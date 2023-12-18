@@ -1,100 +1,179 @@
-Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55D92740BD;
-	Mon, 18 Dec 2023 21:55:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-7b3708b3eacso147561739f.2;
-        Mon, 18 Dec 2023 13:55:57 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702936556; x=1703541356;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=eIl3+miZ0G9Vwo7dKjzcYHAwvEgr2VOComYZIqzlsP0=;
-        b=FcPAqZOaNCnnCBAUcysikjoU5cjRUJSnDfpt4rZaFHlXMMIJo061q2ry4pbQ8Cxq2z
-         btyHMfX7+GbHv6VusdGDVIlRjipHXMOOByLmNx87TUv5aw6NgGpLV0mi8HVZTcGOinaT
-         VIfcnZnFkbcuB+uiE20BgDTEBmvL6VEObBVdNvSY6/OszDpihxn93X9yZync63BmdG1E
-         i6CPS8TMPXSj2DheACWdr7YoG8lmyCtgqSfXtSVGb9mCoQ+w9LFjfVFZelu2aqYNQ+//
-         Pr0SV8nLg2oeT8rhWLi3t/6/teoZOrZf9i9C8fWvxA1biriqNrq+eSYDoeRp6TbxJbMz
-         VDSQ==
-X-Gm-Message-State: AOJu0YxUmP9rUWC+sFficL9z8CltGaSyNu85bm9eOjsUghJTba/1ijHX
-	xxzcLFb99L5Upfz2+2WK45Q=
-X-Google-Smtp-Source: AGHT+IHEewjCipB4PIrKNw9vqIIP/VSnGW9Uiv52Wv48DEo+dTLjJlbTKJ/7N8EqP5QpL2LNEbx/jA==
-X-Received: by 2002:a92:c90b:0:b0:35d:59a2:92a6 with SMTP id t11-20020a92c90b000000b0035d59a292a6mr15410019ilp.58.1702936556465;
-        Mon, 18 Dec 2023 13:55:56 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:e67:7ba6:36a9:8cd5? ([2620:0:1000:8411:e67:7ba6:36a9:8cd5])
-        by smtp.gmail.com with ESMTPSA id s7-20020a634507000000b005cd8bf50c13sm3114268pga.58.2023.12.18.13.55.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 Dec 2023 13:55:55 -0800 (PST)
-Message-ID: <9861ce52-8163-40aa-b156-dd656143a73d@acm.org>
-Date: Mon, 18 Dec 2023 13:55:51 -0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 994B476080;
+	Mon, 18 Dec 2023 22:50:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JMFtsEZL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F368FC433C7;
+	Mon, 18 Dec 2023 22:50:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702939820;
+	bh=XQ3Y2xlODgItuHUfk9LQWvZkE68Or3E774k7hEqz9uo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=JMFtsEZLP9TInD4z1KBYZJn+HhHyQPZeKZ/uxCjFDfRQ4R41d0jWZCypmnLeNuUjl
+	 rpQWOCq+O7G6xURivgtJYluZ77NwNHUwxaqR7HEzI+vR2LeMn2fRcU0UViecTGXyfb
+	 90MQZqkN8OwSOOqlHvNg8anjBpO9H3nRknTsFTJe3xywUlve3pijecR5LQLKNdHQn4
+	 iWg0atuu68HLn+lXqA6M3kkpkGdT9YvDwGKExYdJqaUqoBS2WD0ajIzMcRih+uLXOB
+	 pnsYDAzMfJFStLjI5N0rkI2O9fd+rt1no7PzyMUtiO5tnG8C9cwoy9RJqin+9rAjvv
+	 nYGbbLi7tZJ3w==
+Date: Mon, 18 Dec 2023 15:50:16 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
+Subject: Re: [PATCH v2 00/16] block atomic writes
+Message-ID: <ZYDMqCYedHUb3e6O@kbusch-mbp.dhcp.thefacebook.com>
+References: <20231212110844.19698-1-john.g.garry@oracle.com>
+ <20231212163246.GA24594@lst.de>
+ <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com>
+ <20231213154409.GA7724@lst.de>
+ <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com>
+ <20231214143708.GA5331@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V5 1/2] ufs: core: Add CPU latency QoS support for ufs
- driver
-Content-Language: en-US
-To: Maramaina Naresh <quic_mnaresh@quicinc.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Peter Wang <peter.wang@mediatek.com>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Stanley Jhu <chu.stanley@gmail.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org, quic_cang@quicinc.com,
- quic_nguyenb@quicinc.com
-References: <20231213124353.16407-1-quic_mnaresh@quicinc.com>
- <20231213124353.16407-2-quic_mnaresh@quicinc.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231213124353.16407-2-quic_mnaresh@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231214143708.GA5331@lst.de>
 
-On 12/13/23 04:43, Maramaina Naresh wrote:
-> +static ssize_t ufshcd_pm_qos_enable_store(struct device *dev,
-> +		struct device_attribute *attr, const char *buf, size_t count)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +	u32 value;
-> +
-> +	if (kstrtou32(buf, 0, &value))
-> +		return -EINVAL;
-> +
-> +	value = !!value;
-> +	if (value)
-> +		ufshcd_pm_qos_init(hba);
-> +	else
-> +		ufshcd_pm_qos_exit(hba);
-> +
-> +	return count;
-> +}
+On Thu, Dec 14, 2023 at 03:37:09PM +0100, Christoph Hellwig wrote:
+> On Wed, Dec 13, 2023 at 04:27:35PM +0000, John Garry wrote:
+> >>> Are there any patches yet for the change to always use SGLs for transfers
+> >>> larger than a single PRP?
+> >> No.
+> 
+> Here is the WIP version.  With that you'd need to make atomic writes
+> conditional on !ctrl->need_virt_boundary.
 
-Please use kstrtobool() instead of kstrtou32().
-
-> +static void ufshcd_init_pm_qos_sysfs(struct ufs_hba *hba)
-> +{
-> +	hba->pm_qos_enable_attr.show = ufshcd_pm_qos_enable_show;
-> +	hba->pm_qos_enable_attr.store = ufshcd_pm_qos_enable_store;
-> +	sysfs_attr_init(&hba->pm_qos_enable_attr.attr);
-> +	hba->pm_qos_enable_attr.attr.name = "pm_qos_enable";
-> +	hba->pm_qos_enable_attr.attr.mode = 0644;
-> +	if (device_create_file(hba->dev, &hba->pm_qos_enable_attr))
-> +		dev_err(hba->dev, "Failed to create sysfs for pm_qos_enable\n");
-> +}
-
-Calling device_create_file() and device_remove_file() is not acceptable because of
-the race conditions these calls introduce for udev rules. Please add this attribute
-into an existing group and update the is_visible callback function of that group.
-See also ufs_sysfs_groups[].
-
-Thanks,
-
-Bart.
+This looks pretty good as-is!
+ 
+> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> index 8ebdfd623e0f78..e04faffd6551fe 100644
+> --- a/drivers/nvme/host/core.c
+> +++ b/drivers/nvme/host/core.c
+> @@ -1889,7 +1889,8 @@ static void nvme_set_queue_limits(struct nvme_ctrl *ctrl,
+>  		blk_queue_max_hw_sectors(q, ctrl->max_hw_sectors);
+>  		blk_queue_max_segments(q, min_t(u32, max_segments, USHRT_MAX));
+>  	}
+> -	blk_queue_virt_boundary(q, NVME_CTRL_PAGE_SIZE - 1);
+> +	if (q == ctrl->admin_q || ctrl->need_virt_boundary)
+> +		blk_queue_virt_boundary(q, NVME_CTRL_PAGE_SIZE - 1);
+>  	blk_queue_dma_alignment(q, 3);
+>  	blk_queue_write_cache(q, vwc, vwc);
+>  }
+> diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+> index e7411dac00f725..aa98794a3ec53d 100644
+> --- a/drivers/nvme/host/nvme.h
+> +++ b/drivers/nvme/host/nvme.h
+> @@ -262,6 +262,7 @@ enum nvme_ctrl_flags {
+>  struct nvme_ctrl {
+>  	bool comp_seen;
+>  	bool identified;
+> +	bool need_virt_boundary;
+>  	enum nvme_ctrl_state state;
+>  	spinlock_t lock;
+>  	struct mutex scan_lock;
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index 61af7ff1a9d6ba..a8d273b475cb40 100644
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -60,8 +60,7 @@ MODULE_PARM_DESC(max_host_mem_size_mb,
+>  static unsigned int sgl_threshold = SZ_32K;
+>  module_param(sgl_threshold, uint, 0644);
+>  MODULE_PARM_DESC(sgl_threshold,
+> -		"Use SGLs when average request segment size is larger or equal to "
+> -		"this size. Use 0 to disable SGLs.");
+> +		"Use SGLs when > 0. Use 0 to disable SGLs.");
+>  
+>  #define NVME_PCI_MIN_QUEUE_SIZE 2
+>  #define NVME_PCI_MAX_QUEUE_SIZE 4095
+> @@ -504,23 +503,6 @@ static void nvme_commit_rqs(struct blk_mq_hw_ctx *hctx)
+>  	spin_unlock(&nvmeq->sq_lock);
+>  }
+>  
+> -static inline bool nvme_pci_use_sgls(struct nvme_dev *dev, struct request *req,
+> -				     int nseg)
+> -{
+> -	struct nvme_queue *nvmeq = req->mq_hctx->driver_data;
+> -	unsigned int avg_seg_size;
+> -
+> -	avg_seg_size = DIV_ROUND_UP(blk_rq_payload_bytes(req), nseg);
+> -
+> -	if (!nvme_ctrl_sgl_supported(&dev->ctrl))
+> -		return false;
+> -	if (!nvmeq->qid)
+> -		return false;
+> -	if (!sgl_threshold || avg_seg_size < sgl_threshold)
+> -		return false;
+> -	return true;
+> -}
+> -
+>  static void nvme_free_prps(struct nvme_dev *dev, struct request *req)
+>  {
+>  	const int last_prp = NVME_CTRL_PAGE_SIZE / sizeof(__le64) - 1;
+> @@ -769,12 +751,14 @@ static blk_status_t nvme_setup_sgl_simple(struct nvme_dev *dev,
+>  static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+>  		struct nvme_command *cmnd)
+>  {
+> +	struct nvme_queue *nvmeq = req->mq_hctx->driver_data;
+>  	struct nvme_iod *iod = blk_mq_rq_to_pdu(req);
+> +	bool sgl_supported = nvme_ctrl_sgl_supported(&dev->ctrl) &&
+> +			nvmeq->qid && sgl_threshold;
+>  	blk_status_t ret = BLK_STS_RESOURCE;
+>  	int rc;
+>  
+>  	if (blk_rq_nr_phys_segments(req) == 1) {
+> -		struct nvme_queue *nvmeq = req->mq_hctx->driver_data;
+>  		struct bio_vec bv = req_bvec(req);
+>  
+>  		if (!is_pci_p2pdma_page(bv.bv_page)) {
+> @@ -782,8 +766,7 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+>  				return nvme_setup_prp_simple(dev, req,
+>  							     &cmnd->rw, &bv);
+>  
+> -			if (nvmeq->qid && sgl_threshold &&
+> -			    nvme_ctrl_sgl_supported(&dev->ctrl))
+> +			if (sgl_supported)
+>  				return nvme_setup_sgl_simple(dev, req,
+>  							     &cmnd->rw, &bv);
+>  		}
+> @@ -806,7 +789,7 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+>  		goto out_free_sg;
+>  	}
+>  
+> -	if (nvme_pci_use_sgls(dev, req, iod->sgt.nents))
+> +	if (sgl_supported)
+>  		ret = nvme_pci_setup_sgls(dev, req, &cmnd->rw);
+>  	else
+>  		ret = nvme_pci_setup_prps(dev, req, &cmnd->rw);
+> @@ -3036,6 +3019,8 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	result = nvme_init_ctrl_finish(&dev->ctrl, false);
+>  	if (result)
+>  		goto out_disable;
+> +	if (!nvme_ctrl_sgl_supported(&dev->ctrl))
+> +		dev->ctrl.need_virt_boundary = true;
+>  
+>  	nvme_dbbuf_dma_alloc(dev);
+>  
+> diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
+> index 81e2621169e5d3..416a9fbcccfc74 100644
+> --- a/drivers/nvme/host/rdma.c
+> +++ b/drivers/nvme/host/rdma.c
+> @@ -838,6 +838,7 @@ static int nvme_rdma_configure_admin_queue(struct nvme_rdma_ctrl *ctrl,
+>  	error = nvme_init_ctrl_finish(&ctrl->ctrl, false);
+>  	if (error)
+>  		goto out_quiesce_queue;
+> +	ctrl->ctrl.need_virt_boundary = true;
+>  
+>  	return 0;
+>  
