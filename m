@@ -1,57 +1,54 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C5681171C;
-	Tue, 19 Dec 2023 02:19:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DF825386
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Dec 2023 02:19:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QomB89D6"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ0J5gE025044;
-	Tue, 19 Dec 2023 02:19:21 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UvSL2fyQ"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ0J0CB031069;
+	Tue, 19 Dec 2023 02:19:47 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=yskQ78r92q5mG7d7jw1QYsnF+XyPla4428Cx+87LW3E=;
- b=QomB89D6f5LlqFMVBaOPi0AdjjWHJkQoESPWq74yjiQVyIdrOwYQirB+JW35XOmn+1+X
- n+/02fRbTfEutLi+oJGTwhlAWCALGstf20wIT6bGSmJo1Z6PzN0p+f7+fpL4Cm+QlCyk
- DC9Ij52InR8T/+qxKQ1U1F+sBK1su6wISLvQCFwrl7k61XUNy5LBwZpbs7qjsuRzNcWP
- 1H+yxdrjwpguqYWCwg+gJ6nca1SUQxYpV5usTp8XICAWLc/0e9Yl43/qpQ5QOLtrIgMR
- aBpF76hWbaiXHjE7zqJFUfkhhtxDMxWXVxyrtNaW9SPwbsedcfpGyH3Z1ct6kQUnQv7t Fg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3v12p44unn-1
+ bh=4UbwudAxtpB/uhm1MZYMw+AYuZ7NkIWzV0oItNp1sZc=;
+ b=UvSL2fyQcyXqsNMjHVXznFicPhOiP0JstRev7AnpTaHSj0fMoLUoWYE56TkccIu9ZYQN
+ xzkVyMAAhrMNgvokSlb81Z+mbDfzOxIoQGeJb8cba5unhe3NmhXzsjs4iBIJNKKs3MRI
+ 3XlMxtQxiscu/DegJjQKZ7wWMGWoGGXV6ySS23bcnjFuK14fYB3GW+1SeGx1ApEotkQh
+ cr/ulSrXacbDqpsTeKLZHrxo2w8TJXwR7CZvb/z7TjlSBffBBwAcLp8MGo76L6kE/9d7
+ yRwLeJ3BndTiw976l2T6OPLZlWwFGH6ytADYKDbDrXvw4ArhzqbL8Q2LS04IlBnbLHty aw== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3v12aecs6m-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 19 Dec 2023 02:19:21 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ0soGd020909;
-	Tue, 19 Dec 2023 02:19:20 GMT
+	Tue, 19 Dec 2023 02:19:46 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ1UfLx027635;
+	Tue, 19 Dec 2023 02:19:45 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3v12b69tb6-1
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3v12bc5j46-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 19 Dec 2023 02:19:20 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BJ2J7ZJ012682;
-	Tue, 19 Dec 2023 02:19:19 GMT
+	Tue, 19 Dec 2023 02:19:45 +0000
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BJ2EbhT009328;
+	Tue, 19 Dec 2023 02:19:45 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3v12b69t3t-9;
-	Tue, 19 Dec 2023 02:19:19 +0000
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3v12bc5j3x-1;
+	Tue, 19 Dec 2023 02:19:45 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: bvanassche@acm.org, mani@kernel.org, adrian.hunter@intel.com,
-        vkoul@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
-        junwoo80.lee@samsung.com, Can Guo <quic_cang@quicinc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v8 00/10] Enable HS-G5 support on SM8550
-Date: Mon, 18 Dec 2023 21:18:53 -0500
-Message-ID: <170294822172.2675590.9852477289938557441.b4-ty@oracle.com>
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Paolo Bonzini <pbonzini@redhat.com>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.com>,
+        Alexander Atanasov <alexander.atanasov@virtuozzo.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, kernel@openvz.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v2 RESEND] scsi: code: always send batch on reset or error handling command
+Date: Mon, 18 Dec 2023 21:19:35 -0500
+Message-ID: <170295223225.2870516.464535112683552096.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.42.1
-In-Reply-To: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com>
-References: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com>
+In-Reply-To: <20231215121008.2881653-1-alexander.atanasov@virtuozzo.com>
+References: <20231215121008.2881653-1-alexander.atanasov@virtuozzo.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -63,47 +60,32 @@ Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-12-18_15,2023-12-14_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 mlxscore=0
- mlxlogscore=999 bulkscore=0 adultscore=0 suspectscore=0 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 spamscore=0
+ adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
  definitions=main-2312190017
-X-Proofpoint-GUID: hFRgHiHplc8Oh0bXvqh80-vFWM6K9nTY
-X-Proofpoint-ORIG-GUID: hFRgHiHplc8Oh0bXvqh80-vFWM6K9nTY
+X-Proofpoint-ORIG-GUID: vWtWlZflJysZtcYhmStqNRpQk581y0rD
+X-Proofpoint-GUID: vWtWlZflJysZtcYhmStqNRpQk581y0rD
 
-On Sat, 02 Dec 2023 04:36:06 -0800, Can Guo wrote:
+On Fri, 15 Dec 2023 14:10:08 +0200, Alexander Atanasov wrote:
 
-> This series enables HS-G5 support on SM8550.
+> In commit 8930a6c20791 ("scsi: core: add support for request batching")
+> blk-mq last flags was mapped to SCMD_LAST and used as an indicator to
+> send the batch for the drivers that implement it but the error handling
+> code was not updated.
 > 
-> This series is rebased on below changes from Mani -
-> https://patchwork.kernel.org/project/linux-scsi/patch/20230908145329.154024-1-manivannan.sadhasivam@linaro.org/
-> https://patchwork.kernel.org/project/linux-scsi/patch/20230908145329.154024-2-manivannan.sadhasivam@linaro.org/
-> 
-> This series is tested on below HW combinations -
-> SM8550 MTP + UFS4.0
-> SM8550 QRD + UFS3.1
-> SM8450 MTP + UFS3.1 (for regression test)
-> SM8350 MTP + UFS3.1 (for regression test)
+> scsi_send_eh_cmnd(...) is used to send error handling commands and
+> request sense. The problem is that request sense comes as a single
+> command that gets into the batch queue and times out.  As result
+> device goes offline after several failed resets. This was observed
+> on virtio_scsi device resize operation.
 > 
 > [...]
 
-Applied to 6.8/scsi-queue, thanks!
+Applied to 6.7/scsi-fixes, thanks!
 
-[01/10] scsi: ufs: host: Rename structure ufs_dev_params to ufs_host_params
-        https://git.kernel.org/mkp/scsi/c/fa3dca8251c4
-[02/10] scsi: ufs: ufs-qcom: No need to set hs_rate after ufshcd_init_host_param()
-        https://git.kernel.org/mkp/scsi/c/dc604b4c9d60
-[03/10] scsi: ufs: ufs-qcom: Setup host power mode during init
-        https://git.kernel.org/mkp/scsi/c/55820a7f2cb9
-[04/10] scsi: ufs: ufs-qcom: Allow the first init start with the maximum supported gear
-        https://git.kernel.org/mkp/scsi/c/743e1f596ccc
-[05/10] scsi: ufs: ufs-qcom: Limit HS-G5 Rate-A to hosts with HW version 5
-        https://git.kernel.org/mkp/scsi/c/9d8528a833fc
-[06/10] scsi: ufs: ufs-qcom: Set initial PHY gear to max HS gear for HW ver 4 and newer
-        https://git.kernel.org/mkp/scsi/c/0bd3cb895d19
-[07/10] scsi: ufs: ufs-qcom: Check return value of phy_set_mode_ext()
-        https://git.kernel.org/mkp/scsi/c/a68abdadfe13
-[08/10] scsi: ufs: ufs-qcom: Add support for UFS device version detection
-        https://git.kernel.org/mkp/scsi/c/dc7c948d74e1
+[1/1] scsi: code: always send batch on reset or error handling command
+      https://git.kernel.org/mkp/scsi/c/066c5b46b6ea
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
