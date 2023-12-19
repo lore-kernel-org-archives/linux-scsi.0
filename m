@@ -1,79 +1,177 @@
-Received: from mail-oi1-f181.google.com (mail-oi1-f181.google.com [209.85.167.181])
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32F5F760B7;
-	Mon, 18 Dec 2023 23:29:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FE697F;
+	Tue, 19 Dec 2023 00:08:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-oi1-f181.google.com with SMTP id 5614622812f47-3b9d8bfe845so3098926b6e.0;
-        Mon, 18 Dec 2023 15:29:05 -0800 (PST)
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6cea0fd9b53so1938227b3a.1;
+        Mon, 18 Dec 2023 16:08:20 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702942145; x=1703546945;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=IMhxuDm7jCgcjkNbF9utPAMTKDmnaTIQB3+kH020gZw=;
-        b=LruCcIdfmRM1YMppDxF6QuzrZJZBl8GL/plxXKaQPtdDNgZ05ArucORp6Gh/lYXmcu
-         5hHvBVhnz3ccGNNBQ4s72zVCx2lXS63KPnh40TflLb9eoWoNGQLUIkKmbAI8sPItAIR/
-         +XVneQ2ridGPHKuPC6UNz5L03E9pBFoHZNvfhGpH1sNNogF6prP9G4XzPDrbZnTUpDhy
-         fxpp1nlVF5CXgdIpRun+7DwnvBsWVQgMRrfQ5bGzXf8GaGwzAtfG2TtD4XTj7yIN1oj8
-         WyeRdQI9JZy0q25ChI/1sHRp4JQRV5LqVvWp/m9RLRWd10d8egXQ9CH8nSh5z/63HLoG
-         aJlQ==
-X-Gm-Message-State: AOJu0Yygk3XE/aG0dbxr2iCDPRiO+y9EQnRibXZiSv2QQKnI4mPTRsMo
-	zlBhWiLt9/beLWx9/r6MriEjb0NzqP8=
-X-Google-Smtp-Source: AGHT+IGhmwkLxf9WBMuku/O82sDnDglDuGoyICe9RL55MLWzp0MGV2cbEblM/1mUBzd2970BDakqvA==
-X-Received: by 2002:a05:6808:10cc:b0:3b2:f500:c1e5 with SMTP id s12-20020a05680810cc00b003b2f500c1e5mr24972479ois.29.1702942145165;
-        Mon, 18 Dec 2023 15:29:05 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:e67:7ba6:36a9:8cd5? ([2620:0:1000:8411:e67:7ba6:36a9:8cd5])
-        by smtp.gmail.com with ESMTPSA id n8-20020a654508000000b005c65fcca22csm15697270pgq.85.2023.12.18.15.29.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 Dec 2023 15:29:04 -0800 (PST)
-Message-ID: <7d8564bc-8711-43f5-b6b5-21ae204783f6@acm.org>
-Date: Mon, 18 Dec 2023 15:29:01 -0800
+        d=1e100.net; s=20230601; t=1702944500; x=1703549300;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=DleLb/GRWWWOUxltcEkKo/2njLT6s7G7nFWdrSHsRNU=;
+        b=cSJlsQA0HgJ1KZ8QZjm5vvE0HWokJMKjEfnYcLcFLyDZCMk/McsxlWmQpQXR4IcbG1
+         brVNOD/jNIaL08QDDIUZYpaiC7uiDp5dpt5MDLw0KTHJsBhetqW1Tm5tU5aaulyI28sk
+         JCI8RT11E3eMkfib+Ipo+Ae7DhWDwEmUtxna18WX9ztpZM/NQzdhI54yTethgVJJeKO+
+         2W5ZHwbUoDkWqLZJpb3Ph4rgIhZZ+qR1sqv4Orzg1vkQdIpdAB6Y0VBiJzOeG97jPsra
+         kkWa6VNUAQzr+5+SvMRQ7/D0MWEvh171CEBuk5VQh8b73JlQRKQmw5fbCQzFvQJZfdmI
+         dOlw==
+X-Gm-Message-State: AOJu0YycXcB8HcHDHyM9z5sDgM7M7Q4sLc1FCHlms4b8fVirXDcMRsVv
+	L/sGUBDdH7r98ZglB0TMNtQ=
+X-Google-Smtp-Source: AGHT+IGXXrqCw0mder8OAzVsO+YAR5Rrbf/ckYX1QBTX8yeZcWqslQs+f+yu8qzbuyEdvn7gPPb1Pg==
+X-Received: by 2002:a05:6a20:3d93:b0:18b:480:a0f3 with SMTP id s19-20020a056a203d9300b0018b0480a0f3mr9237678pzi.4.1702944500016;
+        Mon, 18 Dec 2023 16:08:20 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:e67:7ba6:36a9:8cd5])
+        by smtp.gmail.com with ESMTPSA id x17-20020a17090a531100b0028b050e8297sm118630pjh.18.2023.12.18.16.08.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Dec 2023 16:08:19 -0800 (PST)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>,
+	Christoph Hellwig <hch@lst.de>,
+	Daejun Park <daejun7.park@samsung.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v8 00/19] Pass data lifetime information to SCSI disk devices
+Date: Mon, 18 Dec 2023 16:07:33 -0800
+Message-ID: <20231219000815.2739120-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.43.0.472.g3155946c3a-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 00/19] Pass data lifetime information to SCSI disk
- devices
-Content-Language: en-US
-To: dgilbert@interlog.com, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
- Christoph Hellwig <hch@lst.de>, Daejun Park <daejun7.park@samsung.com>,
- Kanchan Joshi <joshi.k@samsung.com>
-References: <20231218185705.2002516-1-bvanassche@acm.org>
- <dbfe9ac0-d432-4911-8a47-23d3d6f3811a@interlog.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <dbfe9ac0-d432-4911-8a47-23d3d6f3811a@interlog.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 12/18/23 15:08, Douglas Gilbert wrote:
-> On 12/18/23 13:56, Bart Van Assche wrote:
->> Changes compared to v6:
->>   - Dropped patch "fs: Restore F_[GS]ET_FILE_RW_HINT support".
-> 
-> That leaves us with F_SET_RW_HINT and F_GET_RW_HINT ioctls. Could you please
-> explain, perhaps with an example, what functionality is lost and what we still
-> have?
-Hmm ... what information do you expect that is not available in the fcntl man
-page? From that man page:
+Hi Martin,
 
-        F_SET_RW_HINT (uint64_t *; since Linux 4.13)
-               Sets the read/write hint value associated with the underlying inode re‐
-               ferred to by fd.  This hint persists until either it is explicitly mod‐
-               ified or the underlying filesystem is unmounted.
+UFS vendors need the data lifetime information to achieve good performance.
+Providing data lifetime information to UFS devices can result in up to 40%
+lower write amplification. Hence this patch series that adds support in F2FS
+and also in the block layer for data lifetime information. The SCSI disk (sd)
+driver is modified such that it passes write hint information to SCSI devices
+via the GROUP NUMBER field.
 
-        F_SET_FILE_RW_HINT (uint64_t *; since Linux 4.13)
-               Sets the read/write hint value associated with the open  file  descrip‐
-               tion referred to by fd.
+Please consider this patch series for the next merge window.
 
-The functionality that is lost is to open a file multiple times and to call
-F_SET_FILE_RW_HINT with a different value for each file. Ceph used this approach
-to specify R/W hints per LBA range in combination with direct I/O.
+Thank you,
 
 Bart.
+
+Changes compared to v7:
+ - As requested by Dave Chinner, changed one occurrence of
+   file_inode(dio->iocb->ki_filp)->i_write_hint into inode->i_write_hint.
+ - Modified the description of patch 03/19 since the patch that restores
+   F_[GS]ET_FILE_RW_HINT has been removed.
+ - Added Reviewed-by tags from v6 of this patch series and that were missing
+   when v7 was posted.
+
+Changes compared to v6:
+ - Dropped patch "fs: Restore F_[GS]ET_FILE_RW_HINT support".
+
+Changes compared to v5:
+ - Added compile-time tests that compare the WRITE_LIFE_* and RWH_* constants.
+ - Split the F_[GS]ET_RW_HINT handlers.
+ - Removed the structure member kiocb.ki_hint again. Instead, copy the data
+   lifetime information directly from struct file into a bio.
+ - Together with Doug Gilbert, fixed multiple bugs in the scsi_debug patches.
+   Added Doug's Tested-by.
+ - Changed the type of "rscs:1" from bool into unsigned.
+ - Added unit tests for the new SCSI protocol data structures.
+ - Improved multiple patch descriptions.
+ 
+Changes compared to v4:
+ - Dropped the patch that renames the WRITE_LIFE_* constants.
+ - Added a fix for an argument check in fcntl_rw_hint().
+ - Reordered the patches that restore data lifetime support.
+ - Included a fix for data lifetime support for buffered I/O to raw block
+   devices.
+
+Changes compared to v3:
+ - Renamed the data lifetime constants (WRITE_LIFE_*).
+ - Fixed a checkpatch complaint by changing "unsigned" into "unsigned int".
+ - Rebased this patch series on top of kernel v6.7-rc1.
+ 
+Changes compared to v2:
+ - Instead of storing data lifetime information in bi_ioprio, introduce the
+   new struct bio member bi_lifetime and also the struct request member
+   'lifetime'.
+ - Removed the bio_set_data_lifetime() and bio_get_data_lifetime() functions
+   and replaced these with direct assignments.
+ - Dropped all changes related to I/O priority.
+ - Improved patch descriptions.
+
+Changes compared to v1:
+ - Use six bits from the ioprio field for data lifetime information. The
+   bio->bi_write_hint / req->write_hint / iocb->ki_hint members that were
+   introduced in v1 have been removed again.
+ - The F_GET_FILE_RW_HINT and F_SET_FILE_RW_HINT fcntls have been removed.
+ - In the SCSI disk (sd) driver, query the stream status and check the PERM bit.
+ - The GET STREAM STATUS command has been implemented in the scsi_debug driver.
+
+Bart Van Assche (19):
+  fs: Fix rw_hint validation
+  fs: Verify write lifetime constants at compile time
+  fs: Split fcntl_rw_hint()
+  fs: Move enum rw_hint into a new header file
+  block, fs: Restore the per-bio/request data lifetime fields
+  block, fs: Propagate write hints to the block device inode
+  fs/f2fs: Restore the whint_mode mount option
+  fs/f2fs: Restore support for tracing data lifetimes
+  scsi: core: Query the Block Limits Extension VPD page
+  scsi: scsi_proto: Add structures and constants related to I/O groups
+    and streams
+  scsi: sd: Translate data lifetime information
+  scsi: scsi_debug: Reduce code duplication
+  scsi: scsi_debug: Support the block limits extension VPD page
+  scsi: scsi_debug: Rework page code error handling
+  scsi: scsi_debug: Rework subpage code error handling
+  scsi: scsi_debug: Allocate the MODE SENSE response from the heap
+  scsi: scsi_debug: Implement the IO Advice Hints Grouping mode page
+  scsi: scsi_debug: Implement GET STREAM STATUS
+  scsi: scsi_debug: Maintain write statistics per group number
+
+ Documentation/filesystems/f2fs.rst |  70 +++++++
+ block/bio.c                        |   2 +
+ block/blk-crypto-fallback.c        |   1 +
+ block/blk-merge.c                  |   8 +
+ block/blk-mq.c                     |   2 +
+ block/bounce.c                     |   1 +
+ block/fops.c                       |  14 ++
+ drivers/scsi/Kconfig               |   5 +
+ drivers/scsi/Makefile              |   2 +
+ drivers/scsi/scsi.c                |   2 +
+ drivers/scsi/scsi_debug.c          | 293 ++++++++++++++++++++++-------
+ drivers/scsi/scsi_proto_test.c     |  56 ++++++
+ drivers/scsi/scsi_sysfs.c          |  10 +
+ drivers/scsi/sd.c                  | 111 ++++++++++-
+ drivers/scsi/sd.h                  |   3 +
+ fs/buffer.c                        |  12 +-
+ fs/direct-io.c                     |   2 +
+ fs/f2fs/data.c                     |   2 +
+ fs/f2fs/f2fs.h                     |  10 +
+ fs/f2fs/segment.c                  |  95 ++++++++++
+ fs/f2fs/super.c                    |  32 +++-
+ fs/fcntl.c                         |  63 ++++---
+ fs/inode.c                         |   1 +
+ fs/iomap/buffered-io.c             |   2 +
+ fs/iomap/direct-io.c               |   1 +
+ fs/mpage.c                         |   1 +
+ include/linux/blk-mq.h             |   2 +
+ include/linux/blk_types.h          |   2 +
+ include/linux/fs.h                 |  17 +-
+ include/linux/rw_hint.h            |  21 +++
+ include/scsi/scsi_device.h         |   1 +
+ include/scsi/scsi_proto.h          |  78 ++++++++
+ include/trace/events/f2fs.h        |   6 +-
+ 33 files changed, 813 insertions(+), 115 deletions(-)
+ create mode 100644 drivers/scsi/scsi_proto_test.c
+ create mode 100644 include/linux/rw_hint.h
+
