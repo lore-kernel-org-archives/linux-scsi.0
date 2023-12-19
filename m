@@ -1,55 +1,51 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE1B45253;
-	Tue, 19 Dec 2023 02:19:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 134BC8F4D
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Dec 2023 02:19:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PvbFtVRM"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ0ItNq024921;
-	Tue, 19 Dec 2023 02:19:12 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="S5R0vdpw"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ0J00g017103;
+	Tue, 19 Dec 2023 02:19:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=OQDM0B40P70QPcL6XBur2Jg9WhefsXBhpyrJKEmGblg=;
- b=PvbFtVRMSS4CbqW/yv2CGx+uGwoaJz1MMwmIYgfc7Ue1ZrhawopFlrWH1P8CXhh36uWY
- W9iO+vdyFx4rDfYYujB6vNUj+1NUgPKwK3mIMQwi/Jejbgz/57rscyYDrtJ6+3rQN+NV
- PbUZb66b7pRP0n8iyukkNY4QiT+ttdZnl9DBmnmElEgCwJ5Bp41ESu0JUO67/wtf4Xqc
- HJg0mVBBBKl32Ro4TMqiPG4/fE5haAxbBOUFYiVIzQykfMfnsPFmucdc81ySLxhVMGdD
- rEgDMUSXNJzk9ytjYZ+qjVxvWZ1mgypYnlbBfLEiJhDhnI3KHa2rug6GIPz1yANM0mIs Tg== 
+ bh=AR3c1uDJ/PxnZqncYngCAyjxGAryWXtDJWQKaKs54FU=;
+ b=S5R0vdpwP3y3Pp+z9jlB6u5sLAUo0QmbPMMUj7qdsy9mDBSrVLSvljKAZtRq/c1oXW2L
+ 9Dgtp4ejoXeJPkQ2ANTCHgZ5RiAXC8kTADlMQiI92BqfDNrL82a0ozS96RNQ6hqUz33K
+ Muu+MdRhttxgaykEsMbXVtSG6b1ljcIcMUELCUUw8tRcPgWDw4hpVdVSM8SmXsGI5roH
+ 4oin1NoPXF1N+PCeqsTpAPZZEMZjbmAgoPxi+sLCv98V/B28oSHFXMmTWxIiHZOMrl2e
+ OqQsC+V4/jWrtLnVIttG8DpHbk17Joei3qWiY0GELWV8TpFpOsN4dVPg+9r4YPb13uzF Fw== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3v12p44un9-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3v13guctee-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 19 Dec 2023 02:19:12 +0000
+	Tue, 19 Dec 2023 02:19:11 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ1k9v8020935;
-	Tue, 19 Dec 2023 02:19:11 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ01t9G021009;
+	Tue, 19 Dec 2023 02:19:10 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3v12b69t76-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3v12b69t6f-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 19 Dec 2023 02:19:11 +0000
+	Tue, 19 Dec 2023 02:19:10 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BJ2J7Z9012682;
-	Tue, 19 Dec 2023 02:19:11 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BJ2J7Z7012682;
+	Tue, 19 Dec 2023 02:19:09 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3v12b69t3t-4;
-	Tue, 19 Dec 2023 02:19:11 +0000
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3v12b69t3t-3;
+	Tue, 19 Dec 2023 02:19:09 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Justin Stitt <justinstitt@google.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: fcoe: use sysfs_match_string over fcoe_parse_mode
-Date: Mon, 18 Dec 2023 21:18:48 -0500
-Message-ID: <170294822166.2675590.301399188654325708.b4-ty@oracle.com>
+To: jejb@linux.ibm.com, chenxiang <chenxiang66@hisilicon.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linuxarm@huawei.com,
+        linux-scsi@vger.kernel.org
+Subject: Re: [RESEND PATCH 0/5] scsi: hisi_sas: Minor fixes and cleanups
+Date: Mon, 18 Dec 2023 21:18:47 -0500
+Message-ID: <170294822184.2675590.505018493872530260.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.42.1
-In-Reply-To: <20231212-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v2-1-1f2d6b2fc409@google.com>
-References: <20231212-strncpy-drivers-scsi-fcoe-fcoe_sysfs-c-v2-1-1f2d6b2fc409@google.com>
+In-Reply-To: <1702525516-51258-1-git-send-email-chenxiang66@hisilicon.com>
+References: <1702525516-51258-1-git-send-email-chenxiang66@hisilicon.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -62,37 +58,35 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-12-18_15,2023-12-14_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 mlxscore=0
- mlxlogscore=999 bulkscore=0 adultscore=0 suspectscore=0 phishscore=0
+ mlxlogscore=832 bulkscore=0 adultscore=0 suspectscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
  definitions=main-2312190017
-X-Proofpoint-GUID: Tkj1uZp2qXkZ3E1TAzz3YUYkkT_vGBTd
-X-Proofpoint-ORIG-GUID: Tkj1uZp2qXkZ3E1TAzz3YUYkkT_vGBTd
+X-Proofpoint-ORIG-GUID: x8PfP1lKO9w_yIstOzp1X8vmI_P_DM0Q
+X-Proofpoint-GUID: x8PfP1lKO9w_yIstOzp1X8vmI_P_DM0Q
 
-On Tue, 12 Dec 2023 23:19:06 +0000, Justin Stitt wrote:
+On Thu, 14 Dec 2023 11:45:11 +0800, chenxiang wrote:
 
-> Instead of copying @buf into a new buffer and carefully managing its
-> newline/null-terminating status, we can just use sysfs_match_string()
-> as it uses sysfs_streq() internally which handles newline/null-term:
-> 
-> |  /**
-> |   * sysfs_streq - return true if strings are equal, modulo trailing newline
-> |   * @s1: one string
-> |   * @s2: another string
-> |   *
-> |   * This routine returns true iff two strings are equal, treating both
-> |   * NUL and newline-then-NUL as equivalent string terminations.  It's
-> |   * geared for use with sysfs input strings, which generally terminate
-> |   * with newlines but are compared against values without newlines.
-> |   */
-> |  bool sysfs_streq(const char *s1, const char *s2)
-> |  ...
+> This series contain some fixes and cleanups including:
+> - Set .phy_attached before notifying phyup event HISI_PHYEE_PHY_UP_PM;
+> - Use standard error code instead of hardcode;
+> - Check before using pointer variable;
+> - Rollback some operations if FLR failed;
+> - Correct the number of global debugfs registers;
 > 
 > [...]
 
 Applied to 6.8/scsi-queue, thanks!
 
-[1/1] scsi: fcoe: use sysfs_match_string over fcoe_parse_mode
-      https://git.kernel.org/mkp/scsi/c/edc22a7c8688
+[1/5] scsi: hisi_sas: Set .phy_attached before notifing phyup event HISI_PHYE_PHY_UP_PM
+      https://git.kernel.org/mkp/scsi/c/ce26497c745d
+[2/5] scsi: hisi_sas: Replace with standard error code return value
+      https://git.kernel.org/mkp/scsi/c/d34ee535705e
+[3/5] scsi: hisi_sas: Check before using pointer variables
+      https://git.kernel.org/mkp/scsi/c/8dd10296be85
+[4/5] scsi: hisi_sas: Rollback some operations if FLR failed
+      https://git.kernel.org/mkp/scsi/c/7ea3e7763c50
+[5/5] scsi: hisi_sas: Correct the number of global debugfs registers
+      https://git.kernel.org/mkp/scsi/c/73e33f969ef0
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
