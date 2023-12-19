@@ -1,35 +1,35 @@
-Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+Received: from mail-io1-f46.google.com (mail-io1-f46.google.com [209.85.166.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84A3B20B16;
-	Tue, 19 Dec 2023 17:00:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A93520B2F;
+	Tue, 19 Dec 2023 17:00:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1d3ddccfaffso6589765ad.1;
-        Tue, 19 Dec 2023 09:00:35 -0800 (PST)
+Received: by mail-io1-f46.google.com with SMTP id ca18e2360f4ac-7b7fdf6e7c1so4980139f.1;
+        Tue, 19 Dec 2023 09:00:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703005235; x=1703610035;
+        d=1e100.net; s=20230601; t=1703005248; x=1703610048;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=GCKdQO85kQLbRZb+7q6diSEi1hXX9QrYCjY7VxGpZ0w=;
-        b=Yk7BOPyzHrw7TG+qpCIvl1vOQU0ugekh6dbnfv1hzeckOZLAm2Qd2REo8uNjNLgSWt
-         VgshO6MACYfWKcW814MK+qE+nWNKHeYdRnGWTNQx5EofZqm8CTF1N2S+5Aprg6iXMfBv
-         b1bTmC7NkDaaz6LLz2C/bU4iHPKRO+3SCK0Cbbn8w9TU5IIrBveIq6p4mHihAxbFcuL1
-         LTNcQoQTwElWDVUUYelL0+AwL6UBwbx17komr7awmP3V6iTckou+jc1Yv94OlywQV/sq
-         KaQ52YerQMaVjXRKaApynpbclf94Yd7tFxF3ncCw/jASzMfwbsYEtptdFyBaIsRtkMlx
-         TZWA==
-X-Gm-Message-State: AOJu0YyV1S4U4/CYT0IMehrtoHs1XGXm3WdWMO2+Q8K86EAlwKX+0LnR
-	cyeSO5eW4v/tmiDxevtEEg4=
-X-Google-Smtp-Source: AGHT+IHjYDf4pLbHjRZhEwzGoga9cTlLdC9BiKX+JX/lxqRBvLuTDO73ZsFEUGEiQv1HqWpmnoEB6g==
-X-Received: by 2002:a17:902:ecc3:b0:1d3:deb7:7c69 with SMTP id a3-20020a170902ecc300b001d3deb77c69mr1299161plh.20.1703005234420;
-        Tue, 19 Dec 2023 09:00:34 -0800 (PST)
+        bh=LgJX2iXSXNpamsAV8ozi86d6tRWgjGnRgb3PlM33YpU=;
+        b=feXTkwy+BvmyfcDWCRLbc+lE6eZicUCr5X5aN/7Nu9AMyNaNrvgYyYLB9ouUJ42Uu0
+         wPxyAsI2qc7qcvxA9l7+l0fy4MQnIbF06px2U4NKW9lWcuDNDZimQslbNjuvkXEhtdjl
+         rs7bLZqWh7o/T4M8/LtrqQsLK5P0g3xxNnbjZNjPvUHDNSsgpKPTU9PGBCQ9RRtduX3o
+         DtBasCWLGekyFBPOsBYL3Du+JYm3a/xKmQSKIK5n487kQcO5ACzXqCM5xwNa8x4oaKKf
+         nAgZ/LwyAlulh2uI2viCMjmiaQYz9NExwN+HBO5kLQSc77w1dFurgd4KfqxaX0XGTHmd
+         hUPQ==
+X-Gm-Message-State: AOJu0YwjbqISkGqcu1w7gV0e//ULVmJy/Ps0K0V56RGbg8OzSVuUkxZQ
+	LsQv3LHoL5XPUqoaGL80aqs=
+X-Google-Smtp-Source: AGHT+IE/pXRsxDbNpnav7+8+DbpUu0omybNbu8s/xeK7S/bDGQfZgSlrOcqQHPwT4Qt848RSe0jwWA==
+X-Received: by 2002:a05:6e02:1c8a:b0:35c:e8ee:f7d7 with SMTP id w10-20020a056e021c8a00b0035ce8eef7d7mr23488887ill.8.1703005247984;
+        Tue, 19 Dec 2023 09:00:47 -0800 (PST)
 Received: from ?IPV6:2620:0:1000:8411:2c02:6167:94c9:999b? ([2620:0:1000:8411:2c02:6167:94c9:999b])
-        by smtp.gmail.com with ESMTPSA id o14-20020a63e34e000000b005c67bb1585csm19711949pgj.68.2023.12.19.09.00.32
+        by smtp.gmail.com with ESMTPSA id o14-20020a63e34e000000b005c67bb1585csm19711949pgj.68.2023.12.19.09.00.45
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 19 Dec 2023 09:00:33 -0800 (PST)
-Message-ID: <90d13f1f-79aa-4067-b949-6f18cb1bb229@acm.org>
-Date: Tue, 19 Dec 2023 09:00:31 -0800
+        Tue, 19 Dec 2023 09:00:47 -0800 (PST)
+Message-ID: <04a6f477-2666-4873-8612-a4fc643a462f@acm.org>
+Date: Tue, 19 Dec 2023 09:00:45 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,8 +37,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V6 1/2] ufs: core: Add CPU latency QoS support for ufs
- driver
+Subject: Re: [PATCH V6 2/2] ufs: ufs-mediatek: Migrate to UFSHCD generic CPU
+ latency PM QoS support
 Content-Language: en-US
 To: Maramaina Naresh <quic_mnaresh@quicinc.com>,
  "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -52,24 +52,14 @@ Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
  linux-arm-kernel@lists.infradead.org, quic_cang@quicinc.com,
  quic_nguyenb@quicinc.com
 References: <20231219123706.6463-1-quic_mnaresh@quicinc.com>
- <20231219123706.6463-2-quic_mnaresh@quicinc.com>
+ <20231219123706.6463-3-quic_mnaresh@quicinc.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231219123706.6463-2-quic_mnaresh@quicinc.com>
+In-Reply-To: <20231219123706.6463-3-quic_mnaresh@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 12/19/23 04:37, Maramaina Naresh wrote:
-> Register ufs driver to CPU latency PM QoS framework to improve
-> ufs device random io performance.
-> 
-> PM QoS initialization will insert new QoS request into the CPU
-> latency QoS list with the maximum latency PM_QOS_DEFAULT_VALUE
-> value.
-> 
-> UFS driver will vote for performance mode on scale up and power
-> save mode for scale down.
-> 
-> If clock scaling feature is not enabled then voting will be based
-> on clock on or off condition.
+> The PM QoS feature found in the MediaTek UFS driver was moved to the UFSHCD
+> core. Hence remove it from MediaTek UFS driver as it is redundant now.
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
