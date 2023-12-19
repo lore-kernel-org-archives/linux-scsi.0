@@ -1,65 +1,57 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2F65468F;
-	Tue, 19 Dec 2023 02:19:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C5681171C;
+	Tue, 19 Dec 2023 02:19:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eZgqs9I+"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ0JPom031537;
-	Tue, 19 Dec 2023 02:19:18 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QomB89D6"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ0J5gE025044;
+	Tue, 19 Dec 2023 02:19:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=ACFm5EgYGz2CeeqLh3teFmTxx+lzmuxagAN+Hbo1eac=;
- b=eZgqs9I+L6CuQX6Y3cRNcegjcsW2EfxwHy80nheNBzOWy8bj+AIURwXPkiqau7MWwUvZ
- 4qxrDr0pQ5tNA29GI9tK4ldiaUo44sdhFuIsj7BspnwF3yL5SyIa0M7HzgdINI/f2RPF
- NTiBic+GcRlOV8hzKTXsO+eQzGXvuobs+DVImst5vApsQ4l8GjaULFzpGZQrgxbFY3FE
- 6a74iwb+VPSywemAsAnldDB5UQ5chuwYlrG0y/K5uGrEFsMdTUaAG2bwUmLXRb14eTGa
- CBaQ4X49zv2hLcz0mlleGbvRM2GlfRemJbCs1vhY4XInWdy57Cgw2sJ46J8I3KlaiC0/ Sg== 
+ bh=yskQ78r92q5mG7d7jw1QYsnF+XyPla4428Cx+87LW3E=;
+ b=QomB89D6f5LlqFMVBaOPi0AdjjWHJkQoESPWq74yjiQVyIdrOwYQirB+JW35XOmn+1+X
+ n+/02fRbTfEutLi+oJGTwhlAWCALGstf20wIT6bGSmJo1Z6PzN0p+f7+fpL4Cm+QlCyk
+ DC9Ij52InR8T/+qxKQ1U1F+sBK1su6wISLvQCFwrl7k61XUNy5LBwZpbs7qjsuRzNcWP
+ 1H+yxdrjwpguqYWCwg+gJ6nca1SUQxYpV5usTp8XICAWLc/0e9Yl43/qpQ5QOLtrIgMR
+ aBpF76hWbaiXHjE7zqJFUfkhhtxDMxWXVxyrtNaW9SPwbsedcfpGyH3Z1ct6kQUnQv7t Fg== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3v12aecs5m-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3v12p44unn-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 19 Dec 2023 02:19:17 +0000
+	Tue, 19 Dec 2023 02:19:21 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ0HcRx020893;
-	Tue, 19 Dec 2023 02:19:16 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJ0soGd020909;
+	Tue, 19 Dec 2023 02:19:20 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3v12b69t9u-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3v12b69tb6-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 19 Dec 2023 02:19:16 +0000
+	Tue, 19 Dec 2023 02:19:20 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BJ2J7ZF012682;
-	Tue, 19 Dec 2023 02:19:16 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BJ2J7ZJ012682;
+	Tue, 19 Dec 2023 02:19:19 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3v12b69t3t-7;
-	Tue, 19 Dec 2023 02:19:15 +0000
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3v12b69t3t-9;
+	Tue, 19 Dec 2023 02:19:19 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        cros-qcom-dts-watchers@chromium.org,
-        Luca Weiss <luca.weiss@fairphone.com>
+To: bvanassche@acm.org, mani@kernel.org, adrian.hunter@intel.com,
+        vkoul@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
+        junwoo80.lee@samsung.com, Can Guo <quic_cang@quicinc.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        ~postmarketos/upstreaming@lists.sr.ht, phone-devel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nitin Rawat <quic_nitirawa@quicinc.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Subject: Re: [PATCH v6 0/3] Add UFS host controller and Phy nodes for sc7280
-Date: Mon, 18 Dec 2023 21:18:51 -0500
-Message-ID: <170294822179.2675590.13100554882735833514.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: Re: [PATCH v8 00/10] Enable HS-G5 support on SM8550
+Date: Mon, 18 Dec 2023 21:18:53 -0500
+Message-ID: <170294822172.2675590.9852477289938557441.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.42.1
-In-Reply-To: <20231205-sc7280-ufs-v6-0-ad6ca7796de7@fairphone.com>
-References: <20231205-sc7280-ufs-v6-0-ad6ca7796de7@fairphone.com>
+In-Reply-To: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com>
+References: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,22 +67,43 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 sp
  mlxlogscore=999 bulkscore=0 adultscore=0 suspectscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
  definitions=main-2312190017
-X-Proofpoint-ORIG-GUID: T4moszaKCu7FmN_m49Eai3-Qu-lx8eVF
-X-Proofpoint-GUID: T4moszaKCu7FmN_m49Eai3-Qu-lx8eVF
+X-Proofpoint-GUID: hFRgHiHplc8Oh0bXvqh80-vFWM6K9nTY
+X-Proofpoint-ORIG-GUID: hFRgHiHplc8Oh0bXvqh80-vFWM6K9nTY
 
-On Tue, 05 Dec 2023 15:38:53 +0100, Luca Weiss wrote:
+On Sat, 02 Dec 2023 04:36:06 -0800, Can Guo wrote:
 
-> This patch adds UFS host controller and Phy nodes for Qualcomm sc7280
-> SoC and enable it on some sc7280-based boards.
+> This series enables HS-G5 support on SM8550.
 > 
-> Pick up the patchset from Nitin since the last revision (v4) has been
-> sent end of September and is blocking qcm6490-fairphone-fp5 UFS.
+> This series is rebased on below changes from Mani -
+> https://patchwork.kernel.org/project/linux-scsi/patch/20230908145329.154024-1-manivannan.sadhasivam@linaro.org/
+> https://patchwork.kernel.org/project/linux-scsi/patch/20230908145329.154024-2-manivannan.sadhasivam@linaro.org/
 > 
+> This series is tested on below HW combinations -
+> SM8550 MTP + UFS4.0
+> SM8550 QRD + UFS3.1
+> SM8450 MTP + UFS3.1 (for regression test)
+> SM8350 MTP + UFS3.1 (for regression test)
+> 
+> [...]
 
 Applied to 6.8/scsi-queue, thanks!
 
-[1/3] scsi: ufs: qcom: dt-bindings: Add SC7280 compatible string
-      https://git.kernel.org/mkp/scsi/c/98bfeda31969
+[01/10] scsi: ufs: host: Rename structure ufs_dev_params to ufs_host_params
+        https://git.kernel.org/mkp/scsi/c/fa3dca8251c4
+[02/10] scsi: ufs: ufs-qcom: No need to set hs_rate after ufshcd_init_host_param()
+        https://git.kernel.org/mkp/scsi/c/dc604b4c9d60
+[03/10] scsi: ufs: ufs-qcom: Setup host power mode during init
+        https://git.kernel.org/mkp/scsi/c/55820a7f2cb9
+[04/10] scsi: ufs: ufs-qcom: Allow the first init start with the maximum supported gear
+        https://git.kernel.org/mkp/scsi/c/743e1f596ccc
+[05/10] scsi: ufs: ufs-qcom: Limit HS-G5 Rate-A to hosts with HW version 5
+        https://git.kernel.org/mkp/scsi/c/9d8528a833fc
+[06/10] scsi: ufs: ufs-qcom: Set initial PHY gear to max HS gear for HW ver 4 and newer
+        https://git.kernel.org/mkp/scsi/c/0bd3cb895d19
+[07/10] scsi: ufs: ufs-qcom: Check return value of phy_set_mode_ext()
+        https://git.kernel.org/mkp/scsi/c/a68abdadfe13
+[08/10] scsi: ufs: ufs-qcom: Add support for UFS device version detection
+        https://git.kernel.org/mkp/scsi/c/dc7c948d74e1
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
