@@ -1,61 +1,60 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f179.google.com (mail-lj1-f179.google.com [209.85.208.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1F1F134B4
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Dec 2023 08:28:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E20F913ADA;
+	Tue, 19 Dec 2023 09:21:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="IYjGGDB+"
-Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20231219082758epoutp04b413b0db2bfc36ee10ff0944b453720a~iLkQNK4Ne1455614556epoutp04C
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Dec 2023 08:27:58 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20231219082758epoutp04b413b0db2bfc36ee10ff0944b453720a~iLkQNK4Ne1455614556epoutp04C
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1702974478;
-	bh=Lkyebhrd6+24n9nfaxXooVLJcoZKM0pcEuToIgbdeGU=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=IYjGGDB+BTxamjrqtwqJys6c6kj6jeWP9j5OOMzvUmkk5jBI3O6ygkij5IUPuJHqG
-	 wtu8kzLpT2D+IneqKnc9OLETdLdpeaK+aJwclWZ7LHzLU7EXcuU8Bz66lfgY6NOcjo
-	 hmlySkZNgpi4H9sy1kD3wiAk15CmSkF4OSA8F5xw=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-	epcas1p1.samsung.com (KnoxPortal) with ESMTP id
-	20231219082758epcas1p1a948778fb0e77d048cd05cbbb14220d7~iLkPrWCwG2492424924epcas1p1F;
-	Tue, 19 Dec 2023 08:27:58 +0000 (GMT)
-Received: from epsmgec1p1-new.samsung.com (unknown [182.195.38.242]) by
-	epsnrtp2.localdomain (Postfix) with ESMTP id 4SvVF951JHz4x9Pt; Tue, 19 Dec
-	2023 08:27:57 +0000 (GMT)
-Received: from epcas1p1.samsung.com ( [182.195.41.45]) by
-	epsmgec1p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	7B.09.19104.D0451856; Tue, 19 Dec 2023 17:27:57 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas1p3.samsung.com (KnoxPortal) with ESMTPA id
-	20231219082757epcas1p33bda4e0723d3d57552132054d3e5a3fe~iLkOmFrH10837108371epcas1p3v;
-	Tue, 19 Dec 2023 08:27:57 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20231219082757epsmtrp26cd44266f4c6ffc8aa51380f26380ad3~iLkOk9DcT1117211172epsmtrp2S;
-	Tue, 19 Dec 2023 08:27:57 +0000 (GMT)
-X-AuditID: b6c32a4c-80dff70000004aa0-ec-6581540deb96
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	C8.20.18939.C0451856; Tue, 19 Dec 2023 17:27:57 +0900 (KST)
-Received: from localhost.localdomain (unknown [10.253.100.232]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20231219082756epsmtip2a68e637137f7a0073d3d41aada0ef488~iLkOU2T8k1132911329epsmtip2s;
-	Tue, 19 Dec 2023 08:27:56 +0000 (GMT)
-From: Chanwoo Lee <cw9316.lee@samsung.com>
-To: mani@kernel.org, agross@kernel.org, andersson@kernel.org,
-	konrad.dybcio@linaro.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GBxYGEcj"
+Received: by mail-lj1-f179.google.com with SMTP id 38308e7fff4ca-2ca04b1cc37so41912721fa.1;
+        Tue, 19 Dec 2023 01:21:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1702977678; x=1703582478; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bwNJbSFpIsu9ypRnPjAlwKfx3kawFr8ncqgoti6mISc=;
+        b=GBxYGEcjS+HBlpnB8ke3+Zan8wxKUKh+hCsHA2EuqbePKnx/KXqNef3SQRrJc4gnNQ
+         Y0L869kP8bJMiRYhBKvhbi31Sl8lAn/db7GtzqIpjcRsH9i/FD2SjcNUAaWrfuJfmQx9
+         7KKmq3te+kT9wVmTJzEBUnTNMWSYmLeoXh4P3nM4urhce8fnlODM4AIFQjAVcxts3w2L
+         co2bLdxalCKwuZzMP+bVpgcIgOtSGATTvzlQWB15GtzdmlwE8W2KR92BBdbysvzWJ67R
+         cdUaNXUxEWxuAr4kSI/lF39fqWZPiqT/sgGaL5278z3BDwpZbLQ9+Kmjt9m0N8QGmQYB
+         9kVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702977678; x=1703582478;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bwNJbSFpIsu9ypRnPjAlwKfx3kawFr8ncqgoti6mISc=;
+        b=UysCKjepxNRjvQV7g7D9xeS1fwdOmWpkFFFMRxEMGzFkCK/EB6l8HblH3fr+u//auj
+         7PCELW/zWWBUqmb7KCnFWSDxAJR4AqEllcfctmUvYaV+bIGSZBy0sBXTsL2ukjn1Trcy
+         6OppvTmUMlG7rN5fUJwkqJoPVnUaVlVv29jytoJy3eo/kze8vJfArBYFYbYVvUigopUf
+         4pHRXm0dEk3PR6PZgvuAePIGyJNG8hDPeEpj5jXJYFfPAvoxsCfHo0YOhcjAC3Ps7DUE
+         OZkiis4KXCHDO1pvHphGgpXNzHwGfR3rlRqNbBLzosnJWXDyR5sLE0jldCGi1S7Gc568
+         FpWg==
+X-Gm-Message-State: AOJu0YxTanDDEdMYYGh6H1sVLf7liHUZj0I3NvLQMF+CCAlyyhruBl93
+	tN6+4asxS6IHKnEduK+hK57fphrkjqf1EWA4eSM=
+X-Google-Smtp-Source: AGHT+IGENMzpnbZf7E5l70A1oi/hFP8KPT7cupvbx9W7YXUVt8yrFgLV3OUaHIZ5jVst4YeCSiXkyA==
+X-Received: by 2002:a2e:780e:0:b0:2cc:68b2:c4de with SMTP id t14-20020a2e780e000000b002cc68b2c4demr472794ljc.24.1702977677653;
+        Tue, 19 Dec 2023 01:21:17 -0800 (PST)
+Received: from rand-ubuntu-development.dl.local (mail.confident.ru. [85.114.29.218])
+        by smtp.gmail.com with ESMTPSA id j5-20020a2e8245000000b002c9fc3dab0asm3766295ljh.5.2023.12.19.01.21.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 Dec 2023 01:21:17 -0800 (PST)
+From: Rand Deeb <rand.sec96@gmail.com>
+To: Hannes Reinecke <hare@suse.com>,
+	"James E . J . Bottomley" <jejb@linux.ibm.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Cc: grant.jung@samsung.com, jt77.jang@samsung.com, dh0421.hwang@samsung.com,
-	sh043.lee@samsung.com, ChanWoo Lee <cw9316.lee@samsung.com>
-Subject: [PATCH] scsi: ufs: qcom: Remove unnecessary goto statement from
- ufs_qcom_config_esi function
-Date: Tue, 19 Dec 2023 17:27:40 +0900
-Message-Id: <20231219082740.27644-1-cw9316.lee@samsung.com>
-X-Mailer: git-send-email 2.29.0
+Cc: deeb.rand@confident.ru,
+	lvc-project@linuxtesting.org,
+	voskresenski.stanislav@confident.ru,
+	Rand Deeb <rand.sec96@gmail.com>
+Subject: [PATCH] [SCSI] aic7xxx: Remove ahd_acquire_seeprom and ahd_release_seeprom due to redundant implementation
+Date: Tue, 19 Dec 2023 12:20:56 +0300
+Message-Id: <20231219092056.52919-1-rand.sec96@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -63,88 +62,242 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPJsWRmVeSWpSXmKPExsWy7bCmri5vSGOqwZUnyhbnHv9msdjWYWMx
-	41Qbq8W+ayfZLX79Xc9usejGNiaLHc/PsFt0TN7OYjFx/1l2i8u75rBZdF/fwWZx4MMqRovl
-	x/8xWTT92cfiwOexaVUnm8eda3vYPCYsOsDo8fHpLRaPvi2rGD0+b5ILYIvKtslITUxJLVJI
-	zUvOT8nMS7dV8g6Od443NTMw1DW0tDBXUshLzE21VXLxCdB1y8wBulZJoSwxpxQoFJBYXKyk
-	b2dTlF9akqqQkV9cYquUWpCSU2BWoFecmFtcmpeul5daYmVoYGBkClSYkJ2x/PQixoJ3HBV7
-	5j9jb2BsZ+9i5OSQEDCRuLRpJVsXIxeHkMAeRonH11qZQRJCAp8YJb7eNIdIANl71r0EquIA
-	63jXoQYR38kocer5V6juL4wSax72sYAUsQloSdw+5g0SFxF4yiixa8ckFhCHWaCLUeLXwS4W
-	kBXCAukSx1ueMoM0sAioSnxcKQ0S5hWwlthyajcrxHnyEn/u9zBDxAUlTs58AtbKDBRv3jqb
-	GWSmhEAnh8SVJ+9YIBpcJJY+WwNlC0u8Or4F6k8pic/v9rJBNDQzSix8cxyqewKjxJePt9kg
-	quwlmlubwf5kFtCUWL9LH2Ibn8S7rz2sEO/zSnS0CUFUq0jM6TrHBjP/443HUEd7SCye/oIJ
-	EoyxEqf2b2OZwCg3C8kPs5D8MAth2QJG5lWMUqkFxbnpqcmGBYa6eanl8NhMzs/dxAhOqVo+
-	Oxi/r/+rd4iRiYPxEKMEB7OSCK/LovpUId6UxMqq1KL8+KLSnNTiQ4ymwICdyCwlmpwPTOp5
-	JfGGJpYGJmZGJhbGlsZmSuK8Z66UpQoJpCeWpGanphakFsH0MXFwSjUwJVmc23IxlGfZ/mkP
-	/jRuMFIvN/E8VJFi671Vs2rmHd13HTkGtSfnPiuM0i42L1nGUjL3xOqzQsuOpzzoj/tV+sqw
-	WFrGX+ZT+V1J583ZkzwT96tO2af0oE5q83eGT6WrsupDnnVZun/kjg4IurTQ58b3xqatTt++
-	MlcUvnjE8kJfYs4Wla7MLzvXTts4OeWu85+gFl7bUmY3RslwvWN+Sy9USp6ZcOGLgMKmyfEZ
-	OUv0L3f3OqdueOyV+e9TWonsPaUp8zpLXq4+xjF9wpWiYLk4uRUXn0n6MT3M3Leh+lxN4P5H
-	8atTRV4IeZkbMWWuOnbwZ7Dd0bmJ9l/UX6/5e5tlnubCUB9HMT0FIzU/JZbijERDLeai4kQA
-	wriaVTIEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrALMWRmVeSWpSXmKPExsWy7bCSvC5vSGOqwZtVzBbnHv9msdjWYWMx
-	41Qbq8W+ayfZLX79Xc9usejGNiaLHc/PsFt0TN7OYjFx/1l2i8u75rBZdF/fwWZx4MMqRovl
-	x/8xWTT92cfiwOexaVUnm8eda3vYPCYsOsDo8fHpLRaPvi2rGD0+b5ILYIvisklJzcksSy3S
-	t0vgylh+ehFjwTuOij3zn7E3MLazdzFycEgImEi861DrYuTiEBLYzijR/mIfUxcjJ1BcSmL3
-	/vNsEDXCEocPF0PUfGKUOHtzNxNInE1AS+L2MW+QuIjAe0aJ/+fXMoM4zAITGCUWX3nLDDJI
-	WCBV4vqdGYwgDSwCqhIfV0qDhHkFrCW2nNrNCrFLXuLP/R5miLigxMmZT1hAbGagePPW2cwT
-	GPlmIUnNQpJawMi0ilE0taA4Nz03ucBQrzgxt7g0L10vOT93EyM40LWCdjAuW/9X7xAjEwfj
-	IUYJDmYlEV6XRfWpQrwpiZVVqUX58UWlOanFhxilOViUxHmVczpThATSE0tSs1NTC1KLYLJM
-	HJxSDUwavWcv5YkExjT8yy/6HyqRb3bAL8KuVPrYFY3C8oR/hxLLnu8/cvql+JyZx1ROffuT
-	PkMucOGscp+CWVH2p97w3PFSv+u3f+21/farb/HOlFLbdIinYIbG2y7/qinb7Iv8tFeZKV1/
-	5sl15gzjWsU918835zUqrHC35/kWx8tULj5jk8obAY654e9KtrUoGTJ/Dl3xz+zA03uZ/fNP
-	V1fuce1dV7DhcbHslD/cmWnzhf9dfyyz5LzYr2N1nFOMVopv8RF+mrXbUd4lx/F1wRsn2W88
-	Jy0nqCTtaYySWfs7IyNMPv7X9FZNPjn513ffqkT7blcP2zj/+sPwMsPYmFlzL30/buLNahJ1
-	ar/J1cNKLMUZiYZazEXFiQBxZjCH4wIAAA==
-X-CMS-MailID: 20231219082757epcas1p33bda4e0723d3d57552132054d3e5a3fe
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20231219082757epcas1p33bda4e0723d3d57552132054d3e5a3fe
-References: <CGME20231219082757epcas1p33bda4e0723d3d57552132054d3e5a3fe@epcas1p3.samsung.com>
 
-From: ChanWoo Lee <cw9316.lee@samsung.com>
+We removed the ahd_acquire_seeprom and ahd_release_seeprom functions
+because both lacked meaningful implementations. The SEEPROM acquisition
+and release logic they provided were unused and had been commented out,
+making them redundant and non-functional. In addition to some style
+fixes.
+This change simplifies the codebase and improves code clarity by
+eliminating unnecessary code.
 
-There is only one place where goto is used,
-and it is unnecessary to check the ret value through 'goto out'
-because the ret value is already true.
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-Therefore, remove the goto statement and
-integrate the '!ret' condition into the existing code.
-
-Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
+Signed-off-by: Rand Deeb <rand.sec96@gmail.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx.h      |  2 -
+ drivers/scsi/aic7xxx/aic79xx_core.c | 29 ----------
+ drivers/scsi/aic7xxx/aic79xx_pci.c  | 89 ++++++++++++++---------------
+ drivers/scsi/aic7xxx/aic79xx_proc.c | 36 +++++-------
+ 4 files changed, 56 insertions(+), 100 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 17e24270477d..8cf803806326 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1929,7 +1929,7 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
- 					     ufs_qcom_write_msi_msg);
- 	if (ret) {
- 		dev_err(hba->dev, "Failed to request Platform MSI %d\n", ret);
--		goto out;
-+		return ret;
+diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
+index 9a515551641c..e8a7b16a6861 100644
+--- a/drivers/scsi/aic7xxx/aic79xx.h
++++ b/drivers/scsi/aic7xxx/aic79xx.h
+@@ -962,8 +962,6 @@ int		ahd_read_seeprom(struct ahd_softc *ahd, uint16_t *buf,
+ int		ahd_write_seeprom(struct ahd_softc *ahd, uint16_t *buf,
+ 				  u_int start_addr, u_int count);
+ int		ahd_verify_cksum(struct seeprom_config *sc);
+-int		ahd_acquire_seeprom(struct ahd_softc *ahd);
+-void		ahd_release_seeprom(struct ahd_softc *ahd);
+ 
+ /****************************  Message Buffer *********************************/
+ typedef enum {
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 4c790fe28f73..7d639b98e9aa 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -10089,35 +10089,6 @@ ahd_verify_cksum(struct seeprom_config *sc)
+ 	}
+ }
+ 
+-int
+-ahd_acquire_seeprom(struct ahd_softc *ahd)
+-{
+-	/*
+-	 * We should be able to determine the SEEPROM type
+-	 * from the flexport logic, but unfortunately not
+-	 * all implementations have this logic and there is
+-	 * no programatic method for determining if the logic
+-	 * is present.
+-	 */
+-	return (1);
+-#if 0
+-	uint8_t	seetype;
+-	int	error;
+-
+-	error = ahd_read_flexport(ahd, FLXADDR_ROMSTAT_CURSENSECTL, &seetype);
+-	if (error != 0
+-         || ((seetype & FLX_ROMSTAT_SEECFG) == FLX_ROMSTAT_SEE_NONE))
+-		return (0);
+-	return (1);
+-#endif
+-}
+-
+-void
+-ahd_release_seeprom(struct ahd_softc *ahd)
+-{
+-	/* Currently a no-op */
+-}
+-
+ /*
+  * Wait at most 2 seconds for flexport arbitration to succeed.
+  */
+diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
+index 8397ae93f7dd..a25d193eb3ad 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
+@@ -507,60 +507,55 @@ ahd_check_extport(struct ahd_softc *ahd)
+ {
+ 	struct	vpd_config vpd;
+ 	struct	seeprom_config *sc;
+-	u_int	adapter_control;
+-	int	have_seeprom;
++	u_int	adapter_control, start_addr;
++	int	have_seeprom = 1;
+ 	int	error;
+ 
+ 	sc = ahd->seep_config;
+-	have_seeprom = ahd_acquire_seeprom(ahd);
+-	if (have_seeprom) {
+-		u_int start_addr;
+ 
+-		/*
+-		 * Fetch VPD for this function and parse it.
+-		 */
+-		if (bootverbose) 
+-			printk("%s: Reading VPD from SEEPROM...",
+-			       ahd_name(ahd));
++	/*
++	 * Fetch VPD for this function and parse it.
++	 */
++	if (bootverbose)
++		printk("%s: Reading VPD from SEEPROM...",
++		       ahd_name(ahd));
+ 
+-		/* Address is always in units of 16bit words */
+-		start_addr = ((2 * sizeof(*sc))
+-			    + (sizeof(vpd) * (ahd->channel - 'A'))) / 2;
+-
+-		error = ahd_read_seeprom(ahd, (uint16_t *)&vpd,
+-					 start_addr, sizeof(vpd)/2,
+-					 /*bytestream*/TRUE);
+-		if (error == 0)
+-			error = ahd_parse_vpddata(ahd, &vpd);
+-		if (bootverbose) 
+-			printk("%s: VPD parsing %s\n",
+-			       ahd_name(ahd),
+-			       error == 0 ? "successful" : "failed");
+-
+-		if (bootverbose) 
+-			printk("%s: Reading SEEPROM...", ahd_name(ahd));
+-
+-		/* Address is always in units of 16bit words */
+-		start_addr = (sizeof(*sc) / 2) * (ahd->channel - 'A');
+-
+-		error = ahd_read_seeprom(ahd, (uint16_t *)sc,
+-					 start_addr, sizeof(*sc)/2,
+-					 /*bytestream*/FALSE);
+-
+-		if (error != 0) {
+-			printk("Unable to read SEEPROM\n");
+-			have_seeprom = 0;
+-		} else {
+-			have_seeprom = ahd_verify_cksum(sc);
++	/* Address is always in units of 16bit words */
++	start_addr = ((2 * sizeof(*sc))
++		      + (sizeof(vpd) * (ahd->channel - 'A'))) / 2;
+ 
+-			if (bootverbose) {
+-				if (have_seeprom == 0)
+-					printk ("checksum error\n");
+-				else
+-					printk ("done.\n");
+-			}
++	error = ahd_read_seeprom(ahd, (uint16_t *)&vpd,
++				 start_addr, sizeof(vpd)/2,
++				 /*bytestream*/TRUE);
++	if (error == 0)
++		error = ahd_parse_vpddata(ahd, &vpd);
++	if (bootverbose)
++		printk("%s: VPD parsing %s\n",
++		       ahd_name(ahd),
++		       error == 0 ? "successful" : "failed");
++
++	if (bootverbose)
++		printk("%s: Reading SEEPROM...", ahd_name(ahd));
++
++	/* Address is always in units of 16bit words */
++	start_addr = (sizeof(*sc) / 2) * (ahd->channel - 'A');
++
++	error = ahd_read_seeprom(ahd, (uint16_t *)sc,
++				 start_addr, sizeof(*sc)/2,
++				 /*bytestream*/FALSE);
++
++	if (error != 0) {
++		printk("Unable to read SEEPROM\n");
++		have_seeprom = 0;
++	} else {
++		have_seeprom = ahd_verify_cksum(sc);
++
++		if (bootverbose) {
++			if (have_seeprom == 0)
++				printk("checksum error\n");
++			else
++				printk("done.\n");
+ 		}
+-		ahd_release_seeprom(ahd);
  	}
  
- 	msi_lock_descs(hba->dev);
-@@ -1964,11 +1964,8 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
- 				      REG_UFS_CFG3);
- 		}
- 		ufshcd_mcq_enable_esi(hba);
--	}
--
--out:
--	if (!ret)
- 		host->esi_enabled = true;
-+	}
+ 	if (!have_seeprom) {
+diff --git a/drivers/scsi/aic7xxx/aic79xx_proc.c b/drivers/scsi/aic7xxx/aic79xx_proc.c
+index add2da581d66..8a4a1c5601d1 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_proc.c
++++ b/drivers/scsi/aic7xxx/aic79xx_proc.c
+@@ -213,6 +213,7 @@ ahd_proc_write_seeprom(struct Scsi_Host *shost, char *buffer, int length)
+ 	u_long s;
+ 	int paused;
+ 	int written;
++	u_int start_addr;
  
- 	return ret;
- }
+ 	/* Default to failure. */
+ 	written = -EINVAL;
+@@ -234,31 +235,22 @@ ahd_proc_write_seeprom(struct Scsi_Host *shost, char *buffer, int length)
+ 		goto done;
+ 	}
+ 
+-	have_seeprom = ahd_acquire_seeprom(ahd);
+-	if (!have_seeprom) {
+-		printk("ahd_proc_write_seeprom: No Serial EEPROM\n");
+-		goto done;
+-	} else {
+-		u_int start_addr;
+-
++	if (ahd->seep_config == NULL) {
++		ahd->seep_config = kmalloc(sizeof(*ahd->seep_config), GFP_ATOMIC);
+ 		if (ahd->seep_config == NULL) {
+-			ahd->seep_config = kmalloc(sizeof(*ahd->seep_config), GFP_ATOMIC);
+-			if (ahd->seep_config == NULL) {
+-				printk("aic79xx: Unable to allocate serial "
+-				       "eeprom buffer.  Write failing\n");
+-				goto done;
+-			}
++			printk("aic79xx: Unable to allocate serial "
++			       "eeprom buffer.  Write failing\n");
++			goto done;
+ 		}
+-		printk("aic79xx: Writing Serial EEPROM\n");
+-		start_addr = 32 * (ahd->channel - 'A');
+-		ahd_write_seeprom(ahd, (u_int16_t *)buffer, start_addr,
+-				  sizeof(struct seeprom_config)/2);
+-		ahd_read_seeprom(ahd, (uint16_t *)ahd->seep_config,
+-				 start_addr, sizeof(struct seeprom_config)/2,
+-				 /*ByteStream*/FALSE);
+-		ahd_release_seeprom(ahd);
+-		written = length;
+ 	}
++	printk("aic79xx: Writing Serial EEPROM\n");
++	start_addr = 32 * (ahd->channel - 'A');
++	ahd_write_seeprom(ahd, (u_int16_t *)buffer, start_addr,
++			  sizeof(struct seeprom_config)/2);
++	ahd_read_seeprom(ahd, (uint16_t *)ahd->seep_config,
++			 start_addr, sizeof(struct seeprom_config)/2,
++			 /*ByteStream*/FALSE);
++	written = length;
+ 
+ done:
+ 	ahd_restore_modes(ahd, saved_modes);
 -- 
-2.29.0
+2.34.1
 
