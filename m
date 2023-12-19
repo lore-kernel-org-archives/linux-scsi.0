@@ -1,52 +1,131 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C5AC18640;
-	Tue, 19 Dec 2023 12:16:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 01BCC68BFE; Tue, 19 Dec 2023 13:16:49 +0100 (CET)
-Date: Tue, 19 Dec 2023 13:16:49 +0100
-From: "hch@lst.de" <hch@lst.de>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Ed Tsai =?utf-8?B?KOiUoeWul+i7kik=?= <Ed.Tsai@mediatek.com>,
-	"Naohiro.Aota@wdc.com" <Naohiro.Aota@wdc.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
-	"hch@lst.de" <hch@lst.de>,
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-	"axboe@kernel.dk" <axboe@kernel.dk>,
-	Chun-Hung Wu =?utf-8?B?KOW3q+mnv+Wujyk=?= <Chun-hung.Wu@mediatek.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"pbonzini@redhat.com" <pbonzini@redhat.com>,
-	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-	"linux-f2fs-devel@lists.sourceforge.net" <linux-f2fs-devel@lists.sourceforge.net>,
-	"stefanha@redhat.com" <stefanha@redhat.com>
-Subject: Re: [PATCH 3/5] block: remove support for the host aware zone model
-Message-ID: <20231219121649.GA21736@lst.de>
-References: <20231217165359.604246-1-hch@lst.de> <20231217165359.604246-4-hch@lst.de> <b4d33dc359495c6227a3f20285566eed27718a14.camel@mediatek.com> <190f58f7-2ed6-46f8-af59-5e167a0bddeb@kernel.org> <f19c41b9ea990e6da734b6c81caeebb73fb60b29.camel@mediatek.com> <do3ekgymdpa4skyz5p3dp6qcqq7zuty73qrpmftszmffunnxpm@fyswyalaxzfq> <dbc4a5b4296effd88ba0ef939aa324df0969545c.camel@mediatek.com> <0a329050-0010-47cb-8c7b-a2f0863a21e8@kernel.org> <20231219103825.GB14379@lst.de>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C71FA18623;
+	Tue, 19 Dec 2023 12:38:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="A5iGsgYA"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 3BJ794Gs022908;
+	Tue, 19 Dec 2023 12:37:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:mime-version:content-type; s=
+	qcppdkim1; bh=NawkK+6zy7f2PHuiiEWPPizPr1GY7iL4+ANOhbIBr24=; b=A5
+	iGsgYAB9IulXPv8qIjiNFJjEAnPAzXSadoBF0mcDcLqxHpe1XqlrSvPSOhG9LM8P
+	fWJR8vzUEavJYLzI7EWaa0okX4vyyHrrovChdZ+TMUxez5cmgBKMfslVSE8BCMEg
+	Cg7GqxJ+4MQsEKBC1Cje5eZO6UZny5JKr/C6DVUCCdg6y1pgKLXe9Piud2mzpjx8
+	Hy1RjYYs+6ZTHHKSq+iEO4W/nmuOdyuR4WOhYhesJnJyD493fqt/3nt5uCOUKk2X
+	f5XxpqXETEPzq1oChEtK9XnXejePl1O3v6JhJGaIIES0jUmeP+kXm0eb6n4047Yr
+	A5JYT2F6fNUgGRNFRYzg==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3v34bj95c5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 19 Dec 2023 12:37:46 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3BJCbjAg021044
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 19 Dec 2023 12:37:45 GMT
+Received: from hu-mnaresh-hyd.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.40; Tue, 19 Dec 2023 04:37:40 -0800
+From: Maramaina Naresh <quic_mnaresh@quicinc.com>
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        "Matthias
+ Brugger" <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>
+CC: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Stanley Jhu <chu.stanley@gmail.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>, <quic_cang@quicinc.com>,
+        <quic_nguyenb@quicinc.com>
+Subject: [PATCH V6 0/2] Add CPU latency QoS support for ufs driver
+Date: Tue, 19 Dec 2023 18:07:04 +0530
+Message-ID: <20231219123706.6463-1-quic_mnaresh@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231219103825.GB14379@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: dLMfhtIfVGhVU1qbDhObTZkch_cbmNJC
+X-Proofpoint-ORIG-GUID: dLMfhtIfVGhVU1qbDhObTZkch_cbmNJC
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-09_01,2023-12-07_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 malwarescore=0
+ mlxlogscore=716 impostorscore=0 priorityscore=1501 clxscore=1015
+ spamscore=0 phishscore=0 suspectscore=0 mlxscore=0 lowpriorityscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2311290000 definitions=main-2312190094
 
-On Tue, Dec 19, 2023 at 11:38:25AM +0100, hch@lst.de wrote:
-> > > It's very minor, so is okay to ignore my preference.
-> > 
-> > Send a patch on top of Christoph's series if you want to clean this up.
-> 
-> I'll need to respin anyway, so I'll look into incorporating the
-> suggestion.
+Add CPU latency QoS support for ufs driver. This improves random io
+performance by 15% for ufs.
 
-I did look into it and the iterate callbacks confuse the heck out of me.
-So I'm not going to touch them in non-trivial ways here and will leave
-it for follow on cleanups as needed.
+tiotest benchmark tool io performance results on sm8550 platform:
+
+1. Without PM QoS support
+	Type (Speed in)    | Average of 18 iterations
+	Random Read(IPOS)  | 37101.3
+	Random Write(IPOS) | 41065.13
+
+2. With PM QoS support
+	Type (Speed in)    | Average of 18 iterations
+	Random Read(IPOS)  | 42943.4
+	Random Write(IPOS) | 46784.9
+(Improvement with PM QoS = ~15%).
+
+This patch is based on below patch by Stanley Chu [1]. 
+Moving the PM QoS code to ufshcd.c and making it generic.
+
+[1] https://lore.kernel.org/r/20220623035052.18802-8-stanley.chu@mediatek.com
+
+Changes from v5:
+- Addressed bvanassche comment to use kstrtobool instead kstrtou32
+- Addressed bvanassche comment to add sys attribute into an existing group
+
+Changes from v4:
+- Addressed angelogioacchino's comment to update commit text
+- Addressed angelogioacchino's comment to code alignment
+
+Changes from v3:
+- Removed UFSHCD_CAP_PM_QOS capability flag from patch#2
+
+Changes from v2:
+- Addressed bvanassche and mani comments
+- Provided sysfs interface to enable/disable PM QoS feature
+
+Changes from v1:
+- Addressed bvanassche comments to have the code in core ufshcd
+- Design is changed from per-device PM QoS to CPU latency QoS based support
+- Reverted existing PM QoS feature from MEDIATEK UFS driver
+- Added PM QoS capability for both QCOM and MEDIATEK SoCs
+
+Maramaina Naresh (2):
+  ufs: core: Add CPU latency QoS support for ufs driver
+  ufs: ufs-mediatek: Migrate to UFSHCD generic CPU latency PM QoS
+    support
+
+ drivers/ufs/core/ufs-sysfs.c    | 49 ++++++++++++++++++++++++++++++++
+ drivers/ufs/core/ufshcd.c       | 50 +++++++++++++++++++++++++++++++++
+ drivers/ufs/host/ufs-mediatek.c | 17 -----------
+ drivers/ufs/host/ufs-mediatek.h |  3 --
+ include/ufs/ufshcd.h            |  6 ++++
+ 5 files changed, 105 insertions(+), 20 deletions(-)
+
+-- 
+2.17.1
+
