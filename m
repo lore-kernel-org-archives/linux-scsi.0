@@ -1,189 +1,150 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BEE3125A8;
-	Tue, 19 Dec 2023 08:12:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1F1F134B4
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Dec 2023 08:28:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ttJ037Tu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74951C433C7;
-	Tue, 19 Dec 2023 08:12:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702973565;
-	bh=U+ZkdTcXjXKG5X1r3LNQSaeJXFjIgFWiM3F9bcVebOk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ttJ037TujCI0HIp63zwRjkVY8HhZNnpxq1+lUfykle8H3F3xExXvUURAumQu/RDLq
-	 FgkPzT9OSV0ajVnmxU7/8a1j0L7G68hVpnyEexW0cWzW4A1lE8g5PZthfSqyK5nhIo
-	 6jHEpCaAkl7xku33ttbZTZIqMx/suFdVZApNXCCuCxTKO/E1EvEIf0Dw5npyU9m6NA
-	 u7ADjgeag9TWY81V1O4RAuRnj1jEYnEnjLPmdqJmpHBqLPVrdiONH0U/aTjxm6TY0u
-	 iKxQnlGZ6oBIlEu4dqQGCauvJMF1JllG2d+UsYuHSwkp2Yv5y+UyBhdeOS5wyMS/97
-	 9kE/SUUW3UjSQ==
-Message-ID: <0a329050-0010-47cb-8c7b-a2f0863a21e8@kernel.org>
-Date: Tue, 19 Dec 2023 17:12:41 +0900
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="IYjGGDB+"
+Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20231219082758epoutp04b413b0db2bfc36ee10ff0944b453720a~iLkQNK4Ne1455614556epoutp04C
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Dec 2023 08:27:58 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20231219082758epoutp04b413b0db2bfc36ee10ff0944b453720a~iLkQNK4Ne1455614556epoutp04C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1702974478;
+	bh=Lkyebhrd6+24n9nfaxXooVLJcoZKM0pcEuToIgbdeGU=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=IYjGGDB+BTxamjrqtwqJys6c6kj6jeWP9j5OOMzvUmkk5jBI3O6ygkij5IUPuJHqG
+	 wtu8kzLpT2D+IneqKnc9OLETdLdpeaK+aJwclWZ7LHzLU7EXcuU8Bz66lfgY6NOcjo
+	 hmlySkZNgpi4H9sy1kD3wiAk15CmSkF4OSA8F5xw=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+	epcas1p1.samsung.com (KnoxPortal) with ESMTP id
+	20231219082758epcas1p1a948778fb0e77d048cd05cbbb14220d7~iLkPrWCwG2492424924epcas1p1F;
+	Tue, 19 Dec 2023 08:27:58 +0000 (GMT)
+Received: from epsmgec1p1-new.samsung.com (unknown [182.195.38.242]) by
+	epsnrtp2.localdomain (Postfix) with ESMTP id 4SvVF951JHz4x9Pt; Tue, 19 Dec
+	2023 08:27:57 +0000 (GMT)
+Received: from epcas1p1.samsung.com ( [182.195.41.45]) by
+	epsmgec1p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	7B.09.19104.D0451856; Tue, 19 Dec 2023 17:27:57 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPA id
+	20231219082757epcas1p33bda4e0723d3d57552132054d3e5a3fe~iLkOmFrH10837108371epcas1p3v;
+	Tue, 19 Dec 2023 08:27:57 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20231219082757epsmtrp26cd44266f4c6ffc8aa51380f26380ad3~iLkOk9DcT1117211172epsmtrp2S;
+	Tue, 19 Dec 2023 08:27:57 +0000 (GMT)
+X-AuditID: b6c32a4c-80dff70000004aa0-ec-6581540deb96
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	C8.20.18939.C0451856; Tue, 19 Dec 2023 17:27:57 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.253.100.232]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20231219082756epsmtip2a68e637137f7a0073d3d41aada0ef488~iLkOU2T8k1132911329epsmtip2s;
+	Tue, 19 Dec 2023 08:27:56 +0000 (GMT)
+From: Chanwoo Lee <cw9316.lee@samsung.com>
+To: mani@kernel.org, agross@kernel.org, andersson@kernel.org,
+	konrad.dybcio@linaro.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: grant.jung@samsung.com, jt77.jang@samsung.com, dh0421.hwang@samsung.com,
+	sh043.lee@samsung.com, ChanWoo Lee <cw9316.lee@samsung.com>
+Subject: [PATCH] scsi: ufs: qcom: Remove unnecessary goto statement from
+ ufs_qcom_config_esi function
+Date: Tue, 19 Dec 2023 17:27:40 +0900
+Message-Id: <20231219082740.27644-1-cw9316.lee@samsung.com>
+X-Mailer: git-send-email 2.29.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/5] block: remove support for the host aware zone model
-To: =?UTF-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?= <Ed.Tsai@mediatek.com>,
- "Naohiro.Aota@wdc.com" <Naohiro.Aota@wdc.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
- "hch@lst.de" <hch@lst.de>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "axboe@kernel.dk" <axboe@kernel.dk>,
- =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <Chun-hung.Wu@mediatek.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "pbonzini@redhat.com" <pbonzini@redhat.com>,
- "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
- "linux-f2fs-devel@lists.sourceforge.net"
- <linux-f2fs-devel@lists.sourceforge.net>,
- "stefanha@redhat.com" <stefanha@redhat.com>
-References: <20231217165359.604246-1-hch@lst.de>
- <20231217165359.604246-4-hch@lst.de>
- <b4d33dc359495c6227a3f20285566eed27718a14.camel@mediatek.com>
- <190f58f7-2ed6-46f8-af59-5e167a0bddeb@kernel.org>
- <f19c41b9ea990e6da734b6c81caeebb73fb60b29.camel@mediatek.com>
- <do3ekgymdpa4skyz5p3dp6qcqq7zuty73qrpmftszmffunnxpm@fyswyalaxzfq>
- <dbc4a5b4296effd88ba0ef939aa324df0969545c.camel@mediatek.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <dbc4a5b4296effd88ba0ef939aa324df0969545c.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPJsWRmVeSWpSXmKPExsWy7bCmri5vSGOqwZUnyhbnHv9msdjWYWMx
+	41Qbq8W+ayfZLX79Xc9usejGNiaLHc/PsFt0TN7OYjFx/1l2i8u75rBZdF/fwWZx4MMqRovl
+	x/8xWTT92cfiwOexaVUnm8eda3vYPCYsOsDo8fHpLRaPvi2rGD0+b5ILYIvKtslITUxJLVJI
+	zUvOT8nMS7dV8g6Od443NTMw1DW0tDBXUshLzE21VXLxCdB1y8wBulZJoSwxpxQoFJBYXKyk
+	b2dTlF9akqqQkV9cYquUWpCSU2BWoFecmFtcmpeul5daYmVoYGBkClSYkJ2x/PQixoJ3HBV7
+	5j9jb2BsZ+9i5OSQEDCRuLRpJVsXIxeHkMAeRonH11qZQRJCAp8YJb7eNIdIANl71r0EquIA
+	63jXoQYR38kocer5V6juL4wSax72sYAUsQloSdw+5g0SFxF4yiixa8ckFhCHWaCLUeLXwS4W
+	kBXCAukSx1ueMoM0sAioSnxcKQ0S5hWwlthyajcrxHnyEn/u9zBDxAUlTs58AtbKDBRv3jqb
+	GWSmhEAnh8SVJ+9YIBpcJJY+WwNlC0u8Or4F6k8pic/v9rJBNDQzSix8cxyqewKjxJePt9kg
+	quwlmlubwf5kFtCUWL9LH2Ibn8S7rz2sEO/zSnS0CUFUq0jM6TrHBjP/443HUEd7SCye/oIJ
+	EoyxEqf2b2OZwCg3C8kPs5D8MAth2QJG5lWMUqkFxbnpqcmGBYa6eanl8NhMzs/dxAhOqVo+
+	Oxi/r/+rd4iRiYPxEKMEB7OSCK/LovpUId6UxMqq1KL8+KLSnNTiQ4ymwICdyCwlmpwPTOp5
+	JfGGJpYGJmZGJhbGlsZmSuK8Z66UpQoJpCeWpGanphakFsH0MXFwSjUwJVmc23IxlGfZ/mkP
+	/jRuMFIvN/E8VJFi671Vs2rmHd13HTkGtSfnPiuM0i42L1nGUjL3xOqzQsuOpzzoj/tV+sqw
+	WFrGX+ZT+V1J583ZkzwT96tO2af0oE5q83eGT6WrsupDnnVZun/kjg4IurTQ58b3xqatTt++
+	MlcUvnjE8kJfYs4Wla7MLzvXTts4OeWu85+gFl7bUmY3RslwvWN+Sy9USp6ZcOGLgMKmyfEZ
+	OUv0L3f3OqdueOyV+e9TWonsPaUp8zpLXq4+xjF9wpWiYLk4uRUXn0n6MT3M3Leh+lxN4P5H
+	8atTRV4IeZkbMWWuOnbwZ7Dd0bmJ9l/UX6/5e5tlnubCUB9HMT0FIzU/JZbijERDLeai4kQA
+	wriaVTIEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrALMWRmVeSWpSXmKPExsWy7bCSvC5vSGOqwZtVzBbnHv9msdjWYWMx
+	41Qbq8W+ayfZLX79Xc9usejGNiaLHc/PsFt0TN7OYjFx/1l2i8u75rBZdF/fwWZx4MMqRovl
+	x/8xWTT92cfiwOexaVUnm8eda3vYPCYsOsDo8fHpLRaPvi2rGD0+b5ILYIvisklJzcksSy3S
+	t0vgylh+ehFjwTuOij3zn7E3MLazdzFycEgImEi861DrYuTiEBLYzijR/mIfUxcjJ1BcSmL3
+	/vNsEDXCEocPF0PUfGKUOHtzNxNInE1AS+L2MW+QuIjAe0aJ/+fXMoM4zAITGCUWX3nLDDJI
+	WCBV4vqdGYwgDSwCqhIfV0qDhHkFrCW2nNrNCrFLXuLP/R5miLigxMmZT1hAbGagePPW2cwT
+	GPlmIUnNQpJawMi0ilE0taA4Nz03ucBQrzgxt7g0L10vOT93EyM40LWCdjAuW/9X7xAjEwfj
+	IUYJDmYlEV6XRfWpQrwpiZVVqUX58UWlOanFhxilOViUxHmVczpThATSE0tSs1NTC1KLYLJM
+	HJxSDUwavWcv5YkExjT8yy/6HyqRb3bAL8KuVPrYFY3C8oR/hxLLnu8/cvql+JyZx1ROffuT
+	PkMucOGscp+CWVH2p97w3PFSv+u3f+21/farb/HOlFLbdIinYIbG2y7/qinb7Iv8tFeZKV1/
+	5sl15gzjWsU918835zUqrHC35/kWx8tULj5jk8obAY654e9KtrUoGTJ/Dl3xz+zA03uZ/fNP
+	V1fuce1dV7DhcbHslD/cmWnzhf9dfyyz5LzYr2N1nFOMVopv8RF+mrXbUd4lx/F1wRsn2W88
+	Jy0nqCTtaYySWfs7IyNMPv7X9FZNPjn513ffqkT7blcP2zj/+sPwMsPYmFlzL30/buLNahJ1
+	ar/J1cNKLMUZiYZazEXFiQBxZjCH4wIAAA==
+X-CMS-MailID: 20231219082757epcas1p33bda4e0723d3d57552132054d3e5a3fe
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20231219082757epcas1p33bda4e0723d3d57552132054d3e5a3fe
+References: <CGME20231219082757epcas1p33bda4e0723d3d57552132054d3e5a3fe@epcas1p3.samsung.com>
 
-On 12/19/23 17:08, Ed Tsai (蔡宗軒) wrote:
-> On Tue, 2023-12-19 at 07:16 +0000, Naohiro Aota wrote:
->>  	 
->> External email : Please do not click links or open attachments until
->> you have verified the sender or the content.
->>  On Mon, Dec 18, 2023 at 08:21:22AM +0000, Ed Tsai (蔡宗軒) wrote:
->>> On Mon, 2023-12-18 at 15:53 +0900, Damien Le Moal wrote:
->>>>  On 2023/12/18 15:15, Ed Tsai (蔡宗軒) wrote:
->>>>> Hi Christoph,
->>>>>
->>>>> some minor suggestions:
->>>>>
->>>>> On Sun, 2023-12-17 at 17:53 +0100, Christoph Hellwig wrote:
->>>>>>
->>>>>> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
->>>>>> index 198d38b53322c1..260b5b8f2b0d7e 100644
->>>>>> --- a/drivers/md/dm-table.c
->>>>>> +++ b/drivers/md/dm-table.c
->>>>>> @@ -1579,21 +1579,18 @@ bool
->> dm_table_has_no_data_devices(struct
->>>>>> dm_table *t)
->>>>>>  return true;
->>>>>>  }
->>>>>>  
->>>>>> -static int device_not_zoned_model(struct dm_target *ti,
->> struct
->>>>>> dm_dev *dev,
->>>>>> -  sector_t start, sector_t len, void
->>>>>> *data)
->>>>>> +static int device_not_zoned(struct dm_target *ti, struct
->> dm_dev
->>>>>> *dev,
->>>>>> +    sector_t start, sector_t len, void *data)
->>>>>>  {
->>>>>> -struct request_queue *q = bdev_get_queue(dev->bdev);
->>>>>> -enum blk_zoned_model *zoned_model = data;
->>>>>> +bool *zoned = data;
->>>>>>  
->>>>>> -return blk_queue_zoned_model(q) != *zoned_model;
->>>>>> +return bdev_is_zoned(dev->bdev) != *zoned;
->>>>>>  }
->>>>>>  
->>>>>>  static int device_is_zoned_model(struct dm_target *ti, struct
->>>> dm_dev
->>>>>> *dev,
->>>>>>   sector_t start, sector_t len, void
->>>>>> *data)
->>>>>
->>>>> Seems like the word "model" should also be remove here.
->>>>>
->>>>>>  {
->>>>>> -struct request_queue *q = bdev_get_queue(dev->bdev);
->>>>>> -
->>>>>> -return blk_queue_zoned_model(q) != BLK_ZONED_NONE;
->>>>>> +return bdev_is_zoned(dev->bdev);
->>>>>>  }
->>>>>>  
->>>>>>  /*
->>>>>> @@ -1603,8 +1600,7 @@ static int device_is_zoned_model(struct
->>>>>> dm_target *ti, struct dm_dev *dev,
->>>>>>   * has the DM_TARGET_MIXED_ZONED_MODEL feature set, the
->> devices
->>>> can
->>>>>> have any
->>>>>>   * zoned model with all zoned devices having the same zone
->> size.
->>>>>>   */
->>>>>> -static bool dm_table_supports_zoned_model(struct dm_table *t,
->>>>>> -  enum blk_zoned_model
->>>>>> zoned_model)
->>>>>> +static bool dm_table_supports_zoned(struct dm_table *t, bool
->>>> zoned)
->>>>>>  {
->>>>>>  for (unsigned int i = 0; i < t->num_targets; i++) {
->>>>>>  struct dm_target *ti = dm_table_get_target(t, i);
->>>>>> @@ -1623,11 +1619,11 @@ static bool
->>>>>> dm_table_supports_zoned_model(struct dm_table *t,
->>>>>>  
->>>>>>  if (dm_target_supports_zoned_hm(ti->type)) {
->>>>>>  if (!ti->type->iterate_devices ||
->>>>>> -    ti->type->iterate_devices(ti,
->>>>>> device_not_zoned_model,
->>>>>> -      &zoned_model))
->>>>>> +    ti->type->iterate_devices(ti,
->>>>>> device_not_zoned,
->>>>>> +      &zoned))
->>>>>>  return false;
->>>>>>  } else if (!dm_target_supports_mixed_zoned_model(ti-
->>>>>>> type)) {
->>>>>> -if (zoned_model == BLK_ZONED_HM)
->>>>>> +if (zoned)
->>>>>>  return false;
->>>>>>  }
->>>>>>  }
->>>>>
->>>>> The parameter "bool zoned" is redundant. It should be removed
->> from
->>>> the
->>>>> above 3 functions
->>>
->>> The two func, is zoned and not zoned, are essentially the same.
->> They
->>> can be simplified into one function.
->>
->> Both functions are used for iterate_devices's callback in
->> dm_table_supports_zoned_model(). As shown in raid_iterate_devices(),
->> iterate_devices() returns 0 if the callback func calls on all the
->> devices
->> returns 0, or returns a non-zero result early otherwise. So, the
->> iterate_devices() call returns "true" if any one of the underlying
->> devices
->> is (zoned|not zoned).
->>
->> Since we cannot create lambda as in other fancy languages, we need
->> two
->> functions...
-> 
-> Not really, there is a "void *data" can be used.
-> 
-> The device_is_zoned_model() is just the same as the device_not_zoned()
-> with (bool *)data = false.
-> 
-> It's very minor, so is okay to ignore my preference.
+From: ChanWoo Lee <cw9316.lee@samsung.com>
 
-Send a patch on top of Christoph's series if you want to clean this up.
+There is only one place where goto is used,
+and it is unnecessary to check the ret value through 'goto out'
+because the ret value is already true.
 
+Therefore, remove the goto statement and
+integrate the '!ret' condition into the existing code.
+
+Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 17e24270477d..8cf803806326 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1929,7 +1929,7 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
+ 					     ufs_qcom_write_msi_msg);
+ 	if (ret) {
+ 		dev_err(hba->dev, "Failed to request Platform MSI %d\n", ret);
+-		goto out;
++		return ret;
+ 	}
+ 
+ 	msi_lock_descs(hba->dev);
+@@ -1964,11 +1964,8 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
+ 				      REG_UFS_CFG3);
+ 		}
+ 		ufshcd_mcq_enable_esi(hba);
+-	}
+-
+-out:
+-	if (!ret)
+ 		host->esi_enabled = true;
++	}
+ 
+ 	return ret;
+ }
 -- 
-Damien Le Moal
-Western Digital Research
+2.29.0
 
