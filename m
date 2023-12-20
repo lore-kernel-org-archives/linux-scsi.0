@@ -1,59 +1,93 @@
-Received: from mail-m49205.qiye.163.com (mail-m49205.qiye.163.com [45.254.49.205])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 988103D989;
-	Wed, 20 Dec 2023 14:45:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sangfor.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sangfor.com.cn
-Received: from [0.0.0.0] (unknown [IPV6:240e:3b7:3270:35d0:2d5d:a87c:93d7:296a])
-	by mail-m12773.qiye.163.com (Hmail) with ESMTPA id 9186D2C063A;
-	Wed, 20 Dec 2023 16:47:09 +0800 (CST)
-Message-ID: <8a0d7c64-128b-277a-8128-5b413f4fc341@sangfor.com.cn>
-Date: Wed, 20 Dec 2023 16:47:09 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C1B23D965
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Dec 2023 14:48:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C0H6pHmS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15DCCC433C7;
+	Wed, 20 Dec 2023 14:48:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1703083708;
+	bh=I/6jP1vaGvijlwf4V6lFrk7+x1qlA1aIzuH5r372J/g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=C0H6pHmSVUuK8ZM22pzH3IOiL6shkSG7ET7Cr02H+6aS/Uj9VYLnMpTWoaIrrhR83
+	 5VjzO4l3KOGqfxGutOeZ7a+fUs/rorfQe1PBYOJx9Qt4Iax5mfuXbjd9EU/iWk2ubp
+	 8bUJ1W5HPT92+1uw3Gvsxwv7IMTAg81MRIVptE/rDzYkvlUA1IpPgW9rzUQoBI+2eb
+	 ShptuuKAyQ06vgeD1ac/EVIQgONgR0In5DBbGBXJ4XPEow3igmB3BFYR/QIjGrjr/j
+	 z38UxnYyA46V4JR8WHCQBcWZHRO8kCZR7HJUSDbRXK7kDETl74mJm6hCZ6ofugurzy
+	 KKDcvSukt7g3g==
+Date: Wed, 20 Dec 2023 20:18:13 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, Daniel Mentz <danielmentz@google.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Stanley Jhu <chu.stanley@gmail.com>,
+	Avri Altman <avri.altman@wdc.com>, Can Guo <quic_cang@quicinc.com>,
+	Asutosh Das <quic_asutoshd@quicinc.com>,
+	Bean Huo <beanhuo@micron.com>,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+	Arthur Simchaev <Arthur.Simchaev@wdc.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: Remove the ufshcd_hba_exit() call from
+ ufshcd_async_scan()
+Message-ID: <20231220144813.GH3544@thinkpad>
+References: <20231218225229.2542156-1-bvanassche@acm.org>
+ <20231218225229.2542156-3-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH 0/2] scsi: ses: Fix out-of-bounds accesses
-Content-Language: en-US
-To: jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: zhuwei@sangfor.com.cn, thenzl@redhat.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20231130142835.18041-1-dinghui@sangfor.com.cn>
-From: Ding Hui <dinghui@sangfor.com.cn>
-In-Reply-To: <20231130142835.18041-1-dinghui@sangfor.com.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlDGR5DVktNHU9DS08eGEkeQ1UTARMWGhIXJBQOD1
-	lXWRgSC1lBWUlPSx5BSBlMQUhJTEtBSE4fS0FJH04fQRpDTBhBQkgfTEFJQk0aWVdZFhoPEhUdFF
-	lBWU9LSFVKTU9JTklVSktLVUpCWQY+
-X-HM-Tid: 0a8c86684666b249kuuu9186d2c063a
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MQg6Kgw*AzwxNyNJCx1RTkoI
-	CRVPChdVSlVKTEtIS01JS0hLTkhKVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
-	QVlJT0seQUgZTEFISUxLQUhOH0tBSR9OH0EaQ0wYQUJIH0xBSUJNGllXWQgBWUFKTEpKNwY+
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231218225229.2542156-3-bvanassche@acm.org>
 
-On 2023/11/30 22:28, Ding Hui wrote:
-> This series includes a few OOB fixes for ses driver
-> 
-> Ding Hui (1):
->    scsi: ses: increase default init_alloc_size
-> 
-> Zhu Wei (1):
->    scsi: ses: Fix slab-out-of-bounds in ses_get_power_status()
-> 
->   drivers/scsi/ses.c | 55 +++++++++++++++++++++++++++++++++++++++-------
->   1 file changed, 47 insertions(+), 8 deletions(-)
+On Mon, Dec 18, 2023 at 02:52:15PM -0800, Bart Van Assche wrote:
+> Calling ufshcd_hba_exit() from a function that is called asynchronously
+> from ufshcd_init() is wrong because this triggers multiple race
+> conditions. Instead of calling ufshcd_hba_exit(), log an error message.
 > 
 
-Friendly ping.
+This also means that during failure, resources will not be powered OFF. IMO, a
+justification is needed why it is OK to left them powered ON.
+
+> Reported-by: Daniel Mentz <danielmentz@google.com>
+> Fixes: 1d337ec2f35e ("ufs: improve init sequence")
+
+No need to backport this patch?
+
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
+- Mani
+
+> ---
+>  drivers/ufs/core/ufshcd.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 0ad8bde39cd1..7c59d7a02243 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -8982,12 +8982,9 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+>  
+>  out:
+>  	pm_runtime_put_sync(hba->dev);
+> -	/*
+> -	 * If we failed to initialize the device or the device is not
+> -	 * present, turn off the power/clocks etc.
+> -	 */
+> +
+>  	if (ret)
+> -		ufshcd_hba_exit(hba);
+> +		dev_err(hba->dev, "%s failed: %d\n", __func__, ret);
+>  }
+>  
+>  static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
 
 -- 
-Thanks,
-- Ding Hui
-
+மணிவண்ணன் சதாசிவம்
