@@ -1,101 +1,81 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 405E68BF6
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Dec 2023 03:18:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="G1qQ7DzF"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-6cdf3e99621so882535b3a.1
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Dec 2023 19:18:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1703042291; x=1703647091; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=kF+V1Jg1BXc6LruEx2QSeT3aVZaOhuhdq7yp1ywFjS8=;
-        b=G1qQ7DzFK/ztH2sYXxjLo6olokvWbiUFdif+c3QnQc8WibAzRjm85/2S0sSl3sT3RK
-         +aNIfv2ElHNkdkz2qawjtwwpXTf1xy+aTrl2XhVdulELGW3HHVqhNClMR3hvB/qJafg4
-         MQ1kuoG9iqtA9gJpp0j4N8Obqa6TybDo8AIktrj7pjufShPm3EL2y/3EmCDjX65aYAXo
-         /QYMEWyFHX6v0Lvv78ZKR16Vkq788y8rRo0znIby7soAIcEBmKKgkAEe++QepU2fd++7
-         AaAmveI5cFyQoHqmempzrcXi6FdKZ4S7znhZREIx3XqaUOKm35RQoMzXf1rNdfBiJ/a/
-         qlZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703042291; x=1703647091;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=kF+V1Jg1BXc6LruEx2QSeT3aVZaOhuhdq7yp1ywFjS8=;
-        b=k6G+RBEMwF4xkbraApaky7FOyBdLtJ0H/7JEeq3dUhNwz2Eu3aIxG05SSIEGIzYwVY
-         JINvQiVDBcLhelafuQykWhB1E6GnuOBO/adRpSGiBarw+sRmVCi7RxDg3nKN5L1WP4KA
-         uaHAkmUBMvLXo9QQ1Gz+V7eNEo0XeZIi8Oc2ghMyT6hfMAXgzexhL3ii/1SZ4RgF0+jy
-         jqjTjM7BBz0QrBEtnegtUBwt3WJ9+KT335uPmquIvXk9alXbqJdjTsR/QW3OEy8Kgo+d
-         bK/odb02zzHzsLHynJ0IH9Ov3PWnJk1/wcY7EI+I7bPR4ekqTwqcyNO168ZRB8TAptmz
-         RTNA==
-X-Gm-Message-State: AOJu0YyQCJSVrKpxFgCZUUU0FWieemWLF7x8rDcLFB/r1NVXFkf4WUAW
-	BPYyI8jYJVZq3ehR5zEXhoibMQ==
-X-Google-Smtp-Source: AGHT+IGJy8KYnZyMHC+4fzSHET6hgmed+3GNH6+zA4QShlWQzZGtRyh4P66B+nvfNY4nmXMHOASd9w==
-X-Received: by 2002:a05:6a20:3c8d:b0:18b:2020:8cd1 with SMTP id b13-20020a056a203c8d00b0018b20208cd1mr42952817pzj.3.1703042291622;
-        Tue, 19 Dec 2023 19:18:11 -0800 (PST)
-Received: from [127.0.0.1] ([198.8.77.194])
-        by smtp.gmail.com with ESMTPSA id d6-20020aa78e46000000b006d088356541sm16958284pfr.104.2023.12.19.19.18.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Dec 2023 19:18:11 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, 
- Stefan Hajnoczi <stefanha@redhat.com>, Damien Le Moal <dlemoal@kernel.org>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, dm-devel@lists.linux.dev, 
- linux-kernel@vger.kernel.org, virtualization@lists.linux.dev, 
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, 
- linux-btrfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net
-In-Reply-To: <20231217165359.604246-1-hch@lst.de>
-References: <20231217165359.604246-1-hch@lst.de>
-Subject: Re: remove support for the host aware zoned model
-Message-Id: <170304229020.683808.16849978519505449769.b4-ty@kernel.dk>
-Date: Tue, 19 Dec 2023 20:18:10 -0700
+Received: from zju.edu.cn (spam.zju.edu.cn [61.164.42.155])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 91504156E0;
+	Wed, 20 Dec 2023 03:45:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from localhost.localdomain (unknown [10.190.71.26])
+	by mail-app3 (Coremail) with SMTP id cC_KCgD3_o5CY4JlrmYuAQ--.11768S4;
+	Wed, 20 Dec 2023 11:45:14 +0800 (CST)
+From: Dinghao Liu <dinghao.liu@zju.edu.cn>
+To: dinghao.liu@zju.edu.cn
+Cc: Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: qla2xxx: fix a double free in qla2x00_probe_one
+Date: Wed, 20 Dec 2023 11:44:48 +0800
+Message-Id: <20231220034448.13249-1-dinghao.liu@zju.edu.cn>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID:cC_KCgD3_o5CY4JlrmYuAQ--.11768S4
+X-Coremail-Antispam: 1UD129KBjvJXoWrZryrJrWruFWrZw1ftryUtrb_yoW8JF4rpa
+	97tryYy3yrXayUCrWjyr47Zr9YyayIkrWUKayxWa43ua1Yqr9FyrW0vFW7Xas7C3yDJ3Wf
+	tFn5Gry7Jay7JF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUk21xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
+	w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
+	IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJr0_GcWl84ACjcxK6I8E
+	87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
+	8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
+	Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
+	xGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vIr41l42xK82IY6x8ErcxF
+	aVAv8VW8uw4UJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr
+	4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxG
+	rwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8Jw
+	CI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2
+	z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgYNBmV+xhdIjwAPsN
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.13-dev-7edf1
 
+When qla2x00_mem_alloc() fails, it has cleaned up resources
+in its error paths. However, qla2x00_probe_one() calls
+qla2x00_mem_free() on failure of qla2x00_mem_alloc() and
+tries to free the resources again, which may casue a
+double-free.
 
-On Sun, 17 Dec 2023 17:53:54 +0100, Christoph Hellwig wrote:
-> hen zones were first added the SCSI and ATA specs, two different
-> models were supported (in addition to the drive managed one that
-> is invisible to the host):
-> 
->  - host managed where non-conventional zones there is strict requirement
->    to write at the write pointer, or else an error is returned
->  - host aware where a write point is maintained if writes always happen
->    at it, otherwise it is left in an under-defined state and the
->    sequential write preferred zones behave like conventional zones
->    (probably very badly performing ones, though)
-> 
-> [...]
+Fixes: d64d6c5671db ("scsi: qla2xxx: Fix NULL pointer crash due to probe failure")
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+---
+ drivers/scsi/qla2xxx/qla_os.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Applied, thanks!
-
-[1/5] virtio_blk: cleanup zoned device probing
-      commit: 77360cadaae562f437b3e98dc3af748d8d75bdc2
-[2/5] virtio_blk: remove the broken zone revalidation support
-      commit: a971ed8002110f211899279cd7295756d263b771
-[3/5] block: remove support for the host aware zone model
-      commit: 7437bb73f087e5f216f9c6603f5149d354e315af
-[4/5] block: simplify disk_set_zoned
-      commit: d73e93b4dfab10c80688b061c30048df05585c7e
-[5/5] sd: only call disk_clear_zoned when needed
-      commit: 5cc99b89785c55430a5674b32ad0d9e57a8ec251
-
-Best regards,
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 03348f605c2e..0d8d6c814723 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3249,7 +3249,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ql_log_pci(ql_log_fatal, pdev, 0x0031,
+ 		    "Failed to allocate memory for adapter, aborting.\n");
+ 
+-		goto probe_hw_failed;
++		goto mem_alloc_failed;
+ 	}
+ 
+ 	req->max_q_depth = MAX_Q_DEPTH;
+@@ -3660,6 +3660,8 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ probe_hw_failed:
+ 	qla2x00_mem_free(ha);
++
++mem_alloc_failed:
+ 	qla2x00_free_req_que(ha, req);
+ 	qla2x00_free_rsp_que(ha, rsp);
+ 	qla2x00_clear_drv_active(ha);
 -- 
-Jens Axboe
-
-
+2.17.1
 
