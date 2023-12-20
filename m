@@ -1,171 +1,96 @@
-Received: from www62.your-server.de (www62.your-server.de [213.133.104.62])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B1BF208C4;
-	Wed, 20 Dec 2023 10:01:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iogearbox.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A3FE20DF3;
+	Wed, 20 Dec 2023 11:34:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b="MoLMUGgP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=iogearbox.net; s=default2302; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:MIME-Version:Date:Message-ID:From:Cc:To:References:Subject:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
-	bh=EUpvZ7ImcN6iRBfQR5QrQA+ZGjPdmy3aiW0Hd3hcrnQ=; b=MoLMUGgP4+KzLa7czzl6ONHYAl
-	0EqEtrZ0BILxZDz94BF+D9YBpP5rnTozkKaFIFBIuUYKU1xIZNU+pAxJpzqEYCv27vgA7swaWERo7
-	BfOZ1gkpo4x8Og2VMsUKVEDuUGtw7SaW+P6LQYY6LopglGIUD5U5BonG/EK/64C1pnE2tboUg4frK
-	RQfiRG4qlnoMpAqhY95ffzvQ4Oc+iEIjj12ezG9e1K2/lGLTQJO0DPj1WdeFk9d3bikVLFZE6nlZk
-	WiznGcVG3CXkV5mT5ZXM58GZymTsxR8/mura55GcV6XQuCIzFlJGEq03UCW5r/VksscUb6bk0txps
-	kgd+K/EA==;
-Received: from sslproxy02.your-server.de ([78.47.166.47])
-	by www62.your-server.de with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <daniel@iogearbox.net>)
-	id 1rFtOB-000Bvm-31; Wed, 20 Dec 2023 11:01:19 +0100
-Received: from [85.1.206.226] (helo=linux.home)
-	by sslproxy02.your-server.de with esmtpsa (TLSv1.3:TLS_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <daniel@iogearbox.net>)
-	id 1rFtOA-0008Xz-Gj; Wed, 20 Dec 2023 11:01:18 +0100
-Subject: LSF/MM/BPF: 2024: Call for Proposals
-References: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
-To: lsf-pc@lists.linuxfoundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
- linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-nvme@lists.infradead.org, bpf@vger.kernel.org, netdev@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Daniel Borkmann <daniel@iogearbox.net>
-X-Forwarded-Message-Id: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
-Message-ID: <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
-Date: Wed, 20 Dec 2023 11:01:17 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VlREs5F6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD941C433C9;
+	Wed, 20 Dec 2023 11:33:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1703072041;
+	bh=RAXyl4ljakAiP1xrw3EqjOoDMXwJ4PyKKqT6SUzQ5HA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VlREs5F6Zd39xwtfPWVcwlaPWa/UsQGFUgyUrblbh5aicN1h/jnFsLs2G0hrzoL1G
+	 KZcBP9H/2iqypNfcsG9tykx34d3DQMzV/xuSwZOTqKlSfJxJ4zdRkdSlT217odhyQw
+	 NZIHuFYJgQhu8Ir6GhUDbTIhWrwUR6FIzL8Z3vvY2xvSnaCQYDEytHqDQb4X/hEmXK
+	 3Tfu8zgPjlXwAK/Bh54i7XTSDLmVeVoS6Ffrf8W/79nC58Wh9yOWjsT2Eo/cdRyH4C
+	 ZsyrLxYMNi5z5DS53F3PFvWoDemeIk1VnnoVd8bcXpV6YWrwFVVsBWXX4MEa8hVgZW
+	 Gq02I2ewKV5/A==
+Date: Wed, 20 Dec 2023 17:03:44 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Chanwoo Lee <cw9316.lee@samsung.com>
+Cc: agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, grant.jung@samsung.com,
+	jt77.jang@samsung.com, dh0421.hwang@samsung.com,
+	sh043.lee@samsung.com
+Subject: Re: [PATCH] scsi: ufs: qcom: Remove unnecessary goto statement from
+ ufs_qcom_config_esi function
+Message-ID: <20231220113344.GC3544@thinkpad>
+References: <CGME20231219082757epcas1p33bda4e0723d3d57552132054d3e5a3fe@epcas1p3.samsung.com>
+ <20231219082740.27644-1-cw9316.lee@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Authenticated-Sender: daniel@iogearbox.net
-X-Virus-Scanned: Clear (ClamAV 0.103.10/27128/Tue Dec 19 10:36:48 2023)
+In-Reply-To: <20231219082740.27644-1-cw9316.lee@samsung.com>
 
-The annual Linux Storage, Filesystem, Memory Management, and BPF
-(LSF/MM/BPF) Summit for 2024 will be held from May 13 to May 15
-at the Hilton Salt Lake City Center in Salt Lake City, Utah, USA.
+On Tue, Dec 19, 2023 at 05:27:40PM +0900, Chanwoo Lee wrote:
+> From: ChanWoo Lee <cw9316.lee@samsung.com>
+> 
+> There is only one place where goto is used,
+> and it is unnecessary to check the ret value through 'goto out'
+> because the ret value is already true.
+> 
+> Therefore, remove the goto statement and
+> integrate the '!ret' condition into the existing code.
+> 
+> Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
 
-LSF/MM/BPF is an invitation-only technical workshop to map out
-improvements to the Linux storage, filesystem, BPF, and memory
-management subsystems that will make their way into the mainline
-kernel within the coming years.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-LSF/MM/BPF 2024 will be a three day, stand-alone conference with
-four subsystem-specific tracks, cross-track discussions, as well
-as BoF and hacking sessions:
+- Mani
 
-          https://events.linuxfoundation.org/lsfmmbpf/
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 17e24270477d..8cf803806326 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1929,7 +1929,7 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
+>  					     ufs_qcom_write_msi_msg);
+>  	if (ret) {
+>  		dev_err(hba->dev, "Failed to request Platform MSI %d\n", ret);
+> -		goto out;
+> +		return ret;
+>  	}
+>  
+>  	msi_lock_descs(hba->dev);
+> @@ -1964,11 +1964,8 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
+>  				      REG_UFS_CFG3);
+>  		}
+>  		ufshcd_mcq_enable_esi(hba);
+> -	}
+> -
+> -out:
+> -	if (!ret)
+>  		host->esi_enabled = true;
+> +	}
+>  
+>  	return ret;
+>  }
+> -- 
+> 2.29.0
+> 
 
-On behalf of the committee I am issuing a call for agenda proposals
-that are suitable for cross-track discussion as well as technical
-subjects for the breakout sessions.
-
-If advance notice is required for visa applications then please
-point that out in your proposal or request to attend, and submit
-the topic as soon as possible.
-
-We are asking that you please let us know you want to be invited
-by March 1, 2024. We realize that travel is an ever changing target,
-but it helps us to get an idea of possible attendance numbers.
-Clearly things can and will change, so consider the request to
-attend deadline more about planning and less about concrete plans.
-
-1) Fill out the following Google form to request attendance and
-suggest any topics for discussion:
-
-          https://forms.gle/TGCgBDH1x5pXiWFo7
-
-In previous years we have accidentally missed people's attendance
-requests because they either did not Cc lsf-pc@ or we simply missed
-them in the flurry of emails we get. Our community is large and our
-volunteers are busy, filling this out will help us to make sure we
-do not miss anybody.
-
-2) Proposals for agenda topics should ideally still be sent to the
-following lists to allow for discussion among your peers. This will
-help us figure out which topics are important for the agenda:
-
-          lsf-pc@lists.linux-foundation.org
-
-... and Cc the mailing lists that are relevant for the topic in
-question:
-
-          FS:     linux-fsdevel@vger.kernel.org
-          MM:     linux-mm@kvack.org
-          Block:  linux-block@vger.kernel.org
-          ATA:    linux-ide@vger.kernel.org
-          SCSI:   linux-scsi@vger.kernel.org
-          NVMe:   linux-nvme@lists.infradead.org
-          BPF:    bpf@vger.kernel.org
-
-Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier
-to track. In addition, please make sure to start a new thread for
-each topic rather than following up to an existing one. Agenda
-topics and attendees will be selected by the program committee,
-but the final agenda will be formed by consensus of the attendees
-on the day.
-
-3) This year we would also like to try and make sure we are
-including new members in the community that the program committee
-may not be familiar with. The Google form has an area for people to
-add required/optional attendees. Please encourage new members of the
-community to submit a request for an invite as well, but additionally
-if maintainers or long term community members could add nominees to
-the form it would help us make sure that new members get the proper
-consideration.
-
-For discussion leaders, slides and visualizations are encouraged to
-outline the subject matter and focus the discussions. Please refrain
-from lengthy presentations and talks in order for sessions to be
-productive; the sessions are supposed to be interactive, inclusive
-discussions.
-
-We are still looking into the virtual component. We will likely run
-something similar to what we did last year, but details on that will
-be forthcoming.
-
-2023: https://lwn.net/Articles/lsfmmbpf2023/
-
-2022: https://lwn.net/Articles/lsfmm2022/
-
-2019: https://lwn.net/Articles/lsfmm2019/
-
-2018: https://lwn.net/Articles/lsfmm2018/
-
-2017: https://lwn.net/Articles/lsfmm2017/
-
-2016: https://lwn.net/Articles/lsfmm2016/
-
-2015: https://lwn.net/Articles/lsfmm2015/
-
-2014: http://lwn.net/Articles/LSFMM2014/
-
-4) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-          lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-          Amir Goldstein (Filesystems)
-          Jan Kara (Filesystems)
-          Martin K. Petersen (Storage)
-          Javier González (Storage)
-          Michal Hocko (MM)
-          Dan Williams (MM)
-          Daniel Borkmann (BPF)
-          Martin KaFai Lau (BPF)
-
+-- 
+மணிவண்ணன் சதாசிவம்
