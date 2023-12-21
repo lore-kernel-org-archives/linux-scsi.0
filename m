@@ -1,40 +1,27 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F19A6C2FD
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Dec 2023 06:48:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xLIFS3Pg"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=B6IEDpKxmFT6XzoVY67nmt1UAN0GIzc6WD3LlcrBHUA=; b=xLIFS3Pg0NZCV8AK8QfxlV0ab4
-	A4+EmFJMuo3lBozKSGWcE4eFne9tslAKWUYjyPVcVsEoQTqhCPZ6BWbneVPif4hRTh8jLLgeVYh0E
-	aBwZX0Dn2RMJAqpwmM0KPPolvsUN6vNi8yvUUH7Gu1FnXk/M6dHwizLhS/0W1rjfvLk29oysZJMai
-	O+2wYVOvrZImLQCg+1uiVwSO8XdgYHZmj9P4I6mt45NgdGFQc3W0/EmBHkHoPKg0LGra7EOW/eTo5
-	1s5MAnPR23m/l/cGpAkIn4b9WAF92UUQpkZu74oaXnlKvzxI1NM6jvABbkjtlNAprHnrjzaH9dKAO
-	aWRNQsmA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rGCqt-001qoc-0r;
-	Thu, 21 Dec 2023 06:48:15 +0000
-Date: Wed, 20 Dec 2023 22:48:15 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Nilesh Javali <njavali@marvell.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-	"lduncan@suse.com" <lduncan@suse.com>,
-	"cleech@redhat.com" <cleech@redhat.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
-	"jmeneghi@redhat.com" <jmeneghi@redhat.com>
-Subject: Re: [EXT] Re: [PATCH] cnic: change __GFP_COMP allocation method
-Message-ID: <ZYPfr5G2j2VWUmfR@infradead.org>
-References: <20231219055514.12324-1-njavali@marvell.com>
- <ZYExB52f/iDzD8xL@infradead.org>
- <CO6PR18MB4500F0DCD64925A775A45F2DAF97A@CO6PR18MB4500.namprd18.prod.outlook.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BC96BE49;
+	Thu, 21 Dec 2023 06:50:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 2ECBC68C4E; Thu, 21 Dec 2023 07:50:31 +0100 (CET)
+Date: Thu, 21 Dec 2023 07:50:31 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
+	axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
+Subject: Re: [PATCH v2 00/16] block atomic writes
+Message-ID: <20231221065031.GA25778@lst.de>
+References: <20231212110844.19698-1-john.g.garry@oracle.com> <20231212163246.GA24594@lst.de> <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com> <20231213154409.GA7724@lst.de> <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com> <20231219051456.GB3964019@frogsfrogsfrogs> <20231219052121.GA338@lst.de> <76c85021-dd9e-49e3-80e3-25a17c7ca455@oracle.com> <20231219151759.GA4468@lst.de> <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -43,16 +30,27 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CO6PR18MB4500F0DCD64925A775A45F2DAF97A@CO6PR18MB4500.namprd18.prod.outlook.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Dec 19, 2023 at 06:16:38AM +0000, Nilesh Javali wrote:
-> If you are referring to the series proposed by Chris Leech, then this had
-> objections. And that was the reason to look for an alternative method for
-> coherent DMA mapping. 
-> 
-> [PATCH 0/3] UIO_MEM_DMA_COHERENT for cnic/bnx2/bnx2x
+On Tue, Dec 19, 2023 at 04:53:27PM +0000, John Garry wrote:
+> On 19/12/2023 15:17, Christoph Hellwig wrote:
+>> On Tue, Dec 19, 2023 at 12:41:37PM +0000, John Garry wrote:
+>>> How about something based on fcntl, like below? We will prob also require
+>>> some per-FS flag for enabling atomic writes without HW support. That flag
+>>> might be also useful for XFS for differentiating forcealign for atomic
+>>> writes with just forcealign.
+>> I would have just exposed it through a user visible flag instead of
+>> adding yet another ioctl/fcntl opcode and yet another method.
+>>
+>
+> Any specific type of flag?
+>
+> I would suggest a file attribute which we can set via chattr, but that is 
+> still using an ioctl and would require a new inode flag; but at least there 
+> is standard userspace support.
 
-Yes.  Well, Greg (rightly) dislikes what the iscsi drivers have been
-doing.  But we're stuck supporting them, so I see no way around that.
+I'd be fine with that, but we're kinda running out of flag there.
+That's why I suggested the FS_XFLAG_ instead, which basically works
+the same.
 
