@@ -1,104 +1,58 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC4E4B641;
-	Thu, 21 Dec 2023 05:31:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F19A6C2FD
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Dec 2023 06:48:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nAwN43VP"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xLIFS3Pg"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=75JO6X/i95NW3ovT3L7Gh3dXza7a+3wXyZ9aCajAIGI=; b=nAwN43VP3EEarggAdn3LPVcO9h
-	AjPq9q5BHgqZnpC/NDIzhjPMbsr2qLn1y36CXuxg4OTj7XK+dOvYAYyqwTVlfZ2n1H8wev+qtRCz2
-	+/b6jzdfy0jAs31RGlRv4SNYzzaeLmI67tfs/J3UtPx5E1a60dpMLN/nJ5QJg2+PyAKJDcP5i5Plv
-	7curl6BPVTNl25OPqcj9qZ3RU8DavnpHT32JNFnvMnuep9ky4Zr/nHUnN7rkHHL2Xh4DVWaE8dudq
-	Di1TCdBpXrOvvFUEcakhe5fmTT2kfdbnH4bGuh/R4xeZfZrTyp7ychsRD7AMYLr8h08KT1PCHhO7g
-	B33whBVQ==;
-Received: from [50.53.46.231] (helo=bombadil.infradead.org)
-	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rGBeM-001kOC-2I;
-	Thu, 21 Dec 2023 05:31:14 +0000
-From: Randy Dunlap <rdunlap@infradead.org>
-To: linux-kernel@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	mpi3mr-linuxdrv.pdl@broadcom.com,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: mpi3mr: fix mpi3mr_fw.c kernel-doc warnings
-Date: Wed, 20 Dec 2023 21:31:13 -0800
-Message-ID: <20231221053113.32191-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.43.0
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=B6IEDpKxmFT6XzoVY67nmt1UAN0GIzc6WD3LlcrBHUA=; b=xLIFS3Pg0NZCV8AK8QfxlV0ab4
+	A4+EmFJMuo3lBozKSGWcE4eFne9tslAKWUYjyPVcVsEoQTqhCPZ6BWbneVPif4hRTh8jLLgeVYh0E
+	aBwZX0Dn2RMJAqpwmM0KPPolvsUN6vNi8yvUUH7Gu1FnXk/M6dHwizLhS/0W1rjfvLk29oysZJMai
+	O+2wYVOvrZImLQCg+1uiVwSO8XdgYHZmj9P4I6mt45NgdGFQc3W0/EmBHkHoPKg0LGra7EOW/eTo5
+	1s5MAnPR23m/l/cGpAkIn4b9WAF92UUQpkZu74oaXnlKvzxI1NM6jvABbkjtlNAprHnrjzaH9dKAO
+	aWRNQsmA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1rGCqt-001qoc-0r;
+	Thu, 21 Dec 2023 06:48:15 +0000
+Date: Wed, 20 Dec 2023 22:48:15 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Nilesh Javali <njavali@marvell.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+	"lduncan@suse.com" <lduncan@suse.com>,
+	"cleech@redhat.com" <cleech@redhat.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+	"jmeneghi@redhat.com" <jmeneghi@redhat.com>
+Subject: Re: [EXT] Re: [PATCH] cnic: change __GFP_COMP allocation method
+Message-ID: <ZYPfr5G2j2VWUmfR@infradead.org>
+References: <20231219055514.12324-1-njavali@marvell.com>
+ <ZYExB52f/iDzD8xL@infradead.org>
+ <CO6PR18MB4500F0DCD64925A775A45F2DAF97A@CO6PR18MB4500.namprd18.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CO6PR18MB4500F0DCD64925A775A45F2DAF97A@CO6PR18MB4500.namprd18.prod.outlook.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Use correct format for function return values.
-Delete blank lines that are reported as "bad line:".
+On Tue, Dec 19, 2023 at 06:16:38AM +0000, Nilesh Javali wrote:
+> If you are referring to the series proposed by Chris Leech, then this had
+> objections. And that was the reason to look for an alternative method for
+> coherent DMA mapping. 
+> 
+> [PATCH 0/3] UIO_MEM_DMA_COHERENT for cnic/bnx2/bnx2x
 
-mpi3mr_fw.c:482: warning: No description found for return value of 'mpi3mr_get_reply_desc'
-mpi3mr_fw.c:1066: warning: bad line: 
-mpi3mr_fw.c:1109: warning: bad line: 
-mpi3mr_fw.c:1249: warning: No description found for return value of 'mpi3mr_revalidate_factsdata'
+Yes.  Well, Greg (rightly) dislikes what the iscsi drivers have been
+doing.  But we're stuck supporting them, so I see no way around that.
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/mpi3mr/mpi3mr_fw.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
-diff -- a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -475,7 +475,7 @@ int mpi3mr_process_admin_reply_q(struct
-  * @op_reply_q: op_reply_qinfo object
-  * @reply_ci: operational reply descriptor's queue consumer index
-  *
-- * Returns reply descriptor frame address
-+ * Returns: reply descriptor frame address
-  */
- static inline struct mpi3_default_reply_descriptor *
- mpi3mr_get_reply_desc(struct op_reply_qinfo *op_reply_q, u32 reply_ci)
-@@ -1063,7 +1063,6 @@ enum mpi3mr_iocstate mpi3mr_get_iocstate
-  * @mrioc: Adapter instance reference
-  *
-  * Free the DMA memory allocated for IOCTL handling purpose.
--
-  *
-  * Return: None
-  */
-@@ -1106,7 +1105,6 @@ static void mpi3mr_free_ioctl_dma_memory
- /**
-  * mpi3mr_alloc_ioctl_dma_memory - Alloc memory for ioctl dma
-  * @mrioc: Adapter instance reference
--
-  *
-  * This function allocates dmaable memory required to handle the
-  * application issued MPI3 IOCTL requests.
-@@ -1241,7 +1239,7 @@ static int mpi3mr_issue_and_process_mur(
-  * during reset/resume
-  * @mrioc: Adapter instance reference
-  *
-- * Return zero if the new IOCFacts parameters value is compatible with
-+ * Return: zero if the new IOCFacts parameters value is compatible with
-  * older values else return -EPERM
-  */
- static int
