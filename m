@@ -1,108 +1,89 @@
-Received: from mail-vs1-f42.google.com (mail-vs1-f42.google.com [209.85.217.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68FA36D6D7;
-	Thu, 21 Dec 2023 14:54:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA88A58229
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Dec 2023 17:02:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fr/DFr0B"
-Received: by mail-vs1-f42.google.com with SMTP id ada2fe7eead31-4669068a20bso188487137.1;
-        Thu, 21 Dec 2023 06:54:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1703170487; x=1703775287; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pURYtu0NLCnQlpjaLQBb3A9CXAcN65Ivjf7L8viYZIQ=;
-        b=fr/DFr0B2e2D5pVAdRa8efpUmsqmuL2g3QPZBhjlG3AKquL6JIi+P/pwiOurUM+Krp
-         E8jOaHtXIoPU+ASnXxD/WU+K/VNMfFPqrfUx6VQ0rRmT8Mr0p+L2bMgQ33KT1YBpanT5
-         7LW+1EkG89UMJ78nqCi0fjvxIugayr3H6l25dY2AWUI32pOCJnGtRXNP8lRmto9u4Cqs
-         aciB5LcgZsEoAN9oMA78JVOUCDvrhJIDbtKIQMEHh50OdbB0R7f2UVJMOOy5PqhCQzsS
-         xE2krxIQmkhbo+7kOqMqYuqO3ztnTdxpCUnTfodfTsslG18eVAluCR+r1lIebDLR/j+b
-         B7PA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703170487; x=1703775287;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=pURYtu0NLCnQlpjaLQBb3A9CXAcN65Ivjf7L8viYZIQ=;
-        b=lMJq6webPomHaUSuC44KN+Y6mKw9tcqg9I7AXceK4Vfz31mvR/pofNbotUqLArlpJe
-         WSu45gjs9Apoy+Wrnz6g7k5yX93fLOjeAn8ZltZzmHsUG74N+l/q1z7IFVETso8YouHt
-         6Pg45PvHga0trHcwR6fb40c/uPoS/z5VNKUofjaUG8doHHYxriNCqtX+w6eISyhEk4qC
-         6HGl/PYDWD5jvLKUs9nLHf9hJVwTLv1OpJ05StG5XIzt0biLqlDGAtaRFQOmebLWnXS3
-         IpvGlxPQaHgZFNWK0SoJyCuGEFX50Lr44sSIqOph7QLFFytxw910U/L5DjX/Yoq47NuF
-         1Pog==
-X-Gm-Message-State: AOJu0YycRWFzlvy6n8Q6oniyXgpBkR93BXMRVhZsEh/zJqYpttIKdbKn
-	J6XmrZk/cIVA96ISUxyt1zxfHzcAuwXdM2XyVDc=
-X-Google-Smtp-Source: AGHT+IFN1NuYgs8WiPh35+AiECRKwSlqz0ZEDe3FqBLZ5rzeC9cKopqWDVql1xxie4BTiSGNKZ2Qkn8RU8vM8AW8lKI=
-X-Received: by 2002:a05:6102:2c19:b0:466:a0dd:4b2 with SMTP id
- ie25-20020a0561022c1900b00466a0dd04b2mr1276429vsb.51.1703170487175; Thu, 21
- Dec 2023 06:54:47 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="1RunbdBK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09BABC433CA;
+	Thu, 21 Dec 2023 17:02:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1703178124;
+	bh=1a/yxjrZ/9ESvAGqHJPmvOk2fuQ8WTuuUhZMju7QStc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=1RunbdBKJhZNQijtFAE8Iz1JEIQP2d3/JBrZpLVbpkCIO4cNfFQaLqPo3LtRHWRQE
+	 M6Fy17SOfIeCkObRzQda1fV48RvQnNOAsJ/iw9MusqghluTGVVpYhm+t82V8MbR18S
+	 7qs0l+F9qfHP3fUabaQ8ZtJblHPCJMLQoUNiz2ns=
+Date: Thu, 21 Dec 2023 18:02:01 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: John Meneghini <jmeneghi@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+	"lduncan@suse.com" <lduncan@suse.com>,
+	"cleech@redhat.com" <cleech@redhat.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>,
+	Jerry Snitselaar <jsnitsel@redhat.com>,
+	Nilesh Javali <njavali@marvell.com>
+Subject: Re: [EXT] Re: [PATCH] cnic: change __GFP_COMP allocation method
+Message-ID: <2023122147-unshaved-finch-2cf3@gregkh>
+References: <20231219055514.12324-1-njavali@marvell.com>
+ <ZYExB52f/iDzD8xL@infradead.org>
+ <CO6PR18MB4500F0DCD64925A775A45F2DAF97A@CO6PR18MB4500.namprd18.prod.outlook.com>
+ <ZYPfr5G2j2VWUmfR@infradead.org>
+ <c9f7d912-d19e-484b-837e-b07171979eef@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231221085712.1766333-1-yukuai1@huaweicloud.com> <20231221085839.1768763-1-yukuai1@huaweicloud.com>
-In-Reply-To: <20231221085839.1768763-1-yukuai1@huaweicloud.com>
-From: Ryusuke Konishi <konishi.ryusuke@gmail.com>
-Date: Thu, 21 Dec 2023 23:54:30 +0900
-Message-ID: <CAKFNMo=TuhzyEs_NEOdYgJz+UVizU6Ojx4ZKXowDaux3kKddUQ@mail.gmail.com>
-Subject: Re: [PATCH RFC v3 for-6.8/block 12/17] nilfs2: use bdev api in nilfs_attach_log_writer()
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de, 
-	kent.overstreet@gmail.com, joern@lazybastard.org, miquel.raynal@bootlin.com, 
-	richard@nod.at, vigneshr@ti.com, sth@linux.ibm.com, hoeppner@linux.ibm.com, 
-	hca@linux.ibm.com, gor@linux.ibm.com, agordeev@linux.ibm.com, 
-	jejb@linux.ibm.com, martin.petersen@oracle.com, clm@fb.com, 
-	josef@toxicpanda.com, dsterba@suse.com, viro@zeniv.linux.org.uk, 
-	brauner@kernel.org, nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, 
-	tytso@mit.edu, adilger.kernel@dilger.ca, jack@suse.com, willy@infradead.org, 
-	akpm@linux-foundation.org, hare@suse.de, p.raghav@samsung.com, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org, 
-	linux-nilfs@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, 
-	yangerkun@huawei.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c9f7d912-d19e-484b-837e-b07171979eef@redhat.com>
 
-On Thu, Dec 21, 2023 at 6:00=E2=80=AFPM Yu Kuai wrote:
->
-> From: Yu Kuai <yukuai3@huawei.com>
->
-> Avoid to access bd_inode directly, prepare to remove bd_inode from
-> block_device.
->
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  fs/nilfs2/segment.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/fs/nilfs2/segment.c b/fs/nilfs2/segment.c
-> index 55e31cc903d1..a1130e384937 100644
-> --- a/fs/nilfs2/segment.c
-> +++ b/fs/nilfs2/segment.c
-> @@ -2823,7 +2823,7 @@ int nilfs_attach_log_writer(struct super_block *sb,=
- struct nilfs_root *root)
->         if (!nilfs->ns_writer)
->                 return -ENOMEM;
->
-> -       inode_attach_wb(nilfs->ns_bdev->bd_inode, NULL);
-> +       bdev_attach_wb(nilfs->ns_bdev);
->
->         err =3D nilfs_segctor_start_thread(nilfs->ns_writer);
->         if (unlikely(err))
-> --
-> 2.39.2
->
+On Thu, Dec 21, 2023 at 09:33:44AM -0500, John Meneghini wrote:
+> Including Greg.
+> 
+> On 12/21/23 01:48, Christoph Hellwig wrote:
+> > On Tue, Dec 19, 2023 at 06:16:38AM +0000, Nilesh Javali wrote:
+> > > If you are referring to the series proposed by Chris Leech, then this had
+> > > objections. And that was the reason to look for an alternative method for
+> > > coherent DMA mapping.
+> > > 
+> > > [PATCH 0/3] UIO_MEM_DMA_COHERENT for cnic/bnx2/bnx2x
+> > 
+> > Yes.  Well, Greg (rightly) dislikes what the iscsi drivers have been
+> > doing.  But we're stuck supporting them, so I see no way around that.
+> 
+> If this is true then can we reconsider Chris's patches.
+> 
+> Red Hat has multiple enterprise customers who are relying on this driver and
+> we need to keep it running - at least till the end of RHEL 9.  We can try
+> and drop support for bnx2/cnic in RHEL 10 but RHEL 9 is in the middle of its
+> life cycle and a failure to address this issue is causing many problems as
+> we attempt to keep RHEL 9 current with what's upstream.
 
-Acked-by: Ryusuke Konishi <konishi.ryusuke@gmail.com>
+So you are trying to tell me to accept kernel patches today to keep
+RHEL9 obsolete systems alive?  And then sometime in the future we can
+drop those changes because why?  That feels very wrong and confusing.
+What does what gets merged in 2024 have to do with RHEL 9 systems?  You
+are free to do whatever you want in your enterprise kernels, don't rely
+on making me take broken-by-design code and be forced to maintain it for
+the next 10+ years please, that's just not nice.
 
-Thanks,
-Ryusuke Konishi
+> Greg, can we please take Chris's patches upstream?
+
+It's a total abuse of the UIO api, and I thought I actually had comments
+about it doing it incorrectly as well.  Resend them in the new year
+after they have been cleaned up and we can reconsider them then, it's
+too late now for anything new for 6.8-rc1 with the holidays apon us now
+anyway.
+
+And get the "we want you to take this crud and maintain it for forever
+because we have to support an obsolete and out-of-date kernel for paying
+customers" story a bit more straight so it doesn't sound so bad :)
+
+thanks,
+
+greg k-h
