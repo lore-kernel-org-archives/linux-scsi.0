@@ -1,35 +1,35 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5E9B634F7;
-	Thu, 21 Dec 2023 19:30:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A4BF768FE;
+	Thu, 21 Dec 2023 20:33:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1d3e6c86868so9593975ad.1;
-        Thu, 21 Dec 2023 11:30:34 -0800 (PST)
+Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1d307cf18fdso8663535ad.3;
+        Thu, 21 Dec 2023 12:33:10 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703187034; x=1703791834;
+        d=1e100.net; s=20230601; t=1703190790; x=1703795590;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=PaCuQQl7ykZXPvtbV2jmLW6ZX1gazXmMk5DzScPV8kQ=;
-        b=wdjEQhQ9NpKcxy7MVLjIdsHVOMIS/mjRE8yT/82e9JLp4ji0Y+0tFHJ9MSQIHLvAhs
-         WMO3zMEEBl/6vjQ/jeLcZ6z/32J8dW+UFft19pt7kSjFrr8wVbJBOM6RLr3MSRi28bkM
-         VXRnizyuYkdXMBg7Eta5z0np4X4WpNY9QS20fQE8dbGNanJifJfhpOAcwCZ+vjF5OR6n
-         HTTRC7Eaea6STKs8nsTAAjVt9k8VHBxGY4MOYDTnmqfzz9XpqTKOknHaKY+a7+Y95GD8
-         ETW6vSZZ8ar1bfjrKPOioT4GWfvWjuYkz0qcw1/wHUsJxJi+lotJBIuFUamQkWxwWnBT
-         x2Cg==
-X-Gm-Message-State: AOJu0YwfxjNSweosfpsCV87gEtB18h1n3owWWVdfTfPmHPl4x+P4jVn9
-	S/HDHSO7UHc+sQUniH018ho=
-X-Google-Smtp-Source: AGHT+IGepjzFq9j/dF+YLX4nSwBc5YNSkf3wiaTW8FLOAYRR3psWsCWFF+YYf0IUgwZDQFzHrxazLQ==
-X-Received: by 2002:a17:902:b195:b0:1d0:afea:78a8 with SMTP id s21-20020a170902b19500b001d0afea78a8mr113124plr.106.1703187033971;
-        Thu, 21 Dec 2023 11:30:33 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:872c:d7b7:41e9:3edd? ([2620:0:1000:8411:872c:d7b7:41e9:3edd])
-        by smtp.gmail.com with ESMTPSA id l17-20020a170902eb1100b001bf11cf2e21sm1995752plb.210.2023.12.21.11.30.31
+        bh=/7KbnN33cEMU1ra8cl0k5N0j8jcZeZqi4GJ0MVOhJUc=;
+        b=kGYxG1o2byY4AyIkpBkmSt/GS2tsrxOYktk0pke3Ra4MCB+fMF+efX4UjQxtVwjRG0
+         JYAgs2G46X9PiV8F4PhYfN+Tn5ksi3gRx7/IpbIouyceIYMmvJ7a+w1/7OARN8PAATKp
+         0BaFOpgmF2xU+05ynmVFJjRO+WaX+zPr/wshLPfu7/Fplu8Fh9OBs+jT9pnTjsn0Qpby
+         0ynzOqKic6xkImwyI9aChTvmdv0m0i7C36r+6zhvnOwVwWWNrHgz7v6O0gXVIjjHgtrW
+         NFMeCm77sugeF0fvjR/XLN9dKvmdCIKOc9UY4YTavAmiWO9KxQPKy9/FADQE5dd2h9bk
+         LLkg==
+X-Gm-Message-State: AOJu0YwzzH3M2G46gIFRjSsDZgn0eqPQYvc6yDmBL2XZeby3mM/DRNTi
+	mWvFcrPC3pt/79Z2kaTTHWFjo66GV6s=
+X-Google-Smtp-Source: AGHT+IEuLC9+wqhPPyf5+htFMuDuga2BsWAd+xWyMzex6dtSWq5jWA+ph6hyRpScpzzQ0l6JSfYajw==
+X-Received: by 2002:a17:902:ecce:b0:1d2:e521:dd72 with SMTP id a14-20020a170902ecce00b001d2e521dd72mr230098plh.109.1703190790351;
+        Thu, 21 Dec 2023 12:33:10 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:d9ff:baa2:bd58:437a? ([2620:0:1000:8411:d9ff:baa2:bd58:437a])
+        by smtp.gmail.com with ESMTPSA id z3-20020a170903018300b001cfa718039bsm2045190plg.216.2023.12.21.12.33.09
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Dec 2023 11:30:33 -0800 (PST)
-Message-ID: <ca0b2a81-c0a0-4392-bcc1-5590caf699c7@acm.org>
-Date: Thu, 21 Dec 2023 11:30:31 -0800
+        Thu, 21 Dec 2023 12:33:09 -0800 (PST)
+Message-ID: <5c356222-fe9e-41b0-b7fe-218fbcde4573@acm.org>
+Date: Thu, 21 Dec 2023 12:33:08 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,62 +37,42 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC v3 07/11] scsi: ufs: core: Perform read back after
- writing UTP_TASK_REQ_LIST_BASE_H
+Subject: Re: [LSF/MM/BPF TOPIC] Large block for I/O
 Content-Language: en-US
-To: Andrew Halaney <ahalaney@redhat.com>, Andy Gross <agross@kernel.org>,
- Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konrad.dybcio@linaro.org>,
- Manivannan Sadhasivam <mani@kernel.org>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Hannes Reinecke <hare@suse.de>, Janek Kotas <jank@cadence.com>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Can Guo <quic_cang@quicinc.com>
-Cc: Will Deacon <will@kernel.org>, linux-arm-msm@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20231221-ufs-reset-ensure-effect-before-delay-v3-0-2195a1b66d2e@redhat.com>
- <20231221-ufs-reset-ensure-effect-before-delay-v3-7-2195a1b66d2e@redhat.com>
+To: Hannes Reinecke <hare@suse.de>, lsf-pc@lists.linuxfoundation.org
+Cc: linux-mm@kvack.org, linux-block@vger.kernel.org,
+ linux-scsi@vger.kernel.org,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+References: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
+ <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
+ <03ebbc5f-2ff5-4f3c-8c5b-544413c55257@suse.de>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20231221-ufs-reset-ensure-effect-before-delay-v3-7-2195a1b66d2e@redhat.com>
+In-Reply-To: <03ebbc5f-2ff5-4f3c-8c5b-544413c55257@suse.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 12/21/23 11:09, Andrew Halaney wrote:
-> Currently, the UTP_TASK_REQ_LIST_BASE_L/UTP_TASK_REQ_LIST_BASE_H regs
-> are written to and then completed with an mb().
+On 12/20/23 07:03, Hannes Reinecke wrote:
+> I would like to discuss
 > 
-> mb() ensure that the write completes, but completion doesn't mean that
-> it isn't stored in a buffer somewhere. The recommendation for
-> ensuring these bits have taken effect on the device is to perform a read
-> back to force it to make it all the way to the device. This is
-> documented in device-io.rst and a talk by Will Deacon on this can
-> be seen over here:
+> Large blocks for I/O
 > 
->      https://youtu.be/i6DayghhA8Q?si=MiyxB5cKJXSaoc01&t=1678
-> 
-> Let's do that to ensure the bits hit the device. Because the mb()'s
-> purpose wasn't to add extra ordering (on top of the ordering guaranteed
-> by writel()/readl()), it can safely be removed.
-> 
-> Fixes: 88441a8d355d ("scsi: ufs: core: Add hibernation callbacks")
-> Signed-off-by: Andrew Halaney <ahalaney@redhat.com>
-> ---
->   drivers/ufs/core/ufshcd.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index d1e33328ff3f..7bfb556e5b8e 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -10351,7 +10351,7 @@ int ufshcd_system_restore(struct device *dev)
->   	 * are updated with the latest queue addresses. Only after
->   	 * updating these addresses, we can queue the new commands.
->   	 */
-> -	mb();
-> +	ufshcd_readl(hba, REG_UTP_TASK_REQ_LIST_BASE_H);
->   
->   	/* Resuming from hibernate, assume that link was OFF */
->   	ufshcd_set_link_off(hba);
+> Since the presentation last year there has been quite some developments
+> and improvements in some areas, but at the same time a lack of progress
+> in other areas.
+> In this presentation/discussion I would like to highlight the current
+> state of affairs, existing pain points, and future directions of development.
+> It might be an idea to co-locate it with the MM folks as we do have
+> quite some overlap with page-cache improvements and hugepage handling.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Hi Hannes,
+
+I'm interested in this topic. But I'm wondering whether the disadvantages of
+large blocks will be covered? Some NAND storage vendors are less than
+enthusiast about increasing the logical block size beyond 4 KiB because it
+increases the size of many writes to the device and hence increases write
+amplification.
+
+Thanks,
+
+Bart.
+
