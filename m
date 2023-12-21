@@ -1,57 +1,57 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D218064A8B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E130473197
 	for <linux-scsi@vger.kernel.org>; Thu, 21 Dec 2023 18:25:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="THcW8POF"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S8893dha"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1703183142;
+	s=mimecast20190719; t=1703183143;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=oX0CWwSSb/xcfXKSUEFguRgCx8LqXafuU1W5XbBtf6I=;
-	b=THcW8POFZJWh59jAHmWvwOWVh6sl9pLaainscpYOknBd7YcqgCnlBUckbN+juT1tmUo7bO
-	Ae6oT9zjjwt9qMoBHM1attmvioRGWZYWXIeTqHBbSWmSSPeXcyvME6mWdbaNzLu1pHqi/j
-	BDDblM/V8T6t2xmLg80WZiwKVNE1UwA=
-Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com
- [209.85.167.199]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=4219KYM+Lx5MIoMXHlnouIE3ETSXouTN4mLohiWEzAY=;
+	b=S8893dha1yDSxx6pcwLwg+/SS0cuzBTO362gOrARS1rxIhBBjIm9sNzFXXut5yna04Kj5a
+	8lNWihDVcITMoypaWwWMT19mu02zQl7bYFWfQZifc58QxPQ8PnHRj1vZG2MdAk/RexuHWP
+	CWGe9LGyaGi73RlFyN1DEYu5jIzHmBk=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-596-kYzDDEtSOeSO4bILgw-kow-1; Thu, 21 Dec 2023 13:25:41 -0500
-X-MC-Unique: kYzDDEtSOeSO4bILgw-kow-1
-Received: by mail-oi1-f199.google.com with SMTP id 5614622812f47-3bb7ab55483so1069442b6e.1
+ us-mta-265-pH5IXlUFOIOv2uFD2kgWyg-1; Thu, 21 Dec 2023 13:25:41 -0500
+X-MC-Unique: pH5IXlUFOIOv2uFD2kgWyg-1
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-67ef53b1f17so16444896d6.3
         for <linux-scsi@vger.kernel.org>; Thu, 21 Dec 2023 10:25:41 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703183141; x=1703787941;
+        d=1e100.net; s=20230601; t=1703183140; x=1703787940;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=oX0CWwSSb/xcfXKSUEFguRgCx8LqXafuU1W5XbBtf6I=;
-        b=mbwR3p2OZYfofSgy5N2s694R5EAORAwIyAH06hndKDGyZFmVjyrXCzkRk1cZSokE94
-         Rzdnj3I9t7ekATkgcyQI3lkLpVxU0QgD3Ubk3xXEwnCwUjGNkzHgOaJbuboLw8rYNrZT
-         GaY1+eHAguAVjhIBbOMX3uAFht5xxcTp0AwfTZNYPbKQh+8LTH107MkFVE/UA5/TtKeO
-         4brtr5fq3Hqxp4CjyvicogcC94O3PkEGv5W85Nll5W4GHD/sBQaNdnfAUkRbvFij4jJz
-         MUfhaA5M2aK66CH/pK/i0NeB4qgUNmB3D3yL2D37CGo3XN+TRrDuJcB0bzzlE3167bp2
-         NKiA==
-X-Gm-Message-State: AOJu0Yz8K+njkKLDKEUv42CQtSJAzB8UVZWGGCmDbLUe57JByNchO441
-	+I5otLCNPBF6vYpgXfect8PhtEHOURFMmvjLfxY5tqZ/oA2rgUVBXR26I40Vspz/uMjMmlWYrpU
-	dZRQdtGRckfG9fZ9dWv2BNqTcRNmxFA==
-X-Received: by 2002:a05:6808:e8a:b0:3b9:e47d:631d with SMTP id k10-20020a0568080e8a00b003b9e47d631dmr90694oil.96.1703183141139;
-        Thu, 21 Dec 2023 10:25:41 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGk4XM7Ucd1ORiXMq9oHfABoA0n2G2V/78MhvX5VtAkYZbvn53wbv8iIbog6TkfOKmdNndrEQ==
-X-Received: by 2002:a05:6808:e8a:b0:3b9:e47d:631d with SMTP id k10-20020a0568080e8a00b003b9e47d631dmr90675oil.96.1703183140902;
-        Thu, 21 Dec 2023 10:25:40 -0800 (PST)
+        bh=4219KYM+Lx5MIoMXHlnouIE3ETSXouTN4mLohiWEzAY=;
+        b=ISTHhL99RP+gVOuzvhKH9LNjubUmACVuKKIqZbdVjQXe0WGhe5GH01kMeAKHxlrXC7
+         s6CeXQAmZZatxNWsYE/EKqFGzQm8liazmLShbSEoFkd1dQVxebccl/QQRWFvoScxQ2Pn
+         9lQ0A3hNoSXug2CuyBTLao+GtVy/PbtCc9nk9Kvv8i0BkFz6ab/9HwYEeiiwF4EPlCIB
+         06UUKtKc1B2Ckst0QgMvx3kVuAnadabYD9DQtbIpg/ix2lsVXDR085qVGvzKw6L/X5ZS
+         Cwwux8vqBgUv835DgBME1cwskmbZjW7vAWq9qIGgblmxW3axMeiMhlCiJ63FaH2J+U7n
+         QqwA==
+X-Gm-Message-State: AOJu0YwKeCOigKkaXhMJJQe3zLqSQUNcCpJw/nxlYCOQhLAdfC4c8LWu
+	h4I3C5mvBScqG5XmTR2PTLWbY/gtqGEpxTYN2flxXl7nK+lde6hn6tnypOhvTAnhNvEkOHk6YUQ
+	bMgrp1BQyA6DnfjL8YA4v2KTN6mYu1w==
+X-Received: by 2002:a05:6214:c69:b0:67f:2167:add8 with SMTP id t9-20020a0562140c6900b0067f2167add8mr128956qvj.63.1703183139772;
+        Thu, 21 Dec 2023 10:25:39 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEZ5Ey0k8eka1Tmd1wHccFHcVx5O7AMpaYlZVPVIE4Mlzs93Ul5Aid/9sPv0OnMJmxA3rI2gQ==
+X-Received: by 2002:a05:6214:c69:b0:67f:2167:add8 with SMTP id t9-20020a0562140c6900b0067f2167add8mr128935qvj.63.1703183139516;
+        Thu, 21 Dec 2023 10:25:39 -0800 (PST)
 Received: from [192.168.1.163] ([2600:1700:1ff0:d0e0::37])
-        by smtp.gmail.com with ESMTPSA id da7-20020a05621408c700b0067f2c03d4adsm779605qvb.100.2023.12.21.10.25.39
+        by smtp.gmail.com with ESMTPSA id da7-20020a05621408c700b0067f2c03d4adsm779605qvb.100.2023.12.21.10.25.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Dec 2023 10:25:40 -0800 (PST)
+        Thu, 21 Dec 2023 10:25:37 -0800 (PST)
 From: Andrew Halaney <ahalaney@redhat.com>
-Date: Thu, 21 Dec 2023 12:25:22 -0600
-Subject: [PATCH RFC v2 05/11] scsi: ufs: qcom: Perform read back after
- writing CGC enable
+Date: Thu, 21 Dec 2023 12:25:21 -0600
+Subject: [PATCH RFC v2 04/11] scsi: ufs: qcom: Perform read back after
+ writing unipro mode
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -60,7 +60,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231221-ufs-reset-ensure-effect-before-delay-v2-5-75af2a9bae51@redhat.com>
+Message-Id: <20231221-ufs-reset-ensure-effect-before-delay-v2-4-75af2a9bae51@redhat.com>
 References: <20231221-ufs-reset-ensure-effect-before-delay-v2-0-75af2a9bae51@redhat.com>
 In-Reply-To: <20231221-ufs-reset-ensure-effect-before-delay-v2-0-75af2a9bae51@redhat.com>
 To: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
@@ -81,7 +81,7 @@ Cc: Will Deacon <will@kernel.org>, linux-arm-msm@vger.kernel.org,
  Andrew Halaney <ahalaney@redhat.com>
 X-Mailer: b4 0.12.3
 
-Currently, the CGC enable bit is written and then an mb() is used to
+Currently, the QUNIPRO_SEL bit is written to and then an mb() is used to
 ensure that completes before continuing.
 
 mb() ensure that the write completes, but completion doesn't mean that
@@ -97,25 +97,25 @@ Let's do that to ensure the bit hits the device. Because the mb()'s
 purpose wasn't to add extra ordering (on top of the ordering guaranteed
 by writel()/readl()), it can safely be removed.
 
-Fixes: 81c0fc51b7a7 ("ufs-qcom: add support for Qualcomm Technologies Inc platforms")
+Fixes: f06fcc7155dc ("scsi: ufs-qcom: add QUniPro hardware support and power optimizations")
 Signed-off-by: Andrew Halaney <ahalaney@redhat.com>
 ---
  drivers/ufs/host/ufs-qcom.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index ab1ff7432d11..3db19591d008 100644
+index 6df2ab3b6f23..ab1ff7432d11 100644
 --- a/drivers/ufs/host/ufs-qcom.c
 +++ b/drivers/ufs/host/ufs-qcom.c
-@@ -409,7 +409,7 @@ static void ufs_qcom_enable_hw_clk_gating(struct ufs_hba *hba)
- 		    REG_UFS_CFG2);
+@@ -280,7 +280,7 @@ static void ufs_qcom_select_unipro_mode(struct ufs_qcom_host *host)
+ 		ufshcd_rmwl(host->hba, QUNIPRO_G4_SEL, 0, REG_UFS_CFG0);
  
- 	/* Ensure that HW clock gating is enabled before next operations */
+ 	/* make sure above configuration is applied before we return */
 -	mb();
-+	ufshcd_readl(hba, REG_UFS_CFG2);
++	ufshcd_readl(host->hba, REG_UFS_CFG1);
  }
  
- static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+ /*
 
 -- 
 2.43.0
