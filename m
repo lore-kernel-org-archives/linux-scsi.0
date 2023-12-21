@@ -1,78 +1,104 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 845FF4685;
-	Thu, 21 Dec 2023 02:54:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 8da60cfefa5d40bdb114173e7c6cacfb-20231221
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.33,REQID:0e5c146c-6213-436d-b6ba-cc218d39367c,IP:15,
-	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:35
-X-CID-INFO: VERSION:1.1.33,REQID:0e5c146c-6213-436d-b6ba-cc218d39367c,IP:15,UR
-	L:0,TC:0,Content:0,EDM:25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:35
-X-CID-META: VersionHash:364b77b,CLOUDID:90a8807e-4f93-4875-95e7-8c66ea833d57,B
-	ulkID:231221105415YJZT1OCP,BulkQuantity:0,Recheck:0,SF:72|19|44|66|24|102,
-	TC:nil,Content:0,EDM:5,IP:-2,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,
-	OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
-X-UUID: 8da60cfefa5d40bdb114173e7c6cacfb-20231221
-Received: from node4.com.cn [(39.156.73.12)] by mailgw
-	(envelope-from <liyouhong@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 2120933743; Thu, 21 Dec 2023 10:54:12 +0800
-Received: from node4.com.cn (localhost [127.0.0.1])
-	by node4.com.cn (NSMail) with SMTP id E5FA916001CD7;
-	Thu, 21 Dec 2023 10:54:11 +0800 (CST)
-X-ns-mid: postfix-6583A8D3-82063953
-Received: from localhost.localdomain (unknown [172.20.185.164])
-	by node4.com.cn (NSMail) with ESMTPA id 8AE8616001CD7;
-	Thu, 21 Dec 2023 02:54:11 +0000 (UTC)
-From: YouHong Li <liyouhong@kylinos.cn>
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	liyouhong <liyouhong@kylinos.cn>,
-	k2ci <kernel-bot@kylinos.cn>
-Subject: [PATCH] drivers/scsi/mpt3sas/mpt3sas_warpdrive.c: Fix spelling typo in comment
-Date: Thu, 21 Dec 2023 10:53:28 +0800
-Message-Id: <20231221025328.1318264-1-liyouhong@kylinos.cn>
-X-Mailer: git-send-email 2.34.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC4E4B641;
+	Thu, 21 Dec 2023 05:31:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nAwN43VP"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=75JO6X/i95NW3ovT3L7Gh3dXza7a+3wXyZ9aCajAIGI=; b=nAwN43VP3EEarggAdn3LPVcO9h
+	AjPq9q5BHgqZnpC/NDIzhjPMbsr2qLn1y36CXuxg4OTj7XK+dOvYAYyqwTVlfZ2n1H8wev+qtRCz2
+	+/b6jzdfy0jAs31RGlRv4SNYzzaeLmI67tfs/J3UtPx5E1a60dpMLN/nJ5QJg2+PyAKJDcP5i5Plv
+	7curl6BPVTNl25OPqcj9qZ3RU8DavnpHT32JNFnvMnuep9ky4Zr/nHUnN7rkHHL2Xh4DVWaE8dudq
+	Di1TCdBpXrOvvFUEcakhe5fmTT2kfdbnH4bGuh/R4xeZfZrTyp7ychsRD7AMYLr8h08KT1PCHhO7g
+	B33whBVQ==;
+Received: from [50.53.46.231] (helo=bombadil.infradead.org)
+	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+	id 1rGBeM-001kOC-2I;
+	Thu, 21 Dec 2023 05:31:14 +0000
+From: Randy Dunlap <rdunlap@infradead.org>
+To: linux-kernel@vger.kernel.org
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: mpi3mr: fix mpi3mr_fw.c kernel-doc warnings
+Date: Wed, 20 Dec 2023 21:31:13 -0800
+Message-ID: <20231221053113.32191-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-From: liyouhong <liyouhong@kylinos.cn>
+Use correct format for function return values.
+Delete blank lines that are reported as "bad line:".
 
-Fix spelling typo in comment.
+mpi3mr_fw.c:482: warning: No description found for return value of 'mpi3mr_get_reply_desc'
+mpi3mr_fw.c:1066: warning: bad line: 
+mpi3mr_fw.c:1109: warning: bad line: 
+mpi3mr_fw.c:1249: warning: No description found for return value of 'mpi3mr_revalidate_factsdata'
 
-Reported-by: k2ci <kernel-bot@kylinos.cn>
-Signed-off-by: liyouhong <liyouhong@kylinos.cn>
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: mpi3mr-linuxdrv.pdl@broadcom.com
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/mpi3mr/mpi3mr_fw.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c b/drivers/scsi/mpt3=
-sas/mpt3sas_warpdrive.c
-index cc07ba41f507..2d35a5948bf3 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
-@@ -250,7 +250,7 @@ mpt3sas_init_warpdrive_properties(struct MPT3SAS_ADAP=
-TER *ioc,
-  * @ioc: per adapter object
-  * @scmd: pointer to scsi command object
-  * @raid_device: pointer to raid device data structure
-- * @mpi_request: pointer to the SCSI_IO reqest message frame
-+ * @mpi_request: pointer to the SCSI_IO request message frame
+diff -- a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -475,7 +475,7 @@ int mpi3mr_process_admin_reply_q(struct
+  * @op_reply_q: op_reply_qinfo object
+  * @reply_ci: operational reply descriptor's queue consumer index
+  *
+- * Returns reply descriptor frame address
++ * Returns: reply descriptor frame address
   */
- void
- mpt3sas_setup_direct_io(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *s=
-cmd,
---=20
-2.34.1
-
+ static inline struct mpi3_default_reply_descriptor *
+ mpi3mr_get_reply_desc(struct op_reply_qinfo *op_reply_q, u32 reply_ci)
+@@ -1063,7 +1063,6 @@ enum mpi3mr_iocstate mpi3mr_get_iocstate
+  * @mrioc: Adapter instance reference
+  *
+  * Free the DMA memory allocated for IOCTL handling purpose.
+-
+  *
+  * Return: None
+  */
+@@ -1106,7 +1105,6 @@ static void mpi3mr_free_ioctl_dma_memory
+ /**
+  * mpi3mr_alloc_ioctl_dma_memory - Alloc memory for ioctl dma
+  * @mrioc: Adapter instance reference
+-
+  *
+  * This function allocates dmaable memory required to handle the
+  * application issued MPI3 IOCTL requests.
+@@ -1241,7 +1239,7 @@ static int mpi3mr_issue_and_process_mur(
+  * during reset/resume
+  * @mrioc: Adapter instance reference
+  *
+- * Return zero if the new IOCFacts parameters value is compatible with
++ * Return: zero if the new IOCFacts parameters value is compatible with
+  * older values else return -EPERM
+  */
+ static int
