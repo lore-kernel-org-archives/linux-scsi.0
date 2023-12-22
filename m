@@ -1,44 +1,41 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17ED423765;
-	Fri, 22 Dec 2023 15:49:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DE49241E4;
+	Fri, 22 Dec 2023 16:06:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VlDxRxG5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6B0AC433C7;
-	Fri, 22 Dec 2023 15:49:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1703260162;
-	bh=Ag0mzWcsnW1g3n91UWrk0/4qwvTZgSOiJlVaZYR4sxk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VlDxRxG5wy4qKpfb3iXAPj2Uc6r15R51pEALVoOguck+w7rxTUgs1Xgby3rJZNH4X
-	 aie0n5cySZhL8SQ0JI70Zn4Jeexb+FDiM52jtiZqhjvg6LvIDcmcg29wi4eem6TTdD
-	 P50+IEjlxIsiOcm9fcWgSSzDH7PJUBusRPKGFbWNr4gISpI+/bmuMHTreF5WTcVIrm
-	 pIrpZVrkAQdSsebQ9W90K6cHkkF0JHyjU3EXoteXRH2y3Ei+iPCWckqgI6NaSPbvro
-	 vXNQTvmHG14Uw6zVmpqGD25Rg4sL+c0jd52jqN2lvzDHXbQiC0xPq8l2pznqs+GUg2
-	 HoSzyldwEOq+w==
-Date: Fri, 22 Dec 2023 21:19:18 +0530
-From: Vinod Koul <vkoul@kernel.org>
-To: Can Guo <quic_cang@quicinc.com>
-Cc: bvanassche@acm.org, mani@kernel.org, adrian.hunter@intel.com,
-	beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, Andy Gross <agross@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-	Abel Vesa <abel.vesa@linaro.org>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	"open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v8 09/10] phy: qualcomm: phy-qcom-qmp-ufs: Rectify SM8550
- UFS HS-G4 PHY Settings
-Message-ID: <ZYWv_rmgLN3NuyY2@matsya>
-References: <1701520577-31163-1-git-send-email-quic_cang@quicinc.com>
- <1701520577-31163-10-git-send-email-quic_cang@quicinc.com>
- <ZYRyJU9klhZzLdni@matsya>
- <ad95e193-1216-46ae-9f7d-2967a24d7a12@quicinc.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="M7xlX1Mr"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=2FDOW+3+TDRLXOzIEQkltc11UaDDT4Rh+Z5GwJAlFHo=; b=M7xlX1MrgGdcrlbmtcelj6k4Uu
+	Ro1Ax1OdCds0mPQw1Cv++MOErDQGGRZuLTh/VlDKfbzgBHjKaeTYDwX/Swk2lMRAJwEHuaMHZRx8W
+	lgE9rk8Yrs+fqAp0eJg0nOFsyXwoJTNq9zwOfnEMV+jnsJXNpmxwN9RuQa7mvEUvHl56MTTNSg5Vz
+	ibdkQnZAi3n+/DStTbBcQ8dw/MsZ7u+qqYw5wAxEfZWEIPWtaEJC4aNFj52dYvAlQaLxp4hkOsUIq
+	6CV/IwbKuoDHb1eaYtLIB8MibMEy4D2rC31iOv3CbuXnaDHktvytm1Fi1tBX4hfX4pItOsuXoEk2r
+	wLfjKIcg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+	id 1rGi2K-008Qjo-Oi; Fri, 22 Dec 2023 16:06:08 +0000
+Date: Fri, 22 Dec 2023 16:06:08 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: Keith Busch <kbusch@kernel.org>
+Cc: Viacheslav Dubeyko <slava@dubeyko.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Hannes Reinecke <hare@suse.de>, lsf-pc@lists.linuxfoundation.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Subject: Re: [LSF/MM/BPF TOPIC] Large block for I/O
+Message-ID: <ZYWz8K98YUGf/VZp@casper.infradead.org>
+References: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
+ <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
+ <03ebbc5f-2ff5-4f3c-8c5b-544413c55257@suse.de>
+ <5c356222-fe9e-41b0-b7fe-218fbcde4573@acm.org>
+ <BB694C7D-0000-4E2F-B26C-F0E719119B0C@dubeyko.com>
+ <ZYWm_tMtfrKaNf3t@kbusch-mbp>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,27 +44,18 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ad95e193-1216-46ae-9f7d-2967a24d7a12@quicinc.com>
+In-Reply-To: <ZYWm_tMtfrKaNf3t@kbusch-mbp>
 
-On 22-12-23, 15:41, Can Guo wrote:
-> Hi Vinod,
-> 
-> On 12/22/2023 1:13 AM, Vinod Koul wrote:
-> > On 02-12-23, 04:36, Can Guo wrote:
-> > > The registers, which are being touched in current SM8550 UFS PHY settings,
-> > > and the values being programmed are mainly the ones working for HS-G4 mode,
-> > > meanwhile, there are also a few ones somehow taken from HS-G5 PHY settings.
-> > > However, even consider HS-G4 mode only, some of them are incorrect and some
-> > > are missing. Rectify the HS-G4 PHY settings by strictly aligning with the
-> > > SM8550 UFS PHY Hardware Programming Guide suggested HS-G4 PHY settings.
-> > 
-> > This fails for me, as I have picked Abels offset series, can you please
-> > rebase these two patches and send
-> > 
-> In v8, I rebased the two changes to linux-next. Is the ask there to rebase
-> the two changes to phy/next?
+On Fri, Dec 22, 2023 at 08:10:54AM -0700, Keith Busch wrote:
+> If the host really wants to write in small granularities, then larger
+> block sizes just shifts the write amplification from the device to the
+> host, which seems worse than letting the device deal with it.
 
-Yes these two failed to apply for me, pls rebase and post
+Maybe?  I'm never sure about that.  See, if the drive is actually
+managing the flash in 16kB chunks internally, then the drive has to do a
+RMW which is increased latency over the host just doing a 16kB write,
+which can go straight to flash.  Assuming the host has the whole 16kB in
+memory (likely?)  Of course, if you're PCIe bandwidth limited, then a
+4kB write looks more attractive, but generally I think drives tend to
+be IOPS limited not bandwidth limited today?
 
--- 
-~Vinod
