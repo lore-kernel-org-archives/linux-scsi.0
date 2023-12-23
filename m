@@ -1,82 +1,55 @@
-Received: from out-182.mta1.migadu.com (out-182.mta1.migadu.com [95.215.58.182])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61C7C12E47
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Dec 2023 18:39:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54E2018B19;
+	Sat, 23 Dec 2023 20:21:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mLUUfEd7"
-Date: Sat, 23 Dec 2023 13:39:24 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1703356772;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=nl8KqWKpD6wWjbvJJznLUba3EPd6rpJb9056eV80EZI=;
-	b=mLUUfEd7gfPYDe3oleQ9tbdyTO5xnWBH1tZ17cgI4qqbATl0NNgyxkk9s86/LqjribMhXF
-	icSGv6krf/Bb8nP/Rk+sLamzbNdocnFQ0i9s/yQOF2bzXjM3YAZVaDOCpBwjSIvilLWEoR
-	/klCC3TPr9UUNblk28yYvK2TJLs04lQ=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, axboe@kernel.dk, 
-	roger.pau@citrix.com, colyli@suse.de, kent.overstreet@gmail.com, joern@lazybastard.org, 
-	miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com, sth@linux.ibm.com, 
-	hoeppner@linux.ibm.com, hca@linux.ibm.com, gor@linux.ibm.com, agordeev@linux.ibm.com, 
-	jejb@linux.ibm.com, martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com, 
-	dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org, nico@fluxnic.net, 
-	xiang@kernel.org, chao@kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, 
-	jack@suse.com, konishi.ryusuke@gmail.com, akpm@linux-foundation.org, 
-	hare@suse.de, p.raghav@samsung.com, linux-block@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org, 
-	linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org, linux-nilfs@vger.kernel.org, 
-	yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH RFC v3 for-6.8/block 09/17] btrfs: use bdev apis
-Message-ID: <j52xmye4qmjqv4mq524ppvqr7naicobnwn2qfcvftbj4zoowga@t6klttrjtq2d>
-References: <20231221085712.1766333-1-yukuai1@huaweicloud.com>
- <20231221085712.1766333-10-yukuai1@huaweicloud.com>
- <ZYcZi5YYvt5QHrG9@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mQFxI7qY"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id D212DC4339A;
+	Sat, 23 Dec 2023 20:21:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1703362871;
+	bh=v5g7Uw4bnAyUSEWBuXk7FyJFivWi7vrQSVYW9EtMYXg=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=mQFxI7qYiNZJecundwhlV0wxKiUn64M21iedNqSvsZAUAVRoAtWBbaeL2vUfiMi7/
+	 oP4vZbjjhVSRR44itR+7D0vdO8UDMTLqZMIvnPAOqk9VCcn+5C8TncWgptqEa+vCrm
+	 5g20CPD0OSoFD25so3ApGesO0UaCgLcnIQfr9lAcIGrC0v5oG6w+EW6EO3v8s4kCL0
+	 rn7IEOzLC+vCgzDwvJ/g7vIvK+JtZEzJOiChVCa2N41xSMbTTWy9tZZ0Ot9QVC3zbs
+	 AtrwKX9VZjepe6uMnJAyupFNge/ypPujuJlftXxmp+Zx0V3nLbgWoxqrOgpl8jSaou
+	 k1OLjBbORgTTQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C17F7DD4EE0;
+	Sat, 23 Dec 2023 20:21:11 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.7-rc6
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <03b579bec43c7bcdeb4eed7ded859c92f4035461.camel@HansenPartnership.com>
+References: <03b579bec43c7bcdeb4eed7ded859c92f4035461.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <03b579bec43c7bcdeb4eed7ded859c92f4035461.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 04c116e2bdfc3969f9819d2cebfdf678353c354c
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: f969c91482e1dedbb35aee4e7d32d13ed17f9e13
+Message-Id: <170336287178.28590.8119563984557905407.pr-tracker-bot@kernel.org>
+Date: Sat, 23 Dec 2023 20:21:11 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZYcZi5YYvt5QHrG9@casper.infradead.org>
-X-Migadu-Flow: FLOW_OUT
 
-On Sat, Dec 23, 2023 at 05:31:55PM +0000, Matthew Wilcox wrote:
-> On Thu, Dec 21, 2023 at 04:57:04PM +0800, Yu Kuai wrote:
-> > @@ -3674,16 +3670,17 @@ struct btrfs_super_block *btrfs_read_dev_one_super(struct block_device *bdev,
-> >  		 * Drop the page of the primary superblock, so later read will
-> >  		 * always read from the device.
-> >  		 */
-> > -		invalidate_inode_pages2_range(mapping,
-> > -				bytenr >> PAGE_SHIFT,
-> > +		invalidate_bdev_range(bdev, bytenr >> PAGE_SHIFT,
-> >  				(bytenr + BTRFS_SUPER_INFO_SIZE) >> PAGE_SHIFT);
-> >  	}
-> >  
-> > -	page = read_cache_page_gfp(mapping, bytenr >> PAGE_SHIFT, GFP_NOFS);
-> > -	if (IS_ERR(page))
-> > -		return ERR_CAST(page);
-> > +	nofs_flag = memalloc_nofs_save();
-> > +	folio = bdev_read_folio(bdev, bytenr);
-> > +	memalloc_nofs_restore(nofs_flag);
-> 
-> This is the wrong way to use memalloc_nofs_save/restore.  They should be
-> used at the point that the filesystem takes/releases whatever lock is
-> also used during reclaim.  I don't know btrfs well enough to suggest
-> what lock is missing these annotations.
+The pull request you sent on Sat, 23 Dec 2023 13:16:49 -0500:
 
-Yes, but considering this is a cross-filesystem cleanup I wouldn't want
-to address that in this patchset. And the easier, more incremental
-approach for the conversion would be to first convert every GFP_NOFS
-usage  to memalloc_nofs_save() like this patch does, as small local
-changes, and then let the btrfs people combine them and move them to the
-approproate location in a separate patchstet.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/f969c91482e1dedbb35aee4e7d32d13ed17f9e13
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
