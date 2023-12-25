@@ -1,55 +1,87 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54E2018B19;
-	Sat, 23 Dec 2023 20:21:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mQFxI7qY"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D212DC4339A;
-	Sat, 23 Dec 2023 20:21:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1703362871;
-	bh=v5g7Uw4bnAyUSEWBuXk7FyJFivWi7vrQSVYW9EtMYXg=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=mQFxI7qYiNZJecundwhlV0wxKiUn64M21iedNqSvsZAUAVRoAtWBbaeL2vUfiMi7/
-	 oP4vZbjjhVSRR44itR+7D0vdO8UDMTLqZMIvnPAOqk9VCcn+5C8TncWgptqEa+vCrm
-	 5g20CPD0OSoFD25so3ApGesO0UaCgLcnIQfr9lAcIGrC0v5oG6w+EW6EO3v8s4kCL0
-	 rn7IEOzLC+vCgzDwvJ/g7vIvK+JtZEzJOiChVCa2N41xSMbTTWy9tZZ0Ot9QVC3zbs
-	 AtrwKX9VZjepe6uMnJAyupFNge/ypPujuJlftXxmp+Zx0V3nLbgWoxqrOgpl8jSaou
-	 k1OLjBbORgTTQ==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C17F7DD4EE0;
-	Sat, 23 Dec 2023 20:21:11 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.7-rc6
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <03b579bec43c7bcdeb4eed7ded859c92f4035461.camel@HansenPartnership.com>
-References: <03b579bec43c7bcdeb4eed7ded859c92f4035461.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <03b579bec43c7bcdeb4eed7ded859c92f4035461.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 04c116e2bdfc3969f9819d2cebfdf678353c354c
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: f969c91482e1dedbb35aee4e7d32d13ed17f9e13
-Message-Id: <170336287178.28590.8119563984557905407.pr-tracker-bot@kernel.org>
-Date: Sat, 23 Dec 2023 20:21:11 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Received: from zju.edu.cn (spam.zju.edu.cn [61.164.42.155])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3FE3A110E;
+	Mon, 25 Dec 2023 06:37:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from localhost.localdomain (unknown [10.190.71.239])
+	by mail-app2 (Coremail) with SMTP id by_KCgCnHdX4IolltND0AA--.46236S4;
+	Mon, 25 Dec 2023 14:36:45 +0800 (CST)
+From: Dinghao Liu <dinghao.liu@zju.edu.cn>
+To: dinghao.liu@zju.edu.cn
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: mpt3sas: fix potential use-after-free in mpt3sas_base_attach
+Date: Mon, 25 Dec 2023 14:36:12 +0800
+Message-Id: <20231225063613.9829-1-dinghao.liu@zju.edu.cn>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID:by_KCgCnHdX4IolltND0AA--.46236S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ary7AF45KF1Dtr4fJw1xAFb_yoW8Xry8pr
+	y8JFZIkrs8Xr4xGr47Was8ur10q3WrCr1UKFW0y3ZI9w1fJry0yws7CFsrKr1kAFs3A39r
+	XrnrGrW3CF15JFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUk21xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
+	w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
+	IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJr0_GcWl84ACjcxK6I8E
+	87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
+	8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
+	Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
+	xGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vIr41l42xK82IY6x8ErcxF
+	aVAv8VW8uw4UJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr
+	4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxG
+	rwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8Jw
+	CI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2
+	z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
+X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgwPBmWCupcTBwAPsW
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-The pull request you sent on Sat, 23 Dec 2023 13:16:49 -0500:
+_base_allocate_memory_pools() calls _base_release_memory_pools()
+to clean up memory in several error paths. However,
+mpt3sas_base_attach() calls _base_release_memory_pools() again
+on failure of _base_allocate_memory_pools(), which may lead to
+use-after-free.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/f969c91482e1dedbb35aee4e7d32d13ed17f9e13
-
-Thank you!
-
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index a75f670bf551..9be7e493e56c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -5844,6 +5844,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 		}
+ 		dma_pool_destroy(ioc->reply_post_free_array_dma_pool);
+ 		kfree(ioc->reply_post);
++		ioc->reply_post = NULL;
+ 	}
+ 
+ 	if (ioc->pcie_sgl_dma_pool) {
+@@ -5854,6 +5855,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 			ioc->pcie_sg_lookup[i].pcie_sgl = NULL;
+ 		}
+ 		dma_pool_destroy(ioc->pcie_sgl_dma_pool);
++		ioc->pcie_sgl_dma_pool = NULL;
+ 	}
+ 	kfree(ioc->pcie_sg_lookup);
+ 	ioc->pcie_sg_lookup = NULL;
+@@ -5864,6 +5866,7 @@ _base_release_memory_pools(struct MPT3SAS_ADAPTER *ioc)
+ 				     ioc->config_page));
+ 		dma_free_coherent(&ioc->pdev->dev, ioc->config_page_sz,
+ 		    ioc->config_page, ioc->config_page_dma);
++		ioc->config_page = NULL;
+ 	}
+ 
+ 	kfree(ioc->hpr_lookup);
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.17.1
+
