@@ -1,78 +1,73 @@
-Received: from mail-oi1-f181.google.com (mail-oi1-f181.google.com [209.85.167.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC3A21847;
-	Tue, 26 Dec 2023 02:22:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-oi1-f181.google.com with SMTP id 5614622812f47-3bb7376957eso3259539b6e.1;
-        Mon, 25 Dec 2023 18:22:45 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703557365; x=1704162165;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=p0ye6VTF0bjOBBw4Oo5vJi04g00aoIv0iinplRLlxEY=;
-        b=VhqVieZdY9WITAVpE3iNJRV5z0X4Powa9+xB/+9OA9QUKB+xTYFiVPuUnV4BPPzcZk
-         SdCe2B7SamPL9IfOzkD7T25zglfNqdG801XdPZLahJrjfdl+HQY8EOTGzSrimmBzOA3t
-         fd0v2KFBeuLyI5SG/IrCBuHc5WImkc8Wjo3KDvsf+7gADCgxwficf2y+qpPcEGZAAByg
-         A9LrebqWJNlrjof+UA4FoptrtuZwgYOQAKsgVKBq9sJ/VaN1/0Rab16xHnkGz7qLduzv
-         392R39kGK70CYL0a8/HgsVcJcPaiA3mHZKAP9ODsQq0H2kg5ytvVvpT2cJb4xZieA+/r
-         IRgQ==
-X-Gm-Message-State: AOJu0YyIqq/z/difUXEc8aUPR+PCQkQaWDc6Y6rmfv1CsIQEmmAqPSGw
-	xXsnuefR3ChTYvT+nx4JDvc=
-X-Google-Smtp-Source: AGHT+IGLP4ZGwUl5RZbmP0PftsjmntPMXXdWjtpN55kgwsW2mN2AemTL0C5F/x7k3R8jYsPQGOMVgQ==
-X-Received: by 2002:a05:6808:1288:b0:3ba:9d:9b54 with SMTP id a8-20020a056808128800b003ba009d9b54mr8304818oiw.14.1703557364799;
-        Mon, 25 Dec 2023 18:22:44 -0800 (PST)
-Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
-        by smtp.gmail.com with ESMTPSA id u1-20020a056a00124100b006cecaff9e29sm8593323pfi.128.2023.12.25.18.22.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Dec 2023 18:22:44 -0800 (PST)
-Message-ID: <42aab0dc-802d-4dd8-9733-20ca2c92ccca@acm.org>
-Date: Mon, 25 Dec 2023 18:22:42 -0800
+Received: from zju.edu.cn (mail.zju.edu.cn [61.164.42.155])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0D9223FE1;
+	Wed, 27 Dec 2023 05:43:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from localhost.localdomain (unknown [10.190.69.69])
+	by mail-app2 (Coremail) with SMTP id by_KCgAXHU17uYtlmtEJAQ--.7437S4;
+	Wed, 27 Dec 2023 13:43:30 +0800 (CST)
+From: Dinghao Liu <dinghao.liu@zju.edu.cn>
+To: dinghao.liu@zju.edu.cn
+Cc: Saurav Kashyap <skashyap@marvell.com>,
+	Javed Hasan <jhasan@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"Dupuis, Chad" <chad.dupuis@cavium.com>,
+	Manish Rangankar <manish.rangankar@cavium.com>,
+	Nilesh Javali <nilesh.javali@cavium.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: qedf: fix a memleak in qedf_alloc_global_queues
+Date: Wed, 27 Dec 2023 13:42:55 +0800
+Message-Id: <20231227054255.28583-1-dinghao.liu@zju.edu.cn>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID:by_KCgAXHU17uYtlmtEJAQ--.7437S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7JF1fZr1fuw13AFW3tr4xWFg_yoW3Zrb_Ga
+	yjq3y2yr4kCrsYvr1Utr9rAFZYvrs3u3W8CF4FqF1SvFWrX3Z3GFWqvr15XrWFk3y2yF1U
+	Aa1DXr1Fyw18ZjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbsAFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
+	wVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20x
+	vE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E
+	87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
+	8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
+	Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
+	xGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1l42xK82IY
+	c2Ij64vIr41l42xK82IY6x8ErcxFaVAv8VW8uw4UJr1UMxC20s026xCaFVCjc4AY6r1j6r
+	4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF
+	67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2I
+	x0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2
+	z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnU
+	UI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgwPBmWCupcTBwAZsA
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
-Content-Language: en-US
-To: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
- Keith Busch <kbusch@kernel.org>,
- Damien Le Moal <damien.lemoal@opensource.wdc.com>,
- Ed Tsai <ed.tsai@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20231130193139.880955-1-bvanassche@acm.org>
- <20231130193139.880955-2-bvanassche@acm.org>
- <58f50403-fcc9-ec11-f52b-f11ced3d2652@huaweicloud.com>
- <8372f2d0-b695-4af4-90e6-e35b86e3b844@acm.org>
- <c1658336-f48e-5688-f0c2-f325fd5696c3@huaweicloud.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <c1658336-f48e-5688-f0c2-f325fd5696c3@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 12/25/23 04:51, Yu Kuai wrote:
-> Are you still intrested in this patchset? I really want this switch in
-> our product as well.
-> 
-> If so, how do you think about following changes, a new field in
-> blk_mq_tag_set will make synchronization much easier.
+When qedf_alloc_bdq() fails, qedf->global_queues should
+be freed to prevent potential memleak. It's the same for
+the following error handling paths.
 
-Hi Kuai,
+Fixes: 61d8658b4a43 ("scsi: qedf: Add QLogic FastLinQ offload FCoE driver framework.")
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+---
+ drivers/scsi/qedf/qedf_main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks for the reminder. I plan to continue working on this patch
-series in January 2024 (after the merge window has closed).
-
-I will take a closer look at the patch in your email.
-
-Thanks,
-
-Bart.
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index a58353b7b4e8..2261efcf2dbb 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -3155,6 +3155,7 @@ static int qedf_alloc_global_queues(struct qedf_ctx *qedf)
+ 
+ mem_alloc_failure:
+ 	qedf_free_global_queues(qedf);
++	kfree(qedf->global_queues);
+ 	return status;
+ }
+ 
+-- 
+2.17.1
 
