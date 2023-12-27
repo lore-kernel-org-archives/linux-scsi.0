@@ -1,41 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CF936105;
-	Wed, 27 Dec 2023 06:21:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C07F5228;
+	Wed, 27 Dec 2023 06:30:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WtcfljAs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 209CEC433C7;
-	Wed, 27 Dec 2023 06:21:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lQrvPlfW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A7B6C433C7;
+	Wed, 27 Dec 2023 06:30:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1703658093;
-	bh=uSrf39EJ3m2nWoWySm/WpjS4Iw8WDsXjJGD5Xt+c8eo=;
+	s=k20201202; t=1703658651;
+	bh=axysAKGKpEKkYuBldpcX4OwH/06/63fo7fdgfaaiYJ0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WtcfljAsXrB0OyllKXtg8mhcJCrl06MXO3isk1FLVmuY3tbWgcgunFO+vIq9Q1Q3L
-	 K/+AJOPVdbx24Z2iBvA52ig2KUk4TEj7Dv8csNFB47ZA87F2CTMNnRkPllXEB3NBpZ
-	 u6slESNZ6jbV+VDGCvbGYZBJZLgbxQ9SRxMCfJ7Zhx7ZqEA2BhdLi/btvtM+pGwVAi
-	 ZVoGcRq1uTnqHo6Y18LlCVOSJxFFejK1Tdh+Ef7HXFPUTseOHbYbZ7ux91Q7HVOD/X
-	 ryIInmXuPMukYIsb+/9X4+lxNn0Y9/iXWuNWCgh79eNHX5AdyNfSHrVKw54Go4jKzQ
-	 PH4JI00KI7wEA==
-Date: Wed, 27 Dec 2023 11:51:23 +0530
+	b=lQrvPlfW/CtT5sS+oEY90/+eqaqBHhGEYLemgV/ZKcGWOjusFD97MO+09SIWOnKOo
+	 tgdwO0+xBuD+X0dYrbW6kvvEQEhlc0DVt6JjrD0/kvARe7Y8Mrrf/+u9BVG0a+La/x
+	 cH+jGCFdHEUUmGkBLXqJnnIgQ6s6UUPUwFt1OlXQ5xDRRVBaMikZYb8g4qIgT961Yq
+	 aRWvXiarXxNcIb6V5ltQlMEMLt/vUTDfwTsqCLphFrWBouu+dJQSdsph1/N30ZLJ+6
+	 ZzOwWPTdVVI2sUyluEm8Gmpqsql8oEVBD2lu3ZTDIrLQaL5CdVxaBoGB7QZDb/fJoI
+	 RSoEakRp8wKjA==
+Date: Wed, 27 Dec 2023 12:00:38 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Andrew Halaney <ahalaney@redhat.com>
-Cc: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>, Janek Kotas <jank@cadence.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Can Guo <quic_cang@quicinc.com>, Will Deacon <will@kernel.org>,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC v3 11/11] scsi: ufs: core: Perform read back before
- writing run/stop regs
-Message-ID: <20231227062123.GI2814@thinkpad>
-References: <20231221-ufs-reset-ensure-effect-before-delay-v3-0-2195a1b66d2e@redhat.com>
- <20231221-ufs-reset-ensure-effect-before-delay-v3-11-2195a1b66d2e@redhat.com>
+To: Chanwoo Lee <cw9316.lee@samsung.com>
+Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	peter.wang@mediatek.com, chu.stanley@gmail.com,
+	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
+	stanley.chu@mediatek.com, quic_cang@quicinc.com,
+	quic_asutoshd@quicinc.com, powen.kao@mediatek.com,
+	quic_nguyenb@quicinc.com, yang.lee@linux.alibaba.com,
+	beanhuo@micron.com, Arthur.Simchaev@wdc.com, ebiggers@google.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org, grant.jung@samsung.com,
+	jt77.jang@samsung.com, dh0421.hwang@samsung.com,
+	sh043.lee@samsung.com
+Subject: Re: [PATCH v2] ufs: mcq: Adding a function for MCQ enable
+Message-ID: <20231227063038.GJ2814@thinkpad>
+References: <CGME20231221065637epcas1p203dcd5cfb1d4a3964fff9543a041d78d@epcas1p2.samsung.com>
+ <20231221065608.9899-1-cw9316.lee@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,55 +46,118 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20231221-ufs-reset-ensure-effect-before-delay-v3-11-2195a1b66d2e@redhat.com>
+In-Reply-To: <20231221065608.9899-1-cw9316.lee@samsung.com>
 
-On Thu, Dec 21, 2023 at 01:09:57PM -0600, Andrew Halaney wrote:
-> Currently a wmb() is used to ensure that writes to the
-> UTP_TASK_REQ_LIST_BASE* regs are completed prior to following writes to
-> the run/stop registers.
+On Thu, Dec 21, 2023 at 03:56:08PM +0900, Chanwoo Lee wrote:
+> From: ChanWoo Lee <cw9316.lee@samsung.com>
 > 
-> wmb() ensure that the write completes, but completion doesn't mean that
-> it isn't stored in a buffer somewhere. The recommendation for
-> ensuring the bits have taken effect on the device is to perform a read
-> back to force it to make it all the way to the device. This is
-> documented in device-io.rst and a talk by Will Deacon on this can
-> be seen over here:
+> The REG_UFS_MEM_CFG register is too general(broad)
+> and it is difficult to know the meaning only with a value of 0x1.
+> So far, comments were required.
 > 
->     https://youtu.be/i6DayghhA8Q?si=MiyxB5cKJXSaoc01&t=1678
+> Therefore, I have added new functions and defines
+> to improve code readability/reusability.
 > 
-> Let's do that to ensure the bits hit the device. Because the wmb()'s
-> purpose wasn't to add extra ordering (on top of the ordering guaranteed
-> by writel()/readl()), it can safely be removed.
-> 
-> Fixes: 897efe628d7e ("scsi: ufs: add missing memory barriers")
-> Signed-off-by: Andrew Halaney <ahalaney@redhat.com>
-> ---
->  drivers/ufs/core/ufshcd.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index caebd589e08c..7c1975a1181f 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -4726,7 +4726,7 @@ int ufshcd_make_hba_operational(struct ufs_hba *hba)
->  	 * Make sure base address and interrupt setup are updated before
->  	 * enabling the run/stop registers below.
->  	 */
-> -	wmb();
-> +	ufshcd_readl(hba, REG_UTP_TASK_REQ_LIST_BASE_H);
+> Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
 
-I don't think the readback is really needed here. Because, the dependency is
-with UTP registers and both should be in the same domain. So there is no way the
-following write can happen before prior UTP write completion.
+I would reword the subject and description as below:
+
+```
+ufs: mcq: Add definition for REG_UFS_MEM_CFG register
+
+Instead of hardcoding the register field, add the proper definition. While
+at it, let's also use ufshcd_rmwl() to simplify updating this register.
+```
 
 - Mani
-
->  
->  	/*
->  	 * UCRDY, UTMRLDY and UTRLRDY bits must be 1
 > 
+> * v1->v2:
+>    1) Excluding ESI_ENABLE
+>    2) Replace with ufshcd_rmwl, BIT()
+>    3) Separating hba->mcq_enabled
+> ---
+>  drivers/ufs/core/ufs-mcq.c      | 6 ++++++
+>  drivers/ufs/core/ufshcd.c       | 4 +---
+>  drivers/ufs/host/ufs-mediatek.c | 4 +---
+>  include/ufs/ufshcd.h            | 1 +
+>  include/ufs/ufshci.h            | 3 +++
+>  5 files changed, 12 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 0787456c2b89..edc752e55878 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -399,6 +399,12 @@ void ufshcd_mcq_enable_esi(struct ufs_hba *hba)
+>  }
+>  EXPORT_SYMBOL_GPL(ufshcd_mcq_enable_esi);
+>  
+> +void ufshcd_mcq_enable(struct ufs_hba *hba)
+> +{
+> +	ufshcd_rmwl(hba, MCQ_MODE_SELECT, MCQ_MODE_SELECT, REG_UFS_MEM_CFG);
+> +}
+> +EXPORT_SYMBOL_GPL(ufshcd_mcq_enable);
+> +
+>  void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg)
+>  {
+>  	ufshcd_writel(hba, msg->address_lo, REG_UFS_ESILBA);
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index ae9936fc6ffb..30df6f6a72c6 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -8723,9 +8723,7 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
+>  	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
+>  	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
+>  
+> -	/* Select MCQ mode */
+> -	ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
+> -		      REG_UFS_MEM_CFG);
+> +	ufshcd_mcq_enable(hba);
+>  	hba->mcq_enabled = true;
+>  
+>  	dev_info(hba->dev, "MCQ configured, nr_queues=%d, io_queues=%d, read_queue=%d, poll_queues=%d, queue_depth=%d\n",
+> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+> index fc61790d289b..1048add66419 100644
+> --- a/drivers/ufs/host/ufs-mediatek.c
+> +++ b/drivers/ufs/host/ufs-mediatek.c
+> @@ -1219,9 +1219,7 @@ static int ufs_mtk_link_set_hpm(struct ufs_hba *hba)
+>  		ufs_mtk_config_mcq(hba, false);
+>  		ufshcd_mcq_make_queues_operational(hba);
+>  		ufshcd_mcq_config_mac(hba, hba->nutrs);
+> -		/* Enable MCQ mode */
+> -		ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
+> -			      REG_UFS_MEM_CFG);
+> +		ufshcd_mcq_enable(hba);
+>  	}
+>  
+>  	if (err)
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index d862c8ddce03..a96c45fa4b4b 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -1257,6 +1257,7 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+>  					 struct ufs_hw_queue *hwq);
+>  void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
+>  void ufshcd_mcq_enable_esi(struct ufs_hba *hba);
+> +void ufshcd_mcq_enable(struct ufs_hba *hba);
+>  void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg);
+>  
+>  int ufshcd_opp_config_clks(struct device *dev, struct opp_table *opp_table,
+> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+> index d5accacae6bc..2a6989a70671 100644
+> --- a/include/ufs/ufshci.h
+> +++ b/include/ufs/ufshci.h
+> @@ -282,6 +282,9 @@ enum {
+>  /* UTMRLRSR - UTP Task Management Request Run-Stop Register 80h */
+>  #define UTP_TASK_REQ_LIST_RUN_STOP_BIT		0x1
+>  
+> +/* REG_UFS_MEM_CFG - Global Config Registers 300h */
+> +#define MCQ_MODE_SELECT 	BIT(0)
+> +
+>  /* CQISy - CQ y Interrupt Status Register  */
+>  #define UFSHCD_MCQ_CQIS_TAIL_ENT_PUSH_STS	0x1
+>  
 > -- 
-> 2.43.0
+> 2.29.0
 > 
 
 -- 
