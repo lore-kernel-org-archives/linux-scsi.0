@@ -1,53 +1,53 @@
-Received: from mail-io1-f45.google.com (mail-io1-f45.google.com [209.85.166.45])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D2EA44394
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Dec 2023 11:08:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2AF34439E
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Dec 2023 11:08:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="F3ZVAyx1"
-Received: by mail-io1-f45.google.com with SMTP id ca18e2360f4ac-7ba87489f97so230449439f.1
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Dec 2023 03:08:08 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="C8rt9Ddo"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1d3e8a51e6bso38998305ad.3
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Dec 2023 03:08:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1703675287; x=1704280087; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1703675289; x=1704280089; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=nS7Hu9JUpjdQ1JPI7Aio1wGA3XY9FxBx5jjocn17oRg=;
-        b=F3ZVAyx1Zc8EHd7Z+SYmxSyzlzK0ThsoIvXrYl5K6mHXDxPhh1AEWINS1eUqEUGfbi
-         3cUcmkKYt4wL3+aVNckyB6MkJmQ0chQ+oxjKMsBEV6LDL525hYLXkyUk6DFrRbIShZSy
-         6lVgLYFtG9MCkUa9XXXLPk6qXeATHAu2J1hqc=
+        bh=Gg6rhnZoBzHwr50ergWXiU5b7Nuh1uCy99UjRNK3K+o=;
+        b=C8rt9DdogA9PorxI4XT1B8LV9f/Foatp8o+7rhLa5vOA/9tiDG3g3Dk0cj2BAlG1a+
+         aEBsPoBiVszk3Rqy7Rd3z2bob+V7yBFemSEaQwXYlJveShCGIkDwdG+QfAn2iDaghpnu
+         IvdzeXWHeN6yoXVT8G24L6yPxhQJg0CuXkhp4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703675287; x=1704280087;
+        d=1e100.net; s=20230601; t=1703675289; x=1704280089;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=nS7Hu9JUpjdQ1JPI7Aio1wGA3XY9FxBx5jjocn17oRg=;
-        b=gdHXK9Ku2QofK96zWyvHJxFR1vMOLy4NEVZuS1DWYakJPW8pyBzDzolZ8n7oj00Woj
-         rQOsGtAFv5Al6P63on/JAvUIoWoBVlf6r5nPOov64uwRKlvgXQqGvhRt5AiKz1SYWime
-         IMNo0kiRa9m5Dyoq5voSq3MDqGShyR9GKDI445/1+Y9+FYdeStjbxNBmxMwHnk5HdCCx
-         uQFFJWY9dPpOyBZNQExN24bJQd43eKB5g6/h8eGEIB6llzd67e8dL2O7rdzO3/+QyA2N
-         inz8ueJnOKJFuId8YhrvEUUIMWI+FQFNP+sdAQ5WLM+US9dbxZ7dGQgOtLcbb1V3uX3+
-         KiCw==
-X-Gm-Message-State: AOJu0Yy5Evn3QKXt+9JE1R2cApIzQQPiylbfF35MnjHsQi/uPI3h/moN
-	HNuZuHSezX8mJBQch3lTpetky/WjaR7WSTUp+AH1AIYb4fRFSSvlUdDLhCTPsFm0umW0ITNdzg5
-	rXDrpX+nnTyFJkcHMmrqfhkTn+PwA/4BWqVvnzMsXSRtwbMPysdRptSK0X9hc54giBMWO5bPJdP
-	ufdrywZe4tWlGLfuT8
-X-Google-Smtp-Source: AGHT+IGqIkarPwmsTyCFA6zcvBCx1Z/f+0610R++A5P0zMHkLaF93Seat+H+OecJPFpWRsix2LOMmg==
-X-Received: by 2002:a6b:7014:0:b0:7ba:965b:fde6 with SMTP id l20-20020a6b7014000000b007ba965bfde6mr8787184ioc.33.1703675286520;
-        Wed, 27 Dec 2023 03:08:06 -0800 (PST)
+        bh=Gg6rhnZoBzHwr50ergWXiU5b7Nuh1uCy99UjRNK3K+o=;
+        b=qoJDUYNhtoCYIXaPz8TrEZEAYFlDgWEyPg838f+OT7OlWr6zc1LfYfWNNYBgIHVuSd
+         pMXRUogIpi6FHciYJREOzdS1yxEXa5Br1AkmQ2WUmaKBQbywo7/X+tqYI3AOluQ8Xbsq
+         Oube5JrddIl7tt9+bfzczYs7LJW4gShjnbhD16t4XW504BJlfxNVbh4CrWVaoq7nzmW0
+         J5QL8T1mSfEtO3KwTt0ryqrqfq/4krdztjCOKT/hcG7nKvpEjIflcVqr62RaW44LZx8J
+         FjzrK/+bah+Zb0xxK1+I6e1Fu2zS7xjAoZSILhzMTBLR75aJOMfg8GQuIMVFtlLIMd+D
+         K4SQ==
+X-Gm-Message-State: AOJu0YwjUpr0FsV/0jJ3AVfqfGk5sAq8Sz8bq4sqvHqQyEedsLLWUUtC
+	6Yee7MTZoNaRDEJ5bPd0Jtwsl0yfk7q8xTtSeRcKRd6Y5YKnJQWAf123d09tI9M1AQrwSrqRxQL
+	LPTcr+P8+kpw8xxa77adzDYlNEX1EfEGaXJxdms2iCv9LmmpH/QdPxV3gyBioNn0pZItfBIkomw
+	uH5J2qAWtzFh9UYRl7
+X-Google-Smtp-Source: AGHT+IEnBTTuqnGUcH1X9aLmYQ7l692VkSuN7MhjM2vyG15v8QRx2dk9Z09k/yVCuBNlD2SdGWz/hw==
+X-Received: by 2002:a17:902:e842:b0:1d4:3112:1c34 with SMTP id t2-20020a170902e84200b001d431121c34mr7525362plg.34.1703675288953;
+        Wed, 27 Dec 2023 03:08:08 -0800 (PST)
 Received: from localhost.localdomain ([192.19.252.250])
-        by smtp.gmail.com with ESMTPSA id n10-20020a1709026a8a00b001ab39cd875csm11699179plk.133.2023.12.27.03.08.04
+        by smtp.gmail.com with ESMTPSA id n10-20020a1709026a8a00b001ab39cd875csm11699179plk.133.2023.12.27.03.08.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Dec 2023 03:08:05 -0800 (PST)
+        Wed, 27 Dec 2023 03:08:08 -0800 (PST)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
 Cc: sathya.prakash@broadcom.com,
 	sreekanth.reddy@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v2 1/2] mpt3sas: Reload SBR without rebooting HBA
-Date: Wed, 27 Dec 2023 16:36:09 +0530
-Message-Id: <20231227110610.18276-2-ranjan.kumar@broadcom.com>
+Subject: [PATCH v2 2/2] mpt3sas: Update driver version to 48.100.00.00
+Date: Wed, 27 Dec 2023 16:36:10 +0530
+Message-Id: <20231227110610.18276-3-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20231227110610.18276-1-ranjan.kumar@broadcom.com>
 References: <20231227110610.18276-1-ranjan.kumar@broadcom.com>
@@ -58,321 +58,38 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000004bf81c060d7bd091"
+	boundary="00000000000070c618060d7bd03e"
 
---0000000000004bf81c060d7bd091
+--00000000000070c618060d7bd03e
 Content-Transfer-Encoding: 8bit
 
-Added a new IOCTL command MPT3ENABLEDIAGSBRRELOAD.
-As a part of firmware update operation, applications use this IOCTL
-command to set the SBR reload bit in the Host Diagnostic register.
-So that HBA firmware is updated without power-cycling the system.
+Update driver version to 48.100.00.00
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c  | 97 +++++++++++++++++++---------
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  4 ++
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 54 ++++++++++++++++
- drivers/scsi/mpt3sas/mpt3sas_ctl.h   | 10 +++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  1 +
- 5 files changed, 135 insertions(+), 31 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 8761bc58d965..da1497cadeb1 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -7914,26 +7914,22 @@ mpt3sas_base_validate_event_type(struct MPT3SAS_ADAPTER *ioc, u32 *event_type)
- }
- 
- /**
-- * _base_diag_reset - the "big hammer" start of day reset
-- * @ioc: per adapter object
-- *
-- * Return: 0 for success, non-zero for failure.
-- */
--static int
--_base_diag_reset(struct MPT3SAS_ADAPTER *ioc)
--{
--	u32 host_diagnostic;
--	u32 ioc_state;
--	u32 count;
--	u32 hcb_size;
--
--	ioc_info(ioc, "sending diag reset !!\n");
--
--	pci_cfg_access_lock(ioc->pdev);
-+* mpt3sas_base_unlock_and_get_host_diagnostic- enable Host Diagnostic Register writes
-+* @ioc: per adapter object
-+* @host_diagnostic: host diagnostic register content
-+*
-+* Return: 0 for success, non-zero for failure.
-+*/
- 
--	drsprintk(ioc, ioc_info(ioc, "clear interrupts\n"));
-+int
-+mpt3sas_base_unlock_and_get_host_diagnostic(struct MPT3SAS_ADAPTER *ioc,
-+	u32 *host_diagnostic)
-+{
- 
-+	u32 count;
-+	*host_diagnostic = 0;
- 	count = 0;
-+
- 	do {
- 		/* Write magic sequence to WriteSequence register
- 		 * Loop until in diagnostic mode
-@@ -7952,30 +7948,67 @@ _base_diag_reset(struct MPT3SAS_ADAPTER *ioc)
- 
- 		if (count++ > 20) {
- 			ioc_info(ioc,
--			    "Stop writing magic sequence after 20 retries\n");
-+				    "Stop writing magic sequence after 20 retries\n");
- 			_base_dump_reg_set(ioc);
--			goto out;
-+			return -EFAULT;
- 		}
- 
--		host_diagnostic = ioc->base_readl_ext_retry(&ioc->chip->HostDiagnostic);
-+		*host_diagnostic = ioc->base_readl_ext_retry(&ioc->chip->HostDiagnostic);
- 		drsprintk(ioc,
--			  ioc_info(ioc, "wrote magic sequence: count(%d), host_diagnostic(0x%08x)\n",
--				   count, host_diagnostic));
-+			     ioc_info(ioc, "wrote magic sequence: count(%d), host_diagnostic(0x%08x)\n",
-+				     count, *host_diagnostic));
- 
--	} while ((host_diagnostic & MPI2_DIAG_DIAG_WRITE_ENABLE) == 0);
-+	} while ((*host_diagnostic & MPI2_DIAG_DIAG_WRITE_ENABLE) == 0);
-+	return 0;
-+}
- 
--	hcb_size = ioc->base_readl(&ioc->chip->HCBSize);
-+/**
-+ * mpt3sas_base_lock_host_diagnostic: Disable Host Diagnostic Register writes
-+ * @ioc: per adapter object
-+ */
- 
-+void
-+mpt3sas_base_lock_host_diagnostic(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	drsprintk(ioc, ioc_info(ioc, "disable writes to the diagnostic register\n"));
-+	writel(MPI2_WRSEQ_FLUSH_KEY_VALUE, &ioc->chip->WriteSequence);
-+}
-+
-+/**
-+ * _base_diag_reset - the "big hammer" start of day reset
-+ * @ioc: per adapter object
-+ *
-+ * Return: 0 for success, non-zero for failure.
-+ */
-+static int
-+_base_diag_reset(struct MPT3SAS_ADAPTER *ioc)
-+{
-+	u32 host_diagnostic;
-+	u32 ioc_state;
-+	u32 count;
-+	u32 hcb_size;
-+
-+	ioc_info(ioc, "sending diag reset !!\n");
-+
-+	pci_cfg_access_lock(ioc->pdev);
-+
-+	drsprintk(ioc, ioc_info(ioc, "clear interrupts\n"));
-+
-+	mutex_lock(&ioc->hostdiag_unlock_mutex);
-+	if (mpt3sas_base_unlock_and_get_host_diagnostic(ioc, &host_diagnostic))
-+		goto out;
-+
-+	hcb_size = ioc->base_readl(&ioc->chip->HCBSize);
- 	drsprintk(ioc, ioc_info(ioc, "diag reset: issued\n"));
- 	writel(host_diagnostic | MPI2_DIAG_RESET_ADAPTER,
- 	     &ioc->chip->HostDiagnostic);
- 
--	/*This delay allows the chip PCIe hardware time to finish reset tasks*/
-+	/* This delay allows the chip PCIe hardware time to finish reset tasks */
- 	msleep(MPI2_HARD_RESET_PCIE_FIRST_READ_DELAY_MICRO_SEC/1000);
- 
- 	/* Approximately 300 second max wait */
- 	for (count = 0; count < (300000000 /
--		MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC); count++) {
-+	    MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC); count++) {
- 
- 		host_diagnostic = ioc->base_readl_ext_retry(&ioc->chip->HostDiagnostic);
- 
-@@ -7988,13 +8021,15 @@ _base_diag_reset(struct MPT3SAS_ADAPTER *ioc)
- 		if (!(host_diagnostic & MPI2_DIAG_RESET_ADAPTER))
- 			break;
- 
--		msleep(MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC / 1000);
-+		/* Wait to pass the second read delay window */
-+			msleep(MPI2_HARD_RESET_PCIE_SECOND_READ_DELAY_MICRO_SEC/1000);
- 	}
- 
- 	if (host_diagnostic & MPI2_DIAG_HCB_MODE) {
- 
- 		drsprintk(ioc,
--			  ioc_info(ioc, "restart the adapter assuming the HCB Address points to good F/W\n"));
-+			ioc_info(ioc, "restart the adapter assuming the\n"
-+					"HCB Address points to good F/W\n"));
- 		host_diagnostic &= ~MPI2_DIAG_BOOT_DEVICE_SELECT_MASK;
- 		host_diagnostic |= MPI2_DIAG_BOOT_DEVICE_SELECT_HCDW;
- 		writel(host_diagnostic, &ioc->chip->HostDiagnostic);
-@@ -8008,9 +8043,8 @@ _base_diag_reset(struct MPT3SAS_ADAPTER *ioc)
- 	writel(host_diagnostic & ~MPI2_DIAG_HOLD_IOC_RESET,
- 	    &ioc->chip->HostDiagnostic);
- 
--	drsprintk(ioc,
--		  ioc_info(ioc, "disable writes to the diagnostic register\n"));
--	writel(MPI2_WRSEQ_FLUSH_KEY_VALUE, &ioc->chip->WriteSequence);
-+	mpt3sas_base_lock_host_diagnostic(ioc);
-+	mutex_unlock(&ioc->hostdiag_unlock_mutex);
- 
- 	drsprintk(ioc, ioc_info(ioc, "Wait for FW to go to the READY state\n"));
- 	ioc_state = _base_wait_on_iocstate(ioc, MPI2_IOC_STATE_READY, 20);
-@@ -8028,6 +8062,7 @@ _base_diag_reset(struct MPT3SAS_ADAPTER *ioc)
-  out:
- 	pci_cfg_access_unlock(ioc->pdev);
- 	ioc_err(ioc, "diag reset: FAILED\n");
-+	mutex_unlock(&ioc->hostdiag_unlock_mutex);
- 	return -EFAULT;
- }
- 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 6d0bc8c66700..de60ef8a7908 100644
+index de60ef8a7908..bf100a4ebfc3 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1366,6 +1366,7 @@ struct MPT3SAS_ADAPTER {
- 	u8		got_task_abort_from_ioctl;
- 
- 	struct mutex	reset_in_progress_mutex;
-+	struct mutex    hostdiag_unlock_mutex;
- 	spinlock_t	ioc_reset_in_progress_lock;
- 	u8		ioc_link_reset_in_progress;
- 
-@@ -1790,6 +1791,9 @@ void mpt3sas_base_disable_msix(struct MPT3SAS_ADAPTER *ioc);
- int mpt3sas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num);
- void mpt3sas_base_pause_mq_polling(struct MPT3SAS_ADAPTER *ioc);
- void mpt3sas_base_resume_mq_polling(struct MPT3SAS_ADAPTER *ioc);
-+int mpt3sas_base_unlock_and_get_host_diagnostic(struct MPT3SAS_ADAPTER *ioc,
-+	u32 *host_diagnostic);
-+void mpt3sas_base_lock_host_diagnostic(struct MPT3SAS_ADAPTER *ioc);
- 
- /* scsih shared API */
- struct scsi_cmnd *mpt3sas_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc,
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 147cb7088d55..5299dc297c04 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -2543,6 +2543,56 @@ _ctl_addnl_diag_query(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
- 	return 0;
- }
- 
-+/**
-+ * _ctl_enable_diag_sbr_reload - enable sbr reload bit
-+ * @ioc: per adapter object
-+ * @arg - user space buffer containing ioctl content
-+ *
-+ * Enable the SBR reload bit
-+ */
-+static int
-+_ctl_enable_diag_sbr_reload(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
-+{
-+	u32 ioc_state, host_diagnostic;
-+
-+	if (ioc->shost_recovery ||
-+	    ioc->pci_error_recovery || ioc->is_driver_loading ||
-+	    ioc->remove_host)
-+		return -EAGAIN;
-+
-+	ioc_state = mpt3sas_base_get_iocstate(ioc, 1);
-+
-+	if (ioc_state != MPI2_IOC_STATE_OPERATIONAL)
-+		return -EFAULT;
-+
-+	host_diagnostic = ioc->base_readl(&ioc->chip->HostDiagnostic);
-+
-+	if (host_diagnostic & MPI2_DIAG_SBR_RELOAD)
-+		return 0;
-+
-+	if (mutex_trylock(&ioc->hostdiag_unlock_mutex)) {
-+		if (mpt3sas_base_unlock_and_get_host_diagnostic(ioc, &host_diagnostic)) {
-+			mutex_unlock(&ioc->hostdiag_unlock_mutex);
-+				return -EFAULT;
-+		}
-+	} else
-+		return -EAGAIN;
-+
-+	host_diagnostic |= MPI2_DIAG_SBR_RELOAD;
-+	writel(host_diagnostic, &ioc->chip->HostDiagnostic);
-+	host_diagnostic = ioc->base_readl(&ioc->chip->HostDiagnostic);
-+	mpt3sas_base_lock_host_diagnostic(ioc);
-+	mutex_unlock(&ioc->hostdiag_unlock_mutex);
-+
-+	if (!(host_diagnostic & MPI2_DIAG_SBR_RELOAD)) {
-+		ioc_err(ioc, "%s: Failed to set Diag SBR Reload Bit\n", __func__);
-+		return -EFAULT;
-+	}
-+
-+	ioc_info(ioc, "%s: Successfully set the Diag SBR Reload Bit\n", __func__);
-+	return 0;
-+}
-+
- #ifdef CONFIG_COMPAT
- /**
-  * _ctl_compat_mpt_command - convert 32bit pointers to 64bit.
-@@ -2719,6 +2769,10 @@ _ctl_ioctl_main(struct file *file, unsigned int cmd, void __user *arg,
- 		if (_IOC_SIZE(cmd) == sizeof(struct mpt3_addnl_diag_query))
- 			ret = _ctl_addnl_diag_query(ioc, arg);
- 		break;
-+	case MPT3ENABLEDIAGSBRRELOAD:
-+		if (_IOC_SIZE(cmd) == sizeof(struct mpt3_enable_diag_sbr_reload))
-+			ret = _ctl_enable_diag_sbr_reload(ioc, arg);
-+		break;
- 	default:
- 		dctlprintk(ioc,
- 			   ioc_info(ioc, "unsupported ioctl opcode(0x%08x)\n",
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.h b/drivers/scsi/mpt3sas/mpt3sas_ctl.h
-index 8f6ffb40261c..171709e91006 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.h
-@@ -98,6 +98,8 @@
- 	struct mpt3_diag_read_buffer)
- #define MPT3ADDNLDIAGQUERY _IOWR(MPT3_MAGIC_NUMBER, 32, \
- 	struct mpt3_addnl_diag_query)
-+#define MPT3ENABLEDIAGSBRRELOAD _IOWR(MPT3_MAGIC_NUMBER, 33, \
-+	struct mpt3_enable_diag_sbr_reload)
- 
- /* Trace Buffer default UniqueId */
- #define MPT2DIAGBUFFUNIQUEID (0x07075900)
-@@ -448,4 +450,12 @@ struct mpt3_addnl_diag_query {
- 	uint32_t reserved2[2];
- };
- 
-+/**
-+ * struct mpt3_enable_diag_sbr_reload - enable sbr reload
-+ * @hdr - generic header
-+ */
-+struct mpt3_enable_diag_sbr_reload {
-+	struct mpt3_ioctl_header hdr;
-+};
-+
- #endif /* MPT3SAS_CTL_H_INCLUDED */
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 51b5788da040..ef8ee93005ea 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -12240,6 +12240,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	/* misc semaphores and spin locks */
- 	mutex_init(&ioc->reset_in_progress_mutex);
-+	mutex_init(&ioc->hostdiag_unlock_mutex);
- 	/* initializing pci_access_mutex lock */
- 	mutex_init(&ioc->pci_access_mutex);
- 	spin_lock_init(&ioc->ioc_reset_in_progress_lock);
+@@ -77,8 +77,8 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"43.100.00.00"
+-#define MPT3SAS_MAJOR_VERSION		43
++#define MPT3SAS_DRIVER_VERSION		"48.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		48
+ #define MPT3SAS_MINOR_VERSION		100
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
 -- 
 2.31.1
 
 
---0000000000004bf81c060d7bd091
+--00000000000070c618060d7bd03e
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -443,13 +160,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFk5dpKAooqgF7EdKjEcKnOFJX8/5eNo
-tHNRez132mfEMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTIy
-NzExMDgwN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIB9wQOobjC4+XIxnULBquSh1aA8f1fRm
+af0+FIDXUo7rMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIzMTIy
+NzExMDgwOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBTAmPfPfW23FZAjqWUMsroWJ45dbhNqml5gWYHsuGTeWvJ5k31
-x/HIuLwH+bCSb5WvuMvDoNt2TGCzhd3FSOV4jeJG2SB7SAEpW59JrSlAZEmtPXPi6RldBYggQPcW
-YxRj62xn6+6eHJr1MsudY1yPV8GYW/T4Z6aziOx0o3utKRZoVqzwA/ZnvNW0hDySfLtWNJMweyQk
-mwDW7gaqQynVoj/qEetT0Ujnq+y425Q3dKUdOdz4wx3/Xn2kwPJRt8ccDp/MbZo6mOyXT1pRj6S0
-BF7reHAZQS4SKWhHSNcEbkG/O298Jt95xupHZi6VLVkXZ/cy+zcmvRDpn9eWb1A0
---0000000000004bf81c060d7bd091--
+ATANBgkqhkiG9w0BAQEFAASCAQBzCOuSOP8G+4bMy4hvGpM5L2eiu4vYNK4t4xuJAxEwYublVGji
+8B1tSEj0JSxU1JyVgWFY9/UVuCE2rsaxWGGZgnFqmTkx56efNrEXlD9Ft8q58SKacqfNFPxY426X
+u0uErhBQ886+eDxUWk4bHY/nXxUGZDSB2+WZaJe23KJbPDfgHQRPG4wa/x6pufMlMmuZmx7b9sg6
+jkIumYMYtDSZesvrGxTASgbb4AYNJRCMVC9tQtHDP1omuA8h3ukCI7j5cY48Bg/mXrUQK5A4zL3A
+AEBwbpS/3MS6dFGd5rLgjV4VjBg41KhYXC5pR1749zFUmEDVUdAzAoXOvJR2yqDS
+--00000000000070c618060d7bd03e--
