@@ -1,97 +1,116 @@
-Received: from zju.edu.cn (spam.zju.edu.cn [61.164.42.155])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 692CC15B3;
-	Thu, 28 Dec 2023 03:22:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from localhost.localdomain (unknown [10.190.65.111])
-	by mail-app3 (Coremail) with SMTP id cC_KCgBXX4_w6YxlMc6TAQ--.5357S4;
-	Thu, 28 Dec 2023 11:22:31 +0800 (CST)
-From: Dinghao Liu <dinghao.liu@zju.edu.cn>
-To: dinghao.liu@zju.edu.cn
-Cc: James Smart <james.smart@broadcom.com>,
-	Dick Kennedy <dick.kennedy@broadcom.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: Fix memleak in lpfc_nvmet_setup_io_context
-Date: Thu, 28 Dec 2023 11:22:17 +0800
-Message-Id: <20231228032217.4100-1-dinghao.liu@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID:cC_KCgBXX4_w6YxlMc6TAQ--.5357S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7KrW7XFyUKw1UZr4fWw4UJwb_yoW8ury5pa
-	1rGF12ywsrGF1IkF43Aw48Cry3ta48Jw4qkFZFvw13CFyrtrW7Kay5A3srJFy3W3WxK34U
-	try8Ga47G3WUJFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUk21xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
-	w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
-	IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJr0_GcWl84ACjcxK6I8E
-	87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
-	8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
-	Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
-	xGrwACjI8F5VA0II8E6IAqYI8I648v4I1l42xK82IYc2Ij64vIr41l42xK82IY6x8ErcxF
-	aVAv8VW8uw4UJr1UMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr
-	4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxG
-	rwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8Jw
-	CI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2
-	z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUoOJ5UUUUU
-X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgwPBmWCupcTBwAjs6
+Received: from out30-113.freemail.mail.aliyun.com (out30-113.freemail.mail.aliyun.com [115.124.30.113])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9117910F2
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Dec 2023 03:25:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R601e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045176;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0VzMqSLj_1703733945;
+Received: from localhost(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0VzMqSLj_1703733945)
+          by smtp.aliyun-inc.com;
+          Thu, 28 Dec 2023 11:25:50 +0800
+From: Guixin Liu <kanie@linux.alibaba.com>
+To: sathya.prakash@broadcom.com,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com
+Cc: mpi3mr-linuxdrv.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: mpi3mr: use ida to manage mrioc's id
+Date: Thu, 28 Dec 2023 11:25:45 +0800
+Message-ID: <20231228032545.22644-1-kanie@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-lpfc_nvmet_setup_io_context() allocates memory for
-phba->sli4_hba.nvmet_ctx_info, but does not free it in
-the following error handling paths, which may lead to
-a memleak.
+To ensure that the same id is not obtained during concurrent
+execution of the probe, an ida is used to manage the mrioc's
+id.
 
-Fixes: 66d7ce93a0f5 ("scsi: lpfc: Fix MRQ > 1 context list handling")
-Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr.h    |  2 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 12 ++++++++++--
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index 425328d9c2d8..9131a04aea28 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1556,6 +1556,8 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
- 	for (i = 0; i < phba->sli4_hba.nvmet_xri_cnt; i++) {
- 		ctx_buf = kzalloc(sizeof(*ctx_buf), GFP_KERNEL);
- 		if (!ctx_buf) {
-+			kfree(phba->sli4_hba.nvmet_ctx_info);
-+			phba->sli4_hba.nvmet_ctx_info = NULL;
- 			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 					"6404 Ran out of memory for NVMET\n");
- 			return -ENOMEM;
-@@ -1565,6 +1567,8 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
- 					   GFP_KERNEL);
- 		if (!ctx_buf->context) {
- 			kfree(ctx_buf);
-+			kfree(phba->sli4_hba.nvmet_ctx_info);
-+			phba->sli4_hba.nvmet_ctx_info = NULL;
- 			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 					"6405 Ran out of NVMET "
- 					"context memory\n");
-@@ -1577,6 +1581,8 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
- 		if (!ctx_buf->iocbq) {
- 			kfree(ctx_buf->context);
- 			kfree(ctx_buf);
-+			kfree(phba->sli4_hba.nvmet_ctx_info);
-+			phba->sli4_hba.nvmet_ctx_info = NULL;
- 			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 					"6406 Ran out of NVMET iocb/WQEs\n");
- 			return -ENOMEM;
-@@ -1596,6 +1602,8 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
- 			lpfc_sli_release_iocbq(phba, ctx_buf->iocbq);
- 			kfree(ctx_buf->context);
- 			kfree(ctx_buf);
-+			kfree(phba->sli4_hba.nvmet_ctx_info);
-+			phba->sli4_hba.nvmet_ctx_info = NULL;
- 			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 					"6407 Ran out of NVMET XRIs\n");
- 			return -ENOMEM;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index ae98d15c30b1..ec5b92c9f9e5 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -1047,7 +1047,7 @@ struct mpi3mr_ioc {
+ 	struct list_head list;
+ 	struct pci_dev *pdev;
+ 	struct Scsi_Host *shost;
+-	u8 id;
++	int id;
+ 	int cpu_count;
+ 	bool enable_segqueue;
+ 	u32 irqpoll_sleep;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 040031eb0c12..8d05cb3e0c90 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -8,11 +8,12 @@
+  */
+ 
+ #include "mpi3mr.h"
++#include <linux/idr.h>
+ 
+ /* global driver scop variables */
+ LIST_HEAD(mrioc_list);
+ DEFINE_SPINLOCK(mrioc_list_lock);
+-static int mrioc_ids;
++static DEFINE_IDA(mrioc_ida);
+ static int warn_non_secure_ctlr;
+ atomic64_t event_counter;
+ 
+@@ -5060,7 +5061,10 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 
+ 	mrioc = shost_priv(shost);
+-	mrioc->id = mrioc_ids++;
++	retval = ida_alloc(&mrioc_ida, GFP_KERNEL);
++	if (retval < 0)
++		goto id_alloc_failed;
++	mrioc->id = retval;
+ 	sprintf(mrioc->driver_name, "%s", MPI3MR_DRIVER_NAME);
+ 	sprintf(mrioc->name, "%s%d", mrioc->driver_name, mrioc->id);
+ 	INIT_LIST_HEAD(&mrioc->list);
+@@ -5207,9 +5211,11 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ resource_alloc_failed:
+ 	destroy_workqueue(mrioc->fwevt_worker_thread);
+ fwevtthread_failed:
++	ida_free(&mrioc_ida, mrioc->id);
+ 	spin_lock(&mrioc_list_lock);
+ 	list_del(&mrioc->list);
+ 	spin_unlock(&mrioc_list_lock);
++id_alloc_failed:
+ 	scsi_host_put(shost);
+ shost_failed:
+ 	return retval;
+@@ -5295,6 +5301,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
+ 		mrioc->sas_hba.num_phys = 0;
+ 	}
+ 
++	ida_free(&mrioc_ida, mrioc->id);
+ 	spin_lock(&mrioc_list_lock);
+ 	list_del(&mrioc->list);
+ 	spin_unlock(&mrioc_list_lock);
+@@ -5502,6 +5509,7 @@ static void __exit mpi3mr_exit(void)
+ 			   &driver_attr_event_counter);
+ 	pci_unregister_driver(&mpi3mr_pci_driver);
+ 	sas_release_transport(mpi3mr_transport_template);
++	ida_destroy(&mrioc_ida);
+ }
+ 
+ module_init(mpi3mr_init);
 -- 
-2.17.1
+2.43.0
 
