@@ -1,29 +1,35 @@
-Received: from mout.web.de (mout.web.de [212.227.17.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DCECF51F;
-	Thu, 28 Dec 2023 17:28:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="iN6+QnsI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de; s=s29768273;
-	t=1703784488; x=1704389288; i=markus.elfring@web.de;
-	bh=bZIUiXqM0iUtPLxaSty3O0T6RhxO0I6eQJgl62PzlfM=;
-	h=X-UI-Sender-Class:Date:Subject:From:To:Cc:References:
-	 In-Reply-To;
-	b=iN6+QnsIE6tetReld5k2uZNh3q6iuqTtJ0Xk4Ge5+1qaZzgkMa47VEgPFy8BIAwm
-	 vJ1WttlhVpCGpVysvCA+SLydzJ/7UaM9wp2FGLSjIluiwLLz4XvOo66VzAY5kIF/o
-	 kSTmgshI//10mM928uiCZslT79GyJB/JJlhee9dCcMo3mNE9Qi4nbUVpCeihuixOL
-	 kxGvlQebmRoV6bKDTw4b8ImuorIFmqlpPYBTH/na9KHfe4F8JCrdEQiygrRBPQ8es
-	 2DGErXjCXqEBy31OfTCgr4/J2W5wA/GbRrIL3PXVV9RQ9B2KGnQZvTc2W/UASXZi/
-	 MKVHX15fAo4O/3DE6A==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.21] ([94.31.85.95]) by smtp.web.de (mrweb105
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1Mm9Va-1qsKql3sG0-00i55t; Thu, 28
- Dec 2023 18:28:07 +0100
-Message-ID: <98f99041-e089-4253-9195-6a26b986658e@web.de>
-Date: Thu, 28 Dec 2023 18:28:06 +0100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBF9D10974;
+	Thu, 28 Dec 2023 22:42:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-5cd68a0de49so4671063a12.2;
+        Thu, 28 Dec 2023 14:42:02 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1703803322; x=1704408122;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=DTy5fC2IJhp+ci9FkJAD+jYq4iQn7KSbHoZ8YlA2wvQ=;
+        b=kMj7KgH8FEjcTaT3OezB+WoHMYviKSLWg6Ijs6Xh16aWAwpW6uqRmDR+U4AzvVZxSY
+         l3s1tuYn8WnagZxbsbGdUYw4B2T0GUP7tscrK33DDsNgq07/k94JUAO9XCf9J+vfNw+R
+         XjC8SMaNTHW9NkniPW2vHtLClZxmJhbzCgD2bpQoyclDuOrSlY7m04Pak/MZcwTpjghU
+         3lrMzCMKUVNSBYvI9yxe3tQpTXbbnCJ71U4+Yk5B6VlzQixIxpusDaDULIpw2dUhvdlf
+         LfQyRbOMlRLDUXXPAk5pNi7ygMcK/y2hdYlQ8euxez3zUAFN2OIrwV5MmibdTdUHC0K3
+         b1LA==
+X-Gm-Message-State: AOJu0YwmDd9P+JeM6KY6wNsm3vJZQAsSeCdafG56ST0lbkDvhzE8VsV+
+	ob4u/mFCtWwPGSOevjAt8Vc=
+X-Google-Smtp-Source: AGHT+IGfNnlAW2Ujv1FURsshAv4bfKuLSP9tIJr+PW8/iihOLm7kQ5HX5H8gMCYPmNM9u0qyCs+CVg==
+X-Received: by 2002:a05:6a20:2445:b0:196:3265:e806 with SMTP id t5-20020a056a20244500b001963265e806mr2631958pzc.86.1703803321864;
+        Thu, 28 Dec 2023 14:42:01 -0800 (PST)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id sr5-20020a17090b4e8500b0028afd8b1e0bsm14482044pjb.57.2023.12.28.14.42.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 28 Dec 2023 14:42:01 -0800 (PST)
+Message-ID: <00cf8ffa-8ad5-45e4-bf7c-28b07ab4de21@acm.org>
+Date: Thu, 28 Dec 2023 14:41:59 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -31,67 +37,68 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH 4/4] scsi: lpfc: Delete an unnecessary variable initialisation
- in lpfc_sli_read_link_ste()
-Content-Language: en-GB
-From: Markus Elfring <Markus.Elfring@web.de>
-To: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org,
- Dick Kennedy <dick.kennedy@broadcom.com>,
- James Smart <james.smart@broadcom.com>,
- "James E. J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>
-References: <48a127e8-ca4f-4fc4-81b7-226080fba720@web.de>
-In-Reply-To: <48a127e8-ca4f-4fc4-81b7-226080fba720@web.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:STSMzfYc67LKhAslNGaZdX4bp6OTa7800mET5EYlhf7vUhCK6Lm
- Ifqyt7MS+yD6MlIY/3dNgCFbV6/dDcnWYSmWrabZ7L8YoIB9RbqaRvL5ING8Ku9Xv26bGd3
- iif/S0BKAFaf/rIl0b7wbKgm01nrQMYWHBFuMm58B/2e6WK7mMoMa/len0eorM8rua5rosz
- CgtspMAQ5PSUUaJF16AVQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:gGJWmcBxQXs=;U1pG/0wNPXece0P+dqVanmQytTQ
- WLCrpq0mp/1yuggSzMAAQf4MCI6fPGsDYbTSoZ2Sx+HM7+52S5wOP6BGNW9/kOXaHs5K1aLhc
- c02hcybWUpDx4ejZ+BMsA7b6sWPD42BMQRQoS9cHp7vv3h8dZ5jOb3RXYGdsxjrYAX9aIJ46f
- NMD8UXU4KVdzSk01vCdv/odEJBlFB7mk75I2eljDK7vQlXyvG+j4C03aPGHKH9hi/DYgtoHED
- L0PRnODx9oSdo5XGfopg+/bNj095vs9phJGDBOvG8l1Nt3sc1dr6/1nAVArsmC/7DzRsfuSEi
- s6YQvjBwpqMfn+xF3VP0ffpPTZ+NXbKDrjzlsDjv4HmUVrSEcaFCXKXU7gHVze+m3oYR8DX+l
- cTZ/lT8OdxOv9fZY059MqdTL3IxFEOZJB2mZDQTwwcf5chnBBhFFMuUqPja7iuCBBBgt2F92m
- 8uCX7w6qyH5KuAgdUuGKA3GKIEIHrQm3vlvOV3L1EsjMHeOpytVU0oX2FuekbfX578+N7RMux
- GWEPeaz3ZiO1ubPm8GFFLSMTW5coWY7jswgi2tu5NNvPgD/zCh9CF2S66FaMi/nmJZVDANhmX
- IV0pK4sEkSCqs63DyIs1HMzp5OzpXiBxlkEta112NzC5Jp+55ATQS3LJEI/tHmyoX/7dFZW4p
- HUYGoMahxVavBFUIN5J2Ft31Lop3PwmC3FUqfvKWPDTcm0atX/kqUsIVcSI8tXMCNZiqTTgQ5
- +WkaU9VRLSA7TV9ywZ7HnaIbtx9b3xRKDhbnipJIDQNv6Z5SAXR6kOPOCJmDjuhiyqOcNO1Z0
- /LhNO6TWX+rXPjrwwSXSRa6ZrS7PW/vvn/v2ZNIbYNtHMHSE6fS+1IDVJO+/J4vfOpBqljCZz
- ByKxcSQfX8qC/Wbol1kaTDNongA6tj+B8Y1SaXCho7qwX8xtpH8EYb5YkR0ixXj9zIbXIdeNM
- CVq95abh9gFa99myyIBDpPySwUI=
+Subject: Re: [PATCH v8 06/19] block, fs: Propagate write hints to the block
+ device inode
+Content-Language: en-US
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+ Daejun Park <daejun7.park@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>,
+ Alexander Viro <viro@zeniv.linux.org.uk>,
+ Christian Brauner <brauner@kernel.org>, Jeff Layton <jlayton@kernel.org>,
+ Chuck Lever <chuck.lever@oracle.com>
+References: <20231219000815.2739120-1-bvanassche@acm.org>
+ <20231219000815.2739120-7-bvanassche@acm.org> <20231228071206.GA13770@lst.de>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20231228071206.GA13770@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Thu, 28 Dec 2023 18:00:11 +0100
+On 12/27/23 23:12, Christoph Hellwig wrote:
+> On Mon, Dec 18, 2023 at 04:07:39PM -0800, Bart Van Assche wrote:
+>> Write hints applied with F_SET_RW_HINT on a block device affect the
+>> shmem inode only. Propagate these hints to the block device inode
+>> because that is the inode used when writing back dirty pages.
+> 
+> What shmem inode?
 
-The variable =E2=80=9Crgn23_data=E2=80=9D will be reassigned by a followin=
-g statement.
-Thus omit the explicit initialisation at the beginning.
+The inode associated with the /dev file, e.g. /dev/sda. That is another
+inode than the inode associated with the struct block_device instance.
+Without this patch, when opening /dev/sda and calling fcntl(), the shmem
+inode is modified but the struct block_device inode not. I think that
+the code path for allocation of the shmem inode is as follows:
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-=2D--
- drivers/scsi/lpfc/lpfc_sli.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+shmem_mknod()
+   shmem_get_inode()
+     __shmem_get_inode()
+         new_inode(sb)
+           alloc_inode(sb)
+             ops->alloc_inode(sb) = shmem_alloc_inode(sb)
+             inode_init_always(sb, inode)
+               inode->i_mapping = &inode->i_data;
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 8de598c9e03b..1ce5671a7e07 100644
-=2D-- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -20694,7 +20694,7 @@ lpfc_sli4_get_config_region23(struct lpfc_hba *phb=
-a, char *rgn23_data)
- void
- lpfc_sli_read_link_ste(struct lpfc_hba *phba)
- {
--	uint8_t *rgn23_data =3D NULL;
-+	uint8_t *rgn23_data;
- 	uint32_t if_type, data_size, sub_tlv_len, tlv_offset;
- 	uint32_t offset =3D 0;
+>> @@ -317,6 +318,9 @@ static long fcntl_set_rw_hint(struct file *file, unsigned int cmd,
+>>   
+>>   	inode_lock(inode);
+>>   	inode->i_write_hint = hint;
+>> +	apply_whint = inode->i_fop->apply_whint;
+>> +	if (apply_whint)
+>> +		apply_whint(file, hint);
+> 
+> Setting the hint in file->f_mapping->inode is the right thing here,
+> not adding a method.
 
-=2D-
-2.43.0
+Is my understanding correct that the only way to reach the struct
+block_device instance from the shmem code is by dereferencing
+file->private_data? Shouldn't all dereferences of that pointer happen
+in source file block/fops.c since the file->private_data pointer is
+assigned in that file?
 
+Please note that suggestions to improve this patch are definitely
+welcome. As you probably know I'm not that familiar with the filesystem
+code.
+
+Thanks,
+
+Bart.
