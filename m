@@ -1,104 +1,113 @@
-Received: from mout.web.de (mout.web.de [212.227.17.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D85823BB;
-	Sat, 30 Dec 2023 07:04:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 791BF20EA;
+	Sat, 30 Dec 2023 10:58:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="XjP1iojg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de; s=s29768273;
-	t=1703919874; x=1704524674; i=markus.elfring@web.de;
-	bh=zCHgF8mqJGlh0F14PrBAaelXu0eznOwtpnIZ2X+LMaA=;
-	h=X-UI-Sender-Class:Date:Subject:To:Cc:References:From:
-	 In-Reply-To;
-	b=XjP1iojg5NqwgGosbEveIyKe69DQWoHVYrGemxAkxv1A+k7lwceGlW57TKY8nxYI
-	 +sDij5t4N9fGAM3tVWI8VbuJj+51lgP8hJGeuB+xwqtl2n9YAPV/551ijC/wxOCHl
-	 RHrOauhEbuyVIpnnjoA4x7Ob8uY60lpiafajJARIqtRkbzRlMAAMBr0yacC0bHpY+
-	 bqEGW2i/JoPIXZeV63W/fGCUieAjTUxvuzyc/BIVh/2obYCohrlvlCn6I89HW7mbv
-	 0FvVXeXCB7qpm6VrEe38SYtdUIORnn7jMG1E/Hn/nK8ZpIttpy03kk6jofgXEavrb
-	 j0f+ZVMhPtdtZv27FQ==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.21] ([94.31.87.95]) by smtp.web.de (mrweb106
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1Mm9Zi-1qsyLh4C6S-00iMiE; Sat, 30
- Dec 2023 08:04:34 +0100
-Message-ID: <b65afa15-41e6-4d71-87bd-39fd688fa551@web.de>
-Date: Sat, 30 Dec 2023 08:04:32 +0100
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="xDVIFxVW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8405BC433C8;
+	Sat, 30 Dec 2023 10:58:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1703933906;
+	bh=8jyz6J2LW3mt3sCjl8zoQF4EqO3LKwzRdDigq943sAk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=xDVIFxVWAL2N+h4ZkCJcxGDZdybqW/kXLjElPQj3TLx0dqcjj+M490OqEFPuDHoCa
+	 o7ftRMpl5vdnEZORUgXW2bZZcqnJpMcP+oE5LtcjRxY0IPt3ge2HquMhrwRbdZFvFZ
+	 PQrjC+F/JrFWMSppnxutARJX1kZdW3PN5RLV31pI=
+Date: Sat, 30 Dec 2023 10:58:23 +0000
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Salvatore Bonaccorso <carnil@debian.org>
+Cc: Thorsten Leemhuis <regressions@leemhuis.info>,
+	Sagar Biradar <sagar.biradar@microchip.com>,
+	James Bottomley <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>,
+	Sasha Levin <sashal@kernel.org>,
+	Linux kernel regressions list <regressions@lists.linux.dev>,
+	Hannes Reinecke <hare@suse.de>, scsi <linux-scsi@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Gilbert Wu <gilbert.wu@microchip.com>,
+	John Garry <john.g.garry@oracle.com>
+Subject: Re: scsi regression that after months is still not addressed and now
+ bothering 6.1.y users, too
+Message-ID: <2023123013-dose-skirmish-27c2@gregkh>
+References: <c6ff53dc-a001-48ee-8559-b69be8e4db81@leemhuis.info>
+ <2023112456-disinfect-undoing-b5ef@gregkh>
+ <34c5b291-b69e-4592-bc9f-fc1b2ef5c5d7@leemhuis.info>
+ <ZY8oXge0QKYUkO1b@eldamar.lan>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: scsi: ses: Move a label in ses_enclosure_data_process()
-Content-Language: en-GB
-To: James Bottomley <jejb@linux.ibm.com>, linux-scsi@vger.kernel.org,
- kernel-janitors@vger.kernel.org,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>
-References: <4616e325-e313-4078-9788-dd1e6e51b9e0@web.de>
- <9d24844f30604f969ac10da456801f594ce72f2d.camel@linux.ibm.com>
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <9d24844f30604f969ac10da456801f594ce72f2d.camel@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:ssePVKLr7X7YYW7M4vbgxXgx3i6L8c4Izh4MH9ObKOra4G/gfsA
- e44rrbzrGRS/L+C7MupMsG4jh40JTh7C7Yk+E9TuPMKOWiCmGQGkaxMBC+UFyP476QTP/NP
- RzWit4rhxBITKzGaFXLj8/s34JprLuTh0M9GwuBLPzusH8Yv3UGx5oV5mqg9MpF2+PwSgg2
- XvrJqP3LMaTtswhxKotdw==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:2lzua34+dEI=;+BaW9nVmUeud/3myjYL60Ga3r6X
- m44U5lz6s4yrB6gpa/29gx0gVDOKSOqFFOv76Ede9c1jRHK/7E4LIyywcPElm36HaVVDUwW9s
- 7viaT0n6tISZeOw7MIwh8WdRUk6vfUsRx586er2gVByBmg3xE8bDqxDejxS1t3NEXmcQ8TzlO
- 5l/l42JdtBrV0xF9hQuzzgojOXf2gsMeHyUiGb0e0Ngmp6Ha8LTnJDw8Jo0iZa7V+YNCstFVh
- kPEY9trR/+2BwRhQqi651NCifrScKgwU7n+rEAtTZyb+MXZER1n0zbYZKQFqmODEXs9nISLOE
- wbwRYlN1Y4Nl3CS7yM7V0c1CFxJwSNLmZtS4boVbsnfRopQvbSCPAlZ8qexsaPAP8vXy1wHEx
- NqnJqacSA7hOxB0+K6WfG1STIqKAy4ncTacCFKU7bEk3ZKdatLPC24W9sfSk5jRF1+7x/X9Py
- yR0zPzUo7DXq6Eiypj2c8XI5AB9SxY+I7q/zz58Q4P2oqcCnEUAIlzri16eX5A5Oi1gFh4W+B
- k4DQnvs1x7EzCfJgHvjpfLRpoeWZEj3/OuSoJvVTsa8Oq+M2AqJAUaRlWPm5/kTMIdrKQyH0U
- LVYuuVInC3BfcRU9iSMrGSP2b15Yh5KJsNTprR8NfqRCv5rOgUhzjzZVOqIgVuz7vV44joDGe
- ZrmjrYCg9/LtB1gWM5ZOR6cqYMRw/XkOoD+Oy4impAzsxVfy1IRMS0qRJtvbU5sJuZi+3bGlC
- Nlw4060n90jH9djd/aKdEWySPdFVbQn3mnVPRzUdXt1seUW5G+IrkejG1eifV6W17tnxnZFAP
- Vgj/70gUYWDeovsOJqfbKM6otmFV84pNailzlU6bPy1YCpOaL1spxaitTVkqeF2USXUZNirk6
- cWXRLYbFNVjJMRdIA6wNdIU9yWkJ5pyIbli1YoOkJDE/HLGI2bFqQTqQfFTHB8JA7bOeegQYW
- 71CPDg==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZY8oXge0QKYUkO1b@eldamar.lan>
 
->> The kfree() function was called in up to three cases by
->> the ses_enclosure_data_process() function during error handling
->> even if the passed variable contained a null pointer.
->> This issue was detected by using the Coccinelle software.
->
-> Why is this an issue?  The whole point of having kfree(NULL) be a nop
+On Fri, Dec 29, 2023 at 09:13:18PM +0100, Salvatore Bonaccorso wrote:
+> Hi all,
+> 
+> On Sat, Nov 25, 2023 at 08:10:35AM +0100, Thorsten Leemhuis wrote:
+> > On 24.11.23 17:25, Greg KH wrote:
+> > > On Tue, Nov 21, 2023 at 10:50:57AM +0100, Thorsten Leemhuis wrote:
+> > >> * @SCSI maintainers: could you please look into below please?
+> > >>
+> > >> * @Stable team: you might want to take a look as well and consider a
+> > >> revert in 6.1.y (yes, I know, those are normally avoided, but here it
+> > >> might make sense).
+> > >>
+> > >> Hi everyone!
+> > >>
+> > >> TLDR: I noticed a regression (Adaptec 71605z with aacraid sometimes
+> > >> hangs for a while) that was reported months ago already but is still not
+> > >> fixed. Not only that, it apparently more and more users run into this
+> > >> recently, as the culprit was recently integrated into 6.1.y; I wonder if
+> > >> it would be best to revert it there, unless a fix for mainline comes
+> > >> into reach soon.
+> > >>
+> > >> Details:
+> > >>
+> > >> Quite a few machines with Adaptec controllers seems to hang for a few
+> > >> tens of seconds to a few minutes before things start to work normally
+> > >> again for a while:
+> > >> https://bugzilla.kernel.org/show_bug.cgi?id=217599
+> > >>
+> > >> That problem is apparently caused by 9dc704dcc09eae ("scsi: aacraid:
+> > >> Reply queue mapping to CPUs based on IRQ affinity") [v6.4-rc7]. That
+> > >> commit despite a warning of mine to Sasha recently made it into 6.1.53
+> > >> -- and that way apparently recently reached more users recently, as
+> > >> quite a few joined that ticket.
+> > >[...]
+> > > I am loath to revert a stable patch that has been there for so long as
+> > > any upgrade will just cause the same bug to show back up. Why can't we
+> > > just revert it in Linus's tree now and I'll take that revert in the
+> > > stable trees as well?
+> > 
+> > FWIW, I know and in general agree with that strategy, that's why I
+> > normally wouldn't have brought a stable-only revert up for
+> > consideration. But this issue to me looked somewhat special and urgent
+> > for two and a half reasons: (1) that backport apparently made a lot more
+> > people suddenly hit the issue (2) there was also this data corruption
+> > aspect one of the reporters mentioned (not sure if that is real and/or
+> > if this might be just a 6.1.y thing). Furthermore for 6.1.y it was
+> > recently confirmed that reverting the change fixes things, while we iirc
+> > had no such confirmation for recent mainline kernels at that point. So
+> > it looked like it would take a while to get this sorted out in mainline.
+> > But it seems we finally might get closer to that now, so yeah, maybe
+> > it's not worth a stable revert.
+> 
+> If I'm not completely wrong, finally indeed the commit has been
+> reverted in mainline, with c5becf57dd56 ("Revert "scsi: aacraid: Reply
+> queue mapping to CPUs based on IRQ affinity"") .
+> 
+> This is what was mentioned here:
+> https://bugzilla.kernel.org/show_bug.cgi?id=217599#c52
+> 
+> So should/can it be reverted it now as well on the 6.1.y stable series
+> (and the others up as needed?)
 
-Such =E2=80=9Ca nop=E2=80=9D can trigger the allocation of extra data proc=
-essing resources,
-can't it?
+Now queued up, thanks.
 
-
-> is so we don't have to special case the free path.
-
-A bit more development attention can hopefully connect the mentioned label
-with a more appropriate jump target directly.
-
-
->                                                     The reason we do
-> that is because multiple special case paths through code leads to more
-> complex control flows and more potential bugs.
-
-You probably know some advices from another information source.
-
-https://wiki.sei.cmu.edu/confluence/display/c/MEM12-C.+Consider+using+a+go=
-to+chain+when+leaving+a+function+on+error+when+using+and+releasing+resourc=
-es
-
-
->                                                 If coccinelle suddenly
-> thinks this is a problem, it's coccinelle that needs fixing.
-
-This software tool can help to point source code places out for further co=
-nsiderations.
-The search patterns are evolving accordingly.
-
-Regards,
-Markus
+greg k-h
