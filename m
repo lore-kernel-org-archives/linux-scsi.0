@@ -1,113 +1,99 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 791BF20EA;
-	Sat, 30 Dec 2023 10:58:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E41B8BE3
+	for <linux-scsi@vger.kernel.org>; Sat, 30 Dec 2023 12:41:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="xDVIFxVW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8405BC433C8;
-	Sat, 30 Dec 2023 10:58:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1703933906;
-	bh=8jyz6J2LW3mt3sCjl8zoQF4EqO3LKwzRdDigq943sAk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=xDVIFxVWAL2N+h4ZkCJcxGDZdybqW/kXLjElPQj3TLx0dqcjj+M490OqEFPuDHoCa
-	 o7ftRMpl5vdnEZORUgXW2bZZcqnJpMcP+oE5LtcjRxY0IPt3ge2HquMhrwRbdZFvFZ
-	 PQrjC+F/JrFWMSppnxutARJX1kZdW3PN5RLV31pI=
-Date: Sat, 30 Dec 2023 10:58:23 +0000
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Salvatore Bonaccorso <carnil@debian.org>
-Cc: Thorsten Leemhuis <regressions@leemhuis.info>,
-	Sagar Biradar <sagar.biradar@microchip.com>,
-	James Bottomley <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>,
-	Sasha Levin <sashal@kernel.org>,
-	Linux kernel regressions list <regressions@lists.linux.dev>,
-	Hannes Reinecke <hare@suse.de>, scsi <linux-scsi@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Gilbert Wu <gilbert.wu@microchip.com>,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: scsi regression that after months is still not addressed and now
- bothering 6.1.y users, too
-Message-ID: <2023123013-dose-skirmish-27c2@gregkh>
-References: <c6ff53dc-a001-48ee-8559-b69be8e4db81@leemhuis.info>
- <2023112456-disinfect-undoing-b5ef@gregkh>
- <34c5b291-b69e-4592-bc9f-fc1b2ef5c5d7@leemhuis.info>
- <ZY8oXge0QKYUkO1b@eldamar.lan>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BVprMgF0"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id E5BD5C433AB
+	for <linux-scsi@vger.kernel.org>; Sat, 30 Dec 2023 12:41:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1703940072;
+	bh=QQkbVVjgxxY/Wx6tHi8PP6kUROdii8WMsWbrDzSwk+Y=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=BVprMgF0vGuPbfts9h0W5BRVSMXS4prReiHmcDfI5TNMJZ+b74PaF3vhfa7ovqHk4
+	 wjw6KcvpPxIYL+CZYQhLdwu6L8oLijsOulsU+XLySshEQYJ4nmKOtkr0aMyqK30Tmq
+	 4pdtyhPlRtPXd5XQXK70fZ6gdRFb5oB09QjrGrQgJUqVxXdFEvbN/EmsONyc/BUUv/
+	 SKLoE71MrtvHM+1y033hLtbaLBql+QETZgUPgAo5PVV8xoCXTl/Ml1vfJqBl6qGsXL
+	 16ZL1/O7LxDlwN3G/WmDNqQWVi9dih1SwrUgWNCbjwRDYNYEynfam5N6NPI94OkOXo
+	 4SkgLrHFOxTbA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id D5CE0C53BD4; Sat, 30 Dec 2023 12:41:12 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date: Sat, 30 Dec 2023 12:41:12 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: samuelwolf85@googlemail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217599-11613-dBLhh3lHux@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZY8oXge0QKYUkO1b@eldamar.lan>
 
-On Fri, Dec 29, 2023 at 09:13:18PM +0100, Salvatore Bonaccorso wrote:
-> Hi all,
-> 
-> On Sat, Nov 25, 2023 at 08:10:35AM +0100, Thorsten Leemhuis wrote:
-> > On 24.11.23 17:25, Greg KH wrote:
-> > > On Tue, Nov 21, 2023 at 10:50:57AM +0100, Thorsten Leemhuis wrote:
-> > >> * @SCSI maintainers: could you please look into below please?
-> > >>
-> > >> * @Stable team: you might want to take a look as well and consider a
-> > >> revert in 6.1.y (yes, I know, those are normally avoided, but here it
-> > >> might make sense).
-> > >>
-> > >> Hi everyone!
-> > >>
-> > >> TLDR: I noticed a regression (Adaptec 71605z with aacraid sometimes
-> > >> hangs for a while) that was reported months ago already but is still not
-> > >> fixed. Not only that, it apparently more and more users run into this
-> > >> recently, as the culprit was recently integrated into 6.1.y; I wonder if
-> > >> it would be best to revert it there, unless a fix for mainline comes
-> > >> into reach soon.
-> > >>
-> > >> Details:
-> > >>
-> > >> Quite a few machines with Adaptec controllers seems to hang for a few
-> > >> tens of seconds to a few minutes before things start to work normally
-> > >> again for a while:
-> > >> https://bugzilla.kernel.org/show_bug.cgi?id=217599
-> > >>
-> > >> That problem is apparently caused by 9dc704dcc09eae ("scsi: aacraid:
-> > >> Reply queue mapping to CPUs based on IRQ affinity") [v6.4-rc7]. That
-> > >> commit despite a warning of mine to Sasha recently made it into 6.1.53
-> > >> -- and that way apparently recently reached more users recently, as
-> > >> quite a few joined that ticket.
-> > >[...]
-> > > I am loath to revert a stable patch that has been there for so long as
-> > > any upgrade will just cause the same bug to show back up. Why can't we
-> > > just revert it in Linus's tree now and I'll take that revert in the
-> > > stable trees as well?
-> > 
-> > FWIW, I know and in general agree with that strategy, that's why I
-> > normally wouldn't have brought a stable-only revert up for
-> > consideration. But this issue to me looked somewhat special and urgent
-> > for two and a half reasons: (1) that backport apparently made a lot more
-> > people suddenly hit the issue (2) there was also this data corruption
-> > aspect one of the reporters mentioned (not sure if that is real and/or
-> > if this might be just a 6.1.y thing). Furthermore for 6.1.y it was
-> > recently confirmed that reverting the change fixes things, while we iirc
-> > had no such confirmation for recent mainline kernels at that point. So
-> > it looked like it would take a while to get this sorted out in mainline.
-> > But it seems we finally might get closer to that now, so yeah, maybe
-> > it's not worth a stable revert.
-> 
-> If I'm not completely wrong, finally indeed the commit has been
-> reverted in mainline, with c5becf57dd56 ("Revert "scsi: aacraid: Reply
-> queue mapping to CPUs based on IRQ affinity"") .
-> 
-> This is what was mentioned here:
-> https://bugzilla.kernel.org/show_bug.cgi?id=217599#c52
-> 
-> So should/can it be reverted it now as well on the 6.1.y stable series
-> (and the others up as needed?)
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-Now queued up, thanks.
+--- Comment #55 from Samuel Wolf (samuelwolf85@googlemail.com) ---
+We see this abort request / hang on Debian 12 with the ASR8805 two or three
+months ago.
+Since this was not the newest server we replaced this system because we tho=
+ught
+this
+was an hardware issue.
 
-greg k-h
+[two month later]
+
+But now, this week we upgraded the next server with ASR8805
+from Debian 11.8 to 12.4 and saw exactly the same issue (Debian 6.1.67-1).
+
+This could not be the same hardware error, so we found this bug
+report and opened on at Debian bug tracker [1].
+
+Salvatore build a test kernel [2] and we fired up the old "faulty" server f=
+or
+testing.
+With the new knowledge we was able to reproduce [3] this with an ASR8805 ra=
+id6
+and 58TB LUKS drive.
+
+luksOpen and mount reproduce this every time with kernel 6.1.67-1 and need =
+~ 1
+minute (because the hang and reset request, I guess). Now booting into
+Salvatore's test kernel (6.1.67-1a~test) and tried the same again, no issue=
+ and
+the luksOpen mount was really quick.
+
+This bug was more serious than I guess and it needed some time to get this
+puzzle together.
+
+[1] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1059624
+[2] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1059624#30
+[3] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1059624#47
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
