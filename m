@@ -1,134 +1,89 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mout.web.de (mout.web.de [212.227.15.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57D69BE49;
-	Sat, 30 Dec 2023 13:46:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B70F08C17;
+	Sat, 30 Dec 2023 14:25:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="QALueXQM"
-Received: from pps.filterd (m0353726.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BUDHRnv013946;
-	Sat, 30 Dec 2023 13:46:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : content-transfer-encoding : mime-version; s=pp1;
- bh=UJ5caAb/2R5/2MyedyGM5AifIXVNYiFI71K0EBUoHBs=;
- b=QALueXQM9WXu6UGqTQC/ljsDW/1rWB30klqBHlUA158aJfdigV5CHVUzvMBS1Rt83fAj
- 5nyp8zmdE7l3jqAIS0cJ2W//yrxsgcxyW3ylCvXhvrg9RQ9c1IxfXyGQMnUXA9R5pgW+
- +1Rjv5QZ3D2/exeN3pnS9OSXa6+tu/7NxZDm9WO72a+V8qB4M+/muzFn7/qxLnrUa+kX
- X4PZQi5btM1/bm8Ux/vrcpn17MgOR4buI6w3U6nQBvCfsOXzXP5+MYA+ysCIYMcsdvi6
- VcVnBOx7MIe4+DknoUzUBAGj4sLZ527aUOHAydN0vIg4PDNx6LXkR+20vpVJYxxL2r+b oA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vabbkqdy4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 30 Dec 2023 13:46:04 +0000
-Received: from m0353726.ppops.net (m0353726.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BUDfiZY027983;
-	Sat, 30 Dec 2023 13:46:04 GMT
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vabbkqdxv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 30 Dec 2023 13:46:03 +0000
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3BUAIv3K004727;
-	Sat, 30 Dec 2023 13:46:02 GMT
-Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3v6bcmawt4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 30 Dec 2023 13:46:02 +0000
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 3BUDk1IF16908952
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 30 Dec 2023 13:46:02 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id E601A58058;
-	Sat, 30 Dec 2023 13:46:01 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id AA58058057;
-	Sat, 30 Dec 2023 13:46:00 +0000 (GMT)
-Received: from lingrow.int.hansenpartnership.com (unknown [9.67.79.160])
-	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Sat, 30 Dec 2023 13:46:00 +0000 (GMT)
-Message-ID: <4018ab9225ecaf18501e54114a94217a58a8a57f.camel@linux.ibm.com>
-Subject: Re: scsi: ses: Move a label in ses_enclosure_data_process()
-From: James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To: Markus Elfring <Markus.Elfring@web.de>, linux-scsi@vger.kernel.org,
-        kernel-janitors@vger.kernel.org,
-        "Martin K. Petersen"
-	 <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>
-Date: Sat, 30 Dec 2023 08:45:59 -0500
-In-Reply-To: <a3825ab2-8987-4b85-9db0-642035789c49@web.de>
-References: <4616e325-e313-4078-9788-dd1e6e51b9e0@web.de>
-	 <9d24844f30604f969ac10da456801f594ce72f2d.camel@linux.ibm.com>
-	 <b65afa15-41e6-4d71-87bd-39fd688fa551@web.de>
-	 <a35c6128d4449fec00238c909e5f6f45ebf4bcba.camel@linux.ibm.com>
-	 <a3825ab2-8987-4b85-9db0-642035789c49@web.de>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: LdMrCx3KT8LjOx-tjmlq1duVEoP3iLgX
-X-Proofpoint-ORIG-GUID: UfqQ1FHVR1nFGlkzVKsVY1etK73uWAGz
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="JrZgkkLc"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de; s=s29768273;
+	t=1703946312; x=1704551112; i=markus.elfring@web.de;
+	bh=dI9cCClD6JexG1woOmdgPnUw06082v8DX+zQoFVxay0=;
+	h=X-UI-Sender-Class:Date:Subject:To:Cc:References:From:
+	 In-Reply-To;
+	b=JrZgkkLcSZEPJI2sUZwLyvAFvdiwnzUUMNrTO+464QkuRNRbHs0x0k+4okj/iV3n
+	 RleY5H0MRaRdI6RTzbBQHRRvq+7MvBUeqsOSc3NJXUEJfGPYNPcyuRMb2WY6DScgH
+	 XZ8+l1Dry/BirwDYtwVnvLrn/cwZ4DPbhnL7YUV/pjpOIJ6EPuUbFu6vBWEHBvPTI
+	 FIwl0YQOSBl6WkizinXiUky2nwsom+ojXYDpACegt7/BzGmx5+IcyrJbh33PV29t7
+	 FSYRJmASTws7Fljq7ADYjU6fgk8hFPRl/HYKXoZSyvi1aRYiAhzVTKhNQZscmWSGk
+	 OKiHxIUdn5h86cX3UA==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.21] ([94.31.87.95]) by smtp.web.de (mrweb005
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 1N9cLR-1r7xFt1Rhd-0159S3; Sat, 30
+ Dec 2023 15:25:12 +0100
+Message-ID: <38dfe7b6-6d8b-4056-9943-12197c80f4d7@web.de>
+Date: Sat, 30 Dec 2023 15:25:11 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-30_07,2023-12-29_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 clxscore=1015
- suspectscore=0 mlxscore=0 adultscore=0 priorityscore=1501 malwarescore=0
- mlxlogscore=689 impostorscore=0 spamscore=0 lowpriorityscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
- definitions=main-2312300115
+User-Agent: Mozilla Thunderbird
+Subject: Re: scsi: ses: Move a label in ses_enclosure_data_process()
+Content-Language: en-GB
+To: James Bottomley <jejb@linux.ibm.com>, linux-scsi@vger.kernel.org,
+ kernel-janitors@vger.kernel.org,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>
+References: <4616e325-e313-4078-9788-dd1e6e51b9e0@web.de>
+ <9d24844f30604f969ac10da456801f594ce72f2d.camel@linux.ibm.com>
+ <b65afa15-41e6-4d71-87bd-39fd688fa551@web.de>
+ <a35c6128d4449fec00238c909e5f6f45ebf4bcba.camel@linux.ibm.com>
+ <a3825ab2-8987-4b85-9db0-642035789c49@web.de>
+ <4018ab9225ecaf18501e54114a94217a58a8a57f.camel@linux.ibm.com>
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <4018ab9225ecaf18501e54114a94217a58a8a57f.camel@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:GNJw0eiTnvRz1Z7tZBuB+o4pb2XmsXkWWTZiR+2n3Tvnb6BFqlp
+ pAi4/57LDG+7T+iqF45/wO7HVSzok2K91AmYGWbueThOhNsTbMdd/XS1h4jVX+bIJiSfBee
+ y+TE/KR2g1a0mx/hHl1Eng1SxE4DnQBlK2d9/1y9QbHRIag5zCKiw3Jf7vcfHBza0ZeL3Ot
+ NOU7r/Ul+GWy3MtQJA0Zw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:Dv4K7cuIcss=;f9YSP876OXo4u8npqQbrBWqzcnR
+ Aa5pg1EAca/6Vvw6iVYzRo07mMqjCV5x3Bx9SCn/KZqfb39Kszo7sk4UtLK8hjOciIl72hIje
+ HJirzLhbASjwNDjaY64AzE37v7kGcO/p72Rs3YkY1+6Jswx4s+zg4XjNLLBIt0jQ+NC/6qlwz
+ fq5WwDbZY3uaRC/EkUETlx+emjPRzeFrUvi2wRXM/jVF+merCQIpchW4IRHQO7PSRlKfDfFdC
+ QGqJVvkHUITnTjaFlT3E8ugMaWh1moO+Zjl3JSe/nHfEXt7GHCUk3IhwIneT/eUbPmaVOzKil
+ v7A+X0ArDLhikEGDWBq8IAFf20mV8D7S2T5wlZKX8sOioLL1JW2ZzM8EKkLvgy//X25PoERwX
+ eBMQYEOAX/46J938bbBNs/hYkl3WvK8ZGNEB6BGPsm4sZ9EVKOG1dWtYbWMpBHwLNc855f7K1
+ VZPx/qXMhXmuzqy9NO2zbcyF8upj0pFsMO2DEjGsvgE8N0nFs46+KfimnfmjA/LwI0l9phEax
+ Ras33D5O/u9iJHjtNsK+sEN6yCoy8O645a/T2tkfSe09zyuymbg0cysAZzz8+JOg26yt2RZqe
+ 3vyRGw0kZeO66qGVTlEbZBR+sInbuXB96+umk4LiuVHYrOvmS1CIIf6JqgYXRm1La+4m+A40q
+ yUpB+v7fvphXCWVCutulLBcr+MpPSLztGboAF0sqDMK0gE1lMsXTBmWCQDy1BytrNKXyuFF6s
+ WF4FFcn/4aZ40Xi9mOuslFbeUCuKQFm9WLVEIomBlFTWijuBk0acIDudd5ATdfs7+ykUEjlnz
+ ZQ9DQcGKgjMFZX79MySJA2zQ4lMED7uUNtzKWTupva5+14t5+nnae61oQU0LJMZtDQlDyXSoD
+ 2zADWO5ELDdUyeRfCEzvTfGPKReLBwbtNZkQ8Vb+xNkOKSoyoY63VIQyeNGI6AT7QdZkNg2fb
+ 0kNrI4d/cH5rQd99QHOYQYMY9cM=
 
-On Sat, 2023-12-30 at 14:36 +0100, Markus Elfring wrote:
-> > > You probably know some advices from another information source.
-> > > 
-> > > https://wiki.sei.cmu.edu/confluence/display/c/MEM12-C.+Consider+using+a+goto+chain+when+leaving+a+function+on+error+when+using+and+releasing+resources
-> > > 
-> > 
-> > Yes, but it's about using staged deallocation at the end of the
-> > function instead of in the if loops.  That's to *simplify* the exit
-> > chain and make the error legs less error prone because the teardown
-> > isn't repeated in if bodies.  It has no bearing on what you just
-> > tried to do.
-> 
-> I got the impression that there is a general conflict involved
-> according to different programming styles.
+>> If you would dare to follow advice from goto chains in a strict way,
+>> I imagine that you can tend to stress the attention for more useful
+>> data processing a bit more than such a redundant function call.
+>
+> It's about maintainability and simplicity.  Eliminating kfree(NULL)
+> doesn't simplify most code,
 
-There isn't; you simply seem to have misunderstood what the above 
-resource is actually saying.
+I find it easy to avoid such a call in the affected and concrete
+function implementation.
 
-> > > >                                               If coccinelle
-> > > > suddenly thinks this is a problem, it's coccinelle that needs
-> > > > fixing.
-> > > 
-> > > This software tool can help to point source code places out for
-> > > further considerations. The search patterns are evolving
-> > > accordingly.
-> > 
-> > The pattern is wrong because kfree(NULL) exists as a teardown
-> > simplification.
-> 
-> It might be convenient to view in this way.
-> 
-> If you would dare to follow advice from goto chains in a strict way,
-> I imagine that you can tend to stress the attention for more useful
-> data processing a bit more than such a redundant function call.
 
-It's about maintainability and simplicity.  Eliminating kfree(NULL)
-doesn't simplify most code, it just makes the exit paths more complex
-as I've said for the third time now.  It could possibly be done in
-extremely performance critical situations for good and well documented
-reason, but that's only a tiny fraction of the kernel and it certainly
-doesn't apply here.
+>                             it just makes the exit paths more complex
 
-James
+Where is undesirable software complexity here in the repositioning
+of the label =E2=80=9Csimple_populate=E2=80=9D before the statement =E2=80=
+=9Cbuf =3D NULL;=E2=80=9D?
 
+Regards,
+Markus
