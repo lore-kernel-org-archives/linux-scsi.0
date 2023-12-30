@@ -1,99 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E41B8BE3
-	for <linux-scsi@vger.kernel.org>; Sat, 30 Dec 2023 12:41:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 992958BEB;
+	Sat, 30 Dec 2023 12:42:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BVprMgF0"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E5BD5C433AB
-	for <linux-scsi@vger.kernel.org>; Sat, 30 Dec 2023 12:41:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1703940072;
-	bh=QQkbVVjgxxY/Wx6tHi8PP6kUROdii8WMsWbrDzSwk+Y=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=BVprMgF0vGuPbfts9h0W5BRVSMXS4prReiHmcDfI5TNMJZ+b74PaF3vhfa7ovqHk4
-	 wjw6KcvpPxIYL+CZYQhLdwu6L8oLijsOulsU+XLySshEQYJ4nmKOtkr0aMyqK30Tmq
-	 4pdtyhPlRtPXd5XQXK70fZ6gdRFb5oB09QjrGrQgJUqVxXdFEvbN/EmsONyc/BUUv/
-	 SKLoE71MrtvHM+1y033hLtbaLBql+QETZgUPgAo5PVV8xoCXTl/Ml1vfJqBl6qGsXL
-	 16ZL1/O7LxDlwN3G/WmDNqQWVi9dih1SwrUgWNCbjwRDYNYEynfam5N6NPI94OkOXo
-	 4SkgLrHFOxTbA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id D5CE0C53BD4; Sat, 30 Dec 2023 12:41:12 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Sat, 30 Dec 2023 12:41:12 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: samuelwolf85@googlemail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-dBLhh3lHux@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="HLZCkMOv"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BU5qIWv010575;
+	Sat, 30 Dec 2023 12:41:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : content-transfer-encoding : mime-version; s=pp1;
+ bh=5WPb7lu8nCv6A+qP0p0HpluMWmDEtFO0vVPTnxPG74k=;
+ b=HLZCkMOvP8Wzcx826QNz3jbBskppdgrSxmBqJnNTMd5ndr75dXPwZreNlgxK2NG4rhr+
+ JknwRR8Ou7WadQKb8UuP67OU0ayVUHxUAz1oXCD3O2HiDqPMP4yiN4J0e0tMrgCY0xww
+ 27Ly6o5PCNcWfFtJfVOF8J/v5hJjDb0IxkeYhucyMTXb+bSiB5vlIrsSGtFGIL6/PfqI
+ TZf6xzHG8kzmnUrXlISpPW1rzY7ohDbRvNasOxeLtZgJFRILglLu/jwIAv8bj49D6iAK
+ fKyn+2wS5KIvKvpKSVz+VW2Hgkx8/5qRVgSWLTePxe3dBnBh1aA0bI1U7hUqU+65+e6D /w== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vadecmqc6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 30 Dec 2023 12:41:59 +0000
+Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BUCRWDV016919;
+	Sat, 30 Dec 2023 12:41:58 GMT
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vadecmqc1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 30 Dec 2023 12:41:58 +0000
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3BUBRstu016595;
+	Sat, 30 Dec 2023 12:41:57 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3v6c3kjg5v-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 30 Dec 2023 12:41:57 +0000
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 3BUCfu3U18547396
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 30 Dec 2023 12:41:57 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id C3CDC58057;
+	Sat, 30 Dec 2023 12:41:56 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 5F84058059;
+	Sat, 30 Dec 2023 12:41:55 +0000 (GMT)
+Received: from lingrow.int.hansenpartnership.com (unknown [9.67.64.147])
+	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Sat, 30 Dec 2023 12:41:55 +0000 (GMT)
+Message-ID: <a35c6128d4449fec00238c909e5f6f45ebf4bcba.camel@linux.ibm.com>
+Subject: Re: scsi: ses: Move a label in ses_enclosure_data_process()
+From: James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To: Markus Elfring <Markus.Elfring@web.de>, linux-scsi@vger.kernel.org,
+        kernel-janitors@vger.kernel.org,
+        "Martin K. Petersen"
+	 <martin.petersen@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>
+Date: Sat, 30 Dec 2023 07:41:53 -0500
+In-Reply-To: <b65afa15-41e6-4d71-87bd-39fd688fa551@web.de>
+References: <4616e325-e313-4078-9788-dd1e6e51b9e0@web.de>
+	 <9d24844f30604f969ac10da456801f594ce72f2d.camel@linux.ibm.com>
+	 <b65afa15-41e6-4d71-87bd-39fd688fa551@web.de>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+User-Agent: Evolution 3.42.4 
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: voUnU-wsCS1EbwPdhiveWTACMypjg6C3
+X-Proofpoint-GUID: iSykN4Qcx_VcRpfdVAFxLZU11Z24z3hT
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-30_07,2023-12-29_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
+ mlxlogscore=922 mlxscore=0 bulkscore=0 adultscore=0 malwarescore=0
+ priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2312300106
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+On Sat, 2023-12-30 at 08:04 +0100, Markus Elfring wrote:
+> > > The kfree() function was called in up to three cases by
+> > > the ses_enclosure_data_process() function during error handling
+> > > even if the passed variable contained a null pointer.
+> > > This issue was detected by using the Coccinelle software.
+> > 
+> > Why is this an issue?  The whole point of having kfree(NULL) be a
+> > nop
+> 
+> Such “a nop” can trigger the allocation of extra data processing
+> resources, can't it?
 
---- Comment #55 from Samuel Wolf (samuelwolf85@googlemail.com) ---
-We see this abort request / hang on Debian 12 with the ASR8805 two or three
-months ago.
-Since this was not the newest server we replaced this system because we tho=
-ught
-this
-was an hardware issue.
+No.
 
-[two month later]
+> > is so we don't have to special case the free path.
+> 
+> A bit more development attention can hopefully connect the mentioned
+> label with a more appropriate jump target directly.
 
-But now, this week we upgraded the next server with ASR8805
-from Debian 11.8 to 12.4 and saw exactly the same issue (Debian 6.1.67-1).
+That's making the flow more complex as I pointed out in my initial
+email.
 
-This could not be the same hardware error, so we found this bug
-report and opened on at Debian bug tracker [1].
+> >                                                     The reason we
+> > do that is because multiple special case paths through code leads
+> > to more complex control flows and more potential bugs.
+> 
+> You probably know some advices from another information source.
+> 
+> https://wiki.sei.cmu.edu/confluence/display/c/MEM12-C.+Consider+using+a+goto+chain+when+leaving+a+function+on+error+when+using+and+releasing+resources
+> 
 
-Salvatore build a test kernel [2] and we fired up the old "faulty" server f=
-or
-testing.
-With the new knowledge we was able to reproduce [3] this with an ASR8805 ra=
-id6
-and 58TB LUKS drive.
+Yes, but it's about using staged deallocation at the end of the
+function instead of in the if loops.  That's to *simplify* the exit
+chain and make the error legs less error prone because the teardown
+isn't repeated in if bodies.  It has no bearing on what you just tried
+to do.
 
-luksOpen and mount reproduce this every time with kernel 6.1.67-1 and need =
-~ 1
-minute (because the hang and reset request, I guess). Now booting into
-Salvatore's test kernel (6.1.67-1a~test) and tried the same again, no issue=
- and
-the luksOpen mount was really quick.
+> >                                               If coccinelle
+> > suddenly thinks this is a problem, it's coccinelle that needs
+> > fixing.
+> 
+> This software tool can help to point source code places out for
+> further considerations. The search patterns are evolving accordingly.
 
-This bug was more serious than I guess and it needed some time to get this
-puzzle together.
+The pattern is wrong because kfree(NULL) exists as a teardown
+simplification.
 
-[1] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1059624
-[2] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1059624#30
-[3] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D1059624#47
+James
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
