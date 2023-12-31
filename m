@@ -1,89 +1,121 @@
-Received: from mout.web.de (mout.web.de [212.227.15.3])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B70F08C17;
-	Sat, 30 Dec 2023 14:25:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4408C63A7;
+	Sun, 31 Dec 2023 14:08:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="JrZgkkLc"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de; s=s29768273;
-	t=1703946312; x=1704551112; i=markus.elfring@web.de;
-	bh=dI9cCClD6JexG1woOmdgPnUw06082v8DX+zQoFVxay0=;
-	h=X-UI-Sender-Class:Date:Subject:To:Cc:References:From:
-	 In-Reply-To;
-	b=JrZgkkLcSZEPJI2sUZwLyvAFvdiwnzUUMNrTO+464QkuRNRbHs0x0k+4okj/iV3n
-	 RleY5H0MRaRdI6RTzbBQHRRvq+7MvBUeqsOSc3NJXUEJfGPYNPcyuRMb2WY6DScgH
-	 XZ8+l1Dry/BirwDYtwVnvLrn/cwZ4DPbhnL7YUV/pjpOIJ6EPuUbFu6vBWEHBvPTI
-	 FIwl0YQOSBl6WkizinXiUky2nwsom+ojXYDpACegt7/BzGmx5+IcyrJbh33PV29t7
-	 FSYRJmASTws7Fljq7ADYjU6fgk8hFPRl/HYKXoZSyvi1aRYiAhzVTKhNQZscmWSGk
-	 OKiHxIUdn5h86cX3UA==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.21] ([94.31.87.95]) by smtp.web.de (mrweb005
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1N9cLR-1r7xFt1Rhd-0159S3; Sat, 30
- Dec 2023 15:25:12 +0100
-Message-ID: <38dfe7b6-6d8b-4056-9943-12197c80f4d7@web.de>
-Date: Sat, 30 Dec 2023 15:25:11 +0100
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="I5Rsre8W"
+Received: from pps.filterd (m0353727.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BV8QA1Z003121;
+	Sun, 31 Dec 2023 14:08:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=/uM23a1DykmVUSnyJhKoNd/pLzJUVQGzc8LClp1i+c4=;
+ b=I5Rsre8WTcCRXkQ3neHKlQoHtyml0m9oQc25vVZI9ObgJHsywbXvaE6E31wPWK043gPp
+ tYgdPzOs7p7iyJQnte+0HK/iDw+KKyt3KzKVDA4+5z6/OmzBqvl9gM9HTNbgJHmBUh/M
+ VD+L96k8ZS0uGZIXnpkyPUDASlZV4Nzx59pczon3gzCR/hjDzxBWrwg7CyvNK7E5BOVa
+ NIJT4Qexzg/Mk2Z2OjoKQV2ofPFzllXgvkT75EgL4mp4YPbSWhmRXhwwmhTxfSC1RTxX
+ gmlsAI+XbJC+aVQ61R09On0KAbph77pKf++Oe7S2UHzS08W3LM1mu9fpoQogDjkwpBl4 3w== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vak6f2ag3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 31 Dec 2023 14:08:05 +0000
+Received: from m0353727.ppops.net (m0353727.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BVDxBEZ029654;
+	Sun, 31 Dec 2023 14:08:04 GMT
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vak6f2afn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 31 Dec 2023 14:08:04 +0000
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3BVDj9iA007335;
+	Sun, 31 Dec 2023 14:08:03 GMT
+Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3vaxhnjpae-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 31 Dec 2023 14:08:03 +0000
+Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
+	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 3BVE82vO17433138
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sun, 31 Dec 2023 14:08:03 GMT
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 95F0758058;
+	Sun, 31 Dec 2023 14:08:02 +0000 (GMT)
+Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 545CA58057;
+	Sun, 31 Dec 2023 14:08:01 +0000 (GMT)
+Received: from lingrow.int.hansenpartnership.com (unknown [9.67.79.160])
+	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Sun, 31 Dec 2023 14:08:01 +0000 (GMT)
+Message-ID: <775642a320f7dae53d70610f265056bcdfd8ab13.camel@linux.ibm.com>
+Subject: Re: scsi: ses: Move a label in ses_enclosure_data_process()
+From: James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To: Markus Elfring <Markus.Elfring@web.de>, linux-scsi@vger.kernel.org,
+        kernel-janitors@vger.kernel.org,
+        "Martin K. Petersen"
+	 <martin.petersen@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>
+Date: Sun, 31 Dec 2023 09:07:59 -0500
+In-Reply-To: <38dfe7b6-6d8b-4056-9943-12197c80f4d7@web.de>
+References: <4616e325-e313-4078-9788-dd1e6e51b9e0@web.de>
+	 <9d24844f30604f969ac10da456801f594ce72f2d.camel@linux.ibm.com>
+	 <b65afa15-41e6-4d71-87bd-39fd688fa551@web.de>
+	 <a35c6128d4449fec00238c909e5f6f45ebf4bcba.camel@linux.ibm.com>
+	 <a3825ab2-8987-4b85-9db0-642035789c49@web.de>
+	 <4018ab9225ecaf18501e54114a94217a58a8a57f.camel@linux.ibm.com>
+	 <38dfe7b6-6d8b-4056-9943-12197c80f4d7@web.de>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: scsi: ses: Move a label in ses_enclosure_data_process()
-Content-Language: en-GB
-To: James Bottomley <jejb@linux.ibm.com>, linux-scsi@vger.kernel.org,
- kernel-janitors@vger.kernel.org,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>
-References: <4616e325-e313-4078-9788-dd1e6e51b9e0@web.de>
- <9d24844f30604f969ac10da456801f594ce72f2d.camel@linux.ibm.com>
- <b65afa15-41e6-4d71-87bd-39fd688fa551@web.de>
- <a35c6128d4449fec00238c909e5f6f45ebf4bcba.camel@linux.ibm.com>
- <a3825ab2-8987-4b85-9db0-642035789c49@web.de>
- <4018ab9225ecaf18501e54114a94217a58a8a57f.camel@linux.ibm.com>
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <4018ab9225ecaf18501e54114a94217a58a8a57f.camel@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:GNJw0eiTnvRz1Z7tZBuB+o4pb2XmsXkWWTZiR+2n3Tvnb6BFqlp
- pAi4/57LDG+7T+iqF45/wO7HVSzok2K91AmYGWbueThOhNsTbMdd/XS1h4jVX+bIJiSfBee
- y+TE/KR2g1a0mx/hHl1Eng1SxE4DnQBlK2d9/1y9QbHRIag5zCKiw3Jf7vcfHBza0ZeL3Ot
- NOU7r/Ul+GWy3MtQJA0Zw==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:Dv4K7cuIcss=;f9YSP876OXo4u8npqQbrBWqzcnR
- Aa5pg1EAca/6Vvw6iVYzRo07mMqjCV5x3Bx9SCn/KZqfb39Kszo7sk4UtLK8hjOciIl72hIje
- HJirzLhbASjwNDjaY64AzE37v7kGcO/p72Rs3YkY1+6Jswx4s+zg4XjNLLBIt0jQ+NC/6qlwz
- fq5WwDbZY3uaRC/EkUETlx+emjPRzeFrUvi2wRXM/jVF+merCQIpchW4IRHQO7PSRlKfDfFdC
- QGqJVvkHUITnTjaFlT3E8ugMaWh1moO+Zjl3JSe/nHfEXt7GHCUk3IhwIneT/eUbPmaVOzKil
- v7A+X0ArDLhikEGDWBq8IAFf20mV8D7S2T5wlZKX8sOioLL1JW2ZzM8EKkLvgy//X25PoERwX
- eBMQYEOAX/46J938bbBNs/hYkl3WvK8ZGNEB6BGPsm4sZ9EVKOG1dWtYbWMpBHwLNc855f7K1
- VZPx/qXMhXmuzqy9NO2zbcyF8upj0pFsMO2DEjGsvgE8N0nFs46+KfimnfmjA/LwI0l9phEax
- Ras33D5O/u9iJHjtNsK+sEN6yCoy8O645a/T2tkfSe09zyuymbg0cysAZzz8+JOg26yt2RZqe
- 3vyRGw0kZeO66qGVTlEbZBR+sInbuXB96+umk4LiuVHYrOvmS1CIIf6JqgYXRm1La+4m+A40q
- yUpB+v7fvphXCWVCutulLBcr+MpPSLztGboAF0sqDMK0gE1lMsXTBmWCQDy1BytrNKXyuFF6s
- WF4FFcn/4aZ40Xi9mOuslFbeUCuKQFm9WLVEIomBlFTWijuBk0acIDudd5ATdfs7+ykUEjlnz
- ZQ9DQcGKgjMFZX79MySJA2zQ4lMED7uUNtzKWTupva5+14t5+nnae61oQU0LJMZtDQlDyXSoD
- 2zADWO5ELDdUyeRfCEzvTfGPKReLBwbtNZkQ8Vb+xNkOKSoyoY63VIQyeNGI6AT7QdZkNg2fb
- 0kNrI4d/cH5rQd99QHOYQYMY9cM=
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: djWPtmrHUpMkdhmwwenP19MDP89Ifvn2
+X-Proofpoint-GUID: vFr7PqRaRso_YZKBlAOYJp00uqQ-d7az
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-31_07,2023-12-29_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=15 clxscore=1015 mlxscore=15
+ priorityscore=1501 bulkscore=0 suspectscore=0 adultscore=0
+ lowpriorityscore=0 impostorscore=0 phishscore=0 spamscore=15
+ mlxlogscore=74 malwarescore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2311290000 definitions=main-2312310116
 
->> If you would dare to follow advice from goto chains in a strict way,
->> I imagine that you can tend to stress the attention for more useful
->> data processing a bit more than such a redundant function call.
->
-> It's about maintainability and simplicity.  Eliminating kfree(NULL)
-> doesn't simplify most code,
+On Sat, 2023-12-30 at 15:25 +0100, Markus Elfring wrote:
+> > > If you would dare to follow advice from goto chains in a strict
+> > > way, I imagine that you can tend to stress the attention for more
+> > > useful data processing a bit more than such a redundant function
+> > > call.
+> > 
+> > It's about maintainability and simplicity.  Eliminating kfree(NULL)
+> > doesn't simplify most code,
+> 
+> I find it easy to avoid such a call in the affected and concrete
+> function implementation.
 
-I find it easy to avoid such a call in the affected and concrete
-function implementation.
+I find it easy to fall down stairs nowadays; that doesn't make it a
+necessary or even desirable thing to do.
 
+> >                             it just makes the exit paths more
+> > complex
+> 
+> Where is undesirable software complexity here in the repositioning
+> of the label “simple_populate” before the statement “buf = NULL;”?
 
->                             it just makes the exit paths more complex
+We don't just apply patches because we can: code churn is inimical to
+software maintenance and backporting, so every patch has an application
+cost.  The value provided by any patch has to be greater than that
+cost. kfree(NULL) is an expected operation so there's little value in
+avoiding it and certainly not enough to overcome the patch application
+cost.
 
-Where is undesirable software complexity here in the repositioning
-of the label =E2=80=9Csimple_populate=E2=80=9D before the statement =E2=80=
-=9Cbuf =3D NULL;=E2=80=9D?
+James
 
-Regards,
-Markus
