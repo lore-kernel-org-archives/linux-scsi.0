@@ -1,112 +1,77 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D6453A9;
-	Tue,  2 Jan 2024 08:52:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C09B10A0C
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jan 2024 14:03:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cGw6QmI/"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 401LrrXc022395;
-	Tue, 2 Jan 2024 08:52:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding;
- s=corp-2023-11-20; bh=IU3SKqS8arQ2vGYuJO5ap2cBUZGNq87a8rKkaitXfhw=;
- b=cGw6QmI/IzqfpMYf1EEhhH4YtRIYu8/J4rpE39vK9Eq8ODGKlyxQm7uQAwdn2HbuHxBm
- UTDQ2q+zJm/s0aFyH/Xp48bwaRoABwuAboDo7n4w7jE663D1xsPlli3J/JK24MpxIq7q
- o1oe4RBrr4qNzSJZQ3q8DYn2MC7zW0hou4PaVBuvlE2lzyR80Smx8JgRHAkCoHq2HRXu
- PE9GqIErsC69xRaHz8wOr7qMMb4NntvnSHdnPlHsp6EnZb8xC/dzDthxNhyvKEy8JuHd
- 4R+GfCahTXvzIMRPYl8y2RrAUJNjWLW2174NeXhSYR+Hiv2ndbaMUBXXL6Iw4dmm+bHK ag== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3vaa03tm7p-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 02 Jan 2024 08:52:50 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4028VYo0024302;
-	Tue, 2 Jan 2024 08:52:50 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3va9nd7xsq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 02 Jan 2024 08:52:50 +0000
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4028nKGJ019622;
-	Tue, 2 Jan 2024 08:52:49 GMT
-Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3va9nd7xrr-1;
-	Tue, 02 Jan 2024 08:52:49 +0000
-From: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
-To: Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Justin Stitt <justinstitt@google.com>,
-        Kees Cook <keescook@chromium.org>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: dan.carpenter@linaro.org, kernel-janitors@vger.kernel.org,
-        error27@gmail.com, harshit.m.mogalapalli@oracle.com
-Subject: [PATCH] scsi: fcoe: Fix unsigned comparison with zero in store_ctlr_mode()
-Date: Tue,  2 Jan 2024 00:52:45 -0800
-Message-ID: <20240102085245.600570-1-harshit.m.mogalapalli@oracle.com>
-X-Mailer: git-send-email 2.42.0
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="eByHxQ8w"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-40d8e7a50c1so1607295e9.2
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Jan 2024 06:03:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1704204198; x=1704808998; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=0CVBxN2b445a133UsX9oSFJ3uLxcIkQQRN4TgJGk7Uk=;
+        b=eByHxQ8wOl9WZcJ7Pv7ahmAunXdTVk03U0u0YFoXOgjkF/Wmxyht41vWR3qqMZOD7Z
+         j2BcpzRIutbfMi+RIbLC3ZLusmH0I3SQyX2lLLvz+WBhyetYQMWyJwasYAbk5psC9gx9
+         Vvq555bUVHbMfq+9KU1yLaCK3uOB7gySgsAdtYYXrGywAW6j8HUW3c8t0ODJamm8XSiP
+         U3x5lyD7IT2tIxuqtpX2oIlHkIoOAvmxzYk+DF8me/UmdNTmOktScyZAaC+y/wzHGOyL
+         s2JZAcBUn7MhyAo2k23iAXvc7TwepzKKsTM3E9zeSu0H4ZAETUP8jZTkOygJQb2+YBh7
+         sG6Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704204198; x=1704808998;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=0CVBxN2b445a133UsX9oSFJ3uLxcIkQQRN4TgJGk7Uk=;
+        b=jCAmpQOAEjAxoXkMlVFwtOjBXfxlEjkT1wJqhx+YqMVAGIz0KoAJOm+CWOjGgsCNEc
+         W2L7VeCOoxvokU03Tnn4DsCdpIgseBCSvQVSeSg02Gho/03KEm08f1TwE5iMFQ5cm+9S
+         0fYZuDkfXOwoYpNw5Lrahg4km7AJunEj6jYeMxM+VjeGEc4nAIvPWEt5YgtM0UvdN4jX
+         jeqXt38mZ/Gx/VEV3Yi093YVqugX3QgGLgnjuz1v1VhlSGiXWd6yIhshChFpBExbzyzt
+         S91tAoyTeC+tY7U2vNkk+XMbR558REIQgSrj1N4J0WwnRqZQKwTlXNloWXB47K1WOFK6
+         5prA==
+X-Gm-Message-State: AOJu0YwRDdGDgXsK0MrOaNhDGM+vZskBVRG6nsnK1cb33Rs0DKXWprCg
+	CbRPiMxgRInGvT6j78CDaLVnLIk9aDvvGw==
+X-Google-Smtp-Source: AGHT+IFOvGdhleRJ7ygZH57lI+Ub0PS/a2HOI+3RC24eb3xIU+LiPD60rC6vDreNFBwusmS/M0we1A==
+X-Received: by 2002:a05:600c:1912:b0:40d:554a:f604 with SMTP id j18-20020a05600c191200b0040d554af604mr6587352wmq.34.1704204198505;
+        Tue, 02 Jan 2024 06:03:18 -0800 (PST)
+Received: from localhost ([102.140.209.237])
+        by smtp.gmail.com with ESMTPSA id z4-20020a5d4d04000000b00336a1f6ce7csm24023808wrt.19.2024.01.02.06.03.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Jan 2024 06:03:18 -0800 (PST)
+Date: Tue, 2 Jan 2024 15:58:06 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Justin Tee <justintee8345@gmail.com>
+Cc: jsmart2021@gmail.com, Dick Kennedy <dick.kennedy@broadcom.com>,
+	Justin Tee <justin.tee@broadcom.com>, linux-scsi@vger.kernel.org
+Subject: Re: [bug report] scsi: lpfc: Add support for the CM framework
+Message-ID: <543d02e3-8208-41c7-836c-3c52bd598158@suswa.mountain>
+References: <121b7df5-8277-497a-983a-eac00061fb58@moroto.mountain>
+ <CABPRKS_8MuDTA3oTXdt+ib_Zaba1iD3xN5ZZFM7fOAFCDBFj6A@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-01-02_02,2024-01-01_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
- mlxlogscore=999 malwarescore=0 spamscore=0 mlxscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2401020066
-X-Proofpoint-ORIG-GUID: _QYeAAJrfGy_q1G6LBrusuXsKPieJl9t
-X-Proofpoint-GUID: _QYeAAJrfGy_q1G6LBrusuXsKPieJl9t
+In-Reply-To: <CABPRKS_8MuDTA3oTXdt+ib_Zaba1iD3xN5ZZFM7fOAFCDBFj6A@mail.gmail.com>
 
-ctlr->mode is of unsigned type, it is never less than zero.
+On Mon, Dec 04, 2023 at 11:46:28AM -0800, Justin Tee wrote:
+> Hi Dan,
+> 
+> Line 8301 sets sli4_params->cmf equal to 0.  So, “if (sli4_params->cmf
+> && sli4_params->mi_ver) {“ on line 8338 would not evaluate to true and
+> we would not reach the line 8343 in question.
+> 
 
-Fix this by using an extra varibale called 'res', to store return value
-from sysfs_match_string() and assign that to ctlr->mode on the success
-path.
+Thanks, you're right.
 
-Fixes: edc22a7c8688 ("scsi: fcoe: Use sysfs_match_string() over fcoe_parse_mode()")
-Signed-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
----
-This is based on static analysis with smatch and only compile tested.
----
- drivers/scsi/fcoe/fcoe_sysfs.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index 408a806bf4c2..c64a085a7ee2 100644
---- a/drivers/scsi/fcoe/fcoe_sysfs.c
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -263,6 +263,7 @@ static ssize_t store_ctlr_mode(struct device *dev,
- 			       const char *buf, size_t count)
- {
- 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
-+	int res;
- 
- 	if (count > FCOE_MAX_MODENAME_LEN)
- 		return -EINVAL;
-@@ -279,12 +280,13 @@ static ssize_t store_ctlr_mode(struct device *dev,
- 			return -ENOTSUPP;
- 		}
- 
--		ctlr->mode = sysfs_match_string(fip_conn_type_names, buf);
--		if (ctlr->mode < 0 || ctlr->mode == FIP_CONN_TYPE_UNKNOWN) {
-+		res = sysfs_match_string(fip_conn_type_names, buf);
-+		if (res < 0 || res == FIP_CONN_TYPE_UNKNOWN) {
- 			LIBFCOE_SYSFS_DBG(ctlr, "Unknown mode %s provided.\n",
- 					  buf);
- 			return -EINVAL;
- 		}
-+		ctlr->mode = res;
- 
- 		ctlr->f->set_fcoe_ctlr_mode(ctlr);
- 		LIBFCOE_SYSFS_DBG(ctlr, "Mode changed to %s.\n", buf);
--- 
-2.39.3
+regards,
+dan carpenter
 
