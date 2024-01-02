@@ -1,77 +1,82 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F52020E0;
-	Tue,  2 Jan 2024 03:46:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0yxUKDia"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-	bh=jPtuUmC93Yea48T6TTFZ4KmQu493//SKPkPtQ7A9VWM=; b=0yxUKDiaV3c/muWhadgd5rj+rS
-	+xOoSFfSXoi9ElsyNcJPD0yiyavFaHdlIgSAvC0EBCnxrOTWB2EJlJTXXbKeLylzobnJBii78mZpt
-	/wR4/X3eFyf1+zN6HKQR1ZT58ng2cTumpext5jnRXnVZJwO4HSGfgyuyxPJ6ji9GPhmGLr5v8vT6K
-	K6hd8qxm33R7LehxYNFaXfsAL7x+TZ8SjwK0rWimroEwhRF86ae5ma4mj8n3s5TKzsVE8qUo4UUKa
-	pBrXT2Fg/S21z3c90lQx8CJep/lLZgP9XRv7djcKGKcPs9pnF5lDIFWGZ/oSVSPHz4FRttiS4aUC/
-	RlTNjFig==;
-Received: from [50.53.46.231] (helo=[192.168.254.15])
-	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rKVjG-0072Fo-1F;
-	Tue, 02 Jan 2024 03:46:10 +0000
-Message-ID: <8b0ad2bb-df2e-4f0c-940c-e2cfbc8fa207@infradead.org>
-Date: Mon, 1 Jan 2024 19:46:09 -0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 236C2468E;
+	Tue,  2 Jan 2024 07:27:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: ad091032bc1a4116b2351c70b3a42695-20240102
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.35,REQID:6b656fcb-e1da-4e6f-8427-69eae0ee4c88,IP:15,
+	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:10
+X-CID-INFO: VERSION:1.1.35,REQID:6b656fcb-e1da-4e6f-8427-69eae0ee4c88,IP:15,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:10
+X-CID-META: VersionHash:5d391d7,CLOUDID:d50b6582-8d4f-477b-89d2-1e3bdbef96d1,B
+	ulkID:240102152741F8M6WHBH,BulkQuantity:0,Recheck:0,SF:44|66|24|72|19|102,
+	TC:nil,Content:0,EDM:-3,IP:-2,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
+X-UUID: ad091032bc1a4116b2351c70b3a42695-20240102
+Received: from node4.com.cn [(39.156.73.12)] by mailgw
+	(envelope-from <tanzheng@kylinos.cn>)
+	(Generic MTA)
+	with ESMTP id 440533296; Tue, 02 Jan 2024 15:27:39 +0800
+Received: from node4.com.cn (localhost [127.0.0.1])
+	by node4.com.cn (NSMail) with SMTP id 1863A16001CD7;
+	Tue,  2 Jan 2024 15:27:39 +0800 (CST)
+X-ns-mid: postfix-6593BAEA-890192601
+Received: from localhost.localdomain (unknown [172.20.40.222])
+	by node4.com.cn (NSMail) with ESMTPA id 43A3616001CD7;
+	Tue,  2 Jan 2024 07:27:37 +0000 (UTC)
+From: zheng tan <tanzheng@kylinos.cn>
+To: skashyap@marvell.com,
+	jhasan@marvell.com,
+	GR-QLogic-Storage-Upstream@marvell.com
+Cc: jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Zheng tan <tanzheng@kylinos.cn>,
+	k2ci <kernel-bot@kylinos.cn>
+Subject: [PATCH v2] scsi: qedf: fix spelling typo in comment
+Date: Tue,  2 Jan 2024 15:27:35 +0800
+Message-Id: <20240102072735.973345-1-tanzheng@kylinos.cn>
+X-Mailer: git-send-email 2.27.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/5] scsi: qedf: fix spelling typo in comment
-Content-Language: en-US
-To: zheng tan <tanzheng@kylinos.cn>, skashyap@marvell.com,
- jhasan@marvell.com, GR-QLogic-Storage-Upstream@marvell.com
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- k2ci <kernel-bot@kylinos.cn>
-References: <20240102022448.3970501-1-tanzheng@kylinos.cn>
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20240102022448.3970501-1-tanzheng@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
+From: Zheng tan <tanzheng@kylinos.cn>
 
+fix spelling typo in comment.
 
-On 1/1/24 18:24, zheng tan wrote:
-> From: Zheng tan <tanzheng@kylinos.cn> 
-> 
-> fix spelling typo in comment.
-> 
-> Reported-by: k2ci <kernel-bot@kylinos.cn>
-> Signed-off-by: Zheng tan <tanzheng@kylinos.cn>
-> ---
->  drivers/scsi/qedf/qedf_hsi.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/qedf/qedf_hsi.h b/drivers/scsi/qedf/qedf_hsi.h
-> index ecd5cb53b750..2df2165e4356 100644
-> --- a/drivers/scsi/qedf/qedf_hsi.h
-> +++ b/drivers/scsi/qedf/qedf_hsi.h
-> @@ -300,7 +300,7 @@ struct fcoe_respqe {
->  /* PARAM that is located in the FCP_RSP FC header */
->  #define FCOE_RESPQE_PARAM_MASK            0xFFFFFF
->  #define FCOE_RESPQE_PARAM_SHIFT           0
-> -/* Indication whther its Target-auto-rsp mode or not */
-> +/* Indication wether its Target-auto-rsp mode or not */
+Reported-by: k2ci <kernel-bot@kylinos.cn>
+Signed-off-by: Zheng tan <tanzheng@kylinos.cn>
+---
+ drivers/scsi/qedf/qedf_hsi.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-                 whether
+diff --git a/drivers/scsi/qedf/qedf_hsi.h b/drivers/scsi/qedf/qedf_hsi.h
+index ecd5cb53b750..36a8a53e859d 100644
+--- a/drivers/scsi/qedf/qedf_hsi.h
++++ b/drivers/scsi/qedf/qedf_hsi.h
+@@ -300,7 +300,7 @@ struct fcoe_respqe {
+ /* PARAM that is located in the FCP_RSP FC header */
+ #define FCOE_RESPQE_PARAM_MASK            0xFFFFFF
+ #define FCOE_RESPQE_PARAM_SHIFT           0
+-/* Indication whther its Target-auto-rsp mode or not */
++/* Indication whether its Target-auto-rsp mode or not */
+ #define FCOE_RESPQE_TARGET_AUTO_RSP_MASK  0xFF
+ #define FCOE_RESPQE_TARGET_AUTO_RSP_SHIFT 24
+ };
+--=20
+2.27.0
 
->  #define FCOE_RESPQE_TARGET_AUTO_RSP_MASK  0xFF
->  #define FCOE_RESPQE_TARGET_AUTO_RSP_SHIFT 24
->  };
-
--- 
-#Randy
