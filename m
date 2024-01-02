@@ -1,82 +1,112 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 236C2468E;
-	Tue,  2 Jan 2024 07:27:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: ad091032bc1a4116b2351c70b3a42695-20240102
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.35,REQID:6b656fcb-e1da-4e6f-8427-69eae0ee4c88,IP:15,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:10
-X-CID-INFO: VERSION:1.1.35,REQID:6b656fcb-e1da-4e6f-8427-69eae0ee4c88,IP:15,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:10
-X-CID-META: VersionHash:5d391d7,CLOUDID:d50b6582-8d4f-477b-89d2-1e3bdbef96d1,B
-	ulkID:240102152741F8M6WHBH,BulkQuantity:0,Recheck:0,SF:44|66|24|72|19|102,
-	TC:nil,Content:0,EDM:-3,IP:-2,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-	,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
-X-UUID: ad091032bc1a4116b2351c70b3a42695-20240102
-Received: from node4.com.cn [(39.156.73.12)] by mailgw
-	(envelope-from <tanzheng@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 440533296; Tue, 02 Jan 2024 15:27:39 +0800
-Received: from node4.com.cn (localhost [127.0.0.1])
-	by node4.com.cn (NSMail) with SMTP id 1863A16001CD7;
-	Tue,  2 Jan 2024 15:27:39 +0800 (CST)
-X-ns-mid: postfix-6593BAEA-890192601
-Received: from localhost.localdomain (unknown [172.20.40.222])
-	by node4.com.cn (NSMail) with ESMTPA id 43A3616001CD7;
-	Tue,  2 Jan 2024 07:27:37 +0000 (UTC)
-From: zheng tan <tanzheng@kylinos.cn>
-To: skashyap@marvell.com,
-	jhasan@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com
-Cc: jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Zheng tan <tanzheng@kylinos.cn>,
-	k2ci <kernel-bot@kylinos.cn>
-Subject: [PATCH v2] scsi: qedf: fix spelling typo in comment
-Date: Tue,  2 Jan 2024 15:27:35 +0800
-Message-Id: <20240102072735.973345-1-tanzheng@kylinos.cn>
-X-Mailer: git-send-email 2.27.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D6453A9;
+	Tue,  2 Jan 2024 08:52:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cGw6QmI/"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 401LrrXc022395;
+	Tue, 2 Jan 2024 08:52:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2023-11-20; bh=IU3SKqS8arQ2vGYuJO5ap2cBUZGNq87a8rKkaitXfhw=;
+ b=cGw6QmI/IzqfpMYf1EEhhH4YtRIYu8/J4rpE39vK9Eq8ODGKlyxQm7uQAwdn2HbuHxBm
+ UTDQ2q+zJm/s0aFyH/Xp48bwaRoABwuAboDo7n4w7jE663D1xsPlli3J/JK24MpxIq7q
+ o1oe4RBrr4qNzSJZQ3q8DYn2MC7zW0hou4PaVBuvlE2lzyR80Smx8JgRHAkCoHq2HRXu
+ PE9GqIErsC69xRaHz8wOr7qMMb4NntvnSHdnPlHsp6EnZb8xC/dzDthxNhyvKEy8JuHd
+ 4R+GfCahTXvzIMRPYl8y2RrAUJNjWLW2174NeXhSYR+Hiv2ndbaMUBXXL6Iw4dmm+bHK ag== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3vaa03tm7p-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 02 Jan 2024 08:52:50 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4028VYo0024302;
+	Tue, 2 Jan 2024 08:52:50 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3va9nd7xsq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 02 Jan 2024 08:52:50 +0000
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4028nKGJ019622;
+	Tue, 2 Jan 2024 08:52:49 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3va9nd7xrr-1;
+	Tue, 02 Jan 2024 08:52:49 +0000
+From: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+To: Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Justin Stitt <justinstitt@google.com>,
+        Kees Cook <keescook@chromium.org>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: dan.carpenter@linaro.org, kernel-janitors@vger.kernel.org,
+        error27@gmail.com, harshit.m.mogalapalli@oracle.com
+Subject: [PATCH] scsi: fcoe: Fix unsigned comparison with zero in store_ctlr_mode()
+Date: Tue,  2 Jan 2024 00:52:45 -0800
+Message-ID: <20240102085245.600570-1-harshit.m.mogalapalli@oracle.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-02_02,2024-01-01_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
+ mlxlogscore=999 malwarescore=0 spamscore=0 mlxscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2401020066
+X-Proofpoint-ORIG-GUID: _QYeAAJrfGy_q1G6LBrusuXsKPieJl9t
+X-Proofpoint-GUID: _QYeAAJrfGy_q1G6LBrusuXsKPieJl9t
 
-From: Zheng tan <tanzheng@kylinos.cn>
+ctlr->mode is of unsigned type, it is never less than zero.
 
-fix spelling typo in comment.
+Fix this by using an extra varibale called 'res', to store return value
+from sysfs_match_string() and assign that to ctlr->mode on the success
+path.
 
-Reported-by: k2ci <kernel-bot@kylinos.cn>
-Signed-off-by: Zheng tan <tanzheng@kylinos.cn>
+Fixes: edc22a7c8688 ("scsi: fcoe: Use sysfs_match_string() over fcoe_parse_mode()")
+Signed-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
 ---
- drivers/scsi/qedf/qedf_hsi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is based on static analysis with smatch and only compile tested.
+---
+ drivers/scsi/fcoe/fcoe_sysfs.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_hsi.h b/drivers/scsi/qedf/qedf_hsi.h
-index ecd5cb53b750..36a8a53e859d 100644
---- a/drivers/scsi/qedf/qedf_hsi.h
-+++ b/drivers/scsi/qedf/qedf_hsi.h
-@@ -300,7 +300,7 @@ struct fcoe_respqe {
- /* PARAM that is located in the FCP_RSP FC header */
- #define FCOE_RESPQE_PARAM_MASK            0xFFFFFF
- #define FCOE_RESPQE_PARAM_SHIFT           0
--/* Indication whther its Target-auto-rsp mode or not */
-+/* Indication whether its Target-auto-rsp mode or not */
- #define FCOE_RESPQE_TARGET_AUTO_RSP_MASK  0xFF
- #define FCOE_RESPQE_TARGET_AUTO_RSP_SHIFT 24
- };
---=20
-2.27.0
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index 408a806bf4c2..c64a085a7ee2 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -263,6 +263,7 @@ static ssize_t store_ctlr_mode(struct device *dev,
+ 			       const char *buf, size_t count)
+ {
+ 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
++	int res;
+ 
+ 	if (count > FCOE_MAX_MODENAME_LEN)
+ 		return -EINVAL;
+@@ -279,12 +280,13 @@ static ssize_t store_ctlr_mode(struct device *dev,
+ 			return -ENOTSUPP;
+ 		}
+ 
+-		ctlr->mode = sysfs_match_string(fip_conn_type_names, buf);
+-		if (ctlr->mode < 0 || ctlr->mode == FIP_CONN_TYPE_UNKNOWN) {
++		res = sysfs_match_string(fip_conn_type_names, buf);
++		if (res < 0 || res == FIP_CONN_TYPE_UNKNOWN) {
+ 			LIBFCOE_SYSFS_DBG(ctlr, "Unknown mode %s provided.\n",
+ 					  buf);
+ 			return -EINVAL;
+ 		}
++		ctlr->mode = res;
+ 
+ 		ctlr->f->set_fcoe_ctlr_mode(ctlr);
+ 		LIBFCOE_SYSFS_DBG(ctlr, "Mode changed to %s.\n", buf);
+-- 
+2.39.3
 
