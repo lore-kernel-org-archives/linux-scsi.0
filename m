@@ -1,81 +1,77 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BEE6EBC;
-	Tue,  2 Jan 2024 02:32:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 2c410ea93b3e4cacba85cfabb0418f34-20240102
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.35,REQID:ae92b39a-53f3-4113-b068-2fdf06733a69,IP:25,
-	URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:15
-X-CID-INFO: VERSION:1.1.35,REQID:ae92b39a-53f3-4113-b068-2fdf06733a69,IP:25,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:15
-X-CID-META: VersionHash:5d391d7,CLOUDID:a4efe17e-4f93-4875-95e7-8c66ea833d57,B
-	ulkID:240102103214JQ1WJQQO,BulkQuantity:0,Recheck:0,SF:24|72|19|44|66|38|1
-	02,TC:nil,Content:0,EDM:-3,IP:-2,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,CO
-	L:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_FSI,TF_CID_SPAM_SNR,TF_CID_SPAM_FSD
-X-UUID: 2c410ea93b3e4cacba85cfabb0418f34-20240102
-Received: from node4.com.cn [(39.156.73.12)] by mailgw
-	(envelope-from <tanzheng@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 1289491454; Tue, 02 Jan 2024 10:32:11 +0800
-Received: from node4.com.cn (localhost [127.0.0.1])
-	by node4.com.cn (NSMail) with SMTP id A298816001CD7;
-	Tue,  2 Jan 2024 10:32:11 +0800 (CST)
-X-ns-mid: postfix-659375AB-484940367
-Received: from localhost.localdomain (unknown [172.20.40.222])
-	by node4.com.cn (NSMail) with ESMTPA id CB81716001CD9;
-	Tue,  2 Jan 2024 02:32:10 +0000 (UTC)
-From: zheng tan <tanzheng@kylinos.cn>
-To: gotom@debian.or.jp,
-	yokota@netlab.is.tsukuba.ac.jp
-Cc: jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Zheng tan <tanzheng@kylinos.cn>,
-	k2ci <kernel-bot@kylinos.cn>
-Subject: [PATCH 5/5] scsi: nsp32: fix spelling typo in comment
-Date: Tue,  2 Jan 2024 10:32:09 +0800
-Message-Id: <20240102023209.4107281-1-tanzheng@kylinos.cn>
-X-Mailer: git-send-email 2.27.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F52020E0;
+	Tue,  2 Jan 2024 03:46:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0yxUKDia"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+	bh=jPtuUmC93Yea48T6TTFZ4KmQu493//SKPkPtQ7A9VWM=; b=0yxUKDiaV3c/muWhadgd5rj+rS
+	+xOoSFfSXoi9ElsyNcJPD0yiyavFaHdlIgSAvC0EBCnxrOTWB2EJlJTXXbKeLylzobnJBii78mZpt
+	/wR4/X3eFyf1+zN6HKQR1ZT58ng2cTumpext5jnRXnVZJwO4HSGfgyuyxPJ6ji9GPhmGLr5v8vT6K
+	K6hd8qxm33R7LehxYNFaXfsAL7x+TZ8SjwK0rWimroEwhRF86ae5ma4mj8n3s5TKzsVE8qUo4UUKa
+	pBrXT2Fg/S21z3c90lQx8CJep/lLZgP9XRv7djcKGKcPs9pnF5lDIFWGZ/oSVSPHz4FRttiS4aUC/
+	RlTNjFig==;
+Received: from [50.53.46.231] (helo=[192.168.254.15])
+	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+	id 1rKVjG-0072Fo-1F;
+	Tue, 02 Jan 2024 03:46:10 +0000
+Message-ID: <8b0ad2bb-df2e-4f0c-940c-e2cfbc8fa207@infradead.org>
+Date: Mon, 1 Jan 2024 19:46:09 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 4/5] scsi: qedf: fix spelling typo in comment
+Content-Language: en-US
+To: zheng tan <tanzheng@kylinos.cn>, skashyap@marvell.com,
+ jhasan@marvell.com, GR-QLogic-Storage-Upstream@marvell.com
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ k2ci <kernel-bot@kylinos.cn>
+References: <20240102022448.3970501-1-tanzheng@kylinos.cn>
+From: Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20240102022448.3970501-1-tanzheng@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Zheng tan <tanzheng@kylinos.cn>=20
 
-fix spelling typo in comment.
 
-Reported-by: k2ci <kernel-bot@kylinos.cn>
-Signed-off-by: Zheng tan <tanzheng@kylinos.cn>
----
- drivers/scsi/nsp32.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 1/1/24 18:24, zheng tan wrote:
+> From: Zheng tan <tanzheng@kylinos.cn> 
+> 
+> fix spelling typo in comment.
+> 
+> Reported-by: k2ci <kernel-bot@kylinos.cn>
+> Signed-off-by: Zheng tan <tanzheng@kylinos.cn>
+> ---
+>  drivers/scsi/qedf/qedf_hsi.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/qedf/qedf_hsi.h b/drivers/scsi/qedf/qedf_hsi.h
+> index ecd5cb53b750..2df2165e4356 100644
+> --- a/drivers/scsi/qedf/qedf_hsi.h
+> +++ b/drivers/scsi/qedf/qedf_hsi.h
+> @@ -300,7 +300,7 @@ struct fcoe_respqe {
+>  /* PARAM that is located in the FCP_RSP FC header */
+>  #define FCOE_RESPQE_PARAM_MASK            0xFFFFFF
+>  #define FCOE_RESPQE_PARAM_SHIFT           0
+> -/* Indication whther its Target-auto-rsp mode or not */
+> +/* Indication wether its Target-auto-rsp mode or not */
 
-diff --git a/drivers/scsi/nsp32.h b/drivers/scsi/nsp32.h
-index 924889f8bd37..47993d123a6f 100644
---- a/drivers/scsi/nsp32.h
-+++ b/drivers/scsi/nsp32.h
-@@ -520,7 +520,7 @@ typedef struct _nsp32_sync_table {
- #define SDTR_TARGET	  BIT(1)    /* sending SDTR from target           */
- #define SDTR_DONE	  BIT(2)    /* exchanging SDTR has been processed */
-=20
--/* syncronous period value for nsp32_target.config_max */
-+/* synchronous period value for nsp32_target.config_max */
- #define FAST5M			0x32
- #define FAST10M			0x19
- #define ULTRA20M		0x0c
---=20
-2.34.1
+                 whether
 
+>  #define FCOE_RESPQE_TARGET_AUTO_RSP_MASK  0xFF
+>  #define FCOE_RESPQE_TARGET_AUTO_RSP_SHIFT 24
+>  };
+
+-- 
+#Randy
