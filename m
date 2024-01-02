@@ -1,56 +1,41 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C09B10A0C
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Jan 2024 14:03:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9600D15480;
+	Tue,  2 Jan 2024 16:54:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="eByHxQ8w"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-40d8e7a50c1so1607295e9.2
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Jan 2024 06:03:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1704204198; x=1704808998; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=0CVBxN2b445a133UsX9oSFJ3uLxcIkQQRN4TgJGk7Uk=;
-        b=eByHxQ8wOl9WZcJ7Pv7ahmAunXdTVk03U0u0YFoXOgjkF/Wmxyht41vWR3qqMZOD7Z
-         j2BcpzRIutbfMi+RIbLC3ZLusmH0I3SQyX2lLLvz+WBhyetYQMWyJwasYAbk5psC9gx9
-         Vvq555bUVHbMfq+9KU1yLaCK3uOB7gySgsAdtYYXrGywAW6j8HUW3c8t0ODJamm8XSiP
-         U3x5lyD7IT2tIxuqtpX2oIlHkIoOAvmxzYk+DF8me/UmdNTmOktScyZAaC+y/wzHGOyL
-         s2JZAcBUn7MhyAo2k23iAXvc7TwepzKKsTM3E9zeSu0H4ZAETUP8jZTkOygJQb2+YBh7
-         sG6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704204198; x=1704808998;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0CVBxN2b445a133UsX9oSFJ3uLxcIkQQRN4TgJGk7Uk=;
-        b=jCAmpQOAEjAxoXkMlVFwtOjBXfxlEjkT1wJqhx+YqMVAGIz0KoAJOm+CWOjGgsCNEc
-         W2L7VeCOoxvokU03Tnn4DsCdpIgseBCSvQVSeSg02Gho/03KEm08f1TwE5iMFQ5cm+9S
-         0fYZuDkfXOwoYpNw5Lrahg4km7AJunEj6jYeMxM+VjeGEc4nAIvPWEt5YgtM0UvdN4jX
-         jeqXt38mZ/Gx/VEV3Yi093YVqugX3QgGLgnjuz1v1VhlSGiXWd6yIhshChFpBExbzyzt
-         S91tAoyTeC+tY7U2vNkk+XMbR558REIQgSrj1N4J0WwnRqZQKwTlXNloWXB47K1WOFK6
-         5prA==
-X-Gm-Message-State: AOJu0YwRDdGDgXsK0MrOaNhDGM+vZskBVRG6nsnK1cb33Rs0DKXWprCg
-	CbRPiMxgRInGvT6j78CDaLVnLIk9aDvvGw==
-X-Google-Smtp-Source: AGHT+IFOvGdhleRJ7ygZH57lI+Ub0PS/a2HOI+3RC24eb3xIU+LiPD60rC6vDreNFBwusmS/M0we1A==
-X-Received: by 2002:a05:600c:1912:b0:40d:554a:f604 with SMTP id j18-20020a05600c191200b0040d554af604mr6587352wmq.34.1704204198505;
-        Tue, 02 Jan 2024 06:03:18 -0800 (PST)
-Received: from localhost ([102.140.209.237])
-        by smtp.gmail.com with ESMTPSA id z4-20020a5d4d04000000b00336a1f6ce7csm24023808wrt.19.2024.01.02.06.03.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Jan 2024 06:03:18 -0800 (PST)
-Date: Tue, 2 Jan 2024 15:58:06 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Justin Tee <justintee8345@gmail.com>
-Cc: jsmart2021@gmail.com, Dick Kennedy <dick.kennedy@broadcom.com>,
-	Justin Tee <justin.tee@broadcom.com>, linux-scsi@vger.kernel.org
-Subject: Re: [bug report] scsi: lpfc: Add support for the CM framework
-Message-ID: <543d02e3-8208-41c7-836c-3c52bd598158@suswa.mountain>
-References: <121b7df5-8277-497a-983a-eac00061fb58@moroto.mountain>
- <CABPRKS_8MuDTA3oTXdt+ib_Zaba1iD3xN5ZZFM7fOAFCDBFj6A@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mT94ck57"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E317AC433C7;
+	Tue,  2 Jan 2024 16:54:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704214455;
+	bh=Xs6JWdVhz8UCi2Nb+OZ68Hcw6GchoGb6m+i1P4qfvuM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mT94ck572c8+zWeYLk5Ty8g9hs+aLOzRuOHkgL7yBhTPleFzdpvBPLc3hYYQkek8L
+	 K5tDaUuauPOfkKBwB9ZEgYu9Mddik0WrFru4v6+Zvt2J7OWnBpEI1R4g1b/5TR9fgg
+	 XbHOZ0N4eGT2vTwzKROzBM27+kSbQYF/0zeEGG8OljQmtekYaAnwu4npup1sXEIc8z
+	 4JrikAmlbHqkFBUeoE1BYQrPGnC9sPh42ZqyXBfVKsJCA/dlre3rpmLFEiSKd+2vQT
+	 RYbGJoRbgGxDLEGiNRMRULMbpOPMePIl4lQaWWb0yE1r10UwpdIdosIHQvpr1TlYVm
+	 /MquyPnPKrAXg==
+Date: Tue, 2 Jan 2024 22:23:56 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Chanwoo Lee <cw9316.lee@samsung.com>
+Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	peter.wang@mediatek.com, chu.stanley@gmail.com,
+	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
+	stanley.chu@mediatek.com, quic_cang@quicinc.com,
+	quic_asutoshd@quicinc.com, powen.kao@mediatek.com,
+	quic_nguyenb@quicinc.com, yang.lee@linux.alibaba.com,
+	athierry@redhat.com, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org, grant.jung@samsung.com,
+	jt77.jang@samsung.com, dh0421.hwang@samsung.com,
+	sh043.lee@samsung.com
+Subject: Re: [PATCH v3] ufs: mcq: Add definition for REG_UFS_MEM_CFG register
+Message-ID: <20240102165356.GD4917@thinkpad>
+References: <CGME20240102014248epcas1p4d49dcf2cd3f020bed88eebaeba648789@epcas1p4.samsung.com>
+ <20240102014222.23351-1-cw9316.lee@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -60,18 +45,114 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CABPRKS_8MuDTA3oTXdt+ib_Zaba1iD3xN5ZZFM7fOAFCDBFj6A@mail.gmail.com>
+In-Reply-To: <20240102014222.23351-1-cw9316.lee@samsung.com>
 
-On Mon, Dec 04, 2023 at 11:46:28AM -0800, Justin Tee wrote:
-> Hi Dan,
+On Tue, Jan 02, 2024 at 10:42:22AM +0900, Chanwoo Lee wrote:
+> From: ChanWoo Lee <cw9316.lee@samsung.com>
 > 
-> Line 8301 sets sli4_params->cmf equal to 0.  So, “if (sli4_params->cmf
-> && sli4_params->mi_ver) {“ on line 8338 would not evaluate to true and
-> we would not reach the line 8343 in question.
+> Instead of hardcoding the register field, add the proper definition. While
+> at it, let's also use ufshcd_rmwl() to simplify updating this register.
+> 
+> Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+> Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
+- Mani
+
+> ---
+> * v2->v3: Change subject and description
+>   v2 : https://patchwork.kernel.org/project/linux-scsi/patch/20231221065608.9899-1-cw9316.lee@samsung.com/
+> 
+> * v1->v2:
+>   v1 : https://patchwork.kernel.org/project/linux-scsi/patch/20231220052737.19857-1-cw9316.lee@samsung.com/
+>    1) Excluding ESI_ENABLE
+>    2) Replace with ufshcd_rmwl, BIT()
+>    3) Separating hba->mcq_enabled
+> ---
+>  drivers/ufs/core/ufs-mcq.c      | 6 ++++++
+>  drivers/ufs/core/ufshcd.c       | 4 +---
+>  drivers/ufs/host/ufs-mediatek.c | 4 +---
+>  include/ufs/ufshcd.h            | 1 +
+>  include/ufs/ufshci.h            | 3 +++
+>  5 files changed, 12 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 0787456c2b89..edc752e55878 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -399,6 +399,12 @@ void ufshcd_mcq_enable_esi(struct ufs_hba *hba)
+>  }
+>  EXPORT_SYMBOL_GPL(ufshcd_mcq_enable_esi);
+>  
+> +void ufshcd_mcq_enable(struct ufs_hba *hba)
+> +{
+> +	ufshcd_rmwl(hba, MCQ_MODE_SELECT, MCQ_MODE_SELECT, REG_UFS_MEM_CFG);
+> +}
+> +EXPORT_SYMBOL_GPL(ufshcd_mcq_enable);
+> +
+>  void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg)
+>  {
+>  	ufshcd_writel(hba, msg->address_lo, REG_UFS_ESILBA);
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index ae9936fc6ffb..30df6f6a72c6 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -8723,9 +8723,7 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
+>  	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
+>  	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
+>  
+> -	/* Select MCQ mode */
+> -	ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
+> -		      REG_UFS_MEM_CFG);
+> +	ufshcd_mcq_enable(hba);
+>  	hba->mcq_enabled = true;
+>  
+>  	dev_info(hba->dev, "MCQ configured, nr_queues=%d, io_queues=%d, read_queue=%d, poll_queues=%d, queue_depth=%d\n",
+> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+> index fc61790d289b..1048add66419 100644
+> --- a/drivers/ufs/host/ufs-mediatek.c
+> +++ b/drivers/ufs/host/ufs-mediatek.c
+> @@ -1219,9 +1219,7 @@ static int ufs_mtk_link_set_hpm(struct ufs_hba *hba)
+>  		ufs_mtk_config_mcq(hba, false);
+>  		ufshcd_mcq_make_queues_operational(hba);
+>  		ufshcd_mcq_config_mac(hba, hba->nutrs);
+> -		/* Enable MCQ mode */
+> -		ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
+> -			      REG_UFS_MEM_CFG);
+> +		ufshcd_mcq_enable(hba);
+>  	}
+>  
+>  	if (err)
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index d862c8ddce03..a96c45fa4b4b 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -1257,6 +1257,7 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
+>  					 struct ufs_hw_queue *hwq);
+>  void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
+>  void ufshcd_mcq_enable_esi(struct ufs_hba *hba);
+> +void ufshcd_mcq_enable(struct ufs_hba *hba);
+>  void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg);
+>  
+>  int ufshcd_opp_config_clks(struct device *dev, struct opp_table *opp_table,
+> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+> index d5accacae6bc..2a6989a70671 100644
+> --- a/include/ufs/ufshci.h
+> +++ b/include/ufs/ufshci.h
+> @@ -282,6 +282,9 @@ enum {
+>  /* UTMRLRSR - UTP Task Management Request Run-Stop Register 80h */
+>  #define UTP_TASK_REQ_LIST_RUN_STOP_BIT		0x1
+>  
+> +/* REG_UFS_MEM_CFG - Global Config Registers 300h */
+> +#define MCQ_MODE_SELECT 	BIT(0)
+> +
+>  /* CQISy - CQ y Interrupt Status Register  */
+>  #define UFSHCD_MCQ_CQIS_TAIL_ENT_PUSH_STS	0x1
+>  
+> -- 
+> 2.29.0
 > 
 
-Thanks, you're right.
-
-regards,
-dan carpenter
-
+-- 
+மணிவண்ணன் சதாசிவம்
