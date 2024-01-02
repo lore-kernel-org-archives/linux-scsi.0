@@ -1,158 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9600D15480;
-	Tue,  2 Jan 2024 16:54:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5377616410;
+	Tue,  2 Jan 2024 20:34:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mT94ck57"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E317AC433C7;
-	Tue,  2 Jan 2024 16:54:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704214455;
-	bh=Xs6JWdVhz8UCi2Nb+OZ68Hcw6GchoGb6m+i1P4qfvuM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mT94ck572c8+zWeYLk5Ty8g9hs+aLOzRuOHkgL7yBhTPleFzdpvBPLc3hYYQkek8L
-	 K5tDaUuauPOfkKBwB9ZEgYu9Mddik0WrFru4v6+Zvt2J7OWnBpEI1R4g1b/5TR9fgg
-	 XbHOZ0N4eGT2vTwzKROzBM27+kSbQYF/0zeEGG8OljQmtekYaAnwu4npup1sXEIc8z
-	 4JrikAmlbHqkFBUeoE1BYQrPGnC9sPh42ZqyXBfVKsJCA/dlre3rpmLFEiSKd+2vQT
-	 RYbGJoRbgGxDLEGiNRMRULMbpOPMePIl4lQaWWb0yE1r10UwpdIdosIHQvpr1TlYVm
-	 /MquyPnPKrAXg==
-Date: Tue, 2 Jan 2024 22:23:56 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Chanwoo Lee <cw9316.lee@samsung.com>
-Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-	jejb@linux.ibm.com, martin.petersen@oracle.com,
-	peter.wang@mediatek.com, chu.stanley@gmail.com,
-	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
-	stanley.chu@mediatek.com, quic_cang@quicinc.com,
-	quic_asutoshd@quicinc.com, powen.kao@mediatek.com,
-	quic_nguyenb@quicinc.com, yang.lee@linux.alibaba.com,
-	athierry@redhat.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, grant.jung@samsung.com,
-	jt77.jang@samsung.com, dh0421.hwang@samsung.com,
-	sh043.lee@samsung.com
-Subject: Re: [PATCH v3] ufs: mcq: Add definition for REG_UFS_MEM_CFG register
-Message-ID: <20240102165356.GD4917@thinkpad>
-References: <CGME20240102014248epcas1p4d49dcf2cd3f020bed88eebaeba648789@epcas1p4.samsung.com>
- <20240102014222.23351-1-cw9316.lee@samsung.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="USUEz1at"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 402KTbF2012670;
+	Tue, 2 Jan 2024 20:33:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	message-id:date:mime-version:subject:to:cc:references:from
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=vmjxe9XwHidyB+gjEeLkZQFfIRNKZJrOImocyOmQabs=; b=US
+	UEz1atSMTOHCJVCNjWRj6XFMwUr1Xn2oojZJOQWwTOCFODutx3yhJ3cZQeclRQMF
+	tcb5HTUxlYnD3JmhB0fbrdH1cK0jiKJU1naZ4Ng5mplMmPt2sI/L5UKQrb0MTzOr
+	eEwzT6M5H5VSe+3QidqTqumS8OSY3GffDJzMUKy2OtDmvRjzpwPKXQDot61r8bOC
+	9JFUCTyNxUIjIrX66btJop71g4xaOIUJo+Un03suTF9ntL6d7rb54gf7y+RQVwEC
+	8Bu5ee2D/GdqtSVOnEoYfnO+V2qfBEndcjRtna47Z+KUVsJmaE3rmNf0dPjlV4Yb
+	88hdjoThs2xADwFD9ZFg==
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vcg41977q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 02 Jan 2024 20:33:22 +0000 (GMT)
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+	by NASANPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 402KXLl2028048
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 2 Jan 2024 20:33:21 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Tue, 2 Jan
+ 2024 12:33:20 -0800
+Message-ID: <76fb76cc-70d6-7a5f-7fcd-e8161ae72299@quicinc.com>
+Date: Tue, 2 Jan 2024 12:33:20 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240102014222.23351-1-cw9316.lee@samsung.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH] scsi: ufs: core: Let the sq_lock protect sq_tail_slot
+ access
+To: Can Guo <quic_cang@quicinc.com>, <bvanassche@acm.org>, <mani@kernel.org>,
+        <adrian.hunter@intel.com>, <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+        Alim Akhtar
+	<alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das
+	<quic_asutoshd@quicinc.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        "Arthur
+ Simchaev" <Arthur.Simchaev@wdc.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1702913550-20631-1-git-send-email-quic_cang@quicinc.com>
+Content-Language: en-US
+From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <1702913550-20631-1-git-send-email-quic_cang@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: wsIyvjIJr7V944lrYzvcDlEk0rKbpo45
+X-Proofpoint-ORIG-GUID: wsIyvjIJr7V944lrYzvcDlEk0rKbpo45
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-12-09_01,2023-12-07_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 mlxscore=0
+ phishscore=0 spamscore=0 bulkscore=0 adultscore=0 priorityscore=1501
+ impostorscore=0 mlxlogscore=999 malwarescore=0 suspectscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2311290000 definitions=main-2401020153
 
-On Tue, Jan 02, 2024 at 10:42:22AM +0900, Chanwoo Lee wrote:
-> From: ChanWoo Lee <cw9316.lee@samsung.com>
+On 12/18/2023 7:32 AM, Can Guo wrote:
+> If access sq_tail_slot without the protection from the sq_lock, race
+> condition can have multiple SQEs copied to duplicate SQE slot(s), which can
+> lead to multiple incredible stability issues. Fix it by moving the *dest
+> initialization, in ufshcd_send_command(), back under protection from the
+> sq_lock.
 > 
-> Instead of hardcoding the register field, add the proper definition. While
-> at it, let's also use ufshcd_rmwl() to simplify updating this register.
+> Fixes: 3c85f087faec ("scsi: ufs: mcq: Use pointer arithmetic in ufshcd_send_command()")
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
 > 
-> Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-> Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
-
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
-- Mani
-
-> ---
-> * v2->v3: Change subject and description
->   v2 : https://patchwork.kernel.org/project/linux-scsi/patch/20231221065608.9899-1-cw9316.lee@samsung.com/
-> 
-> * v1->v2:
->   v1 : https://patchwork.kernel.org/project/linux-scsi/patch/20231220052737.19857-1-cw9316.lee@samsung.com/
->    1) Excluding ESI_ENABLE
->    2) Replace with ufshcd_rmwl, BIT()
->    3) Separating hba->mcq_enabled
-> ---
->  drivers/ufs/core/ufs-mcq.c      | 6 ++++++
->  drivers/ufs/core/ufshcd.c       | 4 +---
->  drivers/ufs/host/ufs-mediatek.c | 4 +---
->  include/ufs/ufshcd.h            | 1 +
->  include/ufs/ufshci.h            | 3 +++
->  5 files changed, 12 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index 0787456c2b89..edc752e55878 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -399,6 +399,12 @@ void ufshcd_mcq_enable_esi(struct ufs_hba *hba)
->  }
->  EXPORT_SYMBOL_GPL(ufshcd_mcq_enable_esi);
->  
-> +void ufshcd_mcq_enable(struct ufs_hba *hba)
-> +{
-> +	ufshcd_rmwl(hba, MCQ_MODE_SELECT, MCQ_MODE_SELECT, REG_UFS_MEM_CFG);
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_mcq_enable);
-> +
->  void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg)
->  {
->  	ufshcd_writel(hba, msg->address_lo, REG_UFS_ESILBA);
 > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index ae9936fc6ffb..30df6f6a72c6 100644
+> index ae9936f..2994aac 100644
 > --- a/drivers/ufs/core/ufshcd.c
 > +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8723,9 +8723,7 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
->  	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
->  	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
->  
-> -	/* Select MCQ mode */
-> -	ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
-> -		      REG_UFS_MEM_CFG);
-> +	ufshcd_mcq_enable(hba);
->  	hba->mcq_enabled = true;
->  
->  	dev_info(hba->dev, "MCQ configured, nr_queues=%d, io_queues=%d, read_queue=%d, poll_queues=%d, queue_depth=%d\n",
-> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-> index fc61790d289b..1048add66419 100644
-> --- a/drivers/ufs/host/ufs-mediatek.c
-> +++ b/drivers/ufs/host/ufs-mediatek.c
-> @@ -1219,9 +1219,7 @@ static int ufs_mtk_link_set_hpm(struct ufs_hba *hba)
->  		ufs_mtk_config_mcq(hba, false);
->  		ufshcd_mcq_make_queues_operational(hba);
->  		ufshcd_mcq_config_mac(hba, hba->nutrs);
-> -		/* Enable MCQ mode */
-> -		ufshcd_writel(hba, ufshcd_readl(hba, REG_UFS_MEM_CFG) | 0x1,
-> -			      REG_UFS_MEM_CFG);
-> +		ufshcd_mcq_enable(hba);
->  	}
->  
->  	if (err)
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index d862c8ddce03..a96c45fa4b4b 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -1257,6 +1257,7 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
->  					 struct ufs_hw_queue *hwq);
->  void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
->  void ufshcd_mcq_enable_esi(struct ufs_hba *hba);
-> +void ufshcd_mcq_enable(struct ufs_hba *hba);
->  void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg);
->  
->  int ufshcd_opp_config_clks(struct device *dev, struct opp_table *opp_table,
-> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-> index d5accacae6bc..2a6989a70671 100644
-> --- a/include/ufs/ufshci.h
-> +++ b/include/ufs/ufshci.h
-> @@ -282,6 +282,9 @@ enum {
->  /* UTMRLRSR - UTP Task Management Request Run-Stop Register 80h */
->  #define UTP_TASK_REQ_LIST_RUN_STOP_BIT		0x1
->  
-> +/* REG_UFS_MEM_CFG - Global Config Registers 300h */
-> +#define MCQ_MODE_SELECT 	BIT(0)
-> +
->  /* CQISy - CQ y Interrupt Status Register  */
->  #define UFSHCD_MCQ_CQIS_TAIL_ENT_PUSH_STS	0x1
->  
-> -- 
-> 2.29.0
-> 
+> @@ -2274,9 +2274,10 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
+>   	if (is_mcq_enabled(hba)) {
+>   		int utrd_size = sizeof(struct utp_transfer_req_desc);
+>   		struct utp_transfer_req_desc *src = lrbp->utr_descriptor_ptr;
+> -		struct utp_transfer_req_desc *dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
+> +		struct utp_transfer_req_desc *dest;
+>   
+>   		spin_lock(&hwq->sq_lock);
+> +		dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
+>   		memcpy(dest, src, utrd_size);
+>   		ufshcd_inc_sq_tail(hwq);
+>   		spin_unlock(&hwq->sq_lock);
 
--- 
-மணிவண்ணன் சதாசிவம்
+Reviewed and Tested-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
