@@ -1,267 +1,101 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4713C18C1D
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jan 2024 10:48:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85AF91B272
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Jan 2024 15:31:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Xjai7+k5"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-1d4c767d3a8so7830915ad.1
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jan 2024 02:48:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1704278904; x=1704883704; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=pdPU059J9ZVWznV8an692mayob38PCXn1K2je3VxOtQ=;
-        b=Xjai7+k5VtQKzf7LA/eVAKNTdK5PaEGp+RJS0s8tEczECFIeq4sHN1bRTCyrNRSvTH
-         HzjWUV8v3oP/MIgelm1Yc/mnDLqCouyguWsANLDhcd7a04K5TelP14m+dNGRGpSIDkrl
-         xFUCt8fnOKBPEPrRHHBln4CjX1EGi/a/8Lknyayu1bVwqXU0ayNQPwQX2jEWd9GiZFai
-         8YpEmYqmSoUFBAGj6ENaI3qq5i0MTwFxn1FbGLFdRO/iEM7RfzDkvFEgEELBJkUarbwn
-         sHJteICa4PT1bmW3Hhgj7Mx+Ql4bmSDrRjsRlOUD3+06+tPK9e09jEcHVGCCDh//yyE/
-         el6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704278904; x=1704883704;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=pdPU059J9ZVWznV8an692mayob38PCXn1K2je3VxOtQ=;
-        b=oVWa0MAyoWX/Spg+S+kBrvIig8W8AwnzN7SJxsuLNBjc999q5Php+62BKBLuZNoTH2
-         Q+9AXRLRUn7WRBJuuSK49/3a906AAgGQ3KLVqRj/eNOuAO8cPBEZB0nVb9VYnetdJNvO
-         74iUHvotIavZMiIvjipZITdDqiAMLC/KFO+VX5uBjpsHidgznaEBzCjjmpnY1EwuPm4y
-         DTp8MLBf4NwPRwgtU5yG4U6T0n/PmZnH3BFV59Y0Cxhkr4phnAAkftPzG6v0b0jT68OJ
-         4p0/TTA7Tt+hDKs01aNyb8F2wCAF0sSsUtz8Q9eZATehT7Uq1xJ3q0Fq6UytmO53IaNH
-         74pg==
-X-Gm-Message-State: AOJu0YwoHr44BgG4GuIdQbmEWxCcsct6i40qc9WeJEROEjKod4F1aI7O
-	kn7yb1io59NpdRHwMIkB83TsY4drRgc0Fg==
-X-Google-Smtp-Source: AGHT+IGiwlRazKmwSv9SQEFS3/AG7SEW3FZuxDqnkmfBlfZ6Y+vxPON78qJPQ3mDacfO3RhGKwzv5g==
-X-Received: by 2002:a17:902:da81:b0:1d4:c2ad:8ff8 with SMTP id j1-20020a170902da8100b001d4c2ad8ff8mr1891688plx.34.1704278904539;
-        Wed, 03 Jan 2024 02:48:24 -0800 (PST)
-Received: from localhost ([122.172.86.168])
-        by smtp.gmail.com with ESMTPSA id z20-20020a170902ee1400b001d3a9676973sm23495578plb.111.2024.01.03.02.48.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Jan 2024 02:48:24 -0800 (PST)
-From: Viresh Kumar <viresh.kumar@linaro.org>
-To: Dmitry Osipenko <digetx@gmail.com>,
-	MyungJoo Ham <myungjoo.ham@samsung.com>,
-	Kyungmin Park <kyungmin.park@samsung.com>,
-	Chanwoo Choi <cw00.choi@samsung.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Viresh Kumar <vireshk@kernel.org>,
-	Nishanth Menon <nm@ti.com>,
-	Stephen Boyd <sboyd@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Viresh Kumar <viresh.kumar@linaro.org>,
-	linux-pm@vger.kernel.org,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	linux-tegra@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH] OPP: Remove the unused argument to config_clks_t
-Date: Wed,  3 Jan 2024 16:18:18 +0530
-Message-Id: <f24f32f1213b4b9e9ff2b4a36922f8d6e3abac51.1704278832.git.viresh.kumar@linaro.org>
-X-Mailer: git-send-email 2.31.1.272.g89b43f80a514
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Wk8l0pUr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1704295892;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=PjMM5OBHuWQPx+I0gjWQY6fIMxtHp/wJUqoWHgEbBdw=;
+	b=Wk8l0pUryObMQgQW4I4bYo5etTg/yejjF5sYPehTb9FhAlF52b2A6exZICAnc08/fyQ8WH
+	NmMZswzQpLiuD1PoAtajUOiEbBoTsoOtIPr/grpuGIdloQROaQXzRYw4oJHVXzs2/fgxYr
+	LVLzMBLJrpwlxC2otP6aio//b2IA7UA=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-172-ctIBx3P_N1GBXcJVNmQ8wg-1; Wed,
+ 03 Jan 2024 10:31:29 -0500
+X-MC-Unique: ctIBx3P_N1GBXcJVNmQ8wg-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id B6C803811F30;
+	Wed,  3 Jan 2024 15:31:28 +0000 (UTC)
+Received: from [10.18.25.182] (unknown [10.18.25.182])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 56B731121306;
+	Wed,  3 Jan 2024 15:31:28 +0000 (UTC)
+Message-ID: <a905fe13-93eb-4359-834a-9e80f7cca2e0@redhat.com>
+Date: Wed, 3 Jan 2024 10:31:28 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/3] UIO_MEM_DMA_COHERENT for cnic/bnx2/bnx2x
+Content-Language: en-US
+To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com,
+ lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
+ gregkh@linuxfoundation.org, Hannes Reinecke <hare@suse.de>,
+ Jerry Snitselaar <jsnitsel@redhat.com>, Ming Lei <ming.lei@redhat.com>,
+ Ewan Milne <emilne@redhat.com>
+References: <20240103091137.27142-1-njavali@marvell.com>
+From: John Meneghini <jmeneghi@redhat.com>
+Organization: RHEL Core Storge Team
+In-Reply-To: <20240103091137.27142-1-njavali@marvell.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
 
-The OPP core needs to take care of a special case, where the OPPs aren't
-available for a device, but in order to keep the same unified interface
-for the driver, the same OPP core API must take care of performing a
-simple clk_set_rate() for the device.
+Nilesh,
 
-This required the extra argument, but that is used only within the OPP
-core and the drivers don't need to take care of that.
+Please explain what has been done to test these patches on bnx2i. Was testing done with iommu enabled/disabled?  Was testing 
+done on any/all platforms, or was only x86_64 tested?
 
-Simplify the external API and handle it differently within the OPP core.
+Thanks,
 
-This shouldn't result in any functional change.
+/John
 
-Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
----
-I will be taking this through the PM tree for the upcoming merge window.
-Hopefully this won't create any issues for the ufs and devfreq driver as there
-is no functional change for them.
-
- drivers/devfreq/tegra30-devfreq.c |  2 +-
- drivers/opp/core.c                | 37 +++++++++++++------------------
- drivers/ufs/core/ufshcd.c         |  3 +--
- include/linux/pm_opp.h            |  5 ++---
- include/ufs/ufshcd.h              |  3 +--
- 5 files changed, 20 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/devfreq/tegra30-devfreq.c b/drivers/devfreq/tegra30-devfreq.c
-index 4a4f0106ab9d..730c6618abc5 100644
---- a/drivers/devfreq/tegra30-devfreq.c
-+++ b/drivers/devfreq/tegra30-devfreq.c
-@@ -823,7 +823,7 @@ static int devm_tegra_devfreq_init_hw(struct device *dev,
- 
- static int tegra_devfreq_config_clks_nop(struct device *dev,
- 					 struct opp_table *opp_table,
--					 struct dev_pm_opp *opp, void *data,
-+					 struct dev_pm_opp *opp,
- 					 bool scaling_down)
- {
- 	/* We want to skip clk configuration via dev_pm_opp_set_opp() */
-diff --git a/drivers/opp/core.c b/drivers/opp/core.c
-index 29f8160c3e38..ba5f692e2161 100644
---- a/drivers/opp/core.c
-+++ b/drivers/opp/core.c
-@@ -940,24 +940,11 @@ static int _set_opp_voltage(struct device *dev, struct regulator *reg,
- 	return ret;
- }
- 
--static int
--_opp_config_clk_single(struct device *dev, struct opp_table *opp_table,
--		       struct dev_pm_opp *opp, void *data, bool scaling_down)
-+static int _opp_clk_set_rate(struct device *dev, struct opp_table *opp_table,
-+			     unsigned long freq)
- {
--	unsigned long *target = data;
--	unsigned long freq;
- 	int ret;
- 
--	/* One of target and opp must be available */
--	if (target) {
--		freq = *target;
--	} else if (opp) {
--		freq = opp->rates[0];
--	} else {
--		WARN_ON(1);
--		return -EINVAL;
--	}
--
- 	ret = clk_set_rate(opp_table->clk, freq);
- 	if (ret) {
- 		dev_err(dev, "%s: failed to set clock rate: %d\n", __func__,
-@@ -969,12 +956,19 @@ _opp_config_clk_single(struct device *dev, struct opp_table *opp_table,
- 	return ret;
- }
- 
-+static int
-+_opp_config_clk_single(struct device *dev, struct opp_table *opp_table,
-+		       struct dev_pm_opp *opp, bool scaling_down)
-+{
-+	return _opp_clk_set_rate(dev, opp_table, opp->rates[0]);
-+}
-+
- /*
-  * Simple implementation for configuring multiple clocks. Configure clocks in
-  * the order in which they are present in the array while scaling up.
-  */
- int dev_pm_opp_config_clks_simple(struct device *dev,
--		struct opp_table *opp_table, struct dev_pm_opp *opp, void *data,
-+		struct opp_table *opp_table, struct dev_pm_opp *opp,
- 		bool scaling_down)
- {
- 	int ret, i;
-@@ -1183,7 +1177,7 @@ static int _disable_opp_table(struct device *dev, struct opp_table *opp_table)
- }
- 
- static int _set_opp(struct device *dev, struct opp_table *opp_table,
--		    struct dev_pm_opp *opp, void *clk_data, bool forced)
-+		    struct dev_pm_opp *opp, bool forced)
- {
- 	struct dev_pm_opp *old_opp;
- 	int scaling_down, ret;
-@@ -1243,7 +1237,7 @@ static int _set_opp(struct device *dev, struct opp_table *opp_table,
- 	}
- 
- 	if (opp_table->config_clks) {
--		ret = opp_table->config_clks(dev, opp_table, opp, clk_data, scaling_down);
-+		ret = opp_table->config_clks(dev, opp_table, opp, scaling_down);
- 		if (ret)
- 			return ret;
- 	}
-@@ -1322,8 +1316,7 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
- 		 * equivalent to a clk_set_rate()
- 		 */
- 		if (!_get_opp_count(opp_table)) {
--			ret = opp_table->config_clks(dev, opp_table, NULL,
--						     &target_freq, false);
-+			ret = _opp_clk_set_rate(dev, opp_table, target_freq);
- 			goto put_opp_table;
- 		}
- 
-@@ -1355,7 +1348,7 @@ int dev_pm_opp_set_rate(struct device *dev, unsigned long target_freq)
- 		forced = opp_table->rate_clk_single != target_freq;
- 	}
- 
--	ret = _set_opp(dev, opp_table, opp, &target_freq, forced);
-+	ret = _set_opp(dev, opp_table, opp, forced);
- 
- 	if (target_freq)
- 		dev_pm_opp_put(opp);
-@@ -1387,7 +1380,7 @@ int dev_pm_opp_set_opp(struct device *dev, struct dev_pm_opp *opp)
- 		return PTR_ERR(opp_table);
- 	}
- 
--	ret = _set_opp(dev, opp_table, opp, NULL, false);
-+	ret = _set_opp(dev, opp_table, opp, false);
- 	dev_pm_opp_put_opp_table(opp_table);
- 
- 	return ret;
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index bce0d2a9a7f3..51d6c8567189 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1064,8 +1064,7 @@ static int ufshcd_set_clk_freq(struct ufs_hba *hba, bool scale_up)
- }
- 
- int ufshcd_opp_config_clks(struct device *dev, struct opp_table *opp_table,
--			   struct dev_pm_opp *opp, void *data,
--			   bool scaling_down)
-+			   struct dev_pm_opp *opp, bool scaling_down)
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 	struct list_head *head = &hba->clk_list_head;
-diff --git a/include/linux/pm_opp.h b/include/linux/pm_opp.h
-index 76dcb7f37bcd..c99a66e88e78 100644
---- a/include/linux/pm_opp.h
-+++ b/include/linux/pm_opp.h
-@@ -50,7 +50,7 @@ typedef int (*config_regulators_t)(struct device *dev,
- 			struct regulator **regulators, unsigned int count);
- 
- typedef int (*config_clks_t)(struct device *dev, struct opp_table *opp_table,
--			struct dev_pm_opp *opp, void *data, bool scaling_down);
-+			struct dev_pm_opp *opp, bool scaling_down);
- 
- /**
-  * struct dev_pm_opp_config - Device OPP configuration values
-@@ -181,8 +181,7 @@ int dev_pm_opp_set_config(struct device *dev, struct dev_pm_opp_config *config);
- int devm_pm_opp_set_config(struct device *dev, struct dev_pm_opp_config *config);
- void dev_pm_opp_clear_config(int token);
- int dev_pm_opp_config_clks_simple(struct device *dev,
--		struct opp_table *opp_table, struct dev_pm_opp *opp, void *data,
--		bool scaling_down);
-+		struct opp_table *opp_table, struct dev_pm_opp *opp, bool scaling_down);
- 
- struct dev_pm_opp *dev_pm_opp_xlate_required_opp(struct opp_table *src_table, struct opp_table *dst_table, struct dev_pm_opp *src_opp);
- int dev_pm_opp_xlate_performance_state(struct opp_table *src_table, struct opp_table *dst_table, unsigned int pstate);
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 7f0b2c5599cd..156e47dd4d9c 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1255,8 +1255,7 @@ void ufshcd_mcq_enable_esi(struct ufs_hba *hba);
- void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg);
- 
- int ufshcd_opp_config_clks(struct device *dev, struct opp_table *opp_table,
--			   struct dev_pm_opp *opp, void *data,
--			   bool scaling_down);
-+			   struct dev_pm_opp *opp, bool scaling_down);
- /**
-  * ufshcd_set_variant - set variant specific data to the hba
-  * @hba: per adapter instance
--- 
-2.31.1.272.g89b43f80a514
+On 1/3/24 04:11, Nilesh Javali wrote:
+> During bnx2i iSCSI testing we ran into page refcounting issues in the
+> uio mmaps exported from cnic to the iscsiuio process, and bisected back
+> to the removal of the __GFP_COMP flag from dma_alloc_coherent calls.
+> 
+> In order to fix these drivers to be able to mmap dma coherent memory via
+> a uio device, without resorting to hacks and working with an iommu
+> enabled, introduce a new uio mmap type backed by dma_mmap_coherent.
+> 
+> While converting the uio interface, I also noticed that not all of these
+> allocations were PAGE_SIZE aligned. Particularly the bnx2/bnx2x status
+> block mapping was much smaller than any architecture page size, and I
+> was concerned that it could be unintentionally exposing kernel memory.
+> 
+> v2:
+> - expose only the dma_addr within uio and cnic.
+> - Cleanup newly added unions comprising virtual_addr
+>    and struct device
+> 
+> Chris Leech (3):
+>    uio: introduce UIO_MEM_DMA_COHERENT type
+>    cnic,bnx2,bnx2x: use UIO_MEM_DMA_COHERENT
+>    cnic,bnx2,bnx2x: page align uio mmap allocations
+> 
+>   drivers/net/ethernet/broadcom/bnx2.c          |  2 +
+>   .../net/ethernet/broadcom/bnx2x/bnx2x_main.c  | 10 +++--
+>   drivers/net/ethernet/broadcom/cnic.c          | 26 ++++++++-----
+>   drivers/net/ethernet/broadcom/cnic.h          |  1 +
+>   drivers/net/ethernet/broadcom/cnic_if.h       |  1 +
+>   drivers/uio/uio.c                             | 38 +++++++++++++++++++
+>   include/linux/uio_driver.h                    |  2 +
+>   7 files changed, 67 insertions(+), 13 deletions(-)
+> 
 
