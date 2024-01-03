@@ -1,45 +1,45 @@
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98821182BB
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E21A7182AB
 	for <linux-scsi@vger.kernel.org>; Wed,  3 Jan 2024 09:12:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="MX2q4EUS"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="O52BQMH4"
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 4037Xfqv021043;
-	Wed, 3 Jan 2024 01:12:04 -0800
+	by mx0b-0016f401.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 4037XSAu020422;
+	Wed, 3 Jan 2024 01:11:59 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	pfpt0220; bh=WmUyq/kxfUsyQn4LpZ/kv754p13WkC0G9aUbi1IE0DM=; b=MX2
-	q4EUS+/c9snFKI0DQjcioAnxPd/Hj/J9kmpr+v4gTck1QCUYZ4cWBx9GQ6h2oouK
-	q0pVWV09qeRZQUDNpd68mUByK684slIv4uTSDXo8ATcw8q3U4693H6hFBahNkbs+
-	ZDSTXjA+Wo6pS9DI4nDBnd7CUru17Czd6FwOvF8EpuA5D8/tb70zOyzTZ3wOOcX8
-	qhDD6UhzktY20jrTeKEzJKQiesKcCM+zfcQZixbGN8EJc7XIpnhajO1gSSEjKhUG
-	IUeOZvUkhBtRqpENLLaIYlTcW/aiCTC0ibGKtGKgUrWew02dILftoxP6cvOnfJFr
-	+TUdTfk/QJ+pc+4wr1Q==
+	pfpt0220; bh=9in1P3JmrWaH6P5DK5n5jKLB1/xw6TWutnCAVdDOjok=; b=O52
+	BQMH4W35yPFXQ2I/rwmuXx3sJ1Iashl2i4vTBSGpPmEr1mTq6CnG3eAcCRHAtQoI
+	aH8JN0zaTAruiQ8zXFTTpsCWvY4MZyK8u3HYWR4oIus5FhIOSp0SCRHgfnuzUE92
+	cxR+DZmXe/aoCRJTANxFBTszCOAUiLAd0+xOWMjE3Xk5vx49wRz95a+5B4/rvN3Z
+	xCRPJYwia7gA4HHSCUXo1Wo4nAv9o6alDN6ONRH5zkOrHD+7VucmPuB4AHLugIiS
+	auuLC9syrGAgJorJD8P6nDiGe6qTZmBpNKoESFa8e2457EZwp3Go/+Jn7Kw7bdOh
+	zyQGBxldnUQ5M9f5C6g==
 Received: from dc5-exch02.marvell.com ([199.233.59.182])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3vd39q8ewt-1
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3vd39q8ew2-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-	Wed, 03 Jan 2024 01:12:04 -0800 (PST)
+	Wed, 03 Jan 2024 01:11:59 -0800 (PST)
 Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
  (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Wed, 3 Jan
- 2024 01:12:02 -0800
+ 2024 01:11:57 -0800
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
  (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
- Transport; Wed, 3 Jan 2024 01:12:02 -0800
+ Transport; Wed, 3 Jan 2024 01:11:56 -0800
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
-	by maili.marvell.com (Postfix) with ESMTP id 09FC83F707C;
-	Wed,  3 Jan 2024 01:11:59 -0800 (PST)
+	by maili.marvell.com (Postfix) with ESMTP id E934E3F707C;
+	Wed,  3 Jan 2024 01:11:54 -0800 (PST)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>, <lduncan@suse.com>, <cleech@redhat.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
         <jmeneghi@redhat.com>
-Subject: [PATCH v2 3/3] cnic,bnx2,bnx2x: page align uio mmap allocations
-Date: Wed, 3 Jan 2024 14:41:37 +0530
-Message-ID: <20240103091137.27142-4-njavali@marvell.com>
+Subject: [PATCH v2 1/3] uio: introduce UIO_MEM_DMA_COHERENT type
+Date: Wed, 3 Jan 2024 14:41:35 +0530
+Message-ID: <20240103091137.27142-2-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20240103091137.27142-1-njavali@marvell.com>
 References: <20240103091137.27142-1-njavali@marvell.com>
@@ -51,111 +51,111 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: DO-yufqaaI3JXg0fIUkrIeHPu_iiyfXH
-X-Proofpoint-GUID: DO-yufqaaI3JXg0fIUkrIeHPu_iiyfXH
+X-Proofpoint-ORIG-GUID: j01TXrSsl3gLKdd2EUKLf4CRJRcrGtmr
+X-Proofpoint-GUID: j01TXrSsl3gLKdd2EUKLf4CRJRcrGtmr
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-12-09_02,2023-12-07_01,2023-05-22_02
 
 From: Chris Leech <cleech@redhat.com>
 
-Allocations in these drivers that will be mmaped through a uio device
-should be made in multiples of PAGE_SIZE to avoid exposing additional
-kernel memory unintentionally.
+Add a UIO memtype specifically for sharing dma_alloc_coherent
+memory with userspace, backed by dma_mmap_coherent.
 
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Chris Leech <cleech@redhat.com>
 ---
- drivers/net/ethernet/broadcom/bnx2.c             | 1 +
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c | 8 ++++----
- drivers/net/ethernet/broadcom/cnic.c             | 8 +++++---
- 3 files changed, 10 insertions(+), 7 deletions(-)
+v2:
+- expose only the dma_addr within uio_mem
+- Cleanup newly added unions comprising virtual_addr
+  and struct device
+ drivers/uio/uio.c          | 38 ++++++++++++++++++++++++++++++++++++++
+ include/linux/uio_driver.h |  2 ++
+ 2 files changed, 40 insertions(+)
 
-diff --git a/drivers/net/ethernet/broadcom/bnx2.c b/drivers/net/ethernet/broadcom/bnx2.c
-index b65b8592ad75..490f88ad3bd2 100644
---- a/drivers/net/ethernet/broadcom/bnx2.c
-+++ b/drivers/net/ethernet/broadcom/bnx2.c
-@@ -838,6 +838,7 @@ bnx2_alloc_stats_blk(struct net_device *dev)
- 						 BNX2_SBLK_MSIX_ALIGN_SIZE);
- 	bp->status_stats_size = status_blk_size +
- 				sizeof(struct statistics_block);
-+	bp->status_stats_size = PAGE_ALIGN(bp->status_stats_size);
- 	status_blk = dma_alloc_coherent(&bp->pdev->dev, bp->status_stats_size,
- 					&bp->status_blk_mapping, GFP_KERNEL);
- 	if (!status_blk)
-diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-index 678829646cec..1d7be7b7c63f 100644
---- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-+++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
-@@ -8270,10 +8270,10 @@ void bnx2x_free_mem_cnic(struct bnx2x *bp)
+diff --git a/drivers/uio/uio.c b/drivers/uio/uio.c
+index 62082d64ece0..9869703450d8 100644
+--- a/drivers/uio/uio.c
++++ b/drivers/uio/uio.c
+@@ -24,6 +24,7 @@
+ #include <linux/kobject.h>
+ #include <linux/cdev.h>
+ #include <linux/uio_driver.h>
++#include <linux/dma-mapping.h>
  
- 	if (!CHIP_IS_E1x(bp))
- 		BNX2X_PCI_FREE(bp->cnic_sb.e2_sb, bp->cnic_sb_mapping,
--			       sizeof(struct host_hc_status_block_e2));
-+			       PAGE_ALIGN(sizeof(struct host_hc_status_block_e2)));
- 	else
- 		BNX2X_PCI_FREE(bp->cnic_sb.e1x_sb, bp->cnic_sb_mapping,
--			       sizeof(struct host_hc_status_block_e1x));
-+			       PAGE_ALIGN(sizeof(struct host_hc_status_block_e1x)));
+ #define UIO_MAX_DEVICES		(1U << MINORBITS)
  
- 	BNX2X_PCI_FREE(bp->t2, bp->t2_mapping, SRC_T2_SZ);
+@@ -759,6 +760,40 @@ static int uio_mmap_physical(struct vm_area_struct *vma)
+ 			       vma->vm_page_prot);
  }
-@@ -8316,12 +8316,12 @@ int bnx2x_alloc_mem_cnic(struct bnx2x *bp)
- 	if (!CHIP_IS_E1x(bp)) {
- 		/* size = the status block + ramrod buffers */
- 		bp->cnic_sb.e2_sb = BNX2X_PCI_ALLOC(&bp->cnic_sb_mapping,
--						    sizeof(struct host_hc_status_block_e2));
-+						    PAGE_ALIGN(sizeof(struct host_hc_status_block_e2)));
- 		if (!bp->cnic_sb.e2_sb)
- 			goto alloc_mem_err;
- 	} else {
- 		bp->cnic_sb.e1x_sb = BNX2X_PCI_ALLOC(&bp->cnic_sb_mapping,
--						     sizeof(struct host_hc_status_block_e1x));
-+						     PAGE_ALIGN(sizeof(struct host_hc_status_block_e1x)));
- 		if (!bp->cnic_sb.e1x_sb)
- 			goto alloc_mem_err;
+ 
++static int uio_mmap_dma_coherent(struct vm_area_struct *vma)
++{
++	struct uio_device *idev = vma->vm_private_data;
++	struct uio_mem *mem;
++	int ret = 0;
++	int mi;
++
++	mi = uio_find_mem_index(vma);
++	if (mi < 0)
++		return -EINVAL;
++
++	mem = idev->info->mem + mi;
++
++	if (mem->dma_addr & ~PAGE_MASK)
++		return -ENODEV;
++	if (vma->vm_end - vma->vm_start > mem->size)
++		return -EINVAL;
++
++	/*
++	 * UIO uses offset to index into the maps for a device.
++	 * We need to clear vm_pgoff for dma_mmap_coherent.
++	 */
++	vma->vm_pgoff = 0;
++
++	ret = dma_mmap_coherent(&idev->dev,
++				vma,
++				(void *)mem->addr,
++				mem->dma_addr,
++				vma->vm_end - vma->vm_start);
++	vma->vm_pgoff = mi;
++
++	return ret;
++}
++
+ static int uio_mmap(struct file *filep, struct vm_area_struct *vma)
+ {
+ 	struct uio_listener *listener = filep->private_data;
+@@ -806,6 +841,9 @@ static int uio_mmap(struct file *filep, struct vm_area_struct *vma)
+ 	case UIO_MEM_VIRTUAL:
+ 		ret = uio_mmap_logical(vma);
+ 		break;
++	case UIO_MEM_DMA_COHERENT:
++		ret = uio_mmap_dma_coherent(vma);
++		break;
+ 	default:
+ 		ret = -EINVAL;
  	}
-diff --git a/drivers/net/ethernet/broadcom/cnic.c b/drivers/net/ethernet/broadcom/cnic.c
-index d9b52dc6d060..11a25d336221 100644
---- a/drivers/net/ethernet/broadcom/cnic.c
-+++ b/drivers/net/ethernet/broadcom/cnic.c
-@@ -1026,6 +1026,7 @@ static int __cnic_alloc_uio_rings(struct cnic_uio_dev *udev, int pages)
- 		return 0;
+diff --git a/include/linux/uio_driver.h b/include/linux/uio_driver.h
+index 47c5962b876b..7efa81497183 100644
+--- a/include/linux/uio_driver.h
++++ b/include/linux/uio_driver.h
+@@ -37,6 +37,7 @@ struct uio_map;
+ struct uio_mem {
+ 	const char		*name;
+ 	phys_addr_t		addr;
++	dma_addr_t		dma_addr;
+ 	unsigned long		offs;
+ 	resource_size_t		size;
+ 	int			memtype;
+@@ -158,6 +159,7 @@ extern int __must_check
+ #define UIO_MEM_LOGICAL	2
+ #define UIO_MEM_VIRTUAL 3
+ #define UIO_MEM_IOVA	4
++#define UIO_MEM_DMA_COHERENT	5
  
- 	udev->l2_ring_size = pages * CNIC_PAGE_SIZE;
-+	udev->l2_ring_size = PAGE_ALIGN(udev->l2_ring_size);
- 	udev->l2_ring = dma_alloc_coherent(&udev->pdev->dev, udev->l2_ring_size,
- 					   &udev->l2_ring_map, GFP_KERNEL);
- 	if (!udev->l2_ring)
-@@ -1033,6 +1034,7 @@ static int __cnic_alloc_uio_rings(struct cnic_uio_dev *udev, int pages)
- 
- 	udev->l2_buf_size = (cp->l2_rx_ring_size + 1) * cp->l2_single_buf_size;
- 	udev->l2_buf_size = CNIC_PAGE_ALIGN(udev->l2_buf_size);
-+	udev->l2_buf_size = PAGE_ALIGN(udev->l2_buf_size);
- 	udev->l2_buf = dma_alloc_coherent(&udev->pdev->dev, udev->l2_buf_size,
- 					  &udev->l2_buf_map, GFP_KERNEL);
- 	if (!udev->l2_buf) {
-@@ -1109,9 +1111,9 @@ static int cnic_init_uio(struct cnic_dev *dev)
- 					CNIC_PAGE_MASK;
- 		uinfo->mem[1].dma_addr = cp->status_blk_map;
- 		if (cp->ethdev->drv_state & CNIC_DRV_STATE_USING_MSIX)
--			uinfo->mem[1].size = BNX2_SBLK_MSIX_ALIGN_SIZE * 9;
-+			uinfo->mem[1].size = PAGE_ALIGN(BNX2_SBLK_MSIX_ALIGN_SIZE * 9);
- 		else
--			uinfo->mem[1].size = BNX2_SBLK_MSIX_ALIGN_SIZE;
-+			uinfo->mem[1].size = PAGE_ALIGN(BNX2_SBLK_MSIX_ALIGN_SIZE);
- 
- 		uinfo->name = "bnx2_cnic";
- 	} else if (test_bit(CNIC_F_BNX2X_CLASS, &dev->flags)) {
-@@ -1120,7 +1122,7 @@ static int cnic_init_uio(struct cnic_dev *dev)
- 		uinfo->mem[1].addr = (phys_addr_t)cp->bnx2x_def_status_blk &
- 			CNIC_PAGE_MASK;
- 		uinfo->mem[1].dma_addr = cp->status_blk_map;
--		uinfo->mem[1].size = sizeof(*cp->bnx2x_def_status_blk);
-+		uinfo->mem[1].size = PAGE_ALIGN(sizeof(*cp->bnx2x_def_status_blk));
- 
- 		uinfo->name = "bnx2x_cnic";
- 	}
+ /* defines for uio_port->porttype */
+ #define UIO_PORT_NONE	0
 -- 
 2.23.1
 
