@@ -1,109 +1,75 @@
-Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E748717981
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jan 2024 02:24:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R701e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045170;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0VzsBzKe_1704248642;
-Received: from 30.178.83.160(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0VzsBzKe_1704248642)
-          by smtp.aliyun-inc.com;
-          Wed, 03 Jan 2024 10:24:03 +0800
-Message-ID: <625483c3-1e69-48cd-8f00-b8159bb268f2@linux.alibaba.com>
-Date: Wed, 3 Jan 2024 10:24:02 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23C1318624;
+	Wed,  3 Jan 2024 09:02:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 9E5E768B05; Wed,  3 Jan 2024 10:02:05 +0100 (CET)
+Date: Wed, 3 Jan 2024 10:02:04 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+	Daejun Park <daejun7.park@samsung.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>,
+	Jeff Layton <jlayton@kernel.org>,
+	Chuck Lever <chuck.lever@oracle.com>
+Subject: Re: [PATCH v8 06/19] block, fs: Propagate write hints to the block
+ device inode
+Message-ID: <20240103090204.GA1851@lst.de>
+References: <20231219000815.2739120-1-bvanassche@acm.org> <20231219000815.2739120-7-bvanassche@acm.org> <20231228071206.GA13770@lst.de> <00cf8ffa-8ad5-45e4-bf7c-28b07ab4de21@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2] scsi: mpi3mr: use ida to manage mrioc's id
-Content-Language: en-GB
-From: Guixin Liu <kanie@linux.alibaba.com>
-To: sathya.prakash@broadcom.com, kashyap.desai@broadcom.com,
- sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com, jejb@linux.ibm.com,
- martin.petersen@oracle.com
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org
-References: <20231229040331.52518-1-kanie@linux.alibaba.com>
-In-Reply-To: <20231229040331.52518-1-kanie@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <00cf8ffa-8ad5-45e4-bf7c-28b07ab4de21@acm.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-gentle ping..
-
-best regards,
-
-Guixin Liu
-
-在 2023/12/29 12:03, Guixin Liu 写道:
-> To ensure that the same id is not obtained during concurrent
-> execution of the probe, an ida is used to manage the mrioc's
-> id.
+On Thu, Dec 28, 2023 at 02:41:59PM -0800, Bart Van Assche wrote:
+> On 12/27/23 23:12, Christoph Hellwig wrote:
+>> On Mon, Dec 18, 2023 at 04:07:39PM -0800, Bart Van Assche wrote:
+>>> Write hints applied with F_SET_RW_HINT on a block device affect the
+>>> shmem inode only. Propagate these hints to the block device inode
+>>> because that is the inode used when writing back dirty pages.
+>>
+>> What shmem inode?
 >
-> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
-> ---
-> Changes from v1 to v2:
-> - change id from int to u8, and use ida_alloc_range instead of ida_alloc.
+> The inode associated with the /dev file, e.g. /dev/sda. That is another
+> inode than the inode associated with the struct block_device instance.
+> Without this patch, when opening /dev/sda and calling fcntl(), the shmem
+> inode is modified but the struct block_device inode not. I think that
+> the code path for allocation of the shmem inode is as follows:
+
+So the block device node.  That can sit on any file system (or at least
+any Unix-y file system that supports device nodes).
+
+>>> @@ -317,6 +318,9 @@ static long fcntl_set_rw_hint(struct file *file, unsigned int cmd,
+>>>     	inode_lock(inode);
+>>>   	inode->i_write_hint = hint;
+>>> +	apply_whint = inode->i_fop->apply_whint;
+>>> +	if (apply_whint)
+>>> +		apply_whint(file, hint);
+>>
+>> Setting the hint in file->f_mapping->inode is the right thing here,
+>> not adding a method.
 >
->   drivers/scsi/mpi3mr/mpi3mr_os.c | 12 ++++++++++--
->   1 file changed, 10 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> index 040031eb0c12..36c4ab679094 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -8,11 +8,12 @@
->    */
->   
->   #include "mpi3mr.h"
-> +#include <linux/idr.h>
->   
->   /* global driver scop variables */
->   LIST_HEAD(mrioc_list);
->   DEFINE_SPINLOCK(mrioc_list_lock);
-> -static int mrioc_ids;
-> +static DEFINE_IDA(mrioc_ida);
->   static int warn_non_secure_ctlr;
->   atomic64_t event_counter;
->   
-> @@ -5060,7 +5061,10 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->   	}
->   
->   	mrioc = shost_priv(shost);
-> -	mrioc->id = mrioc_ids++;
-> +	retval = ida_alloc_range(&mrioc_ida, 1, U8_MAX, GFP_KERNEL);
-> +	if (retval < 0)
-> +		goto id_alloc_failed;
-> +	mrioc->id = (u8)retval;
->   	sprintf(mrioc->driver_name, "%s", MPI3MR_DRIVER_NAME);
->   	sprintf(mrioc->name, "%s%d", mrioc->driver_name, mrioc->id);
->   	INIT_LIST_HEAD(&mrioc->list);
-> @@ -5207,9 +5211,11 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->   resource_alloc_failed:
->   	destroy_workqueue(mrioc->fwevt_worker_thread);
->   fwevtthread_failed:
-> +	ida_free(&mrioc_ida, mrioc->id);
->   	spin_lock(&mrioc_list_lock);
->   	list_del(&mrioc->list);
->   	spin_unlock(&mrioc_list_lock);
-> +id_alloc_failed:
->   	scsi_host_put(shost);
->   shost_failed:
->   	return retval;
-> @@ -5295,6 +5301,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
->   		mrioc->sas_hba.num_phys = 0;
->   	}
->   
-> +	ida_free(&mrioc_ida, mrioc->id);
->   	spin_lock(&mrioc_list_lock);
->   	list_del(&mrioc->list);
->   	spin_unlock(&mrioc_list_lock);
-> @@ -5502,6 +5509,7 @@ static void __exit mpi3mr_exit(void)
->   			   &driver_attr_event_counter);
->   	pci_unregister_driver(&mpi3mr_pci_driver);
->   	sas_release_transport(mpi3mr_transport_template);
-> +	ida_destroy(&mrioc_ida);
->   }
->   
->   module_init(mpi3mr_init);
+> Is my understanding correct that the only way to reach the struct
+> block_device instance from the shmem code is by dereferencing
+> file->private_data?
+
+No.  See blkdev_open:
+
+	filp->f_mapping = handle->bdev->bd_inode->i_mapping;
+
+So you can use file->f_mapping->inode as I said in my previous mail.
+
