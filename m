@@ -1,77 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp87.cstnet.cn [159.226.251.87])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BEF84A0D;
-	Wed,  3 Jan 2024 00:02:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OBJ1CRuL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6731CC433C8;
-	Wed,  3 Jan 2024 00:02:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704240152;
-	bh=g9r3G9V5xJz2Gaj6MeWkVtAQ1b0eUPtfCXR750Wsrpk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=OBJ1CRuLoeiphkxiVOqt7KYgBqZ0m6b/GNHD5bXwMiWwZqeJwQ1RXuVWVww3g6vU6
-	 TqLNwjBCEbvEBQLW9jSDlNzdzoaq2Vw2JNskuJQ2iNo4RCEwHKO51ps6zRuXQ5ouiw
-	 795Cr77+rGnchFkKdQwgOpRaEdMGxJZ5W31kh2yIR8QCTrLxY20ELQ+42UFiWp8fyB
-	 aYzjJaGEeq2hIYSZvw+grIIiuynAHrzUhcqnsW0cA4Qf8t1aYQTSXAAKKBpgoIt0Ee
-	 vFMECgK9olRdU9kbqEAROwT8BwjhPQKvVDaF1jb3Cyw3PSBPnSojxzzsl0Emr8TsbV
-	 HWuswArI5CkRQ==
-Message-ID: <9d9f421e-08fb-44a5-8d07-ccf5f55db468@kernel.org>
-Date: Wed, 3 Jan 2024 09:02:29 +0900
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BBD610EE;
+	Wed,  3 Jan 2024 01:49:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iie.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iie.ac.cn
+Received: from mengjingzi$iie.ac.cn ( [121.195.114.118] ) by
+ ajax-webmail-APP-17 (Coremail) ; Wed, 3 Jan 2024 09:48:57 +0800 (GMT+08:00)
+Date: Wed, 3 Jan 2024 09:48:57 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: =?UTF-8?B?5a2f5pWs5ae/?= <mengjingzi@iie.ac.cn>
+To: aacraid@microsemi.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Suggestion for the capability check in aac_send_raw_srb()
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.15 build 20230921(8ad33efc)
+ Copyright (c) 2002-2024 www.mailtech.cn cnic.cn
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: remove another host aware model leftover
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org,
- linux-scsi@vger.kernel.org
-References: <20231228075141.362560-1-hch@lst.de>
- <6933c048-f77b-4645-a667-adae0f89b347@kernel.org>
- <20231228171445.GA25852@lst.de>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20231228171445.GA25852@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Message-ID: <363710f0.c0f9.18ccd026bda.Coremail.mengjingzi@iie.ac.cn>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:qgCowADXOuoKvZRlxAsDAA--.32448W
+X-CM-SenderInfo: pphqwyxlqj6xo6llvhldfou0/1tbiDAcFE2WUJeXwYgABs-
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-On 12/29/23 02:14, Christoph Hellwig wrote:
-> On Thu, Dec 28, 2023 at 05:45:29PM +0900, Damien Le Moal wrote:
->> On 12/28/23 16:51, Christoph Hellwig wrote:
->>> Hi all,
->>>
->>> now that support for the host aware zoned model is gone in the
->>> for-6.8/block branch, there is no way the sd driver can find a device
->>> where is has to clear the zoned flag, and we can thus remove the code
->>> for it, including a block layer helper.
->>
->> Hmmm... There is one case: if the user uses a passthrough command to issue a
->> FORMAT WITH PRESET command to reformat the disk from SMR to CMR or from CMR to
->> SMR. The next revalidate will see a different device type in this case, and
->> SMR-to-CMR reformat will need clearing the zoned stuff.
-> 
-> scsi_device.type is only set in scsi_add_lun and thus can't change without
-> a re-probe of the upper level driver.
-
-OK. I was worried about what might happen with libata/libsas drives, but
-checking the code, ata_dev_same_device() throws an error from ata_reread_id() if
-the device class (device type) changes. So that will force the user to do a full
-rescan for this corner case. I think we are OK.
-
-Feel free to add:
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-for the series.
-
--- 
-Damien Le Moal
-Western Digital Research
-
+SGkhCgpXZSBub3RpY2VkIGEgcG90ZW50aWFsIHJlZmluZW1lbnQgaW4gdGhlIGFhY19zZW5kX3Jh
+d19zcmIoKSBmdW5jdGlvbiwgdGhlIENBUF9TWVNfQURNSU4gaXMgY2hlY2tlZCBhdCB0aGUgYmVn
+aW5uaW5nIG9mIHRoZSBmdW5jdGlvbiBhbmQgd2UgYmVsaWV2ZSBpdCBpcyBiZXR0ZXIgdG8gdXNl
+IENBUF9TWVNfUkFXSU8gaW5zdGVhZC4gSGVyZSBhcmUgdGhlIHJlYXNvbnMgZm9yIHRoaXMgcmVj
+b21tZW5kYXRpb246CgooMSkgUHVycG9zZSBvZiBDYXBhYmlsaXR5IENoZWNrOiBUaGUgZXJyb3Ig
+bWVzc2FnZSB3aGVuIENBUF9TWVNfQURNSU4gY2hlY2sgZmFpbHMgaW5kaWNhdGVzIHRoYXQgdGhl
+IGNhcGFiaWxpdHkgY2hlY2sgaXMgaW50ZW5kZWQgdG8gcHJvdGVjdCB0aGUgc3Vic2VxdWVudCBz
+ZW5kIG9wZXJhdGlvbnMsIGluY2x1ZGluZyBhY2NfaGJhX3NlbmQoKSBhbmQgYWNjX2ZpYl9zZW5k
+KCkuIEdpdmVuIHRoYXQgdGhlc2UgZnVuY3Rpb25zIGFyZSB1c2VkIGZvciBzZW5kaW5nIFNDU0kg
+Y29tbWFuZHMsIHRoZSBtb3JlIGFwcHJvcHJpYXRlIGNhcGFiaWxpdHksIGFzIHBlciB0aGUgY2Fw
+YWJpbGl0eSBtYW51YWwgcGFnZVsxXSwgaXMgQ0FQX1NZU19SQVdJTyAoInBlcmZvcm0gdmFyaW91
+cyBTQ1NJIGRldmljZSBjb21tYW5kcyIpLgoKKDIpIENvbnNpc3RlbmN5IHdpdGggQWRkcmVzcyBN
+YXBwaW5nOiBUaGUgZnVuY3Rpb24gYWFjX3NlbmRfcmF3X3NyYigpIGFsc28gY2FsbHMgZG1hX21h
+cF9zaW5nbGUoKSBmb3IgYWRkcmVzcyBtYXBwaW5nLiBJbiBhIHNpbWlsYXIgY29udGV4dCBpbiBk
+cml2ZXJzL3Njc2kvaHBzYS5jLCB0aGUgbWFwcGluZyBmdW5jdGlvbiBpcyBwcm90ZWN0ZWQgYnkg
+Q0FQX1NZU19SQVdJTy4gQ29uc2lzdGVuY3kgaW4gdGhlIHVzZSBvZiBjYXBhYmlsaXRpZXMgZW5o
+YW5jZXMgY29kZSBjbGFyaXR5IGFuZCBtYWludGFpbnMgYSBzdGFuZGFyZGl6ZWQgYXBwcm9hY2gu
+CgooMykgTWFpbnRhaW5pbmcgTGVhc3QgUHJpdmlsZWdlOiBDQVBfU1lTX0FTTUlOIGlzIGFscmVh
+ZHkgb3ZlcmxvYWRlZCBhbmQga25vd24gYXMgdGhlIG5ldyAicm9vdCJbMl0sIGFuZCBhY2NvcmRp
+bmcgdG8gdGhlIG1hbnVhbCBwYWdlWzFdIOKAnGRvbid0IGNob29zZSBDQVBfU1lTX0FETUlOIGlm
+IHlvdSBjYW4gcG9zc2libHkgYXZvaWQgaXTigJ0sICB3ZSBiZWxpZXZlIHRoYXQgdXRpbGl6aW5n
+IHRoZSBtb3JlIHNwZWNpZmljIENBUF9TWVNfUkFXSU8gaXMgaW4gbGluZSB3aXRoIHRoZSBwcmlu
+Y2lwbGUgb2YgbGVhc3QgcHJpdmlsZWdlIGFuZCBjb250cmlidXRlcyB0byBhIG1vcmUgc2VjdXJl
+IGNvZGViYXNlLgoKVGhpcyBpc3N1ZSBleGlzdHMgaW4gc2V2ZXJhbCBrZXJuZWwgdmVyc2lvbnMg
+YW5kIHdlIGhhdmUgY2hlY2tlZCBpdCBvbiB0aGUgbGF0ZXN0IHN0YWJsZSByZWxlYXNlKExpbnV4
+IDYuNi45KQoKV2Ugd291bGQgYXBwcmVjaWF0ZSB5b3VyIGluc2lnaHRzIGFuZCBmZWVkYmFjayBv
+biB0aGlzIHByb3Bvc2FsLiBUaGFuayB5b3UgZm9yIHlvdXIgdGltZSBhbmQgY29uc2lkZXJhdGlv
+bi4KCkJlc3QgcmVnYXJkcywKSmluZ3ppCgpyZWZlcmVuY2U6ClsxXSBodHRwczovL3d3dy5tYW43
+Lm9yZy9saW51eC9tYW4tcGFnZXMvbWFuNy9jYXBhYmlsaXRpZXMuNy5odG1sClsyXSBodHRwczov
+L2x3bi5uZXQvQXJ0aWNsZXMvNDg2MzA2Lw==
