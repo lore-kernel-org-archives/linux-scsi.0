@@ -1,45 +1,32 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16CA52C68B
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Jan 2024 20:20:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1A032C698;
+	Thu,  4 Jan 2024 21:17:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZCphfXEi"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1704399626;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bPYz1RfNie2nu/IYZC5wNr9bq3SZ+ONsUGdsTsRrBw8=;
-	b=ZCphfXEiUV/MXLPCGwo0a7Xnvl+Q8o+5iWMggL33xvkFqHTqhkyyJzMSEFA3jsc4vSYc6x
-	okQEgwRh6NURE3LRom+qV3Xg+YJiXLerl/m7qsscdEePTx6DRKLp13mTUtFm+2qjxyPzDs
-	r1Dx9c7JiLE80ueOsRL407DUf2o/6Uo=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-33-WVCyiUNoNluID5OP3_LeCg-1; Thu, 04 Jan 2024 15:20:22 -0500
-X-MC-Unique: WVCyiUNoNluID5OP3_LeCg-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3FA3985A58A;
-	Thu,  4 Jan 2024 20:20:22 +0000 (UTC)
-Received: from rhel-developer-toolbox-latest (unknown [10.2.16.116])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 84530492BE6;
-	Thu,  4 Jan 2024 20:20:21 +0000 (UTC)
-Date: Thu, 4 Jan 2024 12:20:19 -0800
-From: Chris Leech <cleech@redhat.com>
-To: Nilesh Javali <njavali@marvell.com>
-Cc: martin.petersen@oracle.com, lduncan@suse.com,
-	linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
-	jmeneghi@redhat.com
-Subject: Re: [PATCH v2 1/3] uio: introduce UIO_MEM_DMA_COHERENT type
-Message-ID: <ZZcTA6PPS4nfuTjk@rhel-developer-toolbox-latest>
-References: <20240103091137.27142-1-njavali@marvell.com>
- <20240103091137.27142-2-njavali@marvell.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ty799Qn8"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
+	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=p5F8u3xrKU8ESZxmcg8jQ8IAjNp1yE/fjU1J5AXQvGQ=; b=ty799Qn8Fd+rytCk14M0ZVq25I
+	YiBoR7XxLbFmlNS85l+O0gooTrHaDk5fhLePvNU0dGp4e1aMmTnss9STQyHl1VejW4/57v7YeIMBT
+	ZP9rfvynFQ/IN6FqUpfPmxtyPBqFFxwyJMh/iOFqQYxJdTTEz1eSljsz03RUgd9NPFc9D695RfHwk
+	+08zzTszFt8/e9TS1tjVeg0a9Dg7clSrdazeYNx0BSMUnh50XbIuN4hkn2wwogAacauBJO2ucG1rP
+	JnlzoMgHsQUMwe3gYgnlXHjcmHCDNYpPswNwzduYNn/s2OLszGXp84YD0ABSGA9UbbP+tu1yvCFeQ
+	WLAfi1sQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+	id 1rLV5Y-00G1t1-Vo; Thu, 04 Jan 2024 21:17:17 +0000
+Date: Thu, 4 Jan 2024 21:17:16 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
+Message-ID: <ZZcgXI46AinlcBDP@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,73 +35,47 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240103091137.27142-2-njavali@marvell.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.10
 
-On Wed, Jan 03, 2024 at 02:41:35PM +0530, Nilesh Javali wrote:
-> From: Chris Leech <cleech@redhat.com>
-> 
-> Add a UIO memtype specifically for sharing dma_alloc_coherent
-> memory with userspace, backed by dma_mmap_coherent.
-> 
-> Signed-off-by: Nilesh Javali <njavali@marvell.com>
-> Signed-off-by: Chris Leech <cleech@redhat.com>
-> ---
-> v2:
-> - expose only the dma_addr within uio_mem
-> - Cleanup newly added unions comprising virtual_addr
->   and struct device
+This is primarily a _FILESYSTEM_ track topic.  All the work has already
+been done on the MM side; the FS people need to do their part.  It could
+be a joint session, but I'm not sure there's much for the MM people
+to say.
 
-Nilesh, thanks for taking another look at these changes. If we're taking
-another shot at getting uio changes accepted, Greg KH is going to have
-to be part of that conversation.
+There are situations where we need to allocate memory, but cannot call
+into the filesystem to free memory.  Generally this is because we're
+holding a lock or we've started a transaction, and attempting to write
+out dirty folios to reclaim memory would result in a deadlock.
 
-Removing the unions looks good, but I do have some concerns with your
-modifications.
+The old way to solve this problem is to specify GFP_NOFS when allocating
+memory.  This conveys little information about what is being protected
+against, and so it is hard to know when it might be safe to remove.
+It's also a reflex -- many filesystem authors use GFP_NOFS by default
+even when they could use GFP_KERNEL because there's no risk of deadlock.
 
-On Wed, Jan 03, 2024 at 02:41:35PM +0530, Nilesh Javali wrote:
+The new way is to use the scoped APIs -- memalloc_nofs_save() and
+memalloc_nofs_restore().  These should be called when we start a
+transaction or take a lock that would cause a GFP_KERNEL allocation to
+deadlock.  Then just use GFP_KERNEL as normal.  The memory allocators
+can see the nofs situation is in effect and will not call back into
+the filesystem.
 
-> +static int uio_mmap_dma_coherent(struct vm_area_struct *vma)
-> +{
-> +	struct uio_device *idev = vma->vm_private_data;
-> +	struct uio_mem *mem;
-> +	int ret = 0;
-> +	int mi;
-> +
-> +	mi = uio_find_mem_index(vma);
-> +	if (mi < 0)
-> +		return -EINVAL;
-> +
-> +	mem = idev->info->mem + mi;
-> +
-> +	if (mem->dma_addr & ~PAGE_MASK)
-> +		return -ENODEV;
-> +	if (vma->vm_end - vma->vm_start > mem->size)
-> +		return -EINVAL;
-> +
-> +	/*
-> +	 * UIO uses offset to index into the maps for a device.
-> +	 * We need to clear vm_pgoff for dma_mmap_coherent.
-> +	 */
-> +	vma->vm_pgoff = 0;
-> +
-> +	ret = dma_mmap_coherent(&idev->dev,
-                                ~~~~~~~~~~
-This doesn't seem right. You've plugged a struct device into the call,
-but it's not the same device used when calling dma_alloc_coherent.  I
-don't see a way around needing a way to access the correct device in
-uio_mmap_dma_coherent, or a way to do that without attaching it to the
-uio_device.
+This results in better code within your filesystem as you don't need to
+pass around gfp flags as much, and can lead to better performance from
+the memory allocators as GFP_NOFS will not be used unnecessarily.
 
-> +				vma,
-> +				(void *)mem->addr,
-> +				mem->dma_addr,
-> +				vma->vm_end - vma->vm_start);
-> +	vma->vm_pgoff = mi;
-> +
-> +	return ret;
-> +}
-> +
+The memalloc_nofs APIs were introduced in May 2017, but we still have
+over 1000 uses of GFP_NOFS in fs/ today (and 200 outside fs/, which is
+really sad).  This session is for filesystem developers to talk about
+what they need to do to fix up their own filesystem, or share stories
+about how they made their filesystem better by adopting the new APIs.
 
-- Chris
+My interest in this is that I'd like to get rid of the FGP_NOFS flag.
+It'd also be good to get rid of the __GFP_FS flag since there's always
+demand for more GFP flags.  I have a git branch with some work in this
+area, so there's a certain amount of conference-driven development going
+on here too.
 
+We could mutatis mutandi for GFP_NOIO, memalloc_noio_save/restore,
+__GFP_IO, etc, so maybe the block people are also interested.  I haven't
+looked into that in any detail though.  I guess we'll see what interest
+this topic gains.
