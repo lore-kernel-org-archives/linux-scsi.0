@@ -1,131 +1,189 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64F2F23749
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Jan 2024 14:55:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01EE2241E8;
+	Thu,  4 Jan 2024 15:16:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eHmWKXWV"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1704380107; x=1735916107;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=rLDxRZvmq5NvAKwa9UXfuPlqZ2XU8Rt24K3wgF1IxLc=;
-  b=eHmWKXWVNIsCp1enyTpPda+GrrVD6KfPeshJsoiBpJNxTm7W4bu/nkhy
-   +W4HUMKY/k/LdqD8sUxFXkY+yN1QD6L1noUDeNn9lsAUQ5J9Px18wA7PS
-   I/26FwxjvolTl+NXpvSWvvQxEqQQIKMYMw/WxT281+CQgzdRQt1bHjAHz
-   JNxkZG2H3TcYV+/H+nelgFq1ULUDX7GLmIUPkDIX9f7NnNg/LSLbev8k7
-   LUE0WhAngrmxbEklogXdnB+r4gF7cyhPJOBZG/NdAl/ukdX3x1pjj7MZB
-   /VpaPbqtFahdrvAdfBn6YrXV2geHWdH+MBAJMyTsg1hOwAG2xpVQET44E
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10943"; a="4623687"
-X-IronPort-AV: E=Sophos;i="6.04,331,1695711600"; 
-   d="scan'208";a="4623687"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jan 2024 06:55:03 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.04,331,1695711600"; 
-   d="scan'208";a="28813354"
-Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
-  by orviesa001.jf.intel.com with ESMTP; 04 Jan 2024 06:55:00 -0800
-Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rLP7Y-000NPy-0K;
-	Thu, 04 Jan 2024 14:54:57 +0000
-Date: Thu, 4 Jan 2024 22:54:29 +0800
-From: kernel test robot <lkp@intel.com>
-To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com,
-	lduncan@suse.com, cleech@redhat.com
-Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
-	GR-QLogic-Storage-Upstream@marvell.com, jmeneghi@redhat.com
-Subject: Re: [PATCH v2 1/3] uio: introduce UIO_MEM_DMA_COHERENT type
-Message-ID: <202401042222.J9GOUiYL-lkp@intel.com>
-References: <20240103091137.27142-2-njavali@marvell.com>
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="mHk6v/mP";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="6J4uw5uq";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="mHk6v/mP";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="6J4uw5uq"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id B3CFB21D82;
+	Thu,  4 Jan 2024 15:16:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1704381415; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FMPvsZKYHk+D5kb1N2CM5rR4TjKGNh05qKhD/IuVB8c=;
+	b=mHk6v/mPh0nrF36XeRd9n1G+3dVH07YiQx9gWm/SG7NmXFbckEmPHT+psVuS+Q55O5Ewmm
+	fzZp736IzVr5FNkauue7PYolsCdGhN9oZfdxiUjjwUo5SvRhYKG4JdOSw0VhUWvKC+wi2H
+	9fs2A0RPq42k8lt/8HUXEBH2gHBffpc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1704381415;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FMPvsZKYHk+D5kb1N2CM5rR4TjKGNh05qKhD/IuVB8c=;
+	b=6J4uw5uqBb70vbWXOXdU9583F4KrmBOAGYenVBa6jTwgLx70IbxaS5CKgObceVLtg+Uuvf
+	BlSynn3hFCWD0KCQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1704381415; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FMPvsZKYHk+D5kb1N2CM5rR4TjKGNh05qKhD/IuVB8c=;
+	b=mHk6v/mPh0nrF36XeRd9n1G+3dVH07YiQx9gWm/SG7NmXFbckEmPHT+psVuS+Q55O5Ewmm
+	fzZp736IzVr5FNkauue7PYolsCdGhN9oZfdxiUjjwUo5SvRhYKG4JdOSw0VhUWvKC+wi2H
+	9fs2A0RPq42k8lt/8HUXEBH2gHBffpc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1704381415;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FMPvsZKYHk+D5kb1N2CM5rR4TjKGNh05qKhD/IuVB8c=;
+	b=6J4uw5uqBb70vbWXOXdU9583F4KrmBOAGYenVBa6jTwgLx70IbxaS5CKgObceVLtg+Uuvf
+	BlSynn3hFCWD0KCQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 88C6E13722;
+	Thu,  4 Jan 2024 15:16:55 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id CnlcIefLlmUgTAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 04 Jan 2024 15:16:55 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 21D02A07EF; Thu,  4 Jan 2024 16:16:55 +0100 (CET)
+Date: Thu, 4 Jan 2024 16:16:55 +0100
+From: Jan Kara <jack@suse.cz>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Jan Kara <jack@suse.cz>, axboe@kernel.dk, roger.pau@citrix.com,
+	colyli@suse.de, kent.overstreet@gmail.com, joern@lazybastard.org,
+	miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
+	sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
+	gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
+	dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
+	nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
+	adilger.kernel@dilger.ca, jack@suse.com, konishi.ryusuke@gmail.com,
+	willy@infradead.org, akpm@linux-foundation.org, hare@suse.de,
+	p.raghav@samsung.com, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
+	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+	linux-ext4@vger.kernel.org, linux-nilfs@vger.kernel.org,
+	yi.zhang@huawei.com, yangerkun@huawei.com,
+	"yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH RFC v3 for-6.8/block 02/17] xen/blkback: use bdev api in
+ xen_update_blkif_status()
+Message-ID: <20240104151655.oiqtn6onge2etlcn@quack3>
+References: <20231221085712.1766333-1-yukuai1@huaweicloud.com>
+ <20231221085712.1766333-3-yukuai1@huaweicloud.com>
+ <20240104110631.3vspsvxbbvcpdqdu@quack3>
+ <29bfcfc7-62b0-3876-78ce-f7ebe3506eb6@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20240103091137.27142-2-njavali@marvell.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <29bfcfc7-62b0-3876-78ce-f7ebe3506eb6@huaweicloud.com>
+Authentication-Results: smtp-out1.suse.de;
+	none
+X-Spam-Score: 1.90
+X-Spam-Level: *
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [1.90 / 50.00];
+	 ARC_NA(0.00)[];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 URIBL_BLOCKED(0.00)[suse.com:email,huawei.com:email];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 TAGGED_RCPT(0.00)[];
+	 MIME_GOOD(-0.10)[text/plain];
+	 R_RATELIMIT(0.00)[to_ip_from(RLdan9jouj5dxnqx1npfmn4ucx)];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	 RCPT_COUNT_TWELVE(0.00)[49];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,huawei.com:email];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 MID_RHS_NOT_FQDN(0.50)[];
+	 FREEMAIL_CC(0.00)[suse.cz,kernel.dk,citrix.com,suse.de,gmail.com,lazybastard.org,bootlin.com,nod.at,ti.com,linux.ibm.com,oracle.com,fb.com,toxicpanda.com,suse.com,zeniv.linux.org.uk,kernel.org,fluxnic.net,mit.edu,dilger.ca,infradead.org,linux-foundation.org,samsung.com,vger.kernel.org,lists.xenproject.org,lists.infradead.org,lists.ozlabs.org,huawei.com];
+	 RCVD_TLS_ALL(0.00)[];
+	 SUSPICIOUS_RECIPS(1.50)[]
 
-Hi Nilesh,
+Hi Kuai!
 
-kernel test robot noticed the following build warnings:
+On Thu 04-01-24 20:19:05, Yu Kuai wrote:
+> 在 2024/01/04 19:06, Jan Kara 写道:
+> > On Thu 21-12-23 16:56:57, Yu Kuai wrote:
+> > > From: Yu Kuai <yukuai3@huawei.com>
+> > > 
+> > > Avoid to access bd_inode directly, prepare to remove bd_inode from
+> > > block_devcie.
+> > > 
+> > > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> > > ---
+> > >   drivers/block/xen-blkback/xenbus.c | 3 +--
+> > >   1 file changed, 1 insertion(+), 2 deletions(-)
+> > > 
+> > > diff --git a/drivers/block/xen-blkback/xenbus.c b/drivers/block/xen-blkback/xenbus.c
+> > > index e34219ea2b05..e645afa4af57 100644
+> > > --- a/drivers/block/xen-blkback/xenbus.c
+> > > +++ b/drivers/block/xen-blkback/xenbus.c
+> > > @@ -104,8 +104,7 @@ static void xen_update_blkif_status(struct xen_blkif *blkif)
+> > >   		xenbus_dev_error(blkif->be->dev, err, "block flush");
+> > >   		return;
+> > >   	}
+> > > -	invalidate_inode_pages2(
+> > > -			blkif->vbd.bdev_handle->bdev->bd_inode->i_mapping);
+> > > +	invalidate_bdev(blkif->vbd.bdev_handle->bdev);
+> > 
+> > This function uses invalidate_inode_pages2() while invalidate_bdev() ends
+> > up using mapping_try_invalidate() and there are subtle behavioral
+> > differences between these two (for example invalidate_inode_pages2() tries
+> > to clean dirty pages using the ->launder_folio method). So I think you'll
+> > need helper like invalidate_bdev2() for this.
+> 
+> Thanks for reviewing this patch, I know the differenct between then,
+> what I don't understand is that why using invalidate_inode_pages2()
+> here.
 
-[auto build test WARNING on char-misc/char-misc-testing]
-[also build test WARNING on char-misc/char-misc-next char-misc/char-misc-linus linus/master v6.7-rc8 next-20240104]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Well, then the change in behavior should be at least noted in the
+changelog.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Nilesh-Javali/uio-introduce-UIO_MEM_DMA_COHERENT-type/20240103-171531
-base:   char-misc/char-misc-testing
-patch link:    https://lore.kernel.org/r/20240103091137.27142-2-njavali%40marvell.com
-patch subject: [PATCH v2 1/3] uio: introduce UIO_MEM_DMA_COHERENT type
-config: arc-allmodconfig (https://download.01.org/0day-ci/archive/20240104/202401042222.J9GOUiYL-lkp@intel.com/config)
-compiler: arceb-elf-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240104/202401042222.J9GOUiYL-lkp@intel.com/reproduce)
+> sync_blockdev() is just called and 0 is returned, I think in this
+> case it's safe to call invalidate_bdev() directly, or am I missing
+> other things?
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202401042222.J9GOUiYL-lkp@intel.com/
+I still think there's a difference. invalidate_inode_pages2() also unmaps
+memory mappings which mapping_try_invalidate() does not do. That being said
+in xen_update_blkif_status() we seem to be bringing up a virtual block
+device so before this function is called, anybody would have hard time
+using anything in it. But this definitely needs a confirmation from Xen
+maintainers and a good documentation of the behavioral change in the
+changelog.
 
-All warnings (new ones prefixed by >>):
-
-   In file included from drivers/uio/uio.c:27:
-   drivers/uio/uio.c: In function 'uio_mmap_dma_coherent':
->> drivers/uio/uio.c:789:33: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
-     789 |                                 (void *)mem->addr,
-         |                                 ^
-   include/linux/dma-mapping.h:424:63: note: in definition of macro 'dma_mmap_coherent'
-     424 | #define dma_mmap_coherent(d, v, c, h, s) dma_mmap_attrs(d, v, c, h, s, 0)
-         |                                                               ^
-
-
-vim +789 drivers/uio/uio.c
-
-   762	
-   763	static int uio_mmap_dma_coherent(struct vm_area_struct *vma)
-   764	{
-   765		struct uio_device *idev = vma->vm_private_data;
-   766		struct uio_mem *mem;
-   767		int ret = 0;
-   768		int mi;
-   769	
-   770		mi = uio_find_mem_index(vma);
-   771		if (mi < 0)
-   772			return -EINVAL;
-   773	
-   774		mem = idev->info->mem + mi;
-   775	
-   776		if (mem->dma_addr & ~PAGE_MASK)
-   777			return -ENODEV;
-   778		if (vma->vm_end - vma->vm_start > mem->size)
-   779			return -EINVAL;
-   780	
-   781		/*
-   782		 * UIO uses offset to index into the maps for a device.
-   783		 * We need to clear vm_pgoff for dma_mmap_coherent.
-   784		 */
-   785		vma->vm_pgoff = 0;
-   786	
-   787		ret = dma_mmap_coherent(&idev->dev,
-   788					vma,
- > 789					(void *)mem->addr,
-   790					mem->dma_addr,
-   791					vma->vm_end - vma->vm_start);
-   792		vma->vm_pgoff = mi;
-   793	
-   794		return ret;
-   795	}
-   796	
-
+								Honza
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
