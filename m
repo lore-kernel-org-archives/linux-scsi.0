@@ -1,189 +1,120 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01EE2241E8;
-	Thu,  4 Jan 2024 15:16:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16CA52C68B
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jan 2024 20:20:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="mHk6v/mP";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="6J4uw5uq";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="mHk6v/mP";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="6J4uw5uq"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZCphfXEi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1704399626;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=bPYz1RfNie2nu/IYZC5wNr9bq3SZ+ONsUGdsTsRrBw8=;
+	b=ZCphfXEiUV/MXLPCGwo0a7Xnvl+Q8o+5iWMggL33xvkFqHTqhkyyJzMSEFA3jsc4vSYc6x
+	okQEgwRh6NURE3LRom+qV3Xg+YJiXLerl/m7qsscdEePTx6DRKLp13mTUtFm+2qjxyPzDs
+	r1Dx9c7JiLE80ueOsRL407DUf2o/6Uo=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-33-WVCyiUNoNluID5OP3_LeCg-1; Thu, 04 Jan 2024 15:20:22 -0500
+X-MC-Unique: WVCyiUNoNluID5OP3_LeCg-1
+Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id B3CFB21D82;
-	Thu,  4 Jan 2024 15:16:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1704381415; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FMPvsZKYHk+D5kb1N2CM5rR4TjKGNh05qKhD/IuVB8c=;
-	b=mHk6v/mPh0nrF36XeRd9n1G+3dVH07YiQx9gWm/SG7NmXFbckEmPHT+psVuS+Q55O5Ewmm
-	fzZp736IzVr5FNkauue7PYolsCdGhN9oZfdxiUjjwUo5SvRhYKG4JdOSw0VhUWvKC+wi2H
-	9fs2A0RPq42k8lt/8HUXEBH2gHBffpc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1704381415;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FMPvsZKYHk+D5kb1N2CM5rR4TjKGNh05qKhD/IuVB8c=;
-	b=6J4uw5uqBb70vbWXOXdU9583F4KrmBOAGYenVBa6jTwgLx70IbxaS5CKgObceVLtg+Uuvf
-	BlSynn3hFCWD0KCQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1704381415; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FMPvsZKYHk+D5kb1N2CM5rR4TjKGNh05qKhD/IuVB8c=;
-	b=mHk6v/mPh0nrF36XeRd9n1G+3dVH07YiQx9gWm/SG7NmXFbckEmPHT+psVuS+Q55O5Ewmm
-	fzZp736IzVr5FNkauue7PYolsCdGhN9oZfdxiUjjwUo5SvRhYKG4JdOSw0VhUWvKC+wi2H
-	9fs2A0RPq42k8lt/8HUXEBH2gHBffpc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1704381415;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FMPvsZKYHk+D5kb1N2CM5rR4TjKGNh05qKhD/IuVB8c=;
-	b=6J4uw5uqBb70vbWXOXdU9583F4KrmBOAGYenVBa6jTwgLx70IbxaS5CKgObceVLtg+Uuvf
-	BlSynn3hFCWD0KCQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 88C6E13722;
-	Thu,  4 Jan 2024 15:16:55 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id CnlcIefLlmUgTAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 04 Jan 2024 15:16:55 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 21D02A07EF; Thu,  4 Jan 2024 16:16:55 +0100 (CET)
-Date: Thu, 4 Jan 2024 16:16:55 +0100
-From: Jan Kara <jack@suse.cz>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Jan Kara <jack@suse.cz>, axboe@kernel.dk, roger.pau@citrix.com,
-	colyli@suse.de, kent.overstreet@gmail.com, joern@lazybastard.org,
-	miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
-	sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
-	gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
-	dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
-	nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
-	adilger.kernel@dilger.ca, jack@suse.com, konishi.ryusuke@gmail.com,
-	willy@infradead.org, akpm@linux-foundation.org, hare@suse.de,
-	p.raghav@samsung.com, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-	linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org,
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-bcachefs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-	linux-ext4@vger.kernel.org, linux-nilfs@vger.kernel.org,
-	yi.zhang@huawei.com, yangerkun@huawei.com,
-	"yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH RFC v3 for-6.8/block 02/17] xen/blkback: use bdev api in
- xen_update_blkif_status()
-Message-ID: <20240104151655.oiqtn6onge2etlcn@quack3>
-References: <20231221085712.1766333-1-yukuai1@huaweicloud.com>
- <20231221085712.1766333-3-yukuai1@huaweicloud.com>
- <20240104110631.3vspsvxbbvcpdqdu@quack3>
- <29bfcfc7-62b0-3876-78ce-f7ebe3506eb6@huaweicloud.com>
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3FA3985A58A;
+	Thu,  4 Jan 2024 20:20:22 +0000 (UTC)
+Received: from rhel-developer-toolbox-latest (unknown [10.2.16.116])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 84530492BE6;
+	Thu,  4 Jan 2024 20:20:21 +0000 (UTC)
+Date: Thu, 4 Jan 2024 12:20:19 -0800
+From: Chris Leech <cleech@redhat.com>
+To: Nilesh Javali <njavali@marvell.com>
+Cc: martin.petersen@oracle.com, lduncan@suse.com,
+	linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
+	jmeneghi@redhat.com
+Subject: Re: [PATCH v2 1/3] uio: introduce UIO_MEM_DMA_COHERENT type
+Message-ID: <ZZcTA6PPS4nfuTjk@rhel-developer-toolbox-latest>
+References: <20240103091137.27142-1-njavali@marvell.com>
+ <20240103091137.27142-2-njavali@marvell.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <29bfcfc7-62b0-3876-78ce-f7ebe3506eb6@huaweicloud.com>
-Authentication-Results: smtp-out1.suse.de;
-	none
-X-Spam-Score: 1.90
-X-Spam-Level: *
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [1.90 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 URIBL_BLOCKED(0.00)[suse.com:email,huawei.com:email];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 TAGGED_RCPT(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 R_RATELIMIT(0.00)[to_ip_from(RLdan9jouj5dxnqx1npfmn4ucx)];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 RCPT_COUNT_TWELVE(0.00)[49];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,huawei.com:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 FREEMAIL_CC(0.00)[suse.cz,kernel.dk,citrix.com,suse.de,gmail.com,lazybastard.org,bootlin.com,nod.at,ti.com,linux.ibm.com,oracle.com,fb.com,toxicpanda.com,suse.com,zeniv.linux.org.uk,kernel.org,fluxnic.net,mit.edu,dilger.ca,infradead.org,linux-foundation.org,samsung.com,vger.kernel.org,lists.xenproject.org,lists.infradead.org,lists.ozlabs.org,huawei.com];
-	 RCVD_TLS_ALL(0.00)[];
-	 SUSPICIOUS_RECIPS(1.50)[]
+In-Reply-To: <20240103091137.27142-2-njavali@marvell.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.10
 
-Hi Kuai!
-
-On Thu 04-01-24 20:19:05, Yu Kuai wrote:
-> 在 2024/01/04 19:06, Jan Kara 写道:
-> > On Thu 21-12-23 16:56:57, Yu Kuai wrote:
-> > > From: Yu Kuai <yukuai3@huawei.com>
-> > > 
-> > > Avoid to access bd_inode directly, prepare to remove bd_inode from
-> > > block_devcie.
-> > > 
-> > > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> > > ---
-> > >   drivers/block/xen-blkback/xenbus.c | 3 +--
-> > >   1 file changed, 1 insertion(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/block/xen-blkback/xenbus.c b/drivers/block/xen-blkback/xenbus.c
-> > > index e34219ea2b05..e645afa4af57 100644
-> > > --- a/drivers/block/xen-blkback/xenbus.c
-> > > +++ b/drivers/block/xen-blkback/xenbus.c
-> > > @@ -104,8 +104,7 @@ static void xen_update_blkif_status(struct xen_blkif *blkif)
-> > >   		xenbus_dev_error(blkif->be->dev, err, "block flush");
-> > >   		return;
-> > >   	}
-> > > -	invalidate_inode_pages2(
-> > > -			blkif->vbd.bdev_handle->bdev->bd_inode->i_mapping);
-> > > +	invalidate_bdev(blkif->vbd.bdev_handle->bdev);
-> > 
-> > This function uses invalidate_inode_pages2() while invalidate_bdev() ends
-> > up using mapping_try_invalidate() and there are subtle behavioral
-> > differences between these two (for example invalidate_inode_pages2() tries
-> > to clean dirty pages using the ->launder_folio method). So I think you'll
-> > need helper like invalidate_bdev2() for this.
+On Wed, Jan 03, 2024 at 02:41:35PM +0530, Nilesh Javali wrote:
+> From: Chris Leech <cleech@redhat.com>
 > 
-> Thanks for reviewing this patch, I know the differenct between then,
-> what I don't understand is that why using invalidate_inode_pages2()
-> here.
+> Add a UIO memtype specifically for sharing dma_alloc_coherent
+> memory with userspace, backed by dma_mmap_coherent.
+> 
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> Signed-off-by: Chris Leech <cleech@redhat.com>
+> ---
+> v2:
+> - expose only the dma_addr within uio_mem
+> - Cleanup newly added unions comprising virtual_addr
+>   and struct device
 
-Well, then the change in behavior should be at least noted in the
-changelog.
+Nilesh, thanks for taking another look at these changes. If we're taking
+another shot at getting uio changes accepted, Greg KH is going to have
+to be part of that conversation.
 
-> sync_blockdev() is just called and 0 is returned, I think in this
-> case it's safe to call invalidate_bdev() directly, or am I missing
-> other things?
+Removing the unions looks good, but I do have some concerns with your
+modifications.
 
-I still think there's a difference. invalidate_inode_pages2() also unmaps
-memory mappings which mapping_try_invalidate() does not do. That being said
-in xen_update_blkif_status() we seem to be bringing up a virtual block
-device so before this function is called, anybody would have hard time
-using anything in it. But this definitely needs a confirmation from Xen
-maintainers and a good documentation of the behavioral change in the
-changelog.
+On Wed, Jan 03, 2024 at 02:41:35PM +0530, Nilesh Javali wrote:
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> +static int uio_mmap_dma_coherent(struct vm_area_struct *vma)
+> +{
+> +	struct uio_device *idev = vma->vm_private_data;
+> +	struct uio_mem *mem;
+> +	int ret = 0;
+> +	int mi;
+> +
+> +	mi = uio_find_mem_index(vma);
+> +	if (mi < 0)
+> +		return -EINVAL;
+> +
+> +	mem = idev->info->mem + mi;
+> +
+> +	if (mem->dma_addr & ~PAGE_MASK)
+> +		return -ENODEV;
+> +	if (vma->vm_end - vma->vm_start > mem->size)
+> +		return -EINVAL;
+> +
+> +	/*
+> +	 * UIO uses offset to index into the maps for a device.
+> +	 * We need to clear vm_pgoff for dma_mmap_coherent.
+> +	 */
+> +	vma->vm_pgoff = 0;
+> +
+> +	ret = dma_mmap_coherent(&idev->dev,
+                                ~~~~~~~~~~
+This doesn't seem right. You've plugged a struct device into the call,
+but it's not the same device used when calling dma_alloc_coherent.  I
+don't see a way around needing a way to access the correct device in
+uio_mmap_dma_coherent, or a way to do that without attaching it to the
+uio_device.
+
+> +				vma,
+> +				(void *)mem->addr,
+> +				mem->dma_addr,
+> +				vma->vm_end - vma->vm_start);
+> +	vma->vm_pgoff = mi;
+> +
+> +	return ret;
+> +}
+> +
+
+- Chris
+
