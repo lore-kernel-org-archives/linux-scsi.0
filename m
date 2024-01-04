@@ -1,157 +1,140 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0047B1EB20;
-	Wed,  3 Jan 2024 23:09:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1d420aaa2abso43774075ad.3;
-        Wed, 03 Jan 2024 15:09:03 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704323343; x=1704928143;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zZmO2Em5SAGxslvJYxxMr85h0YnmF3m11vf/R6PL49E=;
-        b=fQQSIUGWWAZpygvt8r/YzPXsoXS8ZRrT8Su4u0n2+dkRBnlvWfReRZWtWIMkvC61kI
-         Q0b5XMgsDWn3jrbW//V33GJAQ0v1j+uA2C7lYI9uQB6K7AnERd1hxVOc2esXqqDAEM7C
-         zZBz+1ZsDROA3UWPNdOLTUhUdowwFLn8FmS+87leS3L5mHq6Kox1fd4sQsb2Fq2o/h+l
-         iyJ3YMeAviE2Q7zWpDAN0z/QVjFv/irKp2a+eibnSVnzOVxFv827luhVuTsH5yoI7SqF
-         a+YwJEXMO11aJxW/CqKVmgEjiU+7GelM/b71ZizqXInt6MZ/HeT7qsYscGmVbOnqYcgi
-         ifEg==
-X-Gm-Message-State: AOJu0YxiaY9z0LqlQp64zkFnITt03tQDzOxtfLOy0oIIqMCBT2tk37pO
-	6vzus9MxtKvmSUTbXVa2mhA=
-X-Google-Smtp-Source: AGHT+IEx1EUGxeDBn6VkvBIHx/9b6r5vaU4+g2u2SIxomWqkcQCb6zhm54+bpvg/Vff1UcElOzYnaA==
-X-Received: by 2002:a17:903:41cb:b0:1d4:1623:89ff with SMTP id u11-20020a17090341cb00b001d4162389ffmr9747816ple.83.1704323343030;
-        Wed, 03 Jan 2024 15:09:03 -0800 (PST)
-Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
-        by smtp.gmail.com with ESMTPSA id u2-20020a170902bf4200b001cfc2e0a82fsm24281340pls.26.2024.01.03.15.09.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Jan 2024 15:09:02 -0800 (PST)
-Message-ID: <23753320-63e5-4d76-88e2-8f2c9a90505c@acm.org>
-Date: Wed, 3 Jan 2024 15:09:00 -0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC7CFA29
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jan 2024 01:25:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="mmuYunTt"
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240104012456epoutp02158bb60c24e061195fc77afa15a6303c~nAHdoC_MX3273232732epoutp02u
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jan 2024 01:24:56 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240104012456epoutp02158bb60c24e061195fc77afa15a6303c~nAHdoC_MX3273232732epoutp02u
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1704331496;
+	bh=Nq+WiD2ASCtj8k+pc+sy2PFapO5artqTBd5B67HZ+xA=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=mmuYunTtFJsTWxS8nxjA654MuipivIpgI/QtCIHqQ6XdQgM4Xwa/bPQPRBJMjzZl7
+	 KfxctdQRc0kd0Kb/yuRoWBPvmPK9P3VhODWPY8a7ziA/6HY9eu42wwS018qyTp+uMU
+	 G6ZRlkzKOR5BwaHv8UmCZvvFih++yh8F99vDIfBE=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+	epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+	20240104012456epcas2p4776cd74d834e68a6e7a482114e7e3ec1~nAHdBbU0S2755027550epcas2p49;
+	Thu,  4 Jan 2024 01:24:56 +0000 (GMT)
+Received: from epsmges2p4.samsung.com (unknown [182.195.36.89]) by
+	epsnrtp4.localdomain (Postfix) with ESMTP id 4T585g3CTQz4x9QB; Thu,  4 Jan
+	2024 01:24:55 +0000 (GMT)
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+	epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+	66.17.09607.7E806956; Thu,  4 Jan 2024 10:24:55 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+	20240104012454epcas2p36b58220b4c89ee72f1e095b34d329be2~nAHbuQinc3035330353epcas2p3q;
+	Thu,  4 Jan 2024 01:24:54 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240104012454epsmtrp11cce13ff4e26906bb4ee2678170baba0~nAHbtWgyY2678126781epsmtrp1x;
+	Thu,  4 Jan 2024 01:24:54 +0000 (GMT)
+X-AuditID: b6c32a48-963ff70000002587-19-659608e7a5ca
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	55.A6.18939.6E806956; Thu,  4 Jan 2024 10:24:54 +0900 (KST)
+Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20240104012454epsmtip21f5ad94dcb86432d724be9c53e07db2c~nAHbhIDoe2426324263epsmtip2k;
+	Thu,  4 Jan 2024 01:24:54 +0000 (GMT)
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+	jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+	adrian.hunter@intel.com, h10.kim@samsung.com, hy50.seo@samsung.com,
+	sh425.lee@samsung.com, kwangwon.min@samsung.com, junwoo80.lee@samsung.com,
+	wkon.kim@samsung.com
+Cc: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v1] ufs: get target SQ entry within critical section
+Date: Thu,  4 Jan 2024 10:24:50 +0900
+Message-Id: <1704331491-115325-1-git-send-email-kwmad.kim@samsung.com>
+X-Mailer: git-send-email 2.7.4
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupik+LIzCtJLcpLzFFi42LZdljTVPc5x7RUgyWrxC1OPlnDZvFg3jY2
+	i5c/r7JZHHzYyWIx7cNPZou/ty+yWqxe/IDFYtGNbUwWu/42M1lsvbGTxeLmlqMsFpd3zWGz
+	6L6+g81i+fF/TBZL/71lsdh86RuLg4DH5SveHov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR
+	4/MmOY/2A91MARxR2TYZqYkpqUUKqXnJ+SmZeem2St7B8c7xpmYGhrqGlhbmSgp5ibmptkou
+	PgG6bpk5QB8oKZQl5pQChQISi4uV9O1sivJLS1IVMvKLS2yVUgtScgrMC/SKE3OLS/PS9fJS
+	S6wMDQyMTIEKE7IzVv6bxlywi6vi27vzbA2Mdzm6GDk5JARMJDYt3cXWxcjFISSwg1Hi7JJV
+	TBDOJ0aJFb/es8M5nzeeY+1i5ABraX6tBhHfySjx9sxbRgjnB6PEuu2XWUHmsgloSjy9ORVs
+	lIjARyaJzfO3sYMkmAXUJXZNOMEEYgsLuEhcfDGPDWQqi4CqxPd5YSBhXgE3iWVvJ7BD3Ccn
+	cfNcJzPIHAmBRg6J+YfnQCVcJH6eus8CYQtLvDq+BSouJfGyvw3KLpZYu+MqE0RzA6PE6len
+	oRLGErOetTOCLGYGunT9Ln2Iz5QljtxigTiTT6Lj8F92iDCvREebEESjssSvSZMZIWxJiZk3
+	70AN9JDY++YOG4gtJBArcXfXFeYJjLKzEOYvYGRcxSiWWlCcm55abFRgAo+k5PzcTYzgRKnl
+	sYNx9tsPeocYmTgYDzFKcDArifCuXzc5VYg3JbGyKrUoP76oNCe1+BCjKTC4JjJLiSbnA1N1
+	Xkm8oYmlgYmZmaG5kamBuZI4773WuSlCAumJJanZqakFqUUwfUwcnFINTCy7ZuffSMt7//Df
+	qhPfVn+Kn7bb4eMpOfPP7ef/dW6dujTgw4Gs5qVRT3vrY6yPxEvxXSvann7z0+qzGZdrD05k
+	T/0tdytX9/WVQs7f6y+kqgtMvFjZ8NH1s4Xaev4b26Yav/5dvMZNJr41uelo0AzrHW9kfkj/
+	1dy+kfeBhBXLv/tfk97x9vy4ufVz14SioIkX60SEd0v9UHY+3sH1ao9MG7/VtMe3NTJnHVRg
+	6/KZefbjw1sFgTsreZi5PUp7amVUi7i1THnNUwROf54t55lx1fHdhrNPCtM2yOyO8z77uOfo
+	py8KqwxPB7Fte+2fXsD6Pn4dd//lZ+5zpeIVFS1TzM5anvH+/Zpli0/JFUElluKMREMt5qLi
+	RACiWYtPHQQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrCLMWRmVeSWpSXmKPExsWy7bCSvO4zjmmpBifua1mcfLKGzeLBvG1s
+	Fi9/XmWzOPiwk8Vi2oefzBZ/b19ktVi9+AGLxaIb25gsdv1tZrLYemMni8XNLUdZLC7vmsNm
+	0X19B5vF8uP/mCyW/nvLYrH50jcWBwGPy1e8PRbvecnkMWHRAUaP7+s72Dw+Pr3F4tG3ZRWj
+	x+dNch7tB7qZAjiiuGxSUnMyy1KL9O0SuDJW/pvGXLCLq+Lbu/NsDYx3OboYOTgkBEwkml+r
+	dTFycQgJbGeUuPGgl7GLkRMoLilxYudzKFtY4n7LEVaIom+MEs3N/9lAEmwCmhJPb05lArFF
+	BJqZJfqa7EFsZgF1iV0TToDFhQVcJC6+mMcGsoxFQFXi+7wwkDCvgJvEsrcT2CHmy0ncPNfJ
+	PIGRZwEjwypG0dSC4tz03OQCQ73ixNzi0rx0veT83E2M4IDVCtrBuGz9X71DjEwcjIcYJTiY
+	lUR416+bnCrEm5JYWZValB9fVJqTWnyIUZqDRUmcVzmnM0VIID2xJDU7NbUgtQgmy8TBKdXA
+	1P5yq0rZltWSYQuLDThY8/kFjfykRE3eKcry+56MdZnksM9vV7Go/+UD2zKX6XCYh57k5VW6
+	rrcjS2i9oOJSAcFjd1Ojn1+b7vOuRHFabGtOZ82s9a2cfrMWnGTQL369pXjJAx69uVF3mEJL
+	9kU9CMr/8zBJJcfC+bHHS4/Qt3lCx//OlxFzCxf4wz7RjLHyUcfVrwuKp0Y/uKO8/ca7Pdzx
+	Gx4Unksp4c9Key5j+9TDz8Vn65vVmYmrFb/8CpWZ5PtPabXHy+W/e9U9XRef5InZ7CdmOyNV
+	TPDmsTNnQh46nlk9iaf23YygR81NxdevW/h+e2Hm6eAc+bD1dPRBn2kWs00Yr7Fn7ExZp9qp
+	xFKckWioxVxUnAgADBi78scCAAA=
+X-CMS-MailID: 20240104012454epcas2p36b58220b4c89ee72f1e095b34d329be2
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240104012454epcas2p36b58220b4c89ee72f1e095b34d329be2
+References: <CGME20240104012454epcas2p36b58220b4c89ee72f1e095b34d329be2@epcas2p3.samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 06/19] block, fs: Propagate write hints to the block
- device inode
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
- Daejun Park <daejun7.park@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>,
- Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jeff Layton <jlayton@kernel.org>,
- Chuck Lever <chuck.lever@oracle.com>
-References: <20231219000815.2739120-1-bvanassche@acm.org>
- <20231219000815.2739120-7-bvanassche@acm.org> <20231228071206.GA13770@lst.de>
- <00cf8ffa-8ad5-45e4-bf7c-28b07ab4de21@acm.org> <20240103090204.GA1851@lst.de>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240103090204.GA1851@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 1/3/24 01:02, Christoph Hellwig wrote:
-> So you can use file->f_mapping->inode as I said in my previous mail.
+In IO centric scenarios, especially during a period that
+many IO requests are submitted to a same HW queue at the same
+time, it's found that one reqeust overwrote a SQ entry
+that had been already occupied by another request submitted
+in the past. And it eventually led to command timed-out
+because one of two requests were overwritten, which could not
+be completed.
 
-Since struct address_space does not have a member with the name "inode",
-I assume that you meant "host" instead of "inode"? If so, how about
-modifying patch 06 of this series as shown below? With the patch below
-my tests still pass.
+[   74.995185][  T176] exynos-ufs 17100000.ufs: ufshcd_abort: Device abort task at tag 30
 
-Thanks,
-
-Bart.
-
-
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 ---
-  block/fops.c       | 11 -----------
-  fs/fcntl.c         | 15 +++++++++++----
-  include/linux/fs.h |  1 -
-  3 files changed, 11 insertions(+), 16 deletions(-)
+ drivers/ufs/core/ufshcd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/block/fops.c b/block/fops.c
-index 138b388b5cb1..787ce52bc2c6 100644
---- a/block/fops.c
-+++ b/block/fops.c
-@@ -620,16 +620,6 @@ static int blkdev_release(struct inode *inode, 
-struct file *filp)
-  	return 0;
-  }
-
--static void blkdev_apply_whint(struct file *file, enum rw_hint hint)
--{
--	struct bdev_handle *handle = file->private_data;
--	struct inode *bd_inode = handle->bdev->bd_inode;
--
--	inode_lock(bd_inode);
--	bd_inode->i_write_hint = hint;
--	inode_unlock(bd_inode);
--}
--
-  static ssize_t
-  blkdev_direct_write(struct kiocb *iocb, struct iov_iter *from)
-  {
-@@ -864,7 +854,6 @@ const struct file_operations def_blk_fops = {
-  	.splice_read	= filemap_splice_read,
-  	.splice_write	= iter_file_splice_write,
-  	.fallocate	= blkdev_fallocate,
--	.apply_whint	= blkdev_apply_whint,
-  };
-
-  static __init int blkdev_init(void)
-diff --git a/fs/fcntl.c b/fs/fcntl.c
-index 18407bf5bb9b..cfb52c3a4577 100644
---- a/fs/fcntl.c
-+++ b/fs/fcntl.c
-@@ -306,7 +306,6 @@ static long fcntl_get_rw_hint(struct file *file, 
-unsigned int cmd,
-  static long fcntl_set_rw_hint(struct file *file, unsigned int cmd,
-  			      unsigned long arg)
-  {
--	void (*apply_whint)(struct file *, enum rw_hint);
-  	struct inode *inode = file_inode(file);
-  	u64 __user *argp = (u64 __user *)arg;
-  	u64 hint;
-@@ -318,11 +317,19 @@ static long fcntl_set_rw_hint(struct file *file, 
-unsigned int cmd,
-
-  	inode_lock(inode);
-  	inode->i_write_hint = hint;
--	apply_whint = inode->i_fop->apply_whint;
--	if (apply_whint)
--		apply_whint(file, hint);
-  	inode_unlock(inode);
-
-+	/*
-+	 * file->f_mapping->host may differ from inode. As an example,
-+	 * blkdev_open() modifies file->f_mapping.
-+	 */
-+	if (file->f_mapping->host != inode) {
-+		inode = file->f_mapping->host;
-+		inode_lock(inode);
-+		inode->i_write_hint = hint;
-+		inode_unlock(inode);
-+	}
-+
-  	return 0;
-  }
-
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 293017ea2466..a08014b68d6e 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1944,7 +1944,6 @@ struct file_operations {
-  	int (*uring_cmd)(struct io_uring_cmd *ioucmd, unsigned int issue_flags);
-  	int (*uring_cmd_iopoll)(struct io_uring_cmd *, struct io_comp_batch *,
-  				unsigned int poll_flags);
--	void (*apply_whint)(struct file *, enum rw_hint hint);
-  } __randomize_layout;
-
-  /* Wrap a directory iterator that needs exclusive inode access */
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 7bc3fc4..da1a9c0 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2199,9 +2199,10 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
+ 	if (is_mcq_enabled(hba)) {
+ 		int utrd_size = sizeof(struct utp_transfer_req_desc);
+ 		struct utp_transfer_req_desc *src = lrbp->utr_descriptor_ptr;
+-		struct utp_transfer_req_desc *dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
++		struct utp_transfer_req_desc *dest;
+ 
+ 		spin_lock(&hwq->sq_lock);
++		dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
+ 		memcpy(dest, src, utrd_size);
+ 		ufshcd_inc_sq_tail(hwq);
+ 		spin_unlock(&hwq->sq_lock);
+-- 
+2.7.4
 
