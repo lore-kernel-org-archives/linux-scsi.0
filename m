@@ -1,188 +1,159 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com [209.85.208.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94AC02C85B;
-	Fri,  5 Jan 2024 10:57:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FDFA2DF9C
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jan 2024 14:17:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=dubeyko.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dubeyko.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="MKKjungj";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="4FVik9ep";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="MKKjungj";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="4FVik9ep"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id A8354220B7;
-	Fri,  5 Jan 2024 10:57:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1704452256; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7vXxhtyeckuqJFNr/JRv524z1JHaWgmFYD2pXQ0IUDA=;
-	b=MKKjungjIvGWCqbk0Vf4SBIt53LzaJID/tvg9uLrkg6ZvBfMm0/3NvfIX4H3zTrxSvMjK8
-	Mme8raMtSEGYLgrC8FnZJrGRsc72iI4GiAdmYWpBtkOaRZBPXvxaNjohitwW0mRpsIqetd
-	PNI533+jSBdMQ+x69VEGvnZDvktdkIQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1704452256;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7vXxhtyeckuqJFNr/JRv524z1JHaWgmFYD2pXQ0IUDA=;
-	b=4FVik9epYGd6eXdIFPsDiIvAoOAZNYgVhdckcBQ6otxliwcT7727hvm+6Cy7c2U3FUIAQs
-	bmkQznNaureYqQDw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1704452256; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7vXxhtyeckuqJFNr/JRv524z1JHaWgmFYD2pXQ0IUDA=;
-	b=MKKjungjIvGWCqbk0Vf4SBIt53LzaJID/tvg9uLrkg6ZvBfMm0/3NvfIX4H3zTrxSvMjK8
-	Mme8raMtSEGYLgrC8FnZJrGRsc72iI4GiAdmYWpBtkOaRZBPXvxaNjohitwW0mRpsIqetd
-	PNI533+jSBdMQ+x69VEGvnZDvktdkIQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1704452256;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=7vXxhtyeckuqJFNr/JRv524z1JHaWgmFYD2pXQ0IUDA=;
-	b=4FVik9epYGd6eXdIFPsDiIvAoOAZNYgVhdckcBQ6otxliwcT7727hvm+6Cy7c2U3FUIAQs
-	bmkQznNaureYqQDw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9A4A4136F5;
-	Fri,  5 Jan 2024 10:57:36 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id xfs2JaDgl2XhZwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Fri, 05 Jan 2024 10:57:36 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id 49C52A07EF; Fri,  5 Jan 2024 11:57:36 +0100 (CET)
-Date: Fri, 5 Jan 2024 11:57:36 +0100
-From: Jan Kara <jack@suse.cz>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: lsf-pc@lists.linux-foundation.org, linux-scsi@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-block@vger.kernel.org, linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Removing GFP_NOFS
-Message-ID: <20240105105736.24jep6q6cd7vsnmz@quack3>
-References: <ZZcgXI46AinlcBDP@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=dubeyko-com.20230601.gappssmtp.com header.i=@dubeyko-com.20230601.gappssmtp.com header.b="WeGoaF2y"
+Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2cd053d5683so19314381fa.2
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Jan 2024 06:17:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dubeyko-com.20230601.gappssmtp.com; s=20230601; t=1704464251; x=1705069051; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QVWWEZC0nTAcEXYkvWfohoACi+DyynjzoGETkqq6WTk=;
+        b=WeGoaF2yyXjLQZI12WAYVr7O2xBY+G217JVPFUTkYakWWGdyuK8FuPD0bemHTBSvAZ
+         GOGw8eHzHSG8Um1Nr0Jr9MQfPVlPZl+LSBhJZRdx/tGwEcNJB9Ca7EHuW3Jx4gJwxvGf
+         Cpcnhp+qSdyN8O8b97XW1YbAYtf3+nq/NO/zVjqUXX/hvWfORtrbshvct9AyQojA8qGH
+         4uMSPM8DCbXbpn5norNbVnRixFh5z3c6acGSm0Tv6fKI9ASpXFGvVDrkS6/A45EOlUv9
+         Jotei+FjExDPzmJM4WHlwFGt8EyFMcCQvBx3W5WRHyZR9LVvlhyw8TdGaL2qsMwqH+N6
+         pSfQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704464251; x=1705069051;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=QVWWEZC0nTAcEXYkvWfohoACi+DyynjzoGETkqq6WTk=;
+        b=UNtHp99VE4r2k6q9bnIVXHcKNk2HWVLk/7C5e8Oey7ApXLC8G2KRRkzfZMwx25SUyt
+         vMbDsTyq5fc3eCEsxMHYk1dxL7nSJT1WjDkgj13J2tjhEhBVfLaWAJmqYMcacXXhrFv8
+         +kM+oaHB8W4Kg9jlt+ffm/5sxn8wDebgYPHYmv+WQzE3Ct70OZfDsuoP07jgXShZLUzl
+         zfZI0fxBjelU60KiHty0UhxxYd21PvOM9b7RcVb/zA2Ki66WrVpbZECDgFEdKN4OnADo
+         MxpVuWTi6xOOErpQ9PA0atr0ZBvjzp7dOevnDIwkhwdsfkRyZfCV7GWAMImtTcz2bMIx
+         Ga2w==
+X-Gm-Message-State: AOJu0Yz+P77ARD25p5Zvq238Dhkxe4soM7fqxLgQ3IZcDTY+MIDowimH
+	1K8mUSXoKh0ef9P2bbaGRngmeAUFOL0gAg==
+X-Google-Smtp-Source: AGHT+IFUzqFY0DMUD4VxQFC0jdTQ+04LaFR5XJF6GZDdXO/19l3HLlkR+Dh2SihaaVqGfq3vwivRNQ==
+X-Received: by 2002:a05:651c:2213:b0:2cc:8bd4:b860 with SMTP id y19-20020a05651c221300b002cc8bd4b860mr1337702ljq.85.1704464251368;
+        Fri, 05 Jan 2024 06:17:31 -0800 (PST)
+Received: from smtpclient.apple ([2a00:1370:81a4:169c:3983:bdeb:5f19:e2e9])
+        by smtp.gmail.com with ESMTPSA id p8-20020a2ea4c8000000b002cca51c54c0sm337155ljm.130.2024.01.05.06.17.30
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 05 Jan 2024 06:17:30 -0800 (PST)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZZcgXI46AinlcBDP@casper.infradead.org>
-X-Spam-Level: 
-Authentication-Results: smtp-out1.suse.de;
-	none
-X-Spam-Level: 
-X-Spam-Score: -3.80
-X-Spamd-Result: default: False [-3.80 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 URIBL_BLOCKED(0.00)[suse.com:email];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 MIME_GOOD(-0.10)[text/plain];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 RCPT_COUNT_SEVEN(0.00)[8];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 RCVD_TLS_ALL(0.00)[];
-	 BAYES_HAM(-3.00)[100.00%]
-X-Spam-Flag: NO
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.4\))
+Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Removing GFP_NOFS
+From: Viacheslav Dubeyko <slava@dubeyko.com>
+In-Reply-To: <20240105102657.fwy7uxudqdoyogd5@quack3>
+Date: Fri, 5 Jan 2024 17:17:25 +0300
+Cc: Matthew Wilcox <willy@infradead.org>,
+ linux-scsi@vger.kernel.org,
+ linux-ide@vger.kernel.org,
+ linux-nvme@lists.infradead.org,
+ linux-block@vger.kernel.org,
+ linux-mm@kvack.org,
+ Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+ lsf-pc@lists.linux-foundation.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <FE208054-586E-4365-8F07-4DEBB807755C@dubeyko.com>
+References: <ZZcgXI46AinlcBDP@casper.infradead.org>
+ <2EEB5F76-1D68-4B17-82B6-4A459D91E4BF@dubeyko.com>
+ <20240105102657.fwy7uxudqdoyogd5@quack3>
+To: Jan Kara <jack@suse.cz>
+X-Mailer: Apple Mail (2.3696.120.41.1.4)
 
-Hello,
 
-On Thu 04-01-24 21:17:16, Matthew Wilcox wrote:
-> This is primarily a _FILESYSTEM_ track topic.  All the work has already
-> been done on the MM side; the FS people need to do their part.  It could
-> be a joint session, but I'm not sure there's much for the MM people
-> to say.
-> 
-> There are situations where we need to allocate memory, but cannot call
-> into the filesystem to free memory.  Generally this is because we're
-> holding a lock or we've started a transaction, and attempting to write
-> out dirty folios to reclaim memory would result in a deadlock.
-> 
-> The old way to solve this problem is to specify GFP_NOFS when allocating
-> memory.  This conveys little information about what is being protected
-> against, and so it is hard to know when it might be safe to remove.
-> It's also a reflex -- many filesystem authors use GFP_NOFS by default
-> even when they could use GFP_KERNEL because there's no risk of deadlock.
-> 
-> The new way is to use the scoped APIs -- memalloc_nofs_save() and
-> memalloc_nofs_restore().  These should be called when we start a
-> transaction or take a lock that would cause a GFP_KERNEL allocation to
-> deadlock.  Then just use GFP_KERNEL as normal.  The memory allocators
-> can see the nofs situation is in effect and will not call back into
-> the filesystem.
-> 
-> This results in better code within your filesystem as you don't need to
-> pass around gfp flags as much, and can lead to better performance from
-> the memory allocators as GFP_NOFS will not be used unnecessarily.
-> 
-> The memalloc_nofs APIs were introduced in May 2017, but we still have
-> over 1000 uses of GFP_NOFS in fs/ today (and 200 outside fs/, which is
-> really sad).  This session is for filesystem developers to talk about
-> what they need to do to fix up their own filesystem, or share stories
-> about how they made their filesystem better by adopting the new APIs.
 
-I agree this is a worthy goal and the scoped API helped us a lot in the
-ext4/jbd2 land. Still we have some legacy to deal with:
+> On Jan 5, 2024, at 1:26 PM, Jan Kara <jack@suse.cz> wrote:
+>=20
+> On Fri 05-01-24 13:13:11, Viacheslav Dubeyko wrote:
+>>=20
+>>=20
+>>> On Jan 5, 2024, at 12:17 AM, Matthew Wilcox <willy@infradead.org> =
+wrote:
+>>>=20
+>>> This is primarily a _FILESYSTEM_ track topic.  All the work has =
+already
+>>> been done on the MM side; the FS people need to do their part.  It =
+could
+>>> be a joint session, but I'm not sure there's much for the MM people
+>>> to say.
+>>>=20
+>>> There are situations where we need to allocate memory, but cannot =
+call
+>>> into the filesystem to free memory.  Generally this is because we're
+>>> holding a lock or we've started a transaction, and attempting to =
+write
+>>> out dirty folios to reclaim memory would result in a deadlock.
+>>>=20
+>>> The old way to solve this problem is to specify GFP_NOFS when =
+allocating
+>>> memory.  This conveys little information about what is being =
+protected
+>>> against, and so it is hard to know when it might be safe to remove.
+>>> It's also a reflex -- many filesystem authors use GFP_NOFS by =
+default
+>>> even when they could use GFP_KERNEL because there's no risk of =
+deadlock.
+>>>=20
+>>> The new way is to use the scoped APIs -- memalloc_nofs_save() and
+>>> memalloc_nofs_restore().  These should be called when we start a
+>>> transaction or take a lock that would cause a GFP_KERNEL allocation =
+to
+>>> deadlock.  Then just use GFP_KERNEL as normal.  The memory =
+allocators
+>>> can see the nofs situation is in effect and will not call back into
+>>> the filesystem.
+>>>=20
+>>> This results in better code within your filesystem as you don't need =
+to
+>>> pass around gfp flags as much, and can lead to better performance =
+from
+>>> the memory allocators as GFP_NOFS will not be used unnecessarily.
+>>>=20
+>>> The memalloc_nofs APIs were introduced in May 2017, but we still =
+have
+>>> over 1000 uses of GFP_NOFS in fs/ today (and 200 outside fs/, which =
+is
+>>> really sad).  This session is for filesystem developers to talk =
+about
+>>> what they need to do to fix up their own filesystem, or share =
+stories
+>>> about how they made their filesystem better by adopting the new =
+APIs.
+>>>=20
+>>=20
+>> Many file systems are still heavily using GFP_NOFS for kmalloc and
+>> kmem_cache_alloc family methods even if  memalloc_nofs_save() and
+>> memalloc_nofs_restore() pair is used too. But I can see that GFP_NOFS
+>> is used in radix_tree_preload(), bio_alloc(), posix_acl_clone(),
+>> sb_issue_zeroout, sb_issue_discard(), alloc_inode_sb(), =
+blkdev_issue_zeroout(),
+>> blkdev_issue_secure_erase(), blkdev_zone_mgmt(), etc.
+>=20
+> Given the nature of the scoped API, the transition has to start in the
+> leaves (i.e. filesystems itself) and only once all users of say
+> radix_tree_preload() are converted to the scoped API, we can remove =
+the
+> GFP_NOFS use from radix_tree_preload() itself. So Matthew is right =
+that we
+> need to start in the filesystems.
 
-~> git grep "NOFS" fs/jbd2/ | wc -l
-15
-~> git grep "NOFS" fs/ext4/ | wc -l
-71
+Makes sense to me. So, we need to summarize which file system uses
+the GFP_NOFS for which methods. Then, I assume, it will be possible
+to split the whole modification for particular phases of getting rid of
+GFP_NOFS in particular case (particular method). It looks like that
+we need to declare the whole modification plan and something like
+a schedule for such change. Would it work in such way? :)
 
-When you are asking about what would help filesystems with the conversion I
-actually have one wish. The most common case is that you need to annotate
-some lock that can be grabbed in the reclaim path and thus you must avoid
-GFP_FS allocations from under it. For example to deal with reclaim
-deadlocks in the writeback paths we had to introduce wrappers like:
+Thanks,
+Slava.=20
 
-static inline int ext4_writepages_down_read(struct super_block *sb)
-{
-        percpu_down_read(&EXT4_SB(sb)->s_writepages_rwsem);
-        return memalloc_nofs_save();
-}
-
-static inline void ext4_writepages_up_read(struct super_block *sb, int ctx)
-{
-        memalloc_nofs_restore(ctx);
-        percpu_up_read(&EXT4_SB(sb)->s_writepages_rwsem);
-}
-
-When you have to do it for 5 locks in your filesystem it gets a bit ugly
-and it would be nice to have some generic way to deal with this. We already
-have the spin_lock_irqsave() precedent we might follow (and I don't
-necessarily mean the calling convention which is a bit weird for today's
-standards)?
-
-Even more lovely would be if we could actually avoid passing around the
-returned reclaim state because sometimes the locks get acquired / released
-in different functions and passing the state around requires quite some
-changes and gets ugly. That would mean we'd have to have
-fs-reclaim-forbidden counter instead of just a flag in task_struct. OTOH
-then we could just mark the lock (mutex / rwsem / whatever) as
-fs-reclaim-unsafe during init and the rest would just magically happen.
-That would be super-easy to use.
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
