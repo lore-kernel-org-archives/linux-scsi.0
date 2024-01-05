@@ -1,388 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54C552D600
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Jan 2024 23:49:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCBFB1FBE
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jan 2024 02:11:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JnTUAbTu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CD09C433C7;
-	Thu,  4 Jan 2024 23:49:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704412186;
-	bh=Aeg8Kyi0LEyQP7r5EGQNWCEWehjuO4pmL7LY5kjWBbc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=JnTUAbTuqin/s+/tFy9JCP4tOTC6HwlhkwyRL1J9zM/dQbNaELtmAbHnjKHung3to
-	 XLfZYyq/HlS4Q0TqHrg/EWfan3ZlsseufCYrgbQHkcXlVw1iHeSD9EGEDk+QDakiTj
-	 YQGCfIoM+mfJrOoIuWMFxb21EVGHXiRvbTkPNemRdVH6tHZHAqRbqOIwgfx0ArsbWa
-	 SMqeI3p2Dnu1lN4jDqnJql+tBLU8GuiK3qtlsoAFXD69pKyH9ubHz39KiIF78YhuCm
-	 w+IOfVYATE3+jKv0f6Avu8aIAYdKY4hN0GiyxikcA+ty+jaX/1+Mcv7xnZLQpknxlQ
-	 vVkJbXBh+vKoA==
-Date: Thu, 4 Jan 2024 17:49:45 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-	rajsekhar.chundru@broadcom.com, sathya.prakash@broadcom.com,
-	sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
-	prayas.patel@broadcom.com
-Subject: Re: [PATCH v2 2/6] mpi3mr: Support PCIe Error Recovery callback
- handlers
-Message-ID: <20240104234945.GA1831894@bhelgaas>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="NjDEfq9M"
+Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20240105021132epoutp03d7a41ef2b50928e3b02b7383d0caaae7~nUZbMTF-l2950229502epoutp03O
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jan 2024 02:11:32 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20240105021132epoutp03d7a41ef2b50928e3b02b7383d0caaae7~nUZbMTF-l2950229502epoutp03O
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1704420692;
+	bh=BiF0R81e3X0vSBrQ1qwZB0Cd3lb8UdqUlPYMWGu5AtI=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=NjDEfq9MEEkWfUYjY1nZR/L2mVnFAWy8rBx/qU2EwXTAKN79fVHTEktd/HtgIOn4H
+	 cCJZH5/FtWKg7a1J2iXV2QICTscOADhY2wz69KgTC8eEnzFXpEr9SwFZAlP+P+iLPK
+	 LMes/PZII0AktIA1xnWmYiZ4NsMz7lJBsljA7YVA=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+	epcas1p1.samsung.com (KnoxPortal) with ESMTP id
+	20240105021131epcas1p1997ee50d540a3a5c44182485c7ce0cb0~nUZaq5HcL0052300523epcas1p1Q;
+	Fri,  5 Jan 2024 02:11:31 +0000 (GMT)
+Received: from epsmgec1p1.samsung.com (unknown [182.195.36.227]) by
+	epsnrtp1.localdomain (Postfix) with ESMTP id 4T5n4z329Yz4x9Q8; Fri,  5 Jan
+	2024 02:11:31 +0000 (GMT)
+Received: from epcas1p4.samsung.com ( [182.195.41.48]) by
+	epsmgec1p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	97.1D.08572.35567956; Fri,  5 Jan 2024 11:11:31 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20240105021130epcas1p2b77331ab0fc865cc3763765b0b5ecadf~nUZaEkcic1601016010epcas1p2k;
+	Fri,  5 Jan 2024 02:11:30 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20240105021130epsmtrp27df9163631807e0f2a04564b955c49d9~nUZaB_7Tc2541325413epsmtrp2Z;
+	Fri,  5 Jan 2024 02:11:30 +0000 (GMT)
+X-AuditID: b6c32a33-55c16a800000217c-db-65976553684b
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	DD.5C.18939.25567956; Fri,  5 Jan 2024 11:11:30 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.253.100.232]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20240105021130epsmtip19351d379f94980019eb6c6fe68db3111~nUZZxf8Kh2136321363epsmtip1J;
+	Fri,  5 Jan 2024 02:11:30 +0000 (GMT)
+From: Chanwoo Lee <cw9316.lee@samsung.com>
+To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+	jejb@linux.ibm.com, martin.petersen@oracle.com, stanley.chu@mediatek.com,
+	quic_cang@quicinc.com, mani@kernel.org, quic_asutoshd@quicinc.com,
+	powen.kao@mediatek.com, quic_nguyenb@quicinc.com, cw9316.lee@samsung.com,
+	yang.lee@linux.alibaba.com, peter.wang@mediatek.com, athierry@redhat.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: grant.jung@samsung.com, jt77.jang@samsung.com, dh0421.hwang@samsung.com,
+	sh043.lee@samsung.com
+Subject: [PATCH 0/2] ufs:mcq:Code cleanups 
+Date: Fri,  5 Jan 2024 11:10:39 +0900
+Message-Id: <20240105021041.20400-1-cw9316.lee@samsung.com>
+X-Mailer: git-send-email 2.29.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231214205900.270488-3-ranjan.kumar@broadcom.com>
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Te0xTZxTP13t7e0Gr14LsG2wIHUboBrS8/MrARzTL3dDJQkzmEgc39AYY
+	pW16i7plARRhHTJW50BljFeCyzCOQXhUlNohUiDItiDyqEuHSpjUIYWaCIKuteD873d+5/zO
+	Ob/vQWKiUcKfzFLpWK2KUYoJb7z9epg0PIU9y0rtFb7o7+p2Ak22TvHRg8URAlXMLWLo3EAx
+	H5lu9wvQ0kqTANWPtfOQcXpQgIY7qwh0atRIIPNcI0A/WZ7xUNv8Uz7696/nOKrT/4ij727/
+	SqDyfywCdGLZhKOGtnGAZo9fB7s208O3kuiWxq8J+vKknDbUmwF9sv8aTjumJnD69NU8+pFp
+	hKDLWhsBvdASSH9lPsVLXvdJdkImyyhYbRCrSlcrslQZieKklNQ9qbFxUlm4TI62i4NUTA6b
+	KN67Lzn8vSyly6c46AijzHVRyQzHiSN3JGjVuTo2KFPN6RLFrEah1MRpIjgmh8tVZUSoWF28
+	TCqNinUVpmVn3rlQxteUYsf0xklQAK7xSoAXCakYeMVsAyXAmxRRRgAHZ4YITzAP4JTzIngZ
+	1F35A1uTDFcPriYuA1hUc2NV4gRwcqHSlSFJgpJAa2+Sm/elfsZg+cCMwK3GKAWcKZ3F3diH
+	ehvO2nr5boxTW6F9sP7FUkLqXWgydq0uuAUu20oxD78J9p+/j3v6bIGFbT9g7gGQGiOhratZ
+	4BHshX11i7gH+8AZS+sq7w8XZrsIj6DQ5eehZVVtANDpsBKeqp2wsKiQcFvAqDDY1BnpmbYB
+	zj4u5btpSAmhvljkqQ6BVSVDxFp/x9g9vgfT8G7tInBjEXUYPnxSQhhAYOUrHipf8VD5/7Ba
+	gDUCP1bD5WSw6TKN7OVdpqtzWsCLFy6JNoLhmmcR3YBHgm4ASUzsK2z65QwrEiqYz79gtepU
+	ba6S5bpBrOtUT2P+m9PVri+i0qXKYuTSmLioGBQtj44TvyYcvHWEFVEZjI7NZlkNq13T8Ugv
+	/wLeNq7iHXk79lnAxjLjBkxy95v3J4Q1+euVaRdDN/ZGFQXkjTuOHihYCpJzwbxLK/A8/9K2
+	MOvO+Y9OxIf6hvDS33BOk8Gl+eUan11zOR+atfGBxZse+e6WVESlhabYG2TrZJKOJ+uJA1Xd
+	YYf2W42RA53Tz38PWap5PTqzdTI2bjuTdPP7YVBtyP/N+WZP574bdb0jI6JjH+srIx7v6dH4
+	jaozAnzO3DmY33fhXICp+ZDV+63k+10dfxqWCvKKbCKH5MuleKvpU6WFtKvNZ4dsJw/29gRf
+	3f0UJDR/cO/ocfsDp98OccPWKP2KPdRRa9G371d0yPGJOq/xw9JvbwYvx/eJcS6TkUkwLcf8
+	B3SvXw5qBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupikeLIzCtJLcpLzFFi42LZdlhJTjcodXqqQfNOfYsH87axWTzc8pTV
+	4uXPq2wW0z78ZLaYcaqN1WLftZPsFr/+rme3WHRjG5PFjudn2C0u75rDZtF9fQebxYEPqxgt
+	lh//x2Sx9dNvVou3d/+zWCzsmMtiMenaBjaLqS+Os1s0/dnHYrF0601Gi3eNhxkdRD0uX/H2
+	2LSqk81j50NLjwmLDjB6tJzcz+Lx8ektFo+Je+o83u+7yubRt2UVo8fnTXIe7Qe6mQK4o7hs
+	UlJzMstSi/TtErgy7izrYy3oYa7o2PGQsYFxP1MXIyeHhICJxOV5Zxi7GLk4hAS2M0q0/fnB
+	BpGQkti9/zyQzQFkC0scPlwMUfOJUeLCms3MIHE2AS2J28e8QcpFBPYzS5xuiwWxmQUyJL59
+	PAE2X1hAW+Ld/WOsIDaLgKrE6zOLwOK8AtYS+3bshbpBXuLP/R5miLigxMmZT1gg5shLNG+d
+	zTyBkW8WktQsJKkFjEyrGEVTC4pz03OTCwz1ihNzi0vz0vWS83M3MYKjSytoB+Oy9X/1DjEy
+	cTAeYpTgYFYS4V2/bnKqEG9KYmVValF+fFFpTmrxIUZpDhYlcV7lnM4UIYH0xJLU7NTUgtQi
+	mCwTB6dUA5POok1757AmtHxNn5Uq5uC9xMlX2q+Wd29vx721RzUba69ufvdFZjqnkliRI8fl
+	i7l2J2/+jc5ze/R65vlXL4KuCATt4FnVWPDviED9xmNPysosfTafiivc4p7ce/D+9+D4ztlr
+	PtkuLO6cnp4tsmYjV/ZUCy4ul5nnO04kS22Wvr26c/XWfcJC6iq7ip35ZhiZN508lJ+Z1NGh
+	Pb918fEHilfv79nZ1xTX7t34Jr03O91v3Wubq7yFvmoZz5jzJUpWfz5++YvTqdcFpyYd/lj7
+	7TqjUSHzs7VxWRdfS9bK6sS79C+cu3D5hNPtXR/7FF7mPFb4MJV5Zar+rK0ci6w7npx8dmWj
+	fXvG7ca7FzYrsRRnJBpqMRcVJwIAgh3lKR0DAAA=
+X-CMS-MailID: 20240105021130epcas1p2b77331ab0fc865cc3763765b0b5ecadf
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240105021130epcas1p2b77331ab0fc865cc3763765b0b5ecadf
+References: <CGME20240105021130epcas1p2b77331ab0fc865cc3763765b0b5ecadf@epcas1p2.samsung.com>
 
-On Fri, Dec 15, 2023 at 02:28:56AM +0530, Ranjan Kumar wrote:
-> The driver has been upgraded to include support for the
-> PCIe error recovery callback handler which is crucial for
-> the recovery of the controllers. This feature is
-> necessary for addressing the errors reported by
-> the PCIe AER (Advanced Error Reporting) mechanism.
+From: ChanWoo Lee <cw9316.lee@samsung.com>
 
-I think PCI error handling is not strictly limited to PCIe AER because
-the powerpc EEH framework also uses the pci_error_handlers callbacks,
-so I would refer to this as just "PCI error recovery" and maybe omit
-the AER part.
+This series has code some cleanups to the UFS mcq code.
+No functional change.
 
-Commit log and comments appear to be wrapped to 60 or 70 columns,
-which is unnecessarily short.  I'd recommend 75 columns for commit
-log, maybe 78 for comments.
+ChanWoo Lee (2):
+  ufs:mcq:Use ufshcd_mcq_req_to_hwq() to simplify updating hwq.
+  ufs:mcq:Remove unused parameters
 
-> Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
-> Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-> ---
->  drivers/scsi/mpi3mr/mpi3mr.h    |   5 +
->  drivers/scsi/mpi3mr/mpi3mr_os.c | 197 ++++++++++++++++++++++++++++++++
->  2 files changed, 202 insertions(+)
-> 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-> index 3de1ee05c44e..25e6e3a09468 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr.h
-> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-> @@ -23,6 +23,7 @@
->  #include <linux/miscdevice.h>
->  #include <linux/module.h>
->  #include <linux/pci.h>
-> +#include <linux/aer.h>
->  #include <linux/poll.h>
->  #include <linux/sched.h>
->  #include <linux/slab.h>
-> @@ -1055,6 +1056,8 @@ struct scmd_priv {
->   * @ioctl_chain_sge: DMA buffer descriptor for IOCTL chain
->   * @ioctl_resp_sge: DMA buffer descriptor for Mgmt cmd response
->   * @ioctl_sges_allocated: Flag for IOCTL SGEs allocated or not
-> + * @pcie_err_recovery: PCIe error recovery in progress
-> + * @block_on_pcie_err: Block IO during PCI error recovery
+ drivers/ufs/core/ufs-mcq.c | 6 ++----
+ drivers/ufs/core/ufshcd.c  | 5 +----
+ 2 files changed, 3 insertions(+), 8 deletions(-)
 
-s/PCIe error recovery/PCI error recovery/ so they match.
-
->  struct mpi3mr_ioc {
->  	struct list_head list;
-> @@ -1246,6 +1249,8 @@ struct mpi3mr_ioc {
->  	struct dma_memory_desc ioctl_chain_sge;
->  	struct dma_memory_desc ioctl_resp_sge;
->  	bool ioctl_sges_allocated;
-> +	bool pcie_err_recovery;
-> +	bool block_on_pcie_err;
->  };
->  
->  /**
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> index 76ba31a9517d..dea47ef53abb 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -5472,6 +5472,195 @@ mpi3mr_resume(struct device *dev)
->  	return 0;
->  }
->  
-> +/**
-> + * mpi3mr_pcierr_detected - PCI error detected callback
-> + * @pdev: PCI device instance
-> + * @state: channel state
-> + *
-> + * This function is called by the PCI error recovery driver and
-> + * based on the state passed the driver decides what actions to
-> + * be recommended back to PCI driver.
-> + *
-> + * For all of the states if there is no valid mrioc or scsi host
-> + * references in the pci device then this function will retyrn
-> + * the resul as disconnect.
-
-s/pci device/PCI device/ to match other uses
-s/retyrn/return/
-s/resul/result/
-
-> + * For normal state, this function will return the result as can
-> + * recover.
-> + *
-> + * For frozen state, this function will block for any pennding
-
-s/pennding/pending/
-
-> + * controller initialization or re-initialization to complete,
-> + * stop any new interactions with the controller and return
-> + * status as reset required.
-> + *
-> + * For permanent failure state, this function will mark the
-> + * controller as unrecoverable and return status as disconnect.
-> + *
-> + * Returns: PCI_ERS_RESULT_NEED_RESET or CAN_RECOVER or
-> + * DISCONNECT based on the controller state.
-> + */
-> +static pci_ers_result_t
-> +mpi3mr_pcierr_detected(struct pci_dev *pdev, pci_channel_state_t state)
-> +{
-> +	struct Scsi_Host *shost;
-> +	struct mpi3mr_ioc *mrioc;
-> +	pci_ers_result_t ret_val = PCI_ERS_RESULT_DISCONNECT;
-> +
-> +	dev_info(&pdev->dev, "%s: callback invoked state(%d)\n", __func__,
-> +	    state);
-> +
-> +	if (mpi3mr_get_shost_and_mrioc(pdev, &shost, &mrioc)) {
-> +		dev_err(&pdev->dev, "device not available\n");
-> +		return ret_val;
-
-Since you already know the return value here, use it explicitly:
-
-  return PCI_ERS_RESULT_DISCONNECT;
-
-> +	}
-> +
-> +	switch (state) {
-> +	case pci_channel_io_normal:
-> +		ret_val = PCI_ERS_RESULT_CAN_RECOVER;
-
-Personally, I would just return directly from each case instead of
-assigning "ret_val".
-
-> +		break;
-> +	case pci_channel_io_frozen:
-> +		mrioc->pcie_err_recovery = true;
-> +		mrioc->block_on_pcie_err = true;
-> +		while (mrioc->reset_in_progress || mrioc->is_driver_loading)
-> +			ssleep(1);
-
-This looks like a potential hang.  What guarantees that one of these
-is eventually set?
-
-> +		scsi_block_requests(mrioc->shost);
-> +		mpi3mr_stop_watchdog(mrioc);
-> +		mpi3mr_cleanup_resources(mrioc);
-
-Why are mpi3mr_cleanup_resources() and mpi3mr_setup_resources()
-needed?
-
-> +		mrioc->pdev = NULL;
-
-Seems weird to clear mrioc->pdev and then restore it later.  What does
-this accomplish?
-
-> +		ret_val = PCI_ERS_RESULT_NEED_RESET;
-> +		break;
-> +	case pci_channel_io_perm_failure:
-> +		mrioc->pcie_err_recovery = true;
-> +		mrioc->block_on_pcie_err = true;
-> +		mrioc->unrecoverable = 1;
-> +		mpi3mr_stop_watchdog(mrioc);
-> +		mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
-> +		ret_val = PCI_ERS_RESULT_DISCONNECT;
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +	return ret_val;
-
-Then this could become "return PCI_ERS_RESULT_DISCONNECT;" and you
-don't need "ret_val" at all.
-
-> +}
-> +
-> +/**
-> + * mpi3mr_pcierr_slot_reset_done - Post slot reset callback
-> + * @pdev: PCI device instance
-> + *
-> + * This function is called by the PCI error recovery driver
-> + * after a slot or link reset issued by it for the recovery, the
-> + * driver is expected to bring back the controller and
-> + * initialize it.
-> + *
-> + * This function restores pci state and reinitializes controller
-> + * resoruces and the controller, this blocks for any pending
-> + * reset to complete.
-
-s/pci state/PCI state/ to match other uses
-s/resoruces/resources/
-
-> + * Returns: PCI_ERS_RESULT_DISCONNECT on failure or
-> + * PCI_ERS_RESULT_RECOVERED
-> + */
-> +static pci_ers_result_t mpi3mr_pcierr_slot_reset_done(struct pci_dev *pdev)
-> +{
-> +	struct Scsi_Host *shost;
-> +	struct mpi3mr_ioc *mrioc;
-> +
-> +
-
-Spurious blank line.
-
-> +	dev_info(&pdev->dev, "%s: callback invoked\n", __func__);
-> +
-> +	if (mpi3mr_get_shost_and_mrioc(pdev, &shost, &mrioc)) {
-> +		dev_err(&pdev->dev, "device not available\n");
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +	}
-> +
-> +	while (mrioc->reset_in_progress)
-> +		ssleep(1);
-
-Another potential hang?
-
-> +	mrioc->pdev = pdev;
-> +	pci_restore_state(pdev);
-> +
-> +	if (mpi3mr_setup_resources(mrioc)) {
-> +		ioc_err(mrioc, "setup resources failed\n");
-> +		goto out_failed;
-> +	}
-> +	mrioc->unrecoverable = 0;
-> +	mrioc->pcie_err_recovery = false;
-> +
-> +	if (mpi3mr_soft_reset_handler(mrioc, MPI3MR_RESET_FROM_FIRMWARE, 0))
-> +		goto out_failed;
-> +
-> +	return PCI_ERS_RESULT_RECOVERED;
-> +
-> +out_failed:
-> +	mrioc->unrecoverable = 1;
-> +	mrioc->block_on_pcie_err = false;
-> +	scsi_unblock_requests(shost);
-> +	mpi3mr_start_watchdog(mrioc);
-
-I'm not a SCSI person, but it seems odd to unblock requests and start
-the watchdog here.  Isn't the device just dead at this point?
-
-> +	return PCI_ERS_RESULT_DISCONNECT;
-> +}
-> +
-> +/**
-> + * mpi3mr_pcierr_resume - PCI error recovery resume
-> + * callback
-> + * @pdev: PCI device instance
-> + *
-> + * This function enables all I/O and IOCTLs post reset issued as
-> + * part of the PCI advacned error reporting and handling
-
-s/advacned/advanced/ (actually, I'd just omit "advanced", since this
-covers more than just AER in the powerpc case).
-
-> + * Return: Nothing.
-> + */
-> +static void mpi3mr_pcierr_resume(struct pci_dev *pdev)
-> +{
-> +	struct Scsi_Host *shost;
-> +	struct mpi3mr_ioc *mrioc;
-> +
-> +	dev_info(&pdev->dev, "%s: callback invoked\n", __func__);
-> +
-> +	if (mpi3mr_get_shost_and_mrioc(pdev, &shost, &mrioc)) {
-> +		dev_err(&pdev->dev, "device not available\n");
-> +		return;
-> +	}
-> +
-> +	pci_aer_clear_nonfatal_status(pdev);
-> +
-> +	if (mrioc->block_on_pcie_err) {
-> +		mrioc->block_on_pcie_err = false;
-> +		scsi_unblock_requests(shost);
-> +		mpi3mr_start_watchdog(mrioc);
-> +	}
-> +
-> +}
-> +
-> +/**
-> + * mpi3mr_pcierr_mmio_enabled - PCI error recovery callback
-> + * @pdev: PCI device instance
-> + *
-> + * This is called only if _pcierr_error_detected returns
-> + * PCI_ERS_RESULT_CAN_RECOVER.
-
-s/_pcierr_error_detected/mpi3mr_pcierr_detected()/ ?  (Or possible
-different name as suggested below)
-
-> + * Return: PCI_ERS_RESULT_DISCONNECT when the controller is
-> + * unrecoverable or when the shost/mnrioc reference cannot be
-> + * found, else return PCI_ERS_RESULT_RECOVERED
-
-s/mnrioc/mrioc/
-
-> +static pci_ers_result_t mpi3mr_pcierr_mmio_enabled(struct pci_dev *pdev)
-> +{
-> +
-> +	struct Scsi_Host *shost;
-> +	struct mpi3mr_ioc *mrioc;
-> +/*
-> + *
-> + */
-
-Spurious comment?
-
-> +	dev_info(&pdev->dev, "%s: callback invoked\n", __func__);
-> +
-> +	if (mpi3mr_get_shost_and_mrioc(pdev, &shost, &mrioc)) {
-> +		dev_err(&pdev->dev, "device not available\n");
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +	}
-> +	if (mrioc->unrecoverable)
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +
-> +	return PCI_ERS_RESULT_RECOVERED;
-> +}
-> +
->  static const struct pci_device_id mpi3mr_pci_id_table[] = {
->  	{
->  		PCI_DEVICE_SUB(MPI3_MFGPAGE_VENDORID_BROADCOM,
-> @@ -5489,6 +5678,13 @@ static const struct pci_device_id mpi3mr_pci_id_table[] = {
->  };
->  MODULE_DEVICE_TABLE(pci, mpi3mr_pci_id_table);
->  
-> +static struct pci_error_handlers mpi3mr_err_handler = {
-> +	.error_detected = mpi3mr_pcierr_detected,
-> +	.mmio_enabled = mpi3mr_pcierr_mmio_enabled,
-> +	.slot_reset = mpi3mr_pcierr_slot_reset_done,
-
-It would be helpful if you used "mpi3mr_pcierr_slot_reset()" to match
-the function pointer name.  This would make it much easier to compare
-.slot_reset() implementations across drivers.
-
-I agree that "slot_reset_done()" is more descriptive and would
-probably have been a better name for the function pointer, but that
-ship has sailed.
-
-I'd suggest "mpi3mr_pcierr_error_detected()" for the same reason.  Or
-maybe remove "pcierr_" from all of them if it feels too redundant.
-
-> +	.resume = mpi3mr_pcierr_resume,
-> +};
-> +
->  static SIMPLE_DEV_PM_OPS(mpi3mr_pm_ops, mpi3mr_suspend, mpi3mr_resume);
->  
->  static struct pci_driver mpi3mr_pci_driver = {
-> @@ -5497,6 +5693,7 @@ static struct pci_driver mpi3mr_pci_driver = {
->  	.probe = mpi3mr_probe,
->  	.remove = mpi3mr_remove,
->  	.shutdown = mpi3mr_shutdown,
-> +	.err_handler = &mpi3mr_err_handler,
->  	.driver.pm = &mpi3mr_pm_ops,
->  };
->  
-> -- 
-> 2.31.1
-> 
-
+-- 
+2.29.0
 
