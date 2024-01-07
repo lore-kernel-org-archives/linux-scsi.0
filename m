@@ -1,76 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25B9312B8D
-	for <linux-scsi@vger.kernel.org>; Sun,  7 Jan 2024 10:48:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AA33urKP"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 92941C433AB
-	for <linux-scsi@vger.kernel.org>; Sun,  7 Jan 2024 10:48:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704624489;
-	bh=nU/zZuzq/S8kw1V8Q1LLf2p1n6Gj2Tq0szjNN78WVCU=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=AA33urKPgla2KC5b87ekVWsat0ZrTHwi7PZM8cg+cYFjLJQQwIgTRKrkW/p7AGSMC
-	 sukYKaTHFLSjvG0eWpIugBjN8ggWDQaEfZvr6cn5YVVZetS4ceQDnzW9yg3f4jkvs3
-	 Zkz5u7NQ3Pu/k5x4SbqGuPMtEsLYlTWfDvtkhbeO8zT9K26QMueWXbbGvvjrP4ynqf
-	 TnKEsfjoFaHFUwX4Hi6XugBcIBLMbZDCMj35+2lrhABWpgIyuS2RzzmYK5gquMF2Mb
-	 QBrJIn/hUDmG5X2aVVdLTKrXaGlIPdq6UhVl7zB+umn8dnNSGbVSL7JneMS/VF/Ktk
-	 1FI608pRYiFag==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 83874C53BCD; Sun,  7 Jan 2024 10:48:09 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Sun, 07 Jan 2024 10:48:08 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: carnil@debian.org
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-2Tg9ptBnD7@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E43313AC0;
+	Sun,  7 Jan 2024 16:02:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-5ced19f15c3so780481a12.0;
+        Sun, 07 Jan 2024 08:02:42 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704643362; x=1705248162;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ubF9iYuqrA4cDqdTdDOmYrnWqJz+YZED4CQ5ndLEUD8=;
+        b=MOQUE2lNdLM8mDu8hpTSWNyggozI5KirHnszqP3Md8Y+dIQdnNSL26Qw159AvgT9t3
+         nOf8bhKQZsXhOJ645y/YLtt1hofrOvwMnUTxMVCZZD/Cn9nQEzIfoNGGAfOlajKxS2db
+         tugyAkHQ/jzt1XX8hCTSB0whO+kbqwMfuXmAAiE+pHmJEd7i2vQGTnyMb9sDFKzOKdKb
+         UiOhCKC/qaPIbOAp1XF4Wv1Pc8+zWkvZ47IOoxVgrskS4/Kheup8pzrd/kXnfR2QVsv7
+         XcaOKqdgqlplwr1qvxvl+VS6/31NqlJFkSjZxzk3EHUol3+7sw6Ig5R6O22vUtpdLlJP
+         HZ6A==
+X-Gm-Message-State: AOJu0YwH5d82VALnN+N06NDoMKUrWv/q935zNQgYmdqAn4UzPZx2dL/J
+	8QOlB1e1ho6OMAUmlhsgaHc=
+X-Google-Smtp-Source: AGHT+IFnTcEJvXpZlDMsTDLddJNVooMEU9hBSNrdF520U5mapJb2euinHG76hUXlfsM6X7ynbITh9Q==
+X-Received: by 2002:a17:902:9a02:b0:1d3:f43a:a2e2 with SMTP id v2-20020a1709029a0200b001d3f43aa2e2mr2599032plp.117.1704643361510;
+        Sun, 07 Jan 2024 08:02:41 -0800 (PST)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id w22-20020a1709029a9600b001d35223d0besm4527054plp.251.2024.01.07.08.02.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 07 Jan 2024 08:02:40 -0800 (PST)
+Message-ID: <65dead0b-34a5-4e29-83ec-c26e556f262a@acm.org>
+Date: Sun, 7 Jan 2024 08:02:37 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] ufs: get target SQ entry within critical section
+Content-Language: en-US
+To: Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+ adrian.hunter@intel.com, h10.kim@samsung.com, hy50.seo@samsung.com,
+ sh425.lee@samsung.com, kwangwon.min@samsung.com, junwoo80.lee@samsung.com,
+ wkon.kim@samsung.com
+References: <CGME20240104012454epcas2p36b58220b4c89ee72f1e095b34d329be2@epcas2p3.samsung.com>
+ <1704331491-115325-1-git-send-email-kwmad.kim@samsung.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1704331491-115325-1-git-send-email-kwmad.kim@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
+On 1/3/24 17:24, Kiwoong Kim wrote:
+> In IO centric scenarios, especially during a period that
+> many IO requests are submitted to a same HW queue at the same
+> time, it's found that one reqeust overwrote a SQ entry
+> that had been already occupied by another request submitted
+> in the past. And it eventually led to command timed-out
+> because one of two requests were overwritten, which could not
+> be completed.
+> 
+> [   74.995185][  T176] exynos-ufs 17100000.ufs: ufshcd_abort: Device abort task at tag 30
+> 
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 7bc3fc4..da1a9c0 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2199,9 +2199,10 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
+>   	if (is_mcq_enabled(hba)) {
+>   		int utrd_size = sizeof(struct utp_transfer_req_desc);
+>   		struct utp_transfer_req_desc *src = lrbp->utr_descriptor_ptr;
+> -		struct utp_transfer_req_desc *dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
+> +		struct utp_transfer_req_desc *dest;
+>   
+>   		spin_lock(&hwq->sq_lock);
+> +		dest = hwq->sqe_base_addr + hwq->sq_tail_slot;
+>   		memcpy(dest, src, utrd_size);
+>   		ufshcd_inc_sq_tail(hwq);
+>   		spin_unlock(&hwq->sq_lock);
 
---- Comment #58 from Salvatore Bonaccorso (carnil@debian.org) ---
-(In reply to The Linux kernel's regression tracker (Thorsten Leemhuis) from
-comment #57)
-> (In reply to Salvatore Bonaccorso from comment #56)
-> > #regzbot fixed-by: [=E2=80=A6]
->=20
-> Thx, but this confused regzbot a bit, as it tracks the issue as a mainline
-> commit only this is needed:
-> [...]
+Is this perhaps a duplicate of patch "scsi: ufs: core: Let the sq_lock 
+protect sq_tail_slot access"? See also
+https://lore.kernel.org/linux-scsi/1702913550-20631-1-git-send-email-quic_cang@quicinc.com/#t
 
-apologies for that, this was not my intention (and cause more work)! I thou=
-gh
-we can track as well the regression fixes in the stable series with it.
+Thanks,
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Bart.
