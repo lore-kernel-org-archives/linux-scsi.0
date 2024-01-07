@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91CBDE570
-	for <linux-scsi@vger.kernel.org>; Sat,  6 Jan 2024 19:38:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD0E12B84
+	for <linux-scsi@vger.kernel.org>; Sun,  7 Jan 2024 10:11:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l/Bc1ud0"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 0846BC433A9
-	for <linux-scsi@vger.kernel.org>; Sat,  6 Jan 2024 19:38:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q/cgkN6V"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 4C1F1C433AD
+	for <linux-scsi@vger.kernel.org>; Sun,  7 Jan 2024 10:11:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704569914;
-	bh=hhfuyT7vASDI4V2KILIYSEyNh5oN9OCJV3354iI54NU=;
+	s=k20201202; t=1704622303;
+	bh=H9KXHTo7bFBHFjFmWVtjAexXYZsF1M8v/1tm9CZ6tXI=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=l/Bc1ud0iy912zaC8OY6zLFk/INWWZvtVA57RtjqkxGkiv9lGI9YZ1kCzqqcc+QQ4
-	 nPMYQu4jd9l/mm+KDJXA+MQq02QJXAC575vkXJMzYQQymfqyXLL1yzW9z1H/SdN9oU
-	 3nS5SUSCiuiFKq9v5IFgzBTStcORpLtePK4+SBG9LNJu7JVyCRwHH/L2fEv8hV22y2
-	 zM2FR+MWVyM/527odtl50CxOM2W7A87WMBEe7zHNAa3t3MHY+fNCW+IimpoAQJIEWt
-	 6qZ0WlYxn2x7x4Q80iQmuAmkvkXiEDoz4SNxLe6uiI8Yx2/85uyfOle/VxN3Yaj9U6
-	 nV//V6toHXDkg==
+	b=q/cgkN6VipL5da93iFWz7+4qCAerMbXjoitivkC8QQ9AvOHxs0JkidgpEAQ6INSNC
+	 GVutWNnkNritbHyXbfiS56NN4fVqhgaRjZckaJW9fRapTDYBxK195lFvk1hpUBr97E
+	 4+L1W4eBp+lUaPD9Y9O9gs6ygG3JIBw4KvfBMPlDIEttqMm0fhrkhu30rrbXmMS6e+
+	 MnkZPaLvAzdosA3axipBqifnIC0//3Z3mWp4Eb6VdvcBqHUOMuhOvtUSLuKnnNq08r
+	 Id5gQMDb3KU5kVPHd4sBllc3eIo95k/zvMccuxEu37UlEY9GEygGITj8wykvpniFrP
+	 3SOFxKGMU4Rww==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id ED26DC53BD0; Sat,  6 Jan 2024 19:38:33 +0000 (UTC)
+	id 3987EC53BD2; Sun,  7 Jan 2024 10:11:43 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-scsi@vger.kernel.org
 Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
  request after update to linux 6.4.0
-Date: Sat, 06 Jan 2024 19:38:33 +0000
+Date: Sun, 07 Jan 2024 10:11:42 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
@@ -32,14 +32,14 @@ X-Bugzilla-Component: AACRAID
 X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: high
-X-Bugzilla-Who: carnil@debian.org
+X-Bugzilla-Who: regressions@leemhuis.info
 X-Bugzilla-Status: NEW
 X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-217599-11613-QiHCN7Mxnd@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217599-11613-WzL1PqCWUA@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
 References: <bug-217599-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -55,16 +55,15 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-Salvatore Bonaccorso (carnil@debian.org) changed:
+--- Comment #57 from The Linux kernel's regression tracker (Thorsten Leemhu=
+is) (regressions@leemhuis.info) ---
+(In reply to Salvatore Bonaccorso from comment #56)
+> #regzbot fixed-by: [=E2=80=A6]
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |carnil@debian.org
+Thx, but this confused regzbot a bit, as it tracks the issue as a mainline
+commit only this is needed:
 
---- Comment #56 from Salvatore Bonaccorso (carnil@debian.org) ---
 #regzbot fixed-by: c5becf57dd56
-#regzbot fixed-by: 71758d4d87ef
-#regzbot fixed-by: 72e472a91c0d
 
 --=20
 You may reply to this email to add a comment.
