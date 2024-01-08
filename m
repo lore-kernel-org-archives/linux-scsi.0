@@ -1,49 +1,35 @@
-Received: from mail-il1-f169.google.com (mail-il1-f169.google.com [209.85.166.169])
+Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CBFB56765
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jan 2024 19:16:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="g/1H8Bqk"
-Received: by mail-il1-f169.google.com with SMTP id e9e14a558f8ab-35d374bebe3so1102795ab.1
-        for <linux-scsi@vger.kernel.org>; Mon, 08 Jan 2024 11:16:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1704741406; x=1705346206; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=RUrgDLUfZaVfgTFOVEZNjpmTBZl4Q0vRFzYBcXml+vY=;
-        b=g/1H8BqkMPWcbtyJANvJ9bqYUppywnuIqEJHhtBRaA8dPCIVmHXoZqcVu/ZnpzcaGZ
-         lI8NPG7azNoRRjH4QrGfRycbmtSKjfGzvBdzUsIK9+6d7l6+sYRxM+VSvIjQkC7o+1Hi
-         VpU/BzCwVjo1Kpm1LY55PCgCrQizfkD+jQSLyCuHSGjoiBbmo7DhLvoDKut82uCu+ew2
-         mKGCENM2ttqx44rilJoj7TALdVyeMGZIryfmimFW++EccOqcvDfs6W8tCE4IDsAQQd+J
-         SPEIXHqSBPz7rZGcL6yJ8FPE0NrzunuKl9oG4Aik3/iiBEySAAn8Po/iUkfnbjzHpGgG
-         tz5Q==
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7D0155E60;
+	Mon,  8 Jan 2024 19:30:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-5ce07cf1e5dso719611a12.2;
+        Mon, 08 Jan 2024 11:30:13 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704741406; x=1705346206;
+        d=1e100.net; s=20230601; t=1704742213; x=1705347013;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RUrgDLUfZaVfgTFOVEZNjpmTBZl4Q0vRFzYBcXml+vY=;
-        b=wSoeCodvoMwxqeT/xTlc4ETy6tIRMqqon1zD/On+FoD9b6ZkpiteM8ksOTGNT9AE9q
-         hTyqsuURXZuSO+Um44bIEO2hcG3fqkbPA9RIJRtwIjCSqLGe8h9YOgH1p5Beea3Ly17M
-         slqSww7yA2kshy3QL5Xu0irgeltfd/cp6e+rJIPvlSrmANwEcdvrWGjAdyhfbNehQYAB
-         n4tKJ/milJxKZmX6RMp3klHBY7IPAXsfmZeeNR8cdkWvGD+aHs0ac7AfvSg/ESktL2/M
-         ci45oyMqUnUYze31zlAKLUa6kvPIzcg+xtx09URtdpYrTLVS4rjdZFhz9WkkBYHFHa4R
-         WY6Q==
-X-Gm-Message-State: AOJu0YyXsZ9BpOBMk0S7VTlA75y85CLMIf0sPHdRAZsZ0i9GOpOrOewK
-	tnnMKnTXmIjLylkBGOLPAH6mgfDP5gGK1Q==
-X-Google-Smtp-Source: AGHT+IG/8HuyEUWEG6IyzUnXij1+/sNcjntYd0CBdES0EhUgVJI67Slz2Mm/mTKLZbhdUhuWRHYAEA==
-X-Received: by 2002:a6b:ea16:0:b0:7bc:25da:84cd with SMTP id m22-20020a6bea16000000b007bc25da84cdmr6902287ioc.0.1704741406605;
-        Mon, 08 Jan 2024 11:16:46 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id b26-20020a029a1a000000b0046e025d9fefsm137424jal.48.2024.01.08.11.16.45
+        bh=mPgSYdyg0vJbc0oY7GHDCNU+QLqplixDcaSjAanyb7k=;
+        b=WZRI4708CeZ7zM7TqvZ4zn2hdByPTljoRERTr6Gc/JJfYHDpK/+ZgxDd/DhuxV+lis
+         fEAeFOvHWyDb1STwGz2X4hR6rm7pytX8wcmEdUwrmRn1qs0DtXTqk+nNXz1ydIP50NIC
+         1/lJKph/9LeYyaVG8+nL8gPbLRYdZ/FNpJcLy/B/Ihy73tzihjT9aOv0T7pLFU2wYN7n
+         WSbq0Ms8q+4f8pjIYyuI6dHEdKfqFnBvXUIiXyZNOC4zVO63mZo+AUl66LK2d5Z77ZzB
+         9BjTuIFubR6ZLpgufugu9TO3kv8WjJ6BXe0DTzgUtz/yf1khRpC+tjxn1XXi9jJQrhXV
+         m2xg==
+X-Gm-Message-State: AOJu0YzOHjU87WXPUbGEkNIQne7uNhRJV0w7KWfqSr1Tf9htXC9dL4b1
+	d1/aR7mFnXr8QSGrcuSOPEY=
+X-Google-Smtp-Source: AGHT+IF9dFWPN1tQY/0ojsSkLwZINpIlgjvVcvpzzmGaFhbrOj0bf8qRtWX+L0MtV9ncMN2wK/MWEw==
+X-Received: by 2002:a05:6a20:a115:b0:199:31af:9207 with SMTP id q21-20020a056a20a11500b0019931af9207mr1834279pzk.52.1704742213013;
+        Mon, 08 Jan 2024 11:30:13 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:fe53:b285:ad53:95e0? ([2620:0:1000:8411:fe53:b285:ad53:95e0])
+        by smtp.gmail.com with ESMTPSA id s9-20020aa78d49000000b006d9b2d86bcasm233119pfe.46.2024.01.08.11.30.11
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Jan 2024 11:16:46 -0800 (PST)
-Message-ID: <9f236a51-8df4-4c84-b8ec-db2fb4038659@kernel.dk>
-Date: Mon, 8 Jan 2024 12:16:45 -0700
+        Mon, 08 Jan 2024 11:30:12 -0800 (PST)
+Message-ID: <9b46c48f-d7c4-4ed3-a644-fba90850eab8@acm.org>
+Date: Mon, 8 Jan 2024 11:30:10 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,39 +37,44 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: remove another host aware model leftover
+Subject: Re: [LSF/MM/BPF TOPIC] Large block for I/O
 Content-Language: en-US
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@wdc.com>,
- linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20231228075141.362560-1-hch@lst.de>
- <20240108082452.GA4517@lst.de>
- <1a4f6e1e-9981-4e2d-bacf-3e387addfa47@kernel.dk>
- <yq134v7951a.fsf@ca-mkp.ca.oracle.com>
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <yq134v7951a.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8
+To: Christoph Hellwig <hch@infradead.org>,
+ Matthew Wilcox <willy@infradead.org>
+Cc: Hannes Reinecke <hare@suse.de>, lsf-pc@lists.linuxfoundation.org,
+ linux-mm@kvack.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+References: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
+ <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
+ <03ebbc5f-2ff5-4f3c-8c5b-544413c55257@suse.de>
+ <5c356222-fe9e-41b0-b7fe-218fbcde4573@acm.org>
+ <ZYUbB3brQ0K3rP97@casper.infradead.org> <ZYUgo0a51nCgjLNZ@infradead.org>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ZYUgo0a51nCgjLNZ@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/8/24 9:14 AM, Martin K. Petersen wrote:
+On 12/21/23 21:37, Christoph Hellwig wrote:
+> On Fri, Dec 22, 2023 at 05:13:43AM +0000, Matthew Wilcox wrote:
+>> It clearly solves a problem (and the one I think it's solving is the
+>> size of the FTL map).  But I can't see why we should stop working on it,
+>> just because not all drive manufacturers want to support it.
 > 
-> Jens,
-> 
->>> can you take a look at this? It would be great to finish the zone
->>> aware removal fully with this for 6.8. Thanks!
->>
->> Looks fine to me and I can queue it up. I'll do so preemptively,
->> Martin let me know if you have concerns and I can drop it from
->> top-of-tree.
-> 
-> It was addressed to you so I assumed you'd be picking it up. Looks good
-> to me.
-> 
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> I don't think it is drive vendors.  It is is the SSD divisions which
+> all pretty much love it (for certain use cases) vs the UFS/eMMC
+> divisions which tends to often be fearful and less knowledgeable (to
+> say it nicely) no matter what vendor you're talking to.
 
-Thanks!
+Hi Christoph,
 
--- 
-Jens Axboe
+If there is a significant number of 4 KiB writes in a workload (e.g.
+filesystem metadata writes), and the logical block size is increased from
+4 KiB to 16 KiB, this will increase write amplification no matter how the
+SSD storage controller has been designed, isn't it? Is there perhaps
+something that I'm misunderstanding?
+
+Thanks,
+
+Bart.
 
 
