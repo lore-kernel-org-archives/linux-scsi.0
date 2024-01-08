@@ -1,35 +1,35 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 028EC55E52;
-	Mon,  8 Jan 2024 17:57:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 325AB55787;
+	Mon,  8 Jan 2024 17:59:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1d3eb299e2eso10019785ad.2;
-        Mon, 08 Jan 2024 09:57:56 -0800 (PST)
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-28c0565df34so938605a91.0;
+        Mon, 08 Jan 2024 09:59:49 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704736676; x=1705341476;
+        d=1e100.net; s=20230601; t=1704736789; x=1705341589;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=FsJws2GBQTqVuL0zDyeQXawwmM6nlw+BJqfE/TGg9/g=;
-        b=bFRJBM8P2R2uEq0JQIGwcmW34f4D4G0uW0m9eBK46E11VMenWfUOzcEAhFYBoRpYWt
-         09jgAhwYyCJKrWNdwJzHiPVa06pxT4AUQhRf6jlRcis70CiHmro38RScgr3TliiTRo6M
-         v2T4gP7Ee6ZWhF3nbBKq53Y09YxUpu2NxkoW054DCYKRG/5DsnyNL/GMHUh+bjJnEKkn
-         zRfm7jpeJTiahoYT0bc8lFxw76+w7zN5S8pFr1/tEymQg9cgUiw7UAFmFmnXi+6GBfHk
-         Bjow5RibNu4LrOeQ+DAwkudFyEHotNh9GM4NCwV6VRK5wKAk4kIMdmbUSxyDs/Cko4r0
-         eTXw==
-X-Gm-Message-State: AOJu0YzTxJ2sCPXITLW0pcljJwCcIeZNrmsUzTC/xrnKS20S9D8MDAGH
-	lzikBV65FIKBgjf2+UAOj1Y=
-X-Google-Smtp-Source: AGHT+IHLtStDtgCU08Axpj6/fVlaoUMqBauKXKas/k+5UZBD649yTmWj4FpPjb982/WaQgr8+5tSGw==
-X-Received: by 2002:a17:902:b681:b0:1d4:6274:b4fb with SMTP id c1-20020a170902b68100b001d46274b4fbmr1489185pls.20.1704736676177;
-        Mon, 08 Jan 2024 09:57:56 -0800 (PST)
+        bh=ddNmRgXTdaiclAr6P71lRtgB6j/qOy1G7OU9imrEHxc=;
+        b=j3sES4rCOv0emeU8fRA1PKijbNy51Et9ltvObZj9RmdcY1HjZrzjIPSVtTS1aGxCdq
+         5k72pXa0a4wPtdohn7wvkGg04z/8ZZcS1OxOCwIc6d6DWOFUVaa4mdIVoLanKOoda8xp
+         m8EnCJPZv43DSo+3GXW3Adqvxm8zQswRqlibmExi51jnEs8PyUYxoBl2zgYL/wD4B5+y
+         QE/SBmBJwF/OQJcZvO7iW/+I2sAHVIn6RP2PaYU2XH1kzvpqoNy7fUNGtK4VgDuOhpSK
+         0rOlVf2hdCBh0EKR2CUBC6gZMdZ9Vqp/LsCLsMnHq7aWLH/arkXpAL2HpcvT4fmT34GH
+         kmfg==
+X-Gm-Message-State: AOJu0YxmrgWJjFAbp6Q8e18RbvQDSknnHIj8kteZMAYsDiLql0Mw3aR5
+	yYuxiteKZbuObKFj3ROV0OQ=
+X-Google-Smtp-Source: AGHT+IGWUEeatFIfgaL+0bNdjdfExTDZabWvGBKr5dpyJzoj40aqQIiEMFvILIT1oxrLBZ71gN7gig==
+X-Received: by 2002:a17:90a:ba8a:b0:28d:293c:4cf6 with SMTP id t10-20020a17090aba8a00b0028d293c4cf6mr1389842pjr.92.1704736789260;
+        Mon, 08 Jan 2024 09:59:49 -0800 (PST)
 Received: from ?IPV6:2620:0:1000:8411:cee:c48d:78d6:ed9a? ([2620:0:1000:8411:cee:c48d:78d6:ed9a])
-        by smtp.gmail.com with ESMTPSA id n2-20020a170902e54200b001d058ad8770sm169957plf.306.2024.01.08.09.57.54
+        by smtp.gmail.com with ESMTPSA id li7-20020a17090b48c700b0028cec396567sm6853532pjb.44.2024.01.08.09.59.48
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Jan 2024 09:57:55 -0800 (PST)
-Message-ID: <f95ce17f-f42b-4784-b725-8081df27a7a8@acm.org>
-Date: Mon, 8 Jan 2024 09:57:52 -0800
+        Mon, 08 Jan 2024 09:59:48 -0800 (PST)
+Message-ID: <dd2ab246-04b5-4673-8e07-58bd751b5bac@acm.org>
+Date: Mon, 8 Jan 2024 09:59:45 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,28 +37,28 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] ufs: mcq: Add definition for REG_UFS_MEM_CFG register
+Subject: Re: [PATCH v2] scsi: qedf: fix spelling typo in comment
 Content-Language: en-US
-To: Chanwoo Lee <cw9316.lee@samsung.com>, alim.akhtar@samsung.com,
- avri.altman@wdc.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
- peter.wang@mediatek.com, chu.stanley@gmail.com, matthias.bgg@gmail.com,
- angelogioacchino.delregno@collabora.com, stanley.chu@mediatek.com,
- quic_cang@quicinc.com, mani@kernel.org, quic_asutoshd@quicinc.com,
- powen.kao@mediatek.com, quic_nguyenb@quicinc.com,
- yang.lee@linux.alibaba.com, athierry@redhat.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
-Cc: grant.jung@samsung.com, jt77.jang@samsung.com, dh0421.hwang@samsung.com,
- sh043.lee@samsung.com
-References: <CGME20240102014248epcas1p4d49dcf2cd3f020bed88eebaeba648789@epcas1p4.samsung.com>
- <20240102014222.23351-1-cw9316.lee@samsung.com>
+To: zheng tan <tanzheng@kylinos.cn>, skashyap@marvell.com,
+ jhasan@marvell.com, GR-QLogic-Storage-Upstream@marvell.com
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ k2ci <kernel-bot@kylinos.cn>
+References: <20240102072735.973345-1-tanzheng@kylinos.cn>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240102014222.23351-1-cw9316.lee@samsung.com>
+In-Reply-To: <20240102072735.973345-1-tanzheng@kylinos.cn>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/1/24 17:42, Chanwoo Lee wrote:
-> Instead of hardcoding the register field, add the proper definition. While
-> at it, let's also use ufshcd_rmwl() to simplify updating this register.
+On 1/1/24 23:27, zheng tan wrote:
+> -/* Indication whther its Target-auto-rsp mode or not */
+> +/* Indication whether its Target-auto-rsp mode or not */
+>   #define FCOE_RESPQE_TARGET_AUTO_RSP_MASK  0xFF
+>   #define FCOE_RESPQE_TARGET_AUTO_RSP_SHIFT 24
+>   };
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Shouldn't "its" be changed into "it's"?
+
+Thanks,
+
+Bart.
