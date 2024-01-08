@@ -1,69 +1,49 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17AF84C3AE;
-	Mon,  8 Jan 2024 12:31:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5258E4121D
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Jan 2024 15:26:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="W9564FuO";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="aCa/Vwit";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Hlit9hJE";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IVE0QRmk"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id DF48F1F79A;
-	Mon,  8 Jan 2024 12:31:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1704717082; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1twQEx1dg6gbGHsQjEqD5/fYFL160JMeqSwzbn1AABE=;
-	b=W9564FuOADlN9CzkUXh+78NK/0JIGnrLeDYn9LpKm8qegzKfQ4E+zouIlOFCa3Hq2e8T6g
-	eM+7qSFQabL+1W3gB6un6JVNV4hxTYDOth+yXim6DqSLQB7xk4kdpaLDaHWH907N6AYIdD
-	FmIJzJiL3L4Uu5h0lqi18hYykKfge2g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1704717082;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1twQEx1dg6gbGHsQjEqD5/fYFL160JMeqSwzbn1AABE=;
-	b=aCa/VwitMHQT/anjckx/chIBXE7199MsE6Ne28UHUoLc8t5dZq7bYwfVmJte+UV9vTB0L2
-	pHsvL7i5PEMlnODg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1704717080; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1twQEx1dg6gbGHsQjEqD5/fYFL160JMeqSwzbn1AABE=;
-	b=Hlit9hJE2ByVmL0dvuTY81X8IH8j1Ko7EZG+etguDMBmzkfzTMXarCx7fnidM1mbJfyfNC
-	IcG4hBEA1JLOGTPxaQJWRRWoAuQiqEiCs+EUhdZjw8uiU0Gls2iSHXaLpacV+LF19iWP8E
-	oRfUBEwa++h8c5IV6EO6Btt5ck6jWr8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1704717080;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1twQEx1dg6gbGHsQjEqD5/fYFL160JMeqSwzbn1AABE=;
-	b=IVE0QRmkdA/TKhPdnYQmM5LAmwldU+M1i7AtdktXJie2+JOOnUVpikhw5lZj6DHBx5bXGI
-	o4rRASmLOrmqbtDg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B55A41392C;
-	Mon,  8 Jan 2024 12:31:20 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id SuOzKxjrm2V8YQAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 08 Jan 2024 12:31:20 +0000
-Message-ID: <565e1f78-b46d-4b22-8f9a-5a4bc7d23424@suse.de>
-Date: Mon, 8 Jan 2024 13:31:20 +0100
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="XstsQf/e"
+Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-7baf436cdf7so19519639f.0
+        for <linux-scsi@vger.kernel.org>; Mon, 08 Jan 2024 07:26:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1704727607; x=1705332407; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=jKBszmdO+GFMl2fHINscvTxwqYrGI6Zn86c3J1Yhu2w=;
+        b=XstsQf/e/AK3K3YYQ7/RdeeOce/DDT0IzrckK+djVFhSSVZ7Phzkq31wIYjUU688R0
+         sGHPuP0fOi4pGW39wjJVnhKpRZhThLXl5F1N59UL0rCGexSKVPWe5HZQx2Np6Pji4IOa
+         JcmJbq0E//OGAgBq1gd4KxF7OiHxbHfffADooPJ2iebHd6C0VAyjtElEwwbBYwrL+eca
+         m2KHhDLC7/ZN8sMkoqfASnZUDPSkyipZdlUj4SOdRJUy5s3gMqKoPLCiELFmGI8S7ibO
+         8taAT0BbLwQW+XLLxaXifRwED3IxDrG/nkj+uuiN+Kb7O4g9KoxFFXZqGpoJ+c5ZDy0s
+         hfSQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704727607; x=1705332407;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=jKBszmdO+GFMl2fHINscvTxwqYrGI6Zn86c3J1Yhu2w=;
+        b=Ef5ofFGtf1wDiId9OR3ahoGS9zg9A67HvCzXONHHYlkev3Rl5IisoaEja4NISJWKdk
+         vGUZ6T40Q3w0UXpsRZm/g28Yl/jYeGiwhtroKxYnCUO64Wizlwz8HQvM5jvFkGM3rbTU
+         r/xxgzFFq1e4XHXfUJdUj2msWHrwLOc/jswO/y9KPo4ljP7D2NfqOlN+qGzI1oyDeWL8
+         EFXvmCyEINHASnyye0KVnSggaBk0IRhqLxJQPST//7wePj57g52bo/H3jQkm1dFUQZwg
+         tIeYfHP4zZz/9iUN01TXIio4qfJZPlQHUiMkHFq9PjvvZH33Kf8gxMw1lqAFn+9WpjQS
+         k29g==
+X-Gm-Message-State: AOJu0YztuCqLmqSx1qoM/NkBfks5DfrZADWTcbVp2rNRoazuTxBugUpJ
+	vPta+SkO7rGWTk1Vj9azFaExzU6N/7zLow==
+X-Google-Smtp-Source: AGHT+IGdW9CJgcvJ2Uthw69BnC49HL+xr8afbYNDsiCuyMlQghag6fjOJBvE4n2UC5gZBoA6TG5KjQ==
+X-Received: by 2002:a05:6602:4f42:b0:7bc:2c5:4f6a with SMTP id gm2-20020a0566024f4200b007bc02c54f6amr5641129iob.1.1704727606891;
+        Mon, 08 Jan 2024 07:26:46 -0800 (PST)
+Received: from [192.168.1.116] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id bp15-20020a056638440f00b0046d6b3edd2asm9666jab.132.2024.01.08.07.26.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 08 Jan 2024 07:26:46 -0800 (PST)
+Message-ID: <1a4f6e1e-9981-4e2d-bacf-3e387addfa47@kernel.dk>
+Date: Mon, 8 Jan 2024 08:26:45 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,103 +51,28 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: fcoe: Fix unsigned comparison with zero in
- store_ctlr_mode()
+Subject: Re: remove another host aware model leftover
 Content-Language: en-US
-To: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Justin Stitt <justinstitt@google.com>, Kees Cook <keescook@chromium.org>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: dan.carpenter@linaro.org, kernel-janitors@vger.kernel.org,
- error27@gmail.com
-References: <20240102085245.600570-1-harshit.m.mogalapalli@oracle.com>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240102085245.600570-1-harshit.m.mogalapalli@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org,
+ linux-scsi@vger.kernel.org
+References: <20231228075141.362560-1-hch@lst.de>
+ <20240108082452.GA4517@lst.de>
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20240108082452.GA4517@lst.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Spam-Level: 
-X-Spam-Level: 
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=Hlit9hJE;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=IVE0QRmk
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-3.50 / 50.00];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 XM_UA_NO_VERSION(0.01)[];
-	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	 TO_DN_SOME(0.00)[];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_TRACE(0.00)[suse.de:+];
-	 MX_GOOD(-0.01)[];
-	 RCPT_COUNT_SEVEN(0.00)[10];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_MATCH_FROM(0.00)[];
-	 ARC_NA(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 FROM_HAS_DN(0.00)[];
-	 DWL_DNSWL_MED(-2.00)[suse.de:dkim];
-	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email,oracle.com:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FREEMAIL_CC(0.00)[linaro.org,vger.kernel.org,gmail.com];
-	 RCVD_TLS_ALL(0.00)[]
-X-Spam-Score: -3.50
-X-Rspamd-Queue-Id: DF48F1F79A
-X-Spam-Flag: NO
 
-On 1/2/24 09:52, Harshit Mogalapalli wrote:
-> ctlr->mode is of unsigned type, it is never less than zero.
+On 1/8/24 1:24 AM, Christoph Hellwig wrote:
+> Jens, Martin,
 > 
-> Fix this by using an extra varibale called 'res', to store return value
-> from sysfs_match_string() and assign that to ctlr->mode on the success
-> path.
-> 
-> Fixes: edc22a7c8688 ("scsi: fcoe: Use sysfs_match_string() over fcoe_parse_mode()")
-> Signed-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
-> ---
-> This is based on static analysis with smatch and only compile tested.
-> ---
->   drivers/scsi/fcoe/fcoe_sysfs.c | 6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-> index 408a806bf4c2..c64a085a7ee2 100644
-> --- a/drivers/scsi/fcoe/fcoe_sysfs.c
-> +++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-> @@ -263,6 +263,7 @@ static ssize_t store_ctlr_mode(struct device *dev,
->   			       const char *buf, size_t count)
->   {
->   	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
-> +	int res;
->   
->   	if (count > FCOE_MAX_MODENAME_LEN)
->   		return -EINVAL;
-> @@ -279,12 +280,13 @@ static ssize_t store_ctlr_mode(struct device *dev,
->   			return -ENOTSUPP;
->   		}
->   
-> -		ctlr->mode = sysfs_match_string(fip_conn_type_names, buf);
-> -		if (ctlr->mode < 0 || ctlr->mode == FIP_CONN_TYPE_UNKNOWN) {
-> +		res = sysfs_match_string(fip_conn_type_names, buf);
-> +		if (res < 0 || res == FIP_CONN_TYPE_UNKNOWN) {
->   			LIBFCOE_SYSFS_DBG(ctlr, "Unknown mode %s provided.\n",
->   					  buf);
->   			return -EINVAL;
->   		}
-> +		ctlr->mode = res;
->   
->   		ctlr->f->set_fcoe_ctlr_mode(ctlr);
->   		LIBFCOE_SYSFS_DBG(ctlr, "Mode changed to %s.\n", buf);
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> can you take a look at this?  It would be great to finish the zone
+> aware removal fully with this for 6.8.  Thanks!
 
-Cheers,
+Looks fine to me and I can queue it up. I'll do so preemptively, Martin
+let me know if you have concerns and I can drop it from top-of-tree.
 
-Hannes
+-- 
+Jens Axboe
 
