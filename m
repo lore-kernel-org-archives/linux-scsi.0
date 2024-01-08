@@ -1,35 +1,49 @@
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+Received: from mail-il1-f169.google.com (mail-il1-f169.google.com [209.85.166.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 325AB55787;
-	Mon,  8 Jan 2024 17:59:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-28c0565df34so938605a91.0;
-        Mon, 08 Jan 2024 09:59:49 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CBFB56765
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Jan 2024 19:16:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="g/1H8Bqk"
+Received: by mail-il1-f169.google.com with SMTP id e9e14a558f8ab-35d374bebe3so1102795ab.1
+        for <linux-scsi@vger.kernel.org>; Mon, 08 Jan 2024 11:16:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1704741406; x=1705346206; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RUrgDLUfZaVfgTFOVEZNjpmTBZl4Q0vRFzYBcXml+vY=;
+        b=g/1H8BqkMPWcbtyJANvJ9bqYUppywnuIqEJHhtBRaA8dPCIVmHXoZqcVu/ZnpzcaGZ
+         lI8NPG7azNoRRjH4QrGfRycbmtSKjfGzvBdzUsIK9+6d7l6+sYRxM+VSvIjQkC7o+1Hi
+         VpU/BzCwVjo1Kpm1LY55PCgCrQizfkD+jQSLyCuHSGjoiBbmo7DhLvoDKut82uCu+ew2
+         mKGCENM2ttqx44rilJoj7TALdVyeMGZIryfmimFW++EccOqcvDfs6W8tCE4IDsAQQd+J
+         SPEIXHqSBPz7rZGcL6yJ8FPE0NrzunuKl9oG4Aik3/iiBEySAAn8Po/iUkfnbjzHpGgG
+         tz5Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704736789; x=1705341589;
+        d=1e100.net; s=20230601; t=1704741406; x=1705346206;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ddNmRgXTdaiclAr6P71lRtgB6j/qOy1G7OU9imrEHxc=;
-        b=j3sES4rCOv0emeU8fRA1PKijbNy51Et9ltvObZj9RmdcY1HjZrzjIPSVtTS1aGxCdq
-         5k72pXa0a4wPtdohn7wvkGg04z/8ZZcS1OxOCwIc6d6DWOFUVaa4mdIVoLanKOoda8xp
-         m8EnCJPZv43DSo+3GXW3Adqvxm8zQswRqlibmExi51jnEs8PyUYxoBl2zgYL/wD4B5+y
-         QE/SBmBJwF/OQJcZvO7iW/+I2sAHVIn6RP2PaYU2XH1kzvpqoNy7fUNGtK4VgDuOhpSK
-         0rOlVf2hdCBh0EKR2CUBC6gZMdZ9Vqp/LsCLsMnHq7aWLH/arkXpAL2HpcvT4fmT34GH
-         kmfg==
-X-Gm-Message-State: AOJu0YxmrgWJjFAbp6Q8e18RbvQDSknnHIj8kteZMAYsDiLql0Mw3aR5
-	yYuxiteKZbuObKFj3ROV0OQ=
-X-Google-Smtp-Source: AGHT+IGWUEeatFIfgaL+0bNdjdfExTDZabWvGBKr5dpyJzoj40aqQIiEMFvILIT1oxrLBZ71gN7gig==
-X-Received: by 2002:a17:90a:ba8a:b0:28d:293c:4cf6 with SMTP id t10-20020a17090aba8a00b0028d293c4cf6mr1389842pjr.92.1704736789260;
-        Mon, 08 Jan 2024 09:59:49 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:cee:c48d:78d6:ed9a? ([2620:0:1000:8411:cee:c48d:78d6:ed9a])
-        by smtp.gmail.com with ESMTPSA id li7-20020a17090b48c700b0028cec396567sm6853532pjb.44.2024.01.08.09.59.48
+        bh=RUrgDLUfZaVfgTFOVEZNjpmTBZl4Q0vRFzYBcXml+vY=;
+        b=wSoeCodvoMwxqeT/xTlc4ETy6tIRMqqon1zD/On+FoD9b6ZkpiteM8ksOTGNT9AE9q
+         hTyqsuURXZuSO+Um44bIEO2hcG3fqkbPA9RIJRtwIjCSqLGe8h9YOgH1p5Beea3Ly17M
+         slqSww7yA2kshy3QL5Xu0irgeltfd/cp6e+rJIPvlSrmANwEcdvrWGjAdyhfbNehQYAB
+         n4tKJ/milJxKZmX6RMp3klHBY7IPAXsfmZeeNR8cdkWvGD+aHs0ac7AfvSg/ESktL2/M
+         ci45oyMqUnUYze31zlAKLUa6kvPIzcg+xtx09URtdpYrTLVS4rjdZFhz9WkkBYHFHa4R
+         WY6Q==
+X-Gm-Message-State: AOJu0YyXsZ9BpOBMk0S7VTlA75y85CLMIf0sPHdRAZsZ0i9GOpOrOewK
+	tnnMKnTXmIjLylkBGOLPAH6mgfDP5gGK1Q==
+X-Google-Smtp-Source: AGHT+IG/8HuyEUWEG6IyzUnXij1+/sNcjntYd0CBdES0EhUgVJI67Slz2Mm/mTKLZbhdUhuWRHYAEA==
+X-Received: by 2002:a6b:ea16:0:b0:7bc:25da:84cd with SMTP id m22-20020a6bea16000000b007bc25da84cdmr6902287ioc.0.1704741406605;
+        Mon, 08 Jan 2024 11:16:46 -0800 (PST)
+Received: from [192.168.1.116] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id b26-20020a029a1a000000b0046e025d9fefsm137424jal.48.2024.01.08.11.16.45
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Jan 2024 09:59:48 -0800 (PST)
-Message-ID: <dd2ab246-04b5-4673-8e07-58bd751b5bac@acm.org>
-Date: Mon, 8 Jan 2024 09:59:45 -0800
+        Mon, 08 Jan 2024 11:16:46 -0800 (PST)
+Message-ID: <9f236a51-8df4-4c84-b8ec-db2fb4038659@kernel.dk>
+Date: Mon, 8 Jan 2024 12:16:45 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,28 +51,39 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: qedf: fix spelling typo in comment
+Subject: Re: remove another host aware model leftover
 Content-Language: en-US
-To: zheng tan <tanzheng@kylinos.cn>, skashyap@marvell.com,
- jhasan@marvell.com, GR-QLogic-Storage-Upstream@marvell.com
-Cc: jejb@linux.ibm.com, martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- k2ci <kernel-bot@kylinos.cn>
-References: <20240102072735.973345-1-tanzheng@kylinos.cn>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240102072735.973345-1-tanzheng@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@wdc.com>,
+ linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20231228075141.362560-1-hch@lst.de>
+ <20240108082452.GA4517@lst.de>
+ <1a4f6e1e-9981-4e2d-bacf-3e387addfa47@kernel.dk>
+ <yq134v7951a.fsf@ca-mkp.ca.oracle.com>
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <yq134v7951a.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 1/1/24 23:27, zheng tan wrote:
-> -/* Indication whther its Target-auto-rsp mode or not */
-> +/* Indication whether its Target-auto-rsp mode or not */
->   #define FCOE_RESPQE_TARGET_AUTO_RSP_MASK  0xFF
->   #define FCOE_RESPQE_TARGET_AUTO_RSP_SHIFT 24
->   };
+On 1/8/24 9:14 AM, Martin K. Petersen wrote:
+> 
+> Jens,
+> 
+>>> can you take a look at this? It would be great to finish the zone
+>>> aware removal fully with this for 6.8. Thanks!
+>>
+>> Looks fine to me and I can queue it up. I'll do so preemptively,
+>> Martin let me know if you have concerns and I can drop it from
+>> top-of-tree.
+> 
+> It was addressed to you so I assumed you'd be picking it up. Looks good
+> to me.
+> 
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Shouldn't "its" be changed into "it's"?
+Thanks!
 
-Thanks,
+-- 
+Jens Axboe
 
-Bart.
+
