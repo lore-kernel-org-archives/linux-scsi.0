@@ -1,126 +1,102 @@
-Received: from mail-il1-f175.google.com (mail-il1-f175.google.com [209.85.166.175])
+Received: from mail-il1-f180.google.com (mail-il1-f180.google.com [209.85.166.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCBB73DB90
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Jan 2024 22:44:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="NuvkG/vS"
-Received: by mail-il1-f175.google.com with SMTP id e9e14a558f8ab-36091f4d8easo9811305ab.2
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Jan 2024 14:44:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704840263; x=1705445063; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=L9xTLocbxJtZ/EsVzz8IzAHiTCzUNRLczzpqZlO0pg4=;
-        b=NuvkG/vSLcINgXnC03k23QL0l9G3KqxZ/jrQxVTTiEBbPXQ1xJYEq51nshbMeSaVBs
-         FduTo7bxzBnBArU4Q5YfBLCe8Aogk1SD3vXrMMsyg73NmbXjUkG/iOPwhu4gTGDgUyYu
-         wqidBfoBjQhgZrXecI9nDlgC1m935d1Qpo2hr4hgzNJOU7QkwS0CMwZV1Kc8Cyqrh2KF
-         Y9e2bJZqoFQ1p4zIPWLHEJW+Rj6C/Jf7Yy0FsDXcTc3XUdb8qZzbpEUs/6PJuAtF7YVY
-         Wz2QfD9o1jvgTV0+iPlpX+7VdFyq2izIzbvfLA0aFyhJ+IXTQA0utor42UsDtO5je72N
-         DFzQ==
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEAF43DB8F
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Jan 2024 22:47:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-il1-f180.google.com with SMTP id e9e14a558f8ab-36091f4d8easo9820655ab.2
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Jan 2024 14:47:00 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704840263; x=1705445063;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=L9xTLocbxJtZ/EsVzz8IzAHiTCzUNRLczzpqZlO0pg4=;
-        b=iKbl5oVroQn0XuL738uIP61DIO7ziRTradNaqb++chOcnlnPCoB+GWY4J52KuuJ9zy
-         ocswXM0LbDsfMBbWftZTTi7RUzL7uTPDArUvhvaBX0PHagcnXJ6meAiIgjR+GZ8pvXnD
-         imy44BV0gUm4zVD8S8rWVYymqyIn3WZbKiarTtzyfZdfRdTnipI//2uM3cuuzgfkCCHr
-         BS6LKr08dMD80YGo0cciqZEK37zC/ApuzjKXHqFsW1SF23cHc/9sn8JaOpBRlNgWzUiC
-         mzzyVxuejajk0eYMWGxnkv81MI7IvQZOmwpMkyPvQsprsV/JRbrXcxOUVW8noazGEvZt
-         sRWQ==
-X-Gm-Message-State: AOJu0Ywh4kBhVUupoet4Tggo9O4j2aC0ipxknUtVH6jWUgGjxmzirceB
-	/e5yZsrwtOymwjxBz8Dnsiz43LGRM8GvaA==
-X-Google-Smtp-Source: AGHT+IHSKNtjcO8bUbdBcwmcDlNZLFhTfOw5pswdA67ew28nBq3+gGgOSAobh3nBsnKFOjOmUdXBuw==
-X-Received: by 2002:a05:6e02:1845:b0:35f:bd12:5488 with SMTP id b5-20020a056e02184500b0035fbd125488mr183647ilv.30.1704840262829;
-        Tue, 09 Jan 2024 14:44:22 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
-        by smtp.gmail.com with ESMTPSA id o5-20020a634e45000000b0050f85ef50d1sm2059281pgl.26.2024.01.09.14.44.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jan 2024 14:44:22 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rNKpX-008G6o-07;
-	Wed, 10 Jan 2024 09:44:19 +1100
-Date: Wed, 10 Jan 2024 09:44:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: Re: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
-Message-ID: <ZZ3MQ1nFcyaMVuCv@dread.disaster.area>
-References: <ZZcgXI46AinlcBDP@casper.infradead.org>
+        d=1e100.net; s=20230601; t=1704840419; x=1705445219;
+        h=content-transfer-encoding:in-reply-to:cc:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=9BupsUTlR2wLBScCi1v3R7g/2RvnOLSXn5gnLLglLuk=;
+        b=j1Arecz6wDp4A1yjS8pcps6qQ8bbdj6EeJpwWBvxry2rXHtmr9c6AWNBdoERNNxitI
+         MrVb8KEYu3nHtQkhYjGFBoJa/36x2w6KglWIi6a6EoxsAkSORGNdp6yuntGef+JuYt4c
+         SczbMQHC11eNgmiwfyNZ/DS5AZt7aFPmPtPr2UNcu467A9SJEsbItXieOyobJzq8K6Ly
+         VKrBTfwEPRtmxtc2QRpvw7WwPm4aJwYw+kx//JSp47BnVwIdKlzVSP7MKQb2UeiVqgCi
+         uX+yizVDjl8irHQCvg6PhlFXX6NRak/A+zOVi2gSaJ8ovvwnZWXH433XWItbywAxkMrJ
+         t5Xw==
+X-Gm-Message-State: AOJu0YzWgCopNzSAj/FrKO1kNogMMb5cy/CmqyhqxO8qQ5YL0auhS4Va
+	GqPi2+aKAPyeqftrrNT3SkQ=
+X-Google-Smtp-Source: AGHT+IFtS8HpEcekbOEbh29uPZhdaos9eYKZYKt7OMAxV7pQIYqbzwGWlT1nf4IilOYDwzH3C45DBA==
+X-Received: by 2002:a05:6e02:1a46:b0:35f:ef06:637 with SMTP id u6-20020a056e021a4600b0035fef060637mr188365ilv.36.1704840419557;
+        Tue, 09 Jan 2024 14:46:59 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:b76f:b657:4602:d182? ([2620:0:1000:8411:b76f:b657:4602:d182])
+        by smtp.gmail.com with ESMTPSA id r11-20020a63e50b000000b0059d6f5196fasm2163206pgh.78.2024.01.09.14.46.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 09 Jan 2024 14:46:59 -0800 (PST)
+Message-ID: <d585753a-b5f3-410f-a949-8b52252307ab@acm.org>
+Date: Tue, 9 Jan 2024 14:46:58 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZZcgXI46AinlcBDP@casper.infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [Regression] Hang deleting ATA HDD device for undocking
+Content-Language: en-US
+To: Kevin Locke <kevin@kevinlocke.name>, linux-scsi@vger.kernel.org,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+ Niklas Cassel <niklas.cassel@wdc.com>
+References: <ZZw3Th70wUUvCiCY@kevinlocke.name>
+ <c7c4769c-5999-4373-90df-f2203ecfc423@acm.org>
+ <ZZxvPtrf5hLeZNY5@kevinlocke.name>
+ <8bbbd233-69c6-4f20-904c-332bb838cc42@acm.org>
+ <ZZ2-hMYVJlF4ayqk@kevinlocke.name>
+From: Bart Van Assche <bvanassche@acm.org>
+Cc: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+In-Reply-To: <ZZ2-hMYVJlF4ayqk@kevinlocke.name>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Jan 04, 2024 at 09:17:16PM +0000, Matthew Wilcox wrote:
-> This is primarily a _FILESYSTEM_ track topic.  All the work has already
-> been done on the MM side; the FS people need to do their part.  It could
-> be a joint session, but I'm not sure there's much for the MM people
-> to say.
+On 1/9/24 13:45, Kevin Locke wrote:
+> On Tue, 2024-01-09 at 13:39 -0800, Bart Van Assche wrote:
+>> (cd /sys/class/scsi_host && grep -aH . */state)
+>> (cd /sys/class/scsi_device && grep -aH . */device/{device_{blocked,busy},state})
 > 
-> There are situations where we need to allocate memory, but cannot call
-> into the filesystem to free memory.  Generally this is because we're
-> holding a lock or we've started a transaction, and attempting to write
-> out dirty folios to reclaim memory would result in a deadlock.
+> Sure thing.  Running the above commands produced the following output:
 > 
-> The old way to solve this problem is to specify GFP_NOFS when allocating
-> memory.  This conveys little information about what is being protected
-> against, and so it is hard to know when it might be safe to remove.
-> It's also a reflex -- many filesystem authors use GFP_NOFS by default
-> even when they could use GFP_KERNEL because there's no risk of deadlock.
+> host0/state:running
+> host1/state:running
+> host2/state:running
+> host3/state:running
+> host4/state:running
+> host5/state:running
+> 0:0:0:0/device/device_blocked:0
+> 0:0:0:0/device/device_busy:1
+> 0:0:0:0/device/state:running
 
-Another thing that needs to be considered: GFP_NOFS has been used to
-avoid lockdep false positives due to GFP_KERNEL allocations also
-being used as scoped GFP_NOFS allocations via different call
-chains.
+So the SCSI host state (host1) is fine but the information about the SCSI
+devices associated with host1 is missing, most likely because sysfs
+information of SCSI devices is removed before a SYNCHRONIZE CACHE command
+is submitted. The device_del(dev) call in __scsi_remove_device() happens
+after scsi_device_set_state(sdev, SDEV_CANCEL) so the SCSI device should
+be in the SDEV_CANCEL state. scsi_device_state_check() should translate
+SDEV_CANCEL into BLK_STS_OFFLINE.
 
-That is, if a code path does a GFP_KERNEL allocation by default,
-lockdep will track this as a "reclaim allowed" allocation context.
-If that same code is then executed from a scoped NOFS context
-(e.g. inside a transaction context), then lockdep will see it as
-a "no reclaim allowed" allocation context.
+There are several tests in the blktests suite that trigger SCSI device
+deletion, e.g. block/001. All blktests tests pass on my test setup.
+Additionally, I haven't seen any blktests failure reports recently that
+are related to device deletion. If I try to delete an ATA device in a VM,
+that works fine (kernel v6.7):
 
-The problem then arises when the next GFP_KERNEL allocation occurs,
-the code enters direct reclaim, grabs a filesystem lock and lockdep
-then throws out a warning that filesystem locks are being taken
-in an allocation context that doesn't allow reclaim to take
-filesystem locks.
+# dmesg -c >/dev/null
+# echo 1 > /sys/class/scsi_device/3:0:0:0/device/delete
+# dmesg -c
+[  215.533228] sd 3:0:0:0: [sdb] Synchronizing SCSI cache
+[  215.543932] ata3.00: Entering standby power mode
 
-These are typically false positives.
+Running rescan-scsi-bus.sh -a brings this device back.
 
-Prior to __GFP_NOLOCKDEP existing, we used GFP_NOFS unconditionally
-in these shared context paths to avoid lockdep from seeing a
-GFP_KERNEL allocation context from this allocation path. Now that we
-are getting rid of GFP_NOFS and replacing these instances with
-GFP_KERNEL and scoped constraints, we're removing the anti-lockdep
-false positive mechanism.
+I'm not sure what I'm missing but I think that it's something ATA-specific.
+Since I'm not an ATA expert, I hope that an ATA expert can help. There are
+at least two ATA experts on the Cc-list of this email.
 
-IOWs, we have to replace GFP_NOFS with GFP_KERNEL | __GFP_NOLOCKDEP
-in these cases to prevent false positive reclaim vs lock inversion
-detections. There's at least a dozen of these cases in XFS and we
-generally know where they are, but this will likely be an ongoing
-issue for filesystems as we switch over to using scoped memory
-allocation contexts.
+Thanks,
 
-I'm not sure there's a good solution to this. However, we need to
-make sure people are aware that GFP_NOFS will need to be converted
-to GFP_KERNEL | __GFP_NOLOCKDEP for allocations that can occur in
-mixed contexts.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Bart.
