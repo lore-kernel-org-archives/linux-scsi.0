@@ -1,32 +1,60 @@
-Received: from vulcan.kevinlocke.name (vulcan.kevinlocke.name [107.191.43.88])
+Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DBA45645B
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jan 2024 21:55:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kevinlocke.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kevinlocke.name
-Received: from kevinolos.kevinlocke.name (2600-6c67-5000-0a52-7f13-aa6f-584c-2934.res6.spectrum.com [IPv6:2600:6c67:5000:a52:7f13:aa6f:584c:2934])
-	(Authenticated sender: kevin@kevinlocke.name)
-	by vulcan.kevinlocke.name (Postfix) with ESMTPSA id 1F2D640C6CE3;
-	Mon,  8 Jan 2024 21:55:15 +0000 (UTC)
-Received: by kevinolos.kevinlocke.name (Postfix, from userid 1000)
-	id 0182B1300689; Mon,  8 Jan 2024 14:55:10 -0700 (MST)
-Date: Mon, 8 Jan 2024 14:55:10 -0700
-From: Kevin Locke <kevin@kevinlocke.name>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-	Niklas Cassel <niklas.cassel@wdc.com>
-Subject: Re: [Regression] Hang deleting ATA HDD device for undocking
-Message-ID: <ZZxvPtrf5hLeZNY5@kevinlocke.name>
-Mail-Followup-To: Kevin Locke <kevin@kevinlocke.name>,
-	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-	Niklas Cassel <niklas.cassel@wdc.com>
-References: <ZZw3Th70wUUvCiCY@kevinlocke.name>
- <c7c4769c-5999-4373-90df-f2203ecfc423@acm.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B1BE9442
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Jan 2024 04:47:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="0iXRusis"
+Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-5cda24a77e0so895761a12.2
+        for <linux-scsi@vger.kernel.org>; Mon, 08 Jan 2024 20:47:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704775662; x=1705380462; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=/9d1a6daFwQBP+JMhfWhKWCeVA+a5Q2tDHFKvp5Evgc=;
+        b=0iXRusist83Moo9bwd9PoKkbma1g2L4nRVA2VuJTa5FJTXOTV9UPrOZEMuf1nF+Hhd
+         zQOno/vEr9TseqxG+98ltIM6Bxql5tDaH72DOCU8GoSqjncbCyCeuCDJDbCszzisYimr
+         QUnC4sTLrvsreVRZDv9L3gLxJ2VCx8b/l3zcjDCMsK0UTGKc+VDG7QyG7EkV9vogQEjQ
+         /3sLGfOyMIGmEmHavj2NDUbQLrw0kHfTI3NfJqMVSCtcK4deqfVLEslXnymuk5ykGs/6
+         1oXX1kZgA15QVR45t9KAKXyN2ulUwxm/vIKAXi4nkPYrxO7u1kqSL+j5G1Fe3PYNG4gR
+         /mtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704775662; x=1705380462;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/9d1a6daFwQBP+JMhfWhKWCeVA+a5Q2tDHFKvp5Evgc=;
+        b=YY0Zrluw1I+WNV7j1sY5ibZJPMJMHaZm8gZLChikguDidAHxutNtKkawdci3py7QzQ
+         NnPPJ6nII4C+oVS0xiSlNcEAAJr9gCvTmtWAsUpAynQXPflzgXg+9moI1ezqXyPGmCAe
+         y+Z9fw8xp79EWga0Gko9tafggko+neFWhoEi8yE7dXnUQOxsqaEsOh9gw+LLanv12lHk
+         tVQqeWNiuuzrkyHetWr76kpNBzadwJCG7IBVfdnW2tPcedi1pGKoEmM+mJc3k8Sa951w
+         6I8eI4mHzjLxMIc5tBuKc+HgBmOOks26BIGq4/5h0QyQBw5mEUVGYosZI2URqblmElPP
+         Wbrw==
+X-Gm-Message-State: AOJu0YwNhZbJ2gjNQbK1/YvFh6VICdV0HrTZHJ6EKNvQVtcouowF9oBi
+	9nFQYjcYGkANxKoEv8SWIl4BXpCOOFP9cg==
+X-Google-Smtp-Source: AGHT+IEXGWamsR7Yytcu+DAmr0p08k3oitSFEY8voIlETwQIHC6HU43wCVNAvJQUiECekKewVk/oIw==
+X-Received: by 2002:a17:90a:4b8e:b0:28c:a5e2:1652 with SMTP id i14-20020a17090a4b8e00b0028ca5e21652mr1845080pjh.12.1704775662422;
+        Mon, 08 Jan 2024 20:47:42 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
+        by smtp.gmail.com with ESMTPSA id b6-20020a17090aa58600b0028cf59fea33sm812372pjq.42.2024.01.08.20.47.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 08 Jan 2024 20:47:42 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rN41b-007vgb-0Q;
+	Tue, 09 Jan 2024 15:47:39 +1100
+Date: Tue, 9 Jan 2024 15:47:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: Re: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
+Message-ID: <ZZzP6731XwZQnz0o@dread.disaster.area>
+References: <ZZcgXI46AinlcBDP@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,80 +63,64 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <c7c4769c-5999-4373-90df-f2203ecfc423@acm.org>
+In-Reply-To: <ZZcgXI46AinlcBDP@casper.infradead.org>
 
-On Mon, 2024-01-08 at 13:33 -0800, Bart Van Assche wrote:
-> On 1/8/24 09:56, Kevin Locke wrote:
->> On a ThinkPad T430 running Linux 6.7, when I attempt to delete the ATA
->> device for a hard drive in the Ultrabay slot (to hotswap/undock it[1])
->> the process freezes in an unterruptible sleep.
+On Thu, Jan 04, 2024 at 09:17:16PM +0000, Matthew Wilcox wrote:
+> This is primarily a _FILESYSTEM_ track topic.  All the work has already
+> been done on the MM side; the FS people need to do their part.  It could
+> be a joint session, but I'm not sure there's much for the MM people
+> to say.
 > 
-> [...]
+> There are situations where we need to allocate memory, but cannot call
+> into the filesystem to free memory.  Generally this is because we're
+> holding a lock or we've started a transaction, and attempting to write
+> out dirty folios to reclaim memory would result in a deadlock.
 > 
-> The "Synchronizing SCSI cache" message probably comes from sd_shutdown().
-> sd_shutdown() is called by sd_remove(). sd_remove() is called by
-> __scsi_remove_device(). __scsi_remove_device() is called by
-> sdev_store_delete(). It's not clear to me how commit 8b566edbdbfb
-> ("scsi: core: Only kick the requeue list if necessary") can affect that
-> call path.
+> The old way to solve this problem is to specify GFP_NOFS when allocating
+> memory.  This conveys little information about what is being protected
+> against, and so it is hard to know when it might be safe to remove.
+> It's also a reflex -- many filesystem authors use GFP_NOFS by default
+> even when they could use GFP_KERNEL because there's no risk of deadlock.
 > 
-> It would help if more information about the hang could be provided by
-> running the following command after having reproduced the hang and by
-> sharing the dmesg output triggered by this command:
-> 
->     echo w > /proc/sysrq-trigger
+> The new way is to use the scoped APIs -- memalloc_nofs_save() and
+> memalloc_nofs_restore().  These should be called when we start a
+> transaction or take a lock that would cause a GFP_KERNEL allocation to
+> deadlock.  Then just use GFP_KERNEL as normal.  The memory allocators
+> can see the nofs situation is in effect and will not call back into
+> the filesystem.
 
-Hi Bart,
+So in rebasing the XFS kmem.[ch] removal patchset I've been working
+on, there is a clear memory allocator function that we need to be
+scoped: __GFP_NOFAIL.
 
-Thanks for helping me investigate this issue!
+All of the allocations done through the existing XFS kmem.[ch]
+interfaces (i.e just about everything) have __GFP_NOFAIL semantics
+added except in the explicit cases where we add KM_MAYFAIL to
+indicate that the allocation can fail.
 
-Relevant dmesg section after `echo w > /proc/sysrq-trigger`:
+The result of this conversion to remove GFP_NOFS is that I'm also
+adding *dozens* of __GFP_NOFAIL annotations because we effectively
+scope that behaviour.
 
--8<------------------------------------------------------------------
-sd 1:0:0:0: [sdb] Synchronizing SCSI cache
-ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-ata2.00: ACPI cmd f5/00:00:00:00:00:a0(SECURITY FREEZE LOCK) filtered out
-ata2.00: ACPI cmd ef/10:03:00:00:00:a0(SET FEATURES) filtered out
-ata2.00: ACPI cmd f5/00:00:00:00:00:a0(SECURITY FREEZE LOCK) filtered out
-ata2.00: ACPI cmd ef/10:03:00:00:00:a0(SET FEATURES) filtered out
-ata2.00: configured for UDMA/133
-ata2.00: retrying FLUSH 0xea Emask 0x0
-sysrq: Show Blocked State
-task:ultrabay_eject  state:D stack:0     pid:2630  tgid:2630  ppid:2629   flags:0x00004002
-Call Trace:
- <TASK>
- __schedule+0x2c1/0x8a0
- schedule+0x32/0xb0
- schedule_timeout+0x151/0x160
- io_schedule_timeout+0x50/0x80
- wait_for_completion_io+0x86/0x170
- blk_execute_rq+0x11e/0x1f0
- scsi_execute_cmd+0xf6/0x250 [scsi_mod]
- sd_sync_cache+0xe6/0x1f0 [sd_mod]
- sd_shutdown+0x68/0x100 [sd_mod]
- sd_remove+0x55/0x60 [sd_mod]
- device_release_driver_internal+0x19f/0x200
- bus_remove_device+0xc6/0x130
- device_del+0x15e/0x3f0
- ? mutex_lock+0x12/0x30
- ? __pfx_ata_tdev_match+0x10/0x10 [libata]
- __scsi_remove_device+0x131/0x190 [scsi_mod]
- sdev_store_delete+0x6a/0xd0 [scsi_mod]
- kernfs_fop_write_iter+0x13d/0x1d0
- vfs_write+0x23d/0x400
- ksys_write+0x6f/0xf0
- do_syscall_64+0x64/0x120
- ? exc_page_fault+0x70/0x150
- entry_SYSCALL_64_after_hwframe+0x6e/0x76
-RIP: 0033:0x7fa0f8949b00
-RSP: 002b:00007ffc779b8418 EFLAGS: 00000202 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007fa0f8949b00
-RDX: 0000000000000002 RSI: 000056549cd8fe30 RDI: 0000000000000001
-RBP: 000056549cd8fe30 R08: 0000000000002000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000001
-R13: 0000000000000002 R14: 0000000000000000 R15: 000056549cd8f7e8
- </TASK>
--8<------------------------------------------------------------------
+Hence I think this discussion needs to consider that __GFP_NOFAIL is
+also widely used within critical filesystem code that cannot
+gracefully recover from memory allocation failures, and that this
+would also be useful to scope....
 
-Thanks again,
-Kevin
+Yeah, I know, mm developers hate __GFP_NOFAIL. We've been using
+these semantics NOFAIL in XFS for over 2 decades and the sky hasn't
+fallen. So can we get memalloc_nofail_{save,restore}() so that we
+can change the default allocation behaviour in certain contexts
+(e.g. the same contexts we need NOFS allocations) to be NOFAIL
+unless __GFP_RETRY_MAYFAIL or __GFP_NORETRY are set?
+
+We already have memalloc_noreclaim_{save/restore}() for turning off
+direct memory reclaim for a given context (i.e. equivalent of
+clearing __GFP_DIRECT_RECLAIM), so if we are going to embrace scoped
+allocation contexts, then we should be going all in and providing
+all the contexts that filesystems actually need....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
