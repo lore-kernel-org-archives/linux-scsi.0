@@ -1,35 +1,35 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 188BF3DB81
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Jan 2024 21:34:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 355193DB84
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Jan 2024 21:39:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5cde7afa1d7so1623801a12.1
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Jan 2024 13:34:10 -0800 (PST)
+Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-3bba50cd318so3749783b6e.0
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Jan 2024 13:39:16 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704836050; x=1705440850;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20230601; t=1704836355; x=1705441155;
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=gE416TbjEYVis8prf1cXZYaoI5U/2BL23yGsz4kqVcY=;
-        b=VJkPZzJ/AzmzzPbg/ZGVI2jJrKVLvVIdJO5vNp3LTXLj1gf2FlPbRREoSXA56YAbWq
-         Df8coX8sc2hiFFgn5ZDH5zLuFaD3innuDSJ43QVdLx+X+WgN5ox99b8kfeWn1xw+oIrx
-         WJtqZ80bE/TaKQmFnU1h5O+HsQKx/VAEHWGfNyS4hkZkvtGQn9x1XcJ+tAVvVvevmjnl
-         m2RN3f3o1nQdSTDcZL5LQVKXRaS/nlX+uPxTkGv9SnwxfSBAdhdku7L8y2cOa9u8GoLQ
-         FKTSqlbKZOvLlsglvYA3U1f6dueiV/V4czM0zetPqSmAZe71ndMOlo08LcbM+2B9kTeD
-         MsZA==
-X-Gm-Message-State: AOJu0YwtsugDWER+CyKtPeM+uozvH1mZ8VxyfzOEO8PjD+D7EKX3pMt3
-	9nCXl637d7yUEdZrKaqgFxk=
-X-Google-Smtp-Source: AGHT+IG4rBkEvRL39X6PgG0KP4QJbqKwxIRkuTDkYKKNIgR4JAvpmVnPlNU9UihIMnbPAp3cmN2XRQ==
-X-Received: by 2002:a17:90b:3d12:b0:28d:950f:a207 with SMTP id pt18-20020a17090b3d1200b0028d950fa207mr1393071pjb.30.1704836050211;
-        Tue, 09 Jan 2024 13:34:10 -0800 (PST)
+        bh=lAOoMafluleKVEuXmIEHxXi2fzZ2EbWXVvt2++4Z07k=;
+        b=SPqibwdTHkluSAAoVSuQn2DHiBjLLG2xsVcngp8lYkNULoCK2XF65HOcnR+CNfz4wE
+         UdeqBgK54sYeTlwNuifScm5umcUo/a5mmBBoI3OOL5Xt7rTHKYjqEPATEZ/SjssdhnO3
+         d/lyScvLzlqx/k8VIef4Ix07cNwXNHb01DfctUDmwrPKsYfCNzS++181wOdlUXDZaZdd
+         CTqP553UPo/a2cZtqHqGwseHRzhO/BpCVjTNDYP1YwHEZrvN4sHYJkaLhSrIXqtrTgPY
+         sjwazRVozLd47ZGAzZPCmIU7ANrbrsxenUdjJkuG3pZBN8d4pfAqCupIZiWiONINUO5u
+         0FqQ==
+X-Gm-Message-State: AOJu0YyOn6313mSFTtSQ8BdIv2Dzh0C2fAJr0c8+t6Foin8WK1MfEWVp
+	zToLjNqqtUwjmpoaLzpXCys=
+X-Google-Smtp-Source: AGHT+IE8yJIYk9ze4T7Aq5Y9GakcgVgv3X8mnoKGL/FypBLl8onlImjvI5vtOKePmEsruvpUt374DA==
+X-Received: by 2002:a05:6358:914d:b0:175:9466:12eb with SMTP id r13-20020a056358914d00b00175946612ebmr21468rwr.0.1704836354971;
+        Tue, 09 Jan 2024 13:39:14 -0800 (PST)
 Received: from ?IPV6:2620:0:1000:8411:b76f:b657:4602:d182? ([2620:0:1000:8411:b76f:b657:4602:d182])
-        by smtp.gmail.com with ESMTPSA id d16-20020a17090b005000b0028aea6c24bcsm9010150pjt.53.2024.01.09.13.34.08
+        by smtp.gmail.com with ESMTPSA id u12-20020a17090ac88c00b0028aecd6b29fsm8976530pjt.3.2024.01.09.13.39.14
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 09 Jan 2024 13:34:09 -0800 (PST)
-Message-ID: <53d4c814-0b6a-4328-852c-7dfa2d8466b9@acm.org>
-Date: Tue, 9 Jan 2024 13:34:08 -0800
+        Tue, 09 Jan 2024 13:39:14 -0800 (PST)
+Message-ID: <8bbbd233-69c6-4f20-904c-332bb838cc42@acm.org>
+Date: Tue, 9 Jan 2024 13:39:13 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,30 +37,66 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 1/2] scsi: core: move auto suspend timer to Scsi_Host
+Subject: Re: [Regression] Hang deleting ATA HDD device for undocking
 Content-Language: en-US
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
- jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com, powen.kao@mediatek.com,
- qilin.tan@mediatek.com, lin.gui@mediatek.com, tun-yu.yu@mediatek.com,
- eddie.huang@mediatek.com, naomi.chu@mediatek.com, chu.stanley@gmail.com
-References: <20240109124015.31359-1-peter.wang@mediatek.com>
- <20240109124015.31359-2-peter.wang@mediatek.com>
+To: Kevin Locke <kevin@kevinlocke.name>, linux-scsi@vger.kernel.org,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+ Niklas Cassel <niklas.cassel@wdc.com>
+References: <ZZw3Th70wUUvCiCY@kevinlocke.name>
+ <c7c4769c-5999-4373-90df-f2203ecfc423@acm.org>
+ <ZZxvPtrf5hLeZNY5@kevinlocke.name>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240109124015.31359-2-peter.wang@mediatek.com>
+In-Reply-To: <ZZxvPtrf5hLeZNY5@kevinlocke.name>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/9/24 04:40, peter.wang@mediatek.com wrote:
-> Runtime suspend timer is a const value in scsi_host_template, which
-> host cannot modify this value.
-> Move it to Scsi_Host for host flexible use.
+On 1/8/24 13:55, Kevin Locke wrote:
+> -8<------------------------------------------------------------------
+> sd 1:0:0:0: [sdb] Synchronizing SCSI cache
+> ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> ata2.00: ACPI cmd f5/00:00:00:00:00:a0(SECURITY FREEZE LOCK) filtered out
+> ata2.00: ACPI cmd ef/10:03:00:00:00:a0(SET FEATURES) filtered out
+> ata2.00: ACPI cmd f5/00:00:00:00:00:a0(SECURITY FREEZE LOCK) filtered out
+> ata2.00: ACPI cmd ef/10:03:00:00:00:a0(SET FEATURES) filtered out
+> ata2.00: configured for UDMA/133
+> ata2.00: retrying FLUSH 0xea Emask 0x0
+> sysrq: Show Blocked State
+> task:ultrabay_eject  state:D stack:0     pid:2630  tgid:2630  ppid:2629   flags:0x00004002
+> Call Trace:
+>   <TASK>
+>   __schedule+0x2c1/0x8a0
+>   schedule+0x32/0xb0
+>   schedule_timeout+0x151/0x160
+>   io_schedule_timeout+0x50/0x80
+>   wait_for_completion_io+0x86/0x170
+>   blk_execute_rq+0x11e/0x1f0
+>   scsi_execute_cmd+0xf6/0x250 [scsi_mod]
+>   sd_sync_cache+0xe6/0x1f0 [sd_mod]
+>   sd_shutdown+0x68/0x100 [sd_mod]
+>   sd_remove+0x55/0x60 [sd_mod]
+>   device_release_driver_internal+0x19f/0x200
+>   bus_remove_device+0xc6/0x130
+>   device_del+0x15e/0x3f0
+>   ? mutex_lock+0x12/0x30
+>   ? __pfx_ata_tdev_match+0x10/0x10 [libata]
+>   __scsi_remove_device+0x131/0x190 [scsi_mod]
+>   sdev_store_delete+0x6a/0xd0 [scsi_mod]
+>   kernfs_fop_write_iter+0x13d/0x1d0
+>   vfs_write+0x23d/0x400
+>   ksys_write+0x6f/0xf0
+>   do_syscall_64+0x64/0x120
+>   ? exc_page_fault+0x70/0x150
+>   entry_SYSCALL_64_after_hwframe+0x6e/0x76
 
-It would help to mention in the cover letter that the UFSHCI driver is
-the only driver that sets .rpm_autosuspend_delay in the SCSI host template
-and hence that this patch does not break any SCSI drivers. Anyway:
+I think this means that the block layer is waiting for the completion of
+the SYNCHRONIZE CACHE command. Can you please also share the SCSI host and
+device states after the hang has been reproduced, e.g. by sharing the output
+of the following commands (these commands require the bash shell)?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+(cd /sys/class/scsi_host && grep -aH . */state)
+(cd /sys/class/scsi_device && grep -aH . */device/{device_{blocked,busy},state})
+
+Thanks,
+
+Bart.
