@@ -1,167 +1,122 @@
-Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D67D381DA
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Jan 2024 12:15:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5026E364A8
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Jan 2024 12:40:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="gZKMDGVx"
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 409BvUYJ018215;
-	Tue, 9 Jan 2024 04:15:21 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-transfer-encoding:content-type; s=
-	pfpt0220; bh=qaOwoCxoV4gEUMRbXAzyGEEYtiSsMammCVbWpD7wIKU=; b=gZK
-	MDGVxK9gA2CxO6sMLXaeQd2yQ6I1wlnT0Ask9029RNuHmnIU6lJ7ri7Y29eEzh3c
-	hCgFKO38Irt3wc4iB16L5WZ/tTn4FYpYNlZimbV75oZOG/ZodkKmSpIBxsvSUGKw
-	pUUkBPf9OFCfXZ+Dl2b1cRjcCq7dEcOi8igyLSeUR5VAxDEkmsuKdT2RBuOgKhBG
-	fGORmuqDu9L6UKywdEQz3lMJbhbnYeCSaVJ3cYM26xvtequStEc0avCoQkVjQEVo
-	hg7wkFMRTN2bClE1JM31TgNlvQvmkvK7u5Y8AywZFWmK5GntPbRMUjh8+owY+Tuz
-	owKZlS/ePuT1ZwDK4Eg==
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3vh5qt02td-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-	Tue, 09 Jan 2024 04:15:21 -0800 (PST)
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Tue, 9 Jan
- 2024 04:15:19 -0800
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
- Transport; Tue, 9 Jan 2024 04:15:19 -0800
-Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
-	by maili.marvell.com (Postfix) with ESMTP id CB15F3F70B4;
-	Tue,  9 Jan 2024 04:15:17 -0800 (PST)
-From: Nilesh Javali <njavali@marvell.com>
-To: <martin.petersen@oracle.com>, <lduncan@suse.com>, <cleech@redhat.com>
-CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
-        <jmeneghi@redhat.com>
-Subject: [PATCH v3 1/3] uio: introduce UIO_MEM_DMA_COHERENT type
-Date: Tue, 9 Jan 2024 17:44:56 +0530
-Message-ID: <20240109121458.26475-2-njavali@marvell.com>
-X-Mailer: git-send-email 2.23.1
-In-Reply-To: <20240109121458.26475-1-njavali@marvell.com>
-References: <20240109121458.26475-1-njavali@marvell.com>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="aXZKAQNt"
+X-UUID: 3f33fd0eaeec11ee9e680517dc993faa-20240109
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=9YnYZ+9HQO7srjh6G+ugxuioYLUj69zev/NkRZhEzbo=;
+	b=aXZKAQNtYZKOH3bNT4RGB24aiokaYMoul5NfGMridaUJ9nnLxH+7fKBVUg+w0TUNwDhXiYx4t0E58Vl/lOge+c9ToMLsLFuWm4bVg1SN+CUvpaA2ee1B0ecVAHrPSE3TVCXAPX0qFRR2B4/5EYYUTZ2ys9mEPnTRNSbuYzzBkqU=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.35,REQID:1bd16209-1476-44df-bb99-2dbe8adcef9d,IP:0,U
+	RL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-25
+X-CID-META: VersionHash:5d391d7,CLOUDID:974b287f-4f93-4875-95e7-8c66ea833d57,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+	RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:
+	NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
+X-UUID: 3f33fd0eaeec11ee9e680517dc993faa-20240109
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 500669645; Tue, 09 Jan 2024 20:40:19 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Tue, 9 Jan 2024 20:40:17 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Tue, 9 Jan 2024 20:40:17 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
+	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
+	<naomi.chu@mediatek.com>, <chu.stanley@gmail.com>
+Subject: [PATCH v1 2/2] ufs: host: mediatek: change default auto suspend timer
+Date: Tue, 9 Jan 2024 20:40:15 +0800
+Message-ID: <20240109124015.31359-3-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20240109124015.31359-1-peter.wang@mediatek.com>
+References: <20240109124015.31359-1-peter.wang@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: c5s46ZUEAaEXriuU8INH1nc94IW1MHRM
-X-Proofpoint-GUID: c5s46ZUEAaEXriuU8INH1nc94IW1MHRM
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-09_02,2023-12-07_01,2023-05-22_02
+X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-AS-Result: No-10--6.634100-8.000000
+X-TMASE-MatchedRID: ivhBngArENGAAYHsHSPDcxn0UD4GU5IquLwbhNl9B5UY0A95tjAn+4lb
+	XigDnfa40/AsCkkwxo4Dcb80+9h4A294Ipa1otxo4pdq9sdj8LUK3n1SHen81WHZ+cd7VyKXFrG
+	/KStN8Cgkh92jn4TMCfWwXl0A4TcEGAdnzrnkM48URSScn+QSXt0H8LFZNFG7bkV4e2xSge4JOD
+	FehVdzk7cfTC05fAlZLwYE9U5/3fLkf9e0AcUBj+ulxyHOcPoH
+X-TM-AS-User-Approved-Sender: No
+X-TM-AS-User-Blocked-Sender: No
+X-TMASE-Result: 10--6.634100-8.000000
+X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-SNTS-SMTP: 408B38EB27E7D1DC6ECFE717F89F4676B026CAFDF49F764B6564A733B55A921B2000:8
+X-MTK: N
 
-From: Chris Leech <cleech@redhat.com>
+From: Peter Wang <peter.wang@mediatek.com>
 
-Add a UIO memtype specifically for sharing dma_alloc_coherent
-memory with userspace, backed by dma_mmap_coherent.
+Mediatek ufs driver change default auto suspend timer from 2000 ms
+to 500 ms.
 
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202401042222.J9GOUiYL-lkp@intel.com/
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Signed-off-by: Chris Leech <cleech@redhat.com>
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 ---
-v3:
-- fix warnings reported by kernel test robot
-v2:
-- expose only the dma_addr within uio_mem
-- Cleanup newly added unions comprising virtual_addr
-  and struct device
- drivers/uio/uio.c          | 40 ++++++++++++++++++++++++++++++++++++++
- include/linux/uio_driver.h |  2 ++
- 2 files changed, 42 insertions(+)
+ drivers/ufs/host/ufs-mediatek.c | 4 ++++
+ drivers/ufs/host/ufs-mediatek.h | 3 +++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/uio/uio.c b/drivers/uio/uio.c
-index 62082d64ece0..01d83728b513 100644
---- a/drivers/uio/uio.c
-+++ b/drivers/uio/uio.c
-@@ -24,6 +24,7 @@
- #include <linux/kobject.h>
- #include <linux/cdev.h>
- #include <linux/uio_driver.h>
-+#include <linux/dma-mapping.h>
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index fc61790d289b..1bcf75dd13fc 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -893,6 +893,7 @@ static int ufs_mtk_init(struct ufs_hba *hba)
+ 	const struct of_device_id *id;
+ 	struct device *dev = hba->dev;
+ 	struct ufs_mtk_host *host;
++	struct Scsi_Host *shost = hba->host;
+ 	int err = 0;
  
- #define UIO_MAX_DEVICES		(1U << MINORBITS)
+ 	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
+@@ -937,6 +938,9 @@ static int ufs_mtk_init(struct ufs_hba *hba)
+ 	/* Enable clk scaling*/
+ 	hba->caps |= UFSHCD_CAP_CLK_SCALING;
  
-@@ -759,6 +760,42 @@ static int uio_mmap_physical(struct vm_area_struct *vma)
- 			       vma->vm_page_prot);
- }
++	/* Set runtime pm delay to replace default */
++	shost->rpm_autosuspend_delay = MTK_RPM_AUTOSUSPEND_DELAY_MS;
++
+ 	hba->quirks |= UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
+ 	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_INTR;
+ 	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_RTC;
+diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
+index f76e80d91729..596edadfe747 100644
+--- a/drivers/ufs/host/ufs-mediatek.h
++++ b/drivers/ufs/host/ufs-mediatek.h
+@@ -190,6 +190,9 @@ struct ufs_mtk_host {
+ 	struct ufs_mtk_mcq_intr_info mcq_intr_info[UFSHCD_MAX_Q_NR];
+ };
  
-+static int uio_mmap_dma_coherent(struct vm_area_struct *vma)
-+{
-+	struct uio_device *idev = vma->vm_private_data;
-+	struct uio_mem *mem;
-+	void *addr;
-+	int ret = 0;
-+	int mi;
++/* MTK delay of autosuspend: 500 ms */
++#define MTK_RPM_AUTOSUSPEND_DELAY_MS 500
 +
-+	mi = uio_find_mem_index(vma);
-+	if (mi < 0)
-+		return -EINVAL;
-+
-+	mem = idev->info->mem + mi;
-+
-+	if (mem->dma_addr & ~PAGE_MASK)
-+		return -ENODEV;
-+	if (vma->vm_end - vma->vm_start > mem->size)
-+		return -EINVAL;
-+
-+	/*
-+	 * UIO uses offset to index into the maps for a device.
-+	 * We need to clear vm_pgoff for dma_mmap_coherent.
-+	 */
-+	vma->vm_pgoff = 0;
-+
-+	addr = (void *)mem->addr;
-+	ret = dma_mmap_coherent(&idev->dev,
-+				vma,
-+				addr,
-+				mem->dma_addr,
-+				vma->vm_end - vma->vm_start);
-+	vma->vm_pgoff = mi;
-+
-+	return ret;
-+}
-+
- static int uio_mmap(struct file *filep, struct vm_area_struct *vma)
- {
- 	struct uio_listener *listener = filep->private_data;
-@@ -806,6 +843,9 @@ static int uio_mmap(struct file *filep, struct vm_area_struct *vma)
- 	case UIO_MEM_VIRTUAL:
- 		ret = uio_mmap_logical(vma);
- 		break;
-+	case UIO_MEM_DMA_COHERENT:
-+		ret = uio_mmap_dma_coherent(vma);
-+		break;
- 	default:
- 		ret = -EINVAL;
- 	}
-diff --git a/include/linux/uio_driver.h b/include/linux/uio_driver.h
-index 47c5962b876b..7efa81497183 100644
---- a/include/linux/uio_driver.h
-+++ b/include/linux/uio_driver.h
-@@ -37,6 +37,7 @@ struct uio_map;
- struct uio_mem {
- 	const char		*name;
- 	phys_addr_t		addr;
-+	dma_addr_t		dma_addr;
- 	unsigned long		offs;
- 	resource_size_t		size;
- 	int			memtype;
-@@ -158,6 +159,7 @@ extern int __must_check
- #define UIO_MEM_LOGICAL	2
- #define UIO_MEM_VIRTUAL 3
- #define UIO_MEM_IOVA	4
-+#define UIO_MEM_DMA_COHERENT	5
- 
- /* defines for uio_port->porttype */
- #define UIO_PORT_NONE	0
+ /*
+  * Multi-VCC by Numbering
+  */
 -- 
-2.23.1
+2.18.0
 
