@@ -1,70 +1,60 @@
-Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
+Received: from mail-il1-f175.google.com (mail-il1-f175.google.com [209.85.166.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86A383DBA9
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Jan 2024 22:23:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCBB73DB90
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Jan 2024 22:44:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="v4dmi3Pe"
-Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-5cedfc32250so1533464a12.0
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Jan 2024 14:23:33 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="NuvkG/vS"
+Received: by mail-il1-f175.google.com with SMTP id e9e14a558f8ab-36091f4d8easo9811305ab.2
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Jan 2024 14:44:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704839013; x=1705443813; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704840263; x=1705445063; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RTaJ7F4UvxTDYLwb0WtqTx+At6efRtBZFNZppNwGZ4o=;
-        b=v4dmi3PeHedFlxj5MN0GxY+JUYC7smfDF5oiKO9ZSBRwdXsEdaCJ+jx2r0OxPqtcGR
-         cAuWOaEL135A7dfGfP0QyGa30g7Mb3djr3an/KtjgIjrCpDQbGRVYN3qwsvsdgUj0JEy
-         aASsIlfknqfn4+FVfJnP5FhWhg2qsEjxjQiCNrLGEofpMzaqLi7MWUVFyiPnz+cW/uzG
-         V9MKv1z4D4qaGjLqzpEWMG7OPjqg1KP7vY8qSWItJukYXiT5bH0SgL9bcIcK8WQG0tMe
-         3fOHghG43tyHr6N38uBy8dwr5fbiCiEP4XpR0zbdlajkO7i7AsVFaWUYVg2hO+294ADS
-         OYxQ==
+        bh=L9xTLocbxJtZ/EsVzz8IzAHiTCzUNRLczzpqZlO0pg4=;
+        b=NuvkG/vSLcINgXnC03k23QL0l9G3KqxZ/jrQxVTTiEBbPXQ1xJYEq51nshbMeSaVBs
+         FduTo7bxzBnBArU4Q5YfBLCe8Aogk1SD3vXrMMsyg73NmbXjUkG/iOPwhu4gTGDgUyYu
+         wqidBfoBjQhgZrXecI9nDlgC1m935d1Qpo2hr4hgzNJOU7QkwS0CMwZV1Kc8Cyqrh2KF
+         Y9e2bJZqoFQ1p4zIPWLHEJW+Rj6C/Jf7Yy0FsDXcTc3XUdb8qZzbpEUs/6PJuAtF7YVY
+         Wz2QfD9o1jvgTV0+iPlpX+7VdFyq2izIzbvfLA0aFyhJ+IXTQA0utor42UsDtO5je72N
+         DFzQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704839013; x=1705443813;
+        d=1e100.net; s=20230601; t=1704840263; x=1705445063;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=RTaJ7F4UvxTDYLwb0WtqTx+At6efRtBZFNZppNwGZ4o=;
-        b=WtNV1zs1JjmZM8dOksH0cbVwsyGbenxkDfxSkhsUzc9emq4jBDQZSbtuWy12OkSl4y
-         DGg/llCwvOGvtaP/VA0EI0leWwtcmpw8eMEPqhc+LohAYBNVr2ofJXqm2rTRWNFC9NPu
-         pflpQqYs47XfoYKGdTSFng3++mIT5s5M4Vkym2m/DaNgm0KhE7kAYOFDzdncIFV+iHGL
-         YYePxxo/64KQ3pyeSPmR9KmstVqHRDbmpV0V0B9DupcbVmwa7uw+aLjuiQMaSOYhDEZ8
-         0V/shncR3x1j81+4dDSeSxJ4DEp1vLSmvV1PMApTkA9v86fR5kElQZnyoy+UOxNz6l5K
-         QgIQ==
-X-Gm-Message-State: AOJu0YwlWIvzgzyjfbTcSaN/TMOC4AqGgXTfBUJqwxsp+iNMTy5VJaZn
-	OYcV1ttlEgoe2zS5OiD/O6TfgVlTsENB+w==
-X-Google-Smtp-Source: AGHT+IHwxs6hfy7c10y/Z2WOv2jOl6yN4BZqONuQsBTiNNd0jqVThjnDnXUFG2w0+QL/HodxmXR+Zw==
-X-Received: by 2002:a05:6a21:339d:b0:199:c372:d775 with SMTP id yy29-20020a056a21339d00b00199c372d775mr10071pzb.91.1704839012809;
-        Tue, 09 Jan 2024 14:23:32 -0800 (PST)
+        bh=L9xTLocbxJtZ/EsVzz8IzAHiTCzUNRLczzpqZlO0pg4=;
+        b=iKbl5oVroQn0XuL738uIP61DIO7ziRTradNaqb++chOcnlnPCoB+GWY4J52KuuJ9zy
+         ocswXM0LbDsfMBbWftZTTi7RUzL7uTPDArUvhvaBX0PHagcnXJ6meAiIgjR+GZ8pvXnD
+         imy44BV0gUm4zVD8S8rWVYymqyIn3WZbKiarTtzyfZdfRdTnipI//2uM3cuuzgfkCCHr
+         BS6LKr08dMD80YGo0cciqZEK37zC/ApuzjKXHqFsW1SF23cHc/9sn8JaOpBRlNgWzUiC
+         mzzyVxuejajk0eYMWGxnkv81MI7IvQZOmwpMkyPvQsprsV/JRbrXcxOUVW8noazGEvZt
+         sRWQ==
+X-Gm-Message-State: AOJu0Ywh4kBhVUupoet4Tggo9O4j2aC0ipxknUtVH6jWUgGjxmzirceB
+	/e5yZsrwtOymwjxBz8Dnsiz43LGRM8GvaA==
+X-Google-Smtp-Source: AGHT+IHSKNtjcO8bUbdBcwmcDlNZLFhTfOw5pswdA67ew28nBq3+gGgOSAobh3nBsnKFOjOmUdXBuw==
+X-Received: by 2002:a05:6e02:1845:b0:35f:bd12:5488 with SMTP id b5-20020a056e02184500b0035fbd125488mr183647ilv.30.1704840262829;
+        Tue, 09 Jan 2024 14:44:22 -0800 (PST)
 Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
-        by smtp.gmail.com with ESMTPSA id ns14-20020a17090b250e00b0028c2de909e4sm2574940pjb.50.2024.01.09.14.23.32
+        by smtp.gmail.com with ESMTPSA id o5-20020a634e45000000b0050f85ef50d1sm2059281pgl.26.2024.01.09.14.44.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jan 2024 14:23:32 -0800 (PST)
+        Tue, 09 Jan 2024 14:44:22 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1rNKVN-008FeO-0H;
-	Wed, 10 Jan 2024 09:23:29 +1100
-Date: Wed, 10 Jan 2024 09:23:29 +1100
+	id 1rNKpX-008G6o-07;
+	Wed, 10 Jan 2024 09:44:19 +1100
+Date: Wed, 10 Jan 2024 09:44:19 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Cc: "dsterba@suse.cz" <dsterba@suse.cz>, Jan Kara <jack@suse.cz>,
-	Matthew Wilcox <willy@infradead.org>,
-	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-mm@kvack.org" <linux-mm@kvack.org>,
-	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>
-Subject: Re: [Lsf-pc] [LSF/MM/BPF TOPIC] Removing GFP_NOFS
-Message-ID: <ZZ3HYUR85iIEJiGX@dread.disaster.area>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: Re: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
+Message-ID: <ZZ3MQ1nFcyaMVuCv@dread.disaster.area>
 References: <ZZcgXI46AinlcBDP@casper.infradead.org>
- <20240105105736.24jep6q6cd7vsnmz@quack3>
- <20f3de31-fbb0-4d8b-8f34-aa1beba9afc9@wdc.com>
- <20240108173928.GB28693@twin.jikos.cz>
- <b5bc1e72-72ea-4b67-86a1-3d41deb5bc72@wdc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,34 +63,64 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b5bc1e72-72ea-4b67-86a1-3d41deb5bc72@wdc.com>
+In-Reply-To: <ZZcgXI46AinlcBDP@casper.infradead.org>
 
-On Tue, Jan 09, 2024 at 07:43:54AM +0000, Johannes Thumshirn wrote:
-> On 08.01.24 18:40, David Sterba wrote:
-> >> 199 - btrfs
-> > 
-> > All the easy conversions to scoped nofs allocaionts have been done, the
-> > rest requires to add saving the nofs state at the transactions tart, as
-> > said in above. I have a wip series for that, updated every few releases
-> > but it's intrusive and not finished for a testing run. The number of
-> > patches is over 100, doing each conversion separately, the other generic
-> > changes are straightforward.
-> > 
-> > It's possible to do it incrementally, there's one moster patch (300
-> > edited lines) to add a stub parameter to transaction start,
-> > https://lore.kernel.org/linux-btrfs/20211018173803.18353-1-dsterba@suse.com/ .
-> > There are some counter points in the discussion if it has to be done
-> > like that but IIRC it's not possible, I have examples why not.
-> > 
+On Thu, Jan 04, 2024 at 09:17:16PM +0000, Matthew Wilcox wrote:
+> This is primarily a _FILESYSTEM_ track topic.  All the work has already
+> been done on the MM side; the FS people need to do their part.  It could
+> be a joint session, but I'm not sure there's much for the MM people
+> to say.
 > 
-> At a first glance, storing the nofs scope in the transaction handle like 
-> Filipe proposed sounds like a good idea to me.
+> There are situations where we need to allocate memory, but cannot call
+> into the filesystem to free memory.  Generally this is because we're
+> holding a lock or we've started a transaction, and attempting to write
+> out dirty folios to reclaim memory would result in a deadlock.
+> 
+> The old way to solve this problem is to specify GFP_NOFS when allocating
+> memory.  This conveys little information about what is being protected
+> against, and so it is hard to know when it might be safe to remove.
+> It's also a reflex -- many filesystem authors use GFP_NOFS by default
+> even when they could use GFP_KERNEL because there's no risk of deadlock.
 
-That's exactly what XFS has done for the last couple of decades. :)
+Another thing that needs to be considered: GFP_NOFS has been used to
+avoid lockdep false positives due to GFP_KERNEL allocations also
+being used as scoped GFP_NOFS allocations via different call
+chains.
 
-Cheers,
+That is, if a code path does a GFP_KERNEL allocation by default,
+lockdep will track this as a "reclaim allowed" allocation context.
+If that same code is then executed from a scoped NOFS context
+(e.g. inside a transaction context), then lockdep will see it as
+a "no reclaim allowed" allocation context.
 
-Dave.
+The problem then arises when the next GFP_KERNEL allocation occurs,
+the code enters direct reclaim, grabs a filesystem lock and lockdep
+then throws out a warning that filesystem locks are being taken
+in an allocation context that doesn't allow reclaim to take
+filesystem locks.
+
+These are typically false positives.
+
+Prior to __GFP_NOLOCKDEP existing, we used GFP_NOFS unconditionally
+in these shared context paths to avoid lockdep from seeing a
+GFP_KERNEL allocation context from this allocation path. Now that we
+are getting rid of GFP_NOFS and replacing these instances with
+GFP_KERNEL and scoped constraints, we're removing the anti-lockdep
+false positive mechanism.
+
+IOWs, we have to replace GFP_NOFS with GFP_KERNEL | __GFP_NOLOCKDEP
+in these cases to prevent false positive reclaim vs lock inversion
+detections. There's at least a dozen of these cases in XFS and we
+generally know where they are, but this will likely be an ongoing
+issue for filesystems as we switch over to using scoped memory
+allocation contexts.
+
+I'm not sure there's a good solution to this. However, we need to
+make sure people are aware that GFP_NOFS will need to be converted
+to GFP_KERNEL | __GFP_NOLOCKDEP for allocations that can occur in
+mixed contexts.
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
