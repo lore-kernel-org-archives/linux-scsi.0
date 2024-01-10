@@ -1,170 +1,94 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 001254D591
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Jan 2024 23:04:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0388933EC
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jan 2024 02:18:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="olMukpd8"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-6daa89a6452so2165446b3a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Jan 2024 15:04:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1704841443; x=1705446243; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=GVskAbFQn1uVXaOO+q7ZemcnAH1k41TKnSXZBeHYzrY=;
-        b=olMukpd8457FDVL6h0M69V0r8ezyJTvPfIYpkW+JH/LSruTp7+PsQ1jIDoJLJ+/i+i
-         BipaQLTb8S39RmXJYFEjSoonuU/MkKKJPOQqjbTTMFQVcr42TqGGayha6OObILz4rqnL
-         ks5na4pyacpoOP5vokIWO0XUCOXmJw6eWVtjbxAGMNSIzU2+nbEN0cD9gXd7FoEG5bdq
-         q2VDbHctmJEFpa/p8puLEkHCVByvOX0fVl/pR5Th1lbFFdFT+ATCGMeaZ1Hufgav7h88
-         qoJdTyIJMnz/yfqC5/l73H/MkWm7L8EuSq+wEynQNwf6idZXz3K9jrWG9DqqkTi1Mn3e
-         T5zg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704841443; x=1705446243;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GVskAbFQn1uVXaOO+q7ZemcnAH1k41TKnSXZBeHYzrY=;
-        b=Da9lUvWNYaJZKjvH2SJ5MDffNzUKiPK7Eu6dSV/K5b8MqTj/VTXz1mdJPoFx5s/v71
-         un48S/W5sSo8LHQy3n7UsVv2EDeIFwcc3g3S6npN1j06r4xTgtvCQzN7SHCBFFopABgN
-         92n0ZubloYb/WsG9wj4B9UXyPqiL/8WxD5nrEQ5teyC7B7Tm2V3rrGSByln2LotqEDRS
-         rrumOPNz659PaKg9TBOAz7x7wZz/2IBvqJb9BCLm1rNhDnUTqddTqC/G1kybfO/X/aVo
-         jrIK14rHGaRjEdDzzJEEDFh311NvvVdOzfb1ptFaqyN5N24QNi/7zT4u5PmDAHKP6mkT
-         BNOw==
-X-Gm-Message-State: AOJu0Yz0nea7Yp0EHLDcUdSFqI5YafIvJ8nnJHIvR9hd9KY2qsOW2pER
-	91wj2iLVgqDHc+RhHp45Rfjdfnrn+96vRg==
-X-Google-Smtp-Source: AGHT+IEzELO00cjbdQ5MoAae4PmrX2wGL2oSaAb1TtprT5iO1eenc3qlgGb6zh1GdAb8Vowe9WZkyA==
-X-Received: by 2002:a05:6a00:a01:b0:6d9:b8e3:9137 with SMTP id p1-20020a056a000a0100b006d9b8e39137mr245785pfh.10.1704841443394;
-        Tue, 09 Jan 2024 15:04:03 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-249-6.pa.nsw.optusnet.com.au. [49.180.249.6])
-        by smtp.gmail.com with ESMTPSA id fj1-20020a056a003a0100b006d9b66f3d07sm2241185pfb.95.2024.01.09.15.04.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jan 2024 15:04:02 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rNL8a-008GXv-15;
-	Wed, 10 Jan 2024 10:04:00 +1100
-Date: Wed, 10 Jan 2024 10:04:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-	ming.lei@redhat.com, bvanassche@acm.org, ojaswin@linux.ibm.com
-Subject: Re: [PATCH v2 00/16] block atomic writes
-Message-ID: <ZZ3Q4GPrKYo91NQ0@dread.disaster.area>
-References: <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com>
- <20231213154409.GA7724@lst.de>
- <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com>
- <20231219051456.GB3964019@frogsfrogsfrogs>
- <20231219052121.GA338@lst.de>
- <76c85021-dd9e-49e3-80e3-25a17c7ca455@oracle.com>
- <20231219151759.GA4468@lst.de>
- <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com>
- <20231221065031.GA25778@lst.de>
- <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ahwlawgi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 696E8C433C7;
+	Wed, 10 Jan 2024 02:18:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704853082;
+	bh=jyImiAEPQ+c6zcOuWxgXzf14+6PA86zdtnSh7sbJ3u4=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=ahwlawgiy6uy2N2qfZAHwftzgHE6B4dikUyKOmnkp1GnFxM/xUR8deEVreMrQt6wK
+	 YlGiEEbIiJxQAVRbXKcVg4GvdAIULUkx5iBqpwpABGO3PbJAd3rdg4LGJhPn/Cn/AZ
+	 mQTMpG+V7jxJ9eQYc5MeMxBL1t0GFDtXvywfD40+T46MfC2peqJ9F8rooG4YgDiW95
+	 gsWJ6SjGAjh+ybcUkOwkVKtOr7b98lDJnSO3Aao/LQF7W4se/H4g+qGP4RSmotTv2m
+	 dnNwHC4l4p9yRPAUg+kMjKAkfUmbAr8vRD8CR/svCPr+Sul8fQOoFkmb/spRzfnvSv
+	 NCSJPWWxWoITA==
+Message-ID: <a6d89569-8369-4550-83da-d63afdab579d@kernel.org>
+Date: Wed, 10 Jan 2024 11:18:00 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [Regression] Hang deleting ATA HDD device for undocking
+Content-Language: en-US
+To: Kevin Locke <kevin@kevinlocke.name>, Bart Van Assche
+ <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+ Niklas Cassel <niklas.cassel@wdc.com>
+References: <ZZw3Th70wUUvCiCY@kevinlocke.name>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ZZw3Th70wUUvCiCY@kevinlocke.name>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jan 09, 2024 at 09:55:24AM +0000, John Garry wrote:
-> On 21/12/2023 06:50, Christoph Hellwig wrote:
-> > On Tue, Dec 19, 2023 at 04:53:27PM +0000, John Garry wrote:
-> > > On 19/12/2023 15:17, Christoph Hellwig wrote:
-> > > > On Tue, Dec 19, 2023 at 12:41:37PM +0000, John Garry wrote:
-> > > > > How about something based on fcntl, like below? We will prob also require
-> > > > > some per-FS flag for enabling atomic writes without HW support. That flag
-> > > > > might be also useful for XFS for differentiating forcealign for atomic
-> > > > > writes with just forcealign.
-> > > > I would have just exposed it through a user visible flag instead of
-> > > > adding yet another ioctl/fcntl opcode and yet another method.
-> > > > 
-> > > Any specific type of flag?
-> > > 
-> > > I would suggest a file attribute which we can set via chattr, but that is
-> > > still using an ioctl and would require a new inode flag; but at least there
-> > > is standard userspace support.
-> > I'd be fine with that, but we're kinda running out of flag there.
-> > That's why I suggested the FS_XFLAG_ instead, which basically works
-> > the same.
+On 1/9/24 02:56, Kevin Locke wrote:
+> Hi all,
 > 
-> Hi Christoph,
+> On a ThinkPad T430 running Linux 6.7, when I attempt to delete the ATA
+> device for a hard drive in the Ultrabay slot (to hotswap/undock it[1])
+> the process freezes in an unterruptible sleep.  Specifically, if I run
 > 
-> Coming back to this topic... how about this FS_XFLAG_ and fsxattr update:
+>     echo 1 >/sys/devices/pci0000:00/0000:00:1f.2/ata2/host1/target1:0:0/1:0:0:0/delete
 > 
-> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-> index da43810b7485..9ef15fced20c 100644
-> --- a/include/uapi/linux/fs.h
-> +++ b/include/uapi/linux/fs.h
-> @@ -118,7 +118,8 @@ struct fsxattr {
->        __u32           fsx_nextents;   /* nextents field value (get)   */
->        __u32           fsx_projid;     /* project identifier (get/set) */
->        __u32           fsx_cowextsize; /* CoW extsize field value
-> (get/set)*/
-> -       unsigned char   fsx_pad[8];
-> +       __u32           fsx_atomicwrites_size; /* unit max */
-> +       unsigned char   fsx_pad[4];
-> };
+> The shell process hangs in the write(2) syscall.  The last dmesg
+> entries post hang are:
 > 
-> /*
-> @@ -140,6 +141,7 @@ struct fsxattr {
-> #define FS_XFLAG_FILESTREAM    0x00004000      /* use filestream allocator
-> */
-> #define FS_XFLAG_DAX           0x00008000      /* use DAX for IO */
-> #define FS_XFLAG_COWEXTSIZE    0x00010000      /* CoW extent size
-> allocator hint */
-> +#define FS_XFLAG_ATOMICWRITES  0x00020000
-> #define FS_XFLAG_HASATTR       0x80000000      /* no DIFLAG for this   */
-> 
-> /* the read-only stuff doesn't really belong here, but any other place is
-> lines 1-22/22 (END)
-> 
-> Having FS_XFLAG_ATOMICWRITES set will lead to FMODE_CAN_ATOMIC_WRITE being
-> set.
-> 
-> So a user can issue:
-> 
-> >xfs_io -c "atomic-writes 64K" mnt/file
-> >xfs_io -c "atomic-writes" mnt/file
-> [65536] mnt/file
+>     sd 1:0:0:0: [sda] Synchronizing SCSI cache
+>     ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+>     ata2.00: ACPI cmd f5/00:00:00:00:00:a0(SECURITY FREEZE LOCK) filtered out
+>     ata2.00: ACPI cmd ef/10:03:00:00:00:a0(SET FEATURES) filtered out
+>     ata2.00: ACPI cmd f5/00:00:00:00:00:a0(SECURITY FREEZE LOCK) filtered out
+>     ata2.00: ACPI cmd ef/10:03:00:00:00:a0(SET FEATURES) filtered out
+>     ata2.00: configured for UDMA/133
 
-Where are you going to store this value in the inode?  It requires a
-new field in the inode and so is a change of on-disk format, right?
+It looks like the device was sleeping or was in standby state.
+If that is the case, then we may be deadlocking with the scsi revalidate done
+when waking up a drive. Can you confirm what the power state of the drive was
+when you ran this ? Do you see an issue if you first make sure that the drive is
+spun-up ?
 
-As it is, I really don't see this as a better solution than the
-original generic "force align" flag that simply makes the extent
-size hint alignment a hard physical alignment requirement rather
-than just a hint. This has multiple uses (DAX PMD alignment is
-another), so I just don't see why something that has a single,
-application specific API that implements a hard physical alignment
-is desirable.
+>     ata2.00: retrying FLUSH 0xea Emask 0x0
+> 
+> On kernel versions prior to 6.5-rc1, dmesg would subsequently contain:
+> 
+>     sd 1:0:0:0: [sda] Stopping disk
+>     ata2.00: disable device
+> 
+> Note that the hang only occurs when deleting a hard disk drive.  It
+> does not occur when deleting an optical disk drive.
+> 
+> I bisected the regression to 8b566edbdbfb5cde31a322c57932694ff48125ed.
+> 
+> I know very little about the SCSI/ATA subsystems or the internals of
+> ATA hotswapping/undocking.  I'd appreciate any help investigating the
+> issue, or properly undocking.
+> 
+> Thanks,
+> Kevin
+> 
+> [1]: https://www.thinkwiki.org/wiki/How_to_hotswap_Ultrabay_devices
+> 
 
-Indeed, the whole reason that extent size hints are so versatile is
-that they implement a generic allocation alignment/size function
-that can be used for anything your imagination extends to. If they
-were implemented as a "only allow RAID stripe aligned/sized
-allocation" for the original use case then that functionality would
-have been far less useful than it has proven to be over the past
-couple of decades.
-
-Hence history teaches us that we should be designing the API around
-the generic filesystem function required (hard alignment of physical
-extent allocation), not the specific use case that requires that
-functionality.
-
--Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Damien Le Moal
+Western Digital Research
+
