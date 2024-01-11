@@ -1,19 +1,19 @@
 Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.9])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id AFA5F14F88;
-	Thu, 11 Jan 2024 11:11:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 32524156C1;
+	Thu, 11 Jan 2024 11:13:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="GWDvW8kf"
+	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="l7DFsK+R"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-	s=s110527; h=From:Subject:Date:Message-Id; bh=5sjLwUPk7GW0AYnZdr
-	pWLEmyQy7eYTGg/d7DZKCHq6w=; b=GWDvW8kfl9KDvl1mm6occPSzLG1Ba9xq+0
-	fCwM9WnqnZ7XRaRNeGYL2DLUks0Q3naNm89ugpnZqqxxJ/BhD3HWCUlYrBx+mSgG
-	3wf/QZr+BSd5g9448yOrgAick6GhE7gNQs6EOmoG/GwpmeyXRr3dPD9v1AGLDPtP
-	E2t+mJTvY=
+	s=s110527; h=From:Subject:Date:Message-Id; bh=Ht4MnEG5NluBwbXbW6
+	vqVxhbh7xq6/A58NBUbDmjMTg=; b=l7DFsK+RIianOK3E64WVGDnuMwxWeQRI/O
+	O2JGxwagNNwYIBYrv4p2YzzGRa1QgJcE5EKe7piOT6ZVMq92pipSV9ApZEXU+xqJ
+	D81Z+DOHdmuIlIxk9H4rgyfW0fGhCu2fwRzJrFNsPogpEx0ugxEBcQgnNyHaOPU4
+	OZK8izqxM=
 Received: from localhost.localdomain (unknown [182.148.14.173])
-	by gzga-smtp-mta-g0-4 (Coremail) with SMTP id _____wD3H3fLzJ9lxzinAA--.14213S2;
-	Thu, 11 Jan 2024 19:11:07 +0800 (CST)
+	by gzga-smtp-mta-g0-5 (Coremail) with SMTP id _____wD3_59MzZ9l19GnAA--.21967S2;
+	Thu, 11 Jan 2024 19:13:16 +0800 (CST)
 From: XueBing Chen <chenxb_99091@126.com>
 To: jejb@linux.ibm.com,
 	njavali@marvell.com,
@@ -22,16 +22,16 @@ To: jejb@linux.ibm.com,
 Cc: linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	XueBing Chen <chenxb_99091@126.com>
-Subject: [PATCH] scsi: qla4xxx: Clean up errors in ql4_def.h
-Date: Thu, 11 Jan 2024 11:11:06 +0000
-Message-Id: <20240111111106.15200-1-chenxb_99091@126.com>
+Subject: [PATCH] scsi/qla4xxx: Clean up errors in ql4_nvram.c
+Date: Thu, 11 Jan 2024 11:13:15 +0000
+Message-Id: <20240111111315.15286-1-chenxb_99091@126.com>
 X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID:_____wD3H3fLzJ9lxzinAA--.14213S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxWr17trykAFW3JryDur1xXwb_yoW5uF4DpF
-	WUtas8Wa1DtFnFgFWkKrs8Crn3KFn2qa4UKas2gw48tFn0y3y0yryruFyY9FyfJw1kXF1f
-	JF4kXFWrCw42grUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:_____wD3_59MzZ9l19GnAA--.21967S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uF1ruw47Gw45KF1rJFWrXwb_yoW5JFyfpF
+	y8Gas8ur4Utry7urZ8tFs8ur1furyxt342kw43W3y0vF1DA3y8Ary8ZFy0vasIg3s8GF1I
+	9F4qyF1rWr4UJrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U0FAJUUUUU=
-X-CM-SenderInfo: hfkh05lebzmiizr6ij2wof0z/1tbiGA9ixWVLZWp60gAAs5
+X-CM-SenderInfo: hfkh05lebzmiizr6ij2wof0z/1tbiGBBixWVLZWqBEQAAse
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -40,93 +40,81 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
 Fix the following errors reported by checkpatch:
 
-ERROR: "foo* bar" should be "foo *bar"
+RROR: "foo * bar" should be "foo *bar"
 
 Signed-off-by: XueBing Chen <chenxb_99091@126.com>
 ---
- drivers/scsi/qla4xxx/ql4_def.h | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/scsi/qla4xxx/ql4_nvram.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 5e683ba49fa5..af466834dc3b 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -918,54 +918,54 @@ static inline int adapter_up(struct scsi_qla_host *ha)
- 	       (!test_bit(AF_LOOPBACK, &ha->flags));
+diff --git a/drivers/scsi/qla4xxx/ql4_nvram.c b/drivers/scsi/qla4xxx/ql4_nvram.c
+index f08a5abcb31a..b30d119e6327 100644
+--- a/drivers/scsi/qla4xxx/ql4_nvram.c
++++ b/drivers/scsi/qla4xxx/ql4_nvram.c
+@@ -32,7 +32,7 @@ static inline int eeprom_no_data_bits(struct scsi_qla_host *ha)
+ 	return FM93C56A_DATA_BITS_16;
  }
  
--static inline struct scsi_qla_host* to_qla_host(struct Scsi_Host *shost)
-+static inline struct scsi_qla_host *to_qla_host(struct Scsi_Host *shost)
+-static int fm93c56a_select(struct scsi_qla_host * ha)
++static int fm93c56a_select(struct scsi_qla_host *ha)
  {
- 	return (struct scsi_qla_host *)iscsi_host_priv(shost);
+ 	DEBUG5(printk(KERN_ERR "fm93c56a_select:\n"));
+ 
+@@ -41,7 +41,7 @@ static int fm93c56a_select(struct scsi_qla_host * ha)
+ 	return 1;
  }
  
--static inline void __iomem* isp_semaphore(struct scsi_qla_host *ha)
-+static inline void __iomem *isp_semaphore(struct scsi_qla_host *ha)
+-static int fm93c56a_cmd(struct scsi_qla_host * ha, int cmd, int addr)
++static int fm93c56a_cmd(struct scsi_qla_host *ha, int cmd, int addr)
  {
- 	return (is_qla4010(ha) ?
- 		&ha->reg->u1.isp4010.nvram :
- 		&ha->reg->u1.isp4022.semaphore);
+ 	int i;
+ 	int mask;
+@@ -105,14 +105,14 @@ static int fm93c56a_cmd(struct scsi_qla_host * ha, int cmd, int addr)
+ 	return 1;
  }
  
--static inline void __iomem* isp_nvram(struct scsi_qla_host *ha)
-+static inline void __iomem *isp_nvram(struct scsi_qla_host *ha)
+-static int fm93c56a_deselect(struct scsi_qla_host * ha)
++static int fm93c56a_deselect(struct scsi_qla_host *ha)
  {
- 	return (is_qla4010(ha) ?
- 		&ha->reg->u1.isp4010.nvram :
- 		&ha->reg->u1.isp4022.nvram);
+ 	ha->eeprom_cmd_data = AUBURN_EEPROM_CS_0 | 0x000f0000;
+ 	eeprom_cmd(ha->eeprom_cmd_data, ha);
+ 	return 1;
  }
  
--static inline void __iomem* isp_ext_hw_conf(struct scsi_qla_host *ha)
-+static inline void __iomem *isp_ext_hw_conf(struct scsi_qla_host *ha)
+-static int fm93c56a_datain(struct scsi_qla_host * ha, unsigned short *value)
++static int fm93c56a_datain(struct scsi_qla_host *ha, unsigned short *value)
  {
- 	return (is_qla4010(ha) ?
- 		&ha->reg->u2.isp4010.ext_hw_conf :
- 		&ha->reg->u2.isp4022.p0.ext_hw_conf);
+ 	int i;
+ 	int data = 0;
+@@ -135,8 +135,8 @@ static int fm93c56a_datain(struct scsi_qla_host * ha, unsigned short *value)
+ 	return 1;
  }
  
--static inline void __iomem* isp_port_status(struct scsi_qla_host *ha)
-+static inline void __iomem *isp_port_status(struct scsi_qla_host *ha)
+-static int eeprom_readword(int eepromAddr, u16 * value,
+-			   struct scsi_qla_host * ha)
++static int eeprom_readword(int eepromAddr, u16 *value,
++			   struct scsi_qla_host *ha)
  {
- 	return (is_qla4010(ha) ?
- 		&ha->reg->u2.isp4010.port_status :
- 		&ha->reg->u2.isp4022.p0.port_status);
+ 	fm93c56a_select(ha);
+ 	fm93c56a_cmd(ha, FM93C56A_READ, eepromAddr);
+@@ -146,7 +146,7 @@ static int eeprom_readword(int eepromAddr, u16 * value,
  }
  
--static inline void __iomem* isp_port_ctrl(struct scsi_qla_host *ha)
-+static inline void __iomem *isp_port_ctrl(struct scsi_qla_host *ha)
+ /* Hardware_lock must be set before calling */
+-u16 rd_nvram_word(struct scsi_qla_host * ha, int offset)
++u16 rd_nvram_word(struct scsi_qla_host *ha, int offset)
  {
- 	return (is_qla4010(ha) ?
- 		&ha->reg->u2.isp4010.port_ctrl :
- 		&ha->reg->u2.isp4022.p0.port_ctrl);
+ 	u16 val = 0;
+ 
+@@ -176,7 +176,7 @@ u8 rd_nvram_byte(struct scsi_qla_host *ha, int offset)
+ 	return rval;
  }
  
--static inline void __iomem* isp_port_error_status(struct scsi_qla_host *ha)
-+static inline void __iomem *isp_port_error_status(struct scsi_qla_host *ha)
+-int qla4xxx_is_nvram_configuration_valid(struct scsi_qla_host * ha)
++int qla4xxx_is_nvram_configuration_valid(struct scsi_qla_host *ha)
  {
- 	return (is_qla4010(ha) ?
- 		&ha->reg->u2.isp4010.port_err_status :
- 		&ha->reg->u2.isp4022.p0.port_err_status);
- }
- 
--static inline void __iomem * isp_gp_out(struct scsi_qla_host *ha)
-+static inline void __iomem *isp_gp_out(struct scsi_qla_host *ha)
- {
- 	return (is_qla4010(ha) ?
- 		&ha->reg->u2.isp4010.gp_out :
-@@ -979,9 +979,9 @@ static inline int eeprom_ext_hw_conf_offset(struct scsi_qla_host *ha)
- 		offsetof(struct eeprom_data, isp4022.ext_hw_conf) / 2);
- }
- 
--int ql4xxx_sem_spinlock(struct scsi_qla_host * ha, u32 sem_mask, u32 sem_bits);
--void ql4xxx_sem_unlock(struct scsi_qla_host * ha, u32 sem_mask);
--int ql4xxx_sem_lock(struct scsi_qla_host * ha, u32 sem_mask, u32 sem_bits);
-+int ql4xxx_sem_spinlock(struct scsi_qla_host *ha, u32 sem_mask, u32 sem_bits);
-+void ql4xxx_sem_unlock(struct scsi_qla_host *ha, u32 sem_mask);
-+int ql4xxx_sem_lock(struct scsi_qla_host *ha, u32 sem_mask, u32 sem_bits);
- 
- static inline int ql4xxx_lock_flash(struct scsi_qla_host *a)
- {
+ 	int status = QLA_ERROR;
+ 	uint16_t checksum = 0;
 -- 
 2.17.1
 
