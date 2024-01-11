@@ -1,133 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6C5859B69
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 23:41:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A00ECFC00
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 23:50:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jzzAM5D9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B4DDC433F1;
-	Thu, 11 Jan 2024 23:41:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705016519;
-	bh=R71K6YwiUegymVNGaMMTOWFYzwbb0c0ikKLof262kJI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=jzzAM5D9izn6DyYnCZ8b+//e+vaNRBXp13ksVGZC4pG0WAUolHCc0hE0za3bn6x0u
-	 lsN0PP6ZeHC6M/2m/GZ51WkFFhGly3VLmyyZdLYvSjZo3PuxQjP/Q387cpotylzgqE
-	 k12U0rJ/05i8BB0iw0U6NC3TXKTRDpy50Rhto7x0+4hOSv6WIW2J8b90jPjQuFf72M
-	 LRstFU71byj3ScbU25PdCE8LPfp7InoAMoQWjnESukQ2VrjSuJ5+eubqNKOuFtlFT3
-	 DbgO0vy+pRzAGQN6P2df/LHZJjPeb04uxbvoEy6k+Va8B5H17li0LKQk45rgF0Co93
-	 gCRXPd0fw4PJw==
-Message-ID: <e19165df-fe6c-4858-ba4d-ea3b342dd767@kernel.org>
-Date: Fri, 12 Jan 2024 08:41:57 +0900
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="ZWFtgF8E"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-a27733ae1dfso676844166b.3
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 15:50:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1705017050; x=1705621850; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=XuSRZauKm+2jfpyhgJr6xb3ul4ghcXQgBZWsFpIGPbY=;
+        b=ZWFtgF8ERf5/CkextXIUQiZxp4cqYMJaHRHtn3dIS0wEfxJmsd0ecOIIjVMCzV3mZh
+         GQsQJbbjHY3McUg0gc5Tqk2VeGYu36yTN7DukY//mH+2zT54nxNC6UlrMHqJA2y9ex2R
+         Ylz7yDTMBPH83J81fwIpoxaDM4PBAU9WO/ft0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705017050; x=1705621850;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=XuSRZauKm+2jfpyhgJr6xb3ul4ghcXQgBZWsFpIGPbY=;
+        b=E1sx+Z1bgXcpFX4zUdldUt/9UsfTVVboJcfsFyNPA5gU5xmCUiwCM5bpgxHq85F7Lu
+         MpB3xZIax6XFkYPsueOBiJnECU1kyt0LJiCeLIH+KYUr7n0IdjbSi+AcKt2qz8eqF6rc
+         MTpfugH1HWgFmvg1k0Uah3lKHZa4ryRFOMxUnIcRqwTMoBgjraURNsxIvELiyJ9zprgR
+         140DUm+4CkByZfn8raq7y5v4Y/9PzyoCGOJw0sjFM5ERUGK94O//jhMRT/UwNEPyDP78
+         YKxkkStAPyfAWhqF3aXJIrTaEvxLFU1lCHnkP50nzP3pCqXN/wX6C/RdzmOISlWvufcq
+         P3jg==
+X-Gm-Message-State: AOJu0YyduONOOkcYa+cl6L1ujyCHC19fIvwnWxd0mgUMBGtsAhcoOXdx
+	gdEox5dmXQ+clzqv9GKn+iw8qeoARAT56hl8a/8vty+RpVVj8HDN
+X-Google-Smtp-Source: AGHT+IHRjewC0QurIKP2tg8iA8FsJ3UD2bWKLTMidrZPgIWOf0fHMgCNvcLERhTY62AI0KNN2lGNhw==
+X-Received: by 2002:a17:906:3ed0:b0:a27:5b50:14bb with SMTP id d16-20020a1709063ed000b00a275b5014bbmr112776ejj.37.1705017050585;
+        Thu, 11 Jan 2024 15:50:50 -0800 (PST)
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com. [209.85.218.53])
+        by smtp.gmail.com with ESMTPSA id lc25-20020a170906dff900b00a2c17cb8911sm1120620ejc.2.2024.01.11.15.50.50
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 11 Jan 2024 15:50:50 -0800 (PST)
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-a27733ae1dfso676842066b.3
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 15:50:50 -0800 (PST)
+X-Received: by 2002:a17:906:2592:b0:a28:c638:40a0 with SMTP id
+ m18-20020a170906259200b00a28c63840a0mr102186ejb.77.1705017049672; Thu, 11 Jan
+ 2024 15:50:49 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: core: Kick the requeue list after inserting when
- flushing
-Content-Language: en-US
-To: Niklas Cassel <cassel@kernel.org>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Bart Van Assche <bvanassche@acm.org>
-Cc: Kevin Locke <kevin@kevinlocke.name>, linux-scsi@vger.kernel.org
-References: <20240111120533.3612509-1-cassel@kernel.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20240111120533.3612509-1-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <c5ac3166f35bac3a618b126dabadaddc11c8512d.camel@HansenPartnership.com>
+ <CAHk-=whKVgb27o3+jhSRzuZdpjWJiAvxeO8faMjHpb-asONE1g@mail.gmail.com>
+ <CAHk-=wiHCkxrMCOL+rSGuPxUoX0_GSMLjgs9v5NJg6okxc1NLw@mail.gmail.com> <255e3328bd48c23fbaae0be6d927820d36e14404.camel@HansenPartnership.com>
+In-Reply-To: <255e3328bd48c23fbaae0be6d927820d36e14404.camel@HansenPartnership.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 11 Jan 2024 15:50:32 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wi6PenRqDCuumMK_5+_gU+JdUqrBEDS-XwFiaNdVRZAHA@mail.gmail.com>
+Message-ID: <CAHk-=wi6PenRqDCuumMK_5+_gU+JdUqrBEDS-XwFiaNdVRZAHA@mail.gmail.com>
+Subject: Re: [GIT PULL] first round of SCSI updates for the 6.7+ merge window
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, 
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On 1/11/24 21:05, Niklas Cassel wrote:
-> When libata calls ata_link_abort() to abort all ata queued commands,
-> it calls blk_abort_request() on the SCSI command representing each QC.
-> 
-> This causes scsi_timeout() to be called, which calls scsi_eh_scmd_add()
-> for each SCSI command.
-> 
-> scsi_eh_scmd_add() sets the SCSI host to state recovery, and then adds
-> the command to shost->eh_cmd_q.
-> 
-> This will wake up the SCSI EH, and eventually the libata EH strategy
-> handler will be called, which calls scsi_eh_flush_done_q() to either
-> flush retry or flush finish each failed command.
-> 
-> The commands that are flush retried by scsi_eh_flush_done_q() are
-> done so using scsi_queue_insert().
-> 
-> Before commit 8b566edbdbfb ("scsi: core: Only kick the requeue list if
-> necessary"), __scsi_queue_insert() called blk_mq_requeue_request() with
-> the second argument set to true, indicating that it should always
-> kick/run the requeue list after inserting.
-> 
-> After commit 8b566edbdbfb ("scsi: core: Only kick the requeue list if
-> necessary"), __scsi_queue_insert() does not kick/run the requeue list
-> after inserting, if the current SCSI host state is recovery (which is
-> the case in the libata example above).
-> 
-> This optimization is probably fine in most cases, as I can only assume
-> that most often someone will eventually kick/run the queues.
-> 
-> However, that is not the case for scsi_eh_flush_done_q(), where we can
-> see that the request gets inserted to the requeue list, but the queue is
-> never started after the request has been inserted, leading to the block
-> layer waiting for the completion of command that never gets to run.
-> 
-> Since scsi_eh_flush_done_q() is called by SCSI EH context, the SCSI host
-> state is most likely always in recovery when this function is called.
-> 
-> Thus, let scsi_eh_flush_done_q() explicitly kick the requeue list after
-> inserting a flush retry command, so that scsi_eh_flush_done_q() keeps
-> the same behavior as before commit 8b566edbdbfb ("scsi: core: Only kick
-> the requeue list if necessary").
-> 
-> Simple reproducer for the libata example above:
-> $ hdparm -Y /dev/sda
-> $ echo 1 > /sys/class/scsi_device/0\:0\:0\:0/device/delete
-> 
-> Fixes: 8b566edbdbfb ("scsi: core: Only kick the requeue list if necessary")
-> Reported-by: Kevin Locke <kevin@kevinlocke.name>
-> Closes: https://lore.kernel.org/linux-scsi/ZZw3Th70wUUvCiCY@kevinlocke.name/
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/scsi/scsi_error.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 1223d34c04da..d983f4a0e9f1 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -2196,15 +2196,18 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
->  	struct scsi_cmnd *scmd, *next;
->  
->  	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
-> +		struct scsi_device *sdev = scmd->device;
-> +
->  		list_del_init(&scmd->eh_entry);
-> -		if (scsi_device_online(scmd->device) &&
-> -		    !scsi_noretry_cmd(scmd) && scsi_cmd_retry_allowed(scmd) &&
-> -			scsi_eh_should_retry_cmd(scmd)) {
-> +		if (scsi_device_online(sdev) && !scsi_noretry_cmd(scmd) &&
-> +		    scsi_cmd_retry_allowed(scmd) &&
-> +		    scsi_eh_should_retry_cmd(scmd)) {
->  			SCSI_LOG_ERROR_RECOVERY(3,
->  				scmd_printk(KERN_INFO, scmd,
->  					     "%s: flush retry cmd\n",
->  					     current->comm));
->  				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
-> +				blk_mq_kick_requeue_list(sdev->request_queue);
->  		} else {
->  			/*
->  			 * If just we got sense for the device (called
+On Thu, 11 Jan 2024 at 15:28, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> You installed the special "make it even harder to use" version didn't
+> you?
 
-Looks good to me.
+We call that the standard version. Because "harder to use" comes with
+the base package.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+You have the same one:
 
--- 
-Damien Le Moal
-Western Digital Research
+> Because for me (gpg 2.4.3) it gives
+>
+> jejb@lingrow:~> gpg --list-key E76040DB76CA3D176708F9AAE742C94CEE98AC85
+> pub   rsa2048 2011-09-23 [SC] [expires: 2026-03-11]
+>       D5606E73C8B46271BEAD9ADF814AE47C214854D6
+> uid           [ultimate] James Bottomley
+> <James.Bottomley@HansenPartnership.com>
+> uid           [ultimate] James Bottomley <jejb@linux.vnet.ibm.com>
+> uid           [ultimate] James Bottomley <jejb@kernel.org>
+> uid           [ultimate] [jpeg image of size 5254]
+> uid           [ultimate] James Bottomley <jejb@linux.ibm.com>
+> uid           [ultimate] James Bottomley <jejb@hansenpartnership.com>
+> sub   nistp256 2018-01-23 [S] [expires: 2024-01-16]
+> sub   nistp256 2018-01-23 [E] [expires: 2024-01-16]
+> sub   nistp256 2023-07-20 [A] [expires: 2024-01-16]
 
+Look closer.
+
+NOWHERE there does it mention E76040D.. Nowhere.
+
+Really.
+
+Yeah, it says that a key that I didn't even ask for has subkeys.  It
+doesn't say what those subkeys are, nor does it say which one matches
+the one I actually asked for.
+
+Yes, you clearly have Stockholm syndrome and think that this is all
+normal and exactly what you would expect to see.
+
+I happen to think it's unbelievable garbage, and I think subkeys are
+something that makes gpg even harder to use than it would otherwise
+be.
+
+Here's a clue: if I ask "ls" to show a file, do you think it would be
+ok if "ls" instead said "here's the directory the file is in, and here
+are the dates of all the files inside that directory"?
+
+Or would you say that such a program is crap? Honestly now...
+
+And the above is actually being *generous* to gpg. The reality is even
+worse. Try this:
+
+   gpg --list-key 37AAA9562C5CBD0C
+
+and notice how it doesn't even list the subkey I asked about. Not even
+with '--with-subkey-fingerprint'.
+
+And no, I'm not just making up particularly bad examples. This is the
+reality I deal with all the time when people use expiration dates on
+their keys.
+
+The above "show my the key" is *literally* the key you used a decade ago:
+
+    git show --oneline --show-signature 233ba2c5ffcf
+
+and this is (one of millions) reason why I despise gpg and subkeys in
+particular. That key was valid at the time, and as far as I know
+there's no way for git to say "was it expired at the time", so now all
+those signatures flag as invalid.
+
+Plus the "--list-key" thing NOT EVEN SHOWING THE KEY I ASKED FOR.
+
+Christ.
+
+Ok, I'm over it now. I just wanted to rant about my least favourite
+program ever, and how you trigger all the worst parts of it.
+
+           Linus
