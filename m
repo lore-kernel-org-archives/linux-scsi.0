@@ -1,19 +1,19 @@
-Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.9])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 32524156C1;
-	Thu, 11 Jan 2024 11:13:32 +0000 (UTC)
+Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.8])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 07F3814F80;
+	Thu, 11 Jan 2024 11:15:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="l7DFsK+R"
+	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="Y0oWSKdD"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-	s=s110527; h=From:Subject:Date:Message-Id; bh=Ht4MnEG5NluBwbXbW6
-	vqVxhbh7xq6/A58NBUbDmjMTg=; b=l7DFsK+RIianOK3E64WVGDnuMwxWeQRI/O
-	O2JGxwagNNwYIBYrv4p2YzzGRa1QgJcE5EKe7piOT6ZVMq92pipSV9ApZEXU+xqJ
-	D81Z+DOHdmuIlIxk9H4rgyfW0fGhCu2fwRzJrFNsPogpEx0ugxEBcQgnNyHaOPU4
-	OZK8izqxM=
+	s=s110527; h=From:Subject:Date:Message-Id; bh=tvTGsctEpaQmgcM111
+	a9YFZe1/B7Al7AlizSY3uBAZU=; b=Y0oWSKdDLAZ2tRMwDLggzLHm7qdfgCzfhi
+	2JAUZdWjvoLQz5nQWqwHdCh/Elp/69jjVsXJhNCaMviy5ETG6VrIpPg6x34/kSMp
+	FgpldrXV+o2MUfEHK7yzvm0lpu1hXdzvJUgxf2d4jKEdrErepaeJEzU1D2EOUN7j
+	ZroTYdE5E=
 Received: from localhost.localdomain (unknown [182.148.14.173])
-	by gzga-smtp-mta-g0-5 (Coremail) with SMTP id _____wD3_59MzZ9l19GnAA--.21967S2;
-	Thu, 11 Jan 2024 19:13:16 +0800 (CST)
+	by gzga-smtp-mta-g0-4 (Coremail) with SMTP id _____wDXf3fRzZ9lSFOnAA--.12694S2;
+	Thu, 11 Jan 2024 19:15:30 +0800 (CST)
 From: XueBing Chen <chenxb_99091@126.com>
 To: jejb@linux.ibm.com,
 	njavali@marvell.com,
@@ -22,16 +22,16 @@ To: jejb@linux.ibm.com,
 Cc: linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	XueBing Chen <chenxb_99091@126.com>
-Subject: [PATCH] scsi/qla4xxx: Clean up errors in ql4_nvram.c
-Date: Thu, 11 Jan 2024 11:13:15 +0000
-Message-Id: <20240111111315.15286-1-chenxb_99091@126.com>
+Subject: [PATCH] scsi: qla4xxx: Clean up errors in ql4_mbx.c
+Date: Thu, 11 Jan 2024 11:15:28 +0000
+Message-Id: <20240111111528.15374-1-chenxb_99091@126.com>
 X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID:_____wD3_59MzZ9l19GnAA--.21967S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7uF1ruw47Gw45KF1rJFWrXwb_yoW5JFyfpF
-	y8Gas8ur4Utry7urZ8tFs8ur1furyxt342kw43W3y0vF1DA3y8Ary8ZFy0vasIg3s8GF1I
-	9F4qyF1rWr4UJrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:_____wDXf3fRzZ9lSFOnAA--.12694S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uF1ruw48JF1ktw1DuF4xXrb_yoW8ur1fpF
+	WkXa1Ykr4jkr9YgrWUAF45Crnxur10qry7Kas5Gw1FkF4YyFZ5urWjkFWruF95G34kX3WS
+	gF1jyrWrWF4DXrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U0FAJUUUUU=
-X-CM-SenderInfo: hfkh05lebzmiizr6ij2wof0z/1tbiGBBixWVLZWqBEQAAse
+X-CM-SenderInfo: hfkh05lebzmiizr6ij2wof0z/1tbiOhNixWVEuYGwJAAAsD
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -44,77 +44,49 @@ RROR: "foo * bar" should be "foo *bar"
 
 Signed-off-by: XueBing Chen <chenxb_99091@126.com>
 ---
- drivers/scsi/qla4xxx/ql4_nvram.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/scsi/qla4xxx/ql4_mbx.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_nvram.c b/drivers/scsi/qla4xxx/ql4_nvram.c
-index f08a5abcb31a..b30d119e6327 100644
---- a/drivers/scsi/qla4xxx/ql4_nvram.c
-+++ b/drivers/scsi/qla4xxx/ql4_nvram.c
-@@ -32,7 +32,7 @@ static inline int eeprom_no_data_bits(struct scsi_qla_host *ha)
- 	return FM93C56A_DATA_BITS_16;
- }
- 
--static int fm93c56a_select(struct scsi_qla_host * ha)
-+static int fm93c56a_select(struct scsi_qla_host *ha)
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 249f1d7021d4..fcd03dbcea8b 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -616,7 +616,7 @@ qla4xxx_update_local_ifcb(struct scsi_qla_host *ha,
+  * qla4xxx_initialize_fw_cb - initializes firmware control block.
+  * @ha: Pointer to host adapter structure.
+  **/
+-int qla4xxx_initialize_fw_cb(struct scsi_qla_host * ha)
++int qla4xxx_initialize_fw_cb(struct scsi_qla_host *ha)
  {
- 	DEBUG5(printk(KERN_ERR "fm93c56a_select:\n"));
- 
-@@ -41,7 +41,7 @@ static int fm93c56a_select(struct scsi_qla_host * ha)
- 	return 1;
- }
- 
--static int fm93c56a_cmd(struct scsi_qla_host * ha, int cmd, int addr)
-+static int fm93c56a_cmd(struct scsi_qla_host *ha, int cmd, int addr)
+ 	struct addr_ctrl_blk *init_fw_cb;
+ 	dma_addr_t init_fw_cb_dma;
+@@ -698,7 +698,7 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host * ha)
+  * qla4xxx_get_dhcp_ip_address - gets HBA ip address via DHCP
+  * @ha: Pointer to host adapter structure.
+  **/
+-int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host * ha)
++int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host *ha)
  {
- 	int i;
- 	int mask;
-@@ -105,14 +105,14 @@ static int fm93c56a_cmd(struct scsi_qla_host * ha, int cmd, int addr)
- 	return 1;
- }
- 
--static int fm93c56a_deselect(struct scsi_qla_host * ha)
-+static int fm93c56a_deselect(struct scsi_qla_host *ha)
+ 	struct addr_ctrl_blk *init_fw_cb;
+ 	dma_addr_t init_fw_cb_dma;
+@@ -737,7 +737,7 @@ int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host * ha)
+  * qla4xxx_get_firmware_state - gets firmware state of HBA
+  * @ha: Pointer to host adapter structure.
+  **/
+-int qla4xxx_get_firmware_state(struct scsi_qla_host * ha)
++int qla4xxx_get_firmware_state(struct scsi_qla_host *ha)
  {
- 	ha->eeprom_cmd_data = AUBURN_EEPROM_CS_0 | 0x000f0000;
- 	eeprom_cmd(ha->eeprom_cmd_data, ha);
- 	return 1;
- }
- 
--static int fm93c56a_datain(struct scsi_qla_host * ha, unsigned short *value)
-+static int fm93c56a_datain(struct scsi_qla_host *ha, unsigned short *value)
+ 	uint32_t mbox_cmd[MBOX_REG_COUNT];
+ 	uint32_t mbox_sts[MBOX_REG_COUNT];
+@@ -768,7 +768,7 @@ int qla4xxx_get_firmware_state(struct scsi_qla_host * ha)
+  * qla4xxx_get_firmware_status - retrieves firmware status
+  * @ha: Pointer to host adapter structure.
+  **/
+-int qla4xxx_get_firmware_status(struct scsi_qla_host * ha)
++int qla4xxx_get_firmware_status(struct scsi_qla_host *ha)
  {
- 	int i;
- 	int data = 0;
-@@ -135,8 +135,8 @@ static int fm93c56a_datain(struct scsi_qla_host * ha, unsigned short *value)
- 	return 1;
- }
- 
--static int eeprom_readword(int eepromAddr, u16 * value,
--			   struct scsi_qla_host * ha)
-+static int eeprom_readword(int eepromAddr, u16 *value,
-+			   struct scsi_qla_host *ha)
- {
- 	fm93c56a_select(ha);
- 	fm93c56a_cmd(ha, FM93C56A_READ, eepromAddr);
-@@ -146,7 +146,7 @@ static int eeprom_readword(int eepromAddr, u16 * value,
- }
- 
- /* Hardware_lock must be set before calling */
--u16 rd_nvram_word(struct scsi_qla_host * ha, int offset)
-+u16 rd_nvram_word(struct scsi_qla_host *ha, int offset)
- {
- 	u16 val = 0;
- 
-@@ -176,7 +176,7 @@ u8 rd_nvram_byte(struct scsi_qla_host *ha, int offset)
- 	return rval;
- }
- 
--int qla4xxx_is_nvram_configuration_valid(struct scsi_qla_host * ha)
-+int qla4xxx_is_nvram_configuration_valid(struct scsi_qla_host *ha)
- {
- 	int status = QLA_ERROR;
- 	uint16_t checksum = 0;
+ 	uint32_t mbox_cmd[MBOX_REG_COUNT];
+ 	uint32_t mbox_sts[MBOX_REG_COUNT];
 -- 
 2.17.1
 
