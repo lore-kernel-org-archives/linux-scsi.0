@@ -1,36 +1,37 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from forward204a.mail.yandex.net (forward204a.mail.yandex.net [178.154.239.89])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C58528380;
-	Thu, 11 Jan 2024 13:17:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAD393C097
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 14:20:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NslUajr5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72A99C43601;
-	Thu, 11 Jan 2024 13:17:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1704979073;
-	bh=H6jAa/1qm3fcEGYYR8xZvaYjmIAWKwCFiXdEuAok+aI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=NslUajr5yYffmjX0xTHEDPUKXWSepCDuYldFgyWbcAdo6zIEXGqzd6kP91UEd+rSt
-	 sU/gFDHsL7z1EQrA8i25sU4Uznxit8SxZles95BNEwRi/0k7zB+CXrYd6e/x2npnwB
-	 x4nQfId++/chpiz52ky0VzRiP+7I+p/mNp05AeRHY8CGnNGzj1SnZ0vqd4WT1JsyZN
-	 /DJA94SQbwa9YyY+fMZz+GZ70EH3gcUM6+Fjug6lPtPyLQs6YBsHyIt26TN5KD5OXV
-	 Gv8d+PvtHKyODKD0crVLUG7REoYcoqxVp/kxQdUK3VCUICVive9EI+w7Ap4R+ns3kP
-	 apCZ8OYKBPNEA==
-From: Lee Jones <lee@kernel.org>
-To: lee@kernel.org,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="V4jfWVC7"
+Received: from forward100a.mail.yandex.net (forward100a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d100])
+	by forward204a.mail.yandex.net (Yandex) with ESMTPS id EDC7F65051
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 17:12:54 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net [IPv6:2a02:6b8:c18:3d80:0:640:1395:0])
+	by forward100a.mail.yandex.net (Yandex) with ESMTP id 92C4746C9F;
+	Thu, 11 Jan 2024 17:12:46 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id jCk1Pw8qGOs0-jmmb9P72;
+	Thu, 11 Jan 2024 17:12:46 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1704982366; bh=mOSBv5IXuEhkq3SRKW6tg2z6rxHz74YIXQsbRyGello=;
+	h=Message-ID:Date:Cc:Subject:To:From;
+	b=V4jfWVC7P2vMKwDlgoPIdMRi6mwmKN6j91UafuEMSZobeTfZvPxbjAGf43AegZsRU
+	 xcAeLPV9x1xKR1A8LhEMBQzlnfr/HXkjO1fWcMg+0z/OmgHKhTH/nH7bbL2BTbPAsc
+	 dy4HIJwMbyTc/OYXU7Mx/ysyScBOTnKYCdZwPMMc=
+Authentication-Results: mail-nwsmtp-smtp-production-main-54.vla.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: Nilesh Javali <njavali@marvell.com>
+Cc: Quinn Tran <qutran@marvell.com>,
 	linux-scsi@vger.kernel.org,
-	Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-	"PMC-Sierra, Inc" <aacraid@pmc-sierra.com>
-Subject: [PATCH 5/5] scsi: aacraid: aachba: Replace snprintf() with the safer scnprintf() variant
-Date: Thu, 11 Jan 2024 13:17:26 +0000
-Message-ID: <20240111131732.1815560-6-lee@kernel.org>
-X-Mailer: git-send-email 2.43.0.275.g3460e3d667-goog
-In-Reply-To: <20240111131732.1815560-1-lee@kernel.org>
-References: <20240111131732.1815560-1-lee@kernel.org>
+	Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH] scsi: qla2xxx: fix fortify warning
+Date: Thu, 11 Jan 2024 17:11:40 +0300
+Message-ID: <20240111141145.122306-1-dmantipov@yandex.ru>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,48 +40,71 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There is a general misunderstanding amongst engineers that {v}snprintf()
-returns the length of the data *actually* encoded into the destination
-array.  However, as per the C99 standard {v}snprintf() really returns
-the length of the data that *would have been* written if there were
-enough space for it.  This misunderstanding has led to buffer-overruns
-in the past.  It's generally considered safer to use the {v}scnprintf()
-variants in their place (or even sprintf() in simple cases).  So let's
-do that.
+When compiling with gcc version 14.0.0 20240108 (experimental) and
+CONFIG_FORTIFY_SOURCE=y, I've noticed the following warning:
 
-Link: https://lwn.net/Articles/69419/
-Link: https://github.com/KSPP/linux/issues/105
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Cc: "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>
-Signed-off-by: Lee Jones <lee@kernel.org>
+In function 'fortify_memcpy_chk',
+    inlined from 'qla81xx_nvram_config' at drivers/scsi/qla2xxx/qla_init.c:9190:2:
+./include/linux/fortify-string.h:588:25: warning: call to '__read_overflow2_field'
+declared with attribute warning: detected read beyond size of field (2nd parameter);
+maybe use struct_group()? [-Wattribute-warning]
+  588 |                         __read_overflow2_field(q_size_field, size);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This call to 'memcpy()' is interpreted as an attempt to copy
+'sizeof(struct ex_init_cb_81xx)' bytes from 2-byte 'ex_version'
+field of 'struct nvram_81xx' and thus overread warning is issued.
+Since we actually want to copy the whole control block in 81xx
+format, use the convenient 'struct_group' for the latter.
+
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 ---
- drivers/scsi/aacraid/aachba.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_fw.h   | 18 ++++++++++--------
+ drivers/scsi/qla2xxx/qla_init.c |  2 +-
+ 2 files changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 70e1cac1975eb..b22857c6f3f4f 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1099,7 +1099,7 @@ static void get_container_serial_callback(void *context, struct fib * fibptr)
- 			sp[0] = INQD_PDT_DA;
- 			sp[1] = scsicmd->cmnd[2];
- 			sp[2] = 0;
--			sp[3] = snprintf(sp+4, sizeof(sp)-4, "%08X",
-+			sp[3] = scnprintf(sp+4, sizeof(sp)-4, "%08X",
- 				le32_to_cpu(get_serial_reply->uid));
- 			scsi_sg_copy_from_buffer(scsicmd, sp,
- 						 sizeof(sp));
-@@ -1169,8 +1169,8 @@ static int setinqserial(struct aac_dev *dev, void *data, int cid)
- 	/*
- 	 *	This breaks array migration.
- 	 */
--	return snprintf((char *)(data), sizeof(struct scsi_inq) - 4, "%08X%02X",
--			le32_to_cpu(dev->adapter_info.serial[0]), cid);
-+	return scnprintf((char *)(data), sizeof(struct scsi_inq) - 4, "%08X%02X",
-+			 le32_to_cpu(dev->adapter_info.serial[0]), cid);
- }
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index f307beed9d29..9d5031827082 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -1942,14 +1942,16 @@ struct nvram_81xx {
+ 	__le16	reserved_6[24];
  
- static inline void set_sense(struct sense_data *sense_data, u8 sense_key,
+ 	/* Offset 128. */
+-	__le16	ex_version;
+-	uint8_t prio_fcf_matching_flags;
+-	uint8_t reserved_6_1[3];
+-	__le16	pri_fcf_vlan_id;
+-	uint8_t pri_fcf_fabric_name[8];
+-	__le16	reserved_6_2[7];
+-	uint8_t spma_mac_addr[6];
+-	__le16	reserved_6_3[14];
++	struct_group(ex_cb_81xx,
++		__le16	ex_version;
++		uint8_t prio_fcf_matching_flags;
++		uint8_t reserved_6_1[3];
++		__le16	pri_fcf_vlan_id;
++		uint8_t pri_fcf_fabric_name[8];
++		__le16	reserved_6_2[7];
++		uint8_t spma_mac_addr[6];
++		__le16	reserved_6_3[14];
++	);
+ 
+ 	/* Offset 192. */
+ 	uint8_t min_supported_speed;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index a314cfc5b263..c20acdd634ea 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -9187,7 +9187,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 	}
+ 
+ 	/* Use extended-initialization control block. */
+-	memcpy(ha->ex_init_cb, &nv->ex_version, sizeof(*ha->ex_init_cb));
++	memcpy(ha->ex_init_cb, &nv->ex_cb_81xx, sizeof(*ha->ex_init_cb));
+ 	ha->frame_payload_size = le16_to_cpu(icb->frame_payload_size);
+ 	/*
+ 	 * Setup driver NVRAM options.
 -- 
-2.43.0.275.g3460e3d667-goog
+2.43.0
 
