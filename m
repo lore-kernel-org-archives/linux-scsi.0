@@ -1,49 +1,49 @@
-Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C77856476
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 22:48:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D4A439FC5
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 22:54:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="VgPOZI+4"
-Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2cd1ca52f31so68220141fa.3
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 14:48:04 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="UJ9CSk+Z"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-40e62979d41so6386685e9.2
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 14:54:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1705013283; x=1705618083; darn=vger.kernel.org;
+        d=linux-foundation.org; s=google; t=1705013656; x=1705618456; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=IVTa2Qk/zKb+/z6OaDyalzLK5VKuTWu2RGMKTC1CM0g=;
-        b=VgPOZI+4f8i8Q09HOizwVMdrFwhgA5I0R7KP6rN9xZw8XQrr5ie2l3w4E7A+etrnMv
-         lrUVNuYHG5Y4NZkHhAdGB/xMrsyrcqN9n0ZzOPQLVH/T6VosPVwyo/ZaFlvvHpFtQ/AY
-         f0uqKaBAUTik9B/1q6i3Nbadl2AF3ZkOi9q78=
+        bh=bl2EO7yezYiVPGfmE+e0KG7KvJAbfV77M002tDc+A1A=;
+        b=UJ9CSk+ZxcFgubqeEJdMZTZUDkmIpNsjC8jZxoqDFOhpetxzaOXoCbLC63VmGg5+yp
+         XottLrR4OShrSbG8WbK/068db0LiSF4R2BSNio+Cew2Jfp18NYjUxutKN7d5s1ihWJsf
+         QVXv6uE0Xey6hhQSe/E8l2VJFroDqwPiPScS4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705013283; x=1705618083;
+        d=1e100.net; s=20230601; t=1705013656; x=1705618456;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=IVTa2Qk/zKb+/z6OaDyalzLK5VKuTWu2RGMKTC1CM0g=;
-        b=Cr7NyUMhdco1hW0mK2CzlLLXm2GhGH5EmaRM6Dox9/3wAchsCG0bqvmbhv/TaWbg9I
-         hRB+qt5zTeciZqSB4Etvr1jD/lgOGTDp1KnGTkMLmSiU7zNjQtdsNOzIzgfvl4gJ6nI5
-         etUEf1hnebzXVSoB7azS+yjYkB5RQarjQY/tefEhsiU+cNVNvAZZqfA9GR7JEz9drfWP
-         hPX5gPCIJRDyXD30mLADbb+mIm4ckDTonv1ToAy69KZoQaRX4TseZG2QB+qKG9pVx6WI
-         +j2k9RMqLrxyVB5+nP5dtL3VbC5oyaZnoUYAqrtrU+Fmplby+q95HKyRZbh7TZB3MXfx
-         xz3w==
-X-Gm-Message-State: AOJu0Yw0iJTrteyb3JOsQ/WhvcCRYtF/j2XfN3oBLU0xjWD9epPGbmDG
-	j9qDn4cOj7FgVkU0m9TOztnBbt5Fc6ZZ+cZTm3c3EgJt4+0xj4RF
-X-Google-Smtp-Source: AGHT+IFQPsR64uo8utx9EAe5OqqyqulrcwD/avByPq9wPwdFgZfyGq1exIYbJtbJLjWpWAipCneWQQ==
-X-Received: by 2002:a2e:8754:0:b0:2cd:11f9:a628 with SMTP id q20-20020a2e8754000000b002cd11f9a628mr189156ljj.68.1705013282827;
-        Thu, 11 Jan 2024 14:48:02 -0800 (PST)
-Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com. [209.85.218.54])
-        by smtp.gmail.com with ESMTPSA id q11-20020aa7d44b000000b00555fd008741sm1094668edr.95.2024.01.11.14.48.02
+        bh=bl2EO7yezYiVPGfmE+e0KG7KvJAbfV77M002tDc+A1A=;
+        b=gUtY+0JOBii2PbdpdWf3zjNfHxL1wOrQh/uKn6LjlXezB0NPwgISh/ASKFv9TKd7oU
+         yCJJw9X+Uo0wqkeN7MBQTVu1i5PWy8v4p9GAzPb9bY3U5436bnUv3IPloNCTHrliva0W
+         371R2ppHfE1FboUWttFSyYtaJ8QLCc53DjWcc/uOvcGhrA/IVnc+yRG0M9Cg/PRQTBX5
+         5rFSQxUJoCuHIGEaQT+gF6PAK/WfuiQr4W0PM3/6MAUvx0uxuBdX5kDkEi/C489JnqNe
+         Pqu78/SLqCjMuTYWBiotK7y9Pc4TwY9hYIwHY7ZIoUwZjrcmktLYsL/0mzSAF3buwX24
+         TkhQ==
+X-Gm-Message-State: AOJu0YzxF3FOSF+n6NsrT0Rmg6HC6+Buu1h+xI4gttqjydAjKvJLlo2s
+	xMlC6wmo8MwcRlUMbHGKxIX6Z20McQIHoMnvDY6nzuq0wSG19d8w
+X-Google-Smtp-Source: AGHT+IHxXJtphUFumK68JJ/KFe5/a3Z8be7BZ1kExqD9G429KqMq7qKYYVegrKTpThyzfP5YddERjQ==
+X-Received: by 2002:a7b:c8d2:0:b0:40e:62a3:368e with SMTP id f18-20020a7bc8d2000000b0040e62a3368emr132736wml.264.1705013656144;
+        Thu, 11 Jan 2024 14:54:16 -0800 (PST)
+Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com. [209.85.218.43])
+        by smtp.gmail.com with ESMTPSA id lb10-20020a170906adca00b00a2930696259sm1078297ejb.71.2024.01.11.14.54.15
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 11 Jan 2024 14:48:02 -0800 (PST)
-Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-a2c29418ad5so197544466b.0
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 14:48:02 -0800 (PST)
-X-Received: by 2002:a17:906:7212:b0:a28:b659:cc89 with SMTP id
- m18-20020a170906721200b00a28b659cc89mr182790ejk.115.1705013281951; Thu, 11
- Jan 2024 14:48:01 -0800 (PST)
+        Thu, 11 Jan 2024 14:54:15 -0800 (PST)
+Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-a28b1095064so647583466b.2
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 14:54:15 -0800 (PST)
+X-Received: by 2002:a17:907:36ce:b0:a28:d31a:f8a with SMTP id
+ bj14-20020a17090736ce00b00a28d31a0f8amr113422ejc.246.1705013655197; Thu, 11
+ Jan 2024 14:54:15 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,54 +51,37 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <c5ac3166f35bac3a618b126dabadaddc11c8512d.camel@HansenPartnership.com>
- <CAHk-=whKVgb27o3+jhSRzuZdpjWJiAvxeO8faMjHpb-asONE1g@mail.gmail.com>
-In-Reply-To: <CAHk-=whKVgb27o3+jhSRzuZdpjWJiAvxeO8faMjHpb-asONE1g@mail.gmail.com>
+ <CAHk-=whKVgb27o3+jhSRzuZdpjWJiAvxeO8faMjHpb-asONE1g@mail.gmail.com> <3b5b650fa3c6ed6dc7f296eb7258c722a699147d.camel@HansenPartnership.com>
+In-Reply-To: <3b5b650fa3c6ed6dc7f296eb7258c722a699147d.camel@HansenPartnership.com>
 From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 11 Jan 2024 14:47:45 -0800
-X-Gmail-Original-Message-ID: <CAHk-=wiHCkxrMCOL+rSGuPxUoX0_GSMLjgs9v5NJg6okxc1NLw@mail.gmail.com>
-Message-ID: <CAHk-=wiHCkxrMCOL+rSGuPxUoX0_GSMLjgs9v5NJg6okxc1NLw@mail.gmail.com>
+Date: Thu, 11 Jan 2024 14:53:58 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wik=6Rhvm5Kmgzc6VUJdp=17kQcxXFAGwxkFveU=dAvtQ@mail.gmail.com>
+Message-ID: <CAHk-=wik=6Rhvm5Kmgzc6VUJdp=17kQcxXFAGwxkFveU=dAvtQ@mail.gmail.com>
 Subject: Re: [GIT PULL] first round of SCSI updates for the 6.7+ merge window
 To: James Bottomley <James.Bottomley@hansenpartnership.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, 
 	linux-kernel <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 
-On Thu, 11 Jan 2024 at 14:36, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
+On Thu, 11 Jan 2024 at 14:47, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
 >
-> Stop making a bad pgp experience even worse - for no reason and
-> absolutely zero upside.
+> Well, I did already tell you that I bypass the pgp keyservers because I
+> use a DNSSEC based DANE entry instead:
+>
+> https://lore.kernel.org/all/1564171685.9950.14.camel@HansenPartnership.com/
 
-Side note: even getting gpg to show the subkeys was just an exercise
-in frustration.
+I think I dimly remember seeing that email.
 
-For example, I'd expect that when you do
+But honestly, that just reinforces my point: this is yet ANOTHER
+magical thing you have to know about gpg, and that nobody buy you use.
 
-   gpg --list-key E76040DB76CA3D176708F9AAE742C94CEE98AC85
+So if you insist on using these things that are obscure, you need to
+keep reminding people. Every time your keys are close to expiry, send
+out an email saying "To update my key, use this magical command line".
 
-it would show the details of that key. No, it does not. It doesn't
-even *mention* that key.
+If gpg did that auto-locate automatically, and it all JustWorked(tm),
+it would be one thing. But that is clearly against the design
+principles of pgp and gpg.
 
-Because this is gpg, and the project motto was probably "pgp was
-designed to be hard to use, and by golly, we'll take that to 11".
-
-And no, adding "-vv" to get more verbose output doesn't help. That
-just makes gpg show more *other* keys.
-
-Now, obviously, in order to actually show the key I *asked* gpg to
-list, I also have to use the "--with-subkey-fingerprint". OBVIOUSLY.
-
-I can hear everybody go all Homer on me and say "Well, duh, dummy".
-
-So yes, I realize that my frustration with pgp is because I'm just too
-stupid to understand how wonderful the UX really is, but my point is
-that you're really making it worse by using pointless features that
-actively makes it all so much less usable than it already is.
-
-Subkeys and expiration date make a bad experience worse.
-
-Yes, I blame myself for thinking pgp was a good model for tag signing.
-What can I say? I didn't expect people to actively try to use every
-bad feature.
-
-                Linus
+              Linus
