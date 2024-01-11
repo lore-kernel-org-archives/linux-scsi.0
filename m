@@ -1,35 +1,35 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A495537E3;
-	Thu, 11 Jan 2024 17:33:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48E8452F6A;
+	Thu, 11 Jan 2024 17:55:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1d3eae5c1d7so30734465ad.2;
-        Thu, 11 Jan 2024 09:33:28 -0800 (PST)
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1d426ad4433so36044285ad.0;
+        Thu, 11 Jan 2024 09:55:58 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704994407; x=1705599207;
+        d=1e100.net; s=20230601; t=1704995757; x=1705600557;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xhz/lG4EsXKgcCYrcQVY+shefZ4zMHBbZ8MsW9wIwb8=;
-        b=hrEyMDRKhgcr6cBaDzzLgW9HwHE+YDsYvpYztQ1h/NvwSJKoOPni7J8N/r4+WbU+/l
-         kAj8Myh6um6ZNt85EUbKLbWikDYWI2NJzLwGkKHrEa1EHH6eB9R3z5Alk9Xqmd7XG9EB
-         uNxsT/GHb4AmxwDpADOk21euOMJRemDwt2Gmq6Uq7ziKjiSK1yeFk5Ee6EC0+xTTnn7C
-         kVLCYX6Yf9R3XCH6/cSWCi61Nh9c7opsPWne/ZtxS+yQCGeUXpdjVddNap1YP5w14cpE
-         LMxmxKO4F0oQs7QMwUeelLshFzVnoYBWV0kCE7uNNy8cUQWSGLiuRhoXntOcQ8nYbT3q
-         hLgA==
-X-Gm-Message-State: AOJu0YyQ0kF40SkMUM/jGQk4LN0zXe55AI4lQvKisnorMCc/coIEo8NP
-	v7VZfGN2Ndp6DzPHCtyNyxU=
-X-Google-Smtp-Source: AGHT+IH3IJgqi1b65LHZnGEZrDZRn9LfhP44UO2FDqI1kW7N4WDRko0M3lDABkq+lnDRjDcI1Fi3qA==
-X-Received: by 2002:a17:902:c286:b0:1d4:e1f1:eea3 with SMTP id i6-20020a170902c28600b001d4e1f1eea3mr10640pld.131.1704994407454;
-        Thu, 11 Jan 2024 09:33:27 -0800 (PST)
+        bh=n9arcEUo79iuH5i+dQJ8o/Ftr9e8e+zqckCAA6/vHao=;
+        b=KkEZCKXgczUxYmGnsgzbrQajIB3ag9cDauf3ow20j+Cdh7gSiBnsei0R7Ycs0ThJwN
+         RKEs/2KoOkljZS2+dKNmqoUfpG4sm6BsKyDpB5HqBGZ1ZdNyJETkdz7KdZVA/4JAKRpZ
+         YDh0tVKiCpAJIFpJcHy0rVpSeXQN/P12SeSTLv60wMo03RKt201cuHolOh3qNbTTJhQb
+         yBzg567e7BfZpPBUfyCVZktMhACllh4nKn9ace+9lIDClLr6Y48NOEnp/WDxPQqtUm2A
+         QTNQwgb5nGo1Qdi4Sh1lreHtrhmlShko0FHOp+uI4Sw5tWBFBm8tKsSu3ihqJoAYfMfI
+         Wq0g==
+X-Gm-Message-State: AOJu0Yy5GmRRjk+a1LN+Y7R8vOf7nAw2G9xmeR8JkLRDRgxKLUt8as70
+	eyubw55ilA578VcfQfYh7Ak=
+X-Google-Smtp-Source: AGHT+IGCKXP/Me2EyaazqGPGYzpfCDrjY+044h6PG7i2KrkVjz4fSS4fq8NYYdUCrD//ET7yh10kZA==
+X-Received: by 2002:a05:6a20:3c91:b0:19a:41b2:7d98 with SMTP id b17-20020a056a203c9100b0019a41b27d98mr210749pzj.89.1704995757236;
+        Thu, 11 Jan 2024 09:55:57 -0800 (PST)
 Received: from ?IPV6:2620:0:1000:8411:2b84:6ee3:e813:3d8d? ([2620:0:1000:8411:2b84:6ee3:e813:3d8d])
-        by smtp.gmail.com with ESMTPSA id jx2-20020a170903138200b001d46d9953a3sm1429343plb.241.2024.01.11.09.33.26
+        by smtp.gmail.com with ESMTPSA id u25-20020a62d459000000b006db056542e6sm1500847pfl.190.2024.01.11.09.55.56
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 11 Jan 2024 09:33:26 -0800 (PST)
-Message-ID: <89041392-c747-4aa8-875d-38d3dc892ffa@acm.org>
-Date: Thu, 11 Jan 2024 09:33:24 -0800
+        Thu, 11 Jan 2024 09:55:56 -0800 (PST)
+Message-ID: <5b643088-7110-494e-9c5b-dd271c291894@acm.org>
+Date: Thu, 11 Jan 2024 09:55:54 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,52 +37,81 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: aacraid: Clean up errors in commsup.c
+Subject: Re: [PATCH] scsi: core: Safe warning about bad dev info string
 Content-Language: en-US
-To: XueBing Chen <chenxb_99091@126.com>, jejb@linux.ibm.com,
- aacraid@microsemi.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20240111113240.15985-1-chenxb_99091@126.com>
+To: Petr Mladek <pmladek@suse.com>,
+ "James E . J . Bottomley" <jejb@linux.ibm.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Chris Down <chris@chrisdown.name>, oe-kbuild-all@lists.linux.dev,
+ kernel test robot <lkp@intel.com>
+References: <20240111162419.12406-1-pmladek@suse.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240111113240.15985-1-chenxb_99091@126.com>
+In-Reply-To: <20240111162419.12406-1-pmladek@suse.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/11/24 03:32, XueBing Chen wrote:
-> Fix the following errors reported by checkpatch:
+On 1/11/24 08:24, Petr Mladek wrote:
+> Both "model" and "strflags" are passed to "%s" even when one or both
+> are NULL.
 > 
-> ERROR: spaces required around that '<' (ctx:VxV)
-> ERROR: "foo * bar" should be "foo *bar"
+> It is safe because vsprintf() would detect the NULL pointer and print
+> "(null)". But it is a kernel-specific feature and compiler warns
+> about it:
 > 
-> Signed-off-by: XueBing Chen <chenxb_99091@126.com>
+> <warning>
+>     In file included from include/linux/kernel.h:19,
+>                      from arch/x86/include/asm/percpu.h:27,
+>                      from arch/x86/include/asm/current.h:6,
+>                      from include/linux/sched.h:12,
+>                      from include/linux/blkdev.h:5,
+>                      from drivers/scsi/scsi_devinfo.c:3:
+>     drivers/scsi/scsi_devinfo.c: In function 'scsi_dev_info_list_add_str':
+>>> include/linux/printk.h:434:44: warning: '%s' directive argument is null [-Wformat-overflow=]
+>       434 | #define printk(fmt, ...) printk_index_wrap(_printk, fmt, ##__VA_ARGS__)
+>           |                                            ^
+>     include/linux/printk.h:430:3: note: in definition of macro 'printk_index_wrap'
+>       430 |   _p_func(_fmt, ##__VA_ARGS__);    \
+>           |   ^~~~~~~
+>     drivers/scsi/scsi_devinfo.c:551:4: note: in expansion of macro 'printk'
+>       551 |    printk(KERN_ERR "%s: bad dev info string '%s' '%s'"
+>           |    ^~~~~~
+>     drivers/scsi/scsi_devinfo.c:552:14: note: format string is defined here
+>       552 |           " '%s'\n", __func__, vendor, model,
+>           |              ^~
+> </warning>
+> 
+> Do not rely on the kernel specific behavior and print the message a safe way.
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Closes: https://lore.kernel.org/oe-kbuild-all/202401112002.AOjwMNM0-lkp@intel.com/
+> Signed-off-by: Petr Mladek <pmladek@suse.com>
 > ---
->   drivers/scsi/aacraid/commsup.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+> Note: The patch is only compile tested.
 > 
-> diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-> index 25cee03d7f97..865316ba3c19 100644
-> --- a/drivers/scsi/aacraid/commsup.c
-> +++ b/drivers/scsi/aacraid/commsup.c
-> @@ -129,7 +129,7 @@ void aac_fib_vector_assign(struct aac_dev *dev)
->    *	fib area, the unmapped fib data and also the free list
->    */
->   
-> -int aac_fib_setup(struct aac_dev * dev)
-> +int aac_fib_setup(struct aac_dev *dev)
->   {
->   	struct fib *fibptr;
->   	struct hw_fib *hw_fib;
-> @@ -144,7 +144,7 @@ int aac_fib_setup(struct aac_dev * dev)
->   		if (dev->comm_interface != AAC_COMM_MESSAGE_TYPE3)
->   			dev->init->r7.max_io_commands = cpu_to_le32(max_cmds);
->   	}
-> -	if (i<0)
-> +	if (i < 0)
->   		return -ENOMEM;
->   
->   	memset(dev->hw_fib_va, 0,
+>   drivers/scsi/scsi_devinfo.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index 3fcaf10a9dfe..ba7237e83863 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -551,9 +551,9 @@ static int scsi_dev_info_list_add_str(char *dev_list)
+>   		if (model)
+>   			strflags = strsep(&next, next_check);
+>   		if (!model || !strflags) {
+> -			printk(KERN_ERR "%s: bad dev info string '%s' '%s'"
+> -			       " '%s'\n", __func__, vendor, model,
+> -			       strflags);
+> +			pr_err("%s: bad dev info string '%s' '%s' '%s'\n",
+> +			       __func__, vendor, model ? model : "",
+> +			       strflags ? strflags : "");
+>   			res = -EINVAL;
+>   		} else
+>   			res = scsi_dev_info_list_add(0 /* compatible */, vendor,
 
-checkpatch is for checking patches before these are submitted and should not
-be run on code that has already been merged into the kernel tree.
+Expressions like "model ? model : """ can be shortened into "model ? : """.
 
-Bart.
+Anyway:
+
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
