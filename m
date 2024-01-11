@@ -1,35 +1,35 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA0283A1BE
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 18:01:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1E5255769;
+	Thu, 11 Jan 2024 19:22:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6d98ce84e18so4701811b3a.3
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 10:01:04 -0800 (PST)
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-6d9af1f12d5so4793868b3a.3;
+        Thu, 11 Jan 2024 11:22:04 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704996064; x=1705600864;
+        d=1e100.net; s=20230601; t=1705000924; x=1705605724;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=etPhYEpjrfPMPX4Spi266ti+YyS5E37YvEEcNHdMkkg=;
-        b=rwQuNbhEY++83l8YMc/ph5H/7fQ2mnlRzleg4AVaZcHxFXtPJ980Y2P8wkrz/4Uzig
-         hKbmNVFE2a0z7AwgHPCVuMiXNdWFWNIwpkAwq6cExsmicLw9jFLDIXidqnIrRv0G6mQ0
-         dDrtlh2eNuzKjEAO+lv8g3KStBgNsydb2I05DaERSz9oX1KsktQQ5+XJAmrKweYkXlkp
-         7Kkyo7Qr7h51N/nZYTxSmemhz19JOvniWATvxzcc9MlW6iO+l4Czn2lA46yhy0ZnLEut
-         PEtfHzU4cm9eNd5XxrTIW5TiT/BzgoKfO7Dt8JkZ8T3TunF14s2+fMUk8u2fd9s33j+C
-         wxIQ==
-X-Gm-Message-State: AOJu0YxmPU8dsfxY8AOBblrlJaR4LL8GW79CaH+QRbJqqco0Z3Lq4Qlh
-	O1v0BgHRGZyoYo5pRXHCUkI=
-X-Google-Smtp-Source: AGHT+IFoE6gOXkxUhvogfx6oBcvRj+iWF585sycdoWkfZAeeJZqnrIjclfvVIwNta8yEqwZzj9I2mw==
-X-Received: by 2002:a62:d408:0:b0:6da:d8d5:bd4e with SMTP id a8-20020a62d408000000b006dad8d5bd4emr95318pfh.49.1704996063881;
-        Thu, 11 Jan 2024 10:01:03 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:2b84:6ee3:e813:3d8d? ([2620:0:1000:8411:2b84:6ee3:e813:3d8d])
-        by smtp.gmail.com with ESMTPSA id c25-20020a62e819000000b006ce71af841bsm1470045pfi.4.2024.01.11.10.01.01
+        bh=jW7VBEl6To0KnhKQxbLDFYXLP0Sg9gEqU1I4AR7/hzg=;
+        b=qrEw4004YytqYFIZ4VDrp/737jWuksOe5mbfpdns+8PjEDNy2bch9ZmOeTQ+wtywY3
+         u8zpMODbWq0PNZe3iFmrjVxSSi+UJ8c+a9uOQ/1fP2x7KDrqFYFVJFdYz4AjQKNDvMF2
+         xhm2gooprio8D55jiHzvK4FpHGovwTkJcwdFWFDwivzYLOxwCNADezrmJ0D1HtTCyjvP
+         9J6XaWFDactKh+CWS/czOh/rIa+nq6wghFEPqkEgTDBsQsin5LoU3AjdHpJjiV8a9ce7
+         uikAV0/fvlUE0lhOviLjg91Gi6yiDiW6lNFygkPCxEpM9Vf9L5zB50Gv7systmw+tMra
+         EWYg==
+X-Gm-Message-State: AOJu0YwqCsK2QXejcqsC/QOqpD4JoNjdP8HOdT54YGz6EZJM8eYoAYsS
+	twW1q2GLR+fxHsytvKIHFgg=
+X-Google-Smtp-Source: AGHT+IGzr4/FcXmgket9GjUO8qWqfC2Q86Gf2gnW5Nso+WNfxajVTAOvxXhAlSR3/KxPy7jUInzfUg==
+X-Received: by 2002:a62:4d43:0:b0:6da:b014:860 with SMTP id a64-20020a624d43000000b006dab0140860mr208071pfb.28.1705000923969;
+        Thu, 11 Jan 2024 11:22:03 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:bef8:2106:339:e85f? ([2620:0:1000:8411:bef8:2106:339:e85f])
+        by smtp.gmail.com with ESMTPSA id c23-20020aa78817000000b006d96dc803b3sm1604535pfo.12.2024.01.11.11.22.02
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 11 Jan 2024 10:01:02 -0800 (PST)
-Message-ID: <2cb2844d-86f4-4b72-b841-ba70ef799a55@acm.org>
-Date: Thu, 11 Jan 2024 10:01:00 -0800
+        Thu, 11 Jan 2024 11:22:03 -0800 (PST)
+Message-ID: <1d3866af-ffca-4f97-914d-8084aca901ab@acm.org>
+Date: Thu, 11 Jan 2024 11:22:01 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,46 +37,39 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: core: Kick the requeue list after inserting when
- flushing
+Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
 Content-Language: en-US
-To: Niklas Cassel <cassel@kernel.org>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Kevin Locke <kevin@kevinlocke.name>,
- linux-scsi@vger.kernel.org
-References: <20240111120533.3612509-1-cassel@kernel.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+ Keith Busch <kbusch@kernel.org>,
+ Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+ Ed Tsai <ed.tsai@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231130193139.880955-1-bvanassche@acm.org>
+ <20231130193139.880955-2-bvanassche@acm.org>
+ <58f50403-fcc9-ec11-f52b-f11ced3d2652@huaweicloud.com>
+ <8372f2d0-b695-4af4-90e6-e35b86e3b844@acm.org>
+ <c1658336-f48e-5688-f0c2-f325fd5696c3@huaweicloud.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240111120533.3612509-1-cassel@kernel.org>
+In-Reply-To: <c1658336-f48e-5688-f0c2-f325fd5696c3@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/11/24 04:05, Niklas Cassel wrote:
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 1223d34c04da..d983f4a0e9f1 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -2196,15 +2196,18 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
->   	struct scsi_cmnd *scmd, *next;
->   
->   	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
-> +		struct scsi_device *sdev = scmd->device;
-> +
->   		list_del_init(&scmd->eh_entry);
-> -		if (scsi_device_online(scmd->device) &&
-> -		    !scsi_noretry_cmd(scmd) && scsi_cmd_retry_allowed(scmd) &&
-> -			scsi_eh_should_retry_cmd(scmd)) {
-> +		if (scsi_device_online(sdev) && !scsi_noretry_cmd(scmd) &&
-> +		    scsi_cmd_retry_allowed(scmd) &&
-> +		    scsi_eh_should_retry_cmd(scmd)) {
->   			SCSI_LOG_ERROR_RECOVERY(3,
->   				scmd_printk(KERN_INFO, scmd,
->   					     "%s: flush retry cmd\n",
->   					     current->comm));
->   				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
-> +				blk_mq_kick_requeue_list(sdev->request_queue);
->   		} else {
->   			/*
->   			 * If just we got sense for the device (called
+On 12/25/23 04:51, Yu Kuai wrote:
+> Are you still intrested in this patchset? I really want this switch in
+> our product as well.
+> 
+> If so, how do you think about following changes, a new field in
+> blk_mq_tag_set will make synchronization much eaiser.
+Do you perhaps see the new field as an alternative for the
+BLK_MQ_F_DISABLE_FAIR_TAG_SHARING flag? I'm not sure that would be an
+improvement. hctx_may_queue() is called from the hot path. Using the
+'flags' field will make it easier for the compiler to optimize that
+function compared to using a new structure member.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Thanks,
+
+Bart.
