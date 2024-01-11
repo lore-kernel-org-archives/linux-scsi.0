@@ -1,90 +1,102 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E510B38F
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 01:00:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1d3ef33e68dso33700295ad.1
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Jan 2024 17:00:26 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1704934826; x=1705539626;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=cqEhOhgw+UJXiNIMoRt3yz/W3H227WV8euwyuXh6Yz0=;
-        b=oQRJ4qtwzbcWUcsis0ItqNfhSYBFg4r2ID9r9WOCuL5JvD6ZyqvyvU72opfAuSO4CX
-         Rox+YdzzJ4Pf4Ei5WhRZjae6lDiKiYYF+w2FPON/S0Kwuu1TVZMYZV9HQknnwSWAP/+e
-         okIGPCqWI476gISFbME9ESBGqTZZsnoi1P2VGnjHjLE+9ruaaffFPOLwESpnH4GulRPr
-         B0IJb7KS3WpzNIBR5WJD56kimzIcw8nupNPs9Gf5n6LUN1H/shbjXgezrGwT/GJeMysX
-         IQSL2nVXs9QW5pOSQTYntasCoJuZaknLc0Ee1M/nJc5VT8vAJA3grmSt3W3u1o1Ujwey
-         VjzQ==
-X-Gm-Message-State: AOJu0Yye4+SQu2I2rOToJcALPjfv5MNElunPlqVeBqrrjCSP8uns6J2b
-	6gmDUdQSKKmVEt9/agxOM0Y=
-X-Google-Smtp-Source: AGHT+IE4pI6l3JRhQAbpJRUDKyq84tLPLHrFrijaQ2cb7xmw329SYeUvi37ZPxdObdZJiWnEOOZdQw==
-X-Received: by 2002:a17:902:7849:b0:1d5:629:2e6f with SMTP id e9-20020a170902784900b001d506292e6fmr406707pln.44.1704934825833;
-        Wed, 10 Jan 2024 17:00:25 -0800 (PST)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id p4-20020a1709028a8400b001d43af66d28sm4248399plo.152.2024.01.10.17.00.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 Jan 2024 17:00:25 -0800 (PST)
-Message-ID: <bf673c51-32d7-426a-9591-f6ac5b8b21a4@acm.org>
-Date: Wed, 10 Jan 2024 17:00:24 -0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AF19650;
+	Thu, 11 Jan 2024 01:40:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cfDXvP+m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1D61C433F1;
+	Thu, 11 Jan 2024 01:40:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1704937257;
+	bh=u51yyq5q6reKn5H0CqnJR7jUYlsGmLnDJKKy8teJDRs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=cfDXvP+m7491pQR0YUCkm0mTB2aBegWGodHoLZFFG4xnm1HYzXRQuH2gS9jmS4sxK
+	 4a1YcSnAQwsufJxQwNnVNUv8zlTNrN2c8FDL4SvgoPYxlV5HCtl48g/zf8dKFEZFKy
+	 s2oFPeyW0anIBYuwCbKWlfg0iILlMck90/uZ6HjK3pEsmr6x3ggHxQYlbGaZ+LM+u9
+	 Cdp1Me8dqv2fMqivWwzjoUve3j+IWy/LLnsB6hnY7qN7e4nycBAq9OtxqrOqUVgXsd
+	 pNUpTm723vIzDa8WcFdKrRTfElEbLc8gQRM3fqF3Cypry45w0MWn8V/GMykrc5s3y6
+	 6wFr/xhlj/0lw==
+Date: Wed, 10 Jan 2024 17:40:56 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dave Chinner <david@fromorbit.com>,
+	John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+	kbusch@kernel.org, sagi@grimberg.me, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, viro@zeniv.linux.org.uk,
+	brauner@kernel.org, dchinner@redhat.com, jack@suse.cz,
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	linux-scsi@vger.kernel.org, ming.lei@redhat.com, bvanassche@acm.org,
+	ojaswin@linux.ibm.com
+Subject: Re: [PATCH v2 00/16] block atomic writes
+Message-ID: <20240111014056.GL722975@frogsfrogsfrogs>
+References: <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com>
+ <20231219051456.GB3964019@frogsfrogsfrogs>
+ <20231219052121.GA338@lst.de>
+ <76c85021-dd9e-49e3-80e3-25a17c7ca455@oracle.com>
+ <20231219151759.GA4468@lst.de>
+ <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com>
+ <20231221065031.GA25778@lst.de>
+ <73d03703-6c57-424a-80ea-965e636c34d6@oracle.com>
+ <ZZ3Q4GPrKYo91NQ0@dread.disaster.area>
+ <20240110091929.GA31003@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [Regression] Hang deleting ATA HDD device for undocking
-Content-Language: en-US
-To: Damien Le Moal <damien.lemoal@opensource.wdc.com>,
- Niklas Cassel <Niklas.Cassel@wdc.com>
-Cc: Kevin Locke <kevin@kevinlocke.name>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
-References: <ZZw3Th70wUUvCiCY@kevinlocke.name>
- <c7c4769c-5999-4373-90df-f2203ecfc423@acm.org>
- <ZZxvPtrf5hLeZNY5@kevinlocke.name>
- <8bbbd233-69c6-4f20-904c-332bb838cc42@acm.org>
- <ZZ2-hMYVJlF4ayqk@kevinlocke.name>
- <d585753a-b5f3-410f-a949-8b52252307ab@acm.org> <ZZ8CzOaXBkxyKxNw@x1-carbon>
- <1c34e2e4-4bc5-4142-bc21-3db3a55f638e@acm.org>
- <4214e790-cc9b-40ef-96c3-167569cddb44@opensource.wdc.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <4214e790-cc9b-40ef-96c3-167569cddb44@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240110091929.GA31003@lst.de>
 
-On 1/10/24 15:01, Damien Le Moal wrote:
-> On 1/11/24 05:52, Bart Van Assche wrote:
->> On 1/10/24 12:49, Niklas Cassel wrote:
->>> However, I'm worried that applying that libata patch will simply hide
->>> an actual problem in SCSI, which might lead to someone else stumbling
->>> on this SCSI bug in the future.
->>>
->>> Thoughts?
->>
->> Since the hang is caused by submitting a SCSI pass-through command, I'm
->> not sure this issue can be called a SCSI core bug. Aren't users on their
->> own who mix SCSI pass-through commands with commands submitted by the sd
->> driver?
+On Wed, Jan 10, 2024 at 10:19:29AM +0100, Christoph Hellwig wrote:
+> On Wed, Jan 10, 2024 at 10:04:00AM +1100, Dave Chinner wrote:
+> > Hence history teaches us that we should be designing the API around
+> > the generic filesystem function required (hard alignment of physical
+> > extent allocation), not the specific use case that requires that
+> > functionality.
 > 
-> I would not expect a correct result from a user mixing up passthrough and
-> regular kernel sd management, however, having the system hang is not acceptable
-> I think. So we should fix this, avoiding this hang. Is Niklas patch OK for that ?
+> I disagree.  The alignment requirement is an artefact of how you
+> implement atomic writes.  As the fs user I care that I can do atomic
+> writes on a file and need to query how big the writes can be and
+> what alignment is required.
+> 
+> The forcealign feature is a sensible fs side implementation of that
+> if using hardware based atomic writes with alignment requirements,
+> but it is a really lousy userspace API.
+> 
+> So with John's API proposal for XFS with hardware alignment based atomic
+> writes we could still use force align.
+> 
+> Requesting atomic writes for an inode will set the forcealign flag
+> and the extent size hint, and after that it'll report atomic write
+> capabilities.  Roughly the same implementation, but not an API
+> tied to an implementation detail.
 
-Hi Damien,
+Sounds good to me!  So to summarize, this is approximately what
+userspace programs would have to do something like this:
 
-There are two patches in Niklas' email so I'm not sure which patch you
-are referring to. I'm not enthusiast about the SCSI patch in his email
-because that patch would reintroduce the superfluous queue runs that I'm
-trying to get rid of.
+struct statx statx;
+struct fsxattr fsxattr;
+int fd = open('/foofile', O_RDWR | O_DIRECT);
 
-Thanks,
+ioctl(fd, FS_IOC_GETXATTR, &fsxattr);
 
-Bart.
+fsxattr.fsx_xflags |= FS_XFLAG_FORCEALIGN | FS_XFLAG_WRITE_ATOMIC;
+fsxattr.fsx_extsize = 16384; /* only for hardware no-tears writes */
 
+ioctl(fd, FS_IOC_SETXATTR, &fsxattr);
 
+statx(fd, "", AT_EMPTY_PATH, STATX_ALL | STATX_WRITE_ATOMIC, &statx);
+
+if (statx.stx_atomic_write_unit_max >= 16384) {
+	pwrite(fd, &iov, 1, 0, RWF_SYNC | RWF_ATOMIC);
+	printf("HAPPY DANCE\n");
+}
+
+(Assume we bail out on errors.)
+
+--D
