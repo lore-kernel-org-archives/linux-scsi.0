@@ -1,134 +1,133 @@
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB5F558132;
-	Thu, 11 Jan 2024 23:28:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6C5859B69
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2024 23:41:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="efzeqXuL";
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="f3QrsOVo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1705015701;
-	bh=JnKyvkyvCozlhB9UYGxUbp/LJ0HPI8f2zjkKwp477Ng=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=efzeqXuLVpwl/M6eWk6o98XfArCftxucPIvEudZAXSIZiFtWLFBDWxexbqOm/Y4iI
-	 cL105DyYzjY/Ul1asMvX5NnpZ0/a+Fvstu2ZLh3zYbrlWhasIXLR0LmDtkYocHOHKD
-	 VlPykmMVN2WhqV66OQvppMhLiyXHAYNXCq+btKkc=
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 0D4311281E3F;
-	Thu, 11 Jan 2024 18:28:21 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id PIqmmRzae-dd; Thu, 11 Jan 2024 18:28:20 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1705015700;
-	bh=JnKyvkyvCozlhB9UYGxUbp/LJ0HPI8f2zjkKwp477Ng=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=f3QrsOVo14s15b0h0xmPXPKJFi8zAV76t1HQy/hoh84irV1ZtuYIXxAyUnFYAsWyx
-	 WWVzbt9d57bCQPkpz7cAaMHO6cMPiDr//ON00b612ruA1B3MX4p5yxOnp7v/wX4zSA
-	 v7t8inrdlCvpERXaUszFws7DUpdG9NJ4pj6pUdrw=
-Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits))
-	(Client did not present a certificate)
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 4E8971281C36;
-	Thu, 11 Jan 2024 18:28:20 -0500 (EST)
-Message-ID: <255e3328bd48c23fbaae0be6d927820d36e14404.camel@HansenPartnership.com>
-Subject: Re: [GIT PULL] first round of SCSI updates for the 6.7+ merge window
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi
-	 <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
-Date: Thu, 11 Jan 2024 18:28:18 -0500
-In-Reply-To: <CAHk-=wiHCkxrMCOL+rSGuPxUoX0_GSMLjgs9v5NJg6okxc1NLw@mail.gmail.com>
-References: 
-	<c5ac3166f35bac3a618b126dabadaddc11c8512d.camel@HansenPartnership.com>
-	 <CAHk-=whKVgb27o3+jhSRzuZdpjWJiAvxeO8faMjHpb-asONE1g@mail.gmail.com>
-	 <CAHk-=wiHCkxrMCOL+rSGuPxUoX0_GSMLjgs9v5NJg6okxc1NLw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jzzAM5D9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B4DDC433F1;
+	Thu, 11 Jan 2024 23:41:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1705016519;
+	bh=R71K6YwiUegymVNGaMMTOWFYzwbb0c0ikKLof262kJI=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=jzzAM5D9izn6DyYnCZ8b+//e+vaNRBXp13ksVGZC4pG0WAUolHCc0hE0za3bn6x0u
+	 lsN0PP6ZeHC6M/2m/GZ51WkFFhGly3VLmyyZdLYvSjZo3PuxQjP/Q387cpotylzgqE
+	 k12U0rJ/05i8BB0iw0U6NC3TXKTRDpy50Rhto7x0+4hOSv6WIW2J8b90jPjQuFf72M
+	 LRstFU71byj3ScbU25PdCE8LPfp7InoAMoQWjnESukQ2VrjSuJ5+eubqNKOuFtlFT3
+	 DbgO0vy+pRzAGQN6P2df/LHZJjPeb04uxbvoEy6k+Va8B5H17li0LKQk45rgF0Co93
+	 gCRXPd0fw4PJw==
+Message-ID: <e19165df-fe6c-4858-ba4d-ea3b342dd767@kernel.org>
+Date: Fri, 12 Jan 2024 08:41:57 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: core: Kick the requeue list after inserting when
+ flushing
+Content-Language: en-US
+To: Niklas Cassel <cassel@kernel.org>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Bart Van Assche <bvanassche@acm.org>
+Cc: Kevin Locke <kevin@kevinlocke.name>, linux-scsi@vger.kernel.org
+References: <20240111120533.3612509-1-cassel@kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20240111120533.3612509-1-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, 2024-01-11 at 14:47 -0800, Linus Torvalds wrote:
-> On Thu, 11 Jan 2024 at 14:36, Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
-> > 
-> > Stop making a bad pgp experience even worse - for no reason and
-> > absolutely zero upside.
+On 1/11/24 21:05, Niklas Cassel wrote:
+> When libata calls ata_link_abort() to abort all ata queued commands,
+> it calls blk_abort_request() on the SCSI command representing each QC.
 > 
-> Side note: even getting gpg to show the subkeys was just an exercise
-> in frustration.
+> This causes scsi_timeout() to be called, which calls scsi_eh_scmd_add()
+> for each SCSI command.
 > 
-> For example, I'd expect that when you do
+> scsi_eh_scmd_add() sets the SCSI host to state recovery, and then adds
+> the command to shost->eh_cmd_q.
 > 
->    gpg --list-key E76040DB76CA3D176708F9AAE742C94CEE98AC85
+> This will wake up the SCSI EH, and eventually the libata EH strategy
+> handler will be called, which calls scsi_eh_flush_done_q() to either
+> flush retry or flush finish each failed command.
 > 
-> it would show the details of that key. No, it does not. It doesn't
-> even *mention* that key.
-
-You installed the special "make it even harder to use" version didn't
-you?  Because for me (gpg 2.4.3) it gives
-
-jejb@lingrow:~> gpg --list-key E76040DB76CA3D176708F9AAE742C94CEE98AC85
-pub   rsa2048 2011-09-23 [SC] [expires: 2026-03-11]
-      D5606E73C8B46271BEAD9ADF814AE47C214854D6
-uid           [ultimate] James Bottomley
-<James.Bottomley@HansenPartnership.com>
-uid           [ultimate] James Bottomley <jejb@linux.vnet.ibm.com>
-uid           [ultimate] James Bottomley <jejb@kernel.org>
-uid           [ultimate] [jpeg image of size 5254]
-uid           [ultimate] James Bottomley <jejb@linux.ibm.com>
-uid           [ultimate] James Bottomley <jejb@hansenpartnership.com>
-sub   nistp256 2018-01-23 [S] [expires: 2024-01-16]
-sub   nistp256 2018-01-23 [E] [expires: 2024-01-16]
-sub   nistp256 2023-07-20 [A] [expires: 2024-01-16]
-
-Which shows all the subkeys and their expiration dates.  I admit it
-doesn't show the fingerprints and you have to know you've requested a
-subkey and it's showing the master record.
-
-> Because this is gpg, and the project motto was probably "pgp was
-> designed to be hard to use, and by golly, we'll take that to 11".
+> The commands that are flush retried by scsi_eh_flush_done_q() are
+> done so using scsi_queue_insert().
 > 
-> And no, adding "-vv" to get more verbose output doesn't help. That
-> just makes gpg show more *other* keys.
+> Before commit 8b566edbdbfb ("scsi: core: Only kick the requeue list if
+> necessary"), __scsi_queue_insert() called blk_mq_requeue_request() with
+> the second argument set to true, indicating that it should always
+> kick/run the requeue list after inserting.
 > 
-> Now, obviously, in order to actually show the key I *asked* gpg to
-> list, I also have to use the "--with-subkey-fingerprint". OBVIOUSLY.
+> After commit 8b566edbdbfb ("scsi: core: Only kick the requeue list if
+> necessary"), __scsi_queue_insert() does not kick/run the requeue list
+> after inserting, if the current SCSI host state is recovery (which is
+> the case in the libata example above).
 > 
-> I can hear everybody go all Homer on me and say "Well, duh, dummy".
+> This optimization is probably fine in most cases, as I can only assume
+> that most often someone will eventually kick/run the queues.
 > 
-> So yes, I realize that my frustration with pgp is because I'm just
-> too stupid to understand how wonderful the UX really is, but my point
-> is that you're really making it worse by using pointless features
-> that actively makes it all so much less usable than it already is.
+> However, that is not the case for scsi_eh_flush_done_q(), where we can
+> see that the request gets inserted to the requeue list, but the queue is
+> never started after the request has been inserted, leading to the block
+> layer waiting for the completion of command that never gets to run.
+> 
+> Since scsi_eh_flush_done_q() is called by SCSI EH context, the SCSI host
+> state is most likely always in recovery when this function is called.
+> 
+> Thus, let scsi_eh_flush_done_q() explicitly kick the requeue list after
+> inserting a flush retry command, so that scsi_eh_flush_done_q() keeps
+> the same behavior as before commit 8b566edbdbfb ("scsi: core: Only kick
+> the requeue list if necessary").
+> 
+> Simple reproducer for the libata example above:
+> $ hdparm -Y /dev/sda
+> $ echo 1 > /sys/class/scsi_device/0\:0\:0\:0/device/delete
+> 
+> Fixes: 8b566edbdbfb ("scsi: core: Only kick the requeue list if necessary")
+> Reported-by: Kevin Locke <kevin@kevinlocke.name>
+> Closes: https://lore.kernel.org/linux-scsi/ZZw3Th70wUUvCiCY@kevinlocke.name/
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>  drivers/scsi/scsi_error.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 1223d34c04da..d983f4a0e9f1 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -2196,15 +2196,18 @@ void scsi_eh_flush_done_q(struct list_head *done_q)
+>  	struct scsi_cmnd *scmd, *next;
+>  
+>  	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
+> +		struct scsi_device *sdev = scmd->device;
+> +
+>  		list_del_init(&scmd->eh_entry);
+> -		if (scsi_device_online(scmd->device) &&
+> -		    !scsi_noretry_cmd(scmd) && scsi_cmd_retry_allowed(scmd) &&
+> -			scsi_eh_should_retry_cmd(scmd)) {
+> +		if (scsi_device_online(sdev) && !scsi_noretry_cmd(scmd) &&
+> +		    scsi_cmd_retry_allowed(scmd) &&
+> +		    scsi_eh_should_retry_cmd(scmd)) {
+>  			SCSI_LOG_ERROR_RECOVERY(3,
+>  				scmd_printk(KERN_INFO, scmd,
+>  					     "%s: flush retry cmd\n",
+>  					     current->comm));
+>  				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
+> +				blk_mq_kick_requeue_list(sdev->request_queue);
+>  		} else {
+>  			/*
+>  			 * If just we got sense for the device (called
 
-OK, OK, I can do longer expiration dates.
+Looks good to me.
 
-> Subkeys and expiration date make a bad experience worse.
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-I can't really fix the subkeys bit.  The reason I have a signing subkey
-is because on my laptop it's TPM resident but with the authorization
-password in gnome-keyring, so I unlock it on login (and so, for me, it
-just works for all the day to day signing operations).  My master key
-is also TPM resident but with a different password that doesn't unlock
-on login to try to keep it more secure and because I only need to use
-it when extending expiration dates or signing someone else's key.
-
-> Yes, I blame myself for thinking pgp was a good model for tag
-> signing. What can I say? I didn't expect people to actively try to
-> use every bad feature.
-
-Heh, well to paraphrase Churchill: gpg is the worst key management
-system ... except for all the other key management systems out there
-...
-
-James
+-- 
+Damien Le Moal
+Western Digital Research
 
