@@ -1,19 +1,19 @@
-Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.8])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 48402154AE;
-	Thu, 11 Jan 2024 11:25:38 +0000 (UTC)
+Received: from m16.mail.126.com (m16.mail.126.com [220.197.31.6])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 12DDF14F95;
+	Thu, 11 Jan 2024 11:28:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=126.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=126.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="p4Npi6b7"
+	dkim=pass (1024-bit key) header.d=126.com header.i=@126.com header.b="YdV+GSV7"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-	s=s110527; h=From:Subject:Date:Message-Id; bh=r2mRilxOzWr0QOwJkt
-	E+hPAsQZmw8pw9Sysb6KyWArg=; b=p4Npi6b7/17VCpT8F0yoB71JLy4LWHz19Z
-	FgTGRC4eoISiZJ2fu1E+QWWW99uk0EnNGjkv3dlC5pw/q3ncxCUogZL24zQHkFuj
-	qVhhkpRU9rcLwpsdR5jZmxCsq8Bnh/zkFNBs5IkQwNlw4jarFY1d3/7FKTZ3Q6l6
-	xgkKEdf4c=
+	s=s110527; h=From:Subject:Date:Message-Id; bh=Ldi9YxGzFNhmHsz1pU
+	YmMUQer+GNx8j5nJTj27apNl0=; b=YdV+GSV7dcEknYPSR4P47b5rbbDJ1Q4sAT
+	fm1K0ObAEgZfJK+AKMSmljzQFIGWmUrGQvlPxOqeRy8XU9HOPKFEhUEfHqn5ZlDF
+	AJTg1LQ06jy5hORjIArJ7wUEcqnlRY/GcF+nJf01pJdvqCgQQ3fGXdH80k1/EIXH
+	fSj0AD/rg=
 Received: from localhost.localdomain (unknown [182.148.14.173])
-	by gzga-smtp-mta-g1-2 (Coremail) with SMTP id _____wD3P6ki0J9loTc5AA--.32143S2;
-	Thu, 11 Jan 2024 19:25:22 +0800 (CST)
+	by gzga-smtp-mta-g1-0 (Coremail) with SMTP id _____wD3f6a40J9l+N0qAA--.56294S2;
+	Thu, 11 Jan 2024 19:27:52 +0800 (CST)
 From: XueBing Chen <chenxb_99091@126.com>
 To: jejb@linux.ibm.com,
 	aacraid@microsemi.com,
@@ -21,16 +21,16 @@ To: jejb@linux.ibm.com,
 Cc: linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	XueBing Chen <chenxb_99091@126.com>
-Subject: [PATCH] scsi: aacraid: Clean up errors in aachba.c
-Date: Thu, 11 Jan 2024 11:25:21 +0000
-Message-Id: <20240111112521.15723-1-chenxb_99091@126.com>
+Subject: [PATCH] scsi: aacraid: Clean up errors in commctrl.c
+Date: Thu, 11 Jan 2024 11:27:51 +0000
+Message-Id: <20240111112751.15810-1-chenxb_99091@126.com>
 X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID:_____wD3P6ki0J9loTc5AA--.32143S2
-X-Coremail-Antispam: 1Uf129KBjvdXoW7JFWrGw4fZrWrGF4kCry8Xwb_yoWDXrX_ur
-	43twn7GryUCFsakrn8Cw18ZFyjvan7XrnYvF4Fg3y7AayDZF1xAr40vrnxA34rWF4093Wr
-	Aw4jqFn2kwnrCjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRiqXd5UUUUU==
-X-CM-SenderInfo: hfkh05lebzmiizr6ij2wof0z/1tbiGANixWVLZWqkSgAAsz
+X-CM-TRANSID:_____wD3f6a40J9l+N0qAA--.56294S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxCry8Jr4kCw4xCry3Wr1UGFg_yoW5GrWfpa
+	yrKFy5AF48ta47Xa18tFWvva4fWa4rta18GFWxA34FvFyUK34fGF40gFyjkry3u3ykGw17
+	CF4qvFW7JF1qkFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRPfHbUUUUU=
+X-CM-SenderInfo: hfkh05lebzmiizr6ij2wof0z/1tbiWRxixWVLYUW8GgAAsO
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -40,25 +40,72 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Fix the following errors reported by checkpatch:
 
 ERROR: "foo* bar" should be "foo *bar"
+ERROR: "foo * bar" should be "foo *bar"
+ERROR: space required before the open parenthesis '('
 
 Signed-off-by: XueBing Chen <chenxb_99091@126.com>
 ---
- drivers/scsi/aacraid/aachba.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/commctrl.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 70e1cac1975e..29a12a952e25 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -224,7 +224,7 @@ static long aac_build_sghba(struct scsi_cmnd *scsicmd,
- static int aac_convert_sgraw2(struct aac_raw_io2 *rio2,
- 				int pages, int nseg, int nseg_new);
- static void aac_probe_container_scsi_done(struct scsi_cmnd *scsi_cmnd);
--static int aac_send_srb_fib(struct scsi_cmnd* scsicmd);
-+static int aac_send_srb_fib(struct scsi_cmnd *scsicmd);
- static int aac_send_hba_fib(struct scsi_cmnd *scsicmd);
- #ifdef AAC_DETAILED_STATUS_INFO
- static char *aac_get_status_string(u32 status);
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index e7cc927ed952..049b88030571 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -397,12 +397,12 @@ int aac_close_fib_context(struct aac_dev * dev, struct aac_fib_context * fibctx)
+  *	This routine will close down the fibctx passed in from the user.
+  */
+ 
+-static int close_getadapter_fib(struct aac_dev * dev, void __user *arg)
++static int close_getadapter_fib(struct aac_dev *dev, void __user *arg)
+ {
+ 	struct aac_fib_context *fibctx;
+ 	int status;
+ 	unsigned long flags;
+-	struct list_head * entry;
++	struct list_head *entry;
+ 
+ 	/*
+ 	 *	Verify that the HANDLE passed in was a valid AdapterFibContext
+@@ -414,7 +414,7 @@ static int close_getadapter_fib(struct aac_dev * dev, void __user *arg)
+ 	entry = dev->fib_list.next;
+ 	fibctx = NULL;
+ 
+-	while(entry != &dev->fib_list) {
++	while (entry != &dev->fib_list) {
+ 		fibctx = list_entry(entry, struct aac_fib_context, next);
+ 		/*
+ 		 *	Extract the fibctx from the input parameters
+@@ -428,7 +428,7 @@ static int close_getadapter_fib(struct aac_dev * dev, void __user *arg)
+ 	if (!fibctx)
+ 		return 0; /* Already gone */
+ 
+-	if((fibctx->type != FSAFS_NTC_GET_ADAPTER_FIB_CONTEXT) ||
++	if ((fibctx->type != FSAFS_NTC_GET_ADAPTER_FIB_CONTEXT) ||
+ 		 (fibctx->size != sizeof(struct aac_fib_context)))
+ 		return -EINVAL;
+ 	spin_lock_irqsave(&dev->fib_lock, flags);
+@@ -476,9 +476,9 @@ static int check_revision(struct aac_dev *dev, void __user *arg)
+  *	@dev:	adapter is being processed
+  *	@arg:	arguments to the send call
+  */
+-static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
++static int aac_send_raw_srb(struct aac_dev *dev, void __user *arg)
+ {
+-	struct fib* srbfib;
++	struct fib *srbfib;
+ 	int status;
+ 	struct aac_srb *srbcmd = NULL;
+ 	struct aac_hba_cmd_req *hbacmd = NULL;
+@@ -505,7 +505,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 		dprintk((KERN_DEBUG"aacraid: send raw srb -EBUSY\n"));
+ 		return -EBUSY;
+ 	}
+-	if (!capable(CAP_SYS_ADMIN)){
++	if (!capable(CAP_SYS_ADMIN)) {
+ 		dprintk((KERN_DEBUG"aacraid: No permission to send raw srb\n"));
+ 		return -EPERM;
+ 	}
 -- 
 2.17.1
 
