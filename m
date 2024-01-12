@@ -1,153 +1,208 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1559415E9C
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2024 19:35:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 475CB1773B
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2024 22:28:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZlF2Qh1k"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1705088107;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jK8NzPdFIJN1xPcLfAXJ5ClxrhUaaRbp5aXU0g0i+6A=;
-	b=ZlF2Qh1kGgzT/fqL2SvQ7CWFaOuB82x7Kyo00t5BAkMzhWJyOhOZOoPWQZaVZpY0LScTtv
-	eVZgznnIc/5uX28xSVrZaW5CQjAqi7l79tGHOnY1cyG98JG932pJTCRFKk7ZfZUqHWaPFW
-	b/RyH/go39krz438CpyL6RO1cvwB2y4=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-661-yteGE78wOAmZU0ebGi9sQg-1; Fri, 12 Jan 2024 14:35:05 -0500
-X-MC-Unique: yteGE78wOAmZU0ebGi9sQg-1
-Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-3368698efbdso3574333f8f.0
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2024 11:35:05 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="K+jkxS/H"
+Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-a2cfb0196bcso70945066b.3
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2024 14:28:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1705098529; x=1705703329; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=k+g8KAN/GocAbP+Hjj0VU3R5oOrMC5lRs+LQJKDyZbc=;
+        b=K+jkxS/HFNwjqGT47Hes14wV4POIlXFMqJjU2r06BY6/ANnvSE/NxIER3GEbt2Rci1
+         G+ySvp3yP92iSYndcPdgTP6X5prn6o3ewq88l+pzFuU03dwGecfVMjOmfuEpRysp9Yj1
+         8qWmc0Tk1lZOZowmMKuoQFig+tFKJ1SqxL/E2g/E2jlzOmhwnrtaFsPKrgKw9WCtQYeG
+         YMpeul7CqohG4wU/WwjK4J44hX9fdGvKBTkEd7AfkKlNtGJhIJN8jo6zJT2Yp1OCBJ/7
+         HIWvt7IxJcpOpQyV6MVmy/6XytdULTSKDcX2uO08U9GsBAgOJREQ8gmSKZUmQWhUMnhl
+         SKgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705088104; x=1705692904;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=jK8NzPdFIJN1xPcLfAXJ5ClxrhUaaRbp5aXU0g0i+6A=;
-        b=j7D5yDDoMLjFApb/YNBCgL2N0vO+z2Qk0NQH1TOmbYFX3LIOzhydlJTTpA4HtcWC8a
-         kTOLFecZrsLv31/7xWgsQKpCH0x+IaiyB893rrLXZAE4KgJrfUkGuirdkCQ4F2fpKryC
-         q5Q2zfT88NyO317f2Dd2rpgr7Hdua5VjonoNPH+Juy/IIvajR5Uw8nEWOMyen+mjRJp3
-         I+qWwJSGuE4mfcOTeyIDWjQ/5XshNraZGJtmFr+XDM8qD6T1R2CyYlidd3pPLReFY+9b
-         sVwWJMTzNaNGcEv26K6Lr8SSLcrdn8go5/BLENVFevWGFEJu726aRU4PUIKU758oMUxM
-         Rv2g==
-X-Gm-Message-State: AOJu0Yzgn1Bs2HSIhQ3htdycuQJfLljpcnj+IdL2eOBsi4DYA06uG42Z
-	fRFi1kVNtEQN4ggJ78U45C7SHsIciJMSeHOFwRaJx6hB9o2GgPJGdmioozkO5eDoKHTe0Jqglhx
-	d+qoZ9I2ByBL4OjS5Gj8Yl06ECs79h5QvHasADRcNtJIB6A==
-X-Received: by 2002:a05:6000:4023:b0:337:8f4f:9071 with SMTP id cp35-20020a056000402300b003378f4f9071mr1550052wrb.25.1705088104217;
-        Fri, 12 Jan 2024 11:35:04 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGuMgCsBG6CADTdW9RWgxO4LHQuGPmeCuEPXaSjywG+I++5Se+YnBuzBrVRut5mDutQlzWUZLophhQE5Ukb65I=
-X-Received: by 2002:a05:6000:4023:b0:337:8f4f:9071 with SMTP id
- cp35-20020a056000402300b003378f4f9071mr1550046wrb.25.1705088103909; Fri, 12
- Jan 2024 11:35:03 -0800 (PST)
+        d=1e100.net; s=20230601; t=1705098529; x=1705703329;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=k+g8KAN/GocAbP+Hjj0VU3R5oOrMC5lRs+LQJKDyZbc=;
+        b=whY/Ll7yl0H/B/mC/fTBESs4aBwByp3kRKU/oTMWujTfMuSEbhU2d679QuDb9u4uO0
+         3QSceKCShrvK8o1NsrCPTTJX2d5iQn805IKYBqaHRlNcKsBtm7+89tRrWQkVmDprZbr8
+         b/eq0swvspdyqG1eR1FFtfUtG8bpfPzdLlEHR9PzlXAFRZKbjX2omrcKnYAT0rKCNiER
+         oXjvVw7M55M62OOlV7oWRWIOV2x1vp8jYl1QqWADxopgQD6rWyL8GmVCcZWhyTsFR4ni
+         gqpNGG4T6s5Sr+OEck/oTmHSVwg6ySADgfwkUaE3hqsdZ+8+v44j4MjAO3RIJQueUmVU
+         h7Bw==
+X-Gm-Message-State: AOJu0Ywm+X62AuMRHOkQWvTWNf6DEX4zvQnxR+hV8SaOPAPHPR3hizpy
+	IlguV1oKrEp4kk4rI5vDIGmCAMt99M4HSQ==
+X-Google-Smtp-Source: AGHT+IE6Y1CQAvSWgVhfPTkwN2W/RAJPjIutDlo+/cj2s9k6qNsUhtuGUhJR5tGNazvTNT3GoTlf0A==
+X-Received: by 2002:a17:906:a202:b0:a2c:4b7d:69db with SMTP id r2-20020a170906a20200b00a2c4b7d69dbmr1054995ejy.18.1705098529417;
+        Fri, 12 Jan 2024 14:28:49 -0800 (PST)
+Received: from [192.168.174.25] (178235179017.dynamic-4-waw-k-1-3-0.vectranet.pl. [178.235.179.17])
+        by smtp.gmail.com with ESMTPSA id hx25-20020a170906847900b00a26ac57b951sm2215051ejc.23.2024.01.12.14.28.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 12 Jan 2024 14:28:48 -0800 (PST)
+Message-ID: <2a8ad790-6f3b-43d8-af31-0e6dcca72c54@linaro.org>
+Date: Fri, 12 Jan 2024 23:28:46 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240112070000.4161982-1-ming.lei@redhat.com> <ccbc1e9b-ca63-415c-9b83-225d4108021a@suse.de>
- <ZaEz066MVkijH68c@fedora>
-In-Reply-To: <ZaEz066MVkijH68c@fedora>
-From: Ewan Milne <emilne@redhat.com>
-Date: Fri, 12 Jan 2024 14:34:52 -0500
-Message-ID: <CAGtn9r=Qko22+9Zxg8BnaAMtfEH_WYpkE7mDBmKWSdcm98Ui1Q@mail.gmail.com>
-Subject: Re: [PATCH] scsi: core: move scsi_host_busy() out of host lock for
- waking up EH handler
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V1 1/2] scsi: ufs: qcom : Refactor phy_power_on/off calls
+To: Nitin Rawat <quic_nitirawa@quicinc.com>,
+ Bjorn Andersson <andersson@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>
+Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Can Guo <quic_cang@quicinc.com>,
+ Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+References: <20240112153348.2778-1-quic_nitirawa@quicinc.com>
+ <20240112153348.2778-2-quic_nitirawa@quicinc.com>
+Content-Language: en-US
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
+ 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
+ izWDgYvmBE8=
+In-Reply-To: <20240112153348.2778-2-quic_nitirawa@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jan 12, 2024 at 7:43=E2=80=AFAM Ming Lei <ming.lei@redhat.com> wrot=
-e:
->
-> On Fri, Jan 12, 2024 at 12:12:57PM +0100, Hannes Reinecke wrote:
-> > On 1/12/24 08:00, Ming Lei wrote:
-> > > Inside scsi_eh_wakeup(), scsi_host_busy() is called & checked with ho=
-st lock
-> > > every time for deciding if error handler kthread needs to be waken up=
-.
-> > >
-> > > This way can be too heavy in case of recovery, such as:
-> > >
-> > > - N hardware queues
-> > > - queue depth is M for each hardware queue
-> > > - each scsi_host_busy() iterates over (N * M) tag/requests
-> > >
-> > > If recovery is triggered in case that all requests are in-flight, eac=
-h
-> > > scsi_eh_wakeup() is strictly serialized, when scsi_eh_wakeup() is cal=
-led
-> > > for the last in-flight request, scsi_host_busy() has been run for (N =
-* M - 1)
-> > > times, and request has been iterated for (N*M - 1) * (N * M) times.
-> > >
-> > > If both N and M are big enough, hard lockup can be triggered on acqui=
-ring
-> > > host lock, and it is observed on mpi3mr(128 hw queues, queue depth 81=
-69).
-> > >
-> > > Fix the issue by calling scsi_host_busy() outside host lock, and we
-> > > don't need host lock for getting busy count because host lock never
-> > > covers that.
-> > >
-> > Can you share details for the hard lockup?
-> > I do agree that scsi_host_busy() is an expensive operation, so it
-> > might not be ideal to call it under a spin lock.
-> > But I wonder where the lockup comes in here.
-> > Care to explain?
->
-> Recovery happens when there is N * M inflight requests, then scsi_dec_hos=
-t_busy()
-> can be called for each inflight request/scmnd from irq context.
->
-> host lock serializes every scsi_eh_wakeup().
->
-> Given each hardware queue has its own irq handler, so there could be one
-> request, scsi_dec_host_busy() is called and the host lock is spinned unti=
-l
-> it is released from scsi_dec_host_busy() for all requests from all other
-> hardware queues.
->
-> The spin time can be long enough to trigger the hard lockup if N and M
-> is big enough, and the total wait time can be:
->
->         (N - 1) * M * time_taken_in_scsi_host_busy().
->
-> Meantime the same story happens on scsi_eh_inc_host_failed() which is
-> called from softirq context, so host lock spin can be much more worse.
->
-> It is observed on mpi3mr with 128(N) hw queues and 8169(M) queue depth.
->
-> >
-> > And if it leads to a lockup, aren't other instances calling scsi_host_b=
-usy()
-> > under a spinlock affected, as well?
->
-> It is only possible when it is called in per-command situation.
->
->
-> Thanks,
-> Ming
->
+On 12.01.2024 16:33, Nitin Rawat wrote:
+> Commit 3f6d1767b1a0 ("phy: ufs-qcom: Refactor all init steps into
+> phy_poweron") removes the phy_power_on/off from ufs_qcom_setup_clocks
+> to suspend/resume func.
+> 
+> To have a better power saving, remove the phy_power_on/off calls from
+> resume/suspend path and put them back to ufs_qcom_setup_clocks, so that
+> PHY's regulators & clks can be turned on/off along with UFS's clocks.
+> 
+> Since phy phy_power_on is separated out from phy calibrate, make
+> separate calls to phy_power_on and phy_calibrate calls from ufs qcom
+> driver.
+> 
+> Also add a mutex lock to protect the usage of is_phy_pwr_on against
+> possible racing.
+> 
+> Co-developed-by: Can Guo <quic_cang@quicinc.com>
+> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+> Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
+> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 104 +++++++++++++++++++++++-------------
+>  drivers/ufs/host/ufs-qcom.h |   4 ++
+>  2 files changed, 72 insertions(+), 36 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 39eef470f8fa..2721a30f0db8 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -338,6 +338,46 @@ static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba)
+>  	return UFS_HS_G3;
+>  }
+> 
+> +static int ufs_qcom_phy_power_on(struct ufs_hba *hba)
+> +{
+> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> +	struct phy *phy = host->generic_phy;
+> +	int ret = 0;
+> +
+> +	mutex_lock(&host->phy_mutex);
 
-I can't see why this wouldn't work, or cause a problem with a lost wakeup,
-but the cost of iterating to obtain the host_busy value is still being paid=
-,
-just outside the host_lock.  If this has triggered a hard lockup, should
-we revisit the algorithm, e.g. are we still delaying EH wakeup for a notice=
-able
-amount of time?  O(n^2) algorithms in the kernel don't seem like the best i=
-dea.
+guard(mutex)(&host->phy_mutex);
 
-In any case...
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+and you can drop the _unlock calls
 
--Ewan
+> +	if (!host->is_phy_pwr_on) {
+> +		ret = phy_power_on(phy);
+> +		if (ret) {
+> +			mutex_unlock(&host->phy_mutex);
+> +			return ret;
 
+And with the _unlock now being unnecessary, you can rewrite this
+as:
+
+if (!host->is_phy_pwr_on) {
+	ret = phy_power_on(phy);
+	if (!ret)
+		host->is_phy_pwr_on = true;
+}
+
+return ret
+> +		}
+> +		host->is_phy_pwr_on = true;
+> +	}
+> +	mutex_unlock(&host->phy_mutex);
+> +
+> +	return ret;
+> +}
+
+[...]
+
+>  static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+>  {
+>  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> @@ -378,13 +418,18 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+>  		goto out_disable_phy;
+> 
+>  	/* power on phy - start serdes and phy's power and clocks */
+> -	ret = phy_power_on(phy);
+> +	ret = ufs_qcom_phy_power_on(hba);
+>  	if (ret) {
+>  		dev_err(hba->dev, "%s: phy power on failed, ret = %d\n",
+>  			__func__, ret);
+>  		goto out_disable_phy;
+>  	}
+> 
+> +	ret = phy_calibrate(phy);
+> +	if (ret) {
+> +		dev_err(hba->dev, "%s: Failed to calibrate PHY %d\n",
+> +				  __func__, ret);
+> +	}
+
+You can drop the overly verbose __func__, unwrap the line and remove the
+curly braces, similar for dev_err-s below
+
+Actually, shouldn't this error out if calibrate fails??
+
+Konrad
