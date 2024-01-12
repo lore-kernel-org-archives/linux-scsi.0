@@ -1,42 +1,158 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 078EB5B5AA;
-	Fri, 12 Jan 2024 04:39:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 08BE068CFE; Fri, 12 Jan 2024 05:39:16 +0100 (CET)
-Date: Fri, 12 Jan 2024 05:39:15 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
-	Keith Busch <kbusch@kernel.org>,
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-	Ed Tsai <ed.tsai@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	"yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
-Message-ID: <20240112043915.GA5664@lst.de>
-References: <20231130193139.880955-1-bvanassche@acm.org> <20231130193139.880955-2-bvanassche@acm.org> <58f50403-fcc9-ec11-f52b-f11ced3d2652@huaweicloud.com> <8372f2d0-b695-4af4-90e6-e35b86e3b844@acm.org> <c1658336-f48e-5688-f0c2-f325fd5696c3@huaweicloud.com> <1d3866af-ffca-4f97-914d-8084aca901ab@acm.org> <69b17db7-e9c9-df09-1022-ff7a9e5e04dd@huaweicloud.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83D165C8FB
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2024 07:00:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MdHWNnDi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1705042822;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=igjaY2QQd5669wuItNNsUos2U2/CVCyD5Q+24G4+R9o=;
+	b=MdHWNnDip6qqEOtr8k1vAFyVP7uYJjlbT0lXlhw+ZHDT9oNaRiBlgL14/GFYVRh/QeVQ32
+	Mjg5GbsbdNicEV5KybE4mzQUr1lLml5XFZnidZ3DM52JSrnuGQHw3KR/FZAQdtF+LC6hBf
+	MNAi5GeCmUwBFN30i+7lpmg+mDMB0V4=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-417-gh3wJ0r4MKilKmEQkWGl2w-1; Fri,
+ 12 Jan 2024 02:00:18 -0500
+X-MC-Unique: gh3wJ0r4MKilKmEQkWGl2w-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6209F29AA2F1;
+	Fri, 12 Jan 2024 07:00:18 +0000 (UTC)
+Received: from localhost (unknown [10.72.116.130])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 98F5CC1D368;
+	Fri, 12 Jan 2024 07:00:17 +0000 (UTC)
+From: Ming Lei <ming.lei@redhat.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org
+Cc: Ming Lei <ming.lei@redhat.com>,
+	Ewan Milne <emilne@redhat.com>
+Subject: [PATCH] scsi: core: move scsi_host_busy() out of host lock for waking up EH handler
+Date: Fri, 12 Jan 2024 15:00:00 +0800
+Message-ID: <20240112070000.4161982-1-ming.lei@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <69b17db7-e9c9-df09-1022-ff7a9e5e04dd@huaweicloud.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
 
-On Fri, Jan 12, 2024 at 09:08:25AM +0800, Yu Kuai wrote:
-> Yes, I realized that, handle the new flag in blk_mq_allow_hctx() is
-> good, how about following chang?
+Inside scsi_eh_wakeup(), scsi_host_busy() is called & checked with host lock
+every time for deciding if error handler kthread needs to be waken up.
 
-Who would make that decision and on what grounds?
+This way can be too heavy in case of recovery, such as:
+
+- N hardware queues
+- queue depth is M for each hardware queue
+- each scsi_host_busy() iterates over (N * M) tag/requests
+
+If recovery is triggered in case that all requests are in-flight, each
+scsi_eh_wakeup() is strictly serialized, when scsi_eh_wakeup() is called
+for the last in-flight request, scsi_host_busy() has been run for (N * M - 1)
+times, and request has been iterated for (N*M - 1) * (N * M) times.
+
+If both N and M are big enough, hard lockup can be triggered on acquiring
+host lock, and it is observed on mpi3mr(128 hw queues, queue depth 8169).
+
+Fix the issue by calling scsi_host_busy() outside host lock, and we
+don't need host lock for getting busy count because host lock never
+covers that.
+
+Cc: Ewan Milne <emilne@redhat.com>
+Fixes: 6eb045e092ef ("scsi: core: avoid host-wide host_busy counter for scsi_mq")
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+BTW, another way is to wake up EH handler unconditionally, and it should
+work too.
+
+ drivers/scsi/scsi_error.c | 11 +++++++----
+ drivers/scsi/scsi_lib.c   |  4 +++-
+ drivers/scsi/scsi_priv.h  |  2 +-
+ 3 files changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c67cdcdc3ba8..6743eb88e0a5 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -61,11 +61,11 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
+ static enum scsi_disposition scsi_try_to_abort_cmd(const struct scsi_host_template *,
+ 						   struct scsi_cmnd *);
+ 
+-void scsi_eh_wakeup(struct Scsi_Host *shost)
++void scsi_eh_wakeup(struct Scsi_Host *shost, unsigned int busy)
+ {
+ 	lockdep_assert_held(shost->host_lock);
+ 
+-	if (scsi_host_busy(shost) == shost->host_failed) {
++	if (busy == shost->host_failed) {
+ 		trace_scsi_eh_wakeup(shost);
+ 		wake_up_process(shost->ehandler);
+ 		SCSI_LOG_ERROR_RECOVERY(5, shost_printk(KERN_INFO, shost,
+@@ -87,8 +87,10 @@ void scsi_schedule_eh(struct Scsi_Host *shost)
+ 
+ 	if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
+ 	    scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0) {
++		unsigned int busy = scsi_host_busy(shost);
++
+ 		shost->host_eh_scheduled++;
+-		scsi_eh_wakeup(shost);
++		scsi_eh_wakeup(shost, busy);
+ 	}
+ 
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+@@ -283,10 +285,11 @@ static void scsi_eh_inc_host_failed(struct rcu_head *head)
+ 	struct scsi_cmnd *scmd = container_of(head, typeof(*scmd), rcu);
+ 	struct Scsi_Host *shost = scmd->device->host;
+ 	unsigned long flags;
++	unsigned int busy = scsi_host_busy(shost);
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	shost->host_failed++;
+-	scsi_eh_wakeup(shost);
++	scsi_eh_wakeup(shost, busy);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index cf3864f72093..df5ac03d5d6c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -278,9 +278,11 @@ static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ 	rcu_read_lock();
+ 	__clear_bit(SCMD_STATE_INFLIGHT, &cmd->state);
+ 	if (unlikely(scsi_host_in_recovery(shost))) {
++		unsigned int busy = scsi_host_busy(shost);
++
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 		if (shost->host_failed || shost->host_eh_scheduled)
+-			scsi_eh_wakeup(shost);
++			scsi_eh_wakeup(shost, busy);
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 	}
+ 	rcu_read_unlock();
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 3f0dfb97db6b..1fbfe1b52c9f 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -92,7 +92,7 @@ extern void scmd_eh_abort_handler(struct work_struct *work);
+ extern enum blk_eh_timer_return scsi_timeout(struct request *req);
+ extern int scsi_error_handler(void *host);
+ extern enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *cmd);
+-extern void scsi_eh_wakeup(struct Scsi_Host *shost);
++extern void scsi_eh_wakeup(struct Scsi_Host *shost, unsigned int busy);
+ extern void scsi_eh_scmd_add(struct scsi_cmnd *);
+ void scsi_eh_ready_devs(struct Scsi_Host *shost,
+ 			struct list_head *work_q,
+-- 
+2.42.0
 
