@@ -1,113 +1,99 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E41F59175
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2024 12:43:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB2986DCF2;
+	Fri, 12 Jan 2024 14:27:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="I6xyOd+P"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1705063388;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9hYD9vvEMLBXQ94CTL17ZKqQeZbZQQ3i/iQS9n0ydlQ=;
-	b=I6xyOd+PrI4d0nKyhsUZfsDT2KcqeSLqIqUbTz8L6813e/02MAQJadgXydbmupd64eM46Q
-	GGBQIm8XeyvWFtkpnVPTsFwmHjaQlIGSX5YFSYjpKQDa8KVJxXbIkJTKheLca6GOEhBsf3
-	3eg57y5Kzz+sPUT4dVPOAWiXj5yqsr8=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-650-1_HfE9JePfCvHVcnuZpWnA-1; Fri,
- 12 Jan 2024 07:43:07 -0500
-X-MC-Unique: 1_HfE9JePfCvHVcnuZpWnA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 9BBBF3C13A86;
-	Fri, 12 Jan 2024 12:43:06 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.130])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id BF80D2026D66;
-	Fri, 12 Jan 2024 12:43:03 +0000 (UTC)
-Date: Fri, 12 Jan 2024 20:42:59 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, Ewan Milne <emilne@redhat.com>,
-	ming.lei@redhat.com
-Subject: Re: [PATCH] scsi: core: move scsi_host_busy() out of host lock for
- waking up EH handler
-Message-ID: <ZaEz066MVkijH68c@fedora>
-References: <20240112070000.4161982-1-ming.lei@redhat.com>
- <ccbc1e9b-ca63-415c-9b83-225d4108021a@suse.de>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="pOJ1cgW3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4449BC433F1;
+	Fri, 12 Jan 2024 14:27:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1705069648;
+	bh=rURI4j8Qzdu95xSW0tWCVC+7bpXBaT8ciPIXxAKQmg8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=pOJ1cgW3CWiVAHKRwC/0P+QLn6Rc+YRjGcrFkax05Yw8qge//B1fNWXjwf40ZQNk5
+	 HFGBx0FPiN/gLjP/Y5bNdy6nPnmigOrmQLGEEDTG3d4bEfrOy5KDDcfMa8wnnL9oNC
+	 QC/SDSPB8RmizPkWwIIqQIgdsH/L6DyBaJeKO0do=
+Date: Fri, 12 Jan 2024 09:27:27 -0500
+From: Konstantin Ryabitsev <konstantin@linuxfoundation.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, 
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [GIT PULL] first round of SCSI updates for the 6.7+ merge window
+Message-ID: <20240112-steadfast-eager-porcupine-2c9b3a@lemur>
+References: <c5ac3166f35bac3a618b126dabadaddc11c8512d.camel@HansenPartnership.com>
+ <CAHk-=whKVgb27o3+jhSRzuZdpjWJiAvxeO8faMjHpb-asONE1g@mail.gmail.com>
+ <CAHk-=wiHCkxrMCOL+rSGuPxUoX0_GSMLjgs9v5NJg6okxc1NLw@mail.gmail.com>
+ <255e3328bd48c23fbaae0be6d927820d36e14404.camel@HansenPartnership.com>
+ <CAHk-=wi6PenRqDCuumMK_5+_gU+JdUqrBEDS-XwFiaNdVRZAHA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ccbc1e9b-ca63-415c-9b83-225d4108021a@suse.de>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.4
+In-Reply-To: <CAHk-=wi6PenRqDCuumMK_5+_gU+JdUqrBEDS-XwFiaNdVRZAHA@mail.gmail.com>
 
-On Fri, Jan 12, 2024 at 12:12:57PM +0100, Hannes Reinecke wrote:
-> On 1/12/24 08:00, Ming Lei wrote:
-> > Inside scsi_eh_wakeup(), scsi_host_busy() is called & checked with host lock
-> > every time for deciding if error handler kthread needs to be waken up.
-> > 
-> > This way can be too heavy in case of recovery, such as:
-> > 
-> > - N hardware queues
-> > - queue depth is M for each hardware queue
-> > - each scsi_host_busy() iterates over (N * M) tag/requests
-> > 
-> > If recovery is triggered in case that all requests are in-flight, each
-> > scsi_eh_wakeup() is strictly serialized, when scsi_eh_wakeup() is called
-> > for the last in-flight request, scsi_host_busy() has been run for (N * M - 1)
-> > times, and request has been iterated for (N*M - 1) * (N * M) times.
-> > 
-> > If both N and M are big enough, hard lockup can be triggered on acquiring
-> > host lock, and it is observed on mpi3mr(128 hw queues, queue depth 8169).
-> > 
-> > Fix the issue by calling scsi_host_busy() outside host lock, and we
-> > don't need host lock for getting busy count because host lock never
-> > covers that.
-> > 
-> Can you share details for the hard lockup?
-> I do agree that scsi_host_busy() is an expensive operation, so it
-> might not be ideal to call it under a spin lock.
-> But I wonder where the lockup comes in here.
-> Care to explain?
-
-Recovery happens when there is N * M inflight requests, then scsi_dec_host_busy()
-can be called for each inflight request/scmnd from irq context.
-
-host lock serializes every scsi_eh_wakeup().
-
-Given each hardware queue has its own irq handler, so there could be one
-request, scsi_dec_host_busy() is called and the host lock is spinned until
-it is released from scsi_dec_host_busy() for all requests from all other
-hardware queues.
-
-The spin time can be long enough to trigger the hard lockup if N and M
-is big enough, and the total wait time can be:
-
-	(N - 1) * M * time_taken_in_scsi_host_busy().
-
-Meantime the same story happens on scsi_eh_inc_host_failed() which is
-called from softirq context, so host lock spin can be much more worse.
-
-It is observed on mpi3mr with 128(N) hw queues and 8169(M) queue depth.
-
+On Thu, Jan 11, 2024 at 03:50:32PM -0800, Linus Torvalds wrote:
+> > jejb@lingrow:~> gpg --list-key E76040DB76CA3D176708F9AAE742C94CEE98AC85
+> > pub   rsa2048 2011-09-23 [SC] [expires: 2026-03-11]
+> >       D5606E73C8B46271BEAD9ADF814AE47C214854D6
+> > uid           [ultimate] James Bottomley
+> > <James.Bottomley@HansenPartnership.com>
+> > uid           [ultimate] James Bottomley <jejb@linux.vnet.ibm.com>
+> > uid           [ultimate] James Bottomley <jejb@kernel.org>
+> > uid           [ultimate] [jpeg image of size 5254]
+> > uid           [ultimate] James Bottomley <jejb@linux.ibm.com>
+> > uid           [ultimate] James Bottomley <jejb@hansenpartnership.com>
+> > sub   nistp256 2018-01-23 [S] [expires: 2024-01-16]
+> > sub   nistp256 2018-01-23 [E] [expires: 2024-01-16]
+> > sub   nistp256 2023-07-20 [A] [expires: 2024-01-16]
 > 
-> And if it leads to a lockup, aren't other instances calling scsi_host_busy()
-> under a spinlock affected, as well?
+> Look closer.
+> 
+> NOWHERE there does it mention E76040D.. Nowhere.
 
-It is only possible when it is called in per-command situation.
+I'm piping up just because I know how to get the output you want, not because
+I hold any opinions on GnuPG (I do, but they aren't relevant here). :)
 
+Add the following to your ~/.gnupg/gpg.conf:
 
-Thanks,
-Ming
+    keyid-format long
 
+After that the output should look like this:
+
+    $ gpg --list-key E76040DB76CA3D176708F9AAE742C94CEE98AC85
+    pub   rsa2048/814AE47C214854D6 2011-09-23 [SC] [expires: 2026-03-11]
+          D5606E73C8B46271BEAD9ADF814AE47C214854D6
+    uid                 [  full  ] James Bottomley <James.Bottomley@HansenPartnership.com>
+    uid                 [  full  ] James Bottomley <jejb@kernel.org>
+    uid                 [  full  ] James Bottomley <jejb@linux.vnet.ibm.com>
+    uid                 [  never ] [jpeg image of size 5254]
+    uid                 [  full  ] James Bottomley <jejb@linux.ibm.com>
+    sub   nistp256/E742C94CEE98AC85 2018-01-23 [S] [expires: 2024-01-16]
+    sub   nistp256/3E01E40786F26FB8 2018-01-23 [E] [expires: 2024-01-16]
+    sub   nistp256/920E9CA6AA3F170D 2023-07-20 [A] [expires: 2024-01-16]
+
+Note, that keyids are truncated from the right, as opposed to git commits.
+
+> And the above is actually being *generous* to gpg. The reality is even
+> worse. Try this:
+> 
+>    gpg --list-key 37AAA9562C5CBD0C
+> 
+> and notice how it doesn't even list the subkey I asked about. Not even
+> with '--with-subkey-fingerprint'.
+
+Again, just because I happen to know the right incantation and it may come up
+in a search for someone:
+
+    $ gpg --list-options show-unusable-subkeys --list-key 37AAA9562C5CBD0C
+
+You can add it to your .gnupg/gpg.conf as well:
+
+    list-options show-unusable-subkeys
+
+-K
