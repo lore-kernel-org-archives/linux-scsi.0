@@ -1,158 +1,148 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83D165C8FB
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2024 07:00:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MdHWNnDi"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1705042822;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=igjaY2QQd5669wuItNNsUos2U2/CVCyD5Q+24G4+R9o=;
-	b=MdHWNnDip6qqEOtr8k1vAFyVP7uYJjlbT0lXlhw+ZHDT9oNaRiBlgL14/GFYVRh/QeVQ32
-	Mjg5GbsbdNicEV5KybE4mzQUr1lLml5XFZnidZ3DM52JSrnuGQHw3KR/FZAQdtF+LC6hBf
-	MNAi5GeCmUwBFN30i+7lpmg+mDMB0V4=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-417-gh3wJ0r4MKilKmEQkWGl2w-1; Fri,
- 12 Jan 2024 02:00:18 -0500
-X-MC-Unique: gh3wJ0r4MKilKmEQkWGl2w-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 6209F29AA2F1;
-	Fri, 12 Jan 2024 07:00:18 +0000 (UTC)
-Received: from localhost (unknown [10.72.116.130])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id 98F5CC1D368;
-	Fri, 12 Jan 2024 07:00:17 +0000 (UTC)
-From: Ming Lei <ming.lei@redhat.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Cc: Ming Lei <ming.lei@redhat.com>,
-	Ewan Milne <emilne@redhat.com>
-Subject: [PATCH] scsi: core: move scsi_host_busy() out of host lock for waking up EH handler
-Date: Fri, 12 Jan 2024 15:00:00 +0800
-Message-ID: <20240112070000.4161982-1-ming.lei@redhat.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EAEB55C1A;
+	Fri, 12 Jan 2024 09:22:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-5e89ba9810aso53716167b3.2;
+        Fri, 12 Jan 2024 01:22:58 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705051377; x=1705656177;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=oZ+2Dp9TWzBAJs7a7HXex6+HAK1whEFISVpRMsIzFtY=;
+        b=kz4Rh6tATK+ePkChxTffCB9o+LAq6zBjbkDfXI6KrDfscKzvxXI01Me3Ig/oKKwgnh
+         F/fm3ooHu0iDL858CU7KoFwM+rmNwYZAIpLj2WMuesIFJt0uTqLjVwGJr95JprWaPeTA
+         ZMS/mMy1duXu1z02b9X458aq+ZGgrwp4OM1/mjoaDK25qH7HeXWQ5iMy04XrARfHdZjU
+         KsY9yOW/k1uHcDQ2j006IrLzVi/pvnqMTSfU1klrt5+iExv8BlfvSCjI9SwPZVDz9mCM
+         /olV2pj97GcsWyYLiWLBt9MChS2Oyfj9MHoP/+uEWAZkRPbNaSwiEZ64FulvrHL22xP0
+         C8LA==
+X-Gm-Message-State: AOJu0YxxA6j94SUnMr2pYu/8XC/gHImIJPaTp40blv99ARFOyhdj7Se7
+	64K6HjkIxW5N9drUM+xmpIr5HyR0ayfa7w==
+X-Google-Smtp-Source: AGHT+IFg5IMMzLpSbtw/b/cT8GfZQlvcBjGu28hUCRjpVSb+ZtQCVo1usFysauBc/fg372QgmQpzpA==
+X-Received: by 2002:a81:6c54:0:b0:5fb:7671:477d with SMTP id h81-20020a816c54000000b005fb7671477dmr994872ywc.46.1705051377320;
+        Fri, 12 Jan 2024 01:22:57 -0800 (PST)
+Received: from mail-yw1-f175.google.com (mail-yw1-f175.google.com. [209.85.128.175])
+        by smtp.gmail.com with ESMTPSA id ft18-20020a05690c361200b005fa813ac693sm1160169ywb.48.2024.01.12.01.22.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 12 Jan 2024 01:22:56 -0800 (PST)
+Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-5e89ba9810aso53715957b3.2;
+        Fri, 12 Jan 2024 01:22:56 -0800 (PST)
+X-Received: by 2002:a81:4522:0:b0:5fa:7e0a:b133 with SMTP id
+ s34-20020a814522000000b005fa7e0ab133mr895241ywa.79.1705051375948; Fri, 12 Jan
+ 2024 01:22:55 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
+References: <20240111162419.12406-1-pmladek@suse.com>
+In-Reply-To: <20240111162419.12406-1-pmladek@suse.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Fri, 12 Jan 2024 10:22:44 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdW1XyimybybSwAfwgzeUyFj6riRZZZzQK7zjTVUJziX-Q@mail.gmail.com>
+Message-ID: <CAMuHMdW1XyimybybSwAfwgzeUyFj6riRZZZzQK7zjTVUJziX-Q@mail.gmail.com>
+Subject: Re: [PATCH] scsi: core: Safe warning about bad dev info string
+To: Petr Mladek <pmladek@suse.com>
+Cc: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Chris Down <chris@chrisdown.name>, oe-kbuild-all@lists.linux.dev, 
+	kernel test robot <lkp@intel.com>, Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Inside scsi_eh_wakeup(), scsi_host_busy() is called & checked with host lock
-every time for deciding if error handler kthread needs to be waken up.
+Hi Petr,
 
-This way can be too heavy in case of recovery, such as:
+On Thu, Jan 11, 2024 at 5:26=E2=80=AFPM Petr Mladek <pmladek@suse.com> wrot=
+e:
+> Both "model" and "strflags" are passed to "%s" even when one or both
+> are NULL.
+>
+> It is safe because vsprintf() would detect the NULL pointer and print
+> "(null)". But it is a kernel-specific feature and compiler warns
+> about it:
+>
+> <warning>
+>    In file included from include/linux/kernel.h:19,
+>                     from arch/x86/include/asm/percpu.h:27,
+>                     from arch/x86/include/asm/current.h:6,
+>                     from include/linux/sched.h:12,
+>                     from include/linux/blkdev.h:5,
+>                     from drivers/scsi/scsi_devinfo.c:3:
+>    drivers/scsi/scsi_devinfo.c: In function 'scsi_dev_info_list_add_str':
+> >> include/linux/printk.h:434:44: warning: '%s' directive argument is nul=
+l [-Wformat-overflow=3D]
+>      434 | #define printk(fmt, ...) printk_index_wrap(_printk, fmt, ##__V=
+A_ARGS__)
+>          |                                            ^
+>    include/linux/printk.h:430:3: note: in definition of macro 'printk_ind=
+ex_wrap'
+>      430 |   _p_func(_fmt, ##__VA_ARGS__);    \
+>          |   ^~~~~~~
+>    drivers/scsi/scsi_devinfo.c:551:4: note: in expansion of macro 'printk=
+'
+>      551 |    printk(KERN_ERR "%s: bad dev info string '%s' '%s'"
+>          |    ^~~~~~
+>    drivers/scsi/scsi_devinfo.c:552:14: note: format string is defined her=
+e
+>      552 |           " '%s'\n", __func__, vendor, model,
+>          |              ^~
+> </warning>
+>
+> Do not rely on the kernel specific behavior and print the message a safe =
+way.
+>
+> Reported-by: kernel test robot <lkp@intel.com>
+> Closes: https://lore.kernel.org/oe-kbuild-all/202401112002.AOjwMNM0-lkp@i=
+ntel.com/
+> Signed-off-by: Petr Mladek <pmladek@suse.com>
+> ---
+> Note: The patch is only compile tested.
+>
+>  drivers/scsi/scsi_devinfo.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+> index 3fcaf10a9dfe..ba7237e83863 100644
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -551,9 +551,9 @@ static int scsi_dev_info_list_add_str(char *dev_list)
+>                 if (model)
+>                         strflags =3D strsep(&next, next_check);
+>                 if (!model || !strflags) {
+> -                       printk(KERN_ERR "%s: bad dev info string '%s' '%s=
+'"
+> -                              " '%s'\n", __func__, vendor, model,
+> -                              strflags);
+> +                       pr_err("%s: bad dev info string '%s' '%s' '%s'\n"=
+,
+> +                              __func__, vendor, model ? model : "",
+> +                              strflags ? strflags : "");
 
-- N hardware queues
-- queue depth is M for each hardware queue
-- each scsi_host_busy() iterates over (N * M) tag/requests
+Do we really want to make this change?
+The kernel's vsprintf() implementation has supported NULL pointers
+since forever, and lots of code relies on that behavior.
 
-If recovery is triggered in case that all requests are in-flight, each
-scsi_eh_wakeup() is strictly serialized, when scsi_eh_wakeup() is called
-for the last in-flight request, scsi_host_busy() has been run for (N * M - 1)
-times, and request has been iterated for (N*M - 1) * (N * M) times.
+Perhaps this warning can be disabled instead?
 
-If both N and M are big enough, hard lockup can be triggered on acquiring
-host lock, and it is observed on mpi3mr(128 hw queues, queue depth 8169).
+>                         res =3D -EINVAL;
+>                 } else
+>                         res =3D scsi_dev_info_list_add(0 /* compatible */=
+, vendor,
 
-Fix the issue by calling scsi_host_busy() outside host lock, and we
-don't need host lock for getting busy count because host lock never
-covers that.
+Gr{oetje,eeting}s,
 
-Cc: Ewan Milne <emilne@redhat.com>
-Fixes: 6eb045e092ef ("scsi: core: avoid host-wide host_busy counter for scsi_mq")
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
-BTW, another way is to wake up EH handler unconditionally, and it should
-work too.
+                        Geert
 
- drivers/scsi/scsi_error.c | 11 +++++++----
- drivers/scsi/scsi_lib.c   |  4 +++-
- drivers/scsi/scsi_priv.h  |  2 +-
- 3 files changed, 11 insertions(+), 6 deletions(-)
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index c67cdcdc3ba8..6743eb88e0a5 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -61,11 +61,11 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
- static enum scsi_disposition scsi_try_to_abort_cmd(const struct scsi_host_template *,
- 						   struct scsi_cmnd *);
- 
--void scsi_eh_wakeup(struct Scsi_Host *shost)
-+void scsi_eh_wakeup(struct Scsi_Host *shost, unsigned int busy)
- {
- 	lockdep_assert_held(shost->host_lock);
- 
--	if (scsi_host_busy(shost) == shost->host_failed) {
-+	if (busy == shost->host_failed) {
- 		trace_scsi_eh_wakeup(shost);
- 		wake_up_process(shost->ehandler);
- 		SCSI_LOG_ERROR_RECOVERY(5, shost_printk(KERN_INFO, shost,
-@@ -87,8 +87,10 @@ void scsi_schedule_eh(struct Scsi_Host *shost)
- 
- 	if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
- 	    scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0) {
-+		unsigned int busy = scsi_host_busy(shost);
-+
- 		shost->host_eh_scheduled++;
--		scsi_eh_wakeup(shost);
-+		scsi_eh_wakeup(shost, busy);
- 	}
- 
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -283,10 +285,11 @@ static void scsi_eh_inc_host_failed(struct rcu_head *head)
- 	struct scsi_cmnd *scmd = container_of(head, typeof(*scmd), rcu);
- 	struct Scsi_Host *shost = scmd->device->host;
- 	unsigned long flags;
-+	unsigned int busy = scsi_host_busy(shost);
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	shost->host_failed++;
--	scsi_eh_wakeup(shost);
-+	scsi_eh_wakeup(shost, busy);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
- 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index cf3864f72093..df5ac03d5d6c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -278,9 +278,11 @@ static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
- 	rcu_read_lock();
- 	__clear_bit(SCMD_STATE_INFLIGHT, &cmd->state);
- 	if (unlikely(scsi_host_in_recovery(shost))) {
-+		unsigned int busy = scsi_host_busy(shost);
-+
- 		spin_lock_irqsave(shost->host_lock, flags);
- 		if (shost->host_failed || shost->host_eh_scheduled)
--			scsi_eh_wakeup(shost);
-+			scsi_eh_wakeup(shost, busy);
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 	}
- 	rcu_read_unlock();
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 3f0dfb97db6b..1fbfe1b52c9f 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -92,7 +92,7 @@ extern void scmd_eh_abort_handler(struct work_struct *work);
- extern enum blk_eh_timer_return scsi_timeout(struct request *req);
- extern int scsi_error_handler(void *host);
- extern enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *cmd);
--extern void scsi_eh_wakeup(struct Scsi_Host *shost);
-+extern void scsi_eh_wakeup(struct Scsi_Host *shost, unsigned int busy);
- extern void scsi_eh_scmd_add(struct scsi_cmnd *);
- void scsi_eh_ready_devs(struct Scsi_Host *shost,
- 			struct list_head *work_q,
--- 
-2.42.0
-
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
