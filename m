@@ -1,208 +1,151 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 475CB1773B
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2024 22:28:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D3891A713
+	for <linux-scsi@vger.kernel.org>; Sat, 13 Jan 2024 01:59:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="K+jkxS/H"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-a2cfb0196bcso70945066b.3
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2024 14:28:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1705098529; x=1705703329; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=k+g8KAN/GocAbP+Hjj0VU3R5oOrMC5lRs+LQJKDyZbc=;
-        b=K+jkxS/HFNwjqGT47Hes14wV4POIlXFMqJjU2r06BY6/ANnvSE/NxIER3GEbt2Rci1
-         G+ySvp3yP92iSYndcPdgTP6X5prn6o3ewq88l+pzFuU03dwGecfVMjOmfuEpRysp9Yj1
-         8qWmc0Tk1lZOZowmMKuoQFig+tFKJ1SqxL/E2g/E2jlzOmhwnrtaFsPKrgKw9WCtQYeG
-         YMpeul7CqohG4wU/WwjK4J44hX9fdGvKBTkEd7AfkKlNtGJhIJN8jo6zJT2Yp1OCBJ/7
-         HIWvt7IxJcpOpQyV6MVmy/6XytdULTSKDcX2uO08U9GsBAgOJREQ8gmSKZUmQWhUMnhl
-         SKgg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705098529; x=1705703329;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=k+g8KAN/GocAbP+Hjj0VU3R5oOrMC5lRs+LQJKDyZbc=;
-        b=whY/Ll7yl0H/B/mC/fTBESs4aBwByp3kRKU/oTMWujTfMuSEbhU2d679QuDb9u4uO0
-         3QSceKCShrvK8o1NsrCPTTJX2d5iQn805IKYBqaHRlNcKsBtm7+89tRrWQkVmDprZbr8
-         b/eq0swvspdyqG1eR1FFtfUtG8bpfPzdLlEHR9PzlXAFRZKbjX2omrcKnYAT0rKCNiER
-         oXjvVw7M55M62OOlV7oWRWIOV2x1vp8jYl1QqWADxopgQD6rWyL8GmVCcZWhyTsFR4ni
-         gqpNGG4T6s5Sr+OEck/oTmHSVwg6ySADgfwkUaE3hqsdZ+8+v44j4MjAO3RIJQueUmVU
-         h7Bw==
-X-Gm-Message-State: AOJu0Ywm+X62AuMRHOkQWvTWNf6DEX4zvQnxR+hV8SaOPAPHPR3hizpy
-	IlguV1oKrEp4kk4rI5vDIGmCAMt99M4HSQ==
-X-Google-Smtp-Source: AGHT+IE6Y1CQAvSWgVhfPTkwN2W/RAJPjIutDlo+/cj2s9k6qNsUhtuGUhJR5tGNazvTNT3GoTlf0A==
-X-Received: by 2002:a17:906:a202:b0:a2c:4b7d:69db with SMTP id r2-20020a170906a20200b00a2c4b7d69dbmr1054995ejy.18.1705098529417;
-        Fri, 12 Jan 2024 14:28:49 -0800 (PST)
-Received: from [192.168.174.25] (178235179017.dynamic-4-waw-k-1-3-0.vectranet.pl. [178.235.179.17])
-        by smtp.gmail.com with ESMTPSA id hx25-20020a170906847900b00a26ac57b951sm2215051ejc.23.2024.01.12.14.28.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Jan 2024 14:28:48 -0800 (PST)
-Message-ID: <2a8ad790-6f3b-43d8-af31-0e6dcca72c54@linaro.org>
-Date: Fri, 12 Jan 2024 23:28:46 +0100
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LV+bslp1"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1705111160;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=elHnARtPaVeTuPqQMrheSgI71iI306CU/GVM/myyEsI=;
+	b=LV+bslp1VucFrLhrG04p6Ff/DnUPoZ42xC9KvBXd9L3Ke761HCbBbyZIACwLXc4cGoJqsP
+	EtE5I6bUDHnUri+s71yBkswQulKr2UIeZeuUvXIaF33hYPWDibdmdppJ7KfcwJ2cKC+33F
+	DTArTBgQPboQFV/dhnfXg/V+Vw3BdHU=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-302-PUjI2YAAPNuwNFp2wDS3Bw-1; Fri, 12 Jan 2024 20:59:18 -0500
+X-MC-Unique: PUjI2YAAPNuwNFp2wDS3Bw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 9AFCD185A780;
+	Sat, 13 Jan 2024 01:59:17 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.130])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 49A2751D5;
+	Sat, 13 Jan 2024 01:59:13 +0000 (UTC)
+Date: Sat, 13 Jan 2024 09:59:10 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: Ewan Milne <emilne@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, ming.lei@redhat.com
+Subject: Re: [PATCH] scsi: core: move scsi_host_busy() out of host lock for
+ waking up EH handler
+Message-ID: <ZaHubv1sH2I14z20@fedora>
+References: <20240112070000.4161982-1-ming.lei@redhat.com>
+ <ccbc1e9b-ca63-415c-9b83-225d4108021a@suse.de>
+ <ZaEz066MVkijH68c@fedora>
+ <CAGtn9r=Qko22+9Zxg8BnaAMtfEH_WYpkE7mDBmKWSdcm98Ui1Q@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 1/2] scsi: ufs: qcom : Refactor phy_power_on/off calls
-To: Nitin Rawat <quic_nitirawa@quicinc.com>,
- Bjorn Andersson <andersson@kernel.org>, Vinod Koul <vkoul@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Philipp Zabel <p.zabel@pengutronix.de>
-Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
- linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
- Can Guo <quic_cang@quicinc.com>,
- Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-References: <20240112153348.2778-1-quic_nitirawa@quicinc.com>
- <20240112153348.2778-2-quic_nitirawa@quicinc.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@linaro.org>
-Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
- xsFNBF9ALYUBEADWAhxdTBWrwAgDQQzc1O/bJ5O7b6cXYxwbBd9xKP7MICh5YA0DcCjJSOum
- BB/OmIWU6X+LZW6P88ZmHe+KeyABLMP5s1tJNK1j4ntT7mECcWZDzafPWF4F6m4WJOG27kTJ
- HGWdmtO+RvadOVi6CoUDqALsmfS3MUG5Pj2Ne9+0jRg4hEnB92AyF9rW2G3qisFcwPgvatt7
- TXD5E38mLyOPOUyXNj9XpDbt1hNwKQfiidmPh5e7VNAWRnW1iCMMoKqzM1Anzq7e5Afyeifz
- zRcQPLaqrPjnKqZGL2BKQSZDh6NkI5ZLRhhHQf61fkWcUpTp1oDC6jWVfT7hwRVIQLrrNj9G
- MpPzrlN4YuAqKeIer1FMt8cq64ifgTzxHzXsMcUdclzq2LTk2RXaPl6Jg/IXWqUClJHbamSk
- t1bfif3SnmhA6TiNvEpDKPiT3IDs42THU6ygslrBxyROQPWLI9IL1y8S6RtEh8H+NZQWZNzm
- UQ3imZirlPjxZtvz1BtnnBWS06e7x/UEAguj7VHCuymVgpl2Za17d1jj81YN5Rp5L9GXxkV1
- aUEwONM3eCI3qcYm5JNc5X+JthZOWsbIPSC1Rhxz3JmWIwP1udr5E3oNRe9u2LIEq+wH/toH
- kpPDhTeMkvt4KfE5m5ercid9+ZXAqoaYLUL4HCEw+HW0DXcKDwARAQABzShLb25yYWQgRHli
- Y2lvIDxrb25yYWQuZHliY2lvQGxpbmFyby5vcmc+wsGOBBMBCAA4FiEEU24if9oCL2zdAAQV
- R4cBcg5dfFgFAmQ5bqwCGwMFCwkIBwIGFQoJCAsCBBYCAwECHgECF4AACgkQR4cBcg5dfFjO
- BQ//YQV6fkbqQCceYebGg6TiisWCy8LG77zV7DB0VMIWJv7Km7Sz0QQrHQVzhEr3trNenZrf
- yy+o2tQOF2biICzbLM8oyQPY8B///KJTWI2khoB8IJSJq3kNG68NjPg2vkP6CMltC/X3ohAo
- xL2UgwN5vj74QnlNneOjc0vGbtA7zURNhTz5P/YuTudCqcAbxJkbqZM4WymjQhe0XgwHLkiH
- 5LHSZ31MRKp/+4Kqs4DTXMctc7vFhtUdmatAExDKw8oEz5NbskKbW+qHjW1XUcUIrxRr667V
- GWH6MkVceT9ZBrtLoSzMLYaQXvi3sSAup0qiJiBYszc/VOu3RbIpNLRcXN3KYuxdQAptacTE
- mA+5+4Y4DfC3rUSun+hWLDeac9z9jjHm5rE998OqZnOU9aztbd6zQG5VL6EKgsVXAZD4D3RP
- x1NaAjdA3MD06eyvbOWiA5NSzIcC8UIQvgx09xm7dThCuQYJR4Yxjd+9JPJHI6apzNZpDGvQ
- BBZzvwxV6L1CojUEpnilmMG1ZOTstktWpNzw3G2Gis0XihDUef0MWVsQYJAl0wfiv/0By+XK
- mm2zRR+l/dnzxnlbgJ5pO0imC2w0TVxLkAp0eo0LHw619finad2u6UPQAkZ4oj++iIGrJkt5
- Lkn2XgB+IW8ESflz6nDY3b5KQRF8Z6XLP0+IEdLOOARkOW7yEgorBgEEAZdVAQUBAQdAwmUx
- xrbSCx2ksDxz7rFFGX1KmTkdRtcgC6F3NfuNYkYDAQgHwsF2BBgBCAAgFiEEU24if9oCL2zd
- AAQVR4cBcg5dfFgFAmQ5bvICGwwACgkQR4cBcg5dfFju1Q//Xta1ShwL0MLSC1KL1lXGXeRM
- 8arzfyiB5wJ9tb9U/nZvhhdfilEDLe0jKJY0RJErbdRHsalwQCrtq/1ewQpMpsRxXzAjgfRN
- jc4tgxRWmI+aVTzSRpywNahzZBT695hMz81cVZJoZzaV0KaMTlSnBkrviPz1nIGHYCHJxF9r
- cIu0GSIyUjZ/7xslxdvjpLth16H27JCWDzDqIQMtg61063gNyEyWgt1qRSaK14JIH/DoYRfn
- jfFQSC8bffFjat7BQGFz4ZpRavkMUFuDirn5Tf28oc5ebe2cIHp4/kajTx/7JOxWZ80U70mA
- cBgEeYSrYYnX+UJsSxpzLc/0sT1eRJDEhI4XIQM4ClIzpsCIN5HnVF76UQXh3a9zpwh3dk8i
- bhN/URmCOTH+LHNJYN/MxY8wuukq877DWB7k86pBs5IDLAXmW8v3gIDWyIcgYqb2v8QO2Mqx
- YMqL7UZxVLul4/JbllsQB8F/fNI8AfttmAQL9cwo6C8yDTXKdho920W4WUR9k8NT/OBqWSyk
- bGqMHex48FVZhexNPYOd58EY9/7mL5u0sJmo+jTeb4JBgIbFPJCFyng4HwbniWgQJZ1WqaUC
- nas9J77uICis2WH7N8Bs9jy0wQYezNzqS+FxoNXmDQg2jetX8en4bO2Di7Pmx0jXA4TOb9TM
- izWDgYvmBE8=
-In-Reply-To: <20240112153348.2778-2-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAGtn9r=Qko22+9Zxg8BnaAMtfEH_WYpkE7mDBmKWSdcm98Ui1Q@mail.gmail.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
 
-On 12.01.2024 16:33, Nitin Rawat wrote:
-> Commit 3f6d1767b1a0 ("phy: ufs-qcom: Refactor all init steps into
-> phy_poweron") removes the phy_power_on/off from ufs_qcom_setup_clocks
-> to suspend/resume func.
+On Fri, Jan 12, 2024 at 02:34:52PM -0500, Ewan Milne wrote:
+> On Fri, Jan 12, 2024 at 7:43 AM Ming Lei <ming.lei@redhat.com> wrote:
+> >
+> > On Fri, Jan 12, 2024 at 12:12:57PM +0100, Hannes Reinecke wrote:
+> > > On 1/12/24 08:00, Ming Lei wrote:
+> > > > Inside scsi_eh_wakeup(), scsi_host_busy() is called & checked with host lock
+> > > > every time for deciding if error handler kthread needs to be waken up.
+> > > >
+> > > > This way can be too heavy in case of recovery, such as:
+> > > >
+> > > > - N hardware queues
+> > > > - queue depth is M for each hardware queue
+> > > > - each scsi_host_busy() iterates over (N * M) tag/requests
+> > > >
+> > > > If recovery is triggered in case that all requests are in-flight, each
+> > > > scsi_eh_wakeup() is strictly serialized, when scsi_eh_wakeup() is called
+> > > > for the last in-flight request, scsi_host_busy() has been run for (N * M - 1)
+> > > > times, and request has been iterated for (N*M - 1) * (N * M) times.
+> > > >
+> > > > If both N and M are big enough, hard lockup can be triggered on acquiring
+> > > > host lock, and it is observed on mpi3mr(128 hw queues, queue depth 8169).
+> > > >
+> > > > Fix the issue by calling scsi_host_busy() outside host lock, and we
+> > > > don't need host lock for getting busy count because host lock never
+> > > > covers that.
+> > > >
+> > > Can you share details for the hard lockup?
+> > > I do agree that scsi_host_busy() is an expensive operation, so it
+> > > might not be ideal to call it under a spin lock.
+> > > But I wonder where the lockup comes in here.
+> > > Care to explain?
+> >
+> > Recovery happens when there is N * M inflight requests, then scsi_dec_host_busy()
+> > can be called for each inflight request/scmnd from irq context.
+> >
+> > host lock serializes every scsi_eh_wakeup().
+> >
+> > Given each hardware queue has its own irq handler, so there could be one
+> > request, scsi_dec_host_busy() is called and the host lock is spinned until
+> > it is released from scsi_dec_host_busy() for all requests from all other
+> > hardware queues.
+> >
+> > The spin time can be long enough to trigger the hard lockup if N and M
+> > is big enough, and the total wait time can be:
+> >
+> >         (N - 1) * M * time_taken_in_scsi_host_busy().
+> >
+> > Meantime the same story happens on scsi_eh_inc_host_failed() which is
+> > called from softirq context, so host lock spin can be much more worse.
+> >
+> > It is observed on mpi3mr with 128(N) hw queues and 8169(M) queue depth.
+> >
+> > >
+> > > And if it leads to a lockup, aren't other instances calling scsi_host_busy()
+> > > under a spinlock affected, as well?
+> >
+> > It is only possible when it is called in per-command situation.
+> >
+> >
+> > Thanks,
+> > Ming
+> >
 > 
-> To have a better power saving, remove the phy_power_on/off calls from
-> resume/suspend path and put them back to ufs_qcom_setup_clocks, so that
-> PHY's regulators & clks can be turned on/off along with UFS's clocks.
+> I can't see why this wouldn't work, or cause a problem with a lost wakeup,
+> but the cost of iterating to obtain the host_busy value is still being paid,
+> just outside the host_lock.  If this has triggered a hard lockup, should
+> we revisit the algorithm, e.g. are we still delaying EH wakeup for a noticeable
+> amount of time?
+
+SCSI EH is designed to start handling until all in-flight commands are
+failed, so it waits until all requests are failed first.
+
+> O(n^2) algorithms in the kernel don't seem like the best idea.
+
+It is actually O(n) because each hardware queue handles request
+in parallel.
+
+It is degraded to O(n^2) or O(n * m) just because of shared host lock.
+
+Single or N scsi_host_busy() won't take too long without host lock, what
+matters is actually the per-host lock spin time which can be accumulated
+as too big.
+
 > 
-> Since phy phy_power_on is separated out from phy calibrate, make
-> separate calls to phy_power_on and phy_calibrate calls from ufs qcom
-> driver.
-> 
-> Also add a mutex lock to protect the usage of is_phy_pwr_on against
-> possible racing.
-> 
-> Co-developed-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 104 +++++++++++++++++++++++-------------
->  drivers/ufs/host/ufs-qcom.h |   4 ++
->  2 files changed, 72 insertions(+), 36 deletions(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 39eef470f8fa..2721a30f0db8 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -338,6 +338,46 @@ static u32 ufs_qcom_get_hs_gear(struct ufs_hba *hba)
->  	return UFS_HS_G3;
->  }
-> 
-> +static int ufs_qcom_phy_power_on(struct ufs_hba *hba)
-> +{
-> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> +	struct phy *phy = host->generic_phy;
-> +	int ret = 0;
-> +
-> +	mutex_lock(&host->phy_mutex);
+> In any case...
+> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-guard(mutex)(&host->phy_mutex);
+Thanks for the review!
 
-and you can drop the _unlock calls
 
-> +	if (!host->is_phy_pwr_on) {
-> +		ret = phy_power_on(phy);
-> +		if (ret) {
-> +			mutex_unlock(&host->phy_mutex);
-> +			return ret;
+-- 
+Ming
 
-And with the _unlock now being unnecessary, you can rewrite this
-as:
-
-if (!host->is_phy_pwr_on) {
-	ret = phy_power_on(phy);
-	if (!ret)
-		host->is_phy_pwr_on = true;
-}
-
-return ret
-> +		}
-> +		host->is_phy_pwr_on = true;
-> +	}
-> +	mutex_unlock(&host->phy_mutex);
-> +
-> +	return ret;
-> +}
-
-[...]
-
->  static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> @@ -378,13 +418,18 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
->  		goto out_disable_phy;
-> 
->  	/* power on phy - start serdes and phy's power and clocks */
-> -	ret = phy_power_on(phy);
-> +	ret = ufs_qcom_phy_power_on(hba);
->  	if (ret) {
->  		dev_err(hba->dev, "%s: phy power on failed, ret = %d\n",
->  			__func__, ret);
->  		goto out_disable_phy;
->  	}
-> 
-> +	ret = phy_calibrate(phy);
-> +	if (ret) {
-> +		dev_err(hba->dev, "%s: Failed to calibrate PHY %d\n",
-> +				  __func__, ret);
-> +	}
-
-You can drop the overly verbose __func__, unwrap the line and remove the
-curly braces, similar for dev_err-s below
-
-Actually, shouldn't this error out if calibrate fails??
-
-Konrad
