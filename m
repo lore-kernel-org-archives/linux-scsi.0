@@ -1,151 +1,93 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D3891A713
-	for <linux-scsi@vger.kernel.org>; Sat, 13 Jan 2024 01:59:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LV+bslp1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1705111160;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=elHnARtPaVeTuPqQMrheSgI71iI306CU/GVM/myyEsI=;
-	b=LV+bslp1VucFrLhrG04p6Ff/DnUPoZ42xC9KvBXd9L3Ke761HCbBbyZIACwLXc4cGoJqsP
-	EtE5I6bUDHnUri+s71yBkswQulKr2UIeZeuUvXIaF33hYPWDibdmdppJ7KfcwJ2cKC+33F
-	DTArTBgQPboQFV/dhnfXg/V+Vw3BdHU=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-302-PUjI2YAAPNuwNFp2wDS3Bw-1; Fri, 12 Jan 2024 20:59:18 -0500
-X-MC-Unique: PUjI2YAAPNuwNFp2wDS3Bw-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 9AFCD185A780;
-	Sat, 13 Jan 2024 01:59:17 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.130])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 49A2751D5;
-	Sat, 13 Jan 2024 01:59:13 +0000 (UTC)
-Date: Sat, 13 Jan 2024 09:59:10 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Ewan Milne <emilne@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, ming.lei@redhat.com
-Subject: Re: [PATCH] scsi: core: move scsi_host_busy() out of host lock for
- waking up EH handler
-Message-ID: <ZaHubv1sH2I14z20@fedora>
-References: <20240112070000.4161982-1-ming.lei@redhat.com>
- <ccbc1e9b-ca63-415c-9b83-225d4108021a@suse.de>
- <ZaEz066MVkijH68c@fedora>
- <CAGtn9r=Qko22+9Zxg8BnaAMtfEH_WYpkE7mDBmKWSdcm98Ui1Q@mail.gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 090091841;
+	Sun, 14 Jan 2024 03:22:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TCLD94kCYz4f3jqH;
+	Sun, 14 Jan 2024 11:22:01 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id B58B81A0172;
+	Sun, 14 Jan 2024 11:22:03 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxBZU6NlRqIZAw--.23769S3;
+	Sun, 14 Jan 2024 11:22:03 +0800 (CST)
+Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
+To: Christoph Hellwig <hch@lst.de>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Ming Lei <ming.lei@redhat.com>, Keith Busch <kbusch@kernel.org>,
+ Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+ Ed Tsai <ed.tsai@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231130193139.880955-1-bvanassche@acm.org>
+ <20231130193139.880955-2-bvanassche@acm.org>
+ <58f50403-fcc9-ec11-f52b-f11ced3d2652@huaweicloud.com>
+ <8372f2d0-b695-4af4-90e6-e35b86e3b844@acm.org>
+ <c1658336-f48e-5688-f0c2-f325fd5696c3@huaweicloud.com>
+ <1d3866af-ffca-4f97-914d-8084aca901ab@acm.org>
+ <69b17db7-e9c9-df09-1022-ff7a9e5e04dd@huaweicloud.com>
+ <20240112043915.GA5664@lst.de>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <2d83fcb3-06e6-4a7c-9bd7-b8018208b72f@huaweicloud.com>
+Date: Sun, 14 Jan 2024 11:22:01 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+In-Reply-To: <20240112043915.GA5664@lst.de>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAGtn9r=Qko22+9Zxg8BnaAMtfEH_WYpkE7mDBmKWSdcm98Ui1Q@mail.gmail.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
+X-CM-TRANSID:cCh0CgDHlxBZU6NlRqIZAw--.23769S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7XFWkCF1DCw4xCw4ftw1xAFb_yoW3WFbE9F
+	9YvFyI93srK3say3W7Wr4IyrZFgayYgayxJFy0qFWjk340qa43G3ykGryfZa47Gw4xtF1x
+	Kr95X34xtr47WjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb3AFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Cr0_
+	Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
+	0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xII
+	jxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr
+	1lF7xvr2IY64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY
+	04v7Mxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7
+	v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF
+	1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIx
+	AIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WFyU
+	JwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjfUouWlDUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On Fri, Jan 12, 2024 at 02:34:52PM -0500, Ewan Milne wrote:
-> On Fri, Jan 12, 2024 at 7:43â€¯AM Ming Lei <ming.lei@redhat.com> wrote:
-> >
-> > On Fri, Jan 12, 2024 at 12:12:57PM +0100, Hannes Reinecke wrote:
-> > > On 1/12/24 08:00, Ming Lei wrote:
-> > > > Inside scsi_eh_wakeup(), scsi_host_busy() is called & checked with host lock
-> > > > every time for deciding if error handler kthread needs to be waken up.
-> > > >
-> > > > This way can be too heavy in case of recovery, such as:
-> > > >
-> > > > - N hardware queues
-> > > > - queue depth is M for each hardware queue
-> > > > - each scsi_host_busy() iterates over (N * M) tag/requests
-> > > >
-> > > > If recovery is triggered in case that all requests are in-flight, each
-> > > > scsi_eh_wakeup() is strictly serialized, when scsi_eh_wakeup() is called
-> > > > for the last in-flight request, scsi_host_busy() has been run for (N * M - 1)
-> > > > times, and request has been iterated for (N*M - 1) * (N * M) times.
-> > > >
-> > > > If both N and M are big enough, hard lockup can be triggered on acquiring
-> > > > host lock, and it is observed on mpi3mr(128 hw queues, queue depth 8169).
-> > > >
-> > > > Fix the issue by calling scsi_host_busy() outside host lock, and we
-> > > > don't need host lock for getting busy count because host lock never
-> > > > covers that.
-> > > >
-> > > Can you share details for the hard lockup?
-> > > I do agree that scsi_host_busy() is an expensive operation, so it
-> > > might not be ideal to call it under a spin lock.
-> > > But I wonder where the lockup comes in here.
-> > > Care to explain?
-> >
-> > Recovery happens when there is N * M inflight requests, then scsi_dec_host_busy()
-> > can be called for each inflight request/scmnd from irq context.
-> >
-> > host lock serializes every scsi_eh_wakeup().
-> >
-> > Given each hardware queue has its own irq handler, so there could be one
-> > request, scsi_dec_host_busy() is called and the host lock is spinned until
-> > it is released from scsi_dec_host_busy() for all requests from all other
-> > hardware queues.
-> >
-> > The spin time can be long enough to trigger the hard lockup if N and M
-> > is big enough, and the total wait time can be:
-> >
-> >         (N - 1) * M * time_taken_in_scsi_host_busy().
-> >
-> > Meantime the same story happens on scsi_eh_inc_host_failed() which is
-> > called from softirq context, so host lock spin can be much more worse.
-> >
-> > It is observed on mpi3mr with 128(N) hw queues and 8169(M) queue depth.
-> >
-> > >
-> > > And if it leads to a lockup, aren't other instances calling scsi_host_busy()
-> > > under a spinlock affected, as well?
-> >
-> > It is only possible when it is called in per-command situation.
-> >
-> >
-> > Thanks,
-> > Ming
-> >
+Hi,
+
+ÔÚ 2024/01/12 12:39, Christoph Hellwig Ð´µÀ:
+> On Fri, Jan 12, 2024 at 09:08:25AM +0800, Yu Kuai wrote:
+>> Yes, I realized that, handle the new flag in blk_mq_allow_hctx() is
+>> good, how about following chang?
 > 
-> I can't see why this wouldn't work, or cause a problem with a lost wakeup,
-> but the cost of iterating to obtain the host_busy value is still being paid,
-> just outside the host_lock.  If this has triggered a hard lockup, should
-> we revisit the algorithm, e.g. are we still delaying EH wakeup for a noticeable
-> amount of time?
+> Who would make that decision and on what grounds?
 
-SCSI EH is designed to start handling until all in-flight commands are
-failed, so it waits until all requests are failed first.
+As you might noticed, Bart and I both met the performance problem in
+production due to fair tag sharing in the environment that total driver
+tags is not sufficient. Disable fair tag sharing is a straight way to
+fix the problem, of course this is not the ideal solution, but make tag
+sharing configurable and let drivers make the decision if they want to
+disable it really solve the dilemma, and won't have any influence
+outside the driver.
 
-> O(n^2) algorithms in the kernel don't seem like the best idea.
+I'll be good if you have other proposes.
 
-It is actually O(n) because each hardware queue handles request
-in parallel.
-
-It is degraded to O(n^2) or O(n * m) just because of shared host lock.
-
-Single or N scsi_host_busy() won't take too long without host lock, what
-matters is actually the per-host lock spin time which can be accumulated
-as too big.
+Thanks,
+Kuai
 
 > 
-> In any case...
-> Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
-Thanks for the review!
-
-
--- 
-Ming
+> .
+> 
 
