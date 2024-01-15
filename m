@@ -1,166 +1,171 @@
-Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
+Received: from omta034.useast.a.cloudfilter.net (omta034.useast.a.cloudfilter.net [44.202.169.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8138182A1
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2024 18:03:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56CF81A27D
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2024 18:26:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="l7pl4ljP"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20240115175447euoutp02de091dcb8fb8dc35857db16ae6ad9655~qlt2zJKi20545505455euoutp02A
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2024 17:54:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20240115175447euoutp02de091dcb8fb8dc35857db16ae6ad9655~qlt2zJKi20545505455euoutp02A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1705341287;
-	bh=BXsSyq/ETS6VHy49YmdYk+79vD9CUUsCSBhh019gJfo=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
-	b=l7pl4ljPIyngWGzwFF2ot1P5WbmqQ8vkaXcgZMAQQve5V2Ama9mPoJW1nHAI33Wjm
-	 5t1UVOq8SGsSZDYds9zUGFeEurbCK2E2t/sEwSnP9NZk6lfxmUrdbYSrrDKaS6lgVQ
-	 W99ujb/t3GI4kT2bo0158K5yodQQjzbUNgN0ptho=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-	20240115175447eucas1p2579ccc7b04824ded5b2e7ea9ace6b99f~qlt2VREfc2424624246eucas1p2T;
-	Mon, 15 Jan 2024 17:54:47 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-	eusmges1new.samsung.com (EUCPMTA) with SMTP id B7.6E.09539.76175A56; Mon, 15
-	Jan 2024 17:54:47 +0000 (GMT)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-	eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-	20240115175446eucas1p111db0849d5ea9fa820c71ad5a003f637~qlt16QncW1005210052eucas1p1O;
-	Mon, 15 Jan 2024 17:54:46 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-	eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20240115175446eusmtrp2b6e3ba6dac4ad20d4e5b5e1c06da268f~qlt15rFlu1804618046eusmtrp2Y;
-	Mon, 15 Jan 2024 17:54:46 +0000 (GMT)
-X-AuditID: cbfec7f2-52bff70000002543-74-65a57167756f
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-	eusmgms1.samsung.com (EUCPMTA) with SMTP id 83.7B.09146.66175A56; Mon, 15
-	Jan 2024 17:54:46 +0000 (GMT)
-Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20240115175446eusmtip1dfaeaa659f9440378ec2fe2893a2726c~qlt1u5Ktw1870818708eusmtip1o;
-	Mon, 15 Jan 2024 17:54:46 +0000 (GMT)
-Received: from localhost (106.210.248.142) by CAMSVWEXC02.scsc.local
-	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-	Mon, 15 Jan 2024 17:54:46 +0000
-Date: Mon, 15 Jan 2024 18:54:45 +0100
-From: Javier =?utf-8?B?R29uesOhbGV6?= <javier.gonz@samsung.com>
-To: Viacheslav Dubeyko <slava@dubeyko.com>
-CC: <lsf-pc@lists.linux-foundation.org>, <linux-fsdevel@vger.kernel.org>,
-	<a.manzanares@samsung.com>, <linux-scsi@vger.kernel.org>,
-	<linux-nvme@lists.infradead.org>, <linux-block@vger.kernel.org>,
-	<slava@dubeiko.com>, Kanchan Joshi <joshi.k@samsung.com>, Bart Van Assche
-	<bvanassche@acm.org>
-Subject: Re: [LSF/MM/BPF TOPIC] : Flexible Data Placement (FDP) availability
- for kernel space file systems
-Message-ID: <20240115175445.pyxjxhyrmg7od6sc@mpHalley-2.localdomain>
+	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="SVwkmh3u"
+Received: from eig-obgw-6002a.ext.cloudfilter.net ([10.0.30.222])
+	by cmsmtp with ESMTPS
+	id PQCyrnU7lAxAkPRfZrsjSZ; Mon, 15 Jan 2024 18:26:45 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+	by cmsmtp with ESMTPS
+	id PRfJrm73nD6lhPRfJrjSIq; Mon, 15 Jan 2024 18:26:29 +0000
+X-Authority-Analysis: v=2.4 cv=LNR1/ba9 c=1 sm=1 tr=0 ts=65a578d5
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=WzbPXH4gqzPVN0x6HrNMNA==:17
+ a=OWjo9vPv0XrRhIrVQ50Ab3nP57M=:19 a=dLZJa+xiwSxG16/P+YVxDGlgEgI=:19
+ a=IkcTkHD0fZMA:10 a=dEuoMetlWLkA:10 a=wYkD_t78qR0A:10 a=NEAV23lmAAAA:8
+ a=7YfXLusrAAAA:8 a=VwQbUJbxAAAA:8 a=FXBTkNl2ggHGzUV_zbMA:9 a=QEXdDO2ut3YA:10
+ a=SLz71HocmBbuEhFRYD3r:22 a=AjGcO6oz07-iQ99wixmX:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=WTUFVnlzT6GAPsFMxebpFESclah/dS2GM3YPYolGM+Y=; b=SVwkmh3u9th/SZ2lajgNWnqdaD
+	j+4GYFozQXuB4AiMLbMsUIVqGouSsjJJNO4ovXsh9pZHJbGtQFBTuE6Rv+zqLdQe9yXQH62KvCJCk
+	Vtsa0+knIP42lKLJONngyeyU8ZFOETJqtnxW3GvmU7uoCZxM9kzhBuqqw3m5aoNtS9rsVvpp82w2c
+	mO32tg6M6WJ9qA/+avEbtXpUQ1CS3Cc65wSvgWMjo1VUlLGew/A/6AsrFJV4G3V0L71mU6h1UYpX2
+	DGyCLN4I5Hmp8hBvzYHnE+Z0ENkPKoB82VIbbkomZPETOlps+aDl5N7rz0LzMYEPzmBjyCLKoF0yq
+	mcFKnWow==;
+Received: from 187-162-21-192.static.axtel.net ([187.162.21.192]:43136 helo=[192.168.15.10])
+	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96.2)
+	(envelope-from <gustavo@embeddedor.com>)
+	id 1rPRfI-003vCX-2Y;
+	Mon, 15 Jan 2024 12:26:28 -0600
+Message-ID: <5b2bda6f-d8e7-488d-ab0c-62dfc60de9a1@embeddedor.com>
+Date: Mon, 15 Jan 2024 12:26:27 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-Content-Disposition: inline
-In-Reply-To: <20240115084631.152835-1-slava@dubeyko.com>
-X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
-	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprKKsWRmVeSWpSXmKPExsWy7djPc7rphUtTDf4t4beY9uEns8XeW9oW
-	e/aeZLGYv+wpu0X39R1sFvte72W2+HR5IZDYMpvJgcPj8hVvj0dPDrJ6HFz/hsVj85J6j8k3
-	ljN6fN4kF8AWxWWTkpqTWZZapG+XwJUxd+Vv5oLrghWvL8k2ME7j62Lk5JAQMJHYPK+bvYuR
-	i0NIYAWjxIED8xkhnC+MEtcnzWKDcD4zStx78IYdpuXo5assEInljBIXXu5lgata8W8FlLOV
-	UeL7wv2MIC0sAqoSt6duZwOx2QTsJS4tu8UMYosIaEnM3jeFCcRmFljNJPHwuGAXIweHsECO
-	RPsUb5Awr4CLxLO2c6wQtqDEyZlPWCDKrSQ6PzSxgpQzC0hLLP/HARLmFLCQeDLzLQtIWEJA
-	WWL5dF+Im2slTm25xQRymYTABw6JNd2LoZ5xkdj/aAeULSzx6vgWKFtG4v/O+UwQdrbExTPd
-	zBB2icTi98eYIeZbS/SdyYEIO0ocurOTESLMJ3HjrSDEkXwSk7ZNh6rmlehoE4KoVpNYfe8N
-	ywRG5VlI3pqF5K1ZCG8tYGRexSieWlqcm55abJiXWq5XnJhbXJqXrpecn7uJEZhyTv87/mkH
-	49xXH/UOMTJxMB5ilOBgVhLhrb6zJFWINyWxsiq1KD++qDQntfgQozQHi5I4r2qKfKqQQHpi
-	SWp2ampBahFMlomDU6qBqZEvWOHpLj61FJEV5cEGe54VhMqUuh3QSjy2eMWCuVuv7Oh9/TIu
-	KYpvh6/bNhfeXy+YZii9KHus9eJN/P6HukH/OvMM+Q8JinrNSZGPiJL1kD6b91KIecaTc+se
-	+erKchksDi3zXTBdTv57WL1EffBsmbffxK5diGh5uTry0XuL9vCJBmpZObKp7S8qGD7yL+te
-	JzZD8XDnu1snOqomeCdOOX32tE5/pMscIX6vNQus1zg88lp3coPvcontpjYrHOYpGIstvaik
-	t7GsY9JJL54lj7IVglS6V6yaZ7pl1TfD1MAy26lzmLa527zdU3TjEGtjk9abzx5y9gsXLHHo
-	D7rxp/zUshOKn1TDHPNDlViKMxINtZiLihMBlz9nUqgDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrCIsWRmVeSWpSXmKPExsVy+t/xu7pphUtTDR591LeY9uEns8XeW9oW
-	e/aeZLGYv+wpu0X39R1sFvte72W2+HR5IZDYMpvJgcPj8hVvj0dPDrJ6HFz/hsVj85J6j8k3
-	ljN6fN4kF8AWpWdTlF9akqqQkV9cYqsUbWhhpGdoaaFnZGKpZ2hsHmtlZKqkb2eTkpqTWZZa
-	pG+XoJcxd+Vv5oLrghWvL8k2ME7j62Lk5JAQMJE4evkqSxcjF4eQwFJGiYOnJzFCJGQkNn65
-	ygphC0v8udbFBlH0kVHiS9tyRghnK6PE6m0LwDpYBFQlbk/dzgZiswnYS1xadosZxBYR0JKY
-	vW8KE4jNLLCaSeLhccEuRg4OYYEcifYp3iBhXgEXiWdt51ghZnYzSnz6vY4ZIiEocXLmExaI
-	XguJmfPPM4L0MgtISyz/xwES5gQKP5n5lgUkLCGgLLF8ui/EzbUSn/8+Y5zAKDwLyaBZSAbN
-	Qhi0gJF5FaNIamlxbnpusaFecWJucWleul5yfu4mRmD0bTv2c/MOxnmvPuodYmTiYDzEKMHB
-	rCTCW31nSaoQb0piZVVqUX58UWlOavEhRlNgQExklhJNzgfGf15JvKGZgamhiZmlgamlmbGS
-	OK9nQUeikEB6YklqdmpqQWoRTB8TB6dUA5Nb2qMm6f7fOR6R3ivvH7yZvJo/PopFtPxlevap
-	6LjnW74WMPpdF3ltePKJeNS+pz7rzV5Mfbxuy/784sKY5ZF9HFO7N+oGdiYr6FrK1IkrbI+c
-	p1AlJHLUJ6A5uKCtYZNmgNiGBUc+nT+2eUGfo9y0zoZnm9tOVhuvadB4K37Ff+3r+BMrz3x6
-	fnnKUa6nKbIrQmbI6O88/D5/dvvHeP/a1858Kk+sUk+V6q7b1p4skOL9gS3ghtDe+Qmrz/W/
-	suervGnhfeyDysJFeglW/w0eT7592fjaI6Xll16a2iZOnvt5/RWrB1HfhHwOBJRs+1WztrdI
-	Y5pxUn+w+sN02Vz7x3Hber94yegy6Mx89ECJpTgj0VCLuag4EQAmyXQiRwMAAA==
-X-CMS-MailID: 20240115175446eucas1p111db0849d5ea9fa820c71ad5a003f637
-X-Msg-Generator: CA
-X-RootMTR: 20240115084656eucas1p219dd48243e2eaec4180e5e6ecf5e8ad9
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20240115084656eucas1p219dd48243e2eaec4180e5e6ecf5e8ad9
-References: <CGME20240115084656eucas1p219dd48243e2eaec4180e5e6ecf5e8ad9@eucas1p2.samsung.com>
-	<20240115084631.152835-1-slava@dubeyko.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: csiostor: Use kcalloc() instead of kzalloc()
+Content-Language: en-US
+To: Erick Archer <erick.archer@gmx.com>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: Kees Cook <keescook@chromium.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Justin Stitt <justinstitt@google.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+References: <20240114102400.3816-1-erick.archer@gmx.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <20240114102400.3816-1-erick.archer@gmx.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.21.192
+X-Source-L: No
+X-Exim-ID: 1rPRfI-003vCX-2Y
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-21-192.static.axtel.net ([192.168.15.10]) [187.162.21.192]:43136
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 12
+X-Org: HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfLaZ3OP0TfFjdiYS43D9cSVlzZpZusjYSSulsOrT0DOhExUlXZk6KxPENOt+OE3sydh8GKV79hO3+tkkiydxQ5mt6+uiGOwRufIKS2d3OlZcd8Jj1YT5
+ A1buECgZ2q0hIDhiqU7/DQYa/nzVhOAViuoMYjYH9xzmkgRx9tA3EIBhyduk/bRguEroD5qygNOj5dy05cfALasatH4KeZfrXYJ1QkZ9uSe/3w5fpk970d3n
 
-On 15.01.2024 11:46, Viacheslav Dubeyko wrote:
->Hi Javier,
->
->Samsung introduced Flexible Data Placement (FDP) technology
->pretty recently. As far as I know, currently, this technology
->is available for user-space solutions only. I assume it will be
->good to have discussion how kernel-space file systems could
->work with SSDs that support FDP technology by employing
->FDP benefits.
 
-Slava,
 
-Thanks for bringing this up.
+On 1/14/24 04:24, Erick Archer wrote:
+> Use 2-factor multiplication argument form kcalloc() instead
+> of kzalloc().
+> 
+> Also, it is preferred to use sizeof(*pointer) instead of
+> sizeof(type) due to the type of the variable can change and
+> one needs not change the former (unlike the latter).
+> 
+> Link: https://github.com/KSPP/linux/issues/162
+> Signed-off-by: Erick Archer <erick.archer@gmx.com>
 
-First, this is not a Samsung technology. Several vendors are building
-FDP and several customers are already deploying first product.
+Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
-We enabled FDP thtough I/O Passthru to avoid unnecesary noise in the
-block layer until we had a clear idea on use-cases. We have been
-following and reviewing Bart's write hint series and it covers all the
-block layer and interface needed to support FDP. Currently, we have
-patches with small changes to wire the NVMe driver. We plan to submit
-them after Bart's patches are applied. Now it is a good time since we
-have LSF and there are also 2 customers using FDP on block and file.
+Thanks!
+-- 
+Gustavo
 
->
->How soon FDP API will be available for kernel-space file systems?
-
-The work is done. We will submit as Bart's patches are applied.
-
-Kanchan is doing this work.
-
->How kernel-space file systems can adopt FDP technology?
-
-It is based on write hints. There is no FS-specific placement decisions.
-All the responsibility is in the application.
-
-Kanchan: Can you comment a bit more on this?
-
->How FDP technology can improve efficiency and reliability of
->kernel-space file system?
-
-This is an open problem. Our experience is that making data placement
-decisions on the FS is tricky (beyond the obvious data / medatadata). If
-someone has a good use-case for this, I think it is worth exploring.
-F2FS is a good candidate, but I am not sure FDP is of interest for
-mobile - here ZUFS seems to be the current dominant technology.
-
->Which new challenges FDP technology introduces for kernel-space
->file systems?
-
-See above. All we have done is wire up the NVMe driver. This is a good
-discussion for LSF/
-
->Could we have such discussion leading from Samsung side?
-
-Of course. We are happy to host a session on this if it gets selected.
-We will add it to one of our submission.
+> ---
+> Changes in v2:
+> - Update the changelog text describing the sizeof()
+>    changes (Gustavo A. R. Silva)
+> 
+> Version 1:
+> Link: https://lore.kernel.org/linux-hardening/20240112182603.11048-1-erick.archer@gmx.com/
+> ---
+>   drivers/scsi/csiostor/csio_init.c | 15 +++++----------
+>   1 file changed, 5 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
+> index d649b7a2a879..d72892e44fd1 100644
+> --- a/drivers/scsi/csiostor/csio_init.c
+> +++ b/drivers/scsi/csiostor/csio_init.c
+> @@ -698,8 +698,7 @@ csio_lnodes_block_request(struct csio_hw *hw)
+>   	struct csio_lnode **lnode_list;
+>   	int cur_cnt = 0, ii;
+> 
+> -	lnode_list = kzalloc((sizeof(struct csio_lnode *) * hw->num_lns),
+> -			GFP_KERNEL);
+> +	lnode_list = kcalloc(hw->num_lns, sizeof(*lnode_list), GFP_KERNEL);
+>   	if (!lnode_list) {
+>   		csio_err(hw, "Failed to allocate lnodes_list");
+>   		return;
+> @@ -737,8 +736,7 @@ csio_lnodes_unblock_request(struct csio_hw *hw)
+>   	struct csio_lnode **lnode_list;
+>   	int cur_cnt = 0, ii;
+> 
+> -	lnode_list = kzalloc((sizeof(struct csio_lnode *) * hw->num_lns),
+> -			GFP_KERNEL);
+> +	lnode_list = kcalloc(hw->num_lns, sizeof(*lnode_list), GFP_KERNEL);
+>   	if (!lnode_list) {
+>   		csio_err(hw, "Failed to allocate lnodes_list");
+>   		return;
+> @@ -775,8 +773,7 @@ csio_lnodes_block_by_port(struct csio_hw *hw, uint8_t portid)
+>   	struct csio_lnode **lnode_list;
+>   	int cur_cnt = 0, ii;
+> 
+> -	lnode_list = kzalloc((sizeof(struct csio_lnode *) * hw->num_lns),
+> -			GFP_KERNEL);
+> +	lnode_list = kcalloc(hw->num_lns, sizeof(*lnode_list), GFP_KERNEL);
+>   	if (!lnode_list) {
+>   		csio_err(hw, "Failed to allocate lnodes_list");
+>   		return;
+> @@ -816,8 +813,7 @@ csio_lnodes_unblock_by_port(struct csio_hw *hw, uint8_t portid)
+>   	struct csio_lnode **lnode_list;
+>   	int cur_cnt = 0, ii;
+> 
+> -	lnode_list = kzalloc((sizeof(struct csio_lnode *) * hw->num_lns),
+> -			GFP_KERNEL);
+> +	lnode_list = kcalloc(hw->num_lns, sizeof(*lnode_list), GFP_KERNEL);
+>   	if (!lnode_list) {
+>   		csio_err(hw, "Failed to allocate lnodes_list");
+>   		return;
+> @@ -855,8 +851,7 @@ csio_lnodes_exit(struct csio_hw *hw, bool npiv)
+>   	struct csio_lnode **lnode_list;
+>   	int cur_cnt = 0, ii;
+> 
+> -	lnode_list = kzalloc((sizeof(struct csio_lnode *) * hw->num_lns),
+> -			GFP_KERNEL);
+> +	lnode_list = kcalloc(hw->num_lns, sizeof(*lnode_list), GFP_KERNEL);
+>   	if (!lnode_list) {
+>   		csio_err(hw, "lnodes_exit: Failed to allocate lnodes_list.\n");
+>   		return;
+> --
+> 2.25.1
+> 
+> 
