@@ -1,46 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0BF315AABC;
-	Tue, 16 Jan 2024 20:01:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F08D415B104;
+	Tue, 16 Jan 2024 20:01:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705435269; cv=none; b=PoUtmG0+0kOpLVwDMVGPlLQET6wsIcwnbj4tGhLlP7P3JoEmWhnl4YINJ3J6rRlSPZzy1tlkR954ScPasX2ljZmXkmQO10tEsBZQ1jupSj0r1wdd0RbSikE9Wd+gz+YZ9JHTDBEgBZaWBGwv0S+ZQggrZleWCYLr5oJFEHJ8H6U=
+	t=1705435283; cv=none; b=BA48n1D/eeOFUM/8q74gcMmxm2zQw1L9PwAkFnegDDmRbY2fT5TUtrsiP0yhfbBwtTWBq6QpX0FjJbbE09u/WNO+eVl6FOARr6khnbsw2VwMwYNq9YdGaPxVyYcOEPefmF/q9BgOwEqbYprsokIOj3DBIjMMX6njo76Ytu704Q4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705435269; c=relaxed/simple;
-	bh=aNVForKxkPc54LZTD2rNGc5TEq3jX47b1epbe6q74ZU=;
+	s=arc-20240116; t=1705435283; c=relaxed/simple;
+	bh=DZ9RAMXJhdm5yCZtydaw8uNgsPmizjmf20oqtU0zTYg=;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:X-stable:
-	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=evllfCcNClATTJuYdeCuAnTbOBIKpn+C/JOj7OcQG//CnGc7c1QhsKksowHQ7QUmdoSIm1qK/wRR34nwSu7XsdgA1SfMaeQDhBz1Jz2/d+nTIsUGPxR+DA5BKo9iVshTePDO2MyXL9xz8khVs9TgITBeigBz7ovUGFvRHag8IAs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PZxmC1/r; arc=none smtp.client-ip=10.30.226.201
+	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=UF2uwjitzAX3O4mYEVCR1rG73BVfF36z75ExBkNtW4dKIKJADeoEcqf840oWQljCdf2zD/s15Yy2giI45hWVfuWlKpyV3Ofc3C6BMIdm1CEHSENrBiBuWobXoV3mRiAownXBox5VhQORYvzZP8n44QF56aSKB2+mvRIh555eGkE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SssbEaa4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PZxmC1/r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 747B0C433F1;
-	Tue, 16 Jan 2024 20:01:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SssbEaa4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F156CC433C7;
+	Tue, 16 Jan 2024 20:01:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705435268;
-	bh=aNVForKxkPc54LZTD2rNGc5TEq3jX47b1epbe6q74ZU=;
+	s=k20201202; t=1705435282;
+	bh=DZ9RAMXJhdm5yCZtydaw8uNgsPmizjmf20oqtU0zTYg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=PZxmC1/rpbVecbaMpAjnS0ZVohGvGroOVjLGaBPJuW1sMDgBA0mGPO2JV7Qi5aI0S
-	 8jNdaJNrok1nL++umbRbpGTAuUrFJh8K5+MMoIxuf6fp6drBtTNWRDGvJ9GKrozvuG
-	 cuhax3AzAXPUBYI/SPOlZp4HSKbqS+nVaIO32jHN6h4dxJUHVIkHGNcUQMbUzsgWId
-	 xwjA1hxtxQVxCFqlaLYv8INKJfIXk5uqpYONfSX52TSqUKftzE3D5Z5mXmu1HDtsQx
-	 p99PPjku84cNwraXiAM7GIJpG3jvaFiJQ85UHDndgPQP0rBmhC5zOdpcPUz9jy4GMY
-	 eQ8epkCOn32YQ==
+	b=SssbEaa4Dqd0vdY4i3ouzva/5kKNvScPSc4ugCTUZ3e8zWd9WTtlkoKkEU+KHCP9r
+	 HlPoF9mxeAEyeR6LUApEUclx4vqoqa795Tx674rfxnTdYMLOqefsmKDelxNvbRv74X
+	 eMhNhjVESL5DuPkQitOsT6f/5ThBnMMKVpr1LViF2OaacOMIQveRXN+BxCgZs2z9gL
+	 eewr/8PElZQHs3ft5knw8bT09LIVAKhsjwsqbdyo8/YmxuYZhX+gkAtFQB2+CkQBPI
+	 IYVynLxMzrULWqjhhPchi9HfnVY3NGEyZTF9R9cJ1uymj4JD+u8utGi8JKJZ1lvlmM
+	 YULQcfHJOZpWg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: ching Huang <ching2048@areca.com.tw>,
+Cc: Hannes Reinecke <hare@suse.de>,
+	Christoph Hellwig <hch@lst.de>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
 	jejb@linux.ibm.com,
-	xiangyang3@huawei.com,
-	bhelgaas@google.com,
-	bvanassche@acm.org,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 08/44] scsi: arcmsr: Support new PCI device IDs 1883 and 1886
-Date: Tue, 16 Jan 2024 14:59:37 -0500
-Message-ID: <20240116200044.258335-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 15/44] scsi: libfc: Don't schedule abort twice
+Date: Tue, 16 Jan 2024 14:59:44 -0500
+Message-ID: <20240116200044.258335-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240116200044.258335-1-sashal@kernel.org>
 References: <20240116200044.258335-1-sashal@kernel.org>
@@ -55,68 +53,66 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 5.10.208
 Content-Transfer-Encoding: 8bit
 
-From: ching Huang <ching2048@areca.com.tw>
+From: Hannes Reinecke <hare@suse.de>
 
-[ Upstream commit 41c8a1a1e90fa4721f856bf3cf71211fd16d6434 ]
+[ Upstream commit b57c4db5d23b9df0118a25e2441c9288edd73710 ]
 
-Add support for Areca RAID controllers with PCI device IDs 1883 and 1886.
+The current FC error recovery is sending up to three REC (recovery) frames
+in 10 second intervals, and as a final step sending an ABTS after 30
+seconds for the command itself.  Unfortunately sending an ABTS is also the
+action for the SCSI abort handler, and the default timeout for SCSI
+commands is also 30 seconds. This causes two ABTS to be scheduled, with the
+libfc one slightly earlier. The ABTS scheduled by SCSI EH then sees the
+command to be already aborted, and will always return with a 'GOOD' status
+irrespective on the actual result from the first ABTS.  This causes the
+SCSI EH abort handler to always succeed, and SCSI EH never to be engaged.
+Fix this by not issuing an ABTS when a SCSI command is present for the
+exchange, but rather wait for the abort scheduled from SCSI EH.  And warn
+if an abort is already scheduled to avoid similar errors in the future.
 
-Signed-off-by: ching Huang <ching2048@areca.com.tw>
-Link: https://lore.kernel.org/r/7732e743eaad57681b1552eec9c6a86c76dbe459.camel@areca.com.tw
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Link: https://lore.kernel.org/r/20231129165832.224100-2-hare@kernel.org
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/arcmsr/arcmsr.h     | 4 ++++
- drivers/scsi/arcmsr/arcmsr_hba.c | 6 ++++++
- 2 files changed, 10 insertions(+)
+ drivers/scsi/libfc/fc_fcp.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
-index 5d054d5c70a5..f2e587e66e19 100644
---- a/drivers/scsi/arcmsr/arcmsr.h
-+++ b/drivers/scsi/arcmsr/arcmsr.h
-@@ -77,9 +77,13 @@ struct device_attribute;
- #ifndef PCI_DEVICE_ID_ARECA_1203
- #define PCI_DEVICE_ID_ARECA_1203	0x1203
- #endif
-+#ifndef PCI_DEVICE_ID_ARECA_1883
-+#define PCI_DEVICE_ID_ARECA_1883	0x1883
-+#endif
- #ifndef PCI_DEVICE_ID_ARECA_1884
- #define PCI_DEVICE_ID_ARECA_1884	0x1884
- #endif
-+#define PCI_DEVICE_ID_ARECA_1886_0	0x1886
- #define PCI_DEVICE_ID_ARECA_1886	0x188A
- #define	ARCMSR_HOURS			(1000 * 60 * 60 * 4)
- #define	ARCMSR_MINUTES			(1000 * 60 * 60)
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 9294a2c677b3..199b102f31a2 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -208,8 +208,12 @@ static struct pci_device_id arcmsr_device_id_table[] = {
- 		.driver_data = ACB_ADAPTER_TYPE_A},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1880),
- 		.driver_data = ACB_ADAPTER_TYPE_C},
-+	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1883),
-+		.driver_data = ACB_ADAPTER_TYPE_C},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1884),
- 		.driver_data = ACB_ADAPTER_TYPE_E},
-+	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1886_0),
-+		.driver_data = ACB_ADAPTER_TYPE_F},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1886),
- 		.driver_data = ACB_ADAPTER_TYPE_F},
- 	{0, 0}, /* Terminating entry */
-@@ -4701,9 +4705,11 @@ static const char *arcmsr_info(struct Scsi_Host *host)
- 	case PCI_DEVICE_ID_ARECA_1680:
- 	case PCI_DEVICE_ID_ARECA_1681:
- 	case PCI_DEVICE_ID_ARECA_1880:
-+	case PCI_DEVICE_ID_ARECA_1883:
- 	case PCI_DEVICE_ID_ARECA_1884:
- 		type = "SAS/SATA";
- 		break;
-+	case PCI_DEVICE_ID_ARECA_1886_0:
- 	case PCI_DEVICE_ID_ARECA_1886:
- 		type = "NVMe/SAS/SATA";
- 		break;
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 7cfeb6886237..6f005ada489b 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -270,6 +270,11 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
+ 	if (!fsp->seq_ptr)
+ 		return -EINVAL;
+ 
++	if (fsp->state & FC_SRB_ABORT_PENDING) {
++		FC_FCP_DBG(fsp, "abort already pending\n");
++		return -EBUSY;
++	}
++
+ 	per_cpu_ptr(fsp->lp->stats, get_cpu())->FcpPktAborts++;
+ 	put_cpu();
+ 
+@@ -1700,11 +1705,12 @@ static void fc_fcp_recovery(struct fc_fcp_pkt *fsp, u8 code)
+ 	fsp->status_code = code;
+ 	fsp->cdb_status = 0;
+ 	fsp->io_status = 0;
+-	/*
+-	 * if this fails then we let the scsi command timer fire and
+-	 * scsi-ml escalate.
+-	 */
+-	fc_fcp_send_abort(fsp);
++	if (!fsp->cmd)
++		/*
++		 * Only abort non-scsi commands; otherwise let the
++		 * scsi command timer fire and scsi-ml escalate.
++		 */
++		fc_fcp_send_abort(fsp);
+ }
+ 
+ /**
 -- 
 2.43.0
 
