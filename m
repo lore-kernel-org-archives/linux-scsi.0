@@ -1,46 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D177D128AF9;
-	Tue, 16 Jan 2024 19:49:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A15612AAF7;
+	Tue, 16 Jan 2024 19:50:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705434592; cv=none; b=q+9l4A+yyJFJHRbBsKR2Io9w8LAP3H+ojaCUvFlVXHvZSDd5cnHb/gVX2gsdjwDI+FuHjdFhkpwcGnErfyR4Dn23SLwykxA5i508AaaVdNO6VqZ1ixpgD7w+vAlduTN+JYKuNinkeGcJ6PuRjY78CFtmiGUp9Ba1h23RrqTQnM0=
+	t=1705434610; cv=none; b=Va3KUOScCBvi7UP1vPRo5uRh01lFLl0dJOx+Imsu77gBLkJhQz4QJHGzU1/+7+RRLu8Ppyim8159uvs1O84rpXlnVoohAjmPpO4hWwFS8eJDmJS4Zb1N0LB0GZGsLfhQGP7jYs5Uf0SgMmMt1qzchGZbDbuQ/KacYiJHexwrPNw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705434592; c=relaxed/simple;
-	bh=vUdbnkVY4aGZInQhtc5ZDjv1CxxrS2o1N7aF/3kmzNc=;
+	s=arc-20240116; t=1705434610; c=relaxed/simple;
+	bh=A27CkGYWx+BSRiTz62jKaGieCPCgYNM2ItzwNfmNMF8=;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:X-stable:
-	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=PLkftKPr+lInuUVNmR4odfAEb/tAvOfoSv4zh7vs+JFVKaqWe9hP7cQE+lBMyzbmeySJudB6VQFQHjy8XthLmsjqy7Ol9Omdng37y3cP0GZpYB9uMNPD38xsnTCzIHkOEPIZPi3tODTxE9AZYtpcOpQ21snklNH72qTu/0ctiH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cF1+wz3O; arc=none smtp.client-ip=10.30.226.201
+	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=Vzj2uiTHphPOGTkcLJwRw4UZpu88hmjhO4nqYm1r0Xe3tYTfGnoMRR2xpen7HPsO8ctxSO+rLBb3jybV5O+sR7BYJCGGosEmVysuTRfv5iqtm6tvl+9Jxiw81A+Rlon2oeMILzRHUkjU/3cjmg8vsJCd4MUM8dX9f11aW6NFBuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J++FxfaV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cF1+wz3O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E20DC433F1;
-	Tue, 16 Jan 2024 19:49:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J++FxfaV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9553C43390;
+	Tue, 16 Jan 2024 19:50:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705434592;
-	bh=vUdbnkVY4aGZInQhtc5ZDjv1CxxrS2o1N7aF/3kmzNc=;
+	s=k20201202; t=1705434609;
+	bh=A27CkGYWx+BSRiTz62jKaGieCPCgYNM2ItzwNfmNMF8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=cF1+wz3OGeToS2w7vVK061lKYM1AV/yRhkRft3/ghXfpswjdhaCdLfbb7gGH346EB
-	 f0JYCk9PZpNvXxC77scj+ZETUS+TC1++XLB4pkrZp+32E2kNJeGv+DWTjADjK/7Y/Z
-	 YSCjZNQtJDvJULeVNI7s+qu4HX3AQ8OzBBuFklHF4uJMSFq2li38BSXb4M6JdJh+BG
-	 2/TYqf/fwH/64l4CIT4Ew4jrdkRaWDtEmln1N3gn1p+LWj0UoBYhIlh3420c5QvBp3
-	 UTBdbMTET609Aj58IJkwa8JINvkv85ib/b21zMPfo8bZRWPmUTClXtXJkgEW+5zVY4
-	 8go1XGsO9U+RQ==
+	b=J++FxfaVIPEKVaDCeXKL1fpy7lC/2ACqEA/biDgnG6JwfmmXkZmn9Ex6pbxN99Xhp
+	 aYicF19/6Ey686UWn2+eU6WpQZsyQPDx8YBqjif754EZDMUVh73Bj6rKGvQzKL5Zld
+	 G/lRK3LW/uWNurAgYaX8Jac0iNTSz0dY2zMZdrYYPqhs4pYYgsmjSC/y6mM4rGiIZW
+	 szCCrvZAAfqBqDKQIPcX8HywuNZ6yN0bxQQGxzL/OetT3wYGRcFO6BKjFmYQEsp1fB
+	 tpQzF+jBnOGsoKLEFbUJIPy+v2Lq1hMJlBiH4SErFVk4OZ2EH5GZgLykaJSP4mJ+ay
+	 SzxTrYnV5pEUg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
-	Himanshu Madhani <himanshu.madhani@oracle.com>,
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
+	sathya.prakash@broadcom.com,
+	kashyap.desai@broadcom.com,
+	sreekanth.reddy@broadcom.com,
 	jejb@linux.ibm.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 016/104] scsi: lpfc: Fix possible file string name overflow when updating firmware
-Date: Tue, 16 Jan 2024 14:45:42 -0500
-Message-ID: <20240116194908.253437-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 025/104] scsi: mpi3mr: Add support for SAS5116 PCI IDs
+Date: Tue, 16 Jan 2024 14:45:51 -0500
+Message-ID: <20240116194908.253437-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240116194908.253437-1-sashal@kernel.org>
 References: <20240116194908.253437-1-sashal@kernel.org>
@@ -55,61 +56,39 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.12
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
 
-[ Upstream commit f5779b529240b715f0e358489ad0ed933bf77c97 ]
+[ Upstream commit 6fa21eab82be57a3ad2470fac27b982793805336 ]
 
-Because file_name and phba->ModelName are both declared a size 80 bytes,
-the extra ".grp" file extension could cause an overflow into file_name.
+Add support for Broadcom's SAS5116 IO/RAID controllers PCI IDs.
 
-Define a ELX_FW_NAME_SIZE macro with value 84.  84 incorporates the 4 extra
-characters from ".grp".  file_name is changed to be declared as a char and
-initialized to zeros i.e. null chars.
-
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20231031191224.150862-3-justintee8345@gmail.com
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Link: https://lore.kernel.org/r/20231123160132.4155-2-sumit.saxena@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc.h      | 1 +
- drivers/scsi/lpfc/lpfc_init.c | 4 ++--
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index af15f7a22d25..04d608ea9106 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -33,6 +33,7 @@
- struct lpfc_sli2_slim;
- 
- #define ELX_MODEL_NAME_SIZE	80
-+#define ELX_FW_NAME_SIZE	84
- 
- #define LPFC_PCI_DEV_LP		0x1
- #define LPFC_PCI_DEV_OC		0x2
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 9e59c050103d..2c336953e56c 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -14725,7 +14725,7 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
- int
- lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
- {
--	uint8_t file_name[ELX_MODEL_NAME_SIZE];
-+	char file_name[ELX_FW_NAME_SIZE] = {0};
- 	int ret;
- 	const struct firmware *fw;
- 
-@@ -14734,7 +14734,7 @@ lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
- 	    LPFC_SLI_INTF_IF_TYPE_2)
- 		return -EPERM;
- 
--	snprintf(file_name, ELX_MODEL_NAME_SIZE, "%s.grp", phba->ModelName);
-+	scnprintf(file_name, sizeof(file_name), "%s.grp", phba->ModelName);
- 
- 	if (fw_upgrade == INT_FW_UPGRADE) {
- 		ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_UEVENT,
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 89ba015c5d7e..01437716ffd1 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -5413,6 +5413,14 @@ static const struct pci_device_id mpi3mr_pci_id_table[] = {
+ 		PCI_DEVICE_SUB(MPI3_MFGPAGE_VENDORID_BROADCOM,
+ 		    MPI3_MFGPAGE_DEVID_SAS4116, PCI_ANY_ID, PCI_ANY_ID)
+ 	},
++	{
++		PCI_DEVICE_SUB(MPI3_MFGPAGE_VENDORID_BROADCOM,
++		    MPI3_MFGPAGE_DEVID_SAS5116_MPI, PCI_ANY_ID, PCI_ANY_ID)
++	},
++	{
++		PCI_DEVICE_SUB(MPI3_MFGPAGE_VENDORID_BROADCOM,
++		    MPI3_MFGPAGE_DEVID_SAS5116_MPI_MGMT, PCI_ANY_ID, PCI_ANY_ID)
++	},
+ 	{ 0 }
+ };
+ MODULE_DEVICE_TABLE(pci, mpi3mr_pci_id_table);
 -- 
 2.43.0
 
