@@ -1,47 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5000E1482F2;
-	Tue, 16 Jan 2024 19:56:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0938B14F546;
+	Tue, 16 Jan 2024 19:58:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705435019; cv=none; b=GfX5VxyeO3lgGKuHH2lcw11HTVB14HSDWton7NmgOJeDwRIQg5VsqzMy4pnrnKdSVOh+lzG+7Bd+r3MDcW1Ep13LMUhfIjf2M2cpxlEH4XxkfE8PhT2ZokL7U6FVfBSq74Zhtw6RxODTvle/IEG39HM74eDqi+RnOKFyenOf8gM=
+	t=1705435128; cv=none; b=POeVI/oQcQoriW+nBnHexNGXD44Y1QpU2liv3h7QNlGjBCRuL8vUZe/uFG6M5p6rKIhOGjyGKALqsYdMbyKWx/mDzM+AZXtOfzT3BiuWTSgkXuhMjPdI5eA+RrdUXkxX9LpeU7YqKMEDoAuSWqOI9+oyKwuvf4AEkqpnjuWxLFM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705435019; c=relaxed/simple;
-	bh=cyUEYiXVo5TD95IWupR3lgOIJfMm8WJPRzLURz7qXpQ=;
+	s=arc-20240116; t=1705435128; c=relaxed/simple;
+	bh=CZhK604jlH4UEVG183xJrm/cPY1ZrUQxQIoT0mD2zlo=;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:X-stable:
-	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=mu0YnsCUZ5MFZXtHNVQrNl+bOUJPne3lw8eY8ySNJr6dVZACN72RxMjbXaXsN4Y5SRN3kfYh+qeHLKnfU/lQSiU75/4cllIVm0JB2EnggJzeRzMPC3lLjIJZtxi7ung2g/p6+JIc8LKllG2gmZHpwJhKPIn5J1ZG0Pm63C7SHh0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IabkCL7G; arc=none smtp.client-ip=10.30.226.201
+	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=IJTJ4z+jG3n7DPmbF6MwNG5S24zGaGSLQfjrBRA2MOGXH9gA7qil2stlyc8SH7LGPDzL86RVxogaOxK3k3ofe4k8UphfSXov0tuu1GDhoDsY2/VcT2Xeew4pDLVAYn3J5BWnf6Cgi8tTgF0EzY9jCQYHGDH5yxU+fEiEUb7D8nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZW7Oavu/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IabkCL7G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C326C43609;
-	Tue, 16 Jan 2024 19:56:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZW7Oavu/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D186BC43394;
+	Tue, 16 Jan 2024 19:58:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705435018;
-	bh=cyUEYiXVo5TD95IWupR3lgOIJfMm8WJPRzLURz7qXpQ=;
+	s=k20201202; t=1705435127;
+	bh=CZhK604jlH4UEVG183xJrm/cPY1ZrUQxQIoT0mD2zlo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=IabkCL7GbJg9/9zqTWlCHK/oq0XwbX/dqTs7IwngAptfU1VS99kbuvUjm4o0Jqad/
-	 4J1ZNFhlqdVDGNyi0367q7nrhIThixR2Xdn9rwTLqmx2/uPQCg0JmKQfGoyW9XJdwu
-	 I60DZCRhnd38AgNQl5VSZqK1QZZVGdaAxWEqA5t19/kzQwkF1pIiEVbbzzX//0D0RC
-	 14DbfRbxg9XgM8b9XNU52Wkrr2rwcn5+c/Q9gE3IQKS2PQr3VCtT6YjemIx6UkLzrx
-	 /iQJ1OLowtZa0VZ1HlvPS3+HN81suTL2bNYQgAle+QgUpY5eW6qJqDWiKQhR5xFL9Q
-	 CYJJn8HiDjnJg==
+	b=ZW7Oavu/PMCaNOYUNbzFUkTFah55/VVjU5arXvzGkoVH0/KWwnTkZ+dQz7+8+qlOS
+	 nkjq/qC8ZmZiPIxQo3e0d/mLS2LyWhABcmQRJHcWa9URJuJJamQ42NgSbos4L5ZDBh
+	 btQpCQdQ0iBHNmCnD8d8Va3Y8HET3bf8vCNhuPWseDRJFjkGHPiTkaymEeMv9fD6Pj
+	 RBU8ZoILfYMAtYfOQ8qovrjbVu81bQapGv2jVgBmKy82/NsWykdocXOjwY0ewMWOUV
+	 JRsJCnRfp+FhOB8ycUjysX9UAHxy7f04W8S0/6PtF0O0B2wTOUA5fBG7gLvLERM5ZM
+	 Czf+R9epFc7Yw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Yihang Li <liyihang9@huawei.com>,
-	Xiang Chen <chenxiang66@hisilicon.com>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 45/68] scsi: hisi_sas: Set .phy_attached before notifing phyup event HISI_PHYE_PHY_UP_PM
-Date: Tue, 16 Jan 2024 14:53:44 -0500
-Message-ID: <20240116195511.255854-45-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 05/47] scsi: lpfc: Fix possible file string name overflow when updating firmware
+Date: Tue, 16 Jan 2024 14:57:08 -0500
+Message-ID: <20240116195834.257313-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240116195511.255854-1-sashal@kernel.org>
-References: <20240116195511.255854-1-sashal@kernel.org>
+In-Reply-To: <20240116195834.257313-1-sashal@kernel.org>
+References: <20240116195834.257313-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,57 +52,64 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.73
+X-stable-base: Linux 5.15.147
 Content-Transfer-Encoding: 8bit
 
-From: Yihang Li <liyihang9@huawei.com>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit ce26497c745d0541aec930d5211b431a1c26af97 ]
+[ Upstream commit f5779b529240b715f0e358489ad0ed933bf77c97 ]
 
-Currently in directly attached scenario, the phyup event
-HISI_PHYE_PHY_UP_PM is notified before .phy_attached is set - this may
-cause the phyup work hisi_sas_bytes_dmaed() execution failed and the
-attached device will not be found.
+Because file_name and phba->ModelName are both declared a size 80 bytes,
+the extra ".grp" file extension could cause an overflow into file_name.
 
-To fix it, set .phy_attached before notifing phyup event.
+Define a ELX_FW_NAME_SIZE macro with value 84.  84 incorporates the 4 extra
+characters from ".grp".  file_name is changed to be declared as a char and
+initialized to zeros i.e. null chars.
 
-Signed-off-by: Yihang Li <liyihang9@huawei.com>
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Link: https://lore.kernel.org/r/1702525516-51258-2-git-send-email-chenxiang66@hisilicon.com
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20231031191224.150862-3-justintee8345@gmail.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc.h      | 1 +
+ drivers/scsi/lpfc/lpfc_init.c | 4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index c4305ec38ebf..81a2365dc091 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -1565,6 +1565,11 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 457ff86e02b3..65ac952b767f 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -32,6 +32,7 @@
+ struct lpfc_sli2_slim;
  
- 	phy->port_id = port_id;
-+	spin_lock(&phy->lock);
-+	/* Delete timer and set phy_attached atomically */
-+	del_timer(&phy->timer);
-+	phy->phy_attached = 1;
-+	spin_unlock(&phy->lock);
+ #define ELX_MODEL_NAME_SIZE	80
++#define ELX_FW_NAME_SIZE	84
  
- 	/*
- 	 * Call pm_runtime_get_noresume() which pairs with
-@@ -1578,11 +1583,6 @@ static irqreturn_t phy_up_v3_hw(int phy_no, struct hisi_hba *hisi_hba)
+ #define LPFC_PCI_DEV_LP		0x1
+ #define LPFC_PCI_DEV_OC		0x2
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 2ca4cf1b58c4..bba51ce4276a 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -14516,7 +14516,7 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
+ int
+ lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
+ {
+-	uint8_t file_name[ELX_MODEL_NAME_SIZE];
++	char file_name[ELX_FW_NAME_SIZE] = {0};
+ 	int ret;
+ 	const struct firmware *fw;
  
- 	res = IRQ_HANDLED;
+@@ -14525,7 +14525,7 @@ lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
+ 	    LPFC_SLI_INTF_IF_TYPE_2)
+ 		return -EPERM;
  
--	spin_lock(&phy->lock);
--	/* Delete timer and set phy_attached atomically */
--	del_timer(&phy->timer);
--	phy->phy_attached = 1;
--	spin_unlock(&phy->lock);
- end:
- 	if (phy->reset_completion)
- 		complete(phy->reset_completion);
+-	snprintf(file_name, ELX_MODEL_NAME_SIZE, "%s.grp", phba->ModelName);
++	scnprintf(file_name, sizeof(file_name), "%s.grp", phba->ModelName);
+ 
+ 	if (fw_upgrade == INT_FW_UPGRADE) {
+ 		ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_UEVENT,
 -- 
 2.43.0
 
