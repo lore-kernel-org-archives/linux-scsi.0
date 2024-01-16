@@ -1,110 +1,81 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from gw.rozsnyo.com (gw.rozsnyo.com [77.240.102.234])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 226DB3FE31;
-	Tue, 16 Jan 2024 21:55:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E00D1F61E
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2024 22:26:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=77.240.102.234
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705442122; cv=none; b=OF+0yADKVWLf/lX7/sSqJIaguUIdeTQJiIpS0z2uQnne/d0+8knSEH+V4ni+NLQ3RP3Gpj8PctUegEW1D7/9/6hboVIKC7PaCjHXy8wMAxFO0ydgIcQhyAgJEZsdtTiHA4O5iFdanB669vSly2pJBfSytE/Vq8ax5mQ8Uy2OLWo=
+	t=1705443996; cv=none; b=fq7yMKaJc0XcvHPolBnWD8c8itQMjNXWjmU0r2HfwJ2BSz7LW7AirbEMCVc06/I++tFqprNfnmC//WQva5ea9XMCwzLA2y6TTNyP48ONztiTQO7nZxQpKUgcWeVDPhnM+p9H7smMS8F0p4CwmjQ+H6ANp8s2w2ZBFLcOWHZ89F0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705442122; c=relaxed/simple;
-	bh=2kMngdY8XxaVbjjDWUSvjo23NQ0hWKVAhB8Afjw9Z2Y=;
-	h=Received:DKIM-Signature:Received:Received:Received:Received:
-	 Received:Received:Received:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding:X-TM-AS-GCONF:
-	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details; b=Xw5Luq9ilb+c/J1o2eMbm2Qu9OK2oUP35U072S5BR8zgoGdIqBKV434FtnqvsLCf6WpFLbD+b/I4R3ACXJXIu/lGkDyMpZPCheU+cpg4dVlUA47BMHP+ZxDO605CgETUcm/naF7W2f8mRwCo2S2p/oku0W8g4QSudwkCKDavBSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Duh6G9At; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Duh6G9At"
-Received: from pps.filterd (m0353728.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40GLqGaM014432;
-	Tue, 16 Jan 2024 21:55:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-transfer-encoding; s=pp1;
- bh=yvYg34V1aSxXXxCa9jhpXGi7MKL9Geldai0x1AhQ2Pc=;
- b=Duh6G9Atwwj8hlDB0t5/XhQirIxKuRowJc5tc6zpjRlla7w/pInI2tPr0vezvtAr3KUQ
- 5phhypEzWwCY+WEFTUH7CDNWPTAzbECFqouXQjbfckfU6PLLcjCXqWjVhT7Qhc/oJXeS
- ePkGHEfVeM8M1UPyQUDqpNZEsgu9zZzy0EQmhR5cVIxjlnY1a3ZEVpOYEnNUZqGhHt/W
- v8D7Hj5klK9iXd9ZAW6q2IK2gof1HWLI8+UEWUrGBlm6Hl0ryrM6ruOrzme4MLXChG8x
- 4yCO5YRg9OOXVQR5YXBD0u7k5NK22H9CAPWAacqCl3bYl0mfccc+hJt6DQntgE9J/+vp LA== 
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vp0uk2f4m-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 16 Jan 2024 21:55:16 +0000
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 40GJ6uTr008536;
-	Tue, 16 Jan 2024 21:55:14 GMT
-Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3vm5unhbnu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 16 Jan 2024 21:55:14 +0000
-Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
-	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 40GLtEjX20120134
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 16 Jan 2024 21:55:14 GMT
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id EC9C95804B;
-	Tue, 16 Jan 2024 21:55:13 +0000 (GMT)
-Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id DB38258055;
-	Tue, 16 Jan 2024 21:55:12 +0000 (GMT)
-Received: from li-894d004c-2c43-11b2-a85c-d8bfeb5f0009.ibm.com.com (unknown [9.61.126.152])
-	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 16 Jan 2024 21:55:12 +0000 (GMT)
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-To: linux-kernel@vger.kernel.org
-Cc: brking@linux.ibm.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-        mikecyr@linux.ibm.com, target-devel@vger.kernel.org,
-        Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH] MAINTAINERS: update ibmvscsi_tgt maintainer
-Date: Tue, 16 Jan 2024 13:55:09 -0800
-Message-ID: <20240116215509.1155787-1-tyreld@linux.ibm.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1705443996; c=relaxed/simple;
+	bh=dmyt4YPCc518S7nIuysuzL2FJtq+SwwVxu5mBFH0/VE=;
+	h=Received:X-Virus-Scanned:Received:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:To:Content-Language:From:Subject:
+	 Content-Type:Content-Transfer-Encoding; b=GDPfZ5Yscl42AsgQ5Xv5irxUg8HPaM8NoF3R5hSFDXlad+DRtDzXdP62lCeuqqteWp9uQ/OmJ8lwir6a3LBYUDixCC30WG0q0smFaaWS2g7ZX87cPUNumXdb9B7OZAB+UwoJjdeHiaXrjrWy7MWgorrgHjrVPASLHyQslNaRvUs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rozsnyo.com; spf=pass smtp.mailfrom=rozsnyo.com; arc=none smtp.client-ip=77.240.102.234
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rozsnyo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rozsnyo.com
+Received: from localhost (localhost [127.0.0.1])
+	by gw.rozsnyo.com (Postfix) with ESMTP id 4B904115CC78
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2024 23:19:12 +0100 (CET)
+X-Virus-Scanned: amavisd-new at rozsnyo.com
+Received: from gw.rozsnyo.com ([127.0.0.1])
+	by localhost (hosting.rozsnyo.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 7CN562TYv1SE for <linux-scsi@vger.kernel.org>;
+	Tue, 16 Jan 2024 23:19:12 +0100 (CET)
+Received: from [192.168.68.7] (gw.rozsnyo.com [77.240.102.234])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by gw.rozsnyo.com (Postfix) with ESMTPSA id D1B7B115CC70
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2024 23:19:11 +0100 (CET)
+Message-ID: <3a18893d-4a71-49e1-8eec-d1450291f0f3@rozsnyo.com>
+Date: Tue, 16 Jan 2024 23:19:09 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: vUXZxRlK2EjNgxk-lNMKbHmU3_INNj88
-X-Proofpoint-GUID: vUXZxRlK2EjNgxk-lNMKbHmU3_INNj88
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-01-16_13,2024-01-16_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 bulkscore=0
- spamscore=0 lowpriorityscore=0 phishscore=0 suspectscore=0
- priorityscore=1501 malwarescore=0 mlxscore=0 mlxlogscore=797 adultscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2401160172
+User-Agent: Mozilla Thunderbird
+To: linux-scsi@vger.kernel.org
+Content-Language: en-US
+From: =?UTF-8?Q?Daniel_Rozsny=C3=B3?= <daniel@rozsnyo.com>
+Subject: I/O tracing and access logging
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-Michael has not been responsible for this code as an IBMer for quite
-sometime. Seeing as the rest of the IBM Virtual SCSI related drivers
-already fall under my purview replace Michael with myself as maintainer.
-
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
----
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 391bbb855cbe..1ed1aa7b21eb 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10226,7 +10226,7 @@ F:	drivers/scsi/ibmvscsi/ibmvscsi*
- F:	include/scsi/viosrp.h
- 
- IBM Power Virtual SCSI Device Target Driver
--M:	Michael Cyr <mikecyr@linux.ibm.com>
-+M:	Tyrel Datwyler <tyreld@linux.ibm.com>
- L:	linux-scsi@vger.kernel.org
- L:	target-devel@vger.kernel.org
- S:	Supported
--- 
-2.43.0
-
+SGVsbG8sDQoNCiDCoMKgIGNhbiB5b3UgcGxlYXNlIGFkdmljZSB3aGF0IHRvIHR1cm4gb24s
+IG9yIHdoYXQgaXMgdGhlIGNvcnJlY3QgcGxhY2UgdG8gcHV0IHByaW50aydzIGluIG9yZGVy
+IHRvIHRyYWNlIGFsbCB0aGUgYWNjZXNzIHRvIGEgU0FUQSBkcml2ZT8NCg0KIMKgwqAgSSB3
+b3VsZCBkZWZpbml0ZWx5IHdhbnQgdGhlIGJsb2NrIGRhdGEgYW5kIHRoZWlyIGhlYWRlciAo
+anVzdCBhbiBMQkEgYWRkcmVzcyArIHJlYWQvd3JpdGUpLCBhbmQgdGhlIHBpY2sgYWxzbyBv
+dGhlciBzaWRlIGNoYW5uZWwgbGlrZSBhY2Nlc3NlcyAtIGxpa2Ugd2hhdCB0aGUgc21hcnRj
+dGwgZG9lcy4gQmFzaWNhbGx5IGFsbCBvdXRib3VuZCByZXF1ZXN0cyB3aXRoIGRhdGEgYW5k
+IGFsbCByZXNwb25zZXMgd2l0aCBkYXRhLiBJIGRvIG5vdCBjYXJlIGlmIGl0IGNvbWVzIGlu
+IGZvcm0gb2YgaGV4ZHVtcCwgaSBjYW4gDQpkbyBkZWNvZGluZyBhbmQgYW5hbHlzaXMgaW4g
+cG9zdCAvIG9mZmxpbmUuIFRoYXQgd291bGQgYmUgYW4gaW9jdGwsIHJpZ2h0Pw0KDQogwqDC
+oCBUaGUgcHJlZmVycmVkIGxvY2F0aW9uIGlzIHJhdGhlciBvbiBrZXJuZWwgc2lkZSwgdW5k
+ZXIgZnVsbCBjb250cm9sIG9mIG1pbmUgLSB1bmxlc3MgdGhlcmUgaXMgc29tZSBtYWdpYyBv
+cHRpb24gZm9yIHN0cmFjZSwgdGhhdCB3b3VsZCBtYWtlIGl0IGVub3VnaCB2ZXJib3NlIHRv
+IGhhdmUgYWxsIHRoZSBwaWVjZXMgZHVtcGVkLg0KDQogwqDCoCBJIHdhcyBob3BpbmcgdGhh
+dCBzb21lIGRldmVsb3BlciBvcHRpb24gaW4gdGhlIFNDU0kgbGF5ZXIgbWlnaHQgYWxyZWFk
+eSBkbyB0aGF0Lg0KDQoNCiDCoMKgIFRoZSBnb2FsIGhlcmUgaXMgdG8gc2VlIHdoYXQgYSBu
+b24tc3RhbmRhcmQgZmlybXdhcmUgZmxhc2hpbmcgcHJvY2VzcyBsb29rcyBsaWtlIC0gdGhl
+IHRvb2wgaW4gcXVlc3Rpb24gaXMgZm9yIGFuY2llbnQgU2FuZEZvcmNlIFNTRCdzIHRoYXQg
+ZGllIGJlY2F1c2Ugb2YgcG9vciBmaXJtd2FyZSBkZXNpZ24uIFdoaWxlIEkgaGF2ZSBhIGJ1
+bmNoIG9mIGdlbnVpbmUgU2FuZEZvcmNlIFNGLTIyODEgZXF1aXBwZWQgZHJpdmVzIHdoaWNo
+IEkgd2FzIGFibGUgdG8gZml4LCB0aGUgcmVjZW50IGFjcXVpc2l0aW9uIG9mIA0KZG96ZW4g
+SW50ZWwgMjUwMCBQcm8ncyBhbmQgYSBiaXQgb2Ygd29yayByZXZlYWxlZCB0aGF0IHRoZXkg
+aGF2ZSBsaWNlbnNlZCB0aGUgY29udHJvbGxlciAtIGluY2x1ZGluZyBpdHMgYnVnZ3kgYmVo
+YXZpb3IsIG1hcmtpbmcgaXQgQkYyOUFTNDFCQjAuIFRoZSBqdW1wZXIgb24gYm9hcmQgZGlk
+IGJyaW5nIHRoZSBkcml2ZSBpbnRvIFNhZmVtb2RlIGFuZCByZXBvcnRpbmcgaXRzZWxmIGFz
+IGEgMzJLaUIgZGV2aWNlIG5hbWVkIFNhbmRGb3JjZXsyMDAwMjYgLSBzbyBJIGFtIG5leHQg
+dG8gdHJ5IHRvIHJlY292ZXJpbmcgdGhlc2UuDQoNCiDCoMKgIEFuZCB3aGlsZSBkb2luZyBz
+bywgSSB3YW50IHRvIGtlZXAgdGhlIGNvbW11bmljYXRpb24gdHJhY2VzIGluIG9yZGVyIHRv
+IGV2ZW50dWFsbHkgcmVwbGFjZSB0aGF0IG9ic2N1cmUgMzItYml0IHByb3ByaWV0YXJ5IHNv
+ZnR3YXJlIHdpdGggbXkgb3duIHRvb2wgLSB0byByZXZpdmUgdGhlIGRyaXZlcyBtdWNoIG1v
+cmUgZWFzaWx5IHdoZW4gdGhleSBmYWlsIGFnYWluLg0KDQogwqDCoCBZZXMsIHRoZSB3b3Js
+ZCB3b3VsZCBiZSBuaWNlciBpZiB3ZSBnZXQgc3VjaCBmYWN0b3J5LXJlc2V0IC8gZmFjdG9y
+eS1yZWNvdmVyeSB0b29scyBmb3IgZGVhZCBkcml2ZXMgZnJvbSBtYW51ZmFjdHVyZXJzIGJ1
+dCAtIHdoYXQgd2UgY2FuIGRvLiBJIGFtIHdpbGxpbmcgdG8gc3BlbmQgc29tZSB0aW1lIG9u
+IHRoaXMuDQoNCg0KVGhhbmtzLA0KDQpEYW5pZWwgUm96c255bw0KDQoNCg0K
