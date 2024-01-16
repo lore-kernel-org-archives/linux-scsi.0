@@ -1,137 +1,110 @@
 Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B78D52031D;
-	Tue, 16 Jan 2024 21:39:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 226DB3FE31;
+	Tue, 16 Jan 2024 21:55:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705441152; cv=none; b=aRN58YqO0b4adomtP9e2akTLNEw8NlKSY9gQGZIM0jOKpNuu86nAAvlEImJ3UEv0aW9b7jn4/Jt+oHmo/qv+dftMSoHA6vobpe/8PwvEtepXjGKz36cjB85jBHXi2k8GKGLbrQRym5aFhwlzfPdvSyavmCB34OMIzSY9/h7HYrY=
+	t=1705442122; cv=none; b=OF+0yADKVWLf/lX7/sSqJIaguUIdeTQJiIpS0z2uQnne/d0+8knSEH+V4ni+NLQ3RP3Gpj8PctUegEW1D7/9/6hboVIKC7PaCjHXy8wMAxFO0ydgIcQhyAgJEZsdtTiHA4O5iFdanB669vSly2pJBfSytE/Vq8ax5mQ8Uy2OLWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705441152; c=relaxed/simple;
-	bh=9cVaDEGyE++XlGIZR4zuk6VP7XM32B9Tm1rS1HSDeWQ=;
+	s=arc-20240116; t=1705442122; c=relaxed/simple;
+	bh=2kMngdY8XxaVbjjDWUSvjo23NQ0hWKVAhB8Afjw9Z2Y=;
 	h=Received:DKIM-Signature:Received:Received:Received:Received:
-	 Received:Received:Received:Received:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:Content-Language:To:Cc:References:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 X-TM-AS-GCONF:X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details; b=qQr1HpIU9iSel7QLx3XO0MSfxy3K1/kAhI/W6I6CjKypWJHHUfuM3C998TymkCJLdePTZfa4c9zKUWuId8G3+UkhHyALTBgRhLf27QUHB5GyQ2jT/oxF7R7qfvdddByqIMhP8QlurC5qK6bBcgtHxd8YPnGhJ+Z1Tl9AD0ichcg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=pBCDyTAq; arc=none smtp.client-ip=148.163.156.1
+	 Received:Received:Received:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding:X-TM-AS-GCONF:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details; b=Xw5Luq9ilb+c/J1o2eMbm2Qu9OK2oUP35U072S5BR8zgoGdIqBKV434FtnqvsLCf6WpFLbD+b/I4R3ACXJXIu/lGkDyMpZPCheU+cpg4dVlUA47BMHP+ZxDO605CgETUcm/naF7W2f8mRwCo2S2p/oku0W8g4QSudwkCKDavBSk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Duh6G9At; arc=none smtp.client-ip=148.163.156.1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="pBCDyTAq"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40GLbCeX011034;
-	Tue, 16 Jan 2024 21:38:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=C34bD3H/UW2o8lGJiE4Kl6JTQHvAgZThBzA+i3EkQj4=;
- b=pBCDyTAqmIHQUh+WookDoNH+IaXDelj8E17v4vrqhzDtkWmm7/W79f09VlO9RLAGsyDQ
- 5XpT7BzXBzTjat8kOoLEtQhpr9KxbD+064D4h/Kv3zpIGju3wjpHoQsaR04CV45RsRLy
- mwDHnngbbdsjZJ4GoMXL9UeYcBYBpvvlqNYzpes9ouanXZZFKZJLU+y4Zn4mjexMEeC+
- J+JXb79X5lSv/4+BxOa9PQ1axgPBcfkRayp9wEdkfHZwtntkgxQ7MPF8hm3dI4B22KDu
- v1d0B+0w3llpJDEop1ib9yzyU1dw11yK3m8mXS4fZ3V3FytdkvKZTAW6yspngS4k46S2 ug== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vp1vcg1jp-1
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Duh6G9At"
+Received: from pps.filterd (m0353728.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40GLqGaM014432;
+	Tue, 16 Jan 2024 21:55:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=yvYg34V1aSxXXxCa9jhpXGi7MKL9Geldai0x1AhQ2Pc=;
+ b=Duh6G9Atwwj8hlDB0t5/XhQirIxKuRowJc5tc6zpjRlla7w/pInI2tPr0vezvtAr3KUQ
+ 5phhypEzWwCY+WEFTUH7CDNWPTAzbECFqouXQjbfckfU6PLLcjCXqWjVhT7Qhc/oJXeS
+ ePkGHEfVeM8M1UPyQUDqpNZEsgu9zZzy0EQmhR5cVIxjlnY1a3ZEVpOYEnNUZqGhHt/W
+ v8D7Hj5klK9iXd9ZAW6q2IK2gof1HWLI8+UEWUrGBlm6Hl0ryrM6ruOrzme4MLXChG8x
+ 4yCO5YRg9OOXVQR5YXBD0u7k5NK22H9CAPWAacqCl3bYl0mfccc+hJt6DQntgE9J/+vp LA== 
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vp0uk2f4m-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 16 Jan 2024 21:38:51 +0000
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 40GLcDTF016360;
-	Tue, 16 Jan 2024 21:38:51 GMT
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vp1vcg1hs-1
+	Tue, 16 Jan 2024 21:55:16 +0000
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 40GJ6uTr008536;
+	Tue, 16 Jan 2024 21:55:14 GMT
+Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3vm5unhbnu-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 16 Jan 2024 21:38:51 +0000
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 40GJ6ONT023421;
-	Tue, 16 Jan 2024 21:38:49 GMT
-Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3vm6bkh59q-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 16 Jan 2024 21:38:49 +0000
+	Tue, 16 Jan 2024 21:55:14 +0000
 Received: from smtpav01.wdc07v.mail.ibm.com (smtpav01.wdc07v.mail.ibm.com [10.39.53.228])
-	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 40GLcmas66912726
+	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 40GLtEjX20120134
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 16 Jan 2024 21:38:49 GMT
+	Tue, 16 Jan 2024 21:55:14 GMT
 Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id A30145804B;
-	Tue, 16 Jan 2024 21:38:48 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id EC9C95804B;
+	Tue, 16 Jan 2024 21:55:13 +0000 (GMT)
 Received: from smtpav01.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 8250858055;
-	Tue, 16 Jan 2024 21:38:47 +0000 (GMT)
-Received: from [9.61.126.152] (unknown [9.61.126.152])
+	by IMSVA (Postfix) with ESMTP id DB38258055;
+	Tue, 16 Jan 2024 21:55:12 +0000 (GMT)
+Received: from li-894d004c-2c43-11b2-a85c-d8bfeb5f0009.ibm.com.com (unknown [9.61.126.152])
 	by smtpav01.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 16 Jan 2024 21:38:47 +0000 (GMT)
-Message-ID: <92007644-72e3-4312-b9e9-e93e5142e090@linux.ibm.com>
-Date: Tue, 16 Jan 2024 13:38:46 -0800
+	Tue, 16 Jan 2024 21:55:12 +0000 (GMT)
+From: Tyrel Datwyler <tyreld@linux.ibm.com>
+To: linux-kernel@vger.kernel.org
+Cc: brking@linux.ibm.com, linux-scsi@vger.kernel.org,
+        james.bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+        mikecyr@linux.ibm.com, target-devel@vger.kernel.org,
+        Tyrel Datwyler <tyreld@linux.ibm.com>
+Subject: [PATCH] MAINTAINERS: update ibmvscsi_tgt maintainer
+Date: Tue, 16 Jan 2024 13:55:09 -0800
+Message-ID: <20240116215509.1155787-1-tyreld@linux.ibm.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 25/42] drivers/scsi/ibmvscsi: Convert snprintf to
- sysfs_emit
-Content-Language: en-US
-To: Li Zhijian <lizhijian@fujitsu.com>, linux-kernel@vger.kernel.org
-Cc: Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin
- <npiggin@gmail.com>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
-        "Naveen N. Rao" <naveen.n.rao@linux.ibm.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-References: <20240116041129.3937800-1-lizhijian@fujitsu.com>
- <20240116045151.3940401-1-lizhijian@fujitsu.com>
- <20240116045151.3940401-23-lizhijian@fujitsu.com>
-From: Tyrel Datwyler <tyreld@linux.ibm.com>
-In-Reply-To: <20240116045151.3940401-23-lizhijian@fujitsu.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: T9F9F6QalnDwMMGJCSEfB4HU9ZM759gq
-X-Proofpoint-ORIG-GUID: s4AnZKTFZA-kPfDCUxWgqMxp7_K2Rqb-
+X-Proofpoint-ORIG-GUID: vUXZxRlK2EjNgxk-lNMKbHmU3_INNj88
+X-Proofpoint-GUID: vUXZxRlK2EjNgxk-lNMKbHmU3_INNj88
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-01-16_12,2024-01-16_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
- mlxlogscore=888 clxscore=1011 priorityscore=1501 lowpriorityscore=0
- bulkscore=0 impostorscore=0 spamscore=0 adultscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2401160170
+ definitions=2024-01-16_13,2024-01-16_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 bulkscore=0
+ spamscore=0 lowpriorityscore=0 phishscore=0 suspectscore=0
+ priorityscore=1501 malwarescore=0 mlxscore=0 mlxlogscore=797 adultscore=0
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2401160172
 
-On 1/15/24 20:51, Li Zhijian wrote:
-> Per filesystems/sysfs.rst, show() should only use sysfs_emit()
-> or sysfs_emit_at() when formatting the value to be returned to user space.
-> 
-> coccinelle complains that there are still a couple of functions that use
-> snprintf(). Convert them to sysfs_emit().
-> 
->> ./drivers/scsi/ibmvscsi/ibmvfc.c:3483:8-16: WARNING: please use sysfs_emit
->> ./drivers/scsi/ibmvscsi/ibmvfc.c:3493:8-16: WARNING: please use sysfs_emit
->> ./drivers/scsi/ibmvscsi/ibmvfc.c:3503:8-16: WARNING: please use sysfs_emit
->> ./drivers/scsi/ibmvscsi/ibmvfc.c:3513:8-16: WARNING: please use sysfs_emit
->> ./drivers/scsi/ibmvscsi/ibmvfc.c:3522:8-16: WARNING: please use sysfs_emit
->> ./drivers/scsi/ibmvscsi/ibmvfc.c:3530:8-16: WARNING: please use sysfs_emit
-> 
-> No functional change intended
-> 
-> CC: Tyrel Datwyler <tyreld@linux.ibm.com>
-> CC: Michael Ellerman <mpe@ellerman.id.au>
-> CC: Nicholas Piggin <npiggin@gmail.com>
-> CC: Christophe Leroy <christophe.leroy@csgroup.eu>
-> CC: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-> CC: "Naveen N. Rao" <naveen.n.rao@linux.ibm.com>
-> CC: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> CC: "Martin K. Petersen" <martin.petersen@oracle.com>
-> CC: linux-scsi@vger.kernel.org
-> CC: linuxppc-dev@lists.ozlabs.org
-> Signed-off-by: Li Zhijian <lizhijian@fujitsu.com>
-> ---
+Michael has not been responsible for this code as an IBMer for quite
+sometime. Seeing as the rest of the IBM Virtual SCSI related drivers
+already fall under my purview replace Michael with myself as maintainer.
 
-Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 391bbb855cbe..1ed1aa7b21eb 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10226,7 +10226,7 @@ F:	drivers/scsi/ibmvscsi/ibmvscsi*
+ F:	include/scsi/viosrp.h
+ 
+ IBM Power Virtual SCSI Device Target Driver
+-M:	Michael Cyr <mikecyr@linux.ibm.com>
++M:	Tyrel Datwyler <tyreld@linux.ibm.com>
+ L:	linux-scsi@vger.kernel.org
+ L:	target-devel@vger.kernel.org
+ S:	Supported
+-- 
+2.43.0
 
