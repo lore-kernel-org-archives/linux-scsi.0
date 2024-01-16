@@ -1,97 +1,95 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E7A91BDC0
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2024 13:04:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F+gJfu4z"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1705410263;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=EkZSOnIygpbJ+i2FOTNIbQzjiHiHU9Jj+ia6iKy7fds=;
-	b=F+gJfu4zIo6UGDEA92mkfyXtcAO2YGFYTmaU0k0ULCxF0yaa3gn6338ARZB7TNX0xCUQf3
-	tTDIg+OboFsZhujnfYxkidYfYVUZqaOUhRlmhmxRb8lhBT8Wx8QZCvXZqd1Y+UnzxV9E4h
-	ak89IVxQce1fpgCgpV7cG1dir/DogLE=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-356-Lz1xhmjkNRef1CWsoAMPMQ-1; Tue, 16 Jan 2024 08:04:21 -0500
-X-MC-Unique: Lz1xhmjkNRef1CWsoAMPMQ-1
-Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-40e479a51e4so40954725e9.0
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2024 05:04:21 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06FAF1CAB7;
+	Tue, 16 Jan 2024 17:36:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1705426593; cv=none; b=eYdJ2vCPdAaHSMKHQVf49iZK2v7M7R4xpdm7y5sWIEAB7JUeL2gl8aXOjFJGFlkkat+vKsfMfhTmO5U1oTDQihpfQ/oLSswftATbV6lT5w6v0ez2CmBgxw317I+AnNPYaJHulrGry+fri6Rlu1TcUdhaRYEXA4mhagC+n5ZG9vg=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1705426593; c=relaxed/simple;
+	bh=uEpr9L+zeOD3NLk/ozrANzTT+091eMV/fTYTDUAZuYY=;
+	h=Received:X-Google-DKIM-Signature:X-Gm-Message-State:
+	 X-Google-Smtp-Source:X-Received:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:Content-Language:To:Cc:References:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding; b=PanOAic6oOTuO9hQdDwvcavKUznXZdVTCYKTvwxU1BB9pHI9EG/RDQXRlPcvXbxalnw8DxC5PAYX+wnm7u79nDxdnpW1Re3UWM+DcGFb1YA871TW+AftO22h/HrNcnHQIElC05aeYeZZOnFUC+b0akav/3DWvXho4jx2DWYbFJI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
+Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5ceb3fe708eso3584354a12.3;
+        Tue, 16 Jan 2024 09:36:31 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705410260; x=1706015060;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=EkZSOnIygpbJ+i2FOTNIbQzjiHiHU9Jj+ia6iKy7fds=;
-        b=IvW0PNSXlkzHIHoVpqGMtbuJc5Bjf9pwQz8eqJzAb2Y/8PPFJdWwecqUpZRt5g0cTn
-         lYBb44t6RzM8+NHt10amdQSgXIOya5J4HLAex4vi7cBCGBL4b521Rn94bf3poZzjPBat
-         +WFl4PT0A/Xed5xTti+DjyUb/zBOXKHGfVzDnU/QN4NxvkmUwkUI+6axLrQj8W5nQdFe
-         Jt7NtLP6F7oa97JUiO8F3/rBMUhcaPyI4Tt2KGp2+A5+E3UQ+tDSCXDgX0y3+NKjDwdL
-         k/fgRlvdvJxZuUBkFtsVUfcS/yfS1Uk6Cy4U0WIxrEO5NuHKbqQLvxD6q5KBAIAi6pWe
-         rcXA==
-X-Gm-Message-State: AOJu0YzXBg1npwOIkpilVdAidoR1qFD3yTs8ruThVSYqwQeGdCDRLP95
-	gJYN4a+L3GVHyzXk50A5ImP5xanvuCMSt9s9qgU2eOqC7g9Z5P9adj7R97K64UI2er+akshDsDy
-	BJVzeoPkX9zwaKZ+ChfcVMeuqlHQQHQ==
-X-Received: by 2002:a05:600c:4593:b0:40e:4deb:ebb8 with SMTP id r19-20020a05600c459300b0040e4debebb8mr3969358wmo.110.1705410260619;
-        Tue, 16 Jan 2024 05:04:20 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHyZdcsasGz47vtQaNB8csj3bWm95OR3KENXLPC0whD1sH4fuYcQBxPhDpk8+TYhBCKD+yU/Q==
-X-Received: by 2002:a05:600c:4593:b0:40e:4deb:ebb8 with SMTP id r19-20020a05600c459300b0040e4debebb8mr3969351wmo.110.1705410260253;
-        Tue, 16 Jan 2024 05:04:20 -0800 (PST)
-Received: from redhat.com ([2.52.29.192])
-        by smtp.gmail.com with ESMTPSA id u21-20020a05600c139500b0040e4a7a7ca3sm19339021wmf.43.2024.01.16.05.04.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 16 Jan 2024 05:04:19 -0800 (PST)
-Date: Tue, 16 Jan 2024 08:04:15 -0500
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Li RongQing <lirongqing@baidu.com>
-Cc: jasowang@redhat.com, pbonzini@redhat.com, stefanha@redhat.com,
-	jejb@linux.ibm.com, martin.petersen@oracle.com,
-	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] virtio_scsi: remove duplicate check if queue is broken
-Message-ID: <20240116080403-mutt-send-email-mst@kernel.org>
-References: <20240116045836.12475-1-lirongqing@baidu.com>
+        d=1e100.net; s=20230601; t=1705426591; x=1706031391;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2N6XKQRaK9E3d/TrM1mDT4T5HbKqJaaszLV9COCar4M=;
+        b=TnwrVmoYDuE3F8yQ9V72vgK7e9WvKtizdI/5HpW9OoVWvfp/7I+AmrRl2aAk7A/ahv
+         Fov9m+HTdnYfQEN0ZNd11CWolSwh0kJfoO8aRouKqb0x6cuHk4WlP1Umc6UExCBfJ/wM
+         WMuJvX1o0tc1uANv01Cyamtl5+mSpIRxc1CV0SISTMBhNMfROar6SxeUmPWfAsDDD/4G
+         YS7ZVzkgkJi5HVuv6MVavwXqTAKZby02KjBJqhqe0mdBuPFPymzpjQ6SwPBYptXNadJg
+         GidKsbK1lS7DwePctGiQBAGsiXwfoOzWNoc+9S7eV4NbWCLHoP/YWOZmhDyq7uHZi6um
+         jEjA==
+X-Gm-Message-State: AOJu0Yw2mx/4+IabAPv7id5ECm2Uv0L2yGbgwikrozrnYFvj+kpuuHtK
+	XxJS+AiDCEeYoHY1s7TUOZk=
+X-Google-Smtp-Source: AGHT+IG1feQcn99GIPMPS9kRfLs0UyfdEIFbUtAOzUVIE1Z/gasi868LANR26QRJIaEG4yCTY+Y2TA==
+X-Received: by 2002:a17:90a:ac03:b0:28c:37:f394 with SMTP id o3-20020a17090aac0300b0028c0037f394mr3501240pjq.62.1705426590339;
+        Tue, 16 Jan 2024 09:36:30 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:bf53:62d5:82c4:7343? ([2620:0:1000:8411:bf53:62d5:82c4:7343])
+        by smtp.gmail.com with ESMTPSA id w5-20020a17090ad60500b0028ce12f8cdasm12181165pju.10.2024.01.16.09.36.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 16 Jan 2024 09:36:29 -0800 (PST)
+Message-ID: <aedc82bc-ef10-4bc6-b76c-bf239f48450f@acm.org>
+Date: Tue, 16 Jan 2024 09:36:27 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240116045836.12475-1-lirongqing@baidu.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
+Content-Language: en-US
+To: Yu Kuai <yukuai1@huaweicloud.com>, Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>,
+ Keith Busch <kbusch@kernel.org>,
+ Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+ Ed Tsai <ed.tsai@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <20231130193139.880955-1-bvanassche@acm.org>
+ <20231130193139.880955-2-bvanassche@acm.org>
+ <58f50403-fcc9-ec11-f52b-f11ced3d2652@huaweicloud.com>
+ <8372f2d0-b695-4af4-90e6-e35b86e3b844@acm.org>
+ <c1658336-f48e-5688-f0c2-f325fd5696c3@huaweicloud.com>
+ <1d3866af-ffca-4f97-914d-8084aca901ab@acm.org>
+ <69b17db7-e9c9-df09-1022-ff7a9e5e04dd@huaweicloud.com>
+ <20240112043915.GA5664@lst.de>
+ <2d83fcb3-06e6-4a7c-9bd7-b8018208b72f@huaweicloud.com>
+ <20240115055940.GA745@lst.de>
+ <0d23e3d3-1d7a-f76b-307b-7d74b3f91e05@huaweicloud.com>
+ <f1cac818-8fc8-4f24-b445-d10aa99c04ba@acm.org>
+ <e0305a2c-20c1-7e0f-d25d-003d7a72355f@huaweicloud.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <e0305a2c-20c1-7e0f-d25d-003d7a72355f@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jan 16, 2024 at 12:58:36PM +0800, Li RongQing wrote:
-> virtqueue_enable_cb() will call virtqueue_poll() which will check if
-> queue is broken at beginning, so remove the virtqueue_is_broken() call
+On 1/16/24 02:24, Yu Kuai wrote:
+> I'll provide null_blk tests result in the next version if anyone thinks
+> the approch is acceptable:
 > 
-> Signed-off-by: Li RongQing <lirongqing@baidu.com>
+> 1) add a new field 'available_tags' and update it in slow path, hence
+> fast path hctx_may_queue() won't be affected.
+> 2) delay tag sharing untill failed to get driver tag;
+> 3) add a timer per shared tags to balance shared tags;
+  My concern is that the complexity of the algorithm introduced by that patch
+series is significant. I prefer code that is easy to understand. This is why
+I haven't started yet with a detailed review. If anyone else wants to review
+that patch series that's fine with me.
 
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
+Thanks,
 
-
-> ---
->  drivers/scsi/virtio_scsi.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 9d1bdcd..e15b380 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -182,8 +182,6 @@ static void virtscsi_vq_done(struct virtio_scsi *vscsi,
->  		while ((buf = virtqueue_get_buf(vq, &len)) != NULL)
->  			fn(vscsi, buf);
->  
-> -		if (unlikely(virtqueue_is_broken(vq)))
-> -			break;
->  	} while (!virtqueue_enable_cb(vq));
->  	spin_unlock_irqrestore(&virtscsi_vq->vq_lock, flags);
->  }
-> -- 
-> 2.9.4
-
+Bart.
