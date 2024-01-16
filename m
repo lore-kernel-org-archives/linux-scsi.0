@@ -1,47 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90CB16706C;
-	Tue, 16 Jan 2024 20:04:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD0AD67723;
+	Tue, 16 Jan 2024 20:04:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705435476; cv=none; b=ARZfzN6U3Na1J9PyNivObx5lnrkxlU8urW2wkDDyqqy0EX5lQpNeExJKJq47YkzXBs1NOdomAsy7egzDP9Dw7PTUDInyZrNZZPe9eyVnFKDCCLu3muUzo9hYUqufI/QNOZMWgFJ/lWT1DhJig5y64/6owhbR1R7R3od16dZIAJw=
+	t=1705435488; cv=none; b=SjzUfT3RAu76zRIKSflv+KBYpEfIt3hBAv3EtERYSZDhxkDAsALX9Vmcj1peU2V1M0rzItSG+BVZKvKrpJvQ1lV2R+v5+FXzMSQex3x8F0X899QH0NfOPjnq39n6/BpU3HMMN1cKnUD0C1Usb1Sgr7HTZvCpC+yHHh7jzl4UsmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705435476; c=relaxed/simple;
-	bh=8URfo+JULmWklSLjvW/SRpqud05CMUom6m5j7LEfoZ8=;
+	s=arc-20240116; t=1705435488; c=relaxed/simple;
+	bh=2E5DkhatVCjnaZVP/uUdkTzUXdyfK7XbkiM1SjU/vM8=;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:X-stable:X-Patchwork-Hint:X-stable-base:
-	 Content-Transfer-Encoding; b=nwARuLcDmhNZErHH/UtjhHpmMFjeEvm932FB/cVxD7ZVScq5N3JSuhcIMSIMB/3BDsfp0N7vX7d+FTqOaFq9BQlYpSujonaEEy/x314mef+AuXylYdE2DWdA0J4EACJifkyP5YQaLro1lzsx+ncMasAyPCNQujFYVRIr7nGyfPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fBjKuVO7; arc=none smtp.client-ip=10.30.226.201
+	 X-Mailer:In-Reply-To:References:MIME-Version:X-stable:
+	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=P1C/L1gTDf3JY9WT+DxZ6I8kAqCfS5J9UjWR1BWUfm4/EjZCEEhD4oxN/HaRUqQnDSKfOi/rhOs9KKXxKLVz9bcMTWQXc3J4LpO3f9SRpBw3UBhOj8AYdLtjYsQ89HdMak9tNe2DJ+bFv/IhRoDOb6P+SZ2m11gec31vrsIrKyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=By+7SD0u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fBjKuVO7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 184B4C433C7;
-	Tue, 16 Jan 2024 20:04:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="By+7SD0u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B946EC43390;
+	Tue, 16 Jan 2024 20:04:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705435476;
-	bh=8URfo+JULmWklSLjvW/SRpqud05CMUom6m5j7LEfoZ8=;
-	h=From:To:Cc:Subject:Date:From;
-	b=fBjKuVO7jVPIUklTnhZ0CMaWUvEyyU1ssAxfbH+CX3k6r8d/RtiNnKTtjlC9UdL0Z
-	 Uw+KjzKke5v2pUTgs/1WWlyiM851BAhaeCHf9uMstzCcucFeU9I62nCn0twSdnv5Vr
-	 aPKE2WMTFsgizRQnUs/nRbmahVvWhwA1bwkrK/sw01p6J3AsQqZ0D3vxde3KgsPAfa
-	 NXY2JtBdpiO7W4XzK9X8nKIceyVdCeYKpWCUPUEAcOE36BZmm/Ehy4NfNLj/nV2JMd
-	 +IqKKisvClny/eH0V6Zb4WiMa3l0HNg+8V6gQJQNjzW5xxl0DHpVE0TynCRId+S/0e
-	 mxalMXDVGGO0Q==
+	s=k20201202; t=1705435488;
+	bh=2E5DkhatVCjnaZVP/uUdkTzUXdyfK7XbkiM1SjU/vM8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=By+7SD0u8HrUoVSa7YdBN4Wg54Pv2sjLZx2rKdeLZar/oYMRan8nb50lQYUnuQ/jz
+	 87moT/IY46LyKJbQVOV9w+XWTzGJbsWM6qIKWmnA4Qqk0MuOxHfrIVzCjiwD3OjpJ3
+	 OnltoaEOSd7B5Xv7TD2QYKwaQblXdY1TvsxIR33tya8y8JICvPKSMzIMZz1zU9Y3Ij
+	 ykFHqvhBl+1oWUO3q7m1N4ULdd63Ik+mt8wD1SZp5fvdATgZgqh+Ak0s7dH7ZgNGqM
+	 PlQ+kbwWa1MxfJOtuT1DWKtyQjZyYz2mNAjwirQuQHADHobi5n17nOGwURoO1rjMA/
+	 IzK09OQgGQdxg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
-	Himanshu Madhani <himanshu.madhani@oracle.com>,
+Cc: Hannes Reinecke <hare@suse.de>,
+	Christoph Hellwig <hch@lst.de>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 01/22] scsi: lpfc: Fix possible file string name overflow when updating firmware
-Date: Tue, 16 Jan 2024 15:03:55 -0500
-Message-ID: <20240116200432.260016-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 08/22] scsi: libfc: Don't schedule abort twice
+Date: Tue, 16 Jan 2024 15:04:02 -0500
+Message-ID: <20240116200432.260016-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240116200432.260016-1-sashal@kernel.org>
+References: <20240116200432.260016-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -53,61 +53,66 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 4.19.305
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Hannes Reinecke <hare@suse.de>
 
-[ Upstream commit f5779b529240b715f0e358489ad0ed933bf77c97 ]
+[ Upstream commit b57c4db5d23b9df0118a25e2441c9288edd73710 ]
 
-Because file_name and phba->ModelName are both declared a size 80 bytes,
-the extra ".grp" file extension could cause an overflow into file_name.
+The current FC error recovery is sending up to three REC (recovery) frames
+in 10 second intervals, and as a final step sending an ABTS after 30
+seconds for the command itself.  Unfortunately sending an ABTS is also the
+action for the SCSI abort handler, and the default timeout for SCSI
+commands is also 30 seconds. This causes two ABTS to be scheduled, with the
+libfc one slightly earlier. The ABTS scheduled by SCSI EH then sees the
+command to be already aborted, and will always return with a 'GOOD' status
+irrespective on the actual result from the first ABTS.  This causes the
+SCSI EH abort handler to always succeed, and SCSI EH never to be engaged.
+Fix this by not issuing an ABTS when a SCSI command is present for the
+exchange, but rather wait for the abort scheduled from SCSI EH.  And warn
+if an abort is already scheduled to avoid similar errors in the future.
 
-Define a ELX_FW_NAME_SIZE macro with value 84.  84 incorporates the 4 extra
-characters from ".grp".  file_name is changed to be declared as a char and
-initialized to zeros i.e. null chars.
-
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20231031191224.150862-3-justintee8345@gmail.com
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Link: https://lore.kernel.org/r/20231129165832.224100-2-hare@kernel.org
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc.h      | 1 +
- drivers/scsi/lpfc/lpfc_init.c | 4 ++--
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 706aca3f7c25..53b661793268 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -32,6 +32,7 @@
- struct lpfc_sli2_slim;
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 4fae253d4f3d..119117443496 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -282,6 +282,11 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
+ 	if (!fsp->seq_ptr)
+ 		return -EINVAL;
  
- #define ELX_MODEL_NAME_SIZE	80
-+#define ELX_FW_NAME_SIZE	84
++	if (fsp->state & FC_SRB_ABORT_PENDING) {
++		FC_FCP_DBG(fsp, "abort already pending\n");
++		return -EBUSY;
++	}
++
+ 	per_cpu_ptr(fsp->lp->stats, get_cpu())->FcpPktAborts++;
+ 	put_cpu();
  
- #define LPFC_PCI_DEV_LP		0x1
- #define LPFC_PCI_DEV_OC		0x2
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index c6caacaa3e7a..7db4e893e10e 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -11428,7 +11428,7 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
- int
- lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
- {
--	uint8_t file_name[ELX_MODEL_NAME_SIZE];
-+	char file_name[ELX_FW_NAME_SIZE] = {0};
- 	int ret;
- 	const struct firmware *fw;
+@@ -1710,11 +1715,12 @@ static void fc_fcp_recovery(struct fc_fcp_pkt *fsp, u8 code)
+ 	fsp->status_code = code;
+ 	fsp->cdb_status = 0;
+ 	fsp->io_status = 0;
+-	/*
+-	 * if this fails then we let the scsi command timer fire and
+-	 * scsi-ml escalate.
+-	 */
+-	fc_fcp_send_abort(fsp);
++	if (!fsp->cmd)
++		/*
++		 * Only abort non-scsi commands; otherwise let the
++		 * scsi command timer fire and scsi-ml escalate.
++		 */
++		fc_fcp_send_abort(fsp);
+ }
  
-@@ -11437,7 +11437,7 @@ lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
- 	    LPFC_SLI_INTF_IF_TYPE_2)
- 		return -EPERM;
- 
--	snprintf(file_name, ELX_MODEL_NAME_SIZE, "%s.grp", phba->ModelName);
-+	scnprintf(file_name, sizeof(file_name), "%s.grp", phba->ModelName);
- 
- 	if (fw_upgrade == INT_FW_UPGRADE) {
- 		ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_HOTPLUG,
+ /**
 -- 
 2.43.0
 
