@@ -1,37 +1,40 @@
-Received: from esa12.hc1455-7.c3s2.iphmx.com (esa12.hc1455-7.c3s2.iphmx.com [139.138.37.100])
+Received: from esa6.hc1455-7.c3s2.iphmx.com (esa6.hc1455-7.c3s2.iphmx.com [68.232.139.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F30D1B807;
-	Tue, 16 Jan 2024 04:52:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F8B11C288;
+	Tue, 16 Jan 2024 04:52:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
-X-IronPort-AV: E=McAfee;i="6600,9927,10954"; a="125556478"
+X-IronPort-AV: E=McAfee;i="6600,9927,10954"; a="147894816"
 X-IronPort-AV: E=Sophos;i="6.04,198,1695654000"; 
-   d="scan'208";a="125556478"
-Received: from unknown (HELO oym-r4.gw.nic.fujitsu.com) ([210.162.30.92])
-  by esa12.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jan 2024 13:52:22 +0900
-Received: from oym-m1.gw.nic.fujitsu.com (oym-nat-oym-m1.gw.nic.fujitsu.com [192.168.87.58])
-	by oym-r4.gw.nic.fujitsu.com (Postfix) with ESMTP id 1C695D9D92;
-	Tue, 16 Jan 2024 13:52:20 +0900 (JST)
+   d="scan'208";a="147894816"
+Received: from unknown (HELO yto-r2.gw.nic.fujitsu.com) ([218.44.52.218])
+  by esa6.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jan 2024 13:52:26 +0900
+Received: from yto-m4.gw.nic.fujitsu.com (yto-nat-yto-m4.gw.nic.fujitsu.com [192.168.83.67])
+	by yto-r2.gw.nic.fujitsu.com (Postfix) with ESMTP id 7E38ED6186;
+	Tue, 16 Jan 2024 13:52:24 +0900 (JST)
 Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
-	by oym-m1.gw.nic.fujitsu.com (Postfix) with ESMTP id 4E772D8AD7;
-	Tue, 16 Jan 2024 13:52:19 +0900 (JST)
+	by yto-m4.gw.nic.fujitsu.com (Postfix) with ESMTP id B776DD3F08;
+	Tue, 16 Jan 2024 13:52:23 +0900 (JST)
 Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-	by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id E598C6B4C6;
-	Tue, 16 Jan 2024 13:52:18 +0900 (JST)
+	by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id 425CA6B4C6;
+	Tue, 16 Jan 2024 13:52:23 +0900 (JST)
 Received: from localhost.localdomain (unknown [10.167.226.45])
-	by edo.cn.fujitsu.com (Postfix) with ESMTP id 701651A0160;
-	Tue, 16 Jan 2024 12:52:18 +0800 (CST)
+	by edo.cn.fujitsu.com (Postfix) with ESMTP id B31571A0070;
+	Tue, 16 Jan 2024 12:52:22 +0800 (CST)
 From: Li Zhijian <lizhijian@fujitsu.com>
 To: linux-kernel@vger.kernel.org
 Cc: Li Zhijian <lizhijian@fujitsu.com>,
-	Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH 17/42] drivers/scsi/aacraid: Convert snprintf to sysfs_emit
-Date: Tue, 16 Jan 2024 12:51:26 +0800
-Message-Id: <20240116045151.3940401-15-lizhijian@fujitsu.com>
+Subject: [PATCH 29/42] drivers/scsi/mpt3sas: Convert snprintf to sysfs_emit
+Date: Tue, 16 Jan 2024 12:51:38 +0800
+Message-Id: <20240116045151.3940401-27-lizhijian@fujitsu.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240116045151.3940401-1-lizhijian@fujitsu.com>
 References: <20240116041129.3937800-1-lizhijian@fujitsu.com>
@@ -47,12 +50,12 @@ X-TM-AS-GCONF: 00
 X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-28122.005
 X-TM-AS-User-Approved-Sender: Yes
 X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-28122.005
-X-TMASE-Result: 10--16.275400-10.000000
-X-TMASE-MatchedRID: ebEStOsB1eE4ibokZ3+Q0CoiRKlBVkYIBXngI6jFvpfvd49YGReckE1N
-	J2MN+nPkgxCMf8A0YpR5sRK06wHV4beNXXhVTPU8LdBFrfY9r2n0swHSFcVJ6MC5DTEMxpeQfiq
-	1gj2xET8qqtDuUtwyfKD8el0BdzuozYigC8AbwLLfSQNpZkETVAv/9UzFeXIT/GDEtaauvzvT6Z
-	/7gOjQOMgfSosmpqsABlShLAm3Hw5ccQ8eam5EfRRFJJyf5BJeov6oNokdHvT6C0ePs7A07QKmA
-	RN5PTKc
+X-TMASE-Result: 10--23.447300-10.000000
+X-TMASE-MatchedRID: APZBv0eB5fI4ibokZ3+Q0CoiRKlBVkYIBXngI6jFvpfvd49YGReckE1N
+	J2MN+nPkgxCMf8A0YpR5sRK06wHV4dL4Vi2vvkbTrMZ+BqQt2NrBOVz0Jwcxl6vCrG0TnfVUg9x
+	e4gtUJtptIv0A3hSOW65d/qNNaLIkxrdsXS7GN2SXd9LOVu4KPfCrUlDnEXiSca+Jn8RypgsDdt
+	9bAWFhkAgrlr7+3X3c1i1obzNdfwPpHzzvfxlA9R1qGr6sYOf/W+HVwTKSJIbB1z1KvCXwaP7yO
+	Wod/KQ1yicbDtMS+S90CabJqrYNnB8TzIzimOwPVnRXm1iHN1bEQdG7H66TyOk/y0w7JiZo
 X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 
 Per filesystems/sysfs.rst, show() should only use sysfs_emit()
@@ -61,78 +64,287 @@ or sysfs_emit_at() when formatting the value to be returned to user space.
 coccinelle complains that there are still a couple of functions that use
 snprintf(). Convert them to sysfs_emit().
 
-> ./drivers/scsi/aacraid/linit.c:1299:8-16: WARNING: please use sysfs_emit
-> ./drivers/scsi/aacraid/linit.c:1325:8-16: WARNING: please use sysfs_emit
-> ./drivers/scsi/aacraid/linit.c:1332:8-16: WARNING: please use sysfs_emit
-> ./drivers/scsi/aacraid/linit.c:561:9-17: WARNING: please use sysfs_emit
-> ./drivers/scsi/aacraid/linit.c:588:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:2825:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:2850:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:2873:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:2893:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:2912:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:2932:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:2952:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:2971:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:2990:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3012:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3034:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3055:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3077:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3097:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3133:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3170:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3198:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3320:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3407:9-17: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3828:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3848:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:3996:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:4018:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/mpt3sas/mpt3sas_ctl.c:4056:8-16: WARNING: please use sysfs_emit
 
 No functional change intended
 
-CC: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+CC: Sathya Prakash <sathya.prakash@broadcom.com>
+CC: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+CC: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 CC: "James E.J. Bottomley" <jejb@linux.ibm.com>
 CC: "Martin K. Petersen" <martin.petersen@oracle.com>
+CC: MPT-FusionLinux.pdl@broadcom.com
 CC: linux-scsi@vger.kernel.org
 Signed-off-by: Li Zhijian <lizhijian@fujitsu.com>
 ---
- drivers/scsi/aacraid/linit.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 60 +++++++++++++++---------------
+ 1 file changed, 30 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 68f4dbcfff49..f534f5d985f1 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -558,11 +558,10 @@ static ssize_t aac_show_raid_level(struct device *dev, struct device_attribute *
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index efdb8178db32..e7d7408ce773 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -2822,7 +2822,7 @@ version_fw_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
++	return sysfs_emit(buf, "%02d.%02d.%02d.%02d\n",
+ 	    (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
+ 	    (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
+ 	    (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
+@@ -2847,7 +2847,7 @@ version_bios_show(struct device *cdev, struct device_attribute *attr,
+ 
+ 	u32 version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
++	return sysfs_emit(buf, "%02d.%02d.%02d.%02d\n",
+ 	    (version & 0xFF000000) >> 24,
+ 	    (version & 0x00FF0000) >> 16,
+ 	    (version & 0x0000FF00) >> 8,
+@@ -2870,8 +2870,8 @@ version_mpi_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%03x.%02x\n",
+-	    ioc->facts.MsgVersion, ioc->facts.HeaderVersion >> 8);
++	return sysfs_emit(buf, "%03x.%02x\n",
++			  ioc->facts.MsgVersion, ioc->facts.HeaderVersion >> 8);
+ }
+ static DEVICE_ATTR_RO(version_mpi);
+ 
+@@ -2890,7 +2890,7 @@ version_product_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, 16, "%s\n", ioc->manu_pg0.ChipName);
++	return sysfs_emit(buf, "%s\n", ioc->manu_pg0.ChipName);
+ }
+ static DEVICE_ATTR_RO(version_product);
+ 
+@@ -2909,7 +2909,7 @@ version_nvdata_persistent_show(struct device *cdev,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%08xh\n",
++	return sysfs_emit(buf, "%08xh\n",
+ 	    le32_to_cpu(ioc->iounit_pg0.NvdataVersionPersistent.Word));
+ }
+ static DEVICE_ATTR_RO(version_nvdata_persistent);
+@@ -2929,7 +2929,7 @@ version_nvdata_default_show(struct device *cdev, struct device_attribute
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%08xh\n",
++	return sysfs_emit(buf, "%08xh\n",
+ 	    le32_to_cpu(ioc->iounit_pg0.NvdataVersionDefault.Word));
+ }
+ static DEVICE_ATTR_RO(version_nvdata_default);
+@@ -2949,7 +2949,7 @@ board_name_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, 16, "%s\n", ioc->manu_pg0.BoardName);
++	return sysfs_emit(buf, "%s\n", ioc->manu_pg0.BoardName);
+ }
+ static DEVICE_ATTR_RO(board_name);
+ 
+@@ -2968,7 +2968,7 @@ board_assembly_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, 16, "%s\n", ioc->manu_pg0.BoardAssembly);
++	return sysfs_emit(buf, "%s\n", ioc->manu_pg0.BoardAssembly);
+ }
+ static DEVICE_ATTR_RO(board_assembly);
+ 
+@@ -2987,7 +2987,7 @@ board_tracer_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, 16, "%s\n", ioc->manu_pg0.BoardTracerNumber);
++	return sysfs_emit(buf, "%s\n", ioc->manu_pg0.BoardTracerNumber);
+ }
+ static DEVICE_ATTR_RO(board_tracer);
+ 
+@@ -3009,7 +3009,7 @@ io_delay_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->io_missing_delay);
++	return sysfs_emit(buf, "%02d\n", ioc->io_missing_delay);
+ }
+ static DEVICE_ATTR_RO(io_delay);
+ 
+@@ -3031,7 +3031,7 @@ device_delay_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->device_missing_delay);
++	return sysfs_emit(buf, "%02d\n", ioc->device_missing_delay);
+ }
+ static DEVICE_ATTR_RO(device_delay);
+ 
+@@ -3052,7 +3052,7 @@ fw_queue_depth_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->facts.RequestCredit);
++	return sysfs_emit(buf, "%02d\n", ioc->facts.RequestCredit);
+ }
+ static DEVICE_ATTR_RO(fw_queue_depth);
+ 
+@@ -3074,7 +3074,7 @@ host_sas_address_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "0x%016llx\n",
++	return sysfs_emit(buf, "0x%016llx\n",
+ 	    (unsigned long long)ioc->sas_hba.sas_address);
+ }
+ static DEVICE_ATTR_RO(host_sas_address);
+@@ -3094,7 +3094,7 @@ logging_level_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%08xh\n", ioc->logging_level);
++	return sysfs_emit(buf, "%08xh\n", ioc->logging_level);
+ }
+ static ssize_t
+ logging_level_store(struct device *cdev, struct device_attribute *attr,
+@@ -3130,7 +3130,7 @@ fwfault_debug_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", ioc->fwfault_debug);
++	return sysfs_emit(buf, "%d\n", ioc->fwfault_debug);
+ }
+ static ssize_t
+ fwfault_debug_store(struct device *cdev, struct device_attribute *attr,
+@@ -3167,7 +3167,7 @@ ioc_reset_count_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", ioc->ioc_reset_count);
++	return sysfs_emit(buf, "%d\n", ioc->ioc_reset_count);
+ }
+ static DEVICE_ATTR_RO(ioc_reset_count);
+ 
+@@ -3195,7 +3195,7 @@ reply_queue_count_show(struct device *cdev,
+ 	else
+ 		reply_queue_count = 1;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", reply_queue_count);
++	return sysfs_emit(buf, "%d\n", reply_queue_count);
+ }
+ static DEVICE_ATTR_RO(reply_queue_count);
+ 
+@@ -3260,7 +3260,7 @@ BRM_status_show(struct device *cdev, struct device_attribute *attr,
+ 
+ 	/* BRM status is in bit zero of GPIOVal[24] */
+ 	backup_rail_monitor_status = le16_to_cpu(io_unit_pg3.GPIOVal[24]);
+-	rc = snprintf(buf, PAGE_SIZE, "%d\n", (backup_rail_monitor_status & 1));
++	rc = sysfs_emit(buf, "%d\n", (backup_rail_monitor_status & 1));
+ 
+  out:
+ 	mutex_unlock(&ioc->pci_access_mutex);
+@@ -3317,7 +3317,7 @@ host_trace_buffer_size_show(struct device *cdev,
+ 		size = le32_to_cpu(request_data->Size);
+ 
+ 	ioc->ring_buffer_sz = size;
+-	return snprintf(buf, PAGE_SIZE, "%d\n", size);
++	return sysfs_emit(buf, "%d\n", size);
+ }
+ static DEVICE_ATTR_RO(host_trace_buffer_size);
+ 
+@@ -3404,12 +3404,12 @@ host_trace_buffer_enable_show(struct device *cdev,
+ 	if ((!ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE]) ||
+ 	   ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
+ 	    MPT3_DIAG_BUFFER_IS_REGISTERED) == 0))
+-		return snprintf(buf, PAGE_SIZE, "off\n");
++		return sysfs_emit(buf, "off\n");
+ 	else if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
+ 	    MPT3_DIAG_BUFFER_IS_RELEASED))
+-		return snprintf(buf, PAGE_SIZE, "release\n");
++		return sysfs_emit(buf, "release\n");
+ 	else
+-		return snprintf(buf, PAGE_SIZE, "post\n");
++		return sysfs_emit(buf, "post\n");
+ }
+ 
+ static ssize_t
+@@ -3825,7 +3825,7 @@ drv_support_bitmap_show(struct device *cdev,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "0x%08x\n", ioc->drv_support_bitmap);
++	return sysfs_emit(buf, "0x%08x\n", ioc->drv_support_bitmap);
+ }
+ static DEVICE_ATTR_RO(drv_support_bitmap);
+ 
+@@ -3845,7 +3845,7 @@ enable_sdev_max_qd_show(struct device *cdev,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", ioc->enable_sdev_max_qd);
++	return sysfs_emit(buf, "%d\n", ioc->enable_sdev_max_qd);
+ }
+ 
+ /**
+@@ -3993,7 +3993,7 @@ sas_address_show(struct device *dev, struct device_attribute *attr,
  	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct aac_dev *aac = (struct aac_dev *)(sdev->host->hostdata);
- 	if (sdev_channel(sdev) != CONTAINER_CHANNEL)
--		return snprintf(buf, PAGE_SIZE, sdev->no_uld_attach
--		  ? "Hidden\n" :
-+		return sysfs_emit(buf, sdev->no_uld_attacha ? "Hidden\n" :
- 		  ((aac->jbod && (sdev->type == TYPE_DISK)) ? "JBOD\n" : ""));
--	return snprintf(buf, PAGE_SIZE, "%s\n",
--	  get_container_type(aac->fsa_dev[sdev_id(sdev)].type));
-+	return sysfs_emit(buf, "%s\n",
-+			  get_container_type(aac->fsa_dev[sdev_id(sdev)].type));
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
+ 
+-	return snprintf(buf, PAGE_SIZE, "0x%016llx\n",
++	return sysfs_emit(buf, "0x%016llx\n",
+ 	    (unsigned long long)sas_device_priv_data->sas_target->sas_address);
  }
+ static DEVICE_ATTR_RO(sas_address);
+@@ -4015,8 +4015,8 @@ sas_device_handle_show(struct device *dev, struct device_attribute *attr,
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
  
- static struct device_attribute aac_raid_level_attr = {
-@@ -585,7 +584,7 @@ static ssize_t aac_show_unique_id(struct device *dev,
- 	if (sdev_channel(sdev) == CONTAINER_CHANNEL)
- 		memcpy(sn, aac->fsa_dev[sdev_id(sdev)].identifier, sizeof(sn));
- 
--	return snprintf(buf, 16 * 2 + 2,
-+	return sysfs_emit(buf,
- 		"%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
- 		sn[0], sn[1], sn[2], sn[3],
- 		sn[4], sn[5], sn[6], sn[7],
-@@ -1296,7 +1295,7 @@ static ssize_t aac_show_driver_version(struct device *device,
- 					struct device_attribute *attr,
- 					char *buf)
- {
--	return snprintf(buf, PAGE_SIZE, "%s\n", aac_driver_version);
-+	return sysfs_emit(buf, "%s\n", aac_driver_version);
+-	return snprintf(buf, PAGE_SIZE, "0x%04x\n",
+-	    sas_device_priv_data->sas_target->handle);
++	return sysfs_emit(buf, "0x%04x\n",
++			  sas_device_priv_data->sas_target->handle);
  }
+ static DEVICE_ATTR_RO(sas_device_handle);
  
- static ssize_t aac_show_serial_number(struct device *device,
-@@ -1322,15 +1321,13 @@ static ssize_t aac_show_serial_number(struct device *device,
- static ssize_t aac_show_max_channel(struct device *device,
- 				    struct device_attribute *attr, char *buf)
- {
+@@ -4053,8 +4053,8 @@ sas_ncq_prio_enable_show(struct device *dev,
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
+ 
 -	return snprintf(buf, PAGE_SIZE, "%d\n",
--	  class_to_shost(device)->max_channel);
-+	return sysfs_emit(buf, "%d\n", class_to_shost(device)->max_channel);
+-			sas_device_priv_data->ncq_prio_enable);
++	return sysfs_emit(buf, "%d\n",
++			  sas_device_priv_data->ncq_prio_enable);
  }
  
- static ssize_t aac_show_max_id(struct device *device,
- 			       struct device_attribute *attr, char *buf)
- {
--	return snprintf(buf, PAGE_SIZE, "%d\n",
--	  class_to_shost(device)->max_id);
-+	return sysfs_emit(buf, "%d\n", class_to_shost(device)->max_id);
- }
- 
- static ssize_t aac_store_reset_adapter(struct device *device,
+ static ssize_t
 -- 
 2.29.2
 
