@@ -1,44 +1,45 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E2372CCB4;
-	Tue, 16 Jan 2024 19:44:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CA194F8A7;
+	Tue, 16 Jan 2024 19:45:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705434248; cv=none; b=ONXTbkn+hk4afTk++if+oIrvtgU2wp9ktvwKr9PzRjEzSgtl0zhRLV7ZZzQLDKwbDpORd2Aj02mNjj8c5+q/Sjmre643H+xrWvpJje4oNyENBK8gN9vcDJCKtpQbG7xRzGxCCvHjgKRtCw6qRkiYXt/6FL0jmrC20qIp7ymAM54=
+	t=1705434351; cv=none; b=np7Xmj/RePmxEc6cAx51n4aD01nFJsqhQgPq7c/W7rqM4Hi6gN/YAKmZeNmGQFa0uFpOqh4gWpRTU00Jd0543S5Sp0jemDl1kvd59IMnurADg1kxUka0/ec7hGlhQv3s3o4RHrJLJ9QkJXe4Q6WBM6gSqptinYrFH5FcZx1POdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705434248; c=relaxed/simple;
-	bh=ucOR01tQxbSQYvNkQ21i1Zn9JGJ1tZOEd/21cZ/km/A=;
+	s=arc-20240116; t=1705434351; c=relaxed/simple;
+	bh=CkIgFlWz4aAOoZ0mPFrP2OB5s1ZK7N6YOpZZaSHXLBo=;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:X-stable:
-	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=Uw3ass56lh5Ce78xOzPvAuUbqamAeGmlylb9GfuX6w7IVftC8sqIegjdwPiwPjaMXIiy4f9Gte/BNb0vrmvJySZ8PUaugj631eAZK8AjpypQwu/fA6uB6XMAnJz9IKsymCrop0TAFa+ZQFdGlyh7rXKe0bNbT4vHQQPKqAnb5JI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SkcXuZ2B; arc=none smtp.client-ip=10.30.226.201
+	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=Xi9mwh1wii6haLf95xWr+gbToSv9xoYX8dfzsL+s6zdHnXcO112wDEmRYpbpkV/Om11DLtXj/TX3RBi1ZovOuGR+jS/wmvq6lRyUPgYutw+pW/C/+4bWb1ZIBR4cXixTJor+J5hWEHQh49aJpranpHFmpw5Ng1LGGGw+TKW3s1k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n/H1k8nE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SkcXuZ2B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D69F2C43394;
-	Tue, 16 Jan 2024 19:44:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n/H1k8nE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4C62C43601;
+	Tue, 16 Jan 2024 19:45:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705434247;
-	bh=ucOR01tQxbSQYvNkQ21i1Zn9JGJ1tZOEd/21cZ/km/A=;
+	s=k20201202; t=1705434350;
+	bh=CkIgFlWz4aAOoZ0mPFrP2OB5s1ZK7N6YOpZZaSHXLBo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=SkcXuZ2B9KZM6oJo+1oCCIKsoPPiW5/fghVJ+13rAdsIQn9I6qkkb97Vq4McRLeF6
-	 kAOsIUEO3ceC2H5YxZ/Yy/5TiVsa8lFzqEItm51I3BOvRuVKWk0wLCYD4IUMHaSYms
-	 AwsONGRh11Fq7FbQH74gkAtEqT/9AA5cx1V0QxoK2hJAzVKFrWJjuE7Kx/45alsV2C
-	 bLw5Luezis/bLhybgtTgujZ9V+WJVBY22Bv00UZjf8XN30jk3ulnOhVzjbQkq06G1F
-	 N1jMFHvAm5m7hsDSsNjzXITzDu6aCCkT506sPsdZbndNgd0XgiOUlfBsZBXj57sVui
-	 yuaubhHDcrGUg==
+	b=n/H1k8nEvRAjHZegIQVFG+LE5P54+A9FZ2XyR4bBV6v/8BvSP2FwNON4+33swkdqK
+	 9eivOBPQQufqFyas8wJT+9uGuGgKZ27SnfeZk4cdSLXMHRRlOhtSudNNPNz5qHPne2
+	 ouDTRIDuEfm8lAZbVIGXWNSPLHXrernoB/ziZ5BIxXsnIFfBZnahE33AOv8S2aEZVB
+	 UBeWV64c5PQdcVorrMB6BnNwCX9p3V4afaSNaYkYYff/uU3hmPTH4VQ569hziEQwdC
+	 i72t+3wibrAt0Ia3nMbB6L9MqAx/Gjkjncywz2RG8EM+z/DRSWYpUEOLl+tNbx3BlD
+	 Nwy4ZHjfg+C3Q==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>,
-	Christoph Hellwig <hch@lst.de>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.7 042/108] scsi: libfc: Fix up timeout error in fc_fcp_rec_error()
-Date: Tue, 16 Jan 2024 14:39:08 -0500
-Message-ID: <20240116194225.250921-42-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.7 072/108] scsi: lpfc: Reinitialize an NPIV's VMID data structures after FDISC
+Date: Tue, 16 Jan 2024 14:39:38 -0500
+Message-ID: <20240116194225.250921-72-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240116194225.250921-1-sashal@kernel.org>
 References: <20240116194225.250921-1-sashal@kernel.org>
@@ -53,35 +54,43 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.7
 Content-Transfer-Encoding: 8bit
 
-From: Hannes Reinecke <hare@suse.de>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 53122a49f49796beb2c4a1bb702303b66347e29f ]
+[ Upstream commit 8dc8eb89f4df74593ba4bf30c3d31a0fc6d3ea47 ]
 
-We should set the status to FC_TIMED_OUT when a timeout error is passed to
-fc_fcp_rec_error().
+After a follow up FDISC cmpl, an NPIV's VMID data structures are not
+updated.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Link: https://lore.kernel.org/r/20231129165832.224100-3-hare@kernel.org
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fix by calling lpfc_reinit_vmid and copying the physical port's vmid_flag
+to the NPIV's vmid_flag in the NPIV registration cmpl code path.
+
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20231207224039.35466-3-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_fcp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_els.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 3f189cedf6db..05be0810b5e3 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1676,7 +1676,7 @@ static void fc_fcp_rec_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 		if (fsp->recov_retry++ < FC_MAX_RECOV_RETRY)
- 			fc_fcp_rec(fsp);
- 		else
--			fc_fcp_recovery(fsp, FC_ERROR);
-+			fc_fcp_recovery(fsp, FC_TIMED_OUT);
- 		break;
- 	}
- 	fc_fcp_unlock_pkt(fsp);
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index f9627eddab08..699b2c500f7e 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -11130,6 +11130,14 @@ lpfc_cmpl_reg_new_vport(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	lpfc_nlp_put(ndlp);
+ 
+ 	mempool_free(pmb, phba->mbox_mem_pool);
++
++	/* reinitialize the VMID datastructure before returning.
++	 * this is specifically for vport
++	 */
++	if (lpfc_is_vmid_enabled(phba))
++		lpfc_reinit_vmid(vport);
++	vport->vmid_flag = vport->phba->pport->vmid_flag;
++
+ 	return;
+ }
+ 
 -- 
 2.43.0
 
