@@ -1,47 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1A92165075;
-	Tue, 16 Jan 2024 20:03:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90CB16706C;
+	Tue, 16 Jan 2024 20:04:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705435418; cv=none; b=Y0Fwty49eqSZ1Mnae+obZ6HTDLngN/+H8eRJ0oOWrD1ov/4+7U/Lg1P/b39LpgprjywWcsvf5Gl+MUzpXNEvRmj8fLse7+o3CdvXvMMvDhpHRremDdWtnRpgO5KvL7OPop36PehiPpa/5vUFKFK3pCnnihl136qY5zXiBM2tBWc=
+	t=1705435476; cv=none; b=ARZfzN6U3Na1J9PyNivObx5lnrkxlU8urW2wkDDyqqy0EX5lQpNeExJKJq47YkzXBs1NOdomAsy7egzDP9Dw7PTUDInyZrNZZPe9eyVnFKDCCLu3muUzo9hYUqufI/QNOZMWgFJ/lWT1DhJig5y64/6owhbR1R7R3od16dZIAJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705435418; c=relaxed/simple;
-	bh=n7IPx4XIssv8uc461znxElMzShES4xZYDqG6n5n7bq4=;
+	s=arc-20240116; t=1705435476; c=relaxed/simple;
+	bh=8URfo+JULmWklSLjvW/SRpqud05CMUom6m5j7LEfoZ8=;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:X-stable:
-	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=WkyzU54OgN9vrM+ucwsqhgaySY+K3BF+/ke8+p2JT73CNJ3skg0vyJ+3yJ8d0ov1Xr6tTprMnadtClClrRpboVzC1Bu4WBgIWkkjtjhu1UQHLxzeRxDW1xGVlspUudjL2ke0/1YBJ4CQ+Mwf6UbTbHGHmwIZa1Pi2qaJQ2mHdGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EdiqySor; arc=none smtp.client-ip=10.30.226.201
+	 X-Mailer:MIME-Version:X-stable:X-Patchwork-Hint:X-stable-base:
+	 Content-Transfer-Encoding; b=nwARuLcDmhNZErHH/UtjhHpmMFjeEvm932FB/cVxD7ZVScq5N3JSuhcIMSIMB/3BDsfp0N7vX7d+FTqOaFq9BQlYpSujonaEEy/x314mef+AuXylYdE2DWdA0J4EACJifkyP5YQaLro1lzsx+ncMasAyPCNQujFYVRIr7nGyfPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fBjKuVO7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EdiqySor"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4960C43390;
-	Tue, 16 Jan 2024 20:03:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fBjKuVO7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 184B4C433C7;
+	Tue, 16 Jan 2024 20:04:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705435418;
-	bh=n7IPx4XIssv8uc461znxElMzShES4xZYDqG6n5n7bq4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=EdiqySorZBPz9RXkP0d4keT1GJ34nDr6A0b3BA7QsL3yoFeM2BKrcr/n3p6mc2a9+
-	 1P1I9bFkNdlmWzt+6F0kdeN8k/jLDSlqvSkar/egriUn5ysq9d92CLLQTHakjDCkdL
-	 4VHxaMVpr0CyVvfsuR7B/QAJWi6Gd/41agvH/g7sLUz3LCAWsPds3+/8Rt4gcmi1qC
-	 /bbwg7kG7cwtbvxYZY+H9DBrGvWDQhXyGLyOSl28FdwOgHhdY1RDyKXfpM98Hpo7hh
-	 M4IweJ8rj4/7xPoxUSuIIMqcGP0TfRXC9dtOSoodh4kQRQ1V/NyYrOx4ZTMvuVsmgg
-	 X98VM7zDn78Rg==
+	s=k20201202; t=1705435476;
+	bh=8URfo+JULmWklSLjvW/SRpqud05CMUom6m5j7LEfoZ8=;
+	h=From:To:Cc:Subject:Date:From;
+	b=fBjKuVO7jVPIUklTnhZ0CMaWUvEyyU1ssAxfbH+CX3k6r8d/RtiNnKTtjlC9UdL0Z
+	 Uw+KjzKke5v2pUTgs/1WWlyiM851BAhaeCHf9uMstzCcucFeU9I62nCn0twSdnv5Vr
+	 aPKE2WMTFsgizRQnUs/nRbmahVvWhwA1bwkrK/sw01p6J3AsQqZ0D3vxde3KgsPAfa
+	 NXY2JtBdpiO7W4XzK9X8nKIceyVdCeYKpWCUPUEAcOE36BZmm/Ehy4NfNLj/nV2JMd
+	 +IqKKisvClny/eH0V6Zb4WiMa3l0HNg+8V6gQJQNjzW5xxl0DHpVE0TynCRId+S/0e
+	 mxalMXDVGGO0Q==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>,
-	Christoph Hellwig <hch@lst.de>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 13/31] scsi: libfc: Fix up timeout error in fc_fcp_rec_error()
-Date: Tue, 16 Jan 2024 15:02:22 -0500
-Message-ID: <20240116200310.259340-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 01/22] scsi: lpfc: Fix possible file string name overflow when updating firmware
+Date: Tue, 16 Jan 2024 15:03:55 -0500
+Message-ID: <20240116200432.260016-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240116200310.259340-1-sashal@kernel.org>
-References: <20240116200310.259340-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,38 +50,64 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.267
+X-stable-base: Linux 4.19.305
 Content-Transfer-Encoding: 8bit
 
-From: Hannes Reinecke <hare@suse.de>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 53122a49f49796beb2c4a1bb702303b66347e29f ]
+[ Upstream commit f5779b529240b715f0e358489ad0ed933bf77c97 ]
 
-We should set the status to FC_TIMED_OUT when a timeout error is passed to
-fc_fcp_rec_error().
+Because file_name and phba->ModelName are both declared a size 80 bytes,
+the extra ".grp" file extension could cause an overflow into file_name.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Link: https://lore.kernel.org/r/20231129165832.224100-3-hare@kernel.org
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Define a ELX_FW_NAME_SIZE macro with value 84.  84 incorporates the 4 extra
+characters from ".grp".  file_name is changed to be declared as a char and
+initialized to zeros i.e. null chars.
+
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20231031191224.150862-3-justintee8345@gmail.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_fcp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc.h      | 1 +
+ drivers/scsi/lpfc/lpfc_init.c | 4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 22e286f920f4..5e00ee0645f2 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1685,7 +1685,7 @@ static void fc_fcp_rec_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 		if (fsp->recov_retry++ < FC_MAX_RECOV_RETRY)
- 			fc_fcp_rec(fsp);
- 		else
--			fc_fcp_recovery(fsp, FC_ERROR);
-+			fc_fcp_recovery(fsp, FC_TIMED_OUT);
- 		break;
- 	}
- 	fc_fcp_unlock_pkt(fsp);
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 706aca3f7c25..53b661793268 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -32,6 +32,7 @@
+ struct lpfc_sli2_slim;
+ 
+ #define ELX_MODEL_NAME_SIZE	80
++#define ELX_FW_NAME_SIZE	84
+ 
+ #define LPFC_PCI_DEV_LP		0x1
+ #define LPFC_PCI_DEV_OC		0x2
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index c6caacaa3e7a..7db4e893e10e 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -11428,7 +11428,7 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
+ int
+ lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
+ {
+-	uint8_t file_name[ELX_MODEL_NAME_SIZE];
++	char file_name[ELX_FW_NAME_SIZE] = {0};
+ 	int ret;
+ 	const struct firmware *fw;
+ 
+@@ -11437,7 +11437,7 @@ lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
+ 	    LPFC_SLI_INTF_IF_TYPE_2)
+ 		return -EPERM;
+ 
+-	snprintf(file_name, ELX_MODEL_NAME_SIZE, "%s.grp", phba->ModelName);
++	scnprintf(file_name, sizeof(file_name), "%s.grp", phba->ModelName);
+ 
+ 	if (fw_upgrade == INT_FW_UPGRADE) {
+ 		ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_HOTPLUG,
 -- 
 2.43.0
 
