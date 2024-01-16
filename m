@@ -1,36 +1,38 @@
 Received: from esa8.hc1455-7.c3s2.iphmx.com (esa8.hc1455-7.c3s2.iphmx.com [139.138.61.253])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 920341BC4C;
-	Tue, 16 Jan 2024 04:52:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2DB31C695;
+	Tue, 16 Jan 2024 04:52:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
-X-IronPort-AV: E=McAfee;i="6600,9927,10954"; a="134244467"
+X-IronPort-AV: E=McAfee;i="6600,9927,10954"; a="134244468"
 X-IronPort-AV: E=Sophos;i="6.04,198,1695654000"; 
-   d="scan'208";a="134244467"
-Received: from unknown (HELO oym-r1.gw.nic.fujitsu.com) ([210.162.30.89])
-  by esa8.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jan 2024 13:52:29 +0900
-Received: from oym-m2.gw.nic.fujitsu.com (oym-nat-oym-m2.gw.nic.fujitsu.com [192.168.87.59])
-	by oym-r1.gw.nic.fujitsu.com (Postfix) with ESMTP id 506E3E8BF5;
+   d="scan'208";a="134244468"
+Received: from unknown (HELO yto-r3.gw.nic.fujitsu.com) ([218.44.52.219])
+  by esa8.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jan 2024 13:52:30 +0900
+Received: from yto-m4.gw.nic.fujitsu.com (yto-nat-yto-m4.gw.nic.fujitsu.com [192.168.83.67])
+	by yto-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id EAB19D5027;
 	Tue, 16 Jan 2024 13:52:27 +0900 (JST)
 Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
-	by oym-m2.gw.nic.fujitsu.com (Postfix) with ESMTP id 8723CBF3FF;
-	Tue, 16 Jan 2024 13:52:26 +0900 (JST)
+	by yto-m4.gw.nic.fujitsu.com (Postfix) with ESMTP id 35BDAD3F0C;
+	Tue, 16 Jan 2024 13:52:27 +0900 (JST)
 Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-	by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id 1C54E200A56FC;
+	by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id B84E0200A7685;
 	Tue, 16 Jan 2024 13:52:26 +0900 (JST)
 Received: from localhost.localdomain (unknown [10.167.226.45])
-	by edo.cn.fujitsu.com (Postfix) with ESMTP id A8FBC1A0160;
-	Tue, 16 Jan 2024 12:52:25 +0800 (CST)
+	by edo.cn.fujitsu.com (Postfix) with ESMTP id 41B171A0070;
+	Tue, 16 Jan 2024 12:52:26 +0800 (CST)
 From: Li Zhijian <lizhijian@fujitsu.com>
 To: linux-kernel@vger.kernel.org
 Cc: Li Zhijian <lizhijian@fujitsu.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH 38/42]  drivers/scsi/scsi_transport_fc: Convert snprintf to sysfs_emit
-Date: Tue, 16 Jan 2024 12:51:47 +0800
-Message-Id: <20240116045151.3940401-36-lizhijian@fujitsu.com>
+Subject: [PATCH 40/42] drivers/scsi/snic/snic_attrs: Convert snprintf to sysfs_emit
+Date: Tue, 16 Jan 2024 12:51:49 +0800
+Message-Id: <20240116045151.3940401-38-lizhijian@fujitsu.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240116045151.3940401-1-lizhijian@fujitsu.com>
 References: <20240116041129.3937800-1-lizhijian@fujitsu.com>
@@ -46,12 +48,12 @@ X-TM-AS-GCONF: 00
 X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-28122.004
 X-TM-AS-User-Approved-Sender: Yes
 X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-28122.004
-X-TMASE-Result: 10--14.163000-10.000000
-X-TMASE-MatchedRID: st9CF01730Y4ibokZ3+Q0CoiRKlBVkYIBXngI6jFvpfvd49YGReckMWl
-	hj9iHeVpaAKUUskFh7lM0AWQBBcXdpRSkbxKeJc4LdBFrfY9r2n0swHSFcVJ6MC5DTEMxpeQfiq
-	1gj2xET8vYRhsicUjm84WYLmQfXYmFZzhICPDv1x7wqPa+cm9aflSepWcgdLPx8BJ7uScK205Q+
-	5OtQJCFZ4W5X99NcSot+ix2ebieZ2XBXaJoB9JZxRFJJyf5BJe3QfwsVk0UbtuRXh7bFKB7ulHD
-	smna5gFayom1eEUsbjd0Un7L1Xkx+Kqq72Zh9LCPpCuffGH9zI=
+X-TMASE-Result: 10--15.843000-10.000000
+X-TMASE-MatchedRID: i5zBIT546Mc4ibokZ3+Q0CoiRKlBVkYIBXngI6jFvpfvd49YGReckE1N
+	J2MN+nPkgxCMf8A0YpR5sRK06wHV4QjYlErXRAnoLdBFrfY9r2n0swHSFcVJ6MC5DTEMxpeQfiq
+	1gj2xET8vYRhsicUjm84WYLmQfXYmFZzhICPDv1zfSQNpZkETVAv/9UzFeXITGxDxAG8HwlajxY
+	yRBa/qJcFwgTvxipFajoczmuoPCq3jsutR+QmP0N8aX0oz9KYehB2W+CYlDhFtqNG73mqQ0w521
+	VKzZ7kU
 X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 
 Per filesystems/sysfs.rst, show() should only use sysfs_emit()
@@ -60,142 +62,65 @@ or sysfs_emit_at() when formatting the value to be returned to user space.
 coccinelle complains that there are still a couple of functions that use
 snprintf(). Convert them to sysfs_emit().
 
-> ./drivers/scsi/scsi_transport_fc.c:1123:9-17: WARNING: please use sysfs_emit
-> ./drivers/scsi/scsi_transport_fc.c:1218:10-18: WARNING: please use sysfs_emit
-> ./drivers/scsi/scsi_transport_fc.c:1286:8-16: WARNING: please use sysfs_emit
-> ./drivers/scsi/scsi_transport_fc.c:1304:9-17: WARNING: please use sysfs_emit
-> ./drivers/scsi/scsi_transport_fc.c:1665:9-17: WARNING: please use sysfs_emit
-> ./drivers/scsi/scsi_transport_fc.c:1891:9-17: WARNING: please use sysfs_emit
-> ./drivers/scsi/scsi_transport_fc.c:1915:9-17: WARNING: please use sysfs_emit
-> ./drivers/scsi/scsi_transport_fc.c:1967:9-17: WARNING: please use sysfs_emit
-> ./drivers/scsi/scsi_transport_fc.c:2000:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/snic/snic_attrs.c:16:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/snic/snic_attrs.c:26:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/snic/snic_attrs.c:35:8-16: WARNING: please use sysfs_emit
+> ./drivers/scsi/snic/snic_attrs.c:48:8-16: WARNING: please use sysfs_emit
 
 No functional change intended
 
+CC: Karan Tilak Kumar <kartilak@cisco.com>
+CC: Sesidhar Baddela <sebaddel@cisco.com>
 CC: "James E.J. Bottomley" <jejb@linux.ibm.com>
 CC: "Martin K. Petersen" <martin.petersen@oracle.com>
 CC: linux-scsi@vger.kernel.org
 Signed-off-by: Li Zhijian <lizhijian@fujitsu.com>
 ---
- drivers/scsi/scsi_transport_fc.c | 34 ++++++++++++++++----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+ drivers/scsi/snic/snic_attrs.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index b04075f19445..3335c31772e1 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -1120,7 +1120,7 @@ show_fc_rport_supported_classes (struct device *dev,
+diff --git a/drivers/scsi/snic/snic_attrs.c b/drivers/scsi/snic/snic_attrs.c
+index 3ddbdbc3ded1..03921618182d 100644
+--- a/drivers/scsi/snic/snic_attrs.c
++++ b/drivers/scsi/snic/snic_attrs.c
+@@ -13,7 +13,7 @@ snic_show_sym_name(struct device *dev,
  {
- 	struct fc_rport *rport = transport_class_to_rport(dev);
- 	if (rport->supported_classes == FC_COS_UNSPECIFIED)
--		return snprintf(buf, 20, "unspecified\n");
-+		return sysfs_emit(buf, "unspecified\n");
- 	return get_fc_cos_names(rport->supported_classes, buf);
- }
- static FC_DEVICE_ATTR(rport, supported_classes, S_IRUGO,
-@@ -1215,21 +1215,21 @@ show_fc_rport_roles (struct device *dev, struct device_attribute *attr,
- 					FC_WELLKNOWN_PORTID_MASK) {
- 		switch (rport->port_id & FC_WELLKNOWN_ROLE_MASK) {
- 		case FC_FPORT_PORTID:
--			return snprintf(buf, 30, "Fabric Port\n");
-+			return sysfs_emit(buf, "Fabric Port\n");
- 		case FC_FABCTLR_PORTID:
--			return snprintf(buf, 30, "Fabric Controller\n");
-+			return sysfs_emit(buf, "Fabric Controller\n");
- 		case FC_DIRSRVR_PORTID:
--			return snprintf(buf, 30, "Directory Server\n");
-+			return sysfs_emit(buf, "Directory Server\n");
- 		case FC_TIMESRVR_PORTID:
--			return snprintf(buf, 30, "Time Server\n");
-+			return sysfs_emit(buf, "Time Server\n");
- 		case FC_MGMTSRVR_PORTID:
--			return snprintf(buf, 30, "Management Server\n");
-+			return sysfs_emit(buf, "Management Server\n");
- 		default:
--			return snprintf(buf, 30, "Unknown Fabric Entity\n");
-+			return sysfs_emit(buf, "Unknown Fabric Entity\n");
- 		}
- 	} else {
- 		if (rport->roles == FC_PORT_ROLE_UNKNOWN)
--			return snprintf(buf, 20, "unknown\n");
-+			return sysfs_emit(buf, "unknown\n");
- 		return get_fc_port_roles_names(rport->roles, buf);
- 	}
- }
-@@ -1283,7 +1283,7 @@ show_fc_rport_port_state(struct device *dev,
- 	if (!name)
- 		return -EINVAL;
+ 	struct snic *snic = shost_priv(class_to_shost(dev));
  
--	return snprintf(buf, 20, "%s\n", name);
-+	return sysfs_emit(buf, "%s\n", name);
- }
- 
- static FC_DEVICE_ATTR(rport, port_state, 0444 | 0200,
-@@ -1301,8 +1301,8 @@ show_fc_rport_fast_io_fail_tmo (struct device *dev,
- 	struct fc_rport *rport = transport_class_to_rport(dev);
- 
- 	if (rport->fast_io_fail_tmo == -1)
--		return snprintf(buf, 5, "off\n");
--	return snprintf(buf, 20, "%d\n", rport->fast_io_fail_tmo);
-+		return sysfs_emit(buf, "off\n");
-+	return sysfs_emit(buf, "%d\n", rport->fast_io_fail_tmo);
+-	return snprintf(buf, PAGE_SIZE, "%s\n", snic->name);
++	return sysfs_emit(buf, "%s\n", snic->name);
  }
  
  static ssize_t
-@@ -1662,7 +1662,7 @@ show_fc_vport_roles (struct device *dev, struct device_attribute *attr,
- 	struct fc_vport *vport = transport_class_to_vport(dev);
+@@ -23,7 +23,7 @@ snic_show_state(struct device *dev,
+ {
+ 	struct snic *snic = shost_priv(class_to_shost(dev));
  
- 	if (vport->roles == FC_PORT_ROLE_UNKNOWN)
--		return snprintf(buf, 20, "unknown\n");
-+		return sysfs_emit(buf, "unknown\n");
- 	return get_fc_port_roles_names(vport->roles, buf);
- }
- static FC_DEVICE_ATTR(vport, roles, S_IRUGO, show_fc_vport_roles, NULL);
-@@ -1888,7 +1888,7 @@ show_fc_host_supported_classes (struct device *dev,
- 	struct Scsi_Host *shost = transport_class_to_shost(dev);
- 
- 	if (fc_host_supported_classes(shost) == FC_COS_UNSPECIFIED)
--		return snprintf(buf, 20, "unspecified\n");
-+		return sysfs_emit(buf, "unspecified\n");
- 
- 	return get_fc_cos_names(fc_host_supported_classes(shost), buf);
- }
-@@ -1912,7 +1912,7 @@ show_fc_host_supported_speeds (struct device *dev,
- 	struct Scsi_Host *shost = transport_class_to_shost(dev);
- 
- 	if (fc_host_supported_speeds(shost) == FC_PORTSPEED_UNKNOWN)
--		return snprintf(buf, 20, "unknown\n");
-+		return sysfs_emit(buf, "unknown\n");
- 
- 	return get_fc_port_speed_names(fc_host_supported_speeds(shost), buf);
- }
-@@ -1964,7 +1964,7 @@ show_fc_host_speed (struct device *dev,
- 		i->f->get_host_speed(shost);
- 
- 	if (fc_host_speed(shost) == FC_PORTSPEED_UNKNOWN)
--		return snprintf(buf, 20, "unknown\n");
-+		return sysfs_emit(buf, "unknown\n");
- 
- 	return get_fc_port_speed_names(fc_host_speed(shost), buf);
- }
-@@ -1997,7 +1997,7 @@ show_fc_private_host_tgtid_bind_type(struct device *dev,
- 	name = get_fc_tgtid_bind_type_name(fc_host_tgtid_bind_type(shost));
- 	if (!name)
- 		return -EINVAL;
--	return snprintf(buf, FC_BINDTYPE_MAX_NAMELEN, "%s\n", name);
-+	return sysfs_emit(buf, "%s\n", name);
+-	return snprintf(buf, PAGE_SIZE, "%s\n",
++	return sysfs_emit(buf, "%s\n",
+ 			snic_state_str[snic_get_state(snic)]);
  }
  
- #define get_list_head_entry(pos, head, member) 		\
-@@ -2106,7 +2106,7 @@ fc_stat_show(const struct device *dev, char *buf, unsigned long offset)
- 	if (i->f->get_fc_host_stats) {
- 		stats = (i->f->get_fc_host_stats)(shost);
- 		if (stats)
--			ret = snprintf(buf, 20, "0x%llx\n",
-+			ret = sysfs_emit(buf, "0x%llx\n",
- 			      (unsigned long long)*(u64 *)(((u8 *) stats) + offset));
- 	}
- 	return ret;
+@@ -32,7 +32,7 @@ snic_show_drv_version(struct device *dev,
+ 		      struct device_attribute *attr,
+ 		      char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "%s\n", SNIC_DRV_VERSION);
++	return sysfs_emit(buf, "%s\n", SNIC_DRV_VERSION);
+ }
+ 
+ static ssize_t
+@@ -45,8 +45,8 @@ snic_show_link_state(struct device *dev,
+ 	if (snic->config.xpt_type == SNIC_DAS)
+ 		snic->link_status = svnic_dev_link_status(snic->vdev);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n",
+-			(snic->link_status) ? "Link Up" : "Link Down");
++	return sysfs_emit(buf, "%s\n",
++			  (snic->link_status) ? "Link Up" : "Link Down");
+ }
+ 
+ static DEVICE_ATTR(snic_sym_name, S_IRUGO, snic_show_sym_name, NULL);
 -- 
 2.29.2
 
