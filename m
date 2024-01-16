@@ -1,46 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B251F13FF93;
-	Tue, 16 Jan 2024 19:55:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D95D21413B1;
+	Tue, 16 Jan 2024 19:55:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705434929; cv=none; b=eiwCTdLHlRyyP4azSdXlFqR2jp6SV7K/ZquDCKFVDygavcBqBDsmGHmXMLQnj8cedsSnw6GxophwdFy9mD4ATtn/mlDVxEkrMvsG0dopUZpKmqvwC37KgmHKn5O6/pcPQ+LZzdVbZVeAIdwzKzy8gS6tN0ylsFw30OuFKbn0AQg=
+	t=1705434941; cv=none; b=a3U0HnEVgQWtfhqOTzbkJyrs3UcZKRjMVqfqk2i/hkiRORltgaKLa3RmXXSgKHSAK8DWcRu3yo6e8OA13DJhvVV9dxTHYKkRf52/SdWFLTrHdxFYlldCMv/agCWyW8mBsBR+vZUlk2n29JXBiDMj1Kzx60+Iy0L049+RC006uMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705434929; c=relaxed/simple;
-	bh=caq3yH+zswadpQmrClZC88pl1g02QcuAILHX6Tuj5no=;
+	s=arc-20240116; t=1705434941; c=relaxed/simple;
+	bh=zXmXAqqpRMdVsTfBPNfFFt3JfHNeAXRHKQ1D41aeyzU=;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:X-stable:
-	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=jPJ6nTL0Yn7TUkGBwikHpZutxoMrzNNSQqZcDxWwEz3hWyxO4/nWbhqZVFwAjV2GC2OYyCXrjoTox81XhX5NY3Uoapbbac5+wPeY27xuPgdex23sJuKicC+6cjG5mhI8ko6sHjqNe1v1Wkv8jQbm/6hmnA9fQR8bxm3HX056S4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZyAMVqmt; arc=none smtp.client-ip=10.30.226.201
+	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=jTfAcI49efuDuDSBkLWm/YxKsrEyjvnVWzc7hukVWtvNFRHpKOJNopeRQ4ZC+eNuilFnTihCHYQh4Nnn8t1S+VGC0e6o6H2ubf0e0QvEBUKYbaPq+wdwFRYhw7OPS8a1MFzwQweq95uC7kb3cjHhRwVEWimAIMUuT+uNNiUFojU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KbYCHewL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZyAMVqmt"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E377C43390;
-	Tue, 16 Jan 2024 19:55:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KbYCHewL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9117AC43399;
+	Tue, 16 Jan 2024 19:55:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705434929;
-	bh=caq3yH+zswadpQmrClZC88pl1g02QcuAILHX6Tuj5no=;
+	s=k20201202; t=1705434940;
+	bh=zXmXAqqpRMdVsTfBPNfFFt3JfHNeAXRHKQ1D41aeyzU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ZyAMVqmtDG+svXLoX9DQ2Vdx+HFMAXX1dKgLhS+0tEFJVcwjnUIdFfSljRHVUOjg5
-	 vGEUn37EqGM4RZpF1hsDzTdqKLBC6km+1m5Xi9VdDLOI26bhGBY1AbCeQkCwD2xvwN
-	 CJVuVdEe+EdK6Qly+ne7TDexupzoH/FABo3EDttGIj5aWc4IcKnyKyz/pbFiKGcxO4
-	 jBl2u5KmzRATeIHBib5milqsRWx0Deads1WNw1Y+o9PB7ohtj+K3TsMyMYzo9oWjpV
-	 iWrD8wt113DdU9iB5UALzxzEeOxFRmb1OOqSEaFJJpUGd0jvO/asWrjQD4Pv6Fl2mI
-	 kc6afM29lqMMA==
+	b=KbYCHewLxUO+eg12xbNK222+k78Wit8uMZDgNmpPsJ9GVNnCpwEY/93BglR6TLPl6
+	 FX5EdQzby4cD8bgAp/5DVjF2Z4W/AOb2kFZihBVsZhWWB0LBX147C+9IyE4RLqkwrP
+	 GHS0X7h3z2NIi7GyIjsauuSEwX8H4yh0gzN0ZgmLAp4WKu4WMZi+dlTZ7iI7ZEkIso
+	 oYPqQLYLOXIRHWvqIhpFDGeqC+6tHu/IeTEU0xoXX6ZGWxjj5Ah0E3ewuknyOZoGoN
+	 fN38RngFkqjxZymR2gOnLaGpB7bw5pnRUCVVNkm6khbKm5e2AdkxFmWgv8meTysu7S
+	 fsJeX+ziRTSuw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
-	Himanshu Madhani <himanshu.madhani@oracle.com>,
+Cc: Sumit Saxena <sumit.saxena@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
+	sathya.prakash@broadcom.com,
+	kashyap.desai@broadcom.com,
+	sreekanth.reddy@broadcom.com,
 	jejb@linux.ibm.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 08/68] scsi: lpfc: Fix possible file string name overflow when updating firmware
-Date: Tue, 16 Jan 2024 14:53:07 -0500
-Message-ID: <20240116195511.255854-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 13/68] scsi: mpi3mr: Add PCI checks where SAS5116 diverges from SAS4116
+Date: Tue, 16 Jan 2024 14:53:12 -0500
+Message-ID: <20240116195511.255854-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240116195511.255854-1-sashal@kernel.org>
 References: <20240116195511.255854-1-sashal@kernel.org>
@@ -55,61 +56,52 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.1.73
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
 
-[ Upstream commit f5779b529240b715f0e358489ad0ed933bf77c97 ]
+[ Upstream commit c9260ff28ee561fca5f96425c9328a9698e8427b ]
 
-Because file_name and phba->ModelName are both declared a size 80 bytes,
-the extra ".grp" file extension could cause an overflow into file_name.
+Add PCI IDs checks for the cases where SAS5116 diverges from SAS4116 in
+behavior.
 
-Define a ELX_FW_NAME_SIZE macro with value 84.  84 incorporates the 4 extra
-characters from ".grp".  file_name is changed to be declared as a char and
-initialized to zeros i.e. null chars.
-
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20231031191224.150862-3-justintee8345@gmail.com
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Link: https://lore.kernel.org/r/20231123160132.4155-3-sumit.saxena@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc.h      | 1 +
- drivers/scsi/lpfc/lpfc_init.c | 4 ++--
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 ++-
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 5 ++++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 664ac3069c4b..dc5ac3cc70f6 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -33,6 +33,7 @@
- struct lpfc_sli2_slim;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index d2c7de804b99..41636c4c43af 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1886,7 +1886,8 @@ static int mpi3mr_create_op_reply_q(struct mpi3mr_ioc *mrioc, u16 qidx)
  
- #define ELX_MODEL_NAME_SIZE	80
-+#define ELX_FW_NAME_SIZE	84
+ 	reply_qid = qidx + 1;
+ 	op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD;
+-	if (!mrioc->pdev->revision)
++	if ((mrioc->pdev->device == MPI3_MFGPAGE_DEVID_SAS4116) &&
++		!mrioc->pdev->revision)
+ 		op_reply_q->num_replies = MPI3MR_OP_REP_Q_QD4K;
+ 	op_reply_q->ci = 0;
+ 	op_reply_q->ephase = 1;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 6d55698ea4d1..dc9151c25053 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -4957,7 +4957,10 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		mpi3mr_init_drv_cmd(&mrioc->evtack_cmds[i],
+ 				    MPI3MR_HOSTTAG_EVTACKCMD_MIN + i);
  
- #define LPFC_PCI_DEV_LP		0x1
- #define LPFC_PCI_DEV_OC		0x2
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index f59de61803dc..1a0bafde34d8 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -14778,7 +14778,7 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
- int
- lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
- {
--	uint8_t file_name[ELX_MODEL_NAME_SIZE];
-+	char file_name[ELX_FW_NAME_SIZE] = {0};
- 	int ret;
- 	const struct firmware *fw;
+-	if (pdev->revision)
++	if ((pdev->device == MPI3_MFGPAGE_DEVID_SAS4116) &&
++		!pdev->revision)
++		mrioc->enable_segqueue = false;
++	else
+ 		mrioc->enable_segqueue = true;
  
-@@ -14787,7 +14787,7 @@ lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
- 	    LPFC_SLI_INTF_IF_TYPE_2)
- 		return -EPERM;
- 
--	snprintf(file_name, ELX_MODEL_NAME_SIZE, "%s.grp", phba->ModelName);
-+	scnprintf(file_name, sizeof(file_name), "%s.grp", phba->ModelName);
- 
- 	if (fw_upgrade == INT_FW_UPGRADE) {
- 		ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_UEVENT,
+ 	init_waitqueue_head(&mrioc->reset_waitq);
 -- 
 2.43.0
 
