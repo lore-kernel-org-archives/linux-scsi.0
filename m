@@ -1,88 +1,142 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 545151CF8F;
-	Tue, 16 Jan 2024 19:02:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37D881BF53
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2024 19:36:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chrisdown.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chrisdown.name
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705431739; cv=none; b=AJWDikvdxNIWezvaE8AA5e6kgNFFoGBgEbkkbtcDzO84L8FuEidQf4JmkdzV+VIGrxCutJC/gI+ZhKlT5M0aBIxc27qzmI42Tw0Jgw0lZrkLDR9gAgfFh9pi7e4ROxt1z/KvFJcKIn29Km/r+3BAeBDyMktx5msWm/3LQD2PSDc=
+	t=1705433806; cv=none; b=GUAutfr2+lpb2z5Mk2NIbMjSXhG12IJkOYYqHxpnEMA7vkUujerGSfUX0cv/Ho46++75nQJwPhi+js1ENbY3UnPTTvWyHJInMxXVCGcEZ7AJ/fK1YMcGIIFmDsztk8iKUKjzRTC7vf7fC0qFAofT21xtVSxk53+qgGvZ9FYe0Iw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705431739; c=relaxed/simple;
-	bh=oxwRyeIL7M3hBA9vL9BEAgyW9LT9u2t413CGMrrBAAY=;
-	h=Received:DKIM-Signature:Received:Content-Type:MIME-Version:
-	 Content-Transfer-Encoding:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=GxcklUavu9RIEhjDVPuJzPN14tKjhTewAJJGOLJI+Q8aDr+XzojMAEm2bAR+RknHjXUjeP8fP12+A76a4RD5PWyxrzaA+PlW5ROzV0JUt/yM419rEcJdq3g1jrJuF3aHBSku2Z662AZxs7w1X+oe2C1XE05GUXAO6cTi4F1Mryk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BQlmYwfL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1705433806; c=relaxed/simple;
+	bh=YH9I4mIwagxCplANYVB6qh/qLIS7W5riVXR8JjeVHCk=;
+	h=Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Google-Smtp-Source:X-Received:Received:Date:
+	 From:To:Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:User-Agent; b=qMOusr4fmHrCYqNcXhHa7hZ85NWAc5VK8nn6zi9FJSbA4yapBHFlCZ/Xnx+D8mzlNDvJ7x+iVpXA1JmIKe/UMfMvqmep+2KX840l60dTvI9w9Iy1IfJTAXDUDld6DnSSIJ81yuIgYa/n1GSKE8iBfWIV+rvoLQvZq1Xc1dM0MIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.b=TKHCKZLZ; arc=none smtp.client-ip=209.85.208.176
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BQlmYwfL"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DCB27C433F1;
-	Tue, 16 Jan 2024 19:02:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705431738;
-	bh=oxwRyeIL7M3hBA9vL9BEAgyW9LT9u2t413CGMrrBAAY=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=BQlmYwfLboHO4veFxacQLWA1eyijOjOtpvGdOcLB0sJS7z9eyKYF2Kv6ylK8KAJzX
-	 udynA+l1fx/Jxo9NUVI+CNFE1qI3OrGTniJeYVSiJ4reRLREBBQL3xHMvrqwwiw/Gu
-	 IKzO4vBoMYNROkk2z4d2RP8CjLajJTU237dQ/uqq0sx/B6CYDpjTbzThBUiNq0wnpX
-	 X8gNWgdAyEN8wYTXEhaE3JMmp6ZzcwihS2XBvNccMc8QH4mfkSIhbeDlc+owz8aiyj
-	 pGCvOM0Ta4kMlmWsLhLO9yha6U0JHDHRCENEuJlyVpAG6ox/Y412LVgVi4G1swMuoJ
-	 UFwOnulWFyR1w==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C2AD0D8C987;
-	Tue, 16 Jan 2024 19:02:18 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.b="TKHCKZLZ"
+Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-2cc9fa5e8e1so118491371fa.3
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2024 11:36:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google; t=1705433803; x=1706038603; darn=vger.kernel.org;
+        h=user-agent:in-reply-to:content-disposition:mime-version:references
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tNYuziFWfl9MkUwCZOX6uEvosc04pHrqJNu/2pkS60A=;
+        b=TKHCKZLZ2dE1VlQKL5KFR8xMYBddWn0fe5S2R5qtyA4yTfnMbauww2Q/puqo0e8V1I
+         tJvWedNmAORceFInJQc6TYgvDj38fZNELjUrR6aEO7rcRe2JprNzdlN/LID9mhGkgj76
+         pmAhm57mA4KqRzQ47BmUrXDtueCCE6LrQ/PIk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705433803; x=1706038603;
+        h=user-agent:in-reply-to:content-disposition:mime-version:references
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=tNYuziFWfl9MkUwCZOX6uEvosc04pHrqJNu/2pkS60A=;
+        b=XFWZDSXNg4ojPBCnOYVt+y+ztOc9wSAB+QCH0v8MvhoJn3N8IXWLporXo321JHvPDK
+         QmSlLUVAqgGvfOzQYhserxSZWfXV4beXqdU+Q3mMdWhmrrwW6b4qgeIRvRCZI2l+RpjF
+         RlqnbthEhtQuTd8a7fhJcptRzbi9/usqWbN9XiN1zFWy+bQcwIR3Kui839yNwqgQcX9m
+         qHOFZsIz+35jKmqUKIL5ht3JOjBaKlNgyAOs9VEBPQrVkyheQ4dnJHIFJLfigyaE3uAW
+         p1fDUB/2sC1gvhwftebDJYUAScOBQhWdfwK2EPtfRtD7IgzmrXZbrkCAxxeoiCYLbGXh
+         XGXw==
+X-Gm-Message-State: AOJu0YyrQrNK+1WtO5xsm2j71ZQ/MnnQJqXl6vhdxKiKdquN5bcglAIt
+	7KaWfe2Tn6Ovne6wUQq8QHrFmmuYvv9Ifg==
+X-Google-Smtp-Source: AGHT+IHHLv/HrDg3LpX9uLuJF5R6ejpXBS/hbsvxosqgj82njzmmB2g882OgUEjLdzAghkenrSucMw==
+X-Received: by 2002:a2e:9b97:0:b0:2cc:9435:a5f8 with SMTP id z23-20020a2e9b97000000b002cc9435a5f8mr3606713lji.6.1705433803162;
+        Tue, 16 Jan 2024 11:36:43 -0800 (PST)
+Received: from localhost ([2a01:4b00:8432:8600:5ee4:2aff:fe50:f48d])
+        by smtp.gmail.com with ESMTPSA id e11-20020a2e930b000000b002cd9e966ed1sm1400877ljh.127.2024.01.16.11.36.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Jan 2024 11:36:42 -0800 (PST)
+Date: Tue, 16 Jan 2024 19:36:41 +0000
+From: Chris Down <chris@chrisdown.name>
+To: Petr Mladek <pmladek@suse.com>
+Cc: "James E . J . Bottomley" <jejb@linux.ibm.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	oe-kbuild-all@lists.linux.dev, kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH] scsi: core: Safe warning about bad dev info string
+Message-ID: <ZabayZCoAHjiMb0d@chrisdown.name>
+References: <20240111162419.12406-1-pmladek@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [f2fs-dev] [PATCH 1/5] virtio_blk: cleanup zoned device probing
-From: patchwork-bot+f2fs@kernel.org
-Message-Id: 
- <170543173879.30188.5344312872944674652.git-patchwork-notify@kernel.org>
-Date: Tue, 16 Jan 2024 19:02:18 +0000
-References: <20231217165359.604246-2-hch@lst.de>
-In-Reply-To: <20231217165359.604246-2-hch@lst.de>
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, dm-devel@lists.linux.dev, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, linux-kernel@vger.kernel.org,
- linux-nvme@lists.infradead.org, virtualization@lists.linux.dev,
- dlemoal@kernel.org, stefanha@redhat.com, pbonzini@redhat.com,
- linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+In-Reply-To: <20240111162419.12406-1-pmladek@suse.com>
+User-Agent: Mutt/2.2.12 (2023-09-09)
 
-Hello:
+Petr Mladek writes:
+>Both "model" and "strflags" are passed to "%s" even when one or both
+>are NULL.
+>
+>It is safe because vsprintf() would detect the NULL pointer and print
+>"(null)". But it is a kernel-specific feature and compiler warns
+>about it:
+>
+><warning>
+>   In file included from include/linux/kernel.h:19,
+>                    from arch/x86/include/asm/percpu.h:27,
+>                    from arch/x86/include/asm/current.h:6,
+>                    from include/linux/sched.h:12,
+>                    from include/linux/blkdev.h:5,
+>                    from drivers/scsi/scsi_devinfo.c:3:
+>   drivers/scsi/scsi_devinfo.c: In function 'scsi_dev_info_list_add_str':
+>>> include/linux/printk.h:434:44: warning: '%s' directive argument is null [-Wformat-overflow=]
+>     434 | #define printk(fmt, ...) printk_index_wrap(_printk, fmt, ##__VA_ARGS__)
+>         |                                            ^
+>   include/linux/printk.h:430:3: note: in definition of macro 'printk_index_wrap'
+>     430 |   _p_func(_fmt, ##__VA_ARGS__);    \
+>         |   ^~~~~~~
+>   drivers/scsi/scsi_devinfo.c:551:4: note: in expansion of macro 'printk'
+>     551 |    printk(KERN_ERR "%s: bad dev info string '%s' '%s'"
+>         |    ^~~~~~
+>   drivers/scsi/scsi_devinfo.c:552:14: note: format string is defined here
+>     552 |           " '%s'\n", __func__, vendor, model,
+>         |              ^~
+></warning>
+>
+>Do not rely on the kernel specific behavior and print the message a safe way.
 
-This series was applied to jaegeuk/f2fs.git (dev)
-by Jens Axboe <axboe@kernel.dk>:
+Acked-by: Chris Down <chris@chrisdown.name>
 
-On Sun, 17 Dec 2023 17:53:55 +0100 you wrote:
-> Move reading and checking the zoned model from virtblk_probe_zoned_device
-> into the caller, leaving only the code to perform the actual setup for
-> host managed zoned devices in virtblk_probe_zoned_device.
-> 
-> This allows to share the model reading and sharing between builds with
-> and without CONFIG_BLK_DEV_ZONED, and improve it for the
-> !CONFIG_BLK_DEV_ZONED case.
-> 
-> [...]
+While I agree with the other thread that in reality this is ok, it's worth 
+reducing the addition to LKP noise for now and worrying about that later.
 
-Here is the summary with links:
-  - [f2fs-dev,1/5] virtio_blk: cleanup zoned device probing
-    https://git.kernel.org/jaegeuk/f2fs/c/77360cadaae5
-  - [f2fs-dev,2/5] virtio_blk: remove the broken zone revalidation support
-    https://git.kernel.org/jaegeuk/f2fs/c/a971ed800211
-  - [f2fs-dev,3/5] block: remove support for the host aware zone model
-    https://git.kernel.org/jaegeuk/f2fs/c/7437bb73f087
-  - [f2fs-dev,4/5] block: simplify disk_set_zoned
-    https://git.kernel.org/jaegeuk/f2fs/c/d73e93b4dfab
-  - [f2fs-dev,5/5] sd: only call disk_clear_zoned when needed
-    https://git.kernel.org/jaegeuk/f2fs/c/5cc99b89785c
+Thanks!
 
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+>
+>Reported-by: kernel test robot <lkp@intel.com>
+>Closes: https://lore.kernel.org/oe-kbuild-all/202401112002.AOjwMNM0-lkp@intel.com/
+>Signed-off-by: Petr Mladek <pmladek@suse.com>
+>---
+>Note: The patch is only compile tested.
+>
+> drivers/scsi/scsi_devinfo.c | 6 +++---
+> 1 file changed, 3 insertions(+), 3 deletions(-)
+>
+>diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+>index 3fcaf10a9dfe..ba7237e83863 100644
+>--- a/drivers/scsi/scsi_devinfo.c
+>+++ b/drivers/scsi/scsi_devinfo.c
+>@@ -551,9 +551,9 @@ static int scsi_dev_info_list_add_str(char *dev_list)
+> 		if (model)
+> 			strflags = strsep(&next, next_check);
+> 		if (!model || !strflags) {
+>-			printk(KERN_ERR "%s: bad dev info string '%s' '%s'"
+>-			       " '%s'\n", __func__, vendor, model,
+>-			       strflags);
+>+			pr_err("%s: bad dev info string '%s' '%s' '%s'\n",
+>+			       __func__, vendor, model ? model : "",
+>+			       strflags ? strflags : "");
+> 			res = -EINVAL;
+> 		} else
+> 			res = scsi_dev_info_list_add(0 /* compatible */, vendor,
+>-- 
+>2.43.0
+>
