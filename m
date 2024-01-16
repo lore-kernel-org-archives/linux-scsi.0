@@ -1,47 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C394F15C672;
-	Tue, 16 Jan 2024 20:01:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9FB041C6A;
+	Tue, 16 Jan 2024 20:03:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705435284; cv=none; b=jPidl7CMXJyjogSzextns0vYNpYYhqfn7uGAKGqY0Zk1GY74U3xhS1AEsd5VPCEDJ0giizO8gphOMpClev2YIosNaXs8Ce6jsrqOz+KJ8vowhwIgCxqgbb92E/eM4oYn+v2b2Mq58RNIJ7sQpWkS7a04I33s5oMHUb4AjuddMJw=
+	t=1705435401; cv=none; b=G35joHYC6Ir/duzqaWtAkMbpP/5GYAk7dN9k7Dry0jNPSBci0hmDa0vtxIXYAFLhRQf5e8nw8vW0Xa2GPyGLKMoZ79D8dNgUVzH7iathsYlB59+19YCm1mgBk2lTapjIsH+MUG/n2MCfuoongWqZyYtOr9JRX6C5muoV1pSMOjs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705435284; c=relaxed/simple;
-	bh=ahr+dkYtQRqmFJbj0dsyRqQ0mbsOZUXhRPOJr/k4r2s=;
+	s=arc-20240116; t=1705435401; c=relaxed/simple;
+	bh=egWiQXDkDXFqqb58JMuNfJ1NLfCLshOMRisW5hgos7Y=;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:X-stable:
-	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=LR4Wah0uahpNQpLDf5gB511SyQYLVvxIwP4Gca1EwhH5FZeSkd76AEmQD1L0n7Y6T9IFZLqA1PaF9iOqxX86X1T/YEK+gQIFSJROTHJdlO0wvjmiV87zjpbPkBhOnEGfmXjfNTroGGrFi/Fn3dfP+dB+HF9ZlTdxjwFpSVk8vX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=drn9nQZy; arc=none smtp.client-ip=10.30.226.201
+	 X-Patchwork-Hint:X-stable-base:Content-Transfer-Encoding; b=FiXEMGnhA0traqYkD2tBliPtHycwe+2xownUx0LRrT4Io6yzbDhqiSQGi13npGuGZwxuLnwVKsoBf92jOOL6Xxz5CL5vd/EDQy60cSH8JelXEGH30+wb3iST9jq7TVNHTUOQR3TEjaGK2om+FmobS5FkeqVQgpMlrsoCDaZaV+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SUky5xp5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="drn9nQZy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E931C433A6;
-	Tue, 16 Jan 2024 20:01:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SUky5xp5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CCEEC43399;
+	Tue, 16 Jan 2024 20:03:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705435284;
-	bh=ahr+dkYtQRqmFJbj0dsyRqQ0mbsOZUXhRPOJr/k4r2s=;
+	s=k20201202; t=1705435401;
+	bh=egWiQXDkDXFqqb58JMuNfJ1NLfCLshOMRisW5hgos7Y=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=drn9nQZyztXCLexWNSvS392FpesVO67pUu6jJp4SplyakKHWJ3NN8HiZbIR1f0SrJ
-	 apyarOWCu1mlSjiDuKVLod7T/HD7R1htO29/QNtnttYG5gIpHBq8X15BxanniYimah
-	 9wGSu3ECDGJNLHtSPbCdZ/7gkvf3g6FgClvmRSLB6fFkJ2IsjSP+ToJikVDcXcpuY2
-	 +iIPIrBWactD8P678w00uhBFbaOqNTrrd0C99gsmM2AmuiW/hM5xk5uBxmI8pWyc4/
-	 jQSD/52tArGXN21kcGoVfAA+NfAH745n29tlSWj72MECkPEd6S+2MW9jUaTC+vSuI6
-	 zGLxmqvCK2TZQ==
+	b=SUky5xp51iW633P5c6EAwSovFmS/mhc2fU9dcUWjdfZuLC37oqh90UUMULayv4IZO
+	 9r9m/RnJmCsFjEkGX+3S9SJYjiiaqtYDoIdsGhT6qu5mhHaT1oenYl29SU9scq307M
+	 FUsR65+F893sy8lHnblXKSv94QZa42hbDCe+V6nb7370tSVvgOYBxpZE+eYhRADJEn
+	 8hqVgkn4lY7qFHGzT+U6xGFbNbl4a/7EhfMsZbyDfuyxf3KwsNtrTcE9pHF1yKiCxJ
+	 zLN5/FQtXrI2xox32iYpy+ZUBgEU927pu8o5F+NaOH11BD0otIrf0pnjL7EyNMvSt2
+	 wTXD6MQFPSqmA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>,
-	Christoph Hellwig <hch@lst.de>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 16/44] scsi: libfc: Fix up timeout error in fc_fcp_rec_error()
-Date: Tue, 16 Jan 2024 14:59:45 -0500
-Message-ID: <20240116200044.258335-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 04/31] scsi: lpfc: Fix possible file string name overflow when updating firmware
+Date: Tue, 16 Jan 2024 15:02:13 -0500
+Message-ID: <20240116200310.259340-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240116200044.258335-1-sashal@kernel.org>
-References: <20240116200044.258335-1-sashal@kernel.org>
+In-Reply-To: <20240116200310.259340-1-sashal@kernel.org>
+References: <20240116200310.259340-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,38 +52,64 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.208
+X-stable-base: Linux 5.4.267
 Content-Transfer-Encoding: 8bit
 
-From: Hannes Reinecke <hare@suse.de>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 53122a49f49796beb2c4a1bb702303b66347e29f ]
+[ Upstream commit f5779b529240b715f0e358489ad0ed933bf77c97 ]
 
-We should set the status to FC_TIMED_OUT when a timeout error is passed to
-fc_fcp_rec_error().
+Because file_name and phba->ModelName are both declared a size 80 bytes,
+the extra ".grp" file extension could cause an overflow into file_name.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Link: https://lore.kernel.org/r/20231129165832.224100-3-hare@kernel.org
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Define a ELX_FW_NAME_SIZE macro with value 84.  84 incorporates the 4 extra
+characters from ".grp".  file_name is changed to be declared as a char and
+initialized to zeros i.e. null chars.
+
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20231031191224.150862-3-justintee8345@gmail.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libfc/fc_fcp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc.h      | 1 +
+ drivers/scsi/lpfc/lpfc_init.c | 4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 6f005ada489b..61c12dde967e 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1686,7 +1686,7 @@ static void fc_fcp_rec_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 		if (fsp->recov_retry++ < FC_MAX_RECOV_RETRY)
- 			fc_fcp_rec(fsp);
- 		else
--			fc_fcp_recovery(fsp, FC_ERROR);
-+			fc_fcp_recovery(fsp, FC_TIMED_OUT);
- 		break;
- 	}
- 	fc_fcp_unlock_pkt(fsp);
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 088b764aefa4..7ce0d94cdc01 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -32,6 +32,7 @@
+ struct lpfc_sli2_slim;
+ 
+ #define ELX_MODEL_NAME_SIZE	80
++#define ELX_FW_NAME_SIZE	84
+ 
+ #define LPFC_PCI_DEV_LP		0x1
+ #define LPFC_PCI_DEV_OC		0x2
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index af5238ab6309..f5e509381563 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -12527,7 +12527,7 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
+ int
+ lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
+ {
+-	uint8_t file_name[ELX_MODEL_NAME_SIZE];
++	char file_name[ELX_FW_NAME_SIZE] = {0};
+ 	int ret;
+ 	const struct firmware *fw;
+ 
+@@ -12536,7 +12536,7 @@ lpfc_sli4_request_firmware_update(struct lpfc_hba *phba, uint8_t fw_upgrade)
+ 	    LPFC_SLI_INTF_IF_TYPE_2)
+ 		return -EPERM;
+ 
+-	snprintf(file_name, ELX_MODEL_NAME_SIZE, "%s.grp", phba->ModelName);
++	scnprintf(file_name, sizeof(file_name), "%s.grp", phba->ModelName);
+ 
+ 	if (fw_upgrade == INT_FW_UPGRADE) {
+ 		ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_HOTPLUG,
 -- 
 2.43.0
 
