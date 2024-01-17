@@ -1,139 +1,97 @@
-Received: from mail-io1-f45.google.com (mail-io1-f45.google.com [209.85.166.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF7BB24A17
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2024 20:06:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA25724B20;
+	Wed, 17 Jan 2024 20:10:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705521988; cv=none; b=DyPSVVIgzjCcUClOtXBYUUEL2PXj8wRoGUb8YKcqSQPHhSaRM/5jUFsFqcb6N7hJpqU3sP1pg7ChVjc9Q6FWcEJiLbm69dKukt1BRPxu9rXJd3o/EdMkGQw9UaQAtQJd5NS72HuTM7Qa3eUteU8eFOT9swUVMkVymAUncqADe+I=
+	t=1705522225; cv=none; b=SCnwy7ZnAJN+BEDwRz4JlZ8+o7NDajyeTuhktGH/Xf5T1J4RfbENcOQNeYUuVFjrR/wdtuwlklxlf06LMB1XCtYL91oHOeZhjn5zuodaW4+SnGbM3pxuJVcCFSzhauFeaArVIAR93V6sZm7q3vS3vNU8/D743MIczkR0y8yc1oM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705521988; c=relaxed/simple;
-	bh=XrCbn8NqIBW6LmrHSdKJd3VVhmxEPJ9wyh9xzdzr2XE=;
-	h=Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Google-Smtp-Source:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:Content-Language:
-	 From:To:Cc:References:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding; b=NWRMkBXtglWwbvtsf6RZT0VxaC+/sZAOFntsIKQPSdOxUZmhBx0PAD8YW8pYhljFhPD7H4SNqKVyLKP6OE9mJQbXUzP85VxjULFBQ8G9WI5rcbPZKceaSgvg7/1VhMRz8SPnNXZcLt7O7NK9Qtz/zidiZIZJaVJuVAK9KMxAQZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=f75+nqwo; arc=none smtp.client-ip=209.85.166.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1705522225; c=relaxed/simple;
+	bh=SF5JQcvnVmt4Tnjms+Ejj9mC3MVPiWRTIEHklx99jCM=;
+	h=Received:DKIM-Signature:Received:Received:Received:Received:
+	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
+	 References:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details:
+	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID; b=ML4EUwHUKNmatzjvtYMGWzxkXJukADByBXZigqiMeVix0uQz9yhmhl+Vkqgt4Eq+tYPf9ysRGa7SPaezl1rHW6lzZZDAP4DpU+ox+tzC7Fsm5pmgY/2OWYAEj5w92P3Mh7+b4PPqQR2Kmb57S/X7DLovliYvE4V3A2aIsHmYoxE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=U6AmF3tN; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="f75+nqwo"
-Received: by mail-io1-f45.google.com with SMTP id ca18e2360f4ac-7bee9f626caso58677439f.0
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2024 12:06:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1705521986; x=1706126786; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=RylSDua2BnQBNhz0ri2mwOlsrVpcdZ7iruL97tOno0k=;
-        b=f75+nqwoq7ZxV7xGHotenGl/cZzlI+RaJFg3Zwq29j5zkRa9kpPTenYIQp2z6vg1a3
-         lESAs0E0dY9VDGaWqJdLi2J3UzUwKzddLDJ0ZrNze7BgLnv9J+b+vJaYDEc3Z6Q4MDYG
-         CZWRqiy6Ug3LY+H1wCwm7Q6kwRtzOjMrftPcO2Kr90t9/221p4KH/aUs50+Ws38pNuW7
-         K+7mheiA+TOzku7498h21ghIMyXf+MFAZanYRyrVL3FgYAAsxT49eg123YPJfVOpdYTT
-         46HGlyBuzc+QR5tPK/sCxUSlLcR1hTHq1AFM/y2pIIkpTbiS8zGX4N1qOXyYuV56wEPt
-         yD+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705521986; x=1706126786;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RylSDua2BnQBNhz0ri2mwOlsrVpcdZ7iruL97tOno0k=;
-        b=tWGBl+i1hayFBc2YviYs74mDhjbDT8mJsT5CjsV+640Dj3r+hrM2XEIQB+JvACOflO
-         yQYBdxD/SnBcUNa2IFOEyXCrXMLz6atUXsFBzkn6bQuwL+ZNy+xdSPyQ3SKyhQ1ZRkQt
-         jeJJxKiBlVm96LhCoSxA2395yw3eLEJOEgtbdoQNBKLeQFz/RUv5I48VoGSTPc2siblR
-         eiOtHdfk8Qfcd38K8jlq9ffwEsqsCqZZFHzkr4BPaoubB6o5FgGDPeJJTy8JPQSQrDcc
-         QYyqMuYK/hU+NHXMht5jdZfMGpBe1NL0lzPrzWM0+9BTnRzxm0eICW5QmWQjmUqhi6n9
-         BMsQ==
-X-Gm-Message-State: AOJu0YyCZJZSyRLkALK60+HR8NfX167+6LWEL29h/6fWMhdr/c7VnuV5
-	WX3dC/q/7ctxGn2LK7DavGOVm4LpVvDBmA==
-X-Google-Smtp-Source: AGHT+IGWsohYVR1pZF1dkrm0P3WI2640KWeQttN82iMT/+YWYam6SPj4ldcXSQVyCmlk/vJ0pfftEA==
-X-Received: by 2002:a5e:834b:0:b0:7bc:2603:575f with SMTP id y11-20020a5e834b000000b007bc2603575fmr3270490iom.0.1705521985985;
-        Wed, 17 Jan 2024 12:06:25 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id l16-20020a056638221000b0046df601152dsm589695jas.66.2024.01.17.12.06.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 Jan 2024 12:06:25 -0800 (PST)
-Message-ID: <276eedc2-e3d0-40c7-b355-46232ea65662@kernel.dk>
-Date: Wed, 17 Jan 2024 13:06:19 -0700
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="U6AmF3tN"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40HJciOd003038;
+	Wed, 17 Jan 2024 20:10:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2023-11-20;
+ bh=1zjVlsCpmMyOvWsQhON2/QjBIUYtMmVfKY/1cWTuImM=;
+ b=U6AmF3tNLEAe/mOB8EC4WNa+ZqZezuSHCr1bLGBTnBcNUdzXrWxBMXJ2lgPKfOersF85
+ VPUBIZHKYovwD2eRcB1ddVeTe6+o35V8eSgOE15H8ckHDW1zuEnu5hSTRNyMk0vvhBbH
+ EHcRWeSBwsitybNhR72N98tUuPcb2PA/78kjb1SzWA1G2q4j1/ue3WOVamE3JkC4ATZn
+ Y9Imx3vB+hU9bPdrwLtgL5orJAWAL6aFj8jp8GSc0jZQiBs45fXNh2Z1bgLvHKbjdhpf
+ c9/4t8fDfu2P/Swha5B3P6iybZUM1e25x/Rwx7EgdIGDt3aNY0aYFnxN+qpLeeksP3to EA== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3vkm2hrqt5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 17 Jan 2024 20:10:19 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 40HIsM84020000;
+	Wed, 17 Jan 2024 20:10:18 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3vkgyb1byg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 17 Jan 2024 20:10:18 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 40HKAHCB030718;
+	Wed, 17 Jan 2024 20:10:17 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3vkgyb1bw6-1;
+	Wed, 17 Jan 2024 20:10:17 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Karan Tilak Kumar <kartilak@cisco.com>,
+        Dan Carpenter <dan.carpenter@linaro.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Satish Kharat <satishkh@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Arulprabhu Ponnusamy <arulponn@cisco.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] scsi: fnic: unlock on error path in fnic_queuecommand()
+Date: Wed, 17 Jan 2024 15:10:05 -0500
+Message-ID: <170552035092.3348001.1586940422453299571.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.42.1
+In-Reply-To: <5360fa20-74bc-4c22-a78e-ea8b18c5410d@moroto.mountain>
+References: <5360fa20-74bc-4c22-a78e-ea8b18c5410d@moroto.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [LSF/MM/BPF TOPIC] Improving Zoned Storage Support
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-To: Bart Van Assche <bvanassche@acm.org>, Damien Le Moal
- <dlemoal@kernel.org>,
- "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- Christoph Hellwig <hch@lst.de>
-References: <5b3e6a01-1039-4b68-8f02-386f3cc9ddd1@acm.org>
- <cc6999c2-2d53-4340-8e2b-c50cae1e5c3a@kernel.org>
- <43cc2e4c-1dce-40ab-b4dc-1aadbeb65371@acm.org>
- <c38ab7b2-63aa-4a0c-9fa6-96be304d8df1@kernel.dk>
- <2955b44a-68c0-4d95-8ff1-da38ef99810f@acm.org>
- <9af03351-a04a-4e61-a6d8-b58236b041a3@kernel.dk>
-In-Reply-To: <9af03351-a04a-4e61-a6d8-b58236b041a3@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-17_12,2024-01-17_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0 bulkscore=0
+ spamscore=0 mlxlogscore=647 phishscore=0 malwarescore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2401170147
+X-Proofpoint-GUID: jO8xc34yIqNE87m8hJLI73MQUrJeXS2O
+X-Proofpoint-ORIG-GUID: jO8xc34yIqNE87m8hJLI73MQUrJeXS2O
 
-On 1/17/24 11:43 AM, Jens Axboe wrote:
-> Certainly slower. Now let's try and have the scheduler place the same 4
-> threads where it sees fit:
+On Wed, 10 Jan 2024 21:41:55 +0300, Dan Carpenter wrote:
+
+> Call spin_unlock_irqrestore(&fnic->wq_copy_lock[hwq], flags) before
+> returning.
 > 
-> IOPS=1.56M, BW=759MiB/s, IOS/call=32/31
 > 
-> Yikes! That's still substantially more than 200K IOPS even with heavy
-> contention, let's take a look at the profile:
-> 
-> -   70.63%  io_uring  [kernel.kallsyms]  [k] queued_spin_lock_slowpath
->    - submitter_uring_fn
->       - entry_SYSCALL_64
->       - do_syscall_64
->          - __se_sys_io_uring_enter
->             - 70.62% io_submit_sqes
->                  blk_finish_plug
->                  __blk_flush_plug
->                - blk_mq_flush_plug_list
->                   - 69.65% blk_mq_run_hw_queue
->                        blk_mq_sched_dispatch_requests
->                      - __blk_mq_sched_dispatch_requests
->                         + 60.61% dd_dispatch_request
->                         + 8.98% blk_mq_dispatch_rq_list
->                   + 0.98% dd_insert_requests
-> 
-> which is exactly as expected, we're spending 70% of the CPU cycles
-> banging on dd->lock.
 
-Case in point, I spent 10 min hacking up some smarts on the insertion
-and dispatch side, and then we get:
+Applied to 6.8/scsi-queue, thanks!
 
-IOPS=2.54M, BW=1240MiB/s, IOS/call=32/32
-
-or about a 63% improvement when running the _exact same thing_. Looking
-at profiles:
-
--   13.71%  io_uring  [kernel.kallsyms]  [k] queued_spin_lock_slowpath
-
-reducing the > 70% of locking contention down to ~14%. No change in data
-structures, just an ugly hack that:
-
-- Serializes dispatch, no point having someone hammer on dd->lock for
-  dispatch when already running
-- Serialize insertions, punt to one of N buckets if insertion is already
-  busy. Current insertion will notice someone else did that, and will
-  prune the buckets and re-run insertion.
-
-And while I seriously doubt that my quick hack is 100% fool proof, it
-works as a proof of concept. If we can get that kind of reduction with
-minimal effort, well...
+[1/1] scsi: fnic: unlock on error path in fnic_queuecommand()
+      https://git.kernel.org/mkp/scsi/c/38945c2b006b
 
 -- 
-Jens Axboe
-
+Martin K. Petersen	Oracle Linux Engineering
