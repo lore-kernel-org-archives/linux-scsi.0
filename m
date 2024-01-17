@@ -1,61 +1,40 @@
-Received: from mail-il1-f172.google.com (mail-il1-f172.google.com [209.85.166.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.web.de (mout.web.de [212.227.17.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 359172557D
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2024 21:14:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2716B2557E;
+	Wed, 17 Jan 2024 21:24:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705526085; cv=none; b=fFp7wvpd2kb/NOLjMG1r9HLBJ+t77+vBhDoJsd0qhgVGnZDcxquLuaVmUeabJbohkCC+7gv3i2C+dPkFA1pvtWkHuZ2146qPj2ak7yHtsqmR8hQ2Nz8ysAEDHqgRrjNdJHmaviA8SxyIhwKAkpHDyVBoQjaEmbG3iY0UYbAwsEY=
+	t=1705526665; cv=none; b=rpN1WFLBa3Z/qMzHXDLWm2icTYNvkackySp4IjX4EygP8CGUP3R9Y0QUz8dGjuDg9NdvNHbML9XF66CjVNsDMDt81l65nXgMJl1NjmRTv2i+AC4Tg3K07XxMBxApnvuNmKU1EeycqYH3oQApfj+7HOFOiBDcKC08jMw8iXFlyc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705526085; c=relaxed/simple;
-	bh=EYXqg9NonPHowGDAGulyABT8pjbAK8SGoNi7NuDcic0=;
-	h=Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Google-Smtp-Source:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:Content-Language:
-	 From:To:Cc:References:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding; b=VJLloie7y/E7UYX6Wt3SMRJTFydo4CN1QXlqg5KDj+wGh6yeFU7tUcwdT8dKARjj8pLdXVCV98E2KnWxVNCVY2evXwATNXREYrge2hp5ALswRwL+UhUnhl5/oxnK6D9Ipz5/2iBfuysF4CQlU1Ozy9y0SEraPJ7St/jlndwmpfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=JAgL7V6/; arc=none smtp.client-ip=209.85.166.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1705526665; c=relaxed/simple;
+	bh=rr/O9OnzgwSihYNKoOt11Ezoi6TqX6d/sDWn041aOvs=;
+	h=DKIM-Signature:X-UI-Sender-Class:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:To:Cc:References:Subject:Content-Language:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 X-Provags-ID:X-Spam-Flag:UI-OutboundReport; b=FkdD4ASWocptS/NXd+I++UCOThhYG9aa2go5UhowvFWqpu6P4OOJlKYzseho0lrwLV8TT+F6bIlLTH9/KoOcGIGVs/UtShhDzpnt/WMiEv+rIt9ncG1K3uf0DC1iSqVzVo92EjEVxDDTVCDiBlK44WxgvTkLAgazBHAPqXS96Eo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=BGG+EdFE; arc=none smtp.client-ip=212.227.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="JAgL7V6/"
-Received: by mail-il1-f172.google.com with SMTP id e9e14a558f8ab-36191ee7be4so2128865ab.0
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2024 13:14:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1705526083; x=1706130883; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=7NlonM47ZL/DaVG1oQ0pMdWoMVzqK9l5NUiiZ/sWieg=;
-        b=JAgL7V6/uetEZ7tKsLA+LT9ZyEfJyG277UpK1E/6e3rohMg/ZbO+1UkuMzcfVf2ZXy
-         rEpWV9TWNL+zrtTKprmzt4dNWpckqG5u7S/7QKXuykanu7jScDTNyxS7ZoQ2MDtb15Ke
-         YSoEG9Tv0WMewMrvufLKKFeaJel92mwnBCiv50vhXx6QpSAlisXu30/yskicYu8qY1OM
-         ghF4Nc6eBiifZ2NUNHMV7Uf+jVahA80PnLAwaNhwv5rOlXiT42yN+zRn1shvjhAHKaEz
-         BTW+sJXo+QcwkeJ2x7oiWWL8W0q9X8Eh7evE9ts3XbN3p+2Fjxul/XJJPhNG7Pk3zz7B
-         V8uA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705526083; x=1706130883;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7NlonM47ZL/DaVG1oQ0pMdWoMVzqK9l5NUiiZ/sWieg=;
-        b=DAOGEJOXb/2ZYGAZfs/9pJN2hqbwzxt/lS0jw/petkwHLFIydUDivEXWqOusMFxlto
-         nH7z4IV7HuyqPa2urb8YW56uT9wHR4PqVIQYXBli2/qixdDavSWiMescDlU4Lz+J0wMk
-         rBFOwP5X7cPYnq6IsuZDr0qnzHdKFG82uYicvwf+y2KLqodrx/iFED0Zyc0kEr7SJViS
-         YuxXsSEIq0LwBVRIb8eIAmu7YTWv/1xiRLH4t8AdPcq0C0mujHf0enc5gWeP8Y2zAzgu
-         vDPOqWqdKTrnq84fuRYsvGD7NYI9iSLvImtTSqIrlrAHK80CpsZdLUf8uJ4AmSOXJhsK
-         t77g==
-X-Gm-Message-State: AOJu0Yx5Exw1dOWqyBGQrHGKILCA/0EZAy+q3RZgsJBztOhNMEInXOYH
-	z30BosX/Pu9KbhCEzufMmiiNsG7yHXONzA==
-X-Google-Smtp-Source: AGHT+IG6Rn34LZJ41NucbqmkdsoUihrlcTuf+Vz+HLae2MAYSroiYFWXViZpyUAv5pBL8ScpZdOEvg==
-X-Received: by 2002:a05:6e02:1c0f:b0:361:9b07:be with SMTP id l15-20020a056e021c0f00b003619b0700bemr748987ilh.0.1705526083276;
-        Wed, 17 Jan 2024 13:14:43 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id g14-20020a056e021a2e00b0035d6f8d02d7sm4308292ile.7.2024.01.17.13.14.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 Jan 2024 13:14:42 -0800 (PST)
-Message-ID: <e8c32676-114b-4aaf-8753-5a6d7b04fc4b@kernel.dk>
-Date: Wed, 17 Jan 2024 14:14:42 -0700
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="BGG+EdFE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de; s=s29768273;
+	t=1705526647; x=1706131447; i=markus.elfring@web.de;
+	bh=rr/O9OnzgwSihYNKoOt11Ezoi6TqX6d/sDWn041aOvs=;
+	h=X-UI-Sender-Class:Date:To:Cc:References:Subject:From:
+	 In-Reply-To;
+	b=BGG+EdFEdB8o5/ex2syX84gzb69X81Shks8euCQc0X9v9MbRC1vbOpTOiaPnyuxC
+	 cZjBGrpCqia9b7VjGAGIfUFjkK9jBPv/C2I3oGBlHmPk8nB6+t8D2tP8sPiGMD92j
+	 LAlsLDfxgOiICCRVl9wFFsDY9hsmLimWFvkK3xH/TMbTDM3MSj+pts6rrCCsLOMSY
+	 hjXh+K59ayhfuXnXyw6avRCCLqg3RWLaOpjXQxQXUq+TZkuAuaqrFHPBUSw8vv//C
+	 0bHZ7Yg8Ah5P6j3+9yXE47rFzSRVKgNZsKFKPZJh/aG/vMJcKKHTgBtDG+otqtnSb
+	 6ZY2icE3bNgfh3o1ug==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.21] ([94.31.84.95]) by smtp.web.de (mrweb106
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1M8Bw1-1rVSRo2gIV-005OhR; Wed, 17
+ Jan 2024 22:24:07 +0100
+Message-ID: <4934093b-86c0-4889-a5e9-0f9d63fd528c@web.de>
+Date: Wed, 17 Jan 2024 22:24:01 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -63,130 +42,59 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [LSF/MM/BPF TOPIC] Improving Zoned Storage Support
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-To: Bart Van Assche <bvanassche@acm.org>, Damien Le Moal
- <dlemoal@kernel.org>,
- "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- Christoph Hellwig <hch@lst.de>
-References: <5b3e6a01-1039-4b68-8f02-386f3cc9ddd1@acm.org>
- <cc6999c2-2d53-4340-8e2b-c50cae1e5c3a@kernel.org>
- <43cc2e4c-1dce-40ab-b4dc-1aadbeb65371@acm.org>
- <c38ab7b2-63aa-4a0c-9fa6-96be304d8df1@kernel.dk>
- <2955b44a-68c0-4d95-8ff1-da38ef99810f@acm.org>
- <9af03351-a04a-4e61-a6d8-b58236b041a3@kernel.dk>
- <276eedc2-e3d0-40c7-b355-46232ea65662@kernel.dk>
- <39dfcd32-e5fc-45b9-a0ed-082b879a16a4@acm.org>
- <9f4a6b8a-1c17-46b7-8344-cbf4bcb406ab@kernel.dk>
- <207a985d-ad4e-4cad-ac07-961633967bfc@kernel.dk>
-In-Reply-To: <207a985d-ad4e-4cad-ac07-961633967bfc@kernel.dk>
+To: Kunwu Chan <chentao@kylinos.cn>, linux-scsi@vger.kernel.org,
+ kernel-janitors@vger.kernel.org, "James E. J. Bottomley"
+ <jejb@linux.ibm.com>, "Manoj N. Kumar" <manoj@linux.ibm.com>,
+ "Matthew R. Ochs" <mrochs@linux.ibm.com>,
+ Uma Krishnan <ukrishn@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Kunwu Chan <kunwu.chan@hotmail.com>
+References: <20231127025127.1545877-1-chentao@kylinos.cn>
+Subject: Re: [PATCH] scsi: cxlflash: Fix null pointer dereference in
+ ocxlflash_get_fd
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20231127025127.1545877-1-chentao@kylinos.cn>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:iqDmz8NJdlIeTl5UAA2WHvmAFHU+jenQ98f6n/XdkUaFyhUHwsC
+ 82FLB4xRI0gLxyUZOIVJvbwzbZtUe/ml/htrM4aPHr/VJ3hgKb8/Tp4b4qJLNOtyLQWKz3b
+ 20kMtwa7IcmJOcYEcjxI8G0NFWkGHCyLjOeU0EmAaRw5Dj71S+U8njmuZW7Al/9sF0rgY53
+ EiCBtnbiK/VfOl1+fD5rw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:PBqwc8dxBqM=;FLyDzZb62/ebRUi/Ah3sVBl6gCB
+ gNk1emMMlYhJdlu6UjSnn2UOrPQfVSM4HqQPqYQn2UqpHObhR+Y2UEidTb3K8WHSXfEK6JWjz
+ zeJKTDjK8hlG+IVoZGBHbP1fXJXH1u/edn0U5LKlFiK8Ci2rXXUIsay3Mcwhc39gWIv5XgQjD
+ JaTiyX4FXaR3dkp9R+B5cCH+GwuO//2Aunw69FURHE/jbKlpJxj0UDi6NGsqq3d/rYn0RNYcD
+ v5NBH4ks6kVfEOcrpXMyjmH6MLh0I6LE3EZID/hboIkhqM8Mcwv0fQBSamLX4j9kSCuqdBC3/
+ TOzvDOTuGSIxSvMS5oZmRvoA9cMK4wgWDabX/U3m6pPnzXJmpwcXwUn6VHNZWfYi/REdXGjU2
+ w+mCR5LRTZ2YseYWR44FuVzxcnAiqGCaH9RoZAp6eWMAMcb7PeDQzM45dgZqBw+EhWPNmblQX
+ RKipQz96zxASADZ9tnAjOHOZPm8YEGhOvjt7vILrFzovnmmgNEGjpCZyT/rlSHLyVAG4e7eq8
+ 03LeiH46gF/ZhEfD6P/FJsIxk65LIOqIsxkU+aGORXUK27mWF7Iv8CIplAI9PmJrUKZWzJkd2
+ aCnix+Qq0eoyl57ic3woBwRlDaKo6nxkqNrUsrzc4sPaRkFP+sAUpE1YX0T0CnPbwHQj9ZVv0
+ 60SoAP59bbB58k9ohrd3j1CXA3Qn/PC4P2oxiVN/BWFoyDIGSMIIQp3g95+XWZn6G2vpfPYUZ
+ JF7sTKCFUhO2AcDqYr0jZ5vDnPuc7kkfEjfYOZ3J5H9kSBlUQXyvUNW6ZfHu6Djwc8TKCdVQf
+ ch1LxZd5dQWU9QjPYM0FptNYTYKvThVGWEi3mLnfZcHCMYEkROxpz+ahlx9A6APBSSrvZ7hwJ
+ mO2hEafkniq95XSGJc+kE4JyV4fqc+a6On98usyFTx+9zgc8Tq8XjXkfdCR9apa+qmthYde41
+ x0md6w==
 
-On 1/17/24 2:02 PM, Jens Axboe wrote:
-> On 1/17/24 1:20 PM, Jens Axboe wrote:
->> On 1/17/24 1:18 PM, Bart Van Assche wrote:
->>> On 1/17/24 12:06, Jens Axboe wrote:
->>>> Case in point, I spent 10 min hacking up some smarts on the insertion
->>>> and dispatch side, and then we get:
->>>>
->>>> IOPS=2.54M, BW=1240MiB/s, IOS/call=32/32
->>>>
->>>> or about a 63% improvement when running the _exact same thing_. Looking
->>>> at profiles:
->>>>
->>>> -   13.71%  io_uring  [kernel.kallsyms]  [k] queued_spin_lock_slowpath
->>>>
->>>> reducing the > 70% of locking contention down to ~14%. No change in data
->>>> structures, just an ugly hack that:
->>>>
->>>> - Serializes dispatch, no point having someone hammer on dd->lock for
->>>>    dispatch when already running
->>>> - Serialize insertions, punt to one of N buckets if insertion is already
->>>>    busy. Current insertion will notice someone else did that, and will
->>>>    prune the buckets and re-run insertion.
->>>>
->>>> And while I seriously doubt that my quick hack is 100% fool proof, it
->>>> works as a proof of concept. If we can get that kind of reduction with
->>>> minimal effort, well...
->>>
->>> If nobody else beats me to it then I will look into using separate
->>> locks in the mq-deadline scheduler for insertion and dispatch.
->>
->> That's not going to help by itself, as most of the contention (as I
->> showed in the profile trace in the email) is from dispatch competing
->> with itself, and not necessarily dispatch competing with insertion. And
->> not sure how that would even work, as insert and dispatch are working on
->> the same structures.
->>
->> Do some proper analysis first, then that will show you where the problem
->> is.
-> 
-> Here's a quick'n dirty that brings it from 1.56M to:
-> 
-> IOPS=3.50M, BW=1711MiB/s, IOS/call=32/32
-> 
-> by just doing something stupid - if someone is already dispatching, then
-> don't dispatch anything. Clearly shows that this is just dispatch
-> contention. But a 160% improvement from looking at the initial profile I
+> kasprintf() returns a pointer to dynamically allocated memory
+> which can be NULL upon failure.
+=E2=80=A6
+> +++ b/drivers/scsi/cxlflash/ocxl_hw.c
+> @@ -1231,6 +1231,11 @@ static struct file *ocxlflash_get_fd(void *ctx_co=
+okie,
+>  		fops =3D (struct file_operations *)&ocxl_afu_fops;
+>
+>  	name =3D kasprintf(GFP_KERNEL, "ocxlflash:%d", ctx->pe);
+> +	if (!name) {
+> +		rc =3D -ENOMEM;
+> +		dev_err(dev, "%s: kasprintf allocation failed\n", __func__);
+> +		goto err2;
+> +	}
+=E2=80=A6
 
-224%, not sure where that math came from...
+How do you think about to omit the extra error message?
 
-Anyway, just replying as I sent out the wrong patch. Here's the one I
-tested.
- 
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index f958e79277b8..133ab4a2673b 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -80,6 +80,13 @@ struct dd_per_prio {
- };
- 
- struct deadline_data {
-+	struct {
-+		spinlock_t lock;
-+		spinlock_t zone_lock;
-+	} ____cacheline_aligned_in_smp;
-+
-+	unsigned long dispatch_state;
-+
- 	/*
- 	 * run time data
- 	 */
-@@ -100,9 +107,6 @@ struct deadline_data {
- 	int front_merges;
- 	u32 async_depth;
- 	int prio_aging_expire;
--
--	spinlock_t lock;
--	spinlock_t zone_lock;
- };
- 
- /* Maps an I/O priority class to a deadline scheduler priority. */
-@@ -600,6 +604,10 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	struct request *rq;
- 	enum dd_prio prio;
- 
-+	if (test_bit(0, &dd->dispatch_state) ||
-+	    test_and_set_bit(0, &dd->dispatch_state))
-+		return NULL;
-+
- 	spin_lock(&dd->lock);
- 	rq = dd_dispatch_prio_aged_requests(dd, now);
- 	if (rq)
-@@ -616,6 +624,7 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	}
- 
- unlock:
-+	clear_bit(0, &dd->dispatch_state);
- 	spin_unlock(&dd->lock);
- 
- 	return rq;
-
--- 
-Jens Axboe
-
+Regards,
+Markus
