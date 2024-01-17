@@ -1,221 +1,184 @@
-Received: from mail-il1-f182.google.com (mail-il1-f182.google.com [209.85.166.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A49E2374F
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2024 18:43:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705517031; cv=none; b=kgdSgi+QQkeRjVmv8fz9jVzh56YPAPoyYcmH7pTe1Du0Lb+2T1ZcT7wxa+XeDW+8eikmKWHupan9SedIJyChmi737uOF9cAiHU06Q3XiTXLlaphR4eRCHWNWCquHBWwy+Gu8bzwTf+0BtPKLRxaPbm41vHGEH57724htjZizCt4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705517031; c=relaxed/simple;
-	bh=QeIsyT+MnNMM38OwdadVGjxWcO3q6apltzzjGi4TZT4=;
-	h=Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Google-Smtp-Source:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:Content-Language:
-	 To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding; b=GdGfpa2eoKxr4SkOc1N3iwFIC+2oB+pjQMomSs/FbXF1Taqt7d+Xg4OEjMLUmf/iDq3z6WF47tpXR0S5d7ZvqHwWOgCEuQMjPQu+TvOLNdi8cN/kKdafCGZBdNOIsIMBNLk7U964XYLsK4ifa9P7vRNw6yVAgJN5+uLsDcoOS3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=nn7YnvS+; arc=none smtp.client-ip=209.85.166.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB311249EC;
+	Wed, 17 Jan 2024 19:45:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1705520705; cv=fail; b=Xwr1ROZTd1m1hoLrPgdkF/v0kehmydEWOBXxe3yoW0hMZVk2Xv1bjB7KkTrhCLpL/arMx3BuE5oqNdQzdgL3Xs1L/I58JOvC7lrLNB7pM0EJDpk4A11jS4gJkVo3IOiE88qv0AZxKkeViBVln1UFVfWQXAzmDr/POVYBiiflkao=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1705520705; c=relaxed/simple;
+	bh=66QLZngMRlyaWYX6Q+z7om3P/nUgabYSrHMk+iINI3w=;
+	h=Received:DKIM-Signature:Received:Received:Received:
+	 ARC-Message-Signature:ARC-Authentication-Results:DKIM-Signature:
+	 Received:Received:To:Cc:Subject:From:Organization:Message-ID:
+	 References:Date:In-Reply-To:Content-Type:X-ClientProxiedBy:
+	 MIME-Version:X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:
+	 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:
+	 X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details:
+	 X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID; b=g39AKfMmpLcssRAMrcAVSZA6UOT8zXTPwbkF2Fc2P2xfhXiXaJZNI1N0DmzFg13IpCzngyzsBZXddKPdoJBgUetMtiNTQQ/0Xial20Ntf4TDdtaZwFKLYFdu6lWH6C3u6HciwoZcIlrfJ0YSOm5j8offmILrJ2GKFzTe2oU+Uzs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=IqR2jC3X; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Mj1by0Tn; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="nn7YnvS+"
-Received: by mail-il1-f182.google.com with SMTP id e9e14a558f8ab-35d374bebe3so8678155ab.1
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2024 10:43:48 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IqR2jC3X";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Mj1by0Tn"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40HJcotx031346;
+	Wed, 17 Jan 2024 19:44:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2023-11-20;
+ bh=qHsPrTlTSF/mZuAryvDvh8qeXOI+QhpdCLhL++XpN48=;
+ b=IqR2jC3X2f9+5BJYMY1RqNJPoNKpFawdjjOcEmkBqldTvYob3a/C7GvFb6cs8lzg705T
+ UtxiWFtzxumZzRxSQnhZYIBJtl3KSDbkHsnznas+JitLN4r6n75LroEd0pVugD7SX/KQ
+ iAujrozD/+U+k8eEGtJfhH9gAVgUR1DIwuR4ykrn5Cfuuy/y21ypfc4y+9XLljXLJFyI
+ L9t/lbrmQSa7HVZt5S8SUXzoTqY93ed984gpPfCfXyIm1bMyuCAKpmaUiflxSJBh9NQU
+ k8JgOnCWI1W2Y9x0VyHeR8GqEXnUBgtM0gxI7OafAgvX5cimS32NENvxYrLVx5SGRxI+ 2Q== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3vkjba0whc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 17 Jan 2024 19:44:47 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 40HIeLil035953;
+	Wed, 17 Jan 2024 19:44:46 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2101.outbound.protection.outlook.com [104.47.70.101])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3vkgyb0p7g-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 17 Jan 2024 19:44:46 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=fZnfCWxuTx75Ota8v9FPCql2TAWmtvMvUnzpCpq1OYqPUYr5lEsOsjMj7mXl7fdPk1gaFXEtODiaNG8f3QcEN2ob+sA/h1K9m9pJIToVvapFk//CYTjlaLqFMxK/RbukKvNGnbLJRHK/Wh6wxvKAAXXnh8y+juaXcTaAmb+9DQEYkj6C8CuXFJOt3gwQxtQdqK4Z8Ri51XfAg6Lxha+lwbwfRfzgWN2xIyx/0eTOEmuPjD6n8vNJgCxu81nj3M5PZaOTV/rOYQdT9zmydM8f5DXWs7fsdRFWZ/9Dj/Up40FD3ISvqls5rh2hNRM0J2lCbmYQ1s7nKLy2wzwD4XryIQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=qHsPrTlTSF/mZuAryvDvh8qeXOI+QhpdCLhL++XpN48=;
+ b=lbZteDBtBKSnnKAVz1VM+TwgJs4A7aw7epdCPW82h0qphESXsvZpH8310fSqqQpkTfpkKKk43fGxHXd0L7GT5IkBUWKC28K2xB/Io8nOdbe1iNJPTfOU+6xrB/YpwHph59HSdSRwrNuUMjsylGimFhGiL4/EOrBRScUQeaRF+26gMiQIr6Lijkh8YI0VR8c6NMe9wycatN0jYrVBGXYv7JyS50SuwVNFHIcmMmm58eN94FXsANa448/QuKnDnjVTOwEtFbUPPW2/AkL7cEBNVBcLBbWjszbHakIVE3hdRZQqOI6wWMBQSsx6fFQj3u8r4YK5SSDe6S3FGuYwBOuCtg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1705517028; x=1706121828; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=0m1ycGClAI8pu+Re80UY95eqKAnya4GvX4pu0skEd3s=;
-        b=nn7YnvS+cd1mdqyM8EiSFd4c7WoNNjpQoHRIZ1cLBwdHxT17N2luL4XUCI6fUxV+JG
-         QqKFNzBNCn8kblGPjiWbj/fc1zfSrqO5I+VVQZsy435FJxf8a6fJ+9lSds37qNrR0ijL
-         7rrOMSG3SpNjGIv6K3MmBZILe+k/+wQyOFSEBLaMLXcjBtJKVagS2sUrs40z7yDaJqig
-         fyVduVEnd5g16uBz2Of8xKCHOBJ1EFU15QmzOzFS9E32LpsCZXSYP5d3Xo3pAzAdK7vY
-         mqAsWHxuwT7CBt1s1CfRVK/fa0cgvKX5Y9FpYjnuiWG2B0KY7ftjmRhzoJaquacPBGOQ
-         HrEw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705517028; x=1706121828;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0m1ycGClAI8pu+Re80UY95eqKAnya4GvX4pu0skEd3s=;
-        b=tYM372gecez1yevptsJUdvrEY8B5StBouvLDVeXjwW3d013cSrba1li9JHPr5pZAog
-         E4Jr4YmR+ZGWxSMBZVEjaGDbc3yFQiYA5R6NbT8kLZKxyhpW27FYAyEq3jzeTrokaaxC
-         NVGLcE9m/W1M+FPNCkSMeJIDFcDpoPWfAWS+gaOhsinvPjv27/H8acf3OtBRcnr05ppI
-         xE+1uo+dCSJJqHavaOZchJuAEl5m4wx7lg639+VWzPPGWbqhe9cWbwFLe/0IGnhv9YjU
-         tJtJTC7xZhnwhFo9Mx1t6ICvxZ16bB8e9zaE8U+pTVKrhqbp+WqTm+8zSoZ6J4JfRIrN
-         wITQ==
-X-Gm-Message-State: AOJu0YyMIeO7NXYNyG2VzDYz3FGAvVEHMiIDLegT/VZB75VBkV1uMZ4k
-	1LXqH3cv/5737roB1D+0g0tbZPXQ/Qsejw==
-X-Google-Smtp-Source: AGHT+IFkIYxYV/DPUCmo6RY0/kKekLwm0mFUcgJ8bvfzFQUKklviLuP1Lu2hOB5T/p6Dzou6BB+BHw==
-X-Received: by 2002:a6b:6810:0:b0:7be:e376:fc44 with SMTP id d16-20020a6b6810000000b007bee376fc44mr15408400ioc.2.1705517028234;
-        Wed, 17 Jan 2024 10:43:48 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id i5-20020a5d8405000000b007bbab8c40d2sm3443754ion.44.2024.01.17.10.43.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 Jan 2024 10:43:47 -0800 (PST)
-Message-ID: <9af03351-a04a-4e61-a6d8-b58236b041a3@kernel.dk>
-Date: Wed, 17 Jan 2024 11:43:47 -0700
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qHsPrTlTSF/mZuAryvDvh8qeXOI+QhpdCLhL++XpN48=;
+ b=Mj1by0TnoeYuxCxtSg6iy7LyqrjShvJ/KPLBc01xg2musZ2HX6698eYpsgNegCK2uKUDyS1qG6kW5VT0plOShBcrk1qR8B2O81SatloxGPYc7Y27k+QxJjjOBAVk8iN8KuSTQHDLGAtSysNiH0xo7JpAibIdppr3/FupLJb/Fhk=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by LV8PR10MB7990.namprd10.prod.outlook.com (2603:10b6:408:207::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7181.17; Wed, 17 Jan
+ 2024 19:44:44 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::3676:ea76:7966:1654]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::3676:ea76:7966:1654%4]) with mapi id 15.20.7202.020; Wed, 17 Jan 2024
+ 19:44:44 +0000
+To: Su Hui <suhui@nfschina.com>
+Cc: artur.paszkiewicz@intel.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, nathan@kernel.org, ndesaulniers@google.com,
+        morbo@google.com, justinstitt@google.com, dan.j.williams@intel.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        llvm@lists.linux.dev, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] scsi: isci: request: Fix an error code problem in
+ isci_io_request_build
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1cytz3fuu.fsf@ca-mkp.ca.oracle.com>
+References: <20240112041926.3924315-1-suhui@nfschina.com>
+Date: Wed, 17 Jan 2024 14:44:41 -0500
+In-Reply-To: <20240112041926.3924315-1-suhui@nfschina.com> (Su Hui's message
+	of "Fri, 12 Jan 2024 12:19:27 +0800")
+Content-Type: text/plain
+X-ClientProxiedBy: MN2PR19CA0020.namprd19.prod.outlook.com
+ (2603:10b6:208:178::33) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [LSF/MM/BPF TOPIC] Improving Zoned Storage Support
-Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>, Damien Le Moal
- <dlemoal@kernel.org>,
- "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- Christoph Hellwig <hch@lst.de>
-References: <5b3e6a01-1039-4b68-8f02-386f3cc9ddd1@acm.org>
- <cc6999c2-2d53-4340-8e2b-c50cae1e5c3a@kernel.org>
- <43cc2e4c-1dce-40ab-b4dc-1aadbeb65371@acm.org>
- <c38ab7b2-63aa-4a0c-9fa6-96be304d8df1@kernel.dk>
- <2955b44a-68c0-4d95-8ff1-da38ef99810f@acm.org>
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <2955b44a-68c0-4d95-8ff1-da38ef99810f@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|LV8PR10MB7990:EE_
+X-MS-Office365-Filtering-Correlation-Id: 37711451-503a-41c6-ba29-08dc1794c0e2
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	nXrPgELaMwrxxkbS7yNL1/DJwqYi5ZmR3BXf/xP9KxrQFxn5g8qU8B12icUHHvAVSB85Oej+I6s5Hmk9exTKVKhcEbeUfJlaXVXlYJ27f0+9MNFQeORfmwfLWdKTIgTMI+eoHx5GNfMAXsel733fdN8N8f2tAftKRmIugFV/SURjJFw4Dfz1FMmoUSuf8wthIXAxbTEGWLNvkeHHoRj6R9EQ+nXpysmOZhIBU2u9ZlW/DG6vn0OcHsYVHAEBDsnXz7bWGOdFxhoMKma6d+jyc9KXIh2eOaflg8IPMSsVICcJb1eHLzOSYWxg5i2pB2qsV5li1kmCQz/N5B2s6t/Kt7oW+Sm9O4SFp+ZYuIoDqXXSmUI/NrbXP9Bg/lGxxXvn3BSEP4vmxOT4qIHwU1s6IPjR3FsHjV8cf7GodEL+SM1eRz27OrkwxLaTJzv5inS4cxp1sYPcAHf4CkIfDi9oo4LwHOtDunyrkzr58TlxgxThimFu6JYWaeEcThKpVwbmOgoiUzQ62b4MzwjDhQLTesNll60M2P6bqkNgIszCPn+2A7ZCJSAYG+LP+B6DjEpD
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366004)(39860400002)(376002)(346002)(136003)(396003)(230922051799003)(1800799012)(186009)(451199024)(64100799003)(41300700001)(2906002)(4326008)(558084003)(6512007)(478600001)(6506007)(36916002)(6666004)(8936002)(8676002)(6916009)(38100700002)(7416002)(5660300002)(316002)(6486002)(66556008)(26005)(66946007)(86362001)(66476007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?us-ascii?Q?0Ax9kTIiHLWBsLjIj20qeQTXi7JF43jsnTT/srPtZBvvUJ+t7Bz+ee9mHmPd?=
+ =?us-ascii?Q?V94Jh3r1UHMZ1JCtzBIEGgmEjRbgzGNijIQVgYA9MlHt9/UqU7gSj8SGAHfW?=
+ =?us-ascii?Q?0ev7dd8sPEk7h945+sk89rdsKsVKF2poZp02Jxfk6Sro5vOuXb85M9lxGUkk?=
+ =?us-ascii?Q?zImcmdV9ZWgaYVKlGNIH8kTJHZ8ltNNqLQLerJ5gkU9uiNbhUEi+Be5xw3z/?=
+ =?us-ascii?Q?h4OFg3HYEy4N0YAAJYNYgVfeVgVjyXvRbU7AqDvooysNTceUWFsZSATyAiIl?=
+ =?us-ascii?Q?u6Z0t0ew0/iokRS2mEuECjChhwCQ0FqEwvRrV9raQpNshpn9oSs24sdmdwc3?=
+ =?us-ascii?Q?Qdq/rXjwfbwc0Z4lycIaaceHOFpyhyhvDl/dJQRsgIFXkJm9ta6+VNVsoFAS?=
+ =?us-ascii?Q?jB3G2lf6J+DZDpgVbBie0Iw1/z1KImKKGMniUW18jpLWjVFPwkhKTBgFsO+a?=
+ =?us-ascii?Q?MAVSpvQaHCoRQtRIcO1M3whJMoYQcwrluHkUP5eTS36UwslIP+Ug+vsWK09w?=
+ =?us-ascii?Q?0tkLzV6O6Eu/utFW+19VW3IMuhm7rzbBGqpuZD2JEQPlqXxCER+IEOoU1Rvp?=
+ =?us-ascii?Q?52rLC2lcz4TsCbLsOg/CdaXwOyvoKp92QJN7jAE0+0kGZzZr0L1P//59/Lp2?=
+ =?us-ascii?Q?fmTE/XxvSvEj4u+gchV+wE7PAyJq9/MoAxkCSOzmFaJEZ3miPCyjkKuVyYb+?=
+ =?us-ascii?Q?u09f1yBb8IAXQ1mYouyDkacWyHsGrwbuVJK9AHnl9/U7F58F/e0hgdi3Zk3i?=
+ =?us-ascii?Q?tVwDUqc3K9b7qNEyyqkBEGF3jtLW6Vlg4XxE2ntnOX0V1LJoYxEG9GXlxl2v?=
+ =?us-ascii?Q?jvhs4yMsERnzVe6Jub3jQfV+yOHGWQtUcG+444ZLwGqYKlnUWNsiBeV/QdwU?=
+ =?us-ascii?Q?wy1jo4Wp4yynEMfQXiqqMObEvWMpOZg8IWf7Pm9P87eX6UU4HiWwkNSdcT9x?=
+ =?us-ascii?Q?isD5tzlWJ7s36JE+U9hUjJtrTEH+IkWB29AOKHaoPj94YZvdb3myOMZKb2J9?=
+ =?us-ascii?Q?Brvrii3HYnMqmGmBlAAYvYEnFNqzqqQYiQIphtag+Q7UtzCWbkyHrAHyU1zG?=
+ =?us-ascii?Q?khQLcT6elcUOyEMFMLQ4ozU2+VVbHVQQoLO4fiCjT8Dvb5q6qFS0rMkbYypR?=
+ =?us-ascii?Q?TmDRotkx74ASJzUJPkDl2IqxMExDWZvb1DYEOc3FNP3OCgzOvrvLMeUrL6Tg?=
+ =?us-ascii?Q?Sq9WoYTK7NJPm6ZDCOr9ogjfk24C1EMaQVNldushuEX6jMSMh7Wk46TIYV23?=
+ =?us-ascii?Q?/fywi1K2/k4H1AO1aE7pPvt30tZOui9tn53dvDVO4khutNFQwnxPEVJVrvF6?=
+ =?us-ascii?Q?tg61w8Y1fKdSbk6d/PSBW/XcQt1jscvU4xPQkd+/fBkUwbGvIJVxiaHikPiA?=
+ =?us-ascii?Q?jRBEV35G5NCOELtTQedWnPDVNZ06PFmehBtYoyr/mgcT66zRIxMntH+nYiGf?=
+ =?us-ascii?Q?8/RoC+PUmsICLtJ2uhHkEe6EH5zCrKtGCivvGVeB9/kGbGtzJIW2klnNUWcu?=
+ =?us-ascii?Q?MSzMPOiW+R7970V5YirAO0YUYF7D8bIHE/oMI3Zs0zrFvPJMNuv3CQuz1SVY?=
+ =?us-ascii?Q?hZu8kimJtG9sxct2IfZQDCCaZ3cC4kmLhEj/aQ39Zon+WHv7NjzzNajaQTLZ?=
+ =?us-ascii?Q?jA=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	x+hlYoQgk9X0zHeYQYHEnDf3HGJDiczD4v+ALPX5+ysGJekXCcy49pVtQ/pfBLV4wJ2SH7Hlhyu6jAdZMdYG3W/5MDkK9uZyNpICbkSDjIHnBaCj7RcSmBGEHqbkqdR4HWUySa8/GPFrDfxiMzUrKEW190W0dkypCnFYlvo/Rrrix8wnBCNMg0gelEC+UKzVV1UEjsq+TZps41r2e9cCPq/EXBzVDj3oVE2iB6aEFTDJDEiOl2+yDM1rem3mT45cxskDhf47R6xq/06qAOExVnaX07m6unOCMMLpCJ6Quz6CiXIuZ3FdYa+YTJCptd9W3Y0x+9iMZOvV+4shGdNK0uO7+npmgzfEVAly0fCcCEX5w/YQzaMQlyqegKuiCJDu08lM20/yoiOW6a3DFRWllOlc+NySwep6d0Xm+XzdUNHLoxF/LeKQvc8MNyn5mjGHSfoYU4ygBvCHV2fRtNdAH0Ui1uFX67AMzzp0SIO0wnugXgIA4RfIjUIcDsOuKkj/UflzB+D959o0Jsu6JBqQTGJ0nGwKurJ0Ym3sBZylIzV0nLo0bYDzUgPPuTRukxGfg8Ppk8/zqmcwTq5LX87C0DkuOmNYkWmRlYpRJev5zxg=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 37711451-503a-41c6-ba29-08dc1794c0e2
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jan 2024 19:44:43.9551
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: pjQd4pWx1o4mRfsvv3dKjB8c8wMsYjcswS9bd1Dur/nhSzzUzbPwGqjla0yssWHVEnN8Vq6oQQGoQaU35NYMy3DxNarhe8yGPE/SN5A3M80=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR10MB7990
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-17_12,2024-01-17_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
+ mlxlogscore=612 suspectscore=0 bulkscore=0 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2401170143
+X-Proofpoint-GUID: Wm4QWvMKGZqU5Ggq8maw0tOkefZLXiSe
+X-Proofpoint-ORIG-GUID: Wm4QWvMKGZqU5Ggq8maw0tOkefZLXiSe
 
-On 1/17/24 11:22 AM, Bart Van Assche wrote:
-> On 1/17/24 09:48, Jens Axboe wrote:
->>> When posting this patch series, please include performance results
->>> (IOPS) for a zoned null_blk device instance. mq-deadline doesn't support
->>> more than 200 K IOPS, which is less than what UFS devices support. I
->>> hope that this performance bottleneck will be solved with the new
->>> approach.
->>
->> Not really zone related, but I was very aware of the single lock
->> limitations when I ported deadline to blk-mq. Was always hoping that
->> someone would actually take the time to make it more efficient, but so
->> far that hasn't happened. Or maybe it'll be a case of "just do it
->> yourself, Jens" at some point...
-> 
-> Hi Jens,
-> 
-> I think it is something fundamental rather than something that can be
-> fixed. The I/O scheduling algorithms in mq-deadline and BFQ require
-> knowledge of all pending I/O requests. This implies that data structures
-> must be maintained that are shared across all CPU cores. Making these
-> thread-safe implies having synchronization mechanisms that are used
-> across all CPU cores. I think this is where the (about) 200 K IOPS
-> bottleneck comes from.
 
-Has any analysis been done on where the limitation comes from? For
-kicks, I ran an IOPS benchmark on a smaller AMD box. It has 4 fast
-drives, and if I use mq-deadline on those 4 drives I can get 13.5M IOPS
-using just 4 threads, and only 2 cores. That's vastly more than 200K, in
-fact that's ~3.3M per drive. At the same time it's vastly slower than
-the 5M that they will do without a scheduler.
+> Clang static complains that Value stored to 'status' is never read.
+> Return 'status' rather than 'SCI_SUCCESS'.
 
-Doing a quick look at what slows it down, it's a mix of not being able
-to use completion side batching (which again then brings in TSC reading
-as the highest cycler user...), and some general deadline overhead. In
-order:
-
-+    3.32%  io_uring  [kernel.kallsyms]  [k] __dd_dispatch_request
-+    2.71%  io_uring  [kernel.kallsyms]  [k] dd_insert_requests
-+    1.21%  io_uring  [kernel.kallsyms]  [k] dd_dispatch_request
-
-with the rest being noise. Biggest one is dd_has_work(), which seems
-like it would be trivially fixable by just having a shared flag if ANY
-of the priorities had work.
-
-Granted, this test case is single threaded as far as a device is
-concerned, which is obviously best case. Which then leads me to believe
-that it may indeed be locking that's the main issue here, which is what
-I suspected from the get-go. And while yes this is a lot of shared data,
-there's absolutely ZERO reason why we would end up with a hard limit of
-~200K IOPS even maintaining the behavior it has now.
-
-So let's try a single device, single thread:
-
-IOPS=5.10M, BW=2.49GiB/s, IOS/call=32/31
-
-That's device limits, using mq-deadline. Now let's try and have 4
-threads banging on it, pinned to the same two cores:
-
-IOPS=3.90M, BW=1903MiB/s, IOS/call=32/31
-
-Certainly slower. Now let's try and have the scheduler place the same 4
-threads where it sees fit:
-
-IOPS=1.56M, BW=759MiB/s, IOS/call=32/31
-
-Yikes! That's still substantially more than 200K IOPS even with heavy
-contention, let's take a look at the profile:
-
--   70.63%  io_uring  [kernel.kallsyms]  [k] queued_spin_lock_slowpath
-   - submitter_uring_fn
-      - entry_SYSCALL_64
-      - do_syscall_64
-         - __se_sys_io_uring_enter
-            - 70.62% io_submit_sqes
-                 blk_finish_plug
-                 __blk_flush_plug
-               - blk_mq_flush_plug_list
-                  - 69.65% blk_mq_run_hw_queue
-                       blk_mq_sched_dispatch_requests
-                     - __blk_mq_sched_dispatch_requests
-                        + 60.61% dd_dispatch_request
-                        + 8.98% blk_mq_dispatch_rq_list
-                  + 0.98% dd_insert_requests
-
-which is exactly as expected, we're spending 70% of the CPU cycles
-banging on dd->lock.
-
-Let's run the same thing again, but let's just do single requests at the
-time:
-
-IOPS=1.10M, BW=535MiB/s, IOS/call=1/0
-
-worse again, but still a far cry from 200K IOPS. Contention basically
-the same, but now we're not able to amortize other submission side
-costs.
-
-What I'm getting at is that it's a trap to just say "oh IO schedulers
-can't scale beyong low IOPS" without even looking into where those
-limits may be coming from. I'm willing to bet that increasing the
-current limit for multi-threaded workloads would not be that difficult,
-and it would probably 5x the performance potential of such setups.
-
-Do we care? Maybe not, if we accept that an IO scheduler is just for
-"slower devices". But let's not go around spouting some 200K number as
-if it's gospel, when it depends on so many factors like IO workload,
-system used, etc.
-
-> Additionally, the faster storage devices become, the larger the relative
-> overhead of an I/O scheduler is (assuming that I/O schedulers won't
-> become significantly faster).
-
-FIrst part is definitely true, second assumption I think is a "I just
-give up without even looking at why" kind of attitude.
-
-> A fundamental limitation of I/O schedulers is that multiple commands
-> must be submitted simultaneously to the storage device to achieve good
-> performance. However, if the queue depth is larger than one then the
-> device has some control over the order in which commands are executed.
-
-This isn't new, that's been known and understood for decades.
-
-> Because of all the above reasons I'm recommending my colleagues to move
-> I/O prioritization into the storage device and to evolve towards a
-> future for solid storage devices without I/O schedulers. I/O schedulers
-> probably will remain important for rotating magnetic media.
-
-While I don't agree with a lot of your stipulations above, this is a
-recommendation I've been giving for a long time as well. Mostly
-because it means less cruft for us to maintain in software, also full
-well knowing that we're then at the mercy of hardware implementations
-which may all behave differently. And even if we historically have not
-had good luck punting these problems to hardware and getting the desired
-outcome.
+Applied to 6.8/scsi-staging, thanks!
 
 -- 
-Jens Axboe
-
+Martin K. Petersen	Oracle Linux Engineering
