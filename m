@@ -1,40 +1,46 @@
-Received: from mout.web.de (mout.web.de [212.227.17.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2716B2557E;
-	Wed, 17 Jan 2024 21:24:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 309BA22EE8;
+	Wed, 17 Jan 2024 21:33:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705526665; cv=none; b=rpN1WFLBa3Z/qMzHXDLWm2icTYNvkackySp4IjX4EygP8CGUP3R9Y0QUz8dGjuDg9NdvNHbML9XF66CjVNsDMDt81l65nXgMJl1NjmRTv2i+AC4Tg3K07XxMBxApnvuNmKU1EeycqYH3oQApfj+7HOFOiBDcKC08jMw8iXFlyc8=
+	t=1705527225; cv=none; b=epRgKB9ZvIjx00KCrGNscCIDtTsCFUr2NxpEJgVMRkPVpiU6WrfH84zIOGTJmSPDzaB0cFNYA/tZiy2FcEAQcjVRUXZK+Wd8k86PENEn4iRPoWNTp2kCkcoJAs+d8N/9EqiZL1aXlj9noQeYl4/xQ6p/73nAiAw8eHkR5GcnxEg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705526665; c=relaxed/simple;
-	bh=rr/O9OnzgwSihYNKoOt11Ezoi6TqX6d/sDWn041aOvs=;
-	h=DKIM-Signature:X-UI-Sender-Class:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:To:Cc:References:Subject:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 X-Provags-ID:X-Spam-Flag:UI-OutboundReport; b=FkdD4ASWocptS/NXd+I++UCOThhYG9aa2go5UhowvFWqpu6P4OOJlKYzseho0lrwLV8TT+F6bIlLTH9/KoOcGIGVs/UtShhDzpnt/WMiEv+rIt9ncG1K3uf0DC1iSqVzVo92EjEVxDDTVCDiBlK44WxgvTkLAgazBHAPqXS96Eo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=BGG+EdFE; arc=none smtp.client-ip=212.227.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="BGG+EdFE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de; s=s29768273;
-	t=1705526647; x=1706131447; i=markus.elfring@web.de;
-	bh=rr/O9OnzgwSihYNKoOt11Ezoi6TqX6d/sDWn041aOvs=;
-	h=X-UI-Sender-Class:Date:To:Cc:References:Subject:From:
-	 In-Reply-To;
-	b=BGG+EdFEdB8o5/ex2syX84gzb69X81Shks8euCQc0X9v9MbRC1vbOpTOiaPnyuxC
-	 cZjBGrpCqia9b7VjGAGIfUFjkK9jBPv/C2I3oGBlHmPk8nB6+t8D2tP8sPiGMD92j
-	 LAlsLDfxgOiICCRVl9wFFsDY9hsmLimWFvkK3xH/TMbTDM3MSj+pts6rrCCsLOMSY
-	 hjXh+K59ayhfuXnXyw6avRCCLqg3RWLaOpjXQxQXUq+TZkuAuaqrFHPBUSw8vv//C
-	 0bHZ7Yg8Ah5P6j3+9yXE47rFzSRVKgNZsKFKPZJh/aG/vMJcKKHTgBtDG+otqtnSb
-	 6ZY2icE3bNgfh3o1ug==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.21] ([94.31.84.95]) by smtp.web.de (mrweb106
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1M8Bw1-1rVSRo2gIV-005OhR; Wed, 17
- Jan 2024 22:24:07 +0100
-Message-ID: <4934093b-86c0-4889-a5e9-0f9d63fd528c@web.de>
-Date: Wed, 17 Jan 2024 22:24:01 +0100
+	s=arc-20240116; t=1705527225; c=relaxed/simple;
+	bh=xHQq8VjDitsvhOIV6jTVv811Gc9PkMiGmKj0Ja4RksY=;
+	h=Received:X-Google-DKIM-Signature:X-Gm-Message-State:
+	 X-Google-Smtp-Source:X-Received:Received:Message-ID:Date:
+	 MIME-Version:User-Agent:Subject:Content-Language:To:Cc:References:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding; b=D3KaWa05OrxznpVL62uXsMdUhUMb9WuT5xHTZdw6qXX1apV1ujlJuz6P3pBnoH2ua40EU+Hvu6OX2cVU8QorAyteofUMIe2u0Cv1I9xR0zUcQF0SP4tSxNFLgAzW8YU7Is8NUejLWFVP6bsJRGJcP2kS5viv9XKzyi13mrYtDFs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1d5f38313f9so712225ad.1;
+        Wed, 17 Jan 2024 13:33:43 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705527223; x=1706132023;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=qKRTEGEdrJ4uSy0DPEMsw7O2DbfmPLHSdmoAR4y/Lbs=;
+        b=VTkAVC2vzVgtPXRZCzw2wgg2Ev7pAUcuue6YM9iLAC69ZGTA7xonfcGFfRhrFj3C+h
+         f4UDp98XvBdo11mDN44fsVFmFNhE7GzxAPmyD7OCVKffuubqcRsw6t0LncF+Tv23ssge
+         D5d6P3gs3h2n1uTKf/pI07ZIH34EoTD5bE5rteERVarez/8txUdMDRh2dyJUH6oqMxqM
+         uAzYQHtMAUqGvOhPo9QtllVPnQIuNpCvzqUjbXMX4+U8ez+xXid6PApWeQj6Zub3c9Yw
+         5i4GAuF+bXVLZ8WxyAke/m/KqYwIVg0PtQzu1lixvCP+dVuR5tTqc7GB4pwblkAfGIMX
+         U5eg==
+X-Gm-Message-State: AOJu0Yy320NtuHOlpg2SDPRSfIJ1eA0E76X7EkZHl1XqEGNbf8ZHPUeK
+	iGZEyAcOWZLLDw/I/DPAJ0w=
+X-Google-Smtp-Source: AGHT+IGPxShij0/HAOZ8P3At6ZhQ6kIOlS3Ebm0BxPvhf5meWiuDz5mRMRPBO3ETKVp2Fgqhxw+dyg==
+X-Received: by 2002:a17:902:d58c:b0:1d5:4b88:9ffc with SMTP id k12-20020a170902d58c00b001d54b889ffcmr2377964plh.1.1705527223358;
+        Wed, 17 Jan 2024 13:33:43 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:718b:ab80:1dc2:cbee? ([2620:0:1000:8411:718b:ab80:1dc2:cbee])
+        by smtp.gmail.com with ESMTPSA id ki4-20020a170903068400b001d5ea27932csm108599plb.77.2024.01.17.13.33.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 Jan 2024 13:33:42 -0800 (PST)
+Message-ID: <86a1f9e6-d3ae-4051-8528-13a952cf74a1@acm.org>
+Date: Wed, 17 Jan 2024 13:33:41 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,59 +48,60 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-To: Kunwu Chan <chentao@kylinos.cn>, linux-scsi@vger.kernel.org,
- kernel-janitors@vger.kernel.org, "James E. J. Bottomley"
- <jejb@linux.ibm.com>, "Manoj N. Kumar" <manoj@linux.ibm.com>,
- "Matthew R. Ochs" <mrochs@linux.ibm.com>,
- Uma Krishnan <ukrishn@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Kunwu Chan <kunwu.chan@hotmail.com>
-References: <20231127025127.1545877-1-chentao@kylinos.cn>
-Subject: Re: [PATCH] scsi: cxlflash: Fix null pointer dereference in
- ocxlflash_get_fd
-Content-Language: en-GB
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20231127025127.1545877-1-chentao@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:iqDmz8NJdlIeTl5UAA2WHvmAFHU+jenQ98f6n/XdkUaFyhUHwsC
- 82FLB4xRI0gLxyUZOIVJvbwzbZtUe/ml/htrM4aPHr/VJ3hgKb8/Tp4b4qJLNOtyLQWKz3b
- 20kMtwa7IcmJOcYEcjxI8G0NFWkGHCyLjOeU0EmAaRw5Dj71S+U8njmuZW7Al/9sF0rgY53
- EiCBtnbiK/VfOl1+fD5rw==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:PBqwc8dxBqM=;FLyDzZb62/ebRUi/Ah3sVBl6gCB
- gNk1emMMlYhJdlu6UjSnn2UOrPQfVSM4HqQPqYQn2UqpHObhR+Y2UEidTb3K8WHSXfEK6JWjz
- zeJKTDjK8hlG+IVoZGBHbP1fXJXH1u/edn0U5LKlFiK8Ci2rXXUIsay3Mcwhc39gWIv5XgQjD
- JaTiyX4FXaR3dkp9R+B5cCH+GwuO//2Aunw69FURHE/jbKlpJxj0UDi6NGsqq3d/rYn0RNYcD
- v5NBH4ks6kVfEOcrpXMyjmH6MLh0I6LE3EZID/hboIkhqM8Mcwv0fQBSamLX4j9kSCuqdBC3/
- TOzvDOTuGSIxSvMS5oZmRvoA9cMK4wgWDabX/U3m6pPnzXJmpwcXwUn6VHNZWfYi/REdXGjU2
- w+mCR5LRTZ2YseYWR44FuVzxcnAiqGCaH9RoZAp6eWMAMcb7PeDQzM45dgZqBw+EhWPNmblQX
- RKipQz96zxASADZ9tnAjOHOZPm8YEGhOvjt7vILrFzovnmmgNEGjpCZyT/rlSHLyVAG4e7eq8
- 03LeiH46gF/ZhEfD6P/FJsIxk65LIOqIsxkU+aGORXUK27mWF7Iv8CIplAI9PmJrUKZWzJkd2
- aCnix+Qq0eoyl57ic3woBwRlDaKo6nxkqNrUsrzc4sPaRkFP+sAUpE1YX0T0CnPbwHQj9ZVv0
- 60SoAP59bbB58k9ohrd3j1CXA3Qn/PC4P2oxiVN/BWFoyDIGSMIIQp3g95+XWZn6G2vpfPYUZ
- JF7sTKCFUhO2AcDqYr0jZ5vDnPuc7kkfEjfYOZ3J5H9kSBlUQXyvUNW6ZfHu6Djwc8TKCdVQf
- ch1LxZd5dQWU9QjPYM0FptNYTYKvThVGWEi3mLnfZcHCMYEkROxpz+ahlx9A6APBSSrvZ7hwJ
- mO2hEafkniq95XSGJc+kE4JyV4fqc+a6On98usyFTx+9zgc8Tq8XjXkfdCR9apa+qmthYde41
- x0md6w==
+Subject: Re: [LSF/MM/BPF TOPIC] Improving Zoned Storage Support
+Content-Language: en-US
+To: Jens Axboe <axboe@kernel.dk>, Damien Le Moal <dlemoal@kernel.org>,
+ "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ Christoph Hellwig <hch@lst.de>
+References: <5b3e6a01-1039-4b68-8f02-386f3cc9ddd1@acm.org>
+ <cc6999c2-2d53-4340-8e2b-c50cae1e5c3a@kernel.org>
+ <43cc2e4c-1dce-40ab-b4dc-1aadbeb65371@acm.org>
+ <c38ab7b2-63aa-4a0c-9fa6-96be304d8df1@kernel.dk>
+ <2955b44a-68c0-4d95-8ff1-da38ef99810f@acm.org>
+ <9af03351-a04a-4e61-a6d8-b58236b041a3@kernel.dk>
+ <276eedc2-e3d0-40c7-b355-46232ea65662@kernel.dk>
+ <39dfcd32-e5fc-45b9-a0ed-082b879a16a4@acm.org>
+ <9f4a6b8a-1c17-46b7-8344-cbf4bcb406ab@kernel.dk>
+ <207a985d-ad4e-4cad-ac07-961633967bfc@kernel.dk>
+ <e8c32676-114b-4aaf-8753-5a6d7b04fc4b@kernel.dk>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <e8c32676-114b-4aaf-8753-5a6d7b04fc4b@kernel.dk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> kasprintf() returns a pointer to dynamically allocated memory
-> which can be NULL upon failure.
-=E2=80=A6
-> +++ b/drivers/scsi/cxlflash/ocxl_hw.c
-> @@ -1231,6 +1231,11 @@ static struct file *ocxlflash_get_fd(void *ctx_co=
-okie,
->  		fops =3D (struct file_operations *)&ocxl_afu_fops;
->
->  	name =3D kasprintf(GFP_KERNEL, "ocxlflash:%d", ctx->pe);
-> +	if (!name) {
-> +		rc =3D -ENOMEM;
-> +		dev_err(dev, "%s: kasprintf allocation failed\n", __func__);
-> +		goto err2;
-> +	}
-=E2=80=A6
+On 1/17/24 13:14, Jens Axboe wrote:
+>   /* Maps an I/O priority class to a deadline scheduler priority. */
+> @@ -600,6 +604,10 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+>   	struct request *rq;
+>   	enum dd_prio prio;
+>   
+> +	if (test_bit(0, &dd->dispatch_state) ||
+> +	    test_and_set_bit(0, &dd->dispatch_state))
+> +		return NULL;
+> +
+>   	spin_lock(&dd->lock);
+>   	rq = dd_dispatch_prio_aged_requests(dd, now);
+>   	if (rq)
+> @@ -616,6 +624,7 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
+>   	}
+>   
+>   unlock:
+> +	clear_bit(0, &dd->dispatch_state);
+>   	spin_unlock(&dd->lock);
 
-How do you think about to omit the extra error message?
+Can the above code be simplified by using spin_trylock() instead of
+test_bit() and test_and_set_bit()?
 
-Regards,
-Markus
+Please note that whether or not spin_trylock() is used, there is a
+race condition in this approach: if dd_dispatch_request() is called
+just before another CPU calls spin_unlock() from inside 
+dd_dispatch_request() then some requests won't be dispatched until
+the next time dd_dispatch_request() is called.
+
+Thanks,
+
+Bart.
+
