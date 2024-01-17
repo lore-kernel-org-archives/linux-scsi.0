@@ -1,112 +1,149 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [20.231.56.155])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 02572CA73;
-	Wed, 17 Jan 2024 08:18:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=20.231.56.155
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6C0C134A9;
+	Wed, 17 Jan 2024 08:50:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705479541; cv=none; b=GNfC3IRQsilu77N2d7+8QXsfbxmcdKQViURx5yq3Mj+a0JFGLD2rIs3PiDiSiSkI+KAoAD7f5XL8fSpwp+Fu1zVCBEyz9DDFJvSOfjw9KHhsMy32WyqLM2XXur+mxYlva0wlfzGvewl1By1QMoWMB4/IkqzgXWRcTJWtLI5Z7SM=
+	t=1705481454; cv=none; b=rL52YSfKVvMKSMQfWBuYH/dgKezzhWF17xBBWi11nGvLlsDBLhDor12zK/VZp4rRz1MX2wWraR64PcnPwN31YkBHdsVOHzZbRW29+e9ipQjSWcIdTNW4isNH1gXVXIIeF+lb0L7sVCGTRzgLIxT5xsMUbrrzEVFl33GanDz7kt8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705479541; c=relaxed/simple;
-	bh=YOzCraFGvw1PLY77Yxo76qhKtpwqmc8DWbhhZXYpDYE=;
-	h=Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding:X-CM-TRANSID:X-Coremail-Antispam:
-	 X-CM-SenderInfo; b=Og5x1Nx4nx42B6R5TWAo0ebNdAr4tJKK4qSKZy05Cy3QF0Li2Sf3TZuQwV1AVMj17U2QXlO2xqSE7yRG24P7m6kdI0ijKCFCdOuCPJMHV+czXQgknyVQ8+8m+Cr8prtm+Ue9evN5uKcgN2dAf6xcrJoHZ666pmY6QgmGm5CT53g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=20.231.56.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
-Received: from luzhipeng.223.5.5.5 (unknown [183.159.170.227])
-	by mail-app4 (Coremail) with SMTP id cS_KCgCHo4IyjKdlfk0uAA--.42394S2;
-	Wed, 17 Jan 2024 16:13:38 +0800 (CST)
-From: Zhipeng Lu <alexious@zju.edu.cn>
-To: alexious@zju.edu.cn
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	megaraidlinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: megaraid_sas: Fix a memleak in megasas_init_fw
-Date: Wed, 17 Jan 2024 16:13:13 +0800
-Message-Id: <20240117081314.3818871-1-alexious@zju.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1705481454; c=relaxed/simple;
+	bh=qPpLgCGyyBF78ayhA7eg356GDeU8synRG/Xshtt101Y=;
+	h=Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To:X-Spamd-Result:X-Spam-Level:
+	 X-Spam-Flag:X-Spam-Score; b=qsYHip+WkDpTKHl9jF9gPckVLlEoY5RSnDqSTENnGqrw+/I4jreu4Ne5WlYg1iIlMCURntg+LONnYwsDAIwdMtcIeLxN5Qmq0byLRRjePrhEjpKwAZ4+Om7XUF9PGBEuZRwhW8Zn++dcl6X3O8zqQ8cX1DK9f/EOp0shiyNnumI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MeR0I8L3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=uQiBjgLr; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MeR0I8L3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=uQiBjgLr; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MeR0I8L3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="uQiBjgLr";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MeR0I8L3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="uQiBjgLr"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id DFF331FBEE;
+	Wed, 17 Jan 2024 08:50:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1705481450; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HpWVuH5mWEsk7XpDV+ci2ne8S+COL2568w1F4ccB/iU=;
+	b=MeR0I8L32aw3vSqrEuwLfOX6oLR9JHRoYQSMNhZIXf50HRs/9oswWprxhtgQpVPBfMd5rv
+	qKpHQY1jbs0t3DHrR+yvrNJDPhLccGVfHCQAcGC/1818Mude2ZRhMQwaMWEPctZ1e4IaXr
+	tRRKswhYHx19eTtwMe+Db3hsmSmp3ew=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1705481450;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HpWVuH5mWEsk7XpDV+ci2ne8S+COL2568w1F4ccB/iU=;
+	b=uQiBjgLrobahFM+YXVRzjbTJf36JIYqsekl7lc1F8YV45fgzOJsAPqEoULZ2B0KSE5evMi
+	Xr+vCPBKEDWmlFBQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1705481450; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HpWVuH5mWEsk7XpDV+ci2ne8S+COL2568w1F4ccB/iU=;
+	b=MeR0I8L32aw3vSqrEuwLfOX6oLR9JHRoYQSMNhZIXf50HRs/9oswWprxhtgQpVPBfMd5rv
+	qKpHQY1jbs0t3DHrR+yvrNJDPhLccGVfHCQAcGC/1818Mude2ZRhMQwaMWEPctZ1e4IaXr
+	tRRKswhYHx19eTtwMe+Db3hsmSmp3ew=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1705481450;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=HpWVuH5mWEsk7XpDV+ci2ne8S+COL2568w1F4ccB/iU=;
+	b=uQiBjgLrobahFM+YXVRzjbTJf36JIYqsekl7lc1F8YV45fgzOJsAPqEoULZ2B0KSE5evMi
+	Xr+vCPBKEDWmlFBQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C527013751;
+	Wed, 17 Jan 2024 08:50:50 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id jVWyLuqUp2UFDwAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Wed, 17 Jan 2024 08:50:50 +0000
+Date: Wed, 17 Jan 2024 09:50:50 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: Chaitanya Kulkarni <chaitanyak@nvidia.com>
+Cc: 
+	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, 
+	"linux-fsdevel@vger.kernel.org >> linux-fsdevel" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>, 
+	"josef@toxicpanda.com" <josef@toxicpanda.com>, Amir Goldstein <amir73il@gmail.com>, 
+	Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>, Dan Williams <dan.j.williams@intel.com>, 
+	Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>, Hannes Reinecke <hare@suse.de>, 
+	Damien Le Moal <damien.lemoal@opensource.wdc.com>, "shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>, 
+	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, "jack@suse.com" <jack@suse.com>, Ming Lei <ming.lei@redhat.com>, 
+	Sagi Grimberg <sagi@grimberg.me>, Theodore Ts'o <tytso@mit.edu>, 
+	"daniel@iogearbox.net" <daniel@iogearbox.net>
+Subject: Re: [LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] : blktests: status,
+ expansion plan for the storage stack test framework
+Message-ID: <bh5s6a4fhhlje42bzj2t22k3jpmruzkx234ks4ytuhd62tonzj@zn6h5foaqrof>
+References: <e5d8cd68-b3f2-4d7b-b323-b13d18199256@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cS_KCgCHo4IyjKdlfk0uAA--.42394S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7tFyfZr4Dur1xCr1xGFW5Awb_yoW8uF4Upr
-	yruw13tr17AayfWrWDKw4F9ayjya18G345Kr18t34j934agry5XF4vgrWxGFn7CF95JF9x
-	Zrn8Xr1fCF4jgaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9K14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4U
-	JVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
-	n2kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCY02Avz4vE14v_GFyl42xK82IYc2Ij64vIr4
-	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
-	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
-	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAv
-	wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14
-	v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUObyZUUUUU
-X-CM-SenderInfo: qrsrjiarszq6lmxovvfxof0/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e5d8cd68-b3f2-4d7b-b323-b13d18199256@nvidia.com>
+Authentication-Results: smtp-out2.suse.de;
+	none
+X-Spamd-Result: default: False [0.33 / 50.00];
+	 ARC_NA(0.00)[];
+	 TO_DN_EQ_ADDR_SOME(0.00)[];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 MIME_GOOD(-0.10)[text/plain];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 RCPT_COUNT_TWELVE(0.00)[23];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 MID_RHS_NOT_FQDN(0.50)[];
+	 FREEMAIL_CC(0.00)[lists.linux-foundation.org,vger.kernel.org,lists.infradead.org,kernel.dk,acm.org,toxicpanda.com,gmail.com,javigon.com,intel.com,lst.de,kernel.org,suse.de,opensource.wdc.com,wdc.com,suse.com,redhat.com,grimberg.me,mit.edu,iogearbox.net];
+	 RCVD_TLS_ALL(0.00)[];
+	 BAYES_HAM(-0.07)[62.07%]
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spam-Score: 0.33
 
-In the error-handling paths after allocation of
-fusion->stream_detect_by_ld and fusion->stream_detect_by_ld[i],
-megasas_init_fw should free them or there would be memleaks.
+On Tue, Jan 09, 2024 at 06:30:46AM +0000, Chaitanya Kulkarni wrote:
+> For storage track, I would like to propose a session dedicated to
+> blktests. It is a great opportunity for the storage developers to gather
+> and have a discussion about:-
+> 
+> 1. Current status of the blktests framework.
+> 2. Any new/missing features that we want to add in the blktests.
+> 3. Any new kernel features that could be used to make testing easier?
+> 4. DM/MD Testcases.
+> 5. Potentially adding VM support in the blktests.
 
-Fixes: 2e47e4e62e40 ("scsi: megaraid_sas: Fail init if heartbeat timer fails")
-Signed-off-by: Zhipeng Lu <alexious@zju.edu.cn>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
+I am interested in such a session.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3d4f13da1ae8..046d7c880be6 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -6378,11 +6378,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 			if (!fusion->stream_detect_by_ld[i]) {
- 				dev_err(&instance->pdev->dev,
- 					"unable to allocate stream detect by LD\n ");
--				for (j = 0; j < i; ++j)
--					kfree(fusion->stream_detect_by_ld[j]);
--				kfree(fusion->stream_detect_by_ld);
--				fusion->stream_detect_by_ld = NULL;
--				goto fail_get_ld_pd_list;
-+				goto fail_alloc_stream_detect;
- 			}
- 			fusion->stream_detect_by_ld[i]->mru_bit_map
- 				= MR_STREAM_BITMAP;
-@@ -6502,7 +6498,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 			megasas_start_timer(instance);
- 		} else {
- 			instance->skip_heartbeat_timer_del = 1;
--			goto fail_get_ld_pd_list;
-+			goto fail_alloc_stream_detect;
- 		}
- 	}
- 
-@@ -6520,6 +6516,13 @@ static int megasas_init_fw(struct megasas_instance *instance)
- fail_start_watchdog:
- 	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
- 		del_timer_sync(&instance->sriov_heartbeat_timer);
-+fail_alloc_stream_detect:
-+	if (instance->adapter_type >= VENTURA_SERIES) {
-+		for (i = 0; i < MAX_LOGICAL_DRIVES_EXT; ++i)
-+			kfree(fusion->stream_detect_by_ld[i]);
-+		kfree(fusion->stream_detect_by_ld);
-+		fusion->stream_detect_by_ld = NULL;
-+	}
- fail_get_ld_pd_list:
- 	instance->instancet->disable_intr(instance);
- 	megasas_destroy_irqs(instance);
--- 
-2.34.1
+> Required attendees :-
+> 
+> Shinichiro Kawasaki
+> Damien Le Moal
+> Daniel Wanger
+> Hannes Reinecke
 
+If I get an invite I'll be there.
+
+Thanks,
+Daniel
