@@ -1,161 +1,229 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F73614AA5;
-	Wed, 17 Jan 2024 10:56:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 689E11DFC8
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2024 11:58:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705488990; cv=none; b=h5Xj6a8HHWPweOfQQDtLW+OiADIaXvhm/UDmXdC/WKXIo7ASlC5QzL4wtvmSF7nb9jjpRRquZq2MT/gtykpStcFWPjyNqrLiGKbIYggWTFNPvtW1qCg2A9EIbq/yD5sidfroOTQRCVkTpFGSYHlVLoqug4MAoi7GD2D4t+pQ308=
+	t=1705492705; cv=none; b=F8IzGzPs/fET0CPTbTMYIbGCOhcoru4DV4MYHNrfnYblHwI1SYRCshzQO19sLXqrbZLSz0Ji57R4vjxTQjWKqeIIRsoPBXCOKympjwLPCi8M6zc+bJCrZ2SFauYHwxSWGGEspF3zR+36Z4xZ+fh1VjXX9qd708GLZSN4G/PYdXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705488990; c=relaxed/simple;
-	bh=WSGgAjBCNFTlFNiRizxkXoOuda2eNlpwVgzMjk2JrEU=;
-	h=Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To:X-Spam-Level:X-Rspamd-Server:
-	 X-Spamd-Result:X-Spam-Score:X-Rspamd-Queue-Id:X-Spam-Flag; b=onMSHCOUvjhl6CXmgLNkDK220R+Iv8QxBKNUphM7zkvDIO8oI3YApJpyRYzkxYdlXb4IbzOIjcho55lbXSBeEdobtZ5YpryZnPaZa3y/2HEPNWYr/0XhKvjJABEsqO6o/BLDE1RHqvpN2b+b2zwFFqDS7032lcmECaMwxw6QH9o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=styaGKmK; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=acYuKKYP; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=styaGKmK; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=acYuKKYP; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1705492705; c=relaxed/simple;
+	bh=SdB2TP1URh+2f5CnTPCtsm4BKecp5Qah44NrUZikOFc=;
+	h=Received:DKIM-Filter:DKIM-Signature:Received:Received:Received:
+	 Received:X-AuditID:Received:Received:Received:Date:From:To:CC:
+	 Subject:Message-ID:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To:X-Originating-IP:
+	 X-ClientProxiedBy:X-Brightmail-Tracker:X-Brightmail-Tracker:
+	 X-CMS-MailID:X-Msg-Generator:X-RootMTR:X-EPHeader:CMS-TYPE:
+	 X-CMS-RootMailID:References; b=Re2SO/T9K63UuWaRYuILu94Zif2Vr/uFgqjbuFULkKpRBoY+Wrlg5rX3BJfcY1YmpLJUeiCSUODuyQHGliBe7v26Kkb8g92/keZ7FVRouJ1v7kPA8CvVCV9hum80fmOFPw5Z40eJPz+ziXeFVKhVglyDMCLo5K7hrngasMlHtcQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=FjhHRk4p; arc=none smtp.client-ip=210.118.77.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="styaGKmK";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="acYuKKYP";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="styaGKmK";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="acYuKKYP"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 7B2651FBF2;
-	Wed, 17 Jan 2024 10:56:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1705488987; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/I5YOhlPZDB0xCXK6u+NS0O9D8UoMYtDZ/TUkUtwk1Q=;
-	b=styaGKmK7tv1QTbE0Pf3u/0+YE7O7Z2/uW8YD4onOkDb/cErc4tbHMAfN05avlwMVr3zFT
-	ighay/d+y+cfahaxRPgDEwnd7iGEGI5iVmNwdorQijXp7NTVA8MLEtpFupCzthXOhdehpS
-	uiGbvYg9aU2eGzA1eG02fG0JhnRh82k=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1705488987;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/I5YOhlPZDB0xCXK6u+NS0O9D8UoMYtDZ/TUkUtwk1Q=;
-	b=acYuKKYPUiFqKzuymrfl73fv8gm0GAjTFE2S7Z8pvyWDqdMNmgotp757zT1ki/0uWozy+y
-	MsKc/qy/Qqxds7BQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1705488987; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/I5YOhlPZDB0xCXK6u+NS0O9D8UoMYtDZ/TUkUtwk1Q=;
-	b=styaGKmK7tv1QTbE0Pf3u/0+YE7O7Z2/uW8YD4onOkDb/cErc4tbHMAfN05avlwMVr3zFT
-	ighay/d+y+cfahaxRPgDEwnd7iGEGI5iVmNwdorQijXp7NTVA8MLEtpFupCzthXOhdehpS
-	uiGbvYg9aU2eGzA1eG02fG0JhnRh82k=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1705488987;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/I5YOhlPZDB0xCXK6u+NS0O9D8UoMYtDZ/TUkUtwk1Q=;
-	b=acYuKKYPUiFqKzuymrfl73fv8gm0GAjTFE2S7Z8pvyWDqdMNmgotp757zT1ki/0uWozy+y
-	MsKc/qy/Qqxds7BQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6707313751;
-	Wed, 17 Jan 2024 10:56:27 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Z1SwF1uyp2V0OQAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Wed, 17 Jan 2024 10:56:27 +0000
-Date: Wed, 17 Jan 2024 11:56:26 +0100
-From: Daniel Wagner <dwagner@suse.de>
-To: Dick Kennedy <dick.kennedy@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	James Smart <james.smart@broadcom.com>, Hannes Reinecke <hare@suse.de>
-Subject: Re: Re: [PATCH] scsi: lpfc: use unsigned type for num_sge
-Message-ID: <bhbx4emtgs4dxwryeorgq2igq3b2lu3k2ycdyn4ebwpbw4kxtp@aijstnvpilho>
-References: <20231220162658.12392-1-dwagner@suse.de>
- <CAGx+d6cGuC8S2+_ipyKMtOxNQ5a0RW_H46jrwWJjwRx5TRw-ww@mail.gmail.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="FjhHRk4p"
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20240117115815euoutp01737c96d7fc4fa71fd8f79d7be7266d51~rIJIMmUFo1807218072euoutp01D
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2024 11:58:15 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20240117115815euoutp01737c96d7fc4fa71fd8f79d7be7266d51~rIJIMmUFo1807218072euoutp01D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1705492695;
+	bh=SdB2TP1URh+2f5CnTPCtsm4BKecp5Qah44NrUZikOFc=;
+	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
+	b=FjhHRk4pVr1fiHdOiqsCeldOAHepgntE3+Cnd/uegzFM7/EC3A2n+lhe5HnfxvkVs
+	 +DtK20XM3Ul8AvWXKCbHSlVqUqVBhXPltEIht9ESr/4UEu+J4Amp5LtImImDNkM34m
+	 C5FkBwHhP6sqeKVb8X9zhfAl0ISI5DiNKeTFs1Jo=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+	eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+	20240117115814eucas1p1c232c3b814b2f470041924f3bb0420fd~rIJHaaPx41464314643eucas1p1I;
+	Wed, 17 Jan 2024 11:58:14 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+	eusmges3new.samsung.com (EUCPMTA) with SMTP id 61.9E.09552.6D0C7A56; Wed, 17
+	Jan 2024 11:58:14 +0000 (GMT)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20240117115814eucas1p28abc60e7ee127f6c587bea07b17a19b1~rIJG_Wgv10373303733eucas1p2O;
+	Wed, 17 Jan 2024 11:58:14 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+	eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240117115814eusmtrp11160c27c9b724ad22f73bc9c3a572296~rIJG9uAIB0851908519eusmtrp1H;
+	Wed, 17 Jan 2024 11:58:14 +0000 (GMT)
+X-AuditID: cbfec7f5-853ff70000002550-7c-65a7c0d6794d
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+	eusmgms1.samsung.com (EUCPMTA) with SMTP id C6.74.09146.6D0C7A56; Wed, 17
+	Jan 2024 11:58:14 +0000 (GMT)
+Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
+	eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20240117115813eusmtip2e394ff78bd8b3afa633aac65201743dc~rIJGvRZuJ0477204772eusmtip2X;
+	Wed, 17 Jan 2024 11:58:13 +0000 (GMT)
+Received: from localhost (106.110.32.122) by CAMSVWEXC02.scsc.local
+	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
+	Wed, 17 Jan 2024 11:58:13 +0000
+Date: Wed, 17 Jan 2024 12:58:12 +0100
+From: Javier =?utf-8?B?R29uesOhbGV6?= <javier.gonz@samsung.com>
+To: Viacheslav Dubeyko <slava@dubeyko.com>
+CC: <lsf-pc@lists.linux-foundation.org>, Linux FS Devel
+	<linux-fsdevel@vger.kernel.org>, Adam Manzanares <a.manzanares@samsung.com>,
+	<linux-scsi@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
+	<linux-block@vger.kernel.org>, <slava@dubeiko.com>, Kanchan Joshi
+	<joshi.k@samsung.com>, Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [LSF/MM/BPF TOPIC] : Flexible Data Placement (FDP) availability
+ for kernel space file systems
+Message-ID: <20240117115812.e46ihed2qt67wdue@ArmHalley.local>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"; format="flowed"
 Content-Disposition: inline
-In-Reply-To: <CAGx+d6cGuC8S2+_ipyKMtOxNQ5a0RW_H46jrwWJjwRx5TRw-ww@mail.gmail.com>
-X-Spam-Level: 
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=styaGKmK;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=acYuKKYP
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-3.02 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 MIME_GOOD(-0.10)[text/plain];
-	 DWL_DNSWL_MED(-2.00)[suse.de:dkim];
-	 RCPT_COUNT_FIVE(0.00)[5];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 DKIM_TRACE(0.00)[suse.de:+];
-	 MX_GOOD(-0.01)[];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 RCVD_TLS_ALL(0.00)[];
-	 BAYES_HAM(-0.01)[50.17%]
-X-Spam-Score: -3.02
-X-Rspamd-Queue-Id: 7B2651FBF2
-X-Spam-Flag: NO
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <86106963-0E22-46D6-B0BE-A1ABD58CE7D8@dubeyko.com>
+X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
+	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrEKsWRmVeSWpSXmKPExsWy7djP87rXDixPNdi3RtFi2oefzBZ7b2lb
+	7Nl7ksVi/rKn7Bbd13ewWex7vZfZ4tPlhUBiy2wmBw6Py1e8PR49OcjqcXD9GxaPzUvqPSbf
+	WM7o8XmTXABbFJdNSmpOZllqkb5dAlfG7KapjAVbNSqmb5vI2MD4QKGLkZNDQsBEYkXnXaYu
+	Ri4OIYEVjBIH2lYzQjhfGCXm9pxgg3A+M0rMen+DpYuRA6xl93s3iPhyRonZs7YiFL1+8w3K
+	2cIo8fzLEiaQJSwCqhKbNrcyg9hsAvYSl5bdArNFBLQkZu+bAracWeAUk8S/5U/YQVYIC+RI
+	tE/xBqnhFbCV6Po1nxnCFpQ4OfMJC4jNLGAl0fmhiRWknFlAWmL5Pw6IsLxE89bZzCBhTqBV
+	c4/UQbypJPH4xVtGCLtW4tSWW2BbJQSaOSWmdy1ghUi4SLz7/IEZwhaWeHV8CzuELSNxenIP
+	C4SdLXHxTDdUTYnE4vfHmCGBYi3RdyYHIuwocejOTkaIMJ/EjbeCEJfxSUzaNh2qmleio01o
+	AqPKLCRvzULy1iyEt2YheWsBI8sqRvHU0uLc9NRi47zUcr3ixNzi0rx0veT83E2MwGR0+t/x
+	rzsYV7z6qHeIkYmD8RCjBAezkgivv8GyVCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8qinyqUIC
+	6YklqdmpqQWpRTBZJg5OqQYmrtVZx+71GNl/ir7Q4y/pKnWpNUu1SPWMRpZhdvFVndCaf26m
+	Txwzgl4/EgndzJG4aumx5mnTvk3akpG1WTfbc8f5nKuT5JUtoybPaVmd0WWd5/vXNylp2mZ7
+	1S/rotLqNm6dtijhEjdPaZKKra71lIz+0E8c4Tv33mtIPW/+QTPTcYu05ct60wWJbT7WP7NK
+	bxxIMoh4sf712c81gid2tS1afSnr2NGS30Y9vMc18/mcg2/qfL+wrJnt7f519rP2N+zYFSsX
+	GNW+9tsxnRCd1S8Uk/Y28v3VipS1M/lUds/i+M110c+4L/PLcrFOYQor7Fv0vV1EJVpvYsqX
+	kmzbdTF7RTZyLK5/LJdttk6JpTgj0VCLuag4EQCISNjTtQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLIsWRmVeSWpSXmKPExsVy+t/xe7rXDixPNZjwg8Vi2oefzBZ7b2lb
+	7Nl7ksVi/rKn7Bbd13ewWex7vZfZ4tPlhUBiy2wmBw6Py1e8PR49OcjqcXD9GxaPzUvqPSbf
+	WM7o8XmTXABblJ5NUX5pSapCRn5xia1StKGFkZ6hpYWekYmlnqGxeayVkamSvp1NSmpOZllq
+	kb5dgl7G7KapjAVbNSqmb5vI2MD4QKGLkYNDQsBEYvd7ty5GLg4hgaWMEif2H2PtYuQEistI
+	bPxyFcoWlvhzrYsNougjo0Rn1x9GCGcLo8SdRUfBqlgEVCU2bW5lBrHZBOwlLi27BWaLCGhJ
+	zN43hQmkgVngFJPEv+VP2EFWCwvkSLRP8Qap4RWwlej6NZ8ZYuhvRolZW38zQyQEJU7OfMIC
+	YjMLWEjMnH+eEaSXWUBaYvk/DoiwvETz1tnMIGFOoL1zj9RBHK0k8fjFW0YIu1bi899njBMY
+	RWYhGToLydBZCENnIRm6gJFlFaNIamlxbnpusaFecWJucWleul5yfu4mRmC8bjv2c/MOxnmv
+	PuodYmTiYDzEKMHBrCTC62+wLFWINyWxsiq1KD++qDQntfgQoykwhCYyS4km5wMTRl5JvKGZ
+	gamhiZmlgamlmbGSOK9nQUeikEB6YklqdmpqQWoRTB8TB6dUA9N6nZBpjWH5CYG3ops/zkuT
+	VNVuyT+zMfy36IqNjVvLeM/qqL+suaEevOFllpjndU7Nmr+CzYdVeTeEqR17YnH65+w/zkWb
+	2Dyv5T63ChKLiffU3Lgxdc7KvRO+87p3vsjxORLn9zuE87Wf9dneo2GrZ+6r6P/9WLkkQ+5X
+	hMPT5evnxDe1Z3bPaZ23Qzf9b/F5qykPuCzZHryUuMQ7871iruaSMlnhkIT1B2VDnVsOOWTM
+	qtk+f2KG+evWjDcPH90/w7i8/aUUQ6n4g5Sl2zmeZq/Nv7ZVLm/ulsU27iUlj2Ll7ofN2Vla
+	13T//KzInvcS3afSkv7Utz34O6cg//BlnWd9uqul5EIDZhokBSmxFGckGmoxFxUnAgAFbueN
+	YAMAAA==
+X-CMS-MailID: 20240117115814eucas1p28abc60e7ee127f6c587bea07b17a19b1
+X-Msg-Generator: CA
+X-RootMTR: 20240115084656eucas1p219dd48243e2eaec4180e5e6ecf5e8ad9
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20240115084656eucas1p219dd48243e2eaec4180e5e6ecf5e8ad9
+References: <CGME20240115084656eucas1p219dd48243e2eaec4180e5e6ecf5e8ad9@eucas1p2.samsung.com>
+	<20240115084631.152835-1-slava@dubeyko.com>
+	<20240115175445.pyxjxhyrmg7od6sc@mpHalley-2.localdomain>
+	<86106963-0E22-46D6-B0BE-A1ABD58CE7D8@dubeyko.com>
 
-Hi Dick,
+On 16.01.2024 11:39, Viacheslav Dubeyko wrote:
+>
+>
+>> On Jan 15, 2024, at 8:54 PM, Javier González <javier.gonz@samsung.com> wrote:
+>>
+>> On 15.01.2024 11:46, Viacheslav Dubeyko wrote:
+>>> Hi Javier,
+>>>
+>>> Samsung introduced Flexible Data Placement (FDP) technology
+>>> pretty recently. As far as I know, currently, this technology
+>>> is available for user-space solutions only. I assume it will be
+>>> good to have discussion how kernel-space file systems could
+>>> work with SSDs that support FDP technology by employing
+>>> FDP benefits.
+>>
+>> Slava,
+>>
+>> Thanks for bringing this up.
+>>
+>> First, this is not a Samsung technology. Several vendors are building
+>> FDP and several customers are already deploying first product.
+>>
+>> We enabled FDP thtough I/O Passthru to avoid unnecesary noise in the
+>> block layer until we had a clear idea on use-cases. We have been
+>> following and reviewing Bart's write hint series and it covers all the
+>> block layer and interface needed to support FDP. Currently, we have
+>> patches with small changes to wire the NVMe driver. We plan to submit
+>> them after Bart's patches are applied. Now it is a good time since we
+>> have LSF and there are also 2 customers using FDP on block and file.
+>>
+>>>
+>>> How soon FDP API will be available for kernel-space file systems?
+>>
+>> The work is done. We will submit as Bart's patches are applied.
+>>
+>> Kanchan is doing this work.
+>>
+>>> How kernel-space file systems can adopt FDP technology?
+>>
+>> It is based on write hints. There is no FS-specific placement decisions.
+>> All the responsibility is in the application.
+>>
+>> Kanchan: Can you comment a bit more on this?
+>>
+>>> How FDP technology can improve efficiency and reliability of
+>>> kernel-space file system?
+>>
+>> This is an open problem. Our experience is that making data placement
+>> decisions on the FS is tricky (beyond the obvious data / medatadata). If
+>> someone has a good use-case for this, I think it is worth exploring.
+>> F2FS is a good candidate, but I am not sure FDP is of interest for
+>> mobile - here ZUFS seems to be the current dominant technology.
+>>
+>
+>If I understand the FDP technology correctly, I can see the benefits for
+>file systems. :)
+>
+>For example, SSDFS is based on segment concept and it has multiple
+>types of segments (superblock, mapping table, segment bitmap, b-tree
+>nodes, user data). So, at first, I can use hints to place different segment
+>types into different reclaim units.
 
-On Fri, Dec 22, 2023 at 10:04:50AM -0800, Dick Kennedy wrote:
-> The change is good, however, I  don't think this was really the
-> problem.
+Yes. This is what I meant with data / metadata. We have looked also into
+using 1 RUH for metadata and rest make available to applications. We
+decided to go with a simple solution to start with and complete as we
+see users.
 
-I tried to write the commit message based on the bug report we got. So
-yes, it's possible the it is not correct as I was not really involved
-and might missinterpret it.
+For SSDFS it makes sense.
 
-> We would  like to know if this patch really solved an issue they
-> observed.
+>The first point is clear, I can place different
+>type of data/metadata (with different “hotness”) into different reclaim units.
+>Second point could be not so clear. SSDFS provides the way to define
+>the size of erase block. If it’s ZNS SSD, then mkfs tool uses the size of zone
+>that storage device exposes to mkfs tool. However, for the case of conventional
+>SSD, the size of erase block is defined by user. Technically speaking, this size
+>could be smaller or bigger that the real erase block inside of SSD. Also, FTL could
+>use a tricky mapping scheme that could combine LBAs in the way making
+>FS activity inefficient even by using erase block or segment concept. I can see
+>how FDP can help here. First of all, reclaim unit makes guarantee that erase
+>blocks or segments on file system side will match to erase blocks (reclaim units)
+>on SSD side. Also, I can use various sizes of logical erase blocks but the logical
+>erase blocks of the same segment type will be placed into the same reclaim unit.
+>It could guarantee the decreasing the write amplification and predictable reclaiming on
+>SSD side. The flexibility to use various logical erase block sizes provides
+>the better efficiency of file system because various workloads could require
+>different logical erase block sizes.
 
-Yes, it fixes the reported problem.
+Sounds good. I see you sent a proposal on SSDFS specificaly. It makes
+sense to cover this specific uses there.
+>
+>Technically speaking, any file system can place different types of metadata in
+>different reclaim units. However, user data is slightly more tricky case. Potentially,
+>file system logic can track “hotness” or frequency of updates of some user data
+>and try to direct the different types of user data in different reclaim units.
+>But, from another point of view, we have folders in file system namespace.
+>If application can place different types of data in different folders, then, technically
+>speaking, file system logic can place the content of different folders into different
+>reclaim units. But application needs to follow some “discipline” to store different
+>types of user data (different “hotness”, for example) in different folders.
 
->  A good data point to know is what adapter they're using.
-
-A bunch of different HPE cards which show this log entry: SN1700E,
-SN1610E and SN1200E.
-
->  If that adapter supports hybrid sgl (i.e. phba->cfg_xpsgl), then we
->  would have set the max sg_tablesize = LPFC_MAX_SG_TABLESIZE = 0xffff.
-> 
->  But even then, this patch implies that dma_map_sg() returned a crazy
->  huge amount with the MSB set.
-
-Sure, though this seems to be the case.
-
-One noteworthy information is that DIF needs to be enabled to trigger
-it:
-
-# cat /sys/module/lpfc/parameters/lpfc_enable_bg
-1
-# cat /sys/module/lpfc/parameters/lpfc_prot_guard
-2
-
-Thanks,
-Daniel
+Exactly. This is why I think it makes sense to look at specific FSs as
+there are real deployments that we can use to argue for changes that
+cover a large percentage of use-cases.
