@@ -1,229 +1,181 @@
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+Received: from www62.your-server.de (www62.your-server.de [213.133.104.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 689E11DFC8
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2024 11:58:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAB3A1F5F7;
+	Wed, 17 Jan 2024 13:37:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.133.104.62
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705492705; cv=none; b=F8IzGzPs/fET0CPTbTMYIbGCOhcoru4DV4MYHNrfnYblHwI1SYRCshzQO19sLXqrbZLSz0Ji57R4vjxTQjWKqeIIRsoPBXCOKympjwLPCi8M6zc+bJCrZ2SFauYHwxSWGGEspF3zR+36Z4xZ+fh1VjXX9qd708GLZSN4G/PYdXY=
+	t=1705498668; cv=none; b=B5KUoLOVCVYA5pMy2KmFwPP4p0lXo3GI6jLEgDu6c+Qnyqtm6MOk52NCwx+x8ZH5dmhf+aAcvpVEhAZFzkkUHEbrpk5+BEfeUPzvZVe5l9zksSNVIIzsDyKW8/UiQVLkhAJ9zWKJZ0nJ0EIeVoQT/XKfPhMgja1OSnt3RvtUQJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705492705; c=relaxed/simple;
-	bh=SdB2TP1URh+2f5CnTPCtsm4BKecp5Qah44NrUZikOFc=;
-	h=Received:DKIM-Filter:DKIM-Signature:Received:Received:Received:
-	 Received:X-AuditID:Received:Received:Received:Date:From:To:CC:
-	 Subject:Message-ID:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To:X-Originating-IP:
-	 X-ClientProxiedBy:X-Brightmail-Tracker:X-Brightmail-Tracker:
-	 X-CMS-MailID:X-Msg-Generator:X-RootMTR:X-EPHeader:CMS-TYPE:
-	 X-CMS-RootMailID:References; b=Re2SO/T9K63UuWaRYuILu94Zif2Vr/uFgqjbuFULkKpRBoY+Wrlg5rX3BJfcY1YmpLJUeiCSUODuyQHGliBe7v26Kkb8g92/keZ7FVRouJ1v7kPA8CvVCV9hum80fmOFPw5Z40eJPz+ziXeFVKhVglyDMCLo5K7hrngasMlHtcQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=FjhHRk4p; arc=none smtp.client-ip=210.118.77.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1705498668; c=relaxed/simple;
+	bh=a0o55pxxDCLHmqaWvxrygvI6niPdHttBqY/E85EhHew=;
+	h=DKIM-Signature:Received:Received:Subject:From:To:Cc:References:
+	 Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:Content-Type:
+	 Content-Language:Content-Transfer-Encoding:X-Authenticated-Sender:
+	 X-Virus-Scanned; b=iKGkQOtampxcIClUmVv8tX3N9MbzIz200z1UJvn0ZLjNfPJLpz41xXGqpbXT74z6ZMVPQpV3o72bMqteDzZ3vsTiWi7FNTxwgDy0eNnll+oZwwSfHX7gayt1DdL9kdA2Cm1xYnZm4hb3chfsyOBHhUpGceIp5naUw2nSzVBy+TU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net; spf=pass smtp.mailfrom=iogearbox.net; dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b=DEGHyY+4; arc=none smtp.client-ip=213.133.104.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iogearbox.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="FjhHRk4p"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20240117115815euoutp01737c96d7fc4fa71fd8f79d7be7266d51~rIJIMmUFo1807218072euoutp01D
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2024 11:58:15 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20240117115815euoutp01737c96d7fc4fa71fd8f79d7be7266d51~rIJIMmUFo1807218072euoutp01D
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1705492695;
-	bh=SdB2TP1URh+2f5CnTPCtsm4BKecp5Qah44NrUZikOFc=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:From;
-	b=FjhHRk4pVr1fiHdOiqsCeldOAHepgntE3+Cnd/uegzFM7/EC3A2n+lhe5HnfxvkVs
-	 +DtK20XM3Ul8AvWXKCbHSlVqUqVBhXPltEIht9ESr/4UEu+J4Amp5LtImImDNkM34m
-	 C5FkBwHhP6sqeKVb8X9zhfAl0ISI5DiNKeTFs1Jo=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-	eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-	20240117115814eucas1p1c232c3b814b2f470041924f3bb0420fd~rIJHaaPx41464314643eucas1p1I;
-	Wed, 17 Jan 2024 11:58:14 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-	eusmges3new.samsung.com (EUCPMTA) with SMTP id 61.9E.09552.6D0C7A56; Wed, 17
-	Jan 2024 11:58:14 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20240117115814eucas1p28abc60e7ee127f6c587bea07b17a19b1~rIJG_Wgv10373303733eucas1p2O;
-	Wed, 17 Jan 2024 11:58:14 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-	eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240117115814eusmtrp11160c27c9b724ad22f73bc9c3a572296~rIJG9uAIB0851908519eusmtrp1H;
-	Wed, 17 Jan 2024 11:58:14 +0000 (GMT)
-X-AuditID: cbfec7f5-853ff70000002550-7c-65a7c0d6794d
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-	eusmgms1.samsung.com (EUCPMTA) with SMTP id C6.74.09146.6D0C7A56; Wed, 17
-	Jan 2024 11:58:14 +0000 (GMT)
-Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-	eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20240117115813eusmtip2e394ff78bd8b3afa633aac65201743dc~rIJGvRZuJ0477204772eusmtip2X;
-	Wed, 17 Jan 2024 11:58:13 +0000 (GMT)
-Received: from localhost (106.110.32.122) by CAMSVWEXC02.scsc.local
-	(2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-	Wed, 17 Jan 2024 11:58:13 +0000
-Date: Wed, 17 Jan 2024 12:58:12 +0100
-From: Javier =?utf-8?B?R29uesOhbGV6?= <javier.gonz@samsung.com>
-To: Viacheslav Dubeyko <slava@dubeyko.com>
-CC: <lsf-pc@lists.linux-foundation.org>, Linux FS Devel
-	<linux-fsdevel@vger.kernel.org>, Adam Manzanares <a.manzanares@samsung.com>,
-	<linux-scsi@vger.kernel.org>, <linux-nvme@lists.infradead.org>,
-	<linux-block@vger.kernel.org>, <slava@dubeiko.com>, Kanchan Joshi
-	<joshi.k@samsung.com>, Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [LSF/MM/BPF TOPIC] : Flexible Data Placement (FDP) availability
- for kernel space file systems
-Message-ID: <20240117115812.e46ihed2qt67wdue@ArmHalley.local>
+	dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b="DEGHyY+4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=iogearbox.net; s=default2302; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:MIME-Version:Date:Message-ID:References:Cc:To:From:Subject:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
+	bh=EUpvZ7ImcN6iRBfQR5QrQA+ZGjPdmy3aiW0Hd3hcrnQ=; b=DEGHyY+49LEH3JYxGgz1hw+W01
+	u8ZPQ5hafPlp6u04J2wN52hOOGCB3BQLSYBSxcAeo1w+RKoiyUBhGnNg0Sz3l5VCByCNn+JzxzsIr
+	5HU91Q3fKkxhIEhuZIxOnJzyqJvtzz3JDCJ143149F0dx/695qfuSJZIb6uncyA0Eszq9kdWqY5Us
+	DAISHVTJ3azdLRkAb+v7THDFfp3dk5oROIAFY3mDvTU26s7HwXOMao46pD6RbkTRBlR/0pTXv13JB
+	PQunZBTeSUjfhN1b9tPLnHan9qvIDeOhXeDJ/0y9/C0aVlrREfowX/rZRib95Gc/G2nqY0SVSd1LD
+	2mWUk//Q==;
+Received: from sslproxy01.your-server.de ([78.46.139.224])
+	by www62.your-server.de with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <daniel@iogearbox.net>)
+	id 1rQ66w-000ExX-1L; Wed, 17 Jan 2024 14:37:42 +0100
+Received: from [85.1.206.226] (helo=linux.home)
+	by sslproxy01.your-server.de with esmtpsa (TLSv1.3:TLS_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <daniel@iogearbox.net>)
+	id 1rQ66v-000EvW-F7; Wed, 17 Jan 2024 14:37:41 +0100
+Subject: LSF/MM/BPF: 2024: Call for Proposals [Reminder]
+From: Daniel Borkmann <daniel@iogearbox.net>
+To: lsf-pc@lists.linuxfoundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+ linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-nvme@lists.infradead.org, bpf@vger.kernel.org, netdev@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
+ <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
+Message-ID: <c91530f0-2688-647d-2603-a7b1673f8e42@iogearbox.net>
+Date: Wed, 17 Jan 2024 14:37:41 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-Content-Disposition: inline
+In-Reply-To: <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <86106963-0E22-46D6-B0BE-A1ABD58CE7D8@dubeyko.com>
-X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
-	CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrEKsWRmVeSWpSXmKPExsWy7djP87rXDixPNdi3RtFi2oefzBZ7b2lb
-	7Nl7ksVi/rKn7Bbd13ewWex7vZfZ4tPlhUBiy2wmBw6Py1e8PR49OcjqcXD9GxaPzUvqPSbf
-	WM7o8XmTXABbFJdNSmpOZllqkb5dAlfG7KapjAVbNSqmb5vI2MD4QKGLkZNDQsBEYkXnXaYu
-	Ri4OIYEVjBIH2lYzQjhfGCXm9pxgg3A+M0rMen+DpYuRA6xl93s3iPhyRonZs7YiFL1+8w3K
-	2cIo8fzLEiaQJSwCqhKbNrcyg9hsAvYSl5bdArNFBLQkZu+bAracWeAUk8S/5U/YQVYIC+RI
-	tE/xBqnhFbCV6Po1nxnCFpQ4OfMJC4jNLGAl0fmhiRWknFlAWmL5Pw6IsLxE89bZzCBhTqBV
-	c4/UQbypJPH4xVtGCLtW4tSWW2BbJQSaOSWmdy1ghUi4SLz7/IEZwhaWeHV8CzuELSNxenIP
-	C4SdLXHxTDdUTYnE4vfHmCGBYi3RdyYHIuwocejOTkaIMJ/EjbeCEJfxSUzaNh2qmleio01o
-	AqPKLCRvzULy1iyEt2YheWsBI8sqRvHU0uLc9NRi47zUcr3ixNzi0rx0veT83E2MwGR0+t/x
-	rzsYV7z6qHeIkYmD8RCjBAezkgivv8GyVCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8qinyqUIC
-	6YklqdmpqQWpRTBZJg5OqQYmrtVZx+71GNl/ir7Q4y/pKnWpNUu1SPWMRpZhdvFVndCaf26m
-	Txwzgl4/EgndzJG4aumx5mnTvk3akpG1WTfbc8f5nKuT5JUtoybPaVmd0WWd5/vXNylp2mZ7
-	1S/rotLqNm6dtijhEjdPaZKKra71lIz+0E8c4Tv33mtIPW/+QTPTcYu05ct60wWJbT7WP7NK
-	bxxIMoh4sf712c81gid2tS1afSnr2NGS30Y9vMc18/mcg2/qfL+wrJnt7f519rP2N+zYFSsX
-	GNW+9tsxnRCd1S8Uk/Y28v3VipS1M/lUds/i+M110c+4L/PLcrFOYQor7Fv0vV1EJVpvYsqX
-	kmzbdTF7RTZyLK5/LJdttk6JpTgj0VCLuag4EQCISNjTtQMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrLIsWRmVeSWpSXmKPExsVy+t/xe7rXDixPNZjwg8Vi2oefzBZ7b2lb
-	7Nl7ksVi/rKn7Bbd13ewWex7vZfZ4tPlhUBiy2wmBw6Py1e8PR49OcjqcXD9GxaPzUvqPSbf
-	WM7o8XmTXABblJ5NUX5pSapCRn5xia1StKGFkZ6hpYWekYmlnqGxeayVkamSvp1NSmpOZllq
-	kb5dgl7G7KapjAVbNSqmb5vI2MD4QKGLkYNDQsBEYvd7ty5GLg4hgaWMEif2H2PtYuQEistI
-	bPxyFcoWlvhzrYsNougjo0Rn1x9GCGcLo8SdRUfBqlgEVCU2bW5lBrHZBOwlLi27BWaLCGhJ
-	zN43hQmkgVngFJPEv+VP2EFWCwvkSLRP8Qap4RWwlej6NZ8ZYuhvRolZW38zQyQEJU7OfMIC
-	YjMLWEjMnH+eEaSXWUBaYvk/DoiwvETz1tnMIGFOoL1zj9RBHK0k8fjFW0YIu1bi899njBMY
-	RWYhGToLydBZCENnIRm6gJFlFaNIamlxbnpusaFecWJucWleul5yfu4mRmC8bjv2c/MOxnmv
-	PuodYmTiYDzEKMHBrCTC62+wLFWINyWxsiq1KD++qDQntfgQoykwhCYyS4km5wMTRl5JvKGZ
-	gamhiZmlgamlmbGSOK9nQUeikEB6YklqdmpqQWoRTB8TB6dUA9N6nZBpjWH5CYG3ops/zkuT
-	VNVuyT+zMfy36IqNjVvLeM/qqL+suaEevOFllpjndU7Nmr+CzYdVeTeEqR17YnH65+w/zkWb
-	2Dyv5T63ChKLiffU3Lgxdc7KvRO+87p3vsjxORLn9zuE87Wf9dneo2GrZ+6r6P/9WLkkQ+5X
-	hMPT5evnxDe1Z3bPaZ23Qzf9b/F5qykPuCzZHryUuMQ7871iruaSMlnhkIT1B2VDnVsOOWTM
-	qtk+f2KG+evWjDcPH90/w7i8/aUUQ6n4g5Sl2zmeZq/Nv7ZVLm/ulsU27iUlj2Ll7ofN2Vla
-	13T//KzInvcS3afSkv7Utz34O6cg//BlnWd9uqul5EIDZhokBSmxFGckGmoxFxUnAgAFbueN
-	YAMAAA==
-X-CMS-MailID: 20240117115814eucas1p28abc60e7ee127f6c587bea07b17a19b1
-X-Msg-Generator: CA
-X-RootMTR: 20240115084656eucas1p219dd48243e2eaec4180e5e6ecf5e8ad9
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20240115084656eucas1p219dd48243e2eaec4180e5e6ecf5e8ad9
-References: <CGME20240115084656eucas1p219dd48243e2eaec4180e5e6ecf5e8ad9@eucas1p2.samsung.com>
-	<20240115084631.152835-1-slava@dubeyko.com>
-	<20240115175445.pyxjxhyrmg7od6sc@mpHalley-2.localdomain>
-	<86106963-0E22-46D6-B0BE-A1ABD58CE7D8@dubeyko.com>
+X-Authenticated-Sender: daniel@iogearbox.net
+X-Virus-Scanned: Clear (ClamAV 0.103.10/27157/Wed Jan 17 10:41:11 2024)
 
-On 16.01.2024 11:39, Viacheslav Dubeyko wrote:
->
->
->> On Jan 15, 2024, at 8:54 PM, Javier González <javier.gonz@samsung.com> wrote:
->>
->> On 15.01.2024 11:46, Viacheslav Dubeyko wrote:
->>> Hi Javier,
->>>
->>> Samsung introduced Flexible Data Placement (FDP) technology
->>> pretty recently. As far as I know, currently, this technology
->>> is available for user-space solutions only. I assume it will be
->>> good to have discussion how kernel-space file systems could
->>> work with SSDs that support FDP technology by employing
->>> FDP benefits.
->>
->> Slava,
->>
->> Thanks for bringing this up.
->>
->> First, this is not a Samsung technology. Several vendors are building
->> FDP and several customers are already deploying first product.
->>
->> We enabled FDP thtough I/O Passthru to avoid unnecesary noise in the
->> block layer until we had a clear idea on use-cases. We have been
->> following and reviewing Bart's write hint series and it covers all the
->> block layer and interface needed to support FDP. Currently, we have
->> patches with small changes to wire the NVMe driver. We plan to submit
->> them after Bart's patches are applied. Now it is a good time since we
->> have LSF and there are also 2 customers using FDP on block and file.
->>
->>>
->>> How soon FDP API will be available for kernel-space file systems?
->>
->> The work is done. We will submit as Bart's patches are applied.
->>
->> Kanchan is doing this work.
->>
->>> How kernel-space file systems can adopt FDP technology?
->>
->> It is based on write hints. There is no FS-specific placement decisions.
->> All the responsibility is in the application.
->>
->> Kanchan: Can you comment a bit more on this?
->>
->>> How FDP technology can improve efficiency and reliability of
->>> kernel-space file system?
->>
->> This is an open problem. Our experience is that making data placement
->> decisions on the FS is tricky (beyond the obvious data / medatadata). If
->> someone has a good use-case for this, I think it is worth exploring.
->> F2FS is a good candidate, but I am not sure FDP is of interest for
->> mobile - here ZUFS seems to be the current dominant technology.
->>
->
->If I understand the FDP technology correctly, I can see the benefits for
->file systems. :)
->
->For example, SSDFS is based on segment concept and it has multiple
->types of segments (superblock, mapping table, segment bitmap, b-tree
->nodes, user data). So, at first, I can use hints to place different segment
->types into different reclaim units.
+The annual Linux Storage, Filesystem, Memory Management, and BPF
+(LSF/MM/BPF) Summit for 2024 will be held from May 13 to May 15
+at the Hilton Salt Lake City Center in Salt Lake City, Utah, USA.
 
-Yes. This is what I meant with data / metadata. We have looked also into
-using 1 RUH for metadata and rest make available to applications. We
-decided to go with a simple solution to start with and complete as we
-see users.
+LSF/MM/BPF is an invitation-only technical workshop to map out
+improvements to the Linux storage, filesystem, BPF, and memory
+management subsystems that will make their way into the mainline
+kernel within the coming years.
 
-For SSDFS it makes sense.
+LSF/MM/BPF 2024 will be a three day, stand-alone conference with
+four subsystem-specific tracks, cross-track discussions, as well
+as BoF and hacking sessions:
 
->The first point is clear, I can place different
->type of data/metadata (with different “hotness”) into different reclaim units.
->Second point could be not so clear. SSDFS provides the way to define
->the size of erase block. If it’s ZNS SSD, then mkfs tool uses the size of zone
->that storage device exposes to mkfs tool. However, for the case of conventional
->SSD, the size of erase block is defined by user. Technically speaking, this size
->could be smaller or bigger that the real erase block inside of SSD. Also, FTL could
->use a tricky mapping scheme that could combine LBAs in the way making
->FS activity inefficient even by using erase block or segment concept. I can see
->how FDP can help here. First of all, reclaim unit makes guarantee that erase
->blocks or segments on file system side will match to erase blocks (reclaim units)
->on SSD side. Also, I can use various sizes of logical erase blocks but the logical
->erase blocks of the same segment type will be placed into the same reclaim unit.
->It could guarantee the decreasing the write amplification and predictable reclaiming on
->SSD side. The flexibility to use various logical erase block sizes provides
->the better efficiency of file system because various workloads could require
->different logical erase block sizes.
+          https://events.linuxfoundation.org/lsfmmbpf/
 
-Sounds good. I see you sent a proposal on SSDFS specificaly. It makes
-sense to cover this specific uses there.
->
->Technically speaking, any file system can place different types of metadata in
->different reclaim units. However, user data is slightly more tricky case. Potentially,
->file system logic can track “hotness” or frequency of updates of some user data
->and try to direct the different types of user data in different reclaim units.
->But, from another point of view, we have folders in file system namespace.
->If application can place different types of data in different folders, then, technically
->speaking, file system logic can place the content of different folders into different
->reclaim units. But application needs to follow some “discipline” to store different
->types of user data (different “hotness”, for example) in different folders.
+On behalf of the committee I am issuing a call for agenda proposals
+that are suitable for cross-track discussion as well as technical
+subjects for the breakout sessions.
 
-Exactly. This is why I think it makes sense to look at specific FSs as
-there are real deployments that we can use to argue for changes that
-cover a large percentage of use-cases.
+If advance notice is required for visa applications then please
+point that out in your proposal or request to attend, and submit
+the topic as soon as possible.
+
+We are asking that you please let us know you want to be invited
+by March 1, 2024. We realize that travel is an ever changing target,
+but it helps us to get an idea of possible attendance numbers.
+Clearly things can and will change, so consider the request to
+attend deadline more about planning and less about concrete plans.
+
+1) Fill out the following Google form to request attendance and
+suggest any topics for discussion:
+
+          https://forms.gle/TGCgBDH1x5pXiWFo7
+
+In previous years we have accidentally missed people's attendance
+requests because they either did not Cc lsf-pc@ or we simply missed
+them in the flurry of emails we get. Our community is large and our
+volunteers are busy, filling this out will help us to make sure we
+do not miss anybody.
+
+2) Proposals for agenda topics should ideally still be sent to the
+following lists to allow for discussion among your peers. This will
+help us figure out which topics are important for the agenda:
+
+          lsf-pc@lists.linux-foundation.org
+
+... and Cc the mailing lists that are relevant for the topic in
+question:
+
+          FS:     linux-fsdevel@vger.kernel.org
+          MM:     linux-mm@kvack.org
+          Block:  linux-block@vger.kernel.org
+          ATA:    linux-ide@vger.kernel.org
+          SCSI:   linux-scsi@vger.kernel.org
+          NVMe:   linux-nvme@lists.infradead.org
+          BPF:    bpf@vger.kernel.org
+
+Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier
+to track. In addition, please make sure to start a new thread for
+each topic rather than following up to an existing one. Agenda
+topics and attendees will be selected by the program committee,
+but the final agenda will be formed by consensus of the attendees
+on the day.
+
+3) This year we would also like to try and make sure we are
+including new members in the community that the program committee
+may not be familiar with. The Google form has an area for people to
+add required/optional attendees. Please encourage new members of the
+community to submit a request for an invite as well, but additionally
+if maintainers or long term community members could add nominees to
+the form it would help us make sure that new members get the proper
+consideration.
+
+For discussion leaders, slides and visualizations are encouraged to
+outline the subject matter and focus the discussions. Please refrain
+from lengthy presentations and talks in order for sessions to be
+productive; the sessions are supposed to be interactive, inclusive
+discussions.
+
+We are still looking into the virtual component. We will likely run
+something similar to what we did last year, but details on that will
+be forthcoming.
+
+2023: https://lwn.net/Articles/lsfmmbpf2023/
+
+2022: https://lwn.net/Articles/lsfmm2022/
+
+2019: https://lwn.net/Articles/lsfmm2019/
+
+2018: https://lwn.net/Articles/lsfmm2018/
+
+2017: https://lwn.net/Articles/lsfmm2017/
+
+2016: https://lwn.net/Articles/lsfmm2016/
+
+2015: https://lwn.net/Articles/lsfmm2015/
+
+2014: http://lwn.net/Articles/LSFMM2014/
+
+4) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+          lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+          Amir Goldstein (Filesystems)
+          Jan Kara (Filesystems)
+          Martin K. Petersen (Storage)
+          Javier González (Storage)
+          Michal Hocko (MM)
+          Dan Williams (MM)
+          Daniel Borkmann (BPF)
+          Martin KaFai Lau (BPF)
