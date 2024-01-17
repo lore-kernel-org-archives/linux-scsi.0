@@ -1,181 +1,67 @@
-Received: from www62.your-server.de (www62.your-server.de [213.133.104.62])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAB3A1F5F7;
-	Wed, 17 Jan 2024 13:37:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.133.104.62
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E701721347;
+	Wed, 17 Jan 2024 15:02:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705498668; cv=none; b=B5KUoLOVCVYA5pMy2KmFwPP4p0lXo3GI6jLEgDu6c+Qnyqtm6MOk52NCwx+x8ZH5dmhf+aAcvpVEhAZFzkkUHEbrpk5+BEfeUPzvZVe5l9zksSNVIIzsDyKW8/UiQVLkhAJ9zWKJZ0nJ0EIeVoQT/XKfPhMgja1OSnt3RvtUQJg=
+	t=1705503730; cv=none; b=kCmqLwbD9xuENZ03d9duu+EVtrJLGyD8EW9GCFffS5L+m1dmaEuQ5iNkbmAN8Uz7rKXkxCMR5sLtEOJpeUuch0MrHgKvj+L4JhIb++ZoF3LZ4oUdMZGzZqt+NZNnSLYTijnD5RKMeQ2Uuu6+XNLqutVDb2CdmrS+sgT9KOkv2/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705498668; c=relaxed/simple;
-	bh=a0o55pxxDCLHmqaWvxrygvI6niPdHttBqY/E85EhHew=;
-	h=DKIM-Signature:Received:Received:Subject:From:To:Cc:References:
-	 Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:Content-Type:
-	 Content-Language:Content-Transfer-Encoding:X-Authenticated-Sender:
-	 X-Virus-Scanned; b=iKGkQOtampxcIClUmVv8tX3N9MbzIz200z1UJvn0ZLjNfPJLpz41xXGqpbXT74z6ZMVPQpV3o72bMqteDzZ3vsTiWi7FNTxwgDy0eNnll+oZwwSfHX7gayt1DdL9kdA2Cm1xYnZm4hb3chfsyOBHhUpGceIp5naUw2nSzVBy+TU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net; spf=pass smtp.mailfrom=iogearbox.net; dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b=DEGHyY+4; arc=none smtp.client-ip=213.133.104.62
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iogearbox.net
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b="DEGHyY+4"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=iogearbox.net; s=default2302; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:MIME-Version:Date:Message-ID:References:Cc:To:From:Subject:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
-	bh=EUpvZ7ImcN6iRBfQR5QrQA+ZGjPdmy3aiW0Hd3hcrnQ=; b=DEGHyY+49LEH3JYxGgz1hw+W01
-	u8ZPQ5hafPlp6u04J2wN52hOOGCB3BQLSYBSxcAeo1w+RKoiyUBhGnNg0Sz3l5VCByCNn+JzxzsIr
-	5HU91Q3fKkxhIEhuZIxOnJzyqJvtzz3JDCJ143149F0dx/695qfuSJZIb6uncyA0Eszq9kdWqY5Us
-	DAISHVTJ3azdLRkAb+v7THDFfp3dk5oROIAFY3mDvTU26s7HwXOMao46pD6RbkTRBlR/0pTXv13JB
-	PQunZBTeSUjfhN1b9tPLnHan9qvIDeOhXeDJ/0y9/C0aVlrREfowX/rZRib95Gc/G2nqY0SVSd1LD
-	2mWUk//Q==;
-Received: from sslproxy01.your-server.de ([78.46.139.224])
-	by www62.your-server.de with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <daniel@iogearbox.net>)
-	id 1rQ66w-000ExX-1L; Wed, 17 Jan 2024 14:37:42 +0100
-Received: from [85.1.206.226] (helo=linux.home)
-	by sslproxy01.your-server.de with esmtpsa (TLSv1.3:TLS_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <daniel@iogearbox.net>)
-	id 1rQ66v-000EvW-F7; Wed, 17 Jan 2024 14:37:41 +0100
-Subject: LSF/MM/BPF: 2024: Call for Proposals [Reminder]
-From: Daniel Borkmann <daniel@iogearbox.net>
-To: lsf-pc@lists.linuxfoundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
- linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-nvme@lists.infradead.org, bpf@vger.kernel.org, netdev@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
- <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
-Message-ID: <c91530f0-2688-647d-2603-a7b1673f8e42@iogearbox.net>
-Date: Wed, 17 Jan 2024 14:37:41 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+	s=arc-20240116; t=1705503730; c=relaxed/simple;
+	bh=InjtWWHIK+dxg9+ObW7eBrA9Bb+Q/V/aSLm4A24XvJo=;
+	h=Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:
+	 User-Agent; b=IHCP/xoz2BGkkjj42PPn6NVwAcbqKkZb6QyMdvRhuO7d0zn5xgni6odbG92llKC2ATOeGCXfG047qzXEW52JwiAokeORBnlPo5BUpATF5tr7vn+zy3X3TukBG0RDiqf1OcH3vgXIL8BZ0IrDrx19h+buMuNFm9/z3YgsNAbm+jc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 4135968C7B; Wed, 17 Jan 2024 16:02:01 +0100 (CET)
+Date: Wed, 17 Jan 2024 16:02:00 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
+	axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
+Subject: Re: [PATCH v2 00/16] block atomic writes
+Message-ID: <20240117150200.GA30112@lst.de>
+References: <20231219151759.GA4468@lst.de> <fff50006-ccd2-4944-ba32-84cbb2dbd1f4@oracle.com> <20231221065031.GA25778@lst.de> <b60e39ce-04bf-4ff9-8879-d9e0cf5d84bd@oracle.com> <20231221121925.GB17956@lst.de> <df2b6c6e-6415-489d-be19-7e2217f79098@oracle.com> <20231221125713.GA24013@lst.de> <9bee0c1c-e657-4201-beb2-f8163bc945c6@oracle.com> <20231221132236.GB26817@lst.de> <6135eab3-50ce-4669-a692-b4221773bb20@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Authenticated-Sender: daniel@iogearbox.net
-X-Virus-Scanned: Clear (ClamAV 0.103.10/27157/Wed Jan 17 10:41:11 2024)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6135eab3-50ce-4669-a692-b4221773bb20@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-The annual Linux Storage, Filesystem, Memory Management, and BPF
-(LSF/MM/BPF) Summit for 2024 will be held from May 13 to May 15
-at the Hilton Salt Lake City Center in Salt Lake City, Utah, USA.
+On Tue, Jan 16, 2024 at 11:35:47AM +0000, John Garry wrote:
+> As such, we then need to set atomic write unit max = min(queue max 
+> segments, BIO_MAX_VECS) * LBS. That would mean atomic write unit max 256 * 
+> 512 = 128K (for 512B LBS). For a DMA controller of max segments 64, for 
+> example, then we would have 32K. These seem too low.
 
-LSF/MM/BPF is an invitation-only technical workshop to map out
-improvements to the Linux storage, filesystem, BPF, and memory
-management subsystems that will make their way into the mainline
-kernel within the coming years.
+I don't see how this would work if support multiple sectors.
 
-LSF/MM/BPF 2024 will be a three day, stand-alone conference with
-four subsystem-specific tracks, cross-track discussions, as well
-as BoF and hacking sessions:
+>
+> Alternative I'm thinking that we should just limit to 1x iovec always, and 
+> then atomic write unit max = (min(queue max segments, BIO_MAX_VECS) - 1) * 
+> PAGE_SIZE [ignoring first/last iovec contents]. It also makes support for 
+> non-enterprise NVMe drives more straightforward. If someone wants, they can 
+> introduce support for multi-iovec later, but it would prob require some 
+> more iovec length/alignment rules.
 
-          https://events.linuxfoundation.org/lsfmmbpf/
+Supporting just a single iovec initially is fine with me, as extending
+that is pretty easy.  Just talk to your potential users that they can
+live with it.
 
-On behalf of the committee I am issuing a call for agenda proposals
-that are suitable for cross-track discussion as well as technical
-subjects for the breakout sessions.
+I'd probably still advertise the limits even if it currently always is 1.
 
-If advance notice is required for visa applications then please
-point that out in your proposal or request to attend, and submit
-the topic as soon as possible.
-
-We are asking that you please let us know you want to be invited
-by March 1, 2024. We realize that travel is an ever changing target,
-but it helps us to get an idea of possible attendance numbers.
-Clearly things can and will change, so consider the request to
-attend deadline more about planning and less about concrete plans.
-
-1) Fill out the following Google form to request attendance and
-suggest any topics for discussion:
-
-          https://forms.gle/TGCgBDH1x5pXiWFo7
-
-In previous years we have accidentally missed people's attendance
-requests because they either did not Cc lsf-pc@ or we simply missed
-them in the flurry of emails we get. Our community is large and our
-volunteers are busy, filling this out will help us to make sure we
-do not miss anybody.
-
-2) Proposals for agenda topics should ideally still be sent to the
-following lists to allow for discussion among your peers. This will
-help us figure out which topics are important for the agenda:
-
-          lsf-pc@lists.linux-foundation.org
-
-... and Cc the mailing lists that are relevant for the topic in
-question:
-
-          FS:     linux-fsdevel@vger.kernel.org
-          MM:     linux-mm@kvack.org
-          Block:  linux-block@vger.kernel.org
-          ATA:    linux-ide@vger.kernel.org
-          SCSI:   linux-scsi@vger.kernel.org
-          NVMe:   linux-nvme@lists.infradead.org
-          BPF:    bpf@vger.kernel.org
-
-Please tag your proposal with [LSF/MM/BPF TOPIC] to make it easier
-to track. In addition, please make sure to start a new thread for
-each topic rather than following up to an existing one. Agenda
-topics and attendees will be selected by the program committee,
-but the final agenda will be formed by consensus of the attendees
-on the day.
-
-3) This year we would also like to try and make sure we are
-including new members in the community that the program committee
-may not be familiar with. The Google form has an area for people to
-add required/optional attendees. Please encourage new members of the
-community to submit a request for an invite as well, but additionally
-if maintainers or long term community members could add nominees to
-the form it would help us make sure that new members get the proper
-consideration.
-
-For discussion leaders, slides and visualizations are encouraged to
-outline the subject matter and focus the discussions. Please refrain
-from lengthy presentations and talks in order for sessions to be
-productive; the sessions are supposed to be interactive, inclusive
-discussions.
-
-We are still looking into the virtual component. We will likely run
-something similar to what we did last year, but details on that will
-be forthcoming.
-
-2023: https://lwn.net/Articles/lsfmmbpf2023/
-
-2022: https://lwn.net/Articles/lsfmm2022/
-
-2019: https://lwn.net/Articles/lsfmm2019/
-
-2018: https://lwn.net/Articles/lsfmm2018/
-
-2017: https://lwn.net/Articles/lsfmm2017/
-
-2016: https://lwn.net/Articles/lsfmm2016/
-
-2015: https://lwn.net/Articles/lsfmm2015/
-
-2014: http://lwn.net/Articles/LSFMM2014/
-
-4) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-          lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-          Amir Goldstein (Filesystems)
-          Jan Kara (Filesystems)
-          Martin K. Petersen (Storage)
-          Javier González (Storage)
-          Michal Hocko (MM)
-          Dan Williams (MM)
-          Daniel Borkmann (BPF)
-          Martin KaFai Lau (BPF)
