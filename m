@@ -1,70 +1,44 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0664B29437
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2024 17:22:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63A471DFC2;
+	Thu, 18 Jan 2024 18:40:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705598536; cv=none; b=KNm8oaNUIbj/D1Vua1Jzecd7x9TnA/AIgo/Lno3tDkEjGEp8OGxEXlxIHbVTP8IjK727u5u2y+oSVHTfbn9O1xgGbD/M7WmweYeJAm7XJC7uILk3fu/+WLZK4dMjrHth4qnHnZLw1blk+Owd/NKh7EWpCF9uUkmzAP/I5xMKJEo=
+	t=1705603230; cv=none; b=aOzFaiXpAHpoLfZmybruSYkyCQki842siYBaJ/qrAz8EmprV/OeJ11meHmzj0QoQr2Nx1fNQnhkr9HOeedEKfK0GbKkR1/V+rCR3OXQaRXh/C0wAaq5JiC1+d2vA5PCY/fHYcfiXp1k/D0JziRj1K1zmGsWREoQtbludQWKE39A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705598536; c=relaxed/simple;
-	bh=hunrIZdP+PE9Cv3ODciAYsvPfq0Cg1UHxm37KNSbuV0=;
-	h=Received:DKIM-Signature:Received:Received:Received:Received:
-	 Received:Received:Received:Received:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:Subject:To:Cc:References:Content-Language:
-	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 X-TM-AS-GCONF:X-Proofpoint-GUID:X-Proofpoint-ORIG-GUID:
-	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details; b=aakRDWtRja2RvX39Yzi/IspOEoiycE2Fj6QFMIcCBDF1HJPZyUzUz0ScUIgObew+B20/OFSbGT4SuLiv10867ucXyM5F8Spb2swtGnmmj58ZXFd0LRpfuPP9rQhvttl1pySir0sEwwR4EPtYzIRylq3w2Zy6sI2olsAV8Sl1yKo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.vnet.ibm.com; spf=none smtp.mailfrom=linux.vnet.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=EQh3j4ot; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.vnet.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.vnet.ibm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="EQh3j4ot"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40IG7Wax015627;
-	Thu, 18 Jan 2024 17:22:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=DAuk1ACt/0TihD5mew8Rm8OpVUwzUd0WEQdjIPyKjKk=;
- b=EQh3j4otJ67MLsGYTRiVP46rPYGosDFEPdNXIGDcG3b5yU2v3SR2FtyKzqn4kFvcQttz
- lXLo5RRiP1+Lrtk07Kh+9VLBIujqtVHh0kq2WfGJFzCvxotwIEgPrSKuDqRGfEJv3+Hl
- J1/rsLNH4muKBF0QL2i6UYbCRIl5rbvZVsS9vYbiwBu4MV7wegjV14VJ9qtkTJRuYsRF
- Q6gSoeeZNPfprgd2iqr07joF1ZisS0JNNudfpUGWVlQXKOQO2GdDAa/qjh1nslWptuFA
- lR/PSqYPT9W5mhHN3wRen8lQQsNpcEDbKgvfuJW3UEGy2erlTUpXu7p+McgXaDTeeaNu Sw== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vq77qtjk0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 18 Jan 2024 17:22:12 +0000
-Received: from m0356517.ppops.net (m0356517.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 40IH0R1D012270;
-	Thu, 18 Jan 2024 17:22:12 GMT
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3vq77qtjjp-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 18 Jan 2024 17:22:12 +0000
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 40IH0OWQ030434;
-	Thu, 18 Jan 2024 17:22:11 GMT
-Received: from smtprelay07.wdc07v.mail.ibm.com ([172.16.1.74])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3vm72kcakv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 18 Jan 2024 17:22:11 +0000
-Received: from smtpav06.dal12v.mail.ibm.com (smtpav06.dal12v.mail.ibm.com [10.241.53.105])
-	by smtprelay07.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 40IHMAlY19530346
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 18 Jan 2024 17:22:10 GMT
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 77D8358043;
-	Thu, 18 Jan 2024 17:22:10 +0000 (GMT)
-Received: from smtpav06.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 3BF6A58055;
-	Thu, 18 Jan 2024 17:22:10 +0000 (GMT)
-Received: from [9.10.86.82] (unknown [9.10.86.82])
-	by smtpav06.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 18 Jan 2024 17:22:10 +0000 (GMT)
-Message-ID: <62618192-aa11-40e2-97a0-ecc819815d0d@linux.vnet.ibm.com>
-Date: Thu, 18 Jan 2024 11:22:09 -0600
+	s=arc-20240116; t=1705603230; c=relaxed/simple;
+	bh=R+qXdiiWp2IDGceImUHkpInR05UJDNVs+WU06srsRdc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=StX6YT7TgAhFxiRxPTF4EHi9CwzmfWlZjNKmBXgtzKRSFgBYO5SXQhmSiWWqucNx8i4hTESRvktxpwZLTJejtgSxhh4zeMW9cwXkg39G9+WF6vb/zZRzSvMOUO2hFzvtcUGzv4/rHkcg4hEzYZU/IK4CBZNADSZsg9OFXM8NH9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-6dbb003be79so491758b3a.0;
+        Thu, 18 Jan 2024 10:40:29 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705603228; x=1706208028;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+MCLp+tJNO+etgZgVlXIoBK5XGWALOsHRdh/oS9zFfk=;
+        b=HJigZ2biG1JF1TYE9M/T9+KDHJY9IVAmV0zO22KECcA+ZPJ7tQI/zVQi5hkoO5UejA
+         QDG5shUzZnoJPg3qY+4Ca8VGNOPxGZal4/qMc5uIUzFJ0oKpcQycJOqp9ltFxAVy49F5
+         O4+bcJ0jzP7ZOLQJM0CzSAMSrx5q8O6/Wc3b2cvkvdYMoEE97tvtRDQH0+BV84fnttBs
+         ZLbwfritylthSER9RvZ5M54yjszxcE+OQ2wUYNBCjtUCSu1UasBQa+9sOWEkDGQXTO/+
+         9VbTzhXP8wdIWp0Asew9J67WOLCq8a2ZM7zDSRD29eRsZZMaROPY1nQVE2IDwSui8Ysx
+         P2ng==
+X-Gm-Message-State: AOJu0Yy10k5lmimVJ8LFvDHCqOD2XDz+mGKEglisRaeDgT535PxvyhEE
+	xfoPvLqQPIApt9HJlH/ZaLffaiFG7b/rmhe7XbgupJqGEMiXMONA
+X-Google-Smtp-Source: AGHT+IFFbdqddGbUMGL/psSILR5HML69qSIrd0fLtezJ/Wh8vNQFJPKRCGHup2ka7EbMAKOwoe4opA==
+X-Received: by 2002:a05:6a21:9187:b0:19a:8770:9944 with SMTP id tp7-20020a056a21918700b0019a87709944mr3613133pzb.31.1705603228535;
+        Thu, 18 Jan 2024 10:40:28 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:718b:ab80:1dc2:cbee? ([2620:0:1000:8411:718b:ab80:1dc2:cbee])
+        by smtp.gmail.com with ESMTPSA id 13-20020a63194d000000b005cdb499acd0sm1905982pgz.42.2024.01.18.10.40.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 18 Jan 2024 10:40:27 -0800 (PST)
+Message-ID: <434b771a-7873-4c53-9faa-c5dbc4296495@acm.org>
+Date: Thu, 18 Jan 2024 10:40:26 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,96 +46,68 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: Update max_hw_sectors on rescan
-To: John Garry <john.g.garry@oracle.com>, linux-scsi@vger.kernel.org
-Cc: brking@pobox.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-References: <20240117213620.132880-1-brking@linux.vnet.ibm.com>
- <5326306f-9515-4153-9ef2-e978e775a27f@oracle.com>
+Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
 Content-Language: en-US
-From: Brian King <brking@linux.vnet.ibm.com>
-In-Reply-To: <5326306f-9515-4153-9ef2-e978e775a27f@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: RPrcNbOvAute8PLG18-JugfTPyqJooK-
-X-Proofpoint-ORIG-GUID: qg-g3pv43IL3VXJjjJdunPDHJM9MOUkH
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-01-18_08,2024-01-17_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- spamscore=0 phishscore=0 bulkscore=0 clxscore=1011 mlxlogscore=999
- impostorscore=0 malwarescore=0 adultscore=0 suspectscore=0 mlxscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2401180126
+To: Christoph Hellwig <hch@lst.de>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Ming Lei <ming.lei@redhat.com>, Keith Busch <kbusch@kernel.org>,
+ Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+ Ed Tsai <ed.tsai@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <c1658336-f48e-5688-f0c2-f325fd5696c3@huaweicloud.com>
+ <1d3866af-ffca-4f97-914d-8084aca901ab@acm.org>
+ <69b17db7-e9c9-df09-1022-ff7a9e5e04dd@huaweicloud.com>
+ <20240112043915.GA5664@lst.de>
+ <2d83fcb3-06e6-4a7c-9bd7-b8018208b72f@huaweicloud.com>
+ <20240115055940.GA745@lst.de>
+ <0d23e3d3-1d7a-f76b-307b-7d74b3f91e05@huaweicloud.com>
+ <f1cac818-8fc8-4f24-b445-d10aa99c04ba@acm.org>
+ <e0305a2c-20c1-7e0f-d25d-003d7a72355f@huaweicloud.com>
+ <aedc82bc-ef10-4bc6-b76c-bf239f48450f@acm.org>
+ <20240118073151.GA21386@lst.de>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240118073151.GA21386@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 1/18/24 9:44 AM, John Garry wrote:
-> On 17/01/2024 21:36, Brian King wrote:
->> This addresses an issue discovered on ibmvfc LUNs. For this driver,
->> max_sectors is negotiated with the VIOS. This gets done at initialization
->> time, then LUNs get scanned and things generally work fine. However,
->> this attribute can be changed on the VIOS, either due to a sysadmin
->> change or potentially a VIOS code level change. If this decreases
->> to a smaller value, due to one of these reasons, the next time the
->> ibmvfc driver performs an NPIV login, it will only be able to use
->> the smaller value. In the case of a VIOS reboot, when the VIOS goes
->> down, all paths through that VIOS will go to devloss state. When
->> the VIOS comes back up, ibmvfc negotiates max_sectors and will only
->> be able to get the smaller value and it will update shost->max_sectors.
+On 1/17/24 23:31, Christoph Hellwig wrote:
+> On Tue, Jan 16, 2024 at 09:36:27AM -0800, Bart Van Assche wrote:
+>> My concern is that the complexity of the algorithm introduced by that patch
+>> series is significant. I prefer code that is easy to understand. This is why
+>> I haven't started yet with a detailed review. If anyone else wants to review
+>> that patch series that's fine with me.
 > 
-> Are you saying that the driver will manually update shost->max_sectors after adding the scsi host? I didn't think that was permitted.
+> Given that simply disabling fair sharing isn't going to fly we'll need
+> something more complex than that.
+> 
+> The question is how much complexity do we need, and for that it would
+> be good to collect the use cases first.
 
-That is what happens. The characteristics of the underlying hardware can change across
-a virtual adapter reset. 
+Hi Christoph,
+
+Patch "[PATCH v6 2/4] scsi: core: Make fair tag sharing configurable in
+the host template" of this series can be dropped by making the UFS
+driver call blk_mq_update_fair_sharing() directly.
+
+So far two use cases have been identified: setups with an UFSHCI 3.0
+host controller and ATA controllers for which all storage devices have
+similar latency characteristics. Both storage controllers have a queue
+depth limit of 32 commands.
+
+It seems to me that disabling fair sharing will always result in better
+performance than any algorithm that realizes fair sharing (including the
+current algorithm). Only a single boolean needs to be tested to 
+determine whether or not fair sharing should be disabled. Any fair 
+sharing algorithm that we can come up with will be significantly more 
+complex than testing a single boolean. I think this is a strong argument 
+for adding support for disabling fair sharing.
+
+If anyone wants to improve the fair sharing algorithm that's fine with 
+me. However, I do not plan to work on this myself.
 
 Thanks,
 
-Brian
-
-> 
-> Thanks,
-> John
-> 
->> However, when LUNs are scanned, the devloss paths will be found
->> and brought back online, still using the old max_hw_sectors. This
->> change ensures that max_hw_sectors gets updated.
->>
->> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
->> ---
->>   drivers/scsi/scsi_scan.c | 6 +++++-
->>   1 file changed, 5 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->> index 44680f65ea14..01f2b38daab3 100644
->> --- a/drivers/scsi/scsi_scan.c
->> +++ b/drivers/scsi/scsi_scan.c
->> @@ -1162,6 +1162,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
->>       blist_flags_t bflags;
->>       int res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
->>       struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
->> +    struct request_queue *q;
->>         /*
->>        * The rescan flag is used as an optimization, the first scan of a
->> @@ -1182,6 +1183,10 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
->>                   *bflagsp = scsi_get_device_flags(sdev,
->>                                    sdev->vendor,
->>                                    sdev->model);
->> +            q = sdev->request_queue;
->> +            if (queue_max_hw_sectors(q) > shost->max_sectors)
->> +                blk_queue_max_hw_sectors(q, shost->max_sectors);
->> +
->>               return SCSI_SCAN_LUN_PRESENT;
->>           }
->>           scsi_device_put(sdev);
->> @@ -2006,4 +2011,3 @@ void scsi_forget_host(struct Scsi_Host *shost)
->>       }
->>       spin_unlock_irqrestore(shost->host_lock, flags);
->>   }
->> -
-> 
-
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
-
-
+Bart.
