@@ -1,329 +1,239 @@
-Received: from mail-il1-f170.google.com (mail-il1-f170.google.com [209.85.166.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C07F41E4AF
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2024 15:07:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.170
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705590449; cv=none; b=G4AiKhQlPFlLI8lg0//mnVB30kcskyfrtaUgl3dC0E7rLkIwdeoTHqhd6lP3fk5pXd9tOZrb3e955imRzR3wRWJ4IkGUruNftw8gDvH70Wy8wsnpJam6uaGrbPPYMoI0JXNHRf5QKQJZUEoiLx4yfblAGQJsuL2+pN6d+EvzcHw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705590449; c=relaxed/simple;
-	bh=7zf0+zAKqiJp+22qIes8RaFgFYtBaUXEp5bz92sRYPU=;
-	h=Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Google-Smtp-Source:X-Received:Received:
-	 Message-ID:Date:MIME-Version:User-Agent:Subject:Content-Language:
-	 To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding; b=n6/2pSFcuo8Shgqt++8HfdkK69duf7Z7+kTiOUNY7NN2gzGZ6TNOFs2mN7cuEO+8td/3RODJHbuRv77aro3qlGKMdd9hMxsMb7iUg6HcYOcEWAyxHog5UP9AhDS9PuADrbvRBcWHkerXrt+4u5abB9o7Uqjz2AIkyTF2iq+jBBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=CWDaNpfR; arc=none smtp.client-ip=209.85.166.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75D3A1DA35
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2024 15:45:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1705592709; cv=fail; b=qWIr2JHkzx0b4lS20iWFJ0HyEf99cetajMmmB6tmweRp17SsNNqKtFPwlV+s75mIwkEnEFABRJfQLJQUq1YScGr2EYH7MnydKSa2fmUfqCPM9/OmDrWYDHSlFs3ulpDq8MAKUq3k8XWxNcUwBMdH9Gsb2/r2nxPbIKuLNg+ZRrA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1705592709; c=relaxed/simple;
+	bh=9+L1LMm6lx9hvwnpzYuJMj3ctYKkwZcJ1YToXdbmG1M=;
+	h=Received:DKIM-Signature:Received:Received:Received:
+	 ARC-Message-Signature:ARC-Authentication-Results:DKIM-Signature:
+	 Received:Received:Message-ID:Date:User-Agent:Subject:To:Cc:
+	 References:Content-Language:From:Organization:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:
+	 MIME-Version:X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:
+	 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:
+	 X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped:
+	 X-Proofpoint-Virus-Version:X-Proofpoint-Spam-Details:
+	 X-Proofpoint-ORIG-GUID:X-Proofpoint-GUID; b=VB3kzmV+1QzB8mCU156nVg8EWVMTN92iGtj2mooKqTI4P7QIVXXmiNfCV7MkiOXxkLfQlh9ZFWWOS2lccw1FhMRWQk1UNtv5ObLBj1bQUNXsmZwuKFgaFg1WR9g5fWakK5z5NiBaaR3b9IZUDoEZdO9PlynL9mITkEuE9uq5wXc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Tn42PwPP; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=n1bn6EXk; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="CWDaNpfR"
-Received: by mail-il1-f170.google.com with SMTP id e9e14a558f8ab-36191ee7be4so3141435ab.0
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2024 07:07:25 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Tn42PwPP";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="n1bn6EXk"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 40IFTWAT004874;
+	Thu, 18 Jan 2024 15:44:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-11-20;
+ bh=NJ43BLo3/uNXESwELxWie8t6ZsO0RCPuA+QwPFY557M=;
+ b=Tn42PwPPD854ubJk1Rm340C4SC7lP5CohNBft2QoPB4VgC0w+9qysPU/8Pj2uUnLXm8G
+ A+onL9KQ3ne6PMHyEmJZS3grTy7QYgF1BEEFoEZ6G+coCbUwhAR2d32D30PE1G4DNSLh
+ QuPbhQXhQgGJtsTg6jQIkrmZQtF6S1VrCDxjLqMOBxdo9MjV2C9JAm8QU06MieiksBTN
+ k3VvWcAGyI6VbwNZ3L94OUYEFU46lRLiOkDAQgK2IFYxIWY0r35aO4eQ/VCPtEoCu4DW
+ kgWxv9BgD2i1CwUT15+3WMtLeBprLxjrdG0DvIE+nqCWyBxabUc+7uNLjehJ9S/o387g dg== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3vkk2ub73x-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 18 Jan 2024 15:44:55 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 40IFLhhG035891;
+	Thu, 18 Jan 2024 15:44:54 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2169.outbound.protection.outlook.com [104.47.56.169])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3vkgycya2s-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 18 Jan 2024 15:44:54 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=nLHijSLzDnOl2iH7JQaJ3jMMUnoheOb4A8cjvQh2BRJn1CeZ77P5XSD+ylr51KCSDJgjfFNpkmsT+crtrqQ6ml99eMxu5O1sJR7jYfAK41ExWROt+KhNHml0WBaGFNineej7O2fnokpDLD89qSNawIsmwuDMXa7a1t5G1DCF/Cn5mHJz1wr50vW82hjdQs1OFCquFd7NewT3CZWmKLomyRfQ8QUEUPe5DHhDvsH7GLeo9JSVTdHvPMaEpxLa/+I3Uk6+4/36Z/WSvndfRJnz8QNsyq4grxiq9XXYu16eqkJ3s1baYK7ElJHBac5xsTJuK5aP9awaFvwpnPVvZhwT9w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NJ43BLo3/uNXESwELxWie8t6ZsO0RCPuA+QwPFY557M=;
+ b=mD7YBjuSgP39pgUK+3CWuOJG5jJE7qdDASp/+ACBya95/gSEFaj0AjjQBMhOCPyDwyJD+2PpP5qftAf94IOthNVvMFYMY/trB4x3yR6dgvlcVrOkKWKINNt+rGsLc9BZ7VczEKZfBX5tnq32OyJDmu4iEHyI46/n1885DGUDcUsdp/zNxKa1SyIzvGyKpTZ6HzwmtpF+b0bWhuQKFlL3QulueYqU2rJrgxKcSXTnMBJhdgy+HQ4UlDdb1uPS5sXWr6OmSricMjaNSFJ8ppKp/kl9ZIodZSlZDU9l4Jf93REXD11frs66Wy1yZniIgtgh8OcZUMMMl1I4+odiRYof5g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1705590445; x=1706195245; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=2ePBCEOHv3j3ct5lqsC9iWrX0ypOQ2Cybc71ZL2WdJ4=;
-        b=CWDaNpfRwRAxtv/0kOZ5onmXXgWJS67esp0MSYPJemns4q4B8APw8nS61jshn0s0Ug
-         HSFoXDAtN5Wst5UgYbfh5YyQIKTxlELxP7DW6Je+XlFMM2hxwRO0uuiYAM5BIgP8E5oZ
-         ujF9vwW0VcEiBgxi1QSd5EIxXM/hHRJ7scYB9FdDP8HCfb4oYtqCEoSzvjen17ghm5+u
-         wL8m8lTF2z336EWtKCh7uLRoBUtAVUdXswggls5GNJ/URkLPz3FRMrLtYBUMpQSpUi/P
-         n3+NyrYLD2qh8PnkDuSHfYQwW6kRNigBnMABJMb7yriVqDGgn3oW2Gz4z3rvmmwl1bGA
-         giIw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705590445; x=1706195245;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2ePBCEOHv3j3ct5lqsC9iWrX0ypOQ2Cybc71ZL2WdJ4=;
-        b=X0p3eOUux6869ZIFL0lwjgLyPeOfIYZSgcoom7NML7qc1M37qmPVEL3o3cJi4CK+vv
-         8FZHRIFzIn0BJmPQ2uzt28z8MR5sjLnnr+os4W6QW40XKNXH8CYLx6ILeITYLm36AIbm
-         2rCap0teHiEZiQBA4qt9ABWs9Iq2/CngU9YlI0KOQZg77vIyguvG/BuY+R2TvwfPAw00
-         43uWcmxk5P/dsab4zHj6Xd7Ox73nxVO3wRPiK9bcmZRjmVDMUB9VzPm+vT078CQ9mIQM
-         ExDHQt0W1UO7pDyYDno++Bq6IJgLPA0pEpPDlaQhnmtXm9j23oUC1PgeNp0Fd/EQSaLp
-         eLFw==
-X-Gm-Message-State: AOJu0YxPH6ZGC/eCSb+eY3xaiZf042uUFhtEgyOdbhl2wLazMq/hWVoG
-	j0YB4kVhRs/1kxAUwsi4QQV/P9hSfAkYI8XUuF18TBQFx/yAwwfm7mMXpaHyMWU=
-X-Google-Smtp-Source: AGHT+IFkvKGZcOMGjGeFZdC/rUf2SsGFRtNw+3qaWPDhOxwWZPbqK9RAAN0zSoxGCk2Ea3zzhQ9oAw==
-X-Received: by 2002:a05:6e02:1a23:b0:35f:fa79:644 with SMTP id g3-20020a056e021a2300b0035ffa790644mr2274538ile.3.1705590444774;
-        Thu, 18 Jan 2024 07:07:24 -0800 (PST)
-Received: from [192.168.1.116] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id dp1-20020a0566381c8100b0046923df89easm1005887jab.158.2024.01.18.07.07.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 Jan 2024 07:07:24 -0800 (PST)
-Message-ID: <2ac88048-3aff-4dc4-a8a9-8ba38792533b@kernel.dk>
-Date: Thu, 18 Jan 2024 08:07:23 -0700
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NJ43BLo3/uNXESwELxWie8t6ZsO0RCPuA+QwPFY557M=;
+ b=n1bn6EXkFYKaMn1h/ZYEkYAuGoGhXphF5LQpQurALQ5h3qGv25NgS1NMdbwnDwuDfvebgKH4tDQqI2iEJsuYwvX2c5fToGzVq+jvZXKMGu3Ae+Rs7ZQ7Wt+9DUUoz7MNPuaeefyoWXlpPGe6RmByglRYFxX0C4EEeBqQIa4Kvj0=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by DS0PR10MB6726.namprd10.prod.outlook.com (2603:10b6:8:139::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7202.23; Thu, 18 Jan
+ 2024 15:44:51 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::f11:7303:66e7:286c]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::f11:7303:66e7:286c%4]) with mapi id 15.20.7202.024; Thu, 18 Jan 2024
+ 15:44:51 +0000
+Message-ID: <5326306f-9515-4153-9ef2-e978e775a27f@oracle.com>
+Date: Thu, 18 Jan 2024 15:44:47 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: Update max_hw_sectors on rescan
+To: Brian King <brking@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+Cc: brking@pobox.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+References: <20240117213620.132880-1-brking@linux.vnet.ibm.com>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20240117213620.132880-1-brking@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AM0PR02CA0169.eurprd02.prod.outlook.com
+ (2603:10a6:20b:28e::6) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [LSF/MM/BPF TOPIC] Improving Zoned Storage Support
-Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>, Damien Le Moal
- <dlemoal@kernel.org>,
- "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- Christoph Hellwig <hch@lst.de>
-References: <5b3e6a01-1039-4b68-8f02-386f3cc9ddd1@acm.org>
- <cc6999c2-2d53-4340-8e2b-c50cae1e5c3a@kernel.org>
- <43cc2e4c-1dce-40ab-b4dc-1aadbeb65371@acm.org>
- <c38ab7b2-63aa-4a0c-9fa6-96be304d8df1@kernel.dk>
- <2955b44a-68c0-4d95-8ff1-da38ef99810f@acm.org>
- <9af03351-a04a-4e61-a6d8-b58236b041a3@kernel.dk>
- <c6dfb4f5-10f9-461e-8743-b730a8384f95@acm.org>
- <e19746ce-fdea-4372-bc26-1ee7b1a9a22d@kernel.dk>
- <0853691b-0b70-48c5-825a-4b709d066e20@acm.org>
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <0853691b-0b70-48c5-825a-4b709d066e20@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS0PR10MB6726:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8b588405-105e-4fed-37ba-08dc183c687d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	++2NOaH3hiluOF5scXo3TLpat1YI3RgLnOfTg6Vc+xQ38cOqlm34REG0TfrdIPmtf9HJSC7yR+6CxXcQD5AN2hAcyjKpmioJGrh5hMsbzWf+4LmQhheJrgGg0bYyg2pN+N4/c5lBVdMTKUGIS0zVHjst/fLOWUKg72T/ZJc9RBw7RUjqeQ/MeB5xQ+SgN6KcKykQsc7p8o1nDT65L1iBn2P+7x7SOOiFM1mafAzw37PeKNJ84e0swsj3oXJVk+R1Dw0QPpiTyEyGzcRd2XdK2qAGoRlc8QXJIIZLqNpjUfFJ4jpKUy20tAuHhvvppi0KyGekwODnCwDFS0GIk70N7tZu5pjHa2J3Ueu7FaDi9q+hpH1L2SqBKimSkGdP97qro+nEhEuEjuvYcnClbD64ejXnNF6t29Bafqh8wS1XQYnqlmCV26URcY66g9rj9/LHOr1Xtkun4/x6Y1M5xzPL0hmGW8uY0ei7Y8XPkX84uNFfhYelyHcMtAFyxrDtbYshpu7pjuepADSJarbHhr49i+H775qNfHSWSeCvFWZTw+B0re5z8NPuQLLCw0eXY8tF+ElqpKYaEz2tFPYIgHUYszkxpcUY9Rq4i/clvcFG/vQcuSrpgwO9j8fTKP9+xU16p4OITKtrH3Rixyb47DQ3og==
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(396003)(376002)(39860400002)(346002)(366004)(230922051799003)(186009)(64100799003)(1800799012)(451199024)(31686004)(83380400001)(86362001)(36756003)(31696002)(8676002)(8936002)(4326008)(107886003)(53546011)(2616005)(38100700002)(15650500001)(26005)(66556008)(36916002)(6486002)(6666004)(6512007)(66946007)(5660300002)(66476007)(316002)(6506007)(478600001)(41300700001)(2906002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?TlU4MEoyU2FPdFJTUlVLS2FCZmNva3U1cXhRSFlka053KzBiZVdPd3ROMnFE?=
+ =?utf-8?B?ZG1QRkpLK3RLekM2dmZnUzNHMDAvRjQ3VWxaNUpQTzdSendoU0NaTHo4NEZu?=
+ =?utf-8?B?WUNBbGxGRDFZWTdidG5pMUxCS1pXVE9yZ1hBWnpSUElJRnBXdC9BZzZNeEJm?=
+ =?utf-8?B?R2Qwd2JmTk9xa2JzVlBLUVAxeU9zdmdQc1RrZ1NSWmQvRjNiTS9hTVpPT1gw?=
+ =?utf-8?B?M1NyWksrZ2ltSGU1emJmaFpqbVh4cGpIS2J0MVlTdmdub3VzRTJBY1BRalRv?=
+ =?utf-8?B?RndlTkY1OHluUEVTdW5kWkYzNW1jMkp6Vm5Wd3ZMWlFPSng5ZWRFUnI1d0Nr?=
+ =?utf-8?B?U3lSY05PUW5jWjVEQXFZNHo1aVdUNGR4T1FIa2Z5L1FuQjByMVp3YW1CMis5?=
+ =?utf-8?B?VXE4OSthWDZpSmJiQ256VGNLM0RGdFhrZUNCRWFFK0ZPWm5NMjZmSnZKOXln?=
+ =?utf-8?B?NENUbW94MEptb2VrYjVyS1F2RTF2N091NlJXZXlpYTg0NVdRRHJNb2tzNXlk?=
+ =?utf-8?B?NGxqc3FsZXQ2OWJOeUVCQllSaUpaUnpSREhqV280N0pIL0lEM25MS1hvQlpO?=
+ =?utf-8?B?N0c5VFY2eFlCVkRIaWNFQjhBV29VcnlsTDJNWUJkNndpOUVtZGszc3F6ZmJs?=
+ =?utf-8?B?RWZtclI0UFhYK0x5MkJ3OWxRMm90OUFvOS9IYmpPYjNkallRbE9lR1V3ZEps?=
+ =?utf-8?B?TEd1Rkh4UmxYS3BDMUlYVEtYYkhHR05icHI3Z1NOc1V3S1hUdWFCbUtuQ1FT?=
+ =?utf-8?B?b3BOV3d6dFBLSmt6VFBFdFU1WVFWZTAxRmtmRi9HbUdUMUVTcm9zeUlhdzB2?=
+ =?utf-8?B?aHVaWnB1ckVBQ1p6YmpUSDFDNVg2WW9rMmIvbkoxclNGRk92VkpTNitFd2Iy?=
+ =?utf-8?B?Tmx3MEFmTWllWjVDeFZGVE5xUDdmdHNpd0FoUVBET0RPb2Q4eTlUcnk1MjBu?=
+ =?utf-8?B?RGlaSWNFd1lYcWpNKzJ1cVVObjNpeS8vSTY0OGo4OWV3ck9ia1lTcEdadHJC?=
+ =?utf-8?B?dUdkSjFLVnFoNUtRQjBxam5tdEpFK004UVA1OHhUU0RWZllwQXNGRTh5WDNL?=
+ =?utf-8?B?WlRYRmE1b1JFZmpyWFZSSGZqWEhrcGFwVEJLUGppRWlKL0lwbS9VeDVoS1lv?=
+ =?utf-8?B?YmkvckF1L3NsdlZBZzdyY0RjWnBHQThjNU1MV1ExSGxNYnNLTXFJd1VDY21Y?=
+ =?utf-8?B?eisvSGVWMDExOXBMN1plNTJJTENSOVBsMnUvdVdOcEN5TzMvZU8xMGNmQjhK?=
+ =?utf-8?B?S3MvaktCSDRTbGl4cDIwZ0l4YUhYaTUyR2gxQkNDK1VjWGlSbU5pTnN4YVo3?=
+ =?utf-8?B?YnVlV0lDOTlHeDFTejlmakVxM2hRUThDT1hhaHhwMzByaWt0bFVJcUFUVlFz?=
+ =?utf-8?B?dDQxY1NyMW1FVm11Wm1VNlhGRGV2WUVYT0VSVTZKQ2o0WlcxVWN6UVFibDdt?=
+ =?utf-8?B?eXQ4Q1krZVk4WGsrdmNobWJKV09seWNvdnNReXJtVCs0aVNRY3R3OEsxZ3Z0?=
+ =?utf-8?B?aEVFMjZUdDFBUWxlalU0Q2xoSFZ2NTB4MGk4OC9iYnEyaThwL0J1STRFa1Yy?=
+ =?utf-8?B?U0t5WG9YSU4rUG0wd3lvV3BhQnlBeUYxeW9MSkdZSVpJVDNXMERkRHkveG1p?=
+ =?utf-8?B?dzJMNzN2bkFMZk1RWmovbUNKUGdzUkpVWEJnZVkzMTUydzFsVzNHNlQzUVlU?=
+ =?utf-8?B?U1dQWVI2aWwzYkV2djRHWTlrRFRnZVZxMHY4ZHVpMVRpQjNpRU13MTkydkZa?=
+ =?utf-8?B?VDIzVXZlV0pqZlpsUnRuY296Vnk0THBhb2pGVDhZbmYvN21XT0d5R2FkeW93?=
+ =?utf-8?B?SFJBSzhUSExKYU4vUEEzMjdEQ0ZhRnV3RUNHNDErVGZBMlVETVN1ZlBRd0JN?=
+ =?utf-8?B?UUVyM09MT3NCcVZnT2JzWnlhYkt1ajZkaVAxZTFucWpPck95VnZWYWNWQ2t3?=
+ =?utf-8?B?c3Z0bFlJR3pQV3F0ZDRpUkM0VFI0R3I5VFRiemkwcjdIUFg4SUlQcFlicldr?=
+ =?utf-8?B?TXJXUGVpQ29Zc1hseHNITjQxOXZ6Umpaako1MzlYYVkxSUpzNndDSHdSODFD?=
+ =?utf-8?B?MXp5OUlUOHg1YjkzQzFKNEovb2toOVBPTnFUUWViSm1UeHJjc2c3dVdoZUU3?=
+ =?utf-8?Q?oBewYNDp5mjjCuFoos7kOEIzQ?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	slMoI48Jgohe8nuvba3qy1Tj+sNqowqKfusGyJCPGgJDFI5Yg1cfSV1oWjgSDlAJK43EG706LIjIDXy6ejVT9TqM8snHNdfA/aQPRNfY3+KlZfGzFhmSxGK2/Tyz5uoSy3FoyN3jxswPuWsw1+Tw0n81cLRXj4esk3SxyXBwYGAmDk0UtcFDRDLrqof08Q4TztizeJI22pay9iRfSz96++Jvnin1slRI6xWWChS3EUAtfPqx25yt8/Rb2jrbEwCdFpEXUK3veDhlq5SZBDhe0nnqfyypzASmXAqj7pIKLykFYtREmj6Mn9lTNw3ehf+lQaSAfU3rs0hw44jGgWCeexM8JdHgefmwhiGG2ICOrw8nnlqHqhxXMkoD+BR4ICgIKz0HbUxoJlBbol73GsPAY8BzCAUMfR2Zz1at3X5r7CqzHku8jpV+/YEkz7KiHS0Ufy8VL+k/jGlwD9pBelfGuW/4N6MSRs02mrc/fUbzEkpWRI2bS9VmV0rhm6acnRkOwDBD4RBvcba/wECqOp5p62dx9l54BRd26sqa6zCHb2Eo8bhnAjbZ4o13wD76OZIliywMKr0Dx9U5xlJSGgc3XK9Oq86jRplAZ4M1JltwlU0=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8b588405-105e-4fed-37ba-08dc183c687d
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Jan 2024 15:44:51.2291
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: rKX24RBgBi0tQECsDscdm7dYiYT2NvQEacabw9nACf9aWjIL4TiBHTLfR1q9zjvW5KW4jxnlg9eJ2aY0sXx5Xw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB6726
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-18_08,2024-01-17_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
+ mlxlogscore=999 suspectscore=0 bulkscore=0 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2401180114
+X-Proofpoint-ORIG-GUID: wd8gjKVqhZfPVsnrZBBTV6cc8tdCBOvL
+X-Proofpoint-GUID: wd8gjKVqhZfPVsnrZBBTV6cc8tdCBOvL
 
-On 1/17/24 5:54 PM, Bart Van Assche wrote:
-> On 1/17/24 16:42, Jens Axboe wrote:
->> On 1/17/24 5:38 PM, Bart Van Assche wrote:
->>> On 1/17/24 10:43, Jens Axboe wrote:
->>>> Do we care? Maybe not, if we accept that an IO scheduler is just for
->>>> "slower devices". But let's not go around spouting some 200K number as
->>>> if it's gospel, when it depends on so many factors like IO workload,
->>>> system used, etc.
->>> I've never seen more than 200K IOPS in a single-threaded test. Since
->>> your tests report higher IOPS numbers, I assume that you are submitting
->>> I/O from multiple CPU cores at the same time.
->>
->> Single core, using mq-deadline (with the poc patch, but number without
->> you can already find in a previous reply):
->>
->> axboe@7950x ~/g/fio (master)> cat /sys/block/nvme0n1/queue/scheduler
->> none [mq-deadline]
->> axboe@7950x ~/g/fio (master)> sudo t/io_uring -p1 -d128 -b512 -s32 -c32 -F1 -B1 -R1 -X1 -n1 /dev/nvme0n1
->>
->> submitter=0, tid=1957, file=/dev/nvme0n1, node=-1
->> polled=1, fixedbufs=1/0, register_files=1, buffered=0, QD=128
->> Engine=io_uring, sq_ring=128, cq_ring=128
->> IOPS=5.10M, BW=2.49GiB/s, IOS/call=32/31
->> IOPS=5.10M, BW=2.49GiB/s, IOS/call=32/32
->> IOPS=5.10M, BW=2.49GiB/s, IOS/call=31/31
->>
->> Using non-polled IO, the number is around 4M.
+On 17/01/2024 21:36, Brian King wrote:
+> This addresses an issue discovered on ibmvfc LUNs. For this driver,
+> max_sectors is negotiated with the VIOS. This gets done at initialization
+> time, then LUNs get scanned and things generally work fine. However,
+> this attribute can be changed on the VIOS, either due to a sysadmin
+> change or potentially a VIOS code level change. If this decreases
+> to a smaller value, due to one of these reasons, the next time the
+> ibmvfc driver performs an NPIV login, it will only be able to use
+> the smaller value. In the case of a VIOS reboot, when the VIOS goes
+> down, all paths through that VIOS will go to devloss state. When
+> the VIOS comes back up, ibmvfc negotiates max_sectors and will only
+> be able to get the smaller value and it will update shost->max_sectors.
+
+Are you saying that the driver will manually update shost->max_sectors 
+after adding the scsi host? I didn't think that was permitted.
+
+Thanks,
+John
+
+> However, when LUNs are scanned, the devloss paths will be found
+> and brought back online, still using the old max_hw_sectors. This
+> change ensures that max_hw_sectors gets updated.
 > 
-> A correction: my tests ran with 72 fio jobs instead of 1. I used
-> fio + io_uring + null_blk in my tests. I see about 1100 K IOPS with
-> a single fio job and about 150 K IOPS with 72 fio jobs. This shows
-> how I measured mq-deadline performance:
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
+>   drivers/scsi/scsi_scan.c | 6 +++++-
+>   1 file changed, 5 insertions(+), 1 deletion(-)
 > 
-> modprobe null_blk
-> fio --bs=4096 --group_reporting=1 --gtod_reduce=1 --invalidate=1 \
->     --ioengine=io_uring --ioscheduler=mq-deadline --norandommap \
->     --runtime=60 --rw=randread --thread --time_based=1 --buffered=0 \
->     --numjobs=72 --iodepth=128 --iodepth_batch_submit=64 \
->     --iodepth_batch_complete=64 --name=/dev/nullb0 --filename=/dev/nullb0
-
-I don't think you're testing what you think you are testing here. Queue
-depth of > 9000, you are going to be sleeping basically all of the time.
-Hardly a realistic workload, you'll spend a lot of time on that and also
-make the internal data structures much slower.
-
-Since I still have the box booted with my patch, here's what I see:
-
-Jobs	Queue depth	IOPS
-============================
-1	128		3090K
-32	4		1313K
-
-and taking a quick peek, we're spending a lot of time trying to merge.
-Disabling expensive merges, and I get:
-
-Jobs	Queue depth	IOPS
-============================
-32	4		1980K
-
-which is more reasonable. I used 32 jobs as I have 32 threads in this
-box, and QD=4 to keep the same overall queue depth.
-
-All the contention from the numjobs=32 case is insertion at that point,
-in fact that's 50% of the time! Well add a quick hack that makes that a
-bit better, see below, it's folded in with the previous one. That brings
-it to 2300K, and queue lock contention is 18%, down from 50% before.
-
-As before, don't take this patch as gospel, it's just a proof of concept
-that it would indeed be possible to make this work. 2300K isn't 3100K,
-but it's not terrible scaling for a) all CPUs in the system hammering on
-the device, b) a single queue device, and c) using an IO scheduler.
-
-
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index f958e79277b8..46814b5ed1c9 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -79,7 +79,30 @@ struct dd_per_prio {
- 	struct io_stats_per_prio stats;
- };
- 
-+#define DD_CPU_BUCKETS		32
-+#define DD_CPU_BUCKETS_MASK	(DD_CPU_BUCKETS - 1)
-+
-+struct dd_bucket_list {
-+	struct list_head list;
-+	spinlock_t lock;
-+} ____cacheline_aligned_in_smp;
-+
-+enum {
-+	DD_DISPATCHING	= 0,
-+	DD_INSERTING	= 1,
-+};
-+
- struct deadline_data {
-+	struct {
-+		spinlock_t lock;
-+		spinlock_t zone_lock;
-+	} ____cacheline_aligned_in_smp;
-+
-+	unsigned long run_state;
-+
-+	atomic_t insert_seq;
-+	struct dd_bucket_list bucket_lists[DD_CPU_BUCKETS];
-+
- 	/*
- 	 * run time data
- 	 */
-@@ -100,9 +123,6 @@ struct deadline_data {
- 	int front_merges;
- 	u32 async_depth;
- 	int prio_aging_expire;
--
--	spinlock_t lock;
--	spinlock_t zone_lock;
- };
- 
- /* Maps an I/O priority class to a deadline scheduler priority. */
-@@ -600,6 +620,10 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	struct request *rq;
- 	enum dd_prio prio;
- 
-+	if (test_bit(DD_DISPATCHING, &dd->run_state) ||
-+	    test_and_set_bit(DD_DISPATCHING, &dd->run_state))
-+		return NULL;
-+
- 	spin_lock(&dd->lock);
- 	rq = dd_dispatch_prio_aged_requests(dd, now);
- 	if (rq)
-@@ -616,6 +640,7 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	}
- 
- unlock:
-+	clear_bit(DD_DISPATCHING, &dd->run_state);
- 	spin_unlock(&dd->lock);
- 
- 	return rq;
-@@ -694,7 +719,7 @@ static int dd_init_sched(struct request_queue *q, struct elevator_type *e)
- 	struct deadline_data *dd;
- 	struct elevator_queue *eq;
- 	enum dd_prio prio;
--	int ret = -ENOMEM;
-+	int i, ret = -ENOMEM;
- 
- 	eq = elevator_alloc(q, e);
- 	if (!eq)
-@@ -706,6 +731,11 @@ static int dd_init_sched(struct request_queue *q, struct elevator_type *e)
- 
- 	eq->elevator_data = dd;
- 
-+	for (i = 0; i < DD_CPU_BUCKETS; i++) {
-+		INIT_LIST_HEAD(&dd->bucket_lists[i].list);
-+		spin_lock_init(&dd->bucket_lists[i].lock);
-+	}
-+
- 	for (prio = 0; prio <= DD_PRIO_MAX; prio++) {
- 		struct dd_per_prio *per_prio = &dd->per_prio[prio];
- 
-@@ -724,6 +754,7 @@ static int dd_init_sched(struct request_queue *q, struct elevator_type *e)
- 	dd->prio_aging_expire = prio_aging_expire;
- 	spin_lock_init(&dd->lock);
- 	spin_lock_init(&dd->zone_lock);
-+	atomic_set(&dd->insert_seq, 0);
- 
- 	/* We dispatch from request queue wide instead of hw queue */
- 	blk_queue_flag_set(QUEUE_FLAG_SQ_SCHED, q);
-@@ -789,6 +820,22 @@ static bool dd_bio_merge(struct request_queue *q, struct bio *bio,
- 	return ret;
- }
- 
-+static void dd_dispatch_from_buckets(struct deadline_data *dd,
-+				     struct list_head *list)
-+{
-+	int i;
-+
-+	for (i = 0; i < DD_CPU_BUCKETS; i++) {
-+		struct dd_bucket_list *bucket = &dd->bucket_lists[i];
-+
-+		if (list_empty_careful(&bucket->list))
-+			continue;
-+		spin_lock(&bucket->lock);
-+		list_splice_init(&bucket->list, list);
-+		spin_unlock(&bucket->lock);
-+	}
-+}
-+
- /*
-  * add rq to rbtree and fifo
-  */
-@@ -868,8 +915,29 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
- 	struct request_queue *q = hctx->queue;
- 	struct deadline_data *dd = q->elevator->elevator_data;
- 	LIST_HEAD(free);
-+	int seq, new_seq;
- 
--	spin_lock(&dd->lock);
-+	seq = atomic_inc_return(&dd->insert_seq);
-+	if (!spin_trylock(&dd->lock)) {
-+		if (!test_bit(DD_INSERTING, &dd->run_state)) {
-+			spin_lock(&dd->lock);
-+		} else {
-+			struct dd_bucket_list *bucket;
-+			int cpu = get_cpu();
-+
-+			bucket = &dd->bucket_lists[cpu & DD_CPU_BUCKETS_MASK];
-+			spin_lock(&bucket->lock);
-+			list_splice_init(list, &bucket->list);
-+			spin_unlock(&bucket->lock);
-+			put_cpu();
-+			if (test_bit(DD_INSERTING, &dd->run_state))
-+				return;
-+			spin_lock(&dd->lock);
-+		}
-+	}
-+
-+	set_bit(DD_INSERTING, &dd->run_state);
-+retry:
- 	while (!list_empty(list)) {
- 		struct request *rq;
- 
-@@ -877,7 +945,16 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
- 		list_del_init(&rq->queuelist);
- 		dd_insert_request(hctx, rq, flags, &free);
- 	}
-+
-+	new_seq = atomic_read(&dd->insert_seq);
-+	if (seq != new_seq) {
-+		seq = new_seq;
-+		dd_dispatch_from_buckets(dd, list);
-+		goto retry;
-+	}
-+
- 	spin_unlock(&dd->lock);
-+	clear_bit(DD_INSERTING, &dd->run_state);
- 
- 	blk_mq_free_requests(&free);
- }
-
--- 
-Jens Axboe
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 44680f65ea14..01f2b38daab3 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1162,6 +1162,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+>   	blist_flags_t bflags;
+>   	int res = SCSI_SCAN_NO_RESPONSE, result_len = 256;
+>   	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+> +	struct request_queue *q;
+>   
+>   	/*
+>   	 * The rescan flag is used as an optimization, the first scan of a
+> @@ -1182,6 +1183,10 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+>   				*bflagsp = scsi_get_device_flags(sdev,
+>   								 sdev->vendor,
+>   								 sdev->model);
+> +			q = sdev->request_queue;
+> +			if (queue_max_hw_sectors(q) > shost->max_sectors)
+> +				blk_queue_max_hw_sectors(q, shost->max_sectors);
+> +
+>   			return SCSI_SCAN_LUN_PRESENT;
+>   		}
+>   		scsi_device_put(sdev);
+> @@ -2006,4 +2011,3 @@ void scsi_forget_host(struct Scsi_Host *shost)
+>   	}
+>   	spin_unlock_irqrestore(shost->host_lock, flags);
+>   }
+> -
 
