@@ -1,58 +1,58 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31AE029CED;
-	Thu, 18 Jan 2024 20:19:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D88DD2E657;
+	Thu, 18 Jan 2024 20:21:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705609152; cv=none; b=dH1owG3JFep/MWHuyetPTiMyDsk0Z9KLi9DrOBUpUxUrka1KSfVXI/x1SVw+5AgzpzVtMBaAG5N4g+ms5DaFp03IWY5ySrCSGzRfrNSsc/Ly2vKeHb39R+4gBqT1O/90gAoZPYGRabxE+EeuazenxszL9mD6DAqI2HBfoShy3u4=
+	t=1705609267; cv=none; b=U38Z+M/9//LfE7uhxg6adh7dSJn/AGcAKAg8kU66+y59dVpW2FrZ39+mN40rCqwADW3FlSucDIbTSlz9nHZWn4B5+Z/SOXvlGQ0Wq4cfsqHId9pUuKMwY05fRi4yPfEmFSA7zdaq25xmc/6GcZPljQXS3ZNv/Fvq0jvK3vmNLOQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705609152; c=relaxed/simple;
-	bh=qOyfcY8+N2GbqPmNyR8KCsqKlMiz/33m0/NfqqMf8fE=;
+	s=arc-20240116; t=1705609267; c=relaxed/simple;
+	bh=A+sDgBWxWmMWbOK9CH13QLvCtmTIP6OXbPS4uCAFh3E=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oSKZYhodqmkapHE5LfMbJw4MbEDqwF/RPOQZwPY7cyJAJmm1Ji+vYE5bVX+2YRpucPa8RuITRHvAAoGqPwClFOvnfxpS5sxP/OLo2rf36urAaet+MiTra9xcwfjMsYEbv0gdcEkY6ZzIaL+FE4KuleZMe7PUIcZmWOQPWw0PRNU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GPVojCRK; arc=none smtp.client-ip=209.85.215.177
+	 In-Reply-To:Content-Type; b=krxVS/rd7d7Ufq29dsEUDo449Ybq3EwkprksP/eaFaiIu2hcYBuxfAFZyiiNEj3CQjtvypoQTxvJW/62cthCATbUI/tiWvfnuEb3fZao0kgbOvE59SyiiOUR1u5O+y7H9SfdmYNLB7CDgHxsrHyQJ0p7FWeFm1RM9Gs/mnsXFnw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mskg0gi6; arc=none smtp.client-ip=209.85.210.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GPVojCRK"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-5cf6d5117f9so49320a12.2;
-        Thu, 18 Jan 2024 12:19:10 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mskg0gi6"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-6d9cdd0a5e6so94176b3a.3;
+        Thu, 18 Jan 2024 12:21:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1705609150; x=1706213950; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1705609265; x=1706214065; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=SSp4LijXK8czV2YlnwfwApZRO+PHOzGdXK5fdCdR75M=;
-        b=GPVojCRKfV+AyAg6rdPud8dgVJ+JhkCHmnTJNHjSr8lutfvgBbBSkOT2MPHhG4l06a
-         cIkwm+OxOnaHSNvHDRYWw4aWXNNn4GMvCLFC4OB70JaqQw7zovccyAiqOhf3aib/HQKq
-         LyRMcXnOFX0bY2QCDB2pH4VYrYlfCIR23SGwCUxA7U+zKR7COqiIO5qLybWMJ8ZZkMxI
-         9RuQK2TklGOqEP5wreZKbcL8mUchkdR+JaW8QyI94tSChcMu0QUVPgyOZfkronX/PABP
-         91ZcQulNYClQUqLTXIXatSSWcIgI/LkUvyZdYE7xd/8+xc+Nk3SdV6CfkqifW4Sel1ZW
-         +32A==
+        bh=pZ9pZpCAzsJnyZjUQhh/duwy73BtRwk7HFO6DtWYWZU=;
+        b=mskg0gi6qwMrAi2R6xh2s4mSwPO6YmvU15/O5VBZITYgYhEqEMsXjCTlAPvS4ZKWmT
+         W16OAbVn86AStoRo0beigLDweyAHHHA62hzcstOyz78NF56qlYR8H6oWzny0aXc+CS1a
+         ErJ+o66yDyr83IS9FqKO+CoFYVhAm6ttRzBWqdrfJPwBtmv//J82C6pVc7hZQ99Gf2Iu
+         0yroKvEWmhDB7Lc5CnhgNAY7xW4upb+hRK5VWvJHVSpD6bkEbv5/Zb5jF4wxj+/+KY7z
+         KOeccFGzAa8hfCalR9MBx6U7dx9UCn43FFepI27flMrbgX8yY3XRoviQIkdJVnDpc/OL
+         7BiA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705609150; x=1706213950;
+        d=1e100.net; s=20230601; t=1705609265; x=1706214065;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SSp4LijXK8czV2YlnwfwApZRO+PHOzGdXK5fdCdR75M=;
-        b=oLxK3Zl0248yhwn4GNPw6aL5q6cc14EknYmT66xBYTOIDZLKhteCUtJph+dy3anHtP
-         RCtc+ClbC0GXqden+yL9TdO8zoGE2kuzzE9TT7NMIswX+nWEzcIdNcu0IfVeZpqqiqBG
-         VN3KwjMzCKoR7naWM5cDADllUlBcpRvBJ8JBo8c0+G7xKO4ihCiiN8BSbq2FzLRcftNp
-         NTVhTKFiEyGRm933GK+zBmQvsUJv5X107J/VetGSxbdjr9qlxHPtrsxrWBuLBWFeAc2m
-         EJkODzSWEd47F5XJVqXf/qY5CKpC3meh6UXOs2wM9WqA9ifBzXNKGdnfSWffoCxJKABH
-         5+hA==
-X-Gm-Message-State: AOJu0YzZaIheOyaizrOipKRUsbPR7zEarn3qncITKQ4cX9FJKhzWSwyo
-	qxn+lMTgufodqJVbc3QAy8hCAzt4+MyRBEvE/4uB6M/WwLENEE7j
-X-Google-Smtp-Source: AGHT+IEUSO3kM4FvQZ01TNYzRtRpIG/nW46bdm3gKsc1P9hpMcQbQplOiA9zvr2duZoex7h0eWTw3g==
-X-Received: by 2002:a17:902:cecb:b0:1d4:53cf:fb99 with SMTP id d11-20020a170902cecb00b001d453cffb99mr1789461plg.24.1705609150521;
-        Thu, 18 Jan 2024 12:19:10 -0800 (PST)
+        bh=pZ9pZpCAzsJnyZjUQhh/duwy73BtRwk7HFO6DtWYWZU=;
+        b=oMi4qrYv3DN9LvGLN8b2jL1yhUYfcKZs19JH6CKAO/OOJhA1wq0HvqnXG7hC2o+E0P
+         0nfBsGxxnCrzWupnqlElXeXRRuCh3N6OuDLV80JZLDXhnYjYOBbmctp94wVoBMtEVDE/
+         B37phca01ued6Nft6/X9JHUDllDrySH+/UPTYi05kPR03xvu/qRnEc9a78VBPlowbNb9
+         YTco3I+f0Quz50YWKU41TozkwXzWATu82PL2ZiqQ6WNipmm+n2I5SPbesSXMCAnxkQdr
+         wvEZlVCulLT8swf9YupSG4uyNxwRt/PeUhozAXfYZN3HhJ6mribJP7uMOvRBZ1WsNBW4
+         G7fw==
+X-Gm-Message-State: AOJu0YwoyndUFBPMWRVuMevGr2jcLyuXvkKSQavYrqynaJorBqaWaIPE
+	jn2q+gtOPkduAoxSecxbBZ6aVXNzsTv1aD7uTAJ5AErWwhLBxZR6
+X-Google-Smtp-Source: AGHT+IH9atTBPry6zGhjvZkxevU6L3eia12NqM5JUMvS4WYiKqaKHiaQNlqsGdVUzJod4zwoXb+xkg==
+X-Received: by 2002:a05:6a00:3993:b0:6db:b9fa:ec2b with SMTP id fi19-20020a056a00399300b006dbb9faec2bmr408772pfb.62.1705609265105;
+        Thu, 18 Jan 2024 12:21:05 -0800 (PST)
 Received: from [192.168.0.228] (c-24-20-51-242.hsd1.or.comcast.net. [24.20.51.242])
-        by smtp.gmail.com with ESMTPSA id mi7-20020a170902fcc700b001d5f387aa6esm1768633plb.240.2024.01.18.12.19.09
+        by smtp.gmail.com with ESMTPSA id a19-20020aa780d3000000b006daf1ded817sm3695296pfn.209.2024.01.18.12.21.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 Jan 2024 12:19:10 -0800 (PST)
-Message-ID: <40483b3e-d820-4a9c-823d-76d6f24edfd6@gmail.com>
-Date: Thu, 18 Jan 2024 12:19:09 -0800
+        Thu, 18 Jan 2024 12:21:04 -0800 (PST)
+Message-ID: <9f246fbc-b2e4-4585-912d-a5a00ac8cd04@gmail.com>
+Date: Thu, 18 Jan 2024 12:21:04 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -60,7 +60,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ibmvscsi_tgt: replace deprecated strncpy with
+Subject: Re: [PATCH v2] scsi: ibmvscsi_tgt: replace deprecated strncpy with
  strscpy
 Content-Language: en-US
 To: Kees Cook <keescook@chromium.org>, Justin Stitt <justinstitt@google.com>
@@ -69,15 +69,15 @@ Cc: Michael Cyr <mikecyr@linux.ibm.com>,
  "Martin K. Petersen" <martin.petersen@oracle.com>,
  linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
  linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-References: <20231030-strncpy-drivers-scsi-ibmvscsi_tgt-ibmvscsi_tgt-c-v1-1-859b5ce257fd@google.com>
- <202311301315.BAB096926@keescook>
+References: <20231212-strncpy-drivers-scsi-ibmvscsi_tgt-ibmvscsi_tgt-c-v2-1-bdb9a7cd96c8@google.com>
+ <202312121321.E15E09BF@keescook>
 From: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
-In-Reply-To: <202311301315.BAB096926@keescook>
+In-Reply-To: <202312121321.E15E09BF@keescook>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 11/30/23 13:25, Kees Cook wrote:
-> On Mon, Oct 30, 2023 at 09:43:20PM +0000, Justin Stitt wrote:
+On 12/12/23 13:23, Kees Cook wrote:
+> On Tue, Dec 12, 2023 at 01:20:20AM +0000, Justin Stitt wrote:
 >> strncpy() is deprecated for use on NUL-terminated destination strings
 >> [1] and as such we should prefer more robust and less ambiguous string
 >> interfaces.
@@ -92,100 +92,37 @@ On 11/30/23 13:25, Kees Cook wrote:
 >>
 >> Following the same idea, `partition_name` is defiend as:
 >> |       static char partition_name[PARTITION_NAMELEN] = "UNKNOWN";
->>
 >> ... which is NUL-padded already, meaning strscpy() is the best option.
 >>
 >> Considering the above, a suitable replacement is `strscpy` [2] due to
 >> the fact that it guarantees NUL-termination on the destination buffer
 >> without unnecessarily NUL-padding.
-> 
-> My only worry here is that I don't see if %NUL termination is _required_
-> for these variables. (i.e. do we run the risk of truncating these by 1
-> byte if they're right at the limit?) Are they __nonstring?
-> 
-> I *think* they're %NUL terminated since they follow the same sizing as
-> the global "partition_name", but I'm not sure.
-> 
-> Can any of the SCSI authors comment on this?
-
-Sorry, for a delayed response. I've just taken over the maintainer role as it
-had been left unaccounted for sometime.
-
-These are meant to be handled as C strings and nul termination is expected.
-
--Tyrel
-
-> 
 >>
->> However, for cap->name let's use strscpy_pad as cap is allocated via
->> dma_alloc_coherent():
+>> However, for cap->name and info let's use strscpy_pad as they are
+>> allocated via dma_alloc_coherent():
 >> |       cap = dma_alloc_coherent(&vscsi->dma_dev->dev, olen, &token,
 >> |                                GFP_ATOMIC);
-> 
-> This is also true for the "info" allocation (it comes out of DMA).
-> 
+>> &
+>> |       info = dma_alloc_coherent(&vscsi->dma_dev->dev, sizeof(*info), &token,
+>> |                                 GFP_ATOMIC);
 >>
 >> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
 >> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
 >> Link: https://github.com/KSPP/linux/issues/90
 >> Cc: linux-hardening@vger.kernel.org
 >> Signed-off-by: Justin Stitt <justinstitt@google.com>
->> ---
->> Note: build-tested only.
->>
->> Found with: $ rg "strncpy\("
->> ---
->>  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 14 +++++++-------
->>  1 file changed, 7 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
->> index 385f812b8793..cd223ef696e5 100644
->> --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
->> +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
->> @@ -1551,17 +1551,17 @@ static long ibmvscsis_adapter_info(struct scsi_info *vscsi,
->>  	if (vscsi->client_data.partition_number == 0)
->>  		vscsi->client_data.partition_number =
->>  			be32_to_cpu(info->partition_number);
->> -	strncpy(vscsi->client_data.srp_version, info->srp_version,
->> +	strscpy(vscsi->client_data.srp_version, info->srp_version,
->>  		sizeof(vscsi->client_data.srp_version));
->> -	strncpy(vscsi->client_data.partition_name, info->partition_name,
->> +	strscpy(vscsi->client_data.partition_name, info->partition_name,
->>  		sizeof(vscsi->client_data.partition_name));
->>  	vscsi->client_data.mad_version = be32_to_cpu(info->mad_version);
->>  	vscsi->client_data.os_type = be32_to_cpu(info->os_type);
->>  
->>  	/* Copy our info */
->> -	strncpy(info->srp_version, SRP_VERSION,
->> +	strscpy(info->srp_version, SRP_VERSION,
->>  		sizeof(info->srp_version));
->> -	strncpy(info->partition_name, vscsi->dds.partition_name,
->> +	strscpy(info->partition_name, vscsi->dds.partition_name,
->>  		sizeof(info->partition_name));
 > 
-> Since "info" is from DMA, let's use the _pad variant here just to be
-> safe.
+> This looks good to me. The only question that I haven't seen an answer
+> to from the maintainers is whether this is a __nonstring or not. It
+> really looks like it should be a C String, so with that assumption:
+
+To reaffirm the assumption, as I mentioned in my response to v1 these are
+intended to be handled as C strings.
+
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+
 > 
->>  	info->partition_number = cpu_to_be32(vscsi->dds.partition_num);
->>  	info->mad_version = cpu_to_be32(MAD_VERSION_1);
->> @@ -1645,8 +1645,8 @@ static int ibmvscsis_cap_mad(struct scsi_info *vscsi, struct iu_entry *iue)
->>  			 be64_to_cpu(mad->buffer),
->>  			 vscsi->dds.window[LOCAL].liobn, token);
->>  	if (rc == H_SUCCESS) {
->> -		strncpy(cap->name, dev_name(&vscsi->dma_dev->dev),
->> -			SRP_MAX_LOC_LEN);
->> +		strscpy_pad(cap->name, dev_name(&vscsi->dma_dev->dev),
->> +			sizeof(cap->name));
-> 
-> And this is a safe conversion to sizeof():
-> 
-> struct capabilities {
-> 	...
->         char name[SRP_MAX_LOC_LEN];
-> 
-> 
-> If we can convince ourselves that non of these are __nonstring types,
-> then I think with the "info" change above, this should be good.
+> Reviewed-by: Kees Cook <keescook@chromium.org>
 > 
 > -Kees
 > 
