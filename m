@@ -1,47 +1,46 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+Received: from mail-il1-f175.google.com (mail-il1-f175.google.com [209.85.166.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68EDF1844;
-	Thu, 18 Jan 2024 00:43:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4118517C3;
+	Thu, 18 Jan 2024 00:54:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705538612; cv=none; b=XW5z9MZsi85dIp85Wdu62es2tUAcUlbUpQeu3aaAYMpHBn0intVOWH/bLOHTyQwHmCPtrAWHSSeDtVQWGZOLv+5Y9nqS5fA5JO7aQkOxQ6b6n500PbTBYvv2OHg3fDlOBJkFpndctUgRkJ0uQDIDcTZb0SE79/6Wcb200mi/CKc=
+	t=1705539272; cv=none; b=Ya4GGdnf4aXCmstU2p7UwvOgTIhxCnI8Opy6lVFMUCMLDgDtdsLZsWDVZVBZZCRBPItYhvMTczbN30sLw3WISktTAZI8jVpjopewIx+SeYPc9ArSqVpZdxko/fA9gsWH1ExpgFGgLSIDsiFUp7U5PDmYHjd3mmawEGb79+RCWMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705538612; c=relaxed/simple;
-	bh=Q4jZNmkfVaO8ML1kjEyBQBO98+D6ldHQpRFItWbS4eE=;
+	s=arc-20240116; t=1705539272; c=relaxed/simple;
+	bh=U0wYbpkVCX0nOWn+y9CyglGR9SY/KEry8JLYHWUQw6Q=;
 	h=Received:X-Google-DKIM-Signature:X-Gm-Message-State:
 	 X-Google-Smtp-Source:X-Received:Received:Message-ID:Date:
-	 MIME-Version:User-Agent:From:Subject:To:Cc:References:
-	 Content-Language:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding; b=Wb8AZ8ErAvBMl+s4lESbRIVjpzXI/I6xCpUQcBqZV11ZNsDxMsZycCK36WI7Ct5zMEEZA+k1v+xns3pJk/IJxXrQaAQrSIkSpxEZrv4MHH/c2wc+xV38uDrw228CKss/YITQbmEjL+hDmnlZFEw5srXmUu6tvi4J41zSssHAF30=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.170
+	 MIME-Version:User-Agent:Subject:Content-Language:To:Cc:References:
+	 From:In-Reply-To:Content-Type:Content-Transfer-Encoding; b=N+1/UvNS0kcIlQ2m9jHWHQqempJ78I4k5fSU7K9NyuUBg2uN/NQaqtdi0Fl0fTOsESW3+jQ+gfAu52+8y7cxSEeRaPW3URHhg9JCyssJqDUjck1KOHDFEUjzRitqsfI85nxhR+1SAaWRyfxOWeSG0XrYWaMfKLCKM0YwbuT5k80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.166.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6db9e52bbccso749812b3a.3;
-        Wed, 17 Jan 2024 16:43:31 -0800 (PST)
+Received: by mail-il1-f175.google.com with SMTP id e9e14a558f8ab-36074b286d6so59221855ab.1;
+        Wed, 17 Jan 2024 16:54:31 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705538611; x=1706143411;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:from:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1705539270; x=1706144070;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=u/Mec/5p9+EKLAFCABKLzW46J1sVgHE5SuS/MOmf2rY=;
-        b=Zn8PhPnoIzWcxlnRiy6frERjl/EFeiAGxgJbNOzXPzG9YspLHkCuDvmjtWMOpZCWmW
-         D214DU/hQcwkwJDk7SYMSkMA4JQdw6LT5I/u/oxb1i2M2aPdkV0439rDw5sZuRjNX8dw
-         62S+TJUHcU8MuZbZ0i1rFMtW7h9cr5nCtYbo+AS+zfLHKlW1sJLZVX2QM7ZDJs14fnOQ
-         qQr/MFUpOFyQ7vzcLjhQ74vpDys6PPhR2WgRNP3B+I1+Dnesi6vN0PVU8jNzkb3SZPyi
-         SeZfM/CESmHr/F5omDk+IZrpdwbZpqaeAIIL/wHSUww49EnQ0g9VxIwCtVQizUKxmOG0
-         XcIA==
-X-Gm-Message-State: AOJu0YxVR6IpkU9DZkmG+OTo+3gAId4GMJ6W0lkgcf9Rgb7KGIGJ4/4O
-	gQ6ol41wW2wvoX+gTa0LbZSnkbHxXeWmCEovc00ybePdgqfwmvxN
-X-Google-Smtp-Source: AGHT+IHapUT+JiDEqszaul6msXCqfsq0Mpjjz9hiim4Ceamg2aEC5IDtO0+h7Jgsa5NB8G+B/jANwg==
-X-Received: by 2002:a17:902:f551:b0:1d5:746a:de1 with SMTP id h17-20020a170902f55100b001d5746a0de1mr143778plf.64.1705538610518;
-        Wed, 17 Jan 2024 16:43:30 -0800 (PST)
+        bh=I45qqr9n38DIIRtEluaEbO4BQdx4bUm7wkLvhBzuhuU=;
+        b=pZQWtf+ryje0BhXLDSmrES6xc87ayG/XpYIt4P49KzK1Dr8oHbvkoMRlXze67aTzq9
+         7ITNo+/Ik72QsxfajkmaTxdwX4ojwGY3Zpyw8oMP6XkOfjXFYBNO79Ts8+QXYvl78CSf
+         0FTAUX+5cgttwV9wKqIlb9HaFQx4/SC7RtgXf3dK6zO/+iV5tBVHs6AIDHJRf3mrdH1L
+         rdRyP/U2BlfK/6y8bOtuJvMu376jx2uSQDM5gskmmNYzv/OiL0n5A2YIXnGmredikKST
+         10D1kMuEqoa0C4LrSf35VheTa7fWJuW1yqVMR2NHF8Rg6x5kGzx6tAyKM/PqQtfhjSja
+         pdyQ==
+X-Gm-Message-State: AOJu0YycxnAOcR9MKkjtypGuieGa54avPQEbvk7fEzdp6xLaADRxPSyn
+	BxH0J6C+k3VW8iaoRdnNkKBKWcQEwQhGOW6GRq+xvU+NZ/nM0vp+38s3hL+Z
+X-Google-Smtp-Source: AGHT+IHesprjDRDHKDmWAU1kXOqX9BSX1AEcL/MOMAN2IhfSYFpDHbPo2rnOkF9E8n7AzllJQIuYag==
+X-Received: by 2002:a92:cec2:0:b0:360:70a9:12c5 with SMTP id z2-20020a92cec2000000b0036070a912c5mr173583ilq.11.1705539270228;
+        Wed, 17 Jan 2024 16:54:30 -0800 (PST)
 Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id lg15-20020a170902fb8f00b001d5e996ed4bsm229711plb.263.2024.01.17.16.43.29
+        by smtp.gmail.com with ESMTPSA id y63-20020a638a42000000b005c2185be2basm281448pgd.54.2024.01.17.16.54.29
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 Jan 2024 16:43:30 -0800 (PST)
-Message-ID: <08d22893-9a05-415e-a610-9b1ceaaba96a@acm.org>
-Date: Wed, 17 Jan 2024 16:43:29 -0800
+        Wed, 17 Jan 2024 16:54:29 -0800 (PST)
+Message-ID: <0853691b-0b70-48c5-825a-4b709d066e20@acm.org>
+Date: Wed, 17 Jan 2024 16:54:28 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,8 +48,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: Bart Van Assche <bvanassche@acm.org>
 Subject: Re: [LSF/MM/BPF TOPIC] Improving Zoned Storage Support
+Content-Language: en-US
 To: Jens Axboe <axboe@kernel.dk>, Damien Le Moal <dlemoal@kernel.org>,
  "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
@@ -63,97 +62,52 @@ References: <5b3e6a01-1039-4b68-8f02-386f3cc9ddd1@acm.org>
  <c38ab7b2-63aa-4a0c-9fa6-96be304d8df1@kernel.dk>
  <2955b44a-68c0-4d95-8ff1-da38ef99810f@acm.org>
  <9af03351-a04a-4e61-a6d8-b58236b041a3@kernel.dk>
- <276eedc2-e3d0-40c7-b355-46232ea65662@kernel.dk>
- <39dfcd32-e5fc-45b9-a0ed-082b879a16a4@acm.org>
- <9f4a6b8a-1c17-46b7-8344-cbf4bcb406ab@kernel.dk>
- <207a985d-ad4e-4cad-ac07-961633967bfc@kernel.dk>
- <e8c32676-114b-4aaf-8753-5a6d7b04fc4b@kernel.dk>
- <86a1f9e6-d3ae-4051-8528-13a952cf74a1@acm.org>
- <90de77e4-ed8a-47be-b5df-2178913ec115@kernel.dk>
-Content-Language: en-US
-In-Reply-To: <90de77e4-ed8a-47be-b5df-2178913ec115@kernel.dk>
+ <c6dfb4f5-10f9-461e-8743-b730a8384f95@acm.org>
+ <e19746ce-fdea-4372-bc26-1ee7b1a9a22d@kernel.dk>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <e19746ce-fdea-4372-bc26-1ee7b1a9a22d@kernel.dk>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/17/24 13:40, Jens Axboe wrote:
-> On 1/17/24 2:33 PM, Bart Van Assche wrote:
->> Please note that whether or not spin_trylock() is used, there is a
->> race condition in this approach: if dd_dispatch_request() is called
->> just before another CPU calls spin_unlock() from inside
->> dd_dispatch_request() then some requests won't be dispatched until the
->> next time dd_dispatch_request() is called.
+On 1/17/24 16:42, Jens Axboe wrote:
+> On 1/17/24 5:38 PM, Bart Van Assche wrote:
+>> On 1/17/24 10:43, Jens Axboe wrote:
+>>> Do we care? Maybe not, if we accept that an IO scheduler is just for
+>>> "slower devices". But let's not go around spouting some 200K number as
+>>> if it's gospel, when it depends on so many factors like IO workload,
+>>> system used, etc.
+>> I've never seen more than 200K IOPS in a single-threaded test. Since
+>> your tests report higher IOPS numbers, I assume that you are submitting
+>> I/O from multiple CPU cores at the same time.
 > 
-> Sure, that's not surprising. What I cared most about here is that we
-> should not have a race such that we'd stall. Since we haven't returned
-> this request just yet if we race, we know at least one will be issued
-> and we'll re-run at completion. So yeah, we may very well skip an issue,
-> that's well known within that change, which will be postponed to the
-> next queue run.
+> Single core, using mq-deadline (with the poc patch, but number without
+> you can already find in a previous reply):
 > 
-> The patch is more to demonstrate that it would not take much to fix this
-> case, at least, it's a proof-of-concept.
+> axboe@7950x ~/g/fio (master)> cat /sys/block/nvme0n1/queue/scheduler
+> none [mq-deadline]
+> axboe@7950x ~/g/fio (master)> sudo t/io_uring -p1 -d128 -b512 -s32 -c32 -F1 -B1 -R1 -X1 -n1 /dev/nvme0n1
+> 
+> submitter=0, tid=1957, file=/dev/nvme0n1, node=-1
+> polled=1, fixedbufs=1/0, register_files=1, buffered=0, QD=128
+> Engine=io_uring, sq_ring=128, cq_ring=128
+> IOPS=5.10M, BW=2.49GiB/s, IOS/call=32/31
+> IOPS=5.10M, BW=2.49GiB/s, IOS/call=32/32
+> IOPS=5.10M, BW=2.49GiB/s, IOS/call=31/31
+> 
+> Using non-polled IO, the number is around 4M.
 
-The patch below implements what has been discussed in this e-mail
-thread. I do not recommend to apply this patch since it reduces single-
-threaded performance by 11% on an Intel Xeon Processor (Skylake, IBRS):
+A correction: my tests ran with 72 fio jobs instead of 1. I used
+fio + io_uring + null_blk in my tests. I see about 1100 K IOPS with
+a single fio job and about 150 K IOPS with 72 fio jobs. This shows
+how I measured mq-deadline performance:
 
+modprobe null_blk
+fio --bs=4096 --group_reporting=1 --gtod_reduce=1 --invalidate=1 \
+     --ioengine=io_uring --ioscheduler=mq-deadline --norandommap \
+     --runtime=60 --rw=randread --thread --time_based=1 --buffered=0 \
+     --numjobs=72 --iodepth=128 --iodepth_batch_submit=64 \
+     --iodepth_batch_complete=64 --name=/dev/nullb0 --filename=/dev/nullb0
 
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index f958e79277b8..d83831ced69a 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -84,6 +84,10 @@ struct deadline_data {
-  	 * run time data
-  	 */
+Thanks,
 
-+	spinlock_t lock;
-+	spinlock_t dispatch_lock;
-+	spinlock_t zone_lock;
-+
-  	struct dd_per_prio per_prio[DD_PRIO_COUNT];
-
-  	/* Data direction of latest dispatched request. */
-@@ -100,9 +104,6 @@ struct deadline_data {
-  	int front_merges;
-  	u32 async_depth;
-  	int prio_aging_expire;
--
--	spinlock_t lock;
--	spinlock_t zone_lock;
-  };
-
-  /* Maps an I/O priority class to a deadline scheduler priority. */
-@@ -600,6 +601,16 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
-  	struct request *rq;
-  	enum dd_prio prio;
-
-+	/*
-+	 * Reduce lock contention on dd->lock by re-running the queue
-+	 * asynchronously if another CPU core is already executing
-+	 * dd_dispatch_request().
-+	 */
-+	if (!spin_trylock(&dd->dispatch_lock)) {
-+		blk_mq_delay_run_hw_queue(hctx, 0);
-+		return NULL;
-+	}
-+
-  	spin_lock(&dd->lock);
-  	rq = dd_dispatch_prio_aged_requests(dd, now);
-  	if (rq)
-@@ -617,6 +628,7 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
-
-  unlock:
-  	spin_unlock(&dd->lock);
-+	spin_unlock(&dd->dispatch_lock);
-
-  	return rq;
-  }
-@@ -723,6 +735,7 @@ static int dd_init_sched(struct request_queue *q, struct elevator_type *e)
-  	dd->fifo_batch = fifo_batch;
-  	dd->prio_aging_expire = prio_aging_expire;
-  	spin_lock_init(&dd->lock);
-+	spin_lock_init(&dd->dispatch_lock);
-  	spin_lock_init(&dd->zone_lock);
-
-  	/* We dispatch from request queue wide instead of hw queue */
-
+Bart.
