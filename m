@@ -1,113 +1,245 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63A471DFC2;
-	Thu, 18 Jan 2024 18:40:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1172D638
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2024 18:51:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705603230; cv=none; b=aOzFaiXpAHpoLfZmybruSYkyCQki842siYBaJ/qrAz8EmprV/OeJ11meHmzj0QoQr2Nx1fNQnhkr9HOeedEKfK0GbKkR1/V+rCR3OXQaRXh/C0wAaq5JiC1+d2vA5PCY/fHYcfiXp1k/D0JziRj1K1zmGsWREoQtbludQWKE39A=
+	t=1705603915; cv=none; b=GnH8oVzcL8XzLI4lWCRLWMnlDHC3QOdxBQx3E2gLwy2O7/NjrGTd2bOZvIU+hwgpxP8oPr0XJMh/qSTyYlXj4FaD7pO9LwmJWWRHdXhaUgUDW90UFmnUUsasXNMopfVrn7oIy24EJRf6bW8tEtikdaNEKyMXLGmn6m6k3r5WeT0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705603230; c=relaxed/simple;
-	bh=R+qXdiiWp2IDGceImUHkpInR05UJDNVs+WU06srsRdc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=StX6YT7TgAhFxiRxPTF4EHi9CwzmfWlZjNKmBXgtzKRSFgBYO5SXQhmSiWWqucNx8i4hTESRvktxpwZLTJejtgSxhh4zeMW9cwXkg39G9+WF6vb/zZRzSvMOUO2hFzvtcUGzv4/rHkcg4hEzYZU/IK4CBZNADSZsg9OFXM8NH9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-6dbb003be79so491758b3a.0;
-        Thu, 18 Jan 2024 10:40:29 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705603228; x=1706208028;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+MCLp+tJNO+etgZgVlXIoBK5XGWALOsHRdh/oS9zFfk=;
-        b=HJigZ2biG1JF1TYE9M/T9+KDHJY9IVAmV0zO22KECcA+ZPJ7tQI/zVQi5hkoO5UejA
-         QDG5shUzZnoJPg3qY+4Ca8VGNOPxGZal4/qMc5uIUzFJ0oKpcQycJOqp9ltFxAVy49F5
-         O4+bcJ0jzP7ZOLQJM0CzSAMSrx5q8O6/Wc3b2cvkvdYMoEE97tvtRDQH0+BV84fnttBs
-         ZLbwfritylthSER9RvZ5M54yjszxcE+OQ2wUYNBCjtUCSu1UasBQa+9sOWEkDGQXTO/+
-         9VbTzhXP8wdIWp0Asew9J67WOLCq8a2ZM7zDSRD29eRsZZMaROPY1nQVE2IDwSui8Ysx
-         P2ng==
-X-Gm-Message-State: AOJu0Yy10k5lmimVJ8LFvDHCqOD2XDz+mGKEglisRaeDgT535PxvyhEE
-	xfoPvLqQPIApt9HJlH/ZaLffaiFG7b/rmhe7XbgupJqGEMiXMONA
-X-Google-Smtp-Source: AGHT+IFFbdqddGbUMGL/psSILR5HML69qSIrd0fLtezJ/Wh8vNQFJPKRCGHup2ka7EbMAKOwoe4opA==
-X-Received: by 2002:a05:6a21:9187:b0:19a:8770:9944 with SMTP id tp7-20020a056a21918700b0019a87709944mr3613133pzb.31.1705603228535;
-        Thu, 18 Jan 2024 10:40:28 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:718b:ab80:1dc2:cbee? ([2620:0:1000:8411:718b:ab80:1dc2:cbee])
-        by smtp.gmail.com with ESMTPSA id 13-20020a63194d000000b005cdb499acd0sm1905982pgz.42.2024.01.18.10.40.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 Jan 2024 10:40:27 -0800 (PST)
-Message-ID: <434b771a-7873-4c53-9faa-c5dbc4296495@acm.org>
-Date: Thu, 18 Jan 2024 10:40:26 -0800
+	s=arc-20240116; t=1705603915; c=relaxed/simple;
+	bh=oI6FvZqMbO9wp9RV7/TFEi79nYF+EBJm0B2fSXoFDMQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=EemW4IfFrPtssJfX66AdHJay7qTwZftQm6v0M5nm3kjUbmNcXfH6LJ+o0lsi39znBs3vMmc59pO4JYU1K7R+UT8xIbqsK0cCh0Ekt2iiotrl+QWN6YWfYnCjwQUveO9sLhQE7QsVC8kF5nMAMAhH41fgiyy1NRiTLtdqm0sSLKs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=hlriTmg7; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="hlriTmg7"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240118185143epoutp02f203ad03da2a180f9049fb4d5555a39d~rhba4jA2B2932329323epoutp02_
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Jan 2024 18:51:43 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240118185143epoutp02f203ad03da2a180f9049fb4d5555a39d~rhba4jA2B2932329323epoutp02_
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1705603903;
+	bh=oztZkiRrpDW8Hw6r9bH6GEUAxeaCmhaR9M6Ul05bfLg=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=hlriTmg7pfClIhAFOT2AAXQJoD6iXhMUZq7mvSN2xllT6Mw2P1qjRB5SyVSuE1lnp
+	 w/szsnIEqZB3Od8kAZAcrP+YV/wBAyxxktqNR/gPrqAX4V3Z+FBU8YK5OX2zHrCsea
+	 xbh1+pSVK50fBI10PKRC+UvtKt6kqHKs35bjRy3o=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+	20240118185142epcas5p435343e17ee59310f19d6e813a7285908~rhbZijrJq3047030470epcas5p49;
+	Thu, 18 Jan 2024 18:51:42 +0000 (GMT)
+Received: from epsmges5p2new.samsung.com (unknown [182.195.38.176]) by
+	epsnrtp2.localdomain (Postfix) with ESMTP id 4TGBg03dqqz4x9Pt; Thu, 18 Jan
+	2024 18:51:40 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+	epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	19.B9.10009.C3379A56; Fri, 19 Jan 2024 03:51:40 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20240118185139epcas5p46946aaed9a375ec4199bbda7aaf1552b~rhbXVQlDQ0349403494epcas5p4q;
+	Thu, 18 Jan 2024 18:51:39 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20240118185139epsmtrp225db2df454a36c02cd0e338c3f8a10cf~rhbXUhXo-2400624006epsmtrp2f;
+	Thu, 18 Jan 2024 18:51:39 +0000 (GMT)
+X-AuditID: b6c32a4a-ff1ff70000002719-e2-65a9733c0ff8
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	58.E2.18939.B3379A56; Fri, 19 Jan 2024 03:51:39 +0900 (KST)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20240118185137epsmtip1000035065e54acea4a4f64fe48b7b525~rhbVidIc82329923299epsmtip1B;
+	Thu, 18 Jan 2024 18:51:37 +0000 (GMT)
+Message-ID: <b294a619-c37e-cb05-79a8-8a62aec88c7f@samsung.com>
+Date: Fri, 19 Jan 2024 00:21:37 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
+	Gecko/20100101 Thunderbird/91.8.1
+Subject: Re: [PATCH v8 06/19] block, fs: Propagate write hints to the block
+ device inode
 Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>,
- linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Ming Lei <ming.lei@redhat.com>, Keith Busch <kbusch@kernel.org>,
- Damien Le Moal <damien.lemoal@opensource.wdc.com>,
- Ed Tsai <ed.tsai@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <c1658336-f48e-5688-f0c2-f325fd5696c3@huaweicloud.com>
- <1d3866af-ffca-4f97-914d-8084aca901ab@acm.org>
- <69b17db7-e9c9-df09-1022-ff7a9e5e04dd@huaweicloud.com>
- <20240112043915.GA5664@lst.de>
- <2d83fcb3-06e6-4a7c-9bd7-b8018208b72f@huaweicloud.com>
- <20240115055940.GA745@lst.de>
- <0d23e3d3-1d7a-f76b-307b-7d74b3f91e05@huaweicloud.com>
- <f1cac818-8fc8-4f24-b445-d10aa99c04ba@acm.org>
- <e0305a2c-20c1-7e0f-d25d-003d7a72355f@huaweicloud.com>
- <aedc82bc-ef10-4bc6-b76c-bf239f48450f@acm.org>
- <20240118073151.GA21386@lst.de>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240118073151.GA21386@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Daejun Park
+	<daejun7.park@samsung.com>, Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jeff Layton <jlayton@kernel.org>,
+	Chuck Lever <chuck.lever@oracle.com>
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <23753320-63e5-4d76-88e2-8f2c9a90505c@acm.org>
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Tf1CTdRzH7/tsjAdz+jjx9h1duD2dhRRzw7EeEuiHaE9RxmV3GdcdPW7f
+	A46x7fZs6eyScWUpiASUByOi7jiDWWdN+bHcPANhmSaY6WQ7EnVkBgyc3tGAsm0PGf+9Pu/7
+	/P58vzhP5Bak4GV6MzLpGR0pWMbv7l+flpHDdiJFb4+YOjpaJ6Am+sOAOjwT4VH3R29hlGPs
+	Darz6ABGRY44EimP/wnK7TnLp2p8vQLqK+8/GDX0tzfh2eX0pV8L6Es/W2in44CAPjliE9B3
+	xv18+tAJB6DvOlNpZ3AKK8SLynNKEaNFJinSawzaMn1JLlmwvXhzcZZaocxQZlNPkVI9U4Fy
+	yfyXCzO2lumirZLSdxidJSoVMixLbsjLMRksZiQtNbDmXBIZtTqjyihnmQrWoi+R65H5aaVC
+	kZkVdXy7vLSqfoxvdEl31xwMAhvwSKpBEg4JFayv+z2hGizDRcRJAIc7v+NzRhjA85EG3gNj
+	oPty1MDjIa6FNE53ATj740IiZ0wBOORqFcTyCok82D/ydWKM+cQ6OOeb4HH6Kni2OciP8Rpi
+	J5y7/BmI8WqiCLY3euI+PEIM/cE2LFYsmaChf3IbJ/+FwaYrspgsINbD4UZLTE4iNsFgQwDj
+	XNbC97ta4j1Dwo3D2v7WxZ7z4Ue1j3ITr4Z/ek8kcpwC74Y8Ao418JfmCxjHZnjT/cMiPwP3
+	/VQXT8OLlj32/Qau1ApYOx/EuOxCuP9DEectg781jCdwLIbXm9oXmYbhkUMYt6gbGGzr8oOP
+	gdS+ZCf2JbPbl0xj/7/yF4DvABJkZCtKEJtlzNSjXQ+urTFUOEH8Gae/1Auuj83I+wCGgz4A
+	cR6ZLHxVcQSJhFrGugeZDMUmiw6xfSArepx6XsoajSH6D/TmYqUqW6FSq9Wq7I1qJSkWTuxr
+	1YqIEsaMyhEyItN/cRielGLDDk5tnJkNedPpvV/qbjQpxdNbW3yS6Q+uHJB11L4SkJ2uN9C3
+	y64hrTG80HK8eZWWX143Jt1rRQ6YPPS85A7Mb5wyWLdcHOXtHzwXejz9sWDNHse9286AvXJH
+	8vGVNrtvfqxw54qGtos9D2dcmFQlLW/OHN+Wce5U+ynNYXOj+6rjdd/QzWth0THB+dmp1soC
+	a+qZjmBeuPVd/K3pzPeqrk5Kqh9RRz73Dzodz2UZ/3jI3i0Nna7+lJ7/tioI5naNp86eeXNW
+	E/qkKGC73/Pijh51x71eamB+3ZOub4o30aDSvn3wtbVykPbCgmelanfAFo50WcdTh9ugTH7L
+	62nfQvLZUkaZzjOxzL8ovn2DTwQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprGIsWRmVeSWpSXmKPExsWy7bCSnK518cpUg/VHdS1W3+1ns3h9+BOj
+	xbQPP5kt/t99zmSx6kG4xcrVR5ksfi5bxW6x95a2xZ69J1ksuq/vYLNYfvwfk8X5v8dZHXg8
+	Ll/x9rh8ttRj06pONo/dNxvYPD4+vcXi0bdlFaPH501yHpuevGUK4IjisklJzcksSy3St0vg
+	ymic+IClYKdCRXfPE8YGxr2SXYwcHBICJhI7/2h0MXJxCAlsZ5S4dOU7excjJ1BcXKL52g8o
+	W1hi5b/n7BBFrxklLt7ezgKS4BWwkzh8cw1YEYuAqsSv66+ZIeKCEidnPgGrERVIkthzv5EJ
+	xBYWiJJYMnkvWA0z0IJbT+YzgRwhIuAhceuNH8h8ZoFfTBINj69DLbvHJDFh8gR2kCI2AU2J
+	C5NLQXo5Bawlnky6zQQxx0yia2sXI4QtL9G8dTbzBEahWUjOmIVk3SwkLbOQtCxgZFnFKJpa
+	UJybnptcYKhXnJhbXJqXrpecn7uJERx1WkE7GJet/6t3iJGJg/EQowQHs5IIr7/BslQh3pTE
+	yqrUovz4otKc1OJDjNIcLErivMo5nSlCAumJJanZqakFqUUwWSYOTqkGJoG6id7Xq7dt5dl1
+	z1718Tt+3VNJiS8VL7bVXlgnEBB1vPgiU9S3VoHMz6zfeh7vb17o9b4maufCJwndoWuTz5uu
+	NOxksn1js3XO9ahp0rNNrvRxp68RsAk7pimZ8zRyVuSm1Jm2ChcZP9akvbvwoKhgxZkr3BvX
+	CnyznjVz+3GO06685u/FPvTlKF3LzvQomvvSpudwOkeEkv2RfFP2wy4zvF0rkgtfl9R8cbM9
+	blU9wcJK2GbCvBnHLWJ2hUS+nFH8VearQ+6BpJvFbP3tk8s6dM4sTtE308rdK/Yu49LqkytT
+	pk88cedY19Y/U1VsuH1El6RWcy7M3mp4yYBLe5PN/m3OTXoWTfP1/syuVmIpzkg01GIuKk4E
+	AHVcQcwpAwAA
+X-CMS-MailID: 20240118185139epcas5p46946aaed9a375ec4199bbda7aaf1552b
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240103230906epcas5p468e1779bf14eeaa6f70f045be85afffc
+References: <20231219000815.2739120-1-bvanassche@acm.org>
+	<20231219000815.2739120-7-bvanassche@acm.org>
+	<20231228071206.GA13770@lst.de>
+	<00cf8ffa-8ad5-45e4-bf7c-28b07ab4de21@acm.org>
+	<20240103090204.GA1851@lst.de>
+	<CGME20240103230906epcas5p468e1779bf14eeaa6f70f045be85afffc@epcas5p4.samsung.com>
+	<23753320-63e5-4d76-88e2-8f2c9a90505c@acm.org>
 
-On 1/17/24 23:31, Christoph Hellwig wrote:
-> On Tue, Jan 16, 2024 at 09:36:27AM -0800, Bart Van Assche wrote:
->> My concern is that the complexity of the algorithm introduced by that patch
->> series is significant. I prefer code that is easy to understand. This is why
->> I haven't started yet with a detailed review. If anyone else wants to review
->> that patch series that's fine with me.
+On 1/4/2024 4:39 AM, Bart Van Assche wrote:
+> On 1/3/24 01:02, Christoph Hellwig wrote:
+>> So you can use file->f_mapping->inode as I said in my previous mail.
 > 
-> Given that simply disabling fair sharing isn't going to fly we'll need
-> something more complex than that.
+> Since struct address_space does not have a member with the name "inode",
+> I assume that you meant "host" instead of "inode"? If so, how about
+> modifying patch 06 of this series as shown below? With the patch below
+> my tests still pass.
 > 
-> The question is how much complexity do we need, and for that it would
-> be good to collect the use cases first.
+> Thanks,
+> 
+> Bart.
+> 
+> 
+> ---
+>   block/fops.c       | 11 -----------
+>   fs/fcntl.c         | 15 +++++++++++----
+>   include/linux/fs.h |  1 -
+>   3 files changed, 11 insertions(+), 16 deletions(-)
+> 
+> diff --git a/block/fops.c b/block/fops.c
+> index 138b388b5cb1..787ce52bc2c6 100644
+> --- a/block/fops.c
+> +++ b/block/fops.c
+> @@ -620,16 +620,6 @@ static int blkdev_release(struct inode *inode, 
+> struct file *filp)
+>       return 0;
+>   }
+> 
+> -static void blkdev_apply_whint(struct file *file, enum rw_hint hint)
+> -{
+> -    struct bdev_handle *handle = file->private_data;
+> -    struct inode *bd_inode = handle->bdev->bd_inode;
+> -
+> -    inode_lock(bd_inode);
+> -    bd_inode->i_write_hint = hint;
+> -    inode_unlock(bd_inode);
+> -}
+> -
+>   static ssize_t
+>   blkdev_direct_write(struct kiocb *iocb, struct iov_iter *from)
+>   {
+> @@ -864,7 +854,6 @@ const struct file_operations def_blk_fops = {
+>       .splice_read    = filemap_splice_read,
+>       .splice_write    = iter_file_splice_write,
+>       .fallocate    = blkdev_fallocate,
+> -    .apply_whint    = blkdev_apply_whint,
+>   };
+> 
+>   static __init int blkdev_init(void)
+> diff --git a/fs/fcntl.c b/fs/fcntl.c
+> index 18407bf5bb9b..cfb52c3a4577 100644
+> --- a/fs/fcntl.c
+> +++ b/fs/fcntl.c
+> @@ -306,7 +306,6 @@ static long fcntl_get_rw_hint(struct file *file, 
+> unsigned int cmd,
+>   static long fcntl_set_rw_hint(struct file *file, unsigned int cmd,
+>                     unsigned long arg)
+>   {
+> -    void (*apply_whint)(struct file *, enum rw_hint);
+>       struct inode *inode = file_inode(file);
+>       u64 __user *argp = (u64 __user *)arg;
+>       u64 hint;
+> @@ -318,11 +317,19 @@ static long fcntl_set_rw_hint(struct file *file, 
+> unsigned int cmd,
+> 
+>       inode_lock(inode);
+>       inode->i_write_hint = hint;
+> -    apply_whint = inode->i_fop->apply_whint;
+> -    if (apply_whint)
+> -        apply_whint(file, hint);
+>       inode_unlock(inode);
+> 
+> +    /*
+> +     * file->f_mapping->host may differ from inode. As an example,
+> +     * blkdev_open() modifies file->f_mapping.
+> +     */
+> +    if (file->f_mapping->host != inode) {
+> +        inode = file->f_mapping->host;
+> +        inode_lock(inode);
+> +        inode->i_write_hint = hint;
+> +        inode_unlock(inode);
+> +    }
+> +
 
-Hi Christoph,
+Are you considering to change this so that hint is set only on one inode 
+(and not on two)?
+IOW, should not this fragment be like below:
 
-Patch "[PATCH v6 2/4] scsi: core: Make fair tag sharing configurable in
-the host template" of this series can be dropped by making the UFS
-driver call blk_mq_update_fair_sharing() directly.
+--- a/fs/fcntl.c
++++ b/fs/fcntl.c
+@@ -306,7 +306,6 @@ static long fcntl_get_rw_hint(struct file *file, 
+unsigned int cmd,
+  static long fcntl_set_rw_hint(struct file *file, unsigned int cmd,
+                               unsigned long arg)
+  {
+-       void (*apply_whint)(struct file *, enum rw_hint);
+         struct inode *inode = file_inode(file);
+         u64 __user *argp = (u64 __user *)arg;
+         u64 hint;
+@@ -316,11 +315,15 @@ static long fcntl_set_rw_hint(struct file *file, 
+unsigned int cmd,
+         if (!rw_hint_valid(hint))
+                 return -EINVAL;
 
-So far two use cases have been identified: setups with an UFSHCI 3.0
-host controller and ATA controllers for which all storage devices have
-similar latency characteristics. Both storage controllers have a queue
-depth limit of 32 commands.
-
-It seems to me that disabling fair sharing will always result in better
-performance than any algorithm that realizes fair sharing (including the
-current algorithm). Only a single boolean needs to be tested to 
-determine whether or not fair sharing should be disabled. Any fair 
-sharing algorithm that we can come up with will be significantly more 
-complex than testing a single boolean. I think this is a strong argument 
-for adding support for disabling fair sharing.
-
-If anyone wants to improve the fair sharing algorithm that's fine with 
-me. However, I do not plan to work on this myself.
-
-Thanks,
-
-Bart.
++       /*
++        * file->f_mapping->host may differ from inode. As an example
++        * blkdev_open() modifies file->f_mapping
++        */
++       if (file->f_mapping->host != inode)
++               inode = file->f_mapping->host;
++
+         inode_lock(inode);
+         inode->i_write_hint = hint;
+-       apply_whint = inode->i_fop->apply_whint;
+-       if (apply_whint)
+-               apply_whint(file, hint);
+         inode_unlock(inode);
