@@ -1,58 +1,107 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEB53AD32;
-	Thu, 18 Jan 2024 07:31:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0451121A12;
+	Thu, 18 Jan 2024 12:14:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705563119; cv=none; b=L0jWQUUUiJKCHfRkmZkRJzMk4upDuFWnCeGfWCyoS/sIrL+5mCHsh9QxkApor3MsQLm+mvyQEsfAYrJVCtfTEtJ8iTLH1FwaUw4GREwY1x7hDlcQ53bPfUK484Umgi/voC0hv3SeaEjeIVoMp++Kj2zci0C4APla4pyP9Y+TjOM=
+	t=1705580086; cv=none; b=D8NCYyQfcVw4My2oiu+cuNeuug3MnGD51lW4vrfYnpO8ABHOdH5ld07Lw4ohPf2FOmAVsWJ/fSt5yiGWJyHwhRWn4ECaKVwD5/ewJp1FRiBu/TEpzx5EHhFpneXWrT5aruJ+Sw4ly10f34jSO0ISZWUdqDUQ7lA6T0Q7Nz1Tzek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705563119; c=relaxed/simple;
-	bh=QfcOeteJgZO5Tpxxt5F5FT7pIA+Q0wr+VNG1OJp5XF4=;
-	h=Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To:
-	 User-Agent; b=a+ntAG9WF8JPQ9KDZjHMT5+vS7PfWhXs73RRSjFT0sRFWyZSqozu8Hmq/jFYuZWK+83qtfChp7oMdeiX616lwbQQbqqCnGQI7THMaiTGSD+gKY66r9TWOFEthd/qLcGhxoTq+UK7ZJpZI11reXjWW32kydOBgoLY89493XXJYdA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 004FB68C7B; Thu, 18 Jan 2024 08:31:51 +0100 (CET)
-Date: Thu, 18 Jan 2024 08:31:51 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, Christoph Hellwig <hch@lst.de>,
-	Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
+	s=arc-20240116; t=1705580086; c=relaxed/simple;
+	bh=djjsCtBMT3J7UQOghwFQYVRaBkgwuoLsuZnOcqi4QpI=;
+	h=Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Google-Smtp-Source:X-Received:Received:From:
+	 To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding; b=H2pzjd4CAcDTvr5GrPJBwJe9byieXE/p0JDFOeorU2BtxKGSeVnw302S28nhxfnhd2oyDk0A2YvDgFMe0p+3ZpWhPd4p93ki1REJIsWgwCUIgp/mNJfozrvrvRZVpb9IFVZB1/stTVDpdfgDWImSQw0nXm5kr2/bWlQpWzH9bJw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VDgY2O6t; arc=none smtp.client-ip=209.85.221.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VDgY2O6t"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-3376555b756so391909f8f.0;
+        Thu, 18 Jan 2024 04:14:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1705580083; x=1706184883; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=jl/QSyVeENwFqZo45P+/HN9QAR9bTLqt+HneRrWN0b4=;
+        b=VDgY2O6t8TdVP4MrzqqVuzPKVEEBTfJFaS/EjrLgrUjBWNWFlV5ZVhow/V9e3ZdKsq
+         OaCmjOFq8CRse0IBpVlW+ebWkph5zl6EO9hJFlJzvtG+IwlMYztNyLwFkn+hLsjLWrGF
+         aPvjqk72GryflMsi4F9IuPdZU4/fAPD/s9ijQUUf1YD6Wu0XiSfwhiufXBuvVojOCYIB
+         gyBuQz/zrWPE6HOj7vQB9i6vXM66v5aPt6eDnm/6JA3n65pATT5ryEm6172kuJvwjuER
+         pmuIXnaLeoEORGD5Jx7l8L1uc1VPb4bEX1s61+8x2KY/4lZsxmE3dcZNoBdJEp3F+64Q
+         msFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705580083; x=1706184883;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jl/QSyVeENwFqZo45P+/HN9QAR9bTLqt+HneRrWN0b4=;
+        b=iXBx+EhzeNDDziRcRy/VzKfGKrgaJdJcsuXKCDY6jdSP+FM++OclDfVLZw3rbXmxdh
+         RQT9DWYGlXgFHSwITSaSxBteHMHUG1PfwCQcIQHIKGKK8+WxHR6IFM6GqhsSg/5UN61k
+         FUYN15AVDRMPxoDdQ5rC2d/V7H10q3o6WHwvB4bWIoIKesj+PYycgqhhw4whWm0Fm4Zm
+         PomrPT//Ddc6wZojzT2jNtoDJR8yqDo+Jkf5U+Iue1qrOgIHJY+yYY96n7Xmj7JQ31yw
+         Qu0qcZufdE37u71OsKp+YUHcovMQoWjTGgcILkS6Upj8ij8R1L/3I9QtB9JrPzqklq57
+         LFoA==
+X-Gm-Message-State: AOJu0Yy2NOqfiJkVhYkmuylid56L4RMQjBNrpeMr8QyqllHU7TL2kbCm
+	3xl7RUUsCMYi0Kl8qm317tgW+YIa1eVSKmrAbTk4bRd/dUh4sApp
+X-Google-Smtp-Source: AGHT+IFx5xTOFom6VFy3Gwjtnx2Y2dSjQF2XhfvoIBTOEE5VVzcwGfLtjHAp2ikwIViBbBEGwrVHHw==
+X-Received: by 2002:a5d:6d47:0:b0:337:6208:99df with SMTP id k7-20020a5d6d47000000b00337620899dfmr486497wri.20.1705580083143;
+        Thu, 18 Jan 2024 04:14:43 -0800 (PST)
+Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
+        by smtp.gmail.com with ESMTPSA id y14-20020a5d4ace000000b00337bfc796a6sm3920976wrs.87.2024.01.18.04.14.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 Jan 2024 04:14:42 -0800 (PST)
+From: Colin Ian King <colin.i.king@gmail.com>
+To: Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"James E . J . Bottomley" <jejb@linux.ibm.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Ming Lei <ming.lei@redhat.com>, Keith Busch <kbusch@kernel.org>,
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-	Ed Tsai <ed.tsai@mediatek.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	"yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
-Message-ID: <20240118073151.GA21386@lst.de>
-References: <c1658336-f48e-5688-f0c2-f325fd5696c3@huaweicloud.com> <1d3866af-ffca-4f97-914d-8084aca901ab@acm.org> <69b17db7-e9c9-df09-1022-ff7a9e5e04dd@huaweicloud.com> <20240112043915.GA5664@lst.de> <2d83fcb3-06e6-4a7c-9bd7-b8018208b72f@huaweicloud.com> <20240115055940.GA745@lst.de> <0d23e3d3-1d7a-f76b-307b-7d74b3f91e05@huaweicloud.com> <f1cac818-8fc8-4f24-b445-d10aa99c04ba@acm.org> <e0305a2c-20c1-7e0f-d25d-003d7a72355f@huaweicloud.com> <aedc82bc-ef10-4bc6-b76c-bf239f48450f@acm.org>
+	megaraidlinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH][next] scsi: megaraid: remove redundant assignment to variable retval
+Date: Thu, 18 Jan 2024 12:14:41 +0000
+Message-Id: <20240118121441.2533620-1-colin.i.king@gmail.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aedc82bc-ef10-4bc6-b76c-bf239f48450f@acm.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jan 16, 2024 at 09:36:27AM -0800, Bart Van Assche wrote:
->  My concern is that the complexity of the algorithm introduced by that patch
-> series is significant. I prefer code that is easy to understand. This is why
-> I haven't started yet with a detailed review. If anyone else wants to review
-> that patch series that's fine with me.
+The variable retval is being assigned a value that is not being
+read afterwards. The assignment is redundant and can be removed.
 
-Given that simply disabling fair sharing isn't going to fly we'll need
-something more complex than that.
+Cleans up clang scan warning:
+Although the value stored to 'retval' is used in the enclosing
+expression, the value is never actually read from 'retval'
+[deadcode.DeadStores]
 
-The question is how much complexity do we need, and for that it would
-be good to collect the use cases first.
+Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+---
+ drivers/scsi/megaraid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 66a30a3e6cd5..38976f94453e 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -219,7 +219,7 @@ mega_query_adapter(adapter_t *adapter)
+ 	raw_mbox[3] = ENQ3_GET_SOLICITED_FULL;	/* i.e. 0x02 */
+ 
+ 	/* Issue a blocking command to the card */
+-	if ((retval = issue_scb_block(adapter, raw_mbox))) {
++	if (issue_scb_block(adapter, raw_mbox)) {
+ 		/* the adapter does not support 40ld */
+ 
+ 		mraid_ext_inquiry	*ext_inq;
+-- 
+2.39.2
 
