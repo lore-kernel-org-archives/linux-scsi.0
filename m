@@ -1,174 +1,147 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01EF8524DE
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Jan 2024 13:56:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A212D54656
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Jan 2024 14:51:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705672601; cv=none; b=n4WjbXHLQlx8yPxYnQ1gb6+9o/wtvZJqjAXYxzKwxGXKXPfcSyyuCZV2pcLEUc3cxPcFX/0D+fKg/J6UL6TBIpkgh48z7DEq0U15S3blU3bEHHEbhLmC6UB5SQYXiBOmkkZI5dMc4KoAs1dASyQdFDoGUaLwzxycd/Pn/T/fyCY=
+	t=1705675904; cv=none; b=ZAbT9gDnVChiXHeQqTJN7zrJqIQQWYvJJMB9YjxIBaaAdn7fbXQmltc1mQSjk6PPY6BG+k395wzjmC2e+o+YC96rik/Dt0LDoMAXnDI4S2YxPgvE4bPRRbyuKs/+w0bOhLBdLz8TpqIQXXwioTO2JzFsNqXrTdu6jgbMp249dCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705672601; c=relaxed/simple;
-	bh=xKDBjhSIQeHRiyBuvswYCR7Q2MyTamGKnI7gDtPSo9w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=BbtGs6Run+Axw5nWLzUPEhiZ5+KcuMFQOCcciffVpeXWJskhepyP/RTQ2yScrEn8l4ZWp66XS7Bjo2M8N24pkRqNjMpszcMWHguPc7gS+Qj2K9XJeATFk4DfMjg1K9xDtG/EC4dU0jET/UtUkHdUlYJyMgpFluDles0tpR/li8k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=aQN6qU1F; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1705675904; c=relaxed/simple;
+	bh=7bFNOn9FumAjAOI4ipewa5/5tZ/pSVcxOkDa8iBdCts=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=ZY8MEc6D1lzVfqMa44VjThrw1SK14tF8eDC5N61PaCmOviPDnEldulb7ZCYTcxqbPmmUN5tSp/t14dYMYofZ6K5Fb/vlZOffF0CTHYeMmNou5B8RXvrAdj1QOZ3pq20eK/F0KujX4B/4CEyWprARwL+MvbBDbbyjitBEHcJSxXk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=jNrrI++I; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="aQN6qU1F"
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20240119135635epoutp04c51616108f0532187cd53ae1c08701f2~rxDBQWDkZ0651706517epoutp04g
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Jan 2024 13:56:35 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20240119135635epoutp04c51616108f0532187cd53ae1c08701f2~rxDBQWDkZ0651706517epoutp04g
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1705672595;
-	bh=W+RflgyenszR5l0ujHluv04CpVMqFfMdltxcbwxC4Dc=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=aQN6qU1FoblAU800GFvBwsWPll2Cam2INs5dplxzXu8ct9OQzcymxeILiy/ja/IuU
-	 ckReS347iDXXN0Sriu3iNgkVrfdeIwMbMTH8Rph+nElfSuV6xZwOvZcYhEWqx5401Q
-	 5bhQulUXPxGIjvNAeI4MfKLBWP1jQnRka4aacF7U=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-	20240119135634epcas5p239b4222d5ff49b2334f45d2e8ee4c237~rxDAMYUOz2244622446epcas5p2V;
-	Fri, 19 Jan 2024 13:56:34 +0000 (GMT)
-Received: from epsmges5p2new.samsung.com (unknown [182.195.38.183]) by
-	epsnrtp1.localdomain (Postfix) with ESMTP id 4TGh405bybz4x9Pp; Fri, 19 Jan
-	2024 13:56:32 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-	epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	9B.38.10009.09F7AA56; Fri, 19 Jan 2024 22:56:32 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-	20240119135631epcas5p395210d5cb1880721719bdb46349b1625~rxC9fdr862438224382epcas5p36;
-	Fri, 19 Jan 2024 13:56:31 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20240119135631epsmtrp24f31082e3acee7b1d7b4302edc898d3e~rxC9d9Vsa2247922479epsmtrp28;
-	Fri, 19 Jan 2024 13:56:31 +0000 (GMT)
-X-AuditID: b6c32a4a-ff1ff70000002719-c7-65aa7f90f7b7
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	36.C8.08817.F8F7AA56; Fri, 19 Jan 2024 22:56:31 +0900 (KST)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20240119135629epsmtip191f7c61126b6f0e860791b7e09a9cbeb~rxC7wT0ZV0975809758epsmtip1G;
-	Fri, 19 Jan 2024 13:56:29 +0000 (GMT)
-Message-ID: <9fa04d79-0ba6-a2e0-6af7-d1c85f08923b@samsung.com>
-Date: Fri, 19 Jan 2024 19:26:28 +0530
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="jNrrI++I"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40JEHk5x024386;
+	Fri, 19 Jan 2024 14:51:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	message-id:date:mime-version:subject:to:cc:references:from
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=X7dh1uuLcHXLAsPKwH58aMzLln2WuSCnZhGBM6tQxGk=; b=jN
+	rrI++I1wA1ZmQQTswXeLAcQcdcfgbRYAf/mel/nckW71/r4Nysbqp3/5YXr67xul
+	fPbgz6wJ2+oOA6c4JsPWj9DqZ64g5upKQvcHt6R4gEh9J+6nXQiISIY4GICJjizW
+	KB6FJXNCOXAKxRddwJhuk5Ho/JXy8GhD4P/JdP5t7EjGNWQdadam971cPLrnGMSK
+	o6T9ObwO6ZzAmpl+OGa+g8Wdb65VU0ctqIvfW3q45U4kD9OBwBpeBNL+qtHwkzho
+	Ak2JaZ66Yei9eRSfZDzRST52i2mgIiOUlN0kQNjG2nNeC+yInBZXkspI7PaDIAMJ
+	aiBUhhcMDDFWBLEvUCZg==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vqmgd8txj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 19 Jan 2024 14:51:29 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40JEpPpw031845
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 19 Jan 2024 14:51:28 GMT
+Received: from [10.218.7.247] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Fri, 19 Jan
+ 2024 06:51:24 -0800
+Message-ID: <8dcad0ce-326e-430a-823f-fda0681af4a6@quicinc.com>
+Date: Fri, 19 Jan 2024 20:21:19 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
-	Gecko/20100101 Thunderbird/91.8.1
-Subject: Re: [PATCH v8 06/19] block, fs: Propagate write hints to the block
- device inode
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V6 0/2] Add CPU latency QoS support for ufs driver
 Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Daejun Park
-	<daejun7.park@samsung.com>, Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	Chuck Lever <chuck.lever@oracle.com>
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <9b854847-d29e-4df2-8d5d-253b6e6afc33@acm.org>
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDJsWRmVeSWpSXmKPExsWy7bCmuu6E+lWpBkt3qlmsvtvPZvH68CdG
-	i2kffjJb/L/7nMli1YNwi5WrjzJZ/Fy2it1i7y1tiz17T7JYdF/fwWax/Pg/Jovzf4+zOvB4
-	XL7i7XH5bKnHplWdbB67bzaweXx8eovFo2/LKkaPz5vkPDY9ecsUwBGVbZORmpiSWqSQmpec
-	n5KZl26r5B0c7xxvamZgqGtoaWGupJCXmJtqq+TiE6DrlpkDdKqSQlliTilQKCCxuFhJ386m
-	KL+0JFUhI7+4xFYptSAlp8CkQK84Mbe4NC9dLy+1xMrQwMDIFKgwITtj/bvcgvv8FbcWWzYw
-	ruDtYuTkkBAwkejo/M7YxcjFISSwm1HiSMMUNgjnE6PEpyVX2CGcb4wSk29vYoJpefV6DytE
-	Yi+jxLHeOVDOW0aJnbc3sYJU8QrYSWyctYsdxGYRUJWYtGoTI0RcUOLkzCcsILaoQJLEr6tz
-	wOLCAlESSybvZQaxmQXEJW49mQ+0jYNDRMBD4tYbP4jwDyaJGdcUQcJsApoSFyaXgoQ5Bawl
-	Jv6cyQRRIi/RvHU2M8g5EgIHOCQuzpjHDHG0i0Tnp6eMELawxKvjW9ghbCmJz+/2skHYyRKX
-	Zp6DerJE4vGeg1C2vUTrqX5mkL3MQHvX79KH2MUn0fv7CdiVEgK8Eh1tQhDVihL3Jj1lhbDF
-	JR7OWAJle0h8utnHBAmpE8wSD1r/s01gVJiFFCizkDw/C8k7sxA2L2BkWcUomVpQnJueWmxa
-	YJSXWg6P7eT83E2M4GSs5bWD8eGDD3qHGJk4GA8xSnAwK4nw8quuShXiTUmsrEotyo8vKs1J
-	LT7EaAqMnYnMUqLJ+cB8kFcSb2hiaWBiZmZmYmlsZqgkzvu6dW6KkEB6YklqdmpqQWoRTB8T
-	B6dUA1PL5JC5793/bXlzR4m/buEOYZ9Q++9iK6uFt7IedHWdFfYzo/7QZ8sGm5WX3j9Z7n4t
-	yI5/XnzJv3vfnBQvTas8yXNVY5N0ofGxe/fXKR9WKfth8sBkf+bzB03Hsnd+UfOcPEdm2sSe
-	CHeRe3Xbz8e+cbyyM/ef3QIRQ7N+Had5/zoaEycfk8pwrgzfeuPs/YjzQmwMDWU5bU2TXJdN
-	dnt1f9nhvz5zV/0xkUo+OtfSIN9Zwv7ymtgJTfeiDF8FebTw2p66oHBgmtbLe4x7m5Zf263b
-	9E7j9dzaIyLiVa+rXzmsvv2hwLDrybWqDOYfkQ9llKYKBzV7MdVqHjKTV978JnvX2wpjn0iP
-	73MYnaYrsRRnJBpqMRcVJwIAGnf/1E8EAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprBIsWRmVeSWpSXmKPExsWy7bCSnG5//apUgx1d8har7/azWbw+/InR
-	YtqHn8wW/+8+Z7JY9SDcYuXqo0wWP5etYrfYe0vbYs/ekywW3dd3sFksP/6PyeL83+OsDjwe
-	l694e1w+W+qxaVUnm8fumw1sHh+f3mLx6NuyitHj8yY5j01P3jIFcERx2aSk5mSWpRbp2yVw
-	Zax/l1twn7/i1mLLBsYVvF2MnBwSAiYSr17vYQWxhQR2M0ocv1YBEReXaL72gx3CFpZY+e85
-	kM0FVPOaUeLAtkvMIAleATuJjbN2gRWxCKhKTFq1iREiLihxcuYTFhBbVCBJYs/9RiYQW1gg
-	SmLJ5L1gvcxAC249mQ8U5+AQEfCQuPXGD2Q+s8AvJomGx9ehlh1hlni99x87SBGbgKbEhcml
-	IL2cAtYSE3/OZIKYYybRtbWLEcKWl2jeOpt5AqPQLCRnzEKybhaSlllIWhYwsqxilEwtKM5N
-	zy02LDDKSy3XK07MLS7NS9dLzs/dxAiOPC2tHYx7Vn3QO8TIxMF4iFGCg1lJhJdfdVWqEG9K
-	YmVValF+fFFpTmrxIUZpDhYlcd5vr3tThATSE0tSs1NTC1KLYLJMHJxSDUyFzTb1hcsvBIbs
-	6Q7be3+H9+ndu868fvgyoT95usqf3cv+fdr1cuHLOUcaDP9wmr89yz1hz/Vqmzs9Qj0sfzc0
-	Jz1y+xBimvp47spf7WX//vyZLXc18lzDDTvXYGf+670ini0G79Wjj8zJZHxjc39b64R/y6zT
-	GDrj9V+EHF6nLWZ8p+NHts+KzFuls8q11p/ZXxUYv7q8vj9mrp3xzX8+Uy+95urczdK1J9G0
-	q/N/o/J02/WCW9eEJmz9Gc1c8W2TpMqvyZ4hlxmE9sQ/eDNP/6iwsY4Pl/vvXKGVkRObY3R8
-	jvJP/qq+Jz/wyDwbgXlXZDZ32z9//F056IjcZjVJ4advXb9leKvtunow6ly3EktxRqKhFnNR
-	cSIAf9GIDCsDAAA=
-X-CMS-MailID: 20240119135631epcas5p395210d5cb1880721719bdb46349b1625
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240103230906epcas5p468e1779bf14eeaa6f70f045be85afffc
-References: <20231219000815.2739120-1-bvanassche@acm.org>
-	<20231219000815.2739120-7-bvanassche@acm.org>
-	<20231228071206.GA13770@lst.de>
-	<00cf8ffa-8ad5-45e4-bf7c-28b07ab4de21@acm.org>
-	<20240103090204.GA1851@lst.de>
-	<CGME20240103230906epcas5p468e1779bf14eeaa6f70f045be85afffc@epcas5p4.samsung.com>
-	<23753320-63e5-4d76-88e2-8f2c9a90505c@acm.org>
-	<b294a619-c37e-cb05-79a8-8a62aec88c7f@samsung.com>
-	<9b854847-d29e-4df2-8d5d-253b6e6afc33@acm.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+CC: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Stanley Jhu <chu.stanley@gmail.com>, <linux-scsi@vger.kernel.org>,
+        Peter Wang <peter.wang@mediatek.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        Maramaina Naresh <quic_mnaresh@quicinc.com>,
+        <quic_narepall@quicinc.com>
+References: <20231219123706.6463-1-quic_mnaresh@quicinc.com>
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <20231219123706.6463-1-quic_mnaresh@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: BhXN1qMTO_pFflmhkoTFB8jp5NI89mJ3
+X-Proofpoint-GUID: BhXN1qMTO_pFflmhkoTFB8jp5NI89mJ3
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-19_08,2024-01-19_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 spamscore=0
+ phishscore=0 clxscore=1011 priorityscore=1501 mlxscore=0 malwarescore=0
+ suspectscore=0 bulkscore=0 mlxlogscore=666 impostorscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2311290000 definitions=main-2401190081
 
-On 1/19/2024 12:24 AM, Bart Van Assche wrote:
-> On 1/18/24 10:51, Kanchan Joshi wrote:
->> Are you considering to change this so that hint is set only on one inode
->> (and not on two)?
->> IOW, should not this fragment be like below:
->>
->> --- a/fs/fcntl.c
->> +++ b/fs/fcntl.c
->> @@ -306,7 +306,6 @@ static long fcntl_get_rw_hint(struct file *file,
->> unsigned int cmd,
->>    static long fcntl_set_rw_hint(struct file *file, unsigned int cmd,
->>                                 unsigned long arg)
->>    {
->> -       void (*apply_whint)(struct file *, enum rw_hint);
->>           struct inode *inode = file_inode(file);
->>           u64 __user *argp = (u64 __user *)arg;
->>           u64 hint;
->> @@ -316,11 +315,15 @@ static long fcntl_set_rw_hint(struct file *file,
->> unsigned int cmd,
->>           if (!rw_hint_valid(hint))
->>                   return -EINVAL;
->>
->> +       /*
->> +        * file->f_mapping->host may differ from inode. As an example
->> +        * blkdev_open() modifies file->f_mapping
->> +        */
->> +       if (file->f_mapping->host != inode)
->> +               inode = file->f_mapping->host;
->> +
->>           inode_lock(inode);
->>           inode->i_write_hint = hint;
->> -       apply_whint = inode->i_fop->apply_whint;
->> -       if (apply_whint)
->> -               apply_whint(file, hint);
->>           inode_unlock(inode);
-> 
-> I think the above proposal would introduce a bug: it would break the
-> F_GET_RW_HINT implementation.
+Hi Martin,
 
-Right. I expected to keep the exact change in GET, too, but that will 
-not be free from the side-effect.
-The buffered-write path (block_write_full_page) picks the hint from one 
-inode, and the direct-write path (__blkdev_direct_IO_simple) picks the 
-hint from a different inode.
-So, updating both seems needed here.
+This patch series add CPU latency QoS support for UFS driver. This 
+improves random io
+performance by ~15% for UFS. Can you please consider this patch series 
+for the next merge window.
+
+Thank you,
+Nitin
+
+On 12/19/2023 6:07 PM, Maramaina Naresh wrote:
+> Add CPU latency QoS support for ufs driver. This improves random io
+> performance by 15% for ufs.
+>
+> tiotest benchmark tool io performance results on sm8550 platform:
+>
+> 1. Without PM QoS support
+> 	Type (Speed in)    | Average of 18 iterations
+> 	Random Read(IPOS)  | 37101.3
+> 	Random Write(IPOS) | 41065.13
+>
+> 2. With PM QoS support
+> 	Type (Speed in)    | Average of 18 iterations
+> 	Random Read(IPOS)  | 42943.4
+> 	Random Write(IPOS) | 46784.9
+> (Improvement with PM QoS = ~15%).
+>
+> This patch is based on below patch by Stanley Chu [1].
+> Moving the PM QoS code to ufshcd.c and making it generic.
+>
+> [1] https://lore.kernel.org/r/20220623035052.18802-8-stanley.chu@mediatek.com
+>
+> Changes from v5:
+> - Addressed bvanassche comment to use kstrtobool instead kstrtou32
+> - Addressed bvanassche comment to add sys attribute into an existing group
+>
+> Changes from v4:
+> - Addressed angelogioacchino's comment to update commit text
+> - Addressed angelogioacchino's comment to code alignment
+>
+> Changes from v3:
+> - Removed UFSHCD_CAP_PM_QOS capability flag from patch#2
+>
+> Changes from v2:
+> - Addressed bvanassche and mani comments
+> - Provided sysfs interface to enable/disable PM QoS feature
+>
+> Changes from v1:
+> - Addressed bvanassche comments to have the code in core ufshcd
+> - Design is changed from per-device PM QoS to CPU latency QoS based support
+> - Reverted existing PM QoS feature from MEDIATEK UFS driver
+> - Added PM QoS capability for both QCOM and MEDIATEK SoCs
+>
+> Maramaina Naresh (2):
+>    ufs: core: Add CPU latency QoS support for ufs driver
+>    ufs: ufs-mediatek: Migrate to UFSHCD generic CPU latency PM QoS
+>      support
+>
+>   drivers/ufs/core/ufs-sysfs.c    | 49 ++++++++++++++++++++++++++++++++
+>   drivers/ufs/core/ufshcd.c       | 50 +++++++++++++++++++++++++++++++++
+>   drivers/ufs/host/ufs-mediatek.c | 17 -----------
+>   drivers/ufs/host/ufs-mediatek.h |  3 --
+>   include/ufs/ufshcd.h            |  6 ++++
+>   5 files changed, 105 insertions(+), 20 deletions(-)
+>
