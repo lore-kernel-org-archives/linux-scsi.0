@@ -1,63 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E2F413FE2;
-	Sat, 20 Jan 2024 17:54:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D405638E;
+	Sat, 20 Jan 2024 19:09:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705773249; cv=none; b=OePLLP1GUeBJOGN2Ib/p1TgH/8TKdKut6ZUt0pmMZ0cqpyQGoQS08iFGK10Us4nmZIzb/cNb6f/O66PVtNVXO8v/YEPl5HvgYxlwlVdiMz0rcZKom3GPF+EUsGhxpaI+AdeF+RtvNp1zdREbFzs3HIdB+r6pLpMub2RdrRBWh28=
+	t=1705777774; cv=none; b=fkoxXKddEEVW0wboDbQRiwt5QYcznUxt3L3pkUKvtE1RzprPhWsRTYFQ+a8d9UzaNPnlO8GIZEBGnNnwoDeK/Uly1BMYHODlnaGZdNtVVLS3uPWftSKUIJwIvAsL8GUpIWH9EIFS5NK66a5pxGgfzhATqqNHC1Mf7+p0pcXhfRQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705773249; c=relaxed/simple;
-	bh=ozBgcYdZ49mlsG3K/d80OJsB+C3pib00L97RPoXK7WM=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=tYNgRMjmk9/DdoQOPlU2tFGrEyqPMh3jG1k/q4EmZtU4PsElhkQM4NAvhxWwFRF6jEwCbAXU2njPql/6J+0LiahHs3JAMA2al04Ys4NtEY2kGtBKrrMr40OKEKhbQKnq9Rs6dDECD9l68hCbtJZg5un3W36gxOXL+LKA3R2jO9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QeyW1EPc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1705777774; c=relaxed/simple;
+	bh=s7wFiZD6E5tJ/1g6tszfUH13rKB9H0XEvV1JkDjHXZU=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=TB4Icjio4xl030ai7JdqPFlyaa7ySYb7cl9vppotDDVmrKSa2huo9nwhVRM/D2tXyAgUec9y6PxKRe+h1psj5UBX+Vqd33md6x5kIibJbJct01mMaHm3jspkaQW2TgjVD5QhyegVy5aUI1bZtQIzE2HkTX2cQQe2Uo/gFWRBKHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=UZCPW6UW; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=UZCPW6UW; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QeyW1EPc"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 72023C433F1;
-	Sat, 20 Jan 2024 17:54:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705773249;
-	bh=ozBgcYdZ49mlsG3K/d80OJsB+C3pib00L97RPoXK7WM=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=QeyW1EPcSOJ9XpcIW+MUOG3PdW3Q98vkdXSjjrWTCOC1Pd7ec6Vu1y36GDvNB8y19
-	 6CZIFNirsGITiT7hPvVKRn/ydldpR6sINeB+JN+7xDvD085NeUwPlDBPNIergwOqUQ
-	 5ehAVsi6mdIOnD75YYwIm2PEwpLlCeEMSGgQ3KodpfuJLQ37DVPbKGfuEhdmzSLTNI
-	 HZDq67cGiBvWJr2tYIYZDI/tl33EJFSDfnhMib+YzSmNQL/iuvx4ZtCuS3oOUXfY62
-	 HLAQTo+Z3CwNFmLfgey12ksyMyYek/vlaHT+C8gErKHtnjNc4eDDmYG3ON1+R2Fsl6
-	 6gRnpsjlhtiFw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 61572D8C970;
-	Sat, 20 Jan 2024 17:54:09 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="UZCPW6UW";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="UZCPW6UW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1705777770;
+	bh=s7wFiZD6E5tJ/1g6tszfUH13rKB9H0XEvV1JkDjHXZU=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=UZCPW6UWDLaKrlHjJ4728VYiPfJoJnrcchrJRM9HwZVRC6FgoATW94N9Z324fj7JN
+	 Htbr7mHuIRvmxUkTt4I2OhSSHeZa9qAMv9Dphj+qrG2+E8YlMPptbWzs0L95PR8jKK
+	 OQlznhLzLSOpvuH1ppu1fYYGnFXKRSV2ts9zb884=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id E3BAD1286462;
+	Sat, 20 Jan 2024 14:09:30 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id VVxAY1k8rzoF; Sat, 20 Jan 2024 14:09:30 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1705777770;
+	bh=s7wFiZD6E5tJ/1g6tszfUH13rKB9H0XEvV1JkDjHXZU=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=UZCPW6UWDLaKrlHjJ4728VYiPfJoJnrcchrJRM9HwZVRC6FgoATW94N9Z324fj7JN
+	 Htbr7mHuIRvmxUkTt4I2OhSSHeZa9qAMv9Dphj+qrG2+E8YlMPptbWzs0L95PR8jKK
+	 OQlznhLzLSOpvuH1ppu1fYYGnFXKRSV2ts9zb884=
+Received: from [192.168.2.247] (unknown [204.148.121.182])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 319A21280773;
+	Sat, 20 Jan 2024 14:09:30 -0500 (EST)
+Message-ID: <7b104abd42691c3e3720ca6667f5e52d75ab6a92.camel@HansenPartnership.com>
 Subject: Re: [GIT PULL] final round of SCSI updates for the 6.7+ merge window
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <d2ce7bc75cadd3d39858c02f7f6f0b4286e6319b.camel@HansenPartnership.com>
-References: <d2ce7bc75cadd3d39858c02f7f6f0b4286e6319b.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <d2ce7bc75cadd3d39858c02f7f6f0b4286e6319b.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: 83ab68168a3d990d5ff39ab030ad5754cbbccb25
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: c25b24fa72c734f8cd6c31a13548013263b26286
-Message-Id: <170577324938.9549.12467606490503722746.pr-tracker-bot@kernel.org>
-Date: Sat, 20 Jan 2024 17:54:09 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi
+	 <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Date: Sat, 20 Jan 2024 14:09:28 -0500
+In-Reply-To: <CAHk-=wi8-9BCn+KxwtwrZ0g=Xpjin_D3p8ZYoT+4n2hvNeCh+w@mail.gmail.com>
+References: 
+	<d2ce7bc75cadd3d39858c02f7f6f0b4286e6319b.camel@HansenPartnership.com>
+	 <CAHk-=wi8-9BCn+KxwtwrZ0g=Xpjin_D3p8ZYoT+4n2hvNeCh+w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-The pull request you sent on Sat, 20 Jan 2024 10:26:03 -0500:
+On Sat, 2024-01-20 at 09:52 -0800, Linus Torvalds wrote:
+> On Sat, 20 Jan 2024 at 07:26, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > 
+> > As requested, I did a longer extension of my gpg keys, so my key
+> > needs
+> > refreshing, before you pull, to fix the expiry date.  You can get
+> > my
+> > updates via DANE using:
+> > 
+> > gpg --auto-key-locate dane --recv
+> > D5606E73C8B46271BEAD9ADF814AE47C214854D6
+> 
+> No I can't.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+So this one looks to be a DNS issue.  The secondaries on infradead.org
+hadn't picked up the update (they were still showing old serial numbers
+for the domain).  I've force pushed an update (and verified the new
+serial) so if you have the patience to retry, it should work now
+(fingers crossed).
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/c25b24fa72c734f8cd6c31a13548013263b26286
+It also seems that this magic option combination works better (just
+tried it on an old laptop that had my expired keys)
 
-Thank you!
+gpg --auto-key-locate clear,dane --locate-external-key james.bottomley@hansenpartnership.com
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+James
+
