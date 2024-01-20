@@ -1,94 +1,110 @@
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D405638E;
-	Sat, 20 Jan 2024 19:09:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75EFE8824
+	for <linux-scsi@vger.kernel.org>; Sat, 20 Jan 2024 19:35:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705777774; cv=none; b=fkoxXKddEEVW0wboDbQRiwt5QYcznUxt3L3pkUKvtE1RzprPhWsRTYFQ+a8d9UzaNPnlO8GIZEBGnNnwoDeK/Uly1BMYHODlnaGZdNtVVLS3uPWftSKUIJwIvAsL8GUpIWH9EIFS5NK66a5pxGgfzhATqqNHC1Mf7+p0pcXhfRQ=
+	t=1705779340; cv=none; b=BN/zojkdyfhkB/3hq+kPRmgqCDSnpbLc66IpwALq0qjY9JPNG4lgCIU7w9kmrsqJrq391OMERkaXVt4lwWcIrG0Ho+hWh1AaaeNMRaCTIYw+1/a7DLvCznx4gTs1XcQOsZpjZBCClwnoFltEQLZuTk68r/zN+++EEhzItdw5vK0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705777774; c=relaxed/simple;
-	bh=s7wFiZD6E5tJ/1g6tszfUH13rKB9H0XEvV1JkDjHXZU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=TB4Icjio4xl030ai7JdqPFlyaa7ySYb7cl9vppotDDVmrKSa2huo9nwhVRM/D2tXyAgUec9y6PxKRe+h1psj5UBX+Vqd33md6x5kIibJbJct01mMaHm3jspkaQW2TgjVD5QhyegVy5aUI1bZtQIzE2HkTX2cQQe2Uo/gFWRBKHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=UZCPW6UW; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=UZCPW6UW; arc=none smtp.client-ip=96.44.175.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1705779340; c=relaxed/simple;
+	bh=NLWKB3iyr61ar4WQVIOUCJqflDtAeQTUkI8JnXa1jLo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SQuHnoQWCZGkqDDUk/ZvOyDHYBjy9KhV5MtmIBGIbqGIxuk9iEmueYr/EO1oUYNg8frS33rPJutj/izGcp2FDtGPhpK9Mz1B/omiMyg4Ikuo162rdOBumWLAfVSKN9e6eACpWvBebkHATTmTagXf0lcsdfHgxD+cHxFPdHGMEmQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=NSEnFWvh; arc=none smtp.client-ip=209.85.208.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="UZCPW6UW";
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="UZCPW6UW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1705777770;
-	bh=s7wFiZD6E5tJ/1g6tszfUH13rKB9H0XEvV1JkDjHXZU=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=UZCPW6UWDLaKrlHjJ4728VYiPfJoJnrcchrJRM9HwZVRC6FgoATW94N9Z324fj7JN
-	 Htbr7mHuIRvmxUkTt4I2OhSSHeZa9qAMv9Dphj+qrG2+E8YlMPptbWzs0L95PR8jKK
-	 OQlznhLzLSOpvuH1ppu1fYYGnFXKRSV2ts9zb884=
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id E3BAD1286462;
-	Sat, 20 Jan 2024 14:09:30 -0500 (EST)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id VVxAY1k8rzoF; Sat, 20 Jan 2024 14:09:30 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1705777770;
-	bh=s7wFiZD6E5tJ/1g6tszfUH13rKB9H0XEvV1JkDjHXZU=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=UZCPW6UWDLaKrlHjJ4728VYiPfJoJnrcchrJRM9HwZVRC6FgoATW94N9Z324fj7JN
-	 Htbr7mHuIRvmxUkTt4I2OhSSHeZa9qAMv9Dphj+qrG2+E8YlMPptbWzs0L95PR8jKK
-	 OQlznhLzLSOpvuH1ppu1fYYGnFXKRSV2ts9zb884=
-Received: from [192.168.2.247] (unknown [204.148.121.182])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 319A21280773;
-	Sat, 20 Jan 2024 14:09:30 -0500 (EST)
-Message-ID: <7b104abd42691c3e3720ca6667f5e52d75ab6a92.camel@HansenPartnership.com>
-Subject: Re: [GIT PULL] final round of SCSI updates for the 6.7+ merge window
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi
-	 <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
-Date: Sat, 20 Jan 2024 14:09:28 -0500
-In-Reply-To: <CAHk-=wi8-9BCn+KxwtwrZ0g=Xpjin_D3p8ZYoT+4n2hvNeCh+w@mail.gmail.com>
-References: 
-	<d2ce7bc75cadd3d39858c02f7f6f0b4286e6319b.camel@HansenPartnership.com>
-	 <CAHk-=wi8-9BCn+KxwtwrZ0g=Xpjin_D3p8ZYoT+4n2hvNeCh+w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="NSEnFWvh"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-55a685e6299so1655880a12.2
+        for <linux-scsi@vger.kernel.org>; Sat, 20 Jan 2024 11:35:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1705779336; x=1706384136; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=M/rp5vrGtS2RGHM4ILDxh2i+YzejulCBn4t1151pwRs=;
+        b=NSEnFWvhkbvZRo0au5bHIfCEao9hsDsYxC6VuNXN7fXHaKY2opOC4WizU1oI6ujfsP
+         JGgz2OPNPbJfD8VLokhheQ9Y0x+BGvHZaWQanHIyNTnLGjnTbEWFGRwJwApYAFGqUCns
+         Dn/7JQTePCZxBuMQNggxqp6UG7pKiu1R+hNLY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705779336; x=1706384136;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=M/rp5vrGtS2RGHM4ILDxh2i+YzejulCBn4t1151pwRs=;
+        b=R/czOsjXHBn7UVp4m82cEKJUl4cb/Qc7MnFKPzSVDgqENo9U7D8EOHFhOufJcN8g4P
+         r+2/ZEVfFsPnBb1VTHpGmMbyn13kUcMvjp7RN+9YHafjV1yzYS+yf6Z8YlJ7Js9izxKV
+         g8qwvsR5yXf/ias+CR5/FbBzisgqy8n+02QPARyrNR9QCadYUrMO3xBoEv8TJ4mT2Zz9
+         F/viaCDsPtGl4RqQjuR3kAtXk9cOTzlEfw3Gvf5F3Oyy6Wb+IVZhgOFx5ak4polW4rBG
+         A8jLwJkXSC2x41sNdj+iwuG3kAluz1c3hYWrN/VXe5AbAKAxxMvwq/p9iG5VFp0jXrms
+         zTlg==
+X-Gm-Message-State: AOJu0Yx/sZWlN3Uq0VWZwUEmw6fgxLyiqZt8jW/Xh62v/Bcg6fXZCJSq
+	ICdDVIi+6BXK9Dk6UwlknWeUM9LwU2In6tvNqK7Bc6MwsdO9XhEPRI+mxH6/QmKQhNe5Ud4yChE
+	pH2JvDw==
+X-Google-Smtp-Source: AGHT+IEdRgOpETxFsPXw4awSzl5weMAE1aPaP5pJqRVoyBlIXPUMjg1AL2crmL0v8kFc1F1KDOVsQA==
+X-Received: by 2002:aa7:c403:0:b0:559:aefc:9cee with SMTP id j3-20020aa7c403000000b00559aefc9ceemr872335edq.59.1705779336456;
+        Sat, 20 Jan 2024 11:35:36 -0800 (PST)
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com. [209.85.128.51])
+        by smtp.gmail.com with ESMTPSA id ds9-20020a0564021cc900b0055982b14794sm6601070edb.9.2024.01.20.11.35.35
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 20 Jan 2024 11:35:36 -0800 (PST)
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-40e8fec0968so24646695e9.1
+        for <linux-scsi@vger.kernel.org>; Sat, 20 Jan 2024 11:35:35 -0800 (PST)
+X-Received: by 2002:a05:600c:3581:b0:40e:a3aa:a458 with SMTP id
+ p1-20020a05600c358100b0040ea3aaa458mr716415wmq.27.1705779335473; Sat, 20 Jan
+ 2024 11:35:35 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <d2ce7bc75cadd3d39858c02f7f6f0b4286e6319b.camel@HansenPartnership.com>
+ <CAHk-=wi8-9BCn+KxwtwrZ0g=Xpjin_D3p8ZYoT+4n2hvNeCh+w@mail.gmail.com> <7b104abd42691c3e3720ca6667f5e52d75ab6a92.camel@HansenPartnership.com>
+In-Reply-To: <7b104abd42691c3e3720ca6667f5e52d75ab6a92.camel@HansenPartnership.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Sat, 20 Jan 2024 11:35:18 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wi03SZ4Yn9FRRsxnMv1ED5Qw25Bk9-+ofZVMYEDarHtHQ@mail.gmail.com>
+Message-ID: <CAHk-=wi03SZ4Yn9FRRsxnMv1ED5Qw25Bk9-+ofZVMYEDarHtHQ@mail.gmail.com>
+Subject: Re: [GIT PULL] final round of SCSI updates for the 6.7+ merge window
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, 
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On Sat, 2024-01-20 at 09:52 -0800, Linus Torvalds wrote:
-> On Sat, 20 Jan 2024 at 07:26, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > 
-> > As requested, I did a longer extension of my gpg keys, so my key
-> > needs
-> > refreshing, before you pull, to fix the expiry date.  You can get
-> > my
-> > updates via DANE using:
-> > 
-> > gpg --auto-key-locate dane --recv
-> > D5606E73C8B46271BEAD9ADF814AE47C214854D6
-> 
-> No I can't.
+On Sat, 20 Jan 2024 at 11:09, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> It also seems that this magic option combination works better (just
+> tried it on an old laptop that had my expired keys)
+>
+> gpg --auto-key-locate clear,dane --locate-external-key james.bottomley@hansenpartnership.com
 
-So this one looks to be a DNS issue.  The secondaries on infradead.org
-hadn't picked up the update (they were still showing old serial numbers
-for the domain).  I've force pushed an update (and verified the new
-serial) so if you have the patience to retry, it should work now
-(fingers crossed).
+So now I have a new subkey.
 
-It also seems that this magic option combination works better (just
-tried it on an old laptop that had my expired keys)
+However, I note that you really do not seem to have gotten the message:
 
-gpg --auto-key-locate clear,dane --locate-external-key james.bottomley@hansenpartnership.com
+  sub   nistp256 2018-01-23 [S] [expires: 2026-01-16]
+        E76040DB76CA3D176708F9AAE742C94CEE98AC85
 
-James
+WTF? What happened to "stop doing these idiotic short expirations"?
 
+What's the advantage of all this stupid and pointless pain? Why didn't
+you extend it by AT LEAST five years?
+
+Has the expiration date *EVER* had a single good reason for it?
+
+From a quick git lookup, in the last year I have pulled from 160
+people. Imagine if they all set two-year expiration dates. Do the
+math: I'd see pointlessly expired keys probably on average once or
+twice a week.
+
+Guess why I don't? BECAUSE NOBODY ELSE DOES THAT POINTLESS EXPIRY DANCE.
+
+Why do you insist on being the problem?
+
+Stop it. Really. I'm tired of the pointless extra work. PGP keys are a
+disaster, and you keep on making things worse than they need to be.
+
+               Linus
