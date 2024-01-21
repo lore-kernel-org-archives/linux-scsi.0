@@ -1,89 +1,108 @@
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AE841E487
-	for <linux-scsi@vger.kernel.org>; Sun, 21 Jan 2024 06:30:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=18.9.28.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC8FE364A4;
+	Sun, 21 Jan 2024 15:58:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705818661; cv=none; b=rCtOLEhoZn+FZ7oOqFk+KQ4vPya3GDzcZz05vfrA7v41HHxKkbfnyKuHLxfMcT9zktlpd0xDZZUuWxjB9yzs9HQE3eQv13ayrQTrdsuM0UQ/3JQjytpyXPJlmYdscaJ74ZOrTeKEB3kiT3OPC6Tx5ZDAHoYyLeNauYyymS/wTCY=
+	t=1705852717; cv=none; b=uTyhV8mxVxzdOyQZYmKQesgXI1AqLeuNiXvVmJaxq5gtZQHX5A8QVzF3NoskhReUHCwRhVkxTpcJoiQWi0tXVhAQ7Whm3wTHtBIhUDHW1FtWSxW0PoroOafZRfqg/uTnNFp3oHF348Q75fV3zimtuNk4RBSMj0K41cOjO2aFPTw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705818661; c=relaxed/simple;
-	bh=tK3UcJvJ5BQkGY+bTb2CdK4v2VbqSQmssmv32Na54XE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UzfM4qSNJ0EGbCQtAwHqFi9SBCjLx9ynYBX7NocpjTnwsSIn7NNOhCUQMJ6jrxzGKuhGWX1Lj8tKZ5hWYAsQnzy75+qWvuWexrukBUi9kILOa7w9pWyfD6BRaG/TLeiL2oSkHkJunAr5vsAiIvvuf+NXzathgiswdOQ6s/xVZj8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu; spf=pass smtp.mailfrom=mit.edu; dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b=fI8Tlpma; arc=none smtp.client-ip=18.9.28.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=mit.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mit.edu
+	s=arc-20240116; t=1705852717; c=relaxed/simple;
+	bh=vZKUTi/pGvf34rerdB8LD1X0SEf4pI83URewsECcsQ8=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=fxEW0DAhwGYTUbO1qsiNLCWdLeycI2pfFm6Kd2KQNNuMi7Noth0domQDotmQ2DFCwdtWAekozVva0U2E4xQQIJW2f9rEmgNq4DI8Gowy/Qezg/kJtjIgedteO7ze0qSSfDO4pefHrtF45sP+a+Kb4leYvWQd7EF1IQ0Vd61RIzU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=gxF88Mqi; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=gxF88Mqi; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mit.edu header.i=@mit.edu header.b="fI8Tlpma"
-Received: from cwcc.thunk.org (pool-173-48-117-225.bstnma.fios.verizon.net [173.48.117.225])
-	(authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-	by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 40L6UdaR023566
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 21 Jan 2024 01:30:40 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-	t=1705818641; bh=sgpy4bLPdBnGfXdgc0vYyKPC4rFyOPZ19TPy1I8VkNY=;
-	h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-	b=fI8TlpmaI6N8auQGmVuYYwtSQdVLpDYqPbkt+dMB0Evk0vNokom+FCG8JV2/aAiAq
-	 9oWBOMxHqpJQX1Br3BT0QfHqYnsUSAjCZ3BviicSPbheTgEnjUVAT5zouv50szulp+
-	 sr41Ye3EfI2swt1nQpb1YKVnfP79CyG1tXi5UCtrezFYsIYu80q0hXMWQqkyWRyT/o
-	 +YGJMcAW7aVPnIkLCH339V5IZcgDlPI1GfbG6DfNopFp5MtVNnK2W1TptbCSkGdYvu
-	 Q9YWzgLNTb83nidTD20Q1vJyMCCLNlclzNc0lwDE4f9/J+kXHi52//bEwfT8meFcxY
-	 KRrq2DaYcMTwg==
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-	id D419715C0278; Sun, 21 Jan 2024 01:30:38 -0500 (EST)
-Date: Sun, 21 Jan 2024 01:30:38 -0500
-From: "Theodore Ts'o" <tytso@mit.edu>
-To: Linus Torvalds <torvalds@linux-foundation.org>, G@mit.edu
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="gxF88Mqi";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="gxF88Mqi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1705852714;
+	bh=vZKUTi/pGvf34rerdB8LD1X0SEf4pI83URewsECcsQ8=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=gxF88MqiU/GafvH4sDGJEarDrnZWJRlter/VpO/KynZEw+/RglAO+/PhZTV5oWZAI
+	 nclI0TW5nsBHZTZfcVh9Td6c75Y+zCR9854fr/PDMkxJfW/jzldVm6qFMcD2DYgPwP
+	 cvdXuGK5fL+CSwWdV6B1rKougVtBELCm35tC8g5c=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id E7E3612810AE;
+	Sun, 21 Jan 2024 10:58:34 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id 6anIjXJcDn9K; Sun, 21 Jan 2024 10:58:34 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1705852714;
+	bh=vZKUTi/pGvf34rerdB8LD1X0SEf4pI83URewsECcsQ8=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=gxF88MqiU/GafvH4sDGJEarDrnZWJRlter/VpO/KynZEw+/RglAO+/PhZTV5oWZAI
+	 nclI0TW5nsBHZTZfcVh9Td6c75Y+zCR9854fr/PDMkxJfW/jzldVm6qFMcD2DYgPwP
+	 cvdXuGK5fL+CSwWdV6B1rKougVtBELCm35tC8g5c=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits))
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 1D9A31280FA8;
+	Sun, 21 Jan 2024 10:58:34 -0500 (EST)
+Message-ID: <83d6dca5fec8b2b31e548d56cdf196e39549d9ca.camel@HansenPartnership.com>
 Subject: Re: [GIT PULL] final round of SCSI updates for the 6.7+ merge window
-Message-ID: <20240121063038.GA1452899@mit.edu>
-References: <d2ce7bc75cadd3d39858c02f7f6f0b4286e6319b.camel@HansenPartnership.com>
- <CAHk-=wi8-9BCn+KxwtwrZ0g=Xpjin_D3p8ZYoT+4n2hvNeCh+w@mail.gmail.com>
- <7b104abd42691c3e3720ca6667f5e52d75ab6a92.camel@HansenPartnership.com>
- <CAHk-=wi03SZ4Yn9FRRsxnMv1ED5Qw25Bk9-+ofZVMYEDarHtHQ@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Theodore Ts'o <tytso@mit.edu>, Linus Torvalds
+	 <torvalds@linux-foundation.org>, G@mit.edu
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi
+	 <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Date: Sun, 21 Jan 2024 10:58:32 -0500
+In-Reply-To: <20240121063038.GA1452899@mit.edu>
+References: 
+	<d2ce7bc75cadd3d39858c02f7f6f0b4286e6319b.camel@HansenPartnership.com>
+	 <CAHk-=wi8-9BCn+KxwtwrZ0g=Xpjin_D3p8ZYoT+4n2hvNeCh+w@mail.gmail.com>
+	 <7b104abd42691c3e3720ca6667f5e52d75ab6a92.camel@HansenPartnership.com>
+	 <CAHk-=wi03SZ4Yn9FRRsxnMv1ED5Qw25Bk9-+ofZVMYEDarHtHQ@mail.gmail.com>
+	 <20240121063038.GA1452899@mit.edu>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wi03SZ4Yn9FRRsxnMv1ED5Qw25Bk9-+ofZVMYEDarHtHQ@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Sat, Jan 20, 2024 at 11:35:18AM -0800, Linus Torvalds wrote:
-> Guess why I don't? BECAUSE NOBODY ELSE DOES THAT POINTLESS EXPIRY DANCE.
+On Sun, 2024-01-21 at 01:30 -0500, Theodore Ts'o wrote:
+> Unlike James, I've tried to use DANE, since about the only thing that
+                    ^
+                  never?
 
-So I guess I need to confess.  I haven't been doing the expiry dance
-(which I started doing because GPG revocation certificates are also a
-disaster).  There are certainly those folks who recommend it as a best
-practice[1].
+> has as disastrous a user experience as gpg is DNSSEC.  :-) I just
+> manually upload keys to the kernel and Debian keyrings, and it's been
+> working out, apparently without much pain for either me or to those
+> who rely on my keys --- at least, no one as complained to me so
+> far....
 
-[1] https://www.g-loaded.eu/2010/11/01/change-expiration-date-gpg-key/
+Well the theory is sound: if the DNS is secure and trustworthy, getting
+the gpg key from the same domain as the email records proves the tie
+between the uid and the key (obviating the need for all this keysigning
+and web of trust).  Making DNS substitute for all these stupid external
+CAs for web certificates as well (via DANE export of the X509 public
+key) is also a good idea, as is exporting the ssh host keys and things.
 
-However, I tend to set the expiration 6 to 12 months in
-advance, and make sure I renew them 3 months or so before they expire,
-and then I make a point of sending them to keys@linux.kernel.org to
-update the the kernel keyring, as documented here[2].
+However, having maintained DNSSEC for almost a decade now, I'm not
+going to pretend it's something a non-expert sysadmin should be trying:
+it's very particular and problems are hard to debug; you really have to
+be in the top tier of expert sysadmins to be successful with it. 
+However, once it is running, bind9 now takes much of the pain out of
+rolling the domain keys and, if you run a dynamic domain (one that can
+be updated with nsupdate), you can actually give all your users scoped
+permission to update their own key records, so if you have an expert
+sysadmin on the domain, they can make DANE usable for all the non
+experts.
 
-[2] https://korg.docs.kernel.org/pgpkeys.html
+I think the gpg usability problem is that I can't mark my key as being
+DANE available in the key itself, so gpg would just automatically check
+the DNS for an update and throw a warning if there was a DNS problem
+(but still use the cached key).  The failure is the users having to
+figure out that my key is DANE available and then what combinatoric
+explosion of gpg options they actually need to update it.
 
-Linus, you haven't been complaining about my key, which hopefully
-means that I'm not causing you headaches (or at least I hope so).
-Would it be perhaps because you are periodically running
-scripts/korg-refresh-keys as documented in [2].  Or perhaps you are
-running it out of cron or a systemd timer (again, as documented in [2])?
+James
 
-Unlike James, I've tried to use DANE, since about the only thing that
-has as disastrous a user experience as gpg is DNSSEC.  :-) I just
-manually upload keys to the kernel and Debian keyrings, and it's been
-working out, apparently without much pain for either me or to those
-who rely on my keys --- at least, no one as complained to me so
-far....
-
-					- Ted
