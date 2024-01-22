@@ -1,182 +1,152 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EAD239ACA
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Jan 2024 09:31:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E0553EA65;
+	Mon, 22 Jan 2024 17:10:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705915919; cv=none; b=QOHEUan+c1kMdMqSHrnWlfy70v1mkEeKNjhZ0q7QPQyTJIygtAsPLPHMwrk3kHXdNEyKIjhFeXjEmicKk46roi2FjMhkCne5T2UfTU2wgFfn6lH+PF0II2vEzsA/T30QYePAtFA1M9KhhlSrvOrEjzfzn6joFnB39rMl9HvLDD0=
+	t=1705943415; cv=none; b=THRIgeDaF2JEFgSuRoWxxvKx6Isn2Gd0d6uF2gXdlxoxcNUByq3NNDQmVhNq1pfudNt+eYqCXf3XuY6xNzvLz3jdtbVo2qzN4eWMfFCUEisahvhgxpyWfMBpl+VwPdjClgMqUEprLYQXtm52dcNr1tSYWwrY4K/l4arGxf6Iiaw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705915919; c=relaxed/simple;
-	bh=Lfr82Fnth4Mk+rcFRQy9knLdb7m8SMc+4M01JliXsXs=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:In-Reply-To:
-	 Content-Type:References; b=BGiLGKpuakACpidtZFgbhnMveLwj2+ISZ1gfLl+AwRNMdBGT1AIMo19LNOA0G97p2pKwwTBx1N/MN1Z/IXh+k+1y4P3NscXvra1F3mnUayaT/+rG0PXU/dHs+R4UIU3JLB4QyS2Pc3D3/miUZjkNep6smgWhn0quGNpDn1n8oSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=GJefkC1T; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1705943415; c=relaxed/simple;
+	bh=hg6YVFiUag7Jpn+ogfj/fOty689o28bCOhcvA6bAVyM=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version; b=LQ471mR9+Kuri/77n7RBRcNHRDCGx749ilcnpqwtw01YAL2vFjQugTADWjQGIb7GYEGc5BC7gJLn23uidGijauMzaUyQtcvVlKoZVo4xDIVCfpDPkfEXkzouJYmI1S6SmaGcSu21Tcf16QA/6VaCuRLUxdRa/pBknLHwyNuV+To=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NpF1WIcn; arc=none smtp.client-ip=209.85.210.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="GJefkC1T"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20240122093154epoutp0314c503d415164b8c0167f89ca9e83f47~soXxhvTvN1916319163epoutp03F
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Jan 2024 09:31:54 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20240122093154epoutp0314c503d415164b8c0167f89ca9e83f47~soXxhvTvN1916319163epoutp03F
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1705915914;
-	bh=GV2tQQgiZaNmvp2+JB7Yud6Btg8vLHCkS5jyGrUxZfk=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=GJefkC1T5lRmUXEcLgmd5c69lYr8mw/69zErxrl731HfLgGS7+PeEAHeTalyTP7wQ
-	 SSvb1xsMVu5+5mLU8N1k0+6aV2Xjr/RgRP0iF5kYP9Twz1dFemIb5jfIIfLeuWhKAr
-	 t8Rggk2sAJgasbGbzuZxQcFPdMJAJg0Z9aKIM+P8=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-	20240122093153epcas5p1c5743e793b110dc6392d85abb6bdda17~soXw47HPz2251022510epcas5p1R;
-	Mon, 22 Jan 2024 09:31:53 +0000 (GMT)
-Received: from epsmgec5p1new.samsung.com (unknown [182.195.38.176]) by
-	epsnrtp4.localdomain (Postfix) with ESMTP id 4TJQ3C5Hqdz4x9Q1; Mon, 22 Jan
-	2024 09:31:51 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-	epsmgec5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	8B.BA.08567.7063EA56; Mon, 22 Jan 2024 18:31:51 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20240122093151epcas5p2e032680a61f4ec16dc7d5a673fe179ed~soXuWsvtF2485624856epcas5p2r;
-	Mon, 22 Jan 2024 09:31:51 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240122093151epsmtrp15a662e156f6a0bfb6c1f2c20593709f3~soXuV-eT00622206222epsmtrp15;
-	Mon, 22 Jan 2024 09:31:51 +0000 (GMT)
-X-AuditID: b6c32a44-3abff70000002177-5d-65ae36077b44
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	E9.1A.08755.6063EA56; Mon, 22 Jan 2024 18:31:50 +0900 (KST)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20240122093149epsmtip218553fe229c75c443b2a5b17f8c6b45d~soXslkvkm1156211562epsmtip2K;
-	Mon, 22 Jan 2024 09:31:49 +0000 (GMT)
-Message-ID: <85be3166-1886-b56a-4910-7aff8a13ea3b@samsung.com>
-Date: Mon, 22 Jan 2024 15:01:48 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NpF1WIcn"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6da9c834646so3365277b3a.3;
+        Mon, 22 Jan 2024 09:10:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1705943414; x=1706548214; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:reply-to:message-id:date
+         :subject:to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=UJG831c9X6YdaovxlTqiwAZnTkqpj5rWBo3Fhk5z9C0=;
+        b=NpF1WIcnLkN+vK/4MlwYxA9DPZhfdqYP6kFzuE+t50GsLpWBBDojIBe5jxf1MA5G6B
+         RWzRLZIrVNebin45kqFWw7BZc2Vp7ZOvshup+l5gvFW4Djn6hmoizBB5vcfcp+8qAGpN
+         Og11sEFfIzx+Ac9voB2ZwM8dqWClrpZ9aRfMe68O7RJE37FD+HGF/rIwzFQqla5hzmfM
+         LlGDZJ1L6TKa+ycNCZbnzz4zC5CCm73cjUhrC2iS2tEeKzq8Pc3AEXEF45imJks3QNtK
+         3qbHooXI7oI4/N8j2TVOCqZJmb3iTwxdbqigUdvMPRr6jA2K84eRFO2wOorrGva2Wo04
+         LJEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705943414; x=1706548214;
+        h=content-transfer-encoding:mime-version:reply-to:message-id:date
+         :subject:to:from:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UJG831c9X6YdaovxlTqiwAZnTkqpj5rWBo3Fhk5z9C0=;
+        b=R4auaEYi1qC9bWbluEPATPoMoDALYkVw2qbAiUL7U3i/UcpBCrwabNm+3jQvw1r/T0
+         Cq4+y+aSoMh14uuq0ZJ7NvR91lunxr8G3UQTBX4n2sm/k8HUI/IgmG+jbIR5iwYJ1hLC
+         icfyvChUQ/Km4z10zRhrXh/FNjjixNaMPRD0z60MJwOSnTUVyUqs87ZeCxeu/gDzgnjt
+         YqBJUfiVhkXsXM+4oYh9wi412TA3qNpO9NPLvDUL4HANK+fw2X7HIYm5Kl59mYvLve09
+         KrMoDDJsXw2ndltIqVZctnBPpuTPlaniUm3kFrgPJkdYGPy0CrnC9GRj4/crW7gN41yJ
+         0esw==
+X-Gm-Message-State: AOJu0YwXCOFKekG07U/o3Riyu+luwklI0lZAULXsztUCpbedJGoxIsmJ
+	rgfovu67NX8m1gDIN3rLCOk1aEBquSRrudf8Sa1ib8qbVgW8QC4u
+X-Google-Smtp-Source: AGHT+IGMAkEmkRAFTXivmjaEGv5mnh0z4Lxw/gwh0uW8k6XsWOS2sg7jlgnsTVKbIPBT+Zl5rlPDjw==
+X-Received: by 2002:a05:6a20:8e19:b0:19b:118e:bd87 with SMTP id y25-20020a056a208e1900b0019b118ebd87mr6197660pzj.90.1705943413700;
+        Mon, 22 Jan 2024 09:10:13 -0800 (PST)
+Received: from localhost.localdomain (c-73-254-87-52.hsd1.wa.comcast.net. [73.254.87.52])
+        by smtp.gmail.com with ESMTPSA id lc14-20020a056a004f4e00b006db00cb78a8sm10209855pfb.179.2024.01.22.09.10.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Jan 2024 09:10:13 -0800 (PST)
+From: mhkelley58@gmail.com
+X-Google-Original-From: mhklinux@outlook.com
+To: haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	linux-kernel@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH 1/1] scsi: storvsc: Fix ring buffer size calculation
+Date: Mon, 22 Jan 2024 09:09:56 -0800
+Message-Id: <20240122170956.496436-1-mhklinux@outlook.com>
+X-Mailer: git-send-email 2.25.1
+Reply-To: mhklinux@outlook.com
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
-	Gecko/20100101 Thunderbird/91.8.1
-Subject: Re: [PATCH v8 06/19] block, fs: Propagate write hints to the block
- device inode
-Content-Language: en-US
-From: Kanchan Joshi <joshi.k@samsung.com>
-To: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Daejun Park
-	<daejun7.park@samsung.com>, Alexander Viro <viro@zeniv.linux.org.uk>,
-	Christian Brauner <brauner@kernel.org>, Jeff Layton <jlayton@kernel.org>,
-	Chuck Lever <chuck.lever@oracle.com>
-In-Reply-To: <9fa04d79-0ba6-a2e0-6af7-d1c85f08923b@samsung.com>
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrNJsWRmVeSWpSXmKPExsWy7bCmui672bpUg91HNCxW3+1ns3h9+BOj
-	xbQPP5kt/t99zmSx6kG4xcrVR5ksfi5bxW6x95a2xZ69J1ksuq/vYLNYfvwfk8X5v8dZHXg8
-	Ll/x9rh8ttRj06pONo/dNxvYPD4+vcXi0bdlFaPH501yHpuevGUK4IjKtslITUxJLVJIzUvO
-	T8nMS7dV8g6Od443NTMw1DW0tDBXUshLzE21VXLxCdB1y8wBOlVJoSwxpxQoFJBYXKykb2dT
-	lF9akqqQkV9cYquUWpCSU2BSoFecmFtcmpeul5daYmVoYGBkClSYkJ1x/mgfe8EroYortz+z
-	NDDe4+9i5OSQEDCRWDuvk6WLkYtDSGA3o8S3BX2sEM4nRokTj1cwg1QJCXxjlGhuLOpi5ADr
-	6NsRBFGzl1Hi1br3UN1vGSX+9P9nBGngFbCT2PJyO5jNIqAq8fPdTRaIuKDEyZlPwGxRgSSJ
-	X1fngNUIC0RJLJm8F2wZs4C4xK0n85lAlrEJaEpcmFwKYooIeEjceuMHUfGDSWLGNUUQm1PA
-	XmJ/ZzMLRFxeonnrbGaIx45wSKz+qwJhu0j83vaDDcIWlnh1fAs7hC0l8bK/DcpOlrg08xwT
-	hF0i8XjPQSjbXqL1VD8zyAnMQNes36UPsYpPovf3EyZIiPBKdLQJQVQrStyb9JQVwhaXeDhj
-	CZTtIfHpZh8TJKD+Mku8WniTbQKjwiykMJmF5PdZSL6ZhbB5ASPLKkbJ1ILi3PTUZNMCw7zU
-	cnhkJ+fnbmIEp2Itlx2MN+b/0zvEyMTBeIhRgoNZSYT3huS6VCHelMTKqtSi/Pii0pzU4kOM
-	psDImcgsJZqcD8wGeSXxhiaWBiZmZmYmlsZmhkrivK9b56YICaQnlqRmp6YWpBbB9DFxcEo1
-	MIl3HQ7ZvlLkjlaYiUdbpNFByZiLjI+vLNtvIliRdOpGS1fFQqn+yuCznPy/OrTq3G4b/vhl
-	9XyX67SEBu4vqVO4fmnWFDR7M6TFbHV6ySfuUbJW8cf2eEZf9/mLFhZJvW4xYmWN1+coqWHN
-	7ezhezHl82qNKS2LLs/5tG/S/Fj5V4bz7l8y0PNXDj3DdDa158aFkMKQef/22rY+fSw+d27U
-	aubyDTeTfH7IP5qeP3X7/ytvLT//f9Mvu0m/qujzlF7Bu893bv74qmmnOnvBfZ89NX7hN06l
-	KCbGWMuevfB8rfnnJpYj/QIfRR9Nf+K46eu/QxIs9eKflLfmJIfwqyQffrfpTfzOp6+Xu3Ba
-	HVViKc5INNRiLipOBAClUBUOTgQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprFIsWRmVeSWpSXmKPExsWy7bCSvC6b2bpUg/drLS1W3+1ns3h9+BOj
-	xbQPP5kt/t99zmSx6kG4xcrVR5ksfi5bxW6x95a2xZ69J1ksuq/vYLNYfvwfk8X5v8dZHXg8
-	Ll/x9rh8ttRj06pONo/dNxvYPD4+vcXi0bdlFaPH501yHpuevGUK4IjisklJzcksSy3St0vg
-	yjh/tI+94JVQxZXbn1kaGO/xdzFycEgImEj07QjqYuTiEBLYzSixvOcsaxcjJ1BcXKL52g92
-	CFtYYuW/5+wQRa8ZJd50HmYCSfAK2ElsebmdEcRmEVCV+PnuJgtEXFDi5MwnYLaoQJLEnvuN
-	YPXCAlESSybvZQaxmYEW3HoynwnkCDYBTYkLk0tBTBEBD4lbb/xAVjEL/GKSaHh8HWrvT2aJ
-	KSu72EB6OQXsJfZ3NrNAzDGT6NraxQhhy0s0b53NPIFRaBaSM2YhWTcLScssJC0LGFlWMUqm
-	FhTnpucWGxYY5qWW6xUn5haX5qXrJefnbmIER5+W5g7G7as+6B1iZOJgPMQowcGsJMJ7Q3Jd
-	qhBvSmJlVWpRfnxRaU5q8SFGaQ4WJXFe8Re9KUIC6YklqdmpqQWpRTBZJg5OqQYmq6eeUWzp
-	JeY75rf7MefbuqRNzt5ybbPrFtFCuz2iS3Tna08WPu50JDWrjE157dIlXEXvTsQtOtF0vuv9
-	jdbpgR+3BnY5lrO53GqJCTBcODfc4e0f6diKrUpvOW/t5w1+HT3HZs8+Sa+1wapv+exnm62M
-	kQt5a/imTfrxdOHrIjw/Fs1/u+gLQ1iGpLVtWpQm29JPjQ/LSs0SpM/tmfLp/JwKpt57Hpvq
-	+aMOTuSMTplZIGURXfP0v3Bz0k07v+/+qUnM0kvCmt5tLm5irf22n8vrw5MvPqf59r6x3Vyr
-	ZHJh/bf9e1RlJsVVbQnv/TojdUXI6rUFZ22T75Uqn116pnuTydrr978YybXp3Q9VYinOSDTU
-	Yi4qTgQAB8xnWC0DAAA=
-X-CMS-MailID: 20240122093151epcas5p2e032680a61f4ec16dc7d5a673fe179ed
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240103230906epcas5p468e1779bf14eeaa6f70f045be85afffc
-References: <20231219000815.2739120-1-bvanassche@acm.org>
-	<20231219000815.2739120-7-bvanassche@acm.org>
-	<20231228071206.GA13770@lst.de>
-	<00cf8ffa-8ad5-45e4-bf7c-28b07ab4de21@acm.org>
-	<20240103090204.GA1851@lst.de>
-	<CGME20240103230906epcas5p468e1779bf14eeaa6f70f045be85afffc@epcas5p4.samsung.com>
-	<23753320-63e5-4d76-88e2-8f2c9a90505c@acm.org>
-	<b294a619-c37e-cb05-79a8-8a62aec88c7f@samsung.com>
-	<9b854847-d29e-4df2-8d5d-253b6e6afc33@acm.org>
-	<9fa04d79-0ba6-a2e0-6af7-d1c85f08923b@samsung.com>
 
-On 1/19/2024 7:26 PM, Kanchan Joshi wrote:
-> On 1/19/2024 12:24 AM, Bart Van Assche wrote:
->> On 1/18/24 10:51, Kanchan Joshi wrote:
->>> Are you considering to change this so that hint is set only on one inode
->>> (and not on two)?
->>> IOW, should not this fragment be like below:
->>>
->>> --- a/fs/fcntl.c
->>> +++ b/fs/fcntl.c
->>> @@ -306,7 +306,6 @@ static long fcntl_get_rw_hint(struct file *file,
->>> unsigned int cmd,
->>>     static long fcntl_set_rw_hint(struct file *file, unsigned int cmd,
->>>                                  unsigned long arg)
->>>     {
->>> -       void (*apply_whint)(struct file *, enum rw_hint);
->>>            struct inode *inode = file_inode(file);
->>>            u64 __user *argp = (u64 __user *)arg;
->>>            u64 hint;
->>> @@ -316,11 +315,15 @@ static long fcntl_set_rw_hint(struct file *file,
->>> unsigned int cmd,
->>>            if (!rw_hint_valid(hint))
->>>                    return -EINVAL;
->>>
->>> +       /*
->>> +        * file->f_mapping->host may differ from inode. As an example
->>> +        * blkdev_open() modifies file->f_mapping
->>> +        */
->>> +       if (file->f_mapping->host != inode)
->>> +               inode = file->f_mapping->host;
->>> +
->>>            inode_lock(inode);
->>>            inode->i_write_hint = hint;
->>> -       apply_whint = inode->i_fop->apply_whint;
->>> -       if (apply_whint)
->>> -               apply_whint(file, hint);
->>>            inode_unlock(inode);
->>
->> I think the above proposal would introduce a bug: it would break the
->> F_GET_RW_HINT implementation.
-> 
-> Right. I expected to keep the exact change in GET, too, but that will
-> not be free from the side-effect.
-> The buffered-write path (block_write_full_page) picks the hint from one
-> inode, and the direct-write path (__blkdev_direct_IO_simple) picks the
-> hint from a different inode.
-> So, updating both seems needed here.
+From: Michael Kelley <mhklinux@outlook.com>
 
-I stand corrected. It's possible to do away with two updates.
-The direct-io code (patch 8) should rather be changed to pick the hint 
-from bdev inode (and not from file inode).
-With that change, this patch only need to set the hint into only one 
-inode (bdev one). What do you think?
+Current code uses the specified ring buffer size (either the default of
+128 Kbytes or a module parameter specified value) to encompass the one page
+ring buffer header plus the actual ring itself.  When the page size is
+4K, carving off one page for the header isn't significant.  But when the
+page size is 64K on ARM64, only half of the default 128 Kbytes is left
+for the actual ring.  While this doesn't break anything, the smaller
+ring size could be a performance bottleneck.
+
+Fix this by applying the VMBUS_RING_SIZE macro to the specified ring
+buffer size.  This macro adds a page for the header, and rounds up
+the size to a page boundary, using the page size for which the kernel
+is built.  Use this new size for subsequent ring buffer calculations.
+For example, on ARM64 with 64K page size and the default ring size,
+this results in the actual ring being 128 Kbytes, which is intended.
+
+Cc: <stable@vger.kernel.org> # 5.15.x
+Signed-off-by: Michael Kelley <mhklinux@outlook.com>
+---
+ drivers/scsi/storvsc_drv.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index a95936b18f69..7ceb982040a5 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -330,6 +330,7 @@ enum storvsc_request_type {
+  */
+ 
+ static int storvsc_ringbuffer_size = (128 * 1024);
++static int aligned_ringbuffer_size;
+ static u32 max_outstanding_req_per_channel;
+ static int storvsc_change_queue_depth(struct scsi_device *sdev, int queue_depth);
+ 
+@@ -687,8 +688,8 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
+ 	new_sc->next_request_id_callback = storvsc_next_request_id;
+ 
+ 	ret = vmbus_open(new_sc,
+-			 storvsc_ringbuffer_size,
+-			 storvsc_ringbuffer_size,
++			 aligned_ringbuffer_size,
++			 aligned_ringbuffer_size,
+ 			 (void *)&props,
+ 			 sizeof(struct vmstorage_channel_properties),
+ 			 storvsc_on_channel_callback, new_sc);
+@@ -1973,7 +1974,7 @@ static int storvsc_probe(struct hv_device *device,
+ 	dma_set_min_align_mask(&device->device, HV_HYP_PAGE_SIZE - 1);
+ 
+ 	stor_device->port_number = host->host_no;
+-	ret = storvsc_connect_to_vsp(device, storvsc_ringbuffer_size, is_fc);
++	ret = storvsc_connect_to_vsp(device, aligned_ringbuffer_size, is_fc);
+ 	if (ret)
+ 		goto err_out1;
+ 
+@@ -2164,7 +2165,7 @@ static int storvsc_resume(struct hv_device *hv_dev)
+ {
+ 	int ret;
+ 
+-	ret = storvsc_connect_to_vsp(hv_dev, storvsc_ringbuffer_size,
++	ret = storvsc_connect_to_vsp(hv_dev, aligned_ringbuffer_size,
+ 				     hv_dev_is_fc(hv_dev));
+ 	return ret;
+ }
+@@ -2198,8 +2199,9 @@ static int __init storvsc_drv_init(void)
+ 	 * the ring buffer indices) by the max request size (which is
+ 	 * vmbus_channel_packet_multipage_buffer + struct vstor_packet + u64)
+ 	 */
++	aligned_ringbuffer_size = VMBUS_RING_SIZE(storvsc_ringbuffer_size);
+ 	max_outstanding_req_per_channel =
+-		((storvsc_ringbuffer_size - PAGE_SIZE) /
++		((aligned_ringbuffer_size - PAGE_SIZE) /
+ 		ALIGN(MAX_MULTIPAGE_BUFFER_PACKET +
+ 		sizeof(struct vstor_packet) + sizeof(u64),
+ 		sizeof(u64)));
+-- 
+2.25.1
+
