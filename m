@@ -1,44 +1,44 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 073E541201;
-	Mon, 22 Jan 2024 20:09:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1737D3A8F0;
+	Mon, 22 Jan 2024 20:36:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705954150; cv=none; b=QRDcAzXaebAKjzxZbe9upDUmSXpJATCrtOK5A7tHYXs8DbnqqS+aQQI1yG2lO2jYFdnHZq42zUMbrP+q5VI09u+5XlNYY6Jw2m57GE5FFkuXj+kqSGFFx9r/tNOp0hWe9mJ4yaz/xeKafEf98Sn5+ejBrvMI7w2/hjRWENcjgww=
+	t=1705955795; cv=none; b=K/pOCUqIRxF4n02AaPgKhCZjICL4jkhVDpu2EHhOO8m5QBqrWPSjQ00HjZt8a/800MFbPxOg6UmVaMseEuRSxwq3WV7mN8biuFwsiRn3SxN1565tHLEdt2NSqILfuQRqgW8kj6Xm8Mar3bb5m29KgorXOjA0vopVoF80MrKBNds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705954150; c=relaxed/simple;
-	bh=A9UvLOwOpodh+7+qQNvGu4uH1RSZ0x0pBvj1w7jcJK0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OCsHBUYkEy195n8YDf5BTfp0Ha1aCiRM+6TwAkh3RvHid27fDszAn8aPZjT8vftcqb4jZhHrf2fF+nnGbmDavRJT5cXjyUHAfp74N3B0dM3LcTKwLUYusTEfF8lYhq1lRStnmT6BYtFJ7kQ/P31GqL66egdIPuQUDRMk5zOpuQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.174
+	s=arc-20240116; t=1705955795; c=relaxed/simple;
+	bh=Kixq2tKERqPAxwbmb8+kxRNb2FCPuoVGwis470nnWUM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=PpEQ+He5tcBwt+sd/FPRbyZtLd48B6UjGlDsIRiOf/fZbMBIF8lSoGqj5xnDHl5muJHsWKI1zNFw3aBr6gKIh9jX9k55OOptc9ALChlBsbf6OmAp6muBWzlVxHEgqrtHYnEu5gL2PbypliJxojKVOMUdhXq9AD2yQaN2qTcSk6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6dbb26ec1deso3689060b3a.0;
-        Mon, 22 Jan 2024 12:09:08 -0800 (PST)
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1d75ea3a9b6so8842575ad.2;
+        Mon, 22 Jan 2024 12:36:33 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705954148; x=1706558948;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20230601; t=1705955793; x=1706560593;
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZsNEGOg1W9SSUbMC5dXx27HrjziDPHGrITW9iQruscY=;
-        b=hl3TypwJahOJZL5fNcL5YCAaoc73peg09YvPaUEX6j3zhwEx+l1X6Uk4VdFrlgme02
-         MsA3kP6+Jgbiffxohs1NnwOXsoYro7lef9peS/wL8RUPwlIndz1/7J707khVLRTzr8px
-         kA7mkgCoH/dKrZesEQbqaiDVZo56ErSr1r71QtU3j6Sjl+hQq8YIsvd6QjEI9Dd3FSre
-         M88mnhtWk0rCXLI+N+PVSUFkVJzclLxzMtohLtkIRDbcPH74v0Fd7x3mCmx4jtivG6M4
-         6d283cCJO+/WZlI67ZHeCyHmWS/f4aaMQEgjCO3slGHMx6MFevRQtpD0y+jpbld5NS5C
-         kz4g==
-X-Gm-Message-State: AOJu0YwTlRIOJoqVlqrMKPTBk80gnHCV/84jm7NPZzU65e2UO9uFtLH6
-	B8Qz12OG0vF535pCVgDVoizN3/PsepkkdYVPCM1dAeFFHDcGSNGZE4NANWy+
-X-Google-Smtp-Source: AGHT+IELoHpJB8ahHqjAgPvgmLB3hbJtkcVq7YDOJH3Vi5yiiOcgGl4qY8TFnx9Du2OGo1ZlXlfKNA==
-X-Received: by 2002:a05:6a20:324a:b0:19a:b86c:5b98 with SMTP id hm10-20020a056a20324a00b0019ab86c5b98mr4410806pzc.121.1705954148215;
-        Mon, 22 Jan 2024 12:09:08 -0800 (PST)
+        bh=dkJkPMG5ftc94SD7NICfT1Jj+ErKWedY6H03mn3a72Y=;
+        b=Uxdy69XYJmhRPa7mKIjvqMYpzAEkgdNsVAgtXyXZOtuo+AbOy3ctpCqge+pfXkFUO5
+         rzIG9W6vNa8YGcWhJlb41E+NF1+Pen0AKhe7JYR6sz4kBI2b7s1VI6XfsoMjVBfVJp5n
+         sRJDqlFYQ1sno1SLXEeZIqA6qLL0m57yeXLAabN/k6exTXrxD+0qU4C4bPTzwXSWUB3/
+         5rekfv9wX3EPsmkSr/7rxmUJzO+Fx0NgViv8oLNZodebbL17HXPY0PhrceCqSHBe/4lw
+         /LEr1w4vZGD6aK3cmir7wbUeWGtLsFOdsROT1iRY2i6YOyuE8HHrxOF6jfrUWN5chNHh
+         ZdkQ==
+X-Gm-Message-State: AOJu0YzjHavjSXIvvsnYUo6CDe4Qysrt2geIxvTSPs/AFLk295aJ7y/q
+	/qh/PdIXIhyhGp8aTMZKjrHlWJ6fL0Z2q09XsONYjK1YVO5lDucq
+X-Google-Smtp-Source: AGHT+IEb68sE53R3LbCi3L6zFv3XjfadxEil5FyAQrEWiihaw7c7EnQgmMS2OeJ7VShTMkhEGDjJ5w==
+X-Received: by 2002:a17:902:b78a:b0:1d6:fbab:d40b with SMTP id e10-20020a170902b78a00b001d6fbabd40bmr5293131pls.85.1705955793208;
+        Mon, 22 Jan 2024 12:36:33 -0800 (PST)
 Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id fc13-20020a056a002e0d00b006d9cf4b56edsm10301417pfb.175.2024.01.22.12.09.06
+        by smtp.gmail.com with ESMTPSA id v1-20020a170902b7c100b001d75db0ae21sm1310642plz.170.2024.01.22.12.36.31
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 22 Jan 2024 12:09:07 -0800 (PST)
-Message-ID: <edefdfbc-8584-47ad-9cb0-19ecb94321a8@acm.org>
-Date: Mon, 22 Jan 2024 12:09:06 -0800
+        Mon, 22 Jan 2024 12:36:32 -0800 (PST)
+Message-ID: <06e0ae57-f567-4b90-ad68-4ae73909c29e@acm.org>
+Date: Mon, 22 Jan 2024 12:36:30 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,50 +46,52 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 06/19] block, fs: Propagate write hints to the block
- device inode
+Subject: Re: [PATCH v1] scsi: ufs: core: Remove the ufshcd_release in
+ ufshcd_err_handling_prepare
 Content-Language: en-US
-To: Kanchan Joshi <joshi.k@samsung.com>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
- Daejun Park <daejun7.park@samsung.com>,
- Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jeff Layton <jlayton@kernel.org>,
- Chuck Lever <chuck.lever@oracle.com>
-References: <20231219000815.2739120-1-bvanassche@acm.org>
- <20231219000815.2739120-7-bvanassche@acm.org> <20231228071206.GA13770@lst.de>
- <00cf8ffa-8ad5-45e4-bf7c-28b07ab4de21@acm.org> <20240103090204.GA1851@lst.de>
- <CGME20240103230906epcas5p468e1779bf14eeaa6f70f045be85afffc@epcas5p4.samsung.com>
- <23753320-63e5-4d76-88e2-8f2c9a90505c@acm.org>
- <b294a619-c37e-cb05-79a8-8a62aec88c7f@samsung.com>
- <9b854847-d29e-4df2-8d5d-253b6e6afc33@acm.org>
- <9fa04d79-0ba6-a2e0-6af7-d1c85f08923b@samsung.com>
- <85be3166-1886-b56a-4910-7aff8a13ea3b@samsung.com>
+To: SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+ kwangwon.min@samsung.com, kwmad.kim@samsung.com, sh425.lee@samsung.com,
+ sc.suh@samsung.com, quic_nguyenb@quicinc.com, cpgs@samsung.com,
+ grant.jung@samsung.com, junwoo80.lee@samsung.com
+References: <CGME20240122083204epcas2p26a1bca522e201972ca072e0b24d23a52@epcas2p2.samsung.com>
+ <20240122083324.11797-1-hy50.seo@samsung.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <85be3166-1886-b56a-4910-7aff8a13ea3b@samsung.com>
+In-Reply-To: <20240122083324.11797-1-hy50.seo@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/22/24 01:31, Kanchan Joshi wrote:
-> On 1/19/2024 7:26 PM, Kanchan Joshi wrote:
->> On 1/19/2024 12:24 AM, Bart Van Assche wrote:
->>> I think the above proposal would introduce a bug: it would break the
->>> F_GET_RW_HINT implementation.
->>
->> Right. I expected to keep the exact change in GET, too, but that will
->> not be free from the side-effect.
->> The buffered-write path (block_write_full_page) picks the hint from one
->> inode, and the direct-write path (__blkdev_direct_IO_simple) picks the
->> hint from a different inode.
->> So, updating both seems needed here.
+On 1/22/24 00:33, SEO HOYOUNG wrote:
+> If err_handler is performed in the suspend/resume situation, ufs_release
+> can be called twice and active_reqs valid can be negative.
+> This is because ufshcd_errhandling_prepare() and
+> ufshcd_err_handling_unprepare() repeatedly release calls.
+> Eventually, active_reqs have a value different from the intention.
+> To prevent this, release duplication processing was removed.
 > 
-> I stand corrected. It's possible to do away with two updates.
-> The direct-io code (patch 8) should rather be changed to pick the hint
-> from bdev inode (and not from file inode).
-> With that change, this patch only need to set the hint into only one
-> inode (bdev one). What do you think?
+> Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 1 -
+>   1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 7c59d7a02243..423e83074a20 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -6351,7 +6351,6 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+>   		ufshcd_hold(hba);
+>   		if (!ufshcd_is_clkgating_allowed(hba))
+>   			ufshcd_setup_clocks(hba, true);
+> -		ufshcd_release(hba);
+>   		pm_op = hba->is_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
+>   		ufshcd_vops_resume(hba, pm_op);
+>   	} else {
 
-I think that would break direct I/O submitted by a filesystem.
+I think that the above ufshcd_release() call pairs with the ufshcd_hold()
+call three lines above it and hence that removing that call would be
+wrong.
+
+Thanks,
 
 Bart.
