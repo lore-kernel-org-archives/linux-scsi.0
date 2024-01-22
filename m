@@ -1,69 +1,34 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E0553EA65;
-	Mon, 22 Jan 2024 17:10:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [20.231.56.155])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id CAEDC4D592;
+	Mon, 22 Jan 2024 17:16:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=20.231.56.155
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705943415; cv=none; b=THRIgeDaF2JEFgSuRoWxxvKx6Isn2Gd0d6uF2gXdlxoxcNUByq3NNDQmVhNq1pfudNt+eYqCXf3XuY6xNzvLz3jdtbVo2qzN4eWMfFCUEisahvhgxpyWfMBpl+VwPdjClgMqUEprLYQXtm52dcNr1tSYWwrY4K/l4arGxf6Iiaw=
+	t=1705943807; cv=none; b=hqZK8GaYmK1udIBWBqQOv6thZ0anipOdxn6G7G918K0dca2tNgnImdvQ5PiJi09upqAK0kh/R7WTK8ZPyjPeqXBzLr6L3K9P+ZRJVQaEHfbG7GQ33Wheljx7SYYWfNB7TUxGthu+5HXX/zFhb6YITEkDfEpMklb4k8tZjc4e0yQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705943415; c=relaxed/simple;
-	bh=hg6YVFiUag7Jpn+ogfj/fOty689o28bCOhcvA6bAVyM=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version; b=LQ471mR9+Kuri/77n7RBRcNHRDCGx749ilcnpqwtw01YAL2vFjQugTADWjQGIb7GYEGc5BC7gJLn23uidGijauMzaUyQtcvVlKoZVo4xDIVCfpDPkfEXkzouJYmI1S6SmaGcSu21Tcf16QA/6VaCuRLUxdRa/pBknLHwyNuV+To=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NpF1WIcn; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NpF1WIcn"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6da9c834646so3365277b3a.3;
-        Mon, 22 Jan 2024 09:10:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1705943414; x=1706548214; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:reply-to:message-id:date
-         :subject:to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=UJG831c9X6YdaovxlTqiwAZnTkqpj5rWBo3Fhk5z9C0=;
-        b=NpF1WIcnLkN+vK/4MlwYxA9DPZhfdqYP6kFzuE+t50GsLpWBBDojIBe5jxf1MA5G6B
-         RWzRLZIrVNebin45kqFWw7BZc2Vp7ZOvshup+l5gvFW4Djn6hmoizBB5vcfcp+8qAGpN
-         Og11sEFfIzx+Ac9voB2ZwM8dqWClrpZ9aRfMe68O7RJE37FD+HGF/rIwzFQqla5hzmfM
-         LlGDZJ1L6TKa+ycNCZbnzz4zC5CCm73cjUhrC2iS2tEeKzq8Pc3AEXEF45imJks3QNtK
-         3qbHooXI7oI4/N8j2TVOCqZJmb3iTwxdbqigUdvMPRr6jA2K84eRFO2wOorrGva2Wo04
-         LJEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705943414; x=1706548214;
-        h=content-transfer-encoding:mime-version:reply-to:message-id:date
-         :subject:to:from:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UJG831c9X6YdaovxlTqiwAZnTkqpj5rWBo3Fhk5z9C0=;
-        b=R4auaEYi1qC9bWbluEPATPoMoDALYkVw2qbAiUL7U3i/UcpBCrwabNm+3jQvw1r/T0
-         Cq4+y+aSoMh14uuq0ZJ7NvR91lunxr8G3UQTBX4n2sm/k8HUI/IgmG+jbIR5iwYJ1hLC
-         icfyvChUQ/Km4z10zRhrXh/FNjjixNaMPRD0z60MJwOSnTUVyUqs87ZeCxeu/gDzgnjt
-         YqBJUfiVhkXsXM+4oYh9wi412TA3qNpO9NPLvDUL4HANK+fw2X7HIYm5Kl59mYvLve09
-         KrMoDDJsXw2ndltIqVZctnBPpuTPlaniUm3kFrgPJkdYGPy0CrnC9GRj4/crW7gN41yJ
-         0esw==
-X-Gm-Message-State: AOJu0YwXCOFKekG07U/o3Riyu+luwklI0lZAULXsztUCpbedJGoxIsmJ
-	rgfovu67NX8m1gDIN3rLCOk1aEBquSRrudf8Sa1ib8qbVgW8QC4u
-X-Google-Smtp-Source: AGHT+IGMAkEmkRAFTXivmjaEGv5mnh0z4Lxw/gwh0uW8k6XsWOS2sg7jlgnsTVKbIPBT+Zl5rlPDjw==
-X-Received: by 2002:a05:6a20:8e19:b0:19b:118e:bd87 with SMTP id y25-20020a056a208e1900b0019b118ebd87mr6197660pzj.90.1705943413700;
-        Mon, 22 Jan 2024 09:10:13 -0800 (PST)
-Received: from localhost.localdomain (c-73-254-87-52.hsd1.wa.comcast.net. [73.254.87.52])
-        by smtp.gmail.com with ESMTPSA id lc14-20020a056a004f4e00b006db00cb78a8sm10209855pfb.179.2024.01.22.09.10.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Jan 2024 09:10:13 -0800 (PST)
-From: mhkelley58@gmail.com
-X-Google-Original-From: mhklinux@outlook.com
-To: haiyangz@microsoft.com,
-	wei.liu@kernel.org,
-	decui@microsoft.com,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	linux-kernel@vger.kernel.org,
-	linux-hyperv@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH 1/1] scsi: storvsc: Fix ring buffer size calculation
-Date: Mon, 22 Jan 2024 09:09:56 -0800
-Message-Id: <20240122170956.496436-1-mhklinux@outlook.com>
-X-Mailer: git-send-email 2.25.1
-Reply-To: mhklinux@outlook.com
+	s=arc-20240116; t=1705943807; c=relaxed/simple;
+	bh=J+CE1fjgXdIrGGtCeeEtcrHP/hpRi/SonczTZdsbyEc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=VFn0r/Nn0ag0byiKd8NzxS61MxKbTvD/gq+eNPxq/8FlXb++jkFD0J34tr7zDXKsozTWXmvuMHhwhYJCfvF2v8mv6VuLV1a131h30fw/IInZP2GbEP17KZNG99hE4wT8a8N6dKcMhzjCBi4EuWTUySErXFUPbT5k5lG/Y+NoOBE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=20.231.56.155
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from luzhipeng.223.5.5.5 (unknown [39.174.92.167])
+	by mail-app4 (Coremail) with SMTP id cS_KCgCHhYXsoq5lm0x5AA--.18549S2;
+	Tue, 23 Jan 2024 01:16:29 +0800 (CST)
+From: Zhipeng Lu <alexious@zju.edu.cn>
+To: alexious@zju.edu.cn
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	megaraidlinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] [v2] scsi: megaraid_sas: Fix a memleak in megasas_init_fw
+Date: Tue, 23 Jan 2024 01:16:10 +0800
+Message-Id: <20240122171610.3840351-1-alexious@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,82 +36,88 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cS_KCgCHhYXsoq5lm0x5AA--.18549S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7tFyfZr4Dur1xCFyUXrWxCrg_yoW5JF15pr
+	yruw13tr17AayxWrWqkw4F93yYyw48G3s8Kr18J34j93Wagr15XF4vgrW7GF97CFZ5JF9x
+	Zr4Yqr1fCF4UKaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14v26r
+	xl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+	6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E
+	8cxan2IY04v7MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFV
+	Cjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWl
+	x4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r
+	1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_
+	JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCT
+	nIWIevJa73UjIFyTuYvjfUonmRUUUUU
+X-CM-SenderInfo: qrsrjiarszq6lmxovvfxof0/
 
-From: Michael Kelley <mhklinux@outlook.com>
+In the error-handling paths after allocation of
+fusion->stream_detect_by_ld and fusion->stream_detect_by_ld[i],
+megasas_init_fw should free them or there would be memleaks.
 
-Current code uses the specified ring buffer size (either the default of
-128 Kbytes or a module parameter specified value) to encompass the one page
-ring buffer header plus the actual ring itself.  When the page size is
-4K, carving off one page for the header isn't significant.  But when the
-page size is 64K on ARM64, only half of the default 128 Kbytes is left
-for the actual ring.  While this doesn't break anything, the smaller
-ring size could be a performance bottleneck.
-
-Fix this by applying the VMBUS_RING_SIZE macro to the specified ring
-buffer size.  This macro adds a page for the header, and rounds up
-the size to a page boundary, using the page size for which the kernel
-is built.  Use this new size for subsequent ring buffer calculations.
-For example, on ARM64 with 64K page size and the default ring size,
-this results in the actual ring being 128 Kbytes, which is intended.
-
-Cc: <stable@vger.kernel.org> # 5.15.x
-Signed-off-by: Michael Kelley <mhklinux@outlook.com>
+Fixes: 2e47e4e62e40 ("scsi: megaraid_sas: Fail init if heartbeat timer fails")
+Signed-off-by: Zhipeng Lu <alexious@zju.edu.cn>
 ---
- drivers/scsi/storvsc_drv.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+Changelog:
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index a95936b18f69..7ceb982040a5 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -330,6 +330,7 @@ enum storvsc_request_type {
-  */
+v2: remove the unused variable j.
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 3d4f13da1ae8..a7d3c51fc17b 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -6016,7 +6016,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	void *base_addr_phys;
+ 	struct megasas_ctrl_info *ctrl_info = NULL;
+ 	unsigned long bar_list;
+-	int i, j, loop;
++	int i, loop;
+ 	struct IOV_111 *iovPtr;
+ 	struct fusion_context *fusion;
+ 	bool intr_coalescing;
+@@ -6378,11 +6378,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 			if (!fusion->stream_detect_by_ld[i]) {
+ 				dev_err(&instance->pdev->dev,
+ 					"unable to allocate stream detect by LD\n ");
+-				for (j = 0; j < i; ++j)
+-					kfree(fusion->stream_detect_by_ld[j]);
+-				kfree(fusion->stream_detect_by_ld);
+-				fusion->stream_detect_by_ld = NULL;
+-				goto fail_get_ld_pd_list;
++				goto fail_alloc_stream_detect;
+ 			}
+ 			fusion->stream_detect_by_ld[i]->mru_bit_map
+ 				= MR_STREAM_BITMAP;
+@@ -6502,7 +6498,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 			megasas_start_timer(instance);
+ 		} else {
+ 			instance->skip_heartbeat_timer_del = 1;
+-			goto fail_get_ld_pd_list;
++			goto fail_alloc_stream_detect;
+ 		}
+ 	}
  
- static int storvsc_ringbuffer_size = (128 * 1024);
-+static int aligned_ringbuffer_size;
- static u32 max_outstanding_req_per_channel;
- static int storvsc_change_queue_depth(struct scsi_device *sdev, int queue_depth);
- 
-@@ -687,8 +688,8 @@ static void handle_sc_creation(struct vmbus_channel *new_sc)
- 	new_sc->next_request_id_callback = storvsc_next_request_id;
- 
- 	ret = vmbus_open(new_sc,
--			 storvsc_ringbuffer_size,
--			 storvsc_ringbuffer_size,
-+			 aligned_ringbuffer_size,
-+			 aligned_ringbuffer_size,
- 			 (void *)&props,
- 			 sizeof(struct vmstorage_channel_properties),
- 			 storvsc_on_channel_callback, new_sc);
-@@ -1973,7 +1974,7 @@ static int storvsc_probe(struct hv_device *device,
- 	dma_set_min_align_mask(&device->device, HV_HYP_PAGE_SIZE - 1);
- 
- 	stor_device->port_number = host->host_no;
--	ret = storvsc_connect_to_vsp(device, storvsc_ringbuffer_size, is_fc);
-+	ret = storvsc_connect_to_vsp(device, aligned_ringbuffer_size, is_fc);
- 	if (ret)
- 		goto err_out1;
- 
-@@ -2164,7 +2165,7 @@ static int storvsc_resume(struct hv_device *hv_dev)
- {
- 	int ret;
- 
--	ret = storvsc_connect_to_vsp(hv_dev, storvsc_ringbuffer_size,
-+	ret = storvsc_connect_to_vsp(hv_dev, aligned_ringbuffer_size,
- 				     hv_dev_is_fc(hv_dev));
- 	return ret;
- }
-@@ -2198,8 +2199,9 @@ static int __init storvsc_drv_init(void)
- 	 * the ring buffer indices) by the max request size (which is
- 	 * vmbus_channel_packet_multipage_buffer + struct vstor_packet + u64)
- 	 */
-+	aligned_ringbuffer_size = VMBUS_RING_SIZE(storvsc_ringbuffer_size);
- 	max_outstanding_req_per_channel =
--		((storvsc_ringbuffer_size - PAGE_SIZE) /
-+		((aligned_ringbuffer_size - PAGE_SIZE) /
- 		ALIGN(MAX_MULTIPAGE_BUFFER_PACKET +
- 		sizeof(struct vstor_packet) + sizeof(u64),
- 		sizeof(u64)));
+@@ -6520,6 +6516,13 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ fail_start_watchdog:
+ 	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
+ 		del_timer_sync(&instance->sriov_heartbeat_timer);
++fail_alloc_stream_detect:
++	if (instance->adapter_type >= VENTURA_SERIES) {
++		for (i = 0; i < MAX_LOGICAL_DRIVES_EXT; ++i)
++			kfree(fusion->stream_detect_by_ld[i]);
++		kfree(fusion->stream_detect_by_ld);
++		fusion->stream_detect_by_ld = NULL;
++	}
+ fail_get_ld_pd_list:
+ 	instance->instancet->disable_intr(instance);
+ 	megasas_destroy_irqs(instance);
 -- 
-2.25.1
+2.34.1
 
