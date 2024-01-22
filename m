@@ -1,84 +1,67 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11DD35663
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Jan 2024 00:33:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE5886AA1
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Jan 2024 06:20:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705883610; cv=none; b=Sb/OxkQ0mXYVnFNKGG+DvdsEFFhWPE0ycbp8CAWmOR7n+SsApVLkTFrOiF4gtjjAs6KSOpXQua+lOtyAACju7EBu5XkL26ksOX8AQolvpB1EPZRgWaH7AThkkecfdRyHscNB08yYIGTgEur6FtxQM+oFRHLbpytHeMBgOTqT3xg=
+	t=1705904456; cv=none; b=bda/Fcz7K2Bvvs41JAuzjGzdYZ/fVDb+zo//5+exPMIxufUd3AF860/13CWiVTqnEfZOon/vJe8g/3Fnnzw4GXHi/wIqFof4GS8An33gZhFHsiIxIApKXx1mqadfZ780Ehr2E/Xf+NuB7YlOzUmiaDlza8rJ+wkcaid43PoKTdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705883610; c=relaxed/simple;
-	bh=vsuATLc704fYrj/RqfMec7fU96YGQDhi1sPZDd7rqTI=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Ibos3z8emJd5vbHIqTySneMzOh3guwbMfxeqn9r+HHQybiJ2CdNgO2C1SJ1lLlt/o00uYqa9EJ5ob6aiJQiOeMfA70CqjvXWZfampe7wdiUBI6t4n8h8QH9n8jpwoPl21YsrwXnZSI2RNGs3lPfnLPJ883urL6LALOp7I4BfcmQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zya/kNo8; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zya/kNo8"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 86B7AC433C7
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Jan 2024 00:33:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705883609;
-	bh=vsuATLc704fYrj/RqfMec7fU96YGQDhi1sPZDd7rqTI=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=Zya/kNo83bh7sVGn7Zm29GAU51kPHL1EVFzclTMjwJsrVkQWvkuo3z42zFpEJ6RjD
-	 1LXt0/TeXSVJxNmtmb6JhrC0uYbufUKIxOdvnae7apN0PBh352O4v8P9kRjqqkIau8
-	 LJVqeE76lNXRbUMDf6DHLVkXjVbbOMsBUjdzzVy5qEXJCqT5A25UEEi6IsC1LFs064
-	 E5mPEsD2tWFXjqtl7hyla3/3IQhAmFRQRt2IkMz+BC4sWgd3CRzyGxFR4OPt+rAmU6
-	 x85EPSOB5aEefDsQsrQoX3R5O7h7p3far3vxRmrWFpGcdYmLgyRAtS2S7jFHXamVzg
-	 6ZDDKrW+1Ax5g==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 75624C53BCD; Mon, 22 Jan 2024 00:33:29 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 198923] Linux 4.15.4+: Write on Ext4 causes system block
-Date: Mon, 22 Jan 2024 00:33:29 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: evawillms183@gmail.com
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: DUPLICATE
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-198923-11613-uAbY0fSlov@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-198923-11613@https.bugzilla.kernel.org/>
-References: <bug-198923-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=arc-20240116; t=1705904456; c=relaxed/simple;
+	bh=e+0gWEk8dR5e73nsFAMg4bSczbFQfuQH2kMfZkhd0mY=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fRgD/CqUQiPJWdBE8s42KtMNSGgdAhzdhs/DQkXGPv2MuZyKNnFqFrPGrTDmfc24Tlvmavd0mmrOcr1vOQbZQVCYGSIw6+7AagCZot7lE66BrjbwUU0t+jx7hFkJ990cf4POp6IMHRiubA9sT2QlblhPtHE4gdiuQROiBYJ73KY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=hisilicon.com; spf=pass smtp.mailfrom=hisilicon.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=hisilicon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hisilicon.com
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4TJKn34ghJzvVCy;
+	Mon, 22 Jan 2024 14:19:19 +0800 (CST)
+Received: from kwepemi500025.china.huawei.com (unknown [7.221.188.170])
+	by mail.maildlp.com (Postfix) with ESMTPS id 83CF6180076;
+	Mon, 22 Jan 2024 14:20:49 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ kwepemi500025.china.huawei.com (7.221.188.170) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Mon, 22 Jan 2024 14:20:49 +0800
+From: chenxiang <chenxiang66@hisilicon.com>
+To: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>, Xiang Chen
+	<chenxiang66@hisilicon.com>
+Subject: [PATCH 0/4] scsi: hisi_sas: Minor fixes and cleanups
+Date: Mon, 22 Jan 2024 14:25:43 +0800
+Message-ID: <1705904747-62186-1-git-send-email-chenxiang66@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemi500025.china.huawei.com (7.221.188.170)
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D198923
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-evawillms (evawillms183@gmail.com) changed:
+This series contains some fixes and cleanups including:
+- Fix a deadlock issue related to automatic debugfs;
+- Remove redundant checks for automatic debugfs;
+- Check whether debugfs is enabled before removing or releasing it;
+- Remove hisi_hba->timer for v3 hw;
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |evawillms183@gmail.com
+Xiang Chen (1):
+  scsi: hisi_sas: Remove hisi_hba->timer for v3 hw
 
---- Comment #13 from evawillms (evawillms183@gmail.com) ---
+Yihang Li (3):
+  scsi: hisi_sas: Fix a deadlock issue related to automatic dump
+  scsi: hisi_sas: Remove redundant checks for automatic debugfs dump
+  scsi: hisi_sas: Check whether debugfs is enabled before removing or
+    releasing it
 
-SCSI SUBSYSTEM
-M:      "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-T:      git git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
-M:      "Martin K. Petersen" < https://run3online.pro >
-T:      git git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 26 ++++++++++++++++++++------
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  8 +++++---
+ 2 files changed, 25 insertions(+), 9 deletions(-)
 
---=20
-You may reply to this email to add a comment.
+-- 
+2.8.1
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
