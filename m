@@ -1,248 +1,157 @@
-Received: from cantor.telenet-ops.be (cantor.telenet-ops.be [195.130.132.48])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58D615D8E7
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2024 11:45:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.130.132.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F048C5DF19
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2024 12:17:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706010348; cv=none; b=BAc1eqMqhuZHQr60fqLeNnpZTNEC9rTiYm4IKW4OV7sB87BWmzoer0IkygfkRO1yHnLdCpnDlHlz6FaOiSIw+MQp9Nejf4EZPvmJkzrsu053e8TOMgdVYc2Rsq+aAIXzXrDZ4jWKPMQQ6V+Nh1u5txv/R98nS7bEhjCD2jvfNQM=
+	t=1706012229; cv=none; b=S2PzDVrQbBXwANkZZ53ElK0CZWyy8SXAqs1vnt59ejnh1OIHBy2fg5GWl/rqDXEBCOr36r1o+/rKF/A0CdXHmsJeLLv+7+0MtPSrfUianN0nNtikufzYY37hf/q8EYjbfFfqKJdOhhLUF5niJ6oynvlgpE6PLGmpEVHkj2AnJaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706010348; c=relaxed/simple;
-	bh=8OD6O78KilYfiS1XJAOMNox5aCxYPYDXopHTRlKehPA=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=BOLMiLXJ0eeS/1IXw7L7K4gv5mw1BmEYyNDc0eRveJjfUXCtXvyJvF80ViyanZ3QljenCCBq4QejPbDGggp8tyryT7+H+QPqzpg6hWAKH96g44RT6fIoyIcOQE/nkF1Bqt6ZcX21UcDQBDnHc3COQPAK7gBO75JHtXKjWK9kGhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; arc=none smtp.client-ip=195.130.132.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
-Received: from andre.telenet-ops.be (andre.telenet-ops.be [IPv6:2a02:1800:120:4::f00:15])
-	by cantor.telenet-ops.be (Postfix) with ESMTPS id 4TK4zD3m9Tz4wwks
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2024 12:45:44 +0100 (CET)
-Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed40:8ec8:24bf:c2ed:213e])
-	by andre.telenet-ops.be with bizsmtp
-	id eBlV2B0032E7G5801BlVKu; Tue, 23 Jan 2024 12:45:37 +0100
-Received: from geert (helo=localhost)
-	by ramsan.of.borg with local-esmtp (Exim 4.95)
-	(envelope-from <geert@linux-m68k.org>)
-	id 1rSFDd-00GLOZ-05;
-	Tue, 23 Jan 2024 12:45:29 +0100
-Date: Tue, 23 Jan 2024 12:45:28 +0100 (CET)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: linux-kernel@vger.kernel.org
-cc: linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org, 
-    sparclinux@vger.kernel.org, intel-xe@lists.freedesktop.org, 
-    dri-devel@lists.freedesktop.org, linux-mtd@lists.infradead.org, 
-    mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-    Chris Zankel <chris@zankel.net>, Max Filippov <jcmvbkbc@gmail.com>, 
-    linux-hardening@vger.kernel.org, qat-linux@intel.com, 
-    linux-crypto@vger.kernel.org, intel-wired-lan@lists.osuosl.org, 
-    netdev@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: Build regressions/improvements in v6.8-rc1
-In-Reply-To: <20240123111235.3097079-1-geert@linux-m68k.org>
-Message-ID: <d03e90ca-8485-4d1b-5ec1-c3398e0e8da@linux-m68k.org>
-References: <CAHk-=wiB4iHTtfZKiy5pC24uOjun4fbj4kSX0=ZnGsOXadMf6g@mail.gmail.com> <20240123111235.3097079-1-geert@linux-m68k.org>
+	s=arc-20240116; t=1706012229; c=relaxed/simple;
+	bh=imzXfzj9Mz2WYh709kompIJxnI7EtSqg5p4gmd8D7u4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=U8y4iDaOnXNC74gwjyoHi3utatNYTjr8kbk/am2JTUETECvqlrBOM9S7ArPwTeC8ybKpNM4G/9AHgoeMVxocnj2mYK4Rwx+zzHhv9d9JtVTAc9FFonPTyIvgY/pbyhiFxMa29u9W28ecm3SdP78h6heD42Xl22H1dDZqDSFSBgM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=lpacmLSv; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="lpacmLSv"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240123121658epoutp02dd0ebc60fd28fa81b5044904bc51f140~s_RL0jCGq0087000870epoutp02v
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2024 12:16:58 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240123121658epoutp02dd0ebc60fd28fa81b5044904bc51f140~s_RL0jCGq0087000870epoutp02v
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1706012218;
+	bh=VJDSvXJfTACTi00FTu9C3MOUzMWL79ai+VA/vLu2f+s=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=lpacmLSvdQpRA4ONjiGvEWdBrWPp+xmx/DCmt9fRxQB4e8tdINkqPA2F2qs6ohqGK
+	 3f1rp7d7/nhvBG34sSAjJwK/ANTs7IEIKu87a+fRXCIDAJ+BSIgk9wznJ3+93F9Pb1
+	 RLjqEy/9B86kXNb1CI+YC6+mSw/JXBy0bTqN6QZc=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+	20240123121658epcas5p40610e0760894d467c8a3aa82bb501560~s_RLc8puv0351403514epcas5p4e;
+	Tue, 23 Jan 2024 12:16:58 +0000 (GMT)
+Received: from epsmgec5p1-new.samsung.com (unknown [182.195.38.176]) by
+	epsnrtp3.localdomain (Postfix) with ESMTP id 4TK5gD5L65z4x9Pt; Tue, 23 Jan
+	2024 12:16:56 +0000 (GMT)
+Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
+	epsmgec5p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	18.23.19369.83EAFA56; Tue, 23 Jan 2024 21:16:56 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20240123121656epcas5p46e583609192022c6dca8d75e618e1738~s_RJofRPN0573305733epcas5p4K;
+	Tue, 23 Jan 2024 12:16:56 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240123121656epsmtrp1f198caf7cdf5b3359dc8fa09ef26fd0e~s_RJnlWlQ0683506835epsmtrp1J;
+	Tue, 23 Jan 2024 12:16:56 +0000 (GMT)
+X-AuditID: b6c32a50-c99ff70000004ba9-bc-65afae38dfee
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	4A.1E.08755.83EAFA56; Tue, 23 Jan 2024 21:16:56 +0900 (KST)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20240123121654epsmtip155135df5a224d59190d3e85828ea72d6~s_RH6dVJl2470924709epsmtip1K;
+	Tue, 23 Jan 2024 12:16:54 +0000 (GMT)
+Message-ID: <4f36fc64-a93b-9b2c-7a12-79e25671b375@samsung.com>
+Date: Tue, 23 Jan 2024 17:46:53 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323329-792708632-1706010328=:3895412"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
+	Gecko/20100101 Thunderbird/91.8.1
+Subject: Re: [PATCH v8 06/19] block, fs: Propagate write hints to the block
+ device inode
+Content-Language: en-US
+To: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Daejun Park
+	<daejun7.park@samsung.com>, Alexander Viro <viro@zeniv.linux.org.uk>,
+	Christian Brauner <brauner@kernel.org>, Jeff Layton <jlayton@kernel.org>,
+	Chuck Lever <chuck.lever@oracle.com>
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <edefdfbc-8584-47ad-9cb0-19ecb94321a8@acm.org>
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDJsWRmVeSWpSXmKPExsWy7bCmhq7FuvWpBt2T1SxW3+1ns3h9+BOj
+	xbQPP5kt/t99zmSx6kG4xcrVR5ksfi5bxW6x95a2xZ69J1ksuq/vYLNYfvwfk8X5v8dZHXg8
+	Ll/x9rh8ttRj06pONo/dNxvYPD4+vcXi0bdlFaPH501yHpuevGUK4IjKtslITUxJLVJIzUvO
+	T8nMS7dV8g6Od443NTMw1DW0tDBXUshLzE21VXLxCdB1y8wBOlVJoSwxpxQoFJBYXKykb2dT
+	lF9akqqQkV9cYquUWpCSU2BSoFecmFtcmpeul5daYmVoYGBkClSYkJ1x9ehRloL/HBWHn+1k
+	amCczd7FyMEhIWAiceV7SRcjF4eQwB5GiQtLz7NBOJ8YJR6veM0K4XxjlGjuXsrcxcgJ1jGv
+	bzM7RGIvo0TjrW4o5y2jxK5pz5hAqngF7CRmvp3ACmKzCKhKtG17ywgRF5Q4OfMJC4gtKpAk
+	8evqHLC4sECUxJLJe8E2MAuIS9x6Mp8J5D4RAQ+JW2/8IMI/mCRmXFMECbMJaEpcmFwKYnIK
+	WEs8na8CUSEvsf3tHGaQayQEDnBI9L6fzATxpYvExJWKEOcLS7w6voUdwpaSeNnfBmUnS1ya
+	eY4Jwi6ReLznIJRtL9F6qp8ZZAwz0Nb1u/QhVvFJ9P5+AjWdV6KjTQiiWlHi3qSnrBC2uMTD
+	GUugbA+JTzf7mCDh9JhF4vCHG4wTGBVmIQXJLCSvz0LyzSyEzQsYWVYxSqUWFOempyabFhjq
+	5qWWw2M7OT93EyM4GWsF7GBcveGv3iFGJg7GQ4wSHMxKIrw3JNelCvGmJFZWpRblxxeV5qQW
+	H2I0BUbORGYp0eR8YD7IK4k3NLE0MDEzMzOxNDYzVBLnfd06N0VIID2xJDU7NbUgtQimj4mD
+	U6qBSaJebPuzClHJx+lb4u79b/4iYDlVqZb5d2hDSd2bLwvCw3cVCatfWWp+f/Gewr/J/XH3
+	Iw8fvyn9UvBDS05Y65vcy4eOvr24ad82o9Kcs3pcb/87lD075nvRp1i6j8HGILFeZgXbXku1
+	3riLYucygzUYVyWq3C+/zRJadnnL11czBJvYMwUy6yslPy5hii9035nteUssac6+SOvrbg96
+	/mhzTi5je5pyqa+H9euVT/M/M9y5/87l0rLMXQ0dq6LdTBpEQ/W/7Gpn38/jUjWr1EaiqHdK
+	pc4pwQnLzF9ekzb+qPtspsu6TTOWXqrU9t55eN7BngUz/ynv6WC/cKxwy+NHTU+6d+abLL3y
+	ZUNFtxJLcUaioRZzUXEiAHwQNRdPBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprFIsWRmVeSWpSXmKPExsWy7bCSnK7FuvWpBnueclusvtvPZvH68CdG
+	i2kffjJb/L/7nMli1YNwi5WrjzJZ/Fy2it1i7y1tiz17T7JYdF/fwWax/Pg/Jovzf4+zOvB4
+	XL7i7XH5bKnHplWdbB67bzaweXx8eovFo2/LKkaPz5vkPDY9ecsUwBHFZZOSmpNZllqkb5fA
+	lXH16FGWgv8cFYef7WRqYJzN3sXIySEhYCIxr28zkM3FISSwm1Hi0ZaNrBAJcYnmaz+gioQl
+	Vv57DlX0mlGiees0FpAEr4CdxMy3E8AaWARUJdq2vWWEiAtKnJz5BKxGVCBJYs/9RiYQW1gg
+	SmLJ5L3MIDYz0IJbT+YDxTk4RAQ8JG698QOZzyzwi0mi4fF1qGX3WSQWrt3LCFLEJqApcWFy
+	KYjJKWAt8XS+CsQYM4murV2MELa8xPa3c5gnMArNQnLFLCTbZiFpmYWkZQEjyypGydSC4tz0
+	3GLDAsO81HK94sTc4tK8dL3k/NxNjODo09Lcwbh91Qe9Q4xMHIyHGCU4mJVEeG9IrksV4k1J
+	rKxKLcqPLyrNSS0+xCjNwaIkziv+ojdFSCA9sSQ1OzW1ILUIJsvEwSnVwCTPE73CeoLEqQdu
+	Jt1OukYP+VY5TjW4ObusPk8n1eBx+9PakxZ7rtixupybsO5dNGP/VfY3X6PDjn86tInbzNVz
+	tdDignsJO5N8Ku6Y60/S5uR/12wt/EZ1QuGbF5U5BpPipjVMiu9YsrAq73Ky18wi6fuf96ty
+	z3mYeOvbv1b54qTXTyPdGFbMlswSO8hrb87gP1O0uO/lbb+Pdx5MmpZ0XNxiP6u6uX5ggcX+
+	1cIfGzexKueue1V7uGbHsqZVPu4Zc1L+W4nf+84cG7xfKKvuuqd8z875PZW/ne6sEF2foPk2
+	9H4e35IlcgeevZa/sybqXeql3ZaWjLL8BSd+LpXad/Vob6jvxvBpOpfW+SuxFGckGmoxFxUn
+	AgAxbQ8XLQMAAA==
+X-CMS-MailID: 20240123121656epcas5p46e583609192022c6dca8d75e618e1738
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240103230906epcas5p468e1779bf14eeaa6f70f045be85afffc
+References: <20231219000815.2739120-1-bvanassche@acm.org>
+	<20231219000815.2739120-7-bvanassche@acm.org>
+	<20231228071206.GA13770@lst.de>
+	<00cf8ffa-8ad5-45e4-bf7c-28b07ab4de21@acm.org>
+	<20240103090204.GA1851@lst.de>
+	<CGME20240103230906epcas5p468e1779bf14eeaa6f70f045be85afffc@epcas5p4.samsung.com>
+	<23753320-63e5-4d76-88e2-8f2c9a90505c@acm.org>
+	<b294a619-c37e-cb05-79a8-8a62aec88c7f@samsung.com>
+	<9b854847-d29e-4df2-8d5d-253b6e6afc33@acm.org>
+	<9fa04d79-0ba6-a2e0-6af7-d1c85f08923b@samsung.com>
+	<85be3166-1886-b56a-4910-7aff8a13ea3b@samsung.com>
+	<edefdfbc-8584-47ad-9cb0-19ecb94321a8@acm.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On 1/23/2024 1:39 AM, Bart Van Assche wrote:
+> On 1/22/24 01:31, Kanchan Joshi wrote:
+>> On 1/19/2024 7:26 PM, Kanchan Joshi wrote:
+>>> On 1/19/2024 12:24 AM, Bart Van Assche wrote:
+>>>> I think the above proposal would introduce a bug: it would break the
+>>>> F_GET_RW_HINT implementation.
+>>>
+>>> Right. I expected to keep the exact change in GET, too, but that will
+>>> not be free from the side-effect.
+>>> The buffered-write path (block_write_full_page) picks the hint from one
+>>> inode, and the direct-write path (__blkdev_direct_IO_simple) picks the
+>>> hint from a different inode.
+>>> So, updating both seems needed here.
+>>
+>> I stand corrected. It's possible to do away with two updates.
+>> The direct-io code (patch 8) should rather be changed to pick the hint
+>> from bdev inode (and not from file inode).
+>> With that change, this patch only need to set the hint into only one
+>> inode (bdev one). What do you think?
+> 
+> I think that would break direct I/O submitted by a filesystem.
+> 
 
---8323329-792708632-1706010328=:3895412
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8BIT
-
-On Tue, 23 Jan 2024, Geert Uytterhoeven wrote:
-> Below is the list of build error/warning regressions/improvements in
-> v6.8-rc1[1] compared to v6.7[2].
->
-> Summarized:
->  - build errors: +68/-18
->  - build warnings: +129/-1487
->
-> Happy fixing! ;-)
->
-> Thanks to the linux-next team for providing the build service.
->
-> [1] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/6613476e225e090cc9aad49be7fa504e290dd33d/ (all 239 configs)
-> [2] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/0dd3ee31125508cd67f7e7172247f05b7fd1753a/ (all 239 configs)
->
->
-> *** ERRORS ***
->
-> 68 error regressions:
-
->  + /kisskb/src/arch/powerpc/sysdev/udbg_memcons.c: error: no previous prototype for 'memcons_getc' [-Werror=missing-prototypes]:  => 80:5
->  + /kisskb/src/arch/powerpc/sysdev/udbg_memcons.c: error: no previous prototype for 'memcons_getc_poll' [-Werror=missing-prototypes]:  => 57:5
->  + /kisskb/src/arch/powerpc/sysdev/udbg_memcons.c: error: no previous prototype for 'memcons_putc' [-Werror=missing-prototypes]:  => 44:6
-
-powerpc-gcc{5,12,13}/ppc64_book3e_allmodconfig
-
->  + /kisskb/src/arch/sh/kernel/cpu/init.c: error: no previous prototype for 'l2_cache_init' [-Werror=missing-prototypes]:  => 99:29
-
-sh4-gcc1[123]/se7{619,750}_defconfig
-sh4-gcc1[123]/sh-{all{mod,no,yes},def}config
-sh4-gcc11/sh-allnoconfig
-
->  + /kisskb/src/arch/sh/math-emu/math.c: error: no previous prototype for 'do_fpu_inst' [-Werror=missing-prototypes]:  => 492:5
-
-sh4-gcc1[123]/sh-all{mod,yes}config
-
->  + /kisskb/src/arch/sh/mm/cache-sh2.c: error: no previous prototype for 'sh2_cache_init' [-Werror=missing-prototypes]:  => 85:13
-
-sh4-gcc1[123]/se7619_defconfig
-sh4-gcc1[123]/sh-all{mod,yes}config
-
->  + /kisskb/src/arch/sh/mm/nommu.c: error: no previous prototype for 'kmap_coherent' [-Werror=missing-prototypes]:  => 80:7
->  + /kisskb/src/arch/sh/mm/nommu.c: error: no previous prototype for 'kmap_coherent_init' [-Werror=missing-prototypes]:  => 76:13
->  + /kisskb/src/arch/sh/mm/nommu.c: error: no previous prototype for 'kunmap_coherent' [-Werror=missing-prototypes]:  => 86:6
-
-sh4-gcc1[123]/se7619_defconfig
-sh4-gcc1[123]/sh-allnoconfig
-sh4-gcc12/sh-allyesconfig
-
->  + /kisskb/src/arch/sparc/include/asm/floppy_64.h: error: no previous prototype for 'sparc_floppy_irq' [-Werror=missing-prototypes]:  => 200:13
->  + /kisskb/src/arch/sparc/include/asm/floppy_64.h: error: no previous prototype for 'sun_pci_fd_dma_callback' [-Werror=missing-prototypes]:  => 437:6
-
-sparc64-gcc{5,11,12,13}/sparc64-allmodconfig
-
->  + /kisskb/src/arch/sparc/kernel/traps_64.c: error: no previous prototype for 'do_mcd_err' [-Werror=missing-prototypes]:  => 2035:6
->  + /kisskb/src/arch/sparc/kernel/traps_64.c: error: no previous prototype for 'is_no_fault_exception' [-Werror=missing-prototypes]:  => 253:6
->  + /kisskb/src/arch/sparc/kernel/traps_64.c: error: no previous prototype for 'sun4v_nonresum_error_user_handled' [-Werror=missing-prototypes]:  => 2153:6
->  + /kisskb/src/arch/sparc/prom/misc_64.c: error: no previous prototype for 'prom_get_mmu_ihandle' [-Werror=missing-prototypes]:  => 165:5
->  + /kisskb/src/arch/sparc/prom/p1275.c: error: no previous prototype for 'prom_cif_init' [-Werror=missing-prototypes]:  => 52:6
->  + /kisskb/src/kernel/dma.c: error: no previous prototype for 'free_dma' [-Werror=missing-prototypes]:  => 88:6
->  + /kisskb/src/kernel/dma.c: error: no previous prototype for 'request_dma' [-Werror=missing-prototypes]:  => 70:5
-
-sparc64-gcc{5,1[123]}/sparc64-{all{mod,no},def}config
-
->  + /kisskb/src/arch/sparc/lib/cmpdi2.c: error: no previous prototype for '__cmpdi2' [-Werror=missing-prototypes]:  => 6:11
-
-sparc64-gcc{5,1[123]}/sparc-{all{mod,no},def}config
-
->  + /kisskb/src/arch/sparc/mm/init_64.c: error: no previous prototype for 'vmemmap_free' [-Werror=missing-prototypes]:  => 2644:6
-
-sparc64-gcc{5,1[123]}/sparc64-{allmod,def}config
-
->  + /kisskb/src/arch/sparc/power/hibernate.c: error: no previous prototype for 'pfn_is_nosave' [-Werror=missing-prototypes]:  => 22:5
->  + /kisskb/src/arch/sparc/power/hibernate.c: error: no previous prototype for 'restore_processor_state' [-Werror=missing-prototypes]:  => 35:6
->  + /kisskb/src/arch/sparc/power/hibernate.c: error: no previous prototype for 'save_processor_state' [-Werror=missing-prototypes]:  => 30:6
->  + /kisskb/src/drivers/gpu/drm/xe/xe_lrc.c: error: "CTX_VALID" redefined [-Werror]:  => 24, 24:0
->  + /kisskb/src/drivers/mtd/maps/sun_uflash.c: error: no previous prototype for 'uflash_devinit' [-Werror=missing-prototypes]:  => 50:5
-
-sparc64-gcc{5,1[123]}/sparc64-allmodconfig
-
->  + /kisskb/src/arch/sparc/vdso/vclock_gettime.c: error: no previous prototype for '__vdso_clock_gettime' [-Werror=missing-prototypes]:  => 254:1
->  + /kisskb/src/arch/sparc/vdso/vclock_gettime.c: error: no previous prototype for '__vdso_clock_gettime_stick' [-Werror=missing-prototypes]:  => 282:1
->  + /kisskb/src/arch/sparc/vdso/vclock_gettime.c: error: no previous prototype for '__vdso_gettimeofday' [-Werror=missing-prototypes]:  => 307:1
->  + /kisskb/src/arch/sparc/vdso/vclock_gettime.c: error: no previous prototype for '__vdso_gettimeofday_stick' [-Werror=missing-prototypes]:  => 343:1
->  + /kisskb/src/arch/sparc/vdso/vdso32/../vclock_gettime.c: error: no previous prototype for '__vdso_clock_gettime' [-Werror=missing-prototypes]:  => 254:1
->  + /kisskb/src/arch/sparc/vdso/vdso32/../vclock_gettime.c: error: no previous prototype for '__vdso_clock_gettime_stick' [-Werror=missing-prototypes]:  => 282:1
->  + /kisskb/src/arch/sparc/vdso/vdso32/../vclock_gettime.c: error: no previous prototype for '__vdso_gettimeofday' [-Werror=missing-prototypes]:  => 307:1
->  + /kisskb/src/arch/sparc/vdso/vdso32/../vclock_gettime.c: error: no previous prototype for '__vdso_gettimeofday_stick' [-Werror=missing-prototypes]:  => 343:1
->  + /kisskb/src/arch/sparc/vdso/vma.c: error: no previous prototype for 'init_vdso_image' [-Werror=missing-prototypes]:  => 246:12
-
-sparc64-gcc{5,12,13}/sparc64-{allno,def}config
-sparc64-gcc11/sparc64-{all{mod,no},def}config
-
->  + /kisskb/src/arch/x86/um/shared/sysdep/kernel-offsets.h: error: no previous prototype for ‘foo’ [-Werror=missing-prototypes]:  => 9:6
-
-um-x86_64-gcc12/um-{all{mod,yes},def}config
-
->  + /kisskb/src/drivers/sbus/char/bbc_envctrl.c: error: no previous prototype for 'bbc_envctrl_cleanup' [-Werror=missing-prototypes]:  => 594:6
->  + /kisskb/src/drivers/sbus/char/bbc_envctrl.c: error: no previous prototype for 'bbc_envctrl_init' [-Werror=missing-prototypes]:  => 566:5
-
-sparc64-gcc1[12]/sparc64-allmodconfig
-
->  + /kisskb/src/drivers/scsi/mpi3mr/mpi3mr_transport.c: error: the frame size of 1680 bytes is larger than 1536 bytes [-Werror=frame-larger-than=]:  => 1818:1
-
-xtensa-gcc11/xtensa-allmodconfig
-
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_1044' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_1064' declared with attribute error: FIELD_PREP: mask is not constant:  => 435:38
-
-in drivers/net/ethernet/intel/ice/ice_base.c
-
-powerpc-gcc5/ppc32_allmodconfig
-
-
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_1083' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_1136' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_923' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
-
-in drivers/net/ethernet/intel/ice/ice_nvm.c
-
-aarcharm64-gcc5/arm64-allmodconfig
-powerpc-gcc5/ppc32_allmodconfig
-powerpc-gcc5/powerpc-allmodconfig
-powerpc-gcc5/ppc64le_allmodconfig
-
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_1094' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_1147' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_934' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
-
-in drivers/net/ethernet/intel/ice/ice_common.c
-
-arm64-gcc5/arm64-allmodconfig
-powerpc-gcc5/ppc32_allmodconfig
-
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_453' declared with attribute error: FIELD_PREP: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_485' declared with attribute error: FIELD_PREP: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_544' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_565' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_614' declared with attribute error: FIELD_PREP: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_646' declared with attribute error: FIELD_PREP: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_656' declared with attribute error: FIELD_PREP: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_688' declared with attribute error: FIELD_PREP: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_705' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_747' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
-
-in drivers/gpu/drm/xe/xe_guc_ct.c
-arm64-gcc5/arm64-allmodconfig
-powerpc-gcc5/ppc64_book3e_allmodconfig
-powerpc-gcc5/powerpc-allmodconfig
-
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_693' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_704' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
->  + /kisskb/src/include/linux/compiler_types.h: error: call to '__compiletime_assert_748' declared with attribute error: FIELD_GET: mask is not constant:  => 435:38
-
-in drivers/net/ethernet/intel/i40e/i40e_dcb.c
-
-powerpc-gcc5/powerpc-allmodconfig
-powerpc-gcc5/ppc32_allmodconfig
-powerpc-gcc5/ppc64_book3e_allmodconfig
-
-
-arm64-gcc5/arm64-allmodconfig
-powerpc-gcc5/powerpc-all{mod,yes}config
-powerpc-gcc5/ppc{32,64le,64_book3e}_allmodconfig
-
->  + /kisskb/src/include/linux/fortify-string.h: error: call to '__read_overflow2_field' declared with attribute warning: detected read beyond size of field (2nd parameter); maybe use struct_group()? [-Werror]:  => 537:4
->  + /kisskb/src/include/linux/fortify-string.h: error: call to '__write_overflow_field' declared with attribute warning: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror]:  => 528:4
-
-mips-gcc8/mips-allmodconfig
-
->  + {standard input}: Error: displacement to undefined symbol .L105 overflows 8-bit field :  => 590, 593
->  + {standard input}: Error: displacement to undefined symbol .L135 overflows 8-bit field :  => 603
->  + {standard input}: Error: displacement to undefined symbol .L140 overflows 8-bit field :  => 606
->  + {standard input}: Error: displacement to undefined symbol .L76 overflows 12-bit field:  => 591, 594
->  + {standard input}: Error: displacement to undefined symbol .L77 overflows 8-bit field : 607 => 607, 582, 585
->  + {standard input}: Error: displacement to undefined symbol .L97 overflows 12-bit field:  => 607
->  + {standard input}: Error: pcrel too far: 604, 590, 577, 593, 572, 569, 598, 599, 596, 610 => 610, 574, 599, 569, 598, 596, 601, 590, 604, 595, 572, 577, 593
-
-SH ICE crickets
-
-Gr{oetje,eeting}s,
-
- 						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
- 							    -- Linus Torvalds
---8323329-792708632-1706010328=:3895412--
+By breakage do you mean not being able to set/get the hint correctly?
+I tested with XFS and Ext4 direct I/O. No breakage.
