@@ -1,44 +1,44 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBD905FDD5;
-	Tue, 23 Jan 2024 15:29:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5960860277;
+	Tue, 23 Jan 2024 15:59:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706023753; cv=none; b=oSVzAtUQQs10uFTD997TScBjQrn3cyuFQcfiBiWXfeHKFbfE+rPq97N1jUqLN+Sk78xg71rWj0wrNuwD4pxoVcCb+SFVZOptCHIm6LqOAvXPEJHh1Mwa8SvVJnbPtO0TYotbvRYWcRytQCh2/QorQoVwmNREIxy1Z7vHCCPEzw4=
+	t=1706025592; cv=none; b=QRDrGCM5cr+Fl/SDlOi1TeXHhslXs8/usk+35kiKmEKgSYfr6OrubEC7jO08qWzVi6Hur/RSv2zcTZvR7SmSQfsrCDj51cbYd5YoYduHvP1iDzaUXVG2xsxfPJmILHIQemCLknEb2nhksRBMuy7rHVE7ytadaabD/6VZuKdf5e0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706023753; c=relaxed/simple;
-	bh=s6jgl5KcyFsafPQ+hFpzhVn26U7GR5BduKRkjTiqmyM=;
+	s=arc-20240116; t=1706025592; c=relaxed/simple;
+	bh=iIHhwJmlVl4McxGC9PbqY4l+E23pzobb4tPG9neNLtE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Gu+VS20tsfdFPnDGVnoxf/RCo14ddGJ7kpi4ZAt5GOqcvOSA4yntzqo73B5ADQ/epIcZcthxfa+t7CiIkk/Gf5Q39DNZagViQBbA7K+tizmAPosVPPF7bQHPUEJbg2/wxvjexLrMcd+6HYEw6bn6hgzDauCq/bi81eNf9MEAMkM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.175
+	 In-Reply-To:Content-Type; b=QOFAF04E3XxGuNcqdjQRT7EvyP8voI/xtE7nL+laNOQi1HLzvUkgd50NFuc8ur6HUQdN2sznMmphxcNTHbUrwBU4iaS4FrFrHei3fvS81cf5cDtWIvqWkmhr6kIee8VakRaijAQbsdNHKTFf2k6zZQxDTf4FcS4Ss0gY+eurG9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1d7232dcb3eso18829735ad.2;
-        Tue, 23 Jan 2024 07:29:11 -0800 (PST)
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-29026523507so3384719a91.0;
+        Tue, 23 Jan 2024 07:59:51 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706023751; x=1706628551;
+        d=1e100.net; s=20230601; t=1706025590; x=1706630390;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BEoXkdsFzObck9VQxVE2hGH3a3xF+qG8H5BqRHfrQRM=;
-        b=PBx9QDzWHnMhxgqxdNB2v0jFYL/URQfek/nb+AYQkQWZoZjnrlQMyLdukzMWs3bGq5
-         hTJ6yWzNNF7U1EVFRC2FE4EWSZLd1Hw5DhV0BU/G//uXeiNWD0lrF9BLppk4ufyiqHKa
-         AiS+tOsvlhiluuATKcI9+RE89eWEaWtHUDoA2J94LE03/YMNbNK3c+g3XcUpyvNTBUi8
-         wcS/DJ8GdXEd3fs/qyA/CUQ1kRCchVZtUtrtLd+gGEAYcUW9cWNjdAJwl5rSRb4yKqbV
-         9VNGycQb4vCv4yEnkTUuInD/iIyGu/RVe7+tdqcny5AiZLOhAMwBmukwavJJqAXkS1qC
-         /2sg==
-X-Gm-Message-State: AOJu0Yyl+UlVqdMbhOk/T+IzFSTSGns+FPXB7Utm0vwQ+KFsSJL4EoRk
-	+ge2pa0Twm52i3dEmFNx+LRlS3sMt37m3Rdk8lxxGUMKtV8RRpSs
-X-Google-Smtp-Source: AGHT+IESSOPXAtxeDnwtmAzzfqPO0vHSCSiFgAsWzZ1m6fJrkXNCGAF1nxYU6Vw1hCMO9M/5h+Bkqw==
-X-Received: by 2002:a17:903:1107:b0:1d7:2455:2e70 with SMTP id n7-20020a170903110700b001d724552e70mr3613598plh.21.1706023750906;
-        Tue, 23 Jan 2024 07:29:10 -0800 (PST)
+        bh=iIHhwJmlVl4McxGC9PbqY4l+E23pzobb4tPG9neNLtE=;
+        b=WXznCNFtNDeBnfj7ZoMnppx1mLRidFZuOmZPdigWNST6zkXrWznB/kpEQQO9dSBPHt
+         Hkg+5+3l1Dv+BcuAU7692Bru+qa6LDBv5S1JDgVAR4gCgQcC5Z6N+39OXR34smgBw05t
+         O2uIHDPXVHNRyZk1l7+micBhOccFZf5wINr2uYLy4PMFmU5QW17pCdGR9Dg1eT/vh1/V
+         pBhtf0lj8VxyAJZaFQP8a1i2iSXJoS3oeP8YhH9rs7VluzmGJNME+zQlag//WTRosZ1z
+         kr2eAYCcJA4BmWuqXJhOK3o0oNVNZ9J5TT2LmXvNldrHSlb1XYFuWrueKl4on3SB6U0z
+         eQJg==
+X-Gm-Message-State: AOJu0YxLp1cusiIFky/Se7/04Lv0HwBGuvZ+oK7nWmcEWhChFDJ1iGJ2
+	GS9JBaK+daEHFlOTVJAPOgjonwxlOeStfM8fLh1tl7xD+NQwn2yy
+X-Google-Smtp-Source: AGHT+IFBKo6TaGjN+xsbdjkKy45LeO8Nqvlw3rKgL8wySffscXcpKtUN5cn2mbrHecHhdrY25UKkDw==
+X-Received: by 2002:a17:90a:e38a:b0:28e:84e4:f7d1 with SMTP id b10-20020a17090ae38a00b0028e84e4f7d1mr3417266pjz.93.1706025590529;
+        Tue, 23 Jan 2024 07:59:50 -0800 (PST)
 Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id d5-20020a170902ef0500b001d7244c8ee0sm6819370plx.117.2024.01.23.07.29.09
+        by smtp.gmail.com with ESMTPSA id sy14-20020a17090b2d0e00b0029005525d76sm11890089pjb.16.2024.01.23.07.59.49
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 23 Jan 2024 07:29:10 -0800 (PST)
-Message-ID: <0d266548-b8dc-473c-9603-41f8adb2d3c1@acm.org>
-Date: Tue, 23 Jan 2024 07:29:09 -0800
+        Tue, 23 Jan 2024 07:59:50 -0800 (PST)
+Message-ID: <7d24a322-47a7-4b28-b3a3-42cf3dfbee82@acm.org>
+Date: Tue, 23 Jan 2024 07:59:49 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,64 +46,37 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 06/19] block, fs: Propagate write hints to the block
- device inode
+Subject: Re: [PATCH v8 05/19] block, fs: Restore the per-bio/request data
+ lifetime fields
 Content-Language: en-US
-To: Kanchan Joshi <joshi.k@samsung.com>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+To: Kanchan Joshi <joshi.k@samsung.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
  linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
- Daejun Park <daejun7.park@samsung.com>,
+ Christoph Hellwig <hch@lst.de>, Daejun Park <daejun7.park@samsung.com>,
  Alexander Viro <viro@zeniv.linux.org.uk>,
- Christian Brauner <brauner@kernel.org>, Jeff Layton <jlayton@kernel.org>,
- Chuck Lever <chuck.lever@oracle.com>
+ Christian Brauner <brauner@kernel.org>
 References: <20231219000815.2739120-1-bvanassche@acm.org>
- <20231219000815.2739120-7-bvanassche@acm.org> <20231228071206.GA13770@lst.de>
- <00cf8ffa-8ad5-45e4-bf7c-28b07ab4de21@acm.org> <20240103090204.GA1851@lst.de>
- <CGME20240103230906epcas5p468e1779bf14eeaa6f70f045be85afffc@epcas5p4.samsung.com>
- <23753320-63e5-4d76-88e2-8f2c9a90505c@acm.org>
- <b294a619-c37e-cb05-79a8-8a62aec88c7f@samsung.com>
- <9b854847-d29e-4df2-8d5d-253b6e6afc33@acm.org>
- <9fa04d79-0ba6-a2e0-6af7-d1c85f08923b@samsung.com>
- <85be3166-1886-b56a-4910-7aff8a13ea3b@samsung.com>
- <edefdfbc-8584-47ad-9cb0-19ecb94321a8@acm.org>
- <4f36fc64-a93b-9b2c-7a12-79e25671b375@samsung.com>
+ <CGME20231219000844epcas5p277a34c3a0e212b4a3abec0276ea9e6c6@epcas5p2.samsung.com>
+ <20231219000815.2739120-6-bvanassche@acm.org>
+ <23354a9b-dd1e-5eed-f537-6a2de9185d7a@samsung.com>
+ <bbaf780c-2807-44df-93b4-f3c9f6c43fad@acm.org>
+ <51194dc8-dd4d-1b0b-f6c1-4830ea3a63e9@samsung.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <4f36fc64-a93b-9b2c-7a12-79e25671b375@samsung.com>
+In-Reply-To: <51194dc8-dd4d-1b0b-f6c1-4830ea3a63e9@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 1/23/24 04:16, Kanchan Joshi wrote:
-> On 1/23/2024 1:39 AM, Bart Van Assche wrote:
->> On 1/22/24 01:31, Kanchan Joshi wrote:
->>> On 1/19/2024 7:26 PM, Kanchan Joshi wrote:
->>>> On 1/19/2024 12:24 AM, Bart Van Assche wrote:
->>>>> I think the above proposal would introduce a bug: it would break the
->>>>> F_GET_RW_HINT implementation.
->>>>
->>>> Right. I expected to keep the exact change in GET, too, but that will
->>>> not be free from the side-effect.
->>>> The buffered-write path (block_write_full_page) picks the hint from one
->>>> inode, and the direct-write path (__blkdev_direct_IO_simple) picks the
->>>> hint from a different inode.
->>>> So, updating both seems needed here.
->>>
->>> I stand corrected. It's possible to do away with two updates.
->>> The direct-io code (patch 8) should rather be changed to pick the hint
->>> from bdev inode (and not from file inode).
->>> With that change, this patch only need to set the hint into only one
->>> inode (bdev one). What do you think?
->>
->> I think that would break direct I/O submitted by a filesystem.
-> 
-> By breakage do you mean not being able to set/get the hint correctly?
-> I tested with XFS and Ext4 direct I/O. No breakage.
+On 1/23/24 04:35, Kanchan Joshi wrote:
+> At the cost of inviting some extra work. Because this patch used
+> file_inode, the patch 6 needs to set the hint on two inodes.
+> If we use bdev_file_inode, this whole thing becomes clean.
 
-The approach that you proposed is wrong from a conceptual point of view.
-Zero, one or more block devices can be associated with a filesystem. It
-would be wrong to try to access all associated block devices from inside
-the F_SET_RW_HINT implementation. I don't think that there is any API in
-the Linux kernel for iterating over all the block devices associated with
-a filesystem.
+The idea of accessing block devices only in the F_SET_RW_HINT
+implementation is wrong because it involves a layering violation.
+With the current patch series data lifetime information is
+available to filesystems like Fuse. If the F_SET_RW_HINT
+implementation would iterate over block devices, no data lifetime
+information would be available to filesystems like Fuse.
 
 Bart.
