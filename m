@@ -1,140 +1,141 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDFD75F552;
-	Tue, 23 Jan 2024 15:07:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B59065FDBC
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2024 15:11:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706022472; cv=none; b=j6U3eAxRPzcUVQHM7W+81mJSlrrVHVj0x2XKVvhF8zYBGpmNvKMzR8M4oPkQwvsj9JEHCZK5lInXvEc3jsB6Q5uM4eGMMJ5tbA26ZKbTLqd3kUev1nc4YKDwmITDwiXQWAfeiYoj2mbP3DPOxwGrZJI2KH8hOTtkDIUd+5Ii2Q0=
+	t=1706022672; cv=none; b=B3ut2VQUI8JlGAy61Oz/7UA9g08RznjpzUKMGxgyyLSzdINqXqlyatsfy1f0tT5tb7HTj1kbXbnlHjqco86a/17NwiQrUrBBknfukyuYGk52DWqwSXige8v0c9A8CaC3FOh8cdaikcg++RdW0zXi4xOK6EyUY1r3TGTWlsD1h5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706022472; c=relaxed/simple;
-	bh=f2f1pE8UJhuR9Ss9U+d24HlY6ZpfM3YozM996mUCqQA=;
+	s=arc-20240116; t=1706022672; c=relaxed/simple;
+	bh=PPm9boZjwBn6Xzyt0g83ZrbCoWDaQwNE36cwpign/kQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FeBs2ltk5qx9fzF0mxpDJTqVd+LLIAhnoaJ5WKrWR5MNB4hL6PBF73Ji7UBFw1f8CV8B/tYKemYBFJy7lY4UnphKY0vdyegoQh8d00RxX/XPQi90EfnUXUehhzJumlJhue3PPFBDDtRSZW0R2RFVdCOD9qZJC//i2q8a4s8SH8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=mXa43ChT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=N0C0RFys; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=mXa43ChT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=N0C0RFys; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wf3li3wxSMTeOyaAiY4XA8W1ja3NE4/pQ8bY1p0DjExrKkuIYU52UW+ecUFp3aew19YZ+Z6g/zGhODwicS1WvxbVGt+nBbzKPLQ4BTFmprsEJW5icnUMoCGK8SmF79zv7NtoGciIiggqMvYtNU24p6XH6O6TEqTrCRjPN3elAhQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=VXINKWz/; arc=none smtp.client-ip=209.85.210.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="mXa43ChT";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="N0C0RFys";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="mXa43ChT";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="N0C0RFys"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 2AE113758F;
-	Tue, 23 Jan 2024 15:07:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1706022469; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e7dfcOvlJPEsnWcPOV2iC3ZhD1Xh52nYXFAobPmE4qg=;
-	b=mXa43ChToKwzoaQNmjVWDYDS6UqUA49D04Yle2DVJuix/UEZ/rzLP6xnaMxv2mI1PmEjNl
-	EhpL1knc6j4Wv4bF+i/uipoZEmRZREZZ7Ph8Hc61gGGAc9KwSPYQ89/PpPx0VtxcpXURCU
-	2JcjJvLPRuUbjQB4+IdnsOemtbqf+Xg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1706022469;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e7dfcOvlJPEsnWcPOV2iC3ZhD1Xh52nYXFAobPmE4qg=;
-	b=N0C0RFysQo8bwmlL5WMfIb6evolDtejJ9dJVIdDiuQlvl5rOlx59OPmCYrwZLFGHwjULAm
-	kzs91SBxwT/fIaCw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1706022469; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e7dfcOvlJPEsnWcPOV2iC3ZhD1Xh52nYXFAobPmE4qg=;
-	b=mXa43ChToKwzoaQNmjVWDYDS6UqUA49D04Yle2DVJuix/UEZ/rzLP6xnaMxv2mI1PmEjNl
-	EhpL1knc6j4Wv4bF+i/uipoZEmRZREZZ7Ph8Hc61gGGAc9KwSPYQ89/PpPx0VtxcpXURCU
-	2JcjJvLPRuUbjQB4+IdnsOemtbqf+Xg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1706022469;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=e7dfcOvlJPEsnWcPOV2iC3ZhD1Xh52nYXFAobPmE4qg=;
-	b=N0C0RFysQo8bwmlL5WMfIb6evolDtejJ9dJVIdDiuQlvl5rOlx59OPmCYrwZLFGHwjULAm
-	kzs91SBxwT/fIaCw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 14CB513786;
-	Tue, 23 Jan 2024 15:07:49 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id a/96A0XWr2WUbwAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Tue, 23 Jan 2024 15:07:49 +0000
-Date: Tue, 23 Jan 2024 16:07:48 +0100
-From: Daniel Wagner <dwagner@suse.de>
-To: Chaitanya Kulkarni <chaitanyak@nvidia.com>
-Cc: 
-	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, 
-	"linux-fsdevel@vger.kernel.org >> linux-fsdevel" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
-	Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>, 
-	"josef@toxicpanda.com" <josef@toxicpanda.com>, Amir Goldstein <amir73il@gmail.com>, 
-	Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>, Dan Williams <dan.j.williams@intel.com>, 
-	Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>, Hannes Reinecke <hare@suse.de>, 
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>, "shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>, 
-	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, "jack@suse.com" <jack@suse.com>, Ming Lei <ming.lei@redhat.com>, 
-	Sagi Grimberg <sagi@grimberg.me>, Theodore Ts'o <tytso@mit.edu>, 
-	"daniel@iogearbox.net" <daniel@iogearbox.net>
-Subject: Re: Re: [LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] : blktests: status,
- expansion plan for the storage stack test framework
-Message-ID: <jfydrbb277d7ad2ypu5dottiqh4rtzm5ipf72wcjo34mmpvnl7@mjlqomulsq3q>
-References: <e5d8cd68-b3f2-4d7b-b323-b13d18199256@nvidia.com>
- <bh5s6a4fhhlje42bzj2t22k3jpmruzkx234ks4ytuhd62tonzj@zn6h5foaqrof>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VXINKWz/"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-6dd84fe7aebso230174b3a.1
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2024 07:11:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1706022670; x=1706627470; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=4TDMZtp4Rk/MyqeG91tpztAQaCoeOy1ImodF5oM5/C8=;
+        b=VXINKWz/RqJyQsbef7Qhp0b/TaaiZaU9h32F8bwFGfE2hx378WqsEsgdYNZg5X3LJO
+         n9ttFF0Bf9X9lBSRyO29FUcTtL9X6l9XA1MR2KMnPFta9wCESIMkOGyX9HlovJNP8S2I
+         fKaRsVbWuF/e5WPKhJL6pyM9XhrmwzRM8n2iWBhEbuX7oDubPOSpqPtvmMDODcYqtn4H
+         KfkK8imYEsvwpj7qAR97meraLk2jPWpzaGE6QUI5pBE9eaObSCU+7UCNkV46+e+EaF87
+         xXKGVYnyPn1m1mzu1GP7j3KRDuESiwm+RabSJ8Iv74d8hc/p+Bz+axJF00AqRKRQS8HE
+         HE2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1706022670; x=1706627470;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4TDMZtp4Rk/MyqeG91tpztAQaCoeOy1ImodF5oM5/C8=;
+        b=pcs0i5/wSp6EH/OUobee8Lkczjf/4Qo/1+1zvUDpRJTxrxX7lKZokfWzW6p2lmiDEa
+         DGmE7LE/KO2Eqw31Xbt6s0G1Wtz7oO3+s2ELCOxMFOw7uX/hVK7x1uIjtaSXNLAgG3Eu
+         Juqjx9GD27n8W4rJJz9pb00M2xU+4BcAGTpJ4dnFZH2JnL7UY4EKqaA7buh71PofuKrW
+         zAThlK04FEp4BkugHTvaPUzV6+NcFV5HC1GOLYgpZKPUxhUKtjyWU9Ah4qPJncLzZDVn
+         z+IEh9zHX6PJyIlsz5pBkn/4Rh6cE8IgOBCbH6hWikeyBb0UTIuLpgdNVLioiaKrltKw
+         vOlg==
+X-Gm-Message-State: AOJu0YwbXntRnX0H8F+hd7PzQ5N0VTem1ngahlxZCYRgOQebc+rGONLk
+	96S5QZq+PyTtSUJ8bY5HJss9T+HAdvWbQ4YUCYxx1nfna+aRsbV8yFB6k0dHkQ==
+X-Google-Smtp-Source: AGHT+IEOKhrSQ2AAiD6B4preFnkzitZWz56/vBVAw7INI+RAQyhQg8QHxAEyl6Hrgx0FmHXbiPe34Q==
+X-Received: by 2002:a62:5e06:0:b0:6d9:eb24:4c5f with SMTP id s6-20020a625e06000000b006d9eb244c5fmr2890544pfb.37.1706022670014;
+        Tue, 23 Jan 2024 07:11:10 -0800 (PST)
+Received: from thinkpad ([117.217.189.109])
+        by smtp.gmail.com with ESMTPSA id y22-20020a62b516000000b006dbd2405882sm6021527pfe.148.2024.01.23.07.11.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 23 Jan 2024 07:11:09 -0800 (PST)
+Date: Tue, 23 Jan 2024 20:41:02 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Eric Chanudet <echanude@redhat.com>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konrad.dybcio@linaro.org>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: qcom: avoid re-init quirk when gears match
+Message-ID: <20240123151102.GE19029@thinkpad>
+References: <20240119185537.3091366-11-echanude@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <bh5s6a4fhhlje42bzj2t22k3jpmruzkx234ks4ytuhd62tonzj@zn6h5foaqrof>
-Authentication-Results: smtp-out1.suse.de;
-	none
-X-Spamd-Result: default: False [0.35 / 50.00];
-	 ARC_NA(0.00)[];
-	 TO_DN_EQ_ADDR_SOME(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 RCPT_COUNT_TWELVE(0.00)[23];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 FREEMAIL_CC(0.00)[lists.linux-foundation.org,vger.kernel.org,lists.infradead.org,kernel.dk,acm.org,toxicpanda.com,gmail.com,javigon.com,intel.com,lst.de,kernel.org,suse.de,opensource.wdc.com,wdc.com,suse.com,redhat.com,grimberg.me,mit.edu,iogearbox.net];
-	 RCVD_TLS_ALL(0.00)[];
-	 BAYES_HAM(-0.05)[59.76%]
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spam-Score: 0.35
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240119185537.3091366-11-echanude@redhat.com>
 
-On Wed, Jan 17, 2024 at 09:50:50AM +0100, Daniel Wagner wrote:
-> On Tue, Jan 09, 2024 at 06:30:46AM +0000, Chaitanya Kulkarni wrote:
-> > For storage track, I would like to propose a session dedicated to
-> > blktests. It is a great opportunity for the storage developers to gather
-> > and have a discussion about:-
-> > 
-> > 1. Current status of the blktests framework.
-> > 2. Any new/missing features that we want to add in the blktests.
-> > 3. Any new kernel features that could be used to make testing easier?
-> > 4. DM/MD Testcases.
-> > 5. Potentially adding VM support in the blktests.
+On Fri, Jan 19, 2024 at 01:55:47PM -0500, Eric Chanudet wrote:
+> On sa8775p-ride, probing the hba will go through the
+> UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH path although the power info
+> are same during the second init.
 > 
-> I am interested in such a session.
+> If the host is at least v4, ufs_qcom_get_hs_gear() picked the highest
+> supported gear when setting the host_params. After the negotiation, if
+> the host and device are on the same gear, it is the highest gear
+> supported between the two. Skip the re-init to save some time.
+> 
+> Signed-off-by: Eric Chanudet <echanude@redhat.com>
+> ---
+> 
+> "trace_event=ufs:ufshcd_init" reports the time spent where the re-init
+> quirk is performed. On sa8775p-ride:
+> Baseline:
+>   0.355879: ufshcd_init: 1d84000.ufs: took 103377 usecs, dev_state: UFS_ACTIVE_PWR_MODE, link_state: UIC_LINK_ACTIVE_STATE, err 0
+> With this patch:
+>   0.297676: ufshcd_init: 1d84000.ufs: took 43553 usecs, dev_state: UFS_ACTIVE_PWR_MODE, link_state: UIC_LINK_ACTIVE_STATE, err 0
+> 
+>  drivers/ufs/host/ufs-qcom.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 39eef470f8fa..f9f161340e78 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -738,8 +738,12 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+>  		 * the second init can program the optimal PHY settings. This allows one to start
+>  		 * the first init with either the minimum or the maximum support gear.
+>  		 */
+> -		if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+> +		if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
+> +			if (host->hw_ver.major >= 0x4 &&
 
-One discussion point I'd like to add is
+You can get rid of this check as I said in the reply.
 
-  - running blktest against real hardare/target
+> +			    host_params->hs_tx_gear == dev_req_params->gear_tx)
+
+How about?
+
+			/*
+			 * Skip REINIT if the negotiated gear matches with the
+			 * initial phy_gear. Otherwise, update the phy_gear to
+			 * program the optimal gear setting during REINIT.
+			 */
+			if (host->phy_gear == dev_req_params->gear_tx)
+				hba->quirks &= ~UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+			else
+				host->phy_gear = dev_req_params->gear_tx;
+
+- Mani
+
+> +				hba->quirks &= ~UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+>  			host->phy_gear = dev_req_params->gear_tx;
+> +		}
+>  
+>  		/* enable the device ref clock before changing to HS mode */
+>  		if (!ufshcd_is_hs_mode(&hba->pwr_info) &&
+> -- 
+> 2.43.0
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
