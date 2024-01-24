@@ -1,152 +1,58 @@
-Received: from mail-vk1-f180.google.com (mail-vk1-f180.google.com [209.85.221.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E387218E2C
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2024 08:58:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EB0D18041;
+	Wed, 24 Jan 2024 09:08:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706086733; cv=none; b=iRriC1iLqw7dJpVgEEDxGliIxDDUgSGhWRhE+L4rxmeGuWL6Km1gWCx19CxqJqcaHiByWQgiV/7TrkSpDFRMlvoLLsNKP+282WiLQxyhacg8ANIbBPxskFvBzQScC75zynpoUGx+8aJwrIxGrltG8z/WDgytyN71gOzhgnemZS8=
+	t=1706087329; cv=none; b=lvxmiKKAgKIqF04onhJkMDLdoJX2j+QNUDlKM4G5GB8283uQ0xXMV/eve4FPmngof9p7Sd+yXMxcgideZ//lZ3RM6cBvENhG/F9pC0cQu20YBFm++BygAOvlPBoRc6C80eEAe5aaj8eolfFqQH+1eTTz5WefJjARzsXd/yRxrgY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706086733; c=relaxed/simple;
-	bh=6A2agHWPglD1APaJ96geKgF4ubgM9XgIXuQcxewyelA=;
+	s=arc-20240116; t=1706087329; c=relaxed/simple;
+	bh=w5UCAUqN3folz54n4uOyTlF23BFB53LgwYm/8ZXIsAA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aqY4Xme1UpMAiH5Zfis9AyG2h4qVWkk2AIdbY3yDZp48XIhXz48izXUw98lSmFNLStDjf1Sbv1KNs8fn6Oiec9qOERD3D2tRWwiOPJiweB2SqaPKIDLzy3GPM0Zv7YL8D+Ce5Es1aofMKW+YTJEnpBbthBEDC3c8rZD75LVMll8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=dW+mg23T; arc=none smtp.client-ip=209.85.221.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dW+mg23T"
-Received: by mail-vk1-f180.google.com with SMTP id 71dfb90a1353d-4b87d79a7d8so901382e0c.3
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2024 00:58:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1706086730; x=1706691530; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=wb2TmrQlec/Mf3yh+lhjrs8umkcGGEn+Bj8EU6iIEHk=;
-        b=dW+mg23TtUNG0gYCGkz8jFPtl6rJ0z8l0oG4jTkyGXVgaYQtH4mrONiPHv4c/bLbaL
-         75d2jv8KmET8QGo8/mjoCLIWjPnqNziPgvPOhRLHB+35THVIBCwhHbZdJZxliL5uXITF
-         KJbDjo99aj+0bw4UuzOm7GNZOgy5GJ61S54zV4GhN9yl0YLedYR/jCCogeTOhL+hXm7F
-         kKyGxQOfi11jq7q4OEBgcgrvqbJ/3eZYb+hyX79EszC4K66CrTisNp7zSIrkQwFb+AA/
-         /efdTzDmLiF7qYQEYJIHbMkf82jWSGvD+tsnz/lIGnFE3ChXscrtfnZo4ePe7rpL7x3S
-         yMAw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706086730; x=1706691530;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wb2TmrQlec/Mf3yh+lhjrs8umkcGGEn+Bj8EU6iIEHk=;
-        b=iqOisN7PQ+7dAj5eexX0XX3y9bnHyt7nEThrGtoIKhH7O+to0z1J641VCsHa1eZYW2
-         O9GI4XZ2crs0c66EMOxc/Z1Bw3UH2T1xzSojhBeKlykbDtuIcBywy+CkOR23qehdYZbL
-         6ObEWOPKXgkzIJi0EaDIylXtdONVDxzPwPVl5RcmSFLJxkEB5pEZQsQ57xMy10MiTRSU
-         3gl+QlvW+T8UzyMNFAH/d8wvicTTZ0JCYe9tLsFbp4rX7ZfNBVp3ZgxSPH6ktoYIBLFe
-         z6UPoN/nLHBHmpxgSDgT/XgwtkbXinKF0i65QqJuZghNODbjt/Y/Z+sk5PUINrXlWmrh
-         5raw==
-X-Gm-Message-State: AOJu0YxvsX3GrEUAGpyLGuhSgLmbMSr4ADJtdntu2q8f/rWw7VY+YpFX
-	2/adFBOsm8RomTnwvqkkIKa7YzytKviwp7YJT3Y2BP9HKaO8gZT5kbXS9gF0tQ==
-X-Google-Smtp-Source: AGHT+IHNl1ACK3L5Be2b8Nbsu6WHFviUzLaBTgGDg98+Fj/yv3drk7c1yF3spYfyyD4DRj8/t8c/4w==
-X-Received: by 2002:a05:6122:1c0d:b0:4bd:1677:9458 with SMTP id et13-20020a0561221c0d00b004bd16779458mr1835683vkb.32.1706086729854;
-        Wed, 24 Jan 2024 00:58:49 -0800 (PST)
-Received: from thinkpad ([117.217.189.109])
-        by smtp.gmail.com with ESMTPSA id f1-20020a056122044100b004b723acd1e1sm2619411vkk.11.2024.01.24.00.58.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Jan 2024 00:58:49 -0800 (PST)
-Date: Wed, 24 Jan 2024 14:28:39 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Andrew Halaney <ahalaney@redhat.com>
-Cc: Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	echanude@redhat.com, linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: qcom: Clarify comments about the initial
- phy_gear
-Message-ID: <20240124085839.GH4906@thinkpad>
-References: <20240123-ufs-reinit-comments-v1-1-ff2b3532d7fe@redhat.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=txiEtcB8Mm0Qs4ldlKfHA7qxzX2jw4456IhAxFsNnFsftNqR2Xip+RjM5rox0y5SQb8HD+R4++OZ7rAPrie/zCX4aPN8cqeBkjX6C6WRP/CcsUwnmOTVSMlQP9pWNOSseBxpCcgAaZxpQr6fw6PxyP3iB75+pstHPVPrgfO1Yqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id B5E5D68BFE; Wed, 24 Jan 2024 10:08:43 +0100 (CET)
+Date: Wed, 24 Jan 2024 10:08:43 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>, Yu Kuai <yukuai1@huaweicloud.com>,
+	Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Ming Lei <ming.lei@redhat.com>, Keith Busch <kbusch@kernel.org>,
+	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+	Ed Tsai <ed.tsai@mediatek.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	"yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
+Message-ID: <20240124090843.GA28180@lst.de>
+References: <2d83fcb3-06e6-4a7c-9bd7-b8018208b72f@huaweicloud.com> <20240115055940.GA745@lst.de> <0d23e3d3-1d7a-f76b-307b-7d74b3f91e05@huaweicloud.com> <f1cac818-8fc8-4f24-b445-d10aa99c04ba@acm.org> <e0305a2c-20c1-7e0f-d25d-003d7a72355f@huaweicloud.com> <aedc82bc-ef10-4bc6-b76c-bf239f48450f@acm.org> <20240118073151.GA21386@lst.de> <434b771a-7873-4c53-9faa-c5dbc4296495@acm.org> <20240123091316.GA32130@lst.de> <ac240189-d889-448b-b5f7-7d5a13d4316d@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240123-ufs-reinit-comments-v1-1-ff2b3532d7fe@redhat.com>
+In-Reply-To: <ac240189-d889-448b-b5f7-7d5a13d4316d@acm.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Jan 23, 2024 at 01:13:36PM -0600, Andrew Halaney wrote:
-> The comments that currently are within the hw_ver < 4 conditional
-> are misleading. They really apply to various branches of the
-> conditionals there and incorrectly state that the phy_gear value
-> can increase.
-> 
-> Right now the logic is to:
-> 
->     * Default to max supported gear for phy_gear
->     * Set phy_gear to minimum value if version < 4 since those versions
->       only support one PHY init sequence (and therefore don't need reinit)
->     * Set phy_gear to the optimal value if the device version is already
->       populated in the controller registers on boot
-> 
-> Let's move some of the comment to outside the if statement and clean up
-> the bit left about switching to a higher gear on reinit. This way the
-> comment more accurately reflects the logic.
-> 
-> Signed-off-by: Andrew Halaney <ahalaney@redhat.com>
+On Tue, Jan 23, 2024 at 07:16:05AM -0800, Bart Van Assche wrote:
+> On 1/23/24 01:13, Christoph Hellwig wrote:
+>> The point is why you think fair sharing is not actually required for
+>> these particular setups only.
+>
+> Hi Christoph,
+>
+> Do you perhaps want me to move the SCSI host sysfs attribute that controls
+> fair sharing to the /sys/block/${bdev}/queue directory?
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+No.  I want an explanation from you why you think your use case is so
+snowflake special that you and just you need to fisable fair sharing.
 
-- Mani
-
-> ---
-> This is a minor comment cleanup inspired by my mistaken understanding of
-> the flow over at [0]
-> 
-> [0] https://lore.kernel.org/linux-arm-msm/20240123143615.GD19029@thinkpad/
-> ---
->  drivers/ufs/host/ufs-qcom.c | 15 ++++++++++-----
->  1 file changed, 10 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 39eef470f8fa..d9ec2dfbbda4 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -843,15 +843,20 @@ static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
->  	struct ufs_host_params *host_params = &host->host_params;
->  	u32 val, dev_major;
->  
-> +	/*
-> +	 * Default to powering up the PHY to the max gear possible, which is
-> +	 * backwards compatible with lower gears but not optimal from
-> +	 * a power usage point of view. After device negotiation, if the
-> +	 * gear is lower a reinit will be performed to program the PHY
-> +	 * to the ideal gear for this combo of controller and device.
-> +	 */
->  	host->phy_gear = host_params->hs_tx_gear;
->  
->  	if (host->hw_ver.major < 0x4) {
->  		/*
-> -		 * For controllers whose major HW version is < 4, power up the
-> -		 * PHY using minimum supported gear (UFS_HS_G2). Switching to
-> -		 * max gear will be performed during reinit if supported.
-> -		 * For newer controllers, whose major HW version is >= 4, power
-> -		 * up the PHY using max supported gear.
-> +		 * These controllers only have one PHY init sequence,
-> +		 * let's power up the PHY using that (the minimum supported
-> +		 * gear, UFS_HS_G2).
->  		 */
->  		host->phy_gear = UFS_HS_G2;
->  	} else if (host->hw_ver.major >= 0x5) {
-> 
-> ---
-> base-commit: 319fbd8fc6d339e0a1c7b067eed870c518a13a02
-> change-id: 20240123-ufs-reinit-comments-17c44af62651
-> 
-> Best regards,
-> -- 
-> Andrew Halaney <ahalaney@redhat.com>
-> 
-
--- 
-மணிவண்ணன் சதாசிவம்
