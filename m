@@ -1,75 +1,68 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC5F2175A1
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2024 08:33:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA5291798C
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2024 08:48:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706085227; cv=none; b=Ibr6EKrRnOaCtmZ2HPghsao1Auq3P387KLCuWApyr+t5VRlmXFALKfqtdbSkvfRKbsM5dmjVV03qbiEDmrZTfjqeYkWNg5rkBh/N9zYFi+p2bDjLcGhOdCdsy8WY+gbYEQAMQvuxD9Ty4FpQKyyjl6mEYsubsvUMFJyGZ9j//Zc=
+	t=1706086101; cv=none; b=uKoVUICo1tzH0+R5qMf81RxbDzHNdKAT/BcisZH4iX7f05FordgPvArFjJHlwfuEtZMjvn4ozpGBw4zNL9bWO7Mh4LmKhsM0PW2K7k1s5jA36vRL15UvFbzdBhkVmXCImhUAFFGEoq5kM0qt+PAT5i24G3wEqz4xNjdIjjz+j10=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706085227; c=relaxed/simple;
-	bh=PX2GmyFRFn2nD4mNi7u/AP+PYTUtYKCoSLnLW+0R0YM=;
+	s=arc-20240116; t=1706086101; c=relaxed/simple;
+	bh=P4McOCY6FFE0rm/rfcDQp1J/v6wIBnRRgRJjY2BpMyI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jHpi5sTVvoCimQwx+wIB1ccIiDOd/TcAk0upSHfcLdut75Rv0AQZsNAn29TIS0yUWZF859esANHkdNkiEhnhRrTyBoYRWoHwV/M1aMdVvYB0UiK5SN6gdJdnNUgt6Jzo+Am1SFVu52E5CgpmtyvER8TRouY1N6slQLP7rTw5ZHg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=MkQRGVg5; arc=none smtp.client-ip=209.85.214.178
+	 Content-Type:Content-Disposition:In-Reply-To; b=bFGfqyI3Am5kALHtKtGdqkLBIXpOGrApT8Rt2bP+S49xMFZZgPAFAoD1t4dF/jHi7TgfTpYf1zocyOmNPkvSstmcS7xcIyHhHO37FfMuF9+2l6Nfqb3yCbFU3bQeTLE++8+JANYgDuzwTJdjwgS+WZGWvKRdjNog3Y3Ez7/YEKA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=S5+9laij; arc=none smtp.client-ip=209.85.219.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="MkQRGVg5"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1d74678df08so18159755ad.1
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2024 00:33:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="S5+9laij"
+Received: by mail-qv1-f44.google.com with SMTP id 6a1803df08f44-681922a61baso42529396d6.1
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2024 00:48:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1706085225; x=1706690025; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1706086098; x=1706690898; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=vPFRER/gkE3zm2pQ/KTOV3I0e5WTpUXpU3iwr5G1xwY=;
-        b=MkQRGVg5KQaz8kO59PpfA1JkXBGB+nRarrD0otaJNQwrXkUYP4UsublGyFlbOLJ0SV
-         8rvhey5drE9RT3lwh11Bssl7yNz2ebtbOYupPBxCxLn2xzoBa0UaynOIhp2T7VoV3NWw
-         4iMTbUJa9w/2CLlsFasCy45KYFExpTx8hjIlPlRafIYvcE2JpJmE5lnuHrlBMlGr8Esh
-         9pcsx+Z2BB807HPSR3hdCc0tH99AW8wqZ53mWe82ZnvQNte5vLYD5jih710m3PkAFbre
-         BDQsn89NfttpdwaL/wXG00azs+bepMZxEIYQvxR1iZQXuObOZ7Rcjqggtej3zzYMiBmT
-         dIyA==
+        bh=/7rbypgkDb+liCSqrr02j2nhDq3VhRD+glw+4uRNOQU=;
+        b=S5+9laijnaySIyQqGT6T139zRj1oB8zVUNgzALSdIOCI4EkGB63ZusNvlq7zXhmX3t
+         FU9uK1YBwlb28o7c82Md1Q2Dr3Dspu/q5Pu+PZHtyLeMT1ogEV8OouSWwNsitKoGMFfH
+         ZNIo/YwWtqtwJxQsIcWar5zN5nmBGj+r/CHhreGiV1x+tAGYySbFNMWkA4+6gmmTuyuG
+         WEHm9HsH0R38LDIXIMj8C5teThkQdUmCkxuN71Q2tQN3Y7x7d2UppEGMeJkXlymuOxEr
+         eNUzT6MOHQCNglbqWf/Kc3uTzmReykOlIP89AdC5RgVko2uUVmLfEWiPBmbaB0VoHQh7
+         ogSw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706085225; x=1706690025;
+        d=1e100.net; s=20230601; t=1706086098; x=1706690898;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=vPFRER/gkE3zm2pQ/KTOV3I0e5WTpUXpU3iwr5G1xwY=;
-        b=cTjIr8ZiMtn3Cc5cRTVlmsePHDDs4sqjR6ema2ACTxWj57JvG3ki+zn1NzXFMUQqvA
-         +afz5PWfYy38+PrUpRNhV9VuiYF35+K/dVnM9VI3bquMhF3eiHZPcF3XeZKqfwY9yPWZ
-         zCiwAwdK6M/sYLbOgfv1Yzo853fY6QW4DPvs84haaoB75vdLM5edduNpCas/L/exBusL
-         fvj438/vutYDJ1EnqIeiWK3/h3HL3/4wonz4xa6s2/kQKFtJpbvp6HWuLOGpVG6+Ka8r
-         1UdSjAllO7S8hAe8QZk6AXf+C9yLm5u1wo+DE+ezd5k8vTPbyCePf8DVGenHW3mG/VZa
-         iDww==
-X-Gm-Message-State: AOJu0Yz2/qU+dyyuXhH+hnp7fcqh89pPDWSkhnZlpnbij6iNMFC4AufA
-	WqDFlZmOYgerF3vF/wpOfiLqcjRKPvzSu7ddEHrLnJDW8ireMhUY6zIfrsO0Qg==
-X-Google-Smtp-Source: AGHT+IHAMGkA6E3jdrT6it59P0NjlIeY0P9GAB/kSyKZfIcGyYzIgZ45Z1bjWpdQtj9CnzDYvvwFFg==
-X-Received: by 2002:a17:902:da84:b0:1d6:f2c0:3c00 with SMTP id j4-20020a170902da8400b001d6f2c03c00mr436044plx.16.1706085225158;
-        Wed, 24 Jan 2024 00:33:45 -0800 (PST)
+        bh=/7rbypgkDb+liCSqrr02j2nhDq3VhRD+glw+4uRNOQU=;
+        b=ScGjctCJoUqHKXHI5tTTWLJTyJcbNnZtFbzMeq2ET9mUOHk79St1YvvTQEbqqDvQiT
+         bpiTVo+bjyxgy0PSN1ZTwvE8Iihmawq2zbzdZPINb7ahMcSwrSWhICoXz0gIacBkqG7f
+         HNYNPOUyK5ntC4x8Wi8PvEusJFnY2oafcBcssZ1WK9sp0fks3PCnxN2GbMx1GYFFd+3y
+         noq8i+4ctOzvWOhlUCOkGsKRgxmN6YXypf2lX72dt9kCoI0X38pvmP6IS5IWvzAm7I8c
+         spYPsZBr+QrhAGEn+qRfJAVv43UNLq07/Ml0MbQYCdu6lmDoEOeBilBNb95aBpXW/rmj
+         oKNQ==
+X-Gm-Message-State: AOJu0YzEekAl8Fr+8wbdgMbwH2JbowLr+0X5bA3MRWtQCh4XY7IgYqKA
+	2xTvcxSkXJaz+DuBBN78m+AXHGu504iU+L88Gu2drfMmecMVOzJ7546CByCVIQ==
+X-Google-Smtp-Source: AGHT+IHusNOxPSa2dt91zylAOajByNL2kdMs4WbjVHN0WOdEOyi09tzZ3xXUsx72WRXSjgX82j+03w==
+X-Received: by 2002:a05:6214:e66:b0:686:ad00:3fae with SMTP id jz6-20020a0562140e6600b00686ad003faemr1202389qvb.5.1706086098610;
+        Wed, 24 Jan 2024 00:48:18 -0800 (PST)
 Received: from thinkpad ([117.217.189.109])
-        by smtp.gmail.com with ESMTPSA id r19-20020a170903015300b001d741effb7dsm5373688plc.270.2024.01.24.00.33.40
+        by smtp.gmail.com with ESMTPSA id qj21-20020a056214321500b00685f8308c9bsm3882632qvb.48.2024.01.24.00.48.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Jan 2024 00:33:44 -0800 (PST)
-Date: Wed, 24 Jan 2024 14:03:36 +0530
+        Wed, 24 Jan 2024 00:48:18 -0800 (PST)
+Date: Wed, 24 Jan 2024 14:18:10 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Nitin Rawat <quic_nitirawa@quicinc.com>
+To: Eric Chanudet <echanude@redhat.com>
 Cc: Bjorn Andersson <andersson@kernel.org>,
 	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	Vinod Koul <vkoul@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	Can Guo <quic_cang@quicinc.com>,
-	Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-Subject: Re: [PATCH V1 2/2] phy: qcom: Refactor phy_power_on and
- phy_calibrate callbacks
-Message-ID: <20240124083336.GB4906@thinkpad>
-References: <20240112153348.2778-1-quic_nitirawa@quicinc.com>
- <20240112153348.2778-3-quic_nitirawa@quicinc.com>
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: ufs: qcom: avoid re-init quirk when gears match
+Message-ID: <20240124084810.GF4906@thinkpad>
+References: <20240123192854.1724905-4-echanude@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -79,135 +72,71 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240112153348.2778-3-quic_nitirawa@quicinc.com>
+In-Reply-To: <20240123192854.1724905-4-echanude@redhat.com>
 
-On Fri, Jan 12, 2024 at 09:03:48PM +0530, Nitin Rawat wrote:
-> Commit 052553af6a31 ("ufs/phy: qcom: Refactor to use phy_init call")
-> puts enabling regulators & clks, calibrating UFS PHY, starting serdes
-> and polling PCS ready status into phy_power_on.
+On Tue, Jan 23, 2024 at 02:28:57PM -0500, Eric Chanudet wrote:
+> On sa8775p-ride, probing the hba will go through the
+> UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH path although the power info
+> are same during the second init.
 > 
-> In Current code regulators enable, clks enable, calibrating UFS PHY,
-> start_serdes and polling PCS_ready_status are part of phy_power_on.
+> The REINIT quirk only applies starting with controller v4. For these,
+> ufs_qcom_get_hs_gear() reads the highest supported gear when setting the
+> host_params. After the negotiation, if the host and device are on the
+> same gear, it is the highest gear supported between the two. Skip REINIT
+> to save some time.
 > 
-> UFS PHY registers are retained after power collapse, meaning calibrating
-> UFS PHY, start_serdes and polling PCS_ready_status can be done only when
-> hba is powered_on, and not needed every time when phy_power_on is called
-> during resume. Hence keep the code which enables PHY's regulators & clks
-> in phy_power_on and move the rest steps into phy_calibrate function.
-> 
-> Refactor the code to enable PHY regulators & clks in phy_power_on and
-> move rest of the code to phy_calibrate function.
-> 
+> Signed-off-by: Eric Chanudet <echanude@redhat.com>
 
-This patch should come before UFS patch since you are introducing the
-calibrate() callback here only.
-
-> Co-developed-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> Co-developed-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
->  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 183 +++++++++---------------
->  1 file changed, 67 insertions(+), 116 deletions(-)
-> 
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> index 3c2e6255e26f..ae0218738b0b 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> @@ -32,14 +32,15 @@
->  /* QPHY_SW_RESET bit */
->  #define SW_RESET				BIT(0)
->  /* QPHY_POWER_DOWN_CONTROL */
-> -#define SW_PWRDN				BIT(0)
-> +#define SW_PWRUP				BIT(0)
-> +#define SW_PWRDN				0
-
-Why 0?
-
->  /* QPHY_START_CONTROL bits */
->  #define SERDES_START				BIT(0)
->  #define PCS_START				BIT(1)
->  /* QPHY_PCS_READY_STATUS bit */
->  #define PCS_READY				BIT(0)
-> 
-> -#define PHY_INIT_COMPLETE_TIMEOUT		10000
-> +#define PHY_INIT_COMPLETE_TIMEOUT		1000000
-
-Why? This is not mentioned in the commit message. If it is not related to this
-refactoring, then it should be a separate patch with justification.
-
-> 
->  struct qmp_phy_init_tbl {
->  	unsigned int offset;
-> @@ -1464,8 +1465,25 @@ static void qmp_ufs_init_registers(struct qmp_ufs *qmp, const struct qmp_phy_cfg
->  		qmp_ufs_pcs_init(qmp, &cfg->tbls_hs_g4);
->  }
-> 
-> -static int qmp_ufs_com_init(struct qmp_ufs *qmp)
-> +static int qmp_ufs_power_off(struct phy *phy)
-> +{
-> +	struct qmp_ufs *qmp = phy_get_drvdata(phy);
-> +	const struct qmp_phy_cfg *cfg = qmp->cfg;
-> +
-> +	/* Put PHY into POWER DOWN state: active low */
-> +	qphy_clrbits(qmp->pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL],
-> +			SW_PWRDN);
-> +
-> +	clk_bulk_disable_unprepare(cfg->num_clks, qmp->clks);
-> +
-> +	regulator_bulk_disable(cfg->num_vregs, qmp->vregs);
-> +
-> +	return 0;
-> +}
-> +
-> +static int qmp_ufs_power_on(struct phy *phy)
->  {
-> +	struct qmp_ufs *qmp = phy_get_drvdata(phy);
->  	const struct qmp_phy_cfg *cfg = qmp->cfg;
->  	void __iomem *pcs = qmp->pcs;
->  	int ret;
-> @@ -1480,8 +1498,7 @@ static int qmp_ufs_com_init(struct qmp_ufs *qmp)
->  	if (ret)
->  		goto err_disable_regulators;
-> 
-> -	qphy_setbits(pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL], SW_PWRDN);
-> -
-> +	qphy_setbits(pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL], SW_PWRUP);
-
-Newline please. As mentioned above, why can't you use existing SW_PWRDN macro.
-
->  	return 0;
-> 
->  err_disable_regulators:
-> @@ -1490,61 +1507,7 @@ static int qmp_ufs_com_init(struct qmp_ufs *qmp)
->  	return ret;
->  }
-> 
-
-[...]
-
-> +static int qmp_ufs_get_phy_reset(struct qmp_ufs *qmp)
-> +{
-> +	const struct qmp_phy_cfg *cfg = qmp->cfg;
-> +	int ret;
-> +
-> +	if (!cfg->no_pcs_sw_reset)
-> +		return 0;
-> +
-> +	/*
-> +	 * Get UFS reset, which is delayed until now to avoid a
-> +	 * circular dependency where UFS needs its PHY, but the PHY
-> +	 * needs this UFS reset.
-> +	 */
-> +
-> +	qmp->ufs_reset = devm_reset_control_get_exclusive(qmp->dev,
-> +							  "ufsphy");
-
-You have moved this to probe from power_on() without any justification. What
-about the circular dependency mentioned in the comment.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
 - Mani
+
+> ---
+> 
+> v1 -> v2:
+> * drop test against host->hw_ver.major >= 4 and amend description as a
+>   result (Andrew/Mani)
+> * add comment, test device gear against host->phy_gear and reset
+>   host->phy_gear only if necessary (Mani)
+> * Link to v1: https://lore.kernel.org/linux-arm-msm/20240119185537.3091366-11-echanude@redhat.com/
+> 
+> trace_event=ufs:ufshcd_init reports the time spent in ufshcd_probe_hba
+> where the re-init quirk is performed:
+> Currently:
+> 0.355879: ufshcd_init: 1d84000.ufs: took 103377 usecs, dev_state: UFS_ACTIVE_PWR_MODE, link_state: UIC_LINK_ACTIVE_STATE, err 0
+> With this patch:
+> 0.297676: ufshcd_init: 1d84000.ufs: took 43553 usecs, dev_state: UFS_ACTIVE_PWR_MODE, link_state: UIC_LINK_ACTIVE_STATE, err 0
+> 
+>  drivers/ufs/host/ufs-qcom.c | 13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 39eef470f8fa..f7dba7236c6e 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -738,8 +738,17 @@ static int ufs_qcom_pwr_change_notify(struct ufs_hba *hba,
+>  		 * the second init can program the optimal PHY settings. This allows one to start
+>  		 * the first init with either the minimum or the maximum support gear.
+>  		 */
+> -		if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+> -			host->phy_gear = dev_req_params->gear_tx;
+> +		if (hba->ufshcd_state == UFSHCD_STATE_RESET) {
+> +			/*
+> +			 * Skip REINIT if the negotiated gear matches with the
+> +			 * initial phy_gear. Otherwise, update the phy_gear to
+> +			 * program the optimal gear setting during REINIT.
+> +			 */
+> +			if (host->phy_gear == dev_req_params->gear_tx)
+> +				hba->quirks &= ~UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
+> +			else
+> +				host->phy_gear = dev_req_params->gear_tx;
+> +		}
+>  
+>  		/* enable the device ref clock before changing to HS mode */
+>  		if (!ufshcd_is_hs_mode(&hba->pwr_info) &&
+> -- 
+> 2.43.0
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
