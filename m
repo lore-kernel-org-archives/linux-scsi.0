@@ -1,67 +1,57 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from gentwo.org (gentwo.org [62.72.0.81])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBEE781ABA;
-	Wed, 24 Jan 2024 17:55:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C77AD7CF3F;
+	Wed, 24 Jan 2024 19:05:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.72.0.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706118953; cv=none; b=XiQnz4ZymEXawUI48HVOZC7vUDzJX/LvT4zzTNOmHz15lClmilYHZuS+fOuNvahs+uP2j11dIpSiNE6euuR+kdrz8tqe/GJoBb/VmPGkRW6GYxzhAsz9NOvBus+q2WKdW/YuM2JfF//G961QFX6mmbAz4nH9sSLTfxxGY3FQ2GQ=
+	t=1706123137; cv=none; b=Xyw/3CwBMQLRM7tnbV2M2G4nrBi0l4IqRG8NuPdx+yyqQk8Ru7jFCZAlFVlDuOMX+Kwo9FPKoDHedvgwtV4GVm4/yMyYQdlpaxrQeUw9zqT5vBn7IxA5g/rXcjoSPCjQrv8O6RQ8+f0RuWJ88pbmeyLKdlovM5p1fx1YcYmP+3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706118953; c=relaxed/simple;
-	bh=8nHJpxze9i3uCOhGTrGvmXB+FRPyyXp/F8Bkilw7L18=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m/txCAkE/Rb+Qk9jTKJAMGZVCsVY/W5S2/d54ZGeAyxfhtwY6TNvaVa3aS0ososQeC9QnZDT+8jQsnRVWwFrgdJqvPf4NYBxPwlLXuHlQZ+Gfi+GMdy552Mw3PkdW17grYkBfAhggsTSvYbWLDPspwCkQYncJTEyuMOrbaH4Z/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=g4Gbu+QO; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="g4Gbu+QO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=8nHJpxze9i3uCOhGTrGvmXB+FRPyyXp/F8Bkilw7L18=; b=g4Gbu+QOZjcYDq1GX/CDd67xHQ
-	1MS2y9fFaTAAJ6vO8sFRAVyk/JnxX4hhNK3I6E7t0IGS/3oGdUQQc2wVXu7jLTM4KIf7Akg27WWex
-	+izhhj1Ds/mX2I0vTtpSsOIaG4EU1c/T4eGoZGcZaJSaP1cPW6I/bESRrkHVZ17kK1sstMEANhNzm
-	JgFmlZgjGUTRWuNS4HllcmC5yUs5YnmBV0Om9LJjAN2fS2+9dknKqY7yhnIN0B8JnY3J1RRmw4f2B
-	OBae5YKcDNoYlXZs7ihRQgOiTff75Oww/7n+OnE/AGJZFp+JwmhmUCoUwdieCrHNXh8DIuXVWOadO
-	VcW8VyQA==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rShTW-00000007Lpb-2ECT;
-	Wed, 24 Jan 2024 17:55:46 +0000
-Date: Wed, 24 Jan 2024 17:55:46 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: "Christoph Lameter (Ampere)" <cl@linux.com>
-Cc: David Rientjes <rientjes@google.com>,
-	Pasha Tatashin <tatashin@google.com>,
-	Sourav Panda <souravpanda@google.com>,
-	lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
+	s=arc-20240116; t=1706123137; c=relaxed/simple;
+	bh=35mM6I4/a8/AAfo6vEpCkUubuJeihuMJQkFca3EvMAM=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=XuE8Cp2LTbgq17uvRi9Ata41y4BI5e7jlUfyX0nK4Red+ALj1TN8h3aUgYpMIzbhP0390BIYjEm69BVOVp7NS2OJpKL2lFfmN/A291H9UinoMvgeVUmdIYfO62jc6hukGXyloZ+KHRkiIolbdZNOasFPT4uYXxAq4Xk7xDknG6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=fail smtp.mailfrom=linux.com; arc=none smtp.client-ip=62.72.0.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=linux.com
+Received: by gentwo.org (Postfix, from userid 1003)
+	id C086040A94; Wed, 24 Jan 2024 11:05:33 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by gentwo.org (Postfix) with ESMTP id BFEA640787;
+	Wed, 24 Jan 2024 11:05:33 -0800 (PST)
+Date: Wed, 24 Jan 2024 11:05:33 -0800 (PST)
+From: "Christoph Lameter (Ampere)" <cl@linux.com>
+To: Matthew Wilcox <willy@infradead.org>
+cc: David Rientjes <rientjes@google.com>, Pasha Tatashin <tatashin@google.com>, 
+    Sourav Panda <souravpanda@google.com>, lsf-pc@lists.linux-foundation.org, 
+    linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+    linux-block@vger.kernel.org, linux-ide@vger.kernel.org, 
+    linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, 
+    bpf@vger.kernel.org
 Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
-Message-ID: <ZbFPIidl6dK5cR0W@casper.infradead.org>
-References: <ZaqiPSj1wMrTMdHa@casper.infradead.org>
- <b04b65df-b25f-4457-8952-018dd4479651@google.com>
- <Za2lS-jG1s-HCqbx@casper.infradead.org>
- <aa94b8fe-fc08-2838-50b5-d1c98058b1e0@linux.com>
+In-Reply-To: <ZbFPIidl6dK5cR0W@casper.infradead.org>
+Message-ID: <52821f7a-bb6f-308c-38b0-e5e9904d4f8c@linux.com>
+References: <ZaqiPSj1wMrTMdHa@casper.infradead.org> <b04b65df-b25f-4457-8952-018dd4479651@google.com> <Za2lS-jG1s-HCqbx@casper.infradead.org> <aa94b8fe-fc08-2838-50b5-d1c98058b1e0@linux.com> <ZbFPIidl6dK5cR0W@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aa94b8fe-fc08-2838-50b5-d1c98058b1e0@linux.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 
-On Wed, Jan 24, 2024 at 09:51:02AM -0800, Christoph Lameter (Ampere) wrote:
-> Can we come up with a design that uses a huge page (or some arbitrary page
-> size) and the breaks out portions of the large page? That way potentially
-> TLB use can be reduced (multiple sections of a large page use the same TLB)
-> and defragmentation occurs because allocs and frees focus on a selection of
-> large memory sections.
+On Wed, 24 Jan 2024, Matthew Wilcox wrote:
 
-Could I trouble you to reply in this thread:
-https://lore.kernel.org/linux-mm/Za6RXtSE_TSdrRm_@casper.infradead.org/
-where I actually outline what I think we should do next.
+> On Wed, Jan 24, 2024 at 09:51:02AM -0800, Christoph Lameter (Ampere) wrote:
+>> Can we come up with a design that uses a huge page (or some arbitrary page
+>> size) and the breaks out portions of the large page? That way potentially
+>> TLB use can be reduced (multiple sections of a large page use the same TLB)
+>> and defragmentation occurs because allocs and frees focus on a selection of
+>> large memory sections.
+>
+> Could I trouble you to reply in this thread:
+> https://lore.kernel.org/linux-mm/Za6RXtSE_TSdrRm_@casper.infradead.org/
+> where I actually outline what I think we should do next.
+
+Ahh... ok. Will do.
+
