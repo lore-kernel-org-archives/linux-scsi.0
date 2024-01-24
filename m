@@ -1,76 +1,65 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from gentwo.org (gentwo.org [62.72.0.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D9557CF03;
-	Wed, 24 Jan 2024 16:17:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C09711272CF;
+	Wed, 24 Jan 2024 17:51:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.72.0.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706113041; cv=none; b=nkva5FqsHOYhOUy/BV+/9MzYS8VYbVP5fTy97gf4b7B/aMcO4ocwxjCPzaePHXDcMElnhaeOJygRIs4LWC/k+U1M3VjoyFPCD1UgieGJbqDgdiX1Y0DqcGk3LjrjUzREQp/tFl4rgz6+v1mLmlFnDH2ogcPN/3gMitV3treV8ZE=
+	t=1706118666; cv=none; b=KhGMe1X3nROfgzqpxv6U7g0B3/xQCusvF8kN2yDTgyYt7B26GGXErNWCXyN5UJ3X589FbhsxTf4ZBefyPH3SpUmaleRWni2v3d64SmpruJtsVk6Hn+qHo17/ToHxAgbeYo4TaPnIGYJhwFoi7angcQU4J3zRysXnTRWymL2n2Cw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706113041; c=relaxed/simple;
-	bh=+Bdszo43BcEN1DaJmlTgTYQHqv7S0WaelZBt5xQMMkk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=OYsOldU5Y7Lui+84/d78E3/42PUM9oP3EAUZlWs/viySsfXZLeR2OkIQ31lK739YxbWASsTAgxGRsLGL6I6IVlpkkThtEC4IKCFipQv0p8HHfu5IMaTQ8KXQr/FDArTDnEVuIVw1hKpvX6HVSVdySH5AXkrSIt0f0IUJ2F4GDpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1d71cb97937so35391665ad.3;
-        Wed, 24 Jan 2024 08:17:20 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706113040; x=1706717840;
-        h=content-transfer-encoding:in-reply-to:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+Bdszo43BcEN1DaJmlTgTYQHqv7S0WaelZBt5xQMMkk=;
-        b=LQPlerVEU/Z/il4ETbt/YPKvr2U9deooywEryFeaedP5WUbUsj/ZwnhANpYhhmDnZ/
-         xlSLog0836bnZK0bsNBM8CucZNk5wVYGpCfu4MRKQB2szOJkJhX0VAa1F6FTOfukM33g
-         hy/nvoJq7U+sO4QhEbF9ZDza3ntK/cvTp5QMuSj38lklAndhKiqs8jE1Y+rI1UYEqbMz
-         HPG09o6NxSBlBoXQE28oSdpIt+VhzaIbAUvosRGnletuQug1r4x5S7bTJBIW8Coy87uY
-         E0Dz6lVGB9WZp7zdDdcV2lvU6OIYT0XSBYph+JYFgfnH5h61c76aGc1PCTtatNrFErqh
-         3rew==
-X-Gm-Message-State: AOJu0Yz1tPza+EUtj6zS5/9RVu5JMOw2L7qhVBvCwgrIlvHLR9YzGWUT
-	4u7NvFwVT9c1jwlpj69c15lRpa7iA2XJJUoMbrFlIxUXnyTd15xn
-X-Google-Smtp-Source: AGHT+IHzXI4gTNMTprrybtMnYNEdZMgcb7EzH7OPaLzl3Mu0L6JmbLJygZk48DrcvYjzZoRbZqrPgg==
-X-Received: by 2002:a17:903:41c6:b0:1d7:55c7:e5c with SMTP id u6-20020a17090341c600b001d755c70e5cmr720214ple.25.1706113039707;
-        Wed, 24 Jan 2024 08:17:19 -0800 (PST)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id y4-20020a170902d64400b001d7465c213bsm5767988plh.197.2024.01.24.08.17.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 24 Jan 2024 08:17:19 -0800 (PST)
-Message-ID: <92463403-ea32-4545-a466-21243cd454e2@acm.org>
-Date: Wed, 24 Jan 2024 08:17:16 -0800
+	s=arc-20240116; t=1706118666; c=relaxed/simple;
+	bh=w7rEBfdQN1/zYVzqjkLSQ1tMJOL/dF1Tae38s5/U7yQ=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=OAIt0yqmbBSxk1DxizoBQ7gftR/KI/1EdvloI1ximUo1TAONBmP2D5x2gcspW0ompBG8ylweWACyHwASNOVKgi/GhxD8V+fe/hUJVeyNn9xu92JKKGXBZXU+IvQj1ekKj/iqRCEUMN3cTB7ePwcjFnZbc59GQQ2/R7aE0iAu0f4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=fail smtp.mailfrom=linux.com; arc=none smtp.client-ip=62.72.0.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=linux.com
+Received: by gentwo.org (Postfix, from userid 1003)
+	id 854D340A94; Wed, 24 Jan 2024 09:51:02 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by gentwo.org (Postfix) with ESMTP id 838C840787;
+	Wed, 24 Jan 2024 09:51:02 -0800 (PST)
+Date: Wed, 24 Jan 2024 09:51:02 -0800 (PST)
+From: "Christoph Lameter (Ampere)" <cl@linux.com>
+To: Matthew Wilcox <willy@infradead.org>
+cc: David Rientjes <rientjes@google.com>, Pasha Tatashin <tatashin@google.com>, 
+    Sourav Panda <souravpanda@google.com>, lsf-pc@lists.linux-foundation.org, 
+    linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, 
+    linux-block@vger.kernel.org, linux-ide@vger.kernel.org, 
+    linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, 
+    bpf@vger.kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] State Of The Page
+In-Reply-To: <Za2lS-jG1s-HCqbx@casper.infradead.org>
+Message-ID: <aa94b8fe-fc08-2838-50b5-d1c98058b1e0@linux.com>
+References: <ZaqiPSj1wMrTMdHa@casper.infradead.org> <b04b65df-b25f-4457-8952-018dd4479651@google.com> <Za2lS-jG1s-HCqbx@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] scsi: ufs: core: Remove the ufshcd_release in
- ufshcd_err_handling_prepare
-Content-Language: en-US
-To: hoyoung seo <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
- jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
- kwangwon.min@samsung.com, kwmad.kim@samsung.com, sh425.lee@samsung.com,
- sc.suh@samsung.com, quic_nguyenb@quicinc.com, cpgs@samsung.com,
- grant.jung@samsung.com, junwoo80.lee@samsung.com
-References: <CGME20240122083204epcas2p26a1bca522e201972ca072e0b24d23a52@epcas2p2.samsung.com>
- <20240122083324.11797-1-hy50.seo@samsung.com>
- <06e0ae57-f567-4b90-ad68-4ae73909c29e@acm.org>
- <017501da4da5$405e5ec0$c11b1c40$@samsung.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <017501da4da5$405e5ec0$c11b1c40$@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 
-On 1/22/24 18:38, hoyoung seo wrote:
-> When err_handler is completed, active_reqs becomes negative because
-> ufshcd_release() is called again in ufshcd_err_handling_unprepare().
-> I tested it while printing the log, and if I misanalyzed it, let me know.
+On Sun, 21 Jan 2024, Matthew Wilcox wrote:
 
-Please repeat your analysis. I think this patch is wrong.
+>
+> I'd like to keep this topic relevant to as many people as possible.
+> I can add a proposal for a topic on both the PCP and Buddy allocators
+> (I have a series of Thoughts on how the PCP allocator works in a memdesc
+> world that I haven't written down & sent out yet).
 
-Thanks,
+Well the PCP cache's  (I would not call it an allocator) intent is to 
+provide cache hot / tlb hot pages. In some ways this is like the SLAB/SLUB 
+situation. I.e. lists of objects vs. service objects that are 
+locally related.
 
-Bart.
+Can we come up with a design that uses a huge page (or some 
+arbitrary page size) and the breaks out portions of the large page? That 
+way potentially TLB use can be reduced (multiple sections of a large page 
+use the same TLB) and defragmentation occurs because allocs and frees 
+focus on a selection of large memory sections.
+
+This is rougly equivalent to a per cpu page (folio?) in SLUB where cache 
+hot objects can be served from a single memory section and also freed back 
+without too much interaction with higher level more expensive components 
+of the allocator.
