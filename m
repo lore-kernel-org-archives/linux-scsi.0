@@ -1,54 +1,48 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1044039AC0
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Jan 2024 23:36:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B17EF193;
+	Thu, 25 Jan 2024 00:52:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706139407; cv=none; b=SoyoI4SvBZrwdeIOG3Rlxgfe2vs6KKERsMQZxXOqM3BewzjSlsb1YseM6sr95xADjs1pq81JLXPwj6ZPY+p7fEhFCvB++OunFREDbsge6OHNL0/zd0JT63aBLhlqFrqH+nK1I2AML3rOK/g6JZURNbhNxgMflgSroFRIkGmBsoU=
+	t=1706143939; cv=none; b=uoPgycZ6+RW/3scGPqz9qpL9X6hyiXcfmLJ+a7ebI9ncSPxmbMW8ykSZi7YfLM2BV86YIg61ZLSP4AE1jJJchCQixQOm8HGfGqNpNfTSDqrmLpYzFgrsk3oMMvKTswYzCMBaI2BHkzdEJt9BweYUbqBepyn4QDlmqBU4LpjAXec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706139407; c=relaxed/simple;
-	bh=pe+XeTVfRhYU+++0JA3Qlbt9fe5wx3nGERgeIk5qwlU=;
+	s=arc-20240116; t=1706143939; c=relaxed/simple;
+	bh=OC+XjcopZnLmb3krF+LmINeVCFSSzz1GKe4Bd/HF3is=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=T77dqjyBmUQ8BB8HWZg4AJn87/tuTzonh+KjtX0q/ddPjx7tIiMkwBGH2m1g1LQL9ovAdSfnptgwJhGBoFJYiG372mR/JZiCCAnmR+0kjSIdYT9a/z44XwaRpWR3oZlZWDdzFxta2Is/NXakZTHahKLE6iRSp9CofUp5pU6mx/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SvFcWFNt; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=EfsSGH1+EOKHhba5bWNYBRYtKq5By0yfteYIkJy7eQ6Su0YLKeaF7/4MWnTo+QWOHmEJKfAGSuqgZ126UaJ1juAhhBRIglyv1BaxFQYKKoARFrUrSTljJkerej50QcJB3Sh+c1fMaMOXenUyA6B5RZlZuePf4yhwohXMcOVYaCo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kjVf039j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SvFcWFNt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706139403;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lAE2dMCz9cVUOkDqof5Pc03ZnfQxnP+BsyHXfCZ2zaw=;
-	b=SvFcWFNt8yQHd+Vr05M4bfoSZuOv18HOLQ92eYNiHVGRIx29tHEo+DvAIb0zkG84ZaoxU2
-	anYFexLMVqAEj8wQnjky9KaVIehYr6WUzRqbji9Jiyjzq49fVq8+D/wHDqgXiJz9zEoU7l
-	EtztMxsh6fx3I9bZPN9afIoe7TRnysY=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-425-vBqxVIaBNi68tfdW7Sz1Yw-1; Wed, 24 Jan 2024 18:36:42 -0500
-X-MC-Unique: vBqxVIaBNi68tfdW7Sz1Yw-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id D8A9F800074;
-	Wed, 24 Jan 2024 23:36:41 +0000 (UTC)
-Received: from rhel-developer-toolbox-latest (unknown [10.2.16.47])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 29A1D492BC6;
-	Wed, 24 Jan 2024 23:36:41 +0000 (UTC)
-Date: Wed, 24 Jan 2024 15:36:39 -0800
-From: Chris Leech <cleech@redhat.com>
-To: Nilesh Javali <njavali@marvell.com>
-Cc: martin.petersen@oracle.com, lduncan@suse.com,
-	linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
-	jmeneghi@redhat.com
-Subject: Re: [PATCH v3 1/3] uio: introduce UIO_MEM_DMA_COHERENT type
-Message-ID: <ZbGfB2tqASg5Jiaq@rhel-developer-toolbox-latest>
-References: <20240109121458.26475-1-njavali@marvell.com>
- <20240109121458.26475-2-njavali@marvell.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kjVf039j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC799C433F1;
+	Thu, 25 Jan 2024 00:52:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706143939;
+	bh=OC+XjcopZnLmb3krF+LmINeVCFSSzz1GKe4Bd/HF3is=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=kjVf039jecmwPe9R72x3rAlCy7CKTs7nEXwzknpB92pT0W5/sT6udGTVQ1r1ooKkL
+	 QzygMx99xtOFMc3xgRjzEjiK+KWse1MhzwiXhemYGRiX8tYKNg8QrmAsy3j4c2v0R2
+	 MG3n1VtEdNMKgyUKQ5qZhb0lvf0cQfJWPcLs5RWaZNvT0nJLMz7b+1jI1i+oY8oMEw
+	 DX3Aoi7n6PZuvySPFQic7XTReDwm7uxPykDUoTEr8ORokUt+x2GyV19gA+bKhDYRAb
+	 f404L0eJjoURXfAbvQ/nUgC8vpiaVgoUFMq+GyeYm+RXAJCQcF3iwweOPAEx4Z07fw
+	 bROl+5bpH/8lA==
+Date: Wed, 24 Jan 2024 17:52:15 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: axboe@kernel.dk, hch@lst.de, sagi@grimberg.me, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, djwong@kernel.org,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	ming.lei@redhat.com, ojaswin@linux.ibm.com, bvanassche@acm.org,
+	Alan Adamson <alan.adamson@oracle.com>
+Subject: Re: [PATCH v3 15/15] nvme: Ensure atomic writes will be executed
+ atomically
+Message-ID: <ZbGwv4uFdJyfKtk5@kbusch-mbp.dhcp.thefacebook.com>
+References: <20240124113841.31824-1-john.g.garry@oracle.com>
+ <20240124113841.31824-16-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -57,33 +51,47 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240109121458.26475-2-njavali@marvell.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.9
+In-Reply-To: <20240124113841.31824-16-john.g.garry@oracle.com>
 
-Nilesh, 
+On Wed, Jan 24, 2024 at 11:38:41AM +0000, John Garry wrote:
+> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> index 5045c84f2516..6a34a5d92088 100644
+> --- a/drivers/nvme/host/core.c
+> +++ b/drivers/nvme/host/core.c
+> @@ -911,6 +911,32 @@ static inline blk_status_t nvme_setup_rw(struct nvme_ns *ns,
+>  	if (req->cmd_flags & REQ_RAHEAD)
+>  		dsmgmt |= NVME_RW_DSM_FREQ_PREFETCH;
+>  
+> +	/*
+> +	 * Ensure that nothing has been sent which cannot be executed
+> +	 * atomically.
+> +	 */
+> +	if (req->cmd_flags & REQ_ATOMIC) {
+> +		struct nvme_ns_head *head = ns->head;
+> +		u32 boundary_bytes = head->atomic_boundary;
+> +
+> +		if (blk_rq_bytes(req) > ns->head->atomic_max)
+> +			return BLK_STS_IOERR;
+> +
+> +		if (boundary_bytes) {
+> +			u32 mask = boundary_bytes - 1, imask = ~mask;
+> +			u32 start = blk_rq_pos(req) << SECTOR_SHIFT;
+> +			u32 end = start + blk_rq_bytes(req);
+> +
+> +			if (blk_rq_bytes(req) > boundary_bytes)
+> +				return BLK_STS_IOERR;
+> +
+> +			if (((start & imask) != (end & imask)) &&
+> +			    (end & mask)) {
+> +				return BLK_STS_IOERR;
+> +			}
+> +		}
+> +	}
 
-On Tue, Jan 09, 2024 at 05:44:56PM +0530, Nilesh Javali wrote:
-> +	ret = dma_mmap_coherent(&idev->dev,
-> +				vma,
-> +				addr,
-> +				mem->dma_addr,
-> +				vma->vm_end - vma->vm_start);
+Aren't these new fields, atomic_max and atomic_boundary, duplicates of
+the equivalent queue limits? Let's just use the queue limits instead.
 
-When I asked about the use of idev->dev here in the v2 posting, you
-repled as follows.
-
-> While the cnic loads, it registers the cnic_uio_dev->pdev->dev with
-> uio and the uio attaches its device to cnic device as it's parent. So
-> uio and cnic are attached to the same PCI device.
-
-I still don't think the sysfs parent relationship is enough to get the
-correct behavior out of the DMA APIs on all platforms, and
-dma_mmap_coherent needs to be using the same device struct as
-dma_alloc_coherent.
-
-I had some testing done on an AMD system, where your v2 patch set was
-failing with the iommu enabled, and my original changes were reported to
-work.  And I believe these v3 patches are functionally the same.
-
-- Chris
-
+And couldn't we generically validate the constraints are not violated in
+submit_bio_noacct() instead of doing that in the low level driver? The
+driver assumes all other requests are already sanity checked, so I don't
+think we should change the responsibility for that just for this flag.
