@@ -1,46 +1,46 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 785382E83C;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69EF72E834;
 	Sat, 27 Jan 2024 23:26:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706398009; cv=none; b=BtxVXeXacQLPt4xQ4Da+//oGq/J+Y+CDv3tuVQ25XHbDTRF93JYUxuWakPfh0nc9i6jmEwHhIxV07bvb+hqQ8b/PvzqWfpe3b09sldA4PdqfBWVYTVrDFleeAH3vZVNkiO5NlTfHmfHiz02n6UUlJbDV6dbUvaEqIP8eKS6/DSU=
+	t=1706398010; cv=none; b=PWsfqn2OMwZB4OKpqBQNecfXaP8sx3kQuTwCtQ4wk2lry2Xjlogb6AnbNcY1KcoHpJ27PyukDyjvy/7QTXHtUXKiHs8Ub9T0nQYbApAEyzW/Qug6haMYAYkZCLY5fdn0gj+nvX9XQjBCSkCRXWKZBXQvZ5UVF3b9zboUJeDE2LU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706398009; c=relaxed/simple;
-	bh=9wzF5uhTqyPL+W/7HPPphtIkhNChQKivMp8cg5w8ySc=;
+	s=arc-20240116; t=1706398010; c=relaxed/simple;
+	bh=6ZQ0kgnKoVx4yN1FKa6RPGFLw574BwEZVjH9EZEwlXI=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EJdCw5bzW6kwfaLlnt+pHwLYHWXlXlw4KPdOikYpLAor4KL8vSw2vfwWZIxNKab8/IEoiqFnthOTJMqvtXW+RHB33wYGOWne7VoQeN+jr2v3fLr/pY3IJoNMVvL05exAR/Rir1vXioMmmlix3FC8deqhx9CnTGs9fQVbHS/XNkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=N+SLrg2H; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=JsmSmTvgqDNUGMbsli6reqWdeRPsNNcu/GRvTc4sglxWcBoa1bvBk2TGz7bzHXPyOyPJMUESku0CgJ3qUaI1fYBHoaA/WPOo10+FiS/1g4DLpnDtcFVPne+aNJU/OMZvY5MkUoc5PnyEdfOctH3n0Q6pSBIm/PoLT/BzKq9aYTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=LwlsHC0P; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="N+SLrg2H"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40RNAEdr017366;
-	Sat, 27 Jan 2024 23:26:25 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="LwlsHC0P"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40RNJV8Q021485;
+	Sat, 27 Jan 2024 23:26:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=ofgqnnCuGEgP5vdtT2GLtUEAJxXr9NXRvz9e1DlxJV0=; b=N+
-	SLrg2Hvakf7wA50sdYaz9LKgym0T/s2Ndw/UJ6TAh3ZnJOglKlmS8gIXo0Zbwrsw
-	sZI7AKtzibSk/NJtt++Ns5+8mv29XtPOUUP9HG6EOiSw+iUaifPXUvd/OuWZzXdK
-	e4G0Z7E1ZNcVbSztlsDq3hA8o9ltwH6tMfQDYEgAIRBYVoCvgQMFRS5fq4n4unql
-	fNwtxpTkEGVdvmDHqXOMqfmIrHDCJfxOsH8Oy5XWr+DUqeAioupTYUEkzq8mTVDk
-	QmUoGOdmEamrt4zVriDX/A7OF6IpuiFktES/hgSHRZ80qk+fO7V0t7hmec1qUcfZ
-	tnJrVZCPiK5hN7hjnMOA==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vvu4cs1s5-1
+	qcppdkim1; bh=MQNujueof9e01XdtLBHf/Mn/2u1GIA7gc9ic8JiAi20=; b=Lw
+	lsHC0Py+zYUFKGzcTRpK9xBbmvVcCTZQbVJnB4QPi5mkaquw5gU30V8mGPwjEsfp
+	ms+mHCZwOzBgNiBLwSSgSee1MavTnm10mNxiuOCFAWvPSzlvubqpSAIQAaLCarb0
+	G7/iCq2McPo34FdkzweUVwY9wJ6d8O+Cel5gZQSEEhAAmEr0lBBLIpggf3eNDGes
+	ucSYDdAYcoaKKEfE1A7aB1ioc8Iue8bQIDweROogoLjq02r2Y6t3Tu8YmhgLtnv1
+	7Z3hD8mXRxrYtulYhAuDCrO/VZLgsG2bRv1ka2Q8c6y1yXQdsaz5iY9o7fMMh++n
+	ebDwOgrTzsOGeK4kKe4g==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vvtkm92nb-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 27 Jan 2024 23:26:25 +0000 (GMT)
+	Sat, 27 Jan 2024 23:26:24 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40RNQOC7005899
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40RNQNS9031165
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 27 Jan 2024 23:26:24 GMT
+	Sat, 27 Jan 2024 23:26:23 GMT
 Received: from hu-gaurkash-lv.qualcomm.com (10.49.16.6) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Sat, 27 Jan 2024 15:26:21 -0800
+ 15.2.1118.40; Sat, 27 Jan 2024 15:26:18 -0800
 From: Gaurav Kashyap <quic_gaurkash@quicinc.com>
 To: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <andersson@kernel.org>, <ebiggers@google.com>,
@@ -55,9 +55,9 @@ CC: <linux-kernel@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
         <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <mani@kernel.org>,
         <davem@davemloft.net>, <herbert@gondor.apana.org.au>,
         Gaurav Kashyap <quic_gaurkash@quicinc.com>
-Subject: [PATCH v4 15/15] arm64: dts: qcom: sm8550: add hwkm support to ufs ice
-Date: Sat, 27 Jan 2024 15:14:13 -0800
-Message-ID: <20240127232436.2632187-16-quic_gaurkash@quicinc.com>
+Subject: [PATCH v4 08/15] ufs: core: add support to derive software secret
+Date: Sat, 27 Jan 2024 15:14:06 -0800
+Message-ID: <20240127232436.2632187-9-quic_gaurkash@quicinc.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
 References: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
@@ -73,52 +73,89 @@ X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 2k26aFdIqI3WWqgfepNTgdZRDIS7y4GQ
-X-Proofpoint-ORIG-GUID: 2k26aFdIqI3WWqgfepNTgdZRDIS7y4GQ
+X-Proofpoint-ORIG-GUID: KfOzke2nJI5BU70-hEWf1r_VjXxhcLhI
+X-Proofpoint-GUID: KfOzke2nJI5BU70-hEWf1r_VjXxhcLhI
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-01-25_14,2024-01-25_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 impostorscore=0
- clxscore=1015 priorityscore=1501 lowpriorityscore=0 adultscore=0
- bulkscore=0 suspectscore=0 mlxlogscore=723 phishscore=0 malwarescore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ lowpriorityscore=0 mlxlogscore=999 malwarescore=0 suspectscore=0
+ priorityscore=1501 impostorscore=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2401190000 definitions=main-2401270178
 
-The Inline Crypto Engine (ICE) for UFS/EMMC supports the
-Hardware Key Manager (HWKM) to securely manage storage
-keys. Enable using this hardware on sm8550.
+Block crypto allows storage controllers like UFS to
+register an op derive a software secret from wrapped
+keys added to the kernel.
 
-This requires two changes:
-1. Register size increase: HWKM is an additional piece of hardware
-   sitting alongside ICE, and extends the old ICE's register space.
-2. Explicitly tell the ICE driver to use HWKM with ICE so that
-   wrapped keys are used in sm8550.
-
-NOTE: Although wrapped keys cannot be independently generated and
-tested on this platform using generate, prepare and import key calls,
-there are non-kernel paths to create wrapped keys, and still use the
-kernel to program them into ICE. Hence, enabling wrapped key support
-on sm8550 too.
+Wrapped keys in most cases will have vendor specific
+implementations, which means this op would need to have
+a corresponding UFS variant op.
+This change adds hooks in UFS core to support this variant
+ops and tie them to the blk crypto op.
 
 Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
+Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
 ---
- arch/arm64/boot/dts/qcom/sm8550.dtsi | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/ufs/core/ufshcd-crypto.c | 15 +++++++++++++++
+ include/ufs/ufshcd.h             |  4 ++++
+ 2 files changed, 19 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sm8550.dtsi b/arch/arm64/boot/dts/qcom/sm8550.dtsi
-index ee1ba5a8c8fc..b5b41d0a544c 100644
---- a/arch/arm64/boot/dts/qcom/sm8550.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8550.dtsi
-@@ -1977,7 +1977,8 @@ ufs_mem_hc: ufs@1d84000 {
- 		ice: crypto@1d88000 {
- 			compatible = "qcom,sm8550-inline-crypto-engine",
- 				     "qcom,inline-crypto-engine";
--			reg = <0 0x01d88000 0 0x8000>;
-+			reg = <0 0x01d88000 0 0x10000>;
-+			qcom,ice-use-hwkm;
- 			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
- 		};
+diff --git a/drivers/ufs/core/ufshcd-crypto.c b/drivers/ufs/core/ufshcd-crypto.c
+index 399b55d67b3b..c14800eac1ff 100644
+--- a/drivers/ufs/core/ufshcd-crypto.c
++++ b/drivers/ufs/core/ufshcd-crypto.c
+@@ -119,6 +119,20 @@ static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
+ 	return ufshcd_clear_keyslot(hba, slot);
+ }
  
++static int ufshcd_crypto_derive_sw_secret(struct blk_crypto_profile *profile,
++					  const u8 wkey[], size_t wkey_size,
++					  u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE])
++{
++	struct ufs_hba *hba =
++		container_of(profile, struct ufs_hba, crypto_profile);
++
++	if (hba->vops && hba->vops->derive_sw_secret)
++		return  hba->vops->derive_sw_secret(hba, wkey, wkey_size,
++						    sw_secret);
++
++	return -EOPNOTSUPP;
++}
++
+ bool ufshcd_crypto_enable(struct ufs_hba *hba)
+ {
+ 	if (!(hba->caps & UFSHCD_CAP_CRYPTO))
+@@ -132,6 +146,7 @@ bool ufshcd_crypto_enable(struct ufs_hba *hba)
+ static const struct blk_crypto_ll_ops ufshcd_crypto_ops = {
+ 	.keyslot_program	= ufshcd_crypto_keyslot_program,
+ 	.keyslot_evict		= ufshcd_crypto_keyslot_evict,
++	.derive_sw_secret	= ufshcd_crypto_derive_sw_secret,
+ };
+ 
+ static enum blk_crypto_mode_num
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 680c010a53d4..8a773434a329 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -321,6 +321,7 @@ struct ufs_pwr_mode_info {
+  * @device_reset: called to issue a reset pulse on the UFS device
+  * @config_scaling_param: called to configure clock scaling parameters
+  * @program_key: program or evict an inline encryption key
++ * @derive_sw_secret: derive sw secret from a wrapped key
+  * @event_notify: called to notify important events
+  * @reinit_notify: called to notify reinit of UFSHCD during max gear switch
+  * @mcq_config_resource: called to configure MCQ platform resources
+@@ -365,6 +366,9 @@ struct ufs_hba_variant_ops {
+ 	int	(*program_key)(struct ufs_hba *hba,
+ 			       const struct blk_crypto_key *bkey,
+ 			       const union ufs_crypto_cfg_entry *cfg, int slot);
++	int	(*derive_sw_secret)(struct ufs_hba *hba, const u8 wkey[],
++				    unsigned int wkey_size,
++				    u8 sw_secret[BLK_CRYPTO_SW_SECRET_SIZE]);
+ 	void	(*event_notify)(struct ufs_hba *hba,
+ 				enum ufs_event_type evt, void *data);
+ 	void	(*reinit_notify)(struct ufs_hba *);
 -- 
 2.43.0
 
