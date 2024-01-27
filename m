@@ -1,46 +1,46 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C14F3218B;
-	Sat, 27 Jan 2024 23:26:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAA145959;
+	Sat, 27 Jan 2024 23:26:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706398012; cv=none; b=aFsegzHITJS1kWMjHpNeDQ7MJbf0Aab3VULfE4aHKCWVh4KHM4irEw/Gh35fl0JK6gI89SBi/C3MOpTjfkIBn/gz4FTNmj5y1nPxugP055KFq69nwdUHI56i5G8Krb4b2VHYpQq74khCEk8HxLm1VqXgPsoPCtK8j1ItPb2feRQ=
+	t=1706398012; cv=none; b=BXYDRX6DbHcGAtzw3G06ZAuOaJM1re8N/Fyh7iHb2ppFT9PeQ6jVRJZGVQFZc90YN4CYXvI9WRYJcLIyKdgYha4JtIUjFn90ZijAxtTKDIfYeSEL242n5GGejAyUt80UqTAAr9wwFj3v84hmgY9mkopccz7PiyhzmltLo1SqPpI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1706398012; c=relaxed/simple;
-	bh=dggcWDGlnE/h/JrGhQotIsZI8RLZ/aPTvyRmoDXPyIs=;
+	bh=uFzYOBGLEFbtjSpClA4EglUVe5wO/NhVVgsIvf+G5NA=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QH7hhXkvk1xHK0f+F7O/IVHU6btWv+GN1c2bPBeNs7ob5O9bPiOVfUtSJYskZipsyFoBp9qOZpDFIJbSx0p023YScVU7smZfeMGKa+pmnluWKlsHgj8yUxA6w2ISAs9dzdXtsP5gXWhUE6Wuf5KB8rLWJsQMMx0mumm6ofDMDq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=aJcD05gv; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=h7GtIila1+/SMYtoodYDBWkZYHV6odM65qYVKIL+kycoXpbreNV1MGVIolzyFx/0Ln5ceA9LOF+WAgULBjvKh8cYVG732v5rtK10W6aeTiA0n6lLJ8mbWuJr5B/UFvTHsNs1MfGD+NCTuJtuj9l5kbnBdQhSLe5rALi3YA9x0ao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=XolMEuC5; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="aJcD05gv"
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="XolMEuC5"
 Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40RN1QmR020317;
-	Sat, 27 Jan 2024 23:26:25 GMT
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40RNQOP3000906;
+	Sat, 27 Jan 2024 23:26:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	qcppdkim1; bh=EVy1Whp1fEX2E6iJ0cv7YjXVOSm7Sb+8vbZjvGNLpS0=; b=aJ
-	cD05gv+axsji6AWbr9dEywFZvK1Pr67fSTBAWYPsE0ZiHFQM+AjEMUV+w2S3CxDc
-	gAgPM5AHhBIIkIxcnkiUg7ixA+WE/ZmHEcQNGJRWhz5rTxAKwQQP4e2VZ9U6SSJb
-	QKU3FNOcTXGUE9sMk2rF3NZWq+AoHRCG059OGPBCa2ECBj476XIseHGNqa2tZi4v
-	BpDt9nDck+d7EeYkLGhSn9ma3zFz/joZs8g+UIzzV77VqRwz8+xk4njSNvEcrZXZ
-	kNRy0Bh+lc1Aw4ixKIYWXK+YxatJRsQxTBym+SotgDvmH28PSgNulEJe9SiT+8G8
-	XZfrMSfUkYxE78ozKjyg==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vvu0rs1j3-1
+	qcppdkim1; bh=VHKfjZB1aXfXcepHFQtDQkyCYx8GZ9P4kZUo6KA6Bb0=; b=Xo
+	lMEuC5JCK1+GrUNyanXuHuz/+0ECQGU/ATbD2vbIsqOJp3yVMY2MDFPrSzFKAEbl
+	+jX4TwP0GRoCwrBOXKVnzNI/aXbiFKqBb2QfjuWrD8vtmhh4kBUtjA+0P3wvTfST
+	bBQw6/Rnu+ZE3pWH+WO1wCsT9CNmbjWCvjxfVlgFYYuWOhO3A8wT8m0t6mMIbsWD
+	8OaNRmTL2Vp9xogmeyZHCvgEzUV1EQBer3KOszqBUzRV0bfKkfR9FulXHybNmmPP
+	YNS0d+8AtA0sFZW+yxOxCG+iBwD9xUkIerb6Sd1IBX+KVutniambadfiYNEPKzCI
+	sKLAnINZcMEBSgD/0EXQ==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vvu0rs1j2-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Sat, 27 Jan 2024 23:26:24 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40RNQNFS010255
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40RNQNSA031165
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 27 Jan 2024 23:26:24 GMT
+	Sat, 27 Jan 2024 23:26:23 GMT
 Received: from hu-gaurkash-lv.qualcomm.com (10.49.16.6) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Sat, 27 Jan 2024 15:26:20 -0800
+ 15.2.1118.40; Sat, 27 Jan 2024 15:26:19 -0800
 From: Gaurav Kashyap <quic_gaurkash@quicinc.com>
 To: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <andersson@kernel.org>, <ebiggers@google.com>,
@@ -55,9 +55,9 @@ CC: <linux-kernel@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
         <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <mani@kernel.org>,
         <davem@davemloft.net>, <herbert@gondor.apana.org.au>,
         Gaurav Kashyap <quic_gaurkash@quicinc.com>
-Subject: [PATCH v4 13/15] dt-bindings: crypto: ice: document the hwkm property
-Date: Sat, 27 Jan 2024 15:14:11 -0800
-Message-ID: <20240127232436.2632187-14-quic_gaurkash@quicinc.com>
+Subject: [PATCH v4 10/15] ufs: host: wrapped keys support in ufs qcom
+Date: Sat, 27 Jan 2024 15:14:08 -0800
+Message-ID: <20240127232436.2632187-11-quic_gaurkash@quicinc.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
 References: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
@@ -73,8 +73,8 @@ X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: TyFuLK0k5a895ZQkLuUabwPwb5_UHJqY
-X-Proofpoint-ORIG-GUID: TyFuLK0k5a895ZQkLuUabwPwb5_UHJqY
+X-Proofpoint-GUID: U817TLmrnVnMUsQBD6bYYv0JmEJIl6a-
+X-Proofpoint-ORIG-GUID: U817TLmrnVnMUsQBD6bYYv0JmEJIl6a-
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-01-25_14,2024-01-25_01,2023-05-22_02
@@ -84,44 +84,46 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspect
  impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2401190000 definitions=main-2401270178
 
-When Qualcomm's Inline Crypto Engine (ICE) contains Hardware
-Key Manager (HWKM), and the 'HWKM' mode is enabled, it
-supports wrapped keys. However, this also requires firmware
-support in Trustzone to work correctly, which may not be available
-on all chipsets. In the above scenario, ICE needs to support standard
-keys even though HWKM is integrated from a hardware perspective.
+Use the wrapped keys quirk when hwkm is supported/used.
+Whether to use HWKM or not would be decided during an ICE
+probe, and based on this information, UFS can decide to use
+wrapped keys or standard keys.
 
-Introducing this property so that Hardware wrapped key support
-can be enabled/disabled from software based on chipset firmware,
-and not just based on hardware version.
+Also, propagate the appropriate key size to the ICE driver
+when wrapped keys are used.
 
 Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
 Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
 ---
- .../bindings/crypto/qcom,inline-crypto-engine.yaml     | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/ufs/host/ufs-qcom.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml b/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
-index 09e43157cc71..6415d7be9b73 100644
---- a/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
-+++ b/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
-@@ -25,6 +25,16 @@ properties:
-   clocks:
-     maxItems: 1
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index acf352594362..5c9ba06438a9 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -123,6 +123,8 @@ static int ufs_qcom_ice_init(struct ufs_qcom_host *host)
  
-+  qcom,ice-use-hwkm:
-+    type: boolean
-+    description:
-+      Use the supported Hardware Key Manager (HWKM) in Qualcomm ICE
-+      to support wrapped keys. Having this entry helps scenarios where
-+      the ICE hardware supports HWKM, but the Trustzone firmware does
-+      not have the full capability to use this HWKM and support wrapped
-+      keys. Not having this entry enabled would make ICE function in
-+      non-HWKM mode supporting standard keys.
+ 	host->ice = ice;
+ 	hba->caps |= UFSHCD_CAP_CRYPTO;
++	if (qcom_ice_hwkm_supported(host->ice))
++		hba->quirks |= UFSHCD_QUIRK_USES_WRAPPED_CRYPTO_KEYS;
+ 
+ 	return 0;
+ }
+@@ -160,7 +162,11 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
+ 	    cap.key_size != UFS_CRYPTO_KEY_SIZE_256)
+ 		return -EOPNOTSUPP;
+ 
+-	ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
++	if (bkey->crypto_cfg.key_type == BLK_CRYPTO_KEY_TYPE_HW_WRAPPED)
++		ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_WRAPPED;
++	else
++		ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
 +
- required:
-   - compatible
-   - reg
+ 	if (config_enable)
+ 		return qcom_ice_program_key(host->ice,
+ 					    QCOM_ICE_CRYPTO_ALG_AES_XTS,
 -- 
 2.43.0
 
