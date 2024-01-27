@@ -1,45 +1,46 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD2E72032F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F364200BD;
 	Sat, 27 Jan 2024 23:29:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706398184; cv=none; b=ckiEhHEKdFuIlhbOkcEltt8Ub/z9YMqSnTYm47pWL2TpI54bJpCBNYdrHArIN5hWjlWNDY4rjidBPf/Hn0Sy5ar6Cx8VSzTXkUS8tu0Mvb722p4slfujafUMlP2fmT+hZt/EDAd95GCAGRMnxxUv2yD7PBH7K2Y/Hu3XS48elr4=
+	t=1706398184; cv=none; b=Msdlqi0Tllfhc4Ted7XZZgEYVNSHm5EqnLohapk3/TUgSnRVX3eekN7JD7oJeFswS5SjyHPw6Q6tgC35mTcfgvyrLNKBs7b7MhdZzUqv3pto362cRb5BPazuNwPuMeZoDwcLvpkvOOjwLmXkKpKrFob942t7zyRiwxppH0Hlnek=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1706398184; c=relaxed/simple;
-	bh=+7sGisfjBDLw3/+65hJ8oE5P46X3obGEXGgOIuz9ZDM=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=WN4xbYs5aEHyutr32vx6/LRaNluha9nlIAI5O6800j5n/8eftWYQWKAE5pnlBJIYOG+TZmf3t6Sfgu1nj3q3CDxafz6ZsLmFPkSbJZv0sfS5CniqbOTNC1P5L+CnHHnjebDH+4OA6TYsLCcodh0jl8ZSxqbwijOtgqZgHPu1epo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=cfl0SUTN; arc=none smtp.client-ip=205.220.180.131
+	bh=potbFclKfnBq3j0GUJ+P4wlLfgbpq1NvSB/gWrUhxYc=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=V2tF7z8CBRdcvRNMPy4Rh8Yn2sGnPuWsUjLAezZqpKPH578cLXaUj0RrvFxCwO+Qenw3TopDRU9FZcgDCYM+REOyq+n64819MbuRAqZagNP8KD0v7wfkmdvuaoRtPsoyYxPsgXmQNO0D1m1Ly/IULRn+Bo+Y7GbXt5u4iSEyWBo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=U54o7f9B; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="cfl0SUTN"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40RNQLfd032284;
-	Sat, 27 Jan 2024 23:26:21 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="U54o7f9B"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40RNDZqF003351;
+	Sat, 27 Jan 2024 23:26:25 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding:content-type; s=qcppdkim1; bh=ZtabC2d
-	xcshri/iz1qUsrq8UwR1bNPdOel6KB0APenU=; b=cfl0SUTNFei8oB1OgxmCymf
-	Fd55UL9id5JYRDZW/RGhR6frlnO5M4c9WyeooGnVmN44ewHfS+SBBy5BaBrtoYhW
-	Zoc3/Mx9VoRkEKrplwzxpvn8xMUq9QwRzcrS1M86vysyOd/gYPDwszboc/mDRHMl
-	KDqrt1t1ImzXvdsC47RhN/waFn/Q9zpP3I0kVF02XBBZP6nw+DC+vpSYSBB7Htev
-	5SZVPfrRB0/rthcWsh8Sn/Fpnexmd+dmvgzfDQRWS/OGdtjsLqabiQXCi0I7mT2p
-	ipBFHj6Gx4u0dY0T2HevnRU9cFNCxDmURn7RVc6Vb0b88ws1MQypmRCQx90GksA=
-	=
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vvq6shb8t-1
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=9n5q1g0UwaFVCc2WjJgGkUUt2Q5/PH1F2MWmA0Uawms=; b=U5
+	4o7f9BlMyTRRfw8RqfJ/YNWjchE9r8nCie6/GRcUF/8/9THLJDrNlvOGnWxd0E6o
+	gvsvb/vsOH+y1siEfYlm7IINl/GN+Tz7WfwdD1QEkavWL6ZVjyKE7OS+lJT5vL6c
+	9DpjEjeH+VZ+LJ6b2tSZT+g9LFehrzrMBHCNU8wjQ8Rl+R6R07nj2ZQJuHBS+rnY
+	bZ0gm32CxGImIk+yYJOFqCA72xgYNnXyRIGGh7F3NMQ17DephzU5q4KWbVuKlf1o
+	30odD6HKWM+38aX+MPCuZJfgcsUz+RUM0hl5eN426yT7s7THUZD2fnih9+EqhYGx
+	A+pTW14WDAJlm3H8A1yA==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vvrub95r3-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 27 Jan 2024 23:26:20 +0000 (GMT)
+	Sat, 27 Jan 2024 23:26:25 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40RNQJmV031151
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40RNQOLu030323
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 27 Jan 2024 23:26:19 GMT
+	Sat, 27 Jan 2024 23:26:24 GMT
 Received: from hu-gaurkash-lv.qualcomm.com (10.49.16.6) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Sat, 27 Jan 2024 15:26:16 -0800
+ 15.2.1118.40; Sat, 27 Jan 2024 15:26:20 -0800
 From: Gaurav Kashyap <quic_gaurkash@quicinc.com>
 To: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <andersson@kernel.org>, <ebiggers@google.com>,
@@ -54,10 +55,12 @@ CC: <linux-kernel@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
         <jejb@linux.ibm.com>, <martin.petersen@oracle.com>, <mani@kernel.org>,
         <davem@davemloft.net>, <herbert@gondor.apana.org.au>,
         Gaurav Kashyap <quic_gaurkash@quicinc.com>
-Subject: [PATCH v4 00/15] Hardware wrapped key support for qcom ice and ufs
-Date: Sat, 27 Jan 2024 15:13:58 -0800
-Message-ID: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
+Subject: [PATCH v4 14/15] arm64: dts: qcom: sm8650: add hwkm support to ufs ice
+Date: Sat, 27 Jan 2024 15:14:12 -0800
+Message-ID: <20240127232436.2632187-15-quic_gaurkash@quicinc.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
+References: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,119 +73,48 @@ X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: KjY5zR7Wb7Z5kNM7GdqgFixxWWs-mXHx
-X-Proofpoint-ORIG-GUID: KjY5zR7Wb7Z5kNM7GdqgFixxWWs-mXHx
+X-Proofpoint-ORIG-GUID: N49R5dCBw9SrZqO1oH6F2jv-W7B6gbrG
+X-Proofpoint-GUID: N49R5dCBw9SrZqO1oH6F2jv-W7B6gbrG
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-01-25_14,2024-01-25_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 spamscore=0
- phishscore=0 adultscore=0 clxscore=1015 malwarescore=0 priorityscore=1501
- suspectscore=0 mlxscore=0 lowpriorityscore=0 mlxlogscore=999
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ bulkscore=0 mlxlogscore=943 spamscore=0 mlxscore=0 malwarescore=0
+ priorityscore=1501 adultscore=0 suspectscore=0 impostorscore=0
+ phishscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2401190000 definitions=main-2401270178
 
-The fourth iteration of patches that add support to Qualcomm ICE (Inline Crypto Engine) for hardware wrapped keys using Qualcomm Hardware Key Manager (HWKM)
+The Inline Crypto Engine (ICE) for UFS/EMMC supports the
+Hardware Key Manager (HWKM) to securely manage storage
+keys. Enable using this hardware on sm8650.
 
-These patches do the following:
-- Address comments from previous versions (https://lore.kernel.org/linux-arm-msm/20231122053817.3401748-1-quic_gaurkash@quicinc.com/)
-- Tested on top of Eric's latest fscrypt and block set: https://lore.kernel.org/all/20231104211259.17448-1-ebiggers@kernel.org/
-- Rebased and tested on top of Linaro's SHMBridge patches: (https://lkml.org/lkml/2023/11/20/555)
+This requires two changes:
+1. Register size increase: HWKM is an additional piece of hardware
+   sitting alongside ICE, and extends the old ICE's register space.
+2. Explicitly tell the ICE driver to use HWKM with ICE so that
+   wrapped keys are used in sm8650.
 
-Explanation and use of hardware-wrapped-keys can be found here:
-Documentation/block/inline-encryption.rst (https://lore.kernel.org/all/20231104211259.17448-1-ebiggers@kernel.org/)
+Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
+Reviewed-by: Om Prakash Singh <quic_omprsing@quicinc.com>
+Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
+---
+ arch/arm64/boot/dts/qcom/sm8650.dtsi | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Testing: 
-Test platform: SM8650 MTP
-
-The changes were tested by mounting initramfs and running the fscryptctl
-tool (Ref: https://github.com/ebiggers/fscryptctl/tree/wip-wrapped-keys) to
-generate and prepare keys, as well as to set policies on folders, which
-consequently invokes disk encryption flows through UFS.
-
-Tested both standard and wrapped keys (Removing qcom,ice-use-hwkm from dtsi will support using standard keys)
-
-Steps to test:
-
-The following configs were enabled:
-CONFIG_BLK_INLINE_ENCRYPTION=y
-CONFIG_QCOM_INLINE_CRYPTO_ENGINE=m
-CONFIG_FS_ENCRYPTION_INLINE_CRYPT=y
-CONFIG_SCSI_UFS_CRYPTO=y
-
-Flash boot image to shell and run the following commands
-
-Creating and preparing keys
-- mkfs.ext4 -F -O encrypt,stable_inodes /dev/disk/by-partlabel/userdata
-- mount /dev/disk/by-partlabel/userdata -o inlinecrypt /mnt
-- ./fscryptctl generate_hw_wrapped_key /dev/disk/by-partlabel/userdata > /mnt/key.longterm  OR
-   dd if=/dev/zero bs=32 count=1 | tr '\0' 'X' \ | fscryptctl import_hw_wrapped_key /dev/disk/by-partlabel/userdata > /mnt/key.longterm
-- ./fscryptctl prepare_hw_wrapped_key /dev/disk/by-partlabel/userdata < /mnt/key.longterm > /tmp/key.ephemeral
-- ./fscryptctl add_key --hw-wrapped-key < /tmp/key.ephemeral /mnt
-
-Create a folder and associate created keys with the folder
-- rm -rf /mnt/dir
-- mkdir /mnt/dir
-- ./fscryptctl set_policy --hw-wrapped-key --iv-ino-lblk-64 "$keyid" /mnt/dir
-- dmesg > /mnt/dir/test.txt
-- sync
-
-- Reboot
-- mount /dev/disk/by-partlabel/userdata -o inlinecrypt /mnt
-- ls /mnt/dir (You should see an encrypted file)
-- ./fscryptctl prepare_hw_wrapped_key /dev/disk/by-partlabel/userdata < /mnt/key.longterm > /tmp/key.ephemeral
-- ./fscryptctl add_key --hw-wrapped-key < /tmp/key.ephemeral /mnt
-- cat /mnt/dir/test.txt
-
-NOTE: Evicting a key with HWKM is not supported in the current SCM call for HWKM v2 chipsets, TZ already supports a different call for this.
-Changes will be added separately for these after further internal discussions. But this should not stop merging the existing patches.
-
-Merge Strategy:
-
-This is an open-ended question to the community and the respective component maintainers.
-The changes have the following components.
-
-- Fscrypt and block patches (From Eric Biggers)
-- SHMBridge patches (Bartosz Golaszewski)
-- Qualcomm SCM (This patchset)
-- Qualcomm ICE (This patchset)
-- UFS Core ((This patchset))
-- Qualcomm UFS Host (This patchset)
-
-It would be ideal if one maintainer can take in all the changes together since working with many immutable branches shared with each other might get tricky.
-
-Gaurav Kashyap (15):
-  ice, ufs, mmc: use blk_crypto_key for program_key
-  qcom_scm: scm call for deriving a software secret
-  qcom_scm: scm call for create, prepare and import keys
-  soc: qcom: ice: add hwkm support in ice
-  soc: qcom: ice: support for hardware wrapped keys
-  soc: qcom: ice: support for generate, import and prepare key
-  ufs: core: support wrapped keys in ufs core
-  ufs: core: add support to derive software secret
-  ufs: core: add support for generate, import and prepare keys
-  ufs: host: wrapped keys support in ufs qcom
-  ufs: host: implement derive sw secret vop in ufs qcom
-  ufs: host: support for generate, import and prepare key
-  dt-bindings: crypto: ice: document the hwkm property
-  arm64: dts: qcom: sm8650: add hwkm support to ufs ice
-  arm64: dts: qcom: sm8550: add hwkm support to ufs ice
-
- .../crypto/qcom,inline-crypto-engine.yaml     |  10 +
- arch/arm64/boot/dts/qcom/sm8550.dtsi          |   3 +-
- arch/arm64/boot/dts/qcom/sm8650.dtsi          |   3 +-
- drivers/firmware/qcom/qcom_scm.c              | 247 ++++++++++++++
- drivers/firmware/qcom/qcom_scm.h              |   4 +
- drivers/mmc/host/cqhci-crypto.c               |   7 +-
- drivers/mmc/host/cqhci.h                      |   2 +
- drivers/mmc/host/sdhci-msm.c                  |   6 +-
- drivers/soc/qcom/ice.c                        | 315 +++++++++++++++++-
- drivers/ufs/core/ufshcd-crypto.c              |  87 ++++-
- drivers/ufs/host/ufs-qcom.c                   |  61 +++-
- include/linux/firmware/qcom/qcom_scm.h        |   7 +
- include/soc/qcom/ice.h                        |  18 +-
- include/ufs/ufshcd.h                          |  22 ++
- 14 files changed, 754 insertions(+), 38 deletions(-)
-
+diff --git a/arch/arm64/boot/dts/qcom/sm8650.dtsi b/arch/arm64/boot/dts/qcom/sm8650.dtsi
+index 2df77123a8c7..c27daf576af5 100644
+--- a/arch/arm64/boot/dts/qcom/sm8650.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8650.dtsi
+@@ -2524,7 +2524,8 @@ &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+ 		ice: crypto@1d88000 {
+ 			compatible = "qcom,sm8650-inline-crypto-engine",
+ 				     "qcom,inline-crypto-engine";
+-			reg = <0 0x01d88000 0 0x8000>;
++			reg = <0 0x01d88000 0 0x10000>;
++			qcom,ice-use-hwkm;
+ 
+ 			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
+ 		};
 -- 
 2.43.0
 
