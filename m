@@ -1,119 +1,92 @@
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5169810E4
-	for <linux-scsi@vger.kernel.org>; Sun, 28 Jan 2024 01:01:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4AD51362;
+	Sun, 28 Jan 2024 01:50:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706403692; cv=none; b=Y6jf5vM9+L1Vxpgpnz6hs62YQRkhSozy/GSGWWH+JfPKFigE+AgVCrU1xlJ7Hivg/DLn2/TlibYtaYZLaRxtT1+X96qWIsYIdW8T7AliJC//ZCR5PsOQ6LO48zBy3KnhqEfXhwLkLi8qj1xnsQm9zgdiYHgMth5XTGyUXouq07E=
+	t=1706406609; cv=none; b=h3EzvtcBl585bkkmKJP00NVGw9FgoHy1yXkLoM1jkEU2beDMXUACHzKQRubzEMbwYP7Xd6JfjwHKqbV5Ut/KA5a3N60gkGvxMv7xy9sBVzYFtI6S5ZcrJ+VEWxrwwOnk5ZczsOjxwFbNjTx6k2JUVhp7Dbwx9n04Qs1qXmny4kg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706403692; c=relaxed/simple;
-	bh=s1ktUUM3CbOPG51ADbCX7yYyhsiSqRrPySzxWGfX3cw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uHXg3k0+mSkXu2or/YujqJzBTYahThlWf7LCtOLTVMBST+ePIp5YFudZjtElmc+2/8MG7/s8fman5aXQLxsAjXDJZ2WqO+6zbXEPVyiJVCYgPOAUa0BviIoSoBXa/fhNXKKRatZgv4C2709Ic3WNy99VTKpnI4I9mhV6u7+GaOo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=iU3z4Mk8; arc=none smtp.client-ip=209.85.128.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1706406609; c=relaxed/simple;
+	bh=SYut84D1SsmE34WN82G+H0xoo0YRKUwAO6HyDU0GEGU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Nw9LTlXSUxYXvjRdpbyqAFgOzettCf4AdeCCOX49aqe+G66NHTtFX74Qb3HOOvpcuK+Qpb3gvAC+seU7cBEsCm+tahq6kyBjU4xNPqykYQbgnFt9fZmxJlo2OiMfXVphkpoiHXnb2JCCky12JcOTVqYnpnDhB/FcB/4Z3bG/2Os=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=N//n48oY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="iU3z4Mk8"
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-5f69383e653so21604557b3.1
-        for <linux-scsi@vger.kernel.org>; Sat, 27 Jan 2024 17:01:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1706403690; x=1707008490; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Akq4ZUpGAZUPtZ9ZSl7kec9+rWKqnjhKQTKGm0D6B4E=;
-        b=iU3z4Mk8LGTYyxCHw/aQclMPmjNBcd6xju8kqXbvDKIjCe792H4H12h8GKYp8Uy8d4
-         Rjq5Y/zOfU9cOqx5HHIFFnXUGVZHKKSTb/nNx+JmBdefMcUafRWfu+wK6eUJq41YcY34
-         tXVlwMIxzH+6zTm6iifdoo73zlWuLESVF6QHAa1PQLXB9RhUvrFrS3b1NjrZ+ziVn7Oy
-         Lc86UxfxxeWlSGWmVPez6uje9gdDop/if/+xXDfjbQKocyrbUEAe1rBcEggCOTDUQypZ
-         lZxQspP/3QGzHMRSMW95OSF8g7spAcO6QUOlEgo4ukdymr4uYOPWAYOM8u+sHJCsQcrG
-         79ew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706403690; x=1707008490;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Akq4ZUpGAZUPtZ9ZSl7kec9+rWKqnjhKQTKGm0D6B4E=;
-        b=Z4Ai3PvdEerOwZJu7rE4F4UqPQc4lhB+dIeIohePALnudhI3xo0qGWdMxVlYZjIEcm
-         GlMvbcJOgWCIad+xjIdkal6EHfHxxcnQnBZoUn/O+laFXEecp3AIdYx72Qw+phjtKCRb
-         9KxLyFYg5EZ4j5ahonuVaBLrTudNfovIIqMtMEfJ5aHtIPMNf2XOCatuJJZO0XQdZEUp
-         fv0jB+z5H7U9qSX2eTLcVsaIQd/nHMHfko4JNK7/8rs7I7n39FJRT1eHdEobwxTyxQ9h
-         s9v9dFt2yLlC6OTKOx6dtN/IKVynj0YBqZ+wivNmkVmmCFZnUlNvh39hrIVdndb0GNNb
-         1YyA==
-X-Gm-Message-State: AOJu0YyjR8u5WqxrBSxuQao1NgU/qLDMQt4YuRBljYPSdas+3LSJQFjd
-	o5yMeIXDgH5KhHk1C9ZLCKCFm6zmkvH4ZkpJgqMcSOtNpf7RQSxrVHPdr/7jtPEDhpItlI/MMuW
-	queSPdH9G0rcGWvx7u8f16nI3wePUjGezq1VjMg==
-X-Google-Smtp-Source: AGHT+IFYb7HatSQPPLoPjPqnFQmWWbGZoWPVCQcd0gG1UWF2VmrKzHToe0mTzGvGfmkPE6SpfevyHBwphWYYblRQKag=
-X-Received: by 2002:a81:6d4a:0:b0:5d7:1941:aa6 with SMTP id
- i71-20020a816d4a000000b005d719410aa6mr2551028ywc.65.1706403689965; Sat, 27
- Jan 2024 17:01:29 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="N//n48oY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36B04C433F1;
+	Sun, 28 Jan 2024 01:50:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1706406608;
+	bh=SYut84D1SsmE34WN82G+H0xoo0YRKUwAO6HyDU0GEGU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=N//n48oYvmeLyTEhOrGKToaMnL5VSe20rcdr/t5NveopbPzwBq220bdf9TwbaFS7e
+	 B9DOLH+jMJ8P/sxJ6PDxglj9WrLLu85rgS6xEYoXkHBzZ6mO2STCt+50/bL07CNA7n
+	 ng6SDF6ov0FpjdUAM4xa5EWjhD+CJTvcNcBRDMiw=
+Date: Sat, 27 Jan 2024 17:50:06 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Milan Broz <gmazyland@gmail.com>
+Cc: linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+	linux-scsi@vger.kernel.org, stern@rowland.harvard.edu,
+	oneukum@suse.com
+Subject: Re: [PATCH v6] usb-storage,uas: use host helper to generate driver
+ info
+Message-ID: <2024012744-ungreased-retention-4e84@gregkh>
+References: <20231103201709.124372-1-gmazyland@gmail.com>
+ <20231105182047.166007-1-gmazyland@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240127232436.2632187-1-quic_gaurkash@quicinc.com> <20240127232436.2632187-16-quic_gaurkash@quicinc.com>
-In-Reply-To: <20240127232436.2632187-16-quic_gaurkash@quicinc.com>
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date: Sun, 28 Jan 2024 03:01:18 +0200
-Message-ID: <CAA8EJpr5fLYR1v64-DtjOigkUy3579tx_gwHpFWr9k0GyGajGw@mail.gmail.com>
-Subject: Re: [PATCH v4 15/15] arm64: dts: qcom: sm8550: add hwkm support to
- ufs ice
-To: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	andersson@kernel.org, ebiggers@google.com, neil.armstrong@linaro.org, 
-	srinivas.kandagatla@linaro.org, krzysztof.kozlowski+dt@linaro.org, 
-	conor+dt@kernel.org, robh+dt@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mmc@vger.kernel.org, kernel@quicinc.com, linux-crypto@vger.kernel.org, 
-	devicetree@vger.kernel.org, quic_omprsing@quicinc.com, 
-	quic_nguyenb@quicinc.com, bartosz.golaszewski@linaro.org, 
-	konrad.dybcio@linaro.org, ulf.hansson@linaro.org, jejb@linux.ibm.com, 
-	martin.petersen@oracle.com, mani@kernel.org, davem@davemloft.net, 
-	herbert@gondor.apana.org.au
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231105182047.166007-1-gmazyland@gmail.com>
 
-On Sun, 28 Jan 2024 at 01:28, Gaurav Kashyap <quic_gaurkash@quicinc.com> wrote:
->
-> The Inline Crypto Engine (ICE) for UFS/EMMC supports the
-> Hardware Key Manager (HWKM) to securely manage storage
-> keys. Enable using this hardware on sm8550.
->
-> This requires two changes:
-> 1. Register size increase: HWKM is an additional piece of hardware
->    sitting alongside ICE, and extends the old ICE's register space.
-> 2. Explicitly tell the ICE driver to use HWKM with ICE so that
->    wrapped keys are used in sm8550.
->
-> NOTE: Although wrapped keys cannot be independently generated and
-> tested on this platform using generate, prepare and import key calls,
-> there are non-kernel paths to create wrapped keys, and still use the
-> kernel to program them into ICE. Hence, enabling wrapped key support
-> on sm8550 too.
->
-> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> ---
->  arch/arm64/boot/dts/qcom/sm8550.dtsi | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/arm64/boot/dts/qcom/sm8550.dtsi b/arch/arm64/boot/dts/qcom/sm8550.dtsi
-> index ee1ba5a8c8fc..b5b41d0a544c 100644
-> --- a/arch/arm64/boot/dts/qcom/sm8550.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sm8550.dtsi
-> @@ -1977,7 +1977,8 @@ ufs_mem_hc: ufs@1d84000 {
->                 ice: crypto@1d88000 {
->                         compatible = "qcom,sm8550-inline-crypto-engine",
->                                      "qcom,inline-crypto-engine";
-> -                       reg = <0 0x01d88000 0 0x8000>;
-> +                       reg = <0 0x01d88000 0 0x10000>;
+On Sun, Nov 05, 2023 at 07:20:47PM +0100, Milan Broz wrote:
+> The USB mass storage quirks flags can be stored in driver_info in
+> a 32-bit integer (unsigned long on 32-bit platforms).
+> As this attribute cannot be enlarged, we need to use some form
+> of translation of 64-bit quirk bits.
+> 
+> This problem was discussed on the USB list
+> https://lore.kernel.org/linux-usb/f9e8acb5-32d5-4a30-859f-d4336a86b31a@gmail.com/
+> 
+> The initial solution to use a static array extensively increased the size
+> of the kernel module, so I decided to try the second suggested solution:
+> generate a table by host-compiled program and use bit 31 to indicate
+> that the value is an index, not the actual value.
+> 
+> This patch adds a host-compiled program that processes unusual_devs.h
+> (and unusual_uas.h) and generates files usb-ids.c and usb-ids-uas.c
+> (for pre-processed USB device table with 32-bit device info).
+> These files also contain a generated translation table for driver_info
+> to 64-bit values.
+> 
+> The translation function is used only in usb-storage and uas modules; all
+> other USB storage modules store flags directly, using only 32-bit flags.
+> 
+> For 64-bit platforms, where unsigned long is 64-bit, we do not need to
+> convert quirk flags to 32-bit index; the translation function there uses
+> flags directly.
+> 
+> Signed-off-by: Milan Broz <gmazyland@gmail.com>
 
-Does the driver fail gracefully with the old DT size? At least it
-should not crash.
+I see the need for this, but why now?  We haven't run out of ids yet
+have we?  Do we need to add another one?
 
-> +                       qcom,ice-use-hwkm;
->                         clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
+Also, after building, I get the following files marked by git as needed
+to be added to the tree, so perhaps you also need a .gitignore file:
 
--- 
-With best wishes
-Dmitry
+$ git status
+On branch work-testing
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	drivers/usb/storage/mkflags
+	drivers/usb/storage/usb-ids-uas.c
+	drivers/usb/storage/usb-ids.c
+
+thanks,
+
+greg k-h
