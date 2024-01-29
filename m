@@ -1,134 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02997163A90;
-	Mon, 29 Jan 2024 18:36:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D76EE15697F
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2024 20:57:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706553397; cv=none; b=uP0/73CPnDuTA/wvU6vWKNGLJiUj5Bv2nWvkzCaJRzN9fwtJt2ylKOkCzoIMG5qGQTudK0J+2we+BK/NAmA4mrwIVxET973EUzgndfG3NzQx+8VfjsQERpZqWqKk2Xn9i//9k7FNgNPV3TUSwuZ1y5uqee5ykjJIDGepucxjcUM=
+	t=1706561847; cv=none; b=Yis7DdN2E+KI+WY+rw5XFHrGNc6GbRng1n/UJH/VttLxosCQ7FZuRP/TOOjo4ZI2POVqSufehTl/7lI15shMLiNuuyx6of2NYpxcFLt8XL17K1kabjv5MU9+8KG7lJWbt4iJFPQH5rdOXmzpH74k4KRgzihgzV0Ew0lBy2qXNC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706553397; c=relaxed/simple;
-	bh=8+O35hG4S9TnllCWxGdxV+fD6BRhl7a744frjYfU15c=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P79rkaM0sS/Xr63/94hZtTD/Jky1cdWVDx2FVSIs1/sJNMNlm3854gPctjhBAl1hzByPsAFyzg3PspXVqZL0oOvDdrQ+gW2uEMtLdLbxluuHkZqLe89ZCvxY4Rpn/bWoR1tZJtkLdKP1Vn0yk0lO8qscFExAqZMz2BmxCrljYjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=erpjfTK3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706561847; c=relaxed/simple;
+	bh=2b0Fm92BYrv7od4rmimCRIjuTkKWHJKFkRBuhDCF5M8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GlJtwTy3z2Za4owR2DzamYPOK+gfb1lGe9mJ7ZWFR3zbo/6YdhxHUM6R3DmuIlX96jca5cpg55JCp+ZTzD+bLkqMCeuUt5c0cgf5mxLwCnelkP0KCMmNJL2MrMBQOVfJQqv8dOwYb6XZUQdquZ5OhDgd16Fl/CwPVIdlOgY1cRk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dnDGjD7f; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="erpjfTK3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C59DBC433F1;
-	Mon, 29 Jan 2024 18:36:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706553396;
-	bh=8+O35hG4S9TnllCWxGdxV+fD6BRhl7a744frjYfU15c=;
-	h=From:To:Cc:Subject:Date:From;
-	b=erpjfTK3mlyTtQYX61P54SDS4onnfiZYoYet6qUnydpZGVZm0dBgAH7kvjczfngQ7
-	 Ov4tTtpbjPHBU0VPPewI73u1RNs0+ZRcUzjkzrxgG0PrDvsOqvQYuQ90sB9npHROHU
-	 XtlPzRbQavI4CHG57zl11N63N0Bue1Yp0vof8hpTyNqrAOwF5tWSmhqvysqLD10Jea
-	 9xhQaWTZzlelh5kfglZa9rBdKLC/+T8Eno3w0bPK9FN/5DXpAv0QrbMOLsUka1aeUo
-	 qctyDrThsu4mZh1PA14bSqbiqC1v3Cx4nlrV+w0di82yPS6tJ8ud1qkysMtssEzvu1
-	 DWMWmkBA21pXA==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 1/2] scsi: target: core: Add TMF to tmr_list handling
-Date: Mon, 29 Jan 2024 13:36:30 -0500
-Message-ID: <20240129183633.464847-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dnDGjD7f"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1706561844;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ZpSdnNveS03uidkIaCRaoRGMyvrhYIOI4fp4SKhQKFg=;
+	b=dnDGjD7foQGsbnJYwHaGjSBD2tvSuYHwBKcamyuo+SZtGrMtb4EwU7wnaAo9J943DZB9uX
+	bk2SDBJACiuvq3ywVTVVenukiAIOMHudM8FWrzYQcMYETN4b1VyJPycDGqR4/HK6IyEjIu
+	JTdlQNppALWbLI+8/xpZyXCTaI7+EH0=
+Received: from mail-vk1-f199.google.com (mail-vk1-f199.google.com
+ [209.85.221.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-416-eYsld_QQM0KAbI0dBOxu1g-1; Mon, 29 Jan 2024 15:57:23 -0500
+X-MC-Unique: eYsld_QQM0KAbI0dBOxu1g-1
+Received: by mail-vk1-f199.google.com with SMTP id 71dfb90a1353d-4bdb5b84504so711416e0c.1
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2024 12:57:23 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1706561843; x=1707166643;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZpSdnNveS03uidkIaCRaoRGMyvrhYIOI4fp4SKhQKFg=;
+        b=N9y7C7EsEpGQgNPed5Bre3MXJAhaKgA1aq3KgXeutBJh+cPLDdO1GXgzV84Es/b2yS
+         Z5L9itSBVpGQ7FXM9aSbxGcxRbhZr4+f+WfTa7oQxPIwx3sf01qZ7ULLa48mUHL89Ccx
+         G5ZgRAKLTFb0ySxomlRknEq4kUrZOwvtpv6SEs3qJAfOBQ9HLnLMGpyVM/0Fdjs7+wVb
+         z1aJs7Lz8fr85Fwb92mLRtLYHzeZDpwZXfAcgsW3irTxMNL8JFgCxJjzzSuwkA72IhG9
+         RfgOz4VoQ39GVIg28EHfp49Bmqo17vGa2TaoLotf3uNT3gmcUceWKb9/QCv4R76bunp+
+         HzUA==
+X-Gm-Message-State: AOJu0YzM7tsCSah5gwgacuDm/lbV4fmXI9CZG8aJDcJKfckagM3LrJZX
+	XCDMBvQuzq8tm27xbPfF+g5FFbuLTnEc2dqsNXqPVD5gCs73wBwrEZnSIIQehBvmStBdZ7sf2Zd
+	aJZdTKKbM7CvEPfVLgS2qOcuopJrkodc7X5BuW8M62o2BlltYNkp4fpaXJoQ=
+X-Received: by 2002:a05:6122:3a19:b0:4bd:800d:72ec with SMTP id fp25-20020a0561223a1900b004bd800d72ecmr2631120vkb.19.1706561842933;
+        Mon, 29 Jan 2024 12:57:22 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHrcccUSIgYBufwZZNxLHJdlcGzpJI+aaJovr7DFK+X2Rmv+DVoHH+zCYCUjPVWi9ptYcSCvQ==
+X-Received: by 2002:a05:6122:3a19:b0:4bd:800d:72ec with SMTP id fp25-20020a0561223a1900b004bd800d72ecmr2631106vkb.19.1706561842670;
+        Mon, 29 Jan 2024 12:57:22 -0800 (PST)
+Received: from fedora ([2600:1700:1ff0:d0e0::47])
+        by smtp.gmail.com with ESMTPSA id qq2-20020a0562142c0200b0068c3f3752e5sm2671268qvb.116.2024.01.29.12.57.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 29 Jan 2024 12:57:22 -0800 (PST)
+Date: Mon, 29 Jan 2024 14:57:20 -0600
+From: Andrew Halaney <ahalaney@redhat.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konrad.dybcio@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Rob Herring <robh+dt@kernel.org>, Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Andy Gross <agross@kernel.org>, 
+	Andy Gross <andy.gross@linaro.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] scsi: ufs: qcom: Clarify the comment of core_reset
+ property
+Message-ID: <hm2h3uniy75vkjlnk62k3y4bz44khrdwxlk47t3lndc6c3yd2x@sbwcuvrjar5n>
+References: <20240129-ufs-core-reset-fix-v1-0-7ac628aa735f@linaro.org>
+ <20240129-ufs-core-reset-fix-v1-2-7ac628aa735f@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.306
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240129-ufs-core-reset-fix-v1-2-7ac628aa735f@linaro.org>
 
-From: Dmitry Bogdanov <d.bogdanov@yadro.com>
+On Mon, Jan 29, 2024 at 01:22:05PM +0530, Manivannan Sadhasivam wrote:
+> core_reset is not an optional property for the platforms supported in
+> upstream. Only for the non-upstreamed legacy platforms it is optional.
+> But somehow a few of the upstreamed platforms do not pass this property
+> by mistake.
+> 
+> So clarify the comment to make it clear that even though core_reset is
+> required, it is kept as optional to support the DTs that do not pass this
+> property.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 39eef470f8fa..32760506dfeb 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1027,7 +1027,11 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>  	host->hba = hba;
+>  	ufshcd_set_variant(hba, host);
+>  
+> -	/* Setup the optional reset control of HCI */
+> +	/*
+> +	 * Even though core_reset is required on all platforms, some DTs never
+> +	 * passed this property. So we have to keep it optional for supporting
+> +	 * them.
+> +	 */
 
-[ Upstream commit 83ab68168a3d990d5ff39ab030ad5754cbbccb25 ]
+Any desire to print a warning if !host->core_reset? I'll defer to
+Qualcomm to review since they can confirm the accuracy past Can's
+comment, but this looks good to me for what its worth.
 
-An abort that is responded to by iSCSI itself is added to tmr_list but does
-not go to target core. A LUN_RESET that goes through tmr_list takes a
-refcounter on the abort and waits for completion. However, the abort will
-be never complete because it was not started in target core.
-
- Unable to locate ITT: 0x05000000 on CID: 0
- Unable to locate RefTaskTag: 0x05000000 on CID: 0.
- wait_for_tasks: Stopping tmf LUN_RESET with tag 0x0 ref_task_tag 0x0 i_state 34 t_state ISTATE_PROCESSING refcnt 2 transport_state active,stop,fabric_stop
- wait for tasks: tmf LUN_RESET with tag 0x0 ref_task_tag 0x0 i_state 34 t_state ISTATE_PROCESSING refcnt 2 transport_state active,stop,fabric_stop
-...
- INFO: task kworker/0:2:49 blocked for more than 491 seconds.
- task:kworker/0:2     state:D stack:    0 pid:   49 ppid:     2 flags:0x00000800
- Workqueue: events target_tmr_work [target_core_mod]
-Call Trace:
- __switch_to+0x2c4/0x470
- _schedule+0x314/0x1730
- schedule+0x64/0x130
- schedule_timeout+0x168/0x430
- wait_for_completion+0x140/0x270
- target_put_cmd_and_wait+0x64/0xb0 [target_core_mod]
- core_tmr_lun_reset+0x30/0xa0 [target_core_mod]
- target_tmr_work+0xc8/0x1b0 [target_core_mod]
- process_one_work+0x2d4/0x5d0
- worker_thread+0x78/0x6c0
-
-To fix this, only add abort to tmr_list if it will be handled by target
-core.
-
-Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
-Link: https://lore.kernel.org/r/20240111125941.8688-1-d.bogdanov@yadro.com
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/target/target_core_device.c    | 5 -----
- drivers/target/target_core_transport.c | 4 ++++
- 2 files changed, 4 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index a23dcbe79e14..3ed43a5f1fd3 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -164,7 +164,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
- 	struct se_session *se_sess = se_cmd->se_sess;
- 	struct se_node_acl *nacl = se_sess->se_node_acl;
- 	struct se_tmr_req *se_tmr = se_cmd->se_tmr_req;
--	unsigned long flags;
- 
- 	rcu_read_lock();
- 	deve = target_nacl_find_deve(nacl, unpacked_lun);
-@@ -195,10 +194,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
- 	se_cmd->se_dev = rcu_dereference_raw(se_lun->lun_se_dev);
- 	se_tmr->tmr_dev = rcu_dereference_raw(se_lun->lun_se_dev);
- 
--	spin_lock_irqsave(&se_tmr->tmr_dev->se_tmr_lock, flags);
--	list_add_tail(&se_tmr->tmr_list, &se_tmr->tmr_dev->dev_tmr_list);
--	spin_unlock_irqrestore(&se_tmr->tmr_dev->se_tmr_lock, flags);
--
- 	return 0;
- }
- EXPORT_SYMBOL(transport_lookup_tmr_lun);
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 64481a3a34d4..f8ba730fa1cf 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -3463,6 +3463,10 @@ int transport_generic_handle_tmr(
- 	unsigned long flags;
- 	bool aborted = false;
- 
-+	spin_lock_irqsave(&cmd->se_dev->se_tmr_lock, flags);
-+	list_add_tail(&cmd->se_tmr_req->tmr_list, &cmd->se_dev->dev_tmr_list);
-+	spin_unlock_irqrestore(&cmd->se_dev->se_tmr_lock, flags);
-+
- 	spin_lock_irqsave(&cmd->t_state_lock, flags);
- 	if (cmd->transport_state & CMD_T_ABORTED) {
- 		aborted = true;
--- 
-2.43.0
+>  	host->core_reset = devm_reset_control_get_optional(hba->dev, "rst");
+>  	if (IS_ERR(host->core_reset)) {
+>  		err = dev_err_probe(dev, PTR_ERR(host->core_reset),
+> 
+> -- 
+> 2.25.1
+> 
+> 
 
