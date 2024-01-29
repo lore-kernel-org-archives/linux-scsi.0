@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16BB915EAB8;
-	Mon, 29 Jan 2024 18:36:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02997163A90;
+	Mon, 29 Jan 2024 18:36:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706553388; cv=none; b=j+W17+kTdNk/RvXZKIMJf6Y5j6kOAHXj1y3ogSeYcaGBarKVNUpRTlqR0aAj6KYcadxROtyu+smnoKt30FhWPacvFmrcyKmm71XFH89bFN00zE8XmbEft2sQOvNDa84s1iXNsnGf/B4BZWrZJdmPM9wdFqCmYLt1fJK1txD659M=
+	t=1706553397; cv=none; b=uP0/73CPnDuTA/wvU6vWKNGLJiUj5Bv2nWvkzCaJRzN9fwtJt2ylKOkCzoIMG5qGQTudK0J+2we+BK/NAmA4mrwIVxET973EUzgndfG3NzQx+8VfjsQERpZqWqKk2Xn9i//9k7FNgNPV3TUSwuZ1y5uqee5ykjJIDGepucxjcUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706553388; c=relaxed/simple;
-	bh=CJE2OcqhfXlqgImfan4ls3D2jsBONxueuJ+WVYkv2o8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XQxeESnw+TeiKnZRjzeT+HwNF//t9q9qWGftFkHUwuan/J0p3UkIN4OtQ1SJRzmkV8FsZUSowJOXaXGJmhCdO1tSpH+4Tzts2+5hRZIJJNccEHsdWIPRmxzse6HDJBXzTJDDxPI6ADQpoVT7V4kukv8KN13rD6LIalAZZCD0UcM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qU46pRQc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706553397; c=relaxed/simple;
+	bh=8+O35hG4S9TnllCWxGdxV+fD6BRhl7a744frjYfU15c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P79rkaM0sS/Xr63/94hZtTD/Jky1cdWVDx2FVSIs1/sJNMNlm3854gPctjhBAl1hzByPsAFyzg3PspXVqZL0oOvDdrQ+gW2uEMtLdLbxluuHkZqLe89ZCvxY4Rpn/bWoR1tZJtkLdKP1Vn0yk0lO8qscFExAqZMz2BmxCrljYjk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=erpjfTK3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qU46pRQc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA33FC433C7;
-	Mon, 29 Jan 2024 18:36:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="erpjfTK3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C59DBC433F1;
+	Mon, 29 Jan 2024 18:36:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706553387;
-	bh=CJE2OcqhfXlqgImfan4ls3D2jsBONxueuJ+WVYkv2o8=;
+	s=k20201202; t=1706553396;
+	bh=8+O35hG4S9TnllCWxGdxV+fD6BRhl7a744frjYfU15c=;
 	h=From:To:Cc:Subject:Date:From;
-	b=qU46pRQcrCtGygc5MxjoxPYkCyAL6z4SrZ4KSs5JjbLa4Bbl04JpRxM+2JZdfqxV2
-	 HPL6/H10DE/iSy9SKUq4hOpfHEiBISpD8tNQ5l3XMh/CjLfUwJaAURuWb7LpUUdKFk
-	 ZEjMZBRkyhhG2gAPVfdLeeESxhPOCZICEhgrCH4WIln/lPV8UfxrYN8x1gvq5uyo7m
-	 XVj975WGXGR+L5baMU60SI12Nbm8yUSDRgtyBDwQoCLef17nqESyREDHIiFNrEVegu
-	 WVKq04VMtRDFhyjH95OVu+0gk3epNDoh1wY7liFqWlc2nTKD63K0MoacV//8v28yG0
-	 UsPNdvRecIx9w==
+	b=erpjfTK3mlyTtQYX61P54SDS4onnfiZYoYet6qUnydpZGVZm0dBgAH7kvjczfngQ7
+	 Ov4tTtpbjPHBU0VPPewI73u1RNs0+ZRcUzjkzrxgG0PrDvsOqvQYuQ90sB9npHROHU
+	 XtlPzRbQavI4CHG57zl11N63N0Bue1Yp0vof8hpTyNqrAOwF5tWSmhqvysqLD10Jea
+	 9xhQaWTZzlelh5kfglZa9rBdKLC/+T8Eno3w0bPK9FN/5DXpAv0QrbMOLsUka1aeUo
+	 qctyDrThsu4mZh1PA14bSqbiqC1v3Cx4nlrV+w0di82yPS6tJ8ud1qkysMtssEzvu1
+	 DWMWmkBA21pXA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -34,9 +34,9 @@ Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 1/3] scsi: target: core: Add TMF to tmr_list handling
-Date: Mon, 29 Jan 2024 13:36:21 -0500
-Message-ID: <20240129183625.464771-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 1/2] scsi: target: core: Add TMF to tmr_list handling
+Date: Mon, 29 Jan 2024 13:36:30 -0500
+Message-ID: <20240129183633.464847-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -46,7 +46,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.268
+X-stable-base: Linux 4.19.306
 Content-Transfer-Encoding: 8bit
 
 From: Dmitry Bogdanov <d.bogdanov@yadro.com>
@@ -92,10 +92,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 8ba134ccd3b9..edddc66ad133 100644
+index a23dcbe79e14..3ed43a5f1fd3 100644
 --- a/drivers/target/target_core_device.c
 +++ b/drivers/target/target_core_device.c
-@@ -151,7 +151,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+@@ -164,7 +164,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
  	struct se_session *se_sess = se_cmd->se_sess;
  	struct se_node_acl *nacl = se_sess->se_node_acl;
  	struct se_tmr_req *se_tmr = se_cmd->se_tmr_req;
@@ -103,7 +103,7 @@ index 8ba134ccd3b9..edddc66ad133 100644
  
  	rcu_read_lock();
  	deve = target_nacl_find_deve(nacl, unpacked_lun);
-@@ -182,10 +181,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
+@@ -195,10 +194,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
  	se_cmd->se_dev = rcu_dereference_raw(se_lun->lun_se_dev);
  	se_tmr->tmr_dev = rcu_dereference_raw(se_lun->lun_se_dev);
  
@@ -115,10 +115,10 @@ index 8ba134ccd3b9..edddc66ad133 100644
  }
  EXPORT_SYMBOL(transport_lookup_tmr_lun);
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index f52fe4000225..82d9e2659abe 100644
+index 64481a3a34d4..f8ba730fa1cf 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -3392,6 +3392,10 @@ int transport_generic_handle_tmr(
+@@ -3463,6 +3463,10 @@ int transport_generic_handle_tmr(
  	unsigned long flags;
  	bool aborted = false;
  
