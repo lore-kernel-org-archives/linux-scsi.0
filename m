@@ -1,39 +1,43 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4AD51362;
-	Sun, 28 Jan 2024 01:50:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BB7E3C47A;
+	Mon, 29 Jan 2024 04:32:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706406609; cv=none; b=h3EzvtcBl585bkkmKJP00NVGw9FgoHy1yXkLoM1jkEU2beDMXUACHzKQRubzEMbwYP7Xd6JfjwHKqbV5Ut/KA5a3N60gkGvxMv7xy9sBVzYFtI6S5ZcrJ+VEWxrwwOnk5ZczsOjxwFbNjTx6k2JUVhp7Dbwx9n04Qs1qXmny4kg=
+	t=1706502733; cv=none; b=SZr5c9EyMtrq7X3NcWzWK3p8fhwy+lAhf1Vm4c2mwGvs/ePYzRTxMJYJ1wbYkyISwj7rwnlFLn9DP1F/pckqhcvnq2J6/7Cti8bpQZRfP1E/tR4wJdrwCHC14O+Mxd+t6KuxzAFtZsI52R+Hsoadx81qoyHE3aYCbQpZUYmHVzg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706406609; c=relaxed/simple;
-	bh=SYut84D1SsmE34WN82G+H0xoo0YRKUwAO6HyDU0GEGU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Nw9LTlXSUxYXvjRdpbyqAFgOzettCf4AdeCCOX49aqe+G66NHTtFX74Qb3HOOvpcuK+Qpb3gvAC+seU7cBEsCm+tahq6kyBjU4xNPqykYQbgnFt9fZmxJlo2OiMfXVphkpoiHXnb2JCCky12JcOTVqYnpnDhB/FcB/4Z3bG/2Os=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=N//n48oY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706502733; c=relaxed/simple;
+	bh=vnBCw+VEsZoMU7uXPkz67lpbjtbkGDarP0i7dAApyj4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=NhBXoMBjM73xUg9IjM1tpSs8RzrpyvaUCLwDLFyesSA0HAaN+Pn5Cit6qzT5mUS2MspY0Q6biT7v1/FNtCtNAYrY749gtQOAD1dbAngqjqlKEU0zcv9d47T/7AoqiuqcQAgltrLjYBt/9qW9obQPDfZkXgBXyXYVETVMtEjzzNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WLe6nUl3; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="N//n48oY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36B04C433F1;
-	Sun, 28 Jan 2024 01:50:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1706406608;
-	bh=SYut84D1SsmE34WN82G+H0xoo0YRKUwAO6HyDU0GEGU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=N//n48oYvmeLyTEhOrGKToaMnL5VSe20rcdr/t5NveopbPzwBq220bdf9TwbaFS7e
-	 B9DOLH+jMJ8P/sxJ6PDxglj9WrLLu85rgS6xEYoXkHBzZ6mO2STCt+50/bL07CNA7n
-	 ng6SDF6ov0FpjdUAM4xa5EWjhD+CJTvcNcBRDMiw=
-Date: Sat, 27 Jan 2024 17:50:06 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Milan Broz <gmazyland@gmail.com>
-Cc: linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-	linux-scsi@vger.kernel.org, stern@rowland.harvard.edu,
-	oneukum@suse.com
-Subject: Re: [PATCH v6] usb-storage,uas: use host helper to generate driver
- info
-Message-ID: <2024012744-ungreased-retention-4e84@gregkh>
-References: <20231103201709.124372-1-gmazyland@gmail.com>
- <20231105182047.166007-1-gmazyland@gmail.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WLe6nUl3"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
+	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=H8WTJ8NBmRpbZtf94nTTt/tZUYzTLnihYXaoQXGtdRA=; b=WLe6nUl3NiNOhbZzoHeryOF0bU
+	P5+xpXLngxxGVebSFsePFiFuI/Tje4zs+Zsk0N8ZJB99kB7M5AanK0s0NzdnlE8eRw+vuYTO7UKYw
+	GuYzR0j2zpvVPfRPNwSJ1JNVPTbd4KlXaXcLyUpbS/AMy938NTCRo8+GPJ0oE76c4XVH6RPNdXt+I
+	FaQFBumBWxrEMciRiP6PwVK8WLIHygrOro+u9TQHSSK0waUD4WD+doKz2NHNFX8a9pmVRw7vlEcW3
+	CE1Deh9g/lgotxHlH9x9TsKC402E2Ze1tzLTttiJTWI+L055MOwTe4bpnXfM80IRGtNESiLNW5uVB
+	t24sKqEQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rUJJT-00000005VPu-4AB6;
+	Mon, 29 Jan 2024 04:32:04 +0000
+Date: Mon, 29 Jan 2024 04:32:03 +0000
+From: Matthew Wilcox <willy@infradead.org>
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+	linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+	bpf@vger.kernel.org
+Subject: [LSF/MM/BPF TOPIC] Reclaiming & documenting page flags
+Message-ID: <Zbcn-P4QKgBhyxdO@casper.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,51 +46,24 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231105182047.166007-1-gmazyland@gmail.com>
 
-On Sun, Nov 05, 2023 at 07:20:47PM +0100, Milan Broz wrote:
-> The USB mass storage quirks flags can be stored in driver_info in
-> a 32-bit integer (unsigned long on 32-bit platforms).
-> As this attribute cannot be enlarged, we need to use some form
-> of translation of 64-bit quirk bits.
-> 
-> This problem was discussed on the USB list
-> https://lore.kernel.org/linux-usb/f9e8acb5-32d5-4a30-859f-d4336a86b31a@gmail.com/
-> 
-> The initial solution to use a static array extensively increased the size
-> of the kernel module, so I decided to try the second suggested solution:
-> generate a table by host-compiled program and use bit 31 to indicate
-> that the value is an index, not the actual value.
-> 
-> This patch adds a host-compiled program that processes unusual_devs.h
-> (and unusual_uas.h) and generates files usb-ids.c and usb-ids-uas.c
-> (for pre-processed USB device table with 32-bit device info).
-> These files also contain a generated translation table for driver_info
-> to 64-bit values.
-> 
-> The translation function is used only in usb-storage and uas modules; all
-> other USB storage modules store flags directly, using only 32-bit flags.
-> 
-> For 64-bit platforms, where unsigned long is 64-bit, we do not need to
-> convert quirk flags to 32-bit index; the translation function there uses
-> flags directly.
-> 
-> Signed-off-by: Milan Broz <gmazyland@gmail.com>
+Our documentation of the current page flags is ... not great.  I think
+I can improve it for the page cache side of things; I understand the
+meanings of locked, writeback, uptodate, dirty, head, waiters, slab,
+mlocked, mappedtodisk, error, hwpoison, readahead, anon_exclusive,
+has_hwpoisoned, hugetlb and large_remappable.
 
-I see the need for this, but why now?  We haven't run out of ids yet
-have we?  Do we need to add another one?
+Where I'm a lot more shaky is the meaning of the more "real MM" flags,
+like active, referenced, lru, workingset, reserved, reclaim, swapbacked,
+unevictable, young, idle, swapcache, isolated, and reported.
 
-Also, after building, I get the following files marked by git as needed
-to be added to the tree, so perhaps you also need a .gitignore file:
+Perhaps we could have an MM session where we try to explain slowly and
+carefully to each other what all these flags actually mean, talk about
+what combinations of them make sense, how we might eliminate some of
+them to make more space in the flags word, and what all this looks like
+in a memdesc world.
 
-$ git status
-On branch work-testing
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-	drivers/usb/storage/mkflags
-	drivers/usb/storage/usb-ids-uas.c
-	drivers/usb/storage/usb-ids.c
+And maybe we can get some documentation written about it!  Not trying
+to nerd snipe Jon into attending this session, but if he did ...
 
-thanks,
-
-greg k-h
+[thanks to Amir for reminding me that I meant to propose this topic]
