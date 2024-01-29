@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B96E6F07F;
-	Mon, 29 Jan 2024 18:35:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FDB615DBD4;
+	Mon, 29 Jan 2024 18:36:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706553351; cv=none; b=sp4bSBdKhPIil/PjMYZ+P/O9xAHOEF6+lkHfn/MIfg93oi5mUyNz+nmfDXUNcpPPreEBvuN9bh7PqZ5dVbGzpjLaGl6OtBWOPkXjPRe+cPqxZLcJrvogq2fpRKrgaDH1IrqTTIcxRK6gJLE8eRl88WBRjgPewB5k+7uG/iyMBd8=
+	t=1706553364; cv=none; b=jrI6pFfqLpmErZjxZ/6Gef3ysln9v428tpP3rRCraInuIH5uajInd7l9N6PK2b3L+l3Td/Zb/6YnMD7ppSfoY6ZLLQF9Z2SbDbWGbYkb+f3K0l3sH0A9CC+A13ymNZZAauFcc4+0aZlMx9k3dDYKfuDqleBWTkiYr5z76A2DFnE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706553351; c=relaxed/simple;
-	bh=fjYTSxkcDJSMBhHzVl2Q6adlOxduIpZrdKPP6yYMtSc=;
+	s=arc-20240116; t=1706553364; c=relaxed/simple;
+	bh=f2qon/MEecaTc/kJlFlzqN/Onn1g2OJPkj7GSwe3yuQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WPr1qF1IgIu5GNksNHSmSzrU7d4oftzocpyNZ2Vuz/qkgJAvP4zwoqr8Cza3QyaspeE3e0BlNeVjOp5lcE7R7X6tNrahyMpCLfXBttSAdEy4rlHpGyYbBtgJ0EgzMaVjfp6V04B0Y7gCceZjg1bDC7HQ8Lh06Rsbpghh2gNOoWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JXJtM4Tl; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=OtyzUZeEN9f31Ib8fWfEGxVqgOOERGjXN+2rKzW4PxKZdK7kfFPqMVoOL1uRnyzfeFT8ju+XPoQtK5GE58+69CjbwpGnEasAyDaw8hItTPh5zZHm4fyh0x4dktO6O0s0Ja0w+tX/sAjdMqXmtxdYKbdcHv2yUjgvMDKyrP0CepY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qGX5OkfF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JXJtM4Tl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AB86C433F1;
-	Mon, 29 Jan 2024 18:35:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qGX5OkfF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB4B5C433F1;
+	Mon, 29 Jan 2024 18:36:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706553351;
-	bh=fjYTSxkcDJSMBhHzVl2Q6adlOxduIpZrdKPP6yYMtSc=;
+	s=k20201202; t=1706553363;
+	bh=f2qon/MEecaTc/kJlFlzqN/Onn1g2OJPkj7GSwe3yuQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=JXJtM4TlrshLQw1YxlPc3EjGjoHvaqUWnwvolsvf6gmgW48tawS9lwnGWXO49my9B
-	 V00Rqbw9eZCXU/DoSmO+k/eTDHD2wj0D7Cj7A2IpFJHe7Brlv2nW7v52On50YQ3Etb
-	 QDw7rRmGpboB2ySUqegYyYmj67TKcRLP4fZnyhsCPS8f9X/fM4RqZhlzeOMH6nGtxi
-	 dlHNP29Hsg8L1PVcUiabcN1sDtSbebILQYjJcjjX/aRQr8WAEtSoZrWFJA15VHh+ex
-	 2f5sE+49+a9VdfnYhjgfpfb1DlnwzCjw0wE1D9axjxJ/W9EflllEC5Wu7ZtxNXhxuy
-	 PEZIOTNcBo8Kg==
+	b=qGX5OkfFA7AB0SpYSRutDsNGbrwpKoCE2+vSsXP9FH4nBMVz32K3ifIF/91PwZ4Wd
+	 /oG49lnEvLZx8g0ueHb4rdVV/LF6tnmQW8/3idTFsUXHkOe9AfoE9B39WzkS1W6CGE
+	 Mkpcf4uIPwh/iuspffgmXRY5AFBfC7c5Geb2e8km9j3vKHjrOycQC+MHPhrTsZ/qZA
+	 dCVIAvvMdU/BDeERhkHTglg6s4b8haxvc9JYKHbsCCF3Dai38I5yRGXXCz/4YnEh1o
+	 GKOouXrCryiVbrlV42GDpwUybJeI5wrXsm4ZfBRRNqFOoaVyXht65InpfrX5DCn41W
+	 XIMjkU5qEHiBw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -35,12 +35,12 @@ Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 06/10] scsi: target: core: Add TMF to tmr_list handling
-Date: Mon, 29 Jan 2024 13:35:14 -0500
-Message-ID: <20240129183530.464274-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 2/5] scsi: target: core: Add TMF to tmr_list handling
+Date: Mon, 29 Jan 2024 13:35:54 -0500
+Message-ID: <20240129183559.464502-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240129183530.464274-1-sashal@kernel.org>
-References: <20240129183530.464274-1-sashal@kernel.org>
+In-Reply-To: <20240129183559.464502-1-sashal@kernel.org>
+References: <20240129183559.464502-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,7 +49,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.14
+X-stable-base: Linux 6.1.75
 Content-Transfer-Encoding: 8bit
 
 From: Dmitry Bogdanov <d.bogdanov@yadro.com>
@@ -95,7 +95,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index b6523d4b9259..86590a7e29f6 100644
+index 301fe376a120..13558cbd9b82 100644
 --- a/drivers/target/target_core_device.c
 +++ b/drivers/target/target_core_device.c
 @@ -147,7 +147,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd)
