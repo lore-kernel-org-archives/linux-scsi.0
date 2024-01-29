@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAC1C160883;
-	Mon, 29 Jan 2024 18:36:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16BB915EAB8;
+	Mon, 29 Jan 2024 18:36:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706553379; cv=none; b=XkFwJ/fg7PrLGUGY9z2NsPf8hnt9YnSGoRkaNbhIdwXNEGJZAtFTG+JRCetmmpofYI/fT1vxYC/MFSihZQSs4FR0SbBfdp7RMMpD6ocYeB6tG0zpGef9hnFYFvfw9nCaRcUwnfjJIL33fM5QTw+wE7Jl9JFn2MLcZyxBT3hps24=
+	t=1706553388; cv=none; b=j+W17+kTdNk/RvXZKIMJf6Y5j6kOAHXj1y3ogSeYcaGBarKVNUpRTlqR0aAj6KYcadxROtyu+smnoKt30FhWPacvFmrcyKmm71XFH89bFN00zE8XmbEft2sQOvNDa84s1iXNsnGf/B4BZWrZJdmPM9wdFqCmYLt1fJK1txD659M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706553379; c=relaxed/simple;
-	bh=wXSYGzy1EoFfW3m4rIwhqSSqO7rpIiguW21X+XARLIU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gLNK+0q8Lzd1c9Aj772LTZZ6jkOkXVert4ySy8XEkmWR27MGCyzHfOgerKf6D4pU+JHGcDX60GMbseBg1iDBKoZ82hQqrbZ9rRyP5+4fPYx+jPzLnMnANEPL+qXSOj9NNOB8wIqsAKCO2voQgICnmN8m/7nZXiSM3C15Yw42FoM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=theisKUn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706553388; c=relaxed/simple;
+	bh=CJE2OcqhfXlqgImfan4ls3D2jsBONxueuJ+WVYkv2o8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XQxeESnw+TeiKnZRjzeT+HwNF//t9q9qWGftFkHUwuan/J0p3UkIN4OtQ1SJRzmkV8FsZUSowJOXaXGJmhCdO1tSpH+4Tzts2+5hRZIJJNccEHsdWIPRmxzse6HDJBXzTJDDxPI6ADQpoVT7V4kukv8KN13rD6LIalAZZCD0UcM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qU46pRQc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="theisKUn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9896AC433F1;
-	Mon, 29 Jan 2024 18:36:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qU46pRQc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA33FC433C7;
+	Mon, 29 Jan 2024 18:36:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706553379;
-	bh=wXSYGzy1EoFfW3m4rIwhqSSqO7rpIiguW21X+XARLIU=;
+	s=k20201202; t=1706553387;
+	bh=CJE2OcqhfXlqgImfan4ls3D2jsBONxueuJ+WVYkv2o8=;
 	h=From:To:Cc:Subject:Date:From;
-	b=theisKUnVSb+JiRSjhIBCx4Uc2xs+0MwOdRk1Ju5n2LigAPIalX3l+XI1ApCuR5Qj
-	 Sf0qcUVqZSqCNH6Lr8CoUv1OpVQ+GgyWcB2jp3n1R2FmDn4zkdOLvIuADmwsA4giY0
-	 UkNvzrhMSTjxTecp5KV8XgFpRI1+LKWlyrIvPsZvMWtoIW0QjY4OM0LVLRvmyoATDd
-	 Lp5U0idEVwOzSzw+epu4wmfJBXwlHQFtpNbWv4Ktp5KKJ4Rv6S6Hh8FA57hHNNprTB
-	 6lxF1Z/+GJCvWik8Nk6Cx6Q7JsZG6RTxkfKf6UUhlSQfScJaw17DYvTxSgGBRbqUL/
-	 CStWQhI4wWslA==
+	b=qU46pRQcrCtGygc5MxjoxPYkCyAL6z4SrZ4KSs5JjbLa4Bbl04JpRxM+2JZdfqxV2
+	 HPL6/H10DE/iSy9SKUq4hOpfHEiBISpD8tNQ5l3XMh/CjLfUwJaAURuWb7LpUUdKFk
+	 ZEjMZBRkyhhG2gAPVfdLeeESxhPOCZICEhgrCH4WIln/lPV8UfxrYN8x1gvq5uyo7m
+	 XVj975WGXGR+L5baMU60SI12Nbm8yUSDRgtyBDwQoCLef17nqESyREDHIiFNrEVegu
+	 WVKq04VMtRDFhyjH95OVu+0gk3epNDoh1wY7liFqWlc2nTKD63K0MoacV//8v28yG0
+	 UsPNdvRecIx9w==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -34,9 +34,9 @@ Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 1/3] scsi: target: core: Add TMF to tmr_list handling
-Date: Mon, 29 Jan 2024 13:36:14 -0500
-Message-ID: <20240129183617.464694-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 1/3] scsi: target: core: Add TMF to tmr_list handling
+Date: Mon, 29 Jan 2024 13:36:21 -0500
+Message-ID: <20240129183625.464771-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -46,7 +46,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.209
+X-stable-base: Linux 5.4.268
 Content-Transfer-Encoding: 8bit
 
 From: Dmitry Bogdanov <d.bogdanov@yadro.com>
@@ -92,18 +92,18 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 9aeedcff7d02..daa4d06ce233 100644
+index 8ba134ccd3b9..edddc66ad133 100644
 --- a/drivers/target/target_core_device.c
 +++ b/drivers/target/target_core_device.c
-@@ -150,7 +150,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd)
+@@ -151,7 +151,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
  	struct se_session *se_sess = se_cmd->se_sess;
  	struct se_node_acl *nacl = se_sess->se_node_acl;
  	struct se_tmr_req *se_tmr = se_cmd->se_tmr_req;
 -	unsigned long flags;
  
  	rcu_read_lock();
- 	deve = target_nacl_find_deve(nacl, se_cmd->orig_fe_lun);
-@@ -181,10 +180,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd)
+ 	deve = target_nacl_find_deve(nacl, unpacked_lun);
+@@ -182,10 +181,6 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u64 unpacked_lun)
  	se_cmd->se_dev = rcu_dereference_raw(se_lun->lun_se_dev);
  	se_tmr->tmr_dev = rcu_dereference_raw(se_lun->lun_se_dev);
  
@@ -115,10 +115,10 @@ index 9aeedcff7d02..daa4d06ce233 100644
  }
  EXPORT_SYMBOL(transport_lookup_tmr_lun);
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 2e97937f005f..8d294b658592 100644
+index f52fe4000225..82d9e2659abe 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -3436,6 +3436,10 @@ int transport_generic_handle_tmr(
+@@ -3392,6 +3392,10 @@ int transport_generic_handle_tmr(
  	unsigned long flags;
  	bool aborted = false;
  
