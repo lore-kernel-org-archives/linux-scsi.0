@@ -1,104 +1,208 @@
-Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69DF4D26A;
-	Tue, 30 Jan 2024 00:03:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16E8C2E40E;
+	Tue, 30 Jan 2024 01:30:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706572996; cv=none; b=ssKT50G0AQrMw173+yrABaKIg+ZTHXOMDiUYKN7xvI2o9M4SGd846jCbXiCAsqI92I0hrOu9oadddST8oZ+zi08D1La7FlrrEc9MboLn+6CfDPPVhHLY2UvQIQb/ydZtT8lXpNM6Q1Dx9d3Mphhz0tY2fOazKjmA3CfBfVXDdIo=
+	t=1706578241; cv=none; b=fO2dP37198/alb6LpzZ8PpNVSaXAA3yvdlMaRwWvV6GkIiHSkyYUvzOmKYT+Zk6vE3dsC76d6+ihSSQPUYl/7LchmAmhfrhj6oh7ubJmrdMX8RiYfCACwoZ/bh369PiKfWib2Q5ohMiEmCtToZYZ0uODJMpAfJSZy79ljq19aYI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706572996; c=relaxed/simple;
-	bh=YzvajipgNDVEfpV012P54OSNxMk6P5hJCmxp0VDmoG8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DeoplMG3bcZCSkNJMB2RYACgsMyju7SjD3el6FD6u9IC9djb3+53P0LvZhyqAsJrwJ6ncucq3gnseq/Ta9P3E/kzNboDNl2EtITv0YGUlDGdHuNbj7xnTyTLYk2cLybGgeFzGpq1cldzkDp8jMQQMuPBTJgGTpNXhe1wNVSmweQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-2901ceb0d33so3284303a91.1;
-        Mon, 29 Jan 2024 16:03:15 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706572995; x=1707177795;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tlYacdDh0BjD03SBQ9Jr1hkagZ9LSai4GApM8/5GKd4=;
-        b=A0xMWVEsYzuV5dcM11sxiZ87/Rq6mnqgLGFyqN+W3avoXC+HDgY1rDtmd8i0+Tg0S1
-         5F56Gxn2g6tTiBcy+pE+T0RMU+ieWu+zrnbyTOATD/Y/9jrw7EVi0vckLKISYUQvhtL5
-         TlzDfcLc3p0L+W8ITI3bs7A3+fru/qs1x5erwpmuckxTT6KAqCiYtERqq68+so7c6YZ7
-         n4UYULFG9T36cw5kwMjW73pHXcCpz0VNpzjhgA7Lazfgd6ePjGt1hKNuepWXHxE+wZaX
-         EM0b0RfQAl7APUPtfHb+BQZhyVWzrTaybe+o9XXz1pyaGb8ty63cEHvQlmH8d3BLXXj2
-         C66Q==
-X-Gm-Message-State: AOJu0YwamnoQfyQH9rBsyvismxI1T48Pd9ZN7zDfMm4vNJs7dag6lV2G
-	stiPXB9+iKfFWwcfGuforl9icDAIX3oaEnhkLf+snuB1WRoV0at4
-X-Google-Smtp-Source: AGHT+IHfpNql38wpyMimcnPMqNnzWLmwZdoT3L7uTwHHV7vRDKz5IUejFZzahrLt6DU2RgGeumEXDA==
-X-Received: by 2002:a17:90a:d3d8:b0:290:6de6:5721 with SMTP id d24-20020a17090ad3d800b002906de65721mr122119pjw.32.1706572994472;
-        Mon, 29 Jan 2024 16:03:14 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:be5c:5016:50bb:1469? ([2620:0:1000:8411:be5c:5016:50bb:1469])
-        by smtp.gmail.com with ESMTPSA id t18-20020a17090a5d9200b002958775b061sm2136639pji.56.2024.01.29.16.03.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 29 Jan 2024 16:03:13 -0800 (PST)
-Message-ID: <38676388-4c32-414c-a468-5f82a2e9dda4@acm.org>
-Date: Mon, 29 Jan 2024 16:03:11 -0800
+	s=arc-20240116; t=1706578241; c=relaxed/simple;
+	bh=0QtepIhapBUQYBXsTlb3iozbTJoWSBaagWuqgVCvxwc=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=is7c4TfZ4ep9n9UiFIcBzSXtWo33eVyGrWF2gWnXYjKN6OsBFr68I6u77d72WEVFqYEgqZsKGCYrofI/jboj4c8iq5c8eBE20XYavwmVWXgM6VO0qlilaza+5V8xlDVsyo2QQKI1p0p/OqNSqJFmFcsD0oiecD5TgbKYRESqFOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TP6zy5xTQz4f3lgJ;
+	Tue, 30 Jan 2024 09:30:22 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 4C64F1A01E9;
+	Tue, 30 Jan 2024 09:30:29 +0800 (CST)
+Received: from [10.174.176.73] (unknown [10.174.176.73])
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxAzUbhlL0+cCQ--.50348S3;
+	Tue, 30 Jan 2024 09:30:29 +0800 (CST)
+Subject: Re: [PATCH] scsi: sd: unregister device if device_add_disk() failed
+ in sd_probe()
+To: Luis Chamberlain <mcgrof@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: linan666@huaweicloud.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
+ yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+References: <20231208082335.1754205-1-linan666@huaweicloud.com>
+ <ZYUxZc/my2v6UfFJ@bombadil.infradead.org>
+ <78fb6d82-c50a-8fea-ae6d-551fd35656bf@huaweicloud.com>
+ <ZbfkZxMVpVI97zmk@bombadil.infradead.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <8d75f4dc-554c-b0ae-3e92-d2cf033dc555@huaweicloud.com>
+Date: Tue, 30 Jan 2024 09:30:27 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>,
- linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Ming Lei <ming.lei@redhat.com>, Keith Busch <kbusch@kernel.org>,
- Damien Le Moal <damien.lemoal@opensource.wdc.com>,
- Ed Tsai <ed.tsai@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <2d83fcb3-06e6-4a7c-9bd7-b8018208b72f@huaweicloud.com>
- <20240115055940.GA745@lst.de>
- <0d23e3d3-1d7a-f76b-307b-7d74b3f91e05@huaweicloud.com>
- <f1cac818-8fc8-4f24-b445-d10aa99c04ba@acm.org>
- <e0305a2c-20c1-7e0f-d25d-003d7a72355f@huaweicloud.com>
- <aedc82bc-ef10-4bc6-b76c-bf239f48450f@acm.org>
- <20240118073151.GA21386@lst.de>
- <434b771a-7873-4c53-9faa-c5dbc4296495@acm.org>
- <20240123091316.GA32130@lst.de>
- <ac240189-d889-448b-b5f7-7d5a13d4316d@acm.org>
- <20240124090843.GA28180@lst.de>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240124090843.GA28180@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <ZbfkZxMVpVI97zmk@bombadil.infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDHlxAzUbhlL0+cCQ--.50348S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxZr48ArWUJr47GFyfuF48Zwb_yoWrKFWxpF
+	WDWa90krW8Gr1UCwn0vrWUZa45Kw40y34fXry8G34Yg3s8XryYqFW3GFW5Wa4fJrZrCF4U
+	JrW7GryxW3W8Jw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9F14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7x
+	kEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E
+	67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCw
+	CI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E
+	3s1lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
+	sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 1/24/24 01:08, Christoph Hellwig wrote:
-> On Tue, Jan 23, 2024 at 07:16:05AM -0800, Bart Van Assche wrote:
->> On 1/23/24 01:13, Christoph Hellwig wrote:
->>> The point is why you think fair sharing is not actually required for
->>> these particular setups only.
+Hi,
+
+在 2024/01/30 1:46, Luis Chamberlain 写道:
+> On Fri, Dec 22, 2023 at 04:27:16PM +0800, Yu Kuai wrote:
+>> Hi,
 >>
->> Do you perhaps want me to move the SCSI host sysfs attribute that controls
->> fair sharing to the /sys/block/${bdev}/queue directory?
+>> 在 2023/12/22 14:49, Luis Chamberlain 写道:
+>>> On Fri, Dec 08, 2023 at 04:23:35PM +0800, linan666@huaweicloud.com wrote:
+>>>> From: Li Nan <linan122@huawei.com>
+>>>>
+>>>> "if device_add() succeeds, you should call device_del() when you want to
+>>>> get rid of it."
+>>>>
+>>>> In sd_probe(), device_add_disk() fails when device_add() has already
+>>>> succeeded, so change put_device() to device_unregister() to ensure device
+>>>> resources are released.
+>>>>
+>>>> Fixes: 2a7a891f4c40 ("scsi: sd: Add error handling support for add_disk()")
+>>>> Signed-off-by: Li Nan <linan122@huawei.com>
+>>>
+>>> Nacked-by: Luis Chamberlain <mcgrof@kernel.org>
+>>>
+>>>> ---
+>>>>    drivers/scsi/sd.c | 2 +-
+>>>>    1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>>>> index 542a4bbb21bc..d81cbeee06eb 100644
+>>>> --- a/drivers/scsi/sd.c
+>>>> +++ b/drivers/scsi/sd.c
+>>>> @@ -3736,7 +3736,7 @@ static int sd_probe(struct device *dev)
+>>>>    	error = device_add_disk(dev, gd, NULL);
+>>>>    	if (error) {
+>>>> -		put_device(&sdkp->disk_dev);
+>>>> +		device_unregister(&sdkp->disk_dev);
+>>>>    		put_disk(gd);
+>>>>    		goto out;
+>>>>    	}
+>>>
+>>> This is incorrect, device_unregister() calls:
+>>>
+>>> void device_unregister(struct device *dev)
+>>> {
+>>> 	pr_debug("device: '%s': %s\n", dev_name(dev), __func__);
+>>> 	device_del(dev);
+>>> 	put_device(dev);
+>>> }
+>>>
+>>> So you're adding what you believe to be a correct missing device_del().
+>>> But what you missed is that if device_add_disk() fails then device_add()
+>>> did not succeed because the new code we have in the kernel *today* unwinds
+>>> this for us now.
+>>
+>> I'm confused here, there are two device here, one is 'sdkp->disk_dev',
+>> one is gendisk->part0->bd_device, and the order in which they
+>> initialize:
+>>
+>> sd_probe
+>> device_add(&sdkp->disk_dev) -> succeed
+>> device_add_disk -> failed, and device_add(bd_device) did not succeed
+>> put_device(&sdkp->disk_dev) -> device_del is missed
+>>
+>> I don't see that if device_add_disk() fail, device_del() for
+>> 'sdkp->disk_dev'is called from anywhere. Do I missing anything?
 > 
-> No.  I want an explanation from you why you think your use case is so
-> snowflake special that you and just you need to fisable fair sharing.
+> Ah then the fix is still incorrect and the commit log should
+> describe that this is for another device.
+> 
+> How about this instead?
+> 
+>>From c3f6e03f4a82aa253b6c487a293dcd576393b606 Mon Sep 17 00:00:00 2001
+> From: Luis Chamberlain <mcgrof@kernel.org>
+> Date: Mon, 29 Jan 2024 09:25:18 -0800
+> Subject: [PATCH] sd: remove extra put_device() for extra scsi device
+> 
+> The sd driver first device_add() its own device, and later use
+> device_add_disk() with another device. When we added error handling
+> for device_add_disk() we now call put_disk() and that will trigger
+> disk_release() when the refcount is 0. That will end up calling
+> the block driver's disk->fops->free_disk() if one is defined. The
 
-Hi Christoph,
+This is incorrect. GD_ADDED will only set when device_add_disk()
+succeed, and free_disk() will only be called from disk_release() if
+GD_ADDED is set. I think Li Nan's patch is correct.
 
-Would you agree with disabling fair sharing entirely? The use cases that
-need fair sharing most are those were different storage types (e.g. hard
-disk and SSDs) are connected to the same storage controller. This scenario
-often occurs in a cloud computing context. There are better solutions for
-cloud computing contexts than fair sharing, e.g. associating different
-storage types with different storage controllers. The same approach works
-for storage-over-network since storage arrays that have a network connection
-usually support to establish multiple connections from a storage initiator
-to the storage server.
+> sd driver has scsi_disk_free_disk() as its free_disk() and that
+> does the proper put_device(&sdkp->disk_dev) for us so we should not
+> need to call it, however we are left still missing the device_del()
+> for it.
+> 
+> While at it, unwind with scsi_autopm_put_device(sdp) *prior* to
+> putting to device as we do in sd_remove().
+> 
+> Reported-by: Li Nan <linan122@huawei.com>
+> Reported-by: Yu Kuai <yukuai1@huaweicloud.com>
+> Fixes: 2a7a891f4c40 ("scsi: sd: Add error handling support for add_disk()")
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> ---
+>   drivers/scsi/sd.c | 8 +++++---
+>   1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 7f949adbadfd..6475a3c947f8 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3693,8 +3693,9 @@ static int sd_probe(struct device *dev)
+>   
+>   	error = device_add(&sdkp->disk_dev);
+>   	if (error) {
+> +		scsi_autopm_put_device(sdp);
+>   		put_device(&sdkp->disk_dev);
+> -		goto out;
+> +		return error;
+
+I don't see why this is necessary, the tag 'out' is still there. If
+you think is a problem, I think you need a separate patch to call
+scsi_autopm_put_device() before putting the device.
 
 Thanks,
+Kuai
 
-Bart.
-
+>   	}
+>   
+>   	dev_set_drvdata(dev, sdkp);
+> @@ -3734,9 +3735,10 @@ static int sd_probe(struct device *dev)
+>   
+>   	error = device_add_disk(dev, gd, NULL);
+>   	if (error) {
+> -		put_device(&sdkp->disk_dev);
+> +		scsi_autopm_put_device(sdp);
+> +		device_del(&sdkp->disk_dev);
+>   		put_disk(gd);
+> -		goto out;
+> +		return error;
+>   	}
+>   
+>   	if (sdkp->security) {
+> 
 
