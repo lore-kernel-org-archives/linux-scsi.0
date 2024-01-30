@@ -1,46 +1,55 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-oo1-f44.google.com (mail-oo1-f44.google.com [209.85.161.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB0A1129A95;
-	Tue, 30 Jan 2024 16:45:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8351E78661;
+	Tue, 30 Jan 2024 21:49:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706633119; cv=none; b=MBhszNOtD4BZq5LhCoVyH643pJTIaLyYIUnQVpuqu+dSx9tLtxdJsIfoXqVaQUmJTYrp9Xk11gEKtw+KPfzsPLLNZ15gqc5CPrL8570WMem1dEXpzOTTTU32G53PcCxOGrZZPib+fwPtwYGUeNPkz5fNWo/GJNR5Pdx/fZAm9zI=
+	t=1706651360; cv=none; b=me4diK8A0tp2IGO7v6H5GNVVzzsmST+l3XaBgHP3LsKtM5HgE9uSDZlE3nShG5HG7oG7hRQ4lGDLW5gYfUx0zbwpIV1FHwpFwfmI2QHcmJeU4fRpbrwMS0FWosZaf9JfAs8RKLbEc4A5nWuX5PHQVzoChD7wTqkWzO4iKozhNW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706633119; c=relaxed/simple;
-	bh=Piwy79QW6cDC70P3Di3e058IJrU9THBDbC12+4N07Hg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=GhW5WZx01recRFuC7GUbTTI7NU2jSLl9mClqT7hI6XhjvukgJ+Im7ilEUHsunpofkVj4Jv+wBrkZ/LILBVQVPAeIMpPqyLzGB3NxiRzdgkdh/A9UvsRVMXJg+TJPofWhkcBS2s/ixg3R6QXwr5sIk2WleYh7EcSdAgSOsqrOqkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [10.150.64.98])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 8E83D1F871;
-	Tue, 30 Jan 2024 16:45:10 +0000 (UTC)
-Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 71CA413212;
-	Tue, 30 Jan 2024 16:45:09 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id 2IxNEZUnuWXKWwAAn2gu4w
-	(envelope-from <leeman.duncan@gmail.com>); Tue, 30 Jan 2024 16:45:09 +0000
-From: Lee Duncan <leeman.duncan@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	hare@suse.de,
-	Lee Duncan <lduncan@suse.com>
-Subject: [PATCH 2/2] fnic: move fnic_fnic_flush_tx() to a work queue
-Date: Tue, 30 Jan 2024 08:42:22 -0800
-Message-Id: <9c51ef07a04413fb2f2bd20f1534f96e004e4e59.1706632031.git.lduncan@suse.com>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <cover.1706632031.git.lduncan@suse.com>
-References: <cover.1706632031.git.lduncan@suse.com>
+	s=arc-20240116; t=1706651360; c=relaxed/simple;
+	bh=AgOZ8fS0ZdeWrSTK60qllKoZj76EK5/uWgQudX6Oj2M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YkfZxD4AYBXWv+LnJM+3V5L184tDbga5RqHI9yqBwIjYI+9t9iHUS2HAn5YmCe6Ft6NrGZ4R6p1p9N03fRd9Vu7DsSAkxUdx5n9gnT1y7rFSFqd3niX/ILWJ1nJkrdUrf/mjDBy2/iuhWzsWUho9wYz0Vjl/VVO89cYcHzwm8h4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.161.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-oo1-f44.google.com with SMTP id 006d021491bc7-59a27fbe832so1213545eaf.3;
+        Tue, 30 Jan 2024 13:49:18 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1706651357; x=1707256157;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ZNhb5l1JXYTb2I8/W+Qyh+QKu+mFvWiZEOhzArQ2/u8=;
+        b=bqxXriexJKWdRQVmKrjIe8EIamYE5pAl5DNDUj+HwwU08LAI7ZO0S6rHDt7Ip3foNe
+         hHGJo0DH1S2RadeWwjyGGjkQQPerVmjCozhFBsVLZAUmsJXZW5caf/eoL+6dTaMqxKpd
+         mHsAvhnCEjFjXdogBcJOJJD0ZIGNKJMkWaPv8GkPGLQ2CdJIoCKxvoqtpP5gnwT+ojGB
+         elent+Q444sw1pb2Yq2L3dl3I5PMAGtp4URbsjMSjcBwD+n4jVbs5yj5Njxso//5tpCb
+         SdptT/2+9LIOhbzMW3ZRpE3EoWx1Gdo+l4oF06mOzM89LEXYzKquea+SsPKFjN1x09mP
+         Q/ug==
+X-Gm-Message-State: AOJu0Yz0XhXei6/EJ5YfJG/xrt6II06eTARg+D8j77/E7g8lUfXGXHWE
+	z/zAIicVgtkL9kpAlMtw14qYGlVDSZrGPwlbiudXhaTtADsma3Xq
+X-Google-Smtp-Source: AGHT+IEgy65EbP6py6rz5ikA4+OBWxrA6CRGeW1iLiLTTD595r2Ic67amu7jX5sNlp1OuqovGmu6aw==
+X-Received: by 2002:a05:6358:1203:b0:178:6e53:ed4a with SMTP id h3-20020a056358120300b001786e53ed4amr5349451rwi.8.1706651357374;
+        Tue, 30 Jan 2024 13:49:17 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:f45c:fd18:bfa0:e084])
+        by smtp.gmail.com with ESMTPSA id k14-20020aa7998e000000b006db87354a8fsm8285597pfh.119.2024.01.30.13.49.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Jan 2024 13:49:16 -0800 (PST)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>,
+	Christoph Hellwig <hch@lst.de>,
+	Daejun Park <daejun7.park@samsung.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v9 00/19] Pass data lifetime information to SCSI disk devices
+Date: Tue, 30 Jan 2024 13:48:26 -0800
+Message-ID: <20240130214911.1863909-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.43.0.429.g432eaa2c6b-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,118 +57,138 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Authentication-Results: smtp-out2.suse.de;
-	none
-X-Spam-Level: ********
-X-Spam-Score: 8.30
-X-Spamd-Result: default: False [8.30 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 BAYES_SPAM(5.10)[100.00%];
-	 FROM_HAS_DN(0.00)[];
-	 RCPT_COUNT_THREE(0.00)[4];
-	 FREEMAIL_FROM(0.50)[gmail.com];
-	 R_MISSING_CHARSET(2.50)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 BROKEN_CONTENT_TYPE(1.50)[];
-	 TO_DN_SOME(0.00)[];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 NEURAL_HAM_SHORT(-0.20)[-0.999];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,suse.de:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 FREEMAIL_ENVFROM(0.00)[gmail.com];
-	 TAGGED_FROM(0.00)[];
-	 RCVD_TLS_ALL(0.00)[]
-X-Spam-Flag: NO
 
-From: Hannes Reinecke <hare@suse.de>
+Hi Martin,
 
-Rather than call 'fnic_flush_tx()' from interrupt context we should
-be moving it onto a work queue to avoid any locking issues.
+UFS vendors need the data lifetime information to achieve good performance.
+Providing data lifetime information to UFS devices can result in up to 40%
+lower write amplification. Hence this patch series that adds support in F2FS
+and also in the block layer for data lifetime information. The SCSI disk (sd)
+driver is modified such that it passes write hint information to SCSI devices
+via the GROUP NUMBER field.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Lee Duncan <lduncan@suse.com>
----
- drivers/scsi/fnic/fnic.h      | 3 ++-
- drivers/scsi/fnic/fnic_fcs.c  | 3 ++-
- drivers/scsi/fnic/fnic_main.c | 1 +
- drivers/scsi/fnic/fnic_scsi.c | 4 ++--
- 4 files changed, 7 insertions(+), 4 deletions(-)
+Please consider this patch series for the next merge window.
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 2074937c05bc..3b8eb7dee500 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -305,6 +305,7 @@ struct fnic {
- 	unsigned int copy_wq_base;
- 	struct work_struct link_work;
- 	struct work_struct frame_work;
-+	struct work_struct flush_work;
- 	struct sk_buff_head frame_queue;
- 	struct sk_buff_head tx_queue;
+Thanks,
+
+Bart.
+
+Changes compared to v8:
+ - Removed the .apply_whint() function pointer member from struct
+   file_operations.
+ - Made this patch series compatible with 'sparse' via the following change:
++/* Sparse ignores __packed annotations on enums, hence the #ifndef below. */
++#ifndef __CHECKER__
+ static_assert(sizeof(enum rw_hint) == 1);
++#endif
+
+Changes compared to v7:
+ - As requested by Dave Chinner, changed one occurrence of
+   file_inode(dio->iocb->ki_filp)->i_write_hint into inode->i_write_hint.
+ - Modified the description of patch 03/19 since the patch that restores
+   F_[GS]ET_FILE_RW_HINT has been removed.
+ - Added Reviewed-by tags from v6 of this patch series and that were missing
+   when v7 was posted.
+
+Changes compared to v6:
+ - Dropped patch "fs: Restore F_[GS]ET_FILE_RW_HINT support".
+
+Changes compared to v5:
+ - Added compile-time tests that compare the WRITE_LIFE_* and RWH_* constants.
+ - Split the F_[GS]ET_RW_HINT handlers.
+ - Removed the structure member kiocb.ki_hint again. Instead, copy the data
+   lifetime information directly from struct file into a bio.
+ - Together with Doug Gilbert, fixed multiple bugs in the scsi_debug patches.
+   Added Doug's Tested-by.
+ - Changed the type of "rscs:1" from bool into unsigned.
+ - Added unit tests for the new SCSI protocol data structures.
+ - Improved multiple patch descriptions.
  
-@@ -363,7 +364,7 @@ void fnic_handle_event(struct work_struct *work);
- int fnic_rq_cmpl_handler(struct fnic *fnic, int);
- int fnic_alloc_rq_frame(struct vnic_rq *rq);
- void fnic_free_rq_buf(struct vnic_rq *rq, struct vnic_rq_buf *buf);
--void fnic_flush_tx(struct fnic *);
-+void fnic_flush_tx(struct work_struct *);
- void fnic_eth_send(struct fcoe_ctlr *, struct sk_buff *skb);
- void fnic_set_port_id(struct fc_lport *, u32, struct fc_frame *);
- void fnic_update_mac(struct fc_lport *, u8 *new);
-diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
-index 5e312a55cc7d..1bf1418bbde4 100644
---- a/drivers/scsi/fnic/fnic_fcs.c
-+++ b/drivers/scsi/fnic/fnic_fcs.c
-@@ -1190,8 +1190,9 @@ int fnic_send(struct fc_lport *lp, struct fc_frame *fp)
-  *
-  * Called without fnic_lock held.
-  */
--void fnic_flush_tx(struct fnic *fnic)
-+void fnic_flush_tx(struct work_struct *work)
- {
-+	struct fnic *fnic = container_of(work, struct fnic, flush_work);
- 	struct sk_buff *skb;
- 	struct fc_frame *fp;
+Changes compared to v4:
+ - Dropped the patch that renames the WRITE_LIFE_* constants.
+ - Added a fix for an argument check in fcntl_rw_hint().
+ - Reordered the patches that restore data lifetime support.
+ - Included a fix for data lifetime support for buffered I/O to raw block
+   devices.
+
+Changes compared to v3:
+ - Renamed the data lifetime constants (WRITE_LIFE_*).
+ - Fixed a checkpatch complaint by changing "unsigned" into "unsigned int".
+ - Rebased this patch series on top of kernel v6.7-rc1.
  
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index 5ed1d897311a..29eead383eb9 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -830,6 +830,7 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		spin_lock_init(&fnic->vlans_lock);
- 		INIT_WORK(&fnic->fip_frame_work, fnic_handle_fip_frame);
- 		INIT_WORK(&fnic->event_work, fnic_handle_event);
-+		INIT_WORK(&fnic->flush_work, fnic_flush_tx);
- 		skb_queue_head_init(&fnic->fip_frame_queue);
- 		INIT_LIST_HEAD(&fnic->evlist);
- 		INIT_LIST_HEAD(&fnic->vlans);
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 8d7fc5284293..fc4cee91b175 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -680,7 +680,7 @@ static int fnic_fcpio_fw_reset_cmpl_handler(struct fnic *fnic,
- 
- 	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
- 
--	fnic_flush_tx(fnic);
-+	queue_work(fnic_event_queue, &fnic->flush_work);
- 
-  reset_cmpl_handler_end:
- 	fnic_clear_state_flags(fnic, FNIC_FLAGS_FWRESET);
-@@ -736,7 +736,7 @@ static int fnic_fcpio_flogi_reg_cmpl_handler(struct fnic *fnic,
- 		}
- 		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
- 
--		fnic_flush_tx(fnic);
-+		queue_work(fnic_event_queue, &fnic->flush_work);
- 		queue_work(fnic_event_queue, &fnic->frame_work);
- 	} else {
- 		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
--- 
-2.43.0
+Changes compared to v2:
+ - Instead of storing data lifetime information in bi_ioprio, introduce the
+   new struct bio member bi_lifetime and also the struct request member
+   'lifetime'.
+ - Removed the bio_set_data_lifetime() and bio_get_data_lifetime() functions
+   and replaced these with direct assignments.
+ - Dropped all changes related to I/O priority.
+ - Improved patch descriptions.
+
+Changes compared to v1:
+ - Use six bits from the ioprio field for data lifetime information. The
+   bio->bi_write_hint / req->write_hint / iocb->ki_hint members that were
+   introduced in v1 have been removed again.
+ - The F_GET_FILE_RW_HINT and F_SET_FILE_RW_HINT fcntls have been removed.
+ - In the SCSI disk (sd) driver, query the stream status and check the PERM bit.
+ - The GET STREAM STATUS command has been implemented in the scsi_debug driver.
+
+Bart Van Assche (19):
+  fs: Fix rw_hint validation
+  fs: Verify write lifetime constants at compile time
+  fs: Split fcntl_rw_hint()
+  fs: Move enum rw_hint into a new header file
+  fs: Propagate write hints to the struct block_device inode
+  block, fs: Restore the per-bio/request data lifetime fields
+  fs/f2fs: Restore the whint_mode mount option
+  fs/f2fs: Restore support for tracing data lifetimes
+  scsi: core: Query the Block Limits Extension VPD page
+  scsi: scsi_proto: Add structures and constants related to I/O groups
+    and streams
+  scsi: sd: Translate data lifetime information
+  scsi: scsi_debug: Reduce code duplication
+  scsi: scsi_debug: Support the block limits extension VPD page
+  scsi: scsi_debug: Rework page code error handling
+  scsi: scsi_debug: Rework subpage code error handling
+  scsi: scsi_debug: Allocate the MODE SENSE response from the heap
+  scsi: scsi_debug: Implement the IO Advice Hints Grouping mode page
+  scsi: scsi_debug: Implement GET STREAM STATUS
+  scsi: scsi_debug: Maintain write statistics per group number
+
+ Documentation/filesystems/f2fs.rst |  70 +++++++
+ block/bio.c                        |   2 +
+ block/blk-crypto-fallback.c        |   1 +
+ block/blk-merge.c                  |   8 +
+ block/blk-mq.c                     |   2 +
+ block/bounce.c                     |   1 +
+ block/fops.c                       |   3 +
+ drivers/scsi/Kconfig               |   5 +
+ drivers/scsi/Makefile              |   2 +
+ drivers/scsi/scsi.c                |   2 +
+ drivers/scsi/scsi_debug.c          | 293 ++++++++++++++++++++++-------
+ drivers/scsi/scsi_proto_test.c     |  56 ++++++
+ drivers/scsi/scsi_sysfs.c          |  10 +
+ drivers/scsi/sd.c                  | 111 ++++++++++-
+ drivers/scsi/sd.h                  |   3 +
+ fs/buffer.c                        |  12 +-
+ fs/direct-io.c                     |   2 +
+ fs/f2fs/data.c                     |   2 +
+ fs/f2fs/f2fs.h                     |  10 +
+ fs/f2fs/segment.c                  |  95 ++++++++++
+ fs/f2fs/super.c                    |  32 +++-
+ fs/fcntl.c                         |  64 ++++---
+ fs/inode.c                         |   1 +
+ fs/iomap/buffered-io.c             |   2 +
+ fs/iomap/direct-io.c               |   1 +
+ fs/mpage.c                         |   1 +
+ include/linux/blk-mq.h             |   2 +
+ include/linux/blk_types.h          |   2 +
+ include/linux/fs.h                 |  16 +-
+ include/linux/rw_hint.h            |  24 +++
+ include/scsi/scsi_device.h         |   1 +
+ include/scsi/scsi_proto.h          |  78 ++++++++
+ include/trace/events/f2fs.h        |   6 +-
+ 33 files changed, 808 insertions(+), 112 deletions(-)
+ create mode 100644 drivers/scsi/scsi_proto_test.c
+ create mode 100644 include/linux/rw_hint.h
 
