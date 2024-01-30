@@ -1,127 +1,104 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f50.google.com (mail-pj1-f50.google.com [209.85.216.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D76EE15697F
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2024 20:57:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69DF4D26A;
+	Tue, 30 Jan 2024 00:03:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706561847; cv=none; b=Yis7DdN2E+KI+WY+rw5XFHrGNc6GbRng1n/UJH/VttLxosCQ7FZuRP/TOOjo4ZI2POVqSufehTl/7lI15shMLiNuuyx6of2NYpxcFLt8XL17K1kabjv5MU9+8KG7lJWbt4iJFPQH5rdOXmzpH74k4KRgzihgzV0Ew0lBy2qXNC0=
+	t=1706572996; cv=none; b=ssKT50G0AQrMw173+yrABaKIg+ZTHXOMDiUYKN7xvI2o9M4SGd846jCbXiCAsqI92I0hrOu9oadddST8oZ+zi08D1La7FlrrEc9MboLn+6CfDPPVhHLY2UvQIQb/ydZtT8lXpNM6Q1Dx9d3Mphhz0tY2fOazKjmA3CfBfVXDdIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706561847; c=relaxed/simple;
-	bh=2b0Fm92BYrv7od4rmimCRIjuTkKWHJKFkRBuhDCF5M8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GlJtwTy3z2Za4owR2DzamYPOK+gfb1lGe9mJ7ZWFR3zbo/6YdhxHUM6R3DmuIlX96jca5cpg55JCp+ZTzD+bLkqMCeuUt5c0cgf5mxLwCnelkP0KCMmNJL2MrMBQOVfJQqv8dOwYb6XZUQdquZ5OhDgd16Fl/CwPVIdlOgY1cRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dnDGjD7f; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dnDGjD7f"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706561844;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ZpSdnNveS03uidkIaCRaoRGMyvrhYIOI4fp4SKhQKFg=;
-	b=dnDGjD7foQGsbnJYwHaGjSBD2tvSuYHwBKcamyuo+SZtGrMtb4EwU7wnaAo9J943DZB9uX
-	bk2SDBJACiuvq3ywVTVVenukiAIOMHudM8FWrzYQcMYETN4b1VyJPycDGqR4/HK6IyEjIu
-	JTdlQNppALWbLI+8/xpZyXCTaI7+EH0=
-Received: from mail-vk1-f199.google.com (mail-vk1-f199.google.com
- [209.85.221.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-416-eYsld_QQM0KAbI0dBOxu1g-1; Mon, 29 Jan 2024 15:57:23 -0500
-X-MC-Unique: eYsld_QQM0KAbI0dBOxu1g-1
-Received: by mail-vk1-f199.google.com with SMTP id 71dfb90a1353d-4bdb5b84504so711416e0c.1
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2024 12:57:23 -0800 (PST)
+	s=arc-20240116; t=1706572996; c=relaxed/simple;
+	bh=YzvajipgNDVEfpV012P54OSNxMk6P5hJCmxp0VDmoG8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DeoplMG3bcZCSkNJMB2RYACgsMyju7SjD3el6FD6u9IC9djb3+53P0LvZhyqAsJrwJ6ncucq3gnseq/Ta9P3E/kzNboDNl2EtITv0YGUlDGdHuNbj7xnTyTLYk2cLybGgeFzGpq1cldzkDp8jMQQMuPBTJgGTpNXhe1wNVSmweQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pj1-f50.google.com with SMTP id 98e67ed59e1d1-2901ceb0d33so3284303a91.1;
+        Mon, 29 Jan 2024 16:03:15 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706561843; x=1707166643;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZpSdnNveS03uidkIaCRaoRGMyvrhYIOI4fp4SKhQKFg=;
-        b=N9y7C7EsEpGQgNPed5Bre3MXJAhaKgA1aq3KgXeutBJh+cPLDdO1GXgzV84Es/b2yS
-         Z5L9itSBVpGQ7FXM9aSbxGcxRbhZr4+f+WfTa7oQxPIwx3sf01qZ7ULLa48mUHL89Ccx
-         G5ZgRAKLTFb0ySxomlRknEq4kUrZOwvtpv6SEs3qJAfOBQ9HLnLMGpyVM/0Fdjs7+wVb
-         z1aJs7Lz8fr85Fwb92mLRtLYHzeZDpwZXfAcgsW3irTxMNL8JFgCxJjzzSuwkA72IhG9
-         RfgOz4VoQ39GVIg28EHfp49Bmqo17vGa2TaoLotf3uNT3gmcUceWKb9/QCv4R76bunp+
-         HzUA==
-X-Gm-Message-State: AOJu0YzM7tsCSah5gwgacuDm/lbV4fmXI9CZG8aJDcJKfckagM3LrJZX
-	XCDMBvQuzq8tm27xbPfF+g5FFbuLTnEc2dqsNXqPVD5gCs73wBwrEZnSIIQehBvmStBdZ7sf2Zd
-	aJZdTKKbM7CvEPfVLgS2qOcuopJrkodc7X5BuW8M62o2BlltYNkp4fpaXJoQ=
-X-Received: by 2002:a05:6122:3a19:b0:4bd:800d:72ec with SMTP id fp25-20020a0561223a1900b004bd800d72ecmr2631120vkb.19.1706561842933;
-        Mon, 29 Jan 2024 12:57:22 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHrcccUSIgYBufwZZNxLHJdlcGzpJI+aaJovr7DFK+X2Rmv+DVoHH+zCYCUjPVWi9ptYcSCvQ==
-X-Received: by 2002:a05:6122:3a19:b0:4bd:800d:72ec with SMTP id fp25-20020a0561223a1900b004bd800d72ecmr2631106vkb.19.1706561842670;
-        Mon, 29 Jan 2024 12:57:22 -0800 (PST)
-Received: from fedora ([2600:1700:1ff0:d0e0::47])
-        by smtp.gmail.com with ESMTPSA id qq2-20020a0562142c0200b0068c3f3752e5sm2671268qvb.116.2024.01.29.12.57.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Jan 2024 12:57:22 -0800 (PST)
-Date: Mon, 29 Jan 2024 14:57:20 -0600
-From: Andrew Halaney <ahalaney@redhat.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konrad.dybcio@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Rob Herring <robh+dt@kernel.org>, Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Andy Gross <agross@kernel.org>, 
-	Andy Gross <andy.gross@linaro.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] scsi: ufs: qcom: Clarify the comment of core_reset
- property
-Message-ID: <hm2h3uniy75vkjlnk62k3y4bz44khrdwxlk47t3lndc6c3yd2x@sbwcuvrjar5n>
-References: <20240129-ufs-core-reset-fix-v1-0-7ac628aa735f@linaro.org>
- <20240129-ufs-core-reset-fix-v1-2-7ac628aa735f@linaro.org>
+        d=1e100.net; s=20230601; t=1706572995; x=1707177795;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=tlYacdDh0BjD03SBQ9Jr1hkagZ9LSai4GApM8/5GKd4=;
+        b=A0xMWVEsYzuV5dcM11sxiZ87/Rq6mnqgLGFyqN+W3avoXC+HDgY1rDtmd8i0+Tg0S1
+         5F56Gxn2g6tTiBcy+pE+T0RMU+ieWu+zrnbyTOATD/Y/9jrw7EVi0vckLKISYUQvhtL5
+         TlzDfcLc3p0L+W8ITI3bs7A3+fru/qs1x5erwpmuckxTT6KAqCiYtERqq68+so7c6YZ7
+         n4UYULFG9T36cw5kwMjW73pHXcCpz0VNpzjhgA7Lazfgd6ePjGt1hKNuepWXHxE+wZaX
+         EM0b0RfQAl7APUPtfHb+BQZhyVWzrTaybe+o9XXz1pyaGb8ty63cEHvQlmH8d3BLXXj2
+         C66Q==
+X-Gm-Message-State: AOJu0YwamnoQfyQH9rBsyvismxI1T48Pd9ZN7zDfMm4vNJs7dag6lV2G
+	stiPXB9+iKfFWwcfGuforl9icDAIX3oaEnhkLf+snuB1WRoV0at4
+X-Google-Smtp-Source: AGHT+IHfpNql38wpyMimcnPMqNnzWLmwZdoT3L7uTwHHV7vRDKz5IUejFZzahrLt6DU2RgGeumEXDA==
+X-Received: by 2002:a17:90a:d3d8:b0:290:6de6:5721 with SMTP id d24-20020a17090ad3d800b002906de65721mr122119pjw.32.1706572994472;
+        Mon, 29 Jan 2024 16:03:14 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:be5c:5016:50bb:1469? ([2620:0:1000:8411:be5c:5016:50bb:1469])
+        by smtp.gmail.com with ESMTPSA id t18-20020a17090a5d9200b002958775b061sm2136639pji.56.2024.01.29.16.03.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 29 Jan 2024 16:03:13 -0800 (PST)
+Message-ID: <38676388-4c32-414c-a468-5f82a2e9dda4@acm.org>
+Date: Mon, 29 Jan 2024 16:03:11 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240129-ufs-core-reset-fix-v1-2-7ac628aa735f@linaro.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
+Content-Language: en-US
+To: Christoph Hellwig <hch@lst.de>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Ming Lei <ming.lei@redhat.com>, Keith Busch <kbusch@kernel.org>,
+ Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+ Ed Tsai <ed.tsai@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "yukuai (C)" <yukuai3@huawei.com>
+References: <2d83fcb3-06e6-4a7c-9bd7-b8018208b72f@huaweicloud.com>
+ <20240115055940.GA745@lst.de>
+ <0d23e3d3-1d7a-f76b-307b-7d74b3f91e05@huaweicloud.com>
+ <f1cac818-8fc8-4f24-b445-d10aa99c04ba@acm.org>
+ <e0305a2c-20c1-7e0f-d25d-003d7a72355f@huaweicloud.com>
+ <aedc82bc-ef10-4bc6-b76c-bf239f48450f@acm.org>
+ <20240118073151.GA21386@lst.de>
+ <434b771a-7873-4c53-9faa-c5dbc4296495@acm.org>
+ <20240123091316.GA32130@lst.de>
+ <ac240189-d889-448b-b5f7-7d5a13d4316d@acm.org>
+ <20240124090843.GA28180@lst.de>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240124090843.GA28180@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jan 29, 2024 at 01:22:05PM +0530, Manivannan Sadhasivam wrote:
-> core_reset is not an optional property for the platforms supported in
-> upstream. Only for the non-upstreamed legacy platforms it is optional.
-> But somehow a few of the upstreamed platforms do not pass this property
-> by mistake.
+On 1/24/24 01:08, Christoph Hellwig wrote:
+> On Tue, Jan 23, 2024 at 07:16:05AM -0800, Bart Van Assche wrote:
+>> On 1/23/24 01:13, Christoph Hellwig wrote:
+>>> The point is why you think fair sharing is not actually required for
+>>> these particular setups only.
+>>
+>> Do you perhaps want me to move the SCSI host sysfs attribute that controls
+>> fair sharing to the /sys/block/${bdev}/queue directory?
 > 
-> So clarify the comment to make it clear that even though core_reset is
-> required, it is kept as optional to support the DTs that do not pass this
-> property.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  drivers/ufs/host/ufs-qcom.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 39eef470f8fa..32760506dfeb 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -1027,7 +1027,11 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  	host->hba = hba;
->  	ufshcd_set_variant(hba, host);
->  
-> -	/* Setup the optional reset control of HCI */
-> +	/*
-> +	 * Even though core_reset is required on all platforms, some DTs never
-> +	 * passed this property. So we have to keep it optional for supporting
-> +	 * them.
-> +	 */
+> No.  I want an explanation from you why you think your use case is so
+> snowflake special that you and just you need to fisable fair sharing.
 
-Any desire to print a warning if !host->core_reset? I'll defer to
-Qualcomm to review since they can confirm the accuracy past Can's
-comment, but this looks good to me for what its worth.
+Hi Christoph,
 
->  	host->core_reset = devm_reset_control_get_optional(hba->dev, "rst");
->  	if (IS_ERR(host->core_reset)) {
->  		err = dev_err_probe(dev, PTR_ERR(host->core_reset),
-> 
-> -- 
-> 2.25.1
-> 
-> 
+Would you agree with disabling fair sharing entirely? The use cases that
+need fair sharing most are those were different storage types (e.g. hard
+disk and SSDs) are connected to the same storage controller. This scenario
+often occurs in a cloud computing context. There are better solutions for
+cloud computing contexts than fair sharing, e.g. associating different
+storage types with different storage controllers. The same approach works
+for storage-over-network since storage arrays that have a network connection
+usually support to establish multiple connections from a storage initiator
+to the storage server.
+
+Thanks,
+
+Bart.
+
 
