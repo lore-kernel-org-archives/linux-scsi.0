@@ -1,225 +1,130 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0715376F2;
-	Tue, 30 Jan 2024 04:43:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5DC5376EA
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 05:42:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706589821; cv=none; b=RQXaNgCprAq6dHtchQPnn2P3gdyUdEVtg39bY6jra2jR2YYmg4On2fUb8xiBhsWkJs/0sPQvNWwNzygCLwB/zyDqw7qyr+apJflxMasO68YqexxGLCM43x4rlbaCoW6jSysdOFvpYwHiJgDl/r2TykMnQyMoXPHosjeaFV3ZTBg=
+	t=1706593360; cv=none; b=pF2ys2WvWl0hLfmxFhAqvpWhasjlJZIw1Jblg3Qi7pB7sXuaftoqjFz0RQJBQIjVbSBvHXI8AoIGaI8/2rwdd4y10yKO6d1yUyC8R4zlkWHVN3fLQFdnzViAjBCC7SHsE8W1t3ILFtK+kWjC+QlHiYrtmuREf4iv8oGvs+tjYHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706589821; c=relaxed/simple;
-	bh=JPoxPFTiVNeEELD0yioByjjkHwiYtb0bi/b574VfYY8=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lJL1487IG1SmjHmhqBQKdyz7PiIp6cS1kv3PnZN9DMaFGs5tRQvPHrBMkBTHowSAt8AB5W2zmouWYsd/VqWDzxLmPdgwEjPBu0kQUOmyvBnoxof0foRFQBhmG1yHNDvhN+uthTvg+W3+NTu7bCdTjKSzj057Rk2aK8+8LWKIwtI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=BSbwCH+a; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1706593360; c=relaxed/simple;
+	bh=gNj8qIHubEkiZhyq4ZoFmK//jaqpllZV/Xcsy1eISt8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LngBxl9HmuYC4XlSoOYWieyQw4cXMPsoNB7N6g69MPikZMoaZ5TpF9VqrcTfJInqAXu8YV+OkN6aOb1vo7ytZ/U1BWiQ2gZZBXjAqTb9PvKFisWMFXoE9iL/i50GRCwT7IMVCnR8rUdPPL2Nc2eCTXuWQo/fLDbC9P0sCG6Ggps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=tMNwa+Sn; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="BSbwCH+a"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40U3fFjC009188;
-	Tue, 30 Jan 2024 04:43:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	date:from:to:cc:subject:message-id:references:mime-version
-	:content-type:in-reply-to; s=qcppdkim1; bh=pWFEskhoP9oDG95LJo7cn
-	Oun93WuYdxPtgdyZ6WggcU=; b=BSbwCH+aul6dpJviCTrOZAwOKhxydxmo4iCNj
-	+4MSnmRiKKZajdtXePvftSbc9FUvJxK693Y0IeOXO2MhT3UHAxrWeZSgT0k5/DH9
-	U+lJXBstFBQHvE+M87e3aQYBV0OU9Skz9nFeb3mhuG/Pr9XUcKg5C0MxJgaVQ1GW
-	KHVg5grf6aR0URxxeLfybACXGMW4ueNIYzKnq16hx7aA8eJfm1vlE301c92ccj62
-	a/NqKgayFkK37KXjHbf+yLG4Eigr1MMcm+VmagM2S21F89wfZmjAtwF8yYu2nyOm
-	x0NB//58xdSbJ4iuaxP2klBypN5PuQ20VQKOVWhgkM/Uh2NnQ==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vxsc403rr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Jan 2024 04:43:25 +0000 (GMT)
-Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-	by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 40U4hOP1029937
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Jan 2024 04:43:24 GMT
-Received: from hu-bjorande-lv.qualcomm.com (10.49.16.6) by
- nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Mon, 29 Jan 2024 20:43:21 -0800
-Date: Mon, 29 Jan 2024 20:43:20 -0800
-From: Bjorn Andersson <quic_bjorande@quicinc.com>
-To: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <andersson@kernel.org>, <ebiggers@google.com>,
-        <neil.armstrong@linaro.org>, <srinivas.kandagatla@linaro.org>,
-        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
-        <robh+dt@kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-mmc@vger.kernel.org>, <kernel@quicinc.com>,
-        <linux-crypto@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <quic_omprsing@quicinc.com>, <quic_nguyenb@quicinc.com>,
-        <bartosz.golaszewski@linaro.org>, <konrad.dybcio@linaro.org>,
-        <ulf.hansson@linaro.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <mani@kernel.org>, <davem@davemloft.net>,
-        <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH v4 02/15] qcom_scm: scm call for deriving a software
- secret
-Message-ID: <20240130044320.GV2936378@hu-bjorande-lv.qualcomm.com>
-References: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
- <20240127232436.2632187-3-quic_gaurkash@quicinc.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="tMNwa+Sn"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-29065efa06fso2815255a91.1
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2024 21:42:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1706593358; x=1707198158; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=EaGh7h3BGqQZB3IHcQXh7OenR9j1kWQcR4glI4guQgk=;
+        b=tMNwa+Sn0GnCCk9/4Qc+FRXFvXfOjGGiMsVrdSUpzulxPo6Y/FC25uRc/IQl3pKvlM
+         22U0wPVqp4MdOemII7lw9sLOuUltcMl36oBHHRbUDzq3R0CQthXqXfmVKWCgw5mvNE8e
+         RxCB+pkyC2m7Rrqzh4yo8sqOo6+4JoGrUwCwDksidqmRpL5rXPCvS8tAaZI/WMojKDws
+         DQ+yftN72VMXcu98Q9m037YDyuAYY2Zg8QoIW5J5x+eoI+JTTGgNcjezddUqn0Zk8gd1
+         b0ndqTMRL/olxAiUaNmYnGzPktVvH9GR4+f09fmqupm0pscWOqvzJj+3r4+TuRUoeDzf
+         MAdg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1706593358; x=1707198158;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=EaGh7h3BGqQZB3IHcQXh7OenR9j1kWQcR4glI4guQgk=;
+        b=mZHJ9W6wN5L59QWO0hIEoxMChxVy8/uBlMf/zuGyLWpmVEfSZlj2F6Q5GhedQd6e7D
+         pzUiqLApDNXoBDbrlSoA/SCrx95frljm0MN/3yHeKZWLHM+BchHsfZDJbsnHmLa2mr6a
+         y2Y1bA+6RVATvkn262n+mYmMvch4xUgTcibk2G3R6cGIhojSq8UWXD1kZLyYzhmcJC72
+         GW7noV8Y85rPU/0IkyVHMLiFCjCxdpLZOrTv4ezgwlO/3LRHtcRAurXUwbjaE74Yt5XR
+         jqq+RFjEWOUxYP0vlEg4LTZ0N/5qYWMn8bv3MhboK5X1lWxj8CSOWaq/xha0BdgGC3Ce
+         PlNg==
+X-Gm-Message-State: AOJu0Yx/69pc2VhwRdModTSWPzQ8d6Lio1fAvk6STdfAnqgCTSwqFoby
+	PMOCBo3D2yXtFIxzsAOT3CpWP+VH1LBU2Ini2st3nujE/RlyPRTrJDlmeb++ac62YWaOyLr9/R0
+	=
+X-Google-Smtp-Source: AGHT+IGDWCuMGRFNMFSJzTY56VhwusGGUfj3M38AIIT43nX842A00uaHih5hNYmfU65ZCPxhfo0GQA==
+X-Received: by 2002:a17:90a:eb07:b0:295:b6b5:302f with SMTP id j7-20020a17090aeb0700b00295b6b5302fmr271969pjz.45.1706593358200;
+        Mon, 29 Jan 2024 21:42:38 -0800 (PST)
+Received: from thinkpad ([117.202.188.6])
+        by smtp.gmail.com with ESMTPSA id pq6-20020a17090b3d8600b00294eeb58e59sm6455101pjb.15.2024.01.29.21.42.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 29 Jan 2024 21:42:37 -0800 (PST)
+Date: Tue, 30 Jan 2024 11:12:24 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Andrew Halaney <ahalaney@redhat.com>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konrad.dybcio@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>, Andy Gross <agross@kernel.org>,
+	Andy Gross <andy.gross@linaro.org>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] scsi: ufs: qcom: Clarify the comment of core_reset
+ property
+Message-ID: <20240130054224.GA32821@thinkpad>
+References: <20240129-ufs-core-reset-fix-v1-0-7ac628aa735f@linaro.org>
+ <20240129-ufs-core-reset-fix-v1-2-7ac628aa735f@linaro.org>
+ <hm2h3uniy75vkjlnk62k3y4bz44khrdwxlk47t3lndc6c3yd2x@sbwcuvrjar5n>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20240127232436.2632187-3-quic_gaurkash@quicinc.com>
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nalasex01c.na.qualcomm.com (10.47.97.35)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 6Qi2lqNVEaExsDRler7rksB_ArMqefFy
-X-Proofpoint-ORIG-GUID: 6Qi2lqNVEaExsDRler7rksB_ArMqefFy
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-01-30_01,2024-01-29_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- mlxlogscore=999 spamscore=0 suspectscore=0 impostorscore=0
- lowpriorityscore=0 mlxscore=0 priorityscore=1501 clxscore=1011
- adultscore=0 phishscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2401190000 definitions=main-2401300031
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <hm2h3uniy75vkjlnk62k3y4bz44khrdwxlk47t3lndc6c3yd2x@sbwcuvrjar5n>
 
-On Sat, Jan 27, 2024 at 03:14:00PM -0800, Gaurav Kashyap wrote:
-
-The subject prefix does not match other changes to this file.
-
-> Inline storage encryption may require deriving a software
-> secret from storage keys added to the kernel.
+On Mon, Jan 29, 2024 at 02:57:20PM -0600, Andrew Halaney wrote:
+> On Mon, Jan 29, 2024 at 01:22:05PM +0530, Manivannan Sadhasivam wrote:
+> > core_reset is not an optional property for the platforms supported in
+> > upstream. Only for the non-upstreamed legacy platforms it is optional.
+> > But somehow a few of the upstreamed platforms do not pass this property
+> > by mistake.
+> > 
+> > So clarify the comment to make it clear that even though core_reset is
+> > required, it is kept as optional to support the DTs that do not pass this
+> > property.
+> > 
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> >  drivers/ufs/host/ufs-qcom.c | 6 +++++-
+> >  1 file changed, 5 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> > index 39eef470f8fa..32760506dfeb 100644
+> > --- a/drivers/ufs/host/ufs-qcom.c
+> > +++ b/drivers/ufs/host/ufs-qcom.c
+> > @@ -1027,7 +1027,11 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+> >  	host->hba = hba;
+> >  	ufshcd_set_variant(hba, host);
+> >  
+> > -	/* Setup the optional reset control of HCI */
+> > +	/*
+> > +	 * Even though core_reset is required on all platforms, some DTs never
+> > +	 * passed this property. So we have to keep it optional for supporting
+> > +	 * them.
+> > +	 */
 > 
-> For non-wrapped keys, this can be directly done in the kernel as
-> keys are in the clear.
+> Any desire to print a warning if !host->core_reset? I'll defer to
+> Qualcomm to review since they can confirm the accuracy past Can's
+> comment, but this looks good to me for what its worth.
 > 
-> However, hardware wrapped keys can only be unwrapped by the wrapping
-> entity. In case of Qualcomm's wrapped key solution, this is done by
-> the Hardware Key Manager (HWKM) from Trustzone.
-> Hence, adding a new SCM call which in the end provides a hook
-> to the software secret crypto profile API provided by the block
-> layer.
-> 
-> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
-> ---
->  drivers/firmware/qcom/qcom_scm.c       | 65 ++++++++++++++++++++++++++
->  drivers/firmware/qcom/qcom_scm.h       |  1 +
->  include/linux/firmware/qcom/qcom_scm.h |  2 +
->  3 files changed, 68 insertions(+)
-> 
-> diff --git a/drivers/firmware/qcom/qcom_scm.c b/drivers/firmware/qcom/qcom_scm.c
-> index 7e17fd662bda..4882f8a36453 100644
-> --- a/drivers/firmware/qcom/qcom_scm.c
-> +++ b/drivers/firmware/qcom/qcom_scm.c
-> @@ -1220,6 +1220,71 @@ int qcom_scm_ice_set_key(u32 index, const u8 *key, u32 key_size,
->  }
->  EXPORT_SYMBOL_GPL(qcom_scm_ice_set_key);
->  
-> +/**
-> + * qcom_scm_derive_sw_secret() - Derive software secret from wrapped key
-> + * @wkey: the hardware wrapped key inaccessible to software
-> + * @wkey_size: size of the wrapped key
-> + * @sw_secret: the secret to be derived which is exactly the secret size
-> + * @sw_secret_size: size of the sw_secret
-> + *
-> + * Derive a software secret from a hardware wrapped key for software crypto
-> + * operations.
-> + * For wrapped keys, the key needs to be unwrapped, in order to derive a
-> + * software secret, which can be done in the hardware from a secure execution
-> + * environment.
-> + *
-> + * For more information on sw secret, please refer to "Hardware-wrapped keys"
-> + * section of Documentation/block/inline-encryption.rst.
-> + *
-> + * Return: 0 on success; -errno on failure.
-> + */
-> +int qcom_scm_derive_sw_secret(const u8 *wkey, size_t wkey_size,
-> +			      u8 *sw_secret, size_t sw_secret_size)
-> +{
-> +	struct qcom_scm_desc desc = {
-> +		.svc = QCOM_SCM_SVC_ES,
-> +		.cmd =  QCOM_SCM_ES_DERIVE_SW_SECRET,
-> +		.arginfo = QCOM_SCM_ARGS(4, QCOM_SCM_RW,
-> +					 QCOM_SCM_VAL, QCOM_SCM_RW,
-> +					 QCOM_SCM_VAL),
-> +		.args[1] = wkey_size,
-> +		.args[3] = sw_secret_size,
-> +		.owner = ARM_SMCCC_OWNER_SIP,
-> +	};
-> +
-> +	void *secret_buf;
-> +	void *wkey_buf;
-> +	int ret;
-> +
-> +	wkey_buf = qcom_tzmem_alloc(__scm->mempool, wkey_size, GFP_KERNEL);
-> +	if (!wkey_buf)
-> +		return -ENOMEM;
-> +
-> +	secret_buf = qcom_tzmem_alloc(__scm->mempool, sw_secret_size, GFP_KERNEL);
-> +	if (!secret_buf) {
-> +		ret = -ENOMEM;
-> +		goto err_free_wrapped;
-> +	}
-> +
-> +	memcpy(wkey_buf, wkey, wkey_size);
-> +	desc.args[0] = qcom_tzmem_to_phys(wkey_buf);
-> +	desc.args[2] = qcom_tzmem_to_phys(secret_buf);
-> +
-> +	ret = qcom_scm_call(__scm->dev, &desc, NULL);
-> +	if (!ret)
-> +		memcpy(sw_secret, secret_buf, sw_secret_size);
-> +
-> +	memzero_explicit(secret_buf, sw_secret_size);
-> +	qcom_tzmem_free(secret_buf);
-> +
-> +err_free_wrapped:
 
-This code path is shared between error path and normal path, prefixing
-it "err_" is not helpful to the reader. Please change this to
-out_free_wrapped:
+My only worry is that the existing users of the legacy DTs will get annoyed by
+the warning. And I'm not sure if we can do that.
 
-The rest of the patch looks good to me.
+- Mani
 
-Regards,
-Bjorn
-
-> +	memzero_explicit(wkey_buf, wkey_size);
-> +	qcom_tzmem_free(wkey_buf);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(qcom_scm_derive_sw_secret);
-> +
->  /**
->   * qcom_scm_hdcp_available() - Check if secure environment supports HDCP.
->   *
-> diff --git a/drivers/firmware/qcom/qcom_scm.h b/drivers/firmware/qcom/qcom_scm.h
-> index cb7273aa0a5e..56ff0806f5d2 100644
-> --- a/drivers/firmware/qcom/qcom_scm.h
-> +++ b/drivers/firmware/qcom/qcom_scm.h
-> @@ -127,6 +127,7 @@ struct qcom_tzmem_pool *qcom_scm_get_tzmem_pool(void);
->  #define QCOM_SCM_SVC_ES			0x10	/* Enterprise Security */
->  #define QCOM_SCM_ES_INVALIDATE_ICE_KEY	0x03
->  #define QCOM_SCM_ES_CONFIG_SET_ICE_KEY	0x04
-> +#define QCOM_SCM_ES_DERIVE_SW_SECRET	0x07
->  
->  #define QCOM_SCM_SVC_HDCP		0x11
->  #define QCOM_SCM_HDCP_INVOKE		0x01
-> diff --git a/include/linux/firmware/qcom/qcom_scm.h b/include/linux/firmware/qcom/qcom_scm.h
-> index 9b6054813f59..89358478ac67 100644
-> --- a/include/linux/firmware/qcom/qcom_scm.h
-> +++ b/include/linux/firmware/qcom/qcom_scm.h
-> @@ -103,6 +103,8 @@ bool qcom_scm_ice_available(void);
->  int qcom_scm_ice_invalidate_key(u32 index);
->  int qcom_scm_ice_set_key(u32 index, const u8 *key, u32 key_size,
->  			 enum qcom_scm_ice_cipher cipher, u32 data_unit_size);
-> +int qcom_scm_derive_sw_secret(const u8 *wkey, size_t wkey_size,
-> +			      u8 *sw_secret, size_t sw_secret_size);
->  
->  bool qcom_scm_hdcp_available(void);
->  int qcom_scm_hdcp_req(struct qcom_scm_hdcp_req *req, u32 req_cnt, u32 *resp);
-> -- 
-> 2.43.0
-> 
+-- 
+மணிவண்ணன் சதாசிவம்
