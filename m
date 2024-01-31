@@ -1,63 +1,67 @@
-Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+Received: from mail-ua1-f41.google.com (mail-ua1-f41.google.com [209.85.222.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6622364
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 00:21:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89AAC363
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 00:21:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706660489; cv=none; b=YC4tKfG4RJPitwTIhmPH45ziuSE4SN1Qp7reezAgWxw96Hqtx8QX0i33N3vSS7iFkI4pc73B+mHRKRxpIddYF9ex5SBUWPFDhAKOUnOWyjHhdDqIUGpHKjDEy3z3/+hR8tkGInN5H4WunD0Cr4Om4041vn6D/YpnD/hoDSODSc0=
+	t=1706660502; cv=none; b=NasBAvm6i2oeukqDOdV/ZcqrHsd9VYwmYrYNSyB/YBObt1E89exfL5+/d+c5taMR+DJRalWOvc4tCZ0ZWitePc+HLjxwnD3ZiyuoX63oQcIwajIR9AZByi5p3ZLpxIRiiO2IUYOjTirC0ViGjiRxv/bzb06qVtN/cDvXXa5Modc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706660489; c=relaxed/simple;
-	bh=gDm2BaCy0BUtg05iJ7ByS6gA0fToR3Bnsk3/MRUPz48=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ukew3He6drDZNU7h7tWdRIRK3KYLfVTUF/qyKGPnEIphJgR4JP1DP08zo22ERDzjikIqfQYKMrvyhjPwXouFqvOAC6QyLIrelq4ATCbqGj9lZO9pxT5Inc5kCebMHmi7JC09Zh+yiCdX5hL9x5y2/ONaiwvLdi3wlCIef7Va1VE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VpqhtjYz; arc=none smtp.client-ip=209.85.160.180
+	s=arc-20240116; t=1706660502; c=relaxed/simple;
+	bh=+WqancjfyH3kQ6JkvjEygr+/D2TfGrT9yzFBb7GdWMo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=JoTj98lf18ontVIuwPSbwc89iJbZ7JjvZYobgDiaaX3acp4TLfawZre9aYbThZkSE4wqduizNtVgZSQXuO2zRwXcZqLRC/N9Q1V8R6CHcgOsYZUTlGP2nM5lqp89CKEscbSfSt3vXLWFsvv8t8nFA2RTVkquFmkYsGZIJLlmnNE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jlxe/dKo; arc=none smtp.client-ip=209.85.222.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VpqhtjYz"
-Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-42a9c3f31e0so4802191cf.1
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 16:21:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jlxe/dKo"
+Received: by mail-ua1-f41.google.com with SMTP id a1e0cc1a2514c-7cc2ffdda1cso677983241.1
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 16:21:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1706660486; x=1707265286; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=G02PxKYH/d/xuogNFC50KNVfD5cQDSP0cX0mGmNZDcM=;
-        b=VpqhtjYzgDeSqnwX86WrMoSm1Zb1gAr+n4z4k59H7EdoWh4+9ev9i68J5RynJlihCe
-         yWQoMLuO0wHSP1wDCIs0RV7zw+1hXhlCqyI8+sVleJnxq8Tdo/MdD6XF3QZv2LuI/iMm
-         vJVkKdRw/JVUvkqGFdugnyaI/6urSXpOL2d8FjIXSqDzus5ueuc4mNioXK7X0sDDEy3O
-         FX6Zqw2jQR3E0Azcb8VviqJIBKm3z9JBbPKUFS8/9iZrsoFnhGFq4h2W9BEYcW7N25eQ
-         7y92XLGUTJQIKS6XbyVAAT0c0q5Q6nEkhMp/Hatn540CMtpJZ2pRnwbYXXuuM9r+Ti5H
-         j2SQ==
+        d=gmail.com; s=20230601; t=1706660499; x=1707265299; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ImZlimw8NaPW2DOOZyyfAZCoKws77h59LDy1/yw9qqg=;
+        b=jlxe/dKojBA3O7iZoPFe5ukP9JGauFgQbq12fu4NWu5LJNld88UM3qfcwnJ6Iil9E+
+         9KMQZmMFWbU5MZ5aFJjjH6F4FirCj4dGj5W9X1GfmCcoz+3vpTwha4tfdEM6P08g6Eel
+         lr/RIixixbXo/Bg4toVXhqx5CJg1ykHQRYztdArkxJoAktfy3g0kvtR5fGO5Gu21EkNw
+         ILZIy83oZUz4L4b6nwDMJMY78Z8dAlo8X7J+18cZgzYUD2w1Ocf8FE8T0Bk7Ll4cfnRa
+         DpnrXdvGlgDtk4I1rWI0OdoMAwPehRnzK05YG0sBq5jl4CaBy4zcd3UtWX6O5BdWyieg
+         FwiQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706660486; x=1707265286;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=G02PxKYH/d/xuogNFC50KNVfD5cQDSP0cX0mGmNZDcM=;
-        b=dQMh9YHzrFYff2+2J+Gghin73DOw46VIGDyGajHemXF62V5EXcJa3jvDVmBDJL1Oba
-         oXcqj7+zEvOUy970/pOlVlFjoaC0tWHJi6cSxHD/JhI7T0CJNkpRsKfqb2cMl5CbxtSC
-         0W4214H7A/5GjRyg5rFJINi86KYbNzlv1krU0+dnsFEhImgAERNWA9hlYdB6QqMjX/jz
-         FKgaM1DiOBkpWvlZBonBjANIYNtRZmJ+cV6NdZGLjLNRHhjAgMuSjgBBOABlUnDE2BxU
-         4Vq7ey5p/6De1+bSz7Oz1XeQPpDaFJdbMiGWsTVsrIPMizBQ6jXDOtiNqy95NzfWdpmd
-         FwBQ==
-X-Gm-Message-State: AOJu0Yzl5j8bOg9E5cm+nKrdJZWZyRgiq7cX1K3I5KJgRt33AYpDiinS
-	UW2HUOh7jmhGzhcNIcpZ51mOPnrJe+NIidolEsgCyUUcF2vBjTHDDwlwDaeu
-X-Google-Smtp-Source: AGHT+IEFarVhUwzOhfa5tHSAIO/4wEpuszk9O13BQ/DOuoRRQ2PnaKwHWrg6fbusiHAfq0pbjhGNJQ==
-X-Received: by 2002:a05:6214:d0f:b0:68c:6bc0:bfb with SMTP id 15-20020a0562140d0f00b0068c6bc00bfbmr170346qvh.2.1706660486355;
-        Tue, 30 Jan 2024 16:21:26 -0800 (PST)
+        d=1e100.net; s=20230601; t=1706660499; x=1707265299;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ImZlimw8NaPW2DOOZyyfAZCoKws77h59LDy1/yw9qqg=;
+        b=qChVAsgQl0FAeGWqTR7vPaLMDjdfXKXf+RJshs2F+C2MmY7zCHuKWgS0aMqbFv3gtZ
+         UysSeocuiqRa+eWHx0+kVFjEiiq5xD2O06PXhYuBm4e3S3Ww1CqxDDLOg0nrh9z9ddNO
+         qLAZfq1mZfDXptKegm3nej+4LYwQa7eq44/gyAYNBm1XFAAOItiFQwVCThDH7sJzle30
+         4lPQ5B33HqFEy9b8WUdd4w49lEmZ4j/vUcnqv1i1iQMAK7gS+O1fKYMjl4vUceoNhcPe
+         RY5d49TXRbXwZ7m6ZDCXUkGPWsDzF/Ka8kFRz6HCL7byl3WwJb8C9jgqfeC8xyG1wePi
+         hlOQ==
+X-Gm-Message-State: AOJu0YwVbxYMCv1768XZWSJomZvypizbyTl5x1xQIUL1uTVc9JTNCsen
+	0sW12Ni1VmovvWqiKuoBuTNhhUW6/SoAkqoJwUF56W0b/Fk2YPhLCd3HfOPP
+X-Google-Smtp-Source: AGHT+IFtZD9SjM+rUNcBxYXf3f1R9tTl/cpDxx9qd9HfQH68ywsXqQe6kt42QYobfnKf5BVTcenxyA==
+X-Received: by 2002:a67:fd15:0:b0:46b:3008:e612 with SMTP id f21-20020a67fd15000000b0046b3008e612mr14353vsr.1.1706660499244;
+        Tue, 30 Jan 2024 16:21:39 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id qn19-20020a056214571300b0068c4ecc8886sm2600931qvb.127.2024.01.30.16.21.25
+        by smtp.gmail.com with ESMTPSA id qn19-20020a056214571300b0068c4ecc8886sm2600931qvb.127.2024.01.30.16.21.38
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 30 Jan 2024 16:21:26 -0800 (PST)
+        Tue, 30 Jan 2024 16:21:39 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 00/17] lpfc: Update lpfc to revision 14.4.0.0
-Date: Tue, 30 Jan 2024 16:35:32 -0800
-Message-Id: <20240131003549.147784-1-justintee8345@gmail.com>
+Subject: [PATCH 01/17] lpfc: Initialize status local variable in lpfc_sli4_repost_sgl_list
+Date: Tue, 30 Jan 2024 16:35:33 -0800
+Message-Id: <20240131003549.147784-2-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
+In-Reply-To: <20240131003549.147784-1-justintee8345@gmail.com>
+References: <20240131003549.147784-1-justintee8345@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -66,55 +70,30 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Update lpfc to revision 14.4.0.0
+A static code analyzer tool indicates that the local variable called status
+in the lpfc_sli4_repost_sgl_list routine could be used to print garbage
+uninitialized values in the routine's log message.
 
-This patch set contains fixes identified by static code analyzers, updates
-to log messaging, bug fixes related to discovery and congestion management,
-and clean up patches regarding the abuse of shost lock in the driver.
+Fix by initializing to zero.
 
-The patches were cut against Martin's 6.9/scsi-queue tree.
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Justin Tee (17):
-  lpfc: Initialize status local variable in lpfc_sli4_repost_sgl_list
-  lpfc: Fix possible memory leak in lpfc_rcv_padisc
-  lpfc: Use sg_dma_len API to get struct scatterlist's length
-  lpfc: Remove D_ID swap log message from trace event logger
-  lpfc: Allow lpfc_plogi_confirm_nport logic to execute for Fabric nodes
-  lpfc: Remove NLP_RCV_PLOGI early return during RSCN processing for
-    ndlps
-  lpfc: Fix failure to delete vports when discovery is in progress
-  lpfc: Add condition to delete ndlp object after sending BLS_RJT to an
-    ABTS
-  lpfc: Save FPIN frequency statistics upon receipt of peer cgn
-    notifications
-  lpfc: Move handling of reset congestion statistics events
-  lpfc: Remove shost_lock protection for fc_host_port shost APIs
-  lpfc: Change nlp state statistic counters into atomic_t
-  lpfc: Protect vport fc_nodes list with an explicit spin lock
-  lpfc: Change lpfc_vport fc_flag member into a bitmask
-  lpfc: Change lpfc_vport load_flag member into a bitmask
-  lpfc: Update lpfc version to 14.4.0.0
-  lpfc: Copyright updates for 14.4.0.0 patches
-
- drivers/scsi/lpfc/lpfc.h           |  94 +++---
- drivers/scsi/lpfc/lpfc_attr.c      | 107 +++----
- drivers/scsi/lpfc/lpfc_bsg.c       |   8 +-
- drivers/scsi/lpfc/lpfc_ct.c        | 154 +++++-----
- drivers/scsi/lpfc/lpfc_debugfs.c   |  14 +-
- drivers/scsi/lpfc/lpfc_els.c       | 446 +++++++++++++----------------
- drivers/scsi/lpfc/lpfc_hbadisc.c   | 350 ++++++++++------------
- drivers/scsi/lpfc/lpfc_hw4.h       |   4 +-
- drivers/scsi/lpfc/lpfc_init.c      | 137 +++++----
- drivers/scsi/lpfc/lpfc_mbox.c      |  10 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c |  91 +++---
- drivers/scsi/lpfc/lpfc_nvme.c      |  20 +-
- drivers/scsi/lpfc/lpfc_nvmet.c     |  14 +-
- drivers/scsi/lpfc/lpfc_scsi.c      |  10 +-
- drivers/scsi/lpfc/lpfc_sli.c       |  56 ++--
- drivers/scsi/lpfc/lpfc_version.h   |   6 +-
- drivers/scsi/lpfc/lpfc_vport.c     |  69 ++---
- 17 files changed, 717 insertions(+), 873 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 706985358c6a..c7a2f565e2c2 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -7582,7 +7582,7 @@ lpfc_sli4_repost_sgl_list(struct lpfc_hba *phba,
+ 	struct lpfc_sglq *sglq_entry = NULL;
+ 	struct lpfc_sglq *sglq_entry_next = NULL;
+ 	struct lpfc_sglq *sglq_entry_first = NULL;
+-	int status, total_cnt;
++	int status = 0, total_cnt;
+ 	int post_cnt = 0, num_posted = 0, block_cnt = 0;
+ 	int last_xritag = NO_XRI;
+ 	LIST_HEAD(prep_sgl_list);
 -- 
 2.38.0
 
