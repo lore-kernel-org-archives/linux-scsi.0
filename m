@@ -1,77 +1,137 @@
-Received: from mail-ot1-f50.google.com (mail-ot1-f50.google.com [209.85.210.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48B5738F97;
-	Wed, 31 Jan 2024 21:07:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6633539876;
+	Wed, 31 Jan 2024 21:27:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706735243; cv=none; b=skGPblt6Ad/TGFIkALukBCB6IX0TxQrJ/8PscdTXLtWoFZQDJlVJGbo65Gf9OCg6tmBUrMPz1A86LR9V/XvAqP63o4d9PAw0Ee0deFwbArX4m4ig0/Uz31UF68NqwCl7XM3MLt/tf/4xLtNxhfx68gPeYia863j25iQp7pXKICg=
+	t=1706736425; cv=none; b=blhWwu1+g3Hs1sx2LbjMvQsNtjJHH9Qyfh5pu7km2ppCSPoC41GL60pqtcjXOQ9CqhsIfNbqEG5kVdmIRkgHc+Z78IxUkhQlu2RryYuRZz7dcUI3lbpAG6wMI2qDQboyvxwQa9YMQp+gtcmuvPeTXYD9edo87YHpYlImxeTsJDo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706735243; c=relaxed/simple;
-	bh=g0HPUuyc3xA8aBRoniQjl8dvJBE/1NIN42R2oj0Ub9s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fUJQ4Sp99GoC4lxqTQ/skmiAMLQ9NI0/JARKe74B0ReIw578dN/V8pG2KeOwuAsz30TSXcXQWRmgZAJveNJZ/iYpZC8bLc9nlzZ9nWqh+0Cu1nOTJVAfEXm89KdaW0cyuRpleUl+KRZmK4slzxlrCiuuSgjuwwBzFS3CnZ0PLzk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-ot1-f50.google.com with SMTP id 46e09a7af769-6dc8b280155so114182a34.0;
-        Wed, 31 Jan 2024 13:07:22 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706735241; x=1707340041;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=g0HPUuyc3xA8aBRoniQjl8dvJBE/1NIN42R2oj0Ub9s=;
-        b=Ri/vSUhUqT3Q8rR6Yt1KqnKa6HANX0YRihyEvI3sGHWmXUlnHClX4d0qRLLbT1aEoT
-         KWTpboaPosf+yGq/xNyO1CCDbmJKauh9EzfczJI8LZOqBiaoJujXT8Re8M8ys/9goAZM
-         8kDzI4GE4wSUecsl/O5MWqx0nxUWTQwV0bCKmqiSmJbzWOfju3nJ+ZXbjikkb9flZWW8
-         E9qjzh0MHsWff77/1Zxn5jtzPeDElMce94cQ33WJkt93uLOjOke684YNWPqx0ZR/fUqg
-         IwhJXIMRg4ZOwruRXrL0VLMdQYNvYlKkKrUI10fwtpX+ATQJVwJ0Vy9TfMvGvYH+8wHD
-         kDNA==
-X-Gm-Message-State: AOJu0YzgQpMqIkpVJeybB16g3TtIbUcPligu/7q0OhtJvcP4XGWAUT2X
-	1iBc6+fF1CFDbMIoKQdUj/pHptHalcfOVddjYZHJMgUASOutxVC7mbCr93SR
-X-Google-Smtp-Source: AGHT+IF8jsH6w3Jrntxyz+UTAWJ653bvPjVu0dKPaui3DiBTjcn0sucTjygP5Sr18Y8MIV0p0r4HxQ==
-X-Received: by 2002:a05:6870:f61e:b0:215:d046:8c62 with SMTP id ek30-20020a056870f61e00b00215d0468c62mr3315922oab.9.1706735241172;
-        Wed, 31 Jan 2024 13:07:21 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:1d95:ca94:1cbe:1409? ([2620:0:1000:8411:1d95:ca94:1cbe:1409])
-        by smtp.gmail.com with ESMTPSA id p16-20020a63e650000000b005d553239b16sm10865231pgj.20.2024.01.31.13.07.20
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 31 Jan 2024 13:07:20 -0800 (PST)
-Message-ID: <5eb49324-5c03-4eae-84ff-dcbea494c262@acm.org>
-Date: Wed, 31 Jan 2024 13:07:18 -0800
+	s=arc-20240116; t=1706736425; c=relaxed/simple;
+	bh=W9PyDFDm6db+wY56jckOPsaPr9KPRsFX9rqfQqV1gzk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oHe6rV6xuCIaqfN9mDmXSPa7ojnxTK5heOhm/vVSAMcqu3xZSiG3h2PpkXN6YiaQ4KGCTdsnEQTObqBwx+PidyuTiwvp1v3HdybA1LDYvLTUy5nCa5TZHGjtnEnwBp+WWs/heWB5hkmbU32GDRehpvtJCBir1RaGQvI+++GhxTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=lRrQi1l0; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="lRrQi1l0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5850C433F1;
+	Wed, 31 Jan 2024 21:27:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1706736424;
+	bh=W9PyDFDm6db+wY56jckOPsaPr9KPRsFX9rqfQqV1gzk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=lRrQi1l03Zl7CRmx/XVUgrMjdmBqPJR+e39jYW/Yf7erVn3NUY7RkSyctWLWh0rAy
+	 h94FQtxcOv+D30DLHgdSGAu20JrzttlVz5mtVyMs03TglDV9dfqFrwq1zJcGm3hZSk
+	 jbThPTY36ZiyVC0xvQ4yY02id0RO/CIQFtJDz7ko=
+Date: Wed, 31 Jan 2024 13:27:03 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Chris Leech <cleech@redhat.com>
+Cc: Nilesh Javali <njavali@marvell.com>, Christoph Hellwig <hch@lst.de>,
+	John Meneghini <jmeneghi@redhat.com>, Lee Duncan <lduncan@suse.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	Hannes Reinecke <hare@kernel.org>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH 0/2] UIO_MEM_DMA_COHERENT for cnic/bnx2/bnx2x
+Message-ID: <2024013123-subway-shrapnel-98f4@gregkh>
+References: <20240131191732.3247996-1-cleech@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 01/19] fs: Fix rw_hint validation
-Content-Language: en-US
-To: Christian Brauner <brauner@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
- Christoph Hellwig <hch@lst.de>, Daejun Park <daejun7.park@samsung.com>,
- Kanchan Joshi <joshi.k@samsung.com>, Jeff Layton <jlayton@kernel.org>,
- Chuck Lever <chuck.lever@oracle.com>, Stephen Rothwell
- <sfr@canb.auug.org.au>, Alexander Viro <viro@zeniv.linux.org.uk>
-References: <20240130214911.1863909-1-bvanassche@acm.org>
- <20240130214911.1863909-2-bvanassche@acm.org>
- <20240131-skilift-decken-cf3d638ce40c@brauner>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240131-skilift-decken-cf3d638ce40c@brauner>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240131191732.3247996-1-cleech@redhat.com>
 
-On 1/31/24 05:56, Christian Brauner wrote:
-> The fs parts of this should go through a vfs tree as this is vfs infra.
-> I can then give you a stable tag that you can merge and base the big
-> block and scsci bits on. It'll minimize merge conflicts and makes it
-> easier to coordinate imho.
-The fs parts have been posted on the fs-devel mailing list. See also
-https://lore.kernel.org/all/20240131205237.3540210-1-bvanassche@acm.org/
+On Wed, Jan 31, 2024 at 11:17:30AM -0800, Chris Leech wrote:
+> During bnx2i iSCSI testing we ran into page refcounting issues in the
+> uio mmaps exported from cnic to the iscsiuio process, and bisected back
+> to the removal of the __GFP_COMP flag from dma_alloc_coherent calls.
+> 
+> The cnic uio interface also has issues running with an iommu enabled,
+> which these changes correct.
+> 
+> In order to fix these drivers to be able to mmap dma coherent memory via
+> a uio device, introduce a new uio mmap type backed by dma_mmap_coherent.
+> 
+> While I understand some complaints about how these drivers have been
+> structured, I also don't like letting support bitrot when there's a
+> reasonable alternative to re-architecting an existing driver. I believe
+> this to be the most sane way to restore these drivers to functioning
+> properly.
+> 
+> There are two other uio drivers which are mmaping dma_alloc_coherent
+> memory as UIO_MEM_PHYS, uio_dmem_genirq and uio_pruss. While a
+> conversion to use dma_mmap_coherent might be more correct for these as
+> well, I have no way of testing them and assume that this just hasn't
+> been an issue for the platforms in question.
+> 
+> v4:
+> - re-introduce the dma_device member to uio_map,
+>   it needs to be passed to dma_mmap_coherent somehow
+> - drop patch 3 to focus only on the uio interface,
+>   explicit page alignment isn't needed
+> - re-add the v1 mail recipients,
+>   this isn't something to be handled through linux-scsi
+> v3 (Nilesh Javali <njavali@marvell.com>):
+> - fix warnings reported by kernel test robot
+>   and added base commit
+> v2 (Nilesh Javali <njavali@marvell.com>):
+> - expose only the dma_addr within uio and cnic.
+> - Cleanup newly added unions comprising virtual_addr
+>   and struct device
+> 
+> previous threads:
+> v1: https://lore.kernel.org/all/20230929170023.1020032-1-cleech@redhat.com/
+> attempt at an alternative change: https://lore.kernel.org/all/20231219055514.12324-1-njavali@marvell.com/
+> v2: https://lore.kernel.org/all/20240103091137.27142-1-njavali@marvell.com/
+> v3: https://lore.kernel.org/all/20240109121458.26475-1-njavali@marvell.com/
+> 
+> Chris Leech (2):
+>   uio: introduce UIO_MEM_DMA_COHERENT type
+>   cnic,bnx2,bnx2x: use UIO_MEM_DMA_COHERENT
+> 
+>  drivers/net/ethernet/broadcom/bnx2.c          |  1 +
+>  .../net/ethernet/broadcom/bnx2x/bnx2x_main.c  |  2 +
+>  drivers/net/ethernet/broadcom/cnic.c          | 15 +++++--
+>  drivers/net/ethernet/broadcom/cnic.h          |  1 +
+>  drivers/net/ethernet/broadcom/cnic_if.h       |  1 +
+>  drivers/uio/uio.c                             | 40 +++++++++++++++++++
+>  include/linux/uio_driver.h                    |  3 ++
+>  7 files changed, 60 insertions(+), 3 deletions(-)
+> 
+> 
+> base-commit: 861c0981648f5b64c86fd028ee622096eb7af05a
+> -- 
+> 2.43.0
+> 
 
-Thanks,
+Hi,
 
-Bart.
+This is the friendly patch-bot of Greg Kroah-Hartman.  You have sent him
+a patch that has triggered this response.  He used to manually respond
+to these common problems, but in order to save his sanity (he kept
+writing the same thing over and over, yet to different people), I was
+created.  Hopefully you will not take offence and will fix the problem
+in your patch and resubmit it so that it can be accepted into the Linux
+kernel tree.
+
+You are receiving this message because of the following common error(s)
+as indicated below:
+
+- This looks like a new version of a previously submitted patch, but the
+  version is not listed in the subject line.  Please read the section
+  entitled "The canonical patch format" in the kernel file,
+  Documentation/process/submitting-patches.rst for what needs to be done
+  here to properly describe this.
+
+If you wish to discuss this problem further, or you have questions about
+how to resolve this issue, please feel free to respond to this email and
+Greg will reply once he has dug out from the pending patches received
+from other developers.
+
+thanks,
+
+greg k-h's patch email bot
