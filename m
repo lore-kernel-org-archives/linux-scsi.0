@@ -1,64 +1,64 @@
-Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
+Received: from mail-qv1-f50.google.com (mail-qv1-f50.google.com [209.85.219.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EAF515D4
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 00:21:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4800C1865
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 00:22:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706660521; cv=none; b=Kjt1TE252BKuM/U/ConSNlfxLf0P2rJjL58oSLpxS8j6IP3o3jtMZGdwi/DJPy4BmKCe+4NBk9rNqxJMN3s6oe+KVThKnIkmAvoLnVBO1z/Cwg0AXGsOBLdvtO8JydvHF8myOtElevQKaasJuH738vz1yAu+7OF4jpUP3jBPQNQ=
+	t=1706660522; cv=none; b=RszfT5EndkMRNfJ//ExFyOIZbWJQy4pEHtaHbNnRyW6jIvPnxhapUH2JkJSPKSE/Tj56bSRozJCL9BOTfgh749ALDtdRJnIfEkW0eCSsEDywPCTrGQbGg6NlJ3kEwk2FT+g1mIl5E2qF41jchqlZq99Du42assk0pc6cremaq/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706660521; c=relaxed/simple;
-	bh=RtO0dtK3FXHwhCbu3Br75jy1EqjUvmIg9lschtZjRcY=;
+	s=arc-20240116; t=1706660522; c=relaxed/simple;
+	bh=fENfE+2taATpG8zMPnRHK+IPAjw94up1gMclrRMAQl8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BHfa7BZ/kamuOyH5oXrJjJv+as11gGpt0nXX9GCDi4BFL29VWyfh0A1m2DjYQo+CHmdgOmQxHmLCLx0jCO9wouH7wod2vXT722b2kalnf7Pdqxg6TazmcQJSm73hqAK5TfdDyP9HcaKOr0eIG/OAqT3gqtvrKB4wo7cQ4n6eeFQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FoYpYUlj; arc=none smtp.client-ip=209.85.128.180
+	 MIME-Version; b=N5CO1oXD0wUwyE7nSdqpgHrj6Xvtim9fBj2EUji6RfLx1pqHvhLu+/jgamJsvw9K7vdkU1N47v1pkqA4Qb74MSoed3d5Z0B0nW0imy8dW2hyFXMt8r1LBSWqRvsUj6nzT0kHs+Z9ss0Zs0t3Diz5XlRf3gTUGB5BMK9waeFK9U0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QnWPq17j; arc=none smtp.client-ip=209.85.219.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FoYpYUlj"
-Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-60403e59090so1453967b3.0
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 16:21:59 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QnWPq17j"
+Received: by mail-qv1-f50.google.com with SMTP id 6a1803df08f44-68155fca099so3304956d6.1
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 16:22:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1706660518; x=1707265318; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1706660520; x=1707265320; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=c0tC+gvEyKiYRPyqNL/myXxd3Dt1Jq9ItId7EVdQTQE=;
-        b=FoYpYUljjrOpvo3zW1eQyn/MkgXBgphYc8IiYRczwIEt9w6dRthfnFyfp4bFVgOM09
-         xZRjozkKUftAT4IzFyZD9kYxjC4dipzWQsaRtSaiIV/LELNvdWpSMRx7uJY5fxYxdeAa
-         R7YNc2XzF/N9mu65tRbp1+eNbVELqdH7yWG0bmHwhYyyfD8gEmxgwc4WgLG66J3N61eg
-         oVJ33DG/s2p95Po7Dl9cj6mozqtF38+PoD136w97hMb6ygOcoEiPGPHth992fdRP+CdY
-         PPWFZn7/v3laCeukIBHaZMQDEtI8BNAAbeQasUvgQXl59ZIK+w7YCtx8nUiW3ZDrE+5l
-         4EMQ==
+        bh=ibjgYaa6wb/dw+dNOSbYOZCQG8CUbfsWp5AK3uimKgg=;
+        b=QnWPq17jDHruCbEEVivnT/18b4H8nEZa5bPLarWPACeu5LvkrrwVhYlFOIE9m3wFlt
+         JXB8ZyOiPORHwXo7G19pvFafKUfD2PgVlHicIyw0jwQ4VXiPbUPQ0hh/u/KY3/gjyW8x
+         vdrwb4r0e5I3kXK0NHxLqWSxqXhfEm6Yelc5ngBDEhPSHpZflwHJE8/0bE8iJ6ZKtUS6
+         3KVjq81twhFDIX/If+7sTeAGBXe2n8NxBseCRkyD7VZ4mznUEzAQnO8rPMc2dXw5pwTb
+         b2Lmg9TEyh/g/CFVQ0U69YeibbOflUrz8IxTUqNj34uAAOvhQrkdbmb18obS09pv93NC
+         gq7w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706660518; x=1707265318;
+        d=1e100.net; s=20230601; t=1706660520; x=1707265320;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=c0tC+gvEyKiYRPyqNL/myXxd3Dt1Jq9ItId7EVdQTQE=;
-        b=l9rP3vX44bIQkwvFDE9RaS8jECOHlq2/VuWOCtpyaGuWz4PCIsGCfMZJGW672x80BG
-         r4BdaEYoyZhUL+7CQAc8pTrjzJF1AuzJH7bkuLaPdhz11vAtk2C1At2o+uGd6t4N7dEb
-         WNIHsQry7k5IX+Jujn86D+Nq8FWX28DT6Dzq6IIO8Qz8Kf7TrsF2kN+9eojE46ggITUa
-         DX2dU3bGuB5CiY4zHjMFGKH4QUuV+rZqCht6LNfx9dWgDas7ono8ALTE7YryXpYXluHD
-         nNSEGPv+c7+D5zFEVc5mhvIsMqp9kirAIy5+cB3VZ9kMUzECh3fsN5j4g7GXLwsljQDW
-         LL7w==
-X-Gm-Message-State: AOJu0YwiSpcR7fpPRARc/pG6FrOlFtP3X+FEQliwM7mDQbrrb3tSeXbc
-	dZ1Se6QNd18d19FuD/0MoJAXS5hXiBOOmim/1AmrMa7ZlTSS9mMWx9c449ql
-X-Google-Smtp-Source: AGHT+IH9LhqJ88IB0M6tuy9G8QTLBV2GnyoJj5BDhAbBOZD4ZdFx3mggEMqGaPnhdKfrs3IEs2UBiw==
-X-Received: by 2002:a05:6902:b20:b0:dbe:ac10:9410 with SMTP id ch32-20020a0569020b2000b00dbeac109410mr180970ybb.0.1706660518227;
-        Tue, 30 Jan 2024 16:21:58 -0800 (PST)
+        bh=ibjgYaa6wb/dw+dNOSbYOZCQG8CUbfsWp5AK3uimKgg=;
+        b=QK9ofSHCA3NG1KEdgEKSJQbeMAB76UEq0PWTqZAlrglP3OPvfiFT7l7VubsLqRrkQe
+         HsfM2SmGmK4y+XStzIyvN+Xw1Ac+U14ikON6ltZ1oqR5esXBkm9PahXUq4HGErv1p1km
+         r9XOUIjKhmYpkXLfkVrLJkqkECPHwHquWs5+PgehFQpMIxhOVrxKB4CdOzrUL9mXVMei
+         maz29wVC+6Ju+jkdP2i0HFKPF+dIQFCYsXS0+sCoq5d60Jn4ruplBgXegaQaGdKs8H8J
+         yhjOGtQpBEY3ZR0Q+/yRV+6yhHZ1K4B/+VGlPhGcZ7yv6OVg3iXjYZbc5treir419FnM
+         XqNA==
+X-Gm-Message-State: AOJu0Yz1zrYyxZC/h9I0A4tgeFF32Myzx+PegUKO6eafaE6BnUD1rhue
+	BFt4xpSWPUkVcAv5BRiQUpOAfN2w/L1/DMucDC4sL4BX0GNBuNf8qb2D0c5+
+X-Google-Smtp-Source: AGHT+IEI/m343O5gedP4VEqsH6pExT2wCUXoQ0tSJ5ebhUjVNM+aXz1cIlinDK0bEgjsmmBxPVW6NA==
+X-Received: by 2002:a05:6214:226c:b0:68c:4db6:3423 with SMTP id gs12-20020a056214226c00b0068c4db63423mr164989qvb.3.1706660519884;
+        Tue, 30 Jan 2024 16:21:59 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id qn19-20020a056214571300b0068c4ecc8886sm2600931qvb.127.2024.01.30.16.21.57
+        by smtp.gmail.com with ESMTPSA id qn19-20020a056214571300b0068c4ecc8886sm2600931qvb.127.2024.01.30.16.21.59
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 30 Jan 2024 16:21:57 -0800 (PST)
+        Tue, 30 Jan 2024 16:21:59 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 10/17] lpfc: Move handling of reset congestion statistics events
-Date: Tue, 30 Jan 2024 16:35:42 -0800
-Message-Id: <20240131003549.147784-11-justintee8345@gmail.com>
+Subject: [PATCH 11/17] lpfc: Remove shost_lock protection for fc_host_port shost APIs
+Date: Tue, 30 Jan 2024 16:35:43 -0800
+Message-Id: <20240131003549.147784-12-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20240131003549.147784-1-justintee8345@gmail.com>
 References: <20240131003549.147784-1-justintee8345@gmail.com>
@@ -70,70 +70,92 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The ACQE notification event to reset congestion statistics should be moved
-into the specific lpfc_sli4_async_sli_evt routine instead of being
-processed from the generic lpfc_sli4_async_event_proc routine.
+Desiring to reduce the amount of unnecessary shost_lock acquisitions in the
+lpfc driver, it has been determined that there is no need for shost_lock
+protection when retrieving fc_host port information because it is only for
+display to user via sysfs.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h  | 2 +-
- drivers/scsi/lpfc/lpfc_init.c | 9 ++++++---
- 2 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c | 16 ----------------
+ 1 file changed, 16 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 5d4f9f27084d..f6b1168304f3 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -4069,7 +4069,6 @@ struct lpfc_mcqe {
- #define LPFC_TRAILER_CODE_GRP5	0x5
- #define LPFC_TRAILER_CODE_FC	0x10
- #define LPFC_TRAILER_CODE_SLI	0x11
--#define LPFC_TRAILER_CODE_CMSTAT        0x13
- };
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index d3a5d6ecdf7d..1f9a529e09ff 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -6429,8 +6429,6 @@ lpfc_get_host_port_type(struct Scsi_Host *shost)
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
  
- struct lpfc_acqe_link {
-@@ -4339,6 +4338,7 @@ struct lpfc_acqe_sli {
- #define LPFC_SLI_EVENT_TYPE_EEPROM_FAILURE	0x10
- #define LPFC_SLI_EVENT_TYPE_CGN_SIGNAL		0x11
- #define LPFC_SLI_EVENT_TYPE_RD_SIGNAL           0x12
-+#define LPFC_SLI_EVENT_TYPE_RESET_CM_STATS      0x13
- };
+-	spin_lock_irq(shost->host_lock);
+-
+ 	if (vport->port_type == LPFC_NPIV_PORT) {
+ 		fc_host_port_type(shost) = FC_PORTTYPE_NPIV;
+ 	} else if (lpfc_is_link_up(phba)) {
+@@ -6447,8 +6445,6 @@ lpfc_get_host_port_type(struct Scsi_Host *shost)
+ 		}
+ 	} else
+ 		fc_host_port_type(shost) = FC_PORTTYPE_UNKNOWN;
+-
+-	spin_unlock_irq(shost->host_lock);
+ }
  
- /*
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 70bcee64bc8c..8e84ba0f7721 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -94,6 +94,7 @@ static void lpfc_sli4_oas_verify(struct lpfc_hba *phba);
- static uint16_t lpfc_find_cpu_handle(struct lpfc_hba *, uint16_t, int);
- static void lpfc_setup_bg(struct lpfc_hba *, struct Scsi_Host *);
- static int lpfc_sli4_cgn_parm_chg_evt(struct lpfc_hba *);
-+static void lpfc_sli4_async_cmstat_evt(struct lpfc_hba *phba);
- static void lpfc_sli4_prep_dev_for_reset(struct lpfc_hba *phba);
+ /**
+@@ -6461,8 +6457,6 @@ lpfc_get_host_port_state(struct Scsi_Host *shost)
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
  
- static struct scsi_transport_template *lpfc_transport_template = NULL;
-@@ -6636,6 +6637,11 @@ lpfc_sli4_async_sli_evt(struct lpfc_hba *phba, struct lpfc_acqe_sli *acqe_sli)
- 				acqe_sli->event_data1, acqe_sli->event_data2,
- 				acqe_sli->event_data3);
- 		break;
-+	case LPFC_SLI_EVENT_TYPE_RESET_CM_STATS:
-+		lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
-+				"2905 Reset CM statistics\n");
-+		lpfc_sli4_async_cmstat_evt(phba);
-+		break;
- 	default:
- 		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
- 				"3193 Unrecognized SLI event, type: 0x%x",
-@@ -7346,9 +7352,6 @@ void lpfc_sli4_async_event_proc(struct lpfc_hba *phba)
- 		case LPFC_TRAILER_CODE_SLI:
- 			lpfc_sli4_async_sli_evt(phba, &cq_event->cqe.acqe_sli);
+-	spin_lock_irq(shost->host_lock);
+-
+ 	if (vport->fc_flag & FC_OFFLINE_MODE)
+ 		fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
+ 	else {
+@@ -6490,8 +6484,6 @@ lpfc_get_host_port_state(struct Scsi_Host *shost)
  			break;
--		case LPFC_TRAILER_CODE_CMSTAT:
--			lpfc_sli4_async_cmstat_evt(phba);
--			break;
- 		default:
- 			lpfc_printf_log(phba, KERN_ERR,
- 					LOG_TRACE_EVENT,
+ 		}
+ 	}
+-
+-	spin_unlock_irq(shost->host_lock);
+ }
+ 
+ /**
+@@ -6504,8 +6496,6 @@ lpfc_get_host_speed(struct Scsi_Host *shost)
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba   *phba = vport->phba;
+ 
+-	spin_lock_irq(shost->host_lock);
+-
+ 	if ((lpfc_is_link_up(phba)) && (!(phba->hba_flag & HBA_FCOE_MODE))) {
+ 		switch(phba->fc_linkspeed) {
+ 		case LPFC_LINK_SPEED_1GHZ:
+@@ -6568,8 +6558,6 @@ lpfc_get_host_speed(struct Scsi_Host *shost)
+ 		}
+ 	} else
+ 		fc_host_speed(shost) = FC_PORTSPEED_UNKNOWN;
+-
+-	spin_unlock_irq(shost->host_lock);
+ }
+ 
+ /**
+@@ -6583,8 +6571,6 @@ lpfc_get_host_fabric_name (struct Scsi_Host *shost)
+ 	struct lpfc_hba   *phba = vport->phba;
+ 	u64 node_name;
+ 
+-	spin_lock_irq(shost->host_lock);
+-
+ 	if ((vport->port_state > LPFC_FLOGI) &&
+ 	    ((vport->fc_flag & FC_FABRIC) ||
+ 	     ((phba->fc_topology == LPFC_TOPOLOGY_LOOP) &&
+@@ -6594,8 +6580,6 @@ lpfc_get_host_fabric_name (struct Scsi_Host *shost)
+ 		/* fabric is local port if there is no F/FL_Port */
+ 		node_name = 0;
+ 
+-	spin_unlock_irq(shost->host_lock);
+-
+ 	fc_host_fabric_name(shost) = node_name;
+ }
+ 
 -- 
 2.38.0
 
