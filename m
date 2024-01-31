@@ -1,64 +1,64 @@
-Received: from mail-qv1-f50.google.com (mail-qv1-f50.google.com [209.85.219.50])
+Received: from mail-vs1-f41.google.com (mail-vs1-f41.google.com [209.85.217.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4800C1865
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 00:22:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09A861C2D
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 00:22:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706660522; cv=none; b=RszfT5EndkMRNfJ//ExFyOIZbWJQy4pEHtaHbNnRyW6jIvPnxhapUH2JkJSPKSE/Tj56bSRozJCL9BOTfgh749ALDtdRJnIfEkW0eCSsEDywPCTrGQbGg6NlJ3kEwk2FT+g1mIl5E2qF41jchqlZq99Du42assk0pc6cremaq/k=
+	t=1706660524; cv=none; b=fM3LH/WensNFFcfeIc0k15m5z+lSzG2hslxH5sYKizQm06YdIWOhiN8JLJiM4akFmdJLKm9Kh6VdFomdFQSTpes62ZXpHomygd198wW/KLmJK/leYwJViUI92n8678gjvsT0yeopgKrANPd1wKTOKQjBOqrFFnQF1H96V4eMcNE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706660522; c=relaxed/simple;
-	bh=fENfE+2taATpG8zMPnRHK+IPAjw94up1gMclrRMAQl8=;
+	s=arc-20240116; t=1706660524; c=relaxed/simple;
+	bh=wKJXboA2iya5N1/aC6iVjmzf2TH7p2kWzWVsS1Wa0jE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=N5CO1oXD0wUwyE7nSdqpgHrj6Xvtim9fBj2EUji6RfLx1pqHvhLu+/jgamJsvw9K7vdkU1N47v1pkqA4Qb74MSoed3d5Z0B0nW0imy8dW2hyFXMt8r1LBSWqRvsUj6nzT0kHs+Z9ss0Zs0t3Diz5XlRf3gTUGB5BMK9waeFK9U0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QnWPq17j; arc=none smtp.client-ip=209.85.219.50
+	 MIME-Version; b=ifIQ0Vsye5y77h8kS23InabC27UDDVMIDMj1TcX8H1E1jqKWKVcybIy5B556pXp/VuE8A4pYvkmVdK+dVIizlT9c+O3UY74K0+aBStRN8SJiJV5IRcxfz93QLKJLGJHXfGKPj3cCYIxGOKx74xAK6i9/omeFh/s19ut1rT5v77o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bqXZh39q; arc=none smtp.client-ip=209.85.217.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QnWPq17j"
-Received: by mail-qv1-f50.google.com with SMTP id 6a1803df08f44-68155fca099so3304956d6.1
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 16:22:01 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bqXZh39q"
+Received: by mail-vs1-f41.google.com with SMTP id ada2fe7eead31-46b3a129522so184662137.1
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 16:22:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1706660520; x=1707265320; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1706660522; x=1707265322; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ibjgYaa6wb/dw+dNOSbYOZCQG8CUbfsWp5AK3uimKgg=;
-        b=QnWPq17jDHruCbEEVivnT/18b4H8nEZa5bPLarWPACeu5LvkrrwVhYlFOIE9m3wFlt
-         JXB8ZyOiPORHwXo7G19pvFafKUfD2PgVlHicIyw0jwQ4VXiPbUPQ0hh/u/KY3/gjyW8x
-         vdrwb4r0e5I3kXK0NHxLqWSxqXhfEm6Yelc5ngBDEhPSHpZflwHJE8/0bE8iJ6ZKtUS6
-         3KVjq81twhFDIX/If+7sTeAGBXe2n8NxBseCRkyD7VZ4mznUEzAQnO8rPMc2dXw5pwTb
-         b2Lmg9TEyh/g/CFVQ0U69YeibbOflUrz8IxTUqNj34uAAOvhQrkdbmb18obS09pv93NC
-         gq7w==
+        bh=TeYQhzaNVbFhxez+6JqiRLGnFe80ipC8adEz51DpKRM=;
+        b=bqXZh39qlP91H7qxXQ1M8H3sB+H33BYo+BCp+qIA4Ci2Eu+AsW/1Y2ZwfW2/dQompw
+         ObWkYlajUi7Bvuuz2xVSEhzHUJ7/RGbT47yvv28OiPNF89wmR3XAIP92751YSKHuKbx4
+         8TQ6IYNG9Dq/4nGtXL+4aCO3dkUgxrVJE+cIVEiBMcJ2eEL5uqRDkwhM6SQ/ntQmGItr
+         rQUa1w6+lA9c/j9TB+S/r2IOTu3y2F8087MKIG8+SUplEBHwEH+Updm54E9E0MU06FFx
+         7SWCTodLQkkvOKEZQGHpdnuFwZx8Gm+2zbgGIr7kG87FYSXspcUfvO4+zy57jlqhC+oe
+         Pu/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706660520; x=1707265320;
+        d=1e100.net; s=20230601; t=1706660522; x=1707265322;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ibjgYaa6wb/dw+dNOSbYOZCQG8CUbfsWp5AK3uimKgg=;
-        b=QK9ofSHCA3NG1KEdgEKSJQbeMAB76UEq0PWTqZAlrglP3OPvfiFT7l7VubsLqRrkQe
-         HsfM2SmGmK4y+XStzIyvN+Xw1Ac+U14ikON6ltZ1oqR5esXBkm9PahXUq4HGErv1p1km
-         r9XOUIjKhmYpkXLfkVrLJkqkECPHwHquWs5+PgehFQpMIxhOVrxKB4CdOzrUL9mXVMei
-         maz29wVC+6Ju+jkdP2i0HFKPF+dIQFCYsXS0+sCoq5d60Jn4ruplBgXegaQaGdKs8H8J
-         yhjOGtQpBEY3ZR0Q+/yRV+6yhHZ1K4B/+VGlPhGcZ7yv6OVg3iXjYZbc5treir419FnM
-         XqNA==
-X-Gm-Message-State: AOJu0Yz1zrYyxZC/h9I0A4tgeFF32Myzx+PegUKO6eafaE6BnUD1rhue
-	BFt4xpSWPUkVcAv5BRiQUpOAfN2w/L1/DMucDC4sL4BX0GNBuNf8qb2D0c5+
-X-Google-Smtp-Source: AGHT+IEI/m343O5gedP4VEqsH6pExT2wCUXoQ0tSJ5ebhUjVNM+aXz1cIlinDK0bEgjsmmBxPVW6NA==
-X-Received: by 2002:a05:6214:226c:b0:68c:4db6:3423 with SMTP id gs12-20020a056214226c00b0068c4db63423mr164989qvb.3.1706660519884;
-        Tue, 30 Jan 2024 16:21:59 -0800 (PST)
+        bh=TeYQhzaNVbFhxez+6JqiRLGnFe80ipC8adEz51DpKRM=;
+        b=PuNsRTFojjcSmptqJ37bxCF7KW3wtuHbGX6tOpgGMDbcLI1ZUqKRtC9zN+hPnvgQX9
+         Pwr5hzgdPUBVdyjGGmCtuuiWVweCCG0sY5NRXVgb2VSXhIy3PeRvlntV2ObDDL0yT31+
+         tum0NVt234vBSGGy5gCXKRJ8FjxPRqhcVmi8aVRChcFma23NXgek9bsgXmBv1lUo8N3M
+         KFleRrQxqzzfyEsqLBRz0vqchjIMlVG3Pc1joilJHYDQyUADEmvUbEZ4j8b2znoa2AKb
+         woL6d6T/ekdoy6xQf8Tv3LoOMdOtVtDc3u9SMQphLOtmTBM5BZOaIHBjVnDALHSjmnsJ
+         HUPg==
+X-Gm-Message-State: AOJu0YzSnCq6R72cKYEiavkFgdHoD84weQQWum+wawsIHlSz/qQhsl3r
+	PoqhAczTnMHx4V9aCPnCldPVfD12IfJXihKN2GqK4x5ki5V7QLiqfgbkb6C7
+X-Google-Smtp-Source: AGHT+IEw4sONpIZDL/q1Nmcg67R5Xw2SJJUDm2dEjFExsd+So7KNK1cYLIR0Co9fkqYm5q1yFjSteA==
+X-Received: by 2002:a05:6102:2328:b0:46b:1f7d:4c80 with SMTP id b8-20020a056102232800b0046b1f7d4c80mr13562vsa.1.1706660521718;
+        Tue, 30 Jan 2024 16:22:01 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id qn19-20020a056214571300b0068c4ecc8886sm2600931qvb.127.2024.01.30.16.21.59
+        by smtp.gmail.com with ESMTPSA id qn19-20020a056214571300b0068c4ecc8886sm2600931qvb.127.2024.01.30.16.22.00
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 30 Jan 2024 16:21:59 -0800 (PST)
+        Tue, 30 Jan 2024 16:22:01 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 11/17] lpfc: Remove shost_lock protection for fc_host_port shost APIs
-Date: Tue, 30 Jan 2024 16:35:43 -0800
-Message-Id: <20240131003549.147784-12-justintee8345@gmail.com>
+Subject: [PATCH 12/17] lpfc: Change nlp state statistic counters into atomic_t
+Date: Tue, 30 Jan 2024 16:35:44 -0800
+Message-Id: <20240131003549.147784-13-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20240131003549.147784-1-justintee8345@gmail.com>
 References: <20240131003549.147784-1-justintee8345@gmail.com>
@@ -70,92 +70,251 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Desiring to reduce the amount of unnecessary shost_lock acquisitions in the
-lpfc driver, it has been determined that there is no need for shost_lock
-protection when retrieving fc_host port information because it is only for
-display to user via sysfs.
+There is no reason to use the shost_lock to synchronize an LLDD statistics
+counter.  Convert all the nlp state statistic counters into atomic_t.
+Corresponding zeroing, increments, and reads are converted to atomic
+versions.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 16 ----------------
- 1 file changed, 16 deletions(-)
+ drivers/scsi/lpfc/lpfc.h         | 17 ++++++------
+ drivers/scsi/lpfc/lpfc_attr.c    |  3 ++-
+ drivers/scsi/lpfc/lpfc_els.c     | 10 ++++---
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 46 ++++++++++++++++----------------
+ drivers/scsi/lpfc/lpfc_init.c    | 11 +++++++-
+ 5 files changed, 50 insertions(+), 37 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 04d608ea9106..8f3cac09a381 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -589,14 +589,15 @@ struct lpfc_vport {
+ 	struct list_head fc_nodes;
+ 
+ 	/* Keep counters for the number of entries in each list. */
+-	uint16_t fc_plogi_cnt;
+-	uint16_t fc_adisc_cnt;
+-	uint16_t fc_reglogin_cnt;
+-	uint16_t fc_prli_cnt;
+-	uint16_t fc_unmap_cnt;
+-	uint16_t fc_map_cnt;
+-	uint16_t fc_npr_cnt;
+-	uint16_t fc_unused_cnt;
++	atomic_t fc_plogi_cnt;
++	atomic_t fc_adisc_cnt;
++	atomic_t fc_reglogin_cnt;
++	atomic_t fc_prli_cnt;
++	atomic_t fc_unmap_cnt;
++	atomic_t fc_map_cnt;
++	atomic_t fc_npr_cnt;
++	atomic_t fc_unused_cnt;
++
+ 	struct serv_parm fc_sparam;	/* buffer for our service parameters */
+ 
+ 	uint32_t fc_myDID;	/* fibre channel S_ID */
 diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index d3a5d6ecdf7d..1f9a529e09ff 100644
+index 1f9a529e09ff..142c90eb210f 100644
 --- a/drivers/scsi/lpfc/lpfc_attr.c
 +++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -6429,8 +6429,6 @@ lpfc_get_host_port_type(struct Scsi_Host *shost)
+@@ -1260,7 +1260,8 @@ lpfc_num_discovered_ports_show(struct device *dev,
  	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
- 	struct lpfc_hba   *phba = vport->phba;
  
--	spin_lock_irq(shost->host_lock);
--
- 	if (vport->port_type == LPFC_NPIV_PORT) {
- 		fc_host_port_type(shost) = FC_PORTTYPE_NPIV;
- 	} else if (lpfc_is_link_up(phba)) {
-@@ -6447,8 +6445,6 @@ lpfc_get_host_port_type(struct Scsi_Host *shost)
- 		}
- 	} else
- 		fc_host_port_type(shost) = FC_PORTTYPE_UNKNOWN;
--
--	spin_unlock_irq(shost->host_lock);
+ 	return scnprintf(buf, PAGE_SIZE, "%d\n",
+-			vport->fc_map_cnt + vport->fc_unmap_cnt);
++			 atomic_read(&vport->fc_map_cnt) +
++			 atomic_read(&vport->fc_unmap_cnt));
  }
  
  /**
-@@ -6461,8 +6457,6 @@ lpfc_get_host_port_state(struct Scsi_Host *shost)
- 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
- 	struct lpfc_hba   *phba = vport->phba;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 1ada8ba6cc2a..e01583e2690b 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1646,7 +1646,8 @@ lpfc_more_plogi(struct lpfc_vport *vport)
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+ 			 "0232 Continue discovery with %d PLOGIs to go "
+ 			 "Data: x%x x%x x%x\n",
+-			 vport->num_disc_nodes, vport->fc_plogi_cnt,
++			 vport->num_disc_nodes,
++			 atomic_read(&vport->fc_plogi_cnt),
+ 			 vport->fc_flag, vport->port_state);
+ 	/* Check to see if there are more PLOGIs to be sent */
+ 	if (vport->fc_flag & FC_NLP_MORE)
+@@ -2692,7 +2693,7 @@ lpfc_rscn_disc(struct lpfc_vport *vport)
  
--	spin_lock_irq(shost->host_lock);
+ 	/* RSCN discovery */
+ 	/* go thru NPR nodes and issue ELS PLOGIs */
+-	if (vport->fc_npr_cnt)
++	if (atomic_read(&vport->fc_npr_cnt))
+ 		if (lpfc_els_disc_plogi(vport))
+ 			return;
+ 
+@@ -2752,7 +2753,7 @@ lpfc_adisc_done(struct lpfc_vport *vport)
+ 		if (!(vport->fc_flag & FC_ABORT_DISCOVERY)) {
+ 			vport->num_disc_nodes = 0;
+ 			/* go thru NPR list, issue ELS PLOGIs */
+-			if (vport->fc_npr_cnt)
++			if (atomic_read(&vport->fc_npr_cnt))
+ 				lpfc_els_disc_plogi(vport);
+ 			if (!vport->num_disc_nodes) {
+ 				spin_lock_irq(shost->host_lock);
+@@ -2785,7 +2786,8 @@ lpfc_more_adisc(struct lpfc_vport *vport)
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+ 			 "0210 Continue discovery with %d ADISCs to go "
+ 			 "Data: x%x x%x x%x\n",
+-			 vport->num_disc_nodes, vport->fc_adisc_cnt,
++			 vport->num_disc_nodes,
++			 atomic_read(&vport->fc_adisc_cnt),
+ 			 vport->fc_flag, vport->port_state);
+ 	/* Check to see if there are more ADISCs to be sent */
+ 	if (vport->fc_flag & FC_NLP_MORE) {
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 35ea67431239..7c4356d87730 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -4023,7 +4023,7 @@ lpfc_mbx_cmpl_reg_vpi(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	spin_unlock_irq(shost->host_lock);
+ 	vport->num_disc_nodes = 0;
+ 	/* go thru NPR list and issue ELS PLOGIs */
+-	if (vport->fc_npr_cnt)
++	if (atomic_read(&vport->fc_npr_cnt))
+ 		lpfc_els_disc_plogi(vport);
+ 
+ 	if (!vport->num_disc_nodes) {
+@@ -4600,40 +4600,35 @@ lpfc_unregister_remote_port(struct lpfc_nodelist *ndlp)
+ static void
+ lpfc_nlp_counters(struct lpfc_vport *vport, int state, int count)
+ {
+-	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
+-	unsigned long iflags;
 -
- 	if (vport->fc_flag & FC_OFFLINE_MODE)
- 		fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
- 	else {
-@@ -6490,8 +6484,6 @@ lpfc_get_host_port_state(struct Scsi_Host *shost)
- 			break;
- 		}
+-	spin_lock_irqsave(shost->host_lock, iflags);
+ 	switch (state) {
+ 	case NLP_STE_UNUSED_NODE:
+-		vport->fc_unused_cnt += count;
++		atomic_add(count, &vport->fc_unused_cnt);
+ 		break;
+ 	case NLP_STE_PLOGI_ISSUE:
+-		vport->fc_plogi_cnt += count;
++		atomic_add(count, &vport->fc_plogi_cnt);
+ 		break;
+ 	case NLP_STE_ADISC_ISSUE:
+-		vport->fc_adisc_cnt += count;
++		atomic_add(count, &vport->fc_adisc_cnt);
+ 		break;
+ 	case NLP_STE_REG_LOGIN_ISSUE:
+-		vport->fc_reglogin_cnt += count;
++		atomic_add(count, &vport->fc_reglogin_cnt);
+ 		break;
+ 	case NLP_STE_PRLI_ISSUE:
+-		vport->fc_prli_cnt += count;
++		atomic_add(count, &vport->fc_prli_cnt);
+ 		break;
+ 	case NLP_STE_UNMAPPED_NODE:
+-		vport->fc_unmap_cnt += count;
++		atomic_add(count, &vport->fc_unmap_cnt);
+ 		break;
+ 	case NLP_STE_MAPPED_NODE:
+-		vport->fc_map_cnt += count;
++		atomic_add(count, &vport->fc_map_cnt);
+ 		break;
+ 	case NLP_STE_NPR_NODE:
+-		if (vport->fc_npr_cnt == 0 && count == -1)
+-			vport->fc_npr_cnt = 0;
++		if (!atomic_read(&vport->fc_npr_cnt) && count == -1)
++			atomic_set(&vport->fc_npr_cnt, 0);
+ 		else
+-			vport->fc_npr_cnt += count;
++			atomic_add(count, &vport->fc_npr_cnt);
+ 		break;
  	}
--
--	spin_unlock_irq(shost->host_lock);
+-	spin_unlock_irqrestore(shost->host_lock, iflags);
  }
  
- /**
-@@ -6504,8 +6496,6 @@ lpfc_get_host_speed(struct Scsi_Host *shost)
- 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
- 	struct lpfc_hba   *phba = vport->phba;
+ /* Register a node with backend if not already done */
+@@ -5034,8 +5029,9 @@ lpfc_set_disctmo(struct lpfc_vport *vport)
+ 			 "0247 Start Discovery Timer state x%x "
+ 			 "Data: x%x x%lx x%x x%x\n",
+ 			 vport->port_state, tmo,
+-			 (unsigned long)&vport->fc_disctmo, vport->fc_plogi_cnt,
+-			 vport->fc_adisc_cnt);
++			 (unsigned long)&vport->fc_disctmo,
++			 atomic_read(&vport->fc_plogi_cnt),
++			 atomic_read(&vport->fc_adisc_cnt));
  
--	spin_lock_irq(shost->host_lock);
--
- 	if ((lpfc_is_link_up(phba)) && (!(phba->hba_flag & HBA_FCOE_MODE))) {
- 		switch(phba->fc_linkspeed) {
- 		case LPFC_LINK_SPEED_1GHZ:
-@@ -6568,8 +6558,6 @@ lpfc_get_host_speed(struct Scsi_Host *shost)
- 		}
- 	} else
- 		fc_host_speed(shost) = FC_PORTSPEED_UNKNOWN;
--
--	spin_unlock_irq(shost->host_lock);
+ 	return;
+ }
+@@ -5070,7 +5066,8 @@ lpfc_can_disctmo(struct lpfc_vport *vport)
+ 			 "0248 Cancel Discovery Timer state x%x "
+ 			 "Data: x%x x%x x%x\n",
+ 			 vport->port_state, vport->fc_flag,
+-			 vport->fc_plogi_cnt, vport->fc_adisc_cnt);
++			 atomic_read(&vport->fc_plogi_cnt),
++			 atomic_read(&vport->fc_adisc_cnt));
+ 	return 0;
  }
  
- /**
-@@ -6583,8 +6571,6 @@ lpfc_get_host_fabric_name (struct Scsi_Host *shost)
- 	struct lpfc_hba   *phba = vport->phba;
- 	u64 node_name;
+@@ -5951,8 +5948,10 @@ lpfc_disc_start(struct lpfc_vport *vport)
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+ 			 "0202 Start Discovery port state x%x "
+ 			 "flg x%x Data: x%x x%x x%x\n",
+-			 vport->port_state, vport->fc_flag, vport->fc_plogi_cnt,
+-			 vport->fc_adisc_cnt, vport->fc_npr_cnt);
++			 vport->port_state, vport->fc_flag,
++			 atomic_read(&vport->fc_plogi_cnt),
++			 atomic_read(&vport->fc_adisc_cnt),
++			 atomic_read(&vport->fc_npr_cnt));
  
--	spin_lock_irq(shost->host_lock);
--
- 	if ((vport->port_state > LPFC_FLOGI) &&
- 	    ((vport->fc_flag & FC_FABRIC) ||
- 	     ((phba->fc_topology == LPFC_TOPOLOGY_LOOP) &&
-@@ -6594,8 +6580,6 @@ lpfc_get_host_fabric_name (struct Scsi_Host *shost)
- 		/* fabric is local port if there is no F/FL_Port */
- 		node_name = 0;
+ 	/* First do ADISCs - if any */
+ 	num_sent = lpfc_els_disc_adisc(vport);
+@@ -5981,7 +5980,7 @@ lpfc_disc_start(struct lpfc_vport *vport)
+ 		if (!(vport->fc_flag & FC_ABORT_DISCOVERY)) {
+ 			vport->num_disc_nodes = 0;
+ 			/* go thru NPR nodes and issue ELS PLOGIs */
+-			if (vport->fc_npr_cnt)
++			if (atomic_read(&vport->fc_npr_cnt))
+ 				lpfc_els_disc_plogi(vport);
  
--	spin_unlock_irq(shost->host_lock);
--
- 	fc_host_fabric_name(shost) = node_name;
- }
+ 			if (!vport->num_disc_nodes) {
+@@ -6077,7 +6076,8 @@ lpfc_disc_flush_list(struct lpfc_vport *vport)
+ 	struct lpfc_nodelist *ndlp, *next_ndlp;
+ 	struct lpfc_hba *phba = vport->phba;
  
+-	if (vport->fc_plogi_cnt || vport->fc_adisc_cnt) {
++	if (atomic_read(&vport->fc_plogi_cnt) ||
++	    atomic_read(&vport->fc_adisc_cnt)) {
+ 		list_for_each_entry_safe(ndlp, next_ndlp, &vport->fc_nodes,
+ 					 nlp_listp) {
+ 			if (ndlp->nlp_state == NLP_STE_PLOGI_ISSUE ||
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 8e84ba0f7721..1285a7bbdced 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4770,6 +4770,14 @@ lpfc_create_port(struct lpfc_hba *phba, int instance, struct device *dev)
+ 	vport->load_flag |= FC_LOADING;
+ 	vport->fc_flag |= FC_VPORT_NEEDS_REG_VPI;
+ 	vport->fc_rscn_flush = 0;
++	atomic_set(&vport->fc_plogi_cnt, 0);
++	atomic_set(&vport->fc_adisc_cnt, 0);
++	atomic_set(&vport->fc_reglogin_cnt, 0);
++	atomic_set(&vport->fc_prli_cnt, 0);
++	atomic_set(&vport->fc_unmap_cnt, 0);
++	atomic_set(&vport->fc_map_cnt, 0);
++	atomic_set(&vport->fc_npr_cnt, 0);
++	atomic_set(&vport->fc_unused_cnt, 0);
+ 	lpfc_get_vport_cfgparam(vport);
+ 
+ 	/* Adjust value in vport */
+@@ -4946,7 +4954,8 @@ int lpfc_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ 		goto finished;
+ 	if (vport->num_disc_nodes || vport->fc_prli_sent)
+ 		goto finished;
+-	if (vport->fc_map_cnt == 0 && time < msecs_to_jiffies(2 * 1000))
++	if (!atomic_read(&vport->fc_map_cnt) &&
++	    time < msecs_to_jiffies(2 * 1000))
+ 		goto finished;
+ 	if ((phba->sli.sli_flag & LPFC_SLI_MBOX_ACTIVE) != 0)
+ 		goto finished;
 -- 
 2.38.0
 
