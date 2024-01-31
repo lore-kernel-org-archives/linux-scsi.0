@@ -1,65 +1,65 @@
-Received: from mail-qv1-f41.google.com (mail-qv1-f41.google.com [209.85.219.41])
+Received: from mail-ua1-f49.google.com (mail-ua1-f49.google.com [209.85.222.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A9392134F
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 18:37:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E312118634
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 18:37:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706726249; cv=none; b=dtT51uSDiyJbD2xPlaGr2P3WZKNN/rXEZA0FdGq3GKexBUeI2qkEO+M4kjxJmFl0mrbVfc6X0FOYQLjDym5TLc50KAPJXXUHtZOXjecjMpI8L6QFscWzl4g9D4l1VZBIRAVLXMLZoBooUY5+qkoOY6WIWDuLacnTfCv5ZT/LBzQ=
+	t=1706726251; cv=none; b=pKh33rVcB6PpMV5PNo/MfNY8KVPLSYd6CuVUC+Cl8D1oDZLqur73Ftg/AIB3cXeaaYCNtgv+WPiR7YF1G/9/YZZH2wcJqWa2vMbD6noPE2cE4mmnIzUrIbnMFPbPALA9LtQHi2WWgmCk2KL7GVr6fskPlEfl/bDqLReC0vzi/6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706726249; c=relaxed/simple;
-	bh=27ez7l46OQ5EDPuSrVLB/podSPCjXJKMhlYt1vMOryc=;
+	s=arc-20240116; t=1706726251; c=relaxed/simple;
+	bh=3uN9K4Ly14euOREQO8Y6lyyJQgy+p37EO/Yl5ScpU14=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Ui6Pf6Pze7xSVgQciDjEKu/JDo2loTx+b3CUpZ8CvrnMefqUzS7JXeGHIIMzSJv+m0m8unzg0wsxF4y3JH1mkTIzZgyZg1ON47IZRL6igbjVmzh62jkHj3MPVXF+UeEJ+htV2lm2KLb7TlSSE0iFcf70fw2IXcU5FhLcab+mtT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B4+XBn7z; arc=none smtp.client-ip=209.85.219.41
+	 MIME-Version; b=OHb9lZ79dyAMd7Fhc7wpHfexhubZRFuPGU0j8b/3HoBVEENVgMdFD4YsQ6aOrxlnFsHskDr+JN+8nGMUi2TUsu0m9LYIukPvmy7HNLbg4666CNNbHw6wcjzB2Bu9svlgKauvU4Ur9YLiL6g9Y1tVsnCu/l2IcIvbrC6UkGUp3ts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DbCaFYDs; arc=none smtp.client-ip=209.85.222.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B4+XBn7z"
-Received: by mail-qv1-f41.google.com with SMTP id 6a1803df08f44-68155fca099so205376d6.1
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 10:37:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DbCaFYDs"
+Received: by mail-ua1-f49.google.com with SMTP id a1e0cc1a2514c-7d3029b5e1fso23927241.0
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 10:37:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1706726247; x=1707331047; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1706726248; x=1707331048; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=5YkMNKhf89ZQKnipc+gTJjo6GDA+oFnGwlqZm3Y8nZ4=;
-        b=B4+XBn7zg8sB9AzCF6oZe9O7VFmwK7k7IZ6K+Zleaua5u8EhbSvJLGk5whKv/5PK0d
-         yQUtmJT+W37a2Sg2UJl6smjvakRFEV5NU61BPo6FGpr+8HrJR3gqNRuX6ADb6Ggcuo7J
-         TjPGWPyWZeBy43qaHJr8rNFVBp3COKMwUDyRdn52JjICyCbLUEXMM4HGz3+W0EOueElw
-         KF0LQwljZ9zXJCU3uhiCm4IyHS7x+IYsN5KW6dt8vK2k8aZdz5WYLzVFlArL1wRlTE+4
-         gDjvb3INRitebwY3mXt0uwrIZBLfpcdbutKGCKPWaoZBwGwYZBHzGxBIou1kYCvzJu/u
-         rx/w==
+        bh=yMk2d5ntinQ+7BXRy82249JP296pqt5tzgwd635B3Z4=;
+        b=DbCaFYDslUwMOaGJFkTpJHZ8oejXpUW5P+TPo+Ry7HrvXxZqDGiEQdEx1y3Xn91MN5
+         Sp6v9RmUTX3rfXSxYsn34EMAd+KQJafRHUPnhkH/GmAUbjFN6V+tNi+3W+q/ml+RcTLl
+         F8fO26lJpAFK8+AtFQhxs2aGn0rIp4XGNyu7VVnqVyoCkxFL/uPI6bApXBq6IWWPgznj
+         JIrLHWQ+sRvda4AX+tWOnX2mn2DCx4nye7+tpnPYFodlSg54xlfTOGgpRE/pBahyG/a3
+         IeRVAe0XAbpejz9M7mBgG7Avx0EDlcoh3sD2k5TPg78jP5LObgNLd/8/DEAdCYRTNWmj
+         xioA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706726247; x=1707331047;
+        d=1e100.net; s=20230601; t=1706726248; x=1707331048;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=5YkMNKhf89ZQKnipc+gTJjo6GDA+oFnGwlqZm3Y8nZ4=;
-        b=fhCAFJD0JLZVmXBVOSAkmKnJ74DrTGl31FJTGzjyiKwvKUkPYWZ/8NUbM29G5lt51H
-         +w8aY0GD2f3GgM81bndNF0R9IMS3+xmJO0+h20qoBdP52hFJ1CfJDgOgvmyJhRbMqCfO
-         tOI2kZyzFmQSbajDfKd3akryCw8hdbKQMpn3zg2QBvBiB7OZsPo08mRUxVocjafDXDyZ
-         WMOw8nzCvVrQn2xauzKU9464SOtA7oBwKba+lcjgfgyAFvqZesAQ6XIGMeDK1aLG2gxV
-         M5ycZnuVNavNDD1ICO+n2iJ9kONfrreKRUMaSRnWz/FzIqZ0G+ds2n+kUyDFBXU7/j37
-         +Dlg==
-X-Gm-Message-State: AOJu0YwM0jKjK7nMSm2JVd8038erjzAfCeDjTpeXyg6zANsWDPsl9sQb
-	trbpxPY7wIFxCiXRmdC27IV6NiQXZ3QLbOcuOnl1FAZvKzNIKiwlsiFudIFa
-X-Google-Smtp-Source: AGHT+IH3gCpztv9zVubRrRSS4Wv35TBo1B9pR7HGYMDPkb284c5M39Rubd2Jnkr7uqrUjbGxdsOSRg==
-X-Received: by 2002:ad4:5495:0:b0:685:6147:3607 with SMTP id pv21-20020ad45495000000b0068561473607mr212798qvb.2.1706726246775;
-        Wed, 31 Jan 2024 10:37:26 -0800 (PST)
+        bh=yMk2d5ntinQ+7BXRy82249JP296pqt5tzgwd635B3Z4=;
+        b=el85WK/j1zyncNR8W/8CYBW/ob5pHJ5EJxq0csGoEsZNMN5NTwhIYjZrIWP3vN+mRj
+         dJFVuCoE/adT9MRpm3ZmzaKDWM+MYpJFu5aud0ixFYdjbOvThjP4aCb3mc4n1OfF/Pce
+         WGOv/y960TnCzCo6awT037yt0Dtv9+e/rn7GhSVkc9bEP2pNEN90ClRztED6+XAqpeSh
+         Otrfo5yyQrw4QBweuWJEc+KU8UISJeVHxdsvhDay0vRb+7UMuelKAJLQHrOTrtVphwOn
+         gQQVMex3kR7lYpfFrlRbxwTWyAhVfpuEJtak5rbwDoP2abNVi40HluIDpN0sOD4XGFs7
+         frig==
+X-Gm-Message-State: AOJu0YyIK8AKXZHVhRl1qMoLLwQm7qJVQj/InvWMnakIpz7SVO626Atr
+	O3WN9SMGOZd5rWceTfoUqxIK4Od/4SrMgE8pfAjAHnUmcAhc4zBjvqb21TgL
+X-Google-Smtp-Source: AGHT+IFElXa1M7Kp+dBnJAnoPQjtB3bTL97224copNY9ZRHCwy54acR8KoiGPlEX45aozXd6fodM1w==
+X-Received: by 2002:a05:6122:2704:b0:4b7:3417:b5a4 with SMTP id ej4-20020a056122270400b004b73417b5a4mr429810vkb.1.1706726248405;
+        Wed, 31 Jan 2024 10:37:28 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id oq7-20020a056214460700b00684225ef3a0sm5111229qvb.93.2024.01.31.10.37.25
+        by smtp.gmail.com with ESMTPSA id oq7-20020a056214460700b00684225ef3a0sm5111229qvb.93.2024.01.31.10.37.27
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 31 Jan 2024 10:37:26 -0800 (PST)
+        Wed, 31 Jan 2024 10:37:28 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	himanshu.madhani@oracle.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH v2 06/17] lpfc: Remove NLP_RCV_PLOGI early return during RSCN processing for ndlps
-Date: Wed, 31 Jan 2024 10:51:01 -0800
-Message-Id: <20240131185112.149731-7-justintee8345@gmail.com>
+Subject: [PATCH v2 07/17] lpfc: Fix failure to delete vports when discovery is in progress
+Date: Wed, 31 Jan 2024 10:51:02 -0800
+Message-Id: <20240131185112.149731-8-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20240131185112.149731-1-justintee8345@gmail.com>
 References: <20240131185112.149731-1-justintee8345@gmail.com>
@@ -71,40 +71,44 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Upon first RSCN receipt of a target server's remote port that is
-initially acting as an initiator function, the driver marks the
-ndlp->nlp_type as an initiator role.  Then later, when processing an RSCN
-for a target function role switch, that ndlp remote port is permanently
-stuck as an initiator role and can never transition to be discovered as an
-updated target role function.
+Requests to delete an NPIV port may fail repeatedly if the initial request
+is received during discovery.
 
-Remove the NLP_RCV_PLOGI early return if statement clause so that the
-NLP_NPR_2B_DISC flag gets set.  This allows for role change detections.
+If the FC_UNLOADING load_flag is set, then skip CT response processing for
+the physical port.  This allows discovery processing for other lpfc_vport
+objects to reach their cmpl routines before deleting the vport.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index f80bbc315f4c..35ea67431239 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -5774,14 +5774,6 @@ lpfc_setup_disc_node(struct lpfc_vport *vport, uint32_t did)
- 			if (vport->phba->nvmet_support)
- 				return ndlp;
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index baae1f8279e0..315db836404a 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -943,8 +943,8 @@ lpfc_cmpl_ct_cmd_gid_ft(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		goto out;
+ 	}
  
--			/* If we've already received a PLOGI from this NPort
--			 * we don't need to try to discover it again.
--			 */
--			if (ndlp->nlp_flag & NLP_RCV_PLOGI &&
--			    !(ndlp->nlp_type &
--			     (NLP_FCP_TARGET | NLP_NVME_TARGET)))
--				return NULL;
--
- 			if (ndlp->nlp_state > NLP_STE_UNUSED_NODE &&
- 			    ndlp->nlp_state < NLP_STE_PRLI_ISSUE) {
- 				lpfc_disc_state_machine(vport, ndlp, NULL,
+-	/* Don't bother processing response if vport is being torn down. */
+-	if (vport->load_flag & FC_UNLOADING) {
++	/* Skip processing response on pport if unloading */
++	if (vport == phba->pport && vport->load_flag & FC_UNLOADING) {
+ 		if (vport->fc_flag & FC_RSCN_MODE)
+ 			lpfc_els_flush_rscn(vport);
+ 		goto out;
+@@ -1166,8 +1166,8 @@ lpfc_cmpl_ct_cmd_gid_pt(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		goto out;
+ 	}
+ 
+-	/* Don't bother processing response if vport is being torn down. */
+-	if (vport->load_flag & FC_UNLOADING) {
++	/* Skip processing response on pport if unloading */
++	if (vport == phba->pport && vport->load_flag & FC_UNLOADING) {
+ 		if (vport->fc_flag & FC_RSCN_MODE)
+ 			lpfc_els_flush_rscn(vport);
+ 		goto out;
 -- 
 2.38.0
 
