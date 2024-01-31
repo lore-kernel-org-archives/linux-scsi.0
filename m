@@ -1,64 +1,64 @@
-Received: from mail-vs1-f50.google.com (mail-vs1-f50.google.com [209.85.217.50])
+Received: from mail-qt1-f170.google.com (mail-qt1-f170.google.com [209.85.160.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5297804
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 00:21:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81C7BEBF
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 00:21:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706660517; cv=none; b=lApww/wzPg9gad2SKi/FWMyZ93z9qUQf72kDdhgsWW1uYlSu/m2fy6SZfrk4NoLdD3kdDfjxMbnaU67dyViU9XxNZvNwe8MOBquWUe4SIpaYq0ytrf/ReHSbSSqsix6CYz2YtIimiXT9T2w9Za21fdhlykG5rtyjZadIezN8aAY=
+	t=1706660519; cv=none; b=M3Nbr9wKH+P38GxChXci3cb4Ug/1GA3WIEHMcrht8SUB1o0qncXPPxgtl4t3rADQ/dfm9TT5wlDNVKOb0WtFKA+c+SYl8Cju0HF1GqPZ0S1BoR5x5puz2DKFJX8AIrGGRl9rh81Qv+wuPsp6OmxuoIeOVAFdXU9eQQRaDs5Qea0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706660517; c=relaxed/simple;
-	bh=ZyEG7dNV7noeSjibWL/PNqSsqcqEK+UhCQ/4lRvsttE=;
+	s=arc-20240116; t=1706660519; c=relaxed/simple;
+	bh=IAhuP0aGhWisW08xFRWK8KqxsKmD3kZUDLpYtizbU7c=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EGDJcYyd+e8EVcS1El3P9VJM3r+RcPu3by6WUdvj5lP7MkuEAGBTmkIT/HUblKo53zHjhU9OwCrRvIkoHD4hnVUMOfPAsx/YRZeHE9PbWUCf8O7P/8PP7pf/sbJChFDiT9zFP0VPrmSSswKKERu1oQeLRN6VELnwcOwtSUecEH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DkNu3F5t; arc=none smtp.client-ip=209.85.217.50
+	 MIME-Version; b=MB1/NlINGNqO+F8MW+mPFSHB65uzAZuZo51T3AayqeTwXylINQZ+9+Mzi1IdqsdghqHskXGzpK6ZWu9cqcDRitNGW+jnoWh8LRcSxzwNwSOqQ5gGvpl/LTsPHh53WLpm5fHbDn1jpk3THDzwttUakpGz2BKoXs1sUc7YSsALPCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FRiPpCxq; arc=none smtp.client-ip=209.85.160.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DkNu3F5t"
-Received: by mail-vs1-f50.google.com with SMTP id ada2fe7eead31-46caa53a65eso41262137.0
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 16:21:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FRiPpCxq"
+Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-42a9c3f31e0so4803231cf.1
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 16:21:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1706660514; x=1707265314; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1706660516; x=1707265316; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=WPXnMQ35OYwNhWGkqopxVNUcuap0FITt0rduOYfQkIw=;
-        b=DkNu3F5twhb6JbwKXZcIhPbYkVOnTb3QvNVbySLP63Pipxh2jmBn880gphFc+poorR
-         Z7f3+7XEF8DD20o9E/ZeEKr5/p3wPJ2HelCBjsOVx0NN5Zg7WJ+D63G40CsnNKs/PQQR
-         +A4ja0gRQ7a81LKb2jIjgZJ2ShvXVNBIssoAoTM08A3qYb8KbUJUJERcHYQhXDXxh+xF
-         Q6OetvTof9IzitxpMLI7AKM8s2lRzTccP11q9AHHVWqC+f+wapCpqu06l/iuccKEpKSY
-         ZQ1M1WxVDSjrxrV9bFL6goZgqVi0RsvFYbbZd2WxE0QGz2CeOfrUyOvjoLjaz5s1ThQg
-         FWmA==
+        bh=q18ukcNe8RLqMGrS2HndRD7T0y1FTeIt8zCq4DL37vQ=;
+        b=FRiPpCxqOG4zn1AVvY215lQfb+YZrzuIYEEb1n3HBSWmZA9rIYz0h3peB4HtGkyCXe
+         j+Qg3kP07UhznofbFcptgPhhrc2OdNM2QAOMmNpxE7RWyR4O2zZRA9F790l1jG25si9u
+         ht7DxqT5QbMtjKnqjPd4OaDOB6FR1nwPtZrOVI1d85BNIeymITmouvPcwxVtUnMwPrhI
+         M42zXCG+NPJVgGOoLO1wd5CjJ5kBdWv73KnJTQ54j4XZCnnafJuyCTuFk9s9cprY2KQP
+         wW4PSuj356dKcopb2x4toatPmJ1rKwFa2w3sCImL1aG5tZGrWxBUXxFOfT3WDGuw7bJV
+         z4QA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706660514; x=1707265314;
+        d=1e100.net; s=20230601; t=1706660516; x=1707265316;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=WPXnMQ35OYwNhWGkqopxVNUcuap0FITt0rduOYfQkIw=;
-        b=Vldf8GnDt/Mh0pGW3kUHQUuH333McplBWMZmaQV1hWC0+kEHOOv5QJ5q7p5HAlHGBu
-         JlC2nYXuFUOdv+tCeZtmlnsbI0FElCPV++PC160iO80vgwEIQ92xMIpxBYOIsJ3nEz0y
-         iJ7sJfjvm7tapRXMMFA0oqwsvhqiYtYCotR5vVFxInCqpPkulgTbSeGOjney4VaSNIzC
-         YPKLTOAraAP/1kc4bZwr3EAEHI8osPsxAZd3xGMwvA8Vv7l9VObmJrGS0ZVDzBh/nH7B
-         QTIHa57lh9Djq1MtXFXOO14LVy41QVWJYyqmzs5QJHzNSJPLV0zo8OJSELpH/g1rd+Ph
-         /BVQ==
-X-Gm-Message-State: AOJu0Yw1qDDM7DHXO1sTIo3x1oE9rG7zxQUSIS7i/nNM799xtAcYHnTt
-	rDXhy+KftUryv10lR0hHJP+uxGBTeR4UQcsY5jsPjYn8S2HsDYor5RXxtUVf
-X-Google-Smtp-Source: AGHT+IGJywCwthZe/fwgF7iRXrkkaO4GlIT31OLdowqb8tV6IGt+oKNNJ9li0o2p/Eqxjeagbdpebg==
-X-Received: by 2002:a05:6122:4492:b0:4b7:53d0:846b with SMTP id cz18-20020a056122449200b004b753d0846bmr111735vkb.0.1706660514668;
-        Tue, 30 Jan 2024 16:21:54 -0800 (PST)
+        bh=q18ukcNe8RLqMGrS2HndRD7T0y1FTeIt8zCq4DL37vQ=;
+        b=Aw85+Eehm+2GDin3pz8WsjkhUdhzvL8lgdWly0ocrQffaZ4I4WeoMBV/c2mW8eiX7T
+         fLk25XLUhhRXaNTq9G9wuLoOLu44rRr7vfRjhaz2lSxNAllgkHndwHfOlvAXawRbdw8K
+         pWyuDQGxLafq+B/I41Bhv0XP0CzHXuqrA5awjTohX7pzpMl6MdlOEn4rlS5adav97Rnb
+         uaqiW1ke/zGdhTPEMpH27j2Olm7UW17bb9RMTR7yy5j4uR++uJ7grnMpd6ZShKBF6krk
+         1XcGIX35Sr6hCYvoPeXNdSNC+FkezJsxb0oCKluCdOmsTjCfy4oJaGVqNCiaJNcpGymz
+         Y+uA==
+X-Gm-Message-State: AOJu0YwquicSsywANuoNJ5rx+F3HE+0drIjSvx5sQawIufHoYXDZApru
+	qVyB2TdsCLMGxB3C4H6jAfa5/IWqim0fgfdax3gLGx1GTaQZnWGH4uOpP/le
+X-Google-Smtp-Source: AGHT+IErYiZd4NfelRuz9M8ybk6ITYpY23N4w/EkYw2RtuXI0jW4OaKJ6SLohUw6zTyMm0//qd7Wzw==
+X-Received: by 2002:a05:6214:508c:b0:68c:5fc9:1e79 with SMTP id kk12-20020a056214508c00b0068c5fc91e79mr151637qvb.4.1706660516430;
+        Tue, 30 Jan 2024 16:21:56 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id qn19-20020a056214571300b0068c4ecc8886sm2600931qvb.127.2024.01.30.16.21.52
+        by smtp.gmail.com with ESMTPSA id qn19-20020a056214571300b0068c4ecc8886sm2600931qvb.127.2024.01.30.16.21.55
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 30 Jan 2024 16:21:54 -0800 (PST)
+        Tue, 30 Jan 2024 16:21:56 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 08/17] lpfc: Add condition to delete ndlp object after sending BLS_RJT to an ABTS
-Date: Tue, 30 Jan 2024 16:35:40 -0800
-Message-Id: <20240131003549.147784-9-justintee8345@gmail.com>
+Subject: [PATCH 09/17] lpfc: Save FPIN frequency statistics upon receipt of peer cgn notifications
+Date: Tue, 30 Jan 2024 16:35:41 -0800
+Message-Id: <20240131003549.147784-10-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20240131003549.147784-1-justintee8345@gmail.com>
 References: <20240131003549.147784-1-justintee8345@gmail.com>
@@ -70,61 +70,31 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The "Nodelist not empty" log message and an accompanying delay may be
-observed when deleting an NPIV port or unloading the lpfc driver.  This
-can occur due to receipt of an ABTS for which there is no corresponding
-login context or ndlp allocated.  In such cases, the driver allocates a new
-ndlp object to send a BLS_RJT after which the ndlp object unintentionally
-remains in the NLP_STE_UNUSED_NODE state forever.
+FPIN frequency is provided by the fabric in peer congestion notifications.
 
-Add a check to conditionally remove ndlp's initial reference count when
-queuing a BLS response.  If the initial reference is removed, then set
-the NLP_DROPPED flag to notify other code paths.
+Currently, the frequency is only logged in a message, but it should also be
+saved into the phba's cgn_fpin statistics member for proper application
+functionality.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index c7a2f565e2c2..29fd2eda70d5 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -18933,7 +18933,7 @@ lpfc_sli4_seq_abort_rsp(struct lpfc_vport *vport,
- 					 "oxid:x%x SID:x%x\n", oxid, sid);
- 			return;
- 		}
--		/* Put ndlp onto pport node list */
-+		/* Put ndlp onto vport node list */
- 		lpfc_enqueue_node(vport, ndlp);
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index a17c66e31637..1ada8ba6cc2a 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -10131,6 +10131,9 @@ lpfc_els_rcv_fpin_peer_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
+ 	pc_evt_str = lpfc_get_fpin_congn_event_nm(pc_evt);
+ 	cnt = be32_to_cpu(pc->pname_count);
  
-@@ -18953,7 +18953,7 @@ lpfc_sli4_seq_abort_rsp(struct lpfc_vport *vport,
- 		return;
- 	}
- 
--	ctiocb->vport = phba->pport;
-+	ctiocb->vport = vport;
- 	ctiocb->cmd_cmpl = lpfc_sli4_seq_abort_rsp_cmpl;
- 	ctiocb->sli4_lxritag = NO_XRI;
- 	ctiocb->sli4_xritag = NO_XRI;
-@@ -19040,6 +19040,16 @@ lpfc_sli4_seq_abort_rsp(struct lpfc_vport *vport,
- 		ctiocb->ndlp = NULL;
- 		lpfc_sli_release_iocbq(phba, ctiocb);
- 	}
++	/* Capture FPIN frequency */
++	phba->cgn_fpin_frequency = be32_to_cpu(pc->event_period);
 +
-+	/* if only usage of this nodelist is BLS response, release initial ref
-+	 * to free ndlp when transmit completes
-+	 */
-+	if (ndlp->nlp_state == NLP_STE_UNUSED_NODE &&
-+	    !(ndlp->nlp_flag & NLP_DROPPED) &&
-+	    !(ndlp->fc4_xpt_flags & (NVME_XPT_REGD | SCSI_XPT_REGD))) {
-+		ndlp->nlp_flag |= NLP_DROPPED;
-+		lpfc_nlp_put(ndlp);
-+	}
- }
- 
- /**
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT | LOG_ELS,
+ 			"4684 FPIN Peer Congestion %s (x%x) "
+ 			"Duration %d mSecs "
 -- 
 2.38.0
 
