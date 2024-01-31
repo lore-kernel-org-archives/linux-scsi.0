@@ -1,182 +1,122 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D41D558207
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 08:23:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4DFE76040;
+	Wed, 31 Jan 2024 11:51:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706689405; cv=none; b=o4w/G4Ae2GRfVSgqiHHpJ11V7KSKOoyMfyUDb4m+IbMpjUiYgO/r0SL7yulfIA5U7rK21u98vdqh446YBqcusnaa0jkkdB4Zh//pnK8im98OQWp1tnPu/j5ErpEtcAO0bwdSqiXBqt9/EaM9mE2l+W2AyiKDDRXl6y/c2iZ4Eqo=
+	t=1706701880; cv=none; b=hqqr1XdWZdiEOSiOg1P7CPHHQ9yIQa4tdjtZq/yM3f/5VcfBPGSuAIdNgUFZKQFAoUShirEHieHnOjCe4VpOzxLIXmMHQnFyBr63LHTMviQ67nTMH7nMV5dPUvwvo02qYmOgtVvNlnN/fa6gCgkyyNMMSxiBL4dsaXrDTGbae7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706689405; c=relaxed/simple;
-	bh=nBU5GIbHBpl22p3MAZ75n0AGDakCxqSHTQMAC98VDOQ=;
-	h=From:To:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=s+nVNo35De4mAxsCuC5WNq6pNzz9Wk5T6q+/qRm3ZVlxygzehGSwme54/KyGtvWxGI3iNCqMsouubO9/7b48Hgqwot9zrXxa4Rm28+sA9g0RFnSdnXO5hCunJ9qvhF41T8CBtN5zJA8Worxl123NB/3SV3j07rsS1LVT5frqkmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=YC1kFV00; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1706701880; c=relaxed/simple;
+	bh=CuCh2cxo9xnL4HtIF/woYQx9LoBHjPmfaYxw3p9oUIg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Aq6bU7AZdrsm8/illLQre+1oaAWPO20t2iNU6WGQGLgUM/1nRb0bdy36LsfgSgjfxprO1y/0haGfrlMqvYf2kBCiBsyopeUh8dMEnFXg3LP0+uvNnB/ATyau0OzWW773lUUgdd4EHszQAJwAj4zWIffkB2Kgwvy1HHakJMY3HFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SUtOwy4D; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="YC1kFV00"
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20240131082314epoutp034bfb8b7086832bbf0cec7f06cee207d4~vYPZYkY5Z2215222152epoutp03R
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 08:23:14 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20240131082314epoutp034bfb8b7086832bbf0cec7f06cee207d4~vYPZYkY5Z2215222152epoutp03R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1706689395;
-	bh=nBU5GIbHBpl22p3MAZ75n0AGDakCxqSHTQMAC98VDOQ=;
-	h=From:To:In-Reply-To:Subject:Date:References:From;
-	b=YC1kFV00KC+tRJplGoBbyIM+cWlfiUI8Vc6XAawmIFDz9dpJ8AlcP/rjp0cOc15uz
-	 RftUUxccxa40DSEKtOqUO0WYkm05lT5/Vh10+7qIOjG8vq7i1J4wACFnD7rvzpm+R8
-	 UVy480QKUy3S1gMK+3vlBCd92bHAXoH84G+8N7hY=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-	epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-	20240131082314epcas2p2442dfd97e8db4c01b6d4d9fb5dd63958~vYPY7prZ32644126441epcas2p2S;
-	Wed, 31 Jan 2024 08:23:14 +0000 (GMT)
-Received: from epsmgec2p1-new.samsung.com (unknown [182.195.36.100]) by
-	epsnrtp4.localdomain (Postfix) with ESMTP id 4TPw5s5Dq7z4x9Q7; Wed, 31 Jan
-	2024 08:23:13 +0000 (GMT)
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-	epsmgec2p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	6F.2B.18994.1730AB56; Wed, 31 Jan 2024 17:23:13 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-	20240131082313epcas2p3f802bae1d9682b8df442891fcb27d073~vYPXr6Xw51750117501epcas2p3D;
-	Wed, 31 Jan 2024 08:23:13 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20240131082313epsmtrp23cb8f2e48d962f52edc681e6e6ae9765~vYPXq6Ykm2025320253epsmtrp2e;
-	Wed, 31 Jan 2024 08:23:13 +0000 (GMT)
-X-AuditID: b6c32a4d-743ff70000004a32-63-65ba0371b252
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	D6.E4.07368.0730AB56; Wed, 31 Jan 2024 17:23:13 +0900 (KST)
-Received: from KORCO118546 (unknown [10.229.38.108]) by epsmtip2.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20240131082312epsmtip233b17a2b4a83802cf2587f391f35b4d6~vYPXdS__p0197401974epsmtip2r;
-	Wed, 31 Jan 2024 08:23:12 +0000 (GMT)
-From: "hoyoung seo" <hy50.seo@samsung.com>
-To: "'Bart Van Assche'" <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
-	<avri.altman@wdc.com>, <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<beanhuo@micron.com>, <kwangwon.min@samsung.com>, <kwmad.kim@samsung.com>,
-	<sh425.lee@samsung.com>, <sc.suh@samsung.com>, <quic_nguyenb@quicinc.com>,
-	<cpgs@samsung.com>, <grant.jung@samsung.com>, <junwoo80.lee@samsung.com>
-In-Reply-To: <92463403-ea32-4545-a466-21243cd454e2@acm.org>
-Subject: RE: [PATCH v1] scsi: ufs: core: Remove the ufshcd_release in
- ufshcd_err_handling_prepare
-Date: Wed, 31 Jan 2024 17:23:12 +0900
-Message-ID: <000001da541e$bb358590$31a090b0$@samsung.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SUtOwy4D"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1706701878; x=1738237878;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=CuCh2cxo9xnL4HtIF/woYQx9LoBHjPmfaYxw3p9oUIg=;
+  b=SUtOwy4DEbWBJg5RybyOyJ0XHfIM7BVy39BaVpORLfeK5pZLDJPVvRPP
+   9x/LvoEsGLr6Zh2RWhPrMzMne2xzzlGNzpAVe65Onq9k+R9K24KzHEruF
+   feLLL8BAo5jyqqzGnp06LFq7kQu9OXB0GOrv8CoNjGZT4KFS2R6ZJAsiw
+   A+G8Rvm8BeQifMqvM8+7j9ypJrx5iaFIl3CEWmiGXdGnQEKRPzm/jGfN5
+   2xme6PqNSdJmwaRCK3NSDSDhrw2uSCfWGPvsovlPdE59LOC0LsmLkctOK
+   lZJ0Q+GAMbA3AHJZSmd/6z2FBs05OepNTmhg0/LeMM/oZitdRZJfwD7wi
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10969"; a="22086101"
+X-IronPort-AV: E=Sophos;i="6.05,231,1701158400"; 
+   d="scan'208";a="22086101"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Jan 2024 03:51:17 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10969"; a="907861041"
+X-IronPort-AV: E=Sophos;i="6.05,231,1701158400"; 
+   d="scan'208";a="907861041"
+Received: from lkp-server02.sh.intel.com (HELO 59f4f4cd5935) ([10.239.97.151])
+  by fmsmga002.fm.intel.com with ESMTP; 31 Jan 2024 03:51:14 -0800
+Received: from kbuild by 59f4f4cd5935 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1rV97Y-0001WW-14;
+	Wed, 31 Jan 2024 11:51:12 +0000
+Date: Wed, 31 Jan 2024 19:50:34 +0800
+From: kernel test robot <lkp@intel.com>
+To: Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-kernel@vger.kernel.org,
+	hare@suse.de, Lee Duncan <lduncan@suse.com>
+Subject: Re: [PATCH 2/2] fnic: move fnic_fnic_flush_tx() to a work queue
+Message-ID: <202401311947.cPDhv2xa-lkp@intel.com>
+References: <9c51ef07a04413fb2f2bd20f1534f96e004e4e59.1706632031.git.lduncan@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQH1h0Q8JIMtOyfGxnoTUCtVKJ9etQJjCVVCAjugl6QCof4DrwJoFjdRsG/Y62A=
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA02TcUwTVxzH8+7OayGpuR21exKn9TZF2MC2A3ps1CzBzToUUZfNuCXdUW7A
-	WtrSKwxBF2ABoQQEo3O0YsQ50BphVCBQadQi4haY2wDpWADNBq4wlQmysQW2lmMb/33f9z7f
-	d7/ve3dClLyDhwozDBbWbGD0FB6MtXWFKyOzUBcrK/5sC33vTBtO++YHcfrG/TKM/nR6HqV9
-	nnD6z4UmAX3O24bQroVPELrV24HRP7R0Y3S/6zROlw+143RDzyJCn/ylR0BbR7yA/mLxIfYa
-	oe4fSFRXnbsO1L83leLq38aHMXV158fqyhYHUM8416uPXi9HkoUHdfHpLJPKmqWsQWtMzTCk
-	qajE/ZoETUysTB4pj6OVlNTAZLIqavuu5Mg3MvT++SlpDqPP9lvJDMdRW7fFm43ZFlaabuQs
-	Koo1pepNSlMUx2Ry2Ya0KANreUUukyli/OD7uvTjx942VRG5Q/1ToADcFllBkBAS0dBTeAGx
-	gmAhSXQCWFW4iPKLJwC2zlzD+MUcgM6uC7gVCJcilz5/h/fdAD69P40EtiIJH4CXKz8IaJyI
-	gMcetuABSEy4UNg82oAFHgQRr8Ly5jtoQIcQWjg4d1IQ2BQjNsHei2TAFhFxcLayHef1M/Cr
-	mp+XoijxIqyvm0L5saVwfrx+VSAqJpLg5ZLneEQM7WUlSwUgcU8I3ZM1gOe3w5HRWwivQ+Bk
-	T4uA16Fw5pF7uRcHbXX5fLYAQI/dtsy8DG0TR0GAQYlw2OTayuPPw5vDy5OthqVdC8u0CBY0
-	/yXgEREsLSF5m4K9tT8u2xDesOurAGVbUdG2oqJtRRfb/689CzAHCGVNXGYaq1WY5JEG9qP/
-	7lprzHSCpS87Ync7mGpaiPIARAg8AApRSiy6uL6DJUWpzKE81mzUmLP1LOcBMf5zr0ZD12iN
-	/l/DYNHIo+Nk0bGxcqUiRqaknhWNFtemkkQaY2F1LGtizf/mEGFQaAGi3ng196cJeeOjuLUq
-	pqyrQpwnSXEU7itb1TDdc1znWGebT5nFTmm2Dc/NH5Z4rOMTfXs3jQTX3ZVUdHiDHwzsKr6J
-	oo6JrksbclKUT5NI8u+3Buo7i47cyj9gROx7vn+MTw6Hfbu3tn9s7AVONrZT8no303Zi3eYI
-	GbaTyNvRyJzHfbcV0jfFchCiXcxSfdc4dC23UHM4/pv9fxzpO3iGWC0p1bnBWUVYwkuD+5Si
-	XEW+0QIde34Nu1tzpSpv9nF1hXXI5y063+v+emSzb+OaQ8U+85dX7XTOg+5TjXpxyIE+GxmS
-	+GES3XriypOoog3l71UnvFtrd7owZ1bjloy1FMalM/II1Mwx/wCl+whXYgQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrHIsWRmVeSWpSXmKPExsWy7bCSvG4h865Ug1PfGS0ezNvGZvHy51U2
-	i4MPO1kspn34yWzx8pCmxa+/69ktFt3YxmSx628zk8XWGztZLG5uOcpicXnXHDaL7us72CyW
-	H//HZDH1xXF2i667Nxgtlv57y+Ig4HH5irfHhEUHGD2+r+9g8/j49BaLx8Q9dR59W1Yxenze
-	JOfRfqCbKYAjissmJTUnsyy1SN8ugStj/jP3guf8FQc7p7I0MC7k7WLk4JAQMJFYvTi8i5GL
-	Q0hgN6NE1/QjjF2MnEBxCYn/i5uYIGxhifstR1ghip4zSlxZs40FJMEmoCXR/3YLG0hCROAc
-	s8TJjS9YIKqmM0lsuNPAClLFKWAt0b3xPDOILSyQKHH//UlWkNUsAqoSZ1YKgYR5BSwlvvTt
-	YIOwBSVOznwCtoBZQFvi6c2ncPayha+ZIS5SkPj5dBnYGBEBP4m1bbIQJSISszvbmCcwCs1C
-	MmkWkkmzkEyahaRlASPLKkbJ1ILi3PTcZMMCw7zUcr3ixNzi0rx0veT83E2M4CjV0tjBeG/+
-	P71DjEwcjIcYJTiYlUR4V8rtTBXiTUmsrEotyo8vKs1JLT7EKM3BoiTOazhjdoqQQHpiSWp2
-	ampBahFMlomDU6qBiSfZ/O+y+cxr8g+0VP98/2SJ75Zb352ET65QaV1ZmpbFttd/i95SUYer
-	bxeez52/2NHLqT/1wz+9lFVvKhVK9k0Mz1Pv/f75Q/HEs7eN1+2/ekf33+a1Z1Ytdor3bWE4
-	FLX6AGvY7J+F6TsXm6fMMtmrtkdFZOKnd6ZcXI7fb/umVU3qqlZ6sCs674P7SufTi+WOrOC+
-	3MQrWHP5npqMSIpc9rd5rpIJKfFKlwR7+kKeTJ9x5Kb85otuDY7bm+5FT7tzf/67T2HWKdUC
-	XMYXOlvKJ7wWOxW/O2sh81XraaIf2H+WNCY9U9I4Fyh77bTXvZnpazwtZvK37M7fFydVe2f5
-	TtcgnpXdmxSO+hX+u6/EUpyRaKjFXFScCACgLk/ZQQMAAA==
-X-CMS-MailID: 20240131082313epcas2p3f802bae1d9682b8df442891fcb27d073
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240122083204epcas2p26a1bca522e201972ca072e0b24d23a52
-References: <CGME20240122083204epcas2p26a1bca522e201972ca072e0b24d23a52@epcas2p2.samsung.com>
-	<20240122083324.11797-1-hy50.seo@samsung.com>
-	<06e0ae57-f567-4b90-ad68-4ae73909c29e@acm.org>
-	<017501da4da5$405e5ec0$c11b1c40$@samsung.com>
-	<92463403-ea32-4545-a466-21243cd454e2@acm.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9c51ef07a04413fb2f2bd20f1534f96e004e4e59.1706632031.git.lduncan@suse.com>
 
-> -----Original Message-----
-> From: Bart Van Assche <bvanassche=40acm.org>
-> Sent: Thursday, January 25, 2024 1:17 AM
-> To: hoyoung seo <hy50.seo=40samsung.com>; linux-scsi=40vger.kernel.org; l=
-inux-
-> kernel=40vger.kernel.org; alim.akhtar=40samsung.com; avri.altman=40wdc.co=
-m;
-> jejb=40linux.ibm.com; martin.petersen=40oracle.com; beanhuo=40micron.com;
-> kwangwon.min=40samsung.com; kwmad.kim=40samsung.com; sh425.lee=40samsung.=
-com;
-> sc.suh=40samsung.com; quic_nguyenb=40quicinc.com; cpgs=40samsung.com;
-> grant.jung=40samsung.com; junwoo80.lee=40samsung.com
-> Subject: Re: =5BPATCH v1=5D scsi: ufs: core: Remove the ufshcd_release in
-> ufshcd_err_handling_prepare
->=20
-> On 1/22/24 18:38, hoyoung seo wrote:
-> > When err_handler is completed, active_reqs becomes negative because
-> > ufshcd_release() is called again in ufshcd_err_handling_unprepare().
-> > I tested it while printing the log, and if I misanalyzed it, let me kno=
-w.
->=20
-> Please repeat your analysis. I think this patch is wrong.
->=20
-> Thanks,
->=20
-> Bart.
+Hi Lee,
 
-Hi,
+kernel test robot noticed the following build warnings:
 
-I do not understand. why you said my patch is wrong.
-If ufs entered suspend with hibern8 state then the hba->clk_gating.active_r=
-eqs is 1.
-After that run wl_resume(), ufs drvier send hibern8 exit command.
-At that time, if the command timeout or error occurs, the err_handler is ac=
-tivated.=20
-Then the active_reqs pair may not fit.
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.8-rc2 next-20240131]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-So to sum up, ufs_release() is performed 3 time.
-(wl_resume(), ufshcd_err_handling_prepare(), ufshcd_err_handling_unprepare(=
-))
-And the ufshcd_hold() is performed 2 time(__ufshcd_wl_suspend(), ufshcd_err=
-_handling_prepare())
-So the paire of active_reqs is not correct.
-So I deleted the ufshcd_release() in ufshcd_err_handling_prepare().
+url:    https://github.com/intel-lab-lkp/linux/commits/Lee-Duncan/Revert-scsi-fcoe-Fix-potential-deadlock-on-fip-ctlr_lock/20240131-004656
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/9c51ef07a04413fb2f2bd20f1534f96e004e4e59.1706632031.git.lduncan%40suse.com
+patch subject: [PATCH 2/2] fnic: move fnic_fnic_flush_tx() to a work queue
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20240131/202401311947.cPDhv2xa-lkp@intel.com/config)
+compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240131/202401311947.cPDhv2xa-lkp@intel.com/reproduce)
 
-The ufshcd_release() was not called again even in the pm_op_in_progress sta=
-te in 4.xx version of the kernel.
-But now if is_sys_suspended is 1, then ufshcd_release() is called once more=
-.
-I don't understand why this is added and the pair doesn't fit.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202401311947.cPDhv2xa-lkp@intel.com/
 
-Please check it again.
-Thanks.
+All warnings (new ones prefixed by >>):
 
-Seo.
+>> drivers/scsi/fnic/fnic_fcs.c:1194: warning: Function parameter or struct member 'work' not described in 'fnic_flush_tx'
+>> drivers/scsi/fnic/fnic_fcs.c:1194: warning: Excess function parameter 'fnic' description in 'fnic_flush_tx'
 
+
+vim +1194 drivers/scsi/fnic/fnic_fcs.c
+
+5df6d737dd4b0fe Abhijeet Joglekar 2009-04-17  1182  
+78112e5558064cb Joe Eykholt       2009-11-03  1183  /**
+78112e5558064cb Joe Eykholt       2009-11-03  1184   * fnic_flush_tx() - send queued frames.
+78112e5558064cb Joe Eykholt       2009-11-03  1185   * @fnic: fnic device
+78112e5558064cb Joe Eykholt       2009-11-03  1186   *
+78112e5558064cb Joe Eykholt       2009-11-03  1187   * Send frames that were waiting to go out in FC or Ethernet mode.
+78112e5558064cb Joe Eykholt       2009-11-03  1188   * Whenever changing modes we purge queued frames, so these frames should
+78112e5558064cb Joe Eykholt       2009-11-03  1189   * be queued for the stable mode that we're in, either FC or Ethernet.
+78112e5558064cb Joe Eykholt       2009-11-03  1190   *
+78112e5558064cb Joe Eykholt       2009-11-03  1191   * Called without fnic_lock held.
+78112e5558064cb Joe Eykholt       2009-11-03  1192   */
+7ea34b1ffb4e1aa Hannes Reinecke   2024-01-30  1193  void fnic_flush_tx(struct work_struct *work)
+78112e5558064cb Joe Eykholt       2009-11-03 @1194  {
+7ea34b1ffb4e1aa Hannes Reinecke   2024-01-30  1195  	struct fnic *fnic = container_of(work, struct fnic, flush_work);
+78112e5558064cb Joe Eykholt       2009-11-03  1196  	struct sk_buff *skb;
+78112e5558064cb Joe Eykholt       2009-11-03  1197  	struct fc_frame *fp;
+5df6d737dd4b0fe Abhijeet Joglekar 2009-04-17  1198  
+d9e9ab56b687da0 Brian Uchino      2010-04-09  1199  	while ((skb = skb_dequeue(&fnic->tx_queue))) {
+78112e5558064cb Joe Eykholt       2009-11-03  1200  		fp = (struct fc_frame *)skb;
+78112e5558064cb Joe Eykholt       2009-11-03  1201  		fnic_send_frame(fnic, fp);
+78112e5558064cb Joe Eykholt       2009-11-03  1202  	}
+78112e5558064cb Joe Eykholt       2009-11-03  1203  }
+5df6d737dd4b0fe Abhijeet Joglekar 2009-04-17  1204  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
