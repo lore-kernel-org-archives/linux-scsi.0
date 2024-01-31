@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF82539843;
-	Wed, 31 Jan 2024 21:28:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A017139ACE;
+	Wed, 31 Jan 2024 21:29:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706736534; cv=none; b=VbTsfb8H2TUXhPe8eE7wx5E5Bow2KQ/Vexki0QrVsFwYTBzc9cVkZ2JNpXLQg2ERZEmFyxU3ILVWyfBpDwpu+PQOl25AWN1jRthghut67W1WLbDTDGiVhQ9IxTkeW7c0xny0DP6rCPQpZvGLpxl3GYUDjRhMeeSnttv8aDJyeNo=
+	t=1706736596; cv=none; b=MdKbFTS7jhLhZq7x1Z/LokxI6hNgrWBzX/mMrqKQgg06enEnYPtSzBRu2RBRh7G8DeqY02EU5N3hVvgo8gq/6rCnnQxT0XUu7koN+Zqlgw4KSo44AA/6eK4xWQlMzKHlxcZKh/UV9TQXpQ3SLYQXSC3PLLHolhSVe8nAd5Ykc1c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706736534; c=relaxed/simple;
-	bh=wuWxeCOodCyEvRLOOFJJptfo/uX+q6W7Z6Zj+MRADO4=;
+	s=arc-20240116; t=1706736596; c=relaxed/simple;
+	bh=6fj/DX2RBc3mm1fSA9gkesW+xuAGsYbPXv5YOo3ZBf8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q9l9ZIL8em6cLHKOE1BygKozfWhpPwf50pA3BMOIXM/iDTXX1dY1e4azG5wexJbP4EsGTjF3S2fmYcUq7maCIpsI+LA9RI+jGcjOJB6RYehkb0bKrBAQPuKuM207msPBqRLCN+sM8C4Kp2xto2HmRGkv4JNQ7g77TYGsyn7Ogug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=YOiz0P0j; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=hFiahCazhwRFPd99t1p5rxVmU4uTtJpZuOIKDfakyQRSr2aQMYbftK6hq1peRETnxCqwNbS07GBI3RRTR0INHCmsA0KfhkfPjfYmw1yDoATlWw6bQ8bDl1hZOE4C4DwZSdFLWnlCUaQv1jAKFg/vPsNcFiAU8Gs3ZvACwds5+0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=AI3vnwwT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="YOiz0P0j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A8D8C433F1;
-	Wed, 31 Jan 2024 21:28:53 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="AI3vnwwT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21762C433F1;
+	Wed, 31 Jan 2024 21:29:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1706736533;
-	bh=wuWxeCOodCyEvRLOOFJJptfo/uX+q6W7Z6Zj+MRADO4=;
+	s=korg; t=1706736596;
+	bh=6fj/DX2RBc3mm1fSA9gkesW+xuAGsYbPXv5YOo3ZBf8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YOiz0P0jCd9M3sT8Cad6kK0UQgMSOkgPCJxB3lLHQ96OTe5rVfa0Xv7uVDGHAYUS3
-	 pxF09V64Mm37vzfzvManF8AANRNtw82zoniaS0cU9f7Q3DviZ+vmh8Cv0gxexoMCC5
-	 g/hKKFTZpZDLfVTqn2XodgEeBsts2AIXM1I4dbfw=
-Date: Wed, 31 Jan 2024 13:28:53 -0800
+	b=AI3vnwwTrvTu/QmK0+wair/yqTNxuvY3lHDtxhEJsUHHEdbIgVtl/EEh5Bp8psqwm
+	 iOERzdMsjw2BfNEmJNqTAtyyeZv5WqKX0HKBR6Ny3xbF4O8NGXIrDZNlkX59mP91f4
+	 YYcd60X77bb0TPxulFrcoGTJNmwkr8vI+TL+g0ko=
+Date: Wed, 31 Jan 2024 13:29:56 -0800
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: Chris Leech <cleech@redhat.com>
 Cc: Nilesh Javali <njavali@marvell.com>, Christoph Hellwig <hch@lst.de>,
@@ -32,10 +32,10 @@ Cc: Nilesh Javali <njavali@marvell.com>, Christoph Hellwig <hch@lst.de>,
 	Hannes Reinecke <hare@kernel.org>, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
 	GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH 1/2] uio: introduce UIO_MEM_DMA_COHERENT type
-Message-ID: <2024013110-greasily-juvenile-73fc@gregkh>
+Subject: Re: [PATCH 2/2] cnic,bnx2,bnx2x: use UIO_MEM_DMA_COHERENT
+Message-ID: <2024013125-unraveled-definite-7fc6@gregkh>
 References: <20240131191732.3247996-1-cleech@redhat.com>
- <20240131191732.3247996-2-cleech@redhat.com>
+ <20240131191732.3247996-3-cleech@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -44,20 +44,27 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240131191732.3247996-2-cleech@redhat.com>
+In-Reply-To: <20240131191732.3247996-3-cleech@redhat.com>
 
-On Wed, Jan 31, 2024 at 11:17:31AM -0800, Chris Leech wrote:
-> Add a UIO memtype specifically for sharing dma_alloc_coherent
-> memory with userspace, backed by dma_mmap_coherent.
+On Wed, Jan 31, 2024 at 11:17:32AM -0800, Chris Leech wrote:
+> Use the UIO_MEM_DMA_COHERENT type to properly handle mmap for
+> dma_alloc_coherent buffers.
 > 
-> This is mainly for the bnx2/bnx2x/bnx2i "cnic" interface, although there
-> are a few other uio drivers which map dma_alloc_coherent memory and
-> could be converted to use dma_mmap_coherent as well.
+> The cnic l2_ring and l2_buf mmaps have caused page refcount issues as
+> the dma_alloc_coherent no longer provide __GFP_COMP allocation as per
+> commit "dma-mapping: reject __GFP_COMP in dma_alloc_attrs".
+> 
+> Fix this by having the uio device use dma_mmap_coherent.
+> 
+> The bnx2 and bnx2x status block allocations are also dma_alloc_coherent,
+> and should use dma_mmap_coherent. They don't allocate multiple pages,
+> but this interface does not work correctly with an iommu enabled unless
+> dma_mmap_coherent is used.
+> 
+> Fixes: bb73955c0b1d ("cnic: don't pass bogus GFP_ flags to dma_alloc_coherent")
 
-What other drivers could use this?  Patches doing the conversion would
-be welcome, otherwise, again, I am very loath to take this
-one-off-change for just a single driver that shouldn't be doing this in
-the first place :)
+This is really the commit that broke things?  By adding this, are you
+expecting anyone to backport this change to older kernels?
 
 thanks,
 
