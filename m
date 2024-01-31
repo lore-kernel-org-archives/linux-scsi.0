@@ -1,85 +1,105 @@
-Received: from mail-oo1-f41.google.com (mail-oo1-f41.google.com [209.85.161.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F329239ACD;
-	Wed, 31 Jan 2024 21:42:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEE0538FA4
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 21:45:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706737356; cv=none; b=oH9jbPtQCZmYhBnWmn6CF2okUDxTEZLafWLq2rRE3/CKYQ267SimEyuWaD1xn5LQSwmlQSfGypGqlFo9eZtsZbImrH67R4KlpIn8Qu9wHRTTOL7kq4EHn/8nhCw7+SQO0y36cFZvEmL/dn5QFG9GD+7z/Ia0PG8ogrH6vJTxUKI=
+	t=1706737507; cv=none; b=AnnFgZcEAvruT9W1H0RjzFAPgGtCPKSl32kbN9PtfPsi94W5WQH0iSURWsHejGEROV2yJH64AX0ZuXdSt2y+nJQVJDz16STzvnzKezZ2nPqvvfYa+gHzY69bDxxUYE2NqOcH4zhvsbCIwa2dn5TD3yzMCvJSmGA+PQiFmhtQvrQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706737356; c=relaxed/simple;
-	bh=NR/hM42mf+zpAKe3h/mi6wOp69kJYWSJyh/Xm04dLVE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OQ8V7t1vLcqkif4s2/jxL+wysJ8mAEx8w+ZScHRrAef2kJCh3zpNR5k/r5VSCjHJ8BbBbTr1oHaTaLVT9owDxOdiYSYjISQPJCK+ztT8vfgzHZG5HRaYf9EZQ425mMHJiNOxIbM7w1qgem+vS4Tq1h4HKMd6RKdczME/Rh7BYEM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.161.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-oo1-f41.google.com with SMTP id 006d021491bc7-59a9304aef0so150605eaf.1;
-        Wed, 31 Jan 2024 13:42:34 -0800 (PST)
+	s=arc-20240116; t=1706737507; c=relaxed/simple;
+	bh=RNO5W0OP+zOfgTSimLFGWc0A4ecEarSa4TiMbXZZvIs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Yd99Ay2KAOZ0nV/1konYFk3Oo7isfKwL/+CmIvjicCsYDEq9WZeeur+FPEr2M9RizGLcXE8AGcS4oYOkkWb9cSs/JxC2BGp8C0eUrY7r9U4aB4dOzm7F85YLtCpaqcid1JLFZVmRTmozG7qZ+eD/9wgpn1BAazTGa8NjkV6Lwkk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Js+jWczE; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Js+jWczE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1706737504;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=7dbCchYRiPga9CCVNutbEbzEx6jSnpAXwCYBNUJ7928=;
+	b=Js+jWczETqQoeg5wYTgWpRaw58kpGhPw4F/m0ZBKLfoyw3y5Pl41hTTR0FVFmVbew0h+6h
+	HKZqryaaa/E/eoVsRt24taK0LEPz+rO3qT1flYpI3gXaAAOMyh06h1UeBlg673KUdwZj19
+	PHeivvErr7Wcd0/Y3u1E4RGu3dmEUwc=
+Received: from mail-lj1-f198.google.com (mail-lj1-f198.google.com
+ [209.85.208.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-279-Q_oOJE6ANmKtdDqLHVB-Zw-1; Wed, 31 Jan 2024 16:45:03 -0500
+X-MC-Unique: Q_oOJE6ANmKtdDqLHVB-Zw-1
+Received: by mail-lj1-f198.google.com with SMTP id 38308e7fff4ca-2cf51cafaf9so2726401fa.2
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 13:45:02 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706737354; x=1707342154;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=NR/hM42mf+zpAKe3h/mi6wOp69kJYWSJyh/Xm04dLVE=;
-        b=LV+bl1Bm7It+mxACERehkaKS1llSnKuMErn1s4RgE7jr5wir+rxr7oz3txgRNDN9X9
-         khrvONfBnAsnEF1Uo/+juvJ0VtlKQcvIR1PR3OANz2+/PfyymgMPSPtfAvzi47pflQE0
-         G6NvNBpMYu/50v8iff3HKQOA/ApcH0fA9TY7304TKFMoljt2rezJIHiNoJ+lODSPWMDk
-         xkrRBjBrPFg+CSNdpFpk+ijKpUP2Y6UmooDmLr29GDmR+U9WpHL4y+/znRfe4YdvXPUi
-         Epv3JBjGLR1vwEp8M3KZAJQwTv1B9iNvtylcbcHtj9boW3LoegeSN8UAXNErmgGPkUqA
-         U8Vg==
-X-Gm-Message-State: AOJu0YxrUWbytVw9LkCmejicxcqRB+Ch2kJ8uV5+ImX4JZdzMBB30i5N
-	JMEgKKtmsl3Mp8c+PfS1E7mq6dHY97l5NV5nWTKU4JNbGiUhhQn1
-X-Google-Smtp-Source: AGHT+IGMpTyvewWCm2i8935qebnXvENDIkUuaSZVucF0ukCgIcRkIAZqmQyXj22lKZT9HdhSSZJz5w==
-X-Received: by 2002:a05:6358:7215:b0:178:a202:66b1 with SMTP id h21-20020a056358721500b00178a20266b1mr2788111rwa.25.1706737353717;
-        Wed, 31 Jan 2024 13:42:33 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:1d95:ca94:1cbe:1409? ([2620:0:1000:8411:1d95:ca94:1cbe:1409])
-        by smtp.gmail.com with ESMTPSA id v12-20020a056a00148c00b006de11c980e5sm8680687pfu.80.2024.01.31.13.42.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 31 Jan 2024 13:42:32 -0800 (PST)
-Message-ID: <c2469774-8ebb-4faf-af3b-c9426b8591d4@acm.org>
-Date: Wed, 31 Jan 2024 13:42:30 -0800
+        d=1e100.net; s=20230601; t=1706737501; x=1707342301;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=7dbCchYRiPga9CCVNutbEbzEx6jSnpAXwCYBNUJ7928=;
+        b=S/YXcJq6w0HHTwzsZy/SU6DVYv9VxyN6bPycGzlkl6s6QW0cFXm4absd4TeTIivAAK
+         EiOpB1vp8xgCHQ8bFZRrAzcdBnsbcTxha1Xj7CHpTJwcvzujpuvHUQMPy56CX3YzWhsq
+         Lvp7+eWPEwerWCCVrS3OedkPChiDZRChhVCPQI+BjsBkdic5YVV0sG6LFa9ub5p0MxW/
+         JfsxyqXRD79cxn+newh66GqwSoLNTK5NkzHHRLo3keExL1EIDcEZW0GHd9E3RzhX2Adk
+         gMjO9fKyWIokDhnMO/B6/5zstwk3Kf+kQ4oI5QJhBCjsg/m7x69fxw+O9nA7E0wXjntH
+         Ggbg==
+X-Gm-Message-State: AOJu0Yz2U9aA+gizHwlIjQ/y3MvWHHYIFNO1U6F5paDym9aiS4yPgEEm
+	zvnnSAOqR+yhihyhpmlY6oycjot/jvPD5KKqSgWxiM2xXu/0uTstkNs18Z7uq2+hvGhUh1KhVtT
+	q8bnt7LR3pLfnLEc4JIEvdg1Bhjq7vv+IwIYhkq+NtSCl70MYrfjGRJd7tp8DrWvYu+CcsH0IpL
+	4PaKQ3uDXHwiGiEbpaAY7D1msItC0XtMom1w==
+X-Received: by 2002:a2e:8553:0:b0:2cf:3324:cedd with SMTP id u19-20020a2e8553000000b002cf3324ceddmr2282119ljj.24.1706737501763;
+        Wed, 31 Jan 2024 13:45:01 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IF4WSR9c2pT9GcR96S25SGMyV9IZm76XurE8FEjz5Uxf6I4GCo5Gdvvm8H5SrOpe9xqbYz5TXh0mtvDtkpATcA=
+X-Received: by 2002:a2e:8553:0:b0:2cf:3324:cedd with SMTP id
+ u19-20020a2e8553000000b002cf3324ceddmr2282099ljj.24.1706737501453; Wed, 31
+ Jan 2024 13:45:01 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/4] block: Make fair tag sharing configurable
-Content-Language: en-US
-To: Keith Busch <kbusch@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Yu Kuai <yukuai1@huaweicloud.com>,
- Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
- linux-scsi@vger.kernel.org, "Martin K . Petersen"
- <martin.petersen@oracle.com>, Ming Lei <ming.lei@redhat.com>,
- Damien Le Moal <damien.lemoal@opensource.wdc.com>,
- Ed Tsai <ed.tsai@mediatek.com>, Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <e0305a2c-20c1-7e0f-d25d-003d7a72355f@huaweicloud.com>
- <aedc82bc-ef10-4bc6-b76c-bf239f48450f@acm.org>
- <20240118073151.GA21386@lst.de>
- <434b771a-7873-4c53-9faa-c5dbc4296495@acm.org>
- <20240123091316.GA32130@lst.de>
- <ac240189-d889-448b-b5f7-7d5a13d4316d@acm.org>
- <20240124090843.GA28180@lst.de>
- <38676388-4c32-414c-a468-5f82a2e9dda4@acm.org>
- <20240131062254.GA16102@lst.de>
- <d7c1f279-464d-4ecd-8e65-87d2ced984dc@acm.org>
- <Zbq9kVEZZBD4m4ZY@kbusch-mbp.dhcp.thefacebook.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <Zbq9kVEZZBD4m4ZY@kbusch-mbp.dhcp.thefacebook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20240131191732.3247996-1-cleech@redhat.com> <20240131191732.3247996-2-cleech@redhat.com>
+ <2024013110-greasily-juvenile-73fc@gregkh>
+In-Reply-To: <2024013110-greasily-juvenile-73fc@gregkh>
+From: Chris Leech <cleech@redhat.com>
+Date: Wed, 31 Jan 2024 13:44:50 -0800
+Message-ID: <CAPnfmX+c_TECfVgbAgphFgkCOr-=tKEvHmcxPg_vSY-qJRqaQQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] uio: introduce UIO_MEM_DMA_COHERENT type
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Nilesh Javali <njavali@marvell.com>, Christoph Hellwig <hch@lst.de>, 
+	John Meneghini <jmeneghi@redhat.com>, Lee Duncan <lduncan@suse.com>, 
+	Mike Christie <michael.christie@oracle.com>, Hannes Reinecke <hare@kernel.org>, netdev@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	GR-QLogic-Storage-Upstream@marvell.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 1/31/24 13:37, Keith Busch wrote:
-> What if all the tags are used by one queue and all the tags are
-> performing long running operations? Sure, sbitmap might wake up the
-> longest waiter, but that could be hours.
+On Wed, Jan 31, 2024 at 1:29=E2=80=AFPM Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+>
+> On Wed, Jan 31, 2024 at 11:17:31AM -0800, Chris Leech wrote:
+> > Add a UIO memtype specifically for sharing dma_alloc_coherent
+> > memory with userspace, backed by dma_mmap_coherent.
+> >
+> > This is mainly for the bnx2/bnx2x/bnx2i "cnic" interface, although ther=
+e
+> > are a few other uio drivers which map dma_alloc_coherent memory and
+> > could be converted to use dma_mmap_coherent as well.
+>
+> What other drivers could use this?  Patches doing the conversion would
+> be welcome, otherwise, again, I am very loath to take this
+> one-off-change for just a single driver that shouldn't be doing this in
+> the first place :)
 
-I have not yet encountered any storage driver that needs hours to
-process a single request. Can you give an example of a storage device
-that is that slow?
+uio_pruss and uio_dmem_genirq both appear to mmap dma_alloc_coherent
+memory as UIO_MEM_PHYS.  It might not be an issue on that platforms
+where those are used, but I'd be happy to include untested patches to
+convert them for better adherence to the DMA APIs.
 
-Bart.
+(sorry for the double send on this Greg, missed the reply-all)
+
+- Chris
+
