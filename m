@@ -1,64 +1,64 @@
-Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
+Received: from mail-qv1-f50.google.com (mail-qv1-f50.google.com [209.85.219.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07283363
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 00:21:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0913436D
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 00:21:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706660505; cv=none; b=ZjqOvxfJ0nx/OJ8/axuQmaW23nwpFAWILmDP8MrynKNZxHjT220W9BMZChA/ll8LR3YlPufF4hVwzOrhLGDhZigyTS41XPZXiE9woqenwKAhMahoHeJma6xzis3y0O/zE7d+7W+tjkk6IwEWttr6d1Pm3yikUPymwicTxkEjP2U=
+	t=1706660507; cv=none; b=YNj/CV7cHqSrtxHTKBhg10dE7HIDkP080FDZURohQ+2slpywciMrEaRspKYCUV3YXCcnxHJ4hWbIiNzjFPWpj2anAgLnte3BBMOAV7fyO8a8PVWyxGnA66HKZ5f/SnRROYpBEcGL2dIlNrewW/WGs1x6FJqjAt7B3vWgya8ndqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706660505; c=relaxed/simple;
-	bh=AC9HdCLQepSYxvoCytacu9ihASlLSFUOokrEkMF3VI0=;
+	s=arc-20240116; t=1706660507; c=relaxed/simple;
+	bh=QZC3p6OxMgCqOSF4VYGbC6vOX6EakA87eYj4cdy5CVY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=T1Y7DO+He4wtTIjXPSJUAz6i9eguF5L/mbV4i+PB6w9CX7BZvze9Ndh4JXRK1LfXPm4lEwINGDam9NqoLuurgbAb5FtBa0SkaFtHDogVow+TjQCCuM4YHQqnMBRNOFYaUuV00JBoFAkxp97zX4Xli6ohecVLSg1ISoy8E06CEv4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VLycpqXK; arc=none smtp.client-ip=209.85.219.43
+	 MIME-Version; b=TQv8hfWsU+oyH0m+pKsqTBEbWVoWuV+D40CFGxpAzuK201fKjnxHZelgCVUru7ZXs7ZK3EHphnrjI3o2LnaQimKm9+jy9ORUyaO6sfYNaTR16+bUfJYuKwgDIbwtMmYZ49DMpqPgMEp7YOHA57Uh4Y5L5NTH3tnjPV6wZsqLXXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GgA2mEj5; arc=none smtp.client-ip=209.85.219.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VLycpqXK"
-Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-68155fca099so3303866d6.1
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 16:21:43 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GgA2mEj5"
+Received: by mail-qv1-f50.google.com with SMTP id 6a1803df08f44-68c3fbc48e0so4392446d6.0
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2024 16:21:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1706660503; x=1707265303; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1706660505; x=1707265305; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=xrYMQbBGouBKeVUjbH/ujGHtT8PpnV9jorOVqOvoImA=;
-        b=VLycpqXKnvSrfhvGIY3Cxgkf0/rx6qW6LAcBpHrC1OaYEMfDhepGTwwvqI3Em76ode
-         pohhj5CthZ/oCXC+H69hSUsZ8NbDVgMoCavjBq44XcMlHwOLKsjNWy+ruQKKlGPsiw1p
-         KeugU1Qd4Q9BJeNZtrNx+MSeXWmAZQs7DxM58JShPJPkyRaFVNrXY0EmQ0GfmtydZ3iE
-         zMlzeYY0cehrKRtAVEZhAMOr9IgRMuEFY94BzKwRIyCiS+8pA7/R0jyP0siQrR4Q9XX3
-         80dMzMxd0bfGqQC4r7kUBfHO2HCUfgmqrFDFfWc5v8w1BJq2SJEiWyhbwW7z31SvqMen
-         iY7w==
+        bh=KSnj8+K8t2zMtsT9CuwsNJZ/DNaHwaVFLBOycPKEqAI=;
+        b=GgA2mEj5VsTJMcx4C6mE3mB4ZD/3yRZdNB1vPA/6TBCUoGTJlAcEQPbcmjjoMLR3A+
+         OVyU8Y1BcU/2uxt6jUISfXgCRunsvP7Z6aTtD8B34OKY1rFO67fYLErFpREbRK4eLgBQ
+         +a+bhRvRKQWEU3o6lmL+lsKyQg6o1+lrxOgUWpCnykjE1gkQ7kKFj/WXCPydIOHNmVE4
+         KT2qVc9LdC4uK37a2xrXJ63YRtbfIN1ElJRY0mHziq4lBYXQupDVYuvGdsE9ZLHBx2xl
+         OB1dKOpv+yvmeR1YTqf2RhqXKpJQX5gBqoGnuD1KZvzhNBN6E9YGoaxRMMDXZsHCcxgt
+         HnvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706660503; x=1707265303;
+        d=1e100.net; s=20230601; t=1706660505; x=1707265305;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=xrYMQbBGouBKeVUjbH/ujGHtT8PpnV9jorOVqOvoImA=;
-        b=uiy/dgv95VabxZcRLj8ybQowLU9a5LOMeuYAY7vIlXaAHULjDMkWGl2MdrNoP9Ko8r
-         UPWA3jRGgyJVEsl5tvVcBzh9mlgFEWjJmlo8Y5zhFQ/cuPfRYvNO2WB1sbflPplEP0CE
-         QulJLYXvx69lVGs6CiBh8zDMQYVDzx+E2N6vh1Cs9jZJWNEZO0S/Iln7dX3AeqGig4Sj
-         p0YfbWtuvoSRVrKg6kBZBzPXtnf6vJ73sRWlUBHpYVm2szndI5uSgy9e7+nlKmW1xmfj
-         KzwiJCX81ApK72mxpLgUDDPLbFNEMUYmNda46CHmzjBu30GaX6bUVlKSIksMoYI2pLn+
-         P/Fg==
-X-Gm-Message-State: AOJu0YxtzpfasFNsb4+XeibqVOtY6ICZSWNYIyT+ZwRKFEv2WZKYhMfo
-	2prq8ErghfToUrTHL+qek1XJNgMFA/Ef8A4R//94NnClMIRNHKpaMoTVTCAP
-X-Google-Smtp-Source: AGHT+IFUXMUYLVwx90wx2QAIufcbrsqwGajvmwiioagDMN/lEFR6DZ+Z4Jtos3L5qPwfZjeXUyG5bg==
-X-Received: by 2002:a05:6214:528b:b0:685:6147:3607 with SMTP id kj11-20020a056214528b00b0068561473607mr184566qvb.2.1706660502802;
-        Tue, 30 Jan 2024 16:21:42 -0800 (PST)
+        bh=KSnj8+K8t2zMtsT9CuwsNJZ/DNaHwaVFLBOycPKEqAI=;
+        b=lnWhABj81TXc92nj3dAS5GoawMk+cC5iv2+X2vON8wqEZAYHvg+oxnmKM1EN0la93M
+         JsHXQ3uNK50g9ErZLzFzVZFLhnh7tbqg+w6T/rdWYpyRNckKKcMeibywBIGwWOeVAM06
+         xPlcaQxTTyLYGo6+zvTXNcSDDdQDTMEXqefoLAA6NyumJJYLBTG25afWrN699G8pIcYy
+         QKlQb/+d5MQ3qWUGt7ScNtB+1pl94I+rgMCdBY34vuH4ZiN9pWq0ra9LADZnRakDuo4g
+         5jGzriJHiTP9WZE71b5ugxpkdkB/BGup8Jf9C9duFPRkGUgx2gi4wBUZ8OIP0x5oxhxs
+         S3ZA==
+X-Gm-Message-State: AOJu0YyTAO93w9sDTGE74VPS9ApZSCkk1PjKMA9fr66IidokRPtIguZ0
+	qd6CjelYhZTLtEQ9qQMA6sOIicv6k7D6hyPeH26lxfrzK1JFJhhJRHHYTKd8
+X-Google-Smtp-Source: AGHT+IFkqWBGQuGyOcl9guWpR+uY844AloaDOy9ilNf08Wz5yvkd0Fjz/oFXmLxrSxdzDifQTZbvDA==
+X-Received: by 2002:a05:6214:c62:b0:68c:5c71:e5fc with SMTP id t2-20020a0562140c6200b0068c5c71e5fcmr150620qvj.5.1706660504742;
+        Tue, 30 Jan 2024 16:21:44 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id qn19-20020a056214571300b0068c4ecc8886sm2600931qvb.127.2024.01.30.16.21.41
+        by smtp.gmail.com with ESMTPSA id qn19-20020a056214571300b0068c4ecc8886sm2600931qvb.127.2024.01.30.16.21.43
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 30 Jan 2024 16:21:42 -0800 (PST)
+        Tue, 30 Jan 2024 16:21:44 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 02/17] lpfc: Fix possible memory leak in lpfc_rcv_padisc
-Date: Tue, 30 Jan 2024 16:35:34 -0800
-Message-Id: <20240131003549.147784-3-justintee8345@gmail.com>
+Subject: [PATCH 03/17] lpfc: Use sg_dma_len API to get struct scatterlist's length
+Date: Tue, 30 Jan 2024 16:35:35 -0800
+Message-Id: <20240131003549.147784-4-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20240131003549.147784-1-justintee8345@gmail.com>
 References: <20240131003549.147784-1-justintee8345@gmail.com>
@@ -70,35 +70,53 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The call to lpfc_sli4_resume_rpi in lpfc_rcv_padisc may return an
-unsuccessful status.  In such cases, the elsiocb is not issued, the
-completion is not called, and thus the elsiocb resource is leaked.
-
-Check return value after calling lpfc_sli4_resume_rpi and conditionally
-release the elsiocb resource.
+The sg_dma_len API should be used to retrieve a scatterlist's length
+instead of directly accessing scatterlist->length.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index d9074929fbab..b147304b01fa 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -748,8 +748,10 @@ lpfc_rcv_padisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 				/* Save the ELS cmd */
- 				elsiocb->drvrTimeout = cmd;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index d26941b131fd..07e941da8a16 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -2728,14 +2728,14 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 		sgde = scsi_sglist(cmd);
+ 		blksize = scsi_prot_interval(cmd);
+ 		data_src = (uint8_t *)sg_virt(sgde);
+-		data_len = sgde->length;
++		data_len = sg_dma_len(sgde);
+ 		if ((data_len & (blksize - 1)) == 0)
+ 			chk_guard = 1;
  
--				lpfc_sli4_resume_rpi(ndlp,
--					lpfc_mbx_cmpl_resume_rpi, elsiocb);
-+				if (lpfc_sli4_resume_rpi(ndlp,
-+						lpfc_mbx_cmpl_resume_rpi,
-+						elsiocb))
-+					kfree(elsiocb);
- 				goto out;
+ 		src = (struct scsi_dif_tuple *)sg_virt(sgpe);
+ 		start_ref_tag = scsi_prot_ref_tag(cmd);
+ 		start_app_tag = src->app_tag;
+-		len = sgpe->length;
++		len = sg_dma_len(sgpe);
+ 		while (src && protsegcnt) {
+ 			while (len) {
+ 
+@@ -2800,7 +2800,7 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 						goto out;
+ 
+ 					data_src = (uint8_t *)sg_virt(sgde);
+-					data_len = sgde->length;
++					data_len = sg_dma_len(sgde);
+ 					if ((data_len & (blksize - 1)) == 0)
+ 						chk_guard = 1;
+ 				}
+@@ -2810,7 +2810,7 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 			sgpe = sg_next(sgpe);
+ 			if (sgpe) {
+ 				src = (struct scsi_dif_tuple *)sg_virt(sgpe);
+-				len = sgpe->length;
++				len = sg_dma_len(sgpe);
+ 			} else {
+ 				src = NULL;
  			}
- 		}
 -- 
 2.38.0
 
