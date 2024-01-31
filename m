@@ -1,43 +1,45 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF4138DC8
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 19:17:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4ECF38DC8
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 19:17:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706728678; cv=none; b=bffph9jWdtXI0VIf+f9pnST0QjA8ZhPmYAZ+M5WPS05jBgGP0RxxQjDaqbKjxq4ucRw3ebZ08/0iNbO3ZFKrzeRJwmodO/1biDeDCiVpBKcu0aptCmceRqtmx9PQnkAs4JWqqTYwLMCcwPPhGtso7ute3EjhUgqqW4xUN/4D/0Q=
+	t=1706728681; cv=none; b=L7klhFblh20sp1YIcnQbJ9IZ/dsgFx9LyxKyYi7FYh6h5lvwa3KfYGO4Yx33pBqT7R/hFAHLq0cuXaUdwF/S06B2D7xH5r2e5Xjopw2L1QBxTpfvMMfG2fQQDYsg/p97K4BEy6osO9/6bDZQ/brCMjqd2Z+9PXJ7+tr7Q5dqQic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706728678; c=relaxed/simple;
-	bh=MUgnv5FqcUoe5DskRTyALhWieNzpekHbDDqXbALApN8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nSkmXmwqeNMUs4YmWaLhQoPGbUxtoQDXgv9ZeS4fWGj60egN+s7baNCEeNgwhcjGdgs6OFFfKZywR6++ggEpfJU+1KE0ugw6rRJ7CTQOnQG1qBYnRiHSNLToofbrQgKaZfEGYouPq79gOsZaklQ8jjOMuWDzG/3IgCqZ2egCUNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BC1frJoH; arc=none smtp.client-ip=170.10.129.124
+	s=arc-20240116; t=1706728681; c=relaxed/simple;
+	bh=JiU/Zj2jN5FGcTJs6+iPLUXDsDn+TM4A60WJFyv8XsA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=U00mTcAXLMqhU1hkQF5rkL5CSsMqAopGqj7GJJgawEQgk898u0HAqzV8fKe1it3SMfWznjAccDiD1Mk+OFTupfMcA+423W2gpfOtu7HDHPIxWImSMStyjAPnZcTp6HjSJuZ3wrSmhvd3vNsKxDY97LRepYV5qJ5icEbTArAPwPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=C1m4iMoM; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BC1frJoH"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C1m4iMoM"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1706728675;
+	s=mimecast20190719; t=1706728678;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=F2HLLHWA6yNSaZ0qN3yDV0fsRl3D49AgWKDEnKxo7oA=;
-	b=BC1frJoHd2Cgmlg4VA0iAwxdM9WweGVT+FO/KGOr7u7p+gc6b6vA0xVgAVcMyHDTxsJxra
-	500esv0B0aejIKECVGwIDz5AEk80gigjaCbHLN7f/6ajHlAzeVY+lpEoZ/Bmh56OKED2es
-	AYMet5pjxBwmptxdZEclPXo8hjCfX0A=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-215-3Gg7kGmzOlCJNUBUvDyK0w-1; Wed, 31 Jan 2024 14:17:53 -0500
-X-MC-Unique: 3Gg7kGmzOlCJNUBUvDyK0w-1
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=hSVKx6QtgMDEM8LnOwfuT1EuekagUrvnp40Yk/IOnn8=;
+	b=C1m4iMoMbfFTH8sUIDOdUzN/UAg0UpKmDEmO2vNhrpHz0QxaIO7pyrA7+s0bodp2yLngAR
+	yfcAvOzjCZnuopeux76/gWlWA1xhP6JoM8EP0C1iaxe1ysvXywc7wsxx7mTVBSYQJ8nU9s
+	Cph11RsH1A6t4GVAxh/5sP/7dnoJQjk=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-295-AUv43VFnM4KSGHJbSMaTyA-1; Wed,
+ 31 Jan 2024 14:17:56 -0500
+X-MC-Unique: AUv43VFnM4KSGHJbSMaTyA-1
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 0694984FA84;
-	Wed, 31 Jan 2024 19:17:53 +0000 (UTC)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id AD6E41C0BA49;
+	Wed, 31 Jan 2024 19:17:55 +0000 (UTC)
 Received: from rhel-developer-toolbox-latest.rmtusor.csb (unknown [10.2.16.182])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id 632D340C9444;
-	Wed, 31 Jan 2024 19:17:51 +0000 (UTC)
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 7E63A40C9444;
+	Wed, 31 Jan 2024 19:17:54 +0000 (UTC)
 From: Chris Leech <cleech@redhat.com>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Nilesh Javali <njavali@marvell.com>
@@ -50,9 +52,11 @@ Cc: Christoph Hellwig <hch@lst.de>,
 	linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	GR-QLogic-Storage-Upstream@marvell.com
-Subject: [PATCH 0/2] UIO_MEM_DMA_COHERENT for cnic/bnx2/bnx2x
-Date: Wed, 31 Jan 2024 11:17:30 -0800
-Message-ID: <20240131191732.3247996-1-cleech@redhat.com>
+Subject: [PATCH 2/2] cnic,bnx2,bnx2x: use UIO_MEM_DMA_COHERENT
+Date: Wed, 31 Jan 2024 11:17:32 -0800
+Message-ID: <20240131191732.3247996-3-cleech@redhat.com>
+In-Reply-To: <20240131191732.3247996-1-cleech@redhat.com>
+References: <20240131191732.3247996-1-cleech@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -62,64 +66,141 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.2
 
-During bnx2i iSCSI testing we ran into page refcounting issues in the
-uio mmaps exported from cnic to the iscsiuio process, and bisected back
-to the removal of the __GFP_COMP flag from dma_alloc_coherent calls.
+Use the UIO_MEM_DMA_COHERENT type to properly handle mmap for
+dma_alloc_coherent buffers.
 
-The cnic uio interface also has issues running with an iommu enabled,
-which these changes correct.
+The cnic l2_ring and l2_buf mmaps have caused page refcount issues as
+the dma_alloc_coherent no longer provide __GFP_COMP allocation as per
+commit "dma-mapping: reject __GFP_COMP in dma_alloc_attrs".
 
-In order to fix these drivers to be able to mmap dma coherent memory via
-a uio device, introduce a new uio mmap type backed by dma_mmap_coherent.
+Fix this by having the uio device use dma_mmap_coherent.
 
-While I understand some complaints about how these drivers have been
-structured, I also don't like letting support bitrot when there's a
-reasonable alternative to re-architecting an existing driver. I believe
-this to be the most sane way to restore these drivers to functioning
-properly.
+The bnx2 and bnx2x status block allocations are also dma_alloc_coherent,
+and should use dma_mmap_coherent. They don't allocate multiple pages,
+but this interface does not work correctly with an iommu enabled unless
+dma_mmap_coherent is used.
 
-There are two other uio drivers which are mmaping dma_alloc_coherent
-memory as UIO_MEM_PHYS, uio_dmem_genirq and uio_pruss. While a
-conversion to use dma_mmap_coherent might be more correct for these as
-well, I have no way of testing them and assume that this just hasn't
-been an issue for the platforms in question.
+Fixes: bb73955c0b1d ("cnic: don't pass bogus GFP_ flags to dma_alloc_coherent")
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Signed-off-by: Chris Leech <cleech@redhat.com>
+---
+ drivers/net/ethernet/broadcom/bnx2.c             |  1 +
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c |  2 ++
+ drivers/net/ethernet/broadcom/cnic.c             | 15 ++++++++++++---
+ drivers/net/ethernet/broadcom/cnic.h             |  1 +
+ drivers/net/ethernet/broadcom/cnic_if.h          |  1 +
+ 5 files changed, 17 insertions(+), 3 deletions(-)
 
-v4:
-- re-introduce the dma_device member to uio_map,
-  it needs to be passed to dma_mmap_coherent somehow
-- drop patch 3 to focus only on the uio interface,
-  explicit page alignment isn't needed
-- re-add the v1 mail recipients,
-  this isn't something to be handled through linux-scsi
-v3 (Nilesh Javali <njavali@marvell.com>):
-- fix warnings reported by kernel test robot
-  and added base commit
-v2 (Nilesh Javali <njavali@marvell.com>):
-- expose only the dma_addr within uio and cnic.
-- Cleanup newly added unions comprising virtual_addr
-  and struct device
-
-previous threads:
-v1: https://lore.kernel.org/all/20230929170023.1020032-1-cleech@redhat.com/
-attempt at an alternative change: https://lore.kernel.org/all/20231219055514.12324-1-njavali@marvell.com/
-v2: https://lore.kernel.org/all/20240103091137.27142-1-njavali@marvell.com/
-v3: https://lore.kernel.org/all/20240109121458.26475-1-njavali@marvell.com/
-
-Chris Leech (2):
-  uio: introduce UIO_MEM_DMA_COHERENT type
-  cnic,bnx2,bnx2x: use UIO_MEM_DMA_COHERENT
-
- drivers/net/ethernet/broadcom/bnx2.c          |  1 +
- .../net/ethernet/broadcom/bnx2x/bnx2x_main.c  |  2 +
- drivers/net/ethernet/broadcom/cnic.c          | 15 +++++--
- drivers/net/ethernet/broadcom/cnic.h          |  1 +
- drivers/net/ethernet/broadcom/cnic_if.h       |  1 +
- drivers/uio/uio.c                             | 40 +++++++++++++++++++
- include/linux/uio_driver.h                    |  3 ++
- 7 files changed, 60 insertions(+), 3 deletions(-)
-
-
-base-commit: 861c0981648f5b64c86fd028ee622096eb7af05a
+diff --git a/drivers/net/ethernet/broadcom/bnx2.c b/drivers/net/ethernet/broadcom/bnx2.c
+index 0d917a9699c58..b65b8592ad759 100644
+--- a/drivers/net/ethernet/broadcom/bnx2.c
++++ b/drivers/net/ethernet/broadcom/bnx2.c
+@@ -367,6 +367,7 @@ static void bnx2_setup_cnic_irq_info(struct bnx2 *bp)
+ 	cp->irq_arr[0].status_blk = (void *)
+ 		((unsigned long) bnapi->status_blk.msi +
+ 		(BNX2_SBLK_MSIX_ALIGN_SIZE * sb_id));
++	cp->irq_arr[0].status_blk_map = bp->status_blk_mapping;
+ 	cp->irq_arr[0].status_blk_num = sb_id;
+ 	cp->num_irq = 1;
+ }
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+index 0d8e61c63c7c6..678829646cec3 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+@@ -14912,9 +14912,11 @@ void bnx2x_setup_cnic_irq_info(struct bnx2x *bp)
+ 	else
+ 		cp->irq_arr[0].status_blk = (void *)bp->cnic_sb.e1x_sb;
+ 
++	cp->irq_arr[0].status_blk_map = bp->cnic_sb_mapping;
+ 	cp->irq_arr[0].status_blk_num =  bnx2x_cnic_fw_sb_id(bp);
+ 	cp->irq_arr[0].status_blk_num2 = bnx2x_cnic_igu_sb_id(bp);
+ 	cp->irq_arr[1].status_blk = bp->def_status_blk;
++	cp->irq_arr[1].status_blk_map = bp->def_status_blk_mapping;
+ 	cp->irq_arr[1].status_blk_num = DEF_SB_ID;
+ 	cp->irq_arr[1].status_blk_num2 = DEF_SB_IGU_ID;
+ 
+diff --git a/drivers/net/ethernet/broadcom/cnic.c b/drivers/net/ethernet/broadcom/cnic.c
+index 7926aaef8f0c5..cca1e94fc35dc 100644
+--- a/drivers/net/ethernet/broadcom/cnic.c
++++ b/drivers/net/ethernet/broadcom/cnic.c
+@@ -1107,6 +1107,7 @@ static int cnic_init_uio(struct cnic_dev *dev)
+ 						     TX_MAX_TSS_RINGS + 1);
+ 		uinfo->mem[1].addr = (unsigned long) cp->status_blk.gen &
+ 					CNIC_PAGE_MASK;
++		uinfo->mem[1].dma_addr = cp->status_blk_map;
+ 		if (cp->ethdev->drv_state & CNIC_DRV_STATE_USING_MSIX)
+ 			uinfo->mem[1].size = BNX2_SBLK_MSIX_ALIGN_SIZE * 9;
+ 		else
+@@ -1118,20 +1119,26 @@ static int cnic_init_uio(struct cnic_dev *dev)
+ 
+ 		uinfo->mem[1].addr = (unsigned long) cp->bnx2x_def_status_blk &
+ 			CNIC_PAGE_MASK;
++		uinfo->mem[1].dma_addr = cp->status_blk_map;
+ 		uinfo->mem[1].size = sizeof(*cp->bnx2x_def_status_blk);
+ 
+ 		uinfo->name = "bnx2x_cnic";
+ 	}
+ 
+-	uinfo->mem[1].memtype = UIO_MEM_LOGICAL;
++	uinfo->mem[1].dma_device = &dev->pcidev->dev;
++	uinfo->mem[1].memtype = UIO_MEM_DMA_COHERENT;
+ 
+ 	uinfo->mem[2].addr = (unsigned long) udev->l2_ring;
++	uinfo->mem[2].dma_addr = udev->l2_ring_map;
+ 	uinfo->mem[2].size = udev->l2_ring_size;
+-	uinfo->mem[2].memtype = UIO_MEM_LOGICAL;
++	uinfo->mem[2].dma_device = &dev->pcidev->dev;
++	uinfo->mem[2].memtype = UIO_MEM_DMA_COHERENT;
+ 
+ 	uinfo->mem[3].addr = (unsigned long) udev->l2_buf;
++	uinfo->mem[3].dma_addr = udev->l2_buf_map;
+ 	uinfo->mem[3].size = udev->l2_buf_size;
+-	uinfo->mem[3].memtype = UIO_MEM_LOGICAL;
++	uinfo->mem[3].dma_device = &dev->pcidev->dev;
++	uinfo->mem[3].memtype = UIO_MEM_DMA_COHERENT;
+ 
+ 	uinfo->version = CNIC_MODULE_VERSION;
+ 	uinfo->irq = UIO_IRQ_CUSTOM;
+@@ -1313,6 +1320,7 @@ static int cnic_alloc_bnx2x_resc(struct cnic_dev *dev)
+ 		return 0;
+ 
+ 	cp->bnx2x_def_status_blk = cp->ethdev->irq_arr[1].status_blk;
++	cp->status_blk_map = cp->ethdev->irq_arr[1].status_blk_map;
+ 
+ 	cp->l2_rx_ring_size = 15;
+ 
+@@ -5323,6 +5331,7 @@ static int cnic_start_hw(struct cnic_dev *dev)
+ 	pci_dev_get(dev->pcidev);
+ 	cp->func = PCI_FUNC(dev->pcidev->devfn);
+ 	cp->status_blk.gen = ethdev->irq_arr[0].status_blk;
++	cp->status_blk_map = ethdev->irq_arr[0].status_blk_map;
+ 	cp->status_blk_num = ethdev->irq_arr[0].status_blk_num;
+ 
+ 	err = cp->alloc_resc(dev);
+diff --git a/drivers/net/ethernet/broadcom/cnic.h b/drivers/net/ethernet/broadcom/cnic.h
+index 4baea81bae7a3..fedc84ada937d 100644
+--- a/drivers/net/ethernet/broadcom/cnic.h
++++ b/drivers/net/ethernet/broadcom/cnic.h
+@@ -260,6 +260,7 @@ struct cnic_local {
+ 		#define SM_RX_ID		0
+ 		#define SM_TX_ID		1
+ 	} status_blk;
++	dma_addr_t status_blk_map;
+ 
+ 	struct host_sp_status_block	*bnx2x_def_status_blk;
+ 
+diff --git a/drivers/net/ethernet/broadcom/cnic_if.h b/drivers/net/ethernet/broadcom/cnic_if.h
+index 789e5c7e93116..49a11ec80b364 100644
+--- a/drivers/net/ethernet/broadcom/cnic_if.h
++++ b/drivers/net/ethernet/broadcom/cnic_if.h
+@@ -190,6 +190,7 @@ struct cnic_ops {
+ struct cnic_irq {
+ 	unsigned int	vector;
+ 	void		*status_blk;
++	dma_addr_t	status_blk_map;
+ 	u32		status_blk_num;
+ 	u32		status_blk_num2;
+ 	u32		irq_flags;
 -- 
 2.43.0
 
