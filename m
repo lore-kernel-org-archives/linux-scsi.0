@@ -1,75 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EE3838DD1;
-	Wed, 31 Jan 2024 19:03:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF4138DC8
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2024 19:17:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706727794; cv=none; b=cXTGD8bwQarfpJ48J6Am0VBWKn5rXp3aWzPJhFMhQfwdXzLP15WWIBulRAeFtbKfZNoEg13Su2U+Z9DivL8m38MrtOzTdMcb34GkAP6fQCb0s8mlYhHD3yI0Jotz6Pjzn0jQHy0+YgX0NimMQewY/yDLW4boSPfMUn5peQyl6HY=
+	t=1706728678; cv=none; b=bffph9jWdtXI0VIf+f9pnST0QjA8ZhPmYAZ+M5WPS05jBgGP0RxxQjDaqbKjxq4ucRw3ebZ08/0iNbO3ZFKrzeRJwmodO/1biDeDCiVpBKcu0aptCmceRqtmx9PQnkAs4JWqqTYwLMCcwPPhGtso7ute3EjhUgqqW4xUN/4D/0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706727794; c=relaxed/simple;
-	bh=WKMU0Z5OzqnsIcqS/IBWHJPpY6kqQUrZAznF1ycmrqk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k2GuzWx6RAeGXFqs13duMkiDAEhziwuBPUxBkjXgzTPVI16cWgDMT8Rot80cUCRTPtN8n6PzhML9SaXzXpoDLCfIOkns94KYbT3QkVbVA5r76uRQmq+X+969WEigH9kv3pXIzWjFwddTDO9Y6TahXJYKPpEqQ0orG0Bm+SL5hsg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wg35BRhC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706728678; c=relaxed/simple;
+	bh=MUgnv5FqcUoe5DskRTyALhWieNzpekHbDDqXbALApN8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nSkmXmwqeNMUs4YmWaLhQoPGbUxtoQDXgv9ZeS4fWGj60egN+s7baNCEeNgwhcjGdgs6OFFfKZywR6++ggEpfJU+1KE0ugw6rRJ7CTQOnQG1qBYnRiHSNLToofbrQgKaZfEGYouPq79gOsZaklQ8jjOMuWDzG/3IgCqZ2egCUNM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BC1frJoH; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wg35BRhC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AECCC433F1;
-	Wed, 31 Jan 2024 19:03:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706727793;
-	bh=WKMU0Z5OzqnsIcqS/IBWHJPpY6kqQUrZAznF1ycmrqk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Wg35BRhCQKJAef7IJr58v5VouJ5fEQSpFeg4mDoveVwkeWvNalXAMTQiK+2cSv6IO
-	 Qz3OuwZp/aqjiNlk+b4ALWGUbqHmCo5Ui9k2k0vmF1iWwg54UFpjH6a1HZfBMaFxMb
-	 Tu/1VGO4laZZQlC/FyWPg/P+DMUbxNsT2hy5AZk5YNXW7Zipi9RedPaFaM8DigJtm/
-	 PxWDS+ogkmuodtD/AuaSXRvC3fOr5rmhgmtMa5suI/rG/4ZKYNJtSyMcQAYw4eyhNQ
-	 WtcDYHVD5Wdgj1bRHXeOPzTc8GEDnBtj80oLCt+d1+vsr6HM5qb4eF2OlyG34OatLl
-	 ohBcSWM1EMDjw==
-Date: Wed, 31 Jan 2024 13:03:11 -0600
-From: Rob Herring <robh@kernel.org>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Rob Herring <robh+dt@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Andy Gross <andy.gross@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>, linux-kernel@vger.kernel.org,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Avri Altman <avri.altman@wdc.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	linux-scsi@vger.kernel.org, Andy Gross <agross@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>
-Subject: Re: [PATCH 1/3] dt-bindings: ufs: qcom: Make reset properties as
- required
-Message-ID: <170672779030.2119109.999859641415132765.robh@kernel.org>
-References: <20240129-ufs-core-reset-fix-v1-0-7ac628aa735f@linaro.org>
- <20240129-ufs-core-reset-fix-v1-1-7ac628aa735f@linaro.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BC1frJoH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1706728675;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=F2HLLHWA6yNSaZ0qN3yDV0fsRl3D49AgWKDEnKxo7oA=;
+	b=BC1frJoHd2Cgmlg4VA0iAwxdM9WweGVT+FO/KGOr7u7p+gc6b6vA0xVgAVcMyHDTxsJxra
+	500esv0B0aejIKECVGwIDz5AEk80gigjaCbHLN7f/6ajHlAzeVY+lpEoZ/Bmh56OKED2es
+	AYMet5pjxBwmptxdZEclPXo8hjCfX0A=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-215-3Gg7kGmzOlCJNUBUvDyK0w-1; Wed, 31 Jan 2024 14:17:53 -0500
+X-MC-Unique: 3Gg7kGmzOlCJNUBUvDyK0w-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 0694984FA84;
+	Wed, 31 Jan 2024 19:17:53 +0000 (UTC)
+Received: from rhel-developer-toolbox-latest.rmtusor.csb (unknown [10.2.16.182])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 632D340C9444;
+	Wed, 31 Jan 2024 19:17:51 +0000 (UTC)
+From: Chris Leech <cleech@redhat.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Nilesh Javali <njavali@marvell.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	John Meneghini <jmeneghi@redhat.com>,
+	Lee Duncan <lduncan@suse.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	Hannes Reinecke <hare@kernel.org>,
+	netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: [PATCH 0/2] UIO_MEM_DMA_COHERENT for cnic/bnx2/bnx2x
+Date: Wed, 31 Jan 2024 11:17:30 -0800
+Message-ID: <20240131191732.3247996-1-cleech@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240129-ufs-core-reset-fix-v1-1-7ac628aa735f@linaro.org>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.2
+
+During bnx2i iSCSI testing we ran into page refcounting issues in the
+uio mmaps exported from cnic to the iscsiuio process, and bisected back
+to the removal of the __GFP_COMP flag from dma_alloc_coherent calls.
+
+The cnic uio interface also has issues running with an iommu enabled,
+which these changes correct.
+
+In order to fix these drivers to be able to mmap dma coherent memory via
+a uio device, introduce a new uio mmap type backed by dma_mmap_coherent.
+
+While I understand some complaints about how these drivers have been
+structured, I also don't like letting support bitrot when there's a
+reasonable alternative to re-architecting an existing driver. I believe
+this to be the most sane way to restore these drivers to functioning
+properly.
+
+There are two other uio drivers which are mmaping dma_alloc_coherent
+memory as UIO_MEM_PHYS, uio_dmem_genirq and uio_pruss. While a
+conversion to use dma_mmap_coherent might be more correct for these as
+well, I have no way of testing them and assume that this just hasn't
+been an issue for the platforms in question.
+
+v4:
+- re-introduce the dma_device member to uio_map,
+  it needs to be passed to dma_mmap_coherent somehow
+- drop patch 3 to focus only on the uio interface,
+  explicit page alignment isn't needed
+- re-add the v1 mail recipients,
+  this isn't something to be handled through linux-scsi
+v3 (Nilesh Javali <njavali@marvell.com>):
+- fix warnings reported by kernel test robot
+  and added base commit
+v2 (Nilesh Javali <njavali@marvell.com>):
+- expose only the dma_addr within uio and cnic.
+- Cleanup newly added unions comprising virtual_addr
+  and struct device
+
+previous threads:
+v1: https://lore.kernel.org/all/20230929170023.1020032-1-cleech@redhat.com/
+attempt at an alternative change: https://lore.kernel.org/all/20231219055514.12324-1-njavali@marvell.com/
+v2: https://lore.kernel.org/all/20240103091137.27142-1-njavali@marvell.com/
+v3: https://lore.kernel.org/all/20240109121458.26475-1-njavali@marvell.com/
+
+Chris Leech (2):
+  uio: introduce UIO_MEM_DMA_COHERENT type
+  cnic,bnx2,bnx2x: use UIO_MEM_DMA_COHERENT
+
+ drivers/net/ethernet/broadcom/bnx2.c          |  1 +
+ .../net/ethernet/broadcom/bnx2x/bnx2x_main.c  |  2 +
+ drivers/net/ethernet/broadcom/cnic.c          | 15 +++++--
+ drivers/net/ethernet/broadcom/cnic.h          |  1 +
+ drivers/net/ethernet/broadcom/cnic_if.h       |  1 +
+ drivers/uio/uio.c                             | 40 +++++++++++++++++++
+ include/linux/uio_driver.h                    |  3 ++
+ 7 files changed, 60 insertions(+), 3 deletions(-)
 
 
-On Mon, 29 Jan 2024 13:22:04 +0530, Manivannan Sadhasivam wrote:
-> Apart from the legacy UFS controllers that were not supported in upstream,
-> rest of the controllers do require reset property to reset the UFS host
-> controller. So mark them as required.
-> 
-> Even though this is an ABI break, the bindings should reflect the
-> capabilities of the hardware.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-
-Acked-by: Rob Herring <robh@kernel.org>
+base-commit: 861c0981648f5b64c86fd028ee622096eb7af05a
+-- 
+2.43.0
 
