@@ -1,81 +1,114 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0370741760
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Feb 2024 19:46:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 683FE3FE37;
+	Thu,  1 Feb 2024 21:53:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706816783; cv=none; b=AuNnESCENSDz4A4MGIRaLqYR+jqwEhGdT6ZXPz8SZnNv2Pu/vJFXt3QaS0LzUwkB5zwyu7bwpBi8NzzfGh4E/FAVBcEEvmZjXXAFNy3+QGDOe0SmfcSBPAP68ppJlxojlkh6xRspwImfSMarnxs6Gv/rM/9e2XlSQsTcU7Srj6I=
+	t=1706824437; cv=none; b=W+9ZjicHnAw9h4XOwTU/ukY+oOaprwcmavBEHYeltt5nmRy2tQqNPNRJtqLYFF+n5CO3ML1Aqo8B7oqZwhByuTO5bVSBWNo5334rgbx3+eQgR8Bsda4JG1aDOA+e4KNpD02xydQhnGPsOpuxTb0AGjBQN4MCePu7ZMDaxpHPDpc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706816783; c=relaxed/simple;
-	bh=Xn+HeZwjrhL38IU0Ow1AtlMtY0ELrkM/Pfv2vB1b6do=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=cbAb672tP7XG25AkO+ow6urNDshWheeHB6aV719l+C2ZCXcqCMOmQg+RgAJze3W6rMQ+8GU0F60uA1oYQvC0vlCn5a1BktmFd0JNC/RjD0bkNka6b7DlIsgJCS36X9toFBTXEZakg2bHcoE1mmJqf2Dq+svH3+AMwiFYAdpC+bc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E48Zvt9d; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1706824437; c=relaxed/simple;
+	bh=ApF0fuJM9LahCwtp9OKHrxVJ6Bt5ITSdn6RlluIjytU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lqoDLNE1/N8rxS1uuURbxNAmt2xd3s6yWSrdvLnnP2++lCG4muJr9sDOOmEJT+QVJeyN61F34smYwAbsEZ9tRqoFwV3NG37VSANpJBnszHPK/hIvxcganadit4U1kzQ4oJxMq+EQM0J/t8b7sYA0ljKor+2nJbG/hzTVf8Ri1+A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZsMgwn8J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E48Zvt9d"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id CDF7EC4166A
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Feb 2024 19:46:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZsMgwn8J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F239AC43390;
+	Thu,  1 Feb 2024 21:53:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706816782;
-	bh=Xn+HeZwjrhL38IU0Ow1AtlMtY0ELrkM/Pfv2vB1b6do=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=E48Zvt9d3nvOAs5fFJ3VE9aMFQb4ZWYsbQ1b7N6VOuj5vOWS/JnjdXzJ9jaUWKae+
-	 4/6IymQxIY7jkJJceG9iYMyu3AGHRxUMsQ2X1tiu3gXmljytfBb+1Lov4NUjijSKZR
-	 Zw3bdY5NgIoewYp15Rnm5fmKRvcUdO3qTS6ECwGiacMrFsD378fmS1VHbQT4Rgx9YM
-	 YWuSDo7j3uTrPFnG6mQcDOWSn4+j87+HIImSOr4kj8VFuizhZaJoKS+uZlv3U8WbhS
-	 hnj6QjxEWe72cmP0EziAnTgDhJrXKIJLXf6/cglm0XgkIauIZLyMI2ui2LMLDLuutF
-	 npGAz7fJwfuKA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id BE2C2C53BC6; Thu,  1 Feb 2024 19:46:22 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
- request after update to linux 6.4.0
-Date: Thu, 01 Feb 2024 19:46:21 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: AACRAID
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: ro_ux@hotmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217599-11613-837rnM7BHb@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
-References: <bug-217599-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=k20201202; t=1706824436;
+	bh=ApF0fuJM9LahCwtp9OKHrxVJ6Bt5ITSdn6RlluIjytU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=ZsMgwn8JOKoqImUIHlGktSAqvBXVIJwKqi3VBWhX+gBNLb8Tqk/wsc3FwxEcT6YNE
+	 PeoAod82Pd5pk1H4h36ylutaQqPqnihNu6yRvLs6lAViMyy/ALhJ3uFl/UdgQZbpy3
+	 25AqEGw+DQ/+kuhwHGKnzs+tuR0ASIeT2GjDZxeC/c/698FKEgd1bk8IZ4rP+/s6hJ
+	 9BTx7s67DUy4k02VYyZ9+UnhrwcVa8LsDKdhr0wifkGTGQhli10pHK/0f0ArVAEAPi
+	 YDNtOObFONTCNoDLze1gWWS9ZuqErTaw6uEhUR5i3eNb9bkbkTXJshlujqqASI19Kg
+	 oVGyoTHtW6bIg==
+From: Bjorn Andersson <andersson@kernel.org>
+To: Konrad Dybcio <konrad.dybcio@linaro.org>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	"David S. Miller" <davem@davemloft.net>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Andy Gross <agross@kernel.org>,
+	Vinod Koul <vkoul@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	cros-qcom-dts-watchers@chromium.org,
+	David Wronek <davidwronek@gmail.com>
+Cc: linux-arm-msm@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-phy@lists.infradead.org,
+	~postmarketos/upstreaming@lists.sr.ht,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+	Joe Mason <buddyjojo06@outlook.com>
+Subject: Re: (subset) [PATCH v4 0/8] Add UFS support for SC7180/SM7125
+Date: Thu,  1 Feb 2024 15:53:47 -0600
+Message-ID: <170682442877.248329.5672084774517998432.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240121-sm7125-upstream-v4-0-f7d1212c8ebb@gmail.com>
+References: <20240121-sm7125-upstream-v4-0-f7d1212c8ebb@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
---- Comment #61 from Netix (ro_ux@hotmail.com) ---
-(In reply to Netix from comment #60)
-> I had the same issue and I've put my x16 pcie slot in x8 and it seems to
-> have considerably reduce the occurence I had while running on unRAID 6.12=
-.6.
+On Sun, 21 Jan 2024 17:57:40 +0100, David Wronek wrote:
+> This patchset introduces UFS support for SC7180 and SM7125, as well as
+> support for the Xiaomi Redmi Note 9S.
+> 
+> To: Bjorn Andersson <andersson@kernel.org>
+> To: Konrad Dybcio <konrad.dybcio@linaro.org>
+> To: Herbert Xu <herbert@gondor.apana.org.au>
+> To: David S. Miller <davem@davemloft.net>
+> To: Rob Herring <robh+dt@kernel.org>
+> To: Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+> To: Conor Dooley <conor+dt@kernel.org>
+> To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> To: Alim Akhtar <alim.akhtar@samsung.com>
+> To: Avri Altman <avri.altman@wdc.com>
+> To: Bart Van Assche <bvanassche@acm.org>
+> To: Andy Gross <agross@kernel.org>
+> To: Vinod Koul <vkoul@kernel.org>
+> To: Kishon Vijay Abraham I <kishon@kernel.org>
+> To:  <cros-qcom-dts-watchers@chromium.org>
+> Cc:  <linux-arm-msm@vger.kernel.org>
+> Cc:  <linux-crypto@vger.kernel.org>
+> Cc:  <devicetree@vger.kernel.org>
+> Cc:  <linux-kernel@vger.kernel.org>
+> Cc:  <linux-scsi@vger.kernel.org>
+> Cc:  <linux-phy@lists.infradead.org>
+> CC:  <~postmarketos/upstreaming@lists.sr.ht>
+> 
+> [...]
 
-Small update. I've made the switch (pcie slot to x8) on January 19th and si=
-nce
-then it didn't happen at all. No occurence. Still running unRAID 6.12.6.
+Applied, thanks!
 
---=20
-You may reply to this email to add a comment.
+[4/8] dt-bindings: arm: qcom: Add Xiaomi Redmi Note 9S
+      commit: 526b333d7c275a851ce982357218496569b3958e
+[6/8] arm64: dts: qcom: sc7180: Add UFS nodes
+      commit: 858536d9dc946b039e107350642ac6d78c235a6b
+[7/8] arm64: dts: qcom: sm7125-xiaomi-common: Add UFS nodes
+      commit: 00aaa58e8936558f7526f2376d3740885b5c7312
+[8/8] arm64: dts: qcom: Add support for Xiaomi Redmi Note 9S
+      commit: 6016fb7c91f72f4afbb4017e13cd91954d0f1a9b
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Best regards,
+-- 
+Bjorn Andersson <andersson@kernel.org>
