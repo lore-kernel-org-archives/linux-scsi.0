@@ -1,164 +1,81 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EECFA85298
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Feb 2024 19:13:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0370741760
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Feb 2024 19:46:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706814821; cv=none; b=R/ngyu1kwaZNqPu425h93pu0eSFRwl86S/L7tHOFEq9mC+GoDxeomi2UNZpjiCJjActlq/N97ja8ktvtLvzuOr8zljJl1Zz6v0A7DhvzXMY5uNXZizrQJ6sohVVzrpBoTENjmUtggWzjRqxX/w9b8jZww2G4rT5ZhIBHbBN1k3k=
+	t=1706816783; cv=none; b=AuNnESCENSDz4A4MGIRaLqYR+jqwEhGdT6ZXPz8SZnNv2Pu/vJFXt3QaS0LzUwkB5zwyu7bwpBi8NzzfGh4E/FAVBcEEvmZjXXAFNy3+QGDOe0SmfcSBPAP68ppJlxojlkh6xRspwImfSMarnxs6Gv/rM/9e2XlSQsTcU7Srj6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706814821; c=relaxed/simple;
-	bh=YH86kbr1cgKMKWPB4N2wbtOfMeUg2Y/vh+5jGXYIw4E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=A7XQZgy98TOZUTwnULOJE0basCcq2hL4k99Ny3qsTfvixxLEAOEEWxJP3WXLri9mdexsi3v4NMsgvgEAY5ipuKXEM2L9zccgvRxkUwk78A9L7E3FHNHlRxOEkDpszI7vbAYcRzVD3+Gz2iz0PlwVag58YNeWEL37OmMH4TStUEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Dh9YAkSe; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1706816783; c=relaxed/simple;
+	bh=Xn+HeZwjrhL38IU0Ow1AtlMtY0ELrkM/Pfv2vB1b6do=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=cbAb672tP7XG25AkO+ow6urNDshWheeHB6aV719l+C2ZCXcqCMOmQg+RgAJze3W6rMQ+8GU0F60uA1oYQvC0vlCn5a1BktmFd0JNC/RjD0bkNka6b7DlIsgJCS36X9toFBTXEZakg2bHcoE1mmJqf2Dq+svH3+AMwiFYAdpC+bc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E48Zvt9d; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Dh9YAkSe"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-55c33773c0aso1831665a12.1
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Feb 2024 11:13:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1706814818; x=1707419618; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Rs8bFhf5my2YnmgPHwdbtk4kh1nvJgyASEQNZng+sZE=;
-        b=Dh9YAkSeQjVT10nAo0DsykBzYY1OqFnwRm75BqTqJlk98XPnFy5krR686l7ydBaSCV
-         BRPPoNvZ+bPgKXYuMieoyBxoQC4iKuIB+oE2zYDlPGE9M+l3fhCYq6UtUqWPkzXrUotD
-         /QTEQwTudaDPaws0sYsvbAkY8RL1QsR8HlZJWtvNOqVmh4JCjom0o71LU3ZZ+IKoZLqg
-         8QTzR1keIXmKEfsYD5ZtLvzKxEIIjQwEpI1w04J+eTS+2esT3gNBPpdnh1/IRxwN+033
-         6S8TFDQy6tFbZxcMaUdWrIV3ezTeADqUoe1HJWkHez1dU4rSuyBTTiTGocdlPAjCa/Ll
-         Yi9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706814818; x=1707419618;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
-         :to:content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Rs8bFhf5my2YnmgPHwdbtk4kh1nvJgyASEQNZng+sZE=;
-        b=acHEFlOmkGwaX9hwNR6bXy5+r+vcB+ljuSbSszB9ZKAThWiFhdD8jbi5HPoQjYAaoC
-         zhKScpLeL6GDdDwOaQZPczneagEozEi6GTYCynA5kCHe8QnNrIb2qbN+pz7KKab9cMbh
-         DMP20STJtPJXzKx/LBCquV+3j+B4AKkqw9Tf0Wlp+HQEG9NWSqfrST5M8TmTk3RLwX+T
-         Jkp6qyppKCQUhGR7Hf3/GnpIa2Bm1QVM+8FzJSJ3UnGQ2s02+Z/CKgQh9yBu5Ok7Iuf/
-         gAUmd/5g1Jx9czLu06/BEZrJ7hJ6bYsrhDDBEp4ViQnlsIJczTk3QU2Q2pWWhUCGOWq7
-         ZRvQ==
-X-Gm-Message-State: AOJu0YwZkzVaZu6aJ/3kyHXdyNnHAtwYGhmhJdaPkgKyw8+jXqiHzcfM
-	JGzxXqtOaP3qjvadEgxW8BF6G67Z2hemu0MtjV+cwPE1v90sJdADue9MNyJdjoM=
-X-Google-Smtp-Source: AGHT+IFH37wg9fTFzpFHD98Tr4CkdHn+eHxTd3BlVsEIFmM2D+8wwhDRim+spoFYFjlvzfGNZAEHJQ==
-X-Received: by 2002:a05:6402:696:b0:55d:35dd:4a48 with SMTP id f22-20020a056402069600b0055d35dd4a48mr4059760edy.36.1706814818106;
-        Thu, 01 Feb 2024 11:13:38 -0800 (PST)
-X-Forwarded-Encrypted: i=0; AJvYcCUImBA09Zc6s7ffIyKKncBLxUwit5T9HTfNJeTQiZ2dx4xCRlddL4PfRoyp0/4FXbeBhWX5AXfj5JyvnCaapDgt5/HYeMQ7DxXf5wNce4HPBG8yLt7j6y9E/T3myfYjzt5rAx4N8DCoxvKZoJ/ZbwZ7zoI+H+TPHwVRBKPJqTDMjN7xLXGfGcmmfB1u2GGoKy64zOWDYxK3u/XSft3HYaN3lgC8ec66KTXzCWd+x2wE/Rd/+6GEUor9EcJpwIR3Tv9JmjTN6CoS1MTysAGcauhYm0lsimtekx9MnskIUBHjf8V2Cy0OMwTr778k3ZLotQHBx0dm91qUxHhEOsSsxi9UgF/hYdfwP+ROIjI84Vuxf4/skLtCkowF/yosQfVlNj7LpRsLfS8/hIScv+gtbLhUf+TyZTip/i3fKBoDyMF3WCxEyeOSzUDzBaHulxXoNuezeA6ytocx103SYDJpeC+Mh95m0vWHh6eivpWsOyb9mrOyfIrUpdqy0XEPOA1MYXqtpoSHXYqbktSUHhohrHBLjAqNNPDrZ41qj5BCaepOUvkpxBcKxxxjrSmV2A7Dqc95c5V0ouIxTs5cybCeo1ASl5ZuufR/pCAuMluII5NfOrDxDwETtqKTn31aoWUQSLmBkSxuUZORPyD58VvB01VKUwoos6L1VhQ7crsKiYfBvobWsINJ4t1Ztpys+FUfbAPLaxukEGfirjEmhy7Kn2F2ZmvS87W87sVPS/L+023Rji+JeIHxJk0xuXnVRKfE9e+JQYjn3tzJ+O4DMKScGFhIBgYhXt1kF9IJaeni
-Received: from [192.168.159.104] (178235179129.dynamic-4-waw-k-1-3-0.vectranet.pl. [178.235.179.129])
-        by smtp.gmail.com with ESMTPSA id z17-20020aa7d411000000b0055c97f940fcsm92944edq.81.2024.02.01.11.13.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Feb 2024 11:13:37 -0800 (PST)
-Message-ID: <dd219c40-33d5-43ff-b0da-16ccf0198bb9@linaro.org>
-Date: Thu, 1 Feb 2024 20:13:33 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E48Zvt9d"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id CDF7EC4166A
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Feb 2024 19:46:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706816782;
+	bh=Xn+HeZwjrhL38IU0Ow1AtlMtY0ELrkM/Pfv2vB1b6do=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=E48Zvt9d3nvOAs5fFJ3VE9aMFQb4ZWYsbQ1b7N6VOuj5vOWS/JnjdXzJ9jaUWKae+
+	 4/6IymQxIY7jkJJceG9iYMyu3AGHRxUMsQ2X1tiu3gXmljytfBb+1Lov4NUjijSKZR
+	 Zw3bdY5NgIoewYp15Rnm5fmKRvcUdO3qTS6ECwGiacMrFsD378fmS1VHbQT4Rgx9YM
+	 YWuSDo7j3uTrPFnG6mQcDOWSn4+j87+HIImSOr4kj8VFuizhZaJoKS+uZlv3U8WbhS
+	 hnj6QjxEWe72cmP0EziAnTgDhJrXKIJLXf6/cglm0XgkIauIZLyMI2ui2LMLDLuutF
+	 npGAz7fJwfuKA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id BE2C2C53BC6; Thu,  1 Feb 2024 19:46:22 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 217599] Adaptec 71605z hangs with aacraid: Host adapter abort
+ request after update to linux 6.4.0
+Date: Thu, 01 Feb 2024 19:46:21 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: AACRAID
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: ro_ux@hotmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-aacraid@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217599-11613-837rnM7BHb@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217599-11613@https.bugzilla.kernel.org/>
+References: <bug-217599-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 13/15] dt-bindings: crypto: ice: document the hwkm
- property
-Content-Language: en-US
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
- Gaurav Kashyap <quic_gaurkash@quicinc.com>, linux-arm-msm@vger.kernel.org,
- linux-scsi@vger.kernel.org, andersson@kernel.org, ebiggers@google.com,
- neil.armstrong@linaro.org, srinivas.kandagatla@linaro.org,
- krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org, robh+dt@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
- kernel@quicinc.com, linux-crypto@vger.kernel.org,
- devicetree@vger.kernel.org, quic_omprsing@quicinc.com,
- quic_nguyenb@quicinc.com, bartosz.golaszewski@linaro.org,
- ulf.hansson@linaro.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
- mani@kernel.org, davem@davemloft.net, herbert@gondor.apana.org.au
-References: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
- <20240127232436.2632187-14-quic_gaurkash@quicinc.com>
- <301be6d8-b105-4bba-a154-9caebc8013e3@linaro.org>
-From: Konrad Dybcio <konrad.dybcio@linaro.org>
-Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
- 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
- izWDgYvmBE8=
-In-Reply-To: <301be6d8-b105-4bba-a154-9caebc8013e3@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 29.01.2024 09:18, Krzysztof Kozlowski wrote:
-> On 28/01/2024 00:14, Gaurav Kashyap wrote:
->> When Qualcomm's Inline Crypto Engine (ICE) contains Hardware
->> Key Manager (HWKM), and the 'HWKM' mode is enabled, it
->> supports wrapped keys. However, this also requires firmware
->> support in Trustzone to work correctly, which may not be available
->> on all chipsets. In the above scenario, ICE needs to support standard
->> keys even though HWKM is integrated from a hardware perspective.
->>
->> Introducing this property so that Hardware wrapped key support
->> can be enabled/disabled from software based on chipset firmware,
->> and not just based on hardware version.
->>
->> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
->> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
->> ---
->>  .../bindings/crypto/qcom,inline-crypto-engine.yaml     | 10 ++++++++++
->>  1 file changed, 10 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml b/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
->> index 09e43157cc71..6415d7be9b73 100644
->> --- a/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
->> +++ b/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
->> @@ -25,6 +25,16 @@ properties:
->>    clocks:
->>      maxItems: 1
->>  
->> +  qcom,ice-use-hwkm:
->> +    type: boolean
->> +    description:
->> +      Use the supported Hardware Key Manager (HWKM) in Qualcomm ICE
->> +      to support wrapped keys. Having this entry helps scenarios where
->> +      the ICE hardware supports HWKM, but the Trustzone firmware does
->> +      not have the full capability to use this HWKM and support wrapped
-> 
-> How does it help in this scenario? You enable this property, Trustzone
-> does not support it, so what happens?
-> 
-> Also, which SoCs have incomplete Trustzone support? I expect this to be
-> a quirk, thus limited to specific SoCs with issues.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217599
 
-Can we simply evaluate the return value of the secure calls?
+--- Comment #61 from Netix (ro_ux@hotmail.com) ---
+(In reply to Netix from comment #60)
+> I had the same issue and I've put my x16 pcie slot in x8 and it seems to
+> have considerably reduce the occurence I had while running on unRAID 6.12=
+.6.
 
-Konrad
+Small update. I've made the switch (pcie slot to x8) on January 19th and si=
+nce
+then it didn't happen at all. No occurence. Still running unRAID 6.12.6.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
