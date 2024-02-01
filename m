@@ -1,130 +1,66 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 381AB282EB;
-	Thu,  1 Feb 2024 03:36:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3866E3B789;
+	Thu,  1 Feb 2024 04:44:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706758611; cv=none; b=jkmayETDnVDnLTFPIfhVXV+GrJNX9kox+sNhlqFt1SICprJyXlep+gUJZj9VfBlpY5HCxVH9xj1rXROYr5Qd34Ivl4G50oq3HoLLRvGAW4PphVcEy89XowhTy78oWWKsYIR3QBUXe9dW7Ld6wkvR2jjbzXVmuLYMtbc5YVPDiiQ=
+	t=1706762662; cv=none; b=Lb5tSApQbav0rlbtPtvqWt5S0VitFH3/uxapqTImNdZX2FycXRvxLUtK+txOnN5uWVNaQZC8yEPJB39TVZ+VzJtK+Aad9Ri0dhKAmMDwBkJfqyCxZZqk/H1v+H0tm6k6nRgriqV2wO6RDXQkX+LxG9iedMVd8xMb0TeMTF43wGY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706758611; c=relaxed/simple;
-	bh=Bq55cvGNwwVVpOCiQwwFt8k52ct0mUs6l4Q52OlVgMM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=k6Yv33hvoZxuMz0mfPcf5oGGKUHyai4opeVefjFl6fNFtC067ttNSsz0MakwYWMKHP/JGXphIptloHkkN5ksjxzDjJZOlRVzBNYb45ZY/DJxulpuo9z9CJhyXGxpt3WDRzBN0R6M4BJIIXpNPh9H77uDB57bOpqExm+Nscoh0Wg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=kFJfbRzr; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="kFJfbRzr"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 4112wc09022667;
-	Thu, 1 Feb 2024 03:36:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	message-id:date:mime-version:subject:to:references:from
-	:in-reply-to:content-type:content-transfer-encoding; s=
-	qcppdkim1; bh=hDXm8bbfVsYkdRMP++yi7/3ByrToweDaaBP8GUMHS3k=; b=kF
-	JfbRzr01oH+ZjmJLWhvMGJV5pXCXkipsCpme+rgALTu5UGrrZoPmqzQzNiurOCH6
-	b/OBAefJvi7M2DloXxZOXJGpQ93iXz9GeS6FqHCoPb4iuorEgu2x7kyVBMe+FbO4
-	/dtC+FBDVrwiXwqMtAExsLHBk2CmrSxoHiMY2kj7rQO83N97eXhwNZltOnEgvgAL
-	SjJr2lfLnwJ/pXkH902mG4ENs36DyIc2dnYMFYh96D/hlsTuamXlp5aldaXuUtnB
-	aS9U+lhmKA0slFmQohjqsOI9S+Y0vsX340lHb3uM7z4l/Z/iPGZi/mPRy6PNLYV+
-	mdFSFpoWXIwArA5Ng3hQ==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vyx6drmw3-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 01 Feb 2024 03:36:39 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 4113aclN030218
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 1 Feb 2024 03:36:38 GMT
-Received: from [10.253.15.67] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Wed, 31 Jan
- 2024 19:36:34 -0800
-Message-ID: <fd3d7ea4-b1f8-429b-ba0d-588c2bbe25a3@quicinc.com>
-Date: Thu, 1 Feb 2024 11:36:18 +0800
+	s=arc-20240116; t=1706762662; c=relaxed/simple;
+	bh=/QsB7GMFRLD9SZxmAVzdpodDx52e5lS3sgzFEmbp++Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=S/xXCfZ/wH3EAZl+2VWnUxeqX5waB2xJSeH6z9ruhv0umAGPGNHicessEUqgbhq+MxlUHxE+sAraQhUlaPKBjXWmvhI1E73xZbcTwji1x57JbBKVYnr7hiUec/UUWtz75Kr+S8XweEmXAYxfHhYvGfN2pHAUnhD0jiEgG5Nep4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 518D968AFE; Thu,  1 Feb 2024 05:44:16 +0100 (CET)
+Date: Thu, 1 Feb 2024 05:44:16 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Chris Leech <cleech@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Nilesh Javali <njavali@marvell.com>, Christoph Hellwig <hch@lst.de>,
+	John Meneghini <jmeneghi@redhat.com>, Lee Duncan <lduncan@suse.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	Hannes Reinecke <hare@kernel.org>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH 1/2] uio: introduce UIO_MEM_DMA_COHERENT type
+Message-ID: <20240201044416.GA14176@lst.de>
+References: <20240131191732.3247996-1-cleech@redhat.com> <20240131191732.3247996-2-cleech@redhat.com> <2024013110-greasily-juvenile-73fc@gregkh> <CAPnfmX+c_TECfVgbAgphFgkCOr-=tKEvHmcxPg_vSY-qJRqaQQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] scsi: ufs: core: Remove the ufshcd_release in
- ufshcd_err_handling_prepare
-To: Bart Van Assche <bvanassche@acm.org>, SEO HOYOUNG <hy50.seo@samsung.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
-        <kwangwon.min@samsung.com>, <kwmad.kim@samsung.com>,
-        <sh425.lee@samsung.com>, <sc.suh@samsung.com>,
-        <quic_nguyenb@quicinc.com>, <cpgs@samsung.com>,
-        <grant.jung@samsung.com>, <junwoo80.lee@samsung.com>
-References: <CGME20240122083204epcas2p26a1bca522e201972ca072e0b24d23a52@epcas2p2.samsung.com>
- <20240122083324.11797-1-hy50.seo@samsung.com>
- <0ae6c12e-3b55-4d90-b042-e8c2b3a2c4a7@acm.org>
-Content-Language: en-US
-From: Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <0ae6c12e-3b55-4d90-b042-e8c2b3a2c4a7@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: awebamET4vpZBG3GKjS_OsFbmEaHInGD
-X-Proofpoint-GUID: awebamET4vpZBG3GKjS_OsFbmEaHInGD
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-01-31_10,2024-01-31_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxlogscore=999
- priorityscore=1501 impostorscore=0 mlxscore=0 malwarescore=0 adultscore=0
- clxscore=1011 lowpriorityscore=0 suspectscore=0 spamscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2401190000
- definitions=main-2402010027
+In-Reply-To: <CAPnfmX+c_TECfVgbAgphFgkCOr-=tKEvHmcxPg_vSY-qJRqaQQ@mail.gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-
-
-On 2/1/2024 1:44 AM, Bart Van Assche wrote:
-> On 1/22/24 00:33, SEO HOYOUNG wrote:
->> This is because ufshcd_errhandling_prepare() and
->> ufshcd_err_handling_unprepare() repeatedly release calls.
+On Wed, Jan 31, 2024 at 01:44:50PM -0800, Chris Leech wrote:
+> On Wed, Jan 31, 2024 at 1:29 PM Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> >
+> > On Wed, Jan 31, 2024 at 11:17:31AM -0800, Chris Leech wrote:
+> > > Add a UIO memtype specifically for sharing dma_alloc_coherent
+> > > memory with userspace, backed by dma_mmap_coherent.
+> > >
+> > > This is mainly for the bnx2/bnx2x/bnx2i "cnic" interface, although there
+> > > are a few other uio drivers which map dma_alloc_coherent memory and
+> > > could be converted to use dma_mmap_coherent as well.
+> >
+> > What other drivers could use this?  Patches doing the conversion would
+> > be welcome, otherwise, again, I am very loath to take this
+> > one-off-change for just a single driver that shouldn't be doing this in
+> > the first place :)
 > 
-> It would have been much more clear if it would have been mentioned that
-> ufshcd_err_handling_prepare() should call ufshcd_hold() once and
-> also that ufshcd_err_handling_unprepare() should call ufshcd_release()
-> once.
-> 
-> Additionally, a Fixes: tag is missing. Is this patch perhaps a fix for 
-> commit
-> c72e79c0ad2b ("scsi: ufs: Recover HBA runtime PM error in error handler")?
-> Can Guo, since you wrote that patch, can you please take a look at this 
-> patch?
-> 
->> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->> index 7c59d7a02243..423e83074a20 100644
->> --- a/drivers/ufs/core/ufshcd.c
->> +++ b/drivers/ufs/core/ufshcd.c
->> @@ -6351,7 +6351,6 @@ static void ufshcd_err_handling_prepare(struct 
->> ufs_hba *hba)
->>           ufshcd_hold(hba);
->>           if (!ufshcd_is_clkgating_allowed(hba))
->>               ufshcd_setup_clocks(hba, true);
->> -        ufshcd_release(hba);
+> uio_pruss and uio_dmem_genirq both appear to mmap dma_alloc_coherent
+> memory as UIO_MEM_PHYS.  It might not be an issue on that platforms
+> where those are used, but I'd be happy to include untested patches to
+> convert them for better adherence to the DMA APIs.
 
-When we are here, it means runtime resume has failed.
-
-When I wrote the code (in older kernel), ufshcd_runtime_resume(), if 
-fails, bails without calling ufshcd_release(), eventually 
-ufshcd_err_handling_unprepare() would call ufshcd_release() to balance.
-
-But now, I see that if __ufshcd_wl_resume() fails, ufshcd_release() is 
-called anyways, so ufshcd_release() is not required here. Hence,
-
-Reviewed-by: Can Guo <quic_cang@quicinc.com>
-
->>           pm_op = hba->is_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
->>           ufshcd_vops_resume(hba, pm_op);
->>       } else {
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Yes, they do need fixing.
