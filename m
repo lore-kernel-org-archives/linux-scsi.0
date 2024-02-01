@@ -1,59 +1,59 @@
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 641FE626CE
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Feb 2024 16:11:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EECFA85298
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Feb 2024 19:13:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706803889; cv=none; b=mXgy+hAJU7VSwPqvXjs3B+cvmOGOChixRgFRV8QHCgsSUXzZr62nnyXsWQ2orDaquJ+ANYbMZQhtXsP0eOEm+iDuFPVt4+IqqyfWWDuwdUu3IMkbfMS5uPOiirklq7QcJ8LKE+WwrM1UrHk8cdArwbrMZhZNwc+tRc8ScPzxnGQ=
+	t=1706814821; cv=none; b=R/ngyu1kwaZNqPu425h93pu0eSFRwl86S/L7tHOFEq9mC+GoDxeomi2UNZpjiCJjActlq/N97ja8ktvtLvzuOr8zljJl1Zz6v0A7DhvzXMY5uNXZizrQJ6sohVVzrpBoTENjmUtggWzjRqxX/w9b8jZww2G4rT5ZhIBHbBN1k3k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706803889; c=relaxed/simple;
-	bh=apJLdzMZKNqZkxhr/A8+CNCpsUOL9GHK5UhU9ZsNJTk=;
+	s=arc-20240116; t=1706814821; c=relaxed/simple;
+	bh=YH86kbr1cgKMKWPB4N2wbtOfMeUg2Y/vh+5jGXYIw4E=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lJYB/Z2V+uY4uPxWS6eaaRjdOv8svWUMNo4q2zVnvdt5Anew+mcA9OY/fOSW5tLGo1m/hk3JhyAE1swTFKumAxROXgTQkw9A2w50PYUf6zd/b5zJwhgqE6Um2Osr2/rHQ6rE9E4Oryyr8mjTHyxwEqRvbByzTCOrsu9G5zx7WZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=gf9N5JmE; arc=none smtp.client-ip=209.85.218.49
+	 In-Reply-To:Content-Type; b=A7XQZgy98TOZUTwnULOJE0basCcq2hL4k99Ny3qsTfvixxLEAOEEWxJP3WXLri9mdexsi3v4NMsgvgEAY5ipuKXEM2L9zccgvRxkUwk78A9L7E3FHNHlRxOEkDpszI7vbAYcRzVD3+Gz2iz0PlwVag58YNeWEL37OmMH4TStUEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Dh9YAkSe; arc=none smtp.client-ip=209.85.208.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="gf9N5JmE"
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a354408e6bfso382149466b.1
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Feb 2024 08:11:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Dh9YAkSe"
+Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-55c33773c0aso1831665a12.1
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Feb 2024 11:13:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1706803885; x=1707408685; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1706814818; x=1707419618; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
          :to:content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=8pjHDOWqTPfZAnEZAI0E4Dw26mHdRawBX0HOJq1N4u8=;
-        b=gf9N5JmE4Cg19vElele8rOlai+vTyHCI1HvQuAOq2r4ekDwPWxOyVBsskf/ud04Z9o
-         wkrhmXBhFjPDyhAW0mXXh1GLEMXzJr6AgMaE1UWJH5jbH1W9Msn69cvC3BbQTiQZAJhJ
-         rtpj+nZ3gYzFJXGoV9ltvJ2Hp2YeMu+Lv4jnolOgjQgpg8LlR/hwQFnGHWDmgPrCrpTT
-         pxeSMSJzY4tsnSoSsWY1CuvnFmFy9AH29QNSAMKumvdfrM/Wj7YhY0Fbwk+GlLKDbeKI
-         p1p3wLuZi8BSI3vTtE+xt8ic1xH69QMGFl/w6H4arFrLyTdPb+4TkOyWCxZro7LuxYbM
-         GeCw==
+        bh=Rs8bFhf5my2YnmgPHwdbtk4kh1nvJgyASEQNZng+sZE=;
+        b=Dh9YAkSeQjVT10nAo0DsykBzYY1OqFnwRm75BqTqJlk98XPnFy5krR686l7ydBaSCV
+         BRPPoNvZ+bPgKXYuMieoyBxoQC4iKuIB+oE2zYDlPGE9M+l3fhCYq6UtUqWPkzXrUotD
+         /QTEQwTudaDPaws0sYsvbAkY8RL1QsR8HlZJWtvNOqVmh4JCjom0o71LU3ZZ+IKoZLqg
+         8QTzR1keIXmKEfsYD5ZtLvzKxEIIjQwEpI1w04J+eTS+2esT3gNBPpdnh1/IRxwN+033
+         6S8TFDQy6tFbZxcMaUdWrIV3ezTeADqUoe1HJWkHez1dU4rSuyBTTiTGocdlPAjCa/Ll
+         Yi9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706803885; x=1707408685;
+        d=1e100.net; s=20230601; t=1706814818; x=1707419618;
         h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
          :to:content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=8pjHDOWqTPfZAnEZAI0E4Dw26mHdRawBX0HOJq1N4u8=;
-        b=ZAfkl4+6F+DGmlXv7y00ahMHbs5Y8LVUJ3X0SfkbdRIgX4+iFAJPoraLV6SIcfFgwf
-         dQpZFxHnLoGweMO/S+EpGzFMIQf6lR7hcr6+0FY0665INfy3OClU8IoY3GgY8hPiKOKk
-         a4LMRZXi8B01ppCcmCfg8n7qrDonN3DY324gCS89TqHM24CHHzjOtbaW1i9sOrJMws28
-         8xxG+wokDcdcwIZfjnK1cryOf/L0vB++4QFP0kTH1Z8TvraqbUQFtay/SECG48Ayd1XK
-         laaJhdPuRnSKeKUcA0sQJ+wg2fZwhSCdQyxC8rU1rCeY36P1HQ9JIeIfVntNbLoNHYvE
-         +NQQ==
-X-Gm-Message-State: AOJu0Yw5DK91GIJ4nXzRboFJwM3DwmiTyFxaMB5IQ631Q8Oazx8+N/Mx
-	4tE+pjX2wrm8uwnTqfIldIQAYHTDUyYSzIgA0EwHViFcqaDnEGl1nczLUL4aq7M=
-X-Google-Smtp-Source: AGHT+IEuxOZ2oi/31tSTIMkkw25aN7dth0mVptYES/tdHDb9mAGvYyXsbecw2G/Xeve7QNqJa1stlg==
-X-Received: by 2002:a17:906:bf47:b0:a36:c3e3:9161 with SMTP id ps7-20020a170906bf4700b00a36c3e39161mr1985471ejb.2.1706803885632;
-        Thu, 01 Feb 2024 08:11:25 -0800 (PST)
-X-Forwarded-Encrypted: i=0; AJvYcCU/oxTWPCj5ijULfiynzTYVPiC/wr+Vzjr8rOv48rN16ZEY/9jMKGTf0kHr2muV7oKatpzSPKY5jUlC3zJoBGpF203jONzgtAZ1kjk1kwjLdSUT9/3HVfSOg/1AdJNvbLy5JrQe5ck3RxMLfZ29iEus+a42w3s+zwmQ4bYVuU4+TWLP343L120JeB9kB1arU5Sn7F4Y2jQsPXIyHF4wmcKchFwNj3AGSOXlpok9RbF7Pq7GINIifkNxamgEC3q3Llrocl0KyUKi84M6zaLjA8OCBEEuE7TMt6IsDMaIWvC16aiVhFsgNKwSQEiymKoi6yhn0NsCHM467dCtMSB5cCCEiOdrRPeT16RKZ9NEReEZF2JP53omadRzWjSeABfLyDht/4tbnYjh0jkfLHnk065+vGwYaQQdnrD6uY2UdJQ/OEPrs+qQBEJoQ278h9YKPMM6KYuUSS+P0/79uDwOESGASpyqV2s3yUayAAWhPdkHeuPSDp1FNPfd48gTgExO4dlWW+vVaE4SdaHoSCEqibNSZlUJPhiIe5K8Mf7yHR1Z+0xbuI6Y14akzpAWFVaFBWGRB6NzBdWK3imdrYXVfsqEGKfix4/wJw/bopl+admnZ8gc1fZ5dTrGFt2gkLYHDj6tDF8/ite+8YnEduzPFswC4qGYZgp2w8BpgeRDtblyOTdTptKb2O+/FQCQtGWp4H0AZBNRoeC8ylLr/qPGb7dQjcehNmOnc+Y8+GpciSDHQwxuB4uNZOKP7qaQ9bp2NNXImSGwdOL93ZbBL2fmF6hzPCc5eZ+ejLQ0FxFolVj0mqhAGaU=
+        bh=Rs8bFhf5my2YnmgPHwdbtk4kh1nvJgyASEQNZng+sZE=;
+        b=acHEFlOmkGwaX9hwNR6bXy5+r+vcB+ljuSbSszB9ZKAThWiFhdD8jbi5HPoQjYAaoC
+         zhKScpLeL6GDdDwOaQZPczneagEozEi6GTYCynA5kCHe8QnNrIb2qbN+pz7KKab9cMbh
+         DMP20STJtPJXzKx/LBCquV+3j+B4AKkqw9Tf0Wlp+HQEG9NWSqfrST5M8TmTk3RLwX+T
+         Jkp6qyppKCQUhGR7Hf3/GnpIa2Bm1QVM+8FzJSJ3UnGQ2s02+Z/CKgQh9yBu5Ok7Iuf/
+         gAUmd/5g1Jx9czLu06/BEZrJ7hJ6bYsrhDDBEp4ViQnlsIJczTk3QU2Q2pWWhUCGOWq7
+         ZRvQ==
+X-Gm-Message-State: AOJu0YwZkzVaZu6aJ/3kyHXdyNnHAtwYGhmhJdaPkgKyw8+jXqiHzcfM
+	JGzxXqtOaP3qjvadEgxW8BF6G67Z2hemu0MtjV+cwPE1v90sJdADue9MNyJdjoM=
+X-Google-Smtp-Source: AGHT+IFH37wg9fTFzpFHD98Tr4CkdHn+eHxTd3BlVsEIFmM2D+8wwhDRim+spoFYFjlvzfGNZAEHJQ==
+X-Received: by 2002:a05:6402:696:b0:55d:35dd:4a48 with SMTP id f22-20020a056402069600b0055d35dd4a48mr4059760edy.36.1706814818106;
+        Thu, 01 Feb 2024 11:13:38 -0800 (PST)
+X-Forwarded-Encrypted: i=0; AJvYcCUImBA09Zc6s7ffIyKKncBLxUwit5T9HTfNJeTQiZ2dx4xCRlddL4PfRoyp0/4FXbeBhWX5AXfj5JyvnCaapDgt5/HYeMQ7DxXf5wNce4HPBG8yLt7j6y9E/T3myfYjzt5rAx4N8DCoxvKZoJ/ZbwZ7zoI+H+TPHwVRBKPJqTDMjN7xLXGfGcmmfB1u2GGoKy64zOWDYxK3u/XSft3HYaN3lgC8ec66KTXzCWd+x2wE/Rd/+6GEUor9EcJpwIR3Tv9JmjTN6CoS1MTysAGcauhYm0lsimtekx9MnskIUBHjf8V2Cy0OMwTr778k3ZLotQHBx0dm91qUxHhEOsSsxi9UgF/hYdfwP+ROIjI84Vuxf4/skLtCkowF/yosQfVlNj7LpRsLfS8/hIScv+gtbLhUf+TyZTip/i3fKBoDyMF3WCxEyeOSzUDzBaHulxXoNuezeA6ytocx103SYDJpeC+Mh95m0vWHh6eivpWsOyb9mrOyfIrUpdqy0XEPOA1MYXqtpoSHXYqbktSUHhohrHBLjAqNNPDrZ41qj5BCaepOUvkpxBcKxxxjrSmV2A7Dqc95c5V0ouIxTs5cybCeo1ASl5ZuufR/pCAuMluII5NfOrDxDwETtqKTn31aoWUQSLmBkSxuUZORPyD58VvB01VKUwoos6L1VhQ7crsKiYfBvobWsINJ4t1Ztpys+FUfbAPLaxukEGfirjEmhy7Kn2F2ZmvS87W87sVPS/L+023Rji+JeIHxJk0xuXnVRKfE9e+JQYjn3tzJ+O4DMKScGFhIBgYhXt1kF9IJaeni
 Received: from [192.168.159.104] (178235179129.dynamic-4-waw-k-1-3-0.vectranet.pl. [178.235.179.129])
-        by smtp.gmail.com with ESMTPSA id w15-20020a17090652cf00b00a2e81e4876dsm7299086ejn.44.2024.02.01.08.11.23
+        by smtp.gmail.com with ESMTPSA id z17-20020aa7d411000000b0055c97f940fcsm92944edq.81.2024.02.01.11.13.35
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Feb 2024 08:11:25 -0800 (PST)
-Message-ID: <b06b3b13-3d61-4bf6-bc06-80ca1a189a4f@linaro.org>
-Date: Thu, 1 Feb 2024 17:11:22 +0100
+        Thu, 01 Feb 2024 11:13:37 -0800 (PST)
+Message-ID: <dd219c40-33d5-43ff-b0da-16ccf0198bb9@linaro.org>
+Date: Thu, 1 Feb 2024 20:13:33 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -61,14 +61,14 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 02/15] qcom_scm: scm call for deriving a software
- secret
+Subject: Re: [PATCH v4 13/15] dt-bindings: crypto: ice: document the hwkm
+ property
 Content-Language: en-US
-To: Gaurav Kashyap <quic_gaurkash@quicinc.com>,
- linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- andersson@kernel.org, ebiggers@google.com, neil.armstrong@linaro.org,
- srinivas.kandagatla@linaro.org, krzysztof.kozlowski+dt@linaro.org,
- conor+dt@kernel.org, robh+dt@kernel.org
+To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+ Gaurav Kashyap <quic_gaurkash@quicinc.com>, linux-arm-msm@vger.kernel.org,
+ linux-scsi@vger.kernel.org, andersson@kernel.org, ebiggers@google.com,
+ neil.armstrong@linaro.org, srinivas.kandagatla@linaro.org,
+ krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org, robh+dt@kernel.org
 Cc: linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
  kernel@quicinc.com, linux-crypto@vger.kernel.org,
  devicetree@vger.kernel.org, quic_omprsing@quicinc.com,
@@ -76,7 +76,8 @@ Cc: linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org,
  ulf.hansson@linaro.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
  mani@kernel.org, davem@davemloft.net, herbert@gondor.apana.org.au
 References: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
- <20240127232436.2632187-3-quic_gaurkash@quicinc.com>
+ <20240127232436.2632187-14-quic_gaurkash@quicinc.com>
+ <301be6d8-b105-4bba-a154-9caebc8013e3@linaro.org>
 From: Konrad Dybcio <konrad.dybcio@linaro.org>
 Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
  xsFNBF9ALYUBEADWAhxdTBWrwAgDQQzc1O/bJ5O7b6cXYxwbBd9xKP7MICh5YA0DcCjJSOum
@@ -113,101 +114,51 @@ Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
  bGqMHex48FVZhexNPYOd58EY9/7mL5u0sJmo+jTeb4JBgIbFPJCFyng4HwbniWgQJZ1WqaUC
  nas9J77uICis2WH7N8Bs9jy0wQYezNzqS+FxoNXmDQg2jetX8en4bO2Di7Pmx0jXA4TOb9TM
  izWDgYvmBE8=
-In-Reply-To: <20240127232436.2632187-3-quic_gaurkash@quicinc.com>
+In-Reply-To: <301be6d8-b105-4bba-a154-9caebc8013e3@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 28.01.2024 00:14, Gaurav Kashyap wrote:
-> Inline storage encryption may require deriving a software
-> secret from storage keys added to the kernel.
+On 29.01.2024 09:18, Krzysztof Kozlowski wrote:
+> On 28/01/2024 00:14, Gaurav Kashyap wrote:
+>> When Qualcomm's Inline Crypto Engine (ICE) contains Hardware
+>> Key Manager (HWKM), and the 'HWKM' mode is enabled, it
+>> supports wrapped keys. However, this also requires firmware
+>> support in Trustzone to work correctly, which may not be available
+>> on all chipsets. In the above scenario, ICE needs to support standard
+>> keys even though HWKM is integrated from a hardware perspective.
+>>
+>> Introducing this property so that Hardware wrapped key support
+>> can be enabled/disabled from software based on chipset firmware,
+>> and not just based on hardware version.
+>>
+>> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
+>> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
+>> ---
+>>  .../bindings/crypto/qcom,inline-crypto-engine.yaml     | 10 ++++++++++
+>>  1 file changed, 10 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml b/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
+>> index 09e43157cc71..6415d7be9b73 100644
+>> --- a/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
+>> +++ b/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
+>> @@ -25,6 +25,16 @@ properties:
+>>    clocks:
+>>      maxItems: 1
+>>  
+>> +  qcom,ice-use-hwkm:
+>> +    type: boolean
+>> +    description:
+>> +      Use the supported Hardware Key Manager (HWKM) in Qualcomm ICE
+>> +      to support wrapped keys. Having this entry helps scenarios where
+>> +      the ICE hardware supports HWKM, but the Trustzone firmware does
+>> +      not have the full capability to use this HWKM and support wrapped
 > 
-> For non-wrapped keys, this can be directly done in the kernel as
-> keys are in the clear.
+> How does it help in this scenario? You enable this property, Trustzone
+> does not support it, so what happens?
 > 
-> However, hardware wrapped keys can only be unwrapped by the wrapping
-> entity. In case of Qualcomm's wrapped key solution, this is done by
-> the Hardware Key Manager (HWKM) from Trustzone.
-> Hence, adding a new SCM call which in the end provides a hook
-> to the software secret crypto profile API provided by the block
-> layer.
-> 
-> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
-> ---
->  drivers/firmware/qcom/qcom_scm.c       | 65 ++++++++++++++++++++++++++
->  drivers/firmware/qcom/qcom_scm.h       |  1 +
->  include/linux/firmware/qcom/qcom_scm.h |  2 +
->  3 files changed, 68 insertions(+)
-> 
-> diff --git a/drivers/firmware/qcom/qcom_scm.c b/drivers/firmware/qcom/qcom_scm.c
-> index 7e17fd662bda..4882f8a36453 100644
-> --- a/drivers/firmware/qcom/qcom_scm.c
-> +++ b/drivers/firmware/qcom/qcom_scm.c
-> @@ -1220,6 +1220,71 @@ int qcom_scm_ice_set_key(u32 index, const u8 *key, u32 key_size,
->  }
->  EXPORT_SYMBOL_GPL(qcom_scm_ice_set_key);
->  
-> +/**
-> + * qcom_scm_derive_sw_secret() - Derive software secret from wrapped key
-> + * @wkey: the hardware wrapped key inaccessible to software
-> + * @wkey_size: size of the wrapped key
-> + * @sw_secret: the secret to be derived which is exactly the secret size
-> + * @sw_secret_size: size of the sw_secret
-> + *
-> + * Derive a software secret from a hardware wrapped key for software crypto
-> + * operations.
-> + * For wrapped keys, the key needs to be unwrapped, in order to derive a
-> + * software secret, which can be done in the hardware from a secure execution
-> + * environment.
-> + *
-> + * For more information on sw secret, please refer to "Hardware-wrapped keys"
-> + * section of Documentation/block/inline-encryption.rst.
-> + *
-> + * Return: 0 on success; -errno on failure.
-> + */
-> +int qcom_scm_derive_sw_secret(const u8 *wkey, size_t wkey_size,
-> +			      u8 *sw_secret, size_t sw_secret_size)
-> +{
-> +	struct qcom_scm_desc desc = {
-> +		.svc = QCOM_SCM_SVC_ES,
-> +		.cmd =  QCOM_SCM_ES_DERIVE_SW_SECRET,
-> +		.arginfo = QCOM_SCM_ARGS(4, QCOM_SCM_RW,
-> +					 QCOM_SCM_VAL, QCOM_SCM_RW,
-> +					 QCOM_SCM_VAL),
-> +		.args[1] = wkey_size,
-> +		.args[3] = sw_secret_size,
-> +		.owner = ARM_SMCCC_OWNER_SIP,
-> +	};
-> +
-> +	void *secret_buf;
-> +	void *wkey_buf;
-> +	int ret;
-> +
-> +	wkey_buf = qcom_tzmem_alloc(__scm->mempool, wkey_size, GFP_KERNEL);
-> +	if (!wkey_buf)
-> +		return -ENOMEM;
-> +
-> +	secret_buf = qcom_tzmem_alloc(__scm->mempool, sw_secret_size, GFP_KERNEL);
-> +	if (!secret_buf) {
-> +		ret = -ENOMEM;
-> +		goto err_free_wrapped;
-> +	}
-> +
-> +	memcpy(wkey_buf, wkey, wkey_size);
-> +	desc.args[0] = qcom_tzmem_to_phys(wkey_buf);
-> +	desc.args[2] = qcom_tzmem_to_phys(secret_buf);
-> +
-> +	ret = qcom_scm_call(__scm->dev, &desc, NULL);
-> +	if (!ret)
-> +		memcpy(sw_secret, secret_buf, sw_secret_size);
-> +
-> +	memzero_explicit(secret_buf, sw_secret_size);
-> +	qcom_tzmem_free(secret_buf);
-> +
-> +err_free_wrapped:
-> +	memzero_explicit(wkey_buf, wkey_size);
-> +	qcom_tzmem_free(wkey_buf);
-__free(qcom_tzmem) attribute instead?
+> Also, which SoCs have incomplete Trustzone support? I expect this to be
+> a quirk, thus limited to specific SoCs with issues.
+
+Can we simply evaluate the return value of the secure calls?
 
 Konrad
-
