@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67D1E40BE9;
-	Fri,  2 Feb 2024 07:31:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E519F42079;
+	Fri,  2 Feb 2024 07:31:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706859093; cv=none; b=fOC71BDgS0wzaHnkyKx6++3YtCnlgchtdNmSI6jt1Wf6czmbZZqqpnaUVkDBPiHH8su2r4TowwKK7KKF485f8rmVhzDZGTz1AyINqvNKmWtnpTTO2v0KjhM70ni00G7ziIgBiY7bipitCgIT/vULdI2VASdt0jA2uyt0QZFS+Pw=
+	t=1706859095; cv=none; b=gjneJhWcAHobxE/iXrebNAG+1hbhUCsfKfibWL+3rXelJaIU3v1hM/h7h/A+95jusHjcTwKQvFrInyvsKTBEX8+TZTBVik0PEG4/HLQ1cw6hRKkZnmeGB35eK9VDtCxBYHhFhMuxQfSYk+4SeZHBM258pDMIbvshKG3v1gn6kcY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706859093; c=relaxed/simple;
-	bh=Jat/kVp123yWGk22irG4aEbfBVPnhWQGVUpd2BA1/fk=;
+	s=arc-20240116; t=1706859095; c=relaxed/simple;
+	bh=9DZEBXWXP/p0aDRWqP5vgkYgdSEP3Zph/XEePi0Ylp8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AZnqv43kl6f9bPn7AWnMRai1is8fcCQV9owYmmoXU+QjLjXXxzIAvPTvUZxYtshW2lO0u+69r2Eq/vmIrSQvdvUoCI5Jji/5uZFKVtDQuQDCVutSqO/Wv4Bum3wbZ2LTiZ2S0b9A/CGF6jQpZn3xLNLlroGxHOty61Tq3wehC5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FeJUOT/L; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=qz7wpqKS/GJfMASzxZ6nVYmpgfmEyKmIfxMD5mjAriedg9j/S4gMupdNy/DuZsfOAOTYfPa1xhPFT+P9QLR4n+l4Q3qr1f2lYMacfItsnFofSnSPgSBHOH+gchMpn7J3azXRe5QIei8ENzIQj9elC60q4djLPLlquN6f7NOc548=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aQ1lBpoz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FeJUOT/L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD5C6C433F1;
-	Fri,  2 Feb 2024 07:31:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aQ1lBpoz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52906C43390;
+	Fri,  2 Feb 2024 07:31:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1706859093;
-	bh=Jat/kVp123yWGk22irG4aEbfBVPnhWQGVUpd2BA1/fk=;
+	s=k20201202; t=1706859094;
+	bh=9DZEBXWXP/p0aDRWqP5vgkYgdSEP3Zph/XEePi0Ylp8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=FeJUOT/LvoxQYDwiUF+iV0tFzwg0qo/N8GQDYAi/DErd7PZUXyZpUUBYKWnosHS3E
-	 YpPRF0jEe5Jt64fLnyzlfgulSAkWMnJR7RCyGu5u8kd2P9Nxa8SBmu3GCg8pDbQQ9r
-	 xSvz9h4cXUthg/Fj+d6/3Ah6NsBO3+jEBEnU/F6hDZGtdG7/jID4nNn6XAzPhfC0Xk
-	 vPEj7wDP7L4fm3V1E2/mWC+xx/5SUr8t3k1osIByNmoD83xVmHtF3Ho9+a22ULHHox
-	 msPs4GzBFcktGvzb4WqE7WqwHdzmm4TQhn/S51Bqe9O++4Kd2SsUXjAnQlQwM2mRcn
-	 FIdiBNBTGjtGA==
+	b=aQ1lBpozyUBJsqBVxDTkQvliIrhfATxUvFM0tCMK3Djk1k19ch48aihVhrEv2ukok
+	 S3aW/L/J/5bgIniSGSHnWBOsABC3PlpcLoZePBSBfgN58cI7UN7BfXRztMiESa2zNB
+	 8TF7A6t99AFzrZcH9B2PzAtX2k7swblwywVrocI39mjErRbib8xO7AyzW25J6sWlGE
+	 Vw1dpiyrsHD4GO351WwrxbdqHw8dMxo/k/2OdiYY13AY7PiE+dh8nYzKkCn2uGEWs8
+	 3XXktnpOn7dYrMFEYi5woe2/6vrBYw3Sd6OLTfFjoVydSgaQzUynvzPk7RlMb/EOxr
+	 W58iFGI+IqPsA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-block@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
@@ -34,9 +34,9 @@ To: linux-block@vger.kernel.org,
 	dm-devel@lists.linux.dev,
 	Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/26] block: Simplify blk_revalidate_disk_zones() interface
-Date: Fri,  2 Feb 2024 16:30:56 +0900
-Message-ID: <20240202073104.2418230-19-dlemoal@kernel.org>
+Subject: [PATCH 19/26] block: mq-deadline: Remove support for zone write locking
+Date: Fri,  2 Feb 2024 16:30:57 +0900
+Message-ID: <20240202073104.2418230-20-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240202073104.2418230-1-dlemoal@kernel.org>
 References: <20240202073104.2418230-1-dlemoal@kernel.org>
@@ -48,156 +48,304 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The only user of blk_revalidate_disk_zones() second argument was the
-SCSI disk driver (sd). Now that this driver does not require this
-update_driver_data argument, remove it to simplify the interface of
-blk_revalidate_disk_zones(). Also update the function kdoc comment to
-be more accurate (i.e. there is no gendisk ->revalidate method).
+With the block layer generic plugging of write operations for zoned
+block devices, mq-deadline, or any other scheduler, can only ever
+see at most one write operation per zone at any time. There is thus no
+sequentiality requirements for these writes and thus no need to tightly
+control the dispatching of write requests using zone write locking.
+
+Remove all the code that implement this control in the mq-deadline
+scheduler and remove advertizing support for the
+ELEVATOR_F_ZBD_SEQ_WRITE elevator feature.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- block/blk-zoned.c              | 16 +++++-----------
- drivers/block/null_blk/zoned.c |  2 +-
- drivers/block/ublk_drv.c       |  2 +-
- drivers/block/virtio_blk.c     |  2 +-
- drivers/md/dm-zone.c           |  2 +-
- drivers/nvme/host/zns.c        |  2 +-
- drivers/scsi/sd_zbc.c          |  2 +-
- include/linux/blkdev.h         |  3 +--
- 8 files changed, 12 insertions(+), 19 deletions(-)
+ block/mq-deadline.c | 176 ++------------------------------------------
+ 1 file changed, 6 insertions(+), 170 deletions(-)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 8bf6821735f3..3dadf37ad787 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -1309,21 +1309,17 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
- /**
-  * blk_revalidate_disk_zones - (re)allocate and initialize zone bitmaps
-  * @disk:	Target disk
-- * @update_driver_data:	Callback to update driver data on the frozen disk
-  *
-- * Helper function for low-level device drivers to check and (re) allocate and
-- * initialize a disk request queue zone bitmaps. This functions should normally
-- * be called within the disk ->revalidate method for blk-mq based drivers.
-+ * Helper function for low-level device drivers to check, (re) allocate and
-+ * initialize resources used for managing zoned disks. This function should
-+ * normally be called by blk-mq based drivers when a zoned gendisk is probed
-+ * and when the zone configuration of the gendisk changes (e.g. after a format).
-  * Before calling this function, the device driver must already have set the
-  * device zone size (chunk_sector limit) and the max zone append limit.
-  * BIO based drivers can also use this function as long as the device queue
-  * can be safely frozen.
-- * If the @update_driver_data callback function is not NULL, the callback is
-- * executed with the device request queue frozen after all zones have been
-- * checked.
-  */
--int blk_revalidate_disk_zones(struct gendisk *disk,
--			      void (*update_driver_data)(struct gendisk *disk))
-+int blk_revalidate_disk_zones(struct gendisk *disk)
- {
- 	struct request_queue *q = disk->queue;
- 	sector_t zone_sectors = q->limits.chunk_sectors;
-@@ -1403,8 +1399,6 @@ int blk_revalidate_disk_zones(struct gendisk *disk,
- 		swap(disk->seq_zones_wlock, args.seq_zones_wlock);
- 		swap(disk->conv_zones_bitmap, args.conv_zones_bitmap);
- 		swap(disk->zone_wplugs, args.zone_wplugs);
--		if (update_driver_data)
--			update_driver_data(disk);
- 		mutex_unlock(&disk->zone_wplugs_mutex);
- 		ret = 0;
- 	} else {
-diff --git a/drivers/block/null_blk/zoned.c b/drivers/block/null_blk/zoned.c
-index dd418b174e03..15fc325d8134 100644
---- a/drivers/block/null_blk/zoned.c
-+++ b/drivers/block/null_blk/zoned.c
-@@ -182,7 +182,7 @@ int null_register_zoned_dev(struct nullb *nullb)
- 		queue_emulates_zone_append(q) ? "emulated" : "native");
+diff --git a/block/mq-deadline.c b/block/mq-deadline.c
+index 1b0de4fc3958..42d967849bec 100644
+--- a/block/mq-deadline.c
++++ b/block/mq-deadline.c
+@@ -90,7 +90,6 @@ struct deadline_data {
+ 	struct {
+ 		spinlock_t lock;
+ 		spinlock_t insert_lock;
+-		spinlock_t zone_lock;
+ 	} ____cacheline_aligned_in_smp;
  
- 	if (queue_is_mq(q) || queue_emulates_zone_append(q))
--		return blk_revalidate_disk_zones(disk, NULL);
-+		return blk_revalidate_disk_zones(disk);
- 
- 	return 0;
+ 	unsigned long run_state;
+@@ -171,8 +170,7 @@ deadline_latter_request(struct request *rq)
  }
-diff --git a/drivers/block/ublk_drv.c b/drivers/block/ublk_drv.c
-index 35fb9cc739eb..daa0b5f5788c 100644
---- a/drivers/block/ublk_drv.c
-+++ b/drivers/block/ublk_drv.c
-@@ -221,7 +221,7 @@ static int ublk_get_nr_zones(const struct ublk_device *ub)
- 
- static int ublk_revalidate_disk_zones(struct ublk_device *ub)
- {
--	return blk_revalidate_disk_zones(ub->ub_disk, NULL);
-+	return blk_revalidate_disk_zones(ub->ub_disk);
- }
- 
- static int ublk_dev_param_zoned_validate(const struct ublk_device *ub)
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 5bf98fd6a651..6c2b167ca136 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -788,7 +788,7 @@ static int virtblk_probe_zoned_device(struct virtio_device *vdev,
- 	blk_queue_max_zone_append_sectors(q, v);
- 	dev_dbg(&vdev->dev, "max append sectors = %u\n", v);
- 
--	return blk_revalidate_disk_zones(vblk->disk, NULL);
-+	return blk_revalidate_disk_zones(vblk->disk);
- }
- 
- #else
-diff --git a/drivers/md/dm-zone.c b/drivers/md/dm-zone.c
-index 570b44b924b8..b2ce19a78bbb 100644
---- a/drivers/md/dm-zone.c
-+++ b/drivers/md/dm-zone.c
-@@ -169,7 +169,7 @@ static int dm_revalidate_zones(struct mapped_device *md, struct dm_table *t)
- 	 * our table for dm_blk_report_zones() to use directly.
- 	 */
- 	md->zone_revalidate_map = t;
--	ret = blk_revalidate_disk_zones(disk, NULL);
-+	ret = blk_revalidate_disk_zones(disk);
- 	md->zone_revalidate_map = NULL;
- 
- 	if (ret) {
-diff --git a/drivers/nvme/host/zns.c b/drivers/nvme/host/zns.c
-index 499bbb0eee8d..c02658af6c34 100644
---- a/drivers/nvme/host/zns.c
-+++ b/drivers/nvme/host/zns.c
-@@ -14,7 +14,7 @@ int nvme_revalidate_zones(struct nvme_ns *ns)
- 	blk_queue_chunk_sectors(q, ns->head->zsze);
- 	blk_queue_max_zone_append_sectors(q, ns->ctrl->max_zone_append);
- 
--	return blk_revalidate_disk_zones(ns->disk, NULL);
-+	return blk_revalidate_disk_zones(ns->disk);
- }
- 
- static int nvme_set_max_append(struct nvme_ctrl *ctrl)
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-index d0ead9858954..806036e48abe 100644
---- a/drivers/scsi/sd_zbc.c
-+++ b/drivers/scsi/sd_zbc.c
-@@ -572,7 +572,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
- 	blk_queue_max_zone_append_sectors(q, 0);
- 
- 	flags = memalloc_noio_save();
--	ret = blk_revalidate_disk_zones(disk, NULL);
-+	ret = blk_revalidate_disk_zones(disk);
- 	memalloc_noio_restore(flags);
- 	if (ret) {
- 		sdkp->zone_info = (struct zoned_disk_info){ };
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index e619e10847bd..a39ebf075d26 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -331,8 +331,7 @@ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
- 		unsigned int nr_zones, report_zones_cb cb, void *data);
- int blkdev_zone_mgmt(struct block_device *bdev, enum req_op op,
- 		sector_t sectors, sector_t nr_sectors, gfp_t gfp_mask);
--int blk_revalidate_disk_zones(struct gendisk *disk,
--		void (*update_driver_data)(struct gendisk *disk));
-+int blk_revalidate_disk_zones(struct gendisk *disk);
  
  /*
-  * Independent access ranges: struct blk_independent_access_range describes
+- * Return the first request for which blk_rq_pos() >= @pos. For zoned devices,
+- * return the first request after the start of the zone containing @pos.
++ * Return the first request for which blk_rq_pos() >= @pos.
+  */
+ static inline struct request *deadline_from_pos(struct dd_per_prio *per_prio,
+ 				enum dd_data_dir data_dir, sector_t pos)
+@@ -184,14 +182,6 @@ static inline struct request *deadline_from_pos(struct dd_per_prio *per_prio,
+ 		return NULL;
+ 
+ 	rq = rb_entry_rq(node);
+-	/*
+-	 * A zoned write may have been requeued with a starting position that
+-	 * is below that of the most recently dispatched request. Hence, for
+-	 * zoned writes, start searching from the start of a zone.
+-	 */
+-	if (blk_rq_is_seq_zoned_write(rq))
+-		pos = round_down(pos, rq->q->limits.chunk_sectors);
+-
+ 	while (node) {
+ 		rq = rb_entry_rq(node);
+ 		if (blk_rq_pos(rq) >= pos) {
+@@ -322,36 +312,6 @@ static inline bool deadline_check_fifo(struct dd_per_prio *per_prio,
+ 	return time_is_before_eq_jiffies((unsigned long)rq->fifo_time);
+ }
+ 
+-/*
+- * Check if rq has a sequential request preceding it.
+- */
+-static bool deadline_is_seq_write(struct deadline_data *dd, struct request *rq)
+-{
+-	struct request *prev = deadline_earlier_request(rq);
+-
+-	if (!prev)
+-		return false;
+-
+-	return blk_rq_pos(prev) + blk_rq_sectors(prev) == blk_rq_pos(rq);
+-}
+-
+-/*
+- * Skip all write requests that are sequential from @rq, even if we cross
+- * a zone boundary.
+- */
+-static struct request *deadline_skip_seq_writes(struct deadline_data *dd,
+-						struct request *rq)
+-{
+-	sector_t pos = blk_rq_pos(rq);
+-
+-	do {
+-		pos += blk_rq_sectors(rq);
+-		rq = deadline_latter_request(rq);
+-	} while (rq && blk_rq_pos(rq) == pos);
+-
+-	return rq;
+-}
+-
+ /*
+  * For the specified data direction, return the next request to
+  * dispatch using arrival ordered lists.
+@@ -360,40 +320,10 @@ static struct request *
+ deadline_fifo_request(struct deadline_data *dd, struct dd_per_prio *per_prio,
+ 		      enum dd_data_dir data_dir)
+ {
+-	struct request *rq, *rb_rq, *next;
+-	unsigned long flags;
+-
+ 	if (list_empty(&per_prio->fifo_list[data_dir]))
+ 		return NULL;
+ 
+-	rq = rq_entry_fifo(per_prio->fifo_list[data_dir].next);
+-	if (data_dir == DD_READ || !blk_queue_is_zoned(rq->q))
+-		return rq;
+-
+-	/*
+-	 * Look for a write request that can be dispatched, that is one with
+-	 * an unlocked target zone. For some HDDs, breaking a sequential
+-	 * write stream can lead to lower throughput, so make sure to preserve
+-	 * sequential write streams, even if that stream crosses into the next
+-	 * zones and these zones are unlocked.
+-	 */
+-	spin_lock_irqsave(&dd->zone_lock, flags);
+-	list_for_each_entry_safe(rq, next, &per_prio->fifo_list[DD_WRITE],
+-				 queuelist) {
+-		/* Check whether a prior request exists for the same zone. */
+-		rb_rq = deadline_from_pos(per_prio, data_dir, blk_rq_pos(rq));
+-		if (rb_rq && blk_rq_pos(rb_rq) < blk_rq_pos(rq))
+-			rq = rb_rq;
+-		if (blk_req_can_dispatch_to_zone(rq) &&
+-		    (blk_queue_nonrot(rq->q) ||
+-		     !deadline_is_seq_write(dd, rq)))
+-			goto out;
+-	}
+-	rq = NULL;
+-out:
+-	spin_unlock_irqrestore(&dd->zone_lock, flags);
+-
+-	return rq;
++	return rq_entry_fifo(per_prio->fifo_list[data_dir].next);
+ }
+ 
+ /*
+@@ -404,36 +334,8 @@ static struct request *
+ deadline_next_request(struct deadline_data *dd, struct dd_per_prio *per_prio,
+ 		      enum dd_data_dir data_dir)
+ {
+-	struct request *rq;
+-	unsigned long flags;
+-
+-	rq = deadline_from_pos(per_prio, data_dir,
+-			       per_prio->latest_pos[data_dir]);
+-	if (!rq)
+-		return NULL;
+-
+-	if (data_dir == DD_READ || !blk_queue_is_zoned(rq->q))
+-		return rq;
+-
+-	/*
+-	 * Look for a write request that can be dispatched, that is one with
+-	 * an unlocked target zone. For some HDDs, breaking a sequential
+-	 * write stream can lead to lower throughput, so make sure to preserve
+-	 * sequential write streams, even if that stream crosses into the next
+-	 * zones and these zones are unlocked.
+-	 */
+-	spin_lock_irqsave(&dd->zone_lock, flags);
+-	while (rq) {
+-		if (blk_req_can_dispatch_to_zone(rq))
+-			break;
+-		if (blk_queue_nonrot(rq->q))
+-			rq = deadline_latter_request(rq);
+-		else
+-			rq = deadline_skip_seq_writes(dd, rq);
+-	}
+-	spin_unlock_irqrestore(&dd->zone_lock, flags);
+-
+-	return rq;
++	return deadline_from_pos(per_prio, data_dir,
++				 per_prio->latest_pos[data_dir]);
+ }
+ 
+ /*
+@@ -539,10 +441,6 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
+ 		rq = next_rq;
+ 	}
+ 
+-	/*
+-	 * For a zoned block device, if we only have writes queued and none of
+-	 * them can be dispatched, rq will be NULL.
+-	 */
+ 	if (!rq)
+ 		return NULL;
+ 
+@@ -563,10 +461,6 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
+ 	prio = ioprio_class_to_prio[ioprio_class];
+ 	dd->per_prio[prio].latest_pos[data_dir] = blk_rq_pos(rq);
+ 	dd->per_prio[prio].stats.dispatched++;
+-	/*
+-	 * If the request needs its target zone locked, do it.
+-	 */
+-	blk_req_zone_write_lock(rq);
+ 	rq->rq_flags |= RQF_STARTED;
+ 	return rq;
+ }
+@@ -766,7 +660,6 @@ static int dd_init_sched(struct request_queue *q, struct elevator_type *e)
+ 
+ 	spin_lock_init(&dd->lock);
+ 	spin_lock_init(&dd->insert_lock);
+-	spin_lock_init(&dd->zone_lock);
+ 
+ 	INIT_LIST_HEAD(&dd->at_head);
+ 	INIT_LIST_HEAD(&dd->at_tail);
+@@ -879,12 +772,6 @@ static void dd_insert_request(struct request_queue *q, struct request *rq,
+ 
+ 	lockdep_assert_held(&dd->lock);
+ 
+-	/*
+-	 * This may be a requeue of a write request that has locked its
+-	 * target zone. If it is the case, this releases the zone lock.
+-	 */
+-	blk_req_zone_write_unlock(rq);
+-
+ 	prio = ioprio_class_to_prio[ioprio_class];
+ 	per_prio = &dd->per_prio[prio];
+ 	if (!rq->elv.priv[0]) {
+@@ -916,18 +803,6 @@ static void dd_insert_request(struct request_queue *q, struct request *rq,
+ 		 */
+ 		rq->fifo_time = jiffies + dd->fifo_expire[data_dir];
+ 		insert_before = &per_prio->fifo_list[data_dir];
+-#ifdef CONFIG_BLK_DEV_ZONED
+-		/*
+-		 * Insert zoned writes such that requests are sorted by
+-		 * position per zone.
+-		 */
+-		if (blk_rq_is_seq_zoned_write(rq)) {
+-			struct request *rq2 = deadline_latter_request(rq);
+-
+-			if (rq2 && blk_rq_zone_no(rq2) == blk_rq_zone_no(rq))
+-				insert_before = &rq2->queuelist;
+-		}
+-#endif
+ 		list_add_tail(&rq->queuelist, insert_before);
+ 	}
+ }
+@@ -956,33 +831,8 @@ static void dd_prepare_request(struct request *rq)
+ 	rq->elv.priv[0] = NULL;
+ }
+ 
+-static bool dd_has_write_work(struct blk_mq_hw_ctx *hctx)
+-{
+-	struct deadline_data *dd = hctx->queue->elevator->elevator_data;
+-	enum dd_prio p;
+-
+-	for (p = 0; p <= DD_PRIO_MAX; p++)
+-		if (!list_empty_careful(&dd->per_prio[p].fifo_list[DD_WRITE]))
+-			return true;
+-
+-	return false;
+-}
+-
+ /*
+  * Callback from inside blk_mq_free_request().
+- *
+- * For zoned block devices, write unlock the target zone of
+- * completed write requests. Do this while holding the zone lock
+- * spinlock so that the zone is never unlocked while deadline_fifo_request()
+- * or deadline_next_request() are executing. This function is called for
+- * all requests, whether or not these requests complete successfully.
+- *
+- * For a zoned block device, __dd_dispatch_request() may have stopped
+- * dispatching requests if all the queued requests are write requests directed
+- * at zones that are already locked due to on-going write requests. To ensure
+- * write request dispatch progress in this case, mark the queue as needing a
+- * restart to ensure that the queue is run again after completion of the
+- * request and zones being unlocked.
+  */
+ static void dd_finish_request(struct request *rq)
+ {
+@@ -997,21 +847,8 @@ static void dd_finish_request(struct request *rq)
+ 	 * called dd_insert_requests(). Skip requests that bypassed I/O
+ 	 * scheduling. See also blk_mq_request_bypass_insert().
+ 	 */
+-	if (!rq->elv.priv[0])
+-		return;
+-
+-	atomic_inc(&per_prio->stats.completed);
+-
+-	if (blk_queue_is_zoned(q)) {
+-		unsigned long flags;
+-
+-		spin_lock_irqsave(&dd->zone_lock, flags);
+-		blk_req_zone_write_unlock(rq);
+-		spin_unlock_irqrestore(&dd->zone_lock, flags);
+-
+-		if (dd_has_write_work(rq->mq_hctx))
+-			blk_mq_sched_mark_restart_hctx(rq->mq_hctx);
+-	}
++	if (rq->elv.priv[0])
++		atomic_inc(&per_prio->stats.completed);
+ }
+ 
+ static bool dd_has_work_for_prio(struct dd_per_prio *per_prio)
+@@ -1339,7 +1176,6 @@ static struct elevator_type mq_deadline = {
+ 	.elevator_attrs = deadline_attrs,
+ 	.elevator_name = "mq-deadline",
+ 	.elevator_alias = "deadline",
+-	.elevator_features = ELEVATOR_F_ZBD_SEQ_WRITE,
+ 	.elevator_owner = THIS_MODULE,
+ };
+ MODULE_ALIAS("mq-deadline-iosched");
 -- 
 2.43.0
 
