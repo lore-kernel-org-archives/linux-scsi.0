@@ -1,233 +1,125 @@
-Received: from mail-oo1-f44.google.com (mail-oo1-f44.google.com [209.85.161.44])
+Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D97875FDC3
-	for <linux-scsi@vger.kernel.org>; Sat,  3 Feb 2024 17:58:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FC88171A1;
+	Sat,  3 Feb 2024 18:38:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706983134; cv=none; b=lqsrorT13kfBUEPyfy7MWHCpZfDuPk6bjG/AY3r7ic4kXnvi1RQpCnfo2It//W58um4c4ebO8btB88y21PoE//619+VfLvlanioq+iN/bNvNSIo1nGReL2G5BiddsW6RBWIr/6L3cnvzFvBNxF65iTWxlUxmwgjPWJW+QcG63Iw=
+	t=1706985518; cv=none; b=UvmHK9DALz32l6WQkmL7Zec0lmg5RDbDpIPw1lnhSh9dvqHGiU9Kn2q1OrRrrWAE8Fwcp3IX1bdUileBO+lS+plh1I55YEu7Rnc3u3FuYr/1gfNZdWAT56QZnvdjCq9gXh35s4V6kaOqHirdO4BeBXL1xc15OMU2mhlrHQmW6lY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706983134; c=relaxed/simple;
-	bh=GMR9eTy07E8pepEiT1I2Ci94pv1fx2XZ3jo3DIztS5M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iZyZvqyqyBaKHNGECItnYIboxtmmyL2FNsXVKJudEiVK8WisrxVkKog66JROSMclElrIPQb9e/ovoVcu54THgJrgcp3ZbwXmTk1PlGbiPPnE9/jWaycA6MMm30QoiTU75ygsJjiA4Y04CDymaWs9qpSUmTzJOFGl2ueAHoc1wtQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=redhat.com; arc=none smtp.client-ip=209.85.161.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Received: by mail-oo1-f44.google.com with SMTP id 006d021491bc7-59883168a83so1610967eaf.2
-        for <linux-scsi@vger.kernel.org>; Sat, 03 Feb 2024 09:58:51 -0800 (PST)
+	s=arc-20240116; t=1706985518; c=relaxed/simple;
+	bh=55pC8PmmesMkkMcxKlBxnasiVv+JgYV9EVVd0EP8JS4=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=uIi9aiUJor0ACYepQexWq/JWsZ3Lg/WFIzPaGpH37aVQdv8ghpN3jdKIXjk5KpjyhxLiAtRDe/SINIQe7U6inMkGR0H4sg8NBFCebWlWVdnk5GuuKBxvmscdKQ1Bhf6ShLgDkEbZt7xtAI2Ix+za2rOyy9xguO7qHGmk62Su8kc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=marliere.net; spf=pass smtp.mailfrom=gmail.com; dkim=fail (0-bit key) header.d=marliere.net header.i=@marliere.net header.b=UwoQqlAA reason="key not found in DNS"; arc=none smtp.client-ip=209.85.216.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=marliere.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=marliere.net header.i=@marliere.net header.b="UwoQqlAA"
+Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-29661facbd0so490857a91.1;
+        Sat, 03 Feb 2024 10:38:36 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706983131; x=1707587931;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=DOliNUqI71qLaQZn8VZTphk7egJbvCAyLqPvDh9Lh3w=;
-        b=NVenjYpj5/Mu1EJAK78MZUn6ELB0m9U0aNoaj4zFFGSzNV223X1HwqAK452/FFzZs6
-         z5UAc1SWJctlGw2fZv9IDvsFLqWM2LBVI4mPB5VhvV5JS0U6oiHW2NUOQYk0F9vEAn3j
-         xu3ZY5VAqkqHHLOX9kbm1rInGuU9h9VKgVEPJBRYD072pCGTN2K8yzBRbU96BfIldVlj
-         OPUmawgL8/9rd5IYKay8CO5wuaRjJvzRAr3O43/qWc2O5uu/e5dLfjqKDf8aS1pG1sD9
-         MKtsjneqeIvdLtra76xiuRcSq6foE5CNXlPLrjQA4ytZkDF5VoRBj5VZE9Gq2C+vbqK0
-         cilw==
-X-Gm-Message-State: AOJu0YzOplacHCb0WEZNOnucKkIRBzgZU58ZOPbTRrnQLvBLr8TE16tm
-	soLCRmoNvn1NuIvoaX630E+ov67bin4V6bHOTw9kJ28tlj5H4Awie9REq6rPZG0JbyV38TC3y1o
-	=
-X-Google-Smtp-Source: AGHT+IGTtt7bhSSQCWu93iUoruII8M21I1KuWYt41Al2/26tOAVs7IfkYmE1K/wOoyn5Wimk46x5RQ==
-X-Received: by 2002:a05:6870:2006:b0:219:44bb:ba93 with SMTP id o6-20020a056870200600b0021944bbba93mr2442939oab.17.1706983129580;
-        Sat, 03 Feb 2024 09:58:49 -0800 (PST)
-X-Forwarded-Encrypted: i=0; AJvYcCUSr51JqyMhwRKWtGx14yO6OQu0fv9MTwI870NV93oAbFWcKw3iTQxO8+vfSVxwYWzVvUIdlZ5E04renrZVX8eL037w8l7kFY4K7N6/XfLArJ42kF2g+uHTZ4KE5qOLqHiht2k2hXkfHZ7WifloEBRtkDYr27GdO0P8v4bPpfownyxiHvvFXHD7xA+eU6c7AOL13B+LjLFSMY3oLEBy
-Received: from localhost (pool-68-160-141-91.bstnma.fios.verizon.net. [68.160.141.91])
-        by smtp.gmail.com with ESMTPSA id l22-20020ac87256000000b0042bf0b37b5csm1974371qtp.28.2024.02.03.09.58.48
+        d=1e100.net; s=20230601; t=1706985516; x=1707590316;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:dkim-signature:from:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=rZMgjYPFP9Yzkc6R6Rytn+r1bio2ga/RF1ve70xIGPQ=;
+        b=DYZPz7tvTO1X0KxdZtXDAX8hYX6OWm48eQGhj9+fmqw6iYD9ivDbjzM+MY0E5LfsoT
+         FQUVYMDAPACuZUT7DEIW04V7vFqzZ4CtXzxPw2mEXEwAAnFkz0+feHuF28RTHAsL/nML
+         bpm1921QtkwKkgx1xP9oXOyiXBbO3zzWbpWJJOipW8+pqTMgvlrcwhYiOgvPgCyVatgr
+         qkOGo2FcjVSsKhUOFhcn9VUZwpRNKeLqbXA3swczlCtVWrW6u4YnglVFNt89/7KJuNab
+         6EaMlYfkuyDXd9Bn8tcmlGzhDOPnKd0YdB3qY45EqHrJRT8zbMxmUWhDurQURfPo5Qyn
+         vfrA==
+X-Gm-Message-State: AOJu0YyzWFJ5EFbAbLg3IVNnrriFioeIezQOfcdMT5hFT5jI3fAn9lIA
+	VwVceP0wWvvHovjo5ezv138jK3r/XfK1jzpNq+P7fY18QhPjYnRH
+X-Google-Smtp-Source: AGHT+IGWVQb+q0wRfseVKHM3kLUKBXHC662fWVxnNfV6YxZXtonVerOVxIrTPpCQzgS1R7SeSoJqIQ==
+X-Received: by 2002:a17:90a:bc81:b0:296:2afd:ead2 with SMTP id x1-20020a17090abc8100b002962afdead2mr2653208pjr.21.1706985516384;
+        Sat, 03 Feb 2024 10:38:36 -0800 (PST)
+X-Forwarded-Encrypted: i=0; AJvYcCW58McI3eZAtygN9z7x5wCbcYO9uQ2v1MpEc0q7eNkSzRJ2e9zOeRd9QvXagLQqIdJF5Db5OJReBUSmD0zKS7YfYXTXACUMaY8thU/MrDZOBkDeLztxxMtYurN4E5zE1grm9B5WjMaUeruTJLCfWdF/cgureQ51uoJe5gxS6MiYF/R+8odnsw10KRc3Zmc1OeoQLvtWiEOU0sZnoJzXj81hTFXRSPXiybEIn0n59eEGzhCmaVdR3KFkC2EMuWs3Yg+zeaZ2h22po7DTiaeGIJURyWnRhJ0mifEuOOT6BsJNQdrpymInDUQKu/J6BA+6DdjFXhpe4W0U
+Received: from mail.marliere.net ([24.199.118.162])
+        by smtp.gmail.com with ESMTPSA id sz14-20020a17090b2d4e00b0029082d10fc4sm2123442pjb.39.2024.02.03.10.38.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 03 Feb 2024 09:58:49 -0800 (PST)
-Date: Sat, 3 Feb 2024 12:58:48 -0500
-From: Mike Snitzer <snitzer@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	dm-devel@lists.linux.dev, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 10/26] dm: Use the block layer zone append emulation
-Message-ID: <Zb5-2LsnQtJHV2mL@redhat.com>
-References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <20240202073104.2418230-11-dlemoal@kernel.org>
+        Sat, 03 Feb 2024 10:38:35 -0800 (PST)
+From: "Ricardo B. Marliere" <ricardo@marliere.net>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marliere.net;
+	s=2023; t=1706985514;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=rZMgjYPFP9Yzkc6R6Rytn+r1bio2ga/RF1ve70xIGPQ=;
+	b=UwoQqlAAi5vIXM+Nmc95zavfTJbCIK8lKnx921XMc5KcWUxhEjUYlpwx1IUcu5Y+4rlWgY
+	9AaFV0YUeZ5evnyU4MOllk1+NtjwVEW093pkdSqsmFnIeb7q8eATWGcT4kqGVR5xcJfs1Q
+	6rGuWu4UJnIqj0pkq4rZun4pSRbtef4klNNNSi9cHC4G8s/sA1ZUratSqywMD/9NUgJacm
+	1Zp0zl4FfBqEnxkBCianVa2nQDXU889d51/LrIdFO0vqJwekpwH+MAucBgEM/KF/WZQAFq
+	In+mVX/SaVM6emn25nSprSDTNgiOvAEhYJvz5tnqMZQ+aFNvp5Ishe3GoCzDpA==
+Authentication-Results: ORIGINATING;
+	auth=pass smtp.auth=ricardo@marliere.net smtp.mailfrom=ricardo@marliere.net
+Subject: [PATCH 0/3] drivers: scsi: struct bus_type cleanup
+Date: Sat, 03 Feb 2024 15:38:59 -0300
+Message-Id: <20240203-bus_cleanup-scsi-v1-0-6f552fb24f71@marliere.net>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240202073104.2418230-11-dlemoal@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAEOIvmUC/x3MQQqAIBBA0avIrBNsCoKuEhFqUw2EiYMRhHdPW
+ r7F/y8IJSaBUb2Q6GbhK1S0jQJ/2LCT5rUa0GBv0HTaZVn8STbkqMUL68Ej0uqGzm491Cwm2vj
+ 5l9NcygcZvvw3YgAAAA==
+To: Hannes Reinecke <hare@suse.de>, 
+ "James E.J. Bottomley" <jejb@linux.ibm.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, 
+ Mike Christie <michael.christie@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ open-iscsi@googlegroups.com, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Ricardo B. Marliere" <ricardo@marliere.net>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1162; i=ricardo@marliere.net;
+ h=from:subject:message-id; bh=55pC8PmmesMkkMcxKlBxnasiVv+JgYV9EVVd0EP8JS4=;
+ b=owEBbQKS/ZANAwAKAckLinxjhlimAcsmYgBlvohGFcYaRf2nUJBLOgyYpdPWmVeYVByGz8TYk
+ nnXehlU5XWJAjMEAAEKAB0WIQQDCo6eQk7jwGVXh+HJC4p8Y4ZYpgUCZb6IRgAKCRDJC4p8Y4ZY
+ pi6eD/0bHQkKvpkpC43h27jU3hHRrsOaqdjcC3CbqCjn7mj5foWzWWOmaemJQ7zSAL+aOU06chB
+ UC6MaqrFmdgoq3PD4FtPZFlE5M+nq8FlOuBwTX0Uhvk8PNW/YQwlCSusVrZeJehISj74w7oBY0Y
+ J1Nme2JkDxpK6dfyyxrguIBfqD6HLd+CdSKaSGH39uWMxIGc0ar/ldpwj+acSl1ChHVcavUSSBu
+ 0cMcn/OJR2bLMHU9nZ0wTmJBJTGuhhcXuBgbzmZCbfEr59tnz7gSEAC1m685DXjE1RuadQEP7W9
+ 3InkxvxaR2bJopXYEYp5o97/cfGo9xmVcdLHQORRecTbo78e2QS7TBa155NIgsYyoIs0CD+t8uu
+ 9a5Tv6/A/GMJSniPUPkyo5ila8gAG6XL8kGlVB5tatV5ILJT4o9b2Xb0e1DzLugs7oAmbjpUHru
+ D7YQr6qxnQIF132gk+rerAk5t7O7x/xGBY7j5WPgixqsZ8nNXU9hoS844wWif8JSu/KFP7XQaRj
+ oLb2RnSeTjlPVxMXcQVwSstpjxagAuZDfDesWeIgrkiggYBAmSROlFaEfqI6QpPlggfMBRlpYXS
+ H9rVa2nypLwWrfNKERhHuQvBOaYj1MRCH86K1/xMP/vVMJ1ntravwZQDGup3/SQU12FdtL0tYd3
+ NoX12+WsQ2fZ+PQ==
+X-Developer-Key: i=ricardo@marliere.net; a=openpgp;
+ fpr=030A8E9E424EE3C0655787E1C90B8A7C638658A6
 
-On Fri, Feb 02 2024 at  2:30P -0500,
-Damien Le Moal <dlemoal@kernel.org> wrote:
+This series is part of an effort to cleanup the users of the driver
+core, as can be seen in many recent patches authored by Greg across the
+tree (e.g. [1]). Specifically, this series is part of the task of
+splitting one of his TODOs [2].
 
-> For targets requiring zone append operation emulation with regular
-> writes (e.g. dm-crypt), we can use the block layer emulation provided by
-> zone write plugging. Remove DM implemented zone append emulation and
-> enable the block layer one.
-> 
-> This is done by setting the max_zone_append_sectors limit of the
-> mapped device queue to 0 for mapped devices that have a target table
-> that cannot support native zone append operations. These includes
-> mixed zoned and non-zoned targets, or targets that explicitly requested
-> emulation of zone append (e.g. dm-crypt). For these mapped devices, the
-> new field emulate_zone_append is set to true. dm_split_and_process_bio()
-> is modified to call blk_zone_write_plug_bio() for such device to let the
-> block layer transform zone append operations into regular writes. This
-> is done after ensuring that the submitted BIO is split if it straddles
-> zone boundaries.
-> 
-> dm_revalidate_zones() is also modified to use the block layer provided
-> function blk_revalidate_disk_zones() so that all zone resources needed
-> for zone append emulation are allocated and initialized by the block
-> layer without DM core needing to do anything. Since the device table is
-> not yet live when dm_revalidate_zones() is executed, enabling the use of
-> blk_revalidate_disk_zones() requires adding a pointer to the device
-> table in struct mapped_device. This avoids errors in
-> dm_blk_report_zones() trying to get the table with dm_get_live_table().
-> The mapped device table pointer is set to the table passed as argument
-> to dm_revalidate_zones() before calling blk_revalidate_disk_zones() and
-> reset to NULL after this function returns to restore the live table
-> handling for user call of report zones.
-> 
-> All the code related to zone append emulation is removed from
-> dm-zone.c. This leads to simplifications of the functions __map_bio()
-> and dm_zone_endio(). This later function now only needs to deal with
-> completions of real zone append operations for targets that support it.
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+[1]: https://lore.kernel.org/lkml/?q=f%3Agregkh%40linuxfoundation.org+s%3A%22make%22+and+s%3A%22const%22
+[2]: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core.git/commit/?h=bus_cleanup&id=26105f537f0c60eacfeb430abd2e05d7ddcdd8aa
 
-Love the overall improvement to the DM core code and the broader block
-layer by switching to this bio-based ZWP approach.
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Ricardo B. Marliere <ricardo@marliere.net>
 
-Reviewed-by: Mike Snitzer <snitzer@kernel.org>
+---
+Ricardo B. Marliere (3):
+      scsi: fcoe: make fcoe_bus_type const
+      scsi: iscsi: make iscsi_flashnode_bus const
+      scsi: scsi_debug: make pseudo_lld_bus const
 
-But one incremental suggestion inlined below.
+ drivers/scsi/fcoe/fcoe_sysfs.c      | 4 ++--
+ drivers/scsi/scsi_debug.c           | 4 ++--
+ drivers/scsi/scsi_transport_iscsi.c | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+---
+base-commit: 890d900e7fec7f7956c26bd47b4f0f07a0a507b1
+change-id: 20240203-bus_cleanup-scsi-7c22edb73af4
 
-> ---
->  drivers/md/dm-core.h |  11 +-
->  drivers/md/dm-zone.c | 470 ++++---------------------------------------
->  drivers/md/dm.c      |  44 ++--
->  drivers/md/dm.h      |   7 -
->  4 files changed, 68 insertions(+), 464 deletions(-)
-> 
+Best regards,
+-- 
+Ricardo B. Marliere <ricardo@marliere.net>
 
-<snip>
-
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 8dcabf84d866..92ce3b2eb4ae 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -1419,25 +1419,12 @@ static void __map_bio(struct bio *clone)
->  		down(&md->swap_bios_semaphore);
->  	}
->  
-> -	if (static_branch_unlikely(&zoned_enabled)) {
-> -		/*
-> -		 * Check if the IO needs a special mapping due to zone append
-> -		 * emulation on zoned target. In this case, dm_zone_map_bio()
-> -		 * calls the target map operation.
-> -		 */
-> -		if (unlikely(dm_emulate_zone_append(md)))
-> -			r = dm_zone_map_bio(tio);
-> -		else
-> -			goto do_map;
-> -	} else {
-> -do_map:
-> -		if (likely(ti->type->map == linear_map))
-> -			r = linear_map(ti, clone);
-> -		else if (ti->type->map == stripe_map)
-> -			r = stripe_map(ti, clone);
-> -		else
-> -			r = ti->type->map(ti, clone);
-> -	}
-> +	if (likely(ti->type->map == linear_map))
-> +		r = linear_map(ti, clone);
-> +	else if (ti->type->map == stripe_map)
-> +		r = stripe_map(ti, clone);
-> +	else
-> +		r = ti->type->map(ti, clone);
->  
->  	switch (r) {
->  	case DM_MAPIO_SUBMITTED:
-> @@ -1774,19 +1761,33 @@ static void dm_split_and_process_bio(struct mapped_device *md,
->  	struct clone_info ci;
->  	struct dm_io *io;
->  	blk_status_t error = BLK_STS_OK;
-> -	bool is_abnormal;
-> +	bool is_abnormal, need_split;
->  
->  	is_abnormal = is_abnormal_io(bio);
-> -	if (unlikely(is_abnormal)) {
-> +	if (likely(!md->emulate_zone_append))
-> +		need_split = is_abnormal;
-> +	else
-> +		need_split = is_abnormal || bio_straddle_zones(bio);
-> +	if (unlikely(need_split)) {
->  		/*
->  		 * Use bio_split_to_limits() for abnormal IO (e.g. discard, etc)
->  		 * otherwise associated queue_limits won't be imposed.
-> +		 * Also split the BIO for mapped devices needing zone append
-> +		 * emulation to ensure that the BIO does not cross zone
-> +		 * boundaries.
->  		 */
->  		bio = bio_split_to_limits(bio);
->  		if (!bio)
->  			return;
->  	}
->  
-> +	/*
-> +	 * Use the block layer zone write plugging for mapped devices that
-> +	 * need zone append emulation (e.g. dm-crypt).
-> +	 */
-> +	if (md->emulate_zone_append && blk_zone_write_plug_bio(bio, 0))
-> +		return;
-> +
->  	/* Only support nowait for normal IO */
->  	if (unlikely(bio->bi_opf & REQ_NOWAIT) && !is_abnormal) {
->  		io = alloc_io(md, bio, GFP_NOWAIT);
-
-Would prefer to see this incremental change included from the start:
-
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 92ce3b2eb4ae..1fd9bbf35db3 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1763,11 +1763,10 @@ static void dm_split_and_process_bio(struct mapped_device *md,
- 	blk_status_t error = BLK_STS_OK;
- 	bool is_abnormal, need_split;
- 
--	is_abnormal = is_abnormal_io(bio);
--	if (likely(!md->emulate_zone_append))
--		need_split = is_abnormal;
--	else
-+	need_split = is_abnormal = is_abnormal_io(bio);
-+	if (static_branch_unlikely(&zoned_enabled) && unlikely(md->emulate_zone_append))
- 		need_split = is_abnormal || bio_straddle_zones(bio);
-+
- 	if (unlikely(need_split)) {
- 		/*
- 		 * Use bio_split_to_limits() for abnormal IO (e.g. discard, etc)
-@@ -1781,12 +1780,14 @@ static void dm_split_and_process_bio(struct mapped_device *md,
- 			return;
- 	}
- 
--	/*
--	 * Use the block layer zone write plugging for mapped devices that
--	 * need zone append emulation (e.g. dm-crypt).
--	 */
--	if (md->emulate_zone_append && blk_zone_write_plug_bio(bio, 0))
--		return;
-+	if (static_branch_unlikely(&zoned_enabled)) {
-+		/*
-+		 * Use the block layer zone write plugging for mapped devices that
-+		 * need zone append emulation (e.g. dm-crypt).
-+		 */
-+		if (unlikely(md->emulate_zone_append) && blk_zone_write_plug_bio(bio, 0))
-+			return;
-+	}
- 
- 	/* Only support nowait for normal IO */
- 	if (unlikely(bio->bi_opf & REQ_NOWAIT) && !is_abnormal) {
