@@ -1,78 +1,78 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F550225B2;
-	Sun,  4 Feb 2024 11:57:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C39722307;
+	Sun,  4 Feb 2024 11:58:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707047873; cv=none; b=Ci2ca4cjC0jWwncUialQ2XgnXeskDeCiZH7ttveoaCYd4xxQhxmzQnIXuxGnWeNvN2bQ4o7e7mhOv/FTWfYY63wf4bmvAVSXRCYQJj6cxX/c7Iyw7m8FHSt6Kh62wUQt+ooltIjcNhqIUUIPOwwPdWX/yUWZTHF5CZIW3Ymhyck=
+	t=1707047911; cv=none; b=PONC98VXUEUsC/Muv804KQMD7+KDXp0dp1lGlY9pXM3ZP9hNDLLbU9/zG3nvMImhfYLusugaDMo8odAxqkrUWiPt1ja7/SPMMccglihv0HtmnqCzFdOumCJgkD2uLX/AByqRY4I/WmILnArgDHYlja7i6cfsd7anToe0zczpSRI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707047873; c=relaxed/simple;
-	bh=S1+CvuA1uYK9dbIOwU1n5gpMpUrbbvrEYlTTmjzdHK4=;
+	s=arc-20240116; t=1707047911; c=relaxed/simple;
+	bh=UDGWpj5MY57wj+YxTUDG1yh4fb3IM1zpDzGIobLgjlQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=D33USae8OAtIHF3FZXTjE3Tt/5Yq0vU+xm1FL6f+RNUtRf8Ien8Vke1CwZu1izxfGYqe3Jcr53kEZqOJrXjymcAZB+Z7LFyUygqmDVVBA3BI/nV4bW0qKWu1q3Z01l2Jz8J2I/h/Q1jQGkInCVYwtvJaH1NjxnGUifgUC8gKxMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=FZPFpe5o; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=xrZY9GC1; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=FZPFpe5o; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=xrZY9GC1; arc=none smtp.client-ip=195.135.223.130
+	 In-Reply-To:Content-Type; b=rCleFW7DyeNUfO+Wv/4IEbfjQ06eR9XmM60g72i4Bw244/Zi3ET5jFmoc8Vbk//w6RtoxclhPJsOkpccIaVax0EiFaib8zqUcMZMcfGx7zh4Us5mQ6mKB/Udxg6SO06aF1Rd5ulMIdHTfRy+DkHDuJDZ3J//cdIskVfMaMvF0P8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=cdrXN0Z6; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=tDwBryM+; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=cdrXN0Z6; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=tDwBryM+; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="FZPFpe5o";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="xrZY9GC1";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="FZPFpe5o";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="xrZY9GC1"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="cdrXN0Z6";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="tDwBryM+";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="cdrXN0Z6";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="tDwBryM+"
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 7E2642223D;
-	Sun,  4 Feb 2024 11:57:50 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 8D4481F805;
+	Sun,  4 Feb 2024 11:58:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1707047870; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1707047908; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=veRTSJm61Gn94wWiJxfcCP6FVuIu4bpD0HmlQ/LELq8=;
-	b=FZPFpe5oxQDuWeDrgxjBzfiGiHmX7O/mClqtUH/Gj/zrLT3Apa1nb1ra4F4f3zbl337bLk
-	gmYJdvNbdhOB0foyORLJpwZGAJ21f+pTcpnZNnUgkKrMIHz+v8J2R41f0SHhNnBg8etF02
-	J6pJzwKDkTZCTzaMpwtECPey3ykVj0o=
+	bh=kStBnrjoQFabJh158uI5u7gUnAX8+5ga0oRIZ/a4jBw=;
+	b=cdrXN0Z6A5nxa51FKEJ2yQJ+jP8gh9WYb3j7utsKhBin5iBWn+XWSLg/LYRRtnddjclu+4
+	gTvA7DWyF32XFQzLPJXkakjV/E51IYI4QGj0iZuCz2LLeLBW5XgTlHz4cCrSlosXBwv/rI
+	zNhbQvzC5KCUEt/sMsSLVhyI51HMVq0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1707047870;
+	s=susede2_ed25519; t=1707047908;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=veRTSJm61Gn94wWiJxfcCP6FVuIu4bpD0HmlQ/LELq8=;
-	b=xrZY9GC1ezOh/yIApgLCxeuI+WsMp6RIjIfgY0cGDRW0RK+x4x2z6JL/CLsn+/JDPqy9fk
-	GBbFk+5Gz9RMYQBw==
+	bh=kStBnrjoQFabJh158uI5u7gUnAX8+5ga0oRIZ/a4jBw=;
+	b=tDwBryM+KFucP5vDWxhLyav5V3FWKxEabIRbopS8vtz16OoCl5AnRY4bn5HUUBornWUVsz
+	vCuIy5YyCQBRoSDQ==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1707047870; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1707047908; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=veRTSJm61Gn94wWiJxfcCP6FVuIu4bpD0HmlQ/LELq8=;
-	b=FZPFpe5oxQDuWeDrgxjBzfiGiHmX7O/mClqtUH/Gj/zrLT3Apa1nb1ra4F4f3zbl337bLk
-	gmYJdvNbdhOB0foyORLJpwZGAJ21f+pTcpnZNnUgkKrMIHz+v8J2R41f0SHhNnBg8etF02
-	J6pJzwKDkTZCTzaMpwtECPey3ykVj0o=
+	bh=kStBnrjoQFabJh158uI5u7gUnAX8+5ga0oRIZ/a4jBw=;
+	b=cdrXN0Z6A5nxa51FKEJ2yQJ+jP8gh9WYb3j7utsKhBin5iBWn+XWSLg/LYRRtnddjclu+4
+	gTvA7DWyF32XFQzLPJXkakjV/E51IYI4QGj0iZuCz2LLeLBW5XgTlHz4cCrSlosXBwv/rI
+	zNhbQvzC5KCUEt/sMsSLVhyI51HMVq0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1707047870;
+	s=susede2_ed25519; t=1707047908;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=veRTSJm61Gn94wWiJxfcCP6FVuIu4bpD0HmlQ/LELq8=;
-	b=xrZY9GC1ezOh/yIApgLCxeuI+WsMp6RIjIfgY0cGDRW0RK+x4x2z6JL/CLsn+/JDPqy9fk
-	GBbFk+5Gz9RMYQBw==
+	bh=kStBnrjoQFabJh158uI5u7gUnAX8+5ga0oRIZ/a4jBw=;
+	b=tDwBryM+KFucP5vDWxhLyav5V3FWKxEabIRbopS8vtz16OoCl5AnRY4bn5HUUBornWUVsz
+	vCuIy5YyCQBRoSDQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 477281338E;
-	Sun,  4 Feb 2024 11:57:46 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 361EC1338E;
+	Sun,  4 Feb 2024 11:58:24 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([10.150.64.162])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id omLRNLp7v2WjIAAAD6G6ig
-	(envelope-from <hare@suse.de>); Sun, 04 Feb 2024 11:57:46 +0000
-Message-ID: <0e2d63e8-fe12-46b6-91fa-46f1bae77752@suse.de>
-Date: Sun, 4 Feb 2024 19:57:44 +0800
+	id 6BcGNuB7v2WjIAAAD6G6ig
+	(envelope-from <hare@suse.de>); Sun, 04 Feb 2024 11:58:24 +0000
+Message-ID: <47084a29-353c-4b1d-8a9a-59294bba35d7@suse.de>
+Date: Sun, 4 Feb 2024 19:58:24 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,7 +80,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 02/26] block: Remove req_bio_endio()
+Subject: Re: [PATCH 03/26] block: Introduce bio_straddle_zones() and
+ bio_offset_from_zone_start()
 Content-Language: en-US
 To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
  Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
@@ -88,12 +89,12 @@ To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
  dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <20240202073104.2418230-3-dlemoal@kernel.org>
+ <20240202073104.2418230-4-dlemoal@kernel.org>
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240202073104.2418230-3-dlemoal@kernel.org>
+In-Reply-To: <20240202073104.2418230-4-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Authentication-Results: smtp-out1.suse.de;
+Authentication-Results: smtp-out2.suse.de;
 	none
 X-Spamd-Result: default: False [-1.21 / 50.00];
 	 ARC_NA(0.00)[];
@@ -102,7 +103,7 @@ X-Spamd-Result: default: False [-1.21 / 50.00];
 	 FROM_HAS_DN(0.00)[];
 	 TO_DN_SOME(0.00)[];
 	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 BAYES_HAM(-1.12)[88.36%];
+	 BAYES_HAM(-1.12)[88.43%];
 	 MIME_GOOD(-0.10)[text/plain];
 	 RCVD_COUNT_THREE(0.00)[3];
 	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
@@ -118,17 +119,15 @@ X-Spam-Flag: NO
 X-Spam-Score: -1.21
 
 On 2/2/24 15:30, Damien Le Moal wrote:
-> Moving req_bio_endio() code into its only caller, blk_update_request(),
-> allows reducing accesses to and tests of bio and request fields. Also,
-> given that partial completions of zone append operations is not
-> possible and that zone append operations cannot be merged, the update
-> of the BIO sector using the request sector for these operations can be
-> moved directly before the call to bio_endio().
+> Implement the inline helper functions bio_straddle_zones() and
+> bio_offset_from_zone_start() to respectively test if a BIO crosses a
+> zone boundary (the start sector and last sector belong to different
+> zones) and to obtain the oofset from a zone starting sector of a BIO.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   block/blk-mq.c | 66 ++++++++++++++++++++++++--------------------------
->   1 file changed, 31 insertions(+), 35 deletions(-)
+>   include/linux/blkdev.h | 12 ++++++++++++
+>   1 file changed, 12 insertions(+)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
