@@ -1,78 +1,78 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DF6B11721;
-	Sun,  4 Feb 2024 12:31:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 442D32231F;
+	Sun,  4 Feb 2024 12:32:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707049899; cv=none; b=HqVK/tHDJSh4DuThvyut2021AblBs+ibS7lEpDLkiPUrQk/J6XwEoCvJGCXKoalT1TjJ0MQfbK1YC5gSpsL1MztwxEcuYUsyQnd4qNGC/BnKUposmR0mI7U1F1aaF59AEuXRFQuO9dlR4OgR7yXj6Qle9QyohatVV+Y8wA91R5U=
+	t=1707049940; cv=none; b=JqmqvX9bwhrkEIlJI10tUrLbGq+7pRz+DAl1/+G+n3C0fT9chmAljpNJqyrb/e7/8wyjXwT8rMY/a+2g06/0m7MIs6eAeymDn8ygfcx1CpSsF7ibZjsapMb5t/NONKwarqkioW8AxTZbV3rJy24JHeGw9/ySbb6Wxy3nJJ1Rlwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707049899; c=relaxed/simple;
-	bh=BViBL0n//DZwAZwsWKT0knJ1kyZTJzz3k4JOV2TPiCk=;
+	s=arc-20240116; t=1707049940; c=relaxed/simple;
+	bh=WKWvtrmXy/h0zNo/H1i5/co7BGQviJ73nq0b15zbwBE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WeDlHJHXFt1xU8pUONQLiVxx3ELRcze0t2PH1Vh1vOVb9PliHwXo4QoXtad9UfeNUEkfoquFJS/0+6gq3UKwNtxAZHWFIcGbI1I4rS6zpakmltPrlj9cW93OOSc7Eqi1ty0RKM3aQZbnUAI//ybBysBz1wnS3D86GxNIlHdTb+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ddAZ9eGh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=BeqxLSZI; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ddAZ9eGh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=BeqxLSZI; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=nnM+HWk6bBQ+ovPp7xAyTPYOD3tCdLqIkUOc1fKS7KwJyhUmreyxe6HZkJE/rCjsyFZLJPNnY3pHC+P0WACvYFENgXtRkTDaYnkPNu6ICgjD9MSAhtB8ili0HpiobU9JUwlbVexUvu8T2EbNR2zxqxjgR5eF5rUZe/gVl0WPuCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=AV3smeEt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=dnJ9Jd+n; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=AV3smeEt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=dnJ9Jd+n; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ddAZ9eGh";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="BeqxLSZI";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ddAZ9eGh";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="BeqxLSZI"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="AV3smeEt";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="dnJ9Jd+n";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="AV3smeEt";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="dnJ9Jd+n"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 382BA1F80C;
-	Sun,  4 Feb 2024 12:31:36 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 7264F1F80C;
+	Sun,  4 Feb 2024 12:32:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1707049896; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1707049936; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=T8aQJMwR9Z5GsK1IJPnlrbjrvibaz7ixCYFZBd+IcSQ=;
-	b=ddAZ9eGhwd/FkErPz+0npVnLluer4Z3I207siS+Jc/ivmGm7TklvLy1Pb6LB5CapOlqnbE
-	38B6EM8eajDDWj7PK1uyRvTajMnVbD4N6C+nKQ9ccvz+fIKzAS5fKUAkSBkqDp3OY8C5qS
-	U1ggmVYzhrxXiN2Et7pUP9uhOD3bil0=
+	bh=QLSAOPETBgDWLK1JVvygZfruBNGi9kz5Qw7QBC9gyQg=;
+	b=AV3smeEtJ8q0Ezv062Ao0mGxRQhP759hWd9QTr4+wCEQflJINNVLgFQX+pBwrVILpYAjZV
+	ubTMfg69Wqbe7M/CRFngPRvddYBLA+hPfGTOoMqxmIHKMUolPPe0qU3A3pamBRPVlTgvm1
+	InJquDLQ4C05c1AVTh8JhJAOH9nxxE4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1707049896;
+	s=susede2_ed25519; t=1707049936;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=T8aQJMwR9Z5GsK1IJPnlrbjrvibaz7ixCYFZBd+IcSQ=;
-	b=BeqxLSZInN9uRJyQSsfeS+T2Dg3t2breezBXCIHWB2BT7kfA0s5b+UhOYb8By9ZZsPDc8C
-	/wwjYVPzvRrbayAA==
+	bh=QLSAOPETBgDWLK1JVvygZfruBNGi9kz5Qw7QBC9gyQg=;
+	b=dnJ9Jd+nUV0NVQ/UVHOhjItPuaCV8W6xY2VbFncrB2VhCVxy9X1KUCn9QhWYGaGOOweQ4b
+	jO14mVGR3GfIzjCw==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1707049896; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1707049936; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=T8aQJMwR9Z5GsK1IJPnlrbjrvibaz7ixCYFZBd+IcSQ=;
-	b=ddAZ9eGhwd/FkErPz+0npVnLluer4Z3I207siS+Jc/ivmGm7TklvLy1Pb6LB5CapOlqnbE
-	38B6EM8eajDDWj7PK1uyRvTajMnVbD4N6C+nKQ9ccvz+fIKzAS5fKUAkSBkqDp3OY8C5qS
-	U1ggmVYzhrxXiN2Et7pUP9uhOD3bil0=
+	bh=QLSAOPETBgDWLK1JVvygZfruBNGi9kz5Qw7QBC9gyQg=;
+	b=AV3smeEtJ8q0Ezv062Ao0mGxRQhP759hWd9QTr4+wCEQflJINNVLgFQX+pBwrVILpYAjZV
+	ubTMfg69Wqbe7M/CRFngPRvddYBLA+hPfGTOoMqxmIHKMUolPPe0qU3A3pamBRPVlTgvm1
+	InJquDLQ4C05c1AVTh8JhJAOH9nxxE4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1707049896;
+	s=susede2_ed25519; t=1707049936;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=T8aQJMwR9Z5GsK1IJPnlrbjrvibaz7ixCYFZBd+IcSQ=;
-	b=BeqxLSZInN9uRJyQSsfeS+T2Dg3t2breezBXCIHWB2BT7kfA0s5b+UhOYb8By9ZZsPDc8C
-	/wwjYVPzvRrbayAA==
+	bh=QLSAOPETBgDWLK1JVvygZfruBNGi9kz5Qw7QBC9gyQg=;
+	b=dnJ9Jd+nUV0NVQ/UVHOhjItPuaCV8W6xY2VbFncrB2VhCVxy9X1KUCn9QhWYGaGOOweQ4b
+	jO14mVGR3GfIzjCw==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1D289132DD;
-	Sun,  4 Feb 2024 12:31:32 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3EC4B132DD;
+	Sun,  4 Feb 2024 12:32:12 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([10.150.64.162])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id iEMCKKSDv2U8JwAAD6G6ig
-	(envelope-from <hare@suse.de>); Sun, 04 Feb 2024 12:31:32 +0000
-Message-ID: <7df50ccc-a93f-46e8-9609-f706e7c8dc7e@suse.de>
-Date: Sun, 4 Feb 2024 20:31:32 +0800
+	id 6OhdOsyDv2U8JwAAD6G6ig
+	(envelope-from <hare@suse.de>); Sun, 04 Feb 2024 12:32:12 +0000
+Message-ID: <6ca5864a-7737-4b2f-961f-af3d85feee8c@suse.de>
+Date: Sun, 4 Feb 2024 20:32:12 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,8 +80,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 13/26] null_blk: Do not request ELEVATOR_F_ZBD_SEQ_WRITE
- elevator feature
+Subject: Re: [PATCH 14/26] null_blk: Introduce zone_append_max_sectors
+ attribute
 Content-Language: en-US
 To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
  Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
@@ -89,67 +89,58 @@ To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
  dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <20240202073104.2418230-14-dlemoal@kernel.org>
+ <20240202073104.2418230-15-dlemoal@kernel.org>
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240202073104.2418230-14-dlemoal@kernel.org>
+In-Reply-To: <20240202073104.2418230-15-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=ddAZ9eGh;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=BeqxLSZI
-X-Spamd-Result: default: False [-2.07 / 50.00];
+	none
+X-Spamd-Result: default: False [-1.10 / 50.00];
 	 ARC_NA(0.00)[];
 	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	 XM_UA_NO_VERSION(0.01)[];
 	 FROM_HAS_DN(0.00)[];
 	 TO_DN_SOME(0.00)[];
 	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 BAYES_HAM(-1.77)[93.62%];
+	 BAYES_HAM(-1.01)[87.29%];
 	 MIME_GOOD(-0.10)[text/plain];
-	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
 	 RCVD_COUNT_THREE(0.00)[3];
 	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 DKIM_TRACE(0.00)[suse.de:+];
-	 MX_GOOD(-0.01)[];
 	 RCPT_COUNT_SEVEN(0.00)[8];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email];
 	 FUZZY_BLOCKED(0.00)[rspamd.com];
 	 FROM_EQ_ENVFROM(0.00)[];
 	 MIME_TRACE(0.00)[0:+];
 	 RCVD_TLS_ALL(0.00)[];
 	 MID_RHS_MATCH_FROM(0.00)[]
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: 382BA1F80C
 X-Spam-Level: 
-X-Spam-Score: -2.07
 X-Spam-Flag: NO
+X-Spam-Score: -1.10
 
 On 2/2/24 15:30, Damien Le Moal wrote:
-> With zone write plugging enabled at the block layer level, any zone
-> device can only ever see at most a single write operation per zone.
-> There is thus no need to request a block scheduler with strick per-zone
-> sequential write ordering control through the ELEVATOR_F_ZBD_SEQ_WRITE
-> feature. Removing this allows using a zoned null_blk device with any
-> scheduler, including "none".
+> Add the zone_append_max_sectors configfs attribute and module parameter
+> to allow configuring the maximum number of 512B sectors of zone append
+> operations. This attribute is meaningful only for zoned null block
+> devices.
+> 
+> If not specified, the default is unchanged and the zoned device max
+> append sectors limit is set to the device max sectors limit.
+> If a non 0 value is used for this attribute, which is the default,
+> then native support for zone append operations is enabled.
+> Setting a 0 value disables native zone append operations support to
+> instead use the block layer emulation.
+> 
+> null_submit_bio() is modified to use blk_zone_write_plug_bio() to
+> handle zone append emulation if that is enabled.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/block/null_blk/zoned.c | 1 -
->   1 file changed, 1 deletion(-)
+>   drivers/block/null_blk/main.c     | 40 +++++++++++++++++++++----------
+>   drivers/block/null_blk/null_blk.h |  1 +
+>   drivers/block/null_blk/zoned.c    | 31 ++++++++++++++++++------
+>   3 files changed, 52 insertions(+), 20 deletions(-)
 > 
-> diff --git a/drivers/block/null_blk/zoned.c b/drivers/block/null_blk/zoned.c
-> index 6f5e0994862e..f2cb6da0dd0d 100644
-> --- a/drivers/block/null_blk/zoned.c
-> +++ b/drivers/block/null_blk/zoned.c
-> @@ -161,7 +161,6 @@ int null_register_zoned_dev(struct nullb *nullb)
->   
->   	disk_set_zoned(nullb->disk);
->   	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
-> -	blk_queue_required_elevator_features(q, ELEVATOR_F_ZBD_SEQ_WRITE);
->   	blk_queue_chunk_sectors(q, dev->zone_size_sects);
->   	nullb->disk->nr_zones = bdev_nr_zones(nullb->disk->part0);
->   	blk_queue_max_zone_append_sectors(q, dev->zone_size_sects);
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
