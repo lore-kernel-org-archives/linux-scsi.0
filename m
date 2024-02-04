@@ -1,39 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 558ED24205
-	for <linux-scsi@vger.kernel.org>; Sun,  4 Feb 2024 16:37:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70187249EA
+	for <linux-scsi@vger.kernel.org>; Sun,  4 Feb 2024 16:37:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707064640; cv=none; b=d31R1JV+WlPW0clsmVnPQHzzkFLNnY6ygVeIbcuPghzIad/jXpS1ejNPDndWZAAodrhawc3MaaSdYapwX7Zn/CJQp6TANIppzuIJSWxOyUl/IhOMUJYeGdk+0oJC2qkq5FbebY6CwPc3K6gVu4y31U8GK+Eu59LLLLvAQC9De5Q=
+	t=1707064652; cv=none; b=r4ekGdsj6g19wMa9g4RsCVyEBVjOAgNTUQ+4NZfB8KhvHNjD1248I2s38gZkW3XigILin3WAPu5EBnrTGbYAkDDavVksxomjvLPmzOLc8txdZ3xankfpXYQdE204WxPyLa9QzuRsYgOxcQrt5NX32GnoY7JWFWaY7YxUrJIyQ38=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707064640; c=relaxed/simple;
-	bh=jDfyjnL2jQzTEbNu2k6wMqk6LfSMZJBss1rlkKVErqg=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=OXW74r1Hhxly0TbCOCy7oFTn0h17iV1JqJ8ogC52Dl+54l8XzoRMtmVNI7aec4Li5v97ebVr6yUprOpADtnlXv0tCmk7T1ntie4tkalX2BFTg98BcKF21c4cUs0PcBkcQnBRgMU+d3nMop2qgTQp4175RSMisXuagizx6BjfAvY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OqFw8rzD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707064652; c=relaxed/simple;
+	bh=tP0h2EKwPr8gm7U7oGpu7NHc26S5yKalkeuOrvWbyus=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=izL0/zHd6dgSJzsApqa1yxPV3pw+EN5YyD2ShPZKAV9DILF/E5bgQl0LR+j1bMVd4NLlNEf0kQBDzLCB3bn0xY9dxWZM7juO5yKSpbcugTIfQSuhw6OQEXpkfebB31peV2LBL/MPCQKto0On1Y9/QzMsri6/NqOvvGQD1E5HmwQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uF0V7yxd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OqFw8rzD"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id CE450C433C7
-	for <linux-scsi@vger.kernel.org>; Sun,  4 Feb 2024 16:37:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uF0V7yxd"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 62F07C433F1
+	for <linux-scsi@vger.kernel.org>; Sun,  4 Feb 2024 16:37:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707064639;
-	bh=jDfyjnL2jQzTEbNu2k6wMqk6LfSMZJBss1rlkKVErqg=;
-	h=From:To:Subject:Date:From;
-	b=OqFw8rzD3jIEAiof6Y/K3PJTLo4ZFEGGHWXzq4TEKSWd+i5e7Cn+ewTQQKmzpc6AI
-	 Q8gohf/68e2MxcqIpae1EtODJdYGdNYv9DP6BH/duSdl5TLmofjO9EVbFK+Q/W3VOR
-	 qEtJZ1ALtJNAItLcVhvmEy1TjWDDtXsCaPJD6wC2lNpZPV8lOp3TxCFScpc/nkSGV8
-	 5woKQQw1y+ruhMQ0apX1UY1iAF5xXsfYvGhYI6zxAM1tU/WftgXgZTRj39vl8wHPYc
-	 4kiULwCwkLNbzReSGWSfMZRq0ZTwX3XfdxF7p1qN0wO4I4mk0Mp36QcNQw9oKz+3za
-	 7VuokdCSAqarw==
+	s=k20201202; t=1707064651;
+	bh=tP0h2EKwPr8gm7U7oGpu7NHc26S5yKalkeuOrvWbyus=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=uF0V7yxdRfYuSuKA43eVrbMbysE2p/SM1Ya/7yEMaHknjGQXng9V1hn8FlovUaCGJ
+	 Gn1tv8vlNpgV680Ea2HHtPaEI2M3e6KJ+tH3e64hn49yE6ddeRR4o9u/t8o/HlCgxi
+	 Up7OGF6Nfn3FRF81EeO7E2e8eBCz6FkbuvKx79brORBhYzGp/JtVoRYclevYmo0hPB
+	 mb7C3UK3pqI7jlnpNAHJ3fNNhGJL5ixVwInRZaKJcBbUM4tjjgupeyrRlwcIBrvZ6b
+	 qi3c/nOalPZw6nejhSI1+Cx0wkb2FUCusZKsRPIOeGPVT0/PvpW0DnlVk5faTmsaA7
+	 wRZIYr6yvFCAg==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id AFAB4C53BD0; Sun,  4 Feb 2024 16:37:19 +0000 (UTC)
+	id 52AE4C53BC6; Sun,  4 Feb 2024 16:37:31 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-scsi@vger.kernel.org
-Subject: [Bug 218457] New: mpi3mr - mpi3mr_transport.c:1818:1: warning: the
- frame size of 1640 bytes is larger than 1280 bytes
-Date: Sun, 04 Feb 2024 16:37:19 +0000
+Subject: [Bug 218457] mpi3mr - mpi3mr_transport.c:1818:1: warning: the frame
+ size of 1640 bytes is larger than 1280 bytes
+Date: Sun, 04 Feb 2024 16:37:31 +0000
 X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: new
+X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: None
 X-Bugzilla-Product: IO/Storage
 X-Bugzilla-Component: SCSI
@@ -46,10 +47,10 @@ X-Bugzilla-Resolution:
 X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version rep_platform
- op_sys bug_status bug_severity priority component assigned_to reporter
- cf_regression
-Message-ID: <bug-218457-11613@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: cf_kernel_version
+Message-ID: <bug-218457-11613-s5nAxos4Ut@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-218457-11613@https.bugzilla.kernel.org/>
+References: <bug-218457-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 X-Bugzilla-URL: https://bugzilla.kernel.org/
@@ -63,32 +64,11 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D218457
 
-            Bug ID: 218457
-           Summary: mpi3mr - mpi3mr_transport.c:1818:1: warning: the frame
-                    size of 1640 bytes is larger than 1280 bytes
-           Product: IO/Storage
-           Version: 2.5
-          Hardware: All
-                OS: Linux
-            Status: NEW
-          Severity: normal
-          Priority: P3
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: ionut_n2001@yahoo.com
-        Regression: No
+sander44 (ionut_n2001@yahoo.com) changed:
 
-Hi,
-
-I notice this today, when compiling kernel 6.8.0-rc3.
-
-drivers/scsi/mpi3mr/mpi3mr_transport.c: In function 'mpi3mr_refresh_sas_por=
-ts':
-drivers/scsi/mpi3mr/mpi3mr_transport.c:1818:1: warning: the frame size of 1=
-640
-bytes is larger than 1280 bytes [-Wframe-larger-than=3D]
- 1818 | }
-      | ^
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+     Kernel Version|                            |6.8.0-rc3
 
 --=20
 You may reply to this email to add a comment.
