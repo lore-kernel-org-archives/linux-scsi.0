@@ -1,178 +1,156 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77EC113FF0
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Feb 2024 10:06:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1171317586;
+	Mon,  5 Feb 2024 10:49:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707127613; cv=none; b=M/2fKH8msC6TvXv+aFTQX7cZzGdFuHPJs8XUXq0vEAwrjr8yMotnbbl4S/lND8x9Vx9Qqwo4i494JKJgKXdQVyoFpsZ3Mx3SuWfK81KoT5IA6lffg4H6Yl0rGY9tGZ8uMTMSGruyjzM1rD6aaEMFAHq8XH0KYpXODE+rYr0GPn8=
+	t=1707130159; cv=none; b=Xa2Q14HtkXZJOiUjAqzo9VbMvsnZe1dk0wCq+QlXJIMrHJP0LdEi3/7nEgE28PWG4lVIyCAAZ5dht1gs4hi3zuRyqDdJLmFB2E+v7ULyztK+pZs7gawThKENQ8yIGYkXfvbeC50NLbwhHQkEabiKEUoEmuMGj7ME+2PlQ+h+iSg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707127613; c=relaxed/simple;
-	bh=tXqUfbfbTPxlRaRUJ/MLjCbJOHNA1pZq5PhRen0F0l0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qBmZwzFaTCJ4/4b78dKhv1wu/ip55Dqf/wkgl3yvkSejspyqOKLlE3jw/Wzoaf1/b5eD2OFUL0LpZ/B43Z+sTeebiWtaTV76XgEttmn0vJCVhwD6NwcWPwOWO+0n5CujHT6PxfUPjY83cWyUs9MOJhwv/JvHNht/TRmweZw2i2Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=icLq6na7; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1707130159; c=relaxed/simple;
+	bh=govUFsIU8oUtrCbGqxjAUy8sqpOQeqhvoaRkgz6Ypo4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=B8yQfsj27viKS9vtx5GB3C2nE3XY5w21lcSSOK0woYJ1j3/CtHiy4w2qiWPZ98GpLpnrO1OA/Vc/M2dGTJNmzCXAiYgbjTYBOFzlnjCaRzwLMImsZna1CBGQqsyGSmO7xZRUCHWrLsb6Y3h4RqHow5J5uSafa8NJaLYEHE2Hf3o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=YIsXeHju; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="icLq6na7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1707127610;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=u9ctPd0Qw1QM513nDTJvhPLi5Y7m0SlsDszmPq/msBA=;
-	b=icLq6na7ZL4FmVZYIP0WpfJNevtDmvl+G7RdgS+Qol4jdewQyYNU8n3NhKTEyh4NWY/1PA
-	qSttz2hbBGP+H5adZ8/6EKiw711MTCt7LRhSzPYpIFEoOUFkkxnGPLOhTz5RgmvFRCTd5I
-	aCBNg84cUwpBBQcXwA0LIx4jDRpBs+o=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-616-ihPUgAKNPRiMSCyIlHEM-A-1; Mon,
- 05 Feb 2024 05:06:45 -0500
-X-MC-Unique: ihPUgAKNPRiMSCyIlHEM-A-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 50ECB1C04335;
-	Mon,  5 Feb 2024 10:06:45 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.6])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 5E0321121313;
-	Mon,  5 Feb 2024 10:06:41 +0000 (UTC)
-Date: Mon, 5 Feb 2024 18:06:37 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 06/26] block: Introduce zone write plugging
-Message-ID: <ZcCzLfocp4VcScOb@fedora>
-References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <20240202073104.2418230-7-dlemoal@kernel.org>
- <Zb8K4uSN3SNeqrPI@fedora>
- <a3f17ffb-872b-49cf-a1a7-553ca4a272c0@kernel.org>
- <ZcBFoqweG+okoTN6@fedora>
- <58fa0123-e884-4321-9b9b-8575cc7b4e1d@kernel.org>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="YIsXeHju"
+X-UUID: 30e95b26c41411ee9e680517dc993faa-20240205
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=fUeRA0Jda+Lyqu/i6W8IEQOOKZJBQt/IPjmrmBJEcYo=;
+	b=YIsXeHjux330gf2denmnvznBQxMRhpKW9FqauUIxZxwLTPkRK2sQjNP2yRp0h3P8fCnaA1cZrnyIS9U6UvuUJrrbDI9nu/5g1AKC2nPQqpwbiJr8F2xhw8+D3iNPbyHMLNqxhsuqjYDXU/fUNLwPPB1FE7kFbV5C3VtySqBLRL4=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.37,REQID:2045a737-53c4-4def-862a-8da50850b13b,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:6f543d0,CLOUDID:a83988fe-c16b-4159-a099-3b9d0558e447,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
+	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 30e95b26c41411ee9e680517dc993faa-20240205
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
+	(envelope-from <alice.chao@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1851177890; Mon, 05 Feb 2024 18:49:09 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Mon, 5 Feb 2024 18:49:07 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Mon, 5 Feb 2024 18:49:07 +0800
+From: <alice.chao@mediatek.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>, "James E.J. Bottomley"
+	<jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>
+CC: <wsd_upstream@mediatek.com>, <stanley.chu@mediatek.com>,
+	<peter.wang@mediatek.com>, <powen.kao@mediatek.com>,
+	<naomi.chu@mediatek.com>, <cc.chou@mediatek.com>, <tun-yu.yu@mediatek.com>,
+	<chun-hung.wu@mediatek.com>, <casper.li@mediatek.com>, Alice Chao
+	<alice.chao@mediatek.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-mediatek@lists.infradead.org>
+Subject: [PATCH v1 1/1] ufs: core: fix shift issue in ufshcd_clear_cmd
+Date: Mon, 5 Feb 2024 18:49:04 +0800
+Message-ID: <20240205104905.24929-1-alice.chao@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <58fa0123-e884-4321-9b9b-8575cc7b4e1d@kernel.org>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
+Content-Type: text/plain
+X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-AS-Result: No-10--4.721700-8.000000
+X-TMASE-MatchedRID: KISk8WdGcXBCI2iUrGleqpdc7I2df+ms2D9FbDg9BP42/UwdvFG5IpBn
+	0Y6NyRFo+hJFNJdQq3OnwZyfnQYxDBLekAZjy1WtdXu122+iJtrXAvRa0tfJGvuoLVXE/uWaDbI
+	Geo4FmxIppITnGCYXcdLS2IFgBJ3tVQ7O/4REy+v62mDKTRDEUkJfxXUWJFGS31GU/N5W5BB91D
+	unZtIaFuLzNWBegCW2xl8lw85EaVQLbigRnpKlKTpcQTtiHDgWu7FQYXTUmCAUzE8GbcbxJmrYG
+	6Z2cg1Fe4VlQFoik74zs1tzCvb5Hw==
+X-TM-AS-User-Approved-Sender: No
+X-TM-AS-User-Blocked-Sender: No
+X-TMASE-Result: 10--4.721700-8.000000
+X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-SNTS-SMTP: CDD062A06CE60E35FB211DAD39DB59CF632CD39BD23F74EAC619151C171A39CD2000:8
+X-MTK: N
 
-On Mon, Feb 05, 2024 at 11:41:04AM +0900, Damien Le Moal wrote:
-> On 2/5/24 11:19, Ming Lei wrote:
-> >>>> +static inline void blk_zone_wplug_add_bio(struct blk_zone_wplug *zwplug,
-> >>>> +					  struct bio *bio, unsigned int nr_segs)
-> >>>> +{
-> >>>> +	/*
-> >>>> +	 * Keep a reference on the BIO request queue usage. This reference will
-> >>>> +	 * be dropped either if the BIO is failed or after it is issued and
-> >>>> +	 * completes.
-> >>>> +	 */
-> >>>> +	percpu_ref_get(&bio->bi_bdev->bd_disk->queue->q_usage_counter);
-> >>>
-> >>> It is fragile to get nested usage_counter, and same with grabbing/releasing it
-> >>> from different contexts or even functions, and it could be much better to just
-> >>> let block layer maintain it.
-> >>>
-> >>> From patch 23's change:
-> >>>
-> >>> +	 * Zoned block device information. Reads of this information must be
-> >>> +	 * protected with blk_queue_enter() / blk_queue_exit(). Modifying this
-> >>>
-> >>> Anytime if there is in-flight bio, the block device is opened, so both gendisk and
-> >>> request_queue are live, so not sure if this .q_usage_counter protection
-> >>> is needed.
-> >>
-> >> Hannes also commented about this. Let me revisit this.
-> > 
-> > I think only queue re-configuration(blk_revalidate_zone) requires the
-> > queue usage counter. Otherwise, bdev open()/close() should work just
-> > fine.
-> 
-> I want to check FS case though. No clear if mounting FS that supports zone
-> (btrfs) also uses bdev open ?
+From: Alice Chao <alice.chao@mediatek.com>
 
-I feel the following delta change might be cleaner and easily documented:
+When task_tag > 32 (in mcq mode), 1U << task_tag will out of bound
+for u32 mask. Fix this bug to prevent SHIFT_ISSUE (Bitwise shifts
+that are out of bounds for their data type).
 
-- one IO takes single reference for both bio based and blk-mq,
-- no drop & re-grab
-- only grab extra reference for bio based
-- two code paths share same pattern
+[name:debug_monitors&]Unexpected kernel BRK exception at EL1
+[name:traps&]Internal error: BRK handler: 00000000f2005514 [#1] PREEMPT SMP
+[name:mediatek_cpufreq_hw&]cpufreq stop DVFS log done
+[name:mrdump&]Kernel Offset: 0x1ba5800000 from 0xffffffc008000000
+[name:mrdump&]PHYS_OFFSET: 0x80000000
+[name:mrdump&]pstate: 22400005 (nzCv daif +PAN -UAO)
+[name:mrdump&]pc : [0xffffffdbaf52bb2c] ufshcd_clear_cmd+0x280/0x288
+[name:mrdump&]lr : [0xffffffdbaf52a774] ufshcd_wait_for_dev_cmd+0x3e4/0x82c
+[name:mrdump&]sp : ffffffc0081471b0
+<snip>
+Workqueue: ufs_eh_wq_0 ufshcd_err_handler
+Call trace:
+ dump_backtrace+0xf8/0x144
+ show_stack+0x18/0x24
+ dump_stack_lvl+0x78/0x9c
+ dump_stack+0x18/0x44
+ mrdump_common_die+0x254/0x480 [mrdump]
+ ipanic_die+0x20/0x30 [mrdump]
+ notify_die+0x15c/0x204
+ die+0x10c/0x5f8
+ arm64_notify_die+0x74/0x13c
+ do_debug_exception+0x164/0x26c
+ el1_dbg+0x64/0x80
+ el1h_64_sync_handler+0x3c/0x90
+ el1h_64_sync+0x68/0x6c
+ ufshcd_clear_cmd+0x280/0x288
+ ufshcd_wait_for_dev_cmd+0x3e4/0x82c
+ ufshcd_exec_dev_cmd+0x5bc/0x9ac
+ ufshcd_verify_dev_init+0x84/0x1c8
+ ufshcd_probe_hba+0x724/0x1ce0
+ ufshcd_host_reset_and_restore+0x260/0x574
+ ufshcd_reset_and_restore+0x138/0xbd0
+ ufshcd_err_handler+0x1218/0x2f28
+ process_one_work+0x5fc/0x1140
+ worker_thread+0x7d8/0xe20
+ kthread+0x25c/0x468
+ ret_from_fork+0x10/0x20
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 9520ccab3050..118dd789beb5 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -597,6 +597,10 @@ static void __submit_bio(struct bio *bio)
+Signed-off-by: Alice Chao <alice.chao@mediatek.com>
+---
+ drivers/ufs/core/ufshcd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 029d017fc1b6..c6cff4aa440a 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3057,7 +3057,7 @@ bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd)
+  */
+ static int ufshcd_clear_cmd(struct ufs_hba *hba, u32 task_tag)
+ {
+-	u32 mask = 1U << task_tag;
++	u32 mask;
+ 	unsigned long flags;
+ 	int err;
  
- 	if (!bio->bi_bdev->bd_has_submit_bio) {
- 		blk_mq_submit_bio(bio);
-+	} else if (bio_zone_write_plugging(bio)) {
-+		struct gendisk *disk = bio->bi_bdev->bd_disk;
+@@ -3075,6 +3075,8 @@ static int ufshcd_clear_cmd(struct ufs_hba *hba, u32 task_tag)
+ 		return 0;
+ 	}
+ 
++	mask = 1U << task_tag;
 +
-+		disk->fops->submit_bio(bio);
- 	} else if (likely(bio_queue_enter(bio) == 0)) {
- 		struct gendisk *disk = bio->bi_bdev->bd_disk;
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index f0fc61a3ec81..fc6d792747dc 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -3006,8 +3006,12 @@ void blk_mq_submit_bio(struct bio *bio)
- 	if (blk_mq_attempt_bio_merge(q, bio, nr_segs))
- 		goto queue_exit;
- 
-+	/*
-+	 * Grab one reference for plugged zoned write and it will be reused in
-+	 * next real submission
-+	 */
- 	if (blk_queue_is_zoned(q) && blk_zone_write_plug_bio(bio, nr_segs))
--		goto queue_exit;
-+		return;
- 
- 	if (!rq) {
- new_request:
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index f6d4f511b664..87abb3f7ef30 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -514,7 +514,8 @@ static inline void blk_zone_wplug_add_bio(struct blk_zone_wplug *zwplug,
- 	 * be dropped either if the BIO is failed or after it is issued and
- 	 * completes.
- 	 */
--	percpu_ref_get(&bio->bi_bdev->bd_disk->queue->q_usage_counter);
-+	if (bio->bi_bdev->bd_has_submit_bio)
-+		percpu_ref_get(&bio->bi_bdev->bd_disk->queue->q_usage_counter);
- 
- 	/*
- 	 * The BIO is being plugged and thus will have to wait for the on-going
-@@ -760,15 +761,10 @@ static void blk_zone_wplug_bio_work(struct work_struct *work)
- 
- 	blk_zone_wplug_unlock(zwplug, flags);
- 
--	/*
--	 * blk-mq devices will reuse the reference on the request queue usage
--	 * we took when the BIO was plugged, but the submission path for
--	 * BIO-based devices will not do that. So drop this reference here.
--	 */
-+	submit_bio_noacct_nocheck(bio);
-+
- 	if (bio->bi_bdev->bd_has_submit_bio)
- 		blk_queue_exit(bio->bi_bdev->bd_disk->queue);
--
--	submit_bio_noacct_nocheck(bio);
- }
- 
- static struct blk_zone_wplug *blk_zone_alloc_write_plugs(unsigned int nr_zones)
-
-Thanks,
-Ming
+ 	/* clear outstanding transaction before retry */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	ufshcd_utrl_clear(hba, mask);
+-- 
+2.18.0
 
