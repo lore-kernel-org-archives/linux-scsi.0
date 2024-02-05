@@ -1,93 +1,178 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D865E10A0F;
-	Mon,  5 Feb 2024 06:14:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77EC113FF0
+	for <linux-scsi@vger.kernel.org>; Mon,  5 Feb 2024 10:06:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707113700; cv=none; b=C2zxzuCEAtf7vJHT9cAh2rlTbzfvvh+OYxQw0zdUzedimRkIm1Tj4teQYXei9AeVZiC/GPqJ0s9tv/X+mcFs23Yk8Q9z7yPM1Q0DwJr/NGS/W6M4XGtk6BAzDOqwlr2s987XSSRx1CcFmO2FsySPKhPLzDqX5BukUJiRaxIIngU=
+	t=1707127613; cv=none; b=M/2fKH8msC6TvXv+aFTQX7cZzGdFuHPJs8XUXq0vEAwrjr8yMotnbbl4S/lND8x9Vx9Qqwo4i494JKJgKXdQVyoFpsZ3Mx3SuWfK81KoT5IA6lffg4H6Yl0rGY9tGZ8uMTMSGruyjzM1rD6aaEMFAHq8XH0KYpXODE+rYr0GPn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707113700; c=relaxed/simple;
-	bh=iPgTo1r5+BVOOv0xlone20BepvLTvYfS6cu5SEtKVK0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MufVKK9c8QwFU4L1Mx1GI2xF3lKAY/U5IDsWKVUhj9703KpIKL/7Ln1/NEJNVzgsGm+gdh/plK5UGwEwdKqtY+XkBMTUMcuJHIblFILxaf6oTeSjHWh0VqAHp6l14YJzpOa9sAwOT2AMiyTzRXGdBbJhQWGB70n4NjR1ZxG1LZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RP6zMWHg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707127613; c=relaxed/simple;
+	bh=tXqUfbfbTPxlRaRUJ/MLjCbJOHNA1pZq5PhRen0F0l0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qBmZwzFaTCJ4/4b78dKhv1wu/ip55Dqf/wkgl3yvkSejspyqOKLlE3jw/Wzoaf1/b5eD2OFUL0LpZ/B43Z+sTeebiWtaTV76XgEttmn0vJCVhwD6NwcWPwOWO+0n5CujHT6PxfUPjY83cWyUs9MOJhwv/JvHNht/TRmweZw2i2Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=icLq6na7; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RP6zMWHg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEA0BC433C7;
-	Mon,  5 Feb 2024 06:14:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707113699;
-	bh=iPgTo1r5+BVOOv0xlone20BepvLTvYfS6cu5SEtKVK0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=RP6zMWHge+xTEx2u8nIVPO3XFuQbDiqjKMOqASgq77EUPZukzI/YfoSUWwngynOFD
-	 8jXec7wnqYl4+dkcdPNyAy6v5D0xhU2/bHNcUDhbSkxppAoaf6Of35NtjGCnriVFFa
-	 XBS598tB7KnK15lbzUctMrSixetEOPwhf4VuhN8xZ09Yc/w3ms5aNM1OEYR2QpuHB5
-	 w49x0SKhIkZqZ6Re8Ha+5BNdryiuGy117alKa5oMTmA8iL3lDs/npn1fkc4JQRvkDw
-	 fZY6k9ZBC8pWwREUM14YpP2yitAMis6DL180jkEb30ePY/BzGb9Aq8/KZHW7jlRieC
-	 RpWZYLRtpvyRw==
-Message-ID: <29d31194-c2aa-4720-a7e1-a7c4524ecbab@kernel.org>
-Date: Mon, 5 Feb 2024 15:14:56 +0900
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="icLq6na7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1707127610;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=u9ctPd0Qw1QM513nDTJvhPLi5Y7m0SlsDszmPq/msBA=;
+	b=icLq6na7ZL4FmVZYIP0WpfJNevtDmvl+G7RdgS+Qol4jdewQyYNU8n3NhKTEyh4NWY/1PA
+	qSttz2hbBGP+H5adZ8/6EKiw711MTCt7LRhSzPYpIFEoOUFkkxnGPLOhTz5RgmvFRCTd5I
+	aCBNg84cUwpBBQcXwA0LIx4jDRpBs+o=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-616-ihPUgAKNPRiMSCyIlHEM-A-1; Mon,
+ 05 Feb 2024 05:06:45 -0500
+X-MC-Unique: ihPUgAKNPRiMSCyIlHEM-A-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 50ECB1C04335;
+	Mon,  5 Feb 2024 10:06:45 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.6])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 5E0321121313;
+	Mon,  5 Feb 2024 10:06:41 +0000 (UTC)
+Date: Mon, 5 Feb 2024 18:06:37 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 06/26] block: Introduce zone write plugging
+Message-ID: <ZcCzLfocp4VcScOb@fedora>
+References: <20240202073104.2418230-1-dlemoal@kernel.org>
+ <20240202073104.2418230-7-dlemoal@kernel.org>
+ <Zb8K4uSN3SNeqrPI@fedora>
+ <a3f17ffb-872b-49cf-a1a7-553ca4a272c0@kernel.org>
+ <ZcBFoqweG+okoTN6@fedora>
+ <58fa0123-e884-4321-9b9b-8575cc7b4e1d@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 06/26] block: Introduce zone write plugging
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>
-Cc: Ming Lei <ming.lei@redhat.com>, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
-References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <20240202073104.2418230-7-dlemoal@kernel.org> <Zb8K4uSN3SNeqrPI@fedora>
- <a3f17ffb-872b-49cf-a1a7-553ca4a272c0@kernel.org> <ZcBFoqweG+okoTN6@fedora>
- <58fa0123-e884-4321-9b9b-8575cc7b4e1d@kernel.org>
- <20240205051159.GA17817@lst.de>
- <6e99511d-14f6-4077-87de-47ff285bc26c@kernel.org>
- <20240205055046.GA18392@lst.de>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20240205055046.GA18392@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <58fa0123-e884-4321-9b9b-8575cc7b4e1d@kernel.org>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
 
-On 2/5/24 14:50, Christoph Hellwig wrote:
-> On Mon, Feb 05, 2024 at 02:37:41PM +0900, Damien Le Moal wrote:
->> OK. So I think that Hannes'idea to get/put the queue usage counter reference
->> based on a zone BIO plug becoming not empty (get ref) and becoming empty (put
->> ref) may be simpler then. And that would also work in the same way for blk-mq
->> and BIO based drivers.
+On Mon, Feb 05, 2024 at 11:41:04AM +0900, Damien Le Moal wrote:
+> On 2/5/24 11:19, Ming Lei wrote:
+> >>>> +static inline void blk_zone_wplug_add_bio(struct blk_zone_wplug *zwplug,
+> >>>> +					  struct bio *bio, unsigned int nr_segs)
+> >>>> +{
+> >>>> +	/*
+> >>>> +	 * Keep a reference on the BIO request queue usage. This reference will
+> >>>> +	 * be dropped either if the BIO is failed or after it is issued and
+> >>>> +	 * completes.
+> >>>> +	 */
+> >>>> +	percpu_ref_get(&bio->bi_bdev->bd_disk->queue->q_usage_counter);
+> >>>
+> >>> It is fragile to get nested usage_counter, and same with grabbing/releasing it
+> >>> from different contexts or even functions, and it could be much better to just
+> >>> let block layer maintain it.
+> >>>
+> >>> From patch 23's change:
+> >>>
+> >>> +	 * Zoned block device information. Reads of this information must be
+> >>> +	 * protected with blk_queue_enter() / blk_queue_exit(). Modifying this
+> >>>
+> >>> Anytime if there is in-flight bio, the block device is opened, so both gendisk and
+> >>> request_queue are live, so not sure if this .q_usage_counter protection
+> >>> is needed.
+> >>
+> >> Hannes also commented about this. Let me revisit this.
+> > 
+> > I think only queue re-configuration(blk_revalidate_zone) requires the
+> > queue usage counter. Otherwise, bdev open()/close() should work just
+> > fine.
 > 
-> Maybe I'm missing something, but I'm not sure how that would even work.
-> 
-> We need a q_usage_counter ref when doing all the submissions checks
-> (limits, bounce, etc) early in blk_mq_sunmit_bio, and that one should be
-> taken using the mormal bio_queue_enter patch to do the right thing on
-> nowait submissions, when the queue is already frozen, etc.  What
-> is the benefit of not just keeping that references vs releasing it
-> for all but the first bio just so that we need to grab another
-> new reference at the actual submission time?
+> I want to check FS case though. No clear if mounting FS that supports zone
+> (btrfs) also uses bdev open ?
 
-I just tried to make the change, but the code does not become easier/cleaner at
-all. In fact, the contrary, it is very messy. I think I am going to keep things
-as is regarding the ref counting.
+I feel the following delta change might be cleaner and easily documented:
 
-There is one thing I need to check though: I re-ran the perf tests but this time
-took the average of 10 runs to mitigate differences due to variance between runs
-of the same test. And doing that, I do see a regression in performance for ZNS
-4K qd=16 sequential writes (751 MB/s with rc2 vs 661 MB/s with ZWP). I need to
-check if that is due to never using the cached request for plugged BIOs in
-blk_mq_submit_bio(). If that is the case, we'll need to tweak the reference
-dropping there for the cached request case.
+- one IO takes single reference for both bio based and blk-mq,
+- no drop & re-grab
+- only grab extra reference for bio based
+- two code paths share same pattern
 
-I am also seeing a regression in performance with btrfs on SMR HDD (244 MB/s
-with rc2 and block/for-next vs 233 MB/s with ZWP). I need to check that as well.
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 9520ccab3050..118dd789beb5 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -597,6 +597,10 @@ static void __submit_bio(struct bio *bio)
+ 
+ 	if (!bio->bi_bdev->bd_has_submit_bio) {
+ 		blk_mq_submit_bio(bio);
++	} else if (bio_zone_write_plugging(bio)) {
++		struct gendisk *disk = bio->bi_bdev->bd_disk;
++
++		disk->fops->submit_bio(bio);
+ 	} else if (likely(bio_queue_enter(bio) == 0)) {
+ 		struct gendisk *disk = bio->bi_bdev->bd_disk;
+ 
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index f0fc61a3ec81..fc6d792747dc 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -3006,8 +3006,12 @@ void blk_mq_submit_bio(struct bio *bio)
+ 	if (blk_mq_attempt_bio_merge(q, bio, nr_segs))
+ 		goto queue_exit;
+ 
++	/*
++	 * Grab one reference for plugged zoned write and it will be reused in
++	 * next real submission
++	 */
+ 	if (blk_queue_is_zoned(q) && blk_zone_write_plug_bio(bio, nr_segs))
+-		goto queue_exit;
++		return;
+ 
+ 	if (!rq) {
+ new_request:
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index f6d4f511b664..87abb3f7ef30 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -514,7 +514,8 @@ static inline void blk_zone_wplug_add_bio(struct blk_zone_wplug *zwplug,
+ 	 * be dropped either if the BIO is failed or after it is issued and
+ 	 * completes.
+ 	 */
+-	percpu_ref_get(&bio->bi_bdev->bd_disk->queue->q_usage_counter);
++	if (bio->bi_bdev->bd_has_submit_bio)
++		percpu_ref_get(&bio->bi_bdev->bd_disk->queue->q_usage_counter);
+ 
+ 	/*
+ 	 * The BIO is being plugged and thus will have to wait for the on-going
+@@ -760,15 +761,10 @@ static void blk_zone_wplug_bio_work(struct work_struct *work)
+ 
+ 	blk_zone_wplug_unlock(zwplug, flags);
+ 
+-	/*
+-	 * blk-mq devices will reuse the reference on the request queue usage
+-	 * we took when the BIO was plugged, but the submission path for
+-	 * BIO-based devices will not do that. So drop this reference here.
+-	 */
++	submit_bio_noacct_nocheck(bio);
++
+ 	if (bio->bi_bdev->bd_has_submit_bio)
+ 		blk_queue_exit(bio->bi_bdev->bd_disk->queue);
+-
+-	submit_bio_noacct_nocheck(bio);
+ }
+ 
+ static struct blk_zone_wplug *blk_zone_alloc_write_plugs(unsigned int nr_zones)
 
--- 
-Damien Le Moal
-Western Digital Research
+Thanks,
+Ming
 
