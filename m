@@ -1,162 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E87828F5;
-	Mon,  5 Feb 2024 00:10:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0ECC33EE
+	for <linux-scsi@vger.kernel.org>; Mon,  5 Feb 2024 02:19:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707091817; cv=none; b=Zl5Lki5Ho/lhql10xE+ouJWcT95JS8iPU8W+U7TJf3AacnMfOaOWyP+pLj75a1AKF+VSazA0ffuO1Dn2Mm7uhAgxKQy3xGkQWvfVRmkHoLqdjTsBkLvpB54QaCKFGEGRV340agjF5dlvXUbh6c+Y7XQUYkjD+OfmWE0f002mUrM=
+	t=1707099569; cv=none; b=O4zWPbk+afJ0a0YOspvAeg24f82cee2QxaI5Mc8jpIvZRFuYfnXw7vcFIiWr/dY7ktgVYgIRavTr91yFKE6AZwUEaUiQ+/6/IXhZyUlwgtjsaY4pjOjoDUqHVUQ6IqC8fwKpRjomk4B4AznZPBIxwMeVnWRe1YEZ8va7XQNjFPs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707091817; c=relaxed/simple;
-	bh=3pdylHyP+bKJ75pMNZmMy9J6ynEAHnmL2EleudoNtjs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PsnRYXHksWu5NeM4wRNobWzy59fmBOvfnCtUlKxVsNcJiAU5wEoI7Zm0ud3TclMcNJv4k67EPG0z9XG+qNF5ZpLmsvJIbL9ltOhV9aDmosksz5f3CsjFBz4J2wg0a3CD3ZOSwesdA4qyXqBR2muY2IZgJV8Snh+7D4Oy9U0Wjsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HyOLabSq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707099569; c=relaxed/simple;
+	bh=YNLVJadeBU3MigIiF7lgLr98ea7UZJdpIXR5AJeobm0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ePVO8IeN2NqumK4ZkTijpfRTL4taBhb7EV+EQTNtcz5FzcimWD1j1tJQgFlVJzHeWoVVWYAVp/9qgI4AgR/jrzQN82dsAbblA8qhoiYI2xUkLicBKe8wRde48vKBAi7Htj0rw9d089vvhtgsFlV5uMAjK+hYc6/7q7PkGsp1L44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GZHOiWoW; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HyOLabSq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEA67C43390;
-	Mon,  5 Feb 2024 00:10:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707091816;
-	bh=3pdylHyP+bKJ75pMNZmMy9J6ynEAHnmL2EleudoNtjs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=HyOLabSqoHsBT4xj41SL1+bUnxtnhG2xRHcv5gQTKXpgP+Dos361XrBfWJPfDnu3R
-	 QmGQI0Rw+c0dd7k8amQuD7VeGJg/lh9IvFKk7et07o5jgLzMBk9e0O7mLmdHgS9Iqb
-	 ofciCrDquvhVPhx28hCiVgGSRW85MrPaxywR1jr0VK0LtCF0xv2SkeC3mmOss1YOKk
-	 p1KS7lWD0nsSk5bN6SAk715ArPSNobYTlR5UFzBU0h+qh4nXjEMR/IWLZtE/MlqDlZ
-	 2wZwDBffXS2l7IXt5JnZeHg5M02gV0JvYjj/WHUQ8VB+GTe7FPsaJFz8PLL54X4uyt
-	 EcGI+VmnR3kgQ==
-Message-ID: <ff4018f0-7a51-4cec-82de-f105483dfde2@kernel.org>
-Date: Mon, 5 Feb 2024 09:10:14 +0900
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GZHOiWoW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1707099566;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LPefuR83KBi7OStCyON/nYajtROuhhD6CFUz0EyFryI=;
+	b=GZHOiWoWEv7B0lAGZ/cAYboA2mr8UF3mSfpYJI9ok2q6VGJ89/mcHncDxz6BHGptVbei+O
+	VVH7urGXhKCATqsgu5TOBVToBEHPAunvdvUZ3otR6pCJCz1syovswLWhFN51hrHBCZMdBD
+	4OGMYyx1SzpspYH4yVH7z0chk7d2y8o=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-596-ex0s0-fqNAKTrOIZ2E4YBg-1; Sun, 04 Feb 2024 21:19:23 -0500
+X-MC-Unique: ex0s0-fqNAKTrOIZ2E4YBg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8B06D800074;
+	Mon,  5 Feb 2024 02:19:22 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.96])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 6A51A2166B32;
+	Mon,  5 Feb 2024 02:19:18 +0000 (UTC)
+Date: Mon, 5 Feb 2024 10:19:14 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 06/26] block: Introduce zone write plugging
+Message-ID: <ZcBFoqweG+okoTN6@fedora>
+References: <20240202073104.2418230-1-dlemoal@kernel.org>
+ <20240202073104.2418230-7-dlemoal@kernel.org>
+ <Zb8K4uSN3SNeqrPI@fedora>
+ <a3f17ffb-872b-49cf-a1a7-553ca4a272c0@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/26] block: Implement zone append emulation
-Content-Language: en-US
-To: Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <20240202073104.2418230-9-dlemoal@kernel.org>
- <9026cc14-b107-41de-994f-6b46858b6601@suse.de>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <9026cc14-b107-41de-994f-6b46858b6601@suse.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a3f17ffb-872b-49cf-a1a7-553ca4a272c0@kernel.org>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.6
 
-On 2/4/24 21:24, Hannes Reinecke wrote:
-> On 2/2/24 15:30, Damien Le Moal wrote:
->> +/*
->> + * Set a zone write plug write pointer offset to either 0 (zone reset case)
->> + * or to the zone size (zone finish case). This aborts all plugged BIOs, which
->> + * is fine to do as doing a zone reset or zone finish while writes are in-flight
->> + * is a mistake from the user which will most likely cause all plugged BIOs to
->> + * fail anyway.
->> + */
->> +static void blk_zone_wplug_set_wp_offset(struct gendisk *disk,
->> +					 struct blk_zone_wplug *zwplug,
->> +					 unsigned int wp_offset)
->> +{
->> +	/*
->> +	 * Updating the write pointer offset puts back the zone
->> +	 * in a good state. So clear the error flag and decrement the
->> +	 * error count if we were in error state.
->> +	 */
->> +	if (zwplug->flags & BLK_ZONE_WPLUG_ERROR) {
->> +		zwplug->flags &= ~BLK_ZONE_WPLUG_ERROR;
->> +		atomic_dec(&disk->zone_nr_wplugs_with_error);
->> +	}
->> +
->> +	/* Update the zone write pointer and abort all plugged BIOs. */
->> +	zwplug->wp_offset = wp_offset;
->> +	blk_zone_wplug_abort(disk, zwplug);
->> +}
-
-[...]
-
->> +static void blk_zone_wplug_handle_error(struct gendisk *disk,
->> +					struct blk_zone_wplug *zwplug)
->> +{
->> +	unsigned int zno = zwplug - disk->zone_wplugs;
->> +	sector_t zone_start_sector = bdev_zone_sectors(disk->part0) * zno;
->> +	unsigned int noio_flag;
->> +	struct blk_zone zone;
->> +	unsigned long flags;
->> +	int ret;
->> +
->> +	/* Check if we have an error and clear it if we do. */
->> +	blk_zone_wplug_lock(zwplug, flags);
->> +	if (!(zwplug->flags & BLK_ZONE_WPLUG_ERROR))
->> +		goto unlock;
->> +	zwplug->flags &= ~BLK_ZONE_WPLUG_ERROR;
->> +	atomic_dec(&disk->zone_nr_wplugs_with_error);
->> +	blk_zone_wplug_unlock(zwplug, flags);
->> +
+On Mon, Feb 05, 2024 at 08:57:00AM +0900, Damien Le Moal wrote:
+> On 2/4/24 12:56, Ming Lei wrote:
+> > On Fri, Feb 02, 2024 at 04:30:44PM +0900, Damien Le Moal wrote:
+> >> +/*
+> >> + * Zone write plug flags bits:
+> >> + *  - BLK_ZONE_WPLUG_CONV: Indicate that the zone is a conventional one. Writes
+> >> + *    to these zones are never plugged.
+> >> + *  - BLK_ZONE_WPLUG_PLUGGED: Indicate that the zone write plug is plugged,
+> >> + *    that is, that write BIOs are being throttled due to a write BIO already
+> >> + *    being executed or the zone write plug bio list is not empty.
+> >> + */
+> >> +#define BLK_ZONE_WPLUG_CONV	(1U << 0)
+> >> +#define BLK_ZONE_WPLUG_PLUGGED	(1U << 1)
+> > 
+> > BLK_ZONE_WPLUG_PLUGGED == !bio_list_empty(&zwplug->bio_list), so looks
+> > this flag isn't necessary.
 > 
-> Don't you need to quiesce the drive here?
-> After all, I/O (or a reset zone) might be executed after the call to 
-> report zones, but before we lock the zone, no?
+> No, it is. As the description says, the flag not only indicates that there are
+> plugged BIOs, but it also indicates that there is a write for the zone
+> in-flight. And that can happen even with the BIO list being empty. E.g. for a
+> qd=1 workload of small BIOs, no BIO will ever be added to the BIO list, but the
+> zone still must be marked as "plugged" when a write BIO is issued for it.
 
-Indeed, this is racy with reset zone. But there is no race with IOs because when
-the error flag is set, we always plug incoming BIOs.
-But the race with reset (and finish) is actually easy to fix. All I need to do
-is not clear the error flag above and check for it after the report zones and
-locking the zone plug. Given that blk_zone_wplug_set_wp_offset() clears the
-error flag, we end up restoring a known good wp either from the reset or from
-the report zones.
+OK.
 
->>   struct blk_revalidate_zone_args {
->> @@ -890,6 +1292,8 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
->>   			if (!args->seq_zones_wlock)
->>   				return -ENOMEM;
->>   		}
->> +		args->zone_wplugs[idx].capacity = zone->capacity;
->> +		args->zone_wplugs[idx].wp_offset = blk_zone_wp_offset(zone);
->>   		break;
->>   	case BLK_ZONE_TYPE_SEQWRITE_PREF:
->>   	default:
->> @@ -964,6 +1368,13 @@ int blk_revalidate_disk_zones(struct gendisk *disk,
->>   	if (!args.zone_wplugs)
->>   		goto out_restore_noio;
->>   
->> +	if (!disk->zone_wplugs) {
->> +		mutex_init(&disk->zone_wplugs_mutex);
->> +		atomic_set(&disk->zone_nr_wplugs_with_error, 0);
->> +		INIT_DELAYED_WORK(&disk->zone_wplugs_work,
->> +				  disk_zone_wplugs_work);
->> +	}
->> +
 > 
-> Same question here about device quiesce ...
-
-Yes, I need to check this, together with revisiting the queue usage counter
-handling.
-
->>   	ret = disk->fops->report_zones(disk, 0, UINT_MAX,
->>   				       blk_revalidate_zone_cb, &args);
->>   	if (!ret) {
->> @@ -989,12 +1400,14 @@ int blk_revalidate_disk_zones(struct gendisk *disk,
->>   	 */
->>   	blk_mq_freeze_queue(q);
+> >> +static inline void blk_zone_wplug_add_bio(struct blk_zone_wplug *zwplug,
+> >> +					  struct bio *bio, unsigned int nr_segs)
+> >> +{
+> >> +	/*
+> >> +	 * Keep a reference on the BIO request queue usage. This reference will
+> >> +	 * be dropped either if the BIO is failed or after it is issued and
+> >> +	 * completes.
+> >> +	 */
+> >> +	percpu_ref_get(&bio->bi_bdev->bd_disk->queue->q_usage_counter);
+> > 
+> > It is fragile to get nested usage_counter, and same with grabbing/releasing it
+> > from different contexts or even functions, and it could be much better to just
+> > let block layer maintain it.
+> > 
+> > From patch 23's change:
+> > 
+> > +	 * Zoned block device information. Reads of this information must be
+> > +	 * protected with blk_queue_enter() / blk_queue_exit(). Modifying this
+> > 
+> > Anytime if there is in-flight bio, the block device is opened, so both gendisk and
+> > request_queue are live, so not sure if this .q_usage_counter protection
+> > is needed.
 > 
-> And this, I guess, comes to late.
-> We've already read the zone list, so any write I/O submitted after the 
-> report zone but befor here will cause things to be iffy.
+> Hannes also commented about this. Let me revisit this.
 
-Yes, but the driver is supposed to guarantee that this function is being called
-while there are no writes in flight. DM is OK with that. I think scsi is too,
-but need to check again. Not sure about NVMe and null_blk. But Ming had a good
-point about the usage ref coming from the device being open. So a quiesce may be
-enough here. Need to revisit this.
+I think only queue re-configuration(blk_revalidate_zone) requires the
+queue usage counter. Otherwise, bdev open()/close() should work just
+fine.
 
--- 
-Damien Le Moal
-Western Digital Research
+> 
+> >> +	/*
+> >> +	 * blk-mq devices will reuse the reference on the request queue usage
+> >> +	 * we took when the BIO was plugged, but the submission path for
+> >> +	 * BIO-based devices will not do that. So drop this reference here.
+> >> +	 */
+> >> +	if (bio->bi_bdev->bd_has_submit_bio)
+> >> +		blk_queue_exit(bio->bi_bdev->bd_disk->queue);
+> > 
+> > But I don't see where this reference is reused for blk-mq in this patch,
+> > care to point it out?
+> 
+> This patch modifies blk_mq_submit_bio() to add a "goto new_request" at the top
+> for any BIO flagged with BIO_FLAG_ZONE_WRITE_PLUGGING. So when a plugged BIO is
+> unplugged and submitted again, the reference that was taken in
+> blk_zone_wplug_add_bio() is reused for the new request for that BIO.
+
+OK, this reference reuse may be worse, because queue freeze can't prevent new
+write zoned bio from being submitted any more given only percpu_ref_get() is
+called for all write zoned bios.
+
+
+Thanks,
+Ming
 
