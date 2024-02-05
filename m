@@ -1,45 +1,45 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5879A40BF4;
-	Mon,  5 Feb 2024 17:28:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6834547A61;
+	Mon,  5 Feb 2024 17:48:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707154101; cv=none; b=mDcHmBudNNeZXkgaaI4wW5SkF36/yNSi1AxPKbBk0/kGhL1gZ/bheJSSQkIH+w3VE+38KVYQ5caeaQI2mdUAaO9pYBBFvc9NyLsJoIM1NjBTxLldUcRJb2CfmU8t40AudzAU247zOI10Yz9k0g0uqDX50A2EcZEGiXwZIqAPBM8=
+	t=1707155290; cv=none; b=tnJcxAUOT0Yzg5z/mHX76pSzDCyPXGFUVxbDUxyUKIbaD52urIIJNr3jyD02SRTKFFBYcaztL4V5iQ8xijOik7b32UtXZNkFDjzPSvccDzVbth4CkTIPP9piyC0aCAx+mkQf46rFnVmY30JD9pG/bTlwf+5bfOazUH7PltVoxRc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707154101; c=relaxed/simple;
-	bh=dK9jTty3a/n9QrRTMZUnz5n67yM6a7EfZx1/O/w4oKo=;
+	s=arc-20240116; t=1707155290; c=relaxed/simple;
+	bh=vkzFtbQdZjZispo3UhXXd/LLFzbR7QJ0hX/0RA5jzWc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=d6+ZtD9T46HmcZ1Wy90zszw4ZIDamVK4Ks8E/x08UlXgbOiQtCFV9dJgYnrLd1uxWN8nHB6tcati88/y1hxyjKpkCpdeolDCVVxj4cGLfxafqSSp9r1zq6O2MJkW7ZcC1uRJXP1WW9yY4iaieJAktJz50AAfdT9uadafARZvEV0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.176
+	 In-Reply-To:Content-Type; b=uaWbE3U/heDV6j3+PFcpNskAabAnGBw1eEK1+NR6beCP7eQRA/7npMNYMfb80RIrzPD8jNRkEBwxprDusAI634i62UJUA86t7Txno7fnXAMt9GBzDXs2MVtLIkBqTlopsM9Mnu2Fy9QPdEeMk+zRWoUmIz7ZxEcuW+t5rieQ4Ts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.215.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-6e04eca492fso444324b3a.1;
-        Mon, 05 Feb 2024 09:28:20 -0800 (PST)
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-5c229dabbb6so3024346a12.0;
+        Mon, 05 Feb 2024 09:48:09 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707154099; x=1707758899;
+        d=1e100.net; s=20230601; t=1707155289; x=1707760089;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=QjTDlLbEeGu+oelqaYSRULrHfqn6Ec8MRZebJau3TpY=;
-        b=R1B3umuOUgqJAyAtpV1LJdETrBD5El4a8XbTrznjZ81Wrp7UziOJpw4Tl1cUYEtvAe
-         69S9pBdBfRtBQRQ4coulaDqsSHijRfi96f70sNmJHtJJnSmmNPzp25J9yFNRFk5deR4F
-         OkS+GnKpnKZYhyFfHmz4nah1k1jbs42yZlEyug938VSI2ify8b86QZ2RUdqbRCOrx6IM
-         98y6fkLSx2SB1UJKt1un8ra+cuyZiuaGGkMPxEDYnQpSeTD+MWlCe3skb8UfiQMeBen6
-         f8pLNltcrL5AyGupbsrp2yoxFb+Y8TT9HCYX4GWl8PkG6jSG9RuRfODC8OyhJ+QapfFx
-         phOg==
-X-Gm-Message-State: AOJu0Yx7fZwK2u4A17CnH/BYeobw2T3VAN3CXoP38AlUP2MTvOU4zLL2
-	BXJ4FYo6Xo/op9sB6J0eBS7eZq8xbI35WM6J9UH1piqqwgAhKbmf
-X-Google-Smtp-Source: AGHT+IEGbnnigQCEx4bnoRaokXj2byd63v8qcsr6KkiHF5ZTtHGQ65fRilhC8f93iBKS6IjQ2Kn+IA==
-X-Received: by 2002:a05:6a00:179a:b0:6db:e6b9:4ccf with SMTP id s26-20020a056a00179a00b006dbe6b94ccfmr302204pfg.5.1707154099547;
-        Mon, 05 Feb 2024 09:28:19 -0800 (PST)
-X-Forwarded-Encrypted: i=0; AJvYcCWuRk2VwT2NKwo1BMYgTBUC7L8V85X0dLoY0YbSLQ+vsjtcfdcTWiKmcoFqtG3UBMukLmoM6+/1qcAf5CULkl5tN8WlflkBG2dze2sjg/KDCPTvEVsc3VyxP1Aoya8zHfo7ZyQadjC/AT7FsT6b00tb90+MEOSXGfstw2CiCMaGTQAFon7dwmuGkeY/cc4sONexXwBkyI2cI8QgJ5qTg3EMjv30iaeTzQ2cyiNiKX7GDjVBz9qZen+ftsn/jIwyRLKltg==
+        bh=8KQNkaBYtky5goRSRqnguxMPyZfEM+iuBXnubHYKQgQ=;
+        b=ZT7NpSt8Jk1jlzjTBeeM2QNJmhC+ErjDkCddNoxsIt3haaB/RyvpXN9W9EB5zYeLCY
+         qoPIMNYFb5AToYmnASIQrhLSPMqvIRNh9eWui3UHjp/Y/IRfOgYDuzNRgROMdpzb3wuy
+         tf2tJ2/e3MKQ0wWSwMdhzRaJM+zL82i9ZojMGNqNfL5XM/s0E7ldJaqJsq5+fbgJrXFy
+         L4Do5h+Kxzpp33Q3CG8ekpkMnyeR11YMN9IZCVS7tIWzWKbIJBrYINMQdvjJ/FpJ9h/L
+         kmuTFJ4D0jDoXIk8rfAxf6zMv1Gm4gC+mFbElqDSIYMlPgsGOmn+S3c/toUNQgAOCLSO
+         6NWw==
+X-Gm-Message-State: AOJu0YzHVqA01bmnYndFFvURJRZtnM/rM0mghVz94+9Xx5dPNAndQAIQ
+	es/WZy6FycwDeuypLJHYi6pNKUlNtSpiKx0JgVAyqAmmEhg5e4Ej
+X-Google-Smtp-Source: AGHT+IHJ6X721LPg5ymb106McyTY3TAqyEhjwf8OoCqL3uFxp9vZq3y33y8cNUFTPur97MHRgILPvA==
+X-Received: by 2002:a17:90a:1783:b0:296:36d9:eefe with SMTP id q3-20020a17090a178300b0029636d9eefemr148467pja.14.1707155288649;
+        Mon, 05 Feb 2024 09:48:08 -0800 (PST)
+X-Forwarded-Encrypted: i=0; AJvYcCXp9H2B9362zCrRqE+aCiaIyQmDdtmgVlEEttzF4TzrvV+FUdGUg2IgG0N8HNjRoOTwihRwOWD4iKuLYRSb0Wxyi56dhFmKLPDySsPP0suKmLXmf2tnF7a0wOgmKcr4cIJEEbnLG/iMJXMK/OvK6JlCtv4YxUAGKUZ0B4qa+/r9UReMEYNW2bvMaumxKiS04uAZCg8NSNzM9bLM80jYuzaN5PBeroDMLYnQxOuvJEGWWZxl1Mbq75DcTz31D3bsL8LGsg==
 Received: from ?IPV6:2620:0:1000:8411:be2a:6ac0:4203:7316? ([2620:0:1000:8411:be2a:6ac0:4203:7316])
-        by smtp.gmail.com with ESMTPSA id c24-20020a62e818000000b006dff3ca9e26sm89724pfi.102.2024.02.05.09.28.18
+        by smtp.gmail.com with ESMTPSA id jx15-20020a17090b46cf00b00296540086a5sm5488814pjb.23.2024.02.05.09.48.07
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 05 Feb 2024 09:28:19 -0800 (PST)
-Message-ID: <f7dd57a7-1612-457e-aec0-5cf2c4d98b78@acm.org>
-Date: Mon, 5 Feb 2024 09:28:17 -0800
+        Mon, 05 Feb 2024 09:48:08 -0800 (PST)
+Message-ID: <12bbbfe9-6304-495b-a60b-821becd1f326@acm.org>
+Date: Mon, 5 Feb 2024 09:48:06 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,7 +47,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 02/26] block: Remove req_bio_endio()
+Subject: Re: [PATCH 06/26] block: Introduce zone write plugging
 Content-Language: en-US
 To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
  Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
@@ -55,44 +55,54 @@ To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
  dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <20240202073104.2418230-3-dlemoal@kernel.org>
+ <20240202073104.2418230-7-dlemoal@kernel.org>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240202073104.2418230-3-dlemoal@kernel.org>
+In-Reply-To: <20240202073104.2418230-7-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 2/1/24 23:30, Damien Le Moal wrote:
-> @@ -916,9 +888,8 @@ bool blk_update_request(struct request *req, blk_status_t error,
->   	if (blk_crypto_rq_has_keyslot(req) && nr_bytes >= blk_rq_bytes(req))
->   		__blk_crypto_rq_put_keyslot(req);
->   
-> -	if (unlikely(error && !blk_rq_is_passthrough(req) &&
-> -		     !(req->rq_flags & RQF_QUIET)) &&
-> -		     !test_bit(GD_DEAD, &req->q->disk->state)) {
-> +	if (unlikely(error && !blk_rq_is_passthrough(req) && !quiet) &&
-> +	    !test_bit(GD_DEAD, &req->q->disk->state)) {
+> The next plugged BIO is unplugged and issued once the write request completes.
 
-The new indentation of !test_bit(GD_DEAD, &req->q->disk->state) looks odd to me ...
+So this patch series is orthogonal to my patch series that implements zoned
+write pipelining?
 
->   		blk_print_req_error(req, error);
->   		trace_block_rq_error(req, error, nr_bytes);
->   	}
-> @@ -930,12 +901,37 @@ bool blk_update_request(struct request *req, blk_status_t error,
->   		struct bio *bio = req->bio;
->   		unsigned bio_bytes = min(bio->bi_iter.bi_size, nr_bytes);
->   
-> -		if (bio_bytes == bio->bi_iter.bi_size)
-> +		if (unlikely(error))
-> +			bio->bi_status = error;
+> This mechanism allows to:
+>   - Untangles zone write ordering from block IO schedulers. This allows
+
+Untangles -> Untangle
+
+> Zone write plugging is implemented using struct blk_zone_wplug. This
+> structurei includes a spinlock, a BIO list and a work structure to
+
+structurei -> structure
+
+> This ensures that at any time, at most one request (blk-mq devices) or
+> one BIO (BIO-based devices) are being executed for any zone. The
+> handling of zone write plug using a per-zone plug spinlock maximizes
+> parrallelism and device usage by allowing multiple zones to be writen
+
+parrallelism -> parallelism
+
+> simultaneously without lock contention.
+
+This is not correct. Device usage is not maximized since zone write bios
+are serialized. Pipelining zoned writes results in higher device
+utilization.
+
+> +	/*
+> +	 * For BIOs handled through a zone write plugs, signal the end of the
+
+plugs -> plug
+
+> +#define blk_zone_wplug_lock(zwplug, flags) \
+> +	spin_lock_irqsave(&zwplug->lock, flags)
 > +
-> +		if (bio_bytes == bio->bi_iter.bi_size) {
->   			req->bio = bio->bi_next;
+> +#define blk_zone_wplug_unlock(zwplug, flags) \
+> +	spin_unlock_irqrestore(&zwplug->lock, flags)
 
-The behavior has been changed compared to the original code: the original code
-only tests bio_bytes if error == 0. The new code tests bio_bytes no matter what
-value the 'error' variable has. Is this behavior change intentional?
-
-Otherwise this patch looks good to me.
+Hmm ... these macros may make code harder to read rather than improve
+readability of the code.
 
 Thanks,
 
