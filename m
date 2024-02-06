@@ -1,125 +1,62 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58C2E5675F;
-	Tue,  6 Feb 2024 02:09:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 185D95677B;
+	Tue,  6 Feb 2024 02:09:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707185346; cv=none; b=GbYQLpq4rcIE/1rYnR7HAKEwzMYFo1dvQvcvNhzvkr9blUH+lUqdnbS8FFsAFkiGzfc609kww8w1pBdz5xTQVJnWNR5BkZpusP/fnPdg6QCuzuKdIEQFAVE0fTgs8DCGoE7QgU2+P3ShaSTmlG+k5Ho1r4EIHxnbmxAEm94tgJQ=
+	t=1707185355; cv=none; b=QgiIhhSjJ1b5pdxM5MG2w0WeHDnW4Bc5yDv1K0LzGOdeEGvej+4l2mDQuUN2ptHA0ci8pace0/udXkQZRkgobwP4DKxmyNMh8gUNT05qvn4HSl160ieFQN9/R3GT9sSo7qSuVhb/moLUy3Gl+jZAja2SWtRD3pPwKiEzLnzR128=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707185346; c=relaxed/simple;
-	bh=WYfoRPya76Tqck0ScDgB0y5w0roJ0OYNP1LTT+2qcEk=;
+	s=arc-20240116; t=1707185355; c=relaxed/simple;
+	bh=GIY2oK/tga9KjZ/HpYk+cW7YAmDfpfGCvRvywffo7Qg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LjTpMBNBxG7VMnyEmn5PV2y7SK5TK6sGGnAK4U/S9khqZrK+lM64AGfdTrrKttMcU1H3kw9b0UNyXkztJghtp2rWeRI9ybpoP6BLgS6wrWKdPG1RdpE3qqbAtUa/ljpWYk1LsD4UQv6wa7Uv9F1xHr/PIFYs8/9Zfi19AcLPs90=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=b+KMj6tv; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=Xt4//qYckOW+GmQJjkrisCb3ajM+/fqlgL65xzunYh3mraX/+P+3AuozqP0tPILnHqlmOGKmOqV90UaQ+jUmBymbziawXQnz7FuMOucW4GkSC2K3DclueuP/Jx88uyDPZIby2zHVaH4KQVuJ6i9VdwZf5ASEOsU3PAj4jFy+i20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=DJNMZTOj; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="b+KMj6tv"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 4161Ewsc023386;
-	Tue, 6 Feb 2024 02:08:04 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DJNMZTOj"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 4161ESxo031611;
+	Tue, 6 Feb 2024 02:09:10 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=TNBqmrMN0GKiz0meyol2MTt7jK7ZOMX41ADnOQ7L/UU=;
- b=b+KMj6tvO4efzEbKZhSG/xzlHnsPmbgMlBfcTWawkZTnAIffaQla4J5cVDofspUuJqWS
- /o00HHnk0n3gN9qp3mx/3E4gJC1I52m2sdoqn6JFMG+i8UwxEXr0NcQnIWxdhEFBJn+E
- /x8af1pQLtk1k1AM1L7u822p8aQ15VNJPSq8MPE9D4515Gx5HixPyTgAvA3/EgoqxoHI
- QgW4sF8UUf5WKq6QgWwluTQ92vNZ9x/szjLyibVmDwZBAu8ox17jHGO02Dm+ih1uUcH6
- DGK4SsClE47m3SK3AzW4xYXw6GyPWvrQpLAswBi0lOq+tWmzWKU14KToHTtMKtqix0Tu 5w== 
+ bh=bX86qBrs9kTRXVBpxg7OLAaegBU3rp3Ua/YxvDnw8ik=;
+ b=DJNMZTOjLyp/N3lt+geBO1MDTajm9smZLZUcysbJ7Wg5rnVwXG9ihbO7WEZrwdSq/yz/
+ Sqql6Dft0jIQYwyKfx1sxilrtRj8sXoTbEnNHyfoFo7LJp0dfH1h+1F0YfHDXZXlBLuA
+ PLQF5dIaGiIKzssP7UPbez7wyu7QxBPIvNbyDdFb56ncE1XYzzQhXKQ3Dsr2LPbcsbhC
+ LKltsp8nJyMXEDNBIqhaybfB2jKRwS3PbG8Dros2tRILxGQF2c98j4HuGG292F6m8Pfy
+ bWba/6K/z6si873JQyc4lU0OLFw1POtLnFctYE+UvkRXEYu3gSsMQVMCHs3Ye5pyRgOs nw== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w1dhddkp3-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w1dcbdf57-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 06 Feb 2024 02:08:03 +0000
+	Tue, 06 Feb 2024 02:09:09 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4161MK9a039504;
-	Tue, 6 Feb 2024 02:08:02 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4160L5Rg039556;
+	Tue, 6 Feb 2024 02:09:09 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3w1bx6cdtx-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3w1bx6cegb-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 06 Feb 2024 02:08:02 +0000
+	Tue, 06 Feb 2024 02:09:09 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41627qHJ034652;
-	Tue, 6 Feb 2024 02:08:01 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 416297CK038970;
+	Tue, 6 Feb 2024 02:09:08 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3w1bx6cdrb-2;
-	Tue, 06 Feb 2024 02:08:01 +0000
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3w1bx6cef6-2;
+	Tue, 06 Feb 2024 02:09:08 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-kernel@vger.kernel.org, Li Zhijian <lizhijian@fujitsu.com>
+To: linux-scsi@vger.kernel.org, Daniel Wagner <dwagner@suse.de>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Alistar Popple <alistair@popple.id.au>,
-        "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
-        Arnaldo Carvalho de Melo <acme@kernel.org>,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Borislav Petkov <bp@alien8.de>,
-        =?UTF-8?q?Bruno=20Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-        Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-        Christian Gromm <christian.gromm@microchip.com>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>, cocci@inria.fr,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Don Brace <don.brace@microchip.com>, dri-devel@lists.freedesktop.org,
-        Eddie James <eajames@linux.ibm.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Hannes Reinecke <hare@kernel.org>, Hannes Reinecke <hare@suse.de>,
-        Hans de Goede <hdegoede@redhat.com>, Helge Deller <deller@gmx.de>,
-        HighPoint Linux Team <linux@highpoint-tech.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, Ian Rogers <irogers@google.com>,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Ingo Molnar <mingo@redhat.com>, Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        James Morse <james.morse@arm.com>, Jeremy Kerr <jk@ozlabs.org>,
-        Jiri Kosina <jikos@kernel.org>, Jiri Olsa <jolsa@kernel.org>,
-        Joel Stanley <joel@jms.id.au>, Jonathan Cameron <jic23@kernel.org>,
-        Julia Lawall <Julia.Lawall@inria.fr>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Ketan Mukadam <ketan.mukadam@broadcom.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        linux-arm-kernel@lists.infradead.org, linux-edac@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linux-fsi@lists.ozlabs.org,
-        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-perf-users@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-scsi@vger.kernel.org, Manish Rangankar <mrangankar@marvell.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        megaraidlinux.pdl@broadcom.com, Michael Cyr <mikecyr@linux.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michal Januszewski <spock@gentoo.org>,
-        MPT-FusionLinux.pdl@broadcom.com, Namhyung Kim <namhyung@kernel.org>,
-        "Naveen N. Rao" <naveen.n.rao@linux.ibm.com>, netdev@vger.kernel.org,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Nicolas Palix <nicolas.palix@imag.fr>,
-        Nilesh Javali <njavali@marvell.com>,
-        Parthiban Veerasooran <parthiban.veerasooran@microchip.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        platform-driver-x86@vger.kernel.org,
-        Richard Cochran <richardcochran@gmail.com>,
-        Robert Richter <rric@kernel.org>, Russell King <linux@armlinux.org.uk>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Satish Kharat <satishkh@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Stefan Achatz <erazor_de@users.sourceforge.net>,
-        storagedev@microchip.com, Stuart Yoder <stuyoder@gmail.com>,
-        Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>, target-devel@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>, Tony Luck <tony.luck@intel.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Vadim Pasternak <vadimp@nvidia.com>, x86@kernel.org
-Subject: Re: (subset) [PATCH 00/42] Fix coccicheck warnings
-Date: Mon,  5 Feb 2024 21:07:38 -0500
-Message-ID: <170715263710.945763.16540743989774199712.b4-ty@oracle.com>
+        linux-kernel@vger.kernel.org, James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: lpfc: use unsigned type for num_sge
+Date: Mon,  5 Feb 2024 21:08:56 -0500
+Message-ID: <170718504172.1101069.7792604294877571964.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.42.1
-In-Reply-To: <20240116041129.3937800-1-lizhijian@fujitsu.com>
-References: <20240116041129.3937800-1-lizhijian@fujitsu.com>
+In-Reply-To: <20231220162658.12392-1-dwagner@suse.de>
+References: <20231220162658.12392-1-dwagner@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -132,42 +69,28 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-02-05_18,2024-01-31_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 phishscore=0
- spamscore=0 adultscore=0 mlxlogscore=980 malwarescore=0 suspectscore=0
+ spamscore=0 adultscore=0 mlxlogscore=552 malwarescore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
- definitions=main-2402060013
-X-Proofpoint-GUID: fwziPvoQs2DBL9rAMuJ3Du7KSNls4Hgl
-X-Proofpoint-ORIG-GUID: fwziPvoQs2DBL9rAMuJ3Du7KSNls4Hgl
+ definitions=main-2402060014
+X-Proofpoint-GUID: xrLYDTklL4-zQoXe_zwdiC148QsotFOA
+X-Proofpoint-ORIG-GUID: xrLYDTklL4-zQoXe_zwdiC148QsotFOA
 
-On Tue, 16 Jan 2024 12:10:47 +0800, Li Zhijian wrote:
+On Wed, 20 Dec 2023 17:26:58 +0100, Daniel Wagner wrote:
 
-> make coccicheck COCCI=$PWD/scripts/coccinelle/api/device_attr_show.cocci`
-> complians some warnnings as following[1]:
+> LUNs going into “failed ready running” state observed on >1T and on
+> even numbers of size (2T, 4T, 6T, 8T and 10T). The issue occurs when
+> DIF is enabled at the host.
 > 
-> Not sure if someone had tried these fixes, feel free to ignore this
-> patch set if we have come to a *NOT-FIX* conclusion before :)
+> The kernel logs:
 > 
-> This patch set also fix a few snprintf() beside coccicheck reported.
-> For example, some thing like
-> xxx_show() {
-> 	rc = snprintf();
-> ...
-> 	return rc;
-> }
+>   Cannot setup S/G List for HBAIO segs 1/1 SGL 512 SCSI 256: 3 0
 > 
 > [...]
 
-Applied to 6.9/scsi-queue, thanks!
+Applied to 6.8/scsi-fixes, thanks!
 
-[22/42] drivers/scsi/fnic: Convert snprintf to sysfs_emit
-        https://git.kernel.org/mkp/scsi/c/1ad717c92925
-[25/42] drivers/scsi/ibmvscsi: Convert snprintf to sysfs_emit
-        https://git.kernel.org/mkp/scsi/c/29ff822f466e
-[26/42] drivers/scsi/ibmvscsi_tgt: Convert snprintf to sysfs_emit
-        https://git.kernel.org/mkp/scsi/c/01105c23de42
-[27/42] drivers/scsi/isci: Convert snprintf to sysfs_emit
-        https://git.kernel.org/mkp/scsi/c/5fbf37e53091
-[34/42] drivers/scsi/pm8001: Convert snprintf to sysfs_emit
-        https://git.kernel.org/mkp/scsi/c/8179041f801d
+[1/1] scsi: lpfc: use unsigned type for num_sge
+      https://git.kernel.org/mkp/scsi/c/d6c1b19153f9
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
