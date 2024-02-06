@@ -1,71 +1,66 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B6785677B;
-	Tue,  6 Feb 2024 02:09:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B53395A0E9;
+	Tue,  6 Feb 2024 02:10:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707185370; cv=none; b=qi1tpbIV01C0k6EBJCUtpP5ZO9xor7KgEmfWY5ESAgB1O/hb5Ie4S9z1F2RYbrUOioLg6YAP3IBk91tT5rEWMkV+utY0Ad8DyPgBnvdC9t1agi6q0o9x9KheN4G0O0UG5EsDyHTxcTqcBSQcgTzhKQCcI4JbagFxduQ+VxkDuLE=
+	t=1707185402; cv=none; b=R2n4NHTEBcVWpt54KbePpMAdh3ORIinhBPSE8xjyFlW549EzhdeHL2DAG2qOdjtb+uc71+dcfZoagqoJy81bjKumJ7yHfBo9+MNEaP2hLXqqCnLEe4hdD26ztY+nncRxSCOb1zvAh5UscY43kaxLo0FPK+Xnydg1oHi12BVqT0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707185370; c=relaxed/simple;
-	bh=r6WVirw61VF2FLzNXp4ynWhB/irgRPURWFlNX5Kp8v0=;
+	s=arc-20240116; t=1707185402; c=relaxed/simple;
+	bh=wXZ7on9ZacefHMakxM5K44hEI/YqdV4PBf7mSuIbtiU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ClE/LK+VH1va9S6ne3sJqDKhpMVSxQYj1SLevu2Pxw/z59HE5k1FqAMTPAIsEudkCSbVFlHVgWSOX8xbv8pa40Li0wyntRqWPh78h1d+MaiPtwuiUmPHIpi+2RJCOe/en9t/Aj/KxkkguIp4Nd37Yhb/xEdE7xznONCX/BIDaVs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=d3QE4/02; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=nQa2j1rDBDr1dDaUw4ddN1cz19b/3ZwMuX91bYz7MtN1B8PEYmGx1byw8UXnf+WmQJ/srJhMpqCl16FdUTMpbqeV2thW4BiWL8vevlQkDq/18LsjKj66fIy9CUy2wcVUjImMG7l0fKg/WHHr0tTGiX8Tj0AUFvKs8N/yMA1yjLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Qg/7gR6m; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="d3QE4/02"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 4161EQcu002420;
-	Tue, 6 Feb 2024 02:09:09 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Qg/7gR6m"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 4161EL9J020716;
+	Tue, 6 Feb 2024 02:07:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=zDHvNKH6z8IMSD7KKDrzVdYMtSlJj+y0Dfbg3H1Ui5w=;
- b=d3QE4/02LAU9sFFyfRpfnIeSn2Z4jCU+SEW5sVGoMaS2S14c2BV1WXQMFpOIALTGCVTk
- oq/vfqxeRi+cPMBc7VErTcRtrXyBhO6bDr9XhZwedQw7Hmy7/qQ962WoPogQtmLX4LZQ
- NxTK9McCAqnX6q/R6xDa7jyiTObPzlGMipjryhwQQAKz3xVfEzgTuVw5jQ0ebsUjCeUh
- xQPJjcV67tqn8ysj7FYuigHbyvilj50ilMZ6r2HLXnPuYm/sp+HwbrDus9qumxhE8YRd
- DM8G5HxYpPjCLI6bbMIu08qGYjDvcRflpPUXHSF8MAGQVZCJJ7ckIwxOiioA3TRCXdBX lw== 
+ bh=kWLW+rKj7J9xnZhyEp49tXVd6PZDaAaTix1Fh55T45g=;
+ b=Qg/7gR6maNzGrxfGscPsWA4scU8t0xcT8r6WNXI6FIzLw8KW/VG7qi6hQui/knurBxSA
+ MTFXi5id90zZ40Hvwmcxu6YBOsCYpyBE21czlVG03OEG4+DCAGdCNpvwaUoGtbZbIjsF
+ hw0Qbiy667824iOlKCDR84UoOJPyFf1qC3lRF+ZK18gJbYHq0Y7XgkHcAOjVcTp9+wFp
+ vj2NIesuE6VIxsD+2kE6cgNUTLnEu2t1zsnA1hYJmJZaDkA1pbqEuWKMYXEdSjbk+IEx
+ ltHeSmrZsUwkkJp1lyYuVsUUzT7Lmrn+g5VLqijAIrQZNSVek+3t4SEm/WTPRtPlNfGU Eg== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w1cdcwkm5-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w1bwengt1-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 06 Feb 2024 02:09:08 +0000
+	Tue, 06 Feb 2024 02:07:53 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4160rGUc039547;
-	Tue, 6 Feb 2024 02:09:08 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 416165dk039333;
+	Tue, 6 Feb 2024 02:07:52 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3w1bx6cefx-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3w1bx6cdrq-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 06 Feb 2024 02:09:08 +0000
+	Tue, 06 Feb 2024 02:07:52 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 416297CI038970;
-	Tue, 6 Feb 2024 02:09:07 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41627qHH034652;
+	Tue, 6 Feb 2024 02:07:52 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3w1bx6cef6-1;
-	Tue, 06 Feb 2024 02:09:07 +0000
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3w1bx6cdrb-1;
+	Tue, 06 Feb 2024 02:07:52 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-        alice.chao@mediatek.com
+To: jejb@linux.ibm.com, Lee Jones <lee@kernel.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        wsd_upstream@mediatek.com, stanley.chu@mediatek.com,
-        peter.wang@mediatek.com, powen.kao@mediatek.com,
-        naomi.chu@mediatek.com, cc.chou@mediatek.com, tun-yu.yu@mediatek.com,
-        chun-hung.wu@mediatek.com, casper.li@mediatek.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: Re: [PATCH v1 1/1] ufs: core: fix shift issue in ufshcd_clear_cmd
-Date: Mon,  5 Feb 2024 21:08:55 -0500
-Message-ID: <170718504180.1101069.12960133692209922791.b4-ty@oracle.com>
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Adam Radford <aradford@gmail.com>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        Andre Hedrick <andre@suse.com>, de Melo <acme@conectiva.com.br>,
+        Joel Jacobson <linux@3ware.com>,
+        "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>,
+        Richard Hirst <rhirst@linuxcare.com>
+Subject: Re: [PATCH 0/5] scsi: Replace {v}snprintf() variants with safer alternatives
+Date: Mon,  5 Feb 2024 21:07:37 -0500
+Message-ID: <170715263669.945763.9109810582389494681.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.42.1
-In-Reply-To: <20240205104905.24929-1-alice.chao@mediatek.com>
-References: <20240205104905.24929-1-alice.chao@mediatek.com>
+In-Reply-To: <20240111131732.1815560-1-lee@kernel.org>
+References: <20240111131732.1815560-1-lee@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -78,62 +73,35 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-02-05_18,2024-01-31_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 phishscore=0
- spamscore=0 adultscore=0 mlxlogscore=999 malwarescore=0 suspectscore=0
+ spamscore=0 adultscore=0 mlxlogscore=954 malwarescore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
- definitions=main-2402060014
-X-Proofpoint-GUID: glV5wqreaqgNxcm7upHbcuFGcUYdzy6r
-X-Proofpoint-ORIG-GUID: glV5wqreaqgNxcm7upHbcuFGcUYdzy6r
+ definitions=main-2402060013
+X-Proofpoint-ORIG-GUID: sOV9ZS4Lqr5IzF_bHf0BCwEeNbbeo5so
+X-Proofpoint-GUID: sOV9ZS4Lqr5IzF_bHf0BCwEeNbbeo5so
 
-On Mon, 05 Feb 2024 18:49:04 +0800, alice.chao@mediatek.com wrote:
+On Thu, 11 Jan 2024 13:17:21 +0000, Lee Jones wrote:
 
-> When task_tag > 32 (in mcq mode), 1U << task_tag will out of bound
-> for u32 mask. Fix this bug to prevent SHIFT_ISSUE (Bitwise shifts
-> that are out of bounds for their data type).
+> For a far better description of the problem than I could author, see
+> Jon's write-up on LWN [1] and/or Alex's on the Kernel Self Protection
+> Project [1].
 > 
-> [name:debug_monitors&]Unexpected kernel BRK exception at EL1
-> [name:traps&]Internal error: BRK handler: 00000000f2005514 [#1] PREEMPT SMP
-> [name:mediatek_cpufreq_hw&]cpufreq stop DVFS log done
-> [name:mrdump&]Kernel Offset: 0x1ba5800000 from 0xffffffc008000000
-> [name:mrdump&]PHYS_OFFSET: 0x80000000
-> [name:mrdump&]pstate: 22400005 (nzCv daif +PAN -UAO)
-> [name:mrdump&]pc : [0xffffffdbaf52bb2c] ufshcd_clear_cmd+0x280/0x288
-> [name:mrdump&]lr : [0xffffffdbaf52a774] ufshcd_wait_for_dev_cmd+0x3e4/0x82c
-> [name:mrdump&]sp : ffffffc0081471b0
-> <snip>
-> Workqueue: ufs_eh_wq_0 ufshcd_err_handler
-> Call trace:
->  dump_backtrace+0xf8/0x144
->  show_stack+0x18/0x24
->  dump_stack_lvl+0x78/0x9c
->  dump_stack+0x18/0x44
->  mrdump_common_die+0x254/0x480 [mrdump]
->  ipanic_die+0x20/0x30 [mrdump]
->  notify_die+0x15c/0x204
->  die+0x10c/0x5f8
->  arm64_notify_die+0x74/0x13c
->  do_debug_exception+0x164/0x26c
->  el1_dbg+0x64/0x80
->  el1h_64_sync_handler+0x3c/0x90
->  el1h_64_sync+0x68/0x6c
->  ufshcd_clear_cmd+0x280/0x288
->  ufshcd_wait_for_dev_cmd+0x3e4/0x82c
->  ufshcd_exec_dev_cmd+0x5bc/0x9ac
->  ufshcd_verify_dev_init+0x84/0x1c8
->  ufshcd_probe_hba+0x724/0x1ce0
->  ufshcd_host_reset_and_restore+0x260/0x574
->  ufshcd_reset_and_restore+0x138/0xbd0
->  ufshcd_err_handler+0x1218/0x2f28
->  process_one_work+0x5fc/0x1140
->  worker_thread+0x7d8/0xe20
->  kthread+0x25c/0x468
->  ret_from_fork+0x10/0x20
+> [0] https://lwn.net/Articles/69419/
+> [1] https://github.com/KSPP/linux/issues/105
 > 
 > [...]
 
-Applied to 6.8/scsi-fixes, thanks!
+Applied to 6.9/scsi-queue, thanks!
 
-[1/1] ufs: core: fix shift issue in ufshcd_clear_cmd
-      https://git.kernel.org/mkp/scsi/c/b513d30d59bb
+[1/5] scsi: 3w-9xxx: Remove snprintf() from sysfs call-backs and replace with sysfs_emit()
+      https://git.kernel.org/mkp/scsi/c/a977c8158a42
+[2/5] scsi: 3w-sas: Remove snprintf() from sysfs call-backs and replace with sysfs_emit()
+      https://git.kernel.org/mkp/scsi/c/7eaa48e9e497
+[3/5] scsi: 3w-xxxx: Remove snprintf() from sysfs call-backs and replace with sysfs_emit()
+      https://git.kernel.org/mkp/scsi/c/30cc6aa09eee
+[4/5] scsi: 53c700: Remove snprintf() from sysfs call-backs and replace with sysfs_emit()
+      https://git.kernel.org/mkp/scsi/c/f615c74de383
+[5/5] scsi: aacraid: aachba: Replace snprintf() with the safer scnprintf() variant
+      https://git.kernel.org/mkp/scsi/c/bc978cc18d46
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
