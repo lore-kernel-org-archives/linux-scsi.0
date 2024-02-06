@@ -1,78 +1,45 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EF871367;
-	Tue,  6 Feb 2024 01:23:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 106271361;
+	Tue,  6 Feb 2024 01:25:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707182632; cv=none; b=PSPqtbjappFA9Tt9nGv8Xk+lE9xH/TmTuaARTOBpXNnIjTgczLPCoaKW6EB3y+OSFg3LxkEVU//eqYI+Qd9ymsGdYauBLenMvop+25CbdHTAy+45NjdE8Qx6BssZPyOaOKnVISmUJdULKtuAOWcxz4FRoArB89gseA211bShoRM=
+	t=1707182749; cv=none; b=XCXddGxZUM2Xl47SINIiaFPD/0rZw0LnxWDycncMP9RjeQMWqHvAygpPzrIS+BCfQ/GEdots4C5cVNOVXepZZiCtlF1r5+MT1+PFkqBdVwcv/lh03x/fSN9dt05I0XaL3wAbFkNH8P0fwJ7UBeYknFzXeIXNn1nIoTxE3YIZm8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707182632; c=relaxed/simple;
-	bh=1ubqfGFiV9WTKil/Wx37SVzwQ8BHKrAzW1eSpYyA7B8=;
+	s=arc-20240116; t=1707182749; c=relaxed/simple;
+	bh=xPhVl2iyOivm3Z8E/ftGw19JdA9+2hfmNugZ8ePuDhY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kDoIvLIWwFeDghf28sk0SQc8cbS/a+WZQ9vBOO3zE5qmn4eNhhFoNbGnULP+sZMB+Gt+Z00lKPfX8TjIYDmeHn8V4ZMfoHCAACb4K3jhb9Zw70Vi2egLGUxt9cJDHakUdi6XfmjwbVuqhRkMnBNFG/Tdgg+JzY3ipgyvIyW/l5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=j2uWgFRB; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=BLB9xptA; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=j2uWgFRB; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=BLB9xptA; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="j2uWgFRB";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="BLB9xptA";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="j2uWgFRB";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="BLB9xptA"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 8EEE01FB58;
-	Tue,  6 Feb 2024 01:23:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1707182627; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6rW0G9gt7ir2VvM0GiL0nnA+OWvb2ivQWWi+qfcZ2P4=;
-	b=j2uWgFRB4DbaOB5hpl15zCuvPRIVqSp+SUV+P9mwGh0WMsitJkWton6rRnH0v3ggBn+SRa
-	/8bwwmdl4qO6q38Lu6Rf54+FCepsgwBnFzFi53Q4Lnwile1dxgJpcztz+RayhukWYzHLvo
-	UOPgfrtY6fMkPVGFim2x5TEUx0Ngnjs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1707182627;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6rW0G9gt7ir2VvM0GiL0nnA+OWvb2ivQWWi+qfcZ2P4=;
-	b=BLB9xptAhDourhZr65Yzo7WCNS83d2fCmDYxrjfs4E81IjRq+ixBVv9i+91Am+shOzxRVj
-	UpFmebI05hWw7qBQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1707182627; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6rW0G9gt7ir2VvM0GiL0nnA+OWvb2ivQWWi+qfcZ2P4=;
-	b=j2uWgFRB4DbaOB5hpl15zCuvPRIVqSp+SUV+P9mwGh0WMsitJkWton6rRnH0v3ggBn+SRa
-	/8bwwmdl4qO6q38Lu6Rf54+FCepsgwBnFzFi53Q4Lnwile1dxgJpcztz+RayhukWYzHLvo
-	UOPgfrtY6fMkPVGFim2x5TEUx0Ngnjs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1707182627;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6rW0G9gt7ir2VvM0GiL0nnA+OWvb2ivQWWi+qfcZ2P4=;
-	b=BLB9xptAhDourhZr65Yzo7WCNS83d2fCmDYxrjfs4E81IjRq+ixBVv9i+91Am+shOzxRVj
-	UpFmebI05hWw7qBQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2839C132DD;
-	Tue,  6 Feb 2024 01:23:45 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 9yloNSGKwWWpBAAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 06 Feb 2024 01:23:45 +0000
-Message-ID: <ad231c28-c451-4b1d-9d96-c0245d77da28@suse.de>
-Date: Tue, 6 Feb 2024 10:23:43 +0900
+	 In-Reply-To:Content-Type; b=uo+KxHvsFl8v6fiNYaIMlNeaqjWw1+HKoU9d+BXz0kbQJYgS7dzij0b0SavdO/OjOu3NLbijimRGVxWJFVwk9h15LOAfWFayFb6uqAwSek3JvyMzo+9pvi6nQTkwzo7CX5qacbI/CbvjAxuc2LxqX/XJZU90vhJwS5Ciupr1D8I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1d93edfa76dso43259235ad.1;
+        Mon, 05 Feb 2024 17:25:47 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707182747; x=1707787547;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=EfH74TYuZGZBD3gnqL6oIjRHEvMXzZ6fQIQB4Pz4Ego=;
+        b=kF1flErdx+3HzgoCbn2ZqL6N8bQMc1cnbeIDPzGebFi10HbCqR568nmfSdLNUQoYmV
+         tWeqBkyfcGEBjuejGiSyDyQ1b4l1aryVBl+xrlnPV03x7jfzgFCJ07cBk8nJrKQwWV2m
+         GJNe90fb1jTWRZ0wRmILjtLTtprK40fc+IOYMpSsFdeshzydLzPMAsN9FVc0X9Wka+1w
+         jSK4BuFPpkiu9eUvcSpbNnOuVm73wcGIhhDNtpaOqsitKS6zhj4+idSirUL6xPxD+iEV
+         j7zsTFsnlQhzGIdUvBhwEDkMystZHvsxD4hG0YL2XfAwkuetTuCBPqeltn0j3PHGB9PQ
+         a8Vw==
+X-Gm-Message-State: AOJu0YygrJJoy26f12udp754FNVckRIZzmqx07gDzINkNuZJmPM9q0sN
+	0vvWXPEcTZ5LvL2Nj9U8J1SCZQydSBmfgNACe4oE4Fr58TKP7HoKg2bHax3t
+X-Google-Smtp-Source: AGHT+IGeXKRtT9W1LJG6mPRgiHjBJ4zC8hNfCDVBubWzCzv6teg3jEEUa51cp9v1QpDpzST//Kmftw==
+X-Received: by 2002:a17:902:7ec2:b0:1d9:ca7e:f0b4 with SMTP id p2-20020a1709027ec200b001d9ca7ef0b4mr233109plb.16.1707182747168;
+        Mon, 05 Feb 2024 17:25:47 -0800 (PST)
+X-Forwarded-Encrypted: i=0; AJvYcCU9x8L+y+lWN/r9zFUjKzGBPv9YXMGwNjJzW3oy8qIiBoJWDTsmispFFCYlcLYR1sAiYqqQJ0WJsFHMlfW3RKzpB3W9aIDQpgK9dP7/crIJ3PJEX9TDM8DAXz9WiNdg6gVYxtfzI4xeCHULYhC08XODtY85eARSYOmJlSoN31aMs0eJp540BUpzQHGE7efN/YWOQ3MYBh6kFVuNjPaX5skz/XkNIMLyDoC5HREP+XvKw1/frqAlnqPRedln62lT0AKH6A==
+Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
+        by smtp.gmail.com with ESMTPSA id o9-20020a17090323c900b001d94a3f3987sm522408plh.184.2024.02.05.17.25.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 05 Feb 2024 17:25:46 -0800 (PST)
+Message-ID: <04fb99e4-3e67-4c69-b1ff-d8563dc3098d@acm.org>
+Date: Mon, 5 Feb 2024 17:25:45 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,72 +47,36 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] fnic: move fnic_fnic_flush_tx() to a work queue
+Subject: Re: [PATCH 00/26] Zone write plugging
 Content-Language: en-US
-To: Lee Duncan <leeman.duncan@gmail.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Lee Duncan <lduncan@suse.com>
-References: <cover.1706632031.git.lduncan@suse.com>
- <9c51ef07a04413fb2f2bd20f1534f96e004e4e59.1706632031.git.lduncan@suse.com>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <9c51ef07a04413fb2f2bd20f1534f96e004e4e59.1706632031.git.lduncan@suse.com>
+To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
+ Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+References: <20240202073104.2418230-1-dlemoal@kernel.org>
+ <fc7ab626-58ed-49bd-b692-4875d17c6556@acm.org>
+ <548aa284-6c80-4f01-a5ce-bb16f64e9c85@kernel.org>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <548aa284-6c80-4f01-a5ce-bb16f64e9c85@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Authentication-Results: smtp-out2.suse.de;
-	none
-X-Spam-Level: 
-X-Spam-Score: -4.29
-X-Spamd-Result: default: False [-4.29 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 XM_UA_NO_VERSION(0.01)[];
-	 FROM_HAS_DN(0.00)[];
-	 RCPT_COUNT_THREE(0.00)[4];
-	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 TAGGED_RCPT(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 TO_DN_SOME(0.00)[];
-	 BAYES_HAM(-3.00)[100.00%];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 FREEMAIL_TO(0.00)[gmail.com,vger.kernel.org];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 RCVD_TLS_ALL(0.00)[];
-	 MID_RHS_MATCH_FROM(0.00)[]
-X-Spam-Flag: NO
+Content-Transfer-Encoding: 7bit
 
-On 1/31/24 00:42, Lee Duncan wrote:
-> From: Hannes Reinecke <hare@suse.de>
+On 2/5/24 16:07, Damien Le Moal wrote:
+> On 2/6/24 03:18, Bart Van Assche wrote:
+>> Are there numbers available about the performance differences (bandwidth
+>> and latency) between plugging zoned write bios and zoned write plugging
+>> requests?
 > 
-> Rather than call 'fnic_flush_tx()' from interrupt context we should
-> be moving it onto a work queue to avoid any locking issues.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Lee Duncan <lduncan@suse.com>
-> ---
->   drivers/scsi/fnic/fnic.h      | 3 ++-
->   drivers/scsi/fnic/fnic_fcs.c  | 3 ++-
->   drivers/scsi/fnic/fnic_main.c | 1 +
->   drivers/scsi/fnic/fnic_scsi.c | 4 ++--
->   4 files changed, 7 insertions(+), 4 deletions(-)
-> 
-Can you please add the 'fixes' tag to this one, too?
-Just the first patch doesn't fix anything, one really would
-need to apply both to get the issue fixed.
+> Finish reading the cover letter. It has lots of measurements with rc2, Jens
+> block/for-next and ZWP...
+Hmm ... as far as I know nobody ever implemented zoned write plugging
+for requests in the block layer core so these numbers can't be in the
+cover letter.
 
-And, of course, fix the kbuild robot warning :-)
+Has the bio plugging approach perhaps been chosen because it works
+better for bio-based device mapper drivers?
 
-Cheers,
+Thanks,
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Ivo Totev, Andrew McDonald,
-Werner Knoblich
-
+Bart.
