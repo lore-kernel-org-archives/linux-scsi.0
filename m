@@ -1,102 +1,125 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AE291AACF
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Feb 2024 10:40:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E26CC17559
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Feb 2024 10:54:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707302449; cv=none; b=NrHqauFhAHhumFndG/s52W5P9xSGFtt62TEW2NN8tk7aENy28dL3hPkf9wyyFHtU3OlLos2vBok2i88mcZb4Y42L3Dqmvgl0L4RYbLgxWUJdHNsGGbU8MAYnBKNbVWfyFJP5YLf6QjsE6yR6uw4HqEOxXQ8uYH67w14iIWqqvsI=
+	t=1707303301; cv=none; b=HD8xJZbtODNJ5UWBA9CbvM8SFOsMee3/Ufo0UFIKLSVZPIA7RvcxiLpR0yIYx8kjb2EqdBtcoJ3+5nMt9fwLGhtJHa6fPh6MdK+n+0o48TmZxxU+OdoxFLJSawuzs2vJp83Hz0Y8uJVGBGNPKpFUKjwxXY736XvYIX4TJ8ruWvk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707302449; c=relaxed/simple;
-	bh=y7mfnDkpkBX9UzT7rvEawvP3Nzr1YWsD+mlYAX5Q0Io=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ek0E75uzA3zrPckOkV40N8y0QSGoG0AXy8OYEv69LBn6xnPEUAqikZ6t6IulbHmhkJw3groW8IUcIZQGLaBgskQO4J2Pe7EytOaT9RrKirpwQOE+CUJU21tp0zXMhsal7cZj9YYAq7usdAElG3Yop7YmwaozNsCr0rjyX4sknbM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UlLh6B6+; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1707303301; c=relaxed/simple;
+	bh=e4fmaDqWMhnJ82sNuWoq2ZujrDt92CW0laac1DIL6v8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=WlfSp6SentgmvWkvuWnkLMs+b2mdos/6TkfrB2xg6/54WtJvu5n+ePkPNwttM2HW3mkYIaiTEEL+Ucl0VKI9y7KK+Hlvr67hmnKXGwS0tiR9Z4YeRyN7xV2xDagS9YsCLdyUcXvo+wvPoKWGrkDElAL9IH1OuxdgVPPSNZEA0j4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=NEVVRL0X; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UlLh6B6+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1707302447;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=D8D95Wv2uFhy3JNCjiYOnY3j4dsKXxlHj6HBfXvMeto=;
-	b=UlLh6B6+GmpIDJfFTjh/i9d8pb8+L3/vRBYdpijeb17H32mRt8zmA2kbY5k7/kVTowwGl7
-	mxDbLORMenxhQXTbbJ0oIxv6G88WiJV28NY3X2PeHxC7Md54sk2A5/qsLqZVLpVUl874mv
-	w9Q01JS/3jtW6/AUcxhzRr/UIH9a4wU=
-Received: from mail-vk1-f200.google.com (mail-vk1-f200.google.com
- [209.85.221.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-356-srAS6p-XNpawCGIAMrNWSA-1; Wed, 07 Feb 2024 05:40:45 -0500
-X-MC-Unique: srAS6p-XNpawCGIAMrNWSA-1
-Received: by mail-vk1-f200.google.com with SMTP id 71dfb90a1353d-4c0522e6dbdso276323e0c.0
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Feb 2024 02:40:44 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707302444; x=1707907244;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=D8D95Wv2uFhy3JNCjiYOnY3j4dsKXxlHj6HBfXvMeto=;
-        b=gl+YieeiO24PP5JQ+WVQjLvR4mum0NWctJ8zgnM559Y9uCyjkRpfrat3hBa511Qjtz
-         HJejsP/mSXxUvDdJhiWS8/X52kvCaGtQlTCdIglnLTTKOYbur3uJLAtjxdQp0ld+WOb4
-         EJXjzfhC1H8b3E1iWulVxOqmYTXjh2T1ifBJzgWodJ34/J6ZDhqjKl+dkulE/MnjTTwt
-         sokLrtD1zLvTO9Xp+WyxqTVwhL3Zs6JqHYm2FfAE5H2JD4HTK0wObTlDJjazGZnNsNP1
-         OACEcZTOubYh7hWIavVYjUOwEwFOx4NrrQfNmqNKIjQR3v1F5UqtFTKj87ZhBpMD2dYe
-         ceqw==
-X-Gm-Message-State: AOJu0YwCKFIjl+DrZCJh7udv5MgkTBRO5vEpdY2NSOSU5YZnaf/6MFaM
-	86CBmuEgM1JvAFX7Gexx5M5EN8kNzLFMZdBe1o6N1M40k4advlaCX6h2vp/BP0sCcgaIIez6j7V
-	Vaw9vGdFi3V+wvM1A0RW3opWcthcjYUy5zdl0B3Gnv3NudaWk4Elwm0FBk5+NtjRrAYClt2gFiG
-	ahhR3kHaseHuHYoZ1qoAZrWgNRwECfQ+Mi6Q==
-X-Received: by 2002:a05:6122:c96:b0:4b6:dbc2:1079 with SMTP id ba22-20020a0561220c9600b004b6dbc21079mr1573156vkb.0.1707302444590;
-        Wed, 07 Feb 2024 02:40:44 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IEfejQaK4aq55exy2XCBo4m6y6EkX6aYpyYLsWL0ix6y4nkZXQ4E5fDliKxJO3YJcqwURzU4vygUFKNQIQ0Afo=
-X-Received: by 2002:a05:6122:c96:b0:4b6:dbc2:1079 with SMTP id
- ba22-20020a0561220c9600b004b6dbc21079mr1573148vkb.0.1707302444351; Wed, 07
- Feb 2024 02:40:44 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="NEVVRL0X"
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 417AbKK8011762;
+	Wed, 7 Feb 2024 10:54:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=nx0nXQmjR0sEX0ydvAQ81i3sU1PolYGk6jcwdikkVh0=;
+ b=NEVVRL0XwOZcJWWyJJYLqlIP/uHPphAW8B8gL99RyEHfD7A0YiJpZHWXDLMp8suPTz8/
+ JwXMEuC4NSH/P8rIgWJIgeTQVNUbJCDUUxEZJxB8LK58dspgWBymhJOzHGQLfqSYRsJZ
+ yeBnZMYTMULUkiwD/NZQjo+mYGosLj1QPyK1E1i2ehDuZHoPe99OXS/F0LexfVa/gJy+
+ xPhgXQvWXJlfMQmWkQWRWD6eBlByOGJoOs755xbGLHQ817L6jCeZtfJeAc/fvgNbDtL/
+ UT5QbTTPvPzXHXAOfKacqAiXWOKmZ0ufex4dDfPt2gRNdi8ZYm0u2mcAaCPsS3FO9hWk NQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w4890gd7r-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 07 Feb 2024 10:54:55 +0000
+Received: from m0356517.ppops.net (m0356517.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 417Aofgw013687;
+	Wed, 7 Feb 2024 10:54:55 GMT
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w4890gd6s-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 07 Feb 2024 10:54:55 +0000
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 41789U7l005756;
+	Wed, 7 Feb 2024 10:54:54 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3w21akn2cf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 07 Feb 2024 10:54:54 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 417AspEB22020786
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 7 Feb 2024 10:54:51 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 211BA20043;
+	Wed,  7 Feb 2024 10:54:51 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0CF2320040;
+	Wed,  7 Feb 2024 10:54:51 +0000 (GMT)
+Received: from p1gen4-pw042f0m (unknown [9.171.82.240])
+	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Wed,  7 Feb 2024 10:54:51 +0000 (GMT)
+Received: from bblock by p1gen4-pw042f0m with local (Exim 4.97.1)
+	(envelope-from <bblock@linux.ibm.com>)
+	id 1rXfZq-00000000hHX-2TXR;
+	Wed, 07 Feb 2024 11:54:50 +0100
+Date: Wed, 7 Feb 2024 11:54:50 +0100
+From: Benjamin Block <bblock@linux.ibm.com>
+To: Guixin Liu <kanie@linux.alibaba.com>
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: sd: fix sd ida memory leak
+Message-ID: <20240207105450.GA16886@p1gen4-pw042f0m.boeblingen.de.ibm.com>
+References: <20240129090234.7762-1-kanie@linux.alibaba.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20240129090234.7762-1-kanie@linux.alibaba.com>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: jVJuhrtA8j-H5LsEJyxUOus7hmWEdBIx
+X-Proofpoint-ORIG-GUID: HDB8Hmmwk_UVvShJnf9rCg9BLdogoToc
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240207021919.7989-1-michael.christie@oracle.com>
-In-Reply-To: <20240207021919.7989-1-michael.christie@oracle.com>
-From: Maurizio Lombardi <mlombard@redhat.com>
-Date: Wed, 7 Feb 2024 11:40:32 +0100
-Message-ID: <CAFL455m_+s7nHA_FYFHzadb-qWf3VLdCqatGFbWHY1YCeuv3nw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] scsi: target: Fix unmap setup during configuration
-To: Mike Christie <michael.christie@oracle.com>
-Cc: me@xecycle.info, target-devel@vger.kernel.org, martin.petersen@oracle.com, 
-	linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-07_04,2024-01-31_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 clxscore=1011
+ lowpriorityscore=0 bulkscore=0 malwarescore=0 impostorscore=0
+ mlxlogscore=999 spamscore=0 suspectscore=0 priorityscore=1501 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2402070081
 
-st 7. 2. 2024 v 3:19 odes=C3=ADlatel Mike Christie
-<michael.christie@oracle.com> napsal:
->
-> +static int target_try_configure_unmap(struct se_device *dev,
-> +                                     const char *config_opt)
-> +{
-> +       if (!dev->transport->configure_unmap)
-> +               return 0;
+On Mon, Jan 29, 2024 at 05:02:34PM +0800, Guixin Liu wrote:
+> The sd_index_ida should be destroy when the sd module exit.
+> 
+> Signed-off-by: Guixin Liu <kanie@linux.alibaba.com>
+> ---
+>  drivers/scsi/sd.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 0833b3e6aa6e..8b88cba88da2 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -4079,6 +4079,8 @@ static void __exit exit_sd(void)
+>  
+>  	for (i = 0; i < SD_MAJORS; i++)
+>  		unregister_blkdev(sd_major(i), "sd");
+> +
+> +	ida_destroy(&sd_index_ida);
 
-With this patch, if the configure_unmap callback is NULL then we
-return 0, implying that discard is supported.
+Looks good to me.
 
-Before, a NULL configure_unmap callback triggered an error:
 
-        if (flag && !da->max_unmap_block_desc_count) {
-                if (!dev->transport->configure_unmap ||   <<------
-                    !dev->transport->configure_unmap(dev)) {
-                        pr_err("Generic Block Discard not supported\n");
-                        return -ENOSYS;
-                }
-        }
+Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
 
-Shouldn't you return -ENOSYS in target_try_configure_unmap() if
-configure_unmap is NULL?
-
-Maurizio
-
+-- 
+Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
+IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
+Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
+Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
