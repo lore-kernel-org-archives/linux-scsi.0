@@ -1,130 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F369E7FBD9;
-	Wed,  7 Feb 2024 15:52:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52CC782883
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Feb 2024 18:42:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707321125; cv=none; b=rzwMcSxkdI+S6o7jSrlyGaRsuUGKS+LIRyTghzFY5ueqVs2BWzoiDv/OdiIiYonA7dFyyWo5dvsf2kESW3B5ZGfmM/iGZh84/wZS/lU1ajEedyWdWnzlxWppNXIUW3QO20I1C5EUJnSYvvbcWF0TKiKSnC/c1BzJbHXLeEszP2o=
+	t=1707331337; cv=none; b=BbfL3NPqQaBrNtMY0sTYolyvY7He7OPG+68kTrMaGFLLrDdeJp6x4k0bXv2v/TzFhtFn+L6eNUNRZrkL877OrxmKyfK2s2/DoGVvPXaKthWZZkki/H+1Cdu/fw9Yy8zhmdQio1n0ajoRvFjHrqBqb6fMifh21ZEWJizj9p7KXOQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707321125; c=relaxed/simple;
-	bh=/1x7h2DpHjWcd/k76A8g5THiTurxMbwv+SYlEW+93sc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q6hng+cGwy959ErJkpp6V5JzKjivlCDbLsPZ4feC9upV8jiSDOZlxwE8ClUV9Zj7zNhF14PwfG3SOHaDr/hg3vsuxuZgI5RKUDKlRN9/O3/VErZ1PpqJ8sboLE9DzqFKfRCRS7BB8MdDX8QLurUbfXGD1mPn87+HQH2sz3QxcA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S4roDxo8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707331337; c=relaxed/simple;
+	bh=nYX20/aGyNT7+m3RqCINirH/BlFMdF3vqKDQqvuouqs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=saIjZ9072Mwox57yFDmCWGR9PsSIkU77PemxKGAydikUnOIZ/AalvaOYEmS+YDJ0qPoC0+qdWXrlOHmrEhkxm+YxJZFACmH6pl15t9ailyOeT6naf5Ounnq/7dQIUCWi1zZLjsBA4oFM3dAcmPb9y/kQHFd1KDfm1HsRG842Zds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WoqkJjYG; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S4roDxo8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D9B4C43394;
-	Wed,  7 Feb 2024 15:52:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707321123;
-	bh=/1x7h2DpHjWcd/k76A8g5THiTurxMbwv+SYlEW+93sc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=S4roDxo8tVqC2GezTlb3cfXFcp6weQcwLaiGZmdf1pdhhuOhtMsuGhDXsDCMV8GbO
-	 RLxAo3vtpqHJdWUBeO1ZdBUc+YJEiBqPKnzeW10gKgdzx5yAj262qNEjatFr2oewA5
-	 U96gkG8+cuJWYr/hLXC31VNHfddrz7/y70HWgLAxw3ppS44aI4YAdO6JffVBmwOlG8
-	 XU9HW6HuV+8zPXv4xQ3gBEg6Ps5noXk7cufMK2v4qV4yePWova47vaD8FNN7s7EdTb
-	 NB9oCYbsmwivsZGgDOIpD/iQoZTqpkGenaDhqgpVnREaQgX0b1oUD9pyX7pTlppedD
-	 uLYLbPbnYYeQg==
-Date: Wed, 7 Feb 2024 17:51:44 +0200
-From: Mike Rapoport <rppt@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-nvme@lists.infradead.org, bpf@vger.kernel.org
-Subject: Re: [LSF/MM/BPF TOPIC] Reclaiming & documenting page flags
-Message-ID: <ZcOnEGyr6y3jei68@kernel.org>
-References: <Zbcn-P4QKgBhyxdO@casper.infradead.org>
- <Zb9pZTmyb0lPMQs8@kernel.org>
- <ZcACya-MJr_fNRSH@casper.infradead.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WoqkJjYG"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1707331335;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=uzhXO96uioYuw+s+CgtOuyqJZRewhrPzSOw58rzbztg=;
+	b=WoqkJjYG0ase1W4pxkEMRh0nUQ32Ju7rkkyuQiM+6mmX8Nd6S8QvSQHHE4S1zCYKV6Kfhn
+	UBI/dEZnM/4pOBmqQWISCqAHbCtGR1MUMBcvzPOkV5jNKRvJQRVAevWiL8Jpq4htJcTVo5
+	J4Cc2nRex1uEqIdEutNHc23vnVmkhGI=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-84-SOx90uyXOvy1n8fT4n9uqA-1; Wed,
+ 07 Feb 2024 13:42:13 -0500
+X-MC-Unique: SOx90uyXOvy1n8fT4n9uqA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 3689A38212CF;
+	Wed,  7 Feb 2024 18:42:13 +0000 (UTC)
+Received: from fedora-work.redhat.com (unknown [10.22.32.236])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id ADEB340C9444;
+	Wed,  7 Feb 2024 18:42:12 +0000 (UTC)
+From: David Jeffery <djeffery@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	David Jeffery <djeffery@redhat.com>
+Subject: [RFC PATCH 0/6] async device shutdown support
+Date: Wed,  7 Feb 2024 13:40:54 -0500
+Message-ID: <20240207184100.18066-1-djeffery@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZcACya-MJr_fNRSH@casper.infradead.org>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.2
 
-On Sun, Feb 04, 2024 at 09:34:01PM +0000, Matthew Wilcox wrote:
-> On Sun, Feb 04, 2024 at 11:39:33AM +0100, Mike Rapoport wrote:
-> > On Mon, Jan 29, 2024 at 04:32:03AM +0000, Matthew Wilcox wrote:
-> > > Our documentation of the current page flags is ... not great.  I think
-> > > I can improve it for the page cache side of things; I understand the
-> > > meanings of locked, writeback, uptodate, dirty, head, waiters, slab,
-> > > mlocked, mappedtodisk, error, hwpoison, readahead, anon_exclusive,
-> > > has_hwpoisoned, hugetlb and large_remappable.
-> > > 
-> > > Where I'm a lot more shaky is the meaning of the more "real MM" flags,
-> > > like active, referenced, lru, workingset, reserved, reclaim, swapbacked,
-> > > unevictable, young, idle, swapcache, isolated, and reported.
-> > > 
-> > > Perhaps we could have an MM session where we try to explain slowly and
-> > > carefully to each other what all these flags actually mean, talk about
-> > > what combinations of them make sense, how we might eliminate some of
-> > > them to make more space in the flags word, and what all this looks like
-> > > in a memdesc world.
-> > > 
-> > > And maybe we can get some documentation written about it!  Not trying
-> > > to nerd snipe Jon into attending this session, but if he did ...
-> > 
-> > I suspect Jon will be there anyway, but not sure he'd be willing to do the
-> > writing :)
-> > 
-> > I was going to propose the "mm docs" session again, but this one seems more
-> > useful than talking yet again about how hard it is to get MM documentation
-> > done.
-> 
-> I'm doing my best to write documentation as I go.  I think we're a bit
-> better off than we were last year.  Do we have scripts to tell us which
-> public functions (ie EXPORT_SYMBOL and static inline functions in header
-> files) have kernel-doc?  And could we run them against kernels from, say,
-> April 2023, 2022, 2021, 2020, 2019 (and in two months against April 2024)
-> and see how we're doing in terms of percentage undocumented functions?
+This is another attempt to implement an acceptable implementation of async
+device shutdown, inspired by a previous attempt by Tanjore Suresh. For
+systems with many disks, async shutdown can greatly reduce shutdown times
+from having slow operations run in parallel. The older patches were rejected,
+with this new implementation attempting to fix my understanding of the flaws
+in the older patches.
 
-We didn't have such script, but it was easy to compare "grep
-EXPORT_SYMBOL\|static inline" with ".. c:function" in kernel-doc.
-We do improve slowly, but we are still below 50% with kernel-doc for
-EXPORT_SYMBOL functions and slightly above 10% for static inlines.
+Using similar interfaces and building off the ideas of the older patches,
+this patchset creates an async shutdown implementation which follows the
+basic ordering of the shutdown list, ensuring the shutdown of any children
+devices complete whether synchronous or asynchronous before performing
+shutdown on a parent device.
 
-Although with static inlines it's quite possible that the percentage of
-actual public API documentation is higher because some of the functions in
-inlcude/linux/ are only used inside mm.
+In addition to an implementation for asynchronous pci nvme shutdown, this
+patchset also adds support for async shutdown of sd devices for cache flush.
+As an example of the effects of the patch, one system with a large amount of
+disks went from over 30 seconds to shut down to less than 5.
 
-There are also APIs that are not EXPORT_SYMBOL, but I didn't find an easy
-way to check how well there are documented.
+The specific driver changes are the roughest part of this patchset. But the
+acceptability of the core async functionality is critical. Any feedback on
+flaws or improvements is appreciated.
 
-EXPORT_SYMBOL
-version     	funcs	docs	percent
-v5.0        	514	177	34
-v5.6        	538	208	38
-v5.12       	550	209	38
-v5.17       	580	228	39
-v6.3        	580	235	40
-v6.8-rc1    	565	238	42
+David Jeffery (6):
+  minimal async shutdown infrastructure
+  Improve ability to perform async shutdown in parallel
+  pci bus async shutdown support
+  pci nvme async shutdown support
+  scsi mid layer support for async command submit
+  sd: async cache flush on shutdown
 
-static inline
-version     	funcs	docs	percent
-v5.0        	581	33	5
-v5.6        	596	41	6
-v5.12       	629	42	6
-v5.17       	746	74	9
-v6.3        	867	95	10
-v6.8-rc1    	944	116	12
-
- 
-> There's also the problem of getting long-form documentation done.
-> But I think that's a different problem from getting kernel-doc written.
-> Looking at the 55 commits in the last year to Documentation/mm, we seems
-> to be doing a pretty good job of keeping the documentation we have up
-> to date.  Just not a great job of adding new documentation.
-
-I agree that long-form documentation is a different problem from getting
-kernel-doc written and we are not doing a great job in writing new
-documentation.
+ drivers/base/base.h           |   1 +
+ drivers/base/core.c           | 149 +++++++++++++++++++++++++++++++++-
+ drivers/nvme/host/core.c      |  26 ++++--
+ drivers/nvme/host/nvme.h      |   2 +
+ drivers/nvme/host/pci.c       |  53 +++++++++++-
+ drivers/pci/pci-driver.c      |  24 +++++-
+ drivers/scsi/scsi_lib.c       | 138 ++++++++++++++++++++++++-------
+ drivers/scsi/sd.c             |  66 +++++++++++++--
+ drivers/scsi/sd.h             |   2 +
+ include/linux/device/bus.h    |   8 +-
+ include/linux/device/driver.h |   7 ++
+ include/linux/pci.h           |   4 +
+ include/scsi/scsi_device.h    |   8 ++
+ 13 files changed, 439 insertions(+), 49 deletions(-)
 
 -- 
-Sincerely yours,
-Mike.
+2.43.0
+
