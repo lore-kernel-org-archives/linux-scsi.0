@@ -1,119 +1,133 @@
-Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f178.google.com (mail-yw1-f178.google.com [209.85.128.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B10D86BB2F;
-	Thu,  8 Feb 2024 09:37:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E15396F532;
+	Thu,  8 Feb 2024 10:22:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707385045; cv=none; b=e6XCrUQWXCuiiT9cGf3kPdBj54jGhUkcAsIl2VB6n0gRJHpFHliDKGXrU83IlWZr2n/TVqb0zDS4mHiTwbgngL1GecWOVbGj8O28v2uhc9mqV0HpkKwY4awCM5fkkdD/qJDB/7cUUEdmzkxipJOPxXuND3MrWqZv90uKzQRqtAM=
+	t=1707387767; cv=none; b=EIR0ZpqGw/sk6JAD5Vf3BGBRbTlcWck/gdthtrVekusKIdiFooNyfLJ3+waU9gdWGLTmB7yScZFtK7WqCkDohRQeDyVbf/GUHaa1BRFJ5twF99xKnsma6Z3/yBg1uIhs0K59D2RfXehKmpMgD9sI1hulGBgKDL/jX2TlVPo6afA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707385045; c=relaxed/simple;
-	bh=3Q2iyKC4hyp8AoOZUqz27l11mkhP1r9E0t2phlEb+Ck=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=c1YQYn20twW76s7bKXM6rVrVzESYT0O6WTh8uR6zA7KKlndB9dvtKMXRfuWGR94Q3Txl782ZkogDSUZajP6HnCpwXZoIHxvsUlPCbmyAekrAHPxFeB85xCJ9keGdhL69/nKCqgBZXOL5+bPWRg8GoTLV7PEOTR4DJCiPR1UJonU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=NVlOusRq; arc=none smtp.client-ip=83.149.199.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="NVlOusRq"
-Received: from fpc.intra.ispras.ru (unknown [10.10.165.11])
-	by mail.ispras.ru (Postfix) with ESMTPSA id D37D740755CC;
-	Thu,  8 Feb 2024 09:37:11 +0000 (UTC)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru D37D740755CC
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
-	s=default; t=1707385031;
-	bh=2icsXM4sghF71ROYFCFa6roBWVoViRGL+G2hZIeLN2Y=;
-	h=From:To:Cc:Subject:Date:From;
-	b=NVlOusRqo/vP1OrfsuqYNRGwY5C9++itFnlj14yUQ6+AwsQ4QEdlh5gLhmU3FDSW5
-	 oMk7LvL1rPu3oPs9JkKZWAG3B1byV1SmiPnUNO91WvAl6BqSc0+vR/epcA74l4wAKF
-	 Cr+X0r7Gz8m/sOmOzhC/bpSLWGFLTmUsumy1sl0g=
-From: Fedor Pchelkin <pchelkin@ispras.ru>
-To: James Smart <james.smart@broadcom.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
-	Ram Vegesna <ram.vegesna@broadcom.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	Daniel Wagner <dwagner@suse.de>,
-	Hannes Reinecke <hare@suse.de>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	lvc-project@linuxtesting.org,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: elx: efct: adjust error handling inside efct_hw_setup_io
-Date: Thu,  8 Feb 2024 12:36:57 +0300
-Message-Id: <20240208093657.19617-1-pchelkin@ispras.ru>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1707387767; c=relaxed/simple;
+	bh=1UH2o59ts+vAt0TTrrMt0M5kj3HFA0zfmOKue6ZirfE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=j+PL/QxT0g36ulm/V6s1t7MufKfHzMRpkWtduuoWGSqTF9lNoWT1+tQfPU9a7F4BFjUm3GOKpfhGLwHtoeS2o/0GZK23SLX2ZVDRQOsw1M+e0OD/YH5ZwtJns8Wp/dDCbVzLbVdU0vM2Mmwa5BweO6UgiUrI3UTJh9LED/hVilE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-604a05a36d2so10792957b3.0;
+        Thu, 08 Feb 2024 02:22:45 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707387763; x=1707992563;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=P719nC8BiBLtYPLKz3vIEqLB5ifdhnjRlwd0//T3ZAg=;
+        b=IlNbiyjcf8dG395iD7doxlwGKcVSxJrsmz7ukCB2yG1h0+INJsjSEGm5YsAN9ldXwx
+         IaSQZUuSOAtxk57BRtM0ee5LqXHSo+f7Ozs2wtEaKgN2cmTei7LOL2NYpaFL8ReEq3h/
+         SGoXfqdzxw10DHvFNfQiz0ThobMS7tz4EvcfovTvYopfjm+pzo+MkGoP9X4zH+2ujo3w
+         4AV7FOcBdtVTfvp9AxY1/NxvfPxoE+MyVcd9H8so7HkL81sQxLfdD9FPOKegI1/Mf/7j
+         93ae6LkAXqgyC+5dKbMn+klMsGzU5NRDdAwK2JBkiRs3CzeYvCXixTY2iH6RSEGshB5B
+         gVYg==
+X-Gm-Message-State: AOJu0YxcYFcFOSsw798rDZMF4R6xZrmkQ4b9VoOnUynoJxXYneQMCRPY
+	ho83Yf7g2CV8SyJDFFscVgZ3BFTbYXuYX+KytjeUGugH88PUwGnbbb3NC8KF/LM=
+X-Google-Smtp-Source: AGHT+IETwm/JSu9xMfCeplIXYMQedn3Yy9M2WyehpPNbsLU7pfOCtOxdQB1ocMO4lW1vZOO/TvR8qQ==
+X-Received: by 2002:a0d:e893:0:b0:604:a3c1:1b1a with SMTP id r141-20020a0de893000000b00604a3c11b1amr2083104ywe.38.1707387762952;
+        Thu, 08 Feb 2024 02:22:42 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCX2GTO5HIpxHYuILbyGC52lkCMrktua947fzUF70hkuzfGlfeqKANIoI6UqlWH6J74uReyU0kxUFFt+Xena97U1zPIvnH8bdYR/k6NkCOrGZN3KV6tN2BYKpHbCv2Qsu8ph+0jLbUHS8M1quQ==
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com. [209.85.128.172])
+        by smtp.gmail.com with ESMTPSA id b141-20020a0dd993000000b00604941e2f1fsm553131ywe.130.2024.02.08.02.22.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 08 Feb 2024 02:22:42 -0800 (PST)
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-604a05a36d2so10792397b3.0;
+        Thu, 08 Feb 2024 02:22:42 -0800 (PST)
+X-Received: by 2002:a81:e809:0:b0:5ff:b07b:fb0b with SMTP id
+ a9-20020a81e809000000b005ffb07bfb0bmr7260196ywm.49.1707387761877; Thu, 08 Feb
+ 2024 02:22:41 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20240208084512.3803250-1-lee@kernel.org> <20240208084512.3803250-4-lee@kernel.org>
+In-Reply-To: <20240208084512.3803250-4-lee@kernel.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Thu, 8 Feb 2024 11:22:30 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdX72mpGgb3Wp0WRX3V78nn+bWUqiYz25CjeMNPpWaPmxg@mail.gmail.com>
+Message-ID: <CAMuHMdX72mpGgb3Wp0WRX3V78nn+bWUqiYz25CjeMNPpWaPmxg@mail.gmail.com>
+Subject: Re: [PATCH 03/10] scsi: NCR5380: Replace snprintf() with the safer
+ scnprintf() variant
+To: Lee Jones <lee@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org, 
+	Finn Thain <fthain@linux-m68k.org>, Michael Schmitz <schmitzmic@gmail.com>, 
+	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, drew@colorado.edu, 
+	Tnx to <Thomas_Roesch@m2.maus.de>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-IO and WQE buffers are allocated once per HW and can be reused later. If
-WQE buffers allocation fails then the whole allocation is marked as failed
-but already created IO array internal objects are not freed. hw->io is
-freed but not nullified in that specific case - it may become a problem
-later as efct_hw_setup_io() is supposed to be reusable for the same HW.
+Hi Lee,
 
-While at it, use kcalloc instead of kmalloc_array/memset-zero combination
-and get rid of some needless NULL assignments: nullifying hw->io[i]
-elements just before freeing hw->io is not really useful.
+Thanks for your patch!
 
-Found by Linux Verification Center (linuxtesting.org).
+On Thu, Feb 8, 2024 at 9:48=E2=80=AFAM Lee Jones <lee@kernel.org> wrote:
+> There is a general misunderstanding amongst engineers that {v}snprintf()
+> returns the length of the data *actually* encoded into the destination
+> array.  However, as per the C99 standard {v}snprintf() really returns
+> the length of the data that *would have been* written if there were
+> enough space for it.  This misunderstanding has led to buffer-overruns
+> in the past.  It's generally considered safer to use the {v}scnprintf()
+> variants in their place (or even sprintf() in simple cases).  So let's
+> do that.
 
-Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
-Cc: stable@vger.kernel.org
-Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
----
- drivers/scsi/elx/efct/efct_hw.c | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+Confused... The return value is not used at all?
 
-diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
-index 5a5525054d71..e5486e6949f9 100644
---- a/drivers/scsi/elx/efct/efct_hw.c
-+++ b/drivers/scsi/elx/efct/efct_hw.c
-@@ -487,12 +487,10 @@ efct_hw_setup_io(struct efct_hw *hw)
- 	struct efct *efct = hw->os;
- 
- 	if (!hw->io) {
--		hw->io = kmalloc_array(hw->config.n_io, sizeof(io), GFP_KERNEL);
-+		hw->io = kcalloc(hw->config.n_io, sizeof(io), GFP_KERNEL);
- 		if (!hw->io)
- 			return -ENOMEM;
- 
--		memset(hw->io, 0, hw->config.n_io * sizeof(io));
--
- 		for (i = 0; i < hw->config.n_io; i++) {
- 			hw->io[i] = kzalloc(sizeof(*io), GFP_KERNEL);
- 			if (!hw->io[i])
-@@ -502,10 +500,8 @@ efct_hw_setup_io(struct efct_hw *hw)
- 		/* Create WQE buffs for IO */
- 		hw->wqe_buffs = kzalloc((hw->config.n_io * hw->sli.wqe_size),
- 					GFP_KERNEL);
--		if (!hw->wqe_buffs) {
--			kfree(hw->io);
--			return -ENOMEM;
--		}
-+		if (!hw->wqe_buffs)
-+			goto error;
- 
- 	} else {
- 		/* re-use existing IOs, including SGLs */
-@@ -586,10 +582,8 @@ efct_hw_setup_io(struct efct_hw *hw)
- 
- 	return 0;
- error:
--	for (i = 0; i < hw->config.n_io && hw->io[i]; i++) {
-+	for (i = 0; i < hw->config.n_io && hw->io[i]; i++)
- 		kfree(hw->io[i]);
--		hw->io[i] = NULL;
--	}
- 
- 	kfree(hw->io);
- 	hw->io = NULL;
--- 
-2.39.2
+> --- a/drivers/scsi/NCR5380.c
+> +++ b/drivers/scsi/NCR5380.c
+> @@ -421,14 +421,14 @@ static int NCR5380_init(struct Scsi_Host *instance,=
+ int flags)
+>         if (!hostdata->work_q)
+>                 return -ENOMEM;
+>
+> -       snprintf(hostdata->info, sizeof(hostdata->info),
+> -               "%s, irq %d, io_port 0x%lx, base 0x%lx, can_queue %d, cmd=
+_per_lun %d, sg_tablesize %d, this_id %d, flags { %s%s%s}",
+> -               instance->hostt->name, instance->irq, hostdata->io_port,
+> -               hostdata->base, instance->can_queue, instance->cmd_per_lu=
+n,
+> -               instance->sg_tablesize, instance->this_id,
+> -               hostdata->flags & FLAG_DMA_FIXUP     ? "DMA_FIXUP "     :=
+ "",
+> -               hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " :=
+ "",
+> -               hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY " :=
+ "");
+> +       scnprintf(hostdata->info, sizeof(hostdata->info),
+> +                "%s, irq %d, io_port 0x%lx, base 0x%lx, can_queue %d, cm=
+d_per_lun %d, sg_tablesize %d, this_id %d, flags { %s%s%s}",
+> +                instance->hostt->name, instance->irq, hostdata->io_port,
+> +                hostdata->base, instance->can_queue, instance->cmd_per_l=
+un,
+> +                instance->sg_tablesize, instance->this_id,
+> +                hostdata->flags & FLAG_DMA_FIXUP     ? "DMA_FIXUP "     =
+: "",
+> +                hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " =
+: "",
+> +                hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY " =
+: "");
+>
+>         NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+>         NCR5380_write(MODE_REG, MR_BASE);
 
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
