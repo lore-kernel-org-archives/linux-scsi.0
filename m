@@ -1,80 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 788FB7B3C2;
-	Thu,  8 Feb 2024 17:49:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC6D37711;
+	Thu,  8 Feb 2024 19:55:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707414560; cv=none; b=uueJL2vDInCBX+J25cgyOKdRT5OZUlP8qvORbEkw/FhAGy8Qjyx8lVu0lGZFPEuXVAukWXpEq2D0ai3zfmzGkaFYDmCbGaU/4TyEYXIl29zkiFsYypgT15YugOZrFEwGTXMiLAU5NDZImEXM9m0aEl1QlvZGaSZRjtoclR9AgOk=
+	t=1707422110; cv=none; b=Gy8Cy24bRqg8NleDnrFkX4UXYDLxNRcUqTzzl1gS6hvzXcxgaqY0uxD0OrZUhV5Yvj7C6eNg/HHo1WNvGRSzLX70QnIEIbwkX5fQlUTq4qvICYKQKm2vW8yoUsXprm8Ay9ZyUOS+y6JLgWyxjnFWTzFmO9hnN0j7xpfGA1TbEZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707414560; c=relaxed/simple;
-	bh=cUlzWJZIGqNIKI5dwygE++YzgRhCS9mE4C/8W+hc7no=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IH6atazC00QCeb1UObIguDRDk25hWlcSCZVl9YiV81TnNfyg4SZGSHUopp7+sh+YO6BD01Y4+DDfo7dEU6bRYwwXKk2eBMROsdcCbXqkplY4s4G6YdDUgRoN1ApaUp/9jwibi8eOWlSIBABN17s1CvPeYYJUrK9YyTwcc2iVoJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FLCHoYZu; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707422110; c=relaxed/simple;
+	bh=lOfJwpXUdnEs4NdD2l4UxOLwSgcIGRsZp7hL7KAWBwk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=bEKbI34yHN4R2eSAXGVCN+35wrxOf5XMT8u3xJZEOe9d15i4MlMX2wqP/CGmpqF9wvLUZu7BgtwNCJBJWbcfrhAPpvQqA7bCkPLDJpTb8c7nloE6/hxXetrOQcJI3xWBudJ50m6ahNjjXSh9/mUfmb3mZ30maymzTIQyViu2kYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fHFRsg6W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FLCHoYZu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01A38C433F1;
-	Thu,  8 Feb 2024 17:49:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fHFRsg6W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C640C433F1;
+	Thu,  8 Feb 2024 19:55:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707414560;
-	bh=cUlzWJZIGqNIKI5dwygE++YzgRhCS9mE4C/8W+hc7no=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=FLCHoYZuLz/ZxYoFOli5AfVt6L6NAnEQ4hUKl6INUpMysLLhpAre0tt/mOAHV/p/e
-	 j6brqfNgPy5HSnrk0e8sSOsYfNif7vS/nUdTja81IihfnJZ/eGK1QCbmzxuhgE3Ovc
-	 fNdONplRH+8ICQc2cTt7X2gJdqsPqfDG1ovdLRmeCd7ZiuqIdwotqdYMi+d6JXwTnE
-	 8A+geo+EgJku3OA9irYAZkhTmpOVLpZj3Rh4Oyk81L1VzIORM6qfwbqQGbbDjaxLkF
-	 zm6LdpP/7lA9vGtXEpayDPD0YP3NK+PT8ejR2bEMQ9Hc3y3Hv4dIIEaLBCPmy7YP+G
-	 zNkFr8ldPRSBA==
-Date: Thu, 8 Feb 2024 17:49:12 +0000
-From: Lee Jones <lee@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
-	Adam Radford <aradford@gmail.com>,
-	Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-	Andre Hedrick <andre@suse.com>, de Melo <acme@conectiva.com.br>,
-	drew@colorado.edu, Finn Thain <fthain@linux-m68k.org>,
-	Hannes Reinecke <hare@suse.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	Joel Jacobson <linux@3ware.com>,
-	John Garry <john.g.garry@oracle.com>, linux-scsi@vger.kernel.org,
-	Luben Tuikov <luben_tuikov@adaptec.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Michael Schmitz <schmitzmic@gmail.com>,
-	"PMC-Sierra, Inc" <aacraid@pmc-sierra.com>,
-	Richard Hirst <rhirst@linuxcare.com>, support@areca.com.tw,
-	Tnx to <Thomas_Roesch@m2.maus.de>
-Subject: Re: [PATCH 00/10] scsi: Replace {v}snprintf() variants with safer
- alternatives
-Message-ID: <20240208174912.GZ689448@google.com>
-References: <20240208084512.3803250-1-lee@kernel.org>
- <c9129b08-50fb-4371-aa05-6f6c7cd7acfa@acm.org>
+	s=k20201202; t=1707422110;
+	bh=lOfJwpXUdnEs4NdD2l4UxOLwSgcIGRsZp7hL7KAWBwk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=fHFRsg6WccEchUFyrMTDbpsND8UtEeB7G2dQt7WSwW8EOSdvsfxtiFUpL1Bdc8Bek
+	 mh+UH3E7pdkOXekpzAzB2Pte0DAjqeQI7oJCq5r591oq0M4sd/i3vPYbBzncVnNDqg
+	 VdQaxpWDwOL96HRfsQNAt52NDO1G0JOuNMlGofKNd9hhSd8oBzVG7s6bJ8A8fR5LBJ
+	 yysBINVtEdH6Xnc0eqoSx/ALVkQLvXDJRAk7TG96ukqW5tcoESko0YM4DQ9pryNltg
+	 B7qluL+vCL/+79c0MwGCki1auhtFUIYmiLQZ3ztfxrpEONfxrA79RQpZ5zr/curMdQ
+	 h/meCLWH4APjQ==
+Message-ID: <3aa399bb-5007-4d12-88ae-ed244e9a653f@kernel.org>
+Date: Thu, 8 Feb 2024 20:55:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <c9129b08-50fb-4371-aa05-6f6c7cd7acfa@acm.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
+Content-Language: en-US
+To: Michal Hocko <mhocko@suse.com>
+Cc: Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>,
+ lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+ linux-mm@kvack.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Kent Overstreet <kent.overstreet@gmail.com>
+References: <ZZcgXI46AinlcBDP@casper.infradead.org>
+ <ZZzP6731XwZQnz0o@dread.disaster.area>
+ <3ba0dffa-beea-478f-bb6e-777b6304fb69@kernel.org>
+ <ZcUQfzfQ9R8X0s47@tiehlicka>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+In-Reply-To: <ZcUQfzfQ9R8X0s47@tiehlicka>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, 08 Feb 2024, Bart Van Assche wrote:
-
-> On 2/8/24 00:44, Lee Jones wrote:
-> > Cc: Andre Hedrick <andre@suse.com>
+On 2/8/24 18:33, Michal Hocko wrote:
+> On Thu 08-02-24 17:02:07, Vlastimil Babka (SUSE) wrote:
+>> On 1/9/24 05:47, Dave Chinner wrote:
+>> > On Thu, Jan 04, 2024 at 09:17:16PM +0000, Matthew Wilcox wrote:
+>> 
+>> Your points and Kent's proposal of scoped GFP_NOWAIT [1] suggests to me this
+>> is no longer FS-only topic as this isn't just about converting to the scoped
+>> apis, but also how they should be improved.
 > 
-> Please take a look at https://lwn.net/Articles/508222/.
+> Scoped GFP_NOFAIL context is slightly easier from the semantic POV than
+> scoped GFP_NOWAIT as it doesn't add a potentially unexpected failure
+> mode. It is still tricky to deal with GFP_NOWAIT requests inside the
+> NOFAIL scope because that makes it a non failing busy wait for an
+> allocation if we need to insist on scope NOFAIL semantic. 
+> 
+> On the other hand we can define the behavior similar to what you
+> propose with RETRY_MAYFAIL resp. NORETRY. Existing NOWAIT users should
+> better handle allocation failures regardless of the external allocation
+> scope.
+> 
+> Overriding that scoped NOFAIL semantic with RETRY_MAYFAIL or NORETRY
+> resembles the existing PF_MEMALLOC and GFP_NOMEMALLOC semantic and I do
+> not see an immediate problem with that.
+> 
+> Having more NOFAIL allocations is not great but if you need to
+> emulate those by implementing the nofail semantic outside of the
+> allocator then it is better to have those retries inside the allocator
+> IMO.
 
-get_maintainer.pl pulled it from here:
+I see potential issues in scoping both the NOWAIT and NOFAIL
 
-https://github.com/torvalds/linux/blob/master/drivers/scsi/3w-xxxx.c#L11
+- NOFAIL - I'm assuming Dave is adding __GFP_NOFAIL to xfs allocations or
+adjacent layers where he knows they must not fail for his transaction. But
+could the scope affect also something else underneath that could fail
+without the failure propagating in a way that it affects xfs? Maybe it's a
+high-order allocation with a low-order fallback that really should not be
+__GFP_NOFAIL? We would need to hope it has something like RETRY_MAYFAIL or
+NORETRY already. But maybe it just relies on >costly order being more likely
+to fail implicitly, and those costly orders should be kept excluded from the
+scoped NOFAIL? Maybe __GFP_NOWARN should also override the scoped nofail?
 
-I like to involve the people who take the time to list themselves as
-authors.  I guess these are likely to go out of date at one point or
-another, especially in such a long standing subsystem such as SCSI.  Not
-as big of an issue in NFC!
+- NOWAIT - as said already, we need to make sure we're not turning an
+allocation that relied on too-small-to-fail into a null pointer exception or
+BUG_ON(!page). It's probably not feasible to audit everything that can be
+called underneath when adding a new scoped NOWAIT. Static analysis probably
+won't be powerful enough as well. Kent suggested fault injection [1]. We
+have the framework for a system-wide one but I don't know if anyone is
+running it and how successful it is. But maybe we could have a special fault
+injection mode (CONFIG_ option or something) for the NOWAIT scoped
+allocations only. If everything works as expected, there are no crashes and
+the pattern Kent described in [1] has a fallback that's slower but still
+functional. If not, we get a report and known which place to fix, and the
+testing only focuses on the relevant parts. When a new scoped NOWAIT is
+added and bots/CIs running this fault injection config report no issues, we
+can be reasonably sure it's fine?
 
--- 
-Lee Jones [李琼斯]
+[1]
+https://lore.kernel.org/all/zup5yilebkgkrypis4g6zkbft7pywqi57k5aztoio2ufi5ujsd@mfnqu4rarort/
+
+>> [1] http://lkml.kernel.org/r/Zbu_yyChbCO6b2Lj@tiehlicka
+>> 
+>> > We already have memalloc_noreclaim_{save/restore}() for turning off
+>> > direct memory reclaim for a given context (i.e. equivalent of
+>> > clearing __GFP_DIRECT_RECLAIM), so if we are going to embrace scoped
+>> > allocation contexts, then we should be going all in and providing
+>> > all the contexts that filesystems actually need....
+>> > 
+>> > -Dave.
+> 
+
