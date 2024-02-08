@@ -1,116 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 034F06F509;
-	Thu,  8 Feb 2024 10:29:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BA687BAE7;
+	Thu,  8 Feb 2024 16:02:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707388185; cv=none; b=oiKb30AJ0io/u7mwfm6LsZCXK7Lxq/C0k6MTbBdapKWAhmpXtSESHsLBI8ROO3TkiPNG/WwT/bwhRkOV8U1HEY6v6Duyl0b4mJau7l15WFp99maH52BSH67kFvNAA5jLTGgNEbNhix4uAVXPVwNAni5HGriGO6SXkJnNhfzDWCw=
+	t=1707408132; cv=none; b=tm73EUf2c7KKNmiiEjDpnJdgIbSkl3+4Ous3G0wxKuXobv7EWxUIZMuMufVf3BAYp6SbALHP9z0kzjkoyhyVAbYFI5fNV+818e6IXtQXyft18gKIo7IDh2ajSnDaeb4XeL8UM7s0dFO3CU7HAPDnnRRPOTaqcRV4UhaP5WPthWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707388185; c=relaxed/simple;
-	bh=qkRo7Q5No9t3NPm4Abl0ryUd6rcSfQnev/ZgDKvbQBc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KFU9SiL7PZHlZYlfkzCjZMdBgdN6p5uQwarM+tXfuKDD/l9bV33hykTE+c6uBzxoqxlup911pABHglDOJGuPjYF+ZqZle3CIxqybX2GO6+771Dduvw9IX6nufoLuzIq/i6EMTme4PrdZyVKoimW9bvLh8WlRk4aPZXtojHaWo7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XDE1XBjE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707408132; c=relaxed/simple;
+	bh=uTFe5CG7oWonbpeVbz5UaAiaJEjR9X1sZYLpZSCrroE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RpalCi3Iba9l+gDTQVQ3cBC1tUMXBk160Y1LAnXyH40zfhFpUWCpc8ji+oNx+4O1gknE2g4gk8wKste4qnzOATOhpTU/EgHMB1vf+nr0TU668cjzTKpKdUL9DdLen97lP2o8Dt4lFcKVJ/akmTIPH14w0C5G/V6D6u9exhV9VTk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=obJpFnU3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XDE1XBjE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 745DCC433F1;
-	Thu,  8 Feb 2024 10:29:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="obJpFnU3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC76CC433C7;
+	Thu,  8 Feb 2024 16:02:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707388184;
-	bh=qkRo7Q5No9t3NPm4Abl0ryUd6rcSfQnev/ZgDKvbQBc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XDE1XBjE8ZOe0G+au2Wv6Ojw4kDDbxCa+M9/hV+l7bW7svfDswW89uSALgXYrVx2g
-	 o9+cQRgWmwTWT7ir1BT1R2LQKFrHOfJaInNqoA9L80Mh7eReAUx3K5uRHdvhmQCeHM
-	 N7zbu+higQ5XU2DBQZCFQCvreOOuz4pi7WEwviuKwx00NBp7khcX47lBH5eDTX6y//
-	 PrjcECllhYX4ODckX9AsJGMxs6ZuyqDNU7KHHP7UX5XzcrZZb8UcDC5S9dRU7eaI7c
-	 Ymhl+Wr40iifzZPiqErEdmXoSLABJYFTiiRh5LHSV0xOO4d5wC9Uk7YSbufofmUIrw
-	 FyOKTwXTK/ziA==
-Date: Thu, 8 Feb 2024 10:29:39 +0000
-From: Lee Jones <lee@kernel.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
-	Finn Thain <fthain@linux-m68k.org>,
-	Michael Schmitz <schmitzmic@gmail.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	drew@colorado.edu, Tnx to <Thomas_Roesch@m2.maus.de>,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 03/10] scsi: NCR5380: Replace snprintf() with the safer
- scnprintf() variant
-Message-ID: <20240208102939.GF689448@google.com>
-References: <20240208084512.3803250-1-lee@kernel.org>
- <20240208084512.3803250-4-lee@kernel.org>
- <CAMuHMdX72mpGgb3Wp0WRX3V78nn+bWUqiYz25CjeMNPpWaPmxg@mail.gmail.com>
+	s=k20201202; t=1707408132;
+	bh=uTFe5CG7oWonbpeVbz5UaAiaJEjR9X1sZYLpZSCrroE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=obJpFnU3wW/7vWnQ2T7KbJTN1o0DhsaGAsrrj2BVE8zioOEqxNl2MiXnaak9whqbt
+	 OIDJi1LDw4Ob4TOyMXecgyYlB0ULe8cbKEYD18dH7iv2VOYpw90ipR40HRow6soWvg
+	 DkCTi37Z6twlWFr7xB9SDcp4WUYNmxbMlDbECEGxFl+2eUYoaRKZIyH7IwHvpQ9BQu
+	 nNUhloOm8p60q6R9WsjvEZT4tnO900WaEIv/prTxnu+YOB1xTOPKTTYP8o7TuhLlr2
+	 Ljl07+/LdqTtHEHadWQ3k0UZK64B9xF+oq5GtFxTc70ZUxMclN84FsAWvnJLmt4GnN
+	 Cj4n/P6UyVT+g==
+Message-ID: <3ba0dffa-beea-478f-bb6e-777b6304fb69@kernel.org>
+Date: Thu, 8 Feb 2024 17:02:07 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMuHMdX72mpGgb3Wp0WRX3V78nn+bWUqiYz25CjeMNPpWaPmxg@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [LSF/MM/BPF TOPIC] Removing GFP_NOFS
+Content-Language: en-US
+To: Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>
+Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org,
+ linux-mm@kvack.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Kent Overstreet <kent.overstreet@gmail.com>, Michal Hocko <mhocko@kernel.org>
+References: <ZZcgXI46AinlcBDP@casper.infradead.org>
+ <ZZzP6731XwZQnz0o@dread.disaster.area>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+In-Reply-To: <ZZzP6731XwZQnz0o@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, 08 Feb 2024, Geert Uytterhoeven wrote:
-
-> Hi Lee,
+On 1/9/24 05:47, Dave Chinner wrote:
+> On Thu, Jan 04, 2024 at 09:17:16PM +0000, Matthew Wilcox wrote:
+>> This is primarily a _FILESYSTEM_ track topic.  All the work has already
+>> been done on the MM side; the FS people need to do their part.  It could
+>> be a joint session, but I'm not sure there's much for the MM people
+>> to say.
+>> 
+>> There are situations where we need to allocate memory, but cannot call
+>> into the filesystem to free memory.  Generally this is because we're
+>> holding a lock or we've started a transaction, and attempting to write
+>> out dirty folios to reclaim memory would result in a deadlock.
+>> 
+>> The old way to solve this problem is to specify GFP_NOFS when allocating
+>> memory.  This conveys little information about what is being protected
+>> against, and so it is hard to know when it might be safe to remove.
+>> It's also a reflex -- many filesystem authors use GFP_NOFS by default
+>> even when they could use GFP_KERNEL because there's no risk of deadlock.
+>> 
+>> The new way is to use the scoped APIs -- memalloc_nofs_save() and
+>> memalloc_nofs_restore().  These should be called when we start a
+>> transaction or take a lock that would cause a GFP_KERNEL allocation to
+>> deadlock.  Then just use GFP_KERNEL as normal.  The memory allocators
+>> can see the nofs situation is in effect and will not call back into
+>> the filesystem.
 > 
-> Thanks for your patch!
+> So in rebasing the XFS kmem.[ch] removal patchset I've been working
+> on, there is a clear memory allocator function that we need to be
+> scoped: __GFP_NOFAIL.
 > 
-> On Thu, Feb 8, 2024 at 9:48 AM Lee Jones <lee@kernel.org> wrote:
-> > There is a general misunderstanding amongst engineers that {v}snprintf()
-> > returns the length of the data *actually* encoded into the destination
-> > array.  However, as per the C99 standard {v}snprintf() really returns
-> > the length of the data that *would have been* written if there were
-> > enough space for it.  This misunderstanding has led to buffer-overruns
-> > in the past.  It's generally considered safer to use the {v}scnprintf()
-> > variants in their place (or even sprintf() in simple cases).  So let's
-> > do that.
+> All of the allocations done through the existing XFS kmem.[ch]
+> interfaces (i.e just about everything) have __GFP_NOFAIL semantics
+> added except in the explicit cases where we add KM_MAYFAIL to
+> indicate that the allocation can fail.
 > 
-> Confused... The return value is not used at all?
+> The result of this conversion to remove GFP_NOFS is that I'm also
+> adding *dozens* of __GFP_NOFAIL annotations because we effectively
+> scope that behaviour.
+> 
+> Hence I think this discussion needs to consider that __GFP_NOFAIL is
+> also widely used within critical filesystem code that cannot
+> gracefully recover from memory allocation failures, and that this
+> would also be useful to scope....
+> 
+> Yeah, I know, mm developers hate __GFP_NOFAIL. We've been using
+> these semantics NOFAIL in XFS for over 2 decades and the sky hasn't
+> fallen. So can we get memalloc_nofail_{save,restore}() so that we
+> can change the default allocation behaviour in certain contexts
+> (e.g. the same contexts we need NOFS allocations) to be NOFAIL
+> unless __GFP_RETRY_MAYFAIL or __GFP_NORETRY are set?
 
-Future proofing.  The idea of the effort is to rid the use entirely.
+Your points and Kent's proposal of scoped GFP_NOWAIT [1] suggests to me this
+is no longer FS-only topic as this isn't just about converting to the scoped
+apis, but also how they should be improved.
 
- - Usage is inside a sysfs handler passing PAGE_SIZE as the size
-   - s/snprintf/sysfs_emit/
- - Usage is inside a sysfs handler passing a bespoke value as the size
-   - s/snprintf/scnprintf/
- - Return value used, but does *not* care about overflow
-   - s/snprintf/scnprintf/
- - Return value used, caller *does* care about overflow
-   - s/snprintf/seq_buf/
- - Return value not used
-   - s/snprintf/scnprintf/
+[1] http://lkml.kernel.org/r/Zbu_yyChbCO6b2Lj@tiehlicka
 
-This is the final case.
+> We already have memalloc_noreclaim_{save/restore}() for turning off
+> direct memory reclaim for a given context (i.e. equivalent of
+> clearing __GFP_DIRECT_RECLAIM), so if we are going to embrace scoped
+> allocation contexts, then we should be going all in and providing
+> all the contexts that filesystems actually need....
+> 
+> -Dave.
 
-> > --- a/drivers/scsi/NCR5380.c
-> > +++ b/drivers/scsi/NCR5380.c
-> > @@ -421,14 +421,14 @@ static int NCR5380_init(struct Scsi_Host *instance, int flags)
-> >         if (!hostdata->work_q)
-> >                 return -ENOMEM;
-> >
-> > -       snprintf(hostdata->info, sizeof(hostdata->info),
-> > -               "%s, irq %d, io_port 0x%lx, base 0x%lx, can_queue %d, cmd_per_lun %d, sg_tablesize %d, this_id %d, flags { %s%s%s}",
-> > -               instance->hostt->name, instance->irq, hostdata->io_port,
-> > -               hostdata->base, instance->can_queue, instance->cmd_per_lun,
-> > -               instance->sg_tablesize, instance->this_id,
-> > -               hostdata->flags & FLAG_DMA_FIXUP     ? "DMA_FIXUP "     : "",
-> > -               hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
-> > -               hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY " : "");
-> > +       scnprintf(hostdata->info, sizeof(hostdata->info),
-> > +                "%s, irq %d, io_port 0x%lx, base 0x%lx, can_queue %d, cmd_per_lun %d, sg_tablesize %d, this_id %d, flags { %s%s%s}",
-> > +                instance->hostt->name, instance->irq, hostdata->io_port,
-> > +                hostdata->base, instance->can_queue, instance->cmd_per_lun,
-> > +                instance->sg_tablesize, instance->this_id,
-> > +                hostdata->flags & FLAG_DMA_FIXUP     ? "DMA_FIXUP "     : "",
-> > +                hostdata->flags & FLAG_NO_PSEUDO_DMA ? "NO_PSEUDO_DMA " : "",
-> > +                hostdata->flags & FLAG_TOSHIBA_DELAY ? "TOSHIBA_DELAY " : "");
-> >
-> >         NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-> >         NCR5380_write(MODE_REG, MR_BASE);
-
--- 
-Lee Jones [李琼斯]
