@@ -1,82 +1,80 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26BFA125DA;
-	Thu,  8 Feb 2024 17:41:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 788FB7B3C2;
+	Thu,  8 Feb 2024 17:49:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707414063; cv=none; b=WyeNzmGQ9nq+qU4ndAW/ltsH1+fnGKdwmuGJpZAXGT+euHRS0h6cpn5cNyPwpZhOxUZZIUwd+futzoU2X1gILCGs28yswVUS2coCQL1QfY6uy48jJQzKn4D88KUyCSHiZEVJjEdMHxGzgINtrADoQixDxTfM+Cd6ESFDTDdlGoY=
+	t=1707414560; cv=none; b=uueJL2vDInCBX+J25cgyOKdRT5OZUlP8qvORbEkw/FhAGy8Qjyx8lVu0lGZFPEuXVAukWXpEq2D0ai3zfmzGkaFYDmCbGaU/4TyEYXIl29zkiFsYypgT15YugOZrFEwGTXMiLAU5NDZImEXM9m0aEl1QlvZGaSZRjtoclR9AgOk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707414063; c=relaxed/simple;
-	bh=JDlxEd4DUAltJgPtyMqh2rUgGaRPVzcz0OjIShKXtIA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Qr7s4Viewurt7bQgXiLhTKfSFhy9c8F5yoUjEikwct8IaH3OM/qfDnHYhq4BUhpR/Lcpdw/OW2L8DesuOHXgc2rJDRti8NNXqRFG2n7EWok+ZBScgsOE3H2l6IEdTHe0g4DD+wJ/0AV7/RT5xNtDsSF1r/MafXRG4e3N/Ai/aMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1d73066880eso153715ad.3;
-        Thu, 08 Feb 2024 09:41:01 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707414061; x=1708018861;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=JDlxEd4DUAltJgPtyMqh2rUgGaRPVzcz0OjIShKXtIA=;
-        b=Jq2rvyGUVo3NBnO27UpwBVPLO4sjCa/URCATcRE0zyvCopx6kIOdRpIxPzlUm67vqp
-         +N8sMd8nRVrTiuoToBb8TvQvkommp7bSTovBRIjZhdwWljgxCAAvAi+usS2MxrF+dC1z
-         yNY4dDCVrTEJtPdur8eeW5LLNl785V2PF4PvC8fF0HGePokMwn30CJiDpIxwDHkELqx4
-         EbzxGuKI/diNn3nom6GRNGeFyszxIGULBm8n6EXiOYnShYqGz7d8QEqKtMgRqJQWR2xN
-         egc6jZULCyHqOU3mppGKD/diUAdb1D85IAlKuOBJpCz9OILSpUcD9vzACdhSictIoNVV
-         ibrQ==
-X-Gm-Message-State: AOJu0YyZZYGzd2UIh4EJZS8mS5qyFh3JOoVKGfDFV3P03CLAwZxZley7
-	z80g02efr4G8j82mRe4RmvpCn6pij0atrpjnk57kNlmpTSRrxEBB
-X-Google-Smtp-Source: AGHT+IFqbBBf6L/TNgl9ud++eiJTxjSFTetMmFD3k56FU/BMtYyyW70vU5kc2Vv9Z8vtEXTsgQRdTw==
-X-Received: by 2002:a17:903:1c3:b0:1d9:6895:81c3 with SMTP id e3-20020a17090301c300b001d9689581c3mr10652820plh.22.1707414060984;
-        Thu, 08 Feb 2024 09:41:00 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWwjeR7M737s3YhNB8/OXBJ/YXwSu9RCoYeW2dKcndfY2WOZwrqMkODdN7ilPpGQw5lK3nvu+szGFUZIxSQ2ybJTxDZ8uZz3qzlgWHOIBhl8g5GS/coMsWQb13qveBsmfhspOO3IUE7hQwvdwRRrU/JhEUVKbedMJu8qZHEdtrYv8iJ2YFZFHTSBgiFSjNLVmSv4xYyweIy7p+5DybJBdtO/fqCwR4mH4fde0BktHj5NUiBf6GdRz6H/NbgSoX6Qu/x4rYUu86wC6Vw4an0aGhF2DqQBff9j202E9WX/Wz4HgbaDq8ZIIE6W5uRqRCgoMR/QI71vSkiVJ3aC17+ozL0b3cThc36+NIZfO6euMCxM+uHC9SCc1ovwKGvanjnO82FWHJW2xk3gEW0Dan66v9wTQt9t8QYJJOmjWS7uT7cXlVj5VuDU6Qcw7FZIemJQ8fiLoke7LGh24wWCOos2aZ51NKjhNipZ/+l6I9uQbTfLC29kIrV/XrwkfvgQxELkVQTY+LcXI9q0r+gSkJoXgfMwwX5q491x1zxEOBDQyEZ4ToWgMPzZl4bmoGj8MzcRemj8wzOheYD9EBjfUrDS08WDO+qudgq9BL/+CPurFWY1qMMpVFI1Brr7qRMTdno
-Received: from ?IPV6:2620:0:1000:8411:6ab9:a725:60e:97d2? ([2620:0:1000:8411:6ab9:a725:60e:97d2])
-        by smtp.gmail.com with ESMTPSA id g5-20020a170902740500b001d7439bf914sm5255pll.235.2024.02.08.09.40.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 08 Feb 2024 09:41:00 -0800 (PST)
-Message-ID: <c9129b08-50fb-4371-aa05-6f6c7cd7acfa@acm.org>
-Date: Thu, 8 Feb 2024 09:40:55 -0800
+	s=arc-20240116; t=1707414560; c=relaxed/simple;
+	bh=cUlzWJZIGqNIKI5dwygE++YzgRhCS9mE4C/8W+hc7no=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IH6atazC00QCeb1UObIguDRDk25hWlcSCZVl9YiV81TnNfyg4SZGSHUopp7+sh+YO6BD01Y4+DDfo7dEU6bRYwwXKk2eBMROsdcCbXqkplY4s4G6YdDUgRoN1ApaUp/9jwibi8eOWlSIBABN17s1CvPeYYJUrK9YyTwcc2iVoJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FLCHoYZu; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FLCHoYZu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01A38C433F1;
+	Thu,  8 Feb 2024 17:49:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707414560;
+	bh=cUlzWJZIGqNIKI5dwygE++YzgRhCS9mE4C/8W+hc7no=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FLCHoYZuLz/ZxYoFOli5AfVt6L6NAnEQ4hUKl6INUpMysLLhpAre0tt/mOAHV/p/e
+	 j6brqfNgPy5HSnrk0e8sSOsYfNif7vS/nUdTja81IihfnJZ/eGK1QCbmzxuhgE3Ovc
+	 fNdONplRH+8ICQc2cTt7X2gJdqsPqfDG1ovdLRmeCd7ZiuqIdwotqdYMi+d6JXwTnE
+	 8A+geo+EgJku3OA9irYAZkhTmpOVLpZj3Rh4Oyk81L1VzIORM6qfwbqQGbbDjaxLkF
+	 zm6LdpP/7lA9vGtXEpayDPD0YP3NK+PT8ejR2bEMQ9Hc3y3Hv4dIIEaLBCPmy7YP+G
+	 zNkFr8ldPRSBA==
+Date: Thu, 8 Feb 2024 17:49:12 +0000
+From: Lee Jones <lee@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
+	Adam Radford <aradford@gmail.com>,
+	Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+	Andre Hedrick <andre@suse.com>, de Melo <acme@conectiva.com.br>,
+	drew@colorado.edu, Finn Thain <fthain@linux-m68k.org>,
+	Hannes Reinecke <hare@suse.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Joel Jacobson <linux@3ware.com>,
+	John Garry <john.g.garry@oracle.com>, linux-scsi@vger.kernel.org,
+	Luben Tuikov <luben_tuikov@adaptec.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Michael Schmitz <schmitzmic@gmail.com>,
+	"PMC-Sierra, Inc" <aacraid@pmc-sierra.com>,
+	Richard Hirst <rhirst@linuxcare.com>, support@areca.com.tw,
+	Tnx to <Thomas_Roesch@m2.maus.de>
+Subject: Re: [PATCH 00/10] scsi: Replace {v}snprintf() variants with safer
+ alternatives
+Message-ID: <20240208174912.GZ689448@google.com>
+References: <20240208084512.3803250-1-lee@kernel.org>
+ <c9129b08-50fb-4371-aa05-6f6c7cd7acfa@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/10] scsi: Replace {v}snprintf() variants with safer
- alternatives
-Content-Language: en-US
-To: Lee Jones <lee@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
- Adam Radford <aradford@gmail.com>,
- Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
- Andre Hedrick <andre@suse.com>, de Melo <acme@conectiva.com.br>,
- drew@colorado.edu, Finn Thain <fthain@linux-m68k.org>,
- Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley"
- <jejb@linux.ibm.com>, Joel Jacobson <linux@3ware.com>,
- John Garry <john.g.garry@oracle.com>, linux-scsi@vger.kernel.org,
- Luben Tuikov <luben_tuikov@adaptec.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Michael Schmitz <schmitzmic@gmail.com>,
- "PMC-Sierra, Inc" <aacraid@pmc-sierra.com>,
- Richard Hirst <rhirst@linuxcare.com>, support@areca.com.tw,
- Tnx to <Thomas_Roesch@m2.maus.de>
-References: <20240208084512.3803250-1-lee@kernel.org>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240208084512.3803250-1-lee@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <c9129b08-50fb-4371-aa05-6f6c7cd7acfa@acm.org>
 
-On 2/8/24 00:44, Lee Jones wrote:
-> Cc: Andre Hedrick <andre@suse.com>
+On Thu, 08 Feb 2024, Bart Van Assche wrote:
 
-Please take a look at https://lwn.net/Articles/508222/.
+> On 2/8/24 00:44, Lee Jones wrote:
+> > Cc: Andre Hedrick <andre@suse.com>
+> 
+> Please take a look at https://lwn.net/Articles/508222/.
 
-Thanks,
+get_maintainer.pl pulled it from here:
 
-Bart.
+https://github.com/torvalds/linux/blob/master/drivers/scsi/3w-xxxx.c#L11
 
+I like to involve the people who take the time to list themselves as
+authors.  I guess these are likely to go out of date at one point or
+another, especially in such a long standing subsystem such as SCSI.  Not
+as big of an issue in NFC!
+
+-- 
+Lee Jones [李琼斯]
