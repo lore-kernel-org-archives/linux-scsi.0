@@ -1,45 +1,49 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C056E74E2A;
-	Thu,  8 Feb 2024 08:45:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B10D86BB2F;
+	Thu,  8 Feb 2024 09:37:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707381938; cv=none; b=XvpprrpUgadia5CVM1NSfbgfarfEg2WH3gAFQsQQQ/RMtNqLK9CMP09m9oZfyaSzCDTQUCw8UC82r1TDvo6ejO9arz3C8Uah3zWxuBqIEkbYXwvjwKav66MOquzOCS5knTWGAjwg0A3uhAGOkQe7A2LOs2rOJq/r2Vc/UI7eNyQ=
+	t=1707385045; cv=none; b=e6XCrUQWXCuiiT9cGf3kPdBj54jGhUkcAsIl2VB6n0gRJHpFHliDKGXrU83IlWZr2n/TVqb0zDS4mHiTwbgngL1GecWOVbGj8O28v2uhc9mqV0HpkKwY4awCM5fkkdD/qJDB/7cUUEdmzkxipJOPxXuND3MrWqZv90uKzQRqtAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707381938; c=relaxed/simple;
-	bh=qmbHfN/f8YgSLjrFL2hPNhuDBX1LYqccIkoXslfVQ1o=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rRrK3aks/8IQLgXXaD9OhBbxitdQf8znf7J0WXTZz27P6djHe7VX4KzeiHhR87JYXwX1iZZSF+Is6sNxEnKZXHVoI+GYwbuTYKZzGCT5Dhu4aNM3vUk2t7bYT/pDC7+ZNkQql88yrraDSq3eNIvbqzcB3qvuj7z64a8IhLnjIv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LOEmzCzg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707385045; c=relaxed/simple;
+	bh=3Q2iyKC4hyp8AoOZUqz27l11mkhP1r9E0t2phlEb+Ck=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=c1YQYn20twW76s7bKXM6rVrVzESYT0O6WTh8uR6zA7KKlndB9dvtKMXRfuWGR94Q3Txl782ZkogDSUZajP6HnCpwXZoIHxvsUlPCbmyAekrAHPxFeB85xCJ9keGdhL69/nKCqgBZXOL5+bPWRg8GoTLV7PEOTR4DJCiPR1UJonU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=NVlOusRq; arc=none smtp.client-ip=83.149.199.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LOEmzCzg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E6F1C433B1;
-	Thu,  8 Feb 2024 08:45:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707381938;
-	bh=qmbHfN/f8YgSLjrFL2hPNhuDBX1LYqccIkoXslfVQ1o=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=LOEmzCzgxxjlFn+1XmC8QqhwKpmjJFNJilrBiaaa5pcylqyqEEg8E4wf2GwOCaUU9
-	 fegkkGzEwK1cmtc+QpLPwbHg96F2C7Ie9tVls5Ah66PKkdfldLMY9XXQaNy+MNK3dQ
-	 TzGwHdq/qNrgG/Cr+pjuxFRRm9NPhHiumqhc+QF3WTcRiCnwaCytOg2fObaVSrBmY3
-	 ox5G+HNe7WQOAeVbl057M+XYrRXShmn+DlS41O5L/tlxnFXemnFTuln958Q11MuV1e
-	 mbJcvIB59oJizF3UieAN2VSxFeZK+qYR8l+ueWh663SQ/ZO+NG9tBSATUUryXlpqrB
-	 XKnFiJpyUgDUQ==
-From: Lee Jones <lee@kernel.org>
-To: lee@kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="NVlOusRq"
+Received: from fpc.intra.ispras.ru (unknown [10.10.165.11])
+	by mail.ispras.ru (Postfix) with ESMTPSA id D37D740755CC;
+	Thu,  8 Feb 2024 09:37:11 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru D37D740755CC
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+	s=default; t=1707385031;
+	bh=2icsXM4sghF71ROYFCFa6roBWVoViRGL+G2hZIeLN2Y=;
+	h=From:To:Cc:Subject:Date:From;
+	b=NVlOusRqo/vP1OrfsuqYNRGwY5C9++itFnlj14yUQ6+AwsQ4QEdlh5gLhmU3FDSW5
+	 oMk7LvL1rPu3oPs9JkKZWAG3B1byV1SmiPnUNO91WvAl6BqSc0+vR/epcA74l4wAKF
+	 Cr+X0r7Gz8m/sOmOzhC/bpSLWGFLTmUsumy1sl0g=
+From: Fedor Pchelkin <pchelkin@ispras.ru>
+To: James Smart <james.smart@broadcom.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
+	Ram Vegesna <ram.vegesna@broadcom.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	support@areca.com.tw,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH 10/10] scsi: arcmsr: Remove snprintf() from sysfs call-backs and replace with sysfs_emit()
-Date: Thu,  8 Feb 2024 08:44:22 +0000
-Message-ID: <20240208084512.3803250-11-lee@kernel.org>
-X-Mailer: git-send-email 2.43.0.594.gd9cf4e227d-goog
-In-Reply-To: <20240208084512.3803250-1-lee@kernel.org>
-References: <20240208084512.3803250-1-lee@kernel.org>
+	Daniel Wagner <dwagner@suse.de>,
+	Hannes Reinecke <hare@suse.de>,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	lvc-project@linuxtesting.org,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: elx: efct: adjust error handling inside efct_hw_setup_io
+Date: Thu,  8 Feb 2024 12:36:57 +0300
+Message-Id: <20240208093657.19617-1-pchelkin@ispras.ru>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,140 +52,68 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Since snprintf() has the documented, but still rather strange trait of
-returning the length of the data that *would have been* written to the
-array if space were available, rather than the arguably more useful
-length of data *actually* written, it is usually considered wise to use
-something else instead in order to avoid confusion.
+IO and WQE buffers are allocated once per HW and can be reused later. If
+WQE buffers allocation fails then the whole allocation is marked as failed
+but already created IO array internal objects are not freed. hw->io is
+freed but not nullified in that specific case - it may become a problem
+later as efct_hw_setup_io() is supposed to be reusable for the same HW.
 
-In the case of sysfs call-backs, new wrappers exist that do just that.
+While at it, use kcalloc instead of kmalloc_array/memset-zero combination
+and get rid of some needless NULL assignments: nullifying hw->io[i]
+elements just before freeing hw->io is not really useful.
 
-Link: https://lwn.net/Articles/69419/
-Link: https://github.com/KSPP/linux/issues/105
-Signed-off-by: Lee Jones <lee@kernel.org>
+Found by Linux Verification Center (linuxtesting.org).
+
+Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
+Cc: stable@vger.kernel.org
+Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
 ---
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: support@areca.com.tw
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/arcmsr/arcmsr_attr.c | 40 ++++++++-----------------------
- 1 file changed, 10 insertions(+), 30 deletions(-)
+ drivers/scsi/elx/efct/efct_hw.c | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_attr.c b/drivers/scsi/arcmsr/arcmsr_attr.c
-index baeb5e7956902..c430c835503be 100644
---- a/drivers/scsi/arcmsr/arcmsr_attr.c
-+++ b/drivers/scsi/arcmsr/arcmsr_attr.c
-@@ -258,9 +258,7 @@ static ssize_t
- arcmsr_attr_host_driver_version(struct device *dev,
- 				struct device_attribute *attr, char *buf)
- {
--	return snprintf(buf, PAGE_SIZE,
--			"%s\n",
--			ARCMSR_DRIVER_VERSION);
-+	return sysfs_emit(buf, "%s\n", ARCMSR_DRIVER_VERSION);
- }
+diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
+index 5a5525054d71..e5486e6949f9 100644
+--- a/drivers/scsi/elx/efct/efct_hw.c
++++ b/drivers/scsi/elx/efct/efct_hw.c
+@@ -487,12 +487,10 @@ efct_hw_setup_io(struct efct_hw *hw)
+ 	struct efct *efct = hw->os;
  
- static ssize_t
-@@ -270,9 +268,7 @@ arcmsr_attr_host_driver_posted_cmd(struct device *dev,
- 	struct Scsi_Host *host = class_to_shost(dev);
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *) host->hostdata;
--	return snprintf(buf, PAGE_SIZE,
--			"%4d\n",
--			atomic_read(&acb->ccboutstandingcount));
-+	return sysfs_emit(buf, "%4d\n",	atomic_read(&acb->ccboutstandingcount));
- }
+ 	if (!hw->io) {
+-		hw->io = kmalloc_array(hw->config.n_io, sizeof(io), GFP_KERNEL);
++		hw->io = kcalloc(hw->config.n_io, sizeof(io), GFP_KERNEL);
+ 		if (!hw->io)
+ 			return -ENOMEM;
  
- static ssize_t
-@@ -282,9 +278,7 @@ arcmsr_attr_host_driver_reset(struct device *dev,
- 	struct Scsi_Host *host = class_to_shost(dev);
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *) host->hostdata;
--	return snprintf(buf, PAGE_SIZE,
--			"%4d\n",
--			acb->num_resets);
-+	return sysfs_emit(buf, "%4d\n", acb->num_resets);
- }
+-		memset(hw->io, 0, hw->config.n_io * sizeof(io));
+-
+ 		for (i = 0; i < hw->config.n_io; i++) {
+ 			hw->io[i] = kzalloc(sizeof(*io), GFP_KERNEL);
+ 			if (!hw->io[i])
+@@ -502,10 +500,8 @@ efct_hw_setup_io(struct efct_hw *hw)
+ 		/* Create WQE buffs for IO */
+ 		hw->wqe_buffs = kzalloc((hw->config.n_io * hw->sli.wqe_size),
+ 					GFP_KERNEL);
+-		if (!hw->wqe_buffs) {
+-			kfree(hw->io);
+-			return -ENOMEM;
+-		}
++		if (!hw->wqe_buffs)
++			goto error;
  
- static ssize_t
-@@ -294,9 +288,7 @@ arcmsr_attr_host_driver_abort(struct device *dev,
- 	struct Scsi_Host *host = class_to_shost(dev);
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *) host->hostdata;
--	return snprintf(buf, PAGE_SIZE,
--			"%4d\n",
--			acb->num_aborts);
-+	return sysfs_emit(buf, "%4d\n", acb->num_aborts);
- }
+ 	} else {
+ 		/* re-use existing IOs, including SGLs */
+@@ -586,10 +582,8 @@ efct_hw_setup_io(struct efct_hw *hw)
  
- static ssize_t
-@@ -306,9 +298,7 @@ arcmsr_attr_host_fw_model(struct device *dev, struct device_attribute *attr,
- 	struct Scsi_Host *host = class_to_shost(dev);
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *) host->hostdata;
--	return snprintf(buf, PAGE_SIZE,
--			"%s\n",
--			acb->firm_model);
-+	return sysfs_emit(buf, "%s\n", acb->firm_model);
- }
+ 	return 0;
+ error:
+-	for (i = 0; i < hw->config.n_io && hw->io[i]; i++) {
++	for (i = 0; i < hw->config.n_io && hw->io[i]; i++)
+ 		kfree(hw->io[i]);
+-		hw->io[i] = NULL;
+-	}
  
- static ssize_t
-@@ -319,9 +309,7 @@ arcmsr_attr_host_fw_version(struct device *dev,
- 	struct AdapterControlBlock *acb =
- 			(struct AdapterControlBlock *) host->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE,
--			"%s\n",
--			acb->firm_version);
-+	return sysfs_emit(buf, "%s\n", acb->firm_version);
- }
- 
- static ssize_t
-@@ -332,9 +320,7 @@ arcmsr_attr_host_fw_request_len(struct device *dev,
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *) host->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE,
--			"%4d\n",
--			acb->firm_request_len);
-+	return sysfs_emit(buf, "%4d\n", acb->firm_request_len);
- }
- 
- static ssize_t
-@@ -345,9 +331,7 @@ arcmsr_attr_host_fw_numbers_queue(struct device *dev,
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *) host->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE,
--			"%4d\n",
--			acb->firm_numbers_queue);
-+	return sysfs_emit(buf, "%4d\n",	acb->firm_numbers_queue);
- }
- 
- static ssize_t
-@@ -358,9 +342,7 @@ arcmsr_attr_host_fw_sdram_size(struct device *dev,
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *) host->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE,
--			"%4d\n",
--			acb->firm_sdram_size);
-+	return sysfs_emit(buf, "%4d\n", acb->firm_sdram_size);
- }
- 
- static ssize_t
-@@ -371,9 +353,7 @@ arcmsr_attr_host_fw_hd_channels(struct device *dev,
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *) host->hostdata;
- 
--	return snprintf(buf, PAGE_SIZE,
--			"%4d\n",
--			acb->firm_hd_channels);
-+	return sysfs_emit(buf, "%4d\n", acb->firm_hd_channels);
- }
- 
- static DEVICE_ATTR(host_driver_version, S_IRUGO, arcmsr_attr_host_driver_version, NULL);
+ 	kfree(hw->io);
+ 	hw->io = NULL;
 -- 
-2.43.0.594.gd9cf4e227d-goog
+2.39.2
 
