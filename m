@@ -1,137 +1,208 @@
-Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EEA63A8D5
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Feb 2024 22:30:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C04539AD1;
+	Fri,  9 Feb 2024 22:30:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707517818; cv=none; b=q+JyNJL7ggOb9QhJSJ/BUmBdaA9gTSA7z5ILEkGM/H3duCe/puunIOBHyFTdkYRkusCieJHRnzOJsyVDMxwItR27tMW17wa8SyeJkMNwr7M55aA1JS8TrLPk+ZFkxTqjq1Fobfin3It/8QosZgfoEacclaOGh2KAbVsxL99FwVk=
+	t=1707517852; cv=none; b=Ev5AbhJrXXlEz/HQhBr9RdapKgS9FJtYaMUfYnLCxpTnU1mHGGSOFPGTx1Ounm/xysviKLh/rBzN11PyJmbcbAgw3THJPdo+5X9R9JSDoXeNeWThUMYjtkJuxfrvQQCAMQ2rc4bheQWS7fA8Uxvtnlqg/xv89cxYz55hHde2+2E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707517818; c=relaxed/simple;
-	bh=qKs7KyFODwRvXtWZs/ltpJzu4tyt0xFI26Dxz14P230=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=pfyB1smkWrNLpx798wE6jqeuFq2Dy0K+DMW3DkqlqbWqE0Lx12lC1Dk5R3OQHC+Aj0QJsSNirxxadA5VZSaDVCq7LjJHAjZBj55JvzWNgJgJnOD+c7JGHTuwIHVRS5yz8pXA1fLHtuLR8NmpVudBfyt675MtfOeRgGsV2S+3E7k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=pzZwxPDk; arc=none smtp.client-ip=209.85.218.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1707517852; c=relaxed/simple;
+	bh=WfrDfJeZPwMlSR2dpbJWm5p2rTmdITk0It1fj0d3Urg=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=uXwlryZYVIUZJqkInniJ6aeXotaoWjZtW8OKq1ukSA6KWHE6KNaBeXFbahr6wkOtWFze4hyLthrf+MD2qiCyYMgnxfLnIsURb8Rw0waJ2CCZ4os7Ciadbcf0ZbbffeS2KiQJjU9VlRHMg3US9eka77/n615Q6Ve+a5ZBlOBma3I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=XEtpvBpf; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=AerX8605; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="pzZwxPDk"
-Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-a26fa294e56so188885766b.0
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Feb 2024 14:30:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1707517815; x=1708122615; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:references:cc:to
-         :from:content-language:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=nSBmvntcwDdUS387eIDlaFknoXXxdiAibn8OQ3f/lsA=;
-        b=pzZwxPDkMuOn8IzZAwfOLczp+nSwioX5BNOIDNjthDoB3gbpUtqqb2nkkTcb+HPmuV
-         8MVtnFJLReEnf+rtieOXVB2MMfNDl7gdntu7ZuXe6/ktKhvJez6wpECmwqNDWOif31Jp
-         6uY/xmY1csjHuysbHggQTpVdOxt7V7sUVo7nUJJQXb53CujCuTdZwCwz9ZE1qXG8lIfB
-         CwUWZTVW+CXB3yVvgmxhBo8jzzfJtVLdpbHSExBQge/cPl+mWGvUbVYg7pgdmo0tD3Hc
-         JriiG3JJIX4hnvljrjivUv3X87Wb81oqT/09dAOi/N9MKiq1YQhu6zTJNhkH4dqqvpXG
-         Zq/g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707517815; x=1708122615;
-        h=content-transfer-encoding:in-reply-to:autocrypt:references:cc:to
-         :from:content-language:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=nSBmvntcwDdUS387eIDlaFknoXXxdiAibn8OQ3f/lsA=;
-        b=FtQVJrbZS1VaDUwSZsyDUEkfmmpR88kLQOnN93pHajf7QDPga709EnLAYWUZJBWIDS
-         O2HRGu2aVd0v0XILh9329gBbrGL5F9yqbyowdnsc+TrCzWJYjLIj/Q86kuVKRuaPOof1
-         UncQ6AogVSt/2AhxfsNO7s7+qH+YTgmOOAac1mvYln/WN5H7AuArKDTdyLAgk4WVnefs
-         u0G69pDK7X8l/1YB47flzP0uEh4DDz/eF8FArFCfTKNbAIzAN/JE/Dc67+mo4F+FBt9U
-         yNrrsEFM9E39/ES7KXKnZCMtEuaE6csUr/YAZx6O2lKw0XgGobaH/Gt7f8yBJiI5gMNE
-         OYbw==
-X-Gm-Message-State: AOJu0YxZ25ld2U6UwtnVKlkr4D8WzlJj1uOsO8W2ixOjW5U4X1e5igZH
-	Hw9WIS6YHyKYC3kAEBp3dol15e7PIzcpaJBnKp7FDVqbJLHPMwVcKOfJdNCzKO4=
-X-Google-Smtp-Source: AGHT+IGhawL+j1JNpDm+2uht+C960tCrKJwizcQ7uJvRVACxviW8waF9az2rC9cd+IqpxlStuLMMWQ==
-X-Received: by 2002:a17:906:494d:b0:a3b:a3c4:a672 with SMTP id f13-20020a170906494d00b00a3ba3c4a672mr299746ejt.38.1707517815312;
-        Fri, 09 Feb 2024 14:30:15 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCU8nLJ/4mfGE8gW8Kxg87IvLGWhxl0R3XIMeV0JenttIuC2pld+x3ZzEhAVPRrd5R3WFpqiF/2dkbGXoraCt881k6GBzU+vOGIwdqCiXV0gxZW9G7mM7rG9gVX0VpxOo2TKgJWRCc0rzp5KkY8/hxxRFHnkG/SXqAhRK9LO2UNUQaKmN+9ZFXJWNU6gzMqOEE+KZPpbHB8CfROSDjwUQE8vJtuRSpFPU51kUXaItwD196GUlX8V+mNUDETtB/9Iz3/bg9CrC5To0RMtHJl+/eTCjPRJ8ugPUKhcUlX46bTV2RE5Qb4bAMeVHagIq+N2Lz/Y0WbMymj9hceN0vs4lT2Xf20PRk1S0tOmVczuww4AC+NDDcG32JbfbTZndmCTSUGMABzvmZqFoCPEbepAT6TNai+to8Qdl37M98EWfTVVm8NrNl3o4fMRs6jj5hn+l8xNPxrvYp7WBOnolR9tF89jOzRqLcKHbUW7xsB0qaYNmeOd1fJu8b7KFaUV9wYn0TPCMZrZZKfmPN9jts280DBHdfGLwxpg94vbi+bFcnq6LfCte44Gg1G8YFgj8bC1Cjpc4SgNkeu0v4H3wHCxrSt/bV4qrgNmumqboYq+flwnrg==
-Received: from [192.168.192.207] (037008245233.garwolin.vectranet.pl. [37.8.245.233])
-        by smtp.gmail.com with ESMTPSA id hw13-20020a170907a0cd00b00a3820ec721csm1167406ejc.8.2024.02.09.14.30.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 09 Feb 2024 14:30:14 -0800 (PST)
-Message-ID: <ed08942c-3794-4cbf-bb47-d5a7329a1d60@linaro.org>
-Date: Fri, 9 Feb 2024 23:30:12 +0100
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="XEtpvBpf";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="AerX8605"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1707517849;
+	bh=WfrDfJeZPwMlSR2dpbJWm5p2rTmdITk0It1fj0d3Urg=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=XEtpvBpfGPaoKFNnIq+ysOBrp9e/Ff/7ww0vCRd2nHG+toYTuMYu3oQDcMVIqOKWf
+	 49+NfKnnvREKjqERO6x7IB3x4VecfrU/FkvkXEk4YsZ++fNgJPAYc3fPjuXmxkm58Q
+	 BMhr/iUunYCHgB0RR9XTCNCKNdwu3WPln5K7Kl00=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 06E611286810;
+	Fri,  9 Feb 2024 17:30:49 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id LrY6INkDyhof; Fri,  9 Feb 2024 17:30:48 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1707517848;
+	bh=WfrDfJeZPwMlSR2dpbJWm5p2rTmdITk0It1fj0d3Urg=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=AerX8605vZmjHkSHN0qW+4kMCv1YEyA1szkhMLmWqgR0lTcs+fVo5rit2+QNkzzi4
+	 vvUNLAfpmXaSYFv1pQzLPhvoSzjmBQ/t0lmGruyWv0FY02U0fEz4tV47UFheKmSVCj
+	 OnLhGVlE7kbSzIJm4JCQeNXk368JUkcw/pKYLPrc=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 44AE51281625;
+	Fri,  9 Feb 2024 17:30:48 -0500 (EST)
+Message-ID: <df8e539e6f1e708d1a1b0025632ae3b42bb7ff84.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.8-rc3
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Fri, 09 Feb 2024 17:30:46 -0500
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 6/8] arm64: dts: qcom: msm8996: set GCC_UFS_ICE_CORE_CLK
- freq directly
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@linaro.org>
-To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Bjorn Andersson <andersson@kernel.org>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Nitin Rawat <quic_nitirawa@quicinc.com>, Can Guo <quic_cang@quicinc.com>,
- Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>,
- Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
- Conor Dooley <conor+dt@kernel.org>, Andy Gross <andy.gross@linaro.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org
-References: <20240209-msm8996-fix-ufs-v1-0-107b52e57420@linaro.org>
- <20240209-msm8996-fix-ufs-v1-6-107b52e57420@linaro.org>
- <abb8d55e-20b6-4253-9308-019f19d5efb3@linaro.org>
-Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
- 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
- izWDgYvmBE8=
-In-Reply-To: <abb8d55e-20b6-4253-9308-019f19d5efb3@linaro.org>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 9.02.2024 23:29, Konrad Dybcio wrote:
-> On 9.02.2024 22:50, Dmitry Baryshkov wrote:
->> Instead of setting the frequency of the interim UFS_ICE_CORE_CLK_SRC
->> clokc, set the freency of the leaf GCC_UFS_ICE_CORE_CLK clock directly.
->>
->> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
->> ---
-> 
-> Why on earth is the _SRC clock described?
+4 small fixes, 3 in drivers with the remaining core fix being a fixup
+to the one in the last pull request which didn't entirely move checking
+of scsi_host_busy() out from under the host lock.
 
-Ah, I see patch 8 ;)
+The patch is available here:
 
-Konrad
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Alice Chao (1):
+      scsi: ufs: core: Fix shift issue in ufshcd_clear_cmd()
+
+Hannes Reinecke (1):
+      scsi: lpfc: Use unsigned type for num_sge
+
+Ming Lei (1):
+      scsi: core: Move scsi_host_busy() out of host lock if it is for per-command
+
+SEO HOYOUNG (1):
+      scsi: ufs: core: Remove the ufshcd_release() in ufshcd_err_handling_prepare()
+
+And the diffstat:
+
+ drivers/scsi/lpfc/lpfc_scsi.c | 12 ++++++------
+ drivers/scsi/scsi_error.c     |  3 ++-
+ drivers/scsi/scsi_lib.c       |  4 +++-
+ drivers/ufs/core/ufshcd.c     |  5 +++--
+ 4 files changed, 14 insertions(+), 10 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index d26941b131fd..bf879d81846b 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -1918,7 +1918,7 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+  *
+  * Returns the number of SGEs added to the SGL.
+  **/
+-static int
++static uint32_t
+ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		struct sli4_sge *sgl, int datasegcnt,
+ 		struct lpfc_io_buf *lpfc_cmd)
+@@ -1926,8 +1926,8 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	struct scatterlist *sgde = NULL; /* s/g data entry */
+ 	struct sli4_sge_diseed *diseed = NULL;
+ 	dma_addr_t physaddr;
+-	int i = 0, num_sge = 0, status;
+-	uint32_t reftag;
++	int i = 0, status;
++	uint32_t reftag, num_sge = 0;
+ 	uint8_t txop, rxop;
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	uint32_t rc;
+@@ -2099,7 +2099,7 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+  *
+  * Returns the number of SGEs added to the SGL.
+  **/
+-static int
++static uint32_t
+ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		struct sli4_sge *sgl, int datacnt, int protcnt,
+ 		struct lpfc_io_buf *lpfc_cmd)
+@@ -2123,8 +2123,8 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	uint32_t rc;
+ #endif
+ 	uint32_t checking = 1;
+-	uint32_t dma_offset = 0;
+-	int num_sge = 0, j = 2;
++	uint32_t dma_offset = 0, num_sge = 0;
++	int j = 2;
+ 	struct sli4_hybrid_sgl *sgl_xtra = NULL;
+ 
+ 	sgpe = scsi_prot_sglist(sc);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 4f455884fdc4..612489afe8d2 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -282,11 +282,12 @@ static void scsi_eh_inc_host_failed(struct rcu_head *head)
+ {
+ 	struct scsi_cmnd *scmd = container_of(head, typeof(*scmd), rcu);
+ 	struct Scsi_Host *shost = scmd->device->host;
++	unsigned int busy = scsi_host_busy(shost);
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	shost->host_failed++;
+-	scsi_eh_wakeup(shost, scsi_host_busy(shost));
++	scsi_eh_wakeup(shost, busy);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 1fb80eae9a63..df5ac03d5d6c 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -278,9 +278,11 @@ static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ 	rcu_read_lock();
+ 	__clear_bit(SCMD_STATE_INFLIGHT, &cmd->state);
+ 	if (unlikely(scsi_host_in_recovery(shost))) {
++		unsigned int busy = scsi_host_busy(shost);
++
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 		if (shost->host_failed || shost->host_eh_scheduled)
+-			scsi_eh_wakeup(shost, scsi_host_busy(shost));
++			scsi_eh_wakeup(shost, busy);
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 	}
+ 	rcu_read_unlock();
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 029d017fc1b6..d77b25b79ae3 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3057,7 +3057,7 @@ bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd)
+  */
+ static int ufshcd_clear_cmd(struct ufs_hba *hba, u32 task_tag)
+ {
+-	u32 mask = 1U << task_tag;
++	u32 mask;
+ 	unsigned long flags;
+ 	int err;
+ 
+@@ -3075,6 +3075,8 @@ static int ufshcd_clear_cmd(struct ufs_hba *hba, u32 task_tag)
+ 		return 0;
+ 	}
+ 
++	mask = 1U << task_tag;
++
+ 	/* clear outstanding transaction before retry */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	ufshcd_utrl_clear(hba, mask);
+@@ -6352,7 +6354,6 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+ 		ufshcd_hold(hba);
+ 		if (!ufshcd_is_clkgating_allowed(hba))
+ 			ufshcd_setup_clocks(hba, true);
+-		ufshcd_release(hba);
+ 		pm_op = hba->is_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
+ 		ufshcd_vops_resume(hba, pm_op);
+ 	} else {
+
