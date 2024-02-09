@@ -1,86 +1,368 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+Received: from mail-yw1-f170.google.com (mail-yw1-f170.google.com [209.85.128.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0542C8289B;
-	Fri,  9 Feb 2024 19:36:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 170D024A18
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Feb 2024 20:16:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707507408; cv=none; b=jmk0Pqvv7G9+pSffAI5nhas7RKU6TfuyLzg94OScEsADa5tKTKfpzKGSQkrDFTDqsZHN+31AqHh3KIplPViorWERLg6Lqsqnyr/dgFTeIT7CbOKD2SnrJ9vS5g4VGAJAltVlrwdUHhiP4ZNUOuVLZWzYRXaiSIL8VeKKWNOyDwU=
+	t=1707509801; cv=none; b=X/oNK4HbCohBmePwp6tvs8E+vgS4iYBMacc0vHEx2YCAwos95ZtRBpniuTvhf3Y68W7NWwmtDV2iToaDUDNbgVVG1UdBeYeTknnyztvZ8HTdJ7SkVsBDiGGHd2XSwuML+IcRHuivo6335TDVct+fGn04P0ziyzqElHo5zweRONs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707507408; c=relaxed/simple;
-	bh=2qOuEVJqjHfjmuCIFxKvzPggNz79dLmPFMaVWUe93DA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OXDdQ5pJh6U2jF3ARXVgVCDUpjoVYz2JEQzKdLvaSNJ1XNG/W6lpsIvFXMJ76hMyByN+KFtJMRlJpp5DRGIJEtu571tCYoUTDGDXJKOV4IpUWcoPmtYpf+ql+5sSPFx3TeNgCq2kzwZI6/ig4EWa/j3T81AUbOISyfjweX/3XF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6e09ea155c5so411607b3a.2;
-        Fri, 09 Feb 2024 11:36:46 -0800 (PST)
+	s=arc-20240116; t=1707509801; c=relaxed/simple;
+	bh=kVX4vQ4ByZEK9lh6nk6RWEYTTVXDqlDXFXWRV0Lw+c0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NjbEAlYhTceOirTsgIQzoGwTxJ937WoxAQIvBWa2WmIGZjjdvIFMKVmPZpfkyb9K4uicTVfWTPvc9c3vrym6NbbBS91mZbYCKCfu9xHcw0fRHdQHnauFE7Oi7YdL2OO3k4w5VvwMbht1LQhPar6V1YuBXR01gAsQ7DoK7Q9+9tQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Z38MwJEg; arc=none smtp.client-ip=209.85.128.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Z38MwJEg"
+Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-604baa35597so10993397b3.2
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Feb 2024 12:16:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1707509797; x=1708114597; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=NMpzWA/NvlGypXxAfQsKW8uPREZkDEVfe5vKTEeu3qY=;
+        b=Z38MwJEgcdyxWz/PmALdJeJAAZaPV+jrfLr9MEchPVwKGzdhtAPYqleMjBwcl7MIpj
+         F3XbuA3Jt8ZK9B6G2kzEhLDT5J6ji1NWKrfVFEhG2J6b0phODukicK3mqqanw/nfLopU
+         RDzpcN1jCB180SNTXQrSS3rT7BigGROdY2n4LyqObfHFLKp7UPBkI1c4LwVLwm36zZcR
+         pJkE+dZQOSkeLCRMO56GWXMCCp+jH8ZPJllSanxEkgSfVZCTfLwXuNKh2qRg+NHuCHDh
+         HxhNHQBnU6qFGpPiQmmy/8k+mqHxWfpCQDCZLGnynE4vI7oyT0FBWQbxZB337lERq4ep
+         YHPA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707507406; x=1708112206;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2qOuEVJqjHfjmuCIFxKvzPggNz79dLmPFMaVWUe93DA=;
-        b=f6ngsNOAUkQ1sAlZJyryqi4WFOLdlPekXIqxJsMsZpHriVEUakMr4FPrL5Lg5JOSAN
-         ZHkwrFSLJmRQ5pbR9JHJ39sdlOnD9It9RwL+CuLsv/BXGX/akksYUtNcmEHwGXBpmnWN
-         8jIRldPAlIelqvKhJcM4LKRU1B/zkQVhnLYObHGVimameH1Ylkk51C4qfes3JCzAHgOf
-         S9RDgjnyqF76tdbjXCPHLSK9lVVqoF4LbW5KJEslyADXeAMBi2jmqxzpB0sFoPC8gTIv
-         dha0qmldDgTHCzF951q7Tdz4BAtN+349R0iY+MyQ259NFyyiSi5BGY6MkKxB1Wx8YyPY
-         897g==
-X-Gm-Message-State: AOJu0YytQKxt8NzHE9XPDYAd9WhUehm/6dc7SaoAyMizV9dvSdspEP+d
-	R54M/UXZ7VEHybrpeGgPE8fciJTwBZPcYRRMfsBpb0VoAMX7JWaT
-X-Google-Smtp-Source: AGHT+IFytf2Sre3jHj5B5HsndXcftLS5kunAz1JlEMMhI0gBgJPg1l3ITMhL1hxJyevCJgYmIJVcoQ==
-X-Received: by 2002:a05:6a00:26c4:b0:6e0:57b0:80c4 with SMTP id p4-20020a056a0026c400b006e057b080c4mr210861pfw.24.1707507404972;
-        Fri, 09 Feb 2024 11:36:44 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXNnpiczmDnkSTy0MDNLFRRbLXno+yzQV+sbjE4BVe1/PW0X+xTfgKDN6HSpLHg9KckTW4yfSHp2gMANN4qIawYCUP5aYDP2s8ujSN8JiE7AVgUs8HKAAQxkPXpqvqIpkFJqypFLob+/SkUGTaak0liWFfzaEhi4hXp/bQ7Ll7VO4GGeaVMshru9W47iNLTIxIlwpSOj4yma8EOG6/KT3VB+DToZwou9S85bvy93Ed8BZZhjEJfDxOHxggbPU5ZiY4DCqR1ZGxHyrYcYL63pqlM
-Received: from ?IPV6:2620:0:1000:8411:9d77:6767:98c9:caf2? ([2620:0:1000:8411:9d77:6767:98c9:caf2])
-        by smtp.gmail.com with ESMTPSA id g15-20020a056a0023cf00b006e08f07f0d1sm902718pfc.169.2024.02.09.11.36.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 09 Feb 2024 11:36:44 -0800 (PST)
-Message-ID: <e2a1a020-39e3-4b02-a841-3d53bd854106@acm.org>
-Date: Fri, 9 Feb 2024 11:36:43 -0800
+        d=1e100.net; s=20230601; t=1707509797; x=1708114597;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=NMpzWA/NvlGypXxAfQsKW8uPREZkDEVfe5vKTEeu3qY=;
+        b=UBoBOFoRlKsKWRO8sdfz8pjv+vpEHawyq490wp3YMq2hZOqFmz6DkVt9akFbW4C/n9
+         oWe96dbPO5ZTlczlCflZb/ep/WHzdn4wFh2gEWtiekG7j9oGGQmEN3ceHc8qn6U2zBzW
+         UVAH0YXI7Oc+AiUEeKCJwj5yq+6cDkSwyZfDs9SsvrI40WAFT4Ha/lHBv7ZXMxE4tHtJ
+         D3q29nDdF2mdl+ffyQhfVh36uZs3kVq2XyZRE0/3wcvaw/sJLisJrSOkI2D5gbD8d8UB
+         yIDk3MaHBu4xifyh101uX+YH6DiNOBivTTjTJyjEms7/qQe+MvrA7wamqEw86T6OSrnH
+         KBnA==
+X-Gm-Message-State: AOJu0YxGrMqUupSqaBaqDj7qFhMKTaAiYic77bBjSyTcf/PQ/kxuY1yl
+	Fj1Jm6oXTMzWShNqkfBf7JSMk2DgcjQcGcXTldEM7g5NOtmC1E1MJjhrZuAStG9d/RKobbFMVvd
+	7jqE/DotwJY1uhGzoJ+10IGgMbbLzCL9In8i6Gg==
+X-Google-Smtp-Source: AGHT+IEKs6QoPthIdR1JNmTIvNwWvSxQEoXZqRSu0xxDwQDoaITRfhzg8TinZ7IIkOZB6XA8OusWVQbCSnmA58n4RFk=
+X-Received: by 2002:a81:8354:0:b0:5ff:42f2:ef75 with SMTP id
+ t81-20020a818354000000b005ff42f2ef75mr364164ywf.16.1707509796998; Fri, 09 Feb
+ 2024 12:16:36 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 25/26] block: Reduce zone write plugging memory usage
-Content-Language: en-US
-To: Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
- linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
- linux-scsi@vger.kernel.org, "Martin K . Petersen"
- <martin.petersen@oracle.com>, dm-devel@lists.linux.dev,
- Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <20240202073104.2418230-26-dlemoal@kernel.org>
- <09d99780-8311-4ea9-8f48-cf84043d23f6@suse.de>
- <f3a2f8b8-32d2-4e42-ba78-1f668d69033f@acm.org>
- <a324beda-7651-4881-aea9-99a339e2b9eb@kernel.org>
- <2e246189-a450-4061-b94c-73637859d073@acm.org>
- <75240a9d-1862-4d09-9721-fd5463c5d4e5@kernel.org>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <75240a9d-1862-4d09-9721-fd5463c5d4e5@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20240129-ufs-core-reset-fix-v1-0-7ac628aa735f@linaro.org>
+ <20240129-ufs-core-reset-fix-v1-3-7ac628aa735f@linaro.org>
+ <CAA8EJpphzwoCaetGfnM8dE478ic1-BMqXKA3XVLeC9j5BBu3SA@mail.gmail.com> <20240130065550.GF32821@thinkpad>
+In-Reply-To: <20240130065550.GF32821@thinkpad>
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Fri, 9 Feb 2024 22:16:25 +0200
+Message-ID: <CAA8EJpqZYp0C8rT8E=LoVo9fispLNhBn8CEgx1-iMqN_2MQXfg@mail.gmail.com>
+Subject: Re: [PATCH 3/3] arm64: dts: qcom: msm8996: Add missing UFS host
+ controller reset
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konrad.dybcio@linaro.org>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh+dt@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Andy Gross <agross@kernel.org>, Andy Gross <andy.gross@linaro.org>, 
+	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 2/8/24 19:58, Damien Le Moal wrote:
-> We still need to keep in memory the write pointer offset of zones that are not
-> being actively written to but have been previously partially written. So I do
-> not see how excluding empty and full zones from that tracking simplifies
-> anything at all. And the union of wp offset+zone capacity with a pointer to the
-> active zone plug structure is not *that* complicated to handle...
+On Tue, 30 Jan 2024 at 08:55, Manivannan Sadhasivam
+<manivannan.sadhasivam@linaro.org> wrote:
+>
+> On Mon, Jan 29, 2024 at 11:44:15AM +0200, Dmitry Baryshkov wrote:
+> > On Mon, 29 Jan 2024 at 09:55, Manivannan Sadhasivam
+> > <manivannan.sadhasivam@linaro.org> wrote:
+> > >
+> > > UFS host controller reset is required for the drivers to properly reset the
+> > > controller. Hence, add it.
+> > >
+> > > Fixes: 57fc67ef0d35 ("arm64: dts: qcom: msm8996: Add ufs related nodes")
+> > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> >
+> > I think I had issues previously when I attempted to reset the
+> > controller, but it might be because of the incomplete clocks
+> > programming. Let met check whether it works first.
+> >
+>
+> Sure. Please let me know.
 
-Multiple zoned storage device have 1000 or more zones. The number of partially
-written zones is typically less than 10. Hence, tracking the partially written
-zones only will result in significantly less memory being used, fewer CPU cache
-misses and fewer MMU TLB lookup misses. I expect that this will matter since the
-zone information data structure will be accessed every time a zoned write bio is
-processed.
-
-Bart.
+With the clocking fixes in place (I'll send them in a few minutes) and
+with this patch the UFS breaks in the following way:
 
 
+[    4.397919] scsi host0: ufshcd
+[    4.413964] qcom-qmp-ufs-phy 627000.phy: phy initialization timed-out
+[    4.415776] phy phy-627000.phy.3: phy poweron failed --> -110
+[    4.419511] ufshcd-qcom 624000.ufshc: ufs_qcom_power_up_sequence:
+phy power on failed, ret = -110
+[    4.431297] mmc0: SDHCI controller on 74a4900.mmc [74a4900.mmc]
+using ADMA 64-bit
+[    4.484677] ufshcd-qcom 624000.ufshc: Controller enable failed
+[    4.499710] qcom-qmp-ufs-phy 627000.phy: phy initialization timed-out
+[    4.501507] phy phy-627000.phy.3: phy poweron failed --> -110
+[    4.505219] ufshcd-qcom 624000.ufshc: ufs_qcom_power_up_sequence:
+phy power on failed, ret = -110
+[    4.570505] ufshcd-qcom 624000.ufshc: Controller enable failed
+[    4.585232] qcom-qmp-ufs-phy 627000.phy: phy initialization timed-out
+[    4.587296] phy phy-627000.phy.3: phy poweron failed --> -110
+[    4.590733] ufshcd-qcom 624000.ufshc: ufs_qcom_power_up_sequence:
+phy power on failed, ret = -110
+[    4.598942] mmc0: new ultra high speed SDR104 SDHC card at address 5048
+[    4.606103] mmcblk0: mmc0:5048 SD32G 28.8 GiB
+[    4.615871]  mmcblk0: p1
+[    4.656006] ufshcd-qcom 624000.ufshc: Controller enable failed
+[    4.670985] qcom-qmp-ufs-phy 627000.phy: phy initialization timed-out
+[    4.672795] phy phy-627000.phy.3: phy poweron failed --> -110
+[    4.676493] ufshcd-qcom 624000.ufshc: ufs_qcom_power_up_sequence:
+phy power on failed, ret = -110
+[    4.741859] ufshcd-qcom 624000.ufshc: Controller enable failed
+[    4.741942] ufshcd-qcom 624000.ufshc: Host controller enable failed
+[    4.746717] host_regs: 00000000: 0107001f 00000000 00010100 00000000
+[    4.752822] host_regs: 00000010: 01000000 00010217 00000000 00000000
+[    4.759424] host_regs: 00000020: 00000000 00000000 00000000 00000000
+[    4.765751] host_regs: 00000030: 00000000 00000000 00000000 00000000
+[    4.772090] host_regs: 00000040: 00000000 00000000 00000000 00000000
+[    4.778438] host_regs: 00000050: 00000000 00000000 00000000 00000000
+[    4.784758] host_regs: 00000060: 00000000 00000000 00000000 00000000
+[    4.791096] host_regs: 00000070: 00000000 00000000 00000000 00000000
+[    4.797434] host_regs: 00000080: 00000000 00000000 00000000 00000000
+[    4.803789] host_regs: 00000090: 00000000 00000001 00000000 00000000
+[    4.810109] ufshcd-qcom 624000.ufshc: No record of pa_err
+[    4.816439] ufshcd-qcom 624000.ufshc: No record of dl_err
+[    4.821732] ufshcd-qcom 624000.ufshc: No record of nl_err
+[    4.827112] ufshcd-qcom 624000.ufshc: No record of tl_err
+[    4.832497] ufshcd-qcom 624000.ufshc: No record of dme_err
+[    4.837879] ufshcd-qcom 624000.ufshc: No record of auto_hibern8_err
+[    4.843263] ufshcd-qcom 624000.ufshc: No record of fatal_err
+[    4.849424] ufshcd-qcom 624000.ufshc: No record of link_startup_fail
+[    4.855332] ufshcd-qcom 624000.ufshc: No record of resume_fail
+[    4.861670] ufshcd-qcom 624000.ufshc: No record of suspend_fail
+[    4.867351] ufshcd-qcom 624000.ufshc: No record of wlun resume_fail
+[    4.873132] ufshcd-qcom 624000.ufshc: No record of wlun suspend_fail
+[    4.879375] ufshcd-qcom 624000.ufshc: No record of dev_reset
+[    4.885971] ufshcd-qcom 624000.ufshc: No record of host_reset
+[    4.891617] ufshcd-qcom 624000.ufshc: No record of task_abort
+[    4.897273] HCI Vendor Specific Registers 00000000: 000000c8
+00000000 00000000 00000000
+[    4.903001] HCI Vendor Specific Registers 00000010: 00000000
+00000000 00000000 1c00052e
+[    4.910870] HCI Vendor Specific Registers 00000020: 3f011300
+20020000 00000000 00000000
+[    4.918823] HCI Vendor Specific Registers 00000030: 00000000
+00000000 00000000 00000000
+[    4.926831] UFS_UFS_DBG_RD_REG_OCSC 00000000: 00000000 00000000
+00000000 00000000
+[    4.934769] UFS_UFS_DBG_RD_REG_OCSC 00000010: 00000000 00000000
+00000000 00000000
+[    4.942430] UFS_UFS_DBG_RD_REG_OCSC 00000020: 00000000 00000000
+00000000 00000000
+[    4.949876] UFS_UFS_DBG_RD_REG_OCSC 00000030: 00000000 00000000
+00000000 00000000
+[    4.957338] UFS_UFS_DBG_RD_REG_OCSC 00000040: 00000000 00000000
+00000000 00000000
+[    4.964800] UFS_UFS_DBG_RD_REG_OCSC 00000050: 00000000 00000000
+00000000 00000000
+[    4.972270] UFS_UFS_DBG_RD_REG_OCSC 00000060: 00000000 00000000
+00000000 00000000
+[    4.979733] UFS_UFS_DBG_RD_REG_OCSC 00000070: 00000000 00000000
+00000000 00000000
+[    4.987215] UFS_UFS_DBG_RD_REG_OCSC 00000080: 00000000 00000000
+00000000 00000000
+[    4.994675] UFS_UFS_DBG_RD_REG_OCSC 00000090: 00000000 00000000
+00000000 00000000
+[    5.002128] UFS_UFS_DBG_RD_REG_OCSC 000000a0: 00000000 00000000
+00000000 00000000
+[    5.009615] UFS_UFS_DBG_RD_EDTL_RAM 00000000: 00000000 a4491248
+fcf4caf8 44ff663f
+[    5.017059] UFS_UFS_DBG_RD_EDTL_RAM 00000010: 3495a3e2 7be93e99
+2334e629 a9f5c77a
+[    5.024530] UFS_UFS_DBG_RD_EDTL_RAM 00000020: e0edb246 e451c5b7
+d020df23 c84d85e6
+[    5.032019] UFS_UFS_DBG_RD_EDTL_RAM 00000030: 59e307b2 3685dda2
+3d4484ee 33b4d9d9
+[    5.039460] UFS_UFS_DBG_RD_EDTL_RAM 00000040: 4de322b3 5ba15f50
+18e13d42 ca9f93e5
+[    5.046936] UFS_UFS_DBG_RD_EDTL_RAM 00000050: 4ce04e39 954c996e
+0645064b e235d257
+[    5.054385] UFS_UFS_DBG_RD_EDTL_RAM 00000060: b92c1acb 281dc88f
+56ff1877 3307091a
+[    5.061851] UFS_UFS_DBG_RD_EDTL_RAM 00000070: fc19350a 222e4061
+d2cc6217 1fa596f9
+[    5.069381] UFS_UFS_DBG_RD_DESC_RAM 00000000: 00000fff 000245b9
+40000fff 000245d7
+[    5.076783] UFS_UFS_DBG_RD_DESC_RAM 00000010: ed10dc68 0036fe67
+353c512f 0038a521
+[    5.084250] UFS_UFS_DBG_RD_DESC_RAM 00000020: 8c4f244a 003677cc
+c67731d1 00145113
+[    5.091712] UFS_UFS_DBG_RD_DESC_RAM 00000030: fc33c5b6 00357243
+fce1d206 002dc715
+[    5.099178] UFS_UFS_DBG_RD_DESC_RAM 00000040: c54267f1 0039fc1e
+e7e564f7 001d3070
+[    5.106659] UFS_UFS_DBG_RD_DESC_RAM 00000050: a0c0bff6 002a0367
+4a31b6ca 0021a267
+[    5.114108] UFS_UFS_DBG_RD_DESC_RAM 00000060: 085b1f23 002c64ef
+73830a12 0010ff39
+[    5.121586] UFS_UFS_DBG_RD_DESC_RAM 00000070: f902904f 001b0514
+714edb47 002ef768
+[    5.129041] UFS_UFS_DBG_RD_DESC_RAM 00000080: 369035fc 0010e7fe
+17d94504 003895c4
+[    5.136508] UFS_UFS_DBG_RD_DESC_RAM 00000090: 26dd0675 001c14dc
+7503fb3d 00040c95
+[    5.143996] UFS_UFS_DBG_RD_DESC_RAM 000000a0: 945456e2 003932f0
+bf4a51ed 002c0765
+[    5.151444] UFS_UFS_DBG_RD_DESC_RAM 000000b0: c15810a5 001a4fc3
+f9137305 0020c227
+[    5.158902] UFS_UFS_DBG_RD_DESC_RAM 000000c0: 65b22d16 003b9a18
+63d89770 000ab592
+[    5.166365] UFS_UFS_DBG_RD_DESC_RAM 000000d0: d6257375 0016de4d
+1e047776 000ec615
+[    5.173849] UFS_UFS_DBG_RD_DESC_RAM 000000e0: 23184caa 001c5498
+14cd841d 000a2d46
+[    5.181299] UFS_UFS_DBG_RD_DESC_RAM 000000f0: 9a229d09 00041b11
+d2249690 000e4e1b
+[    5.188761] UFS_UFS_DBG_RD_DESC_RAM 00000100: 1a4f6c46 000202d1
+07159e46 0011276c
+[    5.196227] UFS_UFS_DBG_RD_DESC_RAM 00000110: be679f01 00042f38
+1da6fd6c 000c3556
+[    5.203694] UFS_UFS_DBG_RD_DESC_RAM 00000120: 1641cfe1 000996fd
+7c902c15 0005bd54
+[    5.211158] UFS_UFS_DBG_RD_DESC_RAM 00000130: 1ff37280 002c4c5d
+3bb1d9f0 00286f65
+[    5.218624] UFS_UFS_DBG_RD_DESC_RAM 00000140: 9bbc09e5 0028c6e7
+5f5d9dc6 0035d8dd
+[    5.226089] UFS_UFS_DBG_RD_DESC_RAM 00000150: 4a1d5167 00036152
+da64f552 001ac503
+[    5.233572] UFS_UFS_DBG_RD_DESC_RAM 00000160: 8d429104 003cdc65
+cb6eb64b 0031356b
+[    5.241021] UFS_UFS_DBG_RD_DESC_RAM 00000170: 4438c55a 003dc021
+7859ed93 003748ff
+[    5.248497] UFS_UFS_DBG_RD_DESC_RAM 00000180: 581e7129 00249e0f
+1119282b 002eea5e
+[    5.255973] UFS_UFS_DBG_RD_DESC_RAM 00000190: 36c4e1ff 003696c5
+3d26c8d6 00341834
+[    5.263423] UFS_UFS_DBG_RD_DESC_RAM 000001a0: 9569e755 0038c181
+44a04716 00113eee
+[    5.270880] UFS_UFS_DBG_RD_DESC_RAM 000001b0: 2b8126c4 00070e4e
+3c00b95f 003efa6c
+[    5.278349] UFS_UFS_DBG_RD_DESC_RAM 000001c0: fdac7bc9 002bbd97
+0d1b10d7 00279d0e
+[    5.285814] UFS_UFS_DBG_RD_DESC_RAM 000001d0: fd26970f 003ea7dd
+7cfa0dd9 001abe65
+[    5.293300] UFS_UFS_DBG_RD_DESC_RAM 000001e0: 462260e8 00088e88
+6664d825 0025aedb
+[    5.300740] UFS_UFS_DBG_RD_DESC_RAM 000001f0: e6e33f2d 0010a59d
+646f03d7 00042b16
+[    5.308241] UFS_UFS_DBG_RD_PRDT_RAM 00000000: b6500000 0000916c
+c5801d67 000a3550
+[    5.315674] UFS_UFS_DBG_RD_PRDT_RAM 00000010: 7437814c 0005a357
+e44607eb 00093259
+[    5.323140] UFS_UFS_DBG_RD_PRDT_RAM 00000020: 08ff015c 00082c54
+09070e95 000c2704
+[    5.330602] UFS_UFS_DBG_RD_PRDT_RAM 00000030: 3663d4c0 000c5d89
+fb34130e 0009e7ee
+[    5.338069] UFS_UFS_DBG_RD_PRDT_RAM 00000040: c6c207f0 0002a5d5
+50e088ab 0004be17
+[    5.345534] UFS_UFS_DBG_RD_PRDT_RAM 00000050: e0754a0b 000c5ceb
+c99e1281 000549b2
+[    5.353015] UFS_UFS_DBG_RD_PRDT_RAM 00000060: 3bcb7410 0004cd30
+71149cd2 000fc80b
+[    5.360465] UFS_UFS_DBG_RD_PRDT_RAM 00000070: 4012a0d8 000e04a1
+6dc3ae4d 00080c54
+[    5.367951] UFS_UFS_DBG_RD_PRDT_RAM 00000080: 00000040 00000004
+e910c009 0001a567
+[    5.375408] UFS_UFS_DBG_RD_PRDT_RAM 00000090: 0050cd49 0004eaa0
+813bf322 000dd259
+[    5.382856] UFS_UFS_DBG_RD_PRDT_RAM 000000a0: c920cae2 000a55a1
+41816101 000f8065
+[    5.390323] UFS_UFS_DBG_RD_PRDT_RAM 000000b0: e819a0b7 00050746
+f1310132 000ada10
+[    5.397787] UFS_UFS_DBG_RD_PRDT_RAM 000000c0: 2e4801ec 000a3517
+f5544b9f 00008308
+[    5.405253] UFS_UFS_DBG_RD_PRDT_RAM 000000d0: f345c26d 00041935
+b001d7cf 0004a2ff
+[    5.412737] UFS_UFS_DBG_RD_PRDT_RAM 000000e0: 48140248 0005010e
+6039f044 0008131e
+[    5.420185] UFS_UFS_DBG_RD_PRDT_RAM 000000f0: 0c418401 00000000
+70518e69 00053a4c
+[    5.427657] UFS_DBG_RD_REG_UAWM 00000000: 00000000 00000000 00000000 0001fec0
+[    5.435117] UFS_DBG_RD_REG_UARM 00000000: 00000000 00000000 00000001 00000001
+[    5.442255] UFS_DBG_RD_REG_TXUC 00000000: 00000000 00000000 00000000 00000000
+[    5.449349] UFS_DBG_RD_REG_TXUC 00000010: 00000000 00000000 00000000 00000000
+[    5.456467] UFS_DBG_RD_REG_TXUC 00000020: 00000000 00000000 00000000 00000000
+[    5.463585] UFS_DBG_RD_REG_TXUC 00000030: 00000000 00000000 00000000 00000000
+[    5.470719] UFS_DBG_RD_REG_TXUC 00000040: 00000000 00000000 00000000 00000000
+[    5.477825] UFS_DBG_RD_REG_TXUC 00000050: 00000000 00000000 00000000 00000000
+[    5.484963] UFS_DBG_RD_REG_TXUC 00000060: 00000000 00000000 00000000 00000000
+[    5.492076] UFS_DBG_RD_REG_TXUC 00000070: 00000000 00000000 00000000 00000000
+[    5.499189] UFS_DBG_RD_REG_TXUC 00000080: 00000000 00000000 00000000 00000000
+[    5.506294] UFS_DBG_RD_REG_TXUC 00000090: 00000000 00000000 00000000 00000000
+[    5.513413] UFS_DBG_RD_REG_TXUC 000000a0: 00000000 00000000 00000000 00000000
+[    5.520532] UFS_DBG_RD_REG_TXUC 000000b0: 00000001 00000040 00000000 00000004
+[    5.527665] UFS_DBG_RD_REG_RXUC 00000000: 00000000 00000000 00000000 00000004
+[    5.534781] UFS_DBG_RD_REG_RXUC 00000010: 00000000 00000000 00000000 00000000
+[    5.541883] UFS_DBG_RD_REG_RXUC 00000020: 00000000 00000000 00000000 00000000
+[    5.549005] UFS_DBG_RD_REG_RXUC 00000030: 00000000 00000000 00000000 00000000
+[    5.556121] UFS_DBG_RD_REG_RXUC 00000040: 00000000 00000000 00000000 00000000
+[    5.563239] UFS_DBG_RD_REG_RXUC 00000050: 00000000 00000000 00000000 00000001
+[    5.570357] UFS_DBG_RD_REG_RXUC 00000060: 00000040 00000000 00000004
+[    5.577481] UFS_DBG_RD_REG_DFC 00000000: 00000000 00000000 00000000 00000000
+[    5.583897] UFS_DBG_RD_REG_DFC 00000010: 00000000 00000000 00000000 00000000
+[    5.590931] UFS_DBG_RD_REG_DFC 00000020: 00000000 00000000 00000000 00000000
+[    5.597999] UFS_DBG_RD_REG_DFC 00000030: 00000000 00000000 00000000 00000000
+[    5.604998] UFS_DBG_RD_REG_DFC 00000040: ffffffff 00000000 00000000
+[    5.612039] UFS_DBG_RD_REG_TRLUT 00000000: 00000000 00000000
+00000000 00000000
+[    5.618013] UFS_DBG_RD_REG_TRLUT 00000010: 00000000 00000000
+00000000 00000000
+[    5.625318] UFS_DBG_RD_REG_TRLUT 00000020: 00000000 00000000
+00000000 00000000
+[    5.632510] UFS_DBG_RD_REG_TRLUT 00000030: 00000000 00000000
+00000000 00000000
+[    5.639715] UFS_DBG_RD_REG_TRLUT 00000040: 00000000 00000000
+00000000 00000000
+[    5.646918] UFS_DBG_RD_REG_TRLUT 00000050: 00000000 00000000
+00000000 00000000
+[    5.654126] UFS_DBG_RD_REG_TRLUT 00000060: 00000000 00000000
+00000000 00000000
+[    5.661349] UFS_DBG_RD_REG_TRLUT 00000070: 00000000 00000000
+00000000 00000000
+[    5.668536] UFS_DBG_RD_REG_TRLUT 00000080: 00000000 00000000
+[    5.675741] UFS_DBG_RD_REG_TMRLUT 00000000: 00000000 00000000
+00000000 00000000
+[    5.681552] UFS_DBG_RD_REG_TMRLUT 00000010: 00000000 00000000
+00000000 00000000
+[    5.688585] UFS_DBG_RD_REG_TMRLUT 00000020: 00000000
+[    5.695866] ufshcd-qcom 624000.ufshc: UFS Host state=0
+[    5.701079] ufshcd-qcom 624000.ufshc: outstanding reqs=0x0 tasks=0x0
+[    5.706047] ufshcd-qcom 624000.ufshc: saved_err=0x0, saved_uic_err=0x0
+[    5.712550] ufshcd-qcom 624000.ufshc: Device power mode=0, UIC link state=0
+[    5.718895] ufshcd-qcom 624000.ufshc: PM in progress=0, sys. suspended=0
+[    5.725734] ufshcd-qcom 624000.ufshc: Auto BKOPS=0, Host self-block=0
+[    5.732677] ufshcd-qcom 624000.ufshc: Clk gate=1
+[    5.739003] ufshcd-qcom 624000.ufshc: last_hibern8_exit_tstamp at 0
+us, hibern8_exit_cnt=0
+[    5.743712] ufshcd-qcom 624000.ufshc: last intr at 0 us, last intr status=0x0
+[    5.751790] ufshcd-qcom 624000.ufshc: error handling flags=0x0,
+req. abort count=0
+[    5.758985] ufshcd-qcom 624000.ufshc: hba->ufs_version=0x200, Host
+capabilities=0x107001f, caps=0x12cf
+[    5.766477] ufshcd-qcom 624000.ufshc: quirks=0x20, dev. quirks=0x0
+[    5.775729] ufshcd-qcom 624000.ufshc: clk: core_clk, rate: 200000000
+[    5.781911] ufshcd-qcom 624000.ufshc: clk: core_clk_unipro, rate: 150000000
+[    5.788408] ufshcd-qcom 624000.ufshc: clk: core_clk_ice, rate: 300000000
+[    5.799734] ufshcd-qcom 624000.ufshc: error -EIO: Initialization
+failed with error -5
+[    5.823482] ufshcd-qcom 624000.ufshc: error -EIO: ufshcd_pltfrm_init() failed
+[    5.823655] ufshcd-qcom: probe of 624000.ufshc failed with error -5
+
+-- 
+With best wishes
+Dmitry
