@@ -1,146 +1,103 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D36EF57310;
-	Fri,  9 Feb 2024 06:24:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F1CA657B9;
+	Fri,  9 Feb 2024 06:53:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707459860; cv=none; b=QfyJopc5zJbgmyG9WzHdA8ndIswud+D7Jf9tG5f3quH3gvXTdccv8HbccQQajctZTxk+0jNPv2Eed+wmY7gsEgE/V5Gpi37fMbRiQ+fjGXMwBLb6m1GbmLuiUSzd467xJ7u+oOlo9GbKnw3hsoxnX5qu6uIWf88KI5oZrwKbMwo=
+	t=1707461620; cv=none; b=Zq/XjFJuUHJKYf4wwq4EBwE7IABmKf5AoE9U40D9npiLbXpQLmO3H7pCVlEHCHWun6K+yTgjn7tLJy0VvJXtVxCCn9kQ47XjG0EpraRB7oP9BdLcvgJI61BWRrqFv0qnuziITY8xbbjEM/Jsvcbrp3MGw0vfApyJmqb7gKP5P1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707459860; c=relaxed/simple;
-	bh=89RlaZiW2zFWOUG3IqWYiZXQPTee7Dmk8dUcq3QXIrI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=r2UxGf+QMWhCuq4WGLVHE5yco5mVfQXJKEwRGGIBZe6dUYp82pdCyR9QHktPkXQOdQr1Ih2sPPmSfayBRfu2gvhBq7mkxskvZzb+ml1hqp4hN/GHfv+WsFSiu1/rWydHo2EeJpY4LLD/8jKiT4vNW0+GhVkCL+yEKM1YIf4JNWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lPwB5hIf; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=PADFRAJP; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lPwB5hIf; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=PADFRAJP; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1707461620; c=relaxed/simple;
+	bh=eCw7STPKXS+agLadcrN5bno4acjIX2Vj7SN1t1guTTY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZXensqoJwrO9Ad6CKLM7QEwUx43bq9RtK0oIf9SMTDQU3aGVq1N/6fAShbwVQJVwN7ic/Sv7QV6jZFCdcCJGUhVORQjV8V19LVAHDkFY1I+jjxeZDFZ9SxBp6urAGwy7yipMoHavw6nEDxqlt/nakxPM14gGwm5I1CuBH1eQrm8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GZ75NaXl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lPwB5hIf";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="PADFRAJP";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lPwB5hIf";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="PADFRAJP"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id A9E611F7DE;
-	Fri,  9 Feb 2024 06:24:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1707459855; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RLtqCnLoHDcowrIyQ34cuvnOLg2AS9p8XbafIJGUDZs=;
-	b=lPwB5hIf6hZWKniOlXq/i4koRAVGs8RtjFJqe47F5TQRfHJ5cEuZdIVdvCLR3DcEvhxJg6
-	7bl44qQlWxqIC1/n6xY+q+I66ppgehFHifnGG7QGrYuY1uIEIAo8q4cEx0KZluyqhk3BPd
-	0n5lhhOtrJkUGde10/gSVzJNkMHEq4w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1707459855;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RLtqCnLoHDcowrIyQ34cuvnOLg2AS9p8XbafIJGUDZs=;
-	b=PADFRAJP8mnYZ5ZwUwvsrGbb7iJ0bnu2NSLzjomU9kHvvjFsHpkaex8RkN7k+Njhe2NpGD
-	e4UDERtDwR63j2AA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1707459855; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RLtqCnLoHDcowrIyQ34cuvnOLg2AS9p8XbafIJGUDZs=;
-	b=lPwB5hIf6hZWKniOlXq/i4koRAVGs8RtjFJqe47F5TQRfHJ5cEuZdIVdvCLR3DcEvhxJg6
-	7bl44qQlWxqIC1/n6xY+q+I66ppgehFHifnGG7QGrYuY1uIEIAo8q4cEx0KZluyqhk3BPd
-	0n5lhhOtrJkUGde10/gSVzJNkMHEq4w=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1707459855;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=RLtqCnLoHDcowrIyQ34cuvnOLg2AS9p8XbafIJGUDZs=;
-	b=PADFRAJP8mnYZ5ZwUwvsrGbb7iJ0bnu2NSLzjomU9kHvvjFsHpkaex8RkN7k+Njhe2NpGD
-	e4UDERtDwR63j2AA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6B14A1326D;
-	Fri,  9 Feb 2024 06:24:15 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id +kvPGQ/FxWVDXAAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Fri, 09 Feb 2024 06:24:15 +0000
-Date: Fri, 9 Feb 2024 07:24:13 +0100
-From: Daniel Wagner <dwagner@suse.de>
-To: Fedor Pchelkin <pchelkin@ispras.ru>
-Cc: James Smart <james.smart@broadcom.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Ram Vegesna <ram.vegesna@broadcom.com>, 
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, 
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Alexey Khoroshilov <khoroshilov@ispras.ru>, lvc-project@linuxtesting.org, stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: elx: efct: adjust error handling inside
- efct_hw_setup_io
-Message-ID: <2ik7x74hq6exam5ab4v2moauy4lfvqe3r626bxxettseat2nmv@q4gykxnezkff>
-References: <20240208093657.19617-1-pchelkin@ispras.ru>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GZ75NaXl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2397C433F1;
+	Fri,  9 Feb 2024 06:53:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707461620;
+	bh=eCw7STPKXS+agLadcrN5bno4acjIX2Vj7SN1t1guTTY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=GZ75NaXlVXr12MeJ7UTInLufoEUASxRkASW7RN421i1RqFCu10pF0cPq04yb8bYC3
+	 /iLTJXWFrT+tBWun5q5GYHNSdFM3nVoQ2L/NHfXY3/DZDFdukPnudYT34id7t/bOZt
+	 JUCKPlIEUYbB5JKrZOq+QqYJtq8GsHJe5zl59k6vCLjcMMDOzKPAJsYjpPBQx3BOq3
+	 JCAVtCJr+GycKbsl958fi9ohPiqLXpH5XHnaZR4mgWZdCsUwdAcZ/Y/5aJn++WHL9m
+	 ffcXicsnjIq7aieac+mjrpfXnQNhsntN5M0/qz+PHJyQyMA5ZTriJlx43kNRFtHwrW
+	 3qSlwyIUWbAxw==
+Message-ID: <393e6c27-330f-47fd-ae38-09467419adf4@kernel.org>
+Date: Fri, 9 Feb 2024 15:53:37 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240208093657.19617-1-pchelkin@ispras.ru>
-X-Spam-Level: 
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=lPwB5hIf;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=PADFRAJP
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-1.01 / 50.00];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	 TO_DN_SOME(0.00)[];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_TRACE(0.00)[suse.de:+];
-	 MX_GOOD(-0.01)[];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 BAYES_HAM(-0.00)[39.25%];
-	 ARC_NA(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 FROM_HAS_DN(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 MIME_GOOD(-0.10)[text/plain];
-	 DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 RCPT_COUNT_TWELVE(0.00)[12];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 RCVD_TLS_ALL(0.00)[]
-X-Spam-Score: -1.01
-X-Rspamd-Queue-Id: A9E611F7DE
-X-Spam-Flag: NO
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 02/26] block: Remove req_bio_endio()
+Content-Language: en-US
+To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
+ Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+References: <20240202073104.2418230-1-dlemoal@kernel.org>
+ <20240202073104.2418230-3-dlemoal@kernel.org>
+ <f7dd57a7-1612-457e-aec0-5cf2c4d98b78@acm.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <f7dd57a7-1612-457e-aec0-5cf2c4d98b78@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Thu, Feb 08, 2024 at 12:36:57PM +0300, Fedor Pchelkin wrote:
-> IO and WQE buffers are allocated once per HW and can be reused later. If
-> WQE buffers allocation fails then the whole allocation is marked as failed
-> but already created IO array internal objects are not freed. hw->io is
-> freed but not nullified in that specific case - it may become a problem
-> later as efct_hw_setup_io() is supposed to be reusable for the same HW.
+On 2/6/24 02:28, Bart Van Assche wrote:
+> On 2/1/24 23:30, Damien Le Moal wrote:
+>> @@ -916,9 +888,8 @@ bool blk_update_request(struct request *req, blk_status_t
+>> error,
+>>       if (blk_crypto_rq_has_keyslot(req) && nr_bytes >= blk_rq_bytes(req))
+>>           __blk_crypto_rq_put_keyslot(req);
+>>   -    if (unlikely(error && !blk_rq_is_passthrough(req) &&
+>> -             !(req->rq_flags & RQF_QUIET)) &&
+>> -             !test_bit(GD_DEAD, &req->q->disk->state)) {
+>> +    if (unlikely(error && !blk_rq_is_passthrough(req) && !quiet) &&
+>> +        !test_bit(GD_DEAD, &req->q->disk->state)) {
 > 
-> While at it, use kcalloc instead of kmalloc_array/memset-zero combination
-> and get rid of some needless NULL assignments: nullifying hw->io[i]
-> elements just before freeing hw->io is not really useful.
-> 
-> Found by Linux Verification Center (linuxtesting.org).
-> 
-> Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+> The new indentation of !test_bit(GD_DEAD, &req->q->disk->state) looks odd to me
 
-The patch looks okay. Though I think this funktion leaks all over the
-place memory as soon we take the error path. Could you also prepare
-a fix for these path while you are at it?
+But it is actually correct because that test bit is not part of the unlikely().
+Not sure if that is intentional though.
 
-Thanks!
-Daniel
+> ...
+> 
+>>           blk_print_req_error(req, error);
+>>           trace_block_rq_error(req, error, nr_bytes);
+>>       }
+>> @@ -930,12 +901,37 @@ bool blk_update_request(struct request *req,
+>> blk_status_t error,
+>>           struct bio *bio = req->bio;
+>>           unsigned bio_bytes = min(bio->bi_iter.bi_size, nr_bytes);
+>>   -        if (bio_bytes == bio->bi_iter.bi_size)
+>> +        if (unlikely(error))
+>> +            bio->bi_status = error;
+>> +
+>> +        if (bio_bytes == bio->bi_iter.bi_size) {
+>>               req->bio = bio->bi_next;
+> 
+> The behavior has been changed compared to the original code: the original code
+> only tests bio_bytes if error == 0. The new code tests bio_bytes no matter what
+> value the 'error' variable has. Is this behavior change intentional?
+
+No change actually. The bio_bytes test was in blk_update_request() already.
+
+> 
+> Otherwise this patch looks good to me.
+> 
+> Thanks,
+> 
+> Bart.
+
+-- 
+Damien Le Moal
+Western Digital Research
+
