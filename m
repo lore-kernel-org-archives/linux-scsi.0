@@ -1,73 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6980E56B7C;
-	Fri,  9 Feb 2024 05:28:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D36EF57310;
+	Fri,  9 Feb 2024 06:24:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707456508; cv=none; b=Uyh3tP5Lgns8BXS/6GDMAMsyF2KSPqA/2TAa49LcDF0uVTysgHsNVl++qbeFz2Q5q3N98MiE3GB18cpCPA3mOw2Vn1BC4GlTqwHfejSLf+0ooL6eNup+Zg/hn/wJZKgZLttfyRMp9CtQ4RFB0oz0r3Tn1C0m3yAZkiTfOWfWoj0=
+	t=1707459860; cv=none; b=QfyJopc5zJbgmyG9WzHdA8ndIswud+D7Jf9tG5f3quH3gvXTdccv8HbccQQajctZTxk+0jNPv2Eed+wmY7gsEgE/V5Gpi37fMbRiQ+fjGXMwBLb6m1GbmLuiUSzd467xJ7u+oOlo9GbKnw3hsoxnX5qu6uIWf88KI5oZrwKbMwo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707456508; c=relaxed/simple;
-	bh=XzE+CcfIAI0z1FD5PEtj1tZUMdv8OdcuxPZR9vH0dg8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IZJfyHplrY1sqAPJL6c99DO4RAqjjF+ltgBDyuu9oAE+n6lLb/HBqoy+9NebsGURufkwwyvV7TQNAwJBluo5AhTVNUYuuHhmHauCONK30sMRFgX1RpidHn6brDA0/LqAWzMjSGiSjasGFBJ88b6Jb8ocnyEa584R9A8RlWH8KQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZnisQ25U; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707459860; c=relaxed/simple;
+	bh=89RlaZiW2zFWOUG3IqWYiZXQPTee7Dmk8dUcq3QXIrI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=r2UxGf+QMWhCuq4WGLVHE5yco5mVfQXJKEwRGGIBZe6dUYp82pdCyR9QHktPkXQOdQr1Ih2sPPmSfayBRfu2gvhBq7mkxskvZzb+ml1hqp4hN/GHfv+WsFSiu1/rWydHo2EeJpY4LLD/8jKiT4vNW0+GhVkCL+yEKM1YIf4JNWU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lPwB5hIf; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=PADFRAJP; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lPwB5hIf; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=PADFRAJP; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZnisQ25U"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1BC4C433F1;
-	Fri,  9 Feb 2024 05:28:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707456507;
-	bh=XzE+CcfIAI0z1FD5PEtj1tZUMdv8OdcuxPZR9vH0dg8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ZnisQ25UjWTVHnvFIMfGVwkxCC10KoNwuyAXw57TSFcqaxxLCzBlZ7Tz90KRHnu+t
-	 ZCUZSbcyAAjDFsK5NxAKjJVMZIxMBI37LuXCd8KmxLUnWibxCUhC1M/LCGrnt48epk
-	 0s935w67hyvPjFQyLwHMu1ykrkLJwBpUZPV16olCiirBpCGMiEBqPDQuR3ieJC34kW
-	 BsXpxveEvEWPdVcX5/crTEDznSqNYurEwuAqDaxrmA/KaRCMPcjIXF975hOvUKKzCT
-	 3RulqXvesI8t5cfhPJ+KcdwZrpvi+QqBnVlRdhhcenEbl6h6OSlwaOPEqUlTLXjOPv
-	 zVTGtcg89QeoQ==
-Message-ID: <188df2ae-5a85-4c54-aa29-33dbb41d1110@kernel.org>
-Date: Fri, 9 Feb 2024 14:28:25 +0900
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lPwB5hIf";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="PADFRAJP";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lPwB5hIf";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="PADFRAJP"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id A9E611F7DE;
+	Fri,  9 Feb 2024 06:24:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1707459855; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RLtqCnLoHDcowrIyQ34cuvnOLg2AS9p8XbafIJGUDZs=;
+	b=lPwB5hIf6hZWKniOlXq/i4koRAVGs8RtjFJqe47F5TQRfHJ5cEuZdIVdvCLR3DcEvhxJg6
+	7bl44qQlWxqIC1/n6xY+q+I66ppgehFHifnGG7QGrYuY1uIEIAo8q4cEx0KZluyqhk3BPd
+	0n5lhhOtrJkUGde10/gSVzJNkMHEq4w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1707459855;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RLtqCnLoHDcowrIyQ34cuvnOLg2AS9p8XbafIJGUDZs=;
+	b=PADFRAJP8mnYZ5ZwUwvsrGbb7iJ0bnu2NSLzjomU9kHvvjFsHpkaex8RkN7k+Njhe2NpGD
+	e4UDERtDwR63j2AA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1707459855; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RLtqCnLoHDcowrIyQ34cuvnOLg2AS9p8XbafIJGUDZs=;
+	b=lPwB5hIf6hZWKniOlXq/i4koRAVGs8RtjFJqe47F5TQRfHJ5cEuZdIVdvCLR3DcEvhxJg6
+	7bl44qQlWxqIC1/n6xY+q+I66ppgehFHifnGG7QGrYuY1uIEIAo8q4cEx0KZluyqhk3BPd
+	0n5lhhOtrJkUGde10/gSVzJNkMHEq4w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1707459855;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=RLtqCnLoHDcowrIyQ34cuvnOLg2AS9p8XbafIJGUDZs=;
+	b=PADFRAJP8mnYZ5ZwUwvsrGbb7iJ0bnu2NSLzjomU9kHvvjFsHpkaex8RkN7k+Njhe2NpGD
+	e4UDERtDwR63j2AA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6B14A1326D;
+	Fri,  9 Feb 2024 06:24:15 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id +kvPGQ/FxWVDXAAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Fri, 09 Feb 2024 06:24:15 +0000
+Date: Fri, 9 Feb 2024 07:24:13 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: Fedor Pchelkin <pchelkin@ispras.ru>
+Cc: James Smart <james.smart@broadcom.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Ram Vegesna <ram.vegesna@broadcom.com>, 
+	"James E.J. Bottomley" <jejb@linux.ibm.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Alexey Khoroshilov <khoroshilov@ispras.ru>, lvc-project@linuxtesting.org, stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: elx: efct: adjust error handling inside
+ efct_hw_setup_io
+Message-ID: <2ik7x74hq6exam5ab4v2moauy4lfvqe3r626bxxettseat2nmv@q4gykxnezkff>
+References: <20240208093657.19617-1-pchelkin@ispras.ru>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/26] Zone write plugging
-To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
- linux-scsi@vger.kernel.org, "Martin K . Petersen"
- <martin.petersen@oracle.com>, dm-devel@lists.linux.dev,
- Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <147de7c4-7050-4b1d-a48c-c0316a81baee@kernel.org>
- <a387f08c-05c1-4c47-8ba1-27493b7853ef@kernel.dk>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <a387f08c-05c1-4c47-8ba1-27493b7853ef@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240208093657.19617-1-pchelkin@ispras.ru>
+X-Spam-Level: 
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=lPwB5hIf;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=PADFRAJP
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-1.01 / 50.00];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	 TO_DN_SOME(0.00)[];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_TRACE(0.00)[suse.de:+];
+	 MX_GOOD(-0.01)[];
+	 NEURAL_HAM_SHORT(-0.20)[-1.000];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 BAYES_HAM(-0.00)[39.25%];
+	 ARC_NA(0.00)[];
+	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 FROM_HAS_DN(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 NEURAL_HAM_LONG(-1.00)[-1.000];
+	 MIME_GOOD(-0.10)[text/plain];
+	 DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 RCPT_COUNT_TWELVE(0.00)[12];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 MID_RHS_NOT_FQDN(0.50)[];
+	 RCVD_TLS_ALL(0.00)[]
+X-Spam-Score: -1.01
+X-Rspamd-Queue-Id: A9E611F7DE
+X-Spam-Flag: NO
 
-On 2/3/24 21:11, Jens Axboe wrote:
->> I forgot to mention that the patches are against Jens block/for-next
->> branch with the addition of Christoph's "clean up blk_mq_submit_bio"
->> patches [1] and my patch "null_blk: Always split BIOs to respect queue
->> limits" [2].
+On Thu, Feb 08, 2024 at 12:36:57PM +0300, Fedor Pchelkin wrote:
+> IO and WQE buffers are allocated once per HW and can be reused later. If
+> WQE buffers allocation fails then the whole allocation is marked as failed
+> but already created IO array internal objects are not freed. hw->io is
+> freed but not nullified in that specific case - it may become a problem
+> later as efct_hw_setup_io() is supposed to be reusable for the same HW.
 > 
-> I figured that was the case, I'll get both of these properly setup in a
-> for-6.9/block branch, just wanted -rc3 to get cut first. JFYI that they
-> are coming tomorrow.
+> While at it, use kcalloc instead of kmalloc_array/memset-zero combination
+> and get rid of some needless NULL assignments: nullifying hw->io[i]
+> elements just before freeing hw->io is not really useful.
+> 
+> Found by Linux Verification Center (linuxtesting.org).
+> 
+> Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
 
-Jens,
+The patch looks okay. Though I think this funktion leaks all over the
+place memory as soon we take the error path. Could you also prepare
+a fix for these path while you are at it?
 
-I saw the updated rc3-based for-next branch. Thanks for that. But it seems that
-you removed the mq-deadline insert optimization ? Is that in purpose or did I
-mess up something ?
-
--- 
-Damien Le Moal
-Western Digital Research
-
+Thanks!
+Daniel
