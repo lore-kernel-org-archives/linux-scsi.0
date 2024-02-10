@@ -1,101 +1,105 @@
-Received: from mail-yb1-f182.google.com (mail-yb1-f182.google.com [209.85.219.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7E7839AFC
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Feb 2024 22:31:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79D2B365;
+	Sat, 10 Feb 2024 00:06:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707517863; cv=none; b=ItQhIuxnGzI9TFtcvFVk6OcS7Aj+adJHGiXx4KkbpKQxgEQTuG885w5uFoVJt5CqwDNL7rI0oqkCgC3rL9B3n5bdQCzxZtIre9G2SKvwGx/8r9Urqw+nG1HwYiKqUB+itPz9g8pz6w1cihjBAK/APw0uw+TVINIfhax6XdFQmh8=
+	t=1707523618; cv=none; b=sXehWZ+J/xVJ2xO4mtj9L0JgiXPHjB56foXbP8U0Vv5GrV6p4BkCIw3aU+X2JjvZUj9aorsFlL4m6YoeHiZXlh7LDdN49hZhnEH0AllxhCiOSrlEGsqz7PvsRvWI7QuBLeomMmGAAehLE+TKuyk1eq3dqjOvXlyMgoAvPAvpeWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707517863; c=relaxed/simple;
-	bh=QVarPAYcC5n7oy6ys/7qfQ0UVMQyXIdvToF2ttVkyE8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=g3f6QwISPAQKAzr4y3zCJ2Yb99IaVUHgqjaPnUeA01kDQ6OFr2ib7wvblI46k01qWvU2id52nWnYB8bULBfaH/zcL/FtN7uG5B7KLOYyde3gsTb37XQvczMVGXHq41A9jah73xdAbNfK99Ut+dV+kSrkok7Sb8eOdoc3FpIhako=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=EpfmhWfH; arc=none smtp.client-ip=209.85.219.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1707523618; c=relaxed/simple;
+	bh=2Zw5SzbJLhz1l16efyBAgdXp5PCq1WwBZxnR19de37U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=h5um7paKTSsKag68flHAICJhZyrjCD0fy4TtjuRXWOq3iq8fD1m4QBMp3wNWaTYJXJIcRnHEbWn9kUj69WTEWXzBmwGGBmw4WUxOuMhxA6LIqqPhRUfOz9jdmf5XHca1e1q1oIik1DXe3ggtrgbbsZconiC+6+flodpi8CnUELU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VB8cxc+T; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="EpfmhWfH"
-Received: by mail-yb1-f182.google.com with SMTP id 3f1490d57ef6-dc75c7f638eso332102276.3
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Feb 2024 14:31:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1707517860; x=1708122660; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=628t97wrZYyhnBGa6SPfseRS05OEREwisnOmsVjSZHs=;
-        b=EpfmhWfHIGEW5MVFZQZIgIWLqmUuz0BmZKxHv1KZAQ5mgjh4LxjBzfLCnIGmmjl3H6
-         jC6nAaNhDaA2pLzWiJnFp8AZDCNF8SDeolGJgIXD1ZKkCi1bLFvN0ybmYFxD3DTrefJD
-         /8JrsXyDY6jAZaEXAen94iWv07JCZD+lcrx4lyXamrsIRrjj+HcKanuIFAx76cSYl3J+
-         t41URjn69nzfK4l2Zf1LQVK12+MciUJ7yIg47u+nV3XJxgvz+jk/l05X3JmGExzj8Ywy
-         sXJpeXdCGSABJjfUYoJdzNKdwk7mG0o0/3fDsJNaR3JFKtvmJ/8Y+zqoKRHXsE6AR5n8
-         F/nA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707517860; x=1708122660;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=628t97wrZYyhnBGa6SPfseRS05OEREwisnOmsVjSZHs=;
-        b=MdKZWTw6x2jb8QpNNEpPHYQ1CP7N/AQV/Nq4vSNrdH4zAEok5QXpJsjn/ubvWNam6i
-         vNlqyAnx1fCL2yG3wm2qx4K6Xq1j7HjcEOqCXn3Ny6E2oay+xNOgRJC5WCyehdHDf0hX
-         n+1MjdPz8JA0whocXajOlYMe2GnYXJhGZRphvSwhVt0YySU37yqkhJk5TE6MEErwO1GC
-         E2XARCJMvC0sCLuktnG28HVPfLx2mksbiLPivjgQGZYVcwpTvbutXBtnEXLZh7ZEHhAZ
-         WUwrrUBcVYwvuyhq41z+G+nyjNP2GT/+s47DehOg/XulHQIPoMlWx8qu7benDFwPrMZ2
-         feDg==
-X-Forwarded-Encrypted: i=1; AJvYcCU2xI5rrNUTkA2k0f0rXkUJzoBEzWJ+UQxlOa8K9nmFsKGevM2WsMz/QCsQtXRJJ5LVHrgfO3afRDiVAgGpobyU0BH5tUTTrKziGg==
-X-Gm-Message-State: AOJu0YwHmo61nfQ+MkpdhZ0q2nCDcf4uZ8yEh5/CUZGInvMUEIP7H2vT
-	jcBmRX5dPVNxg/cpHADOZaAipZxm0dXexv4OMPLpnL5KBz5/kEGOFv+VC0y/aWW2gaYzOw/8c73
-	slpDinVh3F2Z7+hPr9ZoEBff9LWqoPfzN4NvjGQ==
-X-Google-Smtp-Source: AGHT+IE2UidT0dSQEZFl/DBrLVMTcv/V7Hyr4NbaAg4ASho6vcCFOa1CL/uvwz6IzvxMyHtF7OCOB/UJYOqtx3M8f3U=
-X-Received: by 2002:a05:6902:230b:b0:dc2:6496:f41a with SMTP id
- do11-20020a056902230b00b00dc26496f41amr694217ybb.28.1707517860682; Fri, 09
- Feb 2024 14:31:00 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VB8cxc+T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F182C433F1;
+	Sat, 10 Feb 2024 00:06:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707523617;
+	bh=2Zw5SzbJLhz1l16efyBAgdXp5PCq1WwBZxnR19de37U=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=VB8cxc+TYRhkfc+O6h5ij5L/vLQCo0jtjx3wlcNC4YVpl7+WtQcSC0U5DWP2YHy3k
+	 taQklacNMoSR6BOEaEJXpIGvbqiJ1qmW7D6H5pBn7VTh98iR6iCBBMiPVA6rFeJ/oX
+	 Q6EzpjGhpHCAERU4dXf1wcHY+enVxaQUwOL/GyS6Sv7okORFZKGyOINVxTD+CPq8Lt
+	 1bwkROckISr/6bhLtHquTH+zOl/vMt3vEtI7D4L6OZqmPYcpbbuAm7qDscoEjdSd0G
+	 QOIlKMoKT31h//cqF39QIvzSqNRj1x4LMWq73W+h/lgzWwKyFzSJQdlmBilC0B2Tga
+	 OpaiGSvS4Tuug==
+Message-ID: <c03735f3-c036-4f78-ac0b-8f394e947d86@kernel.org>
+Date: Sat, 10 Feb 2024 09:06:54 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240209-msm8996-fix-ufs-v1-0-107b52e57420@linaro.org>
- <20240209-msm8996-fix-ufs-v1-4-107b52e57420@linaro.org> <1d67b626-12ef-484b-99e1-d5d6d3571d74@linaro.org>
-In-Reply-To: <1d67b626-12ef-484b-99e1-d5d6d3571d74@linaro.org>
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date: Sat, 10 Feb 2024 00:30:49 +0200
-Message-ID: <CAA8EJpo2NpiVz3b7PAPsTYRJDnXwLtYX9=kHgj8Sk99dzmh1fA@mail.gmail.com>
-Subject: Re: [PATCH 4/8] arm64: dts: qcom: msm8996: specify UFS core_clk frequencies
-To: Konrad Dybcio <konrad.dybcio@linaro.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	Bjorn Andersson <andersson@kernel.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Nitin Rawat <quic_nitirawa@quicinc.com>, 
-	Can Guo <quic_cang@quicinc.com>, 
-	Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Andy Gross <andy.gross@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>, 
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	devicetree@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 25/26] block: Reduce zone write plugging memory usage
+Content-Language: en-US
+To: Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.de>,
+ linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>, dm-devel@lists.linux.dev,
+ Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+References: <20240202073104.2418230-1-dlemoal@kernel.org>
+ <20240202073104.2418230-26-dlemoal@kernel.org>
+ <09d99780-8311-4ea9-8f48-cf84043d23f6@suse.de>
+ <f3a2f8b8-32d2-4e42-ba78-1f668d69033f@acm.org>
+ <a324beda-7651-4881-aea9-99a339e2b9eb@kernel.org>
+ <2e246189-a450-4061-b94c-73637859d073@acm.org>
+ <75240a9d-1862-4d09-9721-fd5463c5d4e5@kernel.org>
+ <e2a1a020-39e3-4b02-a841-3d53bd854106@acm.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <e2a1a020-39e3-4b02-a841-3d53bd854106@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Sat, 10 Feb 2024 at 00:29, Konrad Dybcio <konrad.dybcio@linaro.org> wrote:
->
-> On 9.02.2024 22:50, Dmitry Baryshkov wrote:
-> > Follow the example of other platforms and specify core_clk frequencies
-> > in the frequency table in addition to the core_clk_src frequencies. The
-> > driver should be setting the leaf frequency instead of some interim
-> > clock freq.
-> >
-> > Suggested-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> > Fixes: 57fc67ef0d35 ("arm64: dts: qcom: msm8996: Add ufs related nodes")
-> > Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-> > ---
->
-> 3.18 says the clock can even go as high as 240000000
+On 2/10/24 04:36, Bart Van Assche wrote:
+> On 2/8/24 19:58, Damien Le Moal wrote:
+>> We still need to keep in memory the write pointer offset of zones that are not
+>> being actively written to but have been previously partially written. So I do
+>> not see how excluding empty and full zones from that tracking simplifies
+>> anything at all. And the union of wp offset+zone capacity with a pointer to the
+>> active zone plug structure is not *that* complicated to handle...
+> 
+> Multiple zoned storage device have 1000 or more zones. The number of partially
 
-Yeah. I just copied the core_clk_src specs. We can bump the clocks
-when this gets rewritten to use OPP tables.
+Try multiplying that by 100... 28TB SMR drives have 104000 zones.
 
+> written zones is typically less than 10. Hence, tracking the partially written
 
+That is far from guaranteed, especially with devices that have no active zone
+limits like SMR drives.
 
+> zones only will result in significantly less memory being used, fewer CPU cache
+> misses and fewer MMU TLB lookup misses. I expect that this will matter since the
+> zone information data structure will be accessed every time a zoned write bio is
+> processed.
+
+May be. The performance numbers I have suggest that this is not an issue.
+
+But in any case, what exactly is your idea here ? Can you actually suggest
+something ? Are you suggesting that a sparse array of zone plugs be used, with
+an rb-tree or an xarray ? If that is what you are thinking, I can already tell
+you that this is the first thing I tried to do. Early versions of this work used
+a sparse xarray of zone plugs. But the problem with such approach is that it is
+a lot more complicated and there is a need for a single lock to manage that
+structure (which is really not good for performance).
+
+Hence this series which used a statically allocated array of zone plugs to
+simplify things. Overall, this series is a significant change to the zone write
+path and I wanted something simple/reliable that is not a nightmare to debug and
+test. I believe that an xarray based optimization can be re-tried as an
+incremental change on top of this series. The nice thing about it is that the
+API should not need to change, meaning that all changes can be contained within
+blk-zone.c.
+
+But I may be missing entirely your point. So clarify please.
 
 -- 
-With best wishes
-Dmitry
+Damien Le Moal
+Western Digital Research
+
