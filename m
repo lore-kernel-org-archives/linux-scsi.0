@@ -1,103 +1,63 @@
-Received: from vmicros1.altlinux.org (vmicros1.altlinux.org [194.107.17.57])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2767D1FD7
-	for <linux-scsi@vger.kernel.org>; Sat, 10 Feb 2024 01:18:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.107.17.57
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E387D1A29F;
+	Sat, 10 Feb 2024 01:24:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707527915; cv=none; b=IGNmYz27l6UZ0mQo1oDTyV6hKsVGV6BXSSyIbIWfpcGMHjt7wlZ6iET56aeTrT5yd4i+0fjzfOzFAHEf31Z9ubum+daU1nqxV2QPU6ygdBE9HOZup1KtmqkPCuQ5RuMZMvIOy4Y6+KVqK/gGreowM9PfGWRECCyepSgQGHFuMco=
+	t=1707528251; cv=none; b=dDhStxGHNbQEhybInzvCxnfRPRsOp4lfZ1SUHCev44Yg9aKtHkvK7izerGmMpecioYfjpLQXHGbUl1zx9KhGmqBAw7/g2L+xsH3P2dHxodGXeZG0aPhazNeOKVx50po9In/PfzLQRxvwLGMzwaX0JAFEsK4oVU1/x4a6tnzt6I4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707527915; c=relaxed/simple;
-	bh=/ULtSBGQKlgsBo+SvO9TC+GqendIopQ+6LsRylXb+iU=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=PJe6hOEQVLKmec0Le/tv0Xb3uBNCApMjzQL+QaHgdd/7ikadJgyh8M4E+7VSZf0ysympwZd0qSSVg1u7ZErX8HfeTI6D257JspUcfyseCFOhU0jJx1FNmWdOpiwmJESZAi3f7rmCp8VElA9aOnaLJlFNuK2wmlrObrbg8Za5RF4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org; spf=pass smtp.mailfrom=altlinux.org; arc=none smtp.client-ip=194.107.17.57
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altlinux.org
-Received: from imap.altlinux.org (imap.altlinux.org [194.107.17.38])
-	by vmicros1.altlinux.org (Postfix) with ESMTP id CEC7272C8F5;
-	Sat, 10 Feb 2024 04:18:31 +0300 (MSK)
-Received: from altlinux.org (sole.flsd.net [185.75.180.6])
-	by imap.altlinux.org (Postfix) with ESMTPSA id BC53C36D0246;
-	Sat, 10 Feb 2024 04:18:31 +0300 (MSK)
-Date: Sat, 10 Feb 2024 04:18:31 +0300
-From: Vitaly Chikunov <vt@altlinux.org>
-To: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>
-Subject: megaraid_sas: multiple FALLOC_FL_ZERO_RANGE causes timeouts and
- resets on MegaRAID 9560-8i 4GB since 5.19
-Message-ID: <20240210011831.47f55oe67utq2yr7@altlinux.org>
+	s=arc-20240116; t=1707528251; c=relaxed/simple;
+	bh=M5J+RtqDSp/9POPXx7SzxUz3FTRMzFLR/2oLrayLf3g=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=LlhR6qgPPjJF9XuU9eVMPZd5Gq+Gi2AYbDkxm97Hc7K1ZNrFGhAc3LebjZCxooRYr46vLQyR8v8R810KNrX9nTFxe88eyRq6UeuqXqLSIrCGcfaBmrPu6mFK5l9HJ2JvWvag2nLaKVO4MZxObmIYXG/GeQyVAI+3uTBwHHlsu80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T5ISpW4P; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T5ISpW4P"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 52FEEC433F1;
+	Sat, 10 Feb 2024 01:24:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707528250;
+	bh=M5J+RtqDSp/9POPXx7SzxUz3FTRMzFLR/2oLrayLf3g=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=T5ISpW4PDKIlit3W6bb3aHU3l27PKfWDvmHG/DC/QfQoj2ZkwzCYiuzLakbgrBnFi
+	 iBbicJRvp8caU9X6CVTyV4R2DQSWSY/YrFwvkjB3GgEarlylmbU9kTIMmD/TTMoXNi
+	 Mn384pHZaDNJJYuf5233LrazcOQjuNw57AvEPwub4QFABgpQ7j67GjFyY+Kqj/C4c0
+	 C4myKKgu6EM2kO8rjj7vFdi07GIGm7W+BVBt9kfAjydc6zJOloUR4mbIEMdQ1hU/eI
+	 /rrSgmF7QrSPH9zHMr6M+pA0a35RQg//MF/PheyT+p/c0MnmmC5tOU6+QD2fOsR9YL
+	 cQawNuGMjeckA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 3FD51E2F312;
+	Sat, 10 Feb 2024 01:24:10 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.8-rc3
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <df8e539e6f1e708d1a1b0025632ae3b42bb7ff84.camel@HansenPartnership.com>
+References: <df8e539e6f1e708d1a1b0025632ae3b42bb7ff84.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <df8e539e6f1e708d1a1b0025632ae3b42bb7ff84.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 17e94b2585417e04dabc2f13bc03b4665ae687f3
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 4a7bbe7519b6a5d189feeba1d417c8ce9f7e852b
+Message-Id: <170752825025.10429.10943299676286092255.pr-tracker-bot@kernel.org>
+Date: Sat, 10 Feb 2024 01:24:10 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
-Content-Disposition: inline
 
-Hi,
+The pull request you sent on Fri, 09 Feb 2024 17:30:46 -0500:
 
-We started to get timeouts and controller resets since 5.19.5 (vanilla
-v5.19 is not tested, tests below are on 6.6.15) when several ioctl
-FALLOC_FL_ZERO_RANGE are issued into device consequentially without
-delay between them (3-5 is enough to trigger condition). Because of
-this, for example, mkfs.ext4 extremely slows down when initializing
-filesystem. This happens on aarch64 (Kunpeng-920) server.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Reproducer:
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/4a7bbe7519b6a5d189feeba1d417c8ce9f7e852b
 
-  # for ((i=0;i<5;i++)); do echo $i; fallocate -z -l 2097152 /dev/sdc; done
+Thank you!
 
-Example of dmesg messages after problematic ioctl calls:
-
-  Feb 06 19:44:07 host-226 kernel: sd 0:2:4:0: [sdc] tag#4752 Abort request is for SMID: 4753
-  Feb 06 19:44:07 host-226 kernel: sd 0:2:4:0: attempting task abort! scmd(0x00000000d51beacc) tm_dev_handle 0x4
-  Feb 06 19:44:07 host-226 kernel: megaraid_sas 0000:01:00.0: megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
-  Feb 06 19:44:07 host-226 kernel: megaraid_sas 0000:01:00.0: megasas_enable_intr_fusion is called outbound_intr_mask:0x40000000
-  Feb 06 19:44:07 host-226 kernel: sd 0:2:4:0: [sdc] tag#4752 task abort FAILED!! scmd(0x00000000d51beacc)
-  Feb 06 19:44:07 host-226 kernel: sd 0:2:4:0: [sdc] tag#4752 CDB: Write(10) 2a 00 00 00 00 00 00 00 08 00
-  Feb 06 19:45:04 host-226 kernel: sd 0:2:4:0: [sdc] tag#8292 Abort request is for SMID: 8293
-  Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: attempting task abort! scmd(0x00000000d9406c9c) tm_dev_handle 0x4
-  Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: [sdc] tag#4752 BRCM Debug mfi stat 0x2d, data len requested/completed 0x1000/0x0
-  Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: [sdc] tag#8292 task abort SUCCESS!! scmd(0x00000000d9406c9c)
-  Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: [sdc] tag#8292 CDB: Write Same(10) 41 00 03 4c 00 10 00 10 00 00
-  Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: attempting target reset! scmd(0x00000000d51beacc) tm_dev_handle: 0x4
-  Feb 06 19:45:06 host-226 kernel: megaraid_sas 0000:01:00.0: megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
-  Feb 06 19:45:06 host-226 kernel: megaraid_sas 0000:01:00.0: megasas_enable_intr_fusion is called outbound_intr_mask:0x40000000
-  Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: [sdc] tag#4752 target reset SUCCESS!!
-  Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: Power-on or device reset occurred
-
-Excerpt from the controller events log (from storli):
-
-  Event Description: PD 05(e0xfb/s4) Path 5e8b4700e35e2004  reset (Type 03)
-  Event Description: Drive PD 05(e0xfb/s4) link speed changed
-  Event Description: Unexpected sense: Encl PD fb Path 5e8b4700e35e201e, CDB: 3c 01 05 00 00 00 00 00 10 00, Sense: b/4b/05
-  Event Description: Unexpected sense: Encl PD fb Path 5e8b4700e35e201e, CDB: 3c 01 05 00 00 00 00 00 10 00, Sense: b/4b/05
-  Event Description: PD 05(e0xfb/s4) Path 5e8b4700e35e2004  reset (Type 03)
-  Event Description: Drive PD 05(e0xfb/s4) link speed changed
-  Event Description: Unexpected sense: PD 05(e0xfb/s4) Path 5e8b4700e35e2004, CDB: 41 00 00 00 00 00 00 10 00 00, Sense: 6/29/00
-
-Tests was on the latest firmware (at the moment):
-
-  Product Name = MegaRAID 9560-8i 4GB
-  Serial Number = SKC4006982
-  Firmware Package Build = 52.28.0-5305
-  Firmware Version = 5.280.02-3972
-  PSOC FW Version = 0x001A
-  PSOC Hardware Version = 0x000A
-  PSOC Part Number = 29211-260-4GB
-  NVDATA Version = 5.2800.00-0752
-  CBB Version = 28.250.04.00
-  Bios Version = 7.28.00.0_0x071C0000
-  HII Version = 07.28.04.00
-  HIIA Version = 07.28.04.00
-  Driver Name = megaraid_sas
-  Driver Version = 07.725.01.00-rc1
-
-I tried also latest available megaraid_sas driver (07.728.04.00) which is not
-yet merged into mainline but the problems are not resolved with it.
-
-Thanks,
-
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
