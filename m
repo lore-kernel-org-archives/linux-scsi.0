@@ -1,91 +1,215 @@
-Received: from out4-smtp.messagingengine.com (out4-smtp.messagingengine.com [66.111.4.28])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09DF6364B3;
-	Sat, 10 Feb 2024 09:31:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=66.111.4.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59A6233CF5;
+	Sat, 10 Feb 2024 11:08:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.149.199.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707557522; cv=none; b=dnmmxnaDPSh6+mwajhb1sd1Ez55xoJNOuDnMAzXehPUCpXG6hc7uumeUmdnqJ9eT1K7Up/7brjVh5R8TCxCysyKaIpMlrL6elDUupS0cdYuY2n5dwcxrUq5XxzSDYVD53XdZnDkos0qb0mV9v5+6bNyBXs56Oas/RZBsiBoFNFk=
+	t=1707563339; cv=none; b=EXirCAR7zf2V1UN/RN5Ix2uZv2CkroyqmncxcYI7W7Ww9xM5JtnWvHvNYxcsieL9jOhMnkgdC4VePNQ6bf7Yr3q9muMe3kHpNtcZV8H1NwDRCTlKJlvGQ65WW3IFj666334SkMtdvbNzwtmjd2CmE81Jr6S1MRCc8XAa2xii0Yo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707557522; c=relaxed/simple;
-	bh=TP9W4qCq8hgSVWD+ohqGLyVeD4l5sBB7DBV8tYBFOBA=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=aKoQSpcyjdMwIZTu9JS4dnDDSG2zpgu19iB1YYNtj8mFgDBu1w/HrN1nNQ4jYM7VES7j+6F3dN2SqY81ohd803A5NOB6ftYOt7T5fTrnwKDaWri9gtpuZAJRCZoJsTC6NVThGCcUv0EOLcCHxKQo80nZqgWRHs3hGK9LtPZQmMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=k7mAoGW9; arc=none smtp.client-ip=66.111.4.28
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+	s=arc-20240116; t=1707563339; c=relaxed/simple;
+	bh=MC8dluckGiUt4vKus3dFF0Hblt2kHtloo5fOlZcHL1E=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=MLKm+sDVzTHvB/77snAAcuJ6vsBjvK4Q2SdFT4dvtc9QbhyJdPOauSMsjEby5Zk3zdgjC7kQ/cC8lMJSZEn3L9BRcfVYictZ6CiTulo1j6bZWRWRhh/SpS4HY0tl4ZLWCNB2d90dWmpez1P1T74vRHs+5qLNWdC5lHBS4V/IMVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru; spf=pass smtp.mailfrom=ispras.ru; dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b=QQsHSNJn; arc=none smtp.client-ip=83.149.199.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ispras.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ispras.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="k7mAoGW9"
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-	by mailout.nyi.internal (Postfix) with ESMTP id B1F445C0077;
-	Sat, 10 Feb 2024 04:31:58 -0500 (EST)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute4.internal (MEProxy); Sat, 10 Feb 2024 04:31:58 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-	fm3; t=1707557518; x=1707643918; bh=we3+CNIp/sCmExVts2CpdGbhGFMZ
-	ZEqrf8Zzk61UqYw=; b=k7mAoGW9Pzm6fLDCrX/8udswlMtlLI8f16Z0dsWLV1aw
-	6UEH6kq3mLRz/9T93kjud2ONbUAAQ6U1fsd0PM00d+YuVfF6IiN+RHi/yS7MfGnQ
-	d1iT2kRdK7jnvjXNckVx4Wgs/c0VTo2pLRYnNlupWwtm1ZJaoPK3kqquTaqn88Di
-	CcgdwidBw7lZ9uhAyRHlw5gvX2HtZcj0hGBTIoSew8zMEY7nD/3zJ6XJfROQ9Yiv
-	0tMEU3QRnqAf699kzuAZryF3fhBSafwrzqH9ifbjtPUr15zZiA1Jsg2xTv4soSoR
-	IQ7w45GG9gkyY1q5PlhpQ+xj5ihstfFfmUGCi/7SSw==
-X-ME-Sender: <xms:jULHZQyfUifbzIt4LZvH6rY4CqmoZsdGDyzHgfKw4dEkpLKqtNyRcQ>
-    <xme:jULHZUScGEiDsXxsJyx8I38K8F31t32CBfMDWgiwGvYI8YN3HPxMHY0t5IfhcAnHw
-    566Ddfd__Df7DCnXPs>
-X-ME-Received: <xmr:jULHZSX578yw010Lg8RVAMN9gayfDBtMKo16DyqyvdrXuWlhZfgSeJQaARScsSwu1ND0FD2bN3SHU4PDwWHp-3n1R9cgjzJX6pA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrtdekgddtgecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpeffhffvvefujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfv
-    hhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrth
-    htvghrnhepleeuheelheekgfeuvedtveetjeekhfffkeeffffftdfgjeevkeegfedvueeh
-    ueelnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfh
-    hthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgh
-X-ME-Proxy: <xmx:jULHZei-A-VewmnbNE_NrtBkSvzwRkLiOl-2pMjazrDO2EnrQE-l-w>
-    <xmx:jULHZSB9QEoMCcHSE1PvprqZvDi4_lu11w368Kb5WxyFSWH64OeUYA>
-    <xmx:jULHZfKiRijmbauWA9RIS5CnlPYW1KA487OfpSXGhMjx0CB34JBffg>
-    <xmx:jkLHZe10U-Wb1gXUvZUpvxpOAuzcEaJVaiQiaurh3Yjsi-dO3aRuCA>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sat,
- 10 Feb 2024 04:31:55 -0500 (EST)
-Date: Sat, 10 Feb 2024 20:32:18 +1100 (AEDT)
-From: Finn Thain <fthain@linux-m68k.org>
-To: Lee Jones <lee@kernel.org>
-cc: Geert Uytterhoeven <geert@linux-m68k.org>, linux-kernel@vger.kernel.org, 
-    linux-hardening@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>, 
-    "James E.J. Bottomley" <jejb@linux.ibm.com>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, drew@colorado.edu, 
-    Thomas_Roesch@m2.maus.de, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 03/10] scsi: NCR5380: Replace snprintf() with the safer
- scnprintf() variant
-In-Reply-To: <20240208102939.GF689448@google.com>
-Message-ID: <0f9c95f9-2c14-eee6-7faf-635880edcea4@linux-m68k.org>
-References: <20240208084512.3803250-1-lee@kernel.org> <20240208084512.3803250-4-lee@kernel.org> <CAMuHMdX72mpGgb3Wp0WRX3V78nn+bWUqiYz25CjeMNPpWaPmxg@mail.gmail.com> <20240208102939.GF689448@google.com>
+	dkim=pass (1024-bit key) header.d=ispras.ru header.i=@ispras.ru header.b="QQsHSNJn"
+Received: from fpc.intra.ispras.ru (unknown [10.10.165.7])
+	by mail.ispras.ru (Postfix) with ESMTPSA id A3B6740F1DEB;
+	Sat, 10 Feb 2024 11:08:45 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.ispras.ru A3B6740F1DEB
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ispras.ru;
+	s=default; t=1707563325;
+	bh=UZN3/YB5tI2Be9XIqEj/LszzpwAWHGIHc7dh/SwZb74=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=QQsHSNJnRyTuxeyOVAh1kDIBNQ9CU9zFLv5WoNW4L+gBdYyD7Wp1azBw+QX6oBRGq
+	 1nOnE8Qnv0ccKO/YkJhpHdg1ziO/oZxWeFHeyQ+g4Go2Qu4C4UPiJ79qM3Z1DD+lZp
+	 nXvnQi2Gl+5d6Cxe6SKkncyzb2KS3FdkLIWdvRTo=
+From: Fedor Pchelkin <pchelkin@ispras.ru>
+To: Daniel Wagner <dwagner@suse.de>
+Cc: Fedor Pchelkin <pchelkin@ispras.ru>,
+	James Smart <james.smart@broadcom.com>,
+	Ram Vegesna <ram.vegesna@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Hannes Reinecke <hare@suse.de>,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	lvc-project@linuxtesting.org,
+	stable@vger.kernel.org
+Subject: [PATCH v2] scsi: elx: efct: adjust error handling inside efct_hw_setup_io
+Date: Sat, 10 Feb 2024 14:08:33 +0300
+Message-Id: <20240210110833.27723-1-pchelkin@ispras.ru>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <2ik7x74hq6exam5ab4v2moauy4lfvqe3r626bxxettseat2nmv@q4gykxnezkff>
+References: 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 
+IO and WQE buffers are allocated once per HW and can be reused later. If
+WQE buffers allocation fails then the whole allocation is marked as failed
+but already created IO array internal objects are not freed. hw->io is
+freed but not nullified in that specific case - it may become a problem
+later as efct_hw_setup_io() is supposed to be reusable for the same HW.
 
-On Thu, 8 Feb 2024, Lee Jones wrote:
+Also rollback if HW IO objects initialization loop fails due to memory
+allocation error.
 
-> On Thu, 08 Feb 2024, Geert Uytterhoeven wrote:
-> 
-> > 
-> > Confused... The return value is not used at all?
-> 
-> Future proofing. 
-> 
+While at it, use kcalloc instead of kmalloc_array/memset-zero combination
+and get rid of some needless NULL assignments: nullifying hw->io[i]
+elements just before freeing hw->io is not really useful.
 
-Surely a better way to prevent potential future API abuse is by adding 
-checkpatch.pl rules. That way does not generate churn.
+Found by Linux Verification Center (linuxtesting.org).
 
-James or Martin, if you can find some value in this patch, go ahead and 
-apply it. I'm afraid I can't see it.
+Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
+Cc: stable@vger.kernel.org
+Suggested-by: Daniel Wagner <dwagner@suse.de>
+Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+---
+v2: per Daniel Wagner's notice, handle the other possible memory
+    allocation errors inside the function.
+
+ drivers/scsi/elx/efct/efct_hw.c | 66 +++++++++++++++++++++++----------
+ 1 file changed, 47 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
+index 5a5525054d71..a0871a53f71d 100644
+--- a/drivers/scsi/elx/efct/efct_hw.c
++++ b/drivers/scsi/elx/efct/efct_hw.c
+@@ -485,27 +485,24 @@ efct_hw_setup_io(struct efct_hw *hw)
+ 	bool new_alloc = true;
+ 	struct efc_dma *dma;
+ 	struct efct *efct = hw->os;
++	int err = -ENOMEM;
+ 
+ 	if (!hw->io) {
+-		hw->io = kmalloc_array(hw->config.n_io, sizeof(io), GFP_KERNEL);
++		hw->io = kcalloc(hw->config.n_io, sizeof(io), GFP_KERNEL);
+ 		if (!hw->io)
+-			return -ENOMEM;
+-
+-		memset(hw->io, 0, hw->config.n_io * sizeof(io));
++			return err;
+ 
+ 		for (i = 0; i < hw->config.n_io; i++) {
+ 			hw->io[i] = kzalloc(sizeof(*io), GFP_KERNEL);
+ 			if (!hw->io[i])
+-				goto error;
++				goto err_alloc_io;
+ 		}
+ 
+ 		/* Create WQE buffs for IO */
+ 		hw->wqe_buffs = kzalloc((hw->config.n_io * hw->sli.wqe_size),
+ 					GFP_KERNEL);
+-		if (!hw->wqe_buffs) {
+-			kfree(hw->io);
+-			return -ENOMEM;
+-		}
++		if (!hw->wqe_buffs)
++			goto err_alloc_io;
+ 
+ 	} else {
+ 		/* re-use existing IOs, including SGLs */
+@@ -517,8 +514,10 @@ efct_hw_setup_io(struct efct_hw *hw)
+ 		dma->size = sizeof(struct fcp_txrdy) * hw->config.n_io;
+ 		dma->virt = dma_alloc_coherent(&efct->pci->dev,
+ 					       dma->size, &dma->phys, GFP_KERNEL);
+-		if (!dma->virt)
+-			return -ENOMEM;
++		if (!dma->virt) {
++			memset(&hw->xfer_rdy, 0, sizeof(struct efc_dma));
++			goto err_alloc_wqe;
++		}
+ 	}
+ 	xfer_virt = (uintptr_t)hw->xfer_rdy.virt;
+ 	xfer_phys = hw->xfer_rdy.phys;
+@@ -539,7 +538,8 @@ efct_hw_setup_io(struct efct_hw *hw)
+ 		wqcb = efct_hw_reqtag_alloc(hw, efct_hw_wq_process_io, io);
+ 		if (!wqcb) {
+ 			efc_log_err(hw->os, "can't allocate request tag\n");
+-			return -ENOSPC;
++			err = -ENOSPC;
++			goto err_init_io;
+ 		}
+ 		io->reqtag = wqcb->instance_index;
+ 
+@@ -553,7 +553,8 @@ efct_hw_setup_io(struct efct_hw *hw)
+ 				       &io->indicator, &index)) {
+ 			efc_log_err(hw->os,
+ 				    "sli_resource_alloc failed @ %d\n", i);
+-			return -ENOMEM;
++			efct_hw_reqtag_free(hw, wqcb);
++			goto err_init_io;
+ 		}
+ 
+ 		if (new_alloc) {
+@@ -567,7 +568,10 @@ efct_hw_setup_io(struct efct_hw *hw)
+ 				efc_log_err(hw->os, "dma_alloc fail %d\n", i);
+ 				memset(&io->def_sgl, 0,
+ 				       sizeof(struct efc_dma));
+-				return -ENOMEM;
++				sli_resource_free(&hw->sli, SLI4_RSRC_XRI,
++						  io->indicator);
++				efct_hw_reqtag_free(hw, wqcb);
++				goto err_init_io;
+ 			}
+ 		}
+ 		io->def_sgl_count = hw->config.n_sgl;
+@@ -585,16 +589,40 @@ efct_hw_setup_io(struct efct_hw *hw)
+ 	}
+ 
+ 	return 0;
+-error:
+-	for (i = 0; i < hw->config.n_io && hw->io[i]; i++) {
+-		kfree(hw->io[i]);
+-		hw->io[i] = NULL;
++
++err_init_io:
++	for (u32 j = 0; j < i; j++) {
++		struct hw_wq_callback *wqcb;
++
++		io = hw->io[j];
++		wqcb = efct_hw_reqtag_get_instance(hw, io->reqtag);
++
++		if (new_alloc) {
++			dma = &io->def_sgl;
++			dma_free_coherent(&efct->pci->dev, dma->size,
++					  dma->virt, dma->phys);
++			memset(&io->def_sgl, 0, sizeof(struct efc_dma));
++		}
++		sli_resource_free(&hw->sli, SLI4_RSRC_XRI, io->indicator);
++		efct_hw_reqtag_free(hw, wqcb);
+ 	}
++	if (new_alloc) {
++		dma = &hw->xfer_rdy;
++		dma_free_coherent(&efct->pci->dev, dma->size, dma->virt,
++				  dma->phys);
++		memset(&hw->xfer_rdy, 0, sizeof(struct efc_dma));
++	}
++err_alloc_wqe:
++	kfree(hw->wqe_buffs);
++	hw->wqe_buffs = NULL;
++err_alloc_io:
++	for (i = 0; i < hw->config.n_io && hw->io[i]; i++)
++		kfree(hw->io[i]);
+ 
+ 	kfree(hw->io);
+ 	hw->io = NULL;
+ 
+-	return -ENOMEM;
++	return err;
+ }
+ 
+ static int
+-- 
+2.39.2
+
