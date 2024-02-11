@@ -1,176 +1,226 @@
-Received: from mail-il1-f181.google.com (mail-il1-f181.google.com [209.85.166.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD1D92AE74;
-	Sun, 11 Feb 2024 15:33:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D99F45D8EF
+	for <linux-scsi@vger.kernel.org>; Sun, 11 Feb 2024 19:29:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707665601; cv=none; b=dI0P8ob+ls8yLgb17uqOSZti1CnzmqWWLUOwEL+gksulXePNrEqfPfihDbBA0Q5cDZ/Jyp8k+NAYLLYqbvkJ3q5mZytWLXJsSqQXc0a0B/lAfKbbaSaW1x137uslmxfO+e1x+T2/Re18b1cnehGHyFvSA1HicD2p0x6vfJItAXE=
+	t=1707679762; cv=none; b=JCz3M9LMDpTLzxxbiwyVt++cYmz2cZnr2VMW2Vp556mJMBnIKV3iLRiTMytyhCfeyoG3q8e/GAJEvbmk9cm0ng484RI9Yyxd6X/e7oCXtyEvISxmZvwQYeu1NtXUgEygDhg/ZH2GhGLw3fBJE6OOWXnvejIPySZO7uLfHedbPFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707665601; c=relaxed/simple;
-	bh=KvxrA8HLA+5Te2kk8N9iNiNctxBs5xVzeJBiZZr1CIY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=rz33cKGg1mC23UOJg6YUUMoANNo4CKUvTYi9IDBA+SZBjNICV6Yx4QfCWOlPKWTgSodPnI78UngeNUh9lmunSTLP5MjDgce1vfz/bvkWeVxxlJGV9nI1ZIk+oxdhzDiZJBYmsxiJtUCfRAzdCsuWu1YNE2IYpKy6dhpuyL6ZNPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=marliere.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=marliere.net header.i=@marliere.net header.b=gOLYHkM3; arc=none smtp.client-ip=209.85.166.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=marliere.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1707679762; c=relaxed/simple;
+	bh=+Zb8bamCtLicaeu4poS1aXR+HhWfYaoB0OpmtlP2pxY=;
+	h=MIME-Version:Content-Type:Date:From:To:Cc:Subject:Message-ID; b=hihsVzYGbFVQ+p9oRHHD8sKIqeBNZuqqPmcFmXH/mHAcpoTJcbp2/wKLMX9Vxtn58cmXZNzg3/KYvi207zbNNx88sJRhc9KoIKLBcz7YF2q9bHShcNg5GVAj/BVxocU1MpbZyMm2FrVe10KLhVGG7H5TY3Qm+pVIvldAnnj//nY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=a4BTclVL; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marliere.net header.i=@marliere.net header.b="gOLYHkM3"
-Received: by mail-il1-f181.google.com with SMTP id e9e14a558f8ab-363a76d0c71so13490275ab.1;
-        Sun, 11 Feb 2024 07:33:19 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707665599; x=1708270399;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:dkim-signature:from:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VuHOlvWESTbD0pP+Ok8CQCa3586fwbCX3IMl1v1eng8=;
-        b=uwptsQza39T8ALrZzESwaFWGC3iZk2H+OOWsBM5tEoZ+CsMvU17gVIVmmz2AaRKojE
-         m4GRa4ZLXIE9tRdFdDJSV+2T2xb0XrV2QRZPM5M0pbA7oq4/0eN4stkGm5+nbJEYpgPq
-         yA6xhdIxqoLKbRf6xqaxEuklcLurDm3iAcvtqw93lVQUpDPq2ONel6bMsTH45KauztYG
-         fjSaLNZc7now46Bnzg+8Ce9rbTv1Qpq8cRLYC9nN8W6M9m5ZHeFd5WNNVex8C7fCHABy
-         VIvARYmDqg94b7mpMFsIPBaIu/HSGw97pMzhaCaxXx0j/BpVwjiNIlPapqSi5a3mkpEF
-         TN9A==
-X-Gm-Message-State: AOJu0YxC6HD6vcnzS6QinXF5WjEvoph7OREJ8L/bL+LwE9ArDz9TfNlr
-	Xpzw8oB2rUh/WzzMD5g2OBWRdo5YXTu/HIqKRyXlc7HHZSS+cmJZ
-X-Google-Smtp-Source: AGHT+IGC0FHQGK4yybfJt684xZE+YxS2A8dkndraXw/D15fNRYB89f5zm3oxVgnfniWR9zb5Slgf4A==
-X-Received: by 2002:a92:d3d1:0:b0:363:b33e:c8f2 with SMTP id c17-20020a92d3d1000000b00363b33ec8f2mr5353872ilh.11.1707665598707;
-        Sun, 11 Feb 2024 07:33:18 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWKkRej9xN/v32H1uMhpj9K+QD8Gj6clUcOcBRNWnK5HqhyHy9XMZmy305JQAS8gcpts+4lOdk9sghcWJkS/Rk8nkKejjfg/8o+pxTReZCR3B6p5M7EYfPTYayjQ8mPiFRJ/vqqbmIUqsx8u+LKw1bTBa99BWCNqs9fHPVcDFHP/edg6to=
-Received: from mail.marliere.net ([24.199.118.162])
-        by smtp.gmail.com with ESMTPSA id dq16-20020a056a020f9000b005cfb6e7b0c7sm4584921pgb.39.2024.02.11.07.33.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 11 Feb 2024 07:33:17 -0800 (PST)
-From: "Ricardo B. Marliere" <ricardo@marliere.net>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marliere.net;
-	s=2024; t=1707665596;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=VuHOlvWESTbD0pP+Ok8CQCa3586fwbCX3IMl1v1eng8=;
-	b=gOLYHkM3G7pr1zv9f1ih6dmQ4w1kSRIwgnUCqqL4u6nyXhAIcEo6NseVqU+fUS5qA9RZNG
-	FVcl77V6SAHP7u3bWQJ9OpEbbSGArlW0CE1BB8KkTIQKdPWfD7TMsbZYR/YGTT2PpxrhA2
-	1HmibY9G5HGkcTX2whZAR1c8jrzFi+psTf2/a2MUhFcRSVKNbGYuF864XOARuzlOgGlxzk
-	Q/xo7JJ0BYVrRHk+0YQ9hlBZDsFrr0VHxUSt2OzR1FZ6TJ+FjQt3fWsyVXVUZGpJ0H2ahh
-	wlGgRHzNtGm+WeRzKbfrSC3s9VtoxrWfIoW3E3kDBRO/jbvtnL/JiIA+B5vcwQ==
-Authentication-Results: ORIGINATING;
-	auth=pass smtp.auth=ricardo@marliere.net smtp.mailfrom=ricardo@marliere.net
-Date: Sun, 11 Feb 2024 12:33:50 -0300
-Subject: [PATCH] scsi: Make scsi_bus_type const
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="a4BTclVL"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id B25D1240027
+	for <linux-scsi@vger.kernel.org>; Sun, 11 Feb 2024 20:29:11 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=posteo.de; s=2017;
+	t=1707679751; bh=+Zb8bamCtLicaeu4poS1aXR+HhWfYaoB0OpmtlP2pxY=;
+	h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:
+	 Cc:Subject:Message-ID:From;
+	b=a4BTclVL+Sn5JeYD/YjU2QJ5NCE/maqV4zLERUuBNF78rYcUv0cj8nJ3LGEk9NATz
+	 0qB5AUt4niwA/r+0hD8fs4+wfbaKCMQ6TGH6r6+dERYNJZ3YFnjc1a++KpGIv2n6C1
+	 oNx2SwDphxMtAPMLNWBNagYXgbpmxef1/4ZNFi1uRf9WS62AG6pHasAnwEDk5AsQNa
+	 QgwYNfGLRaVkUd54OqsI6c3MwogjT/dM4DhrAqmhbafWDv+iNCl/C5RCOivXt8LYld
+	 YaP89Pf2SueoqeWa9lDv7OQpXqm0hPmM4NeY9X1uWNANcuAydIyaYU7k0FKwBBUi0K
+	 6S+Dhuzc9mU1A==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4TXyMB4rGWz6tm8;
+	Sun, 11 Feb 2024 20:29:10 +0100 (CET)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240211-bus_cleanup-scsi2-v1-1-dd04ee82e6b0@marliere.net>
-X-B4-Tracking: v=1; b=H4sIAN3oyGUC/x3M0QpAQBBA0V/RPNsyS4pfkbQ7ZpnS0k6k5N9tH
- s/DvQ8oJ2GFvngg8SUqe8zAsgBaXVzYyJwNtrJNZRGNP3WijV08D6OkYg22VFPwrkMXIHdH4iD
- 3/xzG9/0AtFXKx2MAAAA=
-To: "James E.J. Bottomley" <jejb@linux.ibm.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- "Ricardo B. Marliere" <ricardo@marliere.net>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2933; i=ricardo@marliere.net;
- h=from:subject:message-id; bh=KvxrA8HLA+5Te2kk8N9iNiNctxBs5xVzeJBiZZr1CIY=;
- b=owEBbQKS/ZANAwAKAckLinxjhlimAcsmYgBlyOjeDETcFp6Nwe9OCSDwLeUvf1IbdCP6wRf9v
- 6p+MTtnOICJAjMEAAEKAB0WIQQDCo6eQk7jwGVXh+HJC4p8Y4ZYpgUCZcjo3gAKCRDJC4p8Y4ZY
- pg7hEACOFzhma3WS68vSY7kljVwRHpwqfXr+sGA1SyljXObGrn6i/7s5oMr2OcGhCBivVUzPITI
- mJ53hfo2fCx3lp8nTI4ChHzbGjVN4d7yk2jmifTqaU3Ax23gMtTl7520pAYJjhfL11a5Z19Xfhz
- qh+fyGeB21TPeQsZmN0i42hU/76slT/zbFk99ysFLTw1yTPgK9rNBC8vAd8FKupV2ZP/TvEvkRm
- JVWCaEffvaRAdBowbDrr13u//2Os+5/MDMgJD8bj2DWIRqzq1DK7WrCv3moUoOJ6Kix7S4KymRD
- 9yPQIKJjKZ149wMJVSg+Rtn9C0lgPGo+4BqXeolTUP/1oS286Uc8lL/gJEaRa8Us3k+tkczWDnl
- HM0Pcj1wLx2tj9uPAKQoxH9IGTyTiQK0jNqT5nADlp1vbUX7g2eBnsdhNpZ3Cuoa5bGDL/dlu/Z
- zQa4F2BuOWmS6wBVeqrK7d/nc5S4LWLXsue9+DthptIPIha+INPuQzPCiGjZYB6bpVujJVXAy8l
- B/NBrj6DPv3TQRkeVkdwuT+9gNjZ5fHN0NqflyrapfmtG3XhPyBJcoGkoNQfNMhS3hNDp5NUecL
- NktruQqSB9Cl7JvUcgmnTmQOl+MBJj0CiTyIs6OAbFccoSyGAuO9NDJ446EVW1Vxt1wnUW9brOs
- Q51cjnc7qjcGtGQ==
-X-Developer-Key: i=ricardo@marliere.net; a=openpgp;
- fpr=030A8E9E424EE3C0655787E1C90B8A7C638658A6
+Date: Sun, 11 Feb 2024 19:29:10 +0000
+From: ffp@posteo.de
+To: lduncan@suse.com, cleech@redhat.com, michael.christie@oracle.com,
+ phil@philpotter.co.uk, oneukum@suse.com
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+ linux-usb@vger.kernel.org
+Subject: Optical drive (CD/DVD/Blu-ray), connected via USB, passed-through
+ SCSI, distributed via iSCSI, error messages in dmesg every second, slower
+ average read speed at 2 MB/s, normal behavior with Microsoft Initiator
+Message-ID: <1e0495285aa5a8041da884c2f1621cbd@posteo.de>
 
-Now that the driver core can properly handle constant struct bus_type,
-move the scsi_bus_type variable to be a constant structure as well,
-placing it into read-only memory which can not be modified at runtime.
+[1.] One line summary of the problem:
 
-Remove some extraneous whitespace.
+Optical drive (CD/DVD/Blu-ray), connected via USB, passed-through SCSI, 
+distributed via iSCSI, error messages in dmesg every second, slower 
+average read speed at 2 MB/s, normal behavior with Microsoft Initiator
 
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Ricardo B. Marliere <ricardo@marliere.net>
----
- drivers/scsi/scsi_priv.h  | 6 +++---
- drivers/scsi/scsi_sysfs.c | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+[2.] Full description of the problem/report:
 
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 1fbfe1b52c9f..6a02114776b3 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -54,7 +54,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd);
- void scsi_log_send(struct scsi_cmnd *cmd);
- void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
- #else
--static inline void scsi_log_send(struct scsi_cmnd *cmd) 
-+static inline void scsi_log_send(struct scsi_cmnd *cmd)
- 	{ };
- static inline void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
- 	{ };
-@@ -156,7 +156,7 @@ extern void scsi_sysfs_device_initialize(struct scsi_device *);
- extern struct scsi_transport_template blank_transport_template;
- extern void __scsi_remove_device(struct scsi_device *);
- 
--extern struct bus_type scsi_bus_type;
-+extern const struct bus_type scsi_bus_type;
- extern const struct attribute_group *scsi_shost_groups[];
- 
- /* scsi_netlink.c */
-@@ -197,7 +197,7 @@ struct bsg_device *scsi_bsg_register_queue(struct scsi_device *sdev);
- 
- extern int scsi_device_max_queue_depth(struct scsi_device *sdev);
- 
--/* 
-+/*
-  * internal scsi timeout functions: for use by mid-layer and transport
-  * classes.
-  */
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 24f6eefb6803..7f1fede8ef5d 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -549,7 +549,7 @@ static int scsi_bus_uevent(const struct device *dev, struct kobj_uevent_env *env
- 	return 0;
- }
- 
--struct bus_type scsi_bus_type = {
-+const struct bus_type scsi_bus_type = {
-         .name		= "scsi",
-         .match		= scsi_bus_match,
- 	.uevent		= scsi_bus_uevent,
-@@ -656,7 +656,7 @@ static int scsi_sdev_check_buf_bit(const char *buf)
- 			return 1;
- 		else if (buf[0] == '0')
- 			return 0;
--		else 
-+		else
- 			return -EINVAL;
- 	} else
- 		return -EINVAL;
-@@ -881,7 +881,7 @@ store_queue_type_field(struct device *dev, struct device_attribute *attr,
- 
- 	if (!sdev->tagged_supported)
- 		return -EINVAL;
--		
-+
- 	sdev_printk(KERN_INFO, sdev,
- 		    "ignoring write to deprecated queue_type attribute");
- 	return count;
+Hello everyone,
 
----
-base-commit: 59828c7b5975f442ad5bb74a031fe388341f323e
-change-id: 20240211-bus_cleanup-scsi2-16c3cfba91af
+I hope I am writing to the right people and describing the problem 
+reasonably well, this is my first bug report. I have been trying to find 
+a solution at program level for two months now, which is unfortunately 
+proving difficult. I think that the error can be narrowed down to the 
+kernel, there are indications of this, but I can't prove it with 100% 
+certainty as I don't understand the C language myself.
 
-Best regards,
--- 
-Ricardo B. Marliere <ricardo@marliere.net>
+Let me break down the current structure:
+optical drive---> via USB3---> ESXi8 host---> pass-through to VM---> 
+Debian 12 with kernel 6.1.0 and self-compiled kernel 6.7.4--->tgt iSCSI 
+target---> SCSI pass-through---> Ethernet/ WiFi with TCP---> Debian 12 
+Stable or Testing with open-iscsi Initiator---> Programs
+
+(drive already removed from enclosure and connected to physical PC with 
+mini-SATA, tgt set up, same error pattern)
+
+Problem description:
+
+I search for the target via iscsiadm and log in. The optical drive is 
+recognized and initialized, see dmesg:
+
+[ 6204.436754] scsi host0: iSCSI Initiator over TCP/IP
+[ 6204.452976] scsi 0:0:0:0: RAID              IET      Controller       
+0001 PQ: 0 ANSI: 5
+[ 6204.483159] scsi 0:0:0:0: Attached scsi generic sg0 type 12
+[ 6204.486988] scsi 0:0:0:1: CD-ROM            NECVMWar VMware SATA CD00 
+1.00 PQ: 0 ANSI: 5
+[ 6204.534459] sr 0:0:0:1: [sr0] scsi-1 drive
+[ 6204.598759] sr 0:0:0:1: Attached scsi CD-ROM sr0
+[ 6204.598905] sr 0:0:0:1: Attached scsi generic sg1 type 5
+[ 6208.550055] sr 0:0:0:1: [sr0] tag#96 FAILED Result: hostbyte=DID_OK 
+driverbyte=DRIVER_OK cmd_age=0s
+[ 6208.550064] sr 0:0:0:1: [sr0] tag#96 Sense Key : Hardware Error 
+[current]
+[ 6208.550067] sr 0:0:0:1: [sr0] tag#96 Add. Sense: Internal target 
+failure
+[ 6208.550071] sr 0:0:0:1: [sr0] tag#96 CDB: Read(10) 28 00 00 00 00 82 
+00 00 7e 00
+[ 6208.550073] critical target error, dev sr0, sector 520 op 0x0:(READ) 
+flags 0x80700 phys_seg 63 prio class 2
+[ 6208.763308] sr 0:0:0:1: [sr0] tag#96 FAILED Result: hostbyte=DID_OK 
+driverbyte=DRIVER_OK cmd_age=0s
+[ 6208.763316] sr 0:0:0:1: [sr0] tag#96 Sense Key : Hardware Error 
+[current]
+[ 6208.763319] sr 0:0:0:1: [sr0] tag#96 Add. Sense: Internal target 
+failure
+[ 6208.763322] sr 0:0:0:1: [sr0] tag#96 CDB: Read(10) 28 00 01 65 d3 00 
+00 00 80 00
+[ 6208.763324] critical target error, dev sr0, sector 93801472 op 
+0x0:(READ) flags 0x80700 phys_seg 64 prio class 2
+[ 6212.108642] sr 0:0:0:1: [sr0] tag#98 FAILED Result: hostbyte=DID_OK 
+driverbyte=DRIVER_OK cmd_age=0s
+[ 6212.108650] sr 0:0:0:1: [sr0] tag#98 Sense Key : Hardware Error 
+[current]
+[ 6212.108653] sr 0:0:0:1: [sr0] tag#98 Add. Sense: Internal target 
+failure
+[ 6212.108656] sr 0:0:0:1: [sr0] tag#98 CDB: Read(10) 28 00 01 65 d3 80 
+00 00 80 00
+[ 6212.108658] critical target error, dev sr0, sector 93801984 op 
+0x0:(READ) flags 0x80700 phys_seg 64 prio class 2
+
+At first it seems as if it is recognized and initialized without any 
+problems, about 3-5 seconds after connection the first error messages 
+are thrown.
+For example, when I run rsync -av -P on the mounted drive, dmesg is 
+flooded with this kind of error message and the transfer rate is 2.0 - 
+2.5 MB/s. This behavior does NOT continue to occur when I use dd 
+if=/dev/sr0 of=/test.img to read the disc bit by bit. To my surprise, 
+the disc is then read at the full speed of the drive (between 20.0 and 
+24.0 MB/s).
+
+In principle, this is also the complete error pattern, with open-iscsi 
+as the initiator.
+
+I have now run some tests to find a solution at program level, which has 
+not been found.
+Among other things, I have counter-tested with Windows (10/11/Server 
+2022) and the initiator used there can establish a connection with 
+default settings and mount the drive into the system. Completely 
+error-free. The programs there can read it at full speed.
+
+I have also tested another Debian-based distribution (virtualized), 
+Ubuntu 22.04, which also has this error.I have also tested various 
+kernel versions, namely kernel 6.7.4 (self-compiled), 6.6.13, 6.5.0, 
+4.19.306 and 4.0.0 (Debian Stretch Alpha).
+This error occurs in all kernel versions mentioned. In the first four, 
+exactly the same. With kernel 4.0.0 the drive is initialized in dmesg 
+apparently without errors, only when I start a read operation (e.g. with 
+rsync) is dmesg flooded.
+I also read the disc on the VM on which tgt is running with dd 1:1 and 
+wrote it to a hard disk. I then entered the hard disk in targets.conf 
+using SCSI passthrough and mounted it on the client with 
+open-iscsi-initiator.
+Now I have used various programs to read out this created image on the 
+client and copied it to file level. This worked without any problems, 
+neither in dmesg nor with the speed, which means for me that the error 
+is not generally due to open-iscsi.
+On Friday I bought a brand new optical drive which also works fine on 
+Windows to rule out the error of an unlikely hardware defect.
+
+IMPORTANT NOTE: Both drives work flawlessly when I connect them to my 
+Linux clients via USB(2/3) OR pass them through to a guest VM via ESXi8.
+
+How can the error be reproduced?
+
+Set up tgt, connect a DVD/Blu-ray-capable drive via USB/SATA.
+Enter it in /etc/tgt/conf.d/targets.conf:
+
+default-driver iscsi
+
+<target iqn.1993-08.org.brd-srv:vbrd.target1>
+   <backing-store "/dev/sg1">
+       device-type pt
+       bs-type sg
+   </backing-store>
+</target>
+
+Restart tgt: systemctl restart tgt
+
+On the client:
+
+iscsiadm --mode discovery --portal target_ip --type sendtargets
+iscsiadm -m node --targetname=targetname --login
+
+The configuration file: /etc/iscsi/node/target-iqn/ip-address/default
+can be left unchanged, the change of various parameters did not affect 
+the error.
+
+Mount the drive and the disk:
+mount /dev/sr0 /cdrom/
+
+Start a copy process such as rsync -av -P /cdrom /home/user/disc/
+and run dmesg -w at the same time.
+
+I hope this report is enough to get you started, please contact me if 
+you need more information.
+
+Best regards
+
+[3.] Keywords (i.e., modules, networking, kernel):
+
+Networking, SCSI, iSCSI, Kernel, cdrom, sr, tgt
+
+[4.] Kernel information
+[4.1.] Kernel version (from /proc/version):
+[4.2.] Kernel .config file:
+[5.] Most recent kernel version which did not have the bug:
+[6.] Output of Oops.. message (if applicable) with symbolic information
+      resolved (see Documentation/admin-guide/oops-tracing.rst)
+[7.] A small shell script or example program which triggers the
+      problem (if possible)
+[8.] Environment
+[8.1.] Software (add the output of the ver_linux script here)
+[8.2.] Processor information (from /proc/cpuinfo):
+[8.3.] Module information (from /proc/modules):
+[8.4.] Loaded driver and hardware information (/proc/ioports, 
+/proc/iomem)
+[8.5.] PCI information ('lspci -vvv' as root)
+[8.6.] SCSI information (from /proc/scsi/scsi)
+[8.7.] Other information that might be relevant to the problem
+        (please look in /proc and include all information that you
+        think to be relevant):
 
