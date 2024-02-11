@@ -1,150 +1,104 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f52.google.com (mail-oa1-f52.google.com [209.85.160.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50ED54CB51;
-	Sat, 10 Feb 2024 12:57:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C563CC120;
+	Sun, 11 Feb 2024 03:40:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707569822; cv=none; b=FJnzhqG3R9jmqGnxcFvH/p8Uv3bim3JXabJpqGpgTxJL1Ct1kT/ltFhbMRwPzOiO0p8JiYSBCWjnQomFJHyPQwkFqZZa9TDUBJ8E8KkgIxD4zgj+hAajstjM0BcZDIglTKXD3vmITgFgrUZRfhoAOGa0zX46RQhPpjy23q2Ig2o=
+	t=1707622822; cv=none; b=ujgFKMgKcP6f0J4qK/Jgqt7mojadkhMbgjJzBWXw/oaG8nHsx1Mvovi2W5MiFFGSLWrNkEpDrKyXcufVo85UvEQAGr87JTXcQQskbQpkmp914g1MpS6QlVdxNthybBJETl8OyoZjY8XSMFo2YA0j+idZcTEOcwIly6ugVlkSJRs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707569822; c=relaxed/simple;
-	bh=XveJv1CTfFqEzUlKqPUXlyQYCkmqFnf5OOVS23W/ro8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=hfrQIKTrANup0EV0XS+Mc3P6HXiqdbkaJRJ4nnqUlQFJ6QByPNahe0kqAkVZCdl3PIIZLOm6uiwd2xFaXm3LxJvh7LlJpyGRCZDGvJBzJLb3vQB0JWQukoA8SBi50n5onwevHobBdyOI2/o2qc9hqhqrRz6AdS/q3Zg4NyE1ZyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=sqvwW7T3; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="sqvwW7T3"
-Received: from pps.filterd (m0353728.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41AALlVT021376;
-	Sat, 10 Feb 2024 12:56:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=kcHxy6hR8JksGEBmB7+lME5RD90ChjNcUanlnTwLfK8=;
- b=sqvwW7T3m0oBxIbzTPKoXbPeEabRRXN4EbGdWdKTX0vGaP88z9aytVPQCMFAaR83X6Od
- h5NKx4DaXSMVNiC6GcvJgLqv95zQhzQaS92x5ntkjdVfxTY5FEGe1elnYg2jdAkRB3lF
- s6UNRZBOg33TdjPTnq2Ccpw9KRAqtZQ84A2Ept/S/8cIOfkNwdJ93qCWv58xSdWeoE5u
- xQUHHfzrRtzTP1ymwrDhdt/Mwqhn+u2ALCPmVIp/vXWUK8sI6749Ob12pAlQDDmOvP/O
- L8v96i7d2bauUoGGbnrJ75c5LZThMi73GXVfyu6fqF0mkpGJGZPRrItUjGo7mxOre3v9 2g== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w67aw1u0a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 10 Feb 2024 12:56:46 +0000
-Received: from m0353728.ppops.net (m0353728.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41ACuj6s016974;
-	Sat, 10 Feb 2024 12:56:45 GMT
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w67aw1u01-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 10 Feb 2024 12:56:45 +0000
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 41A9lkLC014765;
-	Sat, 10 Feb 2024 12:56:44 GMT
-Received: from smtprelay01.wdc07v.mail.ibm.com ([172.16.1.68])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3w20tph9fr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 10 Feb 2024 12:56:44 +0000
-Received: from smtpav01.dal12v.mail.ibm.com (smtpav01.dal12v.mail.ibm.com [10.241.53.100])
-	by smtprelay01.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 41ACufT453018904
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 10 Feb 2024 12:56:43 GMT
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 7BA3158058;
-	Sat, 10 Feb 2024 12:56:41 +0000 (GMT)
-Received: from smtpav01.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 66FD058057;
-	Sat, 10 Feb 2024 12:56:39 +0000 (GMT)
-Received: from lingrow.int.hansenpartnership.com (unknown [9.67.183.218])
-	by smtpav01.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Sat, 10 Feb 2024 12:56:39 +0000 (GMT)
-Message-ID: <98bdd564c6bf1894717d060f3187c779e969fc5f.camel@linux.ibm.com>
-Subject: Re: [PATCH 03/10] scsi: NCR5380: Replace snprintf() with the safer
- scnprintf() variant
-From: James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To: Lee Jones <lee@kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
-        Finn
- Thain <fthain@linux-m68k.org>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>, drew@colorado.edu,
-        Tnx
- to <Thomas_Roesch@m2.maus.de>, linux-scsi@vger.kernel.org
-Date: Sat, 10 Feb 2024 07:56:38 -0500
-In-Reply-To: <20240208102939.GF689448@google.com>
-References: <20240208084512.3803250-1-lee@kernel.org>
-	 <20240208084512.3803250-4-lee@kernel.org>
-	 <CAMuHMdX72mpGgb3Wp0WRX3V78nn+bWUqiYz25CjeMNPpWaPmxg@mail.gmail.com>
-	 <20240208102939.GF689448@google.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+	s=arc-20240116; t=1707622822; c=relaxed/simple;
+	bh=qAofQFRNn5JOYKBu3rH93zn1we+MRS407FLoTMBaCVU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QqMqkawxrdFNcVLgqBOEgR7ggj63bpaVgtdlqgLsFGMR6vlKmfPjZ8F81hcwxwPMclrYM/W7XjMzUkPKPRLQC3HwHIoNcGhm81+trJpXrbA7KPaJuVIfabh59LPx6azbZV6Z1/3I/Y0WSSYFdF3XtSpYK6aebyor1AWVHZ/RJ90=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.160.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-oa1-f52.google.com with SMTP id 586e51a60fabf-218642337c9so1389596fac.3;
+        Sat, 10 Feb 2024 19:40:20 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707622820; x=1708227620;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hMYgiHBEDavj7uIzhw2tvkbewX2cx77PDc9OLk7jn/k=;
+        b=TLddgr7srpqEKeiC///1i72Hcyn0ZmdMrM2hTgfar+0o21LIFh/LQ5NqRdjplSjKeo
+         EsvGdTXs3Su86S/BbLDaFxU4pId55NF2LswvDQkV19lUstykXb6B2mh51yLFpqwp1AmD
+         A/q7xzI7DVVGEVpMnrnaL0aJPGG9GPLRONMUmx21xf9By2GP/c1gb89gFTqwisedcw64
+         GNiP4oRrT41g+1RM0qkv0h/ilW7UlmyYAAhE4SKCmOJYl5AmAc/iDISZq5vFqOGF61UR
+         qzAEWSNd+eJNxR2RUl0uzMgxs/4LyMXtJzGaYzZkS3DqDKByqLadLzd6UsZALLqO1fOz
+         4HGQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX0m192lNuoPbO74r4bjIxc96DyDPddQwluui74Wc9Lnkh5lmi5RYhYwWbztLaGw2I3GiGpRGT2kgfEZK+o/FkzAUo5oZlzyoKav3zRkbDX8ucZf+C6ejxdNga9WL5Mn05e4p1rfsNu
+X-Gm-Message-State: AOJu0YxgbC7fa6jAmFA34EHPe2qiw/Qq0CMdKBjl/9uXkKbF0i6bEJjm
+	fwwfsd9lISMT+swUTkD7YwxbTAM1S9eCS2SThA/axjNoLC1piH9d
+X-Google-Smtp-Source: AGHT+IGR4P8pGKs+ctCklf4XqK/ylZuLJWQJ0EO9ZKQtD/TUh1WRmTCeAUQBhkgAkZGaHUs1ZTNcFQ==
+X-Received: by 2002:a05:6870:b48a:b0:212:42f4:82f4 with SMTP id y10-20020a056870b48a00b0021242f482f4mr4817221oap.4.1707622819693;
+        Sat, 10 Feb 2024 19:40:19 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUxEhV9yJrJ24Jyyy7aLZmf4V0fw6ZPd0WLNVjRFQC0RNX0R/GJhy4LpgeDgqciTtru6g0MOUXaR8Ga/dHnufxYziotVgVhT7uDVDgHENPtV/8lmpUDW4+3cD4WDEsmUyk0UuB2xWPtYMtgXbQ3QL3YlN6r3o9rhY8wndYroVE7atBeIlK07Bj+4Dl1c7VrlLS5wMkP2OLfTS7ttwjlsoF63B2nsTmd3egehKOvbv5hsqTrr9CRf/kV+wCluc3QOt6fclBcIcyBHCvQy3l88Vq3
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id w13-20020a17090ad60d00b00296a7ac8b5fsm4361773pju.6.2024.02.10.19.40.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 10 Feb 2024 19:40:19 -0800 (PST)
+Message-ID: <a1531631-dce4-49a6-a589-76fa86e88aeb@acm.org>
+Date: Sat, 10 Feb 2024 19:40:17 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: 0_0N3qv_PRysYJ0vGkw1IBX5PPhbpYFk
-X-Proofpoint-ORIG-GUID: r7E3Cnz4lFaJqGafNEcctfudfxufykah
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-10_12,2024-02-08_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
- clxscore=1011 suspectscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0
- impostorscore=0 mlxlogscore=501 adultscore=0 spamscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2402100110
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 25/26] block: Reduce zone write plugging memory usage
+Content-Language: en-US
+To: Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
+ linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>, dm-devel@lists.linux.dev,
+ Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+References: <20240202073104.2418230-1-dlemoal@kernel.org>
+ <20240202073104.2418230-26-dlemoal@kernel.org>
+ <09d99780-8311-4ea9-8f48-cf84043d23f6@suse.de>
+ <f3a2f8b8-32d2-4e42-ba78-1f668d69033f@acm.org>
+ <a324beda-7651-4881-aea9-99a339e2b9eb@kernel.org>
+ <2e246189-a450-4061-b94c-73637859d073@acm.org>
+ <75240a9d-1862-4d09-9721-fd5463c5d4e5@kernel.org>
+ <e2a1a020-39e3-4b02-a841-3d53bd854106@acm.org>
+ <c03735f3-c036-4f78-ac0b-8f394e947d86@kernel.org>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <c03735f3-c036-4f78-ac0b-8f394e947d86@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, 2024-02-08 at 10:29 +0000, Lee Jones wrote:
-> On Thu, 08 Feb 2024, Geert Uytterhoeven wrote:
+On 2/9/24 16:06, Damien Le Moal wrote:
+> On 2/10/24 04:36, Bart Van Assche wrote:
+>> written zones is typically less than 10. Hence, tracking the partially written
 > 
-> > Hi Lee,
-> > 
-> > Thanks for your patch!
-> > 
-> > On Thu, Feb 8, 2024 at 9:48 AM Lee Jones <lee@kernel.org> wrote:
-> > > There is a general misunderstanding amongst engineers that
-> > > {v}snprintf()
-> > > returns the length of the data *actually* encoded into the
-> > > destination
-> > > array.  However, as per the C99 standard {v}snprintf() really
-> > > returns
-> > > the length of the data that *would have been* written if there
-> > > were
-> > > enough space for it.  This misunderstanding has led to buffer-
-> > > overruns
-> > > in the past.  It's generally considered safer to use the
-> > > {v}scnprintf()
-> > > variants in their place (or even sprintf() in simple cases).  So
-> > > let's
-> > > do that.
-> > 
-> > Confused... The return value is not used at all?
-> 
-> Future proofing.  The idea of the effort is to rid the use entirely.
-> 
->  - Usage is inside a sysfs handler passing PAGE_SIZE as the size
->    - s/snprintf/sysfs_emit/
->  - Usage is inside a sysfs handler passing a bespoke value as the
-> size
->    - s/snprintf/scnprintf/
->  - Return value used, but does *not* care about overflow
->    - s/snprintf/scnprintf/
->  - Return value used, caller *does* care about overflow
->    - s/snprintf/seq_buf/
->  - Return value not used
->    - s/snprintf/scnprintf/
-> 
-> This is the final case.
+> That is far from guaranteed, especially with devices that have no active zone
+> limits like SMR drives.
 
-To re-ask Geert's question: the last case can't ever lead to a bug or
-problem, what value does churning the kernel to change it provide?  As
-Finn said, if we want to deprecate it as a future pattern, put it in
-checkpatch.
+Interesting. The zoned devices I'm working with try to keep data in memory
+for all zones that are neither empty nor full and hence impose an upper limit
+on the number of open zones.
 
-James
+> But in any case, what exactly is your idea here ? Can you actually suggest
+> something ? Are you suggesting that a sparse array of zone plugs be used, with
+> an rb-tree or an xarray ? If that is what you are thinking, I can already tell
+> you that this is the first thing I tried to do. Early versions of this work used
+> a sparse xarray of zone plugs. But the problem with such approach is that it is
+> a lot more complicated and there is a need for a single lock to manage that
+> structure (which is really not good for performance).
+
+Hmm ... since the xarray data structure supports RCU I think that locking the
+entire xarray is only required if the zone condition changes from empty into
+not empty or from neither empty nor full into full?
+
+For the use cases I'm interested in a hash table implementation that supports
+RCU-lookups probably will work better than an xarray. I think that the hash
+table implementation in <linux/hashtable.h> supports RCU for lookups, insertion
+and removal.
+
+Thanks,
+
+Bart.
 
