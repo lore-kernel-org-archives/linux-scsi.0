@@ -1,134 +1,150 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D692F9FD;
-	Mon, 12 Feb 2024 08:47:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D12405680;
+	Mon, 12 Feb 2024 09:55:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707727663; cv=none; b=OujSjDxiC7fTdCM++nmLi5sgWNRR11WHfwklRqyN9wZG4/g0InCFf9EFcpRpw7y7g+46SC/bO8jGHKCM8IjJOiOD11szhi7rXwzyts8lraLfgmOjC8wWCSaffM8+5U3JTbjcZ4fd6Umn5fOBjS2M9nDDEkWLMqbJv0ZHU1ZFRJM=
+	t=1707731722; cv=none; b=AbnyYQYW9sWjKp7/LNeLtEnWbMKMQcHX5ab4dmV4WjV8I1fy/mNAnAuB9crODQd/L7wPs4J0IWU8y+BT5d9XakMOfJ0xS4xwQeUR0IoAqKFSRGVS1B7lQvhOwCaqEnJeLorZDmtFGoXh+xy9gVDRu1g6Hyqi8RhT9ac20RI3J+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707727663; c=relaxed/simple;
-	bh=uVOkGeLMsd1+ZjKq4LCkAfBtM1q49YLd4xP4VmnYMDo=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=kiV9PFwdFQSCyiIa031yZjBaO5FqyC7YoN988UEwjvWtyO0F/v4iNCl8uY8OKwsXA9v1Oh/EmlCFLLwYEBrEAStkT+qydC31jjjlF90GNi2EXRpX0HPEQiPJEeVpnN6eEpFJlJ3kjSp/hvPz/eIuRPGC87kDYi2QAIkLIYQxTfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JI5zQavR; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707731722; c=relaxed/simple;
+	bh=t4WvYxU51ydBpw383RUz2vrJCztI+BCrun0XRdgVmKQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UYS4KcGpX/JFvkuKJ0RH/u8PXvioY3/4t9h2SZ6qduEsyNoErR1tBA03MCEZaPxNrtGAX6xPjjpG+e+BKrHHAIRnb2pzVFoYH/OdnxProc26+cOs656qRCZDJ+kh+JppBlDaP10Op841T22+92uCDiTDd23x0AqoGpDv4LBRY2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=UtTjwY9y; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=M2CnSysU; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=RI2oHVs3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=eNEsrdT2; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JI5zQavR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96BC6C43390;
-	Mon, 12 Feb 2024 08:47:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707727663;
-	bh=uVOkGeLMsd1+ZjKq4LCkAfBtM1q49YLd4xP4VmnYMDo=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-	b=JI5zQavRULhgL/JgzNPhtfv/eojP0u55mJLvtoEul5fwp9IO5XYjhVpD87EXzzP1j
-	 dQOFg7eVHhZAQRg7kTVwkM4ZDeDa5o/oLwIRvIYIXnynbDIspzZcRRvWGXM+UviL+c
-	 9boJuF07K3NcuAHVLO2WN+fP6CC9FQzrnkmPE7590bG419zDCown0i+yAvIPfhadT/
-	 YFLL07+DqtJ8b+y3ULE4Ouhgx7SeZ12opUvuz6humQ/D8u4cDq50bc6HA6HypoAgwM
-	 pXIaC3qoHJhXJ0WwNjn1s+ByAN4P+aHa0ygizuRoXYgPVLhUZp22Aw/3qUGiUsQeDY
-	 mFC1g/IB25NVw==
-Message-ID: <2b45ee45-5f2e-4923-9ef6-a7f03bcb65bf@kernel.org>
-Date: Mon, 12 Feb 2024 17:47:40 +0900
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="UtTjwY9y";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="M2CnSysU";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="RI2oHVs3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="eNEsrdT2"
+Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:98])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 5D98021C55;
+	Mon, 12 Feb 2024 09:55:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1707731716; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TcOt8F/vPFobphbJxqs2m3ZJ2DqTEZsfenrec8cS0dc=;
+	b=UtTjwY9yyodJDceWP/WkqF2y+A1kALxjOIl57ksBltuIiw/wnTU4YH0sll5WHp13+K2NtU
+	K+gZeMkVhS9ade2ALrbpaqJWQA25mcPFZG2GKgKO3NEWjrAV4D+fzLqCuQ8Fvo4LK7j+d8
+	dqFh1MRucIebxZVX77SOlZRUtMragRc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1707731716;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TcOt8F/vPFobphbJxqs2m3ZJ2DqTEZsfenrec8cS0dc=;
+	b=M2CnSysUHtdXn9kwBLsqBR5gUyHtkBsnJtQ+ag46LwN1eGfcOPN/P6IeBfnrfWHlp2t2fH
+	UZDbTySVVF8BV9Cw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1707731714; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TcOt8F/vPFobphbJxqs2m3ZJ2DqTEZsfenrec8cS0dc=;
+	b=RI2oHVs3KSB3UJrXCyqeWJLdVfkA30EgSO/rXf+AioGez8Xz5xCuaMK8Fwf6uuKFO9JXVx
+	qZwkz/+HIn17FhAMVQAuB3CaJWzkjqedJnv+ujQrE90xil7ynPSNdZTovI0dX3EO9QVSrO
+	gWHWr8TJb43rLuMPeJY3xL02mI5iVDM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1707731714;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=TcOt8F/vPFobphbJxqs2m3ZJ2DqTEZsfenrec8cS0dc=;
+	b=eNEsrdT2dKXIw/yRW0fLu018iWrhcqMvCjURM6YjrMi6mRX8tEAbQ31ngiwG5aNOLeweF0
+	Ql22q2eJIUGroICw==
+Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 44C2313A0E;
+	Mon, 12 Feb 2024 09:55:14 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap2.dmz-prg2.suse.org with ESMTPSA
+	id hmFQDwLryWUwAQAAn2gu4w
+	(envelope-from <dwagner@suse.de>); Mon, 12 Feb 2024 09:55:14 +0000
+Date: Mon, 12 Feb 2024 10:55:13 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: Fedor Pchelkin <pchelkin@ispras.ru>
+Cc: James Smart <james.smart@broadcom.com>, 
+	Ram Vegesna <ram.vegesna@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, 
+	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Alexey Khoroshilov <khoroshilov@ispras.ru>, lvc-project@linuxtesting.org, stable@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: elx: efct: adjust error handling inside
+ efct_hw_setup_io
+Message-ID: <fbz7l6ekiqqhi47cv6r2ots7siztdydfcspwr2jt56ldsyxjep@rwd5zx2oezl4>
+References: <2ik7x74hq6exam5ab4v2moauy4lfvqe3r626bxxettseat2nmv@q4gykxnezkff>
+ <20240210110833.27723-1-pchelkin@ispras.ru>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 25/26] block: Reduce zone write plugging memory usage
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.de>,
- linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
- linux-scsi@vger.kernel.org, "Martin K . Petersen"
- <martin.petersen@oracle.com>, dm-devel@lists.linux.dev,
- Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <20240202073104.2418230-26-dlemoal@kernel.org>
- <09d99780-8311-4ea9-8f48-cf84043d23f6@suse.de>
- <f3a2f8b8-32d2-4e42-ba78-1f668d69033f@acm.org>
- <a324beda-7651-4881-aea9-99a339e2b9eb@kernel.org>
- <2e246189-a450-4061-b94c-73637859d073@acm.org>
- <75240a9d-1862-4d09-9721-fd5463c5d4e5@kernel.org>
- <e2a1a020-39e3-4b02-a841-3d53bd854106@acm.org>
- <c03735f3-c036-4f78-ac0b-8f394e947d86@kernel.org>
- <a1531631-dce4-49a6-a589-76fa86e88aeb@acm.org>
- <c582fc6c-618e-4052-9f15-3045df819389@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <c582fc6c-618e-4052-9f15-3045df819389@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240210110833.27723-1-pchelkin@ispras.ru>
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=RI2oHVs3;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=eNEsrdT2
+X-Spamd-Result: default: False [-1.81 / 50.00];
+	 ARC_NA(0.00)[];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:98:from];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 MIME_GOOD(-0.10)[text/plain];
+	 DWL_DNSWL_MED(-2.00)[suse.de:dkim];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 DKIM_TRACE(0.00)[suse.de:+];
+	 MX_GOOD(-0.01)[];
+	 RCPT_COUNT_TWELVE(0.00)[12];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email,linuxtesting.org:url,ispras.ru:email];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 MID_RHS_NOT_FQDN(0.50)[];
+	 RCVD_TLS_ALL(0.00)[];
+	 BAYES_HAM(-0.00)[38.62%];
+	 RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:98:from]
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: 5D98021C55
+X-Spam-Level: 
+X-Spam-Score: -1.81
+X-Spam-Flag: NO
 
-On 2/12/24 17:23, Damien Le Moal wrote:
-> On 2/11/24 12:40, Bart Van Assche wrote:
->> On 2/9/24 16:06, Damien Le Moal wrote:
->>> On 2/10/24 04:36, Bart Van Assche wrote:
->>>> written zones is typically less than 10. Hence, tracking the partially written
->>>
->>> That is far from guaranteed, especially with devices that have no active zone
->>> limits like SMR drives.
->>
->> Interesting. The zoned devices I'm working with try to keep data in memory
->> for all zones that are neither empty nor full and hence impose an upper limit
->> on the number of open zones.
->>
->>> But in any case, what exactly is your idea here ? Can you actually suggest
->>> something ? Are you suggesting that a sparse array of zone plugs be used, with
->>> an rb-tree or an xarray ? If that is what you are thinking, I can already tell
->>> you that this is the first thing I tried to do. Early versions of this work used
->>> a sparse xarray of zone plugs. But the problem with such approach is that it is
->>> a lot more complicated and there is a need for a single lock to manage that
->>> structure (which is really not good for performance).
->>
->> Hmm ... since the xarray data structure supports RCU I think that locking the
->> entire xarray is only required if the zone condition changes from empty into
->> not empty or from neither empty nor full into full?
->>
->> For the use cases I'm interested in a hash table implementation that supports
->> RCU-lookups probably will work better than an xarray. I think that the hash
->> table implementation in <linux/hashtable.h> supports RCU for lookups, insertion
->> and removal.
+On Sat, Feb 10, 2024 at 02:08:33PM +0300, Fedor Pchelkin wrote:
+> IO and WQE buffers are allocated once per HW and can be reused later. If
+> WQE buffers allocation fails then the whole allocation is marked as failed
+> but already created IO array internal objects are not freed. hw->io is
+> freed but not nullified in that specific case - it may become a problem
+> later as efct_hw_setup_io() is supposed to be reusable for the same HW.
 > 
-> I spent some time digging into this and also revisiting the possibility of using
-> an xarray. Conclusion is that this does not work well, at least in no way not
-> better than what I did, and most of the time much worse. The reason is that we
-> need at the very least to keep this information around:
-> 1) If the zone is conventional or not
-> 2) The zone capacity of sequential write required zones
+> Also rollback if HW IO objects initialization loop fails due to memory
+> allocation error.
 > 
-> Unless we keep this information, a report zone would be needed before starting
-> writing to a zone that does not yet have a zone write plug allocated.
+> While at it, use kcalloc instead of kmalloc_array/memset-zero combination
+> and get rid of some needless NULL assignments: nullifying hw->io[i]
+> elements just before freeing hw->io is not really useful.
 > 
-> (1) and (2) above can be trivially combined into a single 32-bits value. But
-> that value must exist for all zones. So at the very least, we need nr_zones * 4B
-> of memory allocated at all time. For such case (i.e. non-sparse structure),
-> xarray or hash table would be more costly in memory than a simple static array.
+> Found by Linux Verification Center (linuxtesting.org).
 > 
-> Given that we want to allocate/free zone write plugs dynamically as needed, we
-> essentially need an array of pointers, so 8B * nr_zones for the base structure.
-> From there, ideally, we should be able to use rcu to safely dereference/modify
-> the array entries. However, static arrays are not supported by the rcu code from
-> what I read.
-> 
-> Given this, my current approach that uses 16B per zone is the next best thing I
-> can think of without introducing a single lock for modifying the array entries.
-> 
-> If you have any other idea, please share.
+> Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
+> Cc: stable@vger.kernel.org
+> Suggested-by: Daniel Wagner <dwagner@suse.de>
+> Signed-off-by: Fedor Pchelkin <pchelkin@ispras.ru>
+> ---
+> v2: per Daniel Wagner's notice, handle the other possible memory
+>     allocation errors inside the function.
 
-Replying to myself as I had an idea:
-1) Store the zone capacity in a separate array: 4B * nr_zones needed. Storing
-"0" as a value for a zone in that array would indicate that the zone is
-conventional. No additional zone bitmap needed.
-2) Use a sparse xarray for managing allocated zone write plugs: 64B per
-allocated zone write plug needed, which for an SMR drive would generally be at
-most 128 * 64B = 8K.
+Looks good to me! Thanks!
 
-So for an SMR drive with 100,000 zones, that would be a total of 408 KB, instead
-of the current 1.6 MB. Will try to prototype this to see how performance goes (I
-am worried about the xarray lookup overhead in the hot path).
-
--- 
-Damien Le Moal
-Western Digital Research
-
+Reviewed-by: Daniel Wagner <dwagner@suse.de>
