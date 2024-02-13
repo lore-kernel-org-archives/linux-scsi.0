@@ -1,103 +1,131 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5539C17E;
-	Tue, 13 Feb 2024 00:05:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E53EB4C9F;
+	Tue, 13 Feb 2024 00:19:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707782759; cv=none; b=R0J+JiWd1zJLYiJhKDyei8l1Xb53HpypFC5dZ+O7UAqIJbYjRMRL4DmGW8a1rs2Si1hHK5sqm465gfOB6ckoPik2hWHp/5BGWRR4h7hsndcLE7UxfP2I8f3CxuI3nf8E0VQj2cduj24NPoxCzbSzcN+Bdn/ETqnDFzpkXRi1Eco=
+	t=1707783572; cv=none; b=hvWrF04cFiHx1MqjzVGK+n8ycDWNPcettyhJA9YXvQ+XNA/5AGze8eZ81ELL/ZfzPPWC62ReF9aWl3Wffq2M0i54Rg+lqlXqkair30xeTR9Ya6ViB/HHneyWM4qS+R+HZ4UE/XrAc8DwDekw7NWx/lFx22LmvULCO5Ks3aT6L2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707782759; c=relaxed/simple;
-	bh=KXepePgD9sxv2u2ZKdU/Y+qtxJSXw5zEaJKBohhsn5c=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eq0Z0DDufGgWs+ElT+Jv4kThr1AhWmwJPTvT2pTzlBiek5AvwUs3P8OiReqsPE3hH1IWqxpP8C/S2XFUF+Lv+k9NKAMPDr1ycm+kcRoMm3XLtux5H0dom68PAPlZS8rp/QgP9E/Ly5ebbOkS1VSY0jf/8TATQcLvPQCAHyMiNKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IepsTpxO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1707783572; c=relaxed/simple;
+	bh=D5FmZorhaZefGTlqcT+FkW4aV8RoGBMwO9d0EJXg7IA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=s4CQ97uC0NYjoZllsQ86CZTD6tPrNBXBop15NIPbr0PGMfoXgXIR1JsPzPiPsXlkvO8mZbMgYVhM1tlSMEVtAYzc6w5R9Lv1VeheWxO/TlMi+DtbdJzanbL2YKrJkXkiOLktQQXwF4CGVvsSUC3X4xia03bWhbmxgWduMQD5QR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Cm7UCYGk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IepsTpxO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71D67C433C7;
-	Tue, 13 Feb 2024 00:05:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Cm7UCYGk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93D5CC43390;
+	Tue, 13 Feb 2024 00:19:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707782758;
-	bh=KXepePgD9sxv2u2ZKdU/Y+qtxJSXw5zEaJKBohhsn5c=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=IepsTpxO/DlN9uPD4xRpW+NkqfFswku/8xmd5ShoEZrHIvc/p+HBOq1M7qbeuq0eh
-	 LsLY9w+5c+y8FtyRh/LPWqKtiLp4cN/xcO7BPWneYtybpSi+smmao3lutQ0cZr4cT2
-	 uMw4BGP/KosRVXB3pYKA01uuBqsUwiOXyVNsvKy9BPoVbnPDnqVD1OA4EShjuMNk/e
-	 AAGLCvybyg/QuuUGMqDcf0BxTd2CXOhVAsYDB75O0jFgzY3fnRv5NVK6bRYY8Habnw
-	 onQFwnlU2mA2tSVa2JDTPHJn0odokqRdeyE0Vb0uuj4KJ6e+U6z8OC/+J8keaBlIVO
-	 yIe2SBacxxndQ==
-Message-ID: <5d5ae964-0bc3-452f-98ff-c355bdf50203@kernel.org>
-Date: Tue, 13 Feb 2024 09:05:55 +0900
+	s=k20201202; t=1707783571;
+	bh=D5FmZorhaZefGTlqcT+FkW4aV8RoGBMwO9d0EJXg7IA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Cm7UCYGkK6gRtz5JFCyi1uB8gWbuTav75ULfRKc3di7xtymFtOydyVLR+Jsses1b7
+	 mcklIyfkON8MhyiGpJ8Vz5WlQrV7kiueyyLoFrTlrFE0W33NfBRx8ifokNPMRCHGgA
+	 pgPkEzg14Fp8ephnGErijD5GlCWRFIj1BK3KTYhD4pE6q9V4uJ/BnmMva7PXD3Dope
+	 8xStmEX/jonfKqUg1rw44XGxP5oWh9B640TORM15pXWKoLpmuoRMc9HvNJWFPV7cYb
+	 o+5IWE+AvTQSN16V4VJnzYm4xbURqbiIKx1WNMDsne6BjoGHlCRmaTI68Xsg50rEiN
+	 KZwPCo8gFpFeA==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>,
+	Daniel Wagner <dwagner@suse.de>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
+	jejb@linux.ibm.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.7 36/58] scsi: lpfc: Use unsigned type for num_sge
+Date: Mon, 12 Feb 2024 19:17:42 -0500
+Message-ID: <20240213001837.668862-36-sashal@kernel.org>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240213001837.668862-1-sashal@kernel.org>
+References: <20240213001837.668862-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 25/26] block: Reduce zone write plugging memory usage
-To: Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.de>,
- linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
- linux-scsi@vger.kernel.org, "Martin K . Petersen"
- <martin.petersen@oracle.com>, dm-devel@lists.linux.dev,
- Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-References: <20240202073104.2418230-1-dlemoal@kernel.org>
- <20240202073104.2418230-26-dlemoal@kernel.org>
- <09d99780-8311-4ea9-8f48-cf84043d23f6@suse.de>
- <f3a2f8b8-32d2-4e42-ba78-1f668d69033f@acm.org>
- <a324beda-7651-4881-aea9-99a339e2b9eb@kernel.org>
- <2e246189-a450-4061-b94c-73637859d073@acm.org>
- <75240a9d-1862-4d09-9721-fd5463c5d4e5@kernel.org>
- <e2a1a020-39e3-4b02-a841-3d53bd854106@acm.org>
- <c03735f3-c036-4f78-ac0b-8f394e947d86@kernel.org>
- <a1531631-dce4-49a6-a589-76fa86e88aeb@acm.org>
- <c582fc6c-618e-4052-9f15-3045df819389@kernel.org>
- <2b45ee45-5f2e-4923-9ef6-a7f03bcb65bf@kernel.org>
- <768a184f-c921-40fc-8405-2777f03e1668@acm.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <768a184f-c921-40fc-8405-2777f03e1668@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.7.4
+Content-Transfer-Encoding: 8bit
 
-On 2/13/24 03:40, Bart Van Assche wrote:
-> On 2/12/24 00:47, Damien Le Moal wrote:
->> Replying to myself as I had an idea:
->> 1) Store the zone capacity in a separate array: 4B * nr_zones needed. Storing
->> "0" as a value for a zone in that array would indicate that the zone is
->> conventional. No additional zone bitmap needed.
->> 2) Use a sparse xarray for managing allocated zone write plugs: 64B per
->> allocated zone write plug needed, which for an SMR drive would generally be at
->> most 128 * 64B = 8K.
->>
->> So for an SMR drive with 100,000 zones, that would be a total of 408 KB, instead
->> of the current 1.6 MB. Will try to prototype this to see how performance goes (I
->> am worried about the xarray lookup overhead in the hot path).
-> 
-> Hi Damien,
-> 
-> Are there any zoned devices where the sequential write required zones occur before
-> the conventional zones? If not, does this mean that the conventional zones always
-> occur before the write pointer zones and also that storing the number of conventional
-> zones is sufficient?
+From: Hannes Reinecke <hare@suse.de>
 
-Not sure where you want to go with this... In any case, there are SMR drives
-which have conventional zones before and after the bulk of the capacity as
-sequential write required zones. Conventional zones can be anywhere.
+[ Upstream commit d6c1b19153f92e95e5e1801d540e98771053afae ]
 
-> Are there zoned storage devices where each zone has a different capacity? I have
-> not yet encountered any such device. I'm wondering whether a single capacity
-> variable would be sufficient for the entire device.
+LUNs going into "failed ready running" state observed on >1T and on even
+numbers of size (2T, 4T, 6T, 8T and 10T). The issue occurs when DIF is
+enabled at the host.
 
-Yes, I did this optimization. Right now, for the 28TB SMR disk case, I am down
-to a bitmap for conventional zones (16KB) plus max-open-zones * 64 B for the
-zone write plugs. Cannot go lower than that. I am still looking into xarray vs
-hash table for the zone write plugs for the overhead/performance.
+The kernel logs:
 
+  Cannot setup S/G List for HBAIO segs 1/1 SGL 512 SCSI 256: 3 0
 
+The host lpfc driver is failing to setup scatter/gather list (protection
+data) for the I/Os.
+
+The return type lpfc_bg_setup_sgl()/lpfc_bg_setup_sgl_prot() causes the
+compiler to remove the most significant bit. Use an unsigned type instead.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+[dwagner: added commit message]
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
+Link: https://lore.kernel.org/r/20231220162658.12392-1-dwagner@suse.de
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/lpfc/lpfc_scsi.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index d26941b131fd..bf879d81846b 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -1918,7 +1918,7 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+  *
+  * Returns the number of SGEs added to the SGL.
+  **/
+-static int
++static uint32_t
+ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		struct sli4_sge *sgl, int datasegcnt,
+ 		struct lpfc_io_buf *lpfc_cmd)
+@@ -1926,8 +1926,8 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	struct scatterlist *sgde = NULL; /* s/g data entry */
+ 	struct sli4_sge_diseed *diseed = NULL;
+ 	dma_addr_t physaddr;
+-	int i = 0, num_sge = 0, status;
+-	uint32_t reftag;
++	int i = 0, status;
++	uint32_t reftag, num_sge = 0;
+ 	uint8_t txop, rxop;
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	uint32_t rc;
+@@ -2099,7 +2099,7 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+  *
+  * Returns the number of SGEs added to the SGL.
+  **/
+-static int
++static uint32_t
+ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		struct sli4_sge *sgl, int datacnt, int protcnt,
+ 		struct lpfc_io_buf *lpfc_cmd)
+@@ -2123,8 +2123,8 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	uint32_t rc;
+ #endif
+ 	uint32_t checking = 1;
+-	uint32_t dma_offset = 0;
+-	int num_sge = 0, j = 2;
++	uint32_t dma_offset = 0, num_sge = 0;
++	int j = 2;
+ 	struct sli4_hybrid_sgl *sgl_xtra = NULL;
+ 
+ 	sgpe = scsi_prot_sglist(sc);
 -- 
-Damien Le Moal
-Western Digital Research
+2.43.0
 
