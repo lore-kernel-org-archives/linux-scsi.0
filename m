@@ -1,55 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D727C80605;
-	Tue, 13 Feb 2024 00:23:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7317812A16C;
+	Tue, 13 Feb 2024 00:23:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707783783; cv=none; b=K5nzTYfOjFGKD5dCM5xyRu23UGBlvL8rFduIE+nrDKCM6p8Un2/rImpD303L4vJ3uDeJWt5IOacANSbbuY7vBnxn+LfhhQv4lNrCfHJMJ50tPk04iOpABcEFshrKqPS5/g8ecfNjz0+p1kGKVOtMzcO71LxRql71WbXprCu1cFQ=
+	t=1707783834; cv=none; b=hEEsa4bGHN/VkbR60VnZhlsS9Ci5QaDA/1PjRdYMNrUl51FS4VXsuMumZFRXoHlwIVZikawzZ2xHEYEs8eUSDSGYm3LVVT/SR99Vmh/3/rgMki3bxmmhkvk3bI4AHQbq8yD1MoQDMQz8QzNxoLofRJwCZJ5b8+Vao7gRng0pODU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707783783; c=relaxed/simple;
-	bh=q+t0V9d7gNiB+i/TmSleGgvCD2dhJL3P0vFB8LWHu5I=;
+	s=arc-20240116; t=1707783834; c=relaxed/simple;
+	bh=sQPpvF1mi7ss1SWbQxnt5lrYb4XuGpMjZAT0zYwIyG4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=m+4JCOinDCRjPPlIuGOsjbxo3S1wTAdmRtaX4dcE6zZAh6nZi2gsBzeckrSuzzUkmTOtL/c/T72LL9CI+lMGKCLlD7O1tcAyjF3smF3dIm0f1lxyHFQdRos0SMGi2z8bUwx2aunPHqqCZ0r93xASG4Gp5ndegpYixpVJ0kQ8lo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OdM08RQJ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=sTO+lECETRwXoDwcWH/XvCxz13OFd85k7Fk97ydX3R0d9OLalpx2gwjV1Db1ARKLNfsNYq1Beg7GJRMN/YIZQWP+44pio4Mmf8LEOT6ZuwHHukl30RlWUVidVBHyvSmQ0+9r8Dkt5+Hy7w6z3CBUkwXVndT73pw2vwu5bgINAZE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tjNkAaqy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OdM08RQJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C71D1C43390;
-	Tue, 13 Feb 2024 00:23:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tjNkAaqy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BAB79C433C7;
+	Tue, 13 Feb 2024 00:23:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707783783;
-	bh=q+t0V9d7gNiB+i/TmSleGgvCD2dhJL3P0vFB8LWHu5I=;
+	s=k20201202; t=1707783833;
+	bh=sQPpvF1mi7ss1SWbQxnt5lrYb4XuGpMjZAT0zYwIyG4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=OdM08RQJOxboVkzD/RUlJB8dCmaNbMQzlzXyZscHv+s8cgoLRG2o8uh1NxolqLUbA
-	 twqB4U0qRVM1b001sG7MCp3c7AJqJN2bJoFypaRIzXbPq0wdn6joAjmj9w1Vk+ma85
-	 48iIDM3TA4XcOu8m5YeuzDhd0P8GmdKf/rm7d99o4JYHpoXH3ecHNnyH+8EJjtDuNp
-	 yGFYbdvNsaa8xGk8UvuXNzTuDnvufI/UfQTUW2ePPFdS2KoDsD7qlkfW0GzWp46pn6
-	 n4RCj5o7sMfhLQG68L0JYVvKZA8nF/pDgvA5pspk257EI0OY175ur3bknZwV2zDpSe
-	 pH6Ck5a7nRXCQ==
+	b=tjNkAaqyVLXEyAEPLbbgKe1MbgUGo+3NX7luBFu1aWFykfLYpNzozuANO6zGBspfc
+	 pVxZU1mvSXgsHMdkAcuJx8MyQCk40kXsy6TH7KzWJ59fDSFZyVl007RCUKj/XUB6gS
+	 BhLZfTOLEaLPndQIkPcTGCRFCLN6drhxO/FeCktGTw728IG5/Gq1ECiYfPVwY87ZWf
+	 ugHoiV7BZLJTjAeXebeWT/TgUk3Bo6TGBQ0DE3z48egM7Fhein8LuiiTFNkMP9rLWz
+	 hlZN8U3xU/WwLO8VzZYB7ixCoM/CYqRC2zcSTSmEAZV0bouh3AAMhoU4HbAXk++OIP
+	 ZNkpJekyaZ3iA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: SEO HOYOUNG <hy50.seo@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Can Guo <quic_cang@quicinc.com>,
+Cc: Hannes Reinecke <hare@suse.de>,
+	Daniel Wagner <dwagner@suse.de>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
-	stanley.chu@mediatek.com,
-	avri.altman@wdc.com,
-	quic_nguyenb@quicinc.com,
-	peter.wang@mediatek.com,
-	beanhuo@micron.com,
-	manivannan.sadhasivam@linaro.org,
-	quic_ziqichen@quicinc.com,
-	athierry@redhat.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 19/28] scsi: ufs: core: Remove the ufshcd_release() in ufshcd_err_handling_prepare()
-Date: Mon, 12 Feb 2024 19:22:17 -0500
-Message-ID: <20240213002235.671934-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 17/22] scsi: lpfc: Use unsigned type for num_sge
+Date: Mon, 12 Feb 2024 19:23:19 -0500
+Message-ID: <20240213002331.672583-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240213002235.671934-1-sashal@kernel.org>
-References: <20240213002235.671934-1-sashal@kernel.org>
+In-Reply-To: <20240213002331.672583-1-sashal@kernel.org>
+References: <20240213002331.672583-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -58,42 +51,81 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.77
+X-stable-base: Linux 5.15.148
 Content-Transfer-Encoding: 8bit
 
-From: SEO HOYOUNG <hy50.seo@samsung.com>
+From: Hannes Reinecke <hare@suse.de>
 
-[ Upstream commit 17e94b2585417e04dabc2f13bc03b4665ae687f3 ]
+[ Upstream commit d6c1b19153f92e95e5e1801d540e98771053afae ]
 
-If ufshcd_err_handler() is called in a suspend/resume situation,
-ufs_release() can be called twice and active_reqs end up going negative.
-This is because ufshcd_err_handling_prepare() and
-ufshcd_err_handling_unprepare() both call ufshcd_release().
+LUNs going into "failed ready running" state observed on >1T and on even
+numbers of size (2T, 4T, 6T, 8T and 10T). The issue occurs when DIF is
+enabled at the host.
 
-Remove superfluous call to ufshcd_release().
+The kernel logs:
 
-Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
-Link: https://lore.kernel.org/r/20240122083324.11797-1-hy50.seo@samsung.com
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Can Guo <quic_cang@quicinc.com>
+  Cannot setup S/G List for HBAIO segs 1/1 SGL 512 SCSI 256: 3 0
+
+The host lpfc driver is failing to setup scatter/gather list (protection
+data) for the I/Os.
+
+The return type lpfc_bg_setup_sgl()/lpfc_bg_setup_sgl_prot() causes the
+compiler to remove the most significant bit. Use an unsigned type instead.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+[dwagner: added commit message]
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
+Link: https://lore.kernel.org/r/20231220162658.12392-1-dwagner@suse.de
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9fd4e9ed93b8..f3c25467e571 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6159,7 +6159,6 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
- 		ufshcd_hold(hba, false);
- 		if (!ufshcd_is_clkgating_allowed(hba))
- 			ufshcd_setup_clocks(hba, true);
--		ufshcd_release(hba);
- 		pm_op = hba->is_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
- 		ufshcd_vops_resume(hba, pm_op);
- 	} else {
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 4813adec0301..6d1a3cbd6b3c 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -1983,7 +1983,7 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+  *
+  * Returns the number of SGEs added to the SGL.
+  **/
+-static int
++static uint32_t
+ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		struct sli4_sge *sgl, int datasegcnt,
+ 		struct lpfc_io_buf *lpfc_cmd)
+@@ -1991,8 +1991,8 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	struct scatterlist *sgde = NULL; /* s/g data entry */
+ 	struct sli4_sge_diseed *diseed = NULL;
+ 	dma_addr_t physaddr;
+-	int i = 0, num_sge = 0, status;
+-	uint32_t reftag;
++	int i = 0, status;
++	uint32_t reftag, num_sge = 0;
+ 	uint8_t txop, rxop;
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	uint32_t rc;
+@@ -2164,7 +2164,7 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+  *
+  * Returns the number of SGEs added to the SGL.
+  **/
+-static int
++static uint32_t
+ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		struct sli4_sge *sgl, int datacnt, int protcnt,
+ 		struct lpfc_io_buf *lpfc_cmd)
+@@ -2188,8 +2188,8 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	uint32_t rc;
+ #endif
+ 	uint32_t checking = 1;
+-	uint32_t dma_offset = 0;
+-	int num_sge = 0, j = 2;
++	uint32_t dma_offset = 0, num_sge = 0;
++	int j = 2;
+ 	struct sli4_hybrid_sgl *sgl_xtra = NULL;
+ 
+ 	sgpe = scsi_prot_sglist(sc);
 -- 
 2.43.0
 
