@@ -1,92 +1,147 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CB8279E1;
-	Tue, 13 Feb 2024 01:58:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F9F1134CB;
+	Tue, 13 Feb 2024 04:34:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707789481; cv=none; b=n6Dpfn+OnXKeFcJaV7NQJH9QjRiKKQ7DZlzS9gWLGp/YB7lwxHdH+e4Pt1UHq/sDW4rI8PHQteCX8Uz3jIp3qmbbkfwfXQxaOgEsYwlu4lOVtKFT0eeZu0P3EoSBDgjvH9mTz+LvtOSm2aXSd3Ty9hlY/f+Wmj6iMvRHmOrjh8M=
+	t=1707798853; cv=none; b=L24c9HDA+eKYOEOFyzMmhRRVANXgoOoDyzQnbb0Kj4C/7BwROxh1+0f11kJB57/nvmPEG/zU2+aYQha6ZKP4rDeeSGhuhbuPlutgNENkGO1h40xhkpkSCU42fORy/WzDGHykuWwG+MBtZZhN7Yllnm69IQw7afz6UdIs4DQUoe0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707789481; c=relaxed/simple;
-	bh=AK2dQ9oyoMdcMMHXetOHC+B390rOsuyzXMSQCJ65Py8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=H0v7Tvxv8MnSbgL69mL7NH6Tb/foVjin9Mm56mpClYuZUYZb+ugjrWnAckSAZ1Ak6yEbbnM9IL2cAa3C4WqpwmOK5DjHcZ409fRCLZzoNLfBlfXJqEMvKuzgafuMMeC2heXB53WqEHlpss1W1Z9w9MzR6MEyY1geIpFRn8UkMSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=CMPWu+/o; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1707798853; c=relaxed/simple;
+	bh=KIbzSD+oc/jZIR4jbZWetsO+W0RFfMXzXcK9r5ePxZM=;
+	h=Date:Message-Id:From:To:Cc:Subject:In-Reply-To; b=chXi7uSKdGpOPUZXXOaPq6mUMliVtejl84XQmwxzZ7dAN4JJhT6kAZ3ZegtPRrZ+A2rZjSfF5vp9fKcapbPpdF6WJF3XpiZwgbi0qEF80Hk+DuRwly5trg89ZOjSXdS5RdyWpiZFViWp7O/JlieEpgoFECxP5ONNwV6ji4kWIDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YGUGC3e7; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CMPWu+/o"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41D1iEb2003075;
-	Tue, 13 Feb 2024 01:57:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=JMVoOtM1py7aSa6kLQ7/92X6PzbGGiOnL+aPH9hefLo=;
- b=CMPWu+/oWdlTnhKHzE8wxZQs06FiT6QMOH4JjevQJt4W/uB9wn72I+aKyLnIvkh9SVJx
- egsrf9LrFFY2kEoyoVeEuK6KBiL1iV7TrG4YDsY6i9SlZ4wJ2+FaVNNwRYYahQS9s6kc
- xeqAmLBLFjGa2IA0RM0aCKO5bD1oC8APP+r/yKwHl9l8199ALwwFJqZXDraYX0kQ0Iwx
- dVNU56JxcYs1Ui9c3GOWtQIwHfRLoclmG5xC4Sp2na49TZxUbo9oGzt00iEEEVOASF5u
- Pa0Se9CIYFXaFTpvfB62+UrJmptxtNS3fYdhYQ7HXwdp9bK41A5WtvIjAtMkxv0jnVZ7 Bw== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w7xeq01qh-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 13 Feb 2024 01:57:51 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41D0AENV024679;
-	Tue, 13 Feb 2024 01:57:50 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3w5ykcw3an-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 13 Feb 2024 01:57:50 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41D1vm1l022232;
-	Tue, 13 Feb 2024 01:57:49 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3w5ykcw3a9-3;
-	Tue, 13 Feb 2024 01:57:49 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: "Ricardo B. Marliere" <ricardo@marliere.net>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] scsi: tcm_loop: make tcm_loop_lld_bus const
-Date: Mon, 12 Feb 2024 20:57:43 -0500
-Message-ID: <170778686841.2103627.348317624154335790.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.42.1
-In-Reply-To: <20240204-bus_cleanup-target-v1-1-96106936c4ab@marliere.net>
-References: <20240204-bus_cleanup-target-v1-1-96106936c4ab@marliere.net>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YGUGC3e7"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6de3141f041so414439b3a.0;
+        Mon, 12 Feb 2024 20:34:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1707798851; x=1708403651; darn=vger.kernel.org;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=vh4C2jib+iFDULM0386egKcjhLxfCpsjoM1ZbGOsfWA=;
+        b=YGUGC3e7gHJi453vF63ASpDBgZnQ8VkznsCAeTTe4r8FIJIY1O97zoJHUfZcyyBOll
+         moLILL5fTExbOEGxwED3ABhGxEms3WANvJkh8OuuxF7rN3hVRSFfE2oj22Iz1WGMz4i7
+         auNwXG8Z/QgtlxWQPVzdYYft37zYxOlwMwlX8Xcc45NkM8cdmhnVmnrdvXU+nm5shhDj
+         zzcgkuwoP0GXPgnXQTt9VDbNNARnfY9lCGAZthohBad8wXBjoGp6KzgZEc6kaAyudEcX
+         5lpfOcr19+X1rwCZT5odiiPtbBF+uPET1oqlmNA9yatxkgHMwv4sUEPTV3MUMMMbn6L/
+         3clA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707798851; x=1708403651;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=vh4C2jib+iFDULM0386egKcjhLxfCpsjoM1ZbGOsfWA=;
+        b=mhkOUjj3ZrPWB+jKXN/tWUu0136m+Y4pYHaiR9Umna1uqv8t+DlQi/2m04rpgRxpIo
+         un9g9/gnO62UCC+rU9wuzk7jcjZBJRrBEGjj1kMUfnzv0VUaLXKYDcX37gLU0XY0Bayi
+         0VRvCLkYJW8yj3TRehcs30gNXaL+8dNdk9xNMMcW/0myAzx4RocSqoyjSn49PgvPQXyx
+         PlsOx8HUBCeOoaZN/oriM8jXXV2At5rmbJ9ViykA2PqGoI84xJlrj+qL7nHGHr16AcnO
+         NMB8fYMziyaLt7aRfZ6nqIFTa+QICHBMbuvMFFhVxBx/Cph4Jvl0NI6DXvnX7VX7YSrQ
+         ErYg==
+X-Gm-Message-State: AOJu0Yy0N7M4mxlEIqv1s5CMd54oSn4+m0IAFHfzzan3d/P+rE5uaat7
+	o0hvTQRAiIxv1k8JIQoqsGklLBxQKtJCPN+tXAYF36syQPlH3C3XfWwW9T04
+X-Google-Smtp-Source: AGHT+IEadwOvNzG1cYp2wrNwMifgYz/Nkf//UbAYKYK0dIw3gZ4koF9PqsM8/TaMWNQgSlkRINCZ5Q==
+X-Received: by 2002:a62:cd89:0:b0:6e0:9e90:c952 with SMTP id o131-20020a62cd89000000b006e09e90c952mr7886741pfg.15.1707798851203;
+        Mon, 12 Feb 2024 20:34:11 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUU0RRdBzarrpVcyDWdb8qRYiHJCCqDXh7A8EViKwnWbqKgn+cBFmAQ4jjKcD0C28Sum5Pyuou3F5mqUG+7Qq4/RYaZn+oZSZua89jrFTzI5/T0etWXq1UpNMje6CuIZpqf1Mw+guISstQ1gwZtrvK/HmrCYTnhTVUX4XZCdNvByS5VDb+JVZ+oQxRYP1muyGziTpF+SGVhnleo01PiJ8JMIAYm3oM0mzPLN7t1cpS47Pd7bi1LwAsP2Tyw+6xk9EfHo3AsfkpFjmmIzXp2kEJHuMASP0J7sh0gvlkFXxYqD72Z5ilbkNVc6RReAhLondBt7JaD/PHpDqKLFP/zWYjk/NJK4+ICX1pxJZLVw85gIo74OjUr54nWasmb7lUh5xRM/NOEFUNqKPX5DjvJBzKc3rvhtUPHnqVFLQlOPAkdl2PXMp5lpUK50d8y/NQ+XWHhIqJLOH77s3jlswpsTaPK7tZ6X3cCk9cvtwFLxQT7sV9mvf8Bl7G3U2pJnwOVW6tUmYs/CXoCGk/XPk/G/DO6kQx4Pot8TWso71UrckumNkRwjZRxonNl8EFQy9dg+rGOltEj7tTV417ThWduaqjOwooBCyH7crro+AoUuSvSLfnxl229YnqoYF0nmlV5xlnD+eQXx7QC48wS9P+ccOaecRsP6vvd/xvfaA==
+Received: from dw-tp ([49.205.218.89])
+        by smtp.gmail.com with ESMTPSA id s23-20020a632c17000000b005dc816b2369sm605121pgs.28.2024.02.12.20.34.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Feb 2024 20:34:10 -0800 (PST)
+Date: Tue, 13 Feb 2024 10:03:58 +0530
+Message-Id: <87h6idugnd.fsf@doe.com>
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com, jack@suse.cz
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org, ming.lei@redhat.com, ojaswin@linux.ibm.com, bvanassche@acm.org, John Garry <john.g.garry@oracle.com>
+Subject: Re: [PATCH v3 02/15] block: Limit atomic writes according to bio and queue limits
+In-Reply-To: <20240124113841.31824-3-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-12_20,2024-02-12_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0
- mlxlogscore=758 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2402130011
-X-Proofpoint-GUID: tllfBj0IfAbsXcEZ2-TKmqh6PwkGRswe
-X-Proofpoint-ORIG-GUID: tllfBj0IfAbsXcEZ2-TKmqh6PwkGRswe
 
-On Sun, 04 Feb 2024 17:48:26 -0300, Ricardo B. Marliere wrote:
+John Garry <john.g.garry@oracle.com> writes:
 
-> Now that the driver core can properly handle constant struct bus_type,
-> move the tcm_loop_lld_bus variable to be a constant structure as well,
-> placing it into read-only memory which can not be modified at runtime.
-> 
-> 
+> We rely the block layer always being able to send a bio of size
+> atomic_write_unit_max without being required to split it due to request
+> queue or other bio limits.
+>
+> A bio may contain min(BIO_MAX_VECS, limits->max_segments) vectors on the
+> relevant submission paths for atomic writes and each vector contains at
+> least a PAGE_SIZE, apart from the first and last vectors.
+>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  block/blk-settings.c | 28 ++++++++++++++++++++++++++--
+>  1 file changed, 26 insertions(+), 2 deletions(-)
+>
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index 11c0361c2313..176f26374abc 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -108,18 +108,42 @@ void blk_queue_bounce_limit(struct request_queue *q, enum blk_bounce bounce)
+>  }
+>  EXPORT_SYMBOL(blk_queue_bounce_limit);
+>  
+> +
+> +/*
+> + * Returns max guaranteed sectors which we can fit in a bio. For convenience of
+> + * users, rounddown_pow_of_two() the return value.
+> + *
+> + * We always assume that we can fit in at least PAGE_SIZE in a segment, apart
+> + * from first and last segments.
+> + */
 
-Applied to 6.9/scsi-queue, thanks!
+It took sometime to really understand what is special about the first
+and the last vector. Looks like what we are discussing here is the
+I/O covering a partial page, i.e. the starting offset and the end
+boundary might not cover the whole page. 
 
-[1/1] scsi: tcm_loop: make tcm_loop_lld_bus const
-      https://git.kernel.org/mkp/scsi/c/4ad946536537
+It still isn't very clear that why do we need to consider
+queue_logical_block_size(q) and not the PAGE_SIZE for those 2 vectors
+(1. given atomic writes starting offset and length has alignment
+restrictions? 
+2. So maybe there are devices with starting offset alignment
+to be as low as sector size?)
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+But either ways, my point is it would be good to have a comment above
+this function to help understand what is going on here. 
+
+
+> +static unsigned int blk_queue_max_guaranteed_bio_sectors(
+> +					struct queue_limits *limits,
+> +					struct request_queue *q)
+> +{
+> +	unsigned int max_segments = min(BIO_MAX_VECS, limits->max_segments);
+> +	unsigned int length;
+> +
+> +	length = min(max_segments, 2) * queue_logical_block_size(q);
+> +	if (max_segments > 2)
+> +		length += (max_segments - 2) * PAGE_SIZE;
+> +
+> +	return rounddown_pow_of_two(length >> SECTOR_SHIFT);
+> +}
+> +
+>  static void blk_atomic_writes_update_limits(struct request_queue *q)
+>  {
+>  	struct queue_limits *limits = &q->limits;
+>  	unsigned int max_hw_sectors =
+>  		rounddown_pow_of_two(limits->max_hw_sectors);
+> +	unsigned int unit_limit = min(max_hw_sectors,
+> +		blk_queue_max_guaranteed_bio_sectors(limits, q));
+>  
+>  	limits->atomic_write_max_sectors =
+>  		min(limits->atomic_write_hw_max_sectors, max_hw_sectors);
+>  	limits->atomic_write_unit_min_sectors =
+> -		min(limits->atomic_write_hw_unit_min_sectors, max_hw_sectors);
+> +		min(limits->atomic_write_hw_unit_min_sectors, unit_limit);
+>  	limits->atomic_write_unit_max_sectors =
+> -		min(limits->atomic_write_hw_unit_max_sectors, max_hw_sectors);
+> +		min(limits->atomic_write_hw_unit_max_sectors, unit_limit);
+>  }
+>  
+>  /**
+> -- 
+> 2.31.1
