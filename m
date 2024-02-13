@@ -1,127 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39E59605A9;
-	Tue, 13 Feb 2024 18:12:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDD68605AE;
+	Tue, 13 Feb 2024 18:13:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707847926; cv=none; b=q79Hy4CSTPg0NCcAnxypbV2zw1UjgozCjNEMXJPx/pnnIO2UxgE9RG+lo3Lk6CgqSIRYUShXMWhi1oanl5lWFxTJmzjBcnD8eFA+XKf7BjqxzjD4QC+5MJ+bX4iOz0/t/bj9OgKgnkdK+TeaTDIT38WdogNXbK3LDw5hlCUD5Oc=
+	t=1707847984; cv=none; b=OBRtvth6nXjvpXmb8Am1MZhjJSf0V0Cqx2+Xpchro3B7XNltJutjRfOtyjvkgOkx/NTLBM5cfLv+qzH1lM/9TdsXVYHBd+wcWMEku9U57sXbtmuA7+cPM6kMA5apEYS7zfIplTN2oLhuTnfv0mnE8V/qbpZMJDzZuu8IsFIhwe8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707847926; c=relaxed/simple;
-	bh=iKy4z4zbKIkEBLCIqbOOas6HQLerzLx+0jCCkBHBKZQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=DbrJ2evyg/xfgSGHgV1cUNjUEby8d6BEKZboE5seiA+zBHovIVGRc25YPfV+wKp0pT3k2IOf1WJNRwv6pwENRFThRmkG0fLqf35KVYgf/5jCvfjdYeoy/D6JUnC4xctbMbXSeP6MsQ3lHi1qK3SBv8iWM489iEqdC5MTFh9WJo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VpaXiTQR; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VpaXiTQR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4FEBC43399;
-	Tue, 13 Feb 2024 18:12:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707847925;
-	bh=iKy4z4zbKIkEBLCIqbOOas6HQLerzLx+0jCCkBHBKZQ=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=VpaXiTQRZg0ZnhTOPSLiTS1eVkEjhPem+tuLW+dpBxbdW1/zwKPLqoD5WcVrKV9GN
-	 KAmQnYLIKVPtJ4cVaRg0y3MyYaa/HG7w5plt0NU7g1CrfkjiY5C1vMP+0mlPQI9lbc
-	 uCNk4tkjvAtodbZVXzC44ulWdQEC2PdpqUyzjIUfzf3cuO6ddcm/0Yh9e+6gigtUL4
-	 yX1S3zHv5DaXqUO5jyldY1ynnS9ao8JpUr8rOwM1oPlf1v6fzC3yZE34/s/TCczVwS
-	 cavEw7tRNDQiVG5HPZ9+gTjDiBuv4qYNrBpYdwh+sV+RMREETZiT80tldloTh+H/LY
-	 dHqfKk6i/GcIQ==
-Received: by mail-lj1-f179.google.com with SMTP id 38308e7fff4ca-2d0fd07ba8bso26444361fa.1;
-        Tue, 13 Feb 2024 10:12:05 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVcoy0CMjwZYNdrLramCnrNtWb7qQMcFREcQ6Y3L2IibcPmrzAnQI9BUSTJJpDHhVSEOxpGxnOZaT/ndyKmu6yYVb1Zmws3vFWMXW776yU4dGC2007xVBRGZf7bRk8eJPuccVuXdRyG3kWMpOsaZrk6pocdIGuiyRgBlo2GYJLMHzmhlzuKFP+ztsNv4SqbN94ECuw/hSI1KDCfr3y6YtT1hRVZjz1KfwtXgGi7UrO+8txxtPMTRZAp0IISpb4NNgYK
-X-Gm-Message-State: AOJu0YzlTxJ9ZSB0K9C56uq5c4j33vw5vIQYC8R477tSNFoC2Of0mRuO
-	vQpJDX+068svuqvFjxXgubAehU1mm/+/v+GghhAFV3tNUdp3jd4LnaqKRy+tgMUaLItn5c/3xBt
-	RgFJFMQ2laVpwsCh2R6WlG0VsJw==
-X-Google-Smtp-Source: AGHT+IFoI2nIw8HIgZSb58YNqQnldThBVqDuYOeRmmQBRueJPhHiaK9E85g01QPZR04/VBn2+u4CxK0TcwjK6Jta0Xg=
-X-Received: by 2002:a05:651c:b07:b0:2d1:1440:56f0 with SMTP id
- b7-20020a05651c0b0700b002d1144056f0mr30600ljr.15.1707847923891; Tue, 13 Feb
- 2024 10:12:03 -0800 (PST)
+	s=arc-20240116; t=1707847984; c=relaxed/simple;
+	bh=2k9/Gb4WID3VfKPXG3mdHuhoFUPCD9yLRe+9n1llDWU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=O/e3AKy4pKVsR29CwV/OACESHoowHj+gYVwlQ/agYQ4e1HJOHcnXuOgiVoBA8GTbPPyw5ERTgRCSeYSK1QLiVD/FqsP/5giW5eyW2b0srvd7dALM71A8iHEItNEFGth9dT89GUHQk8NZ9dCjLs3an3K1VWUmzzGaw4zIgRreB8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.215.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5dbf7b74402so3112683a12.0;
+        Tue, 13 Feb 2024 10:13:02 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707847982; x=1708452782;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2k9/Gb4WID3VfKPXG3mdHuhoFUPCD9yLRe+9n1llDWU=;
+        b=ibt/IuXZEqQNTSWRsQNADJOrBBTA6B179YeI6huKfJ4zHzbyf/rPLQpi9Vsa6rUvnD
+         kNl2YAE4Yntwgxff4SxVcjWO6YSn6xioCmwZxdo0TF73RMj2GVORrL1MFtVDK2WBrv7K
+         xDsPcz6T72BZcaPD6/2jaM9WpqzrrFI4IIPcRFw7Kz421k83m2NVbgF4pvvqHGXSowdt
+         np7m6avsHD0jpHpomUFBuYLJZ6D+rkr9zs1n3mWBVya22NXcV5hkfDl41P947ZeKawHj
+         cMtqcuO6Fvo/xc1bkh4ALwLceokBMhuhWAa6WqzZEREeIDmDbwa3x4cqbNZnQzcG2P9X
+         nCww==
+X-Forwarded-Encrypted: i=1; AJvYcCXpKOqb2p1xHr+tfjLQT5f2daYB5PwMHF9HDYIRPhCjC9oB+Lgq4p6t5G8cjmeDjrdGFDPA57qz//OmvqawoVzPAxgxxeYtl+Ef1O8UUfFMbyHT9/0+unLEnyD+hRSgQT5J2bhmp6QUP1/fcb3o3HJJIhbX6SaqFXuaNTdhhw==
+X-Gm-Message-State: AOJu0YyPwwp05uXrvicp9Z88lvXXmT3x2GnNYlltnCDuXIwwoNLNr9D6
+	eeyYRMEAlcIJr7QVk3lQaqlXEvjP+9Uc0+8gDc4FJ8p1hwwqbzmw
+X-Google-Smtp-Source: AGHT+IHmINl9u+Hp9Bc1sO+P46ZEj2uCQvNP2fo83WdQVgO69nf6brGL+Qt8e9+vZOWJpCnFQp/QIQ==
+X-Received: by 2002:a17:90b:68b:b0:298:ab04:7381 with SMTP id m11-20020a17090b068b00b00298ab047381mr247797pjz.25.1707847981882;
+        Tue, 13 Feb 2024 10:13:01 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCWb6k5uiZdOujB1tf1Alj5VYtRZhWLBbKQ9r4fmX/9FzLM9GD3e+h/z012ckOZwj0T4ZjVUGgbgPo3/RIklKUyCqZkaExtGw2jnSS1bsLyyCCM2ut/5G0U/9iAmu14opBQK1pb+1EU6+EUlBNWP7nFHJrBpxWSAHQ/lufql4KSnTzwBD2n83gwb3KOeI4AXjQYx
+Received: from ?IPV6:2620:0:1000:8411:edac:bb62:c977:aef? ([2620:0:1000:8411:edac:bb62:c977:aef])
+        by smtp.gmail.com with ESMTPSA id pl4-20020a17090b268400b002966248d75bsm1549809pjb.49.2024.02.13.10.13.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 13 Feb 2024 10:13:01 -0800 (PST)
+Message-ID: <fabe11a4-d9a3-42cd-aa97-e2214c89de33@acm.org>
+Date: Tue, 13 Feb 2024 10:13:00 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240121-sm7125-upstream-v4-0-f7d1212c8ebb@gmail.com>
- <20240121-sm7125-upstream-v4-2-f7d1212c8ebb@gmail.com> <20240212222232.GB2655166-robh@kernel.org>
- <CAA8EJpoymmOBc3CfNHJKBT8BNje_s2a5uGPde3QHYv3vQ97=-Q@mail.gmail.com>
-In-Reply-To: <CAA8EJpoymmOBc3CfNHJKBT8BNje_s2a5uGPde3QHYv3vQ97=-Q@mail.gmail.com>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 13 Feb 2024 18:11:50 +0000
-X-Gmail-Original-Message-ID: <CAL_JsqLGVBjiYt5tG0GFxxeHmNDD1PgJx3ab-n2x0nHPEaX9iQ@mail.gmail.com>
-Message-ID: <CAL_JsqLGVBjiYt5tG0GFxxeHmNDD1PgJx3ab-n2x0nHPEaX9iQ@mail.gmail.com>
-Subject: Re: [PATCH v4 2/8] dt-bindings: ufs: qcom: Add SC7180 compatible string
-To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc: David Wronek <davidwronek@gmail.com>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konrad.dybcio@linaro.org>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	"David S. Miller" <davem@davemloft.net>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>, 
-	Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	cros-qcom-dts-watchers@chromium.org, linux-arm-msm@vger.kernel.org, 
-	linux-crypto@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-phy@lists.infradead.org, ~postmarketos/upstreaming@lists.sr.ht, 
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: sd: usb_storage: uas: Access media prior to
+ querying device properties
+Content-Language: en-US
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+Cc: belegdol@gmail.com, stable@vger.kernel.org,
+ Tasos Sahanidis <tasos@tasossah.com>
+References: <20240213143306.2194237-1-martin.petersen@oracle.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240213143306.2194237-1-martin.petersen@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Feb 13, 2024 at 4:30=E2=80=AFAM Dmitry Baryshkov
-<dmitry.baryshkov@linaro.org> wrote:
->
-> On Tue, 13 Feb 2024 at 00:22, Rob Herring <robh@kernel.org> wrote:
-> >
-> > On Sun, Jan 21, 2024 at 05:57:42PM +0100, David Wronek wrote:
-> > > Document the compatible for the UFS found on SC7180.
-> > >
-> > > Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> > > Signed-off-by: David Wronek <davidwronek@gmail.com>
-> > > ---
-> > >  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
-> > >  1 file changed, 2 insertions(+)
-> >
-> > Should have been picked up by SCSI/UFS maintainers, but it
-> > hasn't, so I applied it.
->
-> And it now triggers schema warnings, because sc7180-ufshc has 7 clocks
-> and 1 reg entries.
-
-And now dropped... Perhaps the dts changes should be too.
-
-Maybe QCom maintainers should require a report of dtbs_check on new
-boards. My comparisons of Linus vs. next warnings often show an
-increase in QCom warnings. Like right now:
-
-linus: arch/arm64/boot/dts/qcom:1990:265
-next: arch/arm64/boot/dts/qcom:1610:298
-
-First number is total warnings. Second number is unique warnings
-(stripping dtb name). Some of this is just mismatch between schemas
-and dts changes showing up in next, but it doesn't tend to go to 0 as
-the merge window approaches. I've seen this several cycles. All the
-data is available from my CI jobs, and I regularly look at the diff
-with this:
-
-$ less ~/bin/gl-diff-dtb-warnings
-#!/bin/sh
-
-[ -z "$1" ] && { echo "Missing arch!"; exit 1; }
-
-arch=3D"$1"
-
-job=3D"job-dtbs-check"
-logfile=3D"platform-warnings.log"
-
-# url <branch> <arch>
-url() {
-        local branch=3D"$1"
-        local arch=3D"$2"
-        echo "https://gitlab.com/robherring/linux-dt/-/jobs/artifacts/${bra=
-nch}/raw/${logfile}?job=3D${job}%3A+%5B${arch}%5D"
-
-}
-
-curl -Ls -o orig.log $(url linus ${arch})
-curl -Ls -o next.log $(url next ${arch})
-meld orig.log next.log
+On 2/13/24 06:33, Martin K. Petersen wrote:
+> Match the behavior of a well known commercial operating system and
+> trigger a READ operation prior to querying device characteristics to
+> force the device to populate mode pages and VPDs.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
