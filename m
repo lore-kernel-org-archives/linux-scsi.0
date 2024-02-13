@@ -1,104 +1,172 @@
-Received: from mail-yb1-f170.google.com (mail-yb1-f170.google.com [209.85.219.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2363F2261F
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 10:29:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 469612C69A;
+	Tue, 13 Feb 2024 11:09:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707820201; cv=none; b=WTdYYPPzvauxIKrwjYSNTfS7wVzpMkQXtx8BRUbLUvwDORAxdLiHMpT+knvjDW6feIw9Rr2ZAcoLH1RxAJpzOVdE74aGaIOsiO/AmwNOSWm9bh/8798B0lhYQDyfDKxl7cMAlNLYRGRsOhvVHm5ET5WShq6gc0lVRiFffqHultE=
+	t=1707822555; cv=none; b=Jo99At/ZHF47pTbi7vonm1c513bolscBEYH3li0vERJ6Qx4q59QHgarsILvxrM7YONn8msMyvyEoeHYjfzOsCTQJJQmxL9m3W1exGEVClo406dYtRuYmFii56pwn1a1qCEvWS4yqmGlU4/UnzQJwViLMD710woOnlXIvGmV0azQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707820201; c=relaxed/simple;
-	bh=BAFPNPzJQXtyCWF5XDn1RobzHn1V1SnAs/ZanbUdfKY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qRB+LDeOiqbYKWz5dXJIOfkM+BqZYphQSk5vn3eikDpJda758m/0V5t7HbNT1k9HaUyCFs4AAfq3CxycVEOCAUQyfUCLzi7eo5zDEjoUjbt3UfVqFoQIxD62d5L4vRgeKvJWxBuWQKEHJU7pP5umZHHBbJshDpnwcRMo8zeu8XM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=DcNcbdEK; arc=none smtp.client-ip=209.85.219.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1707822555; c=relaxed/simple;
+	bh=BxkpbCWHI5A/EVO4cHovB3iWEf/1RW3L/ybUBeIgCjw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Fy8nCbhHtocSstHuiCF2Fur8/gW8SgAHOxCdGIwnZ/aBkMWvYSNFXc7ij/lpBPntZHnBzO0I+W6WZEQehc0Ec06G6rH/EW9gwPeKCZ+oDaVFPPxKKIB3jkBu37yOeRuoVJzI55TweVS8luC5YgAvrQijKTkDX+bZ5yotT9hKlj4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=BG9E8ZDA; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DcNcbdEK"
-Received: by mail-yb1-f170.google.com with SMTP id 3f1490d57ef6-dcbc00f6c04so1172020276.3
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 02:29:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1707820198; x=1708424998; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=+EqDonj7KQZLiaPp6D4ZvH1t+lrAEwUNc/fnEAHBEOI=;
-        b=DcNcbdEKUxMv4AtS+vABGbgp0+Yl2IvqLbxYGiAwtW96WJ2uzGzFpCsdsJV2NigBmv
-         72oKFdlJmEwojo3olVaRTcsMmVIQqI3UDtSzqFSsT9yG/xKR/TEYi4KZCnC2DMtJa7Ng
-         4wo18UIcsvKnjuVSq8u65kcNBzl9tMVVVh/2CmdvU59oEky8eWuJ9qC/duiTLnNxmmsf
-         7LuOL21lAhH904E+T2V1nJyK6S+7O4+eN4/ua1BZU/JrhGgYBjJBbNyg/KpZsiI6oy1H
-         dVcVqa0NoPpvEJOrBjLFSXJMjCIhyOslNq5ot0WEcxMDI3cWy2U6fn148pmJmxIRUMHW
-         aBGQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707820198; x=1708424998;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=+EqDonj7KQZLiaPp6D4ZvH1t+lrAEwUNc/fnEAHBEOI=;
-        b=MskReaQZWBLp5K5/M7QRYMBpirOVQGy9j/k6EaOJP8NNTXutS2ApjPQbep7dg+x/dO
-         /2OeOJiOH3Qs4p3dlIGnxeaYc7mk54vv6+jhXZtwHdWpi07nkw//Ctn8X7ee/68or7bH
-         n+bw974HRJZ9M39Ilp3szGHRmkWiiknzTm5NtGq92rUt3OJy4m+j8MIPGxLK9sOOZ/PO
-         OyQ3ooYP5Cdq2Bq3hgNHzMh4CciFmod1lQ5WEio9Wy9E0PEGpgelOR/yqwyPbV2ZHEdZ
-         6HX/ojx2ZxUsVK9qtrRU4KSKLcLa0CBbUDtPDdtQovnhK9t0F3Tnf+OieSRQ6MhmuOyT
-         d07g==
-X-Forwarded-Encrypted: i=1; AJvYcCVXMrigLYVmsmFnnHCvj0TmGB9YubW1H4CBzhQN4j53jnmT3tRFRa1jUOqRipxHjrejUHtKwwjNnqocwpN/PFLi0PvkNTKYB5ln8g==
-X-Gm-Message-State: AOJu0Yx8KPMTZsedZQVd99bdn+o2fsUP5Q2gx4jQu9ydCDXO2vDk0Uj0
-	nfRU2Eso8y1GRuNafryF3LUK6jtHG6xhVmt7SGQMZPiYVCMCzGL3+RqN3EJ+Cqcy/olFnOJt1Dt
-	RIUZLCmGHCzTLJlleTve/DjNtmz5QtKeo/Snmmg==
-X-Google-Smtp-Source: AGHT+IHkdJx+zFat9qPbr3h4Rdcuck1pBATP4FKcmKR8VS5uJISAam7tCEk56SEDoapPdlF1E/YwhM52Daf0RNngWRA=
-X-Received: by 2002:a25:ad45:0:b0:dc7:4313:8b6f with SMTP id
- l5-20020a25ad45000000b00dc743138b6fmr7824715ybe.54.1707820198159; Tue, 13 Feb
- 2024 02:29:58 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="BG9E8ZDA"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41DB6NSF008529;
+	Tue, 13 Feb 2024 11:08:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=y6gcA0FwwLcQ+USrtr82gM+J0plPqQJrcFFJlFssEvQ=;
+ b=BG9E8ZDACdcTX9tYoHQKTk06X9gRTLYsD3U+Q3JMytOmcf8MGvxAqEJeMt22/cCm60xe
+ Te02bOTOLk8DvLdvtDuIDofoMjRovuyozvc3L6yHM00ptHBOpOGVx2QawAsst5/0pxuh
+ vkmhGEDCzB5VLy9wsNR/lQ6srBqfYkXrs27yu5jmpJG5vHDgW7Lc/O4d6ahINuI0joOz
+ eE3nOAsUfXIac88qF82J29MbM0hgrRWZ9InuuQZpHXpgCPUC2q55xLIZ/c4xIZIgriV8
+ anMhj1xBPR4costNDfUrIXsvZNY2JEp/SoeVFnlazf7ZGS24nhE7fKo8XJPvXfH4gONL 6w== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w86s0gp6a-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 13 Feb 2024 11:08:45 +0000
+Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41DB8iMC020351;
+	Tue, 13 Feb 2024 11:08:45 GMT
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w86s0gp5g-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 13 Feb 2024 11:08:44 +0000
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 41DB6tfs024888;
+	Tue, 13 Feb 2024 11:08:42 GMT
+Received: from smtprelay03.dal12v.mail.ibm.com ([172.16.1.5])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3w6mfp6wr5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 13 Feb 2024 11:08:42 +0000
+Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
+	by smtprelay03.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 41DB8d4A13500960
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 13 Feb 2024 11:08:41 GMT
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8ADF9582C0;
+	Tue, 13 Feb 2024 11:08:39 +0000 (GMT)
+Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 77120582B1;
+	Tue, 13 Feb 2024 11:08:32 +0000 (GMT)
+Received: from [9.109.198.187] (unknown [9.109.198.187])
+	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Tue, 13 Feb 2024 11:08:32 +0000 (GMT)
+Message-ID: <e99cf4ef-40ec-4e66-956f-c9e2aebb4621@linux.ibm.com>
+Date: Tue, 13 Feb 2024 16:38:31 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240121-sm7125-upstream-v4-0-f7d1212c8ebb@gmail.com>
- <20240121-sm7125-upstream-v4-2-f7d1212c8ebb@gmail.com> <20240212222232.GB2655166-robh@kernel.org>
-In-Reply-To: <20240212222232.GB2655166-robh@kernel.org>
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date: Tue, 13 Feb 2024 12:29:47 +0200
-Message-ID: <CAA8EJpoymmOBc3CfNHJKBT8BNje_s2a5uGPde3QHYv3vQ97=-Q@mail.gmail.com>
-Subject: Re: [PATCH v4 2/8] dt-bindings: ufs: qcom: Add SC7180 compatible string
-To: Rob Herring <robh@kernel.org>
-Cc: David Wronek <davidwronek@gmail.com>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konrad.dybcio@linaro.org>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	"David S. Miller" <davem@davemloft.net>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>, 
-	Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	cros-qcom-dts-watchers@chromium.org, linux-arm-msm@vger.kernel.org, 
-	linux-crypto@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-phy@lists.infradead.org, ~postmarketos/upstreaming@lists.sr.ht, 
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-
-On Tue, 13 Feb 2024 at 00:22, Rob Herring <robh@kernel.org> wrote:
->
-> On Sun, Jan 21, 2024 at 05:57:42PM +0100, David Wronek wrote:
-> > Document the compatible for the UFS found on SC7180.
-> >
-> > Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> > Signed-off-by: David Wronek <davidwronek@gmail.com>
-> > ---
-> >  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
-> >  1 file changed, 2 insertions(+)
->
-> Should have been picked up by SCSI/UFS maintainers, but it
-> hasn't, so I applied it.
-
-And it now triggers schema warnings, because sc7180-ufshc has 7 clocks
-and 1 reg entries.
-
->
-> Rob
->
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 10/15] block: Add fops atomic write support
+Content-Language: en-US
+To: John Garry <john.g.garry@oracle.com>
+Cc: axboe@kernel.dk, brauner@kernel.org, bvanassche@acm.org,
+        dchinner@redhat.com, djwong@kernel.org, hch@lst.de, jack@suse.cz,
+        jbongio@google.com, jejb@linux.ibm.com, kbusch@kernel.org,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+        martin.petersen@oracle.com, ming.lei@redhat.com, ojaswin@linux.ibm.com,
+        sagi@grimberg.me, tytso@mit.edu, viro@zeniv.linux.org.uk
+References: <20240124113841.31824-11-john.g.garry@oracle.com>
+ <20240213093619.106770-1-nilay@linux.ibm.com>
+ <9ffc3102-2936-4f83-b69d-bbf64793b9ca@oracle.com>
+From: Nilay Shroff <nilay@linux.ibm.com>
+In-Reply-To: <9ffc3102-2936-4f83-b69d-bbf64793b9ca@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: wgYyCpTyGo1nKNUZEvPPGbkeV49XjQVm
+X-Proofpoint-GUID: x8JhR4pjGebwkn0QUFWqvWDNH0parMX8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-13_06,2024-02-12_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ suspectscore=0 phishscore=0 spamscore=0 mlxlogscore=999 adultscore=0
+ impostorscore=0 malwarescore=0 lowpriorityscore=0 bulkscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2402130087
 
 
--- 
-With best wishes
-Dmitry
+
+On 2/13/24 15:28, John Garry wrote:
+> On 13/02/2024 09:36, Nilay Shroff wrote:
+>>> +static bool blkdev_atomic_write_valid(struct block_device *bdev, loff_t pos,
+>>
+>>> +                      struct iov_iter *iter)
+>>
+>>> +{
+>>
+>>> +    struct request_queue *q = bdev_get_queue(bdev);
+>>
+>>> +    unsigned int min_bytes = queue_atomic_write_unit_min_bytes(q);
+>>
+>>> +    unsigned int max_bytes = queue_atomic_write_unit_max_bytes(q);
+>>
+>>> +
+>>
+>>> +    if (!iter_is_ubuf(iter))
+>>
+>>> +        return false;
+>>
+>>> +    if (iov_iter_count(iter) & (min_bytes - 1))
+>>
+>>> +        return false;
+>>
+>>> +    if (!is_power_of_2(iov_iter_count(iter)))
+>>
+>>> +        return false;
+>>
+>>> +    if (pos & (iov_iter_count(iter) - 1))
+>>
+>>> +        return false;
+>>
+>>> +    if (iov_iter_count(iter) > max_bytes)
+>>
+>>> +        return false;
+>>
+>>> +    return true;
+>>
+>>> +}
+>>
+>>
+>>
+>> Here do we need to also validate whether the IO doesn't straddle
+>>
+>> the atmic bondary limit (if it's non-zero)? We do check that IO
+>>
+>> doesn't straddle the atomic boundary limit but that happens very
+>>
+>> late in the IO code path either during blk-merge or in NVMe driver
+>>
+>> code.
+> 
+> It's relied that atomic_write_unit_max is <= atomic_write_boundary and both are a power-of-2. Please see the NVMe patch, which this is checked. Indeed, it would not make sense if atomic_write_unit_max > atomic_write_boundary (when non-zero).
+> 
+> So if the write is naturally aligned and its size is <= atomic_write_unit_max, then it cannot be straddling a boundary.
+
+Ok fine but in case the device doesn't support namespace atomic boundary size (i.e. NABSPF is zero) then still do we need 
+to restrict IO which crosses the atomic boundary? 
+
+I am quoting this from NVMe spec (Command Set Specification, revision 1.0a, Section 2.1.4.3) : 
+"To ensure backwards compatibility, the values reported for AWUN, AWUPF, and ACWU shall be set such that 
+they  are  supported  even  if  a  write  crosses  an  atomic  boundary.  If  a  controller  does  not  
+guarantee atomicity across atomic boundaries, the controller shall set AWUN, AWUPF, and ACWU to 0h (1 LBA)." 
+
+Thanks,
+--Nilay
+
+
+  
+
