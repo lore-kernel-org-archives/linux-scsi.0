@@ -1,195 +1,334 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f178.google.com (mail-yw1-f178.google.com [209.85.128.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43C98364BE;
-	Tue, 13 Feb 2024 11:53:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707825205; cv=fail; b=Fp0kITPBslkDJ1Ok3d/A8ZAK3cSwHQh+5thXlplzace0b+azoXmKGEmV/M6Whtk1kWsQUrBUUSuH4G+rIVgV4xb0WVM30CBJ/zQmHgxJNqefQu7RZJGbvxsOfuNaGlghvYy6QQDHxyvrGL/dqOkxtFopzrCE3Ke1YhvJD9YrdFs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707825205; c=relaxed/simple;
-	bh=felYoefIBtn6r9subdk3iariOAYk2z/QguaXE/SJNj4=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=PZN6DVP59F4OnzQg95ye4SnLhr7Ccve0lo0rMbHqu/5oVAActFSKqDf/Eomi7ER17oz6IrVvVZY/1FDw8JAmeDa+sq5wQFtyeAWYYMa9n375oIATKEzj8VypLt3RH+W2I7hB6lzUd6+DTRq8LKvvl3qWGD3posSuzBP08MZovc0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=ivOCT5SU; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=AsYsg0Vl; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6575482DA
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 12:49:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.178
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1707828581; cv=none; b=s5IxCVuEvFVarsb5kVuC5lCoW/OKgvEIFI7hUQk0FK/JEqtfKvzK6fth8isDfYnJo1TLkQi52Yl5c5vYADMUXVfKzMl1EvpFlcYsf+iqSIFXoMkn4mbjCZLHcBSTYDRI5UCNAYVF5tMNnESnIWOlpmOV57MEm5vlqVQWBr/Flfc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1707828581; c=relaxed/simple;
+	bh=HSuK8gF8xqQlzSUAllq5D6X/pqFlN4vTdtHlcK5UeBs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=QI3k9WRhKL5FFuAmfwl4cxol84ZcEtXtZcJv0Kp7Hl4JwgiDWV8MH9oCD4z8X9CenbShQAwOBSMEzpRUGQldMO2+rW56ZYwNNZkFrV6lRnunpmuIDetNL+mCo1sz8gaaqy9aLD0M2aFszU4JT2lwN3IlhtNU6B//js5PeTFblio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=GuE8QpI+; arc=none smtp.client-ip=209.85.128.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ivOCT5SU";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="AsYsg0Vl"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41DBZdDG003084;
-	Tue, 13 Feb 2024 11:52:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-11-20;
- bh=U08ro0OzpnsSyltNg7oZT3s5NQuDe8REyVaCf+Nm2fY=;
- b=ivOCT5SUs0X3Sn1S5eKXHwdbI0EfnaHBPqYlMEMAmLymZo20/Z3rG/QTQTtvvvVKDWqU
- +xMzlhqipkDdss8uNt3UqLmtG+vh2LFAaep3HhY7Cwzdu9sFiQJWhVdRqy2AJF9QVpRK
- BcNjOqhqEKcpyr0sYyqDxOoY23crrvC/s+kSGXkXu0K0maaF4krra9M3Ve2woZ5DkKQl
- jB1ihjdhdziBvNAJe0/mYNWU3qglBmSekapBdOxqrGb02v7IwWCCETRhI7pNwR+Jlm1X
- 6LbpxcY1v9QYN9xrszw37uCp8qyV7cHKFKjFwRFkh1jvAMbGuzpSF3TWV03b8SAFJq7f NQ== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w87nxg128-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 13 Feb 2024 11:52:50 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41DBM91i013849;
-	Tue, 13 Feb 2024 11:52:49 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2101.outbound.protection.outlook.com [104.47.58.101])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3w6ap9we8n-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 13 Feb 2024 11:52:49 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Gokur4W4QgGuDtcUx2RSGi2fIDYrd8g7WgaaM5Kx4O1eoLuDk0rp5wWYDBhrSsuKtxrvMc5a1gXV7Nu4kJtf/hoxKbh35ubzvNJb0EFeTcHI0Yz0UFiAeDjqb6tzR2vNqhW1UO+kZBsZ5iu9opAeh2zCp2kXIL5x+7FOc8rETx72rfhIAb5mLcQK1yVip4dPgO9xbMpB3FHjgAY5Hs5gvPHMQeyEJVYbRAMCGUUgvRigGMlUZzHq5gSYamXlumqkY0Nmf6WdngMk+lhQvqRTxqvhgAyku/B916sXZlThDzuWvCLpb5gTB5irenkZ0kxbSv/2qiax4/86A7gOhRiAug==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=U08ro0OzpnsSyltNg7oZT3s5NQuDe8REyVaCf+Nm2fY=;
- b=lqSNe5JOKhqBZf9JwrvTywC7uGUwca37B1oOhMtmN4SBo815TSCJrvi9S5F3WaeGpBq+TZ2Az42cx5BGiJmFTIEnjat3VP2GidG/L47cIPBX/GcWqRAB2t0oEWuyWSa/SgnJ09E5JgwA54sM5Ry1GgPoThlJ9VcowJuOFEgp0D06MuOkxsK15J92+kTVXk9xTTPEcXCjg4H1HRWyeozqCDQstfZnmlUuRja98vsgvCyMQdwVVZH9B0qKJz+cumuZMQG961ZvtqkhwdAvtJezlHJoMJMShih/NBg3nq4kSN0dSPe0bUU/0+UNNZaluSihswBacAEpWM1QV3mwe5TutQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GuE8QpI+"
+Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-604aaf2d047so43465567b3.0
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 04:49:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=U08ro0OzpnsSyltNg7oZT3s5NQuDe8REyVaCf+Nm2fY=;
- b=AsYsg0VlxHc8dMwEBxkDNgG1eoyJ+MWNFSv5hochIGk+8bRcGv65EluZoN1h6XJYwsgngskUkOWuyqB7SBKPOEjRU7SW7kcG6u5hgKy7SbKNq01/99Z7nWSI13B/TfbjaKBmEbc7b3AEh8RvMASsSIKjdtFhmO5YhYl6T1CwdQY=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by DS0PR10MB7294.namprd10.prod.outlook.com (2603:10b6:8:f6::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7249.39; Tue, 13 Feb
- 2024 11:52:47 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::56f9:2210:db18:61c4]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::56f9:2210:db18:61c4%4]) with mapi id 15.20.7292.026; Tue, 13 Feb 2024
- 11:52:47 +0000
-Message-ID: <30909525-73e4-42cb-a695-672b8e5a6235@oracle.com>
-Date: Tue, 13 Feb 2024 11:52:32 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 10/15] block: Add fops atomic write support
-Content-Language: en-US
-To: Nilay Shroff <nilay@linux.ibm.com>
-Cc: axboe@kernel.dk, brauner@kernel.org, bvanassche@acm.org,
-        dchinner@redhat.com, djwong@kernel.org, hch@lst.de, jack@suse.cz,
-        jbongio@google.com, jejb@linux.ibm.com, kbusch@kernel.org,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-        martin.petersen@oracle.com, ming.lei@redhat.com, ojaswin@linux.ibm.com,
-        sagi@grimberg.me, tytso@mit.edu, viro@zeniv.linux.org.uk
-References: <20240124113841.31824-11-john.g.garry@oracle.com>
- <20240213093619.106770-1-nilay@linux.ibm.com>
- <9ffc3102-2936-4f83-b69d-bbf64793b9ca@oracle.com>
- <e99cf4ef-40ec-4e66-956f-c9e2aebb4621@linux.ibm.com>
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <e99cf4ef-40ec-4e66-956f-c9e2aebb4621@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SI2PR01CA0014.apcprd01.prod.exchangelabs.com
- (2603:1096:4:191::17) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        d=linaro.org; s=google; t=1707828578; x=1708433378; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=PltJZt/4GisbtWaUCig+Gxgvk8AtsQXf9mPTLTSgx3k=;
+        b=GuE8QpI+0/ucIeBnRWUmD3MUGddgsy4Fi+bKHJlY95ce6OMp8AZFYS3eqtN9XXQ3RK
+         kjPp1Zxk33Djzh+OMOxICL4pHUuTsOjTt+mQbpfxPMyK90ouE6JtCkOux3UIw5Jr78Fo
+         wTLkRafHxW42tkpCO2y3B4PBHtjYoLk5kWHRw1xrNSqIpOUNeI3tY6+726Zdge0TyuA9
+         x7YyO4QXigWuV3tkEXkrkmQjB3UtgDfNqsBpEncRmOtBtB/MKdCwsiptYDQpJx3+/5mp
+         5TVArc20cKYb4dFADsEM0FjUTiIceashe/6EY5ZW3O8P/bQYFCQ71OliHFLKZHOjr9ut
+         w1OQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707828578; x=1708433378;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=PltJZt/4GisbtWaUCig+Gxgvk8AtsQXf9mPTLTSgx3k=;
+        b=dsmCSP6bZIC5XAHPshvHy6tfRLxUnNRe6hW7J4CXuiF/e6DpfgdYDhcVzKKdZZj/GG
+         p8rih8OmjwwFjpoFPt2FjyG5f2HNRsnc+0acL6zA75z1cp0lENaJjByJg4XgZ/pMp8zM
+         aLy40uDept4N5MTlnGuGWYJRshU7s3OjQz2GH3mwqe8CRWDm329Lf9hLLzcnkuPREeBH
+         EMT/HEWHfRFoPjkxIIRFM1JdiquDAAYwjpChYmMIxa+9DVbVSVU8cjiioWIrMICWTQ6z
+         DIy7OLyYGviz/r7e63tebJj3bj6tpA+3GrBIwdcp1gOp294+oV9Af7zrna0ae7ihDtjR
+         JGuw==
+X-Forwarded-Encrypted: i=1; AJvYcCV/a0f/Y9BCZsQui+xkM94B11sR59nG0lS7cqj+p94S+ypyFOYHFrUbwXhPpArJ0LyXG+qGTfg4n498sM2UMG8ZmmxbzG6pHDTLwg==
+X-Gm-Message-State: AOJu0YysaFvEYs898A7WU0uVruFLqcr6dH9xHSCPgv03zINGYhy0RYms
+	VMNRXx4e1qRKXguwkWCFQgz9+x2KVGMTxBGPDYku6ym96keHXSmtUwvBv7e6LXCgvLufv5rufqn
+	xg1YbTRROqamt3K7WR8H1fWMXvqNSi3tNtIKBPFIPPJ8BEbur
+X-Google-Smtp-Source: AGHT+IFZTUR6t+Td46CAo+mAkCI61T1Bdp7THvEqZ4Rg9t47+KU4Vr4WFPYRN7MOfIsr49mG+Jk8Zfvv3InHXpEiTrE=
+X-Received: by 2002:a81:60c2:0:b0:604:45d:ddb4 with SMTP id
+ u185-20020a8160c2000000b00604045dddb4mr8648784ywb.43.1707828578552; Tue, 13
+ Feb 2024 04:49:38 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS0PR10MB7294:EE_
-X-MS-Office365-Filtering-Correlation-Id: e3a73b58-707d-43d6-7a4d-08dc2c8a4bf2
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	ahtEHnJX8aN+XZ/lAkeZiKosWRXFN2Kjv58qtbOe4BVG2iIHKi9aR1SoWEj6J7fjwm5Z8Dqxjna8U60CNC4JTlYsVNUyq/j9n6Dj3+ts7ZyoOEozBWzVRlhXCeE36st1NcZA/AmrhHLCWGQd0dSUXl7eNxi+XmG70YGQAPf+Bg8wCJHCftwpKuAo0ZrZaGXlobHgfGO4X4uowvu/8OO4Vf691cbvUt75p7YVKSrgkGPJ3hR8HF1SA00pkzTSVb21spe/U/7uIHQrCDTwRvCTnVwYFtAMIZi2NSMfMwKpUtMYhgxAxLLMkNlBB7CxKpr7n/YhWOzs3ZDkeksu1sJ51vnagsD+aAmfi2AQFSAkoFhVxXHiL2U3r67FpMG6l6Q1aGv5Nh4LXj62+/q/vXGOajh8cHOoH6JSp+Aj25R1Vxoeg0y9sJEEdN0zqZJphJGaTWdKSDbgtKA2C7UXOilT7LfEd0G71Y0GaGZvS1ZDDfSCl6UYA/cvpOMWss8Zsi5jKaDE7z18UbGIxTzYDJQ1UxMIi6MiEyg4A8r98qrLGtIbw6nVcRC+vBA0RnPHDFZ7
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(39860400002)(346002)(366004)(376002)(136003)(396003)(230922051799003)(186009)(1800799012)(451199024)(64100799003)(36756003)(6486002)(6506007)(66556008)(6666004)(66946007)(478600001)(6512007)(2906002)(26005)(2616005)(6916009)(36916002)(316002)(5660300002)(66476007)(7416002)(8936002)(86362001)(31696002)(4326008)(53546011)(38100700002)(8676002)(31686004)(41300700001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?cnhHcXdSNkJPU2RkU2RvcHdKbFgvTi91REV3Vm5jK3FvRzhKNnBDZG1iTTI4?=
- =?utf-8?B?R2dCVDZUWUU1a2E2Y0g2Qkhmckh5WU9icjcrWnBUWFA1YS9ZNmZqOHNEWkpY?=
- =?utf-8?B?YmZ4Q2NWUXA0cEhwZlFJOTJWVTZIeEJFNzZCR1RwVUJFa29oU1ZrUmQ1a1Uy?=
- =?utf-8?B?RlZwYktCZ01saVZTdVI1TkpDYVB0aWJUcE1QQkY0U0o2OXZ0MVRENzhUT1dE?=
- =?utf-8?B?c09CNlVLRzQ4M0tNS1RCTHJlRUhFZFdpRzROc3E4REh6RlJJYVYwamZjYnBG?=
- =?utf-8?B?NExkcUNQTS9mSVVzOERDOFRZOFQrRjRQYXZZWnIvT1J5SURNL2dneitQMHd1?=
- =?utf-8?B?NTR0TGdZQVRxMFlZUnN2QlFlUlRoVkV6a3Z6d1NrRFY5WSs2c25Ramc0UjUy?=
- =?utf-8?B?RHNVc1hHa3JadVhQckNTZTcxNTFUUkM5dGdPdkpyUlR5bjdYbXlmUXNyb3Jn?=
- =?utf-8?B?Rlhvb3NSVjd6Q01xL3FsYnpMaDUrUkZKMityTTFxbXlNUG5HMmp5TVFPczhS?=
- =?utf-8?B?RFV0RmhwWXBzV2ExRDkrR2RSbWN6QmpFamlNMFZCRm8wNVdydkJDUFo1dUVL?=
- =?utf-8?B?eG4vTVV0cEVQOUFuRjVFME0yY2lTeFVNbHgwZ1BKWEo3bXF4c2tUZFE2V0tJ?=
- =?utf-8?B?T2RibjEvUzE0WTZacDJLMEdhN0ZVV2F4eS85SDJNTHExdEdOYTFqckpZMUls?=
- =?utf-8?B?WTFsTGwrcVNZTlFkMXE2S2xLMU9QdHd0eVhEaCtRSHlubldsb2dJRWJiWFFI?=
- =?utf-8?B?M0ducGI3dTBtcVhTSUxhc3ZhbUdIN2QwWFFhY0dTNTZUa1dJa2h6Z0JqYkVB?=
- =?utf-8?B?aVpqSmZJejlwTmZZNGdDOVNQOS92VHlXUWVia1NpMVh0VWxOY3kwakZYYS9v?=
- =?utf-8?B?c0xEYW5MR2JjdGF4TjZkQkhqTFJSUHdJNXBVUzlmaFJNWG94OHpaL09helg3?=
- =?utf-8?B?MExrR0FPRVRCZlpuSFl6Q0xQZjZPaHRMNGtHK0F0RnE5QlB4ZmpHNVN3OU9t?=
- =?utf-8?B?cTlMZW14MGViZU5ncHlONGNGcWx5ZlBPYXYrVXBSd0lRVHZBT3BPOWxzUjFF?=
- =?utf-8?B?clh5L1VlVjJqa013Q1VhQmN5YUhYODQ2dzB4TzFiajBCR0tNREUvV1AxNWQ2?=
- =?utf-8?B?TkN6Ry9ZSHpqRHdhU0I5ZWplSDFFZ1YwdVpKSUVmd3M4VzV6eVdvcWwrdVhC?=
- =?utf-8?B?OW53TXdXcUYwYktWeEovdTdSc25aQ3dOWm0wbFBOOGtOa0c3SmEyNFJ1ckJ2?=
- =?utf-8?B?RkMrU3JXOGR6SXkwN2pJRi9BODkwSXJSMG80V3FNcTUwK3RnK21lNjZZVkRi?=
- =?utf-8?B?c2dNZDA0SHE3dHp1Q21PNXJVOHBpVWJmYkJiU0xXZ0dCdjFrclFRL2IyQ29v?=
- =?utf-8?B?S2RtWVR2RHZqb09RVVZuc0FnUGxFTkticGF2L1JTOGV6TEs1OTVBWVJzTmk2?=
- =?utf-8?B?QkF6TDlVa2JyTFQwcVBRMnNrbGdBQUJUeVEyT2tvb1JlSlBIMjhKV2hWdGFm?=
- =?utf-8?B?N3pEQkRjY1dmQzY4L0lzeU8rOStvNmdwK0x2RjJ6eWNOUUd6eTl6b2xWRkZZ?=
- =?utf-8?B?M2FOc0UwK01yaGRHclJNLzc5UGZqVUQzR0hETUNjNnhNR3Q1ZGcyaUFFWXgw?=
- =?utf-8?B?UUIvbmxVSWIwVEJVM3N6Q2JvaWQ1bHJ0ZkN4TXpkUWpyTmx6ZGViUzh2amoy?=
- =?utf-8?B?V0c0MnI4eUc5Y1hJbXA4ZHdwTnEvSGVoc0xBY25peFY4MG1Jc2Y1bTdiM3VL?=
- =?utf-8?B?UmhtMVUwU0tLaklZWmwxTHFmYWtLWnhFbGtLYlhselVmbm91cjd3T2pPdThj?=
- =?utf-8?B?UlhKenRqSTgxVU1KdnlJYitNbnFrODRaOFNmakFJdzc1ZEcxTkdhQ3RjMXM2?=
- =?utf-8?B?QlR6WTAzalR5TkNDRHBZQmZDd2k5RHdKNllZMm42blB6TzJQaWdSYi9zWWcv?=
- =?utf-8?B?Z3k3RkM3VU84NlVVZm9WZDBCZVIyRWxYL0NOSmJoRHQ0R0FhNG56cmczNmNx?=
- =?utf-8?B?bzdCOEQwb1dTTnZVZlBqVU8vSHRyYW5RVG5rQnZiY1RVNDhzbjl1Q0VibjdS?=
- =?utf-8?B?c1J5RmtTSHg2QWp5N013Mlp4OVFTT2dtdHBQcVZYbFR6cnlRNStlVWVPT09N?=
- =?utf-8?Q?vEfyUWF69lQrCjkyDfn0+l0zk?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	ilnCEJeR+emJQwmPxFqhyeG5qYaCqovl7AGutSk62Ea5l+FVteRGRs1uEm1gDGQxUg3x9lqj3LSy1UCfyMSBR3SWJxqPxyFf1VKJWBwlMaNOHXrGO10OyfjZ7XHcJCK9UmKCo66pBX2Eg/wT5zB3L2gxbPyiIWZwbAFAsNmrGDw1z2gi/DBICi3NUrnEXnZSq5JKBj+eJMYE56tx8jwArkkhiR8/dYtA/gJtRDyfsucjpvYrb4jb21e4AygrPMWap26RQFxL31ilXrMmzqEZdaN3PJuNPJ0O15QuSeWbrX/CX03CxN50fNb1KCi4A6hsjPfE9pz76EutLFIlXkElIv55jCqV4feUywiSiNk6ygNjXUV6KQV64XcoZ/WbUjv3GXWnidWE/uyhojMfCfmdzJ6HXHBmFK00511ybuj0H5zn+QhPbAbxwQK+X/2B7sfQry0z/ch1i2oH/5bihA9h4rcaBXyA3votI2+TKL68ueB6Ar8wIDdnntKuPeYVRSC78xhxEiEOyomtoinUqllySUZJgY7kzI+50uLesYjwmXgsWl/LeRicjReLODZAHAAZCIx4+7bsHMebIr16l3Ge4FD5qoj3vRQ7GNk73/0yEc8=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e3a73b58-707d-43d6-7a4d-08dc2c8a4bf2
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Feb 2024 11:52:47.3978
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: gaaC2qwAuZbF8pT22e2eqTC87tKXVrCr2z8bE1VDKA2X6z5fAmWiFAZIrL3HDjLyE7X6M9UGdMGpfrA0d4kEEQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB7294
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-13_06,2024-02-12_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- suspectscore=0 mlxscore=0 phishscore=0 bulkscore=0 malwarescore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2402130093
-X-Proofpoint-GUID: JsKvP5fP2wFlZlkeHfu-gx_bh7lOlHRw
-X-Proofpoint-ORIG-GUID: JsKvP5fP2wFlZlkeHfu-gx_bh7lOlHRw
+References: <20240127232436.2632187-1-quic_gaurkash@quicinc.com> <20240127232436.2632187-2-quic_gaurkash@quicinc.com>
+In-Reply-To: <20240127232436.2632187-2-quic_gaurkash@quicinc.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Tue, 13 Feb 2024 13:49:02 +0100
+Message-ID: <CAPDyKFqyu4kDYg1Ac=bi4j-M2EYw3bDT602ytspw1KPG2UbS_Q@mail.gmail.com>
+Subject: Re: [PATCH v4 01/15] ice, ufs, mmc: use blk_crypto_key for program_key
+To: Gaurav Kashyap <quic_gaurkash@quicinc.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	andersson@kernel.org, ebiggers@google.com, neil.armstrong@linaro.org, 
+	srinivas.kandagatla@linaro.org, krzysztof.kozlowski+dt@linaro.org, 
+	conor+dt@kernel.org, robh+dt@kernel.org, linux-kernel@vger.kernel.org, 
+	linux-mmc@vger.kernel.org, kernel@quicinc.com, linux-crypto@vger.kernel.org, 
+	devicetree@vger.kernel.org, quic_omprsing@quicinc.com, 
+	quic_nguyenb@quicinc.com, bartosz.golaszewski@linaro.org, 
+	konrad.dybcio@linaro.org, jejb@linux.ibm.com, martin.petersen@oracle.com, 
+	mani@kernel.org, davem@davemloft.net, herbert@gondor.apana.org.au
+Content-Type: text/plain; charset="UTF-8"
 
-On 13/02/2024 11:08, Nilay Shroff wrote:
->> It's relied that atomic_write_unit_max is <= atomic_write_boundary and both are a power-of-2. Please see the NVMe patch, which this is checked. Indeed, it would not make sense if atomic_write_unit_max > atomic_write_boundary (when non-zero).
->>
->> So if the write is naturally aligned and its size is <= atomic_write_unit_max, then it cannot be straddling a boundary.
-> Ok fine but in case the device doesn't support namespace atomic boundary size (i.e. NABSPF is zero) then still do we need
-> to restrict IO which crosses the atomic boundary?
+On Sun, 28 Jan 2024 at 00:26, Gaurav Kashyap <quic_gaurkash@quicinc.com> wrote:
+>
+> The program key ops in the storage controller does not
+> pass on the blk crypto key structure to ice, this is okay
+> when wrapped keys are not supported and keys are standard
+> AES XTS sizes. However, wrapped keyblobs can be of any size
+> and in preparation for that, modify the ICE and storage
+> controller APIs to accept blk_crypto_key.
+>
+> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
+> Reviewed-by: Om Prakash Singh <quic_omprsing@quicinc.com>
+> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
 
-Is there a boundary if NABSPF is zero?
+I assume this is better funneled via some other tree than the MMC, so:
 
-> 
-> I am quoting this from NVMe spec (Command Set Specification, revision 1.0a, Section 2.1.4.3) :
-> "To ensure backwards compatibility, the values reported for AWUN, AWUPF, and ACWU shall be set such that
-> they  are  supported  even  if  a  write  crosses  an  atomic  boundary.  If  a  controller  does  not
-> guarantee atomicity across atomic boundaries, the controller shall set AWUN, AWUPF, and ACWU to 0h (1 LBA)."
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # For MMC
 
-How about respond to the NVMe patch in this series, asking this question?
+Kind regards
+Uffe
 
-I have my idea on how the boundary is determined, but I think that the 
-spec could be made clearer.
-
-Thanks,
-John
-
-
-
+> ---
+>  drivers/mmc/host/cqhci-crypto.c  | 7 ++++---
+>  drivers/mmc/host/cqhci.h         | 2 ++
+>  drivers/mmc/host/sdhci-msm.c     | 6 ++++--
+>  drivers/soc/qcom/ice.c           | 6 +++---
+>  drivers/ufs/core/ufshcd-crypto.c | 7 ++++---
+>  drivers/ufs/host/ufs-qcom.c      | 6 ++++--
+>  include/soc/qcom/ice.h           | 5 +++--
+>  include/ufs/ufshcd.h             | 1 +
+>  8 files changed, 25 insertions(+), 15 deletions(-)
+>
+> diff --git a/drivers/mmc/host/cqhci-crypto.c b/drivers/mmc/host/cqhci-crypto.c
+> index 6652982410ec..91da6de1d650 100644
+> --- a/drivers/mmc/host/cqhci-crypto.c
+> +++ b/drivers/mmc/host/cqhci-crypto.c
+> @@ -32,6 +32,7 @@ cqhci_host_from_crypto_profile(struct blk_crypto_profile *profile)
+>  }
+>
+>  static int cqhci_crypto_program_key(struct cqhci_host *cq_host,
+> +                                   const struct blk_crypto_key *bkey,
+>                                     const union cqhci_crypto_cfg_entry *cfg,
+>                                     int slot)
+>  {
+> @@ -39,7 +40,7 @@ static int cqhci_crypto_program_key(struct cqhci_host *cq_host,
+>         int i;
+>
+>         if (cq_host->ops->program_key)
+> -               return cq_host->ops->program_key(cq_host, cfg, slot);
+> +               return cq_host->ops->program_key(cq_host, bkey, cfg, slot);
+>
+>         /* Clear CFGE */
+>         cqhci_writel(cq_host, 0, slot_offset + 16 * sizeof(cfg->reg_val[0]));
+> @@ -99,7 +100,7 @@ static int cqhci_crypto_keyslot_program(struct blk_crypto_profile *profile,
+>                 memcpy(cfg.crypto_key, key->raw, key->size);
+>         }
+>
+> -       err = cqhci_crypto_program_key(cq_host, &cfg, slot);
+> +       err = cqhci_crypto_program_key(cq_host, key, &cfg, slot);
+>
+>         memzero_explicit(&cfg, sizeof(cfg));
+>         return err;
+> @@ -113,7 +114,7 @@ static int cqhci_crypto_clear_keyslot(struct cqhci_host *cq_host, int slot)
+>          */
+>         union cqhci_crypto_cfg_entry cfg = {};
+>
+> -       return cqhci_crypto_program_key(cq_host, &cfg, slot);
+> +       return cqhci_crypto_program_key(cq_host, NULL, &cfg, slot);
+>  }
+>
+>  static int cqhci_crypto_keyslot_evict(struct blk_crypto_profile *profile,
+> diff --git a/drivers/mmc/host/cqhci.h b/drivers/mmc/host/cqhci.h
+> index 1a12e40a02e6..949ebbe05773 100644
+> --- a/drivers/mmc/host/cqhci.h
+> +++ b/drivers/mmc/host/cqhci.h
+> @@ -12,6 +12,7 @@
+>  #include <linux/completion.h>
+>  #include <linux/wait.h>
+>  #include <linux/irqreturn.h>
+> +#include <linux/blk-crypto.h>
+>  #include <asm/io.h>
+>
+>  /* registers */
+> @@ -291,6 +292,7 @@ struct cqhci_host_ops {
+>         void (*post_disable)(struct mmc_host *mmc);
+>  #ifdef CONFIG_MMC_CRYPTO
+>         int (*program_key)(struct cqhci_host *cq_host,
+> +                          const struct blk_crypto_key *bkey,
+>                            const union cqhci_crypto_cfg_entry *cfg, int slot);
+>  #endif
+>  };
+> diff --git a/drivers/mmc/host/sdhci-msm.c b/drivers/mmc/host/sdhci-msm.c
+> index 668e0aceeeba..529ea9f4fa07 100644
+> --- a/drivers/mmc/host/sdhci-msm.c
+> +++ b/drivers/mmc/host/sdhci-msm.c
+> @@ -1859,6 +1859,7 @@ static __maybe_unused int sdhci_msm_ice_suspend(struct sdhci_msm_host *msm_host)
+>   * vendor-specific SCM calls for this; it doesn't support the standard way.
+>   */
+>  static int sdhci_msm_program_key(struct cqhci_host *cq_host,
+> +                                const struct blk_crypto_key *bkey,
+>                                  const union cqhci_crypto_cfg_entry *cfg,
+>                                  int slot)
+>  {
+> @@ -1866,6 +1867,7 @@ static int sdhci_msm_program_key(struct cqhci_host *cq_host,
+>         struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+>         struct sdhci_msm_host *msm_host = sdhci_pltfm_priv(pltfm_host);
+>         union cqhci_crypto_cap_entry cap;
+> +       u8 ice_key_size;
+>
+>         /* Only AES-256-XTS has been tested so far. */
+>         cap = cq_host->crypto_cap_array[cfg->crypto_cap_idx];
+> @@ -1873,11 +1875,11 @@ static int sdhci_msm_program_key(struct cqhci_host *cq_host,
+>                 cap.key_size != CQHCI_CRYPTO_KEY_SIZE_256)
+>                 return -EINVAL;
+>
+> +       ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
+>         if (cfg->config_enable & CQHCI_CRYPTO_CONFIGURATION_ENABLE)
+>                 return qcom_ice_program_key(msm_host->ice,
+>                                             QCOM_ICE_CRYPTO_ALG_AES_XTS,
+> -                                           QCOM_ICE_CRYPTO_KEY_SIZE_256,
+> -                                           cfg->crypto_key,
+> +                                           ice_key_size, bkey,
+>                                             cfg->data_unit_size, slot);
+>         else
+>                 return qcom_ice_evict_key(msm_host->ice, slot);
+> diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+> index fbab7fe5c652..6f941d32fffb 100644
+> --- a/drivers/soc/qcom/ice.c
+> +++ b/drivers/soc/qcom/ice.c
+> @@ -163,8 +163,8 @@ EXPORT_SYMBOL_GPL(qcom_ice_suspend);
+>
+>  int qcom_ice_program_key(struct qcom_ice *ice,
+>                          u8 algorithm_id, u8 key_size,
+> -                        const u8 crypto_key[], u8 data_unit_size,
+> -                        int slot)
+> +                        const struct blk_crypto_key *bkey,
+> +                        u8 data_unit_size, int slot)
+>  {
+>         struct device *dev = ice->dev;
+>         union {
+> @@ -183,7 +183,7 @@ int qcom_ice_program_key(struct qcom_ice *ice,
+>                 return -EINVAL;
+>         }
+>
+> -       memcpy(key.bytes, crypto_key, AES_256_XTS_KEY_SIZE);
+> +       memcpy(key.bytes, bkey->raw, AES_256_XTS_KEY_SIZE);
+>
+>         /* The SCM call requires that the key words are encoded in big endian */
+>         for (i = 0; i < ARRAY_SIZE(key.words); i++)
+> diff --git a/drivers/ufs/core/ufshcd-crypto.c b/drivers/ufs/core/ufshcd-crypto.c
+> index f4cc54d82281..34537cbac622 100644
+> --- a/drivers/ufs/core/ufshcd-crypto.c
+> +++ b/drivers/ufs/core/ufshcd-crypto.c
+> @@ -18,6 +18,7 @@ static const struct ufs_crypto_alg_entry {
+>  };
+>
+>  static int ufshcd_program_key(struct ufs_hba *hba,
+> +                             const struct blk_crypto_key *bkey,
+>                               const union ufs_crypto_cfg_entry *cfg, int slot)
+>  {
+>         int i;
+> @@ -27,7 +28,7 @@ static int ufshcd_program_key(struct ufs_hba *hba,
+>         ufshcd_hold(hba);
+>
+>         if (hba->vops && hba->vops->program_key) {
+> -               err = hba->vops->program_key(hba, cfg, slot);
+> +               err = hba->vops->program_key(hba, bkey, cfg, slot);
+>                 goto out;
+>         }
+>
+> @@ -89,7 +90,7 @@ static int ufshcd_crypto_keyslot_program(struct blk_crypto_profile *profile,
+>                 memcpy(cfg.crypto_key, key->raw, key->size);
+>         }
+>
+> -       err = ufshcd_program_key(hba, &cfg, slot);
+> +       err = ufshcd_program_key(hba, key, &cfg, slot);
+>
+>         memzero_explicit(&cfg, sizeof(cfg));
+>         return err;
+> @@ -103,7 +104,7 @@ static int ufshcd_clear_keyslot(struct ufs_hba *hba, int slot)
+>          */
+>         union ufs_crypto_cfg_entry cfg = {};
+>
+> -       return ufshcd_program_key(hba, &cfg, slot);
+> +       return ufshcd_program_key(hba, NULL, &cfg, slot);
+>  }
+>
+>  static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 39eef470f8fa..acf352594362 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -144,6 +144,7 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
+>  }
+>
+>  static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
+> +                                   const struct blk_crypto_key *bkey,
+>                                     const union ufs_crypto_cfg_entry *cfg,
+>                                     int slot)
+>  {
+> @@ -151,6 +152,7 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
+>         union ufs_crypto_cap_entry cap;
+>         bool config_enable =
+>                 cfg->config_enable & UFS_CRYPTO_CONFIGURATION_ENABLE;
+> +       u8 ice_key_size;
+>
+>         /* Only AES-256-XTS has been tested so far. */
+>         cap = hba->crypto_cap_array[cfg->crypto_cap_idx];
+> @@ -158,11 +160,11 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
+>             cap.key_size != UFS_CRYPTO_KEY_SIZE_256)
+>                 return -EOPNOTSUPP;
+>
+> +       ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
+>         if (config_enable)
+>                 return qcom_ice_program_key(host->ice,
+>                                             QCOM_ICE_CRYPTO_ALG_AES_XTS,
+> -                                           QCOM_ICE_CRYPTO_KEY_SIZE_256,
+> -                                           cfg->crypto_key,
+> +                                           ice_key_size, bkey,
+>                                             cfg->data_unit_size, slot);
+>         else
+>                 return qcom_ice_evict_key(host->ice, slot);
+> diff --git a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h
+> index 5870a94599a2..9dd835dba2a7 100644
+> --- a/include/soc/qcom/ice.h
+> +++ b/include/soc/qcom/ice.h
+> @@ -7,6 +7,7 @@
+>  #define __QCOM_ICE_H__
+>
+>  #include <linux/types.h>
+> +#include <linux/blk-crypto.h>
+>
+>  struct qcom_ice;
+>
+> @@ -30,8 +31,8 @@ int qcom_ice_resume(struct qcom_ice *ice);
+>  int qcom_ice_suspend(struct qcom_ice *ice);
+>  int qcom_ice_program_key(struct qcom_ice *ice,
+>                          u8 algorithm_id, u8 key_size,
+> -                        const u8 crypto_key[], u8 data_unit_size,
+> -                        int slot);
+> +                        const struct blk_crypto_key *bkey,
+> +                        u8 data_unit_size, int slot);
+>  int qcom_ice_evict_key(struct qcom_ice *ice, int slot);
+>  struct qcom_ice *of_qcom_ice_get(struct device *dev);
+>  #endif /* __QCOM_ICE_H__ */
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index cb2afcebbdf5..582d5a747e84 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -363,6 +363,7 @@ struct ufs_hba_variant_ops {
+>                                 struct devfreq_dev_profile *profile,
+>                                 struct devfreq_simple_ondemand_data *data);
+>         int     (*program_key)(struct ufs_hba *hba,
+> +                              const struct blk_crypto_key *bkey,
+>                                const union ufs_crypto_cfg_entry *cfg, int slot);
+>         void    (*event_notify)(struct ufs_hba *hba,
+>                                 enum ufs_event_type evt, void *data);
+> --
+> 2.43.0
+>
