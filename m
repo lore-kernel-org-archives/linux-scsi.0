@@ -1,334 +1,219 @@
-Received: from mail-yw1-f178.google.com (mail-yw1-f178.google.com [209.85.128.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from ciao.gmane.io (ciao.gmane.io [116.202.254.214])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6575482DA
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 12:49:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97C5B51028
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 13:10:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=116.202.254.214
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707828581; cv=none; b=s5IxCVuEvFVarsb5kVuC5lCoW/OKgvEIFI7hUQk0FK/JEqtfKvzK6fth8isDfYnJo1TLkQi52Yl5c5vYADMUXVfKzMl1EvpFlcYsf+iqSIFXoMkn4mbjCZLHcBSTYDRI5UCNAYVF5tMNnESnIWOlpmOV57MEm5vlqVQWBr/Flfc=
+	t=1707829806; cv=none; b=OqOGEKpKYdqQIo2DXnX46CvHj+pGtB+1vzHzc85degByyBOA+Gccuy5hQvjNygVATpCnAJs7TpVtEcr/qW009qxAS7tfgLuG/PRL5N23A6ZosZwJaQfLI9qyTCEYy8YDIOy/U6MpeUiWjOTtBm8Cj/t6vNnUwpThZy9xLdiJmE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707828581; c=relaxed/simple;
-	bh=HSuK8gF8xqQlzSUAllq5D6X/pqFlN4vTdtHlcK5UeBs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=QI3k9WRhKL5FFuAmfwl4cxol84ZcEtXtZcJv0Kp7Hl4JwgiDWV8MH9oCD4z8X9CenbShQAwOBSMEzpRUGQldMO2+rW56ZYwNNZkFrV6lRnunpmuIDetNL+mCo1sz8gaaqy9aLD0M2aFszU4JT2lwN3IlhtNU6B//js5PeTFblio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=GuE8QpI+; arc=none smtp.client-ip=209.85.128.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GuE8QpI+"
-Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-604aaf2d047so43465567b3.0
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 04:49:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1707828578; x=1708433378; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=PltJZt/4GisbtWaUCig+Gxgvk8AtsQXf9mPTLTSgx3k=;
-        b=GuE8QpI+0/ucIeBnRWUmD3MUGddgsy4Fi+bKHJlY95ce6OMp8AZFYS3eqtN9XXQ3RK
-         kjPp1Zxk33Djzh+OMOxICL4pHUuTsOjTt+mQbpfxPMyK90ouE6JtCkOux3UIw5Jr78Fo
-         wTLkRafHxW42tkpCO2y3B4PBHtjYoLk5kWHRw1xrNSqIpOUNeI3tY6+726Zdge0TyuA9
-         x7YyO4QXigWuV3tkEXkrkmQjB3UtgDfNqsBpEncRmOtBtB/MKdCwsiptYDQpJx3+/5mp
-         5TVArc20cKYb4dFADsEM0FjUTiIceashe/6EY5ZW3O8P/bQYFCQ71OliHFLKZHOjr9ut
-         w1OQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707828578; x=1708433378;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=PltJZt/4GisbtWaUCig+Gxgvk8AtsQXf9mPTLTSgx3k=;
-        b=dsmCSP6bZIC5XAHPshvHy6tfRLxUnNRe6hW7J4CXuiF/e6DpfgdYDhcVzKKdZZj/GG
-         p8rih8OmjwwFjpoFPt2FjyG5f2HNRsnc+0acL6zA75z1cp0lENaJjByJg4XgZ/pMp8zM
-         aLy40uDept4N5MTlnGuGWYJRshU7s3OjQz2GH3mwqe8CRWDm329Lf9hLLzcnkuPREeBH
-         EMT/HEWHfRFoPjkxIIRFM1JdiquDAAYwjpChYmMIxa+9DVbVSVU8cjiioWIrMICWTQ6z
-         DIy7OLyYGviz/r7e63tebJj3bj6tpA+3GrBIwdcp1gOp294+oV9Af7zrna0ae7ihDtjR
-         JGuw==
-X-Forwarded-Encrypted: i=1; AJvYcCV/a0f/Y9BCZsQui+xkM94B11sR59nG0lS7cqj+p94S+ypyFOYHFrUbwXhPpArJ0LyXG+qGTfg4n498sM2UMG8ZmmxbzG6pHDTLwg==
-X-Gm-Message-State: AOJu0YysaFvEYs898A7WU0uVruFLqcr6dH9xHSCPgv03zINGYhy0RYms
-	VMNRXx4e1qRKXguwkWCFQgz9+x2KVGMTxBGPDYku6ym96keHXSmtUwvBv7e6LXCgvLufv5rufqn
-	xg1YbTRROqamt3K7WR8H1fWMXvqNSi3tNtIKBPFIPPJ8BEbur
-X-Google-Smtp-Source: AGHT+IFZTUR6t+Td46CAo+mAkCI61T1Bdp7THvEqZ4Rg9t47+KU4Vr4WFPYRN7MOfIsr49mG+Jk8Zfvv3InHXpEiTrE=
-X-Received: by 2002:a81:60c2:0:b0:604:45d:ddb4 with SMTP id
- u185-20020a8160c2000000b00604045dddb4mr8648784ywb.43.1707828578552; Tue, 13
- Feb 2024 04:49:38 -0800 (PST)
+	s=arc-20240116; t=1707829806; c=relaxed/simple;
+	bh=Tjcyyqnsle0pWXHD9sQjVFWXbeqMpGlAGL+H/lXJst8=;
+	h=To:From:Subject:Date:Message-ID:References:Mime-Version:
+	 Content-Type:Cc:In-Reply-To:Cc; b=buOeVakeWQrklT+rnZccADlJ+979WxHxfCqVmnmqFvzUZEU8OPj6eUPUnobsTmQx/6BGMl6EDGIxZC/YPOkTbWGX+zYw/Jl6285Rx9kBldwB33EwovjQN9Bnd4+MJV9seylOWkLM8FeHyKiD/YEtULLPt+X4rbbQat1VQkRCXBo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=m.gmane-mx.org; arc=none smtp.client-ip=116.202.254.214
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=m.gmane-mx.org
+Received: from list by ciao.gmane.io with local (Exim 4.92)
+	(envelope-from <lnx-linux-scsi@m.gmane-mx.org>)
+	id 1rZsXy-0001cG-5e
+	for linux-scsi@vger.kernel.org; Tue, 13 Feb 2024 14:10:02 +0100
+X-Injected-Via-Gmane: http://gmane.org/
+To: linux-scsi@vger.kernel.org
+From: Julian Sikorski <belegdol@gmail.com>
+Subject: Re: [PATCH] usb-storage: Ignore UAS for LaCie Rugged FW USB3
+Date: Tue, 13 Feb 2024 14:06:30 +0100
+Message-ID: <0cf5ea13-6472-47e1-a32f-b9f332656c6a@gmail.com>
+References: <20240209151121.1004985-1-tasos@tasossah.com>
+ <b16e72ad-3f2d-46a8-8361-2641088694df@rowland.harvard.edu>
+ <2978efa3-e83f-4ef5-907d-8232e4b692a5@tasossah.com>
+ <6d4b1f55-09df-47e9-945d-fa38cd36588c@gmail.com>
+ <b6dcf71b-f094-4664-8d43-7d8c0173f51f@gmail.com>
+ <c21f9649-30be-462a-b9ec-f7c96ead30cf@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20240127232436.2632187-1-quic_gaurkash@quicinc.com> <20240127232436.2632187-2-quic_gaurkash@quicinc.com>
-In-Reply-To: <20240127232436.2632187-2-quic_gaurkash@quicinc.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Tue, 13 Feb 2024 13:49:02 +0100
-Message-ID: <CAPDyKFqyu4kDYg1Ac=bi4j-M2EYw3bDT602ytspw1KPG2UbS_Q@mail.gmail.com>
-Subject: Re: [PATCH v4 01/15] ice, ufs, mmc: use blk_crypto_key for program_key
-To: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	andersson@kernel.org, ebiggers@google.com, neil.armstrong@linaro.org, 
-	srinivas.kandagatla@linaro.org, krzysztof.kozlowski+dt@linaro.org, 
-	conor+dt@kernel.org, robh+dt@kernel.org, linux-kernel@vger.kernel.org, 
-	linux-mmc@vger.kernel.org, kernel@quicinc.com, linux-crypto@vger.kernel.org, 
-	devicetree@vger.kernel.org, quic_omprsing@quicinc.com, 
-	quic_nguyenb@quicinc.com, bartosz.golaszewski@linaro.org, 
-	konrad.dybcio@linaro.org, jejb@linux.ibm.com, martin.petersen@oracle.com, 
-	mani@kernel.org, davem@davemloft.net, herbert@gondor.apana.org.au
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Cc: linux-usb@vger.kernel.org
+Content-Language: en-US
+In-Reply-To: <c21f9649-30be-462a-b9ec-f7c96ead30cf@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 28 Jan 2024 at 00:26, Gaurav Kashyap <quic_gaurkash@quicinc.com> wrote:
->
-> The program key ops in the storage controller does not
-> pass on the blk crypto key structure to ice, this is okay
-> when wrapped keys are not supported and keys are standard
-> AES XTS sizes. However, wrapped keyblobs can be of any size
-> and in preparation for that, modify the ICE and storage
-> controller APIs to accept blk_crypto_key.
->
-> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> Reviewed-by: Om Prakash Singh <quic_omprsing@quicinc.com>
-> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
+Am 10.02.24 um 22:43 schrieb Julian Sikorski:
+> Am 10.02.24 um 22:35 schrieb Julian Sikorski:
+>> Am 10.02.24 um 15:21 schrieb Julian Sikorski:
+>>> Am 10.02.24 um 14:24 schrieb Tasos Sahanidis:
+>>>> On 2024-02-09 17:31, Alan Stern wrote:
+>>>>> On Fri, Feb 09, 2024 at 05:11:21PM +0200, Tasos Sahanidis wrote:
+>>>>>> This external HDD fails when plugged in to a USB 3 port. Ignoring 
+>>>>>> UAS and
+>>>>>> falling back to mass storage resolves this issue.
+>>>>>
+>>>>> What happens when it is plugged into a USB-2 port?
+>>>>
+>>>> It works without any quirks over USB 2.0 with uas, however asking for
+>>>> cache data fails gracefully.
+>>>>
+>>>> [  520.829840] scsi host4: uas
+>>>> [  521.024643] scsi 4:0:0:0: Direct-Access     LaCie    Rugged FW 
+>>>> USB3   1081 PQ: 0 ANSI: 4
+>>>> [  521.026370] sd 4:0:0:0: Attached scsi generic sg2 type 0
+>>>> [  521.030096] sd 4:0:0:0: [sdc] 976773153 512-byte logical blocks: 
+>>>> (500 GB/466 GiB)
+>>>> [  521.030369] sd 4:0:0:0: [sdc] Write Protect is off
+>>>> [  521.030373] sd 4:0:0:0: [sdc] Mode Sense: 47 00 10 08
+>>>> [  521.030507] sd 4:0:0:0: [sdc] Asking for cache data failed
+>>>> [  521.030512] sd 4:0:0:0: [sdc] Assuming drive cache: write through
+>>>> [  521.065916]  sdc: sdc1
+>>>> [  521.067783] sd 4:0:0:0: [sdc] Attached SCSI disk
+>>>> [  521.699380] EXT4-fs (sdc1): recovery complete
+>>>> [  521.699388] EXT4-fs (sdc1): mounted filesystem with ordered data 
+>>>> mode. Opts: errors=remount-ro. Quota mode: none.
+>>>>
+>>>>> Have you checked to see if any of the quirk flags can prevent this
+>>>>> problem?  It looks like the only issue might be that one Mode Sense(6)
+>>>>> command.
+>>>>
+>>>> I have tried various combinations of all the available quirks and I
+>>>> couldn't get it to not hang. Without any quirks it keeps retrying Mode
+>>>> Sense(6) constantly.
+>>>>
+>>>> I tested US_FL_ALWAYS_SYNC as it sets sdev->skip_ms_page_8 (both with
+>>>> and without US_FL_NO_REPORT_OPCODES | US_FL_NO_SAME), and it hung at an
+>>>> ATA passthrough command; presumably the next step afterwards.
+>>>>
+>>>> 30 seconds and one USB reset later, the disk is recognised, but I
+>>>> do not know if it is reliable.
+>>>>
+>>>> [  329.161316] scsi 4:0:0:0: Direct-Access     LaCie    Rugged FW 
+>>>> USB3   1081 PQ: 0 ANSI: 4
+>>>> [  329.162228] sd 4:0:0:0: Attached scsi generic sg2 type 0
+>>>> [  329.166650] sd 4:0:0:0: [sdc] 976773153 512-byte logical blocks: 
+>>>> (500 GB/466 GiB)
+>>>> [  329.166654] sd 4:0:0:0: [sdc] Assuming Write Enabled
+>>>> [  329.166655] sd 4:0:0:0: [sdc] Assuming drive cache: write back
+>>>> [  329.197983]  sdc: sdc1
+>>>> [  329.198521] sd 4:0:0:0: [sdc] Attached SCSI disk
+>>>> [  359.553806] sd 4:0:0:0: [sdc] tag#3 uas_eh_abort_handler 0 
+>>>> uas-tag 1 inflight: IN
+>>>> [  359.553816] sd 4:0:0:0: [sdc] tag#3 CDB: ATA command pass 
+>>>> through(12)/Blank a1 08 2e 00 01 00 00 00 00 ec 00 00
+>>>> [  359.573771] scsi host4: uas_eh_device_reset_handler start
+>>>> [  359.702116] usb 3-1: reset SuperSpeed USB device number 3 using 
+>>>> xhci_hcd
+>>>> [  359.722068] usb 3-1: LPM exit latency is zeroed, disabling LPM.
+>>>> [  359.724348] scsi host4: uas_eh_device_reset_handler success
+>>>> [  360.582975] EXT4-fs (sdc1): recovery complete
+>>>> [  360.633098] EXT4-fs (sdc1): mounted filesystem with ordered data 
+>>>> mode. Opts: errors=remount-ro. Quota mode: none.
+>>>>
+>>>> My assumption is that something goes wrong during init and that 
+>>>> makes it
+>>>> hang in general. Perhaps the Mode Sense(6) is broken in addition to
+>>>> whatever else is misbehaving. I don't believe the XHCI controller is at
+>>>> fault.
+>>>>
+>>>>> Falling back from uas to usb-storage could reduce the throughput
+>>>>> considerably.  We would like to avoid doing this if possible.
+>>>>
+>>>> Absolutely, but at the same time I am not sure how much it matters for
+>>>> an old mechanical hard disk. Granted, someone can use the same 
+>>>> enclosure
+>>>> and install an SSD internally, so perhaps that makes it worth it.
+>>>>
+>>>> Thanks
+>>>>
+>>>> -- 
+>>>> Tasos
+>>>>
+>>>>
+>>>>
+>>> This seems to be similar to the issue I am facing with a similar 
+>>> LaCie Rugged USB3-FW 059f:1061. Initially we patched it to IGNORE_UAS 
+>>> but it then turned out to be working with US_FL_NO_REPORT_OPCODES and 
+>>> US_FL_NO_SAME. This was back in September 2021. In August 2023 I 
+>>> reported a similar issue as you, I am still seeing it in 6.7.3. The 
+>>> good news is that after initial problems it seems to be working fine 
+>>> once the USB connection is established.
+>>
+>> I have now narrowed it down to having broken between 5.18.19 and 
+>> 5.19.4 kernels. Tasos, if you are interested, you might want to check 
+>> if you can get the drive working with US_FL_NO_REPORT_OPCODES and
+>> US_FL_NO_SAME alone (fk) quirks alone on 36 live, which ships 5.17.5 
+>> kernel. Exercise caution as it is an EOL system.
+>> I will see if I can narrow down the regression further.
+>>
+>> Best regards,
+>> Julian
+>>
+> Oddly enough, with 5.19.4 the device starts working after one reset 
+> instead of after four:
+> 
+> Feb 10 22:36:56 kernel: usb 2-4: new SuperSpeed USB device number 3 
+> using xhci_hcd
+> Feb 10 22:36:56 kernel: usb 2-4: New USB device found, idVendor=059f, 
+> idProduct=1061, bcdDevice= 0.01
+> Feb 10 22:36:56 kernel: usb 2-4: New USB device strings: Mfr=2, 
+> Product=3, SerialNumber=1
+> Feb 10 22:36:56 kernel: usb 2-4: Product: Rugged USB3-FW
+> Feb 10 22:36:56 kernel: usb 2-4: Manufacturer: LaCie
+> Feb 10 22:36:56 kernel: usb 2-4: SerialNumber: 00000000157f928920fa
+> Feb 10 22:36:56 kernel: scsi host6: uas
+> Feb 10 22:36:56 kernel: scsi 6:0:0:0: Direct-Access     LaCie    Rugged 
+> FW USB3   051E PQ: 0 ANSI: 6
+> Feb 10 22:36:56 kernel: sd 6:0:0:0: Attached scsi generic sg1 type 0
+> Feb 10 22:36:56 kernel: sd 6:0:0:0: [sda] 1953525168 512-byte logical 
+> blocks: (1.00 TB/932 GiB)
+> Feb 10 22:36:56 kernel: sd 6:0:0:0: [sda] Write Protect is off
+> Feb 10 22:36:56 kernel: sd 6:0:0:0: [sda] Mode Sense: 43 00 00 00
+> Feb 10 22:36:56 kernel: sd 6:0:0:0: [sda] Write cache: enabled, read 
+> cache: enabled, doesn't support DPO or FUA
+> Feb 10 22:36:56 kernel: sd 6:0:0:0: [sda] Preferred minimum I/O size 512 
+> bytes
+> Feb 10 22:36:56 kernel: sd 6:0:0:0: [sda] Optimal transfer size 33553920 
+> bytes
+> Feb 10 22:37:26 kernel: sd 6:0:0:0: [sda] tag#23 uas_eh_abort_handler 0 
+> uas-tag 1 inflight: IN
+> Feb 10 22:37:26 kernel: sd 6:0:0:0: [sda] tag#23 CDB: Inquiry 12 01 b9 
+> 00 04 00
+> Feb 10 22:37:26 kernel: scsi host6: uas_eh_device_reset_handler start
+> Feb 10 22:37:26 kernel: usb 2-4: reset SuperSpeed USB device number 3 
+> using xhci_hcd
+> Feb 10 22:37:26 kernel: scsi host6: uas_eh_device_reset_handler success
+> Feb 10 22:37:26 kernel:  sda: sda1 sda2
+> Feb 10 22:37:26 kernel: sd 6:0:0:0: [sda] Attached SCSI disk
+> 
+> Further bisecting is going to be difficult as there are no built kernels 
+> left. I will see if the time effort is manageable.
+> 
+> Best regards,
+> Julian
 
-I assume this is better funneled via some other tree than the MMC, so:
+So I have good news and bad news. The good news is that I have managed 
+to bisect the issue down to commit
 
-Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # For MMC
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c92a6b5d6335
 
-Kind regards
-Uffe
+With c92a6b5d6335 and with e60ac0b9e445, the drive requires multiple 
+resets in the VM. With 7fb019c46eee onwards, it only requires one reset.
+The bad news is that I am not able to fix it with BLIST_NO_VPD_SIZE:
 
-> ---
->  drivers/mmc/host/cqhci-crypto.c  | 7 ++++---
->  drivers/mmc/host/cqhci.h         | 2 ++
->  drivers/mmc/host/sdhci-msm.c     | 6 ++++--
->  drivers/soc/qcom/ice.c           | 6 +++---
->  drivers/ufs/core/ufshcd-crypto.c | 7 ++++---
->  drivers/ufs/host/ufs-qcom.c      | 6 ++++--
->  include/soc/qcom/ice.h           | 5 +++--
->  include/ufs/ufshcd.h             | 1 +
->  8 files changed, 25 insertions(+), 15 deletions(-)
->
-> diff --git a/drivers/mmc/host/cqhci-crypto.c b/drivers/mmc/host/cqhci-crypto.c
-> index 6652982410ec..91da6de1d650 100644
-> --- a/drivers/mmc/host/cqhci-crypto.c
-> +++ b/drivers/mmc/host/cqhci-crypto.c
-> @@ -32,6 +32,7 @@ cqhci_host_from_crypto_profile(struct blk_crypto_profile *profile)
->  }
->
->  static int cqhci_crypto_program_key(struct cqhci_host *cq_host,
-> +                                   const struct blk_crypto_key *bkey,
->                                     const union cqhci_crypto_cfg_entry *cfg,
->                                     int slot)
->  {
-> @@ -39,7 +40,7 @@ static int cqhci_crypto_program_key(struct cqhci_host *cq_host,
->         int i;
->
->         if (cq_host->ops->program_key)
-> -               return cq_host->ops->program_key(cq_host, cfg, slot);
-> +               return cq_host->ops->program_key(cq_host, bkey, cfg, slot);
->
->         /* Clear CFGE */
->         cqhci_writel(cq_host, 0, slot_offset + 16 * sizeof(cfg->reg_val[0]));
-> @@ -99,7 +100,7 @@ static int cqhci_crypto_keyslot_program(struct blk_crypto_profile *profile,
->                 memcpy(cfg.crypto_key, key->raw, key->size);
->         }
->
-> -       err = cqhci_crypto_program_key(cq_host, &cfg, slot);
-> +       err = cqhci_crypto_program_key(cq_host, key, &cfg, slot);
->
->         memzero_explicit(&cfg, sizeof(cfg));
->         return err;
-> @@ -113,7 +114,7 @@ static int cqhci_crypto_clear_keyslot(struct cqhci_host *cq_host, int slot)
->          */
->         union cqhci_crypto_cfg_entry cfg = {};
->
-> -       return cqhci_crypto_program_key(cq_host, &cfg, slot);
-> +       return cqhci_crypto_program_key(cq_host, NULL, &cfg, slot);
->  }
->
->  static int cqhci_crypto_keyslot_evict(struct blk_crypto_profile *profile,
-> diff --git a/drivers/mmc/host/cqhci.h b/drivers/mmc/host/cqhci.h
-> index 1a12e40a02e6..949ebbe05773 100644
-> --- a/drivers/mmc/host/cqhci.h
-> +++ b/drivers/mmc/host/cqhci.h
-> @@ -12,6 +12,7 @@
->  #include <linux/completion.h>
->  #include <linux/wait.h>
->  #include <linux/irqreturn.h>
-> +#include <linux/blk-crypto.h>
->  #include <asm/io.h>
->
->  /* registers */
-> @@ -291,6 +292,7 @@ struct cqhci_host_ops {
->         void (*post_disable)(struct mmc_host *mmc);
->  #ifdef CONFIG_MMC_CRYPTO
->         int (*program_key)(struct cqhci_host *cq_host,
-> +                          const struct blk_crypto_key *bkey,
->                            const union cqhci_crypto_cfg_entry *cfg, int slot);
->  #endif
->  };
-> diff --git a/drivers/mmc/host/sdhci-msm.c b/drivers/mmc/host/sdhci-msm.c
-> index 668e0aceeeba..529ea9f4fa07 100644
-> --- a/drivers/mmc/host/sdhci-msm.c
-> +++ b/drivers/mmc/host/sdhci-msm.c
-> @@ -1859,6 +1859,7 @@ static __maybe_unused int sdhci_msm_ice_suspend(struct sdhci_msm_host *msm_host)
->   * vendor-specific SCM calls for this; it doesn't support the standard way.
->   */
->  static int sdhci_msm_program_key(struct cqhci_host *cq_host,
-> +                                const struct blk_crypto_key *bkey,
->                                  const union cqhci_crypto_cfg_entry *cfg,
->                                  int slot)
->  {
-> @@ -1866,6 +1867,7 @@ static int sdhci_msm_program_key(struct cqhci_host *cq_host,
->         struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
->         struct sdhci_msm_host *msm_host = sdhci_pltfm_priv(pltfm_host);
->         union cqhci_crypto_cap_entry cap;
-> +       u8 ice_key_size;
->
->         /* Only AES-256-XTS has been tested so far. */
->         cap = cq_host->crypto_cap_array[cfg->crypto_cap_idx];
-> @@ -1873,11 +1875,11 @@ static int sdhci_msm_program_key(struct cqhci_host *cq_host,
->                 cap.key_size != CQHCI_CRYPTO_KEY_SIZE_256)
->                 return -EINVAL;
->
-> +       ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
->         if (cfg->config_enable & CQHCI_CRYPTO_CONFIGURATION_ENABLE)
->                 return qcom_ice_program_key(msm_host->ice,
->                                             QCOM_ICE_CRYPTO_ALG_AES_XTS,
-> -                                           QCOM_ICE_CRYPTO_KEY_SIZE_256,
-> -                                           cfg->crypto_key,
-> +                                           ice_key_size, bkey,
->                                             cfg->data_unit_size, slot);
->         else
->                 return qcom_ice_evict_key(msm_host->ice, slot);
-> diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
-> index fbab7fe5c652..6f941d32fffb 100644
-> --- a/drivers/soc/qcom/ice.c
-> +++ b/drivers/soc/qcom/ice.c
-> @@ -163,8 +163,8 @@ EXPORT_SYMBOL_GPL(qcom_ice_suspend);
->
->  int qcom_ice_program_key(struct qcom_ice *ice,
->                          u8 algorithm_id, u8 key_size,
-> -                        const u8 crypto_key[], u8 data_unit_size,
-> -                        int slot)
-> +                        const struct blk_crypto_key *bkey,
-> +                        u8 data_unit_size, int slot)
->  {
->         struct device *dev = ice->dev;
->         union {
-> @@ -183,7 +183,7 @@ int qcom_ice_program_key(struct qcom_ice *ice,
->                 return -EINVAL;
->         }
->
-> -       memcpy(key.bytes, crypto_key, AES_256_XTS_KEY_SIZE);
-> +       memcpy(key.bytes, bkey->raw, AES_256_XTS_KEY_SIZE);
->
->         /* The SCM call requires that the key words are encoded in big endian */
->         for (i = 0; i < ARRAY_SIZE(key.words); i++)
-> diff --git a/drivers/ufs/core/ufshcd-crypto.c b/drivers/ufs/core/ufshcd-crypto.c
-> index f4cc54d82281..34537cbac622 100644
-> --- a/drivers/ufs/core/ufshcd-crypto.c
-> +++ b/drivers/ufs/core/ufshcd-crypto.c
-> @@ -18,6 +18,7 @@ static const struct ufs_crypto_alg_entry {
->  };
->
->  static int ufshcd_program_key(struct ufs_hba *hba,
-> +                             const struct blk_crypto_key *bkey,
->                               const union ufs_crypto_cfg_entry *cfg, int slot)
->  {
->         int i;
-> @@ -27,7 +28,7 @@ static int ufshcd_program_key(struct ufs_hba *hba,
->         ufshcd_hold(hba);
->
->         if (hba->vops && hba->vops->program_key) {
-> -               err = hba->vops->program_key(hba, cfg, slot);
-> +               err = hba->vops->program_key(hba, bkey, cfg, slot);
->                 goto out;
->         }
->
-> @@ -89,7 +90,7 @@ static int ufshcd_crypto_keyslot_program(struct blk_crypto_profile *profile,
->                 memcpy(cfg.crypto_key, key->raw, key->size);
->         }
->
-> -       err = ufshcd_program_key(hba, &cfg, slot);
-> +       err = ufshcd_program_key(hba, key, &cfg, slot);
->
->         memzero_explicit(&cfg, sizeof(cfg));
->         return err;
-> @@ -103,7 +104,7 @@ static int ufshcd_clear_keyslot(struct ufs_hba *hba, int slot)
->          */
->         union ufs_crypto_cfg_entry cfg = {};
->
-> -       return ufshcd_program_key(hba, &cfg, slot);
-> +       return ufshcd_program_key(hba, NULL, &cfg, slot);
->  }
->
->  static int ufshcd_crypto_keyslot_evict(struct blk_crypto_profile *profile,
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 39eef470f8fa..acf352594362 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -144,6 +144,7 @@ static inline int ufs_qcom_ice_suspend(struct ufs_qcom_host *host)
->  }
->
->  static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
-> +                                   const struct blk_crypto_key *bkey,
->                                     const union ufs_crypto_cfg_entry *cfg,
->                                     int slot)
->  {
-> @@ -151,6 +152,7 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
->         union ufs_crypto_cap_entry cap;
->         bool config_enable =
->                 cfg->config_enable & UFS_CRYPTO_CONFIGURATION_ENABLE;
-> +       u8 ice_key_size;
->
->         /* Only AES-256-XTS has been tested so far. */
->         cap = hba->crypto_cap_array[cfg->crypto_cap_idx];
-> @@ -158,11 +160,11 @@ static int ufs_qcom_ice_program_key(struct ufs_hba *hba,
->             cap.key_size != UFS_CRYPTO_KEY_SIZE_256)
->                 return -EOPNOTSUPP;
->
-> +       ice_key_size = QCOM_ICE_CRYPTO_KEY_SIZE_256;
->         if (config_enable)
->                 return qcom_ice_program_key(host->ice,
->                                             QCOM_ICE_CRYPTO_ALG_AES_XTS,
-> -                                           QCOM_ICE_CRYPTO_KEY_SIZE_256,
-> -                                           cfg->crypto_key,
-> +                                           ice_key_size, bkey,
->                                             cfg->data_unit_size, slot);
->         else
->                 return qcom_ice_evict_key(host->ice, slot);
-> diff --git a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h
-> index 5870a94599a2..9dd835dba2a7 100644
-> --- a/include/soc/qcom/ice.h
-> +++ b/include/soc/qcom/ice.h
-> @@ -7,6 +7,7 @@
->  #define __QCOM_ICE_H__
->
->  #include <linux/types.h>
-> +#include <linux/blk-crypto.h>
->
->  struct qcom_ice;
->
-> @@ -30,8 +31,8 @@ int qcom_ice_resume(struct qcom_ice *ice);
->  int qcom_ice_suspend(struct qcom_ice *ice);
->  int qcom_ice_program_key(struct qcom_ice *ice,
->                          u8 algorithm_id, u8 key_size,
-> -                        const u8 crypto_key[], u8 data_unit_size,
-> -                        int slot);
-> +                        const struct blk_crypto_key *bkey,
-> +                        u8 data_unit_size, int slot);
->  int qcom_ice_evict_key(struct qcom_ice *ice, int slot);
->  struct qcom_ice *of_qcom_ice_get(struct device *dev);
->  #endif /* __QCOM_ICE_H__ */
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index cb2afcebbdf5..582d5a747e84 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -363,6 +363,7 @@ struct ufs_hba_variant_ops {
->                                 struct devfreq_dev_profile *profile,
->                                 struct devfreq_simple_ondemand_data *data);
->         int     (*program_key)(struct ufs_hba *hba,
-> +                              const struct blk_crypto_key *bkey,
->                                const union ufs_crypto_cfg_entry *cfg, int slot);
->         void    (*event_notify)(struct ufs_hba *hba,
->                                 enum ufs_event_type evt, void *data);
-> --
-> 2.43.0
->
+$ echo "LaCie:Rugged FW USB3:0x2000" | sudo tee /proc/scsi/device_info
+
+This is despite this being used to fix problems with some other devices:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4b1a2c2a8e0ddcb89c5f6c5003bd9b53142f69e3
+
+I am cross-posting this to scsi list, maybe someone there would be able 
+to understand what is going on.
+Out of interest, why is the device called "Rugged FW USB3" by scsi but 
+"Rugged USB3-FW" by usb?
+
+Best regards,
+Julian
+
