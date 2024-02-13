@@ -1,89 +1,214 @@
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55F6980C
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 14:32:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F8141DFE3;
+	Tue, 13 Feb 2024 14:33:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707834742; cv=none; b=p+KJka7DwZ1kbLr/nxtt2tmGSXaJqgm4hlyv3SYxiizLxGU4lc3yTOoKSR1MNPJYnqmUju4Kq5SXUjqTeCRrRk2WjpvYiiBob77z20otJu19knfFS81OnMiqZfzypHk1R8o7TInn55U3BgRxo7QJi3v40ipjPUaWE1GozBkMHfg=
+	t=1707834800; cv=none; b=OX5hzEYQZqgmI+HLRGv9xsLBALP7oI9w4Rq1kGapYQ1IIBdNzSy895PNSfebZMauJz8x8wADfNeRXTEh+Y1MFVQrMyd6qO6Z/e0TtNxA+KPteWktsVbYyfhctlNRfF5OaW7ofEBC3MTcx6qJpzM+PABlkNQbTh55RvdWYqjEF2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707834742; c=relaxed/simple;
-	bh=U5ZrHBrWcAUE9Y41fFMLpPGv/KRg+mZUyUM7S7g2HzU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EJH/FfbYph8hbS+pN83qavz7Fn58cR45DElzHJjZpslnrpXhqPEF/bV8JA31DhkGimA7Jh23PSCSBsly635nuqYuf/CtlCocsVVqRaw57H1vf/8u1L2Ik4K5CQth9vbmGxHxGCZhg5thsh4Aw5GBNckRW8tA+U+nvrMg1/KtvPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=CixtPyJl; arc=none smtp.client-ip=209.85.128.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1707834800; c=relaxed/simple;
+	bh=xBIYg43+Vy06LaQwzpL5eJyJ7exe9LOWLiuZ7iNlXZ0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=agQYPwvPksitSSrhtfWu/FExC6kiVJx29jnB519GjLWGFWjHBbhXOXu3VKJ0fcXNO5Wt7ZtjhYa4NBC8ubqQOBaLNOkbpDLKsfH+562ERF/D+zkahfmznYDQDt2q2UkpozGe654oONDwfvZmjmE75+Ldgu+TioSE6CN1oSNXWDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=OLAbKPnD; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="CixtPyJl"
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-411bf7e5c6bso4542765e9.1
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 06:32:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1707834738; x=1708439538; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=tkmZw6wnQN7KBYXyvd8m4RLTht5eLalE8DvBZ/0VlFQ=;
-        b=CixtPyJlmlMFe6lvqYElHGgl3wxr6DYUzc7N6zBGO0wlRhFfqI/xjV2K/d94XtWZl0
-         A5j5Kvp8MN7jUOMBG07iKGAB/8DF1GumCGjCzflB0eEorgi94AsemtETMg6Ev6TQU58Z
-         2ahIIhY7U17xZ6n4jhHBpsyrCnLegjHTR02bFqaqKVSvj2HpRIBr6sivwolS85YbPILf
-         A+EpwaB2of9jl4LJJ6vhn3g8wsgRX4PUgP8gLay6rvV7LRxRV1RXbLDpzSiLN3qf6LPs
-         z9Nxp1/i0IuHqycrzMU8HqtrJEvvC5oU0N36fS3LmmSePz50J26WGNk+BwL3rL3jw+nP
-         X48Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707834738; x=1708439538;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tkmZw6wnQN7KBYXyvd8m4RLTht5eLalE8DvBZ/0VlFQ=;
-        b=EgNHyyaEHX2TQ4VJ08+XyWXIugmVi/PJQFCDOtrnIeLwtUsohTpT+NfQIoFRST+ZCw
-         a+nOFN4yvp7Yj9A3I0SL9Kz51cD99TSUvXadp66WJDe60BpK6F/nQ8od9PDnawuMv5Iy
-         TVDhxl1Y1zdndjzNDWLM4jabBPMzGxhnsoRHCq3mrEKtfqoBc2InD7kAvqaKpyze1PbG
-         GodVLU4a5DaDVn1z3sHy4xny07ZE0w0GvSD1dnh2p4Du6kH+z/7t9fVN+Pmb/3jOLfFC
-         9L4DSI4fUZ/4gBp+a+qQmFzmz7gKroGict2dBueuoqgWCKyaLMvSx0OvFBmVfQH9wpb9
-         umVA==
-X-Gm-Message-State: AOJu0Yx/9yyTFPAmgZWScXhbZoRXqmI+uhNhw0B4c7VeOloEx6wg1xgF
-	I7NweCQ45RKq9+VGFoehW1Ut2c+FmX2s0J0J3dVe6TW8ihfJoij16EUP05UiAgo=
-X-Google-Smtp-Source: AGHT+IFR2GO+ChW4f1Rhw3kPKlleAgLQlqKaCQKPfffs9zzvnHgTKHtllPOUzZ9F8RKIO/OumtdywQ==
-X-Received: by 2002:a5d:5585:0:b0:33a:edaf:13ec with SMTP id i5-20020a5d5585000000b0033aedaf13ecmr7296385wrv.14.1707834738582;
-        Tue, 13 Feb 2024 06:32:18 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVMeauP1Ba2Qg0DjOviADaAirmyu/Faga5FOKXwkx+L9vGMdNvE6C9PiPXay7aud8GJuHzgwfrZbNPj8HZqmJD1Q3GcxHdGIEly
-Received: from ?IPV6:2001:a61:1366:6801:d8:8490:cf1a:3274? ([2001:a61:1366:6801:d8:8490:cf1a:3274])
-        by smtp.gmail.com with ESMTPSA id u6-20020a056000038600b0033ce2aae7ffsm576697wrf.33.2024.02.13.06.32.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 13 Feb 2024 06:32:15 -0800 (PST)
-Message-ID: <cb660336-1771-482b-bba1-8407e6db92e5@suse.com>
-Date: Tue, 13 Feb 2024 15:32:14 +0100
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OLAbKPnD"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41DDojE0014163;
+	Tue, 13 Feb 2024 14:33:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2023-11-20; bh=RWCCo/GkrKf2x4jMdXGak7qX7g7APn1oHCzI7veQcRE=;
+ b=OLAbKPnD37c6mU5JIOR98wSCU6CTu0mlys9yPETz1Z0TgaryeL1H30PBGkGsESrcyDGs
+ I5o7jScdyB9W4gJRC2KQmXYqLrsOtkMYL+t4FWFuHVgieEPzsv5FMv+NWaTxkTQgUgKT
+ CJ6woNiDiZpyTaYg6qwSDO1xsl6y1DQ67PVmLi0g935itQb8pLLXcKh7i8DlaKUoO7sk
+ /o7uucO/xysVjvLP4fnwAhr9whnFU+5nqwhY/KhXNEKnD2nUOlPNgYmuXqV/COYsCBge
+ Xj7KfVDIs6a1odgbwfpgnRAx4QPVaLRVuepGQ/8/bwTQu/b/u4/GJfUOjnXfFXuPZRLp 7w== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w87nxggj5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 13 Feb 2024 14:33:13 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41DDjKjD015098;
+	Tue, 13 Feb 2024 14:33:12 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3w5yk7dwn6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 13 Feb 2024 14:33:12 +0000
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41DEXCgg029359;
+	Tue, 13 Feb 2024 14:33:12 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3w5yk7dwm3-1;
+	Tue, 13 Feb 2024 14:33:12 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+Cc: belegdol@gmail.com, "Martin K. Petersen" <martin.petersen@oracle.com>,
+        stable@vger.kernel.org, Tasos Sahanidis <tasos@tasossah.com>
+Subject: [PATCH] scsi: sd: usb_storage: uas: Access media prior to querying device properties
+Date: Tue, 13 Feb 2024 09:33:06 -0500
+Message-ID: <20240213143306.2194237-1-martin.petersen@oracle.com>
+X-Mailer: git-send-email 2.42.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] usb-storage: Ignore UAS for LaCie Rugged FW USB3
-To: Julian Sikorski <belegdol@gmail.com>, linux-usb@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-References: <20240209151121.1004985-1-tasos@tasossah.com>
- <b16e72ad-3f2d-46a8-8361-2641088694df@rowland.harvard.edu>
- <2978efa3-e83f-4ef5-907d-8232e4b692a5@tasossah.com>
- <6d4b1f55-09df-47e9-945d-fa38cd36588c@gmail.com>
- <b6dcf71b-f094-4664-8d43-7d8c0173f51f@gmail.com>
- <c21f9649-30be-462a-b9ec-f7c96ead30cf@gmail.com>
- <0cf5ea13-6472-47e1-a32f-b9f332656c6a@gmail.com>
-Content-Language: en-US
-From: Oliver Neukum <oneukum@suse.com>
-In-Reply-To: <0cf5ea13-6472-47e1-a32f-b9f332656c6a@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-13_08,2024-02-12_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 suspectscore=0
+ phishscore=0 adultscore=0 spamscore=0 mlxlogscore=999 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2402130115
+X-Proofpoint-GUID: ob5vS-P4vZ8CmFwp3t-Bj23xpNkbo7GK
+X-Proofpoint-ORIG-GUID: ob5vS-P4vZ8CmFwp3t-Bj23xpNkbo7GK
 
-On 13.02.24 14:06, Julian Sikorski wrote:
-> I am cross-posting this to scsi list, maybe someone there would be able to understand what is going on.
-> Out of interest, why is the device called "Rugged FW USB3" by scsi but "Rugged USB3-FW" by usb?
+It has been observed that some USB/UAS devices return generic
+properties hardcoded in firmware for mode pages and vital product data
+for a period of time after a device has been discovered. The reported
+properties are either garbage or they do not accurately reflect the
+properties of the physical storage device attached in the case of a
+bridge.
 
-USB takes the name provided by USB descriptors.
-SCSI takes it from some VPD, IIRC.
+Prior to commit 1e029397d12f ("scsi: sd: Reorganize DIF/DIX code to
+avoid calling revalidate twice") we would call revalidate several
+times during device discovery. As a result, incorrect values would
+eventually get replaced with ones accurately describing the attached
+storage. When we did away with the redundant revalidate pass, several
+cases were reported where devices reported nonsensical values or would
+end up in write-protected state.
 
-	HTH
-		Oliver
+An initial attempt at addressing this issue involved introducing a
+delayed second revalidate invocation. However, this approach still
+left some devices reporting incorrect characteristics.
+
+Tasos Sahanidis debugged the problem further and identified that
+introducing a READ operation prior to MODE SENSE fixed the problem and
+that it wasn't a timing issue. Issuing a READ appears to cause the
+devices to update their SCSI pages to reflect the actual properties of
+the storage media. Device properties like vendor, model, and storage
+capacity appear to be correctly reported from the get-go. It is
+unclear why these device defer populating the remaining
+characteristics.
+
+Match the behavior of a well known commercial operating system and
+trigger a READ operation prior to querying device characteristics to
+force the device to populate mode pages and VPDs.
+
+The additional READ is triggered by a flag set in the USB storage and
+UAS drivers. We avoid issuing the READ for other transport classes
+since some storage devices identify Linux through our particular
+discovery command sequence.
+
+Cc: <stable@vger.kernel.org>
+Fixes: 1e029397d12f ("scsi: sd: Reorganize DIF/DIX code to avoid calling revalidate twice")
+Reported-by: Tasos Sahanidis <tasos@tasossah.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/sd.c              | 27 ++++++++++++++++++++++++++-
+ drivers/usb/storage/scsiglue.c |  7 +++++++
+ drivers/usb/storage/uas.c      |  7 +++++++
+ include/scsi/scsi_device.h     |  1 +
+ 4 files changed, 41 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 530918cbfce2..c284628f702c 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3405,6 +3405,24 @@ static bool sd_validate_opt_xfer_size(struct scsi_disk *sdkp,
+ 	return true;
+ }
+ 
++static void sd_read_block_zero(struct scsi_disk *sdkp)
++{
++	unsigned int buf_len = sdkp->device->sector_size;
++	char *buffer, cmd[10] = { };
++
++	buffer = kmalloc(buf_len, GFP_KERNEL);
++	if (!buffer)
++		return;
++
++	cmd[0] = READ_10;
++	put_unaligned_be32(0, &cmd[2]); /* Logical block address 0 */
++	put_unaligned_be16(1, &cmd[7]);	/* Transfer 1 logical block */
++
++	scsi_execute_cmd(sdkp->device, cmd, REQ_OP_DRV_IN, buffer, buf_len,
++			 SD_TIMEOUT, sdkp->max_retries, NULL);
++	kfree(buffer);
++}
++
+ /**
+  *	sd_revalidate_disk - called the first time a new disk is seen,
+  *	performs disk spin up, read_capacity, etc.
+@@ -3444,7 +3462,14 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	 */
+ 	if (sdkp->media_present) {
+ 		sd_read_capacity(sdkp, buffer);
+-
++		/*
++		 * Some USB/UAS devices return generic values for mode pages
++		 * and VPDs until the media has been accessed. Trigger a READ
++		 * operation to force the device to populate mode pages and
++		 * VPDs.
++		 */
++		if (sdp->read_before_ms)
++			sd_read_block_zero(sdkp);
+ 		/*
+ 		 * set the default to rotational.  All non-rotational devices
+ 		 * support the block characteristics VPD page, which will
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index c54e9805da53..12cf9940e5b6 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -179,6 +179,13 @@ static int slave_configure(struct scsi_device *sdev)
+ 		 */
+ 		sdev->use_192_bytes_for_3f = 1;
+ 
++		/*
++		 * Some devices report generic values until the media has been
++		 * accessed. Force a READ(10) prior to querying device
++		 * characteristics.
++		 */
++		sdev->read_before_ms = 1;
++
+ 		/*
+ 		 * Some devices don't like MODE SENSE with page=0x3f,
+ 		 * which is the command used for checking if a device
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 696bb0b23599..299a6767b7b3 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -878,6 +878,13 @@ static int uas_slave_configure(struct scsi_device *sdev)
+ 	if (devinfo->flags & US_FL_CAPACITY_HEURISTICS)
+ 		sdev->guess_capacity = 1;
+ 
++	/*
++	 * Some devices report generic values until the media has been
++	 * accessed. Force a READ(10) prior to querying device
++	 * characteristics.
++	 */
++	sdev->read_before_ms = 1;
++
+ 	/*
+ 	 * Some devices don't like MODE SENSE with page=0x3f,
+ 	 * which is the command used for checking if a device
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 10480eb582b2..cb019c80763b 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -202,6 +202,7 @@ struct scsi_device {
+ 	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+ 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
+ 	unsigned set_dbd_for_ms:1; /* Set "DBD" field in mode sense */
++	unsigned read_before_ms:1;   	/* perform a READ before MODE SENSE */
+ 	unsigned no_report_opcodes:1;	/* no REPORT SUPPORTED OPERATION CODES */
+ 	unsigned no_write_same:1;	/* no WRITE SAME command */
+ 	unsigned use_16_for_rw:1; /* Use read/write(16) over read/write(10) */
+-- 
+2.42.1
 
