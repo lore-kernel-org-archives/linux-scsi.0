@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D6AC28399;
-	Tue, 13 Feb 2024 00:24:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAA8112E1FA;
+	Tue, 13 Feb 2024 00:24:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707783857; cv=none; b=PUJfUwKL0wpuUVhm2ALS58/hniVBqLio/JsN93Eozdts53TYQAd9ykDBp20QEtjNNy8q0D+eypDqQ2k9FwF8SJi9G6H14aJ43829zPHa8NeYGmsVUIBnTOJ17CzDRbLst/yw5LADrUC2AEgeJuJybslC+eQnUq7jvpARWoVdeSE=
+	t=1707783864; cv=none; b=HaBNypjPcE8f0kjY0+3KgVbIjPlB982yqZSx1HVmLoi3EYE9ZcpH1uhJKlyzgMPu3JIpWBMEIltM9r9Vz86CTzFlpYCKr5IT/bKKotqfye2YPaaLyrOWCdrE2siJjBAYQeDTCkjeYNrMLEGTCNybd4jhmNv8ruTIKlmx+YaPZDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707783857; c=relaxed/simple;
-	bh=+ehf5yaovVJh3SS3wm2stwoHwrbHr9H8j275kaivKFk=;
+	s=arc-20240116; t=1707783864; c=relaxed/simple;
+	bh=BO2iAHGlSeGV+lZ4bF31NOK1cyuTN+llG3Hrw17KFmo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IwsVuYEe1hiLWqZ6emdwYA3h8Bcw6stNglJQ5A/V1wR14cmIPJLB5MQ1yGUerSzqjOm0Yc3Qk7KRw9NqbYIm2y8AC/i7QT6kuki0nIHlcC44kEDYy/W2dvGFS5JRFKjMJ1cfiIjM+xz7WASKdmK6cpI0nCwM4fb7Zkx35xHPJFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xbb3tTUC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=U9VbhefVLLxOxaXmEiR56NU4ys+RxjbjGNS1Q5CJh0ZmYaHrSNkhMDKZe3eCA2miS+xNb+xV4w5aFXFC3tfSwwtj7Sxxc5PfcLILGcM2olq8Skq/L/hLfSXUJlFEKip3mRBUpWiEamc4wZfZZNvQNXKHnxrg52uL5vlnTo5RCOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=spZ9Ism1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xbb3tTUC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CC18C43390;
-	Tue, 13 Feb 2024 00:24:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="spZ9Ism1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54D4FC43394;
+	Tue, 13 Feb 2024 00:24:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1707783856;
-	bh=+ehf5yaovVJh3SS3wm2stwoHwrbHr9H8j275kaivKFk=;
+	s=k20201202; t=1707783864;
+	bh=BO2iAHGlSeGV+lZ4bF31NOK1cyuTN+llG3Hrw17KFmo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Xbb3tTUCL2Jkmzm6U1XxOtkBNEKAddKzljyTJOuJsatXVICpDkrgHYvVXrZJ+xJhP
-	 qjjXe7ZMNL21TtWtDZAmvtKJPLNYIcU8/W/0vzFaMNWpyG4V8ijJciozluCRWF7TDJ
-	 4C0AbpTadh2yM2k/u+KYUH6iYJFiUnNmYrAa01fXtaFmKw9VzyLvDHBb2dFHsccOGs
-	 Aqw2S3bpFmhIfSgHmP6/g7GV+MJsNZ8qDb6bKByxZP0zQy9mDdqENgmII0Y5piN59P
-	 c41aAtjilyzvQzN9raAn7BPpRoayAD0rxxJVdNCuJcElJYoLCCVmsBgx+rbpnpIBst
-	 fZ9Irc9VCtsQA==
+	b=spZ9Ism1joLcFFVIrfbNf2ma9my8ahDLSsNPALhl0HGr8HfYCkF9kCgX/C2RJaL4B
+	 Tgs7Q9NeB9LZn46bcFv3UPV01g+Y849cgfsyrZZmDnXGc0v/ec8RMV6kn64wi59bGO
+	 U9XFRq8ftr+iCYNl81tsdUvxBYI5JSwjjwGGO3EKLGVMpFNs84XNlNpz4UJFdhDsYP
+	 c3zX9NG8FsgrArxYJa7MsxqDty7ku092rxLc8+Er3tLzpDwgJ1GCC3cWXKloDNftMU
+	 zBQREQE5lRMycS76mmqNM7gw6Ua9+LKPzlkPxGiefR2Vb5jtpOcbqmW69TcZj0XRNO
+	 RbW2kudvhX7WQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -37,12 +37,12 @@ Cc: Hannes Reinecke <hare@suse.de>,
 	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 4/6] scsi: lpfc: Use unsigned type for num_sge
-Date: Mon, 12 Feb 2024 19:24:06 -0500
-Message-ID: <20240213002409.673084-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 2/4] scsi: lpfc: Use unsigned type for num_sge
+Date: Mon, 12 Feb 2024 19:24:17 -0500
+Message-ID: <20240213002420.673218-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240213002409.673084-1-sashal@kernel.org>
-References: <20240213002409.673084-1-sashal@kernel.org>
+In-Reply-To: <20240213002420.673218-1-sashal@kernel.org>
+References: <20240213002420.673218-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,7 +51,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.209
+X-stable-base: Linux 5.4.268
 Content-Transfer-Encoding: 8bit
 
 From: Hannes Reinecke <hare@suse.de>
@@ -83,10 +83,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 983eeb0e3d07..b4b87e5d8b29 100644
+index cbab15d299ca..816235ccd299 100644
 --- a/drivers/scsi/lpfc/lpfc_scsi.c
 +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -1944,7 +1944,7 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+@@ -1942,7 +1942,7 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
   *
   * Returns the number of SGEs added to the SGL.
   **/
@@ -95,7 +95,7 @@ index 983eeb0e3d07..b4b87e5d8b29 100644
  lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
  		struct sli4_sge *sgl, int datasegcnt,
  		struct lpfc_io_buf *lpfc_cmd)
-@@ -1952,8 +1952,8 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+@@ -1950,8 +1950,8 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
  	struct scatterlist *sgde = NULL; /* s/g data entry */
  	struct sli4_sge_diseed *diseed = NULL;
  	dma_addr_t physaddr;
@@ -106,7 +106,7 @@ index 983eeb0e3d07..b4b87e5d8b29 100644
  	uint8_t txop, rxop;
  #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
  	uint32_t rc;
-@@ -2124,7 +2124,7 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+@@ -2122,7 +2122,7 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
   *
   * Returns the number of SGEs added to the SGL.
   **/
@@ -115,7 +115,7 @@ index 983eeb0e3d07..b4b87e5d8b29 100644
  lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
  		struct sli4_sge *sgl, int datacnt, int protcnt,
  		struct lpfc_io_buf *lpfc_cmd)
-@@ -2148,8 +2148,8 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+@@ -2146,8 +2146,8 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
  	uint32_t rc;
  #endif
  	uint32_t checking = 1;
