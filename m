@@ -1,47 +1,48 @@
 Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 357DC5DF29
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 16:22:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B94D15F853
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 16:22:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.154.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707841343; cv=none; b=kF+UBEUUIDlWfkJDM7BGzMjmpM6E+FrSmqKt77NM2ndgeOkamBLhOo7p+hxpyKTUYnE3aw2U/MjU2YmJIS6VkprePO7fFnU56UjLHdekiSrdiFurl1AssjZQWgkNk4+4KE6R14pE2T1qKH2b6g+5DL32t6tyaTHMwUmMK6CaZgg=
+	t=1707841345; cv=none; b=XKsV3//pP8Phda48Jhms/65xCdyHjgp22MO4x0EsWXDiIGMIXde7Apj9kL5aQ40tUvWTvmeOI2uCwddDWwcdwxlil/N+c+FIEY59+pPBcrCDXV0sx3W8fXAXXU3aXKpQC1V0l4x+Rk//cxofN1EcCJEpnjPViGzgmSzm9F+4K10=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707841343; c=relaxed/simple;
+	s=arc-20240116; t=1707841345; c=relaxed/simple;
 	bh=g8ULe2rGHOtOWs+LWp56qV/96vY8Lg+qwFde3eozw/0=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=VEIp0qZtOn4QAyrNRc07G2GQQ2tBVxbPDKfIi3jPLfrQttstCG4zIRyNQrYVdh+effX+zQjr5wy4vYNiEwc0xOn1tY0O6cWyIE0F71x0K78Ksx3NO1Dz6ln1MTwcrtZJ+t8diEMNcS8RfErwUflTFOgp6Ff42M5zzTXxsI7+soo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=E69MCDhM; arc=none smtp.client-ip=68.232.154.123
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=llreqg0GOttPJglcgn7d5DOg25IZKJVj7Tb54D4VNYJMaiCObCkfrDJH5C1fjBRek7Q/+arC8EcOairbzygYwFCRKKV2CnqQuw6u3SNAEBBYVDlIhyD9FTr0qC5RQkw58oXGFx4NOBypE41ZHeONrk+l4r8/02ObDE/DXrElNcM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=aVk5BGQA; arc=none smtp.client-ip=68.232.154.123
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=microchip.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="E69MCDhM"
+	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="aVk5BGQA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1707841341; x=1739377341;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
+  t=1707841343; x=1739377343;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
   bh=g8ULe2rGHOtOWs+LWp56qV/96vY8Lg+qwFde3eozw/0=;
-  b=E69MCDhM2U7k71JyN8c29m50vEVvtNFTboBvqw9jGNw5LEtNVSAtXrqd
-   344vE/f/CIf1oKRXBHr3fAIkSRdNiiG9T9aOFeDcobsbybx0QOxDQodzM
-   TcaLKNZqiuf3Q9NNLZ2DTDNBUjd6Egqj7oyjmP69RPI/Cjbi/LbqvMP8y
-   UBEmdExA34Cz9U9Hi3Jk2XLI9WxsZogl0sejtFVAUIHqpkzeUO2N714Ja
-   Hmrl7Cl/A/ZteMV5B+hi9QYwseNJ0UM2DozwUI0NCh8384l1HmYTHuksz
-   PSfAMpNm3mNzsp8UUhU8q7XUYjSJklesfep24k283C8baYH/z4mjIHubQ
-   Q==;
+  b=aVk5BGQAv6KCZ4gu2Xmol/4k227wh5hr5kNGRAqBbXsqaO6ZYGltHQNV
+   ROPURUpmZkpsvC1Zg0P+a1KMeLyCOd9+IbIqGR3rOPXNh775DCiJHEddN
+   J3p3wWrysG4SYY8oRMMwXCXr6lv1G9IJYsH6OlgHRHSQMYSkpDca28Uay
+   N06KlYkyIuNu9xJNyjt2wdxqHoMHTrpDkM1wyC8OAChDFRenUU8uChh78
+   ZTRALQ2foo+K1s+NauQ4XvOYZtsWxKKQ6kXijPG8VaTeUH/xY7eivsIJc
+   lO7x82i+5guzVzhmk9XOBwGPTi4XYPzVobYEpeE8H9qPoXIX/zBv8e6rI
+   g==;
 X-CSE-ConnectionGUID: w5KKbWU/SwilVwDndMwVdw==
-X-CSE-MsgGUID: s8rPbMgMQPud9PWllgiAcg==
+X-CSE-MsgGUID: 9UuXdLaPTGaFzzAJq849+w==
 X-IronPort-AV: E=Sophos;i="6.06,157,1705388400"; 
-   d="scan'208";a="16180974"
+   d="scan'208";a="16180975"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
   by esa4.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 Feb 2024 09:22:19 -0700
 Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
  chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Tue, 13 Feb 2024 09:22:01 -0700
+ 15.1.2507.35; Tue, 13 Feb 2024 09:22:02 -0700
 Received: from brunhilda.pdev.net (10.10.85.11) by chn-vm-ex02.mchp-main.com
  (10.10.85.144) with Microsoft SMTP Server id 15.1.2507.35 via Frontend
- Transport; Tue, 13 Feb 2024 09:22:00 -0700
+ Transport; Tue, 13 Feb 2024 09:22:01 -0700
 From: Don Brace <don.brace@microchip.com>
 To: <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
 	<scott.teel@microchip.com>, <Justin.Lindley@microchip.com>,
@@ -53,15 +54,18 @@ To: <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
 	<POSWALD@suse.com>
 CC: <linux-scsi@vger.kernel.org>
 Subject: [PATCH] smartpqi: fix disable_managed_interrupts
-Date: Tue, 13 Feb 2024 10:21:59 -0600
-Message-ID: <20240213162200.1875970-1-don.brace@microchip.com>
+Date: Tue, 13 Feb 2024 10:22:00 -0600
+Message-ID: <20240213162200.1875970-2-don.brace@microchip.com>
 X-Mailer: git-send-email 2.44.0.rc0
+In-Reply-To: <20240213162200.1875970-1-don.brace@microchip.com>
+References: <20240213162200.1875970-1-don.brace@microchip.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Organization: Microchip Technology Inc.
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
