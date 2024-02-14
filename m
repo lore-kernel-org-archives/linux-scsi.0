@@ -1,66 +1,37 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from devnull.tasossah.com (devnull.tasossah.com [91.121.165.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7CCB18E12;
-	Wed, 14 Feb 2024 11:48:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB73E1B81A;
+	Wed, 14 Feb 2024 12:21:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.121.165.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707911311; cv=none; b=DnJcvRNqXf7gCy8nwb0fGV2B64ijHRnZ3lO++FPMsY6mrcnYc49oE+vSFGP4GhV/ydolnOP3YW3ixZjVrqTO4/5W/GhnyUPRWdAhtWpMiUpv0UgmLcTXfTGAFrJn6dzF4Or2lIJe+/5moJPyRfWIzAfqr+VMMo/iVQHWFcbkyIY=
+	t=1707913313; cv=none; b=nnLyQmFBY+9DJr42/I7HC6X/ZnLQU/0tm+kNVve6NG+fUI0RZY+J35kgExaGnEi/CKN2vz++Od0AgiA5flGdkmdfJg0xdA9TF9cZm8JMD8FRKsJgoVMbe3ZQi2NGXe1y3DJh/LvCakDMijdwvL1ZMBLz7WQtpe+3fDu4kRtMkq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707911311; c=relaxed/simple;
-	bh=oALlycvzijqT3u6LKZHjCMTl3ICm8/2EuzPGAMI7hY0=;
+	s=arc-20240116; t=1707913313; c=relaxed/simple;
+	bh=S1X0Mrkhc1/eoO8nCsORmtBd8Av5gB6rLBM32VNDBq8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AsofPdYUlWaGh7m4NHHiepIfP9R3sjJE6SNIQgZAcd20eof+SSiBEplvnyd5yBQLYVGRvwaXSPo81Tdk7NzyW46q1JrsA5X67n+nCtV59yfHFJI71cz989FxO1d9KoT+XMays5lZtWZmpUiep77hwLitDgsKqc1lA6PDKiJ0hIM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=CGiKXwMs; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 In-Reply-To:Content-Type; b=Z5c/2u2TJVu/X9Afy9x2HMnylZdu4z2DnoAkMVqvDPu/1/nq3GG4asJWN3ZKpNqooEplVZXC87kuF4KdZYTPP7Ss+hx/gK7dLJqeEQz0gMvnVa/uWnXynhc+t9wiCBOKx36Sp+TaGHc6sRFsKPiNwIMxpTHU3Yfzg4aqQMBIMo8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com; spf=pass smtp.mailfrom=tasossah.com; dkim=pass (1024-bit key) header.d=devnull.tasossah.com header.i=@devnull.tasossah.com header.b=cuX/gMZj; arc=none smtp.client-ip=91.121.165.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tasossah.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="CGiKXwMs"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41EBMIgT010608;
-	Wed, 14 Feb 2024 11:48:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=sWznURwDi0Ucv8qJGKi9O2ogY+i+OfhMkhYPI07d+tM=;
- b=CGiKXwMslGXDXbFJALr77tRRmEawlwBk2hI/7aaS0o41K8nGwZ9YHr7RWmILJ9fNWs5t
- qcBv4z4/jHSOcHSEQUcnJZGLILl0sPwMNERl2OOr9nGNhVBtFD5No7/aTZkdtRJadCLz
- LcIcMqCnL+9Tl3aJxkX4/0+d2c1zpJLCu3Mp/ja8MoAnfE1pEgDT8KK6Fz9S85ipLwZh
- I1FRneUfehyKvakb4zOPlpfQJL6J7+y4QphwGTeIQkh2CCQwU4yj9SjSEy22PK319c/v
- qsbq7zZfh4cFLaI2PBUu8ekkf/8cidbdeTgIYboHlzFsZOnYUQHCik1k4A90AUfemjnc ug== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w8vk48k1j-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Feb 2024 11:48:02 +0000
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41EBMU1b011026;
-	Wed, 14 Feb 2024 11:48:01 GMT
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w8vk48k10-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Feb 2024 11:48:01 +0000
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 41EB7h8m010060;
-	Wed, 14 Feb 2024 11:47:59 GMT
-Received: from smtprelay02.wdc07v.mail.ibm.com ([172.16.1.69])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3w6npkw9by-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Feb 2024 11:47:59 +0000
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay02.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 41EBluLJ16384724
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 14 Feb 2024 11:47:58 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 6D06958054;
-	Wed, 14 Feb 2024 11:47:56 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 332FB5805C;
-	Wed, 14 Feb 2024 11:47:49 +0000 (GMT)
-Received: from [9.109.198.187] (unknown [9.109.198.187])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 14 Feb 2024 11:47:48 +0000 (GMT)
-Message-ID: <d34ef016-88d2-4ae9-9a7b-f7431429acc7@linux.ibm.com>
-Date: Wed, 14 Feb 2024 17:17:47 +0530
+	dkim=pass (1024-bit key) header.d=devnull.tasossah.com header.i=@devnull.tasossah.com header.b="cuX/gMZj"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=devnull.tasossah.com; s=vps; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=uMTTpA3ex/tasYG5jcUWjHuUgalpX560MSu3l8bptPs=; b=cuX/gMZj1+bxWV15tuawTCfTag
+	Q2WomxkN9wqXnIr59LCvaycBcfOZBSYb2Vg6zCblh4V3mxSlZ+jnolbYj7T/Ta9V/zapVCtKoQWng
+	EqJqAIXR7yTbJ3R807W/2H3rvAYXXiMdulmxK3ldWG0qbnt2hsrPwTvpdTRZQzA3OWtE=;
+Received: from [2a02:587:6a0e:de00::d54]
+	by devnull.tasossah.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.93)
+	(envelope-from <tasos@tasossah.com>)
+	id 1raEGk-008qr8-7l; Wed, 14 Feb 2024 14:21:42 +0200
+Message-ID: <b597d766-6e05-48a3-9d4c-6a1ebf8899bf@tasossah.com>
+Date: Wed, 14 Feb 2024 14:21:41 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,86 +39,79 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 10/15] block: Add fops atomic write support
-Content-Language: en-US
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, brauner@kernel.org, bvanassche@acm.org,
-        dchinner@redhat.com, djwong@kernel.org, hch@lst.de, jack@suse.cz,
-        jbongio@google.com, jejb@linux.ibm.com, kbusch@kernel.org,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-        martin.petersen@oracle.com, ming.lei@redhat.com, ojaswin@linux.ibm.com,
-        sagi@grimberg.me, tytso@mit.edu, viro@zeniv.linux.org.uk
-References: <20240124113841.31824-11-john.g.garry@oracle.com>
- <20240213093619.106770-1-nilay@linux.ibm.com>
- <9ffc3102-2936-4f83-b69d-bbf64793b9ca@oracle.com>
- <e99cf4ef-40ec-4e66-956f-c9e2aebb4621@linux.ibm.com>
- <30909525-73e4-42cb-a695-672b8e5a6235@oracle.com>
- <c130133f-7c4c-4875-a850-1a8ac9ad4845@linux.ibm.com>
- <445a05e7-f912-4fb8-b66e-204a05a1524f@oracle.com>
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <445a05e7-f912-4fb8-b66e-204a05a1524f@oracle.com>
+Subject: Re: [PATCH] scsi: sd: usb_storage: uas: Access media prior to
+ querying device properties
+Content-Language: el-GR, en-GB
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+Cc: belegdol@gmail.com, stable@vger.kernel.org
+References: <20240213143306.2194237-1-martin.petersen@oracle.com>
+From: Tasos Sahanidis <tasos@tasossah.com>
+Autocrypt: addr=tasos@tasossah.com; keydata=
+ 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
+In-Reply-To: <20240213143306.2194237-1-martin.petersen@oracle.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: u5CeVbzKi9CLDto2Dg4aM4LeEF2I1AVP
-X-Proofpoint-ORIG-GUID: oaVLQ4nXIlQnXwUlwvkPIXDU3F47q6iq
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-14_04,2024-02-14_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
- impostorscore=0 mlxlogscore=999 clxscore=1015 priorityscore=1501
- malwarescore=0 adultscore=0 phishscore=0 suspectscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2402140092
+Content-Transfer-Encoding: 7bit
 
+On 2024-02-13 16:33, Martin K. Petersen wrote:
+> Match the behavior of a well known commercial operating system and
+> trigger a READ operation prior to querying device characteristics to
+> force the device to populate mode pages and VPDs.
 
+Applied the patch, reverted the Kingston quirk, and:
 
-On 2/14/24 16:59, John Garry wrote:
-> On 14/02/2024 09:38, Nilay Shroff wrote:
->>
->>
->> On 2/13/24 17:22, John Garry wrote:
->>> On 13/02/2024 11:08, Nilay Shroff wrote:
->>>>> It's relied that atomic_write_unit_max is <= atomic_write_boundary and both are a power-of-2. Please see the NVMe patch, which this is checked. Indeed, it would not make sense if atomic_write_unit_max > atomic_write_boundary (when non-zero).
->>>>>
->>>>> So if the write is naturally aligned and its size is <= atomic_write_unit_max, then it cannot be straddling a boundary.
->>>> Ok fine but in case the device doesn't support namespace atomic boundary size (i.e. NABSPF is zero) then still do we need
->>>> to restrict IO which crosses the atomic boundary?
->>>
->>> Is there a boundary if NABSPF is zero?
->> If NABSPF is zero then there's no boundary and so we may not need to worry about IO crossing boundary.
->>
->> Even though, the atomic boundary is not defined, this function doesn't allow atomic write crossing atomic_write_unit_max_bytes.
->> For instance, if AWUPF is 63 and an IO starts atomic write from logical block #32 and the number of logical blocks to be written
-> 
-> When you say "IO", you need to be clearer. Do you mean a write from userspace or a merged atomic write?
-Yes I meant write from the userspace. Sorry for the confusion here.
-> 
-> If userspace issues an atomic write which is 64 blocks at offset 32, then it will be rejected.
-> 
-> It will be rejected as it is not naturally aligned, e.g. a 64 block writes can only be at offset 0, 64, 128,
-So it means that even though h/w may support atomic-write crossing natural alignment boundary, the kernel would still reject it.
-> 
->> in this IO equals to #64 then it's not allowed.
->>  However if this same IO starts from logical block #0 then it's allowed.
->> So my point here's that can this restriction be avoided when atomic boundary is zero (or not defined)?
-> 
-> We want a consistent set of rules for userspace to follow, whether the atomic boundary is zero or non-zero.
-> 
-> Currently the atomic boundary only comes into play for merging writes, i.e. we cannot merge a write in which the resultant IO straddles a boundary.
-> 
->>
->> Also, it seems that the restriction implemented for atomic write to succeed are very strict. For example, atomic-write can't
->> succeed if an IO starts from logical block #8 and the number of logical blocks to be written in this IO equals to #16.
->> In this particular case, IO is well within atomic-boundary (if it's defined) and atomic-size-limit, so why do we NOT want to
->> allow it? Is it intentional? I think, the spec doesn't mention about such limitation.
-> 
-> According to the NVMe spec, this is ok. However we don't want the user to have to deal with things like NVMe boundaries. Indeed, for FSes, we do not have a direct linear map from FS blocks to physical blocks, so it would be impossible for the user to know about a boundary condition in this context.
-> 
-> We are trying to formulate rules which work for the somewhat orthogonal HW features of both SCSI and NVMe for both block devices and FSes, while also dealing with alignment concerns of extent-based FSes, like XFS.
-Hmm OK, thanks for that explanation. 
+[  447.655130] usb-storage 3-2:1.0: USB Mass Storage device detected
+[  447.664875] scsi host10: usb-storage 3-2:1.0
+[  448.690959] scsi 10:0:0:0: Direct-Access     Kingston DT Ultimate G3   PMAP PQ: 0 ANSI: 6
+[  448.709502] sd 10:0:0:0: Attached scsi generic sg1 type 0
+[  448.837376] sd 10:0:0:0: [sdb] 61472768 512-byte logical blocks: (31.5 GB/29.3 GiB)
+[  448.847489] sd 10:0:0:0: [sdb] Write Protect is off
+[  448.852593] sd 10:0:0:0: [sdb] Mode Sense: 2b 00 00 08
+[  448.854221] sd 10:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
 
-Thanks,
---Nilay
+Thanks!
+
+Tested-by: Tasos Sahanidis <tasos@tasossah.com>
+
+--
+Tasos
