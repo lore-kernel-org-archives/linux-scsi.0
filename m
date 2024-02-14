@@ -1,168 +1,240 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D66118E06
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2024 11:01:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707908521; cv=none; b=nP1edUpgkmskx2bdFME/7vnIF+LQKcIADPcbnnWMSXvmP+Z3woczNM0Oq6MkYcJdtvmCoFCOwveuGhjptv7FzCxGDQuiHn66IoO0ypW5EjF8MpPpUv2/1kPGcHahcrcsIwgUCLSPsF5dc6FqWDo7zSLFN/AA4OFLU2keDM+j+yw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707908521; c=relaxed/simple;
-	bh=1gjYGCuhJesJVchATCEpRGkap4bUYT4wxu6IGwz0inc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HmwW8qY2n/z3iuP7OSFo0umO+TriqGt6ZddbLk0LuqUcsTU5vP+Rm+bHnu0KqVpqLeAUaZRzcFk+kJ35UUwmtt5xXTwtOdlljwehLDkWeUKmApj5r5Q/4PaGNZ/qlyPVxM9PhVKPdr0ndf21K1dzJ9kB1uUUoaAhjHU+wKcpX2E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bOZMZRit; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B11911B801;
+	Wed, 14 Feb 2024 11:29:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1707910187; cv=fail; b=FRxu7POqYqyEUX/mtXz/ATqS8HcQDRwQR4AKrKfcczdII0hu7pY5lasRcj+T06Fb02qvyyYOhVZk9t5bZENe+t2wcQHpN2nKEMnuBtJ3be/3LahrOSBqH7GwqGY/AkijB48AQYK670RUIpEKSEfiXjycsasgnYwLjpPHZRMbqYg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1707910187; c=relaxed/simple;
+	bh=5BRTRqbL3IBqlh+QrRCyJw6tvs8gcVYIe1hBn+fC4Sc=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=TzoB8WpdoZaDVRtXRKxxjrigihtu64vvX15XgQMtbtZp+roWDiu+KTFsEoh5Ragvx1jo7a41DTnrVONM+Zm4XBayAKpSq2hymH8x/gWSsCTVb8DtUfdoKs59t8lPAzguyYYTRP9ND21TSXcwbCKi7Tic+/LUWK3Yvw0kI4lebTw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=VoKZqegJ; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=XvyqG6Rn; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bOZMZRit"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1707908518;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ej1/wNFVwzSicN4lDJDfw+4pBNgxNvs7M0rU1TbrOPQ=;
-	b=bOZMZRitH8Q3/brkwi80AFxqYXcstumoZ3xEXrJcxlQY/6jppHbPcNAfPVcwS+EiPF6QPl
-	bflLZUMbZJjOEmJYjloKKys76hpAw9i1hiA152nRFB0YmVoFs4I01s8u6qx7+tIk15b6Uc
-	CCwR0qgX6tADTack9aMLGGnfEB17ong=
-Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
- [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-350-b032-mnfO72kV-SrpN8tzw-1; Wed, 14 Feb 2024 06:01:57 -0500
-X-MC-Unique: b032-mnfO72kV-SrpN8tzw-1
-Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-2d0cb64437dso44511341fa.2
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2024 03:01:57 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707908516; x=1708513316;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ej1/wNFVwzSicN4lDJDfw+4pBNgxNvs7M0rU1TbrOPQ=;
-        b=K7UdHBeXc9SO0FdLpp/QrPUgbvTNHSiCtKL9fQ/Ct/1gl6NrB/sSFVjZ+oD4l0Xm2p
-         oI/OIYDCd5DkTK1cfHf67NRiXqPZdVfV59jtUkqOhBRa6Ep3DkHEWl37TOLfyt2N5NB7
-         AsuD0YM3DoqsDVBzn+l3KxWG6MseKgwPxxxfbjoNCk6j48kthQwDu3PbScBxKceJ5lX9
-         +ptF9BMtczZyGscVWdPh9j9K8TH8B9fISpRJtEFN7pox+KWkiyfrKW+Mv5ljbWAuZ8MG
-         1ytgH0Xp88J6sgSg3jFO97TRPhYNjAV0mVtQr4PI0euX554sJYCubSewuhkh1zyuB+xJ
-         ImZg==
-X-Gm-Message-State: AOJu0Yxfsz5D7fq08kQsntlZnMC/XEGRK1Pmx4ve7ndzaJpPUrm5LMb/
-	zpVoGVcsde8EUHyEO+L2qcUJ7ycOVnakEen7LPzB7RPszlSzzEFCvSshx4M/dL1nIwPMpJ+WIhf
-	TjnPSql4ijXogKeLyZMR4J5jBFve5O9aCwgb8+bIKaUmSORpGcIJZYzIqiw0=
-X-Received: by 2002:a05:6512:243:b0:511:5352:649f with SMTP id b3-20020a056512024300b005115352649fmr1424301lfo.19.1707908515810;
-        Wed, 14 Feb 2024 03:01:55 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IG2uAG3XBeib55xP/ZuOMd6IFSo0N4WTaycgU8jIVAsDJgZZGCE2RuTbHKu3J3b6lQnWzjuOA==
-X-Received: by 2002:a05:6512:243:b0:511:5352:649f with SMTP id b3-20020a056512024300b005115352649fmr1424282lfo.19.1707908515428;
-        Wed, 14 Feb 2024 03:01:55 -0800 (PST)
-Received: from [192.168.0.106] (ip4-83-240-118-160.cust.nbox.cz. [83.240.118.160])
-        by smtp.gmail.com with ESMTPSA id z11-20020a7bc7cb000000b00411b7c91470sm1579845wmk.12.2024.02.14.03.01.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 14 Feb 2024 03:01:54 -0800 (PST)
-Message-ID: <ab1ac37c-0dd6-4c7b-9c09-832c2bbc6a36@redhat.com>
-Date: Wed, 14 Feb 2024 12:01:53 +0100
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VoKZqegJ";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="XvyqG6Rn"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41E9YIAR001393;
+	Wed, 14 Feb 2024 11:29:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=corp-2023-11-20;
+ bh=489f0GvvL+46pGv/Wl/nGO+vUS5fGcDRs0+LHc8LuH8=;
+ b=VoKZqegJTCBhs6cd5SDL5Wte+O+CoZT5kG4VIZKO4Tszvl/PZlgczl88sLEjIaHYSQM7
+ b7ZOlidUbrljJMoZSR7vhV7E/cLhrBmX+mi3ZjRpkS+scNG5OCZWeSiYZumMOz46uJQM
+ m356TMwb/gWc/2cQJFhYqXABJoPzjj0dDG1S/arFX/rDLcb2HFv7dUYn8uMLpLR3zscs
+ GLUe/TLtpzwjqF5eMAiqk0QXTb64CoshWiXkh1iI2d6ZMpk0VNId1eVlkR303ex9Tevb
+ LQJRxT7g1Os/nio3G6+4YHdQYw+89XOYLlSIZ5t3OwnEnqejcVZh6lNsULs+G+3CfBEk cw== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w8u0pg8x1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 14 Feb 2024 11:29:18 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41EBRdkH000604;
+	Wed, 14 Feb 2024 11:29:17 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2101.outbound.protection.outlook.com [104.47.58.101])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3w5yk8u12k-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 14 Feb 2024 11:29:17 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OFZ82ZvpCn1+8bhdTXGRkWa/QeJ8D8u7iTbv324gVqMjPZeGxw7ohq91gUOhLrsgFB01DxkNrVUMalaV5/FnW1F7coM3CRnwY0xllZDmTKonrYo5j1ylFT2td6rOlM6QEBH8/msrYHF8TCURO6Vtq1y6RFmBEel+FFjqidD4LptY60nhNOkJ2x/7bBcODbrtYyqm12n3aidHEqsXBc052KlxRBrkFOE1a6wVD1ya3x4M3BaDnrXzrgtjZzPubi+hJpaAaKkmc4s+lCLl2L+5gLLSXe8NFUxvKe6sCoNCokQjk0A3DCWCpvVmt5SCgt3HoL2e8YqdMgVn4UUilXHShg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=489f0GvvL+46pGv/Wl/nGO+vUS5fGcDRs0+LHc8LuH8=;
+ b=Eq21KVMJm7xKZmALXty6s6UqesA7zYRM8j9xU1G78zmOMOp/aJCQHNWBHOdm8qF3SO0MpiEh/QT1am4sChIa71cbgY5/TjxKlVB33v5qWviJXfxOkUZRgnM6RGqrVxgOI/xS0uZ6oWqliZ2TRFy0c2S0iS8H8zY6z6noPnPdhQYg89+cY/XUgAuH6767ZOmtpv0MXxVqOxqrt1PuJvQGaSlvIKjA7/L4X+bu7hyT7HANAjZIp7QzOLqWNqcAiZbNN6z0V+uyiAGoKtwD7ZYJDT0S2sB0xVrsoZzG2+VUSY1ewlfgE3cD9dfSCNZvfuVwabJpYPNhIu85vM9Zi+gvBQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=489f0GvvL+46pGv/Wl/nGO+vUS5fGcDRs0+LHc8LuH8=;
+ b=XvyqG6RnrJGlSknOCHNESUO79BIUY7wwmQbNbO7EhEONaUnGNv9FOFyNsOYTdgRD60hT23AwACODfO/IvEYYjgSPeIU/2O/lJSkWSjrFJY3dZmupLw9POvB12PrUU0YDQXpk+0e1G1zHbWycExYTmDJCs1SR9Wx+sRXl8hIud5Y=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by CO6PR10MB5394.namprd10.prod.outlook.com (2603:10b6:5:35d::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7292.28; Wed, 14 Feb
+ 2024 11:29:15 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::56f9:2210:db18:61c4]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::56f9:2210:db18:61c4%4]) with mapi id 15.20.7292.026; Wed, 14 Feb 2024
+ 11:29:15 +0000
+Message-ID: <445a05e7-f912-4fb8-b66e-204a05a1524f@oracle.com>
+Date: Wed, 14 Feb 2024 11:29:10 +0000
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 10/15] block: Add fops atomic write support
+Content-Language: en-US
+To: Nilay Shroff <nilay@linux.ibm.com>
+Cc: axboe@kernel.dk, brauner@kernel.org, bvanassche@acm.org,
+        dchinner@redhat.com, djwong@kernel.org, hch@lst.de, jack@suse.cz,
+        jbongio@google.com, jejb@linux.ibm.com, kbusch@kernel.org,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+        martin.petersen@oracle.com, ming.lei@redhat.com, ojaswin@linux.ibm.com,
+        sagi@grimberg.me, tytso@mit.edu, viro@zeniv.linux.org.uk
+References: <20240124113841.31824-11-john.g.garry@oracle.com>
+ <20240213093619.106770-1-nilay@linux.ibm.com>
+ <9ffc3102-2936-4f83-b69d-bbf64793b9ca@oracle.com>
+ <e99cf4ef-40ec-4e66-956f-c9e2aebb4621@linux.ibm.com>
+ <30909525-73e4-42cb-a695-672b8e5a6235@oracle.com>
+ <c130133f-7c4c-4875-a850-1a8ac9ad4845@linux.ibm.com>
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <c130133f-7c4c-4875-a850-1a8ac9ad4845@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: LO4P123CA0643.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:296::10) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] smartpqi: fix disable_managed_interrupts
-To: Don Brace <don.brace@microchip.com>, Kevin.Barnett@microchip.com,
- scott.teel@microchip.com, Justin.Lindley@microchip.com,
- scott.benesh@microchip.com, gerry.morong@microchip.com,
- mahesh.rajashekhara@microchip.com, mike.mcgowen@microchip.com,
- murthy.bhat@microchip.com, kumar.meiyappan@microchip.com,
- jeremy.reeves@microchip.com, david.strahan@microchip.com, hch@infradead.org,
- jejb@linux.vnet.ibm.com, joseph.szczypek@hpe.com, POSWALD@suse.com
-Cc: linux-scsi@vger.kernel.org
-References: <20240213162200.1875970-1-don.brace@microchip.com>
- <20240213162200.1875970-2-don.brace@microchip.com>
-Content-Language: en-US
-From: Tomas Henzl <thenzl@redhat.com>
-In-Reply-To: <20240213162200.1875970-2-don.brace@microchip.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CO6PR10MB5394:EE_
+X-MS-Office365-Filtering-Correlation-Id: 5e187191-c51e-42e5-c989-08dc2d502c85
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	XYnLglbYiHKgoOXBcDiWSxJ9EdjgGNEGOaEt4qG71EoRX+PABua/JmUPTJJWmUY4FrMvW82ZqLlB6IKr/GS0U8bx27DKh2wqe0e4P1ubnZeHWRyTSx4F6xCIJTaEovFGP1L61mYcPFLdnrQNB6Zq0CBq9YJa6oEJ4Pgf9aROZC3OIG0ApPplqGsovd7B2VBRO0sqlcK0JXlLfpXbb7YAmRnQ09xK0mxWh45y9ewntqwnuNLp8Ot76sgK/7sgwNr2noPec8wfzdfqbEe1A63pPp5sxoUXc9cztOoyj3dPUAvfM0g+zhh3BSdZ0nkNSRMhilvjlP/a7X80MhKpGoO60LtL4ib1lVHV87hBQvP8ZkYJQUEVSXgCIvPlbrbPA75QN5wu1psYpkX1WEryBlS+pgGewwku92cYpoaaJ0TS0OCQW7J21BO4ZHHSndlk64gCXAoNBLW9DwuHE+rbmcGgLQsR11fbzaddr/WwFp/Zz/sQ1KbZ/WI6jLRgbBxz2xArORCnCTuLxAsgcMEtydxCJJW8QT1tdV/JwQHnmZWZscc1x6Hynm5++z88eX1/m4oL
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(39860400002)(376002)(366004)(346002)(136003)(396003)(230922051799003)(1800799012)(186009)(64100799003)(451199024)(2906002)(8936002)(8676002)(7416002)(5660300002)(4326008)(66899024)(83380400001)(2616005)(38100700002)(26005)(36756003)(86362001)(31696002)(6916009)(66476007)(316002)(66946007)(66556008)(53546011)(36916002)(6506007)(6512007)(6486002)(478600001)(31686004)(6666004)(41300700001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?Y0JiRnZUSFZqcHplbXBoaGJqU2ZneUxoYzB4aVB5NG44cWh6ZHQ3eFVvRXh1?=
+ =?utf-8?B?NHBTTEs1T2N5SDNpOEN2UmMxR0RKS0locUIrdHY5UER4QXhtTXFsNTlQc0s4?=
+ =?utf-8?B?bUF2czVPK1lzVk5LVVV6cW1tT3JuamZlWS9Oc3VBMS9BSWQ4REVpRjk2OFps?=
+ =?utf-8?B?MkZJU3huK0xuZEtDakdtVEVkbENxcjhYMzMrRjV5emUzamV5UXFScHEzOW5F?=
+ =?utf-8?B?bkpWWHcyaGpPSHlwMnVqMndmNVcreEF5UmxucGh3WGRDS1pwY0VxYUhEaUUx?=
+ =?utf-8?B?NndITEsybDNDazk1T24xU1pCOVJ5KzVDVVJsQjUvN0plVzN5RzdxVmxlekhm?=
+ =?utf-8?B?dFBTWXl4WlVpSFJFanBDZEJSaU9xbEJFeXY2Z0dzTjB3bUpMVStnSkpxbEh3?=
+ =?utf-8?B?cXY3Y3hrZ045aldrWnAybEp6bmptOVhJLzN1K3pkdDFMQm1idmF2Ums4ZDF6?=
+ =?utf-8?B?M2dDak50UW5mYnhVOXU3YWF4amNPMCtxQ0lMTHI0NUN5dkd0YzQxNHNlRk5o?=
+ =?utf-8?B?V3h6ZFJYZmhvNjhNY3Vka2tBMFl2Rmd5QnZxNUp4dmR5MWVDVVc3VXpOS2Jr?=
+ =?utf-8?B?dHFQQVpWTE1pWDJ6cG80UFJSbU02VERFM3JsQWorbGl2RFJJT1lITVZraVB2?=
+ =?utf-8?B?eTBWaGVjNkFscVJldjFEcTVmak5MSDRKUmx0WHVSYmIxVkhuRi95RHFPWXVl?=
+ =?utf-8?B?R1RldFkrOTFwVnhrRzJPeU1pNjYvdjRobGdiUmF3TnBNYVJ1eU5SUUMyc2sw?=
+ =?utf-8?B?cU9KODhoZGZ3UENTQ0Q3YnVwdG5SV2F3TkRTdG5VQkxHWGpkUUo0cnRDN0xw?=
+ =?utf-8?B?SE1henI0V3AxSUhUUm5wVTlHQVR6b3VoSXQzN0Z5TXVzVklIOVBPSmh6b3VW?=
+ =?utf-8?B?NlBISVNpdTE2Z3pYS2U0SVFKN0RTNmFXVkRuUGVwWFRWcmlsaHRjbFY1YWYv?=
+ =?utf-8?B?RUlhU2kxSW1hcDRsK1hZRnRKWEY3THFXamp3UmRnVjlMVVR2Z295WG02eENi?=
+ =?utf-8?B?TWlEd2dOaStIckxSSTlYcUg2Zm9NV3Uxd3pZK0tVNFlPbmsvY3ZqbmNaU3Ir?=
+ =?utf-8?B?cXd3d0oxdE0wZWVKQmNpdFJxVWlnZ3JIbktjcUJKV3pQMDBqb2FEKzJXT2s2?=
+ =?utf-8?B?aUloKzlhcExDU29YTldOTE1idUk0cDFXQ1ZTNkt2YWE3NDg1YkFFeEVtSEVJ?=
+ =?utf-8?B?cTlLUm5pN1E1LzAxQVYwVUFraERsWStjV3lUbk91WEpjK05GNmZueExrR3lH?=
+ =?utf-8?B?VGxTUXZHY2owSS9Nb0tpM2JCem1PQjF3MnBjR21nd3hURlFDZncxRjY4dEl1?=
+ =?utf-8?B?czJOS2RmUzE2NVczSGdVYXB6S29lQm9yRzM4LzVuMXJJRHBGN080cUt3eXpY?=
+ =?utf-8?B?Rm9HTkZwaTFKZ25IMnJFV1FLcU5WU2tsS2ZLMWZjYjBrZE5MTHBnUTRkOTVQ?=
+ =?utf-8?B?SU1ldGg1V0YydjJkeW56Q25wM1paUkdNUisyZFBNN3JLbG9aWWtOSHh4YmxY?=
+ =?utf-8?B?dm81Nm5Vckc0WmRGSE5ET0dSR1VrbUJQOXhIeFhpSEJZRDM3N241ekxlYkFt?=
+ =?utf-8?B?RUVCekNiVjFXeXN3T0xpcVZFclZhQWErL2ljWFBObFdLZDZ0d0pqOFg0RExh?=
+ =?utf-8?B?T0hjOWZkbEdWME5uWkk5RkNlSmtSTlZtbnNmOG0zSi9XSG9GWll4T1lKWWZs?=
+ =?utf-8?B?VURlN0trcmprclR3N3kxc25ORFEwSVNtdWl4WHkzTzBZYTArblk0WkFWRm1T?=
+ =?utf-8?B?WlNrUTlLd1lwZGhuMWxLSXRNK1FkQUkyQURHZXVHNkRETWJ4cHExUzRuZHAx?=
+ =?utf-8?B?TXdqQUZDZ1JjcVFiVmNUak9WU3A3VXp1SlNxS2NydGtrd2dMSnBUdGh3c1gw?=
+ =?utf-8?B?Q0M0ejVJZHlEOW9YbExlSXJHNmgzRHF2QkI1NXVhVXR6bXl5MnR5LytzSUox?=
+ =?utf-8?B?a0RjTHBmelNxc0pBNVk4dHRNSTNIc1ZLc3BZcVJqdVdib2NNa0pMaXVEdFN6?=
+ =?utf-8?B?cUV2SGFjYlgrdFlZQXd5SWhCcWdhZUVJbkc0cFk1T1cxamwzdkgwa1pSYmht?=
+ =?utf-8?B?V09wbzl2ZUQyU2phdkgrT0pLMGIybGpacGVmUnFNcjMxVnM4NHd4MEdldUda?=
+ =?utf-8?B?N0J4UmtyQUkwMHFTdm90ZklILy9YOTZiN09lclpIUFpoeUZjbzY3cHNWeENx?=
+ =?utf-8?B?WVE9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	R5VchmCLJNx5cTQcuSGQFO4An7wxIIJk85cJ0K2tFyVHuqzSpF1nLY21NgXLH+WO7l5fSQEpq23EprpkD0zFHisdauJxpQ6HYtdsWoAtppIH+CmhmxUOjc8ZPpQXS4ASk8aYhhoYVHRm2v2zF2oodhyUtQMk/0GRqT0kbJ0/9P4KCdsY2WxKP+rH5lDya1yO3Ymgs1Uu9L8kzF8gGsBVIHF69lQj9tHxBGiXh9huY+sEsWXTH4Q1GBEMuk7QjjmnCLGAXlizcywbie9p9Zjkrf3dg3/125XHAcy04ncD1uE0vAo9ljMtSI8tMLW9HLfrMaw/FdBGQ9d+OnhQZVVFnrZkeRTxugWWXG+up7GP6WnvgjVFYXelGQiYPW/n3X8blko4PTRSjKPysW8HwZpAIuK8jbc9P8Zj8pFxjBhEd91p6KkesEp5HmUQj1A2LCDZMRZG68W03wew6RFfihvYnl6kdd1TsPGKRf2Gol/vEQXuIXvw/rv7R8MHhA7fQX8uRexZ0tshq1f/McbAXs3yeASULYDwIvsXwqYnI3z7DaH69yntQifUmnweIu6HLaJjqUkNgBeSJ5qwjqXeraPb09rDZPQvOBASqp809BSF3YA=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5e187191-c51e-42e5-c989-08dc2d502c85
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Feb 2024 11:29:14.9574
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: FFeOyFGqrBHduDdXex8XVppInEfg1O5zCS0YA3yuB5yQV6j9o4jjLRp7w+WUe+qN08vkCt+L7iIMzp5TE1Mo/A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR10MB5394
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-14_04,2024-02-14_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0 mlxscore=0
+ bulkscore=0 spamscore=0 malwarescore=0 adultscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2402140090
+X-Proofpoint-GUID: hd9d17jBr9QvzqGjQxmOrZMPBVRhRKG-
+X-Proofpoint-ORIG-GUID: hd9d17jBr9QvzqGjQxmOrZMPBVRhRKG-
 
-On 2/13/24 17:22, Don Brace wrote:
-> Correct blk-mq registration issue with module parameter
-> disable_managed_interrupts enabled.
+On 14/02/2024 09:38, Nilay Shroff wrote:
 > 
-> When we turn off the default PCI_IRQ_AFFINITY flag, the driver needs to
-> register with blk-mq using blk_mq_map_queues(). The driver is currently
-> calling blk_mq_pci_map_queues() which results in a stack trace and
-> possibly undefined behavior.
 > 
-> Stack Trace:
-> [    7.860089] scsi host2: smartpqi
-> [    7.871934] WARNING: CPU: 0 PID: 238 at block/blk-mq-pci.c:52 blk_mq_pci_map_queues+0xca/0xd0
-> [    7.889231] Modules linked in: sd_mod t10_pi sg uas smartpqi(+) crc32c_intel scsi_transport_sas usb_storage dm_mirror dm_region_hash dm_log dm_mod ipmi_devintf ipmi_msghandler fuse
-> [    7.924755] CPU: 0 PID: 238 Comm: kworker/0:3 Not tainted 4.18.0-372.88.1.el8_6_smartpqi_test.x86_64 #1
-> [    7.944336] Hardware name: HPE ProLiant DL380 Gen10/ProLiant DL380 Gen10, BIOS U30 03/08/2022
-> [    7.963026] Workqueue: events work_for_cpu_fn
-> [    7.978275] RIP: 0010:blk_mq_pci_map_queues+0xca/0xd0
-> [    7.978278] Code: 48 89 de 89 c7 e8 f6 0f 4f 00 3b 05 c4 b7 8e 01 72 e1 5b 31 c0 5d 41 5c 41 5d 41 5e 41 5f e9 7d df 73 00 31 c0 e9 76 df 73 00 <0f> 0b eb bc 90 90 0f 1f 44 00 00 41 57 49 89 ff 41 56 41 55 41 54
-> [    7.978280] RSP: 0018:ffffa95fc3707d50 EFLAGS: 00010216
-> [    7.978283] RAX: 00000000ffffffff RBX: 0000000000000000 RCX: 0000000000000010
-> [    7.978284] RDX: 0000000000000004 RSI: 0000000000000000 RDI: ffff9190c32d4310
-> [    7.978286] RBP: 0000000000000000 R08: ffffa95fc3707d38 R09: ffff91929b81ac00
-> [    7.978287] R10: 0000000000000001 R11: ffffa95fc3707ac0 R12: 0000000000000000
-> [    7.978288] R13: ffff9190c32d4000 R14: 00000000ffffffff R15: ffff9190c4c950a8
-> [    7.978290] FS:  0000000000000000(0000) GS:ffff9193efc00000(0000) knlGS:0000000000000000
-> [    7.978292] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [    8.172814] CR2: 000055d11166c000 CR3: 00000002dae10002 CR4: 00000000007706f0
-> [    8.172816] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> [    8.172817] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> [    8.172818] PKRU: 55555554
-> [    8.172819] Call Trace:
-> [    8.172823]  blk_mq_alloc_tag_set+0x12e/0x310
-> [    8.264339]  scsi_add_host_with_dma.cold.9+0x30/0x245
-> [    8.279302]  pqi_ctrl_init+0xacf/0xc8e [smartpqi]
-> [    8.294085]  ? pqi_pci_probe+0x480/0x4c8 [smartpqi]
-> [    8.309015]  pqi_pci_probe+0x480/0x4c8 [smartpqi]
-> [    8.323286]  local_pci_probe+0x42/0x80
-> [    8.337855]  work_for_cpu_fn+0x16/0x20
-> [    8.351193]  process_one_work+0x1a7/0x360
-> [    8.364462]  ? create_worker+0x1a0/0x1a0
-> [    8.379252]  worker_thread+0x1ce/0x390
-> [    8.392623]  ? create_worker+0x1a0/0x1a0
-> [    8.406295]  kthread+0x10a/0x120
-> [    8.418428]  ? set_kthread_struct+0x50/0x50
-> [    8.431532]  ret_from_fork+0x1f/0x40
-> [    8.444137] ---[ end trace 1bf0173d39354506 ]---
+> On 2/13/24 17:22, John Garry wrote:
+>> On 13/02/2024 11:08, Nilay Shroff wrote:
+>>>> It's relied that atomic_write_unit_max is <= atomic_write_boundary and both are a power-of-2. Please see the NVMe patch, which this is checked. Indeed, it would not make sense if atomic_write_unit_max > atomic_write_boundary (when non-zero).
+>>>>
+>>>> So if the write is naturally aligned and its size is <= atomic_write_unit_max, then it cannot be straddling a boundary.
+>>> Ok fine but in case the device doesn't support namespace atomic boundary size (i.e. NABSPF is zero) then still do we need
+>>> to restrict IO which crosses the atomic boundary?
+>>
+>> Is there a boundary if NABSPF is zero?
+> If NABSPF is zero then there's no boundary and so we may not need to worry about IO crossing boundary.
+> 
+> Even though, the atomic boundary is not defined, this function doesn't allow atomic write crossing atomic_write_unit_max_bytes.
+> For instance, if AWUPF is 63 and an IO starts atomic write from logical block #32 and the number of logical blocks to be written
 
-This patch fixes the issue on my machine.
+When you say "IO", you need to be clearer. Do you mean a write from 
+userspace or a merged atomic write?
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+If userspace issues an atomic write which is 64 blocks at offset 32, 
+then it will be rejected.
+
+It will be rejected as it is not naturally aligned, e.g. a 64 block 
+writes can only be at offset 0, 64, 128,
+
+> in this IO equals to #64 then it's not allowed.
+>  However if this same IO starts from logical block #0 then it's allowed.
+> So my point here's that can this restriction be avoided when atomic boundary is zero (or not defined)?
+
+We want a consistent set of rules for userspace to follow, whether the 
+atomic boundary is zero or non-zero.
+
+Currently the atomic boundary only comes into play for merging writes, 
+i.e. we cannot merge a write in which the resultant IO straddles a boundary.
 
 > 
-> Fixes: ("cf15c3e734e8 scsi: smartpqi: Add module param to disable managed ints")
+> Also, it seems that the restriction implemented for atomic write to succeed are very strict. For example, atomic-write can't
+> succeed if an IO starts from logical block #8 and the number of logical blocks to be written in this IO equals to #16.
+> In this particular case, IO is well within atomic-boundary (if it's defined) and atomic-size-limit, so why do we NOT want to
+> allow it? Is it intentional? I think, the spec doesn't mention about such limitation.
+
+According to the NVMe spec, this is ok. However we don't want the user 
+to have to deal with things like NVMe boundaries. Indeed, for FSes, we 
+do not have a direct linear map from FS blocks to physical blocks, so it 
+would be impossible for the user to know about a boundary condition in 
+this context.
+
+We are trying to formulate rules which work for the somewhat orthogonal 
+HW features of both SCSI and NVMe for both block devices and FSes, while 
+also dealing with alignment concerns of extent-based FSes, like XFS.
+
 > 
-> Tested-by: Yogesh Chandra Pandey <YogeshChandra.Pandey@microchip.com>
-> Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-> Reviewed-by: Scott Teel <scott.teel@microchip.com>
-> Reviewed-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
-> Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
-> Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-> Signed-off-by: Don Brace <don.brace@microchip.com>
-> ---
->  drivers/scsi/smartpqi/smartpqi_init.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-> index ceff1ec13f9e..385180c98be4 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -6533,8 +6533,11 @@ static void pqi_map_queues(struct Scsi_Host *shost)
->  {
->  	struct pqi_ctrl_info *ctrl_info = shost_to_hba(shost);
->  
-> -	blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
-> +	if (!ctrl_info->disable_managed_interrupts)
-> +		return blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
->  			      ctrl_info->pci_dev, 0);
-> +	else
-> +		return blk_mq_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT]);
->  }
->  
->  static inline bool pqi_is_tape_changer_device(struct pqi_scsi_dev *device)
+>>
+>>>
+>>> I am quoting this from NVMe spec (Command Set Specification, revision 1.0a, Section 2.1.4.3) :
+>>> "To ensure backwards compatibility, the values reported for AWUN, AWUPF, and ACWU shall be set such that
+>>> they  are  supported  even  if  a  write  crosses  an  atomic  boundary.  If  a  controller  does  not
+>>> guarantee atomicity across atomic boundaries, the controller shall set AWUN, AWUPF, and ACWU to 0h (1 LBA)."
+>>
+>> How about respond to the NVMe patch in this series, asking this question?
+>>
+> Yes I will send this query to the NVMe patch in this series.
+
+Thanks,
+John
 
