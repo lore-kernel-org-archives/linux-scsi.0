@@ -1,91 +1,55 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D39D311183;
-	Wed, 14 Feb 2024 05:59:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CADA0111B5;
+	Wed, 14 Feb 2024 07:26:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707890404; cv=none; b=VH2ABI5vMcv4UhOAEJSoFDmGYT5FdytnzRfiWy/W7JI7+F9vyMSF+8Eyho5y6e+DVX/Gs83jhLnOEkkbaa48i8jy3Vx9fL4XZgnD98nEoatSilqg4hMdXjZgbCyqzpdjyQnvz2XgBx01hZLtBkHrLKfRG6zKjfD/l2vp6qYYG3s=
+	t=1707895583; cv=none; b=FS+9VmPhUWs7gCmnH2qYD0xpxMMfobVgu9+VyjSCVgkW7Z5BQGw5cA+BHCbi70zvrFPplF/EO11ajnfRx/UiRJ+g37JLzmrwYwhyw57ZyXd88BtWZsuwWfspU8zl7AoNMl1L9DtELgXHvNUmw4Mns8MZxjnoIOZT3uf7vrJu+gY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707890404; c=relaxed/simple;
-	bh=S89Yy0TSquu1IiarqlR9c1HsKj9O0OkiKkRYen5KW0c=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RHNeNcVyohwcwSMo/tASQYvXpPqEo7KSqgWiYKcPZnang+0N++GEcFP49oYCnsAmDHAFQQJr/U9SecjPUAZkcStrOHTgxi+5UIKOnUz2Z/rveYCLTiARFuP9OLXfdubqfA8c81CGcLy5ck2hv2A8b0pe12HOSxq+Sfx52Et8Bao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=GR/iwEXy; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GR/iwEXy"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=lSQHVkEuXKOPPFhQR3VnljNy6UO4HmXBWr18LMiSUi8=; b=GR/iwEXyD3tLBMpeUjYZ/keMtD
-	1gezL/isRmv679++C+NKYivKmw/E4HaXYqdnPhg67vttt50+knRd/2L/ban+wu1fhB4RAMO5xaUWK
-	2O3ubxl+kZqJlV3ZLbfNjWQladoeRCO8nPXNZO9zg8xpNiBx290nlCOCJz2f4inHWZ2BQQE++QSCc
-	fg9meOrd4gQ0FFYaoFBoZ/2netUVM6ThtydYF8g/48cGLNDpvpKHcVjaNCp0XyOsNa+488UvgREby
-	3wLBw+KRNseHMMYWEVnKzG4yxQUlrFEfYTLy5ATnaxuDkFqTD7+lOtlUO4kyGBrpwx7AyUBurt2pN
-	KljKQVaQ==;
-Received: from [50.53.50.0] (helo=bombadil.infradead.org)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ra8JH-0000000BurM-27Cl;
-	Wed, 14 Feb 2024 05:59:55 +0000
-From: Randy Dunlap <rdunlap@infradead.org>
-To: linux-kernel@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	kernel test robot <lkp@intel.com>,
-	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-	linux-mips@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Masahiro Yamada <masahiroy@kernel.org>,
-	Nicolas Schier <nicolas@fjasle.eu>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] scsi: jazz_esp: only build if SCSI core is builtin
-Date: Tue, 13 Feb 2024 21:59:53 -0800
-Message-ID: <20240214055953.9612-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1707895583; c=relaxed/simple;
+	bh=juFBNMubKn9gMBWcEFowWNCBKZXHfuauU6CXERbbJHM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=h2s4VZ57vLD1VvTuk7DNMNfO6ap1bur2+lZeaVv7Hp26aT0iC48v3QiFym8GQ5l3qzIW5ZHmRZKav13RvhDdH+WnRvmElqjZ9c7mS3PgclahMB2QSA1emADCOM6HvmhLgYnv2hExCGAvRhNepfNWb43a0LDy8U/rqWXi/dVx1hQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 54133227A87; Wed, 14 Feb 2024 08:26:10 +0100 (CET)
+Date: Wed, 14 Feb 2024 08:26:10 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, kbusch@kernel.org,
+	sagi@grimberg.me, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	djwong@kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org,
+	dchinner@redhat.com, jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	ming.lei@redhat.com, ojaswin@linux.ibm.com, bvanassche@acm.org
+Subject: Re: [PATCH v3 07/15] block: Limit atomic write IO size according
+ to atomic_write_max_sectors
+Message-ID: <20240214072610.GA9881@lst.de>
+References: <20240124113841.31824-1-john.g.garry@oracle.com> <20240124113841.31824-8-john.g.garry@oracle.com> <20240213062620.GD23128@lst.de> <749e8de5-8bbb-4fb5-a0c0-82937a9dfa38@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <749e8de5-8bbb-4fb5-a0c0-82937a9dfa38@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-JAZZ_ESP is a bool kconfig symbol that selects SCSI_SPI_ATTRS.
-When CONFIG_SCSI=m, this results in SCSI_SPI_ATTRS=m while
-JAZZ_ESP=y, which causes many undefined symbol linker errors.
+On Tue, Feb 13, 2024 at 08:15:08AM +0000, John Garry wrote:
+> I'm note sure if that would be better in the fops.c patch (or not added)
 
-Fix this by only offering to build this driver when CONFIG_SCSI=y.
+We'll need the partition check.  If you want to get fancy you could
+also add the atomic boundary offset thing there as a partitions would
+make devices with that "feature" useful again, although I'd prefer to
+only deal with that if the need actually arises.
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202402112222.Gl0udKyU-lkp@intel.com/
-Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: linux-mips@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Masahiro Yamada <masahiroy@kernel.org>
-Cc: Nicolas Schier <nicolas@fjasle.eu>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
----
- drivers/scsi/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff -- a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1279,7 +1279,7 @@ source "drivers/scsi/arm/Kconfig"
- 
- config JAZZ_ESP
- 	bool "MIPS JAZZ FAS216 SCSI support"
--	depends on MACH_JAZZ && SCSI
-+	depends on MACH_JAZZ && SCSI=y
- 	select SCSI_SPI_ATTRS
- 	help
- 	  This is the driver for the onboard SCSI host adapter of MIPS Magnum
+The right place is in the core infrastructure, the bdev patch is just
+a user of the block infrastructure.  bdev really are just another
+file system and a consumer of the block layer APIs.
