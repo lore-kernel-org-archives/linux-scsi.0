@@ -1,172 +1,353 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97D2860DD7;
-	Tue, 13 Feb 2024 18:49:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707850157; cv=fail; b=MKUKE7S//UHUNVS+25OjQx13S50ve6sfYYyJ5rUZdFh91ZgL6xSQu6CTqSCcm3sPeZXKZXr4+4+ZbWeiHVl8aQ2I/UBc/xO6fA4U2N2RTPNe3IxjiTQ/ZgaLIlohfmkV4Ob/jgCiZ0rWiKPZavUu5rXCV0if8Tr389gnsZBey7Y=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707850157; c=relaxed/simple;
-	bh=0h7+sGT7voulxyzShs9UHu5fvVoGqgVMmEN/8Bpsxuc=;
-	h=To:Cc:Subject:From:Message-ID:References:Date:In-Reply-To:
-	 Content-Type:MIME-Version; b=EdocxexRCNCbycSuh7NekbevHmjrL9Fe5X89FTjEteJhmyJ1Zj4Zit7obGjzEjx8O8kwao+hn7WyF//7bY7HGrENMvB40lkpDHNyoghUb+QqnuqbPKvQsf6z23T1I+XkH6sDV0RPKlcDaG/LijRCYEiqQr8MDyISjxGbfQR8C6A=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=WByKaSTM; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Ovqao92r; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3FA3B642
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2024 03:43:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1707882209; cv=none; b=krNVd3N8HDysVNlPX9uVHhk9INYUhbABqKLLWU06CnRUYpE6MDK5LDW5mrLcsU8f5pxCHxgntkFVYIvZbGLCmd5rdN1f+16x9NedUfOZjV5nvn6scETKdMZM5aVFrgBAOUdVlGmgvSzriDIo/RLdRU75LT6mzggC7rj2vZ9ef1M=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1707882209; c=relaxed/simple;
+	bh=KfMxCfELFvPSxQe57DRwXg0Qv8zopwXZCm4P1wudT+o=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=oGB/xjkdP9fp1iDdAfrjUgXeBieDQHKirXvrtoDxHCSfkHU+kBE+ZoGasR/0kEgwJ6SJ7VDdNYiqQW14i93Jp2EimRNQIoRCPnUs5eWqS3E+1DVDrHbj9rQHdf1qFF1U7Em+lscz9S11NNaIxcLPiVC68XSQS+9gjsPT6mQElu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=P5uEeppc; arc=none smtp.client-ip=209.85.160.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WByKaSTM";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Ovqao92r"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41DIj4TC018247;
-	Tue, 13 Feb 2024 18:49:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2023-11-20;
- bh=vtBHsuxd1JrBRL4MVfYPZVcsICII7idqKE9hs/7u72E=;
- b=WByKaSTMP60zqgT/uwBhyH666j8cuglP0pIteH9g9sVjPHL6LhfZKGSluYIWLY34NSkR
- 7oMJWYqCyQKX6lh321HCeUGZSUhwIWvAuXnjfJcPTNbgX4y/Jn6JSZI5XBEE2Zmy7bAJ
- 5FSe8jL/GVykQv+peVP3SnGvaO8LjYik0GGtLD7nhGDeNtlETenOTOGZfAwGrG9pLCG5
- EDA7saJhkqoFqk5jQWWTTi5AijsU9Mf6fRDrpbiQUEJDZ+kejdcefbjouNEZL34X68fJ
- bNIkmkPkNX313kmIV/7dQsUoAbJIAWtZpH/KFfB4IqHf5Gpmth6MKcutOi8W9GUxFqMQ eA== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3w8dyjg0c5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 13 Feb 2024 18:49:14 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41DI7XAn031535;
-	Tue, 13 Feb 2024 18:49:12 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3w5yk7sfun-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 13 Feb 2024 18:49:12 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ThDr5RDONdasrisOY3UOU6/EzdGW5YUTyuCGNRvY1F8rshFBbBMGH+lMj0Tky1vmIYHX20vCvNPaBu6ePaozdDcEIr4JYOtCx989iII2i1pIYcKX+6N+XgIlqMaEt/j+nNO+IUMqsHkzyq365VF6UXxtXQeztwPpjtS3kCCOTdt5ImkVr/7ZOROj5W+5G5datRZ2eYkv78rDm4m0708MA7Mno1l9wHx7AezjhoQz5dAeVtFkQh25KCwzQUpZ5TFnn9cWkX4tY64moVVtGOTN2GpFttj5aMGp0WsOzj70cvEYdwVYQ4ZVkEyAr9K8t1l3eHrFrRoOsZ0a+5e9T2cmiw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vtBHsuxd1JrBRL4MVfYPZVcsICII7idqKE9hs/7u72E=;
- b=mZA09xhdtbUmX9T5lb524r0ymaKocX8bddzx5Bg++qFEYKUxjOQsuIR3usQH+x+V/lBozCmC2V34qF1cR0gW1jo1fSzQ2peQtH0NCTH+Eea4EGZL11RLkRLfKZF8jUIlB0d0731a5PLeXpKrFFApURMxfiCfs8O6y3c8B9LFWKIV4og9k082ehXckobq7s0VV+whjCEE/2DIkTJJ0cTBb3IuhCcDzZeFJFtZKtGcZi63Dh/UifOlStMbP0xKb4bcYWMkJcuS9BCPfZk+kNOLhBxOIwn+Y8f1R4G9C/JR71CxFaJnTNPZaw+zqLIEwPAU8QYFGOczYpkKxXwbKlDnFg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="P5uEeppc"
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-428405a0205so577241cf.1
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Feb 2024 19:43:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vtBHsuxd1JrBRL4MVfYPZVcsICII7idqKE9hs/7u72E=;
- b=Ovqao92rEBQ5Nqm1Nv9YpQ/1AqhDSObH4YuyLgQo02JayuX3zzRuqfxA5Lc1btMqB1nhZ+a4520NpQb9I5I7zDnbYMRiAiPZkx/iSgJsNy05bVkOVhbB0picetryghnUNKwTDTurNBFcZbl3I8iSiY+u594px8PlW9CW55+I7Ak=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by DS7PR10MB5053.namprd10.prod.outlook.com (2603:10b6:5:3a4::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7270.39; Tue, 13 Feb
- 2024 18:49:10 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::1b19:1cdf:6ae8:1d79]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::1b19:1cdf:6ae8:1d79%4]) with mapi id 15.20.7270.036; Tue, 13 Feb 2024
- 18:49:10 +0000
-To: Julian Sikorski <belegdol@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH] usb-storage: Ignore UAS for LaCie Rugged FW USB3
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1ttmcjj7t.fsf@ca-mkp.ca.oracle.com>
-References: <20240209151121.1004985-1-tasos@tasossah.com>
-	<b16e72ad-3f2d-46a8-8361-2641088694df@rowland.harvard.edu>
-	<2978efa3-e83f-4ef5-907d-8232e4b692a5@tasossah.com>
-	<6d4b1f55-09df-47e9-945d-fa38cd36588c@gmail.com>
-	<b6dcf71b-f094-4664-8d43-7d8c0173f51f@gmail.com>
-	<c21f9649-30be-462a-b9ec-f7c96ead30cf@gmail.com>
-	<0cf5ea13-6472-47e1-a32f-b9f332656c6a@gmail.com>
-	<yq1bk8kl9th.fsf@ca-mkp.ca.oracle.com>
-	<0a892e80-424f-4047-a885-5efbcc75af53@gmail.com>
-Date: Tue, 13 Feb 2024 13:49:08 -0500
-In-Reply-To: <0a892e80-424f-4047-a885-5efbcc75af53@gmail.com> (Julian
-	Sikorski's message of "Tue, 13 Feb 2024 19:14:39 +0100")
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0P220CA0007.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:a03:41b::15) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        d=google.com; s=20230601; t=1707882207; x=1708487007; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RVdsZB/ToMM1hFsUZU0UC5LfdCPk9RGSv+kQCIcz0sE=;
+        b=P5uEeppc7Ak+pW8C10bhHjE2xl/gXRV/DWxreTrZGpFnRZBHNeQlaX26QL+6YTPzju
+         njX7b0qg7GziHI718rF/eCyaY3l5tA/y9CPugalHwCS82KEA5eipXz3EVSUTk3bu3mFU
+         61e01BB9hc7qK82XjuFrlpmaysqti6Cff+9rWn5mrWu3ws+tlOprXzB99AyyhHqerZOc
+         T2Y4K33eOig+hFLjzluQKy5uLB0Je9JIxn5/h8V0pbkzNr5XKaGwPSDVvsaD5rf+dC/A
+         VLmHEIIx8klHn6uNHwVIxQiNSZum+hBSbhVhHPLe3himJ+aRkpmET9ijf60h3aQSw/Z4
+         HSMQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707882207; x=1708487007;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=RVdsZB/ToMM1hFsUZU0UC5LfdCPk9RGSv+kQCIcz0sE=;
+        b=H+mSLHkuAMeL7OK5cjVkzAIEEQUm1q4/Gzt34vsHloctPz7tv/ilT7D4gjVL25hzXt
+         +L+V5UDxUZ5W+PkbhWZEeIv97vWUK/CY67X5AXfZ2tecW0B4JXL1EPfPKD9RDl5iMVlA
+         VInYFhAZnl+Rzo5Sf1BS1v/onUQoCrtld4uBjZs7I9Oi7aZFCzoOKIyv+78rq36x7Rlv
+         zWXrBrgGyeL2A+jzUQKwlzT3QkSS1geYkWy/7H1J903PxOp+Gv45BL1NW1O5JQSs5biv
+         ANTa5D1w6TVN9VPoticOMcDpWmYlfUtYpRclkqQs6hlf5VlP0DI6ZYlo6ya6DmdkBQFy
+         RJeQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXDRrSmC6hmvJfqsd8vAvdLXpCnbRun0WRgxupdNvSR1uQ2r9biqbp7BKRI29FK6tyis5Tv9CiLSOwejgvFQRLA5WOCQzQViw0BXA==
+X-Gm-Message-State: AOJu0YyFi+JJs9gDQP0r6dEqh/zppTPz1CGFNmv/NQ68KJDbLyDpSFou
+	W8S68K01SLp3JMdYWSzZtq57EtEGuW5BEbF1xXlhc0UpHnCngPxFw+3AkmCVHAgGGXIeqnKVqGw
+	arhRorRxKCNP69GczukPacnoEvX+qgk1fyibk
+X-Google-Smtp-Source: AGHT+IERNeITuXB2DOctF8Q3TmFhxDZD8cOk9Z6lv9oJLw9g32v/uohB8ZGy6kvhRku0RZXUjsHH+ryWlD5ENik9eMI=
+X-Received: by 2002:ac8:5dce:0:b0:42d:b492:868f with SMTP id
+ e14-20020ac85dce000000b0042db492868fmr199017qtx.24.1707882206589; Tue, 13 Feb
+ 2024 19:43:26 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|DS7PR10MB5053:EE_
-X-MS-Office365-Filtering-Correlation-Id: bc1e9661-e4a4-4c4a-b4ef-08dc2cc4773e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	/o/P7/Fp40rjXMxDgVZQldIP/ndevKGQOteKaPQwRb7aXcaJj0qWIjuqUEtIRDdPWzcAS4rpzTuGftzz/c2U6NdtEMtc1QyZFvlfEvgi6ok/gnqRYCa/u3UWMLyYKxY+aUFJSIGlvdvavxRsi3bscW+vnZbjF2ddxpfIZb0FkgIlNA6tnmKxY0NBx2dRZ0x1zUHHu8BGRxWjSm3SYnpntVStfs78k9ppkUvFVFZyZpRBtzlCF4dzQ/XMiFMa832zCYB91URbraNhptzB8cap977h5TbuBEkml2b2V9l11leTEKpmqvJzo1bMfDtamd40wAuXcQxyOHiAFhWXtu/ircnQm2hIFAm7dlIF1OIcuXrI9d84paDakESQbhn5mAMXMXdxcxqdi0VlwxMj06n7K67fjO9Zr1h4V3FS5D9cqDIfom7n6ONzxshiusMmukgCuiEXTU3QjrgZE8540XwBW2nCFfMYouZM+j5Y+Jb8bfX8MSIvzR3mL6J1SttwnawjpJDQavSIWZ6fG6jXGXEYrp6uhHZzC6fbgmxuxx0S0gWLpxUnSc9RP99AT14+EwIX
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(6029001)(366004)(346002)(396003)(39860400002)(376002)(136003)(230922051799003)(186009)(1800799012)(451199024)(64100799003)(8936002)(8676002)(6512007)(4326008)(26005)(41300700001)(66556008)(66476007)(6506007)(6916009)(6486002)(66946007)(478600001)(36916002)(316002)(38100700002)(86362001)(4744005)(2906002)(5660300002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?wN50DIsBh4aaQ5BJtvZFdSfRa1kWqofriwqmLPEkyuaQ6GOTc3oiv/detoLW?=
- =?us-ascii?Q?OmItHcakDIeFjaut0e+dH3qOFIbsLXVHgkh6/1GPheCM3exvbJ4pGZ6NZzfy?=
- =?us-ascii?Q?7vuEZ/2hgpFCcp2/T17hOvwliivtTeEZ8Au6ho2xwTFkKrqBuiNhBSUNFk9b?=
- =?us-ascii?Q?RmZ5Ikwck9TPpuZ+NLwDQXNd/rT6cQtvfDPTVTfVtfP8dWkK4Uja5NBhIIal?=
- =?us-ascii?Q?UMn4F0U+pV8Nc3ap+M0BPkED9OYnK4CeFm6H7skvpLpTEcqFy780B1vJqqTf?=
- =?us-ascii?Q?1Kw+TxyN7oRMo5JXws/jE9pnNmBVzaG1qmYwN65VQRs5uMMKEsRDrcVknnbZ?=
- =?us-ascii?Q?Rs7p39+YCXymOueMy5wWfVY8zHEdjjyvEFz3Acdefw8sCgv1gXLiTfI5/2O/?=
- =?us-ascii?Q?s+6iH4sUckHL2WnOqdt0IvEledwzhMyOO8Ka0VCgdMiztp5yeGTd+96aVsNA?=
- =?us-ascii?Q?CdjzUDmbWuy5+LEvbSkGs9v8dWwb07422JaFe8Joo6BSORNVzSSUcu0uQurd?=
- =?us-ascii?Q?lZfps43+xezNk+/5aQjZAbzCT0R3mDcOlElECwBAOIGJCT3usH1uAhVr5YrY?=
- =?us-ascii?Q?A/Cegf6xZ8R9PHUFCPrIkaqoYc9nAlpzSRlOTeCKHx0znJ1YGAVlDyDPk2OO?=
- =?us-ascii?Q?9/D5TRKA9OoDPu+vzt6BFk4Yl3jgjYZcZeLopoguJc5+bLqKbjGYLnNLGRXh?=
- =?us-ascii?Q?J+K8AFApOFA8LoNfj/MJB06E1RiTLBVBDCjbL8zqvytqwffbAn3u1IbeRcRP?=
- =?us-ascii?Q?OLx8ddnHkzphfYkSc4Xt/NPiuVTlvOHfRc95r4ejCZXAInSr5OmVt3pYObLj?=
- =?us-ascii?Q?6Bxhs/qfBsy1F54u+xiRTyrfXewwIZKP8pWTcmgqotHctXl3c5B5oMGnNKxX?=
- =?us-ascii?Q?NbJ30FfyK83MRHPbclZ6VcEwYy0405R2RIevr4Ml7e/wd9qd7KZn8YgnN1gp?=
- =?us-ascii?Q?N/hOfeUhtM6tRyJx/CJ8sWxF0cINrzX066LcWMkVge0mMLQpYnwbGeG9ZiOj?=
- =?us-ascii?Q?GRT+T50PifI16JaMOPkdA/2nupcfH423JlL4aa7uDTX/fMaOxVga2eBQXdDr?=
- =?us-ascii?Q?ylvTOVpEX0hgrCFGsXtqVfiWpli67lvIsVNFYxlwGVAD7xRubJexexMYJttq?=
- =?us-ascii?Q?pB6QclETHJapEXz71UM0Qo2bEFpP5jayr3Qg8oAJL/813MlO29psKLlQzJmy?=
- =?us-ascii?Q?tXcK98GdQ4enQzupfH4OvBTGEOWAWEJIkxYbMujax0sWXsvmPEl+8l+4iWwg?=
- =?us-ascii?Q?m3QCTm4QIYPSA7men6+QJfbAf/UyTzRUpd5ZMz/mo9mNrsbz4bYRMMtqISvM?=
- =?us-ascii?Q?f1uYsiDVKb165qCrWf9tNtUy+m7k7oAA2LhGkPeMFqWNfz0848hWx7rBOGrQ?=
- =?us-ascii?Q?Mk6Jp3eaCXhbKnfx+8V9LOUFHaYkOVes8fnD+MVTwZO38+PJ3CUwXxaIVwIm?=
- =?us-ascii?Q?pnKNCRUjfnGjWb44nEqIaOKUTza5ZlSMBpsD8noaCpF7ZvkpPcj/acNLSiK2?=
- =?us-ascii?Q?Tle74wQDIPhM5rt5Pt92qD71ijyuDD4zf4sbbP5AUy9S/hRBqBBuoOUuO4BT?=
- =?us-ascii?Q?s3YIn9/EMLGQzAXFu2adCvkgV8/payGHGaPU1QzrD9q44DzUvdjgSNDqNQIS?=
- =?us-ascii?Q?Hw=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	fyw64uATaoj0ST4s1BFeQAIdem0IlI8R+2sdkQn0umD8e3aPE8/AZGIrA6U8vAtpiRDJwrsk6hPVupdOy38GBi45yFX+n0kd8WYSUgQVVnnSWmsDJZEs7U60zVW30OMhDgOeBxbxJERMRiLifaO+50ciR1/GvJZegu00m9eeBY703jShTyScGUNeplXvOIpFsZlJ6zbH9T3JYN6Ip6aISfloMrZOQui4P9p8s5gFXf8alrLrH9Z5IarDsB63RgmyoYwkZEQREB2ZQCI3ignJm9eNxjbC+OGr32WOl63IFy90tLPicHTHS85xzwbDi8BG9LA2Mxl/hiN9Bi8458YSg/9TEQt/byFcl5OffuBZqNOelieFcUBTfIOT3yR0VaTCCZESnCs8kDf5KSh88e7lBoCWL1xAUaDqAJxiPVFT0vUuEmFH6UE3Q0axtXZBPSOoNd7rmjkGGg8oQoMq4t9aXEYh1mf61Xi6PqorkF1cVg1jD6Fn2LF6VgOeN/mz2Ne/VbagbVW+qF68BKJ1Rmvnjzs4a1+KgViZB2xc/ZvHaXWRQhd5YtQ2whLeK2brkr0+bsuAmbS8M0bEZFlx7shoMU9VBrDvuHOqxyw1pQTVhTI=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bc1e9661-e4a4-4c4a-b4ef-08dc2cc4773e
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Feb 2024 18:49:10.6473
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0TZjzpJY5GhM0zxX7QYL77MInBb1o+1GL9ERme+8dks4Jdso98K0Wt6SXzyTr2rzZp8NtkGoRP1nOXaVYBycXLGFS+wfzaDu+7kM86VHyx0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5053
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-13_11,2024-02-12_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 spamscore=0
- adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=422 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
- definitions=main-2402130149
-X-Proofpoint-ORIG-GUID: bZaB86rCwrLK5oDmESHoRz-cx9Sd27RD
-X-Proofpoint-GUID: bZaB86rCwrLK5oDmESHoRz-cx9Sd27RD
+References: <20240207184100.18066-1-djeffery@redhat.com> <20240207184100.18066-2-djeffery@redhat.com>
+In-Reply-To: <20240207184100.18066-2-djeffery@redhat.com>
+From: Saravana Kannan <saravanak@google.com>
+Date: Tue, 13 Feb 2024 19:42:50 -0800
+Message-ID: <CAGETcx91KahXY6ULXDpek3Xf6k4s646Y6+jn_LtfZPDDOpg7hA@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/6] minimal async shutdown infrastructure
+To: David Jeffery <djeffery@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	linux-scsi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J . Wysocki" <rafael@kernel.org>, Laurence Oberman <loberman@redhat.com>, 
+	Android Kernel Team <kernel-team@android.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Feb 7, 2024 at 10:40=E2=80=AFAM David Jeffery <djeffery@redhat.com>=
+ wrote:
+>
+> Adds the async_shutdown_start and async_shutdown_end calls to perform asy=
+nc
+> shutdown. Implements a very minimalist method of async shutdown support
+> within device_shutdown(). The device at the head of the shutdown list is
+> checked against a list of devices under async shutdown. If the head is a
+> parent of a device on the async list, all active async shutdown operation=
+s
+> are completed before the parent's shutdown call is performed.
+>
+> The number of async operations also has a max limit to prevent the list b=
+eing
+> checked for a child from getting overly large.
+>
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
+> Tested-by:     Laurence Oberman <loberman@redhat.com>
+>
+> ---
+>  drivers/base/core.c           | 116 +++++++++++++++++++++++++++++++++-
+>  include/linux/device/bus.h    |   8 ++-
+>  include/linux/device/driver.h |   7 ++
+>  3 files changed, 127 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index 14d46af40f9a..5bc2282c00cd 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -4719,12 +4719,92 @@ int device_change_owner(struct device *dev, kuid_=
+t kuid, kgid_t kgid)
+>  }
+>  EXPORT_SYMBOL_GPL(device_change_owner);
+>
+> +
+> +#define MAX_ASYNC_SHUTDOWNS 32
+> +static int async_shutdown_count;
+> +static LIST_HEAD(async_shutdown_list);
+> +
+> +/**
+> + * If a device has a child busy with an async shutdown or there are too =
+many
+> + * async shutdowns active, the device may not be shut down at this time.
+> + */
+> +static bool may_shutdown_device(struct device *dev)
+> +{
+> +       struct device *tmp;
+> +
+> +       if (async_shutdown_count >=3D MAX_ASYNC_SHUTDOWNS)
+> +               return false;
+> +
+> +       list_for_each_entry(tmp, &async_shutdown_list, kobj.entry) {
+> +               if (tmp->parent =3D=3D dev)
+> +                       return false;
+> +       }
+> +       return true;
+> +}
+> +
+> +/**
+> + * Call and track each async shutdown call
+> + */
+> +static void async_shutdown_start(struct device *dev, void (*callback) (s=
+truct device *))
+> +{
+> +       if (initcall_debug)
+> +               dev_info(dev, "async_shutdown_start\n");
+> +
+> +       (*callback)(dev);
+> +       list_add_tail(&dev->kobj.entry, &async_shutdown_list);
+> +       async_shutdown_count++;
+> +}
+> +
+> +/**
+> + * Wait for all async shutdown operations currently active to complete
+> + */
+> +static void wait_for_active_async_shutdown(void)
+> +{
+> +       struct device *dev, *parent;
+> +
+> +        while (!list_empty(&async_shutdown_list)) {
+> +                dev =3D list_entry(async_shutdown_list.next, struct devi=
+ce,
+> +                                kobj.entry);
+> +
+> +                parent =3D dev->parent;
 
-Julian,
+I didn't check the code thoroughly, but so there might be other big
+issues. But you definitely need to take device links into account.
+Shutdown all your consumers first similar to how you shutdown the
+children devices first. Look at the async suspend/resume code for some
+guidance.
 
-> Feb 13 19:01:41 kernel: sd 8:0:0:0: [sdb] tag#13 uas_eh_abort_handler
-> 0 uas-tag 1 inflight: IN
-> Feb 13 19:01:41 kernel: sd 8:0:0:0: [sdb] tag#13 CDB: Inquiry 12 01 b9
-> 00 ff 00
+> +
+> +                /*
+> +                 * Make sure the device is off the list
+> +                 */
+> +                list_del_init(&dev->kobj.entry);
+> +                if (parent)
+> +                        device_lock(parent);
+> +                device_lock(dev);
+> +                if (dev->bus && dev->bus->async_shutdown_end) {
+> +                        if (initcall_debug)
+> +                                dev_info(dev,
+> +                                "async_shutdown_end called\n");
+> +                        dev->bus->async_shutdown_end(dev);
+> +                } else if (dev->driver && dev->driver->async_shutdown_en=
+d) {
+> +                       if (initcall_debug)
+> +                               dev_info(dev,
+> +                               "async_shutdown_end called\n");
+> +                       dev->driver->async_shutdown_end(dev);
+> +               }
+> +                device_unlock(dev);
+> +                if (parent)
+> +                        device_unlock(parent);
+> +
+> +                put_device(dev);
+> +                put_device(parent);
+> +        }
+> +       if (initcall_debug)
+> +               printk(KERN_INFO "device shutdown: waited for %d async sh=
+utdown callbacks\n", async_shutdown_count);
+> +       async_shutdown_count =3D 0;
+> +}
+> +
+>  /**
+>   * device_shutdown - call ->shutdown() on each device to shutdown.
+>   */
+>  void device_shutdown(void)
+>  {
+>         struct device *dev, *parent;
+> +       bool async_busy;
+>
+>         wait_for_device_probe();
+>         device_block_probing();
+> @@ -4741,6 +4821,8 @@ void device_shutdown(void)
+>                 dev =3D list_entry(devices_kset->list.prev, struct device=
+,
+>                                 kobj.entry);
+>
+> +               async_busy =3D false;
+> +
+>                 /*
+>                  * hold reference count of device's parent to
+>                  * prevent it from being freed because parent's
+> @@ -4748,6 +4830,17 @@ void device_shutdown(void)
+>                  */
+>                 parent =3D get_device(dev->parent);
+>                 get_device(dev);
+> +
+> +                if (!may_shutdown_device(dev)) {
+> +                       put_device(dev);
+> +                       put_device(parent);
+> +
+> +                       spin_unlock(&devices_kset->list_lock);
+> +                       wait_for_active_async_shutdown();
+> +                       spin_lock(&devices_kset->list_lock);
+> +                       continue;
+> +               }
+> +
+>                 /*
+>                  * Make sure the device is off the kset list, in the
+>                  * event that dev->*->shutdown() doesn't remove it.
+> @@ -4769,26 +4862,43 @@ void device_shutdown(void)
+>                                 dev_info(dev, "shutdown_pre\n");
+>                         dev->class->shutdown_pre(dev);
+>                 }
+> -               if (dev->bus && dev->bus->shutdown) {
+> +               if (dev->bus && dev->bus->async_shutdown_start) {
+> +                       async_shutdown_start(dev, dev->bus->async_shutdow=
+n_start);
+> +                       async_busy =3D true;
+> +               } else if (dev->bus && dev->bus->shutdown) {
+>                         if (initcall_debug)
+>                                 dev_info(dev, "shutdown\n");
+>                         dev->bus->shutdown(dev);
+> +               } else if (dev->driver && dev->driver->async_shutdown_sta=
+rt) {
+> +                       async_shutdown_start(dev, dev->driver->async_shut=
+down_start);
+> +                       async_busy =3D true;
+>                 } else if (dev->driver && dev->driver->shutdown) {
+>                         if (initcall_debug)
+>                                 dev_info(dev, "shutdown\n");
+>                         dev->driver->shutdown(dev);
+> +               } else {
+> +                       if (initcall_debug)
+> +                               dev_info(dev, "no shutdown callback\n");
+>                 }
+>
+>                 device_unlock(dev);
+>                 if (parent)
+>                         device_unlock(parent);
+>
+> -               put_device(dev);
+> -               put_device(parent);
+> +               /* if device has an async shutdown, drop the ref when don=
+e */
+> +               if (!async_busy) {
+> +                       put_device(dev);
+> +                       put_device(parent);
+> +               }
+>
+>                 spin_lock(&devices_kset->list_lock);
+>         }
+>         spin_unlock(&devices_kset->list_lock);
+> +       /*
+> +        * Wait for any async shutdown still running.
+> +        */
+> +       if (!list_empty(&async_shutdown_list))
+> +               wait_for_active_async_shutdown();
+>  }
+>
+>  /*
+> diff --git a/include/linux/device/bus.h b/include/linux/device/bus.h
+> index 5ef4ec1c36c3..7a4a2ff0bc23 100644
+> --- a/include/linux/device/bus.h
+> +++ b/include/linux/device/bus.h
+> @@ -48,7 +48,11 @@ struct fwnode_handle;
+>   *             will never get called until they do.
+>   * @remove:    Called when a device removed from this bus.
+>   * @shutdown:  Called at shut-down time to quiesce the device.
+> - *
+> + * @async_shutdown_start:      Optional call to support and begin the sh=
+utdown
+> + *                             process on the device in an asynchronous =
+manner.
+> + * @async_shutdown_end:                Optional call to complete an asyn=
+chronous
+> + *                             shutdown of the device. Must be provided =
+if a
+> + *                             sync_shutdown_start call is provided.
+>   * @online:    Called to put the device back online (after offlining it)=
+.
+>   * @offline:   Called to put the device offline for hot-removal. May fai=
+l.
+>   *
+> @@ -87,6 +91,8 @@ struct bus_type {
+>         void (*sync_state)(struct device *dev);
+>         void (*remove)(struct device *dev);
+>         void (*shutdown)(struct device *dev);
+> +       void (*async_shutdown_start)(struct device *dev);
+> +       void (*async_shutdown_end)(struct device *dev);
+>
+>         int (*online)(struct device *dev);
+>         int (*offline)(struct device *dev);
+> diff --git a/include/linux/device/driver.h b/include/linux/device/driver.=
+h
+> index 7738f458995f..af0ad2d3687a 100644
+> --- a/include/linux/device/driver.h
+> +++ b/include/linux/device/driver.h
+> @@ -71,6 +71,11 @@ enum probe_type {
+>   * @remove:    Called when the device is removed from the system to
+>   *             unbind a device from this driver.
+>   * @shutdown:  Called at shut-down time to quiesce the device.
+> + * @async_shutdown_start:      Optional call to support and begin the sh=
+utdown
+> + *                             process on the device in an asynchronous =
+manner.
+> + * @async_shutdown_end:                Optional call to complete an asyn=
+chronous
+> + *                             shutdown of the device. Must be provided =
+if a
+> + *                             sync_shutdown_start call is provided.
+>   * @suspend:   Called to put the device to sleep mode. Usually to a
+>   *             low power state.
+>   * @resume:    Called to bring a device from sleep mode.
+> @@ -110,6 +115,8 @@ struct device_driver {
+>         void (*sync_state)(struct device *dev);
+>         int (*remove) (struct device *dev);
+>         void (*shutdown) (struct device *dev);
+> +       void (*async_shutdown_start) (struct device *dev);
+> +       void (*async_shutdown_end) (struct device *dev);
 
-OK, I see. I think I have an idea what's going on. Let me try a couple
-of things...
+Why not use the existing shutdown and call it from an async thread and
+wait for it to finish? Similar to how async probes are handled. Also,
+adding separate ops for this feels clunky and a very narrow fix. Just
+use a flag to indicate the driver can support async shutdown using the
+existing shutdown() op.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+-Saravana
