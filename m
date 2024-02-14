@@ -1,117 +1,132 @@
-Received: from devnull.tasossah.com (devnull.tasossah.com [91.121.165.14])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB73E1B81A;
-	Wed, 14 Feb 2024 12:21:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.121.165.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 324821B593;
+	Wed, 14 Feb 2024 12:28:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707913313; cv=none; b=nnLyQmFBY+9DJr42/I7HC6X/ZnLQU/0tm+kNVve6NG+fUI0RZY+J35kgExaGnEi/CKN2vz++Od0AgiA5flGdkmdfJg0xdA9TF9cZm8JMD8FRKsJgoVMbe3ZQi2NGXe1y3DJh/LvCakDMijdwvL1ZMBLz7WQtpe+3fDu4kRtMkq4=
+	t=1707913726; cv=none; b=WYDkyNlDaStXMIXAesRM8UhuQSYweaqC7pxb+qQINT90CMtJzV6+bUyLhgbx75/3AC/NzVIZrbYPwC5r8wS4FIUjI5NRQ2DwWQ+j3FtPEli7ZppqVKeQRuGI0GUDMz5RpiFnkcz9DfU4+LBKIRrs0XZYJlZcXleQ9WfmsdbM5uQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707913313; c=relaxed/simple;
-	bh=S1X0Mrkhc1/eoO8nCsORmtBd8Av5gB6rLBM32VNDBq8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Z5c/2u2TJVu/X9Afy9x2HMnylZdu4z2DnoAkMVqvDPu/1/nq3GG4asJWN3ZKpNqooEplVZXC87kuF4KdZYTPP7Ss+hx/gK7dLJqeEQz0gMvnVa/uWnXynhc+t9wiCBOKx36Sp+TaGHc6sRFsKPiNwIMxpTHU3Yfzg4aqQMBIMo8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com; spf=pass smtp.mailfrom=tasossah.com; dkim=pass (1024-bit key) header.d=devnull.tasossah.com header.i=@devnull.tasossah.com header.b=cuX/gMZj; arc=none smtp.client-ip=91.121.165.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=tasossah.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tasossah.com
+	s=arc-20240116; t=1707913726; c=relaxed/simple;
+	bh=j/9Y4RyzPuUKx7quQTGyGBQV203CBRKx9NceOBRl3v8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=cX8obDrhD4WLX1Wb2s7RiU6Tc87PuyZrtPa2+dM5Tlcd9RaRO8JJKQWlNJyJwDw1Ph4MVaXzwF2M59m1+c3AXWDZnTjLvGSnP+t45/JzmaeTUBUxVIC6T8Gxpsce5X2pLGmCW6xWCCBnwkc1MOUITjSqcJMzYc41uGtgaTnba9w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=RAyyuSiu; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=devnull.tasossah.com header.i=@devnull.tasossah.com header.b="cuX/gMZj"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=devnull.tasossah.com; s=vps; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=uMTTpA3ex/tasYG5jcUWjHuUgalpX560MSu3l8bptPs=; b=cuX/gMZj1+bxWV15tuawTCfTag
-	Q2WomxkN9wqXnIr59LCvaycBcfOZBSYb2Vg6zCblh4V3mxSlZ+jnolbYj7T/Ta9V/zapVCtKoQWng
-	EqJqAIXR7yTbJ3R807W/2H3rvAYXXiMdulmxK3ldWG0qbnt2hsrPwTvpdTRZQzA3OWtE=;
-Received: from [2a02:587:6a0e:de00::d54]
-	by devnull.tasossah.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.93)
-	(envelope-from <tasos@tasossah.com>)
-	id 1raEGk-008qr8-7l; Wed, 14 Feb 2024 14:21:42 +0200
-Message-ID: <b597d766-6e05-48a3-9d4c-6a1ebf8899bf@tasossah.com>
-Date: Wed, 14 Feb 2024 14:21:41 +0200
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="RAyyuSiu"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41EBuYt3032116;
+	Wed, 14 Feb 2024 12:28:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=MRFKlhzzIOqZkfBxF3tF90gsNVo0FbFcej3DjTeQ68Q=;
+ b=RAyyuSiuyE1/8N/E++GW0YWMFId7OBYiV3UQ9eM4Zhs8jy2oE3VqNpSDOCHFoMBsCZ1K
+ o49R9lYVDaJsjzIpHnb6sE0Z6sDW038WAYhEwHV1tu3ZoO6CHGgzhQ2AVJ/cw59ftVXc
+ mmFL67T7td01fQjFd3uxBGg797RCVHh2MVGw9izgCdMzLC3IMbalyXfxzqiHiXGbUHQG
+ aR4Fe2YIRUpEyHbj5VypVVxevkXQ153S3iTaXWthAxmjV2p9rOwvu/AxXigBDZZA4j12
+ zA8yocMdIz/NW1uEL1M16AUy/x8U/XDPLLWNxzaGR3WAqY8LelLU4BhqCQDPATwYCXZx Eg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w8vtc0y5m-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 14 Feb 2024 12:28:15 +0000
+Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41EBudau000403;
+	Wed, 14 Feb 2024 12:27:59 GMT
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w8vtc0wwd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 14 Feb 2024 12:27:58 +0000
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 41E9pwjn024878;
+	Wed, 14 Feb 2024 12:27:30 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3w6mfpdssn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 14 Feb 2024 12:27:30 +0000
+Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 41ECRPn220054748
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 14 Feb 2024 12:27:27 GMT
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id E56B820043;
+	Wed, 14 Feb 2024 12:27:24 +0000 (GMT)
+Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 4C2D920040;
+	Wed, 14 Feb 2024 12:27:20 +0000 (GMT)
+Received: from li-c9696b4c-3419-11b2-a85c-f9edc3bf8a84.in.ibm.com (unknown [9.109.198.187])
+	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 14 Feb 2024 12:27:20 +0000 (GMT)
+From: Nilay Shroff <nilay@linux.ibm.com>
+To: john.g.garry@oracle.com
+Cc: alan.adamson@oracle.com, axboe@kernel.dk, brauner@kernel.org,
+        bvanassche@acm.org, dchinner@redhat.com, djwong@kernel.org, hch@lst.de,
+        jack@suse.cz, jbongio@google.com, jejb@linux.ibm.com,
+        kbusch@kernel.org, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org, martin.petersen@oracle.com,
+        ming.lei@redhat.com, ojaswin@linux.ibm.com, sagi@grimberg.me,
+        tytso@mit.edu, viro@zeniv.linux.org.uk
+Subject: Re: [PATCH v3 14/15] nvme: Support atomic writes
+Date: Wed, 14 Feb 2024 17:57:19 +0530
+Message-ID: <20240214122719.184946-1-nilay@linux.ibm.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240124113841.31824-15-john.g.garry@oracle.com>
+References: <20240124113841.31824-15-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: sd: usb_storage: uas: Access media prior to
- querying device properties
-Content-Language: el-GR, en-GB
-To: "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
-Cc: belegdol@gmail.com, stable@vger.kernel.org
-References: <20240213143306.2194237-1-martin.petersen@oracle.com>
-From: Tasos Sahanidis <tasos@tasossah.com>
-Autocrypt: addr=tasos@tasossah.com; keydata=
- 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
-In-Reply-To: <20240213143306.2194237-1-martin.petersen@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: OzWX2STjmdBlT2OvLENkQJSFshfYk4zr
+X-Proofpoint-GUID: RSF1EXPuEZ0h1L4vhPfo9aQTI-RvmULM
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-14_04,2024-02-14_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 adultscore=0
+ malwarescore=0 phishscore=0 suspectscore=0 bulkscore=0 spamscore=0
+ priorityscore=1501 clxscore=1011 mlxlogscore=849 impostorscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311290000 definitions=main-2402140097
 
-On 2024-02-13 16:33, Martin K. Petersen wrote:
-> Match the behavior of a well known commercial operating system and
-> trigger a READ operation prior to querying device characteristics to
-> force the device to populate mode pages and VPDs.
-
-Applied the patch, reverted the Kingston quirk, and:
-
-[  447.655130] usb-storage 3-2:1.0: USB Mass Storage device detected
-[  447.664875] scsi host10: usb-storage 3-2:1.0
-[  448.690959] scsi 10:0:0:0: Direct-Access     Kingston DT Ultimate G3   PMAP PQ: 0 ANSI: 6
-[  448.709502] sd 10:0:0:0: Attached scsi generic sg1 type 0
-[  448.837376] sd 10:0:0:0: [sdb] 61472768 512-byte logical blocks: (31.5 GB/29.3 GiB)
-[  448.847489] sd 10:0:0:0: [sdb] Write Protect is off
-[  448.852593] sd 10:0:0:0: [sdb] Mode Sense: 2b 00 00 08
-[  448.854221] sd 10:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-
-Thanks!
-
-Tested-by: Tasos Sahanidis <tasos@tasossah.com>
-
---
-Tasos
+>Support reading atomic write registers to fill in request_queue=0D
+>properties.=0D
+=0D
+>Use following method to calculate limits:=0D
+>atomic_write_max_bytes =3D flp2(NAWUPF ?: AWUPF)=0D
+>atomic_write_unit_min =3D logical_block_size=0D
+>atomic_write_unit_max =3D flp2(NAWUPF ?: AWUPF)=0D
+>atomic_write_boundary =3D NABSPF=0D
+=0D
+In case the device doesn't support namespace atomic boundary size (i.e. NAB=
+SPF =0D
+is zero) then while merging atomic block-IO we should allow merge.=0D
+ =0D
+For example, while front/back merging the atomic block IO, we check whether=
+ =0D
+boundary is defined or not. In case if boundary is not-defined (i.e. it's z=
+ero) =0D
+then we simply reject merging ateempt (as implemented in =0D
+rq_straddles_atomic_write_boundary()).  =0D
+=0D
+I am quoting this from NVMe spec (Command Set Specification, revision 1.0a,=
+ =0D
+Section 2.1.4.3) : "To ensure backwards compatibility, the values reported =
+for =0D
+AWUN, AWUPF, and ACWU shall be set such that they  are  supported  even  if=
+  a  =0D
+write  crosses  an  atomic  boundary.  If  a  controller  does  not  guaran=
+tee =0D
+atomicity across atomic boundaries, the controller shall set AWUN, AWUPF, a=
+nd =0D
+ACWU to 0h (1 LBA)." =0D
+=0D
+Thanks,=0D
+--Nilay=0D
+=0D
