@@ -1,66 +1,64 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68FA113FFC;
-	Wed, 14 Feb 2024 09:39:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D66118E06
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2024 11:01:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707903554; cv=none; b=nwttFn1YpEs6tTxdAGO8L7OeXdDJjQhYIV7I21Bb0QLK90cyIuiF+ulaN2I4PAfZqXzDmyFXXG3K5uRij8PwpTbB1Xu9xo9HLAOK/oBUmRm3vh3yAU7QB3CV+0QnMWXXNhTJkBBMzMrr/Bj+bzjTQlfXgwuFpSSDYv2BY1ESrNk=
+	t=1707908521; cv=none; b=nP1edUpgkmskx2bdFME/7vnIF+LQKcIADPcbnnWMSXvmP+Z3woczNM0Oq6MkYcJdtvmCoFCOwveuGhjptv7FzCxGDQuiHn66IoO0ypW5EjF8MpPpUv2/1kPGcHahcrcsIwgUCLSPsF5dc6FqWDo7zSLFN/AA4OFLU2keDM+j+yw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707903554; c=relaxed/simple;
-	bh=UWInf7VyNRnbUUOfxbPM+OMaftXsfWaPUjTVPMbbifg=;
+	s=arc-20240116; t=1707908521; c=relaxed/simple;
+	bh=1gjYGCuhJesJVchATCEpRGkap4bUYT4wxu6IGwz0inc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=reePuEvmFgY9LqnJshIPK0tvJzeHHuqMOXL167E1lKV+giYCmMaxqH8z7Xfwcw6d+4gZ1RTNBVa8hRe6UbpjdFBbG9aLFn3h2GRXCEZnBKCwZX0Ee+1KC4R6xzJ1Hof3UlzcE8ZOIAI+tLe6EUcXTSfZqlKdFIEcZT8DwW+sfKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=DoXGmsP4; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 In-Reply-To:Content-Type; b=HmwW8qY2n/z3iuP7OSFo0umO+TriqGt6ZddbLk0LuqUcsTU5vP+Rm+bHnu0KqVpqLeAUaZRzcFk+kJ35UUwmtt5xXTwtOdlljwehLDkWeUKmApj5r5Q/4PaGNZ/qlyPVxM9PhVKPdr0ndf21K1dzJ9kB1uUUoaAhjHU+wKcpX2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bOZMZRit; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="DoXGmsP4"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41E9Wmfh018847;
-	Wed, 14 Feb 2024 09:38:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=cUcJoLtY+nDexHMnGYoZp3U7wjuUH4CdIXmbB/RLu4c=;
- b=DoXGmsP4K81+9XjLJWWthfIK5HcFnGRXVnTNhQYKLpE4UNiWNdYWzWhdVKjraBl8JpJO
- alqg64zxAP4okpf2tHNQAyQp6Tayak6XgScxJmec1e5bo3LoqxQpwt4XOwaF/YFDcdXh
- 72vYSUxrkb2O9p8AoigIZHgAnmdE3Wb2wr24BR1CecBCic4R5g2TYDnX0ib+lIhMvlrP
- gjoFxH356Ua64DRJuOjc4gEt2A+BTmDPK5eu5q0XdZ84K386dVI0yh949B4ZlkP1DlUO
- cxyAaAEtLli14uzMpXVurlO3pT87em81jCiBWtk/jp3KDvhYrEufewqHBTV3oJNPxkm3 ew== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w8tyrr4f4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Feb 2024 09:38:48 +0000
-Received: from m0356517.ppops.net (m0356517.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41E9X0Ub019301;
-	Wed, 14 Feb 2024 09:38:47 GMT
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3w8tyrr4et-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Feb 2024 09:38:47 +0000
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 41E8xTQw032553;
-	Wed, 14 Feb 2024 09:38:46 GMT
-Received: from smtprelay04.dal12v.mail.ibm.com ([172.16.1.6])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 3w6kftna01-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 Feb 2024 09:38:46 +0000
-Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
-	by smtprelay04.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 41E9chpo14877390
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 14 Feb 2024 09:38:45 GMT
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 3C22C5806A;
-	Wed, 14 Feb 2024 09:38:43 +0000 (GMT)
-Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 26BC05805C;
-	Wed, 14 Feb 2024 09:38:36 +0000 (GMT)
-Received: from [9.109.198.187] (unknown [9.109.198.187])
-	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Wed, 14 Feb 2024 09:38:35 +0000 (GMT)
-Message-ID: <c130133f-7c4c-4875-a850-1a8ac9ad4845@linux.ibm.com>
-Date: Wed, 14 Feb 2024 15:08:34 +0530
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bOZMZRit"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1707908518;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ej1/wNFVwzSicN4lDJDfw+4pBNgxNvs7M0rU1TbrOPQ=;
+	b=bOZMZRitH8Q3/brkwi80AFxqYXcstumoZ3xEXrJcxlQY/6jppHbPcNAfPVcwS+EiPF6QPl
+	bflLZUMbZJjOEmJYjloKKys76hpAw9i1hiA152nRFB0YmVoFs4I01s8u6qx7+tIk15b6Uc
+	CCwR0qgX6tADTack9aMLGGnfEB17ong=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-350-b032-mnfO72kV-SrpN8tzw-1; Wed, 14 Feb 2024 06:01:57 -0500
+X-MC-Unique: b032-mnfO72kV-SrpN8tzw-1
+Received: by mail-lj1-f200.google.com with SMTP id 38308e7fff4ca-2d0cb64437dso44511341fa.2
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Feb 2024 03:01:57 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707908516; x=1708513316;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ej1/wNFVwzSicN4lDJDfw+4pBNgxNvs7M0rU1TbrOPQ=;
+        b=K7UdHBeXc9SO0FdLpp/QrPUgbvTNHSiCtKL9fQ/Ct/1gl6NrB/sSFVjZ+oD4l0Xm2p
+         oI/OIYDCd5DkTK1cfHf67NRiXqPZdVfV59jtUkqOhBRa6Ep3DkHEWl37TOLfyt2N5NB7
+         AsuD0YM3DoqsDVBzn+l3KxWG6MseKgwPxxxfbjoNCk6j48kthQwDu3PbScBxKceJ5lX9
+         +ptF9BMtczZyGscVWdPh9j9K8TH8B9fISpRJtEFN7pox+KWkiyfrKW+Mv5ljbWAuZ8MG
+         1ytgH0Xp88J6sgSg3jFO97TRPhYNjAV0mVtQr4PI0euX554sJYCubSewuhkh1zyuB+xJ
+         ImZg==
+X-Gm-Message-State: AOJu0Yxfsz5D7fq08kQsntlZnMC/XEGRK1Pmx4ve7ndzaJpPUrm5LMb/
+	zpVoGVcsde8EUHyEO+L2qcUJ7ycOVnakEen7LPzB7RPszlSzzEFCvSshx4M/dL1nIwPMpJ+WIhf
+	TjnPSql4ijXogKeLyZMR4J5jBFve5O9aCwgb8+bIKaUmSORpGcIJZYzIqiw0=
+X-Received: by 2002:a05:6512:243:b0:511:5352:649f with SMTP id b3-20020a056512024300b005115352649fmr1424301lfo.19.1707908515810;
+        Wed, 14 Feb 2024 03:01:55 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IG2uAG3XBeib55xP/ZuOMd6IFSo0N4WTaycgU8jIVAsDJgZZGCE2RuTbHKu3J3b6lQnWzjuOA==
+X-Received: by 2002:a05:6512:243:b0:511:5352:649f with SMTP id b3-20020a056512024300b005115352649fmr1424282lfo.19.1707908515428;
+        Wed, 14 Feb 2024 03:01:55 -0800 (PST)
+Received: from [192.168.0.106] (ip4-83-240-118-160.cust.nbox.cz. [83.240.118.160])
+        by smtp.gmail.com with ESMTPSA id z11-20020a7bc7cb000000b00411b7c91470sm1579845wmk.12.2024.02.14.03.01.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 Feb 2024 03:01:54 -0800 (PST)
+Message-ID: <ab1ac37c-0dd6-4c7b-9c09-832c2bbc6a36@redhat.com>
+Date: Wed, 14 Feb 2024 12:01:53 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,71 +66,103 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 10/15] block: Add fops atomic write support
+Subject: Re: [PATCH] smartpqi: fix disable_managed_interrupts
+To: Don Brace <don.brace@microchip.com>, Kevin.Barnett@microchip.com,
+ scott.teel@microchip.com, Justin.Lindley@microchip.com,
+ scott.benesh@microchip.com, gerry.morong@microchip.com,
+ mahesh.rajashekhara@microchip.com, mike.mcgowen@microchip.com,
+ murthy.bhat@microchip.com, kumar.meiyappan@microchip.com,
+ jeremy.reeves@microchip.com, david.strahan@microchip.com, hch@infradead.org,
+ jejb@linux.vnet.ibm.com, joseph.szczypek@hpe.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
+References: <20240213162200.1875970-1-don.brace@microchip.com>
+ <20240213162200.1875970-2-don.brace@microchip.com>
 Content-Language: en-US
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, brauner@kernel.org, bvanassche@acm.org,
-        dchinner@redhat.com, djwong@kernel.org, hch@lst.de, jack@suse.cz,
-        jbongio@google.com, jejb@linux.ibm.com, kbusch@kernel.org,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-        martin.petersen@oracle.com, ming.lei@redhat.com, ojaswin@linux.ibm.com,
-        sagi@grimberg.me, tytso@mit.edu, viro@zeniv.linux.org.uk
-References: <20240124113841.31824-11-john.g.garry@oracle.com>
- <20240213093619.106770-1-nilay@linux.ibm.com>
- <9ffc3102-2936-4f83-b69d-bbf64793b9ca@oracle.com>
- <e99cf4ef-40ec-4e66-956f-c9e2aebb4621@linux.ibm.com>
- <30909525-73e4-42cb-a695-672b8e5a6235@oracle.com>
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <30909525-73e4-42cb-a695-672b8e5a6235@oracle.com>
+From: Tomas Henzl <thenzl@redhat.com>
+In-Reply-To: <20240213162200.1875970-2-don.brace@microchip.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: p7_p2wy0T2tbh-50wJFh1wKiPX3doLPk
-X-Proofpoint-ORIG-GUID: DUfNKTmlVXqE-eL32_o5hvhwgMYyPpUV
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-14_03,2024-02-12_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
- priorityscore=1501 impostorscore=0 malwarescore=0 phishscore=0
- mlxlogscore=999 lowpriorityscore=0 clxscore=1015 spamscore=0
- suspectscore=0 mlxscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2311290000 definitions=main-2402140074
+Content-Transfer-Encoding: 7bit
 
-
-
-On 2/13/24 17:22, John Garry wrote:
-> On 13/02/2024 11:08, Nilay Shroff wrote:
->>> It's relied that atomic_write_unit_max is <= atomic_write_boundary and both are a power-of-2. Please see the NVMe patch, which this is checked. Indeed, it would not make sense if atomic_write_unit_max > atomic_write_boundary (when non-zero).
->>>
->>> So if the write is naturally aligned and its size is <= atomic_write_unit_max, then it cannot be straddling a boundary.
->> Ok fine but in case the device doesn't support namespace atomic boundary size (i.e. NABSPF is zero) then still do we need
->> to restrict IO which crosses the atomic boundary?
+On 2/13/24 17:22, Don Brace wrote:
+> Correct blk-mq registration issue with module parameter
+> disable_managed_interrupts enabled.
 > 
-> Is there a boundary if NABSPF is zero?
-If NABSPF is zero then there's no boundary and so we may not need to worry about IO crossing boundary.
+> When we turn off the default PCI_IRQ_AFFINITY flag, the driver needs to
+> register with blk-mq using blk_mq_map_queues(). The driver is currently
+> calling blk_mq_pci_map_queues() which results in a stack trace and
+> possibly undefined behavior.
+> 
+> Stack Trace:
+> [    7.860089] scsi host2: smartpqi
+> [    7.871934] WARNING: CPU: 0 PID: 238 at block/blk-mq-pci.c:52 blk_mq_pci_map_queues+0xca/0xd0
+> [    7.889231] Modules linked in: sd_mod t10_pi sg uas smartpqi(+) crc32c_intel scsi_transport_sas usb_storage dm_mirror dm_region_hash dm_log dm_mod ipmi_devintf ipmi_msghandler fuse
+> [    7.924755] CPU: 0 PID: 238 Comm: kworker/0:3 Not tainted 4.18.0-372.88.1.el8_6_smartpqi_test.x86_64 #1
+> [    7.944336] Hardware name: HPE ProLiant DL380 Gen10/ProLiant DL380 Gen10, BIOS U30 03/08/2022
+> [    7.963026] Workqueue: events work_for_cpu_fn
+> [    7.978275] RIP: 0010:blk_mq_pci_map_queues+0xca/0xd0
+> [    7.978278] Code: 48 89 de 89 c7 e8 f6 0f 4f 00 3b 05 c4 b7 8e 01 72 e1 5b 31 c0 5d 41 5c 41 5d 41 5e 41 5f e9 7d df 73 00 31 c0 e9 76 df 73 00 <0f> 0b eb bc 90 90 0f 1f 44 00 00 41 57 49 89 ff 41 56 41 55 41 54
+> [    7.978280] RSP: 0018:ffffa95fc3707d50 EFLAGS: 00010216
+> [    7.978283] RAX: 00000000ffffffff RBX: 0000000000000000 RCX: 0000000000000010
+> [    7.978284] RDX: 0000000000000004 RSI: 0000000000000000 RDI: ffff9190c32d4310
+> [    7.978286] RBP: 0000000000000000 R08: ffffa95fc3707d38 R09: ffff91929b81ac00
+> [    7.978287] R10: 0000000000000001 R11: ffffa95fc3707ac0 R12: 0000000000000000
+> [    7.978288] R13: ffff9190c32d4000 R14: 00000000ffffffff R15: ffff9190c4c950a8
+> [    7.978290] FS:  0000000000000000(0000) GS:ffff9193efc00000(0000) knlGS:0000000000000000
+> [    7.978292] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [    8.172814] CR2: 000055d11166c000 CR3: 00000002dae10002 CR4: 00000000007706f0
+> [    8.172816] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> [    8.172817] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> [    8.172818] PKRU: 55555554
+> [    8.172819] Call Trace:
+> [    8.172823]  blk_mq_alloc_tag_set+0x12e/0x310
+> [    8.264339]  scsi_add_host_with_dma.cold.9+0x30/0x245
+> [    8.279302]  pqi_ctrl_init+0xacf/0xc8e [smartpqi]
+> [    8.294085]  ? pqi_pci_probe+0x480/0x4c8 [smartpqi]
+> [    8.309015]  pqi_pci_probe+0x480/0x4c8 [smartpqi]
+> [    8.323286]  local_pci_probe+0x42/0x80
+> [    8.337855]  work_for_cpu_fn+0x16/0x20
+> [    8.351193]  process_one_work+0x1a7/0x360
+> [    8.364462]  ? create_worker+0x1a0/0x1a0
+> [    8.379252]  worker_thread+0x1ce/0x390
+> [    8.392623]  ? create_worker+0x1a0/0x1a0
+> [    8.406295]  kthread+0x10a/0x120
+> [    8.418428]  ? set_kthread_struct+0x50/0x50
+> [    8.431532]  ret_from_fork+0x1f/0x40
+> [    8.444137] ---[ end trace 1bf0173d39354506 ]---
 
-Even though, the atomic boundary is not defined, this function doesn't allow atomic write crossing atomic_write_unit_max_bytes.
-For instance, if AWUPF is 63 and an IO starts atomic write from logical block #32 and the number of logical blocks to be written
-in this IO equals to #64 then it's not allowed. However if this same IO starts from logical block #0 then it's allowed.
-So my point here's that can this restriction be avoided when atomic boundary is zero (or not defined)? 
+This patch fixes the issue on my machine.
 
-Also, it seems that the restriction implemented for atomic write to succeed are very strict. For example, atomic-write can't
-succeed if an IO starts from logical block #8 and the number of logical blocks to be written in this IO equals to #16. 
-In this particular case, IO is well within atomic-boundary (if it's defined) and atomic-size-limit, so why do we NOT want to 
-allow it? Is it intentional? I think, the spec doesn't mention about such limitation.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
 > 
->>
->> I am quoting this from NVMe spec (Command Set Specification, revision 1.0a, Section 2.1.4.3) :
->> "To ensure backwards compatibility, the values reported for AWUN, AWUPF, and ACWU shall be set such that
->> they  are  supported  even  if  a  write  crosses  an  atomic  boundary.  If  a  controller  does  not
->> guarantee atomicity across atomic boundaries, the controller shall set AWUN, AWUPF, and ACWU to 0h (1 LBA)."
+> Fixes: ("cf15c3e734e8 scsi: smartpqi: Add module param to disable managed ints")
 > 
-> How about respond to the NVMe patch in this series, asking this question?
+> Tested-by: Yogesh Chandra Pandey <YogeshChandra.Pandey@microchip.com>
+> Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+> Reviewed-by: Scott Teel <scott.teel@microchip.com>
+> Reviewed-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+> Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
+> Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+> Signed-off-by: Don Brace <don.brace@microchip.com>
+> ---
+>  drivers/scsi/smartpqi/smartpqi_init.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
 > 
-Yes I will send this query to the NVMe patch in this series.
+> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+> index ceff1ec13f9e..385180c98be4 100644
+> --- a/drivers/scsi/smartpqi/smartpqi_init.c
+> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
+> @@ -6533,8 +6533,11 @@ static void pqi_map_queues(struct Scsi_Host *shost)
+>  {
+>  	struct pqi_ctrl_info *ctrl_info = shost_to_hba(shost);
+>  
+> -	blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
+> +	if (!ctrl_info->disable_managed_interrupts)
+> +		return blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
+>  			      ctrl_info->pci_dev, 0);
+> +	else
+> +		return blk_mq_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT]);
+>  }
+>  
+>  static inline bool pqi_is_tape_changer_device(struct pqi_scsi_dev *device)
 
-Thanks,
---Nilay
