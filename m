@@ -1,89 +1,121 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9240213246C
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Feb 2024 14:39:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+Received: from vmicros1.altlinux.org (vmicros1.altlinux.org [194.107.17.57])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 251D4133286
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Feb 2024 15:18:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.107.17.57
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708008001; cv=none; b=u8n7Ou4YlV+SHfTpHcOw7l/2oLhYTEg+wMLyTPlDsnuIQaJabtr0gYoLgHHyYtRb4VtigKGEJG7E7gc+dmrkTVzYY9LppNebecvhk1xyDpLPcd9rtL3Kc+mQ4vo1MM/w8npEMmbbI7QRNUSIxNuNhCpgBjq35z/ubAL3yf6yAc8=
+	t=1708010320; cv=none; b=EifIM8A1od0VAbKXUvJipHHR/W5K1Oo5SxFHOUEkWJZ0M2D98kI/tentsiH51wC+nuclYfm/m9kKJ89SJ73GHqbyeTZ+7o7DhiIbJFK4dwd24cGubbYg+RPAFR9xA8D9h40FYBuqNL6qavWkQSXC4kLb+fh6syqy/dMqnWxyDww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708008001; c=relaxed/simple;
-	bh=pyiETiT0mWRVTFHitcfy6ifRjN7asMxAy4uLZDURMBk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gthdLmjMULsUDDhgrLDIdX977STgiXxz4NqPirug43YOZEvGuyzOR0vc0/W3aTe6e5u8J9sF0MJv9hFpwYeaea5UQHqHqg0c2y6MzDA6euRV/BjhEnFEXqfzFO4YVe223eND3ImDq9tbrmLiI3B6/2mFAkASp+BPgKCD10f2oDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Y+yHeLbJ; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Y+yHeLbJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1708007997;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=EerRsS3pnhmM4qDFUqEJSQKn/OlEoujFDPhFMuqHJ58=;
-	b=Y+yHeLbJdVL0pl2nmfdBV1qkvA0mbjy7vGt1jiX4Nl89mKFS9veMREBDh6Oev0sJc4UsXh
-	ia4HPbhvRhPnp8hPv/kt0B3Ua8zt3Du4hYqR+G0WKahqSW9VUma1lxyyyx/YGIRsZl+tCN
-	UTGt3z/dhUJFH5kBBq1dGOaRfWsmVDs=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-547-xzAAwuTIN4WIZqtE8jyt-Q-1; Thu,
- 15 Feb 2024 09:39:53 -0500
-X-MC-Unique: xzAAwuTIN4WIZqtE8jyt-Q-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id A4B2138060E2;
-	Thu, 15 Feb 2024 14:39:52 +0000 (UTC)
-Received: from kalibr.redhat.com (unknown [10.47.238.145])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id C7BFC40C106C;
-	Thu, 15 Feb 2024 14:39:50 +0000 (UTC)
-From: Maurizio Lombardi <mlombard@redhat.com>
-To: michael.christie@oracle.com
-Cc: d.bogdanov@yadro.com,
-	target-devel@vger.kernel.org,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	james.bottomley@hansenpartnership.com
-Subject: [PATCH V2 2/2] target: set the xcopy_wq pointer to NULL after free.
-Date: Thu, 15 Feb 2024 15:39:44 +0100
-Message-Id: <20240215143944.847184-3-mlombard@redhat.com>
-In-Reply-To: <20240215143944.847184-1-mlombard@redhat.com>
-References: <20240215143944.847184-1-mlombard@redhat.com>
+	s=arc-20240116; t=1708010320; c=relaxed/simple;
+	bh=19ctJ6tpw9FTjJaUlOrYShKM2wHyAali4GAIClMZQuA=;
+	h=Date:From:To:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KrBZhjEv37jfR5HdMlLpAtBNoFcTIP1glmQy4u8TgfnuxgYrPmkY2j6W4rAPAiIz8YEBpJwMvqDY87iNad5yDF+HlbnNO8pvr1Qy9jxdCKhlnnqHBUk/zFg8/PAGIo5Fxl1zE2AjmGtmw4VBE5LUJmPwRVY5DiOEhlsyopljyYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org; spf=pass smtp.mailfrom=altlinux.org; arc=none smtp.client-ip=194.107.17.57
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altlinux.org
+Received: from imap.altlinux.org (imap.altlinux.org [194.107.17.38])
+	by vmicros1.altlinux.org (Postfix) with ESMTP id 9935272C8F5;
+	Thu, 15 Feb 2024 18:18:29 +0300 (MSK)
+Received: from pony.office.basealt.ru (unknown [193.43.10.9])
+	by imap.altlinux.org (Postfix) with ESMTPSA id 9564136D016B;
+	Thu, 15 Feb 2024 18:18:29 +0300 (MSK)
+Received: by pony.office.basealt.ru (Postfix, from userid 500)
+	id 671F7360AE29; Thu, 15 Feb 2024 18:18:29 +0300 (MSK)
+Date: Thu, 15 Feb 2024 18:18:29 +0300
+From: Vitaly Chikunov <vt@altlinux.org>
+To: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
+	Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, 
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Chandrakanth patil <chandrakanth.patil@broadcom.com>
+Subject: Re: megaraid_sas: multiple FALLOC_FL_ZERO_RANGE causes timeouts and
+ resets on MegaRAID 9560-8i 4GB since 5.19
+Message-ID: <64phxapjp742qob7gr74o2tnnkaic6wmxgfa3uxn33ukrwumbi@cfd6kmix3bbm>
+References: <20240210011831.47f55oe67utq2yr7@altlinux.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240210011831.47f55oe67utq2yr7@altlinux.org>
 
-Do not leave a dangling pointer after free.
+Hi,
 
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/target/target_core_xcopy.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+On Sat, Feb 10, 2024 at 04:18:31AM +0300, Vitaly Chikunov wrote:
+> 
+> We started to get timeouts and controller resets since 5.19.5 (vanilla
+> v5.19 is not tested, tests below are on 6.6.15) when several ioctl
+> FALLOC_FL_ZERO_RANGE are issued into device consequentially without
+> delay between them (3-5 is enough to trigger condition). Because of
+> this, for example, mkfs.ext4 extremely slows down when initializing
+> filesystem. This happens on aarch64 (Kunpeng-920) server.
 
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 4128631c9dfd..1f79da0041e3 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -491,8 +491,10 @@ int target_xcopy_setup_pt(void)
- 
- void target_xcopy_release_pt(void)
- {
--	if (xcopy_wq)
-+	if (xcopy_wq) {
- 		destroy_workqueue(xcopy_wq);
-+		xcopy_wq = NULL;
-+	}
- }
- 
- /*
--- 
-2.39.3
+I am reported that bisect found this commit to cause above mentioned
+problem:
 
+  commit c92a6b5d63359dd6d2ce6ea88ecd8e31dd769f6b
+  Author:     Martin K. Petersen <martin.petersen@oracle.com>
+  AuthorDate: Wed Mar 2 00:35:47 2022 -0500
+
+      scsi: core: Query VPD size before getting full page
+
+When from v5.19 this commit is reverted the problem disappears.
+
+Thanks,
+
+> 
+> Reproducer:
+> 
+>   # for ((i=0;i<5;i++)); do echo $i; fallocate -z -l 2097152 /dev/sdc; done
+> 
+> Example of dmesg messages after problematic ioctl calls:
+> 
+>   Feb 06 19:44:07 host-226 kernel: sd 0:2:4:0: [sdc] tag#4752 Abort request is for SMID: 4753
+>   Feb 06 19:44:07 host-226 kernel: sd 0:2:4:0: attempting task abort! scmd(0x00000000d51beacc) tm_dev_handle 0x4
+>   Feb 06 19:44:07 host-226 kernel: megaraid_sas 0000:01:00.0: megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
+>   Feb 06 19:44:07 host-226 kernel: megaraid_sas 0000:01:00.0: megasas_enable_intr_fusion is called outbound_intr_mask:0x40000000
+>   Feb 06 19:44:07 host-226 kernel: sd 0:2:4:0: [sdc] tag#4752 task abort FAILED!! scmd(0x00000000d51beacc)
+>   Feb 06 19:44:07 host-226 kernel: sd 0:2:4:0: [sdc] tag#4752 CDB: Write(10) 2a 00 00 00 00 00 00 00 08 00
+>   Feb 06 19:45:04 host-226 kernel: sd 0:2:4:0: [sdc] tag#8292 Abort request is for SMID: 8293
+>   Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: attempting task abort! scmd(0x00000000d9406c9c) tm_dev_handle 0x4
+>   Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: [sdc] tag#4752 BRCM Debug mfi stat 0x2d, data len requested/completed 0x1000/0x0
+>   Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: [sdc] tag#8292 task abort SUCCESS!! scmd(0x00000000d9406c9c)
+>   Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: [sdc] tag#8292 CDB: Write Same(10) 41 00 03 4c 00 10 00 10 00 00
+>   Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: attempting target reset! scmd(0x00000000d51beacc) tm_dev_handle: 0x4
+>   Feb 06 19:45:06 host-226 kernel: megaraid_sas 0000:01:00.0: megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
+>   Feb 06 19:45:06 host-226 kernel: megaraid_sas 0000:01:00.0: megasas_enable_intr_fusion is called outbound_intr_mask:0x40000000
+>   Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: [sdc] tag#4752 target reset SUCCESS!!
+>   Feb 06 19:45:06 host-226 kernel: sd 0:2:4:0: Power-on or device reset occurred
+> 
+> Excerpt from the controller events log (from storli):
+> 
+>   Event Description: PD 05(e0xfb/s4) Path 5e8b4700e35e2004  reset (Type 03)
+>   Event Description: Drive PD 05(e0xfb/s4) link speed changed
+>   Event Description: Unexpected sense: Encl PD fb Path 5e8b4700e35e201e, CDB: 3c 01 05 00 00 00 00 00 10 00, Sense: b/4b/05
+>   Event Description: Unexpected sense: Encl PD fb Path 5e8b4700e35e201e, CDB: 3c 01 05 00 00 00 00 00 10 00, Sense: b/4b/05
+>   Event Description: PD 05(e0xfb/s4) Path 5e8b4700e35e2004  reset (Type 03)
+>   Event Description: Drive PD 05(e0xfb/s4) link speed changed
+>   Event Description: Unexpected sense: PD 05(e0xfb/s4) Path 5e8b4700e35e2004, CDB: 41 00 00 00 00 00 00 10 00 00, Sense: 6/29/00
+> 
+> Tests was on the latest firmware (at the moment):
+> 
+>   Product Name = MegaRAID 9560-8i 4GB
+>   Serial Number = SKC4006982
+>   Firmware Package Build = 52.28.0-5305
+>   Firmware Version = 5.280.02-3972
+>   PSOC FW Version = 0x001A
+>   PSOC Hardware Version = 0x000A
+>   PSOC Part Number = 29211-260-4GB
+>   NVDATA Version = 5.2800.00-0752
+>   CBB Version = 28.250.04.00
+>   Bios Version = 7.28.00.0_0x071C0000
+>   HII Version = 07.28.04.00
+>   HIIA Version = 07.28.04.00
+>   Driver Name = megaraid_sas
+>   Driver Version = 07.725.01.00-rc1
+> 
+> I tried also latest available megaraid_sas driver (07.728.04.00) which is not
+> yet merged into mainline but the problems are not resolved with it.
+> 
+> Thanks,
+> 
