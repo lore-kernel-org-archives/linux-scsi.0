@@ -1,58 +1,58 @@
-Received: from mail-oo1-f53.google.com (mail-oo1-f53.google.com [209.85.161.53])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A86FF12BF07
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 13:52:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E690412B175
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 13:54:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708091575; cv=none; b=bC/OapyECbJQh4xNLv4ZSuMd5NxZ87/k3UUmCiCNddzEziImYI7NgTHTlztEca3A8aipXNEIJDAfwN8akekkwPyigeXCiDPBfBIYZmpcJ3WcOUUWvG7MzupL3GW18KkPee0S6cTL1B9UqKzJ52P/w3sYlDKwqJaKM8DKwjWJf58=
+	t=1708091675; cv=none; b=PDIIqRQmUKLQReWFjjfHvWyicSq6b+ulQ8/eAjaEWvBoGt4qcbN4JIMgXHaUZtK5qwVfKGmiwIZqQkIaHKJoTya6rDO/KAgMfMdcatU1iUxSsqLfOF+Hincb9o4ikHDFm3JBNvwBhGCW0M+TvLZvLhVTeSPb6tAT/Z7GOwogk2Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708091575; c=relaxed/simple;
-	bh=xNpXVvKRPsTrj/Mzz8I8ejGA4UCfRcdLu0H+70btQTc=;
+	s=arc-20240116; t=1708091675; c=relaxed/simple;
+	bh=NhmCUNDgsWt5+ADVtF0uTbpvzwT1bgHvCHWDDbqVurE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HsmdNWeXexjSeDkLxPift4peQR9Ec4t8MJFyBz4M7AEfXqFQY2AHxCghiWiUTiXvtGGYVVb30kX9IkqNURrlRkJUqUcwn9sxspHfrt67/NSZ/vwo6DGILBSVWi3WWyY5LOCIxyRoge7DWp+0tUzTUe3ynHcGL8CiZOTZccsd+ks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=VB1e4192; arc=none smtp.client-ip=209.85.161.53
+	 Content-Type:Content-Disposition:In-Reply-To; b=Q+SIy0nfZQMbgyXm8jT5EwboamUDr+sJZLbyqDFLemCZbVHKaxAtGMf3SIbmw+EwqCg3ZQSTva95PhwbGpqoYdjG3pf41aQc9URiFTpcy97QD9EHxJt1UHMJ2OMfpCI/O3AooJcxXYvkCzvA9orNxNc75wq/HnSTBIbuAbSrOis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=HDGLgv9h; arc=none smtp.client-ip=209.85.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VB1e4192"
-Received: by mail-oo1-f53.google.com with SMTP id 006d021491bc7-59f80e1e259so1082301eaf.0
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 05:52:53 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="HDGLgv9h"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1db51e55023so13255625ad.1
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 05:54:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1708091572; x=1708696372; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1708091673; x=1708696473; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=txRJIv35R09tUN5MfiS2GVQlI2ntTTEw/eVgWdiZrzQ=;
-        b=VB1e4192DhHmjWHMmAwglNGGolZVlxlUQr5OXTTZQEApPow8ftWl4DDNG13LNDrxqX
-         KRdQtp9kB0BMa+47bVxPjJbJzH9mNIvftz/vHjby7MEvDutnrmcYWcmrZGfeWVQEF+Is
-         vqZ2FYgsvbCZ5GSZDnCSIHGyMkmLNqrZEWQBmrLREZhl6JFj0qU1F9FFXMK1RKMFSc3B
-         BYuL/Mzy3WYwbIn3aBsNlHTiOkGTT8825RSYR4N8AuvA/xLzQWujuoh6gCpj+swJsW6M
-         +MV+dw3rn0PqmgKf1Zy7RxowZT+NBtIT+AOikLDPrmOX2GxkNuTVSWNzVuyp5gR3ekQW
-         uJNQ==
+        bh=WZ1AXsb/8YISAA45nMnA+ELNn4c9qOzlfcLWF36QQ1Q=;
+        b=HDGLgv9h9RMuL5A5VDizsU7+Ezvh0+umtj+FZVTNCpGMXas+R/puAOb7P/GSCI5yfw
+         QHdca3v08zziz9k6ss3Le0wUGKC6J30Fg8Fl/4fwXj+FXmpVW2RnjD5Wlj9Tj/uPi2Ip
+         VDNFjgRraPHHQJ4Xgb+gMpMixj9rmlUX6orPeg06Ehg+GbNDTa2d3Gbc/gHZUSGY4EiF
+         QtqQlpXfjuaklCXddNA0WUuPVyfgBhxvkOjScQYHwBBUMv0pmoR6fYL5mPVmThGKfLQm
+         E43DenKim0dmkk69tlrC88vrmbqZKjZvqIJgHmSxLszn5XDHAKXQ9qvTfut4d1vKHtsU
+         KvHA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708091572; x=1708696372;
+        d=1e100.net; s=20230601; t=1708091673; x=1708696473;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=txRJIv35R09tUN5MfiS2GVQlI2ntTTEw/eVgWdiZrzQ=;
-        b=VvmLt0KUVMYn06FM+pT4jVWFLdgdZidsVOY6Ez4wIVjB3wyVQw3wVgEX1m/lm04895
-         LErp7oEOt2cDY5mo4ivFBmkdqzvzVTumlBBedGHazc2y0LqORDIHnyUrgZatWm01iRT2
-         7Qhc9ESt03xLSnPsK5OTWN4ZxEFsSGU8viZPrEfj3b0JrWZuntq1z9bLnIjYReP83xZ/
-         h4Ax/94cfe2FIIWaUjRGt/dweeO6b0wLEj9wcFA/WFzn0w3OocutDAWdAavSO0duJs0H
-         MRMW9pEBP3ks7h+EOPCORVefrzMq5PgRgqGd8YaDCqKUofrKSB1Cx3oGxWJ64/47zcbe
-         KyWg==
-X-Forwarded-Encrypted: i=1; AJvYcCXlQaEQOFJz4i/YSo6jatJttg7sy2M4RfVTzmwkoC92RRLQwHeIYj7C48R4+A34r8+b9h4qjuHqH6h3IXMqt6hFnaSKa8ZwIlhixA==
-X-Gm-Message-State: AOJu0YwjIJ+z/fathhUDtCx44tkhWOv6C2ku75gENssaVxXxqDk6Wh2O
-	h5sHOmbJBOw8rLQy9WaZiaElYLY2RWV6/spKgfeyiet1k8nr3xKLTA4e9BUfjQ==
-X-Google-Smtp-Source: AGHT+IHLmVvUWapv7oUFnRXFU043RYMQhKVtctMXsXagpqJTQfV8kTfz5kOQItDz9MAbIRUab45aoQ==
-X-Received: by 2002:a05:6358:9213:b0:179:ff:2486 with SMTP id d19-20020a056358921300b0017900ff2486mr5607719rwb.29.1708091572498;
-        Fri, 16 Feb 2024 05:52:52 -0800 (PST)
+        bh=WZ1AXsb/8YISAA45nMnA+ELNn4c9qOzlfcLWF36QQ1Q=;
+        b=HTWxtRwFgb1H4RloINFjnKaUKpYZ5dPqBMMT95yRVa7xo73RUsw1vJZaNgXcWGxIlu
+         WeOjTo5mSkcmGA2p8I3faITZqXRRQSzFj28hdLedJAr5spyMekjWcbq97MwWOf2B37cd
+         UhFM++mqOD9PMPJ3P/QnJNPF9zB4coHQOLR40ZLIWpU2UqM35Q29IzhvUvXSlejdIdGA
+         praZ4v3FvcZ7CcwUf0Pbg+Z6fofDvYksyZSrG7lRd7p1B1M7N83ndPy5uaaxYzbDJUOZ
+         gJphvKJMiAPYr7PZLjJgYyLO4Un8PvS9pUq7GZieY44rRMGPXEm1rbXaBrbUqH9rAo9v
+         GlQg==
+X-Forwarded-Encrypted: i=1; AJvYcCUxoaXWpn8E0Mem/fBqn/DjhM4+SBu3csCWiGttw0CGAZnjOmnCaTsKLrmSb05ouUzvpIvX+dAGkfUAZi6N3iVtBImg4zLxvspmtg==
+X-Gm-Message-State: AOJu0YzATZuy98l2URc3nBh9D7tdzmmmwctRxWElIvcAvTidmu5CC4Rg
+	ZX7rPk6B2xHPJN2qSk9g7vNCbNbq2H9M75VZwUcVZyt/DC7gdvuk0JT7GKE+LA==
+X-Google-Smtp-Source: AGHT+IG6Br18asjjyc6sQxw6JVym7Z2OCTsKAUJJzmDUZu4MebY4OOdpdvTZcZyMkQSZ2OYVxRzpSw==
+X-Received: by 2002:a17:902:f681:b0:1d9:bf07:7e64 with SMTP id l1-20020a170902f68100b001d9bf077e64mr6398835plg.59.1708091673171;
+        Fri, 16 Feb 2024 05:54:33 -0800 (PST)
 Received: from thinkpad ([120.138.12.48])
-        by smtp.gmail.com with ESMTPSA id p29-20020a63951d000000b005cfbdf71baasm3262550pgd.47.2024.02.16.05.52.47
+        by smtp.gmail.com with ESMTPSA id l12-20020a170903120c00b001db53ace011sm3010714plh.220.2024.02.16.05.54.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Feb 2024 05:52:52 -0800 (PST)
-Date: Fri, 16 Feb 2024 19:22:45 +0530
+        Fri, 16 Feb 2024 05:54:32 -0800 (PST)
+Date: Fri, 16 Feb 2024 19:24:27 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 Cc: Bjorn Andersson <andersson@kernel.org>,
@@ -70,11 +70,10 @@ Cc: Bjorn Andersson <andersson@kernel.org>,
 	Bart Van Assche <bvanassche@acm.org>,
 	Andy Gross <agross@kernel.org>, linux-arm-msm@vger.kernel.org,
 	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 1/6] scsi: ufs: qcom: provide default cycles_in_1us
- value
-Message-ID: <20240216135245.GI2559@thinkpad>
+Subject: Re: [PATCH v2 2/6] arm64: dts: qcom: msm8996: unbreak UFS HCD support
+Message-ID: <20240216135427.GJ2559@thinkpad>
 References: <20240213-msm8996-fix-ufs-v2-0-650758c26458@linaro.org>
- <20240213-msm8996-fix-ufs-v2-1-650758c26458@linaro.org>
+ <20240213-msm8996-fix-ufs-v2-2-650758c26458@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -84,46 +83,42 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240213-msm8996-fix-ufs-v2-1-650758c26458@linaro.org>
+In-Reply-To: <20240213-msm8996-fix-ufs-v2-2-650758c26458@linaro.org>
 
-On Tue, Feb 13, 2024 at 01:22:17PM +0200, Dmitry Baryshkov wrote:
-> The MSM8996 DT doesn't provide frequency limits for the core_clk_unipro
-> clock, which results in miscalculation of the cycles_in_1us value.
-> Provide the backwards-compatible default to support existing MSM8996
-> DT files.
+On Tue, Feb 13, 2024 at 01:22:18PM +0200, Dmitry Baryshkov wrote:
+> Since the commit b4e13e1ae95e ("scsi: ufs: qcom: Add multiple frequency
+> support for MAX_CORE_CLK_1US_CYCLES") the Qualcomm UFS driver uses
+> core_clk_unipro values from frequency table to calculate cycles_in_1us.
+> The DT file for MSM8996  passed 0 HZ frequencies there, resulting in
+> broken UFS support on that platform. Fix the corresponding clock values
+> in the frequency table.
 > 
-> Fixes: b4e13e1ae95e ("scsi: ufs: qcom: Add multiple frequency support for MAX_CORE_CLK_1US_CYCLES")
-> Cc: Nitin Rawat <quic_nitirawa@quicinc.com>
+> Suggested-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> Fixes: 57fc67ef0d35 ("arm64: dts: qcom: msm8996: Add ufs related nodes")
 > Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
 > Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-
-CC stable list?
 
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
 - Mani
 
 > ---
->  drivers/ufs/host/ufs-qcom.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  arch/arm64/boot/dts/qcom/msm8996.dtsi | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 0aeaee1c564c..79f8cb377710 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -1210,8 +1210,10 @@ static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up)
->  
->  	list_for_each_entry(clki, head, list) {
->  		if (!IS_ERR_OR_NULL(clki->clk) &&
-> -			!strcmp(clki->name, "core_clk_unipro")) {
-> -			if (is_scale_up)
-> +		    !strcmp(clki->name, "core_clk_unipro")) {
-> +			if (!clki->max_freq)
-> +				cycles_in_1us = 150; /* default for backwards compatibility */
-> +			else if (is_scale_up)
->  				cycles_in_1us = ceil(clki->max_freq, (1000 * 1000));
->  			else
->  				cycles_in_1us = ceil(clk_get_rate(clki->clk), (1000 * 1000));
+> diff --git a/arch/arm64/boot/dts/qcom/msm8996.dtsi b/arch/arm64/boot/dts/qcom/msm8996.dtsi
+> index f6b6fdc12f44..80d83e01bb4d 100644
+> --- a/arch/arm64/boot/dts/qcom/msm8996.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/msm8996.dtsi
+> @@ -2077,7 +2077,7 @@ ufshc: ufshc@624000 {
+>  				<0 0>,
+>  				<0 0>,
+>  				<150000000 300000000>,
+> -				<0 0>,
+> +				<75000000 150000000>,
+>  				<0 0>,
+>  				<0 0>,
+>  				<0 0>,
 > 
 > -- 
 > 2.39.2
