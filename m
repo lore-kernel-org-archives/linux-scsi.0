@@ -1,148 +1,133 @@
-Received: from vmicros1.altlinux.org (vmicros1.altlinux.org [194.107.17.57])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 742F91BF3F
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 10:08:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.107.17.57
+Received: from mail-oo1-f53.google.com (mail-oo1-f53.google.com [209.85.161.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A86FF12BF07
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 13:52:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708078133; cv=none; b=WYaoGUD8Yl8BEnsPxMkvq22Pzeo4fWLgsyqu+RufLPxPCNYb6y+VlDXgw8bbsMHvBIyaJJZeXJR1qxAXRcmIRtrFiti0X8TgIBRceQ6Z+j0W8lFS8WTKXjB5DYoT9AfXmpxWTv77IMOADURWHftSPh9Qjrv2hQ30N3mBQR96nro=
+	t=1708091575; cv=none; b=bC/OapyECbJQh4xNLv4ZSuMd5NxZ87/k3UUmCiCNddzEziImYI7NgTHTlztEca3A8aipXNEIJDAfwN8akekkwPyigeXCiDPBfBIYZmpcJ3WcOUUWvG7MzupL3GW18KkPee0S6cTL1B9UqKzJ52P/w3sYlDKwqJaKM8DKwjWJf58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708078133; c=relaxed/simple;
-	bh=+Rfwn9UC3HmIm/IJOIia+EdNSWg9lxlPMGFinlFOXU4=;
+	s=arc-20240116; t=1708091575; c=relaxed/simple;
+	bh=xNpXVvKRPsTrj/Mzz8I8ejGA4UCfRcdLu0H+70btQTc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aymMGX/3DQvuOKIPZ37CLtKbHPxNlnOy3j6xUzyGAfEePTHzhom1Ty9WM+CjDka6ZLAg7blIy3w5vT0dO9eDtHprf5F65PXc6EQUMI+68eF8l62cS2Nl0ax2AeHZXY+ehTMbtAvU1wrJuZgi08m/w6tG9jBvnFBXksXZBO4vYZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org; spf=pass smtp.mailfrom=altlinux.org; arc=none smtp.client-ip=194.107.17.57
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altlinux.org
-Received: from imap.altlinux.org (imap.altlinux.org [194.107.17.38])
-	by vmicros1.altlinux.org (Postfix) with ESMTP id 2EB6372C981;
-	Fri, 16 Feb 2024 13:08:45 +0300 (MSK)
-Received: from altlinux.org (sole.flsd.net [185.75.180.6])
-	by imap.altlinux.org (Postfix) with ESMTPSA id 203F636D016B;
-	Fri, 16 Feb 2024 13:08:45 +0300 (MSK)
-Date: Fri, 16 Feb 2024 13:08:44 +0300
-From: Vitaly Chikunov <vt@altlinux.org>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>
-Subject: Re: megaraid_sas: multiple FALLOC_FL_ZERO_RANGE causes timeouts and
- resets on MegaRAID 9560-8i 4GB since 5.19
-Message-ID: <20240216100844.aabjlexbwq6ggzs2@altlinux.org>
-References: <20240210011831.47f55oe67utq2yr7@altlinux.org>
- <64phxapjp742qob7gr74o2tnnkaic6wmxgfa3uxn33ukrwumbi@cfd6kmix3bbm>
- <yq18r3lful5.fsf@ca-mkp.ca.oracle.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=HsmdNWeXexjSeDkLxPift4peQR9Ec4t8MJFyBz4M7AEfXqFQY2AHxCghiWiUTiXvtGGYVVb30kX9IkqNURrlRkJUqUcwn9sxspHfrt67/NSZ/vwo6DGILBSVWi3WWyY5LOCIxyRoge7DWp+0tUzTUe3ynHcGL8CiZOTZccsd+ks=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=VB1e4192; arc=none smtp.client-ip=209.85.161.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VB1e4192"
+Received: by mail-oo1-f53.google.com with SMTP id 006d021491bc7-59f80e1e259so1082301eaf.0
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 05:52:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1708091572; x=1708696372; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=txRJIv35R09tUN5MfiS2GVQlI2ntTTEw/eVgWdiZrzQ=;
+        b=VB1e4192DhHmjWHMmAwglNGGolZVlxlUQr5OXTTZQEApPow8ftWl4DDNG13LNDrxqX
+         KRdQtp9kB0BMa+47bVxPjJbJzH9mNIvftz/vHjby7MEvDutnrmcYWcmrZGfeWVQEF+Is
+         vqZ2FYgsvbCZ5GSZDnCSIHGyMkmLNqrZEWQBmrLREZhl6JFj0qU1F9FFXMK1RKMFSc3B
+         BYuL/Mzy3WYwbIn3aBsNlHTiOkGTT8825RSYR4N8AuvA/xLzQWujuoh6gCpj+swJsW6M
+         +MV+dw3rn0PqmgKf1Zy7RxowZT+NBtIT+AOikLDPrmOX2GxkNuTVSWNzVuyp5gR3ekQW
+         uJNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708091572; x=1708696372;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=txRJIv35R09tUN5MfiS2GVQlI2ntTTEw/eVgWdiZrzQ=;
+        b=VvmLt0KUVMYn06FM+pT4jVWFLdgdZidsVOY6Ez4wIVjB3wyVQw3wVgEX1m/lm04895
+         LErp7oEOt2cDY5mo4ivFBmkdqzvzVTumlBBedGHazc2y0LqORDIHnyUrgZatWm01iRT2
+         7Qhc9ESt03xLSnPsK5OTWN4ZxEFsSGU8viZPrEfj3b0JrWZuntq1z9bLnIjYReP83xZ/
+         h4Ax/94cfe2FIIWaUjRGt/dweeO6b0wLEj9wcFA/WFzn0w3OocutDAWdAavSO0duJs0H
+         MRMW9pEBP3ks7h+EOPCORVefrzMq5PgRgqGd8YaDCqKUofrKSB1Cx3oGxWJ64/47zcbe
+         KyWg==
+X-Forwarded-Encrypted: i=1; AJvYcCXlQaEQOFJz4i/YSo6jatJttg7sy2M4RfVTzmwkoC92RRLQwHeIYj7C48R4+A34r8+b9h4qjuHqH6h3IXMqt6hFnaSKa8ZwIlhixA==
+X-Gm-Message-State: AOJu0YwjIJ+z/fathhUDtCx44tkhWOv6C2ku75gENssaVxXxqDk6Wh2O
+	h5sHOmbJBOw8rLQy9WaZiaElYLY2RWV6/spKgfeyiet1k8nr3xKLTA4e9BUfjQ==
+X-Google-Smtp-Source: AGHT+IHLmVvUWapv7oUFnRXFU043RYMQhKVtctMXsXagpqJTQfV8kTfz5kOQItDz9MAbIRUab45aoQ==
+X-Received: by 2002:a05:6358:9213:b0:179:ff:2486 with SMTP id d19-20020a056358921300b0017900ff2486mr5607719rwb.29.1708091572498;
+        Fri, 16 Feb 2024 05:52:52 -0800 (PST)
+Received: from thinkpad ([120.138.12.48])
+        by smtp.gmail.com with ESMTPSA id p29-20020a63951d000000b005cfbdf71baasm3262550pgd.47.2024.02.16.05.52.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Feb 2024 05:52:52 -0800 (PST)
+Date: Fri, 16 Feb 2024 19:22:45 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konrad.dybcio@linaro.org>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Nitin Rawat <quic_nitirawa@quicinc.com>,
+	Can Guo <quic_cang@quicinc.com>,
+	Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Andy Gross <agross@kernel.org>, linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 1/6] scsi: ufs: qcom: provide default cycles_in_1us
+ value
+Message-ID: <20240216135245.GI2559@thinkpad>
+References: <20240213-msm8996-fix-ufs-v2-0-650758c26458@linaro.org>
+ <20240213-msm8996-fix-ufs-v2-1-650758c26458@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <yq18r3lful5.fsf@ca-mkp.ca.oracle.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240213-msm8996-fix-ufs-v2-1-650758c26458@linaro.org>
 
-Martin,
-
-On Thu, Feb 15, 2024 at 01:42:35PM -0500, Martin K. Petersen wrote:
+On Tue, Feb 13, 2024 at 01:22:17PM +0200, Dmitry Baryshkov wrote:
+> The MSM8996 DT doesn't provide frequency limits for the core_clk_unipro
+> clock, which results in miscalculation of the cycles_in_1us value.
+> Provide the backwards-compatible default to support existing MSM8996
+> DT files.
 > 
-> I'd appreciate it if you could test the patch Bart referred you to.
+> Fixes: b4e13e1ae95e ("scsi: ufs: qcom: Add multiple frequency support for MAX_CORE_CLK_1US_CYCLES")
+> Cc: Nitin Rawat <quic_nitirawa@quicinc.com>
+> Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+
+CC stable list?
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
+- Mani
+
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> > I am reported that bisect found this commit to cause above mentioned
-> > problem:
-> 
-> Also, I would like to understand why things fail as a result of the
-> original change.
-> 
-> Could you please send me the output of:
-> 
-> # sg_readcap -l /dev/sdc
-> # sg_vpd -l /dev/sdc
-> # sg_vpd -p 0xb0 /dev/sdc
-> # sg_vpd -p 0xb1 /dev/sdc
-> # sg_vpd -p 0xb2 /dev/sdc
-
-Here it is:
-
-  # sg_readcap -l /dev/sdc
-  Read Capacity results:
-     Protection: prot_en=0, p_type=0, p_i_exponent=0
-     Logical block provisioning: lbpme=0, lbprz=0
-     Last LBA=3907029167 (0xe8e088af), Number of logical blocks=3907029168
-     Logical block length=512 bytes
-     Logical blocks per physical block exponent=0
-     Lowest aligned LBA=0
-  Hence:
-     Device size: 2000398934016 bytes, 1907729.1 MiB, 2000.40 GB, 2.00 TB
-
-  # sg_vpd -l /dev/sdc
-  Supported VPD pages VPD page:
-     [PQual=0  Peripheral device type: disk]
-    0x00  Supported VPD pages [sv]
-    0x80  Unit serial number [sn]
-    0x83  Device identification [di]
-    0x87  Mode page policy [mpp]
-    0x89  ATA information (SAT) [ai]
-    0x8a  Power condition [pc]
-    0xb0  Block limits (SBC) [bl]
-    0xb1  Block device characteristics (SBC) [bdc]
-    0xb2  Logical block provisioning (SBC) [lbpv]
-    0xb6  Zoned block device characteristics [zbdch]
-
-  # sg_vpd -p 0xb0 /dev/sdc
-  Block limits VPD page (SBC):
-    Write same non-zero (WSNZ): 1
-    Maximum compare and write length: 0 blocks [Command not implemented]
-    Optimal transfer length granularity: 0 blocks [not reported]
-    Maximum transfer length: 0 blocks [not reported]
-    Optimal transfer length: 0 blocks [not reported]
-    Maximum prefetch transfer length: 0 blocks [ignored]
-    Maximum unmap LBA count: 0 [Unmap command not implemented]
-    Maximum unmap block descriptor count: 0 [Unmap command not implemented]
-    Optimal unmap granularity: 0 blocks [not reported]
-    Unmap granularity alignment valid: false
-    Unmap granularity alignment: 0 [invalid]
-    Maximum write same length: 0xffff blocks
-    Maximum atomic transfer length: 0 blocks [not reported]
-    Atomic alignment: 0 [unaligned atomic writes permitted]
-    Atomic transfer length granularity: 0 [no granularity requirement
-    Maximum atomic transfer length with atomic boundary: 0 blocks [not reported]
-    Maximum atomic boundary size: 0 blocks [can only write atomic 1 block]
-
-  # sg_vpd -p 0xb1 /dev/sdc
-  Block device characteristics VPD page (SBC):
-    Nominal rotation rate: 7200 rpm
-    Product type: Not specified
-    WABEREQ=0
-    WACEREQ=0
-    Nominal form factor: 3.5 inch
-    MACT=0
-    ZONED=0
-    RBWZ=0
-    BOCS=0
-    FUAB=0
-    VBULS=0
-    DEPOPULATION_TIME=0 (seconds)
-
-  # sg_vpd -p 0xb2 /dev/sdc
-  Logical block provisioning VPD page (SBC):
-    Unmap command supported (LBPU): 0
-    Write same (16) with unmap bit supported (LBPWS): 0
-    Write same (10) with unmap bit supported (LBPWS10): 0
-    Logical block provisioning read zeros (LBPRZ): 0
-    Anchored LBAs supported (ANC_SUP): 0
-    Threshold exponent: 0 [threshold sets not supported]
-    Descriptor present (DP): 0
-    Minimum percentage: 0 [not reported]
-    Provisioning type: 0 (not known or fully provisioned)
-    Threshold percentage: 0 [percentages not supported]
-
-About the patch it will be tested later today.
-
-Thanks,
-
-> 
-> Thanks!
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 0aeaee1c564c..79f8cb377710 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1210,8 +1210,10 @@ static int ufs_qcom_set_core_clk_ctrl(struct ufs_hba *hba, bool is_scale_up)
+>  
+>  	list_for_each_entry(clki, head, list) {
+>  		if (!IS_ERR_OR_NULL(clki->clk) &&
+> -			!strcmp(clki->name, "core_clk_unipro")) {
+> -			if (is_scale_up)
+> +		    !strcmp(clki->name, "core_clk_unipro")) {
+> +			if (!clki->max_freq)
+> +				cycles_in_1us = 150; /* default for backwards compatibility */
+> +			else if (is_scale_up)
+>  				cycles_in_1us = ceil(clki->max_freq, (1000 * 1000));
+>  			else
+>  				cycles_in_1us = ceil(clk_get_rate(clki->clk), (1000 * 1000));
 > 
 > -- 
-> Martin K. Petersen	Oracle Linux Engineering
+> 2.39.2
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
