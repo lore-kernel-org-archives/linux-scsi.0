@@ -1,152 +1,98 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DFCF12BF3F
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 14:08:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+Received: from vmicros1.altlinux.org (vmicros1.altlinux.org [194.107.17.57])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8D2085465D;
+	Fri, 16 Feb 2024 14:57:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=194.107.17.57
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708092508; cv=none; b=lGjWwaNy0OxrmbEhxDNVjiw5XiURu/EZh/02pXc+NiS7sr4S+/4RTSP5C4+eMlpWjKcAXYP9f9ltQ7VzFYiRn3BoVe70W0kNg63W9AHWqK/dnh42Pf7HP4MY/GNnfN4esp4e5aFCu34NgrLBK5mx08UamgdgkZsBGrPbdXFF4PE=
+	t=1708095442; cv=none; b=LH6JB/Dh1O+BFtL9UzeP37GEyy+PjTHSsigkHsBO6Kd9yd2GJsqWsAnhVbeygJ8EptrIO2BRwlsI1sOaUXxdpVieuDGKZEI/PiMJpQeSpc7XFOlcnPEp2y1IONVYw1KvqzSd7qt+LmBv7EngbQv3tv1D3mGXH3WQr0z+kFMXguM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708092508; c=relaxed/simple;
-	bh=VWBsKuNrGY4MHfVRFud0fpjtMJD9nw9ddeYFNhkmHOs=;
+	s=arc-20240116; t=1708095442; c=relaxed/simple;
+	bh=wAY3ufdEMmUjsCvCBHBuq0Zl1K89KI9vKD7ZUjkReI8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ENHQxFXkdSaa5HwdEclBADaiWPt/NNsAoMWmGIAVwhHiTQCBxoOrvHW9DBE0qNUmNKmafDBLj0z5786zn82+/2UYB29VSH+lDENmwO9HLWSmdOxDPLl6uRSfoUa6w5lq2mv2l/wo4CpA+S3seVKsfeLMbry0d42eBh8jgnMlhdA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=JEJxSQkD; arc=none smtp.client-ip=209.85.214.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JEJxSQkD"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1dba6b9b060so5192995ad.1
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 06:08:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1708092504; x=1708697304; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=hDNGahqQJk0+PITO4aJ9GSNZ6MTNzgQKhJKA5SQZKi8=;
-        b=JEJxSQkDlBSxDwr2A8IeMR85T+g8S+1tDUy1Cfi6B1n1uwMyXmUDPZVF363lc/8gFI
-         OslOa/0P+EORrnKMizcJXnAhGbtxJXZnTKcM76Z8wEAlMW0VE7twP5CCp1n89bENMO4T
-         d1LYqv0oWvSogkJ/HTe8SKyDChlQkMLzwOgAR3WVLGurUSFuM9wwY2SnNVhhsrkT8MLp
-         +XiC7bxox//Im/muCdXrCO00Z+QLw1Nhg6IfVyEtZASLE3AL3jjAPuEBYK5QemohBx2L
-         ChwP9L6AFosAh1jCm+U769bytLrJZ16v3YF6u8MWKB0K9CxsKsMPgvEBuhYhCkJAHWZ6
-         TUeQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708092504; x=1708697304;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hDNGahqQJk0+PITO4aJ9GSNZ6MTNzgQKhJKA5SQZKi8=;
-        b=uAFXkdO8cLQxRm4QrhTGXNHOhODIH2cIf3iFMbdazWoeatBxHU7272eDcw0GGzqikX
-         1G/iKwHqrbfW31x6oor273c8n6cI8u7vp75IzUxbHPmoWo0CSUs2sGYtKvwKnkqXtN+E
-         NVphpavAAZLeQYfiZPjC8fsAF3Y6BO92fKsYvPGPUzu40mGbl2oCJs98t7pfvGDPWyBQ
-         QCjZ8W9pzPIcSv4U869UCL3wOW4TbShMmp6sO24wXtqU302FLA8N1KWA+vdaagwKEmrM
-         P/YSI5VNSqNDz8NqM6wzuLIb34X34B1gvBnRAX8CqPNDTwJFr7oEO2808zUlPWglX/bk
-         ubdw==
-X-Forwarded-Encrypted: i=1; AJvYcCWuEc0GKElAg8a2Ip13x9Nnvht2XjrXZ7scpU4jYgxJmhz9wWVZjHf/fZHe32yZYqKhiOiD4rvsTPm0cCZP9w0utfk4f2/oq/Gzqw==
-X-Gm-Message-State: AOJu0Yzf4olD4RTDiTYA6cmtzCSTUXnP/h5gUgT8XVkQcdcEocgKl9cK
-	PqTI2LGN/ckhTu0sSdl4812aTl3Su+ZCrrmKxu2mdHgXJ09jMwY5uEhLQCVKHw==
-X-Google-Smtp-Source: AGHT+IEJ67yKNp9ZCPVkUP0bhXP3swDJdkIjJCRgMu0wYsy757xU1RvqSe3sdhXohwWYryr7nTgkZQ==
-X-Received: by 2002:a17:902:7c8c:b0:1db:47bb:671b with SMTP id y12-20020a1709027c8c00b001db47bb671bmr9327518pll.19.1708092504602;
-        Fri, 16 Feb 2024 06:08:24 -0800 (PST)
-Received: from thinkpad ([120.138.12.48])
-        by smtp.gmail.com with ESMTPSA id jl21-20020a170903135500b001d8e41b3f95sm3036484plb.51.2024.02.16.06.08.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Feb 2024 06:08:24 -0800 (PST)
-Date: Fri, 16 Feb 2024 19:38:18 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc: Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Andy Gross <agross@kernel.org>, linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v2 6/6] arm64: dts: qcom: msm8996: drop source clock
- entries from the UFS node
-Message-ID: <20240216140818.GN2559@thinkpad>
-References: <20240213-msm8996-fix-ufs-v2-0-650758c26458@linaro.org>
- <20240213-msm8996-fix-ufs-v2-6-650758c26458@linaro.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=lNxfgsmcmQX6gRHB6DVRovdwliKcqgZvzb5DlUJ4Znmus8yLdeukDWgw2f0cpOILW5eM51Xo3UwKvejpqlYWMWMjoXt02Z3mEmvDgs6E/v+UGmKUC/VOqoOXPtNXSggMCXvMSnWX3nRrSX5HUBeCRqRlWg1LmytjAKR7m88YBds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org; spf=pass smtp.mailfrom=altlinux.org; arc=none smtp.client-ip=194.107.17.57
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=altlinux.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=altlinux.org
+Received: from imap.altlinux.org (imap.altlinux.org [194.107.17.38])
+	by vmicros1.altlinux.org (Postfix) with ESMTP id 036EA72C8F5;
+	Fri, 16 Feb 2024 17:57:18 +0300 (MSK)
+Received: from altlinux.org (sole.flsd.net [185.75.180.6])
+	by imap.altlinux.org (Postfix) with ESMTPSA id EC2A236D016B;
+	Fri, 16 Feb 2024 17:57:17 +0300 (MSK)
+Date: Fri, 16 Feb 2024 17:57:17 +0300
+From: Vitaly Chikunov <vt@altlinux.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	belegdol@gmail.com, stable@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: core: Consult supported VPD page list prior to
+ fetching page
+Message-ID: <20240216145717.bywcwpx5m7ymyzyp@altlinux.org>
+References: <20240214221411.2888112-1-martin.petersen@oracle.com>
+ <883d670c-3ae1-4f44-bcb1-45e1428c9c3b@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=koi8-r
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240213-msm8996-fix-ufs-v2-6-650758c26458@linaro.org>
+In-Reply-To: <883d670c-3ae1-4f44-bcb1-45e1428c9c3b@acm.org>
 
-On Tue, Feb 13, 2024 at 01:22:22PM +0200, Dmitry Baryshkov wrote:
-> There is no need to mention and/or to touch in any way the intermediate
-> (source) clocks. Drop them from MSM8996 UFSHCD schema, making it follow
-> the example lead by all other platforms.
+Bart,
+
+On Thu, Feb 15, 2024 at 10:28:06AM -0800, Bart Van Assche wrote:
+> On 2/14/24 14:14, Martin K. Petersen wrote:
+> > Commit c92a6b5d6335 ("scsi: core: Query VPD size before getting full
+> > page") removed the logic which checks whether a VPD page is present on
+> > the supported pages list before asking for the page itself. That was
+> > done because SPC helpfully states "The Supported VPD Pages VPD page
+> > list may or may not include all the VPD pages that are able to be
+> > returned by the device server". Testing had revealed a few devices
+> > that supported some of the 0xBn pages but didn't actually list them in
+> > page 0.
+> > 
+> > Julian Sikorski bisected a problem with his drive resetting during
+> > discovery to the commit above. As it turns out, this particular drive
+> > firmware will crash if we attempt to fetch page 0xB9.
+> > 
+> > Various approaches were attempted to work around this. In the end,
+> > reinstating the logic that consults VPD page 0 before fetching any
+> > other page was the path of least resistance. A firmware update for the
+> > devices which originally compelled us to remove the check has since
+> > been released.
+> > 
+> > Cc: stable@vger.kernel.org
+> > Cc: Bart Van Assche <bvanassche@acm.org>
+> > Fixes: c92a6b5d6335 ("scsi: core: Query VPD size before getting full page")
+> > Reported-by: Julian Sikorski <belegdol@gmail.com>
+> > Tested-by: Julian Sikorski <belegdol@gmail.com>
+> > Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 > 
-
-Okay, here you are dropping the "core_clk_unipro_src" anyway. So my earlier
-comment can be ignored.
-
-> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
-- Mani
-
-> ---
->  arch/arm64/boot/dts/qcom/msm8996.dtsi | 6 ------
->  1 file changed, 6 deletions(-)
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 > 
-> diff --git a/arch/arm64/boot/dts/qcom/msm8996.dtsi b/arch/arm64/boot/dts/qcom/msm8996.dtsi
-> index ce94e2af6bc5..f18d80a97bbf 100644
-> --- a/arch/arm64/boot/dts/qcom/msm8996.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/msm8996.dtsi
-> @@ -2047,24 +2047,20 @@ ufshc: ufshc@624000 {
->  			power-domains = <&gcc UFS_GDSC>;
->  
->  			clock-names =
-> -				"core_clk_src",
->  				"core_clk",
->  				"bus_clk",
->  				"bus_aggr_clk",
->  				"iface_clk",
-> -				"core_clk_unipro_src",
->  				"core_clk_unipro",
->  				"core_clk_ice",
->  				"ref_clk",
->  				"tx_lane0_sync_clk",
->  				"rx_lane0_sync_clk";
->  			clocks =
-> -				<&gcc UFS_AXI_CLK_SRC>,
->  				<&gcc GCC_UFS_AXI_CLK>,
->  				<&gcc GCC_SYS_NOC_UFS_AXI_CLK>,
->  				<&gcc GCC_AGGRE2_UFS_AXI_CLK>,
->  				<&gcc GCC_UFS_AHB_CLK>,
-> -				<&gcc UFS_ICE_CORE_CLK_SRC>,
->  				<&gcc GCC_UFS_UNIPRO_CORE_CLK>,
->  				<&gcc GCC_UFS_ICE_CORE_CLK>,
->  				<&rpmcc RPM_SMD_LN_BB_CLK>,
-> @@ -2072,8 +2068,6 @@ ufshc: ufshc@624000 {
->  				<&gcc GCC_UFS_RX_SYMBOL_0_CLK>;
->  			freq-table-hz =
->  				<100000000 200000000>,
-> -				<100000000 200000000>,
-> -				<0 0>,
->  				<0 0>,
->  				<0 0>,
->  				<0 0>,
+> BTW, here is another report related to this patch:
+> https://lore.kernel.org/linux-scsi/64phxapjp742qob7gr74o2tnnkaic6wmxgfa3uxn33ukrwumbi@cfd6kmix3bbm/
 > 
-> -- 
-> 2.39.2
-> 
+> Vitaly, can you help with testing this patch? See also:
+> https://lore.kernel.org/linux-scsi/20240214221411.2888112-1-martin.petersen@oracle.com/
 
--- 
-மணிவண்ணன் சதாசிவம்
+With this patch applied over 6.6.16 problem still persists.
+
+Also reading page 0x89 (mentioned in patch description) does not show any signs
+of crash (any errors in dmesg with it of with the following reads):
+
+  [root@host-226 ~]# sg_vpd -p 0x89 /dev/sdc
+  ATA information VPD page:
+    SAT Vendor identification: LSI     
+    SAT Product identification: LSI SATL        
+    SAT Product revision level: 0008
+    Device signature indicates SATA transport
+    Command code: 0xec
+    ATA command IDENTIFY DEVICE response summary:
+      model: WDC WD2005FBYZ-01YCBB2                  
+      serial number:      WD-WMC6N0J5VKLH
+      firmware revision: RR07    
+
+Thanks,
+
