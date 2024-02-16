@@ -1,58 +1,58 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1A2E12C7F5
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 14:06:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DFCF12BF3F
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 14:08:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708092384; cv=none; b=qQwyRrFT8w6d10jjT6g4b5RjIthNvICV9pSuLsBJh6N33xB6OHfSMeOR07gGXjBJ4ERatuF5IH72nzqVam5KiaaYz7u7JSSvmCv8QkcTVKNUmuio95wVo7G8lf5dTbZVawTmkPp4BmWpA2Ru7OWOOET+XK7MTelzjJ1VPm+anTQ=
+	t=1708092508; cv=none; b=lGjWwaNy0OxrmbEhxDNVjiw5XiURu/EZh/02pXc+NiS7sr4S+/4RTSP5C4+eMlpWjKcAXYP9f9ltQ7VzFYiRn3BoVe70W0kNg63W9AHWqK/dnh42Pf7HP4MY/GNnfN4esp4e5aFCu34NgrLBK5mx08UamgdgkZsBGrPbdXFF4PE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708092384; c=relaxed/simple;
-	bh=bAu2PND9JYRILMhrLqb//hy/h62rVPrraWmxZ04wfFI=;
+	s=arc-20240116; t=1708092508; c=relaxed/simple;
+	bh=VWBsKuNrGY4MHfVRFud0fpjtMJD9nw9ddeYFNhkmHOs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rdQTfl+lz671mf2iqCdGWa18sFnfE4KTT/039hcqVkT3tNrduicTf3wgzhWVNpglrf/LQyZWLltxKGiom+gRSwGqCMyoEI8aJ752ZL102jDdy4WXL+ykMhAjU5jaGrfD0bs6IW55wOdSjxblwyE8j87ZCWdyIz9j9bEhUNydNro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Va6XKjgz; arc=none smtp.client-ip=209.85.210.179
+	 Content-Type:Content-Disposition:In-Reply-To; b=ENHQxFXkdSaa5HwdEclBADaiWPt/NNsAoMWmGIAVwhHiTQCBxoOrvHW9DBE0qNUmNKmafDBLj0z5786zn82+/2UYB29VSH+lDENmwO9HLWSmdOxDPLl6uRSfoUa6w5lq2mv2l/wo4CpA+S3seVKsfeLMbry0d42eBh8jgnMlhdA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=JEJxSQkD; arc=none smtp.client-ip=209.85.214.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Va6XKjgz"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6e1040455b5so1280390b3a.0
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 06:06:22 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JEJxSQkD"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1dba6b9b060so5192995ad.1
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Feb 2024 06:08:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1708092382; x=1708697182; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1708092504; x=1708697304; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=O3dHLlYZRK7J9zZQzjwJFT/aM7vDnrj3CkPGq1K5fek=;
-        b=Va6XKjgzSMQeP3J4R7hRgqesgj1o6PpXqIG3y6hY/P2TP3g8GVGWBx+yOlEe/ZmJVL
-         tEhQxM2yTb3n5FtHeo6jRs/66QwEVTE9TeLoIT6MgyDn6xW0iGktx8lFx2nVbOK4MMYs
-         Cy9AFmKTeuQWx5h2Xdb+dH7bNOfTaRbof1wxnvT8z3+emDCsb3aDCKYW/JGP4eVGXMRB
-         MPBSE/EmGWKz8si5UqyKT5sjIwintV9hSgvwNJ7+mXxCly6udIauP+f94ut+ORxEZRid
-         6FSQ4LYYmNFi2UCy7K2nBex3ZvE1j4WtzksBwStCYM99aDMCIyBVPGCVNv5mu+sBngG4
-         A+AQ==
+        bh=hDNGahqQJk0+PITO4aJ9GSNZ6MTNzgQKhJKA5SQZKi8=;
+        b=JEJxSQkDlBSxDwr2A8IeMR85T+g8S+1tDUy1Cfi6B1n1uwMyXmUDPZVF363lc/8gFI
+         OslOa/0P+EORrnKMizcJXnAhGbtxJXZnTKcM76Z8wEAlMW0VE7twP5CCp1n89bENMO4T
+         d1LYqv0oWvSogkJ/HTe8SKyDChlQkMLzwOgAR3WVLGurUSFuM9wwY2SnNVhhsrkT8MLp
+         +XiC7bxox//Im/muCdXrCO00Z+QLw1Nhg6IfVyEtZASLE3AL3jjAPuEBYK5QemohBx2L
+         ChwP9L6AFosAh1jCm+U769bytLrJZ16v3YF6u8MWKB0K9CxsKsMPgvEBuhYhCkJAHWZ6
+         TUeQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708092382; x=1708697182;
+        d=1e100.net; s=20230601; t=1708092504; x=1708697304;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=O3dHLlYZRK7J9zZQzjwJFT/aM7vDnrj3CkPGq1K5fek=;
-        b=SrhQkIF6TB9KijavM1K/61JJSDWwIrdolMmPVxOWa3bvAXbdj6he2mGyOm0zND+dPu
-         i4IVQzDuDbopRofZ/Am1gCNKL8czmbH2anWAeh5XN+5egQol0VUv243xcN40yc0FC9AO
-         1COShBircG6d0VyDwc3PGAY9vJ3of1mK8AAb6XnBwA2cm4LMbBdxdbsn4/UxKvGpXGkR
-         RGzuShXkvM3V5kEHpBgHa1TqoSmQpml27Ek9lXK3xxPnx9y4cq6CNQ5hGEUprbG5Dd+W
-         N2lP/HrJJFWB6MNTggthf+8cMdkpK7gGrHqR64BP5X3a3NpuNLcGOcjQq5UQlGpKFJ/L
-         o8oQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVpm11BKthcfcY7eZrt1kyZSdBvbPsxGqevVk4IwViDWCtIGX/8QhHRbjRjDK98hcToYnMy+Nmkh+XbzsA5dH6HysRN8Ph8j/ppvw==
-X-Gm-Message-State: AOJu0YwiPET5AC5lHAprShCiVgOcD4fh0ejKUBQ3ADdt0MJtm5nm0j5I
-	Pzthy4yvZoMoIqenLlSGKz9kt/+lIdBup/OwNQY0EWdvpwFcS4MRE6rA2880Ow==
-X-Google-Smtp-Source: AGHT+IEVKL2W8Ew0RqRICTu86Llx4Xnb4uMrPeGq+pPINM4mazjOtgpp66xUfqQBZJhrgWNWNweiYg==
-X-Received: by 2002:a05:6a00:18aa:b0:6e1:1e05:d629 with SMTP id x42-20020a056a0018aa00b006e11e05d629mr6372478pfh.18.1708092381619;
-        Fri, 16 Feb 2024 06:06:21 -0800 (PST)
+        bh=hDNGahqQJk0+PITO4aJ9GSNZ6MTNzgQKhJKA5SQZKi8=;
+        b=uAFXkdO8cLQxRm4QrhTGXNHOhODIH2cIf3iFMbdazWoeatBxHU7272eDcw0GGzqikX
+         1G/iKwHqrbfW31x6oor273c8n6cI8u7vp75IzUxbHPmoWo0CSUs2sGYtKvwKnkqXtN+E
+         NVphpavAAZLeQYfiZPjC8fsAF3Y6BO92fKsYvPGPUzu40mGbl2oCJs98t7pfvGDPWyBQ
+         QCjZ8W9pzPIcSv4U869UCL3wOW4TbShMmp6sO24wXtqU302FLA8N1KWA+vdaagwKEmrM
+         P/YSI5VNSqNDz8NqM6wzuLIb34X34B1gvBnRAX8CqPNDTwJFr7oEO2808zUlPWglX/bk
+         ubdw==
+X-Forwarded-Encrypted: i=1; AJvYcCWuEc0GKElAg8a2Ip13x9Nnvht2XjrXZ7scpU4jYgxJmhz9wWVZjHf/fZHe32yZYqKhiOiD4rvsTPm0cCZP9w0utfk4f2/oq/Gzqw==
+X-Gm-Message-State: AOJu0Yzf4olD4RTDiTYA6cmtzCSTUXnP/h5gUgT8XVkQcdcEocgKl9cK
+	PqTI2LGN/ckhTu0sSdl4812aTl3Su+ZCrrmKxu2mdHgXJ09jMwY5uEhLQCVKHw==
+X-Google-Smtp-Source: AGHT+IEJ67yKNp9ZCPVkUP0bhXP3swDJdkIjJCRgMu0wYsy757xU1RvqSe3sdhXohwWYryr7nTgkZQ==
+X-Received: by 2002:a17:902:7c8c:b0:1db:47bb:671b with SMTP id y12-20020a1709027c8c00b001db47bb671bmr9327518pll.19.1708092504602;
+        Fri, 16 Feb 2024 06:08:24 -0800 (PST)
 Received: from thinkpad ([120.138.12.48])
-        by smtp.gmail.com with ESMTPSA id l2-20020a656802000000b005dc2ca5b667sm2860185pgt.10.2024.02.16.06.06.16
+        by smtp.gmail.com with ESMTPSA id jl21-20020a170903135500b001d8e41b3f95sm3036484plb.51.2024.02.16.06.08.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Feb 2024 06:06:21 -0800 (PST)
-Date: Fri, 16 Feb 2024 19:36:15 +0530
+        Fri, 16 Feb 2024 06:08:24 -0800 (PST)
+Date: Fri, 16 Feb 2024 19:38:18 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 Cc: Bjorn Andersson <andersson@kernel.org>,
@@ -69,13 +69,12 @@ Cc: Bjorn Andersson <andersson@kernel.org>,
 	Avri Altman <avri.altman@wdc.com>,
 	Bart Van Assche <bvanassche@acm.org>,
 	Andy Gross <agross@kernel.org>, linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: Re: [PATCH v2 5/6] dt-bindings: ufs: qcom,ufs: drop source clock
- entries
-Message-ID: <20240216140615.GM2559@thinkpad>
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 6/6] arm64: dts: qcom: msm8996: drop source clock
+ entries from the UFS node
+Message-ID: <20240216140818.GN2559@thinkpad>
 References: <20240213-msm8996-fix-ufs-v2-0-650758c26458@linaro.org>
- <20240213-msm8996-fix-ufs-v2-5-650758c26458@linaro.org>
+ <20240213-msm8996-fix-ufs-v2-6-650758c26458@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -85,70 +84,65 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240213-msm8996-fix-ufs-v2-5-650758c26458@linaro.org>
+In-Reply-To: <20240213-msm8996-fix-ufs-v2-6-650758c26458@linaro.org>
 
-On Tue, Feb 13, 2024 at 01:22:21PM +0200, Dmitry Baryshkov wrote:
+On Tue, Feb 13, 2024 at 01:22:22PM +0200, Dmitry Baryshkov wrote:
 > There is no need to mention and/or to touch in any way the intermediate
 > (source) clocks. Drop them from MSM8996 UFSHCD schema, making it follow
 > the example lead by all other platforms.
 > 
-> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+
+Okay, here you are dropping the "core_clk_unipro_src" anyway. So my earlier
+comment can be ignored.
+
 > Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
 - Mani
 
 > ---
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 12 +++++-------
->  1 file changed, 5 insertions(+), 7 deletions(-)
+>  arch/arm64/boot/dts/qcom/msm8996.dtsi | 6 ------
+>  1 file changed, 6 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index 9a4f2b43e155..649f7951ac01 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -44,11 +44,11 @@ properties:
+> diff --git a/arch/arm64/boot/dts/qcom/msm8996.dtsi b/arch/arm64/boot/dts/qcom/msm8996.dtsi
+> index ce94e2af6bc5..f18d80a97bbf 100644
+> --- a/arch/arm64/boot/dts/qcom/msm8996.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/msm8996.dtsi
+> @@ -2047,24 +2047,20 @@ ufshc: ufshc@624000 {
+>  			power-domains = <&gcc UFS_GDSC>;
 >  
->    clocks:
->      minItems: 8
-> -    maxItems: 11
-> +    maxItems: 9
->  
->    clock-names:
->      minItems: 8
-> -    maxItems: 11
-> +    maxItems: 9
->  
->    dma-coherent: true
->  
-> @@ -189,16 +189,14 @@ allOf:
->      then:
->        properties:
->          clocks:
-> -          minItems: 11
-> -          maxItems: 11
-> +          minItems: 9
-> +          maxItems: 9
->          clock-names:
->            items:
-> -            - const: core_clk_src
->              - const: core_clk
->              - const: bus_clk
->              - const: bus_aggr_clk
->              - const: iface_clk
-> -            - const: core_clk_unipro_src
->              - const: core_clk_unipro
->              - const: core_clk_ice
->              - const: ref_clk
-> @@ -259,7 +257,7 @@ allOf:
->            maxItems: 2
->          clocks:
->            minItems: 8
-> -          maxItems: 11
-> +          maxItems: 9
->  
->  unevaluatedProperties: false
->  
+>  			clock-names =
+> -				"core_clk_src",
+>  				"core_clk",
+>  				"bus_clk",
+>  				"bus_aggr_clk",
+>  				"iface_clk",
+> -				"core_clk_unipro_src",
+>  				"core_clk_unipro",
+>  				"core_clk_ice",
+>  				"ref_clk",
+>  				"tx_lane0_sync_clk",
+>  				"rx_lane0_sync_clk";
+>  			clocks =
+> -				<&gcc UFS_AXI_CLK_SRC>,
+>  				<&gcc GCC_UFS_AXI_CLK>,
+>  				<&gcc GCC_SYS_NOC_UFS_AXI_CLK>,
+>  				<&gcc GCC_AGGRE2_UFS_AXI_CLK>,
+>  				<&gcc GCC_UFS_AHB_CLK>,
+> -				<&gcc UFS_ICE_CORE_CLK_SRC>,
+>  				<&gcc GCC_UFS_UNIPRO_CORE_CLK>,
+>  				<&gcc GCC_UFS_ICE_CORE_CLK>,
+>  				<&rpmcc RPM_SMD_LN_BB_CLK>,
+> @@ -2072,8 +2068,6 @@ ufshc: ufshc@624000 {
+>  				<&gcc GCC_UFS_RX_SYMBOL_0_CLK>;
+>  			freq-table-hz =
+>  				<100000000 200000000>,
+> -				<100000000 200000000>,
+> -				<0 0>,
+>  				<0 0>,
+>  				<0 0>,
+>  				<0 0>,
 > 
 > -- 
 > 2.39.2
