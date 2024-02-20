@@ -1,45 +1,45 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA4B176C89
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Feb 2024 17:18:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ACDC77626;
+	Tue, 20 Feb 2024 17:21:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708449484; cv=none; b=S1W97nUTOAgsdON3IkyDaQAOmXr3WP7Ko4WXphN/QZOHUWdpgkdVDPntj2xG2KVN/Rjby1JRVJMGmdSo8Y8c8rJfhXBPBo82kYmW9ywhDIn9n7lwgs69Yf7bwhUnXxgbnDQkEAoGkLb7Tfvq+OwD26baiHB5TqFUKDbCwGTQPdQ=
+	t=1708449702; cv=none; b=Ga5CSM2k5xwranlZl+YJmESnqyx48h0o8U+jMal1UnpHt9GMjMstHBRrIq+YK1gv+477RogPX4Juxkq+AOYgMuY58TxTfrWlNv++UBuvpqQuGU8JHfj0MwXSjfW69P5bOzRstya1Ibt4WpZAPGFxn8qTV22S2xeiQtGq8HBzUsc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708449484; c=relaxed/simple;
-	bh=3NJZKXzZcH9Fr2S2jBYAuQSNfFUMMJ+GOJF9NxToya4=;
+	s=arc-20240116; t=1708449702; c=relaxed/simple;
+	bh=mPo+l7s6R2Mn5HzTebtRduD2jfu/x8K/datW8X5vC90=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dLU7U7nHppq25H0C5wWlRXWVpJXIdmora12Ffm1qUyrRxQiwABKdjEPsLKRXFvGyUeJKtkQdoZTGJL9DZSVHzIwJvpfXYRsXHW8b46DWWzx8KkYiDjOpaS6ehqtCnkmMO1tFABUhwYXXCzK21ZbmqMxV5yfT8in9zJrMFLUIpmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.171
+	 In-Reply-To:Content-Type; b=q2+OpkUeas4pb8Dt/N4dct68D7PguvkyP2VOMx/sqsztDCcfjNBkfblko2CQ5bVLWJXU4DUQ0Nun/l3hPk/K/SVNoTbS14YzQ7EdCTgfOD+p4rZcZQwruOfa5Kose2kWoISvI4pI/vC2J3MmHinz37U+jxf4uChFLGEU3KRZzd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-6e46b5e7c43so1143145b3a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Feb 2024 09:18:02 -0800 (PST)
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6e0f803d9dfso2903171b3a.0;
+        Tue, 20 Feb 2024 09:21:39 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708449482; x=1709054282;
+        d=1e100.net; s=20230601; t=1708449699; x=1709054499;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3NJZKXzZcH9Fr2S2jBYAuQSNfFUMMJ+GOJF9NxToya4=;
-        b=nd9WTybvWHHNP5fJ3fq/727+VrHtFlenDvaFEdqD+M/5WNxjWv6KH3TyEZof3mYfVt
-         HAuYoLt6XvyWMCIYQWBW7Zslq9XN3TjifjZ54WuriKi/oPdbYmviPkn4owZfamY3QPI6
-         NxZ3Z7jdyx6zVK0k9R2//sPt2uV9uySmgz3JUrEOxBqQRZKkhjc3+Te+NCEXZwKvC8Wc
-         3K8axvSOmo/7HqlTdObNa8LvrXnByNKvKME2SslNGIHYwr9Hqiav8KKG997A9PrFB1cz
-         1ZmzEgHdR7HMPWLC4/ymtvIpQV8dyvqYAyboQfZWYyjuulULde+1swmXzxR0ekyI7VfT
-         3LUQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWY2g8a6YfipG3aQA40jOXqM9WrlXYO7cPK8QakJfZjDW7eIfiiOwVf/KzhqF1OwMmhoL1ei+04WaIy6zu7rBEHiM4QXiEVSbTdCg==
-X-Gm-Message-State: AOJu0Yy0IBtq7lLeeUlQtE0Ixjkv+BUbq+VvNKavp29nXmz1aWVvYPaW
-	ROumkCEXbIqUVsX2lBSqcH+WnkTIU84WdRU6zeIxph96kK/OYAxN
-X-Google-Smtp-Source: AGHT+IEGX9I6dAr4XwDddzjtJJ7E4l/4z8mM80OwXNh/ZK/KcMZPyyc6Pi5EOXeHtBy2uNcNbBboGw==
-X-Received: by 2002:a05:6a21:9101:b0:19e:ccb2:fd80 with SMTP id tn1-20020a056a21910100b0019eccb2fd80mr14979835pzb.8.1708449481848;
-        Tue, 20 Feb 2024 09:18:01 -0800 (PST)
+        bh=q2yUIPD7foX8u6Xdbasilcg/3p8ULKCtlmQtBTHBRrU=;
+        b=e/kosMAp12J+yiF6DGKXrEZV1tkuDDqC0SOtLxOfO8mgIOy4Dz7r1qSEZf6oupFoF/
+         02wKYY1lxGnKrC9NpVd2zzHiStrEUWWy8hAlh97ijzqcm1+YplTxMGAfAeiMgv5xEpHq
+         SPawy8MzbgG+TfY79r8xaHzNpjnbmxKeU9LPCK6+yzzrfxc1aUdVKTkdUTn4je2JbUDz
+         7c1iiXh4VBkKu6yx7bkYDPGLfSLfW+rJUGkqxONBzpi81tMPQZQ5qddBdoWPX9RpwgwX
+         8kwexL3MwdrXzI+VyoT8+RsprOIh7c/naz4/E7Et4lERLjdRSu0ovUY/gPB9IaKXsPGv
+         j1wQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWByMh4C5ZiEkgqW2yRsoX+fRY/iXFnHgIYxgfo2SKz0/Nkp+gLYk7vJiwE0iCzcFEgciuISwTO4TmAsJC/f4ZuXG13o6IiWnH5ZG5lr9bjkb5ioe7UDcmXbVxsyRXX1m2VwLQPAXx/FA==
+X-Gm-Message-State: AOJu0YxU1vWtfGQeD/WGaUwHy3D96lxG0nyLkpPdtCGWRqz11iqGp4N/
+	7GaqVIbhnzFbpE4s+5lEVYd41AoccsBVzZ21VAzgOlxeqSB+rLk8
+X-Google-Smtp-Source: AGHT+IE779i2QADDo/XfAUyVbShxQgDbClnCbfoX2CDYqxGWSdXQL6WKX7naG+PPOPmDkKWQE36Vow==
+X-Received: by 2002:a05:6a00:1897:b0:6e4:864a:9f68 with SMTP id x23-20020a056a00189700b006e4864a9f68mr1190636pfh.5.1708449699227;
+        Tue, 20 Feb 2024 09:21:39 -0800 (PST)
 Received: from ?IPV6:2620:0:1000:8411:455a:b76d:46a7:7189? ([2620:0:1000:8411:455a:b76d:46a7:7189])
-        by smtp.gmail.com with ESMTPSA id t20-20020a632254000000b005cfbf96c733sm6890557pgm.30.2024.02.20.09.18.00
+        by smtp.gmail.com with ESMTPSA id d5-20020aa78685000000b006e2301e702fsm6824989pfo.125.2024.02.20.09.21.38
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 20 Feb 2024 09:18:01 -0800 (PST)
-Message-ID: <46d0c5b7-7158-405d-ba38-cece4030e2bd@acm.org>
-Date: Tue, 20 Feb 2024 09:17:59 -0800
+        Tue, 20 Feb 2024 09:21:38 -0800 (PST)
+Message-ID: <1920a2f6-e398-47af-a5d7-9dad9c70e03d@acm.org>
+Date: Tue, 20 Feb 2024 09:21:37 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,30 +47,57 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] ufs: core: adjust config_scsi_dev usage
+Subject: Re: [PATCH] scsi: ufs: core: Fix setup_xfer_req invocation
 Content-Language: en-US
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
- jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com, powen.kao@mediatek.com,
- qilin.tan@mediatek.com, lin.gui@mediatek.com, tun-yu.yu@mediatek.com,
- eddie.huang@mediatek.com, naomi.chu@mediatek.com, chu.stanley@gmail.com
-References: <20240220094211.20678-1-peter.wang@mediatek.com>
+To: Rohit Ner <rohitner@google.com>, Can Guo <quic_cang@quicinc.com>,
+ Bean Huo <beanhuo@micron.com>, Stanley Chu <stanley.chu@mediatek.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20240220090805.2886914-1-rohitner@google.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240220094211.20678-1-peter.wang@mediatek.com>
+In-Reply-To: <20240220090805.2886914-1-rohitner@google.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 2/20/24 01:42, peter.wang@mediatek.com wrote:
-> Adjust the usage of config_scis_dev to mach the existing usage of
-> other vops in ufs driver.
+On 2/20/24 01:08, Rohit Ner wrote:
+> Allow variant callback to setup transfers without
+> restricting the transfers to use legacy doorbell
+> 
+> Signed-off-by: Rohit Ner <rohitner@google.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index d77b25b79ae3..91e483dd3974 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2280,6 +2280,9 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
+>   		ufshcd_clk_scaling_start_busy(hba);
+>   	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+>   		ufshcd_start_monitor(hba, lrbp);
+> +	if (hba->vops && hba->vops->setup_xfer_req)
+> +		hba->vops->setup_xfer_req(hba, lrbp->task_tag,
+> +						!!lrbp->cmd);
+>   
+>   	if (is_mcq_enabled(hba)) {
+>   		int utrd_size = sizeof(struct utp_transfer_req_desc);
+> @@ -2293,9 +2296,6 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
+>   		spin_unlock(&hwq->sq_lock);
+>   	} else {
+>   		spin_lock_irqsave(&hba->outstanding_lock, flags);
+> -		if (hba->vops && hba->vops->setup_xfer_req)
+> -			hba->vops->setup_xfer_req(hba, lrbp->task_tag,
+> -						  !!lrbp->cmd);
+>   		__set_bit(lrbp->task_tag, &hba->outstanding_reqs);
+>   		ufshcd_writel(hba, 1 << lrbp->task_tag,
+>   			      REG_UTP_TRANSFER_REQ_DOOR_BELL);
 
-I'm not sure the above is sufficient as motivation to make this change.
-Why to introduce the helper function ufshcd_vops_config_scsi_dev() since it
-only has one caller? Is this patch really an improvement of the UFS driver
-code base?
+UFS controllers that are compliant with the JEDEC UFSHCI specification do
+not need the .setup_xfer_req() callback so I think a better motivation is
+needed to make this change.
 
 Thanks,
 
