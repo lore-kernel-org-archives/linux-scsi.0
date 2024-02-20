@@ -1,52 +1,50 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 914205C5F9;
-	Tue, 20 Feb 2024 08:24:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D44045C8E3;
+	Tue, 20 Feb 2024 08:28:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708417490; cv=none; b=IWo/hhQW05lDT8mZDj7qC7Y8rnJSHdORNIu2DvteHeylp47cs8oHwbKS4+1r8rKufa3RO7sO4HwZafa9LjfQM1C+GJqoRGW3qfR9l7k40QtsM838CkkGfOfRg7JIJgo0udfv15PaW6AEINVvLgUNg9EFuNz3M0f9nKe0n1m9Tvw=
+	t=1708417702; cv=none; b=g32VrOaEAp7sJguIeQ4LaERopkKqVYY6Lp+Iy7q+b/Svh1VOKtRmVJi5ckHznuAPvd6Iul/5ZnaIK7nDd+UEN4QMNbU0N+4g/kgaHb0Ql6OFmR26N36Pxwd98fdJYC409Rk3YBe9flpg+/MQxLHlIe6ENVeHQmtJz7E6LHNRI7c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708417490; c=relaxed/simple;
-	bh=o7IhKXDzwH+CSSEaHA40a69Pk3oXdDwj9C4S5J5Ncmc=;
+	s=arc-20240116; t=1708417702; c=relaxed/simple;
+	bh=oJi3V1tRMEwgDlhC520Ifp/R6zBTkiVQaqZyEkhfrVA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FNz8V73Sv8+IdQ3F9k8A3781fHVzZNgfmaMuATa289gfGi/XhulcMtvJBv6FdtKiFh6l5f8kfoLGQgjqZnXqIvknBhZp2NXSmonAvWWrTAWVP8ZWU7qdVcrf3Cl2err/NHX5CSsEoAkKb9pXGLPKg298xI4fHdDbMeLr2ZfiesI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VQ+u7iKR; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=EpGFMQ9OXemzvspeFmVTJzJtcJA7c62YPdE6uol31F6uCDBBZOjIrMhEko3ocVncQfIAaiTeT6kCVJuT9jkx4J6QUegVkgIeSyhkW0rlruZDnmBKzjSK1lPi+GfrbPDDpp419R6DEdyFEyIkQxdnSiTYaYGgtHSDxvyA8hr7Hb0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OBOlYvZw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VQ+u7iKR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD151C43399;
-	Tue, 20 Feb 2024 08:24:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OBOlYvZw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52899C433C7;
+	Tue, 20 Feb 2024 08:28:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708417490;
-	bh=o7IhKXDzwH+CSSEaHA40a69Pk3oXdDwj9C4S5J5Ncmc=;
+	s=k20201202; t=1708417702;
+	bh=oJi3V1tRMEwgDlhC520Ifp/R6zBTkiVQaqZyEkhfrVA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VQ+u7iKRqijmTFoTEmptfvIprnx9ryUDSI3kw8AifYGxDlkufqMcNPB9PC/iCD1i8
-	 DFun1qkoL3q6Co5UCEFCNDr32LL+IVWIq7RV7TP7aqW/Aqf5xfiUnOZmHZ0wnpVi4L
-	 70oCtuZ764e6jUThAzjQ3oP8slxFQShh8VuL8oUML8cl3V3ZQlHbknEI4UXSaPEUS9
-	 T4mhSGD/QtZy+nHiqiRpga8LdHo0jjNYWutCdwXXtXmq62roWyFRcT+hqnbA8jeyNT
-	 f1d5XoHHhRIYgUwoP04wBO4uvhIjgTswbsbhgLPftMYq7Fu5BWnzrR2N44EfgRnr6I
-	 ZOg1wEDGuKmKA==
-Date: Tue, 20 Feb 2024 08:24:44 +0000
+	b=OBOlYvZw2tJRck/Zg8EMtwh7APiUr/fhwwAHze2BPIm7NcUcbqGJse9WXmPoi0ksw
+	 goQn52o3dXxiobRdcjtMGDPuPHsPoxGOkCWsIsPBb3Np/7WHHUtbGwtzvIxI2Kza8D
+	 ++rmMriBysq3Z9RoB/nNQlkwEwiilLM7RxS5/ULt83c2yjJ4z8Hhplxqi/b4ib8kdf
+	 xIFzdSy66602G9NdAlH5GY+NGK2BAZT7GsW+zUIzgDmS8NTqVUg1bwRJAnXfYLf2HB
+	 tlBRlPh6wRKL0sbFMSZYpjC02+h0dAFtGfAdaL5zFcR+iACpKVa4WVypeNl/XZyjii
+	 YRBdp0xU0g1GQ==
+Date: Tue, 20 Feb 2024 08:28:16 +0000
 From: Lee Jones <lee@kernel.org>
-To: Kees Cook <keescook@chromium.org>
-Cc: James Bottomley <jejb@linux.ibm.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
-	Finn Thain <fthain@linux-m68k.org>,
+To: James Bottomley <jejb@linux.ibm.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, linux-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>,
 	Michael Schmitz <schmitzmic@gmail.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	drew@colorado.edu, Tnx to <Thomas_Roesch@m2.maus.de>,
 	linux-scsi@vger.kernel.org
 Subject: Re: [PATCH 03/10] scsi: NCR5380: Replace snprintf() with the safer
  scnprintf() variant
-Message-ID: <20240220082444.GH10170@google.com>
+Message-ID: <20240220082816.GI10170@google.com>
 References: <20240208084512.3803250-1-lee@kernel.org>
  <20240208084512.3803250-4-lee@kernel.org>
  <CAMuHMdX72mpGgb3Wp0WRX3V78nn+bWUqiYz25CjeMNPpWaPmxg@mail.gmail.com>
  <20240208102939.GF689448@google.com>
  <98bdd564c6bf1894717d060f3187c779e969fc5f.camel@linux.ibm.com>
  <20240219152312.GD10170@google.com>
- <202402191328.8E1A325@keescook>
+ <f5bef33da6c50e5fd067577f16f460025fe9a601.camel@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -56,43 +54,69 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <202402191328.8E1A325@keescook>
+In-Reply-To: <f5bef33da6c50e5fd067577f16f460025fe9a601.camel@linux.ibm.com>
 
-On Mon, 19 Feb 2024, Kees Cook wrote:
+On Mon, 19 Feb 2024, James Bottomley wrote:
 
-> On Mon, Feb 19, 2024 at 03:23:12PM +0000, Lee Jones wrote:
+> On Mon, 2024-02-19 at 15:23 +0000, Lee Jones wrote:
+> > On Sat, 10 Feb 2024, James Bottomley wrote:
+> > 
+> > > On Thu, 2024-02-08 at 10:29 +0000, Lee Jones wrote:
+> > > > On Thu, 08 Feb 2024, Geert Uytterhoeven wrote:
+> > > > 
+> > > > > Hi Lee,
+> > > > > 
+> > > > > Thanks for your patch!
+> > > > > 
+> > > > > On Thu, Feb 8, 2024 at 9:48 AM Lee Jones <lee@kernel.org>
+> > > > > wrote:
+> > > > > > There is a general misunderstanding amongst engineers that
+> > > > > > {v}snprintf() returns the length of the data *actually*
+> > > > > > encoded into the destination array.  However, as per the C99
+> > > > > > standard {v}snprintf() really returns the length of the data
+> > > > > > that *would have been* written if there were enough space for
+> > > > > > it.  This misunderstanding has led to buffer-overruns in the
+> > > > > > past.  It's generally considered safer to use the
+> > > > > > {v}scnprintf() variants in their place (or even sprintf() in
+> > > > > > simple cases).  So let's do that.
+> > > > > 
+> > > > > Confused... The return value is not used at all?
+> > > > 
+> > > > Future proofing.  The idea of the effort is to rid the use
+> > > > entirely.
+> > > > 
+> > > >  - Usage is inside a sysfs handler passing PAGE_SIZE as the size
+> > > >    - s/snprintf/sysfs_emit/
+> > > >  - Usage is inside a sysfs handler passing a bespoke value as the
+> > > > size
+> > > >    - s/snprintf/scnprintf/
+> > > >  - Return value used, but does *not* care about overflow
+> > > >    - s/snprintf/scnprintf/
+> > > >  - Return value used, caller *does* care about overflow
+> > > >    - s/snprintf/seq_buf/
+> > > >  - Return value not used
+> > > >    - s/snprintf/scnprintf/
+> > > > 
+> > > > This is the final case.
+> > > 
+> > > To re-ask Geert's question: the last case can't ever lead to a bug
+> > > orproblem, what value does churning the kernel to change it
+> > > provide? As Finn said, if we want to deprecate it as a future
+> > > pattern, put it in checkpatch.
+> > 
 > > Adding this to checkpatch is a good idea.
-> 
-> Yeah, please do. You can look at the "strncpy -> strscpy" check that is
-> already in there for an example.
-> 
 > > 
 > > What if we also take Kees's suggestion and hit all of these found in
 > > SCSI in one patch to keep the churn down to a minimum?
 > 
-> We don't have to focus on SCSI even. At the end of the next -rc1, I can
+> That doesn't fix the churn problem because you're still changing the
+> source.  For ancient drivers, we keep the changes to a minimum to avoid
+> introducing inadvertent bugs which aren't discovered until months
+> later.  If there's no actual bug in the driver, there's no reason to
+> change the code.
 
-When I've conducted similar work before, I've taken it subsystem by
-subsystem.  However, if you're happy to co-ordinate with the big penguin
-et al. and get them all with a treewide patch, please go for it.
-
-> send a tree-wide patch (from Coccinelle) that'll convert all snprintf()
-> uses that don't check a return value into scnprintf(). For example,
-> this seems to do the trick:
-> 
-> @scnprintf depends on !(file in "tools") && !(file in "samples")@
-> @@
-> 
-> -snprintf
-> +scnprintf
->  (...);
-> 
-> 
-> Results in:
-> 
->  2252 files changed, 4795 insertions(+), 4795 deletions(-)
-
-Super!
+Okay, no problem.  Would you like me to drop these from the set and
+resubmit or are you happy to cherry-pick the remainder?
 
 -- 
 Lee Jones [李琼斯]
