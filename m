@@ -1,45 +1,45 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ACDC77626;
-	Tue, 20 Feb 2024 17:21:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AB24763F6;
+	Tue, 20 Feb 2024 18:19:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708449702; cv=none; b=Ga5CSM2k5xwranlZl+YJmESnqyx48h0o8U+jMal1UnpHt9GMjMstHBRrIq+YK1gv+477RogPX4Juxkq+AOYgMuY58TxTfrWlNv++UBuvpqQuGU8JHfj0MwXSjfW69P5bOzRstya1Ibt4WpZAPGFxn8qTV22S2xeiQtGq8HBzUsc=
+	t=1708453188; cv=none; b=VwHjudjnSRF8JBZYDx0Lf89Domxh8+Vp6dggHqOxygeooZjm9FA30HaahSGtnS+sLkUwXifdU3QWOaZEOy8qOwRFMwQRQEqy9aRj/PuYx5L+1jNsPAqL5gY61FTWXuADCOvKlVrgXafR3io8ZhuENpYDkP0wk4UcfJgz5uaiEbQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708449702; c=relaxed/simple;
-	bh=mPo+l7s6R2Mn5HzTebtRduD2jfu/x8K/datW8X5vC90=;
+	s=arc-20240116; t=1708453188; c=relaxed/simple;
+	bh=jyYnr1vl6x18LWQLd7EauTB9Xo3hvmJzMJZ0083i9Y4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=q2+OpkUeas4pb8Dt/N4dct68D7PguvkyP2VOMx/sqsztDCcfjNBkfblko2CQ5bVLWJXU4DUQ0Nun/l3hPk/K/SVNoTbS14YzQ7EdCTgfOD+p4rZcZQwruOfa5Kose2kWoISvI4pI/vC2J3MmHinz37U+jxf4uChFLGEU3KRZzd4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.179
+	 In-Reply-To:Content-Type; b=t+QmX37YxoXvTa+UHl7vmdMDq60eaW02dmtno2j6v516+jW31SnDy4OEiZTirik5HiDoHOovzVFPs3YWjGNXLBcqb31e3eSEPssPmhxlDkZ1y1rhdIdgxm2YsAsU9hGorsBV6Ll1pqn3Ur9T2feW0KrCM9RFJbr8lkcQyzVy9G8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6e0f803d9dfso2903171b3a.0;
-        Tue, 20 Feb 2024 09:21:39 -0800 (PST)
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1d934c8f8f7so54620035ad.2;
+        Tue, 20 Feb 2024 10:19:47 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708449699; x=1709054499;
+        d=1e100.net; s=20230601; t=1708453187; x=1709057987;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=q2yUIPD7foX8u6Xdbasilcg/3p8ULKCtlmQtBTHBRrU=;
-        b=e/kosMAp12J+yiF6DGKXrEZV1tkuDDqC0SOtLxOfO8mgIOy4Dz7r1qSEZf6oupFoF/
-         02wKYY1lxGnKrC9NpVd2zzHiStrEUWWy8hAlh97ijzqcm1+YplTxMGAfAeiMgv5xEpHq
-         SPawy8MzbgG+TfY79r8xaHzNpjnbmxKeU9LPCK6+yzzrfxc1aUdVKTkdUTn4je2JbUDz
-         7c1iiXh4VBkKu6yx7bkYDPGLfSLfW+rJUGkqxONBzpi81tMPQZQ5qddBdoWPX9RpwgwX
-         8kwexL3MwdrXzI+VyoT8+RsprOIh7c/naz4/E7Et4lERLjdRSu0ovUY/gPB9IaKXsPGv
-         j1wQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWByMh4C5ZiEkgqW2yRsoX+fRY/iXFnHgIYxgfo2SKz0/Nkp+gLYk7vJiwE0iCzcFEgciuISwTO4TmAsJC/f4ZuXG13o6IiWnH5ZG5lr9bjkb5ioe7UDcmXbVxsyRXX1m2VwLQPAXx/FA==
-X-Gm-Message-State: AOJu0YxU1vWtfGQeD/WGaUwHy3D96lxG0nyLkpPdtCGWRqz11iqGp4N/
-	7GaqVIbhnzFbpE4s+5lEVYd41AoccsBVzZ21VAzgOlxeqSB+rLk8
-X-Google-Smtp-Source: AGHT+IE779i2QADDo/XfAUyVbShxQgDbClnCbfoX2CDYqxGWSdXQL6WKX7naG+PPOPmDkKWQE36Vow==
-X-Received: by 2002:a05:6a00:1897:b0:6e4:864a:9f68 with SMTP id x23-20020a056a00189700b006e4864a9f68mr1190636pfh.5.1708449699227;
-        Tue, 20 Feb 2024 09:21:39 -0800 (PST)
+        bh=IIaEw1j+qBtvH9M5w+a4/XEf+88yuJ80F8Q41APfGUI=;
+        b=wZyNewfMZsu822YNske5TKT67ENt2f9gQWvWXLcxEYcXhyWGYZS6bG/2sEQipUT7SC
+         xgDyRogRkGz/jHQSkgFCiOuiHE2PHkSEoNlOCzvZzmK7dwEaO1ej3Czhs287cmXyEM+F
+         799C7kMzozAleJ9ITzjBOWS+VXhjuiGoA3504BLI/qpAw3gJ/qAg5vD2Ay3e6J8MVxaD
+         u2CuhkKGFmOirazUhpqpP9ews3fkMLooHRqqoYxuutxgYJ0jg8ocxiCnYmQ5G9A0cZHm
+         o+Yk0EJUlH8fy1ZeBkYC5UmBiYDQbWOGM6biQ8s3nv1yX5g5X6kTIu3RTp+mRp7Ktlko
+         1+QA==
+X-Forwarded-Encrypted: i=1; AJvYcCXT0rJUgFydKuLf7KW/42/oskAtUffBaaaGiQIQ8oew7mX1uAZ+3bSSBNv2OyLAJ0bMC0Ss3YvcP9lfNlvTAn2osQDK3lS/UYzOaHcH3GJsUKRqFpkQbOHJZW3yF+jrRtm+XEKpyN/HYg==
+X-Gm-Message-State: AOJu0Yy9OjrYt3myFydTaw3d+bKz0cNJx7h7aHa0Kx5rdtp5moVfm+S3
+	5Y0PNLKsHYsbA+MV7Z+fb+SgJqIjaRHkDolEIhyT2KnYgdTEbImN
+X-Google-Smtp-Source: AGHT+IFLKIJ8T5RC9P8/uZ8FZkGizTQrrQBxZm4RJgH2uR30HVY5oRcERKtInkYamNv2sQyhKl6Puw==
+X-Received: by 2002:a17:903:22c6:b0:1db:d42f:fde9 with SMTP id y6-20020a17090322c600b001dbd42ffde9mr10215831plg.41.1708453186714;
+        Tue, 20 Feb 2024 10:19:46 -0800 (PST)
 Received: from ?IPV6:2620:0:1000:8411:455a:b76d:46a7:7189? ([2620:0:1000:8411:455a:b76d:46a7:7189])
-        by smtp.gmail.com with ESMTPSA id d5-20020aa78685000000b006e2301e702fsm6824989pfo.125.2024.02.20.09.21.38
+        by smtp.gmail.com with ESMTPSA id f12-20020a17090274cc00b001da1fae8a73sm6519834plt.12.2024.02.20.10.19.45
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 20 Feb 2024 09:21:38 -0800 (PST)
-Message-ID: <1920a2f6-e398-47af-a5d7-9dad9c70e03d@acm.org>
-Date: Tue, 20 Feb 2024 09:21:37 -0800
+        Tue, 20 Feb 2024 10:19:46 -0800 (PST)
+Message-ID: <f55c36c5-0b8f-4b7a-a0b9-b11320781a4f@acm.org>
+Date: Tue, 20 Feb 2024 10:19:45 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,56 +49,30 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] scsi: ufs: core: Fix setup_xfer_req invocation
 Content-Language: en-US
-To: Rohit Ner <rohitner@google.com>, Can Guo <quic_cang@quicinc.com>,
- Bean Huo <beanhuo@micron.com>, Stanley Chu <stanley.chu@mediatek.com>,
+To: Rohit Ner <rohitner@google.com>
+Cc: Can Guo <quic_cang@quicinc.com>, Bean Huo <beanhuo@micron.com>,
+ Stanley Chu <stanley.chu@mediatek.com>,
  "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jaegeuk Kim <jaegeuk@kernel.org>
-Cc: Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
+ Jaegeuk Kim <jaegeuk@kernel.org>, Avri Altman <avri.altman@wdc.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20240220090805.2886914-1-rohitner@google.com>
+ <1920a2f6-e398-47af-a5d7-9dad9c70e03d@acm.org>
+ <CAGt9f=Qd8P4OUuT=KJQqpwJPYVB7zeCJjWn_4CTiXWce6ZRERg@mail.gmail.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240220090805.2886914-1-rohitner@google.com>
+In-Reply-To: <CAGt9f=Qd8P4OUuT=KJQqpwJPYVB7zeCJjWn_4CTiXWce6ZRERg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 2/20/24 01:08, Rohit Ner wrote:
-> Allow variant callback to setup transfers without
-> restricting the transfers to use legacy doorbell
-> 
-> Signed-off-by: Rohit Ner <rohitner@google.com>
-> ---
->   drivers/ufs/core/ufshcd.c | 6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index d77b25b79ae3..91e483dd3974 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -2280,6 +2280,9 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
->   		ufshcd_clk_scaling_start_busy(hba);
->   	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
->   		ufshcd_start_monitor(hba, lrbp);
-> +	if (hba->vops && hba->vops->setup_xfer_req)
-> +		hba->vops->setup_xfer_req(hba, lrbp->task_tag,
-> +						!!lrbp->cmd);
->   
->   	if (is_mcq_enabled(hba)) {
->   		int utrd_size = sizeof(struct utp_transfer_req_desc);
-> @@ -2293,9 +2296,6 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
->   		spin_unlock(&hwq->sq_lock);
->   	} else {
->   		spin_lock_irqsave(&hba->outstanding_lock, flags);
-> -		if (hba->vops && hba->vops->setup_xfer_req)
-> -			hba->vops->setup_xfer_req(hba, lrbp->task_tag,
-> -						  !!lrbp->cmd);
->   		__set_bit(lrbp->task_tag, &hba->outstanding_reqs);
->   		ufshcd_writel(hba, 1 << lrbp->task_tag,
->   			      REG_UTP_TRANSFER_REQ_DOOR_BELL);
+On 2/20/24 09:58, Rohit Ner wrote:
+> Do you propose to remove this callback altogether? This callback should
+> either support both transfer modes or none.
 
-UFS controllers that are compliant with the JEDEC UFSHCI specification do
-not need the .setup_xfer_req() callback so I think a better motivation is
-needed to make this change.
-
-Thanks,
+The only UFSHCI controller I know of that needs this callback is the Exynos
+UFSHCI controller. As far as I know there are Exynos UFSHCI controllers that
+support UFSHCI 3.0 but UFSHCI 4.0 Exynos controllers are not yet available.
+Standard compliant controllers should not use the .setup_xfer_req() callback.
+As you may know invoking that callback means performing an indirect function
+call. Indirect function calls are slower than direct calls, especially if
+speculative execution  vulnerability security mitigations are enabled.
 
 Bart.
