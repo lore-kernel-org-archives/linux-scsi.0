@@ -1,48 +1,48 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A2E23A269;
-	Wed, 21 Feb 2024 09:07:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9602E3C497;
+	Wed, 21 Feb 2024 09:13:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708506461; cv=none; b=sWmrqcEmHXtVv2eri0Vt/mA35IhtAw4/5x1vks9WCctVqyCc9I4+PRMHz8Wot1dXYEJ6JhPDKzxl40ES+wGyxEK+c+fRbQl6mRtzX3y0lLucsHnsmwAEX9DPQGKIZVvj2l0pyGf/HVhDhLGhGZtXNNLnfZjLDOM/NXr043Zl6c0=
+	t=1708506828; cv=none; b=V+m8Ef8m45USe4ehQdHnROFruMGfb2OUwayexh4kz19J9KyTKYg6UcKs6K5ek83pQPIMp83RGU0MKOwNfxHK2ZEZZ6pqlkQbib2xLRgAzF6tbgeDnXffbhMqhLck3n9sA5l+bmYGYSDs9MB8v76otv5eawzvjir1bdc+IwSbX/o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708506461; c=relaxed/simple;
-	bh=mciGcG1/7XQyHXY9pTQf0Pnd9D3SNVyA+vi37R1v1PE=;
+	s=arc-20240116; t=1708506828; c=relaxed/simple;
+	bh=qFObq/imKbrBX0uou05JQZLEdlhhLxwxtZ5KTgzKBr4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Ypotl8itmJ61GG/Z/g+6T4D+OT7YnpShJ8Uv1WClY4nCpOgeg3JpM2Ad510sUx6ENzU7K4OfG5OhRlgjyWUd8tsWnZitf5vOenJiU6sPJyPRf9RSsq/Dr7Wfuo+72jp0AqY6WYd96+C3INrPx6OiY4quOaGQAE0ytfLQV7qazs8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=cXEZj7+0; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:Content-Type; b=IbY/nNUOERSIxOJDmUGDD2u0+A9WG6Du8EMblxJTP7MI3/5pq61uKw1Nbw2Vpm9/FQI8efvENMlbiDF5ISigH/wMOFqRU+SiBM6iW/nxAFj4+2zn+ttAu+nHki/yQ7hEFXWDGPuaOKrRz93AmoVVWnoDrGe5qBNj2Lb5Ofn5rzw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=msgzdkru; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="cXEZj7+0"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 41L7hgtc015736;
-	Wed, 21 Feb 2024 09:07:30 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="msgzdkru"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 41KM7mMF023143;
+	Wed, 21 Feb 2024 09:13:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	message-id:date:mime-version:subject:to:cc:references:from
 	:in-reply-to:content-type:content-transfer-encoding; s=
-	qcppdkim1; bh=Rm9nfXyllOUZ4Ibd5UKs+r2t8KUwgkJ+x+imnhOfPek=; b=cX
-	EZj7+0P12cPG+nxnzIP3cykoFWzA4w3PPmZhz1KjB+xwUWMqiaD+5LA7fU4ZFb/m
-	psOD8bceG4X+LN2x1kneoD3stSbyDCI3fFOog6kbP34id3QlhxyB+zOF4/6e0D1B
-	eRj8LW/2zf0xQ9BK4VMjwPEMnGI1v2NsGOZ9M2ZcV1O2S1UJ7rHq8zmGLVn4pykT
-	l1KOvnzbzGPy0yHrzoqOJZ/rBs1L3z925sCNSwM7US0YlVKDKrLlWx6hvN49nMFi
-	gGO5wmCG+wS1+Eq0C9WHp4PilBX6CmTBz1V0LRJNBbvD2fiW5l2WKI7O4/yi/qhL
-	Gknzw1q9vgk2up3o/WJg==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wd22rhfpk-1
+	qcppdkim1; bh=7YFnjNAZLO3w+jteC62S+W+CCoKKILLhKobc4wtrZdc=; b=ms
+	gzdkruov9J8BhiNFDFptNtmjSOWkB/e/e4PyU0+pRfet/kCfdtVff7xJnokp5tmk
+	naY5aUNmyKERT4Yuba/G8Y4/kITRXn3wYxlv47JRwGAySaBTZcm9SFd9RTZbZIUu
+	entXIMV/n0BQKiMwJam1an3eK+2stulYB7jQpjts0y6hxZnZrJ+tMM95oEn5eHR9
+	UHzXsj3dQJelFGeLis64pRfgB5fm8ajzOvFnNnFfD2dpm1kvPD9hK3rKF568OLCJ
+	vx9O9j2VbLAdyACdmPOAgbfchum256+K4S3kZjcTL+fXUeGOWEI33zSFYnQ/YoT7
+	2AIB43BOadwBQ3M0iacw==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wd21qsgg0-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 21 Feb 2024 09:07:29 +0000 (GMT)
+	Wed, 21 Feb 2024 09:13:29 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 41L97SEC020735
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 41L9DScs008018
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 21 Feb 2024 09:07:28 GMT
+	Wed, 21 Feb 2024 09:13:28 GMT
 Received: from [10.253.11.235] (10.80.80.8) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Wed, 21 Feb
- 2024 01:07:26 -0800
-Message-ID: <5ac69cde-24d6-4d31-a1bb-10e91dd289ce@quicinc.com>
-Date: Wed, 21 Feb 2024 17:07:06 +0800
+ 2024 01:13:26 -0800
+Message-ID: <c7635c10-1724-4db5-9568-d554e1c64f72@quicinc.com>
+Date: Wed, 21 Feb 2024 17:13:24 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,61 +50,88 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: Fix mcq mac configuration
-To: Rohit Ner <rohitner@google.com>, Bean Huo <beanhuo@micron.com>,
-        "Bart Van
- Assche" <bvanassche@acm.org>,
-        "Martin K. Petersen"
-	<martin.petersen@oracle.com>
-CC: Avri Altman <avri.altman@wdc.com>,
-        "Bao D. Nguyen"
-	<quic_nguyenb@quicinc.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20240220095637.2900067-1-rohitner@google.com>
+Subject: Re: [PATCH] scsi: ufs: core: Fix setup_xfer_req invocation
 Content-Language: en-US
+To: Bart Van Assche <bvanassche@acm.org>, Rohit Ner <rohitner@google.com>,
+        Bean Huo <beanhuo@micron.com>, Stanley Chu <stanley.chu@mediatek.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jaegeuk Kim
+	<jaegeuk@kernel.org>
+CC: Avri Altman <avri.altman@wdc.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20240220090805.2886914-1-rohitner@google.com>
+ <1920a2f6-e398-47af-a5d7-9dad9c70e03d@acm.org>
 From: Can Guo <quic_cang@quicinc.com>
-In-Reply-To: <20240220095637.2900067-1-rohitner@google.com>
+In-Reply-To: <1920a2f6-e398-47af-a5d7-9dad9c70e03d@acm.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: hLHaYREpg8i8MLinWT63Eeuvb_fR_0wZ
-X-Proofpoint-GUID: hLHaYREpg8i8MLinWT63Eeuvb_fR_0wZ
+X-Proofpoint-GUID: 99d-wUo6I_MKnG9oBQmP4xkAWK7nYloM
+X-Proofpoint-ORIG-GUID: 99d-wUo6I_MKnG9oBQmP4xkAWK7nYloM
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-02-20_06,2024-02-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 adultscore=0
- priorityscore=1501 phishscore=0 impostorscore=0 bulkscore=0 mlxscore=0
- lowpriorityscore=0 spamscore=0 mlxlogscore=999 malwarescore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ priorityscore=1501 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=0
+ phishscore=0 adultscore=0 impostorscore=0 bulkscore=0 mlxlogscore=999
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2402120000 definitions=main-2402210071
 
+Hi Bart,
 
-
-On 2/20/2024 5:56 PM, Rohit Ner wrote:
-> As per JEDEC Standard No. 223E Section 5.9.2,
-> the max # active commands value programmed by the host sw
-> in MCQConfig.MAC should be one less than the actual value.
+On 2/21/2024 1:21 AM, Bart Van Assche wrote:
+> On 2/20/24 01:08, Rohit Ner wrote:
+>> Allow variant callback to setup transfers without
+>> restricting the transfers to use legacy doorbell
+>>
+>> Signed-off-by: Rohit Ner <rohitner@google.com>
+>> ---
+>>   drivers/ufs/core/ufshcd.c | 6 +++---
+>>   1 file changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index d77b25b79ae3..91e483dd3974 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -2280,6 +2280,9 @@ void ufshcd_send_command(struct ufs_hba *hba, 
+>> unsigned int task_tag,
+>>           ufshcd_clk_scaling_start_busy(hba);
+>>       if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+>>           ufshcd_start_monitor(hba, lrbp);
+>> +    if (hba->vops && hba->vops->setup_xfer_req)
+>> +        hba->vops->setup_xfer_req(hba, lrbp->task_tag,
+>> +                        !!lrbp->cmd);
+>>       if (is_mcq_enabled(hba)) {
+>>           int utrd_size = sizeof(struct utp_transfer_req_desc);
+>> @@ -2293,9 +2296,6 @@ void ufshcd_send_command(struct ufs_hba *hba, 
+>> unsigned int task_tag,
+>>           spin_unlock(&hwq->sq_lock);
+>>       } else {
+>>           spin_lock_irqsave(&hba->outstanding_lock, flags);
+>> -        if (hba->vops && hba->vops->setup_xfer_req)
+>> -            hba->vops->setup_xfer_req(hba, lrbp->task_tag,
+>> -                          !!lrbp->cmd);
+>>           __set_bit(lrbp->task_tag, &hba->outstanding_reqs);
+>>           ufshcd_writel(hba, 1 << lrbp->task_tag,
+>>                     REG_UTP_TRANSFER_REQ_DOOR_BELL);
 > 
-> Signed-off-by: Rohit Ner <rohitner@google.com>
-> ---
->   drivers/ufs/core/ufs-mcq.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index 0787456c2b89..c873fd823942 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -94,7 +94,7 @@ void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds)
->   
->   	val = ufshcd_readl(hba, REG_UFS_MCQ_CFG);
->   	val &= ~MCQ_CFG_MAC_MASK;
-> -	val |= FIELD_PREP(MCQ_CFG_MAC_MASK, max_active_cmds);
-> +	val |= FIELD_PREP(MCQ_CFG_MAC_MASK, max_active_cmds - 1);
->   	ufshcd_writel(hba, val, REG_UFS_MCQ_CFG);
->   }
->   EXPORT_SYMBOL_GPL(ufshcd_mcq_config_mac);
+> UFS controllers that are compliant with the JEDEC UFSHCI specification do
+> not need the .setup_xfer_req() callback so I think a better motivation is
+> needed to make this change.
 
-Reviewed-by: Can Guo <quic_cang@quicinc.com>
+I am going to push some BUG fixes for Qualcomm UFSHCI MCQ engine, one of 
+which would count on a vops in ufshcd_send_command(). My original plan 
+was to add a new vops.mcq_setup_xfer_req() to differentiate from the 
+existing one used in legacy mode. But if Rohit moves the existing 
+.setup_xfer_req() up, I can use it instead of introducing the new one.
+
+Thanks,
+Can Guo.
+
+> 
+> Thanks,
+> 
+> Bart.
