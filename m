@@ -1,81 +1,82 @@
-Received: from new-mail.astralinux.ru (new-mail.astralinux.ru [51.250.53.244])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D39E33B794;
-	Wed, 21 Feb 2024 12:14:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.250.53.244
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F334584A45;
+	Wed, 21 Feb 2024 17:55:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708517647; cv=none; b=OOSm5q11P1djgUbh18Zlnv0jEyFm4Eg/rRGP1i77bRtHTguJmBFSmNn3rs6mkCSFwla0uSuKAHGXUq6cd9TnNXi+ME7uc762xjwq9oXetuILSrLQ4zlvY7fAq2k7t7nqnR9/1p60l4TJLX//okIEi4+oZCCM2ZgvaSN8LfNUk28=
+	t=1708538111; cv=none; b=cqbQb9NDDZnoK9bCxpLUEWfYC0qyArxFcVpoVlX38Eij8TpjCjEMHv5O2AR7bujYh6+0oc5gOC/5SRLnqecOFGREpth+n8NKrfPOcQ6B8kfa+MR1iIGmslIQaXl51h9Hhy6jYaWzFcdGyZQq6bSLCvnPdeHk5SrFYKMPMAbbcIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708517647; c=relaxed/simple;
-	bh=MqhbnS1NjXDY8Qh9eFNNfw3K5AIjRJ9BCE+okMQm6tI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TDRMKHXLBxEhbbinfjHjXF3YCe7yeeR/gMflUMI+qSgJaVbxkVzwBzj0Jf/chpMtEYhZlEhRKwwBH1NFlJu4Dbqe7o9197oVqXXaN9Iw+jMWenSJ2oBczSoxqftbQI6GlzyuDSN9vu1RNjhxsjpb6/DcjdjpUwh2vytDytZ6qsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=astralinux.ru; spf=pass smtp.mailfrom=astralinux.ru; arc=none smtp.client-ip=51.250.53.244
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=astralinux.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=astralinux.ru
-Received: from rbta-msk-lt-302690.astralinux.ru (unknown [10.177.233.36])
-	by new-mail.astralinux.ru (Postfix) with ESMTPA id 4Tfw1m5C1dzlVxB;
-	Wed, 21 Feb 2024 15:04:44 +0300 (MSK)
-From: Alexandra Diupina <adiupina@astralinux.ru>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Alexandra Diupina <adiupina@astralinux.ru>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org
-Subject: [PATCH] Add NULL check for SCp in process_script_interrupt()
-Date: Wed, 21 Feb 2024 15:04:14 +0300
-Message-Id: <20240221120414.29192-1-adiupina@astralinux.ru>
-X-Mailer: git-send-email 2.30.2
+	s=arc-20240116; t=1708538111; c=relaxed/simple;
+	bh=V5g39ReTMQQQdgjvi0X/fnE23YA0xre0R2QtYw1EiXo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ebICfPpi+KO/cZRVT6R52PxeBHYJsxY0ToM9r7ddAIOFXiYh574AykqJfmylol71HDXvifn/RUDyRpK7drhm6XULM+2SlnvElu0ZGLPMBBkpoyH6RW7zEY2IAM+m6jilRmxDewR5I0rj36v2K3RUPZYeDjRDLzsadpaFGYHETLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6d9f94b9186so784666b3a.0;
+        Wed, 21 Feb 2024 09:55:09 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708538109; x=1709142909;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ixNT6lrCynAY5FEQSBY8l84PkqF4jn/V5s3vgWDx/rI=;
+        b=RChN+00dRsrg9CQiFJNWkx7o6SkhflkJeuMNf0Kplt38U/EWiF6c+MgLFi4l7dqtPE
+         RntoC8eWX3/tS8MmgcTF1I+UG0QPTxP7u8Ut2wNOG3+FxG9VvqDeJbpLiSHJWcqrcptu
+         Ne82yaeXwE2fXWbyXtfbgCbFKhhBo+AMfllPoHzF8LbhqC0qfHer2Y3LHbTm87hujz2L
+         GcVa0sJ+1s+pn54ZFjETV2GgntGh46BeuFTFjMK1kP6X4ZSIo5GO0IaO8qoId5ZjVsu5
+         9NAv9IUGFJwySEVkY+mkcw8gyfgxvSO1/C4IPb5gwZ3rgN9UP1jCqEl96WfwL1Ho5fFL
+         b+hg==
+X-Forwarded-Encrypted: i=1; AJvYcCXbRUHs2piLzBIRJ/yxAXv4cFca/cMyHiPUU9SiMBS2WuBADKhhXdNPlT3c2IAJJOfdZQtDphbMgJvuNuIGJpEUyBT9gSHGeKM0Ey7qk/RaznKIOkGwn48cXzXpVLGYJS+dkmXdiYyZhQ==
+X-Gm-Message-State: AOJu0Yw5IiAKCgeoI49Tr3iLgbS7EkIs3FP3WivToF70UMfehxC2sk46
+	TuOAs8PWyyFRWasZ1nvOMUd93EPawCPdOcBJrnWP5AbRqj6+pTAw
+X-Google-Smtp-Source: AGHT+IHQLN7ypibCh6ZCJi6S6WsHEXut1dsRaeKs0vJ089o8BXr73jDTqM3k6MiJPtLd2vwCn0Cklg==
+X-Received: by 2002:a05:6a00:2309:b0:6e4:c3ec:1193 with SMTP id h9-20020a056a00230900b006e4c3ec1193mr1106867pfh.32.1708538108610;
+        Wed, 21 Feb 2024 09:55:08 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:d74f:a168:a26a:d7fe? ([2620:0:1000:8411:d74f:a168:a26a:d7fe])
+        by smtp.gmail.com with ESMTPSA id fb19-20020a056a002d9300b006e42bc22725sm7310727pfb.113.2024.02.21.09.55.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 21 Feb 2024 09:55:08 -0800 (PST)
+Message-ID: <0f959cca-ad29-4b8b-966d-55eb37156ef8@acm.org>
+Date: Wed, 21 Feb 2024 09:55:06 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-DrWeb-SpamScore: -100
-X-DrWeb-SpamState: legit
-X-DrWeb-SpamDetail: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehuddgtddvucetufdoteggodetrfcurfhrohhfihhlvgemucfftfghgfeunecuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkffoggfgsedtkeertdertddtnecuhfhrohhmpeetlhgvgigrnhgurhgrucffihhuphhinhgruceorgguihhuphhinhgrsegrshhtrhgrlhhinhhugidrrhhuqeenucggtffrrghtthgvrhhnpeduleetfeehffekueeuffektefgudfgffeutdefudfghedvieffheehleeuieehteenucffohhmrghinheplhhinhhugihtvghsthhinhhgrdhorhhgnecukfhppedutddrudejjedrvdeffedrfeeinecurfgrrhgrmhephhgvlhhopehrsghtrgdqmhhskhdqlhhtqdeftddvieeltddrrghsthhrrghlihhnuhigrdhruhdpihhnvghtpedutddrudejjedrvdeffedrfeeimeegvdeiudegpdhmrghilhhfrhhomheprgguihhuphhinhgrsegrshhtrhgrlhhinhhugidrrhhupdhnsggprhgtphhtthhopeeipdhrtghpthhtoheplfgrmhgvshdruehothhtohhmlhgvhiesjfgrnhhsvghnrfgrrhhtnhgvrhhshhhiphdrtghomhdprhgtphhtthhopegrughiuhhpihhnrgesrghsthhrrghlihhnuhigrdhruhdprhgtphhtthhopehmrghrthhinhdrphgvthgvrhhsvghnsehorhgrtghlvgdrtghomhdprhgtphhtthhopehlihhnuhigqdhstghsihesvhhgvghrrd
- hkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlvhgtqdhprhhojhgvtghtsehlihhnuhigthgvshhtihhnghdrohhrgh
-X-DrWeb-SpamVersion: Vade Retro 01.423.251#02 AS+AV+AP Profile: DRWEB; Bailout: 300
-X-AntiVirus: Checked by Dr.Web [MailD: 11.1.19.2307031128, SE: 11.1.12.2210241838, Core engine: 7.00.62.01180, Virus records: 12454253, Updated: 2024-Feb-21 10:21:39 UTC]
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: core: Fix setup_xfer_req invocation
+Content-Language: en-US
+To: Can Guo <quic_cang@quicinc.com>, Rohit Ner <rohitner@google.com>,
+ Bean Huo <beanhuo@micron.com>, Stanley Chu <stanley.chu@mediatek.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20240220090805.2886914-1-rohitner@google.com>
+ <1920a2f6-e398-47af-a5d7-9dad9c70e03d@acm.org>
+ <c7635c10-1724-4db5-9568-d554e1c64f72@quicinc.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <c7635c10-1724-4db5-9568-d554e1c64f72@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-SCp is 3rd argument of process_script_interrupt()
-(calls in drivers/scsi/53c700.c:1346 where SCp != NULL and
-drivers/scsi/53c700.c:1672 where this condition is not guaranteed).
-Before call process_script_interrupt() in drivers/scsi/53c700.c:1672
-there is SCp = hostdata->cmd, wherein (type casts omitted)
-hostdata = host->hostdata[0], host = dev_id,
-dev_id - 2nd argument of NCR_700_intr().
-NCR_700_intr() is used when calling request_irq() -> request_threaded_irq()
-as the 2nd argument.
-Last argument of call request_irq(..., NCR_700_intr, ... host) is host.
-host = NCR_700_detect(), host->hostdata[0] = hostdata, hostdata->cmd = NULL.
-So, there is possible NULL pointer dereference,
-so add NULL check for SCp in process_script_interrupt() to avoid it.
+On 2/21/24 01:13, Can Guo wrote:
+> I am going to push some BUG fixes for Qualcomm UFSHCI MCQ engine, one of 
+> which would count on a vops in ufshcd_send_command(). My original plan 
+> was to add a new vops.mcq_setup_xfer_req() to differentiate from the 
+> existing one used in legacy mode. But if Rohit moves the existing 
+> .setup_xfer_req() up, I can use it instead of introducing the new one.
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+Hi Can,
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Alexandra Diupina <adiupina@astralinux.ru>
----
- drivers/scsi/53c700.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+If an if-statement can be avoided in the hot path by introducing a new
+callback pointer for MCQ code then I prefer the approach of introducing
+a new callback instead of moving the setup_xfer_req() call.
 
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 857be0f3ae5b..54bcc5727fbb 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -1067,7 +1067,7 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
- 			//}
- 			NCR_700_scsi_done(hostdata, SCp, hostdata->status[0]);
- 		}
--	} else if((dsps & 0xfffff0f0) == A_UNEXPECTED_PHASE) {
-+	} else if ((dsps & 0xfffff0f0) == A_UNEXPECTED_PHASE && SCp) {
- 		__u8 i = (dsps & 0xf00) >> 8;
- 
- 		scmd_printk(KERN_ERR, SCp, "UNEXPECTED PHASE %s (%s)\n",
--- 
-2.30.2
+Thanks,
+
+Bart.
 
