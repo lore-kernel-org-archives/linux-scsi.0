@@ -1,79 +1,88 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28FE410A12;
-	Thu, 22 Feb 2024 03:09:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0F9119478
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 08:27:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708571353; cv=none; b=OrA5g639gk+YMy6XI9aDlUuXI5ypNO/MrPCGEBx3sTJ+JcWerQViWyOwm0p99UB1RpQ2HAqBlMv5D9YAp+dvnkxaYvH6YLjPl+80dUboryiO/e0wsXZkp1391BaXmhfCmVZRi7/hT5i0nW6E5HyrnPBVzdUHK/RO7u87rgoPCy4=
+	t=1708590469; cv=none; b=RmonQZLLqoyCRyJZbXVpTzURwyiTvtxaXJpwijwLiV4xWzdesXPwlhRUyMLPfaACu/a7sRRqSmOyxR+gS84Z+Z7/J9FmrZRDkYotnN74Moi80OerjJwFZAn0Z+vJLm/GskmyXH78R8BQUG4n9pNHyJsXTF8iFZT7ASf3LHNX3r4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708571353; c=relaxed/simple;
-	bh=utSs3m/ghTp4R805q7ZPfnuZ2Nk1u20QIFsToJjeTH0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OgpEo/T5PgA2ZPG0VK6tyx2645SQlBbaWF/jSwHYS/9MpocBaKXX04pykzx+/jV0n9FIXkda/F6kua3u84uzr4FvmpJKDXql+de5iw52c1BclXtWWyekl1p8DLPDH+ykyqdKiarSBgT2eXiws+yOIkmsjZcmhBzRbjeI869aNYQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1dc3b4b9b62so3883025ad.1;
-        Wed, 21 Feb 2024 19:09:11 -0800 (PST)
+	s=arc-20240116; t=1708590469; c=relaxed/simple;
+	bh=42vLzQafvh0kEIFCeD5IElVY0TCzlGFSo3aibC2pLlI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=hHlkOru38TPSWMlc3lPtJYVa2ZanweFEWq78i47MQYcgRyw1OwZbOfLdBGDS4lXQYu88cBgdKboXutf2mldHVA6FH8Qhldl3no1KwG1GS5ul2EJzggLIc9JsbE5P4+5U3F8v0uqWgTaK8hvEQbbeN1d6fciJVDeC6AK/6pyvpqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=BKY0nMrB; arc=none smtp.client-ip=209.85.208.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="BKY0nMrB"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-5654a367f53so371a12.0
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 00:27:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1708590466; x=1709195266; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=42vLzQafvh0kEIFCeD5IElVY0TCzlGFSo3aibC2pLlI=;
+        b=BKY0nMrB4sGhgG78QvHYlyf5iNFHcRbWTzkYKDB7n+RmI9gYYgcsHSkH9BpQjeieXa
+         /rESupUjD1Uk84ppypU0FO53lrSmBD+eO3KkOgDvkUQOhBHHWCPn1RqrUc0omm5NYGtJ
+         KoJ2L7Nx7MVYlTlqaRzBYoO/rnHVsR63bWmXQ+3Lvh3wK22OiT11NEblS/WVoQ7o30Eu
+         aStw7LWuc/8zUh6ciWDt0scw5jJwh8Gc8mVS3GSVyEF52CDGLyKFIqQb57TwWa2F3+Ha
+         BADqifFo6EulQVLI6Ra43tx3nA0sAeTQph5u+a5zL9G9OksESGHoO5kzyzwN/j9GlEfb
+         5xlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708571351; x=1709176151;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=utSs3m/ghTp4R805q7ZPfnuZ2Nk1u20QIFsToJjeTH0=;
-        b=EmN7hVvJfya12V21lLC5e+Fi07GPwiIrbU2x0cBoBXiw/7zbfqUPMT+V/X9kgESK0o
-         TuXP/ZE7jHcblU5Zb57oxlfeh3uOmOUOR9nW2zvEnKqFOwxLtQenR6xlHWCkx0tiutir
-         SyHTcGMUXQ6DiB1LBCZulw5MuYLp+8CJdnzOYatSvnLoJmQxYRpjEVwhpFb/CMVDUqZk
-         gy7GDvhE1M0TKVs9aP1bSUlFJ+h/EhjQ+o+Dwmcv9F0SnX11A/6XKDSV4S4Zbhbiy+Zy
-         oaNI6+vF0lxKUaZ8i8hIoiIL04/pItvemnIxp9n/0yVdWbokvAzTM8t2ct5xxvQGsHJ5
-         OeeQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVrxjVMr8RDgcPwPeC3rnOSwNDLbg+4JzGS1zHSPiMQRDp/ZTIHIqx7hLTsXGsYQFARZRNRSHwpx2YkvHWwG8sug3T61Qo8MAadkhm3AhMDcTViKA8HpZscEBNYVO14vWA4AspEKJDKNw==
-X-Gm-Message-State: AOJu0YyIuwe/lHsxyHhxW4P1K4bta+kqTrI+6rjx5AXJ3eOHd08rqHQb
-	XkQd46q86jItHmB1caS5q1l2LWbIQJK/UhTe0v2tokgTFd+GvFAz
-X-Google-Smtp-Source: AGHT+IGFvtSvMMQ+ev1NRjHkB1t0K8/305nAlbjKCh1a7FXjQST7s7J7xBqN7LNtwYtEY1MRkRu6tQ==
-X-Received: by 2002:a17:903:2288:b0:1db:bd46:a429 with SMTP id b8-20020a170903228800b001dbbd46a429mr2039102plh.28.1708571351085;
-        Wed, 21 Feb 2024 19:09:11 -0800 (PST)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id w12-20020a170902d3cc00b001db398d13ecsm8780462plb.258.2024.02.21.19.09.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 21 Feb 2024 19:09:10 -0800 (PST)
-Message-ID: <9eb36b38-87a3-4619-be64-8a6ccf3b407d@acm.org>
-Date: Wed, 21 Feb 2024 19:09:07 -0800
+        d=1e100.net; s=20230601; t=1708590466; x=1709195266;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=42vLzQafvh0kEIFCeD5IElVY0TCzlGFSo3aibC2pLlI=;
+        b=WpEz5jYIb7SVtZE/8U55I++OXyNbnE5nI940NquZUr8QqfzsvzWu6JYn41NcZd9xya
+         XLwRy5CBgZjcfV/Z6mfGE7r87CkqidU7nvoHIfVcCIaMrpgVTnLTl9q5am3Xp2Opn+JO
+         AY9I8d70/7Huyju3vFy9ZRUwqTrn+1SPF/6v0HG4yo7hYdG9Btxwp0XTlYmC6gM/9H98
+         dUIBxAO9i1B42iYcH5ut62qUpCnyeTLz/KIoG8z+RAL68bA++UB6YFfPR8OdGfU/19A7
+         FDX9BU2hG09WWAIqSmVE2Tong2NwXTnvYxiQIpyuxZwFSwqgL8tPpTunnNdfoa5Q+29n
+         6M+w==
+X-Forwarded-Encrypted: i=1; AJvYcCXEHh6FXwTGTIUTPsCFXUc8ho6qwllWEkN4bUDyv5ExRWeSnJFVIBuKQXnXq1jdqx3WZKfjno9XTGbOsQvUU0V9R3NAuNeEKlPdbg==
+X-Gm-Message-State: AOJu0Yz+iIIJf9TakxAn2ZrK6gKOS4Dw1MQgWhwDzP4ABZ1/WDyMILh7
+	qWe0D6BUjxKSnXf6nYkScAMp0/pBOP1vkdnsfhYitOxQVjMaqai6dKI0IWZ7x6mz0dHQpFph5NW
+	q40YRGDyWR/OfpANDUbKtZaVEw/huHaiAIyUR
+X-Google-Smtp-Source: AGHT+IF9Pslsp2Wk+JCCeyDyiuzYmQpUnrU/YDwfVaY7TIOceUDD/8XPiAnUfH8BKWm+574Wzkl/1hnxv4RUVkMsyGk=
+X-Received: by 2002:a50:9feb:0:b0:562:a438:47ff with SMTP id
+ c98-20020a509feb000000b00562a43847ffmr375785edf.6.1708590465698; Thu, 22 Feb
+ 2024 00:27:45 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: Fix setup_xfer_req invocation
-Content-Language: en-US
-To: Can Guo <quic_cang@quicinc.com>, Rohit Ner <rohitner@google.com>,
- Bean Huo <beanhuo@micron.com>, Stanley Chu <stanley.chu@mediatek.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jaegeuk Kim <jaegeuk@kernel.org>
-Cc: Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20240220090805.2886914-1-rohitner@google.com>
- <1920a2f6-e398-47af-a5d7-9dad9c70e03d@acm.org>
+References: <20240220090805.2886914-1-rohitner@google.com> <1920a2f6-e398-47af-a5d7-9dad9c70e03d@acm.org>
  <c7635c10-1724-4db5-9568-d554e1c64f72@quicinc.com>
- <0f959cca-ad29-4b8b-966d-55eb37156ef8@acm.org>
- <cca63e1e-e16e-476c-b646-b6ff2cfb70a5@quicinc.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <cca63e1e-e16e-476c-b646-b6ff2cfb70a5@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <c7635c10-1724-4db5-9568-d554e1c64f72@quicinc.com>
+From: Rohit Ner <rohitner@google.com>
+Date: Thu, 22 Feb 2024 13:57:33 +0530
+Message-ID: <CAGt9f=T5352bo=K2OAa7QRMds=tQC1JspN+zQ2aYxNRDWGSVnA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: ufs: core: Fix setup_xfer_req invocation
+To: Can Guo <quic_cang@quicinc.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
+	Stanley Chu <stanley.chu@mediatek.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Jaegeuk Kim <jaegeuk@kernel.org>, 
+	Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 2/21/24 18:05, Can Guo wrote:
-> The if-statement you are mentioning here, is it the if (hba->vops && hba->vops->setup_xfer_req) or if (is_mcq_enabled(hba))?
+On 2/21/24 01:13, Can Guo wrote:
+> I am going to push some BUG fixes for Qualcomm UFSHCI MCQ engine, one of
+> which would count on a vops in ufshcd_send_command(). My original plan
+> was to add a new vops.mcq_setup_xfer_req() to differentiate from the
+> existing one used in legacy mode. But if Rohit moves the existing
+> .setup_xfer_req() up, I can use it instead of introducing the new one.
 
 Hi Can,
 
-I was referring to the latter if-statement, at least if it would occur in the
-code that you plan to post and that I haven't seen yet.
+Can we stick to the current approach of moving the .setup_xfer_req()
+up, keeping in mind the following pros?
+1. Avoid redundant callbacks for setting up transfers
+2. Trim the duration for which hba->outstanding_lock is acquired unnecessarily
 
 Thanks,
-
-Bart.
-
+Rohit.
