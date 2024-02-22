@@ -1,163 +1,164 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC1D25491E;
-	Thu, 22 Feb 2024 18:45:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E01073F2A
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 21:45:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708627532; cv=none; b=bQ34cPKPi5Hngche0zPvMEATLDBLJ8V0Q3kcRdXQTsvOpBp55gMHpjOI7x+xmuvcDbnaH0NWxewaXQA8N2xRulgIt7I8aoASssen/X3ofcIsEyW/PmRUKF4aJS5zhi0VmMuYr0gW5g6ibagu1+eklWRywPcbH9ByB2Ad9bWQN/k=
+	t=1708638335; cv=none; b=BzpldP2LIzEQ/w5I7IUq7s1c7orLy3XIG4iuAkcL+RrDsIb6MVj+p/E5+sv90yNHleAL4w9RXgGpy2k+TPtUljKj+qejqHoddQvGfcMFc1TU2+Nw0wuPNesMAkmymQ1AP2ftADyyykpaNSVqOBD1kTjphea6PD5EzUf5TgNsw0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708627532; c=relaxed/simple;
-	bh=4QzDmPnJPwLAYY0Yqwj6a6KbkfRhgeRzj8uLh37vfXE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NcqSylggApU/BCAf7SNfdv92h0B1aDM1+J0AwgXWauz+IVYa+p4samLzrILuL0QDx1cIsmOHGOqoSREjEAMqCEierdPKUhSRkne2486HSoB1JKM9wh8E8e1rkLvKFjrMXfjDR2iUYYQs+CVVnFrg00dvgLhlDTR1sm8iEI/bCyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=MxFhswDv; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MxFhswDv"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=yOb/RuraypnITZK8K9KciUvMA2gEcSTBZFoeNPrttlI=; b=MxFhswDvkHyRV7RHnWx9NwBoLF
-	PDrA5t0NaBjPqvKPE5EAs3kqS2oxzymCZmmhkAVMj+U9WosFENX4nPaUyhem9xmIrlHpZ07yKuKtX
-	PPeA7e9q35WOPGZOjHBJAlN9pS8rJtPDNM/8bcZoX8iUhpsYwiqeCREPoSLA4ZTjpg9tFaqnI+Tqf
-	o5IGges+gMK+G+Txdt7QH1nSxamVljMm92X9RUDPrvPt031BrkXle53KCDjiyDT0BZjqfTLtp1z93
-	zp9JiKd6/8pwZV/6ziscsJGh4ZY1nYmTjVsN3ETepLXFG3kdQDSf13JPMW+FusNwB5Pf2HyhFcxMZ
-	ykbZRvWg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rdE4T-00000006BTO-2hLZ;
-	Thu, 22 Feb 2024 18:45:25 +0000
-Date: Thu, 22 Feb 2024 10:45:25 -0800
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Christoph Hellwig <hch@infradead.org>,
-	Hannes Reinecke <hare@suse.de>, lsf-pc@lists.linuxfoundation.org,
-	linux-mm@kvack.org, linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-Subject: Re: [LSF/MM/BPF TOPIC] Large block for I/O
-Message-ID: <ZdeWRaGQo1IX18pL@bombadil.infradead.org>
-References: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
- <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
- <03ebbc5f-2ff5-4f3c-8c5b-544413c55257@suse.de>
- <5c356222-fe9e-41b0-b7fe-218fbcde4573@acm.org>
- <ZYUbB3brQ0K3rP97@casper.infradead.org>
- <ZYUgo0a51nCgjLNZ@infradead.org>
- <9b46c48f-d7c4-4ed3-a644-fba90850eab8@acm.org>
- <ZZxOdWoHrKH4ImL7@casper.infradead.org>
+	s=arc-20240116; t=1708638335; c=relaxed/simple;
+	bh=pNWJ0N/oU811ln6XjE6ccGcxB0xHSmz/H8UfazqF9Fc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Xf3TtmKQECvqD6HMF3AnhlU8XvX7w7iPi3N2tJkSOjVDgzGTWtaZD4dGjeICgMwhEhi7MZV5vowUFr2gZEy/I2N9z/JJ82tyd+z0coXzvUw728QZYpLKI2r49WCtvZ+m4sHAxLHNCqft3t72QqFlZQFukU0akmIYS7YE0vull1Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-6e471caaa71so98398b3a.2
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 13:45:34 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708638333; x=1709243133;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vpSpyC7JgtmkB5qVO34atZ81+aHvh6w/pNdfi44Gk/E=;
+        b=m2Epsp7QRywYIr46I7B1plo7CAdmqQwoKXi6y8wcswdN0YNy68H/syiOX3DH/daBcO
+         ME3JkAD/9lhidhYAFcEumeeikFV8c7NGiXT7mEbSOTSXV/vLYdgKMbryzqJChVR3Ro9C
+         LQKkW0VYUK/V5WhNrnPlXBs6D4+9zQFLzL8brAalMBcdQqGkRwyTub7slmRmxnEYwlGK
+         oKTtLV+axb8aU9RbtYf9fWNjNVD6kZwD5jb9826rlrAcxTBhN2TYvMvX2dDKAPMELHGj
+         eQzaH+orQnO516ROtnFBNTW2TJx0XuYg03ax29JSFkKh+zc/PZUAeWgcE2ztwYhX8Wjb
+         LSjg==
+X-Gm-Message-State: AOJu0YyZXqmfCDHv9HtLYo85/8yNMQrypKf0cEnQa7QozqgJ8KN3DFwr
+	ipDO3jaRskO6velkftF7Iklxn+bTN7onl2cAwoqPvydkVGMN2x+F
+X-Google-Smtp-Source: AGHT+IFpBG1drC6nKF77p8x6er02GQu0RNwUI/aCKlv831Ycw0AZDevrI7ZZgflo/GmQYlGjEUA7cg==
+X-Received: by 2002:a05:6a00:22ca:b0:6e1:399b:fac3 with SMTP id f10-20020a056a0022ca00b006e1399bfac3mr167260pfj.25.1708638333247;
+        Thu, 22 Feb 2024 13:45:33 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:bcee:4c5d:88b9:5644])
+        by smtp.gmail.com with ESMTPSA id a1-20020aa78e81000000b006e414faff99sm9598203pfr.180.2024.02.22.13.45.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Feb 2024 13:45:32 -0800 (PST)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Daejun Park <daejun7.park@samsung.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v10 00/11] Pass data lifetime information to SCSI disk devices
+Date: Thu, 22 Feb 2024 13:44:48 -0800
+Message-ID: <20240222214508.1630719-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.44.0.rc0.258.g7320e95886-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZZxOdWoHrKH4ImL7@casper.infradead.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jan 08, 2024 at 07:35:17PM +0000, Matthew Wilcox wrote:
-> On Mon, Jan 08, 2024 at 11:30:10AM -0800, Bart Van Assche wrote:
-> > On 12/21/23 21:37, Christoph Hellwig wrote:
-> > > On Fri, Dec 22, 2023 at 05:13:43AM +0000, Matthew Wilcox wrote:
-> > > > It clearly solves a problem (and the one I think it's solving is the
-> > > > size of the FTL map).  But I can't see why we should stop working on it,
-> > > > just because not all drive manufacturers want to support it.
-> > > 
-> > > I don't think it is drive vendors.  It is is the SSD divisions which
-> > > all pretty much love it (for certain use cases) vs the UFS/eMMC
-> > > divisions which tends to often be fearful and less knowledgeable (to
-> > > say it nicely) no matter what vendor you're talking to.
-> > 
-> > Hi Christoph,
-> > 
-> > If there is a significant number of 4 KiB writes in a workload (e.g.
-> > filesystem metadata writes), and the logical block size is increased from
-> > 4 KiB to 16 KiB, this will increase write amplification no matter how the
-> > SSD storage controller has been designed, isn't it? Is there perhaps
-> > something that I'm misunderstanding?
-> 
-> You're misunderstanding that it's the _drive_ which gets to decide the
-> logical block size. Filesystems literally can't do 4kB writes to these
-> drives; you can't do a write smaller than a block.  If your clients
-> don't think it's a good tradeoff for them, they won't tell Linux that
-> the minimum IO size is 16kB.
+Hi Martin,
 
-Yes, but its perhaps good to review how flexible this might be or not.
-I can at least mention what I know of for NVMe. Getting a lay of the
-land of this for other storage media would be good.
+UFS vendors need the data lifetime information to achieve good performance.
+Providing data lifetime information to UFS devices can result in up to 40%
+lower write amplification. Hence this patch series that adds support in F2FS
+and also in the block layer for data lifetime information. The SCSI disk (sd)
+driver is modified such that it passes write hint information to SCSI devices
+via the GROUP NUMBER field.
 
-Some of the large capacity NVMe drives have NPWG as 16k, that just means
-the Indirection Unit is 16k, the mapping table, so the drive is hinting
-*we prefer 16k* but you can still do 4k writes, it just means for all
-these drives that a 4k write will be a RMW.
+Please consider this patch series for the next merge window.
 
-Users who *want* to help avoid RMWs on these drives and want to increase the
-writes to be at least 16k can enable a 16k or larger block size so to
-align the writes. The experimentation we have done using Daniel Gomez's
-eBPF blkalgn tool [0] reveal (as discussed at last year's Plumbers) that
-there were still some 4k writes, this was in turn determined to be due
-to XFS's buffer cache usage for metadata. Dave recently posted patches to allow
-to use large folios on the xfs buffer cache [1], and Daniel has started making
-further observations on this which he'll be revealing soon.
+Thanks,
 
-[0] https://github.com/dagmcr/bcc/tree/blkalgn-dump
-[1] https://lore.kernel.org/all/20240118222216.4131379-1-david@fromorbit.com/
+Bart.
 
-For large capacity NVMe drives with large atomics (NAUWPF), the
-nvme block driver will allow for the physical block size to be 16k too,
-thus allowing the sector size to be set to 16k when creating the
-filesystem, that would *optionally* allow for users to force the
-filesystem to not allow *any* writes to the device to be 4k. Note
-then that there are two ways to be able to use a sector size of 16k
-for NVMe today then, one is if your drive supported 16 LBA format and
-another is with these two parameters set to 16k. The later allows you
-to stick with 512 byte or 4k LBA format and still use a 16k sector size.
-That allows you to remain backward compatible.
+Changes compared to v9:
+ - Rebased the patch series on top of Christian's vfs/vfs.rw branch
+   (tag vfs-6.9.rw_hint).
+ - Instead of checking in sd_setup_read_write_cmnd() whether rq->write_hint
+   != 0, set use_10_for_rw if permanent streams are supported.
 
-Jan Kara's patches "block: Add config option to not allow writing to
-mounted devices" [2] should allow us to remove the set_blocksize() call
-in xfs_setsize_buftarg() since XFS does not use the block device cache
-at all, and his pathces ensure once a filesystem is mounted userspace
-won't muck with the block device directly.
+Changes compared to v8:
+ - Removed the .apply_whint() function pointer member from struct
+   file_operations.
+ - Made this patch series compatible with 'sparse' via the following change:
++/* Sparse ignores __packed annotations on enums, hence the #ifndef below. */
++#ifndef __CHECKER__
+ static_assert(sizeof(enum rw_hint) == 1);
++#endif
 
-As for the impact of this for 4k writes, if you create the filesystem
-with a 16 sector size then we're strict, and it means at minimum 16k is
-needed. It is no different than what is done for 4k where the logical
-block size is 512 bytes and we use a 4k sector size as the physical
-block size is 4k. If using buffered IO then we can leverage the page
-cache for modifications. Either way, you should do your WAF homework
-too. Even if you *do* have 4k workloads, underneath the hood you may see
-that as of matter of fact the number of IOs which are 4k are very likely
-small in count. In so far as WAF is concerned, the *IO volume* is what
-matters.  Luca Bert has a great write up on his team's findings when
-evaluating some real world workload's WAF estimates when considering
-IO volume [3].
+Changes compared to v7:
+ - As requested by Dave Chinner, changed one occurrence of
+   file_inode(dio->iocb->ki_filp)->i_write_hint into inode->i_write_hint.
+ - Modified the description of patch 03/19 since the patch that restores
+   F_[GS]ET_FILE_RW_HINT has been removed.
+ - Added Reviewed-by tags from v6 of this patch series and that were missing
+   when v7 was posted.
 
-[2] https://lkml.kernel.org/r/20231101173542.23597-1-jack@suse.cz
-[3] https://www.micron.com/about/blog/2023/october/real-life-workloads-allow-more-efficient-data-granularity-and-enable-very-large-ssd-capacities
+Changes compared to v6:
+ - Dropped patch "fs: Restore F_[GS]ET_FILE_RW_HINT support".
 
-We were not aware of public open source tools to do what they did,
-so we worked on a tool that allows just that. You can measure your
-workload WAF using Daniel Gomez's WAF tool for NVMe [4] and decide if
-the tradeoffs are acceptable. It would be good for us to automate
-generic workloads, slap it on kdevops, and compute WAF, for instance.
+Changes compared to v5:
+ - Added compile-time tests that compare the WRITE_LIFE_* and RWH_* constants.
+ - Split the F_[GS]ET_RW_HINT handlers.
+ - Removed the structure member kiocb.ki_hint again. Instead, copy the data
+   lifetime information directly from struct file into a bio.
+ - Together with Doug Gilbert, fixed multiple bugs in the scsi_debug patches.
+   Added Doug's Tested-by.
+ - Changed the type of "rscs:1" from bool into unsigned.
+ - Added unit tests for the new SCSI protocol data structures.
+ - Improved multiple patch descriptions.
+ 
+Changes compared to v4:
+ - Dropped the patch that renames the WRITE_LIFE_* constants.
+ - Added a fix for an argument check in fcntl_rw_hint().
+ - Reordered the patches that restore data lifetime support.
+ - Included a fix for data lifetime support for buffered I/O to raw block
+   devices.
 
-[4] https://github.com/dagmcr/bcc/tree/nvmeiuwaf
+Changes compared to v3:
+ - Renamed the data lifetime constants (WRITE_LIFE_*).
+ - Fixed a checkpatch complaint by changing "unsigned" into "unsigned int".
+ - Rebased this patch series on top of kernel v6.7-rc1.
+ 
+Changes compared to v2:
+ - Instead of storing data lifetime information in bi_ioprio, introduce the
+   new struct bio member bi_lifetime and also the struct request member
+   'lifetime'.
+ - Removed the bio_set_data_lifetime() and bio_get_data_lifetime() functions
+   and replaced these with direct assignments.
+ - Dropped all changes related to I/O priority.
+ - Improved patch descriptions.
 
-> Some workloads are better with a 4kB block size, no doubt.  Others are
-> better with a 512 byte block size.  That doesn't prevent vendors from
-> offering 4kB LBA size drives.
+Changes compared to v1:
+ - Use six bits from the ioprio field for data lifetime information. The
+   bio->bi_write_hint / req->write_hint / iocb->ki_hint members that were
+   introduced in v1 have been removed again.
+ - The F_GET_FILE_RW_HINT and F_SET_FILE_RW_HINT fcntls have been removed.
+ - In the SCSI disk (sd) driver, query the stream status and check the PERM bit.
+ - The GET STREAM STATUS command has been implemented in the scsi_debug driver.
 
-Indeed, using large block sizes by no not meant for all workloads. But
-it's a good time to also remind folks that larger IOs tend to just be
-good for flash storage in general too. So if your WAF measurements check
-out, using large block sizes is something to evaluate.
+Bart Van Assche (11):
+  scsi: core: Query the Block Limits Extension VPD page
+  scsi: scsi_proto: Add structures and constants related to I/O groups
+    and streams
+  scsi: sd: Translate data lifetime information
+  scsi: scsi_debug: Reduce code duplication
+  scsi: scsi_debug: Support the block limits extension VPD page
+  scsi: scsi_debug: Rework page code error handling
+  scsi: scsi_debug: Rework subpage code error handling
+  scsi: scsi_debug: Allocate the MODE SENSE response from the heap
+  scsi: scsi_debug: Implement the IO Advice Hints Grouping mode page
+  scsi: scsi_debug: Implement GET STREAM STATUS
+  scsi: scsi_debug: Maintain write statistics per group number
 
- Luis
+ drivers/scsi/Kconfig           |   5 +
+ drivers/scsi/Makefile          |   2 +
+ drivers/scsi/scsi.c            |   2 +
+ drivers/scsi/scsi_debug.c      | 293 +++++++++++++++++++++++++--------
+ drivers/scsi/scsi_proto_test.c |  56 +++++++
+ drivers/scsi/scsi_sysfs.c      |  10 ++
+ drivers/scsi/sd.c              | 117 ++++++++++++-
+ drivers/scsi/sd.h              |   3 +
+ include/scsi/scsi_device.h     |   1 +
+ include/scsi/scsi_proto.h      |  78 +++++++++
+ 10 files changed, 497 insertions(+), 70 deletions(-)
+ create mode 100644 drivers/scsi/scsi_proto_test.c
+
