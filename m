@@ -1,68 +1,174 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx2.zhaoxin.com (mx2.zhaoxin.com [203.110.167.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 613A3101E2;
-	Thu, 22 Feb 2024 08:51:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D50B42BB13
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 08:54:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.110.167.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708591905; cv=none; b=psBViqXCg9SAB/RYI0KTJknWFc+SShyqR3FMzVS9Y0OsLIn5jLTFH5/FiK+DoGY1VdoEXr+85dBEzbgt6Wq8Vff6GBNGA4FRJ9XNELJsnyCXKnjva+EjVI4Tdwpd+1Jk+x6afiTAbg0KHpl0Gxv16Q7FKm/qSF9eqXF5JbTct1k=
+	t=1708592088; cv=none; b=MJE1WW+cq3p7QNRNalSvt73L52qLy8cq9pEk1LkVtUoTy2AlphwKgNwWySSoDk0CogAb3yi5wtY+9uOZGVC75eEP+ApCPfV4lK3eoreui4T6ExRp2b7I7WZgCnEY0nSQpxkDmM6GFL8xLyZq0SUkXDIcZ/VzV5XeIdVEZCVx5iU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708591905; c=relaxed/simple;
-	bh=JoxFkXKK1G2eYE+0iXjJP6VvOtWDkSC6kFkAL0Sn46s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DlXm8VtT7c85PnjWwqKs/WjklcOZ0A3vTWuM+6uzZzSEcTWUs2my5r73oa20rWvWOVKO/T5s8+SF3Wpd1oxt14tco6pQG8NM6MjZ+ydHMr8X2z4ZB87so6O2e4Z885a2IWQT08FWzhBqkVu07vX0PcKPhE/5KY4ehE07qZbEC9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cKfyJXhp; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cKfyJXhp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F35CBC433F1;
-	Thu, 22 Feb 2024 08:51:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708591904;
-	bh=JoxFkXKK1G2eYE+0iXjJP6VvOtWDkSC6kFkAL0Sn46s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=cKfyJXhpwlkE/PHdOyJPjp9icGsKUDkLJ9wNQRmoUxvLz84Q6NqdwerTU4GToBvED
-	 J6JSfqp8e8+hMpo3bilBSHMsc68Wjd6q9x4iPK70hlZMkQXTwnaSkRL3X5+8SLlreX
-	 bGComPLy1GC9YDOX220c3e8HmAA4EIF8U4jwJL6nES9+GKfzoTvi4P4T7ElManM2Oo
-	 AUTYqkU9lpAg/A4Q+WpDUg6Os7qQU8mAHPyDEbyT7gAMBKhFEsRtHA9mioQZJSx2R1
-	 S8vAwbGEJGt/7tpY8rzxuCTM+v/dhVNl6XGKwR6YDSJCodXl7TtCX6fG6jzDl7gxHt
-	 I0+PIx7lHy34w==
-Date: Thu, 22 Feb 2024 09:51:39 +0100
-From: Christian Brauner <brauner@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, 
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, 
-	Daejun Park <daejun7.park@samsung.com>, Kanchan Joshi <joshi.k@samsung.com>, 
-	Jeff Layton <jlayton@kernel.org>, Chuck Lever <chuck.lever@oracle.com>, 
-	Stephen Rothwell <sfr@canb.auug.org.au>, Alexander Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [PATCH v9 01/19] fs: Fix rw_hint validation
-Message-ID: <20240222-hamster-rosafarben-fe5b5766613f@brauner>
-References: <20240130214911.1863909-1-bvanassche@acm.org>
- <20240130214911.1863909-2-bvanassche@acm.org>
- <20240131-skilift-decken-cf3d638ce40c@brauner>
- <fafab67c-f87d-4684-98d5-6d9f82804bba@acm.org>
+	s=arc-20240116; t=1708592088; c=relaxed/simple;
+	bh=Q09ggyJX4LTHC+Qx+tTl+VcdUVE6MRDSmOxeTtRF1M0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=F4vyiV/hMQvVqcXp3J/Uu3dZCwtcpbhiuFf3C7+WKx2D3yq7vfxAxWpsk+eZCGU1lUkz6NFuPmt7+Ji3HwmkvfydIEh9UZjunrrhGB0JEDiQguzRFDZ5tJy3MYpZClDizVHVrU7PfrgNsdU1zYsU4HsMPANO6CRKlnCbWWkv9as=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=203.110.167.99
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
+X-ASG-Debug-ID: 1708592081-1eb14e0c7c45a80001-ziuLRu
+Received: from ZXSHMBX2.zhaoxin.com (ZXSHMBX2.zhaoxin.com [10.28.252.164]) by mx2.zhaoxin.com with ESMTP id IHwyCNpP3iJxhYfP (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Thu, 22 Feb 2024 16:54:42 +0800 (CST)
+X-Barracuda-Envelope-From: WeitaoWang-oc@zhaoxin.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
+Received: from zxbjmbx1.zhaoxin.com (10.29.252.163) by ZXSHMBX2.zhaoxin.com
+ (10.28.252.164) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 22 Feb
+ 2024 16:54:41 +0800
+Received: from L440.zhaoxin.com (10.29.8.21) by zxbjmbx1.zhaoxin.com
+ (10.29.252.163) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 22 Feb
+ 2024 16:54:41 +0800
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
+From: Weitao Wang <WeitaoWang-oc@zhaoxin.com>
+X-Barracuda-RBL-Trusted-Forwarder: 10.29.252.163
+To: <oneukum@suse.com>, <stern@rowland.harvard.edu>,
+	<gregkh@linuxfoundation.org>, <linux-usb@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<usb-storage@lists.one-eyed-alien.net>
+CC: <WeitaoWang@zhaoxin.com>
+Subject: [PATCH] USB:UAS:return ENODEV when submit urbs fail with device not attached.
+Date: Fri, 23 Feb 2024 00:54:41 +0800
+X-ASG-Orig-Subj: [PATCH] USB:UAS:return ENODEV when submit urbs fail with device not attached.
+Message-ID: <20240222165441.6148-1-WeitaoWang-oc@zhaoxin.com>
+X-Mailer: git-send-email 2.32.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <fafab67c-f87d-4684-98d5-6d9f82804bba@acm.org>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
+ zxbjmbx1.zhaoxin.com (10.29.252.163)
+X-Barracuda-Connect: ZXSHMBX2.zhaoxin.com[10.28.252.164]
+X-Barracuda-Start-Time: 1708592081
+X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
+X-Barracuda-URL: https://10.28.252.36:4443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at zhaoxin.com
+X-Barracuda-Scan-Msg-Size: 4195
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
+X-Barracuda-Spam-Score: 1.09
+X-Barracuda-Spam-Status: No, SCORE=1.09 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=DATE_IN_FUTURE_06_12, DATE_IN_FUTURE_06_12_2
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.121168
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
+	0.01 DATE_IN_FUTURE_06_12   Date: is 6 to 12 hours after Received: date
+	3.10 DATE_IN_FUTURE_06_12_2 DATE_IN_FUTURE_06_12_2
 
-On Wed, Feb 21, 2024 at 06:46:51PM -0800, Bart Van Assche wrote:
-> On 1/31/24 05:56, Christian Brauner wrote:
-> > The fs parts of this should go through a vfs tree as this is vfs infra.
-> > I can then give you a stable tag that you can merge and base the big
-> > block and scsci bits on. It'll minimize merge conflicts and makes it
-> > easier to coordinate imho.
-> 
-> Hi Christian,
-> 
-> It would be appreciated if such a stable tag could be created on the vfs.rw
-> branch.
+In the scenario of entering hibernation with udisk in the system, if the
+udisk was gone or resume fail in the thaw phase of hibernation. Its state
+will be set to NOTATTACHED. However, usb_hub_wq was already freezed and
+can't not handle disconnect event. Then, sync cache SCSI command will be
+sent to this udisk on the poweroff phase of hibernation, that will cause
+uas_submit_urbs to be called to submit URB to sense/data/cmd pipe. Then,
+usb_submit_urb return value -ENODEV when device was set to NOTATTACHED
+state. However, uas_submit_urbs always return "SCSI_MLQUEUE_DEVICE_BUSY"
+regardless of the reason for submission failure.That will lead the SCSI
+layer go into an ugly loop and system fail to go into hibernation.
 
-Isn't the stable branch enough I gave you weeks ago?
-It's usually what I do with Jens.
-But fwiw, see I've added the vfs-6.9.rw_hint tag. Pushed.
+To fix this issue, let uas_submit_urbs function to return real error
+-ENODEV when submit URB with device in the NOTATTACHED state. In the error
+checking inside of function uas_queuecommand_lck, reporting DID_ERROR will
+cause device poweroff fail and system shutdown instead of entering
+hibernation. So,replace DID_ERROR with DID_NO_CONNECT to report to SCSI
+upper layer.
+
+Signed-off-by: Weitao Wang <WeitaoWang-oc@zhaoxin.com>
+---
+ drivers/usb/storage/uas.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 9707f53cfda9..967f18db525a 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -533,7 +533,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+  * daft to me.
+  */
+ 
+-static struct urb *uas_submit_sense_urb(struct scsi_cmnd *cmnd, gfp_t gfp)
++static int uas_submit_sense_urb(struct scsi_cmnd *cmnd, gfp_t gfp)
+ {
+ 	struct uas_dev_info *devinfo = cmnd->device->hostdata;
+ 	struct urb *urb;
+@@ -541,16 +541,15 @@ static struct urb *uas_submit_sense_urb(struct scsi_cmnd *cmnd, gfp_t gfp)
+ 
+ 	urb = uas_alloc_sense_urb(devinfo, gfp, cmnd);
+ 	if (!urb)
+-		return NULL;
++		return -ENOMEM;
+ 	usb_anchor_urb(urb, &devinfo->sense_urbs);
+ 	err = usb_submit_urb(urb, gfp);
+ 	if (err) {
+ 		usb_unanchor_urb(urb);
+ 		uas_log_cmd_state(cmnd, "sense submit err", err);
+ 		usb_free_urb(urb);
+-		return NULL;
+ 	}
+-	return urb;
++	return err;
+ }
+ 
+ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+@@ -562,9 +561,9 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+ 
+ 	lockdep_assert_held(&devinfo->lock);
+ 	if (cmdinfo->state & SUBMIT_STATUS_URB) {
+-		urb = uas_submit_sense_urb(cmnd, GFP_ATOMIC);
+-		if (!urb)
+-			return SCSI_MLQUEUE_DEVICE_BUSY;
++		err = uas_submit_sense_urb(cmnd, GFP_ATOMIC);
++		if (err)
++			return (err == -ENODEV) ? -ENODEV : SCSI_MLQUEUE_DEVICE_BUSY;
+ 		cmdinfo->state &= ~SUBMIT_STATUS_URB;
+ 	}
+ 
+@@ -582,7 +581,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+ 		if (err) {
+ 			usb_unanchor_urb(cmdinfo->data_in_urb);
+ 			uas_log_cmd_state(cmnd, "data in submit err", err);
+-			return SCSI_MLQUEUE_DEVICE_BUSY;
++			return (err == -ENODEV) ? -ENODEV : SCSI_MLQUEUE_DEVICE_BUSY;
+ 		}
+ 		cmdinfo->state &= ~SUBMIT_DATA_IN_URB;
+ 		cmdinfo->state |= DATA_IN_URB_INFLIGHT;
+@@ -602,7 +601,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+ 		if (err) {
+ 			usb_unanchor_urb(cmdinfo->data_out_urb);
+ 			uas_log_cmd_state(cmnd, "data out submit err", err);
+-			return SCSI_MLQUEUE_DEVICE_BUSY;
++			return (err == -ENODEV) ? -ENODEV : SCSI_MLQUEUE_DEVICE_BUSY;
+ 		}
+ 		cmdinfo->state &= ~SUBMIT_DATA_OUT_URB;
+ 		cmdinfo->state |= DATA_OUT_URB_INFLIGHT;
+@@ -621,7 +620,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+ 		if (err) {
+ 			usb_unanchor_urb(cmdinfo->cmd_urb);
+ 			uas_log_cmd_state(cmnd, "cmd submit err", err);
+-			return SCSI_MLQUEUE_DEVICE_BUSY;
++			return (err == -ENODEV) ? -ENODEV : SCSI_MLQUEUE_DEVICE_BUSY;
+ 		}
+ 		cmdinfo->cmd_urb = NULL;
+ 		cmdinfo->state &= ~SUBMIT_CMD_URB;
+@@ -698,7 +697,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd)
+ 	 * of queueing, no matter how fatal the error
+ 	 */
+ 	if (err == -ENODEV) {
+-		set_host_byte(cmnd, DID_ERROR);
++		set_host_byte(cmnd, DID_NO_CONNECT);
+ 		scsi_done(cmnd);
+ 		goto zombie;
+ 	}
+-- 
+2.32.0
+
