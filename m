@@ -1,52 +1,54 @@
 Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 127FA6E601
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 21:45:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A5F612D1E4
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 21:45:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708638343; cv=none; b=JpnYggaAdJX7HAxYvu6Su2Fnuw0vRNxFJP69rhhGshbrCAc+v/iwg8OeSwyJ8Myc2qJnRo98VtDy7oSYi8eusDUo3vLGjhvCi7/LWSRs8Y+M6xNb2orfwy4sH3+14XcIN5EUjnbxlNyP7Peh3phsF9HV0Tl8zu+wZuUbuEDuKpE=
+	t=1708638344; cv=none; b=fHpdNZGqs54xi/eQEI+ix9YyXGK7JuXvFk1ZPdemZeTUdYYtcgXqWeR1DjGkPamQOoyd3x7ilP1lUJ/AgmHQsSOWbO/Dz15CfLo6rG7leVb9AAUHbh689st0wapBD1z+e28721fkRG9OKWqv2kw8w+x0hgCPAcP3HHCo+gHOeyA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708638343; c=relaxed/simple;
-	bh=vKkLynyPI87nBPlD+YkeLe9enWhazuyF+YIUJ+9jpD8=;
+	s=arc-20240116; t=1708638344; c=relaxed/simple;
+	bh=6Es1z9Z021Z+d2BSbfnWdCwEq2J0mG6QTi9n7uOvsr8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=V4vIuGQH0ZIducGoqZl4rntXensMdUsFKoVxAlhnU6MBijpNAePa6kkOfouZHYpfZ6/TW1AyC/2PVfXzY4ZQ5HRKnj8x4hCQ/hV4FzPKx4ss4A33/0RcZDVkmWQWJuugWFth4+Zi80PkFZQY7524WNmY749YOJfQBaf1gYkkV2M=
+	 MIME-Version; b=L+ovGiCic9cIUacFFRkyhd7XxQ6iVSthz/+rcxOt+4HI8rLYAnTuMLTUPJj93nGohkOIm9P3Pg1KtK13iJx5EzRjO6VqIVtsl2Q63qu0SMroyNz2DEXzTHYI1Yxf9S3IRvZQtGgIknRD2lXVQXe0hI1oMLIfZZn3IsjQAXJYM9A=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6da4a923b1bso125026b3a.2
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 13:45:41 -0800 (PST)
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6e4560664b5so100851b3a.1
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 13:45:43 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708638341; x=1709243141;
+        d=1e100.net; s=20230601; t=1708638342; x=1709243142;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=42p6S51yVjjRx4XaJ49dXrO2bR8JV9Iikw1taYqMYk4=;
-        b=FFVUXNS9osOK4GpRkg/vg8jm1A48NdloorrIXJ2oRGf8EU95U/Ryut1+nUKNmWKWg/
-         dWsfxmwsarZ1bo9IPGCv+c5IXyycu2yY9/DVrpSa511kkjue84+rm4V0qqbpL3rgbr0n
-         nqIXYulV122UIgbI+v0MoVZLaw4gtzbCcZUJ0oa1A66wam9P63GgFWZS0x47XZfjLwl8
-         S1EgtyAcZJ1IBt6Jna0ZLFm13by97e5SzM1ZzWo9fDc6rnaW2g7G35Cn7jTtBaUdlUhA
-         w059wEIbg2DicQO3Z/JQZb2oXf31ZhKKv/rBQPkpwRtLVsH3mFaaeADGaMnxUwoKAqxV
-         J2lA==
-X-Gm-Message-State: AOJu0Ywlp6mQTcV0Cku4pOwfkhLaY3+RbCCspFgZAR2jH52mAc2tbXMJ
-	4o0xPeMSoJ+ZSQw3LBPECzePfFh8ntqiFIOT6MI4z72RM8S6wSHI
-X-Google-Smtp-Source: AGHT+IETsLQBk2X6xqcvY4T3QHCCEiFif67b0jwxxOLZmx6VmsB+Q5Wt/LLsB5v/eEDHFXPLsM0PXQ==
-X-Received: by 2002:a05:6a21:3944:b0:1a0:5841:6740 with SMTP id ac4-20020a056a21394400b001a058416740mr168288pzc.14.1708638341264;
-        Thu, 22 Feb 2024 13:45:41 -0800 (PST)
+        bh=omJq96HpIrT4jxUoJlMDOO+77ZTwDn15R2tbbux00I8=;
+        b=FO3tkqvig8PBXWAIgXls5Ufwh6x+Z+i0BHHm+SYSQb6nghoRonPeEbSTSaiXkNMEES
+         Eg5lkX7Q5Uz9in3cFa3W40+wS1br+rJAVv5j6ipuD7ucBjjMgLOYmhCakl/TWJ25uhwa
+         BWjFt/baKFC/voTFHU79V0LjTSKqKyUPW+kK7sCQLIMI+ScA1ns9cMB8tPH3gioAP7do
+         gm30zN2WveSn2RWYlbQ24hjTMZdpsMbnxkusG8tZ3/VjptsmUNvKiliyOw9fDyNjI3Rf
+         GT8qfLCZEKTLlXAVbk61N1t3FZg1XFaqWYFvmW+Ex/Xv41OcJLlrHPO3UJFc+nsU3tOu
+         LmUg==
+X-Gm-Message-State: AOJu0YxeMwt8c+5wIALfbl7qqbiklEjD4iOaB0uX/L9i53hz0sv7wse6
+	UQue7Mpi/pg7zOFK+wrrvrvf8gFR53o40fNtOwmZVePvjBSdK7EA
+X-Google-Smtp-Source: AGHT+IGLRSnDVvaDmNjdhydC2QgIbkwgi7S0tmq3dauPyNwkZTO945wn2mmXRQiT72Urfd3feOIBpA==
+X-Received: by 2002:a05:6a21:360b:b0:1a0:d5b3:8e1 with SMTP id yg11-20020a056a21360b00b001a0d5b308e1mr101253pzb.30.1708638342516;
+        Thu, 22 Feb 2024 13:45:42 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:bcee:4c5d:88b9:5644])
-        by smtp.gmail.com with ESMTPSA id a1-20020aa78e81000000b006e414faff99sm9598203pfr.180.2024.02.22.13.45.40
+        by smtp.gmail.com with ESMTPSA id a1-20020aa78e81000000b006e414faff99sm9598203pfr.180.2024.02.22.13.45.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Feb 2024 13:45:40 -0800 (PST)
+        Thu, 22 Feb 2024 13:45:42 -0800 (PST)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Daejun Park <daejun7.park@samsung.com>,
 	Kanchan Joshi <joshi.k@samsung.com>,
 	Bart Van Assche <bvanassche@acm.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v10 02/11] scsi: scsi_proto: Add structures and constants related to I/O groups and streams
-Date: Thu, 22 Feb 2024 13:44:50 -0800
-Message-ID: <20240222214508.1630719-3-bvanassche@acm.org>
+Subject: [PATCH v10 03/11] scsi: sd: Translate data lifetime information
+Date: Thu, 22 Feb 2024 13:44:51 -0800
+Message-ID: <20240222214508.1630719-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.44.0.rc0.258.g7320e95886-goog
 In-Reply-To: <20240222214508.1630719-1-bvanassche@acm.org>
 References: <20240222214508.1630719-1-bvanassche@acm.org>
@@ -58,210 +60,186 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Prepare for adding code that will query the I/O advice hints group
-descriptors and for adding code that will retrieve the stream status.
+Recently T10 standardized SBC constrained streams. This mechanism allows
+to pass data lifetime information to SCSI devices in the group number
+field. Add support for translating write hint information into a
+permanent stream number in the sd driver.
 
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/Kconfig           |  5 +++
- drivers/scsi/Makefile          |  2 +
- drivers/scsi/scsi_proto_test.c | 56 ++++++++++++++++++++++++
- include/scsi/scsi_proto.h      | 78 ++++++++++++++++++++++++++++++++++
- 4 files changed, 141 insertions(+)
- create mode 100644 drivers/scsi/scsi_proto_test.c
+ drivers/scsi/sd.c | 104 +++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/sd.h |   2 +
+ 2 files changed, 104 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index addac7fbe37b..83b542abfc29 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -232,6 +232,11 @@ config SCSI_SCAN_ASYNC
- 	  Note that this setting also affects whether resuming from
- 	  system suspend will be performed asynchronously.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 86b819fa04d9..48496e816409 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -47,6 +47,7 @@
+ #include <linux/blkpg.h>
+ #include <linux/blk-pm.h>
+ #include <linux/delay.h>
++#include <linux/rw_hint.h>
+ #include <linux/major.h>
+ #include <linux/mutex.h>
+ #include <linux/string_helpers.h>
+@@ -1080,12 +1081,35 @@ static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
+ 	return BLK_STS_OK;
+ }
  
-+config SCSI_PROTO_TEST
-+	tristate "scsi_proto.h unit tests" if !KUNIT_ALL_TESTS
-+	depends on SCSI && KUNIT
-+	default KUNIT_ALL_TESTS
-+
- menu "SCSI Transports"
- 	depends on SCSI
- 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index f055bfd54a68..1313ddf2fd1a 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -24,6 +24,8 @@ obj-$(CONFIG_SCSI_COMMON)	+= scsi_common.o
- 
- obj-$(CONFIG_RAID_ATTRS)	+= raid_class.o
- 
-+obj-$(CONFIG_SCSI_PROTO_TEST)	+= scsi_proto_test.o
-+
- # --- NOTE ORDERING HERE ---
- # For kernel non-modular link, transport attributes need to
- # be initialised before drivers
-diff --git a/drivers/scsi/scsi_proto_test.c b/drivers/scsi/scsi_proto_test.c
-new file mode 100644
-index 000000000000..7fa0a78a2ad1
---- /dev/null
-+++ b/drivers/scsi/scsi_proto_test.c
-@@ -0,0 +1,56 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * Copyright 2023 Google LLC
++/**
++ * sd_group_number() - Compute the GROUP NUMBER field
++ * @cmd: SCSI command for which to compute the value of the six-bit GROUP NUMBER
++ *	field.
++ *
++ * From SBC-5 r05 (https://www.t10.org/cgi-bin/ac.pl?t=f&f=sbc5r05.pdf):
++ * 0: no relative lifetime.
++ * 1: shortest relative lifetime.
++ * 2: second shortest relative lifetime.
++ * 3 - 0x3d: intermediate relative lifetimes.
++ * 0x3e: second longest relative lifetime.
++ * 0x3f: longest relative lifetime.
 + */
-+#include <kunit/test.h>
-+#include <asm-generic/unaligned.h>
-+#include <scsi/scsi_proto.h>
-+
-+static void test_scsi_proto(struct kunit *test)
++static u8 sd_group_number(struct scsi_cmnd *cmd)
 +{
-+	static const union {
-+		struct scsi_io_group_descriptor desc;
-+		u8 arr[sizeof(struct scsi_io_group_descriptor)];
-+	} d = { .arr = { 0x45, 0, 0, 0, 0xb0, 0xe4, 0xe3 } };
-+	KUNIT_EXPECT_EQ(test, d.desc.io_advice_hints_mode + 0, 1);
-+	KUNIT_EXPECT_EQ(test, d.desc.st_enble + 0, 1);
-+	KUNIT_EXPECT_EQ(test, d.desc.cs_enble + 0, 0);
-+	KUNIT_EXPECT_EQ(test, d.desc.ic_enable + 0, 1);
-+	KUNIT_EXPECT_EQ(test, d.desc.acdlu + 0, 1);
-+	KUNIT_EXPECT_EQ(test, d.desc.rlbsr + 0, 3);
-+	KUNIT_EXPECT_EQ(test, d.desc.lbm_descriptor_type + 0, 0);
-+	KUNIT_EXPECT_EQ(test, d.desc.params[0] + 0, 0xe4);
-+	KUNIT_EXPECT_EQ(test, d.desc.params[1] + 0, 0xe3);
++	const struct request *rq = scsi_cmd_to_rq(cmd);
++	struct scsi_disk *sdkp = scsi_disk(rq->q->disk);
 +
-+	static const union {
-+		struct scsi_stream_status s;
-+		u8 arr[sizeof(struct scsi_stream_status)];
-+	} ss = { .arr = { 0x80, 0, 0x12, 0x34, 0x3f } };
-+	KUNIT_EXPECT_EQ(test, ss.s.perm + 0, 1);
-+	KUNIT_EXPECT_EQ(test, get_unaligned_be16(&ss.s.stream_identifier),
-+			0x1234);
-+	KUNIT_EXPECT_EQ(test, ss.s.rel_lifetime + 0, 0x3f);
-+
-+	static const union {
-+		struct scsi_stream_status_header h;
-+		u8 arr[sizeof(struct scsi_stream_status_header)];
-+	} sh = { .arr = { 1, 2, 3, 4, 0, 0, 5, 6 } };
-+	KUNIT_EXPECT_EQ(test, get_unaligned_be32(&sh.h.len), 0x1020304);
-+	KUNIT_EXPECT_EQ(test, get_unaligned_be16(&sh.h.number_of_open_streams),
-+			0x506);
++	return min3((u32)rq->write_hint, (u32)sdkp->permanent_stream_count,
++		    0x3fu);
 +}
 +
-+static struct kunit_case scsi_proto_test_cases[] = {
-+	KUNIT_CASE(test_scsi_proto),
-+	{}
-+};
-+
-+static struct kunit_suite scsi_proto_test_suite = {
-+	.name = "scsi_proto",
-+	.test_cases = scsi_proto_test_cases,
-+};
-+kunit_test_suite(scsi_proto_test_suite);
-+
-+MODULE_DESCRIPTION("<scsi/scsi_proto.h> unit tests");
-+MODULE_AUTHOR("Bart Van Assche");
-+MODULE_LICENSE("GPL");
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index 07d65c1f59db..843106e1109f 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -10,6 +10,7 @@
- #ifndef _SCSI_PROTO_H_
- #define _SCSI_PROTO_H_
+ static blk_status_t sd_setup_rw32_cmnd(struct scsi_cmnd *cmd, bool write,
+ 				       sector_t lba, unsigned int nr_blocks,
+ 				       unsigned char flags, unsigned int dld)
+ {
+ 	cmd->cmd_len = SD_EXT_CDB_SIZE;
+ 	cmd->cmnd[0]  = VARIABLE_LENGTH_CMD;
++	cmd->cmnd[6]  = sd_group_number(cmd);
+ 	cmd->cmnd[7]  = 0x18; /* Additional CDB len */
+ 	cmd->cmnd[9]  = write ? WRITE_32 : READ_32;
+ 	cmd->cmnd[10] = flags;
+@@ -1104,7 +1128,7 @@ static blk_status_t sd_setup_rw16_cmnd(struct scsi_cmnd *cmd, bool write,
+ 	cmd->cmd_len  = 16;
+ 	cmd->cmnd[0]  = write ? WRITE_16 : READ_16;
+ 	cmd->cmnd[1]  = flags | ((dld >> 2) & 0x01);
+-	cmd->cmnd[14] = (dld & 0x03) << 6;
++	cmd->cmnd[14] = ((dld & 0x03) << 6) | sd_group_number(cmd);
+ 	cmd->cmnd[15] = 0;
+ 	put_unaligned_be64(lba, &cmd->cmnd[2]);
+ 	put_unaligned_be32(nr_blocks, &cmd->cmnd[10]);
+@@ -1119,7 +1143,7 @@ static blk_status_t sd_setup_rw10_cmnd(struct scsi_cmnd *cmd, bool write,
+ 	cmd->cmd_len = 10;
+ 	cmd->cmnd[0] = write ? WRITE_10 : READ_10;
+ 	cmd->cmnd[1] = flags;
+-	cmd->cmnd[6] = 0;
++	cmd->cmnd[6] = sd_group_number(cmd);
+ 	cmd->cmnd[9] = 0;
+ 	put_unaligned_be32(lba, &cmd->cmnd[2]);
+ 	put_unaligned_be16(nr_blocks, &cmd->cmnd[7]);
+@@ -3001,6 +3025,81 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	sdkp->DPOFUA = 0;
+ }
  
-+#include <linux/build_bug.h>
- #include <linux/types.h>
- 
++static bool sd_is_perm_stream(struct scsi_disk *sdkp, unsigned int stream_id)
++{
++	u8 cdb[16] = { SERVICE_ACTION_IN_16, SAI_GET_STREAM_STATUS };
++	struct {
++		struct scsi_stream_status_header h;
++		struct scsi_stream_status s;
++	} buf;
++	struct scsi_device *sdev = sdkp->device;
++	struct scsi_sense_hdr sshdr;
++	const struct scsi_exec_args exec_args = {
++		.sshdr = &sshdr,
++	};
++	int res;
++
++	put_unaligned_be16(stream_id, &cdb[4]);
++	put_unaligned_be32(sizeof(buf), &cdb[10]);
++
++	res = scsi_execute_cmd(sdev, cdb, REQ_OP_DRV_IN, &buf, sizeof(buf),
++			       SD_TIMEOUT, sdkp->max_retries, &exec_args);
++	if (res < 0)
++		return false;
++	if (scsi_status_is_check_condition(res) && scsi_sense_valid(&sshdr))
++		sd_print_sense_hdr(sdkp, &sshdr);
++	if (res)
++		return false;
++	if (get_unaligned_be32(&buf.h.len) < sizeof(struct scsi_stream_status))
++		return false;
++	return buf.h.stream_status[0].perm;
++}
++
++static void sd_read_io_hints(struct scsi_disk *sdkp, unsigned char *buffer)
++{
++	struct scsi_device *sdp = sdkp->device;
++	const struct scsi_io_group_descriptor *desc, *start, *end;
++	struct scsi_sense_hdr sshdr;
++	struct scsi_mode_data data;
++	int res;
++
++	if (!sdkp->rscs)
++		return;
++
++	res = scsi_mode_sense(sdp, /*dbd=*/0x8, /*modepage=*/0x0a,
++			      /*subpage=*/0x05, buffer, SD_BUF_SIZE, SD_TIMEOUT,
++			      sdkp->max_retries, &data, &sshdr);
++	if (res < 0)
++		return;
++	start = (void *)buffer + data.header_length + 16;
++	end = (void *)buffer + ALIGN_DOWN(data.header_length + data.length,
++					  sizeof(*end));
++	/*
++	 * From "SBC-5 Constrained Streams with Data Lifetimes": Device severs
++	 * should assign the lowest numbered stream identifiers to permanent
++	 * streams.
++	 */
++	for (desc = start; desc < end; desc++)
++		if (!desc->st_enble || !sd_is_perm_stream(sdkp, desc - start))
++			break;
++	sdkp->permanent_stream_count = desc - start;
++	if (sdkp->permanent_stream_count < 2) {
++		sd_printk(KERN_INFO, sdkp,
++			  "Unexpected: RSCS has been set and the permanent stream count is %u\n",
++			  sdkp->permanent_stream_count);
++		return;
++	}
++
++	sd_printk(KERN_INFO, sdkp, "permanent stream count = %d\n",
++		  sdkp->permanent_stream_count);
++	/*
++	 * Use WRITE(10) instead of WRITE(6) if data lifetime information is
++	 * present because the WRITE(6) command does not have a GROUP NUMBER
++	 * field.
++	 */
++	sdp->use_10_for_rw = true;
++}
++
  /*
-@@ -126,6 +127,7 @@
- #define	SAI_READ_CAPACITY_16  0x10
- #define SAI_GET_LBA_STATUS    0x12
- #define SAI_REPORT_REFERRALS  0x13
-+#define SAI_GET_STREAM_STATUS 0x16
- /* values for maintenance in */
- #define MI_REPORT_IDENTIFYING_INFORMATION 0x05
- #define MI_REPORT_TARGET_PGS  0x0a
-@@ -275,6 +277,82 @@ struct scsi_lun {
- 	__u8 scsi_lun[8];
- };
+  * The ATO bit indicates whether the DIF application tag is available
+  * for use by the operating system.
+@@ -3481,6 +3580,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
  
-+/* SBC-5 IO advice hints group descriptor */
-+struct scsi_io_group_descriptor {
-+#if defined(__BIG_ENDIAN)
-+	u8 io_advice_hints_mode: 2;
-+	u8 reserved1: 3;
-+	u8 st_enble: 1;
-+	u8 cs_enble: 1;
-+	u8 ic_enable: 1;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 ic_enable: 1;
-+	u8 cs_enble: 1;
-+	u8 st_enble: 1;
-+	u8 reserved1: 3;
-+	u8 io_advice_hints_mode: 2;
-+#else
-+#error
-+#endif
-+	u8 reserved2[3];
-+	/* Logical block markup descriptor */
-+#if defined(__BIG_ENDIAN)
-+	u8 acdlu: 1;
-+	u8 reserved3: 1;
-+	u8 rlbsr: 2;
-+	u8 lbm_descriptor_type: 4;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 lbm_descriptor_type: 4;
-+	u8 rlbsr: 2;
-+	u8 reserved3: 1;
-+	u8 acdlu: 1;
-+#else
-+#error
-+#endif
-+	u8 params[2];
-+	u8 reserved4;
-+	u8 reserved5[8];
-+};
-+
-+static_assert(sizeof(struct scsi_io_group_descriptor) == 16);
-+
-+/* SCSI stream status descriptor */
-+struct scsi_stream_status {
-+#if defined(__BIG_ENDIAN)
-+	u8 perm: 1;
-+	u8 reserved1: 7;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 reserved1: 7;
-+	u8 perm: 1;
-+#else
-+#error
-+#endif
-+	u8 reserved2;
-+	__be16 stream_identifier;
-+#if defined(__BIG_ENDIAN)
-+	u8 reserved3: 2;
-+	u8 rel_lifetime: 6;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 rel_lifetime: 6;
-+	u8 reserved3: 2;
-+#else
-+#error
-+#endif
-+	u8 reserved4[3];
-+};
-+
-+static_assert(sizeof(struct scsi_stream_status) == 8);
-+
-+/* GET STREAM STATUS parameter data */
-+struct scsi_stream_status_header {
-+	__be32 len;	/* length in bytes of stream_status[] array. */
-+	u16 reserved;
-+	__be16 number_of_open_streams;
-+	DECLARE_FLEX_ARRAY(struct scsi_stream_status, stream_status);
-+};
-+
-+static_assert(sizeof(struct scsi_stream_status_header) == 8);
-+
- /* SPC asymmetric access states */
- #define SCSI_ACCESS_STATE_OPTIMAL     0x00
- #define SCSI_ACCESS_STATE_ACTIVE      0x01
+ 		sd_read_write_protect_flag(sdkp, buffer);
+ 		sd_read_cache_type(sdkp, buffer);
++		sd_read_io_hints(sdkp, buffer);
+ 		sd_read_app_tag_own(sdkp, buffer);
+ 		sd_read_write_same(sdkp, buffer);
+ 		sd_read_security(sdkp, buffer);
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index f1120de03d51..5c4285a582b2 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -125,6 +125,8 @@ struct scsi_disk {
+ 	unsigned int	physical_block_size;
+ 	unsigned int	max_medium_access_timeouts;
+ 	unsigned int	medium_access_timed_out;
++			/* number of permanent streams */
++	u16		permanent_stream_count;
+ 	u8		media_present;
+ 	u8		write_prot;
+ 	u8		protection_type;/* Data Integrity Field */
