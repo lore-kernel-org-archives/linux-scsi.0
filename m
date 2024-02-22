@@ -1,102 +1,145 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C8DB2BB09;
-	Thu, 22 Feb 2024 09:24:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51D8836AED;
+	Thu, 22 Feb 2024 09:31:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708593866; cv=none; b=ju686H+q/UbCzK0O4IVvgY61PfNbzbZVHJZJoSWeOeZpyPBUUFDhQz7oDamGXO23S7t76pQmOiVPuhkr5gE346iawZrxdsVGTWux5mKPGLG2rwtZ0If7CFkivxq+m9OOl8znx1RrFzIBKHLX7GA2N2AW48JAh//aHYa1SFjTEdw=
+	t=1708594318; cv=none; b=H+Dd0GUdk+s8cc6c/lON9+iISJT37RAzEy9CGxfC3J0P6Ce9jZDMrh8leV3LCUxfXMK31oGJyP/pBaITZLti00ruIbWxtdXeZvedLKIIKPxrtVZZnWIKl3TSchlb+5QIelNa0omMVvWfrF4k77J+HiarrfDXVPbpOO1nOAtD09Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708593866; c=relaxed/simple;
-	bh=Yqq/aNPUZed2Oe5vM66rRJzixSD3hRXsrZvbY3LmYxI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZJGLBe83tcEoCP8yRzlO5w1MKOpk+sEMQIyOjFuBYZ69U1l67f470cREG6GMOxnLcpd7rbd++AyW/7a8tX+///fE+Q8vmpuFYggr8OhnMd+/Gkwn4zWuJUDYJ4nXYqLc1hqEMzM+4qYiEJPK9/GcUnwWWpvGJYOH+dAE9JTKEBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4TgSQ95XpMz4f3kpQ;
-	Thu, 22 Feb 2024 17:24:17 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id F39D21A0172;
-	Thu, 22 Feb 2024 17:24:20 +0800 (CST)
-Received: from [10.174.179.247] (unknown [10.174.179.247])
-	by APP2 (Coremail) with SMTP id Syh0CgAXOQzBEtdlquR_Ew--.59051S3;
-	Thu, 22 Feb 2024 17:24:20 +0800 (CST)
-Message-ID: <772d4058-aef0-0b06-068c-f33636fac01e@huaweicloud.com>
-Date: Thu, 22 Feb 2024 17:24:17 +0800
+	s=arc-20240116; t=1708594318; c=relaxed/simple;
+	bh=3NC2JFWUwUaKfvx89610bLmkWiiZCuu/S/semy0WzBI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dv4+InJNf7lc3qLugZoVz0Num3AcYWjK9JJwdKnm4/y8vUG0YFvDdR+RstAlOmJczz6g+ahhhoaYNE0OKBmsmQb6cRxlGNTwG5az9u2z/kclkS4hjO4Rb9RJe7xp1PLhnW7zHCPtW1OyyG+pVYguROSpzr5M382h0+Qz3SDJcso=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Auj3nCYb; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=8P71PZvf; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Auj3nCYb; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=8P71PZvf; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Auj3nCYb";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="8P71PZvf";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Auj3nCYb";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="8P71PZvf"
+Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [10.150.64.98])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 602DC1F452;
+	Thu, 22 Feb 2024 09:31:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1708594314; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=JyST72IAHa1gwE0JzbLVOSJaR7ARzsfKSjPlAFyXYSE=;
+	b=Auj3nCYbyfzn3C+J5lEUtdrxnsnSwqPyxqZBPi7vz5mDYASxc2bmkliMZ9KgLv+1CD2YIP
+	fnYssxjk2keTd+MAvjI27G8apoen6uBX2sCBE5XU/QmliXED5GAiFW5BcMY0x34nIVBWQo
+	gActl/kAoGwiGer1JyJd9Ou+4yBvYVI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1708594314;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=JyST72IAHa1gwE0JzbLVOSJaR7ARzsfKSjPlAFyXYSE=;
+	b=8P71PZvf2kH7oAeqPBPWGNbtn1aQ42d3yD88rWaBqOoSBLp59C2CpHSdYvAayzxUKzGUPz
+	IF+fGimQleP9xDDw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1708594314; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=JyST72IAHa1gwE0JzbLVOSJaR7ARzsfKSjPlAFyXYSE=;
+	b=Auj3nCYbyfzn3C+J5lEUtdrxnsnSwqPyxqZBPi7vz5mDYASxc2bmkliMZ9KgLv+1CD2YIP
+	fnYssxjk2keTd+MAvjI27G8apoen6uBX2sCBE5XU/QmliXED5GAiFW5BcMY0x34nIVBWQo
+	gActl/kAoGwiGer1JyJd9Ou+4yBvYVI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1708594314;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=JyST72IAHa1gwE0JzbLVOSJaR7ARzsfKSjPlAFyXYSE=;
+	b=8P71PZvf2kH7oAeqPBPWGNbtn1aQ42d3yD88rWaBqOoSBLp59C2CpHSdYvAayzxUKzGUPz
+	IF+fGimQleP9xDDw==
+Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 4506313A6B;
+	Thu, 22 Feb 2024 09:31:54 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap2.dmz-prg2.suse.org with ESMTPSA
+	id oa75D4oU12XQIQAAn2gu4w
+	(envelope-from <dwagner@suse.de>); Thu, 22 Feb 2024 09:31:54 +0000
+Date: Thu, 22 Feb 2024 10:31:53 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: Chaitanya Kulkarni <chaitanyak@nvidia.com>, 
+	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, 
+	"linux-fsdevel@vger.kernel.org >> linux-fsdevel" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>, 
+	"josef@toxicpanda.com" <josef@toxicpanda.com>, Amir Goldstein <amir73il@gmail.com>, 
+	Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>, Dan Williams <dan.j.williams@intel.com>, 
+	Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>, Hannes Reinecke <hare@suse.de>, 
+	Damien Le Moal <damien.lemoal@opensource.wdc.com>, "shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>, 
+	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, "jack@suse.com" <jack@suse.com>, Ming Lei <ming.lei@redhat.com>, 
+	Sagi Grimberg <sagi@grimberg.me>, Theodore Ts'o <tytso@mit.edu>, 
+	"daniel@iogearbox.net" <daniel@iogearbox.net>
+Subject: Re: [LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] : blktests: status,
+ expansion plan for the storage stack test framework
+Message-ID: <g5c3kwbalxru7gykmzdymrzf43fkriofiqtgdgcswbf4hrg65r@wdduaccaswhe>
+References: <e5d8cd68-b3f2-4d7b-b323-b13d18199256@nvidia.com>
+ <bh5s6a4fhhlje42bzj2t22k3jpmruzkx234ks4ytuhd62tonzj@zn6h5foaqrof>
+ <jfydrbb277d7ad2ypu5dottiqh4rtzm5ipf72wcjo34mmpvnl7@mjlqomulsq3q>
+ <ZdZBpb4vMMVoLfhs@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH] scsi: sd: unregister device if device_add_disk() failed
- in sd_probe()
-To: linan666@huaweicloud.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
- mcgrof@kernel.org, mcgrof@kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- yukuai3@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
- yangerkun@huawei.com
-References: <20231208082335.1754205-1-linan666@huaweicloud.com>
-From: Li Nan <linan666@huaweicloud.com>
-In-Reply-To: <20231208082335.1754205-1-linan666@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgAXOQzBEtdlquR_Ew--.59051S3
-X-Coremail-Antispam: 1UD129KBjvdXoWrKryxKr45ArWUGF1kKFyfWFg_yoWDWwb_Cw
-	42v397Xr1rCw1Iyr1fAr1avrW0vFsFq3yrCF4jqr9avayfX3yv9F9Y9ryYvr4UGF4xuw1j
-	yr1UXr4Fkr4kGjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbSxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
-	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr
-	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
-	xwACI402YVCY1x02628vn2kIc2xKxwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7V
-	AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-	r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6x
-	IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAI
-	w20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6x
-	kF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOlksUUUUU
-X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZdZBpb4vMMVoLfhs@bombadil.infradead.org>
+Authentication-Results: smtp-out2.suse.de;
+	none
+X-Spam-Level: 
+X-Spam-Score: -0.92
+X-Spamd-Result: default: False [-0.92 / 50.00];
+	 ARC_NA(0.00)[];
+	 TO_DN_EQ_ADDR_SOME(0.00)[];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 MIME_GOOD(-0.10)[text/plain];
+	 NEURAL_HAM_LONG(-1.00)[-1.000];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 NEURAL_HAM_SHORT(-0.20)[-1.000];
+	 RCPT_COUNT_TWELVE(0.00)[24];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 MID_RHS_NOT_FQDN(0.50)[];
+	 FREEMAIL_CC(0.00)[nvidia.com,lists.linux-foundation.org,vger.kernel.org,lists.infradead.org,kernel.dk,acm.org,toxicpanda.com,gmail.com,javigon.com,intel.com,lst.de,kernel.org,suse.de,opensource.wdc.com,wdc.com,suse.com,redhat.com,grimberg.me,mit.edu,iogearbox.net];
+	 RCVD_TLS_ALL(0.00)[];
+	 BAYES_HAM(-0.12)[66.79%]
+X-Spam-Flag: NO
 
-friendly ping...
+On Wed, Feb 21, 2024 at 10:32:05AM -0800, Luis Chamberlain wrote:
+> > One discussion point I'd like to add is
+> > 
+> >   - running blktest against real hardare/target
+> 
+> We've resolved this in fstests with canonicalizing device symlinks, and
+> through kdevops its possible to even use PCIe passthrough onto a guest
+> using dynamic kconfig (ie, specific to the host).
+> 
+> It should be possible to do that in blktests too, but the dynamic
+> kconfig thing is outside of scope, but this is a long winded way of
+> suggestin that if we extend blktests to add a canonon-similar device
+> function, then since kdevops supports blktests you get that pcie
+> passthrough for free too.
 
-在 2023/12/8 16:23, linan666@huaweicloud.com 写道:
-> From: Li Nan <linan122@huawei.com>
-> 
-> "if device_add() succeeds, you should call device_del() when you want to
-> get rid of it."
-> 
-> In sd_probe(), device_add_disk() fails when device_add() has already
-> succeeded, so change put_device() to device_unregister() to ensure device
-> resources are released.
-> 
-> Fixes: 2a7a891f4c40 ("scsi: sd: Add error handling support for add_disk()")
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> ---
->   drivers/scsi/sd.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 542a4bbb21bc..d81cbeee06eb 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3736,7 +3736,7 @@ static int sd_probe(struct device *dev)
->   
->   	error = device_add_disk(dev, gd, NULL);
->   	if (error) {
-> -		put_device(&sdkp->disk_dev);
-> +		device_unregister(&sdkp->disk_dev);
->   		put_disk(gd);
->   		goto out;
->   	}
-
--- 
-Thanks,
-Nan
-
+I should have been more precise here, I was trying to say supporting
+real fabrics targets. blktests already has some logic for PCI targets
+with $TEST_DEV but I haven't really looked into this part yet.
