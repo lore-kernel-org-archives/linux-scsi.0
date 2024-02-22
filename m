@@ -1,145 +1,103 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51D8836AED;
-	Thu, 22 Feb 2024 09:31:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD79F383BA
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 09:47:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708594318; cv=none; b=H+Dd0GUdk+s8cc6c/lON9+iISJT37RAzEy9CGxfC3J0P6Ce9jZDMrh8leV3LCUxfXMK31oGJyP/pBaITZLti00ruIbWxtdXeZvedLKIIKPxrtVZZnWIKl3TSchlb+5QIelNa0omMVvWfrF4k77J+HiarrfDXVPbpOO1nOAtD09Q=
+	t=1708595233; cv=none; b=Cq+/t5fcJNfJbCfKcNkj1OetaHn7Lt2yHYcQ2nidkaLNpS1moZlN4KVhIhik6Q8wyUw2ijqPqdyZWh0UP4pQtQtYXiVybiBsqw4FICfUZNMf7MiFR5CO/Y1wGc3spElsKlk7UHsddXa/G+tqmFx9uUzfkYoPZlrT+OY5HNPr3PY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708594318; c=relaxed/simple;
-	bh=3NC2JFWUwUaKfvx89610bLmkWiiZCuu/S/semy0WzBI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dv4+InJNf7lc3qLugZoVz0Num3AcYWjK9JJwdKnm4/y8vUG0YFvDdR+RstAlOmJczz6g+ahhhoaYNE0OKBmsmQb6cRxlGNTwG5az9u2z/kclkS4hjO4Rb9RJe7xp1PLhnW7zHCPtW1OyyG+pVYguROSpzr5M382h0+Qz3SDJcso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Auj3nCYb; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=8P71PZvf; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Auj3nCYb; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=8P71PZvf; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1708595233; c=relaxed/simple;
+	bh=p/NLjmUdzl2udebkQzhZYTZge1vEW9JNghSztBz2MFg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pzGmZq7ZdOwvW2CnsVVLaQJdYefII92i+vlhBRIk3aEZQyt7nfrMzhz5DTi/lq8gaJf0RlvP3x95WMGQdOOVDaZ+EsN6Rvd32yElGraGkhfoNXUIumZL9l5wr0FkyO1P9HrwhEt8RdDE2giPUW5zTDbYlBA/ZHm+pocAAfbZD+0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=dKkOC5yO; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Auj3nCYb";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="8P71PZvf";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Auj3nCYb";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="8P71PZvf"
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [10.150.64.98])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 602DC1F452;
-	Thu, 22 Feb 2024 09:31:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1708594314; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=JyST72IAHa1gwE0JzbLVOSJaR7ARzsfKSjPlAFyXYSE=;
-	b=Auj3nCYbyfzn3C+J5lEUtdrxnsnSwqPyxqZBPi7vz5mDYASxc2bmkliMZ9KgLv+1CD2YIP
-	fnYssxjk2keTd+MAvjI27G8apoen6uBX2sCBE5XU/QmliXED5GAiFW5BcMY0x34nIVBWQo
-	gActl/kAoGwiGer1JyJd9Ou+4yBvYVI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1708594314;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=JyST72IAHa1gwE0JzbLVOSJaR7ARzsfKSjPlAFyXYSE=;
-	b=8P71PZvf2kH7oAeqPBPWGNbtn1aQ42d3yD88rWaBqOoSBLp59C2CpHSdYvAayzxUKzGUPz
-	IF+fGimQleP9xDDw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1708594314; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=JyST72IAHa1gwE0JzbLVOSJaR7ARzsfKSjPlAFyXYSE=;
-	b=Auj3nCYbyfzn3C+J5lEUtdrxnsnSwqPyxqZBPi7vz5mDYASxc2bmkliMZ9KgLv+1CD2YIP
-	fnYssxjk2keTd+MAvjI27G8apoen6uBX2sCBE5XU/QmliXED5GAiFW5BcMY0x34nIVBWQo
-	gActl/kAoGwiGer1JyJd9Ou+4yBvYVI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1708594314;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=JyST72IAHa1gwE0JzbLVOSJaR7ARzsfKSjPlAFyXYSE=;
-	b=8P71PZvf2kH7oAeqPBPWGNbtn1aQ42d3yD88rWaBqOoSBLp59C2CpHSdYvAayzxUKzGUPz
-	IF+fGimQleP9xDDw==
-Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 4506313A6B;
-	Thu, 22 Feb 2024 09:31:54 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id oa75D4oU12XQIQAAn2gu4w
-	(envelope-from <dwagner@suse.de>); Thu, 22 Feb 2024 09:31:54 +0000
-Date: Thu, 22 Feb 2024 10:31:53 +0100
-From: Daniel Wagner <dwagner@suse.de>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: Chaitanya Kulkarni <chaitanyak@nvidia.com>, 
-	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, 
-	"linux-fsdevel@vger.kernel.org >> linux-fsdevel" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
-	Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>, 
-	"josef@toxicpanda.com" <josef@toxicpanda.com>, Amir Goldstein <amir73il@gmail.com>, 
-	Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>, Dan Williams <dan.j.williams@intel.com>, 
-	Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>, Hannes Reinecke <hare@suse.de>, 
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>, "shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>, 
-	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, "jack@suse.com" <jack@suse.com>, Ming Lei <ming.lei@redhat.com>, 
-	Sagi Grimberg <sagi@grimberg.me>, Theodore Ts'o <tytso@mit.edu>, 
-	"daniel@iogearbox.net" <daniel@iogearbox.net>
-Subject: Re: [LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] : blktests: status,
- expansion plan for the storage stack test framework
-Message-ID: <g5c3kwbalxru7gykmzdymrzf43fkriofiqtgdgcswbf4hrg65r@wdduaccaswhe>
-References: <e5d8cd68-b3f2-4d7b-b323-b13d18199256@nvidia.com>
- <bh5s6a4fhhlje42bzj2t22k3jpmruzkx234ks4ytuhd62tonzj@zn6h5foaqrof>
- <jfydrbb277d7ad2ypu5dottiqh4rtzm5ipf72wcjo34mmpvnl7@mjlqomulsq3q>
- <ZdZBpb4vMMVoLfhs@bombadil.infradead.org>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="dKkOC5yO"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-563c595f968so2228017a12.0
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 01:47:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1708595229; x=1709200029; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=dhVnYESztk5T2B/6C2k8gNoOah30/4ZRZ/kF6+4P7Uw=;
+        b=dKkOC5yOlC19qjiK5+6HgiE05WByhPHUONs6zTMjmmp6Atvb+aou1+TTyrtEvUqjsC
+         NEGMC0ymPtoOEHmhMxikyhcrnUtxvS02y8dzohqdgtumJxVsLqdSmzcv2xeOK2W4yMuJ
+         ZA1+05W8i39/A0jewi834v0Y0+GAz/I1kuOw1EpYEjTQNmFvtwjoRFPNN2KFHW3miO2h
+         W0Z+ZtN5b/lsnbOgm8PObuxvOrt6x2RHisRNSXoSLCU9ejp3Irox4wcnXJ66QK2CdCo2
+         1JTZdZfnPIIdzi6bgHTu+pxjQOGMJyz6mnwQYf7wFIEEIoCI4GIYmz9GsG/bLIIIOSUi
+         UE6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708595229; x=1709200029;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=dhVnYESztk5T2B/6C2k8gNoOah30/4ZRZ/kF6+4P7Uw=;
+        b=qST8oXtRSO2g1H7PP5VN2OhM3DprJYQkr2IPsnIH7mQ+t0IT+EQI5XjYwjrQonzgT4
+         Umosch8fbiNKLugkFmGIZbvRHyFz/uxi+cRR52ft+u72oiDG0wtI5r3YPADMTYyJDlOl
+         dJv/bwRZ9XALgqxcEExXsZdiiZZsDzWCGgDE3M48Zi8eTi4MfijjAUxISY1Ir4TOflGl
+         O8IKPf65IYekvHoGtiy22/p4PKvmbr/t+JfiYwqMSPE7ZMkEnY0Thkpl6Dgx7TCB/WCA
+         vI+IArhMLyb+R1hEHuURTkzNL78NZyv+9/fEBmL45rJohU39KtB/skkA9ZeWgbLtxkcQ
+         ITNA==
+X-Forwarded-Encrypted: i=1; AJvYcCW2c4dEIh0EgSuXPPumJ4q7HpJXsqjxJrmAgxIBd3Dlb9+T6+VTzFXRu8qcR+bBTCrXfUrvi6+MS2RISoQVsSOmkeTOt8yFJYkEVQ==
+X-Gm-Message-State: AOJu0Yz/HYdc+8IgvLjB10f1gLK2qIA71LCs/VBOt4HTu8m7UOVspArd
+	CURk8D81isB+7sdlmoYVE9Uy2wAplT7sqwi34LPR9e6VBGa8zEU3I3PV7nR9Grw=
+X-Google-Smtp-Source: AGHT+IG1aDzb+IIVwxggYxnhkecGvu0RiI61eOavtRNRtUy9JvH30l3jJlU3ceQLnu9hAqLoy8dj9w==
+X-Received: by 2002:a05:6402:693:b0:564:56e0:5643 with SMTP id f19-20020a056402069300b0056456e05643mr7560672edy.27.1708595229208;
+        Thu, 22 Feb 2024 01:47:09 -0800 (PST)
+Received: from ?IPV6:2001:a61:1366:6801:d8:8490:cf1a:3274? ([2001:a61:1366:6801:d8:8490:cf1a:3274])
+        by smtp.gmail.com with ESMTPSA id q29-20020a50cc9d000000b00563a3ff30basm5724081edi.59.2024.02.22.01.47.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Feb 2024 01:47:08 -0800 (PST)
+Message-ID: <3ff16f34-07a9-4b7e-b51d-b7220f08d88d@suse.com>
+Date: Thu, 22 Feb 2024 10:47:07 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZdZBpb4vMMVoLfhs@bombadil.infradead.org>
-Authentication-Results: smtp-out2.suse.de;
-	none
-X-Spam-Level: 
-X-Spam-Score: -0.92
-X-Spamd-Result: default: False [-0.92 / 50.00];
-	 ARC_NA(0.00)[];
-	 TO_DN_EQ_ADDR_SOME(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 RCPT_COUNT_TWELVE(0.00)[24];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 FREEMAIL_CC(0.00)[nvidia.com,lists.linux-foundation.org,vger.kernel.org,lists.infradead.org,kernel.dk,acm.org,toxicpanda.com,gmail.com,javigon.com,intel.com,lst.de,kernel.org,suse.de,opensource.wdc.com,wdc.com,suse.com,redhat.com,grimberg.me,mit.edu,iogearbox.net];
-	 RCVD_TLS_ALL(0.00)[];
-	 BAYES_HAM(-0.12)[66.79%]
-X-Spam-Flag: NO
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] USB:UAS:return ENODEV when submit urbs fail with device
+ not attached.
+To: Weitao Wang <WeitaoWang-oc@zhaoxin.com>, oneukum@suse.com,
+ stern@rowland.harvard.edu, gregkh@linuxfoundation.org,
+ linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Cc: WeitaoWang@zhaoxin.com
+References: <20240222165441.6148-1-WeitaoWang-oc@zhaoxin.com>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <20240222165441.6148-1-WeitaoWang-oc@zhaoxin.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Feb 21, 2024 at 10:32:05AM -0800, Luis Chamberlain wrote:
-> > One discussion point I'd like to add is
-> > 
-> >   - running blktest against real hardare/target
-> 
-> We've resolved this in fstests with canonicalizing device symlinks, and
-> through kdevops its possible to even use PCIe passthrough onto a guest
-> using dynamic kconfig (ie, specific to the host).
-> 
-> It should be possible to do that in blktests too, but the dynamic
-> kconfig thing is outside of scope, but this is a long winded way of
-> suggestin that if we extend blktests to add a canonon-similar device
-> function, then since kdevops supports blktests you get that pcie
-> passthrough for free too.
+On 22.02.24 17:54, Weitao Wang wrote:
+> In the scenario of entering hibernation with udisk in the system, if the
+> udisk was gone or resume fail in the thaw phase of hibernation. Its state
+> will be set to NOTATTACHED. However, usb_hub_wq was already freezed and
+> can't not handle disconnect event. Then, sync cache SCSI command will be
+> sent to this udisk on the poweroff phase of hibernation, that will cause
 
-I should have been more precise here, I was trying to say supporting
-real fabrics targets. blktests already has some logic for PCI targets
-with $TEST_DEV but I haven't really looked into this part yet.
+Wait, this seems like a contradiction. Are we in thaw or are we powering off?
+
+> uas_submit_urbs to be called to submit URB to sense/data/cmd pipe. Then,
+> usb_submit_urb return value -ENODEV when device was set to NOTATTACHED
+> state. However, uas_submit_urbs always return "SCSI_MLQUEUE_DEVICE_BUSY"
+> regardless of the reason for submission failure.That will lead the SCSI
+> layer go into an ugly loop and system fail to go into hibernation.
+
+The thing is that the SCSI documentation explicitly tells us to return
+either SCSI_MLQUEUE_DEVICE_BUSY or SCSI_MLQUEUE_HOST_BUSY. Now, it makes
+sense to tell the SCSI laer that a device or host is gone for good,
+if we know that. But we cannot just introduce new error returns on our own.
+
+This needs to be addressed. That means that the SCSI layer or at the
+very least the documentation needs to be fixed. Frankly, this is not strictly
+speaking a UAS issue. Any thing hotunpluggable should have this issue.
+
+	Regards
+		Oliver
