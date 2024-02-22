@@ -1,64 +1,96 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5528E14E2EE;
-	Thu, 22 Feb 2024 15:54:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 487591509A7;
+	Thu, 22 Feb 2024 16:16:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708617262; cv=none; b=UkNDTSREbYW2DnwCruxM0qmoRUsCdpRqzhXDixEvh1bm4OesglR7szGfDDm0K7qVaVIXgqrQeaAxOy38sedMM7d1xCg6bPFKTF2P/upOXMnXIDG0xAuSp+mkZDrRs1uXXvwRWEOO+wpEihELdBS6DsMwnnbCe7GgXSb2zXo2PnY=
+	t=1708618596; cv=none; b=EvY6OdLabufg8VGVoSDpHq7FeCGX9vAYbYXeW3rzCqD5Wozt7xTOJwyQVUTt7GcLBI6Hp51dXTyeKsxI4oAz0lx5QEWukPCTfyCGK0FBgd7B4JTMx0IukD9EJNXjuvBM234kMq9ZANOb/YFzNGSkT7ReS1fqfdfbXIgXJJrUx+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708617262; c=relaxed/simple;
-	bh=6r4EIbX+1A+R+iS1NBfTYzCaLu8SYgyQ2yueIWcu2PA=;
+	s=arc-20240116; t=1708618596; c=relaxed/simple;
+	bh=lUjzPL2Rn/vckbm9GFQABCjyaKVvEJJPfyMuWnZrp4A=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=n3NruPaWPfsFhhlkO1wXfjQjzC4BzznsE+YqfpmvkUZp3sW8Lxu3XGQlweYGnjhTX71yY851sOHvqQ4ngu2XyPtHsb5/5wLqi4u+x1yH8T889w8wBa62Q/EXLzjP38hNAPCWCmI0kQoEe/K7B9jkpQzwRUf+vy7Wwdxj0lNoLl4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=w0/CbupC; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=h+diUzOTo+kvMGTDfguz88UZQBvB6ZnmQzK4qcfFowo6W33TgiC8/NokWj4bUAGwexD5j1gZZgqxGc15tAHonohzHl5VK6gWHvMWjl6sJwVE7CnfaW2BKJuGAf+mSlk27OX9fFAg2hq0r9xb+wxZl8/jK1Fh88QEt+OckkFu5FM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1IPtTC1B; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=s5rnFZTL; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1IPtTC1B; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=s5rnFZTL; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="w0/CbupC"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=1HpmxAKzkYfraoLdEHEm+a3ZNMRSibqqtuuwE9JPZYI=; b=w0/CbupCmha2bVmZGkJtvLSn4y
-	qQYRWqBYjFz3iRzeU77CIZGz5QBL1ezDiFGX/ZBK/JJN0iY8N9cFHWr6kyoBBxZdj/r9kmzC3ieD2
-	6hcynFX7magDhUHbKDACPEhRoQt9S6TfXOwCYvft7/ltxaoondhV1eCOyvFWRoq4ZO3Og8iaFvqTi
-	5soqhHzQFBdO8eaymngAdHwqYXbIIe4HLYyi4FOoMmgsUBlJLE64VvP7sRA6+Cu19BXDnwfqcbpiW
-	I7I25+3XxBvmF9h1ow3MZfmA79jlbrs1sJ6EGHUyBUJZN2qGU0Ia+YL88aAEWNKX58tFk5DOH3jqX
-	s4SuGL+g==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rdBOs-00000005V2s-0lCt;
-	Thu, 22 Feb 2024 15:54:18 +0000
-Date: Thu, 22 Feb 2024 07:54:18 -0800
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Daniel Wagner <dwagner@suse.de>
-Cc: Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>,
-	"linux-fsdevel@vger.kernel.org >> linux-fsdevel" <linux-fsdevel@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>,
-	"josef@toxicpanda.com" <josef@toxicpanda.com>,
-	Amir Goldstein <amir73il@gmail.com>,
-	Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier@javigon.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>,
-	Hannes Reinecke <hare@suse.de>,
-	Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-	"shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>,
-	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-	"jack@suse.com" <jack@suse.com>, Ming Lei <ming.lei@redhat.com>,
-	Sagi Grimberg <sagi@grimberg.me>, Theodore Ts'o <tytso@mit.edu>,
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1IPtTC1B";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="s5rnFZTL";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1IPtTC1B";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="s5rnFZTL"
+Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [10.150.64.98])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 4ABE41FB9A;
+	Thu, 22 Feb 2024 16:16:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1708618591; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WxAylS37KlSMxqz30UlWrIOlrte9S7xx+OkJa4dyaF4=;
+	b=1IPtTC1BlUpNz+Rkqo4Yxv3I+yStxpqoMioqayy1m4KZWUa/XPFfAtd7oBX0vSUu8MlhIn
+	fBjyF96Y1tc4QXQNkBOSksngMIJX7o+eSxopjZAqMCOp3DYezazk5qWC31vpDVKN45c7fV
+	tMnLvrxcoaK/jfLAWKY1Jp+mk+Yhvyg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1708618591;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WxAylS37KlSMxqz30UlWrIOlrte9S7xx+OkJa4dyaF4=;
+	b=s5rnFZTLttmF3tC9S5WDuuKboJl7/2Sq8PlCDfBYFRpVr1Ts17KrRiwYn3MiCz0ePNSfju
+	xhppSBXF+Ym+LmAg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1708618591; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WxAylS37KlSMxqz30UlWrIOlrte9S7xx+OkJa4dyaF4=;
+	b=1IPtTC1BlUpNz+Rkqo4Yxv3I+yStxpqoMioqayy1m4KZWUa/XPFfAtd7oBX0vSUu8MlhIn
+	fBjyF96Y1tc4QXQNkBOSksngMIJX7o+eSxopjZAqMCOp3DYezazk5qWC31vpDVKN45c7fV
+	tMnLvrxcoaK/jfLAWKY1Jp+mk+Yhvyg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1708618591;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=WxAylS37KlSMxqz30UlWrIOlrte9S7xx+OkJa4dyaF4=;
+	b=s5rnFZTLttmF3tC9S5WDuuKboJl7/2Sq8PlCDfBYFRpVr1Ts17KrRiwYn3MiCz0ePNSfju
+	xhppSBXF+Ym+LmAg==
+Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 2CAE613A6B;
+	Thu, 22 Feb 2024 16:16:31 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap2.dmz-prg2.suse.org with ESMTPSA
+	id FXYpCl9z12XIfAAAn2gu4w
+	(envelope-from <dwagner@suse.de>); Thu, 22 Feb 2024 16:16:31 +0000
+Date: Thu, 22 Feb 2024 17:16:30 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: Chaitanya Kulkarni <chaitanyak@nvidia.com>, 
+	"lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, 
+	"linux-fsdevel@vger.kernel.org >> linux-fsdevel" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bvanassche@acm.org>, 
+	"josef@toxicpanda.com" <josef@toxicpanda.com>, Amir Goldstein <amir73il@gmail.com>, 
+	Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>, Dan Williams <dan.j.williams@intel.com>, 
+	Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>, Hannes Reinecke <hare@suse.de>, 
+	Damien Le Moal <damien.lemoal@opensource.wdc.com>, "shinichiro.kawasaki@wdc.com" <shinichiro.kawasaki@wdc.com>, 
+	Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, "jack@suse.com" <jack@suse.com>, Ming Lei <ming.lei@redhat.com>, 
+	Sagi Grimberg <sagi@grimberg.me>, Theodore Ts'o <tytso@mit.edu>, 
 	"daniel@iogearbox.net" <daniel@iogearbox.net>
 Subject: Re: [LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] : blktests: status,
  expansion plan for the storage stack test framework
-Message-ID: <ZdduKnjJx3tJsQGY@bombadil.infradead.org>
+Message-ID: <6spltrohwisctoeowctyyneyrqolzyvcd3riozbczj2c2o5pcw@lmtrghutbgwx>
 References: <e5d8cd68-b3f2-4d7b-b323-b13d18199256@nvidia.com>
  <bh5s6a4fhhlje42bzj2t22k3jpmruzkx234ks4ytuhd62tonzj@zn6h5foaqrof>
  <jfydrbb277d7ad2ypu5dottiqh4rtzm5ipf72wcjo34mmpvnl7@mjlqomulsq3q>
  <ZdZBpb4vMMVoLfhs@bombadil.infradead.org>
  <g5c3kwbalxru7gykmzdymrzf43fkriofiqtgdgcswbf4hrg65r@wdduaccaswhe>
+ <ZdduKnjJx3tJsQGY@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,29 +99,65 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <g5c3kwbalxru7gykmzdymrzf43fkriofiqtgdgcswbf4hrg65r@wdduaccaswhe>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <ZdduKnjJx3tJsQGY@bombadil.infradead.org>
+Authentication-Results: smtp-out2.suse.de;
+	none
+X-Spamd-Result: default: False [0.40 / 50.00];
+	 ARC_NA(0.00)[];
+	 TO_DN_EQ_ADDR_SOME(0.00)[];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 MIME_GOOD(-0.10)[text/plain];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 RCPT_COUNT_TWELVE(0.00)[24];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 MID_RHS_NOT_FQDN(0.50)[];
+	 FREEMAIL_CC(0.00)[nvidia.com,lists.linux-foundation.org,vger.kernel.org,lists.infradead.org,kernel.dk,acm.org,toxicpanda.com,gmail.com,javigon.com,intel.com,lst.de,kernel.org,suse.de,opensource.wdc.com,wdc.com,suse.com,redhat.com,grimberg.me,mit.edu,iogearbox.net];
+	 RCVD_TLS_ALL(0.00)[];
+	 BAYES_HAM(-0.00)[27.99%]
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spam-Score: 0.40
 
-On Thu, Feb 22, 2024 at 10:31:53AM +0100, Daniel Wagner wrote:
-> On Wed, Feb 21, 2024 at 10:32:05AM -0800, Luis Chamberlain wrote:
-> > > One discussion point I'd like to add is
-> > > 
-> > >   - running blktest against real hardare/target
-> > 
-> > We've resolved this in fstests with canonicalizing device symlinks, and
-> > through kdevops its possible to even use PCIe passthrough onto a guest
-> > using dynamic kconfig (ie, specific to the host).
-> > 
-> > It should be possible to do that in blktests too, but the dynamic
-> > kconfig thing is outside of scope, but this is a long winded way of
-> > suggestin that if we extend blktests to add a canonon-similar device
-> > function, then since kdevops supports blktests you get that pcie
-> > passthrough for free too.
+On Thu, Feb 22, 2024 at 07:54:18AM -0800, Luis Chamberlain wrote:
+> > I should have been more precise here, I was trying to say supporting
+> > real fabrics targets. blktests already has some logic for PCI targets
+> > with $TEST_DEV but I haven't really looked into this part yet.
 > 
-> I should have been more precise here, I was trying to say supporting
-> real fabrics targets. blktests already has some logic for PCI targets
-> with $TEST_DEV but I haven't really looked into this part yet.
+> Do fabric targets have a symlink which remains static?
 
-Do fabric targets have a symlink which remains static?
+A pretty typical nvme fabric test is:
 
-  Luis
+setup phase target side:
+ - create backing device (file/block)
+ - create loopback device
+ - create nvme subsystem
+
+setup phase host side:
+ - discover
+ - connect to the target
+
+test phase
+ do something like reading/writing from '/dev/nvmeX'
+ or 'nvme id-ctrl /dev/nvmeX', etc.
+
+cleanup phase host side:
+ - disconnect from the target
+
+cleanup phase target side:
+ - remove nvme subsystem
+ - remove loopback device
+ - remove backing device
+
+I'd like to make the setup and cleanup target side more flexible. The
+host side will not be affected at all by exchanging the current soft
+target side (aka nvmet) with something else. This means it's not about
+any device links in /dev.
+
+Hope this makes it a bit clearer.
