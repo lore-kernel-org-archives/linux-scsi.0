@@ -1,243 +1,183 @@
-Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E616673F35
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 21:45:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708638353; cv=none; b=UVVmWkM2IJDVlet9LKCouikCBHC+u2V7ETzxZm57LZyajG8xem2jnT4dLg2X+iOlGzigSynLM+TeI3lP9Pkz4pZ/NSOKDY6JEJDpYMsFn1DiKaBzMrEF36kO5l9X2cxenuX9ZJJyINK6QSl4NNnhY1Q0aQ1LJGJzUsbMyCRwCjE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708638353; c=relaxed/simple;
-	bh=QM3pj8RymkvttqcCJVdupGcih6w4z7Gl+b93y9il9A8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GSnq8+9RsfZKG7Ijr9AlsBGjIN7bTCUJC5oPG807qdEQ2dT7Wrc089galviRlS/UEpxfFzHm64F3MQDXU1n8+efBlfOX6lJ+C3D6AckHtjJUkj0Lncz/g2iMAtXyswitUb6tdBIsmqwIcd1HKtzA+NbdHgkJGKkgBdMTvqw9/c0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6e34d12404eso87004b3a.2
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2024 13:45:51 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708638351; x=1709243151;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=V0Xmdm/OHLZ7BZpyv4wwjqwC83xCcMmBotSHyQroMK0=;
-        b=qRLEYUDWHoWYTPpn7QJtX6kIHCXfJFNwhK9sK7T/bFcr643OGIvE09X2fTgaAYuvyQ
-         b87WmrE4HL5yNmACxU5AVvpT8dspB7s0o5AJgMDCbqXmh+NnymPgzIafq39hYDiwVl2i
-         zF6d2Ca7iiy7JyoAmnilQkGW/LnM0935XkyUD+JUeNaE1q/r5Vaq+FSJPcab7OBA5mVr
-         664IvpdgvFbCtvDIUOz1T3yFj4Z60vpHW3qEj1TfBxPQ/8FwB8z/jBKsvKvv49o6Ui0E
-         wjjLByMUwelP99zAMebsbrGblKMR1zaCE9jYOV9CgG8EJXaMYGoB4xdFCdzUPTCSNmYq
-         /nCw==
-X-Gm-Message-State: AOJu0YxzmE63UNHJ28/5qZc5a/uP1JlJi2goLfJagycQNzbOpn7Pnfnn
-	igu8LzLWpXQ2rLTkMPDYnhZKvWUl2i5UP51V5uA9zePCq7YVs9yd
-X-Google-Smtp-Source: AGHT+IFsba57CzwzFTSgifwOg5HdZCq+3HWSOx+5/M+g+HsGdle+S3f7EeVottYWvtD52uDh/XCVWA==
-X-Received: by 2002:a05:6a20:5194:b0:1a0:c3e6:3135 with SMTP id j20-20020a056a20519400b001a0c3e63135mr111602pzf.28.1708638351342;
-        Thu, 22 Feb 2024 13:45:51 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:0:1000:8411:bcee:4c5d:88b9:5644])
-        by smtp.gmail.com with ESMTPSA id a1-20020aa78e81000000b006e414faff99sm9598203pfr.180.2024.02.22.13.45.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Feb 2024 13:45:50 -0800 (PST)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Daejun Park <daejun7.park@samsung.com>,
-	Kanchan Joshi <joshi.k@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Douglas Gilbert <dgilbert@interlog.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v10 11/11] scsi: scsi_debug: Maintain write statistics per group number
-Date: Thu, 22 Feb 2024 13:44:59 -0800
-Message-ID: <20240222214508.1630719-12-bvanassche@acm.org>
-X-Mailer: git-send-email 2.44.0.rc0.258.g7320e95886-goog
-In-Reply-To: <20240222214508.1630719-1-bvanassche@acm.org>
-References: <20240222214508.1630719-1-bvanassche@acm.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF458847E;
+	Fri, 23 Feb 2024 01:18:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1708651136; cv=fail; b=fhNRVg5aLKV50qVtpjbszWxg8C1lggbMAYC6P4PR0uxYblDje1WX9TrHA9QStr38CcB1YVx8z5arLeweG+5uj+9KpFuj2hOZdL3HV0CZ7gEYy25wtDP9NgAf6NEUo4uG5cuFBNf96ohRWrP2nmiQj8cARgkQ3s3jwj7O90T+n58=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1708651136; c=relaxed/simple;
+	bh=eZ9mONgI1gjVZMi160RGdnC8PzQ+dASKxc6TH8xAmFk=;
+	h=To:Cc:Subject:From:Message-ID:References:Date:In-Reply-To:
+	 Content-Type:MIME-Version; b=rYXMRN4Mie8E7JDlYlz+cUYrnOajz3+0YL3PCo7aaYl43mvTczv4P7ZCcxeuJteEmdefC2L9wvuMXvk2Ogn5kjaHhxS3KzF3sBs1RRgC1WBKC0BVFTdiF0/mYV3rwSi0/T/kqi59hf/fqgKg44fLkD9C+L6oB5dpPePl2yC3vic=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=MoAhjLj6; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=PwkpYDcW; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MoAhjLj6";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="PwkpYDcW"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41MIQUZH013906;
+	Fri, 23 Feb 2024 01:16:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2023-11-20;
+ bh=qQTTTugDV/C3oKRs/JzN4fs5FhlGf/AkAql690BJ4vo=;
+ b=MoAhjLj6/Rtqq8Cp3vqAln8M7n1Ola4x4/PFeawpuKUBKwYPo0m+g/yX03hj+yAfkXnq
+ A/c1+mAzEKOpqmo4C0LXwbqKRVlScgrLpAELGMPwaW7GHQq5t1B8nJ3wB4p1PpiHGn62
+ Roza4E+L6mZuZ8v/DEEhYYdhq9TItPA81nmy1/aghOI48Upwi2+xYiUHGunwj7ihZd9q
+ TPxLuegV7fsA//CElKQrPzsyNGLowl+HcslX3SoDhP+zpWGJ9rVzHjku61aDczWZu5XE
+ NM79J3jW77Lkx6S7dnW99uuBb9IYshWJAH1QKD2PpUAVk9DvLFabCJCcj+dTtx+3+Ju7 NA== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3wd5fw6052-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 23 Feb 2024 01:16:38 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41N10YVA037737;
+	Fri, 23 Feb 2024 01:16:32 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3wak8bf5qn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 23 Feb 2024 01:16:31 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=fwxM5KVBt1SDXFIXuJpOr8gTFb6ESH+M5cdSVFcFJNwKi8roo+X5Y3sVkDlfbYzjtStwFFO5fuMgFQRCGC3Aly+T/Y8QKa+1BL4AvafzUzVWYVN9XFpXk9cmTG4znW2K1A4mTC8OJAhTqCBEiPVqpmYwkaYp72tHZy8d7qv/afdS4eVwbM7W/8pQVHiYd/tvKZKhPLTRs8F3eI1DMIesS0sbjkoebElLnHIiQ7GaN2OV14f/sCnbHrwK1d/hNcJmreQBAzOH7/E3Il0CNrPo4/3+gyUrPO3K7fuUKlQDXuMVvZ1NqxIBr5h8TZlIFlgAA4iyq3j1hxBdX7x1GiAAgg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=qQTTTugDV/C3oKRs/JzN4fs5FhlGf/AkAql690BJ4vo=;
+ b=I0pwQ8Ygp5Id/xB4609V+NR39vn32V6Z9b7LCDExIDXUdk4nRv6tdoH+Tn21HICSlXGrBrTCx4Lyc4mhJqUOgvTBLTfo7kyXFCO3AuaEdCZiEHK+zPjktfsooFrMak5mgsRVLL8SuI24hYxMkaLvodDuItwSfy6FusCl9TveMVS6HUJwRoaTjITC9m59cGtva6WS0bSo1cpSBbs9MpGnTbkmDUA2uXimCuI/M10znCq6GHW/CnxDa4EeR2dI0HKxYwUzdE62UCdhQ330mw9uqqU6TQeZRtzzdJaozvPQRGgOgHpAw+0RVjJvYHfXp5SMYVI2yaPBXxkc0XCyaQkfdw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qQTTTugDV/C3oKRs/JzN4fs5FhlGf/AkAql690BJ4vo=;
+ b=PwkpYDcWrQXpAKghEyXKyILrKRsGRkm0y1GeVzQAwrLdcM1WHLYqZ88UvrCpVKa2H/fEmbn/QUH/YGoYQ+fqkmuBucICPKBPZhKuRBq6PNK2tyhrB1IaDDE2twFVUqbnAW6yp31LHMYR3aJCLC6NnUT7EHAPLxplFA2dhLEsp8M=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4808.namprd10.prod.outlook.com (2603:10b6:510:35::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7316.22; Fri, 23 Feb
+ 2024 01:16:29 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::1b19:1cdf:6ae8:1d79]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::1b19:1cdf:6ae8:1d79%5]) with mapi id 15.20.7316.023; Fri, 23 Feb 2024
+ 01:16:29 +0000
+To: John Garry <john.g.garry@oracle.com>
+Cc: Arnd Bergmann <arnd@kernel.org>,
+        Sathya Prakash Veerichetty
+ <sathya.prakash@broadcom.com>,
+        Kashyap Desai
+ <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Arnd Bergmann
+ <arnd@arndb.de>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        "James
+ E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen"
+ <martin.petersen@oracle.com>,
+        Ranjan Kumar <ranjan.kumar@broadcom.com>,
+        Tomas Henzl <thenzl@redhat.com>,
+        Harshit Mogalapalli
+ <harshit.m.mogalapalli@oracle.com>,
+        mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] [v2] scsi: mpi3mr: reduce stack usage in
+ mpi3mr_refresh_sas_ports()
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1bk887zg8.fsf@ca-mkp.ca.oracle.com>
+References: <20240123130754.2011469-1-arnd@kernel.org>
+	<96bb914c-79be-4867-b59d-62f80dbcdace@oracle.com>
+Date: Thu, 22 Feb 2024 20:16:27 -0500
+In-Reply-To: <96bb914c-79be-4867-b59d-62f80dbcdace@oracle.com> (John Garry's
+	message of "Mon, 19 Feb 2024 12:08:24 +0000")
+Content-Type: text/plain
+X-ClientProxiedBy: MN2PR01CA0027.prod.exchangelabs.com (2603:10b6:208:10c::40)
+ To PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|PH0PR10MB4808:EE_
+X-MS-Office365-Filtering-Correlation-Id: 68c605c4-959b-42c6-47ef-08dc340d1005
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	etpm0XCD390yLVinHmtgvUxBNfgjLAu10NW6uj/fD28SdFKMjRYpISqVa+VOPo9c4kkcn0ZSfPWtbAgB/6bGeji/qJoinKjsyRbJQ/NjvtBDCcJIJdA/pF0eqUMHny33MZWZ63MU2ty10JZ5ZVyPlaTOOV8n7AYdQ6iptjHZ75K1j3sTRYIAk+4zx+ZDm0ZU2e9NsO0bjFicp1yWQUJ7Pc77uWXkskT7TYzC+yaL6/f3DwZNe1XLVx0TIrQ0fgEZqT56r5YrbeTrFSy44rycuj0iExz4zjXElln8UOAEwOxq30iYfWUmZV09Kwff8IfMcik7C1haSpju5diLzrdCY8c59Hy6zg20pJH1dL9btHJbZdHpvcYVH/fY7LNex5nfRh1elQQP+bvlE8QT+lYmqOP5hHfW605WFriyYbMj5JHqOSCdB79b1xY7aA+cVXSi0J+9zzbrOUFQX5Lppu5SnyoIz8ghGa7YrL00pXHMt0nTPJ8hfPP/MkfxnKuPq/NnP53BY9Dr5YM/npW2vS1LtWU5Q+7nxEwql4QdLYp0x/A=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?us-ascii?Q?WYKXN98Hqurx7NKk9Pm+OBs0exdbWb0co2E2CwQtFPsHR709JJXSG0ildehX?=
+ =?us-ascii?Q?4pVW2GKpSl/OMq7L0TZ18COQlP1lpLZtqw55v5/aNGcOaWja4SOQMT+GavBM?=
+ =?us-ascii?Q?zsggKmPE+eTUOlobc4kue6cBM1o5wpdyYcyK78W2QuNZiTOnXgTi2nnpY6Mc?=
+ =?us-ascii?Q?fS8PSjA3NaDZxsiK4GkgNcJpC3qdW7G/PqfV7eoJ+wZ/UOR6chzIDe158Yab?=
+ =?us-ascii?Q?I4CXfm5gsVjao1Dq0PFV5U3sOi5XO9U724HbJpoB64Fpw/NpIAqXDq/oxMEf?=
+ =?us-ascii?Q?VefZQFYzcZki4I1UxD0jXdXXo/Z1ru9ZPx0Js5mXhpIe7ZnMle/gz8+r+BzY?=
+ =?us-ascii?Q?Tj7VDrm8ZFtvnghjfWmsq0GJ6LOvTbay5+acL6ASwt7s0Dbq4qjl5dfq8M0E?=
+ =?us-ascii?Q?Jtug2yQtMcGXFugtQfG5lExxcrrfKmzju7ujYf0ojnOc0kYN+M7QbrzRMSmg?=
+ =?us-ascii?Q?FvsgfiVdXewUKWZo455d2Hsh0jhpVyO+ipDxSwjeWt+nBTt2OYKcdwrncSMb?=
+ =?us-ascii?Q?yCrsYdWzD+IwEVJBVsFrk2NZEonzlzWHAzG8ETqv0hTpie4G+ygf3fsYjgHs?=
+ =?us-ascii?Q?HTlcWgXRAmf0c2d5xvpjjGqn6NZXDS2aTUJyHN7jzwpyK36C065D5cxbrTPH?=
+ =?us-ascii?Q?Pw+E2MDpR6SXOv+YPDwTxebTEGjlPTT1tXzvG4/5O97uTjc+Ni2na40pHeTp?=
+ =?us-ascii?Q?WmsIrYti9ZKsGqGogWoPEzzhtT+hupb+bSP8b1hj71LbzkVBlDbjlZz1SqQu?=
+ =?us-ascii?Q?cXB5CqNE4D1Fl5IU7dguDf6uwr2PQh/2gM6UiJ7ABhTTNkwAovpEL62KQLTE?=
+ =?us-ascii?Q?f1PfsJrZikj52L8JOinJ38CjKQB4o1RKMdIRGjC6ED4kAqvEzjJEbt9zUMER?=
+ =?us-ascii?Q?kzCV8huFE3QC72aVTUD5vGGxoo0bBz1SouFhrWW6BnRZN6xEFVPd63wEtLWk?=
+ =?us-ascii?Q?s5qU3JnvXyLRPEwuNmTjPGofugfK5l89J/uNR1h7PecQc8yD3zxwGnW/YxyL?=
+ =?us-ascii?Q?t4wYpoRmtQ42GvhfB1ZODDTORMXp+wpWTlxkF4uAlbp8oLukyBkxHhSrxsVF?=
+ =?us-ascii?Q?7LUgUVL294KU1WTFSjc6XEXj2ouzGSXvE/tzgWlGohxdy26k99q5IrIwkrQ1?=
+ =?us-ascii?Q?2s4RSBu2uPOcxNpldj99REX0iV5hX3nOx5kakBeop0sy4H8tMhOX49o98pNW?=
+ =?us-ascii?Q?IVe7E9+9q4lfS0l7GizU0egNkkClLUyHbnnlDVJHuoFVj05DgaTk0TemiILr?=
+ =?us-ascii?Q?qPORX6mH13F1ND/PNFjK4yKYrK+1aIYGNyLLvNVmm5KGem+c34Fg/2npA+mn?=
+ =?us-ascii?Q?TJ2LjT/aWer2mRKLraVl5YRr6mnXhPIX6ZGCSsihsNMSYBbKfdhaUVL00Uv+?=
+ =?us-ascii?Q?NtWVnG6yJNwt02qU3ksyWDVKMoQSxu5Cz681fRMg6kMSLTdQ/m3CLHvbk0C0?=
+ =?us-ascii?Q?G8Ad4r7BR7sZnXiFRFh8uW+R8RkEcFoD2mvG6jYZnL8f/h97cEijpjQHWznM?=
+ =?us-ascii?Q?zp5TyUafZt750IhTGx5s6eJTzoTQETvB3oAc/EhQsjO8cD2cdtvfDt1RCOAu?=
+ =?us-ascii?Q?hPZQN7TWzICiP1U34b2K75NHONc1u521pqvGHGhz1h9RDt9H3VvEyqZpgnO8?=
+ =?us-ascii?Q?6g=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	n0lDWv+mDCwOK/bdgGcoxHtLCXb0HMLSZ9y1IjOFCiYPlGFajMTe3bVeKImC8xKWZfA2Xl1mUbWtQklyL0evVBfGifoyJVRvVjZHAG4vke19P6POCYoNSvrfa0z63YgptS2Eu7RQEsZERBoFJMII8wAJilJgrNZABIsxo0Tx7tIHX0OWH3QpXlxkNK8Y4zzoV8vcwb9ESn/BtoDjueL6FwDaFsIwUdPlo6g4ekRzV8/TRdkqpiUEYe6J9V9xDZj983XP0B2gaxsnmE/UHI/e3eCFSmAUu7e1a4YkWD5iSNOgyDLH09upkODpbyTwrnW9KLyqjD97e4+Z1NISsEQ7919Ldss9xeGA1F8jFj/R2IAebQLyMU23oXUiVH2TUnZG7Gro2lYqEEOOBiDAkxDQuTG1o+yc4+CUWEocy5P8Gu5lGZ+8IwaQqDvFOyro9ie4Ki0f9W7lCduHXGoTrcx+nDTNWDauJrPUxACOp+5G7jhNk1Scl8upeeBkwLsbGjKZbWhts69Q67GmNd8lTCnrmsAb2BIW8KL4Zp/qiSg7t2u/S2EwRHbxyk0e03Ry3ibIyhcfG1+DtoNtxGaVKBV5Md6HCjc+MFOZ0ctcZO+Lavg=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 68c605c4-959b-42c6-47ef-08dc340d1005
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Feb 2024 01:16:28.8817
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: m0tDVYrie9EfmfRGeDYn6KoOKQedrTDbw4x5zAbZmPy3dYxLLQMNSNxgxd9mj7kVUzrCjcmHS5DPGfScZF4gk3RGDCKevwuWgi7mJ2cnGwM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4808
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-22_15,2024-02-22_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
+ bulkscore=0 adultscore=0 suspectscore=0 spamscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
+ definitions=main-2402230003
+X-Proofpoint-GUID: W5yNvm5MZvRvzmc5b1OrQvOuNQez479I
+X-Proofpoint-ORIG-GUID: W5yNvm5MZvRvzmc5b1OrQvOuNQez479I
 
-Track per GROUP NUMBER how many write commands have been processed. Make
-this information available in sysfs. Reset these statistics if any data
-is written into the sysfs attribute.
 
-Note: SCSI devices should only interpret the information in the GROUP
-NUMBER field as a stream identifier if the ST_ENBLE bit has been set to
-one. This patch follows a simpler approach: count the number of writes
-per GROUP NUMBER whether or not the group number represents a stream
-identifier.
+John,
 
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Tested-by: Douglas Gilbert <dgilbert@interlog.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_debug.c | 49 +++++++++++++++++++++++++++++++++++----
- 1 file changed, 45 insertions(+), 4 deletions(-)
+> Has this patch been missed?
+>
+> I have this same build issue for i386 allmodconfig on v6.8-rc5 and earlier
+>
+> Tested-by: John Garry <john.g.garry@oracle.com> #build only
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 497045e54300..ce52d580d1aa 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -902,6 +902,8 @@ static int sdeb_zbc_nr_conv = DEF_ZBC_NR_CONV_ZONES;
- static int submit_queues = DEF_SUBMIT_QUEUES;  /* > 1 for multi-queue (mq) */
- static int poll_queues; /* iouring iopoll interface.*/
- 
-+static atomic_long_t writes_by_group_number[64];
-+
- static char sdebug_proc_name[] = MY_NAME;
- static const char *my_name = MY_NAME;
- 
-@@ -3377,7 +3379,8 @@ static inline struct sdeb_store_info *devip2sip(struct sdebug_dev_info *devip,
- 
- /* Returns number of bytes copied or -1 if error. */
- static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
--			    u32 sg_skip, u64 lba, u32 num, bool do_write)
-+			    u32 sg_skip, u64 lba, u32 num, bool do_write,
-+			    u8 group_number)
- {
- 	int ret;
- 	u64 block, rest = 0;
-@@ -3396,6 +3399,10 @@ static int do_device_access(struct sdeb_store_info *sip, struct scsi_cmnd *scp,
- 		return 0;
- 	if (scp->sc_data_direction != dir)
- 		return -1;
-+
-+	if (do_write && group_number < ARRAY_SIZE(writes_by_group_number))
-+		atomic_long_inc(&writes_by_group_number[group_number]);
-+
- 	fsp = sip->storep;
- 
- 	block = do_div(lba, sdebug_store_sectors);
-@@ -3769,7 +3776,7 @@ static int resp_read_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		}
- 	}
- 
--	ret = do_device_access(sip, scp, 0, lba, num, false);
-+	ret = do_device_access(sip, scp, 0, lba, num, false, 0);
- 	sdeb_read_unlock(sip);
- 	if (unlikely(ret == -1))
- 		return DID_ERROR << 16;
-@@ -3954,6 +3961,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- {
- 	bool check_prot;
- 	u32 num;
-+	u8 group = 0;
- 	u32 ei_lba;
- 	int ret;
- 	u64 lba;
-@@ -3965,11 +3973,13 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		ei_lba = 0;
- 		lba = get_unaligned_be64(cmd + 2);
- 		num = get_unaligned_be32(cmd + 10);
-+		group = cmd[14] & 0x3f;
- 		check_prot = true;
- 		break;
- 	case WRITE_10:
- 		ei_lba = 0;
- 		lba = get_unaligned_be32(cmd + 2);
-+		group = cmd[6] & 0x3f;
- 		num = get_unaligned_be16(cmd + 7);
- 		check_prot = true;
- 		break;
-@@ -3984,15 +3994,18 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		ei_lba = 0;
- 		lba = get_unaligned_be32(cmd + 2);
- 		num = get_unaligned_be32(cmd + 6);
-+		group = cmd[6] & 0x3f;
- 		check_prot = true;
- 		break;
- 	case 0x53:	/* XDWRITEREAD(10) */
- 		ei_lba = 0;
- 		lba = get_unaligned_be32(cmd + 2);
-+		group = cmd[6] & 0x1f;
- 		num = get_unaligned_be16(cmd + 7);
- 		check_prot = false;
- 		break;
- 	default:	/* assume WRITE(32) */
-+		group = cmd[6] & 0x3f;
- 		lba = get_unaligned_be64(cmd + 12);
- 		ei_lba = get_unaligned_be32(cmd + 20);
- 		num = get_unaligned_be32(cmd + 28);
-@@ -4047,7 +4060,7 @@ static int resp_write_dt0(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		}
- 	}
- 
--	ret = do_device_access(sip, scp, 0, lba, num, true);
-+	ret = do_device_access(sip, scp, 0, lba, num, true, group);
- 	if (unlikely(scsi_debug_lbp()))
- 		map_region(sip, lba, num);
- 	/* If ZBC zone then bump its write pointer */
-@@ -4099,12 +4112,14 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 	u32 lb_size = sdebug_sector_size;
- 	u32 ei_lba;
- 	u64 lba;
-+	u8 group;
- 	int ret, res;
- 	bool is_16;
- 	static const u32 lrd_size = 32; /* + parameter list header size */
- 
- 	if (cmd[0] == VARIABLE_LENGTH_CMD) {
- 		is_16 = false;
-+		group = cmd[6] & 0x3f;
- 		wrprotect = (cmd[10] >> 5) & 0x7;
- 		lbdof = get_unaligned_be16(cmd + 12);
- 		num_lrd = get_unaligned_be16(cmd + 16);
-@@ -4115,6 +4130,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		lbdof = get_unaligned_be16(cmd + 4);
- 		num_lrd = get_unaligned_be16(cmd + 8);
- 		bt_len = get_unaligned_be32(cmd + 10);
-+		group = cmd[14] & 0x3f;
- 		if (unlikely(have_dif_prot)) {
- 			if (sdebug_dif == T10_PI_TYPE2_PROTECTION &&
- 			    wrprotect) {
-@@ -4203,7 +4219,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 			}
- 		}
- 
--		ret = do_device_access(sip, scp, sg_off, lba, num, true);
-+		ret = do_device_access(sip, scp, sg_off, lba, num, true, group);
- 		/* If ZBC zone then bump its write pointer */
- 		if (sdebug_dev_is_zoned(devip))
- 			zbc_inc_wp(devip, lba, num);
-@@ -7298,6 +7314,30 @@ static ssize_t tur_ms_to_ready_show(struct device_driver *ddp, char *buf)
- }
- static DRIVER_ATTR_RO(tur_ms_to_ready);
- 
-+static ssize_t group_number_stats_show(struct device_driver *ddp, char *buf)
-+{
-+	char *p = buf, *end = buf + PAGE_SIZE;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(writes_by_group_number); i++)
-+		p += scnprintf(p, end - p, "%d %ld\n", i,
-+			       atomic_long_read(&writes_by_group_number[i]));
-+
-+	return p - buf;
-+}
-+
-+static ssize_t group_number_stats_store(struct device_driver *ddp,
-+					const char *buf, size_t count)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(writes_by_group_number); i++)
-+		atomic_long_set(&writes_by_group_number[i], 0);
-+
-+	return count;
-+}
-+static DRIVER_ATTR_RW(group_number_stats);
-+
- /* Note: The following array creates attribute files in the
-    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
-    files (over those found in the /sys/module/scsi_debug/parameters
-@@ -7344,6 +7384,7 @@ static struct attribute *sdebug_drv_attrs[] = {
- 	&driver_attr_cdb_len.attr,
- 	&driver_attr_tur_ms_to_ready.attr,
- 	&driver_attr_zbc.attr,
-+	&driver_attr_group_number_stats.attr,
- 	NULL,
- };
- ATTRIBUTE_GROUPS(sdebug_drv);
+Broadcom requested changes and I haven't seen a v3.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
