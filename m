@@ -1,124 +1,112 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C8BF12E5E;
-	Fri, 23 Feb 2024 07:04:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64CF7134D1
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Feb 2024 07:45:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708671850; cv=none; b=Zz1/seuJp3Zube0zuUUGr0ADDXaskIGEOumF+AK/INgCbZIoiMxWXlJ0FPyi5Ur4ULOGAMQBbgq7CS+T7kMHAKnwt3Ij6ig8jMb9n7jZGPi/NzRPB05IV4Xj0I+qz6TmW28u35r+ksOgVWvioOskuUdJCke8uYhsZHcdOnIr+J8=
+	t=1708674333; cv=none; b=HVyQAkg2Ankir3pt4ro8saLZ1AdTI+e41GBLrRQhkAJX9I3B2hHviJDEmch550fFORMiSpecLev6nPUH1jrHanv4BkEUInqIDUPjEnOxtBZSxoGMhWfT2oSE/2dDL3gUxM/HRmW/NAb6SRFBAKz1xtaY8vNEEtVX7M2FBr34SXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708671850; c=relaxed/simple;
-	bh=T43BLEbFn/rY6Onlkz3M/nH7U1rGkzTWtfmwRvtPX34=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=pivkHnrDYyC2gCSiN3gsSFuPNpehruMCwYwHPSRIocXN56F1SgSMrTeKwRk0dIjt4LCOzSzF2Nskvlhs5tl3WJ3u+GJEDADih38OGaKZ7yEyTRmQWxbNIQdvCccUhq0iiUdMT2rv+zKPm33MZoCLqjsHtmoxb9S+YAy7mQpn8AY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4Th18D0w7Wz1FLFm;
-	Fri, 23 Feb 2024 14:59:08 +0800 (CST)
-Received: from canpemm500003.china.huawei.com (unknown [7.192.105.39])
-	by mail.maildlp.com (Postfix) with ESMTPS id D2CE31400CC;
-	Fri, 23 Feb 2024 15:04:01 +0800 (CST)
-Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm500003.china.huawei.com (7.192.105.39) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Fri, 23 Feb 2024 15:04:01 +0800
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Fri, 23 Feb 2024 15:04:00 +0800
-Subject: Re: [PATCH] scsi: libsas: Fix disk not being scanned in after being
- removed
-To: yangxingui <yangxingui@huawei.com>, John Garry <john.g.garry@oracle.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
-References: <20240221073159.29408-1-yangxingui@huawei.com>
- <d765d2c5-3451-4519-a5e1-9e8f28dcd6b3@oracle.com>
- <cdf241a7-8504-5b87-2d18-d2a971f6ebb9@huawei.com>
-From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <8dc34f04-943b-26fd-01bc-34fb98803503@huawei.com>
-Date: Fri, 23 Feb 2024 15:04:00 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1708674333; c=relaxed/simple;
+	bh=Hefd3OZG/mB7XJ3V1w6c5xdyBvsv6saAcM/R4Fmw0u0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=GImrRVCJYdSvfID6GLdFFcOEjx9oZtzXJbcg2n+LemAxuylCcZVfqUYF0KbL8ANuE4SWq1NJaSVio+leOHXhWJKe1NUxuBqivSEhyLAvPlDzOjiAz+l6NGjeiNHDU9Wkk4XuQRNRpIdn+Ggw1g3NRn2Ie4iuDWZYOpPy1yZ10j4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=fBsN7PkJ; arc=none smtp.client-ip=67.231.156.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="fBsN7PkJ"
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 41ML8YSg001863;
+	Thu, 22 Feb 2024 23:45:28 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
+	from:to:cc:subject:date:message-id:mime-version
+	:content-transfer-encoding:content-type; s=pfpt0220; bh=xqnUvseV
+	UXuhv759wyhOLIr4ZU5BUUv6uB08Y7/rWGI=; b=fBsN7PkJCTCbKPjzd+lVVUaF
+	vNtaXuOhYndl0LCHe3Yh9NyxyMlcVK3fjYV5XHxnmjNGd4MaUagxSo/14iu5YCIh
+	/Rl4uBdUkfoUsB5tim2oiqefb1ZG69z2HbyZODIq1HgleGwBa/gwToQtricJcaLw
+	wXuyt6wgS4Ud/bQ1FViLr+RfTYv6jtgFLtVIAdbAUdl0qaThoIrJN+07poic+Wer
+	14nkFUY6pk0ptZbitzqKpPMdNObMuCfdKUgu09xfleq0GBevtuIoWX5I+714Lu5z
+	/EybY2cVldr0AjCAhdpmhqQz2oSDf1BcVh+CcL6QMQDgveXzioWZ60h8C0wM+w==
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3wedwxht1m-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+	Thu, 22 Feb 2024 23:45:27 -0800 (PST)
+Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
+ DC5-EXCH02.marvell.com (10.69.176.39) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.48; Thu, 22 Feb 2024 23:45:26 -0800
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH05.marvell.com
+ (10.69.176.209) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Thu, 22 Feb
+ 2024 23:45:25 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.48 via Frontend
+ Transport; Thu, 22 Feb 2024 23:45:25 -0800
+Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
+	by maili.marvell.com (Postfix) with ESMTP id 36D493F714A;
+	Thu, 22 Feb 2024 23:45:22 -0800 (PST)
+From: Nilesh Javali <njavali@marvell.com>
+To: <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
+        <agurumurthy@marvell.com>, <sdeodhar@marvell.com>, <emilne@redhat.com>,
+        <jmeneghi@redhat.com>
+Subject: [PATCH 00/11] qla2xxx misc. bug fixes
+Date: Fri, 23 Feb 2024 13:15:03 +0530
+Message-ID: <20240223074514.8472-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.23.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <cdf241a7-8504-5b87-2d18-d2a971f6ebb9@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- canpemm500004.china.huawei.com (7.192.104.92)
+Content-Type: text/plain
+X-Proofpoint-GUID: 1zadvqvn69ZvjyZJ4dyGjs-El2UIUiZ9
+X-Proofpoint-ORIG-GUID: 1zadvqvn69ZvjyZJ4dyGjs-El2UIUiZ9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-22_15,2024-02-22_01,2023-05-22_02
 
-On 2024/2/23 12:04, yangxingui wrote:
-> Hi, John
-> 
-> On 2024/2/22 20:41, John Garry wrote:
->> On 21/02/2024 07:31, Xingui Yang wrote:
->>> As of commit d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to
->>> update PHY info"), do discovery will send a new SMP_DISCOVER and update
->>> phy->phy_change_count. We found that if the disk is reconnected and phy
->>> change_count changes at this time, the disk scanning process will not be
->>> triggered.
->>>
->>> So update the PHY info with the last query results.
->>>
->>> Fixes: d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to 
->>> update PHY info")
->>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->>> ---
->>>   drivers/scsi/libsas/sas_expander.c | 9 ++++-----
->>>   1 file changed, 4 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/drivers/scsi/libsas/sas_expander.c 
->>> b/drivers/scsi/libsas/sas_expander.c
->>> index a2204674b680..9563f5589948 100644
->>> --- a/drivers/scsi/libsas/sas_expander.c
->>> +++ b/drivers/scsi/libsas/sas_expander.c
->>> @@ -1681,6 +1681,10 @@ int sas_get_phy_attached_dev(struct 
->>> domain_device *dev, int phy_id,
->>>           if (*type == 0)
->>>               memset(sas_addr, 0, SAS_ADDR_SIZE);
->>>       }
->>> +
->>> +    if ((SAS_ADDR(sas_addr) == 0) || (res == -ECOMM))
->>> +        sas_set_ex_phy(dev, phy_id, disc_resp);
->>> +
->>>       kfree(disc_resp);
->>>       return res;
->>>   }
->>> @@ -1972,11 +1976,6 @@ static int sas_rediscover_dev(struct 
->>> domain_device *dev, int phy_id,
->>>       if ((SAS_ADDR(sas_addr) == 0) || (res == -ECOMM)) {
->>>           phy->phy_state = PHY_EMPTY;
->>>           sas_unregister_devs_sas_addr(dev, phy_id, last);
->>> -        /*
->>> -         * Even though the PHY is empty, for convenience we discover
->>> -         * the PHY to update the PHY info, like negotiated linkrate.
->>> -         */
->>> -        sas_ex_phy_discover(dev, phy_id);
->>
->> It would be nice to be able to call sas_set_ex_phy() here (instead of 
->> sas_get_phy_attached_dev()), but I assume that you can't do that as 
->> the disc_resp memory is not available.
->>
->> If we were to manually set the PHY info here instead, how would that 
->> look?
-> Yes, I think it is indeed better to use sas_set_ex_phy, as you said, 
-> disc_resp memory is not available. Maybe we can use sas_get_phy_discover 
-> instead of sas_get_phy_attached_dev so we can use disc_resp?
+Martin,
 
-Can we directly set phy->negotiated_linkrate = SAS_PHY_DISABLED here? 
-For an empty PHY the other variables means nothing, so why bother get 
-and update them?
+Please apply the qla2xxx driver miscellaneous bug fixes
+to the scsi tree at your earliest convenience.
 
 Thanks,
-Jason
+Nilesh
+
+Bikash Hazarika (1):
+  qla2xxx: Update manufacturer detail
+
+Nilesh Javali (1):
+  qla2xxx: Update version to 10.02.09.200-k
+
+Quinn Tran (6):
+  qla2xxx: Prevent command send on chip reset
+  qla2xxx: Fix N2N stuck connection
+  qla2xxx: Split FCE|EFT trace control
+  qla2xxx: NVME|FCP prefer flag not being honored
+  qla2xxx: Fix command flush on cable pull
+  qla2xxx: Delay IO Abort on PCI error
+
+Saurav Kashyap (3):
+  qla2xxx: Fix double free of the ha->vp_map pointer.
+  qla2xxx: Fix double free of fcport
+  qla2xxx: change debug message during driver unload
+
+ drivers/scsi/qla2xxx/qla_attr.c    |  14 +++-
+ drivers/scsi/qla2xxx/qla_def.h     |   2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   2 +-
+ drivers/scsi/qla2xxx/qla_init.c    | 126 +++++++++++++++--------------
+ drivers/scsi/qla2xxx/qla_iocb.c    |  68 ++++++++++------
+ drivers/scsi/qla2xxx/qla_mbx.c     |   2 +-
+ drivers/scsi/qla2xxx/qla_os.c      |   3 +-
+ drivers/scsi/qla2xxx/qla_target.c  |  10 +++
+ drivers/scsi/qla2xxx/qla_version.h |   4 +-
+ 9 files changed, 138 insertions(+), 93 deletions(-)
+
+
+base-commit: f4469f3858352ad1197434557150b1f7086762a0
+-- 
+2.23.1
 
