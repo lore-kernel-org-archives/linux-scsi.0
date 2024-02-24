@@ -1,54 +1,54 @@
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
+Received: from mail-ot1-f49.google.com (mail-ot1-f49.google.com [209.85.210.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 232EA38B
-	for <linux-scsi@vger.kernel.org>; Sat, 24 Feb 2024 00:09:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2317A55
+	for <linux-scsi@vger.kernel.org>; Sat, 24 Feb 2024 00:23:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708733371; cv=none; b=kIxT3qXBO2Oew3+NlwVTcoF2Jr1HRXADHdmxiw1ZQohO6k7UfOANBog2RXHiScOGAEsB10Zq0AkotUH+hQuJ964qQavcMG0gpk/SLTF3RCosK41ZmOYEZocggv48cwSiHmy/K6nOuI9b2ZtiBoEjc9chg6Q2SAd//UUwrK1Un5A=
+	t=1708734209; cv=none; b=s7f3xUFWgGsVUw2uibC+JuvFjZE5CemHm9BG7BpNKyAMYxF3DPaS3NjCY/6aMUQ82ycat2+VhZ8wxKehfO6IrmQbMDKDsPIOy149yQnkydd6+kUHfNVVFAVtFQJI4086/NQYZpdvljIr2kwPFwQfY3AkSHwDEuWeM1cpa45geVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708733371; c=relaxed/simple;
-	bh=B7Dv5dmeACyRpOSQW8ispbxs2jmSkERBItx9SEjQyHA=;
+	s=arc-20240116; t=1708734209; c=relaxed/simple;
+	bh=/KBTgDtx9iqxLGOnVDV65i60I9gYZ01mwe9y6PSyVF4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EMHFwzGOOcen3y+JWn7V5iJVxYSNOxzCrZcNVmJhnQdN4GdTyQJ1dw7s9jDac+ltSERW/RUt6cB9EZXvtBdNBY3/tGd2FNlc1sUDzngOOS66Lf5d72xxypIjBfkb+ITEuTtgZQxz8mDC5tMB0zXM1j+pX8IZUUIj0NYE9/DpIn4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=XQnOAltR; arc=none smtp.client-ip=209.85.215.174
+	 Content-Type:Content-Disposition:In-Reply-To; b=GssebNbZbEJUAG+PYx/thcDLtQ5bPkyF1brTUPyiZQaernQ3nEQZCHTomPjYjylshenD9eaSNCl+SV9MpkYqpQVkS9IdZb5DSHEU27nqKEQ7LXM9667Kf8edKthvhgbsyNIKN0b2+zssh9X132Hh2VUHlntOrCNhqhaQ55u2b+o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=XG1gMhAu; arc=none smtp.client-ip=209.85.210.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="XQnOAltR"
-Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-5d8b276979aso1085091a12.2
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Feb 2024 16:09:29 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="XG1gMhAu"
+Received: by mail-ot1-f49.google.com with SMTP id 46e09a7af769-6e2e44aad03so393710a34.2
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Feb 2024 16:23:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1708733369; x=1709338169; darn=vger.kernel.org;
+        d=chromium.org; s=google; t=1708734204; x=1709339004; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=OnDYUmc3jpobh2TN46WwlCu2ElQF5tI8PklWkNI35oQ=;
-        b=XQnOAltRmIQNFvE9xCVEJIxnaWSDoxQn4i8h14y8l6K8PKJnPKR9cVYzWYg+Zy5ZQP
-         axSy5kWaZPd3MWGEdk9+zFajJFGGhIYkOg3JQMc17uykhMZlm/nCSIDXtdIc5mC18EK1
-         kUAKzGgmMeSb3Q25XV167g3BgfhV7UyG9CX2Q=
+        bh=FDZ+jIfcZnSyT6ko3bZa/QkR2I1bAFTbjf79kFMZltI=;
+        b=XG1gMhAuyDWgV1iYkFQIZpsfZlRhBuMO8IZkuTo7VNOb0hlE0Gs8AgE3RgyVlI24Ij
+         eRjby26jB31axuAaOp0EqQFa14zjYjEx/RoFBL1I6f0s92EhW1VuHe5bnpCPxiO/rM43
+         YyNMduUrQrX7wKXkPw0r6HwlxMIBDPp7FEAHo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708733369; x=1709338169;
+        d=1e100.net; s=20230601; t=1708734204; x=1709339004;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=OnDYUmc3jpobh2TN46WwlCu2ElQF5tI8PklWkNI35oQ=;
-        b=incThw0wTndByFccvrYdOi4292zXeGH0/0W2mahaleLuccYvFf0LEzwVjlrl1hHne2
-         A3bHyED045/e2j7M8+W4Uh+cM4jcQDs3zc4dpr/jPr4pQFpgVKYvwqibfMZIe3N0Ch/5
-         ShirhB9I8OImj7thS4E0sGQpyUZnvdM92bZjopRxR14mHKPCKLsu1wfnSYVZUwA1S6hO
-         otr3o8vSNgN5QHxqt4bk7wAluuoijSmiHSSvhRM4tvCd8c3dkCTGoGo73Q+f594OVcFx
-         JUV/b5Y+UVHBMCff613O6RP6O8e7Yq+G7g0mq+lbjYxQW0vHRCUL6GwwhImyDlpaNDH+
-         BF8w==
-X-Forwarded-Encrypted: i=1; AJvYcCUfXB/DPdpZAUxa4c8hpZkKldZtzLsbMKYKVAFZ/IVBj5pGzbeI+Y14mYg/BO8VUyxj8D8ghNeVbsVsgrH8gCGTCwUHaksRuMlMXQ==
-X-Gm-Message-State: AOJu0YzpW9kj2ALvhbNqiBmWwypi609FEHJnmjqh/qBxQEBk9C5lEBI3
-	Q06s9zDe2rx7FAoNAQDXePQGBoY4qXWHGm9wp2KHg5PUm2RDke2O7tqnBTkCYA==
-X-Google-Smtp-Source: AGHT+IFKfPECqsVhmrrNx/vGtyxZh4W0YZoCA9sgWVucX2CWOw6y+KPjncpxsZNQm/QJeAE5gD/R0Q==
-X-Received: by 2002:a05:6a21:789d:b0:19e:3a94:6272 with SMTP id bf29-20020a056a21789d00b0019e3a946272mr1623552pzc.44.1708733369463;
-        Fri, 23 Feb 2024 16:09:29 -0800 (PST)
+        bh=FDZ+jIfcZnSyT6ko3bZa/QkR2I1bAFTbjf79kFMZltI=;
+        b=VDaNH4MZ0To4eY4knncxipdhMxhU4/Z/veLxdlXoaYlHq0u45tNc0zVHfB2k+0HJU/
+         UL/suqkhnbF26c28U4c5IKvc9M6358emxiYwvwrSspfDqtw3HTj7w+NLj5IHmFW8vXwx
+         /O2EVEMR6D54DFo1mR4CS6MkVUvj6ay6rOqaMIusH3//IJ+XyI3ipmURCmOlbM2so6Vw
+         tDTjj5coGEVUPG23SXzR/vxjMonXdwYneJDWZk1dcoZnQBi6igwLD36+aD6vBjiXRdH6
+         jGNRjGmhtw1MM0ScnK4S1f8WQ8lGdyqGMl8PKHXZXNg+dX0j4wJn6mwHe7ywNhw83Ybk
+         IwPg==
+X-Forwarded-Encrypted: i=1; AJvYcCUVd6t/wbtJu4rdyvxNioSzFe8jhWDftjQMvt6RAPAcn0OLb4/+8EwvAzlZfB1MXNXizFe6XMnubHmYquH6+MRW99LGhvRCXl4lIg==
+X-Gm-Message-State: AOJu0YxuDIU42fzTjxP9GJh79Mh8OVV0YJorrP+7CPnGkoRiek68wz+u
+	GWSRpUQ7hlENP+angM0PGKuqiL+eKTUNjtJntZjganrXwK2wo3XK5x4dYCav+A==
+X-Google-Smtp-Source: AGHT+IGgLYDyRxzzGX2Ym3I1LfXv+ag2fv25ZMLSP8c/c3USRwTcmglDTsCYIbM5/n2QasSMK8oqfw==
+X-Received: by 2002:a05:6830:1418:b0:6e4:7b54:966f with SMTP id v24-20020a056830141800b006e47b54966fmr1478582otp.18.1708734203786;
+        Fri, 23 Feb 2024 16:23:23 -0800 (PST)
 Received: from www.outflux.net ([198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id p23-20020a63fe17000000b005dca5caed40sm59589pgh.81.2024.02.23.16.09.29
+        by smtp.gmail.com with ESMTPSA id i12-20020a056a00004c00b006e4d42e218csm63131pfk.41.2024.02.23.16.23.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Feb 2024 16:09:29 -0800 (PST)
-Date: Fri, 23 Feb 2024 16:09:28 -0800
+        Fri, 23 Feb 2024 16:23:23 -0800 (PST)
+Date: Fri, 23 Feb 2024 16:23:22 -0800
 From: Kees Cook <keescook@chromium.org>
 To: Justin Stitt <justinstitt@google.com>
 Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
@@ -73,10 +73,11 @@ Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
 	linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
 	MPT-FusionLinux.pdl@broadcom.com, netdev@vger.kernel.org,
 	storagedev@microchip.com
-Subject: Re: [PATCH 3/7] scsi: qedf: replace deprecated strncpy with strscpy
-Message-ID: <202402231608.37D9DCCA29@keescook>
+Subject: Re: [PATCH 4/7] scsi: qla4xxx: replace deprecated strncpy with
+ strscpy
+Message-ID: <202402231613.F845617@keescook>
 References: <20240223-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v1-0-9cd3882f0700@google.com>
- <20240223-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v1-3-9cd3882f0700@google.com>
+ <20240223-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v1-4-9cd3882f0700@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -85,68 +86,186 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240223-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v1-3-9cd3882f0700@google.com>
+In-Reply-To: <20240223-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v1-4-9cd3882f0700@google.com>
 
-On Fri, Feb 23, 2024 at 10:23:08PM +0000, Justin Stitt wrote:
-> We expect slowpath_params.name to be NUL-terminated based on its future
-> usage with other string APIs:
+On Fri, Feb 23, 2024 at 10:23:09PM +0000, Justin Stitt wrote:
+> Replace 3 instances of strncpy in ql4_mbx.c
 > 
-> |	static int qed_slowpath_start(struct qed_dev *cdev,
-> |				      struct qed_slowpath_params *params)
-> ...
-> |	strscpy(drv_version.name, params->name,
-> |		MCP_DRV_VER_STR_SIZE - 4);
+> No bugs exist in the current implementation as some care was taken to
+> ensure the write length was decreased by one to leave some space for a
+> NUL-byte. However, instead of using strncpy(dest, src, LEN-1) we can opt
+> for strscpy(dest, src, sizeof(dest)) which will result in
+> NUL-termination as well. It should be noted that the entire chap_table
+> is zero-allocated so the NUL-padding provided by strncpy is not needed.
 > 
-> Moreover, NUL-padding is not necessary as the only use for this slowpath
-> name parameter is to copy into the drv_version.name field.
+> While here, I noticed that MIN_CHAP_SECRET_LEN was not used anywhere.
+> Since strscpy gives us the number of bytes copied into the destination
+> buffer (or an -E2BIG) we can check both for an error during copying and
+> also for a non-length compliant secret. Add a new jump label so we can
+> properly clean up our chap_table should we have to abort due to bad
+> secret.
 > 
-> Also, let's prefer using strscpy(src, dest, sizeof(src)) in two
-> instances (one of which is outside of the scsi system but it is trivial
-> and related to this patch).
+> The third instance in this file involves some more peculiar handling of
+> strings:
+> |	uint32_t mbox_cmd[MBOX_REG_COUNT];
+> |	...
+> |	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+> |	...
+> |	mbox_cmd[0] = MBOX_CMD_SET_PARAM;
+> |	if (param == SET_DRVR_VERSION) {
+> |		mbox_cmd[1] = SET_DRVR_VERSION;
+> |		strncpy((char *)&mbox_cmd[2], QLA4XXX_DRIVER_VERSION,
+> |			MAX_DRVR_VER_LEN - 1);
 > 
-> We can see the drv_version.name size here:
-> |	struct qed_mcp_drv_version {
-> |		u32	version;
-> |		u8	name[MCP_DRV_VER_STR_SIZE - 4];
+> mbox_cmd has a size of 8:
+> |	#define MBOX_REG_COUNT 8
+> ... and its type width is 4 bytes. Hence, we have 32 bytes to work with
+> here. The first 4 bytes are used as a flag for the MBOX_CMD_SET_PARAM.
+> The next 4 bytes are used for SET_DRVR_VERSION. We now have 32-8=24
+> bytes remaining -- which thankfully is what MAX_DRVR_VER_LEN is equal to
+> |	#define MAX_DRVR_VER_LEN                    24
+> 
+> ... and the thing we're copying into this pseudo-string buffer is
+> |	#define QLA4XXX_DRIVER_VERSION        "5.04.00-k6"
+> 
+> ... which is great because its less than 24 bytes (therefore we aren't
+> truncating the source).
+> 
+> All to say, there's no bug in the existing implementation (yay!) but we
+> can clean the code up a bit by using strscpy().
+> 
+> In ql4_os.c, there aren't any strncpy() uses to replace but there are
+> some existing strscpy() calls that could be made more idiomatic. Where
+> possible, use strscpy(dest, src, sizeof(dest)). Note that
+> chap_rec->password has a size of ISCSI_CHAP_AUTH_SECRET_MAX_LEN
+> |	#define ISCSI_CHAP_AUTH_SECRET_MAX_LEN	256
+> ... while the current strscpy usage uses QL4_CHAP_MAX_SECRET_LEN
+> |	#define QL4_CHAP_MAX_SECRET_LEN 100
+> ... however since chap_table->secret was set and bounded properly in its
+> string assignment its probably safe here to switch over to sizeof().
+> 
+> |	struct iscsi_chap_rec {
+> 	...
+> |		char username[ISCSI_CHAP_AUTH_NAME_MAX_LEN];
+> |		uint8_t password[ISCSI_CHAP_AUTH_SECRET_MAX_LEN];
+> 	...
 > |	};
-
-What a weird length. :P
-
+> 
+> |	strscpy(chap_rec->password, chap_table->secret,
+> |		QL4_CHAP_MAX_SECRET_LEN);
 > 
 > Signed-off-by: Justin Stitt <justinstitt@google.com>
 > ---
->  drivers/net/ethernet/qlogic/qed/qed_main.c | 2 +-
->  drivers/scsi/qedf/qedf_main.c              | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+>  drivers/scsi/qla4xxx/ql4_mbx.c | 17 ++++++++++++-----
+>  drivers/scsi/qla4xxx/ql4_os.c  | 14 +++++++-------
+>  2 files changed, 19 insertions(+), 12 deletions(-)
 > 
-> diff --git a/drivers/net/ethernet/qlogic/qed/qed_main.c b/drivers/net/ethernet/qlogic/qed/qed_main.c
-> index c278f8893042..d39e198fe8db 100644
-> --- a/drivers/net/ethernet/qlogic/qed/qed_main.c
-> +++ b/drivers/net/ethernet/qlogic/qed/qed_main.c
-> @@ -1351,7 +1351,7 @@ static int qed_slowpath_start(struct qed_dev *cdev,
->  				      (params->drv_rev << 8) |
->  				      (params->drv_eng);
->  		strscpy(drv_version.name, params->name,
-> -			MCP_DRV_VER_STR_SIZE - 4);
-> +			sizeof(drv_version.name));
->  		rc = qed_mcp_send_drv_version(hwfn, hwfn->p_main_ptt,
->  					      &drv_version);
->  		if (rc) {
-> diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-> index a58353b7b4e8..fd12439cbaab 100644
-> --- a/drivers/scsi/qedf/qedf_main.c
-> +++ b/drivers/scsi/qedf/qedf_main.c
-> @@ -3468,7 +3468,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
->  	slowpath_params.drv_minor = QEDF_DRIVER_MINOR_VER;
->  	slowpath_params.drv_rev = QEDF_DRIVER_REV_VER;
->  	slowpath_params.drv_eng = QEDF_DRIVER_ENG_VER;
-> -	strncpy(slowpath_params.name, "qedf", QED_DRV_VER_STR_SIZE);
-> +	strscpy(slowpath_params.name, "qedf", sizeof(slowpath_params.name));
->  	rc = qed_ops->common->slowpath_start(qedf->cdev, &slowpath_params);
->  	if (rc) {
->  		QEDF_ERR(&(qedf->dbg_ctx), "Cannot start slowpath.\n");
+> diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+> index 249f1d7021d4..75125d2021f5 100644
+> --- a/drivers/scsi/qla4xxx/ql4_mbx.c
+> +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+> @@ -1641,6 +1641,7 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
+>  	struct ql4_chap_table *chap_table;
+>  	uint32_t chap_size = 0;
+>  	dma_addr_t chap_dma;
+> +	ssize_t secret_len;
+>  
+>  	chap_table = dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
+>  	if (chap_table == NULL) {
+> @@ -1652,9 +1653,13 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
+>  		chap_table->flags |= BIT_6; /* peer */
+>  	else
+>  		chap_table->flags |= BIT_7; /* local */
+> -	chap_table->secret_len = strlen(password);
+> -	strncpy(chap_table->secret, password, MAX_CHAP_SECRET_LEN - 1);
+> -	strncpy(chap_table->name, username, MAX_CHAP_NAME_LEN - 1);
+> +
+> +	secret_len = strscpy(chap_table->secret, password,
+> +			     sizeof(chap_table->secret));
+> +	if (secret_len < MIN_CHAP_SECRET_LEN)
+> +		goto cleanup_chap_table;
+> +	chap_table->secret_len = (uint8_t)secret_len;
+> +	strscpy(chap_table->name, username, sizeof(chap_table->name));
 
-Yeah, looks good.
+I'm genuinely not sure what to do here, but I suspect your approach is
+safest.
+
+I can't see where chap_table->secret is getting set, but if it was
+longer than 100 bytes, there was a bug here, as strncpy() would truncate
+but chap_table->secret_len would continue to have the original length.
+However, it looks like the buf_len passed to iscsi_set_param() is
+ignored. O_o
+
+>  	chap_table->cookie = cpu_to_le16(CHAP_VALID_COOKIE);
+>  
+>  	if (is_qla40XX(ha)) {
+> @@ -1679,6 +1684,8 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
+>  		memcpy((struct ql4_chap_table *)ha->chap_list + idx,
+>  		       chap_table, sizeof(struct ql4_chap_table));
+>  	}
+> +
+> +cleanup_chap_table:
+>  	dma_pool_free(ha->chap_dma_pool, chap_table, chap_dma);
+>  	if (rval != QLA_SUCCESS)
+>  		ret =  -EINVAL;
+> @@ -2281,8 +2288,8 @@ int qla4_8xxx_set_param(struct scsi_qla_host *ha, int param)
+>  	mbox_cmd[0] = MBOX_CMD_SET_PARAM;
+>  	if (param == SET_DRVR_VERSION) {
+>  		mbox_cmd[1] = SET_DRVR_VERSION;
+> -		strncpy((char *)&mbox_cmd[2], QLA4XXX_DRIVER_VERSION,
+> -			MAX_DRVR_VER_LEN - 1);
+> +		strscpy((char *)&mbox_cmd[2], QLA4XXX_DRIVER_VERSION,
+> +			MAX_DRVR_VER_LEN);
+
+As you mentioned in the commit log, this is a weird destination, but
+is a legit calculation.
+
+>  	} else {
+>  		ql4_printk(KERN_ERR, ha, "%s: invalid parameter 0x%x\n",
+>  			   __func__, param);
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+> index 675332e49a7b..17cccd14765f 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -799,10 +799,10 @@ static int qla4xxx_get_chap_list(struct Scsi_Host *shost, uint16_t chap_tbl_idx,
+>  
+>  		chap_rec->chap_tbl_idx = i;
+>  		strscpy(chap_rec->username, chap_table->name,
+> -			ISCSI_CHAP_AUTH_NAME_MAX_LEN);
+> -		strscpy(chap_rec->password, chap_table->secret,
+> -			QL4_CHAP_MAX_SECRET_LEN);
+> -		chap_rec->password_length = chap_table->secret_len;
+> +			sizeof(chap_rec->username));
+> +		chap_rec->password_length = strscpy(chap_rec->password,
+> +						    chap_table->secret,
+> +						    sizeof(chap_rec->password));
+>  
+>  		if (chap_table->flags & BIT_7) /* local */
+>  			chap_rec->chap_type = CHAP_TYPE_OUT;
+> @@ -6291,8 +6291,8 @@ static void qla4xxx_get_param_ddb(struct ddb_entry *ddb_entry,
+>  
+>  	tddb->tpgt = sess->tpgt;
+>  	tddb->port = conn->persistent_port;
+> -	strscpy(tddb->iscsi_name, sess->targetname, ISCSI_NAME_SIZE);
+> -	strscpy(tddb->ip_addr, conn->persistent_address, DDB_IPADDR_LEN);
+> +	strscpy(tddb->iscsi_name, sess->targetname, sizeof(tddb->iscsi_name));
+> +	strscpy(tddb->ip_addr, conn->persistent_address, sizeof(tddb->ip_addr));
+>  }
+>  
+>  static void qla4xxx_convert_param_ddb(struct dev_db_entry *fw_ddb_entry,
+> @@ -7792,7 +7792,7 @@ static int qla4xxx_sysfs_ddb_logout(struct iscsi_bus_flash_session *fnode_sess,
+>  	}
+>  
+>  	strscpy(flash_tddb->iscsi_name, fnode_sess->targetname,
+> -		ISCSI_NAME_SIZE);
+> +		sizeof(flash_tddb->iscsi_name));
+>  
+>  	if (!strncmp(fnode_sess->portal_type, PORTAL_TYPE_IPV6, 4))
+>  		sprintf(flash_tddb->ip_addr, "%pI6", fnode_conn->ipaddress);
+> 
+> -- 
+> 2.44.0.rc0.258.g7320e95886-goog
+> 
 
 Reviewed-by: Kees Cook <keescook@chromium.org>
 
