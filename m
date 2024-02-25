@@ -1,196 +1,209 @@
-Received: from mail-ot1-f52.google.com (mail-ot1-f52.google.com [209.85.210.52])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A959612E6A;
-	Sun, 25 Feb 2024 14:46:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 338F61B94E
+	for <linux-scsi@vger.kernel.org>; Sun, 25 Feb 2024 23:09:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708872386; cv=none; b=DGtdgtriKtg5npAzL/aUYG0499U0VCWlrXkz2QFBLLqjz11oHZKjHfkgmU4YdIqL7Tq+Rr8N10FVVbnmRX+E3vqGNzRKIRMmCYyelV+u6yZI46q/4gE0vN1D7qQXxPjMu0tni4uA7xxfQLoCoRbGk3cqWyHZI0p+uEtSEBCFz2U=
+	t=1708902554; cv=none; b=oI8eK6UUUqFToILKQQ2i6KF17JcslD4YugOvy08jtaCqStmSq4Lsd0YwiRAPB+2eb4tpycPjmLqZ9tzViDZUgg/H5+pVkbmlUWj1mHQbWsKgqPE0jtSVag2+4MtDDjHToMubpZ5RyEeKOlztVjIfJER0ZpdNp9JdseUAzRTZBv8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708872386; c=relaxed/simple;
-	bh=cJxeZ9XcAyAWI/FNWJkHGSlKd1lbYW4aDtPK/n0YZ7E=;
-	h=Date:Message-Id:From:To:Cc:Subject:In-Reply-To; b=DpKkA8IrvQd5/VKHvx8QABWq+Y514Pvkhc8WTe7KB3bw7afxuZn8MCgkJkJ6QTDifyzUVBoY0Ng8zFvQW2+yNm00ZgPw7F7VslF4RxkpzAqOw4kcrohUzjGaW04S+dW59rK+gYnP7Cp8LX4jMB8OD/LTxXWs8gB/uuZIbwB4Q/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AW1Zn5Vm; arc=none smtp.client-ip=209.85.210.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1708902554; c=relaxed/simple;
+	bh=MLksRqOA0tGt2uFoSX/LuRF3RmS1RwzPLzua2ZbwEuA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ff2LtScr7t/HFziXXK9BlJkeXjbhUSLwrk+a5UT/Qzn9QbMhsIQ6tS8vEziPeEG/PT4CFs2tZxj0q2B9ICKppjZhyjjTvdp74Q4i2f9hh64/gmtXpaI5KR0qgoeP48HUu9NuI/ZAZUu03R1Gjc83dP1hnGErbn5zpR3KgNJ+A0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=V+tW7/Ck; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AW1Zn5Vm"
-Received: by mail-ot1-f52.google.com with SMTP id 46e09a7af769-6e125818649so959907a34.1;
-        Sun, 25 Feb 2024 06:46:24 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="V+tW7/Ck"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1d51ba18e1bso33098775ad.0
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Feb 2024 15:09:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1708872384; x=1709477184; darn=vger.kernel.org;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=JpmlBduLOtP9Y7HibP2DDg1Ww/fxHjaBUbZW8bb6d/A=;
-        b=AW1Zn5VmQkfCq0cJRFVK/ELslGUJtAfKmvQOBK5n7WHRR+a8b/7QYR7++jLAEdCjzZ
-         C5EWKncnQO8/XnyF8AmwcxVw47Yp8DgMZxOWPb2GA5tvpUSy7dfeW/mv+fY6FSQ9VXv2
-         7ubgCh+NVZkYAk+VQj0q8NeWjZFf59VJg2DMSLQ5RlsxRy2InTDudd8+tnO8QU4+3Z9L
-         7oGTHEAqelz/qxKACLJuFllFQZ039n+thADhdCtK20InQCvQEA9HhHGbvKx+5iSrXBpJ
-         N4S1B2uaaxtzxF7kdtgjEmG3iqGoFXsUc6+40oHzm2JyEQlq5OB5kqPfNXFNGDwC0S2R
-         ycQg==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1708902552; x=1709507352; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=l7a9pYx80wW5C+0OOLf7V/OKZTSHuwOcmWS8SrHVorg=;
+        b=V+tW7/CkOfTuaA41Q3OvSLTO9z/C+sBq8gwdm3QfgiGA22sBKZ9qtasxgIHVrApFs+
+         Jbqmj5KevnJ8qKSa7/Lqv9Nc/wHvH8N3VkJRr2sPZN8sFwjtSMe0hNhF2nn5kaXb0e/e
+         1H7CR4SSMc6f8HAKFb4ztSJswnVT9Lse+Z6hoHUzzUcZupSmA16YxrgrkY0SFJbiSIvs
+         fJrYK9Sn7j3Cjrppcx0n85WK7nWYr9LcO2N04eKZUbWFp6Bf9cJj6H++XB8KxtZOWzps
+         utjkIGdahmoI/B0OP87tSPOqT4DSNmGGmtLGAyz3NUlT6QLTb9wDASJGYW4+ukgLL5gG
+         HTrA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708872384; x=1709477184;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=JpmlBduLOtP9Y7HibP2DDg1Ww/fxHjaBUbZW8bb6d/A=;
-        b=nVvZTENd8X0QXzA1SbAP8sG+lfcFKWGETkEOO9A6R/rQ53i4gd63v3fuoNVb2Q6Qmn
-         09xzoAfwMtLDdr0Rci78k7UVTog9xuACMLR3a6hJZX8H11voh/dJeEiskMWy9Y8u5J+P
-         oDoC+XK67xTa2nNhRP7UF9uKTGYhXLXuSQdFrHHrXSmqrR3ARcJM4ed+yVFw4gNrXN42
-         IgJroMrSrONDKA31vXF4GpoRmT2dYjXFyHaHe0uRMKQ/v4DC3la7bT7PLr3RNEgvAN9S
-         zoFtnNH9r66pY5r9wMRSEc8Ug2P6jyVpTO4eaTH46RXKUzO27yxUNoNQPBl87SZVGodz
-         UERA==
-X-Forwarded-Encrypted: i=1; AJvYcCVupIqXIoAzUuB32m8dlgAUTk/HKs0D01XcTK3TIrm0cKWR+Y8dRM+0DfZA8MUZ7Hhv6IaBjdplK/eUgtsCUKLBzJElP8bUnuymH3QLeQ0PPENlRJ0FL8cpojoCrdMPDthzqyXbL/6PcZnKJXyy/qEGJMMBj+dnPOCvHTeVySLY4+rF76ilCZRNvzf8tCfW5/jzA6zAAl0w75YgSRGkRsdTE6iqQKOenGlSSRWrOg3dikKCxVtCmnxlcH67fh/d
-X-Gm-Message-State: AOJu0YzKqICN2WK6QD0yamBIntqYUvZVSLIv81ToLIP7BOCMnTl0ZAL6
-	3YIrui6XvNf4E5ENq1RhuFSDi+ZHxi0NitG73NCRx6LuloEc6xST
-X-Google-Smtp-Source: AGHT+IHH2tg/cZwys6nguaiuLttBdJz9HIEFZ+uxlzW8VtX1+VRUmvRpyYwrqwFLixwGrsBZ7zvQBA==
-X-Received: by 2002:a05:6358:7e81:b0:179:272e:54c6 with SMTP id o1-20020a0563587e8100b00179272e54c6mr5299313rwn.25.1708872383543;
-        Sun, 25 Feb 2024 06:46:23 -0800 (PST)
-Received: from dw-tp ([171.76.80.106])
-        by smtp.gmail.com with ESMTPSA id d8-20020a056a0010c800b006e4762b5f3bsm2476163pfu.172.2024.02.25.06.46.16
+        d=1e100.net; s=20230601; t=1708902552; x=1709507352;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=l7a9pYx80wW5C+0OOLf7V/OKZTSHuwOcmWS8SrHVorg=;
+        b=vLkbSOkz+XorYwzRQeTbdx4/RrrCSNmiXpZS6xdeD1dRdK7++U4h+7g/K17eurRnoM
+         9vsuypQ/KKyqkf7fS5jEsIFb4uLp+4HDsaeQY5UQ6CtZ1GU16K6vxe8k0PZiz7fCH9Gv
+         K2vtUyAom9/esc0lBKA4i6EB0ZTOW1N2yrVA/BhvOXYlzq+8qnMVxQuHb5Thts7tLg50
+         /XW9zk/KXZQTMsASwP2bUlcddz1davt6n9ngkj5aJtKWAXf44zblsjYwv39jMfHt7W23
+         sVa+0wb0vQn2jZucL2ye8iDcCri29Bv9gMnR3mpqmyMzYYLkRptCht7zLHLCoaqHp1Nx
+         y5Tg==
+X-Forwarded-Encrypted: i=1; AJvYcCUl0hbv2k0nKNHG37ZO3cgo5uGDQa+4hUbTlZRHXvlaBAAIi6QVVLtd8IoAfhGv7cRGVVNfKDbxU9L/Tq7755110G+whQFRlioMrQ==
+X-Gm-Message-State: AOJu0Yw9n3uiQ6VWTxHdHBlF9SPopZb1ZAIBjqSH3mUqn18zBPlZvb9X
+	7zi3oR3U8iOQhC4WE2fH4Ie6EX7JhrHFd+F0pYrzAS1/rxcYeR4NZ7iIYFzWcn8=
+X-Google-Smtp-Source: AGHT+IF7Q1OsYYh07q3WF9Mui45ZkhG22+fhtpowOBILiP+qRKRpg66hFJe8Zc3/frwdBVhcPIiQGA==
+X-Received: by 2002:a17:902:dac9:b0:1dc:623d:1c3f with SMTP id q9-20020a170902dac900b001dc623d1c3fmr8618092plx.6.1708902552513;
+        Sun, 25 Feb 2024 15:09:12 -0800 (PST)
+Received: from dread.disaster.area (pa49-181-247-196.pa.nsw.optusnet.com.au. [49.181.247.196])
+        by smtp.gmail.com with ESMTPSA id jj5-20020a170903048500b001dca9316374sm26662plb.147.2024.02.25.15.09.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 25 Feb 2024 06:46:22 -0800 (PST)
-Date: Sun, 25 Feb 2024 20:16:15 +0530
-Message-Id: <87cysk1u14.fsf@doe.com>
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com, jack@suse.cz
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com, linux-aio@kvack.org, linux-btrfs@vger.kernel.org, io-uring@vger.kernel.org, nilay@linux.ibm.com, John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v4 07/11] block: Add fops atomic write support
-In-Reply-To: <20240219130109.341523-8-john.g.garry@oracle.com>
+        Sun, 25 Feb 2024 15:09:11 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1reNcK-00BVIu-0x;
+	Mon, 26 Feb 2024 10:09:08 +1100
+Date: Mon, 26 Feb 2024 10:09:08 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: Matthew Wilcox <willy@infradead.org>,
+	Daniel Gomez <da.gomez@samsung.com>,
+	Pankaj Raghav <p.raghav@samsung.com>, Jan Kara <jack@suse.cz>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Hannes Reinecke <hare@suse.de>, lsf-pc@lists.linuxfoundation.org,
+	linux-mm@kvack.org, linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Subject: Re: [LSF/MM/BPF TOPIC] Large block for I/O
+Message-ID: <ZdvIlLbhtb7+1CTx@dread.disaster.area>
+References: <7970ad75-ca6a-34b9-43ea-c6f67fe6eae6@iogearbox.net>
+ <4343d07b-b1b2-d43b-c201-a48e89145e5c@iogearbox.net>
+ <03ebbc5f-2ff5-4f3c-8c5b-544413c55257@suse.de>
+ <5c356222-fe9e-41b0-b7fe-218fbcde4573@acm.org>
+ <ZYUbB3brQ0K3rP97@casper.infradead.org>
+ <ZYUgo0a51nCgjLNZ@infradead.org>
+ <9b46c48f-d7c4-4ed3-a644-fba90850eab8@acm.org>
+ <ZZxOdWoHrKH4ImL7@casper.infradead.org>
+ <ZdeWRaGQo1IX18pL@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZdeWRaGQo1IX18pL@bombadil.infradead.org>
 
-John Garry <john.g.garry@oracle.com> writes:
+On Thu, Feb 22, 2024 at 10:45:25AM -0800, Luis Chamberlain wrote:
+> On Mon, Jan 08, 2024 at 07:35:17PM +0000, Matthew Wilcox wrote:
+> > On Mon, Jan 08, 2024 at 11:30:10AM -0800, Bart Van Assche wrote:
+> > > On 12/21/23 21:37, Christoph Hellwig wrote:
+> > > > On Fri, Dec 22, 2023 at 05:13:43AM +0000, Matthew Wilcox wrote:
+> > > > > It clearly solves a problem (and the one I think it's solving is the
+> > > > > size of the FTL map).  But I can't see why we should stop working on it,
+> > > > > just because not all drive manufacturers want to support it.
+> > > > 
+> > > > I don't think it is drive vendors.  It is is the SSD divisions which
+> > > > all pretty much love it (for certain use cases) vs the UFS/eMMC
+> > > > divisions which tends to often be fearful and less knowledgeable (to
+> > > > say it nicely) no matter what vendor you're talking to.
+> > > 
+> > > Hi Christoph,
+> > > 
+> > > If there is a significant number of 4 KiB writes in a workload (e.g.
+> > > filesystem metadata writes), and the logical block size is increased from
+> > > 4 KiB to 16 KiB, this will increase write amplification no matter how the
+> > > SSD storage controller has been designed, isn't it? Is there perhaps
+> > > something that I'm misunderstanding?
+> > 
+> > You're misunderstanding that it's the _drive_ which gets to decide the
+> > logical block size. Filesystems literally can't do 4kB writes to these
+> > drives; you can't do a write smaller than a block.  If your clients
+> > don't think it's a good tradeoff for them, they won't tell Linux that
+> > the minimum IO size is 16kB.
+> 
+> Yes, but its perhaps good to review how flexible this might be or not.
+> I can at least mention what I know of for NVMe. Getting a lay of the
+> land of this for other storage media would be good.
+> 
+> Some of the large capacity NVMe drives have NPWG as 16k, that just means
+> the Indirection Unit is 16k, the mapping table, so the drive is hinting
+> *we prefer 16k* but you can still do 4k writes, it just means for all
+> these drives that a 4k write will be a RMW.
 
-> Support atomic writes by submitting a single BIO with the REQ_ATOMIC set.
->
-> It must be ensured that the atomic write adheres to its rules, like
-> naturally aligned offset, so call blkdev_dio_invalid() ->
-> blkdev_atomic_write_valid() [with renaming blkdev_dio_unaligned() to
-> blkdev_dio_invalid()] for this purpose.
->
-> In blkdev_direct_IO(), if the nr_pages exceeds BIO_MAX_VECS, then we cannot
-> produce a single BIO, so error in this case.
+That's just a 4kb logical sector, 16kB physical sector block device,
+yes?
 
-BIO_MAX_VECS is 256. So around 1MB limit with 4k pagesize. 
-Any mention of why this limit for now? Is it due to code complexity that
-we only support a single bio? 
-As I see it, you have still enabled req merging in block layer for
-atomic requests. So it can essentially submit bio chains to the device
-driver? So why not support this case for user to submit a req. larger
-than 1 MB? 
+Maybe I'm missing something, but we already handle cases like that
+just fine thanks to all the work that went into supporting 512e
+devices...
 
->
-> Finally set FMODE_CAN_ATOMIC_WRITE when the bdev can support atomic writes
-> and the associated file flag is for O_DIRECT.
->
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  block/fops.c | 31 ++++++++++++++++++++++++++++---
->  1 file changed, 28 insertions(+), 3 deletions(-)
->
-> diff --git a/block/fops.c b/block/fops.c
-> index 28382b4d097a..563189c2fc5a 100644
-> --- a/block/fops.c
-> +++ b/block/fops.c
-> @@ -34,13 +34,27 @@ static blk_opf_t dio_bio_write_op(struct kiocb *iocb)
->  	return opf;
->  }
->  
-> -static bool blkdev_dio_unaligned(struct block_device *bdev, loff_t pos,
-> -			      struct iov_iter *iter)
-> +static bool blkdev_atomic_write_valid(struct block_device *bdev, loff_t pos,
-> +				      struct iov_iter *iter)
->  {
-> +	struct request_queue *q = bdev_get_queue(bdev);
-> +	unsigned int min_bytes = queue_atomic_write_unit_min_bytes(q);
-> +	unsigned int max_bytes = queue_atomic_write_unit_max_bytes(q);
-> +
-> +	return atomic_write_valid(pos, iter, min_bytes, max_bytes);
+> Users who *want* to help avoid RMWs on these drives and want to increase the
+> writes to be at least 16k can enable a 16k or larger block size so to
+> align the writes. The experimentation we have done using Daniel Gomez's
+> eBPF blkalgn tool [0] reveal (as discussed at last year's Plumbers) that
+> there were still some 4k writes, this was in turn determined to be due
+> to XFS's buffer cache usage for metadata.
 
-generic_atomic_write_valid() would be better for this function. However,
-I have any commented about this in some previous
+As I've explained several times, XFS AG headers are sector sized
+metadata. If you are exposing a 4kB logical sector size on a 16kB
+physical sector device, this is what you'll get. It's been that way
+with 512e devices for a long time, yes?
 
-> +}
-> +
-> +static bool blkdev_dio_invalid(struct block_device *bdev, loff_t pos,
-> +				struct iov_iter *iter, bool atomic_write)
+Also, direct IO will allow sector sized user data IOs, too, so it's
+not just XFS metadata that will be issuing 4kB IO in this case...
 
-bool "is_atomic" or "is_atomic_write" perhaps? 
-we anyway know that we only support atomic writes and RWF_ATOMIC
-operation is made -EOPNOTSUPP for reads in kiocb_set_rw_flags().
-So we may as well make it "is_atomic" for bools.
+> Dave recently posted patches to allow
+> to use large folios on the xfs buffer cache [1],
 
-> +{
-> +	if (atomic_write && !blkdev_atomic_write_valid(bdev, pos, iter))
-> +		return true;
-> +
->  	return pos & (bdev_logical_block_size(bdev) - 1) ||
->  		!bdev_iter_is_aligned(bdev, iter);
->  }
->  
-> +
->  #define DIO_INLINE_BIO_VECS 4
->  
->  static ssize_t __blkdev_direct_IO_simple(struct kiocb *iocb,
-> @@ -71,6 +85,8 @@ static ssize_t __blkdev_direct_IO_simple(struct kiocb *iocb,
->  	}
->  	bio.bi_iter.bi_sector = pos >> SECTOR_SHIFT;
->  	bio.bi_ioprio = iocb->ki_ioprio;
-> +	if (iocb->ki_flags & IOCB_ATOMIC)
-> +		bio.bi_opf |= REQ_ATOMIC;
->  
->  	ret = bio_iov_iter_get_pages(&bio, iter);
->  	if (unlikely(ret))
-> @@ -341,6 +357,9 @@ static ssize_t __blkdev_direct_IO_async(struct kiocb *iocb,
->  		task_io_account_write(bio->bi_iter.bi_size);
->  	}
->  
-> +	if (iocb->ki_flags & IOCB_ATOMIC)
-> +		bio->bi_opf |= REQ_ATOMIC;
-> +
->  	if (iocb->ki_flags & IOCB_NOWAIT)
->  		bio->bi_opf |= REQ_NOWAIT;
->  
-> @@ -357,13 +376,14 @@ static ssize_t __blkdev_direct_IO_async(struct kiocb *iocb,
->  static ssize_t blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
->  {
->  	struct block_device *bdev = I_BDEV(iocb->ki_filp->f_mapping->host);
-> +	bool atomic_write = iocb->ki_flags & IOCB_ATOMIC;
+This has nothing to do with supporting large block sizes - it's
+purely an internal optimisation to reduce the amount of vmap
+(vmalloc) work we have to do for buffers that are larger than
+PAGE_SIZE on 4kB block size filesystems.
 
-ditto, bool is_atomic perhaps?
+> For large capacity NVMe drives with large atomics (NAUWPF), the
+> nvme block driver will allow for the physical block size to be 16k too,
+> thus allowing the sector size to be set to 16k when creating the
+> filesystem, that would *optionally* allow for users to force the
+> filesystem to not allow *any* writes to the device to be 4k.
 
->  	loff_t pos = iocb->ki_pos;
->  	unsigned int nr_pages;
->  
->  	if (!iov_iter_count(iter))
->  		return 0;
->  
-> -	if (blkdev_dio_unaligned(bdev, pos, iter))
-> +	if (blkdev_dio_invalid(bdev, pos, iter, atomic_write))
->  		return -EINVAL;
->  
->  	nr_pages = bio_iov_vecs_to_alloc(iter, BIO_MAX_VECS + 1);
-> @@ -371,6 +391,8 @@ static ssize_t blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
->  		if (is_sync_kiocb(iocb))
->  			return __blkdev_direct_IO_simple(iocb, iter, nr_pages);
->  		return __blkdev_direct_IO_async(iocb, iter, nr_pages);
-> +	} else if (atomic_write) {
-> +		return -EINVAL;
->  	}
->  	return __blkdev_direct_IO(iocb, iter, bio_max_segs(nr_pages));
->  }
-> @@ -616,6 +638,9 @@ static int blkdev_open(struct inode *inode, struct file *filp)
->  	if (bdev_nowait(handle->bdev))
->  		filp->f_mode |= FMODE_NOWAIT;
->  
-> +	if (bdev_can_atomic_write(handle->bdev) && filp->f_flags & O_DIRECT)
-> +		filp->f_mode |= FMODE_CAN_ATOMIC_WRITE;
-> +
->  	filp->f_mapping = handle->bdev->bd_inode->i_mapping;
->  	filp->f_wb_err = filemap_sample_wb_err(filp->f_mapping);
->  	filp->private_data = handle;
-> -- 
-> 2.31.1
+Just present it as a 16kB logical/physical sector block device. Then
+userspace and the filesystem will magically just do the right thing.
+
+We've already solved these problems, yes?
+
+> Note
+> then that there are two ways to be able to use a sector size of 16k
+> for NVMe today then, one is if your drive supported 16 LBA format and
+> another is with these two parameters set to 16k. The later allows you
+> to stick with 512 byte or 4k LBA format and still use a 16k sector size.
+> That allows you to remain backward compatible.
+
+Yes, that's an emulated small logical sector size block device.
+We've been supporting this for years - how are these NVMe drives in
+any way different? Configure the drive this way, it presents as a
+512e or 4096e device, not a 16kB sector size device, yes?
+
+> Jan Kara's patches "block: Add config option to not allow writing to
+> mounted devices" [2] should allow us to remove the set_blocksize() call
+> in xfs_setsize_buftarg() since XFS does not use the block device cache
+> at all, and his pathces ensure once a filesystem is mounted userspace
+> won't muck with the block device directly.
+
+That patch is completely irrelevant to how the block device presents
+sector sizes to userspace and the filesystem. It's also completely
+irrelevant to large block size support in filesystems. Why do you
+think it is relevant at all?
+
+<snip irrelevant WAF stuff that we already know all about>
+
+I'm not sure exactly what is being argued about here, but if the
+large sector size support requires filesystem utilities to treat
+4096e NVMe devices differently to existing 512e devices then the
+large sector size support stuff has gone completely off the rails.
+
+We already have all the mechanisms needed for optimising layouts for
+large physical sector sizes w/ small emulated sector sizes and we
+have widespread userspace support for that. If this new large block
+device sector stuff doesn't work the same way, then you need to go
+back to the drawing board and make it work transparently with all
+the existing userspace infrastructure....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
