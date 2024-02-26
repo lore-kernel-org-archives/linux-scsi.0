@@ -1,288 +1,132 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f202.google.com (mail-yb1-f202.google.com [209.85.219.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FEC312E1DD;
-	Mon, 26 Feb 2024 17:37:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708969072; cv=fail; b=XeckrropkWR20u5hOfW/Jx6Hfn+6xWIQibRIwxRosGlkweDozOtLdo0bL++3wmHuSz8ZzIlgh9VYRuYIXipPUHUWHVyMJA+sRvaV6lSvOkf5vOfJ+FbkVjbMehyTX1RWBBW3wbKRNb/YMEIdSqn2TawFSUtn3E7KyhGjT1q5eaE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708969072; c=relaxed/simple;
-	bh=YE/LjT0Xd7gjGB/1Zuvyxakr4Z4mYKZi5JdVoHAl3oQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=GGTEyJUfYwKovExuTgt8gXEEZvip7L4v3FqRwdDdHxU7E3OsRvjLi1pki8xnkJr6ZMYS5vkOM5rngj2SJ9jIut1HP/f+dMSvmS7vtilvlqk+Vkv0Uqt5rROFv9Kz6F9/Gw8qVeK4K2n5UBnIFmWWWOvRbO6dFe8NG74DFy5B+88=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=OCQfSMJA; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=RTaM11Fm; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B84091E894
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Feb 2024 23:53:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.202
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1708991635; cv=none; b=MF33puVBoPEhUsG5Ywik6nWdsgSlihnfQ0+322EfTN65FLurnazUbEXxBKjGh3RKDSQkU9TmPJetbd34XlqYGaJ+ObIcdyKq/1yUaAwCaxO7cXkKEf9ahBUZi+d4F3E91yLA6946otHjsMZ5ZYaGcFjWek3pTA+oJRsjfqhPxq8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1708991635; c=relaxed/simple;
+	bh=JeCxx3c4ppdgFDh3lp6P1rqNUJwDxT9JEo9Mm+GfI38=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=MgoKSpblfoUJbm1UO+LsSExxBkBpCMkEUR6Eab+Y7tiJxv6841Uz9Jrr5iBY9r3exUH9Xw1FQhlmxcKRcwCcK8QS9WO8/2m6U50GGpgd0I1XFeQaMj7vdxecMubh10ssmDZ/nP8262H/YiTPl+zMLg5J8QYmAUZZpmHIC2n9opo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Fy1d2mYM; arc=none smtp.client-ip=209.85.219.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OCQfSMJA";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="RTaM11Fm"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41QGnLmX016088;
-	Mon, 26 Feb 2024 17:36:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2023-11-20; bh=RxTJeUuu1N/TIPajR55nn7e23m9c5xQj95jq67VyvpI=;
- b=OCQfSMJA7K8yywD6HGk9JNT/NSkQYKJL4T0oQXSFpp974e2bOO6EkOJGgBbYKH9RU7XF
- k8DkEcn74dldMgj71zBrRBT79x/wLjcJfxVhAMv0BlH300XxJxcImEZ2KZ1+PwoB63yX
- 5xagSYOlIjFhItBv+aGwpCF4bBvEvGNbSWQO2N6f0EuXqMeAfGW3urUw7ESXwYuMcIG3
- StpZql/URmltIezPIKLcnskJOWlbs+R4WBddwUtgrMDhL+6wweKeUGFohC21AP1XsPa/
- 8ClSdvBRjcmPQIWdXtQodJ7ePCCP9lnXYyI0qz4tdtX0XhVv04eSDg1DTd9Eq//HjPlX +Q== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3wf90v540h-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 26 Feb 2024 17:36:54 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41QGjeVF022403;
-	Mon, 26 Feb 2024 17:36:53 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2040.outbound.protection.outlook.com [104.47.66.40])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3wf6w61thw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 26 Feb 2024 17:36:53 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hTPkT48euYyCzEyszjEI5JqFqpAYyzKp4qipU0jVn8VQ0X2alD7HbdxfMrsdf2/Sp5btb/itmKC1a3qzEjAvSBUD66j7038EF6BnvypN5GhlwA/l4Ersdffu4LnNS7LM93C4mLY4SOSsHQN97kRPstwzXgHghML2phu9uYS8lfvz9eYSs8dMsXdFG9NOyiF7/++L9yweNjLqa2xXV5FoHP+0yf8VXbcoOXD4vCjmc6gezrC+sUNPaB/pvkMTK8f4w0G8be8iXrVCLRmDrwMqCAH2qw7F8BUFwQrsIZWMR2QDfp/BC9ghGgCV8wEl/LemO/EYhWNhlLGd6DOJzV3Fyg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=RxTJeUuu1N/TIPajR55nn7e23m9c5xQj95jq67VyvpI=;
- b=EWW7kk6chMI1oNo4MPP+Rp4LYq3r6Gh+Rnfbo3q4xgyGcN8Dwl+UAdvBJPvrAUScDq0ny5IMDc5VtLFrfGtx8ZhgVr40gMO9wIoe6aUrX+MoubwF6gxtPqGxikk1lgwycUo2fqDeqA2hMHamD8Y448KlrtGBKbrMHNGEmGy2Pg3FzP+dEMHagjA7cCu6fgtZIXL+jH7YwDIcBITK/sx/XgNEXxEVMXR5douAwNpS54TpiDuniYVxR0w3HVU5Z2toHHrTVBFeTq+k1tU+7V9P1jmMMPOxAwbeE/9Nwg6hry2JyKIPoCKUYBYU2/ClcdnJLH/WALpzrfa8eL1sLWwzVw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Fy1d2mYM"
+Received: by mail-yb1-f202.google.com with SMTP id 3f1490d57ef6-dc6b26845cdso5010573276.3
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Feb 2024 15:53:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RxTJeUuu1N/TIPajR55nn7e23m9c5xQj95jq67VyvpI=;
- b=RTaM11Fmy9mCXqLTCCM8DXEp7GMjkR1mjxnawxvwkYQRPDVnu3zdffoQk14RG9hHTC3hqs+yFLAYAqyFy0nJyJHatU1LjIe1cmUm/nGNJdgMfgd7TEaoLmKkb8rGRVVqVMiGwNt2HTTFR3ydYHwlJakD7JP9fHRTMBmlKPB45QI=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by MW4PR10MB6298.namprd10.prod.outlook.com (2603:10b6:303:1e3::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7316.34; Mon, 26 Feb
- 2024 17:36:51 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::97a0:a2a2:315e:7aff]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::97a0:a2a2:315e:7aff%3]) with mapi id 15.20.7316.034; Mon, 26 Feb 2024
- 17:36:51 +0000
-From: John Garry <john.g.garry@oracle.com>
-To: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-        jack@suse.cz
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-fsdevel@vger.kernel.org,
-        tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-        ojaswin@linux.ibm.com, linux-aio@kvack.org,
-        linux-btrfs@vger.kernel.org, io-uring@vger.kernel.org,
-        nilay@linux.ibm.com, ritesh.list@gmail.com,
-        Prasad Singamsetty <prasad.singamsetty@oracle.com>,
-        John Garry <john.g.garry@oracle.com>
-Subject: [PATCH v5 06/10] block: Add atomic write support for statx
-Date: Mon, 26 Feb 2024 17:36:08 +0000
-Message-Id: <20240226173612.1478858-7-john.g.garry@oracle.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20240226173612.1478858-1-john.g.garry@oracle.com>
-References: <20240226173612.1478858-1-john.g.garry@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: PH0PR07CA0032.namprd07.prod.outlook.com
- (2603:10b6:510:e::7) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        d=google.com; s=20230601; t=1708991632; x=1709596432; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=S39j559seDHpHoyUT6gNBve2pYTlYnQB3wRYpD7F2CQ=;
+        b=Fy1d2mYM9bV1lszCzKF98Q2nCdK/94vBoLQjkpBqgs7WL0pb83HxuWjXTTz6vxRp6E
+         NQYYO4PIfEeSJ8bfzWG5u/Yc/Wtqix4gYedQOzAEp+0Yj1/YIuDKrrHNimbIPid9DVJi
+         zJw6/pPPofKVeRvZYOFIgLIfuZBI1d1k479azNx3HBndxJi1DH+AituoPfikWgMdWAfY
+         Xsb0S3EdK+OZjOrIesBv0/3QIV15xaY6wA/hPeTsm31ylWbuLvkGFi3ThEtXchmXwxjD
+         /PrAoR9j+KlwSPC90FU5IDCD8sctiVJOzS/SHtnPp8FGyrj+rZSdx6rqB74WiOCYlbmG
+         A4bw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708991632; x=1709596432;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=S39j559seDHpHoyUT6gNBve2pYTlYnQB3wRYpD7F2CQ=;
+        b=M+17S31c96ikMndXMDiU+9JEgmIzQH/0jIP0lhr+2qkveNB8M5UWosYtO3Vw3B9+tW
+         FQw5S71TIw5N92ij17HI0TwaQK5zzxEBRKpeE1DpxCv3nFbux08MO0Cjn+YndlzZACjR
+         LKO/D+cdeB2cdWlyXFqwJiOnozyNGKr75v44vOGI0vH0LQYlx3MtNelU6EO9ZFNpsHCv
+         kI64irJxeDMoUGow5HEXS3HHGOFrsIPGQ8rbDm4AeODSa9CT76dehqMT7GKXS4ueZaPQ
+         ZaHcI7hQ7zVcYdW22JksWbcCwl3LAiN9931BG8FZxUHi2a26hhhk5TG4QVa641sc3WnS
+         0FPg==
+X-Gm-Message-State: AOJu0Ywm10gRIrkXUD15uB3CnkYHApPrApnNYTPybaAvQvXzoObaV+Po
+	LfgkvpPQw/c3+nHtxmMB6EsA5e2jjNRhbGoizVChq1GnxWwDpP+UlWPaVwsrKDvgeMifUnTJAiG
+	vf5ZhpuDw8S5v7G5mvAKSxw==
+X-Google-Smtp-Source: AGHT+IH54DJnpJg9iPluQxwsW66Wg0QACJLoVbFpM8JyEIz57ZeMOw8tfs/bwhBt9SCw4HWibOH+XXlMWWCOk7NznQ==
+X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
+ (user=justinstitt job=sendgmr) by 2002:a05:6902:1887:b0:dcc:e1a6:aca9 with
+ SMTP id cj7-20020a056902188700b00dcce1a6aca9mr189067ybb.9.1708991631843; Mon,
+ 26 Feb 2024 15:53:51 -0800 (PST)
+Date: Mon, 26 Feb 2024 23:53:44 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|MW4PR10MB6298:EE_
-X-MS-Office365-Filtering-Correlation-Id: 201fc476-6276-4e4b-b404-08dc36f18401
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	64T6DozHSYpgOjPv3rp7o72zSHg5icpX38M+Sq52Gctfy1eQJzL8IXpwdF9FcFsXhvPf1RLkYnJKB8nCHiYDGsaCJu0eaPJjTXzsfC9hYmoq76HbqXSBcsgTqn3V2bh9zGnLP4HnazLvRF2riQdet0yugAKiskFO4Q74c/ErOMDwBegP1T1X9A5GSib/0Hmuu8+ShskMKaITaotpG9CLAtpwpDoOdz/cJoMQ4oABxjnxryH84PkvnALeeRbR8KspW0Y94vM2iPywqmE3UcZyrAqS3AwToNFm/mImC/lTeAkGY27nohCPGBOl0qdurUbdlRz09XhHtQlbB/4rtTBLEK4qFYal0NHyOZzO9BjXUjQFN6u9eJ6/PcAjH4G7lC+ct3lW/O/ox8DjTPdhVLzESqqyG/Lk2fy3Z1lfj8G/go0cJe59oa1DD4Z4cEBPsrjRI0lN83qGo8+IgkfNRGB2BNyNoMH4izCxT5k2AnoU4lgU27c9vKJEsGu6T6mzKylAmgfFOnGQFN6v/DNlrUbZ9qMyxCQ2zmyGWAp9zwrZXRCzcVFI8X/zipntKMnNg3GSSYcSSqQA2/qOMuFzXFLAD5GGgO9DSM1PYxw2JGXRK9TBUKlQCwtMPJ+zalBN8Qu1Ux6TswK8Hc9bncFLy65x8S+D29VVaxBM4HNTTi0SRNIeFKrGbmLE5DK3XJExpEpQwX0/ZRec+69/4ohU0Sz11w==
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(921011);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?+TM/THG3yJ6h93JvLQRo9Qhh8EZM001ZGlaFxsFA6UFG5tLvC1Jl62AP4LGf?=
- =?us-ascii?Q?5bUEJHGZFiVJV4WVofBjwwToIqscLsDC92pPEhj6Fb3Vwy0Jiza9IADLz2vc?=
- =?us-ascii?Q?pwiwD/dWTYttLJQ867doChXJv4QrZHuVvhVs8jGtkMQsDFPmBTSjXUEHGEM6?=
- =?us-ascii?Q?2L0suRD7kEBrFFcbloOHfaLmH3pUYAzBaw/8yeosjzKBI4cNGOM2MBqZ5hSP?=
- =?us-ascii?Q?e0uiBk+6TiS2x/J/MWPcVIYBRqRpnsUfWcGajEogY9VkzJew4r4/UszrsbwU?=
- =?us-ascii?Q?Kfy2alJimacxQ9xlodeXB/FmJ0/jKN6r7i7enPTcAoCawARtnN/moeZHGTMI?=
- =?us-ascii?Q?xLgO+/UxgHGJ8s0Uj9omrowZ51SKieS7TlLfHQwiz7bmyvZMrgVUTtnNALUB?=
- =?us-ascii?Q?5lkTnlMNx6RRf5MW0Qzj5QuH7ZkIbBf6DdvbMqS0TShz2mVUAyc3gTgWBsfA?=
- =?us-ascii?Q?9loMg34zDh+GaUpZz/B4oF1YdMgLTkoONOB1zUcP3iSndLAJTPeQolXhsYQX?=
- =?us-ascii?Q?gnd4IQpBetCROAy7bVSG4pH/25gGKNdGhSgnwGG0GsMxWKXqQ+7WF0NdgLd+?=
- =?us-ascii?Q?qoXKIetMVwHsMU/pV2Jl5qfd1PeO305VeoIDvlc1wSSbbF5Y7j7bUxWBxkQ0?=
- =?us-ascii?Q?VtAldRbGQBE9Yu6Xn/LGEcs7YpVSm0886hZurc9IqYxx7dx27pNBqICxQQj/?=
- =?us-ascii?Q?acwV+KbQiNJpb8jLaMAfS67SQ4VsQ9D6UZB8vpWRtHPYdmeNI4GLIwRKcmmy?=
- =?us-ascii?Q?AxiBd962mQo+a5QmrpnsJQ0fbnfD9Oyg8P4ojkE7i+hFdFfH7STgUGaUNHhT?=
- =?us-ascii?Q?kbblDIcwMTZPNm+1+quXLyfnvWW2pNFS6A8wjh2ZT0vO47waOK/onzkUUdr5?=
- =?us-ascii?Q?NpinsOOItDYfCZwrwKxXcHrU/M+NCWYlgrYcvKS3YjfHjGMZQIjh4PayygvF?=
- =?us-ascii?Q?tD+Ia6ndPqovQmuqmYMUYqWE398d770agfrlLOhuNhFrdYkCCC8eYut0vCgU?=
- =?us-ascii?Q?dreWSMFteBczg/dIVCu/7TKj9RnM3/Iafwpg3XeKznNzg2PeerJO+jaDPUVT?=
- =?us-ascii?Q?55V1Ph7WfvrCjkRT824EtgWy6TUS4aWALwO8XUE7NZ7ZDOst0z7cvqgjw9vY?=
- =?us-ascii?Q?mnUnnrl/We9fuDLp0zYeAjKzucWrW632rvKjlhlBhDhSWmxa/kzEOC8pznjU?=
- =?us-ascii?Q?BVUWY66b/ogYAqz54zymV8U7MtdIM8QOE7lAgmBX1maCxzdS2VivawStd+gf?=
- =?us-ascii?Q?jeSCrB7kjse9kgMwgjTrJXeo2Cluu/aN84U9yb9CsFoSjh9HRqivMzpPaglM?=
- =?us-ascii?Q?5G1SH7jtEYtXSGWttV+fzcLPppHgsbAw+aiQ6EZMC+no7enhExYy0bX1NGzy?=
- =?us-ascii?Q?W2fodMLlRM1Nng1qY9q69T3aXrwqGZy/7gwAztifKlV4tPLY6sH1pdm/jshW?=
- =?us-ascii?Q?1J13O12dtagNf2qg0No1DI/XsiqSnzF1fzhv3PNNyUwI2mhRuY0xZlUH6Y0K?=
- =?us-ascii?Q?olXbvCulwHrcHeKm03TleDTaw2XEwbxADMvHfyOGFORwF8jHIqg0WudaofIl?=
- =?us-ascii?Q?iITAZkRWs4sqC5vvPkel8RXfKRAttHc6ZVQzH99C4nSuDpJoXOl5LN8/1MXX?=
- =?us-ascii?Q?Jw=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	ghVj9UEFSkPcSS0znC/GTbd0wKgly9MVy7QyI0uXduplmTE66bwCfO6epcAIE29RU7pvWMfzfi7HI8vKKlv0PQ6+xowSKQnS/OcYrJGV9Rv/hRI6WjR8MwdWD1+gIiDgvBxXv2+nJZxzT47PO3hr1QBADQDb5FDXWcOxxt1tO++aSd5hYGbe+a2T56h3PXLz5PeHTAs4iXJtjt63M3vhFETPjOlytNwE0KY2O6kfoBGVI694vDWVaffrgnL40O9t5fOUOZGNyax+L3qDaqODc8J+ryqxka2XO42iWO5+VprCh5iJb9rxINT47kt/jAQwZkZ/2qRsA0q0nE52HUQuEtNgc3PZBsIrY8X4RoHv0cC6b6JlTZAcx3uxK/w1EeskQDBTjTRxcyR3Ypvh6B3jIPe3f0oHUsYjKObfymiFif+JS+2nD30AAru12eSsPph4ir1LgVCxDR6deXIuuA2octWcu5EE2RMhjhphWCG2rjAKKhfbki4YhUlgqqe0vtdNRe/vkKs4kVHyZQkoulF5EWGy+ccyOZa0XHLU7nohlAYH/VZVdO6XQO809hKifDJ6lUhjaWj6AdloUN0RMsBa4sqlJar7hsVm3ovqBLXLoz0=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 201fc476-6276-4e4b-b404-08dc36f18401
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Feb 2024 17:36:51.0780
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CBAevY9y3iNPxmzsjPE794FUpkrSI8MrDcM5W9lkr5LpW3gSDZhQS3VyJVlWZjt3zoHmhzt0wVBp2PnriewA0Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR10MB6298
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-26_11,2024-02-26_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0 spamscore=0
- mlxlogscore=999 adultscore=0 mlxscore=0 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
- definitions=main-2402260134
-X-Proofpoint-GUID: -SZ7PoMCFaAGtIfoNLTgRdJD7OtHA1c3
-X-Proofpoint-ORIG-GUID: -SZ7PoMCFaAGtIfoNLTgRdJD7OtHA1c3
+Mime-Version: 1.0
+X-B4-Tracking: v=1; b=H4sIAIck3WUC/42NQQqDMBBFryJZd4qG1GpXvUeRYsaJDlgjGQkV8
+ e5Nhe67+fD+4r1NCQUmUbdsU4EiC/spgT5lCod26gm4S6x0rk2utQZZwoTzCl3gSEFAUBjG2eE
+ xT1wAwV2MLa9EZMtKJdMcyPH7qDyaxAPL4sN6RGPxfX/+8i9/LKCAyhpTt1Q7h3jvve9HOqN/q Wbf9w8CtWNb1wAAAA==
+X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1708991630; l=2521;
+ i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
+ bh=JeCxx3c4ppdgFDh3lp6P1rqNUJwDxT9JEo9Mm+GfI38=; b=aI8lYYQTCTWr5poJcPKK8qGIaYaUXNNsUPhPuHz8s+B2GXWwyabkAt5Y93G5bTZHu1TS6wyRB
+ e1Z6lu+bX0RDep2Xlb7/pIjK9b5aqj9hCE2PQ1b3XxtRQKpfxD3hgt3
+X-Mailer: b4 0.12.3
+Message-ID: <20240226-strncpy-drivers-scsi-lpfc-lpfc_ct-c-v2-1-2df2e46569b9@google.com>
+Subject: [PATCH v2] scsi: lpfc: replace deprecated strncpy with strscpy
+From: Justin Stitt <justinstitt@google.com>
+To: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, 
+	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org, Justin Stitt <justinstitt@google.com>
+Content-Type: text/plain; charset="utf-8"
 
-From: Prasad Singamsetty <prasad.singamsetty@oracle.com>
+strncpy() is deprecated for use on NUL-terminated destination strings
+[1] and as such we should prefer more robust and less ambiguous string
+interfaces.
 
-Extend statx system call to return additional info for atomic write support
-support if the specified file is a block device.
+We expect ae->value_string to be NUL-terminated because there's a
+comment that says as much; these attr strings are also used with other
+string APIs, further cementing the fact.
 
-Signed-off-by: Prasad Singamsetty <prasad.singamsetty@oracle.com>
-Signed-off-by: John Garry <john.g.garry@oracle.com>
+Now, the question of whether or not to NUL-pad the destination buffer:
+lpfc_fdmi_rprt_defer() initializes vports (all zero-initialized), then
+we call lpfc_fdmi_cmd() with each vport and a mask. Then, inside of
+lpfc_fdmi_cmd() we check each bit in the mask to invoke the proper
+callback. Importantly, the zero-initialized vport is passed in as the
+"attr" parameter. Seeing this:
+|	struct lpfc_fdmi_attr_string *ae = attr;
+... we can tell that ae->value_string is entirely zero-initialized. Due
+to this, NUL-padding is _not_ required as it would be redundant.
+
+Considering the above, a suitable replacement is `strscpy` [2].
+
+Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
+Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
+Link: https://github.com/KSPP/linux/issues/90
+Cc: linux-hardening@vger.kernel.org
+Signed-off-by: Justin Stitt <justinstitt@google.com>
 ---
- block/bdev.c           | 36 ++++++++++++++++++++++++++----------
- fs/stat.c              | 16 +++++++++-------
- include/linux/blkdev.h |  6 ++++--
- 3 files changed, 39 insertions(+), 19 deletions(-)
+Changes in v2:
+- keep strnlen (thanks Kees)
+- Link to v1: https://lore.kernel.org/all/20240222-strncpy-drivers-scsi-lpfc-lpfc_ct-c-v1-1-20c685bd1b43@google.com/
+---
+ drivers/scsi/lpfc/lpfc_ct.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/block/bdev.c b/block/bdev.c
-index e9f1b12bd75c..bd23f10a425a 100644
---- a/block/bdev.c
-+++ b/block/bdev.c
-@@ -1117,23 +1117,39 @@ void sync_bdevs(bool wait)
- }
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index baae1f8279e0..296d2d4796cb 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -2569,9 +2569,9 @@ lpfc_fdmi_set_attr_string(void *attr, uint16_t attrtype, char *attrstring)
+ 	 * 64 bytes or less.
+ 	 */
  
- /*
-- * Handle STATX_DIOALIGN for block devices.
-- *
-- * Note that the inode passed to this is the inode of a block device node file,
-- * not the block device's internal inode.  Therefore it is *not* valid to use
-- * I_BDEV() here; the block device has to be looked up by i_rdev instead.
-+ * Handle STATX_{DIOALIGN, WRITE_ATOMIC} for block devices.
-  */
--void bdev_statx_dioalign(struct inode *inode, struct kstat *stat)
-+void bdev_statx(struct inode *backing_inode, struct kstat *stat,
-+		u32 request_mask)
- {
- 	struct block_device *bdev;
- 
--	bdev = blkdev_get_no_open(inode->i_rdev);
-+	if (!(request_mask & (STATX_DIOALIGN | STATX_WRITE_ATOMIC)))
-+		return;
-+
-+	/*
-+	 * Note that backing_inode is the inode of a block device node file,
-+	 * not the block device's internal inode.  Therefore it is *not* valid
-+	 * to use I_BDEV() here; the block device has to be looked up by i_rdev
-+	 * instead.
-+	 */
-+	bdev = blkdev_get_no_open(backing_inode->i_rdev);
- 	if (!bdev)
- 		return;
- 
--	stat->dio_mem_align = bdev_dma_alignment(bdev) + 1;
--	stat->dio_offset_align = bdev_logical_block_size(bdev);
--	stat->result_mask |= STATX_DIOALIGN;
-+	if (request_mask & STATX_DIOALIGN) {
-+		stat->dio_mem_align = bdev_dma_alignment(bdev) + 1;
-+		stat->dio_offset_align = bdev_logical_block_size(bdev);
-+		stat->result_mask |= STATX_DIOALIGN;
-+	}
-+
-+	if (request_mask & STATX_WRITE_ATOMIC && bdev_can_atomic_write(bdev)) {
-+		struct request_queue *bd_queue = bdev->bd_queue;
-+
-+		generic_fill_statx_atomic_writes(stat,
-+			queue_atomic_write_unit_min_bytes(bd_queue),
-+			queue_atomic_write_unit_max_bytes(bd_queue));
-+	}
- 
- 	blkdev_put_no_open(bdev);
- }
-diff --git a/fs/stat.c b/fs/stat.c
-index 83aaa555711d..0e296925a56b 100644
---- a/fs/stat.c
-+++ b/fs/stat.c
-@@ -265,6 +265,7 @@ static int vfs_statx(int dfd, struct filename *filename, int flags,
- {
- 	struct path path;
- 	unsigned int lookup_flags = getname_statx_lookup_flags(flags);
-+	struct inode *backing_inode;
- 	int error;
- 
- 	if (flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT | AT_EMPTY_PATH |
-@@ -290,13 +291,14 @@ static int vfs_statx(int dfd, struct filename *filename, int flags,
- 		stat->attributes |= STATX_ATTR_MOUNT_ROOT;
- 	stat->attributes_mask |= STATX_ATTR_MOUNT_ROOT;
- 
--	/* Handle STATX_DIOALIGN for block devices. */
--	if (request_mask & STATX_DIOALIGN) {
--		struct inode *inode = d_backing_inode(path.dentry);
--
--		if (S_ISBLK(inode->i_mode))
--			bdev_statx_dioalign(inode, stat);
--	}
-+	/*
-+	 * If this is a block device inode, override the filesystem
-+	 * attributes with the block device specific parameters that need to be
-+	 * obtained from the bdev backing inode.
-+	 */
-+	backing_inode = d_backing_inode(path.dentry);
-+	if (S_ISBLK(backing_inode->i_mode))
-+		bdev_statx(backing_inode, stat, request_mask);
- 
- 	path_put(&path);
- 	if (retry_estale(error, lookup_flags)) {
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index dee88e27ad59..40b40e49b244 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1542,7 +1542,8 @@ int sync_blockdev(struct block_device *bdev);
- int sync_blockdev_range(struct block_device *bdev, loff_t lstart, loff_t lend);
- int sync_blockdev_nowait(struct block_device *bdev);
- void sync_bdevs(bool wait);
--void bdev_statx_dioalign(struct inode *inode, struct kstat *stat);
-+void bdev_statx(struct inode *backing_inode, struct kstat *stat,
-+		u32 request_mask);
- void printk_all_partitions(void);
- int __init early_lookup_bdev(const char *pathname, dev_t *dev);
- #else
-@@ -1560,7 +1561,8 @@ static inline int sync_blockdev_nowait(struct block_device *bdev)
- static inline void sync_bdevs(bool wait)
- {
- }
--static inline void bdev_statx_dioalign(struct inode *inode, struct kstat *stat)
-+static inline void bdev_statx(struct inode *backing_inode, struct kstat *stat,
-+				u32 request_mask)
- {
- }
- static inline void printk_all_partitions(void)
--- 
-2.31.1
+-	strncpy(ae->value_string, attrstring, sizeof(ae->value_string));
++	strscpy(ae->value_string, attrstring, sizeof(ae->value_string));
+ 	len = strnlen(ae->value_string, sizeof(ae->value_string));
+-	/* round string length to a 32bit boundary. Ensure there's a NULL */
++	/* round string length to a 32bit boundary */
+ 	len += (len & 3) ? (4 - (len & 3)) : 4;
+ 	/* size is Type/Len (4 bytes) plus string length */
+ 	size = FOURBYTES + len;
+
+---
+base-commit: 39133352cbed6626956d38ed72012f49b0421e7b
+change-id: 20240222-strncpy-drivers-scsi-lpfc-lpfc_ct-c-f54b67eeeb68
+
+Best regards,
+--
+Justin Stitt <justinstitt@google.com>
 
