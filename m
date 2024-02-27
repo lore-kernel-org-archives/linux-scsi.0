@@ -1,155 +1,101 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 267D11369AA;
-	Tue, 27 Feb 2024 09:03:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7E1F134CD5
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Feb 2024 09:05:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709024608; cv=none; b=morcscWOzxEsHmRLXQmtqIZycQ8dXXbkC6pV6xs3JzhRKhUAs7qLxcCfenhvUKSu/0AyF7b6E5FxjFXvrML9nnIDKI3kyoZ2YeYv3i+Pm/IrFqdSgLc9xLZZ37WK84ms9/iR9tJBPOhT/Cqm9S9ZAl83tQ42jgde6zC/6Vp+0Zo=
+	t=1709024711; cv=none; b=E8k1lpvg0MIStVE3se4G68Ejo9GF4MEIzJgefxD2UFyYez4RBEHJWL5NUmPqOss5t9/+sYaUIHfCXH10PF1LkllxWd4vapEpBovbcqSwK0uxudZ3aAeX93HNDLTE6FxKWuuIiGgt6NL2rYNiGjdICcRqJ7yMGfoAgQzcuL44Cbg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709024608; c=relaxed/simple;
-	bh=rpAcgDu08eOYArumIDP3NkspxMrhkm+nJ8NzviuOPCg=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BpbnqvzDh1PXx5uTkJRGs3ZwRxncz7sj4ASooTMPXZvPUqQIPL9XYPZvNmbEfWEvfXQzPok4feqi9S9IsbUkLN2J93fo/AFNBzVeLhVR/tzQ0W5++xgivQrH8CM0VqvypsggWOHBoUSUu1ptg07mQGCuInVaQgIJbsClFrZEubs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.214])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4TkWbt2Lzdz1b12P;
-	Tue, 27 Feb 2024 16:58:18 +0800 (CST)
-Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 6FC3B1A016B;
-	Tue, 27 Feb 2024 17:03:16 +0800 (CST)
-Received: from localhost.localdomain (10.50.165.33) by
- dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.28; Tue, 27 Feb 2024 17:03:16 +0800
-From: Xingui Yang <yangxingui@huawei.com>
-To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
-Subject: [PATCH v2] scsi: libsas: Fix disk not being scanned in after being removed
-Date: Tue, 27 Feb 2024 09:01:49 +0000
-Message-ID: <20240227090149.29039-1-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.17.1
+	s=arc-20240116; t=1709024711; c=relaxed/simple;
+	bh=WBe6ga2pwLP2qHgi217Nz+cjjBzoXfuuCdkvtlbLF4o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CT1oB4bjs0TKJhEHpMYz9VkNWqsEPsO7ZThiSNl+JubTXoKqa02NB24NeQJop64z9mTmnYAniPznEHa1igolRtfRaprW1t5gcl5eTPOQiHTtT0TmWqS1WZ23DGVssnZIac3BBu4f8/c9TZLIrq4tMeZMWBIP1sSo4Y4c4vxMngE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=F14Kc37D; arc=none smtp.client-ip=209.85.208.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="F14Kc37D"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-5640fef9fa6so5228329a12.0
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Feb 2024 01:05:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1709024707; x=1709629507; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=rCD6F3e3P3I+Zgk/2guSviAQKEfOfySNcNBt5UHEyXo=;
+        b=F14Kc37D4Num9JJ7X0m0kszo6RDhV8CtzHX4Rj3+1qHBOrIAXjE4MN3+cnUdGFyaPk
+         nTRzOX1QtDxWi+PDZgbqjMQnZFFF0JcCEq3mrUmUbNJ7c43dijsvAtZciq94eP/h8gaV
+         EqtPAaNnrNWoUTTrz7YDTP4JAnXMxHFwtQTGtdV82u/82iS95dI6Qzv13v8IWRLcEzZg
+         aCPN/gaG7CJMODQvIidIMKKFfoBID6rb4nvVPSMZpC5cgDEFJnn6h4yq+0MjkHBubwGn
+         cSL7vetUlu4kRhHgRofrNBSdKFfkjd5CH4H4swtfmUqZn42R/+xuD9CxTL2mpWilYmst
+         uhcQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709024707; x=1709629507;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rCD6F3e3P3I+Zgk/2guSviAQKEfOfySNcNBt5UHEyXo=;
+        b=bfrRt2t+KDZ94GCPQlK2RvZwkTevG9+NsrLDu+7kMqwRswS3E9pH8flzpt1ytn34Xq
+         SPbLmrFOfwPYKT0WAGldd+pFiHwFmhVyCgCZm/oF92ftpClQn+tMhFukeZKrOm2B6J+V
+         9f8wwEuH1I2jdogyG1Ow93CO3WX2JzOEIIswcKg/ZcNq4jKnIiKljJieYRJKq1KJf+7K
+         R9FSW8IoDr50u1r3wNP/1mYfX1wQJWMIOH1hw1WkKUSVSg7PgmYMT+myAquBR2PcSRrJ
+         wMR7aer41/HkdwOEVON0bH05Ki+LDO2f90p3nO4RYV91L+qZR5UatEDWPsOKzab5DAK7
+         SESA==
+X-Forwarded-Encrypted: i=1; AJvYcCWVlw1o+2aAl9+kJguZj5j6yb4EU5w2o4oDDe275xZHB7a3X4A/7VZ2XPZystwZlHTHOb744Yca3GlpYqMX7KjvfmAzsxe20bpmKw==
+X-Gm-Message-State: AOJu0Yw387AXU/tSI93/pQ39mm+pl2zf+UF+s2tRwwivibLpfn+AqetS
+	Bs2DmGmbYuz6d+Uzq52TgDHwhailXUgJJn05jUHAQx3em57Xri2+KMef1a/oCXOnroTwehXP5Hz
+	m
+X-Google-Smtp-Source: AGHT+IGmE8MK4gkN9ZDkWYcSJldVKxnmTp00nCPleWmQ8of4pKV4ikWCBrLzgOeJlaMUry+8f5Wkfg==
+X-Received: by 2002:a17:907:9950:b0:a3e:bd4e:c87e with SMTP id kl16-20020a170907995000b00a3ebd4ec87emr6151888ejc.36.1709024707227;
+        Tue, 27 Feb 2024 01:05:07 -0800 (PST)
+Received: from ?IPV6:2001:a61:1366:6801:d8:8490:cf1a:3274? ([2001:a61:1366:6801:d8:8490:cf1a:3274])
+        by smtp.gmail.com with ESMTPSA id c12-20020a17090603cc00b00a433f470cf1sm552971eja.138.2024.02.27.01.05.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 27 Feb 2024 01:05:07 -0800 (PST)
+Message-ID: <8f4fe820-2385-40e7-a3c6-51102e57acad@suse.com>
+Date: Tue, 27 Feb 2024 10:05:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemd100001.china.huawei.com (7.185.36.94)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] USB:UAS:return ENODEV when submit urbs fail with device
+ not attached.
+To: "WeitaoWang-oc@zhaoxin.com" <WeitaoWang-oc@zhaoxin.com>,
+ Oliver Neukum <oneukum@suse.com>, stern@rowland.harvard.edu,
+ gregkh@linuxfoundation.org, linux-usb@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ usb-storage@lists.one-eyed-alien.net
+Cc: WeitaoWang@zhaoxin.com
+References: <20240222165441.6148-1-WeitaoWang-oc@zhaoxin.com>
+ <3ff16f34-07a9-4b7e-b51d-b7220f08d88d@suse.com>
+ <41daf1a9-590a-e220-84a3-648eb895272b@zhaoxin.com>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <41daf1a9-590a-e220-84a3-648eb895272b@zhaoxin.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-As of commit d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to
-update PHY info"), do discovery will send a new SMP_DISCOVER and update
-phy->phy_change_count. We found that if the disk is reconnected and phy
-change_count changes at this time, the disk scanning process will not be
-triggered.
 
-So update the PHY info with the last query results.
 
-Fixes: d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to update PHY info")
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
-v1 -> v2:
-Use sas_get_phy_discover() instead of sas_get_phy_attached_dev() in
-sas_rediscover_dev() and use disc_resp to update phy info.
----
- drivers/scsi/libsas/sas_expander.c | 37 ++++++++++++++++++++++--------
- 1 file changed, 28 insertions(+), 9 deletions(-)
+On 22.02.24 21:06, WeitaoWang-oc@zhaoxin.com wrote:
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index a2204674b680..a75dcce7a9ba 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1940,6 +1940,7 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
- 	struct expander_device *ex = &dev->ex_dev;
- 	struct ex_phy *phy = &ex->ex_phy[phy_id];
- 	enum sas_device_type type = SAS_PHY_UNUSED;
-+	struct smp_disc_resp *disc_resp;
- 	u8 sas_addr[SAS_ADDR_SIZE];
- 	char msg[80] = "";
- 	int res;
-@@ -1951,33 +1952,47 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
- 		 SAS_ADDR(dev->sas_addr), phy_id, msg);
- 
- 	memset(sas_addr, 0, SAS_ADDR_SIZE);
--	res = sas_get_phy_attached_dev(dev, phy_id, sas_addr, &type);
-+	disc_resp = alloc_smp_resp(DISCOVER_RESP_SIZE);
-+	if (!disc_resp)
-+		return -ENOMEM;
-+
-+	res = sas_get_phy_discover(dev, phy_id, disc_resp);
- 	switch (res) {
- 	case SMP_RESP_NO_PHY:
- 		phy->phy_state = PHY_NOT_PRESENT;
- 		sas_unregister_devs_sas_addr(dev, phy_id, last);
--		return res;
-+		goto out;
- 	case SMP_RESP_PHY_VACANT:
- 		phy->phy_state = PHY_VACANT;
- 		sas_unregister_devs_sas_addr(dev, phy_id, last);
--		return res;
-+		goto out;
- 	case SMP_RESP_FUNC_ACC:
- 		break;
- 	case -ECOMM:
- 		break;
- 	default:
--		return res;
-+		goto out;
-+	}
-+
-+	if (res == 0) {
-+		struct discover_resp *dr = &disc_resp->disc;
-+
-+		memcpy(sas_addr, dr->attached_sas_addr, SAS_ADDR_SIZE);
-+		type = to_dev_type(dr);
-+		if (type == 0)
-+			memset(sas_addr, 0, SAS_ADDR_SIZE);
- 	}
- 
- 	if ((SAS_ADDR(sas_addr) == 0) || (res == -ECOMM)) {
- 		phy->phy_state = PHY_EMPTY;
- 		sas_unregister_devs_sas_addr(dev, phy_id, last);
- 		/*
--		 * Even though the PHY is empty, for convenience we discover
--		 * the PHY to update the PHY info, like negotiated linkrate.
-+		 * Even though the PHY is empty, for convenience we update
-+		 * the PHY info, like negotiated linkrate.
- 		 */
--		sas_ex_phy_discover(dev, phy_id);
--		return res;
-+		if (res == 0)
-+			sas_set_ex_phy(dev, phy_id, disc_resp);
-+		goto out;
- 	} else if (SAS_ADDR(sas_addr) == SAS_ADDR(phy->attached_sas_addr) &&
- 		   dev_type_flutter(type, phy->attached_dev_type)) {
- 		struct domain_device *ata_dev = sas_ex_to_ata(dev, phy_id);
-@@ -1989,7 +2004,7 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
- 			action = ", needs recovery";
- 		pr_debug("ex %016llx phy%02d broadcast flutter%s\n",
- 			 SAS_ADDR(dev->sas_addr), phy_id, action);
--		return res;
-+		goto out;
- 	}
- 
- 	/* we always have to delete the old device when we went here */
-@@ -1998,7 +2013,11 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
- 		SAS_ADDR(phy->attached_sas_addr));
- 	sas_unregister_devs_sas_addr(dev, phy_id, last);
- 
-+	kfree(disc_resp);
- 	return sas_discover_new(dev, phy_id);
-+out:
-+	kfree(disc_resp);
-+	return res;
- }
- 
- /**
--- 
-2.17.1
+> Maybe, my description was not accurate enough, here not add new return
+> value to scsi layer,it just add a case to tell device is gone in the uas
+> driver internal and the ENODEV error code not return to scsi layer.
+> Here just notify SCSI layer of device loss through flag DID_NO_CONNECT.
+> This is also hope to fix this issue in the uas driver internal.
+
+Hi,
+
+sorry for the delay. OK, I see what you are aiming at. Could you redo
+the patch with a better description, like:
+
+We need to translate -ENODEV to DID_NOT_CONNECT for the SCSI layer.
+
+	Regards
+		Oliver
 
