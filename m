@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BC8913B2B9;
-	Tue, 27 Feb 2024 13:39:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECF3813B2B9;
+	Tue, 27 Feb 2024 13:45:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709041198; cv=none; b=dc02aubfzJJO9eiM14PtZuKrHaMVVIXtF/DeSRsp6HQVXKo3mOakoejm0mz2Dc0zvDpDjkVbsp4GMbtDozjMa9pqavYxIPR8Mnfd0No2kvFesmLpLUPbsWnz7Bp+sRTWFv7kdC9g2I1shEeCKPbm58pWJ5e+tcX7/hkZhD5X4lM=
+	t=1709041549; cv=none; b=oCB3yjGoOwiCPbQIV8IQOqWaDjLGHVh6x21ocTMKBRoa0Ft0DfqGE8xnZcKv0qhxSr1gMT3PpaDeEdJAT/h5lPLdj3Dexz6hqSfIEwhCddPyo6rBrScOCUosDlz063/iltQR8znL6xfVR1sttU18EAELsTfNawjX+XuZ6iLJGUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709041198; c=relaxed/simple;
-	bh=YQ0U1V4gvzPe2wvx/qzDZQm6nE8CwWJfxGbxF84iZjw=;
+	s=arc-20240116; t=1709041549; c=relaxed/simple;
+	bh=zgwKldCsW+3XSE2NZ+EPIrDZOQakt6qTyS8tEcDq6oE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gd+LJqA3pgIHIVoGKiwfCdKfrU2OTXqBcNqBBujKeS5SCaXMniIXo3NgYom6DPRCUtXoGsslTXEFaelY6RLi7G+9dkj1Ox4Q21+rHSOc/iNFRBHe6UewCTknzDX+njm3htXwm7xl7NZ2d4tFi9HHF1AbKf9mzhMQkU21ntf/Qw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=uYme2QI6; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=ignin5+qj3//1sJV97sg3w7LHt9Z7xZrvln+IYIUHFFYScZp9zurQDFU/Z1K9sZO6PQXuquaLPdC9bIFBtgjKpc50LdB5yqryKZiQ/ykZzPFVUf2vUY7jbx+gtFmWAeBRl7EE/LhappUrC8vbiXc81nSk4amUl8tu+nrvAwJk7E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=aXmoo5Il; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="uYme2QI6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0CB1C433F1;
-	Tue, 27 Feb 2024 13:39:57 +0000 (UTC)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="aXmoo5Il"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E6A69C433F1;
+	Tue, 27 Feb 2024 13:45:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1709041198;
-	bh=YQ0U1V4gvzPe2wvx/qzDZQm6nE8CwWJfxGbxF84iZjw=;
+	s=korg; t=1709041548;
+	bh=zgwKldCsW+3XSE2NZ+EPIrDZOQakt6qTyS8tEcDq6oE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=uYme2QI61LqXar1R5WGcjAFAu43UY3XOqMTf4lXu7FP2KVtAbmCd7fTW6yFvoVUSm
-	 B7zhVVaetL20jq4WKlg00u2p8iG3Qcod2Aw4Iui77ZhPVdNLQiEqdxkpV2ZuV3ZQWT
-	 WNxkQwV/ABvryCt/4Nl/w8FbENfj2gFq+9hhjMb8=
+	b=aXmoo5IllGqhjr8sA3DUMukIHsvnp8HBHFnMsITlGYSy+xBrayiNxJchLeUhh84tU
+	 WklvVXEYL2WCq4/ZwtjCQbeWkRy6lDjCZZSOuEyjngz9sQqIBqwq8I0/UbkNqWWL6E
+	 D845N9sDQF7InHUdV5FK3hnwpjPTUngqwz2gcWyM=
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: stable@vger.kernel.org
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -39,12 +39,12 @@ Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	Geert Uytterhoeven <geert@linux-m68k.org>,
 	kernel test robot <lkp@intel.com>,
 	Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 6.7 256/334] scsi: jazz_esp: Only build if SCSI core is builtin
-Date: Tue, 27 Feb 2024 14:21:54 +0100
-Message-ID: <20240227131639.175856705@linuxfoundation.org>
+Subject: [PATCH 4.19 43/52] scsi: jazz_esp: Only build if SCSI core is builtin
+Date: Tue, 27 Feb 2024 14:26:30 +0100
+Message-ID: <20240227131549.944152047@linuxfoundation.org>
 X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20240227131630.636392135@linuxfoundation.org>
-References: <20240227131630.636392135@linuxfoundation.org>
+In-Reply-To: <20240227131548.514622258@linuxfoundation.org>
+References: <20240227131548.514622258@linuxfoundation.org>
 User-Agent: quilt/0.67
 X-stable: review
 X-Patchwork-Hint: ignore
@@ -56,7 +56,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-6.7-stable review patch.  If anyone has any objections, please let me know.
+4.19-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -94,10 +94,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index addac7fbe37b9..9ce27092729c3 100644
+index 6047f0284f73a..5c3635378c321 100644
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
-@@ -1270,7 +1270,7 @@ source "drivers/scsi/arm/Kconfig"
+@@ -1252,7 +1252,7 @@ source "drivers/scsi/arm/Kconfig"
  
  config JAZZ_ESP
  	bool "MIPS JAZZ FAS216 SCSI support"
