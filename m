@@ -1,221 +1,156 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F58140845;
-	Wed, 28 Feb 2024 18:13:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709144041; cv=fail; b=ulH+hs35oW079hDYT8FH0cjdPjW42punAznW5yOOsFS1Eq15xP8WHfYgUWaTVqeCYLlbnqyVsVOSPeu0HDJv/uJQONc35xpspc00TiF8vdGI4Qp2Apgub/Owo7JUnz5RQGAs7MSiqTYO/62CXXWvxtRIzoanjJbjgKpUQ8y5O8k=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709144041; c=relaxed/simple;
-	bh=CGWZeUYqwRGqr1kd963pIPVPdb9T8qNDhjZbUlP1zGU=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=D9IchvajCmN+EatviAiY4XVwi09oEcxnRTORUbTmjQKNzz3Y9Qz4oafQdHiYl+apuuxXDihnbfsThZd+LIPJXLdeSLgttGO0p+cWj3l6Camk+DJYLahwFXtCXKjPun3o3pPgfHVlDqDBmT8IHhoX7/TrBH8fFA8n6ZTfsZo8G90=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=ftZW5gsk; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=TtVBqMTQ; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5389C40843
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2024 18:21:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1709144474; cv=none; b=bzNagMdgS3OOlyAk4NH6azlQmCvjj2tmUq2NlSyr0OyYW7rMAy1dvkHz6WjUGAjTq88nHUGNgTjusYBhcCAfQVu8EjULdQJuqj0ooIvcu7lhR82hnE8bDYwEO7hZ0t3wt+n4nVN5YQKPywFpE/3qFIv/20/48wc+Lzw/DoJ1Wz4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1709144474; c=relaxed/simple;
+	bh=IlLz2VfIORUGWPlRUuhRJlF7DR2TU3PjgeFfLjigpBU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lyKnuoCu3ba7EPVeH2KtXKguQ/1jX0YYpLSpRKm0p4lSTD2GM0UDdWl7Oi6Gj8/D3h7sNYGG9UvnL5omV+P8QeJvIBlb8YrBMh5gAi+2y2mTi6TDvACD8nfQ7kjRSyZP7oXImyntLL0IG+Dps3Jqu0QfiUOiIUq/wrMFqOeiI44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=YLaLKLZx; arc=none smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ftZW5gsk";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="TtVBqMTQ"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 41SEJweC013144;
-	Wed, 28 Feb 2024 18:13:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-11-20;
- bh=Y1kSgCPucJQSeUKyIx+OqALG/CVDY4d4+Oqq1cl+QzE=;
- b=ftZW5gsk5TIAGTILV07PPnvQ/q5wazzNEOAZ5FcN0aLPlzd9FtAU3z2lhg70guzrdiS4
- W4lY6bJ3wkr9shiMFQqKI2OVLvLMbht5QTfjGQG/TgKuFLJj5YmJlanIyR/y4sxOZtyF
- Tlz2QOrqBhQQc24o+6w/TrJLbzll1+UJ2MgCeBe1lVc+G7RGdokiT61xUgAvF+O5v7iD
- pQZJ4L9BNcXQCE4mu//02eNkeiqxjo/0JzyQ0AhcgoLL1Lq+26txJkqL6+UV6KejW19h
- jqCSy+Vi66m7eE53Np57+qb6DL7isiikIe2poTvCKl6N6gwN5zTfMCDOYrW2KoWv6GRy 1Q== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3wf90vb1tj-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 28 Feb 2024 18:13:38 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 41SI4BlX022687;
-	Wed, 28 Feb 2024 18:13:38 GMT
-Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam02lp2040.outbound.protection.outlook.com [104.47.56.40])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3wf6w9khd9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 28 Feb 2024 18:13:38 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VgQjN+q8QedMLfuDf+PFe2E+0p/wjshRfjdCeMzpHjWia6W6+7R7MGREhu93hh33G12wDn+6ezDOTACzzru9RA+rn9j8jQ4Pqpi+NYYVX4Yyk+AC7r2LxZODf2SuGOcemEg+07Gj6MyD3ukrllyrEVf2oARk73PwYKFHSda41HIw3kthQKSzLthFQbkKXfo+gK2p2g0ewFhW6NjbDBCDrPNZ2zKnD0DFI5WslPjRPs0hTUEtyA/7AcfOpouNSar42TqdC5pj/Z9oIPv6Qyb2CP/1GP3P5aYv8YQbdu3f6tCaLurbTzBJ/SZNSwYPlfcatN2KibcbYK8zsCFaFtLEmA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Y1kSgCPucJQSeUKyIx+OqALG/CVDY4d4+Oqq1cl+QzE=;
- b=ZPZu4Tb3534iNnTS7NSyrtfjduqJb0qfXNl/2DQ6+kPtv/U9dW4IhNAHgw+r++SjvPozywvlYBBnA8KDkllnmFRuOwHY72ZP2Gr/JLVRe/kXNCkA6ITnS86xWJlmxzZ+AVo1DnEFyiGmq6DyID1jNBrH4UB502Q0Gf+JWLSg5ERdX9ncLgQ5oKxlgwBcHCaTG8zAqColfLwY1luzBzyQp2porTLoEJNsW6gXWwJDu6JpoIRWN9w4thwQD4W1ZysQXjhCK9UVAWWIC6d+iVSQpgRl9Ytp7a1GpXOVphvIvqghZ8nwriv9o7rc8Gsl9v3zTX228+RNGpeSA3hGT187Ng==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="YLaLKLZx"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-563d32ee33aso119759a12.2
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2024 10:21:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Y1kSgCPucJQSeUKyIx+OqALG/CVDY4d4+Oqq1cl+QzE=;
- b=TtVBqMTQUWsY5Eittq9IdiSWLLG9WvWVYc/4flfv2mBQWDV8oJj3ugFe3g3rD+BY5tIIYgq/sbAq/DatnFgWP+xTu7bnrPVkoA6vqcxZLg3oIp9ZR+chNHcVA9TJ8Bg67/CDnQcHiaTGg12FI053B3cYsfdg3fGsp73/CwgocxY=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by SN7PR10MB7002.namprd10.prod.outlook.com (2603:10b6:806:344::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7316.39; Wed, 28 Feb
- 2024 18:13:13 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::97a0:a2a2:315e:7aff]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::97a0:a2a2:315e:7aff%3]) with mapi id 15.20.7316.035; Wed, 28 Feb 2024
- 18:13:12 +0000
-Message-ID: <f095aa1c-f233-40f9-ad0f-fcd8fe69a80d@oracle.com>
-Date: Wed, 28 Feb 2024 18:13:08 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: libsas: Fix disk not being scanned in after being
- removed
-To: Xingui Yang <yangxingui@huawei.com>, yanaijie@huawei.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com,
-        damien.lemoal@opensource.wdc.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, prime.zeng@hisilicon.com,
-        chenxiang66@hisilicon.com, kangfenglong@huawei.com
-References: <20240221073159.29408-1-yangxingui@huawei.com>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20240221073159.29408-1-yangxingui@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO4P123CA0401.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:189::10) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        d=suse.com; s=google; t=1709144470; x=1709749270; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=F0Q2VEWLTjS2U6IhLhs8VN1l8yd5YlaS/zs5Osz7AKY=;
+        b=YLaLKLZxbZLjz0J1yQCaZVSkRbl4dTTrln5e8BLQBYvNqooIrzhbVXTT5aVj2u2DJg
+         gvc4IfuAJZFQSbaByKXEwO+GDn/EVQSaTRm+gillpDSwGDCukQQvfk9xUWVk7EQC704e
+         1E1ddx3yrYhm4GdlmzCVjEi9FS28uIyjHCchfc/X36XUQSPck9yLZWlMXp4VXETZOt9d
+         5cx2feuJFAVZfT5OpfZ8SzW+WboNCNjKJrv6stM8EnTqJgBJndbljy21eP2mMastbOOU
+         EyXzvAhc7KfwW6mYc1yx2Bbc+bJ4lBoBYcIePoHVGgpk4jsTclRXytzD1RNF3FYRy1dz
+         GGDg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709144470; x=1709749270;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=F0Q2VEWLTjS2U6IhLhs8VN1l8yd5YlaS/zs5Osz7AKY=;
+        b=LXcdpdgzPEpSekeFS4CQ+kApD5a9kUoG2rUPaPKeB+7iA+HCZhJAFtylcyP3neeIKP
+         He1y7g23McnU1YgkLbp9e3qfG/d8nLkJ72/7MFhXwasFRW4DV2tUfy3DOi5ayP7072Jr
+         dksDqkjt3P75YGbYhy+TvvraDStgcnUxjd9kLChJa/t4LESm55WGkpLp8bWcqB+Cmf88
+         NQY/s1OpcmdXyZM7MB7ZPOaMGuW0fCybJxgudc+QA8jzZL1gEbKA8u219a9toB/RCw6A
+         aQ10l8n5hKKBLMr0FyNF8WglqaSQ19+/oL+PD37INFBqQ3hzOfq7wIG+44Bw1tvdAnxk
+         SDDA==
+X-Forwarded-Encrypted: i=1; AJvYcCVq9ph+aEcyFKvZzG1s+qU+P/IyhFUo5FjaBwSE6hZKQ5X8zKW01t8n3RMeXqM4NQMYnoeIggmBQ2lzp0RHOYrvKZYRKtxsjCETGA==
+X-Gm-Message-State: AOJu0Yzqd+ePS6gygVQyNvK66HPdcm97nu9eVW2UaQJiRJU4MW0x+vF6
+	vWn8r3DxmwyFogpRfFxNBu/771m2NBcK5ZUy36aClnlrNNy3C4DoxKpE2K2V7lUW/qeLdsbAHaM
+	1JRUn0mznXSwKqDX4h3570wH2sTtuqgfXq4kGrA==
+X-Google-Smtp-Source: AGHT+IGxdXWls/rPfinB0uQQkXKmMgc6r4kLOeAWFd8I9R7QhkQU4gee2PUX9KLBptb/Pw4yWIXjq4Yzyd+hFDFrqcY=
+X-Received: by 2002:aa7:cfd1:0:b0:564:151c:747a with SMTP id
+ r17-20020aa7cfd1000000b00564151c747amr150661edy.27.1709144469812; Wed, 28 Feb
+ 2024 10:21:09 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SN7PR10MB7002:EE_
-X-MS-Office365-Filtering-Correlation-Id: bc9f6b1e-b701-4901-ec52-08dc3888ed32
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	zYlvqNVOUaVfqWb3G1qHBr0us/4FEddxsphKge6RUzZhdAolBvNpiGgAjDT7aTQbaVxePEws814kE0thm2lkBjt6JURhpOTN6f6h2W3+pB+pRuoddl4XK5hctihmxP8OBe2Ov0vm5G/zmLnR81l68ldVOz8eEDpk43OEXSlCCFoJqnMcOWthoib4NP2IyGJiUAq/RqPJCCd/treVEl2Z5PFECf/BIz+zFU7IaHhO5q7cL41FfqQjITHUbSVu9Lb/IFMAQunDWAEQOCQ5CL/Uyq24hNRQ0tZL447KTf6UJ9ZivPGLgMvf/eSXqjE1kqaqsvvsP10OnLe4dwUlb6CtUQgpq21zFTjuAjHxm+HSR7GA/r2/prdxqoI3dQ4qVtHz2Pr1XT0j9fI2wpWnsQEBg1XKZZi5quQLgfjOoc85KgTwpFAP89pSplJVzWw1+3nuj98IrSILqpirGHipKBBnzFfIS4GBWMV94Dzx4yWRLjK0eDk4YodjZYp4Xa+Xh1A5PuHjm+q2w/Wz0VO0kY125oP9ltabtITW22GbvvZtq2+BRqZiz4+63U0N8bLs/pYxxq1TNEq4iW11YIjVryHT8aXya99w/FUnfil3JSr77oOGeceHdi+Eyoo4xy2wZTynmJf94jprUxEiB3fSW0FpZA==
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?RHlFcWpCVGthbzJXVnl1a0VqdHZBby9UamJlT2s5SzJPQThMZ3lad0dFL1NZ?=
- =?utf-8?B?aW1SZXVGRkdNbDlVNmFqd050dThqejVqT2IrdzBDUnRKU0VEMDR5TysrelBF?=
- =?utf-8?B?cFNnK1ArMVJFOVhkNndSUDBVYTcrMlBIa250VmZ1SUMzajJJUFBpamQ5aTVD?=
- =?utf-8?B?M2ZzZk1LWHN0emIwYXQraHJqK2ZkNFZPMmoyZ210cWhtSUpEZWtmOFplNWZz?=
- =?utf-8?B?ZmtaQlFvWmJJRldrRUM4RUxpaDQ3STJQQ0N3L3F2Mlgya0dtcCs5MnZhUUlQ?=
- =?utf-8?B?bzhUU0FKdU5yK0FaZ01wMmsxQ0RycWM4aTROanJBVnZWRnc2UlhzK2IvYW5O?=
- =?utf-8?B?SzFCcy8rZDJuOUNFS0I1YVM0amdZdjU5OUhlSzFMeEhuYjM3b2ROc3BKWmVS?=
- =?utf-8?B?L0laMWk2VVVZbytBRitDMUkxekJFVVBxRVFJUDhNd2UvQWtsUmMvbVhDY0dM?=
- =?utf-8?B?TDNQUkVKQ2JHMW1TR1hBVU9rT1kzVnJROTBCdTdhS01Vd0FzeDd2ZXNQZjdV?=
- =?utf-8?B?akdHc3RZTWRIa0orM0JNOEV5YmtLWWhTVjg5cHBXRlhjczU0TWxiTURWUzRX?=
- =?utf-8?B?TlllRmtvMy9GOFNTL29RQ3ZHUnRjY1N3NEdnbjZrT09TY3lxUVZxaFloRVpH?=
- =?utf-8?B?c05mR2VsMXF0YjlHeXU0TVZvbUppZDV5aUR1d2VqRXI1eDNlZVNQZFREKzdJ?=
- =?utf-8?B?bXdLNUlHZmRUdm1URjdkSnhSMk1YQnBBUWRiR0pUV0VyT29xMW1yRnhoRnpX?=
- =?utf-8?B?d3d1dHFxYVRYM285elRSaXBYOTRUMW9VcGdlMDJ6cFloZU5yczU1SkFkdTZX?=
- =?utf-8?B?WUZ4MHg1WDY1UkRXS0oraFlnbGVhYmZjaUhuaDNqR0dRSjRtc3Y1U3VhYmJW?=
- =?utf-8?B?S3RXVlZYL3VYSUNMU2ttNThvR2ZVcTR3dVJDZWlBdzN4bUlTaTN5MXZ2UVVO?=
- =?utf-8?B?U3hNOHJ5SWdacmd4SldKQVJrUkFqYlRndjFMTjlKVnlyUE1NS1BiWERLTmdl?=
- =?utf-8?B?VGg5bVJDWFlBdzdweE5xK0YxdXJmR1ZzSzFrNkRXdzFnK0hRK2x5bzgwdnFH?=
- =?utf-8?B?SnRXY2hXY1dyTVpvK2p0SkRQdzRMRldUck5iNHJxbUpvRmVQTW5XRzU1TzNU?=
- =?utf-8?B?aGFsOHgwcUk1VlVUUnMzanZkcFMvZ0NLbjFaZ1pzbjZwekppVVZZb0Yrbksr?=
- =?utf-8?B?ZUxJeWc1ZEIxMVhjckJpZnoxVWhFT1NTSWVOTmR0dVIxaU1CZUhjQzBvT3Qz?=
- =?utf-8?B?Qms1emlrUGpqeTRXRUhzRGlxSGpzL2pncEkvUUlRdVhCUWR0bWEybjNPNVJw?=
- =?utf-8?B?aFQxZ2hTc3R1d0E1MUlJVEtKQTBQYjY0WGxDTXZmaFZVM24zZFhNR29tUHJO?=
- =?utf-8?B?eHZVSnZNTk9aTmhtYVB3WlhubndUL1dsVGI4RnF0b3dxQWVZaEprVHJNblBi?=
- =?utf-8?B?VkFuaUFOZU1UY0lBNnNRUjdIakxydUd5OU1tUGF6L1psdkt5TkxhbzBpOUpq?=
- =?utf-8?B?MlRLTEV0ZHQvSXNtQUwramV1aXp1MTlHOFV4U01jdjN1eGtwVFZrbVVvWUdZ?=
- =?utf-8?B?aEYwdzlHK1ZQUUJIWVhGVW9mQ3NXazFNM3pFWDQ3Q2tod1ZUM3hxRXI1VFdT?=
- =?utf-8?B?Sm5xeUU3b0FwZVdXWjI0cjNFcmxpL0RJSXAxS2VtdWRYRGZmZlhSTzVJRWdI?=
- =?utf-8?B?UktJa1k5ZlJSUVJlbWhRZThicFJ4bTBzRlp2ZFQ2bjBEK2wzWEZUTmVLYmU1?=
- =?utf-8?B?VjRSWXpVeHR5RDEwUUdReWZMWlRXY1dreHVXZFY4K3N3cEZxM1NmZkQzUUhq?=
- =?utf-8?B?M0JyUk1ZTnNHeXJRZStjeWlUNy9NQjVqbWZwTlFDR3FtZ0tQQWVTWENFZlgr?=
- =?utf-8?B?QWlJVFNIeEg4N2lzbUhKdGQxZmJOQUwycGp6UmlIb2RUdkR5RzVjY1ZscHV2?=
- =?utf-8?B?dTdNR1RmM1d4MC9zVEM4OWkvU2c2Q3Y2RStESnZrR0dRYUk4Ujg3Q3BsVDAw?=
- =?utf-8?B?MzU3UFV3azhmZFlOMnNJdFhWNU16VWp1VURuaEU3U3RDam5DZENDUEpXNXAv?=
- =?utf-8?B?QU5CdE5VRFhla3RjajdzYlp2elM2RkJISmF4VDZjUG1XQm1uNkdrZTg4MVNt?=
- =?utf-8?Q?NOf6+td1Y9/fAl/6QZAaFb82r?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	trjVLOvsXHfOpCBw00NuMJmdiFXJcZN81jS4SxE8OYE869Ucq5lOf8AkdLVJiAp9xobIygqKvW6SwRCns3yqimDiQ0Xd81L495wW5jq+Um8LyQUDGVP+Phz5WOZkznOlR34vaq8279u8V58kjZ5p7Op6TZVhI0qnYQRONdrwJJVcaaMaNpwa706NZpcNnxjGxvkjUfLfWji/Ff2OE5iZ6Bi0oN8G41Gjp7wwTltKixi7H66onlH+Drg6s81p5Jvptdf/7eg9gzQBZqO7VL8xvliN3PIwQeHdDO+THtounpjNW0wdSVBH49COB+9+R+dgk9CTI5INZRsC3FOWxrViuMf3CtamcuNHHe3tAHu/McW3ERteb1cvnEtTEAmdtrEw1WX3zq+NypfrHqB8QpLQViniWaCxvdmGDl09Hie7QOmqa9LCqeGL3ZKGPfEJ8wPoxfx9989s9iPew15Viorff4n15HrWdp44lh8zP7gSL4IYDjJl2WGpW9K274sOGEvAzwaYYtv6CMI5rrihjCYiDDWZ7cIoeJjCHy9NX5yMepccscxmNNmUkjaLOQ/Yb3H6/DrPFBdvBwDPyEAGsNkeeD2eNn9Tr01tMUK7IEQO5L4=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bc9f6b1e-b701-4901-ec52-08dc3888ed32
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Feb 2024 18:13:12.8398
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CNATXLe88AIVWho0QyJhUvQdxWsVp1612f3JNw9BCjMsYFGfYToWOt8qnRWcsM5Dv5s/izsj0eWw+IVdkUFpIA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR10MB7002
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-02-28_08,2024-02-27_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0 spamscore=0
- mlxlogscore=999 adultscore=0 mlxscore=0 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
- definitions=main-2402280144
-X-Proofpoint-GUID: 9PguZkiM764zsirtvijkwLdIziMH-6Wv
-X-Proofpoint-ORIG-GUID: 9PguZkiM764zsirtvijkwLdIziMH-6Wv
+References: <20240201233400.3394996-1-cleech@redhat.com>
+In-Reply-To: <20240201233400.3394996-1-cleech@redhat.com>
+From: Lee Duncan <lduncan@suse.com>
+Date: Wed, 28 Feb 2024 10:20:58 -0800
+Message-ID: <CAPj3X_Ve4WgwCdzXiNSC+3ejsD9yc=586=g9kY_zGZXBREx7fA@mail.gmail.com>
+Subject: Re: [PATCH v5 0/4] UIO_MEM_DMA_COHERENT for cnic/bnx2/bnx2x
+To: Chris Leech <cleech@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Nilesh Javali <njavali@marvell.com>, 
+	Christoph Hellwig <hch@lst.de>, John Meneghini <jmeneghi@redhat.com>, 
+	Mike Christie <michael.christie@oracle.com>, Hannes Reinecke <hare@kernel.org>, netdev@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	GR-QLogic-Storage-Upstream@marvell.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 21/02/2024 07:31, Xingui Yang wrote:
-> As of commit d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to
-> update PHY info"), do discovery will send a new SMP_DISCOVER and update
-> phy->phy_change_count. We found that if the disk is reconnected and phy
-> change_count changes at this time, the disk scanning process will not be
-> triggered.
-> 
-> So update the PHY info with the last query results.
-> 
-> Fixes: d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to update PHY info")
-> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
-> ---
->   drivers/scsi/libsas/sas_expander.c | 9 ++++-----
->   1 file changed, 4 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index a2204674b680..9563f5589948 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -1681,6 +1681,10 @@ int sas_get_phy_attached_dev(struct domain_device *dev, int phy_id,
->   		if (*type == 0)
->   			memset(sas_addr, 0, SAS_ADDR_SIZE);
->   	}
-> +
-> +	if ((SAS_ADDR(sas_addr) == 0) || (res == -ECOMM))
+Is this series stalled?
 
-It's odd to call sas_set_ex_phy() if we got res == -ECOMM. I mean, in 
-this this case disc_resp is not filled in as the command did not 
-execute, right? I know that is what the current code does, but it is 
-strange.
+I believe the main objections came from Greg earlier in the series,
+but I'd gotten the impression Greg accepted the latest version.
 
-> +		sas_set_ex_phy(dev, phy_id, disc_resp);
-
-So can we just call this here when we know that the SMP command was 
-executed properly?
-
-Thanks,
-John
-
-> +
->   	kfree(disc_resp);
->   	return res;
->   }
-> @@ -1972,11 +1976,6 @@ static int sas_rediscover_dev(struct domain_device *dev, int phy_id,
->   	if ((SAS_ADDR(sas_addr) == 0) || (res == -ECOMM)) {
->   		phy->phy_state = PHY_EMPTY;
->   		sas_unregister_devs_sas_addr(dev, phy_id, last);
-> -		/*
-> -		 * Even though the PHY is empty, for convenience we discover
-> -		 * the PHY to update the PHY info, like negotiated linkrate.
-> -		 */
-> -		sas_ex_phy_discover(dev, phy_id);
->   		return res;
->   	} else if (SAS_ADDR(sas_addr) == SAS_ADDR(phy->attached_sas_addr) &&
->   		   dev_type_flutter(type, phy->attached_dev_type)) {
-
+On Thu, Feb 1, 2024 at 3:34=E2=80=AFPM Chris Leech <cleech@redhat.com> wrot=
+e:
+>
+> During bnx2i iSCSI testing we ran into page refcounting issues in the
+> uio mmaps exported from cnic to the iscsiuio process, and bisected back
+> to the removal of the __GFP_COMP flag from dma_alloc_coherent calls.
+>
+> The cnic uio interface also has issues running with an iommu enabled,
+> which these changes correct.
+>
+> In order to fix these drivers to be able to mmap dma coherent memory via
+> a uio device, introduce a new uio mmap type backed by dma_mmap_coherent.
+>
+> While I understand some complaints about how these drivers have been
+> structured, I also don't like letting support bitrot when there's a
+> reasonable alternative to re-architecting an existing driver. I believe
+> this to be the most sane way to restore these drivers to functioning
+> properly.
+>
+> There are two other uio drivers which are mmaping dma_alloc_coherent
+> memory as UIO_MEM_PHYS, uio_dmem_genirq and uio_pruss.
+> These drivers are converted in the later patches of this series.
+>
+> v5:
+> - convert uio_pruss and uio_dmem_genirq
+> - added dev_warn and comment about not adding more users
+> - put some PAGE_ALIGNs back in cnic to keep checks in
+>   uio_mmap_dma_coherent matched with uio_mmap_physical.
+> - dropped the Fixes trailer
+> v4:
+> - re-introduce the dma_device member to uio_map,
+>   it needs to be passed to dma_mmap_coherent somehow
+> - drop patch 3 to focus only on the uio interface,
+>   explicit page alignment isn't needed
+> - re-add the v1 mail recipients,
+>   this isn't something to be handled through linux-scsi
+> v3 (Nilesh Javali <njavali@marvell.com>):
+> - fix warnings reported by kernel test robot
+>   and added base commit
+> v2 (Nilesh Javali <njavali@marvell.com>):
+> - expose only the dma_addr within uio and cnic.
+> - Cleanup newly added unions comprising virtual_addr
+>   and struct device
+>
+> previous threads:
+> v1: https://lore.kernel.org/all/20230929170023.1020032-1-cleech@redhat.co=
+m/
+> attempt at an alternative change: https://lore.kernel.org/all/20231219055=
+514.12324-1-njavali@marvell.com/
+> v2: https://lore.kernel.org/all/20240103091137.27142-1-njavali@marvell.co=
+m/
+> v3: https://lore.kernel.org/all/20240109121458.26475-1-njavali@marvell.co=
+m/
+> v4: https://lore.kernel.org/all/20240131191732.3247996-1-cleech@redhat.co=
+m/
+>
+> Chris Leech (4):
+>   uio: introduce UIO_MEM_DMA_COHERENT type
+>   cnic,bnx2,bnx2x: use UIO_MEM_DMA_COHERENT
+>   uio_pruss: UIO_MEM_DMA_COHERENT conversion
+>   uio_dmem_genirq: UIO_MEM_DMA_COHERENT conversion
+>
+>  drivers/net/ethernet/broadcom/bnx2.c          |  1 +
+>  .../net/ethernet/broadcom/bnx2x/bnx2x_main.c  |  2 +
+>  drivers/net/ethernet/broadcom/cnic.c          | 25 ++++++----
+>  drivers/net/ethernet/broadcom/cnic.h          |  1 +
+>  drivers/net/ethernet/broadcom/cnic_if.h       |  1 +
+>  drivers/uio/uio.c                             | 47 +++++++++++++++++++
+>  drivers/uio/uio_dmem_genirq.c                 | 22 ++++-----
+>  drivers/uio/uio_pruss.c                       |  6 ++-
+>  include/linux/uio_driver.h                    |  8 ++++
+>  9 files changed, 89 insertions(+), 24 deletions(-)
+>
+>
+> base-commit: 861c0981648f5b64c86fd028ee622096eb7af05a
+> --
+> 2.43.0
+>
