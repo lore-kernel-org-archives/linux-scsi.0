@@ -1,98 +1,110 @@
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga06-in.huawei.com (szxga06-in.huawei.com [45.249.212.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A5BF1487D8
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2024 13:02:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06AAE149E0B;
+	Wed, 28 Feb 2024 13:13:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709125371; cv=none; b=uJiDPSgTISpbeb1h+TvZgG4RbjY+r5Uh9YWDEtL9q9ZxNAJCNASrIopnoz+++FlO3z8Wmy8CdLFuDbB6XTUlxQoCOpUSW2kmz2aAa1F9E0rFdYMNHuRXlrAzePLP3ndE7mx+bECjXO4uTJQl/blixqhKHofwMv7QXiKOUqes3lA=
+	t=1709126037; cv=none; b=ZdP5ak93nlT60V92o77ZoU8oIkDghEBijn7mqLlqkHn4gp2r7d1r5iiFVwll1XlxBX0Lgb0L1o24gWYacaGc6z6VAXdFFbZPrXiejqxb0VdeTPN/IMGtwcoplA6rZ/EEE+YN94AHge2QnpZzzUqXfYYS6CTOwd9KR7zZymM1LRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709125371; c=relaxed/simple;
-	bh=3cYG7GaJLaJHPFKTz6+fE0NqWzsbSwHco8JoDUKQEQY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hsFA9eCN8PMGTKqHtZG5PoncsHzaXVwcxPIYuwHwO8M9XduQFRv9rRaGEy4hpmcUxBh/MdxCJD2n//JxNn3K9aZ9Vv1htfOuz7r5PZ6+xWECIqGv9WRt8Dswx69uZzZ4V1h7PSmRiWgayhHp5lfvlsNgUwQqH7D4l90pSqJqYA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hCg28rL8; arc=none smtp.client-ip=209.85.128.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hCg28rL8"
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-608ccac1899so50857747b3.1
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2024 05:02:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1709125369; x=1709730169; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=x6lSKguAFNJlnGwYnPcXJDGp7aYh6GWsOXe6nAyiYVg=;
-        b=hCg28rL8oQhsqzK4oYJZsSxvYvmljTITpK5k0wS+vfNH+vKG9z8H8l5pp4r41mYF+9
-         p510o9l1WIA8Wm7T2r7h9/mLz4CKHFsNRJMgKj+qmuxzkae8EV6/HWFyRNPzuPZ9SmEV
-         ZIRGSRmM2X1v7AVwcX0W432l6Y7VrBQ+JpLoXLVyFEhXIECUyUfUSsGZweEpmqQBbJnS
-         npv0fQnT12bn58e6iJOQuzd/Lyyz8WvczN9nn8lQMSlDEZi7u/6/Z/FFB72Dh9XxQ2Jh
-         ArmuL0uyavKLdZorcCRUuOASszDvpDEzvOjBs6U/pgfHnSXTdEo5tqmNGwpzdrmOBbie
-         C27Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709125369; x=1709730169;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=x6lSKguAFNJlnGwYnPcXJDGp7aYh6GWsOXe6nAyiYVg=;
-        b=vbYQ7WX7Oh6ICL+g0kOWcTf0mX8fs6/uebxRKqx/NpqkN1XeCTGGACc6St950HMdmH
-         7bzCyiVEzts3ZaUDJWk0uqiE4PtjCSNKTsJiXiolCQVv8nLQIHfI5kf9CrxRAHiuZe+r
-         hrLEV8Ht/5zzVSHbp2zMTsKvi6s95wgeQXOk753ntpLxx1zu8ITiGLSDZokWp2cFqMhW
-         5poZWtZqurIWJYHFWSMh+QPsWfW7isJbAjJgByAxXWmUhr2oV9vXXORX/sJ34y/fmOjf
-         AwsMaIbKyJzXq6IVR2akV8iD32WlfNmOjiIqLEppYoTY44v8WDvelrKtQIkc71Hiogud
-         6U4A==
-X-Forwarded-Encrypted: i=1; AJvYcCXMuquR6ihyojvdm+uLpsIvNtXOMeGUbjg4VR7x9LpOqMK8sG/aOwgAqD111T4iYpQit3JYcC5eobhytSZIrRSJZOID7OrirAJwxQ==
-X-Gm-Message-State: AOJu0YxxIDDW275LSDMEH3R3JttKDwEDOX2FfcAKkUzm8rnFX7/7Dp5A
-	Fc52QZZid6/2BjFS7kfuzbaSHWEri1tsjOpfrWw94X+xIMfxZiPpJp3JdSCdbVLri8rgNHpoO3K
-	oNS53UtA0cyPDT/3QjVbCZKF2emIHrpQ/YT3Wqw==
-X-Google-Smtp-Source: AGHT+IHt515XwjEFX2Talx1MabYfeTXhLsH0vACvt9NK8SBc6/4ePgqNHrqmsK6WApAXc6SEFfgq73kQu0EE4nMTs0E=
-X-Received: by 2002:a05:6902:1b09:b0:dcc:53c6:113a with SMTP id
- eh9-20020a0569021b0900b00dcc53c6113amr2580289ybb.59.1709125368961; Wed, 28
- Feb 2024 05:02:48 -0800 (PST)
+	s=arc-20240116; t=1709126037; c=relaxed/simple;
+	bh=HgwVfW0K+Hhu2RJ2w8yehDlFn8KAHL04pm/mocETtp0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=ScBJPmK63lQa0ygbcYtugbbP+p4ex4A5fps5HNG/WC1bzdj3Wv9WvEw4UHtU49+YA4dH38wtlf7cOU780oHn3dEZ2n2JzMeKTmQhESlhsITeiT79Z2qdXfxkhz4JGEONxOFX2CxMl6TLm6JTzkBClN84KDnxn4XGUGqGcM18Uwc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4TlFCZ73XBzqhs3;
+	Wed, 28 Feb 2024 21:13:14 +0800 (CST)
+Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 3CE591A016B;
+	Wed, 28 Feb 2024 21:13:52 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.28; Wed, 28 Feb 2024 21:13:51 +0800
+Message-ID: <693dec74-1750-191e-cbc3-37f993d165ac@huawei.com>
+Date: Wed, 28 Feb 2024 21:13:51 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240218-msm8996-fix-ufs-v3-0-40aab49899a3@linaro.org> <yq1o7c24oyt.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1o7c24oyt.fsf@ca-mkp.ca.oracle.com>
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date: Wed, 28 Feb 2024 15:02:37 +0200
-Message-ID: <CAA8EJpqUrvzU_=EGcXdpLjVetSkCv0vfnc1hNhPQdyUQvY7UzQ@mail.gmail.com>
-Subject: Re: [PATCH v3 0/5] scsi: ufs: qcom: fix UFSDHCD support on MSM8996 platform
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konrad.dybcio@linaro.org>, 
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, Nitin Rawat <quic_nitirawa@quicinc.com>, 
-	Can Guo <quic_cang@quicinc.com>, 
-	Naveen Kumar Goud Arepalli <quic_narepall@quicinc.com>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>, linux-arm-msm@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
-	stable@vger.kernel.org, Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH] scsi: libsas: Fix disk not being scanned in after being
+ removed
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<damien.lemoal@opensource.wdc.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
+References: <20240221073159.29408-1-yangxingui@huawei.com>
+ <d765d2c5-3451-4519-a5e1-9e8f28dcd6b3@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <d765d2c5-3451-4519-a5e1-9e8f28dcd6b3@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggpemm100023.china.huawei.com (7.185.36.248) To
+ dggpemd100001.china.huawei.com (7.185.36.94)
 
-On Tue, 27 Feb 2024 at 04:33, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> Dmitry,
->
-> > First several patches target fixing the UFS support on the Qualcomm
-> > MSM8996 / APQ8096 platforms, broken by the commit b4e13e1ae95e ("scsi:
-> > ufs: qcom: Add multiple frequency support for
-> > MAX_CORE_CLK_1US_CYCLES"). Last two patches clean up the UFS DT device
-> > on that platform to follow the bindings on other MSM8969 platforms. If
-> > such breaking change is unacceptable, they can be simply ignored,
-> > merging fixes only.
->
-> Does not apply to 6.9/scsi-staging. Please rebase if you want this
-> series to go through the SCSI tree.
+Hi John,
 
-Please pick up just the UFS patch. DT patches should go through arm-soc tree.
+On 2024/2/22 20:41, John Garry wrote:
+> On 21/02/2024 07:31, Xingui Yang wrote:
+>> As of commit d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to
+>> update PHY info"), do discovery will send a new SMP_DISCOVER and update
+>> phy->phy_change_count. We found that if the disk is reconnected and phy
+>> change_count changes at this time, the disk scanning process will not be
+>> triggered.
+>>
+>> So update the PHY info with the last query results.
+>>
+>> Fixes: d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to 
+>> update PHY info")
+>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>> ---
+>>   drivers/scsi/libsas/sas_expander.c | 9 ++++-----
+>>   1 file changed, 4 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_expander.c 
+>> b/drivers/scsi/libsas/sas_expander.c
+>> index a2204674b680..9563f5589948 100644
+>> --- a/drivers/scsi/libsas/sas_expander.c
+>> +++ b/drivers/scsi/libsas/sas_expander.c
+>> @@ -1681,6 +1681,10 @@ int sas_get_phy_attached_dev(struct 
+>> domain_device *dev, int phy_id,
+>>           if (*type == 0)
+>>               memset(sas_addr, 0, SAS_ADDR_SIZE);
+>>       }
+>> +
+>> +    if ((SAS_ADDR(sas_addr) == 0) || (res == -ECOMM))
+>> +        sas_set_ex_phy(dev, phy_id, disc_resp);
+>> +
+>>       kfree(disc_resp);
+>>       return res;
+>>   }
+>> @@ -1972,11 +1976,6 @@ static int sas_rediscover_dev(struct 
+>> domain_device *dev, int phy_id,
+>>       if ((SAS_ADDR(sas_addr) == 0) || (res == -ECOMM)) {
+>>           phy->phy_state = PHY_EMPTY;
+>>           sas_unregister_devs_sas_addr(dev, phy_id, last);
+>> -        /*
+>> -         * Even though the PHY is empty, for convenience we discover
+>> -         * the PHY to update the PHY info, like negotiated linkrate.
+>> -         */
+>> -        sas_ex_phy_discover(dev, phy_id);
+> 
+> It would be nice to be able to call sas_set_ex_phy() here (instead of 
+> sas_get_phy_attached_dev()), but I assume that you can't do that as the 
+> disc_resp memory is not available.
+> 
+By the way, I have updated a version and call sas_set_ex_phy() here, 
+please check it again.
 
--- 
-With best wishes
-Dmitry
+Thanks,
+Xingui
