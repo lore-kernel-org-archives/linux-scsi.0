@@ -1,115 +1,129 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6178359149
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 00:18:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 787CA36AF9
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 03:20:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.0.225.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709165930; cv=none; b=Qiym7630lDWkzcn/akQN1q5xHj3bMeUVnFuO5nNaSJud9DIqLoh8SWEy8baFFxQFv3SVKQa5czPrGrR0q5pZocpwxJDBTD2mI30ox21q0gQnVihNom2j4Od2SGQgE9eTt4w5KiPsIIKf6uqffFAFGY8kub7PpmMw5jV+QaBiW6c=
+	t=1709176807; cv=none; b=Dskdg9enNZbF5DI9FTZGhE6ODDXKtxEDw1j16jAGdi0CwtK3zWhj0asf20NcGa2CB7WOKJKSc7NcDG5l8DBHDhCAQg5MpsSnuNAR3PJmY/OquOMt6lOcuh09B7iK65z2c/rqjzAdgGiW2ACQDmFSaR0WYnS3o64x5R01JNMYPiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709165930; c=relaxed/simple;
-	bh=9DJj6YTz0ZZOl6MAUN9AsplTyADMYRPheFd4FjREcq0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TNHhjwIF/Ejr2OlRThlzitIUarV8uOCjcquy2kpNcbWBCRbptjEfM1dmCQBPEZyZAPxcvLu+YQBiMnPEkZaG1xRXsSD90Kn2oVgU8jcdCEP4jnPI66QF4HyG5LtXRp/+wqafyPR4vwbJLCtyX2mw/F/CJ2UqkyAu5vIgD3gABvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=Zd6FsrbG; arc=none smtp.client-ip=209.85.216.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Zd6FsrbG"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-299e0271294so191904a91.3
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2024 16:18:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1709165929; x=1709770729; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=K5uqn8jk7ThAKtuWvpjc6qdSbK1EvuBbH6icwTpGIW4=;
-        b=Zd6FsrbGvnNHW8S/xTkaP8iOt0/OYTPNpeWEampDlCmOtdciZpBKQacdXgA3W8WqKd
-         je2ed3pek8hzLO8jLXSAiCfElrc/dD2tOLHFMyF0P5JuV1g+AZaU0I40tkMAVPEhCjEU
-         kbIf/NuBfZz5rKsXoMemtF89f69aO0mt0e9/4=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709165929; x=1709770729;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=K5uqn8jk7ThAKtuWvpjc6qdSbK1EvuBbH6icwTpGIW4=;
-        b=mLwtZYNxECnWad+gHKaemF939NEsxqxgdJD1b4W5uS+kNXPC6kqhQs0fyln4AIzHHB
-         KO6gn2/v6AMDDQPx1zxqbQg6xQ5bR0wNvO5L+zrf1SNTzyYixqUUx6qboECpXjLF7gIo
-         ARFlXesT35J1TYlf8RHh+5fmrH68lSnQHQXMNSeXP9XgqZbXf5tX/dnJkVBI9e0GWVW0
-         xFbmQi/T7p+DtPdVLzlBkBj5dOjgFoAs2ndHJnUrH/5tXkfSO+BMVPte35J8c9/VNXLB
-         AJG1BqN5ZO8kw1lSBrQcKLYfkprtohvQbL7UeKnS1AneD/ENsq4RCu7M5PiBOAfp5ptK
-         Vtlg==
-X-Forwarded-Encrypted: i=1; AJvYcCX2lDJAa+/wOElkdcyqY+oAvs8APQphiblT8RtJRXIPP+0BrM6MMQtQu0tM7sgFg3An7Zk7kzu2pKu3Q7Yn8bo122N48J2c6EmU/A==
-X-Gm-Message-State: AOJu0YylvI8k7hfFJFb6SXPlJCQivbNoycKVKXv3oxuoeaLqokfDRcvD
-	EI2stJdHwrHuJqhBmrO9l3pmHEP6mQOEF2WilEc/1VoCth3XFi7RVJbdluJntg==
-X-Google-Smtp-Source: AGHT+IG9LGv7xga1c26psaW5lSQ/a3FgyK1kDrzHgkNdLgVdVr5RsO1xWGsalLcOFQ/g2GqHBPATsg==
-X-Received: by 2002:a17:90b:3905:b0:299:6848:28c1 with SMTP id ob5-20020a17090b390500b00299684828c1mr834549pjb.26.1709165928724;
-        Wed, 28 Feb 2024 16:18:48 -0800 (PST)
-Received: from www.outflux.net ([198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id su7-20020a17090b534700b002973162eca1sm2292760pjb.17.2024.02.28.16.18.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Feb 2024 16:18:48 -0800 (PST)
-Date: Wed, 28 Feb 2024 16:18:47 -0800
-From: Kees Cook <keescook@chromium.org>
-To: Justin Stitt <justinstitt@google.com>
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Ariel Elior <aelior@marvell.com>,
-	Manish Chopra <manishc@marvell.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Saurav Kashyap <skashyap@marvell.com>,
-	Javed Hasan <jhasan@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	Nilesh Javali <njavali@marvell.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
-	Don Brace <don.brace@microchip.com>,
-	mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
-	MPT-FusionLinux.pdl@broadcom.com, netdev@vger.kernel.org,
-	storagedev@microchip.com
-Subject: Re: [PATCH v2 0/7] scsi: replace deprecated strncpy
-Message-ID: <202402281617.807B1B7@keescook>
-References: <20240228-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v2-0-dacebd3fcfa0@google.com>
+	s=arc-20240116; t=1709176807; c=relaxed/simple;
+	bh=nWI0xfyfsyOczyWzPno9G0ANgOD4EpWps6XT4tWG26c=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=WaIC/pfUcrAjQUq5klxXx6vx5uocXF46QO6O+Qgf9wMPloFMqRfmYlq7twZRxWaQXEl9vaBcOPf/Ldf0rB7n271ckeUnjdpkOrxTR+tm00bFEuKZXoix8aTqhuFYpsVEyi4kfsLnN2f6yGLLoFcrq45+n9nxg3m1f3LfVw2ieYQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=210.0.225.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
+X-ASG-Debug-ID: 1709176794-086e2316ed02390001-ziuLRu
+Received: from ZXSHMBX2.zhaoxin.com (ZXSHMBX2.zhaoxin.com [10.28.252.164]) by mx1.zhaoxin.com with ESMTP id 1NWDjwmQUgYZ1sxI (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Thu, 29 Feb 2024 11:19:54 +0800 (CST)
+X-Barracuda-Envelope-From: WeitaoWang-oc@zhaoxin.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
+Received: from zxbjmbx1.zhaoxin.com (10.29.252.163) by ZXSHMBX2.zhaoxin.com
+ (10.28.252.164) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 29 Feb
+ 2024 11:19:54 +0800
+Received: from [10.29.8.21] (10.29.8.21) by zxbjmbx1.zhaoxin.com
+ (10.29.252.163) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 29 Feb
+ 2024 11:19:52 +0800
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
+Message-ID: <0b0eefa5-71b6-dc08-d103-72b9aebd9237@zhaoxin.com>
+X-Barracuda-RBL-Trusted-Forwarder: 10.29.8.21
+Date: Thu, 29 Feb 2024 19:19:49 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240228-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v2-0-dacebd3fcfa0@google.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v2] USB:UAS:return ENODEV when submit urbs fail with
+ device not attached.
+Content-Language: en-US
+X-ASG-Orig-Subj: Re: [PATCH v2] USB:UAS:return ENODEV when submit urbs fail with
+ device not attached.
+To: Oliver Neukum <oneukum@suse.com>, <stern@rowland.harvard.edu>,
+	<gregkh@linuxfoundation.org>, <linux-usb@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<usb-storage@lists.one-eyed-alien.net>
+CC: <WeitaoWang@zhaoxin.com>, <stable@vger.kernel.org>
+References: <20240228111521.3864-1-WeitaoWang-oc@zhaoxin.com>
+ <e8c4e8a3-bfc3-463f-afce-b9f600b588b2@suse.com>
+ <07e80d55-d766-1781-ffc9-fab9ddcd33e3@zhaoxin.com>
+ <49a365a7-199a-42cd-b8d3-86d72fe5bca6@suse.com>
+From: "WeitaoWang-oc@zhaoxin.com" <WeitaoWang-oc@zhaoxin.com>
+In-Reply-To: <49a365a7-199a-42cd-b8d3-86d72fe5bca6@suse.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: ZXSHCAS2.zhaoxin.com (10.28.252.162) To
+ zxbjmbx1.zhaoxin.com (10.29.252.163)
+X-Barracuda-Connect: ZXSHMBX2.zhaoxin.com[10.28.252.164]
+X-Barracuda-Start-Time: 1709176794
+X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
+X-Barracuda-URL: https://10.28.252.35:4443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at zhaoxin.com
+X-Barracuda-Scan-Msg-Size: 1699
+X-Barracuda-BRTS-Status: 0
+X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
+X-Barracuda-Spam-Score: 1.09
+X-Barracuda-Spam-Status: No, SCORE=1.09 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=DATE_IN_FUTURE_06_12, DATE_IN_FUTURE_06_12_2
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.121467
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
+	0.01 DATE_IN_FUTURE_06_12   Date: is 6 to 12 hours after Received: date
+	3.10 DATE_IN_FUTURE_06_12_2 DATE_IN_FUTURE_06_12_2
 
-On Wed, Feb 28, 2024 at 10:59:00PM +0000, Justin Stitt wrote:
-> This series contains multiple replacements of strncpy throughout the
-> scsi subsystem.
+On 2024/2/28 22:47, Oliver Neukum wrote:
+
+>> I'm not sure I fully understand what your mean.
+>> Whether the above code is more reasonable? If not,could you give me some
+>> suggestion? Thanks for your help!
 > 
-> strncpy() is deprecated for use on NUL-terminated destination strings
-> [1] and as such we should prefer more robust and less ambiguous string
-> interfaces. The details of each replacement will be in their respective
-> patch.
+> You want to change uas_submit_urbs() to return the reason for
+> errors, because -ENODEV needs to be handled differently. That
+> is good.
+> But why don't you just do
 > 
-> ---
-> Changes in v2:
-> - for (1/7): change strscpy to simple const char* assignments
-> - Link to v1: https://lore.kernel.org/r/20240223-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v1-0-9cd3882f0700@google.com
+> return err;
+> 
+> unconditionally? There is no point in using SCSI_MLQUEUE_DEVICE_BUSY
 
-I think you lost my tags for the later patches. I re-reviewed a few and
-then remembered I'd already reviewed these and they were unchanged. :)
+I got it, Thanks. New patch would like this sample:
 
-Please run:
+@@ -562,9 +561,9 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
 
-b4 trailers -u 20240223-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v1-0-9cd3882f0700@google.com
+  	lockdep_assert_held(&devinfo->lock);
+  	if (cmdinfo->state & SUBMIT_STATUS_URB) {
+-		urb = uas_submit_sense_urb(cmnd, GFP_ATOMIC);
+-		if (!urb)
+-			return SCSI_MLQUEUE_DEVICE_BUSY;
++		err = uas_submit_sense_urb(cmnd, GFP_ATOMIC);
++		if (err)
++			return err;
+  		cmdinfo->state &= ~SUBMIT_STATUS_URB;
+  	}
+@@ -582,7 +581,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+  		if (err) {
+  			usb_unanchor_urb(cmdinfo->data_in_urb);
+  			uas_log_cmd_state(cmnd, "data in submit err", err);
+-			return SCSI_MLQUEUE_DEVICE_BUSY;
++			return err;
+  		}
 
-:)
+When alloc urb fail in the same function uas_submit_urbs,
+whether we should replace SCSI_MLQUEUE_DEVICE_BUSY with generic
+error code -ENOMEM? Such like this:
 
--Kees
+@@ -572,7 +571,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+  		cmdinfo->data_in_urb = uas_alloc_data_urb(devinfo, GFP_ATOMIC,
+  							cmnd, DMA_FROM_DEVICE);
+  		if (!cmdinfo->data_in_urb)
+-			return SCSI_MLQUEUE_DEVICE_BUSY;
++			return -ENOMEM;
+  		cmdinfo->state &= ~ALLOC_DATA_IN_URB;
+  	}
 
--- 
-Kees Cook
+Thanks and Best regards,
+Weitao
