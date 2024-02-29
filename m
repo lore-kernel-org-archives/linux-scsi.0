@@ -1,101 +1,105 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12713481CE
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 08:04:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68A4847F77
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 08:09:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709193890; cv=none; b=Gw2wky8vEAm+UHjyreFeL4mO0vpKKBXO+5PX1C5Bn3ZNmsPrY60hno/Tj//4pg6udpTnjQFFmIjfpAFPOKYXxZekWibSElUUhj8yxi2O1bncCL6z1KGySU6Rs9sh6sQCuc+e10q7xK5LZYuGcyiBCaRgu/WZigEtrZeSu1hniwM=
+	t=1709194145; cv=none; b=cPTo924yhmB/KluMXApUGEqjWMS/y2v6fvj/1Cqn3a50NQK93sv/qo55Va0H//FqtXmVhskG579n38LsQ5wEuXVyS1KoAkgN3wkOSXsIuIcez8W61HPVVYJJ+cJ5zFtpzIFD1bNBzVLOlTSuhh7A6rn073BpI6UHCbd7c+TZ8VY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709193890; c=relaxed/simple;
-	bh=yvmDo8YJeEK3UxeCvIoPcHlXqgOAt3vzAdtI8JCmimw=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=rtN2kKWomgQkDwT2JFVyiTRYUUE2EbHjGRRpTdcpvwXhDHiWl5OpXFyFf1FrkLLb4kZBPPwbc5OJHyc13khY8ugbKdBU/orDNlQEOms1JoHkwQOvESAsUkdO5S95aD8qI/07sHH6yuXRioB7RGDo/wG8m97agHsGy4+KBZEZWLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=XbwJXJyK; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1709194145; c=relaxed/simple;
+	bh=kurHTtq2rspvJgMv43M46KVUb0L5q+U22TYTVcEIAOs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Nbu3vfXOZQnk4vgnXMgUq+7wEy5EjRfqTZIJBp1LRUu2/3U25Z5OiCzDrVr48WZEFqj0RMnaGCa7f5w4PoMTXQegbWVU+iVOJYmBnEujADHi8hxzD90sVfKCi33HNypJbMg9m8/IJkzQ+XJociuZqeDimYewCSe87v6380Cr6MM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=cHDNc0b6; arc=none smtp.client-ip=209.85.208.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="XbwJXJyK"
-X-UUID: 322ab44ed6d911eeb8927bc1f75efef4-20240229
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=US1AZlWB4XWSCrS/zunSnKIl4wPRKQLfiiA+beXnKrs=;
-	b=XbwJXJyKbiuoEqDeo9bownBscugy5q7XlNeBRqQ1j2aH1sTeF7uGiw14vM+q8lraDO3xjvNMvToQNZEl5Wsx/Jff1t7KCW23xd8jDpk/tMae5UHPsLTGB+qySfLWmwHaG3Qz5NUk+yl0aVXEKhYohz9gqCy1fAygX6ayz5Sbqqc=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.37,REQID:fa1a4209-a4a8-44c6-882a-a8ec4ac99010,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:6f543d0,CLOUDID:c5b5f180-4f93-4875-95e7-8c66ea833d57,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 322ab44ed6d911eeb8927bc1f75efef4-20240229
-Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 143670650; Thu, 29 Feb 2024 16:04:43 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Thu, 29 Feb 2024 16:04:37 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Thu, 29 Feb 2024 16:04:37 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <chu.stanley@gmail.com>
-Subject: [PATCH v2] ufs: core: add config_scsi_dev vops comment
-Date: Thu, 29 Feb 2024 16:04:35 +0800
-Message-ID: <20240229080435.6563-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="cHDNc0b6"
+Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-2d220e39907so7457341fa.1
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 00:09:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1709194141; x=1709798941; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=+6fUyesk9XtuEUwAKGfVFcYKYn8nCxiz5t4vTL0pI4o=;
+        b=cHDNc0b6X2W23utcpiCwLBIqvSth4LUen5f9nw77arxlFGQBjpPQ5ivkrduHmTigXF
+         cHLxCZtjh8n/2QvtIUVLmTsVgIUdIt5ljDko64YcwP4X3K9XOBnOta4REycdFwlusVHi
+         mvSy0SjFToBz6RdCd+hMdpF1ZNjT7AjmlbMBL2iL6EpnYwaOKPC6ZSbKqdsPZJX2xtUo
+         JDKrdRW0F6jENZJ/9SD/Akvxlb1acvsVNIMSepB6ynsCV8kQaxpC7PWu+mdG4qutEixq
+         rZNfYdJbs2ZQrB23pZWW13wD1Sim9ceJBxZZFkDhyfzMBPNi6TJpDUVJOAVaOuEQTjI3
+         4/sw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709194141; x=1709798941;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=+6fUyesk9XtuEUwAKGfVFcYKYn8nCxiz5t4vTL0pI4o=;
+        b=U5H3zqzEwLlgW5CoZ9naM4/eNSz6xcAAw6/NNyO4ovMeSnQ4Ck7nd3gXMPUvebOSVl
+         e3OWDH9voMO73oTzqsjIOBcMXEIo364gUjhOZZBbXd+Q3mUHKQqe6bsRDXtTyrY2Mw6H
+         ULB25Lwh5q0WjLFtD0x0lu3cp1nYLxUstE/26clhM8WS5W+CTEWmoT7BWzppyDrxpvpI
+         u4M/SLsKZAvITTq6BV3KV4jgmPluXIsnDsJJ2wkOadzoR78sG9gKwNBKZWHp5Nm1xPBt
+         8mGoVOWxEKcF1yutsQJEAQIveu2S7UZM/nNsNxciYsSg70xaz0Df6uVGUVi68/zkhP8j
+         L4uw==
+X-Forwarded-Encrypted: i=1; AJvYcCVYs0A5sfS/9q1pCdmqi7x/U0T2ODfbhLlrxTaUpTmho5W1G1MoF05Ro5ZgLQJ/4mx40W1y40urkCtbDkn0ZuZ5haZ173OEF/T24g==
+X-Gm-Message-State: AOJu0Ywd2eWytdJY8I1aLqx/QCVqmVxXPVgxBeQf0JNml4JScr/obneF
+	U2+k3yl4KkhSgKdCclAc1+p8lj+8gA2uHyt87Fyzc/ti+qs8W3hxMVlMdNwZ+rk=
+X-Google-Smtp-Source: AGHT+IEioEBenaGBregM2gF1RR+HQbJWqUnI/Hp2B6pwGbY54Du2S+X2nxQx2LKNChi6zePmii8/pQ==
+X-Received: by 2002:a2e:bc1f:0:b0:2d2:8290:46ff with SMTP id b31-20020a2ebc1f000000b002d2829046ffmr971230ljf.50.1709194141302;
+        Thu, 29 Feb 2024 00:09:01 -0800 (PST)
+Received: from ?IPV6:2001:a61:1366:6801:d8:8490:cf1a:3274? ([2001:a61:1366:6801:d8:8490:cf1a:3274])
+        by smtp.gmail.com with ESMTPSA id jn3-20020a05600c6b0300b004128e903b2csm4375201wmb.39.2024.02.29.00.09.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 29 Feb 2024 00:09:01 -0800 (PST)
+Message-ID: <9263b77e-9ebe-4987-bf7f-8f9fafcf06b3@suse.com>
+Date: Thu, 29 Feb 2024 09:08:59 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10--5.435400-8.000000
-X-TMASE-MatchedRID: MACTyP4PrdMMQLXc2MGSbFz+axQLnAVBTJDl9FKHbrm7qpOHKudqc/mv
-	83Rzid1phgjat2+RfEfdRIKCUEZlk49oUcx9VMLgFEUknJ/kEl5jFT88f69nG/oLR4+zsDTtjoc
-	zmuoPCq1ze+i+Dlv5ABEG8YoH0A3pTlOaLF8YOD+mDC7RQmDzf6yO1uMZNQBO
-X-TM-AS-User-Approved-Sender: No
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--5.435400-8.000000
-X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP: 67EA079068FEE011FA50AA4FCA0B72E2AE908FF2D6C4ED72EF36C8667C54E9482000:8
-X-MTK: N
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] USB:UAS:return ENODEV when submit urbs fail with
+ device not attached.
+To: "WeitaoWang-oc@zhaoxin.com" <WeitaoWang-oc@zhaoxin.com>,
+ Oliver Neukum <oneukum@suse.com>, stern@rowland.harvard.edu,
+ gregkh@linuxfoundation.org, linux-usb@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ usb-storage@lists.one-eyed-alien.net
+Cc: WeitaoWang@zhaoxin.com, stable@vger.kernel.org
+References: <20240228111521.3864-1-WeitaoWang-oc@zhaoxin.com>
+ <e8c4e8a3-bfc3-463f-afce-b9f600b588b2@suse.com>
+ <07e80d55-d766-1781-ffc9-fab9ddcd33e3@zhaoxin.com>
+ <49a365a7-199a-42cd-b8d3-86d72fe5bca6@suse.com>
+ <0b0eefa5-71b6-dc08-d103-72b9aebd9237@zhaoxin.com>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <0b0eefa5-71b6-dc08-d103-72b9aebd9237@zhaoxin.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+On 29.02.24 12:19, WeitaoWang-oc@zhaoxin.com wrote:
 
-Add config_scis_dev vops comment.
+> When alloc urb fail in the same function uas_submit_urbs,
+> whether we should replace SCSI_MLQUEUE_DEVICE_BUSY with generic
+> error code -ENOMEM? Such like this:
+> 
+> @@ -572,7 +571,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+>           cmdinfo->data_in_urb = uas_alloc_data_urb(devinfo, GFP_ATOMIC,
+>                               cmnd, DMA_FROM_DEVICE);
+>           if (!cmdinfo->data_in_urb)
+> -            return SCSI_MLQUEUE_DEVICE_BUSY;
+> +            return -ENOMEM;
+>           cmdinfo->state &= ~ALLOC_DATA_IN_URB;
+>       }
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- include/ufs/ufshcd.h | 1 +
- 1 file changed, 1 insertion(+)
+Hi,
 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 7f0b2c5599cd..a19d87e7980f 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -327,6 +327,7 @@ struct ufs_pwr_mode_info {
-  * @op_runtime_config: called to config Operation and runtime regs Pointers
-  * @get_outstanding_cqs: called to get outstanding completion queues
-  * @config_esi: called to config Event Specific Interrupt
-+ * @config_scsi_dev: called to configure scsi device parameters
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
--- 
-2.18.0
+yes, and then you translate in one central place for the SCSI layer
+into DID_ERROR or DID_NO_CONNECT.
+
+	Regards
+		Oliver
 
