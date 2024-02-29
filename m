@@ -1,54 +1,54 @@
-Received: from mail-ot1-f50.google.com (mail-ot1-f50.google.com [209.85.210.50])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E1A3EDB
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 00:02:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF843168C7
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 00:03:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709164969; cv=none; b=KRzznu3ZNAuSl/8Ivmllb4ziAuhzpR29kgTl28uFiglGwHVbsEJ25j7Vw8JwcA55rSiE6Uyn6QAftbOvtxgo9g+bFVdRxSczxcrLMZZY6COCvPGsbv8pHcrjDFwjR2+Spw9jDz1WpxjIPXKjCjNgqRLNQKz0j5mC/JPUxc1H+EU=
+	t=1709165028; cv=none; b=KeHvTNFMkfauwi33SJki5I6pNPJKK8BnXoE+wpvJCpbaqRN7yKoqz9gTsfgnnngmqXJEy39JIhCeV1ZB/nnV9UeJjgPtd6NOpFiwsGAR3fZlgW4ZPA0HSrl/vI2PSiQJjc3vksUj/zqRetdGgUYlI6e8RnyvS7ZEAF4oK7G8VBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709164969; c=relaxed/simple;
-	bh=tH8Do06WsHG8uh7bIC0z1/jOfTEgMGtUd5RXQ5jyXwY=;
+	s=arc-20240116; t=1709165028; c=relaxed/simple;
+	bh=OFgQwXsMv2PCEP7cboBXKNq0QnFBUPWLxnww317nqsQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dzFpG83+yE7tlXB49kPztr19wgIW8nryo0dp8jXUNltOQIy+TWNkhNITZnJ1jiRinx5/+OuemHK4vGheErHL5nAoKVoyuL79oHgbY9+iiiXvLKOGbY5s8WawepvpBn4DI+tgphw9q7wEJ+qf5i40DBinZm5XZ/m8x03Pe0rxNEM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=iQAAjyIW; arc=none smtp.client-ip=209.85.210.50
+	 Content-Type:Content-Disposition:In-Reply-To; b=qWVVg5Vw5ihuP6xZxQWvAeeS278dWEKbHe8UqLzIypdJAQ5rGSyyv/0DApePX/sYKEwluwkU7xXdxIv4UDCkuykf6nK3fBZ1gyr8xiOCxOCn8lV7SPZHJAbVKXj8oDYhb0eOwVlb2AVpJrtWntvW+fxN0lEXet/HtlbSXcASBuo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=aYNrdHUY; arc=none smtp.client-ip=209.85.210.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="iQAAjyIW"
-Received: by mail-ot1-f50.google.com with SMTP id 46e09a7af769-6e4b34f2455so170046a34.2
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2024 16:02:46 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="aYNrdHUY"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6da202aa138so186109b3a.2
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2024 16:03:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1709164966; x=1709769766; darn=vger.kernel.org;
+        d=chromium.org; s=google; t=1709165026; x=1709769826; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=dzYFHNFtHHHpRZc8edEq8bHU8oqWM7vjNzOC9ZZj3Zw=;
-        b=iQAAjyIWjHzlp0w0zAz8XfTortXy50gEPPvXUInJQNpwa2nzLMHuBnYqRILTEpwNbi
-         GJFm+FilgeG+XUGAHAtwkUM4M3sEMT87s0zsdaXbf3Vz/MGUO0LzDopdH4+CbDPkG6L9
-         MFTXQyqmObj1eNFTbtl8xAFTIGsl3UADpscxE=
+        bh=pwLo+SlOHd8K2sY22rmYO9CHmiOYoa90iOQ05o2rFZY=;
+        b=aYNrdHUYuyJGyk0h8wM585jDjVnxI2bOCC378+Bt1xtQkKPR8xJgMAjR+6Wz0wh4GO
+         UzS/MtcE6YusEKbCPLQ9a5eRFG3f5KU00Gpru7VlfWPs0vOc89wzv1TpI7nJpmDNPmS6
+         PinP9pCql/WHCNc8/OOt4d1AcJ4GF6FyUPHtk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709164966; x=1709769766;
+        d=1e100.net; s=20230601; t=1709165026; x=1709769826;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=dzYFHNFtHHHpRZc8edEq8bHU8oqWM7vjNzOC9ZZj3Zw=;
-        b=fIyQZWaWFMjTxpqMUTN4YBttsGfGh3mDFzdfyu7gJt37+7uHMdGYF8A93iBAo1aEDi
-         aXi0yQ6NEpz2t6dayqIQFol//3fmCmjw0lrRJczIlf61nlBEc9n2sGR6BbiY1bhJXsRR
-         AJjHnszM+1kzXTAhyJDYf7ogM5mfpB6y57cJVCU/B842ZxoBKo5++gZ3sTem+sNhXE5A
-         dXPVTGOJznnxT2RsUVNPCdvtEX2ydjPTcVHK7aMVMOGCZo7SDbjRF9saWmpRLTsmtKXU
-         89vs/zZJ4HFOV46rPKP+M5fRlFdfycLT4A8IayVKhhbVOavjNP93NyMhreTKr1hXU+U7
-         Evyw==
-X-Forwarded-Encrypted: i=1; AJvYcCWGrzLHm4lXgyzmG97N/ni3YIIx945THIWY4VwbkOLXbnXI5Wur2gS8drYHhUiRMS0GJSkcoYj5+BGMMQi9ZHjiuMu952KxTXjhVg==
-X-Gm-Message-State: AOJu0Yybgo2s/1Yp9hPulwvXuLZhYNgfYrdTOMTChWcwvTA1ldciczbw
-	5eV9HD3Vy6+q4DLR1ZycDXPn/hHgMnrffVT3ugyaaxqsfOfLxZNjcazEnR9UYw==
-X-Google-Smtp-Source: AGHT+IHqJ/JwJcpPTP9TpL7Xpyx58Z+NNG0bN9Bpx1sjxaHowFIn1a95cgyKBfJKxJgwJgp15rh7Lw==
-X-Received: by 2002:a9d:7acd:0:b0:6e4:787a:9bc5 with SMTP id m13-20020a9d7acd000000b006e4787a9bc5mr461484otn.14.1709164966200;
-        Wed, 28 Feb 2024 16:02:46 -0800 (PST)
+        bh=pwLo+SlOHd8K2sY22rmYO9CHmiOYoa90iOQ05o2rFZY=;
+        b=QwnDxy7lsw2g6qRm8xh7lSTYhOTIb3ivlra7HZwf2F41pmHNAFIJVyBbG1h5f7VCv0
+         NHdlFUAmILIN8MpphKinAYjLOPUPmGBG0Oacvok1mInSeTpNhaXsa/T0w2467xJ0bz9p
+         L9cBcx+zh7Z8uux6AtHhlHkh57FhB9pVapHuTIj6mprLXn936GimQdnz1Zn/vg05tKXX
+         TCMN0pzf9FriC7HP5ogF4qIicfSdwImQ5ZWCzvBBBJKa01mrMjBF42DDolUTnXGyUBpA
+         duowUjnBDcFw8YWqNGwBus200AcJLQnuY/I84Oue4xryxiIp3TgeptuzkCyKyTEG9Jzf
+         7aMA==
+X-Forwarded-Encrypted: i=1; AJvYcCUUgYRPwVSOPkiKoAqI4gUTcO4dG2PLCP6hQGzxUDmfEUlP+XnBECRWZRL/JF+pOtUy1spCQT4Q3qFKIXqxEjTDsk2QWk6UobL+JA==
+X-Gm-Message-State: AOJu0Yx5h7rCW5UfaSzfJmp4fcZwYjsAMO6JSL1cer7NlpDDRBItRCvD
+	XoMJJSLkxjt4NJPI1iAcNJvaeg4jLhl/xa/L6LE1YZ/QW5j9btPnPClbUeWXnQ==
+X-Google-Smtp-Source: AGHT+IGbYipmoXWwMUNX0EpbZy8eo0Zyoq2OcZwuRennRyHpxCas19mkzz4HsTupR5aawal2RQuuDA==
+X-Received: by 2002:aa7:9e50:0:b0:6e5:7075:7235 with SMTP id z16-20020aa79e50000000b006e570757235mr712201pfq.23.1709165026244;
+        Wed, 28 Feb 2024 16:03:46 -0800 (PST)
 Received: from www.outflux.net ([198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id k3-20020a63d843000000b005dcbb855530sm61436pgj.76.2024.02.28.16.02.45
+        by smtp.gmail.com with ESMTPSA id s36-20020a056a0017a400b006e53d2c0618sm34321pfg.65.2024.02.28.16.03.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Feb 2024 16:02:45 -0800 (PST)
-Date: Wed, 28 Feb 2024 16:02:45 -0800
+        Wed, 28 Feb 2024 16:03:45 -0800 (PST)
+Date: Wed, 28 Feb 2024 16:03:45 -0800
 From: Kees Cook <keescook@chromium.org>
 To: Justin Stitt <justinstitt@google.com>
 Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
@@ -73,11 +73,11 @@ Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
 	linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org,
 	MPT-FusionLinux.pdl@broadcom.com, netdev@vger.kernel.org,
 	storagedev@microchip.com
-Subject: Re: [PATCH v2 1/7] scsi: mpi3mr: replace deprecated strncpy with
- assignments
-Message-ID: <202402281602.2750B1F2@keescook>
+Subject: Re: [PATCH v2 2/7] scsi: mpt3sas: replace deprecated strncpy with
+ strscpy
+Message-ID: <202402281603.E33A62C096@keescook>
 References: <20240228-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v2-0-dacebd3fcfa0@google.com>
- <20240228-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v2-1-dacebd3fcfa0@google.com>
+ <20240228-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v2-2-dacebd3fcfa0@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -86,19 +86,19 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240228-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v2-1-dacebd3fcfa0@google.com>
+In-Reply-To: <20240228-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v2-2-dacebd3fcfa0@google.com>
 
-On Wed, Feb 28, 2024 at 10:59:01PM +0000, Justin Stitt wrote:
-> Really, there's no bug with the current code. Let's just ditch strncpy()
-> all together.
+On Wed, Feb 28, 2024 at 10:59:02PM +0000, Justin Stitt wrote:
+> The replacement in mpt3sas_base.c is a trivial one because desc is
+> already zero-initialized meaning there is no functional change here.
 > 
-> We can just copy the const strings instead of reserving room on the
-> stack.
+> For mpt3sas_transport.c, we know edev is zero-initialized as well while
+> manufacture_reply comes from dma_alloc_coherent(). No functional change
+> here either.
 > 
-> Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-> Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
-> Link: https://github.com/KSPP/linux/issues/90
-> Cc: linux-hardening@vger.kernel.org
+> For all cases, use the more idiomatic strscpy() usage of:
+> strscpy(dest, src, sizeof(dest))
+> 
 > Signed-off-by: Justin Stitt <justinstitt@google.com>
 
 Reviewed-by: Kees Cook <keescook@chromium.org>
