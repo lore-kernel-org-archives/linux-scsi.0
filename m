@@ -1,44 +1,77 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07CA4134411
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 20:05:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F7236D52F
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 22:05:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709237128; cv=none; b=OeKRWHqXZ1oBwXm8o85wByaJXOY9etFPTbCKBvwBw744yyXVkc13cmvcLBhHtvNOYDchhWO4NOVG7ZmqoIea3YwHXZPhBh04NPCiHn+pJVTTHdZO+mVzPefJDJ1bEJAVZrF4ExZGQuTsI6Xu8RmlSlc+eUW+QV2VT/dwDK2mhDQ=
+	t=1709244322; cv=none; b=CqY0nDYwBI+b/+9e4xSZFAmk4GoPIaclXNozFdVac3XBxudIHswY3fdt/whuCe2fAJyTvMjpfmWfqwh9/gCPGG0immPTjQj1tmIJRFy71qWD7th7EgBGlu6q4UzxxIKt/TIMBwaLjXNKizwG1g5YyYLdGBCaJtHJoqq08P4VYDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709237128; c=relaxed/simple;
-	bh=fReipLIendE0HhQcwhaKDvjlRjIx7QIhVT1ZhAIhTHw=;
+	s=arc-20240116; t=1709244322; c=relaxed/simple;
+	bh=5DbVUHySeDB9YEJSKPkg8srk8wvvGFrP3vfhRWS7FHE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dSjtOFIc1HlWbiJZWVZMi/IaFcn89XLAsMZtI6lhX/v//EEV3BtGltmip27zxcXNie2l/TAGn18yn9snyl2CJ1A6r1kE24moIRqORxinHv2g8AFnFKrvSV8SMSHi3QxWKb+C6rqBFsDTg1gFTfkv7jyKTr52PF/LKxb2IWTZ9ZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1dca160163dso13553415ad.3
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 12:05:26 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709237126; x=1709841926;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/LtOmGcyZyQFS1Sa4ahTMebn+wCkdBTseH2oJHgUW+w=;
-        b=DiVSZsejdJFAF3VFm6o1ResJ9B+GGeErjNlyc4AHxsIN+2gce6A9Sk+HGU1rFo8aax
-         qohVKKAyZxCPUbIBLaDi3Wn3QVkc6KDzCYMjmzFdRYHTdn0svsyh1bHmsoiSLMLWTDhE
-         STbWnoifolwiSHi5cgYp08KV8OlS5KYFyEPrS6Y8DQ1Uc0K9iD/h4a7NhTgSDNFFP6Sp
-         jtdJrGR0hS4AtXbyAOOAxenPUUWN+ARJfWFG1rvhVyb8dSYLH1HferPqxp0jA+r5abui
-         9RrKZYlhe6io4YY4o7wUJGxYPc9draRvYijP/R0NQGoRiOw8q9Sorq2sJF5Dt1cXWN32
-         k6fA==
-X-Gm-Message-State: AOJu0Yx/La+qknTHa1GXRZSGk9hQLZ2HhhGzpyZNrZHRlB/pkEVPvDQS
-	XtBKTppx3vGGpFSeHypgRpRKRaABXGuc2SeSSlg9s2uZxz1pHWeg
-X-Google-Smtp-Source: AGHT+IHBYWOoHy2uSQhp6gTJgyfnqTk9cNCf/mcWCzeCAHvNxizjh2S6vLTxOdgwKC0JCgOTujv3cQ==
-X-Received: by 2002:a17:903:2405:b0:1dc:71b6:5727 with SMTP id e5-20020a170903240500b001dc71b65727mr3694501plo.50.1709237126093;
-        Thu, 29 Feb 2024 12:05:26 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:2491:7db1:8e45:9513? ([2620:0:1000:8411:2491:7db1:8e45:9513])
-        by smtp.gmail.com with ESMTPSA id z18-20020a170903019200b001d8be6d1ec4sm1900387plg.39.2024.02.29.12.05.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 29 Feb 2024 12:05:25 -0800 (PST)
-Message-ID: <0004135e-56e9-4722-bc6a-ddb293274d39@acm.org>
-Date: Thu, 29 Feb 2024 12:05:24 -0800
+	 In-Reply-To:Content-Type; b=AhKpWZkPNwd++z1TmYg+905MHbfmImcAay+b4N987+E5Ktwbq9xk1zE/M/Nji7Qvp1qjQkt6DDebdF+5mV9867MkRlTCV8FqClv5+IR3do+fw4KcqQXktAN85bjr7febW4gKpX3RFn5SobQ2EvO6y+T4Zq9GrO/3PH0Tfr9w6Jk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=opensource.wdc.com; spf=pass smtp.mailfrom=opensource.wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=gnVdABYj; dkim=pass (2048-bit key) header.d=opensource.wdc.com header.i=@opensource.wdc.com header.b=PKgyndpq; arc=none smtp.client-ip=68.232.141.245
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=opensource.wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=opensource.wdc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="gnVdABYj";
+	dkim=pass (2048-bit key) header.d=opensource.wdc.com header.i=@opensource.wdc.com header.b="PKgyndpq"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1709244321; x=1740780321;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=5DbVUHySeDB9YEJSKPkg8srk8wvvGFrP3vfhRWS7FHE=;
+  b=gnVdABYjPToIYcAXDlt+/KjbGhTGWMSy4e3R5BRrxZyRYlrjWUd1GnR0
+   RX63zOS2abA5JMesFUCrjBy8UGKFwcozuq+csNLczjEaKQyxgo+OZQiw3
+   SLctBrV1uQPozvW9WeLBcvhP7eSAvV0Y916zyuHV83DqQri7QclHL73KX
+   VgvXJB2T33xaYVuEZz7JXZSXNeiHGA88GG/4Mg79TpLc1/es82ylHrxbW
+   dKGo6O07Y/8EXeSMddHUUGH8fVHq+utvF9WoR+7Izp8Ygp1y25Kc7Jjsd
+   MU++URzYIApcWz6MrkiqNyu+r4Zfd479x9mYM+kEMAvHyM34Kz40YD4h7
+   Q==;
+X-CSE-ConnectionGUID: B87f7UpEQb+2Hj/cJ4HxMw==
+X-CSE-MsgGUID: IgsFJ3tfSGKXpdilBsA3rQ==
+X-IronPort-AV: E=Sophos;i="6.06,194,1705334400"; 
+   d="scan'208";a="10764783"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Mar 2024 06:05:12 +0800
+IronPort-SDR: NNdzDteZ9xnO/7opwr1W6e02CQmhKpZUPddwjpodfjSPvZNFxdtrvBomvoMRwBRpzX8V6+Hh9/
+ B9oXf+G0ohRQ==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Feb 2024 13:14:29 -0800
+IronPort-SDR: xGA4BtmtfZZ7UJxEZdUJf4FrE2LAG2tGkOhfzzrqk7LXDgndEWslqkQaZWnoV3e8T4CrZHFxti
+ tFvxADeOzldw==
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Feb 2024 14:05:13 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+	by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Tm4yw52jmz1RtVS
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 14:05:12 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+	reason="pass (just generated, assumed good)"
+	header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+	opensource.wdc.com; h=content-transfer-encoding:content-type
+	:in-reply-to:organization:from:references:to:content-language
+	:subject:user-agent:mime-version:date:message-id; s=dkim; t=
+	1709244297; x=1711836298; bh=5DbVUHySeDB9YEJSKPkg8srk8wvvGFrP3vf
+	hRWS7FHE=; b=PKgyndpqPaoVtbkHJHnNngynZ8i3Cnbj5CubPIpPguFVaxaW79b
+	yfdudKrjmX+iQfkitUX5H3wrJCm41H+wcM2lYznfLBNqQQOFifBIlGT7nm5nEWAa
+	ki9w4jIlxp1ETlzaZYoVCbgId94JOJmmabmJrsKwQcoCq546jsU/vZYNV9cainvs
+	LUOb6SefCZoP39xsxJwjILrSEn6v3APatlMJggXzRpdqnRfROt2BebEPvUThewa5
+	EgZKie41VUPR+7xpclyRTdLCmFz65+YJdZ4+9ChnP1x4+5C00UAt6IgnQxbSouHa
+	faAg0EbwbEK6zbheCI5MHUIMChadcMv51cA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+	by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id E3UsnjveWYtI for <linux-scsi@vger.kernel.org>;
+	Thu, 29 Feb 2024 14:04:57 -0800 (PST)
+Received: from [10.111.69.9] (c02drav6md6t.sdcorp.global.sandisk.com [10.111.69.9])
+	by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Tm4yc5T89z1RtVG;
+	Thu, 29 Feb 2024 14:04:56 -0800 (PST)
+Message-ID: <18490fc9-7fda-41ee-803a-bda874c2b42d@opensource.wdc.com>
+Date: Thu, 29 Feb 2024 14:04:56 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,73 +79,45 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi/sd_zbc: Use READ(10)/WRITE(10) for zoned UFS devices
+Subject: Re: [PATCH] ipr: Remove SATA support
 Content-Language: en-US
-To: Damien Le Moal <dlemoal@kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20240229172333.2494378-1-bvanassche@acm.org>
- <d28c3a75-0a90-4720-a510-7e6847d76f8b@kernel.org>
- <eec0d0d1-9fe3-457f-8150-e5cbe19a9f23@acm.org>
- <ecbc260c-1202-4b0f-bcc9-4886c85bf43c@kernel.org>
- <527dfffe-5ea5-4a0c-9be4-d336e202b34b@acm.org>
- <0c34b7b3-0e24-4256-b593-98675db8e3a8@kernel.org>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <0c34b7b3-0e24-4256-b593-98675db8e3a8@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Elektrokinesis DJ <cpubuilder2@gmail.com>, brking@linux.vnet.ibm.com,
+ "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: jejb@linux.ibm.com, john.g.garry@oracle.com, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com, wenxiong@linux.ibm.com,
+ Niklas Cassel <cassel@kernel.org>
+References: <CABa-fKRfE8B2TLVJASB9xQaOXDiYH3YCw0YEEg1UcGu2Le8xWw@mail.gmail.com>
+From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <CABa-fKRfE8B2TLVJASB9xQaOXDiYH3YCw0YEEg1UcGu2Le8xWw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 2/29/24 11:58, Damien Le Moal wrote:
-> On 2024/02/29 10:54, Bart Van Assche wrote:
->> On 2/29/24 10:31, Damien Le Moal wrote:
->>> Yes, but I find that a little fragile and given that rw-10 causes problems with
->>> ZBC, I prefer to make it very explicit that the 10B command variants should not
->>> be used.
->>
->> Hi Damien,
->>
->>   From commit c6463c651d7a ("sd_zbc: Force use of READ16/WRITE16"; v4.10):
->>
->> -------------------------------------------------------------------------
->> sd_zbc: Force use of READ16/WRITE16
->>
->> Normally, sd_read_capacity sets sdp->use_16_for_rw to 1 based on the
->> disk capacity so that READ16/WRITE16 are used for large drives. However,
->> for a zoned disk with RC_BASIS set to 0, the capacity reported through
->> READ_CAPACITY may be very small, leading to use_16_for_rw not being
->> set and READ10/WRITE10 commands being used, even after the actual zoned
->> disk capacity is corrected in sd_zbc_read_zones. This causes LBA offset
->> overflow for accesses beyond 2TB.
->>
->> As the ZBC standard makes it mandatory for ZBC drives to support
->> the READ16/WRITE16 commands anyway, make sure that use_16_for_rw is set.
->> -------------------------------------------------------------------------
->>
->> Would this change be sufficient to fix the problems mentioned above?
->>
->> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->> index 997de4daa8c4..71f477e502e9 100644
->> --- a/drivers/scsi/sd.c
->> +++ b/drivers/scsi/sd.c
->> @@ -1279,7 +1279,7 @@ static blk_status_t
->> sd_setup_read_write_cmnd(struct scsi_cmnd *cmd)
->>    	if (protect && sdkp->protection_type == T10_PI_TYPE2_PROTECTION) {
->>    		ret = sd_setup_rw32_cmnd(cmd, write, lba, nr_blocks,
->>    					 protect | fua, dld);
->> -	} else if (sdp->use_16_for_rw || (nr_blocks > 0xffff)) {
->> +	} else if (sdp->use_16_for_rw || (nr_blocks > 0xffff) || (lba >> 32)) {
-> 
-> Sure, that works too, but seems useless given that we do have use_16_for_rw set.
-> Would clearing use_10_for_rw to 0 cause a problem for zoned UFS drives ?
+On 2024/02/29 9:31, Elektrokinesis DJ wrote:
+> I am dissatisfied with the decision to remove SATA from the ipr driver, I
+> have multiple machines in my homelab that now require manual patching every
+> time I would like to update the kernel and initrd image. Bladecenter PS700
+> uses the ipr SCSI driver if you install a common SATA SSD into the Planar
+> SAS slots. This limits me from being able to use newer kernels without
+> patching, unless I would like to procure expensive SAS SSDs.
 
-The patch at the start of this email thread should be sufficient. I
-shared the above change because I wanted to make sure that I understand
-why 16-byte commands need to be selected explicitly for zoned hard
-disks. I plan to post a second version of that patch with the
-use_10_for_rw = 0 assignment restored.
+The ipr driver was the only libsas/ATA driver that had not been converted to the
+new libata error handling, and was thus preventing necessary cleanups in libata.
+When it was removed, it seemed that no-one was using ATA devices with IPR beside
+SATA DVDs, and very few people had this hardware to test anything.
 
-Thanks,
+So it seems that devices beside DVDs were/are actually used.
 
-Bart.
+We can try to reintroduce the support for ATA in ipr, but that will not be a
+simple revert as the new EH handling needs to be supported.
+
+Brian,
+
+Any comment ? Is this feasible ?
+I do not have the hardware to work on this, so patches will have to be done by
+you or someone with access.
+
+-- 
+Damien Le Moal
+Western Digital Research
 
