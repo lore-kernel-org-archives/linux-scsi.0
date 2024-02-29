@@ -1,219 +1,97 @@
-Received: from mx2.zhaoxin.com (mx2.zhaoxin.com [203.110.167.99])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB6504F615
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 08:40:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.110.167.99
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94D316350F
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 10:14:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709196052; cv=none; b=By98uEuwBvYWZHPyHD2cL6dJAyaKH0Hc8HO99hsmVjU1HS35QipxkIpWyek/GjvkRRNwCKmLcUkhuyt6dGhDEtFP5ifskCYQVd3Wgf8NNFbWrAEiXY7KyZgVpdvmGhAAMNwzeAp7bBuTX1LZQ2ETO6xr0fS/qF557coNhC74hHk=
+	t=1709201649; cv=none; b=MUxPxedQAVErbwxzDDiIKLrBqti26CwZ3Spwh3ygfuelf1svXoXmwIW7G04oU5t80ct4/vPLMb4WTfWriBO8G7rdVOtbgvE6Fnwz/gOwEk6azwd7cInridRyBUp9FAl4ytaVZWvYsPhBND9JveDTvzamTFJc/DFRRJWQAZu1Gp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709196052; c=relaxed/simple;
-	bh=FLBMpOnUYTtHFFdZlsSLuXW6H+PMwcHf+HhPg0BQiiU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=pm5X+AhPkmxUXd+/GK2D1Jdp8L/vdr3Nb/2L6k7/QYIh9ZSbuaMYvQTu/HDsFOea6xWsC0fhGs8X5yNdcUEzbaX0uqyjUTs5PrHRVls2N6afflgo1kFdxopio2iFkyb3hfUCGXQIjSDUNRiefho02Riov+KqIljpIFpgN68rtg0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=203.110.167.99
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
-X-ASG-Debug-ID: 1709196046-1eb14e0c7c4cd80001-ziuLRu
-Received: from ZXSHMBX1.zhaoxin.com (ZXSHMBX1.zhaoxin.com [10.28.252.163]) by mx2.zhaoxin.com with ESMTP id IFq8M5OlV5QskFli (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Thu, 29 Feb 2024 16:40:46 +0800 (CST)
-X-Barracuda-Envelope-From: WeitaoWang-oc@zhaoxin.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.163
-Received: from zxbjmbx1.zhaoxin.com (10.29.252.163) by ZXSHMBX1.zhaoxin.com
- (10.28.252.163) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 29 Feb
- 2024 16:40:46 +0800
-Received: from [10.29.8.21] (10.29.8.21) by zxbjmbx1.zhaoxin.com
- (10.29.252.163) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 29 Feb
- 2024 16:40:44 +0800
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.163
-Message-ID: <bb269ab0-128b-1988-acf1-8df05f08cf86@zhaoxin.com>
-X-Barracuda-RBL-Trusted-Forwarder: 10.29.8.21
-Date: Fri, 1 Mar 2024 00:40:43 +0800
+	s=arc-20240116; t=1709201649; c=relaxed/simple;
+	bh=aO/xACjri3DeJZJbYyZbIn3zPglqkV2lKn/RFIM8uSY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=V8zFjovWgye+E+jF1T6HgwI1qyanK+oiPkRP552i/gyOUxyKohjS3koKtAc8sy9T4acNWAJ7X9tNdyYhYA66W5OUZbH2lMR6eSvSR+WzVajmwOVBU9GcULzlhT1WZwfys2OoryfGDj933xRf79ged0ILLdkfQ6I11SzBKX94fhQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=OQYLDG9W; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="OQYLDG9W"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-412bf3d52d7so2034915e9.2
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 02:14:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1709201646; x=1709806446; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=jnnbn314m5C/930ao7THUc7euOiuIRor/2uYI5CotuI=;
+        b=OQYLDG9WK5oGDUeJw3oEY+37s7u1HPzCaDnG2gE110jbPcu23xWvrOnaVu7Bkiii/s
+         AJrrnDMEsKhN88lCVoyaoV2YYhccDCU0M7qaJt43pziq3wPuIkg5+pwBWikz/tlF+Y11
+         jOd3d5VY8r7tWTNOxRIuQwZGisErRgfCUbDTB8VRcWhq5WUjXcxiEQdiX57JFJ/+yWW6
+         yifbG/lKq7t+l+AjUD1j6FtdR9alPKcumRLlIpflKpO8atep/xhR73UgB3lsGY2/i3pS
+         H0+0dwb2usPzGni/lsbMaKRrZlde7iqPQh6FFb+Nzc6NNwvjWKO72FLqp+DUUySl0Jkr
+         e80A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709201646; x=1709806446;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=jnnbn314m5C/930ao7THUc7euOiuIRor/2uYI5CotuI=;
+        b=kc9YkQnsw+Osi4C52ht/3F9qzg7HjExfX0nSRD5yi0TQGG34cKtE/LCLIq5oBMuQw6
+         /294KtEmnM4s2TF2ia+MWzVResBMYLmkqumiFdWaGWMqx+k2QODCzaXqIjPERoSnYSzw
+         lVRE7ZSgh8WEjUoDpiYI1ySJox0YjvkAAvgj5ReXcPEnuMGDWEDoCV2qscM2JDNEXz1y
+         OeBZlNYeVMs34zlzULxAmVqQAJg/GfV3KVYYVsqW45cF2PMZ4GjcOhthKSVMP3OLKmRl
+         iQjG3slmNVyuUotzMGt6aJDDQV7CiLShKFOAkw2NDideAkfsT7JmGOAeMIVFOi94p/Gr
+         1nUQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUmkW5ZHXZT1ico0SYBhqs4b1fHLZuNW/t+T3poUzztg8m3ml+p/4mr9Bb7YfoSi832IDXkLJprJcpPJLhNxUA8jB2lDmuFcbEL+Q==
+X-Gm-Message-State: AOJu0Yw6UaPXZGjXiBdpaBGMiJAx3pLeZQfRETtsOjM0gIGUuDfoc9b8
+	h+ycc7KmSu1VnCxTWQpqAw+B53f7cLftZTwCVkitOnUNYr50kBfrr5BMr2DjlnE=
+X-Google-Smtp-Source: AGHT+IGFyJEaCoJzyd7PF1nh1cjcVfv4xAAk+3Zq2JvER863k+1HDULiC8Ke+TEiagF31qTpvhzwyQ==
+X-Received: by 2002:a05:600c:a001:b0:412:bd5b:efbd with SMTP id jg1-20020a05600ca00100b00412bd5befbdmr1040220wmb.1.1709201645978;
+        Thu, 29 Feb 2024 02:14:05 -0800 (PST)
+Received: from ?IPV6:2001:a61:1366:6801:d8:8490:cf1a:3274? ([2001:a61:1366:6801:d8:8490:cf1a:3274])
+        by smtp.gmail.com with ESMTPSA id n33-20020a05600c3ba100b00412bca4cdf9sm1504987wms.36.2024.02.29.02.14.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 29 Feb 2024 02:14:05 -0800 (PST)
+Message-ID: <62891b42-7662-463a-885b-fba1d29bafdd@suse.com>
+Date: Thu, 29 Feb 2024 11:14:04 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
+User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v2] USB:UAS:return ENODEV when submit urbs fail with
  device not attached.
 Content-Language: en-US
-X-ASG-Orig-Subj: Re: [PATCH v2] USB:UAS:return ENODEV when submit urbs fail with
- device not attached.
-To: Oliver Neukum <oneukum@suse.com>, <stern@rowland.harvard.edu>,
-	<gregkh@linuxfoundation.org>, <linux-usb@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-	<usb-storage@lists.one-eyed-alien.net>
-CC: <WeitaoWang@zhaoxin.com>, <stable@vger.kernel.org>
+To: "WeitaoWang-oc@zhaoxin.com" <WeitaoWang-oc@zhaoxin.com>,
+ Oliver Neukum <oneukum@suse.com>, stern@rowland.harvard.edu,
+ gregkh@linuxfoundation.org, linux-usb@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ usb-storage@lists.one-eyed-alien.net
+Cc: WeitaoWang@zhaoxin.com, stable@vger.kernel.org
 References: <20240228111521.3864-1-WeitaoWang-oc@zhaoxin.com>
  <e8c4e8a3-bfc3-463f-afce-b9f600b588b2@suse.com>
  <07e80d55-d766-1781-ffc9-fab9ddcd33e3@zhaoxin.com>
  <49a365a7-199a-42cd-b8d3-86d72fe5bca6@suse.com>
  <0b0eefa5-71b6-dc08-d103-72b9aebd9237@zhaoxin.com>
  <9263b77e-9ebe-4987-bf7f-8f9fafcf06b3@suse.com>
-From: "WeitaoWang-oc@zhaoxin.com" <WeitaoWang-oc@zhaoxin.com>
-In-Reply-To: <9263b77e-9ebe-4987-bf7f-8f9fafcf06b3@suse.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: ZXSHCAS2.zhaoxin.com (10.28.252.162) To
- zxbjmbx1.zhaoxin.com (10.29.252.163)
-X-Barracuda-Connect: ZXSHMBX1.zhaoxin.com[10.28.252.163]
-X-Barracuda-Start-Time: 1709196046
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://10.28.252.36:4443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at zhaoxin.com
-X-Barracuda-Scan-Msg-Size: 4700
-X-Barracuda-BRTS-Status: 0
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
-X-Barracuda-Spam-Score: 1.09
-X-Barracuda-Spam-Status: No, SCORE=1.09 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=DATE_IN_FUTURE_06_12, DATE_IN_FUTURE_06_12_2
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.121476
-	Rule breakdown below
-	 pts rule name              description
-	---- ---------------------- --------------------------------------------------
-	0.01 DATE_IN_FUTURE_06_12   Date: is 6 to 12 hours after Received: date
-	3.10 DATE_IN_FUTURE_06_12_2 DATE_IN_FUTURE_06_12_2
-
-On 2024/2/29 16:08, Oliver Neukum wrote:
-> 
-
-> On 29.02.24 12:19, WeitaoWang-oc@zhaoxin.com wrote:
-> 
->> When alloc urb fail in the same function uas_submit_urbs,
->> whether we should replace SCSI_MLQUEUE_DEVICE_BUSY with generic
->> error code -ENOMEM? Such like this:
->>
->> @@ -572,7 +571,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
->>           cmdinfo->data_in_urb = uas_alloc_data_urb(devinfo, GFP_ATOMIC,
->>                               cmnd, DMA_FROM_DEVICE);
->>           if (!cmdinfo->data_in_urb)
->> -            return SCSI_MLQUEUE_DEVICE_BUSY;
->> +            return -ENOMEM;
->>           cmdinfo->state &= ~ALLOC_DATA_IN_URB;
->>       }
-> 
-> Hi,
-> 
-> yes, and then you translate in one central place for the SCSI layer
-> into DID_ERROR or DID_NO_CONNECT.
-> 
-
-OK, I'll submit a new version after you help to review the following patch.
+ <bb269ab0-128b-1988-acf1-8df05f08cf86@zhaoxin.com>
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <bb269ab0-128b-1988-acf1-8df05f08cf86@zhaoxin.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 9707f53cfda9..689396777b6f 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -533,7 +533,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, 
-gfp_t gfp,
-   * daft to me.
-   */
 
--static struct urb *uas_submit_sense_urb(struct scsi_cmnd *cmnd, gfp_t gfp)
-+static int uas_submit_sense_urb(struct scsi_cmnd *cmnd, gfp_t gfp)
-  {
-  	struct uas_dev_info *devinfo = cmnd->device->hostdata;
-  	struct urb *urb;
-@@ -541,16 +541,15 @@ static struct urb *uas_submit_sense_urb(struct scsi_cmnd *cmnd, 
-gfp_t gfp)
+On 29.02.24 17:40, WeitaoWang-oc@zhaoxin.com wrote:
 
-  	urb = uas_alloc_sense_urb(devinfo, gfp, cmnd);
-  	if (!urb)
--		return NULL;
-+		return -ENOMEM;
-  	usb_anchor_urb(urb, &devinfo->sense_urbs);
-  	err = usb_submit_urb(urb, gfp);
-  	if (err) {
-  		usb_unanchor_urb(urb);
-  		uas_log_cmd_state(cmnd, "sense submit err", err);
-  		usb_free_urb(urb);
--		return NULL;
-  	}
--	return urb;
-+	return err;
-  }
+> OK, I'll submit a new version after you help to review the following patch.
 
-  static int uas_submit_urbs(struct scsi_cmnd *cmnd,
-@@ -562,9 +561,9 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
+Hi,
 
-  	lockdep_assert_held(&devinfo->lock);
-  	if (cmdinfo->state & SUBMIT_STATUS_URB) {
--		urb = uas_submit_sense_urb(cmnd, GFP_ATOMIC);
--		if (!urb)
--			return SCSI_MLQUEUE_DEVICE_BUSY;
-+		err = uas_submit_sense_urb(cmnd, GFP_ATOMIC);
-+		if (err)
-+			return err;
-  		cmdinfo->state &= ~SUBMIT_STATUS_URB;
-  	}
+perfect.
 
-@@ -572,7 +571,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
-  		cmdinfo->data_in_urb = uas_alloc_data_urb(devinfo, GFP_ATOMIC,
-  							cmnd, DMA_FROM_DEVICE);
-  		if (!cmdinfo->data_in_urb)
--			return SCSI_MLQUEUE_DEVICE_BUSY;
-+			return -ENOMEM;
-  		cmdinfo->state &= ~ALLOC_DATA_IN_URB;
-  	}
+	Regards
+		Oliver
 
-@@ -582,7 +581,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
-  		if (err) {
-  			usb_unanchor_urb(cmdinfo->data_in_urb);
-  			uas_log_cmd_state(cmnd, "data in submit err", err);
--			return SCSI_MLQUEUE_DEVICE_BUSY;
-+			return err;
-  		}
-  		cmdinfo->state &= ~SUBMIT_DATA_IN_URB;
-  		cmdinfo->state |= DATA_IN_URB_INFLIGHT;
-@@ -592,7 +591,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
-  		cmdinfo->data_out_urb = uas_alloc_data_urb(devinfo, GFP_ATOMIC,
-  							cmnd, DMA_TO_DEVICE);
-  		if (!cmdinfo->data_out_urb)
--			return SCSI_MLQUEUE_DEVICE_BUSY;
-+			return -ENOMEM;
-  		cmdinfo->state &= ~ALLOC_DATA_OUT_URB;
-  	}
-
-@@ -602,7 +601,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
-  		if (err) {
-  			usb_unanchor_urb(cmdinfo->data_out_urb);
-  			uas_log_cmd_state(cmnd, "data out submit err", err);
--			return SCSI_MLQUEUE_DEVICE_BUSY;
-+			return err;
-  		}
-  		cmdinfo->state &= ~SUBMIT_DATA_OUT_URB;
-  		cmdinfo->state |= DATA_OUT_URB_INFLIGHT;
-@@ -611,7 +610,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
-  	if (cmdinfo->state & ALLOC_CMD_URB) {
-  		cmdinfo->cmd_urb = uas_alloc_cmd_urb(devinfo, GFP_ATOMIC, cmnd);
-  		if (!cmdinfo->cmd_urb)
--			return SCSI_MLQUEUE_DEVICE_BUSY;
-+			return -ENOMEM;
-  		cmdinfo->state &= ~ALLOC_CMD_URB;
-  	}
-
-@@ -621,7 +620,7 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
-  		if (err) {
-  			usb_unanchor_urb(cmdinfo->cmd_urb);
-  			uas_log_cmd_state(cmnd, "cmd submit err", err);
--			return SCSI_MLQUEUE_DEVICE_BUSY;
-+			return err;
-  		}
-  		cmdinfo->cmd_urb = NULL;
-  		cmdinfo->state &= ~SUBMIT_CMD_URB;
-@@ -698,7 +697,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd)
-  	 * of queueing, no matter how fatal the error
-  	 */
-  	if (err == -ENODEV) {
--		set_host_byte(cmnd, DID_ERROR);
-+		set_host_byte(cmnd, DID_NO_CONNECT);
-  		scsi_done(cmnd);
-  		goto zombie;
-  	}
-
-Thanks and best regards,
-weitao
