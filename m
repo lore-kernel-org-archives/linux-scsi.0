@@ -1,101 +1,101 @@
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D76F538DC3;
-	Fri,  1 Mar 2024 01:55:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12C0345C12
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Mar 2024 03:46:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709258138; cv=none; b=TiCiakTg3jiEo+SQp1oW9N+VpUEuJc1HiKqRCxx+IuQ7134KYq3yAlxm4Dfd7KLePeP0JPOuIOwLP2bnCGAenBeZ9gEJVaj6aPWx9zgDFCHnHj3YUfsT90nDozPRszhgiQbwgsRbT4BFC1dS2CQDzowq9NFWm2fTaE+Wz8sQnMU=
+	t=1709264781; cv=none; b=LgLaeP7D6opsPywDJARa93acz9pHRUgvk2JwYMin5wotONSK1Qeybb6ODlR0DqraoS2l1nS3QWAub526OF6+AbzvHag7EQ6hqT3KeA6rLNrcyDrcBUpCP9zvqz6gfOeLpJEtB9fSNI7n969pVMAaziU+Aq9jJPbNq0yxMM7tj+Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709258138; c=relaxed/simple;
-	bh=oqWoH8VhvOjQFKWrC83og1gw9x5C8cR+JCMt9m9J5hM=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=O+RlPo1KOIMltdUESKz51ro/ZqGtLyWmDD6N0q9U/bfpDNZuzNUNeIrSa2oR83qgWGlWva6EZxOx3J4WRfzP33fJUtfDvUEiHYBQOrNQQsPJu0TS/ScqFhLsZ0CWimwtE4g0EqnoOu93zd4rHzWk/qFmyueLNOleOCwXu5Rwgis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4TmB2T0nQ4z1Q96j;
-	Fri,  1 Mar 2024 09:53:37 +0800 (CST)
-Received: from canpemm100001.china.huawei.com (unknown [7.192.105.122])
-	by mail.maildlp.com (Postfix) with ESMTPS id C68C914037F;
-	Fri,  1 Mar 2024 09:55:27 +0800 (CST)
-Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm100001.china.huawei.com (7.192.105.122) with Microsoft SMTP Server
+	s=arc-20240116; t=1709264781; c=relaxed/simple;
+	bh=iNkJ1ntQQ70wiItkAxBObKNrMoTyaPJ5kZ0ruDm3EZs=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=SUNSKhFtm6AUWmMogS1537vP77eoW8B1Ur3i7UE+HqzkHvz9s5EIYUshib9qIo+1NHCqsDGk+PS1pM+t0cfleDV+eFkbsALAxmBLG6eVpNb2tymBe+3rSJaeoG00K4//g5JZbrr21SnAtQRczGvISL1jMsdRW4ks0G5+hrho76o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=Qe4avecc; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Qe4avecc"
+X-UUID: 401817f4d77e11ee935d6952f98a51a9-20240301
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=CPu3l9H69Jhri37bGWe8fRzSRrxBLsJfYK5gBNQ9uTM=;
+	b=Qe4aveccJrr54NB/ZyXnk3+VPznCfYUrT5OEd6rMMTnSQ3iedT4n6kUcHIn4ATLIIV0iDX6fwR1NH5wk5urIsWKpnwX5urCjnGtvLgt2HVL2IgodQ28KJEkaUSO7LN9HL9G+eaZpL1HDcQQAHDjH1xNNbOL6wXwyfJdB8qIqeIk=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.37,REQID:8cd52849-4c4f-4d0f-bcaa-c974b3de24be,IP:0,U
+	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-5
+X-CID-META: VersionHash:6f543d0,CLOUDID:4c1ffb80-4f93-4875-95e7-8c66ea833d57,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
+	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
+X-UUID: 401817f4d77e11ee935d6952f98a51a9-20240301
+Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1577241430; Fri, 01 Mar 2024 11:46:13 +0800
+Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Fri, 1 Mar 2024 09:55:27 +0800
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Fri, 1 Mar 2024 09:55:26 +0800
-Subject: Re: [PATCH] scsi: libsas: Fix disk not being scanned in after being
- removed
-To: John Garry <john.g.garry@oracle.com>, Xingui Yang <yangxingui@huawei.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
-References: <20240221073159.29408-1-yangxingui@huawei.com>
- <f095aa1c-f233-40f9-ad0f-fcd8fe69a80d@oracle.com>
-From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <e2a725ee-98b3-fd57-6ee4-af031ffbd6bc@huawei.com>
-Date: Fri, 1 Mar 2024 09:55:26 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+ 15.2.1118.26; Fri, 1 Mar 2024 11:46:11 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
+ mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Fri, 1 Mar 2024 11:46:11 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
+	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
+	<naomi.chu@mediatek.com>, <chu.stanley@gmail.com>
+Subject: [PATCH v3] ufs: core: add config_scsi_dev vops comment
+Date: Fri, 1 Mar 2024 11:46:10 +0800
+Message-ID: <20240301034610.24928-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.18.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <f095aa1c-f233-40f9-ad0f-fcd8fe69a80d@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- canpemm500004.china.huawei.com (7.192.104.92)
+Content-Type: text/plain
+X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-AS-Result: No-10--5.435400-8.000000
+X-TMASE-MatchedRID: MACTyP4PrdMMQLXc2MGSbFz+axQLnAVBTJDl9FKHbrm7qpOHKudqc/mv
+	83Rzid1phgjat2+RfEfdRIKCUEZlk49oUcx9VMLgFEUknJ/kEl5jFT88f69nG/oLR4+zsDTtjoc
+	zmuoPCq1ze+i+Dlv5ABEG8YoH0A3pTlOaLF8YOD+mDC7RQmDzf6yO1uMZNQBO
+X-TM-AS-User-Approved-Sender: No
+X-TM-AS-User-Blocked-Sender: No
+X-TMASE-Result: 10--5.435400-8.000000
+X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
+X-TM-SNTS-SMTP: 4542F3BD3F18A93542461E9E6F76A2ECD8F0E86ED94C860EEEA7DBD32B326C622000:8
+X-MTK: N
 
-On 2024/2/29 2:13, John Garry wrote:
-> On 21/02/2024 07:31, Xingui Yang wrote:
->> As of commit d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to
->> update PHY info"), do discovery will send a new SMP_DISCOVER and update
->> phy->phy_change_count. We found that if the disk is reconnected and phy
->> change_count changes at this time, the disk scanning process will not be
->> triggered.
->>
->> So update the PHY info with the last query results.
->>
->> Fixes: d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to 
->> update PHY info")
->> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->> ---
->>   drivers/scsi/libsas/sas_expander.c | 9 ++++-----
->>   1 file changed, 4 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/scsi/libsas/sas_expander.c 
->> b/drivers/scsi/libsas/sas_expander.c
->> index a2204674b680..9563f5589948 100644
->> --- a/drivers/scsi/libsas/sas_expander.c
->> +++ b/drivers/scsi/libsas/sas_expander.c
->> @@ -1681,6 +1681,10 @@ int sas_get_phy_attached_dev(struct 
->> domain_device *dev, int phy_id,
->>           if (*type == 0)
->>               memset(sas_addr, 0, SAS_ADDR_SIZE);
->>       }
->> +
->> +    if ((SAS_ADDR(sas_addr) == 0) || (res == -ECOMM))
-> 
-> It's odd to call sas_set_ex_phy() if we got res == -ECOMM. I mean, in 
-> this this case disc_resp is not filled in as the command did not 
-> execute, right? I know that is what the current code does, but it is 
-> strange.
+From: Peter Wang <peter.wang@mediatek.com>
 
-The current code actually re-send the SMP command and update the PHY 
-status only when the the SMP command is responded correctly.
+Add config_scsi_dev vops comment.
 
-Xinggui, can you please fix this and send v3?
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+---
+ include/ufs/ufshcd.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Jason
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 7f0b2c5599cd..a19d87e7980f 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -327,6 +327,7 @@ struct ufs_pwr_mode_info {
+  * @op_runtime_config: called to config Operation and runtime regs Pointers
+  * @get_outstanding_cqs: called to get outstanding completion queues
+  * @config_esi: called to config Event Specific Interrupt
++ * @config_scsi_dev: called to configure scsi device parameters
+  */
+ struct ufs_hba_variant_ops {
+ 	const char *name;
+-- 
+2.18.0
 
