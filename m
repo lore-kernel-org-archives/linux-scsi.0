@@ -1,105 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f201.google.com (mail-yb1-f201.google.com [209.85.219.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD93642A8C
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 23:53:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 018FA2BAE3
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Mar 2024 01:38:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709250815; cv=none; b=b99J+h5U8Viv1qfNNd0kvfCt78LDUPtsg4/cjtCX0qMyfMQ49bz9R5SrWoZbeH52M1CIQ3K7wwyRun53Bmtr9sfSJ7DZjcG5jJjJ3PWJhittBORNrelyvxqiRug0KKV4svZVGyoYS9SwMJM6B+gTWOVr/vYgGlyjn5mHe4u7yHE=
+	t=1709257100; cv=none; b=MOCT7LBz6JR1A8Ui1haiNKqIH95waFUrF7ueBh0o4IhKwg3mjJuIXiTtLl+aPJ4811LpPbMxtwVtoZLfxHiUCGfyKxZoOBwdWvTAM08yeXM7xMm8xhc2PD5wlibdjWAU6yyT8Q1SHjhlgj+b/y0Qgtn1EiOkcC+51ws+qElJe+U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709250815; c=relaxed/simple;
-	bh=TXGlMtKfpA+7e5mLP2ZfPxXbX/6avZgIub5ouL9izKc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Gc0Bfy8FNq+Pt0I9PMl2vHZ2tOnDASjcJ5hN/cI2hWci9vr8RbANXzZzxf9Bn2Nq6gZyD7UaIIqRczQRPOx8GCY9lSso6XQ1eIKSQySikTzK+yjFlKbE5sm2GTddsyWrysTG20EoFFCpfNROvmT25ZStvtYLTHqyvyYgMzuNZQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MXPWbhWM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1709257100; c=relaxed/simple;
+	bh=KMpxKpbpjeoQqcOIhlHPKvhUGkSROvNhsAYmAL2oE2k=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=GsvpFve7Q0hzZXL9gmh6XdU5EBaz8LUPleXFpkTSY8PFVHt0xJJ4FoE8KD5owSb/1MfeZ8P4ZoPD7AvrUVrvO6lLtnHlratI7Aa8znpebJq+jTdii+gpOkypwNGHTp3onypmyoMWEUrB6Te0PIu9wXBEsewbHwkQ3QYcV19JNRE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fIvwGQoO; arc=none smtp.client-ip=209.85.219.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MXPWbhWM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0EA7C43390;
-	Thu, 29 Feb 2024 23:53:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709250815;
-	bh=TXGlMtKfpA+7e5mLP2ZfPxXbX/6avZgIub5ouL9izKc=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=MXPWbhWMNvgrKUNNTEEThqac2m43s+W325wwnV/qxxCWe99cqB9j5Dp/PFlES+3sA
-	 r5rSffbmTcaKYEPWTJYLqpsF6OKRt5i3jSCyd/A/n+wDSi0bJYC7bqahOTzVtjMJBs
-	 ZYzTYw9/eqqAZDNW/uFHboa3c/7EELjFuLktFCZo9iGoUjTyISRPS/GCulh8YBGuek
-	 fGeeZ45clRCjRLTDz8zvI6Y+3vkyE4DGxOXY3HL8JhG/32UjRFMoUGqhvSzaQJFd7A
-	 mmw1DGpGDhD+8GaVXdE5YO3W6LeLrFE0lidi7V1P/xklVJ6VNFW1G/nFCcbeZINXHc
-	 14zs12s3yycxg==
-Message-ID: <99d2f02a-8198-479d-a361-96a79143e5a8@kernel.org>
-Date: Thu, 29 Feb 2024 15:53:34 -0800
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fIvwGQoO"
+Received: by mail-yb1-f201.google.com with SMTP id 3f1490d57ef6-dcc4563611cso2685549276.3
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Feb 2024 17:38:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1709257097; x=1709861897; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=CWSEzr83qDpP+Sd5Vt8txQd9Oa0cdIaTZ7C0izQO4eA=;
+        b=fIvwGQoOvFWge1dBEWoKXM+lpbDLzacvG2+mc+8DzCbwZlmiZF/obxOftllakc873O
+         TO1JAaEdhcyW1oj3MlxBj5oj8+omC5oldVHdO1oqTckZ0rqlehWEX5A3jfGq5y1dZRZ8
+         oDXkYw0KEQoRMqahc2bykMoM1c9YRJvITd14Z5HfesnJQpOyxWnKwjM+Vl7OnUecC8Dl
+         1LmHspnJILDxt+6g5FjvP4KA0va/P6kLLEkivlm7KnOwKeEvU0mHvYqYlWGBXUN/DOMT
+         lMjuTFrC5GnV0u5/bW6bpMKZPBFBX2IqVr9uBmLLK/x3CBkmCmqRmT2DlcqEFRSOelQe
+         sDfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709257097; x=1709861897;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=CWSEzr83qDpP+Sd5Vt8txQd9Oa0cdIaTZ7C0izQO4eA=;
+        b=R9+Mute7o2HegYuNPxk6QjWDAxS7xayYKii3jHLAH9pasV+xBZblAXt7jHGOmEAeWC
+         NlmKjrUwGaDR6pm4ITDTqhCldBSJhXWBeK11pkOPjnYMruEDDrw2Dj6XKgMP/TSwYQVU
+         N1Acf6aJbmFksEqjQnJl3jmuxjj7zfP/CS+PLxGAj1DNFOOW2I8AP/kTPtoLuMD48al8
+         yOL852woHK9ukupMoDb4lHFirivjcfBmogTChRE0SPOimINBM4z9vurLpARS+oXozptl
+         FojH77/Rgt32QzU7MZt4O0diNW1im3tK1H9zxsuiKljz6UrLlTAEMw8QeX7aDftuWvFP
+         kZeA==
+X-Forwarded-Encrypted: i=1; AJvYcCWcrY4kVB+jAzE3StSkPynS1tJmpQYNbqzelsJGydNtyA2HV3RZsdRqJEo/MUSQJRAghqh7hzClF2bAKngUhOWZNK8RJx90F64dgQ==
+X-Gm-Message-State: AOJu0YxruCa/B7LUCkSViGBQsy/vOQ8Ou5d8D2EwIjapEdrg92K9P9Do
+	mH6ZrrbGYSlTbkXDzhO+SHiFXCkkjwwzipx5a4UK1nocVV/ai6DHCzvOlhmWpeYcMzr2vI8vUxy
+	Y6of+TnRiKg==
+X-Google-Smtp-Source: AGHT+IE404rz7EDy2MtSWy82xprXTyrLWHNGQHVJXAyHGYB3tIhAtfRmvWt9ht+SCiuuaQ95Ip2J5VNwdGzIlA==
+X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:13:3564:51b2:6cdf:92fb])
+ (user=ipylypiv job=sendgmr) by 2002:a05:6902:728:b0:dc2:1f34:fac4 with SMTP
+ id l8-20020a056902072800b00dc21f34fac4mr42691ybt.2.1709257097144; Thu, 29 Feb
+ 2024 17:38:17 -0800 (PST)
+Date: Thu, 29 Feb 2024 17:37:56 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi/sd_zbc: Use READ(10)/WRITE(10) for zoned UFS devices
-Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20240229172333.2494378-1-bvanassche@acm.org>
- <d28c3a75-0a90-4720-a510-7e6847d76f8b@kernel.org>
- <eec0d0d1-9fe3-457f-8150-e5cbe19a9f23@acm.org>
- <ecbc260c-1202-4b0f-bcc9-4886c85bf43c@kernel.org>
- <527dfffe-5ea5-4a0c-9be4-d336e202b34b@acm.org>
- <0c34b7b3-0e24-4256-b593-98675db8e3a8@kernel.org>
- <0004135e-56e9-4722-bc6a-ddb293274d39@acm.org>
- <cd13bc17-f930-471d-9b69-81831205db64@acm.org>
- <57fc23ee-d450-40b1-89f5-c7a85b6b158a@kernel.org>
- <fbe8bf39-4222-4b5a-8c7f-d284bc9f29fe@acm.org>
- <e3d40ae6-ed41-40a0-8521-48a2797fa255@kernel.org>
- <aca96b4f-96ca-4dd1-891d-85f025f39867@acm.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <aca96b4f-96ca-4dd1-891d-85f025f39867@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.44.0.278.ge034bb2e1d-goog
+Message-ID: <20240301013759.516817-1-ipylypiv@google.com>
+Subject: [PATCH 0/3] NCQ Priority sysfs sttributes for libsas
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
+	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Jack Wang <jinpu.wang@cloud.ionos.com>, Hannes Reinecke <hare@suse.de>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 2024/02/29 15:25, Bart Van Assche wrote:
-> On 2/29/24 14:45, Damien Le Moal wrote:
->> On 2024/02/29 14:39, Bart Van Assche wrote:
->>> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
->>> index 26af5ab7d7c1..d4d6b3056410 100644
->>> --- a/drivers/scsi/sd_zbc.c
->>> +++ b/drivers/scsi/sd_zbc.c
->>> @@ -734,6 +734,8 @@ static int sd_zbc_check_capacity(struct scsi_disk
->>> *sdkp, unsigned char *buf,
->>>    					(unsigned long long)sdkp->capacity,
->>>    					(unsigned long long)max_lba + 1);
->>>    			sdkp->capacity = max_lba + 1;
->>> +			if (sdkp->capacity > 0xffffffff)
->>> +				sdkp->device->use_16_for_rw = 1;
->>
->> While correct, I do not think that this change is needed. With the first hunk in
->> place, a TYPE_ZBC device will be forced to use RW-16, regardless of the device
->> capacity.
-> 
-> The first hunk of this patch is for ATA devices only. I want to make sure that
-> .use_16_for_rw is set for non-ATA devices if there are LBAs that need more than
-> 32 bits.
+This patch series adds sas_ncq_prio_supported and sas_ncq_prio_enable
+sysfs sttributes for libsas managed SATA devices. Existing libata sysfs
+attributes cannot be used directly because the ata_port location is
+different for libsas.
 
-I missed that ! OK. So, you want to keep RW-16 forced for HDDs, but only have
-RW-10 for zoned UFS devices, is this correct ? If it is, then question: what is
-the device type reported by zoned UFS drives ? If it is TYPE_ZBC, then we should
-follow SBC specs and thus have RW-16 mandatory. Is UFS, again, not following
-completely the scsi specifications ?
+Igor Pylypiv (3):
+  ata: libata-sata: Factor out NCQ Priority configuration helpers
+  scsi: libsas: Define NCQ Priority sysfs attributes for SATA devices
+  scsi: pm80xx: Add libsas SATA sysfs attributes group
 
-I would really prefer to not spread this setting between scsi sd and
-libata-scsi. I also do not like that your change for the scsi side depends on
-the capacity instead on the device type. Small capacity ZBC drives can be
-created with scsi_debug or tcmu-runner zbc handler, and these should use RW-16
-as per the specifications too.
-
-> 
-> Thanks,
-> 
-> Bart.
+ drivers/ata/libata-sata.c         | 130 ++++++++++++++++++++----------
+ drivers/scsi/libsas/sas_ata.c     |  87 ++++++++++++++++++++
+ drivers/scsi/pm8001/pm8001_ctl.c  |   5 ++
+ drivers/scsi/pm8001/pm8001_init.c |   1 +
+ drivers/scsi/pm8001/pm8001_sas.h  |   1 +
+ include/linux/libata.h            |   4 +
+ include/scsi/sas_ata.h            |   6 ++
+ 7 files changed, 190 insertions(+), 44 deletions(-)
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.44.0.278.ge034bb2e1d-goog
 
