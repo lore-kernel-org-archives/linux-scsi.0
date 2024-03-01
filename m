@@ -1,44 +1,45 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+Received: from mail-il1-f179.google.com (mail-il1-f179.google.com [209.85.166.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCA2D1F16B
-	for <linux-scsi@vger.kernel.org>; Fri,  1 Mar 2024 23:03:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F4344206E
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Mar 2024 23:04:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709334232; cv=none; b=YYqI115LXwyGtIhSvK6bHDQyy+gF22uvv2j1OJ8tI90vIB76eX/JX2sGHNkssvBnFEQYtDczw/3F+B7hatcnDSfdB6hKWt0kP4fbXrK5jYR1SYqxOvSxB3B4ByyaDQP8038O2rBU9hsMsQyvVHYlxewODkpQlGbYo4MBwgPPdz4=
+	t=1709334295; cv=none; b=UjMwQj1fdltXTXUlQejuqWBDR9pO3Qj7dzofBAV2mu5Be9fOuidqXQPRI6xWXSvms5liSTGnzqQiZYazj+ZnD99YAxo4Cpu4RF78Sr8aFdvPaQdDS6vEQqVlaHjfbvSQ2XQohGXFIlO3AmTuTzMbod0JtCNzBUIJ8cAVWFC0Zl0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709334232; c=relaxed/simple;
-	bh=V1Hlfc6dmZRcMp6S6SU8k5QfMkvtwS7Xjk5etHhgvNc=;
+	s=arc-20240116; t=1709334295; c=relaxed/simple;
+	bh=N2cPQ/qamgYKQiZt6F8JxqkMkeMuHMsMrjJV8QIW4+s=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Z4AX13GzgwpaNCE/sCeoR5QX7niufKuiXT88PtBFzqjsiIViZqjvsjDIpvvrISmLmCmhh2Gjyqr/++T4C5qAe1MEEWK8FljHQ3DnttYqm+lfONR80y9LZZq9a5l3zqikOyIgcRkVccBi4wiPJe31fQLLbojnMN+XpcPbzbBLKRs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.43
+	 In-Reply-To:Content-Type; b=TRfcq1wmTmqxyAuMSXRpdeZfWaLYonrs4qpNsfrguhZNqeuD+NiCr2l2MWdhT76ilcZxEkubvJ9Rn3kQurOjLAo1fBUOaZtC22DpWgSailRFXMRGZ0tnJbgsLPaUe4TdOa7A1qvvot9eiSv3K4xwTCQlsmja/9lb1Y2c47QOjw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.166.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-29a7951c6faso1984830a91.1
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Mar 2024 15:03:50 -0800 (PST)
+Received: by mail-il1-f179.google.com with SMTP id e9e14a558f8ab-365b3d92354so15167835ab.1
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Mar 2024 15:04:54 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709334230; x=1709939030;
+        d=1e100.net; s=20230601; t=1709334293; x=1709939093;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zDBcm0T6rgKyLoiB1Oi0mYl1EU8mcx68QstEfWk1cG8=;
-        b=e03qC1vIlIOx/zCIxGFXdraRc/HJbNC3n6xc0DzNyBJTPoz7oAMaviwv0217LTtTev
-         coXkENtPEu4YYw629Dki3SQE5DZuKjfP9YsTAM0e5JhzuqOFRrdHBfmcNeqKsvxUN4Og
-         4O47rw9TknIDFDHBOm1z142bjMlP2ffoiAnWJF2isYBWqRQU54KIrbri3ilttAOw95MX
-         MDgt9kTvPp7QsFmu8SIch2Ucsng6ImfRi1AeNzq7Th651/zydqbfo7MGgQiY6WvNp5fP
-         8+zVYIJfNoKLxRM6YNmEoyeZANPzpbD/VrDaQPc8sOtAtwmQCfgEm9rftl0KMCEb8k45
-         cpdg==
-X-Gm-Message-State: AOJu0YwnogtUywLwc7/qlXgDOpEJdyVu7f0QO6mOnrWWdi2XmVPBwG0+
-	cRzmzGfCLvxcM7+1RXCAgst8f2AwtHtIGxR3M7SDg0ziDPtZNL0Z
-X-Google-Smtp-Source: AGHT+IG958G7ECw8IZPnlGPuUfsk5za73ds8qmwRGeq80ecxmT273abIYLKVIcW6qaiprFgnBZDZ5g==
-X-Received: by 2002:a17:90a:990b:b0:29a:4b13:786f with SMTP id b11-20020a17090a990b00b0029a4b13786fmr3001841pjp.36.1709334229866;
-        Fri, 01 Mar 2024 15:03:49 -0800 (PST)
+        bh=N2cPQ/qamgYKQiZt6F8JxqkMkeMuHMsMrjJV8QIW4+s=;
+        b=UxZ8Ymq6zTdMWwJrsYD7NmJdh94AY10+pYdeOy834GUC7XhxwEeR+lCAYYJRmRmaCA
+         y84uQ2qce7vzCGYAAlB8YSCAq2PYjGuxgoLeiTuquJwyVn9+OPoB7MmCn6XfZqA/Vwjh
+         xCKeaBnpNlbJZf2ffie0itFb9J/h3wukQRgMv8eKZSM23CC0xAhxnkEaNUk6AQyulIG+
+         o88wC8UzFxkw0sbOTGH6dwbjDSUAS4QHbs5+cQRSnlSnJ6jvTNP23b0+cAeqa1MRVYO5
+         L8TtA5KbnBtUU00ksq+m7Fk41dwdIAF0RhqOJqpvFMOoZY8mhh5Orn0Ioucx+VeJjvjd
+         i8pw==
+X-Forwarded-Encrypted: i=1; AJvYcCW5yDaO9N5yF/NR/bJ0W0yS68CfoyfcD85QJ9aDcZQL+0CdxmlL16f3xMxSAxvqmV+dqgap2D4C2TIoRBFxUW/riTK35xzz4sfCpw==
+X-Gm-Message-State: AOJu0YxidFKcl0WsHBKWlgs1i75stvxrUERYpVTsCj2HuJx8QzywsRsF
+	XJcviDYEiWCnbeYNId4LwYfAAoHe0Jxd/ErbXpEMogDt3XKAyrKV
+X-Google-Smtp-Source: AGHT+IGYfruGgWePt93txBq/IzJsO9JFDu0K4CcG1F+Q7Fo5ZePPsJZnArBCEiDtRkSM5H9l8TJ3jQ==
+X-Received: by 2002:a05:6e02:b47:b0:365:b485:734c with SMTP id f7-20020a056e020b4700b00365b485734cmr3728724ilu.25.1709334293285;
+        Fri, 01 Mar 2024 15:04:53 -0800 (PST)
 Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
-        by smtp.gmail.com with ESMTPSA id y6-20020a634b06000000b005ce472f2d0fsm3105554pga.66.2024.03.01.15.03.49
+        by smtp.gmail.com with ESMTPSA id y6-20020a634b06000000b005ce472f2d0fsm3105554pga.66.2024.03.01.15.04.51
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 Mar 2024 15:03:49 -0800 (PST)
-Message-ID: <49b3e7b8-4e34-487a-8789-32f8b765ea1c@acm.org>
-Date: Fri, 1 Mar 2024 15:03:48 -0800
+        Fri, 01 Mar 2024 15:04:52 -0800 (PST)
+Message-ID: <967e329a-7114-4857-b79a-01b751be759c@acm.org>
+Date: Fri, 1 Mar 2024 15:04:51 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,36 +47,24 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi_debug: Make CRC_T10DIF support optional
+Subject: Re: [PATCH v3] ufs: core: add config_scsi_dev vops comment
 Content-Language: en-US
-To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20240229172320.2494100-1-bvanassche@acm.org>
- <d94983a5-9c0c-494d-8fb7-51e3dd2d3460@oracle.com>
- <61b4391a-8613-4ca5-b250-3253f2085712@acm.org>
- <fcad0227-dfd9-4fe4-b977-2eaf6242ea48@oracle.com>
+To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
+ jejb@linux.ibm.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+ chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
+ chaotian.jing@mediatek.com, jiajie.hao@mediatek.com, powen.kao@mediatek.com,
+ qilin.tan@mediatek.com, lin.gui@mediatek.com, tun-yu.yu@mediatek.com,
+ eddie.huang@mediatek.com, naomi.chu@mediatek.com, chu.stanley@gmail.com
+References: <20240301034610.24928-1-peter.wang@mediatek.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <fcad0227-dfd9-4fe4-b977-2eaf6242ea48@oracle.com>
+In-Reply-To: <20240301034610.24928-1-peter.wang@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 3/1/24 10:18, John Garry wrote:
-> On 29/02/2024 17:23, Bart Van Assche wrote:
->  >   config SCSI_DEBUG
->  >       tristate "SCSI debugging host and device simulator"
->  >       depends on SCSI
->  > -    select CRC_T10DIF
->  > +    select CRC_T10DIF if SCSI_DEBUG = y
-> 
-> So this means that we select CRC_T10DIF if SCSI_DEBUG is only built-in, 
-> right?
+On 2/29/24 19:46, peter.wang@mediatek.com wrote:
+> Add config_scsi_dev vops comment.
 
-Yes, that's correct. Without "select CRC_T10DIF if SCSI_DEBUG = y" the
-build fails if CRC_T10DIF=m and SCSI_DEBUG=y.
-
-Thanks,
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
