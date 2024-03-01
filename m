@@ -1,44 +1,40 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+Received: from smtp.smtpout.orange.fr (smtp-21.smtpout.orange.fr [80.12.242.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7568953E0D
-	for <linux-scsi@vger.kernel.org>; Fri,  1 Mar 2024 16:30:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56F2B5224
+	for <linux-scsi@vger.kernel.org>; Fri,  1 Mar 2024 16:39:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709310614; cv=none; b=XgwXQT0yBF7+PFHOyhWRXUzCCQ1PjoiCQO/AjhMNDzUfaC/uD78ve8TgoLO3dfUn8t5LBwFe//CZB36/1Pf3C2aS0Afijn8eAqTYFTlGe45UWYdMiln5TYhftrhI2tEHXEAVXa7I7g0qUUEnqxT7XnOnPbzI+3sdAew83ZNEGlk=
+	t=1709311177; cv=none; b=h4pXz0FnTiLuMznjagR399YeXjp4pMheFgch1kHtqhOxf6DK3G+HVmM2MePS/ozncz1YYmlIB+cy3FO5F3Xaj/B6g+ymdGw7g7lAgtyBqvs2S8lmxZOr4hLcCp3UOSmI9I9dlXTMkZLHh8WwmW+mXM0jk1u1fgnz3fliNMG5TI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709310614; c=relaxed/simple;
-	bh=eApwMdV77Pr6TQOw2X9bSNSaGq9RsqwjQERYxJjbiRE=;
+	s=arc-20240116; t=1709311177; c=relaxed/simple;
+	bh=4LCWmAiman5r71J5/XB8evn4nHCvsyVvo6RCk/szjFE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OfIyWcNRMZMp8AB9xZll/GThpBDz1iLVVNxXHjes3MAHgRebEKk1EaEOR4fhr22eiobqjBgP7l/2bTejsnqyi3G9AEEei5PuRb2hBgxRAslC2SfPVTovxuyxKBo9itwOqJ3ikzxQz3XB75beZVJc9B+3DDb9m085xzSPbqijTBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-6e5c81ccfb9so529737b3a.3
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Mar 2024 08:30:13 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709310613; x=1709915413;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZxY5u13o4NIGqi8UVa/l0eoG1+awUYdFkDwGxEeN9H0=;
-        b=Ys3K5noXv+EJU9yLf+w5bHOSvWIdldpoIZXS8Yzt5l68vt/4XYhzxXSVIG+OSWxe78
-         IvJWs5aYZIcFsubr3QeYXJRG1qTF/WczsXEyTd178DkJevtexnb/wAZuzHrp8bOJewFN
-         7ACxc48RCnwP8HetXaUbsapY41lP9Nw5Ut4pdnQvkTqDrK/beD88W8EkpR8DIdTvTgcg
-         6J+mJ/u8CIIy78RtkHPuPgGfvbhL7c6k8zY12WL+I1t+k9PitadxqImk0XeBQOUaB5YO
-         HyIsYAjFAWSgUN3cbjX1TDsAf2uVnUHJhsCADqAbpAdWTscIXMROkTkDdePkn4+lM3+t
-         /zog==
-X-Gm-Message-State: AOJu0YzoS7C6NlSqG3OE5fk/XjAk0qPry6fCMZV2JbxZuZ4ceAaodB1H
-	hZjXhNj51LJiuv85z9/f7h9UhpxgX8QRErYbXR85T10hS5gyZN6s
-X-Google-Smtp-Source: AGHT+IFerv1qbC+PLlBKhDhvegr1ObmSf6ROFxLDFNSK8caIUiaiyUqV34g1lYo1NFBXk/TvyQEwlQ==
-X-Received: by 2002:a05:6a20:7d82:b0:19c:a3de:647d with SMTP id v2-20020a056a207d8200b0019ca3de647dmr2126251pzj.19.1709310612764;
-        Fri, 01 Mar 2024 08:30:12 -0800 (PST)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id e29-20020aa7981d000000b006e592a2d073sm3076895pfl.161.2024.03.01.08.30.11
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 01 Mar 2024 08:30:12 -0800 (PST)
-Message-ID: <61b4391a-8613-4ca5-b250-3253f2085712@acm.org>
-Date: Fri, 1 Mar 2024 08:30:10 -0800
+	 In-Reply-To:Content-Type; b=efOyMSfgi3G5+RpiemLsFoUKUkdV2hhArO2uZKL+97LFsd/Q+0eKeqZa+rX+JxXjBNGPYxVECc1nYYOa4KEcEGy2Li+uHENqHkgcpdgB7efaBTNJu2Yl2VjXpsqfqd0ORslxzvHAahiaHFWohBFwVzb1WoVrr3s+y4LJ2q9ZngQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=BgAs5u5J; arc=none smtp.client-ip=80.12.242.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="BgAs5u5J"
+Received: from [192.168.1.18] ([92.140.202.140])
+	by smtp.orange.fr with ESMTPA
+	id g5utrzXJF9TLjg5uurqagy; Fri, 01 Mar 2024 17:39:26 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1709311166;
+	bh=RN0U8d0tLa6K7dQm1uz+etryBFOWXolWyCXCTbp29Xc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=BgAs5u5JiucHRHyG36DPlbfHDTpaH9GYNXjVbAyrtDqgAsWeQixQlDa52jAj/vZyt
+	 PJoc0ZSd1Qmbw3Cskch4mFqBQ3gBNWM4DqAm41gjROvQMOhCE8MO6u8R9jNQCZ4F3L
+	 pWAjeljun8RB/RiiyoBUet3QhosyKgbqqHG7Bsg1grO8j7C8dROxORtjjyy++nRMx7
+	 HLLbcXGx7iGSxhSTCxF7Mly/e8hGbSANoyFBynDUtZWXPFX9j9tbIX7CPNkQfcZo2l
+	 snQ7UkRUucD8xh9ydtYFCaIQJznQ3trlz65yJ4sFc+iRUdqJdRuli3c1sPpkH4m7KX
+	 TFwKlgn/Y0XjQ==
+X-ME-Helo: [192.168.1.18]
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Fri, 01 Mar 2024 17:39:26 +0100
+X-ME-IP: 92.140.202.140
+Message-ID: <5a0172a7-1a02-47d4-86c7-f5fd22e9767c@wanadoo.fr>
+Date: Fri, 1 Mar 2024 17:39:21 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,45 +42,61 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi_debug: Make CRC_T10DIF support optional
-Content-Language: en-US
-To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20240229172320.2494100-1-bvanassche@acm.org>
- <d94983a5-9c0c-494d-8fb7-51e3dd2d3460@oracle.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <d94983a5-9c0c-494d-8fb7-51e3dd2d3460@oracle.com>
+Subject: Re: [PATCH] scsi: lpfc: correct size for cmdwqe/rspwqe for memset
+To: Muhammad Usama Anjum <usama.anjum@collabora.com>,
+ James Smart <james.smart@broadcom.com>,
+ Dick Kennedy <dick.kennedy@broadcom.com>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Justin Tee <justin.tee@broadcom.com>
+Cc: kernel@collabora.com, kernel-janitors@vger.kernel.org,
+ James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20240301144434.2809483-1-usama.anjum@collabora.com>
+Content-Language: en-MW
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+In-Reply-To: <20240301144434.2809483-1-usama.anjum@collabora.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 3/1/24 00:59, John Garry wrote:
-> On 29/02/2024 17:23, Bart Van Assche wrote:
->> Not all scsi_debug users need data integrity support. Hence modify the
->> scsi_debug driver such that it becomes possible to build this driver
->> without data integrity support.
->>
->> Cc: Douglas Gilbert<dgilbert@interlog.com>
->> Signed-off-by: Bart Van Assche<bvanassche@acm.org>
->> ---
->>   drivers/scsi/Kconfig                          |   2 +-
->>   drivers/scsi/Makefile                         |   2 +
->>   drivers/scsi/scsi_debug-dif.h                 |  65 +++++
->>   drivers/scsi/scsi_debug_dif.c                 | 224 +++++++++++++++
->>   .../scsi/{scsi_debug.c => scsi_debug_main.c}  | 257 ++----------------
->>   5 files changed, 308 insertions(+), 242 deletions(-)
+Le 01/03/2024 à 15:44, Muhammad Usama Anjum a écrit :
+> The cmdwqe and rspwqe are of type lpfc_wqe128. They should be memset
+> with the same type.
 > 
-> That's a pretty light commit message for so many modifications.
+> Fixes: 61910d6a5243 ("scsi: lpfc: SLI path split: Refactor CT paths")
+> Signed-off-by: Muhammad Usama Anjum <usama.anjum@collabora.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_bsg.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+> index d80e6e81053b0..8caf54aa20391 100644
+> --- a/drivers/scsi/lpfc/lpfc_bsg.c
+> +++ b/drivers/scsi/lpfc/lpfc_bsg.c
+> @@ -3169,10 +3169,10 @@ lpfc_bsg_diag_loopback_run(struct bsg_job *job)
+>   	}
+>   
+>   	cmdwqe = &cmdiocbq->wqe;
+> -	memset(cmdwqe, 0, sizeof(union lpfc_wqe));
+> +	memset(cmdwqe, 0, sizeof(union lpfc_wqe128));
 
-Hi John,
+Hi,
 
-Thanks for having taken a look. The patch description is short because
-this patch doesn't do much: it splits the scsi_debug source code in two
-files and modifies the Kconfig and Makefile. No functional changes are
-present in this patch.
+maybe even:
+	memset(cmdwqe, 0, sizeof(*cmdwqe));
 
-Thanks,
+Same below and in your other patch.
 
-Bart.
+just my 2c,
+
+CJ
+
+
+>   	if (phba->sli_rev < LPFC_SLI_REV4) {
+>   		rspwqe = &rspiocbq->wqe;
+> -		memset(rspwqe, 0, sizeof(union lpfc_wqe));
+> +		memset(rspwqe, 0, sizeof(union lpfc_wqe128));
+>   	}
+>   
+>   	INIT_LIST_HEAD(&head);
 
