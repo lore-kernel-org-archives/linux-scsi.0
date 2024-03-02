@@ -1,55 +1,55 @@
-Received: from mail-yb1-f201.google.com (mail-yb1-f201.google.com [209.85.219.201])
+Received: from mail-yb1-f202.google.com (mail-yb1-f202.google.com [209.85.219.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6764542079
-	for <linux-scsi@vger.kernel.org>; Sat,  2 Mar 2024 20:16:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90430446D5
+	for <linux-scsi@vger.kernel.org>; Sat,  2 Mar 2024 20:16:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709410618; cv=none; b=WILOAY613JCtR2l8aZSEBnYEU3gVZckEpKOi+MpzxGZ4zjDaCv8/7WgBGo8m95xAip4mnH+zUMUCaVSCM0hnpl1JJy7BrrJr6odSMnLVNr7HswGpuMIOs/Wn+rYIGsMhTQiV0G6E7BmJQKQX+5jDdwrvkxlobiWOqu67Ynd6bts=
+	t=1709410620; cv=none; b=UxaOUcoOKshePt2682j2NXWUSHhQgRcMiosYwZO6a47Nc8UEgzBULNEEcVY05orBWAw6GQRnDi1/7EAMYrY5H9eX7/qNNaOZU9C0LX7264PbFtyPgS/j94Bzvbe7/vzC+SId7svaAJqxTPCb34ht2rKgCUus/0Mswllz5+T7+Tg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709410618; c=relaxed/simple;
-	bh=KWCF/wRFo5DDf67uvUwFxQaljHz80tfPANfuy0kjn8k=;
+	s=arc-20240116; t=1709410620; c=relaxed/simple;
+	bh=BVc9AZZs/RVfi8UbrJKJ/9aeH5efGDemJUyaiD8CbnQ=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=Ljk90qhx2UFvkHoKw5qQ/4IPb+VrDHpCcnyikTR7AoqbzL9HumuRv7tHEkkIinTYDk1TXNVGXDI59ExkpsvXgU0x1pG8sfkLLaXIIPeof/ROLE6jCbkNe2Q2bXn05UDZ/dxLIplA82uzWub3+CXAwxpV4qWasoecbzdO2AzcdM4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=BJfL6C0X; arc=none smtp.client-ip=209.85.219.201
+	 To:Cc:Content-Type; b=lRO+cmgwfT1ZsyKz9hyhS1qTpvi7VhSzUZhophxHMUDSmoH/TxV9gZvPT4wP0syiCpfIZKNj1Wprrz26ZaAhfcQKmDdUc3DUxEwmEa8HuLFep4w0MimE1UJp4pc6hmP0suVuf76CquvZ+PqOWmi6Y4vdP0COkQNUhqTp9u87I/U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=darQoFh0; arc=none smtp.client-ip=209.85.219.202
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="BJfL6C0X"
-Received: by mail-yb1-f201.google.com with SMTP id 3f1490d57ef6-dcc05887ee9so4668213276.1
-        for <linux-scsi@vger.kernel.org>; Sat, 02 Mar 2024 12:16:56 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="darQoFh0"
+Received: by mail-yb1-f202.google.com with SMTP id 3f1490d57ef6-dcd1779adbeso6186996276.3
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Mar 2024 12:16:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1709410615; x=1710015415; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1709410617; x=1710015417; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=jZVgry90rEYwnQ29s3Mz+RKBDNtmCmbKQoUc6PEOd2Y=;
-        b=BJfL6C0Xzs6wghQ+RU/vyClfzNjlSaa8C3sYe4b8S9XTPS3xcX4+5C3s2QP6bORXzB
-         OwtHDcahIc4br3A1Xa8Au6b/j6Botz/oCAZdhwokbEWqKfdT7xHw0ILeq6GoRdbQHyJE
-         0DzRqKfWF01P8nq9hwWnC57Kri9fZXLXXo3fSj6WVL972jbAMqvP01eDPSCMXVIWM/ks
-         kSt1rcJYYZFXHwg+5tbLWaEtUJFFTa8pATM/WnRaDkx+l7gGdDVsyKgMOF1s2cYMAWJY
-         wG32XXefyCiEtO7F+TocvT2fQ9KdH3sWrTbT8WlhC0xTiG5Mn9clDAvgzDEOcEh2GjQG
-         j07Q==
+        bh=63IDjKZgY41/sxscATiWOYuczRuUk4XINSTCQSRn0Gw=;
+        b=darQoFh0MZx3w51d+OsqEu26I7s5U/qD4kU1pPjsg/iYClzJfpRDrxtDgY6AEoKX3o
+         2/5kpZ1WLAMQqaXaiPREFLFr67xAtIpjhfeCecAv+FLRUenEasbNfB5qbZAkkHY+UhyQ
+         +KI9tDZ1g6Ir8RdRcyz+EhgLYG4R5Xp+pjJvgq4WohAO28uRpFg+Y7YXmYeYzwHGgkpI
+         /evLyuV9gHVLEhOMS3pzYoEXfCV/DctGkRFkyyy5sZjmymdsviHEhtCFloeWC51xxbpo
+         Zj4r4K+mKPXe7D9WUV8WTpd3uDTE1XFE/z0NBHJd8el4KUkfosnZ9J3zpdzsa0IYFLUH
+         QvZQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709410615; x=1710015415;
+        d=1e100.net; s=20230601; t=1709410617; x=1710015417;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=jZVgry90rEYwnQ29s3Mz+RKBDNtmCmbKQoUc6PEOd2Y=;
-        b=nMXgeEIOIlsIHQJn/F1aY4QOXt8fKq2yVMhtXrzoCTP68aHtQf91F97aSmACqUhuyz
-         zIKVZmrTrWF6pQABUUhJSFqt4RgtKvOs+cbwdEr38F/Kfa3WfDYXrOj0wSN97RdQ2d8c
-         hJN6Xvr1TAVh26bkcRmUGyq5uOyN34t+/hjSV/QFlSK9mkUNZa1r28qXWax0pHiQ5fqG
-         qPCgJ5CHGSwmXbspkjOTGpa8iH5Vyuc3cZCl+9w6TYrkvkD/oUNO3L2bz3Q/MlTJAHiu
-         boeLsK9Z60eB1lv+0i8kSdR7ci4+vzJCW/6VE6p9aH9nU+/J1YpQe785RrTGgnlIqx2S
-         fYww==
-X-Forwarded-Encrypted: i=1; AJvYcCWq+sbVSObyUHoNFSI1ylKIz/yuzWB0tASF6AW+k+2PcBnCBMx9bjNykF9Sdv2NHziRBEAoFTEoaB7/+77Ggt5e+n1BLKb2rYdrwQ==
-X-Gm-Message-State: AOJu0YyuVcGZ62ShLnDd92tsCDX9bzD64BiPmUy8erE7a5+CI6DpYaJi
-	JZVtwWPAa+S7ianupujxSHiclAxNVeJrwaKUz8JbXT0XpDUTe2Ab+gdQx/9hHGroB8uXXy31LDp
-	ECNcsEI505A==
-X-Google-Smtp-Source: AGHT+IEnSk2Y3x8oCi5AN0TxB8bOTAxxMMr2bkZsFSHegFkEgU2tAVWqbB7S8UuQeE3B1FqjL8CudwlDT6LN0Q==
+        bh=63IDjKZgY41/sxscATiWOYuczRuUk4XINSTCQSRn0Gw=;
+        b=rv56tL5kmyiDA0KCf/e3cgczfaQknJ/lOJUbLH2AGvdX29W77k90OcTEw2S6NLl/YX
+         M5a8luTZQVchb5Ep4zVOJUkjBsdzttaQesYH6qD3IODmb4631YBjS1sF58oYTyKGscuP
+         asyhaqVZuzeJ8VAQPSqHK6Pi5K17OC81pf2HAPxQ2276baO/PwDXLmuGBd8rLPv0aRRn
+         ywlo76HegsqsTj8Dq0tW4NlOciKV7/4junasofk1dyQTPTlw7/iSG+cLdx/Kl7S2+AmQ
+         j4ZrlaQ38yj+IyE5i2Hyzz1Hci55FRZgVU/oapay2U+cCXZ4zMpvrAw4oFwst7DDyxNW
+         v1/Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXTjz10jkM+Sfb2huSP4XaNXJ7YYoMm2lBImU4JwLd/5psRITZCXrYHyfKrIbdj8hrFbsHHCd6P39qKbmJekL65JG+Klg594ADHfA==
+X-Gm-Message-State: AOJu0YzIA2EzWBTeV+nVkBMEfqI/NVVr1tTTusH3kD0BQigmrPK5HTVZ
+	5lzAHiAuzTbv85eWSgzYIYzYSOk62/HUbVIpIVOXV44dDhNsIJC5jCUkHc0l6QWCIIqd2oWkoaq
+	SrkZOpbTBHA==
+X-Google-Smtp-Source: AGHT+IEORCsCCZU3k7TPogV9jHsXNHCrge31RYXS3NSAXSIa7IhPkHGnOtO0elfir6/1uicloJv1lIQ3KmJXyQ==
 X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:13:41a7:9019:9a7:b404])
- (user=ipylypiv job=sendgmr) by 2002:a25:a009:0:b0:dc6:b982:cfa2 with SMTP id
- x9-20020a25a009000000b00dc6b982cfa2mr177837ybh.8.1709410615275; Sat, 02 Mar
- 2024 12:16:55 -0800 (PST)
-Date: Sat,  2 Mar 2024 12:16:32 -0800
+ (user=ipylypiv job=sendgmr) by 2002:a05:6902:210b:b0:dcc:50ca:e153 with SMTP
+ id dk11-20020a056902210b00b00dcc50cae153mr1370635ybb.7.1709410617704; Sat, 02
+ Mar 2024 12:16:57 -0800 (PST)
+Date: Sat,  2 Mar 2024 12:16:33 -0800
 In-Reply-To: <20240302201636.1228331-1-ipylypiv@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -59,8 +59,8 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20240302201636.1228331-1-ipylypiv@google.com>
 X-Mailer: git-send-email 2.44.0.278.ge034bb2e1d-goog
-Message-ID: <20240302201636.1228331-4-ipylypiv@google.com>
-Subject: [PATCH v3 3/7] scsi: pm80xx: Add libsas SATA sysfs attributes group
+Message-ID: <20240302201636.1228331-5-ipylypiv@google.com>
+Subject: [PATCH v3 4/7] scsi: mvsas: Add libsas SATA sysfs attributes group
 From: Igor Pylypiv <ipylypiv@google.com>
 To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
 	John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
@@ -78,47 +78,40 @@ feature for HBAs that rely on libsas to manage SATA devices.
 
 Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 ---
- drivers/scsi/pm8001/pm8001_ctl.c  | 5 +++++
- drivers/scsi/pm8001/pm8001_init.c | 1 +
- drivers/scsi/pm8001/pm8001_sas.h  | 1 +
- 3 files changed, 7 insertions(+)
+ drivers/scsi/mvsas/mv_init.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 5c26a13ffbd2..9ffe1a868d0f 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -1039,3 +1039,8 @@ const struct attribute_group *pm8001_host_groups[] = {
- 	&pm8001_host_attr_group,
- 	NULL
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 43ebb331e216..f1090bb5f2c9 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -26,6 +26,7 @@ static const struct mvs_chip_info mvs_chips[] = {
  };
-+
-+const struct attribute_group *pm8001_sdev_groups[] = {
+ 
+ static const struct attribute_group *mvst_host_groups[];
++static const struct attribute_group *mvst_sdev_groups[];
+ 
+ #define SOC_SAS_NUM 2
+ 
+@@ -53,6 +54,7 @@ static const struct scsi_host_template mvs_sht = {
+ 	.compat_ioctl		= sas_ioctl,
+ #endif
+ 	.shost_groups		= mvst_host_groups,
++	.sdev_groups		= mvst_sdev_groups,
+ 	.track_queue_depth	= 1,
+ };
+ 
+@@ -779,6 +781,11 @@ static struct attribute *mvst_host_attrs[] = {
+ 
+ ATTRIBUTE_GROUPS(mvst_host);
+ 
++static const struct attribute_group *mvst_sdev_groups[] = {
 +	&sas_ata_sdev_attr_group,
 +	NULL
 +};
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index ed6b7d954dda..e6b1108f6117 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -134,6 +134,7 @@ static const struct scsi_host_template pm8001_sht = {
- 	.compat_ioctl		= sas_ioctl,
- #endif
- 	.shost_groups		= pm8001_host_groups,
-+	.sdev_groups		= pm8001_sdev_groups,
- 	.track_queue_depth	= 1,
- 	.cmd_per_lun		= 32,
- 	.map_queues		= pm8001_map_queues,
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 3ccb7371902f..ced6721380a8 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -717,6 +717,7 @@ int pm80xx_fatal_errors(struct pm8001_hba_info *pm8001_ha);
- void pm8001_free_dev(struct pm8001_device *pm8001_dev);
- /* ctl shared API */
- extern const struct attribute_group *pm8001_host_groups[];
-+extern const struct attribute_group *pm8001_sdev_groups[];
- 
- #define PM8001_INVALID_TAG	((u32)-1)
++
+ module_init(mvs_init);
+ module_exit(mvs_exit);
  
 -- 
 2.44.0.278.ge034bb2e1d-goog
