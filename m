@@ -1,62 +1,62 @@
-Received: from mail-io1-f49.google.com (mail-io1-f49.google.com [209.85.166.49])
+Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EBB222F14;
-	Sat,  2 Mar 2024 16:47:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 438B02BB1A;
+	Sat,  2 Mar 2024 16:47:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709398053; cv=none; b=LVJKcvtkbu9oROr7PokWUqwoCMKMZ3BBA+wQrWHus+C20td9mQQIUp19e1TzSpM6u6nAsvFSS2QVFWNCIHCPaNDs9g5YhWStFUHYHa1Y8EGeIaEtln9uei0mnkJu85yUu73G0Hxa6y7GvSqyxMHDLd9ZYD1u2/M9thauy4nnDGI=
+	t=1709398057; cv=none; b=CsllGP8C5NXPsTvXOOCS4ArfPCBnU561+u3LBGx+Dzgmx7p7ubLSn6MEOqw6RamzbwCQUtllJF/T1aGf8vKW0ZcK7e4qqS/QOonvpP4D/5F7KrkAczWJU5cVDg5xS00Jotz614eYGkLqMcpojTr+NwvzOBP3Xwwbw8Q3O/SQBj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709398053; c=relaxed/simple;
-	bh=5fFFl+NQvKIKgg15BuOC5SNCW60DHjH9gv71w7SxkWk=;
+	s=arc-20240116; t=1709398057; c=relaxed/simple;
+	bh=rlc4uufc3PtM/hoEPL10OKjaFHgvMNuVTywDQZGsyvw=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=aMob70jiD+wUvBJgQ0n3BeFBDNe7wC1Hg1KbPxTo5YmIY2Yo9uRSZrhddkQNnPwlrqvlYD3xOiGf0spmNEfGBGICpasNp1lrj/IMK6FlTtka3q5D7w8TG94Y9dEqsuRKUq5xzWCzW9VcZ3Lt8R14GoiedbiIwEkFXZCCGuQG5CQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=marliere.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=marliere.net header.i=@marliere.net header.b=Upd2qR4P; arc=none smtp.client-ip=209.85.166.49
+	 In-Reply-To:To:Cc; b=hoJXdVhOq0eKVPILS+x//6Ih3LH4plWXOWSS2YlWkK6c1H25gx61tbELw6zuczOSsDLVzwt9/DJXAHgrqz4TDVQz1fLc6uZZK0B6SGx75JNk23GDxvgmzL61ZUJg8T0D+EJgLbxIblToOYRxemM4RtrY9CIapfYdxaErnT1pSc8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=marliere.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=marliere.net header.i=@marliere.net header.b=mL8nYeAD; arc=none smtp.client-ip=209.85.166.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=marliere.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marliere.net header.i=@marliere.net header.b="Upd2qR4P"
-Received: by mail-io1-f49.google.com with SMTP id ca18e2360f4ac-7c835b36e9dso16845139f.3;
-        Sat, 02 Mar 2024 08:47:31 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=marliere.net header.i=@marliere.net header.b="mL8nYeAD"
+Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-7c403dbf3adso205795739f.1;
+        Sat, 02 Mar 2024 08:47:35 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709398051; x=1710002851;
+        d=1e100.net; s=20230601; t=1709398054; x=1710002854;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:dkim-signature:from:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=VKp49xShFivIZ3FSVYH7CTAL/TfZjGtj5hihj2WnRpY=;
-        b=UWLMp9nGZQYzpvdMM2zyrpkrh88U19TZuTxk0yFUgMj5sILuztkui34zbgg0IB/SgY
-         p1JP2+OLgoiSGEnyIpNvfDsolPx2pkdKvcfuiTagQlF8uLLEwHXE98HDGumosyQUvllp
-         IX7Jt4dNRJ5Az2sKLRAjmmaRH+c7OOyl7cEb148gNKkxEC8pWuC7QY4lHN7SyuvrtBXb
-         jxwIvvOeTt3jtqMDnSrtDRr9xCLUcF6HRviKssYw7/PkRVMK00I8WZFSTb2Q/Tewgift
-         5x9aVfTJwiZ/g2Tri/fjrpUZ5VD7C/0Uxh2Tcu3tPwyeAfe8DlZ/cp4BbRIexOhCH9Uy
-         E4Fg==
-X-Forwarded-Encrypted: i=1; AJvYcCW5meGs67klaA8A3kRy+eTnFtR61LAazBbXLzybeintVxp/quxtdpSbRgo0uxtw2W3+NLmuDXekfkF/PifqhuQLy8HK3gbhD4O32l93
-X-Gm-Message-State: AOJu0YzHJLi2s0lfiLf7VnRtbVR1JvYVvGBY28QTaodD0KJRJKUPejrC
-	Gx1U6ajZ1zZj/xxhk9KAxmQ2zwltGuj2SsdSWq1pZBEpiSnWn+iV
-X-Google-Smtp-Source: AGHT+IEp2RDU3Zd9t11xhj78W40lqahskTWojefoSXhk8+kyTEU8UOQRJGdPPdJy8RDxESofWyUcjA==
-X-Received: by 2002:a5e:c702:0:b0:7c8:2bb3:ebb4 with SMTP id f2-20020a5ec702000000b007c82bb3ebb4mr3145859iop.6.1709398051264;
-        Sat, 02 Mar 2024 08:47:31 -0800 (PST)
+        bh=EIxIH/dP4WE4ZSIoHocSg2tr9v1M7GINqI1t7vtWcKE=;
+        b=d6ir/tAOBC47VfehtTMX68EF3vVPN6zZe2yQW4FbUdsvcv2NKR5FuJ5w2drLun/mSH
+         8a98u0e2mtsDQP0p9X7q53a+AJgRZqN/TmdWcFLEHXDMeHnrAoUgxbbs+BIm2t67/4M7
+         WtucJpnuHt2Tf7YvylK4G8B0KpPWXdbIL2IsU0PpSJRQaxfa7mMOsXVDgi/+mQT5zPo/
+         QsXrWABmonnaPtKeYyjlGapaGcbOY53I0j4mWroaGw8kDZ/u3C+1/C8Eo3agB0/4L7xT
+         fcYGqH5G99CrplVlmF4yLJgHQf4kI+zTVg94B+yO1IYFFNIEqj7TsfFw/VYHP0NlJNSi
+         U8Yg==
+X-Forwarded-Encrypted: i=1; AJvYcCVRkfkEnRujhJK1RxUjmGAoAzvnfG70D4LW77BU+dDyeweh3HtS4Bf7KomWoN+0zPdEerpCPbYKrHdc9Zo9+fdNFweMH38mzSNvfUHl
+X-Gm-Message-State: AOJu0Yz6moZTcxhouTmErbU5FJnOGkf8M8RRNzHcSCwHN736PjSXFyYJ
+	6odCZGYFiap0g9ydpw0o4HsalTqe9VuwRdY+yShQ5cO8BsFNcLhS
+X-Google-Smtp-Source: AGHT+IH9A/LZfckMTPIlJHjoSAVFm8QxA4sruNR8pQW+9pmfexs502P6vVARjfmQPDf0tlLTRRlUXQ==
+X-Received: by 2002:a05:6602:3705:b0:7c8:298:8c88 with SMTP id bh5-20020a056602370500b007c802988c88mr6063659iob.7.1709398054386;
+        Sat, 02 Mar 2024 08:47:34 -0800 (PST)
 Received: from mail.marliere.net ([24.199.118.162])
-        by smtp.gmail.com with ESMTPSA id g10-20020a02b70a000000b00474558a20a3sm1385930jam.140.2024.03.02.08.47.30
+        by smtp.gmail.com with ESMTPSA id f22-20020a056638023600b00474506c900esm1397545jaq.145.2024.03.02.08.47.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 02 Mar 2024 08:47:30 -0800 (PST)
+        Sat, 02 Mar 2024 08:47:33 -0800 (PST)
 From: "Ricardo B. Marliere" <ricardo@marliere.net>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marliere.net;
-	s=2024; t=1709398049;
+	s=2024; t=1709398052;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=VKp49xShFivIZ3FSVYH7CTAL/TfZjGtj5hihj2WnRpY=;
-	b=Upd2qR4Pnm++Aph61tfJnBVo5fGiwg5YIqJqx+nygIMq2XZlIGT7HHyUKX/6BPfTaywNNR
-	MqpdPzIGwPHCi+mRGFMtdtnuFR2SFSDq5iGla+YzDcnukgQRlKv950pbHLJsR7LA/No6QP
-	jFJJL2iavDe/DvHMSuGkGrRspFOmCljLMAEstqoK5/4vwpWPssbL1KdVJkdCikYnvQu0Ay
-	ZX1MAK5FEMoliNEOzOcBo/xyyNGlI0mwJ7WST+hwnYu5vsdnTIcHXJypJSQmijWiv7D9xS
-	mURMKfnDKEAEEc3mFgL6h4eF8IhFxWlyDtd8W57W4WdIi+jSAcs5kF9mrabN9g==
+	bh=EIxIH/dP4WE4ZSIoHocSg2tr9v1M7GINqI1t7vtWcKE=;
+	b=mL8nYeAD2lk6N2ClmmOSOaO4aZy95VvHRavTznymRQsiG96lU7C/YkC8l9VPEjqI46nCVG
+	DTSQ6ydWsj3Cq74fkuHbaKQqLcdWcavwwRV2E0AZhQXwhO9uYJIQ24OK98ozKF/3ILRJT5
+	Zbxe4i3q07OoHyEyoX17m80cfZ20eEr/SM6nHLwWPUj5OEsUGHpFffdLKXm9SDUFd+BlfM
+	aXsYxgR3UXiE4f5ecXjuA2NIEkbODNyBmI4WbKZzysAmVd8Z47+2NrosvJAHup1LmV9YjY
+	zU9wfG/Rl1xJfbbUriQIWPQ7Su1TnB7nJsg5p0LZSNFgeA9zxN+OurPAsQk2EA==
 Authentication-Results: ORIGINATING;
 	auth=pass smtp.auth=ricardo@marliere.net smtp.mailfrom=ricardo@marliere.net
-Date: Sat, 02 Mar 2024 13:47:22 -0300
-Subject: [PATCH 1/5] scsi: sg: make sg_sysfs_class constant
+Date: Sat, 02 Mar 2024 13:47:23 -0300
+Subject: [PATCH 2/5] scsi: pmcraid: make pmcraid_class constant
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -65,7 +65,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240302-class_cleanup-scsi-v1-1-b9096b990e27@marliere.net>
+Message-Id: <20240302-class_cleanup-scsi-v1-2-b9096b990e27@marliere.net>
 References: <20240302-class_cleanup-scsi-v1-0-b9096b990e27@marliere.net>
 In-Reply-To: <20240302-class_cleanup-scsi-v1-0-b9096b990e27@marliere.net>
 To: Doug Gilbert <dgilbert@interlog.com>, 
@@ -78,26 +78,26 @@ To: Doug Gilbert <dgilbert@interlog.com>,
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
  "Ricardo B. Marliere" <ricardo@marliere.net>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2750; i=ricardo@marliere.net;
- h=from:subject:message-id; bh=5fFFl+NQvKIKgg15BuOC5SNCW60DHjH9gv71w7SxkWk=;
- b=owEBbQKS/ZANAwAKAckLinxjhlimAcsmYgBl41gcO4omM5O9dpvOdRQNcf0ToXQGw1Slh668i
- 1BBGJ1CLI+JAjMEAAEKAB0WIQQDCo6eQk7jwGVXh+HJC4p8Y4ZYpgUCZeNYHAAKCRDJC4p8Y4ZY
- pkfFEACCudsWo/MlDFnP2LfTWScW1Wxiezy5M1HYiFJB72XHRkqW9Ih8+tJdSV0q3G/aNhFtDlL
- nYjrXoxe/dwTMZbMZq8ryWsy4S1B7ubqN8OlfyWMe/agHgguYY/NiuGBaZGFaOeINChw1oJo+2/
- t/Gk4ki7BYwfHh5TYuJPYxkjNyJsszsZiU/uNNg0itso0u4I46AqU3tnqJYCz051k+wcuylxEiN
- 4YnSVUc3tezYRscFAhmKgZo6uOQev/h/V82teVD7eShaIiifMetP6IrxjRfkIgl6dEsD+yzWsVB
- mfR+tEIWZa/rZqCp5BXeXMLB4TV4A/jpH26Q5z/N/XMuMxuidZePw8Nv/k1Ja+PGGS2eZJpUipi
- g7opERg54T02As/Rqjb0mK6GiqWUj3MOa/vfYLx5raPBpSEzQsNItqpPBDgytSXsWTyFQGm4Kqv
- RcNIkXcmUIKhs8wbx8C9YMU43liBagiTHicukYgr2WkjKs2tk91f6MvVLSirq6EsS71+vsxKa2J
- MxzfLRInj5j6c8UeMMhCOIlKFd3a28593zLZO7lbWd5xDoFHlWeqqsIGHZFPcZko86CpUk3myhg
- GZmPb5JTxAOSrGoOqbd1bgU6IgFcUfZBOzushN8tylwA0I5lcrUQHfBLQkWe8x+Jc8kA3pVSTkk
- I323B26ftPh/ZYQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3047; i=ricardo@marliere.net;
+ h=from:subject:message-id; bh=rlc4uufc3PtM/hoEPL10OKjaFHgvMNuVTywDQZGsyvw=;
+ b=owEBbQKS/ZANAwAKAckLinxjhlimAcsmYgBl41gcgcXPauwcMwcivousgucxCY3RKlSytTHfr
+ WJeH+nqr1KJAjMEAAEKAB0WIQQDCo6eQk7jwGVXh+HJC4p8Y4ZYpgUCZeNYHAAKCRDJC4p8Y4ZY
+ pnPWEACTmPuE8CaT+BVJaxp20vvGyFmz+woXDXlRcLmwZQFBfigeYCJZfDiEgy7opaqrPKVSLkd
+ j9bCQ3p58rGUmFOWIiYyRhnrx63JN7wBtgFOVsas+IGEBz9cF4Manuv0e+DXaa7tvEBHcpYEu+h
+ r8o6/bVuSIHq1a9XWDhUtlurep1BhI5BzH+I9i7Cewz6Yie4eYNJqeoxvzxxT7aVfJU69RgxAy2
+ 3jIOjfuX370sAOXXb+Y9YaKr+DBfPtF0w1hZWW3NvUVjo6IysGgr2WLoxOFGTNU2fNicKLI5bMb
+ dyqQscsnCPm18gKOZZ81dVy3hfdicuw9R3z6x43gwuUk753M0cnVXYqCkfI5g3PkSQhfK+XlgUr
+ 65UStiHtAvLqyeRLrDJXZS0aToKbIwhiGUxx1sQgHSDb/nhCl4Aim/XN0imc3HFTxNxmvIBjR3j
+ OLKmn8TyLoHcUymKgMStQlvFoOuDpIHDTHm5jgX5Bjmp8Wr1fwwr44luVMjd+56eDnVVuATQXJp
+ qp5ZxlvdTM8yeF1Q36ZrkTGgYZ6J1KfD5OzR4UxD1pDgQLer+pCHy77k5k82LKfyM23ydJF1cmX
+ 1kgcGZiYjujKQqAVkAedaRLpog2wyRuOdZGrwvc36nOJRIJMzdric8fCuKvishjTlyfLl5HncFt
+ MlZ3fzF3qXKTDHw==
 X-Developer-Key: i=ricardo@marliere.net; a=openpgp;
  fpr=030A8E9E424EE3C0655787E1C90B8A7C638658A6
 
 Since commit 43a7206b0963 ("driver core: class: make class_register() take
 a const *"), the driver core allows for struct class to be in read-only
-memory, so move the sg_sysfs_class structure to be declared at build time
+memory, so move the pmcraid_class structure to be declared at build time
 placing it into read-only memory, instead of having to be dynamically
 allocated at boot time.
 
@@ -105,74 +105,83 @@ Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Ricardo B. Marliere <ricardo@marliere.net>
 ---
- drivers/scsi/sg.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/pmcraid.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 86210e4dd0d3..6ef6256246df 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1424,7 +1424,9 @@ static const struct file_operations sg_fops = {
- 	.llseek = no_llseek,
- };
- 
--static struct class *sg_sysfs_class;
-+static const struct class sg_sysfs_class = {
-+	.name = "scsi_generic"
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index e8bcc3a88732..0614b7e366b7 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -61,7 +61,9 @@ static atomic_t pmcraid_adapter_count = ATOMIC_INIT(0);
+  * pmcraid_minor - minor number(s) to use
+  */
+ static unsigned int pmcraid_major;
+-static struct class *pmcraid_class;
++static const struct class pmcraid_class = {
++	.name = PMCRAID_DEVFILE,
 +};
+ static DECLARE_BITMAP(pmcraid_minor, PMCRAID_MAX_ADAPTERS);
  
- static int sg_sysfs_valid = 0;
- 
-@@ -1526,7 +1528,7 @@ sg_add_device(struct device *cl_dev)
- 	if (sg_sysfs_valid) {
- 		struct device *sg_class_member;
- 
--		sg_class_member = device_create(sg_sysfs_class, cl_dev->parent,
-+		sg_class_member = device_create(&sg_sysfs_class, cl_dev->parent,
- 						MKDEV(SCSI_GENERIC_MAJOR,
- 						      sdp->index),
- 						sdp, "%s", sdp->name);
-@@ -1616,7 +1618,7 @@ sg_remove_device(struct device *cl_dev)
- 	read_unlock_irqrestore(&sdp->sfd_lock, iflags);
- 
- 	sysfs_remove_link(&scsidp->sdev_gendev.kobj, "generic");
--	device_destroy(sg_sysfs_class, MKDEV(SCSI_GENERIC_MAJOR, sdp->index));
-+	device_destroy(&sg_sysfs_class, MKDEV(SCSI_GENERIC_MAJOR, sdp->index));
- 	cdev_del(sdp->cdev);
- 	sdp->cdev = NULL;
- 
-@@ -1687,11 +1689,9 @@ init_sg(void)
- 				    SG_MAX_DEVS, "sg");
- 	if (rc)
- 		return rc;
--        sg_sysfs_class = class_create("scsi_generic");
--        if ( IS_ERR(sg_sysfs_class) ) {
--		rc = PTR_ERR(sg_sysfs_class);
-+	rc = class_register(&sg_sysfs_class);
-+	if (rc)
- 		goto err_out;
--        }
- 	sg_sysfs_valid = 1;
- 	rc = scsi_register_interface(&sg_interface);
- 	if (0 == rc) {
-@@ -1700,7 +1700,7 @@ init_sg(void)
- #endif				/* CONFIG_SCSI_PROC_FS */
- 		return 0;
+ /*
+@@ -4723,7 +4725,7 @@ static int pmcraid_setup_chrdev(struct pmcraid_instance *pinstance)
+ 	if (error)
+ 		pmcraid_release_minor(minor);
+ 	else
+-		device_create(pmcraid_class, NULL, MKDEV(pmcraid_major, minor),
++		device_create(&pmcraid_class, NULL, MKDEV(pmcraid_major, minor),
+ 			      NULL, "%s%u", PMCRAID_DEVFILE, minor);
+ 	return error;
+ }
+@@ -4739,7 +4741,7 @@ static int pmcraid_setup_chrdev(struct pmcraid_instance *pinstance)
+ static void pmcraid_release_chrdev(struct pmcraid_instance *pinstance)
+ {
+ 	pmcraid_release_minor(MINOR(pinstance->cdev.dev));
+-	device_destroy(pmcraid_class,
++	device_destroy(&pmcraid_class,
+ 		       MKDEV(pmcraid_major, MINOR(pinstance->cdev.dev)));
+ 	cdev_del(&pinstance->cdev);
+ }
+@@ -5390,10 +5392,10 @@ static int __init pmcraid_init(void)
  	}
--	class_destroy(sg_sysfs_class);
-+	class_unregister(&sg_sysfs_class);
- 	register_sg_sysctls();
- err_out:
- 	unregister_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0), SG_MAX_DEVS);
-@@ -1715,7 +1715,7 @@ exit_sg(void)
- 	remove_proc_subtree("scsi/sg", NULL);
- #endif				/* CONFIG_SCSI_PROC_FS */
- 	scsi_unregister_interface(&sg_interface);
--	class_destroy(sg_sysfs_class);
-+	class_unregister(&sg_sysfs_class);
- 	sg_sysfs_valid = 0;
- 	unregister_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0),
- 				 SG_MAX_DEVS);
+ 
+ 	pmcraid_major = MAJOR(dev);
+-	pmcraid_class = class_create(PMCRAID_DEVFILE);
+ 
+-	if (IS_ERR(pmcraid_class)) {
+-		error = PTR_ERR(pmcraid_class);
++	error = class_register(&pmcraid_class);
++
++	if (error) {
+ 		pmcraid_err("failed to register with sysfs, error = %x\n",
+ 			    error);
+ 		goto out_unreg_chrdev;
+@@ -5402,7 +5404,7 @@ static int __init pmcraid_init(void)
+ 	error = pmcraid_netlink_init();
+ 
+ 	if (error) {
+-		class_destroy(pmcraid_class);
++		class_unregister(&pmcraid_class);
+ 		goto out_unreg_chrdev;
+ 	}
+ 
+@@ -5413,7 +5415,7 @@ static int __init pmcraid_init(void)
+ 
+ 	pmcraid_err("failed to register pmcraid driver, error = %x\n",
+ 		     error);
+-	class_destroy(pmcraid_class);
++	class_unregister(&pmcraid_class);
+ 	pmcraid_netlink_release();
+ 
+ out_unreg_chrdev:
+@@ -5432,7 +5434,7 @@ static void __exit pmcraid_exit(void)
+ 	unregister_chrdev_region(MKDEV(pmcraid_major, 0),
+ 				 PMCRAID_MAX_ADAPTERS);
+ 	pci_unregister_driver(&pmcraid_driver);
+-	class_destroy(pmcraid_class);
++	class_unregister(&pmcraid_class);
+ }
+ 
+ module_init(pmcraid_init);
 
 -- 
 2.43.0
