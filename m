@@ -1,75 +1,137 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41DEE1364;
-	Sat,  2 Mar 2024 02:54:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 980117469;
+	Sat,  2 Mar 2024 08:25:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709348066; cv=none; b=sZ3bwqgvQ16IRCAqFz/U6bKX+N5AWsFN99wr5QZTRRgGnf7K3f0Zxa4tXhvtjsl9VZAHv3nW0LWxqUfLth6MOy4+cLeU/nM6mi87JQ/OI0B1ht1HFNbeZoVnVBkUYfw0mhfLj95cMMtuOuhfTFSj/QXvIsQzsYnnDDqg93Ebu/A=
+	t=1709367903; cv=none; b=SaGMDx124vuTndv4wN7rbZvJ6vxDhVjXEsLE1G2oAu/64Vq8QDthSYdRAio+Y1vFuMqLZ0y3vf+AIBgDsrutc3Z0/dqU8R8NRLblN8ARnBHyCQTbmL/hCdlZdYSxRiYLW7ayeY31w+yeToLXfL3+jMGA6AYRKHdrPVvqDmN8lt4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709348066; c=relaxed/simple;
-	bh=7WNoEH9fayW9GXHYr9GoW6MPle3ANHC7zx9ampZ1Hdo=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=dsZs9c3b/XR8iI2WV1i6UCLx6qiAl+Bqi6Tkw3TA/1q9Olec6SAQe6oOWnDlScA/6EZZHltCamKCp8YKEG0Yc/mqxcbKEutgQCuurNZmSn7MXsQA4maGvkMjrT3fsw4BUndWv8J59qcjXvzenPck/PK0237BMpDbGPogw+8hiNU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.214])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4TmqKv6kQ2z1FLRM;
-	Sat,  2 Mar 2024 10:54:11 +0800 (CST)
-Received: from canpemm100003.china.huawei.com (unknown [7.192.104.85])
-	by mail.maildlp.com (Postfix) with ESMTPS id 6117B1A016B;
-	Sat,  2 Mar 2024 10:54:15 +0800 (CST)
-Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm100003.china.huawei.com (7.192.104.85) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Sat, 2 Mar 2024 10:54:15 +0800
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Sat, 2 Mar 2024 10:54:14 +0800
-Subject: Re: [PATCH v2 5/5] scsi: hisi_sas: Add libsas SATA sysfs attributes
- group
-To: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, John Garry <john.g.garry@oracle.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Jack Wang <jinpu.wang@cloud.ionos.com>, "Hannes
- Reinecke" <hare@suse.de>
-CC: TJ Adams <tadamsjr@google.com>, <linux-ide@vger.kernel.org>,
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20240302001603.1012084-1-ipylypiv@google.com>
- <20240302001603.1012084-6-ipylypiv@google.com>
-From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <e363a966-46a6-5c19-ea6c-77db43021149@huawei.com>
-Date: Sat, 2 Mar 2024 10:54:14 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1709367903; c=relaxed/simple;
+	bh=yxRHpAE7Su6Yi++mYKCyTKa75U5UXl1rl+cNRpQDmog=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=Wa/pfMlMUvu5vACxKh6oY6HmkpD6tQYDYNPWlflo7MNotsfKCxk3oxQhpe9zAIc/G/C0oz06b/u2Rn/rLzBjRv/vkmmd2mbiE+vDjN0XJwAJMsdcucDhwAtXwy91jat4YnZ8KHamZ6VVzXpalwzYQiGFDlqnqZXjZjCI+jNk6OI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=i8nUdSzo; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=i8nUdSzo; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="i8nUdSzo";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="i8nUdSzo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1709367900;
+	bh=yxRHpAE7Su6Yi++mYKCyTKa75U5UXl1rl+cNRpQDmog=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=i8nUdSzoplFMdAusSEFd2X39x1qtDcUZ8L9gbgoli77AShQlzUYW/WbM3P6POycHj
+	 joG/QNkks87A6QsxZiUaL/KRgUnFTpeDgD+2zZgmHSjsprvO8U7KYmq0RAY5V1OjyI
+	 7LIAbnP+Ewdp6yo1eZBlKE88XY8aqVMShYS/Akok=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id B52241286E23;
+	Sat,  2 Mar 2024 03:25:00 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id FHF77ltlOsGh; Sat,  2 Mar 2024 03:25:00 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1709367900;
+	bh=yxRHpAE7Su6Yi++mYKCyTKa75U5UXl1rl+cNRpQDmog=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=i8nUdSzoplFMdAusSEFd2X39x1qtDcUZ8L9gbgoli77AShQlzUYW/WbM3P6POycHj
+	 joG/QNkks87A6QsxZiUaL/KRgUnFTpeDgD+2zZgmHSjsprvO8U7KYmq0RAY5V1OjyI
+	 7LIAbnP+Ewdp6yo1eZBlKE88XY8aqVMShYS/Akok=
+Received: from [10.0.15.72] (unknown [49.231.15.39])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 376981286E22;
+	Sat,  2 Mar 2024 03:24:59 -0500 (EST)
+Message-ID: <1f7995571142ef7e7ed2739bc6f8574d40159de7.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.8-rc6
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Sat, 02 Mar 2024 15:24:53 +0700
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240302001603.1012084-6-ipylypiv@google.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- canpemm500004.china.huawei.com (7.192.104.92)
 
-On 2024/3/2 8:16, Igor Pylypiv wrote:
-> The added sysfs attributes group enables the configuration of NCQ Priority
-> feature for HBAs that rely on libsas to manage SATA devices.
-> 
-> Signed-off-by: Igor Pylypiv<ipylypiv@google.com>
-> ---
->   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 6 ++++++
->   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 6 ++++++
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 6 ++++++
->   3 files changed, 18 insertions(+)
+Two small fixes, all in drivers (the more obsolete mpt3sas and the
+newer mpi3mr).
 
-As John pointed out, please check aic94xx and isci driver, they also use 
-libsas.
+The patch is available here:
 
-Thanks,
-Jason
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Arnd Bergmann (1):
+      scsi: mpi3mr: Reduce stack usage in mpi3mr_refresh_sas_ports()
+
+Ranjan Kumar (1):
+      scsi: mpt3sas: Prevent sending diag_reset when the controller is ready
+
+And the diffstat:
+
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 7 ++++++-
+ drivers/scsi/mpt3sas/mpt3sas_base.c    | 4 +++-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+index c0c8ab586957..d32ad46318cb 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+@@ -1671,7 +1671,7 @@ mpi3mr_update_mr_sas_port(struct mpi3mr_ioc *mrioc, struct host_port *h_port,
+ void
+ mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
+ {
+-	struct host_port h_port[64];
++	struct host_port *h_port = NULL;
+ 	int i, j, found, host_port_count = 0, port_idx;
+ 	u16 sz, attached_handle, ioc_status;
+ 	struct mpi3_sas_io_unit_page0 *sas_io_unit_pg0 = NULL;
+@@ -1685,6 +1685,10 @@ mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
+ 	sas_io_unit_pg0 = kzalloc(sz, GFP_KERNEL);
+ 	if (!sas_io_unit_pg0)
+ 		return;
++	h_port = kcalloc(64, sizeof(struct host_port), GFP_KERNEL);
++	if (!h_port)
++		goto out;
++
+ 	if (mpi3mr_cfg_get_sas_io_unit_pg0(mrioc, sas_io_unit_pg0, sz)) {
+ 		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+ 		    __FILE__, __LINE__, __func__);
+@@ -1814,6 +1818,7 @@ mpi3mr_refresh_sas_ports(struct mpi3mr_ioc *mrioc)
+ 		}
+ 	}
+ out:
++	kfree(h_port);
+ 	kfree(sas_io_unit_pg0);
+ }
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 8761bc58d965..b8120ca93c79 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -7378,7 +7378,9 @@ _base_wait_for_iocstate(struct MPT3SAS_ADAPTER *ioc, int timeout)
+ 		return -EFAULT;
+ 	}
+ 
+- issue_diag_reset:
++	return 0;
++
++issue_diag_reset:
+ 	rc = _base_diag_reset(ioc);
+ 	return rc;
+ }
+
