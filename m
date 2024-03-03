@@ -1,103 +1,82 @@
-Received: from mail-il1-f173.google.com (mail-il1-f173.google.com [209.85.166.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5F783FE5F
-	for <linux-scsi@vger.kernel.org>; Sat,  2 Mar 2024 20:20:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95225BE4A;
+	Sun,  3 Mar 2024 12:12:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.237.130.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709410840; cv=none; b=FE0qNmZaihD6ECuVBEHJKcO39OmIIQMOeywuoKav9uJi9EXXGnqusY7pmHor3nweqvhtV8YQ3tlIONhXiGWuXedDoc27bv2jpBoaCHTWOKzdkIwpSFmOGtrZAsSG44+5gYHH52Ca0krdyr2/xScJe1+nJUBcXNnR6wbXzAshGEU=
+	t=1709467980; cv=none; b=e3B7mu+UwZRF6rjllwIUOUjGbwvNRxDWWjnWqRPMR/8HAhMPD9rtgvoJIwsK6TA23IrgSfvTcHtesLTQQ4uuov2KdkMAsSu4oZp5MuREMXFtXctVHWaliRlG6DexmeMgWmAe5ojIje2fxlotvWJlRckaVLRxUe+ej7FB1ydeX5w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709410840; c=relaxed/simple;
-	bh=Il4TNeGZ87lBBA6QRmI8wfKgBRijwa3cS1rM+/WJJ3M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SqNeZcht7acf36EqZmaa/Jc2n/LGnHLZUpAlW3O8jA1pQzjmljM/31J1oRPc1xtWwXDowMKOjsMJnScVkPBkXRoJuZ/CakdFFX7eEihn5Wf5qe/2Ti4SN6EcPdrcKXFtlfZh/mGno5pt8PTvZ7YiETmc5Ko6l2p5bgi6aDihw4Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=pEQnPFPG; arc=none smtp.client-ip=209.85.166.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1709467980; c=relaxed/simple;
+	bh=SBOPZsrdqZ/NNDMbOM0UYx3P98xhQulgQAGDn5mg7Zg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NBHdYwZLAKomizScmcY6XS589WGpsp4zVVE/cpdmzR7rC6Dcl1pXmbBog8s0iYC34oMRwjHlknvfdACYeln5pH5W3MTIbTk6Rtf3xbLq/s0gibKC1irNzzvO8TWCyvA/CkjggZlkfU6AHUj7HLfo3MgqbogFQoioUk22HCX7d+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info; spf=pass smtp.mailfrom=leemhuis.info; dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b=K4+z7M4V; arc=none smtp.client-ip=80.237.130.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=leemhuis.info
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=leemhuis.info
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="pEQnPFPG"
-Received: by mail-il1-f173.google.com with SMTP id e9e14a558f8ab-3650c7e0dd2so12225625ab.2
-        for <linux-scsi@vger.kernel.org>; Sat, 02 Mar 2024 12:20:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1709410838; x=1710015638; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=vLDiv6aj5j9bGmsHcUHk2rwN974mAAiIOmfVyl85S3Y=;
-        b=pEQnPFPGSYYQzvR7/P6Eq2tmOmpgqbZU/P5R+dtiz5jDj6CfCcNUlybIW0oeF3Mt6Z
-         hM39jFXTtG0Tp9XnFgPlYxRS4KtYf8iW3JvNI/K4roBWfQ+j85IzCz1RkHgH0rvRnT9s
-         LdN9PuKPPUcj6IFL5SnZh6AoQYPLHYXAuGz+cAnaYi99H7Cg/pYHqi2e8AGItdhk76L2
-         Z9rbMFDfN7ZrkbJnrLNfiuxbYB3tFYDjFR3EbRxFZmLAe8J5BIjBAAmx3Fq3cePFzCNg
-         EdFFZGFbVz7VFecH5ACQnaeQKFjnumYCMQ17cJB5hJ0OWIEbSrYQTt1eRoyE7RHG9QuW
-         i4Iw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709410838; x=1710015638;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vLDiv6aj5j9bGmsHcUHk2rwN974mAAiIOmfVyl85S3Y=;
-        b=Lu9kny1OBHh8+qvLfrDJ+sRy/v35fuCVPK7PiNw4nSfZ8xG0rQwoJ23GrRZg4SkOGX
-         UfH2t3lgkmIxwD8adkXkrLS0Lth/b7eXMfJAk/pEt0CqsT6k2SP6TPOeCUlM6aDByUG0
-         k32lak7MbjyzC/vBq5kDIowOHWit4Tibo/Qs/qFeKso0IdIRANaNj4bs6oMuStqoNGAE
-         IV6U8hwNI/m6XwcKsLuWL8YTKq46gois4e3EmH3F6jEO936TTsiBuvKezHNwkcsVBn0s
-         Z89/nxlyp6XpdAsjDy/q0NVgCZWhHeS9OShYGj1WHNQQn+//mMx6gxmHSVi/youDi2lX
-         77oQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVQf3LgTsLNjKvq/WwgvBqs3/XiL2np0gdKwCASlC+6HkpoEa2scuD4aF+sMZp8tJLv9Zc96EzLrYdC8OcHsJgtiJfyXNffq6QvNg==
-X-Gm-Message-State: AOJu0YybLhYW3hL43IU4u6NCWU8fjws63a4nIPeNz37CwzbiabZW0a/r
-	sEaLyDyTUYFw43PSPSQ5tQEXpIajm2mUR3ntfv4LhbRfLeR3PvtlE2NTTijVaw==
-X-Google-Smtp-Source: AGHT+IGWHtZpooNRhjtLGiXDKWHHb3lExF13M/bZvYdKWRjeMnuIBH8ANCqhWwP12f0YF8dMR1h+PA==
-X-Received: by 2002:a05:6e02:1564:b0:364:2239:a89b with SMTP id k4-20020a056e02156400b003642239a89bmr7054185ilu.11.1709410837857;
-        Sat, 02 Mar 2024 12:20:37 -0800 (PST)
-Received: from google.com ([2620:15c:2c5:13:41a7:9019:9a7:b404])
-        by smtp.gmail.com with ESMTPSA id 7-20020a630107000000b005cf450e91d2sm4984639pgb.52.2024.03.02.12.20.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 02 Mar 2024 12:20:37 -0800 (PST)
-Date: Sat, 2 Mar 2024 12:20:32 -0800
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Jason Yan <yanaijie@huawei.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
-	John Garry <john.g.garry@oracle.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jack Wang <jinpu.wang@cloud.ionos.com>,
-	Hannes Reinecke <hare@suse.de>, TJ Adams <tadamsjr@google.com>,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 5/5] scsi: hisi_sas: Add libsas SATA sysfs attributes
- group
-Message-ID: <ZeOKEFC10lD-9Kle@google.com>
-References: <20240302001603.1012084-1-ipylypiv@google.com>
- <20240302001603.1012084-6-ipylypiv@google.com>
- <e363a966-46a6-5c19-ea6c-77db43021149@huawei.com>
+	dkim=pass (2048-bit key) header.d=leemhuis.info header.i=@leemhuis.info header.b="K4+z7M4V"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=leemhuis.info; s=he214686; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+	Message-ID:From:Sender:Reply-To:Subject:Date:Message-ID:To:Cc:MIME-Version:
+	Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:
+	In-Reply-To:References; bh=SBOPZsrdqZ/NNDMbOM0UYx3P98xhQulgQAGDn5mg7Zg=;
+	t=1709467978; x=1709899978; b=K4+z7M4V7mynQwndJVgwr/opirGmmeGOgwchIZAQPIfklrZ
+	kgVfUoOh2VP8w7/HZRxgbwPcVbB1883Kk4To3ppmTjjekPkiMwJtqhEqUrs4W0dXqAd1rH4o9CqwZ
+	kZG/PyPQibsFjjlPdUTj08gBrxYmcfMGBx3OKhhScEwm8xf0GsNIKvZupSzwBA0+al/j8egd9WSg6
+	rRRK8EzJeaFHpkZRQhWntfcmaUUwIJaFXeyppX1NY+UfEPERNV46oFzyBtKOAtaBN9aIn85GpHYRx
+	gfegNs21eW/YddCe/OICU0QoyVfWuHg68dWFdIwnSZ3lHbatYgJVrnmgl+pPOZqg==;
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	id 1rgkPH-0008Ly-3H; Sun, 03 Mar 2024 12:53:27 +0100
+Message-ID: <78c14dd8-b655-4405-85e6-5c9530c77282@leemhuis.info>
+Date: Sun, 3 Mar 2024 12:53:26 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e363a966-46a6-5c19-ea6c-77db43021149@huawei.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/1] Revert "scsi: ufs: core: Only suspend clock scaling
+ if scaling down"
+Content-Language: en-US, de-DE
+To: Linux kernel regressions list <regressions@lists.linux.dev>,
+ LKML <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
+References: <20240228053421.19700-1-quic_rampraka@quicinc.com>
+From: "Linux regression tracking #adding (Thorsten Leemhuis)"
+ <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <20240228053421.19700-1-quic_rampraka@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1709467978;bb23a397;
+X-HE-SMSGID: 1rgkPH-0008Ly-3H
 
-On Sat, Mar 02, 2024 at 10:54:14AM +0800, Jason Yan wrote:
-> On 2024/3/2 8:16, Igor Pylypiv wrote:
-> > The added sysfs attributes group enables the configuration of NCQ Priority
-> > feature for HBAs that rely on libsas to manage SATA devices.
-> > 
-> > Signed-off-by: Igor Pylypiv<ipylypiv@google.com>
-> > ---
-> >   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 6 ++++++
-> >   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 6 ++++++
-> >   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 6 ++++++
-> >   3 files changed, 18 insertions(+)
-> 
-> As John pointed out, please check aic94xx and isci driver, they also use
-> libsas.
+[TLDR: I'm adding this report to the list of tracked Linux kernel
+regressions; the text you find below is based on a few templates
+paragraphs you might have encountered already in similar form.
+See link in footer if these mails annoy you.]
 
-Thank you, Jason. I wasn't sure about these drivers. Added in v3.
+On 28.02.24 06:34, Ram Prakash Gupta wrote:
+> This reverts commit 1d969731b87f122108c50a64acfdbaa63486296e.
+> Approx 28% random perf IO degradation is observed by suspending clk
+> scaling only when clks are scaled down. Concern for original fix was
+> power consumption, which is already taken care by clk gating by putting
+> the link into hibern8 state.
 
-Thanks,
-Igor
+Thanks for the report. To be sure the issue doesn't fall through the
+cracks unnoticed, I'm adding it to regzbot, the Linux kernel regression
+tracking bot:
 
-> 
-> Thanks,
-> Jason
+#regzbot ^introduced 1d969731b87f122108c50a64acfdbaa63486296e
+#regzbot title scsi: ufs: core: approx 28% random perf IO degradation
+#regzbot ignore-activity
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
