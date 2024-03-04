@@ -1,160 +1,87 @@
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5B453A1B4;
-	Mon,  4 Mar 2024 09:24:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87191225A6;
+	Mon,  4 Mar 2024 10:18:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709544259; cv=none; b=D9xP0qZTUpD4OftBEeHAwnQAo9QwXMc2ybPoxVzbJxE28dKc8U1AXv+1PdmCVE2eYMOhzdJ6w/WqD1VU9sKjs2jHIeMZPZUTRDNg+F64fhOUlWgupViadZgiOIhpF5AIawb6o9DGR8fvF1eLo8yrfi67hZ+Q41hOuViHvVyRT1U=
+	t=1709547528; cv=none; b=qzobJnn3lYXqkOwZbaXMh+soH6z5LyoYN78iqjMLvEtBQlDVdukOBffEnUb0H1wLvf6/oZ6941ADnlH9KdkluNsA7LNCce1q2xZLLsKJGkxwz6DApCEPO6N/PO/8Juu41naTacq0tHa4ZypAynC6ibLstytBUFj4ES91Rwfq3kU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709544259; c=relaxed/simple;
-	bh=ZNYJmH6JH98eqGuB5N4pR86eqdep53xLc9xBzuVhHUg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cb98yjOcx+35kE14Ekh/l/DhxayP5WGVruI2tUSm8TrPqJwKimI+tby4LFlAHnClZmN4bSUwZw1n20m+1dJsiXTfjXTPXhPlWqEdvM9PXtTidmCka6uKUUYHGJxebLayzt0t/aYib630CUqhB8+A0IJGfBsdE37mBmzf16We828=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=OCuSmq0j; arc=none smtp.client-ip=216.71.153.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1709547528; c=relaxed/simple;
+	bh=PJtcCbs756j5oFqV8d7Qq7eKfaIJxwawRk/fSYxEiHM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qYbbknxhqZ+7/RU0ucL1UadXorpDEz9wxd2VFG4Nstkoa7aI7WjzG6fF/itOTRTEs3RsxgsgMU9ZPK+zb1fAkP53Jw8Euk4hIE3E3Im83z1ZBSeP6LyccTNCD3ovdbcAGoPGROKa6edPDXgS5t+6rX1XnR5G0uZUv6vIsl1GDgo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=fy+hoh8u; arc=none smtp.client-ip=46.235.227.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="OCuSmq0j"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1709544257; x=1741080257;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=ZNYJmH6JH98eqGuB5N4pR86eqdep53xLc9xBzuVhHUg=;
-  b=OCuSmq0jYEkwFTH40z+9o0ATpEa5M2g+M2tF/1AxInTrlnoFzrx50GNA
-   CnDMAccG3gIPYAcwK/U723IxaVvdbltJB+FPtdTGxOL7UA47mE0snVgem
-   McQoV9gxFEH5EmUdBzCQ50bED91qM1o+++84qWuN8rcLoA6GYEBQaK58q
-   eK32t297Sy3I1UVCnjqgS82ZrinmmvudjHWK6BNFghQ8do3Q3lYUlA4Mf
-   EyyEv3zlyGQeLnLn+BtmOBGEyvT8oImKUXh12jlP6hViNpyJxYgU1gTh7
-   AxKiV9yaxgy7soCSYMrKg00xxiIbVHkIYeLXeNs4OkN3SctSuU1iPqpQy
-   g==;
-X-CSE-ConnectionGUID: V6yQldMlQCqlwEt5v/y4ZQ==
-X-CSE-MsgGUID: QWkrR/5IRbO7WHd5JPRA8w==
-X-IronPort-AV: E=Sophos;i="6.06,203,1705334400"; 
-   d="scan'208";a="11326514"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 04 Mar 2024 17:24:17 +0800
-IronPort-SDR: qY8wHVNb1m4xRgMIvaJOmkjcq4K0DnJUeC6hP2yCCnpCTqWiuNtmEYEm9PnpF6elHjWZ/R1iHu
- l0oVa934JMNw==
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 04 Mar 2024 00:33:30 -0800
-IronPort-SDR: ZmtozU8xo0e5aX8zlT7rq3/aIRmOvhI0hLB7OQZ97i52rOky9cZ6JZ00LINFbOSHA491aAcqDi
- TMLjQHDYuQyw==
-WDCIronportException: Internal
-Received: from bxygm33.ad.shared ([10.45.31.229])
-  by uls-op-cesaip02.wdc.com with ESMTP; 04 Mar 2024 01:24:15 -0800
-From: Avri Altman <avri.altman@wdc.com>
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 4/4] scsi: ufs: Re-use compose_devman_upiu
-Date: Mon,  4 Mar 2024 11:23:46 +0200
-Message-ID: <20240304092346.654-5-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20240304092346.654-1-avri.altman@wdc.com>
-References: <20240304092346.654-1-avri.altman@wdc.com>
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="fy+hoh8u"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1709547524;
+	bh=PJtcCbs756j5oFqV8d7Qq7eKfaIJxwawRk/fSYxEiHM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=fy+hoh8uZ7q58A/cmDJN4kWCBUlXzQ98FWQRHMfPBPX0SrMV77ruFj0BztpL4vZ1w
+	 hIBZTxwopsvzdNQzjUYlvBasvauZuIykcHJgD+yAgnsAXnvWnKcsTXGwFH9m1M2Ria
+	 1qez2bz8ULvhcxQ/K1ZZ7VqjmaGoxBt8zY6F2eTNSiPdAawtEsvTd9TA3zktMkdlvT
+	 eIPv8j6DTBAxGyrfMCCh1lkxXAxGP7RVFhd06Us07/mgPv4xsw86dDubcDJ7NtcGFf
+	 kshlX6Pppcd5porjPYRbfBbTfR+QmK4tFB7eBwss5ribf0iyfG1iGM/77Mw/vRasKf
+	 +UxC5YPpScNgg==
+Received: from [100.113.186.2] (cola.collaboradmins.com [195.201.22.229])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: kholk11)
+	by madrid.collaboradmins.com (Postfix) with ESMTPSA id F02FD3781FE3;
+	Mon,  4 Mar 2024 10:18:43 +0000 (UTC)
+Message-ID: <1244daaf-4b02-4dd1-915d-0e50ef638b6a@collabora.com>
+Date: Mon, 4 Mar 2024 11:18:43 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: lpfc: correct size for cmdwqe/rspwqe for memset
+Content-Language: en-US
+To: Muhammad Usama Anjum <usama.anjum@collabora.com>,
+ James Smart <james.smart@broadcom.com>,
+ Dick Kennedy <dick.kennedy@broadcom.com>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Justin Tee <justin.tee@broadcom.com>
+Cc: kernel@collabora.com, kernel-janitors@vger.kernel.org,
+ James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20240301144434.2809483-1-usama.anjum@collabora.com>
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+In-Reply-To: <20240301144434.2809483-1-usama.anjum@collabora.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Move out some code fragments so it can be used elsewhere.
+Il 01/03/24 15:44, Muhammad Usama Anjum ha scritto:
+> The cmdwqe and rspwqe are of type lpfc_wqe128. They should be memset
+> with the same type.
+> 
+> Fixes: 61910d6a5243 ("scsi: lpfc: SLI path split: Refactor CT paths")
+> Signed-off-by: Muhammad Usama Anjum <usama.anjum@collabora.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_bsg.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+> index d80e6e81053b0..8caf54aa20391 100644
+> --- a/drivers/scsi/lpfc/lpfc_bsg.c
+> +++ b/drivers/scsi/lpfc/lpfc_bsg.c
+> @@ -3169,10 +3169,10 @@ lpfc_bsg_diag_loopback_run(struct bsg_job *job)
+>   	}
+>   
+>   	cmdwqe = &cmdiocbq->wqe;
+> -	memset(cmdwqe, 0, sizeof(union lpfc_wqe));
+> +	memset(cmdwqe, 0, sizeof(union lpfc_wqe128));
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/ufs/core/ufshcd.c | 40 +++++++++++++++------------------------
- 1 file changed, 15 insertions(+), 25 deletions(-)
+memset(cmdwqe, 0, sizeof(*cmdwqe));
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index a41cd7ed1e38..b6e27c6daf54 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2840,6 +2840,17 @@ static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
- 	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
- }
- 
-+static void __compose_devman_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
-+				  u8 *upiu_flags, int ehs_length)
-+{
-+	if (hba->ufs_version <= ufshci_version(1, 1))
-+		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
-+	else
-+		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
-+
-+	ufshcd_prepare_req_desc_hdr(lrbp, upiu_flags, DMA_NONE, ehs_length);
-+}
-+
- /**
-  * ufshcd_compose_devman_upiu - UFS Protocol Information Unit(UPIU)
-  *			     for Device Management Purposes
-@@ -2854,12 +2865,8 @@ static int ufshcd_compose_devman_upiu(struct ufs_hba *hba,
- 	u8 upiu_flags;
- 	int ret = 0;
- 
--	if (hba->ufs_version <= ufshci_version(1, 1))
--		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
--	else
--		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
-+	__compose_devman_upiu(hba, lrbp, &upiu_flags, 0);
- 
--	ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE, 0);
- 	if (hba->dev_cmd.type == DEV_CMD_TYPE_QUERY)
- 		ufshcd_prepare_utp_query_req_upiu(hba, lrbp, upiu_flags);
- 	else if (hba->dev_cmd.type == DEV_CMD_TYPE_NOP)
-@@ -7220,17 +7227,11 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 	u8 upiu_flags;
- 
- 	__compose_dev_cmd(hba, lrbp, cmd_type, 0, tag);
--
--	if (hba->ufs_version <= ufshci_version(1, 1))
--		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
--	else
--		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
-+	__compose_devman_upiu(hba, lrbp, &upiu_flags, 0);
- 
- 	/* update the task tag in the request upiu */
- 	req_upiu->header.task_tag = tag;
- 
--	ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, DMA_NONE, 0);
--
- 	/* just copy the upiu request as it is */
- 	memcpy(lrbp->ucd_req_ptr, req_upiu, sizeof(*lrbp->ucd_req_ptr));
- 	if (desc_buff && desc_op == UPIU_QUERY_OPCODE_WRITE_DESC) {
-@@ -7371,24 +7372,13 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *r
- 	u8 upiu_flags;
- 	u8 *ehs_data;
- 	u16 ehs_len;
-+	int ehs = (hba->capabilities & MASK_EHSLUTRD_SUPPORTED) ? 2 : 0;
- 
- 	/* Protects use of hba->reserved_slot. */
- 	ufshcd_dev_man_lock(hba);
- 
- 	__compose_dev_cmd(hba, lrbp, DEV_CMD_TYPE_RPMB, UFS_UPIU_RPMB_WLUN, tag);
--
--	/* Advanced RPMB starts from UFS 4.0, so its command type is UTP_CMD_TYPE_UFS_STORAGE */
--	lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
--
--	/*
--	 * According to UFSHCI 4.0 specification page 24, if EHSLUTRDS is 0, host controller takes
--	 * EHS length from CMD UPIU, and SW driver use EHS Length field in CMD UPIU. if it is 1,
--	 * HW controller takes EHS length from UTRD.
--	 */
--	if (hba->capabilities & MASK_EHSLUTRD_SUPPORTED)
--		ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, dir, 2);
--	else
--		ufshcd_prepare_req_desc_hdr(lrbp, &upiu_flags, dir, 0);
-+	__compose_devman_upiu(hba, lrbp, &upiu_flags, ehs);
- 
- 	/* update the task tag */
- 	req_upiu->header.task_tag = tag;
--- 
-2.42.0
+Cheers,
+Angelo
 
