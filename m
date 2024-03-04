@@ -1,53 +1,60 @@
-Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F216A19472;
-	Mon,  4 Mar 2024 09:11:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B05F210F8;
+	Mon,  4 Mar 2024 09:23:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709543465; cv=none; b=IxWPWBBGYJv/YpH7TRhPqxsfEolgYB14f0lYXlnF7QU8+R3rQ2C3Pjzvk8r4Z5vP47bc0nVWt1Xg5ucyFmMGbl/Xj99fwaet+rhbVLRqVTAebE5AUCYP6jh5ZsMka3aMGyo2nYSYiWykDdV/wMxNyPiLE7oYD8eSTioon5uUGyQ=
+	t=1709544239; cv=none; b=bWMqKhU301SgcSU83Rw/JjtWTWRfS0LpOD89qU6E3ED8dRfaIUyf6WtGN4fZiC4E9GWPSETmoPPrXy33bPk2IHBMzKtz2SOh3fvNSnbhdvWjM4GWRlSHwFANt7DD9tR9XxKDL73CGUoY6pIkPPAdIHKodIQaV9VCKIcA1JczC8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709543465; c=relaxed/simple;
-	bh=CVm0itqbknJclQDsY4Frf9OoAkYPPa/1GZRo1JGqk0M=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FdxqIAI+JTPMe72VE7cjnBeV74+jAICEoA5gS2Uql1xw4Jsy5otUQAtE1kfJ5CNp7s6q794BYW5XaHBQ8gDF53HAEjr1Svl0e6xMHekrQDOPuGo5q5yz2YeFQ17NWaG3cgBicCIwIdcpBtbFnoBTLZup8zIZ11NJnTeZGCz4Mw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=MoQtuYqx; arc=none smtp.client-ip=46.235.227.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	s=arc-20240116; t=1709544239; c=relaxed/simple;
+	bh=OjdXgl996KJ6kcslz1prq+1oitdyPh2abPpCxnR1xpg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=B66hYUr7avwQnsI6JxQT2RfTQ6sdGNF0rOEdiCu2AT4pi+SIE44WzeuCtgfI0hVPsdxagx3IReiJjnd3ZQ0B99IEC26ibd/llHH+icWVkb/vYkHRYLVMOTmDW48n3l5qZohUbputoRgouu0ZCjw7d44Y3D/vn/NPkWKrbd6hdkE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=kK3BzVN8; arc=none smtp.client-ip=216.71.153.144
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="MoQtuYqx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1709543461;
-	bh=CVm0itqbknJclQDsY4Frf9OoAkYPPa/1GZRo1JGqk0M=;
-	h=From:To:Cc:Subject:Date:From;
-	b=MoQtuYqxH59MYYoqJHYWXgE/CvSNkS4FDInxOYwx+mBhrrD6EgejdXCyXE9MrjrDc
-	 JdM39yfc+uT7tRfH7HbyGWnZzyafiz0GiKY/DXxXIY6i8A66/aIYv0SdnLxGWOHMkm
-	 ScjWEkYMttvzFGh6aEzmCCGOMq31NUtCyDf1yb31FEArCD6dkMM9eNf0QLqxh83vrI
-	 8Ui56w0i4qR/Wyd3GXS2TFEeaZ70jlH8tuVXkVqg5Gu/15cXZiCCFgSOzDWkLfrEmh
-	 nPAFMC2dj0ptermIeZBQFZ7dRJAieLIHyIoXCDebuPBkF88nytOK/Kb1Vufxx0O840
-	 DCdQioVds9PdQ==
-Received: from localhost.localdomain (broslavsky.collaboradmins.com [68.183.210.73])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: usama.anjum)
-	by madrid.collaboradmins.com (Postfix) with ESMTPSA id 580A73781FE9;
-	Mon,  4 Mar 2024 09:10:58 +0000 (UTC)
-From: Muhammad Usama Anjum <usama.anjum@collabora.com>
-To: James Smart <james.smart@broadcom.com>,
-	Dick Kennedy <dick.kennedy@broadcom.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Justin Tee <justin.tee@broadcom.com>
-Cc: Muhammad Usama Anjum <usama.anjum@collabora.com>,
-	kernel@collabora.com,
-	kernel-janitors@vger.kernel.org,
-	James Smart <jsmart2021@gmail.com>,
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="kK3BzVN8"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1709544237; x=1741080237;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=OjdXgl996KJ6kcslz1prq+1oitdyPh2abPpCxnR1xpg=;
+  b=kK3BzVN8tjaY6aVEu9bhqDIl3dXYAuRb/6QcQ7S08gIIsEgltS8OGPWr
+   +oaVSF6pSFtDT8mTOQOHCat8QyW9a7e2Q3aQu3y1FZZPKkJFDS2fxMI19
+   pkOkCObqbFGFUfgM3hm3ZDxSy8rdhDry/fm/WNs+Wgi1QpuNDJeLWLwek
+   y86yAo2j+FVtqmGXKV+FooZKd9kSNMhDnotGriA5XPWzKM3P1aIV93hgT
+   Tv+IUvGHGDobA20D9kVd1wes8CYbfwoFGNAvFMQS/szeisW/eeMUiQ9u/
+   HcIusHUyPVqOf7Dwo1LkXfLkGoxfyRCEoWAR3FIEqRlOB5DCrVMonewrt
+   Q==;
+X-CSE-ConnectionGUID: QtHxfmh5SDeQnsihbwmKPA==
+X-CSE-MsgGUID: PO1S7Z45Rk2GPXSr6Cw3lw==
+X-IronPort-AV: E=Sophos;i="6.06,203,1705334400"; 
+   d="scan'208";a="11326487"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 04 Mar 2024 17:23:55 +0800
+IronPort-SDR: 7nMD2euxlH8wRyz0fa3qFmKXlm+vV5EBzPgY6Q+IkRs85yNv7JaJrkkxcwH8ovDff5evndahfK
+ PPGGQI4M6f7w==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 04 Mar 2024 00:33:08 -0800
+IronPort-SDR: yZR0QJVOQPPKwAx+ursqZJ8HQsOKyOKft4ayJ7RdLkyl4H8LLIWxqbLDp8e0mzcg3B5oerY+SA
+ 5EAcvFk/6dxA==
+WDCIronportException: Internal
+Received: from bxygm33.ad.shared ([10.45.31.229])
+  by uls-op-cesaip02.wdc.com with ESMTP; 04 Mar 2024 01:23:53 -0800
+From: Avri Altman <avri.altman@wdc.com>
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi: lpfc: correct size for cmdwqe/rspwqe for memset
-Date: Mon,  4 Mar 2024 14:11:19 +0500
-Message-Id: <20240304091119.847060-1-usama.anjum@collabora.com>
-X-Mailer: git-send-email 2.39.2
+	linux-kernel@vger.kernel.org,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH 0/4] Re-use device management code fragments
+Date: Mon,  4 Mar 2024 11:23:42 +0200
+Message-ID: <20240304092346.654-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -56,35 +63,22 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The cmdwqe and rspwqe are of type lpfc_wqe128. They should be memset
-with the same type.
+Device management commands are constructed for query commands that are
+being issued by the driver, but also for raw device management commands
+originated by the bsg module, and recently, by the advanced rpmb
+handler. Thus, the same code fragments, e.g. locking, composing the
+command, composing the upiu etc., appear over and over. Remove those
+duplications.  Theoretically, there should be no functional change.
 
-Fixes: 61910d6a5243 ("scsi: lpfc: SLI path split: Refactor CT paths")
-Signed-off-by: Muhammad Usama Anjum <usama.anjum@collabora.com>
----
-Changes since v1:
-- Use *ptr instead of specifying type in sizeof
----
- drivers/scsi/lpfc/lpfc_bsg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Avri Altman (4):
+  scsi: ufs: Re-use device management locking code
+  scsi: ufs: Re-use exec_dev_cmd
+  scsi: ufs: Re-use compose_dev_cmd
+  scsi: ufs: Re-use compose_devman_upiu
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index d80e6e81053b0..7d5275d3a7406 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -3169,10 +3169,10 @@ lpfc_bsg_diag_loopback_run(struct bsg_job *job)
- 	}
- 
- 	cmdwqe = &cmdiocbq->wqe;
--	memset(cmdwqe, 0, sizeof(union lpfc_wqe));
-+	memset(cmdwqe, 0, sizeof(*cmdwqe));
- 	if (phba->sli_rev < LPFC_SLI_REV4) {
- 		rspwqe = &rspiocbq->wqe;
--		memset(rspwqe, 0, sizeof(union lpfc_wqe));
-+		memset(rspwqe, 0, sizeof(*rspwqe));
- 	}
- 
- 	INIT_LIST_HEAD(&head);
+ drivers/ufs/core/ufshcd.c | 200 ++++++++++++++++----------------------
+ 1 file changed, 83 insertions(+), 117 deletions(-)
+
 -- 
-2.39.2
+2.42.0
 
