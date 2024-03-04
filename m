@@ -1,52 +1,52 @@
 Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 625501A58B;
-	Mon,  4 Mar 2024 09:06:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F216A19472;
+	Mon,  4 Mar 2024 09:11:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709543191; cv=none; b=HqbEkQuM9VLg2nFbyDeCkMWI8Meo3iqu3hi/x7JeUUnltzNH3TJ6vwu/ZBQJOVOnjw2a/syJ0jEdzmBHu2fP4ZOltJoIyuSf9F7RaaNaPf7aGahrbiMq/y9sZw7p5Zx0MYYrgGEGcNA1PpjBIOvjnNaY6kwWlJqZvLndokw4a+s=
+	t=1709543465; cv=none; b=IxWPWBBGYJv/YpH7TRhPqxsfEolgYB14f0lYXlnF7QU8+R3rQ2C3Pjzvk8r4Z5vP47bc0nVWt1Xg5ucyFmMGbl/Xj99fwaet+rhbVLRqVTAebE5AUCYP6jh5ZsMka3aMGyo2nYSYiWykDdV/wMxNyPiLE7oYD8eSTioon5uUGyQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709543191; c=relaxed/simple;
-	bh=GCuw5Sm9pjw8RPsF+AZn1B/kTPwUEgdiAsqcOZ4ANW4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=V+F0nfqV8n4FGanRatN6e+RD5tQd1kgVzUdAmD9AixJ750rsGuWF/warwoy21g5Ndo3xgPt5HhFGZHu9TLZrqv8/T6O4k6/QAm1bWDB+zpnPfi5NCagiPsSCvv74wdL5H3bvJASyCU22hZofLv0KRlPE+bgvTqbnvNiOnrd2984=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=GAj+fQta; arc=none smtp.client-ip=46.235.227.194
+	s=arc-20240116; t=1709543465; c=relaxed/simple;
+	bh=CVm0itqbknJclQDsY4Frf9OoAkYPPa/1GZRo1JGqk0M=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=FdxqIAI+JTPMe72VE7cjnBeV74+jAICEoA5gS2Uql1xw4Jsy5otUQAtE1kfJ5CNp7s6q794BYW5XaHBQ8gDF53HAEjr1Svl0e6xMHekrQDOPuGo5q5yz2YeFQ17NWaG3cgBicCIwIdcpBtbFnoBTLZup8zIZ11NJnTeZGCz4Mw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=MoQtuYqx; arc=none smtp.client-ip=46.235.227.194
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="GAj+fQta"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="MoQtuYqx"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1709543188;
-	bh=GCuw5Sm9pjw8RPsF+AZn1B/kTPwUEgdiAsqcOZ4ANW4=;
+	s=mail; t=1709543461;
+	bh=CVm0itqbknJclQDsY4Frf9OoAkYPPa/1GZRo1JGqk0M=;
 	h=From:To:Cc:Subject:Date:From;
-	b=GAj+fQtaM6u3iin5ZbT5b0HjMjDpd/odSbjNw77qL0jim7x03ptPzJ3bAn2cN7C4R
-	 RUhQyBKG4m5ZeDvxb18qKB6sFfIH9e90sYI+neWLEe6F0yURn8zBzKGUulqISlmwBQ
-	 XxV3K0kgY+E6imnSaPWHGnyw36w4DWbvtI3BR88NCiRrDf8hY02+T+Zaj2sAag6Kot
-	 Gz96q1i1YBfXSQGnD7tdvpdbhT+gdyoLdJWooHAMAzWI8tAPFk+Noj//Q/Cutvcgih
-	 6RpS3PiGj43mprxgFFChFZ4PPKIBfO6NH4UM4Rq7JnY4NYOWP6rS0m6sAnm00Kmk68
-	 EBHE8sb39w5dQ==
+	b=MoQtuYqxH59MYYoqJHYWXgE/CvSNkS4FDInxOYwx+mBhrrD6EgejdXCyXE9MrjrDc
+	 JdM39yfc+uT7tRfH7HbyGWnZzyafiz0GiKY/DXxXIY6i8A66/aIYv0SdnLxGWOHMkm
+	 ScjWEkYMttvzFGh6aEzmCCGOMq31NUtCyDf1yb31FEArCD6dkMM9eNf0QLqxh83vrI
+	 8Ui56w0i4qR/Wyd3GXS2TFEeaZ70jlH8tuVXkVqg5Gu/15cXZiCCFgSOzDWkLfrEmh
+	 nPAFMC2dj0ptermIeZBQFZ7dRJAieLIHyIoXCDebuPBkF88nytOK/Kb1Vufxx0O840
+	 DCdQioVds9PdQ==
 Received: from localhost.localdomain (broslavsky.collaboradmins.com [68.183.210.73])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: usama.anjum)
-	by madrid.collaboradmins.com (Postfix) with ESMTPSA id BD3A53781FE9;
-	Mon,  4 Mar 2024 09:06:25 +0000 (UTC)
+	by madrid.collaboradmins.com (Postfix) with ESMTPSA id 580A73781FE9;
+	Mon,  4 Mar 2024 09:10:58 +0000 (UTC)
 From: Muhammad Usama Anjum <usama.anjum@collabora.com>
 To: James Smart <james.smart@broadcom.com>,
 	Dick Kennedy <dick.kennedy@broadcom.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.com>
+	Justin Tee <justin.tee@broadcom.com>
 Cc: Muhammad Usama Anjum <usama.anjum@collabora.com>,
 	kernel@collabora.com,
 	kernel-janitors@vger.kernel.org,
 	James Smart <jsmart2021@gmail.com>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi: lpfc: correct size for wqe for memset
-Date: Mon,  4 Mar 2024 14:06:48 +0500
-Message-Id: <20240304090649.833953-1-usama.anjum@collabora.com>
+Subject: [PATCH v2] scsi: lpfc: correct size for cmdwqe/rspwqe for memset
+Date: Mon,  4 Mar 2024 14:11:19 +0500
+Message-Id: <20240304091119.847060-1-usama.anjum@collabora.com>
 X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -56,30 +56,35 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The wqe is of type lpfc_wqe128. It should be memset with the same type.
+The cmdwqe and rspwqe are of type lpfc_wqe128. They should be memset
+with the same type.
 
-Fixes: 6c621a2229b0 ("scsi: lpfc: Separate NVMET RQ buffer posting from IO resources SGL/iocbq/context")
+Fixes: 61910d6a5243 ("scsi: lpfc: SLI path split: Refactor CT paths")
 Signed-off-by: Muhammad Usama Anjum <usama.anjum@collabora.com>
 ---
 Changes since v1:
-- Use *wqe instead of type to find sizeof
+- Use *ptr instead of specifying type in sizeof
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_bsg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index 8258b771bd009..561ced5503c63 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1586,7 +1586,7 @@ lpfc_nvmet_setup_io_context(struct lpfc_hba *phba)
- 		wqe = &nvmewqe->wqe;
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index d80e6e81053b0..7d5275d3a7406 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -3169,10 +3169,10 @@ lpfc_bsg_diag_loopback_run(struct bsg_job *job)
+ 	}
  
- 		/* Initialize WQE */
--		memset(wqe, 0, sizeof(union lpfc_wqe));
-+		memset(wqe, 0, sizeof(*wqe));
+ 	cmdwqe = &cmdiocbq->wqe;
+-	memset(cmdwqe, 0, sizeof(union lpfc_wqe));
++	memset(cmdwqe, 0, sizeof(*cmdwqe));
+ 	if (phba->sli_rev < LPFC_SLI_REV4) {
+ 		rspwqe = &rspiocbq->wqe;
+-		memset(rspwqe, 0, sizeof(union lpfc_wqe));
++		memset(rspwqe, 0, sizeof(*rspwqe));
+ 	}
  
- 		ctx_buf->iocbq->cmd_dmabuf = NULL;
- 		spin_lock(&phba->sli4_hba.sgl_list_lock);
+ 	INIT_LIST_HEAD(&head);
 -- 
 2.39.2
 
