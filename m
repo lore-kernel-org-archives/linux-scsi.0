@@ -1,70 +1,104 @@
-Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 755E2249F4;
-	Mon,  4 Mar 2024 10:32:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC9DF1946C;
+	Mon,  4 Mar 2024 12:50:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709548345; cv=none; b=Az4uGbhOfr7vs2iS8Tb64EQxnNLEujK1CGYwepuiJczGDApaDbgjY8j8toDt0MjttC0KzPPtMZTU/Cyf5vYHUOtlElzPj/fccMKAU/gHUnLSD7s1cXbFH8BVkzcUNaR59XWlvP44RsSJg1WI91HjJWSMpjVWnz05nUmPsXJYZis=
+	t=1709556652; cv=none; b=sYkLOedQQnBkx7Oxcdty99ImLS1udQVlInPqbGIw/F/AjzRP7qowEufxjmRACJLi9cgTu2IFcGK3MtwcpLbqYw15j5wp5yCB53t/aTamk8RnVbpLnv9OW67JxmEyejppo3kueejbWOB9tXE0H9fDulwqOAX//QFzeG8WHccMUKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709548345; c=relaxed/simple;
-	bh=YazaxYSTieA5lQl0E2xF/DFcpgv65JFrmncXrg70YAQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SP/wfQ45M4y4DbXX03TZHz0lwhjsp0/ZY5t6IUK6jipPkBd4DlnMiJjKp8w19rPQrU/+2oM8xFleq4M+IQb7l2Z7L+4ejcsphKGkTkehGN47YGXvvc/AzH4j6M+DpO9pf/M6Uqd27riXX6veV5/qt7oBk1gNCD99zWhxG/VAS0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=JbVnd2YV; arc=none smtp.client-ip=46.235.227.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="JbVnd2YV"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1709548342;
-	bh=YazaxYSTieA5lQl0E2xF/DFcpgv65JFrmncXrg70YAQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=JbVnd2YVXN+09b8YSM/hkmyBdT/HVu8L+jWuMtEsPq7uaUp7AWwUc8OAVMjkDgEQz
-	 3ODfYOfwRgn3vU3MuD8ddQIS447f69xvNL+BkMSFUE+fPIfyVNfvPqaFeuChmTS9Ny
-	 bjpD72J54iuvOd8a8lv18uoVHIqvHCEj4b/o44y3RflRYiQwMwNNmneCjWF0djjUsY
-	 mmJOnSPZReJeiXnBZVQEx3iCV7458BRDqbHB9etRVMNlcvJT7eYON+pBqlYbr1jtUl
-	 hjhYa+d9Vb6cHatsnNEilmpOmgVJHm6snmDVOozDLfIRfLp45V7/qes78Tyx/4tVj7
-	 r6nzgSCaBHGUA==
-Received: from [100.113.186.2] (cola.collaboradmins.com [195.201.22.229])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: kholk11)
-	by madrid.collaboradmins.com (Postfix) with ESMTPSA id 050FC3781FE3;
-	Mon,  4 Mar 2024 10:32:21 +0000 (UTC)
-Message-ID: <367fd03e-b645-49bc-95f2-0fe06a043370@collabora.com>
-Date: Mon, 4 Mar 2024 11:32:21 +0100
+	s=arc-20240116; t=1709556652; c=relaxed/simple;
+	bh=si1k6+m8kih3uRFyccYJEqu1Hr+qAYqsSzmMjNBAkH8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=IA/S3vX9WPdvc22rXS4QLBVxvx+jHY4T9/epPff8Sra1u/Qr33LsUeRPNJJiph1V8dhwZ7zhsfo8eYukuDZGYAha14PRfwROpuP25T1hg30rTprlS+BEp4oHxCIRFOxQUleavy4UBsxdK8Oq6r83RqzfSKK8SYpv6Gv2+qA74Kk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4TpJTC5nRrz1FLgX;
+	Mon,  4 Mar 2024 20:50:39 +0800 (CST)
+Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id D438D140113;
+	Mon,  4 Mar 2024 20:50:45 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.28; Mon, 4 Mar 2024 20:50:45 +0800
+Message-ID: <80050a50-af6a-5862-8c12-ccaf91c5ff74@huawei.com>
+Date: Mon, 4 Mar 2024 20:50:45 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: lpfc: correct size for wqe for memset
-Content-Language: en-US
-To: Muhammad Usama Anjum <usama.anjum@collabora.com>,
- James Smart <james.smart@broadcom.com>,
- Dick Kennedy <dick.kennedy@broadcom.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Hannes Reinecke <hare@suse.com>
-Cc: kernel@collabora.com, kernel-janitors@vger.kernel.org,
- James Smart <jsmart2021@gmail.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20240304090649.833953-1-usama.anjum@collabora.com>
-From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-In-Reply-To: <20240304090649.833953-1-usama.anjum@collabora.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH] scsi: libsas: Fix disk not being scanned in after being
+ removed
+Content-Language: en-CA
+To: Jason Yan <yanaijie@huawei.com>, John Garry <john.g.garry@oracle.com>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<damien.lemoal@opensource.wdc.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
+References: <20240221073159.29408-1-yangxingui@huawei.com>
+ <f095aa1c-f233-40f9-ad0f-fcd8fe69a80d@oracle.com>
+ <e2a725ee-98b3-fd57-6ee4-af031ffbd6bc@huawei.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <e2a725ee-98b3-fd57-6ee4-af031ffbd6bc@huawei.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggpemm500007.china.huawei.com (7.185.36.183) To
+ dggpemd100001.china.huawei.com (7.185.36.94)
 
-Il 04/03/24 10:06, Muhammad Usama Anjum ha scritto:
-> The wqe is of type lpfc_wqe128. It should be memset with the same type.
+Hi Jason,
+
+On 2024/3/1 9:55, Jason Yan wrote:
+> On 2024/2/29 2:13, John Garry wrote:
+>> On 21/02/2024 07:31, Xingui Yang wrote:
+>>> As of commit d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to
+>>> update PHY info"), do discovery will send a new SMP_DISCOVER and update
+>>> phy->phy_change_count. We found that if the disk is reconnected and phy
+>>> change_count changes at this time, the disk scanning process will not be
+>>> triggered.
+>>>
+>>> So update the PHY info with the last query results.
+>>>
+>>> Fixes: d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to 
+>>> update PHY info")
+>>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>>> ---
+>>>   drivers/scsi/libsas/sas_expander.c | 9 ++++-----
+>>>   1 file changed, 4 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/libsas/sas_expander.c 
+>>> b/drivers/scsi/libsas/sas_expander.c
+>>> index a2204674b680..9563f5589948 100644
+>>> --- a/drivers/scsi/libsas/sas_expander.c
+>>> +++ b/drivers/scsi/libsas/sas_expander.c
+>>> @@ -1681,6 +1681,10 @@ int sas_get_phy_attached_dev(struct 
+>>> domain_device *dev, int phy_id,
+>>>           if (*type == 0)
+>>>               memset(sas_addr, 0, SAS_ADDR_SIZE);
+>>>       }
+>>> +
+>>> +    if ((SAS_ADDR(sas_addr) == 0) || (res == -ECOMM))
+>>
+>> It's odd to call sas_set_ex_phy() if we got res == -ECOMM. I mean, in 
+>> this this case disc_resp is not filled in as the command did not 
+>> execute, right? I know that is what the current code does, but it is 
+>> strange.
 > 
-> Fixes: 6c621a2229b0 ("scsi: lpfc: Separate NVMET RQ buffer posting from IO resources SGL/iocbq/context")
-> Signed-off-by: Muhammad Usama Anjum <usama.anjum@collabora.com>
+> The current code actually re-send the SMP command and update the PHY 
+> status only when the the SMP command is responded correctly.
+> 
+> Xinggui, can you please fix this and send v3?
+The current location cannot directly update the phy information. The 
+previous phy information will be used later, and the previous sas 
+address will be compared with the currently queried sas address. At 
+present, v2 is more suitable after many days of testing.
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-
-
+Thanks,
+Xingui
