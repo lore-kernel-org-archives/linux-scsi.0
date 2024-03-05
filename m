@@ -1,109 +1,86 @@
-Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F7D15381E;
-	Tue,  5 Mar 2024 13:21:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34CBE85645;
+	Tue,  5 Mar 2024 13:25:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709644904; cv=none; b=Juawz18U8MYCeBaPx9iFw5q15+dVqrmkxuITPaKVR+nQAmzJRa64Ca71nNpLAuYhwfZHOSgqCCYcEdCOIUu4+/O2EYN+K2O0JpD9U1lTqNkYPii/8gmxZxI41/pkie1lGwm0tsl86EOHMbjPzJJqMLJT/OiAMOB0NxLjKAyeFJA=
+	t=1709645160; cv=none; b=k7yICnulDX26Woku98Xrk5NiSLZQ4yPCXd5v5BOociKSA6fHGIrXXt/SXrqNgJbsj6o6X9pZnjgMohjL3KzhoRsU8XHkAkAeeEhzQFGECSD5RlrotARBLZhjNo3mZB3ir9+PG9bT+rH2jMHe4KIn5Xk146tQAl1jxg8x5lFjaT0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709644904; c=relaxed/simple;
-	bh=Zsna3w0baJEu+CkVxCY9YDcgalMpnPzFpi6Ywn8rmb0=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=VSkh3i2Wda4dhBKpplNeBCifDrNWXZsztZl/2NeSO9KKXs1KLWYj82/uSFz39P/Ieo8yo2vZSR4AM3DDpIJ9Ym9FryC3NBvVsidnSbc42fKSzfmmY2Ghg2UXgBjLpAjCuhKEaKJb06Z4abGxZwlGBpB2LbDiAgcA6LCrAHoVtSk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.214])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4Tpx3n5c24z1Q9l3;
-	Tue,  5 Mar 2024 21:19:17 +0800 (CST)
-Received: from canpemm500010.china.huawei.com (unknown [7.192.105.118])
-	by mail.maildlp.com (Postfix) with ESMTPS id 783061A016E;
-	Tue,  5 Mar 2024 21:21:38 +0800 (CST)
-Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm500010.china.huawei.com (7.192.105.118) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 5 Mar 2024 21:21:38 +0800
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 5 Mar 2024 21:21:37 +0800
-Subject: Re: [PATCH 6/6] scsi: isci: Use LIBSAS_SHT_BASE
-To: John Garry <john.g.garry@oracle.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>, <chenxiang66@hisilicon.com>,
-	<jinpu.wang@cloud.ionos.com>, <artur.paszkiewicz@intel.com>,
-	<dlemoal@kernel.org>, <ipylypiv@google.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20240305122452.340471-1-john.g.garry@oracle.com>
- <20240305122452.340471-7-john.g.garry@oracle.com>
-From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <e3fcc620-d803-c8e3-651b-9781ecd8e87a@huawei.com>
-Date: Tue, 5 Mar 2024 21:21:37 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1709645160; c=relaxed/simple;
+	bh=qGUY1dxiZirRGSYHab1JAkhMGDJpARkMldpVYyOZWJQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PIjqGekwug37oM/1HuUJxaMzn+Jg5ajUdh7WFz6YD/E8+ZlT/SBLJR/t/HdQwcUnreKQlinSqSpRN3tG2rrNcJRqvyW4+cMB5Rr933e/VsW/E6t4ju80AeZHROTZL6GsCHCutBvOmP/dixnpteVKgPHCYK1fSzl37xvX1v8mKKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=Mv/7ew43; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="Mv/7ew43"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61595C433C7;
+	Tue,  5 Mar 2024 13:25:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1709645159;
+	bh=qGUY1dxiZirRGSYHab1JAkhMGDJpARkMldpVYyOZWJQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Mv/7ew43kGKZfV6Z49esHWEbBa1oKgnsWW1B4+H2IITQG67n7G6Ij+is7AO4J7SqU
+	 FQV680h4TdMx7AP/lBCrzLDXMVWnguNQP+HKRtqJZnds1ZYSrVyQlb18wwqQ8vsn+p
+	 C1qdeOzt+sbS6Zj8dDEOZK8SwXR9CDnuLD1GCYCs=
+Date: Tue, 5 Mar 2024 13:25:55 +0000
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Weitao Wang <WeitaoWang-oc@zhaoxin.com>
+Cc: oneukum@suse.com, stern@rowland.harvard.edu, linux-usb@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net, WeitaoWang@zhaoxin.com,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v3] USB:UAS:return ENODEV when submit urbs fail with
+ device not attached
+Message-ID: <2024030530-trinity-triangle-c334@gregkh>
+References: <20240229193349.5407-1-WeitaoWang-oc@zhaoxin.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240305122452.340471-7-john.g.garry@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- canpemm500004.china.huawei.com (7.192.104.92)
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240229193349.5407-1-WeitaoWang-oc@zhaoxin.com>
 
-On 2024/3/5 20:24, John Garry wrote:
-> Use standard template for scsi_host_template structure to reduce
-> duplication.
+On Fri, Mar 01, 2024 at 03:33:49AM +0800, Weitao Wang wrote:
+> In the scenario of entering hibernation with udisk in the system, if the
+> udisk was gone or resume fail in the thaw phase of hibernation. Its state
+> will be set to NOTATTACHED. At this point, usb_hub_wq was already freezed
+> and can't not handle disconnect event. Next, in the poweroff phase of
+> hibernation, SYNCHRONIZE_CACHE SCSI command will be sent to this udisk
+> when poweroff this scsi device, which will cause uas_submit_urbs to be
+> called to submit URB for sense/data/cmd pipe. However, these URBs will
+> submit fail as device was set to NOTATTACHED state. Then, uas_submit_urbs
+> will return a value SCSI_MLQUEUE_DEVICE_BUSY to the caller. That will lead
+> the SCSI layer go into an ugly loop and system fail to go into hibernation.
 > 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> On the other hand, when we specially check for -ENODEV in function
+> uas_queuecommand_lck, returning DID_ERROR to SCSI layer will cause device
+> poweroff fail and system shutdown instead of entering hibernation.
+> 
+> To fix this issue, let uas_submit_urbs to return original generic error
+> when submitting URB failed. At the same time, we need to translate -ENODEV
+> to DID_NOT_CONNECT for the SCSI layer.
+> 
+> Suggested-by: Oliver Neukum <oneukum@suse.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Weitao Wang <WeitaoWang-oc@zhaoxin.com>
 > ---
->   drivers/scsi/isci/init.c | 22 +---------------------
->   1 file changed, 1 insertion(+), 21 deletions(-)
-> 
-> diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-> index d0a23ce4afba..49e64232def1 100644
-> --- a/drivers/scsi/isci/init.c
-> +++ b/drivers/scsi/isci/init.c
-> @@ -155,31 +155,11 @@ static const struct attribute_group *isci_sdev_groups[] = {
->   };
->   
->   static const struct scsi_host_template isci_sht = {
-> -
-> -	.module				= THIS_MODULE,
-> -	.name				= DRV_NAME,
-> -	.proc_name			= DRV_NAME,
-> -	.queuecommand			= sas_queuecommand,
-> -	.dma_need_drain			= ata_scsi_dma_need_drain,
-> -	.target_alloc			= sas_target_alloc,
-> -	.slave_configure		= sas_slave_configure,
-> +	LIBSAS_SHT_BASE
->   	.scan_finished			= isci_host_scan_finished,
->   	.scan_start			= isci_host_start,
-> -	.change_queue_depth		= sas_change_queue_depth,
-> -	.bios_param			= sas_bios_param,
->   	.can_queue			= ISCI_CAN_QUEUE_VAL,
-> -	.this_id			= -1,
->   	.sg_tablesize			= SG_ALL,
-> -	.max_sectors			= SCSI_DEFAULT_MAX_SECTORS,
+> v2->v3
+>  - Modify the description of this patch.
+>  - An error is returned directly when submitting URB fails.
 
-.max_sectors is not defined in LIBSAS_SHT_BASE.
+This change breaks the build, please be more careful:
 
-Thanks,
-Jaosn
+drivers/usb/storage/uas.c: In function ‘uas_submit_urbs’:
+drivers/usb/storage/uas.c:559:21: error: unused variable ‘urb’ [-Werror=unused-variable]
+  559 |         struct urb *urb;
+      |                     ^~~
 
-> -	.eh_abort_handler		= sas_eh_abort_handler,
-> -	.eh_device_reset_handler        = sas_eh_device_reset_handler,
-> -	.eh_target_reset_handler        = sas_eh_target_reset_handler,
-> -	.slave_alloc			= sas_slave_alloc,
-> -	.target_destroy			= sas_target_destroy,
-> -	.ioctl				= sas_ioctl,
-> -#ifdef CONFIG_COMPAT
-> -	.compat_ioctl			= sas_ioctl,
-> -#endif
->   	.shost_groups			= isci_host_groups,
->   	.sdev_groups			= isci_sdev_groups,
->   	.track_queue_depth		= 1,
-> 
+
+thanks,
+
+greg k-h
