@@ -1,105 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC7381B957;
-	Tue,  5 Mar 2024 18:53:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFDB51BF3C;
+	Tue,  5 Mar 2024 19:04:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709664816; cv=none; b=puND4GPBe5aTJWnkSskAt9FzPYnDb1p+vE16DwxviMmg1I7gjJBl7efEfOPhjHJxc41aXr3SzwO9NNDRrYeql32FEeYmXIVWksm+aQrngy9VeYd79DK8fP6zDLFEy6iuaKtq2GH7bSs6lmwi9qJXhNtQdLUXt0Dg8tnpGUYwz2A=
+	t=1709665476; cv=none; b=DyQiuxARMnPh02TUa4h4EitPmXcKLX4/c/MZZWNgldfv3cSxfesl2fHZGTfr1stMLM7vVdJB1M6kXo6exKKqFsO1Flxq0Bn6gVOL1ip553QlG5Lr89A9bAuCaHFsoyyuqolqee74pqU1wQdziaF4KbBi4Q7DAJXzfJEZIt8/Uoc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709664816; c=relaxed/simple;
-	bh=UxSg3J7pmXgouiW5qzsuGHpZBdYmHL4bL7FyvyMHf+k=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=dlfNDkuxZS5yfGzVWiV6/+JgjqsYMCyRSb7M8C/uk4AgWQJoIL1B3fFOknn1l/+9WyTTbCq8EoBQXuo7fCPdjPUHOg3UsvCa6uE2K/cYveXPci9f0zzC6OMOMSJDGwXi6QBcVRn4QGy9rlUG+lv1vhItd6eZZp6eWSF3pzZfOpE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VR0Eeyjp; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VR0Eeyjp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 390B3C43601;
-	Tue,  5 Mar 2024 18:53:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709664816;
-	bh=UxSg3J7pmXgouiW5qzsuGHpZBdYmHL4bL7FyvyMHf+k=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=VR0Eeyjp/78+DsOUI5efdN9B5bRcF6HFxoyvC5bWeVElq/VWUrAW0m3CZKkWd+/7m
-	 EWOsjMwJjrbelAFQUOJd4gCQmEYpb8qQ9o6GAEuNUC4gFQSvpshLsHCOHWJnfuabzm
-	 09ANuKESfkHOchOjLYVen0ph1WGHj6dRrgJfEcADIWSzTdYzj95l1MFd+dM71Lnert
-	 5UuVIzk/H2GE0K6qCuwKYph1b0GYbZiDzD55PIfVSD2Q6I9awi3YtDqTplCIGvB3C1
-	 qCE1U07l+G7WGbfteb5WeCDHyxuR1JjmfzFZTmAwysC+rzXhrRdFSvTrvdqsKZAPpQ
-	 aT7NxkPqiKRMw==
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-2d309a23d76so496691fa.1;
-        Tue, 05 Mar 2024 10:53:36 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVWyTkNS4fgL/XwUPQNXbZuW2tUyJugvB98cJOC1RPXO4sMCq6WsuVL653k7wEV2XOOPC5JeyArt3XmpiC9Icmqpz223swFBeY6ZjtCTADSxbbvbu0HCkDDq5ew9AK8pFj/O7QBGvCAASTJOk+31wgEaevBD41P1rQZdc+kO0cjt0y9DAm8TJNAZHL4TGyCMIvwc6x0e/fdKRwaLD9YnDrnVEHEc8OpPkApA5Apt4Px2WCpUZQskiECuXSNDCPVLcEo
-X-Gm-Message-State: AOJu0YzRssHPDILbq6mTXwSdr5hwY3RePeXdNy081lFzXiYQjpr22LV1
-	kg9A+AWxu1d2q/pJyuja7xjfEjbwJM6irLN7ncKm9Rqd/Q7JNccyR7QdRMDboFpsB5JZft90Je+
-	eqCaYmBTM6ea8VU3ucjrtBjOcBg==
-X-Google-Smtp-Source: AGHT+IEU/KBPArFsCWKj4b5nW5QhpIEG3gfe02KIC5UhsfknOlWHT6QJ/okiHavM97I63ii3T7OjJZvBcaAb43h3RQs=
-X-Received: by 2002:a2e:91d8:0:b0:2d3:9cc2:fca4 with SMTP id
- u24-20020a2e91d8000000b002d39cc2fca4mr971547ljg.15.1709664814125; Tue, 05 Mar
- 2024 10:53:34 -0800 (PST)
+	s=arc-20240116; t=1709665476; c=relaxed/simple;
+	bh=rLNadQH124qkvis5G8T5Ibj9jxNp33uFHpoXpJVOMkA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ESv4P0/SYRiVPp0sTi0IKoJw8gJdb3lxeJCt/hJM7x5SipCc2+RIUJa1aPXPGgXO1SVjF+vrvr20idO/duK7L98WJnLYi+4OjFKzVyqEl514Tm12No0ldzf/Z9kCtC7l2JiXjEnt6vGMl2ICkkgNxfhBzBu8aUyeqx2AiUovrDY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-29a74c88f74so4022311a91.3;
+        Tue, 05 Mar 2024 11:04:34 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709665474; x=1710270274;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=22MPWwbM3zhSE10kK+4F0IeX95NXlBV1KV/bo2U8AfY=;
+        b=vt6/zQsfhbUdqT+1IKfAFfT0bkVTytsg2P2bir4aM1Xe9Mqzf0m8vTzBdvZbHPR3Vs
+         NqfVK7PLTl4dzp6BPARD+DRU++gnAlxQrhUQxIXECYqMiJjpVi9x/FdrBoxSuR3b00f9
+         yIgyYmd33RDzTRwqbiAA+HsGmB5gPOBHcw5xHGkx4Swbx7zxylvvUniai31crjjzahj0
+         VorGGDBR7QYpcT8UKEkDhcdbRttoGy2D16/6J/AZGyzfwtlzGXt4dGSjuvN+0e3w2NBg
+         k96NI91MGWLT5fnu/edhCf+zQ3Oj13AHiD915XIDhKWKRS67o75ZuDkMI1YljiUdrPqi
+         q7TA==
+X-Forwarded-Encrypted: i=1; AJvYcCVMeQtwlcKmJOQFzRUMbSiJOLRHmj3a5wgQWAx+JaNLTSnxNoaTOBZJWepUPk8jFpfM1RY/c854f23nLX5leCHk6Dcg8Y90U4UU7GqA1TH6zq8C8gK5L/HxYUMjEdB+8vdIi+hpJ47GIQ==
+X-Gm-Message-State: AOJu0YxzU3unzZpjno+IrMvQjFfwsijzfWT6bIUORcS7UFw3gS1mRkbg
+	nagwn7kpAPKvbTspO8QGZF3HNdeoyGNZ3zSyaTm9+/IvLu8CEFaL
+X-Google-Smtp-Source: AGHT+IGT1YCGV1vjwrx6h0SEn3DJvK2qWVOsrijPQkE7dEHsjCiUdp8ItY0MTp+lElJS3fVrH8FvZw==
+X-Received: by 2002:a17:90a:17cb:b0:299:3511:1554 with SMTP id q69-20020a17090a17cb00b0029935111554mr10236225pja.40.1709665473853;
+        Tue, 05 Mar 2024 11:04:33 -0800 (PST)
+Received: from ?IPV6:2620:0:1000:8411:3e11:2c1a:c1ee:7fe1? ([2620:0:1000:8411:3e11:2c1a:c1ee:7fe1])
+        by smtp.gmail.com with ESMTPSA id q40-20020a17090a17ab00b00298cc4c56cdsm13167208pja.22.2024.03.05.11.04.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 05 Mar 2024 11:04:33 -0800 (PST)
+Message-ID: <f6045888-bb53-4ba2-90a9-98fc6a5254ad@acm.org>
+Date: Tue, 5 Mar 2024 11:04:31 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240121-sm7125-upstream-v4-0-f7d1212c8ebb@gmail.com>
- <20240121-sm7125-upstream-v4-2-f7d1212c8ebb@gmail.com> <20240212222232.GB2655166-robh@kernel.org>
- <CAA8EJpoymmOBc3CfNHJKBT8BNje_s2a5uGPde3QHYv3vQ97=-Q@mail.gmail.com> <CAL_JsqLGVBjiYt5tG0GFxxeHmNDD1PgJx3ab-n2x0nHPEaX9iQ@mail.gmail.com>
-In-Reply-To: <CAL_JsqLGVBjiYt5tG0GFxxeHmNDD1PgJx3ab-n2x0nHPEaX9iQ@mail.gmail.com>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 5 Mar 2024 12:53:21 -0600
-X-Gmail-Original-Message-ID: <CAL_Jsq+wdu20iU5c-j6-V61nm6zuBOfDDqGdunjaGQLbc9BRmA@mail.gmail.com>
-Message-ID: <CAL_Jsq+wdu20iU5c-j6-V61nm6zuBOfDDqGdunjaGQLbc9BRmA@mail.gmail.com>
-Subject: Re: [PATCH v4 2/8] dt-bindings: ufs: qcom: Add SC7180 compatible string
-To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>, David Wronek <davidwronek@gmail.com>, 
-	Bjorn Andersson <andersson@kernel.org>
-Cc: Konrad Dybcio <konrad.dybcio@linaro.org>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	"David S. Miller" <davem@davemloft.net>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>, 
-	Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	cros-qcom-dts-watchers@chromium.org, linux-arm-msm@vger.kernel.org, 
-	linux-crypto@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-phy@lists.infradead.org, ~postmarketos/upstreaming@lists.sr.ht, 
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/4] scsi: ufs: Re-use device management locking code
+Content-Language: en-US
+To: Avri Altman <avri.altman@wdc.com>,
+ "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Bean Huo <beanhuo@micron.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20240304092346.654-1-avri.altman@wdc.com>
+ <20240304092346.654-2-avri.altman@wdc.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240304092346.654-2-avri.altman@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Feb 13, 2024 at 12:11=E2=80=AFPM Rob Herring <robh@kernel.org> wrot=
-e:
->
-> On Tue, Feb 13, 2024 at 4:30=E2=80=AFAM Dmitry Baryshkov
-> <dmitry.baryshkov@linaro.org> wrote:
-> >
-> > On Tue, 13 Feb 2024 at 00:22, Rob Herring <robh@kernel.org> wrote:
-> > >
-> > > On Sun, Jan 21, 2024 at 05:57:42PM +0100, David Wronek wrote:
-> > > > Document the compatible for the UFS found on SC7180.
-> > > >
-> > > > Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> > > > Signed-off-by: David Wronek <davidwronek@gmail.com>
-> > > > ---
-> > > >  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
-> > > >  1 file changed, 2 insertions(+)
-> > >
-> > > Should have been picked up by SCSI/UFS maintainers, but it
-> > > hasn't, so I applied it.
-> >
-> > And it now triggers schema warnings, because sc7180-ufshc has 7 clocks
-> > and 1 reg entries.
->
-> And now dropped... Perhaps the dts changes should be too.
->
-> Maybe QCom maintainers should require a report of dtbs_check on new
-> boards. My comparisons of Linus vs. next warnings often show an
-> increase in QCom warnings. Like right now:
->
-> linus: arch/arm64/boot/dts/qcom:1990:265
-> next: arch/arm64/boot/dts/qcom:1610:298
+On 3/4/24 01:23, Avri Altman wrote:
+>   /**
+>    * ufshcd_exec_dev_cmd - API for sending device management requests
+>    * @hba: UFS hba
+> @@ -3291,11 +3305,6 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>   	struct ufshcd_lrb *lrbp;
+>   	int err;
+>   
+> -	/* Protects use of hba->reserved_slot. */
+> -	lockdep_assert_held(&hba->dev_cmd.lock);
+> -
+> -	down_read(&hba->clk_scaling_lock);
+> -
+>   	lrbp = &hba->lrb[tag];
+>   	lrbp->cmd = NULL;
+>   	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
 
-Still a bunch of warnings in next. This binding should be resubmitted
-with fixes or the dts changes dropped.
+Please restore the lockdep_assert_held() call.
 
-Rob
+> -	/* Protects use of hba->reserved_slot. */
+> -	lockdep_assert_held(&hba->dev_cmd.lock);
+> -
+> -	down_read(&hba->clk_scaling_lock);
+> -
+>   	lrbp = &hba->lrb[tag];
+>   	lrbp->cmd = NULL;
+>   	lrbp->task_tag = tag;
+
+Same comment here - please restore the lockdep_assert_held() call.
+
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
