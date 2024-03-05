@@ -1,79 +1,131 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D1E91803E;
-	Tue,  5 Mar 2024 03:00:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47D0C46521
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Mar 2024 06:24:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709607651; cv=none; b=YwGrZeqHaOZ4CArO71O6ZxOTwHNdW2qOel14uQr23LWdzuBW4GPtkqlkMKcnuOA8MRexuF6pxGqXM+XlCxnN1T3Fujf31jJ4CYUAKlSDIHluC7uopceU7EykwKSwyjds5Td48m13hMy28K5JgUsWDnMKirKX2JgUf8eGbHBwBDs=
+	t=1709619855; cv=none; b=pePDtbj45t/YBiXSdAJpjhF6oYikz2nIBJCaIK3sxPScrN8hR0AR+VQgHEq3Ix13IL+uBXcp22cY9i+hYufRzGXw2hjynFibULuFYlXbmIvPVwtstLLv/2CDGAtNbXrB0zK87/wAg4a5aB003bVHfPCp+C4e/54s8kPJq2Jh6BY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709607651; c=relaxed/simple;
-	bh=xk2vWiWpHN3rKQ0Tp/1QPJGkv/RZv4mYOP9Y0+u1lFQ=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=ZdqLvkxICLTAClCtoPEw4Oy7NlAs7gDT+9ac2Vj8AARTZdEYpOshCyRU1x6g37tljaxrWTBFfGQWwIZWAcTczACUKjInWoNxLOLnWxa0b8kraFVXs2jpTxlNp3TxXlaqiGmk6CLMfnvzSJAuq3lW/U6O/oJTS1HNy9FyortFtEM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.194])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4TpgJG1rrbzNlsR;
-	Tue,  5 Mar 2024 10:59:10 +0800 (CST)
-Received: from canpemm100001.china.huawei.com (unknown [7.192.105.122])
-	by mail.maildlp.com (Postfix) with ESMTPS id F0B5614037B;
-	Tue,  5 Mar 2024 11:00:46 +0800 (CST)
-Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm100001.china.huawei.com (7.192.105.122) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 5 Mar 2024 11:00:46 +0800
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 5 Mar 2024 11:00:45 +0800
-Subject: Re: [PATCH v2] scsi: libsas: Fix disk not being scanned in after
- being removed
-To: Xingui Yang <yangxingui@huawei.com>, <john.g.garry@oracle.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
-References: <20240227090149.29039-1-yangxingui@huawei.com>
-From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <f52b3c8c-886e-665d-a50d-cba3387d8418@huawei.com>
-Date: Tue, 5 Mar 2024 11:00:45 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1709619855; c=relaxed/simple;
+	bh=XyAXgB2YoPk7YMebJUvAwa0FLPvJmqVV8vDiHO/jhqw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=BtfCeG8dN72nmI9tCVrmJhMh4W93W+L3dtdOJKJyfpHnmtuOhQEiArBPTiN2cMbIHH8R+wpKROtTtnniBNj7ISXiycKBsNFoPqxsFAUs6KtsjbVYa39joDYc38nTfYY4FJSyI6tkkIrj0JYyLs8GQPjrJyPONkXRBqACczUO91I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=JYVpjr1Z; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="JYVpjr1Z"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 4253S4hp002228;
+	Tue, 5 Mar 2024 06:24:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	message-id:date:mime-version:subject:to:cc:references:from
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=O47r3PXTgFalbpepBv8mBcJznvOALYqMQPJHK1GHaiI=; b=JY
+	Vpjr1ZYcGvKCjFl8vLx1A0hRZACRsv76FdALFniAA+AFO19V2K1wvsWg+7xyvJis
+	y9nnIML/6F74Wn9ZBODnVWg4g5Eb6EoLVllJR4S4FFy6MrTu4scS7lyzw45Lufkn
+	PDP8Pm/lTt/mApPIYberZTUhNfdU/tfD4jY2MQ4QkhjKMf5C2sNwrzvkxXfcfaaF
+	PwiJD2ZVrkMlcxuQRPySWipK/aOn1mZeREA19s/0kgBEwM+5bbqjPsyFYuzGpkQf
+	wsOqzRAJhs/YGa8JOMDWXSGFiWgbJaQDff3ldAm1piLAg7kEFg1X7olV8HAn8J9Z
+	oNLb6KKNScCsQP1yqs8g==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wnjtbhbaa-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 05 Mar 2024 06:24:04 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 4256O3dd024951
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 5 Mar 2024 06:24:03 GMT
+Received: from [10.217.216.18] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.40; Mon, 4 Mar
+ 2024 22:23:59 -0800
+Message-ID: <90989d74-d138-5ec4-2b34-11e8e17f29b3@quicinc.com>
+Date: Tue, 5 Mar 2024 11:53:56 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240227090149.29039-1-yangxingui@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH 1/1] Revert "scsi: ufs: core: Only suspend clock scaling
+ if scaling down"
+To: Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley"
+	<jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        <peter.wang@mediatek.com>
+CC: <quic_cang@quicinc.com>, <quic_nguyenb@quicinc.com>,
+        <quic_pragalla@quicinc.com>, <quic_nitirawa@quicinc.com>,
+        <quic_bhaskarv@quicinc.com>, <quic_narepall@quicinc.com>,
+        <quic_sartgarg@quicinc.com>, <linux-scsi@vger.kernel.org>,
+        Maramaina Naresh
+	<quic_mnaresh@quicinc.com>
+References: <20240228053421.19700-1-quic_rampraka@quicinc.com>
+ <565c6b0b-137f-4d72-b8c6-eb3d34592808@acm.org>
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm500004.china.huawei.com (7.192.104.92)
+From: Ram Prakash Gupta <quic_rampraka@quicinc.com>
+In-Reply-To: <565c6b0b-137f-4d72-b8c6-eb3d34592808@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: xVOfP1cxvXz7DhjAqCZ0hIx1f9NwbsCq
+X-Proofpoint-ORIG-GUID: xVOfP1cxvXz7DhjAqCZ0hIx1f9NwbsCq
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-05_03,2024-03-04_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ priorityscore=1501 mlxscore=0 lowpriorityscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 malwarescore=0 phishscore=0 adultscore=0 mlxlogscore=999
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2402120000 definitions=main-2403050048
 
-On 2024/2/27 17:01, Xingui Yang wrote:
-> As of commit d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to
-> update PHY info"), do discovery will send a new SMP_DISCOVER and update
-> phy->phy_change_count. We found that if the disk is reconnected and phy
-> change_count changes at this time, the disk scanning process will not be
-> triggered.
+
+
+On 2/29/2024 12:22 AM, Bart Van Assche wrote:
+> On 2/27/24 21:34, Ram Prakash Gupta wrote:
+>> This reverts commit 1d969731b87f122108c50a64acfdbaa63486296e.
+>> Approx 28% random perf IO degradation is observed by suspending clk
+>> scaling only when clks are scaled down. Concern for original fix was
+>> power consumption, which is already taken care by clk gating by putting
+>> the link into hibern8 state.
+>>
+>> Signed-off-by: Ram Prakash Gupta <quic_rampraka@quicinc.com>
+>> ---
+>>   drivers/ufs/core/ufshcd.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index c416826762e9..f6be18db031c 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -1586,7 +1586,7 @@ static int ufshcd_devfreq_target(struct device 
+>> *dev,
+>>           ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+>>   out:
+>> -    if (sched_clk_scaling_suspend_work && !scale_up)
+>> +    if (sched_clk_scaling_suspend_work)
+>>           queue_work(hba->clk_scaling.workq,
+>>                  &hba->clk_scaling.suspend_work);
 > 
-> So update the PHY info with the last query results.
+> What is the base kernel version for your tests? Was this patch series
+> included in your kernel tree: "[PATCH V6 0/2] Add CPU latency QoS 
+> support for ufs driver" 
+> (https://lore.kernel.org/all/20231219123706.6463-1-quic_mnaresh@quicinc.com/)?
 > 
-> Fixes: d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to update PHY info")
-> Signed-off-by: Xingui Yang<yangxingui@huawei.com>
-> ---
-> v1 -> v2:
-> Use sas_get_phy_discover() instead of sas_get_phy_attached_dev() in
-> sas_rediscover_dev() and use disc_resp to update phy info.
-> ---
->   drivers/scsi/libsas/sas_expander.c | 37 ++++++++++++++++++++++--------
->   1 file changed, 28 insertions(+), 9 deletions(-)
+> Thanks,
+> 
+> Bart.
 
-Looks good to me:
+Hi Bart,
 
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
+kernel version used is 6.1 and QoS support for CPU latency is present.
+
+Thanks,
+Ram
