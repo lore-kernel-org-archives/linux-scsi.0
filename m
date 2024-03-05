@@ -1,64 +1,64 @@
-Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
+Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 131F85C607
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Mar 2024 19:49:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F41461272A2
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Mar 2024 19:49:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709668178; cv=none; b=nTNZ7mgYEZ1kboBzJQTNARM3MzSZxhpBJ+dwTzq72y958MMlrLsTz0GAhsGkYyckXL7DXyWEIPgasrNPIJ9SzIV84s5uJq5wLc5voK4YOE5TCzjtl/nNrYag3fgJdbL1pesLbL/iQSiuQ/4RFrA63Dxx3nyS3vIrofymSTCDGHU=
+	t=1709668180; cv=none; b=qExNn9P0Z5thEBw/o0to8ixBJdJWhpob4WFAcF5s0krgOENqjb9TW/QYsVSriU8J8x8S0Fu19DJhBjUWCPH2kHN/+cMFfpfchjRozd2jk7eLNtAqFMBZw03qAuhwaTNgQDXIFgw6rclcv2MjPrZc4n9DPJ7hpV59qrczVDOKDcA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709668178; c=relaxed/simple;
-	bh=ATqU87LS5ezLdeXcWTeyKyLuBGCxRxxH115EhPc5+wQ=;
+	s=arc-20240116; t=1709668180; c=relaxed/simple;
+	bh=eArTxbds+9jJBj0X0IckQcyMO9vFBcya1CFb5iEHHqI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=lTpePEJNGMwIMltA05XXvR5vXo9Gs0KWwjNImkAtRmkD3uLL2XBlXrgqooO7eqXG35Jes1LL6V1sw859laqpPDJd0C756J3XH/ZSc7ym8OuNQM1nTTNrA2ja9FWTVvhk3+bu+lPt84ifEhtx67Y8bhKHnwUdBe745AVXcnq6iF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WUp0OiaO; arc=none smtp.client-ip=209.85.160.174
+	 MIME-Version:Content-Type; b=KNIkCi9P09Bwdb70wdcYXwWEs+tivZHP/P8hi82jMM0YZC8axQJodb1gl/AmN7PRZsLdwR6UgZvAJf77sum/5xOkxitUEPs5LGv+txE/EInd/tJsE4brfPCzAYbLrl4oTCB7f7QOQpgWMwmOeqUVg2hTmKZm0vveGfHMPN3Upqg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IbImqtvp; arc=none smtp.client-ip=209.85.219.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WUp0OiaO"
-Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-42e4b89bd3cso10082461cf.0
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Mar 2024 11:49:36 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IbImqtvp"
+Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-69069235a0eso4486016d6.0
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Mar 2024 11:49:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1709668176; x=1710272976; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1709668178; x=1710272978; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=KVHTt6NBiMTnG3shM3xG2Nf64zdGcTjMP0Ts5mx9Cgg=;
-        b=WUp0OiaOGbHYL6mvJ2Ml+k+mHZrxredveJ4VjCGvnTFnj6B5pSrYzg5WE63ki+a/2l
-         psDJf7y+hVPHFAz5csDb74v3xR0m/Etv6VXOBwGo955o2IWw7dYw9MNyGbxgPkKilhs/
-         2oTIAwLpflc4SlYXv/yBj6CJDX/jmZ3ijxKcU9GhSP/YM8sffQkSrl0g9J1105FXVniv
-         ncyQF959KNWh0hB9BXW1TdkJM4K75gg55ZfWipnsYZVS4jTBl6ratE+dDF05W4xb4URY
-         tquzl/PDnZ0jlVno0y4BF1828B1RtGPFNUU4ON1TNwJZjjZQQENHmVAZrmSnU+Doh70w
-         4yCQ==
+        bh=6QyepeMeNdh4dvf6RFrc0FdzXpa+q1WoVI5foLDSuwc=;
+        b=IbImqtvpgAARTHuk0TNr9ckNIEzKo6gVS0yPrBX8XnRhFUZZhh7udAoy5iRy7pVKqH
+         XJ88UDUAaKQ4bYctucwNJeJtNpUzZLk6bUCZFWJp3vUTOv1nXYm6yWkxVDPg9THjsmMK
+         0yCsNJETEhq7ZB7OudYKktK9Zo/ILCHjTqVohJAhfqP48OvGNhDU9bC1r+Te6j3TUsv/
+         lGS5CjJbCNsWpJrEtFWJ7l4VeIm3W/SiPHGC1Pceguj0ge/gweoQBM8k32tMCqcpxxXt
+         Ia89052uNoxnQGWBBG2C/xJ+tn1h8uSb3aBprzm/3v3nSOTno+V/TUcEd/PV4rT/8k5d
+         nMJA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709668176; x=1710272976;
+        d=1e100.net; s=20230601; t=1709668178; x=1710272978;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=KVHTt6NBiMTnG3shM3xG2Nf64zdGcTjMP0Ts5mx9Cgg=;
-        b=V1zsijVH1DWFp/33nEOHO65wCbsuov8GlzwDdyf6S79ype+CUVDMt1SEP4cMlB7NiX
-         FxZ4TqrRk2ydWyQCXPhwGExar3Z3P9VZlV0T8GygvZF40Mx6J8rA0sjK6iVrNM3gEfvv
-         SDVn87Wgjr5DJS8UM226OQuWH6F1l0ROXY5Ksvyl7bT1aXxGt5VQ+r5PBIyLuMDuItnn
-         SdJ+zdoiRzFFmOM8ZVu/wUXwzjs8b+wCuGnc3I1TYr6GYxrIk5PYUiv7SL+wZN115Jll
-         M/WZ0ZK6PbLejtVmSnOnXj6aUL1+W83QktmukVSp9vpHGHoRvx2rEztrearpzJ5x/G9c
-         Zuyw==
-X-Gm-Message-State: AOJu0Ywrxwj7VL8Ovj+744awg9QmVf//JZBnzxL3+X2HflDKJ1NxL8v7
-	+oa+LxKYunUvV1B9fG4GMBC5drelj7hcisvXOWx/pY6lP7H5xLdbrPAXZudZ
-X-Google-Smtp-Source: AGHT+IGaUOxMIluvb4IeQ1iyk4SDyFA4r/TovscU19o4EPSY5lX+qCUYQPX/hjxsWthBmOAvpMLQpg==
-X-Received: by 2002:a05:620a:4587:b0:788:31b8:a750 with SMTP id bp7-20020a05620a458700b0078831b8a750mr1417952qkb.1.1709668175995;
-        Tue, 05 Mar 2024 11:49:35 -0800 (PST)
+        bh=6QyepeMeNdh4dvf6RFrc0FdzXpa+q1WoVI5foLDSuwc=;
+        b=o7YxRyKxOtSpvdIDqavzY5Ibwf9HdTxTJxs2akt8Dzafderwxs6a7dkxyUKWNjPqcz
+         AwWERvoe4l7fWjsLX0At6sbSjTOkK4hEe6+DYIVXiGT8w4ltD1M9LB3w13BkTVfy7K89
+         6NatfjrojYu+JC2yX6Nnuow9zp2X6XGI0TwDP/08yRSKUGRrIqjVBTqNWQNpij1VldHR
+         scCllx084/GgZsf7sjzU8yho2T9Iwj3xp4ndqNf4WFOinDBSR0iZyuqHDQJtDpP8i6MT
+         pJ9hGalBkSFI9RyNdZ+Jn1sn3+cMbzbumF7fCr9F9vbYuklw5nCAa6zEIcUmJaZHaaLB
+         amTA==
+X-Gm-Message-State: AOJu0YyrgNRL6+MBzJxKDQ3AfJzvWvLWZHVpdC2QT5g5R8CIfVAZuY18
+	X5hA07wN0NkGj2PREy+2xuKfgl/RvjfqIDSMYG0KltSC8yqyja+0zfsZ655J
+X-Google-Smtp-Source: AGHT+IHaJw4vDglwEy7vnHK9DKFGd30KVxm/FxI8cCIWfAeO8cm1Q0nUKnb9CJ4xFG8mBId3wcX/qw==
+X-Received: by 2002:a05:620a:4587:b0:788:2f7b:d3 with SMTP id bp7-20020a05620a458700b007882f7b00d3mr786377qkb.7.1709668177859;
+        Tue, 05 Mar 2024 11:49:37 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id bj13-20020a05620a190d00b007877f52a6b9sm5706050qkb.136.2024.03.05.11.49.35
+        by smtp.gmail.com with ESMTPSA id bj13-20020a05620a190d00b007877f52a6b9sm5706050qkb.136.2024.03.05.11.49.37
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 05 Mar 2024 11:49:35 -0800 (PST)
+        Tue, 05 Mar 2024 11:49:37 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 11/12] lpfc: Update lpfc version to 14.4.0.1
-Date: Tue,  5 Mar 2024 12:05:02 -0800
-Message-Id: <20240305200503.57317-12-justintee8345@gmail.com>
+Subject: [PATCH 12/12] lpfc: Copyright updates for 14.4.0.1 patches
+Date: Tue,  5 Mar 2024 12:05:03 -0800
+Message-Id: <20240305200503.57317-13-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20240305200503.57317-1-justintee8345@gmail.com>
 References: <20240305200503.57317-1-justintee8345@gmail.com>
@@ -68,28 +68,43 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Update lpfc version to 14.4.0.1
+Update copyrights to 2024 for files modified in the 14.4.0.1 patch set.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_sli.h  | 2 +-
+ drivers/scsi/lpfc/lpfc_sli4.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index 56f5889dbaf9..915f2f11fb55 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "14.4.0.0"
-+#define LPFC_DRIVER_VERSION "14.4.0.1"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
+diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
+index 39f78ef291f7..cf7c42ec0306 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.h
++++ b/drivers/scsi/lpfc/lpfc_sli.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2017-2023 Broadcom. All Rights Reserved. The term *
++ * Copyright (C) 2017-2024 Broadcom. All Rights Reserved. The term *
+  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
+  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 37d9ead7a7c0..c1e9ec0243ba 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2017-2023 Broadcom. All Rights Reserved. The term *
++ * Copyright (C) 2017-2024 Broadcom. All Rights Reserved. The term *
+  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
+  * Copyright (C) 2009-2016 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
 -- 
 2.38.0
 
