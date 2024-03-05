@@ -1,74 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41A698592E
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Mar 2024 13:32:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F11AC85C65;
+	Tue,  5 Mar 2024 13:47:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709645557; cv=none; b=kKiOyMsW4XD1w830zX/1D64JasuO4jNVnR0g4X4vtFaN4Lvks+wErxvlzONQdUAImsDqJmXCjkrKJBtdiHXlCxiRqQBZF9GLWgtzCEiCT+ILPZZeBUydy0IlWOaV+SC8ArT5XBcgM31n79WaGOdUi1aK3eiyUBdp2DLiiUkBIlY=
+	t=1709646482; cv=none; b=bYYB3A4l7iHIJXXwKzV6p1GLL2uRi/YqTCLZWuxfbHgelIpZA7y3QpFTnWTXqmLbROvse10Al2zimFrc38Lf61SbB76M3L18y+VAVUmlYU3fdIE9/RXJsN/83sYqYE6IlK/fR/T3i9LDOQFwNYgJY0Ce1UK77a659qnXulEfCu0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709645557; c=relaxed/simple;
-	bh=9JiC8Y+QdO7roIkA3OqCJtVLQIs4KmmlSQlUc/tNzL0=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=K40sEMRbpItEygtKVY2xeeq3tUkuadRykprQ4ELIcpIxn7pOLlekgWQuJ+HHFhFVslVwsbpXGGZA7SQVuEsWpGF5wtW6DndSTR86K2IoB3RS83JtOwZdJJL1ZRp1ELD9em8vHmej6sMI7f21rSFpm/K0vVgcnlbKunASK99PYGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uhlla6sW; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uhlla6sW"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C031AC43390
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Mar 2024 13:32:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1709645556;
-	bh=9JiC8Y+QdO7roIkA3OqCJtVLQIs4KmmlSQlUc/tNzL0=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=Uhlla6sWSQCORnDHX9N0ME3TL6rwnb5fZlMhbS3tmzdXrNpSydPqan/chcnuPcrQo
-	 oze3HvDn97gXROuUww1ik/o+oxFCj5dXpccsXxtuTBfDvXduY8/5srNmXW8vz6Dd1n
-	 Jn5b729tdXdabUg4qOlFpROB63u2VA+5O0+jZ81dWlfsJIzotHRSuYlWaFTIqrhXH3
-	 99l1hMpCtCi1zaYOJj32Rw2ROaeB/sV4g7K7blg6Enf7q/JmHSj+CvzzgggnlGaq1b
-	 5HwV5fXkYnPDK+e2vD1g9B4PPpANpnTUOigF+NpqNrghO3dEhdjaiNyYnIJIyHF0oG
-	 clAa51g222cgQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id ADBCAC53BC6; Tue,  5 Mar 2024 13:32:36 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 218198] Suspend/Resume Regression with attached ATA devices
-Date: Tue, 05 Mar 2024 13:32:36 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: regressions@leemhuis.info
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-218198-11613-WdSeXPP22T@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-218198-11613@https.bugzilla.kernel.org/>
-References: <bug-218198-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=arc-20240116; t=1709646482; c=relaxed/simple;
+	bh=fwsD95FdoAbsdyR2QUY9CpZGE8wzEFI62CxYIBvAC9U=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=aOlL/8Na78m1EQCNCO4kKtTpxbLk7uvjwSnQC0ku/EpirRPzTGf7/wJGyLyrzglo+mCiIG34C1R1Qap0twdt15/TurT2ManULbhRx0TPP2voFSS5s1+OWKz7QVVbGMDfsnYJKyr1g9IODAHS1RYhgEf4NkYeBhfiC2b6vBio5MQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.163])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4Tpxhk0swLz1FLnJ;
+	Tue,  5 Mar 2024 21:47:50 +0800 (CST)
+Received: from canpemm500005.china.huawei.com (unknown [7.192.104.229])
+	by mail.maildlp.com (Postfix) with ESMTPS id 46AFB18002F;
+	Tue,  5 Mar 2024 21:47:57 +0800 (CST)
+Received: from canpemm500004.china.huawei.com (7.192.104.92) by
+ canpemm500005.china.huawei.com (7.192.104.229) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Tue, 5 Mar 2024 21:47:57 +0800
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Tue, 5 Mar 2024 21:47:56 +0800
+Subject: Re: [PATCH 5/6] scsi: mvsas: Use LIBSAS_SHT_BASE
+To: John Garry <john.g.garry@oracle.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>, <chenxiang66@hisilicon.com>,
+	<jinpu.wang@cloud.ionos.com>, <artur.paszkiewicz@intel.com>,
+	<dlemoal@kernel.org>, <ipylypiv@google.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20240305122452.340471-1-john.g.garry@oracle.com>
+ <20240305122452.340471-6-john.g.garry@oracle.com>
+ <8834df38-413d-855c-433c-653d7023dc8b@huawei.com>
+ <f54e9c30-b483-4dae-9b22-24feb4fc289e@oracle.com>
+From: Jason Yan <yanaijie@huawei.com>
+Message-ID: <deae273c-7789-e8da-1256-777d01a4ab9f@huawei.com>
+Date: Tue, 5 Mar 2024 21:47:56 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <f54e9c30-b483-4dae-9b22-24feb4fc289e@oracle.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ canpemm500004.china.huawei.com (7.192.104.92)
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D218198
+On 2024/3/5 21:28, John Garry wrote:
+> On 05/03/2024 13:19, Jason Yan wrote:
+>>> -    .ioctl            = sas_ioctl,
+>>> -#ifdef CONFIG_COMPAT
+>>> -    .compat_ioctl        = sas_ioctl,
+>>> -#endif
+>>>       .shost_groups        = mvst_host_groups,
+>>>       .sdev_groups        = mvst_sdev_groups,
+>>>       .track_queue_depth    = 1,
+>>>
+>>
+>> Doesn't hvae ->eh_abort_handler too.
+> 
+> Is setting eh_abort_handler actually really ever required for libsas 
+> drivers? We have sas_eh_abort_handler, so I assume so..
 
---- Comment #27 from The Linux kernel's regression tracker (Thorsten Leemhu=
-is) (regressions@leemhuis.info) ---
-Dieter (or Damien/Niklas), what is the status of this? Was this fixed?
+For now among libsas drivers only isci has eh_abort_handler. But 
+LIBSAS_SHT_BASE is setting it by default. I think it's better to keep 
+the same as before for other four drivers.
 
---=20
-You may reply to this email to add a comment.
+Thanks,
+Jason
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+> 
+> Thanks,
+> John
+> .
