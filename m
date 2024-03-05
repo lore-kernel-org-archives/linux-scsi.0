@@ -1,48 +1,48 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4482A18032;
-	Tue,  5 Mar 2024 02:47:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFBEA28E02;
+	Tue,  5 Mar 2024 02:56:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709606837; cv=none; b=FXZvZtq/gYHUC0IId6RhH3NTeq/9z5r6cG48UsSzNbJQZ7+4O3bbypC5UDBY2+ylt4r/0NCwu8w9iKUB4FT3ZxgwT45RYbLAfQ8tYe4z/WqPVr86DzXY7eIHP9dUvaL2ck4Y0EGEjJx398Gx+VD526s+7Ty2QJUJdBxJ3wgXtzQ=
+	t=1709607388; cv=none; b=fj0S0nzkqFf67pQDfi9QCrJHMuMvC12jTuNm0JKnclWP5FuZ59yFs+fYMrK6Z6KZjAK194dDz4vFsxLxWJJ9RCslOmVmwveNVQFCdNawiPgfBZZwzJENn9uFQ/Vi4ZPNO5M7LMgCVTpb5POCJqsrdFgEmCx5r2ogqxxrLZ4oiGQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709606837; c=relaxed/simple;
-	bh=MuUyikP68WHPsllS/AZLIjAw7kG0ypfYkfKatNE3yQU=;
+	s=arc-20240116; t=1709607388; c=relaxed/simple;
+	bh=9aq1dWdZloxUMNZSHLf/pMwp0TpoxuSjANvoAXLgcUE=;
 	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=diPh5GlA/y9dPHpCBWOqIQz8Z7Q2INiIZsro8t3xOxbixmONtp6iZjBJRJRcirVRkdj2gOr4WEqHHeI8FIUcui5d4DgQODBnPPx2+/dtURYs8pm6DLCNmCapvazXi6zwH5UMhjTxua19kj2a2SucVU7YCl9XXKkFy18maRESHH0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
+	 In-Reply-To:Content-Type; b=qr9Le+EYvHlp6p1eOGOvHPSH3heSdMZHakpcSgvO/jRPhrI4o4H0+/jPRgOZ9Q7hWDwJIKZGXpl/CHuWlqRjzdY3aJMNB+oUNSmbs7/yqOSKnvLLxCBwiwSi2jE0R1pdy/ec4/55IZFqFfnJfDqlRYxaZtaNJeVc6R2kvhEP0RI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.105])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Tpg0b3WPYzNlt3;
-	Tue,  5 Mar 2024 10:45:35 +0800 (CST)
-Received: from canpemm100003.china.huawei.com (unknown [7.192.104.85])
-	by mail.maildlp.com (Postfix) with ESMTPS id 32BF114011A;
-	Tue,  5 Mar 2024 10:47:12 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4TpgDw5cxbz1FLmL;
+	Tue,  5 Mar 2024 10:56:16 +0800 (CST)
+Received: from canpemm500005.china.huawei.com (unknown [7.192.104.229])
+	by mail.maildlp.com (Postfix) with ESMTPS id 766971402CB;
+	Tue,  5 Mar 2024 10:56:23 +0800 (CST)
 Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm100003.china.huawei.com (7.192.104.85) with Microsoft SMTP Server
+ canpemm500005.china.huawei.com (7.192.104.229) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 5 Mar 2024 10:47:12 +0800
+ 15.1.2507.35; Tue, 5 Mar 2024 10:56:23 +0800
 Received: from [10.174.179.14] (10.174.179.14) by
  canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 5 Mar 2024 10:47:11 +0800
-Subject: Re: [PATCH v5 7/7] scsi: isci: Add libsas SATA sysfs attributes group
-To: Igor Pylypiv <ipylypiv@google.com>, Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, John Garry <john.g.garry@oracle.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Jack Wang <jinpu.wang@cloud.ionos.com>, "Hannes
- Reinecke" <hare@suse.de>, Xiang Chen <chenxiang66@hisilicon.com>, "Artur
- Paszkiewicz" <artur.paszkiewicz@intel.com>, Bart Van Assche
-	<bvanassche@acm.org>
-CC: TJ Adams <tadamsjr@google.com>, <linux-ide@vger.kernel.org>,
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20240305005103.1849325-1-ipylypiv@google.com>
- <20240305005103.1849325-8-ipylypiv@google.com>
+ 15.1.2507.35; Tue, 5 Mar 2024 10:56:22 +0800
+Subject: Re: [PATCH] scsi: libsas: Fix disk not being scanned in after being
+ removed
+To: yangxingui <yangxingui@huawei.com>, John Garry <john.g.garry@oracle.com>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<damien.lemoal@opensource.wdc.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
+References: <20240221073159.29408-1-yangxingui@huawei.com>
+ <f095aa1c-f233-40f9-ad0f-fcd8fe69a80d@oracle.com>
+ <e2a725ee-98b3-fd57-6ee4-af031ffbd6bc@huawei.com>
+ <80050a50-af6a-5862-8c12-ccaf91c5ff74@huawei.com>
 From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <070e02e9-4250-4a19-4673-dd307121da86@huawei.com>
-Date: Tue, 5 Mar 2024 10:47:10 +0800
+Message-ID: <7e1b554b-a675-14d2-59aa-7f37e3dd5994@huawei.com>
+Date: Tue, 5 Mar 2024 10:56:22 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 Precedence: bulk
@@ -51,22 +51,68 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240305005103.1849325-8-ipylypiv@google.com>
+In-Reply-To: <80050a50-af6a-5862-8c12-ccaf91c5ff74@huawei.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
  canpemm500004.china.huawei.com (7.192.104.92)
 
-On 2024/3/5 8:51, Igor Pylypiv wrote:
-> The added sysfs attributes group enables the configuration of NCQ Priority
-> feature for HBAs that rely on libsas to manage SATA devices.
+On 2024/3/4 20:50, yangxingui wrote:
+> Hi Jason,
 > 
-> Reviewed-by: John Garry<john.g.garry@oracle.com>
-> Reviewed-by: Damien Le Moal<dlemoal@kernel.org>
-> Signed-off-by: Igor Pylypiv<ipylypiv@google.com>
-> ---
->   drivers/scsi/isci/init.c | 6 ++++++
->   1 file changed, 6 insertions(+)
+> On 2024/3/1 9:55, Jason Yan wrote:
+>> On 2024/2/29 2:13, John Garry wrote:
+>>> On 21/02/2024 07:31, Xingui Yang wrote:
+>>>> As of commit d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to
+>>>> update PHY info"), do discovery will send a new SMP_DISCOVER and update
+>>>> phy->phy_change_count. We found that if the disk is reconnected and phy
+>>>> change_count changes at this time, the disk scanning process will 
+>>>> not be
+>>>> triggered.
+>>>>
+>>>> So update the PHY info with the last query results.
+>>>>
+>>>> Fixes: d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to 
+>>>> update PHY info")
+>>>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>>>> ---
+>>>>   drivers/scsi/libsas/sas_expander.c | 9 ++++-----
+>>>>   1 file changed, 4 insertions(+), 5 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/libsas/sas_expander.c 
+>>>> b/drivers/scsi/libsas/sas_expander.c
+>>>> index a2204674b680..9563f5589948 100644
+>>>> --- a/drivers/scsi/libsas/sas_expander.c
+>>>> +++ b/drivers/scsi/libsas/sas_expander.c
+>>>> @@ -1681,6 +1681,10 @@ int sas_get_phy_attached_dev(struct 
+>>>> domain_device *dev, int phy_id,
+>>>>           if (*type == 0)
+>>>>               memset(sas_addr, 0, SAS_ADDR_SIZE);
+>>>>       }
+>>>> +
+>>>> +    if ((SAS_ADDR(sas_addr) == 0) || (res == -ECOMM))
+>>>
+>>> It's odd to call sas_set_ex_phy() if we got res == -ECOMM. I mean, in 
+>>> this this case disc_resp is not filled in as the command did not 
+>>> execute, right? I know that is what the current code does, but it is 
+>>> strange.
+>>
+>> The current code actually re-send the SMP command and update the PHY 
+>> status only when the the SMP command is responded correctly.
+>>
+>> Xinggui, can you please fix this and send v3?
+> The current location cannot directly update the phy information. The 
+> previous phy information will be used later, and the previous sas 
+> address will be compared with the currently queried sas address. At 
+> present, v2 is more suitable after many days of testing.
 
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
+OK, so let me have a closer look at v2.
+
+Thanks,
+Jason
+
+> 
+> Thanks,
+> Xingui
+> .
