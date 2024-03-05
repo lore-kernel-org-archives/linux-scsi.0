@@ -1,81 +1,111 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04F0022F0C;
-	Tue,  5 Mar 2024 19:15:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9682618639
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Mar 2024 19:49:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709666137; cv=none; b=CXtAaMMP6cmjN9FNUBCOe7IE6FSPVl13tu2V8FUJsrrq0EN+QNRl+KFGYU8SbzyYRi587JYe/w+Z0mfmMp3664Nx5SXZE7ap7PRAFi8mviyO3L3fVSMMKf06AIMemXz3apEmr6Gj6gFi4QFeP8jWpv5BHnd1t4ILCc3n9cVIUuU=
+	t=1709668144; cv=none; b=GL6VJeiHTKtRtVzxwlUZMpalDJihzxmnmZGcBxTv2Xmb91OsuDPSgH7rwIVMDkKVXSnqkj5YGFy7OI6XD86YypAWJWqONihNoxixfYTxM5Xfj2s2dRvSLQ76VK9ThIkVuPS+gRiBBf4FoCEJC4E4K84ZYo0x8T8OO4KXrci328I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709666137; c=relaxed/simple;
-	bh=q+ztNtFvfKQ9hq+M/YvKvcctrTchDNPkgWnn+oztkYc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dBWGMQdMVRBbPmPBoN/+PzsPOLwuuKmTmUGMcKgPD+1T1eEmRz9JNeN13C7guQLaSLf5vD7fS31cHZn0buiyB50ixQvlfNnW/+XvYNW9MO2SBtWKFWJenE+mxYJCkQ0VMMLz9SMGIeyt4YEs2ZWwHJMrqQjvywYs3UL7WIFpLBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
+	s=arc-20240116; t=1709668144; c=relaxed/simple;
+	bh=UKLMP4QdbgL68D4hKgIg/xYHPQfpiT1vw8U5Fi323Kc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=UwxkHKZa3lJ5X0fVJwOI4GVQt2j57D2rk3BE0/d7mk2XXiPIpUBtxSBRcF9ZZkM0DgH4C0H20WzwK6FdmwF6nQxj5Br3iObiYCNrkLOzLHyDIeQSiqv5+5wOkj8agW3ngXtKfhN0j2vkmIQ/Tl9IQzxZ9Hvw62bC0cRxMCR0zww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=d5B7nwu6; arc=none smtp.client-ip=209.85.160.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1dc49b00bdbso54732275ad.3;
-        Tue, 05 Mar 2024 11:15:35 -0800 (PST)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="d5B7nwu6"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-42e4b89bd3cso10081501cf.0
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Mar 2024 11:49:02 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1709668141; x=1710272941; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=6IhrXmGZCVEocJxTVveamRg46bVFo3O8o60C7+XKQB4=;
+        b=d5B7nwu60zuXj/FqsEu6rfSf+qsoMEVBMRx0NYKL2GyhIIbhJVDVMp+gdDQKZyecQa
+         raELd+ZY0sLtv8BvzKSDJHMvUW8t/cAoMtHQHeZDVYq8euD/couKwlCd9yTWKpEYku3G
+         srSPqWcbp7Bs/1wvNMvbnQliW3M/0W8aslTR8D8QhoW8BZM2bOScb1LfHG/Imh2bC02Z
+         zCLLEAdfvBisuXNBIVkMb0GWWTcjbl5gXTQwnXu9h9UdopXWN7NjzB0ayapJRIdR03tM
+         XD7dzvD3aGaxpuv/6ZLndfw/FJtTxHqofXdjlsmPKs7uYldZieBVVDK8leSleonVWvYX
+         XtOQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709666135; x=1710270935;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=8fGMOBv3EJ/8KyNhVETcyV7O4e5ShcJePbc3rjazADM=;
-        b=BfFdxEur7wDeIrDcnejurlltMXlDO8v+Ygi6o1I9TGA2Q71y7ap8E1Q2QX+nDHhAYA
-         x8dpq7iaxVenyaUEuey5TCuKj80PJvnAhjqaqlDa/g0meRjRhY1dwSajkeqFBYb4956u
-         61X6pAhQe/mTgIv1ce4Bk3etcsHtF8S0pEwJg5tuUaVkWVgVBZOvm1RbTM78H1U8SKKq
-         5XSJEp+cofvlkhoxYtqhdkHVVKkIJTkDtc9kj+NVW/SbHORh/IZgN8yXzbWeIqcZcwvz
-         YT56XaHEn7RTbh86ULxZPxURsbaxSIBgsOGYkbT5xexYzo7mWinJIFPsKIuZSat6CUDv
-         VlhA==
-X-Forwarded-Encrypted: i=1; AJvYcCUq6cG2LUfosdOnjWbIsLH4MMBi51AzuXCxuETZ4dytVokkJkTFEW9k9G8U5d5C2DC9j2xnJhbrHX/OBcaEOss+jB6NSQlyOSJnWK2aS1HBBc+4M/boc67nGTIfn+x8rMNDO614TO9b6g==
-X-Gm-Message-State: AOJu0Yx9OJHrPYQgSjZitZiWOC/Ap9NZa8PLowh0ClcybS7bQiz6MVyR
-	wPV3JLVWaFEwi9nWryGVNjZ/wocOz0juR7uQzpRP2+ZtPCU9+dA7
-X-Google-Smtp-Source: AGHT+IFqjmg65FENs6jCedy4peDcSuxPDgIGq1cxbDX1vLubXUmRD6MD5jUd4nz1y8SzKCO29AIjPQ==
-X-Received: by 2002:a17:903:1209:b0:1dc:4199:a31d with SMTP id l9-20020a170903120900b001dc4199a31dmr3115815plh.53.1709666135385;
-        Tue, 05 Mar 2024 11:15:35 -0800 (PST)
-Received: from ?IPV6:2620:0:1000:8411:3e11:2c1a:c1ee:7fe1? ([2620:0:1000:8411:3e11:2c1a:c1ee:7fe1])
-        by smtp.gmail.com with ESMTPSA id g24-20020a170902869800b001dbae7b85b1sm10916399plo.237.2024.03.05.11.15.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Mar 2024 11:15:35 -0800 (PST)
-Message-ID: <b28bed87-161c-4086-b6de-5844d012a090@acm.org>
-Date: Tue, 5 Mar 2024 11:15:34 -0800
+        d=1e100.net; s=20230601; t=1709668141; x=1710272941;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6IhrXmGZCVEocJxTVveamRg46bVFo3O8o60C7+XKQB4=;
+        b=oS0s2WAOX2q/eURrUqsD7SW8KXHNmDIdBjapTD2BIqo9bQ7Lk9x1RsUObc3cgFpdwB
+         Dg99gzWXavYn0S5KfB2+9YUMpmhPrLCIWEaSf9hC7WJOQ2nbO/QHeY1oJBJ1lrQNsNp6
+         JEc+tyhleiszniTwg14I4DeGO5A74Y+aYiYqIKROde9vGuPpgS2OuwL0imRQf3nI7o39
+         05Lvu7dBwxChFQww8q5mi8UU7urk3jXuZ11mDHTNEelqTucnmpOLqE4Mgq/XVBjKFLKg
+         iQib4OX3QbmgFIDpb8KCTOlU7pWTpgMjKoeGGxW9ziJ7Qfltwwg3+6I1VwqHqI+H+9tF
+         0KxQ==
+X-Gm-Message-State: AOJu0Yyv0lhcN1/OlUYe9AUCr0SDYwt0R626UcowstrlbVFaf7LIFf/u
+	r6OCOy6uqCFlcdIKYhyoC8Dru0+Ngx+IZsiCorHgys3OTT0KHBG/lE79HsNr
+X-Google-Smtp-Source: AGHT+IFA2snVcKyMSusawXFufBPu8rJzIf2EdM4gGV34fZy3hP12lqdYMzF9oao85j8NBIM+nb0YZw==
+X-Received: by 2002:a05:620a:191d:b0:788:33ed:e34e with SMTP id bj29-20020a05620a191d00b0078833ede34emr1418548qkb.3.1709668141483;
+        Tue, 05 Mar 2024 11:49:01 -0800 (PST)
+Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id bj13-20020a05620a190d00b007877f52a6b9sm5706050qkb.136.2024.03.05.11.49.00
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 05 Mar 2024 11:49:01 -0800 (PST)
+From: Justin Tee <justintee8345@gmail.com>
+To: linux-scsi@vger.kernel.org
+Cc: jsmart2021@gmail.com,
+	justin.tee@broadcom.com,
+	Justin Tee <justintee8345@gmail.com>
+Subject: [PATCH 00/12] Update lpfc to revision 14.4.0.1
+Date: Tue,  5 Mar 2024 12:04:51 -0800
+Message-Id: <20240305200503.57317-1-justintee8345@gmail.com>
+X-Mailer: git-send-email 2.38.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/4] scsi: ufs: Re-use compose_devman_upiu
-Content-Language: en-US
-To: Avri Altman <avri.altman@wdc.com>,
- "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bean Huo <beanhuo@micron.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20240304092346.654-1-avri.altman@wdc.com>
- <20240304092346.654-5-avri.altman@wdc.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240304092346.654-5-avri.altman@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 3/4/24 01:23, Avri Altman wrote:
-> +static void __compose_devman_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
-> +				  u8 *upiu_flags, int ehs_length)
-> +{
-> +	if (hba->ufs_version <= ufshci_version(1, 1))
-> +		lrbp->command_type = UTP_CMD_TYPE_DEV_MANAGE;
-> +	else
-> +		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
-> +
-> +	ufshcd_prepare_req_desc_hdr(lrbp, upiu_flags, DMA_NONE, ehs_length);
-> +}
+Update lpfc to revision 14.4.0.1
 
-Please move the above if-statement into ufshcd_prepare_req_desc_hdr() 
-instead of introducing yet another helper function.
+This patch set contains updates to log messaging, bug fixes related to
+unregistration, interrupt handling, resource recovery, and clean up patches
+regarding the abuse of hbalock and void pointers in the driver.
 
-Thanks,
+The patches were cut against Martin's 6.9/scsi-queue tree.
 
-Bart.
+Justin Tee (12):
+  lpfc: Remove unnecessary log message in queuecommand path
+  lpfc: Move NPIV's transport unregistration to after resource clean up
+  lpfc: Remove IRQF_ONESHOT flag from threaded irq handling
+  lpfc: Update lpfc_ramp_down_queue_handler logic
+  lpfc: Replace hbalock with ndlp lock in lpfc_nvme_unregister_port
+  lpfc: Release hbalock before calling lpfc_worker_wake_up
+  lpfc: Use a dedicated lock for ras_fwlog state
+  lpfc: Define lpfc_nodelist type for ctx_ndlp ptr
+  lpfc: Define lpfc_dmabuf type for ctx_buf ptr
+  lpfc: Define types in a union for generic void *context3 ptr
+  lpfc: Update lpfc version to 14.4.0.1
+  lpfc: Copyright updates for 14.4.0.1 patches
+
+ drivers/scsi/lpfc/lpfc.h           |  2 +-
+ drivers/scsi/lpfc/lpfc_attr.c      |  4 +-
+ drivers/scsi/lpfc/lpfc_bsg.c       | 36 +++++------
+ drivers/scsi/lpfc/lpfc_debugfs.c   | 12 ++--
+ drivers/scsi/lpfc/lpfc_els.c       | 45 +++++++-------
+ drivers/scsi/lpfc/lpfc_hbadisc.c   | 33 +++++-----
+ drivers/scsi/lpfc/lpfc_init.c      | 13 ++--
+ drivers/scsi/lpfc/lpfc_mbox.c      | 30 +++------
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 12 ++--
+ drivers/scsi/lpfc/lpfc_nvme.c      |  4 +-
+ drivers/scsi/lpfc/lpfc_scsi.c      | 23 ++-----
+ drivers/scsi/lpfc/lpfc_sli.c       | 99 +++++++++++++++---------------
+ drivers/scsi/lpfc/lpfc_sli.h       | 30 +++++++--
+ drivers/scsi/lpfc/lpfc_sli4.h      |  7 ++-
+ drivers/scsi/lpfc/lpfc_version.h   |  2 +-
+ drivers/scsi/lpfc/lpfc_vport.c     | 10 +--
+ 16 files changed, 177 insertions(+), 185 deletions(-)
+
+-- 
+2.38.0
+
