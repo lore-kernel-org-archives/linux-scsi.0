@@ -1,44 +1,44 @@
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E499B85920;
-	Tue,  5 Mar 2024 13:18:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 874335381E;
+	Tue,  5 Mar 2024 13:19:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709644689; cv=none; b=G1+4LdNlvDNa3O4otQa2H9Kh8vRZI/7z+WVB6wG6Fc/i5S/gWjCkFtCAzpzhbuH8vxmKMgrh++mrowQ37+FT7Iuz79pWmov7I7bL44Z6waMswCwbjXqCA45eUu6ssXOBYAaqj0lJI8DmOxNxL0lnTd9ra6gc5tMZqr0azAgXJUE=
+	t=1709644767; cv=none; b=im8DK/PxE0KvBNNsmORGPqUWL3BUAlSB9i1VrYSTeQ2xoxHM2vfYbEn4k75cXiwZy5ej1rUu5de5XwgTF5zu/7auBuMzTVhIL5c0Ut9NUsldLELXdN5NdCY3o4q5yBrOedxp9lk8g/1rF9zJq6m7jY+Lzdk+w+ip0Qi50QwEx+w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709644689; c=relaxed/simple;
-	bh=rTVx3vnuzXzSdWk3HXicjemCJcYYPy1I/GQBPyfPXLU=;
+	s=arc-20240116; t=1709644767; c=relaxed/simple;
+	bh=5dvzbaUABGmZglbR4UQH63OsA3I6euQSwrr+nKFycSw=;
 	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=iEdPODPNNHFCPeA3caiFwFga7ZTuJAo/Z+UkNPEBLhDaY363ObF97NkA/bNj9Ll+4BRWG3zuHHzoOMYgQu61TbgmfbvmeqFrktY5qEJu20ZiRjumKGmbtK12zyKyodkoakgUv94J0uDd+Zc37ETK22ce54/JQ824bdpazP+Y7v4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
+	 In-Reply-To:Content-Type; b=h8sJSvSI7/R6XGlMjInIgbbPngkQgEPiJbOc7J/+HYUG+WfxTQo5mSR7muwvWyAjJhuP1hbXKz2gLAiIZ0jQ2PR5Jtl3gLWmv9f3i8pQwG4OqRqRso2PQPmQSVWEPUZ7a5OV7xEXvEychyx5SGLY8FlYJ98FyOrIMQMwx0SLZz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4Tpx073jDWz1Q9GW;
-	Tue,  5 Mar 2024 21:16:07 +0800 (CST)
-Received: from canpemm100003.china.huawei.com (unknown [7.192.104.85])
-	by mail.maildlp.com (Postfix) with ESMTPS id 10D851400C8;
-	Tue,  5 Mar 2024 21:18:04 +0800 (CST)
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Tpx1G5ChQzwPF8;
+	Tue,  5 Mar 2024 21:17:06 +0800 (CST)
+Received: from canpemm100001.china.huawei.com (unknown [7.192.105.122])
+	by mail.maildlp.com (Postfix) with ESMTPS id 45E3D1400C8;
+	Tue,  5 Mar 2024 21:19:23 +0800 (CST)
 Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm100003.china.huawei.com (7.192.104.85) with Microsoft SMTP Server
+ canpemm100001.china.huawei.com (7.192.105.122) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 5 Mar 2024 21:18:03 +0800
+ 15.1.2507.35; Tue, 5 Mar 2024 21:19:23 +0800
 Received: from [10.174.179.14] (10.174.179.14) by
  canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 5 Mar 2024 21:18:03 +0800
-Subject: Re: [PATCH 3/6] scsi: hisi_sas: Use LIBSAS_SHT_BASE_NO_SLAVE_INIT
+ 15.1.2507.35; Tue, 5 Mar 2024 21:19:22 +0800
+Subject: Re: [PATCH 5/6] scsi: mvsas: Use LIBSAS_SHT_BASE
 To: John Garry <john.g.garry@oracle.com>, <jejb@linux.ibm.com>,
 	<martin.petersen@oracle.com>, <chenxiang66@hisilicon.com>,
 	<jinpu.wang@cloud.ionos.com>, <artur.paszkiewicz@intel.com>,
 	<dlemoal@kernel.org>, <ipylypiv@google.com>
 CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 References: <20240305122452.340471-1-john.g.garry@oracle.com>
- <20240305122452.340471-4-john.g.garry@oracle.com>
+ <20240305122452.340471-6-john.g.garry@oracle.com>
 From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <26ff4850-2ff8-1625-cf97-6fbf063e26c7@huawei.com>
-Date: Tue, 5 Mar 2024 21:18:02 +0800
+Message-ID: <8834df38-413d-855c-433c-653d7023dc8b@huawei.com>
+Date: Tue, 5 Mar 2024 21:19:22 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 Precedence: bulk
@@ -47,11 +47,11 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240305122452.340471-4-john.g.garry@oracle.com>
+In-Reply-To: <20240305122452.340471-6-john.g.garry@oracle.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  canpemm500004.china.huawei.com (7.192.104.92)
 
 On 2024/3/5 20:24, John Garry wrote:
@@ -60,115 +60,43 @@ On 2024/3/5 20:24, John Garry wrote:
 > 
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 18 +-----------------
->   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 18 +-----------------
->   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 18 +-----------------
->   3 files changed, 3 insertions(+), 51 deletions(-)
+>   drivers/scsi/mvsas/mv_init.c | 19 +------------------
+>   1 file changed, 1 insertion(+), 18 deletions(-)
 > 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> index 3c555579f9a1..161feae3acab 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> @@ -1735,28 +1735,12 @@ static struct attribute *host_v1_hw_attrs[] = {
->   ATTRIBUTE_GROUPS(host_v1_hw);
+> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+> index f1090bb5f2c9..c792e4486e54 100644
+> --- a/drivers/scsi/mvsas/mv_init.c
+> +++ b/drivers/scsi/mvsas/mv_init.c
+> @@ -31,28 +31,11 @@ static const struct attribute_group *mvst_sdev_groups[];
+>   #define SOC_SAS_NUM 2
 >   
->   static const struct scsi_host_template sht_v1_hw = {
-> -	.name			= DRV_NAME,
-> -	.proc_name		= DRV_NAME,
+>   static const struct scsi_host_template mvs_sht = {
 > -	.module			= THIS_MODULE,
+> -	.name			= DRV_NAME,
 > -	.queuecommand		= sas_queuecommand,
 > -	.dma_need_drain		= ata_scsi_dma_need_drain,
 > -	.target_alloc		= sas_target_alloc,
-> +	LIBSAS_SHT_BASE_NO_SLAVE_INIT
->   	.slave_configure	= hisi_sas_slave_configure,
->   	.scan_finished		= hisi_sas_scan_finished,
->   	.scan_start		= hisi_sas_scan_start,
+> -	.slave_configure	= sas_slave_configure,
+> +	LIBSAS_SHT_BASE
+>   	.scan_finished		= mvs_scan_finished,
+>   	.scan_start		= mvs_scan_start,
 > -	.change_queue_depth	= sas_change_queue_depth,
 > -	.bios_param		= sas_bios_param,
+>   	.can_queue		= 1,
 > -	.this_id		= -1,
->   	.sg_tablesize		= HISI_SAS_SGE_PAGE_CNT,
+>   	.sg_tablesize		= SG_ALL,
 > -	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
 > -	.eh_device_reset_handler = sas_eh_device_reset_handler,
 > -	.eh_target_reset_handler = sas_eh_target_reset_handler,
->   	.slave_alloc		= hisi_sas_slave_alloc,
+> -	.slave_alloc		= sas_slave_alloc,
 > -	.target_destroy		= sas_target_destroy,
 > -	.ioctl			= sas_ioctl,
 > -#ifdef CONFIG_COMPAT
 > -	.compat_ioctl		= sas_ioctl,
 > -#endif
->   	.shost_groups		= host_v1_hw_groups,
->   	.host_reset             = hisi_sas_host_reset,
->   };
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> index b5d379ebe05d..d89e97e8f5c2 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> @@ -3567,28 +3567,12 @@ static void map_queues_v2_hw(struct Scsi_Host *shost)
->   }
->   
->   static const struct scsi_host_template sht_v2_hw = {
-> -	.name			= DRV_NAME,
-> -	.proc_name		= DRV_NAME,
-> -	.module			= THIS_MODULE,
-> -	.queuecommand		= sas_queuecommand,
-> -	.dma_need_drain		= ata_scsi_dma_need_drain,
-> -	.target_alloc		= sas_target_alloc,
-> +	LIBSAS_SHT_BASE_NO_SLAVE_INIT
->   	.slave_configure	= hisi_sas_slave_configure,
->   	.scan_finished		= hisi_sas_scan_finished,
->   	.scan_start		= hisi_sas_scan_start,
-> -	.change_queue_depth	= sas_change_queue_depth,
-> -	.bios_param		= sas_bios_param,
-> -	.this_id		= -1,
->   	.sg_tablesize		= HISI_SAS_SGE_PAGE_CNT,
-> -	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
-> -	.eh_device_reset_handler = sas_eh_device_reset_handler,
-> -	.eh_target_reset_handler = sas_eh_target_reset_handler,
->   	.slave_alloc		= hisi_sas_slave_alloc,
-> -	.target_destroy		= sas_target_destroy,
-> -	.ioctl			= sas_ioctl,
-> -#ifdef CONFIG_COMPAT
-> -	.compat_ioctl		= sas_ioctl,
-> -#endif
->   	.shost_groups		= host_v2_hw_groups,
->   	.sdev_groups		= sdev_groups_v2_hw,
->   	.host_reset		= hisi_sas_host_reset,
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> index ebdfb7e7c88d..756660588a1e 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-> @@ -3320,30 +3320,14 @@ static void hisi_sas_map_queues(struct Scsi_Host *shost)
->   }
->   
->   static const struct scsi_host_template sht_v3_hw = {
-> -	.name			= DRV_NAME,
-> -	.proc_name		= DRV_NAME,
-> -	.module			= THIS_MODULE,
-> -	.queuecommand		= sas_queuecommand,
-> -	.dma_need_drain		= ata_scsi_dma_need_drain,
-> -	.target_alloc		= sas_target_alloc,
-> +	LIBSAS_SHT_BASE_NO_SLAVE_INIT
->   	.slave_configure	= slave_configure_v3_hw,
->   	.scan_finished		= hisi_sas_scan_finished,
->   	.scan_start		= hisi_sas_scan_start,
->   	.map_queues		= hisi_sas_map_queues,
-> -	.change_queue_depth	= sas_change_queue_depth,
-> -	.bios_param		= sas_bios_param,
-> -	.this_id		= -1,
->   	.sg_tablesize		= HISI_SAS_SGE_PAGE_CNT,
->   	.sg_prot_tablesize	= HISI_SAS_SGE_PAGE_CNT,
-> -	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
-> -	.eh_device_reset_handler = sas_eh_device_reset_handler,
-> -	.eh_target_reset_handler = sas_eh_target_reset_handler,
->   	.slave_alloc		= hisi_sas_slave_alloc,
-> -	.target_destroy		= sas_target_destroy,
-> -	.ioctl			= sas_ioctl,
-> -#ifdef CONFIG_COMPAT
-> -	.compat_ioctl		= sas_ioctl,
-> -#endif
->   	.shost_groups		= host_v3_hw_groups,
->   	.sdev_groups		= sdev_groups_v3_hw,
->   	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
+>   	.shost_groups		= mvst_host_groups,
+>   	.sdev_groups		= mvst_sdev_groups,
+>   	.track_queue_depth	= 1,
 > 
 
 Doesn't hvae ->eh_abort_handler too.
