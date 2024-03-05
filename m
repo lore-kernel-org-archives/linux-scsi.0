@@ -1,55 +1,55 @@
-Received: from mail-io1-f74.google.com (mail-io1-f74.google.com [209.85.166.74])
+Received: from mail-yw1-f201.google.com (mail-yw1-f201.google.com [209.85.128.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FA2512EBCC
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Mar 2024 23:34:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 410DD12E1C1
+	for <linux-scsi@vger.kernel.org>; Tue,  5 Mar 2024 23:34:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709681688; cv=none; b=KPvtCrgsTAYEhspirgGsuhQctVk8KiP/QmByjPJc9p4+owHLe25TZqRqgrZ6mfioFdCXe+R4aVge3BKSFVGddjAoNwltHLpK2ZDgMuwuiD8kIaWTx3ImSCbJb2e0yHWsPzFQOyKLBn9UkdzYmYoWj5A6sbL10JAh9CYCxL8PU/I=
+	t=1709681688; cv=none; b=pVWYORPFTboZhIyNQW6pLalAZ1QkmwyegkVBkoVNBrELpCCVU4YE8/4qI5KqIILfZdSnDWKO9fnr8VDgw/x8RBf7DwidbURyT2hrJYUMed2ASipmdQ2k+7br/jIrEvTk1ucqdTvBN3DgahiXAwA/ckCTeHZF618q4KyysrveTsM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1709681688; c=relaxed/simple;
-	bh=OsMSw4z6iWbxTXjZg30kuZBO6Vj6czVVXXM7+X4U6u0=;
+	bh=oKHJz8KX639JHaY4FxkGeuRgysM8ixCYP31PDePvR/I=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=tYK0sK51C+5lpXegxXDjRM5K5I0LG8Q1Evtg3eJ6Yt/+6jPVlzfmclCsxUgDsrkFXHRg5g+ux4amoZ4R4BbVmT9cGaG6z7bo1y+6wyCDRISkcURzYI2eUMsvLFMtfACfcaJWsKp64f7hiq+ivC7KCb5JsdyiWAQwDYJv/snx9/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=n9Cl1Ynq; arc=none smtp.client-ip=209.85.166.74
+	 To:Cc:Content-Type; b=B5qB/cPyJB1FSrB3lBPPYydbnH6E+TH3l9EYXoNPpSFsMFG6sxVwmQei8obnh30HRoKbsKS8/Hy4AQN6xzjeOA+i/78AlOWXg2BD8sF8AkpEzu7CQx6R1efJgd1MoiK4xSfvY3NvJ40+nzOXztdGyIZYojXjjmKA78h7xhCA39w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ht2ltYkY; arc=none smtp.client-ip=209.85.128.201
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="n9Cl1Ynq"
-Received: by mail-io1-f74.google.com with SMTP id ca18e2360f4ac-7c83708311dso346330539f.0
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Mar 2024 15:34:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ht2ltYkY"
+Received: by mail-yw1-f201.google.com with SMTP id 00721157ae682-60957b52eecso98514857b3.2
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Mar 2024 15:34:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1709681685; x=1710286485; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1709681684; x=1710286484; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RCz/Py0Ns2mXKbBtgurW4Nm4I/8gG7F1BHKnQ6umRVY=;
-        b=n9Cl1YnqtavUFx/nHKyUvlMLgiyCyrvc5GiNlDu/8dsOET9tLPbNfYjIQ7IE0ePgU2
-         TAY3mqLUeQ13yUrqMSOCxO36q0AXXQ3Jf5eES4omXjO5Lw/587CmnSYxCD3OCfAD4UU0
-         nrMHydCiinMFxWxQ1ugKOFp2h9C2Qskn/s8/TuCbdSbFMJfswMBdqkz5xw9TqHSW+FrH
-         I/gXvLlvWqgk1zyjaZibNv8pRFxG1cOYJe3d+NoX78SMTJ4WlMNkqUKEQ3+flw6PZLsK
-         H494wLgdpivqBd7VknN6DyhdcDIeug/F+YFNIC/zjoYootf6EV43vRGTqlmj0HL7/yyg
-         EPsg==
+        bh=R/Gd0jRGfWXRd5LSFgmnGhf286BOGmU7x4htLcq4bds=;
+        b=ht2ltYkYovKDw+rkhfKf8Wo+0OReFa20ICI9kZuXwFDMwVBueoyUI2Co2xDjAT9IYI
+         lDc6J1WERayjV/yvNVmXpUSk87eJjeHbTTQYQM2IuRmRqh5cD3DmgEaSLNpzUZ0Zohx3
+         94mzdXh9Tnpu2qyEAQJvnTjScRK8M2LbLg0/sT+DkfrsKFn9tnhUvuuBzkXhHZEI5ifV
+         /tfgs2mMWdRuoqTbhcQeXrKvn6nFJkPGNPJL3kcIHPgJbU+e42nQAmcTcYfCZNIxrnyV
+         8rY5yq8cB8M5gerkAwrXS4tKg2FbeTf1dW9BW/413/2T9IC4K1EoOUrEjsGb5nRTp2Ck
+         Jq6g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709681685; x=1710286485;
+        d=1e100.net; s=20230601; t=1709681684; x=1710286484;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RCz/Py0Ns2mXKbBtgurW4Nm4I/8gG7F1BHKnQ6umRVY=;
-        b=HjRz2rJBF2hu3+VIx8QrPXFRgdrMelN3Oztyy4Q21NpDj/q0CBeAo1pivZLuqTPMpC
-         GclUJSawAAGmOOJKwspQQB9vf2m1qLiW9v8C+Rn9yAdsOG7oaAlbpNqxjQCt9UY7q97s
-         p74toh2a5l8N1ZkWHPZDWKOp5koflt7nlEQT1Bzuflk3m2O3zHmHEw5jx2d8Y1KcK2lK
-         282cQ52tdopVDKO878b84ARSPDNrf/wa4vt4QAXV2bKgYqibK6uzF2EoWpCXe1EyBSbG
-         EqyrfQWWkzMZjqrGi4u4W0zx9khRZPaKx4FobrfumB90TPFJNOc3rq/SGgP4xRydsns4
-         q2Tw==
-X-Forwarded-Encrypted: i=1; AJvYcCV8foYxUcVwNF+sLjA4gRx/yIX/hflD8CwxHuTRxSWb/qb6/T7XrQxEtdu3radARlJUKHxN+X8ayYjU3NuuwdC/4YbwVGTKBKaetw==
-X-Gm-Message-State: AOJu0YwRGT3J65AtrgqKvKngE2+ZZtRTHqrge03ooE9wiVHl6BDrIRKu
-	JdpJ3FW7cFUU/qI8/4MamWKh1zJ4emzRPOwoYUoQl90QB5Bi6AfqsZf9+wFHM683LyjkNL8rxoq
-	WwJi8G69GB2KZqLjCPiInGw==
-X-Google-Smtp-Source: AGHT+IHg0I14q/uq1iOXxVZ/7MUvTrMtE2B2cT+hC15fDY+B3hGbY752uu2ZyIfVlk86YppQd1jP3G63j24k66Vpxw==
+        bh=R/Gd0jRGfWXRd5LSFgmnGhf286BOGmU7x4htLcq4bds=;
+        b=KHlLOTOnekc95ZdHHGXx+XFVnu3MZDmcMvMnNP4ptFJGCoAaIsUbX8qLcVJffxVEXR
+         jQ30oy630mhycOGNEe9QLBx52idMab7YcEEpGoFbNS4p/pg08rrhFtZkELzc6wpsPM82
+         wK0SBka4b3hj61sCHWXXUZjjDE1VKzqqZHlqdCwDg6KmEDXZqMnULet0xdGYMpAHH670
+         G9J+kMpmqHML6l2uAOTKiPtDH+QQwNPwCuXo1vXhzcNgHkLRHTSYU6JFQ3NJ9Qy5XCUL
+         P7Aypcmlpe7XW/ktPySh5mFa1rdEPdqAl2qJHqx87grT0hLW4cuwTKr8qHCdGKp+Mm95
+         vdHw==
+X-Forwarded-Encrypted: i=1; AJvYcCWWAwo6g8RXkQLbOIcrhShmOT2bwMHaz3QnSfWXaJeaEsgaf9XCYeW3j4LUXa3pfKtU/GMr6FHe44Ru2KyQDRXl+vBEFytm7v/v5Q==
+X-Gm-Message-State: AOJu0Yypk35oFlGeqVLYAx3yFFBZoqBx/I3oZKh6jrHdFOT8ZO2RyQKD
+	ro5attXfqZ/rBGmrv1RwKoc898o6aw/iDspmNGGvPEjHYc2GZ+2dIitSECsraoQjmafa4hzCChk
+	SEaOmksJrNB5pec0phxJ32A==
+X-Google-Smtp-Source: AGHT+IGAp9/lowPpevoGgxO6AVRrNKa1EDrxjPg50w1kHJVDcThAxX6KQnG119Aw9qN/A+OBNDlix25FOCb265goww==
 X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
- (user=justinstitt job=sendgmr) by 2002:a05:6602:e0d:b0:7c8:264a:8c45 with
- SMTP id gp13-20020a0566020e0d00b007c8264a8c45mr72249iob.4.1709681685585; Tue,
- 05 Mar 2024 15:34:45 -0800 (PST)
-Date: Tue, 05 Mar 2024 23:34:39 +0000
+ (user=justinstitt job=sendgmr) by 2002:a81:7947:0:b0:609:359a:9313 with SMTP
+ id u68-20020a817947000000b00609359a9313mr2995157ywc.1.1709681684397; Tue, 05
+ Mar 2024 15:34:44 -0800 (PST)
+Date: Tue, 05 Mar 2024 23:34:38 +0000
 In-Reply-To: <20240305-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v3-0-5b78a13ff984@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -59,13 +59,13 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20240305-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v3-0-5b78a13ff984@google.com>
 X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1709681680; l=6820;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1709681680; l=2333;
  i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
- bh=OsMSw4z6iWbxTXjZg30kuZBO6Vj6czVVXXM7+X4U6u0=; b=yFz+ZNCjXqzkg2Y1+WAxa057MaLfkBRd65XWFzulVwXxiDf5n3QvmIwTtlL8S/RT1Ao0b6bub
- SgIj+Z7PxHyCyQr7LEoG9QIUAtNgzOLVs4yZd3iG5z0q/fg43YRZnzG
+ bh=oKHJz8KX639JHaY4FxkGeuRgysM8ixCYP31PDePvR/I=; b=it20B8oEmrPPFj34tDnAo4Ojh4hPjBzwi2qKfmpt/w+DdvBX6HYJceOYTm/Cy2VY/qxpBA2UD
+ lqH/vh4t55GDuJiu/Zvhhq9hXwO+V8wMcpojq7qCbWnxBJHE5ZwhMEb
 X-Mailer: b4 0.12.3
-Message-ID: <20240305-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v3-4-5b78a13ff984@google.com>
-Subject: [PATCH v3 4/7] scsi: qla4xxx: replace deprecated strncpy with strscpy
+Message-ID: <20240305-strncpy-drivers-scsi-mpi3mr-mpi3mr_fw-c-v3-3-5b78a13ff984@google.com>
+Subject: [PATCH v3 3/7] scsi: qedf: replace deprecated strncpy with strscpy
 From: Justin Stitt <justinstitt@google.com>
 To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, 
 	Sumit Saxena <sumit.saxena@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
@@ -83,166 +83,61 @@ Cc: mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org,
 	Justin Stitt <justinstitt@google.com>
 Content-Type: text/plain; charset="utf-8"
 
-Replace 3 instances of strncpy in ql4_mbx.c
+We expect slowpath_params.name to be NUL-terminated based on its future
+usage with other string APIs:
 
-No bugs exist in the current implementation as some care was taken to
-ensure the write length was decreased by one to leave some space for a
-NUL-byte. However, instead of using strncpy(dest, src, LEN-1) we can opt
-for strscpy(dest, src, sizeof(dest)) which will result in
-NUL-termination as well. It should be noted that the entire chap_table
-is zero-allocated so the NUL-padding provided by strncpy is not needed.
+|	static int qed_slowpath_start(struct qed_dev *cdev,
+|				      struct qed_slowpath_params *params)
+...
+|	strscpy(drv_version.name, params->name,
+|		MCP_DRV_VER_STR_SIZE - 4);
 
-While here, I noticed that MIN_CHAP_SECRET_LEN was not used anywhere.
-Since strscpy gives us the number of bytes copied into the destination
-buffer (or an -E2BIG) we can check both for an error during copying and
-also for a non-length compliant secret. Add a new jump label so we can
-properly clean up our chap_table should we have to abort due to bad
-secret.
+Moreover, NUL-padding is not necessary as the only use for this slowpath
+name parameter is to copy into the drv_version.name field.
 
-The third instance in this file involves some more peculiar handling of
-strings:
-|	uint32_t mbox_cmd[MBOX_REG_COUNT];
-|	...
-|	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-|	...
-|	mbox_cmd[0] = MBOX_CMD_SET_PARAM;
-|	if (param == SET_DRVR_VERSION) {
-|		mbox_cmd[1] = SET_DRVR_VERSION;
-|		strncpy((char *)&mbox_cmd[2], QLA4XXX_DRIVER_VERSION,
-|			MAX_DRVR_VER_LEN - 1);
+Also, let's prefer using strscpy(src, dest, sizeof(src)) in two
+instances (one of which is outside of the scsi system but it is trivial
+and related to this patch).
 
-mbox_cmd has a size of 8:
-|	#define MBOX_REG_COUNT 8
-... and its type width is 4 bytes. Hence, we have 32 bytes to work with
-here. The first 4 bytes are used as a flag for the MBOX_CMD_SET_PARAM.
-The next 4 bytes are used for SET_DRVR_VERSION. We now have 32-8=24
-bytes remaining -- which thankfully is what MAX_DRVR_VER_LEN is equal to
-|	#define MAX_DRVR_VER_LEN                    24
-
-... and the thing we're copying into this pseudo-string buffer is
-|	#define QLA4XXX_DRIVER_VERSION        "5.04.00-k6"
-
-... which is great because its less than 24 bytes (therefore we aren't
-truncating the source).
-
-All to say, there's no bug in the existing implementation (yay!) but we
-can clean the code up a bit by using strscpy().
-
-In ql4_os.c, there aren't any strncpy() uses to replace but there are
-some existing strscpy() calls that could be made more idiomatic. Where
-possible, use strscpy(dest, src, sizeof(dest)). Note that
-chap_rec->password has a size of ISCSI_CHAP_AUTH_SECRET_MAX_LEN
-|	#define ISCSI_CHAP_AUTH_SECRET_MAX_LEN	256
-... while the current strscpy usage uses QL4_CHAP_MAX_SECRET_LEN
-|	#define QL4_CHAP_MAX_SECRET_LEN 100
-... however since chap_table->secret was set and bounded properly in its
-string assignment its probably safe here to switch over to sizeof().
-
-|	struct iscsi_chap_rec {
-	...
-|		char username[ISCSI_CHAP_AUTH_NAME_MAX_LEN];
-|		uint8_t password[ISCSI_CHAP_AUTH_SECRET_MAX_LEN];
-	...
+We can see the drv_version.name size here:
+|	struct qed_mcp_drv_version {
+|		u32	version;
+|		u8	name[MCP_DRV_VER_STR_SIZE - 4];
 |	};
-
-|	strscpy(chap_rec->password, chap_table->secret,
-|		QL4_CHAP_MAX_SECRET_LEN);
 
 Reviewed-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Justin Stitt <justinstitt@google.com>
 ---
- drivers/scsi/qla4xxx/ql4_mbx.c | 17 ++++++++++++-----
- drivers/scsi/qla4xxx/ql4_os.c  | 14 +++++++-------
- 2 files changed, 19 insertions(+), 12 deletions(-)
+ drivers/net/ethernet/qlogic/qed/qed_main.c | 2 +-
+ drivers/scsi/qedf/qedf_main.c              | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 249f1d7021d4..75125d2021f5 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1641,6 +1641,7 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
- 	struct ql4_chap_table *chap_table;
- 	uint32_t chap_size = 0;
- 	dma_addr_t chap_dma;
-+	ssize_t secret_len;
- 
- 	chap_table = dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
- 	if (chap_table == NULL) {
-@@ -1652,9 +1653,13 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
- 		chap_table->flags |= BIT_6; /* peer */
- 	else
- 		chap_table->flags |= BIT_7; /* local */
--	chap_table->secret_len = strlen(password);
--	strncpy(chap_table->secret, password, MAX_CHAP_SECRET_LEN - 1);
--	strncpy(chap_table->name, username, MAX_CHAP_NAME_LEN - 1);
-+
-+	secret_len = strscpy(chap_table->secret, password,
-+			     sizeof(chap_table->secret));
-+	if (secret_len < MIN_CHAP_SECRET_LEN)
-+		goto cleanup_chap_table;
-+	chap_table->secret_len = (uint8_t)secret_len;
-+	strscpy(chap_table->name, username, sizeof(chap_table->name));
- 	chap_table->cookie = cpu_to_le16(CHAP_VALID_COOKIE);
- 
- 	if (is_qla40XX(ha)) {
-@@ -1679,6 +1684,8 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
- 		memcpy((struct ql4_chap_table *)ha->chap_list + idx,
- 		       chap_table, sizeof(struct ql4_chap_table));
- 	}
-+
-+cleanup_chap_table:
- 	dma_pool_free(ha->chap_dma_pool, chap_table, chap_dma);
- 	if (rval != QLA_SUCCESS)
- 		ret =  -EINVAL;
-@@ -2281,8 +2288,8 @@ int qla4_8xxx_set_param(struct scsi_qla_host *ha, int param)
- 	mbox_cmd[0] = MBOX_CMD_SET_PARAM;
- 	if (param == SET_DRVR_VERSION) {
- 		mbox_cmd[1] = SET_DRVR_VERSION;
--		strncpy((char *)&mbox_cmd[2], QLA4XXX_DRIVER_VERSION,
--			MAX_DRVR_VER_LEN - 1);
-+		strscpy((char *)&mbox_cmd[2], QLA4XXX_DRIVER_VERSION,
-+			MAX_DRVR_VER_LEN);
- 	} else {
- 		ql4_printk(KERN_ERR, ha, "%s: invalid parameter 0x%x\n",
- 			   __func__, param);
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 675332e49a7b..17cccd14765f 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -799,10 +799,10 @@ static int qla4xxx_get_chap_list(struct Scsi_Host *shost, uint16_t chap_tbl_idx,
- 
- 		chap_rec->chap_tbl_idx = i;
- 		strscpy(chap_rec->username, chap_table->name,
--			ISCSI_CHAP_AUTH_NAME_MAX_LEN);
--		strscpy(chap_rec->password, chap_table->secret,
--			QL4_CHAP_MAX_SECRET_LEN);
--		chap_rec->password_length = chap_table->secret_len;
-+			sizeof(chap_rec->username));
-+		chap_rec->password_length = strscpy(chap_rec->password,
-+						    chap_table->secret,
-+						    sizeof(chap_rec->password));
- 
- 		if (chap_table->flags & BIT_7) /* local */
- 			chap_rec->chap_type = CHAP_TYPE_OUT;
-@@ -6291,8 +6291,8 @@ static void qla4xxx_get_param_ddb(struct ddb_entry *ddb_entry,
- 
- 	tddb->tpgt = sess->tpgt;
- 	tddb->port = conn->persistent_port;
--	strscpy(tddb->iscsi_name, sess->targetname, ISCSI_NAME_SIZE);
--	strscpy(tddb->ip_addr, conn->persistent_address, DDB_IPADDR_LEN);
-+	strscpy(tddb->iscsi_name, sess->targetname, sizeof(tddb->iscsi_name));
-+	strscpy(tddb->ip_addr, conn->persistent_address, sizeof(tddb->ip_addr));
- }
- 
- static void qla4xxx_convert_param_ddb(struct dev_db_entry *fw_ddb_entry,
-@@ -7792,7 +7792,7 @@ static int qla4xxx_sysfs_ddb_logout(struct iscsi_bus_flash_session *fnode_sess,
- 	}
- 
- 	strscpy(flash_tddb->iscsi_name, fnode_sess->targetname,
--		ISCSI_NAME_SIZE);
-+		sizeof(flash_tddb->iscsi_name));
- 
- 	if (!strncmp(fnode_sess->portal_type, PORTAL_TYPE_IPV6, 4))
- 		sprintf(flash_tddb->ip_addr, "%pI6", fnode_conn->ipaddress);
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_main.c b/drivers/net/ethernet/qlogic/qed/qed_main.c
+index c278f8893042..d39e198fe8db 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_main.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_main.c
+@@ -1351,7 +1351,7 @@ static int qed_slowpath_start(struct qed_dev *cdev,
+ 				      (params->drv_rev << 8) |
+ 				      (params->drv_eng);
+ 		strscpy(drv_version.name, params->name,
+-			MCP_DRV_VER_STR_SIZE - 4);
++			sizeof(drv_version.name));
+ 		rc = qed_mcp_send_drv_version(hwfn, hwfn->p_main_ptt,
+ 					      &drv_version);
+ 		if (rc) {
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index a58353b7b4e8..fd12439cbaab 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -3468,7 +3468,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	slowpath_params.drv_minor = QEDF_DRIVER_MINOR_VER;
+ 	slowpath_params.drv_rev = QEDF_DRIVER_REV_VER;
+ 	slowpath_params.drv_eng = QEDF_DRIVER_ENG_VER;
+-	strncpy(slowpath_params.name, "qedf", QED_DRV_VER_STR_SIZE);
++	strscpy(slowpath_params.name, "qedf", sizeof(slowpath_params.name));
+ 	rc = qed_ops->common->slowpath_start(qedf->cdev, &slowpath_params);
+ 	if (rc) {
+ 		QEDF_ERR(&(qedf->dbg_ctx), "Cannot start slowpath.\n");
 
 -- 
 2.44.0.278.ge034bb2e1d-goog
