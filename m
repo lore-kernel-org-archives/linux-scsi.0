@@ -1,166 +1,89 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EFB218EAF
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Mar 2024 21:34:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF9551B941;
+	Wed,  6 Mar 2024 22:05:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709760843; cv=none; b=f5flVQocs5K3r/W5WGtR7SndvluTqKqTH2KPbXRRYksj3EIK3FRU8JGdeXT6+S6zYt42KYyf/4i3j14gj/F/yrzK6jWoiInHLd1K2vUwWHNjcrme/Y+IaZCZy+hNA7T2RUQzJcTMjlzRKCxAxTs6c6Cg5eJVVXJDqx3dQDNk6Xg=
+	t=1709762718; cv=none; b=XOmNFa1Ls0XVchqOOLUD1FBF8K3MmvXB/71Tu2c544yOw5NolOvU/7sE+4X3P4yHgwWKgPqQQ3p1mIMgOcaDDrcgM3S0UpCjpWxpN4wXnxBvjddsJhuQABiqnE3Jv2Uo8+SSBRBjIRzvAaIekQZyhmBadj4W2TXunyFxeETe/CY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709760843; c=relaxed/simple;
-	bh=peAbg4zTIh+UTQtLUNXjdZERPwEBRspOqi/uvi47S5Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hIEhpbUgNKofjiEWzTRgefA3d1xNznU2F1Mueigc7QjXfBT2Ou4WD2553VUj1bUp0vbitzBfcXT7kyt0XjFZhbvGcUfwz0NB58X2PRMFeLzKqHTCa2cgjZi6xSuiNu2J8nJQl9qwm2pTUW11lEpEr8S6Hs6HsBdAfztcgPD7yLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=aBdgnM2F; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1709762718; c=relaxed/simple;
+	bh=S39nLjr8vUhAkwYfZaJ21Wp7XOABo31SGFbLvNClb6o=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=EA2vkvEz+RHWxVgMYrvUe/OTb0mQJhCjSyVERiGK9ybvwM6iraWqUtLDrLQtLJKMjFoZRjwBOaefVbdErBtz5NgDQ9rszEB0zKHuKnQeXqveWoce6DPgbyplMWcZh/aV7j/8Ie4aSA9oY+a9u6otefbVBStWICwL0pL+ucvXyV0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=d/cT+ymp; arc=none smtp.client-ip=209.85.208.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="aBdgnM2F"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1dc1ff3ba1aso1497365ad.3
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Mar 2024 13:34:01 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="d/cT+ymp"
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-563c595f968so257313a12.0;
+        Wed, 06 Mar 2024 14:05:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1709760841; x=1710365641; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=spCvMYknEOhSMD+gnBZqeFH7EvzN91XDO9RNAyR+qps=;
-        b=aBdgnM2FRSz5up/ufxvS4vnkA+O1A7l5yUQjsO2C0bddUGFfS/Sq+zkXazBIkLZZWw
-         69d34eiOYxGf2XyarkMRtnZLY8ObsKJstBHO9YESvXrcSBMOblYus1/6orrBL+OIHsiK
-         iWnWBBjoAZePkbeSPGVtXuVapbUFmcf/7g4WAPp61g/6pw8rpfkSGyI2viFyknPBfoqt
-         2+7IsAdp6HqQlbLADDh0C7X6AOsxfhuho+3wQVYzgzsz/D4p2Y3Slps+ptx8xTIZhzZE
-         imvOXb1H0QMQM4JJrFstYhsMPANO6R4GIfVgcdqZmRRbiXi3zkU1a14TuzGNfNuvo2ai
-         atIg==
+        d=gmail.com; s=20230601; t=1709762715; x=1710367515; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=S39nLjr8vUhAkwYfZaJ21Wp7XOABo31SGFbLvNClb6o=;
+        b=d/cT+ympDhyFcyftHD4rcIei0OfEB/4oTHqtKNsE/z/CXgi1oCB/l5t40f4Bmu1Ylt
+         dt6AAz8jIZWQ+15iCZMK5hgjkWQ7mHL0bGQyFfPhgqZ/hyne9WZKmcxQXtgDg8OSmGPP
+         nMp+RCLcgk7beZe60ewTL4GbHfLAI7iBrSaDVxtoDsy9f4PTvLmVZe6LdKFu6IqqK0d2
+         OdAhrZcnFIf72A1k0aqX8gK/hZWyU0X0ZBOEk1BdOANgtczOKoNV1n2zjW3awB8p2mik
+         7cCqEFHoIHnk7A3jybw9LGNqPMuGqKA8YuomVlN3DIopbd8irYtpOMqcfGEo1KFfHXg4
+         1YCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709760841; x=1710365641;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=spCvMYknEOhSMD+gnBZqeFH7EvzN91XDO9RNAyR+qps=;
-        b=GT8byqwV0/Ii3GKZ9ZtZvXkV3vKbur5uCeRVWO/ItZAW/sMl4Wc9Z6WnET2ae2qFUE
-         tJKOaykEA6y/sMJCiZvK0vF+eLChjFgbBkXCyinQidimgCiKIKLHOyiRWi+AqLZhkLYk
-         /UPZpr/XL8DQ2MviD5RN3vPsrt3gXLgqUA4mtMVClHhevOuGrBEwE1mgHqytA9YP3x+6
-         uhJtl73xhnMHe+ArsU9IshA1mFKzTOOSu/8Lx167s/+24SseTqc0NaB1paMdHYlpC8II
-         WKa+sEzxIZCEyQGTNKYuiLZWNrIGzo+5gAY1EketCdy/9pi7p1zMtloyQXAyjQPHc/El
-         2tAg==
-X-Forwarded-Encrypted: i=1; AJvYcCWl5tpILExoDY9sE26/wAzrAly12xTuLQRty0yDnkK9RnAN7pLzTNv3IlW0bQIMY9e42IoctbEc0CvkphMK1y7J9cabMcp2aEUXLg==
-X-Gm-Message-State: AOJu0YxywjjxhC4swlPqPiHj/LnadgohhjikbSISV3UfZ1d63HKMuwz/
-	KRJ+P1hIXDUzrnp1+xoOGjuXjFb/UxuUinegxOam3YjNSGqNi5lKVbh613+y7Q==
-X-Google-Smtp-Source: AGHT+IFT59l4bms+SwWKG/vnM8EnnHFXormej4iFF9afmQhiVqbtqHArrM4el5GtDToqRrBwaMv3WQ==
-X-Received: by 2002:a17:903:41cc:b0:1dc:499b:8e80 with SMTP id u12-20020a17090341cc00b001dc499b8e80mr7742894ple.54.1709760840505;
-        Wed, 06 Mar 2024 13:34:00 -0800 (PST)
-Received: from google.com ([2620:15c:2c5:13:9a91:c17:53d9:d156])
-        by smtp.gmail.com with ESMTPSA id lc11-20020a170902fa8b00b001dc668e145asm13063705plb.200.2024.03.06.13.33.59
+        d=1e100.net; s=20230601; t=1709762715; x=1710367515;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=S39nLjr8vUhAkwYfZaJ21Wp7XOABo31SGFbLvNClb6o=;
+        b=NrpIoipGNw26zTGO6p122wIY7hCTKHEjqlSR1mW0PhS560qFHkcZVONkWjVubsndY0
+         q80LPznI26ovkxKjP2ASdNHOgWz551GIWF9ldjjpO7lSLgwHQtAb1WLCJOH0aJMcG8Nx
+         W7S03EssKZNSHhYe9DOJkU3Gl+qvicD1avE03Mx7RKlC/eutP2I7f9GrKLeyI/IHePTY
+         q8q4fd9fBJy8SO+U7Oa+unKIghzfJKSunLXpNFr++z1igoUw3F2x0GicJlwCoBFT5HD1
+         uTDX0ZcrUtwyKFwiG+hPG/5Z6z0HyBkjCcXwv5d+4wBiER2YNtQOe7yZUIozPRXNMG8R
+         1wmg==
+X-Forwarded-Encrypted: i=1; AJvYcCWbiRe4VtLyMGqdEJjHkDzRUxTagBegqXApk5tMb+gDbJNOTVZ5lRQUGnPux0HyDTujYJvev5PkhDwPDhGtr0uVsLWSWPEgiV/ro2JIuimZJgssBk7u456dImtHSla9Vr5ad3URwkd4jQ==
+X-Gm-Message-State: AOJu0YzrFrzJjBQMBGF9Z2iqxiNjtQ5NICJhGDa8mcLnMV9mv1WY9bw3
+	U46o6BPXYw+r+htp0lGsetjQ2R+yg7x3VnkA7FWGFdFlY3SQpKTn
+X-Google-Smtp-Source: AGHT+IGB2ZQ6CV3Dgb9Plcw39baYRs2294dWUkYQFCPbAtSa6a9RS9YTHjl/5lEIe5SL+Wygssej1A==
+X-Received: by 2002:a50:cac7:0:b0:566:d28c:e627 with SMTP id f7-20020a50cac7000000b00566d28ce627mr11490259edi.36.1709762715031;
+        Wed, 06 Mar 2024 14:05:15 -0800 (PST)
+Received: from p200300c58728635f85ed642449045909.dip0.t-ipconnect.de (p200300c58728635f85ed642449045909.dip0.t-ipconnect.de. [2003:c5:8728:635f:85ed:6424:4904:5909])
+        by smtp.gmail.com with ESMTPSA id j16-20020aa7c0d0000000b00562149c7bf4sm7365155edp.48.2024.03.06.14.05.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Mar 2024 13:34:00 -0800 (PST)
-Date: Wed, 6 Mar 2024 13:33:55 -0800
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jack Wang <jinpu.wang@cloud.ionos.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Xiang Chen <chenxiang66@hisilicon.com>,
-	Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org,
+        Wed, 06 Mar 2024 14:05:14 -0800 (PST)
+Message-ID: <6c75ce4cc05c6983137e954043d5ae7323a96172.camel@gmail.com>
+Subject: Re: [PATCH v2 2/4] scsi: ufs: Re-use exec_dev_cmd
+From: Bean Huo <huobean@gmail.com>
+To: Avri Altman <avri.altman@wdc.com>, "James E . J . Bottomley"
+ <jejb@linux.vnet.ibm.com>, "Martin K . Petersen"
+ <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
 	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 0/7] NCQ Priority sysfs sttributes for libsas
-Message-ID: <ZejhQ7PMFdYV_ktq@google.com>
-References: <20240306012226.3398927-1-ipylypiv@google.com>
- <ZehLXDoWQZiLzCTo@ryzen>
+Date: Wed, 06 Mar 2024 23:05:13 +0100
+In-Reply-To: <20240305210051.10847-3-avri.altman@wdc.com>
+References: <20240305210051.10847-1-avri.altman@wdc.com>
+	 <20240305210051.10847-3-avri.altman@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZehLXDoWQZiLzCTo@ryzen>
 
-On Wed, Mar 06, 2024 at 11:54:20AM +0100, Niklas Cassel wrote:
-> Hello Igor,
-> 
-> On Tue, Mar 05, 2024 at 05:22:19PM -0800, Igor Pylypiv wrote:
-> > This patch series adds sas_ncq_prio_supported and sas_ncq_prio_enable
-> > sysfs sttributes for libsas managed SATA devices. Existing libata sysfs
-> > attributes cannot be used directly because the ata_port location is
-> > different for libsas.
-> 
-> As far as I can tell, you don't add sas_ncq_prio_supported and
-> sas_ncq_prio_enable, but instead add ncq_prio_supported and
-> ncq_prio_enable, so perhaps update this sentence.
-> 
-Thank you for catching this, Niklas! I've updated the sysfs naming in
-the actual patch but forgot to update the cover letter.
+On Tue, 2024-03-05 at 23:00 +0200, Avri Altman wrote:
+> Move out the actual command issue from exec_dev_cmd so it can be used
+> elsewhere.=C2=A0 While at it, remove a redundant "lrbp->cmd =3D NULL"
+> assignment.=C2=A0 Also, as a free bonus, call the upiu trace if it
+> doesn't.
 
-Thanks,
-Igor
-> 
-> Kind regards,
-> Niklas
-> 
-> > 
-> > Changes since v6:
-> > - Replaced sas_ata_sdev_attr_group definition with a macro for
-> >   the "CONFIG_SCSI_SAS_ATA is not set" case. The macro defines
-> >   an empty rvalue struct eliminating the variable definition.
-> > 
-> > Changes since v5:
-> > - Added __maybe_unused attribute to sas_ata_sdev_attr_group to prevent
-> >   an unused-const-variable warning when CONFIG_SCSI_SAS_ATA is not set.
-> > 
-> > Changes since v4:
-> > - Updated sas_ncq_prio_* sysfs functions to use WARN_ON_ONCE() instead
-> >   of WARN_ON().
-> > 
-> > Changes since v3:
-> > - Changed ata_ncq_prio_supported() and ata_ncq_prio_enabled() to store
-> >   the result into a boolean variable passed by address.
-> > - Removed the "usable with both libsas and libata" wording from
-> >   ata_ncq_prio_* helper's function comments.
-> > - Removed the unlikely() in ata_ncq_prio_enable() because the function
-> >   is not in a fastpath.
-> > - Dropped hisi_sas v1 HW driver changes because it doesn't support SATA.
-> > 
-> > Changes since v2:
-> > - Added libsas SATA sysfs attributes to aic94xx and isci.
-> > 
-> > Changes since v1:
-> > - Dropped the "sas_" prefix to align sysfs sttributes naming with AHCI.
-> > - Dropped ternary operators to make the code more readable.
-> > - Corrected the formatting %u -> %d in sysfs_emit().
-> > - Changed kstrtol() to kstrtobool() in [ata|sas]_ncq_prio_enable_store().
-> > - Changed comments to use the "/* */" style instead of "//".
-> > - Added libsas SATA sysfs attributes to mvsas and hisi_sas.
-> > - Dropped the 'Reviewed-by' tags because they were not sent in-reply
-> >   to the patch emails.
-> > 
-> > Igor Pylypiv (7):
-> >   ata: libata-sata: Factor out NCQ Priority configuration helpers
-> >   scsi: libsas: Define NCQ Priority sysfs attributes for SATA devices
-> >   scsi: pm80xx: Add libsas SATA sysfs attributes group
-> >   scsi: mvsas: Add libsas SATA sysfs attributes group
-> >   scsi: hisi_sas: Add libsas SATA sysfs attributes group
-> >   scsi: aic94xx: Add libsas SATA sysfs attributes group
-> >   scsi: isci: Add libsas SATA sysfs attributes group
-> > 
-> >  drivers/ata/libata-sata.c              | 140 ++++++++++++++++++-------
-> >  drivers/scsi/aic94xx/aic94xx_init.c    |   8 ++
-> >  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   6 ++
-> >  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |   6 ++
-> >  drivers/scsi/isci/init.c               |   6 ++
-> >  drivers/scsi/libsas/sas_ata.c          |  94 +++++++++++++++++
-> >  drivers/scsi/mvsas/mv_init.c           |   7 ++
-> >  drivers/scsi/pm8001/pm8001_ctl.c       |   5 +
-> >  drivers/scsi/pm8001/pm8001_init.c      |   1 +
-> >  drivers/scsi/pm8001/pm8001_sas.h       |   1 +
-> >  include/linux/libata.h                 |   6 ++
-> >  include/scsi/sas_ata.h                 |   6 ++
-> >  12 files changed, 247 insertions(+), 39 deletions(-)
-> > 
-> > -- 
-> > 2.44.0.278.ge034bb2e1d-goog
-> > 
+
+This statement is a bit strange, what it is "if it doesn't"?
+
+from the change, the patch refactors command issue for broader usage
+and enhance UPIU tracing, isolate the command issuance logic from
+`ufshcd_exec_dev_cmd` to allow reuse across different contexts.
+
