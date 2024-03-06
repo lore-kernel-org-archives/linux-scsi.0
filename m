@@ -1,113 +1,97 @@
-Received: from mail-yb1-f201.google.com (mail-yb1-f201.google.com [209.85.219.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from quicklyemailsend77.com (quicklyemailsend77.com [57.128.172.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9485E1BC26
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Mar 2024 01:22:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DB441C6AF
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Mar 2024 06:24:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=57.128.172.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709688167; cv=none; b=ifuFCONqCaKGETPAI3V3S9O61aWJPRVtUA2GPggXtGj6VwCdwgnBNqgaxF+k3UnV7xVE2B1eAyCg8IyskX434MGtwwPjG6fgkVVuUDtOLuMynvwmwx4oE3UvlrowokcSOpWacq6frxy/7wgsBmwGJW9TCDAut/NJVhjJ7FG9Rw8=
+	t=1709706246; cv=none; b=t8Jg0H7gQSzMOPdbdsZ7v/djv8pgyaG3QZcExlwucXaYANS84N2Oz2gDECRZDrt2H4nMeu+eBpUezUdUlIydLB1fUzK12H/0IpuV5cnfqRKDsADwILyrhyG9QgEw/2lDlXPkA3o++qd68DSV9q5FTXNCW2UWeDpXvfPf5cB9RWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709688167; c=relaxed/simple;
-	bh=ZQgGWVSWytcgK5MJZ6jggoBjQfFJugefhTJSzcVcgYk=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=MQvPTq24EpMH0mLjVNSbLuPMWEmLf+WHQS+jGw/u+8piL0IUK0aoyF12a+UBxLUrTF9K++5m7T6gaX4alHRrTmMFmQeJ4qc8W2asL1M0eecrTP1kV2sz7DOu/DLlpCvkriVdhSwhAY4llOVt58MMYkix4n4l0Wl43LSNm9o2zos=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=k8jNQqeK; arc=none smtp.client-ip=209.85.219.201
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ipylypiv.bounces.google.com
+	s=arc-20240116; t=1709706246; c=relaxed/simple;
+	bh=UkCnC3hxyWUR811IY5T5PlAQFaHotSY7xhHSl4hh88I=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=uLGgo36Q8oaKa/p3czQKHdKtabEdSXOQfEVzNRns3yQBWlwjLHNSriZio9kEAuLjlcoVyzU3//YFWvck+cLGCsTIYxIvSzLhpEXc2FA5dk98kYhHWvBrKmNKy31ei2gfnkT/vewKFFvqcMENVHXQnd1CAr+fPixNL5bN7gnoNZg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicklyemailsend77.com; spf=pass smtp.mailfrom=quicklyemailsend77.com; dkim=pass (2048-bit key) header.d=quicklyemailsend77.com header.i=@quicklyemailsend77.com header.b=k0BM0ZDK; arc=none smtp.client-ip=57.128.172.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicklyemailsend77.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicklyemailsend77.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="k8jNQqeK"
-Received: by mail-yb1-f201.google.com with SMTP id 3f1490d57ef6-dc6dbdcfd39so12097407276.2
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Mar 2024 17:22:45 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=quicklyemailsend77.com header.i=@quicklyemailsend77.com header.b="k0BM0ZDK"
+Received: from quicklyemailsend77.com (unknown [185.255.114.95])
+	by quicklyemailsend77.com (Postfix) with ESMTPA id 0FC593977B4
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Mar 2024 03:51:50 +0000 (UTC)
+DKIM-Filter: OpenDKIM Filter v2.11.0 quicklyemailsend77.com 0FC593977B4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1709688164; x=1710292964; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=iW4+YjuNAKvAoJg+NmQ5C96xY/u5WzV8UruESW/Bs4M=;
-        b=k8jNQqeK7gQKIbzMge/onFNDkBDQoWlKZc9e1Yu5CHgqUsTYSSqY8AvFKi/KUny4DT
-         eopA1+krKRaFD23m9rv6jQF0VejsCHmxr5u0R4oLH64/KmvAcIQjvVSnFCrglueIk5rE
-         +811v4ySFHjV5W/G5zybxXKbGN0RpuM7A38KXr+KiDdgsOLYSVDgsScifR4XuFNE/Ofe
-         fR2HaeDOz1SeyUQvp1ZJTkm1mPCMLLlTWozsmEswBw3jTw0VlgxDspSE6qhgysp/RktO
-         u8X9t2eA4dFH37vUCJ8LIM+t+2ck2ck3LO5L1Yc3Yl86HRj1EiYR+uMWrGhWMAau+QtH
-         BaYA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709688164; x=1710292964;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=iW4+YjuNAKvAoJg+NmQ5C96xY/u5WzV8UruESW/Bs4M=;
-        b=fFpTozlxGMPYUB53F4E0SXB0I36LIxFfKc9DxFEJV2E7biN7QwtF8mhyQ7Y//rgOjs
-         PrHkqq5VdOmvkHmOLGZaHESP11O31E+R81136w8ylOyXK3Ahbv3cJ/+TRPaUMAmdz3LU
-         mahun84EbCqkEnM55ZR1LwiKE+LdVqN6RZBhYBukNqWvfjYKa6sEqvtNnoQK3CXJFVLH
-         3RtZCbIAhmvDOUCaupkE/pngZZkNu6YMFn/4f+X0vDSezY5r9OThJ6kMuxfotZPGyIh9
-         sW+D9vzefA44T/2SHc6+fPOBamc+7dLKU8ZeOEWQDX2FB/HMiA1dhuh0CXc/kcQYyIED
-         7B+w==
-X-Forwarded-Encrypted: i=1; AJvYcCX/Fj150Cd0sLazQ03+2grOfu8goK6IYl9k/VR9bDE+DflrjZmXWPrQH0x+byVJpjrBND72MaVqNE932eA8hsBA6x3ZCrfDHChmTA==
-X-Gm-Message-State: AOJu0YwBCFtrk4FQRY/oRrEeIT0+iTJEsnLPhbKfA3gG5FUbO8tK7ivB
-	u2Vd0edf+6BNM9r/o+JPjSupExRss1aOe7i1lHFGZpcyIxpg7iCdohSrehu+atjCB0gXbQQjxlC
-	OqHVc2W3BEw==
-X-Google-Smtp-Source: AGHT+IHdUO0CSTTXSxP9RMH2G/OtJPNDHKSmhMwQ7efvIbVrkR+X7rTKxQ+kI29DRE6cGTrNY3Jc+MzpCV3TDQ==
-X-Received: from ipylypiv.svl.corp.google.com ([2620:15c:2c5:13:69ff:df2c:aa81:7b74])
- (user=ipylypiv job=sendgmr) by 2002:a05:6902:728:b0:dc2:1f34:fac4 with SMTP
- id l8-20020a056902072800b00dc21f34fac4mr3554574ybt.2.1709688164688; Tue, 05
- Mar 2024 17:22:44 -0800 (PST)
-Date: Tue,  5 Mar 2024 17:22:26 -0800
-In-Reply-To: <20240306012226.3398927-1-ipylypiv@google.com>
+	d=quicklyemailsend77.com; s=default; t=1709697112;
+	bh=eefLZdwY5mr6nwq86b3d+rtsxGUHJntuGmXl+R35AcQ=;
+	h=Reply-To:From:To:Subject:Date:From;
+	b=k0BM0ZDK6iYVCUwJidcrVuGE78OVAXH+Dw4FTyXjVBGj4CKlVo0PCN8G8+5sZZtyG
+	 6GlC53k7qQZJtSMYb5zdiVxfJ+SnTu5SKm9UjebVKPWNBxMJ05r10QkP/D9bETxlql
+	 /A0YBxfpc0jxgcc10swDdokzz1nlXbEaoYMBSgAENr1zHXKYAN4RqhC8+m0wu9Xqlx
+	 N9mfE1i42J2UP+j3CVLtPLKubAEq7OvjxrCm18KYVtjKMcI3fOVJ1PZSkw+4MFkYcg
+	 GyRQOiM3F951DbcYhkS1S2QmAx8pzfn15p+6e7Sog/q7VlNL/0wDVo9WZsrP+BqTAU
+	 dKodIGpivcNzw==
+Reply-To: joakimlarson@skendiaelevator.com
+From: info@quicklyemailsend77.com
+To: linux-scsi@vger.kernel.org
+Subject: =?UTF-8?B?7YyQ66ekIOusuOydmCAyMDI0?=
+Date: 05 Mar 2024 19:51:47 -0800
+Message-ID: <20240305195146.C56457F0758A8F79@quicklyemailsend77.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20240306012226.3398927-1-ipylypiv@google.com>
-X-Mailer: git-send-email 2.44.0.278.ge034bb2e1d-goog
-Message-ID: <20240306012226.3398927-8-ipylypiv@google.com>
-Subject: [PATCH v7 7/7] scsi: isci: Add libsas SATA sysfs attributes group
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
-	John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Jack Wang <jinpu.wang@cloud.ionos.com>, Hannes Reinecke <hare@suse.de>, 
-	Xiang Chen <chenxiang66@hisilicon.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, 
-	Bart Van Assche <bvanassche@acm.org>
-Cc: TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Igor Pylypiv <ipylypiv@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-The added sysfs attributes group enables the configuration of NCQ Priority
-feature for HBAs that rely on libsas to manage SATA devices.
 
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
----
- drivers/scsi/isci/init.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+=EC=95=88=EB=85=95=ED=95=98=EC=84=B8=EC=9A=94
+=20
+=EC=8A=A4=EC=9B=A8=EB=8D=B4 =EC=8A=A4=EC=B9=B8=EB=94=94=EC=95=84 =EC=97=98=
+=EB=A0=88=EB=B0=94=ED=86=A0(Skandia Elevato)=EC=97=90=EC=84=9C =EC=98=A8 =
+=EC=9A=94=EC=95=84=ED=82=B4 =EB=9D=BC=EB=A5=B4=EC=86=90(JOAKIM LARSSON) .
+=20
+=EC=9A=B0=EB=A6=AC=EB=8A=94 =EA=B8=B4=EA=B8=89=ED=95=98=EA=B2=8C =EA=B7=80=
+=ED=95=98=EC=9D=98 =EC=A0=9C=ED=92=88=EC=9D=84 =ED=95=84=EC=9A=94=EB=A1=9C =
+=ED=95=98=EB=A9=B0 =EA=B0=80=EB=8A=A5=ED=95=9C =ED=95=9C =EB=B9=A8=EB=A6=AC=
+ =EC=8B=9C=ED=97=98 =EC=A3=BC=EB=AC=B8=EC=9D=84 =ED=95=98=EA=B3=A0 =EC=8B=
+=B6=EC=8A=B5=EB=8B=88=EB=8B=A4. 
+=20
+=EC=98=A8=EB=9D=BC=EC=9D=B8=EC=9C=BC=EB=A1=9C =EC=A0=9C=ED=92=88=EC=97=90 =
+=EB=8C=80=ED=95=9C =EC=A0=95=EB=B3=B4=EB=A5=BC =EC=88=98=EC=A7=91=ED=95=98=
+=EA=B3=A0 =EC=9E=88=EC=8A=B5=EB=8B=88=EB=8B=A4. 
+=20
+=EA=B7=B8=EB=A6=AC=EA=B3=A0 =EB=82=B4 =EB=AA=A8=EC=9E=84=EC=97=90=EC=84=9C =
+=EB=82=98=EB=8A=94 =EC=9A=B0=EB=A6=AC=EA=B0=80 =EB=8B=B9=EC=8B=A0=EC=9D=98 =
+=EC=A0=9C=ED=92=88=EC=9D=84 =EC=A3=BC=EB=AC=B8=ED=95=A0 =EA=B2=83=EC=9D=B4=
+=EB=9D=BC=EA=B3=A0 =EC=83=9D=EA=B0=81=ED=95=A9=EB=8B=88=EB=8B=A4.
+=20
+1. =EC=B5=9C=EC=8B=A0 Catalouge=EB=A5=BC =EB=B3=B4=EB=82=BC =EC=88=98 =EC=
+=9E=88=EC=8A=B5=EB=8B=88=EA=B9=8C?
+=20
+2. =EC=9A=B0=EB=A6=AC=EA=B0=80 =EC=A3=BC=EB=AC=B8=ED=95=A0 =EC=88=98 =EC=9E=
+=88=EB=8A=94 =EC=B5=9C=EC=86=8C=ED=95=9C=EC=9D=80 =EB=AC=B4=EC=97=87=EC=9D=
+=B4=EA=B3=A0 =EB=98=90=ED=95=9C =EA=B8=B0=EA=B0=84=EC=9D=84 =EB=B3=B4=EB=82=
+=B4=EC=8B=AD=EC=8B=9C=EC=98=A4=20
+=EB=B0=8F =EC=A1=B0=EA=B1=B4.
+3. =EC=9A=B0=EB=A6=AC=EA=B0=80 =EC=A3=BC=EB=AC=B8=ED=95=98=EB=8A=94 =EA=B2=
+=BD=EC=9A=B0 =EC=A7=80=EB=B6=88=EC=9D=84 =EC=96=B4=EB=96=BB=EA=B2=8C =ED=95=
+=B4=EA=B2=B0=ED=95=98=EA=B8=B0=EB=A5=BC =EC=9B=90=ED=95=98=EC=8B=AD=EB=8B=
+=88=EA=B9=8C?
+=20
+=EA=B7=80=ED=95=98=EC=9D=98 =ED=9A=8C=EC=8B=A0 =EB=8C=80=EA=B8=B0 =EC=A4=91=
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 6277162a028b..8658dcd61b87 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -149,6 +149,11 @@ static struct attribute *isci_host_attrs[] = {
- 
- ATTRIBUTE_GROUPS(isci_host);
- 
-+static const struct attribute_group *isci_sdev_groups[] = {
-+	&sas_ata_sdev_attr_group,
-+	NULL
-+};
-+
- static const struct scsi_host_template isci_sht = {
- 
- 	.module				= THIS_MODULE,
-@@ -176,6 +181,7 @@ static const struct scsi_host_template isci_sht = {
- 	.compat_ioctl			= sas_ioctl,
- #endif
- 	.shost_groups			= isci_host_groups,
-+	.sdev_groups			= isci_sdev_groups,
- 	.track_queue_depth		= 1,
- };
- 
--- 
-2.44.0.278.ge034bb2e1d-goog
+
+Mr Joakim larssonv(=EB=B6=80=EC=82=AC=EC=9E=A5/=EC=98=81=EC=97=85 =EA=B4=80=
+=EB=A6=AC=EC=9E=90)
+
+=EB=B0=A9=EB=AC=B8=EC=9E=90 =EC=A3=BC=EC=86=8C: Kedumsv=C3=A4gen 14, SE-534=
+ 94 Vara, Sweden
+
+=EB=B0=B0=EC=86=A1 =EC=A3=BC=EC=86=8C: Industriv=C3=A4gen, SE-534 94 Vara, =
+Sweden
+
+joakimlarson@skendiaelevator.com
+https://skandiaelevator.com
 
