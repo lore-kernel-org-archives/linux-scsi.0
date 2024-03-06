@@ -1,60 +1,59 @@
-Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1008A692E6
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Mar 2024 19:28:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8501417551
+	for <linux-scsi@vger.kernel.org>; Wed,  6 Mar 2024 20:56:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709753332; cv=none; b=pCqPI/sbvcPmyaVpG2gyCq7NZVxj070KejSZazQd9Tyf43XSlZBuOrPXqih60SviOt9/dhISuHzWSDu6wupMoIS/ybsec66XNXoC5I+jC5BYnq79VnSkqQN3NUJ3iJD2FkmkqgYcLbBLGh1zSzvrLBOq6e4j0+CZjYWLQwPSNbw=
+	t=1709758583; cv=none; b=JsZzhY0ncL4aleDJVPPfGBvVwc4TdZ4/RQwVbaEFLFFVnuY2kvvfTuM5SH8eNdY2ngRLspxUl0kygeI+JtzNLQg6lwICd9Nnep32gw+2WGO/R3KGKJTsYGcgjoqUbH/c0I/4SXjMvarcwIDxXfDo7/AI2Qet6npzxrN9TgleFVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709753332; c=relaxed/simple;
-	bh=oVbP8h99GUK9lOc/Amw1op4GHOhWRRASuthXoAH1gbE=;
+	s=arc-20240116; t=1709758583; c=relaxed/simple;
+	bh=chMLxuuJhus8RSm2D1A6/5wioNv3E3Jgtwtcd+vx6Hs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GWqT6K8bY1AdynbfNUDw2v2A/x+q85w+QYIRdkuYCbTmIfkmwZwZdzTm9FQxmE2lJfR8oZ+xBWwUaLMKvE236B6za9426zkH+0V7OfvsOmEnBXDVW6qFiGr7UtMcd6DgbqR8D1D3lomWNql19gxzhIiQlFzGYvZ52noSwYFaZ40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=R+iKghyo; arc=none smtp.client-ip=209.85.215.174
+	 Content-Type:Content-Disposition:In-Reply-To; b=tMwBYSixI8KDOxArFhQeAfF8tPBFXlT64qmY/O7gm/wcGRG5LhCGQsijnAOnIvH9z8YaiU9Xy1OD8Bwoaoge7kFSU92A6SE7F3LTZDqKIb5xPkaeGpsQ4AefZCYsqbf6ARyWD/eaE0gUcBGz/GvN4QXLkNT5bzJIYhiohHSpKz8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=TIEgxQWG; arc=none smtp.client-ip=209.85.210.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="R+iKghyo"
-Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-5e4613f2b56so40611a12.1
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Mar 2024 11:28:50 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="TIEgxQWG"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6e6419cd4ddso132442b3a.2
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Mar 2024 12:56:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1709753330; x=1710358130; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1709758581; x=1710363381; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=m9++UoKpeeQiFQPK2S6XtFoDKlxqW5vdVso25F8fqUo=;
-        b=R+iKghyoQDh5a92Rgy8ermZReGcTEAJKdfigKeXwTapaAMM65j3r/8br9CS0da04mK
-         G42Wly5B14AX2d4IKQwm57XqpOlWHzQr59zUMqsBZq4obsf/m4t+ddbP5VvBFQBRbNn6
-         wudyd+zRPUZi5zH+ZKi7qaD1g+FemIfgFM76uZnk26aaHHwdrUEYUT9DD54+eGXnLBWL
-         Tytber+V+3spP7Q02UNIODHt47VPM7KFlAvDGcYhtiQ8gDLowaymlBzZfjxsZXCl1rdN
-         N2TWVPQ8oPOuF2rY5CDX766wdf3hF970igQD31DSN/aHOwdqIbvLSp1xWBrULWA/iWGf
-         yxAQ==
+        bh=24sGFAKUTMlFkQcWZBTL9mXGCoHWah/p2w8E9U7LrWw=;
+        b=TIEgxQWGUdZcgyAEg02NRIfvaCCwulC7zCXCg1AHb+9YobU/p5rsm/rIo1tasgARhp
+         X/TvboIjVw2DlRcyhTOmRgBNjc9OBvLjIY7Ut4LDiykEE8yoNWDWtQYKrifaADDsh4kz
+         cU+h/mDqjUL5QC3pg30iyxu4dzx/E0WCKKCmMomydBC0jwPPKjqiTmujLTd6+6pgXJy7
+         vPvTio0T4eapBN1yG8a5zV2jkP+ovmRmOYx6tqjmfSh4mSWmg+rIURyB4Ou2x8QGHl1S
+         bG2b2MuR5r2c6/Yrm9nLU9c3xkQY4BcKPSUtljuPQkHiFJwAufLvABh1nyuLZZsf1uMR
+         z5MQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709753330; x=1710358130;
+        d=1e100.net; s=20230601; t=1709758581; x=1710363381;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=m9++UoKpeeQiFQPK2S6XtFoDKlxqW5vdVso25F8fqUo=;
-        b=JpUM7v1zEVoj6YDe7vNZ1fq1TPZK1rT1X6NBV2Fz4bUP61hshulxNJ6dXS8GDkKhKj
-         d5G7cRcu81Z3eHnYK57RSC4XCkBMvbBMH+C7tJqQd6+YNU20TkHXm5mLy3jjsLwmDuV/
-         PbK/k+iJeOsG1nP8YZEJqSOQmR3dI+SCIjXCW3mfGgFCMRdiCYCRWS7UEcBCSNLuzW37
-         aye825Ddce4s5uJmplFL3epNkC/A0Jsr419+JhV7QVOvcsTvwy3cRiIyIYIHIX1zFePx
-         8tXrTBZ/2JI4W5nT/ser3igWHpqBXQ1bTO3mEIuF4Yuz+XcJ9sfZIvs+GK6/Wlcmhq5Z
-         9QOQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWokvMo28qdT+uAw8b+yhFYMgWgVFFHCUe1u+MGjn2mZBUhI4+jG1eYWtyFg51xtBA1D5PBVbK/he5oY5SMnJFfqQMr5fLSqmr67Q==
-X-Gm-Message-State: AOJu0YxzhYqUUcQz0IKxMCulQyxqsDf8esCh6gR8DjO8PUKtVO6cCxXX
-	NPUapWFdfTHkmx739gsCzvUIYEk+0CFZK5KzKJLPktqrlOeOx/NIU2XroWQXag==
-X-Google-Smtp-Source: AGHT+IGakAHWNMkzUL4cVU+huFc20UjAENCfOhUHpM8bWIsR6IZeSjD2XDwSligdYZMB5iErYVB1qg==
-X-Received: by 2002:a05:6a20:3d19:b0:1a1:6ee9:336 with SMTP id y25-20020a056a203d1900b001a16ee90336mr137360pzi.15.1709753330036;
-        Wed, 06 Mar 2024 11:28:50 -0800 (PST)
+        bh=24sGFAKUTMlFkQcWZBTL9mXGCoHWah/p2w8E9U7LrWw=;
+        b=I8VStfKyqqjG8Bhr9EhUMlHqevHC8WVIoZJtssp+82tl72Pr8kgMAL4UVqDTgdGlUw
+         ZxU0EJJ4VTxM5FxYrqy3FHpEGmkl4VsVTtY583gQi0ME8TQWSsiE+epNgPihWox+SnJx
+         anMomt8uxaUz1BeePuEMcL83Fk4syFFQy+HM0QNU2iVmP7QOpaMfSRKHEFdYxcd15VG5
+         7frHF0wbk9Q+VavtYoxXYBEQ5yOtiSAGTV6ELMT4juapsOKWLnxXq4rnBA/ppjkJFJb9
+         UhXsta16LtcYv0wm41Fjjbgpmmv/02V3Xavym4rB2UOKHGSvcyJkSbV7iLyxVnoVFlZZ
+         pb+A==
+X-Forwarded-Encrypted: i=1; AJvYcCXXNf9emF4+wd2INU0xs+bQrx9CjtxcTpBGfDSv4/PQHDATOo/KircmXyWRk0yOBWl844UlC1Y/qtmVtAXkDsvj1P4uXopStWPYlQ==
+X-Gm-Message-State: AOJu0YwYnIlcM+ku8Hq6EsJB9HFB1KpMG3nitwElfSbp5mK1JyzBkmT0
+	UNIv8lcjPKQRDBowu39knvHJLKzraZTHqmH7q4SUUHreNumXjiLAR/BdqLDfxA==
+X-Google-Smtp-Source: AGHT+IHGAd/L7VB6xNYd1gWzlLG1X1+due696CWjKmT3T0LUK5z6Uf8B1dNIBpiddnRm1LGtygv1Gg==
+X-Received: by 2002:a05:6a00:1915:b0:6e5:584d:8d17 with SMTP id y21-20020a056a00191500b006e5584d8d17mr18776495pfi.15.1709758580424;
+        Wed, 06 Mar 2024 12:56:20 -0800 (PST)
 Received: from google.com ([2620:15c:2c5:13:9a91:c17:53d9:d156])
-        by smtp.gmail.com with ESMTPSA id p41-20020a056a000a2900b006e641fee598sm3260316pfh.141.2024.03.06.11.28.48
+        by smtp.gmail.com with ESMTPSA id s16-20020a62e710000000b006e5a6e83f8esm10313892pfh.134.2024.03.06.12.56.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Mar 2024 11:28:49 -0800 (PST)
-Date: Wed, 6 Mar 2024 11:28:42 -0800
+        Wed, 06 Mar 2024 12:56:20 -0800 (PST)
+Date: Wed, 6 Mar 2024 12:56:15 -0800
 From: Igor Pylypiv <ipylypiv@google.com>
-To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
-	Hannes Reinecke <hare@suse.de>
+To: Niklas Cassel <cassel@kernel.org>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
 	John Garry <john.g.garry@oracle.com>,
 	Jason Yan <yanaijie@huawei.com>,
@@ -67,12 +66,12 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	Bart Van Assche <bvanassche@acm.org>,
 	TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org,
 	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 2/7] scsi: libsas: Define NCQ Priority sysfs
- attributes for SATA devices
-Message-ID: <ZejD6mYBhYFQ5Xq8@google.com>
+Subject: Re: [PATCH v7 5/7] scsi: hisi_sas: Add libsas SATA sysfs attributes
+ group
+Message-ID: <ZejYb4ykeF7Qx5a5@google.com>
 References: <20240306012226.3398927-1-ipylypiv@google.com>
- <20240306012226.3398927-3-ipylypiv@google.com>
- <ZehLfEjfOTs2wGZe@ryzen>
+ <20240306012226.3398927-6-ipylypiv@google.com>
+ <ZehLpV06mpHxjecc@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,183 +80,79 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZehLfEjfOTs2wGZe@ryzen>
+In-Reply-To: <ZehLpV06mpHxjecc@ryzen>
 
-On Wed, Mar 06, 2024 at 11:54:52AM +0100, Niklas Cassel wrote:
-> On Tue, Mar 05, 2024 at 05:22:21PM -0800, Igor Pylypiv wrote:
-> > Libata sysfs attributes cannot be used for libsas managed SATA devices
-> > because the ata_port location is different for libsas.
-> > 
-> > Defined sysfs attributes (visible for SATA devices only):
-> > - /sys/block/sda/device/ncq_prio_enable
-> > - /sys/block/sda/device/ncq_prio_supported
-> > 
-> > The newly defined attributes will pass the correct ata_port to libata
-> > helper functions.
+On Wed, Mar 06, 2024 at 11:55:33AM +0100, Niklas Cassel wrote:
+> On Tue, Mar 05, 2024 at 05:22:24PM -0800, Igor Pylypiv wrote:
+> > The added sysfs attributes group enables the configuration of NCQ Priority
+> > feature for HBAs that rely on libsas to manage SATA devices.
 > > 
 > > Reviewed-by: John Garry <john.g.garry@oracle.com>
 > > Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 > > Reviewed-by: Jason Yan <yanaijie@huawei.com>
 > > Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 > > ---
-> >  drivers/scsi/libsas/sas_ata.c | 94 +++++++++++++++++++++++++++++++++++
-> >  include/scsi/sas_ata.h        |  6 +++
-> >  2 files changed, 100 insertions(+)
+> >  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 6 ++++++
+> >  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 6 ++++++
+> 
+> Is there a reason why you didn't patch:
+> drivers/scsi/hisi_sas/hisi_sas_v1_hw.c ?
+> 
+
+I originally patched hisi_sas_v1_hw.c as well. John Garry pointed out
+that v1 HW doesn't support SATA so I dropped the change.
+
+> 
+> >  2 files changed, 12 insertions(+)
 > > 
-> > diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> > index 12e2653846e3..04b0bd9a4e01 100644
-> > --- a/drivers/scsi/libsas/sas_ata.c
-> > +++ b/drivers/scsi/libsas/sas_ata.c
-> > @@ -964,3 +964,97 @@ int sas_execute_ata_cmd(struct domain_device *device, u8 *fis, int force_phy_id)
-> >  			       force_phy_id, &tmf_task);
-> >  }
-> >  EXPORT_SYMBOL_GPL(sas_execute_ata_cmd);
-> > +
-> > +static ssize_t sas_ncq_prio_supported_show(struct device *device,
-> > +					   struct device_attribute *attr,
-> > +					   char *buf)
-> > +{
-> > +	struct scsi_device *sdev = to_scsi_device(device);
-> > +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
-> > +	bool supported;
-> > +	int rc;
-> > +
-> > +	/* This attribute shall be visible for SATA devices only */
-> > +	if (WARN_ON_ONCE(!dev_is_sata(ddev)))
-> > +		return -EINVAL;
-> 
-> Like Hannes commented, I don't believe this is needed.
-> 
-
-The intention for the check is to serve as a fail-safe in case 'is_visible()'
-callback gets incorrectly modified and stops hiding the sysfs attributes
-for non-SATA devices.
-
-Just want to clarify should I remove the WARN_ON_ONCE and keep the fail-safe
-check or should I get rid of the check completely and trust 'is_visible()'
-to always hide the sysfs attributes for non-SATA devices? 
-
-> 
-> > +
-> > +	rc = ata_ncq_prio_supported(ddev->sata_dev.ap, sdev, &supported);
-> > +	if (rc)
-> > +		return rc;
-> > +
-> > +	return sysfs_emit(buf, "%d\n", supported);
-> > +}
-> > +
-> 
-> While this is a bit different depending on file, the most common way is to
-> have no blank link before the DEVICE_ATTR().
->
-
-In "[PATCH 1/3] ata: libata-sata: Factor out NCQ Priority configuration helpers"
-Damien asked to keep the blank link before the DEVICE_ATTR() in libata-sata.c.
-
-Non-prio sysfs attributes in libata-sata.c don't have blank lines
-before DEVICE_ATTR() so I'm more inclined to remove the lines.
-
-I'm fine with either of ways, just want to get a consensus and make it 
-consistent for both libata-sata.c and sas_ata.c.
- 
-> 
-> > +DEVICE_ATTR(ncq_prio_supported, S_IRUGO, sas_ncq_prio_supported_show, NULL);
-> > +
-> > +static ssize_t sas_ncq_prio_enable_show(struct device *device,
-> > +					struct device_attribute *attr,
-> > +					char *buf)
-> > +{
-> > +	struct scsi_device *sdev = to_scsi_device(device);
-> > +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
-> > +	bool enabled;
-> > +	int rc;
-> > +
-> > +	/* This attribute shall be visible for SATA devices only */
-> > +	if (WARN_ON_ONCE(!dev_is_sata(ddev)))
-> > +		return -EINVAL;
-> > +
-> > +	rc = ata_ncq_prio_enabled(ddev->sata_dev.ap, sdev, &enabled);
-> > +	if (rc)
-> > +		return rc;
-> > +
-> > +	return sysfs_emit(buf, "%d\n", enabled);
-> > +}
-> > +
-> > +static ssize_t sas_ncq_prio_enable_store(struct device *device,
-> > +					 struct device_attribute *attr,
-> > +					 const char *buf, size_t len)
-> > +{
-> > +	struct scsi_device *sdev = to_scsi_device(device);
-> > +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
-> > +	bool enable;
-> > +	int rc;
-> > +
-> > +	/* This attribute shall be visible for SATA devices only */
-> > +	if (WARN_ON_ONCE(!dev_is_sata(ddev)))
-> > +		return -EINVAL;
-> > +
-> > +	rc = kstrtobool(buf, &enable);
-> > +	if (rc)
-> > +		return rc;
-> > +
-> > +	rc = ata_ncq_prio_enable(ddev->sata_dev.ap, sdev, enable);
-> > +	if (rc)
-> > +		return rc;
-> > +
-> > +	return len;
-> > +}
-> > +
-> > +DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
-> > +	    sas_ncq_prio_enable_show, sas_ncq_prio_enable_store);
-> > +
-> > +static struct attribute *sas_ata_sdev_attrs[] = {
-> > +	&dev_attr_ncq_prio_supported.attr,
-> > +	&dev_attr_ncq_prio_enable.attr,
+> > diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+> > index 73b378837da7..b5d379ebe05d 100644
+> > --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+> > +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+> > @@ -3544,6 +3544,11 @@ static struct attribute *host_v2_hw_attrs[] = {
+> >  
+> >  ATTRIBUTE_GROUPS(host_v2_hw);
+> >  
+> > +static const struct attribute_group *sdev_groups_v2_hw[] = {
+> > +	&sas_ata_sdev_attr_group,
 > > +	NULL
 > > +};
 > > +
-> > +static umode_t sas_ata_attr_is_visible(struct kobject *kobj,
-> > +				       struct attribute *attr, int i)
-> > +{
-> > +	struct device *dev = kobj_to_dev(kobj);
-> > +	struct scsi_device *sdev = to_scsi_device(dev);
-> > +	struct domain_device *ddev = sdev_to_domain_dev(sdev);
-> > +
-> > +	if (!dev_is_sata(ddev))
-> > +		return 0;
-> > +
-> > +	return attr->mode;
-> > +}
-> > +
-> > +const struct attribute_group sas_ata_sdev_attr_group = {
-> > +	.attrs = sas_ata_sdev_attrs,
-> > +	.is_visible = sas_ata_attr_is_visible,
-> > +};
-> > +EXPORT_SYMBOL_GPL(sas_ata_sdev_attr_group);
-> > diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-> > index 2f8c719840a6..92e27e7bf088 100644
-> > --- a/include/scsi/sas_ata.h
-> > +++ b/include/scsi/sas_ata.h
-> > @@ -39,6 +39,9 @@ int smp_ata_check_ready_type(struct ata_link *link);
-> >  int sas_discover_sata(struct domain_device *dev);
-> >  int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *phy,
-> >  		    struct domain_device *child, int phy_id);
-> > +
-> > +extern const struct attribute_group sas_ata_sdev_attr_group;
-> > +
-> >  #else
-> >  
-> >  static inline void sas_ata_disabled_notice(void)
-> > @@ -123,6 +126,9 @@ static inline int sas_ata_add_dev(struct domain_device *parent, struct ex_phy *p
-> >  	sas_ata_disabled_notice();
-> >  	return -ENODEV;
-> >  }
-> > +
-> > +#define sas_ata_sdev_attr_group ((struct attribute_group) {})
-> > +
+> >  static void map_queues_v2_hw(struct Scsi_Host *shost)
+> >  {
+> >  	struct hisi_hba *hisi_hba = shost_priv(shost);
+> > @@ -3585,6 +3590,7 @@ static const struct scsi_host_template sht_v2_hw = {
+> >  	.compat_ioctl		= sas_ioctl,
 > >  #endif
+> >  	.shost_groups		= host_v2_hw_groups,
+> > +	.sdev_groups		= sdev_groups_v2_hw,
+> >  	.host_reset		= hisi_sas_host_reset,
+> >  	.map_queues		= map_queues_v2_hw,
+> >  	.host_tagset		= 1,
+> > diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> > index b56fbc61a15a..9b69ea16a1e6 100644
+> > --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> > +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+> > @@ -2929,6 +2929,11 @@ static struct attribute *host_v3_hw_attrs[] = {
 > >  
-> >  #endif /* _SAS_ATA_H_ */
+> >  ATTRIBUTE_GROUPS(host_v3_hw);
+> >  
+> > +static const struct attribute_group *sdev_groups_v3_hw[] = {
+> > +	&sas_ata_sdev_attr_group,
+> > +	NULL
+> > +};
+> > +
+> >  #define HISI_SAS_DEBUGFS_REG(x) {#x, x}
+> >  
+> >  struct hisi_sas_debugfs_reg_lu {
+> > @@ -3340,6 +3345,7 @@ static const struct scsi_host_template sht_v3_hw = {
+> >  	.compat_ioctl		= sas_ioctl,
+> >  #endif
+> >  	.shost_groups		= host_v3_hw_groups,
+> > +	.sdev_groups		= sdev_groups_v3_hw,
+> >  	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
+> >  	.host_reset             = hisi_sas_host_reset,
+> >  	.host_tagset		= 1,
 > > -- 
 > > 2.44.0.278.ge034bb2e1d-goog
 > > 
