@@ -1,96 +1,83 @@
-Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D78F384FD5;
-	Thu,  7 Mar 2024 12:32:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42C402AD17;
+	Thu,  7 Mar 2024 12:50:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709814742; cv=none; b=qlrHjZF5gfMHB129LSyAWWqP2IoxSWOf210cWLZpG6im0mcsxbpDRKZ/wH/+4QTofWegGoXm0PSqWYJDQ20yNU069sTvF5x7u2OzfIF9J3u8Fx54earuwfFVlU9Ep75b/KRcRVbzS6RN5tyUW48IHEQlcqYJ0AChMc3b94KyOaY=
+	t=1709815811; cv=none; b=rSQqtyIhPf8k6/pL3ue799umuTYdTBaw3j4qgSXCyWaeY/f5xY5BTx+wkVSL/irgJQPkg6knMDbZMPM3l1kD9vYGI4dfh/UgVKQsUINsXpK0ACB9yoiWt3AOv4/zGrbWKtHHl4P7mEEOodWQLtYmZmZlndelCZLwS9keDd6ATTA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709814742; c=relaxed/simple;
-	bh=CnKV7YkmwKVN45OVgq9HMp191oP0lkB4cDHb6peK+T4=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=qSXw9glSI9pQzgAlZWw01fjMjQRLCoYzV23qVcUHioZC0HVjAXzgiDk9IEn3fvtI04niI/Hp8XJ3kLK8YOx/xl3LthwwB8UvrfrVCjtioVkV7NSWpGB2J32Y6dVJTbGOLtyTmvsS4k7e3p+6CmBWYuyk9U5TOBXTK9pp7uauiK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=lBx1+QuJ; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
+	s=arc-20240116; t=1709815811; c=relaxed/simple;
+	bh=P1ANr6WZoM+rU9Iqi1I71/cCCVASl1XhewCDlvQP138=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=J7dtInDb7m9Gv6QxReMwoUbeOjfRWl1OYyRYEeYxs05LlLIHOOV91aQ6XDA7wToml+s0iZvDZ7bKSVwno0hzjh51nc2cHiX7MtjMMW6nMgYa00E2eAywOeTIOrdIC42+pQOnNj8GAAcfz0CncTIBJ5LSlpJrkl7JB5arRw185l8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FSosD+AY; arc=none smtp.client-ip=209.85.218.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="lBx1+QuJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
-	s=201909; t=1709814736;
-	bh=CnKV7YkmwKVN45OVgq9HMp191oP0lkB4cDHb6peK+T4=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=lBx1+QuJTEVHApTpCCDU+EV1Aykxe0USdn1M5qeFxUu86nOmkjduBDq8dT3o7qXpm
-	 oS8/qBbiILsQJC5KQx/qJRP/+1Rtwj+Mvna+PmMaQHKiOOUzj3K4BfsAnCXpYBeO5i
-	 sIHi1sZKR2G1jRkcILr1PE7EJZw85kHZ0/HyQZD5Je+4MUjufb3f6fIkyubjPbz8re
-	 /xYRYrDhHsNlHZi8hwJ5D8xkg2qXwM8ii3IePd37e1Jh7QAPge7a0+jwCSZNdI+ZOe
-	 Y4f3knEgXbFr14hWz3pvmzLU64Pzxk2jZ5fbpD4Fd7BcqwRmHFTOSol/RnqeVlE3F0
-	 mpc6I8Pch7Hkg==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Tr7wZ6z4Xz4wc8;
-	Thu,  7 Mar 2024 23:32:14 +1100 (AEDT)
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Dawei Li <set_pte_at@outlook.com>, Christophe Leroy
- <christophe.leroy@csgroup.eu>
-Cc: "npiggin@gmail.com" <npiggin@gmail.com>, "linuxppc-dev@lists.ozlabs.org"
- <linuxppc-dev@lists.ozlabs.org>, "linux-ide@vger.kernel.org"
- <linux-ide@vger.kernel.org>, "netdev@vger.kernel.org"
- <netdev@vger.kernel.org>, "linux-wireless@vger.kernel.org"
- <linux-wireless@vger.kernel.org>, "linux-scsi@vger.kernel.org"
- <linux-scsi@vger.kernel.org>, "linux-serial@vger.kernel.org"
- <linux-serial@vger.kernel.org>, "alsa-devel@alsa-project.org"
- <alsa-devel@alsa-project.org>, "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] powerpc: macio: Make remove callback of macio driver
- void returned
-In-Reply-To: <TYTP286MB356472357994D5EA49E2F5E3CA212@TYTP286MB3564.JPNP286.PROD.OUTLOOK.COM>
-References: <TYCP286MB232391520CB471E7C8D6EA84CAD19@TYCP286MB2323.JPNP286.PROD.OUTLOOK.COM>
- <3dc29701-239f-4a3b-b571-b9732975bd73@csgroup.eu>
- <TYTP286MB356472357994D5EA49E2F5E3CA212@TYTP286MB3564.JPNP286.PROD.OUTLOOK.COM>
-Date: Thu, 07 Mar 2024 23:32:14 +1100
-Message-ID: <87bk7qnrxt.fsf@mail.lhotse>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FSosD+AY"
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a45b6fcd5e8so111269366b.1;
+        Thu, 07 Mar 2024 04:50:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1709815808; x=1710420608; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=P1ANr6WZoM+rU9Iqi1I71/cCCVASl1XhewCDlvQP138=;
+        b=FSosD+AYwArtN40L5lPrhfLpvSrlf1qRRJ9mzmohSTwBxVk6JADkX9/4FQxyBGj4+e
+         TUEF2E1OLu/q9tAtM9ALUYTN93zdPIeGiVVDB/NgQyFE9rtfaCfbmQJbFgSGmE1ZA+eI
+         hN7L+t4CMtEhfc4DwCm1xuFTSYZyd6BZ526mqETw1hhRVokcmnbUgkYT9040lmOovl4P
+         uXP2Mv1fXTYxUsM2goUzBZex73q+p0vZI4zaw70QzPQu/8YqVYe1FLfX0OCUctYP2H4L
+         clbPPXZfNJ9ibRGIcPRoPUtGwvvnNXQbJOtj8AxM+QrJIp409vck4Jjew6LNHlbBDfJC
+         lvQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709815808; x=1710420608;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=P1ANr6WZoM+rU9Iqi1I71/cCCVASl1XhewCDlvQP138=;
+        b=Vbv5ZVfnjljC9f9D9G08oEYDbmySK3ctU3dX71E+VIxj0AH2KpiO80V9wmrPQWw4NS
+         xxFRrtSjn6jAZyyI45mqY9auWnW9J3jSGAlICefoTrWBK4pSZOZoc4y3uvYamq9CLpfb
+         VdT+kVHANtE71CJjcN4am0jNTddYcwOjtQ//S4PKSW7SsxzYXhzXTYRZZj+YEwNEbLys
+         xn8Pg7SePNINZbfdWcefeLxTHJgFVYfSnBnQDA2tjaDIdELwRIg0m8Sfx4xZTpod1C98
+         OUEeiKKlcWFshwHMBeg76vDTgvT5hnF+CTyLWQu7Xnir5eny9Z9N2RUhY8+Wx8oGu7r8
+         c+cA==
+X-Forwarded-Encrypted: i=1; AJvYcCUWj7osqc0V1XmneICFsA6Wh+/KQ5hPpVK3oGTWfAyKKY/3roKqQT/nOAFurrErR0R5FQOi4MjWkQdMyf5DcL5IreSV+zrhhNMGfGSJKYMtYNTTNkmlCtgD82j6CCJsYcXSOzzqptnJWA==
+X-Gm-Message-State: AOJu0YxhhV78yoZb93wxk4NTjXr23r7HqzR39i8A4f4UWtZhrm3jBqG1
+	hiTrEdc2EOIHp773hWndnC3YMDq0pK/vECJIIxfmRUDejYv3wuA7
+X-Google-Smtp-Source: AGHT+IG9ZVxbwyRUEJbKjydiMKrvS4cfisnOt/lKjep9dUtwykGrPVXC4KkE+9YhHMnF3V2pXxeLSw==
+X-Received: by 2002:a17:906:6954:b0:a45:8f10:50c6 with SMTP id c20-20020a170906695400b00a458f1050c6mr6309296ejs.57.1709815808292;
+        Thu, 07 Mar 2024 04:50:08 -0800 (PST)
+Received: from [10.176.235.119] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id k13-20020a1709067acd00b00a44f3fb4f07sm5708077ejo.191.2024.03.07.04.50.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Mar 2024 04:50:07 -0800 (PST)
+Message-ID: <0bd1df398ab552931b854934ba15d98fa9400a34.camel@gmail.com>
+Subject: Re: [PATCH v2 3/4] scsi: ufs: Re-use compose_dev_cmd
+From: Bean Huo <huobean@gmail.com>
+To: Avri Altman <avri.altman@wdc.com>, "James E . J . Bottomley"
+ <jejb@linux.vnet.ibm.com>, "Martin K . Petersen"
+ <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 07 Mar 2024 13:50:06 +0100
+In-Reply-To: <20240305210051.10847-4-avri.altman@wdc.com>
+References: <20240305210051.10847-1-avri.altman@wdc.com>
+	 <20240305210051.10847-4-avri.altman@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
-Dawei Li <set_pte_at@outlook.com> writes:
-> Hi Christophe,
->
-> On Tue, Feb 20, 2024 at 04:12:17PM +0000, Christophe Leroy wrote:
->> Hi Michael,
->>=20
->> ping ?
->>=20
->> Le 01/02/2023 =C3=A0 15:36, Dawei Li a =C3=A9crit=C2=A0:
->> > Commit fc7a6209d571 ("bus: Make remove callback return void") forces
->> > bus_type::remove be void-returned, it doesn't make much sense for any
->> > bus based driver implementing remove callbalk to return non-void to
->> > its caller.
->> >=20
->> > This change is for macio bus based drivers.
->> >=20
->> > Signed-off-by: Dawei Li <set_pte_at@outlook.com>
->>=20
->> This patch is Acked , any special reason for not applying it ?
->>=20
->> Note that it now conflicts with commit 1535d5962d79 ("wifi: remove=20
->> orphaned orinoco driver") but resolution is trivial, just drop the=20
->> changes to that file.
->
-> Thanks for picking it up, hardly believe that it's been one year.
->
-> Michael,
->
-> I will respin V4 if it's needed.
+On Tue, 2024-03-05 at 23:00 +0200, Avri Altman wrote:
+> Move out some of the dev_cmd initializations so it can be used
+> elsewhere.
+>=20
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
 
-No that's fine, I'll sort it out.
-
-cheers
+Reviewed-by: Bean Huo <beanhuo@micron.com>
