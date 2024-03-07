@@ -1,136 +1,200 @@
-Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com [209.85.208.178])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF9747F7DB;
-	Thu,  7 Mar 2024 13:06:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EB0312C7EC
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Mar 2024 13:31:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709816798; cv=none; b=IU5NH9FG8jscOyAW8Yrwoqs+/j87/lkP+pLNjNr8n7eG2k6ZPoeFXoPeyoDcEWquRmGHuSoLH3qcLZNJ9lMrAP8HvWkHyr2hxaV5glngwjuLByk9m+V96IK60QJ+/ujXoD0QXbOb2rZFHZMqk8kMium+Ut5UacsMRwQYCucaxc0=
+	t=1709818268; cv=none; b=EqMG6D41djDH6OE6MUjQ3dXfkcIpHaZRKkv+sGv6o19PQONOe6tByqBohQjAJcUgV8L/v4Qt4OiQfMcbrIKQjLyaLthA2hwx0Z2Ry/Vz+8mEp7ru2FDg6JpsuPhKO/yQrvWXycYN/4J2w9oIqdSI6yyipn+iUwC1c9gv+Jw2MfY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709816798; c=relaxed/simple;
-	bh=RiU+yV9otIE+FfiUJCTFmjpI6TQk1VsgwIYafXgJGQM=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=HOjQ4ZoCaYydxnQ/YF7rlMorNk6cjRFpHdLH4b0vzVb32K8E0q0SGC4zEbEyUemtjHz5jmYurhwQdNBo5/MP8rDSt0I+H9r3a0H5aQ4/rvoyLZW5M8CC/vUbKverMBRJl4zmbt0Z0pYBng5v1bOOE4r2nuKP/RrrzDQ1BV/d6DE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XIjudYMx; arc=none smtp.client-ip=209.85.208.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1709818268; c=relaxed/simple;
+	bh=kcHGXxaxmSOBJ2OCFh6zk22ZwzuRTWU4RDlWHOuNO4Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=TEGdxqSNKIXLFvyS+NtpB49mpraXsRo2gATyh8TZoS9APQDoqsMbnBRNsLroz8aFBwbIWFibYCDG3ZhhPDXmfuFsHqscxrk1h8oaRnj81Q4CyIuWWyJI6Nqozao0ba+TbuCCceadsZVKWYKlEv0zLpCw05qPUKONJLpLMC7Y3Gk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kIRa5GiF; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Coch1DB8; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kIRa5GiF; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Coch1DB8; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XIjudYMx"
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2d240d8baf6so10110001fa.3;
-        Thu, 07 Mar 2024 05:06:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1709816795; x=1710421595; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=6b0dP2x9JgNOkZdWVMwZj4fWH+1O5YM+rCuFRVEaBss=;
-        b=XIjudYMxAdrtzEeesINsrnICKWEFPDkCn2sDSdhwGfXrjdK79QJ1Am0IekA32z1J4P
-         M5zSdDumaLoYMDMeIzZ2RSzkwzDmEyklIYw9eWRJ9NoK1CGFTLNImJSLQPEKi+4JYuAo
-         XU1XpntF7LpThIxtcYKPJc26TJUioTvZDDRQ4l4Y247lUiHVZ1A868AOzN/WGJNbSG2Q
-         M6m17wTuukVOKKRa+S+whk2vgbpQ5hsYVbi2v+kLAYI2cmFlC410TzbcRPOSM/xkRTwC
-         Upf63Gw3EYcs9e1FS9TE9pn1AXOSFMsyEAmp6XmbHgR8ku3rA3HRw64GVKb0DmJryfP3
-         49VQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709816795; x=1710421595;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=6b0dP2x9JgNOkZdWVMwZj4fWH+1O5YM+rCuFRVEaBss=;
-        b=soYbJYHsZ+Cl9w8QbIJ5ODAgJv8zxesXv97yBwGIabZFvQ/+WTMCdYI4WjlH1okUbq
-         4bTkABbj0//p5AM5v3yjVrwN0at3S5iCrdJqZN9A/envihbzibj8P1IGEnbxLgnOw9Tq
-         JL56S4dIf0JRy4z2l7PWYBZZH821k2LhTIyCHWHf/5yro4Y419N2nfWSMjcO9xdj+HYM
-         jelrp6r5Xms5mv/Il9s5F4078kYB9eeqCUqJpya9mXiccRHXmMqRWpM1/ucJKp1w1Kep
-         CPUioyshW5OSiE1OHMiYI89l72UoeB/RGofTlzE54kAQ/clDCL9btuBLYadn61t78liu
-         +yYw==
-X-Forwarded-Encrypted: i=1; AJvYcCX8dj0Ulo1M8fmyZX2eW81IKJwOrtA1VgqgXmMekWhguCLONI/RBPSo1OgWyvhVmRERanlYc9Y8Gg+HT8wyMZovQOkuaO3LzC13pxEo6kszvV6mtecxKqT809I5ZeyriblJionirjMx2w==
-X-Gm-Message-State: AOJu0YxECdRweFzxiZqAg1Ots4LGf4StxxPy5hDagdcn/YCrB8tTcsRQ
-	Zc0sEB3QpLjYZeeVi7QwvKc3qIlh/oM4QQw2bdpn145ZOUYMPjLt
-X-Google-Smtp-Source: AGHT+IEJOLHABL7/l7Gi0d4ejmJvati3k9LbR/a70UY0ZQiL7MIms3UjinQtd5hBKUSTzNSALocD6g==
-X-Received: by 2002:a2e:2414:0:b0:2d3:365e:9cfe with SMTP id k20-20020a2e2414000000b002d3365e9cfemr1232600ljk.22.1709816794664;
-        Thu, 07 Mar 2024 05:06:34 -0800 (PST)
-Received: from [10.176.235.119] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id ds9-20020a0564021cc900b00567f39a8b55sm1592159edb.39.2024.03.07.05.06.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Mar 2024 05:06:34 -0800 (PST)
-Message-ID: <6826cdb060609f81c970fc21b2050535f7c5a810.camel@gmail.com>
-Subject: Re: [PATCH v2 4/4] scsi: ufs: Re-use compose_devman_upiu
-From: Bean Huo <huobean@gmail.com>
-To: Avri Altman <avri.altman@wdc.com>, "James E . J . Bottomley"
- <jejb@linux.vnet.ibm.com>, "Martin K . Petersen"
- <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 07 Mar 2024 14:06:33 +0100
-In-Reply-To: <20240305210051.10847-5-avri.altman@wdc.com>
-References: <20240305210051.10847-1-avri.altman@wdc.com>
-	 <20240305210051.10847-5-avri.altman@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kIRa5GiF";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Coch1DB8";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kIRa5GiF";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Coch1DB8"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 2CE925F879;
+	Thu,  7 Mar 2024 12:13:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1709813589; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=X+X4RtqesHUgTo2LWHgZ07Y0OREFz8I4FH89i8xneP0=;
+	b=kIRa5GiFWHUDenpr4fKPZgz7wiDQUhtexoBDfhPJej6bm54uzksQuij952y68cIDQgFpS0
+	NBPRiQB1Vv1CJyP4GMkfcblfd7Hza8PX6yk+LG6krTAZgzdg8qXu1A35Ir1rkzrW7p85Pp
+	qwpWi2uS/fX5bTuqlbWKJl08qiPOu3w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1709813589;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=X+X4RtqesHUgTo2LWHgZ07Y0OREFz8I4FH89i8xneP0=;
+	b=Coch1DB8k4lJtmOqVVL24phIdztmEm3qrY90r0RubQCc3BxN1N8Xa0Plwga/0g6K0sHFgP
+	BPFd+KYqvIaeIXBg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1709813589; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=X+X4RtqesHUgTo2LWHgZ07Y0OREFz8I4FH89i8xneP0=;
+	b=kIRa5GiFWHUDenpr4fKPZgz7wiDQUhtexoBDfhPJej6bm54uzksQuij952y68cIDQgFpS0
+	NBPRiQB1Vv1CJyP4GMkfcblfd7Hza8PX6yk+LG6krTAZgzdg8qXu1A35Ir1rkzrW7p85Pp
+	qwpWi2uS/fX5bTuqlbWKJl08qiPOu3w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1709813589;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=X+X4RtqesHUgTo2LWHgZ07Y0OREFz8I4FH89i8xneP0=;
+	b=Coch1DB8k4lJtmOqVVL24phIdztmEm3qrY90r0RubQCc3BxN1N8Xa0Plwga/0g6K0sHFgP
+	BPFd+KYqvIaeIXBg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1886D12FC5;
+	Thu,  7 Mar 2024 12:13:09 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id ilqQBVWv6WVEQwAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 07 Mar 2024 12:13:09 +0000
+Message-ID: <0b18f1f9-5011-46f4-a0a1-a69cd54bfc88@suse.de>
+Date: Thu, 7 Mar 2024 13:13:08 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC] nvme-fc: FPIN link integrity handling
+Content-Language: en-US
+To: Sagi Grimberg <sagi@grimberg.me>, hare@kernel.org,
+ Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <kbusch@kernel.org>, James Smart <james.smart@broadcom.com>,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+References: <20240219085929.31255-1-hare@kernel.org>
+ <1dfa9a4e-e4a2-4d48-b569-85e48ce4311c@grimberg.me>
+ <1c3eea31-b80f-4b95-ab15-ac42f7c45c16@suse.de>
+ <7ff7c9cc-6b02-4adc-9b78-8bab26341049@grimberg.me>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <7ff7c9cc-6b02-4adc-9b78-8bab26341049@grimberg.me>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Level: 
+Authentication-Results: smtp-out2.suse.de;
+	none
+X-Spamd-Result: default: False [-3.09 / 50.00];
+	 ARC_NA(0.00)[];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 XM_UA_NO_VERSION(0.01)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 BAYES_HAM(-3.00)[100.00%];
+	 MIME_GOOD(-0.10)[text/plain];
+	 URIBL_BLOCKED(0.00)[suse.de:email];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 RCPT_COUNT_SEVEN(0.00)[7];
+	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 RCVD_TLS_ALL(0.00)[];
+	 MID_RHS_MATCH_FROM(0.00)[]
+X-Spam-Score: -3.09
+X-Spam-Flag: NO
 
-On Tue, 2024-03-05 at 23:00 +0200, Avri Altman wrote:
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index c9c2b7f99758..a39a2b34ee2b 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -2710,18 +2710,27 @@ static void ufshcd_disable_intr(struct
-> ufs_hba *hba, u32 intrs)
-> =C2=A0/**
-> =C2=A0 * ufshcd_prepare_req_desc_hdr - Fill UTP Transfer request
-> descriptor header according to request
-> =C2=A0 * descriptor according to request
-> + * @hba: per adapter instance
-> =C2=A0 * @lrbp: pointer to local reference block
-> =C2=A0 * @upiu_flags: flags required in the header
-> =C2=A0 * @cmd_dir: requests data direction
-> =C2=A0 * @ehs_length: Total EHS Length (in 32=E2=80=90bytes units of all =
-Extra
-> Header Segments)
-> + * @scsi: scsi or device management`
-				      ^  '`'
+On 3/7/24 13:01, Sagi Grimberg wrote:
+> 
+> 
+> On 07/03/2024 13:29, Hannes Reinecke wrote:
+>> On 3/7/24 11:10, Sagi Grimberg wrote:
+>>>
+>>>
+>>> On 19/02/2024 10:59, hare@kernel.org wrote:
+>>>> From: Hannes Reinecke <hare@suse.de>
+>>>>
+>>>> FPIN LI (link integrity) messages are received when the attached
+>>>> fabric detects hardware errors. In response to these messages the
+>>>> affected ports should not be used for I/O, and only put back into
+>>>> service once the ports had been reset as then the hardware might
+>>>> have been replaced.
+>>>
+>>> Does this mean it cannot service any type of communication over
+>>> the wire?
+>>>
+>> It means that the service is impacted, and communication cannot be 
+>> guaranteed (CRC errors, packet loss, you name it).
+>> So the link should be taken out of service until it's been (manually)
+>> replaced.
+> 
+> OK, that's what I assumed.
+> 
+>>
+>>>> This patch adds a new controller flag 'NVME_CTRL_TRANSPORT_BLOCKED'
+>>>> which will be checked during multipath path selection, causing the
+>>>> path to be skipped.
+>>>
+>>> While this looks sensible to me, it also looks like this introduces a 
+>>> ctrl state
+>>> outside of ctrl->state... Wouldn't it make sense to move the 
+>>> controller to
+>>> NVME_CTRL_DEAD ? or is it not a terminal state?
+>>>
+>> Actually, I was trying to model it alongside the 
+>> 'devloss_tmo'/'fast_io_fail' mechanism we have in SCSI.
+>> Technically the controller is still present, it's just that we shouldn't
+>> send I/O to it.
+> 
+> Sounds like a dead controller to me.
+> 
+Sort of, yes.
 
-> =C2=A0 */
-> -static void ufshcd_prepare_req_desc_hdr(struct ufshcd_lrb *lrbp, u8
-> *upiu_flags,
-> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0enum dma_data_direction
-> cmd_dir, int ehs_length)
-> +static void
-> +ufshcd_prepare_req_desc_hdr(struct ufs_hba *hba, struct ufshcd_lrb
-> *lrbp,
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 u8 *upiu_flags, enum dma_data_direction
-> cmd_dir,
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 int ehs_length, bool scsi)
+>> And I'd rather not disconnect here as we're trying to
+>> do an autoconnect on FC, so manually disconnect would interfere with
+>> that and we probably end in a death spiral doing disconnect/reconnect.
+> 
+> I suggested just transitioning the state to DEAD... Not sure how 
+> keep-alives behave though...
+> 
+Hmm. The state machine has the transition LIVE->DELETING->DEAD,
+ie a dead controller is on the way out, with all resources being
+reclaimed.
 
-Why not directly pass UTP_CMD_TYPE_SCSI or UTP_CMD_TYPE_DEV_MANAGE
-instead of using below ?: logic?
+A direct transition would pretty much violate that.
+If we were going that way I'd prefer to have another state
+('IMPACTED' ? 'LIVE_NOIO' ?) with the transitions
+LIVE->IMPACTED->DELETING->DEAD
 
+>>
+>> We could 'elevate' it to a new controller state, but wasn't sure how big
+>> an appetite there is. And we already have flags like 'stopped' which
+>> seem to fall into the same category.
+> 
+> stopped is different because it is not used to determine if it is capable
+> for IO (admin or io queues). Hence it is ok to be a flag.
+> 
+Okay.
 
-> =C2=A0{
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0struct utp_transfer_req_d=
-esc *req_desc =3D lrbp-
-> >utr_descriptor_ptr;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0struct request_desc_heade=
-r *h =3D &req_desc->header;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0enum utp_data_direction d=
-ata_direction;
-> =C2=A0
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (hba->ufs_version <=3D ufsh=
-ci_version(1, 1))
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0lrbp->command_type =3D scsi ? UTP_CMD_TYPE_SCSI :
-> UTP_CMD_TYPE_DEV_MANAGE;
+So yeah, we could introduce a new state, but I guess a direct transition
+to 'DEAD' is not really a good idea.
 
+Cheers,
+
+Hannes
 
