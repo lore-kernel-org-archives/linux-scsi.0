@@ -1,94 +1,133 @@
-Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77A1346AF;
-	Thu,  7 Mar 2024 02:13:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4875F1FBB
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Mar 2024 04:26:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709777619; cv=none; b=IrKeF5RvzRikLZXYEXIn3i80+mT3XasqkZhmhkvIIm1kfbm4Y1yjS9FavmaNcNXBmEYEXAeRlRyAzI89s6hV31/QLwbj9tw5wkybrNrWdzQI9lAACXz4EnzHgdhJizTbDLSSLUTygCi8i4vaeQ/LxMQi6UM0hUXa1C+9VwCKaqY=
+	t=1709785617; cv=none; b=QD6wLEbqiEMtvDEemQ+rz92e+PP1G5fBfrY/mjOmghFJ8MZRyoAXtlNP9i+SmH2NrvCQysjUC31k6qi3hStceecgaaqHtqpt8blKu/GQNhnMX0bL+PVQVvdODmKQ/iCcSYNKj0BEdkbIFZMmgUQGFAQnOHIymsvabgOxYBkCH5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709777619; c=relaxed/simple;
-	bh=NYvLwxW5+Yk03IExklIdt8oNDuILP24XEPQPGfITePk=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=kkR0zB1Ymk+7dHNVkEX2nx9M2zh3iNe8kq0LbH46UmaIS45gA9lGvnp6v0L9jM5f5QnVWMZ54hlEPr03gEq4m3oSGGcDKgWLarzZ9KK5MQrZRhtDH0IPB+rICB3JSZgY8R57EE5+L2itPrLwboaNr0ZDDYzMqxMV6mQA7b+vcDA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.44])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4Tqt805Lxxz1Q9f8;
-	Thu,  7 Mar 2024 10:11:12 +0800 (CST)
-Received: from canpemm100005.china.huawei.com (unknown [7.192.105.21])
-	by mail.maildlp.com (Postfix) with ESMTPS id C4F8E140155;
-	Thu,  7 Mar 2024 10:13:34 +0800 (CST)
-Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm100005.china.huawei.com (7.192.105.21) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Thu, 7 Mar 2024 10:13:34 +0800
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Thu, 7 Mar 2024 10:13:33 +0800
-Subject: Re: [PATCH v2] scsi: libsas: Fix disk not being scanned in after
- being removed
-To: John Garry <john.g.garry@oracle.com>, Xingui Yang <yangxingui@huawei.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
-References: <20240227090149.29039-1-yangxingui@huawei.com>
- <f8de67cb-8d0c-475d-b3f3-bc38ff097823@oracle.com>
-From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <4067aa2d-838d-5cd8-5e93-c9c4ade995fc@huawei.com>
-Date: Thu, 7 Mar 2024 10:13:33 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1709785617; c=relaxed/simple;
+	bh=XvG2eyiUURCV7Yq/ZR4BglI3b7eXPRDL/cjIKrWcH5I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=b5FxdboGY7DDMfbXr2XEAnfUI2k4qi21zudailIL0fZX376VqMEWJ0EHtRqH5pC/huDwo9a5NzqeME/nzjHBq1nZfxRWGUjsl0oPKIrodTI/8Gm6ejdKjtYvupcfFA19uMCiOAUksKBlGZzKdcOckZeKwiqurSSKfDWKQdXqxlU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=nJaK+2P5; arc=none smtp.client-ip=68.232.141.245
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="nJaK+2P5"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1709785614; x=1741321614;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=XvG2eyiUURCV7Yq/ZR4BglI3b7eXPRDL/cjIKrWcH5I=;
+  b=nJaK+2P5sPHah/YYGBGRniSJTm4NshZRT0flIETJnDZUXC+O5zVrjpfA
+   SVo1C32dihWDWkwfQ6cxYxLPK+J/Z3KaTvaFmNydxJy+/L/aPoCkW4AYf
+   JjHWuAoiZhsBbG8qZ2M5wfr82e3oieD18mwNtMrL64yTW3YboWPgSfqJw
+   cWI+V24dgb7YfMHLTGvAWXVe7e4gVNi3Qoh3exJ6k2UqrATLjd7Yx7rQG
+   ThVEvhsBLoSzXlmj6+2lNE0lZjK3aGZ0ptVnZ4dOgie35xHBi9T4XVNmq
+   OvoobwwdP54dbyctwgP7VykPdTEWTboCM+DR4EJckeM2+leIlzO60ci7F
+   g==;
+X-CSE-ConnectionGUID: gBqvjzVAT2WS9oGWe6ME1Q==
+X-CSE-MsgGUID: qZY3UE1GT0uO3TJFSQOBgw==
+X-IronPort-AV: E=Sophos;i="6.06,209,1705334400"; 
+   d="scan'208";a="11243710"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Mar 2024 12:26:47 +0800
+IronPort-SDR: Xm0AEmTojxiWieNGy0Gp3FAKX92tRkHq31N3oAO02AoG+XhtA68Le/na7XpTQQVziNT8/R0wBs
+ IvtGzsWUhJwQ==
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 06 Mar 2024 19:30:15 -0800
+IronPort-SDR: cUv4T7L4spbm6/sTT2HKUAoIEvnDawnTZXmz4mcDIiRwwk2Wpe6dePprQeBguqFffgqMIpXYW6
+ xeBHaYV/uJSw==
+WDCIronportException: Internal
+Received: from unknown (HELO shindev.ssa.fujisawa.hgst.com) ([10.149.66.30])
+  by uls-op-cesaip01.wdc.com with ESMTP; 06 Mar 2024 20:26:45 -0800
+From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+To: mpi3mr-linuxdrv.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org
+Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Subject: [PATCH] scsi: mpi3mr: Avoid memcpy field-spanning write WARNING
+Date: Thu,  7 Mar 2024 13:26:45 +0900
+Message-ID: <20240307042645.2827201-1-shinichiro.kawasaki@wdc.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <f8de67cb-8d0c-475d-b3f3-bc38ff097823@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- canpemm500004.china.huawei.com (7.192.104.92)
 
-On 2024/3/7 2:43, John Garry wrote:
-> As an aside, could libsas - and your changes here - be simpler if we 
-> changed smp_execute_task() like this:
-> 
-> static int smp_execute_task(struct domain_device *dev, void *req /* can 
-> be on the stack */, int req_size,
->                  void *resp /* can be on the stack */, int resp_size)
-> {
->      struct scatterlist req_sg;
->      struct scatterlist resp_sg;
->      int ret;
->      void *_req = kmemdup(req, req_size, GFP_KERNEL);
->      void *_resp = alloc_smp_resp(resp_size);
->      if (!_req || !resp)
->          return -ENOMEM;
-> 
->      sg_init_one(&req_sg, _req, req_size);
->      sg_init_one(&resp_sg, _resp, resp_size);
->      ret = smp_execute_task_sg(dev, &req_sg, &resp_sg);
->      memcpy(resp, _resp, resp_size);
->      kfree(_req);
->      kfree(_resp);
->      return ret;
-> }
-> 
-> We need to use alloc_smp_resp() and alloc_smp_req() as we can't allocate 
-> these memories on the stack for calling sg_init_one(). But if we changed 
-> smp_execute_task() to memcpy from/to data on the stack, it might make 
-> callers simpler. I'm not sure.
+When the "storcli2 show" command is executed for eHBA-9600, mpi3mr
+driver prints this WARNING:
 
-Maybe simpler. I have not check all the length of these buffers, but 
-there is still a risk of stack overflow if the buffer on stack is too 
-large.
+  memcpy: detected field-spanning write (size 128) of single field "bsg_reply_buf->reply_buf" at drivers/scsi/mpi3mr/mpi3mr_app.c:1658 (size 1)
+  WARNING: CPU: 0 PID: 12760 at drivers/scsi/mpi3mr/mpi3mr_app.c:1658 mpi3mr_bsg_request+0x6b12/0x7f10 [mpi3mr]
 
-Thanks,
-Jason
+This is caused by the 128 bytes memcpy to the 1 byte size struct field
+replay_buf in the struct mpi3mr_bsg_in_reply_buf. The field is intended
+to be a variable length buffer, then the WARN is a false positive.
+
+One approach to suppress the WARN is to remove the constant '1' from the
+replay_buf array declaration to clarify the array size is variable.
+However, the array is defined in include/uapi/scsi/scsi_bsg_mpi3mr.h and
+the change will break UAPI compatibility. As another approach, divide
+the memcpy call into two memcpy calls: one call for the 1 byte size of
+the array declaration, and the other call for the left over. While at
+it, replace the magic number 1 with sizeof(bsg_reply_buf->reply_buf);
+
+Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 0380996b5ad2..7fa0710c7574 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -1233,6 +1233,7 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
+ 	u8 *din_buf = NULL, *dout_buf = NULL;
+ 	u8 *sgl_iter = NULL, *sgl_din_iter = NULL, *sgl_dout_iter = NULL;
+ 	u16 rmc_size  = 0, desc_count = 0;
++	int declared_size;
+ 
+ 	bsg_req = job->request;
+ 	karg = (struct mpi3mr_bsg_mptcmd *)&bsg_req->cmd.mptcmd;
+@@ -1643,9 +1644,11 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
+ 
+ 	if ((mpirep_offset != 0xFF) &&
+ 	    drv_bufs[mpirep_offset].bsg_buf_len) {
++		declared_size = sizeof(bsg_reply_buf->reply_buf);
+ 		drv_buf_iter = &drv_bufs[mpirep_offset];
+-		drv_buf_iter->kern_buf_len = (sizeof(*bsg_reply_buf) - 1 +
+-					   mrioc->reply_sz);
++		drv_buf_iter->kern_buf_len = (sizeof(*bsg_reply_buf)
++					      - declared_size
++					      + mrioc->reply_sz);
+ 		bsg_reply_buf = kzalloc(drv_buf_iter->kern_buf_len, GFP_KERNEL);
+ 
+ 		if (!bsg_reply_buf) {
+@@ -1655,8 +1658,13 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
+ 		if (mrioc->bsg_cmds.state & MPI3MR_CMD_REPLY_VALID) {
+ 			bsg_reply_buf->mpi_reply_type =
+ 				MPI3MR_BSG_MPI_REPLY_BUFTYPE_ADDRESS;
++			/* Divide memcpy to avoid field-spanning write WARN */
+ 			memcpy(bsg_reply_buf->reply_buf,
+-			    mrioc->bsg_cmds.reply, mrioc->reply_sz);
++			       mrioc->bsg_cmds.reply,
++			       declared_size);
++			memcpy(bsg_reply_buf->reply_buf + declared_size,
++			       (u8 *)mrioc->bsg_cmds.reply + declared_size,
++			       mrioc->reply_sz - declared_size);
+ 		} else {
+ 			bsg_reply_buf->mpi_reply_type =
+ 				MPI3MR_BSG_MPI_REPLY_BUFTYPE_STATUS;
+-- 
+2.43.0
+
