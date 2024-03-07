@@ -1,97 +1,85 @@
 Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 727E312D771;
-	Thu,  7 Mar 2024 14:15:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A68351D699;
+	Thu,  7 Mar 2024 14:17:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709820954; cv=none; b=WUZE5eXqwWsAl+gOoqrE+jEfmyNEJ4ADxwIBVQQErkiyizq9iQ1OlJWdhI5XgpK5ItYFfCI4jLhOBWIfsOzf01eH0qFNjFdKd16e0awICHBwQcnfckMIwnMNEPapPV9c6NcOmTVklVj6LMYsL2u53FzACfX8cLG9cyv33pynkqo=
+	t=1709821054; cv=none; b=L1bo+EfCTH/joU8jlCf5KbOtAMQECHxTPYtUtpKEqd6/sMD06vTqa7BB3XMSQlp6LEPYK5XKOBlm8BgozypFdznDkr/E9rmekUvdDUADt9OJxuEnqT8TlArF7GP8xgtwGZ33JXEixNRi3m7CvR75+T79RERUi+uABk9BIfORg+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709820954; c=relaxed/simple;
-	bh=0oU6KL9B71fDtOf5uIw+wC2C4iG62LR7H2m3mEJxiNs=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Sk1DXsHOSa5rfBCWxJH5hWWyL3Vq2e8EPDUkndtItAcqaDcM+Hs3UR8E1SGZSDJTEvXTMPPEUCPKORV7gtD9nbfS9PQQgoJDRwKJrmN2u5WnbG4Wwdu8c2jrTfUiYj1YBqgd5lDQd6qXWQDaRQwg3zVqZZVI71k77s9ca7OjML4=
+	s=arc-20240116; t=1709821054; c=relaxed/simple;
+	bh=S+Lk8cgQNJ1J514ZKuPD0P9IeeMhDUgmPT9fj7UAJDQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=AcYRNd4PjZ5EOEr0+/Z0dSgh41qmPbuIjzjgqVbZYvDv4Kt8lHWHBY3D/BWv5XQOR+F9ShPQmmalSPCsNcKGb3ZFcMz2c0jnNkbMtN9oIHEGZVrbLy0r9WFSEwhzJJn99G2Pi8MTLb1Ht9Aozi1J8I8275P0t1SGR9osPaPI3zY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.17])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4TrBB94cPlz1xq7L;
-	Thu,  7 Mar 2024 22:14:09 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4TrBD72hn8z1xnfc;
+	Thu,  7 Mar 2024 22:15:51 +0800 (CST)
 Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 97DC81A0172;
-	Thu,  7 Mar 2024 22:15:48 +0800 (CST)
-Received: from localhost.localdomain (10.50.165.33) by
+	by mail.maildlp.com (Postfix) with ESMTPS id 564E5140336;
+	Thu,  7 Mar 2024 22:17:30 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
  dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.28; Thu, 7 Mar 2024 22:15:48 +0800
-From: Xingui Yang <yangxingui@huawei.com>
-To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
-Subject: [PATCH v4 1/2] scsi: libsas: Add a helper sas_get_sas_addr_and_dev_type()
-Date: Thu, 7 Mar 2024 14:14:12 +0000
-Message-ID: <20240307141413.48049-2-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20240307141413.48049-1-yangxingui@huawei.com>
-References: <20240307141413.48049-1-yangxingui@huawei.com>
+ 15.2.1258.28; Thu, 7 Mar 2024 22:17:30 +0800
+Message-ID: <20979c45-fd36-cc52-8ed1-33750ce68333@huawei.com>
+Date: Thu, 7 Mar 2024 22:17:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v3 3/3] scsi: libsas: Fix disk not being scanned in after
+ being removed
+Content-Language: en-CA
+To: John Garry <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<damien.lemoal@opensource.wdc.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
+References: <20240307093733.41222-1-yangxingui@huawei.com>
+ <20240307093733.41222-4-yangxingui@huawei.com>
+ <b105b26c-9c0b-4315-beeb-7879de85d240@oracle.com>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <b105b26c-9c0b-4315-beeb-7879de85d240@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggpemm100005.china.huawei.com (7.185.36.231) To
  dggpemd100001.china.huawei.com (7.185.36.94)
 
-Add a helper to get attached_sas_addr and device type from disc_resp.
 
-Suggested-by: John Garry <john.g.garry@oracle.com>
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
----
- drivers/scsi/libsas/sas_expander.c | 19 ++++++++++++-------
- 1 file changed, 12 insertions(+), 7 deletions(-)
+Hi John,
+On 2024/3/7 18:08, John Garry wrote:
+> On 07/03/2024 09:37, Xingui Yang wrote:
+>> As of commit d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to
+>> update PHY info"), do discovery will send a new SMP_DISCOVER and update
+>> phy->phy_change_count. We found that if the disk is reconnected and phy
+>> change_count changes at this time, the disk scanning process will not be
+>> triggered.
+>>
+>> Therefore, call sas_set_ex_phy() to update the PHY info with the 
+>> results of
+>> the last query. And because the previous phy info will be used when 
+>> calling
+>> sas_unregister_devs_sas_addr(), sas_unregister_devs_sas_addr() should be
+>> called before sas_set_ex_phy().
+>>
+>> Fixes: d8649fc1c5e4 ("scsi: libsas: Do discovery on empty PHY to 
+>> update PHY info")
+>> Signed-off-by: Xingui Yang<yangxingui@huawei.com>
+> 
+> I am also ok with a change to revert to allocating the resp memory with 
+> alloc_smp_resp(), but make the changes neat please:
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> .
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 1eeb69cba8da..d6147616339f 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1631,6 +1631,16 @@ int sas_discover_root_expander(struct domain_device *dev)
- 
- /* ---------- Domain revalidation ---------- */
- 
-+static void sas_get_sas_addr_and_dev_type(struct smp_disc_resp *disc_resp,
-+					  u8 *sas_addr,
-+					  enum sas_device_type *type)
-+{
-+	memcpy(sas_addr, disc_resp->disc.attached_sas_addr, SAS_ADDR_SIZE);
-+	*type = to_dev_type(&disc_resp->disc);
-+	if (*type == SAS_PHY_UNUSED)
-+		memset(sas_addr, 0, SAS_ADDR_SIZE);
-+}
-+
- static int sas_get_phy_discover(struct domain_device *dev,
- 				int phy_id, struct smp_disc_resp *disc_resp)
- {
-@@ -1684,13 +1694,8 @@ int sas_get_phy_attached_dev(struct domain_device *dev, int phy_id,
- 		return -ENOMEM;
- 
- 	res = sas_get_phy_discover(dev, phy_id, disc_resp);
--	if (res == 0) {
--		memcpy(sas_addr, disc_resp->disc.attached_sas_addr,
--		       SAS_ADDR_SIZE);
--		*type = to_dev_type(&disc_resp->disc);
--		if (*type == 0)
--			memset(sas_addr, 0, SAS_ADDR_SIZE);
--	}
-+	if (res == 0)
-+		sas_get_sas_addr_and_dev_type(disc_resp, sas_addr, type);
- 	kfree(disc_resp);
- 	return res;
- }
--- 
-2.17.1
+Thanks for your review, I have updated the version.
 
+Thanks,
+Xingui
