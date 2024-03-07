@@ -1,133 +1,130 @@
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4875F1FBB
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Mar 2024 04:26:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EC011FDD
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Mar 2024 05:31:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709785617; cv=none; b=QD6wLEbqiEMtvDEemQ+rz92e+PP1G5fBfrY/mjOmghFJ8MZRyoAXtlNP9i+SmH2NrvCQysjUC31k6qi3hStceecgaaqHtqpt8blKu/GQNhnMX0bL+PVQVvdODmKQ/iCcSYNKj0BEdkbIFZMmgUQGFAQnOHIymsvabgOxYBkCH5E=
+	t=1709789515; cv=none; b=ju6KnmIIpcfQnXxPbkWSZKZYB4ATf8Y9SKyRj/TX8XxMyOzpY8Rr6MmxrYpJtNS1yz51Ea2UoFF5gY477PQ7jb8rZzNFVJ7OLKmN1nYFA1d5ao17IvXyR7AZU6q3QrZcw/H42WcewWlea7DXigVIEr3CjLnTk3ABFRig1CIDYt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709785617; c=relaxed/simple;
-	bh=XvG2eyiUURCV7Yq/ZR4BglI3b7eXPRDL/cjIKrWcH5I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=b5FxdboGY7DDMfbXr2XEAnfUI2k4qi21zudailIL0fZX376VqMEWJ0EHtRqH5pC/huDwo9a5NzqeME/nzjHBq1nZfxRWGUjsl0oPKIrodTI/8Gm6ejdKjtYvupcfFA19uMCiOAUksKBlGZzKdcOckZeKwiqurSSKfDWKQdXqxlU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=nJaK+2P5; arc=none smtp.client-ip=68.232.141.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1709789515; c=relaxed/simple;
+	bh=d0Ufl4MibzFscR0K1VA6p6YEY6iaz+LmQ01k8l4gkOs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PB/RL3gxywnoYUr0go4oU5OF+jgqsBcPO442RRzP+qCUbtFKd43lAijyMSKyr5gwxF7L4jUEZ33N+gLh1olpgtyW2GUS4pF6qfNaxx5PtHS5W2Av+Z31tOVvI2VTD0SKYeMV33j5Znlvs4b5SkrZZ+DU6McBCcVEj28XPmXFJDM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com; spf=pass smtp.mailfrom=fromorbit.com; dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b=cE/l1/at; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="nJaK+2P5"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1709785614; x=1741321614;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=XvG2eyiUURCV7Yq/ZR4BglI3b7eXPRDL/cjIKrWcH5I=;
-  b=nJaK+2P5sPHah/YYGBGRniSJTm4NshZRT0flIETJnDZUXC+O5zVrjpfA
-   SVo1C32dihWDWkwfQ6cxYxLPK+J/Z3KaTvaFmNydxJy+/L/aPoCkW4AYf
-   JjHWuAoiZhsBbG8qZ2M5wfr82e3oieD18mwNtMrL64yTW3YboWPgSfqJw
-   cWI+V24dgb7YfMHLTGvAWXVe7e4gVNi3Qoh3exJ6k2UqrATLjd7Yx7rQG
-   ThVEvhsBLoSzXlmj6+2lNE0lZjK3aGZ0ptVnZ4dOgie35xHBi9T4XVNmq
-   OvoobwwdP54dbyctwgP7VykPdTEWTboCM+DR4EJckeM2+leIlzO60ci7F
-   g==;
-X-CSE-ConnectionGUID: gBqvjzVAT2WS9oGWe6ME1Q==
-X-CSE-MsgGUID: qZY3UE1GT0uO3TJFSQOBgw==
-X-IronPort-AV: E=Sophos;i="6.06,209,1705334400"; 
-   d="scan'208";a="11243710"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Mar 2024 12:26:47 +0800
-IronPort-SDR: Xm0AEmTojxiWieNGy0Gp3FAKX92tRkHq31N3oAO02AoG+XhtA68Le/na7XpTQQVziNT8/R0wBs
- IvtGzsWUhJwQ==
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 06 Mar 2024 19:30:15 -0800
-IronPort-SDR: cUv4T7L4spbm6/sTT2HKUAoIEvnDawnTZXmz4mcDIiRwwk2Wpe6dePprQeBguqFffgqMIpXYW6
- xeBHaYV/uJSw==
-WDCIronportException: Internal
-Received: from unknown (HELO shindev.ssa.fujisawa.hgst.com) ([10.149.66.30])
-  by uls-op-cesaip01.wdc.com with ESMTP; 06 Mar 2024 20:26:45 -0800
-From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To: mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH] scsi: mpi3mr: Avoid memcpy field-spanning write WARNING
-Date: Thu,  7 Mar 2024 13:26:45 +0900
-Message-ID: <20240307042645.2827201-1-shinichiro.kawasaki@wdc.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="cE/l1/at"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1dc3b4b9b62so4340115ad.1
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Mar 2024 21:31:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1709789513; x=1710394313; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=L47MhA6RlNNWhsEXCUPqvDSxXvqi0AMkVxgVFxt+deE=;
+        b=cE/l1/at8BXkS8vq3j9a/XvN48Q84ehmiAJlit9Arfg0dF6ZWwNXIOSosfGJUOt5C1
+         R4jMOMfs4hOkd1xGPN9cwwSywv7K78TpYGYreL/iCDTk3iHY7M4Oe5Nmmug5mwFhlqwL
+         xK2+rlcIRNjUAizmDXNvkc0nkVHhxDTYCIx+tzrdfG4rsTqRaspik1hebeMF//v+HlVk
+         RblLtkOpOyJw6EmU1vlltEwYB7ZVAov+a5+tLOAVbm68r/d3z2dOyV8G2bsmaF3mGL8P
+         0aQzbK4YbJT+RhhOaT6LDKXNHy6CskSNvJK8ASXaHvN0Tw5FP5Qbe+kFmEDByG48a/8S
+         1WDQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1709789513; x=1710394313;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=L47MhA6RlNNWhsEXCUPqvDSxXvqi0AMkVxgVFxt+deE=;
+        b=Xniuaq8rt/Zejf//e7FUmuTZ9Q303cgBeRuLxqrGL5r/CAETZy8An9zCk4BrqrDl21
+         5i1ukoUoLd9siY8o1O7cg3rE/y8QY0zkhR4ietw541rhWW869Wb36tRKklkxb9yB2afI
+         pcSvuN9VSHITtCvg21DQmVEMPE1H6qwegYePpSAXRA/Ze1OBSE4CTd3qDe/bbg9VCZ6L
+         A8uMiKHmdcYmel+9aH4glCs4wH7atNtq9pFmvIHM4eME3IZVFQ0tsy0fWB4ZxBVpLUor
+         4pttB7DXOGuGSCdU1+8jd/VBxxbxNhbcOlA5swgKWHQjPL3roCShjStYVJ8ccr/WyR1F
+         UAVQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUKcpQ9TStqn76h807pB6m86Z9Kf/qH81NsZt1jxMEunAbqVAKcA48XKBMr9jeZ1409sEC9NQYeXEqp4DucdBXypt5SADt76HsiqA==
+X-Gm-Message-State: AOJu0YzoXbhFG4FAzrqGUHtMXykheurY1gyd6WuZBiEhlr66r4o7j0ug
+	MAdrQxwJrIirmEGBqUNUvvQeMqBd6A5oR/Ni4rgUEwPm2Cr899R0AmAYDsjaRig=
+X-Google-Smtp-Source: AGHT+IGz82Z2o57rsxo8MUUyj5kmz5ZD4c9J2gDw8Id8hGUA6zXaFrREbrxI/w7LJItZwwUPJP5S2w==
+X-Received: by 2002:a17:902:b494:b0:1dc:a836:19af with SMTP id y20-20020a170902b49400b001dca83619afmr523182plr.32.1709789512233;
+        Wed, 06 Mar 2024 21:31:52 -0800 (PST)
+Received: from dread.disaster.area (pa49-179-47-118.pa.nsw.optusnet.com.au. [49.179.47.118])
+        by smtp.gmail.com with ESMTPSA id lh13-20020a170903290d00b001dd58258d19sm127006plb.40.2024.03.06.21.31.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Mar 2024 21:31:51 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1ri6M8-00G7kw-1e;
+	Thu, 07 Mar 2024 16:31:48 +1100
+Date: Thu, 7 Mar 2024 16:31:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: "kbus @pop.gmail.com>> Keith Busch" <kbusch@kernel.org>,
+	NeilBrown <neilb@suse.de>, Tso Ted <tytso@mit.edu>,
+	Matthew Wilcox <willy@infradead.org>,
+	Daniel Gomez <da.gomez@samsung.com>,
+	Pankaj Raghav <p.raghav@samsung.com>, Jan Kara <jack@suse.cz>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Christoph Hellwig <hch@infradead.org>,
+	Hannes Reinecke <hare@suse.de>,
+	Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier.gonz@samsung.com>,
+	lsf-pc@lists.linuxfoundation.org, linux-mm@kvack.org,
+	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Subject: Re: [LSF/MM/BPF TOPIC] Large block for I/O
+Message-ID: <ZelRRFTBvpyXeVGD@dread.disaster.area>
+References: <03ebbc5f-2ff5-4f3c-8c5b-544413c55257@suse.de>
+ <5c356222-fe9e-41b0-b7fe-218fbcde4573@acm.org>
+ <ZYUbB3brQ0K3rP97@casper.infradead.org>
+ <ZYUgo0a51nCgjLNZ@infradead.org>
+ <9b46c48f-d7c4-4ed3-a644-fba90850eab8@acm.org>
+ <ZZxOdWoHrKH4ImL7@casper.infradead.org>
+ <ZdeWRaGQo1IX18pL@bombadil.infradead.org>
+ <ZdvIlLbhtb7+1CTx@dread.disaster.area>
+ <ZdytYs8W9o0CIu_C@bombadil.infradead.org>
+ <ZekfZdchUnRZoebo@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZekfZdchUnRZoebo@bombadil.infradead.org>
 
-When the "storcli2 show" command is executed for eHBA-9600, mpi3mr
-driver prints this WARNING:
+On Wed, Mar 06, 2024 at 05:59:01PM -0800, Luis Chamberlain wrote:
+> On Mon, Feb 26, 2024 at 07:25:23AM -0800, Luis Chamberlain wrote:
+> root@frag ~/bcc (git::blkalgn)# cat
+> /sys/block/vdh/queue/physical_block_size 
+> 4096
+> root@frag ~/bcc (git::blkalgn)# cat
+> /sys/block/vdh/queue/logical_block_size 
+> 512
 
-  memcpy: detected field-spanning write (size 128) of single field "bsg_reply_buf->reply_buf" at drivers/scsi/mpi3mr/mpi3mr_app.c:1658 (size 1)
-  WARNING: CPU: 0 PID: 12760 at drivers/scsi/mpi3mr/mpi3mr_app.c:1658 mpi3mr_bsg_request+0x6b12/0x7f10 [mpi3mr]
+This device supports 512 byte aligned IOs.
 
-This is caused by the 128 bytes memcpy to the 1 byte size struct field
-replay_buf in the struct mpi3mr_bsg_in_reply_buf. The field is intended
-to be a variable length buffer, then the WARN is a false positive.
+> mkfs.xfs -f -b size=4k -s size=4k /dev/vdh
 
-One approach to suppress the WARN is to remove the constant '1' from the
-replay_buf array declaration to clarify the array size is variable.
-However, the array is defined in include/uapi/scsi/scsi_bsg_mpi3mr.h and
-the change will break UAPI compatibility. As another approach, divide
-the memcpy call into two memcpy calls: one call for the 1 byte size of
-the array declaration, and the other call for the left over. While at
-it, replace the magic number 1 with sizeof(bsg_reply_buf->reply_buf);
+This sets the filesystem block size to 4k, and the smallest metadata
+block size to 4kB (sector size). It does not force user data direct
+IO alignment to be 4kB - that is determined by what the underlying
+block device supports, not the filesystem block size or metadata
+sector size is set to.
 
-Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
----
- drivers/scsi/mpi3mr/mpi3mr_app.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+Sure, doing 512 byte aligned/sized IO to a 4kB sector sizer device
+is not optimal. IO will to the file will be completely serialised
+because they are sub-fs-block DIO writes, but it does work because
+the underlying device allows it. Nobody wanting a performant
+application will want to do this, but there are cases where this
+case fulfils important functional requirements.
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 0380996b5ad2..7fa0710c7574 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -1233,6 +1233,7 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 	u8 *din_buf = NULL, *dout_buf = NULL;
- 	u8 *sgl_iter = NULL, *sgl_din_iter = NULL, *sgl_dout_iter = NULL;
- 	u16 rmc_size  = 0, desc_count = 0;
-+	int declared_size;
- 
- 	bsg_req = job->request;
- 	karg = (struct mpi3mr_bsg_mptcmd *)&bsg_req->cmd.mptcmd;
-@@ -1643,9 +1644,11 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 
- 	if ((mpirep_offset != 0xFF) &&
- 	    drv_bufs[mpirep_offset].bsg_buf_len) {
-+		declared_size = sizeof(bsg_reply_buf->reply_buf);
- 		drv_buf_iter = &drv_bufs[mpirep_offset];
--		drv_buf_iter->kern_buf_len = (sizeof(*bsg_reply_buf) - 1 +
--					   mrioc->reply_sz);
-+		drv_buf_iter->kern_buf_len = (sizeof(*bsg_reply_buf)
-+					      - declared_size
-+					      + mrioc->reply_sz);
- 		bsg_reply_buf = kzalloc(drv_buf_iter->kern_buf_len, GFP_KERNEL);
- 
- 		if (!bsg_reply_buf) {
-@@ -1655,8 +1658,13 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 		if (mrioc->bsg_cmds.state & MPI3MR_CMD_REPLY_VALID) {
- 			bsg_reply_buf->mpi_reply_type =
- 				MPI3MR_BSG_MPI_REPLY_BUFTYPE_ADDRESS;
-+			/* Divide memcpy to avoid field-spanning write WARN */
- 			memcpy(bsg_reply_buf->reply_buf,
--			    mrioc->bsg_cmds.reply, mrioc->reply_sz);
-+			       mrioc->bsg_cmds.reply,
-+			       declared_size);
-+			memcpy(bsg_reply_buf->reply_buf + declared_size,
-+			       (u8 *)mrioc->bsg_cmds.reply + declared_size,
-+			       mrioc->reply_sz - declared_size);
- 		} else {
- 			bsg_reply_buf->mpi_reply_type =
- 				MPI3MR_BSG_MPI_REPLY_BUFTYPE_STATUS;
+e.g. fs tools and loop devices that use direct IO to access file
+based filesystem images that have 512 byte sector size will just
+work on such a fs and storage setup, even though the host filesystem
+isn't configured to use 512 byte sector alignment directly
+itself....
+
+-Dave.
 -- 
-2.43.0
-
+Dave Chinner
+david@fromorbit.com
