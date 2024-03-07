@@ -1,53 +1,53 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3030912AAE3
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Mar 2024 15:10:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 029D512EBC8
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Mar 2024 15:10:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709824255; cv=none; b=jAoiC2ItvaQjykO7LkpUd43+xS+BK1EdCWfmM9fevMWevl77JoFQ4D7o1m4cAxKNeifl20lPgYUkHBSYEPrYscN7YgpBfH9fEZq9Bc5VLPH5UbMrP0iV8IwlxV5bum4Kp/f1TcVwbEb8bmckBZZBW+0PuDcQR95C0UWzxCdNF8s=
+	t=1709824259; cv=none; b=hNf7RqYBRRyGD9Oh7TWRE+GaIwwe9Yy7M1SqsLns2e3nCGR6qbrZhhUxAX9Gd1Lg4wQQ9OeVhWevx1wJzgbqBW7ftux+EiPmmOF5Y2LqhiG61FyTaNQpsYVusVIuWQiwH9aIDo4aCUKoAkrZcrWOGVz2G0BRUDpJ8LFlW8SWvMI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709824255; c=relaxed/simple;
-	bh=YyK7//meP6BUh/Uos4m/nKzqI2m4MrT+Sovyk1TZFAw=;
+	s=arc-20240116; t=1709824259; c=relaxed/simple;
+	bh=4rZaSVk0IYVNWo00zzYTgljowcLCe6VwCaDi2+UX5aA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Mdb+WDdlOb1WghcIMUdT963RD/QDMna7ChshIuX6ZLRGs9Z+FFvF1avssOAfY5zov4vtU45XwNuwbyZBkWz0nf5A+0t1pIpSRqDerPikCzeN7DmJBeOg37zPbvRKuNtFLj1qmJB+VMSLnZl0l1WTw3Awthd3KQu0vaDytGOjXJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=htflP2g4; arc=none smtp.client-ip=209.85.210.175
+	 MIME-Version:Content-Type; b=AJ8Xxv4KwEV7CRC3C0pR3LVwcrPMKygnewxnWqNSczRD890QRXgTvRSaFWRVMxSQjvswapyI5GU8Uh95nhBk1BEZjcKVJ3rk3l9+j0lPF3kDdQpf2+qSagm6fuwyWSGwQXTd6bxJe+AfCd8eflkSF1h6TLsn5UFSFEM9IXp7Mp8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=PgxYwjEz; arc=none smtp.client-ip=209.85.210.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="htflP2g4"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6e63e9abf6aso811168b3a.2
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Mar 2024 07:10:53 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="PgxYwjEz"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6e46dcd8feaso691272b3a.2
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Mar 2024 07:10:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1709824253; x=1710429053; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1709824256; x=1710429056; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=muwYOZKSY0hfz1fLH17GZC7NlhH1OcneAl9OxO4Bms0=;
-        b=htflP2g49M0RV13/jlf4Fwt9XGkYow3TpRKtanT67t68b3mZvlT5cZ++/IH7ELCqW2
-         zmR7pITYIWSa4d+NWEl4WqxipuumFo9Ztu/7aQpWB8lRjWNLjHlJ9G8YTWmW2CqKqZZL
-         0AphRthpM0m86tFAnLsiUkxpuRfvg2LfrR2yM=
+        bh=XM+GE6z3QFZ2++UsDWEjJOrVjIjIB6jnzhyhGHWi+Dc=;
+        b=PgxYwjEzaDitMeGoT6Z7vc5qRey8bcwq1IuI3bkr/qiq14ma8uqO8l/CZgybOLgPUG
+         PIfg7AtU0sgnbjB41Mw73NVmw3sPaxbLv2Kvwa/ZElPLe/qMOjvfvX3fEUILIWHvJv//
+         6i9FLJXQ6jlC09T29bFCY6FaUqLS5uvy7oRIo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709824253; x=1710429053;
+        d=1e100.net; s=20230601; t=1709824256; x=1710429056;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=muwYOZKSY0hfz1fLH17GZC7NlhH1OcneAl9OxO4Bms0=;
-        b=rbTuCJyhQqlgziebtxXl1gc+Cozlb7IMoZWt+GBOxiFVgrxDEAdk/ZNVxj6iDT/lRW
-         eaNm1YMv9LBGFk+w+10JYUIQuYoEjc9mwZlRgPb6xfe/qxAPjn4n0H55PL3a2p3CQwbl
-         8l41nG150u8J47N2lDnfpfVX4YRTu0IyMxz7y/83NwuuVt8h7XSDol7+Z1/hYULfEDG1
-         +bgXAy31BNARTqIlaIJlMfAQFo9Bn+dQGug7823ympTIY38jxqGxLA2dOwEc1iGJrPEG
-         eyYE/myVF+Ym6YXgN1gC8IbfI90QcX9/y2q5+rZT3GyfuolvbWlKtvCCGtgT/xb05wjs
-         uDZA==
-X-Gm-Message-State: AOJu0Yyh75Fa+Hcrnik7ZlnU6zdqWb3jKsAXRsl+FDrJGOZj+3mKkSj6
-	ZE2wCp1Ex009+r5muraZgdhFCnQO3bzal+oiXZaXVa/gJPEwfgvx9XJeY9DAduc0sxane8MOBso
-	afz/lWohst0Xw4vK+j/bfP9UIVaDhOad6cX/x2JNeufZFfL4Nrtg3BXKRmBmm8Ftufx4/VfJnkh
-	ZykHkOmUjcVK9dj33lMH1nqjSP3xEkleKTWRUGRh9oX09vRVhV
-X-Google-Smtp-Source: AGHT+IFOntb26uil2vJpqX+MoBmho6+wUuRF6FpKMmZI8PDtu0/JHaf8zmiqGE4pLu7ImCpjSM70aw==
-X-Received: by 2002:a05:6a00:2da3:b0:6e6:451c:a519 with SMTP id fb35-20020a056a002da300b006e6451ca519mr9022951pfb.5.1709824252978;
-        Thu, 07 Mar 2024 07:10:52 -0800 (PST)
+        bh=XM+GE6z3QFZ2++UsDWEjJOrVjIjIB6jnzhyhGHWi+Dc=;
+        b=S93oWxv98lSObv2FYIq2IxVOOK7impogPPOnQT48p+ML5E+8A/8u5hzavs3WWJmhQS
+         ozILbbI44YQcAZDEM9ya/HsCAnH7aP3qNGJMjhUVwHC16wI3JbCDqwiY0MS1vtKKO2F+
+         A236VLfl1PYrx8Gix/wud3eBODEBi8dXgCMywlvAOMzVIgo7uk4v+OkRH47i4vWdkLyk
+         ZRX6CaWRwuN8DSVzkVMu7XwtxRgcmiFGFcCBBWEY7xC0JZFQDymfK+wI2eocAHbTJMiF
+         Fjak2sAPP4zwpQaIT1IO1Jj04xC8OqArLxmn7Qv9z4Yyu8gWC+qUjthxNOHSXcs5QotO
+         E1pg==
+X-Gm-Message-State: AOJu0YxTU+PQ8DBxaEIxOYHoXO13o3e8h7COGnenybJ4cUD8LIomSgp1
+	xisbIAdBk3TYWVSeCfXEPt+xlgI1ZTpcqrZN342365B1macfMPsWLAretc6ibxyCVdmxcYCSrZM
+	SpRqpNBcMGoqqc8I6G+WzHhaNGMSa/lYad8NLZo747cHyJdUhq7tC4+vyzZXByvY6m47ZzROSU3
+	wgE1wB5dnR+gw626fB9iRstbj4AIjNXFDRgAO2drsqZrLq4pwv
+X-Google-Smtp-Source: AGHT+IGVzLegN+gxjOOvlSmFxU0G8lSRoJKg92VMqsLoQsijD9LqLiSp1zA/5GXVVwxav2XDLipy3A==
+X-Received: by 2002:a05:6a20:4f9b:b0:1a1:48f7:dbda with SMTP id gh27-20020a056a204f9b00b001a148f7dbdamr6180158pzb.57.1709824256197;
+        Thu, 07 Mar 2024 07:10:56 -0800 (PST)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id w17-20020a056a0014d100b006e58da8bb6asm12009906pfu.132.2024.03.07.07.10.50
+        by smtp.gmail.com with ESMTPSA id w17-20020a056a0014d100b006e58da8bb6asm12009906pfu.132.2024.03.07.07.10.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Mar 2024 07:10:52 -0800 (PST)
+        Thu, 07 Mar 2024 07:10:55 -0800 (PST)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -57,9 +57,9 @@ Cc: rajsekhar.chundru@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v2 2/7] mpi3mr: Set MPI request flags appropriately
-Date: Thu,  7 Mar 2024 20:38:20 +0530
-Message-Id: <20240307150825.7613-3-ranjan.kumar@broadcom.com>
+Subject: [PATCH v2 3/7] mpi3mr: Clear controller-wide flag that is used to  block IOCTLS for the unresponsive controller
+Date: Thu,  7 Mar 2024 20:38:21 +0530
+Message-Id: <20240307150825.7613-4-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240307150825.7613-1-ranjan.kumar@broadcom.com>
 References: <20240307150825.7613-1-ranjan.kumar@broadcom.com>
@@ -70,39 +70,42 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000004234a00613137b39"
+	boundary="0000000000007397860613137b85"
 
---0000000000004234a00613137b39
-Content-Type: text/plain; charset=UTF-8
+--0000000000007397860613137b85
 Content-Transfer-Encoding: 8bit
 
-“Flags” inside MPI request is bitfield-based.
-So ‘Flags’ should be updated with bitwise OR operation.
+Driver uses a controller-wide flag to block IOCTLs when
+controller reset is in progress. This flag is set before
+controller reset is initiated and clear after the controller
+reset is completed.
+
+Driver will clear the controller-wide block IOCTLs flag after
+controller reset is failed and controller is marked unrecoverable.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index bfd32354b662..5f975e0db388 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -4895,7 +4895,7 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
- 		    MPI3_SCSIIO_MSGFLAGS_DIVERT_TO_FIRMWARE;
- 		scsiio_flags |= MPI3_SCSIIO_FLAGS_DIVERT_REASON_IO_THROTTLING;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 528f19f782f2..a21fbff60b59 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -5102,6 +5102,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 		mrioc->device_refresh_on = 0;
+ 		mrioc->unrecoverable = 1;
+ 		mrioc->reset_in_progress = 0;
++		mrioc->stop_bsgs = 0;
+ 		retval = -1;
+ 		mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
  	}
--	scsiio_req->flags = cpu_to_le32(scsiio_flags);
-+	scsiio_req->flags |= cpu_to_le32(scsiio_flags);
- 
- 	if (mpi3mr_op_request_post(mrioc, op_req_q,
- 	    scmd_priv_data->mpi3mr_scsiio_req)) {
 -- 
 2.31.1
 
 
---0000000000004234a00613137b39
+--0000000000007397860613137b85
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -173,13 +176,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIP2D1LYK9rnKy8WcNyrul9CCNmQVIVvg
-vuf6Ho2YzhEAMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMw
-NzE1MTA1M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILMuroqBCqUuUWjjQSG5NLQra6puSG32
+7VGXgyKZb3CSMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMw
+NzE1MTA1NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQAa5UU8u7JHzS3f9KqV2wWWiDgLJwa8YwT6GscDoZQkaYqXjROp
-e4VmzqzjRi/lkovfQVffy1ySLLSURUs+T1QHa2LPo5oR8VtPiATSi4sme9772RdK4TjWlqqcU/AN
-PloC4T1dGCRAe4W8rpuGz1X+TjOyxwOkT2/rozm84xVEtcVeG4SIsByiyosuU9QmDRBFm/0VZUQX
-V9s59+f0TxU5+UANM8ZHIK2Me02LDHqEyQ6GwhiEBowDuPo37Pvnx+Q0z5vmc6hTocWF2ueDTxUd
-aWxfk6Lywc0cJKCyNx2DrETorg5/XMe+gR783oCvzW3KCYh4nhuyQOSvRq6Qf6Zz
---0000000000004234a00613137b39--
+ATANBgkqhkiG9w0BAQEFAASCAQAOtByCvuqF9GN1EXwWchmOJ/2UtfBYvlOBtPxjO1os+5dVMN2E
+siJ/K7UWcRbAjFjvZlzYRVCBvginQXFz3a1Ej0VvKiPZLhKrPs+XnQ0agEFsmqtFf7dTAhv7yF2f
+Fcj4hScRLmFMVkZQejTASTLJsS3g1Mcp87fEn9bnRBrrEcvOT3TtR7BtCRM1YtgCW9MgYe5AK4sf
+FcAZSnntuG0brI44flUzDmR2jjZ89mRCi2PwPDBmXRN3B2jwUAwjrxMmYJ9ejKfCoH0kLbXxj3t9
+fCgo2JIbcSCc8z3jzy6qc+chVKl5wF3zfv9jAr1fhgW/Mf67j5VOO/Cb16ddipoJ
+--0000000000007397860613137b85--
