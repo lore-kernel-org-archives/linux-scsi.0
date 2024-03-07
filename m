@@ -1,184 +1,134 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99C9712D765
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Mar 2024 15:11:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74850130E30
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Mar 2024 17:59:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709824272; cv=none; b=h/hyYEiwqMT543NASRbM7Xiym6Os/Vfl1Oi3mrBPksrNZo+F0Sq1DXP3KXb4GPdRlX0o3r++OiFYgmQGtLZrM2xVwZTDSJm2T8tea6e3M88MeG57g03XsskSSE2/dxMMpdxOpsUjmTIRuB+ry2d0PyTyFDrIxbDxLK3foQNwxcg=
+	t=1709834349; cv=none; b=KWemw8JLFkpawJ68TPk9yqhi0IMDL5FN04ZQCbKWkUxu2H8auPQA2/AaA+TvP1EeCthYJzqcyymOv+xeUd6yS1VIag6+vgBtHrZmwxfQSriagarqmIgrOmt3zdcB8owqJQ+riktgfGD16gKLvQx4oOnNQd6oTwuUPuUAB/6Ll48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709824272; c=relaxed/simple;
-	bh=k9/1IGSAqdzXhVE1YaitEmcv51wzx4bos1iCISR1eXk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ds+XuQy8lVnL+lma2/MamG9FlmasQu+i9j6w6JMf2l+0XyO1P4EFiHXk1qRBrEka+kN4P8EgdFU9k8DbWRYp6FO+SBteruQwj1SZ2SMOEYtW10lDlSxP/WWGDqcVOsXKaug3HeBPe02sL24uuzp7OgRrNttM5cETnTGuv06taiE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=PxIEzPoe; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1709834349; c=relaxed/simple;
+	bh=e62SMdrsV+4tn2lYJR5N4yyuYRU/qcW8T9GfkqPdtcQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=EBvvFTyAv2NiJUl5yIoFiFheFI2HaKKZB1qblf68VbkHnVWkeEJUDrhvI6hrq+7I3MBkTuwO+88ggQJbiQjKAOYi1NXCgOthO0YxFHQqWHG6rAVUKWLfS7Q9xrzijxlpdjZIH/wn/VNijWywbRSe68m1OKwo8Qg4U3quCZoDTk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=lYw4EORU; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="PxIEzPoe"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6e6419cd4ddso822840b3a.2
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Mar 2024 07:11:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1709824269; x=1710429069; darn=vger.kernel.org;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=oQ/SRVKcaaiq3tkWkckH7RuKwOq8q9b5BMmdo+j4dX0=;
-        b=PxIEzPoewQ3lQEceGSOA734WDsjs+dJhN926fFpupskH4LRkRK1eLdG0V0dymgfj4Q
-         8V+rSyUSEjvQvJLgJJvdmsZF7F7wolQ3msMUi5T6LTrnF0guXUj8mUvd8muY/Fhk3Ydj
-         deXERZL/8noMKkldnP1YAnhRecUUrMlxAbbIE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709824269; x=1710429069;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=oQ/SRVKcaaiq3tkWkckH7RuKwOq8q9b5BMmdo+j4dX0=;
-        b=OjIh9uBCHzP2zIYGlcY7/82/bfzXb2bZTIiGne5yV0qKjCIOL6D9LvD53ZrDbuT6Ee
-         VccJXGdnmyu758LY2rCwncdESxQA1taEcquZ62wOsPkFIIdu8Ewi+B/dQnsDEPtY24yj
-         If8fZpUGsTwfKrv+lDZqxUP5iOCJvUQ+DJvP5lbqaUl5aJlXShqXNQjQc86EZ13BrE0V
-         6BuHS7eDSjqnVH+olWh/7D/d5QG+6Mcxs1z0PBd/kbtKxUczJgXUAmaSGmam+Wl32oYo
-         Ek1iUyWUQZrcWqY0Upys2S8Z4c+E3X93XJQL8NazLZJDIcdSc9IwsCRRN2v4okZ1MF8P
-         M27A==
-X-Gm-Message-State: AOJu0YxAu22ND5rdAsQiKZEq+HJgzam1uSftpDjPYJZYoSnqvxlWTK6l
-	EVK6VpXuWCZ0hknQikt7ClIVK6IS0mo4QtZvsckwGt3JtA6t6Q2FPV2ScJt/y34rKhvtoV8OnR+
-	NehsZzxvIZwNIgCg6K87UJjtF5GzN/eQYD2S1msa91fsrXbg9C0uRaXlzhoRXhlEdAQ1qP04I2P
-	4TmHlP6ofxGwCzHZKZG7TzDmNMqJFMw5vWDpsNvHDEv39/lGRO
-X-Google-Smtp-Source: AGHT+IG+eAM4zsXTxa5XLi6eodcwpU18PcQozTUduhZAvwlSwaoQZuMRtScSMxjRNNSll3d3cOghCQ==
-X-Received: by 2002:a05:6a20:4326:b0:1a1:4b74:1102 with SMTP id h38-20020a056a20432600b001a14b741102mr9483375pzk.16.1709824269393;
-        Thu, 07 Mar 2024 07:11:09 -0800 (PST)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id w17-20020a056a0014d100b006e58da8bb6asm12009906pfu.132.2024.03.07.07.11.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Mar 2024 07:11:08 -0800 (PST)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: rajsekhar.chundru@broadcom.com,
-	sathya.prakash@broadcom.com,
-	sumit.saxena@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v2 7/7] mpi3mr: driver version upgrade to 8.8.1.0.50
-Date: Thu,  7 Mar 2024 20:38:25 +0530
-Message-Id: <20240307150825.7613-8-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20240307150825.7613-1-ranjan.kumar@broadcom.com>
-References: <20240307150825.7613-1-ranjan.kumar@broadcom.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="lYw4EORU"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4TrH9k5qyDz6ClTND;
+	Thu,  7 Mar 2024 17:59:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:references:content-language:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1709834344; x=1712426345; bh=vhvFcC+O7kH5YGk3pO8OOD9T
+	yuqj7J/eXdb0ky0HINs=; b=lYw4EORU6LuM3GJT8ANEOEcprCoCo91nrzzw4Opa
+	/m5/AMcokwIlXJj0CPc1iLiokwqBxFdHQasYG3azihB0O0lumzQlnhwTG5Y+cDTS
+	hGmC5+3Bs0iyjM+f/Gyn4UcZ2GeYWF/LFFVDYLq9849kSG9PZHpRRMIAByv8A0jn
+	XR6xKo3K4MQ2aPaaejwMv7ouHkMgBoGMhLqBb2fj0m4reyS3M7d1P5GE6EYyj4ht
+	ojv8TWWJ3z12ycjpc0i5n3ije/IQNwnBrvH86Aeg53kM53lwYDnpl1N1usYiK+8w
+	IU/pHwDxUnX+bkvVz+5JM3B0T7hHAT/1DjMALIuR4H4rVg==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id hLljrFmqByUT; Thu,  7 Mar 2024 17:59:04 +0000 (UTC)
+Received: from [100.96.154.173] (unknown [104.132.1.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4TrH9g06g5z6ClY9v;
+	Thu,  7 Mar 2024 17:59:02 +0000 (UTC)
+Message-ID: <2f2c14e4-1a8c-4472-9ac4-887b8b0f2689@acm.org>
+Date: Thu, 7 Mar 2024 09:59:01 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000003c63fe0613137c34"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi_debug: Make CRC_T10DIF support optional
+Content-Language: en-US
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20240305222612.37383-1-bvanassche@acm.org>
+ <cd54668a-8f01-46d8-a597-3dc25ad1ad00@oracle.com>
+ <4fbd2106-1e39-4fd9-b0e0-411105e80bb7@acm.org>
+ <218b4bb9-ced8-4480-8b6d-24969180053c@oracle.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <218b4bb9-ced8-4480-8b6d-24969180053c@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
---0000000000003c63fe0613137c34
-Content-Transfer-Encoding: 8bit
+On 3/7/24 01:37, John Garry wrote:
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index acf0592d63da..5bac3b5aa5fa 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -3471,6 +3471,7 @@ static bool comp_write_worker(struct=20
+> sdeb_store_info *sip, u64 lba, u32 num,
+>  =C2=A0=C2=A0=C2=A0=C2=A0 return res;
+>  =C2=A0}
+>=20
+> +#if (IS_ENABLED(CONFIG_CRC_T10DIF))
+>  =C2=A0static __be16 dif_compute_csum(const void *buf, int len)
+>  =C2=A0{
+>  =C2=A0=C2=A0=C2=A0=C2=A0 __be16 csum;
+> @@ -3509,6 +3510,13 @@ static int dif_verify(struct t10_pi_tuple *sdt,=20
+> const void *data,
+>  =C2=A0=C2=A0=C2=A0=C2=A0 }
+>  =C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>  =C2=A0}
+> +#else
+> +static int dif_verify(struct t10_pi_tuple *sdt, const void *data,
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0 sector_t sector, u32 ei_lba)
+> +{
+> +=C2=A0=C2=A0=C2=A0 return -EOPNOTSUPP;
+> +}
+> +#endif
+>=20
+>  =C2=A0static void dif_copy_prot(struct scsi_cmnd *scp, sector_t sector=
+,
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 unsigned int sectors, bool read)
+> @@ -7421,7 +7429,12 @@ static int __init scsi_debug_init(void)
+>  =C2=A0=C2=A0=C2=A0=C2=A0 case T10_PI_TYPE1_PROTECTION:
+>  =C2=A0=C2=A0=C2=A0=C2=A0 case T10_PI_TYPE2_PROTECTION:
+>  =C2=A0=C2=A0=C2=A0=C2=A0 case T10_PI_TYPE3_PROTECTION:
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 #if (IS_ENABLED(CONFIG_CRC_=
+T10DIF))
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 have_dif_prot =3D tru=
+e;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 #else
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pr_err("CRC_T10DIF not enab=
+led\n");
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return -EINVAL;
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 #endif
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 break;
+>=20
+>  =C2=A0=C2=A0=C2=A0=C2=A0 default:
+> ----8<-----
+>=20
+> I know that IS_ENABLED(CONFIG_XXX)) ain't too nice to use, but this is =
+a=20
+> lot less change and we also don't need multiple files for the driver. A=
+s=20
+> below, it's not easy to separate the CRC_T10DIF-related stuff out.
 
-Update driver version to 8.8.1.0.50
+The above suggestion violates the following rule from the Linux kernel=20
+coding style: "As a general rule, #ifdef use should be confined to
+header files whenever possible." See also
+Documentation/process/4.Coding.rst.
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The approach to use multiple files in order to avoid #ifdefs in .c files
+is strongly preferred in Linux kernel code.
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index d7ee94aff67a..b7fdffef2157 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -55,8 +55,8 @@ extern struct list_head mrioc_list;
- extern int prot_mask;
- extern atomic64_t event_counter;
- 
--#define MPI3MR_DRIVER_VERSION	"8.5.1.0.0"
--#define MPI3MR_DRIVER_RELDATE	"5-December-2023"
-+#define MPI3MR_DRIVER_VERSION	"8.8.1.0.50"
-+#define MPI3MR_DRIVER_RELDATE	"5-March-2024"
- 
- #define MPI3MR_DRIVER_NAME	"mpi3mr"
- #define MPI3MR_DRIVER_LICENSE	"GPL"
--- 
-2.31.1
+Thanks,
 
-
---0000000000003c63fe0613137c34
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-GK2Ee6ez7fr/FL1RWbOPVHJR+deNIorOjW7U5HVwnRYhM1OR4mAkrkqcN+3kwae0KmVO3SDKFd7h
-Ok4L2e1ixyaRTo379Ur3iVTnagglDOliayMGRITBPe0CAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
-AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
-c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
-AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
-TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
-bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
-L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
-BB0wG4EZcmFuamFuLmt1bWFyQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
-HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU8WuEiYXvpeCaubgLCCFoyRBc
-8QwwDQYJKoZIhvcNAQELBQADggEBAA5th3yz1fvJCBmK21x68IdDNFC0gmynT76I3fOgslLHc7ey
-lC9VXLb+vJ863blS/WxEOwf0fvc0ks7qYWl8xisInHu5AX9glaooGhLImlzE0l9rDf0tcq2kkgc4
-CXL9UGDEoqdxfRj3j9xn9fm9gpTBWSck6ufc/8RV1TLVjcZvrYkMqQwoVulGkr+HCnzaEFxBRmO/
-nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
-0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
-aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
-EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPoPHpsb6WBFwBPh0H8q1OjcAp1e93dx
-V6Qw5jOeUgOeMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMw
-NzE1MTEwOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
-SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBHnSXz6CQ2AuQ/ddXmeh6px6GDnuN0NVXs+YuAJP/8hFc18jWM
-dr5RP3HfXzO54O4OWgLE1oSMznAVkoVLquWChXo+9gLje8LuzgRIKP6Gl12EJQijHQm2A0HGqQV/
-c0e+FfNDMeIit4WNKUrJftZVs0rX4Bw72y9XoQB5O7D833iK5PNs7yGsqdT//2qRtEeCMcBvmDQG
-c2iEoCDBCH2MaSY8cJoUUjR9tzsZNQR0UbfGMtWKwD5YHuFu2QB+vI3cNAeAOoVEqu/5CwwpCqf0
-nwpz11Rjmrnd5LyemGmpar25GQgW2IX5nyLzHRM8w2JM1Dj1T1hl+/NDNEUGvX3o
---0000000000003c63fe0613137c34--
+Bart.
