@@ -1,106 +1,159 @@
-Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A8A025774;
-	Fri,  8 Mar 2024 19:29:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2110A5916F
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Mar 2024 19:41:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709926192; cv=none; b=Uy3sjCS3iHrwsghQfGUjLYPxAa4X5GOn2ywf7NY09HslNjzGzcZryQ8/pEveYMBwcKk0HajtD65gMbDrwDJSZT8TeD+NJrDOY389vgxikmmTJlCber5rEfx7SHBxAizBucdE6tPhZIOf9kRD6vJkhZIT+iAGifdoyB9bPTPyIsI=
+	t=1709926905; cv=none; b=M+n+zcuHFUmw0fUclUscJHsYnpQUew1XkaiylEivstVU7AWAlNQlCrwog+pOMHiMumNMujIhG8ujt1mSgUlE6/U4OQQW688G7V7l6gxE788Ar8n52Xqu0VueMY8gShk4RJkzQhdSJ8LSTCAlx4OCabkSAKVg1lYViklDRbyiDaA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709926192; c=relaxed/simple;
-	bh=RMRgdsBHJyxDqGQTUczfYvV37B+xx0l9E6N+68thdNY=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=WMiG96OSEVTlkpqvZQupof84iNc3O43SJsQiQtdXBU72d3rcHZtzV83iYwvWXa5jVmsXURWr4Zv/HlS0/Onhy/yZW11WQw5VF2XMzF5YInkBSqujMeUh99DV+gjAbQOiHGtXv7aK3Nox0qZTLq8AW5mWrV9GcdZa8s01kZXgWyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MiTGaLQa; arc=none smtp.client-ip=209.85.167.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1709926905; c=relaxed/simple;
+	bh=6Ccado+7fTNCrTIVsJle4IYobU2lLARj/d+Hs9ns0Ko=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XypIPovv9rCzkbQmKbolGl0AJ65WbScamIYsj1uOIVDg7pueWjLywEWuNgQ4AHmpuZrg0Wsr/y1i7fkbogWjAXK8ev/ft+5Cyvzl/dqIy+RGRTLinQN0i9ed3idZZvC0Uy0q9CQXAsuWA1cgxuAoR/hqR88fxtnFulFtDV6eWLw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=3UjhDmWZ; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MiTGaLQa"
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-512e4f4e463so3462218e87.1;
-        Fri, 08 Mar 2024 11:29:50 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="3UjhDmWZ"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6e617b39877so2066748b3a.3
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Mar 2024 11:41:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1709926189; x=1710530989; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=RMRgdsBHJyxDqGQTUczfYvV37B+xx0l9E6N+68thdNY=;
-        b=MiTGaLQa4KrmbzMlJuO6wq8VWco0tlfoBcIffti/+5BKbgJJAF8no4woKo0nj/7jBV
-         0CpgN2mltylnweWKiTWdKxZIxype3RU+922YbwZSaf46VugfrRjNWFGnO/YxuANMyQy4
-         NKkZaHsriChlXRQsNu4hG5j42y/5h6l43RpVnb1efXMdPLncI1Ol0hJHmnpwsVARI/pe
-         log8Dv2Jo/+PFgZaDUd5Vn+o9t8LhFeB+q8iphUMhq1Uuor0/qabiyZxAraxY8wxcfAT
-         PgvxEW5wl3G4Q5EILe1AzzE/imLpXvIKIjHOB0MVC8KiXC5hmlAJPI7EZZODp9pzCYK9
-         An9w==
+        d=google.com; s=20230601; t=1709926903; x=1710531703; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=t7Fse3QrTOuTSu6oOGHjMUM7d92RQbiAqK9kY+ki5S0=;
+        b=3UjhDmWZLzTXNLUwjP2diwlGDicFI+a3eAcuOxg/bLpMWei1gUgZe5uBFfuQ332P1S
+         /FcugolCmCF5/Cu+HFUs+aGB3JLGDenChR0sghIWgrOZbzlLBuBg0u1/f+5heCq7Yc56
+         WuBM9q1/lOWxaARhlG5ijE8Lo1ZOlk9BJGdpJ+aqW4OXXv/ABbPrpUH7oGHEiIQcXzy6
+         jgG8ThJk2zXpJNgfTp4Vs8cc3xJ8+mjfOFPTqVt9S8qopmLmmruUXf6V0e2G4mioB1SV
+         9y8XoK/2k29YkbKgCta0d3Qu9IPpxGeicvm2Lihm43nJFkR9DMe5eMlaYOnLOJ7utC+k
+         8UQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1709926189; x=1710530989;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=RMRgdsBHJyxDqGQTUczfYvV37B+xx0l9E6N+68thdNY=;
-        b=JgO2Wa9cVp//+6++TGznWQZT5w49/Z3Lor6U+v6UQf75FEGPek/dLlBuu+szKry8GS
-         1Q3ii3h/ghna9z8Gbr1kS2fWG8r3KW3SlYu3WpQTl78TT4jOIW6e8lD72KgAS0XWnJ3e
-         owjVSzIrLGdc1UXs7UwRpRr87X/xcFgtAwdMMWVZrNwLAXW9jf/B6y7xsOwdky15lZzF
-         nXtAHRhRfhzc3wjZFv1usg32wI2zUDtyHREJHRWF/BpEb7wGvE+ehI/jd43JasNA7RaL
-         8f5ZyF1dWihSr26g7LlatAyNgMMQDBAo3S8GBG6/z79+T1DbK51jR4kBoBUMgzcx/eeN
-         jhNg==
-X-Forwarded-Encrypted: i=1; AJvYcCVO8ki3eGoNKjoZDCOQvoKcULDNzeDQvZzPsP5bVUz6vwb+mYtuFTZTLdgFho/+xcVEFV2nhe0kx9Ztj0NNLmMByv/I/A5Qjrk7JjWrKgIln80GbWEYD0HNFYwZMXIG1z7QRqSXVcSrXA==
-X-Gm-Message-State: AOJu0YxTDMU+XKekAK4bgR5bBKY9SqzB+8bZuFwDwGl39LPbR2F9JTrf
-	gIN7Wx7ntRw+4EHRgHHTX9ldxUmQYPicQPlCEWlFH/n8IqVV5Y0b
-X-Google-Smtp-Source: AGHT+IH17VTWtbb/T2JbzXCWcrj4STjOoGKe2CYFs7brPVKMcgV7JeYRxZlNDF7KQXU8nix1zfLaeg==
-X-Received: by 2002:a19:691c:0:b0:513:2b10:cc28 with SMTP id e28-20020a19691c000000b005132b10cc28mr18935lfc.9.1709926188993;
-        Fri, 08 Mar 2024 11:29:48 -0800 (PST)
-Received: from p200300c58728637afaa070da676dcf95.dip0.t-ipconnect.de (p200300c58728637afaa070da676dcf95.dip0.t-ipconnect.de. [2003:c5:8728:637a:faa0:70da:676d:cf95])
-        by smtp.gmail.com with ESMTPSA id ws7-20020a170907704700b00a42f6d17123sm98411ejb.46.2024.03.08.11.29.47
+        d=1e100.net; s=20230601; t=1709926903; x=1710531703;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=t7Fse3QrTOuTSu6oOGHjMUM7d92RQbiAqK9kY+ki5S0=;
+        b=HAD+rwO/fyYGsIDg7RyeBTypr9BSBrcWaI6ZbI6UThkLh4NKTZHiGSdRh3f645LEiu
+         2kYkioFpbKdvujLdyY685jgi58t8k4mtzQIEG7DcEvycroi0WyOBto9t5lblomfsLVtp
+         cPqJ/RrRiYqFNL1FOSAYTbIm4fhgxxSYLHeioHk2Jo/9SoAZpT3SWlgW8FPc+Twsztg7
+         qirTD4FtIeFOoSUVRlQTvhA2UTuDiSnnvx/MNNO8CAr6ZiqS6bBtdevf7KcGvglMRZeY
+         3CXFPjDywNSPx4eXEbIx8ePi1mCR6AjJoFVxa+FuRIHEDOWb/S55fc6u9oGSPf2fA407
+         jeDA==
+X-Forwarded-Encrypted: i=1; AJvYcCWnVPRIfpyC53fCoywSiGBUQsO2grk2Qui107CJWEq8b2sa9bswT0ue7tJcICLypXAhWsQ6TGziBqIq7ldhZCN7N8uhCUfTdlxfTg==
+X-Gm-Message-State: AOJu0YzA0fAXYIwR6m24dbq95mMO9X87DC3gPcB1T9SC2TAUrkn9V5DU
+	PXIfCNKPdHJxeohhzb40mCjC9Vnsg34OM58CJ0SaWgF65Icii0qdFIOm9ZDkYA==
+X-Google-Smtp-Source: AGHT+IF2QUGIFTFWhcLdhuzr3B8ltK/RgVGdsfAQvH5CgB5TVFx2FaPtxLn0l+RMqAoD9ICqPF8e/A==
+X-Received: by 2002:a05:6a00:3c86:b0:6e4:fc2b:62d5 with SMTP id lm6-20020a056a003c8600b006e4fc2b62d5mr21424pfb.0.1709926903141;
+        Fri, 08 Mar 2024 11:41:43 -0800 (PST)
+Received: from google.com ([2620:15c:2c5:13:5598:405c:5e3b:f1be])
+        by smtp.gmail.com with ESMTPSA id o12-20020a62f90c000000b006e053e98e1csm62460pfh.136.2024.03.08.11.41.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Mar 2024 11:29:48 -0800 (PST)
-Message-ID: <e96bd7b0b5b6abbde6a5e2396bc5a291e4c9ddad.camel@gmail.com>
-Subject: Re: [PATCH v2 2/4] scsi: ufs: Re-use exec_dev_cmd
-From: Bean Huo <huobean@gmail.com>
-To: Avri Altman <Avri.Altman@wdc.com>, "James E . J . Bottomley"
- <jejb@linux.vnet.ibm.com>, "Martin K . Petersen"
- <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
-	"linux-scsi@vger.kernel.org"
-	 <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	 <linux-kernel@vger.kernel.org>
-Date: Fri, 08 Mar 2024 20:29:47 +0100
-In-Reply-To: <DM6PR04MB6575A5D43DF0589B480A4EA9FC202@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20240305210051.10847-1-avri.altman@wdc.com>
-	 <20240305210051.10847-3-avri.altman@wdc.com>
-	 <6c75ce4cc05c6983137e954043d5ae7323a96172.camel@gmail.com>
-	 <DM6PR04MB6575A5D43DF0589B480A4EA9FC202@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+        Fri, 08 Mar 2024 11:41:42 -0800 (PST)
+Date: Fri, 8 Mar 2024 11:41:38 -0800
+From: Igor Pylypiv <ipylypiv@google.com>
+To: John Garry <john.g.garry@oracle.com>
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com,
+	chenxiang66@hisilicon.com, jinpu.wang@cloud.ionos.com,
+	artur.paszkiewicz@intel.com, yanaijie@huawei.com,
+	dlemoal@kernel.org, cassel@kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/6] scsi: libsas: Add LIBSAS_SHT_BASE
+Message-ID: <Zetp8ufVfxxo6DOF@google.com>
+References: <20240308114339.1340549-1-john.g.garry@oracle.com>
+ <20240308114339.1340549-2-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240308114339.1340549-2-john.g.garry@oracle.com>
 
-On Thu, 2024-03-07 at 19:28 +0000, Avri Altman wrote:
-> > On Tue, 2024-03-05 at 23:00 +0200, Avri Altman wrote:
-> > > Move out the actual command issue from exec_dev_cmd so it can be
-> > > used
-> > > elsewhere.=C2=A0 While at it, remove a redundant "lrbp->cmd =3D NULL"
-> > > assignment.=C2=A0 Also, as a free bonus, call the upiu trace if it
-> > > doesn't.
-> >=20
-> >=20
-> > This statement is a bit strange, what it is "if it doesn't"?
-> >=20
-> > from the change, the patch refactors command issue for broader
-> > usage
-> > and enhance UPIU tracing, isolate the command issuance logic from
-> > `ufshcd_exec_dev_cmd` to allow reuse across different contexts.
-> What I meant is, that I see no downside for including the bsg path in
-> the upiu trace event.
-> Do you object to that?
+On Fri, Mar 08, 2024 at 11:43:34AM +0000, John Garry wrote:
+> There is much duplication in the scsi_host_template structure for the
+> drivers which use libsas.
+> 
+> Similar to how a standard template is used in libata with __ATA_BASE_SHT,
+> create a standard template in LIBSAS_SHT_BASE.
+> 
+> Don't set a default for max_sectors at SCSI_DEFAULT_MAX_SECTORS, as
+> scsi_host_alloc() will default to this value automatically.
+> 
+> Even though some drivers don't set proc_name, it won't make much difference
+> to set as DRV_NAME.
+> 
+> Also add LIBSAS_SHT_BASE_NO_SLAVE_INIT for the hisi_sas drivers which have
+> custom .slave_alloc and .slave_configure methods.
 
-Avri,=20
+Looks like libata drivers have no problem overriding default values that were
+set by __ATA_BASE_SHT. For example __ATA_BASE_SHT sets .can_queue .sdev_attrs
+and then AHCI_SHT overrides those with AHCI specific values: 
 
-no, I meant your commit message is not clearer. and then understood
-after reading your patch.
+#define AHCI_SHT(drv_name)                                              \       
+        ATA_NCQ_SHT(drv_name),                                          \       
+        .can_queue              = AHCI_MAX_CMDS,                        \       
+        .sg_tablesize           = AHCI_MAX_SG,                          \       
+        .dma_boundary           = AHCI_DMA_BOUNDARY,                    \       
+        .shost_attrs            = ahci_shost_attrs,                     \       
+        .sdev_attrs             = ahci_sdev_attrs 
 
-Kind regards,
-Bean
+Perhaps there is no need for LIBSAS_SHT_BASE_NO_SLAVE_INIT since hisi_sas
+can use LIBSAS_SHT_BASE with .slave_alloc and .slave_configure overrides?
+
+Similarly hisi_sas and pm8001 can override the default ".sg_tablesize = SG_ALL".
+
+Thanks,
+Igor
+
+> 
+> Reviewed-by: Jason Yan <yanaijie@huawei.com>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>  include/scsi/libsas.h | 29 +++++++++++++++++++++++++++++
+>  1 file changed, 29 insertions(+)
+> 
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index f5257103fdb6..de842602f47e 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -726,4 +726,33 @@ void sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
+>  void sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
+>  			   gfp_t gfp_flags);
+>  
+> +#define __LIBSAS_SHT_BASE						\
+> +	.module				= THIS_MODULE,			\
+> +	.name				= DRV_NAME,			\
+> +	.proc_name			= DRV_NAME,			\
+> +	.queuecommand			= sas_queuecommand,		\
+> +	.dma_need_drain			= ata_scsi_dma_need_drain,	\
+> +	.target_alloc			= sas_target_alloc,		\
+> +	.change_queue_depth		= sas_change_queue_depth,	\
+> +	.bios_param			= sas_bios_param,		\
+> +	.this_id			= -1,				\
+> +	.eh_device_reset_handler	= sas_eh_device_reset_handler, 	\
+> +	.eh_target_reset_handler	= sas_eh_target_reset_handler,	\
+> +	.target_destroy			= sas_target_destroy,		\
+> +	.ioctl				= sas_ioctl,			\
+> +
+> +#ifdef CONFIG_COMPAT
+> +#define _LIBSAS_SHT_BASE		__LIBSAS_SHT_BASE		\
+> +	.compat_ioctl			= sas_ioctl,
+> +#else
+> +#define _LIBSAS_SHT_BASE		__LIBSAS_SHT_BASE
+> +#endif
+> +
+> +#define LIBSAS_SHT_BASE			_LIBSAS_SHT_BASE		\
+> +	.slave_configure		= sas_slave_configure,		\
+> +	.slave_alloc			= sas_slave_alloc,		\
+> +
+> +#define LIBSAS_SHT_BASE_NO_SLAVE_INIT	_LIBSAS_SHT_BASE
+> +
+> +
+>  #endif /* _SASLIB_H_ */
+> -- 
+> 2.31.1
+> 
