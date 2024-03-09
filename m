@@ -1,93 +1,118 @@
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5994249F5;
-	Sat,  9 Mar 2024 08:12:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD563FC1F
+	for <linux-scsi@vger.kernel.org>; Sat,  9 Mar 2024 18:05:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709971931; cv=none; b=C1yvr/9TbEADU74Z9PQ4392og1Q4o2UCE5MIojhY90S8Of0ko9k2R2zPksRxL61Mn8DCadfMY4wovbWS1Dt4Lp7zWV7RB+NegvsRt/NChM4ePaVbWhZapmM9yE0LLmLt5QSP+qpXoYBtWrMP+T51co5IMz2uPsk5+1VK1jtfs54=
+	t=1710007545; cv=none; b=TJE081RvXyV/HsCYf1cpDvMzaIrKHi+zvhjlBfKZGpRsb6dHAby5VN0AOTp2ZpeT/Jlc+y6+GP8v1BVFT2CtBVA9khbgihZEG3wDAiZalfgLHM1F5h9wDw7iE4fqvbeRDPjNc6uRbimaUlLeZJEtklu9Vx1j5Pb/fvtSmQLIfl4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709971931; c=relaxed/simple;
-	bh=YUXiHY4k8KdxfRkpMRa4zrfX6fzO4umIBuPK9q+tKlE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IaIuvAzq0sphS2sk9XC+DQEE2SyTM7D2UOgKX+y1e6ZkgiwunIlCz6/EbkrhY0Xzyr2Pt0ETsr+F1ZI6ls87SmH9LmQ1POUx133s5K2A0ca+hXfncB99DkoXgn4v4P79VqMto7rn4OforJyb1VeS9OCvloGg0Ebyd9wVGOo6pcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=mtckFTT6; arc=none smtp.client-ip=216.71.154.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1710007545; c=relaxed/simple;
+	bh=/PtZj1THudgmWXg55mQ9XJrnkglTEegrHaESQa9gBFI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=bp8ppEzm4FwU8SKNxsH6Iiy4EifZDS0we4CHhkumvMGDoK1l6DKLkxmpUVzNu6mVb2CGC8rNNCsY3IQJTYIgePIQO4RuysNIhJvrFT9PgjlQunqKDLcVRozYgMIvAQIGYN0i8geLX3cfKuB9c4O7h3rvNtYl2n/LS1u+rKJswSY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=axulDVbW; arc=none smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="mtckFTT6"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1709971930; x=1741507930;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=YUXiHY4k8KdxfRkpMRa4zrfX6fzO4umIBuPK9q+tKlE=;
-  b=mtckFTT6nYEuitlaINCOORYAJOvtgPAAdpgCrCPhcsFEkW6AMiCWMBoC
-   J+scBnWhPm8iEo3B/HWl2ag5RcpcwhNdnSUGVNpR/Y5YHkkCtWP4H0y7Y
-   vidVxIgSp9OqdJva4t0k69tREMyuWC6S8EzSymzcIXbw0klfDlaQqviZm
-   nvy+Pjb04GenNVCBL8am781doqzJGv3MAOMqe1mreh3GMg0kkToxj9KLK
-   HWpPAV7xdtG8IhOYIq0U3A3pM3VLXqcA6lofrLOx/Yz4tzTbfRqedsMTX
-   zae8M0mYnMa4DE3SmGIUp2w2NMadlVgOXm+WHOQupzgde9RRArSWuJTYX
-   A==;
-X-CSE-ConnectionGUID: NvKoeE8dSyO2eCb06znFxw==
-X-CSE-MsgGUID: Zuiiz2TyRIa70X024KqZpQ==
-X-IronPort-AV: E=Sophos;i="6.07,112,1708358400"; 
-   d="scan'208";a="10715102"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Mar 2024 16:11:07 +0800
-IronPort-SDR: jSC2buZsMmFz+I5Tn+6SLJpkng26O2S7da8W9BYkAhvcYr86IgKLG24qr5RUME5OiDxX4dqMPj
- bzkHcBOYsKhQ==
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Mar 2024 23:14:33 -0800
-IronPort-SDR: xo0xJQxqbFnR1B0uE3yFCV1Jf1+WGqrMjq4vctoJz5Hd8fWZNDKLSNkqkJ9cP48N7/iAVnAYzi
- FL15C8bINO1g==
-WDCIronportException: Internal
-Received: from 87h6l33.ad.shared (HELO BXYGM33.ad.shared) ([10.225.32.8])
-  by uls-op-cesaip01.wdc.com with ESMTP; 09 Mar 2024 00:11:06 -0800
-From: Avri Altman <avri.altman@wdc.com>
-To: "James E . J . Bottomley" <jejb@linux.ibm.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v3 0/4] Re-use device management code fragments
-Date: Sat,  9 Mar 2024 10:10:58 +0200
-Message-ID: <20240309081104.5006-1-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.42.0
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="axulDVbW"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-56829f41f81so2645154a12.2
+        for <linux-scsi@vger.kernel.org>; Sat, 09 Mar 2024 10:05:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1710007540; x=1710612340; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4ITjBMAYZbjYo7OABjVqPiHGlJq6tqTY9J1maIuyk9g=;
+        b=axulDVbW/tDc/D7TG7PSTPnl9Xui3OchqCkM73ZRnmnOv5IRc469alZ5v9ZFoTSpcp
+         +FFzztrB39goA5QqtDDBHfHkTH2TcjRNGBdPVGii23PTpMsvx9PqQzwKtP9pnXoOOhnK
+         3GU6tU+YdNk3ZXLE8sJiXrVSnRFgn+q9gHZRd3mcNsxoVebULScKXFPtJCNdIa/lCKh6
+         QJMrFH09fbLogXOPT8xRYYF+P0MXeb3yejjTb0eY020BLskkRyiQ+twotwZvUrZ8o2x1
+         lc6x834HnT2YwTsRPVgwzOmScPuVvqki9kCvtAZuv8Be7S5XsnCUGJmsapn9Cc1xcnnB
+         tsxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710007540; x=1710612340;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4ITjBMAYZbjYo7OABjVqPiHGlJq6tqTY9J1maIuyk9g=;
+        b=T9/FliTkwjpDc9PoFX8qRubPbclcI1IivVDhYnczp/GtBVVglZO2Hi9YV2AbhutzsZ
+         x3yqEAoq3c2rBxCJl2JdEI7ptAjwgOCoUIAZTSfe4gVnsyoWt35kmrdOmn8kt4qDjTdh
+         s6C0NORd2er+p7wwei7W1IOUrafp3G71kdWM76BbK2o2baMDR5OHKyXD4OjaXGtFkPjJ
+         5v8MQpnxAclAydd5Tk9J9S8YAEfYdkETc2QwU0eepEYw0L49iPsCgxnkY+KGE1h+jyEt
+         z6AJwYajHAxLrCvoAU2XqfsyvqWdQznOW3xYM5T+C0J7Ko+IsaRc4nezereGNnLQhLJ6
+         yItg==
+X-Gm-Message-State: AOJu0YxUtLWOm1XZNL5pbUlRc5ewWWf/1jZnyWQlWPYXmjmquRLwPSHo
+	m90xc+JBmf0FeHcRyOYn/Xy7m/EIdQBYO0EfkHAhG+pi6X1Ep8DyKfPCgeZbHLRoCw5DF5qeV4Q
+	po0aMgoCBZIGztsLBZsxV2CivjHv5i60TgRpIBg==
+X-Google-Smtp-Source: AGHT+IHvRfRvVdOpSqga2VG+TMQSk8gbq3W0T+xahiDiFkVNTHojG2kqWZT3iOcIpvoLdLnWdwXVoH7BCpXTdklDjPY=
+X-Received: by 2002:a50:8d51:0:b0:567:b54f:86b3 with SMTP id
+ t17-20020a508d51000000b00567b54f86b3mr1426814edt.20.1710007540217; Sat, 09
+ Mar 2024 10:05:40 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <cover.1701540918.git.lduncan@suse.com> <437f863520874ee386b6882ef749bf8d988839ca.1701540918.git.lduncan@suse.com>
+In-Reply-To: <437f863520874ee386b6882ef749bf8d988839ca.1701540918.git.lduncan@suse.com>
+From: Lee Duncan <lduncan@suse.com>
+Date: Sat, 9 Mar 2024 10:05:29 -0800
+Message-ID: <CAPj3X_UKdC_sXG=qm5w=BeufDC0p_88xF2nvkBAB0SXzJfo3xQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] scsi: target: iscsi: don't warn of R/W when no data
+To: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dbond@suse.com, 
+	hare@suse.de, cleech@redhat.com, michael.christie@oracle.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-v2->v3:
- - 2/4 - Clarify commit log (Bean)
- - 4/4 - pass cmd_type to ufshcd_prepare_req_desc_hdr (Bean)
+I didn't see any objections to this patch.
 
-v1->v2:
- - Attend Bart's comments
+Are there any issues?
 
-
-Device management commands are constructed for query commands that are
-being issued by the driver, but also for raw device management commands
-originated by the bsg module, and recently, by the advanced rpmb
-handler. Thus, the same code fragments, e.g. locking, composing the
-command, composing the upiu etc., appear over and over. Remove those
-duplications.  Theoretically, there should be no functional change.
-
-Avri Altman (4):
-  scsi: ufs: Re-use device management locking code
-  scsi: ufs: Re-use exec_dev_cmd
-  scsi: ufs: Re-use compose_dev_cmd
-  scsi: ufs: Re-use compose_devman_upiu
-
- drivers/ufs/core/ufshcd.c | 204 ++++++++++++++++----------------------
- include/ufs/ufshci.h      |   2 +-
- 2 files changed, 87 insertions(+), 119 deletions(-)
-
--- 
-2.42.0
-
+On Sat, Dec 2, 2023 at 10:45=E2=80=AFAM lduncan@suse.com <lduncan@suse.com>=
+ wrote:
+>
+> From: Lee Duncan <lduncan@suse.com>
+>
+> The LIO target code has a warning about setting the
+> read and/or write header bits with a PDU that has zero
+> transfer length, even though the code mentions that the
+> SPEC (RFC 3720) allows this, and that some initiators
+> set these bits. But in practice such initiators end up
+> flooding the logs with thousands of warning messages for
+> IO that is allowed.
+>
+> So change this to a debug message, and clean up the wording
+> just a little bit while at it.
+>
+> Signed-off-by: Lee Duncan <lduncan@suse.com>
+> Reviewed-by: David Bond <dbond@suse.com>
+> ---
+>  drivers/target/iscsi/iscsi_target.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/i=
+scsi_target.c
+> index f246e5015868..c82dc2cd08b3 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -1039,9 +1039,10 @@ int iscsit_setup_scsi_cmd(struct iscsit_conn *conn=
+, struct iscsit_cmd *cmd,
+>                 hdr->flags &=3D ~ISCSI_FLAG_CMD_READ;
+>                 hdr->flags &=3D ~ISCSI_FLAG_CMD_WRITE;
+>
+> -               pr_warn("ISCSI_FLAG_CMD_READ or ISCSI_FLAG_CMD_WRITE"
+> +               pr_debug("ISCSI_FLAG_CMD_READ or ISCSI_FLAG_CMD_WRITE"
+>                         " set when Expected Data Transfer Length is 0 for=
+"
+> -                       " CDB: 0x%02x, Fixing up flags\n", hdr->cdb[0]);
+> +                       " CDB: 0x%02x, cleared READ/WRITE flag(s)\n",
+> +                       hdr->cdb[0]);
+>         }
+>
+>         if (!(hdr->flags & ISCSI_FLAG_CMD_READ) &&
+> --
+> 2.43.0
+>
