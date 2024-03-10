@@ -1,57 +1,57 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+Received: from mail-il1-f179.google.com (mail-il1-f179.google.com [209.85.166.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4C01383A9
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Mar 2024 20:17:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFB62383A9
+	for <linux-scsi@vger.kernel.org>; Sun, 10 Mar 2024 20:19:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710101856; cv=none; b=g3nC6j+LgAVeYwxDOfqVZ2XLZgE2xAOPlo158n8s1u7OgJ2ls5fbkMN/e7WKhKU+I3CGeDjkNVujklozj9Pj7nhzwNiYzHjuiz5LXshnAvKQRCt+wuhJz6auwXEGHCXWMvRgCkm6V0IrYhj2opvD8+uGeOtV2DG/31iLPyyN0jQ=
+	t=1710101965; cv=none; b=ZDJ2rWrTvgw21i5kRTgK0f+A0V40cHfeJNQRQ7cd2Ya8izLQo3zeKpRJXRAGJ1EmMzARvXhWgXSmco2Y4BeExWGIIu9AjbkVZ3ye0qDMfykkRmGdmrQMfgW99s8MzCVsEUWTct8Xg6w6gqlXF0pHGU6CVTrPhbbFCgj7xErOBgE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710101856; c=relaxed/simple;
-	bh=yYpWxaTagmqVzXIXxrJg3aLLEPUItswmEUTywcZvkUo=;
+	s=arc-20240116; t=1710101965; c=relaxed/simple;
+	bh=xVgw+WLpstkp51McpETd1ecy51TvKLzFwrwza0ZRMNA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mMQMYlkTcGcgD2T2XRCpxn0c6oRuxI3+RNR8RXNhWMn9bNKtOFoPD6Umu0LQNigklFa/7yYU/z+79Y1Va+HUcaOkZk4DF282idN+Sly/jrjK5CvUp0o7rFX+thsDyu0iup5FJirPb0WV/5dshWVzEaI7vFUnBfv769yfZCYHR4o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=nEUjC3om; arc=none smtp.client-ip=209.85.214.171
+	 Content-Type:Content-Disposition:In-Reply-To; b=AAnji7TKvTzu/yOtoRcjjYOSX2ybXKSoSe+FJINkEr7w4Z+nxsmGo+8qKtTo/FY7+OVoNvZmyHqCbAvms+V6BOItKnv2/5dfdy7wC5TJgrqU+tS43XPNl3ssKvSVWdRkc5fDZEnQwF91BPnKh80dvRMVE6ic3MtD/nE4m4p6GKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=cb87LhzD; arc=none smtp.client-ip=209.85.166.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="nEUjC3om"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1dd9b6098aeso2071915ad.0
-        for <linux-scsi@vger.kernel.org>; Sun, 10 Mar 2024 13:17:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cb87LhzD"
+Received: by mail-il1-f179.google.com with SMTP id e9e14a558f8ab-3664c7f5a18so2452815ab.0
+        for <linux-scsi@vger.kernel.org>; Sun, 10 Mar 2024 13:19:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1710101854; x=1710706654; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1710101963; x=1710706763; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=WbiSzw26+9373KYouYTfVHpboWaxNLA5RmqGKrJSo98=;
-        b=nEUjC3om9ooDnd/4bTXaTwNJz6rGWVy5+4Ugqzje0Zfpljlc4x46/ZBEg+oSHFXO+F
-         YWzwZzSMSLFJv1uDm+ZqgttR4CyH8RPyXJNaV06RPZP74sbAu+Muiu/yqmUzikyhkedt
-         2NfXe3Ujj95W1L812F/XqBdHFGPJVncgLAi5R5kpCQs7QTKH1mQbkzAOfux0jj2JT+8p
-         qTN9lSoyx8fcIS7qvMD+KybR1d7pQT1jQd+5T+g4qqQyR3p3GjI7d9U9B6aejoFyWxrc
-         sa5IiUFntLhJOtupSTDe67BJhC5X2+H6nR6GleqCLyMe9ggqdfd7JkVnVrdbteHYcN6C
-         HeUQ==
+        bh=8p/OFdmYo9bWywhrZ/WxG3/jOMvpbouzGPdTG2yUZyw=;
+        b=cb87LhzDNUq96H9olgzx6I3vhlmYBDXkWJItiB25d9zM6veUBCPEtJntns5J6vBRnW
+         4GrWW+dR/hvcNiSp4YJYYpdKFLGS9s2Shhn+BTVBDVmzJtl36vsoHiyrP+Ai45uH3zPS
+         R5Qq7+g3vQCqijMEd69bWDSWR3DeloA9mZs8VZkAglOXDKOQZZLJE5gKZdEtjZMK6ZVE
+         IBugTZmuSDfDeuh+lCKqW5tYe4aGn59Ok2F6T+r/jZCn6i4o2vT/htAB7j6o022MX3G/
+         QOH0DWxyXBguLimH+EhUVqc/2fU0p9AbSyJ0du+FkwwZLu7TO/RHlJmKHkw3mpqxRx45
+         Fh8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710101854; x=1710706654;
+        d=1e100.net; s=20230601; t=1710101963; x=1710706763;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=WbiSzw26+9373KYouYTfVHpboWaxNLA5RmqGKrJSo98=;
-        b=W1yDsuY1gYK8XbDQ4nsyJBcsdRy/r7nKPW3PiWgjRDHUX/ejOW+TNO5AvDa7BlGYBK
-         imdSG7uRAZSPCBoiC4VcSrjJV3XuwNqZtUe0u+c3Z43G6hdYdiCphi2T5Rmnv0HkLugg
-         VoJgYQy6tKsx840deqnhNGWkLMheJqUTQlSKDz2W70BG6cRgtZzKTGMWHdUCWqz6V87F
-         uPn3VL4eYkHfNdbAlKGSFivDBRHl1d1jJPGTRpFZgdlT5tcBs+hUo/WGezIVFkSTHNZP
-         VK/6iv8zyVkh5vDxgFULYu9Bqb/Orw8kVmHFyCzSTE4N09T8Kjxtxlch8FdCjd+j8QKU
-         SjnA==
-X-Forwarded-Encrypted: i=1; AJvYcCWSkQlhvB+8EsR/go2/VsXADZypBbkntfRanJ1x2aA/JAAZaScrHTLgGjK1egoZl8XlfCm2XZutMI7ifYjjX5MxK6NvP3QGoZhtTQ==
-X-Gm-Message-State: AOJu0YxbiJQ2kHbC9O2+FSnQuIxsGBQSDvSa3sg1bl4uFrhJ64JdULMd
-	Fg5vzYkeXxhCpsuKdIbcKVF24aRU1J0I1i7qKaPDOgNTlBz8Z9kffUjd6EtWOQ==
-X-Google-Smtp-Source: AGHT+IHpNG92iH7XTGOkJLBcMhmM9mRBUygQpDgdmRz9qp4hXq7hh1jlRbGd45dyAql9JF0l5lIGaQ==
-X-Received: by 2002:a17:902:7608:b0:1dc:90c0:1e9a with SMTP id k8-20020a170902760800b001dc90c01e9amr5153297pll.64.1710101853807;
-        Sun, 10 Mar 2024 13:17:33 -0700 (PDT)
+        bh=8p/OFdmYo9bWywhrZ/WxG3/jOMvpbouzGPdTG2yUZyw=;
+        b=bfTwNVpV7YxfgYpb2/iRZn6Quv4CR9hpHVsv0XZ2KmifkWLyEL199g6aLtsGtHFWpj
+         5Bp9bHpmrE0qk9COYlsgXQfIPzpuyyWi9q2+ZazFUwZkRVtgX8WqpB/1Ycx1mrKGb4d/
+         2LfPVBghJOER94Ous57A37vK+dtAB2dbauDotI+RJwYOErxLjgkO7WmmLEaFwlYyeqmU
+         N+EmCxlFJizu16GMK54tB36AkKk/uiXcQtvGnl31WZYHPLTKHgv5HOgLjNgneQv8vPCq
+         VplfKbWihn2nIoPqK3DWevSOIcPvh3wxV5L4EP99MfR58AknOd8ve5E/tlRZZ1RYi+uK
+         /SEg==
+X-Forwarded-Encrypted: i=1; AJvYcCVyyi4T7bT0rbQLoXlfCXrbVoxxgAzRwSYnqXwY7AccVU2rhlNQZH6ewyMh9Bty+xA7AhXwrLEwNVldRo2KciaH2XwAgzid8LC5uA==
+X-Gm-Message-State: AOJu0Yxi7z/6hlzDWozF9aLCnybRUjmjQhuuAdMxt13TX+mJjWBXsaw5
+	81u2JNm4dgSrMFyhr4DItR4kedkPUpkwnilTDrYrScS6TkEtdLchdC/8hbKZJQ==
+X-Google-Smtp-Source: AGHT+IFKWg0hXoZLmFIdYMz6hJTqPMSruvwbNITVdX3FilLT2IXrNKs5ao0yzivkQ3kT2B/4G5GAww==
+X-Received: by 2002:a05:6e02:1748:b0:365:d2be:3de6 with SMTP id y8-20020a056e02174800b00365d2be3de6mr6871993ill.2.1710101962804;
+        Sun, 10 Mar 2024 13:19:22 -0700 (PDT)
 Received: from google.com ([2620:15c:2c5:13:d1de:e5bb:fcf:1314])
-        by smtp.gmail.com with ESMTPSA id p8-20020a170902e74800b001dd6298a3efsm3039369plf.118.2024.03.10.13.17.32
+        by smtp.gmail.com with ESMTPSA id q19-20020a656253000000b005d553239b16sm2473866pgv.20.2024.03.10.13.19.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 Mar 2024 13:17:33 -0700 (PDT)
-Date: Sun, 10 Mar 2024 13:17:28 -0700
+        Sun, 10 Mar 2024 13:19:22 -0700 (PDT)
+Date: Sun, 10 Mar 2024 13:19:17 -0700
 From: Igor Pylypiv <ipylypiv@google.com>
 To: John Garry <john.g.garry@oracle.com>
 Cc: jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -59,10 +59,10 @@ Cc: jejb@linux.ibm.com, martin.petersen@oracle.com,
 	artur.paszkiewicz@intel.com, yanaijie@huawei.com,
 	dlemoal@kernel.org, cassel@kernel.org, linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/6] scsi: pm8001: Use LIBSAS_SHT_BASE
-Message-ID: <Ze4VWDO6_X6BbH53@google.com>
+Subject: Re: [PATCH v2 3/6] scsi: hisi_sas: Use LIBSAS_SHT_BASE_NO_SLAVE_INIT
+Message-ID: <Ze4VxRS1GQ1q4Jke@google.com>
 References: <20240308114339.1340549-1-john.g.garry@oracle.com>
- <20240308114339.1340549-3-john.g.garry@oracle.com>
+ <20240308114339.1340549-4-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,16 +71,19 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240308114339.1340549-3-john.g.garry@oracle.com>
+In-Reply-To: <20240308114339.1340549-4-john.g.garry@oracle.com>
 
-On Fri, Mar 08, 2024 at 11:43:35AM +0000, John Garry wrote:
+On Fri, Mar 08, 2024 at 11:43:36AM +0000, John Garry wrote:
 > Use standard template for scsi_host_template structure to reduce
 > duplication.
 > 
+> Reviewed-by: Jason Yan <yanaijie@huawei.com>
 > Signed-off-by: John Garry <john.g.garry@oracle.com>
 > ---
->  drivers/scsi/pm8001/pm8001_init.c | 20 +-------------------
->  1 file changed, 1 insertion(+), 19 deletions(-)
+>  drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 18 +-----------------
+>  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 18 +-----------------
+>  drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 18 +-----------------
+>  3 files changed, 3 insertions(+), 51 deletions(-)
 
 Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 
