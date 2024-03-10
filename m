@@ -1,63 +1,62 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FCD13BBDF;
-	Sun, 10 Mar 2024 23:04:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13F5D3CF7D;
+	Sun, 10 Mar 2024 23:04:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710111881; cv=none; b=fkwwtbPraPB9pDvqTG4tUpMEXxJvEHXCmrFP39H/TzGcRNk1+yief/UXA7eR2wAfs4ZwEU8kHDIoW97pQ1oBVCGVQ10yRCNNZhx/reG5ivFrNCCypRJWcchFFThcQTSzKpELI4+FSm4eApVt0/CR7IHZ1mKix7W02Jh0zqjorSM=
+	t=1710111885; cv=none; b=i/Kk7Gxnj7G7+y+PV3LTf0YVCvtaxZPBp/gaY9ATSHukBy18EeCXoyTeaekbQrfRFiqHJbNcH+FUZlqQy9AaKGirEhbARvy8k86SATRzhJvA1CBVN3tvrwN8QCDhwg4fZARaq4BnnXL0untQvZAYcyXL0zK21pALMi5phPBHks0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710111881; c=relaxed/simple;
-	bh=xsSCg1gIRfOme0qklPp8Mf3tndy3KcT8aeAC76zRIw8=;
+	s=arc-20240116; t=1710111885; c=relaxed/simple;
+	bh=MumzQ3IsWvimTKAo3jDk2dgNf1hA91GXx5qNhG6fKc4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nUbI+2GdkjPI8soSmE8uS8gKlHRoQ2nagbMKqU8x7jsUu39B/+i/wXF2v9zkYTSgvKpbbQgQjPETtBlWp3DLPVAYiOJsVIBIEuf+O8nog7ujhz1EGEFY39HtGIkjblIWYWwuQ2NBP2GIAWEepUP0iqOnCuDiHYPpUvSCpRmxpX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=LuiLPCKd; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=lKX+FkbrKJbqk/77tvF3wMGFyJ3HQaOgk9ypOPS5NKMCvlKh/C3cHGibBrNT/E77yS358NOXl02j5VOOG/JoZtYqfLJYoeUbnEVzcNgjP0ovQ/pR0kNlCLw2B88E5NoSA4/bjd0oq9Gj2LJu5d/PPe3y7xCFiOIrGv5WRjM2/y4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=nB/RdRDq; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LuiLPCKd"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42AJHw3T023445;
-	Sun, 10 Mar 2024 23:04:31 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nB/RdRDq"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42AL1Ppb030905;
+	Sun, 10 Mar 2024 23:04:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=f+FpPc4r1PZZdnJlL9j5cCgKyKK/ti6jzEW4uDteAb8=;
- b=LuiLPCKdYmBUX4HPpw3r+LJCreOcQHeGO0wW9hSeLGcq5yy4CcIe70CsLE315Y2AQpBG
- PNS5QWI5swQWW5FxJ9yJFUZxQ72iT76x2sqFHDMaw7LJA3nQ/1Mc4Ty8TZTukDYEjj2s
- OApGoYZ5w3uY4KDiDS5Di5L8qOCxJewF69xbJfqmcBgEJSEssVimDsh6uVVy7IiSkDm5
- uZ60B6gQL2bM1v+TwVrAc3A3zDhTPpCMYMKYIgPY+1ZxC5GONp60U4lSDwfrMCVRzgq9
- Kq60NgDOdY4QXUsQJeb2WJ8K1G/QMp9dtD9jGgMyBwSaaRsKytNMtUdWQ76Hn/S31vbV 1w== 
+ bh=Am0zrIX5u09VdN+5NR+B1MgFOehy3Kyxjqn1fkhhUNY=;
+ b=nB/RdRDqT8vG5mSIYl9qgGbxuiukKHhyu6JchchA9hy6LVG2tQJ7RXkEa25Rn1Zv1BV7
+ 7qeRkJBBhd1on/NqO8+AAF+FVBa2QFK6Z6gG1xg6A80YFYWBIue/by92RemSPkkeeI3F
+ Clu6T3KifGxwfmjiDZqjhqkT8Q3RvMTbUI42pzvpV/elqXXt8YrXHPBwQzVsGoxzRNDZ
+ Wym3UB9mhr8+PNStQyWrutnQgRsNnbSbuvsRXQH/oB641Qbroe4j+IGExZqIYH5okijY
+ Kg6rXwifNRXcPyxBj+NWyOl/oCJt9GnZ3KfJQFpQoEwNqj6EmDc80vH9oj2iUFr6sJt1 8w== 
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3wrej3stu8-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3wrgauhsh3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sun, 10 Mar 2024 23:04:32 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 42AJ4ntP004737;
+	Sun, 10 Mar 2024 23:04:31 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3wre750nee-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Sun, 10 Mar 2024 23:04:31 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 42AIUIgY004790;
-	Sun, 10 Mar 2024 23:04:30 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3wre750ne5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 10 Mar 2024 23:04:30 +0000
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 42AN4TSC006839;
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 42AN4TSG006839;
 	Sun, 10 Mar 2024 23:04:30 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3wre750ndq-2;
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3wre750ndq-4;
 	Sun, 10 Mar 2024 23:04:30 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Justin Stitt <justinstitt@google.com>
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Ricardo B. Marliere" <ricardo@marliere.net>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: libfc: replace deprecated strncpy with memcpy
-Date: Sun, 10 Mar 2024 19:04:18 -0400
-Message-ID: <171010474754.3838281.7412694993720179449.b4-ty@oracle.com>
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] scsi: constify the struct device_type usage
+Date: Sun, 10 Mar 2024 19:04:20 -0400
+Message-ID: <171010474755.3838281.2449680609899297619.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.42.1
-In-Reply-To: <20240221-strncpy-drivers-scsi-libfc-fc_encode-h-v2-1-019a0889c5ca@google.com>
-References: <20240221-strncpy-drivers-scsi-libfc-fc_encode-h-v2-1-019a0889c5ca@google.com>
+In-Reply-To: <20240219-device_cleanup-scsi-v1-1-c5edf2afe178@marliere.net>
+References: <20240219-device_cleanup-scsi-v1-1-c5edf2afe178@marliere.net>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,27 +69,27 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-03-10_14,2024-03-06_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 adultscore=0
- mlxscore=0 phishscore=0 spamscore=0 suspectscore=0 mlxlogscore=809
+ mlxscore=0 phishscore=0 spamscore=0 suspectscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
  definitions=main-2403100187
-X-Proofpoint-GUID: -lc6KRz5DNNYPN7JoNIakS6QpDoyRZ6q
-X-Proofpoint-ORIG-GUID: -lc6KRz5DNNYPN7JoNIakS6QpDoyRZ6q
+X-Proofpoint-GUID: cefgvOFomSyys2DMh0mPnSly9OyQn3sR
+X-Proofpoint-ORIG-GUID: cefgvOFomSyys2DMh0mPnSly9OyQn3sR
 
-On Wed, 21 Feb 2024 23:50:26 +0000, Justin Stitt wrote:
+On Mon, 19 Feb 2024 08:45:53 -0300, Ricardo B. Marliere wrote:
 
-> strncpy() is deprecated [1] and as such we should use different apis to
-> copy string data.
+> Since commit aed65af1cc2f ("drivers: make device_type const"), the driver
+> core can properly handle constant struct device_type. Move the
+> scsi_host_type, scsi_target_type and scsi_dev_type variables to be constant
+> structures as well, placing it into read-only memory which can not be
+> modified at runtime.
 > 
-> We can see that ct is NUL-initialized with fc_ct_hdr_fill:
-> |       ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rspn) + len,
-> ...
 > 
 > [...]
 
 Applied to 6.9/scsi-queue, thanks!
 
-[1/1] scsi: libfc: replace deprecated strncpy with memcpy
-      https://git.kernel.org/mkp/scsi/c/3e24118ec185
+[1/1] scsi: constify the struct device_type usage
+      https://git.kernel.org/mkp/scsi/c/517bcc2b4db4
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
