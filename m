@@ -1,220 +1,95 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95CA18468
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2024 12:11:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF5BE535A8;
+	Mon, 11 Mar 2024 15:12:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710159103; cv=none; b=HSBeZQJDfmBlQqohaREpae7XL3iLWsot2S7Zp0Hq8LmCuIh3RgA60ZofNSVbVJn5bYdxbKFF5iFxnWZibU60oCSYlx0hSZb6jDB9Fj8B6tyoyPhpgikSToNiFgxMwe0q4jkgNrg2u5wsOM9b89sb38Ef9/R9y0yBOP/jPRJpGFI=
+	t=1710169966; cv=none; b=I6/wJBf61qesBTobQgi18VQY/w4hKv1x8z62IULf+8KBHDGYfmOa3ZkjktdkDqvQRxQ/UoTv0zeYXfmAltLA8N5WsE9TQysSA3nla8EQu9I5WRCU09Ntth1A1AeQgK/51O+OgbR5aaNCrMnRcsRa9reyGEcDBh/gUY28h65rT4o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710159103; c=relaxed/simple;
-	bh=jzTKEKFQm9pb99MLcwtFzrHohRjmWGKE6mJ4PAqvrJw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=J8SVRlVRWOm2vDbw8LAv52FPjxa+NHhr1OyES5/qm76MEKlPzC7Iq6guY4qdqnegs2R9oy9rBqfxS87MvRIOkxE3iWfDBeAaK0kZTtVCIpAacw5I9xqajslYguaKeR3Z3vrQUcS2nhdVd7q+ilxijmHr5hXG1//0OHlRgM9BCXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ftp0kNT5; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1710169966; c=relaxed/simple;
+	bh=fcYzSLOFq5sMLBWQn8a4zJLsYwI3TPCX+aV1ze6z2EI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ZPGjpQjMHlp9Pl1oKk0ZEBOZnj/5cdMEF6XxzkxLzJnXKKx5aIOqJerpR4w2AKGYZQZuKyakB5xJQVcTcc0tpfZ3Dks9SSOZ90+CYc+MiCcFHR/lqAua+e1RQ96d+yqQZia677SJiBjBvj80R9gOIJk5aqwBjEXXSoNLTLabCfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nH1hc/bm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ftp0kNT5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1710159100;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=XxDD2wD70pCbEB5KzxbrQDKQzOfuvWqDUlzVI/kjUYM=;
-	b=Ftp0kNT5SPMRMwCI04l7ebzC6PizIb3aNbiR+o1nMkZi1vgbrTHgYtHu5WwGl5WrUypVD2
-	keewiFEClFNjvJxC2jFwqafun0VENy84aVwAVfnRdiVorLJbxs7x7s9LYyK3+l6FZCd7Ew
-	R4r0hhfd4DSznudXjo9CQZ5wMJ1GNfo=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-557-XHV5xFAbO36ZwOqM5AWmnQ-1; Mon, 11 Mar 2024 08:11:36 -0400
-X-MC-Unique: XHV5xFAbO36ZwOqM5AWmnQ-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 65EEC851783;
-	Mon, 11 Mar 2024 12:11:35 +0000 (UTC)
-Received: from kaapi.redhat.com (unknown [10.67.24.5])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 9D872112131D;
-	Mon, 11 Mar 2024 12:11:32 +0000 (UTC)
-From: Prasad Pandit <ppandit@redhat.com>
-To: linux-scsi@vger.kernel.org
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	megaraidlinux.pdl@broadcom.com,
-	Prasad Pandit <pjp@fedoraproject.org>
-Subject: [PATCH v1] scsi: megaraid: indent Kconfig option help text
-Date: Mon, 11 Mar 2024 17:41:27 +0530
-Message-ID: <20240311121127.1281159-1-ppandit@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nH1hc/bm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CD7BC433F1;
+	Mon, 11 Mar 2024 15:12:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1710169965;
+	bh=fcYzSLOFq5sMLBWQn8a4zJLsYwI3TPCX+aV1ze6z2EI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=nH1hc/bmJYpavXfpK/sJBy5a5aNWd3uTyz9WtvV9t3iu3vtb2S1RWlzsGkeLQHX0q
+	 jslO2QS2rDBef+FZbKn9caVU0OMpwJtwSJFQf2eAV3HaRas52lZ+kQEgt1TQhkAMOa
+	 gPcqNqEeErmGthRupZ0eBOAoXlTMftEjci7towvDgOWRD6EIAkXfwMusLHvm5I7u54
+	 IJEm6j6UeYL8mIV8VSrFV40C1ilnrPtm7xp5cXC0Rfx2WgxfyoS5bBcgJd3lslsMvp
+	 7wjxSdUJcBxNdp1D3EZqerFcoJXeXx1nJyE//ZH2ihoOV9rXv5Gn4mA5Y67lB+9k2H
+	 REnbj1amZ1iaQ==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	sathya.prakash@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	suganath-prabu.subramani@broadcom.com,
+	jejb@linux.ibm.com,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.7 13/23] scsi: mpt3sas: Prevent sending diag_reset when the controller is ready
+Date: Mon, 11 Mar 2024 11:11:53 -0400
+Message-ID: <20240311151217.317068-13-sashal@kernel.org>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240311151217.317068-1-sashal@kernel.org>
+References: <20240311151217.317068-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.7.9
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
 
-From: Prasad Pandit <pjp@fedoraproject.org>
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-Fix indentation of megaraid options help text by adding
-leading spaces. Generally help text is indented by couple
-of spaces more beyond the leading tab <\t> character.
+[ Upstream commit ee0017c3ed8a8abfa4d40e42f908fb38c31e7515 ]
 
-Signed-off-by: Prasad Pandit <pjp@fedoraproject.org>
+If the driver detects that the controller is not ready before sending the
+first IOC facts command, it will wait for a maximum of 10 seconds for it to
+become ready. However, even if the controller becomes ready within 10
+seconds, the driver will still issue a diagnostic reset.
+
+Modify the driver to avoid sending a diag reset if the controller becomes
+ready within the 10-second wait time.
+
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Link: https://lore.kernel.org/r/20240221071724.14986-1-ranjan.kumar@broadcom.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/Kconfig.megaraid | 113 ++++++++++++-------------
- 1 file changed, 56 insertions(+), 57 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/Kconfig.megaraid b/drivers/scsi/megaraid/Kconfig.megaraid
-index 3f2ce1eb081c..56b76d73895b 100644
---- a/drivers/scsi/megaraid/Kconfig.megaraid
-+++ b/drivers/scsi/megaraid/Kconfig.megaraid
-@@ -3,85 +3,84 @@ config MEGARAID_NEWGEN
- 	bool "LSI Logic New Generation RAID Device Drivers"
- 	depends on PCI && HAS_IOPORT && SCSI
- 	help
--	LSI Logic RAID Device Drivers
-+	  LSI Logic RAID Device Drivers
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index a75f670bf5519..aa29e250cf15f 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -7387,7 +7387,9 @@ _base_wait_for_iocstate(struct MPT3SAS_ADAPTER *ioc, int timeout)
+ 		return -EFAULT;
+ 	}
  
- config MEGARAID_MM
- 	tristate "LSI Logic Management Module (New Driver)"
- 	depends on PCI && HAS_IOPORT && SCSI && MEGARAID_NEWGEN
- 	help
--	Management Module provides ioctl, sysfs support for LSI Logic
--	RAID controllers.
--	To compile this driver as a module, choose M here: the
--	module will be called megaraid_mm
-+	  Management Module provides ioctl, sysfs support for LSI Logic
-+	  RAID controllers.
-+	  To compile this driver as a module, choose M here: the
-+	  module will be called megaraid_mm
- 
- 
- config MEGARAID_MAILBOX
- 	tristate "LSI Logic MegaRAID Driver (New Driver)"
- 	depends on PCI && SCSI && MEGARAID_MM
- 	help
--	List of supported controllers
-+	  List of supported controllers
- 
--	OEM	Product Name		VID :DID :SVID:SSID
--	---	------------		---- ---- ---- ----
--	Dell PERC3/QC			101E:1960:1028:0471
--	Dell PERC3/DC			101E:1960:1028:0493
--	Dell PERC3/SC			101E:1960:1028:0475
--	Dell PERC3/Di			1028:000E:1028:0123
--	Dell PERC4/SC			1000:1960:1028:0520
--	Dell PERC4/DC			1000:1960:1028:0518
--	Dell PERC4/QC			1000:0407:1028:0531
--	Dell PERC4/Di			1028:000F:1028:014A
--	Dell PERC 4e/Si			1028:0013:1028:016c
--	Dell PERC 4e/Di			1028:0013:1028:016d
--	Dell PERC 4e/Di			1028:0013:1028:016e
--	Dell PERC 4e/Di			1028:0013:1028:016f
--	Dell PERC 4e/Di			1028:0013:1028:0170
--	Dell PERC 4e/DC			1000:0408:1028:0002
--	Dell PERC 4e/SC			1000:0408:1028:0001
--	LSI MegaRAID SCSI 320-0		1000:1960:1000:A520
--	LSI MegaRAID SCSI 320-1		1000:1960:1000:0520
--	LSI MegaRAID SCSI 320-2		1000:1960:1000:0518
--	LSI MegaRAID SCSI 320-0X	1000:0407:1000:0530
--	LSI MegaRAID SCSI 320-2X	1000:0407:1000:0532
--	LSI MegaRAID SCSI 320-4X	1000:0407:1000:0531
--	LSI MegaRAID SCSI 320-1E	1000:0408:1000:0001
--	LSI MegaRAID SCSI 320-2E	1000:0408:1000:0002
--	LSI MegaRAID SATA 150-4		1000:1960:1000:4523
--	LSI MegaRAID SATA 150-6		1000:1960:1000:0523
--	LSI MegaRAID SATA 300-4X	1000:0409:1000:3004
--	LSI MegaRAID SATA 300-8X	1000:0409:1000:3008
--	INTEL RAID Controller SRCU42X	1000:0407:8086:0532
--	INTEL RAID Controller SRCS16	1000:1960:8086:0523
--	INTEL RAID Controller SRCU42E	1000:0408:8086:0002
--	INTEL RAID Controller SRCZCRX	1000:0407:8086:0530
--	INTEL RAID Controller SRCS28X	1000:0409:8086:3008
--	INTEL RAID Controller SROMBU42E	1000:0408:8086:3431
--	INTEL RAID Controller SROMBU42E	1000:0408:8086:3499
--	INTEL RAID Controller SRCU51L	1000:1960:8086:0520
--	FSC MegaRAID PCI Express ROMB	1000:0408:1734:1065
--	ACER MegaRAID ROMB-2E		1000:0408:1025:004D
--	NEC MegaRAID PCI Express ROMB	1000:0408:1033:8287
-+	  OEM  Product Name               VID :DID :SVID:SSID
-+	  ---  ------------               ---- ---- ---- ----
-+	  Dell PERC3/QC                   101E:1960:1028:0471
-+	  Dell PERC3/DC                   101E:1960:1028:0493
-+	  Dell PERC3/SC                   101E:1960:1028:0475
-+	  Dell PERC3/Di                   1028:000E:1028:0123
-+	  Dell PERC4/SC                   1000:1960:1028:0520
-+	  Dell PERC4/DC                   1000:1960:1028:0518
-+	  Dell PERC4/QC                   1000:0407:1028:0531
-+	  Dell PERC4/Di                   1028:000F:1028:014A
-+	  Dell PERC 4e/Si                 1028:0013:1028:016c
-+	  Dell PERC 4e/Di                 1028:0013:1028:016d
-+	  Dell PERC 4e/Di                 1028:0013:1028:016e
-+	  Dell PERC 4e/Di                 1028:0013:1028:016f
-+	  Dell PERC 4e/Di                 1028:0013:1028:0170
-+	  Dell PERC 4e/DC                 1000:0408:1028:0002
-+	  Dell PERC 4e/SC                 1000:0408:1028:0001
-+	  LSI MegaRAID SCSI 320-0         1000:1960:1000:A520
-+	  LSI MegaRAID SCSI 320-1         1000:1960:1000:0520
-+	  LSI MegaRAID SCSI 320-2         1000:1960:1000:0518
-+	  LSI MegaRAID SCSI 320-0X        1000:0407:1000:0530
-+	  LSI MegaRAID SCSI 320-2X        1000:0407:1000:0532
-+	  LSI MegaRAID SCSI 320-4X        1000:0407:1000:0531
-+	  LSI MegaRAID SCSI 320-1E        1000:0408:1000:0001
-+	  LSI MegaRAID SCSI 320-2E        1000:0408:1000:0002
-+	  LSI MegaRAID SATA 150-4         1000:1960:1000:4523
-+	  LSI MegaRAID SATA 150-6         1000:1960:1000:0523
-+	  LSI MegaRAID SATA 300-4X        1000:0409:1000:3004
-+	  LSI MegaRAID SATA 300-8X        1000:0409:1000:3008
-+	  INTEL RAID Controller SRCU42X   1000:0407:8086:0532
-+	  INTEL RAID Controller SRCS16    1000:1960:8086:0523
-+	  INTEL RAID Controller SRCU42E   1000:0408:8086:0002
-+	  INTEL RAID Controller SRCZCRX   1000:0407:8086:0530
-+	  INTEL RAID Controller SRCS28X   1000:0409:8086:3008
-+	  INTEL RAID Controller SROMBU42E 1000:0408:8086:3431
-+	  INTEL RAID Controller SROMBU42E 1000:0408:8086:3499
-+	  INTEL RAID Controller SRCU51L   1000:1960:8086:0520
-+	  FSC MegaRAID PCI Express ROMB   1000:0408:1734:1065
-+	  ACER MegaRAID ROMB-2E           1000:0408:1025:004D
-+	  NEC MegaRAID PCI Express ROMB   1000:0408:1033:8287
- 
--	To compile this driver as a module, choose M here: the
--	module will be called megaraid_mbox
-+	  To compile this driver as a module, choose M here: the
-+	  module will be called megaraid_mbox
- 
- config MEGARAID_LEGACY
- 	tristate "LSI Logic Legacy MegaRAID Driver"
- 	depends on PCI && HAS_IOPORT && SCSI
- 	help
--	This driver supports the LSI MegaRAID 418, 428, 438, 466, 762, 490
--	and 467 SCSI host adapters. This driver also support the all U320
--	RAID controllers
-+	  This driver supports the LSI MegaRAID 418, 428, 438, 466, 762, 490
-+	  and 467 SCSI host adapters. This driver also support the all U320
-+	  RAID controllers
- 
--	To compile this driver as a module, choose M here: the
--	module will be called megaraid
-+	  To compile this driver as a module, choose M here: the
-+	  module will be called megaraid
- 
- config MEGARAID_SAS
- 	tristate "LSI Logic MegaRAID SAS RAID Module"
- 	depends on PCI && SCSI
- 	select IRQ_POLL
- 	help
--	Module for LSI Logic's SAS based RAID controllers.
--	To compile this driver as a module, choose 'm' here.
--	Module will be called megaraid_sas
--
-+	  Module for LSI Logic's SAS based RAID controllers.
-+	  To compile this driver as a module, choose 'm' here.
-+	  Module will be called megaraid_sas
+- issue_diag_reset:
++	return 0;
++
++issue_diag_reset:
+ 	rc = _base_diag_reset(ioc);
+ 	return rc;
+ }
 -- 
-2.44.0
+2.43.0
 
