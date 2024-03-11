@@ -1,53 +1,53 @@
-Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36B213BBCC
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2024 11:37:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2487F3BBF7
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2024 11:37:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710157075; cv=none; b=iaYSMvJ4rb6ibgcBYbLCnfTpxM8YJbmSwe0CFiV4aLcnq6LveW1jhv//1Y1j0XdcH8yw8fayFYsQtjI7Su+qeYEUm1TAkGtwe2TX9AffTUDP2wxLpuymCRexTRtTiQsrgiq0FqSFHAwj0QaFkP54BafAVZ/EVnE8EWbzAiVY6mo=
+	t=1710157078; cv=none; b=rYG99UQmmIBMjLQH7TN+YvC8AegUbPUTiav7o1F+ynkvO6i9gb8MNLAPDEHKiDNkMySyTdaFdpMjOui8UzmE0BBl0LKAIP9Ws6BLKEC11dUfAmrjk40UIYe91PYSyUAm8JXL2iCw+GLocNvrk8Gj3koAw96OLd9Lgtko0agXKXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710157075; c=relaxed/simple;
-	bh=4aGpEiGH4GDYheB2y3FhjUhDWb4acjzTqXg97OmvRJ8=;
+	s=arc-20240116; t=1710157078; c=relaxed/simple;
+	bh=oCkjplDMG2OlVTPM2+CjgpJM97K1mwQOmMM4eKT3/To=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uv3n8ntMlh4xyZCLvVqRisRW109sGzO7JJgyMKfxHYgQGK4LILT9nLIjvFuoZ0QPnObNBrwp8dKeOidH1b2Qvo33v/oFEMqtKXxXyMxk0xMW9PemA85xUq2OxNTTxlbImotNk72yK1/h2jAJlv6CPu3ayVoFyJTAnduIjp9fwzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=RH37HvAD; arc=none smtp.client-ip=209.85.215.172
+	 MIME-Version:Content-Type; b=f0Uayyf45hb+xa83+O6z5uHi5Rus1c7mX794+mWm347ad4MEEynV42iei0ayOBou1un8+RaUxRFU99I85XxwnIBngv4h2YK8YA/1vz67bKU5e/2Pibdkdu0ZcHhEMo2oripqj3kLiPdWyGP9TMxv26Hqsxqfzqz067G5AP7L9Jg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=cPjiw9wo; arc=none smtp.client-ip=209.85.215.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RH37HvAD"
-Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-5cedfc32250so2476346a12.0
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2024 04:37:53 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cPjiw9wo"
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-5d8b887bb0cso3643620a12.2
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2024 04:37:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1710157072; x=1710761872; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1710157076; x=1710761876; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=EO+SGdF5JEz3n1UyVEO64Cw3h3Iw4o56G5P1Q+JtWXE=;
-        b=RH37HvAD+cR/rYS15Zsv2ldhsF3mb3pF+LXVRgk59FmGZHGvRSFrvu5EoLYnfCvZIh
-         NnCx7KMQOWtXxR1ADxS+kj1BDwiOaDtJf4lyFWWwSeEay2s3TAUBUmBxm/SPZH6zRp6V
-         n8rG/6Kpqk1aI1E5DGG9gl46J/fQF1ohEJOeo=
+        bh=ocylGidR+I50hkjpDeO8fVMiXO54dEEkqPSh1T2kmXM=;
+        b=cPjiw9woMUKH6N0FqdZX8FQnYa5fEdavq0xw5Kb/hNY2yku71Wmy2LSnOKvW+t4haV
+         gHzeT/fI4YHzspuylUsm4zA2iyVWMfYQvpEYUtocIkIXsNCnBCGzHcne0Ah2Ob0h3JD8
+         C7P7L92vK2oQzj61Y71v6ElS0RWqLYVW8WLMg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710157072; x=1710761872;
+        d=1e100.net; s=20230601; t=1710157076; x=1710761876;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=EO+SGdF5JEz3n1UyVEO64Cw3h3Iw4o56G5P1Q+JtWXE=;
-        b=vVcGXejEnh+SGgol9b+TDl6AWLqNuOpx92WevFbK3Dr0zMbrZfTvKyzCRTdcwgzC7+
-         c6uFrihDpQFNTIpETIZC+Y/TqVt9Xh88w1o/X8G2HV833aJWaVIWXb2Cr46Nh41Gxv6y
-         c8KRZliaPvvSf7BDP206oPMdEENxWzv//ckEbFZLVebE5BxeB/M7N68mU+goHx33O6ot
-         PZhb8WnqCjLGmPdqqJHkTuEhrHCuNqnRuLqjTWqNdkNDYqTxzWdz/My35WbWb92lvn/2
-         lmGd4wKP/BROAtVaXIgoOsOXU22qwZBRDkqRNe6Ib78lzscb9AQkcnf7lxnJ24O6ze+m
-         qJ2g==
-X-Gm-Message-State: AOJu0YzDCEB94NsPcUHhwiRvKuA+U72ULkC3X3cPZItCKN6UVEVDHjUe
-	8wTihuRKu9h6oWAOILigRZiWqCgVICNt61MQNvyr6O/p7cr/N+dwpVxdrxo/4sh/jvBi4VCTiqX
-	c+kGmoLhGTTeM1Xh+jwLbwWNwkFTvE3k5eoYQC99ImcUY1wL1MnIWRxp76Et0cjwU3mec0iGD8w
-	3nm7DGwcSuVNHBBpO1gqpF7o1xzeBJAD1H/GC3B7YMuLQpiA==
-X-Google-Smtp-Source: AGHT+IFusrPVhaI7XDInxHrwajnmEFukSuIgtU2NniuFsm2rwayuVcqTTs3aOxjJsby6JxfbauzplA==
-X-Received: by 2002:a17:90b:38d1:b0:29b:fd48:f1ab with SMTP id nn17-20020a17090b38d100b0029bfd48f1abmr1964430pjb.29.1710157072218;
-        Mon, 11 Mar 2024 04:37:52 -0700 (PDT)
+        bh=ocylGidR+I50hkjpDeO8fVMiXO54dEEkqPSh1T2kmXM=;
+        b=H1Kx0NCr1OHlqruHUoB0zF3fdhuAVxDjHqOZJhkXD297L3x5pdv02IBMrnj04YndmX
+         PiMcBDEpaWnGVQ6X6hVpxSMm3drYv4Dfme6WM6vFvwxxpyy5PztlR4163dEw/tD6ola2
+         O/J0J0kWyz+fbWfY0HVfVQm8h5DNs4gwUGWFTSyV6NyPDIxw76nUpMt2OJinMi1OsZYP
+         6gXGdaJYQxwLCnSb3jMIUHVJeJBfMudBAiUkhEyO7RRya0QdyLCZWEa7sJmEiqGxp6lw
+         2Q+dqIRLQmSST9xRGzQrxKIQQHwiTANDaMljj065yZGkLtGZjvP9TNWRz2GD+M1LnHGk
+         oRZg==
+X-Gm-Message-State: AOJu0YwYYEO8qnLvDnyonk+AQKu5fIaTUhFHSwIZ4XlJRvgK3Mnri4Ww
+	1i+mm9kwLNXDHy/PQ1E52ubMjlz82w5T1c1GpRPIhwZu0Va/jyO6N9WbWu7uNsIufZ/iDStrGm5
+	5O1o29rTHL/dPoI9z7ofMzV03OfbqrtmMbCNiGk5pMFumbWRqBlxE4qbXktzJWE4OR2wqmK+b1K
+	9apVY0kq2pBvudC3SYybrwLUsUs2MSNYdKztSzhJ/9LdCJhg==
+X-Google-Smtp-Source: AGHT+IGwrMSmnRUzdIB3VLZokLX6GEs7JKHEw0oEPDlkTZxIrK76MSSr75emOxhTOU+lFLhrPyfchw==
+X-Received: by 2002:a05:6a21:9989:b0:1a1:4ca5:86cf with SMTP id ve9-20020a056a21998900b001a14ca586cfmr8017984pzb.12.1710157075765;
+        Mon, 11 Mar 2024 04:37:55 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id ay3-20020a17090b030300b0029ba5f434a8sm3982655pjb.26.2024.03.11.04.37.49
+        by smtp.gmail.com with ESMTPSA id ay3-20020a17090b030300b0029ba5f434a8sm3982655pjb.26.2024.03.11.04.37.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Mar 2024 04:37:51 -0700 (PDT)
+        Mon, 11 Mar 2024 04:37:54 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -56,10 +56,11 @@ Cc: rajsekhar.chundru@broadcom.com,
 	sumit.saxena@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v3 4/7] mpi3mr: Set the WriteSame Divert Capability in the IOCInit MPI Request
-Date: Mon, 11 Mar 2024 17:05:11 +0530
-Message-Id: <20240311113514.108795-5-ranjan.kumar@broadcom.com>
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	kernel test robot <lkp@intel.com>
+Subject: [PATCH v3 5/7] mpi3mr: Debug ability improvements
+Date: Mon, 11 Mar 2024 17:05:12 +0530
+Message-Id: <20240311113514.108795-6-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240311113514.108795-1-ranjan.kumar@broadcom.com>
 References: <20240311113514.108795-1-ranjan.kumar@broadcom.com>
@@ -70,54 +71,193 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000d44a15061360f89b"
+	boundary="0000000000000b0186061360f9f0"
 
---000000000000d44a15061360f89b
+--0000000000000b0186061360f9f0
 Content-Transfer-Encoding: 8bit
 
-Driver is modified to set the Write Same Divert Capability bit
-in the IOCInit message for the firmware to know that the driver
-is capable of diverting certain write same commands as defined
-by the MPI specification.
+Driver updated to include OS type in fault/reset reason code.
+MPI request sent through IOCTL now automatically dumped on timeout.
 
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202403081903.q3Dq54zZ-lkp@intel.com/
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h | 2 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c     | 2 ++
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr.h     | 10 +++++++---
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 21 ++++++++++++++-------
+ drivers/scsi/mpi3mr/mpi3mr_fw.c  | 21 ++++++++++++++-------
+ 3 files changed, 35 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-index 0cb24fc03620..85b91583bacf 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-@@ -27,7 +27,7 @@ struct mpi3_ioc_init_request {
- 	__le64                   sense_buffer_free_queue_address;
- 	__le64                   driver_information_address;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 06359915a48d..dca8390c33ec 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -63,7 +63,7 @@ extern atomic64_t event_counter;
+ #define MPI3MR_DRIVER_AUTHOR	"Broadcom Inc. <mpi3mr-linuxdrv.pdl@broadcom.com>"
+ #define MPI3MR_DRIVER_DESC	"MPI3 Storage Controller Device Driver"
+ 
+-#define MPI3MR_NAME_LENGTH	32
++#define MPI3MR_NAME_LENGTH	64
+ #define IOCNAME			"%s: "
+ 
+ #define MPI3MR_DEFAULT_MAX_IO_SIZE	(1 * 1024 * 1024)
+@@ -294,6 +294,10 @@ enum mpi3mr_reset_reason {
+ 	MPI3MR_RESET_FROM_SAS_TRANSPORT_TIMEOUT = 30,
  };
--
-+#define MPI3_IOCINIT_MSGFLAGS_WRITESAMEDIVERT_SUPPORTED		(0x08)
- #define MPI3_IOCINIT_MSGFLAGS_SCSIIOSTATUSREPLY_SUPPORTED	(0x04)
- #define MPI3_IOCINIT_MSGFLAGS_HOSTMETADATA_MASK          (0x03)
- #define MPI3_IOCINIT_MSGFLAGS_HOSTMETADATA_NOT_USED      (0x00)
+ 
++#define MPI3MR_RESET_REASON_OSTYPE_LINUX	1
++#define MPI3MR_RESET_REASON_OSTYPE_SHIFT	28
++#define MPI3MR_RESET_REASON_IOCNUM_SHIFT	20
++
+ /* Queue type definitions */
+ enum queue_type {
+ 	MPI3MR_DEFAULT_QUEUE = 0,
+@@ -1142,7 +1146,7 @@ struct mpi3mr_ioc {
+ 	spinlock_t fwevt_lock;
+ 	struct list_head fwevt_list;
+ 
+-	char watchdog_work_q_name[20];
++	char watchdog_work_q_name[50];
+ 	struct workqueue_struct *watchdog_work_q;
+ 	struct delayed_work watchdog_work;
+ 	spinlock_t watchdog_lock;
+@@ -1336,7 +1340,7 @@ void mpi3mr_start_watchdog(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_stop_watchdog(struct mpi3mr_ioc *mrioc);
+ 
+ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+-			      u32 reset_reason, u8 snapdump);
++			      u16 reset_reason, u8 snapdump);
+ void mpi3mr_ioc_disable_intr(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_ioc_enable_intr(struct mpi3mr_ioc *mrioc);
+ 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 0380996b5ad2..38f63bc7ef3b 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -1598,26 +1598,33 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
+ 		rval = -EAGAIN;
+ 		if (mrioc->bsg_cmds.state & MPI3MR_CMD_RESET)
+ 			goto out_unlock;
+-		dprint_bsg_err(mrioc,
+-		    "%s: bsg request timedout after %d seconds\n", __func__,
+-		    karg->timeout);
+-		if (mrioc->logging_level & MPI3_DEBUG_BSG_ERROR) {
+-			dprint_dump(mpi_req, MPI3MR_ADMIN_REQ_FRAME_SZ,
++		if (((mpi_header->function != MPI3_FUNCTION_SCSI_IO) &&
++		    (mpi_header->function != MPI3_FUNCTION_NVME_ENCAPSULATED))
++		    || (mrioc->logging_level & MPI3_DEBUG_BSG_ERROR)) {
++			ioc_info(mrioc, "%s: bsg request timedout after %d seconds\n",
++			    __func__, karg->timeout);
++			if (!(mrioc->logging_level & MPI3_DEBUG_BSG_INFO)) {
++				dprint_dump(mpi_req, MPI3MR_ADMIN_REQ_FRAME_SZ,
+ 			    "bsg_mpi3_req");
+ 			if (mpi_header->function ==
+-			    MPI3_BSG_FUNCTION_MGMT_PASSTHROUGH) {
++			    MPI3_FUNCTION_MGMT_PASSTHROUGH) {
+ 				drv_buf_iter = &drv_bufs[0];
+ 				dprint_dump(drv_buf_iter->kern_buf,
+ 				    rmc_size, "mpi3_mgmt_req");
++				}
+ 			}
+ 		}
+ 		if ((mpi_header->function == MPI3_BSG_FUNCTION_NVME_ENCAPSULATED) ||
+-		    (mpi_header->function == MPI3_BSG_FUNCTION_SCSI_IO))
++			(mpi_header->function == MPI3_BSG_FUNCTION_SCSI_IO)) {
++			dprint_bsg_err(mrioc, "%s: bsg request timedout after %d seconds,\n"
++				"issuing target reset to (0x%04x)\n", __func__,
++				karg->timeout, mpi_header->function_dependent);
+ 			mpi3mr_issue_tm(mrioc,
+ 			    MPI3_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
+ 			    mpi_header->function_dependent, 0,
+ 			    MPI3MR_HOSTTAG_BLK_TMS, MPI3MR_RESETTM_TIMEOUT,
+ 			    &mrioc->host_tm_cmds, &resp_code, NULL);
++		}
+ 		if (!(mrioc->bsg_cmds.state & MPI3MR_CMD_COMPLETE) &&
+ 		    !(mrioc->bsg_cmds.state & MPI3MR_CMD_RESET))
+ 			mpi3mr_soft_reset_handler(mrioc,
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index a21fbff60b59..6ce75366dd8a 100644
+index 6ce75366dd8a..07accf01be0f 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -3302,6 +3302,8 @@ static int mpi3mr_issue_iocinit(struct mpi3mr_ioc *mrioc)
+@@ -11,7 +11,7 @@
+ #include <linux/io-64-nonatomic-lo-hi.h>
  
- 	iocinit_req.msg_flags |=
- 	    MPI3_IOCINIT_MSGFLAGS_SCSIIOSTATUSREPLY_SUPPORTED;
-+	iocinit_req.msg_flags =
-+		MPI3_IOCINIT_MSGFLAGS_WRITESAMEDIVERT_SUPPORTED;
+ static int
+-mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type, u32 reset_reason);
++mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type, u16 reset_reason);
+ static int mpi3mr_setup_admin_qpair(struct mpi3mr_ioc *mrioc);
+ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3_ioc_facts_data *facts_data);
+@@ -1195,7 +1195,7 @@ static inline void mpi3mr_clear_reset_history(struct mpi3mr_ioc *mrioc)
+ static int mpi3mr_issue_and_process_mur(struct mpi3mr_ioc *mrioc,
+ 	u32 reset_reason)
+ {
+-	u32 ioc_config, timeout, ioc_status;
++	u32 ioc_config, timeout, ioc_status, scratch_pad0;
+ 	int retval = -1;
  
- 	init_completion(&mrioc->init_cmds.done);
- 	retval = mpi3mr_admin_request_post(mrioc, &iocinit_req,
+ 	ioc_info(mrioc, "Issuing Message unit Reset(MUR)\n");
+@@ -1204,7 +1204,11 @@ static int mpi3mr_issue_and_process_mur(struct mpi3mr_ioc *mrioc,
+ 		return retval;
+ 	}
+ 	mpi3mr_clear_reset_history(mrioc);
+-	writel(reset_reason, &mrioc->sysif_regs->scratchpad[0]);
++	scratch_pad0 = ((MPI3MR_RESET_REASON_OSTYPE_LINUX <<
++			 MPI3MR_RESET_REASON_OSTYPE_SHIFT) |
++			(mrioc->facts.ioc_num <<
++			 MPI3MR_RESET_REASON_IOCNUM_SHIFT) | reset_reason);
++	writel(scratch_pad0, &mrioc->sysif_regs->scratchpad[0]);
+ 	ioc_config = readl(&mrioc->sysif_regs->ioc_configuration);
+ 	ioc_config &= ~MPI3_SYSIF_IOC_CONFIG_ENABLE_IOC;
+ 	writel(ioc_config, &mrioc->sysif_regs->ioc_configuration);
+@@ -1520,11 +1524,11 @@ static inline void mpi3mr_set_diagsave(struct mpi3mr_ioc *mrioc)
+  * Return: 0 on success, non-zero on failure.
+  */
+ static int mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type,
+-	u32 reset_reason)
++	u16 reset_reason)
+ {
+ 	int retval = -1;
+ 	u8 unlock_retry_count = 0;
+-	u32 host_diagnostic, ioc_status, ioc_config;
++	u32 host_diagnostic, ioc_status, ioc_config, scratch_pad0;
+ 	u32 timeout = MPI3MR_RESET_ACK_TIMEOUT * 10;
+ 
+ 	if ((reset_type != MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET) &&
+@@ -1576,6 +1580,9 @@ static int mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type,
+ 		    unlock_retry_count, host_diagnostic);
+ 	} while (!(host_diagnostic & MPI3_SYSIF_HOST_DIAG_DIAG_WRITE_ENABLE));
+ 
++	scratch_pad0 = ((MPI3MR_RESET_REASON_OSTYPE_LINUX <<
++	    MPI3MR_RESET_REASON_OSTYPE_SHIFT) | (mrioc->facts.ioc_num <<
++	    MPI3MR_RESET_REASON_IOCNUM_SHIFT) | reset_reason);
+ 	writel(reset_reason, &mrioc->sysif_regs->scratchpad[0]);
+ 	writel(host_diagnostic | reset_type,
+ 	    &mrioc->sysif_regs->host_diagnostic);
+@@ -2581,7 +2588,7 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
+ 	unsigned long flags;
+ 	enum mpi3mr_iocstate ioc_state;
+ 	u32 fault, host_diagnostic, ioc_status;
+-	u32 reset_reason = MPI3MR_RESET_FROM_FAULT_WATCH;
++	u16 reset_reason = MPI3MR_RESET_FROM_FAULT_WATCH;
+ 
+ 	if (mrioc->reset_in_progress)
+ 		return;
+@@ -4968,7 +4975,7 @@ void mpi3mr_pel_get_seqnum_complete(struct mpi3mr_ioc *mrioc,
+  * Return: 0 on success, non-zero on failure.
+  */
+ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+-	u32 reset_reason, u8 snapdump)
++	u16 reset_reason, u8 snapdump)
+ {
+ 	int retval = 0, i;
+ 	unsigned long flags;
 -- 
 2.31.1
 
 
---000000000000d44a15061360f89b
+--0000000000000b0186061360f9f0
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -188,13 +328,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEID8QacJSs31xkkIQPrr75K1N8ktq2AF/
-ioQNqVUVVGXjMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMx
-MTExMzc1MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIM5+TfdRre89785BVxsxJjqlqq/SY8B6
+Y6ubr31kDYFLMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMx
+MTExMzc1NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBLhNBykY4IKkYLklOGm497/bEigLGoaRKjUYsITsZdgH9ofaFD
-f6+ExR7DGmw7lCwB5crZE+79eY+vmh91NEbDGleu9GGJb9AfXNO0ENDnTuIusyjAsoWm9tgfrdYR
-WUeJ4ZboxbHdqc0/9YD4QKHeYgd0kYLAQnn0yOj2eIOJp106Nup9pgY9L0zDDY+nBJHvx/MARLwo
-9YmEA6x75u6QjwyHHaQ4CG2H6l/M8wmSqcYXuih9Oao2wjfARADggYsie1fASU20Ccg7AL5EtSRQ
-LiI1gpFus1IuDz6IAGPm6vhXo6GNujoPRzU+vFUsxyHtlZ9qf/gkoC+k5XIoogTM
---000000000000d44a15061360f89b--
+ATANBgkqhkiG9w0BAQEFAASCAQCxoROT2v21y+vX3ypwSgyL/03+PWlqQrejBEOim8wZHjeNBlqQ
+RY+MMvubR6gFs6/HXm0mMCyhTpMXOt3QHiEPiIlAhpRXncLuGHodTilq7+ikCsV9eRXo73D25uM5
+4H2mSjT3Esn8vgOYBRmOcMQYWrPx5+7ofDz/AMFfdC3bP4/xsy+SGlrUSgHfFpc3s16kBFlQkc82
+YJjFz5KKajkkemy3MtXnsovAJKsUjdXWNSZLE/aCQSAkj6ePUA4gvxyLu5ZJcYE0+8JDSJopQB2A
+DZiTi951arDdjcwKL0rCbFP76SqsIU6Y422gI/VlPIBP3fkeMUueqRsNQTlBIsYe
+--0000000000000b0186061360f9f0--
