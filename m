@@ -1,53 +1,53 @@
-Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E93923BBF0
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2024 11:38:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A16E13C489
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2024 11:38:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710157082; cv=none; b=hgQ1B2msgB2FGIlakJlKPCvsv/Xj0d13J7K9h0uQA8ZL1TeJqIKuwwhLzCX6wI2gQnnXM9Ec4Xof5DrbXD4V0+OqaSyQCOmwZAnSyGlAwTC9Y0p66Rt2EHoHxvFWW/8lFbajnXzlqtQXRNEUCDqx1Pm2oI9Y93XeMOG7NdKRpOA=
+	t=1710157086; cv=none; b=KcS0JSlWtRuTUVwVSRxH5IbdKaPr82h7j5SrL0S+3AvhkX7lCf8aPchLSVMCYLgEh29XOFgUyU5CpsAgzJDK1qJjD9aX7hfBC8sTlkdXmJvLrKnj8hiDBw61br6LOPHGzx9k5/k6eMOlV6wwFZCsYapQYz+gaefa3zjdDixEkJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710157082; c=relaxed/simple;
-	bh=ITHy56DWZ0RorXQAH12zpOQQc7OhNS6WEYCjdxSHGPE=;
+	s=arc-20240116; t=1710157086; c=relaxed/simple;
+	bh=pBr9mUxem8nAjHaCc0BTvsikyluzTduETSBHL9IdvaE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=O3H8NGHl7Kkoy/5nfwCVauG4Xt6GnGH+EFpooeNBXW1ZM9nE/f4S5YmVQK4aAObnBELEdZDhaRrpJ4x7MDuFC9hH8oJO1wp+HDO0YMGKguk26cFokSmYdplUZVdVoPiQSCR24C7pBfGsPzcefhe33q1SPGpgLLk4wY1Hi5vkvGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=UcrT0Ola; arc=none smtp.client-ip=209.85.216.49
+	 MIME-Version:Content-Type; b=K9S1m55IIY9wzsR4GX/xs+RAyn6ota0yyjqiX1iLyxFsllFka+YDQaeus5ofA8lVFeDGdmBAvlEx9eej8OhU+dJIeti+Gjplzrf/Dxk2NFfaIOQKwThF735JJF1mEmD1uNKh888Z1+XV/XS7l8EqYwxUXape/sjCk7yeJXOIm5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=YxkEDPaU; arc=none smtp.client-ip=209.85.216.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="UcrT0Ola"
-Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-29b7b9a4908so1629620a91.1
-        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2024 04:38:00 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="YxkEDPaU"
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-29954bb87b4so1622965a91.2
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2024 04:38:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1710157079; x=1710761879; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1710157083; x=1710761883; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=0eegRfjJHv1whYpDpJR6iOXJMEceoubavlXR5qbSzFw=;
-        b=UcrT0OlaXx+zUYIEOZrnzgY6mHBKs363CPUg32BAEODwMZ08qjfJlxDW4d8pev+IZb
-         MgWEI3w1MGqB/rUUW8K4bzhzpwZlQcAk2gj3USgtq5rsdjNMiPDGhV5Z1gG8kgd6k1ZG
-         KpOqhyIuYymZnSDl1c4H3NHFe/P3XhHkq7vzY=
+        bh=epOEUTbgNJwW5ih05kg/nN+cSjllxVhcxQJ/Ike6Dlk=;
+        b=YxkEDPaUi4Iqc3+SSKTxAp62ngBc6f6INU8Yv4AS6wU6GZ7WoWdLhNd+eLx3tQb7ME
+         aRRH+Iu+8YDvS3uyDwfG2yK2a2GDeUNIAOCAC39MffGcX93YGv9f6G1xJB8fUuEhLByW
+         zwFWNrEXNQNPrbqqNFdY6b55zU1fd0mFSssoY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710157079; x=1710761879;
+        d=1e100.net; s=20230601; t=1710157083; x=1710761883;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0eegRfjJHv1whYpDpJR6iOXJMEceoubavlXR5qbSzFw=;
-        b=OL8A/y6SvalTpl8Wx7VrXy1NO9RTLtsRZqFxyu18mbqVdre7VEECNFVGAFfP8SV9rm
-         YnY5D7/9IEskvwCE8NNq2PXpIVAeakpg3wS1UVTy6xY6OuP1Ye6hxupBdkkUb6K3NIot
-         xby2IcPyGT8p7QL426dfXfDBteVqlfn1Ah9jv+CISAe1TqyipcAc16MBidNy9C86Eyk6
-         UQFn0Rmv46MlOHWU4ujAYAeNXAAyAj4ZBdPh0oCDSG59VrjQgZt9tK/uD32HOC2kjWRz
-         Zwzox+2eZF8ZSSQ9z8yFjcz9kv6b48cwYTVfXQrViUY7/ZpSHfCPxlS6uwCa3oyHFdaU
-         VpTQ==
-X-Gm-Message-State: AOJu0Yw0tOkBjmS0Wu61e5p1YdTORmxt0MUR9cdrOeEbRtQlbzMW45qv
-	dsxgz07FalrLAb+cEqhQ2GR/c8zxAp9ENfhUejbDVPKZXW7x+f8SoATgbJhUGm5jE2q7ZOmOqRa
-	w6841jrcvAVpUsK+NB9Q1v3oX6g48dlPXOfboK6DPBzBRobYB6nccxLPzzqVtQ+62VLd0nVdQ1E
-	dMLnqTzCmBMKlsKhUBcv5VupkXuP86NCmSTfiD93hzvkeTNg==
-X-Google-Smtp-Source: AGHT+IHd6FIz8VWBDVi5lEUDqZDmtWqpaV9lqW2oTMMOWZOKeKJYq1tdRUYIUHLUgmoIW97klEdLpg==
-X-Received: by 2002:a17:90a:cb09:b0:29b:c402:9d65 with SMTP id z9-20020a17090acb0900b0029bc4029d65mr3877260pjt.5.1710157079208;
-        Mon, 11 Mar 2024 04:37:59 -0700 (PDT)
+        bh=epOEUTbgNJwW5ih05kg/nN+cSjllxVhcxQJ/Ike6Dlk=;
+        b=N7KcTnhflJUDMawM+XKb/8yWUn8+E4hy+uJJRPTCENwPaLGxmizNB5f8IASqcRYDXf
+         MtTFORR4u6vjByS6DAKw3k4rJd2oJyrbXDvQ/cYDpBLNLCSpIUJwk+GP/+YyZJnh0Yy+
+         g5PTS4BOnWlmw84oP2aIpNYV+UozmVZngkLaBzdIZXPvvi6iqdoXMx+czkS8KtuZSvK6
+         S8yhaIFHYSowjSm8sla3MIo4uDZ3Iqfu6iQpaenyS4lhaKbkM54Ak76D4nYh3UY9oShT
+         jrv1o91994puf7uKfsNFX3liWvv/yZ60qrab6bKgnacCaGzWh/pROtiX2ablGsFnAUAA
+         jX5w==
+X-Gm-Message-State: AOJu0YwSrZ42zgrKl8+xgnYG+pcSZ6TnhyGsqKXECYZQZaW7hHlbFGtp
+	VpK1i/x6m4b2NyrbgnwFHHdZKGI9j3A45HQ2cqzufhdr2IMqNs5rWc0xI1j8ihwSpn5EgdVritZ
+	gyvqI3M4EX2kHjsjjabkUV49kQdKzo0AyFHYRgVZEvuhXSJGWNweOI2oVycNd/wKzbvcawo9mHb
+	2H+Lc2PwsRXvuVr00gmS806thXN+JYA8b5Fv/rOo2cFPnfYw==
+X-Google-Smtp-Source: AGHT+IHF0zxwO4Xe0LjAAGZzooC8wHVyQrJSw7UWqhH7pH38aNydWt6h3mTXfF5JoNyGR8n/F/0Dlg==
+X-Received: by 2002:a17:90a:c798:b0:29b:c4a0:c8bc with SMTP id gn24-20020a17090ac79800b0029bc4a0c8bcmr4370106pjb.34.1710157082940;
+        Mon, 11 Mar 2024 04:38:02 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id ay3-20020a17090b030300b0029ba5f434a8sm3982655pjb.26.2024.03.11.04.37.56
+        by smtp.gmail.com with ESMTPSA id ay3-20020a17090b030300b0029ba5f434a8sm3982655pjb.26.2024.03.11.04.37.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Mar 2024 04:37:58 -0700 (PDT)
+        Mon, 11 Mar 2024 04:38:01 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -57,9 +57,9 @@ Cc: rajsekhar.chundru@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v3 6/7] mpi3mr: Update MPI Headers to revision 31
-Date: Mon, 11 Mar 2024 17:05:13 +0530
-Message-Id: <20240311113514.108795-7-ranjan.kumar@broadcom.com>
+Subject: [PATCH v3 7/7] mpi3mr: driver version upgrade to 8.8.1.0.50
+Date: Mon, 11 Mar 2024 17:05:14 +0530
+Message-Id: <20240311113514.108795-8-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240311113514.108795-1-ranjan.kumar@broadcom.com>
 References: <20240311113514.108795-1-ranjan.kumar@broadcom.com>
@@ -70,182 +70,38 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000404663061360f90f"
+	boundary="000000000000799aa9061360f981"
 
---000000000000404663061360f90f
+--000000000000799aa9061360f981
 Content-Transfer-Encoding: 8bit
 
-Update MPI Headers to revision 31
+Update driver version to 8.8.1.0.50
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      |  3 +++
- drivers/scsi/mpi3mr/mpi/mpi30_image.h     | 20 +++++---------------
- drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       | 18 +++++++++++-------
- drivers/scsi/mpi3mr/mpi/mpi30_transport.h |  2 +-
- drivers/scsi/mpi3mr/mpi3mr_fw.c           |  8 ++++----
- 5 files changed, 24 insertions(+), 27 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-index 35f81af40f51..6a19e17eb1a7 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-@@ -309,6 +309,7 @@ struct mpi3_man6_gpio_entry {
- #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_SOURCE_GENERIC                     (0x00)
- #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_SOURCE_CABLE_MGMT                  (0x10)
- #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_SOURCE_ACTIVE_CABLE_OVERCURRENT    (0x20)
-+#define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_ACK_REQUIRED                       (0x02)
- #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_TRIGGER_MASK                       (0x01)
- #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_TRIGGER_EDGE                       (0x00)
- #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_TRIGGER_LEVEL                      (0x01)
-@@ -1315,6 +1316,8 @@ struct mpi3_driver_page0 {
- 	__le32                             reserved18;
- };
- #define MPI3_DRIVER0_PAGEVERSION               (0x00)
-+#define MPI3_DRIVER0_BSDOPTS_DEVICEEXPOSURE_DISABLE	    (0x00000020)
-+#define MPI3_DRIVER0_BSDOPTS_WRITECACHE_DISABLE		    (0x00000010)
- #define MPI3_DRIVER0_BSDOPTS_HEADLESS_MODE_ENABLE           (0x00000008)
- #define MPI3_DRIVER0_BSDOPTS_DIS_HII_CONFIG_UTIL            (0x00000004)
- #define MPI3_DRIVER0_BSDOPTS_REGISTRATION_MASK              (0x00000003)
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_image.h b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-index 47035b811902..7df242190135 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
-@@ -198,16 +198,17 @@ struct mpi3_supported_devices_data {
- 	struct mpi3_supported_device   supported_device[MPI3_SUPPORTED_DEVICE_MAX];
- };
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index dca8390c33ec..d1c93978f28a 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -55,8 +55,8 @@ extern struct list_head mrioc_list;
+ extern int prot_mask;
+ extern atomic64_t event_counter;
  
--#ifndef MPI3_ENCRYPTED_HASH_MAX
--#define MPI3_ENCRYPTED_HASH_MAX                      (1)
-+#ifndef MPI3_PUBLIC_KEY_MAX
-+#define MPI3_PUBLIC_KEY_MAX                      (1)
- #endif
- struct mpi3_encrypted_hash_entry {
- 	u8                         hash_image_type;
- 	u8                         hash_algorithm;
- 	u8                         encryption_algorithm;
- 	u8                         reserved03;
--	__le32                     reserved04;
--	__le32                     encrypted_hash[MPI3_ENCRYPTED_HASH_MAX];
-+	__le16                     public_key_size;
-+	__le16                     signature_size;
-+	__le32                     public_key[MPI3_PUBLIC_KEY_MAX];
- };
+-#define MPI3MR_DRIVER_VERSION	"8.5.1.0.0"
+-#define MPI3MR_DRIVER_RELDATE	"5-December-2023"
++#define MPI3MR_DRIVER_VERSION	"8.8.1.0.50"
++#define MPI3MR_DRIVER_RELDATE	"5-March-2024"
  
- #define MPI3_HASH_IMAGE_TYPE_KEY_WITH_SIGNATURE      (0x03)
-@@ -228,17 +229,6 @@ struct mpi3_encrypted_hash_entry {
- #define MPI3_ENCRYPTION_ALGORITHM_RSA2048            (0x04)
- #define MPI3_ENCRYPTION_ALGORITHM_RSA4096            (0x05)
- #define MPI3_ENCRYPTION_ALGORITHM_RSA3072            (0x06)
--#ifndef MPI3_PUBLIC_KEY_MAX
--#define MPI3_PUBLIC_KEY_MAX                          (1)
--#endif
--struct mpi3_encrypted_key_with_hash_entry {
--	u8                         hash_image_type;
--	u8                         hash_algorithm;
--	u8                         encryption_algorithm;
--	u8                         reserved03;
--	__le32                     reserved04;
--	__le32                     public_key[MPI3_PUBLIC_KEY_MAX];
--};
- 
- #ifndef MPI3_ENCRYPTED_HASH_ENTRY_MAX
- #define MPI3_ENCRYPTED_HASH_ENTRY_MAX               (1)
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-index 85b91583bacf..028784949873 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-@@ -101,6 +101,8 @@ struct mpi3_ioc_facts_data {
- 	__le16                     max_io_throttle_group;
- 	__le16                     io_throttle_low;
- 	__le16                     io_throttle_high;
-+	__le32			   diag_fdl_size;
-+	__le32			   diag_tty_size;
- };
- #define MPI3_IOCFACTS_CAPABILITY_NON_SUPERVISOR_MASK          (0x80000000)
- #define MPI3_IOCFACTS_CAPABILITY_SUPERVISOR_IOC               (0x00000000)
-@@ -108,13 +110,13 @@ struct mpi3_ioc_facts_data {
- #define MPI3_IOCFACTS_CAPABILITY_INT_COALESCE_MASK            (0x00000600)
- #define MPI3_IOCFACTS_CAPABILITY_INT_COALESCE_FIXED_THRESHOLD (0x00000000)
- #define MPI3_IOCFACTS_CAPABILITY_INT_COALESCE_OUTSTANDING_IO  (0x00000200)
--#define MPI3_IOCFACTS_CAPABILITY_COMPLETE_RESET_CAPABLE       (0x00000100)
--#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_TRACE_ENABLED       (0x00000080)
--#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_FW_ENABLED          (0x00000040)
--#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_DRIVER_ENABLED      (0x00000020)
--#define MPI3_IOCFACTS_CAPABILITY_ADVANCED_HOST_PD_ENABLED     (0x00000010)
--#define MPI3_IOCFACTS_CAPABILITY_RAID_CAPABLE                 (0x00000008)
--#define MPI3_IOCFACTS_CAPABILITY_MULTIPATH_ENABLED            (0x00000002)
-+#define MPI3_IOCFACTS_CAPABILITY_COMPLETE_RESET_SUPPORTED     (0x00000100)
-+#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_TRACE_SUPPORTED     (0x00000080)
-+#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_FW_SUPPORTED        (0x00000040)
-+#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_DRIVER_SUPPORTED    (0x00000020)
-+#define MPI3_IOCFACTS_CAPABILITY_ADVANCED_HOST_PD_SUPPORTED   (0x00000010)
-+#define MPI3_IOCFACTS_CAPABILITY_RAID_SUPPORTED               (0x00000008)
-+#define MPI3_IOCFACTS_CAPABILITY_MULTIPATH_SUPPORTED          (0x00000002)
- #define MPI3_IOCFACTS_CAPABILITY_COALESCE_CTRL_SUPPORTED      (0x00000001)
- #define MPI3_IOCFACTS_PID_TYPE_MASK                           (0xf000)
- #define MPI3_IOCFACTS_PID_TYPE_SHIFT                          (12)
-@@ -159,6 +161,8 @@ struct mpi3_ioc_facts_data {
- #define MPI3_IOCFACTS_FLAGS_PERSONALITY_RAID_DDR              (0x00000002)
- #define MPI3_IOCFACTS_IO_THROTTLE_DATA_LENGTH_NOT_REQUIRED    (0x0000)
- #define MPI3_IOCFACTS_MAX_IO_THROTTLE_GROUP_NOT_REQUIRED      (0x0000)
-+#define MPI3_IOCFACTS_DIAGFDLSIZE_NOT_SUPPORTED		      (0x00000000)
-+#define MPI3_IOCFACTS_DIAGTTYSIZE_NOT_SUPPORTED               (0x00000000)
- struct mpi3_mgmt_passthrough_request {
- 	__le16                 host_tag;
- 	u8                     ioc_use_only02;
-diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-index 1e0a3dcaf723..fdc3d1968e43 100644
---- a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-+++ b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
-@@ -18,7 +18,7 @@ union mpi3_version_union {
- 
- #define MPI3_VERSION_MAJOR                                              (3)
- #define MPI3_VERSION_MINOR                                              (0)
--#define MPI3_VERSION_UNIT                                               (28)
-+#define MPI3_VERSION_UNIT                                               (31)
- #define MPI3_VERSION_DEV                                                (0)
- #define MPI3_DEVHANDLE_INVALID                                          (0xffff)
- struct mpi3_sysif_oper_queue_indexes {
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 07accf01be0f..0f102ba49759 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -1280,7 +1280,7 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
- 			    mrioc->shost->max_sectors * 512, mrioc->facts.max_data_length);
- 
- 	if ((mrioc->sas_transport_enabled) && (mrioc->facts.ioc_capabilities &
--	    MPI3_IOCFACTS_CAPABILITY_MULTIPATH_ENABLED))
-+	    MPI3_IOCFACTS_CAPABILITY_MULTIPATH_SUPPORTED))
- 		ioc_err(mrioc,
- 		    "critical error: multipath capability is enabled at the\n"
- 		    "\tcontroller while sas transport support is enabled at the\n"
-@@ -3677,8 +3677,8 @@ static const struct {
- 	u32 capability;
- 	char *name;
- } mpi3mr_capabilities[] = {
--	{ MPI3_IOCFACTS_CAPABILITY_RAID_CAPABLE, "RAID" },
--	{ MPI3_IOCFACTS_CAPABILITY_MULTIPATH_ENABLED, "MultiPath" },
-+	{ MPI3_IOCFACTS_CAPABILITY_RAID_SUPPORTED, "RAID" },
-+	{ MPI3_IOCFACTS_CAPABILITY_MULTIPATH_SUPPORTED, "MultiPath" },
- };
- 
- /**
-@@ -3960,7 +3960,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 		    MPI3MR_HOST_IOS_KDUMP);
- 
- 	if (!(mrioc->facts.ioc_capabilities &
--	    MPI3_IOCFACTS_CAPABILITY_MULTIPATH_ENABLED)) {
-+	    MPI3_IOCFACTS_CAPABILITY_MULTIPATH_SUPPORTED)) {
- 		mrioc->sas_transport_enabled = 1;
- 		mrioc->scsi_device_channel = 1;
- 		mrioc->shost->max_channel = 1;
+ #define MPI3MR_DRIVER_NAME	"mpi3mr"
+ #define MPI3MR_DRIVER_LICENSE	"GPL"
 -- 
 2.31.1
 
 
---000000000000404663061360f90f
+--000000000000799aa9061360f981
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -316,13 +172,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIC+3q7UkAd/O7vv1+F8aEhorqW0fXx1W
-fotdIQSLzWhzMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMx
-MTExMzc1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIA20WwO+g+WiDLyqTJz/X8T5Va6MG6fC
+y0+j0XnLastiMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMx
+MTExMzgwM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQCVgklqIU31qqdGemrHYVQqj8uo7iMJkNOvfJI8B2KVAUXMWCvj
-sgu0G15ikHEiAVQWkKp9eintnKtByM0J5ciJ7fgLzWAUtZnVMjI3sOsZ2IoNYlpZIwfGoaAJQbMh
-FVdE5Ia6SAl6vb7Ei2Xg6NxE8mbNYSeOxS601lbwYC4AG66f3mjmQBDp1Zz3QfKSGh8sssZPY+18
-bYIsn059UnE+B8n/GDBofuxadPP+spMX18xBta62bGcQgEJ5R18NmcKb3yCr6wYRHVzzf8AV5xhJ
-ub8B0GEqey79SpS8IC1SYKSDe5ovfcoVvbRJe0pIUE0YmPqZVrHCyRMtm0GY+9AS
---000000000000404663061360f90f--
+ATANBgkqhkiG9w0BAQEFAASCAQAuybb2fdbzxkWRIM0tofxECI580Blm6nJCShfweXe33Ceen4Ng
+1rK/tuTR9N794/idRMR0u9esZYJDS0FOQcqVoePjOvGvCFBOzzUC/SiloMpBjAU3y7hUy4bagfLk
+dN2m7GpLQL2vwbxi2Ugr4DD2GXVGk2Q6RSp7IZzC2RHNSiLqugeaPSRLAugUaxFw9WbbzAuvVnu3
+IybJDWLoZusUnDFdpjtt+5PtgEHCH9zzrdrQMnCAHDYqbgT0a5FY3sMlcKYtuj6bm9eRLeutHKfD
+OtxFcmcIjjFpsJJ8MZ6SA6BM+WLiYOx0xBOnm8vzUIxj2iCOfx6lzsnTW5C9K3np
+--000000000000799aa9061360f981--
