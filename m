@@ -1,31 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7D5069314;
-	Mon, 11 Mar 2024 15:14:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B44C669D3C;
+	Mon, 11 Mar 2024 15:14:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710170089; cv=none; b=UZQDpbyIcCHScEQO/CMjx32ci/KpkSwxSbrdGWpYvEdtuVIM2bDMQ50m2sNweHFnlFXxYndnzPBd4FB9O/sO/51iIJhXi1V+K0JPTyu0LKUX9/zDVNU1fpJAqNO5eDVXOlbytJpjMwPprdl7jqvTU7/5cg5tBUMoRh1oT9yCkLQ=
+	t=1710170096; cv=none; b=J4Nmx7orkvWyl4gHWApJNCgzp53AfQmWfxRANamy5dTZVLYuCSJv0XIBQDnWJNpr508xeXcLGK2XYLEhOQKUnEYd5IPX4NGYgNKotT/iIjYb01yZYWH832YTR0d+LxcpNT5YLy1s9p8Jxh23DLoxCzb5z0Ga/R5RKpbY8Mrnp6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710170089; c=relaxed/simple;
-	bh=LE8jwGkMU5Hm6hrhMTyPiG6zSNHB4RBSwMNNmbZ1gpw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SW9228s/htk3XRDNiD2szaLqq/zpfCQ/eHiMvj2RXk8SEqwbS0C+F4StcWWIYiUdxdetFLFocZXJexefUecc2wrnX244T/EvkfcKEBNgBsnOZwHIzrJIYQFQbCsjecVi570h1jaAQdNk4d64knkMB4gwK6s+KcffctgiAnX/2x4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kgh+SEIg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1710170096; c=relaxed/simple;
+	bh=paOHW1kIZrwXOBOt+eRefXVJRjuNEshaUz8HY4Qj0Ms=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Rp7CKMYCqkSiiVk1m4IjQFHZ7cMaHnzwZBCaNi5JqaYlxsKPkBOE8/xvascQ87zWBSWk4JUIQoZVHHjf1eWG96fZo2io27+71yJMWg4iSGAtpK5kQiST9Q2Cf8FpfJOKvfoOsC2o2xEWvPgkAifU6DSMvEAknx9ncJxfGHHgtxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f9pFRtc4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kgh+SEIg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71536C433C7;
-	Mon, 11 Mar 2024 15:14:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f9pFRtc4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 683D7C433F1;
+	Mon, 11 Mar 2024 15:14:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1710170089;
-	bh=LE8jwGkMU5Hm6hrhMTyPiG6zSNHB4RBSwMNNmbZ1gpw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=kgh+SEIg0aT+7DJy+w6jdUqMSH5pd67Kp0utf/rxgZKNJhQr/UhTvHR6Bm0YzsTZV
-	 iXv+G0q8BDYYvPM9hVGPpGZhy18Il4VJ3blTxf8Gp9YgkRfTQojPGDmXjZsv1a4PyX
-	 gHXrSG2E+ZH/2eehPGeTSySUfv8yj4CCQDsf+3wwhN9cUOSJ9pFf3s+JN1WcOHQoQZ
-	 XXV9WwVTRJzghLThYEdUKTtcBjroLXpPzwx95dNvKPSzcKdiJnkvfh9BT6U4BLmeT5
-	 VwsKyzfDyeKza5nE0QWfV6UoKfA9aEDaOSHZwvwj7tus0vLUVZ6rYLnTdipgxpNNX8
-	 b/l9TbZfKKDGg==
+	s=k20201202; t=1710170096;
+	bh=paOHW1kIZrwXOBOt+eRefXVJRjuNEshaUz8HY4Qj0Ms=;
+	h=From:To:Cc:Subject:Date:From;
+	b=f9pFRtc4hfT0fCh6Dy1E/Z4zPFKosYG1DQ1z+PXuXrOOXci/iS0lPd0GCE08Q+kIj
+	 0HeCVmyDYMusuJ4h/cIOKIprybFmXVO4QPfcTOHC9t9ErhjJ7fYUuqdcJEkNfpH5Pz
+	 sVR6CQhOjs4Z5ivimxJniX/5Mr6Zq+dGaym7X0gjV9SpJS7D475RA2mswI3fqqBcFa
+	 vHFAvpR6MGEb4Jvb2fu/WlOiossXyNtKV8ilmWCZTn1TB+ntN17l15+Ws05Wa72mCr
+	 vuq9a15M6RWNmGQAEYJzXqB8RLhqvZJ54I3NIPqqBppbthcil15gLcgJ4Me7labIxV
+	 7G96G/Wr5QETw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -38,12 +37,10 @@ Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
 	jejb@linux.ibm.com,
 	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 2/4] scsi: mpt3sas: Prevent sending diag_reset when the controller is ready
-Date: Mon, 11 Mar 2024 11:14:42 -0400
-Message-ID: <20240311151445.318822-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 1/3] scsi: mpt3sas: Prevent sending diag_reset when the controller is ready
+Date: Mon, 11 Mar 2024 11:14:51 -0400
+Message-ID: <20240311151454.318918-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240311151445.318822-1-sashal@kernel.org>
-References: <20240311151445.318822-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,7 +49,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.271
+X-stable-base: Linux 4.19.309
 Content-Transfer-Encoding: 8bit
 
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
@@ -76,10 +73,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index e72f1dbc91f7f..04fa7337cb1ef 100644
+index 447ac667f4b2b..7588c2c11a879 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -6040,7 +6040,9 @@ _base_wait_for_iocstate(struct MPT3SAS_ADAPTER *ioc, int timeout)
+@@ -5584,7 +5584,9 @@ _base_wait_for_iocstate(struct MPT3SAS_ADAPTER *ioc, int timeout)
  		return -EFAULT;
  	}
  
