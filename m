@@ -1,149 +1,103 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EDD5101C6
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Mar 2024 06:54:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA8E511721;
+	Mon, 11 Mar 2024 07:35:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710140079; cv=none; b=fXpXuUiXSRb7SynlVmiE+y01cetpZspF6OYX3W7noAKLyynX08d5huxfOH9BWeYhoy1wH2+iJQ0Ia3K6iErfnfMaUCCX37lK5EAcoZlQFmjCKzaEnElKtFwH38qXHa71ocG/nLMehRRDAZrgwtZyTuyVdNyAA6OLgNoHktEjf7k=
+	t=1710142535; cv=none; b=HPmCWDfxsB0KN9FIXTb/pSgqT1MSmdOvtY9PkZsdAqudTDwLVif83tAyxuHcCBsB92U882eH9wJw+e++DwxiKsjCS2QBKp7ISJ2D1TPwjLN4RT0cBiDhOcnCgq+0xGSM57T2fJRRPpAx/ie+IT9RYVTeEUpqMmul5aTIChvZLDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710140079; c=relaxed/simple;
-	bh=75VZ4uY/3LdVEp3CcJ2taoalZb4yjw1aG7xG/xgar4Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EeH/uqQCK8XnBJMFkZQWPv99r7YFqpu2hoJLNud/NFDV8jSqF6HCoPeK7TG8famXKRWEQ8NQjx85fslOGOM6lgQI2NByisTZj+ey/CQsOMWlD5VH5oB43q3SpLRt+80xxTxwd2aqHrJy0CF3A0t9gbQbDHiYr6PQpnHpD5phBFQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=ZGTC/hwv; arc=none smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ZGTC/hwv"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1710140078; x=1741676078;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=75VZ4uY/3LdVEp3CcJ2taoalZb4yjw1aG7xG/xgar4Q=;
-  b=ZGTC/hwvzkLM9+/jVLu1jFXoGVcLuDxDQaHaC+NqmHWkDlf4kLoVoe8j
-   RfcB4nG3nsam9ksYJhoXElAGSS4CvVq2ssFLk+eqTCObxLfDCqkVyuMav
-   7QX17ip+vYloCeqsu4GIoKgGW+UmTncXoTTad+5ZHc6vDlEe5s6SOi44Z
-   l+P5YCDn86EuWHuOHNcWvR+8jp1fQS1shw2hYtm/ym9hOLC7bFQjNneO/
-   EZvLV9IFTcWKC8c+NdSf75x2gGMCLR+gPy8SWyz6k8TYpOBtr9e5JVhwZ
-   4iEmb8FqdSpGoTZYtJpcUhcHzH//wfi2cWCYKVzCKLwnvXQ6eKxV/lCy4
-   Q==;
-X-CSE-ConnectionGUID: SbaRYobVQiynejfGLj5SdA==
-X-CSE-MsgGUID: Oni2s385QS2kwL7aKAtBsA==
-X-IronPort-AV: E=Sophos;i="6.07,115,1708358400"; 
-   d="scan'208";a="11270708"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Mar 2024 14:54:30 +0800
-IronPort-SDR: XojlvIbUIqBueFlLF3mL5wfYTYz87KeUOMjGyReKAggYa1my6SPx5x30QaiGl9ChGYTQ6cv1rr
- fx/oQFyghvHw==
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Mar 2024 22:57:53 -0700
-IronPort-SDR: RFgchh1F2fAGd6KeWFoLbrQk32IGEbJPcxajWEzA5cdDSPSBNyY7vAbV40L7+c7Qq4L+JGIKXS
- SzuuespFfKeg==
-WDCIronportException: Internal
-Received: from unknown (HELO shindev.ssa.fujisawa.hgst.com) ([10.149.66.30])
-  by uls-op-cesaip02.wdc.com with ESMTP; 10 Mar 2024 23:54:29 -0700
-From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To: linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Douglas Gilbert <dgilbert@interlog.com>
-Cc: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH RFC 2/2] scsi: scsi_debug: Allow dev_size_mb changes through sysfs
-Date: Mon, 11 Mar 2024 15:54:27 +0900
-Message-ID: <20240311065427.3006023-3-shinichiro.kawasaki@wdc.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240311065427.3006023-1-shinichiro.kawasaki@wdc.com>
-References: <20240311065427.3006023-1-shinichiro.kawasaki@wdc.com>
+	s=arc-20240116; t=1710142535; c=relaxed/simple;
+	bh=7LH2wzc/LZb2FQlVliTCF9VhxXEg9MBUThqc0qpE1JU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=Y6a4986lCTsrM4Gb8M9Ncon8mlkQZb8p632ReX0wAF/PCQH07Sbc+Iqvv6+b5E2XQLG/+HlldcDGUmojJShpvqbbkW+DhoB3DDVuJ9+L+PDZ8IIJNP+sS9gLWlinpebLc50aIHKblvZ1EnSCEo/Q4SeRIIi6qUS+EZZy13CwW2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.112])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4TtT5X5yK0z1h1rl;
+	Mon, 11 Mar 2024 15:33:04 +0800 (CST)
+Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 0BEDD14038F;
+	Mon, 11 Mar 2024 15:35:30 +0800 (CST)
+Received: from [10.67.120.108] (10.67.120.108) by
+ dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.28; Mon, 11 Mar 2024 15:35:29 +0800
+Message-ID: <b2762a93-c8e3-f467-aed6-37c7e124f7c8@huawei.com>
+Date: Mon, 11 Mar 2024 15:35:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.1
+Subject: Re: [PATCH v3 1/3] scsi: libsas: Allow smp_execute_task() arguments
+ to be on the stack
+Content-Language: en-CA
+To: Dan Carpenter <dan.carpenter@linaro.org>, <oe-kbuild@lists.linux.dev>,
+	<john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>
+CC: <lkp@intel.com>, <oe-kbuild-all@lists.linux.dev>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
+References: <0cf17536-beba-4a8f-836b-553a9e0d1046@moroto.mountain>
+From: yangxingui <yangxingui@huawei.com>
+In-Reply-To: <0cf17536-beba-4a8f-836b-553a9e0d1046@moroto.mountain>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggpemm500024.china.huawei.com (7.185.36.203) To
+ dggpemd100001.china.huawei.com (7.185.36.94)
 
-The parameter dev_size_mb is read-only and can be modified only when
-scsi_debug is reloaded. Therefore, loadable scsi_debug is required to
-specify the desired dev_size_mb. With the built-in scsi_debug, only the
-default dev_size_mb value can be used.
 
-To allow testing with built-in scsi_debug and any dev_size_mb value,
-make the parameter writable. To take the required actions at the
-parameter writing and change, allow such writing not through the sysfs
-module attribute, but through the sysfs driver attribute. The parameter
-is stored as a global variable and referred to in many places, then
-changes of the value would causes troubles for existing live hosts. To
-avoid the troubles, allow the value changes only when there is no host.
-Users must remove all hosts to write new dev_size_mb values.
 
-At the parameter write, call scsi_debug_init_size_parameters() to
-propagate the dev_size_mb value changes to dependent parameters. Also
-erase all stores at dev_size_mb change and recreate the store with the
-new dev_size_mb value.
+On 2024/3/11 13:42, Dan Carpenter wrote:
+> Hi Xingui,
+> 
+> kernel test robot noticed the following build warnings:
+> 
+> https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> 
+> url:    https://github.com/intel-lab-lkp/linux/commits/Xingui-Yang/scsi-libsas-Allow-smp_execute_task-arguments-to-be-on-the-stack/20240307-174215
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+> patch link:    https://lore.kernel.org/r/20240307093733.41222-2-yangxingui%40huawei.com
+> patch subject: [PATCH v3 1/3] scsi: libsas: Allow smp_execute_task() arguments to be on the stack
+> config: i386-randconfig-141-20240308 (https://download.01.org/0day-ci/archive/20240310/202403102353.jUPi6fOP-lkp@intel.com/config)
+> compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+> 
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+> | Closes: https://lore.kernel.org/r/202403102353.jUPi6fOP-lkp@intel.com/
+> 
+> New smatch warnings:
+> drivers/scsi/libsas/sas_expander.c:148 smp_execute_task() warn: possible memory leak of '_req'
+> 
+> vim +/_req +148 drivers/scsi/libsas/sas_expander.c
+> 
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07  138  static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07  139  			    void *resp, int resp_size)
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07  140  {
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07  141  	struct scatterlist req_sg;
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07  142  	struct scatterlist resp_sg;
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07  143  	void *_req = kmemdup(req, req_size, GFP_KERNEL);
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07  144  	void *_resp = alloc_smp_resp(resp_size);
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07  145  	int ret;
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07  146
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07  147  	if (!_req || !resp)
+> adfd2325dfc5cf6 Xingui Yang     2024-03-07 @148  		return -ENOMEM;
+> 
+> I haven't looked at the callers so I don't know how likely it is for one
+> of the allocations to fail and the other succeed...  But it seems
+> possible.
 
-Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
----
- drivers/scsi/scsi_debug.c | 39 ++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 38 insertions(+), 1 deletion(-)
+Yes, it's possible. This patch has been canceled in v4. Based on John's 
+suggestion, if there are plans to resubmit modifications , we will pay 
+attention to this, thank you.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index c6b32f07a82c..c93cac831d8e 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -558,6 +558,8 @@ static void sdebug_erase_all_stores(bool apart_from_first);
- 
- static void sdebug_free_queued_cmd(struct sdebug_queued_cmd *sqcp);
- 
-+static void scsi_debug_init_size_parameters(void);
-+
- /*
-  * The following are overflow arrays for cdbs that "hit" the same index in
-  * the opcode_info_arr array. The most time sensitive (or commonly used) cdb
-@@ -6660,7 +6662,42 @@ static ssize_t dev_size_mb_show(struct device_driver *ddp, char *buf)
- {
- 	return scnprintf(buf, PAGE_SIZE, "%d\n", sdebug_dev_size_mb);
- }
--static DRIVER_ATTR_RO(dev_size_mb);
-+
-+static ssize_t dev_size_mb_store(struct device_driver *ddp, const char *buf,
-+				 size_t count)
-+{
-+	bool want_store = sdebug_fake_rw == 0;
-+	int n, ret;
-+
-+	if (sdebug_num_hosts) {
-+		pr_err("scsi_debug: Can not change dev_size_mb due to existing hosts\n");
-+		return -EINVAL;
-+	}
-+
-+	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 1)) {
-+		sdebug_dev_size_mb = n;
-+
-+		/* Propagate dev_size_mb change to other parameters */
-+		scsi_debug_init_size_parameters();
-+
-+		/*
-+		 * Erase all stores which may have different size. Initialize
-+		 * global variables for the stores and recreate the store.
-+		 */
-+		sdebug_erase_all_stores(false);
-+		sdeb_first_idx = -1;
-+		sdeb_most_recent_idx = -1;
-+		if (want_store) {
-+			ret = sdebug_add_store();
-+			if (ret < 0)
-+				return ret;
-+		}
-+		return count;
-+	}
-+
-+	return -EINVAL;
-+}
-+static DRIVER_ATTR_RW(dev_size_mb);
- 
- static ssize_t per_host_store_show(struct device_driver *ddp, char *buf)
- {
--- 
-2.43.0
-
+Thanks,
+Xingui
