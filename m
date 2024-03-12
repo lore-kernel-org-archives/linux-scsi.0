@@ -1,68 +1,68 @@
-Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
+Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D3C17D063;
-	Tue, 12 Mar 2024 15:33:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 667507C09F;
+	Tue, 12 Mar 2024 15:34:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710257603; cv=none; b=ZewO/jmCZACHxssy4sAYX6JpQfOOp+/0nOljrgC2NU3Mt+ER8EsmHs+t+kDhkqc1D0WheJ+y7E88MVQzqUvEfJugR4R5C1m6fbkSsgQKkCyTKpG0IVdVTE0OC9RNtbtYHwv9rSDf7NFlLVOPK1+1Yk5RVw0S2RG2ztJQZ1yy3ug=
+	t=1710257665; cv=none; b=Br1XWhqq6C5jZG1a9hrwhrM6C6thPSeWWLZLvKIkHucIh/0ZfqA3hgliK4k4snKFsv3jccM7BRpjXFAEnAlsPnO587KO9MNeGNIheh0D2OAmEqXi9ZluBkjmOxpWVzDIbdhrRPiPNOcGIO6benxNM43wsrTTFvnTtvVYAwv9hKQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710257603; c=relaxed/simple;
-	bh=j53OhaUdNor3mQ/LpX8s3IrNzFb3Okutcd5V/IJzIh8=;
+	s=arc-20240116; t=1710257665; c=relaxed/simple;
+	bh=NTT4vZyCf045pq+UcdflHRXPoL5Hj1INbxxNA9aOAc0=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=pcfXfcYZsBtkwLBq/30qRAkVaQiF8KusiAi1y1848C6m5UP76rZhBqtABp1cyBSirI2OC8+eQsI/tAtaxXbJtqp9dnyJV7cTaWFuYakgjVVBb6gjGT/IZ/M19slAer0Kt9WgQU59BlrQNSc0vObefEyaSl7sQthAKlxxpbk8y14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CzuU5doD; arc=none smtp.client-ip=209.85.208.171
+	 Content-Type:MIME-Version; b=uSobOu3Yi07XO1bicVqUbr/1wjdXmMU5zxcu4xkU+ZacfMPkjJyTmtoCtjXXHLfuMvEyZVtK/qwdOfIurk1v7IajRtPL5AgozPE5tKecUCCkf+eS0jVe688z09dQwrnAKyz+WOc7i8cVCHq0bwElfCoonngCQno0ygk5J9zMuJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=akKK4m7q; arc=none smtp.client-ip=209.85.210.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CzuU5doD"
-Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-2d26227d508so85530241fa.2;
-        Tue, 12 Mar 2024 08:33:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="akKK4m7q"
+Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-6e66601f082so21803b3a.0;
+        Tue, 12 Mar 2024 08:34:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1710257599; x=1710862399; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1710257664; x=1710862464; darn=vger.kernel.org;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=j53OhaUdNor3mQ/LpX8s3IrNzFb3Okutcd5V/IJzIh8=;
-        b=CzuU5doDnsWrCtBTxkxGb+T6J8v3EIN5LYPaOjmVWizd+Jz/Ibmf9UnEHyWf710GUR
-         LbWQZc8m4ax6fJOBHZ192/ItA7+Qog4VCFpmfwK3Y3azI4qTRVcfAv+7YyfsEOSh9nrH
-         XkJKguPrePjIxNwr+zjIifUnXr8gnVaYJ5wUaKw3r3R8SRvtRxncolyTuUyl0fEr56ey
-         FBeHgxZ/k6CPBsViFJ9NF72ED7fJdNfvfO1+QOAMagnCRl34KPMsoIuzwl9FB5UW4/LN
-         OZYvvvj1x2j7fTAFcCkBrky0lMnE9+cqL6fdDg0Z/4XGZQyyT2/bINIwJTsQkVN4KD5W
-         xCwQ==
+        bh=NTT4vZyCf045pq+UcdflHRXPoL5Hj1INbxxNA9aOAc0=;
+        b=akKK4m7qPlU704LiVpA8ZDTk0sY4CCtdg6RczQ5VWlyOH1OaF0yBgQMUOSy6bCdiVi
+         d2DQgmk4e1SvnnzFITKIjnk4DCpZmY5DPL7BYA/kHeLKCdUCJ9O2jhz725t9TUC+VfeH
+         9HPnAZWekYbJXIgBdLNHv/AMA62xxR6yVO3eFacb1WxyT4wh3pVMo0CKSLi6/zUAH5MK
+         D4c/MFbi5IOtU+2+Rs4Sf5TbzlwOsdu9yqVhe/0UxceeqZwzxV5oS42JsJzTTw71AVGD
+         OSU3VIKao5pB3rOvT0zlc/uOZ+OwrynzL6SF67J+koHKdy20Xakw0hIBuPPATOeGqknN
+         eunQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710257599; x=1710862399;
+        d=1e100.net; s=20230601; t=1710257664; x=1710862464;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=j53OhaUdNor3mQ/LpX8s3IrNzFb3Okutcd5V/IJzIh8=;
-        b=PvP8J+3Krz6+YjNKcsFpf+3rJu4ry3m3wX5hroXGBYiIxOLXZ4FtECxi91LLa3Aj7c
-         nxZeRb0qCT87MdWwXeO8fVt73TkwzUhan/gjE3SqU8mmkWkjAXmorfsySOpuLVNyHKXR
-         AOEG8kCc28dcDnwqGj967jqQdoq4Uxqdd5zgiebicbAEhZHm2dTKt+9yKNqwU71kO24b
-         FTYdRTUhpVxVwR9gPDGjr8s2dfiHwiNZYqaUE8UXKFC7QJstGqno6iVaqPUwApLDquEj
-         Kib1fp7I51MEQc1ZHrrQjMSqJqg3nIqhVVoK4vGuJu+o+zG3NSGigaT5zksIvwUOq9p0
-         j+uQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVKY67THNwy4iMl8UtRc61GFIvrRbaK3i39q/Ood2OAEih6qijW113TOyBJepNJJFnHx2W0e20IPL/Fbx/LS2GzCTTxzhbYQkULVMmwowD4TpTi7ZTxJ1aLUP87C87LdF2JGaBSD1hjbQ==
-X-Gm-Message-State: AOJu0Yx3F9nRFr2+CoWtTO80Zq7ABrm3qT2cCIrKOS2QcsIAmgH3L0mG
-	y58LrYfYmqiutq+62y/mMLzJKds7HJ5YZZpeqIeMUDDo3JkfnuVY
-X-Google-Smtp-Source: AGHT+IH+GYdHn43KNybwuLnriIBfr5ACpdRFrQf1mgqFq8tNNQ+vL1aYSJJzyxkQYXKDSNlgc7iZ/A==
-X-Received: by 2002:a05:651c:211a:b0:2d4:6815:fc6f with SMTP id a26-20020a05651c211a00b002d46815fc6fmr495703ljq.30.1710257599065;
-        Tue, 12 Mar 2024 08:33:19 -0700 (PDT)
+        bh=NTT4vZyCf045pq+UcdflHRXPoL5Hj1INbxxNA9aOAc0=;
+        b=lhxBr94v9AC5kcqiRhtLKq/QRBuaqRzzhYJ577bhEcR4fLSSzdY0uycaK87M+yedPl
+         OGn2LOyJo2PXWU7VCgxUrzM81AGQLxBWwPeftD0gS1/csm2rcrZ7mS5zHv24ZJxFky3T
+         VCliozdjS0fYhBo6twJ9MvZlFHDfNvdtHEPi02ecDh9nNhKxZ19wX8ssJiTpREapn+tR
+         lGn9A88ub9ke61xNte4ddh7p+WDYDjNSItaiQDiNa1JNSOZzdmrqShfyrMYGFcwy0FPo
+         EDfK1gqJx6AHM+NtWgFZ4qzhS0QegZQI1Cj2dERHP4WRu2vPy47WTk7TAj/E0DT5FTax
+         L4EQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXcNUGHxShXKG5wnzl3RsF+5pXL+sO+fU/MEk+AiC8CHv1esD0FSCgtG97QN1is+Ltc4/kPi7YG72Cf3n336GMI2VRdfL098NVIvd2mNSiQfTpwkr48OyYks5G6s216q/ORVfXPlpAKcw==
+X-Gm-Message-State: AOJu0YytN7lMF42wPcKLMqKvrB7jhEyy/6/+3PnAp6pJ6HmLncO7JoMn
+	nlVUKIiWHX6+3RjfET1SMd2MAEkGZaa34j6bJIMOkIvpCTamZsOk
+X-Google-Smtp-Source: AGHT+IELxK3b+RbuazNAVgYXGg12TX0E4AVimgM1jUeXX9liCsI2uPkLhdxekrEAmkmTh4vVcqyVxw==
+X-Received: by 2002:a05:6a00:1acc:b0:6e6:a3ed:76a3 with SMTP id f12-20020a056a001acc00b006e6a3ed76a3mr718338pfv.11.1710257663536;
+        Tue, 12 Mar 2024 08:34:23 -0700 (PDT)
 Received: from [10.176.235.119] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id s21-20020a50ab15000000b00568699d4b83sm1384635edc.44.2024.03.12.08.33.18
+        by smtp.gmail.com with ESMTPSA id gu20-20020a056a004e5400b006e55a21ac02sm450580pfb.152.2024.03.12.08.34.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Mar 2024 08:33:18 -0700 (PDT)
-Message-ID: <4aa7761173875ccfac57b18c9f002c4078358631.camel@gmail.com>
-Subject: Re: [PATCH v3 2/4] scsi: ufs: Re-use exec_dev_cmd
+        Tue, 12 Mar 2024 08:34:23 -0700 (PDT)
+Message-ID: <950c5f7f1350ca333972040a660bbedfcf6682a6.camel@gmail.com>
+Subject: Re: [PATCH v3 4/4] scsi: ufs: Re-use compose_devman_upiu
 From: Bean Huo <huobean@gmail.com>
 To: Avri Altman <avri.altman@wdc.com>, "James E . J . Bottomley"
 	 <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
 	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 12 Mar 2024 16:33:17 +0100
-In-Reply-To: <20240309081104.5006-3-avri.altman@wdc.com>
+Date: Tue, 12 Mar 2024 16:34:19 +0100
+In-Reply-To: <20240309081104.5006-5-avri.altman@wdc.com>
 References: <20240309081104.5006-1-avri.altman@wdc.com>
-	 <20240309081104.5006-3-avri.altman@wdc.com>
+	 <20240309081104.5006-5-avri.altman@wdc.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.4-0ubuntu2 
@@ -74,15 +74,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
 On Sat, 2024-03-09 at 10:11 +0200, Avri Altman wrote:
-> Move out the actual command issue from exec_dev_cmd so it can be used
-> elsewhere.=C2=A0 While at it, remove a redundant "lrbp->cmd =3D NULL"
-> assignment.
->=20
-> Also, the device management commands that are originated from the
-> ufs-bsg code path, are being traced now, which wasn't the case
-> before.
+> Move some code fragments into ufshcd_prepare_req_desc_hdr so it can
+> be used throughout.
 >=20
 > Signed-off-by: Avri Altman <avri.altman@wdc.com>
 
 Reviewed-by: Bean Huo <beanhuo@micron.com>
-
