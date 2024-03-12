@@ -1,82 +1,77 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 667507C09F;
-	Tue, 12 Mar 2024 15:34:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 583977C0B2;
+	Tue, 12 Mar 2024 15:37:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710257665; cv=none; b=Br1XWhqq6C5jZG1a9hrwhrM6C6thPSeWWLZLvKIkHucIh/0ZfqA3hgliK4k4snKFsv3jccM7BRpjXFAEnAlsPnO587KO9MNeGNIheh0D2OAmEqXi9ZluBkjmOxpWVzDIbdhrRPiPNOcGIO6benxNM43wsrTTFvnTtvVYAwv9hKQ=
+	t=1710257828; cv=none; b=KTuI5JWNyS5kHJOkKrUg+2avYUiNLjz2LxNad8YG3RO5m9aWdzqPprtEbZhkBKt/8kKKT6PlI3FieN/pTMYVvrqmrI6QviZH+NcWkuYBgTt2zHiERW1Txq8rYJdObrV9AJSeqgmb9QY91h9RaYlZWszcE4umAaZ54I5LrtELxCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710257665; c=relaxed/simple;
-	bh=NTT4vZyCf045pq+UcdflHRXPoL5Hj1INbxxNA9aOAc0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=uSobOu3Yi07XO1bicVqUbr/1wjdXmMU5zxcu4xkU+ZacfMPkjJyTmtoCtjXXHLfuMvEyZVtK/qwdOfIurk1v7IajRtPL5AgozPE5tKecUCCkf+eS0jVe688z09dQwrnAKyz+WOc7i8cVCHq0bwElfCoonngCQno0ygk5J9zMuJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=akKK4m7q; arc=none smtp.client-ip=209.85.210.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1710257828; c=relaxed/simple;
+	bh=W30M/6SE7BKh9U1huPbKGcpVKwBjwlhhTiOxGjXQktQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gbykxdt6ry5KSFPz+XbcDIT9tBsii83xn487KUcYN3SZKs1f2CZ5QxCoPdAISVOvowZg8aaLZTtskiB0ndhCOOeezqL3K2Spy1av8mD9ELOKc5hDYP5pm3fguQKwvPUVkTEkEAZdsjEyUl6kEVCDDQvXxt5TNwk+f5noLwUsqXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d8hUP6JI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="akKK4m7q"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-6e66601f082so21803b3a.0;
-        Tue, 12 Mar 2024 08:34:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1710257664; x=1710862464; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=NTT4vZyCf045pq+UcdflHRXPoL5Hj1INbxxNA9aOAc0=;
-        b=akKK4m7qPlU704LiVpA8ZDTk0sY4CCtdg6RczQ5VWlyOH1OaF0yBgQMUOSy6bCdiVi
-         d2DQgmk4e1SvnnzFITKIjnk4DCpZmY5DPL7BYA/kHeLKCdUCJ9O2jhz725t9TUC+VfeH
-         9HPnAZWekYbJXIgBdLNHv/AMA62xxR6yVO3eFacb1WxyT4wh3pVMo0CKSLi6/zUAH5MK
-         D4c/MFbi5IOtU+2+Rs4Sf5TbzlwOsdu9yqVhe/0UxceeqZwzxV5oS42JsJzTTw71AVGD
-         OSU3VIKao5pB3rOvT0zlc/uOZ+OwrynzL6SF67J+koHKdy20Xakw0hIBuPPATOeGqknN
-         eunQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710257664; x=1710862464;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=NTT4vZyCf045pq+UcdflHRXPoL5Hj1INbxxNA9aOAc0=;
-        b=lhxBr94v9AC5kcqiRhtLKq/QRBuaqRzzhYJ577bhEcR4fLSSzdY0uycaK87M+yedPl
-         OGn2LOyJo2PXWU7VCgxUrzM81AGQLxBWwPeftD0gS1/csm2rcrZ7mS5zHv24ZJxFky3T
-         VCliozdjS0fYhBo6twJ9MvZlFHDfNvdtHEPi02ecDh9nNhKxZ19wX8ssJiTpREapn+tR
-         lGn9A88ub9ke61xNte4ddh7p+WDYDjNSItaiQDiNa1JNSOZzdmrqShfyrMYGFcwy0FPo
-         EDfK1gqJx6AHM+NtWgFZ4qzhS0QegZQI1Cj2dERHP4WRu2vPy47WTk7TAj/E0DT5FTax
-         L4EQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXcNUGHxShXKG5wnzl3RsF+5pXL+sO+fU/MEk+AiC8CHv1esD0FSCgtG97QN1is+Ltc4/kPi7YG72Cf3n336GMI2VRdfL098NVIvd2mNSiQfTpwkr48OyYks5G6s216q/ORVfXPlpAKcw==
-X-Gm-Message-State: AOJu0YytN7lMF42wPcKLMqKvrB7jhEyy/6/+3PnAp6pJ6HmLncO7JoMn
-	nlVUKIiWHX6+3RjfET1SMd2MAEkGZaa34j6bJIMOkIvpCTamZsOk
-X-Google-Smtp-Source: AGHT+IELxK3b+RbuazNAVgYXGg12TX0E4AVimgM1jUeXX9liCsI2uPkLhdxekrEAmkmTh4vVcqyVxw==
-X-Received: by 2002:a05:6a00:1acc:b0:6e6:a3ed:76a3 with SMTP id f12-20020a056a001acc00b006e6a3ed76a3mr718338pfv.11.1710257663536;
-        Tue, 12 Mar 2024 08:34:23 -0700 (PDT)
-Received: from [10.176.235.119] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id gu20-20020a056a004e5400b006e55a21ac02sm450580pfb.152.2024.03.12.08.34.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Mar 2024 08:34:23 -0700 (PDT)
-Message-ID: <950c5f7f1350ca333972040a660bbedfcf6682a6.camel@gmail.com>
-Subject: Re: [PATCH v3 4/4] scsi: ufs: Re-use compose_devman_upiu
-From: Bean Huo <huobean@gmail.com>
-To: Avri Altman <avri.altman@wdc.com>, "James E . J . Bottomley"
-	 <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>, 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d8hUP6JI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2021C433C7;
+	Tue, 12 Mar 2024 15:37:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1710257827;
+	bh=W30M/6SE7BKh9U1huPbKGcpVKwBjwlhhTiOxGjXQktQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=d8hUP6JIjXohPvBv6NPFZi0JrrhFfeA1Mt75eFhrHGf3un72QrgosFPDbu31HeoS4
+	 N0Vv5mWQnqEEUp182QYq1mPGf47b8/4I4i4l7pN808iPlvXOe7twHESd3j6rSkvEbz
+	 BJKptL9zDn2vAC8P4rluHRyfZEwycTJmS0dt1CaveubPiIIebW+N5NpcACCamP/GBo
+	 bVS2EX7maUSEQf6GFtcZPANfCtZ/E80Va8LitP35CkE9X14tz7eLKuV8dW1i8zBvZ3
+	 bmcreJSfHSX+tKcqiGaY71n1LNHSrwlBpcexH+yVbXfLYgWGIuvVRC4GufOwbzByVi
+	 /q4fqX2xoHfwg==
+Date: Tue, 12 Mar 2024 16:37:01 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Igor Pylypiv <ipylypiv@google.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Xiang Chen <chenxiang66@hisilicon.com>,
+	Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org,
 	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 12 Mar 2024 16:34:19 +0100
-In-Reply-To: <20240309081104.5006-5-avri.altman@wdc.com>
-References: <20240309081104.5006-1-avri.altman@wdc.com>
-	 <20240309081104.5006-5-avri.altman@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+Subject: Re: [PATCH v8 1/7] ata: libata-sata: Factor out NCQ Priority
+ configuration helpers
+Message-ID: <ZfB2nTnzDqIgb65V@ryzen>
+References: <20240307214418.3812290-1-ipylypiv@google.com>
+ <20240307214418.3812290-2-ipylypiv@google.com>
+ <ZeriaUWlhBqp4Q77@ryzen>
+ <35801735-1e6a-43ef-8687-06ff04d53619@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <35801735-1e6a-43ef-8687-06ff04d53619@kernel.org>
 
-On Sat, 2024-03-09 at 10:11 +0200, Avri Altman wrote:
-> Move some code fragments into ufshcd_prepare_req_desc_hdr so it can
-> be used throughout.
->=20
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+On Tue, Mar 12, 2024 at 03:17:43PM +0900, Damien Le Moal wrote:
+> On 2024/03/08 19:03, Niklas Cassel wrote:
+> > 
+> > Anyway, like you said, as you are now creating helper functions:
+> > ata_ncq_prio_supported(), ata_ncq_prio_enabled(), ata_ncq_prio_enable()
+> > these function might no longer only be called from sysfs code,
+> > so it is probably a bad idea to let these functions use spin_lock_irq().
+> > 
+> > However, can't ata_ncq_prio_supported() and ata_ncq_prio_enabled()
+> > still use a simple spin_lock(), why would they need to disable irqs?
+> > 
+> > Damien, you are the author of ata_ncq_prio_supported_show(), thoughts?
+> 
+> See above. The spin lock irq-disabling variant is needed because the port lock
+> is taken from command completion context.
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+Yes of course, I don't know what I was thinking...
