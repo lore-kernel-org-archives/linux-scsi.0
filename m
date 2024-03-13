@@ -1,53 +1,53 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F760125CF
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Mar 2024 10:10:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1785338DF7
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Mar 2024 10:10:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710324629; cv=none; b=SYrbQiCCvAF4VXjDUbWBTjUsqlWWoi2/Hnh/+hlA4HTzr+/s/ThFEceKMmJSxUuUDRv+rT0skD+L2c7IUn6BewKMXnri6kvEavJpvw69tEuKDUbKWk5sbfSjPChpACjacmpyR3dXMEmJGYNNNqllR20km2IzflQm2VxTAufP0Qs=
+	t=1710324630; cv=none; b=PqMSIFXLp10s5Na9qyEQjVA7ZVb7VwLc6ocnhwuX3ZpVCQM10ZxHmO+d3wiA4t0pH+YXvtDpoyLvIb5/1PWUV4cis6BuDRgVJagIAPzIFMFNWJKPB91Mt99kPHG3fNPNjjpia0Cg5M9YMfeQ1bLDNobUMvp60ENy9cX8c+GKyMc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710324629; c=relaxed/simple;
-	bh=v5pEK2tlG1N+Spdq6ueyxLlHOzKg96Ga5+re19ZQ8x4=;
+	s=arc-20240116; t=1710324630; c=relaxed/simple;
+	bh=kh9qI8eVJ9Vs7+4whIFJ49yLWf2soIJX6MOYReyZjWs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UG9iYjEf40bvm1QIRq9j3hAgRZAGSlTlg8iVk2W1GzIgAlvfKVGA0j0IX9LXw1DSrZI6O6ZwwpFN9qI01rJovnjZEeyuq64Pjmv29u0DECUCg2E6UUkdEwlUASupJhO3Q1En+ITMZd3h0VpqQQw2fJQ7WvYL79NiQHsQQxdNpVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=QWqRRfA7; arc=none smtp.client-ip=209.85.210.174
+	 MIME-Version:Content-Type; b=EfGA0ng9FMDSRPeF1+U9e0CNTQbkdpPRMXzSQAawXIv3j36DMN/XPY7k2tNC6rz4Ut+AFLxpk4KhCKKskQaZtt5MViLcrFsg860nXL2Y/oUXqQ3HOyMEU1QADIG/mnMzsXwczcH0FTuTX/bPXiXi+B1cir7x5jf0MZKmvCLHKI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Qo5v5rFC; arc=none smtp.client-ip=209.85.210.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="QWqRRfA7"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6e6adf257fdso1356103b3a.0
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Mar 2024 03:10:27 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Qo5v5rFC"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-6e6ac00616cso1453742b3a.0
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Mar 2024 03:10:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1710324626; x=1710929426; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1710324627; x=1710929427; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=sCJmMNSq9HH/dOQ4h4/2xFRtDqp9JhaV38tysWIaTTs=;
-        b=QWqRRfA7n3yIqVhfUbUOWqXJk/ryVky0Psjq1gseb6nqiOvpJnwgOF78xtCzuX8wt8
-         4KitqauTE9gPp2xSaHmtj+SZ5ipn5q0dNyH+UZFRjYzEOe6yJnGZkyP03K2kocGLfre/
-         GaTjSEdp7QAOQA//BoO/DJiruasjZm3ibWwrc=
+        bh=iqo+fuiBl8+PAzATKqlt/myteFBZkewLztQbgAP4k/E=;
+        b=Qo5v5rFCM5YMbqTblSdynfMEUNXd3AhpSVXGp8zSC9c8p1/FbNmiZS2vW95LtSQBFx
+         /n/EoP5ikpBtcQMW0dZF5RsLRUajxo6ZpzxLkSDRxr7sCcaPfiLmqvf5mTM5QfeJpuOZ
+         xh+VTIFCHvJHIJolsijJNJuMxBErVY1PoMhMA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710324626; x=1710929426;
+        d=1e100.net; s=20230601; t=1710324627; x=1710929427;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=sCJmMNSq9HH/dOQ4h4/2xFRtDqp9JhaV38tysWIaTTs=;
-        b=ILftT3sBZ65EpkhTI9iS5IaVKC9q+aUZc86+eYcQ4VLZcLL72/2rVBW1to1yI6IETh
-         O9b9Tai0NthSjvqvjv9Yu4tsTMikRNDrXGLH3+IoMTHLktN2WwrsFGYXjyFGMPQ4E4dS
-         C4VxyjGYUIsVuDt1aFnv52JSwX5ClmaPb32TEVt3JvCnK+0QLRGLgrufaPgeamR77d3Q
-         UJo7EtLAzATTMHAC34KkEIk+0IDCGw3fN0AUJY6WYl3Lcx7TdMdwpD16P7LHUWJG5kys
-         tEqy2zFA2SYHO/sOhPl5JGLtz9Iz/pC8wi8JNXZn5HMWxrfRAH4UBcAbVU+AYK6rbUgX
-         pmtQ==
-X-Gm-Message-State: AOJu0YxNy5faIlHueDKzz9paDbKE+tcol/Xi15No4Te6YCLkCumAJC2A
-	99H7XIlcPz10uonLkYfUzybxYr3Wep0mFyEjL2h/JiEqJQ9WvlBX9fZuCnpPP4R5lABKXQ9p9Wv
-	lv1uLIeXk0FwRvxdQxAk47Q8v4NThNqxBgA39e/F/N7EqI9e/pnyALG9UbgNkemfJ+Dt8IvX7/5
-	Cw0Zmb0/rhs4GEG6S8U2BLdQ3fFHeMU4Sv6vjApo4O+KG9QQ==
-X-Google-Smtp-Source: AGHT+IGimHPEC87SwFHdriTB/Vner6yu4b0jVY5RXsXN0uRI1bvoz7NON3/Q8IYLFrsE4LyYtGcwhQ==
-X-Received: by 2002:a05:6a00:23d2:b0:6e6:9ff1:31b7 with SMTP id g18-20020a056a0023d200b006e69ff131b7mr2039260pfc.16.1710324623733;
-        Wed, 13 Mar 2024 03:10:23 -0700 (PDT)
+        bh=iqo+fuiBl8+PAzATKqlt/myteFBZkewLztQbgAP4k/E=;
+        b=LueLSjaBUx4aY1llkNtqLoAp2avlcj8eNB6wm5rMb5iHbyBFt4Msz3/cbgBWh37Z9P
+         PK0trmcLKgwZIJzkyIfyUjmYX6cZWX4ChMD3ldKSGOIPj91ol1FkH9GnWqTXRO35mo2/
+         asErou/l7PxnOIXvhp9rd7r1GefPYBBkSDL8nik72N5YlLk5nEq4BbhPlcTIlCRYfWMd
+         Lg90nxId42/PUv6mC0IKfXNRBfZxCjswrv/t5ZeE9HE326kekOQej3pqKo7k2EsUFBgO
+         yxDskAv9IgTsey9P50nFzVcgp15g+2AlAZW5VkZjpDk9T9k0RYMBQBHwNTJaLB1un9dQ
+         wMiA==
+X-Gm-Message-State: AOJu0YyWq1dy290IQ+YFXOW4KNzada7Xbrk9qB4znhjhL21CVP06qBJ8
+	Nyefc9WY7taf+b/5KYfjgDoKAFzBfO5BWERoq5gDgvC0/hVghoQfwdgtfmvPMbMOZPO+VZHq7cf
+	s9G12zeS+o9iLaqlHT3va3gkksd3Gs16ju5MReTH/MSnfuU/SWwg3mCCLEZ8nVXMdjfpUzmbDyu
+	9ukF1HFyYe6OJOQ02jwGZJsxLD6s5w434J3C1ozcO2X68JaA==
+X-Google-Smtp-Source: AGHT+IET2uxNtxuqTFgo88d0Yd2D/9JE8G+yyP4/VJOtfFZnHziVU7NIIpR2Ak2mfMO+0zsE0Z9XFQ==
+X-Received: by 2002:a05:6a21:789e:b0:1a1:85b2:44e2 with SMTP id bf30-20020a056a21789e00b001a185b244e2mr10953193pzc.11.1710324627379;
+        Wed, 13 Mar 2024 03:10:27 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id j18-20020a056a00175200b006e5af565b1dsm7570337pfc.201.2024.03.13.03.10.20
+        by smtp.gmail.com with ESMTPSA id j18-20020a056a00175200b006e5af565b1dsm7570337pfc.201.2024.03.13.03.10.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Mar 2024 03:10:22 -0700 (PDT)
+        Wed, 13 Mar 2024 03:10:26 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -57,9 +57,9 @@ Cc: rajsekhar.chundru@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v4 1/7] mpi3mr: Block devices are not removed from OS even vd's are offlined
-Date: Wed, 13 Mar 2024 15:37:40 +0530
-Message-Id: <20240313100746.128951-2-ranjan.kumar@broadcom.com>
+Subject: [PATCH v4 2/7] mpi3mr: Set MPI request flags appropriately
+Date: Wed, 13 Mar 2024 15:37:41 +0530
+Message-Id: <20240313100746.128951-3-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240313100746.128951-1-ranjan.kumar@broadcom.com>
 References: <20240313100746.128951-1-ranjan.kumar@broadcom.com>
@@ -70,84 +70,39 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000ae9e7a061387fbc8"
+	boundary="000000000000e5d315061387fbc6"
 
---000000000000ae9e7a061387fbc8
+--000000000000e5d315061387fbc6
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The driver did not remove the virtual disk that was
-exposed as hidden and offline after the controller was reset.
-
-Drive is removed from OS when firmware sends "device added" event
-with hidden bit set or access status indicating inability to accept I/Os.
+“Flags” inside MPI request is bitfield-based.
+So ‘Flags’ should be updated with bitwise OR operation.
 
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  2 +-
- drivers/scsi/mpi3mr/mpi3mr_os.c | 10 +++++-----
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 3de1ee05c44e..06359915a48d 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -1348,7 +1348,7 @@ void mpi3mr_wait_for_host_io(struct mpi3mr_ioc *mrioc, u32 timeout);
- void mpi3mr_cleanup_fwevt_list(struct mpi3mr_ioc *mrioc);
- void mpi3mr_flush_host_io(struct mpi3mr_ioc *mrioc);
- void mpi3mr_invalidate_devhandles(struct mpi3mr_ioc *mrioc);
--void mpi3mr_rfresh_tgtdevs(struct mpi3mr_ioc *mrioc);
-+void mpi3mr_refresh_tgtdevs(struct mpi3mr_ioc *mrioc);
- void mpi3mr_flush_delayed_cmd_lists(struct mpi3mr_ioc *mrioc);
- void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code);
- void mpi3mr_print_fault_info(struct mpi3mr_ioc *mrioc);
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 73c831a97d27..bfd32354b662 100644
+index bfd32354b662..5f975e0db388 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -1029,7 +1029,7 @@ mpi3mr_update_sdev(struct scsi_device *sdev, void *data)
- }
+@@ -4895,7 +4895,7 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 		    MPI3_SCSIIO_MSGFLAGS_DIVERT_TO_FIRMWARE;
+ 		scsiio_flags |= MPI3_SCSIIO_FLAGS_DIVERT_REASON_IO_THROTTLING;
+ 	}
+-	scsiio_req->flags = cpu_to_le32(scsiio_flags);
++	scsiio_req->flags |= cpu_to_le32(scsiio_flags);
  
- /**
-- * mpi3mr_rfresh_tgtdevs - Refresh target device exposure
-+ * mpi3mr_refresh_tgtdevs - Refresh target device exposure
-  * @mrioc: Adapter instance reference
-  *
-  * This is executed post controller reset to identify any
-@@ -1039,7 +1039,7 @@ mpi3mr_update_sdev(struct scsi_device *sdev, void *data)
-  * Return: Nothing.
-  */
- 
--void mpi3mr_rfresh_tgtdevs(struct mpi3mr_ioc *mrioc)
-+void mpi3mr_refresh_tgtdevs(struct mpi3mr_ioc *mrioc)
- {
- 	struct mpi3mr_tgt_dev *tgtdev, *tgtdev_next;
- 	struct mpi3mr_stgt_priv_data *tgt_priv;
-@@ -1047,8 +1047,8 @@ void mpi3mr_rfresh_tgtdevs(struct mpi3mr_ioc *mrioc)
- 	dprint_reset(mrioc, "refresh target devices: check for removals\n");
- 	list_for_each_entry_safe(tgtdev, tgtdev_next, &mrioc->tgtdev_list,
- 	    list) {
--		if ((tgtdev->dev_handle == MPI3MR_INVALID_DEV_HANDLE) &&
--		     tgtdev->is_hidden &&
-+		if (((tgtdev->dev_handle == MPI3MR_INVALID_DEV_HANDLE) ||
-+		     tgtdev->is_hidden) &&
- 		     tgtdev->host_exposed && tgtdev->starget &&
- 		     tgtdev->starget->hostdata) {
- 			tgt_priv = tgtdev->starget->hostdata;
-@@ -2010,7 +2010,7 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
- 			mpi3mr_refresh_sas_ports(mrioc);
- 			mpi3mr_refresh_expanders(mrioc);
- 		}
--		mpi3mr_rfresh_tgtdevs(mrioc);
-+		mpi3mr_refresh_tgtdevs(mrioc);
- 		ioc_info(mrioc,
- 		    "scan for non responding and newly added devices after soft reset completed\n");
- 		break;
+ 	if (mpi3mr_op_request_post(mrioc, op_req_q,
+ 	    scmd_priv_data->mpi3mr_scsiio_req)) {
 -- 
 2.31.1
 
 
---000000000000ae9e7a061387fbc8
+--000000000000e5d315061387fbc6
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -218,13 +173,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEfZy7VGotu3LAsLon420LZOTuY1pvdx
-AkTf14NqwqUpMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMx
-MzEwMTAyNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIP2D1LYK9rnKy8WcNyrul9CCNmQVIVvg
+vuf6Ho2YzhEAMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMx
+MzEwMTAyN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQAC/qGJVgol6DzbwbsxzlDfR99RPm0Qokm6qgmH+bc2Yav+2Ks4
-ku/0IZE3w25JzKjkU9rpW3g1hhBW3YpT2oXCokvKvvTt0RISYoc7+1iWmNk2k0EG/1O3B6+M7xKF
-4DPCyHJcXAZPiPKkI2oPTgnqEOb0EJWvTAG+SsXrW7TKyQ0O67o17XdAeTdDlXZ/iKDBbSVsBuuK
-kNeR8yJGUleXx1YBmc9sg28Y95vEgsf80uYmIZhU6JEo/H2QbCeicZhfFG8ZIe2OUQFdNMAuZkY4
-Q3RnUbn9BU3n9+AMnMNFCfN1tJH1WK0WKTuayXB8AjP2srXeYAtEpASydAtHiGwv
---000000000000ae9e7a061387fbc8--
+ATANBgkqhkiG9w0BAQEFAASCAQC+FPWxS4FcLjJpbWx3QgRTDHxCCgeRLs1ChAO0ywkLSd1mYwns
+LnYuZPvzxSCeI4Z6RKD2FhQf2A6YdB1XM3HXdxPqCZQh6Y+yCC2IruCUI19Kkszi0r96Ig8Giol3
+Nrhpx/eLqMxoR4sdx0X1e6iT48H2H30F3CEd0eZN/U7UlGxhUtoiPcZbvIdVZZny7FpbLZJ2dbpY
+gw0yuIrx6gLtdSkEH6MRu2fAZCCP4MGMn8W7K250FsZgTRrPbg4pk15njwSoe7QYTY7gfHr3tZjU
+jMx4Ox2Y/w0fm4jRra7j1L4vXJTId0xOd2bpHHZ2ARGFgI1G9BuQLhBaKcbM98HI
+--000000000000e5d315061387fbc6--
