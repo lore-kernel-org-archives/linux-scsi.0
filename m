@@ -1,53 +1,53 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09B9C38DDA
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Mar 2024 10:10:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23042125CF
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Mar 2024 10:10:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710324641; cv=none; b=OWuXEGcHimHXV+/I3w5w8GqeAnYGgLnAOvjbegPSxet9COqJ6bzhUs1Km5DJplVp99eK+wCOFJoYtISCq5Fa8pBeRctRuTZrr3k0gi1dr1Agh0H+OoHw9ZftgwY3CVJepdAvC8vRnDDSpCFwp8GMSDkYQuShTcDfRPn1rxI5PDY=
+	t=1710324644; cv=none; b=G5KUfqWDWk49IQvqjxSuwE334gJAs7Ah4r/8mMg11TWLooaaQzxZubKoQnEKYVrysxBBRAypZv9RQsgoDawetvldOeInFxVyMi/8gVaer5BTY7wIu9a6wo2zWci/485M/qcQUnTwN/EZaK4ewwokJyyvzDC40yRKxHiXDUTovrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710324641; c=relaxed/simple;
-	bh=3vSbQHeuOTke+XGsLCMXq//JZatseVKnTr2eUY2H2zE=;
+	s=arc-20240116; t=1710324644; c=relaxed/simple;
+	bh=PFZxX43/l3FoK4ucjRoK/zB6DugmY3219TsRxokw1Mo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=F1mXQCaXsoTi2JSwrkIu/o5RoTNNs+fut0jLZMxJ2ze6um/c6Nbk78yUBcB6QC7AT9lNNggnPEKl6O+LRoKkMpIQPij+2n5ryp7AihzPj1xM95kqQvOb2aZco0X414PcI5FV6EumyiV89OnJyRuWvUfCk1a41e16rTM34JVeRI8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=EQpCK9JF; arc=none smtp.client-ip=209.85.210.178
+	 MIME-Version:Content-Type; b=bC5SywHhYBwApSHJwPIT7v4ceSHoeqpcAP79Ckv2G+vTeK1wXMdCn2u39m5iCKMrIWOrgBcpXKtnRyYgCG+pSAg36BJ1IHJ9m8uMOim+YXl+hjl2cWMEGKmKFg0mH+fTfjOHTBX5anzHJCyEKBAAT+qFwGbcJTKx6Fc4WnRwHuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=CH3tA1eB; arc=none smtp.client-ip=209.85.210.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="EQpCK9JF"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-6e6ac741ff7so1209051b3a.0
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Mar 2024 03:10:39 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="CH3tA1eB"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6e5dddd3b95so524091b3a.1
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Mar 2024 03:10:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1710324638; x=1710929438; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1710324642; x=1710929442; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=wSXJ1AVHK7hlHS78VsfBkKCEa9VZ8J9Ksa9DuPSZqpw=;
-        b=EQpCK9JFKHsN1fsltvBgQOctyWtSrRtvM80vK+07hgs0X8ABcvJWj4nAmuPgJTgnJP
-         q8tql9Nm43cfRwvOFwLszD2uA65BDsKCfu89xB34sNdDb1pHD4ke+jzmcxuuODT5qoON
-         BirKYgz4ZqVi1XcrG6NnLpoh6RVny6VmLsubE=
+        bh=sqbeZIRkbwJLN4faaloi+8DWFIXMq/f2gPp+1oSZiBY=;
+        b=CH3tA1eBeb5/WyQ4GJJTnr3IS83riOTWiLN0gh0JqMGp/SmBzwHPXwrs2Xhkyi3p1R
+         gMCNENyJN5pU62/t3I6XU1fYPFqCysrtqIVEKFkALzfQxvbeUzks6scr1AX+tFSvapER
+         ntZ1yi6xmed9+8vL13EffG3q2r7i+IpE26SRs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710324638; x=1710929438;
+        d=1e100.net; s=20230601; t=1710324642; x=1710929442;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wSXJ1AVHK7hlHS78VsfBkKCEa9VZ8J9Ksa9DuPSZqpw=;
-        b=sru/v1ZhmHUEsSUQAa03zsqs3Bg3N/5eP1TFlPp8+q0pVjxQk53eNjmljLH9m+hBPO
-         XddSIaybvc7mF4qkjz7XvnWMFWhckH/SOaLSNJ5I0kcXVDJJl16iTiEE6H3Wgz7BWWep
-         /wU8lRMiPqCOqRQFPb8yiclvpTAQ+WfQr//rCieenVVJ2wmJcrOQUCj2wve4jOT136yx
-         kBC/k/YP8oqkYwTqk4TmLHP4lCRV9NZ1/MshQU84sH2UMirnq31vOrVbTAaCJ8MqDDWL
-         ttPV0Fov2pSDJXpAF7JluGj59ITdeh58ezGS6ldyrCVGj1mYUheTAkwPw2/ZEp8lyFH0
-         X4ww==
-X-Gm-Message-State: AOJu0Yyuo6iZ+b6p+WDqyz28jYAfN2C5OL7zswn5fjzNaEYoS1gfyhoi
-	NC1rTX7u33frLz7RIkiaBMi7se6uEZUWt0KAPNaKuaa2ieh85nj80l2rpqpIa0vvX4V8/zgyEhs
-	/Ae2jMvZB2DTLmlZW8hQQwE1qOdOBx+9GF5OQGZMe3khL1kb4/bVo7kfMvmbPAs8yldt3YKze8s
-	FFgl0r2b6gr3UGaiTY+k8LXvywR4Yf2jX36RT5JBu9/kwnpA==
-X-Google-Smtp-Source: AGHT+IH9xXKlX3+ymxKFkLKAMsIcerkK/E3RR2Wow/Swm+9EZyxT8fKNeHPsX1PFdYG8aweVYHwIxw==
-X-Received: by 2002:a05:6a00:3d0b:b0:6e6:4946:985f with SMTP id lo11-20020a056a003d0b00b006e64946985fmr1922906pfb.11.1710324638214;
-        Wed, 13 Mar 2024 03:10:38 -0700 (PDT)
+        bh=sqbeZIRkbwJLN4faaloi+8DWFIXMq/f2gPp+1oSZiBY=;
+        b=h+FfZDnjWk/3xln+QEmtec/6ml8WWYFTuAXvBXbE+7MZDBZ1MzL4woonHGYPRxYhZu
+         po6S4EgDKr0ZWJPOGS4yk8NuNcW1MZ/fzvhbJHgF6PZKMGvLq7E/IiFJKAsIeH9fPyb7
+         U+1M6lMSIfx2lphhmHWwDyF2PQDYVNPy9NijVqMEl7G7fMsuH1nmk6VWHsnZVHIiPkhB
+         r7vc9w0/SAc89/ALbaaut5z2yG47AWlesGExMzbOo/ZAed6Va6Moafznp+QoNa3kEDQe
+         YDN89XZi3qI9qXZdtn965mjmgS0/gArWEYElmjp/211rNapzvj+H47LdvFzh0VFChwm8
+         JMDA==
+X-Gm-Message-State: AOJu0Yw+XpTklwJGxNH3elZ58J2WlXgipZ+TcI1clgh7sErwVEWjgZEE
+	sitkhwEuYxvtjZdbiv5VQqpeKdOyFhhkcKAaD6D1SpFR+ahiRAUHQ6YEzkJWFVX2CCnQ7t70gvL
+	WYTFYsNy4ExCttZxdhRsVJQS+FZ8L8s63+JGGOo95S7cCONc3719Pem+DVG3+kSfR7S+MV9W8UX
+	yT6p3p0lEoyX2gv9eyCPXvh9EvtaMpau8wJF73e+Xyr7Q+AQ==
+X-Google-Smtp-Source: AGHT+IGWzRSuMNHk1Gd+n+wyiPU4bjL5BD9ikJXtlt431gNhvqW87tuQpF1FukuLK0Gi07mWGwNu0w==
+X-Received: by 2002:a05:6a21:182:b0:1a1:8bd6:af65 with SMTP id le2-20020a056a21018200b001a18bd6af65mr3094754pzb.20.1710324641894;
+        Wed, 13 Mar 2024 03:10:41 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id j18-20020a056a00175200b006e5af565b1dsm7570337pfc.201.2024.03.13.03.10.34
+        by smtp.gmail.com with ESMTPSA id j18-20020a056a00175200b006e5af565b1dsm7570337pfc.201.2024.03.13.03.10.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Mar 2024 03:10:37 -0700 (PDT)
+        Wed, 13 Mar 2024 03:10:40 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -56,11 +56,10 @@ Cc: rajsekhar.chundru@broadcom.com,
 	sumit.saxena@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	kernel test robot <lkp@intel.com>
-Subject: [PATCH v4 5/7] mpi3mr: Debug ability improvements
-Date: Wed, 13 Mar 2024 15:37:44 +0530
-Message-Id: <20240313100746.128951-6-ranjan.kumar@broadcom.com>
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v4 6/7] mpi3mr: Update MPI Headers to revision 31
+Date: Wed, 13 Mar 2024 15:37:45 +0530
+Message-Id: <20240313100746.128951-7-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240313100746.128951-1-ranjan.kumar@broadcom.com>
 References: <20240313100746.128951-1-ranjan.kumar@broadcom.com>
@@ -71,193 +70,182 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000008d600a061387fccf"
+	boundary="000000000000c34a33061387fc88"
 
---0000000000008d600a061387fccf
+--000000000000c34a33061387fc88
 Content-Transfer-Encoding: 8bit
 
-Driver updated to include OS type in fault/reset reason code.
-MPI request sent through IOCTL now automatically dumped on timeout.
+Update MPI Headers to revision 31
 
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202403081903.q3Dq54zZ-lkp@intel.com/
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h     | 10 +++++++---
- drivers/scsi/mpi3mr/mpi3mr_app.c | 21 ++++++++++++++-------
- drivers/scsi/mpi3mr/mpi3mr_fw.c  | 21 ++++++++++++++-------
- 3 files changed, 35 insertions(+), 17 deletions(-)
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      |  3 +++
+ drivers/scsi/mpi3mr/mpi/mpi30_image.h     | 20 +++++---------------
+ drivers/scsi/mpi3mr/mpi/mpi30_ioc.h       | 18 +++++++++++-------
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h |  2 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c           |  8 ++++----
+ 5 files changed, 24 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 06359915a48d..dca8390c33ec 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -63,7 +63,7 @@ extern atomic64_t event_counter;
- #define MPI3MR_DRIVER_AUTHOR	"Broadcom Inc. <mpi3mr-linuxdrv.pdl@broadcom.com>"
- #define MPI3MR_DRIVER_DESC	"MPI3 Storage Controller Device Driver"
- 
--#define MPI3MR_NAME_LENGTH	32
-+#define MPI3MR_NAME_LENGTH	64
- #define IOCNAME			"%s: "
- 
- #define MPI3MR_DEFAULT_MAX_IO_SIZE	(1 * 1024 * 1024)
-@@ -294,6 +294,10 @@ enum mpi3mr_reset_reason {
- 	MPI3MR_RESET_FROM_SAS_TRANSPORT_TIMEOUT = 30,
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+index 35f81af40f51..6a19e17eb1a7 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+@@ -309,6 +309,7 @@ struct mpi3_man6_gpio_entry {
+ #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_SOURCE_GENERIC                     (0x00)
+ #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_SOURCE_CABLE_MGMT                  (0x10)
+ #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_SOURCE_ACTIVE_CABLE_OVERCURRENT    (0x20)
++#define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_ACK_REQUIRED                       (0x02)
+ #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_TRIGGER_MASK                       (0x01)
+ #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_TRIGGER_EDGE                       (0x00)
+ #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_TRIGGER_LEVEL                      (0x01)
+@@ -1315,6 +1316,8 @@ struct mpi3_driver_page0 {
+ 	__le32                             reserved18;
+ };
+ #define MPI3_DRIVER0_PAGEVERSION               (0x00)
++#define MPI3_DRIVER0_BSDOPTS_DEVICEEXPOSURE_DISABLE	    (0x00000020)
++#define MPI3_DRIVER0_BSDOPTS_WRITECACHE_DISABLE		    (0x00000010)
+ #define MPI3_DRIVER0_BSDOPTS_HEADLESS_MODE_ENABLE           (0x00000008)
+ #define MPI3_DRIVER0_BSDOPTS_DIS_HII_CONFIG_UTIL            (0x00000004)
+ #define MPI3_DRIVER0_BSDOPTS_REGISTRATION_MASK              (0x00000003)
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_image.h b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
+index 47035b811902..7df242190135 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_image.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_image.h
+@@ -198,16 +198,17 @@ struct mpi3_supported_devices_data {
+ 	struct mpi3_supported_device   supported_device[MPI3_SUPPORTED_DEVICE_MAX];
  };
  
-+#define MPI3MR_RESET_REASON_OSTYPE_LINUX	1
-+#define MPI3MR_RESET_REASON_OSTYPE_SHIFT	28
-+#define MPI3MR_RESET_REASON_IOCNUM_SHIFT	20
-+
- /* Queue type definitions */
- enum queue_type {
- 	MPI3MR_DEFAULT_QUEUE = 0,
-@@ -1142,7 +1146,7 @@ struct mpi3mr_ioc {
- 	spinlock_t fwevt_lock;
- 	struct list_head fwevt_list;
+-#ifndef MPI3_ENCRYPTED_HASH_MAX
+-#define MPI3_ENCRYPTED_HASH_MAX                      (1)
++#ifndef MPI3_PUBLIC_KEY_MAX
++#define MPI3_PUBLIC_KEY_MAX                      (1)
+ #endif
+ struct mpi3_encrypted_hash_entry {
+ 	u8                         hash_image_type;
+ 	u8                         hash_algorithm;
+ 	u8                         encryption_algorithm;
+ 	u8                         reserved03;
+-	__le32                     reserved04;
+-	__le32                     encrypted_hash[MPI3_ENCRYPTED_HASH_MAX];
++	__le16                     public_key_size;
++	__le16                     signature_size;
++	__le32                     public_key[MPI3_PUBLIC_KEY_MAX];
+ };
  
--	char watchdog_work_q_name[20];
-+	char watchdog_work_q_name[50];
- 	struct workqueue_struct *watchdog_work_q;
- 	struct delayed_work watchdog_work;
- 	spinlock_t watchdog_lock;
-@@ -1336,7 +1340,7 @@ void mpi3mr_start_watchdog(struct mpi3mr_ioc *mrioc);
- void mpi3mr_stop_watchdog(struct mpi3mr_ioc *mrioc);
+ #define MPI3_HASH_IMAGE_TYPE_KEY_WITH_SIGNATURE      (0x03)
+@@ -228,17 +229,6 @@ struct mpi3_encrypted_hash_entry {
+ #define MPI3_ENCRYPTION_ALGORITHM_RSA2048            (0x04)
+ #define MPI3_ENCRYPTION_ALGORITHM_RSA4096            (0x05)
+ #define MPI3_ENCRYPTION_ALGORITHM_RSA3072            (0x06)
+-#ifndef MPI3_PUBLIC_KEY_MAX
+-#define MPI3_PUBLIC_KEY_MAX                          (1)
+-#endif
+-struct mpi3_encrypted_key_with_hash_entry {
+-	u8                         hash_image_type;
+-	u8                         hash_algorithm;
+-	u8                         encryption_algorithm;
+-	u8                         reserved03;
+-	__le32                     reserved04;
+-	__le32                     public_key[MPI3_PUBLIC_KEY_MAX];
+-};
  
- int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
--			      u32 reset_reason, u8 snapdump);
-+			      u16 reset_reason, u8 snapdump);
- void mpi3mr_ioc_disable_intr(struct mpi3mr_ioc *mrioc);
- void mpi3mr_ioc_enable_intr(struct mpi3mr_ioc *mrioc);
+ #ifndef MPI3_ENCRYPTED_HASH_ENTRY_MAX
+ #define MPI3_ENCRYPTED_HASH_ENTRY_MAX               (1)
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
+index 85b91583bacf..028784949873 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
+@@ -101,6 +101,8 @@ struct mpi3_ioc_facts_data {
+ 	__le16                     max_io_throttle_group;
+ 	__le16                     io_throttle_low;
+ 	__le16                     io_throttle_high;
++	__le32			   diag_fdl_size;
++	__le32			   diag_tty_size;
+ };
+ #define MPI3_IOCFACTS_CAPABILITY_NON_SUPERVISOR_MASK          (0x80000000)
+ #define MPI3_IOCFACTS_CAPABILITY_SUPERVISOR_IOC               (0x00000000)
+@@ -108,13 +110,13 @@ struct mpi3_ioc_facts_data {
+ #define MPI3_IOCFACTS_CAPABILITY_INT_COALESCE_MASK            (0x00000600)
+ #define MPI3_IOCFACTS_CAPABILITY_INT_COALESCE_FIXED_THRESHOLD (0x00000000)
+ #define MPI3_IOCFACTS_CAPABILITY_INT_COALESCE_OUTSTANDING_IO  (0x00000200)
+-#define MPI3_IOCFACTS_CAPABILITY_COMPLETE_RESET_CAPABLE       (0x00000100)
+-#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_TRACE_ENABLED       (0x00000080)
+-#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_FW_ENABLED          (0x00000040)
+-#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_DRIVER_ENABLED      (0x00000020)
+-#define MPI3_IOCFACTS_CAPABILITY_ADVANCED_HOST_PD_ENABLED     (0x00000010)
+-#define MPI3_IOCFACTS_CAPABILITY_RAID_CAPABLE                 (0x00000008)
+-#define MPI3_IOCFACTS_CAPABILITY_MULTIPATH_ENABLED            (0x00000002)
++#define MPI3_IOCFACTS_CAPABILITY_COMPLETE_RESET_SUPPORTED     (0x00000100)
++#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_TRACE_SUPPORTED     (0x00000080)
++#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_FW_SUPPORTED        (0x00000040)
++#define MPI3_IOCFACTS_CAPABILITY_SEG_DIAG_DRIVER_SUPPORTED    (0x00000020)
++#define MPI3_IOCFACTS_CAPABILITY_ADVANCED_HOST_PD_SUPPORTED   (0x00000010)
++#define MPI3_IOCFACTS_CAPABILITY_RAID_SUPPORTED               (0x00000008)
++#define MPI3_IOCFACTS_CAPABILITY_MULTIPATH_SUPPORTED          (0x00000002)
+ #define MPI3_IOCFACTS_CAPABILITY_COALESCE_CTRL_SUPPORTED      (0x00000001)
+ #define MPI3_IOCFACTS_PID_TYPE_MASK                           (0xf000)
+ #define MPI3_IOCFACTS_PID_TYPE_SHIFT                          (12)
+@@ -159,6 +161,8 @@ struct mpi3_ioc_facts_data {
+ #define MPI3_IOCFACTS_FLAGS_PERSONALITY_RAID_DDR              (0x00000002)
+ #define MPI3_IOCFACTS_IO_THROTTLE_DATA_LENGTH_NOT_REQUIRED    (0x0000)
+ #define MPI3_IOCFACTS_MAX_IO_THROTTLE_GROUP_NOT_REQUIRED      (0x0000)
++#define MPI3_IOCFACTS_DIAGFDLSIZE_NOT_SUPPORTED		      (0x00000000)
++#define MPI3_IOCFACTS_DIAGTTYSIZE_NOT_SUPPORTED               (0x00000000)
+ struct mpi3_mgmt_passthrough_request {
+ 	__le16                 host_tag;
+ 	u8                     ioc_use_only02;
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
+index 1e0a3dcaf723..fdc3d1968e43 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
+@@ -18,7 +18,7 @@ union mpi3_version_union {
  
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 0380996b5ad2..38f63bc7ef3b 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -1598,26 +1598,33 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
- 		rval = -EAGAIN;
- 		if (mrioc->bsg_cmds.state & MPI3MR_CMD_RESET)
- 			goto out_unlock;
--		dprint_bsg_err(mrioc,
--		    "%s: bsg request timedout after %d seconds\n", __func__,
--		    karg->timeout);
--		if (mrioc->logging_level & MPI3_DEBUG_BSG_ERROR) {
--			dprint_dump(mpi_req, MPI3MR_ADMIN_REQ_FRAME_SZ,
-+		if (((mpi_header->function != MPI3_FUNCTION_SCSI_IO) &&
-+		    (mpi_header->function != MPI3_FUNCTION_NVME_ENCAPSULATED))
-+		    || (mrioc->logging_level & MPI3_DEBUG_BSG_ERROR)) {
-+			ioc_info(mrioc, "%s: bsg request timedout after %d seconds\n",
-+			    __func__, karg->timeout);
-+			if (!(mrioc->logging_level & MPI3_DEBUG_BSG_INFO)) {
-+				dprint_dump(mpi_req, MPI3MR_ADMIN_REQ_FRAME_SZ,
- 			    "bsg_mpi3_req");
- 			if (mpi_header->function ==
--			    MPI3_BSG_FUNCTION_MGMT_PASSTHROUGH) {
-+			    MPI3_FUNCTION_MGMT_PASSTHROUGH) {
- 				drv_buf_iter = &drv_bufs[0];
- 				dprint_dump(drv_buf_iter->kern_buf,
- 				    rmc_size, "mpi3_mgmt_req");
-+				}
- 			}
- 		}
- 		if ((mpi_header->function == MPI3_BSG_FUNCTION_NVME_ENCAPSULATED) ||
--		    (mpi_header->function == MPI3_BSG_FUNCTION_SCSI_IO))
-+			(mpi_header->function == MPI3_BSG_FUNCTION_SCSI_IO)) {
-+			dprint_bsg_err(mrioc, "%s: bsg request timedout after %d seconds,\n"
-+				"issuing target reset to (0x%04x)\n", __func__,
-+				karg->timeout, mpi_header->function_dependent);
- 			mpi3mr_issue_tm(mrioc,
- 			    MPI3_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
- 			    mpi_header->function_dependent, 0,
- 			    MPI3MR_HOSTTAG_BLK_TMS, MPI3MR_RESETTM_TIMEOUT,
- 			    &mrioc->host_tm_cmds, &resp_code, NULL);
-+		}
- 		if (!(mrioc->bsg_cmds.state & MPI3MR_CMD_COMPLETE) &&
- 		    !(mrioc->bsg_cmds.state & MPI3MR_CMD_RESET))
- 			mpi3mr_soft_reset_handler(mrioc,
+ #define MPI3_VERSION_MAJOR                                              (3)
+ #define MPI3_VERSION_MINOR                                              (0)
+-#define MPI3_VERSION_UNIT                                               (28)
++#define MPI3_VERSION_UNIT                                               (31)
+ #define MPI3_VERSION_DEV                                                (0)
+ #define MPI3_DEVHANDLE_INVALID                                          (0xffff)
+ struct mpi3_sysif_oper_queue_indexes {
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index ae0e2c6cd2af..fe5ed1a2b9a3 100644
+index fe5ed1a2b9a3..53e0192e165d 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -11,7 +11,7 @@
- #include <linux/io-64-nonatomic-lo-hi.h>
+@@ -1280,7 +1280,7 @@ mpi3mr_revalidate_factsdata(struct mpi3mr_ioc *mrioc)
+ 			    mrioc->shost->max_sectors * 512, mrioc->facts.max_data_length);
  
- static int
--mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type, u32 reset_reason);
-+mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type, u16 reset_reason);
- static int mpi3mr_setup_admin_qpair(struct mpi3mr_ioc *mrioc);
- static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
- 	struct mpi3_ioc_facts_data *facts_data);
-@@ -1195,7 +1195,7 @@ static inline void mpi3mr_clear_reset_history(struct mpi3mr_ioc *mrioc)
- static int mpi3mr_issue_and_process_mur(struct mpi3mr_ioc *mrioc,
- 	u32 reset_reason)
- {
--	u32 ioc_config, timeout, ioc_status;
-+	u32 ioc_config, timeout, ioc_status, scratch_pad0;
- 	int retval = -1;
+ 	if ((mrioc->sas_transport_enabled) && (mrioc->facts.ioc_capabilities &
+-	    MPI3_IOCFACTS_CAPABILITY_MULTIPATH_ENABLED))
++	    MPI3_IOCFACTS_CAPABILITY_MULTIPATH_SUPPORTED))
+ 		ioc_err(mrioc,
+ 		    "critical error: multipath capability is enabled at the\n"
+ 		    "\tcontroller while sas transport support is enabled at the\n"
+@@ -3677,8 +3677,8 @@ static const struct {
+ 	u32 capability;
+ 	char *name;
+ } mpi3mr_capabilities[] = {
+-	{ MPI3_IOCFACTS_CAPABILITY_RAID_CAPABLE, "RAID" },
+-	{ MPI3_IOCFACTS_CAPABILITY_MULTIPATH_ENABLED, "MultiPath" },
++	{ MPI3_IOCFACTS_CAPABILITY_RAID_SUPPORTED, "RAID" },
++	{ MPI3_IOCFACTS_CAPABILITY_MULTIPATH_SUPPORTED, "MultiPath" },
+ };
  
- 	ioc_info(mrioc, "Issuing Message unit Reset(MUR)\n");
-@@ -1204,7 +1204,11 @@ static int mpi3mr_issue_and_process_mur(struct mpi3mr_ioc *mrioc,
- 		return retval;
- 	}
- 	mpi3mr_clear_reset_history(mrioc);
--	writel(reset_reason, &mrioc->sysif_regs->scratchpad[0]);
-+	scratch_pad0 = ((MPI3MR_RESET_REASON_OSTYPE_LINUX <<
-+			 MPI3MR_RESET_REASON_OSTYPE_SHIFT) |
-+			(mrioc->facts.ioc_num <<
-+			 MPI3MR_RESET_REASON_IOCNUM_SHIFT) | reset_reason);
-+	writel(scratch_pad0, &mrioc->sysif_regs->scratchpad[0]);
- 	ioc_config = readl(&mrioc->sysif_regs->ioc_configuration);
- 	ioc_config &= ~MPI3_SYSIF_IOC_CONFIG_ENABLE_IOC;
- 	writel(ioc_config, &mrioc->sysif_regs->ioc_configuration);
-@@ -1520,11 +1524,11 @@ static inline void mpi3mr_set_diagsave(struct mpi3mr_ioc *mrioc)
-  * Return: 0 on success, non-zero on failure.
-  */
- static int mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type,
--	u32 reset_reason)
-+	u16 reset_reason)
- {
- 	int retval = -1;
- 	u8 unlock_retry_count = 0;
--	u32 host_diagnostic, ioc_status, ioc_config;
-+	u32 host_diagnostic, ioc_status, ioc_config, scratch_pad0;
- 	u32 timeout = MPI3MR_RESET_ACK_TIMEOUT * 10;
+ /**
+@@ -3960,7 +3960,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		    MPI3MR_HOST_IOS_KDUMP);
  
- 	if ((reset_type != MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET) &&
-@@ -1576,6 +1580,9 @@ static int mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type,
- 		    unlock_retry_count, host_diagnostic);
- 	} while (!(host_diagnostic & MPI3_SYSIF_HOST_DIAG_DIAG_WRITE_ENABLE));
- 
-+	scratch_pad0 = ((MPI3MR_RESET_REASON_OSTYPE_LINUX <<
-+	    MPI3MR_RESET_REASON_OSTYPE_SHIFT) | (mrioc->facts.ioc_num <<
-+	    MPI3MR_RESET_REASON_IOCNUM_SHIFT) | reset_reason);
- 	writel(reset_reason, &mrioc->sysif_regs->scratchpad[0]);
- 	writel(host_diagnostic | reset_type,
- 	    &mrioc->sysif_regs->host_diagnostic);
-@@ -2581,7 +2588,7 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 	unsigned long flags;
- 	enum mpi3mr_iocstate ioc_state;
- 	u32 fault, host_diagnostic, ioc_status;
--	u32 reset_reason = MPI3MR_RESET_FROM_FAULT_WATCH;
-+	u16 reset_reason = MPI3MR_RESET_FROM_FAULT_WATCH;
- 
- 	if (mrioc->reset_in_progress)
- 		return;
-@@ -4968,7 +4975,7 @@ void mpi3mr_pel_get_seqnum_complete(struct mpi3mr_ioc *mrioc,
-  * Return: 0 on success, non-zero on failure.
-  */
- int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
--	u32 reset_reason, u8 snapdump)
-+	u16 reset_reason, u8 snapdump)
- {
- 	int retval = 0, i;
- 	unsigned long flags;
+ 	if (!(mrioc->facts.ioc_capabilities &
+-	    MPI3_IOCFACTS_CAPABILITY_MULTIPATH_ENABLED)) {
++	    MPI3_IOCFACTS_CAPABILITY_MULTIPATH_SUPPORTED)) {
+ 		mrioc->sas_transport_enabled = 1;
+ 		mrioc->scsi_device_channel = 1;
+ 		mrioc->shost->max_channel = 1;
 -- 
 2.31.1
 
 
---0000000000008d600a061387fccf
+--000000000000c34a33061387fc88
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -328,13 +316,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIC/ZrIzcBRzs71XsLnoO1b/hDjyk7JzK
-WJIvOOiKtitmMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMx
-MzEwMTAzOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILcEjqm19WmtOic7mMLiJz3bJsKIZaDN
+zBDEDoSbt5B/MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDMx
+MzEwMTA0MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQAck5Qzv7oU2cWXSeg2z5ndrNRmqhUi5UGzw+zvRD3t76O+x9Lr
-XXf+WyOoHKtmYlPyFmrFRY+t2a6NFX8sNffwigLzC9Kq7pAg6+qXXUZQJ1QE325j9TZb3dWhtNiH
-6U6oeNPvSo5o+RmSLa07mAa9kJuFXqRM6O06xmBwsvo5MyZaJS2pizJYYl6M7u7cx5FtzcuphV9O
-55BpLEYuQE9IOvKImPTSZjLpjlwz5zYEfQrWH3TFmUAmWcu5S0LOcv33GzGb4XVcQHY6r/BF6hXt
-cm/NnCVV7/JH5lnkPUR9nCUX4X5YiNOqlgBFjwM7hB8i0JxIQNCavOMJKO8zONrx
---0000000000008d600a061387fccf--
+ATANBgkqhkiG9w0BAQEFAASCAQBmjl1jfkheoKrWp4hJPg/jaQA3YBswIsuaob8nUKC2xuoULd3C
+qm3s6YuNVijDPOeIF7ypGuwvdKZjbstpUeAaETTmuS4OtojKtrFvLifFsDauj64kYmpqWft//bvK
+8gOD29UJ0683XS1Ip43dD/Ni6Cc6R0ScfSxRmGWyzAKMl+ijmpiMJIlIkIv18eWQKgxXliewgZNw
+tf3alH1KiJyPIgqrnmsd5wgycXJ7u4LiI86Q2d/+M0u10CHrq5uMkA1eYr5WkYf/ci2y4QT2WSAR
+ILtGx1zBLzcmqOuX9841EMr9WEoLxfCmRX22pR7a/Z8aUhXO+VOm/yIF/IO1eNJI
+--000000000000c34a33061387fc88--
