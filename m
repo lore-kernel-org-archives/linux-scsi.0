@@ -1,151 +1,55 @@
-Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
+Received: from gandalf.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6B8A3EA72;
-	Wed, 13 Mar 2024 11:30:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E94A43AA4;
+	Wed, 13 Mar 2024 13:28:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710329430; cv=none; b=L591MWBMTZnk81D3gEn8KZ6AhEIXkigVmCaO+DpNU7DNhjbIidPk3LI1vtqIJriEITGqBLyvM6UsrC59hfeCAGfNq5q9st7Xys0gvRlltrtMpzk+LF1QZ0rS1li7WdusZC+q5p5PU3QuTBuPKFd4s7wB14FBqaMNm18Ds44Xnkc=
+	t=1710336485; cv=none; b=dSOuWcjmkgIbRtph9/TU+s+1fwxUr+pqz9KW8o00hbdORYlNPKF7xYgWuTFuVKbanYwM+XFzEtvROlwUeG12mkpVpH49Mgazj8tv6m29NFy/bfnjrbrfagdno8GzIuIgn+6rRGjSBfY7FXoh+WYtp6OvdwiIMPapJu0pPiT0PCQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710329430; c=relaxed/simple;
-	bh=rwEW4ySKbuvJZTu5EpEHtshEWyyGgcijixSrw4EKNwA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nyZvgj2IWacyZfRc/oTrEwPyh/1nUvF4VmD5nNS/gL78uCicSk9j2f7oCNkl+/v8e3CqvLADCea58nYUnXdm3ROxzdA3vNXS6Bd6u5AELuGbCkc95nqpkCpt3qsW25DJlw5BotOa7ZqA4NBVpPxhZzGYOn0VTMWMM8bISdsU+h8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=JHTkQMP3; arc=none smtp.client-ip=213.97.179.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=igalia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="JHTkQMP3"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
-	s=20170329; h=Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:
-	Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-	List-Post:List-Owner:List-Archive;
-	bh=kky/dRJyKBUx3h381cnSb+YhqF1W+SBQhMlIYZOCUjM=; b=JHTkQMP3eWxl1jUynSym40Wck1
-	g2mAz51Fn20s+96CmQHKcDABvD0U7X7MAh8NV7U2WODtevqXR+r8b54O4wETah2klzrZr0JSF9Klr
-	JCO6EBtnGl4WIzUgTXbxYw8ATutMGifsELKriAZe14vi2xe3feV3COcNe8fh8P5QEBP8muiGfF5uh
-	PIR55YxKP0+WQEuJZYhrb7gt9/hMS65JrRi+SAeubqb4sxzT5LY1sMc122Z2V+cPs9h0g7WbFc0W5
-	dTuICzDf03P8r0XenOZhJqn45vVLCoiFWmmaKunBfnN3Wn6DpGh/WHZ+7gzsYscYbvrM6z5xnQylM
-	VGF4cc5w==;
-Received: from [177.62.247.190] (helo=localhost)
-	by fanzine2.igalia.com with esmtpsa 
-	(Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim)
-	id 1rkMoN-009vIC-01; Wed, 13 Mar 2024 12:30:19 +0100
-From: "Guilherme G. Piccoli" <gpiccoli@igalia.com>
-To: linux-scsi@vger.kernel.org
-Cc: jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	stern@rowland.harvard.edu,
-	linux-usb@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net,
-	kernel-dev@igalia.com,
-	kernel@gpiccoli.net,
-	"Guilherme G. Piccoli" <gpiccoli@igalia.com>,
-	syzbot+c645abf505ed21f931b5@syzkaller.appspotmail.com,
-	stable@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	John Garry <john.g.garry@oracle.com>,
-	Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Subject: [PATCH] scsi: core: Fix unremoved procfs host directory regression
-Date: Wed, 13 Mar 2024 08:21:20 -0300
-Message-ID: <20240313113006.2834799-1-gpiccoli@igalia.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1710336485; c=relaxed/simple;
+	bh=CHtNAQTIT1rvRWPPhR3rIHeiRbGPnmXiD2gTyBFLaGs=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=byF4RuIMTWcCErhOkBA3Q0uIphiz3X9oxe2UDzfK6Es6eAKKDuuzv95ahGbMlFUPC53+/HqtfE3XZGUGV4jyhRwapYYlKg5PHZZmeSOheeRn+mwVZ1kwQhTnVdqle/mi0kolXvjf9q4mg16J8BakWHygG2Jqi1uylunumszfqtc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Tvrt96D1qz4x4T;
+	Thu, 14 Mar 2024 00:28:01 +1100 (AEDT)
+From: Michael Ellerman <patch-notifications@ellerman.id.au>
+To: Dawei Li <set_pte_at@outlook.com>
+Cc: npiggin@gmail.com, christophe.leroy@csgroup.eu, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
+In-Reply-To: <TYCP286MB232391520CB471E7C8D6EA84CAD19@TYCP286MB2323.JPNP286.PROD.OUTLOOK.COM>
+References: <TYCP286MB232391520CB471E7C8D6EA84CAD19@TYCP286MB2323.JPNP286.PROD.OUTLOOK.COM>
+Subject: Re: [PATCH v3] powerpc: macio: Make remove callback of macio driver void returned
+Message-Id: <171033598348.517247.10069683831844972530.b4-ty@ellerman.id.au>
+Date: Thu, 14 Mar 2024 00:19:43 +1100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-Commit fc663711b944 ("scsi: core: Remove the /proc/scsi/${proc_name} directory
-earlier") fixed a bug related to modules loading/unloading, by adding a
-call to scsi_proc_hostdir_rm() on scsi_remove_host(). But that led to a
-potential duplicate call to the hostdir_rm() routine, since it's also
-called from scsi_host_dev_release(). That triggered a regression report,
-which was then fixed by commit be03df3d4bfe ("scsi: core: Fix a procfs host
-directory removal regression"). The fix just dropped the hostdir_rm() call
-from dev_release().
+On Wed, 01 Feb 2023 22:36:19 +0800, Dawei Li wrote:
+> Commit fc7a6209d571 ("bus: Make remove callback return void") forces
+> bus_type::remove be void-returned, it doesn't make much sense for any
+> bus based driver implementing remove callbalk to return non-void to
+> its caller.
+> 
+> This change is for macio bus based drivers.
+> 
+> [...]
 
-But happens that this proc directory is created on scsi_host_alloc(),
-and that function "pairs" with scsi_host_dev_release(), while
-scsi_remove_host() pairs with scsi_add_host(). In other words, it seems
-the reason for removing the proc directory on dev_release() was meant to
-cover cases in which a SCSI host structure was allocated, but the call
-to scsi_add_host() didn't happen. And that pattern happens to exist in
-some error paths, for example.
+Applied to powerpc/next.
 
-Syzkaller causes that by using USB raw gadget device, error'ing on usb-storage
-driver, at usb_stor_probe2(). By checking that path, we can see that the
-BadDevice label leads to a scsi_host_put() after a SCSI host allocation, but
-there's no call to scsi_add_host() in such path. That leads to messages like
-this in dmesg (and a leak of the SCSI host proc structure):
+[1/1] powerpc: macio: Make remove callback of macio driver void returned
+      https://git.kernel.org/powerpc/c/9db2235326c4b868b6e065dfa3a69011ee570848
 
-usb-storage 4-1:87.51: USB Mass Storage device detected
-proc_dir_entry 'scsi/usb-storage' already registered
-WARNING: CPU: 1 PID: 3519 at fs/proc/generic.c:377 proc_register+0x347/0x4e0 fs/proc/generic.c:376
-
-The proper fix seems to still call scsi_proc_hostdir_rm() on dev_release(),
-but guard that with the state check for SHOST_CREATED; there is even a
-comment in scsi_host_dev_release() detailing that: such conditional is
-meant for cases where the SCSI host was allocated but there was no calls
-to {add,remove}_host(), like the usb-storage case.
-
-This is what we propose here and with that, the error path of usb-storage
-does not trigger the warning anymore.
-
-Reported-by: syzbot+c645abf505ed21f931b5@syzkaller.appspotmail.com
-Fixes: be03df3d4bfe ("scsi: core: Fix a procfs host directory removal regression")
-Cc: stable@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: John Garry <john.g.garry@oracle.com>
-Cc: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@igalia.com>
----
-
-
-Hi folks, thanks in advance for reviews.
-
-The issue  with usb-storage happens upstream but despite we have a
-repro in the aforementioned Syzkaller report, it's only easy to reproduce
-the proc_dir_entry warning in a timely manner on stable right now.
-
-The reason for that is commit 036abd614007 ("scsi: core: Introduce a new
-list for SCSI proc directory entries") not being present on stable. This
-commit (indirectly) bumps the ->present field from unsigned char to uint,
-and the bug reproducer shows the warning whenever such field overflows,
-hence it's way easier/faster to see this problem in stable, though it's
-present in latest v6.8.0 too.
-
-Cheers,
-
-Guilherme
-
-
- drivers/scsi/hosts.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index d7f51b84f3c7..445f4a220df3 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -353,12 +353,13 @@ static void scsi_host_dev_release(struct device *dev)
- 
- 	if (shost->shost_state == SHOST_CREATED) {
- 		/*
--		 * Free the shost_dev device name here if scsi_host_alloc()
--		 * and scsi_host_put() have been called but neither
-+		 * Free the shost_dev device name and remove the proc host dir
-+		 * here if scsi_host_{alloc,put}() have been called but neither
- 		 * scsi_host_add() nor scsi_remove_host() has been called.
- 		 * This avoids that the memory allocated for the shost_dev
--		 * name is leaked.
-+		 * name as well as the proc dir structure are leaked.
- 		 */
-+		scsi_proc_hostdir_rm(shost->hostt);
- 		kfree(dev_name(&shost->shost_dev));
- 	}
- 
--- 
-2.43.0
-
+cheers
