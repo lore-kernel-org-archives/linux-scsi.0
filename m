@@ -1,160 +1,125 @@
-Received: from mail-io1-f73.google.com (mail-io1-f73.google.com [209.85.166.73])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F26959B76
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Mar 2024 22:08:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1A435BAE0
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Mar 2024 23:05:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710799687; cv=none; b=quDNx8gwuBw/zAIZh3dL1zecaSrpuSbSHvcNkXVgJ77HNtsXSGpY79ubYkfvR+cPdi+TwzW/F3TZva48gI5ngDO9dzFHhuUj0RYodFnbF6McFrIM+Yf6MijgSytzo2gmsKC/2p0wdZL5wjxgrrEyDf6X6ujBefGj3pLBffWRg/s=
+	t=1710803104; cv=none; b=OSN90TW8NU8zvQ9fE2onU/rxerNtNvFoVbiCMlPhHhiYlfY9q8Pvob/JQATkSEnp83mTy7QDF37suCJU/cIiXL9CgZQvzlcI6PVAJF2HzwUDQYxVQCmEsc+IqB7FTPu9iFLANYhtRFS0SNM1j6PFjstgdNypurFxGb3hKiOjaQk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710799687; c=relaxed/simple;
-	bh=8sSU/nXOVaTUrxt2iL4oXf9XEJw7qJGFB8M6brZiaUI=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=nJ4Byy4sRipEY2Pep2dOnB1cvi8FU7/qiaSXiiyi50onqe/GIUMqjV29dfXjVH+TzWzTnZaEvq5VPQ5N59NGqSPX6ZV3fnQOG6NAtxljwAVVfTo/pkmDU4ILxlqf0G/NJGBuM470W28tIh37CNx82Hs8d0Res0kkNtep+ZDjKnQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Wp3ntPOD; arc=none smtp.client-ip=209.85.166.73
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--justinstitt.bounces.google.com
+	s=arc-20240116; t=1710803104; c=relaxed/simple;
+	bh=knR8pGzHciTzdr9QSQyhOsFXKWWfeJtRj4qQ++TUEB0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lbdLk8D6Q6ckgXCGz8laozKMyXxTLCz6JqDK6ZgHLDmTSQtwjTGfr5copiIuV5xqo8vUdWS5PTl1FjEac6ngbxc8P6RO6t5VpeC53wKGNDFXTeOlaWTn5GTZiups8Vt56riuZPpwzp2WkTzARJCaOubovBjVpYal3q5pvOeb44Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=uewZYDCP; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Wp3ntPOD"
-Received: by mail-io1-f73.google.com with SMTP id ca18e2360f4ac-7c75dee76c0so357649239f.1
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Mar 2024 15:08:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1710799683; x=1711404483; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Wl+YEObNF5jUVaY8QBV97LtH6p2YMlOabTAyUwaF4rY=;
-        b=Wp3ntPODHkyF5Jl1wxhGV35ctcYLm2wbSzgW97Gku5uHIssx5h7tJ6JfimYKDFIdG4
-         B1J55vZ8h0knTrvWugaerSD6dO1o8qxXOGIPKxWgxcScdeiDDogyPAG+AekCthBgmpRp
-         cB+AHgmiBVfW4yFFQvDJsB7FupuPWRSWwM6eyZZveV+L4MkAhvL+qRtK/SMVa3LsJ0uI
-         lymyrM8WV7JU42+0W34/OaL5gfhKoGK2W3vc/8/Fk/XwvqpMpgAcNvoL3VMuz0NdT+bg
-         cqbthnrsJTlAwqwDAk/MTGlhXlPuqXzx5rWIbTf5IA446jYkvg9QMgkKPMnoehcu/WGH
-         7HiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710799683; x=1711404483;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Wl+YEObNF5jUVaY8QBV97LtH6p2YMlOabTAyUwaF4rY=;
-        b=rBKrVSeCFzdKTjos+HzfJL7kt0QnPqrupJwNs4v1rikh+Sz1LOYNlVFXpSNXOyKQw4
-         xxovv/O9meUJuKrJcGrI+5lzA+LqppmZwGvIJT08hWc79ioC4UmA7zOKr9N0JcJZDsas
-         DO9hAvYS6H4fQ2Y8Beml+DUkIZO/LDd+mdeQh6TFek/ogAPOY85dey0Afrb7MIvDDNFp
-         gZtJ5b+Kfw0iggy5026l1+ty59etDzvYIeOTx1nwyypuUYzNUwZubNZULd/FP5IevQ0o
-         nCDLiI+Tj2izNT2Jk1SQqD2g4T8kMBchnpiPrDdr7aHApK0hBAfY+rL63ovdXXjmG6yx
-         t/zg==
-X-Gm-Message-State: AOJu0Yy+c7OeXvbhjzRp+ZjYj9kjbTHIB21XdoSlCkgwFHHJhK0DRrbZ
-	eX1N3YP8EVcZrrYQnXUsY2Fm8Pof13RtVwPJN315G8U+E02od9mLgeAyhpHlgwDGv7yOW2I6jKa
-	LVzeGVRzbV32cgcWrqz90sg==
-X-Google-Smtp-Source: AGHT+IGPo1ty8ABBFYT2U90iQtfMKa/TblLUJSl5kNLDYgsFtkX4DwwFNIMofYowsjLzN/AITEX2RoloAWykuDWUuQ==
-X-Received: from jstitt-linux1.c.googlers.com ([fda3:e722:ac3:cc00:2b:ff92:c0a8:23b5])
- (user=justinstitt job=sendgmr) by 2002:a05:6602:1491:b0:7c8:264d:5e98 with
- SMTP id a17-20020a056602149100b007c8264d5e98mr41333iow.0.1710799683679; Mon,
- 18 Mar 2024 15:08:03 -0700 (PDT)
-Date: Mon, 18 Mar 2024 22:07:50 +0000
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="uewZYDCP"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Tz9RV1z1rzlgVnf;
+	Mon, 18 Mar 2024 23:04:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:references:content-language:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1710803092; x=1713395093; bh=+k5qwVDaSVAaFOyDfVAC/R5i
+	OL6nAqBoxMRXwONafx0=; b=uewZYDCPlA31wA6oHmwWDASSKH6gy8kPY+WomPxk
+	+NGJCL70Lx0BnyZJP/wOxwMSatMRsXXvWu4hZ8StUQtUWwEagkJzcT5Zm7UCkJdQ
+	XNtQrdcdTXU1SMdrpXvcGB8yJmTRSGKaGA8zKaPOo8vCtGeDDDyNbU/wrdsk6YRN
+	tLx9QX9m3TnkMn78GIWIFHm38OKRJS2CZgi9t9zCCE6smHfw6nMv8AOgoCexI6dC
+	WqsYbxlX5a0/nHZR1jv9aH+y0MGHhATSqgOxI+yN0bQEMfXlYGwQqVGaw7QKQqg+
+	mtKMkojmza0h8GJV97OlUukWJH1E4ZxlYnIMCxYVIIUIcw==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id EVcs0l49dWO2; Mon, 18 Mar 2024 23:04:52 +0000 (UTC)
+Received: from [100.96.154.173] (unknown [104.132.1.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Tz9RR0chWzlgVnW;
+	Mon, 18 Mar 2024 23:04:50 +0000 (UTC)
+Message-ID: <cd3c9461-c453-4843-a01a-1a602f6bdb5f@acm.org>
+Date: Mon, 18 Mar 2024 16:04:47 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-B4-Tracking: v=1; b=H4sIADW7+GUC/y2NQQrCMBAAv1L27EJSE1C/IlJCum33koTdpSilf
- zeIp2EuMwcoCZPCYzhAaGflWrr4ywB5S2Ul5Lk7jG4M7upvqCYltw/OwjuJoiVZyf6YchWaTFL RVsUwo79HF2Og7AJBjzahhd+/4fN1nl+qx69CgAAAAA==
-X-Developer-Key: i=justinstitt@google.com; a=ed25519; pk=tC3hNkJQTpNX/gLKxTNQKDmiQl6QjBNCGKJINqAdJsE=
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1710799682; l=2858;
- i=justinstitt@google.com; s=20230717; h=from:subject:message-id;
- bh=8sSU/nXOVaTUrxt2iL4oXf9XEJw7qJGFB8M6brZiaUI=; b=OEbAyG7DwUzX78dcvhoYXw1WfM1MXn+uwhR8Pl5NHBMijevu9EXe1FKB6bvnpLFpfTyBfs256
- hAZDn/EmeRfCJENhPedcD67Xu1m0s2MWz/3odklFXGzJYmRuB/0rAM7
-X-Mailer: b4 0.12.3
-Message-ID: <20240318-strncpy-drivers-target-target_core_transport-c-v1-1-a086b9a0d639@google.com>
-Subject: [PATCH] scsi: target: core: replace deprecated strncpy with strscpy
-From: Justin Stitt <justinstitt@google.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org, 
-	Justin Stitt <justinstitt@google.com>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/4] scsi: scsi_debug: Remove a reference to in_use_bm
+Content-Language: en-US
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20240307203015.870254-1-bvanassche@acm.org>
+ <20240307203015.870254-2-bvanassche@acm.org>
+ <8c52f474-d157-4a68-a51a-9ccbe2352560@oracle.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <8c52f474-d157-4a68-a51a-9ccbe2352560@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-strncpy() is deprecated for use on NUL-terminated destination strings
-[1] and as such we should prefer more robust and less ambiguous string
-interfaces.
+On 3/8/24 03:46, John Garry wrote:
+> On 07/03/2024 20:30, Bart Van Assche wrote:
+>> Commit f1437cd1e535 ("scsi: scsi_debug: Drop sdebug_queue") removed
+>> the 'in_use_bm' struct member. Hence remove a reference to that struct
+>> member from the procfs host info file.
+>>
+>> Cc: Douglas Gilbert<dgilbert@interlog.com>
+>> Cc: John Garry<john.g.garry@oracle.com>
+>> Fixes: f1437cd1e535 ("scsi: scsi_debug: Drop sdebug_queue")
+>> Signed-off-by: Bart Van Assche<bvanassche@acm.org>
+>=20
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+>=20
+>> ---
+>> =C2=A0 drivers/scsi/scsi_debug.c | 2 +-
+>> =C2=A0 1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+>> index acf0592d63da..36368c71221b 100644
+>> --- a/drivers/scsi/scsi_debug.c
+>> +++ b/drivers/scsi/scsi_debug.c
+>> @@ -6516,7 +6516,7 @@ static int scsi_debug_show_info(struct seq_file=20
+>> *m, struct Scsi_Host *host)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 blk_mq_tagset_b=
+usy_iter(&host->tag_set,=20
+>> sdebug_submit_queue_iter,
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 &data);
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (f >=3D 0) {
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 se=
+q_printf(m, "=C2=A0=C2=A0=C2=A0 in_use_bm BUSY: %s: %d,%d\n",
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 se=
+q_printf(m, "=C2=A0=C2=A0=C2=A0 BUSY: %s: %d,%d\n",
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 "first,last bits", f, l)=
+;
+>=20
+> maybe this can fit on a single line now without exceeding 80 char (whic=
+h=20
+> some people still want - I don't mind).
 
-We expect p_buf to be NUL-terminated based on the callsites using these
-transport_dump_* methods because they use the destination buf with C-string
-APIs like strlen() and sprintf().
+The most compact version of this patch I can come up with is the
+following:
 
-		memset(buf, 0, VPD_TMP_BUF_SIZE);			\
-		transport_dump_vpd_ident_type(vpd, buf, VPD_TMP_BUF_SIZE); \
-		if (len + strlen(buf) >= PAGE_SIZE)			\
-			break;						\
-		len += sprintf(page+len, "%s", buf);			\
+@@ -6384,8 +6384,8 @@ static int scsi_debug_show_info(struct seq_file=20
+*m, struct Scsi_Host *host)
+  		blk_mq_tagset_busy_iter(&host->tag_set, sdebug_submit_queue_iter,
+  					&data);
+  		if (f >=3D 0) {
+-			seq_printf(m, "    in_use_bm BUSY: %s: %d,%d\n",
+-				   "first,last bits", f, l);
++			seq_printf(m, "    BUSY: first,last bits: %d,%d\n", f,
++				   l);
+  		}
+  	}
 
-We also do not require the NUL-padding behavior that strncpy() provides
-because we are manually setting the entire buffer to NUL, rendering any
-future padding redundant.
+Thanks,
 
-Let's use strscpy() as it guarantees NUL-termination and doesn't
-NUL-pad ( and isn't deprecated :>] ). Note that we can't use the more
-idiomatic strscpy() usage of strscpy(dest, src, sizeof(dest)) because
-the size of the destination buffer is not known to the compiler. We also
-can't use the new 2-arg version of strscpy() from Commit e6584c3964f2f
-("string: Allow 2-argument strscpy()")
-
-Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strncpy-on-nul-terminated-strings [1]
-Link: https://manpages.debian.org/testing/linux-manual-4.8/strscpy.9.en.html [2]
-Link: https://github.com/KSPP/linux/issues/90
-Cc: linux-hardening@vger.kernel.org
-Signed-off-by: Justin Stitt <justinstitt@google.com>
----
-Note: build-tested only.
-
-Found with: $ rg "strncpy\("
----
- drivers/target/target_core_transport.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 73d0d6133ac8..3311eb87df6d 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1112,7 +1112,7 @@ void transport_dump_vpd_proto_id(
- 	}
- 
- 	if (p_buf)
--		strncpy(p_buf, buf, p_buf_len);
-+		strscpy(p_buf, buf, p_buf_len);
- 	else
- 		pr_debug("%s", buf);
- }
-@@ -1162,7 +1162,7 @@ int transport_dump_vpd_assoc(
- 	}
- 
- 	if (p_buf)
--		strncpy(p_buf, buf, p_buf_len);
-+		strscpy(p_buf, buf, p_buf_len);
- 	else
- 		pr_debug("%s", buf);
- 
-@@ -1222,7 +1222,7 @@ int transport_dump_vpd_ident_type(
- 	if (p_buf) {
- 		if (p_buf_len < strlen(buf)+1)
- 			return -EINVAL;
--		strncpy(p_buf, buf, p_buf_len);
-+		strscpy(p_buf, buf, p_buf_len);
- 	} else {
- 		pr_debug("%s", buf);
- 	}
-@@ -1276,7 +1276,7 @@ int transport_dump_vpd_ident(
- 	}
- 
- 	if (p_buf)
--		strncpy(p_buf, buf, p_buf_len);
-+		strscpy(p_buf, buf, p_buf_len);
- 	else
- 		pr_debug("%s", buf);
- 
-
----
-base-commit: bf3a69c6861ff4dc7892d895c87074af7bc1c400
-change-id: 20240318-strncpy-drivers-target-target_core_transport-c-1950554ec04e
-
-Best regards,
---
-Justin Stitt <justinstitt@google.com>
-
+Bart.
