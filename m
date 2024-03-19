@@ -1,60 +1,61 @@
-Received: from esa2.hc1455-7.c3s2.iphmx.com (esa2.hc1455-7.c3s2.iphmx.com [207.54.90.48])
+Received: from esa6.hc1455-7.c3s2.iphmx.com (esa6.hc1455-7.c3s2.iphmx.com [68.232.139.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94DC45102E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7D4851C40;
 	Tue, 19 Mar 2024 06:32:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.54.90.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.139.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710829954; cv=none; b=Q62m6FCJEWEpZnD+zYBdgbHQgzFxxdqLFfKYZOofCKk0uTm9I/1BsvdRUTRGw7eP1e5y9RMbJIi9nx/86f+AB/Qh2SHK8mxelPCpXEHUmA8BNOrXvSy6/Xu3emiOrT5+x2/N1lMh0JA1XwpEZx7SDcfCSoOLqQY4H2FUJz0kOt0=
+	t=1710829955; cv=none; b=IDlHDfzDk/kL3LNk3vtchrqn2lufyGpTCXtfP4b4oKuRGuDZijHGgM6GJR5Fs3yZv3ndhcidR7dVFXfAKW4uLBex7gg9metdM+nIfk+ppKDfaAvcMRQvOhm4I2Hiwq3UUYG2ph+Uksbk6W9q3MlbD0bjlQEDkGtq09WxRx76ddw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710829954; c=relaxed/simple;
-	bh=WTXpZlGLvu69orlfGdipH5GXMwQecnj3ncOT0UXMt9I=;
+	s=arc-20240116; t=1710829955; c=relaxed/simple;
+	bh=ZlA6JU7/ehef/vW2jERz/3A3wyjNfKl0XuA2hSGKzPc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=nZJCm/VifjuEn0IrSuuYWwEXNE4c4QEEHjPr+na/XUC9+7zzHr/SdvJDcD5tqBNBYM90C6u82jvDI3Ok0q03iWerG5vmaj1EXsB+X0IKZZ1ExkF3s/Q8XbCSIW8M6iGqCbs37QlG8N2o1iXQK+Z7gPJzJaqQ/nZkJkFRiBReQv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=Lm5PxFgV; arc=none smtp.client-ip=207.54.90.48
+	 MIME-Version; b=umPxziulaa92yNVrk8pKoo0Wcl1Bat0qYPr0LNOJJFYDODv0jPwVUB58uMhl0DAvyIcfCTpSYsQ7YGrCW4zuDTzh55dJAqR5AqVMjQ2hR5UlExRwZKtXlS9U7v5wTSiMzOj0KIZruVckllVt1LtxXXjFDd9HxBcITrGzcZRUI1U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=WxaJmaGm; arc=none smtp.client-ip=68.232.139.139
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="Lm5PxFgV"
+	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="WxaJmaGm"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
   t=1710829953; x=1742365953;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=WTXpZlGLvu69orlfGdipH5GXMwQecnj3ncOT0UXMt9I=;
-  b=Lm5PxFgV0/CcIcZJgQZmiofhVHXT7iElG/zeIc3UfH40tSBizeonuHyu
-   z+R82Hkqx/I9sXWVnkyoDYDVu3Sq+P3sj0WIZS5BhORph7frVUL/KRXFz
-   4Sccsix4ZcZtW5pAtN4FYyJHEH63gczH47P5dbmrJGMIjz7+FsVTpwsyV
-   3ocZbT1+7/wFo+m8bMqrSzo+1oM7HE8zg55XUENgIMiHd9cGsaffvCfd6
-   mkzY7lPmBcRtQSoS77oxlW5mKAWo4AuVMYJth9VHl7qv5oVwa5iRXk/Kh
-   B0t8FU1lRTpmuqXxJhC09yRYzH2JzapGhPebkiUFayKf2U6gLT//6v8Mz
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11017"; a="152728482"
+  bh=ZlA6JU7/ehef/vW2jERz/3A3wyjNfKl0XuA2hSGKzPc=;
+  b=WxaJmaGmUCAy0U7ObGi7kM3t7zUP5Pem70LKx8yaxgRt9kJkNb1k2fUw
+   QI+6xEj1F4RMFk8cPgHHvCrO55K9VQWoWvcY1O+FlZZFHNYBST52PEBYt
+   C4yvTnBsPNHWpjjdO3AgiME+y9urdZlcEnpkJ39UBWNzf/kgo3qYeRZE1
+   KQMeZdEsZzdrYQjv6RL5nBMqoorPasHCt+U8hZmB6tMxS8KTFoEvYe7s2
+   h70hlUaPTg+4ZsqZksCvZY2G/Dnrm2ucsjqPanR7c1pv2ZZP4txSzzW33
+   +MjqQZ/whftQrYpkgNJkqbzSin6Y9lHXTxyngVarnrWS6KQw5edkhVVlr
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,11017"; a="154551207"
 X-IronPort-AV: E=Sophos;i="6.07,136,1708354800"; 
-   d="scan'208";a="152728482"
-Received: from unknown (HELO yto-r2.gw.nic.fujitsu.com) ([218.44.52.218])
-  by esa2.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2024 15:32:30 +0900
-Received: from yto-m3.gw.nic.fujitsu.com (yto-nat-yto-m3.gw.nic.fujitsu.com [192.168.83.66])
-	by yto-r2.gw.nic.fujitsu.com (Postfix) with ESMTP id 9AC82C6817;
-	Tue, 19 Mar 2024 15:32:27 +0900 (JST)
+   d="scan'208";a="154551207"
+Received: from unknown (HELO yto-r3.gw.nic.fujitsu.com) ([218.44.52.219])
+  by esa6.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2024 15:32:28 +0900
+Received: from yto-m2.gw.nic.fujitsu.com (yto-nat-yto-m2.gw.nic.fujitsu.com [192.168.83.65])
+	by yto-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id 7471A10A303;
+	Tue, 19 Mar 2024 15:32:26 +0900 (JST)
 Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
-	by yto-m3.gw.nic.fujitsu.com (Postfix) with ESMTP id DB6ED2970B;
-	Tue, 19 Mar 2024 15:32:26 +0900 (JST)
+	by yto-m2.gw.nic.fujitsu.com (Postfix) with ESMTP id ADEB4D5E8B;
+	Tue, 19 Mar 2024 15:32:25 +0900 (JST)
 Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-	by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id 77CAE20093269;
-	Tue, 19 Mar 2024 15:32:26 +0900 (JST)
+	by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id 39A4420099077;
+	Tue, 19 Mar 2024 15:32:25 +0900 (JST)
 Received: from localhost.localdomain (unknown [10.167.226.45])
-	by edo.cn.fujitsu.com (Postfix) with ESMTP id 0D4411A006E;
-	Tue, 19 Mar 2024 14:32:26 +0800 (CST)
+	by edo.cn.fujitsu.com (Postfix) with ESMTP id A908D1A006D;
+	Tue, 19 Mar 2024 14:32:24 +0800 (CST)
 From: Li Zhijian <lizhijian@fujitsu.com>
 To: linux-kernel@vger.kernel.org
 Cc: Li Zhijian <lizhijian@fujitsu.com>,
+	HighPoint Linux Team <linux@highpoint-tech.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH v2 18/25] scsi: pmcraid: Convert sprintf() family to sysfs_emit() family
-Date: Tue, 19 Mar 2024 14:31:25 +0800
-Message-Id: <20240319063132.1588443-18-lizhijian@fujitsu.com>
+Subject: [PATCH v2 14/25] scsi: hptiop: Convert sprintf() family to sysfs_emit() family
+Date: Tue, 19 Mar 2024 14:31:21 +0800
+Message-Id: <20240319063132.1588443-14-lizhijian@fujitsu.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240319063132.1588443-1-lizhijian@fujitsu.com>
 References: <20240319063132.1588443-1-lizhijian@fujitsu.com>
@@ -69,13 +70,13 @@ X-TM-AS-GCONF: 00
 X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-28260.005
 X-TM-AS-User-Approved-Sender: Yes
 X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-28260.005
-X-TMASE-Result: 10--14.511600-10.000000
-X-TMASE-MatchedRID: vWLMKRYJCzcbO59FK9BdmJiHtCNYjckMjkDrBOJwwnQ8JmmJxjOaQXVX
-	Q3/qdw5yDiqGKKMcNgRhoUIS5GGeEs1HQN/TlJ3ZOIQ9GP2P2u/iwxLjNbuPBWO0yVK/5LmcQiM
-	ingSlKoKMx5HzfQifbPE41045MrHXFDCN/1eC4ASdVNZaI2n6/8E5XPQnBzGXq8KsbROd9VTZ3y
-	a1EhGxQ6HpFHQK2deBojVDzk3DrCl8M8QL/JCA9N9JA2lmQRNUC//1TMV5chNShcWO/83xogYzG
-	YtVtarB/srJ1bjaCKGdqC2fLtk9xB8TzIzimOwPC24oEZ6SpSkj80Za3RRg8BmVY5bgINIVKHlP
-	WL/eVsBinwNZyXFb2Ko6sd/AiC8FRR4hrziDrtc=
+X-TMASE-Result: 10--9.668400-10.000000
+X-TMASE-MatchedRID: pfKaEBrCt3IbO59FK9BdmJiHtCNYjckMjkDrBOJwwnQ8JmmJxjOaQXVX
+	Q3/qdw5yDiqGKKMcNgRhoUIS5GGeEs1HQN/TlJ3ZOIQ9GP2P2u8SyA2F3XSGImluHEj++VqUhQ6
+	YZNvnIb+Ekt/L8HtAJ785xNkZcrN2ePWEUnWb98FBDn6Fjq77jvioIsi7Sa0gwLkNMQzGl5B+Kr
+	WCPbERPy9hGGyJxSOb+2f2+sX68s9d3YLSL0hj6d9JA2lmQRNUJScvOTX4jHO7DRAx8YqC+RhBv
+	WgZlX+84vM1YF6AJbbCCfuIMF6xLSAHAopEd76vpajbLOEXhRLdRewN0C4wlusoImWqyaA+5zNp
+	VcKo+DLrCT0EGhF/DQ==
 X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 
 Per filesystems/sysfs.rst, show() should only use sysfs_emit()
@@ -92,6 +93,7 @@ COCCI=scripts/coccinelle/api/device_attr_show.cocci
 
 No functional change intended
 
+CC: HighPoint Linux Team <linux@highpoint-tech.com>
 CC: "James E.J. Bottomley" <jejb@linux.ibm.com>
 CC: "Martin K. Petersen" <martin.petersen@oracle.com>
 CC: linux-scsi@vger.kernel.org
@@ -101,44 +103,31 @@ This is a part of the work "Fix coccicheck device_attr_show warnings"[1]
 Split them per subsystem so that the maintainer can review it easily
 [1] https://lore.kernel.org/lkml/20240116041129.3937800-1-lizhijian@fujitsu.com/
 ---
- drivers/scsi/pmcraid.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ drivers/scsi/hptiop.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index e8bcc3a88732..56376d335b21 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -3538,7 +3538,7 @@ static ssize_t pmcraid_show_log_level(
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct pmcraid_instance *pinstance =
- 		(struct pmcraid_instance *)shost->hostdata;
--	return snprintf(buf, PAGE_SIZE, "%d\n", pinstance->current_log_level);
-+	return sysfs_emit(buf, "%d\n", pinstance->current_log_level);
- }
- 
- /**
-@@ -3599,8 +3599,7 @@ static ssize_t pmcraid_show_drv_version(
- 	char *buf
- )
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index f5334ccbf2ca..65426df93270 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -1111,7 +1111,7 @@ static int hptiop_adjust_disk_queue_depth(struct scsi_device *sdev,
+ static ssize_t hptiop_show_version(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
  {
--	return snprintf(buf, PAGE_SIZE, "version: %s\n",
--			PMCRAID_DRIVER_VERSION);
-+	return sysfs_emit(buf, "version: %s\n", PMCRAID_DRIVER_VERSION);
+-	return snprintf(buf, PAGE_SIZE, "%s\n", driver_ver);
++	return sysfs_emit(buf, "%s\n", driver_ver);
  }
  
- static struct device_attribute pmcraid_driver_version_attr = {
-@@ -3632,9 +3631,8 @@ static ssize_t pmcraid_show_adapter_id(
- 	u32 adapter_id = pci_dev_id(pinstance->pdev);
- 	u32 aen_group = pmcraid_event_family.id;
+ static ssize_t hptiop_show_fw_version(struct device *dev,
+@@ -1120,7 +1120,7 @@ static ssize_t hptiop_show_fw_version(struct device *dev,
+ 	struct Scsi_Host *host = class_to_shost(dev);
+ 	struct hptiop_hba *hba = (struct hptiop_hba *)host->hostdata;
  
--	return snprintf(buf, PAGE_SIZE,
--			"adapter id: %d\nminor: %d\naen group: %d\n",
--			adapter_id, MINOR(pinstance->cdev.dev), aen_group);
-+	return sysfs_emit(buf, "adapter id: %d\nminor: %d\naen group: %d\n",
-+			  adapter_id, MINOR(pinstance->cdev.dev), aen_group);
- }
- 
- static struct device_attribute pmcraid_adapter_id_attr = {
+-	return snprintf(buf, PAGE_SIZE, "%d.%d.%d.%d\n",
++	return sysfs_emit(buf, "%d.%d.%d.%d\n",
+ 				hba->firmware_version >> 24,
+ 				(hba->firmware_version >> 16) & 0xff,
+ 				(hba->firmware_version >> 8) & 0xff,
 -- 
 2.29.2
 
