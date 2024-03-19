@@ -1,50 +1,50 @@
 Received: from esa4.hc1455-7.c3s2.iphmx.com (esa4.hc1455-7.c3s2.iphmx.com [68.232.139.117])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E49167E566;
-	Tue, 19 Mar 2024 06:32:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 479487EEE0;
+	Tue, 19 Mar 2024 06:32:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.139.117
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710829962; cv=none; b=NA7MZtU5SwkTSCPVQqgBAlxwMlEQx+hXpp4+QX4n+91pocRJjij3G67K39LaNd+pIUpQROEvkWmn/1ILt0KEe7IZS7BhbqUa4/6SM6Ltnwx103PLOXl8VMaDEKFFqA3HH4fjU3bSmcsKQSDR2Jris0LvPuojuryGlaHAHJJEb5k=
+	t=1710829963; cv=none; b=mSNEHQB8l985lGZ2Azb6sWNEPWnpYqoXxo1P+Csr7MzSYW+nQsgbPNduMFmzK2y2r47mVultZm+rrze3pwC4KqEA6X4HrHkHgMkRr3iCg0umM6y0Q2HTYAAuDF4YqBBZUCRMaDkXIKzMz4Ge8+UXex+QK58Q/r2ebUC+9lpqVj0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710829962; c=relaxed/simple;
-	bh=Tljs7sj6NLXRsbg++DwByxlwGXW9ocCAWeklXKVpQPE=;
+	s=arc-20240116; t=1710829963; c=relaxed/simple;
+	bh=XJCQdz/gchkeN5S6zp6jU0abnRa0KvI5l1susWJLLdk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JOzxxXbp/o8GskTq8f87C430olwNTXGMwBvwm7ixoZVzdAYM6kp9W+CmGdFEfnQGDVi2xOTS/aVdcrJ7UlkMVy3TzUoCo7aSoJvCjVlN6isx79BTvBMDphg+vpGstICWXs2PWqYkFmGmoYlSUidpb7bbeNuDIuApkX+R5lhjZ8g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=D2KT4OE6; arc=none smtp.client-ip=68.232.139.117
+	 MIME-Version; b=PPRQJxQ89dFL85qKJwhDvwhlU0v1qNgd45Pr17sI3eMAJrgb3n1ia9pzYQ0EZzcpVJPEMPFws3pCP2hh77V5o8jP0rhMyfmdpdXRM/uy3RG3C8SfUegVXfop3CtNpwutimHhBvjMxlOpCxLVd+5Af2Trc8IlDqbjls2X0R4orq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=piw56tmA; arc=none smtp.client-ip=68.232.139.117
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="D2KT4OE6"
+	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="piw56tmA"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
-  t=1710829959; x=1742365959;
+  t=1710829960; x=1742365960;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Tljs7sj6NLXRsbg++DwByxlwGXW9ocCAWeklXKVpQPE=;
-  b=D2KT4OE6QQRgFyexxzEZucVlTt/arUPpBUWZJK8Pa6G3wBh8fnCm/tqX
-   EuoK2DthXlLho8scvMu17XVYMd1qKryOxgbquSOD2qTwKS/zgnx7fn+Zw
-   9uZMFxCmtGvvjLm5tchBbZx7aPYFL0PWbpRGHbUUkkUA39m4yt8Lwrbia
-   AnIDSOgsAusCLEDaUR7TYNc6k0q0zyD78nzbNZamSJV17UTpxXuJHByIP
-   mMQAIgtG70L6Zk21IuITaxSFRhmzIs9wBA4/XueckP5WfOc7POft9C4jo
-   99E35lDT1W7mKpJTwCIh9eoqX76AHR25QyLJW0qz+H9NNA/P4irWqUm6V
+  bh=XJCQdz/gchkeN5S6zp6jU0abnRa0KvI5l1susWJLLdk=;
+  b=piw56tmAImpH5Cvy6wuv47ohjjPuSAtj2NylfpNsrBygTdTpBkAH2Zst
+   8iJT8US1TI4XzF9X3puZZmE6fI8F6XPaqoMO06OuHWb3XM9bMan0IrR/z
+   iz9J89Iemw7NB/SDjsfwZRVfglChS0aIkpSQe03K0UqGaKmQ/rH2CRddy
+   BwCErBmM4f9cEaVgnNyXnnpiZvKWPnaizki0rUKY1jx7qGyuRYCghUjA7
+   pk2/FOUcYeIeZKBTE3jnyg2H822i+grEONn4b2PsLTArqeK8H8Jxfxjng
+   KxTMLGq63eVa4KWHcrEgfxrvlWSJGihdajRYzGQdS0dE/qaF3Znp5bFD7
    w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11017"; a="152971403"
+X-IronPort-AV: E=McAfee;i="6600,9927,11017"; a="152971406"
 X-IronPort-AV: E=Sophos;i="6.07,136,1708354800"; 
-   d="scan'208";a="152971403"
-Received: from unknown (HELO oym-r2.gw.nic.fujitsu.com) ([210.162.30.90])
+   d="scan'208";a="152971406"
+Received: from unknown (HELO yto-r3.gw.nic.fujitsu.com) ([218.44.52.219])
   by esa4.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2024 15:32:31 +0900
-Received: from oym-m4.gw.nic.fujitsu.com (oym-nat-oym-m4.gw.nic.fujitsu.com [192.168.87.61])
-	by oym-r2.gw.nic.fujitsu.com (Postfix) with ESMTP id 37311F2646;
+Received: from yto-m3.gw.nic.fujitsu.com (yto-nat-yto-m3.gw.nic.fujitsu.com [192.168.83.66])
+	by yto-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id 634C010A300;
 	Tue, 19 Mar 2024 15:32:29 +0900 (JST)
 Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
-	by oym-m4.gw.nic.fujitsu.com (Postfix) with ESMTP id 490F314014;
+	by yto-m3.gw.nic.fujitsu.com (Postfix) with ESMTP id 96DF4F933;
 	Tue, 19 Mar 2024 15:32:28 +0900 (JST)
 Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-	by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id B15851EA349;
-	Tue, 19 Mar 2024 15:32:27 +0900 (JST)
+	by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id 244AF228822;
+	Tue, 19 Mar 2024 15:32:28 +0900 (JST)
 Received: from localhost.localdomain (unknown [10.167.226.45])
-	by edo.cn.fujitsu.com (Postfix) with ESMTP id 405F21A006D;
+	by edo.cn.fujitsu.com (Postfix) with ESMTP id CE4801A006E;
 	Tue, 19 Mar 2024 14:32:27 +0800 (CST)
 From: Li Zhijian <lizhijian@fujitsu.com>
 To: linux-kernel@vger.kernel.org
@@ -52,9 +52,9 @@ Cc: Li Zhijian <lizhijian@fujitsu.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH v2 22/25] scsi: scsi_transport_fc: Convert sprintf() family to sysfs_emit() family (part 2)
-Date: Tue, 19 Mar 2024 14:31:29 +0800
-Message-Id: <20240319063132.1588443-22-lizhijian@fujitsu.com>
+Subject: [PATCH v2 24/25] scsi: scsi_transport_sas: Convert sprintf() family to sysfs_emit() family (part 2)
+Date: Tue, 19 Mar 2024 14:31:31 +0800
+Message-Id: <20240319063132.1588443-24-lizhijian@fujitsu.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240319063132.1588443-1-lizhijian@fujitsu.com>
 References: <20240319063132.1588443-1-lizhijian@fujitsu.com>
@@ -69,18 +69,15 @@ X-TM-AS-GCONF: 00
 X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-28260.005
 X-TM-AS-User-Approved-Sender: Yes
 X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-28260.005
-X-TMASE-Result: 10--8.175600-10.000000
-X-TMASE-MatchedRID: oHBCG6HyOVEbO59FK9BdmJiHtCNYjckMjkDrBOJwwnQ8JmmJxjOaQXVX
+X-TMASE-Result: 10--9.708800-10.000000
+X-TMASE-MatchedRID: LFhZ4D3QpawbO59FK9BdmJiHtCNYjckMjkDrBOJwwnQ8JmmJxjOaQXVX
 	Q3/qdw5yDiqGKKMcNgRhoUIS5GGeEs1HQN/TlJ3ZOIQ9GP2P2u/iwxLjNbuPBWO0yVK/5LmcQiM
 	ingSlKoKMx5HzfQifbPE41045MrHXFDCN/1eC4ASdVNZaI2n6/2BKRtg9pHEawLkNMQzGl5B+Kr
-	WCPbERPyqq0O5S3DJ8TPK2izpFIcpKTrL7C/IWdIXQ/hu1OV/0+LidURF+DB02IB8TTQDNxPVss
-	+T7ABwcbF6gos3VEkPxhi6d+tzuTPFT0+xU+1/830kDaWZBE1RYL/tox9XQkVKFxY7/zfGiQVhQ
-	ktC6mCrCqU5ZaMeHNGYyzo3OdtPuIQJt3nwJw/DHsEljqux9nan/3nyhTdZwpjlkbDvDJ4dNI/Y
-	G2D7IkscEmVYex+Nkd4AIPQ5gPYCR9GF2J2xqMxRFJJyf5BJe3QfwsVk0UbtuRXh7bFKB7soss8
-	v7FcAi2/GxwmCnQbmmxxOV/oQSfcmYwSKX7pcBsBTJSD2iAW0=
+	WCPbERPznpYPqS6jzxXnkq6nWMKnwUt79wf2J8qWgws6g0ewz2rzl8sNiWClKbKItl61J/yZ+in
+	TK0bC9eKrauXd3MZDVXk9+tZ+3vTcfWJrWr2NKtynbcaY8t5OdsgdUCQd8VplZsmxh4osEt
 X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 
-This focuses on the abused in macros.
+This focuses on the abused cases in macros.
 
 Per filesystems/sysfs.rst, show() should only use sysfs_emit()
 or sysfs_emit_at() when formatting the value to be returned to user space.
@@ -105,426 +102,85 @@ This is a part of the work "Fix coccicheck device_attr_show warnings"[1]
 Split them per subsystem so that the maintainer can review it easily
 [1] https://lore.kernel.org/lkml/20240116041129.3937800-1-lizhijian@fujitsu.com/
 ---
- drivers/scsi/scsi_transport_fc.c | 152 +++++++++++++++----------------
- 1 file changed, 74 insertions(+), 78 deletions(-)
+ drivers/scsi/scsi_transport_sas.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 3335c31772e1..340cda452b44 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -114,7 +114,6 @@ static struct {
- 	{ FC_PORTTYPE_NPIV,		"NPIV VPORT" },
- };
- fc_enum_name_search(port_type, fc_port_type, fc_port_type_names)
--#define FC_PORTTYPE_MAX_NAMELEN		50
- 
- /* Reuse fc_port_type enum function for vport_type */
- #define get_fc_vport_type_name get_fc_port_type_name
-@@ -166,7 +165,6 @@ static struct {
- };
- fc_enum_name_search(port_state, fc_port_state, fc_port_state_names)
- fc_enum_name_match(port_state, fc_port_state, fc_port_state_names)
--#define FC_PORTSTATE_MAX_NAMELEN	20
- 
- 
- /* Convert fc_vport_state values to ascii string name */
-@@ -186,7 +184,6 @@ static struct {
- 	{ FC_VPORT_FAILED,		"VPort Failed" },
- };
- fc_enum_name_search(vport_state, fc_vport_state, fc_vport_state_names)
--#define FC_VPORTSTATE_MAX_NAMELEN	24
- 
- /* Reuse fc_vport_state enum function for vport_last_state */
- #define get_fc_vport_last_state_name get_fc_vport_state_name
-@@ -983,7 +980,7 @@ static void __exit fc_transport_exit(void)
-  * FC Remote Port Attribute Management
-  */
- 
--#define fc_rport_show_function(field, format_string, sz, cast)		\
-+#define fc_rport_show_function(field, format_string, cast)		\
- static ssize_t								\
- show_fc_rport_##field (struct device *dev, 				\
- 		       struct device_attribute *attr, char *buf)	\
-@@ -996,7 +993,7 @@ show_fc_rport_##field (struct device *dev, 				\
- 	      (rport->port_state == FC_PORTSTATE_DELETED) ||		\
- 	      (rport->port_state == FC_PORTSTATE_NOTPRESENT)))		\
- 		i->f->get_rport_##field(rport);				\
--	return snprintf(buf, sz, format_string, cast rport->field); 	\
-+	return sysfs_emit(buf, format_string, cast rport->field); 	\
- }
- 
- #define fc_rport_store_function(field)					\
-@@ -1021,45 +1018,45 @@ store_fc_rport_##field(struct device *dev,				\
- 	return count;							\
- }
- 
--#define fc_rport_rd_attr(field, format_string, sz)			\
--	fc_rport_show_function(field, format_string, sz, )		\
-+#define fc_rport_rd_attr(field, format_string)			\
-+	fc_rport_show_function(field, format_string, )		\
- static FC_DEVICE_ATTR(rport, field, S_IRUGO,			\
- 			 show_fc_rport_##field, NULL)
- 
--#define fc_rport_rd_attr_cast(field, format_string, sz, cast)		\
--	fc_rport_show_function(field, format_string, sz, (cast))	\
-+#define fc_rport_rd_attr_cast(field, format_string, cast)		\
-+	fc_rport_show_function(field, format_string, (cast))	\
- static FC_DEVICE_ATTR(rport, field, S_IRUGO,			\
- 			  show_fc_rport_##field, NULL)
- 
--#define fc_rport_rw_attr(field, format_string, sz)			\
--	fc_rport_show_function(field, format_string, sz, )		\
-+#define fc_rport_rw_attr(field, format_string)			\
-+	fc_rport_show_function(field, format_string, )		\
- 	fc_rport_store_function(field)					\
- static FC_DEVICE_ATTR(rport, field, S_IRUGO | S_IWUSR,		\
- 			show_fc_rport_##field,				\
- 			store_fc_rport_##field)
- 
- 
--#define fc_private_rport_show_function(field, format_string, sz, cast)	\
-+#define fc_private_rport_show_function(field, format_string, cast)	\
- static ssize_t								\
- show_fc_rport_##field (struct device *dev, 				\
- 		       struct device_attribute *attr, char *buf)	\
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index baf2aaf361d2..21d3b13c543a 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -427,7 +427,7 @@ show_sas_phy_##name(struct device *dev, 				\
  {									\
- 	struct fc_rport *rport = transport_class_to_rport(dev);		\
--	return snprintf(buf, sz, format_string, cast rport->field); 	\
-+	return sysfs_emit(buf, format_string, cast rport->field); 	\
- }
- 
--#define fc_private_rport_rd_attr(field, format_string, sz)		\
--	fc_private_rport_show_function(field, format_string, sz, )	\
-+#define fc_private_rport_rd_attr(field, format_string)		\
-+	fc_private_rport_show_function(field, format_string, )	\
- static FC_DEVICE_ATTR(rport, field, S_IRUGO,			\
- 			 show_fc_rport_##field, NULL)
- 
--#define fc_private_rport_rd_attr_cast(field, format_string, sz, cast)	\
--	fc_private_rport_show_function(field, format_string, sz, (cast)) \
-+#define fc_private_rport_rd_attr_cast(field, format_string, cast)	\
-+	fc_private_rport_show_function(field, format_string, (cast)) \
- static FC_DEVICE_ATTR(rport, field, S_IRUGO,			\
- 			  show_fc_rport_##field, NULL)
- 
- 
--#define fc_private_rport_rd_enum_attr(title, maxlen)			\
-+#define fc_private_rport_rd_enum_attr(title)			\
- static ssize_t								\
- show_fc_rport_##title (struct device *dev,				\
- 		       struct device_attribute *attr, char *buf)	\
-@@ -1069,7 +1066,7 @@ show_fc_rport_##title (struct device *dev,				\
- 	name = get_fc_##title##_name(rport->title);			\
- 	if (!name)							\
- 		return -EINVAL;						\
--	return snprintf(buf, maxlen, "%s\n", name);			\
-+	return sysfs_emit(buf, "%s\n", name);			\
- }									\
- static FC_DEVICE_ATTR(rport, title, S_IRUGO,			\
- 			show_fc_rport_##title, NULL)
-@@ -1112,7 +1109,7 @@ static FC_DEVICE_ATTR(rport, title, S_IRUGO,			\
- 
- /* Fixed Remote Port Attributes */
- 
--fc_private_rport_rd_attr(maxframe_size, "%u bytes\n", 20);
-+fc_private_rport_rd_attr(maxframe_size, "%u bytes\n");
- 
- static ssize_t
- show_fc_rport_supported_classes (struct device *dev,
-@@ -1175,7 +1172,7 @@ static int fc_rport_set_dev_loss_tmo(struct fc_rport *rport,
- 	return 0;
- }
- 
--fc_rport_show_function(dev_loss_tmo, "%u\n", 20, )
-+fc_rport_show_function(dev_loss_tmo, "%u\n", )
- static ssize_t
- store_fc_rport_dev_loss_tmo(struct device *dev, struct device_attribute *attr,
- 			    const char *buf, size_t count)
-@@ -1199,9 +1196,9 @@ static FC_DEVICE_ATTR(rport, dev_loss_tmo, S_IRUGO | S_IWUSR,
- 
- /* Private Remote Port Attributes */
- 
--fc_private_rport_rd_attr_cast(node_name, "0x%llx\n", 20, unsigned long long);
--fc_private_rport_rd_attr_cast(port_name, "0x%llx\n", 20, unsigned long long);
--fc_private_rport_rd_attr(port_id, "0x%06x\n", 20);
-+fc_private_rport_rd_attr_cast(node_name, "0x%llx\n", unsigned long long);
-+fc_private_rport_rd_attr_cast(port_name, "0x%llx\n", unsigned long long);
-+fc_private_rport_rd_attr(port_id, "0x%06x\n");
- 
- static ssize_t
- show_fc_rport_roles (struct device *dev, struct device_attribute *attr,
-@@ -1289,7 +1286,7 @@ show_fc_rport_port_state(struct device *dev,
- static FC_DEVICE_ATTR(rport, port_state, 0444 | 0200,
- 			show_fc_rport_port_state, fc_rport_set_marginal_state);
- 
--fc_private_rport_rd_attr(scsi_target_id, "%d\n", 20);
-+fc_private_rport_rd_attr(scsi_target_id, "%d\n");
- 
- /*
-  * fast_io_fail_tmo attribute
-@@ -1346,7 +1343,7 @@ static ssize_t fc_rport_fpinstat_##name(struct device *cd,		\
- {									\
- 	struct fc_rport *rport = transport_class_to_rport(cd);		\
+ 	struct sas_phy *phy = transport_class_to_phy(dev);		\
  									\
--	return snprintf(buf, 20, "0x%llx\n", rport->fpin_stats.name);	\
-+	return sysfs_emit(buf, "0x%llx\n", rport->fpin_stats.name);	\
- }									\
- static FC_DEVICE_ATTR(rport, fpin_##name, 0444, fc_rport_fpinstat_##name, NULL)
- 
-@@ -1411,7 +1408,7 @@ static struct attribute_group fc_rport_statistics_group = {
-  *  involved in sysfs functions. The driver only gets involved if
-  *  it's the "old" style that doesn't use rports.
-  */
--#define fc_starget_show_function(field, format_string, sz, cast)	\
-+#define fc_starget_show_function(field, format_string, cast)	\
- static ssize_t								\
- show_fc_starget_##field (struct device *dev, 				\
- 			 struct device_attribute *attr, char *buf)	\
-@@ -1424,17 +1421,17 @@ show_fc_starget_##field (struct device *dev, 				\
- 		fc_starget_##field(starget) = rport->field;		\
- 	else if (i->f->get_starget_##field)				\
- 		i->f->get_starget_##field(starget);			\
--	return snprintf(buf, sz, format_string, 			\
-+	return sysfs_emit(buf, format_string, 				\
- 		cast fc_starget_##field(starget)); 			\
+-	return snprintf(buf, 20, format_string, cast phy->field);	\
++	return sysfs_emit(buf, format_string, cast phy->field);		\
  }
  
--#define fc_starget_rd_attr(field, format_string, sz)			\
--	fc_starget_show_function(field, format_string, sz, )		\
-+#define fc_starget_rd_attr(field, format_string)			\
-+	fc_starget_show_function(field, format_string, )		\
- static FC_DEVICE_ATTR(starget, field, S_IRUGO,			\
- 			 show_fc_starget_##field, NULL)
- 
--#define fc_starget_rd_attr_cast(field, format_string, sz, cast)		\
--	fc_starget_show_function(field, format_string, sz, (cast))	\
-+#define fc_starget_rd_attr_cast(field, format_string, cast)		\
-+	fc_starget_show_function(field, format_string, (cast))	\
- static FC_DEVICE_ATTR(starget, field, S_IRUGO,			\
- 			  show_fc_starget_##field, NULL)
- 
-@@ -1457,9 +1454,9 @@ static FC_DEVICE_ATTR(starget, field, S_IRUGO,			\
- 		count++
- 
- /* The FC Transport SCSI Target Attributes: */
--fc_starget_rd_attr_cast(node_name, "0x%llx\n", 20, unsigned long long);
--fc_starget_rd_attr_cast(port_name, "0x%llx\n", 20, unsigned long long);
--fc_starget_rd_attr(port_id, "0x%06x\n", 20);
-+fc_starget_rd_attr_cast(node_name, "0x%llx\n", unsigned long long);
-+fc_starget_rd_attr_cast(port_name, "0x%llx\n", unsigned long long);
-+fc_starget_rd_attr(port_id, "0x%06x\n");
- 
- 
- /*
-@@ -1477,7 +1474,7 @@ show_fc_vport_##field (struct device *dev, 				\
- 	if ((i->f->get_vport_##field) &&				\
- 	    !(vport->flags & (FC_VPORT_DEL | FC_VPORT_CREATING)))	\
- 		i->f->get_vport_##field(vport);				\
--	return snprintf(buf, sz, format_string, cast vport->field); 	\
-+	return sysfs_emit(buf, format_string, cast vport->field); 	\
+ #define sas_phy_simple_attr(field, name, format_string, type)		\
+@@ -442,7 +442,7 @@ show_sas_phy_##name(struct device *dev, 				\
+ 	struct sas_phy *phy = transport_class_to_phy(dev);		\
+ 									\
+ 	if (!phy->field)						\
+-		return snprintf(buf, 20, "none\n");			\
++		return sysfs_emit(buf, "none\n");			\
+ 	return get_sas_protocol_names(phy->field, buf);		\
  }
  
- #define fc_vport_store_function(field)					\
-@@ -1544,7 +1541,7 @@ show_fc_vport_##field (struct device *dev,				\
- 		       struct device_attribute *attr, char *buf)	\
+@@ -507,7 +507,7 @@ show_sas_phy_##field(struct device *dev, 				\
+ 	error = i->f->get_linkerrors ? i->f->get_linkerrors(phy) : 0;	\
+ 	if (error)							\
+ 		return error;						\
+-	return snprintf(buf, 20, "%u\n", phy->field);			\
++	return sysfs_emit(buf, "%u\n", phy->field);			\
+ }
+ 
+ #define sas_phy_linkerror_attr(field)					\
+@@ -798,7 +798,7 @@ show_sas_port_##name(struct device *dev, 				\
  {									\
- 	struct fc_vport *vport = transport_class_to_vport(dev);		\
--	return snprintf(buf, sz, format_string, cast vport->field); 	\
-+	return sysfs_emit(buf, format_string, cast vport->field); 	\
+ 	struct sas_port *port = transport_class_to_sas_port(dev);	\
+ 									\
+-	return snprintf(buf, 20, format_string, cast port->field);	\
++	return sysfs_emit(buf, format_string, cast port->field);	\
  }
  
- #define fc_private_vport_store_u32_function(field)			\
-@@ -1584,7 +1581,7 @@ static FC_DEVICE_ATTR(vport, field, S_IRUGO | S_IWUSR,		\
- 			store_fc_vport_##field)
- 
- 
--#define fc_private_vport_rd_enum_attr(title, maxlen)			\
-+#define fc_private_vport_rd_enum_attr(title)			\
- static ssize_t								\
- show_fc_vport_##title (struct device *dev,				\
- 		       struct device_attribute *attr,			\
-@@ -1595,7 +1592,7 @@ show_fc_vport_##title (struct device *dev,				\
- 	name = get_fc_##title##_name(vport->title);			\
- 	if (!name)							\
- 		return -EINVAL;						\
--	return snprintf(buf, maxlen, "%s\n", name);			\
-+	return sysfs_emit(buf, "%s\n", name);			\
- }									\
- static FC_DEVICE_ATTR(vport, title, S_IRUGO,			\
- 			show_fc_vport_##title, NULL)
-@@ -1650,8 +1647,8 @@ static FC_DEVICE_ATTR(vport, title, S_IRUGO,			\
- 
- /* Private Virtual Port Attributes */
- 
--fc_private_vport_rd_enum_attr(vport_state, FC_VPORTSTATE_MAX_NAMELEN);
--fc_private_vport_rd_enum_attr(vport_last_state, FC_VPORTSTATE_MAX_NAMELEN);
-+fc_private_vport_rd_enum_attr(vport_state);
-+fc_private_vport_rd_enum_attr(vport_last_state);
- fc_private_vport_rd_attr_cast(node_name, "0x%llx\n", 20, unsigned long long);
- fc_private_vport_rd_attr_cast(port_name, "0x%llx\n", 20, unsigned long long);
- 
-@@ -1667,7 +1664,7 @@ show_fc_vport_roles (struct device *dev, struct device_attribute *attr,
- }
- static FC_DEVICE_ATTR(vport, roles, S_IRUGO, show_fc_vport_roles, NULL);
- 
--fc_private_vport_rd_enum_attr(vport_type, FC_PORTTYPE_MAX_NAMELEN);
-+fc_private_vport_rd_enum_attr(vport_type);
- 
- fc_private_vport_show_function(symbolic_name, "%s\n",
- 		FC_VPORT_SYMBOLIC_NAMELEN + 1, )
-@@ -1735,7 +1732,7 @@ static FC_DEVICE_ATTR(vport, vport_disable, S_IWUSR,
-  * Host Attribute Management
-  */
- 
--#define fc_host_show_function(field, format_string, sz, cast)		\
-+#define fc_host_show_function(field, format_string, cast)		\
- static ssize_t								\
- show_fc_host_##field (struct device *dev,				\
- 		      struct device_attribute *attr, char *buf)		\
-@@ -1744,7 +1741,7 @@ show_fc_host_##field (struct device *dev,				\
- 	struct fc_internal *i = to_fc_internal(shost->transportt);	\
- 	if (i->f->get_host_##field)					\
- 		i->f->get_host_##field(shost);				\
--	return snprintf(buf, sz, format_string, cast fc_host_##field(shost)); \
-+	return sysfs_emit(buf, format_string, cast fc_host_##field(shost)); \
- }
- 
- #define fc_host_store_function(field)					\
-@@ -1785,13 +1782,13 @@ store_fc_host_##field(struct device *dev,				\
- 	return count;							\
- }
- 
--#define fc_host_rd_attr(field, format_string, sz)			\
--	fc_host_show_function(field, format_string, sz, )		\
-+#define fc_host_rd_attr(field, format_string)			\
-+	fc_host_show_function(field, format_string, )		\
- static FC_DEVICE_ATTR(host, field, S_IRUGO,			\
- 			 show_fc_host_##field, NULL)
- 
--#define fc_host_rd_attr_cast(field, format_string, sz, cast)		\
--	fc_host_show_function(field, format_string, sz, (cast))		\
-+#define fc_host_rd_attr_cast(field, format_string, cast)		\
-+	fc_host_show_function(field, format_string, (cast))		\
- static FC_DEVICE_ATTR(host, field, S_IRUGO,			\
- 			  show_fc_host_##field, NULL)
- 
-@@ -1802,7 +1799,7 @@ static FC_DEVICE_ATTR(host, field, S_IRUGO | S_IWUSR,		\
- 			show_fc_host_##field,				\
- 			store_fc_host_##field)
- 
--#define fc_host_rd_enum_attr(title, maxlen)				\
-+#define fc_host_rd_enum_attr(title)				\
- static ssize_t								\
- show_fc_host_##title (struct device *dev,				\
- 		      struct device_attribute *attr, char *buf)		\
-@@ -1815,7 +1812,7 @@ show_fc_host_##title (struct device *dev,				\
- 	name = get_fc_##title##_name(fc_host_##title(shost));		\
- 	if (!name)							\
- 		return -EINVAL;						\
--	return snprintf(buf, maxlen, "%s\n", name);			\
-+	return sysfs_emit(buf, "%s\n", name);			\
- }									\
- static FC_DEVICE_ATTR(host, title, S_IRUGO, show_fc_host_##title, NULL)
- 
-@@ -1845,22 +1842,22 @@ static FC_DEVICE_ATTR(host, title, S_IRUGO, show_fc_host_##title, NULL)
- 		count++
- 
- 
--#define fc_private_host_show_function(field, format_string, sz, cast)	\
-+#define fc_private_host_show_function(field, format_string, cast)	\
- static ssize_t								\
- show_fc_host_##field (struct device *dev,				\
- 		      struct device_attribute *attr, char *buf)		\
+ #define sas_port_simple_attr(field, name, format_string, type)		\
+@@ -1145,7 +1145,7 @@ show_sas_rphy_##name(struct device *dev, 				\
  {									\
- 	struct Scsi_Host *shost = transport_class_to_shost(dev);	\
--	return snprintf(buf, sz, format_string, cast fc_host_##field(shost)); \
-+	return sysfs_emit(buf, format_string, cast fc_host_##field(shost)); \
+ 	struct sas_rphy *rphy = transport_class_to_rphy(dev);		\
+ 									\
+-	return snprintf(buf, 20, format_string, cast rphy->field);	\
++	return sysfs_emit(buf, format_string, cast rphy->field);	\
  }
  
--#define fc_private_host_rd_attr(field, format_string, sz)		\
--	fc_private_host_show_function(field, format_string, sz, )	\
-+#define fc_private_host_rd_attr(field, format_string)		\
-+	fc_private_host_show_function(field, format_string, )	\
- static FC_DEVICE_ATTR(host, field, S_IRUGO,			\
- 			 show_fc_host_##field, NULL)
- 
--#define fc_private_host_rd_attr_cast(field, format_string, sz, cast)	\
--	fc_private_host_show_function(field, format_string, sz, (cast)) \
-+#define fc_private_host_rd_attr_cast(field, format_string, cast)	\
-+	fc_private_host_show_function(field, format_string, (cast)) \
- static FC_DEVICE_ATTR(host, field, S_IRUGO,			\
- 			  show_fc_host_##field, NULL)
- 
-@@ -1920,20 +1917,20 @@ static FC_DEVICE_ATTR(host, supported_speeds, S_IRUGO,
- 		show_fc_host_supported_speeds, NULL);
- 
- 
--fc_private_host_rd_attr_cast(node_name, "0x%llx\n", 20, unsigned long long);
--fc_private_host_rd_attr_cast(port_name, "0x%llx\n", 20, unsigned long long);
--fc_private_host_rd_attr_cast(permanent_port_name, "0x%llx\n", 20,
-+fc_private_host_rd_attr_cast(node_name, "0x%llx\n", unsigned long long);
-+fc_private_host_rd_attr_cast(port_name, "0x%llx\n", unsigned long long);
-+fc_private_host_rd_attr_cast(permanent_port_name, "0x%llx\n",
- 			     unsigned long long);
--fc_private_host_rd_attr(maxframe_size, "%u bytes\n", 20);
--fc_private_host_rd_attr(max_npiv_vports, "%u\n", 20);
--fc_private_host_rd_attr(serial_number, "%s\n", (FC_SERIAL_NUMBER_SIZE +1));
--fc_private_host_rd_attr(manufacturer, "%s\n", FC_SERIAL_NUMBER_SIZE + 1);
--fc_private_host_rd_attr(model, "%s\n", FC_SYMBOLIC_NAME_SIZE + 1);
--fc_private_host_rd_attr(model_description, "%s\n", FC_SYMBOLIC_NAME_SIZE + 1);
--fc_private_host_rd_attr(hardware_version, "%s\n", FC_VERSION_STRING_SIZE + 1);
--fc_private_host_rd_attr(driver_version, "%s\n", FC_VERSION_STRING_SIZE + 1);
--fc_private_host_rd_attr(firmware_version, "%s\n", FC_VERSION_STRING_SIZE + 1);
--fc_private_host_rd_attr(optionrom_version, "%s\n", FC_VERSION_STRING_SIZE + 1);
-+fc_private_host_rd_attr(maxframe_size, "%u bytes\n");
-+fc_private_host_rd_attr(max_npiv_vports, "%u\n");
-+fc_private_host_rd_attr(serial_number, "%s\n");
-+fc_private_host_rd_attr(manufacturer, "%s\n");
-+fc_private_host_rd_attr(model, "%s\n");
-+fc_private_host_rd_attr(model_description, "%s\n");
-+fc_private_host_rd_attr(hardware_version, "%s\n");
-+fc_private_host_rd_attr(driver_version, "%s\n");
-+fc_private_host_rd_attr(firmware_version, "%s\n");
-+fc_private_host_rd_attr(optionrom_version, "%s\n");
- 
- 
- /* Dynamic Host Attributes */
-@@ -1972,14 +1969,13 @@ static FC_DEVICE_ATTR(host, speed, S_IRUGO,
- 		show_fc_host_speed, NULL);
- 
- 
--fc_host_rd_attr(port_id, "0x%06x\n", 20);
--fc_host_rd_enum_attr(port_type, FC_PORTTYPE_MAX_NAMELEN);
--fc_host_rd_enum_attr(port_state, FC_PORTSTATE_MAX_NAMELEN);
--fc_host_rd_attr_cast(fabric_name, "0x%llx\n", 20, unsigned long long);
--fc_host_rd_attr(symbolic_name, "%s\n", FC_SYMBOLIC_NAME_SIZE + 1);
-+fc_host_rd_attr(port_id, "0x%06x\n");
-+fc_host_rd_enum_attr(port_type);
-+fc_host_rd_enum_attr(port_state);
-+fc_host_rd_attr_cast(fabric_name, "0x%llx\n", unsigned long long);
-+fc_host_rd_attr(symbolic_name, "%s\n");
- 
--fc_private_host_show_function(system_hostname, "%s\n",
--		FC_SYMBOLIC_NAME_SIZE + 1, )
-+fc_private_host_show_function(system_hostname, "%s\n", )
- fc_host_store_str_function(system_hostname, FC_SYMBOLIC_NAME_SIZE)
- static FC_DEVICE_ATTR(host, system_hostname, S_IRUGO | S_IWUSR,
- 		show_fc_host_system_hostname, store_fc_host_system_hostname);
-@@ -2079,12 +2075,12 @@ store_fc_private_host_dev_loss_tmo(struct device *dev,
- 	return count;
+ #define sas_rphy_simple_attr(field, name, format_string, type)		\
+@@ -1161,7 +1161,7 @@ show_sas_rphy_##name(struct device *dev, 				\
+ 	struct sas_rphy *rphy = transport_class_to_rphy(dev);		\
+ 									\
+ 	if (!rphy->field)					\
+-		return snprintf(buf, 20, "none\n");			\
++		return sysfs_emit(buf, "none\n");			\
+ 	return get_sas_protocol_names(rphy->field, buf);	\
  }
  
--fc_private_host_show_function(dev_loss_tmo, "%d\n", 20, );
-+fc_private_host_show_function(dev_loss_tmo, "%d\n", );
- static FC_DEVICE_ATTR(host, dev_loss_tmo, S_IRUGO | S_IWUSR,
- 		      show_fc_host_dev_loss_tmo,
- 		      store_fc_private_host_dev_loss_tmo);
+@@ -1280,7 +1280,7 @@ show_sas_end_dev_##name(struct device *dev, 				\
+ 	struct sas_rphy *rphy = transport_class_to_rphy(dev);		\
+ 	struct sas_end_device *rdev = rphy_to_end_device(rphy);		\
+ 									\
+-	return snprintf(buf, 20, format_string, cast rdev->field);	\
++	return sysfs_emit(buf, format_string, cast rdev->field);	\
+ }
  
--fc_private_host_rd_attr(npiv_vports_inuse, "%u\n", 20);
-+fc_private_host_rd_attr(npiv_vports_inuse, "%u\n");
+ #define sas_end_dev_simple_attr(field, name, format_string, type)	\
+@@ -1309,7 +1309,7 @@ show_sas_expander_##name(struct device *dev, 				\
+ 	struct sas_rphy *rphy = transport_class_to_rphy(dev);		\
+ 	struct sas_expander_device *edev = rphy_to_expander_device(rphy); \
+ 									\
+-	return snprintf(buf, 20, format_string, cast edev->field);	\
++	return sysfs_emit(buf, format_string, cast edev->field);	\
+ }
  
- /*
-  * Host Statistics Management
+ #define sas_expander_simple_attr(field, name, format_string, type)	\
 -- 
 2.29.2
 
