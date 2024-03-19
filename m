@@ -1,110 +1,140 @@
-Received: from mail-yb1-f173.google.com (mail-yb1-f173.google.com [209.85.219.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0AA6823CB;
-	Tue, 19 Mar 2024 16:11:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C98381804A;
+	Tue, 19 Mar 2024 17:01:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710864678; cv=none; b=nVw1+z6RG/t1VQ4xw3uUGDolEo2LoR1yjuTz4KG07pdZkL68u8IsTFQaXQHNGyiRXOmM57rh5Kqzb0HH6cfuajhBZVLYTS4rmDj2/HlamwMcQzXXPezAgAdPZ6OoCqNs9h9DdhQGjsejxie95PE6yLuVfUmGiiZbF+T7z22tntI=
+	t=1710867682; cv=none; b=m4IyizvAmWsZMGb/63Njah/Qd1ld2v5/ine9BU+ALBl2xuQbyKMTeElWcNSi8qHdkCIHUAMGodXhKdXWHic0EZQdo5VEssW3x+XAnb1MTrI5X4wmqTvweD95codtjmAFOvVAmHb1EBUUY8aNjSgZ3me6AkkVua6J3jhSMeFVleA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710864678; c=relaxed/simple;
-	bh=U993M1JRV0FGOsJ7Xah80cxg5qsx0Afxi3HJKSRRq64=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hsvdQPX5X1f6WXOJfeoTfzD9yvvMO21K14D840bWAwZeV0xH1vx/E2QMSpmjfn56OVGiCMAhagSRUom6O2Fsi3uut8af0J7//WxfmC63ZXtJMwZYPm95FnbHHA0zMvfEeYvNO4bKH5EgHj27liHGl9MEwmz1y8UN1hYCm/Na+OY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.219.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yb1-f173.google.com with SMTP id 3f1490d57ef6-dd14d8e7026so4683226276.2;
-        Tue, 19 Mar 2024 09:11:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710864675; x=1711469475;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0bT5IxGVGT1/jwRDQQJapGpqLtI5H2MTLx4kQKFPlIA=;
-        b=aUjTdfEp7kfnqYNm+P9vxB5egOaM8ZAKb6vz1RSkNsLSo05W6YAWERtXvMqJxYHt/X
-         fUhJTJMivOVVGCxIJD2EjEWaAXNvtAjaOjQdJkFtezgytdwidbM4+pY16ZpVWO0NC/qh
-         eqF9eGEw0WfhlLqKduEzFbkYXpJIzegY2i6MagJ5uAyVOYNV+GJ/s8YCIWRF6+EPZEui
-         1ZMQ8I5XyJl4tYOsRB539sXn1zA1O9b/BNLJUlnhwLBFY4EvAYry6fvxV6rkLpKWjntD
-         cw8zHGaf9akIJ2PkmfavdtRof932PZLdRh46tNtd+QExHM3XomMMdqi3blbPO8ZrEdCH
-         YcYA==
-X-Forwarded-Encrypted: i=1; AJvYcCWDBqeq1tcqvNntg0I40eNqnFSBiU4haqDnthyCsFEzki2FM7UO6Kfg2ucAKWHfFRs4rDO/tYyIq28ty6SBaIkWdPd2GBPRHMOY9XPeD4H7+CdiPqFnt2aWkvnchYieEIiKFxni81Peaw==
-X-Gm-Message-State: AOJu0YwVrXkETN4bbAOTGKiQqg49sSv13DHp8ekoFcTDlSXN4Ay+cQ2c
-	elNBAXNd/NDrMd1rDAEDR/KkJ1j3spDO1xs339bmGGkhMC9lPGlFhvkq0tZ0rO8=
-X-Google-Smtp-Source: AGHT+IGqa3f5sWDPgyvsXo+pKRPE6dKh1PdnVpo7k9OilqmK7Qkr1dV1fSBxAv8VWbGV7FixNm1XNA==
-X-Received: by 2002:a05:6902:1b85:b0:dd1:40cf:942b with SMTP id ei5-20020a0569021b8500b00dd140cf942bmr14058809ybb.48.1710864673322;
-        Tue, 19 Mar 2024 09:11:13 -0700 (PDT)
-Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com. [209.85.219.169])
-        by smtp.gmail.com with ESMTPSA id s10-20020a5b074a000000b00dc6c179f536sm2185060ybq.20.2024.03.19.09.11.13
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 19 Mar 2024 09:11:13 -0700 (PDT)
-Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-dcc84ae94c1so5171791276.1;
-        Tue, 19 Mar 2024 09:11:13 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUVmj2TvNNRE7yUig1FLs0vXBLWmBnTiqIY+IqC2h61tE0zHwAJYVhzCUSjbUNqGY8SYXY34tHT+TgQ+VgI+Mf35pUhBcEtGDcKrSEcVxEv8Uadl5uQXq1wftt8XA95I+wBRwvnuYLoZw==
-X-Received: by 2002:a25:dc82:0:b0:db9:9537:2c39 with SMTP id
- y124-20020a25dc82000000b00db995372c39mr12914894ybe.2.1710864672896; Tue, 19
- Mar 2024 09:11:12 -0700 (PDT)
+	s=arc-20240116; t=1710867682; c=relaxed/simple;
+	bh=s3VmWNpfRoSZzBqlkyzepBdDQAjaNpifveoVLpt85ng=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=q1YGyVh1OZVlMQfd9ND/HxzD+9zdOWebzdPXljIv8z1UEmqXInwRTq/59muzTNM+IG90D76od+AAeUPBT0KIWYgFameWUQ8tLMgUFxdW29MX2wTgMcRnBqPQeLQEYvdZiy6mHbXxxl8fSICm0naRRYFPljtMgvt8yUIVfnyknpY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=k1SmjNW5; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="k1SmjNW5"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4TzdKX0pysz6Cnk94;
+	Tue, 19 Mar 2024 17:01:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:references:content-language:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1710867675; x=1713459676; bh=DMTMB9/LAk5BGlCUtQsC4r4k
+	TvUuJ3sSt9k1EF9/RXM=; b=k1SmjNW5Ylm3wDLl7V8YVhob5mr93GJ2s9k5EAJ5
+	tdcX8ptPHTa4C4sJ+AvtMSPpYCp1O4hAHwtc+ES5OdwWXFAKCkaIJSsFllyVOxqM
+	VuJy2LD7qJmQ75oeLEdjiFun07EOfrCj+y3KzSl0Wxxb2CRNGwqlpiDwQPYOc1B2
+	9B+5RUwEnmAXPvk1ozOLGuvEH1YSkB+EoXtQHM89/4ghh+SHEQQ2akX+wTwLO4Up
+	Oq1004nSOqVpq4UXlVSmERVGU2Q51sbjQ3KmiTKO70DZ4GiJUs2+6/9xCIZgC6nY
+	zV7pZn4OOUjQUAA76FfEX0QWBzV7KvJLOpQBMzqSQzknrQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 9YE-69ygPJXO; Tue, 19 Mar 2024 17:01:15 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4TzdKP6t2Kz6Cnk8y;
+	Tue, 19 Mar 2024 17:01:13 +0000 (UTC)
+Message-ID: <0d41ae1a-f6aa-4377-b8a3-7fcf067f99ac@acm.org>
+Date: Tue, 19 Mar 2024 10:01:11 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: core: Make scsi_lib KUnit tests modular for real
+Content-Language: en-US
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Mike Christie <michael.christie@oracle.com>,
+ "James E . J . Bottomley" <jejb@linux.ibm.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Lukas Bulwahn <lukas.bulwahn@gmail.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
 References: <48ca5e827ca420bbdbabb1643e2179dc95c9e0b7.1710849638.git.geert@linux-m68k.org>
  <d1a1b0b8-41f1-4ead-b393-d8d2f099b0c4@acm.org>
-In-Reply-To: <d1a1b0b8-41f1-4ead-b393-d8d2f099b0c4@acm.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 19 Mar 2024 17:10:59 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdWzD1OR8qj8oHfUgQ9GMtrD8y69G+A+ONdVm0vTCvYe=w@mail.gmail.com>
-Message-ID: <CAMuHMdWzD1OR8qj8oHfUgQ9GMtrD8y69G+A+ONdVm0vTCvYe=w@mail.gmail.com>
-Subject: Re: [PATCH] scsi: core: Make scsi_lib KUnit tests modular for real
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Mike Christie <michael.christie@oracle.com>, 
-	"James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
-	Lukas Bulwahn <lukas.bulwahn@gmail.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+ <CAMuHMdWzD1OR8qj8oHfUgQ9GMtrD8y69G+A+ONdVm0vTCvYe=w@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAMuHMdWzD1OR8qj8oHfUgQ9GMtrD8y69G+A+ONdVm0vTCvYe=w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-Hoi Bart,
+On 3/19/24 09:10, Geert Uytterhoeven wrote:
+> On Tue, Mar 19, 2024 at 5:03=E2=80=AFPM Bart Van Assche <bvanassche@acm=
+.org> wrote:
+>> On 3/19/24 05:02, Geert Uytterhoeven wrote:
+>> kernel module? What are the advantages compared to the current approac=
+h?
+>> That information is missing from the patch description.
+>=20
+> SCSI_LIB_KUNIT_TEST is already tristate, so the original author must
+> have meant it to be modular.  Or perhaps he just copied it from
+> (most/all) other tests ;-)
+>=20
+> Anyway, I find it very useful to be able to do "modprobe kunit" and
+> "modprobe <test>" to run a test when I feel the need to do so.
 
-On Tue, Mar 19, 2024 at 5:03=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
-> wrote:
-> On 3/19/24 05:02, Geert Uytterhoeven wrote:
-> > While SCSI_LIB_KUNIT_TEST is a tristate config symbol, configuring a
-> > modular build of this test does not do anything: as the test code is
-> > just included by the mid layer code, it only works in the built-in case=
-.
-> >
-> > Fix this by converting the test to a stand-alone module.  This requires
-> > exporting scsi_check_passthrough() and adding a MODULE_LICENSE() tag.
->
-> I don't like it that scsi_check_passthrough() is exported so that counts
-> as a disadvantage of this patch. Why to convert scsi_lib_test into a
+Hi Geert,
 
-Perhaps the exported symbol should be __scsi_check_passthrough(),
-to make it clearer this is not meant for general use?
+Why to run hardware-independent kunit tests on the target system instead
+of on the host? Isn't it much more convenient when developing embedded
+software to run kunit tests on the host using UML? The script I use to
+run SCSI kunit tests is available below. And if there is a desire to run
+SCSI tests on the target system, how about adding triggers in sysfs for
+running kunit tests? The (GPL v2) Samsung smartphone kernel supports
+this but I have not yet checked whether their implementation is
+appropriate for the upstream kernel.
 
-> kernel module? What are the advantages compared to the current approach?
-> That information is missing from the patch description.
+Thanks,
 
-SCSI_LIB_KUNIT_TEST is already tristate, so the original author must
-have meant it to be modular.  Or perhaps he just copied it from
-(most/all) other tests ;-)
+Bart.
 
-Anyway, I find it very useful to be able to do "modprobe kunit" and
-"modprobe <test>" to run a test when I feel the need to do so.
 
-Gr{oetje,eeting}s,
+#!/bin/sh
 
-                        Geert
+set -e
 
---=20
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
-
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
+mkdir -p .kunit
+if [ -e .config ]; then
+     rm -f .config
+     make ARCH=3Dum mrproper
+fi
+if [ ! -e .kunit/.kunitconfig ] || [ "$0" -nt .kunit/.kunitconfig ]; then
+     echo "Regenerating .kunit/.kunitconfig"
+     cat <<EOF >.kunit/.kunitconfig
+CONFIG_BLK_DEV_SD=3Dy
+CONFIG_BLK_DEV_ZONED=3Dy
+CONFIG_MQ_IOSCHED_DEADLINE=3Dy
+CONFIG_BLOCK=3Dy
+CONFIG_EISA=3Dn
+CONFIG_KUNIT=3Dy
+CONFIG_SCSI_PROCFS=3Dn
+#CONFIG_PROVE_LOCKING=3Dy
+CONFIG_SCSI=3Dy
+#CONFIG_SYSFS=3Dy
+CONFIG_UBSAN=3Dy
+CONFIG_KASAN=3Dy
+CONFIG_RUNTIME_TESTING_MENU=3Dn
+CONFIG_WERROR=3Dy
+EOF
+     syms=3D(
+	CONFIG_SCSI_ERROR_TEST
+	CONFIG_SCSI_PROTO_TEST
+	CONFIG_SCSI_SD_TEST
+     )
+     for s in "${syms[@]}"; do
+     if git grep -qw "${s#CONFIG_}" block/Kconfig* drivers/scsi/Kconfig;=20
+then
+	echo "$s=3Dy" >> .kunit/.kunitconfig
+     fi
+     done
+     cp .kunit/.kunitconfig .kunit/.config
+fi
+./tools/testing/kunit/kunit.py run
