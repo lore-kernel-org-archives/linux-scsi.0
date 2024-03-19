@@ -1,60 +1,60 @@
-Received: from esa4.hc1455-7.c3s2.iphmx.com (esa4.hc1455-7.c3s2.iphmx.com [68.232.139.117])
+Received: from esa10.hc1455-7.c3s2.iphmx.com (esa10.hc1455-7.c3s2.iphmx.com [139.138.36.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCB29537FC;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0542253813;
 	Tue, 19 Mar 2024 06:32:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.139.117
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=139.138.36.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710829956; cv=none; b=czOfmgnDJbsi601T1DNuzWUDNGIhs3nu6YXa9of1eJrUfkuv6wf4nvjN2qaY3QOJwMwEwh4m1n243ZMosob5cLx/x0ik9C4HzLJLf/UCBFClR/upRe8zc+R5OHwldWZVpjpEbxcKUmqawEXG3aDP00lgBlp29+WsuDQnL4GY1/Q=
+	t=1710829956; cv=none; b=My+OvVUW9GAa+kHqY2vGCZm/qD63mpwDdNOSG85SXQZ23E8w9iklOv7rIohfMEBP+RPDMUkSN4A7QTnxn56fBIz+xF+pbEOzNYpQX0Z6Mwob4WZocwopg4ZeQXVbqc3mEyRKTw5ZAR55wCh7ftZftVZEIh2AyzcYRQIhcPr54Ss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1710829956; c=relaxed/simple;
-	bh=g/F/uSB80Kmdz2xmcZ9fhA6lsdgQP0M3skp+uddabjw=;
+	bh=ZZwfBq58lOo0qbSS2ix7UcSEpSP7RIoFTyDOAnZBzUQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=q+zNO7BmQ8sYf/Rc8n0tKg7YT2oQ9H4OW8WgaygOLgdtadWnngtgZHMJ2sTdck7oOOASoL7CyasvDu54lbF3iElMaDKzcyB8l1JDe/r2pGT6l18G17J60wg8Krn7rXTmn6BZEa0lf4Pxwvr2fDYb66lAKX8EZO9mlhx6zny3Heg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=OakVmdOt; arc=none smtp.client-ip=68.232.139.117
+	 MIME-Version; b=oNIz2rC0FCPZshQ0sIxFmRMCc4FIITQDc3FAOl/BvynzjQnHOHGblJO4y9iGmunfVRJL71wzD4z2QodPNkvU/qaaavn4pC2yftNYcnJzpi+weH3ocBZYyYAslPrAUGHLgLeIvaM2QqJncEazF/tEL8cMBR1ydIWQeFQM2/N6r5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=ANLP1RxT; arc=none smtp.client-ip=139.138.36.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="OakVmdOt"
+	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="ANLP1RxT"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
   t=1710829954; x=1742365954;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=g/F/uSB80Kmdz2xmcZ9fhA6lsdgQP0M3skp+uddabjw=;
-  b=OakVmdOteelyhTVYj+N8DiKtv96F4lbN+qIvWOEr9mBBuypCcQmBVHLb
-   dWNuJLI8erE9DL2ZCsivQjkvQHaghft1fQ6xk6KI07Mvon2iAxj7OvZhz
-   WN1QJS1bE59M8OcQj8fgddf32CvDfQumeUmYBvIO+LzueDon5NHCboR2B
-   XICC3O7tbiOtnMvRmxpCbG2Z+GN3TSSl7gZNp+ec8hUB7xbeI0E1QGq2E
-   vZi5hokg6lKi5mQKk/2anGpX5sT1gQM0VyEwO2wfVn9ZwHRDO/euwCp7m
-   TFMW77Z3QApnM1KVV2Qa5aytqcJ5Ifm5DOmb5RyasRZbTW6svmLTsGAau
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11017"; a="152971378"
+  bh=ZZwfBq58lOo0qbSS2ix7UcSEpSP7RIoFTyDOAnZBzUQ=;
+  b=ANLP1RxTEghGGhcXp1U0iA2Xh1OUvpl/BxlS+zauPtZhRmxhFo4JaFJp
+   E4dHYquXI/NGh/ZVsuJd7fmZckwyR4ryvmWNx25Yitbf6OXUw91Vh0hKR
+   zulL0EDLlsXjlfT/BJY/FcvFipuUQOVvDVjeW21TbIZMjmqkij58WpaSO
+   6D/MBJJSFWWAWtKpNBl3Ph0QaeGsGkxPIvv9T4KjlurY9D2gFPhWqyb3o
+   w2MgBnuWxP+NmlabsTaUHkE8g2td+0cRZUJjjdAjRm7Y6U3WVyYfM64hl
+   mmyxEMYgJPlonQcvHr0kLFRC0PGEQlBQbkJF7RwnRFkVCgJ5PH+qqwaG3
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,11017"; a="140310363"
 X-IronPort-AV: E=Sophos;i="6.07,136,1708354800"; 
-   d="scan'208";a="152971378"
-Received: from unknown (HELO oym-r4.gw.nic.fujitsu.com) ([210.162.30.92])
-  by esa4.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2024 15:32:24 +0900
+   d="scan'208";a="140310363"
+Received: from unknown (HELO oym-r1.gw.nic.fujitsu.com) ([210.162.30.89])
+  by esa10.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2024 15:32:30 +0900
 Received: from oym-m2.gw.nic.fujitsu.com (oym-nat-oym-m2.gw.nic.fujitsu.com [192.168.87.59])
-	by oym-r4.gw.nic.fujitsu.com (Postfix) with ESMTP id F167B141218;
-	Tue, 19 Mar 2024 15:32:21 +0900 (JST)
-Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
-	by oym-m2.gw.nic.fujitsu.com (Postfix) with ESMTP id 310D9BF4B8;
-	Tue, 19 Mar 2024 15:32:21 +0900 (JST)
+	by oym-r1.gw.nic.fujitsu.com (Postfix) with ESMTP id 742D7D4805;
+	Tue, 19 Mar 2024 15:32:28 +0900 (JST)
+Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
+	by oym-m2.gw.nic.fujitsu.com (Postfix) with ESMTP id AA7C8BF4B7;
+	Tue, 19 Mar 2024 15:32:27 +0900 (JST)
 Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-	by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id BE4C420093269;
-	Tue, 19 Mar 2024 15:32:20 +0900 (JST)
+	by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id 472E0227ABA;
+	Tue, 19 Mar 2024 15:32:27 +0900 (JST)
 Received: from localhost.localdomain (unknown [10.167.226.45])
-	by edo.cn.fujitsu.com (Postfix) with ESMTP id 4AE611A006D;
-	Tue, 19 Mar 2024 14:32:20 +0800 (CST)
+	by edo.cn.fujitsu.com (Postfix) with ESMTP id F14851A006E;
+	Tue, 19 Mar 2024 14:32:26 +0800 (CST)
 From: Li Zhijian <lizhijian@fujitsu.com>
 To: linux-kernel@vger.kernel.org
 Cc: Li Zhijian <lizhijian@fujitsu.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH v2 02/25] scsi: aic94xx: Convert sprintf() family to sysfs_emit() family
-Date: Tue, 19 Mar 2024 14:31:09 +0800
-Message-Id: <20240319063132.1588443-2-lizhijian@fujitsu.com>
+Subject: [PATCH v2 21/25] scsi: scsi_transport_fc: Convert sprintf() family to sysfs_emit() family (part 1)
+Date: Tue, 19 Mar 2024 14:31:28 +0800
+Message-Id: <20240319063132.1588443-21-lizhijian@fujitsu.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240319063132.1588443-1-lizhijian@fujitsu.com>
 References: <20240319063132.1588443-1-lizhijian@fujitsu.com>
@@ -69,13 +69,13 @@ X-TM-AS-GCONF: 00
 X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-28260.005
 X-TM-AS-User-Approved-Sender: Yes
 X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-28260.005
-X-TMASE-Result: 10--7.640100-10.000000
-X-TMASE-MatchedRID: pfKaEBrCt3IbO59FK9BdmJiHtCNYjckMjkDrBOJwwnQ8JmmJxjOaQXVX
+X-TMASE-Result: 10--11.924400-10.000000
+X-TMASE-MatchedRID: yLHOPqhdQyUbO59FK9BdmJiHtCNYjckMjkDrBOJwwnQ8JmmJxjOaQXVX
 	Q3/qdw5yDiqGKKMcNgRhoUIS5GGeEs1HQN/TlJ3ZOIQ9GP2P2u/iwxLjNbuPBWO0yVK/5LmcQiM
-	ingSlKoKMx5HzfQifbPE41045MrHXFDCN/1eC4ASdVNZaI2n6/8E5XPQnBzGXq8KsbROd9VSArq
-	oIZrVn15fzUkBpc0721RVFWxUguUH+0jQufZU6FIDCiwMF64/BEOqYpzM+g1kYiM67YVe6ChhBv
-	WgZlX+84vM1YF6AJbbCCfuIMF6xLSAHAopEd76vphClXDiKKk8nzRrxP+Bp1zE3Xi452DCPieKR
-	5xnjQ+4nnWiTJUlIYg==
+	ingSlKoKMx5HzfQifbPE41045MrHXFDCN/1eC4ASdVNZaI2n6/2BKRtg9pHEawLkNMQzGl5B+Kr
+	WCPbERPznpYPqS6jzxXnkq6nWMKnzODTJNlBAw6AXtykVcrvpNmZiw53dqSN///os1Fav+xrfb6
+	KcK2lmLexIBjF6bqxGjPXfA/IMu+5H0YXYnbGozFEUknJ/kEl7dB/CxWTRRu25FeHtsUoHu5Wbu
+	/jwBRoelu+DxdpZgrjrmCnSPLeFBDseBWySHnpwfwV6sBPR0lg==
 X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 
 Per filesystems/sysfs.rst, show() should only use sysfs_emit()
@@ -101,54 +101,125 @@ This is a part of the work "Fix coccicheck device_attr_show warnings"[1]
 Split them per subsystem so that the maintainer can review it easily
 [1] https://lore.kernel.org/lkml/20240116041129.3937800-1-lizhijian@fujitsu.com/
 ---
- drivers/scsi/aic94xx/aic94xx_init.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ drivers/scsi/scsi_transport_fc.c | 34 ++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 8a3340d8d7ad..39d1617834de 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -264,8 +264,7 @@ static ssize_t asd_show_dev_rev(struct device *dev,
- 				struct device_attribute *attr, char *buf)
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index b04075f19445..3335c31772e1 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -1120,7 +1120,7 @@ show_fc_rport_supported_classes (struct device *dev,
  {
- 	struct asd_ha_struct *asd_ha = dev_to_asd_ha(dev);
--	return snprintf(buf, PAGE_SIZE, "%s\n",
--			asd_dev_rev[asd_ha->revision_id]);
-+	return sysfs_emit(buf, "%s\n", asd_dev_rev[asd_ha->revision_id]);
+ 	struct fc_rport *rport = transport_class_to_rport(dev);
+ 	if (rport->supported_classes == FC_COS_UNSPECIFIED)
+-		return snprintf(buf, 20, "unspecified\n");
++		return sysfs_emit(buf, "unspecified\n");
+ 	return get_fc_cos_names(rport->supported_classes, buf);
  }
- static DEVICE_ATTR(aic_revision, S_IRUGO, asd_show_dev_rev, NULL);
- 
-@@ -273,7 +272,7 @@ static ssize_t asd_show_dev_bios_build(struct device *dev,
- 				       struct device_attribute *attr,char *buf)
- {
- 	struct asd_ha_struct *asd_ha = dev_to_asd_ha(dev);
--	return snprintf(buf, PAGE_SIZE, "%d\n", asd_ha->hw_prof.bios.bld);
-+	return sysfs_emit(buf, "%d\n", asd_ha->hw_prof.bios.bld);
+ static FC_DEVICE_ATTR(rport, supported_classes, S_IRUGO,
+@@ -1215,21 +1215,21 @@ show_fc_rport_roles (struct device *dev, struct device_attribute *attr,
+ 					FC_WELLKNOWN_PORTID_MASK) {
+ 		switch (rport->port_id & FC_WELLKNOWN_ROLE_MASK) {
+ 		case FC_FPORT_PORTID:
+-			return snprintf(buf, 30, "Fabric Port\n");
++			return sysfs_emit(buf, "Fabric Port\n");
+ 		case FC_FABCTLR_PORTID:
+-			return snprintf(buf, 30, "Fabric Controller\n");
++			return sysfs_emit(buf, "Fabric Controller\n");
+ 		case FC_DIRSRVR_PORTID:
+-			return snprintf(buf, 30, "Directory Server\n");
++			return sysfs_emit(buf, "Directory Server\n");
+ 		case FC_TIMESRVR_PORTID:
+-			return snprintf(buf, 30, "Time Server\n");
++			return sysfs_emit(buf, "Time Server\n");
+ 		case FC_MGMTSRVR_PORTID:
+-			return snprintf(buf, 30, "Management Server\n");
++			return sysfs_emit(buf, "Management Server\n");
+ 		default:
+-			return snprintf(buf, 30, "Unknown Fabric Entity\n");
++			return sysfs_emit(buf, "Unknown Fabric Entity\n");
+ 		}
+ 	} else {
+ 		if (rport->roles == FC_PORT_ROLE_UNKNOWN)
+-			return snprintf(buf, 20, "unknown\n");
++			return sysfs_emit(buf, "unknown\n");
+ 		return get_fc_port_roles_names(rport->roles, buf);
+ 	}
  }
- static DEVICE_ATTR(bios_build, S_IRUGO, asd_show_dev_bios_build, NULL);
+@@ -1283,7 +1283,7 @@ show_fc_rport_port_state(struct device *dev,
+ 	if (!name)
+ 		return -EINVAL;
  
-@@ -281,7 +280,7 @@ static ssize_t asd_show_dev_pcba_sn(struct device *dev,
- 				    struct device_attribute *attr, char *buf)
- {
- 	struct asd_ha_struct *asd_ha = dev_to_asd_ha(dev);
--	return snprintf(buf, PAGE_SIZE, "%s\n", asd_ha->hw_prof.pcba_sn);
-+	return sysfs_emit(buf, "%s\n", asd_ha->hw_prof.pcba_sn);
- }
- static DEVICE_ATTR(pcba_sn, S_IRUGO, asd_show_dev_pcba_sn, NULL);
- 
-@@ -452,9 +451,9 @@ static ssize_t asd_show_update_bios(struct device *dev,
- 	if (asd_ha->bios_status != FLASH_IN_PROGRESS)
- 		asd_ha->bios_status = FLASH_OK;
- 
--	return snprintf(buf, PAGE_SIZE, "status=%x %s\n",
--			flash_error_table[i].err_code,
--			flash_error_table[i].reason);
-+	return sysfs_emit(buf, "status=%x %s\n",
-+			  flash_error_table[i].err_code,
-+			  flash_error_table[i].reason);
+-	return snprintf(buf, 20, "%s\n", name);
++	return sysfs_emit(buf, "%s\n", name);
  }
  
- static DEVICE_ATTR(update_bios, S_IRUGO|S_IWUSR,
+ static FC_DEVICE_ATTR(rport, port_state, 0444 | 0200,
+@@ -1301,8 +1301,8 @@ show_fc_rport_fast_io_fail_tmo (struct device *dev,
+ 	struct fc_rport *rport = transport_class_to_rport(dev);
+ 
+ 	if (rport->fast_io_fail_tmo == -1)
+-		return snprintf(buf, 5, "off\n");
+-	return snprintf(buf, 20, "%d\n", rport->fast_io_fail_tmo);
++		return sysfs_emit(buf, "off\n");
++	return sysfs_emit(buf, "%d\n", rport->fast_io_fail_tmo);
+ }
+ 
+ static ssize_t
+@@ -1662,7 +1662,7 @@ show_fc_vport_roles (struct device *dev, struct device_attribute *attr,
+ 	struct fc_vport *vport = transport_class_to_vport(dev);
+ 
+ 	if (vport->roles == FC_PORT_ROLE_UNKNOWN)
+-		return snprintf(buf, 20, "unknown\n");
++		return sysfs_emit(buf, "unknown\n");
+ 	return get_fc_port_roles_names(vport->roles, buf);
+ }
+ static FC_DEVICE_ATTR(vport, roles, S_IRUGO, show_fc_vport_roles, NULL);
+@@ -1888,7 +1888,7 @@ show_fc_host_supported_classes (struct device *dev,
+ 	struct Scsi_Host *shost = transport_class_to_shost(dev);
+ 
+ 	if (fc_host_supported_classes(shost) == FC_COS_UNSPECIFIED)
+-		return snprintf(buf, 20, "unspecified\n");
++		return sysfs_emit(buf, "unspecified\n");
+ 
+ 	return get_fc_cos_names(fc_host_supported_classes(shost), buf);
+ }
+@@ -1912,7 +1912,7 @@ show_fc_host_supported_speeds (struct device *dev,
+ 	struct Scsi_Host *shost = transport_class_to_shost(dev);
+ 
+ 	if (fc_host_supported_speeds(shost) == FC_PORTSPEED_UNKNOWN)
+-		return snprintf(buf, 20, "unknown\n");
++		return sysfs_emit(buf, "unknown\n");
+ 
+ 	return get_fc_port_speed_names(fc_host_supported_speeds(shost), buf);
+ }
+@@ -1964,7 +1964,7 @@ show_fc_host_speed (struct device *dev,
+ 		i->f->get_host_speed(shost);
+ 
+ 	if (fc_host_speed(shost) == FC_PORTSPEED_UNKNOWN)
+-		return snprintf(buf, 20, "unknown\n");
++		return sysfs_emit(buf, "unknown\n");
+ 
+ 	return get_fc_port_speed_names(fc_host_speed(shost), buf);
+ }
+@@ -1997,7 +1997,7 @@ show_fc_private_host_tgtid_bind_type(struct device *dev,
+ 	name = get_fc_tgtid_bind_type_name(fc_host_tgtid_bind_type(shost));
+ 	if (!name)
+ 		return -EINVAL;
+-	return snprintf(buf, FC_BINDTYPE_MAX_NAMELEN, "%s\n", name);
++	return sysfs_emit(buf, "%s\n", name);
+ }
+ 
+ #define get_list_head_entry(pos, head, member) 		\
+@@ -2106,7 +2106,7 @@ fc_stat_show(const struct device *dev, char *buf, unsigned long offset)
+ 	if (i->f->get_fc_host_stats) {
+ 		stats = (i->f->get_fc_host_stats)(shost);
+ 		if (stats)
+-			ret = snprintf(buf, 20, "0x%llx\n",
++			ret = sysfs_emit(buf, "0x%llx\n",
+ 			      (unsigned long long)*(u64 *)(((u8 *) stats) + offset));
+ 	}
+ 	return ret;
 -- 
 2.29.2
 
