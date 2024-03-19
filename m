@@ -1,60 +1,60 @@
-Received: from esa12.hc1455-7.c3s2.iphmx.com (esa12.hc1455-7.c3s2.iphmx.com [139.138.37.100])
+Received: from esa4.hc1455-7.c3s2.iphmx.com (esa4.hc1455-7.c3s2.iphmx.com [68.232.139.117])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2FBD7CF30;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 176447CF39;
 	Tue, 19 Mar 2024 06:32:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=139.138.37.100
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.139.117
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710829959; cv=none; b=SfHo/cy5qtdzQ6t6QPTvaQPiCtlyhigIcFmqL1nGFn4x3iwmwW+Bytu3tGll98hH0HHGKKyv8m5O9toz3UJJ0qxEVqPQhbtOgcwKXqIHHSE8RCygy30XsRiCUC2TCAubvaNgXDPuzWP5/KBu2Xgcr3q2og2ErnAjD5qFeCplPjo=
+	t=1710829959; cv=none; b=XFJW+JSJWrjpjlt1rjGZtsAKv0DzGXk0EEqZHXpeUDOMHuBBex7bk/PEKljXDBAdIWSQOrv5fPYLy6OQNpbY4zs45c6vEWq94y1/XrFub4en7PGotIBS+rlI2EmQP8cjVhUCEcqHo1apdPEsObp979EIc+Vxc6ldWpQ1sbnKVNA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1710829959; c=relaxed/simple;
-	bh=It5Zxc5LZMCakogfZklJFik4nouNeq8Wa514XlZZazY=;
+	bh=IbSVMgZx41kP9mucdGRkZ+TwMkWR19uh07az1NIR6E0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=pJAlbmbQyhtW28+85ZShyPwcjcB1Ac6WGGnTZ6vjtN1uweJ3QRuLZRBUeo/8ghwRQC9f0rYtZVj8V91EuLfsznbjSD/El+yTJEleZbn5n4oJ3xp2ze2CoLz/rDQoKOIrIkJzMDatledQXKONB+YR2kz6bJNLFLyiOQh3HuMAEMY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=bweHafBJ; arc=none smtp.client-ip=139.138.37.100
+	 MIME-Version; b=AZNWG1PX2PX/BInT4pxm6vAi28NYaRtohglxDhFccnEHwLO3bQvvcdPj0MIh+nPTTKC2gxlJh+8GBHw0xR2rQuOTW6Y00EfcM08aI0VW/mz4sM1TDn+nBMqQB9ofIl0k6lCagoLx5cxDkVokOwJJoZ67nj6QnGDERoX6Sn2NNRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=kgMSsekE; arc=none smtp.client-ip=68.232.139.117
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="bweHafBJ"
+	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="kgMSsekE"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
-  t=1710829956; x=1742365956;
+  t=1710829957; x=1742365957;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=It5Zxc5LZMCakogfZklJFik4nouNeq8Wa514XlZZazY=;
-  b=bweHafBJ/vVIb3+NeJauw5o1A6jyk9w33iXRN/82a69hwNesO+17Umsb
-   nIoxwCfCIRKui1+YAL/OFcyIx9eIlwU0N4I+dxS0HzM0vPWZGTQwoDlmK
-   rUizw6uiXlFOv/Pv5pjNsGJnp3WHdSykVkdgqMg/4dgV9ypaw3DQC7Vnj
-   cDvsw2YsFQvE3k6Yw7kupHbVxyKbx+1c0RlrgJZACVWPOJplvrw8/TGvi
-   lHDmnRmPwlWIdifkjNUbC8u93krm/CCZjKCpCOcGD9bgZ5VNmPV6WB7PA
-   z+Zca5W6rygJ/jGRyMjdMHofsiHqTcg5cl2yfUlGgwYkMLKEdn4MjYNlt
+  bh=IbSVMgZx41kP9mucdGRkZ+TwMkWR19uh07az1NIR6E0=;
+  b=kgMSsekE9Mz8JC8Q8PDCaCpy+eTdYdtNNneBPMrSxBwhMVfw8d2BF74F
+   A/0COCh9uZaeAlrZZNzIYyw9hNlsznVgspUrMoOWZAgt/z9IN6tSAYTsZ
+   LwWjRMw+ruTYPH9FS9LG5P2xwMyRvR7pbdklRi7RTRmGCbgFxr5T1nyMl
+   YOhRR4uC8SmyaEuhljlqss1TfkBquHv8fcB3KsyBeEzsdYzesEEjBBn5I
+   FYuKUu/FS9UylxDiIJMouexLEun/NJ2ehzfVyyt5yM0wHnVWu+tdmm31Y
+   V9nu+zlaXO/9viHDA7vuWH0fFXjGAx0F4WV6dPHQcvBJtQfZ+LWUo+n2n
    A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11017"; a="132006246"
+X-IronPort-AV: E=McAfee;i="6600,9927,11017"; a="152971383"
 X-IronPort-AV: E=Sophos;i="6.07,136,1708354800"; 
-   d="scan'208";a="132006246"
-Received: from unknown (HELO yto-r2.gw.nic.fujitsu.com) ([218.44.52.218])
-  by esa12.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2024 15:32:30 +0900
-Received: from yto-m4.gw.nic.fujitsu.com (yto-nat-yto-m4.gw.nic.fujitsu.com [192.168.83.67])
-	by yto-r2.gw.nic.fujitsu.com (Postfix) with ESMTP id 35BBB2A0DF9;
-	Tue, 19 Mar 2024 15:32:29 +0900 (JST)
-Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
-	by yto-m4.gw.nic.fujitsu.com (Postfix) with ESMTP id 769D8D7B7E;
-	Tue, 19 Mar 2024 15:32:28 +0900 (JST)
+   d="scan'208";a="152971383"
+Received: from unknown (HELO oym-r1.gw.nic.fujitsu.com) ([210.162.30.89])
+  by esa4.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Mar 2024 15:32:25 +0900
+Received: from oym-m2.gw.nic.fujitsu.com (oym-nat-oym-m2.gw.nic.fujitsu.com [192.168.87.59])
+	by oym-r1.gw.nic.fujitsu.com (Postfix) with ESMTP id 64992D4800;
+	Tue, 19 Mar 2024 15:32:23 +0900 (JST)
+Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
+	by oym-m2.gw.nic.fujitsu.com (Postfix) with ESMTP id 84366BF4B8;
+	Tue, 19 Mar 2024 15:32:22 +0900 (JST)
 Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-	by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id 038D0202C976A;
-	Tue, 19 Mar 2024 15:32:27 +0900 (JST)
+	by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id 156AC2288DF;
+	Tue, 19 Mar 2024 15:32:22 +0900 (JST)
 Received: from localhost.localdomain (unknown [10.167.226.45])
-	by edo.cn.fujitsu.com (Postfix) with ESMTP id 8AFFD1A006B;
-	Tue, 19 Mar 2024 14:32:27 +0800 (CST)
+	by edo.cn.fujitsu.com (Postfix) with ESMTP id 9FEB21A006E;
+	Tue, 19 Mar 2024 14:32:21 +0800 (CST)
 From: Li Zhijian <lizhijian@fujitsu.com>
 To: linux-kernel@vger.kernel.org
 Cc: Li Zhijian <lizhijian@fujitsu.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH v2 23/25] scsi: scsi_transport_sas: Convert sprintf() family to sysfs_emit() family (part 1)
-Date: Tue, 19 Mar 2024 14:31:30 +0800
-Message-Id: <20240319063132.1588443-23-lizhijian@fujitsu.com>
+Subject: [PATCH v2 06/25] scsi: fcoe: Convert sprintf() family to sysfs_emit() family (part 2)
+Date: Tue, 19 Mar 2024 14:31:13 +0800
+Message-Id: <20240319063132.1588443-6-lizhijian@fujitsu.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240319063132.1588443-1-lizhijian@fujitsu.com>
 References: <20240319063132.1588443-1-lizhijian@fujitsu.com>
@@ -69,13 +69,16 @@ X-TM-AS-GCONF: 00
 X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-28260.005
 X-TM-AS-User-Approved-Sender: Yes
 X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-28260.005
-X-TMASE-Result: 10--9.676400-10.000000
-X-TMASE-MatchedRID: 6n1zk+md1nUbO59FK9BdmJiHtCNYjckMjkDrBOJwwnQ8JmmJxjOaQXVX
+X-TMASE-Result: 10--9.144400-10.000000
+X-TMASE-MatchedRID: pfKaEBrCt3IbO59FK9BdmJiHtCNYjckMjkDrBOJwwnQ8JmmJxjOaQXVX
 	Q3/qdw5yDiqGKKMcNgRhoUIS5GGeEs1HQN/TlJ3ZOIQ9GP2P2u/iwxLjNbuPBWO0yVK/5LmcQiM
-	ingSlKoKMx5HzfQifbPE41045MrHXFDCN/1eC4ASdVNZaI2n6/2BKRtg9pHEawLkNMQzGl5B+Kr
-	WCPbERPznpYPqS6jzxXnkq6nWMKnxgNUdcYnHhO3aNJ/iTxXCafS0Ip2eEHnz3IzXlXlpamPoLR
-	4+zsDTtD12T7q2dIUvhAYNECNeotsQTOF4spdICumJCBGjERTgkI5TbtbsRyA==
+	ingSlKoKMx5HzfQifbPE41045MrHXFDCN/1eC4ASdVNZaI2n6/8E5XPQnBzGXq8KsbROd9VSArq
+	oIZrVn10Bh0sVevfs+KARHumklBHdgNUdcYnHhO869emDs42ddJ1hCPLkD1Z0elQy/uI/kRRhBv
+	WgZlX+84vM1YF6AJbbCCfuIMF6xLSAHAopEd76vDgB4GwJOR3Dpx/3g93ShNJLNK9Jps9Vaf+w/
+	hpgGsH/X1yytYt1jVw==
 X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
+
+This focuses on abused cases in macros
 
 Per filesystems/sysfs.rst, show() should only use sysfs_emit()
 or sysfs_emit_at() when formatting the value to be returned to user space.
@@ -100,58 +103,161 @@ This is a part of the work "Fix coccicheck device_attr_show warnings"[1]
 Split them per subsystem so that the maintainer can review it easily
 [1] https://lore.kernel.org/lkml/20240116041129.3937800-1-lizhijian@fujitsu.com/
 ---
- drivers/scsi/scsi_transport_sas.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/fcoe/fcoe_sysfs.c | 82 +++++++++++++++++-----------------
+ 1 file changed, 41 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index d704c484a251..baf2aaf361d2 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -522,7 +522,7 @@ show_sas_device_type(struct device *dev,
- 	struct sas_phy *phy = transport_class_to_phy(dev);
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index 46a2f7f0669f..2baa1d6456fc 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -134,7 +134,7 @@ static int fcoe_fcf_set_dev_loss_tmo(struct fcoe_fcf_device *fcf,
+ struct device_attribute device_attr_fcoe_##_prefix##_##_name =	\
+ 	__ATTR(_name, _mode, _show, _store)
  
- 	if (!phy->identify.device_type)
--		return snprintf(buf, 20, "none\n");
-+		return sysfs_emit(buf, "none\n");
- 	return get_sas_device_type_names(phy->identify.device_type, buf);
- }
- static DEVICE_ATTR(device_type, S_IRUGO, show_sas_device_type, NULL);
-@@ -569,7 +569,7 @@ show_sas_phy_enable(struct device *dev, struct device_attribute *attr,
- {
- 	struct sas_phy *phy = transport_class_to_phy(dev);
- 
--	return snprintf(buf, 20, "%d\n", phy->enabled);
-+	return sysfs_emit(buf, "%d\n", phy->enabled);
- }
- 
- static DEVICE_ATTR(enable, S_IRUGO | S_IWUSR, show_sas_phy_enable,
-@@ -1177,7 +1177,7 @@ show_sas_rphy_device_type(struct device *dev,
- 	struct sas_rphy *rphy = transport_class_to_rphy(dev);
- 
- 	if (!rphy->identify.device_type)
--		return snprintf(buf, 20, "none\n");
-+		return sysfs_emit(buf, "none\n");
- 	return get_sas_device_type_names(
- 			rphy->identify.device_type, buf);
- }
-@@ -1199,7 +1199,7 @@ show_sas_rphy_enclosure_identifier(struct device *dev,
- 	error = i->f->get_enclosure_identifier(rphy, &identifier);
- 	if (error)
- 		return error;
--	return sprintf(buf, "0x%llx\n", (unsigned long long)identifier);
-+	return sysfs_emit(buf, "0x%llx\n", (unsigned long long)identifier);
+-#define fcoe_ctlr_show_function(field, format_string, sz, cast)	\
++#define fcoe_ctlr_show_function(field, format_string, cast)	\
+ static ssize_t show_fcoe_ctlr_device_##field(struct device *dev, \
+ 					    struct device_attribute *attr, \
+ 					    char *buf)			\
+@@ -142,11 +142,11 @@ static ssize_t show_fcoe_ctlr_device_##field(struct device *dev, \
+ 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);		\
+ 	if (ctlr->f->get_fcoe_ctlr_##field)				\
+ 		ctlr->f->get_fcoe_ctlr_##field(ctlr);			\
+-	return snprintf(buf, sz, format_string,				\
+-			cast fcoe_ctlr_##field(ctlr));			\
++	return sysfs_emit(buf, format_string,				\
++			  cast fcoe_ctlr_##field(ctlr));		\
  }
  
- static SAS_DEVICE_ATTR(rphy, enclosure_identifier, S_IRUGO,
-@@ -1218,7 +1218,7 @@ show_sas_rphy_bay_identifier(struct device *dev,
- 	val = i->f->get_bay_identifier(rphy);
- 	if (val < 0)
- 		return val;
--	return sprintf(buf, "%d\n", val);
-+	return sysfs_emit(buf, "%d\n", val);
+-#define fcoe_fcf_show_function(field, format_string, sz, cast)	\
++#define fcoe_fcf_show_function(field, format_string, cast)	\
+ static ssize_t show_fcoe_fcf_device_##field(struct device *dev,	\
+ 					   struct device_attribute *attr, \
+ 					   char *buf)			\
+@@ -155,55 +155,55 @@ static ssize_t show_fcoe_fcf_device_##field(struct device *dev,	\
+ 	struct fcoe_ctlr_device *ctlr = fcoe_fcf_dev_to_ctlr_dev(fcf);	\
+ 	if (ctlr->f->get_fcoe_fcf_##field)				\
+ 		ctlr->f->get_fcoe_fcf_##field(fcf);			\
+-	return snprintf(buf, sz, format_string,				\
+-			cast fcoe_fcf_##field(fcf));			\
++	return sysfs_emit(buf, format_string,				\
++			  cast fcoe_fcf_##field(fcf));			\
  }
  
- static SAS_DEVICE_ATTR(rphy, bay_identifier, S_IRUGO,
+-#define fcoe_ctlr_private_show_function(field, format_string, sz, cast)	\
++#define fcoe_ctlr_private_show_function(field, format_string, cast)	\
+ static ssize_t show_fcoe_ctlr_device_##field(struct device *dev, \
+ 					    struct device_attribute *attr, \
+ 					    char *buf)			\
+ {									\
+ 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);		\
+-	return snprintf(buf, sz, format_string, cast fcoe_ctlr_##field(ctlr)); \
++	return sysfs_emit(buf, format_string, cast fcoe_ctlr_##field(ctlr)); \
+ }
+ 
+-#define fcoe_fcf_private_show_function(field, format_string, sz, cast)	\
++#define fcoe_fcf_private_show_function(field, format_string, cast)	\
+ static ssize_t show_fcoe_fcf_device_##field(struct device *dev,	\
+ 					   struct device_attribute *attr, \
+ 					   char *buf)			\
+ {								\
+ 	struct fcoe_fcf_device *fcf = dev_to_fcf(dev);			\
+-	return snprintf(buf, sz, format_string, cast fcoe_fcf_##field(fcf)); \
++	return sysfs_emit(buf, format_string, cast fcoe_fcf_##field(fcf)); \
+ }
+ 
+-#define fcoe_ctlr_private_rd_attr(field, format_string, sz)		\
+-	fcoe_ctlr_private_show_function(field, format_string, sz, )	\
++#define fcoe_ctlr_private_rd_attr(field, format_string)		\
++	fcoe_ctlr_private_show_function(field, format_string, )	\
+ 	static FCOE_DEVICE_ATTR(ctlr, field, S_IRUGO,			\
+ 				show_fcoe_ctlr_device_##field, NULL)
+ 
+-#define fcoe_ctlr_rd_attr(field, format_string, sz)			\
+-	fcoe_ctlr_show_function(field, format_string, sz, )		\
++#define fcoe_ctlr_rd_attr(field, format_string)			\
++	fcoe_ctlr_show_function(field, format_string, )		\
+ 	static FCOE_DEVICE_ATTR(ctlr, field, S_IRUGO,			\
+ 				show_fcoe_ctlr_device_##field, NULL)
+ 
+-#define fcoe_fcf_rd_attr(field, format_string, sz)			\
+-	fcoe_fcf_show_function(field, format_string, sz, )		\
++#define fcoe_fcf_rd_attr(field, format_string)			\
++	fcoe_fcf_show_function(field, format_string, )		\
+ 	static FCOE_DEVICE_ATTR(fcf, field, S_IRUGO,			\
+ 				show_fcoe_fcf_device_##field, NULL)
+ 
+-#define fcoe_fcf_private_rd_attr(field, format_string, sz)		\
+-	fcoe_fcf_private_show_function(field, format_string, sz, )	\
++#define fcoe_fcf_private_rd_attr(field, format_string)		\
++	fcoe_fcf_private_show_function(field, format_string, )	\
+ 	static FCOE_DEVICE_ATTR(fcf, field, S_IRUGO,			\
+ 				show_fcoe_fcf_device_##field, NULL)
+ 
+-#define fcoe_ctlr_private_rd_attr_cast(field, format_string, sz, cast)	\
+-	fcoe_ctlr_private_show_function(field, format_string, sz, (cast)) \
++#define fcoe_ctlr_private_rd_attr_cast(field, format_string, cast)	\
++	fcoe_ctlr_private_show_function(field, format_string, (cast)) \
+ 	static FCOE_DEVICE_ATTR(ctlr, field, S_IRUGO,			\
+ 				show_fcoe_ctlr_device_##field, NULL)
+ 
+-#define fcoe_fcf_private_rd_attr_cast(field, format_string, sz, cast)	\
+-	fcoe_fcf_private_show_function(field, format_string, sz, (cast)) \
++#define fcoe_fcf_private_rd_attr_cast(field, format_string, cast)	\
++	fcoe_fcf_private_show_function(field, format_string, (cast)) \
+ 	static FCOE_DEVICE_ATTR(fcf, field, S_IRUGO,			\
+ 				show_fcoe_fcf_device_##field, NULL)
+ 
+@@ -489,30 +489,30 @@ store_private_fcoe_ctlr_fcf_dev_loss_tmo(struct device *dev,
+ 	mutex_unlock(&ctlr->lock);
+ 	return count;
+ }
+-fcoe_ctlr_private_show_function(fcf_dev_loss_tmo, "%d\n", 20, );
++fcoe_ctlr_private_show_function(fcf_dev_loss_tmo, "%d\n", );
+ static FCOE_DEVICE_ATTR(ctlr, fcf_dev_loss_tmo, S_IRUGO | S_IWUSR,
+ 			show_fcoe_ctlr_device_fcf_dev_loss_tmo,
+ 			store_private_fcoe_ctlr_fcf_dev_loss_tmo);
+ 
+ /* Link Error Status Block (LESB) */
+-fcoe_ctlr_rd_attr(link_fail, "%u\n", 20);
+-fcoe_ctlr_rd_attr(vlink_fail, "%u\n", 20);
+-fcoe_ctlr_rd_attr(miss_fka, "%u\n", 20);
+-fcoe_ctlr_rd_attr(symb_err, "%u\n", 20);
+-fcoe_ctlr_rd_attr(err_block, "%u\n", 20);
+-fcoe_ctlr_rd_attr(fcs_error, "%u\n", 20);
+-
+-fcoe_fcf_private_rd_attr_cast(fabric_name, "0x%llx\n", 20, unsigned long long);
+-fcoe_fcf_private_rd_attr_cast(switch_name, "0x%llx\n", 20, unsigned long long);
+-fcoe_fcf_private_rd_attr(priority, "%u\n", 20);
+-fcoe_fcf_private_rd_attr(fc_map, "0x%x\n", 20);
+-fcoe_fcf_private_rd_attr(vfid, "%u\n", 20);
+-fcoe_fcf_private_rd_attr(mac, "%pM\n", 20);
+-fcoe_fcf_private_rd_attr(fka_period, "%u\n", 20);
+-fcoe_fcf_rd_attr(selected, "%u\n", 20);
+-fcoe_fcf_rd_attr(vlan_id, "%u\n", 20);
+-
+-fcoe_fcf_private_show_function(dev_loss_tmo, "%d\n", 20, )
++fcoe_ctlr_rd_attr(link_fail, "%u\n");
++fcoe_ctlr_rd_attr(vlink_fail, "%u\n");
++fcoe_ctlr_rd_attr(miss_fka, "%u\n");
++fcoe_ctlr_rd_attr(symb_err, "%u\n");
++fcoe_ctlr_rd_attr(err_block, "%u\n");
++fcoe_ctlr_rd_attr(fcs_error, "%u\n");
++
++fcoe_fcf_private_rd_attr_cast(fabric_name, "0x%llx\n", unsigned long long);
++fcoe_fcf_private_rd_attr_cast(switch_name, "0x%llx\n", unsigned long long);
++fcoe_fcf_private_rd_attr(priority, "%u\n");
++fcoe_fcf_private_rd_attr(fc_map, "0x%x\n");
++fcoe_fcf_private_rd_attr(vfid, "%u\n");
++fcoe_fcf_private_rd_attr(mac, "%pM\n");
++fcoe_fcf_private_rd_attr(fka_period, "%u\n");
++fcoe_fcf_rd_attr(selected, "%u\n");
++fcoe_fcf_rd_attr(vlan_id, "%u\n");
++
++fcoe_fcf_private_show_function(dev_loss_tmo, "%d\n", )
+ static ssize_t
+ store_fcoe_fcf_dev_loss_tmo(struct device *dev, struct device_attribute *attr,
+ 			    const char *buf, size_t count)
 -- 
 2.29.2
 
