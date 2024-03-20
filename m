@@ -1,28 +1,48 @@
-Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id DA70910FA;
-	Wed, 20 Mar 2024 16:58:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AE424436E;
+	Wed, 20 Mar 2024 17:45:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710953930; cv=none; b=kn2dJGJagOwlPaP3gEolDBITZTCk10IQTzBOBOYMkVzIRqo2i59zF9qVCmDDdVIMxqoIxIxFEr9R5mM3ThhrSNKrXoBwGZ5YwIcp3oa1a1LRJh2u+Z8OgiWD3CAfbGIO340s/wWBG024afFcvqisZN1pzJ3n+qbel/i1UiW5w1A=
+	t=1710956715; cv=none; b=oApJvS04FLb7OY5QQq+gxtvgIBCyntmm/9qnT9aQNVD5La5eyfjtSf7jitnXS3DICR2wzbQ+B7xWp9Eagabl/1cLPYDWqVYpP2KB0evSRqwtNP4F3MN4jqRsda9aQSu0+NxUncQQNXaGAvi/xlKA7nIcIWN5+eVXtgIQHQfe/00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710953930; c=relaxed/simple;
-	bh=TxQReDTPFeYIzxbmKhjwiCFg5+LQu3KfvGpmrlrOVdU=;
+	s=arc-20240116; t=1710956715; c=relaxed/simple;
+	bh=GJUmMn8O1+0Qgr33lDmKiGfqPuy300EzxWsX5/k8E1A=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WmoMzgAvaE7KJ8UB1GZzr95xI8GY4vOqevzs6fJZ5TB0E6PCt+zLIJyc+lly/IVy7wvstqYJ8jVby9GgRbTh4tR1YRkptGH6/8oN9UcSBy/HvKgL6EwEhfa33fKvpX0WfxNs18JWI9InM6pxpHV2coqKkHJenrHapr2aS97OJrc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=ljodIoNn; arc=none smtp.client-ip=5.252.227.236
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
+	 In-Reply-To:Content-Type; b=tLoiPcFqQDFIpVjvsanfC2bNvcPzmMrJUOT0Weprrcg82R1+XkmPS7tBJWuV3xLicFfta8/cYEXockI9U4FKgPwikX4lrwQWihQmjAuYywSE7K6448GWq2Z6vV0XHTdDaXL6KVhqVZS+sRNvI0VImZu/qsoHZPlz8HElH7Jgf3o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Y79iFE/n; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="ljodIoNn"
-Message-ID: <c2454690-4cb4-41ac-b4f3-b1591ca472e7@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-	s=wetzel-home; t=1710953922;
-	bh=TxQReDTPFeYIzxbmKhjwiCFg5+LQu3KfvGpmrlrOVdU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=ljodIoNnKZ2pjEBGTdKvK6V189Yee7CXKotw6bYdU5ViA/B3hweS4YFx0AM+aEr+I
-	 Ci7eUncg3QPpI9beTqIQZj/mzjbe27LpbHw2sNMZymR/LDz7ZUrwUbCDgmNMcCA3xC
-	 EITpbsuIIbf4E1w6gIWeZhEwIuVWlryhOUegK50c=
-Date: Wed, 20 Mar 2024 17:58:42 +0100
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Y79iFE/n"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4V0GFZ6wZlz6Cnk8y;
+	Wed, 20 Mar 2024 17:45:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:references:content-language:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1710956705; x=1713548706; bh=eBkDCxL+4cfPGdEIHqAohiUW
+	a95UqvI7P/+B3TioUJE=; b=Y79iFE/nVdQz6k4kucX0uOkOSTMIyG9O4XFL5rFv
+	HLZcDtmJDpXDjN+rvTaqkXUc0PTfCXBPreIDB/OF6pGT7hWRcRjub8jLOoiEADON
+	050c3cYXDGvNp0UC/OpxHbEsroWL/wpAJTGVicVcGtWbiSnWoHS/ARTPJ81puMRr
+	kLmrN/6f33c6aOBjOoMbGBaaqhHvdwFTpAJqE+SIK2JPcaqljyQLpEQi4NFvA9Ee
+	VImb6t/RcXst5mIjpoROXCz/JAFM5gp1qmPcswXVk+QFuVJl5oms1BM+mSAPGruy
+	1SuJffyoi5F0nUx36oZv9zHUsbL+jI7Ue5AVor3PXnoc9w==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 4d0ZRzNUMVk4; Wed, 20 Mar 2024 17:45:05 +0000 (UTC)
+Received: from [100.96.154.173] (unknown [104.132.1.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4V0GFX6sRJz6Cnk8t;
+	Wed, 20 Mar 2024 17:45:04 +0000 (UTC)
+Message-ID: <bb98f997-b02b-4af6-8488-cb13f424ac44@acm.org>
+Date: Wed, 20 Mar 2024 10:45:03 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -31,90 +51,27 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v2] scsi: sg: Avoid sg device teardown race
-To: Bart Van Assche <bvanassche@acm.org>, dgilbert@interlog.com
+Content-Language: en-US
+To: Alexander Wetzel <alexander@wetzel-home.de>, dgilbert@interlog.com
 Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org
 References: <20240318175021.22739-1-Alexander@wetzel-home.de>
  <20240320110809.12901-1-Alexander@wetzel-home.de>
  <8b8e5aca-4b97-4662-9ae0-fc36db2436b4@acm.org>
-Content-Language: en-US, de-DE
-From: Alexander Wetzel <alexander@wetzel-home.de>
-In-Reply-To: <8b8e5aca-4b97-4662-9ae0-fc36db2436b4@acm.org>
+ <c2454690-4cb4-41ac-b4f3-b1591ca472e7@wetzel-home.de>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <c2454690-4cb4-41ac-b4f3-b1591ca472e7@wetzel-home.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 20.03.24 16:02, Bart Van Assche wrote:
-> On 3/20/24 04:08, Alexander Wetzel wrote:
->> sg_remove_sfp_usercontext() must not use sg_device_destroy() after
->> calling scsi_device_put().
->>
->> sg_device_destroy() is accessing the parent scsi device request_queue.
->> Which will already be set to NULL when the preceding call to
->> scsi_device_put() removed the last reference to the parent scsi device.
->>
->> The resulting NULL pointer exception will then crash the kernel.
->>
->> Link: 
->> https://lore.kernel.org/r/20240305150509.23896-1-Alexander@wetzel-home.de
->> Cc: <stable@vger.kernel.org>
->> Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
->> ---
->> Changes compared to V1:
->> Reworked the commit message
->>
->> Alexander
->> ---
->>   drivers/scsi/sg.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
->> index 86210e4dd0d3..80e0d1981191 100644
->> --- a/drivers/scsi/sg.c
->> +++ b/drivers/scsi/sg.c
->> @@ -2232,8 +2232,8 @@ sg_remove_sfp_usercontext(struct work_struct *work)
->>               "sg_remove_sfp: sfp=0x%p\n", sfp));
->>       kfree(sfp);
->> -    scsi_device_put(sdp->device);
->>       kref_put(&sdp->d_ref, sg_device_destroy);
->> +    scsi_device_put(sdp->device);
->>       module_put(THIS_MODULE);
->>   }
-> 
-> Is it guaranteed that the above kref_put() call is the last kref_put()
-> call on sdp->d_ref? If not, how about inserting code between the
-> kref_put() call and the scsi_device_put() call that waits until
-> sg_device_destroy() has finished?
-> 
+On 3/20/24 09:58, Alexander Wetzel wrote:
+> While I'm not familiar with the code, I'm pretty sure kref_put() is 
+> removing the last reference to d_ref here. Anything else would be odd, 
+> based on my - really sketchy - understanding of the flows.
 
-While I'm not familiar with the code, I'm pretty sure kref_put() is 
-removing the last reference to d_ref here. Anything else would be odd, 
-based on my - really sketchy - understanding of the flows.
+Please document this by adding a WARN_ON_ONCE() statement before the
+kref_put() call that checks that the refcount equals one.
 
-Also waiting for another process looks wrong. I guess we would then have 
-to delay the call to sg_release().
+Thanks,
 
-And at least for me it's always the last d_ref reference.
-I changed the section to:
-
-         kref_put(&sdp->d_ref, sg_device_destroy);
-         printk("XXXX scsi=%u, dref=%u\n", \
-		kref_read(&sdp->device->sdev_gendev.kobj.kref), \
-		kref_read(&sdp->d_ref));
-         scsi_device_put(sdp->device);
-
-And connected/disconnected my test USB device a few times:
-  XXXX scsi=2, dref=0
-  XXXX scsi=1, dref=0
-  XXXX scsi=2, dref=0
-  XXXX scsi=1, dref=0
-  XXXX scsi=1, dref=0
-  XXXX scsi=1, dref=0
-  XXXX scsi=1, dref=0
-  XXXX scsi=1, dref=0
-  XXXX scsi=1, dref=0
-  XXXX scsi=1, dref=0
-
-(scsi=1 are the cases which would cause the NULL pointer exceptions with 
-the unpatched driver.)
-
-Alexander
+Bart.
 
