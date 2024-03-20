@@ -1,137 +1,121 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A68414A96
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Mar 2024 06:58:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC021642B;
+	Wed, 20 Mar 2024 08:08:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710917884; cv=none; b=UsVyvVliy5FU/HoAP4sB58nIpm7CL2//+/bdUjfBqcH81BWZsoFAd+ixJ72J6QzBR039C88xskqtSFKG0t3yIw7PmNhAEUb3DQxT/HbZZ/vPxN6akENm1HYsHCnoLoDvUXOGGbayGoSggT3VkriDUyR7t87Az6/3t587M3FeNC8=
+	t=1710922137; cv=none; b=XmXdtldK/cbSHIzOoqKPYqnIaalfFFlu9tRzrKIAVjEBZGYb7Sk+wkRC8z4Yb4T/ntTecc64hMnjcx1CPta5rSEvKjy86UMn6C2r4qlCpYAJCcDXP+I+Mh+VhySmaaibuDA63XXJAscUAcLgjGQJCRNwm3Pgz3p7GynNRxlv+CE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710917884; c=relaxed/simple;
-	bh=DzbL2ta32r3fZb3poZ+ecdauASwMD6F+D73N/oO6EFM=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=oZGxs1Q0pmv72t6PoEQv9I0+0XA0CbUw7Sw7DGmuTC+yyf90BzEFq/j3EG3hw5JTIJVgCkZ+KpU6GXcHcocaiVxO/5aIs7Uu6sqsLTBkyccYphSHPija3rpUKZnnSh7Jiudi7Oe4c0slc7W6cmaM6tFQGxUd0aH6AJKhx4D6imc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F5s+ppR9; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F5s+ppR9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1710917881;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-	bh=ja+Ql3ZN56r0tluKaw1RJ1px6iHKRsoQ+ikPDhL9tZo=;
-	b=F5s+ppR9Jt9ZdxCb1R1ucJ5jgSucKELjKV3E71K+T9xroWsbU/jksNM+m0H8lUeE3EXvpD
-	ciD5DsOPVlxUih6AmuWRG2ECNsxMkZNs04MYzaSDbv5ggOBxVaFnN46MoQQgQucep8Zg4w
-	RZECb/aayrWwQOdaBy71vHod2FHQ82Y=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-568-pim0ekCHOma6qubdDp326A-1; Wed, 20 Mar 2024 02:58:00 -0400
-X-MC-Unique: pim0ekCHOma6qubdDp326A-1
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-29df3d9c644so4142788a91.1
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Mar 2024 23:58:00 -0700 (PDT)
+	s=arc-20240116; t=1710922137; c=relaxed/simple;
+	bh=YHYOadkmOipUMw5vHmVozyaiYQFe3Wgatl1WnyHvUMU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=KZLpH1mVvxKvc8N3qDJ8xiuCksBVi+0Talor+EErEkzSIYrFH5CIlXiQ1Rok6z631IrE7oIohD49qGZD+c3XlImH2ejwv28RfB/+zHcxLxucxZ02VOtKKm1IWgmO7okaOwm7kaJjBuRoK55l18OPRd5vF3gdjg94d1se1kTerBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-609f359b7b1so75592957b3.1;
+        Wed, 20 Mar 2024 01:08:56 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710917878; x=1711522678;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ja+Ql3ZN56r0tluKaw1RJ1px6iHKRsoQ+ikPDhL9tZo=;
-        b=NcqaOvFbW3m9fKOs3MV9qQrmvU9bD7jHPJNTdtCGo5HnudxZw9WoCQDZclYRhVejCP
-         XmbS35SuOnQba9nz6PshvmoD+jdlRlj4JwerC+ZE5Fp2D2Z4/rj+b7pZXmnbqOQDJC/u
-         Re2/1J2aReiOy7Og30XTQWuKHlVF5G1wGl/3dFHzros7S4DBoL+H14IGF2FhDPtnhbVI
-         0N0BYEFe+7y0qskTirm0WPaRfRafhkI8MKMnZTt2mzWZQ4ztDk6r9saDl/PltmHPv9b5
-         ohWpMhae0v8thpBbyxCw1OF6zh+XZp8XVxN9qwqcRSdN8RdDhCqDlCSHq2LwyDq0PdNK
-         MjMw==
-X-Forwarded-Encrypted: i=1; AJvYcCWo6H4jh6Ry5Rb/CWv2AgEkJhcS6EPlkw/iucwxBpdH/YaSyKCWQhRKnFYU6oKuKbGRM43kPrIdlE43nqy9F3qNEXOCKFPuT5ko5w==
-X-Gm-Message-State: AOJu0YzVp2vuaeb4adrfhcPyVe00sd6WlWv+jBUUTxdVTKKoAhyC1Pnt
-	I59n2Juga39gWLSweC3rAonLh/HCT+stfenKSf5MqIzo/fLmTWM2klIlo3J6BnsgRVMC5YxoCab
-	/ekYi281oc2OS1k4NE9CYJPIqaqPRaVf1E0TOntkO3OhXK8lzCaXLBBi57hF1Ya9lpvjiI9aMzb
-	qTKOTZRuGJykzndSGnWPIKSZVNQsIxgqgbodGFRm3U4T4mhLXQJQ==
-X-Received: by 2002:a17:90a:7286:b0:29c:3bed:afb2 with SMTP id e6-20020a17090a728600b0029c3bedafb2mr1236809pjg.7.1710917878546;
-        Tue, 19 Mar 2024 23:57:58 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEMW4uBLzqIz9g1sDiZZ+f4Lg/YiSXun3KgvGkTt5S5aSg+sWMiCrioPZR8AdVw0BsfQj6Hz8nG9SXnhvzUfBo=
-X-Received: by 2002:a17:90a:7286:b0:29c:3bed:afb2 with SMTP id
- e6-20020a17090a728600b0029c3bedafb2mr1236798pjg.7.1710917878231; Tue, 19 Mar
- 2024 23:57:58 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1710922134; x=1711526934;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=UxAjfDS34SkaeqdOsAUG7ZjS13iVv3mgsYNBQbuG+9o=;
+        b=CTT35BJxGjG91jqMkN0Qlmvj17pcrdP6khHdiQuK5K0IfErFPZOY+SSshO3wPsMIIA
+         rjaD+ugB3Tp1v+9ZD/1Zi8B3tL+QATd6ngQAFv6M0Rhhi+fD/altqf4CwcmAFtZdnOYM
+         J1DbsW1aReZJhcgZK+EYPR8zrua9Vi9rItilg82X//Hgdi0Lf8XRmmZ75Jb9xF1BADB7
+         1cHVhJCvGsh3Mgw147U5fMK3oBNs8vjQvDyjehvBFe6Gi1Poa54dmswlI6CVDceXUAQo
+         a0Aul9Z3s79vHc5FmQqQIoyXshldaHxFXuaaDhy14kaGVa2jZwHjs1Pl23C5CQ7YJEWd
+         /wfg==
+X-Forwarded-Encrypted: i=1; AJvYcCWXHxvhYKAMSw7K34XRNChj61bIyZaUf1Sl6JljR6XwAiQLOc3p3CPZ395APJZZzreZMCb3oX3HRqt/JSXAj1+36Ukzq25x+1RDippgnoLSkhdOTTS2n/JMVgPbs+90gbAzPu7viXtEAg==
+X-Gm-Message-State: AOJu0Yze0QXTThUOlTqKmxQndok+5lwaCPv3kv1k79cGlZtrAcFV3rTd
+	RG6tqP/n9P/oBVJUnGcHNx3zzYioBMv6AiGm2j3Oi85SaAxNtbCWd11HQg5D0+0=
+X-Google-Smtp-Source: AGHT+IGasCsLKtbgBJzbK44zWI4+raapf2xsNEu4QsMmZWQ1hc1o3WHnw/x577Pc62k3/HA3LIbbCw==
+X-Received: by 2002:a81:b2c7:0:b0:610:e46c:18f6 with SMTP id q190-20020a81b2c7000000b00610e46c18f6mr3966229ywh.17.1710922134605;
+        Wed, 20 Mar 2024 01:08:54 -0700 (PDT)
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com. [209.85.128.171])
+        by smtp.gmail.com with ESMTPSA id p1-20020a81ca01000000b00610f3850e14sm249309ywi.131.2024.03.20.01.08.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 Mar 2024 01:08:54 -0700 (PDT)
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-609f359b7b1so75592767b3.1;
+        Wed, 20 Mar 2024 01:08:54 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCX/vIirLIYjDEH7xzHHiZtNMnZ9eO7W0YwOKX/uMLWWf6qx9lMzh8h2SDd675NBDHX3R4EFDARFr5AOfPydI07qLv49QnsYuIPtNog5beQzz7eIk2GZ9GBaL/CKIcQzGLRI4dgTsN7eZw==
+X-Received: by 2002:a0d:fb87:0:b0:609:fdf7:b443 with SMTP id
+ l129-20020a0dfb87000000b00609fdf7b443mr4533721ywf.52.1710922133920; Wed, 20
+ Mar 2024 01:08:53 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Yi Zhang <yi.zhang@redhat.com>
-Date: Wed, 20 Mar 2024 14:57:46 +0800
-Message-ID: <CAHj4cs8dB4bbwnnAXde9S8Tarr8k_O_mkt_cB09X_TsZYjcGcQ@mail.gmail.com>
-Subject: [bug report]debugfs: Directory 'target13:0:0' with parent
- 'scsi_debug' already present! observed during blktests block/001
-To: linux-block <linux-block@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+References: <48ca5e827ca420bbdbabb1643e2179dc95c9e0b7.1710849638.git.geert@linux-m68k.org>
+ <d1a1b0b8-41f1-4ead-b393-d8d2f099b0c4@acm.org> <CAMuHMdWzD1OR8qj8oHfUgQ9GMtrD8y69G+A+ONdVm0vTCvYe=w@mail.gmail.com>
+ <0d41ae1a-f6aa-4377-b8a3-7fcf067f99ac@acm.org>
+In-Reply-To: <0d41ae1a-f6aa-4377-b8a3-7fcf067f99ac@acm.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 20 Mar 2024 09:08:42 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdVig-cm7KPi76ow9-xyZ55z4YgYrx6QuO9V5A0ni7HxDA@mail.gmail.com>
+Message-ID: <CAMuHMdVig-cm7KPi76ow9-xyZ55z4YgYrx6QuO9V5A0ni7HxDA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: core: Make scsi_lib KUnit tests modular for real
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Mike Christie <michael.christie@oracle.com>, 
+	"James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	Lukas Bulwahn <lukas.bulwahn@gmail.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello
+Hoi Bart,
 
-I found below error log from dmesg during blktests block/001 on the
-latest linux-block/for-next, please help check it, thanks.
+CC linux-kselftest@vger.kernel.org
 
-[ 4036.273873] debugfs: Directory 'target13:0:0' with parent
-'scsi_debug' already present!
-[ 4036.275452] scsi 13:0:0:0: Direct-Access     Linux    scsi_debug
-   0191 PQ: 0 ANSI: 7
-[ 4036.278450] sd 10:0:0:0: [sdb] Preferred minimum I/O size 512 bytes
-[ 4036.281055] scsi 13:0:0:0: Power-on or device reset occurred
---snip--
-[ 4038.401691] debugfs: Directory 'target10:0:0' with parent
-'scsi_debug' already present!
-[ 4038.403439] scsi 10:0:0:0: Direct-Access     Linux    scsi_debug
-   0191 PQ: 0 ANSI: 7
-[ 4038.409814] sd 11:0:0:0: [sde] Synchronizing SCSI cache
-[ 4038.417776] scsi 10:0:0:0: Power-on or device reset occurred
-[ 4038.418858] sd 12:0:0:0: Attached scsi generic sg1 type 0
-[ 4038.419320] scsi 13:0:0:0: Direct-Access     Linux    scsi_debug
-   0191 PQ: 0 ANSI: 7
-[ 4038.421092] scsi 11:0:0:0: Direct-Access     Linux    scsi_debug
-   0191 PQ: 0 ANSI: 7
-[ 4038.424960] scsi 13:0:0:0: Power-on or device reset occurred
-[ 4038.425373] sd 12:0:0:0: [sdb] 16384 512-byte logical blocks: (8.39
-MB/8.00 MiB)
-[ 4038.427895] scsi 11:0:0:0: Power-on or device reset occurred
-[ 4038.440374] sd 12:0:0:0: [sdb] Write Protect is off
-[ 4038.440470] sd 12:0:0:0: [sdb] Mode Sense: 73 00 10 08
-[ 4038.440693] sd 12:0:0:0: [sdb] Asking for cache data failed
-[ 4038.446410] sd 12:0:0:0: [sdb] Assuming drive cache: write through
-[ 4038.454555] sd 12:0:0:0: [sdb] Preferred minimum I/O size 512 bytes
-[ 4038.454643] sd 12:0:0:0: [sdb] Optimal transfer size 524288 bytes
-[ 4038.460898] sd 10:0:0:0: Attached scsi generic sg1 type 0
-[ 4038.461989] sd 11:0:0:0: [sdc] 16384 512-byte logical blocks: (8.39
-MB/8.00 MiB)
-[ 4038.462478] sd 10:0:0:0: [sdd] 16384 512-byte logical blocks: (8.39
-MB/8.00 MiB)
-[ 4038.463355] sd 11:0:0:0: [sdc] Write Protect is off
-[ 4038.463438] sd 11:0:0:0: [sdc] Mode Sense: 73 00 10 08
-[ 4038.464098] sd 10:0:0:0: [sdd] Write Protect is off
-[ 4038.464194] sd 10:0:0:0: [sdd] Mode Sense: 73 00 10 08
-[ 4038.465634] sd 13:0:0:0: [sde] 16384 512-byte logical blocks: (8.39
-MB/8.00 MiB)
-[ 4038.465828] sd 13:0:0:0: Attached scsi generic sg2 type 0
-[ 4038.466047] sd 11:0:0:0: [sdc] Write cache: enabled, read cache:
-enabled, supports DPO and FUA
-[ 4038.466849] sd 10:0:0:0: [sdd] Write cache: enabled, read cache:
-enabled, supports DPO and FUA
-[ 4038.467347] sd 13:0:0:0: [sde] Write Protect is off
-[ 4038.467432] sd 13:0:0:0: [sde] Mode Sense: 73 00 10 08
-[ 4038.470204] sd 13:0:0:0: [sde] Write cache: enabled, read cache:
-enabled, supports DPO and FUA
-[ 4038.470270] sd 11:0:0:0: [sdc] Preferred minimum I/O size 512 bytes
-[ 4038.470353] sd 11:0:0:0: [sdc] Optimal transfer size 524288 bytes
-[ 4038.471268] sd 10:0:0:0: [sdd] Preferred minimum I/O size 512 bytes
-[ 4038.471365] sd 10:0:0:0: [sdd] Optimal transfer size 524288 bytes
-[ 4038.476629] sd 13:0:0:0: [sde] Preferred minimum I/O size 512 bytes
-[ 4038.476708] sd 13:0:0:0: [sde] Optimal transfer size 524288 bytes
-[ 4038.478031] sd 11:0:0:0: Attached scsi generic sg3 type 0
-[ 4038.522116] sd 12:0:0:0: [sdb] Attached SCSI disk
-[ 4038.528571] sd 10:0:0:0: [sdd] Attached SCSI disk
-[ 4038.529208] sd 11:0:0:0: [sdc] Attached SCSI disk
+On Tue, Mar 19, 2024 at 6:01=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
+> wrote:
+> On 3/19/24 09:10, Geert Uytterhoeven wrote:
+> > On Tue, Mar 19, 2024 at 5:03=E2=80=AFPM Bart Van Assche <bvanassche@acm=
+.org> wrote:
+> >> On 3/19/24 05:02, Geert Uytterhoeven wrote:
+> >> kernel module? What are the advantages compared to the current approac=
+h?
+> >> That information is missing from the patch description.
+> >
+> > SCSI_LIB_KUNIT_TEST is already tristate, so the original author must
+> > have meant it to be modular.  Or perhaps he just copied it from
+> > (most/all) other tests ;-)
+> >
+> > Anyway, I find it very useful to be able to do "modprobe kunit" and
+> > "modprobe <test>" to run a test when I feel the need to do so.
+>
+> Why to run hardware-independent kunit tests on the target system instead
+> of on the host? Isn't it much more convenient when developing embedded
+> software to run kunit tests on the host using UML? The script I use to
 
--- 
-Best Regards,
-  Yi Zhang
+Because test results may differ between target and host?
+It's not uncommon for supposedly hardware-independent tests to behave
+differently on different architectures and platforms, due to subtle
+differences in word size, endianness, alignment rules, CPU topology, ...
 
+> run SCSI kunit tests is available below. And if there is a desire to run
+> SCSI tests on the target system, how about adding triggers in sysfs for
+> running kunit tests? The (GPL v2) Samsung smartphone kernel supports
+> this but I have not yet checked whether their implementation is
+> appropriate for the upstream kernel.
+
+That would require all tests to be built-in, reducing the amount of memory
+(if any remains at all) available to the real application.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
