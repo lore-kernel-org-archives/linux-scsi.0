@@ -1,121 +1,80 @@
-Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC021642B;
-	Wed, 20 Mar 2024 08:08:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.173
+Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E7DB83B298;
+	Wed, 20 Mar 2024 11:08:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710922137; cv=none; b=XmXdtldK/cbSHIzOoqKPYqnIaalfFFlu9tRzrKIAVjEBZGYb7Sk+wkRC8z4Yb4T/ntTecc64hMnjcx1CPta5rSEvKjy86UMn6C2r4qlCpYAJCcDXP+I+Mh+VhySmaaibuDA63XXJAscUAcLgjGQJCRNwm3Pgz3p7GynNRxlv+CE=
+	t=1710932927; cv=none; b=mAw7DIKnC9YfWit7yK6sNW+9gPbqmhsIi2UL00mzmND+22m/VAMwc620o1jDeYZs8Zi1KKxHZhbVRJlpwLA9qJ34nANwThIQNJH1XtDnjhMlG2cVWDnPJ8tmv8Yn2ezBwn45KuW+2faXjGdwKCgrovDg/fZqailc56zkzzZq2CQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710922137; c=relaxed/simple;
-	bh=YHYOadkmOipUMw5vHmVozyaiYQFe3Wgatl1WnyHvUMU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KZLpH1mVvxKvc8N3qDJ8xiuCksBVi+0Talor+EErEkzSIYrFH5CIlXiQ1Rok6z631IrE7oIohD49qGZD+c3XlImH2ejwv28RfB/+zHcxLxucxZ02VOtKKm1IWgmO7okaOwm7kaJjBuRoK55l18OPRd5vF3gdjg94d1se1kTerBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-609f359b7b1so75592957b3.1;
-        Wed, 20 Mar 2024 01:08:56 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710922134; x=1711526934;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UxAjfDS34SkaeqdOsAUG7ZjS13iVv3mgsYNBQbuG+9o=;
-        b=CTT35BJxGjG91jqMkN0Qlmvj17pcrdP6khHdiQuK5K0IfErFPZOY+SSshO3wPsMIIA
-         rjaD+ugB3Tp1v+9ZD/1Zi8B3tL+QATd6ngQAFv6M0Rhhi+fD/altqf4CwcmAFtZdnOYM
-         J1DbsW1aReZJhcgZK+EYPR8zrua9Vi9rItilg82X//Hgdi0Lf8XRmmZ75Jb9xF1BADB7
-         1cHVhJCvGsh3Mgw147U5fMK3oBNs8vjQvDyjehvBFe6Gi1Poa54dmswlI6CVDceXUAQo
-         a0Aul9Z3s79vHc5FmQqQIoyXshldaHxFXuaaDhy14kaGVa2jZwHjs1Pl23C5CQ7YJEWd
-         /wfg==
-X-Forwarded-Encrypted: i=1; AJvYcCWXHxvhYKAMSw7K34XRNChj61bIyZaUf1Sl6JljR6XwAiQLOc3p3CPZ395APJZZzreZMCb3oX3HRqt/JSXAj1+36Ukzq25x+1RDippgnoLSkhdOTTS2n/JMVgPbs+90gbAzPu7viXtEAg==
-X-Gm-Message-State: AOJu0Yze0QXTThUOlTqKmxQndok+5lwaCPv3kv1k79cGlZtrAcFV3rTd
-	RG6tqP/n9P/oBVJUnGcHNx3zzYioBMv6AiGm2j3Oi85SaAxNtbCWd11HQg5D0+0=
-X-Google-Smtp-Source: AGHT+IGasCsLKtbgBJzbK44zWI4+raapf2xsNEu4QsMmZWQ1hc1o3WHnw/x577Pc62k3/HA3LIbbCw==
-X-Received: by 2002:a81:b2c7:0:b0:610:e46c:18f6 with SMTP id q190-20020a81b2c7000000b00610e46c18f6mr3966229ywh.17.1710922134605;
-        Wed, 20 Mar 2024 01:08:54 -0700 (PDT)
-Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com. [209.85.128.171])
-        by smtp.gmail.com with ESMTPSA id p1-20020a81ca01000000b00610f3850e14sm249309ywi.131.2024.03.20.01.08.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 Mar 2024 01:08:54 -0700 (PDT)
-Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-609f359b7b1so75592767b3.1;
-        Wed, 20 Mar 2024 01:08:54 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCX/vIirLIYjDEH7xzHHiZtNMnZ9eO7W0YwOKX/uMLWWf6qx9lMzh8h2SDd675NBDHX3R4EFDARFr5AOfPydI07qLv49QnsYuIPtNog5beQzz7eIk2GZ9GBaL/CKIcQzGLRI4dgTsN7eZw==
-X-Received: by 2002:a0d:fb87:0:b0:609:fdf7:b443 with SMTP id
- l129-20020a0dfb87000000b00609fdf7b443mr4533721ywf.52.1710922133920; Wed, 20
- Mar 2024 01:08:53 -0700 (PDT)
+	s=arc-20240116; t=1710932927; c=relaxed/simple;
+	bh=/Mf7ayfRptIPYf1l912/MT+uiDe4k/RTJV5IF4l5F5E=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=PEt0zNtVs9bXlhBnQ76m7Tej7l4BjFUoZ8hhHDjY77XE4d+z44/G177HOafhYXNwaCWOLBYz0mvEdYyeObYMhGUJcQRCv53JHPF0LDdzRL0T8vSALDDoHQlQkYuwlrebJAlnjATTQ/7RDvKIkz2XoZK8hCYlsvbQ6ekJdTuBzhk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=QQ/sZ5Xx; arc=none smtp.client-ip=5.252.227.236
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="QQ/sZ5Xx"
+From: Alexander Wetzel <Alexander@wetzel-home.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+	s=wetzel-home; t=1710932914;
+	bh=/Mf7ayfRptIPYf1l912/MT+uiDe4k/RTJV5IF4l5F5E=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=QQ/sZ5XxSexkc6olD8pvqKZbcXusVtWNm0EPZ5q8k3loqGxLngGx6B0e4guPyFmgO
+	 h2qgbe+6RO2h4GPnFjSahMhjBFvdePvMwmaFWPlsGvoLi1lu2+srW8lsJP7GrZX/hx
+	 9bcZ2X/mj1C0GbLb5Os3v98EKUIEAOd0BHqYNNpc=
+To: dgilbert@interlog.com
+Cc: linux-scsi@vger.kernel.org,
+	Alexander Wetzel <Alexander@wetzel-home.de>,
+	stable@vger.kernel.org
+Subject: [PATCH v2] scsi: sg: Avoid sg device teardown race
+Date: Wed, 20 Mar 2024 12:08:09 +0100
+Message-ID: <20240320110809.12901-1-Alexander@wetzel-home.de>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240318175021.22739-1-Alexander@wetzel-home.de>
+References: <20240318175021.22739-1-Alexander@wetzel-home.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <48ca5e827ca420bbdbabb1643e2179dc95c9e0b7.1710849638.git.geert@linux-m68k.org>
- <d1a1b0b8-41f1-4ead-b393-d8d2f099b0c4@acm.org> <CAMuHMdWzD1OR8qj8oHfUgQ9GMtrD8y69G+A+ONdVm0vTCvYe=w@mail.gmail.com>
- <0d41ae1a-f6aa-4377-b8a3-7fcf067f99ac@acm.org>
-In-Reply-To: <0d41ae1a-f6aa-4377-b8a3-7fcf067f99ac@acm.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 20 Mar 2024 09:08:42 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdVig-cm7KPi76ow9-xyZ55z4YgYrx6QuO9V5A0ni7HxDA@mail.gmail.com>
-Message-ID: <CAMuHMdVig-cm7KPi76ow9-xyZ55z4YgYrx6QuO9V5A0ni7HxDA@mail.gmail.com>
-Subject: Re: [PATCH] scsi: core: Make scsi_lib KUnit tests modular for real
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Mike Christie <michael.christie@oracle.com>, 
-	"James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
-	Lukas Bulwahn <lukas.bulwahn@gmail.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hoi Bart,
+sg_remove_sfp_usercontext() must not use sg_device_destroy() after
+calling scsi_device_put().
 
-CC linux-kselftest@vger.kernel.org
+sg_device_destroy() is accessing the parent scsi device request_queue.
+Which will already be set to NULL when the preceding call to
+scsi_device_put() removed the last reference to the parent scsi device.
 
-On Tue, Mar 19, 2024 at 6:01=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
-> wrote:
-> On 3/19/24 09:10, Geert Uytterhoeven wrote:
-> > On Tue, Mar 19, 2024 at 5:03=E2=80=AFPM Bart Van Assche <bvanassche@acm=
-.org> wrote:
-> >> On 3/19/24 05:02, Geert Uytterhoeven wrote:
-> >> kernel module? What are the advantages compared to the current approac=
-h?
-> >> That information is missing from the patch description.
-> >
-> > SCSI_LIB_KUNIT_TEST is already tristate, so the original author must
-> > have meant it to be modular.  Or perhaps he just copied it from
-> > (most/all) other tests ;-)
-> >
-> > Anyway, I find it very useful to be able to do "modprobe kunit" and
-> > "modprobe <test>" to run a test when I feel the need to do so.
->
-> Why to run hardware-independent kunit tests on the target system instead
-> of on the host? Isn't it much more convenient when developing embedded
-> software to run kunit tests on the host using UML? The script I use to
+The resulting NULL pointer exception will then crash the kernel.
 
-Because test results may differ between target and host?
-It's not uncommon for supposedly hardware-independent tests to behave
-differently on different architectures and platforms, due to subtle
-differences in word size, endianness, alignment rules, CPU topology, ...
+Link: https://lore.kernel.org/r/20240305150509.23896-1-Alexander@wetzel-home.de
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
+---
+Changes compared to V1:
+Reworked the commit message
 
-> run SCSI kunit tests is available below. And if there is a desire to run
-> SCSI tests on the target system, how about adding triggers in sysfs for
-> running kunit tests? The (GPL v2) Samsung smartphone kernel supports
-> this but I have not yet checked whether their implementation is
-> appropriate for the upstream kernel.
+Alexander
+---
+ drivers/scsi/sg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-That would require all tests to be built-in, reducing the amount of memory
-(if any remains at all) available to the real application.
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 86210e4dd0d3..80e0d1981191 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -2232,8 +2232,8 @@ sg_remove_sfp_usercontext(struct work_struct *work)
+ 			"sg_remove_sfp: sfp=0x%p\n", sfp));
+ 	kfree(sfp);
+ 
+-	scsi_device_put(sdp->device);
+ 	kref_put(&sdp->d_ref, sg_device_destroy);
++	scsi_device_put(sdp->device);
+ 	module_put(THIS_MODULE);
+ }
+ 
+-- 
+2.44.0
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---=20
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
-
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
