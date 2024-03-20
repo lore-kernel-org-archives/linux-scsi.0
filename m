@@ -1,48 +1,28 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FD2A53E1E
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Mar 2024 15:14:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id DA70910FA;
+	Wed, 20 Mar 2024 16:58:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710947674; cv=none; b=JUxlcBvA5Aq4Lc8q9MbJjDjTML/VTi65HReU57QfSkTB8Xnn5pTJyD04PVUdIRIHbAifROADqfoCbSw3I75OjIaQT11SlZ+yqKPGT/bj6ePo3QbCOWx5s01SLHlZI3pqAvemQpy6Ho6qLKAgofv58P4ExOYkXLaqtg1Wf1m59eg=
+	t=1710953930; cv=none; b=kn2dJGJagOwlPaP3gEolDBITZTCk10IQTzBOBOYMkVzIRqo2i59zF9qVCmDDdVIMxqoIxIxFEr9R5mM3ThhrSNKrXoBwGZ5YwIcp3oa1a1LRJh2u+Z8OgiWD3CAfbGIO340s/wWBG024afFcvqisZN1pzJ3n+qbel/i1UiW5w1A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710947674; c=relaxed/simple;
-	bh=MLIXzgkB9cgWj26D5dgtGq4LSDtERkfv2MJm6BAGNF4=;
+	s=arc-20240116; t=1710953930; c=relaxed/simple;
+	bh=TxQReDTPFeYIzxbmKhjwiCFg5+LQu3KfvGpmrlrOVdU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Xi5IkuzevbwmeLthpvH7PTZ8eGVOQDqGarttR7vlzoBS2/+cbpx3UHuXLw+tLtiq8ih9OTsvRO6h1A/A2pt+GB0xJVePru4+ErwjYs4lrSIIuCCnaa69aGXH/y6vQE2eSMfPC9EKgZw+2jGWme2CUQOhQJAoQZ+TBsN1SU/2ANg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=N0e1ZWT5; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=WmoMzgAvaE7KJ8UB1GZzr95xI8GY4vOqevzs6fJZ5TB0E6PCt+zLIJyc+lly/IVy7wvstqYJ8jVby9GgRbTh4tR1YRkptGH6/8oN9UcSBy/HvKgL6EwEhfa33fKvpX0WfxNs18JWI9InM6pxpHV2coqKkHJenrHapr2aS97OJrc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=ljodIoNn; arc=none smtp.client-ip=5.252.227.236
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="N0e1ZWT5"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4V0Bvq74pwz6Cnk8y;
-	Wed, 20 Mar 2024 15:14:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:references:content-language:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1710947670; x=1713539671; bh=8MlsgXDLTzg4Y3u831ROjhfq
-	csncf3r+0eLClFLTdf0=; b=N0e1ZWT5W674pKcd8SKnta4ZNBnTf2ryqML2MwjM
-	Dt5YnSYWU74Morr3dChJ/lh6ewIsT8h2J52dA4FJmXAWQHlIypnAIAdNhz6H0YlV
-	1+cdxxvHl0o3H/LscmtEEMc+wVtY5S6xD0ThJ3hPKRWSgF2gAfh7gq29arTiRcht
-	AO85aMkSmTLtYFhn+8dTruzYQ1y39DTK7+/QCYpmMgNx5oN6xE1v9hjuRTcZI7sd
-	BD1sri4embz9G6bkPkJFSrJf24u0uG25xVaoZUd3Yfc5r3lW6aRZ20S8JwKesYW/
-	NYIsBGDAwNyaNU75QrmVrgBI++Qy98yhbLYJIj/Itc69Cg==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 86tLquL3vGhp; Wed, 20 Mar 2024 15:14:30 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4V0Bvn4WrWz6Cnk8t;
-	Wed, 20 Mar 2024 15:14:29 +0000 (UTC)
-Message-ID: <e8f9d970-2266-4ed3-9e34-c7668b4a2f57@acm.org>
-Date: Wed, 20 Mar 2024 08:14:28 -0700
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="ljodIoNn"
+Message-ID: <c2454690-4cb4-41ac-b4f3-b1591ca472e7@wetzel-home.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+	s=wetzel-home; t=1710953922;
+	bh=TxQReDTPFeYIzxbmKhjwiCFg5+LQu3KfvGpmrlrOVdU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=ljodIoNnKZ2pjEBGTdKvK6V189Yee7CXKotw6bYdU5ViA/B3hweS4YFx0AM+aEr+I
+	 Ci7eUncg3QPpI9beTqIQZj/mzjbe27LpbHw2sNMZymR/LDz7ZUrwUbCDgmNMcCA3xC
+	 EITpbsuIIbf4E1w6gIWeZhEwIuVWlryhOUegK50c=
+Date: Wed, 20 Mar 2024 17:58:42 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,44 +30,91 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 1/2] scsi: scsi_debug: Factor out initialization of
- size parameters
-Content-Language: en-US
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Douglas Gilbert <dgilbert@interlog.com>
-References: <20240311065427.3006023-1-shinichiro.kawasaki@wdc.com>
- <20240311065427.3006023-2-shinichiro.kawasaki@wdc.com>
- <b62b8f7d-abb9-470c-a042-c0710710da96@acm.org>
- <rzhvj5uieq4ers2ocmwmkivtbfcjyhvvpmx4ufj7ii3tgndr4r@6jpf2tanpmcy>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <rzhvj5uieq4ers2ocmwmkivtbfcjyhvvpmx4ufj7ii3tgndr4r@6jpf2tanpmcy>
+Subject: Re: [PATCH v2] scsi: sg: Avoid sg device teardown race
+To: Bart Van Assche <bvanassche@acm.org>, dgilbert@interlog.com
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org
+References: <20240318175021.22739-1-Alexander@wetzel-home.de>
+ <20240320110809.12901-1-Alexander@wetzel-home.de>
+ <8b8e5aca-4b97-4662-9ae0-fc36db2436b4@acm.org>
+Content-Language: en-US, de-DE
+From: Alexander Wetzel <alexander@wetzel-home.de>
+In-Reply-To: <8b8e5aca-4b97-4662-9ae0-fc36db2436b4@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 3/19/24 18:46, Shinichiro Kawasaki wrote:
-> On Mar 11, 2024 / 10:22, Bart Van Assche wrote:
->> Please remove sdebug_heads, sdebug_cylinders_per and sdebug_sectors_per
->> instead of making this change. While these values are reported in a
->> MODE SENSE response, I don't think that it is valuable to keep support
->> for heads, cylinders and sectors in the scsi_debug driver.
+On 20.03.24 16:02, Bart Van Assche wrote:
+> On 3/20/24 04:08, Alexander Wetzel wrote:
+>> sg_remove_sfp_usercontext() must not use sg_device_destroy() after
+>> calling scsi_device_put().
+>>
+>> sg_device_destroy() is accessing the parent scsi device request_queue.
+>> Which will already be set to NULL when the preceding call to
+>> scsi_device_put() removed the last reference to the parent scsi device.
+>>
+>> The resulting NULL pointer exception will then crash the kernel.
+>>
+>> Link: 
+>> https://lore.kernel.org/r/20240305150509.23896-1-Alexander@wetzel-home.de
+>> Cc: <stable@vger.kernel.org>
+>> Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
+>> ---
+>> Changes compared to V1:
+>> Reworked the commit message
+>>
+>> Alexander
+>> ---
+>>   drivers/scsi/sg.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>> index 86210e4dd0d3..80e0d1981191 100644
+>> --- a/drivers/scsi/sg.c
+>> +++ b/drivers/scsi/sg.c
+>> @@ -2232,8 +2232,8 @@ sg_remove_sfp_usercontext(struct work_struct *work)
+>>               "sg_remove_sfp: sfp=0x%p\n", sfp));
+>>       kfree(sfp);
+>> -    scsi_device_put(sdp->device);
+>>       kref_put(&sdp->d_ref, sg_device_destroy);
+>> +    scsi_device_put(sdp->device);
+>>       module_put(THIS_MODULE);
+>>   }
 > 
-> I see. I guess we can return just zero as sdebug_sectors_per in the MODE
-> SENSE response instead.
+> Is it guaranteed that the above kref_put() call is the last kref_put()
+> call on sdp->d_ref? If not, how about inserting code between the
+> kref_put() call and the scsi_device_put() call that waits until
+> sg_device_destroy() has finished?
 > 
-> I noticed that the three variables you suggest to remove are used in
-> sdebug_build_parts() also. It is not a good idea to remove the function
-> and drop or modify the partition table generation feature, probably. I
-> think we can make the three variables non-global, local variables in the
-> function. What do you think?
 
-I propose to rework sdebug_build_parts() such that it aligns partitions
-on logical block boundaries instead of cylinder boundaries. That will
-make sdebug_build_parts() independent of sdebug_heads,
-sdebug_cylinders_per and sdebug_sectors and hence will allow these three
-variables to be removed.
+While I'm not familiar with the code, I'm pretty sure kref_put() is 
+removing the last reference to d_ref here. Anything else would be odd, 
+based on my - really sketchy - understanding of the flows.
 
-Thanks,
+Also waiting for another process looks wrong. I guess we would then have 
+to delay the call to sg_release().
 
-Bart.
+And at least for me it's always the last d_ref reference.
+I changed the section to:
+
+         kref_put(&sdp->d_ref, sg_device_destroy);
+         printk("XXXX scsi=%u, dref=%u\n", \
+		kref_read(&sdp->device->sdev_gendev.kobj.kref), \
+		kref_read(&sdp->d_ref));
+         scsi_device_put(sdp->device);
+
+And connected/disconnected my test USB device a few times:
+  XXXX scsi=2, dref=0
+  XXXX scsi=1, dref=0
+  XXXX scsi=2, dref=0
+  XXXX scsi=1, dref=0
+  XXXX scsi=1, dref=0
+  XXXX scsi=1, dref=0
+  XXXX scsi=1, dref=0
+  XXXX scsi=1, dref=0
+  XXXX scsi=1, dref=0
+  XXXX scsi=1, dref=0
+
+(scsi=1 are the cases which would cause the NULL pointer exceptions with 
+the unpatched driver.)
+
+Alexander
+
