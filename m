@@ -1,100 +1,75 @@
-Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 744B585C4E;
-	Wed, 20 Mar 2024 21:31:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E833623DE;
+	Wed, 20 Mar 2024 21:39:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710970310; cv=none; b=GMbkHzXK0XZhhsc/xXZKQuKbqUQhdExbNgvAoFZMew9td0MyjzcPsDGoUCtXUdTSUjCSY3HyAjbE8hQ0yxMb7D8uVrGk4fZGmP3q0ufWbADw1Iht5B269ZDb5BM8dRS1vCT4kpavWtJbjSzsrZVpurjc1G4r8sDdcOwCZXT9ISM=
+	t=1710970790; cv=none; b=c4PksgIZe0nCUaDrJYSKUNaAQFAHBYhtvvHQ62bNIXrZauzrxoe9W3YYO9JoHR7OvW0kjZEl2Dl0iSk+IWu10HSQSkkh4R/TvoHkKBbWvpdpg5j8XW3YcUNdtTGi2flGxQqBLXj/Lu0aBLMS1W6S8cKFPTFI4e1oAQ9+I82XNbc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710970310; c=relaxed/simple;
-	bh=NDSi49coxZRxdskul8Gc8KVSDnjMOncHAEdPKeyZEs8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=u2gYAxg42DQS/5WiI0mHOXKUIV7JydfVucGZ4yRoR05hVhC2BgWqvWIKGTghDLXp5DkFkR5u7lxGlaWhZbgfctYOIWjRbhdzgCEuYfwKoJ8SSBwRM97jqbi1REuqyVp71RAGGfzRuuVXNpMfcka01LGV59f0vX86whnq4GVDemQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=vv1HalPj; arc=none smtp.client-ip=5.252.227.236
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
+	s=arc-20240116; t=1710970790; c=relaxed/simple;
+	bh=0U5vMjocMlLk8Yw73BfhsWOWk1eQADhqyMLavb/YSnc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WMu1qG2Ix43qQc9RZaB1LN80tq12yRsi1VAbyeNFQeYcgvWiO+BtrjQfQ8IiYRESK6KhiSe8Lc1VojkFUWJu6vujAzCKeYO8F1LPYYCKNw3bQtrdbmmaHJjxd5tdc8XVivNKli+goHPK/rhGmYqlUYP3YIxgpF8+GQKF4QKC+uU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2XEoXnkG; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="vv1HalPj"
-From: Alexander Wetzel <Alexander@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-	s=wetzel-home; t=1710970303;
-	bh=NDSi49coxZRxdskul8Gc8KVSDnjMOncHAEdPKeyZEs8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=vv1HalPj4Y/YKdkqgiNbpxXx+p/6b7sWOhuH22X37l/movhbmO7tfh+8eFnIKdLu8
-	 WZq5kjxQGpSVzyRTrL8ghqGNpEFgclx5eAxueHh8E6G4BlA0lQQOs1CGe1AVPtvh/B
-	 q9B6X84UTKWClp2t0X2+VtUA2eBm+EcuAHvYW3Fo=
-To: dgilbert@interlog.com
-Cc: linux-scsi@vger.kernel.org,
-	bvanassche@acm.org,
-	gregkh@linuxfoundation.org,
-	Alexander Wetzel <Alexander@wetzel-home.de>,
-	stable@vger.kernel.org
-Subject: [PATCH v3] scsi: sg: Avoid sg device teardown race
-Date: Wed, 20 Mar 2024 22:30:32 +0100
-Message-ID: <20240320213032.18221-1-Alexander@wetzel-home.de>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20240320110809.12901-1-Alexander@wetzel-home.de>
-References: <20240320110809.12901-1-Alexander@wetzel-home.de>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2XEoXnkG"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4V0MSN1Bd8z6Cnk98;
+	Wed, 20 Mar 2024 21:39:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:references:content-language:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1710970786; x=1713562787; bh=ntLADi8IR1swSxvMty94trq0
+	yZbd6Lv0xWRvFtJVSeY=; b=2XEoXnkGIlAHLJ17VMcKDeqtSd40UlPFFPMR26P8
+	1ZE1UO8+XU1Kl/ZOCp1VBM22CEboy2Cr8qlJYvqlRrKmcvh06KP/QzYnYCYsXchM
+	FBN6D0/XBcByj+Iw/hMqX3LhCWSFOG7RAmrhjTGLDZ/PZn51/y0WV8m1pc8RBmS1
+	eBWNj0Tqj16QWfGmMkASnCudbp6Gq3U0VPQmhA8qBGBysPFu915NiCWnre02UHAK
+	6NUUPcvXfbWDj61IN+L6uSFC/Y1EuujifSe7n4YPZveZy/kZXY/ivvaRsMN08xzL
+	QOBNVRDizQmoqH2MlT1vFjcBfvZI8+z7aZfJnFbQnjFhTQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id oqONWr5OK4Rz; Wed, 20 Mar 2024 21:39:46 +0000 (UTC)
+Received: from [100.96.154.173] (unknown [104.132.1.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4V0MSK5Bvmz6Cnk97;
+	Wed, 20 Mar 2024 21:39:45 +0000 (UTC)
+Message-ID: <f5a263c4-f27d-4df0-ba23-4510a357d19b@acm.org>
+Date: Wed, 20 Mar 2024 14:39:44 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] scsi: sg: Avoid sg device teardown race
+Content-Language: en-US
+To: Alexander Wetzel <Alexander@wetzel-home.de>, dgilbert@interlog.com
+Cc: linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org,
+ stable@vger.kernel.org
+References: <20240320110809.12901-1-Alexander@wetzel-home.de>
+ <20240320213032.18221-1-Alexander@wetzel-home.de>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240320213032.18221-1-Alexander@wetzel-home.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-sg_remove_sfp_usercontext() must not use sg_device_destroy() after
-calling scsi_device_put().
+On 3/20/24 14:30, Alexander Wetzel wrote:
+> sg_remove_sfp_usercontext() must not use sg_device_destroy() after
+> calling scsi_device_put().
+> 
+> sg_device_destroy() is accessing the parent scsi device request_queue.
+> Which will already be set to NULL when the preceding call to
+> scsi_device_put() removed the last reference to the parent scsi device.
+> 
+> The resulting NULL pointer exception will then crash the kernel.
 
-sg_device_destroy() is accessing the parent scsi device request_queue.
-Which will already be set to NULL when the preceding call to
-scsi_device_put() removed the last reference to the parent scsi device.
-
-The resulting NULL pointer exception will then crash the kernel.
-
-Link: https://lore.kernel.org/r/20240305150509.23896-1-Alexander@wetzel-home.de
-Fixes: db59133e9279 ("scsi: sg: fix blktrace debugfs entries leakage")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
----
-Changes compared to V2:
-- Fixed the use-after-free pointed out by Bart
-- Added the WARN_ON_ONCE() requested by Bart
-- added the Fixes tag pointed out by Greg
-
-This patch has now been tested with KASAN enabled. I also  verified,
-that db59133e9279 ("scsi: sg: fix blktrace debugfs entries leakage")
-introduced the issue.
-
-Thanks for all your help!
-
-Alexander
----
- drivers/scsi/sg.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 86210e4dd0d3..ff6894ce5404 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -2207,6 +2207,7 @@ sg_remove_sfp_usercontext(struct work_struct *work)
- {
- 	struct sg_fd *sfp = container_of(work, struct sg_fd, ew.work);
- 	struct sg_device *sdp = sfp->parentdp;
-+	struct scsi_device *device = sdp->device;
- 	Sg_request *srp;
- 	unsigned long iflags;
- 
-@@ -2232,8 +2233,9 @@ sg_remove_sfp_usercontext(struct work_struct *work)
- 			"sg_remove_sfp: sfp=0x%p\n", sfp));
- 	kfree(sfp);
- 
--	scsi_device_put(sdp->device);
-+	WARN_ON_ONCE(kref_read(&sdp->d_ref) != 1);
- 	kref_put(&sdp->d_ref, sg_device_destroy);
-+	scsi_device_put(device);
- 	module_put(THIS_MODULE);
- }
- 
--- 
-2.44.0
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
