@@ -1,81 +1,166 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD9CD6FB9;
-	Thu, 21 Mar 2024 02:14:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BF235821C
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Mar 2024 11:24:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710987263; cv=none; b=Ef3MR8T4qlpWux7PwKug0vMP1w6ak0Id/7/g4lCM3oVuSC+DU8HjSUmlRsAXbGWfUWazj0QdHzROVzGHh34jKbvfXEpnI62N6WEWxI9jsbgIXaTobXiKC9ULP+F9EGQlm9+iDM11mgPGpNcT1BoUJzsD0Mn3ZJn1TCy6YndiOnU=
+	t=1711020299; cv=none; b=O0A/3+6YJ6dvLPLym5ZbBitPAJ/noTkMyMs04aT1RXAaVFbkRZfUv93VRoISOg/gswbBH1wSLkPYjRASqhsso6ZoXFpGvrRg2ue7aq4x2/KjxyHfSmF+yoU+KM9Cu4Knjzw6QdcGa6BcW0l9j96gyu1pNLS8zSUMgBtrQ+KGbQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710987263; c=relaxed/simple;
-	bh=jfvCeLIg+canj1YOabyHCZY32Y5la91we5Z1XUDvdkc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=ddb7ibvh1IDQDwFt6FXBZwTyM+r3274mOAiJPcWw1YzwdiQbRZTFO8Od5S7rMO5/oTK0w0Dk7ogqOXZoPcIycb7KQ9h1EhPb4hQFbBqHBVPLUKHsIGvnCKZgXr4XrxYCwsc/NetmKfKRZV6vKEozrDQoGjBL+qTcmhaAvZ1Hrjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=elhsWbcB; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1711020299; c=relaxed/simple;
+	bh=vxFAVBLiUKJIj1bj0i6YA1pMJRxUQFxLA1RcEnest8E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AwoMOyiZMVxkTQm476f88954G/8IthwXUy1GvCc5aH6z9EEP7w4Vo10fd1yxqGSiunWmqh04rB4DSMt4xK6EmEZd5rIl1+QYMW9SfIKJ0/3V9ZO58Vj8tHSTPGShzeu7HTmYlLiM9HPgXEDD+sTm2eHiKz5QUOkapWCzLrKiu2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EVX7BjVN; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="elhsWbcB"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4V0TY902pTz6Cnk8y;
-	Thu, 21 Mar 2024 02:14:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:references:content-language:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1710987258; x=1713579259; bh=bYq+oUDZUpDI/pMzlQv8q7N+
-	w8/crdOYLwn0HTneqtY=; b=elhsWbcBTPwtjGsPM4L4hGm3L4I4yocByWau3xoq
-	z23GYI0sR2owMGt6ydD330kIdaPCT5LlAapQrWWMQKTGp0UAx29SNghjRkU+pRWW
-	0ZRwPL/NGof/zUL31XnSB6eJZEM/szbz8tPUUPcNPuZIvdurZkPZ4Cfxkb7zyf2J
-	32trLH2A5XSuDB9V2Ria8o184JyqV5du0TH3pzZ+yuHpdHyUtAf/r/ftoIjHUJ9o
-	rnv44qvJyjjhjcfErw9P8fJMhxCBDgwvFzpdxNy4IknUAXtAF1cC7vgB8aSNOSs+
-	R27xMjqikQsF/i7LI0gjznh4bFZng+3wdiBddj2o870IdQ==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id gOfMeMs7eDlS; Thu, 21 Mar 2024 02:14:18 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EVX7BjVN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1711020296;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=ac9UvT/S9w6LbHxFoGYKOuJ8nuY7rQnT47SPtuGSLnk=;
+	b=EVX7BjVNDJSAjpM7rS/p46qCL/kWjBbDqlD8mQJPF5/0AKHu/vLEaTjJVQgY6tIrouphr+
+	b26Rgdk4aQ83ktZVOSRwf/Zlclph3eYf533FGaFCy15J90g7c18qannJviJZ+ZA2OpRq6K
+	lod9bDrOR3e2JeX/M+Zo86ARqJ/db+Q=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-641-vIKu1wwfPEy98mdiyKdr-w-1; Thu, 21 Mar 2024 07:24:50 -0400
+X-MC-Unique: vIKu1wwfPEy98mdiyKdr-w-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4V0TY60Thsz6Cnk90;
-	Thu, 21 Mar 2024 02:14:17 +0000 (UTC)
-Message-ID: <2489eb85-747d-441b-b19b-4e4c5ef1c478@acm.org>
-Date: Wed, 20 Mar 2024 19:14:16 -0700
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 45B01800265;
+	Thu, 21 Mar 2024 11:24:50 +0000 (UTC)
+Received: from kaapi.redhat.com (unknown [10.67.24.5])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id A24CD2166B33;
+	Thu, 21 Mar 2024 11:24:47 +0000 (UTC)
+From: Prasad Pandit <ppandit@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: GR-QLogic-Storage-Upstream@marvell.com,
+	Nilesh Javali <njavali@marvell.com>,
+	Arnd Bergmann <arnd@kernel.org>,
+	Prasad Pandit <pjp@fedoraproject.org>
+Subject: [PATCH] scsi: qla2xxx: indent help text
+Date: Thu, 21 Mar 2024 16:54:38 +0530
+Message-ID: <20240321112438.1759347-1-ppandit@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: WARNING: CPU: 45 PID: 84967 at ../block/mq-deadline.c:659
- dd_exit_sched+0xce/0xe0
-Content-Language: en-US
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>,
- Martin Wilck <mwilck@suse.com>, Hannes Reinecke <hare@suse.com>,
- Jens Axboe <axboe@kernel.dk>, BLOCK ML <linux-block@vger.kernel.org>,
- SCSI ML <linux-scsi@vger.kernel.org>
-References: <cc8d00fa-9ffb-441e-9483-7ef4a581e9d2@gmail.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <cc8d00fa-9ffb-441e-9483-7ef4a581e9d2@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.6
 
-On 3/8/24 07:24, Xose Vazquez Perez wrote:
-> This warning arose in the middle of a lpfc bug.
-> The block/mq-deadline.c file of this SUSE kernel is synchronized with
-> the latest version, and perhaps the bug is relevant for upstream.
->=20
->  =C2=A0statistics for priority 1: i 219 m 0 d 219 c 218
->  =C2=A0WARNING: CPU: 45 PID: 84967 at ../block/mq-deadline.c:659=20
-> dd_exit_sched+0xce/0xe0
+From: Prasad Pandit <pjp@fedoraproject.org>
 
-I think this indicates a bug in the block layer core - a bug that has
-been fixed in the latest kernels by the blk-flush.c rewrite. I fixed
-this bug for the Android 6.1 kernel. Please let me know if it would help
-if I make my fix available for inclusion in the stable trees.
+Fix indentation of config option's help text by adding
+leading spaces. Generally help text is indented by couple
+of spaces more beyond the leading tab <\t> character.
+It helps Kconfig parsers to read file without error.
 
-Bart.
+Signed-off-by: Prasad Pandit <pjp@fedoraproject.org>
+---
+ drivers/scsi/Kconfig         |  4 ++--
+ drivers/scsi/qla2xxx/Kconfig | 42 +++++++++++++++++++-----------------
+ 2 files changed, 24 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 9ce27092729c..a9704b05ce10 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -53,7 +53,7 @@ config SCSI_ESP_PIO
+ 
+ config SCSI_NETLINK
+ 	bool
+-	default	n
++	default n
+ 	depends on NET
+ 
+ config SCSI_PROC_FS
+@@ -313,7 +313,7 @@ config ISCSI_TCP
+ 
+ config ISCSI_BOOT_SYSFS
+ 	tristate "iSCSI Boot Sysfs Interface"
+-	default	n
++	default n
+ 	help
+ 	  This option enables support for exposing iSCSI boot information
+ 	  via sysfs to userspace. If you wish to export this information,
+diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
+index a584708d3056..a8b4314bfd6e 100644
+--- a/drivers/scsi/qla2xxx/Kconfig
++++ b/drivers/scsi/qla2xxx/Kconfig
+@@ -7,29 +7,29 @@ config SCSI_QLA_FC
+ 	select FW_LOADER
+ 	select BTREE
+ 	help
+-	This qla2xxx driver supports all QLogic Fibre Channel
+-	PCI and PCIe host adapters.
++	  This qla2xxx driver supports all QLogic Fibre Channel
++	  PCI and PCIe host adapters.
+ 
+-	By default, firmware for the ISP parts will be loaded
+-	via the Firmware Loader interface.
++	  By default, firmware for the ISP parts will be loaded
++	  via the Firmware Loader interface.
+ 
+-	ISP               Firmware Filename
+-	----------        -----------------
+-	21xx              ql2100_fw.bin
+-	22xx              ql2200_fw.bin
+-	2300, 2312, 6312  ql2300_fw.bin
+-	2322, 6322        ql2322_fw.bin
+-	24xx, 54xx        ql2400_fw.bin
+-	25xx              ql2500_fw.bin
++	  ISP               Firmware Filename
++	  ----------        -----------------
++	  21xx              ql2100_fw.bin
++	  22xx              ql2200_fw.bin
++	  2300, 2312, 6312  ql2300_fw.bin
++	  2322, 6322        ql2322_fw.bin
++	  24xx, 54xx        ql2400_fw.bin
++	  25xx              ql2500_fw.bin
+ 
+-	Upon request, the driver caches the firmware image until
+-	the driver is unloaded.
++	  Upon request, the driver caches the firmware image until
++	  the driver is unloaded.
+ 
+-	Firmware images can be retrieved from:
++	  Firmware images can be retrieved from:
+ 
+-		http://ldriver.qlogic.com/firmware/
++	        http://ldriver.qlogic.com/firmware/
+ 
+-	They are also included in the linux-firmware tree as well.
++	  They are also included in the linux-firmware tree as well.
+ 
+ config TCM_QLA2XXX
+ 	tristate "TCM_QLA2XXX fabric module for QLogic 24xx+ series target mode HBAs"
+@@ -38,13 +38,15 @@ config TCM_QLA2XXX
+ 	select BTREE
+ 	default n
+ 	help
+-	Say Y here to enable the TCM_QLA2XXX fabric module for QLogic 24xx+ series target mode HBAs
++	  Say Y here to enable the TCM_QLA2XXX fabric module for QLogic 24xx+
++	  series target mode HBAs.
+ 
+ if TCM_QLA2XXX
+ config TCM_QLA2XXX_DEBUG
+ 	bool "TCM_QLA2XXX fabric module DEBUG mode for QLogic 24xx+ series target mode HBAs"
+ 	default n
+ 	help
+-	Say Y here to enable the TCM_QLA2XXX fabric module DEBUG for QLogic 24xx+ series target mode HBAs
+-	This will include code to enable the SCSI command jammer
++	  Say Y here to enable the TCM_QLA2XXX fabric module DEBUG for
++	  QLogic 24xx+ series target mode HBAs.
++	  This will include code to enable the SCSI command jammer.
+ endif
+-- 
+2.44.0
 
