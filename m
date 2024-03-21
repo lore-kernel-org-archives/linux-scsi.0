@@ -1,24 +1,24 @@
 Received: from unicom146.biz-email.net (unicom146.biz-email.net [210.51.26.146])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D55D458232;
-	Thu, 21 Mar 2024 12:15:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C899224F2;
+	Thu, 21 Mar 2024 12:20:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.51.26.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711023350; cv=none; b=pZQ/L9DR1INJHZkHgsG4BPNKDj++iNxs/YY+SZmoQsNZU82B3EEVSA0Z/SQ8Eh62lqZdauyo2VfKZOEJEFlZzuAYiJ0XN84ERFoqyJb580LBMfNDGlx8F7xM95MJS/wjQtToBG6UfvKmImJdnpVUWrRgVRmF768cD3AYXwtN7xw=
+	t=1711023638; cv=none; b=Re2FYEYseGfDgrcgfPZRm9pKybeih8rP60wxB0NXyQQiWFhj4XOAJRcvFj/cZXiXKl+QcZL47rPhXhBUICQQHwfdAQjnnTrt3n+WnDR8VtaxBZBd1IXcfXLIm1IHUcOcP35DCXYjjDdf6dz1qXysLnax/hsGm4+fi1+z/RyuC5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711023350; c=relaxed/simple;
-	bh=BE5d4uIhGmXfTmt51hbSLudYl5pML7tLg/so8U1NfGA=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=SvBw5j8P1rTf8nlVDKHI7oj6yH3Gch5M7UbSfO29/IxmqsPAbmvr/t7wSENFervUqqubG78cLY7SjXi5jsqEJGeMuintDWo+KGNJ+fTgeKC1nH5AhU8t9hEKVe9yOuECkrReTipws9yYW3/ePIzLckzdkhZyLG3emE5mnrQC8iE=
+	s=arc-20240116; t=1711023638; c=relaxed/simple;
+	bh=7T3ZMGkzzpCMvYPDnfhlD6ZOzgqvjIvDKifoS2Jbd1c=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=j2M6dUGK+k6+9/aB87H+4+TTjnvs65YJLhT/PtKWenxoyyg1I1pZ0Tz1ab+kjKqIz/GoRDhdNaDgE3xuqJlFwtnFiHes7q4cT9jeGqq2DDizHJ+tofpeY9RXck3BzOiOxCfh+keWlbibSo0YEMWdYU/vFY67ZU+EDv5a0yiPlkg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com; spf=pass smtp.mailfrom=inspur.com; arc=none smtp.client-ip=210.51.26.146
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=inspur.com
 Received: from unicom146.biz-email.net
-        by unicom146.biz-email.net ((D)) with ASMTP (SSL) id SHL00039;
-        Thu, 21 Mar 2024 20:15:39 +0800
+        by unicom146.biz-email.net ((D)) with ASMTP (SSL) id SHQ00026;
+        Thu, 21 Mar 2024 20:20:26 +0800
 Received: from localhost.localdomain (10.94.11.189) by
  jtjnmail201611.home.langchao.com (10.100.2.11) with Microsoft SMTP Server id
- 15.1.2507.35; Thu, 21 Mar 2024 20:15:40 +0800
+ 15.1.2507.35; Thu, 21 Mar 2024 20:20:27 +0800
 From: Deming Wang <wangdeming@inspur.com>
 To: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
 	<sathya.prakash@broadcom.com>, <sreekanth.reddy@broadcom.com>,
@@ -26,8 +26,8 @@ To: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
 CC: <MPT-FusionLinux.pdl@broadcom.com>, <linux-scsi@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, Deming Wang <wangdeming@inspur.com>
 Subject: [PATCH] scsi: mpt3sas: complete function description
-Date: Thu, 21 Mar 2024 08:15:33 -0400
-Message-ID: <20240321121533.1519-1-wangdeming@inspur.com>
+Date: Thu, 21 Mar 2024 08:20:16 -0400
+Message-ID: <20240321122016.1587-1-wangdeming@inspur.com>
 X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -37,13 +37,13 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-tUid: 202432120153994dded071cfb602ad65e351760d0b16e
+tUid: 2024321202026d57b9675eb60499e78977c056994ce70
 X-Abuse-Reports-To: service@corp-email.com
 Abuse-Reports-To: service@corp-email.com
 X-Complaints-To: service@corp-email.com
 X-Report-Abuse-To: service@corp-email.com
 
-Add unction parameter description.
+Add function parameter description.
 
 Signed-off-by: Deming Wang <wangdeming@inspur.com>
 ---
