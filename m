@@ -1,107 +1,90 @@
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3401E56B78;
-	Fri, 22 Mar 2024 20:24:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7C5556B78
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Mar 2024 20:34:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711139062; cv=none; b=Q61yQ0aJoTKb7MNc8+M0J3ReaP34+5Jj71LKgsbv+YEjAVWPAN7JByLqvd5Ld8iliEXJQLmW1rbMG9xBrp4j9EpogafpYRIUoRhPqBCpqeFk+7rLdtX68dRi+nuHLpmwrGH0FOwHZp1D0NI5++xwNGMlAIL4cNcT7ziYDZc6oIk=
+	t=1711139684; cv=none; b=k3qefm0087fGenr2yjiqr//fBZMfw8JOgitUhEKr8r7tuMY+wjKMSr+uLj2LtLYegBiQ/ycoU7k+xXO7aeTfJsMlglaYmiEnx4v1R/cJT8tEUqRY+kkyvYmsppFCsGcJ7iodClHzskX//BFdCYwJlLSgrqDpjPpltxSqED/6QpA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711139062; c=relaxed/simple;
-	bh=1rNmkICy0RsIlEZQj84nE8h6DjeWYi5zek97NTIVO44=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=TrGkyWN6gDrRKeOd9kG//jDoNOml/pIxd/bIDCaNDUkGHbeD7Ex1i8n+YPuIccGBuIc6Y8l6WNJcPxHtaMymAtp5CXPuoyHNAj9U3ytvtbR3xUL2hEbr2Svymn4EBtoshDUVyL87rZcaE/+V+euiurYgvjxAse+1FDvwZBWEBgY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=NMA5VK3e; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=NMA5VK3e; arc=none smtp.client-ip=96.44.175.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1711139684; c=relaxed/simple;
+	bh=XjWgDhwAnyLOFEQHOgQQXXRRn46n/ix293GOySxitgs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Yo7Ef0GAjIoRwkAihRQDkbaDLrcZhaywJ/FUqCHoy4KLHQtOuA1YUV68+IU6m2JptMeqImPrjQVH7GaBZt3Ti/XQdmqzu6JaxW/HQ0AGzr11HoXCOyVlZeOSR877BYt0bhfFdqvNaEGP8ETQN4WMK4rbKpU2bwIMZiLP3uhQcDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=DJIxiwk3; arc=none smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="NMA5VK3e";
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="NMA5VK3e"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1711139059;
-	bh=1rNmkICy0RsIlEZQj84nE8h6DjeWYi5zek97NTIVO44=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=NMA5VK3eSL8t6oa4iSqjullmlTy6eCiZZiZjnAZU9DKx78Vf7pa/Rh2egG2Dvc6cG
-	 Xbga+XglGVqf+CROA7+uO4tXNhvG96bXbr4PEDEmHW9mncW0V9bW7Z3ZLIb0ALGJ77
-	 2+O6rwCb45+3VhhOWodRqGls3yaSbLN70tP4uL+0=
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 6C3E71286D39;
-	Fri, 22 Mar 2024 16:24:19 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id Is9O2Zz0E7am; Fri, 22 Mar 2024 16:24:19 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1711139059;
-	bh=1rNmkICy0RsIlEZQj84nE8h6DjeWYi5zek97NTIVO44=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=NMA5VK3eSL8t6oa4iSqjullmlTy6eCiZZiZjnAZU9DKx78Vf7pa/Rh2egG2Dvc6cG
-	 Xbga+XglGVqf+CROA7+uO4tXNhvG96bXbr4PEDEmHW9mncW0V9bW7Z3ZLIb0ALGJ77
-	 2+O6rwCb45+3VhhOWodRqGls3yaSbLN70tP4uL+0=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id C918A1286BAC;
-	Fri, 22 Mar 2024 16:24:18 -0400 (EDT)
-Message-ID: <3b5f3404bc63d59f4093e02c2cbb426a88d0bc70.camel@HansenPartnership.com>
-Subject: Re: [GIT PULL] SCSI postmerge updates for the 6.8+ merge window
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi
-	 <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
-Date: Fri, 22 Mar 2024 16:24:17 -0400
-In-Reply-To: <CAHk-=wg9pvT5YEo_kGo2QGjbC-eRaaQNOZuJYCsM1zaxj+rnug@mail.gmail.com>
-References: 
-	<3b789eacddd6265921be9da6e15257908f29b186.camel@HansenPartnership.com>
-	 <CAHk-=wg9pvT5YEo_kGo2QGjbC-eRaaQNOZuJYCsM1zaxj+rnug@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="DJIxiwk3"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-55a179f5fa1so3545361a12.0
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Mar 2024 13:34:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1711139681; x=1711744481; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=60APz7zYnkhGexsbPEuUDopr5dRjcEm9AN80VhOLeZA=;
+        b=DJIxiwk3pgLdaMx6qqvI7vzMHugQ9GuzIhT2PZj6kRzCIYUHXMnzW3T2vszEruH3wT
+         WBOZswtLtpk4pROjNi5qzCaTUiRMU2PFKQ0lQPOgF7RBFQSY6ylnY0FlKUhjhBYY0qN3
+         5lobyXHBYXU5w2VyVzLFN343bYYmFmPm7h/lM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711139681; x=1711744481;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=60APz7zYnkhGexsbPEuUDopr5dRjcEm9AN80VhOLeZA=;
+        b=Q+nSomQcsxRGdxT7iNN5ytijjwAEz9CASdpsGp7wgvL+/SV7ru2c4D9FPiq7LzrFTS
+         LxqTSaeG05ke1OCRbTcDaRdpZq/rBMgOglTyHlcjQOlORpfYP4Cbjsda6iNp0Exn2e2B
+         XS9FZBPFaEPdWw+HTHi0LHkZHUIs750hHhMVtxwggCcpaxjd/Xag7amSPuMt5jCIhYJ6
+         THg21xM3zUPGB0IxZlfVJGJAaRx+ViOVuSLQs2wQwfK5CSc6Xp0tmM0mABB8XmCcjJFY
+         nzdTLC/hFvbAQgkLXZ05F4a271Pbt+vcOFk8zYQZ+UGUNOfyBcG9nay7SOcPWPahNkL3
+         UyRA==
+X-Forwarded-Encrypted: i=1; AJvYcCXpgkgkmp1N+JbRXCSHDBfT2wGhg63B2IuqyeyrcsjkWwvZJH9Y1U50rLt7jkHenczoHmA8eKACF2m8IL8UveeGrIrEFXCFtaIN8Q==
+X-Gm-Message-State: AOJu0YzvSCo4V/ReddSiC+yff0uPD1PCRbeRNpEEPi0VjSYMelPE/K8n
+	pSk1Zyh4FlxewU9eYiqeGBO5MH/IdSOCA9SZVKJPMZwqwiW3MTfoBaSJfXosazaYFppqZwr4dG1
+	iUrQ=
+X-Google-Smtp-Source: AGHT+IFPD8exVz/a0HTyu2ktc0NeO6do/qu0Ulgda5h7tkaUP+fhQ+CWWmT4jsRh3TGlWQY/RT8iXg==
+X-Received: by 2002:a50:9f44:0:b0:568:d55c:1bb3 with SMTP id b62-20020a509f44000000b00568d55c1bb3mr490635edf.31.1711139680652;
+        Fri, 22 Mar 2024 13:34:40 -0700 (PDT)
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com. [209.85.218.48])
+        by smtp.gmail.com with ESMTPSA id d12-20020a50fe8c000000b0056a033fa007sm177414edt.64.2024.03.22.13.34.40
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 Mar 2024 13:34:40 -0700 (PDT)
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-a45f257b81fso314487466b.0
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Mar 2024 13:34:40 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCVdPPQjOiW+TqezzB60n14OhcQ8mmdD8a1FoWkYcNx2A36mB9WCuS3MWyXfrPPAFSZgV0BYR2RfNgygo67rjFLWdfX9ViIjJ0zSVQ==
+X-Received: by 2002:a17:906:5288:b0:a46:13d5:46fe with SMTP id
+ c8-20020a170906528800b00a4613d546femr621763ejm.11.1711139679859; Fri, 22 Mar
+ 2024 13:34:39 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+References: <3b789eacddd6265921be9da6e15257908f29b186.camel@HansenPartnership.com>
+ <CAHk-=wg9pvT5YEo_kGo2QGjbC-eRaaQNOZuJYCsM1zaxj+rnug@mail.gmail.com> <3b5f3404bc63d59f4093e02c2cbb426a88d0bc70.camel@HansenPartnership.com>
+In-Reply-To: <3b5f3404bc63d59f4093e02c2cbb426a88d0bc70.camel@HansenPartnership.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 22 Mar 2024 13:34:23 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wj-d9pPn00m0v3K3rHD+O=oZV-JvX-Y4aZ9jKMdEq2Rtg@mail.gmail.com>
+Message-ID: <CAHk-=wj-d9pPn00m0v3K3rHD+O=oZV-JvX-Y4aZ9jKMdEq2Rtg@mail.gmail.com>
+Subject: Re: [GIT PULL] SCSI postmerge updates for the 6.8+ merge window
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, 
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, 2024-03-22 at 12:55 -0700, Linus Torvalds wrote:
-> On Fri, 22 Mar 2024 at 12:12, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > 
-> > Eleven patches that are based on the rw_hint branch of the vfs tree
-> > which contained the base block and fs changes needed to support
-> > this. 8 patches are in the debug driver and 3 in the core.
-> 
-> Please people - the number of patches involved is entirely
-> immaterial.
-> 
-> I want my merge messages to say what those patches *do*?
-> 
-> This whole "how many patches" thing is a disease. It's not even
-> remotely interesting. I see the size of the patch in the diffstat,
-> and that actually has some meaning in the sense of "how much does
-> this pull actually change", whether it's in one patch or a hundred.
-> 
-> I have absolutely *zero* idea what the above pull request actually
-> asks me to pull.
-> 
-> So I won't.
+On Fri, 22 Mar 2024 at 13:24, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> OK, try this (I've updated the scsi-misc tag with it as well)
 
-OK, try this (I've updated the scsi-misc tag with it as well)
+Well there we go. I really had no idea what the pull was supposed to do.
 
-The vfs has long had a write lifetime hint mechanism that gives the
-expected longevity on storage of the data being written.  f2fs was the
-original consumer of this and used the hint for flash data placement
-(mostly to avoid write amplification by placing objects with similar
-lifetimes in the same erase block).  More recently the SCSI based UFS
-(Universal Flash Storage) drivers have wanted to take advantage of this
-as well, for the same reasons as f2fs, necessitating plumbing the write
-hints through the block layer and then adding it to the SCSI core.  The
-vfs write_hints pull you've already taken plumbs this as far as block
-and this pull request completes the SCSI core enabling based on a
-recently agreed reuse of the old write command group number.  The
-additions to the scsi_debug driver are for emulating this property so
-we can run tests on it in the absence of an actual UFS device.
+And while I end up looking at individual commits for random smaller
+subsystems when it's unclear (sometimes just for language barrier
+issues), for long-time maintainers of bigger stuff I kind of expect
+better.
 
-James
-
+           Linus
