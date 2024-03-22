@@ -1,98 +1,107 @@
-Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 990FA7F7D7
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Mar 2024 19:56:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3401E56B78;
+	Fri, 22 Mar 2024 20:24:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711137378; cv=none; b=VL32FdI6wYsDyu9MnERtszIiH6KAqI0wQVOBNh83tPREmaw5mZwSeMZIjStrtyL/xJIyUHBfY1Es4jXgg28D0okt7IfsC/Jj5uKu2AW5+4oz1UUYmKKlLJtj4Nd21au+zYjWuTv+4+Gdfi/qJG48lr1VfLKRPsGdRQ85qAZwnHo=
+	t=1711139062; cv=none; b=Q61yQ0aJoTKb7MNc8+M0J3ReaP34+5Jj71LKgsbv+YEjAVWPAN7JByLqvd5Ld8iliEXJQLmW1rbMG9xBrp4j9EpogafpYRIUoRhPqBCpqeFk+7rLdtX68dRi+nuHLpmwrGH0FOwHZp1D0NI5++xwNGMlAIL4cNcT7ziYDZc6oIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711137378; c=relaxed/simple;
-	bh=kEPXH+l/Pa5KYbYBvhkjCAhhsDglYWMHVXWYgQs1Dss=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=DRZDhgh4z9ZvdQ4TuwcRnEXj1w1m1RdIvcFWAtrNziAAqnK15eHfQZuQH2TKZDtkjexMxzEZ2y/QLlTL2gSN251Gbu85fdz0r3C+cf3eGbLPlAI+cuzEG+AhxYGw1WHmGFyrNPu+y/7Ks6A/YTtfKC7Rao4WRKuP6E8KXzP6V1Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=EXILuZAD; arc=none smtp.client-ip=209.85.218.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1711139062; c=relaxed/simple;
+	bh=1rNmkICy0RsIlEZQj84nE8h6DjeWYi5zek97NTIVO44=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=TrGkyWN6gDrRKeOd9kG//jDoNOml/pIxd/bIDCaNDUkGHbeD7Ex1i8n+YPuIccGBuIc6Y8l6WNJcPxHtaMymAtp5CXPuoyHNAj9U3ytvtbR3xUL2hEbr2Svymn4EBtoshDUVyL87rZcaE/+V+euiurYgvjxAse+1FDvwZBWEBgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=NMA5VK3e; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=NMA5VK3e; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="EXILuZAD"
-Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-a2f22bfb4e6so345094266b.0
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Mar 2024 12:56:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1711137375; x=1711742175; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=ceUxvYrzPOvc3uSwb/RCsigp5k0CjOlOqglIw+EfE8A=;
-        b=EXILuZADeZ4q+QOfsh6mIRJsJd4ac0zgIBggXEjzxPalBvMYeEWBagtuObkQrgPJS3
-         TcdnuR0z8ReCv/JY2cN5Q8mLuHu8IeXzxO/Pevy/Q36PAUGocn4lPbRWTvDTDBV/1Qwa
-         yazyB45zfzMPSyo0vudGKw5lU0330DdoarBNo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711137375; x=1711742175;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ceUxvYrzPOvc3uSwb/RCsigp5k0CjOlOqglIw+EfE8A=;
-        b=gg1gC23CGnauq+Hzw7quvDt9s3uApGa6V5JnPMg/jJfvLUAu33BXJyP8AdJ3FizG2q
-         q0+eKLIrfcShwtK/xAZnNg2JR9t6au3OWS6tSYxYGhNB+BH2FAFpf0xRhx5mdp+F9qdF
-         bLlNJSKSjQTJQNU611J4Kz6gOsUzNfOgj4Sc8bIlV6r+zc7adosizfbOAQBj/xOdaOoE
-         c7ztHSpB5+fTOIlc7u1ElJnTY70dTvMqLNWhwk1421qWx0N3raUhcoKeQIx5P7/XVN3l
-         okf5t55YqdO7FphObHjgffWzSKFESjU/IqbKzZWRguDLWgoHeMXh01WGUuCLUXjsKzsH
-         a/JA==
-X-Forwarded-Encrypted: i=1; AJvYcCUUmTC3CPQjfTZyCaidN3xUPizp6xdkz28kqs21H8bOzzeGsIlylNtORxAfCokKhsy6ego0A9s+dNCH4nPedrtjPUkHInStfilquA==
-X-Gm-Message-State: AOJu0YzjM5s+KCxQto9DvkwSQQy6ljttZYTmwJc1rEiuVKhOFxCZvjd1
-	Mm0g9a9C7dkZhnFfHEP8ukXjWinZXIQXGexItc5WAXHWE6Y/eXPl0Ek58ACgwZJwAB/6kQZM2CN
-	tfrI=
-X-Google-Smtp-Source: AGHT+IG4WLp0+QNMZ5OJol4iw5Hd9yGGXPR0zsJTzzc6PK9drBwhomqUXS7v81QoEJ7N9yK+LrrpEA==
-X-Received: by 2002:a17:906:aac4:b0:a45:231:9b4b with SMTP id kt4-20020a170906aac400b00a4502319b4bmr532561ejb.20.1711137374622;
-        Fri, 22 Mar 2024 12:56:14 -0700 (PDT)
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com. [209.85.218.44])
-        by smtp.gmail.com with ESMTPSA id kt16-20020a170906aad000b00a46025483c7sm158998ejb.72.2024.03.22.12.56.13
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 22 Mar 2024 12:56:13 -0700 (PDT)
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-a466a27d30aso330486066b.1
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Mar 2024 12:56:13 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUg1dfOl/xttbaTUI5eHXdlCK35Txyau1Z7Lf3JSnuJtUXAmxJwO2mzreoLND8LFXj9fvihajI0Ka3fFUOiD8HZkdvsYqGefWmJng==
-X-Received: by 2002:a17:907:7892:b0:a46:c8d5:84c8 with SMTP id
- ku18-20020a170907789200b00a46c8d584c8mr486369ejc.38.1711137373495; Fri, 22
- Mar 2024 12:56:13 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="NMA5VK3e";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="NMA5VK3e"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1711139059;
+	bh=1rNmkICy0RsIlEZQj84nE8h6DjeWYi5zek97NTIVO44=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=NMA5VK3eSL8t6oa4iSqjullmlTy6eCiZZiZjnAZU9DKx78Vf7pa/Rh2egG2Dvc6cG
+	 Xbga+XglGVqf+CROA7+uO4tXNhvG96bXbr4PEDEmHW9mncW0V9bW7Z3ZLIb0ALGJ77
+	 2+O6rwCb45+3VhhOWodRqGls3yaSbLN70tP4uL+0=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 6C3E71286D39;
+	Fri, 22 Mar 2024 16:24:19 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id Is9O2Zz0E7am; Fri, 22 Mar 2024 16:24:19 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1711139059;
+	bh=1rNmkICy0RsIlEZQj84nE8h6DjeWYi5zek97NTIVO44=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=NMA5VK3eSL8t6oa4iSqjullmlTy6eCiZZiZjnAZU9DKx78Vf7pa/Rh2egG2Dvc6cG
+	 Xbga+XglGVqf+CROA7+uO4tXNhvG96bXbr4PEDEmHW9mncW0V9bW7Z3ZLIb0ALGJ77
+	 2+O6rwCb45+3VhhOWodRqGls3yaSbLN70tP4uL+0=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id C918A1286BAC;
+	Fri, 22 Mar 2024 16:24:18 -0400 (EDT)
+Message-ID: <3b5f3404bc63d59f4093e02c2cbb426a88d0bc70.camel@HansenPartnership.com>
+Subject: Re: [GIT PULL] SCSI postmerge updates for the 6.8+ merge window
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi
+	 <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Date: Fri, 22 Mar 2024 16:24:17 -0400
+In-Reply-To: <CAHk-=wg9pvT5YEo_kGo2QGjbC-eRaaQNOZuJYCsM1zaxj+rnug@mail.gmail.com>
+References: 
+	<3b789eacddd6265921be9da6e15257908f29b186.camel@HansenPartnership.com>
+	 <CAHk-=wg9pvT5YEo_kGo2QGjbC-eRaaQNOZuJYCsM1zaxj+rnug@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <3b789eacddd6265921be9da6e15257908f29b186.camel@HansenPartnership.com>
-In-Reply-To: <3b789eacddd6265921be9da6e15257908f29b186.camel@HansenPartnership.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 22 Mar 2024 12:55:56 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wg9pvT5YEo_kGo2QGjbC-eRaaQNOZuJYCsM1zaxj+rnug@mail.gmail.com>
-Message-ID: <CAHk-=wg9pvT5YEo_kGo2QGjbC-eRaaQNOZuJYCsM1zaxj+rnug@mail.gmail.com>
-Subject: Re: [GIT PULL] SCSI postmerge updates for the 6.8+ merge window
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, 
-	linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-On Fri, 22 Mar 2024 at 12:12, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> Eleven patches that are based on the rw_hint branch of the vfs tree
-> which contained the base block and fs changes needed to support this.
-> 8 patches are in the debug driver and 3 in the core.
+On Fri, 2024-03-22 at 12:55 -0700, Linus Torvalds wrote:
+> On Fri, 22 Mar 2024 at 12:12, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > 
+> > Eleven patches that are based on the rw_hint branch of the vfs tree
+> > which contained the base block and fs changes needed to support
+> > this. 8 patches are in the debug driver and 3 in the core.
+> 
+> Please people - the number of patches involved is entirely
+> immaterial.
+> 
+> I want my merge messages to say what those patches *do*?
+> 
+> This whole "how many patches" thing is a disease. It's not even
+> remotely interesting. I see the size of the patch in the diffstat,
+> and that actually has some meaning in the sense of "how much does
+> this pull actually change", whether it's in one patch or a hundred.
+> 
+> I have absolutely *zero* idea what the above pull request actually
+> asks me to pull.
+> 
+> So I won't.
 
-Please people - the number of patches involved is entirely immaterial.
+OK, try this (I've updated the scsi-misc tag with it as well)
 
-I want my merge messages to say what those patches *do*?
+The vfs has long had a write lifetime hint mechanism that gives the
+expected longevity on storage of the data being written.  f2fs was the
+original consumer of this and used the hint for flash data placement
+(mostly to avoid write amplification by placing objects with similar
+lifetimes in the same erase block).  More recently the SCSI based UFS
+(Universal Flash Storage) drivers have wanted to take advantage of this
+as well, for the same reasons as f2fs, necessitating plumbing the write
+hints through the block layer and then adding it to the SCSI core.  The
+vfs write_hints pull you've already taken plumbs this as far as block
+and this pull request completes the SCSI core enabling based on a
+recently agreed reuse of the old write command group number.  The
+additions to the scsi_debug driver are for emulating this property so
+we can run tests on it in the absence of an actual UFS device.
 
-This whole "how many patches" thing is a disease. It's not even
-remotely interesting. I see the size of the patch in the diffstat, and
-that actually has some meaning in the sense of "how much does this
-pull actually change", whether it's in one patch or a hundred.
+James
 
-I have absolutely *zero* idea what the above pull request actually
-asks me to pull.
-
-So I won't.
-
-                Linus
