@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 626232A356A;
-	Sun, 24 Mar 2024 23:55:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB18D2A4910;
+	Sun, 24 Mar 2024 23:56:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711324552; cv=none; b=COptuWWWGFl/OnSvP44DP5a37QY5i/TBfv1TDvujpHjhgfN9BEG+1pAzlDfamr8qkib6Jq4+hdv7fDQotbXInXPSa0iA2pfuk9xB3A6wXbC1SzSjH8HmX1pH/6ziyhbEpIfES11DTgfT+IO1Kok1hVPNTl7cZqUIExh0o7eCGTk=
+	t=1711324569; cv=none; b=eBOhVIxXpUgVts3OJEOthv/fK6gAd5Z4FxcfsfLSgM+n+yupe692BFJi6PEYE3jNHcfh2C7RXwr2TPKfOJX0Ea3WD6LaT8mT6GJxQA+sMIeS4D5HCzTjpcGTxHoWswzvz8o1BbqjxWK6NZlz9g8V7WI+1ZOvzDbIrFCYHaiprks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711324552; c=relaxed/simple;
-	bh=/miLi9ayeFDj/1m5b/DXrakCXRsVkLDPvQUTFUx9GtY=;
+	s=arc-20240116; t=1711324569; c=relaxed/simple;
+	bh=QkaP0e8Mes0ggr8tSjRKR1hnJDvnEOKjDSalc0xzATQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LkeVhuRLnEuNFTIYDkpN5roTX4UoOfXkpWAJrW7AWIrVzQbjaJUcOjo8/ohliMYlV/a+fIc2sU8oDj/n+ILdWPSlP/H65qwcLKIRv/FFvWrIhCyb4oz9mcTrvgQ+N71K0TZINzWk2E72QG9KTBGPx3H+eAlVLqKLvGLYMG4Wi0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BfOP82s5; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=gy0YVvhZshgCxetGXTSrrn7f0ungxKwmj7c654WqPehVEt44iC8ViQC4xGVS5Nz3RAS2BYlTgd8L0UAnFVMzDpxWGisl9k/gnwgUIC+VzOOZhB/IIJphIz3uD6m1ryep1+YXS/xB8fUFgbppadZ6skpz0ELYhj1y8hhgJK2GTsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yaNYGNDq; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BfOP82s5"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yaNYGNDq"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=n/G3RdcsG/UHdocEiANoLj+Yss9HtHvu5C4t+MOMe/A=; b=BfOP82s54xwTY8QgOAJgTaoC7O
-	LmkOjwxOuRJMRjFtFHU4TinNu0wxPxF4U/M57S1gQrDkfztuwqAZ2E87LK1BgjcT0wzpa4Ytz0QTv
-	KfbVSC0cY8bAgzMUEXaJOPZN9G/ei1vehGdbaOIjwc52zsuDvxMuQlarYoAfvbS1pgLrK8MfrsHjm
-	FaLJCfafmiPwd9CDbGz8KHlJ4Y0ibqlhSLimylnaryMhzyf+OBe0zaqmmUj5cCLax+BdBEiIDLDtK
-	yvUTK2i66nI+OM7fNtVCK2ChU2mqgDWy07NfGTCQCmXR0C458RFI8xdt54wLnN1o/FuW9rlyd9+Gq
-	JxHrZvow==;
+	bh=ouyfZJOprAivUD3pQoGhzFC7pBq223cKtZHCDHGO3TU=; b=yaNYGNDq75sSccoFdn2AV2nsme
+	3FWw3HqCcY9hlgmeZ0OAIU1iUEKf1570UJhQ/87GUC4ZlaKEkidBy/C/M78P3MAQ4Csx241lFn0oN
+	CA+GmTa0zo9TYcNosWT8dOKZANebHq18BOMi4disy08EnkqBRDzvZUV9FTQC2L0U3UXG6XSfKiCPd
+	gQAgdf7GNKiDHC7HGs4qPUXrB0OcCBDLQbl9g8T7p4GZkStzqsblT6BebaTW/9lKujDcMU9rqlz5f
+	cObpYrbGlO/Rhie/ztGrxo6qC2VLMM6ALfep4fXq5FCgA4/qkmfFVJQM5f6xIzRKogfDRB5CaPO/H
+	DVxo3EKg==;
 Received: from [210.13.83.2] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1roXgi-0000000Dzai-1gDh;
-	Sun, 24 Mar 2024 23:55:40 +0000
+	id 1roXgy-0000000Dzft-48tF;
+	Sun, 24 Mar 2024 23:55:57 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -73,9 +73,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-samsung-soc@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net
-Subject: [PATCH 10/23] scsi: add a device_configure method to the host template
-Date: Mon, 25 Mar 2024 07:54:35 +0800
-Message-Id: <20240324235448.2039074-11-hch@lst.de>
+Subject: [PATCH 14/23] hptiop: switch to using ->device_configure
+Date: Mon, 25 Mar 2024 07:54:39 +0800
+Message-Id: <20240324235448.2039074-15-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240324235448.2039074-1-hch@lst.de>
 References: <20240324235448.2039074-1-hch@lst.de>
@@ -88,100 +88,43 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This is a version of ->slave_configure that also takes a queue_limits
-structure that the caller applies, and thus allows drivers to reconfigure
-the queue using the atomic queue limits API.
-
-In the long run it should also replace ->slave_configure entirely as
-there is no need to have two different methods here, and the slave
-name in addition to being politically charged also has no basis in
-the SCSI standards or the kernel code.
+Switch to the ->device_configure method instead of ->slave_configure
+and update the block limits on the passed in queue_limits instead
+of using the per-limit accessors.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/scsi_scan.c | 33 +++++++++++++++++++--------------
- include/scsi/scsi_host.h |  4 ++++
- 2 files changed, 23 insertions(+), 14 deletions(-)
+ drivers/scsi/hptiop.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 699356d7d17545..8e05780f802523 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -227,7 +227,7 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index f5334ccbf2cac3..e889f268601b4f 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -1151,11 +1151,11 @@ static struct attribute *hptiop_host_attrs[] = {
  
- 	/*
- 	 * realloc if new shift is calculated, which is caused by setting
--	 * up one new default queue depth after calling ->slave_configure
-+	 * up one new default queue depth after calling ->device_configure
- 	 */
- 	if (!need_alloc && new_shift != sdev->budget_map.shift)
- 		need_alloc = need_free = true;
-@@ -874,8 +874,9 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
- static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		blist_flags_t *bflags, int async)
+ ATTRIBUTE_GROUPS(hptiop_host);
+ 
+-static int hptiop_slave_config(struct scsi_device *sdev)
++static int hptiop_device_configure(struct scsi_device *sdev,
++		struct queue_limits *lim)
  {
-+	const struct scsi_host_template *hostt = sdev->host->hostt;
- 	struct queue_limits lim;
--	int ret;
-+	int ret, ret2;
- 
- 	/*
- 	 * XXX do not save the inquiry, since it can change underneath us,
-@@ -1073,22 +1074,26 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		lim.max_hw_sectors = 512;
- 	else if (*bflags & BLIST_MAX_1024)
- 		lim.max_hw_sectors = 1024;
--	ret = queue_limits_commit_update(sdev->request_queue, &lim);
-+
-+	if (hostt->device_configure)
-+		ret = hostt->device_configure(sdev, &lim);
-+	else if (hostt->slave_configure)
-+		ret = hostt->slave_configure(sdev);
-+
-+	ret2 = queue_limits_commit_update(sdev->request_queue, &lim);
-+	if (ret2 && !ret)
-+		ret = ret2;
- 	if (ret)
- 		goto fail;
- 
--	if (sdev->host->hostt->slave_configure) {
--		ret = sdev->host->hostt->slave_configure(sdev);
--		if (ret)
--			goto fail;
+ 	if (sdev->type == TYPE_TAPE)
+-		blk_queue_max_hw_sectors(sdev->request_queue, 8192);
 -
--		/*
--		 * The queue_depth is often changed in ->slave_configure.
--		 * Set up budget map again since memory consumption of
--		 * the map depends on actual queue depth.
--		 */
-+	/*
-+	 * The queue_depth is often changed in ->device_configure.
-+	 *
-+	 * Set up budget map again since memory consumption of the map depends
-+	 * on actual queue depth.
-+	 */
-+	if (hostt->device_configure || hostt->slave_configure)
- 		scsi_realloc_sdev_budget_map(sdev, sdev->queue_depth);
--	}
++		lim->max_hw_sectors = 8192;
+ 	return 0;
+ }
  
- 	if (sdev->scsi_level >= SCSI_3)
- 		scsi_attach_vpd(sdev);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index b0948ab69e0fa6..1959193d47e7f5 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -211,7 +211,11 @@ struct scsi_host_template {
- 	 *     up after yourself before returning non-0
- 	 *
- 	 * Status: OPTIONAL
-+	 *
-+	 * Note: slave_configure is the legacy version, use device_configure for
-+	 * all new code.
- 	 */
-+	int (* device_configure)(struct scsi_device *, struct queue_limits *lim);
- 	int (* slave_configure)(struct scsi_device *);
- 
- 	/*
+@@ -1168,7 +1168,7 @@ static const struct scsi_host_template driver_template = {
+ 	.emulated                   = 0,
+ 	.proc_name                  = driver_name,
+ 	.shost_groups		    = hptiop_host_groups,
+-	.slave_configure            = hptiop_slave_config,
++	.device_configure	    = hptiop_device_configure,
+ 	.this_id                    = -1,
+ 	.change_queue_depth         = hptiop_adjust_disk_queue_depth,
+ 	.cmd_size		    = sizeof(struct hpt_cmd_priv),
 -- 
 2.39.2
 
