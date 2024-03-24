@@ -1,35 +1,34 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F0A72A13E3;
-	Sun, 24 Mar 2024 23:55:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E671A2A13F6;
+	Sun, 24 Mar 2024 23:55:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711324525; cv=none; b=Eqvai5V6cQP3bYoDqq9pBSdu2gLgPY4Tr7NemIJLzzot9Kyra0fbgu8gdOfyJ1r0ckLrBk4eFqwo1aFNdMOlzKFp+oWzo+v6Jh1J4uk15nxypenF5aGPIpQN6k2248UgdahILASXgJ/RPdDRVnFjZsVymihOG9gEdNTpYXV5OWg=
+	t=1711324526; cv=none; b=eODJ96ZamOs4dwYpfLoYjEKVNc5RPUFu6d+S9OJBbE7vWqJ2XNWO6dGg61DfZxU+/GqNdl+wtys9CAfRhRSDx+pFq/NS5oUJqT3FugufSUKjigsTOCwHcQt9G6qsRb5um25jL4Qecz8yK78M0xwtvil2AgAPmJTBGPoz3lnBpjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711324525; c=relaxed/simple;
-	bh=SELFkbNszRqDf9dNFabcVXNlgHcuwLzbi4oarjWV1Kw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=DZNtBdQrlpQpTJ6bLwCzWZixjNAmdGSZ2Emcw1iC2dSFIeQyfbDnxH8FnAVMgi3zZop52ClKiMsCZ8qKfgJLVtWyDcyYrw8vyOLh/pjRWXToKjydPq/+hs4LuAIqDSUOHDCDeteQZoJFkmRSAck2Qy1XcQ+LmrZOUMKqbhKGMN0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=NYsH+jPH; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1711324526; c=relaxed/simple;
+	bh=HM+xgQnk/LbBudkCoxqN/+jLocL868hQICD0EUJlSmQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hE8Kqn4bSeynGHMOyFf3rDM03u8X6nfk4ez8O4SQ/rlHIhn8g7JRbNd2O/YsfWDTGnrGw4IOcAdyDYh4A/iEYQ87fURbZqhSDNyR+ke0shVzf54vltGU5ssLZWH8Ut3kT1YgXuHu2ObAoZ9QPo2A9PzO6eKUjcT65qc3zc21xJU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=iFGmw5+9; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NYsH+jPH"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iFGmw5+9"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Oi3gXJaYMU3a5CWeWFZBGsi5hiMd7VrWMH8aWRvFEBc=; b=NYsH+jPHH8jf7F53QOWprSH1g2
-	e3RHAOgDAudjCGi04C2rMsaWewlEM8SbYrfRfR19iaa1gEZxOnivXdaaoL1QvFgvbrMxEr6ZxisiI
-	PJghhyY0Uwr+OAX/XdvigXvhqKWpgBUCNUyKdyaBVahFkIP9bnyFX8uAjHct87kzEJrvQsCMIDU4m
-	4hmOoAn/BFZ3xEMQB3EV890S6hEOcS8d61ymlCtdkhBy1D7S5Hagugw8qQSS7B+2pE1BrTBq88Kd6
-	CwoxK8O2Y81nSef5Lpubk0EhW1xhxNMi5qK71dP9yOJQzHWWFocWsvvAoANScILKzQxrDEmasz3pK
-	BT6LK1nQ==;
+	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=eHfDKYBKDOSF5nkhxH0HKhVm+4o+I6CDGNU5dThwXeo=; b=iFGmw5+9ejiIzgsJsfpITQ1Gxa
+	cNW+HGYcPgHMfnTTMiFBjgg/8YplxgjdIXeW4gatcGxyvUM7bGrMDOWAIrjcehyUhcf7yhs1uTF8N
+	j/6E4rX+8NSQvugVHBLrxw7uClWfF5izDdYsOMowrlpd0gP8sKhOV32KkfOLhEDHUSl3icbfQUSEh
+	1RdL5Fr6g8stlf8eeiTi8gHT0IloiZnnoe2zXE7a3EqYV6jbG/i8o1mnWgPTn42fGOsI/LxGYp5FC
+	1w9lylFq5FkbrbbCCcnli40xb1G/s+kidml/0U4kMgM6qC7wORl5rjWoB+R0mM3L8qlcXwHLQZScE
+	u8JuhRUA==;
 Received: from [210.13.83.2] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1roXfy-0000000DzKg-2IVj;
-	Sun, 24 Mar 2024 23:54:55 +0000
+	id 1roXfu-0000000DzJc-2rva;
+	Sun, 24 Mar 2024 23:54:51 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -73,12 +72,10 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-samsung-soc@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net
-Subject: [PATCH 01/23] block: don't reject too large max_user_setors in blk_validate_limits
-Date: Mon, 25 Mar 2024 07:54:26 +0800
-Message-Id: <20240324235448.2039074-2-hch@lst.de>
+Subject: convert SCSI to atomic queue limits, part 1
+Date: Mon, 25 Mar 2024 07:54:25 +0800
+Message-Id: <20240324235448.2039074-1-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240324235448.2039074-1-hch@lst.de>
-References: <20240324235448.2039074-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -88,28 +85,84 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-We already cap down the actual max_sectors to the max of the hardware
-and user limit, so don't reject the configuration.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-settings.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+this series converts the SCSI midlayer and LLDDs to use atomic queue limits
+API.  It is pretty straight forward, except for the mpt3mr driver which
+does really weird and probably already broken things by setting limits
+from unlocked device iteration callsbacks.
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 3c7d8d638ab59d..cdbaef159c4bc3 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -146,8 +146,7 @@ static int blk_validate_limits(struct queue_limits *lim)
- 	max_hw_sectors = min_not_zero(lim->max_hw_sectors,
- 				lim->max_dev_sectors);
- 	if (lim->max_user_sectors) {
--		if (lim->max_user_sectors > max_hw_sectors ||
--		    lim->max_user_sectors < PAGE_SIZE / SECTOR_SIZE)
-+		if (lim->max_user_sectors < PAGE_SIZE / SECTOR_SIZE)
- 			return -EINVAL;
- 		lim->max_sectors = min(max_hw_sectors, lim->max_user_sectors);
- 	} else {
--- 
-2.39.2
+The first patch is actually a bug fix and should probably go into 6.9-rc.
+The other would probably best be in a shared branch between the block and
+scsi code, as the ULD drivers will be a lot more extensive.  I'm actually
+scratching my head on dealing with some of the updates that it does from
+the I/O completion handler and ->open calls for already open devices.
+Suggestions welcome..
 
+Diffstat:
+ block/blk-settings.c                        |  248 ----------------------------
+ block/bsg-lib.c                             |    6 
+ drivers/ata/ahci.h                          |    2 
+ drivers/ata/libata-sata.c                   |   10 -
+ drivers/ata/libata-scsi.c                   |   19 +-
+ drivers/ata/libata.h                        |    3 
+ drivers/ata/pata_macio.c                    |   11 -
+ drivers/ata/sata_mv.c                       |    2 
+ drivers/ata/sata_nv.c                       |   24 +-
+ drivers/ata/sata_sil24.c                    |    2 
+ drivers/firewire/sbp2.c                     |   13 -
+ drivers/message/fusion/mptfc.c              |    1 
+ drivers/message/fusion/mptsas.c             |    1 
+ drivers/message/fusion/mptscsih.c           |    2 
+ drivers/message/fusion/mptspi.c             |    1 
+ drivers/s390/block/dasd_eckd.c              |    6 
+ drivers/scsi/aha152x.c                      |    8 
+ drivers/scsi/aic94xx/aic94xx_init.c         |    2 
+ drivers/scsi/hisi_sas/hisi_sas.h            |    3 
+ drivers/scsi/hisi_sas/hisi_sas_main.c       |    7 
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c      |    2 
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c      |    2 
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c      |    7 
+ drivers/scsi/hosts.c                        |    6 
+ drivers/scsi/hptiop.c                       |    8 
+ drivers/scsi/ibmvscsi/ibmvfc.c              |    5 
+ drivers/scsi/imm.c                          |   12 -
+ drivers/scsi/ipr.c                          |   10 -
+ drivers/scsi/isci/init.c                    |    2 
+ drivers/scsi/iscsi_tcp.c                    |    2 
+ drivers/scsi/libsas/sas_scsi_host.c         |    7 
+ drivers/scsi/megaraid/megaraid_sas.h        |    2 
+ drivers/scsi/megaraid/megaraid_sas_base.c   |   29 +--
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |    3 
+ drivers/scsi/mpi3mr/mpi3mr.h                |    1 
+ drivers/scsi/mpi3mr/mpi3mr_app.c            |   12 -
+ drivers/scsi/mpi3mr/mpi3mr_os.c             |   76 +++-----
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |   18 --
+ drivers/scsi/mvsas/mv_init.c                |    2 
+ drivers/scsi/pm8001/pm8001_init.c           |    2 
+ drivers/scsi/pmcraid.c                      |   11 -
+ drivers/scsi/ppa.c                          |    8 
+ drivers/scsi/qla2xxx/qla_os.c               |    6 
+ drivers/scsi/scsi_lib.c                     |   40 +---
+ drivers/scsi/scsi_scan.c                    |   79 ++++----
+ drivers/scsi/scsi_transport_fc.c            |   15 +
+ drivers/scsi/scsi_transport_iscsi.c         |    6 
+ drivers/scsi/scsi_transport_sas.c           |    4 
+ drivers/staging/rts5208/rtsx.c              |   24 +-
+ drivers/ufs/core/ufs_bsg.c                  |    3 
+ drivers/ufs/core/ufshcd.c                   |    3 
+ drivers/ufs/host/ufs-exynos.c               |    8 
+ drivers/usb/image/microtek.c                |    8 
+ drivers/usb/storage/scsiglue.c              |   57 ++----
+ drivers/usb/storage/uas.c                   |   29 +--
+ drivers/usb/storage/usb.c                   |   10 +
+ include/linux/blkdev.h                      |   13 -
+ include/linux/bsg-lib.h                     |    3 
+ include/linux/libata.h                      |   10 -
+ include/linux/mmc/host.h                    |    4 
+ include/scsi/libsas.h                       |    3 
+ include/scsi/scsi_host.h                    |    9 +
+ include/scsi/scsi_transport.h               |    2 
+ include/scsi/scsi_transport_fc.h            |    1 
+ include/ufs/ufshcd.h                        |    1 
+ 65 files changed, 335 insertions(+), 601 deletions(-)
