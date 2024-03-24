@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2866C233A9A;
-	Sun, 24 Mar 2024 23:55:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 626232A356A;
+	Sun, 24 Mar 2024 23:55:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711324534; cv=none; b=IWprOGL8zzlXJbUFXorEL9gw8nQTqmH9Ml81fjrnN0Z8gk8oVcdCZfxQCRbt9KJmAkmkP2M9xQuE2R/Z4kaFBhIIBJ4/zNAGMMYcjZ0YsZGGhTD7HGoYMSLeGc9Vca5V8vpwdFMbiKhLqLo35365Ui2yW4tV5W4ItYAvY53doPo=
+	t=1711324552; cv=none; b=COptuWWWGFl/OnSvP44DP5a37QY5i/TBfv1TDvujpHjhgfN9BEG+1pAzlDfamr8qkib6Jq4+hdv7fDQotbXInXPSa0iA2pfuk9xB3A6wXbC1SzSjH8HmX1pH/6ziyhbEpIfES11DTgfT+IO1Kok1hVPNTl7cZqUIExh0o7eCGTk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711324534; c=relaxed/simple;
-	bh=Ggm0AssI7VPKnGrHGhPZVI47OFlAlU5qjKuqDiv7nOE=;
+	s=arc-20240116; t=1711324552; c=relaxed/simple;
+	bh=/miLi9ayeFDj/1m5b/DXrakCXRsVkLDPvQUTFUx9GtY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=H3zg0UzipnAFeJ9G1IKD3MRv9/eFSebkP0cc3FH57uz64m71yW42q9leJm0LtpL1NR+vw6cqA54XFRHtvNaq8b0+cFuOxC/O6dDYclqjWr7N70dtrFEl+lpyFdxhXJDShYSyWiw+m3exZV74I/I8pmUfJB4PeR4Aq60R9Jv9yw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Q1Gh7k6V; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=LkeVhuRLnEuNFTIYDkpN5roTX4UoOfXkpWAJrW7AWIrVzQbjaJUcOjo8/ohliMYlV/a+fIc2sU8oDj/n+ILdWPSlP/H65qwcLKIRv/FFvWrIhCyb4oz9mcTrvgQ+N71K0TZINzWk2E72QG9KTBGPx3H+eAlVLqKLvGLYMG4Wi0U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=BfOP82s5; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Q1Gh7k6V"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BfOP82s5"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=rf6PjrXwu7364vZU4ZL9Ykj49zwA3myfqTzlnUym/Zk=; b=Q1Gh7k6VdLVot4Qp0hFjkg7EL0
-	cEqpjHrfbS7DhPXED6LXdQ9+jDh1kNY/vCrpeWDLgLuqQiBOXm/usbnGPkn3IlDteqcUDU/WdJRB2
-	QSwCJOcWhFxThh89zaFDtmKXQAvCBxaDN5zRReAdV/M4uwR6ccPLO+5ZpYAqHWfDuk9JkRKlJEIkS
-	KXnoChQOw0+j9QRIwce7eIMXZtSaJ1MdX5Ol9kxfgvCl3d1qag4vRDk/jX5XYQQXm7VliPkfAaGmu
-	B+LpySG/DXNLj0msXY8CFHhdtYLl9dYVD2GAaHWLbIlAo5nTLmQbGZH6VmKBxTuzj8QyikQbQqT81
-	kwp8mNPw==;
+	bh=n/G3RdcsG/UHdocEiANoLj+Yss9HtHvu5C4t+MOMe/A=; b=BfOP82s54xwTY8QgOAJgTaoC7O
+	LmkOjwxOuRJMRjFtFHU4TinNu0wxPxF4U/M57S1gQrDkfztuwqAZ2E87LK1BgjcT0wzpa4Ytz0QTv
+	KfbVSC0cY8bAgzMUEXaJOPZN9G/ei1vehGdbaOIjwc52zsuDvxMuQlarYoAfvbS1pgLrK8MfrsHjm
+	FaLJCfafmiPwd9CDbGz8KHlJ4Y0ibqlhSLimylnaryMhzyf+OBe0zaqmmUj5cCLax+BdBEiIDLDtK
+	yvUTK2i66nI+OM7fNtVCK2ChU2mqgDWy07NfGTCQCmXR0C458RFI8xdt54wLnN1o/FuW9rlyd9+Gq
+	JxHrZvow==;
 Received: from [210.13.83.2] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1roXgE-0000000DzPl-1LSc;
-	Sun, 24 Mar 2024 23:55:13 +0000
+	id 1roXgi-0000000Dzai-1gDh;
+	Sun, 24 Mar 2024 23:55:40 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -73,9 +73,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-samsung-soc@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net
-Subject: [PATCH 05/23] scsi_transport_fc: add a max_bsg_segments field to struct fc_function_template
-Date: Mon, 25 Mar 2024 07:54:30 +0800
-Message-Id: <20240324235448.2039074-6-hch@lst.de>
+Subject: [PATCH 10/23] scsi: add a device_configure method to the host template
+Date: Mon, 25 Mar 2024 07:54:35 +0800
+Message-Id: <20240324235448.2039074-11-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240324235448.2039074-1-hch@lst.de>
 References: <20240324235448.2039074-1-hch@lst.de>
@@ -88,79 +88,100 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-ibmvfc only supports a single segment for BSG FC passthrough.  Instead of
-having it set a queue limits after creating the BSD queues, add a field so
-that the FC transport can set it before allocating the queue.
+This is a version of ->slave_configure that also takes a queue_limits
+structure that the caller applies, and thus allows drivers to reconfigure
+the queue using the atomic queue limits API.
+
+In the long run it should also replace ->slave_configure entirely as
+there is no need to have two different methods here, and the slave
+name in addition to being politically charged also has no basis in
+the SCSI standards or the kernel code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c   | 5 +----
- drivers/scsi/scsi_transport_fc.c | 2 ++
- include/scsi/scsi_transport_fc.h | 1 +
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_scan.c | 33 +++++++++++++++++++--------------
+ include/scsi/scsi_host.h |  4 ++++
+ 2 files changed, 23 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 05b126bfd18b55..a3d1013c83075c 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -5541,8 +5541,6 @@ static void ibmvfc_tgt_add_rport(struct ibmvfc_target *tgt)
- 			rport->supported_classes |= FC_COS_CLASS2;
- 		if (be32_to_cpu(tgt->service_parms.class3_parms[0]) & 0x80000000)
- 			rport->supported_classes |= FC_COS_CLASS3;
--		if (rport->rqst_q)
--			blk_queue_max_segments(rport->rqst_q, 1);
- 	} else
- 		tgt_dbg(tgt, "rport add failed\n");
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-@@ -6391,8 +6389,6 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 699356d7d17545..8e05780f802523 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -227,7 +227,7 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
  
- 	ibmvfc_init_sub_crqs(vhost);
+ 	/*
+ 	 * realloc if new shift is calculated, which is caused by setting
+-	 * up one new default queue depth after calling ->slave_configure
++	 * up one new default queue depth after calling ->device_configure
+ 	 */
+ 	if (!need_alloc && new_shift != sdev->budget_map.shift)
+ 		need_alloc = need_free = true;
+@@ -874,8 +874,9 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 		blist_flags_t *bflags, int async)
+ {
++	const struct scsi_host_template *hostt = sdev->host->hostt;
+ 	struct queue_limits lim;
+-	int ret;
++	int ret, ret2;
  
--	if (shost_to_fc_host(shost)->rqst_q)
--		blk_queue_max_segments(shost_to_fc_host(shost)->rqst_q, 1);
- 	dev_set_drvdata(dev, vhost);
- 	spin_lock(&ibmvfc_driver_lock);
- 	list_add_tail(&vhost->queue, &ibmvfc_head);
-@@ -6547,6 +6543,7 @@ static struct fc_function_template ibmvfc_transport_functions = {
- 	.get_starget_port_id = ibmvfc_get_starget_port_id,
- 	.show_starget_port_id = 1,
+ 	/*
+ 	 * XXX do not save the inquiry, since it can change underneath us,
+@@ -1073,22 +1074,26 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 		lim.max_hw_sectors = 512;
+ 	else if (*bflags & BLIST_MAX_1024)
+ 		lim.max_hw_sectors = 1024;
+-	ret = queue_limits_commit_update(sdev->request_queue, &lim);
++
++	if (hostt->device_configure)
++		ret = hostt->device_configure(sdev, &lim);
++	else if (hostt->slave_configure)
++		ret = hostt->slave_configure(sdev);
++
++	ret2 = queue_limits_commit_update(sdev->request_queue, &lim);
++	if (ret2 && !ret)
++		ret = ret2;
+ 	if (ret)
+ 		goto fail;
  
-+	.max_bsg_segments = 1,
- 	.bsg_request = ibmvfc_bsg_request,
- 	.bsg_timeout = ibmvfc_bsg_timeout,
- };
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 0799700b0fca77..7d088b8da07578 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -4288,6 +4288,7 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
- 	snprintf(bsg_name, sizeof(bsg_name),
- 		 "fc_host%d", shost->host_no);
- 	scsi_init_limits(shost, &lim);
-+	lim.max_segments = min_not_zero(lim.max_segments, i->f->max_bsg_segments);
- 	q = bsg_setup_queue(dev, bsg_name, &lim, fc_bsg_dispatch,
- 			fc_bsg_job_timeout, i->f->dd_bsg_size);
- 	if (IS_ERR(q)) {
-@@ -4320,6 +4321,7 @@ fc_bsg_rportadd(struct Scsi_Host *shost, struct fc_rport *rport)
- 		return -ENOTSUPP;
+-	if (sdev->host->hostt->slave_configure) {
+-		ret = sdev->host->hostt->slave_configure(sdev);
+-		if (ret)
+-			goto fail;
+-
+-		/*
+-		 * The queue_depth is often changed in ->slave_configure.
+-		 * Set up budget map again since memory consumption of
+-		 * the map depends on actual queue depth.
+-		 */
++	/*
++	 * The queue_depth is often changed in ->device_configure.
++	 *
++	 * Set up budget map again since memory consumption of the map depends
++	 * on actual queue depth.
++	 */
++	if (hostt->device_configure || hostt->slave_configure)
+ 		scsi_realloc_sdev_budget_map(sdev, sdev->queue_depth);
+-	}
  
- 	scsi_init_limits(shost, &lim);
-+	lim.max_segments = min_not_zero(lim.max_segments, i->f->max_bsg_segments);
- 	q = bsg_setup_queue(dev, dev_name(dev), &lim, fc_bsg_dispatch_prep,
- 				fc_bsg_job_timeout, i->f->dd_bsg_size);
- 	if (IS_ERR(q)) {
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index 483513c575976c..fd039306ffbb20 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -709,6 +709,7 @@ struct fc_function_template {
- 	int  	(*vport_delete)(struct fc_vport *);
+ 	if (sdev->scsi_level >= SCSI_3)
+ 		scsi_attach_vpd(sdev);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index b0948ab69e0fa6..1959193d47e7f5 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -211,7 +211,11 @@ struct scsi_host_template {
+ 	 *     up after yourself before returning non-0
+ 	 *
+ 	 * Status: OPTIONAL
++	 *
++	 * Note: slave_configure is the legacy version, use device_configure for
++	 * all new code.
+ 	 */
++	int (* device_configure)(struct scsi_device *, struct queue_limits *lim);
+ 	int (* slave_configure)(struct scsi_device *);
  
- 	/* bsg support */
-+	u32				max_bsg_segments;
- 	int	(*bsg_request)(struct bsg_job *);
- 	int	(*bsg_timeout)(struct bsg_job *);
- 
+ 	/*
 -- 
 2.39.2
 
