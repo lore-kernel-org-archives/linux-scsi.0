@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F38D2A359D;
-	Sun, 24 Mar 2024 23:55:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 308F22A2B41;
+	Sun, 24 Mar 2024 23:55:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711324557; cv=none; b=YiXLJJNP3ALvxvyBXJ8XCw9ksJqCCGgSeSTRiNwU5Ig5s/MrPyOARNAbuprd1U5ILcbXgYjUJMbLwt2ljpyw7LT/QewxEzzolA4VSqzbSbjZp1OhdnTmKrPztz8+JJAo+9dCCUQVbRdsFxmaFydD80phkMUIgvaKbkK2gklTAHc=
+	t=1711324546; cv=none; b=btei4dfYf94xuyqvuKTYYnswvYTHq/uU7nkw6Z7cl6By6Q8RZ/bRnHCFP+/jWUtWB94k7AOYdyMykXYI7ZS3qKH55igBWqB56QGE6GLBoeiATIEoj7+RK6hX8riX+RUt/iDhU7HxcRe0aMvznp0W5glARAK0tVJ96yyxfAPEj0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711324557; c=relaxed/simple;
-	bh=AhaBs1aHSv9qKb/7I2tJJuQYtkri22rZoTcelfmTa1M=;
+	s=arc-20240116; t=1711324546; c=relaxed/simple;
+	bh=1ux5EGgMI7mfjlWWdKU6y9GGYwk5n3iGe+Ja067XuGQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=IgH1LZi3S6aQJopavpdFU4f/axOJITl+LIO5Mq+wl7zyeUWmsLAqJxXQCnWgJea6Yl0kvfCS9c5cCFppXQsgtHlthXfUpj1fKC4iC8CA+u+LCZ2GIGMxHu+IYe1u4QKs/O1gmnXtj7ZJ1ZWG0BJXZbDhRuZPC4z4AZl4Dt/q8zM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=EPwKA8vB; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=t7VDBe6S8Ud/9gx8p4P66B99sOPpYmoO8GD7uTalbXnffV5/uQigHjMPp4GeDDs8rMmkAJW3RvPUKaFnTHHrcfZExh3f0HahnoiNWyk6YPn5NDZdUj2EWWh/qO7/PiDciASYPBA9eoY/BuHKlXbM9qjwFDwfEPaLv5P9SK18+cA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=EKuYXNlp; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EPwKA8vB"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EKuYXNlp"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=qJi5WCtY1yhQ9UxhLc1APOVXudQDNK947ENHC/rdITw=; b=EPwKA8vBGvjGYpkkJfpCjZbApB
-	5foUKKW/zf2p+CFr1H96o1EnUY5k8fmsYQlezVfaycUCH9O9bpQUabVFFWkPBbhIWKsePOcmM2hZK
-	s+RhyiyTnd99mse1pqPEFfVB33L3NFuHVBAA2rESF7lq4fGhc3CRAyANv/cR4HanROVSpvO2IAGtS
-	AjeIZ1exxhb3GeiYEvb85Vd44fyUejHDugxGGlPHmMMOkf1PXYkruPtypkMwLPp9P5sLZWZLmmLZ+
-	mRWlfGO2X4yTW3VuqBKCa4QLJ3gUwwbShmhHOhvgxSnGDSHmGQ1UPAcxO3QECbN57kp0OcQxFFmUV
-	xqxJVPZg==;
+	bh=QpEcu6br0nAm6nvHblhU5Wfkb8gpPkNvyq7w8yaKxUI=; b=EKuYXNlpKdXNfFKgx4BGUtUvLq
+	z/ZeBrzjCLmsiYFEpz0FNjKfi1mC/4rgk/rf5qm/j6jryZAI5ynHqmV0gHgWdsY3TmyufNfWUNU3C
+	/+566mnuYmdPVxCzRs4WPYckhOIhLPhlY3IFa/VWRf7VknxMpnDn3eLNSCJd5Y3a6Nj/bbPXEoGUQ
+	evRTAnn9WNST8fFWT4TI6pGyZ/2ZEVUTt9N4qL6B1mkjU69W3LpnaFazLrPN5vvXzG2eoFY+FD8+l
+	yRY+qmamIKJkFch+I+cYnMVGaRdO9UN4+Zy753trTPYKlalKrvcP8Zd1DTyuR64126FBa7EgIiYkS
+	e619Z5pA==;
 Received: from [210.13.83.2] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1roXgl-0000000DzcT-32yh;
-	Sun, 24 Mar 2024 23:55:44 +0000
+	id 1roXga-0000000DzXo-2oPb;
+	Sun, 24 Mar 2024 23:55:33 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -73,9 +73,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-samsung-soc@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net
-Subject: [PATCH 11/23] megaraid_sas: switch to using ->device_configure
-Date: Mon, 25 Mar 2024 07:54:36 +0800
-Message-Id: <20240324235448.2039074-12-hch@lst.de>
+Subject: [PATCH 08/23] ufs-exynos: move setting the the dma alignment to the init method
+Date: Mon, 25 Mar 2024 07:54:33 +0800
+Message-Id: <20240324235448.2039074-9-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240324235448.2039074-1-hch@lst.de>
 References: <20240324235448.2039074-1-hch@lst.de>
@@ -88,142 +88,75 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Switch to the ->device_configure method instead of ->slave_configure
-and update the block limits on the passed in queue_limits instead
-of using the per-limit accessors.
+Use the SCSI host's dma_alignment field and set it in ->init and remove
+the now unused config_scsi_dev method.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |  2 +-
- drivers/scsi/megaraid/megaraid_sas_base.c   | 29 ++++++++++++---------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  3 ++-
- 3 files changed, 20 insertions(+), 14 deletions(-)
+ drivers/ufs/core/ufshcd.c     | 3 ---
+ drivers/ufs/host/ufs-exynos.c | 8 ++------
+ include/ufs/ufshcd.h          | 1 -
+ 3 files changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 56624cbf7fa5e7..5680c6cdb22193 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2701,7 +2701,7 @@ int megasas_get_ctrl_info(struct megasas_instance *instance);
- int
- megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend);
- void megasas_set_dynamic_target_properties(struct scsi_device *sdev,
--					   bool is_target_prop);
-+		struct queue_limits *lim, bool is_target_prop);
- int megasas_get_target_prop(struct megasas_instance *instance,
- 			    struct scsi_device *sdev);
- void megasas_get_snapdump_properties(struct megasas_instance *instance);
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3d4f13da1ae873..def0d905b6d9e3 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1888,7 +1888,7 @@ static struct megasas_instance *megasas_lookup_instance(u16 host_no)
- * Returns void
- */
- void megasas_set_dynamic_target_properties(struct scsi_device *sdev,
--					   bool is_target_prop)
-+		struct queue_limits *lim, bool is_target_prop)
- {
- 	u16 pd_index = 0, ld;
- 	u32 device_id;
-@@ -1915,8 +1915,10 @@ void megasas_set_dynamic_target_properties(struct scsi_device *sdev,
- 			return;
- 		raid = MR_LdRaidGet(ld, local_map_ptr);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index e30fd125988d7a..7d593395aeff25 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5262,9 +5262,6 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+ 	 */
+ 	sdev->silence_suspend = 1;
  
--		if (raid->capability.ldPiMode == MR_PROT_INFO_TYPE_CONTROLLER)
--			blk_queue_update_dma_alignment(sdev->request_queue, 0x7);
-+		if (raid->capability.ldPiMode == MR_PROT_INFO_TYPE_CONTROLLER) {
-+			if (lim)
-+				lim->dma_alignment = 0x7;
-+		}
+-	if (hba->vops && hba->vops->config_scsi_dev)
+-		hba->vops->config_scsi_dev(sdev);
+-
+ 	ufshcd_crypto_register(hba, q);
  
- 		mr_device_priv_data->is_tm_capable =
- 			raid->capability.tmCapable;
-@@ -1967,7 +1969,8 @@ void megasas_set_dynamic_target_properties(struct scsi_device *sdev,
-  *
-  */
- static inline void
--megasas_set_nvme_device_properties(struct scsi_device *sdev, u32 max_io_size)
-+megasas_set_nvme_device_properties(struct scsi_device *sdev,
-+		struct queue_limits *lim, u32 max_io_size)
- {
- 	struct megasas_instance *instance;
- 	u32 mr_nvme_pg_size;
-@@ -1976,10 +1979,10 @@ megasas_set_nvme_device_properties(struct scsi_device *sdev, u32 max_io_size)
- 	mr_nvme_pg_size = max_t(u32, instance->nvme_page_size,
- 				MR_DEFAULT_NVME_PAGE_SIZE);
+ 	return 0;
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 734d40f99e31e6..7ffc28e2278420 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -1187,6 +1187,8 @@ static int exynos_ufs_init(struct ufs_hba *hba)
+ 		goto out;
+ 	exynos_ufs_specify_phy_time_attr(ufs);
+ 	exynos_ufs_config_smu(ufs);
++
++	hba->host->dma_alignment = SZ_4K - 1;
+ 	return 0;
  
--	blk_queue_max_hw_sectors(sdev->request_queue, (max_io_size / 512));
-+	lim->max_hw_sectors = max_io_size / 512;
-+	lim->virt_boundary_mask = mr_nvme_pg_size - 1;
- 
- 	blk_queue_flag_set(QUEUE_FLAG_NOMERGES, sdev->request_queue);
--	blk_queue_virt_boundary(sdev->request_queue, mr_nvme_pg_size - 1);
+ out:
+@@ -1510,11 +1512,6 @@ static int fsd_ufs_pre_link(struct exynos_ufs *ufs)
+ 	return 0;
  }
  
- /*
-@@ -2041,7 +2044,7 @@ static void megasas_set_fw_assisted_qd(struct scsi_device *sdev,
-  * @is_target_prop			true, if fw provided target properties.
-  */
- static void megasas_set_static_target_properties(struct scsi_device *sdev,
--						 bool is_target_prop)
-+		struct queue_limits *lim, bool is_target_prop)
+-static void exynos_ufs_config_scsi_dev(struct scsi_device *sdev)
+-{
+-	blk_queue_update_dma_alignment(sdev->request_queue, SZ_4K - 1);
+-}
+-
+ static int fsd_ufs_post_link(struct exynos_ufs *ufs)
  {
- 	u32 max_io_size_kb = MR_DEFAULT_NVME_MDTS_KB;
- 	struct megasas_instance *instance;
-@@ -2060,13 +2063,15 @@ static void megasas_set_static_target_properties(struct scsi_device *sdev,
- 		max_io_size_kb = le32_to_cpu(instance->tgt_prop->max_io_size_kb);
+ 	int i;
+@@ -1583,7 +1580,6 @@ static const struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
+ 	.hibern8_notify			= exynos_ufs_hibern8_notify,
+ 	.suspend			= exynos_ufs_suspend,
+ 	.resume				= exynos_ufs_resume,
+-	.config_scsi_dev		= exynos_ufs_config_scsi_dev,
+ };
  
- 	if (instance->nvme_page_size && max_io_size_kb)
--		megasas_set_nvme_device_properties(sdev, (max_io_size_kb << 10));
-+		megasas_set_nvme_device_properties(sdev, lim,
-+				max_io_size_kb << 10);
+ static struct ufs_hba_variant_ops ufs_hba_exynosauto_vh_ops = {
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index cb2afcebbdf514..061919448d3936 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -373,7 +373,6 @@ struct ufs_hba_variant_ops {
+ 	int	(*get_outstanding_cqs)(struct ufs_hba *hba,
+ 				       unsigned long *ocqs);
+ 	int	(*config_esi)(struct ufs_hba *hba);
+-	void	(*config_scsi_dev)(struct scsi_device *sdev);
+ };
  
- 	megasas_set_fw_assisted_qd(sdev, is_target_prop);
- }
- 
- 
--static int megasas_slave_configure(struct scsi_device *sdev)
-+static int megasas_device_configure(struct scsi_device *sdev,
-+		struct queue_limits *lim)
- {
- 	u16 pd_index = 0;
- 	struct megasas_instance *instance;
-@@ -2096,10 +2101,10 @@ static int megasas_slave_configure(struct scsi_device *sdev)
- 		ret_target_prop = megasas_get_target_prop(instance, sdev);
- 
- 	is_target_prop = (ret_target_prop == DCMD_SUCCESS) ? true : false;
--	megasas_set_static_target_properties(sdev, is_target_prop);
-+	megasas_set_static_target_properties(sdev, lim, is_target_prop);
- 
- 	/* This sdev property may change post OCR */
--	megasas_set_dynamic_target_properties(sdev, is_target_prop);
-+	megasas_set_dynamic_target_properties(sdev, lim, is_target_prop);
- 
- 	mutex_unlock(&instance->reset_mutex);
- 
-@@ -3507,7 +3512,7 @@ static const struct scsi_host_template megasas_template = {
- 	.module = THIS_MODULE,
- 	.name = "Avago SAS based MegaRAID driver",
- 	.proc_name = "megaraid_sas",
--	.slave_configure = megasas_slave_configure,
-+	.device_configure = megasas_device_configure,
- 	.slave_alloc = megasas_slave_alloc,
- 	.slave_destroy = megasas_slave_destroy,
- 	.queuecommand = megasas_queue_command,
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index c60014e07b449e..6c1fb8149553a8 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -5119,7 +5119,8 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
- 					ret_target_prop = megasas_get_target_prop(instance, sdev);
- 
- 				is_target_prop = (ret_target_prop == DCMD_SUCCESS) ? true : false;
--				megasas_set_dynamic_target_properties(sdev, is_target_prop);
-+				megasas_set_dynamic_target_properties(sdev, NULL,
-+						is_target_prop);
- 			}
- 
- 			status_reg = instance->instancet->read_fw_status_reg
+ /* clock gating state  */
 -- 
 2.39.2
 
