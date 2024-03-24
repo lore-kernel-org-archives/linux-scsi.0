@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 455292A4100;
-	Sun, 24 Mar 2024 23:55:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6F2A2A2B5C;
+	Sun, 24 Mar 2024 23:55:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711324560; cv=none; b=UJAwe94g64xv1JcdYiAkju9WWby32eO1KCRXceKHOB2vLQYikHBeSZbSaup9M+OLxgSioDLzO5hAh2Miyr0lzWGSdd2TH/Db6zO4kdJBazOkQbJlLCvuqdo1r/IRwm6o7rB5bzYoFehgtsBzwcTzOQzmtWspiOazIbviN82+GXg=
+	t=1711324549; cv=none; b=YgIw9aZa3fB/ElnKbOPyT2q3m9M0b/ZRZOoYzwDbY4GOovUXwyTSkrfLaWY5DB4UC9f0c+ySh7wZ/hFRj8zWzXSTRKu1PNP3zFmyADfDwqk8i60K17QNgJmRDh0aSZMO22dRuvdXGUCGVcfKtRhU2vtJBB/PvwXfHC61Yllauso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711324560; c=relaxed/simple;
-	bh=0o0wea8IOEG3fImvdytoP6pTaDfNGvbeoglcpd/vcag=;
+	s=arc-20240116; t=1711324549; c=relaxed/simple;
+	bh=LItSflsTIpc3oSfPFr0kTVKSf+cMF4KH1ptylwWgfXU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=qAF0TPCaCjtccoec1Cd89qcAZArybQfn/3CTvrOWUY/4k8XiILbRCSRf1fUnwaVbXgCIlItQLzoHYNSsRXI27NNCezevJCsaGf0xgdEcL4+zvvf3IhR8gk7z2j1pAiFSGhhcacu05SgA/T2/8jP3r39Dm9Adnzcs24LaYYvnNqw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mUzKVDRm; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=nUGVqEafThUhRph9dadxB4VEO1xHOCLBQReJVEKHqf0d0lk4ieL6n0XviQVOyK3Fbmhau+XidPMim/PIOcujr2z/kkwb8zG6RjJG9bA8DlXj3BDwVmba70SkBEEIpnLfrwFjZEv1LH6rFkrmzKQ1d4iBEJxao8d6ll3m4n4tYGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XbCc2oME; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mUzKVDRm"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XbCc2oME"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=OPWUBHnGb0JxJ3ne4A3+w3BXzTBtlAWCEg6mk8pbIPQ=; b=mUzKVDRmEkMaNc2YTOdmLt2dEj
-	AN+1x/gJVD+AAoLSip5ibQ+d2/VOGIkKvXuLc+r1nRiiwXGSqzVWqCcF2VayHXXfJGRd6Mcgv1QGc
-	meKKL0eXc6a8f6bAdGjhaIcj41gIaOsA4DyajfbP2UZ3Y1FG4I53y3MlKvBtLuYSadNziM1akF14p
-	mHAQmMEk7wPYhyrVp9kS3S174yDjO6216Jh0zTFbCuQ5yAhqWHyuvW0KOsAvBgF8vdMAM9BGucy38
-	6gj19oz9Rg+3fFS2tsU6K1wOLkF0g+x/MToZqWwGLNa9vJx5gIgFQRN5+AigH4iCkhu5asMumechZ
-	OEP2wmCQ==;
+	bh=WXYhCbVwCEU0UHf+sQtOcxTHe5YrehjKDolUaK54+l0=; b=XbCc2oMEJQFyUJsRWtFJXJO4qk
+	Q679u+SL3f1+0VtHHT0u4U34Ha5HX9PqcEhZ+uptBoaUVApbXxL9mh6WM737csu9xD9oNZ0op6k9H
+	GHy8Bif+xRLkICRPQuw0+Smv14r2ujhknZWW/U5NpNgMHqPbpMWFUgM/oTpkI5/NCZiENSHU6NDnk
+	ZJ3ckaD59z2WfQXBw6cbcnzOHWqcEmAVqQrfdnIJGV5mgNm7OEQ/ngfmfu35GHB4xLSLgSZ7vktZ9
+	XGjnr6+B2sC5hO9DWYebAwdI/q6ma73tpgrSvZxFCw4+5Kx4tp8im1WQoVDOLzlTWotgnDafk+Qkd
+	haYOuUCw==;
 Received: from [210.13.83.2] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1roXgq-0000000Dzdg-0RFW;
-	Sun, 24 Mar 2024 23:55:48 +0000
+	id 1roXge-0000000DzZ6-3X9j;
+	Sun, 24 Mar 2024 23:55:37 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -73,9 +73,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-samsung-soc@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net
-Subject: [PATCH 12/23] mpt3sas: switch to using ->device_configure
-Date: Mon, 25 Mar 2024 07:54:37 +0800
-Message-Id: <20240324235448.2039074-13-hch@lst.de>
+Subject: [PATCH 09/23] scsi: use the atomic queue limits API in scsi_add_lun
+Date: Mon, 25 Mar 2024 07:54:34 +0800
+Message-Id: <20240324235448.2039074-10-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240324235448.2039074-1-hch@lst.de>
 References: <20240324235448.2039074-1-hch@lst.de>
@@ -88,85 +88,98 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Switch to the ->device_configure method instead of ->slave_configure
-and update the block limits on the passed in queue_limits instead
-of using the per-limit accessors.
+Switch scsi_add_lun to use the atomic queue limits API to update the
+max_hw_sectors for devices with quirks.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+ drivers/scsi/scsi_scan.c | 49 ++++++++++++++++++++--------------------
+ 1 file changed, 24 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index ef8ee93005eae6..89ef43a5ef862d 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -2497,14 +2497,15 @@ _scsih_enable_tlr(struct MPT3SAS_ADAPTER *ioc, struct scsi_device *sdev)
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 205ab3b3ea89be..699356d7d17545 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -874,6 +874,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 		blist_flags_t *bflags, int async)
+ {
++	struct queue_limits lim;
+ 	int ret;
+ 
+ 	/*
+@@ -1004,19 +1005,6 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	if (*bflags & BLIST_SELECT_NO_ATN)
+ 		sdev->select_no_atn = 1;
+ 
+-	/*
+-	 * Maximum 512 sector transfer length
+-	 * broken RA4x00 Compaq Disk Array
+-	 */
+-	if (*bflags & BLIST_MAX_512)
+-		blk_queue_max_hw_sectors(sdev->request_queue, 512);
+-	/*
+-	 * Max 1024 sector transfer length for targets that report incorrect
+-	 * max/optimal lengths and relied on the old block layer safe default
+-	 */
+-	else if (*bflags & BLIST_MAX_1024)
+-		blk_queue_max_hw_sectors(sdev->request_queue, 1024);
+-
+ 	/*
+ 	 * Some devices may not want to have a start command automatically
+ 	 * issued when a device is added.
+@@ -1077,19 +1065,22 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 
+ 	transport_configure_device(&sdev->sdev_gendev);
+ 
++	/*
++	 * No need to freeze the queue as it isn't reachable to anyone else yet.
++	 */
++	lim = queue_limits_start_update(sdev->request_queue);
++	if (*bflags & BLIST_MAX_512)
++		lim.max_hw_sectors = 512;
++	else if (*bflags & BLIST_MAX_1024)
++		lim.max_hw_sectors = 1024;
++	ret = queue_limits_commit_update(sdev->request_queue, &lim);
++	if (ret)
++		goto fail;
++
+ 	if (sdev->host->hostt->slave_configure) {
+ 		ret = sdev->host->hostt->slave_configure(sdev);
+-		if (ret) {
+-			/*
+-			 * if LLDD reports slave not present, don't clutter
+-			 * console with alloc failure messages
+-			 */
+-			if (ret != -ENXIO) {
+-				sdev_printk(KERN_ERR, sdev,
+-					"failed to configure device\n");
+-			}
+-			return SCSI_SCAN_NO_RESPONSE;
+-		}
++		if (ret)
++			goto fail;
+ 
+ 		/*
+ 		 * The queue_depth is often changed in ->slave_configure.
+@@ -1115,8 +1106,16 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 */
+ 	if (!async && scsi_sysfs_add_sdev(sdev) != 0)
+ 		return SCSI_SCAN_NO_RESPONSE;
+-
+ 	return SCSI_SCAN_LUN_PRESENT;
++
++fail:
++	/*
++	 * If the LLDD reports LU not present, don't clutter the console with
++	 * alloc failure messages.
++	 */
++	if (ret != -ENXIO)
++		sdev_printk(KERN_ERR, sdev, "failed to configure device\n");
++	return SCSI_SCAN_NO_RESPONSE;
  }
  
- /**
-- * scsih_slave_configure - device configure routine.
-+ * scsih_device_configure - device configure routine.
-  * @sdev: scsi device struct
-+ * @lim: queue limits
-  *
-  * Return: 0 if ok. Any other return is assumed to be an error and
-  * the device is ignored.
-  */
- static int
--scsih_slave_configure(struct scsi_device *sdev)
-+scsih_device_configure(struct scsi_device *sdev, struct queue_limits *lim)
- {
- 	struct Scsi_Host *shost = sdev->host;
- 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
-@@ -2609,8 +2610,7 @@ scsih_slave_configure(struct scsi_device *sdev)
- 			    raid_device->num_pds, ds);
- 
- 		if (shost->max_sectors > MPT3SAS_RAID_MAX_SECTORS) {
--			blk_queue_max_hw_sectors(sdev->request_queue,
--						MPT3SAS_RAID_MAX_SECTORS);
-+			lim->max_hw_sectors = MPT3SAS_RAID_MAX_SECTORS;
- 			sdev_printk(KERN_INFO, sdev,
- 					"Set queue's max_sector to: %u\n",
- 						MPT3SAS_RAID_MAX_SECTORS);
-@@ -2675,8 +2675,7 @@ scsih_slave_configure(struct scsi_device *sdev)
- 				pcie_device->connector_name);
- 
- 		if (pcie_device->nvme_mdts)
--			blk_queue_max_hw_sectors(sdev->request_queue,
--					pcie_device->nvme_mdts/512);
-+			lim->max_hw_sectors = pcie_device->nvme_mdts / 512;
- 
- 		pcie_device_put(pcie_device);
- 		spin_unlock_irqrestore(&ioc->pcie_device_lock, flags);
-@@ -2687,8 +2686,7 @@ scsih_slave_configure(struct scsi_device *sdev)
- 		 **/
- 		blk_queue_flag_set(QUEUE_FLAG_NOMERGES,
- 				sdev->request_queue);
--		blk_queue_virt_boundary(sdev->request_queue,
--				ioc->page_size - 1);
-+		lim->virt_boundary_mask = ioc->page_size - 1;
- 		return 0;
- 	}
- 
-@@ -11914,7 +11912,7 @@ static const struct scsi_host_template mpt2sas_driver_template = {
- 	.queuecommand			= scsih_qcmd,
- 	.target_alloc			= scsih_target_alloc,
- 	.slave_alloc			= scsih_slave_alloc,
--	.slave_configure		= scsih_slave_configure,
-+	.device_configure		= scsih_device_configure,
- 	.target_destroy			= scsih_target_destroy,
- 	.slave_destroy			= scsih_slave_destroy,
- 	.scan_finished			= scsih_scan_finished,
-@@ -11952,7 +11950,7 @@ static const struct scsi_host_template mpt3sas_driver_template = {
- 	.queuecommand			= scsih_qcmd,
- 	.target_alloc			= scsih_target_alloc,
- 	.slave_alloc			= scsih_slave_alloc,
--	.slave_configure		= scsih_slave_configure,
-+	.device_configure		= scsih_device_configure,
- 	.target_destroy			= scsih_target_destroy,
- 	.slave_destroy			= scsih_slave_destroy,
- 	.scan_finished			= scsih_scan_finished,
+ #ifdef CONFIG_SCSI_LOGGING
 -- 
 2.39.2
 
