@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB18D2A4910;
-	Sun, 24 Mar 2024 23:56:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 488972A4935;
+	Sun, 24 Mar 2024 23:56:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711324569; cv=none; b=eBOhVIxXpUgVts3OJEOthv/fK6gAd5Z4FxcfsfLSgM+n+yupe692BFJi6PEYE3jNHcfh2C7RXwr2TPKfOJX0Ea3WD6LaT8mT6GJxQA+sMIeS4D5HCzTjpcGTxHoWswzvz8o1BbqjxWK6NZlz9g8V7WI+1ZOvzDbIrFCYHaiprks=
+	t=1711324572; cv=none; b=lYxEbwegsfNurWAQc9Qn3+LW8lYCgA/GDG8gwe6xvmRPL9gq9leckvv1Y4xHLHZWqwq1ieyaomIEFmjUAo0uu2EET7IExAdjy9FI9nivFrZ8nfD4H0AvE73oxpYurzbDY2w7AXEY//SoMlqnLAgyyjhMovk6RlY2832FE51OHdI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711324569; c=relaxed/simple;
-	bh=QkaP0e8Mes0ggr8tSjRKR1hnJDvnEOKjDSalc0xzATQ=;
+	s=arc-20240116; t=1711324572; c=relaxed/simple;
+	bh=p+f+IA3FpJ4jx1tHqUxfRV0ekYVJxEh5WOYNuf9rwCI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gy0YVvhZshgCxetGXTSrrn7f0ungxKwmj7c654WqPehVEt44iC8ViQC4xGVS5Nz3RAS2BYlTgd8L0UAnFVMzDpxWGisl9k/gnwgUIC+VzOOZhB/IIJphIz3uD6m1ryep1+YXS/xB8fUFgbppadZ6skpz0ELYhj1y8hhgJK2GTsY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yaNYGNDq; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=R7KTreAr1lSMhFKsfvj19xJyjIREupEmWE75p2vcgPO4aH1W6yjg9hl9W5BWVqMi2fFBLyHAw9KAg0lHUj9qqyvCaizFgJkw0XBFasAI9JHw3fKlPwQojXs2QOF/ak+avU/KlINvKgamjws/rFtQpsSVzpa4VAyTWPJUndDvRDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fZw6oQVE; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yaNYGNDq"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fZw6oQVE"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=ouyfZJOprAivUD3pQoGhzFC7pBq223cKtZHCDHGO3TU=; b=yaNYGNDq75sSccoFdn2AV2nsme
-	3FWw3HqCcY9hlgmeZ0OAIU1iUEKf1570UJhQ/87GUC4ZlaKEkidBy/C/M78P3MAQ4Csx241lFn0oN
-	CA+GmTa0zo9TYcNosWT8dOKZANebHq18BOMi4disy08EnkqBRDzvZUV9FTQC2L0U3UXG6XSfKiCPd
-	gQAgdf7GNKiDHC7HGs4qPUXrB0OcCBDLQbl9g8T7p4GZkStzqsblT6BebaTW/9lKujDcMU9rqlz5f
-	cObpYrbGlO/Rhie/ztGrxo6qC2VLMM6ALfep4fXq5FCgA4/qkmfFVJQM5f6xIzRKogfDRB5CaPO/H
-	DVxo3EKg==;
+	bh=pO7QUZsXXhu9HAXfSQAqPprtEItLE8G7INdiPk7KBF8=; b=fZw6oQVEGmasfFxtKFwCWJSNh5
+	BgRN0CF3Fse5YsmYvZQjPjW0scA+WvNq7DZXxLgGpsZzig0nl5zuWpr19NlgN70gSJo63BOLP3iUy
+	23TalktuWevABFINjZLyPMgeb3wiDcTON4oELA2L4lem1gdS709mriPqsGpd+vkwVOrtYa09HdI+Y
+	XhyQBU0X7U5H5yh8GhWj+N07en0vmNOKfnR2ys+CdRKywrz4bQTvgV8iUA7Sy6ocyYFCv+sSeAGwT
+	nU7/oZmsD0TMJEvfLo31yGUdLAUp4Ke4ctaSoKmkIqQwZKcdKqCVWXUV4uRFqF4thAOm5h4/HjdGe
+	uMkXhDOg==;
 Received: from [210.13.83.2] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1roXgy-0000000Dzft-48tF;
-	Sun, 24 Mar 2024 23:55:57 +0000
+	id 1roXh2-0000000Dzho-2g5B;
+	Sun, 24 Mar 2024 23:56:01 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -73,9 +73,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-samsung-soc@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net
-Subject: [PATCH 14/23] hptiop: switch to using ->device_configure
-Date: Mon, 25 Mar 2024 07:54:39 +0800
-Message-Id: <20240324235448.2039074-15-hch@lst.de>
+Subject: [PATCH 15/23] ipr: switch to using ->device_configure
+Date: Mon, 25 Mar 2024 07:54:40 +0800
+Message-Id: <20240324235448.2039074-16-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240324235448.2039074-1-hch@lst.de>
 References: <20240324235448.2039074-1-hch@lst.de>
@@ -94,37 +94,51 @@ of using the per-limit accessors.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/hptiop.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/ipr.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index f5334ccbf2cac3..e889f268601b4f 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -1151,11 +1151,11 @@ static struct attribute *hptiop_host_attrs[] = {
- 
- ATTRIBUTE_GROUPS(hptiop_host);
- 
--static int hptiop_slave_config(struct scsi_device *sdev)
-+static int hptiop_device_configure(struct scsi_device *sdev,
-+		struct queue_limits *lim)
- {
- 	if (sdev->type == TYPE_TAPE)
--		blk_queue_max_hw_sectors(sdev->request_queue, 8192);
--
-+		lim->max_hw_sectors = 8192;
- 	return 0;
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 3819f7c42788bc..388c8a10295a67 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4769,15 +4769,17 @@ static void ipr_slave_destroy(struct scsi_device *sdev)
  }
  
-@@ -1168,7 +1168,7 @@ static const struct scsi_host_template driver_template = {
- 	.emulated                   = 0,
- 	.proc_name                  = driver_name,
- 	.shost_groups		    = hptiop_host_groups,
--	.slave_configure            = hptiop_slave_config,
-+	.device_configure	    = hptiop_device_configure,
- 	.this_id                    = -1,
- 	.change_queue_depth         = hptiop_adjust_disk_queue_depth,
- 	.cmd_size		    = sizeof(struct hpt_cmd_priv),
+ /**
+- * ipr_slave_configure - Configure a SCSI device
++ * ipr_device_configure - Configure a SCSI device
+  * @sdev:	scsi device struct
++ * @lim:	queue limits
+  *
+  * This function configures the specified scsi device.
+  *
+  * Return value:
+  * 	0 on success
+  **/
+-static int ipr_slave_configure(struct scsi_device *sdev)
++static int ipr_device_configure(struct scsi_device *sdev,
++		struct queue_limits *lim)
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *) sdev->host->hostdata;
+ 	struct ipr_resource_entry *res;
+@@ -4798,7 +4800,7 @@ static int ipr_slave_configure(struct scsi_device *sdev)
+ 			sdev->no_report_opcodes = 1;
+ 			blk_queue_rq_timeout(sdev->request_queue,
+ 					     IPR_VSET_RW_TIMEOUT);
+-			blk_queue_max_hw_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
++			lim->max_hw_sectors = IPR_VSET_MAX_SECTORS;
+ 		}
+ 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 
+@@ -6397,7 +6399,7 @@ static const struct scsi_host_template driver_template = {
+ 	.eh_device_reset_handler = ipr_eh_dev_reset,
+ 	.eh_host_reset_handler = ipr_eh_host_reset,
+ 	.slave_alloc = ipr_slave_alloc,
+-	.slave_configure = ipr_slave_configure,
++	.device_configure = ipr_device_configure,
+ 	.slave_destroy = ipr_slave_destroy,
+ 	.scan_finished = ipr_scan_finished,
+ 	.target_destroy = ipr_target_destroy,
 -- 
 2.39.2
 
