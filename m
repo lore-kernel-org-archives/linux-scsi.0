@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CA7F1869C2;
-	Mon, 25 Mar 2024 07:17:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C7B613E6A4;
+	Mon, 25 Mar 2024 07:20:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711351063; cv=none; b=HJvZ0w/g5u4Y04lNnfTdRk30sEf8iHVBjqRtfNEpQ8uZAd9xLJoSl6vaucKwpTS6rAyRSPqyrhRYgG/h0hypwbx2pgD/dPKpVFhRDP567XdVKsZ3HVlFLN1JApjNH7cl9I1voQn7Wtmf2wTDdrw21O7lN8lM9nV3sqJVaIMIDmE=
+	t=1711351222; cv=none; b=unnvQDR5oo52QkkQWZXB0CgcP0qCvPvo2vqAnGvR/R31t0VUxs9WkcxpFOY7LOVG5znTSHQ/C6twcgDReXuEllO/uZ3savUNJ/+M5xc/NA6PeBVlr/svu9EUK9Rw4MVRJfWMbK8/pFo9xLUsJB4q7jtP1u8Iyhk9Smawetfmy3Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711351063; c=relaxed/simple;
-	bh=krcKJp10FuGtr98dTHJSOHbrBcdRM3frvNdn3khaR+o=;
+	s=arc-20240116; t=1711351222; c=relaxed/simple;
+	bh=iKh5Cg64Ms9blQ0EGs0buI8MPJmgJshCkJoiOFuZjCw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=P/FnJ3rtwQMkxdgfNbgP7HdRerKxIa+8JP9f3ZZanoM2n6gPVVq8EO1ugBo8G2EuAiNIeGL97LCGdg68RcESg7b2J8g1yc+QE/2uxbt+9vMYfNhFV+emw8ytwiyiy3M/OhgZ8aGEIqqKcVsGk0ty8s6RA6UpPtqqz6sy6+2PoKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dSlxD04j; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=WP0DC1pIj9RphIZps8+JAnlRIeU9BxtuYQRLbs+ebayiFG/k9FXm/K6Knrf9KNAZCY/cU5Oh9PgxqKZKOjHSKvfbNTf5j6vNTAFoBOt+fBcKwGczxSqlbnGJ1Sy5nIeTgUityhb5oCCpSbx1O7LNd97mEf868kSUAcsdEW+0jGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R5g4IRlb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dSlxD04j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C16C3C433F1;
-	Mon, 25 Mar 2024 07:17:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R5g4IRlb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25E96C433F1;
+	Mon, 25 Mar 2024 07:20:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711351062;
-	bh=krcKJp10FuGtr98dTHJSOHbrBcdRM3frvNdn3khaR+o=;
+	s=k20201202; t=1711351222;
+	bh=iKh5Cg64Ms9blQ0EGs0buI8MPJmgJshCkJoiOFuZjCw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=dSlxD04j/cvhKDB4Qx1Ot1hj6nlV/+6z4nRumaOdp1EgrKMnrD6zopVoHdDllatrM
-	 8g7FwBOsONYyJFZ4Xe/YWQSl7WXvHpzt7bAc1HqdGUYKa9BId2QEZwHOus/sV9cMVe
-	 e7LsW504Ro8HHnhETGfRjeeeAmIx2tCEujdFrfodwQUWtGq2FHzGzR0a9UOEZkXNjy
-	 g/zmTd3HQPZCgw3+u52Q7cCnkAwYUsnlL0mZgn4fqktcLoEcJnZ6G96flxEZGhws+Y
-	 KXusUbhNnQtNpQxdSKYzFbkKvEuq4rRgbyvHzhElCp710VKE30dHV7/QTf1WFGs0VU
-	 RYtSkIHm1l23w==
-Message-ID: <04beb70f-38b0-46f7-bbbc-24cf40a91d70@kernel.org>
-Date: Mon, 25 Mar 2024 16:17:35 +0900
+	b=R5g4IRlbC3SQUy3oJQhy12g0ig8AMW6UJl/f2arqHlczHRcHtU8gu2SJbj+5ZdowF
+	 R+jGsPmodQRNt2yOG5jbDjnbwb87PbQJEhD/cKHk7fDfiJGYGSseTvTAGn7Cput2/q
+	 PJGaRsdwPO2AOrWtER6gIi2A/1bIgNC0YQwbFkiTxhpZ6AA+253s7Ef972ItbX+oJl
+	 Ri47A8l8xXTwaQy7UjWN/9cmZuKHOfaCr80usQWXJwKa9EvVLXxjZ0KA6aXXWKgKx5
+	 Il+wi2wm3ZvgtFidAI3IF8LdofY/fOmXBbsIEwVSsibb45xMgRXdwnLq2ZLPw4vqK4
+	 SgtIgD5jmnLyA==
+Message-ID: <be1655f7-3ae0-4a5a-ac35-95e9c7d2da02@kernel.org>
+Date: Mon, 25 Mar 2024 16:20:13 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 03/23] mpi3mr: pass queue_limits to bsg_setup_queue
+Subject: Re: [PATCH 04/23] scsi: initialize scsi midlayer limits before
+ allocating the queue
 Content-Language: en-US
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -68,16 +69,16 @@ Cc: Niklas Cassel <cassel@kernel.org>,
  mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
  linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 References: <20240324235448.2039074-1-hch@lst.de>
- <20240324235448.2039074-4-hch@lst.de>
+ <20240324235448.2039074-5-hch@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240324235448.2039074-4-hch@lst.de>
+In-Reply-To: <20240324235448.2039074-5-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 3/25/24 08:54, Christoph Hellwig wrote:
-> Pass the limits to bsg_setup_queue instead of setting them up on the live
-> queue.
+> Turn __scsi_init_queue into scsi_init_limits which initializes
+> queue_limits structure that can be passed to blk_mq_alloc_queue.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
