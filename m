@@ -1,82 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0C7E13E6D7;
-	Mon, 25 Mar 2024 04:44:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C136D18431C;
+	Mon, 25 Mar 2024 07:14:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711341897; cv=none; b=I5WgJjW+dBOLAAtrNhucOE5R6vLu5pfNfAC2eCEgKrz9p2I0eJzszf57Ck1ZTjlRaV3zP1Gkc7BWU7ZOic9bku2mzrNPSxaJqQhhO1ArxVchSn0y2WWqZLfOq7tpGnUdDdHxolFkvtLHxiKiFwizLCEwiaviF1EkedbVtCD9cI0=
+	t=1711350898; cv=none; b=LRQ9XxXr5shgu5TlTXB4D/luQMHpOytxAKe/BxGV+zVyX0p2SYFbTKIVbYApz5vl9TPfxHmOS3692EezkQC2nyrM3XU/hT0YcQqHNWAWZFNpJwXXWGN8Xsm3QNgLfykwIA1a1HTaDlbF6IkbifRG5eW0h1w6TnSxZTwW/ujyDO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711341897; c=relaxed/simple;
-	bh=fJ2ybBbACCoTUM31bLsYbegcYwYQ5GsQ4QXTrnuthDk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZlbBtmdxD1hHGcpiScoqSntfqsPW63Lo8x3A+H44eekBMCmoXo91+Bh1wltSaXl53NXa4XZKhehoWBpqNmx8C1X7QyaetJCbHNGPnqswBXRxarPfO03zZtFkSoUiH2XirnhdLhkkr6IFX2NNxXoOXOFo6vWstXMXO4/wZVyY6dc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eu/b25Up; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711350898; c=relaxed/simple;
+	bh=y3qv71zpjndpj4NB+KeexavfGhw/KD4Z+vmOdRol9g0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=aDEd2bN35UBaAqEI5DfjkZhtL8mqnDuwXP3IYxybIwVY/B0Ywd8cH7OJ6oyPZMY4/F+GIk0JH6r8weZua2v1aLy0sqDDMFwm1WjY/Kcj5v4DXHnwTk4oJsmnOLfpjTtK4uTe5aDieD3Gs8Y5FEH2kjL/0h0U+OoiYMAaaszoUe0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Rtrmh5Sf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eu/b25Up"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B6D4C433F1;
-	Mon, 25 Mar 2024 04:44:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Rtrmh5Sf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D80BC43390;
+	Mon, 25 Mar 2024 07:14:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711341897;
-	bh=fJ2ybBbACCoTUM31bLsYbegcYwYQ5GsQ4QXTrnuthDk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=eu/b25UpGWQDJlL5z0TwPB9oYMBaMJv7o9Kx6gKOh5V6QB/IIzFi/Rxa6bvDlol/v
-	 grGkqd1HmsLVvoqJgnrd8ZJFE9BIFwyZqbEgwc+uZSogNtwJUeNtKZlYlNKo16+x4s
-	 7IGr6kQMvnesHInGkz1cDBs81D2EEzKXVaR/ChP8YY4/Xg+VEv71Dco6+LWnqENq92
-	 tHmNiWe4fjdrihbrNCtnqr59wkHkuV1ceJGQyJLbR7zX6NACYuN6x+l/TywXtUBQxu
-	 u/xvRzOsgk7nG5rLoixoGjcZRNwtSO+4tyF04SI+8Xt/k/8l80AqwnoEhMsPTFjUtY
-	 wy7QKeSyE1Geg==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-block@vger.kernel.org,
-	Jens Axboe <axboe@kernel.dk>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	dm-devel@lists.linux.dev,
-	Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 01/28] block: Restore sector of flush requests
-Date: Mon, 25 Mar 2024 13:44:25 +0900
-Message-ID: <20240325044452.3125418-2-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20240325044452.3125418-1-dlemoal@kernel.org>
-References: <20240325044452.3125418-1-dlemoal@kernel.org>
+	s=k20201202; t=1711350898;
+	bh=y3qv71zpjndpj4NB+KeexavfGhw/KD4Z+vmOdRol9g0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=Rtrmh5SfbgjERmHsqPcQ+yhhfByQQq8GxgvgRdmK7Z+Hjkdms8oZ+o/UmiYcqZ16x
+	 Dks5YmvOe4uY/xGqR/Ty83lnbI6YNpx+jDOWCJXw8y8JK+BPozZOxLa+XqubWoV97M
+	 PEVP8itGIYGNI3tnfonfdvQ6AbqfRJUyGrtoJya7FWk3PTZi++DCDUmK44jaWGMeTL
+	 Yi2zJUJlzbsFvOD6TfhJsknzpUGbU0Iz3dE2XpkhqRZlzCa1dhU13LkBqPQNHMQ7Hh
+	 Fii0E7sNJ37tfk2IR4ihYhXcwMa4KAJ/9lXdY3WB4TX+xg+hvKuZRqyGG7Bbaey5iR
+	 NlThAD2Cl/Pxw==
+Message-ID: <b8346696-316c-497d-972e-c76d897a1c87@kernel.org>
+Date: Mon, 25 Mar 2024 16:14:51 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/23] block: don't reject too large max_user_setors in
+ blk_validate_limits
+Content-Language: en-US
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Niklas Cassel <cassel@kernel.org>,
+ Takashi Sakamoto <o-takashi@sakamocchi.jp>,
+ Sathya Prakash <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ "Juergen E. Fischer" <fischer@norbit.de>,
+ Xiang Chen <chenxiang66@hisilicon.com>,
+ HighPoint Linux Team <linux@highpoint-tech.com>,
+ Tyrel Datwyler <tyreld@linux.ibm.com>, Brian King <brking@us.ibm.com>,
+ Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+ Mike Christie <michael.christie@oracle.com>,
+ John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ Jack Wang <jinpu.wang@cloud.ionos.com>, Nilesh Javali <njavali@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+ Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+ MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+ open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com,
+ mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
+ linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+References: <20240324235448.2039074-1-hch@lst.de>
+ <20240324235448.2039074-2-hch@lst.de>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20240324235448.2039074-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On completion of a flush sequence, blk_flush_restore_request() restores
-the bio of a request to the original submitted BIO. However, the last
-use of the request in the flush sequence may have been for a POSTFLUSH
-which does not have a sector. So make sure to restore the request sector
-using the iter sector of the original BIO. This BIO has not changed yet
-since the completions of the flush sequence intermediate steps use
-requeueing of the request until all steps are completed.
+On 3/25/24 08:54, Christoph Hellwig wrote:
+> We already cap down the actual max_sectors to the max of the hardware
+> and user limit, so don't reject the configuration.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Restoring the request sector ensures that blk_mq_end_request() will see
-a valid sector as originally set when the flush BIO was submitted.
+Looks OK to me.
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- block/blk-flush.c | 1 +
- 1 file changed, 1 insertion(+)
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-diff --git a/block/blk-flush.c b/block/blk-flush.c
-index b0f314f4bc14..2f58ae018464 100644
---- a/block/blk-flush.c
-+++ b/block/blk-flush.c
-@@ -130,6 +130,7 @@ static void blk_flush_restore_request(struct request *rq)
- 	 * original @rq->bio.  Restore it.
- 	 */
- 	rq->bio = rq->biotail;
-+	rq->__sector = rq->bio->bi_iter.bi_sector;
- 
- 	/* make @rq a normal request */
- 	rq->rq_flags &= ~RQF_FLUSH_SEQ;
 -- 
-2.44.0
+Damien Le Moal
+Western Digital Research
 
