@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C64113C9C9;
-	Mon, 25 Mar 2024 07:54:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F0ED1428FB;
+	Mon, 25 Mar 2024 07:56:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711353286; cv=none; b=r+nv6F2F7VM2UsfiJGtopKevSy5f7zu4Rle89oj0MrrF/dXxqyF7VeE7GgH8/61UI5+WDHQ0RCrrDb5pPkN+2t30CLKHWUntgqQ/7Zc/RXTQp0IRiFcnxnu+dUBPS9Sxz4RIXoMc2Xpc7v8rElCo1EbpIMOHOGEF14KD4NtgIxk=
+	t=1711353378; cv=none; b=nI8puqXf+XuREma696Eq9BG+8/PwH1gqsORsV8Ds9HrrHRKPF7ZtoMTlArjhu86tY8gTWKu6CUzvYhAgXfke9tfnQuD0mnsPsT3Dr6OIe1q13Zo8QQPGUizrZbt5XYhiOGOKCDUaje60x0lSEvy37pIuSwbPfj3T2jymN6clpa0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711353286; c=relaxed/simple;
-	bh=owMqOeBsS40pgAVEEJqiivm8vJ9vsYeg9GKGOlS+4mk=;
+	s=arc-20240116; t=1711353378; c=relaxed/simple;
+	bh=+z5n42jcDU1Q65n+MHR7wbB2WsqxNLtuNE+zdSE58go=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=d4en4xCU7yS4YnE2uI+VLaSQoRiiZmcK8YTLoPpJbwmu3AiqVmaqZ4rSpaZSh8gxIcuLlHb2OtbK6oTUBf8JxiJuoS5mJaYV3EaXyj4dP/PAyjfRCM4GB7d1d+34hiuvqlMULhyEdWduF2MahR75YYfc4vzimDbngfjb9VJPfZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j1xHlxFy; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=eqhKGR1r2msdxkdKS6oz6Vbg+7ZqDZz14Na4Q4C+ZV89593q/EGBd5/WcjcZ1oAfRWZLJiZwuJKQhYGH2ql3JgG+PV8UezdSpeFH1qPxQsvNx7zFgVwNenHpIKX0hTXKAmh6wUDwH0FiKilD9tkrCchpM/wW/ECH3zA2BQfQ5fw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DRIyCw+R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j1xHlxFy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86033C433F1;
-	Mon, 25 Mar 2024 07:54:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DRIyCw+R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8369DC433C7;
+	Mon, 25 Mar 2024 07:56:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711353285;
-	bh=owMqOeBsS40pgAVEEJqiivm8vJ9vsYeg9GKGOlS+4mk=;
+	s=k20201202; t=1711353378;
+	bh=+z5n42jcDU1Q65n+MHR7wbB2WsqxNLtuNE+zdSE58go=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=j1xHlxFyrQ4/4bWLbtuWfZHhrQilncRu7iJnrGz4+8mMPb4xD+/VaDx68WL0+yb1Y
-	 n7pWfWEtpZFX2XSRJAbUng/wnBPnQQXf8yPXh1ETB/RRw7tBc8WRgMSrz8ojqZn/Bh
-	 xcufasJNpsdvt7lgZZf9lP9HES8aoIbbJpA0TESAPV3vZ89a5ERculIinIzz1yyKOg
-	 HbwcXVxUqFyQUg9bUic+qhmV1ZyPj0qinBaIXb/i/3teYlDO/eAJ1P4wPYIi87D9Yb
-	 2Rn5poUux+rcVeKZNNqyDwc4KQYvGzTZ5yBd9+s4rkaSKjm7ATo6nodTEBLbTbFxM8
-	 cXOOBBSHz7XLA==
-Message-ID: <66169fb4-efeb-4da5-8280-a0585537acfd@kernel.org>
-Date: Mon, 25 Mar 2024 16:54:38 +0900
+	b=DRIyCw+Raq/vGzJ0dJqI9r/RqfobgkxAwTJe0q7r86S7sVHlxRfqfCeguJNxmT0IQ
+	 BB7G1F7G8oItcYfoOGv+Vk9cdINiBQ9buBhrCvxIEmQH+RXECl4Pt4pzMnQzyRMMdI
+	 xRU3VVC3OaIDw+iTMZXeT+uSPC584aanpCeKbuY72xI2ElQzycopkmWcwvq0vgjvOp
+	 8JQZo1gVo6qbPKuXMhhXtPvB1IxlauCcerYawjfiYkZwlxOO7rUWkq1+OLNMhxFxTX
+	 mhSfFOyPmw6W9Upanlj7BLcaT+nZTb4/0j8TwOw9qnsvgpo0zL1kFVUHf8swReWnTI
+	 jE1durxYfPgig==
+Message-ID: <bc4293a0-988d-42f3-a94a-b6715d72c204@kernel.org>
+Date: Mon, 25 Mar 2024 16:56:12 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 21/23] mpi3mr: switch to using ->device_configure
+Subject: Re: [PATCH 23/23] block: remove now unused queue limits helpers
 Content-Language: en-US
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -68,23 +68,14 @@ Cc: Niklas Cassel <cassel@kernel.org>,
  mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
  linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 References: <20240324235448.2039074-1-hch@lst.de>
- <20240324235448.2039074-22-hch@lst.de>
+ <20240324235448.2039074-24-hch@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240324235448.2039074-22-hch@lst.de>
+In-Reply-To: <20240324235448.2039074-24-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 3/25/24 08:54, Christoph Hellwig wrote:
-> Switch to the ->device_configure method instead of ->slave_configure
-> and update the block limits on the passed in queue_limits instead
-> of using the per-limit accessors.
-> 
-> Note that mpi3mr also updates the limits from an event handler that
-> iterates all SCSI devices.  This is also updated to use the
-> queue_limits, but the complete locking of this path probably means
-> it already is completely broken and needs a proper audit.
-> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Looks OK to me.
