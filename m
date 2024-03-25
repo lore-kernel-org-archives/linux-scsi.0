@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F121D1C321F;
-	Mon, 25 Mar 2024 04:44:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF1C71C3221;
+	Mon, 25 Mar 2024 04:44:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711341900; cv=none; b=NkS50Am0+BflvoaagsBuMNvW+5w+2nn65N7uj9qMADs686xcAEkutlMBv9BU2/fVfsch+c7N9gBC+/5kl28NdC8ptDE/jjfC9dcJSxQdGFyHNp2DqFYXMHcLKUNFDhIEDgTy70k12mikPHWLEAB1eMfEvnX1Ggyo4aSddilvXhU=
+	t=1711341898; cv=none; b=sYepaGZMeNWUGoYB6V5M9eQmmXaRXhdtGVVMDyaaHgzx3/qaZQtjEAYkogqduPqR5RJ5pnoeb/wcv/1Iko3696OpgnkpoRkXUBKLoIxmhiGIUPHQ0qR56S9q54WI6SEIoZSqx03BHT6gb2RFXPJgr1Kt+3odf/OtpT0kfqCcCaE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711341900; c=relaxed/simple;
-	bh=wVV0K4pgInzHyMFWF+DaOk+dVArB5rNZHyyPh1Y8kjo=;
+	s=arc-20240116; t=1711341898; c=relaxed/simple;
+	bh=RnoX5upttHVgQnc+jhMKbIaEKnjun/Mtv8asXEtshE8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Qg3/3GKO2qLwaC/rojdG3o8JJ87aIg0Xg5bi/CQ7MRHJ+k948CFlQLRmTB4hUtGDNj5SB0GRyEg7yhRGCpXNIWQHhnofLu3Q4mbE4zel0WnhdjfBqCKKAPMOLLOldSeIchajHWjO4gSATY5w0h7mCXmS9E9aj287wvTAjETbHgI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H1hqJ6XC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=YnPZYfZeYp0oYkmAwxX4mKdbgSMTRGa2ApOFCR8j1Hy7TRYWOHNpNltnpMl2hUTG1fnWW+c9Dwk4bAEEW0KTyqzPW29bZFA6EuEF81NFaxyJ8DUJj7GQzHErz2Upql3NFwsJ4BGbIGRB+RC1sQOmxBj1ZgptVUp2UI77j+c6/WY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iq+2N+qQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H1hqJ6XC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D46FFC43394;
-	Mon, 25 Mar 2024 04:44:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iq+2N+qQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CCC3C433C7;
+	Mon, 25 Mar 2024 04:44:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711341899;
-	bh=wVV0K4pgInzHyMFWF+DaOk+dVArB5rNZHyyPh1Y8kjo=;
+	s=k20201202; t=1711341898;
+	bh=RnoX5upttHVgQnc+jhMKbIaEKnjun/Mtv8asXEtshE8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=H1hqJ6XCEgLcjch9XsKvOATmUsH9/Mp5zx7PYaP2BBzkXRaOfpCjLlpq2qls4CWSq
-	 j8mNTNg7drh35BdsdN5Fyl7KdXLdKStoX+lbKUUNeNGINLQ3is/erc29zBAaoeUjaG
-	 xox+0kGFT5BLgQV2DXjUpLeS7fh/zPzxzWK108IC3jvolTIQnqEgFmTLxgEs1mL4MN
-	 KT1DOEX2mrnGGJUBnIYUMPyJcnWQRbcFvKtQ+M5mhL33ZihdUm6I6H0ycC+gMhKgZG
-	 tRNFiqZJKeXRgFV6Kgeegz50t+fSge03qcn1cbnZv5Suj5Yw0K8m5EpdG0QihAzsx9
-	 rwq/uoPAC6/Kg==
+	b=iq+2N+qQgbRYSHMbd+3TdiQWyhuY6UPh4ytDDvY4kMzR+fpGP42ltA3/TyKtYbceL
+	 oB4tppuwSturj3auh3/Nsg9QK/bos5o9wk0Yh3cRDRXEiGUemjSSfWCJ4cIBKC9zwN
+	 O4QmLCsFdXIjWRW6QY78iJd94hUh084CZuKYUdAbSyfzsJNrhNEP6hViDtGCu9CuR3
+	 kNFPOTU9jBThPpaHED/lkCw9NUxe/bV5HbQmpLV0aUG082a8FQXZPsUCXZTg7+tr0a
+	 USuwX8Cp0Ngy8QO+F9amNPTTOCjNasotpodt/JMJkUcJtlf7OmlbizLyT1czDMHQHg
+	 cqrkFRxux1B7Q==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-block@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
@@ -34,9 +34,9 @@ To: linux-block@vger.kernel.org,
 	dm-devel@lists.linux.dev,
 	Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 03/28] block: Introduce blk_zone_update_request_bio()
-Date: Mon, 25 Mar 2024 13:44:27 +0900
-Message-ID: <20240325044452.3125418-4-dlemoal@kernel.org>
+Subject: [PATCH v2 02/28] block: Remove req_bio_endio()
+Date: Mon, 25 Mar 2024 13:44:26 +0900
+Message-ID: <20240325044452.3125418-3-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240325044452.3125418-1-dlemoal@kernel.org>
 References: <20240325044452.3125418-1-dlemoal@kernel.org>
@@ -48,85 +48,121 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On completion of a zone append request, the request sector indicates the
-location of the written data. This value must be returned to the user
-through the BIO iter sector. This is done in 2 places: in
-blk_complete_request() and in blk_update_request(). Introduce the inline
-helper function blk_zone_update_request_bio() to avoid duplicating
-this BIO update for zone append requests, and to compile out this
-helper call when CONFIG_BLK_DEV_ZONED is not enabled.
+Moving req_bio_endio() code into its only caller, blk_update_request(),
+allows reducing accesses to and tests of bio and request fields. Also,
+given that partial completions of zone append operations is not
+possible and that zone append operations cannot be merged, the update
+of the BIO sector using the request sector for these operations can be
+moved directly before the call to bio_endio().
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- block/blk-mq.c | 11 +++++------
- block/blk.h    | 19 ++++++++++++++++++-
- 2 files changed, 23 insertions(+), 7 deletions(-)
+ block/blk-mq.c | 66 ++++++++++++++++++++++++--------------------------
+ 1 file changed, 31 insertions(+), 35 deletions(-)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 8aeb8e96f1a7..9e6e2a9a147c 100644
+index 555ada922cf0..8aeb8e96f1a7 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -820,11 +820,11 @@ static void blk_complete_request(struct request *req)
+@@ -761,36 +761,6 @@ void blk_dump_rq_flags(struct request *rq, char *msg)
+ }
+ EXPORT_SYMBOL(blk_dump_rq_flags);
+ 
+-static void req_bio_endio(struct request *rq, struct bio *bio,
+-			  unsigned int nbytes, blk_status_t error)
+-{
+-	if (unlikely(error)) {
+-		bio->bi_status = error;
+-	} else if (req_op(rq) == REQ_OP_ZONE_APPEND) {
+-		/*
+-		 * Partial zone append completions cannot be supported as the
+-		 * BIO fragments may end up not being written sequentially.
+-		 * For such case, force the completed nbytes to be equal to
+-		 * the BIO size so that bio_advance() sets the BIO remaining
+-		 * size to 0 and we end up calling bio_endio() before returning.
+-		 */
+-		if (bio->bi_iter.bi_size != nbytes) {
+-			bio->bi_status = BLK_STS_IOERR;
+-			nbytes = bio->bi_iter.bi_size;
+-		} else {
+-			bio->bi_iter.bi_sector = rq->__sector;
+-		}
+-	}
+-
+-	bio_advance(bio, nbytes);
+-
+-	if (unlikely(rq->rq_flags & RQF_QUIET))
+-		bio_set_flag(bio, BIO_QUIET);
+-	/* don't actually finish bio if it's part of flush sequence */
+-	if (bio->bi_iter.bi_size == 0 && !(rq->rq_flags & RQF_FLUSH_SEQ))
+-		bio_endio(bio);
+-}
+-
+ static void blk_account_io_completion(struct request *req, unsigned int bytes)
+ {
+ 	if (req->part && blk_do_io_stat(req)) {
+@@ -894,6 +864,8 @@ static void blk_complete_request(struct request *req)
+ bool blk_update_request(struct request *req, blk_status_t error,
+ 		unsigned int nr_bytes)
+ {
++	bool is_flush = req->rq_flags & RQF_FLUSH_SEQ;
++	bool quiet = req->rq_flags & RQF_QUIET;
+ 	int total_bytes;
+ 
+ 	trace_block_rq_complete(req, error, nr_bytes);
+@@ -914,9 +886,8 @@ bool blk_update_request(struct request *req, blk_status_t error,
+ 	if (blk_crypto_rq_has_keyslot(req) && nr_bytes >= blk_rq_bytes(req))
+ 		__blk_crypto_rq_put_keyslot(req);
+ 
+-	if (unlikely(error && !blk_rq_is_passthrough(req) &&
+-		     !(req->rq_flags & RQF_QUIET)) &&
+-		     !test_bit(GD_DEAD, &req->q->disk->state)) {
++	if (unlikely(error && !blk_rq_is_passthrough(req) && !quiet) &&
++	    !test_bit(GD_DEAD, &req->q->disk->state)) {
+ 		blk_print_req_error(req, error);
+ 		trace_block_rq_error(req, error, nr_bytes);
+ 	}
+@@ -928,12 +899,37 @@ bool blk_update_request(struct request *req, blk_status_t error,
+ 		struct bio *bio = req->bio;
+ 		unsigned bio_bytes = min(bio->bi_iter.bi_size, nr_bytes);
+ 
+-		if (bio_bytes == bio->bi_iter.bi_size)
++		if (unlikely(error))
++			bio->bi_status = error;
++
++		if (bio_bytes == bio->bi_iter.bi_size) {
+ 			req->bio = bio->bi_next;
++		} else if (req_op(req) == REQ_OP_ZONE_APPEND) {
++			/*
++			 * Partial zone append completions cannot be supported
++			 * as the BIO fragments may end up not being written
++			 * sequentially. For such case, force the completed
++			 * nbytes to be equal to the BIO size so that
++			 * bio_advance() sets the BIO remaining size to 0 and
++			 * we end up calling bio_endio() before returning.
++			 */
++			bio->bi_status = BLK_STS_IOERR;
++			bio_bytes = bio->bi_iter.bi_size;
++		}
+ 
  		/* Completion has already been traced */
  		bio_clear_flag(bio, BIO_TRACE_COMPLETION);
- 
--		if (req_op(req) == REQ_OP_ZONE_APPEND)
--			bio->bi_iter.bi_sector = req->__sector;
--
--		if (!is_flush)
-+		if (!is_flush) {
-+			blk_zone_update_request_bio(req, bio);
- 			bio_endio(bio);
-+		}
+-		req_bio_endio(req, bio, bio_bytes, error);
++		if (unlikely(quiet))
++			bio_set_flag(bio, BIO_QUIET);
 +
- 		bio = next;
- 	} while (bio);
++		bio_advance(bio, bio_bytes);
++
++		/* Don't actually finish bio if it's part of flush sequence */
++		if (!bio->bi_iter.bi_size && !is_flush) {
++			if (req_op(req) == REQ_OP_ZONE_APPEND)
++				bio->bi_iter.bi_sector = req->__sector;
++			bio_endio(bio);
++		}
  
-@@ -926,8 +926,7 @@ bool blk_update_request(struct request *req, blk_status_t error,
- 
- 		/* Don't actually finish bio if it's part of flush sequence */
- 		if (!bio->bi_iter.bi_size && !is_flush) {
--			if (req_op(req) == REQ_OP_ZONE_APPEND)
--				bio->bi_iter.bi_sector = req->__sector;
-+			blk_zone_update_request_bio(req, bio);
- 			bio_endio(bio);
- 		}
- 
-diff --git a/block/blk.h b/block/blk.h
-index 5cac4e29ae17..a12cde1d45de 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -409,12 +409,29 @@ static inline struct bio *blk_queue_bounce(struct bio *bio,
- 
- #ifdef CONFIG_BLK_DEV_ZONED
- void disk_free_zone_bitmaps(struct gendisk *disk);
-+static inline void blk_zone_update_request_bio(struct request *rq,
-+					       struct bio *bio)
-+{
-+	/*
-+	 * For zone append requests, the request sector indicates the location
-+	 * at which the BIO data was written. Return this value to the BIO
-+	 * issuer through the BIO iter sector.
-+	 */
-+	if (req_op(rq) == REQ_OP_ZONE_APPEND)
-+		bio->bi_iter.bi_sector = rq->__sector;
-+}
- int blkdev_report_zones_ioctl(struct block_device *bdev, unsigned int cmd,
- 		unsigned long arg);
- int blkdev_zone_mgmt_ioctl(struct block_device *bdev, blk_mode_t mode,
- 		unsigned int cmd, unsigned long arg);
- #else /* CONFIG_BLK_DEV_ZONED */
--static inline void disk_free_zone_bitmaps(struct gendisk *disk) {}
-+static inline void disk_free_zone_bitmaps(struct gendisk *disk)
-+{
-+}
-+static inline void blk_zone_update_request_bio(struct request *rq,
-+					       struct bio *bio)
-+{
-+}
- static inline int blkdev_report_zones_ioctl(struct block_device *bdev,
- 		unsigned int cmd, unsigned long arg)
- {
+ 		total_bytes += bio_bytes;
+ 		nr_bytes -= bio_bytes;
 -- 
 2.44.0
 
