@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE768181495;
-	Mon, 25 Mar 2024 07:11:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A820118149E;
+	Mon, 25 Mar 2024 07:11:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711350680; cv=none; b=KYX1lNiNOmXEmkCcAhbE/m2OuzN7wLNgvVfYq8ZIhDwxLkym0ICG8/eAhL/DEmgYBqKRvcBFpc4aQQPKGpjaEhfoAQnJrHZHUW5seab2qQb/PfTMoUjjkGnddTf4MxNwSw3hSY7v41RuMovKbYWrhhGZ4SYjS3yDci6qRVc9xEs=
+	t=1711350687; cv=none; b=N/Z5DtqF/bobIys4NI3pyKZ5WA5kNqIN/5q6NF8jTndCgI/z7rOPcc1+1EaRD/y+uAW8dHOw3ZypLPrGE+sZabuOUf9n2Hi46LfGY18ScbiAJjA3rVDo6XG0tRmxI30Pl+sfSM+HW0Y2qrvn/XjqMZjc55iGR9kiLjGlPBVNXHA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711350680; c=relaxed/simple;
-	bh=bD3pn7waGVyabrrIrvOuivhv+kWsQE+KY0AsrDgUOwM=;
+	s=arc-20240116; t=1711350687; c=relaxed/simple;
+	bh=RYeTCQwP5u3jJ+AkUZ6LHgFtrd06l1caA0vGxdp3bhM=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N8wUEggiWrLqQO7GlSLRP+tJOzjCrJmxLwI/Dq6WdSK9sPi5xcYhO/pkfkgpo7r8r39+bhBy+X0rgQRgKsct9S5+wd/uKFB3AmArAjaia8GttQjQeqhZFv9uKlF7YFGTtFD1bdHDbpL7cKvGB31dQk4tPRd+C8ru9YO0mwsFh7E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q/LGWM1B; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=lKs5MDua3g8p4I4+1+OrPvoJjIpk9Xeq5fSnr2Ubg0h5QWA4FN2iGTkHEiPTc697wEdDCOY0EVLtM4fu18BvFi/PMiZlWbjAvgxbzAV53i+jTs/riAWn3xV29RVZ1bPDINDJRKWjwnJ2Q9nQwF9NPmQF8DCDNZZo9lEjCCrluaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Alt9q+ta; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q/LGWM1B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66983C43394;
-	Mon, 25 Mar 2024 07:11:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Alt9q+ta"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05C10C433F1;
+	Mon, 25 Mar 2024 07:11:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711350679;
-	bh=bD3pn7waGVyabrrIrvOuivhv+kWsQE+KY0AsrDgUOwM=;
+	s=k20201202; t=1711350687;
+	bh=RYeTCQwP5u3jJ+AkUZ6LHgFtrd06l1caA0vGxdp3bhM=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=q/LGWM1B7C6oEXzLyn0OvSQrW0mAYOU7gObAFz+pNpqU7TWGiohm0kB2VOYMbAp6G
-	 8XerHyhTXQ9lBuR1SvmU75R8uPyT300T1voZ4MRUXX78O32A4ws5P54ycc9hiEZIu0
-	 iUGVY7pgXel5vb3yTJwmRm6sWrCF/joWvrZ5l/WPDwMwk4LzxA7JOuYTN//zUArb7g
-	 Y5wwkRJBoJzSHlvM+90D35vHdP3cURyOeeYh4pljIZMKS4MGe4Z0edJl9+FOmBqN2+
-	 1WNTb0dt7g+Qn2dYT0ZKSF7O5EZTCeifqWePGiAULS55uHgPhdxNsr7So3C4RV8Kul
-	 lh45KDw/hcAFg==
+	b=Alt9q+tawym1SyqqoG3+QMsGYWZJgANmwxp9AFI3vdUq2RwmFe7LszV6wCXfmCL04
+	 gNeXiSBV2JraBD3M9ikl3+OwKLNj5BURjtb2f/B1s2BWFxrL36wfliMy2fJRf3pm3e
+	 +7FxrHVGafniohFnc7hl//EbzU5dJJlcv1xXZIcju6daZfpS8M2z/ETtssi7R96I9q
+	 EFKpxTfZ83P4Sp7i+hUwmIMeT39mWgAhj37qlPAm79mS1V5cIhDGYp54/YJwxfGknk
+	 BMxEDK1zEWP5eBYTOFNht0LYBsfnsjK2F3j5REG0LbvZs3329wAz4I/BrXhscniuHI
+	 tRY9YQB+MrWdQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -49,9 +49,9 @@ To: linux-pci@vger.kernel.org,
 	Eric Dumazet <edumazet@google.com>,
 	netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 24/28] scsi: megaraid: Use PCI_IRQ_INTX
-Date: Mon, 25 Mar 2024 16:09:35 +0900
-Message-ID: <20240325070944.3600338-25-dlemoal@kernel.org>
+Subject: [PATCH 26/28] scsi: pmcraid: Use PCI_IRQ_INTX
+Date: Mon, 25 Mar 2024 16:09:37 +0900
+Message-ID: <20240325070944.3600338-27-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240325070944.3600338-1-dlemoal@kernel.org>
 References: <20240325070944.3600338-1-dlemoal@kernel.org>
@@ -68,31 +68,22 @@ macro.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/pmcraid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 3d4f13da1ae8..631a24d91fa9 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -6300,7 +6300,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	}
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index e8bcc3a88732..9c57efa10732 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -4033,7 +4033,7 @@ static int
+ pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
+ {
+ 	struct pci_dev *pdev = pinstance->pdev;
+-	unsigned int irq_flag = PCI_IRQ_LEGACY, flag;
++	unsigned int irq_flag = PCI_IRQ_INTX, flag;
+ 	int num_hrrq, rc, i;
+ 	irq_handler_t isr;
  
- 	if (!instance->msix_vectors) {
--		i = pci_alloc_irq_vectors(instance->pdev, 1, 1, PCI_IRQ_LEGACY);
-+		i = pci_alloc_irq_vectors(instance->pdev, 1, 1, PCI_IRQ_INTX);
- 		if (i < 0)
- 			goto fail_init_adapter;
- 	}
-@@ -7839,7 +7839,7 @@ megasas_resume(struct device *dev)
- 
- 	if (!instance->msix_vectors) {
- 		rval = pci_alloc_irq_vectors(instance->pdev, 1, 1,
--					     PCI_IRQ_LEGACY);
-+					     PCI_IRQ_INTX);
- 		if (rval < 0)
- 			goto fail_reenable_msix;
- 	}
 -- 
 2.44.0
 
