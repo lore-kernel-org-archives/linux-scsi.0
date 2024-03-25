@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5637717F392;
-	Mon, 25 Mar 2024 07:09:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D47C8180A67;
+	Mon, 25 Mar 2024 07:10:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711350589; cv=none; b=jXBZJ1+KbfrRXyBjnPMCeCNSRXu8Tvo8slJLIgomnHd/EEZpiYdygxkqdazrOacidZVMEnvluvkkZXtKAcvR+QJqSX67fbXRSi1rZuY65W9XlIya3qwcXEkhg8XrXy/tHfL7uihtVClBbTuz0so4g4T0jKLeakwwGTbeLcq+dAo=
+	t=1711350616; cv=none; b=tjSLFapms45Hz4TuINs9ECA2+PoLUXajuk4qjCQbtaHKbYBBm6g3yLU60hGEFEhbik2tp5EvuwcB/GTo5ASmzH5Yfe7mr0n399E2qq+/vfNWuJvG1UXipBenaFrFnY/NCGodZLGhWKiLFKR/MBIf7xYJLbL7/eljY9pUMVubphQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711350589; c=relaxed/simple;
-	bh=dGJkJbFdBqM1o9IeFZ+PlOQFJCVwRbT/Iii7yFVFMSI=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=XDYBAoZaCPis8y3DEnsXsrSM0trJV9sr2/VkpCkwR28fKJCQq4WRLYybrydHxEXccBzh3Txrs82BW+U5L7bemhxNFTcgm3BazX1JDo7xqFqwlwZ0pLnuj9cdYwhk1yTQItiO59ylIs2OPKsEkcx7Lp7w1tNdLgCQ1UEm82UhtjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QE/7hIf4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711350616; c=relaxed/simple;
+	bh=/OcYeyGR7nBShU6EhPVo+RHG9KRcq17+M9rAUK4EZAk=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=tHJExlt1swy3hJGHCpTIxvlMUHDDJ3jVjHRnbf9L7rmHUUtDS2DndqEnyUjETcGCazD90r5i/HTVc2tQRfKo/C2WtQT7pbOF7XvO1Op7fSGpIBPYGVal05kF6UHNpWchakDgE8VOY4HFMKk54kNXFV1w4v8CkN1JuD6TNvLy4sE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hyWih1aE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QE/7hIf4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7946AC433F1;
-	Mon, 25 Mar 2024 07:09:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hyWih1aE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E001DC43394;
+	Mon, 25 Mar 2024 07:10:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711350588;
-	bh=dGJkJbFdBqM1o9IeFZ+PlOQFJCVwRbT/Iii7yFVFMSI=;
-	h=From:To:Subject:Date:From;
-	b=QE/7hIf4k1WdMYvCLYH6NWECK80CO9rFwUlKJkwfZ3wfMTBHrGASomESh4jVHXrIM
-	 QpknjzOPFaMLXXYDFsWUzeEjTgmzhhGoh2uEYo6ZaDnMv9KkNibR5UwQMPbzQWhjge
-	 4U/VOeJdCnGli7BcYDHsW1gEbczyXFxPW6Ouc/cZG194BBgVdKEra/Ri8v12n71hRy
-	 yxHTeeLcfPlZ0eYRVyOfM4PT0y5mXYStStFcX/563oqrleQ+x1z/BtOj2RklJxNr4G
-	 lE24FyJC+G1TiuwTkDXCNeL044b8fAkOJt1ES3F/I+1YxhlZB4bkmFEMKHpzoaZvPC
-	 5yzMMFW9kDEcg==
+	s=k20201202; t=1711350615;
+	bh=/OcYeyGR7nBShU6EhPVo+RHG9KRcq17+M9rAUK4EZAk=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=hyWih1aEBrF5fxLDV0V7K3X3aOV9TRZTf1V6Bi5kbYHX7oexMuY0E7/Sx+c8SQDTh
+	 d/4dnVvriW2v5Lj5xRzzYkl9M1zajnODNQ6jcgylx6P2ZYBNPHm6gftRxMLNzVPtYc
+	 ijrfvXui5RyPzGBxjLHov1GbqT+koXV96+dkHf7/ZReRGiaH20mWOy9fs5Xl/uU/6S
+	 D/J8rLWLOIs0S8B2hNC35jNImJZ7h1x4c/QfZZW3EzDpvSyKqFJIOzCf35S9g86jC2
+	 c3dlzOrpO800VWpezt374Vba4a3Z5Gj+Orv3Ak8By8NusjGfQxybpKRyX/eeYcuYtC
+	 vLgsrYpw2VoQg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -48,10 +49,12 @@ To: linux-pci@vger.kernel.org,
 	Eric Dumazet <edumazet@google.com>,
 	netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 00/28] Remove PCI_IRQ_LEGACY
-Date: Mon, 25 Mar 2024 16:09:11 +0900
-Message-ID: <20240325070944.3600338-1-dlemoal@kernel.org>
+Subject: [PATCH 07/28] platform: intel_ips: Use PCI_IRQ_INTX
+Date: Mon, 25 Mar 2024 16:09:18 +0900
+Message-ID: <20240325070944.3600338-8-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240325070944.3600338-1-dlemoal@kernel.org>
+References: <20240325070944.3600338-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -60,83 +63,27 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This patch series removes the use of the depracated PCI_IRQ_LEGACY macro
-and replace it with PCI_IRQ_INTX. No functional change.
+Use the macro PCI_IRQ_INTX instead of the deprecated PCI_IRQ_LEGACY
+macro.
 
-Damien Le Moal (28):
-  PCI: msi: Use PCI_IRQ_INTX
-  PCI: portdrv: Use PCI_IRQ_INTX
-  PCI: documentation: Use PCI_IRQ_INTX
-  sound: intel: Use PCI_IRQ_INTX
-  usb: hcd-pci: Use PCI_IRQ_INTX
-  tty: 8250_pci: Use PCI_IRQ_INTX
-  platform: intel_ips: Use PCI_IRQ_INTX
-  ntb: Use PCI_IRQ_INTX
-  mfd: intel-lpss-pci: Use PCI_IRQ_INTX
-  drm: amdgpu: Use PCI_IRQ_INTX
-  infiniband: qib: Use PCI_IRQ_INTX
-  infiniband: vmw_pvrdma: Use PCI_IRQ_INTX
-  misc: vmci_guest: Use PCI_IRQ_ALL_TYPES
-  net: xgbe: Use PCI_IRQ_INTX
-  net: aquantia atlantic: Use PCI_IRQ_INTX
-  net: atheros: alx: Use PCI_IRQ_INTX
-  net: realtek: r8169: Use PCI_IRQ_INTX
-  net: wangxun: Use PCI_IRQ_INTX
-  net: wireless: ath10k: Use references to INTX instead of LEGACY
-  net wireless; realtec: Use PCI_IRQ_INTX
-  scsi: arcmsr: Use PCI_IRQ_INTX
-  scsi: hpsa: Use PCI_IRQ_INTX
-  scsi: ipr: Use PCI_IRQ_INTX
-  scsi: megaraid: Use PCI_IRQ_INTX
-  scsi: mpt3sas: Use PCI_IRQ_INTX
-  scsi: pmcraid: Use PCI_IRQ_INTX
-  scsi: vmw_pvscsi: Do not use PCI_IRQ_LEGACY
-  PCI: Remove PCI_IRQ_LEGACY
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/platform/x86/intel_ips.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- Documentation/PCI/msi-howto.rst               |  2 +-
- Documentation/PCI/pci.rst                     |  2 +-
- .../translations/zh_CN/PCI/msi-howto.rst      |  2 +-
- Documentation/translations/zh_CN/PCI/pci.rst  |  2 +-
- drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c       |  2 +-
- drivers/infiniband/hw/qib/qib_iba7220.c       |  2 +-
- drivers/infiniband/hw/qib/qib_iba7322.c       |  5 ++-
- drivers/infiniband/hw/qib/qib_pcie.c          |  2 +-
- .../infiniband/hw/vmw_pvrdma/pvrdma_main.c    |  2 +-
- drivers/mfd/intel-lpss-pci.c                  |  2 +-
- drivers/misc/vmw_vmci/vmci_guest.c            |  3 +-
- drivers/net/ethernet/amd/xgbe/xgbe-pci.c      |  2 +-
- .../net/ethernet/aquantia/atlantic/aq_cfg.h   |  2 +-
- .../net/ethernet/aquantia/atlantic/aq_hw.h    |  2 +-
- .../net/ethernet/aquantia/atlantic/aq_nic.c   |  2 +-
- .../ethernet/aquantia/atlantic/aq_pci_func.c  |  9 ++---
- .../aquantia/atlantic/hw_atl/hw_atl_a0.c      |  2 +-
- .../aquantia/atlantic/hw_atl/hw_atl_b0.c      |  2 +-
- .../aquantia/atlantic/hw_atl2/hw_atl2.c       |  2 +-
- drivers/net/ethernet/atheros/alx/main.c       |  2 +-
- drivers/net/ethernet/realtek/r8169_main.c     |  2 +-
- drivers/net/ethernet/wangxun/libwx/wx_lib.c   |  8 ++---
- drivers/net/wireless/ath/ath10k/ahb.c         | 18 +++++-----
- drivers/net/wireless/ath/ath10k/pci.c         | 36 +++++++++----------
- drivers/net/wireless/ath/ath10k/pci.h         |  6 ++--
- drivers/net/wireless/realtek/rtw88/pci.c      |  2 +-
- drivers/net/wireless/realtek/rtw89/pci.c      |  2 +-
- drivers/ntb/hw/idt/ntb_hw_idt.c               |  2 +-
- drivers/pci/msi/api.c                         |  8 ++---
- drivers/pci/pcie/portdrv.c                    |  8 ++---
- drivers/platform/x86/intel_ips.c              |  2 +-
- drivers/scsi/arcmsr/arcmsr_hba.c              |  2 +-
- drivers/scsi/hpsa.c                           |  2 +-
- drivers/scsi/ipr.c                            |  2 +-
- drivers/scsi/megaraid/megaraid_sas_base.c     |  4 +--
- drivers/scsi/mpt3sas/mpt3sas_base.c           |  2 +-
- drivers/scsi/pmcraid.c                        |  2 +-
- drivers/scsi/vmw_pvscsi.c                     |  2 +-
- drivers/tty/serial/8250/8250_pci.c            |  2 +-
- drivers/usb/core/hcd-pci.c                    |  3 +-
- include/linux/pci.h                           |  7 ++--
- sound/soc/intel/avs/core.c                    |  2 +-
- 42 files changed, 84 insertions(+), 91 deletions(-)
-
+diff --git a/drivers/platform/x86/intel_ips.c b/drivers/platform/x86/intel_ips.c
+index ba38649cc142..73ec4460a151 100644
+--- a/drivers/platform/x86/intel_ips.c
++++ b/drivers/platform/x86/intel_ips.c
+@@ -1505,7 +1505,7 @@ static int ips_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	 * IRQ handler for ME interaction
+ 	 * Note: don't use MSI here as the PCH has bugs.
+ 	 */
+-	ret = pci_alloc_irq_vectors(dev, 1, 1, PCI_IRQ_LEGACY);
++	ret = pci_alloc_irq_vectors(dev, 1, 1, PCI_IRQ_INTX);
+ 	if (ret < 0)
+ 		return ret;
+ 
 -- 
 2.44.0
 
