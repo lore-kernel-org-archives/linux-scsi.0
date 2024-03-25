@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A15615E213;
-	Mon, 25 Mar 2024 07:31:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DD347F7C0;
+	Mon, 25 Mar 2024 07:34:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711351888; cv=none; b=RlkiHw8ZFcfC1DmCRpaVNSO5RshvcfHeGDudQe4yEZjs/59T8SvdZ1kBCglFDIuBOJeFgLDV/Ga3QrKwFQRcg4XVaDEwQPfuSzq/hn5vZmMgMkk3Pq/MD1uYiirEpCYsksO0mRb4r+pSWqKdnM92tH4LXwuY9H6XO3EFEuSbe+s=
+	t=1711352054; cv=none; b=Qmw0KDfmEFEYZyKIrmzxbsabdJKWrbeBD4or/Gh6B4/LwzDgXisgh2Fowm4jIken1KNOpzVgpW4kv2eahEMTU5KpOcudGOQoUcRekgyLjbysATu5BP0sT1tVXKCYySHgVM2gDnByf4xeW2tMX1D5IFeoQiaYdUGxkae4XqXQiqU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711351888; c=relaxed/simple;
-	bh=IC8NYRbOMOiKOx44RirXjG8foOxmmNK/Eyzsmt6KCLg=;
+	s=arc-20240116; t=1711352054; c=relaxed/simple;
+	bh=GYfhhQCI0HEBDSAfk3WZNrC6oWQDTVD8vAnkwEiPM7Q=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fQxWTlpsSIlUjYkh5kFBWDTxtR6Be88TuBEa0QP2KOQWun9UlsDgXArdzGDb7thr1N5DTphzSvgrbWZFT0hXg+PWLdmKJTMa6eDKFM6zbRa5ThkueO9z8WKnD2fZqNBk2lxHo7pfE4blvGLBc5I065u3mkuEL+fNFbE20K7n/EI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RM4sFH01; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=SDTdsTkUnzyXG5SWucVrooaE0C6xuGTyXUre0S2qiBjG4KRhwoOZ01GHeAGiniCqkhxBYOy6s1rBmVKNCJR1guMbViBWEpAhaGRtxWcttYMg86G+cD4bLoaAg5DfcHMNZTNMdYm+8BfAbfB865GkeOKT8NN9XIL/XUPWxvUviMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WxcVi03w; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RM4sFH01"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E082FC433F1;
-	Mon, 25 Mar 2024 07:31:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WxcVi03w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E85F7C433F1;
+	Mon, 25 Mar 2024 07:34:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711351887;
-	bh=IC8NYRbOMOiKOx44RirXjG8foOxmmNK/Eyzsmt6KCLg=;
+	s=k20201202; t=1711352053;
+	bh=GYfhhQCI0HEBDSAfk3WZNrC6oWQDTVD8vAnkwEiPM7Q=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=RM4sFH012a7DZxA84yCjRBudqGMTkwq0Fwk8bsqetGLY5ECxmf+l0zw6wzWP4hxAh
-	 6XgrqK9oxlOt+Tr5gOxTa4G1Wk+JxJsvxn+W+tMXcZWEfafowUu63uuTk0vck0Fwfh
-	 3XJP0oYHpYZ8D/Xslkyf2kH0aFM8xCGMkTHnqoQpSkdeFgWH+dkD6PUmlVUFvJuKmH
-	 TQCFgXJ6pRFYCMmMUeqtS9Mp/5AjUbaJ8OTva/QsE5PfzGNLcxpV7jqXM5XRe1R4Dn
-	 QjukBx6aiXcQJKwdqxGZnXXMYTFy2btWnV/hpKhDpmVtqGKGnUyiEbG+/mkc9nNlLs
-	 SCyvm8HwB30Xg==
-Message-ID: <0fa3b0d9-d6a8-4427-80a3-616e54987a77@kernel.org>
-Date: Mon, 25 Mar 2024 16:31:22 +0900
+	b=WxcVi03wKqjeMHplvNl2L/OTj6Ipo7kIQD6J8p+TCNpgVHDS41sUtFUM2Nv2hYn/T
+	 m/f6G0u1t6S5w0EvmrRn4NOSQCAZxVof9Ep9NBPYTv0eioG+enhIsugaDYYIYvEvMB
+	 QimR5yeASB63ej7Irbm+CykIdHGB9C3wZecYv2PM6/gdsJkqTiKjQi+DFpJX6kdkky
+	 etsunOc1chgeDpiCUuXQ6IabxV1XoMfI5LpfvXk2U9aH62yq5rIwrvsmdqipBPLIay
+	 8QcBB5A3FWC6FSwDd1Cv9sLJzr0a4X6E05DpEgjivEQ+R9e8pJ+1+8y3Pea3SQ2wic
+	 OQLq724QFfrWw==
+Message-ID: <942dc890-9a1d-4008-944d-816f7a7c470b@kernel.org>
+Date: Mon, 25 Mar 2024 16:34:06 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/23] ufs-exynos: move setting the the dma alignment to
- the init method
+Subject: Re: [PATCH 09/23] scsi: use the atomic queue limits API in
+ scsi_add_lun
 Content-Language: en-US
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -69,16 +69,16 @@ Cc: Niklas Cassel <cassel@kernel.org>,
  mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
  linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 References: <20240324235448.2039074-1-hch@lst.de>
- <20240324235448.2039074-9-hch@lst.de>
+ <20240324235448.2039074-10-hch@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240324235448.2039074-9-hch@lst.de>
+In-Reply-To: <20240324235448.2039074-10-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 3/25/24 08:54, Christoph Hellwig wrote:
-> Use the SCSI host's dma_alignment field and set it in ->init and remove
-> the now unused config_scsi_dev method.
+> Switch scsi_add_lun to use the atomic queue limits API to update the
+> max_hw_sectors for devices with quirks.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
