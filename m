@@ -1,45 +1,45 @@
 Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6705E7350C;
-	Mon, 25 Mar 2024 22:13:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7436A76049;
+	Mon, 25 Mar 2024 22:13:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711404816; cv=none; b=aVGVnaHgBzYCMEmwaEoNqpigERg2oAvDFqGdTisy9qB4lB9utZJFpSWAMatUA7IYv8M1o9Vxd46gbF5I7jC+AbvKpGAE2WBSvZfuWcZ8LKEYbzoNctcL0aGejllDM7gZcqR5dlJa+2J1PIVbthjvUebAl9o3w51bnJ9YLwAGxKI=
+	t=1711404817; cv=none; b=Pe7hiC9+TP1LnVjV9evkWq1t8QHhXSJZq6EXVckXwpEEdB2S0XldzoPzEMxPbED7UY7SiQIvxADit2palZSxfZAfdT/kLgzQ50h4azI5M9FR+u1p+T20wXJAgJtVGkU7F5q1/GxhOXiLCd6tshAk9SacexLJ/XibRLRPcFw8C1g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711404816; c=relaxed/simple;
-	bh=lY9FIntr0nkvHSL2c+KUE7nnc9/NyBweIhAGiFvlGMc=;
+	s=arc-20240116; t=1711404817; c=relaxed/simple;
+	bh=/aQ4e/dbCdS2itYvqCPdo8g2LXYfZKkrZB47BoXZEIg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eqoJYu1sbf7a3pRorJpk8Z0XYxHYYlXYVA9Y462rIhdm5EwV1LChyJlCZMdvcIZ1njVcP2buymsBuQJySN052rhSAe5LCEGV4/RH/93NLuy3u0eVhU4qL9QEJdvQTxbfoBJC3waseCusO/QrSiRi6RDlHL9nvISbuSLfh/mGwHA=
+	 In-Reply-To:Content-Type; b=BVWrvAX9d6fGDRWNyp3Tqpxe1V28J0Dz2hj7K85sFoMSYHA9aAG8QPCK7AB2PmkRqWdmAPDDdyBjiSVJyxzOJ7XOFnOe6/43o/hc0YC3019KIhfi3NJo2vrt+LBhNVkM95+rBsfYvfaCSaJM2PU5akc0fnoE/6EFLvJoLlnvjwA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1dde26f7e1dso35736375ad.1;
-        Mon, 25 Mar 2024 15:13:35 -0700 (PDT)
+Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1dfff641d10so33199075ad.2;
+        Mon, 25 Mar 2024 15:13:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20230601; t=1711404815; x=1712009615;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lY9FIntr0nkvHSL2c+KUE7nnc9/NyBweIhAGiFvlGMc=;
-        b=R+n9wE3OHI5rWqdyN3O34fud5nOzq0D2Wc3zZmt/QVS5qG77qhnvUksxXTpI9Z4C9q
-         imfi9NIB0kLIPFtch7zQKLfX1KPMnF8iGe9ZI2GghbbMhG5qVaTC1PffURBs4YFDFDgs
-         lH1zmtNe1nDVYNJ8gUWHE4zv5uztzjtOfnBMvjvuwpC1ZQvA18u5sgtvMhYxaqAyBtGo
-         hiI6p0jH+Ne5NPLf0sEHC6ylszSPeDC51VNTtNmyy8IEtGlRWKOURbuB5ZYQ9/vNZlMz
-         7Iair6TTYdxfsucxNOuF/zdC6x3TqpQk20vd3oXHsX3yyHHnaSDzfL89dmZ+ByXV34g+
-         EmiQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVZrVtRl3evs6g+Z6MMkQzh0FhdRBx0whkw0EKkPdA0qKDIjWCY7+5EeQzesRBSOaLCrYp3hHcx1qXu5+Ge1VxF8ogQUyAimnl0RJbmIbYBavU7LeDK06CWeyS3HvmVyphDWxpiaL2ogfPZWLxhccuXY28wd/SvMfrEHtkxiUbZUgSzbfu+A/nrdRqRpmwkXNnrUkan4NagSsCxnbF4A7ffN5QfhQeRqpXqEewXaKFJ5TyeRaU/ki2s90r268rRbxw=
-X-Gm-Message-State: AOJu0YzaCo60s83nPCIf+Sud2QF3apmwrPfyEB42hvhCTkto+1SFYRBF
-	so6+oHWyo2Dav+jbScMEvOJ+MCgW5pmRl861WcQ0qWEDOxSUdpoA
-X-Google-Smtp-Source: AGHT+IFUGYd8Jam7bWvjJzPqP4kRsvvoGwSNPai1P4IrVGBzs7Jpyu8Rqw4R37V+qo7lwI2rThO4Hg==
-X-Received: by 2002:a17:903:26c9:b0:1e0:27c8:5c7e with SMTP id jg9-20020a17090326c900b001e027c85c7emr7288051plb.25.1711404814659;
-        Mon, 25 Mar 2024 15:13:34 -0700 (PDT)
+        bh=/aQ4e/dbCdS2itYvqCPdo8g2LXYfZKkrZB47BoXZEIg=;
+        b=AaZU0bb8r2Z1qf9JawTq3jTgbvgna/sjm4Njr+h/9fzBz62Cb6HrAyfdfYYXc0Z7mI
+         254eIX2TjwF3/Br3E2Ilhq88jS8FMHxqdrtDlxe2wd+KFO/AUEpzPpVAhBpV4QYoFx4y
+         RnZ9CdPqYS10dTemKZGYArPRGiMjrYhv8Xr/y1B7orOtw2kJHlZGtK8fNa+VDfiJpyoc
+         7QVsi4/Fj4U2yW0DDPVdf22+nZsF9vZmSC6HaVFAbCQn5oEXRZKERIS4pYsql1n5hqN4
+         O0qSwultMSpkylKiJZQxVMbBGW9asw1BSJ6y+GLiva0xZ2vwfSG+S7oD0QU7EQLAuEv2
+         mH3A==
+X-Forwarded-Encrypted: i=1; AJvYcCW/M/PHx5ZW93BPBiM3h05B7cbaf6PSE8qtaTvQXGbuHUZ2h8nkr4qhxJvCqrMwOYc29QEfkZCzCpTWpF8nkcVEMJTbs9bDdsux8QB1y2Og0kNXu4KUWopmdnN8dhQuFjYtWnyfudDyas0cyR1pZPPQqiIY0XbZj1PKhORLpG3ApHE+k00b2VW8SFJFTg9V0cdkiViB/Fswnjifnj5qxoUuRUCLjcrraDpWBJyTvBjmGlcmc7hO3m/chfzNl4ofSGc=
+X-Gm-Message-State: AOJu0YwZc2KHjJW2A5tWFs9B3FC6Waxf8iS1CZzg98a60W3Q7HQo80hW
+	wg7ME2WfJ9n7hvAh6zcYGbxehvyt5e/whtqmblw13m3KEawD3JZ7
+X-Google-Smtp-Source: AGHT+IGfB+WQv3DsfWzHC6sXgKWc3iOzsu5rHx4jJULxZaWi0a0lVRdY99x8OK5M+q8sweYiGRV5UA==
+X-Received: by 2002:a17:902:d650:b0:1e0:d579:91df with SMTP id y16-20020a170902d65000b001e0d57991dfmr956391plh.68.1711404815577;
+        Mon, 25 Mar 2024 15:13:35 -0700 (PDT)
 Received: from ?IPV6:2620:0:1000:8411:262:e41e:a4dd:81c6? ([2620:0:1000:8411:262:e41e:a4dd:81c6])
-        by smtp.gmail.com with ESMTPSA id v17-20020a170902d09100b001dcc18e1c10sm5273962plv.174.2024.03.25.15.13.31
+        by smtp.gmail.com with ESMTPSA id s19-20020a170902989300b001dd67c8e108sm5195084plp.199.2024.03.25.15.13.31
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Mar 2024 15:13:34 -0700 (PDT)
-Message-ID: <47028fba-7fb0-4eda-81a2-ccf439cfec6a@acm.org>
-Date: Mon, 25 Mar 2024 15:13:29 -0700
+        Mon, 25 Mar 2024 15:13:35 -0700 (PDT)
+Message-ID: <a81db761-7ed2-4e4b-834f-7641f6199fcc@acm.org>
+Date: Mon, 25 Mar 2024 15:13:31 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,8 +47,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/23] scsi: add a dma_alignment field to the host and
- host template
+Subject: Re: [PATCH 08/23] ufs-exynos: move setting the the dma alignment to
+ the init method
 Content-Language: en-US
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -80,14 +80,14 @@ Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
  mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
  linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 References: <20240324235448.2039074-1-hch@lst.de>
- <20240324235448.2039074-8-hch@lst.de>
+ <20240324235448.2039074-9-hch@lst.de>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240324235448.2039074-8-hch@lst.de>
+In-Reply-To: <20240324235448.2039074-9-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 3/24/24 16:54, Christoph Hellwig wrote:
-> Get drivers out of the business of having to call the block layer
-> dma alignment limits helpers themselves.
+> Use the SCSI host's dma_alignment field and set it in ->init and remove
+> the now unused config_scsi_dev method.
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
