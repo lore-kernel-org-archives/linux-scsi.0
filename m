@@ -1,45 +1,45 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A7B470CC2;
-	Mon, 25 Mar 2024 22:20:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AC9383A08;
+	Mon, 25 Mar 2024 22:27:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711405252; cv=none; b=MIfwWiifZVY4LG9V3TAN7JFkJsUk6h8XSoI7sb3ICNRM61PEevFqrAUjU9k9MAClCj5pjkbUCQJyoxiFL+zPw88d7zWPCSCoIGOvpkbvX/AHtsdsszTOfyZISoTv1apUr4U5u5j/latdonGTUx+SRawzoD56FJDhFsEExq5DAE8=
+	t=1711405666; cv=none; b=PonZqSLVAGp70jf0lkxe4Nwo7ugopTZVS1XXpbE1yUvyaptv+LVAJiE4FDQ2n/PovML5YLNg9tSrJvisWa1jHczvUe218qOAdvTvi8ek8r8l9vBnS8+43RU0c4vaKEpJzbFUQpDjHEcT7CCNrqh+mRc7V6ZSrd5uO8cCBTrKQhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711405252; c=relaxed/simple;
-	bh=6Ic0OY/97E82y2MO5yNzW1qCXh44+WdvVl2RS/Soo8k=;
+	s=arc-20240116; t=1711405666; c=relaxed/simple;
+	bh=k380Di9PPn4HrfhXJaKlNHKgzfcSKY8nBgbOVUGHviE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p8uJnJuAv7FPjlFKgPqGLPSm7xkhpB0Kn6AeeKA+SVjq2RJRioNwc2PzAqvaIugT1Ngr0znkJUGUYieo00ZkZWzMSY4QF7AgK5G77xQBwFMZx7hi29bkRn3Wt/iQzAzFCrz2op5T+0JNBImsV/HXZKLh8kue55UWgyfs0hKOGuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.177
+	 In-Reply-To:Content-Type; b=KZy4wGgGcORoQLB/RRfvxFo7ZHiCldxGdhnDyz5/Lu6q0/8+QgR4wuR5TLuGvZXkn6KGX1sd6SRE48YNw0YPs5RUgMW9mq5vL/cW/jffOlo4SfQfXtHOSp/EYc7uRFVAj1QD40qInAavcNd07yzSxonjlUaF9PUkr2XcuLOPTjA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1e0ae065d24so15596995ad.1;
-        Mon, 25 Mar 2024 15:20:51 -0700 (PDT)
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-1dde26f7e1dso35823035ad.1;
+        Mon, 25 Mar 2024 15:27:45 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711405251; x=1712010051;
+        d=1e100.net; s=20230601; t=1711405665; x=1712010465;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1dOJx1Zp4J5cyUuaj5fJBb2ijZj1VrN3Fadd6N6MWeI=;
-        b=XU1H9528gPnXtuyNyK/gUfbI70WDAe98CCJPreL254dsxf/uXRo6spRXqeZ8jqsqi9
-         /APSYFe7/+9raLDnYte5geDoF3lSQgCjAM3UJ4sQx0HEl4VzT+cfZ0ss5yKAILJEz+TT
-         ChZP6FXfeS3kFdWIvbTyax3Eota5kCL88P8qEi1hA9inIcNabTLc/wRcT2jlBmEBOq36
-         9yrUNoZdHwG4j7ACkz/P1TtTys60YInNSythQfw55nHIkRaRP55+1BWFwixDFSXHF/pJ
-         osHrnzEl/TxfajdHk+i82aufcnYNfE9jQ0GSYXrAiBdocFAVKrGvOMm25n2Vz+3eVFdq
-         xnLw==
-X-Forwarded-Encrypted: i=1; AJvYcCWXDz0n/jk4rEhvFcxuHHyBFF2tza/UaFjd1haVR6Z+Z3tK0DkwftZO9KLSBd9tYkZO2RjOCPYdwXuyHwyn0ZLSYfpGHbVjoJu3v3G3Ae43MnBq4CkuoxdUyJ7du1om/YOrgkVs+iTg
-X-Gm-Message-State: AOJu0YxfenPAT6neOVD1K8lOuXqj/AqoYdlDle90Enp3WSkHU9jlfogC
-	5ROJAP8DAUYVtECqXEaqX7Z3rtG4pmbuIMv6LGvUbgeD1CJI7ecs1y03yEX3
-X-Google-Smtp-Source: AGHT+IH6wE9DUGYzGAKfvhk+v7he4HblqsUTfSKTWYcKXWWLAk/0gRjMM40dMuxy17T78mdp9wIAkw==
-X-Received: by 2002:a17:903:41c8:b0:1e0:c88f:654b with SMTP id u8-20020a17090341c800b001e0c88f654bmr3374540ple.25.1711405250675;
-        Mon, 25 Mar 2024 15:20:50 -0700 (PDT)
+        bh=uzMzCvhZ2DsLlicFbodpkHWs9sqgYoFg0qVaOmdiFnk=;
+        b=oWjK2g76yTVNrMX1k1TuBjSpdHsaKKT1sVWokUBeU2chxqZeRJzA8QhWS+kMQR4q5L
+         M30uVtXJxUBExQb0l4cEif6Y72Q1E1YieAswGOfbX8CyodB4pwL1pnqXtxIHIHSPmJVV
+         NmU/FXtE5EZQfHCyNpObM4UzFKxfGe/o0jTiC9xRJcW32xb4j1QATuaxBEVaUkqCJshb
+         nTrhVVmUS+2jOpM0lVPhYxpNBORlmzoiue6qrKQN3Byql/mXKLN55hVYL45EJ/FM1omH
+         1QXLK8vweDYsDqvDBBdjLKEM28XZWkpqSw9/M9l4aiCVw6yXh67lcr0jAmZoHi6TXfet
+         iYXg==
+X-Forwarded-Encrypted: i=1; AJvYcCVv3QdcIOCF7m7eQlufoUKKDjQaWnwT+dyErM4YuTpzQZrG/NWW3vZgnQxz7KlEW5mYUNWP1dPCbidwr/XYmlEHiZHcrzAwlBm+26DV3Lso5wcZNGK9OMtaxa4Z4FR4RGZ0pzX+zQkc
+X-Gm-Message-State: AOJu0YwzrAGN5eDUetzNx9C7CPXEjsJ4dyjfXpV0BAOk3l3qikselMOT
+	Yy+t13ka4q+k3AW79L9fhFqaTiVTxfV6ycbgUtpBAgUBA+5knBp5
+X-Google-Smtp-Source: AGHT+IG9EL2LYfr+5S1VK0pzV73lq96IFxyx1IqFKpBI9Wig5gzPZQK/aPza9vwmuPuSmTHUppIalA==
+X-Received: by 2002:a17:902:e849:b0:1e0:b60e:1a08 with SMTP id t9-20020a170902e84900b001e0b60e1a08mr5343333plg.40.1711405664622;
+        Mon, 25 Mar 2024 15:27:44 -0700 (PDT)
 Received: from ?IPV6:2620:0:1000:8411:262:e41e:a4dd:81c6? ([2620:0:1000:8411:262:e41e:a4dd:81c6])
-        by smtp.gmail.com with ESMTPSA id w1-20020a170902e88100b001db8f7720e2sm4672631plg.288.2024.03.25.15.20.49
+        by smtp.gmail.com with ESMTPSA id c2-20020a170903234200b001dd876b46e0sm5261746plh.20.2024.03.25.15.27.43
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Mar 2024 15:20:50 -0700 (PDT)
-Message-ID: <ddc7708f-fcfa-45da-af01-601ea7ca8897@acm.org>
-Date: Mon, 25 Mar 2024 15:20:48 -0700
+        Mon, 25 Mar 2024 15:27:44 -0700 (PDT)
+Message-ID: <0f3b82c6-2579-46be-b709-4a4ec7daf9c8@acm.org>
+Date: Mon, 25 Mar 2024 15:27:42 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,8 +47,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 25/28] block: Move zone related debugfs attribute to
- blk-zoned.c
+Subject: Re: [PATCH v2 26/28] block: Remove zone write locking
 Content-Language: en-US
 To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
  Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
@@ -56,64 +55,48 @@ To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
  dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 References: <20240325044452.3125418-1-dlemoal@kernel.org>
- <20240325044452.3125418-26-dlemoal@kernel.org>
+ <20240325044452.3125418-27-dlemoal@kernel.org>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240325044452.3125418-26-dlemoal@kernel.org>
+In-Reply-To: <20240325044452.3125418-27-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 3/24/24 21:44, Damien Le Moal wrote:
-> diff --git a/block/blk-mq-debugfs.h b/block/blk-mq-debugfs.h
-> index 9c7d4b6117d4..3ebe2c29b624 100644
-> --- a/block/blk-mq-debugfs.h
-> +++ b/block/blk-mq-debugfs.h
-> @@ -83,7 +83,7 @@ static inline void blk_mq_debugfs_unregister_rqos(struct rq_qos *rqos)
->   }
->   #endif
->   
-> -#ifdef CONFIG_BLK_DEBUG_FS_ZONED
-> +#if defined(CONFIG_BLK_DEV_ZONED) && defined(CONFIG_BLK_DEBUG_FS)
->   int queue_zone_wlock_show(void *data, struct seq_file *m);
->   #else
->   static inline int queue_zone_wlock_show(void *data, struct seq_file *m)
-> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-> index 03222314d649..62160a8675f4 100644
-> --- a/block/blk-zoned.c
-> +++ b/block/blk-zoned.c
-> @@ -22,6 +22,7 @@
->   
->   #include "blk.h"
->   #include "blk-mq-sched.h"
-> +#include "blk-mq-debugfs.h"
->   
->   #define ZONE_COND_NAME(name) [BLK_ZONE_COND_##name] = #name
->   static const char *const zone_cond_name[] = {
-> @@ -1745,3 +1746,22 @@ void blk_zone_dev_init(void)
->   {
->   	blk_zone_wplugs_cachep = KMEM_CACHE(blk_zone_wplug, SLAB_PANIC);
->   }
-> +
-> +#ifdef CONFIG_BLK_DEBUG_FS
-> +
-> +int queue_zone_wlock_show(void *data, struct seq_file *m)
-> +{
-> +	struct request_queue *q = data;
-> +	unsigned int i;
-> +
-> +	if (!q->disk->seq_zones_wlock)
-> +		return 0;
-> +
-> +	for (i = 0; i < q->disk->nr_zones; i++)
-> +		if (test_bit(i, q->disk->seq_zones_wlock))
-> +			seq_printf(m, "%u\n", i);
-> +
-> +	return 0;
-> +}
-> +
-> +#endif
+> Zone write locking is now unused and replaced with zone write plugging.
+> Remove all code that was implementing zone write locking, that is, the
+> various helper functions controlling request zone write locking and
+> the gendisk attached zone bitmaps.
+> 
+> The "zone_wlock" mq-debugfs entry that was listing zones that are
+> write-locked is replaced with the zone_wplugs entry which lists
+> the zones that currently have a write plug allocated. The information
+> provided is: the zone number, the zone write plug flags, the zone write
+> plug write pointer offset and the number of BIOs currently waiting for
+> execution in the zone write plug BIO list.
 
-This patch increases the number of #ifdefs in block layer .c files so
-I'm not sure that this patch can be considered an improvement.
+Shouldn't this patch be split - one patch that adds the new debugfs
+entry and a second patch that removes the code that is no longer used?
+
+> +	rcu_read_lock();
+> +	for (i = 0; i < disk_zone_wplugs_hash_size(disk); i++) {
+> +		hlist_for_each_entry_rcu(zwplug,
+> +					 &disk->zone_wplugs_hash[i], node) {
+> +			spin_lock_irqsave(&zwplug->lock, flags);
+> +			seq_printf(m, "%u 0x%x %u %u %u\n",
+> +				   zwplug->zone_no,
+> +				   zwplug->flags,
+> +				   atomic_read(&zwplug->ref),
+> +				   zwplug->wp_offset,
+> +				   bio_list_size(&zwplug->bio_list));
+> +			spin_unlock_irqrestore(&zwplug->lock, flags);
+> +		}
+> +	}
+> +	rcu_read_unlock();
+
+Can calling seq_printf() with interrupts disabled cause interrupt
+latency issues? Has it been considered to collect the information that
+will be printed with interrupts disabled and to re-enable interrupts
+before seq_printf() is called?
 
 Thanks,
 
