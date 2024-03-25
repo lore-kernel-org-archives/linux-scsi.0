@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA07415ECE1;
-	Mon, 25 Mar 2024 07:30:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A15615E213;
+	Mon, 25 Mar 2024 07:31:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711351813; cv=none; b=GUnIP0EA6EVsDzdiOU6+CUWZZpRtwFKCVSBmhey1zQ7/A8Bkk50ivHv1RJolMhJe/aK9FwWBmosIikOGoX49CaAFDwV6D3Bm3ofXX2dQKB2T/DZMUwkYpzGaJFR6bmp18Nn9OPs+ieHxuOySSQSBfUNYKfTztqL8sDlkJoa+JlE=
+	t=1711351888; cv=none; b=RlkiHw8ZFcfC1DmCRpaVNSO5RshvcfHeGDudQe4yEZjs/59T8SvdZ1kBCglFDIuBOJeFgLDV/Ga3QrKwFQRcg4XVaDEwQPfuSzq/hn5vZmMgMkk3Pq/MD1uYiirEpCYsksO0mRb4r+pSWqKdnM92tH4LXwuY9H6XO3EFEuSbe+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711351813; c=relaxed/simple;
-	bh=NDrBUpM1fCLkHIX/k1OcYxlc7+QNZ4MTP5hVlmaU808=;
+	s=arc-20240116; t=1711351888; c=relaxed/simple;
+	bh=IC8NYRbOMOiKOx44RirXjG8foOxmmNK/Eyzsmt6KCLg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uerf7YcX+jgCpENMkh42t3F1iD0tb1TAQrVCzQivVGid1z5TVds8RcyAy9RXxfViVkJ6hfTGa9SRDy4HjxvWsjIi84+Zsxdx76IjX6nqo3V0vPR6DnZ2VsK5P3D1hEeEyJusNC/hLg+lbgFChvuY0q461yT4QGCviZiClO4cNRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=et16iQGk; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=fQxWTlpsSIlUjYkh5kFBWDTxtR6Be88TuBEa0QP2KOQWun9UlsDgXArdzGDb7thr1N5DTphzSvgrbWZFT0hXg+PWLdmKJTMa6eDKFM6zbRa5ThkueO9z8WKnD2fZqNBk2lxHo7pfE4blvGLBc5I065u3mkuEL+fNFbE20K7n/EI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RM4sFH01; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="et16iQGk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1EB3EC433F1;
-	Mon, 25 Mar 2024 07:30:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RM4sFH01"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E082FC433F1;
+	Mon, 25 Mar 2024 07:31:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711351813;
-	bh=NDrBUpM1fCLkHIX/k1OcYxlc7+QNZ4MTP5hVlmaU808=;
+	s=k20201202; t=1711351887;
+	bh=IC8NYRbOMOiKOx44RirXjG8foOxmmNK/Eyzsmt6KCLg=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=et16iQGk3uzH3inLKxHIVwmH/ZOKLRNisFtq/zgjl3TXvONDYMuIOHRwkrfAytWqq
-	 3lRMoVUARh5ghzQm7JLFiXmBjhCodoeqsMpRKcvwO/rrUzw98ewNLc9XD20pDhw+ub
-	 DqTJlsd0LIpX6jbzbdmhrV7KgS+432yhcyo1SU226C4dRd03YFq7LceQkpGlKO/Yeq
-	 O3MDjVYH6GS2PVBtbcq/KkrEO8GjSGI2h0LVkZS0ZWszuXbmZLHzkLpz45xcJ3DiWf
-	 8AbTLD7Gv6G8H1XqlL8o/oIc28bMnjnnt9TvFnwVDttTXMNcZaaWpg/2TTDZbcGCwd
-	 QyJKyo3Krivhg==
-Message-ID: <3f140e6e-a73b-4c27-a14f-0add8c36dd26@kernel.org>
-Date: Mon, 25 Mar 2024 16:30:06 +0900
+	b=RM4sFH012a7DZxA84yCjRBudqGMTkwq0Fwk8bsqetGLY5ECxmf+l0zw6wzWP4hxAh
+	 6XgrqK9oxlOt+Tr5gOxTa4G1Wk+JxJsvxn+W+tMXcZWEfafowUu63uuTk0vck0Fwfh
+	 3XJP0oYHpYZ8D/Xslkyf2kH0aFM8xCGMkTHnqoQpSkdeFgWH+dkD6PUmlVUFvJuKmH
+	 TQCFgXJ6pRFYCMmMUeqtS9Mp/5AjUbaJ8OTva/QsE5PfzGNLcxpV7jqXM5XRe1R4Dn
+	 QjukBx6aiXcQJKwdqxGZnXXMYTFy2btWnV/hpKhDpmVtqGKGnUyiEbG+/mkc9nNlLs
+	 SCyvm8HwB30Xg==
+Message-ID: <0fa3b0d9-d6a8-4427-80a3-616e54987a77@kernel.org>
+Date: Mon, 25 Mar 2024 16:31:22 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/23] scsi: add a dma_alignment field to the host and
- host template
+Subject: Re: [PATCH 08/23] ufs-exynos: move setting the the dma alignment to
+ the init method
 Content-Language: en-US
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -69,16 +69,16 @@ Cc: Niklas Cassel <cassel@kernel.org>,
  mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
  linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 References: <20240324235448.2039074-1-hch@lst.de>
- <20240324235448.2039074-8-hch@lst.de>
+ <20240324235448.2039074-9-hch@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240324235448.2039074-8-hch@lst.de>
+In-Reply-To: <20240324235448.2039074-9-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 3/25/24 08:54, Christoph Hellwig wrote:
-> Get drivers out of the business of having to call the block layer
-> dma alignment limits helpers themselves.
+> Use the SCSI host's dma_alignment field and set it in ->init and remove
+> the now unused config_scsi_dev method.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
