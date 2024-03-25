@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 395F2181327;
-	Mon, 25 Mar 2024 07:10:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD260179646;
+	Mon, 25 Mar 2024 07:10:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711350657; cv=none; b=C25nZs1Z+c8QewNnM01J3PrQ/wUZBjyxmGvV59xs5I921E2TWnYj3trOx9tWXdtyJ9V4XxqrwikNLsoKa2FlKNioQU6sqeusSKZwGwL2haCR0hE+58B4BV7a82ampHWDU4AZXKjdUXPdCswBoGHm1qQB2UrIJJ84TVz6tzoARpE=
+	t=1711350650; cv=none; b=qS1TJWuAtWBoQ2kzJWexwWwmR3kedLwIuREZoK3aSz0br6FqJeNXOxZC76pI9kriG+rqXuBl7iSLC7FOYcIPoeGpOcuYqhRmJQoBj4AN16rmdR0AQz4UKY4BKRHE+Eg1Jjey4pHMPr+I3n4qIjgclOAXcXRF9hLyRF6/pgeI5MU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711350657; c=relaxed/simple;
-	bh=XKJ4PdWS7sPUSp/i639lPoqRweHPQBN/JvN8m6hg+pc=;
+	s=arc-20240116; t=1711350650; c=relaxed/simple;
+	bh=82CeZhOQbJ6rbgh7yjtlPJLHhk0GT4ijOnBVaOy6U2I=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LZ991KGX2GfLmDzEWtmhsngjr/ZCoXt83QhHp1FxCCZeTnfUDxOhC7X97Ccw+FXOmlFSpADEZZzkbSSOoUe0zopAafolfZ2YBeqbofz8RK/VkuMA7WVYkUccG3S4RqqroEbxL74QYBYR8pyeRipFrZKeIQSBXMs9XTSu1hGnxis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EQF88+Zs; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Yb+/oTvd5JTMrT2Sn72/lf/1dIAoYor03bLrFEnr5Nw5TrWP1wq0zazdhAe+xD4ibwusJY0G98F+IIj4+RzmN3fLsam8j9OrF9cPhtF5jHPle4TMzjmlMwzLJNQ7U8ZeOSMA4b/fMpahbv0wYUpfuepPEHkn6iTkhomjGSDyGfw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nSPzc2Tb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EQF88+Zs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BCE5C43390;
-	Mon, 25 Mar 2024 07:10:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nSPzc2Tb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A7CAC43399;
+	Mon, 25 Mar 2024 07:10:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711350657;
-	bh=XKJ4PdWS7sPUSp/i639lPoqRweHPQBN/JvN8m6hg+pc=;
+	s=k20201202; t=1711350649;
+	bh=82CeZhOQbJ6rbgh7yjtlPJLHhk0GT4ijOnBVaOy6U2I=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=EQF88+Zsdyl9+YqNvdRhZaeBdFtqwsmgLnRE2ZYEQO91OQDEssBs1HPYFOydw2Y/c
-	 q9fVT5yFUBshGdvC1nUwagh7ju47fKIHz84i+Kl0muQiajdyvAcnGrWwVPBVKT9G7i
-	 USMISh4UGA5PG/UwiADc9Diq32hAG2W8nPjC9IMpbUEg9z+qL+RoATwb/JLfpgPlhz
-	 Em6NmF8VDQuJbxefV/WmGaqGuE3aZePf4TtuO3WeiAJagXHfk082h9jsD/qBidsVoD
-	 6tsgfsehwBOgri2r63Ealv34YI6KGsuvwWNrnRxGVU/59jD+ALjfzcF5ZDBs0DLce0
-	 +1KV1UDFRbPWw==
+	b=nSPzc2Tb9CbjeS4SH754ujdqu5AOYkmi9pYGiC+52yMSsJb12CQQGvH6HOqcjluEc
+	 nTgCHxSGg4BP17X6liPUewIyfkzuHbAC9lX5yA9LCoNIU5wTPUO6Jp4giQFoYsSVdq
+	 vsO5VL+nFcXm5PoIct9t+HSS7eFbuGIbV3+PoVM35Lqi0KbfrbKkqBctgADp2mCw7g
+	 of2/PrKdPtBV2tPUA688yNIMnf323z0oGDXVY5ka+8rF26qQkzz2lGeyA3Okf+jFTo
+	 NPVEAyqSp56LeoF9RMsOCxNNaMaZitpcVAG9HSlkavbkttHENw5PMlpS1dqr62HAVK
+	 WZKEDdyXUfdFA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -49,9 +49,9 @@ To: linux-pci@vger.kernel.org,
 	Eric Dumazet <edumazet@google.com>,
 	netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 18/28] net: wangxun: Use PCI_IRQ_INTX
-Date: Mon, 25 Mar 2024 16:09:29 +0900
-Message-ID: <20240325070944.3600338-19-dlemoal@kernel.org>
+Subject: [PATCH 16/28] net: atheros: alx: Use PCI_IRQ_INTX
+Date: Mon, 25 Mar 2024 16:09:27 +0900
+Message-ID: <20240325070944.3600338-17-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240325070944.3600338-1-dlemoal@kernel.org>
 References: <20240325070944.3600338-1-dlemoal@kernel.org>
@@ -68,40 +68,22 @@ macro.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/net/ethernet/wangxun/libwx/wx_lib.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/ethernet/atheros/alx/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/wangxun/libwx/wx_lib.c b/drivers/net/ethernet/wangxun/libwx/wx_lib.c
-index 6dff2c85682d..ae0b940717a8 100644
---- a/drivers/net/ethernet/wangxun/libwx/wx_lib.c
-+++ b/drivers/net/ethernet/wangxun/libwx/wx_lib.c
-@@ -1674,14 +1674,14 @@ static int wx_set_interrupt_capability(struct wx *wx)
- 	/* minmum one for queue, one for misc*/
- 	nvecs = 1;
- 	nvecs = pci_alloc_irq_vectors(pdev, nvecs,
--				      nvecs, PCI_IRQ_MSI | PCI_IRQ_LEGACY);
-+				      nvecs, PCI_IRQ_MSI | PCI_IRQ_INTX);
- 	if (nvecs == 1) {
- 		if (pdev->msi_enabled)
- 			wx_err(wx, "Fallback to MSI.\n");
- 		else
--			wx_err(wx, "Fallback to LEGACY.\n");
-+			wx_err(wx, "Fallback to INTX.\n");
- 	} else {
--		wx_err(wx, "Failed to allocate MSI/LEGACY interrupts. Error: %d\n", nvecs);
-+		wx_err(wx, "Failed to allocate MSI/INTX interrupts. Error: %d\n", nvecs);
- 		return nvecs;
- 	}
+diff --git a/drivers/net/ethernet/atheros/alx/main.c b/drivers/net/ethernet/atheros/alx/main.c
+index 49bb9a8f00e6..0dbb541155f3 100644
+--- a/drivers/net/ethernet/atheros/alx/main.c
++++ b/drivers/net/ethernet/atheros/alx/main.c
+@@ -901,7 +901,7 @@ static int alx_init_intr(struct alx_priv *alx)
+ 	int ret;
  
-@@ -2127,7 +2127,7 @@ void wx_write_eitr(struct wx_q_vector *q_vector)
-  * wx_configure_vectors - Configure vectors for hardware
-  * @wx: board private structure
-  *
-- * wx_configure_vectors sets up the hardware to properly generate MSI-X/MSI/LEGACY
-+ * wx_configure_vectors sets up the hardware to properly generate MSI-X/MSI/INTX
-  * interrupts.
-  **/
- void wx_configure_vectors(struct wx *wx)
+ 	ret = pci_alloc_irq_vectors(alx->hw.pdev, 1, 1,
+-			PCI_IRQ_MSI | PCI_IRQ_LEGACY);
++			PCI_IRQ_MSI | PCI_IRQ_INTX);
+ 	if (ret < 0)
+ 		return ret;
+ 
 -- 
 2.44.0
 
