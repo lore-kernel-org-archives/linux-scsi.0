@@ -1,92 +1,91 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02232224DB;
-	Mon, 25 Mar 2024 19:39:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7F35219E5;
+	Mon, 25 Mar 2024 19:52:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711395589; cv=none; b=tIOayVXut9KE/NYDUZcSvyTjAUdAlNKUepz8h3pwoMmawbQghj1W2LklMsrITmu8yUBDAyr865I3blXkQsZOXyRY1VF+6kH7p2oBCJ0mASP+2Sq2LqqrC1ItRPOudgmkOTnF+EQxXnlSj9RsoPKBsYLICl37vgzkNMryi4Yge6o=
+	t=1711396366; cv=none; b=soozggVAzXTWmn54VFtIHGd3AB2zrTmo0Th9lAxtKuRt6RgZoeMDFuRIHsHbicygGs8xC3s8rc86xgLtJtBmvvdK8I7CFECdKHt1VDQC59LXZw759T1rq+0r100xMuz5dYwPTdwdnoGKkgWONcYvcwc0EjvpGpXiHQ2+VUrKlFA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711395589; c=relaxed/simple;
-	bh=D6MfnrEFK0/vmjnJEcjSthiQ8tmUlQRWp4661t4UP/k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MwsJk27hpF2ClJvmWBeP+Kp+0rwh8ljR9mxXu4RuSJ36/nzsE/2DMAse0NuByJ1Dbdj5UmoVnkB6Xj3BKT7Ms69vnjvz4+DiiMb+AOnnjeBN1RhEKG3Hk6XLieehai55/qp/y3KoDM4yXbxtDGUe5j468vpASCtFBaHx4zPuG/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HqQ7RdWG; arc=none smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1711396366; c=relaxed/simple;
+	bh=/XTQ9M4CmszItDuZmv5xRlgv4tYd4200t7nVAYuJxkY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Z+3p3hFkYlc8qhS4G7/uSqvUdfnFMHfO9nKtS+UkcMrtX19bKPqEp3FNoXVDXt3yHM6AODz46tzrpvEL6OX8ebs+/P4ECx0OrW4dEVekFIuKKLUOcgm//glYFhvColbe1I7c6rWQ04+Ak/q1k/PFtYE4ssy2S2GFqVG10KrPQvI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=lO19YMqA; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HqQ7RdWG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1711395587; x=1742931587;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=D6MfnrEFK0/vmjnJEcjSthiQ8tmUlQRWp4661t4UP/k=;
-  b=HqQ7RdWG+Lw1MCIjj21cTC1fwXcPU9/EMfx1ROyiBYbmE8eU38GdtPpH
-   YAjxZUCHoA+2MGA1Ui4aMl0u3s9RbcHeXqr5LNUX4n9cH0sEnSz6Y/7PL
-   Un7RgwCxyAWzDNw1MXQOjI3aebAj4Z4BYwKxInG6ciJOn/ra6ZdqoosCx
-   9zVX3W0fAu1teOrPKsy1hG0wLtoIpd7JXhmqMj2DpoyPtfT6kbvw37AMM
-   vjwYlMzlKrnJMvn7768pvnqK7+Qp8boyfYwwjpYufYlgjRYHagdzDmClg
-   imcLLoZmnEwfvDgbulyq927hXSJxo/2uwjubjmjcTipch8Fs5rjyiBGou
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11024"; a="6601587"
-X-IronPort-AV: E=Sophos;i="6.07,154,1708416000"; 
-   d="scan'208";a="6601587"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2024 12:39:46 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,11024"; a="914852875"
-X-IronPort-AV: E=Sophos;i="6.07,154,1708416000"; 
-   d="scan'208";a="914852875"
-Received: from smile.fi.intel.com ([10.237.72.54])
-  by fmsmga002.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2024 12:39:42 -0700
-Received: from andy by smile.fi.intel.com with local (Exim 4.97)
-	(envelope-from <andriy.shevchenko@intel.com>)
-	id 1roqAU-0000000G7FV-4928;
-	Mon, 25 Mar 2024 21:39:38 +0200
-Date: Mon, 25 Mar 2024 21:39:38 +0200
-From: Andy Shevchenko <andriy.shevchenko@intel.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Manivannan Sadhasivami <manivannan.sadhasivam@linaro.org>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Jaroslav Kysela <perex@perex.cz>, linux-sound@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-usb@vger.kernel.org, linux-serial@vger.kernel.org,
-	Hans de Goede <hdegoede@redhat.com>,
-	platform-driver-x86@vger.kernel.org, ntb@lists.linux.dev,
-	Lee Jones <lee@kernel.org>, David Airlie <airlied@gmail.com>,
-	amd-gfx@lists.freedesktop.org, Jason Gunthorpe <jgg@ziepe.ca>,
-	linux-rdma@vger.kernel.org,
-	"David S . Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 09/28] mfd: intel-lpss-pci: Use PCI_IRQ_INTX
-Message-ID: <ZgHS-qZliVyFD5xh@smile.fi.intel.com>
-References: <20240325070944.3600338-1-dlemoal@kernel.org>
- <20240325070944.3600338-10-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="lO19YMqA"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4V3NrX29qdz6Cnk9J;
+	Mon, 25 Mar 2024 19:52:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:references:content-language:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1711396361; x=1713988362; bh=NUFKIL9na2llYb0G+09EY53b
+	2jiWjVxPnyEC6DWVij4=; b=lO19YMqAFBA3jgSHSAXI6l6h5BfW27LN/HuOZ0h9
+	6heFZdz3+fAU6GNP3RqpWaIbSTbh6giFz6LBsMrfelnkOjkMqZmqX6ll2XgLYHh3
+	LEeOsqgXcxywZlqlh5LlGadOoPNYH4XSApdc/8NS/jyDYRdFsw86Cef84RFTi40s
+	Fq9FGrA2kwoKxtrDiMutuvEra4U3EzCWlz9mVg9sTfFgmBlmKbw9uR42GUU+U5oC
+	xiGgN8twb5IlVx0duyf1Jyp7MRVAAnDaS/rqpe9uxF94adNRD9hgUsSNbvV6EydL
+	G3vvphvskkeT/v1fCG3bp0BrKDlXtVSE/5AVY2ueoJkodw==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 81hb702HiYYO; Mon, 25 Mar 2024 19:52:41 +0000 (UTC)
+Received: from [100.96.154.173] (unknown [104.132.1.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4V3NrS4zyLz6Cnk9G;
+	Mon, 25 Mar 2024 19:52:40 +0000 (UTC)
+Message-ID: <20a3af4a-3075-4abc-8378-d55ea84a5893@acm.org>
+Date: Mon, 25 Mar 2024 12:52:39 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240325070944.3600338-10-dlemoal@kernel.org>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 03/28] block: Introduce blk_zone_update_request_bio()
+Content-Language: en-US
+To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
+ Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+References: <20240325044452.3125418-1-dlemoal@kernel.org>
+ <20240325044452.3125418-4-dlemoal@kernel.org>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240325044452.3125418-4-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Mar 25, 2024 at 04:09:20PM +0900, Damien Le Moal wrote:
-> Use the macro PCI_IRQ_INTX instead of the deprecated PCI_IRQ_LEGACY
-> macro.
+On 3/24/24 21:44, Damien Le Moal wrote:
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index 8aeb8e96f1a7..9e6e2a9a147c 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -820,11 +820,11 @@ static void blk_complete_request(struct request *req)
+>   		/* Completion has already been traced */
+>   		bio_clear_flag(bio, BIO_TRACE_COMPLETION);
+>   
+> -		if (req_op(req) == REQ_OP_ZONE_APPEND)
+> -			bio->bi_iter.bi_sector = req->__sector;
+> -
+> -		if (!is_flush)
+> +		if (!is_flush) {
+> +			blk_zone_update_request_bio(req, bio);
+>   			bio_endio(bio);
+> +		}
 
-Not needed anymore. MFD subsystem has a patch moving this to MSI support.
-But you need to coordinate with Lee how to proceed (in case of conflicts MFD
-version should be taken).
+The above change includes a behavior change. It seems wrong to me not
+to call blk_zone_update_request_bio() for REQ_OP_ZONE_APPEND requests if
+RQF_FLUSH_SEQ has been set.
 
--- 
-With Best Regards,
-Andy Shevchenko
+Thanks,
 
-
+Bart.
