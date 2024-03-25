@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5D8113E6A1;
-	Mon, 25 Mar 2024 04:44:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15CE01C32A9;
+	Mon, 25 Mar 2024 04:45:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711341896; cv=none; b=ZiysjupQb5bwjQJcAQqDts9FNjmC2xHzjvAJJOPPPliWHlp5myv15SqxsD9YbYuOjPaKiN6nsbiZKgti8fgU/RJlmVFNdL2c4nRY220R75FFO1fu7Q3n9YnUrET2Wlt2OOuRzn3dNf3RRe7i1NjKs3JzH5qGX/Vrk10Sb1P1yQE=
+	t=1711341938; cv=none; b=peGhShU9adXrWco9E/TIVzwfgE9MhhomjXWmo1A8FjeaEnoSMbh9ZJoUZFJ+GHKqCKE3YGUYsaqhJ3qycWWNcrX0mK1T1aLeu12zVyDuFs9SdLwTWlPbn4fjAlpqGM0Mta/Ogw4aAsbsLG0x8NkcDfroA2ctOISb6TgHks63nL8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711341896; c=relaxed/simple;
-	bh=dCyq4IlLyCxZDmF0hNOTrSr/OwDTABcs0o62nUuJaT0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Ww6huz7hqi4lgYMmVhGglrS5Pp/hil0OSbe7sDCVqXoehPBEjbkEZcwEWlHvzITrm6aAEx0yHkV2Ps5SFVUAloq3BMlCoBOZXmJqvMsTXTb4pfwVuSYOSs0sF5CqFvslkzpqthpN7pCftHOn5ZbG8lWFuk+7y55ZkgJiAlfs0+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dq/dHpX2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711341938; c=relaxed/simple;
+	bh=q+XsDtYo/2/RZEgIqOxru5p8iCOQ4U+aEKwxrk47H/g=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=VGKhZsA24JDOATBvpRlWYABjn3MyOp8wBxN7kKf1MzoF+9NMhzPG2ul0ZgXZuqRzu8LNx7OltVPQ2SECMuvunakG7VGqASX9XJRoyypKM3inWyz/Jp0yDamyD//e3A7cRhsGPrv1gRHPNQkzr3RVTEeTVuzeLlzn0nNF0B0sMt4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pC/Z63cb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dq/dHpX2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9914AC433C7;
-	Mon, 25 Mar 2024 04:44:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pC/Z63cb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECFCAC433F1;
+	Mon, 25 Mar 2024 04:45:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711341895;
-	bh=dCyq4IlLyCxZDmF0hNOTrSr/OwDTABcs0o62nUuJaT0=;
-	h=From:To:Cc:Subject:Date:From;
-	b=Dq/dHpX2TKC3Q1cqVWFDLG24Ijui6m7kAiIRKj1aCHHBYme4HRO1rvC+T1Np5mvp2
-	 gfY78hQd3DMqdD7koSpEBP2kJfRlOOVqg8+srsj4Mc2Ojzt10E96p12AIKLVst3++I
-	 4rpwcpfrFNJJJROWhcEZrgXpZ0/1276j9XEPFZdq/x0GEHVEv6Oq0DNupu2MqPeZae
-	 vvTrSOHibpQRuQzNvJMb1Dzsq6gILVXRQ7Qg3HA/0QiMxsB/X7qYs2F0Awn7B0xPOj
-	 4CEWVstWJKVQwzNmCWO2zTFUrxHwno5OlF0jwxP5tO2TSPVCLm/8gAlV5RyvQ4w84m
-	 1qzx9OfjOk6CA==
+	s=k20201202; t=1711341938;
+	bh=q+XsDtYo/2/RZEgIqOxru5p8iCOQ4U+aEKwxrk47H/g=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=pC/Z63cb28uKhuEElYL6VeH7nZSMJTnsMuU/0lFUERJY56FPo4lTXqdGH8N0ROiRf
+	 Vk49s4Xdr6lWwTmacFP8ws6HbSWLACSj1D2g4a/uPUnb825nRFguRwnXEW5sJHC6Vh
+	 FL+6hzooKOtX96DM1VcHobl/ZuTut5YqIhTdsukrV1/lFlkZPE0CkY05bE6p490Ine
+	 HPYIrw84NlrR2Ww1okwEF4L3HoKObKY0e3UEqhghz4FX5zPyNa9xFJd6dD9U+42S+P
+	 wYccxdttChc/tPzgrJp8CvBbGy5ObkhRpEHZupbdnfzBnZxWud9eut3MM/B0/s9j26
+	 7JvzHO0et7k5A==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-block@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
@@ -33,10 +34,12 @@ To: linux-block@vger.kernel.org,
 	dm-devel@lists.linux.dev,
 	Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 00/28] Zone write plugging
-Date: Mon, 25 Mar 2024 13:44:24 +0900
-Message-ID: <20240325044452.3125418-1-dlemoal@kernel.org>
+Subject: [PATCH v2 23/28] block: Remove elevator required features
+Date: Mon, 25 Mar 2024 13:44:47 +0900
+Message-ID: <20240325044452.3125418-24-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240325044452.3125418-1-dlemoal@kernel.org>
+References: <20240325044452.3125418-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,269 +48,177 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The patch series introduces zone write plugging (ZWP) as the new
-mechanism to control the ordering of writes to zoned block devices.
-ZWP replaces zone write locking (ZWL) which is implemented only by
-mq-deadline today. ZWP also allows emulating zone append operations
-using regular writes for zoned devices that do not natively support this
-operation (e.g. SMR HDDs). This patch series removes the scsi disk
-driver and device mapper zone append emulation to use ZWP emulation.
+The only elevator feature ever implemented is ELEVATOR_F_ZBD_SEQ_WRITE
+for signaling that a scheduler implements zone write locking to tightly
+control the dispatching order of write operations to zoned block
+devices. With the removal of zone write locking support in mq-deadline
+and the reliance of all block device drivers on the block layer zone
+write plugging to control ordering of write operations to zones, the
+elevator feature ELEVATOR_F_ZBD_SEQ_WRITE is completely unused.
+Remove it, and also remove the now unused code for filtering the
+possible schedulers for a block device based on required features.
 
-Unlike ZWL which operates on requests, ZWP operates on BIOs. A zone
-write plug is simply a BIO list that is atomically manipulated using a
-spinlock and a kblockd submission work. A write BIO to a zone is
-"plugged" to delay its execution if a write BIO for the same zone was
-already issued, that is, if a write request for the same zone is being
-executed. The next plugged BIO is unplugged and issued once the write
-request completes.
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+---
+ block/blk-settings.c   | 16 ---------------
+ block/elevator.c       | 46 +++++-------------------------------------
+ block/elevator.h       |  1 -
+ include/linux/blkdev.h | 10 ---------
+ 4 files changed, 5 insertions(+), 68 deletions(-)
 
-This mechanism allows to:
- - Untangle zone write ordering from the block IO schedulers. This
-   allows removing the restriction on using only mq-deadline for zoned
-   block devices. Any block IO scheduler, including "none" can be used.
- - Zone write plugging operates on BIOs instead of requests. Plugged
-   BIOs waiting for execution thus do not hold scheduling tags and thus
-   do not prevent other BIOs from being submitted to the device (reads
-   or writes to other zones). Depending on the workload, this can
-   significantly improve the device use and the performance.
- - Both blk-mq (request) based zoned devices and BIO-based devices (e.g.
-   device mapper) can use ZWP. It is mandatory for the
-   former but optional for the latter: BIO-based driver can use zone
-   write plugging to implement write ordering guarantees, or the drivers
-   can implement their own if needed.
- - The code is less invasive in the block layer and in device drivers.
-   ZWP implementation is mostly limited to blk-zoned.c, with some small
-   changes in blk-mq.c, blk-merge.c and bio.c.
-
-Performance evaluation results are shown below.
-
-The series is based on 6.9.0-rc1 and organized as follows:
-
- - Patch 1 to 6 are preparatory changes for patch 7.
- - Patch 7, 8 and 9 introduce ZWP
- - Patch 10 and 11 add zone append emulation to ZWP.
- - Patch 12 to 19 modify zoned block device drivers to use ZWP and
-   prepare for the removal of ZWL.
- - Patch 20 to 28 remove zone write locking
-
-Overall, these changes do not significantly increase the amount of code
-(the higher number of addition shown by diff-stat is in fact due to a
-larger amount of comments in the code).
-
-Many thanks must go to Christoph Hellwig for comments and suggestions
-he provided on earlier versions of these patches.
-
-Performance evaluation results
-==============================
-
-Environments:
- - Intel Xeon 16-cores/32-threads, 128GB of RAM
- - Kernel:
-   - ZWL (baseline): 6.9.0-rc1
-   - ZWP: 6.9.0-rc1 patched kernel to add zone write plugging
-   (both kernels were compiled with the same configuration turning off
-   most heavy debug features)
-
-Workoads:
- - seqw4K1: 4KB sequential write, qd=1
- - seqw4K16: 4KB sequential write, qd=16
- - seqw1M16: 1MB sequential write, qd=16
- - rndw4K16: 4KB random write, qd=16
- - rndw128K16: 128KB random write, qd=16
- - btrfs workoad: Single fio job writing 128 MB files using 128 KB
-   direct IOs at qd=16.
-
-Devices:
- - nullblk (zoned): 4096 zones of 256 MB, 128 max open zones.
- - NVMe ZNS drive: 1 TB ZNS drive with 2GB zone size, 14 max open and
-   active zones.
- - SMR HDD: 20 TB disk with 256MB zone size, 128 max open zones.
-
-For ZWP, the result show the performance percentage increase (or
-decrease) against ZWL (baseline) case.
-
-1) null_blk zoned device:
-
-             +--------+--------+-------+--------+---------+---------+
-             |seqw4K1 |seqw4K16|seqw1M1|seqw1M16|rndw4K16|rndw128K16|
-             |(MB/s)  | (MB/s) |(MB/s) | (MB/s) | (KIOPS)| (KIOPS)  |
- +-----------+--------+--------+-------+--------+--------+----------+
- |    ZWL    | 961    | 835    | 18640 | 14480  | 415    | 167      |
- |mq-deadline|        |        |       |        |        |          |
- +-----------+--------+--------+-------+--------+--------+----------+
- |    ZWP    | 963    | 845    | 18640 | 14630  | 452    | 165      |
- |mq-deadline| (+0%)  | (+1%)  | (+0%) | (+1%)  | (+8%)  | (-1%)    |
- +-----------+--------+--------+-------+--------+--------+----------+
- |    ZWP    | 731    | 651    | 15780 | 12710  | 129    | 108      |
- |    bfq    | (-23%) | (-22%) | (-15%)| (-12%) | (-68%) | (-15%)   |
- +-----------+--------+--------+-------+--------+--------+----------+
- |    ZWP    | 2511   | 1632   | 27470 | 19340  | 336    | 150      |
- |   none    | (+161%)| (+95%) | (+47%)| (+33%) | (-19%) | (-19%)   |
- +-----------+--------+--------+-------+--------+--------+----------+
-
-ZWP with mq-deadline gives performance very similar to zone write
-locking, showing that zone write plugging overhead is acceptable.
-But ZWP ability to run fast block devices with the none scheduler
-shows brings all the benefits of zone write plugging and results in
-significant performance increase for all workloads. The exception to
-this are random write workloads with multiple jobs: for these, the
-faster request submission rate achieved by zone write plugging results
-in higher contention on null-blk zone spinlock, which degrades
-performance.
-
-2) NVMe ZNS drive:
-
-             +--------+--------+-------+--------+--------+----------+
-             |seqw4K1 |seqw4K16|seqw1M1|seqw1M16|rndw4K16|rndw128K16|
-             |(MB/s)  | (MB/s) |(MB/s) | (MB/s) | (KIOPS)|  (KIOPS) |
- +-----------+--------+--------+-------+--------+--------+----------+
- |    ZWL    | 183    | 707    | 1083  | 1101   | 53.6   | 14.1     |
- |mq-deadline|        |        |       |        |        |          |
- +-----------+--------+--------+-------+--------+--------+----------+
- |    ZWP    | 183    | 719    | 1082  | 1103   |55.5    | 14.1     |
- |mq-deadline|(-0%)   | (+1%)  | (+0%) | (+0%)  |(+3%)   | (+0%)    |
- +-----------+--------+--------+-------+--------+--------+----------+
- |    ZWP    | 175    | 691    | 1078  | 1097   | 28.3   | 11.2     |
- |    bfq    | (-4%)  | (-2%)  | (-0%) | (-0%)  | (-47%) | (-20%)   |
- +-----------+--------+--------+-------+--------+--------+----------+
- |    ZWP    | 190    | 665    | 1083  | 1105   | 51.4   | 14.1     |
- |   none    | (+4%)  | (-5%)  | (+0%) | (+0%)  | (-4%)  | (+0%)    |
- +-----------+--------+--------+-------+--------+--------+----------+
-
-Zone write plugging overhead does not significantly impact performance.
-Similar to nullblk, using the none scheduler leads to performance
-increase for most workloads.
-
-3) SMR SATA HDD:
-
-             +-------+--------+-------+--------+--------+----------+
-             |seqw4K1|seqw4K16|seqw1M1|seqw1M16|rndw4K16|rndw128K16|
-             |(MB/s) | (MB/s) |(MB/s) | (MB/s) | (KIOPS)|  (KIOPS) |
- +-----------+-------+--------+-------+--------+--------+----------+
- |    ZWL    | 107   | 243    | 246   | 246    | 2.2    | 0.769    |
- |mq-deadline|       |        |       |        |        |          |
- +-----------+-------+--------+-------+--------+--------+----------+
- |    ZWP    | 107   | 240    | 245   | 242    | 2.2    | 0.767    |
- |mq-deadline|(-0%)  | (-1%)  | (-0%) | (-1%)  | (+0%)  | (+0%)    |
- +-----------+-------+--------+-------+--------+--------+----------+
- |    ZWP    | 104   | 240    | 245   | 243    | 2.3    | 0.765    |
- |    bfq    | (-2%) | (-1%)  | (-0%) | (-1%)  | (+0%)  | (+0%)    |
- +-----------+-------+--------+-------+--------+--------+----------+
- |    ZWP    | 113   | 230    | 246   | 242    | 2.2    | 0.771    |
- |   none    | (+5%) | (-5%)  | (+0%) | (-1%)  | (+0%)  | (+0%)    |
- +-----------+-------+--------+-------+--------+--------+----------+
-
-Performance with purely sequential write workloads at high queue depth
-somewhat decrease a little when using zone write plugging. This is due
-to the different IO pattern that ZWP generates where the first writes to
-a zone start being issued when the end of the previous zone are still
-being written. Depending on how the disk handles queued commands, seek
-may be generated, slightly impacting the throughput achieved. Such pure
-sequential write workloads are however rare with SMR drives.
-
-4) Zone append tests using btrfs:
-
-             +-------------+-------------+-----------+-------------+
-             |  null-blk   |  null_blk   |    ZNS    |     SMR     |
-             |  native ZA  | emulated ZA | native ZA | emulated ZA |
-             |    (MB/s)   |   (MB/s)    |   (MB/s)  |    (MB/s)   |
- +-----------+-------------+-------------+-----------+-------------+
- |    ZWL    | 2434        | N/A         | 1083      | 244         |
- |mq-deadline|             |             |           |             |
- +-----------+-------------+-------------+-----------+-------------+
- |    ZWP    | 2361        | 3111        | 1087      | 237         |
- |mq-deadline| (+1%)       |             | (+0%)     | (-2%)       |
- +-----------+-------------+-------------+-----------+-------------+
- |    ZWP    | 2299        | 2840        | 1082      | 239         |
- |    bfq    | (-4%)       |             | (+0%)     | (-2%)       |
- +-----------+-------------+-------------+-----------+-------------+
- |    ZWP    | 2443        | 3152        | 1078      | 238         |
- |    none   | (+0%)       |             | (-0%)     | (-2%)       |
- +-----------+-------------+-------------+-----------+-------------+
-
-With a more realistic use of the device though a file system, ZWP does
-not introduce significant performance differences, except for SMR for
-the same reason as with the fio sequential workloads at high queue
-depth.
-
-Changes from v1:
- - Added patch 6
- - Rewrite of patch 7 to use a hash table of dynamically allocated zone
-   write plugs. This results in changes in patch 11 and the addition of
-   patch 8 and 9.
- - Rebased everything on 6.9.0-rc1
- - Added review tags for patches that did not change
-
-Damien Le Moal (28):
-  block: Restore sector of flush requests
-  block: Remove req_bio_endio()
-  block: Introduce blk_zone_update_request_bio()
-  block: Introduce bio_straddle_zones() and bio_offset_from_zone_start()
-  block: Allow using bio_attempt_back_merge() internally
-  block: Remember zone capacity when revalidating zones
-  block: Introduce zone write plugging
-  block: Use a mempool to allocate zone write plugs
-  block: Fake max open zones limit when there is no limit
-  block: Allow zero value of max_zone_append_sectors queue limit
-  block: Implement zone append emulation
-  block: Allow BIO-based drivers to use blk_revalidate_disk_zones()
-  dm: Use the block layer zone append emulation
-  scsi: sd: Use the block layer zone append emulation
-  ublk_drv: Do not request ELEVATOR_F_ZBD_SEQ_WRITE elevator feature
-  null_blk: Do not request ELEVATOR_F_ZBD_SEQ_WRITE elevator feature
-  null_blk: Introduce zone_append_max_sectors attribute
-  null_blk: Introduce fua attribute
-  nvmet: zns: Do not reference the gendisk conv_zones_bitmap
-  block: Remove BLK_STS_ZONE_RESOURCE
-  block: Simplify blk_revalidate_disk_zones() interface
-  block: mq-deadline: Remove support for zone write locking
-  block: Remove elevator required features
-  block: Do not check zone type in blk_check_zone_append()
-  block: Move zone related debugfs attribute to blk-zoned.c
-  block: Remove zone write locking
-  block: Do not force select mq-deadline with CONFIG_BLK_DEV_ZONED
-  block: Do not special-case plugging of zone write operations
-
- block/Kconfig                     |    5 -
- block/Makefile                    |    1 -
- block/bio.c                       |    7 +
- block/blk-core.c                  |   13 +-
- block/blk-flush.c                 |    1 +
- block/blk-merge.c                 |   22 +-
- block/blk-mq-debugfs-zoned.c      |   22 -
- block/blk-mq-debugfs.c            |    3 +-
- block/blk-mq-debugfs.h            |    6 +-
- block/blk-mq.c                    |  144 ++--
- block/blk-mq.h                    |   31 -
- block/blk-settings.c              |   46 +-
- block/blk-sysfs.c                 |    2 +-
- block/blk-zoned.c                 | 1262 +++++++++++++++++++++++++++--
- block/blk.h                       |   73 +-
- block/elevator.c                  |   46 +-
- block/elevator.h                  |    1 -
- block/genhd.c                     |    3 +-
- block/mq-deadline.c               |  176 +---
- drivers/block/null_blk/main.c     |   24 +-
- drivers/block/null_blk/null_blk.h |    2 +
- drivers/block/null_blk/zoned.c    |   23 +-
- drivers/block/ublk_drv.c          |    5 +-
- drivers/block/virtio_blk.c        |    2 +-
- drivers/md/dm-core.h              |    2 +-
- drivers/md/dm-zone.c              |  476 +----------
- drivers/md/dm.c                   |   75 +-
- drivers/md/dm.h                   |    4 +-
- drivers/nvme/host/core.c          |    2 +-
- drivers/nvme/target/zns.c         |   10 +-
- drivers/scsi/scsi_lib.c           |    1 -
- drivers/scsi/sd.c                 |    8 -
- drivers/scsi/sd.h                 |   19 -
- drivers/scsi/sd_zbc.c             |  335 +-------
- include/linux/blk-mq.h            |   85 +-
- include/linux/blk_types.h         |   30 +-
- include/linux/blkdev.h            |  106 ++-
- 37 files changed, 1607 insertions(+), 1466 deletions(-)
- delete mode 100644 block/blk-mq-debugfs-zoned.c
-
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index 82c61d2e4bb8..31d882ac72d4 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -1053,22 +1053,6 @@ void blk_queue_write_cache(struct request_queue *q, bool wc, bool fua)
+ }
+ EXPORT_SYMBOL_GPL(blk_queue_write_cache);
+ 
+-/**
+- * blk_queue_required_elevator_features - Set a queue required elevator features
+- * @q:		the request queue for the target device
+- * @features:	Required elevator features OR'ed together
+- *
+- * Tell the block layer that for the device controlled through @q, only the
+- * only elevators that can be used are those that implement at least the set of
+- * features specified by @features.
+- */
+-void blk_queue_required_elevator_features(struct request_queue *q,
+-					  unsigned int features)
+-{
+-	q->required_elevator_features = features;
+-}
+-EXPORT_SYMBOL_GPL(blk_queue_required_elevator_features);
+-
+ /**
+  * blk_queue_can_use_dma_map_merging - configure queue for merging segments.
+  * @q:		the request queue for the device
+diff --git a/block/elevator.c b/block/elevator.c
+index 5ff093cb3cf8..f64ebd726e58 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -83,13 +83,6 @@ bool elv_bio_merge_ok(struct request *rq, struct bio *bio)
+ }
+ EXPORT_SYMBOL(elv_bio_merge_ok);
+ 
+-static inline bool elv_support_features(struct request_queue *q,
+-		const struct elevator_type *e)
+-{
+-	return (q->required_elevator_features & e->elevator_features) ==
+-		q->required_elevator_features;
+-}
+-
+ /**
+  * elevator_match - Check whether @e's name or alias matches @name
+  * @e: Scheduler to test
+@@ -120,7 +113,7 @@ static struct elevator_type *elevator_find_get(struct request_queue *q,
+ 
+ 	spin_lock(&elv_list_lock);
+ 	e = __elevator_find(name);
+-	if (e && (!elv_support_features(q, e) || !elevator_tryget(e)))
++	if (e && (!elevator_tryget(e)))
+ 		e = NULL;
+ 	spin_unlock(&elv_list_lock);
+ 	return e;
+@@ -580,34 +573,8 @@ static struct elevator_type *elevator_get_default(struct request_queue *q)
+ }
+ 
+ /*
+- * Get the first elevator providing the features required by the request queue.
+- * Default to "none" if no matching elevator is found.
+- */
+-static struct elevator_type *elevator_get_by_features(struct request_queue *q)
+-{
+-	struct elevator_type *e, *found = NULL;
+-
+-	spin_lock(&elv_list_lock);
+-
+-	list_for_each_entry(e, &elv_list, list) {
+-		if (elv_support_features(q, e)) {
+-			found = e;
+-			break;
+-		}
+-	}
+-
+-	if (found && !elevator_tryget(found))
+-		found = NULL;
+-
+-	spin_unlock(&elv_list_lock);
+-	return found;
+-}
+-
+-/*
+- * For a device queue that has no required features, use the default elevator
+- * settings. Otherwise, use the first elevator available matching the required
+- * features. If no suitable elevator is find or if the chosen elevator
+- * initialization fails, fall back to the "none" elevator (no elevator).
++ * Use the default elevator settings. If the chosen elevator initialization
++ * fails, fall back to the "none" elevator (no elevator).
+  */
+ void elevator_init_mq(struct request_queue *q)
+ {
+@@ -622,10 +589,7 @@ void elevator_init_mq(struct request_queue *q)
+ 	if (unlikely(q->elevator))
+ 		return;
+ 
+-	if (!q->required_elevator_features)
+-		e = elevator_get_default(q);
+-	else
+-		e = elevator_get_by_features(q);
++	e = elevator_get_default(q);
+ 	if (!e)
+ 		return;
+ 
+@@ -781,7 +745,7 @@ ssize_t elv_iosched_show(struct request_queue *q, char *name)
+ 	list_for_each_entry(e, &elv_list, list) {
+ 		if (e == cur)
+ 			len += sprintf(name+len, "[%s] ", e->elevator_name);
+-		else if (elv_support_features(q, e))
++		else
+ 			len += sprintf(name+len, "%s ", e->elevator_name);
+ 	}
+ 	spin_unlock(&elv_list_lock);
+diff --git a/block/elevator.h b/block/elevator.h
+index 7ca3d7b6ed82..e9a050a96e53 100644
+--- a/block/elevator.h
++++ b/block/elevator.h
+@@ -74,7 +74,6 @@ struct elevator_type
+ 	struct elv_fs_entry *elevator_attrs;
+ 	const char *elevator_name;
+ 	const char *elevator_alias;
+-	const unsigned int elevator_features;
+ 	struct module *elevator_owner;
+ #ifdef CONFIG_BLK_DEBUG_FS
+ 	const struct blk_mq_debugfs_attr *queue_debugfs_attrs;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 2e0087b4c37d..82cda82e9891 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -456,8 +456,6 @@ struct request_queue {
+ 
+ 	atomic_t		nr_active_requests_shared_tags;
+ 
+-	unsigned int		required_elevator_features;
+-
+ 	struct blk_mq_tags	*sched_shared_tags;
+ 
+ 	struct list_head	icq_list;
+@@ -962,14 +960,6 @@ disk_alloc_independent_access_ranges(struct gendisk *disk, int nr_ia_ranges);
+ void disk_set_independent_access_ranges(struct gendisk *disk,
+ 				struct blk_independent_access_ranges *iars);
+ 
+-/*
+- * Elevator features for blk_queue_required_elevator_features:
+- */
+-/* Supports zoned block devices sequential write constraint */
+-#define ELEVATOR_F_ZBD_SEQ_WRITE	(1U << 0)
+-
+-extern void blk_queue_required_elevator_features(struct request_queue *q,
+-						 unsigned int features);
+ extern bool blk_queue_can_use_dma_map_merging(struct request_queue *q,
+ 					      struct device *dev);
+ 
 -- 
 2.44.0
 
