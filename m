@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5086712FF81;
-	Mon, 25 Mar 2024 07:48:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74156139566;
+	Mon, 25 Mar 2024 07:49:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711352927; cv=none; b=ARijzz8966aLlQ7nHGUZhkCG2sHrLyMGyvgCfa3OBXEbp1qkaQl1ULsVHO1rtofJ2nDRQyRXQhsQf4ryWCzxk9lTj64eVb30dYaiUbkP6eHBdFEGSOFALYsWP3j8frj45McuS72D1Nv2rdmX1eIuYUP1UtIPk/zKaMfDchLJ/dk=
+	t=1711352984; cv=none; b=j2/IuGCw9ErJagaWQHBkP7dFLUm+ot1hPauUZVO/TF7LQPEXM1lo/USV0QMrAQstPMmLm9U4Nb0VlKqxiZcHVUWmvGR9RCjVXY+zFjVD2Fj2/d/uGDpzeeEq/dDIRuPfkqwPQO7Q5/PkaE29T6cPe8HwfEBKplpsOLQHR8Yut14=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711352927; c=relaxed/simple;
-	bh=VK/6BkARnl/o3OozqGNIJdt7BEP2i7mKnGvBJjOZ2u0=;
+	s=arc-20240116; t=1711352984; c=relaxed/simple;
+	bh=g2liTy/svI2y0Rrkakwfy55aiwUTTTcX59UpQY/YMaw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=m48S/dwhs7tneigi8b2Wmp+ok5ymXhdWrvYmHihKuOVysOUBrIE6fIjia90B7bByrjKI4+5III3CPpdsGGs160H+Cwq5R0nkcZv/+B/NM/LoQjJnX6dRskypVuPXDqiM+0rCNOKDh8bK1ZuI3N2bITVMrK8OswcVC9h3CzgPWGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SeVYTbo7; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=tnfudbBn4WmcIVURCxwFuw8izpVPgE/LLW4Ab+gKwkl+vJ6Ioe46MCTTneLFtNPRTn2I9cF9ph4QsMK9M7vTgfSXCQ4Dqvk8+mpeo3HMtGeGe9v9iVZWX+r/70hitF9ve6EEPFp++LZtHmUHLE2vHukiT8saMWQ7if8WFadL9e4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IeufiVsA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SeVYTbo7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06BE3C433F1;
-	Mon, 25 Mar 2024 07:48:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IeufiVsA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F84EC433C7;
+	Mon, 25 Mar 2024 07:49:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711352926;
-	bh=VK/6BkARnl/o3OozqGNIJdt7BEP2i7mKnGvBJjOZ2u0=;
+	s=k20201202; t=1711352984;
+	bh=g2liTy/svI2y0Rrkakwfy55aiwUTTTcX59UpQY/YMaw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=SeVYTbo7XFptQ6mWrWBPVyvQAJx9LyolOlkhSsJq6pxUR/dZ8a0SX8i2SCkiHdxhK
-	 9UGmsq8tngObo0Rl/xX+azoMmQtaKDEgcehgORBLVgUaI9dvykPA3e4h76UqNqI21j
-	 sMpt5+vY64Etqh14S7yn6NwMX3s4hAmRSpIPyhe/J/BSJpulFlVk66gb/muntNmyVs
-	 eSZluCqUidVQRC/LjFLHZe5Chu2gIb8ysJETi6XX+prnnXShdPLkvrn5WpHZ8/QsXZ
-	 GR9O4WCTPUs+g/xzO0kBdThTUEqxDnMwNpt1fJiNPZNi+mTgrzyGffuFRjPLD+q476
-	 fFFdRLTmbmxkA==
-Message-ID: <9f2082fd-83d8-4140-84a2-865112090a46@kernel.org>
-Date: Mon, 25 Mar 2024 16:48:38 +0900
+	b=IeufiVsALvz53psJC6ITZ6ifsETNmPoVX/uAnTIUE/Pah8LhpTpG385nM/7PMPwb7
+	 ehPwFUI1cNbpCmGoU92fKINkuggZXn0DK41CKRNyZtCQC9IzHbPHM6bj/XAT1DUzc4
+	 ZFKAfc//meUhUtHSTSr3tg5pYtdKG68HB5GwDLRVN/5mEUk93qn7/xoLtCGWuTYqZ/
+	 R+Z2QWCeMAJnx0NWECYY8pglW0fA9Q3e+fdR7Okt2n9+ALDR10JN8N/x36Au5u5UYf
+	 SZmj41muOkcGDpxXDdipCmomvYgtG/asN7MUcjOc7l20qj7NRHR+KVLnJxHoEG8/UA
+	 aoo0BC8h3XwBA==
+Message-ID: <b1dba4fa-5a5d-443c-aae3-e8e5aea3eafe@kernel.org>
+Date: Mon, 25 Mar 2024 16:49:36 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 17/23] usb-storage: switch to using ->device_configure
+Subject: Re: [PATCH 18/23] sata_nv: switch to using ->device_configure
 Content-Language: en-US
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -68,10 +68,10 @@ Cc: Niklas Cassel <cassel@kernel.org>,
  mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
  linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 References: <20240324235448.2039074-1-hch@lst.de>
- <20240324235448.2039074-18-hch@lst.de>
+ <20240324235448.2039074-19-hch@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240324235448.2039074-18-hch@lst.de>
+In-Reply-To: <20240324235448.2039074-19-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
@@ -80,14 +80,11 @@ On 3/25/24 08:54, Christoph Hellwig wrote:
 > and update the block limits on the passed in queue_limits instead
 > of using the per-limit accessors.
 > 
-> Also use the proper atomic queue limit update helpers and freeze the
-> queue when updating max_hw_sectors from sysfs.
-> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Looks OK to me.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
