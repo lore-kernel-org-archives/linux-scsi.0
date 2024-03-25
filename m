@@ -1,92 +1,99 @@
-Received: from new-mail.astralinux.ru (new-mail.astralinux.ru [51.250.53.244])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4345686629;
-	Mon, 25 Mar 2024 12:25:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.250.53.244
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 607C8156669;
+	Mon, 25 Mar 2024 12:35:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711369527; cv=none; b=rNPu89y/Rtegi4gQCNI9iDUzV/E0gm1xHPPyhNiOIKKtO90hcvW3yWx/6+eFjdFRnee4o3AuIRncLhAkkueAz5HHK1RH4f3ZvlRM7eFXxabbMEznGnz03iI9tantcP7cNEc7ZJzNfKCtNnqXLWTd4gouqQXzvdl3/FU1r+4aoDk=
+	t=1711370102; cv=none; b=XAglHPtgYw7zVIkczpU+mgdKekhOE8zhrhbaitr74x6hHeuou6gqJVdGkrPfonSIUFAusoO5ybOvpe5WqSLnPNjhpyZXGMLJfibcxuu5tywB4d7u9g5xmpIm17varEJDoOVa6rx9aRvg8OXJV61FJp4omOKxM2xtsJUmRzH27dY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711369527; c=relaxed/simple;
-	bh=DIV35aPPM2JtoPQYCmeHAZJnh/zGHOjH9qYHQpBaVLA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EtkPpehpjkLEM0vhcD2ZxaQ/GFe6Xmxv7r0/LRwrnr83HD6llIGjt8uTQWSBMjzqoQ7BaGIXo7iu4/qCx7pogvStb7rVDDsTvRicCg0Q53PLaciJF8fUSNrP1ZBbBGgVZml2JmE7LtrwvYzE06gOFWjzG/xUp/HP47oVMCPYd6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=astralinux.ru; spf=pass smtp.mailfrom=astralinux.ru; arc=none smtp.client-ip=51.250.53.244
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=astralinux.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=astralinux.ru
-Received: from rbta-msk-lt-302690.astralinux.ru (unknown [10.177.236.245])
-	by new-mail.astralinux.ru (Postfix) with ESMTPA id 4V3Bw956nrzySJ;
-	Mon, 25 Mar 2024 15:25:13 +0300 (MSK)
-From: Alexandra Diupina <adiupina@astralinux.ru>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Alexandra Diupina <adiupina@astralinux.ru>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org
-Subject: [PATCH] scsi: 53c700: call NCR_700_internal_bus_reset() unconditionally
-Date: Mon, 25 Mar 2024 15:24:18 +0300
-Message-Id: <20240325122418.27693-1-adiupina@astralinux.ru>
-X-Mailer: git-send-email 2.30.2
+	s=arc-20240116; t=1711370102; c=relaxed/simple;
+	bh=6jzjiwrkhrrxiOb3ouQm9/gN7kt04YtLniYwKlTluek=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:Cc:From:
+	 In-Reply-To:Content-Type; b=fNfM/HWZmJj7ltEr1HJE6UgsiNfIqo0JE6qXgrBcXcS0v0EKO7jgXt++mfs0spP8COdCuCBuaNccHgBkSCfkxYnKKP8ANu6yQ8Cxo72xVO7P7ZmgoozUzGyyo/Sg6BgBQLR0Uma+pHPD08my6ZYTgTM728SsK5WtMbMAEzAh7m0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=meT28BSM; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="meT28BSM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1711370100; x=1742906100;
+  h=message-id:date:mime-version:subject:to:references:cc:
+   from:in-reply-to:content-transfer-encoding;
+  bh=6jzjiwrkhrrxiOb3ouQm9/gN7kt04YtLniYwKlTluek=;
+  b=meT28BSM18Q5CeqZIYtu9mWAq3MfHi6+rVVaqz1DPzkIq3liaJn3P1nk
+   lVozH64N2x/0psEQgAfOFmvF3e+zH4/DTzZa5J5YU/rVSTzLrUfNefPTe
+   dZVn1qfkyutYbO2Ki1kqY2fgWyxsSU9zzNEGyyHZAI8sMBo5yNoXu10lW
+   Sm4T7w64g6350vGEibsVq1GtaPeTfFSM8fGikouNS7VRcsyhtbewvPC+G
+   MeVcUrLnEMw2QsUeRaaFuFBxCM9x4MC/alv9yQ/Rk7DCnCEo37hTU6gJv
+   BkyY4/xA0BUjxmkaXomk7MlO2Zg/X45Laz+QtIS39Gr2C2oBYiFku/oLM
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,11023"; a="10139987"
+X-IronPort-AV: E=Sophos;i="6.07,153,1708416000"; 
+   d="scan'208";a="10139987"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2024 05:34:59 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.07,153,1708416000"; 
+   d="scan'208";a="16268554"
+Received: from aslawinx-mobl.ger.corp.intel.com (HELO [10.94.0.53]) ([10.94.0.53])
+  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2024 05:34:54 -0700
+Message-ID: <3edd5823-bf54-4898-bcee-e1628c863388@linux.intel.com>
+Date: Mon, 25 Mar 2024 13:34:51 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 04/28] sound: intel: Use PCI_IRQ_INTX
+Content-Language: en-US
+To: Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Manivannan Sadhasivami <manivannan.sadhasivam@linaro.org>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>, Jaroslav Kysela <perex@perex.cz>,
+ linux-sound@vger.kernel.org, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
+ linux-serial@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
+ platform-driver-x86@vger.kernel.org, ntb@lists.linux.dev,
+ Lee Jones <lee@kernel.org>, David Airlie <airlied@gmail.com>,
+ amd-gfx@lists.freedesktop.org, Jason Gunthorpe <jgg@ziepe.ca>,
+ linux-rdma@vger.kernel.org, "David S . Miller" <davem@davemloft.net>,
+ Eric Dumazet <edumazet@google.com>, netdev@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20240325070944.3600338-1-dlemoal@kernel.org>
+ <20240325070944.3600338-5-dlemoal@kernel.org>
+Cc: Cezary Rojewski <cezary.rojewski@intel.com>
+From: =?UTF-8?Q?Amadeusz_S=C5=82awi=C5=84ski?=
+ <amadeuszx.slawinski@linux.intel.com>
+In-Reply-To: <20240325070944.3600338-5-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-DrWeb-SpamScore: -100
-X-DrWeb-SpamState: legit
-X-DrWeb-SpamDetail: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehuddgtddvucetufdoteggodetrfcurfhrohhfihhlvgemucfftfghgfeunecuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkffoggfgsedtkeertdertddtnecuhfhrohhmpeetlhgvgigrnhgurhgrucffihhuphhinhgruceorgguihhuphhinhgrsegrshhtrhgrlhhinhhugidrrhhuqeenucggtffrrghtthgvrhhnpeduleetfeehffekueeuffektefgudfgffeutdefudfghedvieffheehleeuieehteenucffohhmrghinheplhhinhhugihtvghsthhinhhgrdhorhhgnecukfhppedutddrudejjedrvdefiedrvdegheenucfrrghrrghmpehhvghloheprhgsthgrqdhmshhkqdhlthdqfedtvdeiledtrdgrshhtrhgrlhhinhhugidrrhhupdhinhgvthepuddtrddujeejrddvfeeirddvgeehmeeghedtudegpdhmrghilhhfrhhomheprgguihhuphhinhgrsegrshhtrhgrlhhinhhugidrrhhupdhnsggprhgtphhtthhopeeipdhrtghpthhtoheplfgrmhgvshdruehothhtohhmlhgvhiesjfgrnhhsvghnrfgrrhhtnhgvrhhshhhiphdrtghomhdprhgtphhtthhopegrughiuhhpihhnrgesrghsthhrrghlihhnuhigrdhruhdprhgtphhtthhopehmrghrthhinhdrphgvthgvrhhsvghnsehorhgrtghlvgdrtghomhdprhgtphhtthhopehlihhnuhigqdhstghsihesvhhgvg
- hrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlvhgtqdhprhhojhgvtghtsehlihhnuhigthgvshhtihhnghdrohhrgh
-X-DrWeb-SpamVersion: Vade Retro 01.423.251#02 AS+AV+AP Profile: DRWEB; Bailout: 300
-X-AntiVirus: Checked by Dr.Web [MailD: 11.1.19.2307031128, SE: 11.1.12.2210241838, Core engine: 7.00.62.01180, Virus records: 12535435, Updated: 2024-Mar-25 10:47:37 UTC]
 
-It is necessary to include the SCp check inside the branch
-and call NCR_700_internal_bus_reset() unconditionally.
+On 3/25/2024 8:09 AM, Damien Le Moal wrote:
+> Use the macro PCI_IRQ_INTX instead of the deprecated PCI_IRQ_LEGACY
+> macro.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   sound/soc/intel/avs/core.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/sound/soc/intel/avs/core.c b/sound/soc/intel/avs/core.c
+> index d7f8940099ce..69818e4b43da 100644
+> --- a/sound/soc/intel/avs/core.c
+> +++ b/sound/soc/intel/avs/core.c
+> @@ -343,7 +343,7 @@ static int avs_hdac_acquire_irq(struct avs_dev *adev)
+>   	int ret;
+>   
+>   	/* request one and check that we only got one interrupt */
+> -	ret = pci_alloc_irq_vectors(pci, 1, 1, PCI_IRQ_MSI | PCI_IRQ_LEGACY);
+> +	ret = pci_alloc_irq_vectors(pci, 1, 1, PCI_IRQ_MSI | PCI_IRQ_INTX);
+>   	if (ret != 1) {
+>   		dev_err(adev->dev, "Failed to allocate IRQ vector: %d\n", ret);
+>   		return ret;
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
-
-Fixes: 87fd912d3ba3 ("Add NULL check for SCp in process_script_interrupt()")
-Signed-off-by: Alexandra Diupina <adiupina@astralinux.ru>
----
-The patch makes a change to commit 87fd912d3ba3, which I 
-created earlier. It became clear that it is necessary to 
-call NCR_700_internal_bus_reset() in this condition branch 
-for any value of SCp. Sorry for the incorrect previous patch.
- drivers/scsi/53c700.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index e4fe7fc8dfcb..1a422264160d 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -1067,15 +1067,17 @@ process_script_interrupt(__u32 dsps, __u32 dsp, struct scsi_cmnd *SCp,
- 			//}
- 			NCR_700_scsi_done(hostdata, SCp, hostdata->status[0]);
- 		}
--	} else if ((dsps & 0xfffff0f0) == A_UNEXPECTED_PHASE && SCp) {
--		__u8 i = (dsps & 0xf00) >> 8;
--
--		scmd_printk(KERN_ERR, SCp, "UNEXPECTED PHASE %s (%s)\n",
--		       NCR_700_phase[i],
--		       sbcl_to_string(NCR_700_readb(host, SBCL_REG)));
--		scmd_printk(KERN_ERR, SCp, "         len = %d, cmd =",
--			SCp->cmd_len);
--		scsi_print_command(SCp);
-+	} else if ((dsps & 0xfffff0f0) == A_UNEXPECTED_PHASE) {
-+		if (SCp) {
-+			__u8 i = (dsps & 0xf00) >> 8;
-+
-+			scmd_printk(KERN_ERR, SCp, "UNEXPECTED PHASE %s (%s)\n",
-+				NCR_700_phase[i],
-+				sbcl_to_string(NCR_700_readb(host, SBCL_REG)));
-+			scmd_printk(KERN_ERR, SCp, "         len = %d, cmd =",
-+				SCp->cmd_len);
-+			scsi_print_command(SCp);
-+		}
- 
- 		NCR_700_internal_bus_reset(host);
- 	} else if((dsps & 0xfffff000) == A_FATAL) {
--- 
-2.30.2
-
+Reviewed-by: Amadeusz Sławiński <amadeuszx.slawinski@linux.intel.com>
