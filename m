@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA3611802A4;
-	Mon, 25 Mar 2024 07:09:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 395F2181327;
+	Mon, 25 Mar 2024 07:10:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711350593; cv=none; b=SpV4+Y+YojNgmbM2bmzzKeKeAUCPZMkEgw9xwzxOZt58VE1UqeTh5hBF8Y07GA067OTty0px8K+YCNHLNwFI5rNIKH6me+CmDq2xnMNnF0HwLpp3qEYoNarQGr/5Mi490+eMQMSIFKuWxP94AipbVP3zyScTzcNt2hxSLNf1tCA=
+	t=1711350657; cv=none; b=C25nZs1Z+c8QewNnM01J3PrQ/wUZBjyxmGvV59xs5I921E2TWnYj3trOx9tWXdtyJ9V4XxqrwikNLsoKa2FlKNioQU6sqeusSKZwGwL2haCR0hE+58B4BV7a82ampHWDU4AZXKjdUXPdCswBoGHm1qQB2UrIJJ84TVz6tzoARpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711350593; c=relaxed/simple;
-	bh=fgNYRUWQ1ehKxth4W+tPpNo5aTyrEzS0AG45mdCeF+8=;
+	s=arc-20240116; t=1711350657; c=relaxed/simple;
+	bh=XKJ4PdWS7sPUSp/i639lPoqRweHPQBN/JvN8m6hg+pc=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=K0XhA1YX2nSpuFt/1aCesQuD/7UPkjuGICtfdttyu8zsl1Am5WLX5iERBUJ8IuH4wmjRuOk3NXX/XIWlblw2GbfP2SL0fvYDjajeCNBhnaRamKuWdQX8HjEPbXYV/7uDuE7eIs7aycl6EBhCQeYISX+SrnVltcMjMIWuR2uG7i0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nlLsGMZ2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=LZ991KGX2GfLmDzEWtmhsngjr/ZCoXt83QhHp1FxCCZeTnfUDxOhC7X97Ccw+FXOmlFSpADEZZzkbSSOoUe0zopAafolfZ2YBeqbofz8RK/VkuMA7WVYkUccG3S4RqqroEbxL74QYBYR8pyeRipFrZKeIQSBXMs9XTSu1hGnxis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EQF88+Zs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nlLsGMZ2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 481CBC43394;
-	Mon, 25 Mar 2024 07:09:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EQF88+Zs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BCE5C43390;
+	Mon, 25 Mar 2024 07:10:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711350592;
-	bh=fgNYRUWQ1ehKxth4W+tPpNo5aTyrEzS0AG45mdCeF+8=;
+	s=k20201202; t=1711350657;
+	bh=XKJ4PdWS7sPUSp/i639lPoqRweHPQBN/JvN8m6hg+pc=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=nlLsGMZ2Nh1cmWZviNXNJCoreXfnZJbu/HHZ5lA3BMPBMNWQKCda07SFBYqYhojiW
-	 fVZSiiPSSgYzid9Z+ET8AaD/7NA3ZpksRz0tid4Zbt+pwN2P6b2h3LawbPRcs03yPg
-	 QoSyFngv2VBgv17tj1gF7yCPHd5J3L5PnRgyE13/PYW6ku+qY19ZNJYClUXzgUc8/h
-	 c9d2WErzPC3zdyVm8IA7SZxCmmndh+BTOzvXXha8YlvWjcMTxTYUWp2zKalOq8Q467
-	 hjGn63aTCi2DWOPTiWtV45L+Y/i6QK7e2kF4i/AQbLg8riS7vdPwlVzsUx1VuQ5Ypb
-	 nyRI/JDRgUqXA==
+	b=EQF88+Zsdyl9+YqNvdRhZaeBdFtqwsmgLnRE2ZYEQO91OQDEssBs1HPYFOydw2Y/c
+	 q9fVT5yFUBshGdvC1nUwagh7ju47fKIHz84i+Kl0muQiajdyvAcnGrWwVPBVKT9G7i
+	 USMISh4UGA5PG/UwiADc9Diq32hAG2W8nPjC9IMpbUEg9z+qL+RoATwb/JLfpgPlhz
+	 Em6NmF8VDQuJbxefV/WmGaqGuE3aZePf4TtuO3WeiAJagXHfk082h9jsD/qBidsVoD
+	 6tsgfsehwBOgri2r63Ealv34YI6KGsuvwWNrnRxGVU/59jD+ALjfzcF5ZDBs0DLce0
+	 +1KV1UDFRbPWw==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -49,9 +49,9 @@ To: linux-pci@vger.kernel.org,
 	Eric Dumazet <edumazet@google.com>,
 	netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 01/28] PCI: msi: Use PCI_IRQ_INTX
-Date: Mon, 25 Mar 2024 16:09:12 +0900
-Message-ID: <20240325070944.3600338-2-dlemoal@kernel.org>
+Subject: [PATCH 18/28] net: wangxun: Use PCI_IRQ_INTX
+Date: Mon, 25 Mar 2024 16:09:29 +0900
+Message-ID: <20240325070944.3600338-19-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240325070944.3600338-1-dlemoal@kernel.org>
 References: <20240325070944.3600338-1-dlemoal@kernel.org>
@@ -63,40 +63,45 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In pci_alloc_irq_vectors_affinity(), use the macro PCI_IRQ_INTX instead
-of the now deprecated PCI_IRQ_LEGACY macro.
+Use the macro PCI_IRQ_INTX instead of the deprecated PCI_IRQ_LEGACY
+macro.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/pci/msi/api.c | 8 ++++----
+ drivers/net/ethernet/wangxun/libwx/wx_lib.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/msi/api.c b/drivers/pci/msi/api.c
-index be679aa5db64..dfba4d6dd535 100644
---- a/drivers/pci/msi/api.c
-+++ b/drivers/pci/msi/api.c
-@@ -213,8 +213,8 @@ EXPORT_SYMBOL(pci_disable_msix);
-  *            * %PCI_IRQ_MSIX      Allow trying MSI-X vector allocations
-  *            * %PCI_IRQ_MSI       Allow trying MSI vector allocations
-  *
-- *            * %PCI_IRQ_LEGACY    Allow trying legacy INTx interrupts, if
-- *              and only if @min_vecs == 1
-+ *            * %PCI_IRQ_INTX      Allow trying INTx interrupts, if and
-+ *              only if @min_vecs == 1
-  *
-  *            * %PCI_IRQ_AFFINITY  Auto-manage IRQs affinity by spreading
-  *              the vectors around available CPUs
-@@ -279,8 +279,8 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 			return nvecs;
+diff --git a/drivers/net/ethernet/wangxun/libwx/wx_lib.c b/drivers/net/ethernet/wangxun/libwx/wx_lib.c
+index 6dff2c85682d..ae0b940717a8 100644
+--- a/drivers/net/ethernet/wangxun/libwx/wx_lib.c
++++ b/drivers/net/ethernet/wangxun/libwx/wx_lib.c
+@@ -1674,14 +1674,14 @@ static int wx_set_interrupt_capability(struct wx *wx)
+ 	/* minmum one for queue, one for misc*/
+ 	nvecs = 1;
+ 	nvecs = pci_alloc_irq_vectors(pdev, nvecs,
+-				      nvecs, PCI_IRQ_MSI | PCI_IRQ_LEGACY);
++				      nvecs, PCI_IRQ_MSI | PCI_IRQ_INTX);
+ 	if (nvecs == 1) {
+ 		if (pdev->msi_enabled)
+ 			wx_err(wx, "Fallback to MSI.\n");
+ 		else
+-			wx_err(wx, "Fallback to LEGACY.\n");
++			wx_err(wx, "Fallback to INTX.\n");
+ 	} else {
+-		wx_err(wx, "Failed to allocate MSI/LEGACY interrupts. Error: %d\n", nvecs);
++		wx_err(wx, "Failed to allocate MSI/INTX interrupts. Error: %d\n", nvecs);
+ 		return nvecs;
  	}
  
--	/* use legacy IRQ if allowed */
--	if (flags & PCI_IRQ_LEGACY) {
-+	/* use INTx IRQ if allowed */
-+	if (flags & PCI_IRQ_INTX) {
- 		if (min_vecs == 1 && dev->irq) {
- 			/*
- 			 * Invoke the affinity spreading logic to ensure that
+@@ -2127,7 +2127,7 @@ void wx_write_eitr(struct wx_q_vector *q_vector)
+  * wx_configure_vectors - Configure vectors for hardware
+  * @wx: board private structure
+  *
+- * wx_configure_vectors sets up the hardware to properly generate MSI-X/MSI/LEGACY
++ * wx_configure_vectors sets up the hardware to properly generate MSI-X/MSI/INTX
+  * interrupts.
+  **/
+ void wx_configure_vectors(struct wx *wx)
 -- 
 2.44.0
 
