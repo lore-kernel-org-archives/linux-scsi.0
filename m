@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86AAB13E8BD;
-	Mon, 25 Mar 2024 07:23:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB23D18C792;
+	Mon, 25 Mar 2024 07:27:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711351401; cv=none; b=eMZsOskkBa/uoIoTXt/aGkrbWDp7emUzynqmjZ3UVDs29uHyr6OtDsLTka7SqJL6hWuegn3FBpQiRYVTUrRckYqZiz2xbUk9Lwa8uJrgztW8f95fDI3Nbln+kq3Uj1VuDD+g01aCcfOFM+JP82i0+WsbGGimtHvc4UYXStRR+Oc=
+	t=1711351623; cv=none; b=Z4GuFBuhB6fmZrwR+6IAm9TtTm/abURittgAJPDEbvNmCTZsnYZ/Vlaw2HCrD0sjs9of4piZLNcNdYfAH/d7wzuthIdQpq3x1Y3U0PL7xTSOhAzQmF1UkTD8BTiQkE9pY66ml03OzGOzRCHZlmk8SBrrRbvBTb6CbvYD29SKM+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711351401; c=relaxed/simple;
-	bh=kejTuzIp9rfToJ4oy04aXfQo2mLPE9gVCVVnySoDABs=;
+	s=arc-20240116; t=1711351623; c=relaxed/simple;
+	bh=0tzakfE76KWoDDiUjOG1vag1jOkRfq3q7Ivpq8ckM2k=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=So5lmPHCQAkSctQIgOGhoLISN8F38QhtrCjZXeNO7fhPPBLN9DkUMkH9V5emfWVtWnaG0AnK6F9YYYTXfyfv/zsBGelW7HQMdjSqTE9YMM6ayPy/k+nPJiN2+FjMl+1OugmmGd3sT5HpIxaC7I76jKkBsTcjumwSQN1kGxZnXvw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cQqk9TXB; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=i/Jp+71aF+UQqovkjF9EaIzBRmKQxrVohN3z2fS0/03lW0VZqvREKT0LVDMLpyCzjyX3uAVbwYoaCUEow5NcSI3aYUc2SAPb0a9Jh1RUFORGrI3dRFACNgIhfEBrnLNBdtgCi2ZiAgEYX3h4ylD24QZ+uF8e/A9Pt9GT8YSPbek=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=knq/N6Eb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cQqk9TXB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F153EC433F1;
-	Mon, 25 Mar 2024 07:23:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="knq/N6Eb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F25CBC433F1;
+	Mon, 25 Mar 2024 07:26:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711351401;
-	bh=kejTuzIp9rfToJ4oy04aXfQo2mLPE9gVCVVnySoDABs=;
+	s=k20201202; t=1711351623;
+	bh=0tzakfE76KWoDDiUjOG1vag1jOkRfq3q7Ivpq8ckM2k=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=cQqk9TXBq4tgTpnY+hlyUGJfi7yyom6JXB9i2HUcI64xPvvlIVPrltzqs5VeG+FUS
-	 kVcOfp7IYSKx0W6PW3nCOhwjndCkz7+40nBI/eRbzqzShnIYqh/54TvrovU7N65Pwk
-	 RwNETPj8eYi0WSyYfW6nN9ysBAJsrdPvxe/ITLUXWGi8ufOTPJnEiF1dAg3j9JFXm2
-	 BD9asb/Hyb9ZfYUQHXfpSwWcmlGbyR3ByYYGV0KgOb5Of+TIEkJccV2dgh08Nds5PZ
-	 X71IkDWnd8xMsPZ8pw6Of7A/1o+C/Etk2JXfCmJWMXt7xRgDODl6i6PjZozk5rJ/DI
-	 Ld7nzYvEKO6Vw==
-Message-ID: <08451976-7e39-4c7f-8bf5-5eeda4316c4b@kernel.org>
-Date: Mon, 25 Mar 2024 16:23:14 +0900
+	b=knq/N6EbC4cBc3ZbKDtVEqKBHHsXJIUUVvhNlFrKkOal7b4LG60CIzqWqWVMvl3VJ
+	 rB3KsKHE8MSzpW1nqGZXX7ImBiflU2ngEb1KlUiBvCRbnwSUhAVDozAmJSZVyU+K4o
+	 18UvviO6JaxM+Kq3DBzKAtE7moyDqQ9cNzmgvn/g+MK0mjXnUmYf9U9Cz+7+vqegNN
+	 yPcG1baS+ESupeRJyvZzLf/SljDrDuRvoG0gayCS6tqbpPzttUe+klaQY6w6LI1VPJ
+	 sJuzeQ+/rQ8wBiVbfrsTrpn6rV+cpZx2HfD769unSN1GAEX2QjXXG8nH90XCbDtQNn
+	 hLFrM0TEefc1g==
+Message-ID: <80162a6e-12d1-4fd4-ac74-dc5388853323@kernel.org>
+Date: Mon, 25 Mar 2024 16:26:55 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 05/23] scsi_transport_fc: add a max_bsg_segments field to
- struct fc_function_template
+Subject: Re: [PATCH 06/23] scsi: add a no_highmem flag to struct Scsi_Host
 Content-Language: en-US
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -69,21 +68,24 @@ Cc: Niklas Cassel <cassel@kernel.org>,
  mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
  linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 References: <20240324235448.2039074-1-hch@lst.de>
- <20240324235448.2039074-6-hch@lst.de>
+ <20240324235448.2039074-7-hch@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240324235448.2039074-6-hch@lst.de>
+In-Reply-To: <20240324235448.2039074-7-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 3/25/24 08:54, Christoph Hellwig wrote:
-> ibmvfc only supports a single segment for BSG FC passthrough.  Instead of
-> having it set a queue limits after creating the BSD queues, add a field so
-> that the FC transport can set it before allocating the queue.
+> While we really should be killing the block layer bounce buffering ASAP,
+> I even more urgently need to stop the drivers to fiddle with the limits
+> from ->slave_configure.  Add a no_highmem flag to the Scsi_Host to
+> centralize this setting and switch the remaining four drivers that use
+> block layer bounce buffering to it.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks OK to me.
+The USB hunks could probably be moved to their own patch following this one ?
+But otherwise, looks OK to me.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
