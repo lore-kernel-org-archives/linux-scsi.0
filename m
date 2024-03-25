@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B96513DDC8;
-	Mon, 25 Mar 2024 07:10:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D581617967E;
+	Mon, 25 Mar 2024 07:11:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711350638; cv=none; b=fmQf3BZ27uDeh59L5hfxo4EeCRemNrkKeHhyKG6gnXMuYD7Dy1eqH7H+SRQcaVD/xudkzq4TfllKrpDCsVwR4RhrpM2kkgyGuOnVxbswVbmMD9zE5kx7oV/jAlteuc+C+eI0eDAd2/S2YRFHp5Yrvr6cbvHoJSNjDcOhEpJn/jo=
+	t=1711350665; cv=none; b=DikNhWcuFb0LcCTgZZWyTT90te+ggkWGneAMy7EZxXS11MDijiozNWVTWnl9OQpUzvcpIxPWT6OysXZbjHodBU5xUF/3NO3IxB73VfoXKCZI7IENWJ86YedlfooOnQ8IIic7DuGV05R5pQAPmDIkk+p+z61fmzdlxTRIzd5X0aM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711350638; c=relaxed/simple;
-	bh=WYkv91EIIKYnBjiqDa2StmEVhH3MpVjmEKTd+pFQezw=;
+	s=arc-20240116; t=1711350665; c=relaxed/simple;
+	bh=sTPATJrZxPXDBU2hJVRgbRVp2puDXDGSZp/6Anb2ra0=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ToQ+7sY6sdKNYlsMZ0Um0SC5zE1tvQ1BxuFRzPezdKG78zheeQC+g7a6BExmNy8fxQoGLQOrkfQ4vMPjiRIdX/dTz2scKdI+bBPVKu1EqxDbG/nC75BZYA1m2VWChCiQYRyUwEvL7FGTra6HTIQFwb2stPrPhZjDuyP3Lr/wCq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ly8fo8tV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=MExOTKV8rl+dX0cW0wzjGAiEAnFHcfHCAKPbxVz/kDovKkLp8IrMxjDid47qBzInjnVFa2eIVJPhsgLl+3A23hKqfQHS5HAulKAUjArRBTFaRVFJm0YbxV876tIEyHcHPm1RRaCul4PNsqo9YoG1jH+usgUwvNEetxkM6vKJrcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JFHyCT7W; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ly8fo8tV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3503C433F1;
-	Mon, 25 Mar 2024 07:10:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JFHyCT7W"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DB58C433C7;
+	Mon, 25 Mar 2024 07:11:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711350638;
-	bh=WYkv91EIIKYnBjiqDa2StmEVhH3MpVjmEKTd+pFQezw=;
+	s=k20201202; t=1711350664;
+	bh=sTPATJrZxPXDBU2hJVRgbRVp2puDXDGSZp/6Anb2ra0=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=ly8fo8tVm0I9vz6tH/U6vYCt+/tZTektMeBOExnuVyIh/EKmBVeGLhwFpI2tQULum
-	 uVL1ynEGdJjL7PyOeXwFWQvSCqhuqJgmYzocLxL1zxgnbU0Dvo6F8v7L7lub4met9v
-	 1QBWc0EhV5YJA0b3d7ZhZ1F4W3od9WchLg0QCemBc/iZymYbd4j1ZANCRvuiXDSNf+
-	 DlRI66tKG19MF6dctm45sochuLHR4XBUlBQPJJSNElJ4y8Cxwd+vLfrjRsDsRnz+io
-	 fRHcKlf7ZqGFmZXRxVFGUHQ/8YwDdVYd6lm4umZzXirCXC5Ok0ca77lFO5W6mZ/zF8
-	 u0beROuG8V2oQ==
+	b=JFHyCT7W6X1xUcGVlMTa9iTr+w72NzubImHdd/0DveOX+7NhWajlvvcfrjrxl60sS
+	 KkT921c4aSXDeZslfjxdIPIMprZCkYQPpxVcNU/yL7f/aDwrf4GrjNM9dKSG4W7uf3
+	 fMe50RzV4tc7wWOXO8P9bQbN+3SGEfKS8ayLJFCI50/a9rODs8i3qKiGSlk9MMMkPB
+	 ql92SAegznSMyE4yCvrW46M/kA2pNYT9yKzBJ4gpVUp+bCC5n+ZHDYRggqrf8dTsld
+	 nLGac3hxSgAWlW+LOGDkAuqUhlzjavo07M+c+jV9WprXJ6qpPlWdGjC29JjHhDZ8aR
+	 45GG63jK43Sig==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -49,9 +49,9 @@ To: linux-pci@vger.kernel.org,
 	Eric Dumazet <edumazet@google.com>,
 	netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 13/28] misc: vmci_guest: Use PCI_IRQ_ALL_TYPES
-Date: Mon, 25 Mar 2024 16:09:24 +0900
-Message-ID: <20240325070944.3600338-14-dlemoal@kernel.org>
+Subject: [PATCH 20/28] net wireless; realtec: Use PCI_IRQ_INTX
+Date: Mon, 25 Mar 2024 16:09:31 +0900
+Message-ID: <20240325070944.3600338-21-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240325070944.3600338-1-dlemoal@kernel.org>
 References: <20240325070944.3600338-1-dlemoal@kernel.org>
@@ -63,28 +63,41 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In vmci_guest_probe_device(), remove the reference to PCI_IRQ_LEGACY by
-using PCI_IRQ_ALL_TYPES instead of an explicit OR of all IRQ types.
+Use the macro PCI_IRQ_INTX instead of the deprecated PCI_IRQ_LEGACY
+macro.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/misc/vmw_vmci/vmci_guest.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/pci.c | 2 +-
+ drivers/net/wireless/realtek/rtw89/pci.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/misc/vmw_vmci/vmci_guest.c b/drivers/misc/vmw_vmci/vmci_guest.c
-index 4f8d962bb5b2..c61e8953511d 100644
---- a/drivers/misc/vmw_vmci/vmci_guest.c
-+++ b/drivers/misc/vmw_vmci/vmci_guest.c
-@@ -787,8 +787,7 @@ static int vmci_guest_probe_device(struct pci_dev *pdev,
- 	error = pci_alloc_irq_vectors(pdev, num_irq_vectors, num_irq_vectors,
- 				      PCI_IRQ_MSIX);
- 	if (error < 0) {
--		error = pci_alloc_irq_vectors(pdev, 1, 1,
--				PCI_IRQ_MSIX | PCI_IRQ_MSI | PCI_IRQ_LEGACY);
-+		error = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
- 		if (error < 0)
- 			goto err_unsubscribe_event;
- 	} else {
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index 9986a4cb37eb..282f1e5a882e 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -1612,7 +1612,7 @@ static struct rtw_hci_ops rtw_pci_ops = {
+ 
+ static int rtw_pci_request_irq(struct rtw_dev *rtwdev, struct pci_dev *pdev)
+ {
+-	unsigned int flags = PCI_IRQ_LEGACY;
++	unsigned int flags = PCI_IRQ_INTX;
+ 	int ret;
+ 
+ 	if (!rtw_disable_msi)
+diff --git a/drivers/net/wireless/realtek/rtw89/pci.c b/drivers/net/wireless/realtek/rtw89/pci.c
+index 19001130ad94..100549694e53 100644
+--- a/drivers/net/wireless/realtek/rtw89/pci.c
++++ b/drivers/net/wireless/realtek/rtw89/pci.c
+@@ -3547,7 +3547,7 @@ static int rtw89_pci_request_irq(struct rtw89_dev *rtwdev,
+ 	unsigned long flags = 0;
+ 	int ret;
+ 
+-	flags |= PCI_IRQ_LEGACY | PCI_IRQ_MSI;
++	flags |= PCI_IRQ_INTX | PCI_IRQ_MSI;
+ 	ret = pci_alloc_irq_vectors(pdev, 1, 1, flags);
+ 	if (ret < 0) {
+ 		rtw89_err(rtwdev, "failed to alloc irq vectors, ret %d\n", ret);
 -- 
 2.44.0
 
