@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04C7E6EB6B;
-	Mon, 25 Mar 2024 23:20:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F2276FE05;
+	Mon, 25 Mar 2024 23:23:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711408855; cv=none; b=gjoCU9ToTs//vXSv/C04pFV/NbOZxkL2u7l9+HmfklKmxYv+aBIwT971vDW3Ltwma4KxmCSRPyy32D5IMpIGj8BKNE7tp78CT/Z82SqA8J8HAJZuEEL3IT16giYEQVyaOON8UU/07U+eojeG//r0wvcyOo8myLFEGeA4YaeWiU4=
+	t=1711409002; cv=none; b=iacjfuxanHtw0Cj0ehfvU7o/P8ktWdEXz3YDqfiAxd8X0Aj0fhNNwscShQJGh7bm9OuWWEzHWoksktGxKqHjrKNMD/mRoJZ+rmEgogbdKFC9yp8F1DxRNjcnXAwZZPpHDY18YkAdezH4IpvNtEjh2d20fcWF0X4+GQ5w6DP6wUE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711408855; c=relaxed/simple;
-	bh=32FQAK6jT/ndwBZbVN6kF9UmjBx2mUmZDtIAx1MO/Do=;
+	s=arc-20240116; t=1711409002; c=relaxed/simple;
+	bh=v5B55OzY0NZ3VEVd9kcrLWRkVYRFdm4B65Y1TGJxHG4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CTcOFI4n2FUhftJPvLCcTzXEo4W7nRBaFLwJdnaAfABVKbGVBjNpUXEQQGhW6Sa0UxenLsz4mIzrpdrwtPuXyb7KtGnf7UMjQxQo3mNmE5aWU4xjUoLHBKiFrNgM+/a5n3B1L6bizH2EdSPdlNkAIy++DXl4Tr6dzgurMZdV9zg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jiy7duNN; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=GW9ra+E0dJ/Xnyy/46Ni2+Hr5GltbxJocBH+n/TyPd+wV85yPHtq3oRlUtk4A8Io+FZJckmMJGc942caiYGc6vl42UG8B8l8XTS6OY4c9E62C+c5WsODNXRLiNVQtmXv8IpeJ3SMD4dEBA2Oh9R0rtYEGWD2rGcXw7yRmQMs8/o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Hz9sgYIC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jiy7duNN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C251C433F1;
-	Mon, 25 Mar 2024 23:20:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Hz9sgYIC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A9ABC433C7;
+	Mon, 25 Mar 2024 23:23:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711408854;
-	bh=32FQAK6jT/ndwBZbVN6kF9UmjBx2mUmZDtIAx1MO/Do=;
+	s=k20201202; t=1711409001;
+	bh=v5B55OzY0NZ3VEVd9kcrLWRkVYRFdm4B65Y1TGJxHG4=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Jiy7duNNzDUZJkF8HeyGzJEF/5HBQtYIN3/KFi6Rzgv6wKzPpbjdLimlpvXYvCl2m
-	 N1Cnk0FE96cgssjnT2Ug2qFYb704wX3zUeLviYCekNj8TvhWlz2uqapvSRMU6xw2QO
-	 D74hF1Qffgy+yuT3dYiRWxsYQaXbpm+mb+p6boVWosAG9KQUPCVnmMPGRrGnp4VGaJ
-	 zm7SbSCWAzdCzgsrljdcxzpeegFgbFs48sm7L1Xd1/C10VOXzRc6xfE5cUOmasTyF+
-	 rWRL0NH076sDXtRhJzy6wjnI1KubXK6KaIzoDmAxd3Xr2F7xyS+TNZiOPAx2mKICxH
-	 FNO7OeXFxadjQ==
-Message-ID: <9a8462fc-affc-4b9d-96d8-d5a76e4afc55@kernel.org>
-Date: Tue, 26 Mar 2024 08:20:51 +0900
+	b=Hz9sgYIC2SOdbFKotLWlZBZd1WAHHyiPoFsm18N4IqLgnNRuWVpAjH1og+DLsem0Z
+	 QJKv1mDGdvig2Mz+icMG4ek2i+r2gGUav6TXX0hdjakCwjpWoJxWTJUK9XrSLMBFzz
+	 IdWtdFN2H4FDmoQAbTMycvHpoNHWhL+HKeJ8WjTKvSp8FCG41h72GftZewMQ4tyCob
+	 k22UjU+9jC6Jp2NFH2yji+iSyUQw1vkP7ssTPhEaJRPrRztQaZ1UhhlEb1ge1LRc0z
+	 I30qOCglNg4I15nb78IqVs33MqVXe927dYiRIzIdk87l7w/E/ogllvbppvuYzTuUEE
+	 VpVBjiGOcYo4Q==
+Message-ID: <0d3d0d81-66e0-4c7c-82dd-024972946666@kernel.org>
+Date: Tue, 26 Mar 2024 08:23:19 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 06/28] block: Remember zone capacity when revalidating
- zones
+Subject: Re: [PATCH v2 03/28] block: Introduce blk_zone_update_request_bio()
 Content-Language: en-US
 To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
  Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
@@ -44,34 +43,42 @@ To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
  dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 References: <20240325044452.3125418-1-dlemoal@kernel.org>
- <20240325044452.3125418-7-dlemoal@kernel.org>
- <641c122c-1dfa-4590-b908-68706721a2ef@acm.org>
+ <20240325044452.3125418-4-dlemoal@kernel.org>
+ <20a3af4a-3075-4abc-8378-d55ea84a5893@acm.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <641c122c-1dfa-4590-b908-68706721a2ef@acm.org>
+In-Reply-To: <20a3af4a-3075-4abc-8378-d55ea84a5893@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/26/24 06:53, Bart Van Assche wrote:
+On 3/26/24 04:52, Bart Van Assche wrote:
 > On 3/24/24 21:44, Damien Le Moal wrote:
->> +		/*
->> +		 * Remember the capacity of the first sequential zone and check
->> +		 * if it is constant for all zones.
->> +		 */
->> +		if (!args->zone_capacity)
->> +			args->zone_capacity = zone->capacity;
->> +		if (zone->capacity != args->zone_capacity) {
->> +			pr_warn("%s: Invalid variable zone capacity\n",
->> +				disk->disk_name);
->> +			return -ENODEV;
+>> diff --git a/block/blk-mq.c b/block/blk-mq.c
+>> index 8aeb8e96f1a7..9e6e2a9a147c 100644
+>> --- a/block/blk-mq.c
+>> +++ b/block/blk-mq.c
+>> @@ -820,11 +820,11 @@ static void blk_complete_request(struct request *req)
+>>   		/* Completion has already been traced */
+>>   		bio_clear_flag(bio, BIO_TRACE_COMPLETION);
+>>   
+>> -		if (req_op(req) == REQ_OP_ZONE_APPEND)
+>> -			bio->bi_iter.bi_sector = req->__sector;
+>> -
+>> -		if (!is_flush)
+>> +		if (!is_flush) {
+>> +			blk_zone_update_request_bio(req, bio);
+>>   			bio_endio(bio);
 >> +		}
 > 
-> The above code won't refuse devices for which the first few zones have 
-> capacity zero. Shouldn't these be rejected?
+> The above change includes a behavior change. It seems wrong to me not
+> to call blk_zone_update_request_bio() for REQ_OP_ZONE_APPEND requests if
+> RQF_FLUSH_SEQ has been set.
 
-The device driver is supposed to ensure that zone capacity is always set to the
-device reported value or to the zone size for devices that do not have a zone
-capacity smaller than the zone size. But sure, I can add a check.
+REQ_OP_ZONE_APPEND + RQF_FLUSH_SEQ is not something supported, and this patch
+series is not changing that. The reason is that the flush machinery is not
+zone-append aware and will break if such request is issued for a device that
+does not support fua. We probably should check for this, but that is not
+something for this series to do and should be a separate fix.
 
 -- 
 Damien Le Moal
