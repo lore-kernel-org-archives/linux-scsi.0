@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BB15524D0;
-	Tue, 26 Mar 2024 10:05:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B31670CCC;
+	Tue, 26 Mar 2024 10:07:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711447539; cv=none; b=M8ZmPQ4dsGVZNAIbOwhRXpGkpktbZALAqYi9njMOblpBCJiIAHHesh1aKh4cmNyDRi6X3Q53SF6JNWMXiDwbW4AbYM9+/OClML+Qw5/s8curAw2DPY1AZhXZzr+q7984xHfTi8cg63Z9JgGBsNwb0WK0YfJ6Ap+CwDhqfJq2W84=
+	t=1711447622; cv=none; b=bgC40Q18K6ycYfa1BMDBJPmjjgUzC9AHb65gS+0HD7kF5td/lzM4iWMUcpJI/yhR/uPZi0cSWcUkGBQmqYEtcUD5t2hNzUiiuHDuMnd9RBaciZAPJeh+iw3YsKPTgStC7gHq1d05ou6FGkCsAZdtdzgaAooVnGdstNwhNE96f+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711447539; c=relaxed/simple;
-	bh=/oYS92t78LsjtBRAu2wTfiubNqaf7k6aYu+wQ42Dlp8=;
+	s=arc-20240116; t=1711447622; c=relaxed/simple;
+	bh=U4EdSS4ABUOTzZjhVULdw5aeTTxo/JKgfI7ODcfDDtg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=shSWrES5wknKDdDgr2bQYsVlPMLODEh7+rtLxehFQKT4A1cWD0bkGpznIuRKyJ9sRx0pmX6R9iOeW0OkvvtQPgY+sTWYLUY/IpwRID2+bhDE5PvML7RQ2MVNh4JZhpZLJ4zfa0fE9fhDgcMUlvjX0xvX2jAlEAw5JenM1jOU2y4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=THGAJerI; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=rmMY19+pTgKPqqc6flfobbCXyI06vHpWa5/2g+nkQ79R6UjrxHeV4Dc5TZPyBLEX7l6Pk3NM7ZInUwHlL2NFJV5nVwMgvxHcwiGYSY2SqmPi9xmQxKpSM3CfLe2e2utfmtyETjLayCZvLE+57LB+aNEh1+kLVCl657zjAGGPGJE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r7ooJuTx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="THGAJerI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8A7EC433C7;
-	Tue, 26 Mar 2024 10:05:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r7ooJuTx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81130C433C7;
+	Tue, 26 Mar 2024 10:06:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711447539;
-	bh=/oYS92t78LsjtBRAu2wTfiubNqaf7k6aYu+wQ42Dlp8=;
+	s=k20201202; t=1711447621;
+	bh=U4EdSS4ABUOTzZjhVULdw5aeTTxo/JKgfI7ODcfDDtg=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=THGAJerIDhr2e97aM7xHDFFhNVDgNVOoQLzkMlbvDQCGhE9sPoFrZyfuy2H8MgTjf
-	 CqEPlNGfwATXIjPnyLcKVRQrWYg7KCiINzEDJFoyXmJOqDeCnPHeVHo6wnbgLaA8MK
-	 +gHIYG5ksqjqFJHqk9OPDk8c7cmJhZmBnajWXyXy8cKcTobUfcB4BZJ+4mPcoYMnx4
-	 LAHodiEmwCXkkZp/85dinuNAVfn/15TYoh8cvU9hkanDem5AJM+UZZy2mMnTk5n+ci
-	 Vik1eBJpRwdcio63M1j85HfKFctIqcgZWl0zoc8uqMt9EJlnGA7EJJL+GxazermINO
-	 yo67UtsjKZTIw==
-Message-ID: <6ce6edde-67f0-4452-aee2-602af3d71ecd@kernel.org>
-Date: Tue, 26 Mar 2024 19:05:35 +0900
+	b=r7ooJuTxZN+PNiPnccb67g34KjJFZGCbDEgFec7vlUu1ajdengm+9RmR5ora7u1Bv
+	 jbfwicklE0lImv+7AHkT8Ep/VdsKhRmeMG6UxrolnJ/ZzqEFl7pNfUgvwonKbip4hX
+	 r+/Yg367izpOMHHu3oKVpwsGFPu0chGtDgmxAVKs6sKAqMYx2dJagTcKGVYHwXhHhZ
+	 wml/UNgn2xqfhxKlSbephOrUcJLtFgoqjvZk8BSEuDYtEkpx8L8cCrnExrP/1wb9Lk
+	 ODqAwMdItZqnS/Pzh8wYphLB67vqAqvbENX/0iLnGHLNYv8ydBq+ejsL+ZWZy2j2K+
+	 kY2BYUifmV2gQ==
+Message-ID: <66ad274d-9890-411d-9fba-90fed2eb33f5@kernel.org>
+Date: Tue, 26 Mar 2024 19:06:59 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -96,6 +96,10 @@ On 3/26/24 18:53, Geert Uytterhoeven wrote:
 >> +
 > 
 > When both CONFIG_SCSI_SAS_ATA and CONFIG_SATA_HOST are enabled:
+
+I have both enabled in my config and I do not see any issue. What is special
+with these on ARM ?
+
 > 
 > aarch64-linux-gnu-ld: drivers/ata/libata-sata.o:(.data+0x110):
 > multiple definition of `dev_attr_ncq_prio_supported';
@@ -145,12 +149,6 @@ On 3/26/24 18:53, Geert Uytterhoeven wrote:
 > Perhaps the new attributes can be renamed?
 > Alternatively, the DEVICE_ATTR() can be open-coded, so the actual
 > device_attribute structures are named differently.
-
-I think we need to do that because I do not want the attribute name to change in
-sysfs as that creates hell for the user to control a feature that is identical
-beside the different transport (which the user should not care about).
-I will send something asap.
-
 > 
 > Gr{oetje,eeting}s,
 > 
