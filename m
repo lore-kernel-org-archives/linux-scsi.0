@@ -1,215 +1,164 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+Received: from wflow4-smtp.messagingengine.com (wflow4-smtp.messagingengine.com [64.147.123.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5204E3FB9B;
-	Tue, 26 Mar 2024 08:33:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15A997BAF9;
+	Tue, 26 Mar 2024 09:31:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.147.123.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711442003; cv=none; b=gzZnMiQZXBZ4DYAjD9xw2rGrk86K7GmoB5CUpTeigxowsACfp4juIDyG/RCwLX6/TBV0xkvJZzqLJN5H0aU/rFMIXr0PqagsbGTQR3G3kpJGoChLBTuRgfEtXlRmHA2XuL1s6rQafmXGZ4+WtX/eI6eCpkrIYWX5/p1nxUjCaio=
+	t=1711445467; cv=none; b=mcKGBiqr674ThQg6XEpwitnd/n6d/11hQJuvNchNxc7eeDu1Cg5I7sAT3ISaWFSFu3eWgXQV9zuA1pcdXnfmaTEEayM+KM2Oy4wdWaAy7ggLYYDYgR0IvPz7N5ANkJHb6TX+mxNVj0L4jkuqLol+HnqDlUzeq8E3a0cKWyTLOco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711442003; c=relaxed/simple;
-	bh=L9ECRQuWWxOYBhvGRljfWbWYDuMM29Hmf/oHGt0Mqn0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hWo84iJxfa0a3p/SEcTOsxO2iCjWAqFO+KSjUStA+U+XH1j1XTDA/aUjQseHoGb4FZ2zIjdZDLegfwhfsq/ypXut6lz0MXNpC8PYeamt2Hz3HlNN4Jejp8+yj3F/Dqrmo3ByYAUTD61nwprTEMC8SfTZOWyPwNMofKYlJVA71/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Gk9f9tEV; arc=none smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1711445467; c=relaxed/simple;
+	bh=A385P8sstLom6kzL26rxDc9NxJPEN2ya79T0qMm//ek=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Qe7RimVjhdg+JNchzlWhlpF7SIYo2P6BZlWPcqTVKtAMfHubotiq9uYtRaOh6ynwNp6IXqmwo7kVu9cfN5TKFgW/910YFjHIfo7JUWpezq5eBqNZ545sacYwkiOG6N5MnyxF423c3C8CV3P81f1mDJp00Rqg9k7U0Pv+p1FaQQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sakamocchi.jp; spf=pass smtp.mailfrom=sakamocchi.jp; dkim=pass (2048-bit key) header.d=sakamocchi.jp header.i=@sakamocchi.jp header.b=IYcHZRbd; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=bY6T7bCu; arc=none smtp.client-ip=64.147.123.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sakamocchi.jp
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sakamocchi.jp
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Gk9f9tEV"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1711442001; x=1742978001;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=L9ECRQuWWxOYBhvGRljfWbWYDuMM29Hmf/oHGt0Mqn0=;
-  b=Gk9f9tEV7kzCK74oMSaLznTMGfTrbsAYNg0sYhbJIt6QYbxg2r76vIzq
-   y0aVjRhcn32aI/q/9v5lW/SS0vPmjfBuNm3ist2km2jtX186wwpZvpQBW
-   4Ugitg0iR54jEtUNO7Vq/JTv/e07G79E18sdpN60jEzYVFbUfuuULf2Co
-   Ua2KgmjZF25h4CHjptlFYX85T/3jox/xEBf3aCPStpD7VwC+2TNsIscBj
-   fYtXsOadJR7TCzn/LepodNJdRNFdAor5q5j39Hm5cN+fD+5nvCkwKb0qF
-   LXWYiThpKXze7npgAGKt8l5mz7AL/vqj3J+j7KVRuKK50cVUTjQHRHFwd
-   Q==;
-X-CSE-ConnectionGUID: vnsO3JvrRE2g1QpW1VJQGw==
-X-CSE-MsgGUID: rqeSrDu2QzqevU8jIVUNqg==
-X-IronPort-AV: E=Sophos;i="6.07,155,1708358400"; 
-   d="scan'208";a="12495279"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Mar 2024 16:33:16 +0800
-IronPort-SDR: 4oOtUEAr6RndZlTwpHnGNjTjzMKZAUblQ9r2Ikkrl5G0WNQXFewyXfwUugZIAeVZnMTCeUeOyt
- uTEBdUan39WQ==
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Mar 2024 00:42:01 -0700
-IronPort-SDR: 081SocrVI7iLooEdak6P7QoSIpS2VFZ8vWMI+zdCe5jSfqhGipOHoxny2mjux0iJdQJaaJ9iLf
- KDl05hg7aALw==
-WDCIronportException: Internal
-Received: from bxygm33.ad.shared ([10.45.31.229])
-  by uls-op-cesaip02.wdc.com with ESMTP; 26 Mar 2024 01:33:14 -0700
-From: Avri Altman <avri.altman@wdc.com>
-To: "James E . J . Bottomley" <jejb@linux.ibm.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 2/2] scsi: ufs: Remove legacy tuning calls
-Date: Tue, 26 Mar 2024 10:32:50 +0200
-Message-ID: <20240326083253.1303-3-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20240326083253.1303-1-avri.altman@wdc.com>
-References: <20240326083253.1303-1-avri.altman@wdc.com>
+	dkim=pass (2048-bit key) header.d=sakamocchi.jp header.i=@sakamocchi.jp header.b="IYcHZRbd";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="bY6T7bCu"
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
+	by mailflow.west.internal (Postfix) with ESMTP id 671F62CC0247;
+	Tue, 26 Mar 2024 05:31:00 -0400 (EDT)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute6.internal (MEProxy); Tue, 26 Mar 2024 05:31:04 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sakamocchi.jp;
+	 h=cc:cc:content-type:content-type:date:date:from:from
+	:in-reply-to:in-reply-to:message-id:mime-version:references
+	:reply-to:subject:subject:to:to; s=fm2; t=1711445459; x=
+	1711452659; bh=JsIYIdm4lfmTSisZZ/DXBUcj1A+T+HA65a7uJi4J4Ag=; b=I
+	YcHZRbd9sIqHicWGnTcnbloJibtoDxCJb1PAsLm0emFQ00jzFYEifmMbCFh0Otvs
+	lXluwz6G8n8zwkeLXhb3kBgLnFeAKfJX1uqRW8zLv+64GlO3xbTSLa4NUfMhFCEt
+	7+3d/oa1d7PJWNhAaDEEn9melllT1zZws8077/2fa0eQJmg/hxmy/IzDVwHUsp/J
+	d39UqieNanc/fas+7PD/0DV2Dgb/85rvu6xKHD6yVWJLc5RsAlYZD7Egob+G2WMj
+	+YqvJiwsckXS6iMXrm0lUUYcWNYyas1SYaXb1zqwr3EJTwYLwy4S7u9rEpSF8CKZ
+	EWKSoaLtKvg+q2UZbRm0A==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+	fm2; t=1711445459; x=1711452659; bh=JsIYIdm4lfmTSisZZ/DXBUcj1A+T
+	+HA65a7uJi4J4Ag=; b=bY6T7bCua+MtWTPA5KWjwHZJGaJziE/2KYz7fxj20W0q
+	If1MAampCvCny6OBHZOHF32y3Kn4INASY9MYgcWPloU9RzC5JhZgXACJJCOzzbiW
+	/omAae/qPOKlgipcJZ82q+o6szSvs3ct/aQhVAudZmjU8z6xqk/m8oufiOmPDVJ6
+	YF6CvwTEorC8Wxd1l59IAGGH3W82NS2cMdOpqLw+Ta3jj1GIdknH5Dv3ilEqdHKT
+	mKqhrk5Uuf2VkxqIu59mUzNvkU0PDH5U9YWz5zMlAvj+cKm+2OuZalJ5/GkFiGuD
+	sNpVjilapH+Lgsu11iLndOldjMUmnQckKHNPtrBN8Q==
+X-ME-Sender: <xms:0pUCZuTCEK_UZ1FIa04HDNbw09J1SP-yLjTPmiKJ7fcM9-9PLm5N5Q>
+    <xme:0pUCZjzvYUNp_6AUn1GhXmXL5M4uvpS0meVqI5xxToMHvEoigMtmYJ7j1_wA3I0Sp
+    HvgeEyM6lGYvNXn320>
+X-ME-Received: <xmr:0pUCZr0cUziTQhpAkvv_eqG_J-dYqPzZf0V1SUH3f-nNStBcAUp6EA4jUGzRJEBOwGQMJiJimKe5XTYumtIHgMhG_YMg7hmSTdk>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledruddufedgtdehucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvfevuffkfhggtggujgesthdtredttddtvdenucfhrhhomhepvfgrkhgr
+    shhhihcuufgrkhgrmhhothhouceoohdqthgrkhgrshhhihesshgrkhgrmhhotggthhhird
+    hjpheqnecuggftrfgrthhtvghrnhephefhhfettefgkedvieeuffevveeufedtlefhjeei
+    ieetvdelfedtgfefuedukeeunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpe
+    hmrghilhhfrhhomhepohdqthgrkhgrshhhihesshgrkhgrmhhotggthhhirdhjph
+X-ME-Proxy: <xmx:0pUCZqB2VFAGd4lCaBCxrik37ACK9ghaOvrLJuoQkMNILffyy2RCbg>
+    <xmx:0pUCZngGTm6NYZ66zzHGXj6ZOAhF1W15NGgU_1lQ7VVTb5-DzgKjDw>
+    <xmx:0pUCZmotj5j7QD4RQRHOqylb2bqFpvVFfCyUaWvVyWMamP166ANVEA>
+    <xmx:0pUCZqgjGdSeR-bNNxKjy_SJixp8QgiXMk2VyLNValuMMfRrKA7OQA>
+    <xmx:05UCZshvx_JveHrwhZignnPkPsX9dTUPRS4MjCrtEER4_LSUV7Gv69QHUMm5xSVi>
+Feedback-ID: ie8e14432:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 26 Mar 2024 05:30:48 -0400 (EDT)
+Date: Tue, 26 Mar 2024 18:30:45 +0900
+From: Takashi Sakamoto <o-takashi@sakamocchi.jp>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Damien Le Moal <dlemoal@kernel.org>,	Niklas Cassel <cassel@kernel.org>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"Juergen E. Fischer" <fischer@norbit.de>,
+	Xiang Chen <chenxiang66@hisilicon.com>,
+	HighPoint Linux Team <linux@highpoint-tech.com>,
+	Tyrel Datwyler <tyreld@linux.ibm.com>,	Brian King <brking@us.ibm.com>,
+ Lee Duncan <lduncan@suse.com>,	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,	Jason Yan <yanaijie@huawei.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
+	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Subject: Re: [PATCH 13/23] sbp2: switch to using ->device_configure
+Message-ID: <20240326093045.GA139274@workstation.local>
+Mail-Followup-To: Christoph Hellwig <hch@lst.de>,	Jens Axboe <axboe@kernel.dk>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Damien Le Moal <dlemoal@kernel.org>,	Niklas Cassel <cassel@kernel.org>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"Juergen E. Fischer" <fischer@norbit.de>,
+	Xiang Chen <chenxiang66@hisilicon.com>,
+	HighPoint Linux Team <linux@highpoint-tech.com>,
+	Tyrel Datwyler <tyreld@linux.ibm.com>,	Brian King <brking@us.ibm.com>,
+ Lee Duncan <lduncan@suse.com>,	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,	Jason Yan <yanaijie@huawei.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
+	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+References: <20240324235448.2039074-1-hch@lst.de>
+ <20240324235448.2039074-14-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240324235448.2039074-14-hch@lst.de>
 
-Those tunings only apply to old host controllers, Now that UFSHCI <= 2.0
-has been removed, we can remove those calls as well.
+Hi,
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/ufs/core/ufshcd.c   | 96 -------------------------------------
- drivers/ufs/host/ufs-qcom.c |  3 +-
- 2 files changed, 1 insertion(+), 98 deletions(-)
+On Mon, Mar 25, 2024 at 07:54:38AM +0800, Christoph Hellwig wrote:
+> Switch to the ->device_configure method instead of ->slave_configure
+> and update the block limits on the passed in queue_limits instead
+> of using the per-limit accessors.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/firewire/sbp2.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index cda1939f2d8a..d97590c1c9e7 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -980,20 +980,6 @@ u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)
- }
- EXPORT_SYMBOL(ufshcd_get_local_unipro_ver);
- 
--static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
--{
--	/*
--	 * If both host and device support UniPro ver1.6 or later, PA layer
--	 * parameters tuning happens during link startup itself.
--	 *
--	 * We can manually tune PA layer parameters if either host or device
--	 * doesn't support UniPro ver 1.6 or later. But to keep manual tuning
--	 * logic simple, we will only do manual tuning if local unipro version
--	 * doesn't support ver1.6 or later.
--	 */
--	return ufshcd_get_local_unipro_ver(hba) < UFS_UNIPRO_VER_1_6;
--}
--
- /**
-  * ufshcd_pm_qos_init - initialize PM QoS request
-  * @hba: per adapter instance
-@@ -8325,83 +8311,6 @@ static void ufs_put_device_desc(struct ufs_hba *hba)
- 	dev_info->model = NULL;
- }
- 
--/**
-- * ufshcd_tune_pa_tactivate - Tunes PA_TActivate of local UniPro
-- * @hba: per-adapter instance
-- *
-- * PA_TActivate parameter can be tuned manually if UniPro version is less than
-- * 1.61. PA_TActivate needs to be greater than or equal to peerM-PHY's
-- * RX_MIN_ACTIVATETIME_CAPABILITY attribute. This optimal value can help reduce
-- * the hibern8 exit latency.
-- *
-- * Return: zero on success, non-zero error value on failure.
-- */
--static int ufshcd_tune_pa_tactivate(struct ufs_hba *hba)
--{
--	int ret = 0;
--	u32 peer_rx_min_activatetime = 0, tuned_pa_tactivate;
--
--	ret = ufshcd_dme_peer_get(hba,
--				  UIC_ARG_MIB_SEL(
--					RX_MIN_ACTIVATETIME_CAPABILITY,
--					UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
--				  &peer_rx_min_activatetime);
--	if (ret)
--		goto out;
--
--	/* make sure proper unit conversion is applied */
--	tuned_pa_tactivate =
--		((peer_rx_min_activatetime * RX_MIN_ACTIVATETIME_UNIT_US)
--		 / PA_TACTIVATE_TIME_UNIT_US);
--	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TACTIVATE),
--			     tuned_pa_tactivate);
--
--out:
--	return ret;
--}
--
--/**
-- * ufshcd_tune_pa_hibern8time - Tunes PA_Hibern8Time of local UniPro
-- * @hba: per-adapter instance
-- *
-- * PA_Hibern8Time parameter can be tuned manually if UniPro version is less than
-- * 1.61. PA_Hibern8Time needs to be maximum of local M-PHY's
-- * TX_HIBERN8TIME_CAPABILITY & peer M-PHY's RX_HIBERN8TIME_CAPABILITY.
-- * This optimal value can help reduce the hibern8 exit latency.
-- *
-- * Return: zero on success, non-zero error value on failure.
-- */
--static int ufshcd_tune_pa_hibern8time(struct ufs_hba *hba)
--{
--	int ret = 0;
--	u32 local_tx_hibern8_time_cap = 0, peer_rx_hibern8_time_cap = 0;
--	u32 max_hibern8_time, tuned_pa_hibern8time;
--
--	ret = ufshcd_dme_get(hba,
--			     UIC_ARG_MIB_SEL(TX_HIBERN8TIME_CAPABILITY,
--					UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),
--				  &local_tx_hibern8_time_cap);
--	if (ret)
--		goto out;
--
--	ret = ufshcd_dme_peer_get(hba,
--				  UIC_ARG_MIB_SEL(RX_HIBERN8TIME_CAPABILITY,
--					UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
--				  &peer_rx_hibern8_time_cap);
--	if (ret)
--		goto out;
--
--	max_hibern8_time = max(local_tx_hibern8_time_cap,
--			       peer_rx_hibern8_time_cap);
--	/* make sure proper unit conversion is applied */
--	tuned_pa_hibern8time = ((max_hibern8_time * HIBERN8TIME_UNIT_US)
--				/ PA_HIBERN8_TIME_UNIT_US);
--	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HIBERN8TIME),
--			     tuned_pa_hibern8time);
--out:
--	return ret;
--}
--
- /**
-  * ufshcd_quirk_tune_host_pa_tactivate - Ensures that host PA_TACTIVATE is
-  * less than device PA_TACTIVATE time.
-@@ -8474,11 +8383,6 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
- 
- static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
- {
--	if (ufshcd_is_unipro_pa_params_tuning_req(hba)) {
--		ufshcd_tune_pa_tactivate(hba);
--		ufshcd_tune_pa_hibern8time(hba);
--	}
--
- 	ufshcd_vops_apply_dev_quirks(hba);
- 
- 	if (hba->dev_quirks & UFS_DEVICE_QUIRK_PA_TACTIVATE)
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 06859e17b67b..06391f923dba 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -531,8 +531,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 		 * and device TX LCC are disabled once link startup is
- 		 * completed.
- 		 */
--		if (ufshcd_get_local_unipro_ver(hba) != UFS_UNIPRO_VER_1_41)
--			err = ufshcd_disable_host_tx_lcc(hba);
-+		err = ufshcd_disable_host_tx_lcc(hba);
- 
- 		break;
- 	default:
--- 
-2.42.0
+I'm not good at any kind of storage protocol, thus execute me not to
+review it. My concern is which subsystem provides the change to mainline.
+I don't mind it is your subsystem.
 
+
+Thanks
+
+Takashi Sakamoto
