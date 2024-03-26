@@ -1,84 +1,104 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDEDA5CDE7;
-	Tue, 26 Mar 2024 12:44:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF9C967A00;
+	Tue, 26 Mar 2024 13:14:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711457047; cv=none; b=Fluynpr5prTO/oSFS0rDiylk96GuwmEBnrHjXOzxd3qtBVOL5CWdre86c10tK4Mxw6YjBHjV3/gzAbMCKgvW8CAkRonLaOpdMEvnurM+91Q3rXvO/ZpXMzzaLKD1aIBa1Pkn0nP3BTGuCNvwC/Jh1DKcNnLpw57r9uFnPJshbNQ=
+	t=1711458878; cv=none; b=afDqzbauq6FJ/KX8EkTGa6HPFdVgw83FZnYPFZz9nMAAboSVRvcsd50pCXkX4PFE9Io/Kaq3REj3q8Y1anTrNYOGjME0MiDSuYCEQl3DD8VCIQ7cS9+Na1S2vn15rfX20A8zhSoOr/o+QzyC5mqVdZM4IgB6kSNtxmn648fS0KQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711457047; c=relaxed/simple;
-	bh=+tsqbPva4v8ckvlURd/TCkXfFT7ZUNUmsZJThNP5SU0=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=I0j26Yu2aDd03psCeUYbYK2EK2jARcCXfn7CmK4FgBNJ5mhzw7KS2ZSjaPYt1gesulZuhlwuom2suX9sjGfU58MCmy5HGwR+hGnfmyTIn9WuTaBZ4RyhDNAJjoQUZSxGCUlC7nczp3xv/kaG3HD5DffGNO4VLtwA2Qr3fAy7H6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.17])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4V3qDK70wkz2Bhfw;
-	Tue, 26 Mar 2024 20:41:21 +0800 (CST)
-Received: from kwepemi500008.china.huawei.com (unknown [7.221.188.139])
-	by mail.maildlp.com (Postfix) with ESMTPS id B395D1A0172;
-	Tue, 26 Mar 2024 20:44:00 +0800 (CST)
-Received: from localhost.huawei.com (10.50.165.33) by
- kwepemi500008.china.huawei.com (7.221.188.139) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 26 Mar 2024 20:44:00 +0800
-From: Yihang Li <liyihang9@huawei.com>
-To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>, <dlemoal@kernel.org>,
-	<chenxiang66@hisilicon.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@huawei.com>, <yangxingui@huawei.com>,
-	<liyihang9@huawei.com>
-Subject: [PATCH v2] scsi: libsas: Allocation SMP request is aligned to ARCH_DMA_MINALIGN
-Date: Tue, 26 Mar 2024 20:43:58 +0800
-Message-ID: <20240326124358.2466259-1-liyihang9@huawei.com>
-X-Mailer: git-send-email 2.33.0
+	s=arc-20240116; t=1711458878; c=relaxed/simple;
+	bh=nmWVxeahIwjiydd8whiklUV8w2UkQUt1yCCfBT1OWnY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GxEnYbfzR9UOGmznMNwFufHMtlROpeIKZtL0oLCPR2X7baeNZk1yECECURQx9Mpwh1wFZiet5V9lBjBmcuEmRPkUwdUSM+bZSU9tbb3As29AGNHPMpqAMbi0ATdMe0Ti7DLj2H9xArVvEJtVuTzgmbWXo1I11sYsibpOUM/i/yw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U8UAgcMU; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U8UAgcMU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC19AC433F1;
+	Tue, 26 Mar 2024 13:14:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711458878;
+	bh=nmWVxeahIwjiydd8whiklUV8w2UkQUt1yCCfBT1OWnY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=U8UAgcMUMoPBe08Joo53MjIM6CWAZ8Yk/tYFvFnt5mnaWxJU0n47rFFu689nzxXN7
+	 ICE4ZOhKm3hWsHsn7XEnjlswT9TnAr2cP9u1ThJ4cJOnDEyCmu362CrQUTNBOsQCRe
+	 5HPgdvi6jAbIEGgxA4O9Q7NW5jAZsxb8oaojOeyj6IDjqIztGa5huwR3iuOlM8TQ3d
+	 /KQ4dkvsBhV8rOCdDecXytiD4kBCOuKFV+ThaPq8QPVbGSRW8NQ1GufLWRxnM6FL3T
+	 32yiX5uGFZBrHV7s8HdDwmdEXPFx9/RzGtwnEqQ9Rqe745zA6gqsNRI9XaTMj2I3Bw
+	 KwHvfFNy2ZDCg==
+Message-ID: <5b5b9392-7fd2-4c87-8e41-5e54adf20003@kernel.org>
+Date: Tue, 26 Mar 2024 22:14:11 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemi500008.china.huawei.com (7.221.188.139)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: libsas: Allocation SMP request is aligned to
+ ARCH_DMA_MINALIGN
+Content-Language: en-US
+To: Yihang Li <liyihang9@huawei.com>, john.g.garry@oracle.com,
+ yanaijie@huawei.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+ chenxiang66@hisilicon.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxarm@huawei.com, prime.zeng@huawei.com, yangxingui@huawei.com
+References: <20240326124358.2466259-1-liyihang9@huawei.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20240326124358.2466259-1-liyihang9@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-This series [1] reducing the kmalloc() minimum alignment on arm64 to 8
-(from 128). In libsas, this will cause SMP requests to be 8-byte-aligned
-through kmalloc() allocation. However, for the hisi_sas hardware, all
-commands address must be 16-byte-aligned. Otherwise, the commands fail to
-be executed.
+On 3/26/24 21:43, Yihang Li wrote:
+> This series [1] reducing the kmalloc() minimum alignment on arm64 to 8
+> (from 128). In libsas, this will cause SMP requests to be 8-byte-aligned
+> through kmalloc() allocation. However, for the hisi_sas hardware, all
+> commands address must be 16-byte-aligned. Otherwise, the commands fail to
+> be executed.
+> 
+> ARCH_DMA_MINALIGN represents the minimum (static) alignment for safe DMA
+> operations, so use ARCH_DMA_MINALIGN as the alignment for SMP request.
+> 
+> Link: https://lkml.kernel.org/r/20230612153201.554742-1-catalin.marinas@arm.com [1]
+> Signed-off-by: Yihang Li <liyihang9@huawei.com>
+> ---
+> Changes since v1:
+> - Directly modify alloc_smp_req() instead of using handler callback.
+> ---
+>  drivers/scsi/libsas/sas_expander.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index a2204674b680..941abc7298df 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -135,7 +135,10 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
+>  
+>  static inline void *alloc_smp_req(int size)
+>  {
+> -	u8 *p = kzalloc(size, GFP_KERNEL);
+> +	u8 *p;
+> +
+> +	size = ALIGN(size, ARCH_DMA_MINALIGN);
+> +	p = kzalloc(size, GFP_KERNEL);
 
-ARCH_DMA_MINALIGN represents the minimum (static) alignment for safe DMA
-operations, so use ARCH_DMA_MINALIGN as the alignment for SMP request.
+Nit: why not:
 
-Link: https://lkml.kernel.org/r/20230612153201.554742-1-catalin.marinas@arm.com [1]
-Signed-off-by: Yihang Li <liyihang9@huawei.com>
----
-Changes since v1:
-- Directly modify alloc_smp_req() instead of using handler callback.
----
- drivers/scsi/libsas/sas_expander.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+	p = kzalloc(ALIGN(size, ARCH_DMA_MINALIGN), GFP_KERNEL);
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index a2204674b680..941abc7298df 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -135,7 +135,10 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
- 
- static inline void *alloc_smp_req(int size)
- {
--	u8 *p = kzalloc(size, GFP_KERNEL);
-+	u8 *p;
-+
-+	size = ALIGN(size, ARCH_DMA_MINALIGN);
-+	p = kzalloc(size, GFP_KERNEL);
- 	if (p)
- 		p[0] = SMP_REQUEST;
- 	return p;
+>  	if (p)
+>  		p[0] = SMP_REQUEST;
+>  	return p;
+
+Otherwise looks OK to me.
+
+John,
+
+Unrelated to this patch, but I wonder if the GFP_KERNEL used here shouldn't be
+GFP_NOIO... Is this ever called in the IO path or error recovery ?
+
 -- 
-2.33.0
+Damien Le Moal
+Western Digital Research
 
