@@ -1,110 +1,119 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47D351CAA0;
-	Tue, 26 Mar 2024 17:23:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5EE61D559
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Mar 2024 17:46:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711473832; cv=none; b=UtH9OT2SrMhx5FKHNysQPHrSHD/rs4q6DLh8Yq9vpVeIwSoNTFrQ/6a4reYKGEAKXihspA5uqQvCL6kIPbX7OMK2t64TfhjaNyGaWKokZZtonbAAKiAunCdu9nYLWNNKRIASXcKLy50x+8sZ9yyQEbXuX4ilgWpvEYlH7ZpXycM=
+	t=1711475199; cv=none; b=ENMKNwkY8q3b8ZHroG+a1K+hGiMZxL2T2/zXgoYD1PALwxh1U5s7QKRZ5+UBhumP4E+nV+ezTHb/galXeNdSmudMq4U2ZcZzOrIQWe41o8021CXEMzXY3wldEKk8Uji7CQaw4t1UfgWGkXjralSziiPzFHEY0Tbvi81tvSCh0v0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711473832; c=relaxed/simple;
-	bh=y+Jn18BZvFtNR884rHy0vrdkGll6bE/d3iE32Yv6pyM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=m7/xXIU9qUAr8XOg/5nLgR0eFkoDkrRttszwzRhpZl8FtTGOQZa/4g+QqA4jQ/xHfxnfdanpf5gAbJxdEQQgpqCk3PZcxo9cvj7hZyNTCtjJS0wNN2NSFC/Zs+IS0JpCErMI+WzXUzVXGDr0+0VADqKZP7Pv1FbDqjaeUq+91c0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6e88e4c8500so4107437b3a.2;
-        Tue, 26 Mar 2024 10:23:51 -0700 (PDT)
+	s=arc-20240116; t=1711475199; c=relaxed/simple;
+	bh=+Jb3+P97t3/SYjNzJeD0Doe3JTD7QKu5XiF0KJGtqvE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=iqmj8hoqOTwoCGQbeTOsjS81M7BFxbC9tKp8fJsEcYSjTfCRILwILrByJwCe2h19S6tNbXmZAzwjaO3PorUrZGM8iZO3x6Rz9XzcIwV6IQv92dvDrxwIKpB2OhEq2BuQVvKnTpdsYAfjHvNsq4DvKTQ+bisKzOYE2jsIY2OH8Qc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=k3ImuXZA; arc=none smtp.client-ip=209.85.208.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="k3ImuXZA"
+Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-56c1364ff79so2987727a12.1
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Mar 2024 10:46:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1711475196; x=1712079996; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=xEazo7CkUjqyyWnsaq027rdmCtFwk9evR4G6KKq+jfU=;
+        b=k3ImuXZABKLxMtlS5jhB/uwjnfN5VK7JEQJIHp8a+aGIZiqswNhk27zUh/JBoLl8r6
+         t1CVwhLwCM2zkkwXnapZ8vUBwgpadJsQyIYDvqOn3UntxjuMclnRJqZAgGehgPE1LHjf
+         kaqO7EOnymZ1D8ZXbvGQ+xiElSi9mMRofMyH94CgEGJ7KwIWZTtB5aiVawgh2BmJBgH0
+         97j7OGhqFUH+JN1Jyj5eeEJy2ZvCoOe7pazOh2KKPNbaPPKuSk9/7DWzGLSIJmKOxLzg
+         55bQ7kbtNuJJhXUNMiSXugDxEMidn2Je99iHq5pDjhrjr4ZzWgsksWWFqjumKreug/XF
+         njdg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711473830; x=1712078630;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=CbK5+D93ipMvgDtby/SY/DONORImvPAeAXEdkHS1+b8=;
-        b=TgowYE51yh0Mw4USGwqhYZ2y6ANiE1NPJ5iBQNk9cvwIxH6E9eNyNaEU4cAWgZpR4E
-         HMKtllE63ctGagxcffPn/vMB1CjuZpv3lx3U+oKcaEBb6UQ4SBKiIWF9dZsqJU71qr5J
-         WbO5tFWoClhk5KlPTvcQcaYxIpaZPNAWhG44yQ0pLQXO/dY07ZJaznGDUY/z/uK95QRG
-         mCIsxooEoVBCSZRtY//hdOE4ZpkyDxAdYUXCYfY5HljJY8LVRyZIIV5qxFLq7HKLMumb
-         1f9VByxSQz+1EdzAPpYdopm1y9Ln45eMsuylc84e6GtEIGIMoLX3KCzSIxpgmPrbi+RV
-         pmxw==
-X-Forwarded-Encrypted: i=1; AJvYcCXw+v4kopAUrxc/9KKO0HfvCSxLCfpUGo7cew3fDSRgQjrDVzzybiBqT68WeMFCDCeTtYWnp2UhaUMU4qwuQW7CZZzZ5F/aQBrwYSLSGa/xiw03nzXMGUVZh23ZPnjxuG8SZEK6bc7e
-X-Gm-Message-State: AOJu0YyNTezKvzaAcW3wti9tjFuej7Ia7XuieZpQmzyoewUOLza1N+3V
-	5xJg4yo2Dytn+PaOMa7rvknwvrPsuH4pVhQwIoSOjfHWNL916fix
-X-Google-Smtp-Source: AGHT+IF1a1+CI+nTKVQ/ChEFscp+C7hhSiLHGv8wry4HV4h8dI0yWHSfHNCPewRPVIDM7JHJjuoSRA==
-X-Received: by 2002:a05:6a00:2d15:b0:6e7:30b0:9cc7 with SMTP id fa21-20020a056a002d1500b006e730b09cc7mr3703390pfb.15.1711473830487;
-        Tue, 26 Mar 2024 10:23:50 -0700 (PDT)
-Received: from ?IPV6:2620:0:1000:8411:262:e41e:a4dd:81c6? ([2620:0:1000:8411:262:e41e:a4dd:81c6])
-        by smtp.gmail.com with ESMTPSA id x21-20020a056a00271500b006e7309d9831sm3908204pfv.39.2024.03.26.10.23.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Mar 2024 10:23:49 -0700 (PDT)
-Message-ID: <c50dc0a4-190a-4780-91b7-ceedfb1aa926@acm.org>
-Date: Tue, 26 Mar 2024 10:23:48 -0700
+        d=1e100.net; s=20230601; t=1711475196; x=1712079996;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=xEazo7CkUjqyyWnsaq027rdmCtFwk9evR4G6KKq+jfU=;
+        b=dLnrRsVB/pe/5WGXR2GrMT1+PhNw8Ff2XB45hNX7fpistAS7VxjxxwKsgicPT/jKIg
+         D57H8RJef1hjYNsJ0sW1PGGo7FSrYulzKtl8JybyNm/Uwv9f7kU2JhIjzHT9H00tLALt
+         09lr6Hcm8cNZzAFbr9aQVMoYbb8wyQEVt2RpJJfQuIEWmc23tIO4qVjcNIXUqg3o2/Yg
+         wBHm/g4Jpca+F42z2rFFS8Bxbw2eIshgjglAXEDcaKQmhAGz74yqvwjX07AKeAYXFoaF
+         o2zm5EoL9d8gYxLijWM7wsNCzqgaETq2phz2KhmyC6r1jBXF2psKxw1QUTAZRcArIOOA
+         wuxw==
+X-Forwarded-Encrypted: i=1; AJvYcCVb46SceUqEvIg2HDHZolKuiT9SKsT8wrnPQuVkVHF943otYkSHdWdy1lfSR6h7Qrc2QH9rypiKvinUykvMgQ5fr2Se133Gam2cZw==
+X-Gm-Message-State: AOJu0YyRDVj2HmjxmnD55yqa5kNl9KbgO7hwyf0A02fEb7FVa66q0ZGs
+	bk+w4fqc1p1sRkbHlWLZkeRBpNrRnjx3WjqbXfAFzPj2FTkbxacWCjxoB6ndJc8=
+X-Google-Smtp-Source: AGHT+IEDXr/rGD/GEqrQHL/G3YeNWczFxMCfJdYUN/McfMgn2peLnTcs3anULp1X3DvgNu3GWK0kxw==
+X-Received: by 2002:a17:906:c9ce:b0:a46:be85:4410 with SMTP id hk14-20020a170906c9ce00b00a46be854410mr243447ejb.74.1711475196041;
+        Tue, 26 Mar 2024 10:46:36 -0700 (PDT)
+Received: from krzk-bin.. ([178.197.222.44])
+        by smtp.gmail.com with ESMTPSA id l19-20020a17090612d300b00a46cffe6d06sm4451438ejb.42.2024.03.26.10.46.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Mar 2024 10:46:35 -0700 (PDT)
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+To: Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konrad.dybcio@linaro.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Andy Gross <agross@kernel.org>,
+	linux-arm-msm@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH 1/3] dt-bindings: ufs: qcom: document SC8180X UFS
+Date: Tue, 26 Mar 2024 18:46:30 +0100
+Message-Id: <20240326174632.209745-1-krzysztof.kozlowski@linaro.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 07/28] block: Introduce zone write plugging
-Content-Language: en-US
-To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-References: <20240325044452.3125418-1-dlemoal@kernel.org>
- <20240325044452.3125418-8-dlemoal@kernel.org>
- <f3b298bb-b68a-4375-a3b4-fc91229740c1@acm.org>
- <839ebf2a-4dc6-433b-bc47-fd7915ed0ecf@kernel.org>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <839ebf2a-4dc6-433b-bc47-fd7915ed0ecf@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 3/25/24 20:12, Damien Le Moal wrote:
-> On 3/26/24 06:53, Bart Van Assche wrote:
->> On 3/24/24 21:44, Damien Le Moal wrote:
->>> -void disk_free_zone_bitmaps(struct gendisk *disk)
->>> +static bool disk_insert_zone_wplug(struct gendisk *disk,
->>> +				   struct blk_zone_wplug *zwplug)
->>> +{
->>> +	struct blk_zone_wplug *zwplg;
->>> +	unsigned long flags;
->>> +	unsigned int idx =
->>> +		hash_32(zwplug->zone_no, disk->zone_wplugs_hash_bits);
->>> +
->>> +	/*
->>> +	 * Add the new zone write plug to the hash table, but carefully as we
->>> +	 * are racing with other submission context, so we may already have a
->>> +	 * zone write plug for the same zone.
->>> +	 */
->>> +	spin_lock_irqsave(&disk->zone_wplugs_lock, flags);
->>> +	hlist_for_each_entry_rcu(zwplg, &disk->zone_wplugs_hash[idx], node) {
->>> +		if (zwplg->zone_no == zwplug->zone_no) {
->>> +			spin_unlock_irqrestore(&disk->zone_wplugs_lock, flags);
->>> +			return false;
->>> +		}
->>> +	}
->>> +	hlist_add_head_rcu(&zwplug->node, &disk->zone_wplugs_hash[idx]);
->>> +	spin_unlock_irqrestore(&disk->zone_wplugs_lock, flags);
->>> +
->>> +	return true;
->>> +}
->>
->> Since this function inserts an element into disk->zone_wplugs_hash[],
->> can it happen that another thread removes that element from the hash
->> list before this function returns?
-> 
-> No, that cannot happen. Both insertion and deletion of plugs in the hash table
-> are serialized with disk->zone_wplugs_lock. See disk_remove_zone_wplug().
+Document already upstreamed and used Qualcomm SC8180x UFS host
+controller to fix dtbs_check warnings like:
 
-I think that documenting locking assumptions with lockdep_assert_held()
-would make this patch easier to review.
+  sc8180x-primus.dtb: ufshc@1d84000: compatible:0: 'qcom,sc8180x-ufshc' is not one of ['qcom,msm8994-ufshc', ... ]
+  sc8180x-primus.dtb: ufshc@1d84000: Unevaluated properties are not allowed ('compatible' was unexpected)
 
-Thanks,
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-Bart.
+---
 
+Rob, considering limbo status of this binding, maybe you can take it
+directly? Would be the fastest.
+---
+ Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+index 10c146424baa..1ab3d16917ac 100644
+--- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+@@ -28,6 +28,7 @@ properties:
+           - qcom,msm8998-ufshc
+           - qcom,sa8775p-ufshc
+           - qcom,sc7280-ufshc
++          - qcom,sc8180x-ufshc
+           - qcom,sc8280xp-ufshc
+           - qcom,sdm845-ufshc
+           - qcom,sm6115-ufshc
+@@ -120,6 +121,7 @@ allOf:
+               - qcom,msm8998-ufshc
+               - qcom,sa8775p-ufshc
+               - qcom,sc7280-ufshc
++              - qcom,sc8180x-ufshc
+               - qcom,sc8280xp-ufshc
+               - qcom,sm8250-ufshc
+               - qcom,sm8350-ufshc
+-- 
+2.34.1
 
