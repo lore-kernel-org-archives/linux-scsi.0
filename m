@@ -1,93 +1,134 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE8FB12AAF0;
-	Tue, 26 Mar 2024 06:13:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B63B28F66;
+	Tue, 26 Mar 2024 06:34:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711433621; cv=none; b=F2X02SC8kCwFOuhlICHXaBkEk+NOAHd80XiTucQrBX7U2C1nspYf+XTtI79LIFEqPBuJyDgZ2EdxKqtDxz9FQdkKW2bTrYSgrOImOKIgQFnCxFPfpvRMQwxEMst1Ok/+4GAoUf0UnD88T7j9pJabOWegK73QaljfavQeLNWtJGI=
+	t=1711434890; cv=none; b=rMFp+S2tFq+QbtcXVijeRx4Wqi5djZpaotj5WL8Dut88WDbZZ7T69PuZ790ZXsHwHYsYY0DegRRe8Rm+ZDRJ4UsdO8XVgqgVEck9CcEwF6qUS02fE2A4VQw2XaoBqFdxpac/ylGEY7A7xLOySnYrVWG5q7fcCrt2tFVj+pfpkuw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711433621; c=relaxed/simple;
-	bh=DcNGe9Tk16HHRAoWEdPOBl5gcDCsDZwYgrSCwCtlhAw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VJJMAxgwzPjl5coCQLY5tl2iVFl+pZHAiAZDkDKrUBk4jHhQbVXVFn/v4MIgbEYZo+mhOg/PeQEZjR9DVFKgECaF1a3twvHWLG/X2pNJQqW5YkVEnb+FlYK6pwkexXf4vKBmC3soJ0Qbp36DIuF6j0T8WzMO3jWvP5wGFb8+vis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id AEBC068D45; Tue, 26 Mar 2024 07:13:35 +0100 (CET)
-Date: Tue, 26 Mar 2024 07:13:35 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Takashi Sakamoto <o-takashi@sakamocchi.jp>,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	"Juergen E. Fischer" <fischer@norbit.de>,
-	Xiang Chen <chenxiang66@hisilicon.com>,
-	HighPoint Linux Team <linux@highpoint-tech.com>,
-	Tyrel Datwyler <tyreld@linux.ibm.com>,
-	Brian King <brking@us.ibm.com>, Lee Duncan <lduncan@suse.com>,
-	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	Jack Wang <jinpu.wang@cloud.ionos.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
-	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
-Subject: Re: [PATCH 10/23] scsi: add a device_configure method to the host
- template
-Message-ID: <20240326061335.GE7108@lst.de>
-References: <20240324235448.2039074-1-hch@lst.de> <20240324235448.2039074-11-hch@lst.de> <6199c70e-f0a9-4756-b3fb-106985c41ebf@kernel.org>
+	s=arc-20240116; t=1711434890; c=relaxed/simple;
+	bh=LrbkdzMjwwb8BnnnwkhHxKdMp/k+Ftblz/NexU7S31I=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=uNSVmTPqvQ5aEZ7rluQ0D429S9zb/cusH7WhwXBjx9Ytx5ABvmBCwwK8qahKk2hRxgsqtRZf/Ll3mKwcLmUBwPxPMzaGrqLG1c9zSDoVq/9FjVe8bqx9IOaSgAiOfJ7s1mXDdT7KjLC2WC+2UN+mPwf85w2BHuUHWh/nQXPJTBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.194])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4V3g2106zLzXjmJ;
+	Tue, 26 Mar 2024 14:31:53 +0800 (CST)
+Received: from kwepemi500008.china.huawei.com (unknown [7.221.188.139])
+	by mail.maildlp.com (Postfix) with ESMTPS id 550511402CB;
+	Tue, 26 Mar 2024 14:34:38 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ kwepemi500008.china.huawei.com (7.221.188.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Tue, 26 Mar 2024 14:34:37 +0800
+Subject: Re: [PATCH] scsi: libsas: Add SMP request allocation handler callback
+To: Jason Yan <yanaijie@huawei.com>, Damien Le Moal <dlemoal@kernel.org>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<john.g.garry@oracle.com>, <chenxiang66@hisilicon.com>
+References: <20240325131751.1840329-1-liyihang9@huawei.com>
+ <da4de4e0-6d13-4509-b288-a9d122d1c2d3@kernel.org>
+ <e7612e81-dc44-7bc6-3bd2-0b71367408ec@huawei.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@huawei.com>, <yangxingui@huawei.com>,
+	<liyihang9@huawei.com>
+From: Yihang Li <liyihang9@huawei.com>
+Message-ID: <bbf8376a-fcab-0aaf-e834-379a72672496@huawei.com>
+Date: Tue, 26 Mar 2024 14:34:36 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6199c70e-f0a9-4756-b3fb-106985c41ebf@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <e7612e81-dc44-7bc6-3bd2-0b71367408ec@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500008.china.huawei.com (7.221.188.139)
 
-On Mon, Mar 25, 2024 at 04:38:43PM +0900, Damien Le Moal wrote:
-> > +	if (hostt->device_configure)
-> > +		ret = hostt->device_configure(sdev, &lim);
-> > +	else if (hostt->slave_configure)
-> > +		ret = hostt->slave_configure(sdev);
-> > +
-> > +	ret2 = queue_limits_commit_update(sdev->request_queue, &lim);
+
+
+On 2024/3/25 22:21, Jason Yan wrote:
+> On 2024/3/25 22:03, Damien Le Moal wrote:
+>> On 3/25/24 22:17, Yihang Li wrote:
+>>> This series [1] reducing the kmalloc() minimum alignment on arm64 to 8
+>>> (from 128).
+>>
+>> And ? What is the point you are trying to convey here ?
+>>
+>>> The hisi_sas has special requirements on the memory address alignment
+>>> (must be 16-byte-aligned) of the command request frame, so add a SMP
+>>> request allocation callback and fill it in for the hisi_sas driver.
+>>
+>> 128 is aligned to 16. So what is the problem you are trying to solve here ?
+>> Can you clarify ? I suspect this is all about memory allocation optimization ?
 > 
-> Why do this if ->device_configure() or ->slave_configure() failed ?
-> Shouldn't the "if (ret) goto fail" hunk be moved above this call ?
+> After series [1] been merged, kmalloc is 8-byte-aligned, however hisi_sas hardware needs 16-byte-aligned. That's the problem.
 
-queue_limits_commit_update unlocks the limits lock, which we'd
-otherwise leak.  We could have a queue_limits_commit_abort, but
-it seems a bit pointless.
+Yes, that's the problem. I will explain it in detail in the next version.
 
-> > +	 *
-> > +	 * Note: slave_configure is the legacy version, use device_configure for
-> > +	 * all new code.
 > 
-> Maybe explictly mention that both *cannot* be defined here ?
+>>
+>>>
+>>> Link: https://lkml.kernel.org/r/20230612153201.554742-1-catalin.marinas@arm.com [1]
+>>> Signed-off-by: Yihang Li <liyihang9@huawei.com>
+>>> ---
+>>>   drivers/scsi/hisi_sas/hisi_sas_main.c | 14 ++++++++++++
+>>>   drivers/scsi/libsas/sas_expander.c    | 31 ++++++++++++++++++---------
+>>>   include/scsi/libsas.h                 |  3 +++
+>>>   3 files changed, 38 insertions(+), 10 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+>>> index 097dfe4b620d..40329558d435 100644
+>>> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+>>> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+>>> @@ -2031,6 +2031,19 @@ static int hisi_sas_write_gpio(struct sas_ha_struct *sha, u8 reg_type,
+>>>                   reg_index, reg_count, write_data);
+>>>   }
+>>>   +static void *hisi_sas_alloc_smp_req(int size)
+>>> +{
+>>> +    u8 *p;
+>>> +
+>>> +    /* The address must be 16-byte-aligned. */
+>>
+>> ARCH_DMA_MINALIGN is not always 16, right ?
+>>
+>>> +    size = ALIGN(size, ARCH_DMA_MINALIGN);
+>>> +    p = kzalloc(size, GFP_KERNEL);
+>>> +    if (p)
+>>> +        p[0] = SMP_REQUEST;
+>>> +
+>>> +    return p;
+>>> +}
+>>> +
+>>>   static void hisi_sas_phy_disconnected(struct hisi_sas_phy *phy)
+>>>   {
+>>>       struct asd_sas_phy *sas_phy = &phy->sas_phy;
+>>> @@ -2130,6 +2143,7 @@ static struct sas_domain_function_template hisi_sas_transport_ops = {
+>>>       .lldd_write_gpio    = hisi_sas_write_gpio,
+>>>       .lldd_tmf_aborted    = hisi_sas_tmf_aborted,
+>>>       .lldd_abort_timeout    = hisi_sas_internal_abort_timeout,
+>>> +    .lldd_alloc_smp_req    = hisi_sas_alloc_smp_req,
+>>
+>> Why this complexity ? Why not simply modify alloc_smp_req() to have the required
+>> alignment ? This will avoid a costly indirect function call.
+> 
+> Yeah, I think it's simpler to modify alloc_smp_req() directly too. Yihang, Can you please cook a new one?
 
-Will do.
+Sure, I will post a new version later.
+The reason why I did not directly modify alloc_smp_req() is that I think the requirement that the command frame must be 16-byte aligned is hisi_sas private and not a general requirement.
+To avoid the impact on other drivers, I only add aligned to 16B in hisi_sas. If this measure is considered pointless, I will directly modify alloc_smp_req().
 
+Thanks,
+Yihang
+
+> 
+> Thansk,
+> Jason
+> .
+> 
