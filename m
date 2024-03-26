@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F7ED1804F;
-	Tue, 26 Mar 2024 01:54:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDBC412838B;
+	Tue, 26 Mar 2024 03:12:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711418086; cv=none; b=p1Caw1Y6YysTSbpwTYGv5W7ZHC6uEiMD8uKyqskdu2A61F5+yV99RkmGRl4hsV41h01JU83MePe17koLqzK7rt0w71QREt3HAyIJbx/jPkz9z6/IU+hXaLRooflSu7flWCfWdBQo7166Q9CjFByxXuQjKDgE9JwI65ozns2q5/Q=
+	t=1711422726; cv=none; b=stX7QQ31EbYSRY89p1PJz188nQF3ShaACGLrBofMtiPIg4jbgeIvtEvzqaypSQvJNTd3Rf9FIYBUJkihAoHz8tBWqctOI1OWM0pTHTL8dcFmG1QgdHS2O/oeURfhZ35avyQKJDkwxWdEGBl7ShNgCi2olHgRUwPrbtykI0HP2DI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711418086; c=relaxed/simple;
-	bh=GQ2PRg9TF6LeTZ1JKZ2PJDfs17EEgFkNTejSfhGrD6U=;
+	s=arc-20240116; t=1711422726; c=relaxed/simple;
+	bh=zRJ0PkouhwYaZlMIw+G0AYkZMTYCIB1ZRHyeYjgdIPs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mgcpaEmtyCrulGlUQLmhHGnfITIgudo7wp1kunpGBqxHwycCiAirVgZtPKAxPKdW5ARUprMb54Jrql+HqxyhsgVCcHbCWsYk7eRp43DTY3KMzINl873HQbQlWCVIEFxUUnbAU4NY+drkhOfAowuWHbHP3OKo7ZRBvgZZr49gT1U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K612fdTL; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=pwUuBRpLm8n6woN1BZeg7aOGLUl+nPvd6GRAir5fGLbasy+6NOvJJqL+qIZP3dcf9ELqyAL8nrjUxezc/BYrEhl06jUp3fZ1152oiZ/UQAL/YrLM6vjDgbrFuQfmJ6Sj7wCiWdPtRhzDdTufyr9r1OR+YhiBYvOErM8pAzA6gNM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hohgZAsY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K612fdTL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D3DCC433C7;
-	Tue, 26 Mar 2024 01:54:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hohgZAsY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A61C9C433C7;
+	Tue, 26 Mar 2024 03:12:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711418085;
-	bh=GQ2PRg9TF6LeTZ1JKZ2PJDfs17EEgFkNTejSfhGrD6U=;
+	s=k20201202; t=1711422725;
+	bh=zRJ0PkouhwYaZlMIw+G0AYkZMTYCIB1ZRHyeYjgdIPs=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=K612fdTLopHdP9gsn5CdevClO+PYg8yBNaxkGin6wC+ZjT2Os9oamsWqlfA8JfFJs
-	 s9XrdK8I1wXp+Fd3A6wm9PAyJwQJcCAfBC7Ia+qYay7RrryOj8cWnkCtw2/Ojxpo0G
-	 oy7U8DT6uNjU5SzuJHdSvtidsSovOD9HjCF2uL9mdNzAJp1RE//LnM77rZw72G8shh
-	 kaMFn40w7Jvart7Ba9AcAMbLZRfY4JX65vf41QmGU9voiRmt6+sGYmCKgk0Ce1qMp0
-	 Hv9K5B70ca0libgJHXgYgmQ22YQWTv/QXcaabBdnhFrB5NM+cFH5F6fpocOxkx1RIi
-	 uI1HHR4tsQMpA==
-Message-ID: <33ba0e4a-85b0-4595-81fa-12805e70f6c8@kernel.org>
-Date: Tue, 26 Mar 2024 10:54:42 +0900
+	b=hohgZAsYFDUgJdyTz3p5FqmsBREU2D0BQ2HjsBRjPwqFJRCdW69ISwzk/RXSLsjKM
+	 f9shzVjYFnePlP3X+iSeZxakXPHqy3Uz8OGkI9Awyol0esN/imYJb5JQ1ZB3wpvji3
+	 xXUAQMA7SUCJ7PGa5Uyw6Rpd1fuft94xRYlvgJUKazM2MIUHl5Bjjy1ZJTmXyeky2j
+	 sf99LF2A4LYP5E3MgwAC/6Ho6hmQ1N7WxX5bjewmVhBc2u5Nf2wcxFQ/5PITX7SAn5
+	 rjkYhnS904PjgaLOhgepeJT5Jw6SiohULw+/uVGPCq4hjzIEB5yYftUQkR0JjcRYDk
+	 3jgJ3WvNLBDdw==
+Message-ID: <839ebf2a-4dc6-433b-bc47-fd7915ed0ecf@kernel.org>
+Date: Tue, 26 Mar 2024 12:12:03 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 02/28] block: Remove req_bio_endio()
+Subject: Re: [PATCH v2 07/28] block: Introduce zone write plugging
 Content-Language: en-US
 To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
  Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
@@ -43,50 +43,90 @@ To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
  dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 References: <20240325044452.3125418-1-dlemoal@kernel.org>
- <20240325044452.3125418-3-dlemoal@kernel.org>
- <9025d842-8685-4e64-8c8b-005f4bc25906@acm.org>
+ <20240325044452.3125418-8-dlemoal@kernel.org>
+ <f3b298bb-b68a-4375-a3b4-fc91229740c1@acm.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <9025d842-8685-4e64-8c8b-005f4bc25906@acm.org>
+In-Reply-To: <f3b298bb-b68a-4375-a3b4-fc91229740c1@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 3/26/24 04:39, Bart Van Assche wrote:
+On 3/26/24 06:53, Bart Van Assche wrote:
 > On 3/24/24 21:44, Damien Le Moal wrote:
->> -		if (bio_bytes == bio->bi_iter.bi_size)
->> +		if (unlikely(error))
->> +			bio->bi_status = error;
+>> +/*
+>> + * Per-zone write plug.
+>> + */
+>> +struct blk_zone_wplug {
+>> +	struct hlist_node	node;
+>> +	struct list_head	err;
+>> +	atomic_t		ref;
+>> +	spinlock_t		lock;
+>> +	unsigned int		flags;
+>> +	unsigned int		zone_no;
+>> +	unsigned int		wp_offset;
+>> +	struct bio_list		bio_list;
+>> +	struct work_struct	bio_work;
+>> +};
+> 
+> Please document what 'lock' protects. Please also document the unit of
+> wp_offset.
+> 
+> Since there is an atomic reference count in this data structure, why is
+> the flag BLK_ZONE_WPLUG_FREEING required? Can that flag be replaced by
+> checking whether or not 'ref' is zero?
+
+Nope, we cannot. The reason is that BIO issuing and zone reset/finish can be
+concurrently processed and we need to be ready for a user doing really stupid
+things like resetting or finishing a zone while BIOs for that zone are being
+issued. When zone reset/finish is processed, the plug is removed from the hash
+table, but disk_get_zone_wplug_locked() may still get a reference to it because
+we do not have the plug locked yet. Hence the flag, to prevent reusing the plug
+for the reset/finished zone that was already removed from the hash table. This
+is mentioned with a comment in disk_get_zone_wplug_locked():
+
+	/*
+	 * Check that a BIO completion or a zone reset or finish
+	 * operation has not already flagged the zone write plug for
+	 * freeing and dropped its reference count. In such case, we
+	 * need to get a new plug so start over from the beginning.
+	 */
+
+The reference count dropping to 0 will then be the trigger for actually freeing
+the plug, after all in-flight or plugged BIOs are completed (most likely failed).
+
+>> -void disk_free_zone_bitmaps(struct gendisk *disk)
+>> +static bool disk_insert_zone_wplug(struct gendisk *disk,
+>> +				   struct blk_zone_wplug *zwplug)
+>> +{
+>> +	struct blk_zone_wplug *zwplg;
+>> +	unsigned long flags;
+>> +	unsigned int idx =
+>> +		hash_32(zwplug->zone_no, disk->zone_wplugs_hash_bits);
 >> +
->> +		if (bio_bytes == bio->bi_iter.bi_size) {
-> 
-> Why no "else" in front of the above if? I think this patch introduces a
-> behavior change. With the current code, if a zone append operation
-> fails, bio->bi_status is set to 'error'. With this patch applied, this
-> becomes BLK_STS_IOERR.
-
-Adding an else would be very wrong since we still need to go to the next bio of
-the request if the current BIO failed. But I get your point. Will fix it.
-
-> 
->>   			req->bio = bio->bi_next;
->> +		} else if (req_op(req) == REQ_OP_ZONE_APPEND) {
->> +			/*
->> +			 * Partial zone append completions cannot be supported
->> +			 * as the BIO fragments may end up not being written
->> +			 * sequentially. For such case, force the completed
->> +			 * nbytes to be equal to the BIO size so that
->> +			 * bio_advance() sets the BIO remaining size to 0 and
->> +			 * we end up calling bio_endio() before returning.
->> +			 */
->> +			bio->bi_status = BLK_STS_IOERR;
->> +			bio_bytes = bio->bi_iter.bi_size;
+>> +	/*
+>> +	 * Add the new zone write plug to the hash table, but carefully as we
+>> +	 * are racing with other submission context, so we may already have a
+>> +	 * zone write plug for the same zone.
+>> +	 */
+>> +	spin_lock_irqsave(&disk->zone_wplugs_lock, flags);
+>> +	hlist_for_each_entry_rcu(zwplg, &disk->zone_wplugs_hash[idx], node) {
+>> +		if (zwplg->zone_no == zwplug->zone_no) {
+>> +			spin_unlock_irqrestore(&disk->zone_wplugs_lock, flags);
+>> +			return false;
 >> +		}
+>> +	}
+>> +	hlist_add_head_rcu(&zwplug->node, &disk->zone_wplugs_hash[idx]);
+>> +	spin_unlock_irqrestore(&disk->zone_wplugs_lock, flags);
+>> +
+>> +	return true;
+>> +}
 > 
-> Thanks,
-> 
-> Bart.
-> 
-> 
+> Since this function inserts an element into disk->zone_wplugs_hash[],
+> can it happen that another thread removes that element from the hash
+> list before this function returns?
+
+No, that cannot happen. Both insertion and deletion of plugs in the hash table
+are serialized with disk->zone_wplugs_lock. See disk_remove_zone_wplug().
 
 -- 
 Damien Le Moal
