@@ -1,164 +1,178 @@
-Received: from wflow4-smtp.messagingengine.com (wflow4-smtp.messagingengine.com [64.147.123.139])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15A997BAF9;
-	Tue, 26 Mar 2024 09:31:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.147.123.139
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7470D5D734;
+	Tue, 26 Mar 2024 09:53:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711445467; cv=none; b=mcKGBiqr674ThQg6XEpwitnd/n6d/11hQJuvNchNxc7eeDu1Cg5I7sAT3ISaWFSFu3eWgXQV9zuA1pcdXnfmaTEEayM+KM2Oy4wdWaAy7ggLYYDYgR0IvPz7N5ANkJHb6TX+mxNVj0L4jkuqLol+HnqDlUzeq8E3a0cKWyTLOco=
+	t=1711446828; cv=none; b=FjOJXXm+wY962Om0cFxxgbKUCNL73Q4wmAAgGszNlZabGAID+SEPNGCrg/2LG89QkqGAhRvSPfPRChI+JL9DcbVwhWk+HrEqy8o5w6tXT58UVsTJNZ4lSwGWjrmZOrmZaDP1teYK36zh5/m1gLgjiRJ+ODX0SzR5Cxt8wWAGFc8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711445467; c=relaxed/simple;
-	bh=A385P8sstLom6kzL26rxDc9NxJPEN2ya79T0qMm//ek=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Qe7RimVjhdg+JNchzlWhlpF7SIYo2P6BZlWPcqTVKtAMfHubotiq9uYtRaOh6ynwNp6IXqmwo7kVu9cfN5TKFgW/910YFjHIfo7JUWpezq5eBqNZ545sacYwkiOG6N5MnyxF423c3C8CV3P81f1mDJp00Rqg9k7U0Pv+p1FaQQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sakamocchi.jp; spf=pass smtp.mailfrom=sakamocchi.jp; dkim=pass (2048-bit key) header.d=sakamocchi.jp header.i=@sakamocchi.jp header.b=IYcHZRbd; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=bY6T7bCu; arc=none smtp.client-ip=64.147.123.139
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sakamocchi.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sakamocchi.jp
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sakamocchi.jp header.i=@sakamocchi.jp header.b="IYcHZRbd";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="bY6T7bCu"
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
-	by mailflow.west.internal (Postfix) with ESMTP id 671F62CC0247;
-	Tue, 26 Mar 2024 05:31:00 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute6.internal (MEProxy); Tue, 26 Mar 2024 05:31:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sakamocchi.jp;
-	 h=cc:cc:content-type:content-type:date:date:from:from
-	:in-reply-to:in-reply-to:message-id:mime-version:references
-	:reply-to:subject:subject:to:to; s=fm2; t=1711445459; x=
-	1711452659; bh=JsIYIdm4lfmTSisZZ/DXBUcj1A+T+HA65a7uJi4J4Ag=; b=I
-	YcHZRbd9sIqHicWGnTcnbloJibtoDxCJb1PAsLm0emFQ00jzFYEifmMbCFh0Otvs
-	lXluwz6G8n8zwkeLXhb3kBgLnFeAKfJX1uqRW8zLv+64GlO3xbTSLa4NUfMhFCEt
-	7+3d/oa1d7PJWNhAaDEEn9melllT1zZws8077/2fa0eQJmg/hxmy/IzDVwHUsp/J
-	d39UqieNanc/fas+7PD/0DV2Dgb/85rvu6xKHD6yVWJLc5RsAlYZD7Egob+G2WMj
-	+YqvJiwsckXS6iMXrm0lUUYcWNYyas1SYaXb1zqwr3EJTwYLwy4S7u9rEpSF8CKZ
-	EWKSoaLtKvg+q2UZbRm0A==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-	fm2; t=1711445459; x=1711452659; bh=JsIYIdm4lfmTSisZZ/DXBUcj1A+T
-	+HA65a7uJi4J4Ag=; b=bY6T7bCua+MtWTPA5KWjwHZJGaJziE/2KYz7fxj20W0q
-	If1MAampCvCny6OBHZOHF32y3Kn4INASY9MYgcWPloU9RzC5JhZgXACJJCOzzbiW
-	/omAae/qPOKlgipcJZ82q+o6szSvs3ct/aQhVAudZmjU8z6xqk/m8oufiOmPDVJ6
-	YF6CvwTEorC8Wxd1l59IAGGH3W82NS2cMdOpqLw+Ta3jj1GIdknH5Dv3ilEqdHKT
-	mKqhrk5Uuf2VkxqIu59mUzNvkU0PDH5U9YWz5zMlAvj+cKm+2OuZalJ5/GkFiGuD
-	sNpVjilapH+Lgsu11iLndOldjMUmnQckKHNPtrBN8Q==
-X-ME-Sender: <xms:0pUCZuTCEK_UZ1FIa04HDNbw09J1SP-yLjTPmiKJ7fcM9-9PLm5N5Q>
-    <xme:0pUCZjzvYUNp_6AUn1GhXmXL5M4uvpS0meVqI5xxToMHvEoigMtmYJ7j1_wA3I0Sp
-    HvgeEyM6lGYvNXn320>
-X-ME-Received: <xmr:0pUCZr0cUziTQhpAkvv_eqG_J-dYqPzZf0V1SUH3f-nNStBcAUp6EA4jUGzRJEBOwGQMJiJimKe5XTYumtIHgMhG_YMg7hmSTdk>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledruddufedgtdehucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevuffkfhggtggujgesthdtredttddtvdenucfhrhhomhepvfgrkhgr
-    shhhihcuufgrkhgrmhhothhouceoohdqthgrkhgrshhhihesshgrkhgrmhhotggthhhird
-    hjpheqnecuggftrfgrthhtvghrnhephefhhfettefgkedvieeuffevveeufedtlefhjeei
-    ieetvdelfedtgfefuedukeeunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpe
-    hmrghilhhfrhhomhepohdqthgrkhgrshhhihesshgrkhgrmhhotggthhhirdhjph
-X-ME-Proxy: <xmx:0pUCZqB2VFAGd4lCaBCxrik37ACK9ghaOvrLJuoQkMNILffyy2RCbg>
-    <xmx:0pUCZngGTm6NYZ66zzHGXj6ZOAhF1W15NGgU_1lQ7VVTb5-DzgKjDw>
-    <xmx:0pUCZmotj5j7QD4RQRHOqylb2bqFpvVFfCyUaWvVyWMamP166ANVEA>
-    <xmx:0pUCZqgjGdSeR-bNNxKjy_SJixp8QgiXMk2VyLNValuMMfRrKA7OQA>
-    <xmx:05UCZshvx_JveHrwhZignnPkPsX9dTUPRS4MjCrtEER4_LSUV7Gv69QHUMm5xSVi>
-Feedback-ID: ie8e14432:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 26 Mar 2024 05:30:48 -0400 (EDT)
-Date: Tue, 26 Mar 2024 18:30:45 +0900
-From: Takashi Sakamoto <o-takashi@sakamocchi.jp>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Damien Le Moal <dlemoal@kernel.org>,	Niklas Cassel <cassel@kernel.org>,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	"Juergen E. Fischer" <fischer@norbit.de>,
-	Xiang Chen <chenxiang66@hisilicon.com>,
-	HighPoint Linux Team <linux@highpoint-tech.com>,
-	Tyrel Datwyler <tyreld@linux.ibm.com>,	Brian King <brking@us.ibm.com>,
- Lee Duncan <lduncan@suse.com>,	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,	Jason Yan <yanaijie@huawei.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	Jack Wang <jinpu.wang@cloud.ionos.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
-	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
-Subject: Re: [PATCH 13/23] sbp2: switch to using ->device_configure
-Message-ID: <20240326093045.GA139274@workstation.local>
-Mail-Followup-To: Christoph Hellwig <hch@lst.de>,	Jens Axboe <axboe@kernel.dk>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Damien Le Moal <dlemoal@kernel.org>,	Niklas Cassel <cassel@kernel.org>,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	"Juergen E. Fischer" <fischer@norbit.de>,
-	Xiang Chen <chenxiang66@hisilicon.com>,
-	HighPoint Linux Team <linux@highpoint-tech.com>,
-	Tyrel Datwyler <tyreld@linux.ibm.com>,	Brian King <brking@us.ibm.com>,
- Lee Duncan <lduncan@suse.com>,	Chris Leech <cleech@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,	Jason Yan <yanaijie@huawei.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	Jack Wang <jinpu.wang@cloud.ionos.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	open-iscsi@googlegroups.com, megaraidlinux.pdl@broadcom.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com, linux-samsung-soc@vger.kernel.org,
-	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
-References: <20240324235448.2039074-1-hch@lst.de>
- <20240324235448.2039074-14-hch@lst.de>
+	s=arc-20240116; t=1711446828; c=relaxed/simple;
+	bh=SPMt9sPXUWG+6brPuvlSRI7/wEP/OhYVJDICeA+oquE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=feu5yccASxWlatjrBBMP91KtWV4zWQUEqm4ggpiL79PA89/8AykRvCzd87ryi71nAfDURNznqGEUJxC9BiJO84fsvq4/YdIXZvImIfcdT9kz5UgBAlZb7O7aq4ZNLVhmmNYokNfcQGypTUG4hsp8v3b/lEgpqJp1k6UV+eP2unw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-60a0579a931so57290647b3.0;
+        Tue, 26 Mar 2024 02:53:46 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711446824; x=1712051624;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=RYG112uU2LU/aG30QDJAbplxe7xFJ5VktIX6iywVcNY=;
+        b=OaJ9i5d4+/yhpKJxiUI+1CVIe8EVysvZlX4si8HivJ/22Cn3iEAukB+FanfclgxdUy
+         65wlaEiuqImZsettx3SG5ZLcF83cgPesgfzZKj6TxuWfD4ribzU/W/MExq2kDsgDrJWu
+         96xmYMATU168mC8mr4ElVF9WZEKdfvNd0a6iKJextJFeG3CoK4VP2XwXQtLhkINx7/TL
+         oBPQ7YP0wsp96mTN05wGxGrU1sXMtlmUvMdkZDm6g/A3CsqLh9A6ccTKkxoDZm2DV+GJ
+         D8tUq3o3PtTd660bQbJwrHf2jgGDbKb2wWxrMm83tTe0nQA/QP4hr6A8IF9ZI+3v+y/z
+         8dPg==
+X-Forwarded-Encrypted: i=1; AJvYcCWA/VPXzv0lvE4uzKjzB4ahynq5fUQKjpUJbjtLnMKQsUgeYZrp3R/pW/shp34a+1SMah17SlAiCXIwAyyjjhmsjwm18JWk39CUB44AqhZqm4DQZRfOdA7lgxZBUE1l6fiXP1RCntKWCViWu8+IyCgRgSN2EVzTKC8VYzuw2da/Ia1/Rw==
+X-Gm-Message-State: AOJu0Yz285jHuqiF0/UqtHVCZrUZHpXG2KcsHV+gTwrOT01vgHErGIyj
+	af6FuvekgnvP2RjAtMtPoBYyReOPO7QDbndgGUTzzOwgx0uIzp46RLwDCUMBYbw=
+X-Google-Smtp-Source: AGHT+IEgarFDIiVFFBTPp/+8EOjmJfMZ6VCYGpbs0Go20VbeJYn5rKF+ceXxXuvWF5eppaaGfW60zw==
+X-Received: by 2002:a0d:d48a:0:b0:60a:16b8:1042 with SMTP id w132-20020a0dd48a000000b0060a16b81042mr7799749ywd.16.1711446824182;
+        Tue, 26 Mar 2024 02:53:44 -0700 (PDT)
+Received: from mail-yb1-f178.google.com (mail-yb1-f178.google.com. [209.85.219.178])
+        by smtp.gmail.com with ESMTPSA id gw8-20020a05690c460800b006111be0eaefsm1373172ywb.50.2024.03.26.02.53.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 Mar 2024 02:53:43 -0700 (PDT)
+Received: by mail-yb1-f178.google.com with SMTP id 3f1490d57ef6-dcc71031680so4666294276.2;
+        Tue, 26 Mar 2024 02:53:43 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCWdWtW7UiRuQmAjofQ2dvRCDB1zudD21aZ96hG0sThIuCq9L3LrTku/LUsPx+xvi8IOBRU1Fa/AYk+Bi1blucA6Td4+TC9U2EOnbGpMKfUiL0Y74kmW+1KV1nAUifg3z5+blm3T+vR40WpiwI35JXFdjoUH1BHPWNxTrmz//DQs9V80iQ==
+X-Received: by 2002:a25:db08:0:b0:dcd:5c7:8466 with SMTP id
+ g8-20020a25db08000000b00dcd05c78466mr7990390ybf.44.1711446823406; Tue, 26 Mar
+ 2024 02:53:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240324235448.2039074-14-hch@lst.de>
+References: <20240307214418.3812290-1-ipylypiv@google.com> <20240307214418.3812290-3-ipylypiv@google.com>
+In-Reply-To: <20240307214418.3812290-3-ipylypiv@google.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Tue, 26 Mar 2024 10:53:30 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdWxVbT=f+kZ58urwGhYD9RfBnu7u8oLAyrx_riU8OGt0w@mail.gmail.com>
+Message-ID: <CAMuHMdWxVbT=f+kZ58urwGhYD9RfBnu7u8oLAyrx_riU8OGt0w@mail.gmail.com>
+Subject: Re: [PATCH v8 2/7] scsi: libsas: Define NCQ Priority sysfs attributes
+ for SATA devices
+To: Igor Pylypiv <ipylypiv@google.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+	John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
+	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Jack Wang <jinpu.wang@cloud.ionos.com>, Hannes Reinecke <hare@suse.de>, 
+	Xiang Chen <chenxiang66@hisilicon.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, 
+	Bart Van Assche <bvanassche@acm.org>, TJ Adams <tadamsjr@google.com>, linux-ide@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Hi Igor,
 
-On Mon, Mar 25, 2024 at 07:54:38AM +0800, Christoph Hellwig wrote:
-> Switch to the ->device_configure method instead of ->slave_configure
-> and update the block limits on the passed in queue_limits instead
-> of using the per-limit accessors.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/firewire/sbp2.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
+On Thu, Mar 7, 2024 at 10:55=E2=80=AFPM Igor Pylypiv <ipylypiv@google.com> =
+wrote:
+> Libata sysfs attributes cannot be used for libsas managed SATA devices
+> because the ata_port location is different for libsas.
+>
+> Defined sysfs attributes (visible for SATA devices only):
+> - /sys/block/sda/device/ncq_prio_enable
+> - /sys/block/sda/device/ncq_prio_supported
+>
+> The newly defined attributes will pass the correct ata_port to libata
+> helper functions.
+>
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Jason Yan <yanaijie@huawei.com>
+> Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 
-I'm not good at any kind of storage protocol, thus execute me not to
-review it. My concern is which subsystem provides the change to mainline.
-I don't mind it is your subsystem.
+Thanks for your patch, which is now commit b4d3ddd2df7531e3 ("scsi:
+libsas: Define NCQ Priority sysfs attributes for SATA devices")
+in scsi-mkp/for-next
 
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
 
-Thanks
+> +
+> +DEVICE_ATTR(ncq_prio_supported, S_IRUGO, sas_ncq_prio_supported_show, NU=
+LL);
+> +
 
-Takashi Sakamoto
+[...]
+
+> +
+> +DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
+> +           sas_ncq_prio_enable_show, sas_ncq_prio_enable_store);
+> +
+
+When both CONFIG_SCSI_SAS_ATA and CONFIG_SATA_HOST are enabled:
+
+aarch64-linux-gnu-ld: drivers/ata/libata-sata.o:(.data+0x110):
+multiple definition of `dev_attr_ncq_prio_supported';
+drivers/scsi/libsas/sas_ata.o:(.data+0x260): first defined here
+aarch64-linux-gnu-ld: drivers/ata/libata-sata.o:(.data+0xd8): multiple
+definition of `dev_attr_ncq_prio_enable';
+drivers/scsi/libsas/sas_ata.o:(.data+0x228): first defined here
+
+Making both new DEVICE_ATTR() declarations static doesn't work,
+as <linux/libata.h> contains a forward declaration for the existing global
+dev_attr_ncq_prio_supported in libata:
+
+In file included from include/linux/async.h:14,
+                 from drivers/scsi/libsas/sas_ata.c:12:
+include/linux/device.h:156:33: error: static declaration of
+=E2=80=98dev_attr_ncq_prio_supported=E2=80=99 follows non-static declaratio=
+n
+  156 |         struct device_attribute dev_attr_##_name =3D
+__ATTR(_name, _mode, _show, _store)
+      |                                 ^~~~~~~~~
+drivers/scsi/libsas/sas_ata.c:984:8: note: in expansion of macro =E2=80=98D=
+EVICE_ATTR=E2=80=99
+  984 | static DEVICE_ATTR(ncq_prio_supported, S_IRUGO,
+sas_ncq_prio_supported_show,
+      |        ^~~~~~~~~~~
+In file included from include/scsi/sas_ata.h:13,
+                 from drivers/scsi/libsas/sas_ata.c:15:
+include/linux/libata.h:508:32: note: previous declaration of
+=E2=80=98dev_attr_ncq_prio_supported=E2=80=99 with type =E2=80=98struct dev=
+ice_attribute=E2=80=99
+  508 | extern struct device_attribute dev_attr_ncq_prio_supported;
+      |                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from include/linux/async.h:14,
+                 from drivers/scsi/libsas/sas_ata.c:12:
+include/linux/device.h:156:33: error: static declaration of
+=E2=80=98dev_attr_ncq_prio_enable=E2=80=99 follows non-static declaration
+  156 |         struct device_attribute dev_attr_##_name =3D
+__ATTR(_name, _mode, _show, _store)
+      |                                 ^~~~~~~~~
+drivers/scsi/libsas/sas_ata.c:1023:8: note: in expansion of macro =E2=80=98=
+DEVICE_ATTR=E2=80=99
+ 1023 | static DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
+      |        ^~~~~~~~~~~
+In file included from include/scsi/sas_ata.h:13,
+                 from drivers/scsi/libsas/sas_ata.c:15:
+include/linux/libata.h:509:32: note: previous declaration of
+=E2=80=98dev_attr_ncq_prio_enable=E2=80=99 with type =E2=80=98struct device=
+_attribute=E2=80=99
+  509 | extern struct device_attribute dev_attr_ncq_prio_enable;
+      |                                ^~~~~~~~~~~~~~~~~~~~~~~~
+
+Perhaps the new attributes can be renamed?
+Alternatively, the DEVICE_ATTR() can be open-coded, so the actual
+device_attribute structures are named differently.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
+
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
