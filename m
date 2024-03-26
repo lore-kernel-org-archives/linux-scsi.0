@@ -1,90 +1,53 @@
-Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 662AC54BFF;
-	Tue, 26 Mar 2024 06:37:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E641B74BE2;
+	Tue, 26 Mar 2024 06:39:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711435057; cv=none; b=XL856bQL7jJPkbIlrpwwaGYX64Mobhw1J5DlLBqDcd9+ZRxD0h/0BzAA6aV+JBwsZYCCeKPhw9hH5sSfEBlnBBvl9QCNtb/5hnx+5tVXFCcVa7BykqbAObovn8FbU0JsymeMWXnYK91zgInghVFWUigAlMbicM0tMOPQs8kfLvw=
+	t=1711435160; cv=none; b=tLLplkmG0QhKfF0t9nuTFiWU/T8bOH54GY6Vzzz+BQoL1AdW91ODMwq5RvO28IKfcZb6DVydDoc/iBUaqSrW33a4GAzLSNv11RBUgyIIHTbm6LWfc7/aMw1ZgzlOrVa+5I5lbjibXAbV2+3fZhXUNMYmouk6W7u2BYHywEIPnYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711435057; c=relaxed/simple;
-	bh=u2y+vtRSLyiyZLwEmdo24Sm096aRMYJD9m5vspSuB8o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=pw49hkmhqSXU5YfJWt3TEH/ZipjQjPJCe0liN9iDmtlGSqmPd7NBLa282zRn2vHVrAjDdqe2WNayiC9a5rvUEfQXvWbYgcC0jAHQ304yLsKP/uMZbtGOS5wwtm7+ag2wWRbrtiIYi01PjkbJ0T9yHA6cWs4iKDOvTJRed5kgNlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4V3g5M727Xz1h3fb;
-	Tue, 26 Mar 2024 14:34:47 +0800 (CST)
-Received: from kwepemm600012.china.huawei.com (unknown [7.193.23.74])
-	by mail.maildlp.com (Postfix) with ESMTPS id 4DB4E18002F;
-	Tue, 26 Mar 2024 14:37:26 +0800 (CST)
-Received: from [10.174.178.220] (10.174.178.220) by
- kwepemm600012.china.huawei.com (7.193.23.74) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Tue, 26 Mar 2024 14:37:25 +0800
-Message-ID: <267c4355-e930-4439-9239-bc78e7ab316d@huawei.com>
-Date: Tue, 26 Mar 2024 14:37:24 +0800
+	s=arc-20240116; t=1711435160; c=relaxed/simple;
+	bh=jrfmVvT3S7W+clvvumpDWCaHkWdg/2lgMSWBhMBZGXE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PEobamZteTi04qEtXR8gZYdqp8XAe5JJkdTFS0JoqoafjqEFKCZCbJlMzRscgEaST+5GNbPGqOk7tgm5hXRgWQEpyY7QGj6COBQCaGRWhe5zSu5m3iQ40D5mBu03mvlzd9UHwtAsDHtlaE4I4Qxf4BjYzOHTKGMAqtPCoFn9XXk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 205A968D37; Tue, 26 Mar 2024 07:39:15 +0100 (CET)
+Date: Tue, 26 Mar 2024 07:39:14 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 04/28] block: Introduce bio_straddle_zones() and
+ bio_offset_from_zone_start()
+Message-ID: <20240326063914.GC7696@lst.de>
+References: <20240325044452.3125418-1-dlemoal@kernel.org> <20240325044452.3125418-5-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/3] SCSI: Fix issues between removing device and error
- handle
-To: "James E . J . Bottomley" <jejb@linux.ibm.com>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-CC: <louhongxiang@huawei.com>
-References: <20240307144311.73735-1-haowenchao2@huawei.com>
-Content-Language: en-US
-From: Wenchao Hao <haowenchao2@huawei.com>
-In-Reply-To: <20240307144311.73735-1-haowenchao2@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemm600012.china.huawei.com (7.193.23.74)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240325044452.3125418-5-dlemoal@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On 2024/3/7 22:43, Wenchao Hao wrote:
-> I am testing SCSI error handle with my previous scsi_debug error
-> injection patches, and found some issues when removing device and
-> error handler happened together.
-> 
-> These issues are triggered because devices in removing would be skipped
-> when calling shost_for_each_device().
-> 
+On Mon, Mar 25, 2024 at 01:44:28PM +0900, Damien Le Moal wrote:
+> Implement the inline helper functions bio_straddle_zones() and
+> bio_offset_from_zone_start() to respectively test if a BIO crosses a
+> zone boundary (the start sector and last sector belong to different
+> zones) and to obtain the offset of a BIO from the start sector of its
+> target zone.
 
-Ping...
+Looks good:
 
-> The issues are found:
-> 1. statistic info printed at beginning of scsi_error_handler is wrong
-> 2. device reset is not triggered
-> 
-> V4:
->   - Remove the forth patch which fix IO hang when device removing
->     becaust the issue is fixed by commit '6df0e077d76bd (scsi: core:
->     Kick the requeue list after inserting when flushing)'
-> 
-> V3:
->    - Update patch description
->    - Update comments of functions added
-> 
-> V2:
->    - Fix IO hang by run all devices' queue after error handler
->    - Do not modify shost_for_each_device() directly but add a new
->      helper to iterate devices but do not skip devices in removing
-> 
-> Wenchao Hao (3):
->    scsi: core: Add new helper to iterate all devices of host
->    scsi: scsi_error: Fix wrong statistic when print error info
->    scsi: scsi_error: Fix device reset is not triggered
-> 
->   drivers/scsi/scsi.c        | 46 ++++++++++++++++++++++++++------------
->   drivers/scsi/scsi_error.c  |  4 ++--
->   include/scsi/scsi_device.h | 25 ++++++++++++++++++---
->   3 files changed, 56 insertions(+), 19 deletions(-)
-> 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
+(the grammar fix from Bart looks good as well)
