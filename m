@@ -1,100 +1,153 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F2171BF31;
-	Wed, 27 Mar 2024 03:50:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C48531C28F;
+	Wed, 27 Mar 2024 07:02:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711511419; cv=none; b=NKLWOwmyqvHnMNUZcv2SKNcQe0Ti8ZG6xSHa35iIVq3cN6GcKLziCuaKleL3v6cdtT7EXQZmaxwztSl09y563ZWz8Y30EVXMeR2my0FJ/jK9K0lWiBnaSz1km9H6UpwaIj1NUY0XstT8WJ++JoozxjbU0XOGLypaDmTRQ0LXJyo=
+	t=1711522928; cv=none; b=Z98qSGe/RZ4PXag4VVFGNp/jD7shfKVADD2l46fYcx6rR9AItdAqcnP6MiQkEEkaPEWJ7kf+g1ariA4yUl/iJHEKSz2LsXIcD7LPlO2VmbW+rF5Cq7rWXX17NHFXjJxud4eLu4LHUnB+fWwSnODCtFgVJDe8qS3Y4ZqyTRkSnjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711511419; c=relaxed/simple;
-	bh=yxDuwLY/j7X4qrwh8xDbw8rteroxa22o47tiK/LWHgM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rGUWnWSEzO7Db++j1e814O0vouSLqYWj8wLrkftf8KZj7b7KWokiZvb4jMsxjYDO7XLRhqmDQLLw943v8IDSJDFHvIx70d00npWjPXc3uq0mmTnyI/k6HMjAcKaigU9mdwMkQFlldF+AaZl92ymM4Ggk/afAd/BLYOGsZgI4ZtQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=k6AI2bfn; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1711522928; c=relaxed/simple;
+	bh=jindFJ5MOPucGrnP5I81k/UJr+Ax6BwZ6m/wtj1VOKM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=M0s+Mtcy+yq3xrv2kxFdS1UXNBT+h/4guaH+lZALqZPG9zgCumWmKb9y61fEzK2ACVrwkZ55kohHSuYeigq5CT9Q8PL/Sh4AuZhxFCKmTj3+MCfM8kk8wICt49J1sZNOM9bg1IL9nhZ3iNAvyZCJ32kEm6iV8Tuh/VOmlPbhcHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=2UN0USoy; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=8xQRE97W; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qIS0H3us; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=fiRfutid; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="k6AI2bfn"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=rk1STaKASJZMOQESaE4YdsbKcHTwjlEtdkr30vV9pdg=; b=k6AI2bfnRnr2I3SiqEJhR0ATer
-	L/tOjZtLNhHZu7N988MPkHPWZJoBDo+zKoYivmHKkU31eNPCva+VjDW+1R4Gm2R9QCg9X4JWeyq/e
-	dI4XLAOq1DzhKn4YwIj+lcTmhL1RkuTgK/i1pDSmi9D6Lm5kMFE+Q+1wlg5UMNTm5hOwkCAqbRAJj
-	IEUAQSGMrFpTRQY4p8k8ZrEEaxVf4ciY1E1jJcKZIkIQFhgMyGawFsbfpoeYbqpLUo4LPaD/rKBC3
-	+6OIEw+02Zj2ueHh3TKcU/mDZsebPI/D73/FkvUZGJNikrmvbubgTIxVumhEwo5Ifk7nNsozpsf7o
-	FJjRTWDA==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rpKIh-00000002xYu-3gF1;
-	Wed, 27 Mar 2024 03:50:07 +0000
-Date: Wed, 27 Mar 2024 03:50:07 +0000
-From: Matthew Wilcox <willy@infradead.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
-	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-	io-uring@vger.kernel.org, nilay@linux.ibm.com,
-	ritesh.list@gmail.com
-Subject: Re: [PATCH v6 00/10] block atomic writes
-Message-ID: <ZgOXb_oZjsUU12YL@casper.infradead.org>
-References: <20240326133813.3224593-1-john.g.garry@oracle.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="2UN0USoy";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="8xQRE97W";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qIS0H3us";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fiRfutid"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 3A9F4386A7;
+	Wed, 27 Mar 2024 07:02:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1711522922; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9f6guCBCCX5gVsiss0/i0Pw65KQFxVNRsRCpDMrOZ1M=;
+	b=2UN0USoyMoRh9JgU2P1Xlz4tuvpiD++a165pr5Xz/Mmvwxn4ICXNH/Uf2kitx75Tk3G3yT
+	Ko128J0/Sh4iC+71FOCLZ1PZMtx/uGFPcnMkbIYbrFyq/56bN+hw1Jq0yx5AVAiCjqiOyu
+	fF+R4q/xwPezPgTUJfvulCFoaVRNc+c=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1711522922;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9f6guCBCCX5gVsiss0/i0Pw65KQFxVNRsRCpDMrOZ1M=;
+	b=8xQRE97W8KyfHK77l6fukAgUsxFpots4mHViMknJ9aj7xWkUsWi7aRUcxnGGKzUJpqu/gq
+	a1mj7daU7BeshOAA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1711522921; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9f6guCBCCX5gVsiss0/i0Pw65KQFxVNRsRCpDMrOZ1M=;
+	b=qIS0H3usCqFheuvd5JktHN9zrCqJKkj7doAddiyEMlwPHOKzzoO4sL0YAgrPn+NpEqAYU5
+	B+17zwPOuMsnTJf3qmuBzjeSZenZv+v3OQ3UV0sCrOFr60HLX/tubyrrqyyUl0FaBh9paq
+	ncrsH0abnECgy3zaAUaTF4ypizv7BfU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1711522921;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9f6guCBCCX5gVsiss0/i0Pw65KQFxVNRsRCpDMrOZ1M=;
+	b=fiRfutidTiGi2DThVLF7pZ2yksDV4eGxmE22zOnb+D5Tps6XQk1lPNL8+VUFF/8pe4vdRN
+	pfUz9qT9y4OXJBCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id B2B5A13688;
+	Wed, 27 Mar 2024 07:01:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([10.150.64.162])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id M9rSGWbEA2a5dQAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 27 Mar 2024 07:01:58 +0000
+Message-ID: <4d3f229c-64a1-46e7-a906-ecd3dffe8965@suse.de>
+Date: Wed, 27 Mar 2024 08:01:55 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240326133813.3224593-1-john.g.garry@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 03/28] block: Introduce blk_zone_update_request_bio()
+Content-Language: en-US
+To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
+ Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+References: <20240325044452.3125418-1-dlemoal@kernel.org>
+ <20240325044452.3125418-4-dlemoal@kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240325044452.3125418-4-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -2.50
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-2.50 / 50.00];
+	 ARC_NA(0.00)[];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 XM_UA_NO_VERSION(0.01)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 BAYES_HAM(-0.00)[42.32%];
+	 MIME_GOOD(-0.10)[text/plain];
+	 NEURAL_HAM_LONG(-1.00)[-1.000];
+	 DWL_DNSWL_LOW(-1.00)[suse.de:dkim];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	 DKIM_TRACE(0.00)[suse.de:+];
+	 MX_GOOD(-0.01)[];
+	 RCPT_COUNT_SEVEN(0.00)[8];
+	 NEURAL_HAM_SHORT(-0.20)[-1.000];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 RCVD_TLS_ALL(0.00)[];
+	 MID_RHS_MATCH_FROM(0.00)[]
+X-Spam-Level: 
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=qIS0H3us;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=fiRfutid
+X-Rspamd-Queue-Id: 3A9F4386A7
 
-On Tue, Mar 26, 2024 at 01:38:03PM +0000, John Garry wrote:
-> The goal here is to provide an interface that allows applications use
-> application-specific block sizes larger than logical block size
-> reported by the storage device or larger than filesystem block size as
-> reported by stat().
+On 3/25/24 05:44, Damien Le Moal wrote:
+> On completion of a zone append request, the request sector indicates the
+> location of the written data. This value must be returned to the user
+> through the BIO iter sector. This is done in 2 places: in
+> blk_complete_request() and in blk_update_request(). Introduce the inline
+> helper function blk_zone_update_request_bio() to avoid duplicating
+> this BIO update for zone append requests, and to compile out this
+> helper call when CONFIG_BLK_DEV_ZONED is not enabled.
 > 
-> With this new interface, application blocks will never be torn or
-> fractured when written. For a power fail, for each individual application
-> block, all or none of the data to be written. A racing atomic write and
-> read will mean that the read sees all the old data or all the new data,
-> but never a mix of old and new.
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   block/blk-mq.c | 11 +++++------
+>   block/blk.h    | 19 ++++++++++++++++++-
+>   2 files changed, 23 insertions(+), 7 deletions(-)
 > 
-> Three new fields are added to struct statx - atomic_write_unit_min,
-> atomic_write_unit_max, and atomic_write_segments_max. For each atomic
-> individual write, the total length of a write must be a between
-> atomic_write_unit_min and atomic_write_unit_max, inclusive, and a
-> power-of-2. The write must also be at a natural offset in the file
-> wrt the write length. For pwritev2, iovcnt is limited by
-> atomic_write_segments_max.
-> 
-> There has been some discussion on supporting buffered IO and whether the
-> API is suitable, like:
-> https://lore.kernel.org/linux-nvme/ZeembVG-ygFal6Eb@casper.infradead.org/
-> 
-> Specifically the concern is that supporting a range of sizes of atomic IO
-> in the pagecache is complex to support. For this, my idea is that FSes can
-> fix atomic_write_unit_min and atomic_write_unit_max at the same size, the
-> extent alignment size, which should be easier to support. We may need to
-> implement O_ATOMIC to avoid mixing atomic and non-atomic IOs for this. I
-> have no proposed solution for atomic write buffered IO for bdev file
-> operations, but I know of no requirement for this.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-The thing is that there's no requirement for an interface as complex as
-the one you're proposing here.  I've talked to a few database people
-and all they want is to increase the untorn write boundary from "one
-disc block" to one database block, typically 8kB or 16kB.
+Cheers,
 
-So they would be quite happy with a much simpler interface where they
-set the inode block size at inode creation time, and then all writes to
-that inode were guaranteed to be untorn.  This would also be simpler to
-implement for buffered writes.
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
-Who's asking for this more complex interface?
