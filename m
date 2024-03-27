@@ -1,78 +1,78 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62A6D20B04;
-	Wed, 27 Mar 2024 07:33:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F36F2C1AA;
+	Wed, 27 Mar 2024 07:40:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711524842; cv=none; b=eyMHYrdeKxQdQhML2O00vLuUoVV5T2v0zo4MfR/NntoeAik6m2NJK2By2uYpiJsuhUlcoWVHgo/k8ugF8uL1CcLZBx6DH9zpz75ZuHmKu4yklbJSc7xUENqunNvrbo01KiojT6fBeTxVokhu8pU/hgh3M/YfRwGoqhINgm2Y3EU=
+	t=1711525230; cv=none; b=hrnBvGWjLN7YghrjMeXqhGWvFHS3X6s6nRVof3psox6osK/H/PR5XPX7GcUbLU20kv8d+QDaUdbkw7dsTn+9LItfr5yqllgLmIqCOqjhw6tTI7NULnIZuLG/4My0N57H+F9fcvJU7+Ng9ZuInA7PBxDscAtS+IwAILNfToEc114=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711524842; c=relaxed/simple;
-	bh=uWZhZCTjCdv9BRCYQRPuFbmFx5dG84ZkNjHyRZXSqbk=;
+	s=arc-20240116; t=1711525230; c=relaxed/simple;
+	bh=nn2BDOr2BCIekUSUO9oL3jzqNlqdrqYPxziN82NCkrs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=f5Or2qfoMomjEC4tH7gZdjTj0LayxNeGkELvnjUrxxROXbpVHfNIyzKwUZAg6WSXFzWXkco77K8MmFaQWxKIBXVIMAd4QaVBZ/A5dDvO4jbn5OR6+z9iUTs8zeKroKQTLirbYFm2P4Ohqg0kShL6FcTDKiTV1YIB/QreYgGbvbU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=DTn3SWS3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=tR5/67VI; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=DTn3SWS3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=tR5/67VI; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=b1zyfsIaEv80jorXs5I9ACIjvGEfNP+YxKEo62ADMeglnBUdCTokDyia2Z2EaPB1xrACWQTpT7gHuPRc8F5Z4Uev0Ojm+9GPzySaZOjEsuJLNGa3HiIl+BRuNelnFNP0pldi/TFir2sUDH7lgeX9S9TkXHP8s8QwNkCPU0OvLPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=d6Ekj9b6; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=g6A4UAyx; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=d6Ekj9b6; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=g6A4UAyx; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="DTn3SWS3";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="tR5/67VI";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="DTn3SWS3";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="tR5/67VI"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="d6Ekj9b6";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="g6A4UAyx";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="d6Ekj9b6";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="g6A4UAyx"
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id CAEA85F9F6;
-	Wed, 27 Mar 2024 07:33:35 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id B8A8D60010;
+	Wed, 27 Mar 2024 07:40:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1711524815; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1711525226; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=N1yBeqz2rtXiSTTozIUNCVIH2ZVOt0/ZQZ9ypm9J+oA=;
-	b=DTn3SWS3OI5Q20Nrvj/SaLZK3MC5cRstxSgF6SdQvgLgSoMMDUdQp9RV1z7Kb2jCUd7mmB
-	1qk/842uWhf8Do+VZqK7su/nJXZReaR6M8L9Hbrr2YK+9cxFUB799NvpioGyksgVCxHi5a
-	CPTGWtzs+hJurTPn9lKie//NlMYk3fY=
+	bh=thcqS+vw6Usq7MYZ7czl11khcu2wqBEm+Lcfikv4tgs=;
+	b=d6Ekj9b6oB4yrYj3hmvCy7RpYniA8W6bBY7viSSwSp33vzrqUqFLbNrNqEUZoQGRmj0D/Y
+	qqh88zp/T2M+7NAIZiuiVSfI0jp5OVb7RR6h/o+o8yR+2iN9nc36P586HPDDaySFeFoh3c
+	mQSH+iosB44feCz9zRfOFMSz4fUiSZs=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1711524815;
+	s=susede2_ed25519; t=1711525226;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=N1yBeqz2rtXiSTTozIUNCVIH2ZVOt0/ZQZ9ypm9J+oA=;
-	b=tR5/67VIXalsCiY1I+Om4aexP/A9Wzh6Y9CTQM6PSBTGKVn+IfDjtBDLsJbNmEwiddJNFc
-	EE+u7iDKwW3g8dCA==
+	bh=thcqS+vw6Usq7MYZ7czl11khcu2wqBEm+Lcfikv4tgs=;
+	b=g6A4UAyxG5rVoaC7eyoPyfcwedap2u1OoO4C1B1XWk9zUzJ+xwvwlit02AOLHnfZptL851
+	6O+Cmw3MCK0KBtDw==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1711524815; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1711525226; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=N1yBeqz2rtXiSTTozIUNCVIH2ZVOt0/ZQZ9ypm9J+oA=;
-	b=DTn3SWS3OI5Q20Nrvj/SaLZK3MC5cRstxSgF6SdQvgLgSoMMDUdQp9RV1z7Kb2jCUd7mmB
-	1qk/842uWhf8Do+VZqK7su/nJXZReaR6M8L9Hbrr2YK+9cxFUB799NvpioGyksgVCxHi5a
-	CPTGWtzs+hJurTPn9lKie//NlMYk3fY=
+	bh=thcqS+vw6Usq7MYZ7czl11khcu2wqBEm+Lcfikv4tgs=;
+	b=d6Ekj9b6oB4yrYj3hmvCy7RpYniA8W6bBY7viSSwSp33vzrqUqFLbNrNqEUZoQGRmj0D/Y
+	qqh88zp/T2M+7NAIZiuiVSfI0jp5OVb7RR6h/o+o8yR+2iN9nc36P586HPDDaySFeFoh3c
+	mQSH+iosB44feCz9zRfOFMSz4fUiSZs=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1711524815;
+	s=susede2_ed25519; t=1711525226;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=N1yBeqz2rtXiSTTozIUNCVIH2ZVOt0/ZQZ9ypm9J+oA=;
-	b=tR5/67VIXalsCiY1I+Om4aexP/A9Wzh6Y9CTQM6PSBTGKVn+IfDjtBDLsJbNmEwiddJNFc
-	EE+u7iDKwW3g8dCA==
+	bh=thcqS+vw6Usq7MYZ7czl11khcu2wqBEm+Lcfikv4tgs=;
+	b=g6A4UAyxG5rVoaC7eyoPyfcwedap2u1OoO4C1B1XWk9zUzJ+xwvwlit02AOLHnfZptL851
+	6O+Cmw3MCK0KBtDw==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E8C341369F;
-	Wed, 27 Mar 2024 07:33:34 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 245101369F;
+	Wed, 27 Mar 2024 07:40:24 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([10.150.64.162])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id CGHyNc7LA2ZKewAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 27 Mar 2024 07:33:34 +0000
-Message-ID: <e10d2389-dd24-4768-95ed-290d773365f7@suse.de>
-Date: Wed, 27 Mar 2024 08:33:33 +0100
+	id 6TiVNmjNA2aZfQAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 27 Mar 2024 07:40:24 +0000
+Message-ID: <65576638-2d23-4916-8e2a-84f949d360c1@suse.de>
+Date: Wed, 27 Mar 2024 08:40:23 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,24 +80,27 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 27/28] block: Do not force select mq-deadline with
- CONFIG_BLK_DEV_ZONED
+Subject: Re: [PATCH 7/9] scsi: mylex: fix sysfs buffer lengths
 Content-Language: en-US
-To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-References: <20240325044452.3125418-1-dlemoal@kernel.org>
- <20240325044452.3125418-28-dlemoal@kernel.org>
+To: Arnd Bergmann <arnd@kernel.org>, llvm@lists.linux.dev,
+ Hannes Reinecke <hare@kernel.org>, "James E.J. Bottomley"
+ <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Nathan Chancellor <nathan@kernel.org>,
+ Nick Desaulniers <ndesaulniers@google.com>, Bill Wendling
+ <morbo@google.com>, Justin Stitt <justinstitt@google.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240326223825.4084412-1-arnd@kernel.org>
+ <20240326223825.4084412-8-arnd@kernel.org>
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240325044452.3125418-28-dlemoal@kernel.org>
+In-Reply-To: <20240326223825.4084412-8-arnd@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -2.58
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-2.58 / 50.00];
+X-Spam-Level: 
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=d6Ekj9b6;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=g6A4UAyx
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-5.50 / 50.00];
 	 ARC_NA(0.00)[];
 	 RCVD_VIA_SMTP_AUTH(0.00)[];
 	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
@@ -105,7 +108,7 @@ X-Spamd-Result: default: False [-2.58 / 50.00];
 	 FROM_HAS_DN(0.00)[];
 	 TO_DN_SOME(0.00)[];
 	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 BAYES_HAM(-0.08)[63.11%];
+	 BAYES_HAM(-3.00)[100.00%];
 	 MIME_GOOD(-0.10)[text/plain];
 	 NEURAL_HAM_LONG(-1.00)[-1.000];
 	 DWL_DNSWL_LOW(-1.00)[suse.de:dkim];
@@ -113,43 +116,43 @@ X-Spamd-Result: default: False [-2.58 / 50.00];
 	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	 DKIM_TRACE(0.00)[suse.de:+];
 	 MX_GOOD(-0.01)[];
-	 RCPT_COUNT_SEVEN(0.00)[8];
+	 RCPT_COUNT_TWELVE(0.00)[12];
 	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email];
 	 FUZZY_BLOCKED(0.00)[rspamd.com];
 	 FROM_EQ_ENVFROM(0.00)[];
 	 MIME_TRACE(0.00)[0:+];
 	 NEURAL_HAM_SHORT(-0.20)[-1.000];
 	 RCVD_TLS_ALL(0.00)[];
-	 MID_RHS_MATCH_FROM(0.00)[];
-	 RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from]
-X-Spam-Level: 
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=DTn3SWS3;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="tR5/67VI"
-X-Rspamd-Queue-Id: CAEA85F9F6
+	 MID_RHS_MATCH_FROM(0.00)[]
+X-Spam-Score: -5.50
+X-Rspamd-Queue-Id: B8A8D60010
+X-Spam-Flag: NO
 
-On 3/25/24 05:44, Damien Le Moal wrote:
-> Now that zone block device write ordering control does not depend
-> anymore on mq-deadline and zone write locking, there is no need to force
-> select the mq-deadline scheduler when CONFIG_BLK_DEV_ZONED is enabled.
+On 3/26/24 23:38, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
 > 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> The myrb and myrs drivers use an odd way of implementing their sysfs files,
+> calling snprintf() with a fixed length of 32 bytes to print into a page
+> sized buffer. One of the strings is actually longer than 32 bytes, which
+> clang can warn about:
+> 
+> drivers/scsi/myrb.c:1906:10: error: 'snprintf' will always be truncated; specified size is 32, but format string expands to at least 34 [-Werror,-Wformat-truncation]
+> drivers/scsi/myrs.c:1089:10: error: 'snprintf' will always be truncated; specified size is 32, but format string expands to at least 34 [-Werror,-Wformat-truncation]
+> 
+> These could all be plain sprintf() without a length as the buffer is
+> always long enough. On the other hand, sysfs files should not be overly
+> long either, so just double the length to make sure the longest strings
+> don't get truncated here.
+> 
+> Fixes: 77266186397c ("scsi: myrs: Add Mylex RAID controller (SCSI interface)")
+> Fixes: 081ff398c56c ("scsi: myrb: Add Mylex RAID controller (block interface)")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 > ---
->   block/Kconfig | 1 -
->   1 file changed, 1 deletion(-)
+>   drivers/scsi/myrb.c | 20 ++++++++++----------
+>   drivers/scsi/myrs.c | 24 ++++++++++++------------
+>   2 files changed, 22 insertions(+), 22 deletions(-)
 > 
-> diff --git a/block/Kconfig b/block/Kconfig
-> index 9f647149fbee..d47398ae9824 100644
-> --- a/block/Kconfig
-> +++ b/block/Kconfig
-> @@ -100,7 +100,6 @@ config BLK_DEV_WRITE_MOUNTED
->   
->   config BLK_DEV_ZONED
->   	bool "Zoned block device support"
-> -	select MQ_IOSCHED_DEADLINE
->   	help
->   	Block layer zoned block device support. This option enables
->   	support for ZAC/ZBC/ZNS host-managed and host-aware zoned block
+Yeah, counting is hard ...
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
