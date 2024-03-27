@@ -1,78 +1,78 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48A7220B04;
-	Wed, 27 Mar 2024 07:33:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62A6D20B04;
+	Wed, 27 Mar 2024 07:33:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711524787; cv=none; b=kuIINBGehoDA94JfWeZdCQ3JswgbiYJw9eu8gr1lhhZ6QeXAfM9zIFucemK5ZyPjYtLuzlXYqiBbqluDoPhb2a76FLHn7oMmTiTI8B2sDXumc4uws8AKLSgSBYLrkpRJja77dtoYhYnyOLAMaOXiTKOiUo2Sb4q7l+S7tb54jpY=
+	t=1711524842; cv=none; b=eyMHYrdeKxQdQhML2O00vLuUoVV5T2v0zo4MfR/NntoeAik6m2NJK2By2uYpiJsuhUlcoWVHgo/k8ugF8uL1CcLZBx6DH9zpz75ZuHmKu4yklbJSc7xUENqunNvrbo01KiojT6fBeTxVokhu8pU/hgh3M/YfRwGoqhINgm2Y3EU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711524787; c=relaxed/simple;
-	bh=JK3p4J57aqXJYO88/FikNreooE8VQitzNxJi/6A23wk=;
+	s=arc-20240116; t=1711524842; c=relaxed/simple;
+	bh=uWZhZCTjCdv9BRCYQRPuFbmFx5dG84ZkNjHyRZXSqbk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZQAeHdJtGd//6TdOYOAFK0KL/Ph8f+glJaeq+14fglXLTgM1Q1l+VixhZwb/YOYPVontrSVym4QyTGcH+KrBiI6EbZj27QO4ZBsAeV+Ymo2YYOvk8AIgMT5lw0wuJCiWDzvhHWLufRXoRSlbLSMWhY3Dh1unPT1KYAT3i15aITk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=sEtvniPA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=0f9EwBI3; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=sEtvniPA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=0f9EwBI3; arc=none smtp.client-ip=195.135.223.131
+	 In-Reply-To:Content-Type; b=f5Or2qfoMomjEC4tH7gZdjTj0LayxNeGkELvnjUrxxROXbpVHfNIyzKwUZAg6WSXFzWXkco77K8MmFaQWxKIBXVIMAd4QaVBZ/A5dDvO4jbn5OR6+z9iUTs8zeKroKQTLirbYFm2P4Ohqg0kShL6FcTDKiTV1YIB/QreYgGbvbU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=DTn3SWS3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=tR5/67VI; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=DTn3SWS3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=tR5/67VI; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="sEtvniPA";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="0f9EwBI3";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="sEtvniPA";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="0f9EwBI3"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="DTn3SWS3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="tR5/67VI";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="DTn3SWS3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="tR5/67VI"
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 1E9485FAAF;
-	Wed, 27 Mar 2024 07:33:01 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id CAEA85F9F6;
+	Wed, 27 Mar 2024 07:33:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1711524781; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1711524815; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qGfK7/s/ZI9R2hpHto34S9brkysQqVRsKkoZ7EZnj8I=;
-	b=sEtvniPAA1SnC3A7G0Jyd+qp+pky6Jz8Fj6F4Y+AF0X1+wNgw8C7v1eGABcaULhRJeOdev
-	j7Pp+RT+mYSvLduwmZ4+vNo1o1vwSqIYTZwNNzVnXNPXUOs6gV9k5qaMkKv+RJeuffjqOB
-	+SeCzmzKt1IEr5I6jpx7SeXCO6jXwtg=
+	bh=N1yBeqz2rtXiSTTozIUNCVIH2ZVOt0/ZQZ9ypm9J+oA=;
+	b=DTn3SWS3OI5Q20Nrvj/SaLZK3MC5cRstxSgF6SdQvgLgSoMMDUdQp9RV1z7Kb2jCUd7mmB
+	1qk/842uWhf8Do+VZqK7su/nJXZReaR6M8L9Hbrr2YK+9cxFUB799NvpioGyksgVCxHi5a
+	CPTGWtzs+hJurTPn9lKie//NlMYk3fY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1711524781;
+	s=susede2_ed25519; t=1711524815;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qGfK7/s/ZI9R2hpHto34S9brkysQqVRsKkoZ7EZnj8I=;
-	b=0f9EwBI3Kbq6h8kIvLA4Ax4uMPhcf9zCDO9QqEWqLQrfXXT3V5qhqj4/B85eZquwcLcqDu
-	VLMSbkvA7FJYWYAA==
+	bh=N1yBeqz2rtXiSTTozIUNCVIH2ZVOt0/ZQZ9ypm9J+oA=;
+	b=tR5/67VIXalsCiY1I+Om4aexP/A9Wzh6Y9CTQM6PSBTGKVn+IfDjtBDLsJbNmEwiddJNFc
+	EE+u7iDKwW3g8dCA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1711524781; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1711524815; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qGfK7/s/ZI9R2hpHto34S9brkysQqVRsKkoZ7EZnj8I=;
-	b=sEtvniPAA1SnC3A7G0Jyd+qp+pky6Jz8Fj6F4Y+AF0X1+wNgw8C7v1eGABcaULhRJeOdev
-	j7Pp+RT+mYSvLduwmZ4+vNo1o1vwSqIYTZwNNzVnXNPXUOs6gV9k5qaMkKv+RJeuffjqOB
-	+SeCzmzKt1IEr5I6jpx7SeXCO6jXwtg=
+	bh=N1yBeqz2rtXiSTTozIUNCVIH2ZVOt0/ZQZ9ypm9J+oA=;
+	b=DTn3SWS3OI5Q20Nrvj/SaLZK3MC5cRstxSgF6SdQvgLgSoMMDUdQp9RV1z7Kb2jCUd7mmB
+	1qk/842uWhf8Do+VZqK7su/nJXZReaR6M8L9Hbrr2YK+9cxFUB799NvpioGyksgVCxHi5a
+	CPTGWtzs+hJurTPn9lKie//NlMYk3fY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1711524781;
+	s=susede2_ed25519; t=1711524815;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qGfK7/s/ZI9R2hpHto34S9brkysQqVRsKkoZ7EZnj8I=;
-	b=0f9EwBI3Kbq6h8kIvLA4Ax4uMPhcf9zCDO9QqEWqLQrfXXT3V5qhqj4/B85eZquwcLcqDu
-	VLMSbkvA7FJYWYAA==
+	bh=N1yBeqz2rtXiSTTozIUNCVIH2ZVOt0/ZQZ9ypm9J+oA=;
+	b=tR5/67VIXalsCiY1I+Om4aexP/A9Wzh6Y9CTQM6PSBTGKVn+IfDjtBDLsJbNmEwiddJNFc
+	EE+u7iDKwW3g8dCA==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4F4B21369F;
-	Wed, 27 Mar 2024 07:32:59 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E8C341369F;
+	Wed, 27 Mar 2024 07:33:34 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([10.150.64.162])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id IMYDEavLA2ZKewAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 27 Mar 2024 07:32:59 +0000
-Message-ID: <3ddab2f0-f10e-4ec1-a40a-8662cb6f3a56@suse.de>
-Date: Wed, 27 Mar 2024 08:32:57 +0100
+	id CGHyNc7LA2ZKewAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 27 Mar 2024 07:33:34 +0000
+Message-ID: <e10d2389-dd24-4768-95ed-290d773365f7@suse.de>
+Date: Wed, 27 Mar 2024 08:33:33 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,7 +80,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 26/28] block: Remove zone write locking
+Subject: Re: [PATCH v2 27/28] block: Do not force select mq-deadline with
+ CONFIG_BLK_DEV_ZONED
 Content-Language: en-US
 To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
  Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
@@ -88,17 +89,15 @@ To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
  dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 References: <20240325044452.3125418-1-dlemoal@kernel.org>
- <20240325044452.3125418-27-dlemoal@kernel.org>
+ <20240325044452.3125418-28-dlemoal@kernel.org>
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240325044452.3125418-27-dlemoal@kernel.org>
+In-Reply-To: <20240325044452.3125418-28-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=sEtvniPA;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=0f9EwBI3
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-5.50 / 50.00];
+X-Spam-Score: -2.58
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-2.58 / 50.00];
 	 ARC_NA(0.00)[];
 	 RCVD_VIA_SMTP_AUTH(0.00)[];
 	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
@@ -106,9 +105,8 @@ X-Spamd-Result: default: False [-5.50 / 50.00];
 	 FROM_HAS_DN(0.00)[];
 	 TO_DN_SOME(0.00)[];
 	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 BAYES_HAM(-3.00)[100.00%];
+	 BAYES_HAM(-0.08)[63.11%];
 	 MIME_GOOD(-0.10)[text/plain];
-	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
 	 NEURAL_HAM_LONG(-1.00)[-1.000];
 	 DWL_DNSWL_LOW(-1.00)[suse.de:dkim];
 	 RCVD_COUNT_THREE(0.00)[3];
@@ -122,34 +120,37 @@ X-Spamd-Result: default: False [-5.50 / 50.00];
 	 MIME_TRACE(0.00)[0:+];
 	 NEURAL_HAM_SHORT(-0.20)[-1.000];
 	 RCVD_TLS_ALL(0.00)[];
-	 MID_RHS_MATCH_FROM(0.00)[]
-X-Spam-Score: -5.50
-X-Rspamd-Queue-Id: 1E9485FAAF
-X-Spam-Flag: NO
+	 MID_RHS_MATCH_FROM(0.00)[];
+	 RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from]
+X-Spam-Level: 
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=DTn3SWS3;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="tR5/67VI"
+X-Rspamd-Queue-Id: CAEA85F9F6
 
 On 3/25/24 05:44, Damien Le Moal wrote:
-> Zone write locking is now unused and replaced with zone write plugging.
-> Remove all code that was implementing zone write locking, that is, the
-> various helper functions controlling request zone write locking and
-> the gendisk attached zone bitmaps.
-> 
-> The "zone_wlock" mq-debugfs entry that was listing zones that are
-> write-locked is replaced with the zone_wplugs entry which lists
-> the zones that currently have a write plug allocated. The information
-> provided is: the zone number, the zone write plug flags, the zone write
-> plug write pointer offset and the number of BIOs currently waiting for
-> execution in the zone write plug BIO list.
+> Now that zone block device write ordering control does not depend
+> anymore on mq-deadline and zone write locking, there is no need to force
+> select the mq-deadline scheduler when CONFIG_BLK_DEV_ZONED is enabled.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   block/blk-mq-debugfs.c    |  3 +-
->   block/blk-mq-debugfs.h    |  4 +-
->   block/blk-zoned.c         | 92 ++++++++++-----------------------------
->   include/linux/blk-mq.h    | 83 -----------------------------------
->   include/linux/blk_types.h |  1 -
->   include/linux/blkdev.h    | 35 ++-------------
->   6 files changed, 29 insertions(+), 189 deletions(-)
+>   block/Kconfig | 1 -
+>   1 file changed, 1 deletion(-)
 > 
+> diff --git a/block/Kconfig b/block/Kconfig
+> index 9f647149fbee..d47398ae9824 100644
+> --- a/block/Kconfig
+> +++ b/block/Kconfig
+> @@ -100,7 +100,6 @@ config BLK_DEV_WRITE_MOUNTED
+>   
+>   config BLK_DEV_ZONED
+>   	bool "Zoned block device support"
+> -	select MQ_IOSCHED_DEADLINE
+>   	help
+>   	Block layer zoned block device support. This option enables
+>   	support for ZAC/ZBC/ZNS host-managed and host-aware zoned block
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
