@@ -1,153 +1,96 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C03FC1C11;
-	Wed, 27 Mar 2024 07:05:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71E7E29D03;
+	Wed, 27 Mar 2024 07:17:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711523142; cv=none; b=qF9bDVsL9qqyIB4Hi7IRbkdj34LmVt2V05/fC3Wouq8x7ha0wDwPNLdDdUdfWPbFsMIB3fZEZ98R6scFPE6Bshk7nXWojR2nsQUR7JI7OY55DeOeDZY4RLk68usmnGGoEY57ZySkSwSdn780Ua2SxLQN+BKeY+Ku42YQZ6O+JAo=
+	t=1711523853; cv=none; b=YVT7Dad/MIRszuTtCbDt2htk80ZkWM+B/cJW4LMqlWF6OfG8KCUJYsvPc/vN7TG7lzpc80h7+/ilf7vto9/E9LqKqVBbpLKUpdMXYxWiJF6wnpMawEWD2BlLj9YfyI6oONuxRoaEaKpCE9Uj/PDy7BfdR+e0tSj51E116wxdt/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711523142; c=relaxed/simple;
-	bh=XOBlX09e+v1j/udaOw/wYT2yZj6VgSRElukmOnK4HV8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FoPlnKGQNZr4b8xLw99WGE0/bIERyBNhwfv9cSOud2EgeMt+4MmIKzLV66ECxd0M+puzKQjP37tFVYpt8BIVpqDpJq1VbBdd2DKjvGdFC4AxTXB5pTVhqJdkWlcDQbLHDqaOzC0P8mFN5rfxVjx8R4/SlPMUpZpM7EH7oxc2+KQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=yqMsbqiK; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=mRa/yHnm; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=yqMsbqiK; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=mRa/yHnm; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1711523853; c=relaxed/simple;
+	bh=D9p4RfF5ezlFXA1XBBrfGcpjoZrd0yh0J08vc3C306I=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LEoO6v/hzBc74rMXh09StZCm3KZeaLgh4mnh5AlpNGLst/JmAGMNPs5I4k8R/7zFvnsB+N5aBPaKapZm4ZWXf9LFezUzy/jAtftfeEhiUW36fu8mxyt9Pe/76AAuEIgMMseNSf3DA0H7aVhYuMo2Oemdir71PIWDDQ59xuJ8fE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=ifKIbeKz; arc=none smtp.client-ip=216.71.153.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="yqMsbqiK";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="mRa/yHnm";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="yqMsbqiK";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="mRa/yHnm"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 9E490386AC;
-	Wed, 27 Mar 2024 07:05:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1711523136; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qLW+/MaVrU3M8GnOjQqL2d7nAeSWgcaHhlcif43J8fw=;
-	b=yqMsbqiKOZGycNfEgzTa/GKjGjYoavviXAl2nbYEwkGjDzTWyfPnhGdrA46CEn4iSlsZut
-	hoyOK7LN8S6Mer3AGxdzcTZCF+9czx+00M18lXhcnEWiOrUdx4e3J9481gk39DxmLXKwW9
-	pj6th46imryhV5ikOnOWFJGg8kzPUGk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1711523136;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qLW+/MaVrU3M8GnOjQqL2d7nAeSWgcaHhlcif43J8fw=;
-	b=mRa/yHnme6la7nDnsZ4uHvp2PZtD3dnL5JAZwtDLXl19lCQ9Bfe+6hSVdliyWXkU7F3Uu+
-	0xw70lhIsviXsqCw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1711523136; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qLW+/MaVrU3M8GnOjQqL2d7nAeSWgcaHhlcif43J8fw=;
-	b=yqMsbqiKOZGycNfEgzTa/GKjGjYoavviXAl2nbYEwkGjDzTWyfPnhGdrA46CEn4iSlsZut
-	hoyOK7LN8S6Mer3AGxdzcTZCF+9czx+00M18lXhcnEWiOrUdx4e3J9481gk39DxmLXKwW9
-	pj6th46imryhV5ikOnOWFJGg8kzPUGk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1711523136;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qLW+/MaVrU3M8GnOjQqL2d7nAeSWgcaHhlcif43J8fw=;
-	b=mRa/yHnme6la7nDnsZ4uHvp2PZtD3dnL5JAZwtDLXl19lCQ9Bfe+6hSVdliyWXkU7F3Uu+
-	0xw70lhIsviXsqCw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 850DE13688;
-	Wed, 27 Mar 2024 07:05:34 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id bf4gED7FA2Z0dgAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 27 Mar 2024 07:05:34 +0000
-Message-ID: <542328d6-f1af-494c-a497-64a653ac3072@suse.de>
-Date: Wed, 27 Mar 2024 08:05:31 +0100
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="ifKIbeKz"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1711523851; x=1743059851;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=D9p4RfF5ezlFXA1XBBrfGcpjoZrd0yh0J08vc3C306I=;
+  b=ifKIbeKz/baAMHd0ZFX5fytumXXcP5KRzpAgeoVyeCPu090ybJh07mZb
+   WGa5gG6Ril9pHXq385SZwZAtGu6dViYrvDJGpzNhIGufCtZQfzOxM8Khx
+   E38Ehi+eAOfkiz+TuyS6DuUKv2dsn2KwNEHgx7y2xt1qYA9EGhTYT3s8s
+   00DMtYZanle7jrizjKbU7Vu63gCnnqXgLpGbehjGUX7W0rmP2AdYdZOUK
+   HUrjixJ+8zaCSox2HMuH8yZEic88AWWgyo7DHLbi1CiMt+xIdubsuFXMI
+   VY72NIv/qupRgX+OCFRdEe3YRFrETBf/HUl3crXoFT/Thmqdl5A49CPKb
+   w==;
+X-CSE-ConnectionGUID: 4Yrb4TpOTKSBR9jzknzkBA==
+X-CSE-MsgGUID: SWUjxgMoQtuWjA9GPC/46g==
+X-IronPort-AV: E=Sophos;i="6.07,158,1708358400"; 
+   d="scan'208";a="12423273"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 27 Mar 2024 15:17:24 +0800
+IronPort-SDR: OxjDc8QUt+xi9Bv+Bz87UssT3MbScp8mk5ewG3bnT/p1PDTXhmxy5UHXVNnljuDhYUSiHMkV88
+ iMOIwZ0EZQ/A==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 Mar 2024 23:20:28 -0700
+IronPort-SDR: FfGD8/6EtQX8e4wbLFYdT/qjbnSrpSvsyGzsWMp1rhmvRlV/JchFq2fxOAB+DhJgRFIJJDzEcb
+ wjHp71eILZBA==
+WDCIronportException: Internal
+Received: from bxygm33.ad.shared ([10.45.31.229])
+  by uls-op-cesaip02.wdc.com with ESMTP; 27 Mar 2024 00:17:21 -0700
+From: Avri Altman <avri.altman@wdc.com>
+To: "James E . J . Bottomley" <jejb@linux.ibm.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v2 0/1] Remove support for legacy UFS
+Date: Wed, 27 Mar 2024 09:17:12 +0200
+Message-ID: <20240327071714.757-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 06/28] block: Remember zone capacity when revalidating
- zones
-Content-Language: en-US
-To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-References: <20240325044452.3125418-1-dlemoal@kernel.org>
- <20240325044452.3125418-7-dlemoal@kernel.org>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240325044452.3125418-7-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -1.29
-X-Spamd-Result: default: False [-1.29 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 XM_UA_NO_VERSION(0.01)[];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 BAYES_HAM(-0.00)[29.35%];
-	 MIME_GOOD(-0.10)[text/plain];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 RCPT_COUNT_SEVEN(0.00)[8];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 RCVD_TLS_ALL(0.00)[];
-	 MID_RHS_MATCH_FROM(0.00)[]
-X-Spam-Level: 
-Authentication-Results: smtp-out1.suse.de;
-	none
-X-Spam-Flag: NO
 
-On 3/25/24 05:44, Damien Le Moal wrote:
-> In preparation for adding zone write plugging, modify
-> blk_revalidate_disk_zones() to get the capacity of zones of a zoned
-> block device. This capacity value as a number of 512B sectors is stored
-> in the gendisk zone_capacity field.
-> 
-> Given that host-managed SMR disks (including zoned UFS drives) and all
-> known NVMe ZNS devices have the same zone capacity for all zones
-> blk_revalidate_disk_zones() returns an error if different capacities are
-> detected for different zones.
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   block/blk-zoned.c      | 15 +++++++++++++++
->   include/linux/blkdev.h |  1 +
->   2 files changed, 16 insertions(+)
-> 
-That again. We should never have allowed zones with different sizes.
-Anyway.
+UFS1.0 and UFS1.1, published in the early 2010s, were more of a proof of
+concept rather than a mature functional spec. Toshiba was the only
+device manufacturer with the most accomplished phy team to come up with
+a small UFS1.0 device. Alas, there were no commercial platforms it can
+be paired with. Even UFS2.0 that was published in 2013, didn't really
+make it to the market: too moot to take effect. It's not until UFS2.1
+that was published in 2016, were a myriad of devices and platforms
+flooded the market. Designated to mobile devices, dictates a rapid short
+lives for those platforms. Hence, we can safely remove those pre-UFS2.1
+pieces of code.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Changes from v1:
+ - remove ufshcd_get_local_unipro_ver which practically mean squashing
+   patch 1 & 2 into a single patch (Christoph)
+ - restore an if clause to avoid functional change in
+   ufshcd_compl_one_cqe (Bart)
 
-Cheers,
 
-Hannes
+Avri Altman (1):
+  scsi: ufs: Remove support for old UFSHCI versions
+
+ drivers/ufs/core/ufshcd.c   | 174 +++---------------------------------
+ drivers/ufs/host/ufs-qcom.c |   3 +-
+ include/ufs/ufshcd.h        |   2 -
+ include/ufs/ufshci.h        |   7 --
+ 4 files changed, 15 insertions(+), 171 deletions(-)
+
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.42.0
 
