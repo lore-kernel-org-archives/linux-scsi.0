@@ -1,70 +1,157 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5ACE84F8BB;
-	Thu, 28 Mar 2024 08:00:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8116B6518F
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Mar 2024 08:52:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711612856; cv=none; b=qrzlrHCVc/nX4NqH7w+QlqVGPfjBK/VUFwv9JzfcduaMiN0WRPgEXGS81kCI2vBwFAnjIMn5aK5IHtYguwFzTIPBrDr0tbAO/wk9+6+SNW3Mdvt3DWXfxRPM6YLXbTeFWEKFPCkdowkFogONNbMZYa8cZdK9z5wMlKTG+dlD2NU=
+	t=1711615945; cv=none; b=ntdN69KqwH7YLaMwclS8OKwAB/EdynLTRV6v8Qlya6yOWetoVm7Lku7OO/HOHynMTpGU1mRpbMtTu15APvlrH0YL+KT82MNyXhcCirMC1moDp2mO6bOMQL6QOw8tSO4U0qXJkROXPhgeHhulRChCUUh7NOTpJnUMUQrLXl1ncrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711612856; c=relaxed/simple;
-	bh=KqfMhfcyKl9MR7FT4u8aDUFTZmjcq2Pn0uZW9tDQ3mE=;
-	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=dl3Z/XWs3C5N4LPCf5P4eOS7PgxDAh8T6JA3SiE1TaJREVD0xFsiJLyqsE2sMy1r7BsNWGiNsHQyswbFZXwLK/INlHHlyyBr0Kett2boWWH9/tRa46ehPdhNdX2hwC0xtrAI8fJfOq3uvIslzl47xwEYnkjCD+zHOmQ7+bJGQdQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.17])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4V4wsP49hTz1xsdh;
-	Thu, 28 Mar 2024 15:58:49 +0800 (CST)
-Received: from kwepemi500008.china.huawei.com (unknown [7.221.188.139])
-	by mail.maildlp.com (Postfix) with ESMTPS id 02AC61A0172;
-	Thu, 28 Mar 2024 16:00:51 +0800 (CST)
-Received: from [10.67.120.126] (10.67.120.126) by
- kwepemi500008.china.huawei.com (7.221.188.139) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Thu, 28 Mar 2024 16:00:50 +0800
-Subject: Re: [PATCH v2] scsi: libsas: Allocation SMP request is aligned to
- ARCH_DMA_MINALIGN
-To: Christoph Hellwig <hch@infradead.org>, Damien Le Moal <dlemoal@kernel.org>
-References: <20240326124358.2466259-1-liyihang9@huawei.com>
- <5b5b9392-7fd2-4c87-8e41-5e54adf20003@kernel.org>
- <0ba9914d-7060-498a-beac-2b19770e1963@oracle.com>
- <ZgUPpwhkE9bRwHec@infradead.org>
- <75df3e2d-10c3-5370-3cd8-fe2fb0ff2acc@huawei.com>
- <03ed6449-eb57-4a55-b2bf-ecbb9787feca@kernel.org>
- <ZgUcTLQnoLuqhOxO@infradead.org>
- <ba7d201b-3746-4ee1-9574-5782cccbc88e@kernel.org>
- <ZgUgMcOC8DKbOVsN@infradead.org>
-CC: John Garry <john.g.garry@oracle.com>, <yanaijie@huawei.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<chenxiang66@hisilicon.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-	<prime.zeng@huawei.com>, <yangxingui@huawei.com>, <liyihang9@huawei.com>
-From: Yihang Li <liyihang9@huawei.com>
-Message-ID: <964862d3-ebb2-59ff-8414-6fd650e421cc@huawei.com>
-Date: Thu, 28 Mar 2024 16:00:49 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+	s=arc-20240116; t=1711615945; c=relaxed/simple;
+	bh=ChxjiAPwIJAoMLWvSyvtBLUuuJR3I+RKCIHsWyF8tDk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=thiuK19sFWVZAOilyU2Exn1zCr+mJKC+wZDiIbVBkdRfNmOqhKVAZFV6hN694ellCEO1XEt3XexLbxHB/34tLdWvZRJtiVGd6NwrQ78UmuxcD9EUZMB6KZ2y6hdqRaIynhiz7rNOx15A6Or6uE7NO5heUYuvPxcpXzM3kMSPE+8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=rj/mWA8p; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="rj/mWA8p"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-33e285a33bdso468337f8f.2
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Mar 2024 01:52:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1711615942; x=1712220742; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=zPYjukiTakqXaBTdtaepVTDOm2SsVNFnM6RyH2/1aQ0=;
+        b=rj/mWA8piQ9hR8B1HhwNb7jshD5tWjcER8vUkrz08dUW2JmdOD4Hg1rMTeRcyBIYjY
+         Q8Q1zwsn9AALbaDPYqXCleuq8iGxj5EhyaEXRNrvMgtdv+QfACf7onTq9qo+/3FRBqc6
+         66q897PQqiFm0nq7ICtqH+z/MWNOf5kdctLfqS05ZkmKhwK4KHsMc2MgK/ASP3Z91TpE
+         smrysuHZsavq3yVpjcMVW1yLq+KMl+RT5aE8bQZE3zpzsmdtFKg18H8/pbe439o9qG53
+         1L7wqVLlzGnVzGN1Ba3KBa2Q5PzL+Zu8il1XJ60Hx293vZcMTY9R1DoWFEP9MDNXHi5d
+         cL+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711615942; x=1712220742;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zPYjukiTakqXaBTdtaepVTDOm2SsVNFnM6RyH2/1aQ0=;
+        b=IMB7ghw30fxv0abRodl2atF9SzRxpX24OKmpbF0AEUqLR1WvnD6AE1lz9lMCE7Tmoy
+         d/o6mYKG//JXGbjWh+rMSnp+h8gRk2VIEQlTVcWKOGZjqJ/DGfgfb1AT9x41EYmsdEeC
+         4PPkcYmxerD6rWpyqWEr1+ePUVsYNI7TDt2uxr7fVEk/OgkNqaew3kJ5hIGY0T+9F3Xu
+         2d8hbPCC54qoZTVX2xVtn15IelIXNwwUOfVNqODqr+4h7/6J3vEONbp3CJe/sLGh9zOD
+         VSj+QXDnG5w9O0E/79yI6cl1YiVwxO7OIrSBVUOR7f4uHTV9V0Unt0vXX6sFNQdy5AVR
+         RTtw==
+X-Forwarded-Encrypted: i=1; AJvYcCXa8SkxbEf9RICsfyJgRBjHdY54k94FroAdXWCxNxVexV4TeIWERmqxBo+d4ttVACE/XF6Nn0yILO5Vr96KLHDa07Jwxq16vNiziA==
+X-Gm-Message-State: AOJu0Yxjam38+HDCdujr/PX7C0vbGamzaOVCmP0C6uskwDzSh5pyqtny
+	HF6ARUFDyqewP54chN2z2LFvrPw2PbqZYo1xWEFfYbQzZKvG+g6os6ja+T7MUFM=
+X-Google-Smtp-Source: AGHT+IHzq/DkX1mQgyKwyLbrkwPXY9N1nuYOMcKmFgvdM0fybQQIm4ZFa6cnU75qQRsOsahfuax9Vw==
+X-Received: by 2002:a5d:5043:0:b0:341:bf1e:45a5 with SMTP id h3-20020a5d5043000000b00341bf1e45a5mr1247456wrt.46.1711615941979;
+        Thu, 28 Mar 2024 01:52:21 -0700 (PDT)
+Received: from [192.168.1.20] ([178.197.219.148])
+        by smtp.gmail.com with ESMTPSA id dz16-20020a0560000e9000b0033dedd63382sm1148785wrb.101.2024.03.28.01.52.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 28 Mar 2024 01:52:21 -0700 (PDT)
+Message-ID: <4937df72-9efb-45c5-9c46-2a9d3ec8887f@linaro.org>
+Date: Thu, 28 Mar 2024 09:52:20 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <ZgUgMcOC8DKbOVsN@infradead.org>
-Content-Type: text/plain; charset="windows-1252"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/3] dt-bindings: ufs: qcom: document SC7180 UFS
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konrad.dybcio@linaro.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+ Conor Dooley <conor+dt@kernel.org>, Andy Gross <agross@kernel.org>,
+ linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240326174632.209745-1-krzysztof.kozlowski@linaro.org>
+ <20240326174632.209745-2-krzysztof.kozlowski@linaro.org>
+ <20240328035909.GB3212@thinkpad>
+Content-Language: en-US
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
+ 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
+ D2GYIS41Kv4Isx2dEFh+/Q==
+In-Reply-To: <20240328035909.GB3212@thinkpad>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- kwepemi500008.china.huawei.com (7.221.188.139)
 
-
-
-On 2024/3/28 15:45, Christoph Hellwig wrote:
-> On Thu, Mar 28, 2024 at 04:36:12PM +0900, Damien Le Moal wrote:
->> My bad: it is kmalloc() that can return something aligned to 8B...
+On 28/03/2024 04:59, Manivannan Sadhasivam wrote:
+>>    - if:
+>>        properties:
+>>          compatible:
+>> @@ -250,7 +276,7 @@ allOf:
+>>          reg:
+>>            maxItems: 1
+>>          clocks:
+>> -          minItems: 8
+>> +          minItems: 7
+>>            maxItems: 8
+>>      else:
+>>        properties:
+>> @@ -258,7 +284,7 @@ allOf:
+>>            minItems: 1
+>>            maxItems: 2
+>>          clocks:
+>> -          minItems: 8
+>> +          minItems: 7
 > 
-> Yes, that's new on arm64, and possibly soon riscv.
+> I'm getting confused by the clock requirements for qcom,ice. Why does specifying
+> the qcom,ice phandle require these clocks? These are the UFSHC clocks and
+> already defined above.
 
-Thanks for the discussion, I will still aligned to ARCH_DMA_MINALIGN in v4.
+I am also confused, but I did not change that logic. I don't think that
+it is anyway useful, but that separate topic from this patch.
+
+Best regards,
+Krzysztof
 
