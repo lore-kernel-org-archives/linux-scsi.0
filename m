@@ -1,120 +1,126 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DE501CD24;
-	Thu, 28 Mar 2024 18:14:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B77BE46BF
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Mar 2024 20:45:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711649659; cv=none; b=bWDscat1RWlDU4xRnpeYBe+W2GOO3gQ2WVBnbOQsW5Ji317iFtsd4nquTaYYOJfuWgojMbYRCmegZEOGSqjmv/xSW19oL7ux+dIAIhm8ZRxeIJLDMqVBN2cs7qChn2HRdM4/znss6hEv86GTKvqB1H+fWsysIjj/rosfSsnKF00=
+	t=1711658757; cv=none; b=HbneHNe8JfbwCr2XcmYBC7Kg3PRewYiDJoUqas+OmKQ/8b+EwGfx3cj/EJr/u6gjkeSmmUO6JgDPkTVQ6An4fmUq+gmWUZDrUAkEXPIUgSAYBxYZB97f6dZmkfJZdA7Z+rkQK5Dgq9oeMqgLPSFh37oYY37mFvuX5vmNItROhhU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711649659; c=relaxed/simple;
-	bh=gLygC9Vp66UvWQw2Yi8ZCQFXKYiU/tkZw+C8jULcJF0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=r7Nc5yqD9FTYsEmq/J15Mt8wB26wIdIRVE/tP4VBqPWHBZXhrFyFa9zngsgSdI+pY3+NkQaUE3Jj3tswYCwVx/anNR7XwpkqJsI5Rc5yL1LqSTyW9koSKKpMFPXGF4+qyyJqshhtGRbnl/zOXwEsgED74YEfHSrzGRZlcckobU4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=iuwosM9K; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1711658757; c=relaxed/simple;
+	bh=fft4OrHAz+FhYU/1OtFhOBCY8wS5s8+GRl/vDm+Mp+A=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=Ke1EtQYb+Ma196wciO5TFiYMedmI0o+66KvzGTDrgvVn1D5Gr5uxXQAiuxST04qhpRl693Xr/X46tVZySvUc8JCgZvWUhNKexj1eQPvENvK67bEmB9R+DotCzVz2zYLwTn1AlEq4UDhmf07wJPtbENzmjYCnkjOF59AiF+2NAFg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=QJnGDtUs; arc=none smtp.client-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="iuwosM9K"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V5BWR50w5zlgTGW;
-	Thu, 28 Mar 2024 18:14:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:references:content-language:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1711649647; x=1714241648; bh=FMpIw+4/bg5d5JM200rhY7E6
-	bZSeI+7NplMoHYYK1Tw=; b=iuwosM9KdXWsyq1U30xWAJpj9J7ys9QDClYZFUv7
-	zwclHQgfVB3/WXjHtwTvtqmF4Fl24fpxZ+LuVbvrTG8E04kr0zJYBo/jUI4qZTLr
-	Cc0u4SHampfYpUNGkRcJgBF2bEDbRAFDzDlxq2A+/VpcrXYs4VJ5GQq+jNXjW3Gw
-	A+OGYyYtSbpE0kdvzObZZKFpxrFcTPb17zUN/xbP7XPGpGGAwHz8V82ejRMexCBm
-	Wl/XEo7MzOS++EWAaJOOa+vLo3dL+Elwor9hiJVF5vgfFNp5VFsTHcZ0y7mK+5a8
-	93Yji5qC9N8GEucum+kH+PKgQnTvHLpKLwbZZuyBP1ntUg==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id FpCBlwONxWxa; Thu, 28 Mar 2024 18:14:07 +0000 (UTC)
-Received: from [100.96.154.173] (unknown [104.132.1.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V5BWJ1T3tzlgTHp;
-	Thu, 28 Mar 2024 18:14:03 +0000 (UTC)
-Message-ID: <a474bae3-e505-4d17-a5e4-ed9928b6cbb3@acm.org>
-Date: Thu, 28 Mar 2024 11:14:02 -0700
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QJnGDtUs"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-415447b16aaso7574985e9.1
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Mar 2024 13:45:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1711658754; x=1712263554; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=OHCAelpDeOyTspvDhIg4gg/+myzVVV+bdN1gr4pqQRs=;
+        b=QJnGDtUsI5HYWzbHOqFhtYF/x0eGYc7ZBn3XKt8w3dAc/Djf/KrfF+0EjFaNosOFmj
+         yJNrKatVBZHibBOh6NPe/cvleJFEN92TTOtCwBTJrKfeEvo++hoMft7HX8sNy75NGIBW
+         1PIPXG7XXL2IJa/dS9Au8HRWu8ut35DfTGnpZg2UT7IaqMMhdbPufWcuduRVZD+d8r/n
+         ZHJYh1tSVp6z9VLhUDg7G6IvhvlwwK2R/FZDjcUfnkfvxqjxWjKkopqTA5Q4KrrzWYAj
+         kQROMlEx3JTGV9Rj7kyhqxrYAaSBzhxntcxUi7m1JttIqVlEu5nuWwDNQJGs5asmoO66
+         n1pg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711658754; x=1712263554;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=OHCAelpDeOyTspvDhIg4gg/+myzVVV+bdN1gr4pqQRs=;
+        b=NAesf+Z1qx0vpT2yTUkjc86gaBftEUhsCiyYo1SSqI7qNbNvJ2X8SNflyNy/5qySDm
+         B5UztO4mKeojSGE30OXQT/0gkvV4aTXQcgHLtVlRCcSFH4AhinWq/AJtw8qxWcoEpjd3
+         ER/2+1NULCQ1slrpjfniOztOkZfHMIF7FZ1kYIwQb9dVzRdFUgLI9wY0FPr6zi9+l+oc
+         rxNtT2Ia/CO9AHVPwFCRgxdF5Y7onYnvMkh9Ou/ANOx5kCtWsw3fyerZycGH4BfdaG9v
+         Ko4+3FdJKk9v+fIYoAEUKVbnHcES6s0Ws8wc1aqp4/0XZ8wwKLubznhdyIJXfq8zaecm
+         VQ7A==
+X-Gm-Message-State: AOJu0YyaMnwz3Ey/HuskbCnS5VuoB3rzB+daUAwgP2k1sAn/Lrmd7HZ9
+	AvLx8CX0ab4GSWmhH0+kE1Knqi8MfaVwzm6rDDy2O7nr3RPfUxN6JhhJaqVMThk=
+X-Google-Smtp-Source: AGHT+IGx1i0glEArl3yYP+MeF600L4ZFfhwyYRmYb/OzKbGsp9z3rF9xSa5fs69ktTjLjash1eKRvw==
+X-Received: by 2002:a05:600c:45c7:b0:415:4b56:362f with SMTP id s7-20020a05600c45c700b004154b56362fmr324635wmo.15.1711658753935;
+        Thu, 28 Mar 2024 13:45:53 -0700 (PDT)
+Received: from [127.0.1.1] ([178.197.223.50])
+        by smtp.gmail.com with ESMTPSA id t15-20020a05600c198f00b0041497459204sm4762697wmq.12.2024.03.28.13.45.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 28 Mar 2024 13:45:53 -0700 (PDT)
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH 0/6] scsi: store owner from modules with
+ scsi_register_driver()
+Date: Thu, 28 Mar 2024 21:45:44 +0100
+Message-Id: <20240328-b4-module-owner-scsi-v1-0-c86cb4f6e91c@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 01/30] block: Do not force full zone append completion
- in req_bio_endio()
-Content-Language: en-US
-To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
- linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
- Christoph Hellwig <hch@lst.de>
-References: <20240328004409.594888-1-dlemoal@kernel.org>
- <20240328004409.594888-2-dlemoal@kernel.org>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240328004409.594888-2-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAPjWBWYC/x3MSQqAMAxA0atI1gZqtThcRVxojRrQVhocQLy7x
+ eVb/P+AUGASaJIHAp0s7F1EliZgl97NhDxGg1a6ULmucChw8+OxEvrLUUCxwlhnNtclGTPYEmK
+ 6B5r4/rdt974fGaQk7GYAAAA=
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ =?utf-8?q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, 
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+ Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+X-Mailer: b4 0.13.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=996;
+ i=krzysztof.kozlowski@linaro.org; h=from:subject:message-id;
+ bh=fft4OrHAz+FhYU/1OtFhOBCY8wS5s8+GRl/vDm+Mp+A=;
+ b=owEBbQKS/ZANAwAKAcE3ZuaGi4PXAcsmYgBmBdb6jMDSW5dTJ22j6xYqakqZzsHwKgnbk9uwj
+ PSYItD1XvuJAjMEAAEKAB0WIQTd0mIoPREbIztuuKjBN2bmhouD1wUCZgXW+gAKCRDBN2bmhouD
+ 11k9D/sGG3YkxmAJvcaSAMR5xVP3k/lGaPgRxbgGQCg7Bh0/7txnl+h9FQRmhLGh0zfBt+KqEgP
+ +CD7p8izNocjR9sh/likMTI/JHNgOpllcdw4DuSzICBeO24GJWokHJO2OmjEHqPc9/VnJKYsIju
+ y4t10LN//glAlwPFn5zIFpUDVLin4WEFy1vzH4VcCUTt8vkdAhFVgvIjh5vXMwUXJf+tEiz1/Gn
+ QUtyyGIxHeYfXqxqrGi39Gfxy+BVbyJKmT2TcLKocWBB8K/XnIgRyj5oyQ0+7eHuHPtW3ITzo2U
+ ssVmmcgDhelq70EVyIyNFXoYfik6Z0I/52Er5lobA8jVLbkhQv4eTjD+NR9Z/cVQ07pX/EYVyjN
+ ngI9nf13TgAopWw1BkNFQeI7BJH42YuHCW1VOJvKSMfljIVq7YEaS5qBj+H1Kd1Dl01aCux5JBT
+ CyPhTJxRe7PCqJFQ7ZvA7aw8sVf+eTmMwARbJMON9kG/d5pNEMEW+aHQHa+ux+xvTqG68+aC++0
+ TxQfIvSs3Yb3nNKgUWivnpIUxb3ItuBeM2j3J1xHgxTS3tQJFZfru7JSaXP09iDgoL/uX7yc1rX
+ WzU8GYF7rBERjjc1Yqe5Cd1OCi/6E8cieqFRI0vF3hnh1jssVZkEResWRuPOirBGb6Yj99KIW3X
+ rpnEzTqdDLKrSCQ==
+X-Developer-Key: i=krzysztof.kozlowski@linaro.org; a=openpgp;
+ fpr=9BD07E0E0C51F8D59677B7541B93437D3B41629B
 
-On 3/27/24 17:43, Damien Le Moal wrote:
-> This reverts commit 748dc0b65ec2b4b7b3dbd7befcc4a54fdcac7988.
-> 
-> Partial zone append completions cannot be supported as there is no
-> guarantees that the fragmented data will be written sequentially in the
-> same manner as with a full command. Commit 748dc0b65ec2 ("block: fix
-> partial zone append completion handling in req_bio_endio()") changed
-> req_bio_endio() to always advance a partially failed BIO by its full
-> length, but this can lead to incorrect accounting. So revert this
-> change and let low level device drivers handle this case by always
-> failing completely zone append operations. With this revert, users will
-> still see an IO error for a partially completed zone append BIO.
-> 
-> Fixes: 748dc0b65ec2 ("block: fix partial zone append completion handling in req_bio_endio()")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   block/blk-mq.c | 9 ++-------
->   1 file changed, 2 insertions(+), 7 deletions(-)
-> 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index 555ada922cf0..32afb87efbd0 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -770,16 +770,11 @@ static void req_bio_endio(struct request *rq, struct bio *bio,
->   		/*
->   		 * Partial zone append completions cannot be supported as the
->   		 * BIO fragments may end up not being written sequentially.
-> -		 * For such case, force the completed nbytes to be equal to
-> -		 * the BIO size so that bio_advance() sets the BIO remaining
-> -		 * size to 0 and we end up calling bio_endio() before returning.
->   		 */
-> -		if (bio->bi_iter.bi_size != nbytes) {
-> +		if (bio->bi_iter.bi_size != nbytes)
->   			bio->bi_status = BLK_STS_IOERR;
-> -			nbytes = bio->bi_iter.bi_size;
-> -		} else {
-> +		else
->   			bio->bi_iter.bi_sector = rq->__sector;
-> -		}
->   	}
->   
->   	bio_advance(bio, nbytes);
+Merging
+=======
+All further patches depend on the first patch, therefore please ack
+and this should go via one tree.
 
-Hi Damien,
+Best regards,
+Krzysztof
 
-This patch looks good to me but shouldn't it be separated from this
-patch series? I think that will help this patch to get merged sooner.
+---
+Krzysztof Kozlowski (6):
+      scsi: store owner from modules with scsi_register_driver()
+      scsi: sd: drop driver owner initialization
+      scsi: ses: drop driver owner initialization
+      scsi: sr: drop driver owner initialization
+      scsi: st: drop driver owner initialization
+      ufs: core: drop driver owner initialization
 
-Thanks,
+ drivers/scsi/scsi_sysfs.c  | 5 +++--
+ drivers/scsi/sd.c          | 1 -
+ drivers/scsi/ses.c         | 1 -
+ drivers/scsi/sr.c          | 1 -
+ drivers/scsi/st.c          | 1 -
+ drivers/ufs/core/ufshcd.c  | 1 -
+ include/scsi/scsi_driver.h | 4 +++-
+ 7 files changed, 6 insertions(+), 8 deletions(-)
+---
+base-commit: 7fdcff3312e16ba8d1419f8a18f465c5cc235ecf
+change-id: 20240328-b4-module-owner-scsi-91c327e55bc7
 
-Bart.
+Best regards,
+-- 
+Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+
