@@ -1,163 +1,329 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DBF24A09
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Mar 2024 00:17:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711585051; cv=fail; b=mIyOLg1WWAy0j1FuaPumXT46h97J530dLL+muf00RZQrc1CPENNqMTMIOgWT0VBUFiXP5VurLL6MTxKdYpFVXqVY6EMt4xmSIWPwcaz9oZxdRYxkIE3vrJOKxQ2NhSEAHP22RI3gbrngy86WP8lhleh4hxtNP1DLm/yd/O94Jy8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711585051; c=relaxed/simple;
-	bh=PhAu0Tf/JJX4MAyFcNE4no7d8baUXLLVtxpBG8mPL1k=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=L4oxiWWuI7jJmDNcUbyinzT5Pf2KRIJDmuxm8jlJ5qS1XLWMIwIbWfLU2ld+Hc6kcHhwCgYfhyB1MWSPZvJm07BEx2KMUijK0RdoMg0PqUGB1dOa/4Ao0rEn9jtyFjrsgtQU8Xtu6YRaLveWpZeiatA4g2njelxUm1+o4NmK43s=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=U82MilsU; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=boG7rK0w; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F01EB1BDEB;
+	Thu, 28 Mar 2024 00:44:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1711586653; cv=none; b=Hdl6PC7ygbRZQV/03KgqasOw1IQx48NDzhHQugS+dp27k5GGR/oJUqkSOiAYeFEOZ5Az8W0Ly1vN55zv8ovlw3vxYgUKDJeTScpKLprwxN8LgSj9KnypbEaTELnlTgrF8dQErOmH6a38dy26G/akjjh2bEGavqPE6DyXfQEm95M=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1711586653; c=relaxed/simple;
+	bh=zU3tXmGX09zUyJv+MjSCjxdvPX8nml8PhD7h7mDK1rI=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=uZ7nfcjZRM+fmZV+wmQyYya7foWnIogBO5ZzdyyPkObgN4lVaOwivK+H9QKRJeY4iT1yqgu2Nnz/p6FZCFDHNkAc+7ImtJqp1KrGhrHTb/OC/BVSn8VZqAORGVoJamDChtArK8sNUc/VDzCIR8aXzZyPbAKSRyj3AdybhS5/VfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fWTE5ADB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="U82MilsU";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="boG7rK0w"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42RK95PH002128;
-	Thu, 28 Mar 2024 00:17:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : in-reply-to : message-id : references : date : content-type :
- mime-version; s=corp-2023-11-20;
- bh=59ROeluxsDFcrjtqJ63sJcTUvwXNlxoNdSfd82xInx0=;
- b=U82MilsUZUoPAVpzWUmzEPkTiYYZCakl2eSxnJCook4T7xPQokEkpidTIGlqJMIqOU4N
- 4ZNkU6GGSTxcC2X38W6TcFk8Ic8l5w1Ufbr78cns3RlvTq6sSEKgmPusJTTDslzJnfsS
- TyrLWGCfn5QaBz2pdiR+TKK1rPr9+yj0huaS7VRR9aQDH40O7a125LYKTuAzjDqn0cLQ
- Zdjvukoa/cjDoO9dzC0tqhqbhbZ0AB1QBrgBZnXQNXawKjgoNf0gmb2kX2stiMSLkFEC
- cGmF/b8vcNivYX3woVQ43b8+lkm624t+GxVOASU4ku2udGuuZmMYKyvQNpgyIqnsOpbK Mg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x1nv48mkj-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 28 Mar 2024 00:17:21 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 42RMUcb8018173;
-	Thu, 28 Mar 2024 00:17:21 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2041.outbound.protection.outlook.com [104.47.66.41])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3x1nh9gh3e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 28 Mar 2024 00:17:20 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jQDUZbc1bl5tLsMrQ5noAwRL0G6BMVh3PuCueQTby5daWKh8LLnie83WKRYRRj4O8dW9dp5DvPFQdnLKbh3LglYrkR1qT4B6BV0gRiBEfdWLVTJ7m4fNgGI30Q9B7RnxfDlE23j4ho5E2ww8A55xL6c6klwu/ZpetZI8mBrYEvzpO4sTPr0hHVWXaevcJ3QUTE+0k3Bb6rEpnxbgExfcrr+I5pbOZKYa1BBRRLsbhfJHZwfMXqrJjkOqOw70OP1TOh/wJqw3ryfpiPk6p3/8pGjcAEFnn+DKC9/PfMBjoNpQjqA7ZjKOJ94R2nsyqc71t1sFpEekUTTvNqO5FBG8gg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=59ROeluxsDFcrjtqJ63sJcTUvwXNlxoNdSfd82xInx0=;
- b=IrinSGL/WvST7Bzfr+qTeIInfFXJZjYtnV9DJJyl3vHW0tsj12t2rXx2QpBaEKzJwqKDALiLeh9YyKxR8p4opuyXwihGj2pAy6lFUsiwMT5sNX81lFIaNgd0moNuyX8orGooBeFGB2AJi6fuL4M82/mJSmvuP/Olwzwr7WQpVn3qUP9mwle8w87E5viJuYvu2HpIyMZO91rDal+4w4I/jQr3GbCoZpfrcVQ08iGRRPhQCs/yyzo+ptwKJiI6iQo3ZX/KIGCGptOksP/0aYsVbFsp1zbz1iDuPoT0zdP7cVQFVlYGeAoO/aPkRSXdKAmsy3fpGUKVZJ2sxeQxf/kdOA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=59ROeluxsDFcrjtqJ63sJcTUvwXNlxoNdSfd82xInx0=;
- b=boG7rK0w22zsmPlKCOaXk4SGRIpc17f9kkC9/CErX9iXkKxTzgJvkz15RdMvkOBNzDLnl4mU8QnTnNvL8cOY3s4WsU6okFz934dWLNygUV+89iaOT73PZpzNGIZVUIIcGa7pyGmERfC1ivc59gFaRqQ1okQIWJgonIG5wZ/Y37w=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by DM6PR10MB4186.namprd10.prod.outlook.com (2603:10b6:5:218::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.33; Thu, 28 Mar
- 2024 00:17:19 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::7856:8db7:c1f6:fc59]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::7856:8db7:c1f6:fc59%4]) with mapi id 15.20.7409.031; Thu, 28 Mar 2024
- 00:17:18 +0000
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>,
-        Igor Pylypiv <ipylypiv@google.com>
-Subject: Re: [PATCH] scsi: libsas: Fix declaration of ncq priority attributes
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <20240327020122.439424-1-dlemoal@kernel.org> (Damien Le Moal's
-	message of "Wed, 27 Mar 2024 11:01:22 +0900")
-Organization: Oracle Corporation
-Message-ID: <yq14jcr5hxj.fsf@ca-mkp.ca.oracle.com>
-References: <20240327020122.439424-1-dlemoal@kernel.org>
-Date: Wed, 27 Mar 2024 20:17:17 -0400
-Content-Type: text/plain
-X-ClientProxiedBy: MN2PR03CA0014.namprd03.prod.outlook.com
- (2603:10b6:208:23a::19) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fWTE5ADB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46A7AC43394;
+	Thu, 28 Mar 2024 00:44:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711586652;
+	bh=zU3tXmGX09zUyJv+MjSCjxdvPX8nml8PhD7h7mDK1rI=;
+	h=From:To:Subject:Date:From;
+	b=fWTE5ADBWld0/K3YcRWxNFgZBwJ01YVr13zYQypwfgqI6VNbMw4uCgzgmm+AQ+08B
+	 fNZm03MSmOd8NvQbCich/dTvmZvhmfNGIBrRFx1wo0D6lgp7V36NMOLJezru85X4Z3
+	 HMPYmQYO/F05V+Z6IoYtuduzqWnArizgZT877mAORhl0FqEtb5mUIfh+LftcCAxKUu
+	 OLM2CyfX+C8uihciApapYGJyvA1X2aGRQKVDcpvAnzAbmQJUgeYNZYh5GyButV62aQ
+	 EDuahyFyLDpAdUWLGz0tj2+TvojFvL/SgqlGSnWvjvglrVy0MutfijeU184i1KIqjx
+	 k7tNFJXlfMYvg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-block@vger.kernel.org,
+	Jens Axboe <axboe@kernel.dk>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	dm-devel@lists.linux.dev,
+	Mike Snitzer <snitzer@redhat.com>,
+	linux-nvme@lists.infradead.org,
+	Keith Busch <kbusch@kernel.org>,
+	Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v3 00/30] Zone write plugging
+Date: Thu, 28 Mar 2024 09:43:39 +0900
+Message-ID: <20240328004409.594888-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|DM6PR10MB4186:EE_
-X-MS-Office365-Filtering-Correlation-Id: 85949ba0-f517-47a7-fc16-08dc4ebc6e15
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	5sTnlWqkVelNXYYqRyo/GJkEjbOp+kw4LahCsogvo6dI07/nZ6Il/OuP5BWyhFOOHx6QJDFdg0hugE9UEss52smSa0O+yGmVlFjvTqPOiF6Pt2t362cbLo+HYQJVp7goq4VMl3ivGaln8O09Pw29NwsxjQ6WxIJBJ2OfYMNfYQLl5lw11P4ntg2yEJ6Lsr1s+yJfqNWXaygD87EgWq6EQk0ewIiFPjfl6nYkMRvqLhUCT/NtAXW9XQoAjTaxWJ5ugncPq+PJ+2kUe84q6Ey1oM3epqpJv7alBowEVt+TkKdNk4ihEpSqrCUd233sKmInkveiomjggXog89XfEZhvm5VHHsqp82Gk92Sr8iOeJU6yFgh8VwSJnUAp6yOE+qKVG/8VSsdtpV7u+33zdqjdTqV0v+y6uH8YdzUa4p7++tjv2YEyY4Jlm7gQPdEAGsAcIPunqXAYJZE/fYSspQekxldk7f9l8/+U19FvbM0qrgKuMrduui9eKXt89Lyu9PLQm5QrezVeFEMCEbLjUV2V8AzsocjKRPrO7RkjQ9lz0qxiGflKzkaDvE0toc2Iw6SRhaQCFwv1zJsRUcd7VO1kuJSgFs2mQH0z1/CxGv61l5PYW9cyAQI4iXdm8PxJRQrShcW1usdJNSrBcPzmCJJDlXQjJt/GPsFHSHPASBOEZTc=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(1800799015)(376005);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?ihOp7a2rTvUMHk0V8o1OSuUifpcFL9qXRWA59/xys9v5XKWw1yaGhYxatpJK?=
- =?us-ascii?Q?mtVQx6DA3u2Xnp0ShojRwW5xES42zSTKqwlEzwVPSAK/LVsXLcPQR9qyMp+r?=
- =?us-ascii?Q?l6n2wJ2Q03yFxhWutz15ViV5MqYaJ+sPkqHPs7GFlypN1HOB+4sSfrvOkdrO?=
- =?us-ascii?Q?VIKmmyNPWGNzmMwXZWekOg4Rv6QgpKY7dn8/AkS++xcigmcNWfzTbxYcpexW?=
- =?us-ascii?Q?ykZvKwORsB8/RcfiVjhyZmdGNi0G7sgSitj1rY1zTjvv+e9//33KfkcLaOZL?=
- =?us-ascii?Q?UqLghPz1mVcnMvvM6S7YMs1n2CpDv1oPPCBUECqcHte7RfiEGwHQh/RoykG+?=
- =?us-ascii?Q?YytD98DhV2jowTN8U1LT7auNRhLU6aiCLlJNecBvdIcDRerdtsXueuqFL7tQ?=
- =?us-ascii?Q?GE6BUK939WJVIPIvpesW3WdqO3q+cq4WTDbtznhra9yGFRw5BWBoJdx4YnNE?=
- =?us-ascii?Q?UeqKVEg33Qvid3VktiKK+0b5uLVujlbccRSui4rPgkwmiOuYDj5eOPo61BN8?=
- =?us-ascii?Q?uDLapjY0eDt5EtgK6KmM7h+L8Z4Oz4tJ8yDKcu/s3e3i71EK5NH7NdBhQw0I?=
- =?us-ascii?Q?4xx3JlfN10Y24kFJTZK1AZ0J4kEfsmCkpRomFW0tbiT59AiMEsFiEZRGGSiY?=
- =?us-ascii?Q?m7qG/A6nKkVFVkm/vve5gOGXssTSDjA0oPAh8dDsLTtukd8lm5Eee4QsuEhB?=
- =?us-ascii?Q?Zkh9dBzzbV1DtawiQKfBs7zT9TsqidHolnN1Mou0gKFhb7CRVeF3j4oyusAL?=
- =?us-ascii?Q?MuXcGMpubAObkMLhhI7bunY9iIHtj6T6MQ9kvb4sBMcAuRp57+cal4TWQulj?=
- =?us-ascii?Q?AlPuzvz10wLi14XCYCYRK86cYxSqgM8CDtkJbJoDFLuBs9FIDb8qp4OfIlnV?=
- =?us-ascii?Q?7O7DqyQgkTqdQWCS4aih5bFLSrQqzir86uOmcY5sv55N5YT3uTqUeO0wZYkM?=
- =?us-ascii?Q?2uAigB7rZa5jXl8KQzkfCkFZ6hO+vnTmDty33AWCTMh6G32dRMrDyaQfmw2s?=
- =?us-ascii?Q?IOMdzhLQy9PxgH5eutq7Ma7m9tbtxi6qyk3h44WiJELDZ+XoBIicU2Pol+ra?=
- =?us-ascii?Q?8bc5JL9fqRRNuYdaRTT0oFwOVFo/y9tx8CedgVaHehFNIVQpfoBYCBXH1z9k?=
- =?us-ascii?Q?Kldmwl5JMFIGdvJP5kJ/ZrgBMHsVz7L2OllalQpJXMBBAATUcyNdMNtISs2V?=
- =?us-ascii?Q?5L4eIkz6nAQoAN31F+4LFZdQIIECJ9vT7E1KXdNTq1GqHkXbVVlQNY3XGA3m?=
- =?us-ascii?Q?Ft48vqMCIdfAHHSQHeqJJXXewgQRvgKnyZ1USHnrzwIar2SDbRP+J8uLfnkC?=
- =?us-ascii?Q?MhxH14QrTieTzz1CZzB9M5Zda62mndHyikYHpCSguuQFsuFFRbuFwi81neP1?=
- =?us-ascii?Q?Hu+uoQeu10jyj6RGGlkWmeZ95sS97Jgbv8yDMqVcnppPn+bTEI8Qtrrz6GUh?=
- =?us-ascii?Q?Czma7nrpT4TZrCumhhgvjLAIdwyl3KAI3M2ESfDd+jfxGlDUzT4xvni0bOaL?=
- =?us-ascii?Q?9dRVwNkDT7tCRi1DXohFqZyjaeelPbaXlKZ3Xv9AWwP13CI2UIc8eWnLmNJU?=
- =?us-ascii?Q?LICWgQQ23xYSEAToMAGs2jfEquqZqIsPi13rJEzA9V6pNWlIF6mNd5xBJ0tH?=
- =?us-ascii?Q?aA=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	izrzOqgDQ3mmOCpuF1KQL21KnzL9se1L74SRBzYi8VRHDsGn36tNy1rmQ0DAttVrSiDFmVKkT58GWrHq+95cyHOQGrPcK24vkMJddA0uhepSF7ZMIqM/xradYkxMunOObFf2Z78VRVF7OwTaGlvTgllgyC2tEKppd5U+D0fzZIbtXHDGh05K6KqpTM9O0fSxust943x78ADQiI0ehwUHBeud9M/I2XOqMhnVzM9w88nAnCQpQX5tGae3ihpxW2K+OEub4NNQgH0jyFpd2WWspcU3C/8xlJaToM+m/Rebuk1Cc01b9gGfVYtYcQPNwrWwfW4h/5ubS1oGHv3MUzR60mZ7/BJqB2wQAhBdryQLiiLZGuuqFvttToxGU1sEJiZu9Vy4GfMi456K7OZ4botOxmcMo7uySFT1kD2roncXS7Xl6qETgmdEDupv1xMIOHVgqZgJ2uutfeMffM+G5IiwKisfe2IKGs8zMZszHUxba8f3K/dIX6qJN0OrA7mMze+V+Tl/2VFPVF0bESICXlzs1jGfOcljSBHzLdFf2JsfnTTmstjT29shekuZofZH5TrdDoZ0VL0Ogk/oeoLrlZyp/wPgdNLXkoe9r/MzEil2iiI=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 85949ba0-f517-47a7-fc16-08dc4ebc6e15
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Mar 2024 00:17:18.8474
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +FTamQ4zeIXQvRu5N0mQ2gspyhAFhmUQnJJZiUBamrweJWdG3ZdycyuGiiPXENUGlIyJvLyxH21x/toqzwFODWr/vKWrRtpH5mA1dkRlHt4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB4186
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-03-27_19,2024-03-27_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
- suspectscore=0 mlxlogscore=931 mlxscore=0 adultscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2403210000 definitions=main-2403270169
-X-Proofpoint-ORIG-GUID: OESmXz0OR0aSXQ3ciSayb4yPG1jVXRx3
-X-Proofpoint-GUID: OESmXz0OR0aSXQ3ciSayb4yPG1jVXRx3
+Content-Transfer-Encoding: 8bit
 
+The patch series introduces zone write plugging (ZWP) as the new
+mechanism to control the ordering of writes to zoned block devices.
+ZWP replaces zone write locking (ZWL) which is implemented only by
+mq-deadline today. ZWP also allows emulating zone append operations
+using regular writes for zoned devices that do not natively support this
+operation (e.g. SMR HDDs). This patch series removes the scsi disk
+driver and device mapper zone append emulation to use ZWP emulation.
 
-Damien,
+Unlike ZWL which operates on requests, ZWP operates on BIOs. A zone
+write plug is simply a BIO list that is atomically manipulated using a
+spinlock and a kblockd submission work. A write BIO to a zone is
+"plugged" to delay its execution if a write BIO for the same zone was
+already issued, that is, if a write request for the same zone is being
+executed. The next plugged BIO is unplugged and issued once the write
+request completes.
 
-> Commit b4d3ddd2df7 ("scsi: libsas: Define NCQ Priority sysfs
-> attributes for SATA devices") introduced support for ATA NCQ priority
-> control for ATA devices managed by libsas.
+This mechanism allows to:
+ - Untangle zone write ordering from the block IO schedulers. This
+   allows removing the restriction on using only mq-deadline for zoned
+   block devices. Any block IO scheduler, including "none" can be used.
+ - Zone write plugging operates on BIOs instead of requests. Plugged
+   BIOs waiting for execution thus do not hold scheduling tags and thus
+   do not prevent other BIOs from being submitted to the device (reads
+   or writes to other zones). Depending on the workload, this can
+   significantly improve the device use and the performance.
+ - Both blk-mq (request) based zoned devices and BIO-based devices (e.g.
+   device mapper) can use ZWP. It is mandatory for the
+   former but optional for the latter: BIO-based driver can use zone
+   write plugging to implement write ordering guarantees, or the drivers
+   can implement their own if needed.
+ - The code is less invasive in the block layer and in device drivers.
+   ZWP implementation is mostly limited to blk-zoned.c, with some small
+   changes in blk-mq.c, blk-merge.c and bio.c.
 
-Applied to 6.10/scsi-staging, thanks!
+Performance evaluation results are shown below.
+
+The series is based on 6.9.0-rc1 and organized as follows:
+
+ - Patch 1 to 7 are preparatory changes for patch 8.
+ - Patch 8, 9 and 10 introduce ZWP
+ - Patch 11 and 12 add zone append emulation to ZWP.
+ - Patch 13 to 20 modify zoned block device drivers to use ZWP and
+   prepare for the removal of ZWL.
+ - Patch 21 to 30 remove zone write locking
+
+Overall, these changes do not significantly increase the amount of code
+(the higher number of addition shown by diff-stat is in fact due to a
+larger amount of comments in the code).
+
+Many thanks must go to Christoph Hellwig for comments and suggestions
+he provided on earlier versions of these patches.
+
+Performance evaluation results
+==============================
+
+Environments:
+ - Intel Xeon 16-cores/32-threads, 128GB of RAM
+ - Kernel:
+   - ZWL (baseline): 6.9.0-rc1
+   - ZWP: 6.9.0-rc1 patched kernel to add zone write plugging
+   (both kernels were compiled with the same configuration turning off
+   most heavy debug features)
+
+Workoads:
+ - seqw4K1: 4KB sequential write, qd=1
+ - seqw4K16: 4KB sequential write, qd=16
+ - seqw1M16: 1MB sequential write, qd=16
+ - rndw4K16: 4KB random write, qd=16
+ - rndw128K16: 128KB random write, qd=16
+ - btrfs workoad: Single fio job writing 128 MB files using 128 KB
+   direct IOs at qd=16.
+
+Devices:
+ - nullblk (zoned): 4096 zones of 256 MB, 128 max open zones.
+ - NVMe ZNS drive: 1 TB ZNS drive with 2GB zone size, 14 max open and
+   active zones.
+ - SMR HDD: 20 TB disk with 256MB zone size, 128 max open zones.
+
+For ZWP, the result show the performance percentage increase (or
+decrease) against ZWL (baseline) case.
+
+1) null_blk zoned device:
+
+             +--------+--------+-------+--------+---------+---------+
+             |seqw4K1 |seqw4K16|seqw1M1|seqw1M16|rndw4K16|rndw128K16|
+             |(MB/s)  | (MB/s) |(MB/s) | (MB/s) | (KIOPS)| (KIOPS)  |
+ +-----------+--------+--------+-------+--------+--------+----------+
+ |    ZWL    | 961    | 835    | 18640 | 14480  | 415    | 167      |
+ |mq-deadline|        |        |       |        |        |          |
+ +-----------+--------+--------+-------+--------+--------+----------+
+ |    ZWP    | 963    | 845    | 18640 | 14630  | 452    | 165      |
+ |mq-deadline| (+0%)  | (+1%)  | (+0%) | (+1%)  | (+8%)  | (-1%)    |
+ +-----------+--------+--------+-------+--------+--------+----------+
+ |    ZWP    | 731    | 651    | 15780 | 12710  | 129    | 108      |
+ |    bfq    | (-23%) | (-22%) | (-15%)| (-12%) | (-68%) | (-15%)   |
+ +-----------+--------+--------+-------+--------+--------+----------+
+ |    ZWP    | 2511   | 1632   | 27470 | 19340  | 336    | 150      |
+ |   none    | (+161%)| (+95%) | (+47%)| (+33%) | (-19%) | (-19%)   |
+ +-----------+--------+--------+-------+--------+--------+----------+
+
+ZWP with mq-deadline gives performance very similar to zone write
+locking, showing that zone write plugging overhead is acceptable.
+But ZWP ability to run fast block devices with the none scheduler
+shows brings all the benefits of zone write plugging and results in
+significant performance increase for all workloads. The exception to
+this are random write workloads with multiple jobs: for these, the
+faster request submission rate achieved by zone write plugging results
+in higher contention on null-blk zone spinlock, which degrades
+performance.
+
+2) NVMe ZNS drive:
+
+             +--------+--------+-------+--------+--------+----------+
+             |seqw4K1 |seqw4K16|seqw1M1|seqw1M16|rndw4K16|rndw128K16|
+             |(MB/s)  | (MB/s) |(MB/s) | (MB/s) | (KIOPS)|  (KIOPS) |
+ +-----------+--------+--------+-------+--------+--------+----------+
+ |    ZWL    | 183    | 707    | 1083  | 1101   | 53.6   | 14.1     |
+ |mq-deadline|        |        |       |        |        |          |
+ +-----------+--------+--------+-------+--------+--------+----------+
+ |    ZWP    | 183    | 719    | 1082  | 1103   |55.5    | 14.1     |
+ |mq-deadline|(-0%)   | (+1%)  | (+0%) | (+0%)  |(+3%)   | (+0%)    |
+ +-----------+--------+--------+-------+--------+--------+----------+
+ |    ZWP    | 175    | 691    | 1078  | 1097   | 28.3   | 11.2     |
+ |    bfq    | (-4%)  | (-2%)  | (-0%) | (-0%)  | (-47%) | (-20%)   |
+ +-----------+--------+--------+-------+--------+--------+----------+
+ |    ZWP    | 190    | 665    | 1083  | 1105   | 51.4   | 14.1     |
+ |   none    | (+4%)  | (-5%)  | (+0%) | (+0%)  | (-4%)  | (+0%)    |
+ +-----------+--------+--------+-------+--------+--------+----------+
+
+Zone write plugging overhead does not significantly impact performance.
+Similar to nullblk, using the none scheduler leads to performance
+increase for most workloads.
+
+3) SMR SATA HDD:
+
+             +-------+--------+-------+--------+--------+----------+
+             |seqw4K1|seqw4K16|seqw1M1|seqw1M16|rndw4K16|rndw128K16|
+             |(MB/s) | (MB/s) |(MB/s) | (MB/s) | (KIOPS)|  (KIOPS) |
+ +-----------+-------+--------+-------+--------+--------+----------+
+ |    ZWL    | 107   | 243    | 246   | 246    | 2.2    | 0.769    |
+ |mq-deadline|       |        |       |        |        |          |
+ +-----------+-------+--------+-------+--------+--------+----------+
+ |    ZWP    | 109   | 240    | 246   | 244    | 2.2    | 0.767    |
+ |mq-deadline|(+1%)  | (-1%)  | (-0%) | (-0%)  | (+0%)  | (+0%)    |
+ +-----------+-------+--------+-------+--------+--------+----------+
+ |    ZWP    | 104   | 240    | 247   | 244    | 2.3    | 0.765    |
+ |    bfq    | (-2%) | (-1%)  | (+0%) | (-0%)  | (+0%)  | (+0%)    |
+ +-----------+-------+--------+-------+--------+--------+----------+
+ |    ZWP    | 115   | 235    | 246   | 243    | 2.2    | 0.771    |
+ |   none    | (+7%) | (-3%)  | (+0%) | (-1%)  | (+0%)  | (+0%)    |
+ +-----------+-------+--------+-------+--------+--------+----------+
+
+Performance with purely sequential write workloads at high queue depth
+somewhat decrease a little when using zone write plugging. This is due
+to the different IO pattern that ZWP generates where the first writes to
+a zone start being issued when the end of the previous zone are still
+being written. Depending on how the disk handles queued commands, seek
+may be generated, slightly impacting the throughput achieved. Such pure
+sequential write workloads are however rare with SMR drives.
+
+4) Zone append tests using btrfs:
+
+             +-------------+-------------+-----------+-------------+
+             |  null-blk   |  null_blk   |    ZNS    |     SMR     |
+             |  native ZA  | emulated ZA | native ZA | emulated ZA |
+             |    (MB/s)   |   (MB/s)    |   (MB/s)  |    (MB/s)   |
+ +-----------+-------------+-------------+-----------+-------------+
+ |    ZWL    | 2434        | N/A         | 1083      | 244         |
+ |mq-deadline|             |             |           |             |
+ +-----------+-------------+-------------+-----------+-------------+
+ |    ZWP    | 2361        | 3111        | 1087      | 239         |
+ |mq-deadline| (+1%)       |             | (+0%)     | (-2%)       |
+ +-----------+-------------+-------------+-----------+-------------+
+ |    ZWP    | 2299        | 2840        | 1082      | 239         |
+ |    bfq    | (-4%)       |             | (+0%)     | (-2%)       |
+ +-----------+-------------+-------------+-----------+-------------+
+ |    ZWP    | 2443        | 3152        | 1078      | 238         |
+ |    none   | (+0%)       |             | (-0%)     | (-2%)       |
+ +-----------+-------------+-------------+-----------+-------------+
+
+With a more realistic use of the device though a file system, ZWP does
+not introduce significant performance differences, except for SMR for
+the same reason as with the fio sequential workloads at high queue
+depth.
+
+Changes from v2:
+ - Added Patch 1 (Christoph's comment)
+ - Fixed error code setup in Patch 3 (Bart's comment)
+ - Split former patch 26 into patches 27 and 28
+ - Modified patch 8 (zone write plugging) introduction to remove the
+   kmem_cache use and address Bart's and Christoph comments.
+ - Changed from using a mempool of zone write plugs to using a simple
+   free-list (patch 9)
+ - Simplified patch 10 as suggested by Christoph
+ - Moved common code to a helper in patch 13 as suggested by Christoph
+
+Changes from v1:
+ - Added patch 6
+ - Rewrite of patch 7 to use a hash table of dynamically allocated zone
+   write plugs. This results in changes in patch 11 and the addition of
+   patch 8 and 9.
+ - Rebased everything on 6.9.0-rc1
+ - Added review tags for patches that did not change
+
+Damien Le Moal (30):
+  block: Do not force full zone append completion in req_bio_endio()
+  block: Restore sector of flush requests
+  block: Remove req_bio_endio()
+  block: Introduce blk_zone_update_request_bio()
+  block: Introduce bio_straddles_zones() and
+    bio_offset_from_zone_start()
+  block: Allow using bio_attempt_back_merge() internally
+  block: Remember zone capacity when revalidating zones
+  block: Introduce zone write plugging
+  block: Pre-allocate zone write plugs
+  block: Fake max open zones limit when there is no limit
+  block: Allow zero value of max_zone_append_sectors queue limit
+  block: Implement zone append emulation
+  block: Allow BIO-based drivers to use blk_revalidate_disk_zones()
+  dm: Use the block layer zone append emulation
+  scsi: sd: Use the block layer zone append emulation
+  ublk_drv: Do not request ELEVATOR_F_ZBD_SEQ_WRITE elevator feature
+  null_blk: Do not request ELEVATOR_F_ZBD_SEQ_WRITE elevator feature
+  null_blk: Introduce zone_append_max_sectors attribute
+  null_blk: Introduce fua attribute
+  nvmet: zns: Do not reference the gendisk conv_zones_bitmap
+  block: Remove BLK_STS_ZONE_RESOURCE
+  block: Simplify blk_revalidate_disk_zones() interface
+  block: mq-deadline: Remove support for zone write locking
+  block: Remove elevator required features
+  block: Do not check zone type in blk_check_zone_append()
+  block: Move zone related debugfs attribute to blk-zoned.c
+  block: Replace zone_wlock debugfs entry with zone_wplugs entry
+  block: Remove zone write locking
+  block: Do not force select mq-deadline with CONFIG_BLK_DEV_ZONED
+  block: Do not special-case plugging of zone write operations
+
+ block/Kconfig                     |    5 -
+ block/Makefile                    |    1 -
+ block/bio.c                       |    7 +
+ block/blk-core.c                  |   11 +-
+ block/blk-flush.c                 |    1 +
+ block/blk-merge.c                 |   22 +-
+ block/blk-mq-debugfs-zoned.c      |   22 -
+ block/blk-mq-debugfs.c            |    3 +-
+ block/blk-mq-debugfs.h            |    6 +-
+ block/blk-mq.c                    |  140 ++-
+ block/blk-mq.h                    |   31 -
+ block/blk-settings.c              |   46 +-
+ block/blk-sysfs.c                 |    2 +-
+ block/blk-zoned.c                 | 1412 +++++++++++++++++++++++++++--
+ block/blk.h                       |   69 +-
+ block/elevator.c                  |   46 +-
+ block/elevator.h                  |    1 -
+ block/genhd.c                     |    3 +-
+ block/mq-deadline.c               |  176 +---
+ drivers/block/null_blk/main.c     |   24 +-
+ drivers/block/null_blk/null_blk.h |    2 +
+ drivers/block/null_blk/zoned.c    |   23 +-
+ drivers/block/ublk_drv.c          |    5 +-
+ drivers/block/virtio_blk.c        |    2 +-
+ drivers/md/dm-core.h              |    2 +-
+ drivers/md/dm-zone.c              |  476 +---------
+ drivers/md/dm.c                   |   75 +-
+ drivers/md/dm.h                   |    4 +-
+ drivers/nvme/host/core.c          |    2 +-
+ drivers/nvme/target/zns.c         |   10 +-
+ drivers/scsi/scsi_lib.c           |    1 -
+ drivers/scsi/sd.c                 |    8 -
+ drivers/scsi/sd.h                 |   19 -
+ drivers/scsi/sd_zbc.c             |  335 +------
+ include/linux/blk-mq.h            |   85 +-
+ include/linux/blk_types.h         |   30 +-
+ include/linux/blkdev.h            |  104 +--
+ 37 files changed, 1745 insertions(+), 1466 deletions(-)
+ delete mode 100644 block/blk-mq-debugfs-zoned.c
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.44.0
+
