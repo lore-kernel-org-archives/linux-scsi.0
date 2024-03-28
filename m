@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A893F36B0E;
-	Thu, 28 Mar 2024 00:44:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 345F9381C2;
+	Thu, 28 Mar 2024 00:44:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711586684; cv=none; b=VkaizIjRIA7xNEedynEPnqZxPLMw925IcocCvVdtO5LlCf03tMVxeBNUOiVlt4+9HffCIwirbcBMH5s8wibPubxJ8rvZt5jriNalTNxVf+lXRZiuoNAvYCwN5Kd6hlRg5tNpNfhdJN+7zJTMMDPsUgVypxF0X2+fMlcSMvX4UqQ=
+	t=1711586686; cv=none; b=h7hnY/iww/0PHoYO4VIvY5BG2iaQQGsmJ9NLA805kphIH2GLN4yrZcFX0DoH9r8n+dJwn0K6bdDgJM5oL4fYYFj5ugvNrCsjgXRVi/m/zxS5AJiEqsgJ/LeeBtrYiAViHaQP0vlelXw6jN8LhIkJi5gX7fKc4mL3bKdQfQzpCJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711586684; c=relaxed/simple;
-	bh=kZvGhC1PA/qyHmOpbm6mW4dvYWiynQxFrzJJxazakic=;
+	s=arc-20240116; t=1711586686; c=relaxed/simple;
+	bh=Fvr6VEzT58EffMpVI6doCZCQhJL73ahLPR4ALZ5o7yA=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AEzfWdw9YotqabZC82hk1esdkpVcq0VBw5k9QIFVmKO6RPRWdxap+67AGoMLqmbvZJeYukV4Etacyd55Zlyj15iLbgXWmKrR7ysy/C1U6BgAptOWDndh2VWgei4C8wnsvMJhE8hsBCXB3KoXN65nhsYSp6vX8e5T+bDTpfu1m2c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZMppAAwB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=urElf2h7NUigkftDFrgrEs/iDJ9GqziC0JRKsHE/y9FAlrAtIrub56dENnzpXNLE0y+lVXde+srCrGQYbUAb2+j/BPj0qzjX/HVW0K9jLTMmV/ETCltOb+GTkeJD7xSYnVlriI/C6svH8ijV6Vohg18FT9Ic/4P+7fSDs+Cveco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SxaV57pE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZMppAAwB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E33DC433C7;
-	Thu, 28 Mar 2024 00:44:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SxaV57pE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7A79C433F1;
+	Thu, 28 Mar 2024 00:44:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711586684;
-	bh=kZvGhC1PA/qyHmOpbm6mW4dvYWiynQxFrzJJxazakic=;
+	s=k20201202; t=1711586686;
+	bh=Fvr6VEzT58EffMpVI6doCZCQhJL73ahLPR4ALZ5o7yA=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=ZMppAAwB6d52zIf+kHEnujYoSdaVYfftC6Trt5kmvvmvHMh3pFlaCUHJzlqnEQw9N
-	 q4IyOga+EuOh2ATtYFNNpzyrDi9eZzIJ4Uh5q/zG+2HJGneEaxF2nsBOB7Zwih3M2/
-	 QVBhEp3gZMVGE2YUynDdiEPyOzqYUXSPgWjJoNRId3DSWaxBReDRYTSR64AsAlztwD
-	 oMrWXvsMIIYuBV5dabbb1oMySpnpBm3GKSBUf/X4LTm84tTxXfi6a7U4tSJPxeomka
-	 5PURNLEu9sAaMgDorxkEsmgSjqARXUnhd2BrQaRdoe5J4v5+UcgeHaeIsAzAunWw1O
-	 vNYDMH2hN053Q==
+	b=SxaV57pEI+XnoEeO14qx4TIe8RNVmv8lg7LVrMl5rw8wjg9WL6xNpHBBQP3UoaIIL
+	 H6FrpCcUl0CiulWJNHRLUOXTYb9Enr3GcEf2qR7baSsotK5FZz8YmrNFYBMONf7x6I
+	 2tscBpMnxJsvqSkiWfXNhaxXfJVvqWvDa++ULqj7PaGIXUJlEJWSbtonPYZ/0Yz9gb
+	 l8o2Hr2yXx84+uPy0RckQyLR7Bnz6yDcByCbLTL0ZZFoDla5MM0tN9O7Af+yEEhwmq
+	 L1bI6fMoAEPKPJQNFQyjeuIOvkntjEpdi1yKoHmGIRBta1T/FxNCW8iFjquALKlvCm
+	 67Tb+vFWOBAJA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-block@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
@@ -36,9 +36,9 @@ To: linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	Keith Busch <kbusch@kernel.org>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 18/30] null_blk: Introduce zone_append_max_sectors attribute
-Date: Thu, 28 Mar 2024 09:43:57 +0900
-Message-ID: <20240328004409.594888-19-dlemoal@kernel.org>
+Subject: [PATCH v3 19/30] null_blk: Introduce fua attribute
+Date: Thu, 28 Mar 2024 09:43:58 +0900
+Message-ID: <20240328004409.594888-20-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240328004409.594888-1-dlemoal@kernel.org>
 References: <20240328004409.594888-1-dlemoal@kernel.org>
@@ -50,159 +50,92 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add the zone_append_max_sectors configfs attribute and module parameter
-to allow configuring the maximum number of 512B sectors of zone append
-operations. This attribute is meaningful only for zoned null block
-devices.
+Add the fua configfs attribute and module parameter to allow
+configuring if the device supports FUA or not. Using this attribute
+has an effect on the null_blk device only if memory backing is enabled
+together with a write cache (cache_size option).
 
-If not specified, the default is unchanged and the zoned device max
-append sectors limit is set to the device max sectors limit.
-If a non 0 value is used for this attribute, which is the default,
-then native support for zone append operations is enabled.
-Setting a 0 value disables native zone append operations support to
-instead use the block layer emulation.
+This new attribute allows configuring a null_blk device with a write
+cache but without FUA support. This is convenient to test the block
+layer flush machinery.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
  drivers/block/null_blk/main.c     | 12 ++++++++++--
  drivers/block/null_blk/null_blk.h |  1 +
- drivers/block/null_blk/zoned.c    | 22 +++++++++++++++++++---
- 3 files changed, 30 insertions(+), 5 deletions(-)
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/block/null_blk/main.c b/drivers/block/null_blk/main.c
-index 71c39bcd872c..cd6519360dbc 100644
+index cd6519360dbc..47e1bbb5b24e 100644
 --- a/drivers/block/null_blk/main.c
 +++ b/drivers/block/null_blk/main.c
-@@ -253,6 +253,11 @@ static unsigned int g_zone_max_active;
- module_param_named(zone_max_active, g_zone_max_active, uint, 0444);
- MODULE_PARM_DESC(zone_max_active, "Maximum number of active zones when block device is zoned. Default: 0 (no limit)");
+@@ -225,6 +225,10 @@ static unsigned long g_cache_size;
+ module_param_named(cache_size, g_cache_size, ulong, 0444);
+ MODULE_PARM_DESC(mbps, "Cache size in MiB for memory-backed device. Default: 0 (none)");
  
-+static int g_zone_append_max_sectors = INT_MAX;
-+module_param_named(zone_append_max_sectors, g_zone_append_max_sectors, int, 0444);
-+MODULE_PARM_DESC(zone_append_max_sectors,
-+		 "Maximum size of a zone append command (in 512B sectors). Specify 0 for zone append emulation");
++static bool g_fua = true;
++module_param_named(fua, g_fua, bool, S_IRUGO);
++MODULE_PARM_DESC(zoned, "Enable/disable FUA support when cache_size is used. Default: true");
 +
- static struct nullb_device *null_alloc_dev(void);
- static void null_free_dev(struct nullb_device *dev);
- static void null_del_dev(struct nullb *nullb);
-@@ -436,6 +441,7 @@ NULLB_DEVICE_ATTR(zone_capacity, ulong, NULL);
- NULLB_DEVICE_ATTR(zone_nr_conv, uint, NULL);
- NULLB_DEVICE_ATTR(zone_max_open, uint, NULL);
- NULLB_DEVICE_ATTR(zone_max_active, uint, NULL);
-+NULLB_DEVICE_ATTR(zone_append_max_sectors, uint, NULL);
- NULLB_DEVICE_ATTR(virt_boundary, bool, NULL);
+ static unsigned int g_mbps;
+ module_param_named(mbps, g_mbps, uint, 0444);
+ MODULE_PARM_DESC(mbps, "Limit maximum bandwidth (in MiB/s). Default: 0 (no limit)");
+@@ -446,6 +450,7 @@ NULLB_DEVICE_ATTR(virt_boundary, bool, NULL);
  NULLB_DEVICE_ATTR(no_sched, bool, NULL);
  NULLB_DEVICE_ATTR(shared_tags, bool, NULL);
-@@ -580,6 +586,7 @@ static struct configfs_attribute *nullb_device_attrs[] = {
- 	&nullb_device_attr_zone_nr_conv,
- 	&nullb_device_attr_zone_max_open,
- 	&nullb_device_attr_zone_max_active,
-+	&nullb_device_attr_zone_append_max_sectors,
- 	&nullb_device_attr_zone_readonly,
- 	&nullb_device_attr_zone_offline,
- 	&nullb_device_attr_virt_boundary,
-@@ -671,7 +678,7 @@ static ssize_t memb_group_features_show(struct config_item *item, char *page)
- 			"shared_tags,size,submit_queues,use_per_node_hctx,"
- 			"virt_boundary,zoned,zone_capacity,zone_max_active,"
- 			"zone_max_open,zone_nr_conv,zone_offline,zone_readonly,"
--			"zone_size\n");
-+			"zone_size,zone_append_max_sectors\n");
- }
+ NULLB_DEVICE_ATTR(shared_tag_bitmap, bool, NULL);
++NULLB_DEVICE_ATTR(fua, bool, NULL);
  
- CONFIGFS_ATTR_RO(memb_group_, features);
-@@ -751,6 +758,7 @@ static struct nullb_device *null_alloc_dev(void)
- 	dev->zone_nr_conv = g_zone_nr_conv;
- 	dev->zone_max_open = g_zone_max_open;
- 	dev->zone_max_active = g_zone_max_active;
-+	dev->zone_append_max_sectors = g_zone_append_max_sectors;
- 	dev->virt_boundary = g_virt_boundary;
+ static ssize_t nullb_device_power_show(struct config_item *item, char *page)
+ {
+@@ -593,6 +598,7 @@ static struct configfs_attribute *nullb_device_attrs[] = {
+ 	&nullb_device_attr_no_sched,
+ 	&nullb_device_attr_shared_tags,
+ 	&nullb_device_attr_shared_tag_bitmap,
++	&nullb_device_attr_fua,
+ 	NULL,
+ };
+ 
+@@ -671,7 +677,7 @@ nullb_group_drop_item(struct config_group *group, struct config_item *item)
+ static ssize_t memb_group_features_show(struct config_item *item, char *page)
+ {
+ 	return snprintf(page, PAGE_SIZE,
+-			"badblocks,blocking,blocksize,cache_size,"
++			"badblocks,blocking,blocksize,cache_size,fua,"
+ 			"completion_nsec,discard,home_node,hw_queue_depth,"
+ 			"irqmode,max_sectors,mbps,memory_backed,no_sched,"
+ 			"poll_queues,power,queue_mode,shared_tag_bitmap,"
+@@ -763,6 +769,8 @@ static struct nullb_device *null_alloc_dev(void)
  	dev->no_sched = g_no_sched;
  	dev->shared_tags = g_shared_tags;
-@@ -1953,7 +1961,7 @@ static int null_add_dev(struct nullb_device *dev)
- 
- 	rv = add_disk(nullb->disk);
- 	if (rv)
--		goto out_ida_free;
-+		goto out_cleanup_zone;
- 
- 	mutex_lock(&lock);
- 	list_add_tail(&nullb->list, &nullb_list);
-diff --git a/drivers/block/null_blk/null_blk.h b/drivers/block/null_blk/null_blk.h
-index 477b97746823..a9c5df650ddb 100644
---- a/drivers/block/null_blk/null_blk.h
-+++ b/drivers/block/null_blk/null_blk.h
-@@ -82,6 +82,7 @@ struct nullb_device {
- 	unsigned int zone_nr_conv; /* number of conventional zones */
- 	unsigned int zone_max_open; /* max number of open zones */
- 	unsigned int zone_max_active; /* max number of active zones */
-+	unsigned int zone_append_max_sectors; /* Max sectors per zone append command */
- 	unsigned int submit_queues; /* number of submission queues */
- 	unsigned int prev_submit_queues; /* number of submission queues before change */
- 	unsigned int poll_queues; /* number of IOPOLL submission queues */
-diff --git a/drivers/block/null_blk/zoned.c b/drivers/block/null_blk/zoned.c
-index 8e217f8fadcd..159746b0661c 100644
---- a/drivers/block/null_blk/zoned.c
-+++ b/drivers/block/null_blk/zoned.c
-@@ -62,6 +62,7 @@ int null_init_zoned_dev(struct nullb_device *dev,
- 			struct queue_limits *lim)
- {
- 	sector_t dev_capacity_sects, zone_capacity_sects;
-+	sector_t zone_append_max_bytes;
- 	struct nullb_zone *zone;
- 	sector_t sector = 0;
- 	unsigned int i;
-@@ -103,6 +104,12 @@ int null_init_zoned_dev(struct nullb_device *dev,
- 			dev->zone_nr_conv);
- 	}
- 
-+	zone_append_max_bytes =
-+		ALIGN_DOWN(dev->zone_append_max_sectors << SECTOR_SHIFT,
-+			   dev->blocksize);
-+	dev->zone_append_max_sectors =
-+		min(zone_append_max_bytes >> SECTOR_SHIFT, zone_capacity_sects);
+ 	dev->shared_tag_bitmap = g_shared_tag_bitmap;
++	dev->fua = g_fua;
 +
- 	/* Max active zones has to be < nbr of seq zones in order to be enforceable */
- 	if (dev->zone_max_active >= dev->nr_zones - dev->zone_nr_conv) {
- 		dev->zone_max_active = 0;
-@@ -154,7 +161,7 @@ int null_init_zoned_dev(struct nullb_device *dev,
- 
- 	lim->zoned = true;
- 	lim->chunk_sectors = dev->zone_size_sects;
--	lim->max_zone_append_sectors = dev->zone_size_sects;
-+	lim->max_zone_append_sectors = dev->zone_append_max_sectors;
- 	lim->max_open_zones = dev->zone_max_open;
- 	lim->max_active_zones = dev->zone_max_active;
- 	return 0;
-@@ -163,10 +170,16 @@ int null_init_zoned_dev(struct nullb_device *dev,
- int null_register_zoned_dev(struct nullb *nullb)
- {
- 	struct request_queue *q = nullb->q;
-+	struct gendisk *disk = nullb->disk;
- 
- 	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
--	nullb->disk->nr_zones = bdev_nr_zones(nullb->disk->part0);
--	return blk_revalidate_disk_zones(nullb->disk, NULL);
-+	disk->nr_zones = bdev_nr_zones(disk->part0);
-+
-+	pr_info("%s: using %s zone append\n",
-+		disk->disk_name,
-+		queue_emulates_zone_append(q) ? "emulated" : "native");
-+
-+	return blk_revalidate_disk_zones(disk, NULL);
+ 	return dev;
  }
  
- void null_free_zoned_dev(struct nullb_device *dev)
-@@ -365,6 +378,9 @@ static blk_status_t null_zone_write(struct nullb_cmd *cmd, sector_t sector,
+@@ -1920,7 +1928,7 @@ static int null_add_dev(struct nullb_device *dev)
  
- 	trace_nullb_zone_op(cmd, zno, zone->cond);
+ 	if (dev->cache_size > 0) {
+ 		set_bit(NULLB_DEV_FL_CACHE, &nullb->dev->flags);
+-		blk_queue_write_cache(nullb->q, true, true);
++		blk_queue_write_cache(nullb->q, true, dev->fua);
+ 	}
  
-+	if (WARN_ON_ONCE(append && !dev->zone_append_max_sectors))
-+		return BLK_STS_IOERR;
-+
- 	if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL) {
- 		if (append)
- 			return BLK_STS_IOERR;
+ 	nullb->q->queuedata = nullb;
+diff --git a/drivers/block/null_blk/null_blk.h b/drivers/block/null_blk/null_blk.h
+index a9c5df650ddb..3234e6c85eed 100644
+--- a/drivers/block/null_blk/null_blk.h
++++ b/drivers/block/null_blk/null_blk.h
+@@ -105,6 +105,7 @@ struct nullb_device {
+ 	bool no_sched; /* no IO scheduler for the device */
+ 	bool shared_tags; /* share tag set between devices for blk-mq */
+ 	bool shared_tag_bitmap; /* use hostwide shared tags */
++	bool fua; /* Support FUA */
+ };
+ 
+ struct nullb {
 -- 
 2.44.0
 
