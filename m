@@ -1,22 +1,22 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E47234F8A0;
-	Thu, 28 Mar 2024 06:51:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2698225CF;
+	Thu, 28 Mar 2024 06:52:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711608707; cv=none; b=vFqgwBfHI4874Cgn3CsUTJD82tHFd2L0DybTWw4LJ8AUgSx1Zr/OpRtP4AFE6M3B6O1Xy0i37/8c+ipe+noX+0LWEi/ocaktoQNpP/OuFwHqhEm5roch9Di92xnGQbr9yw8kb+ev/Y04FkcdULyBjGeSXfTb0EbV6keiwYW5fAw=
+	t=1711608781; cv=none; b=OBe+hPjJYAs2o/F45wl9BnB4wJ4bFEgDGv7IPo4WVfA1h6dMwaWNUcVKMFtQNrCxXX0CiaaiRRtJL/LK4PveXNRLzGi5L0vWob9nSGyPFfBLamQNBZcCm0AVlaF3CKF3PqI3JqcNUcRkS5KuJoL3Pyk+k6cQDS6Apid9UgpEhQE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711608707; c=relaxed/simple;
-	bh=iWQJeLmFWhP310QIMJOM3u++IXJBHww6QFUNCdlYxH4=;
+	s=arc-20240116; t=1711608781; c=relaxed/simple;
+	bh=IsG7fsolO+VI9XYrUV3KhSni/zrhmJIuPCPtBGvLwK0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VgoiMptC98vOnTcUmkD0CR3o0aocjwW2dNUe1v2sdn//hry4xFDnP3QFJRWJhZLazI1GFra+xVyCA+bC6OP7bxh7EOfHLEst5dpKCngVt9OOut4Lhw+p3icjTZtozcGIRrCsVVC/PUwgZ69ZdRJYPRLJm9GbGlPqxkNBGD34o24=
+	 Content-Type:Content-Disposition:In-Reply-To; b=F8+NvY0NqAEc+Npi14KOw6y4dvc6+ptxy3dnD45PPRZe+K7LmGxo+afuqWrKi6j5w3yfqAqBXBuIXQjS4F+wm1J+T5DwBVYU/RVrZlQwr8Z40iCihw6LUODuW/loHaTTQKFTU+H7I/3irDcWGrunxesUvssFg79qRFHCqNdQBCM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 2025C68D17; Thu, 28 Mar 2024 07:51:39 +0100 (CET)
-Date: Thu, 28 Mar 2024 07:51:38 +0100
+	id DA3D268B05; Thu, 28 Mar 2024 07:52:56 +0100 (CET)
+Date: Thu, 28 Mar 2024 07:52:56 +0100
 From: Christoph Hellwig <hch@lst.de>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
@@ -24,10 +24,9 @@ Cc: Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
 	linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCH v3 30/30] block: Do not special-case plugging of zone
- write operations
-Message-ID: <20240328065138.GA17890@lst.de>
-References: <20240328004409.594888-1-dlemoal@kernel.org> <20240328004409.594888-31-dlemoal@kernel.org> <20240328045430.GN14113@lst.de> <6035bad8-b157-4705-8ec1-80cc003fa646@kernel.org>
+Subject: Re: [PATCH v3 09/30] block: Pre-allocate zone write plugs
+Message-ID: <20240328065256.GB17890@lst.de>
+References: <20240328043016.GA13701@lst.de> <714d0cbc-be4d-4aa9-b200-73c6caaa1d18@kernel.org> <20240328054652.GA16237@lst.de> <7d8f3ec4-c416-445f-92db-7d2b60726821@kernel.org> <20240328060357.GA16819@lst.de> <ca3fe7b0-7e27-4ac9-b669-5263c3cec550@kernel.org> <20240328062237.GA17225@lst.de> <0d54c569-f586-4b75-a8a3-509e3f3717e2@kernel.org> <20240328063816.GA17642@lst.de> <b144a7f1-af29-4c0d-96f7-c0f16b2299b8@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,18 +35,17 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6035bad8-b157-4705-8ec1-80cc003fa646@kernel.org>
+In-Reply-To: <b144a7f1-af29-4c0d-96f7-c0f16b2299b8@kernel.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, Mar 28, 2024 at 03:43:02PM +0900, Damien Le Moal wrote:
-> That is indeed not great, but irrelevant for zone writes as the regular BIO plug
-> is after the zone write plugging. So the regular BIO plug can only see at most
-> one write request per zone. Even if that order changes, that will not result in
-> unaligned write errors like before. But the reordering may still be bad for
-> performance though, especially on HDD, so yes, we should definitely look into this.
+On Thu, Mar 28, 2024 at 03:51:09PM +0900, Damien Le Moal wrote:
+> I am all for not micro-optimizing the free path right now.
+> I am not so sure about the mempool being simpler... And I do see some
+> improvements in perf for SMR HDDs with the free list. Could be noise though but
+> it feels a little more solid perf-wise. I have not seen any benefit for faster
+> devices with the free list though...
+> 
+> If you prefer the mempool, I can go back to using it though, not a big deal.
 
-Irrelevant is not how I would frame it.  Yes, it will not affect
-correctness.  But it will affect performance not just for the write
-itself, but also in the long run as it affects the on-disk extent
-layout.
-
+A capped free list + dynamic allocation beyond it is exactly what the
+mempool is, so reimplementing seems a bit silly.
