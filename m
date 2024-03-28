@@ -1,124 +1,152 @@
-Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FDF512BEA0
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Mar 2024 14:31:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.69
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94B8C12FB3F
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Mar 2024 15:39:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711636287; cv=none; b=QvyiPk7FvN0PU8Ag+cvth0JONDkcP6SUjYrW4IaRnBLg4n24tmb2IYyhrSm4yvkMkf5HNugm0zDws5C1ZzF15Z4IunayYRD257RC1094nY9T8Sm1NSQm6UCCqD+Y5g7jjQ97UaMnAO98B2QjV539/FGFFeyYXJvj496wpgPrchY=
+	t=1711640362; cv=none; b=lFiAbKH9F6HcSPtSZAsCgCV6QtF3oQqXVaGIqs2qyeutzL4i2cAMWWHDvFf0Ks1k4o3MImdekaMstL4HsQOo71W3E8mHyIeDEaWpjv996lwxNOW4et+LrpyfxAKj65A4yX7Y8ZoG++zx3jvaDBBA7lEaKlWEV5a73UCjWZAL7Kc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711636287; c=relaxed/simple;
-	bh=ql0ShIXEVLTm4DaLyg9Gu3OwM9uQ9LAPxl/H3BUej5c=;
-	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=LEhXTR74DMlAt8zqBjDBpzh7YOfu86kSldgI/wZcbOuBmUO/Ry+zCjH1PXnt8//V8x1bYG9Ios13fxIxtvghzMNETlU0eww4diKNekCs1X24ty4RG50m2suZ8jkIyyCvVLdL6AHUQei6CBUS5y5lF3ii6WfCcgNA70us/y+tMeA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
-Received: by mail-io1-f69.google.com with SMTP id ca18e2360f4ac-7cbfd4781fcso95818439f.3
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Mar 2024 07:31:24 -0700 (PDT)
+	s=arc-20240116; t=1711640362; c=relaxed/simple;
+	bh=G1iRW2zHIY2/EiULrJ1nqfVUKDfTimjQj7b8q3dHoFc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rIDmEyNGI82Y+27KVdKTKAGTsHDr76NqBxPJggvlYBfMTX+F+VzS3H4RNmNaAfJOy/Zt3wtFfrUa7ZjoT9r3J8APpP7Y9jruUXR5OS63VFnjM7yxJio1o9AMmB/aM/XHPRbWtUW/XoI+uSNCN/a+sI4LSHYqxJgVeumNrq3j+6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=yiXFFCxU; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yiXFFCxU"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-6e6b6f86975so760533b3a.1
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Mar 2024 08:39:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1711640358; x=1712245158; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=mPjQD/vT8EW8FIsS5EhEUvjw7Yq2DPw74odbleQjQC0=;
+        b=yiXFFCxUidOur1Yje4vLUgh6HPAPLTa0A8Jr+L02ErZCnLUGyA5cbWRfLbW2anYSXf
+         OBw4ySIQT0uhUbGcSG01jSnXmA99UGDz+ieVFtksloTDysGebITCGl5U79aib5tRot4U
+         R4S1ExbeBqVsmWInB4bb8zRKX9QyP7Ax6Eh5Ma6rjz8KpZ8v4vKS3+LuOQnifxodUaJY
+         zzOk4VHwBPO7tnFwFYmLG1MzB7aHaa3xKXAwElEJjPQS4p0yDYFN/Ey+1PpWehd8HZdj
+         vYgMf7EihG/MeLThCAKSbALwA7sdiXDqthcdvgmkCW/VSJ7MQdHCJb7IT9nDNTdo6+e8
+         nNWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711636283; x=1712241083;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=EKHhWn51ldZDqfWJ6q60eQUGHhOBY3BJue8OM3ps8qY=;
-        b=SyaOcjeLIWrk82Sdr/4pdc3LAHcXa+LYPvN7rTHmDyscBkuzBhqoGW7qDvESxWVZfS
-         PWSnbGXnwkePog4pJumlMEJ3SgwZZqrWwiAZ7myxpsf+Ex5//C1hXS6NomNCEW+BKOsx
-         HBTN9WTE8A1n6rJesYEM/EKluQPM9SBu7YMbU0onIuE9gcczRW6RAy7wzZPBdCaMVWnF
-         +S5p7EjaRZTN44MpBGx+Gk6kek1jYlnSTLo3lWDsC+qGZ3k2pN4oahoNqD2Cq0wnGY9c
-         U/QAP61FEiAdrnPu1/h9o+2GnDAvz4tz/uoILrHMo2Snp+nHq4RD0u6pLUXuvPgLkAG9
-         +hKQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVxGAkM1ud7SAokDRA9EqYgKR8MIYUKfMYP6UPFFJsVQAvsvwfB1WTkNKYt9xBxgXaxq6DtEM85XYIyWTrvHYfVQm/cWCHhrvsclw==
-X-Gm-Message-State: AOJu0YyzI9LMNxKPKMUX14Zgvbz5KCilYsJJoRiQ0gFHPeCeeqsgYcs/
-	BCTQsMGy0GP21m2Jan9YoUGBRjlyhjXKsbenwnvEdpvAcVHWsnkYMaohN3T5KoccnvrPRtED05s
-	rj36aPGizoHIDkoOldAlAg3FuL3A4EYuf0xGbQZk0pQIUhjN1HD/P4IY=
-X-Google-Smtp-Source: AGHT+IF2esD8gMeDLCuj3r/4WBmGLTuFwxUM3dV8BeC3Bhnp634ROWL9Mpp1q1684CUTBqa4XaEpZJxsudSuErOCU0lT0XFow66+
+        d=1e100.net; s=20230601; t=1711640358; x=1712245158;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mPjQD/vT8EW8FIsS5EhEUvjw7Yq2DPw74odbleQjQC0=;
+        b=pJX7EeK00MkVgDin0G+2CQEhKmsHndRrwe9ya6Mt5GGgn5eDQ34tx5ZQ02dWnM9WB9
+         nb1pC32dzpjsmEbJP9V7dtzoJXZf2R9hUv32DLJPNTdWzrsMTzFBBW2D2L9bTSg1IpnA
+         CwmkKaFXfeR6eGXLDceIsuIpLDILFTfCm91w7Kg+iyhsUN8WktaHbpcr0eL3v6nnHvTR
+         GHmof9hE0Y9Nyar/Vo1H62VU99lM8RsNiAXB/dIL3oB2gewAIyZjE0Pq88emWO/dglAU
+         3pXv/e2921CmtA/I7Vl4rTtfVA7e/XvVjzkJTZDDilTzMgX63sbOrjdVRvYIexkA3VUy
+         b/XQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUef/0/UyIGU06IJLuOQg0pIbBLpW8HN3mCipRGTLGzMw6cPEO9x2P6ayM6g0khXyK2yWdds9i/Ldsg0LzZh6LTyPiYLUovGWh3jw==
+X-Gm-Message-State: AOJu0YyiZ7NOzpYoNutkz2GfruqGJEJ87xSDD0A3gk3/AdjQw9pJgjDb
+	mFSGYzVMTR8LE+JXBA1KmxvIn7c4VPeEMI9gvca7Y3FC5croBCvKAT+mCAH0amk=
+X-Google-Smtp-Source: AGHT+IGhUQYINGDQ7hWfiGCoXweY10vLCz/e/x+HjJ8dVvYs43ivIcKXZCgoqnZGIv+19J3DIwIpug==
+X-Received: by 2002:a05:6a00:a12:b0:6ea:92a7:fb82 with SMTP id p18-20020a056a000a1200b006ea92a7fb82mr3800870pfh.27.1711640357806;
+        Thu, 28 Mar 2024 08:39:17 -0700 (PDT)
+Received: from p14s ([2604:3d09:148c:c800:ff63:c57b:4625:b68c])
+        by smtp.gmail.com with ESMTPSA id e2-20020aa798c2000000b006ea923678a6sm1505830pfm.137.2024.03.28.08.39.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 28 Mar 2024 08:39:17 -0700 (PDT)
+Date: Thu, 28 Mar 2024 09:39:10 -0600
+From: Mathieu Poirier <mathieu.poirier@linaro.org>
+To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Paolo Bonzini <pbonzini@redhat.com>,
+	Stefan Hajnoczi <stefanha@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Olivia Mackall <olivia@selenic.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Amit Shah <amit@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gonglei <arei.gonglei@huawei.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Viresh Kumar <vireshk@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	David Airlie <airlied@redhat.com>,
+	Gerd Hoffmann <kraxel@redhat.com>,
+	Gurchetan Singh <gurchetansingh@chromium.org>,
+	Chia-I Wu <olvaffe@gmail.com>,
+	Jean-Philippe Brucker <jean-philippe@linaro.org>,
+	Joerg Roedel <joro@8bytes.org>, Alexander Graf <graf@amazon.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Eric Van Hensbergen <ericvh@kernel.org>,
+	Latchesar Ionkov <lucho@ionkov.net>,
+	Dominique Martinet <asmadeus@codewreck.org>,
+	Christian Schoenebeck <linux_oss@crudebyte.com>,
+	Stefano Garzarella <sgarzare@redhat.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>, Ira Weiny <ira.weiny@intel.com>,
+	Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
+	Bjorn Andersson <andersson@kernel.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Vivek Goyal <vgoyal@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>,
+	Anton Yakovlev <anton.yakovlev@opensynergy.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	virtualization@lists.linux.dev, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-um@lists.infradead.org,
+	linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	iommu@lists.linux.dev, netdev@vger.kernel.org, v9fs@lists.linux.dev,
+	kvm@vger.kernel.org, linux-wireless@vger.kernel.org,
+	nvdimm@lists.linux.dev, linux-remoteproc@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	alsa-devel@alsa-project.org, linux-sound@vger.kernel.org
+Subject: Re: [PATCH 19/22] rpmsg: virtio: drop owner assignment
+Message-ID: <ZgWPHntosUk+5qac@p14s>
+References: <20240327-module-owner-virtio-v1-0-0feffab77d99@linaro.org>
+ <20240327-module-owner-virtio-v1-19-0feffab77d99@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6638:3789:b0:47e:c0b0:5a08 with SMTP id
- w9-20020a056638378900b0047ec0b05a08mr102477jal.4.1711636283301; Thu, 28 Mar
- 2024 07:31:23 -0700 (PDT)
-Date: Thu, 28 Mar 2024 07:31:23 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000a6e0450614b960ac@google.com>
-Subject: [syzbot] [scsi?] WARNING in sg_remove_sfp_usercontext
-From: syzbot <syzbot+93cdc797590ffc710918@syzkaller.appspotmail.com>
-To: dgilbert@interlog.com, jejb@linux.ibm.com, linux-kernel@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, martin.petersen@oracle.com, 
-	syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240327-module-owner-virtio-v1-19-0feffab77d99@linaro.org>
 
-Hello,
+On Wed, Mar 27, 2024 at 01:41:12PM +0100, Krzysztof Kozlowski wrote:
+> virtio core already sets the .owner, so driver does not need to.
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> 
+> ---
+> 
+> Depends on the first patch.
+> ---
+>  drivers/rpmsg/virtio_rpmsg_bus.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/rpmsg/virtio_rpmsg_bus.c b/drivers/rpmsg/virtio_rpmsg_bus.c
+> index 1062939c3264..e9e8c1f7829f 100644
+> --- a/drivers/rpmsg/virtio_rpmsg_bus.c
+> +++ b/drivers/rpmsg/virtio_rpmsg_bus.c
+> @@ -1053,7 +1053,6 @@ static struct virtio_driver virtio_ipc_driver = {
+>  	.feature_table	= features,
+>  	.feature_table_size = ARRAY_SIZE(features),
+>  	.driver.name	= KBUILD_MODNAME,
+> -	.driver.owner	= THIS_MODULE,
+>  	.id_table	= id_table,
+>  	.probe		= rpmsg_probe,
+>  	.remove		= rpmsg_remove,
 
-syzbot found the following issue on:
+Reviewed-by: Mathieu Poirier <mathieu.poirier@linaro.org>
 
-HEAD commit:    a6bd6c933339 Add linux-next specific files for 20240328
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=126f4231180000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=b0058bda1436e073
-dashboard link: https://syzkaller.appspot.com/bug?extid=93cdc797590ffc710918
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-
-Unfortunately, I don't have any reproducer for this issue yet.
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/7c1618ff7d25/disk-a6bd6c93.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/875519f620fe/vmlinux-a6bd6c93.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/ad92b057fb96/bzImage-a6bd6c93.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+93cdc797590ffc710918@syzkaller.appspotmail.com
-
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 46 at drivers/scsi/sg.c:2236 sg_remove_sfp_usercontext+0x3f3/0x530 drivers/scsi/sg.c:2236
-Modules linked in:
-CPU: 1 PID: 46 Comm: kworker/1:1 Not tainted 6.9.0-rc1-next-20240328-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024
-Workqueue: events sg_remove_sfp_usercontext
-RIP: 0010:sg_remove_sfp_usercontext+0x3f3/0x530 drivers/scsi/sg.c:2236
-Code: 8b 36 49 8d 96 4d 01 00 00 48 c7 c7 a0 fe 4b 8c 48 c7 c1 c0 07 4c 8c 4d 89 e0 e8 d8 a3 eb ff e9 f7 fe ff ff e8 8e 9d 74 fb 90 <0f> 0b 90 e9 3f ff ff ff e8 80 9d 74 fb 48 8b 44 24 08 48 b9 00 00
-RSP: 0018:ffffc90000b67b48 EFLAGS: 00010293
-RAX: ffffffff8620cd42 RBX: 0000000000000002 RCX: ffff888015171e00
-RDX: 0000000000000000 RSI: 0000000000000002 RDI: 0000000000000001
-RBP: 0000000000008000 R08: ffffffff8620cc7c R09: 1ffff1100412372f
-R10: dffffc0000000000 R11: ffffed1004123730 R12: ffff88805fb20000
-R13: ffff88805fb21688 R14: ffff88802091b978 R15: ffff88805fb20148
-FS:  0000000000000000(0000) GS:ffff8880b9500000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b32227000 CR3: 0000000068468000 CR4: 00000000003526f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- process_one_work kernel/workqueue.c:3218 [inline]
- process_scheduled_works+0xa2c/0x1830 kernel/workqueue.c:3299
- worker_thread+0x86d/0xd70 kernel/workqueue.c:3380
- kthread+0x2f0/0x390 kernel/kthread.c:388
- ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:243
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-
-If the report is already addressed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want to overwrite report's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the report is a duplicate of another one, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+> 
+> -- 
+> 2.34.1
+> 
