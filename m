@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6356C2B9A3;
-	Thu, 28 Mar 2024 00:44:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41EBB2B9CC;
+	Thu, 28 Mar 2024 00:44:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711586662; cv=none; b=IsXY8czlTtMric555vwpPtvUKZkkNc0E+4wyvDlK+c01aSqBz7kACJjhgvrWOF3fGvW/GWnqoCWGvFVAGKfN0X6ZV9aQxgGGXnKq0Q1YyEpRxjJrUgPgcfM/VZCQYVNAsb+vkFAB9rp+w/yoh+HXi4C7vuJKAHDcGkrRlowZvnM=
+	t=1711586664; cv=none; b=TV7mM116k4F5t/mKJV9KejZMwwqTdqz0OJaxotlDC9O4JPTOcYa8CbokX9HqARwSbhiPaz1yJwOkLfrzEL01WvJIS7IhpcLp2g3pQpbWCFDRmpYuPk4jGYx0NGCOgzqn9PLZW3BvVdaVXRcHbvIbkjA17iUDJCYPoMNvjwmIfLI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711586662; c=relaxed/simple;
-	bh=JWcFjyy+OD/TNvYIfUUGiuk5k3y51VJlLmQxqzZP42Y=;
+	s=arc-20240116; t=1711586664; c=relaxed/simple;
+	bh=GRSnttSon36Brl7D5Dx+9ESml44bLMxHIragGuHvzQM=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DZ3bCA6gjTbokl7PsdAgUGQus5CjFISIF8lg1a3lxLqsvJOsBV75uO8sEdEWk2/TESIEjQEq2ailKR2E0db+E5joqHqNj+vg2swWG9ierHsn1Vrg2ejdFHK97L3YudkHLjLwg2AEVW7T/8B7IYRJBo63Cda3EfaTKOvde75IUDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gidhj3PJ; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=oGCM67iwTonp7FxeIOg0JeiOpBlTHaNLBgCZ1OZ5bieVaLnCiv71xVuw5NAch/P95B9RJC9KY2DF6hWP0LAmHp8Y0MSxGlFF2Wr8ozoBREhbUF1W5lD1aZ3G3CR7JqjqiBYXeaKxKYrl4HBuN0h7k4ym2oXZcWoFAy/j4UQu0lw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XSaBxRRf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gidhj3PJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 248E1C433C7;
-	Thu, 28 Mar 2024 00:44:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XSaBxRRf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68234C43394;
+	Thu, 28 Mar 2024 00:44:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711586662;
-	bh=JWcFjyy+OD/TNvYIfUUGiuk5k3y51VJlLmQxqzZP42Y=;
+	s=k20201202; t=1711586663;
+	bh=GRSnttSon36Brl7D5Dx+9ESml44bLMxHIragGuHvzQM=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=gidhj3PJSs25ona2MLVYHS5ZdvH7WofywoqHZFBVdNZbQWzs15PwSDgdQ6WRcX6qn
-	 4gonsGJOg0wBOv5JOGD89CV8nb1DnROHR4s26LSpsyjdiYnodNNiG1+fJJ4zX85FqO
-	 NsYKOsaIRdjpYZiOyfXnveli68miC9yIO3fJLBnLN0Z9md3Fh5KuUEwoVmVxWQCzc7
-	 9o2dEpgK0mudY2GkxxCsJIaqwCzxx4HqdrT3o77nI7o/G3koc6eBM6DF1fylJx/9SL
-	 BNBhRD703+z1p2onaJ0b+02+QpTIAgjJiX374uMw0VQigHX9MkpFZQxXH5O4v6DrVF
-	 ntuxTkFe8/Jqg==
+	b=XSaBxRRfeqVCTRVCby32lohAfjvxsK7E4403PRBbuP0ZpI6o6IWZaPNTl55Gutdbp
+	 OlvPNvhg5VtqlQEdd2gpdpv3DrIql2hchehu1IkM9JmH22RFogmwicgOk0/APK3TrF
+	 FdYI/LFEJU7f7jcWFRk3lEwZ1ra3ThQuJF+MEeMUKPYImPJbBXsenMaq0D54Yv2QCF
+	 0gHdcXSbMpCovo8NfM/evozz6m62Qr7w77DmuYhNsmUDEXii+bu4LVAP0mw6R5tk6B
+	 /wgBaIIgcO1wcu18uR9Ao83Whxzis1sYhFhoCV7anhdfcbkMc8I6U095Hhy+d2uYqM
+	 VvU4mlJz9d6yg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-block@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
@@ -36,9 +36,9 @@ To: linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	Keith Busch <kbusch@kernel.org>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 05/30] block: Introduce bio_straddles_zones() and bio_offset_from_zone_start()
-Date: Thu, 28 Mar 2024 09:43:44 +0900
-Message-ID: <20240328004409.594888-6-dlemoal@kernel.org>
+Subject: [PATCH v3 06/30] block: Allow using bio_attempt_back_merge() internally
+Date: Thu, 28 Mar 2024 09:43:45 +0900
+Message-ID: <20240328004409.594888-7-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240328004409.594888-1-dlemoal@kernel.org>
 References: <20240328004409.594888-1-dlemoal@kernel.org>
@@ -50,50 +50,58 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Implement the inline helper functions bio_straddles_zones() and
-bio_offset_from_zone_start() to respectively test if a BIO crosses a
-zone boundary (the start sector and last sector belong to different
-zones) and to obtain the offset of a BIO from the start sector of its
-target zone.
+Remove "static" from the definition of bio_attempt_back_merge() and
+declare this function in block/blk.h to allow using it internally from
+other block layer files. The definition of enum bio_merge_status is
+also moved to block/blk.h.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/linux/blkdev.h | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ block/blk-merge.c | 8 +-------
+ block/blk.h       | 8 ++++++++
+ 2 files changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index c3e8f7cf96be..ec7bd7091467 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -853,6 +853,13 @@ static inline unsigned int bio_zone_no(struct bio *bio)
- 	return disk_zone_no(bio->bi_bdev->bd_disk, bio->bi_iter.bi_sector);
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 2a06fd33039d..88367c10c8bc 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -972,13 +972,7 @@ static void blk_account_io_merge_bio(struct request *req)
+ 	part_stat_unlock();
  }
  
-+static inline bool bio_straddles_zones(struct bio *bio)
-+{
-+	return bio_sectors(bio) &&
-+		bio_zone_no(bio) !=
-+		disk_zone_no(bio->bi_bdev->bd_disk, bio_end_sector(bio) - 1);
-+}
-+
- static inline unsigned int bio_zone_is_seq(struct bio *bio)
+-enum bio_merge_status {
+-	BIO_MERGE_OK,
+-	BIO_MERGE_NONE,
+-	BIO_MERGE_FAILED,
+-};
+-
+-static enum bio_merge_status bio_attempt_back_merge(struct request *req,
++enum bio_merge_status bio_attempt_back_merge(struct request *req,
+ 		struct bio *bio, unsigned int nr_segs)
  {
- 	return disk_zone_is_seq(bio->bi_bdev->bd_disk, bio->bi_iter.bi_sector);
-@@ -1328,6 +1335,12 @@ static inline sector_t bdev_offset_from_zone_start(struct block_device *bdev,
- 	return sector & (bdev_zone_sectors(bdev) - 1);
- }
+ 	const blk_opf_t ff = bio_failfast(bio);
+diff --git a/block/blk.h b/block/blk.h
+index a12cde1d45de..f2a521b72f9d 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -269,6 +269,14 @@ static inline void bio_integrity_free(struct bio *bio)
+ unsigned long blk_rq_timeout(unsigned long timeout);
+ void blk_add_timer(struct request *req);
  
-+static inline sector_t bio_offset_from_zone_start(struct bio *bio)
-+{
-+	return bdev_offset_from_zone_start(bio->bi_bdev,
-+					   bio->bi_iter.bi_sector);
-+}
++enum bio_merge_status {
++	BIO_MERGE_OK,
++	BIO_MERGE_NONE,
++	BIO_MERGE_FAILED,
++};
 +
- static inline bool bdev_is_zone_start(struct block_device *bdev,
- 				      sector_t sector)
- {
++enum bio_merge_status bio_attempt_back_merge(struct request *req,
++		struct bio *bio, unsigned int nr_segs);
+ bool blk_attempt_plug_merge(struct request_queue *q, struct bio *bio,
+ 		unsigned int nr_segs);
+ bool blk_bio_list_merge(struct request_queue *q, struct list_head *list,
 -- 
 2.44.0
 
