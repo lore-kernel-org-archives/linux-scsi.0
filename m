@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92E3D3C473;
-	Thu, 28 Mar 2024 00:44:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3B8C225DA;
+	Thu, 28 Mar 2024 00:44:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711586695; cv=none; b=O6b7szdQ0YWRz0ahBdxmuizfqnZmAhP802AFN1qDHrUw7o7OsGhDxTyuA+DcLHCsCT0aruIbt1V7S4fu5jYOzP/Vx40UPZ5VULX/x+dKTQuFX4/Wq1dTI3A2qas34D1m8/65jLft2t9wenIYfdlQH3lV5ZFPrlBaJrwxSThU5T8=
+	t=1711586696; cv=none; b=oz7daN27ULsgYbZaJpFIO5Mt3ROar6A3qD2MxUINgPtSQuDLmuJoEPWiUhaD9/fuD9/4XqBq3+jzT2NQhabAqJtA4lydbPx4heZf8dgqdIJ3gy7hrXf6i2bU3vYbXhIa9hPYPyOY+harxLnuxQzXx+mGT763VY4JXBe8ltWxk9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711586695; c=relaxed/simple;
-	bh=SDWELck1RoGv2VSJxikvYBXlMcfGyvAzaBGySLOyeYQ=;
+	s=arc-20240116; t=1711586696; c=relaxed/simple;
+	bh=9lGN8HcNOfcmbC48TC0lGJlJVU3243wN0wEL2maXvro=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lqBECfTQGSZbaD/Y3Q+F4a9YPAMoe8ZD3IQzWwG1bT7QlQh3bJlZsyuXOTCOgZj6XEgkeUikmUDGnMnFo5k3V8oGxkPVJFCSbffl7vx52e7zm69T5yFOcTNv1F+hGzBaPKGkq5G7pQviXtDHJNB3Xe+cr8xtooenkzbVLl2RYPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UtLiGjhX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=nR8PRRh4ckU9cn2ptWg7XDqOXWizAycDoUU7VOIUcwJ9zA1pI2vc0SjiVjdZh103/3G710P+J8mwcnTfjUAyMWQK3UhOLN2zAK1Gyfbvieygm08j8T6m7QxigFQlG3koivLVvhX2RsG67nEPfJFhl0uDaWdpPxxRCqbC1mJvRq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eQW0wRqT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UtLiGjhX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDC58C433C7;
-	Thu, 28 Mar 2024 00:44:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eQW0wRqT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 780E0C433F1;
+	Thu, 28 Mar 2024 00:44:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711586695;
-	bh=SDWELck1RoGv2VSJxikvYBXlMcfGyvAzaBGySLOyeYQ=;
+	s=k20201202; t=1711586696;
+	bh=9lGN8HcNOfcmbC48TC0lGJlJVU3243wN0wEL2maXvro=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=UtLiGjhX7AvMYzjDfFZ574opBQKTuiGSVHa8HUFdQRks1nmKYrwiclfJWjCK4rHgF
-	 3ka+LaBu08t+pri56NnCyZi++BT4E4O5D+vbvAd6cTkkBQ57jXABwUQols6NoRKVjB
-	 4GmQTs20RPIc/t3eTB9CcQ8mhxi4MxCerYzCbS8XaToCvmFDgEESyNi41712rPG+lG
-	 JaWbqWJi9c4rUdIbd4sK0U5m4/wwX4AgY2mLq5zVv8yLr9HYsi/mSi6P/Tuu0yMQBp
-	 HXu7wX3iFKtgY2h5NDSaY+cDvA/ufODF87BJwzf9eAtZd4mQ1Kyq0Ny7t2pEKMOBZE
-	 bP1E/b+nbXU7A==
+	b=eQW0wRqTYhthe7X1QaVsV10f/zuKfjkMbB+lLmCKM0P9gcPJFRog5GEp25reBW1qH
+	 8m7++H+O6fHNn+N0wX+DnT2injPsJ1cK+HYAsWqI3DBN1ukXuOrVCTzoWNhZ6/Oqdn
+	 JTp9/Ykxpgbrh8poPi0JGml6xFLMjsX6QKvbFU7w/KSAsX1i+zFfBQ/qoCxVt5Mx/8
+	 cox5zko3NcyvdjDgZQmQl+pScX7k0u8ohjx/6Bm5+wrPxifLZhuU5+ll7qmKhMX5Qz
+	 hYVqAR/OQtqlDskAiV0UcmbwggWKR3j67k1K4S+blHCUL4gXd7sTbOwAzC6VDydHDh
+	 vYBdrT/nkyzug==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-block@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
@@ -36,9 +36,9 @@ To: linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	Keith Busch <kbusch@kernel.org>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 25/30] block: Do not check zone type in blk_check_zone_append()
-Date: Thu, 28 Mar 2024 09:44:04 +0900
-Message-ID: <20240328004409.594888-26-dlemoal@kernel.org>
+Subject: [PATCH v3 26/30] block: Move zone related debugfs attribute to blk-zoned.c
+Date: Thu, 28 Mar 2024 09:44:05 +0900
+Message-ID: <20240328004409.594888-27-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240328004409.594888-1-dlemoal@kernel.org>
 References: <20240328004409.594888-1-dlemoal@kernel.org>
@@ -50,42 +50,125 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Zone append operations are only allowed to target sequential write
-required zones. blk_check_zone_append() uses bio_zone_is_seq() to check
-this. However, this check is not necessary because:
-1) For NVMe ZNS namespace devices, only sequential write required zones
-   exist, making the zone type check useless.
-2) For null_blk, the driver will fail the request anyway, thus notifying
-   the user that a conventional zone was targeted.
-3) For all other zoned devices, zone append is now emulated using zone
-   write plugging, which checks that a zone append operation does not
-   target a conventional zone.
-
-In preparation for the removal of zone write locking and its
-conventional zone bitmap (used by bio_zone_is_seq()), remove the
-bio_zone_is_seq() call from blk_check_zone_append().
+block/blk-mq-debugfs-zone.c contains a single debugfs attribute
+function. Defining this outside of block/blk-zoned.c does not really
+help in any way, so move this zone related debugfs attribute to
+block/blk-zoned.c and delete block/blk-mq-debugfs-zone.c.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-core.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ block/Kconfig                |  4 ----
+ block/Makefile               |  1 -
+ block/blk-mq-debugfs-zoned.c | 22 ----------------------
+ block/blk-mq-debugfs.h       |  2 +-
+ block/blk-zoned.c            | 20 ++++++++++++++++++++
+ 5 files changed, 21 insertions(+), 28 deletions(-)
+ delete mode 100644 block/blk-mq-debugfs-zoned.c
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 3bf28149e104..e1a5344c2257 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -589,8 +589,7 @@ static inline blk_status_t blk_check_zone_append(struct request_queue *q,
- 		return BLK_STS_NOTSUPP;
+diff --git a/block/Kconfig b/block/Kconfig
+index 1de4682d48cc..9f647149fbee 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -198,10 +198,6 @@ config BLK_DEBUG_FS
+ 	Unless you are building a kernel for a tiny system, you should
+ 	say Y here.
  
- 	/* The bio sector must point to the start of a sequential zone */
--	if (!bdev_is_zone_start(bio->bi_bdev, bio->bi_iter.bi_sector) ||
--	    !bio_zone_is_seq(bio))
-+	if (!bdev_is_zone_start(bio->bi_bdev, bio->bi_iter.bi_sector))
- 		return BLK_STS_IOERR;
+-config BLK_DEBUG_FS_ZONED
+-       bool
+-       default BLK_DEBUG_FS && BLK_DEV_ZONED
+-
+ config BLK_SED_OPAL
+ 	bool "Logic for interfacing with Opal enabled SEDs"
+ 	depends on KEYS
+diff --git a/block/Makefile b/block/Makefile
+index 46ada9dc8bbf..168150b9c510 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -33,7 +33,6 @@ obj-$(CONFIG_BLK_MQ_VIRTIO)	+= blk-mq-virtio.o
+ obj-$(CONFIG_BLK_DEV_ZONED)	+= blk-zoned.o
+ obj-$(CONFIG_BLK_WBT)		+= blk-wbt.o
+ obj-$(CONFIG_BLK_DEBUG_FS)	+= blk-mq-debugfs.o
+-obj-$(CONFIG_BLK_DEBUG_FS_ZONED)+= blk-mq-debugfs-zoned.o
+ obj-$(CONFIG_BLK_SED_OPAL)	+= sed-opal.o
+ obj-$(CONFIG_BLK_PM)		+= blk-pm.o
+ obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= blk-crypto.o blk-crypto-profile.o \
+diff --git a/block/blk-mq-debugfs-zoned.c b/block/blk-mq-debugfs-zoned.c
+deleted file mode 100644
+index a77b099c34b7..000000000000
+--- a/block/blk-mq-debugfs-zoned.c
++++ /dev/null
+@@ -1,22 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (C) 2017 Western Digital Corporation or its affiliates.
+- */
+-
+-#include <linux/blkdev.h>
+-#include "blk-mq-debugfs.h"
+-
+-int queue_zone_wlock_show(void *data, struct seq_file *m)
+-{
+-	struct request_queue *q = data;
+-	unsigned int i;
+-
+-	if (!q->disk->seq_zones_wlock)
+-		return 0;
+-
+-	for (i = 0; i < q->disk->nr_zones; i++)
+-		if (test_bit(i, q->disk->seq_zones_wlock))
+-			seq_printf(m, "%u\n", i);
+-
+-	return 0;
+-}
+diff --git a/block/blk-mq-debugfs.h b/block/blk-mq-debugfs.h
+index 9c7d4b6117d4..3ebe2c29b624 100644
+--- a/block/blk-mq-debugfs.h
++++ b/block/blk-mq-debugfs.h
+@@ -83,7 +83,7 @@ static inline void blk_mq_debugfs_unregister_rqos(struct rq_qos *rqos)
+ }
+ #endif
  
- 	/*
+-#ifdef CONFIG_BLK_DEBUG_FS_ZONED
++#if defined(CONFIG_BLK_DEV_ZONED) && defined(CONFIG_BLK_DEBUG_FS)
+ int queue_zone_wlock_show(void *data, struct seq_file *m);
+ #else
+ static inline int queue_zone_wlock_show(void *data, struct seq_file *m)
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index d0549b85f281..93aa994824d1 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -22,6 +22,7 @@
+ 
+ #include "blk.h"
+ #include "blk-mq-sched.h"
++#include "blk-mq-debugfs.h"
+ 
+ #define ZONE_COND_NAME(name) [BLK_ZONE_COND_##name] = #name
+ static const char *const zone_cond_name[] = {
+@@ -1890,3 +1891,22 @@ int blk_revalidate_disk_zones(struct gendisk *disk)
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(blk_revalidate_disk_zones);
++
++#ifdef CONFIG_BLK_DEBUG_FS
++
++int queue_zone_wlock_show(void *data, struct seq_file *m)
++{
++	struct request_queue *q = data;
++	unsigned int i;
++
++	if (!q->disk->seq_zones_wlock)
++		return 0;
++
++	for (i = 0; i < q->disk->nr_zones; i++)
++		if (test_bit(i, q->disk->seq_zones_wlock))
++			seq_printf(m, "%u\n", i);
++
++	return 0;
++}
++
++#endif
 -- 
 2.44.0
 
