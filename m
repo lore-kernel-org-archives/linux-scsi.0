@@ -1,83 +1,80 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB08E4EB42;
-	Thu, 28 Mar 2024 06:27:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D73C5223;
+	Thu, 28 Mar 2024 06:33:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711607236; cv=none; b=f1HAVI0/Z8tg4EysQe/qmcSfwgmtM18MUshXq/iHY1lquVfEXKOb037m/VuAlm/rMD27Im2kyAgO7Ug3xM9TwDT0Lbb/xRhIsc0VLJakV7e2CWfGajxqh+h9mW2aQMpLEUJj2cwq5LXPZ27P72SkfQjnep8vEoASdliv6VVi+vg=
+	t=1711607598; cv=none; b=UQgphOzaCEHbN6W0ZjNvxKXfD80OfaQrdydOJuFgfzBICkQjcSWYH73REMT/gcahDPcKsLSUvBSD1EERTVmn7pGBSRc1/Pup4NWj4S2aaqZqRkBogCmLrKqFsILoqdC0v1Mz8twVuLhDhG0Ok1XTyo6w6uri+Jvr7Ob5Dqofd2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711607236; c=relaxed/simple;
-	bh=/S13wRNr5LsSZgLf9WFNV5wLCibrFCIJ8lAI341NND0=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bS0hcKhssdeDrKdScF/RASAuetk5IM0n0xmuXFsUihVYm7WllWLOsIcDaujJUICMUA0wcwCBqCvxZYGSPoOevGdV/SpqxqxkbcO9dsToU+zNIz1Bjl5Yf5KYBxvTvr3WcIW1ntWXopAzXIjp7tl3VOxorOJhMkWa/3jWJcQC+Wo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.44])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4V4tnH1yPyz1xt4F;
-	Thu, 28 Mar 2024 14:25:07 +0800 (CST)
-Received: from kwepemi500008.china.huawei.com (unknown [7.221.188.139])
-	by mail.maildlp.com (Postfix) with ESMTPS id 99D5D1402CA;
-	Thu, 28 Mar 2024 14:27:08 +0800 (CST)
-Received: from localhost.huawei.com (10.50.165.33) by
- kwepemi500008.china.huawei.com (7.221.188.139) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Thu, 28 Mar 2024 14:27:07 +0800
-From: Yihang Li <liyihang9@huawei.com>
-To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>, <dlemoal@kernel.org>,
-	<chenxiang66@hisilicon.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@huawei.com>, <yangxingui@huawei.com>,
-	<liyihang9@huawei.com>
-Subject: [PATCH v3] scsi: libsas: Allocation SMP request is aligned to 16B
-Date: Thu, 28 Mar 2024 14:26:57 +0800
-Message-ID: <20240328062657.581460-1-liyihang9@huawei.com>
-X-Mailer: git-send-email 2.33.0
+	s=arc-20240116; t=1711607598; c=relaxed/simple;
+	bh=pnn1rBwl7okz5KQPjjIbUYL83lIbFWVfob8arJ3eTdc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OKCmJLjFyrGRs5LSeH+BZ585OtaaTQf5BMzaOvVTXEF5vmH8aph5faRB1JUXAsQKmBScACuOEhP1hnJYmzLzZu/vS7ZBpUEng5JOYq4XN3S0snXhzcNQCkO8vkGPiXPkCOo9a1wBOTJaSUOkicHlGraWG8ewaMsvX/8L09EZnCQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DEOpjtjo; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DEOpjtjo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 450C5C433F1;
+	Thu, 28 Mar 2024 06:33:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711607597;
+	bh=pnn1rBwl7okz5KQPjjIbUYL83lIbFWVfob8arJ3eTdc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=DEOpjtjoDphsjzqdfmc+oW2z5RKEb/O3BRxBr+5ZaPPENY5oyeQdFzZM4kznRPHly
+	 NG+N+UvvDvfLwggfdcHnalD2qpotFzOqdXGXXQz0hkPjuc08RHBs/j6Rxd9UQW6oAF
+	 hKlu+ho4Zssg+R2jls0h3rulj4p/NkKKu1ej/n9O/rfI/ZlEECWGyIXlzv2d3MsC7y
+	 jJiGqZeOXzH+kRUlg6xtyyDw46kgezKugWLBDWDqS5ESBAwLG6r85hR18XiXHUtuXl
+	 UN6h+8WRofRiDFWJjrB+7C6ioGaLyWE/UJ6a0/zVzRjp640N5ktClLgXY+pkDNj8rU
+	 AoWGvpq7X2C5g==
+Message-ID: <0d54c569-f586-4b75-a8a3-509e3f3717e2@kernel.org>
+Date: Thu, 28 Mar 2024 15:33:13 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- kwepemi500008.china.huawei.com (7.221.188.139)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 09/30] block: Pre-allocate zone write plugs
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>, dm-devel@lists.linux.dev,
+ Mike Snitzer <snitzer@redhat.com>, linux-nvme@lists.infradead.org,
+ Keith Busch <kbusch@kernel.org>
+References: <20240328004409.594888-1-dlemoal@kernel.org>
+ <20240328004409.594888-10-dlemoal@kernel.org> <20240328043016.GA13701@lst.de>
+ <714d0cbc-be4d-4aa9-b200-73c6caaa1d18@kernel.org>
+ <20240328054652.GA16237@lst.de>
+ <7d8f3ec4-c416-445f-92db-7d2b60726821@kernel.org>
+ <20240328060357.GA16819@lst.de>
+ <ca3fe7b0-7e27-4ac9-b669-5263c3cec550@kernel.org>
+ <20240328062237.GA17225@lst.de>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20240328062237.GA17225@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-This series [1] reducing the kmalloc() minimum alignment on arm64 to 8
-(from 128). In libsas, this will cause SMP requests to be 8-byte-aligned
-through kmalloc() allocation. However, for the hisi_sas hardware, all
-commands address must be 16-byte-aligned. Otherwise, the commands fail to
-be executed.
+On 3/28/24 15:22, Christoph Hellwig wrote:
+> On Thu, Mar 28, 2024 at 03:18:46PM +0900, Damien Le Moal wrote:
+>>> Yes, bt it can use kfree_rcu which doesn't need the rcu_head in the
+>>> zwplug.
+>>
+>> Unfortunately, it does. kfree_rcu() is a 2 argument macro: address and rcu head
+>> to use... The only thing we could drop from the plug struct is the gendisk pointer.
+> 
+> It used to have a one argument version.  Oh, that recently got renamed
+> to kfree_rcu_mightsleep.  Which seems like a somewhat odd name, but
+> it's still there and what i meant.
 
-So use 16B as the alignment for SMP request.
+Ha. OK. I did not see that one. But that means that the plug kfree() can then
+block the caller. Given that the last ref drop may happen from BIO completion
+context (when the last write to a zone making the zone full complete), I do not
+think we can use this function...
 
-Link: https://lkml.kernel.org/r/20230612153201.554742-1-catalin.marinas@arm.com [1]
-Signed-off-by: Yihang Li <liyihang9@huawei.com>
----
-Changes since v2:
-- Use 16B as alignment for SMP requests instead of ARCH_DMA_MINALIGN.
-
-Changes since v1:
-- Directly modify alloc_smp_req() instead of using handler callback.
----
- drivers/scsi/libsas/sas_expander.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index a2204674b680..5ddbd00d5c76 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -135,7 +135,7 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
- 
- static inline void *alloc_smp_req(int size)
- {
--	u8 *p = kzalloc(size, GFP_KERNEL);
-+	u8 *p = kzalloc(ALIGN(size, 16), GFP_KERNEL);
- 	if (p)
- 		p[0] = SMP_REQUEST;
- 	return p;
 -- 
-2.33.0
+Damien Le Moal
+Western Digital Research
 
