@@ -1,108 +1,160 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF9727D3E3
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Mar 2024 11:12:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81B553D387;
+	Thu, 28 Mar 2024 14:05:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711624377; cv=none; b=Kz6Ft7fQcTgzXHjfrtFJnuPaFupadbSNSETKMYcbavEpTQCgMZ9KCbo+F/c4n9K1UwcoD9DrmCQrY7fOFs+46xlXzRZ+DfwKLv8Op7RgiWJU1MYzejLyC4tPmRwzoYKPOYvk4/ONpKNLW2xsFMBqFgJCPDhRSLo5lwWaxffQmjE=
+	t=1711634730; cv=none; b=E+zMxlSPbsuLL5OX4zUG0+FOsWMO86pY6EujB3kXagcw414q2UQIfnV31G4nEc5yAbkl1JmEZ4imlljV4mknjnWMZfYOcSuqnfM7F+myMfUNTOEm5iuvgAFTpwtuTf31gGqpfm1HHyotu9gzH3XVhNbmoBKRNNUS213hb43wEwA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711624377; c=relaxed/simple;
-	bh=2x2qIbw6zQj4MvkULqgv0P6vJpBaLeyyrUxWql1Ngzg=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=aer3qJHGe52ekqxc1Ch2HrxzIJ6lx1VPy3HNuyARAOuMWYEg195YAp5Lv9WXSDVUHJ+NW1uAu6JVmBiQO6I4voFHqfFK8Aa/31kpiEjZZ98O+HyJdj/wQox/IkJOzuuLxUzDoTj3Donj+nH4VhIpMgiVxn4763sNMoa+Kf+x1WM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=QPmQVKEz; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1711634730; c=relaxed/simple;
+	bh=DyPPajVzJsQEhnad3V3XmULXNURr7x/hE7W3jpIhYHU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=g1a6ueWB4BUtbTRLzwtIjeug+VyHDG5UvL6xj82XS3hDxWFktUwbUaDjZl9Et6JwybgAUsRJsAjk0v9MvoWyGQDGLy7CEWC9Ici3a8Ky4RoLSqETaGrAV1orI3/WIM8p1zEUNU4SRHIAsa3ird99hlqbDdDbM0KOw+LJvSxKRw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YSIBj/z8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="QPmQVKEz"
-X-UUID: 1c45a284ecf411ee935d6952f98a51a9-20240328
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=1+ipa3gYGdsi7GnjlrbioIQ8A1A8ugliu8amDLRxkgc=;
-	b=QPmQVKEzJAeIQTAvKE2g3eSBPfNz7cbgQETwp8afk1QvqfwxIgMaXZFEaf8u9RWTH/o8/JbqI+dvel7vCtCqhi/NiKWNij0415BxYCyFs4cDct04yqCJFU1zPGgLN3CdFcofmH8QC051G9qNwlABCWX421Xj5koK7JywPKMIDKg=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.37,REQID:595018d2-e1a8-488a-8255-fbaa4568aee6,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:6f543d0,CLOUDID:038d6f00-c26b-4159-a099-3b9d0558e447,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 1c45a284ecf411ee935d6952f98a51a9-20240328
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 769327657; Thu, 28 Mar 2024 19:12:48 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Thu, 28 Mar 2024 19:12:46 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Thu, 28 Mar 2024 19:12:46 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <chu.stanley@gmail.com>
-Subject: [PATCH v1] ufs: core: fix mcq mode dev commad timeout
-Date: Thu, 28 Mar 2024 19:12:44 +0800
-Message-ID: <20240328111244.3599-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YSIBj/z8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2767DC433F1;
+	Thu, 28 Mar 2024 14:05:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711634730;
+	bh=DyPPajVzJsQEhnad3V3XmULXNURr7x/hE7W3jpIhYHU=;
+	h=From:To:Cc:Subject:Date:From;
+	b=YSIBj/z8FiuLEgDqBHCsbNl9cmMUDFKkjhDyPYeuiZwdnRhaWzQB1qy5bUc+cEoyn
+	 TgUgizmrgNHaRrJXrUOrR+GdgNy6Jcz8XE1oOPfSpaFhiEmf4RgxaXmRRkMfBs3XvJ
+	 Wdamgkwsoalajey9FhYVrBXHHnDc3hfmz1/sXLzA38s+j7m8rRsVIbogv2merkfHvl
+	 7NGUhSAkFPNi5a9tOFYSVMmfUJIhgs6J2mztKYfkmZfdJyHIxoNs7A5AsNpAjEutO0
+	 MTG5hno3yJ9IL2S3wchli/Txbu6/jMN5FjWKlXiRfuxNfq/iu1yN/a5CzMTTL577iG
+	 hodYTkkA1QuNg==
+From: Arnd Bergmann <arnd@kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Jens Axboe <axboe@kernel.dk>,
+	Robert Moore <robert.moore@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Len Brown <lenb@kernel.org>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Viresh Kumar <vireshk@kernel.org>,
+	Johan Hovold <johan@kernel.org>,
+	Alex Elder <elder@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Mike Marshall <hubcap@omnibond.com>,
+	Martin Brandenburg <martin@omnibond.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Masahiro Yamada <masahiroy@kernel.org>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Nicolas Schier <nicolas@fjasle.eu>,
+	Kees Cook <keescook@chromium.org>,
+	Alexey Starikovskiy <astarikovskiy@suse.de>,
+	linux-ntfs-dev@lists.sourceforge.net,
+	linux-block@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	acpica-devel@lists.linux.dev,
+	linux-scsi@vger.kernel.org,
+	greybus-dev@lists.linaro.org,
+	linux-staging@lists.linux.dev,
+	linux-rpi-kernel@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	devel@lists.orangefs.org,
+	linux-trace-kernel@vger.kernel.org,
+	linux-kbuild@vger.kernel.org
+Subject: [PATCH 00/11] address remaining stringop-truncation warnings
+Date: Thu, 28 Mar 2024 15:04:44 +0100
+Message-Id: <20240328140512.4148825-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-AS-Product-Ver: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-AS-Result: No-10--3.713000-8.000000
-X-TMASE-MatchedRID: n/G9Jfep/EYMQLXc2MGSbEKcYi5Qw/RVLoYOuiLW+uW7qpOHKudqcyvd
-	+2hXReVzUKHb2fVYuJQZiQOLu5PhvLBAQLqGlKiv4pdq9sdj8LWz4D778GcgEUklF5L0lQHcKLW
-	rCrDVHUni8zVgXoAltsYlDcGKIsCCC24oEZ6SpSk6XEE7Yhw4FgbXoidYSy4P3unOsFItkBB+mh
-	WkR14Qms0MN25RQ6qSqHSgf2x6gMl1CdFT0X8D/24OrJLqXmZ9R4HKDZ8NHjGuxQRL3Ccs18GQY
-	FMiVRG5ehcPPz6UzEWlb5ogMngNpHOTEn5IiRSOady5RJQR05c=
-X-TM-AS-User-Approved-Sender: No
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--3.713000-8.000000
-X-TMASE-Version: SMEX-14.0.0.3152-9.1.1006-23728.005
-X-TM-SNTS-SMTP: DB594D91E0DAB569C3A7D9A4665BB7B09F13F27FFC68A0935D26ED1A494258802000:8
-X-MTK: N
+Content-Transfer-Encoding: 8bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+From: Arnd Bergmann <arnd@arndb.de>
 
-When dev command timeout in mcq mode, clear success should return
-retry, because return 0, caller consider success and have error log.
-"Invalid offset 0x0 in descriptor IDN 0x9, length 0x0"
+We are close to being able to turn on -Wstringop-truncation
+unconditionally instead of only at the 'make W=1' level, these ten
+warnings are all that I saw in randconfig testing across compiler versions
+on arm, arm64 and x86.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+The final patch is only there for reference at the moment, I hope
+we can merge the other ones through the subsystem trees first,
+as there are no dependencies between them.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e30fd125988d..5f8749ea347c 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3217,7 +3217,9 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 
- 		/* MCQ mode */
- 		if (is_mcq_enabled(hba)) {
--			err = ufshcd_clear_cmd(hba, lrbp->task_tag);
-+			/* successfully cleared the command, retry if needed */
-+			if (ufshcd_clear_cmd(hba, lrbp->task_tag) == 0)
-+				err = -EAGAIN;
- 			hba->dev_cmd.complete = NULL;
- 			return err;
- 		}
+     Arnd
+
+Arnd Bergmann (11):
+  staging: vc04_services: changen strncpy() to strscpy_pad()
+  scsi: devinfo: rework scsi_strcpy_devinfo()
+  staging: replace weird strncpy() with memcpy()
+  orangefs: convert strncpy() to strscpy()
+  test_hexdump: avoid string truncation warning
+  acpi: avoid warning for truncated string copy
+  block/partitions/ldm: convert strncpy() to strscpy()
+  blktrace: convert strncpy() to strscpy_pad()
+  staging: rtl8723bs: convert strncpy to strscpy
+  staging: greybus: change strncpy() to strscpy()
+  kbuild: enable -Wstringop-truncation globally
+
+ block/partitions/ldm.c                        |  6 ++--
+ drivers/acpi/acpica/tbfind.c                  | 19 +++++------
+ drivers/scsi/scsi_devinfo.c                   | 30 +++++++++++------
+ drivers/staging/greybus/fw-management.c       |  4 +--
+ .../staging/rtl8723bs/os_dep/ioctl_cfg80211.c |  5 ++-
+ drivers/staging/rts5208/rtsx_scsi.c           |  2 +-
+ .../vc04_services/vchiq-mmal/mmal-vchiq.c     |  4 +--
+ fs/orangefs/dcache.c                          |  4 +--
+ fs/orangefs/namei.c                           | 33 +++++++++----------
+ fs/orangefs/super.c                           | 16 ++++-----
+ kernel/trace/blktrace.c                       |  3 +-
+ lib/test_hexdump.c                            |  2 +-
+ scripts/Makefile.extrawarn                    |  1 -
+ 13 files changed, 64 insertions(+), 65 deletions(-)
+
 -- 
-2.18.0
+2.39.2
+
+Cc: "Richard Russon
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Robert Moore <robert.moore@intel.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Cc: Len Brown <lenb@kernel.org>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Viresh Kumar <vireshk@kernel.org>
+Cc: Johan Hovold <johan@kernel.org>
+Cc: Alex Elder <elder@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Florian Fainelli <florian.fainelli@broadcom.com>
+Cc: Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>
+Cc: Mike Marshall <hubcap@omnibond.com>
+Cc: Martin Brandenburg <martin@omnibond.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>
+Cc: Masami Hiramatsu <mhiramat@kernel.org>
+Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Masahiro Yamada <masahiroy@kernel.org>
+Cc: Nathan Chancellor <nathan@kernel.org>
+Cc: Nicolas Schier <nicolas@fjasle.eu>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Alexey Starikovskiy <astarikovskiy@suse.de>
+Cc: linux-ntfs-dev@lists.sourceforge.net
+Cc: linux-block@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org
+Cc: acpica-devel@lists.linux.dev
+Cc: linux-scsi@vger.kernel.org
+Cc: greybus-dev@lists.linaro.org
+Cc: linux-staging@lists.linux.dev
+Cc: linux-rpi-kernel@lists.infradead.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: devel@lists.orangefs.org
+Cc: linux-trace-kernel@vger.kernel.org
+Cc: linux-kbuild@vger.kernel.org
 
