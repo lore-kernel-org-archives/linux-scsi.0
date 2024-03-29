@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5F9B233A91;
-	Fri, 29 Mar 2024 12:46:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 527261A6D01;
+	Fri, 29 Mar 2024 12:47:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711716382; cv=none; b=ahk8LK/iPpYQmfzVCq6/6YnyO6QdkXJrWtTWHGe8B2GM9Wkwm93i6vV89NYkCeLuq492y8OjPUc3FnwTAw4hVgZBrq8xSZGAtgTYAxoFPkU2vID6HAi58eb7xOBtVh0ya4q6DFCAURuw6HLICANgGKmuMt/KRJKkVVe5EOGrPJQ=
+	t=1711716479; cv=none; b=EYfCLs7W0GpNnnPAxn0qQItS4jJUymkU1Dyo6TB5v9e3UI9mLIiCcyz4GYGQm9a2Es9IS/BMVGR09/JbBeAKIAJozMwnsv4cZsFnZJT+dJRTHNLJa4/gubh8v39ti5VlWal1LQOxYSl20xacWLKAWVC87wST8mSdVuppJ97uA2Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711716382; c=relaxed/simple;
-	bh=kaa8ifzx6hH+2K+Lax/DSzP0zj6PNJSy9o/mAG2JK5Q=;
+	s=arc-20240116; t=1711716479; c=relaxed/simple;
+	bh=0wAhSurDvrkS7sS7HCp4satg5frJrKfG7SxBG1rPTms=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NyOAxSDdeICXUCLHjB9gAsxHFNaeNs2ET8802/wbKMX3uTqclfto3nvwYSL7ZEGV1jarl9u4ZTGlVByrml1PTOn2SrObnVAP18zA+flGgDN+5yzXB6faLbnFRFdVZLztgZEbCtgCDVI9pDZgABfFy9SnmdCtNiacyRCmfu37Vt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M4sI7Sfg; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=bnqMoCIDoGI2hSy7vvfF8gaMlcrxwKZqspQD/pCBKkRih/zyG2lOE4b/90kyfbQdQI08baHpJBj3ENsH8oKCzOMLYrdpoby0+6nvkONWODrGpi60AcYhFJknMoo6pzhsnvuvlm1+OcbagMTjX7PJu1FE/aT+55WiJf9hUyZ9GrQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K3UlcC79; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M4sI7Sfg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB326C433C7;
-	Fri, 29 Mar 2024 12:46:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K3UlcC79"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25FE4C433C7;
+	Fri, 29 Mar 2024 12:47:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711716381;
-	bh=kaa8ifzx6hH+2K+Lax/DSzP0zj6PNJSy9o/mAG2JK5Q=;
+	s=k20201202; t=1711716479;
+	bh=0wAhSurDvrkS7sS7HCp4satg5frJrKfG7SxBG1rPTms=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=M4sI7Sfgm0sjA1UnKobFnPFXcBGsIQMdE9oLM2XoKZiCqM7P+KnzPitbGxLkmlFJP
-	 ScypDL5/ji23i19mlGLThX5Op43vPduFPKr1eNEgcnAxdckGxvBcQGJk4kUgo1bx0d
-	 ol1eTfuEPt+yo5eILe0Jb7DlOMtveQED50GMhZ0iIPPwaxDTcQXQUdvMZPNHG76HFL
-	 hMcq5Qowyd+DdaDgV70hz+KuZCskJ4lyyKvh3h/fFzIidt0qqwM4784MdcXqWB5kmS
-	 LjWgPwa/ewudz/gdPJFUFNttjCXhcVXpFUivbZ6rHyafRPHyH3DW+ozOMlijLALnY4
-	 xmPmmvna7hYAg==
+	b=K3UlcC796yMPJsUhLfqs6PvSsZAZsDHRK2+3hUzedGXqmSrNwctkflTr1qENKQf5d
+	 EzTZp8yekrM7Wydg4rd15GNPwoFwKGtQNG69iR3PShNzlWmFCFARcdwFHuCr7DZK1s
+	 ccpTCQKNi1wz4ycXUy07LlVmuJ3/n3zMqLv/trQeg4ytifzZK8zCOvXHQTAU8sLpTO
+	 FiLZ0ryHwl+6cLv+HlMyNrRXvH8j8luLSbegSYtuV0Fv7o9cSe7ofzGk8cggIEZ24z
+	 73OJU4E92ExW1v4hkyrL7XfZr/Nbqyk11dwawR5YL/vBWficisX/RZ+d05sVb1eytH
+	 cTaGTJRnwNdKg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -37,12 +37,12 @@ Cc: Justin Tee <justin.tee@broadcom.com>,
 	dick.kennedy@broadcom.com,
 	jejb@linux.ibm.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 10/52] scsi: lpfc: Fix possible memory leak in lpfc_rcv_padisc()
-Date: Fri, 29 Mar 2024 08:45:04 -0400
-Message-ID: <20240329124605.3091273-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 06/34] scsi: lpfc: Fix possible memory leak in lpfc_rcv_padisc()
+Date: Fri, 29 Mar 2024 08:47:07 -0400
+Message-ID: <20240329124750.3092394-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240329124605.3091273-1-sashal@kernel.org>
-References: <20240329124605.3091273-1-sashal@kernel.org>
+In-Reply-To: <20240329124750.3092394-1-sashal@kernel.org>
+References: <20240329124750.3092394-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,7 +51,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.83
+X-stable-base: Linux 5.15.153
 Content-Transfer-Encoding: 8bit
 
 From: Justin Tee <justin.tee@broadcom.com>
@@ -75,10 +75,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index b86ff9fcdf0c6..f21396a0ba9d0 100644
+index 2bd35a7424c25..9b862f1254a42 100644
 --- a/drivers/scsi/lpfc/lpfc_nportdisc.c
 +++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -748,8 +748,10 @@ lpfc_rcv_padisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+@@ -724,8 +724,10 @@ lpfc_rcv_padisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
  				/* Save the ELS cmd */
  				elsiocb->drvrTimeout = cmd;
  
