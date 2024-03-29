@@ -1,142 +1,167 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CB73142902
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 13:28:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87D6118D
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 14:37:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711718921; cv=none; b=kMsD2L5qc47cm6LxWxTMrjM3p2Xc2qG57N0VGKXruRBm4Z+iZUHuQX33RVUmge6BkF/dVhD23MLyNgjN1bcVUWbXBsgL1UpLZQYrAGtvfPkEk9hcDyEZxe2+KehzYgSeexwdCj0givN1mkkRe9BH86inbWso/0qygsUsim5N/74=
+	t=1711723078; cv=none; b=C7YSoMeCUNOdPn5bI1dSbwjkD+UOO5vnOc5jY8uIEMzUcM69UXIyTGUmQynBMP6kSRNrqIJ7W5kDEpXzquKfdqT2HwWlnSfzZnH2/prZg0t0Xlt9uO1wRi0zcIAbweaEO82rr4ChgtnSQZcn1tkJYm7kBwko4NEdWtHthOoA0T4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711718921; c=relaxed/simple;
-	bh=zlmV0sBDPPllGZWjPqa2/c1/r7nXDK5/rzJZO9Fvals=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kTx65mt1FpiR3dSd87eS/n0DyhXGLo7kfzP6IApyt1WpiQOJYXXHZJ67zkKOJ49xGEYGyL48+Dml6NOfZWw/8q+7xpKbiBH6g/cXIudRdjopyC3KrZQAYaY+Odrdi5ZMnufwogFjC57scJPbVZBBdTdSAvuJn4mYlRISOLUzA+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IUDXgm2k; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1711723078; c=relaxed/simple;
+	bh=7rHd30Sez1/sSFzXD0qg5rfaKgziIJhPm3mkW7vh1W0=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=AOQhJxYwDbwVVvF821hWCkTW5GXXRegd4fVmZ6wTexkJU9g8tV5smXBCPEMn9LLxrCFPZwaIEc84h+cBguG60O7uL7JeJ+98BIlVpY/0yejWcKC+m3Xw34sC6Y+xhj23KoZmP9CF9eeSxe0GaR4qw4/VZiXzFZziz6JEu4Usd/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Y+bud6sf; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IUDXgm2k"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1711718918;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9b2+syugljaMrrOP++3j3QqL3+aM8ytb7iOaLk3Q4wQ=;
-	b=IUDXgm2kOl9/CN/lhCVgoBjWiVVVwUt5rBIo9bSfsN0DUnUCU2Di83i8B8QVZ9/uRrHU2v
-	HiWjjesvrN8Qf3DWBUSub7BKFKH5vNhk02uIBr3cj/ZDu/ZGZKKbSzLesA1/nL3E2h0Ed7
-	NXmppQUWSIftHX8LY7SCkJOAH64TCms=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-21-jGgjbn7CMMOh380ljGJnVA-1; Fri, 29 Mar 2024 09:28:36 -0400
-X-MC-Unique: jGgjbn7CMMOh380ljGJnVA-1
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-33ed44cb765so1145163f8f.2
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 06:28:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711718915; x=1712323715;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9b2+syugljaMrrOP++3j3QqL3+aM8ytb7iOaLk3Q4wQ=;
-        b=WHOpo2381zNvMRCWYUoNTuv5a1miOhGMWmSa5BbRQEg2dw4H51xeh99g5qdP17TX9e
-         5Ft3TRJEnPcvJdYIPKOX+oWyKM7VQJlSkAL7q8ElMePfe5HIw+GOXX8a/Z11DCQ/x4ye
-         K+esIUi8hKPT5ZSjAqRklZLmcb+PDwsz2LtfuE++c6LvJoCuIGczmqJqQWLghJniB0II
-         ZoCOaY50E5ppJwQJhY9gcZWaYJL+ZRil9vpGW/WRO6RVpo8IcovZuallXIL7izoXb+AX
-         DFmO5+6wm+4MGN/jzr+Y9O1YK3asvHSXxQHDgTE+eZo/V7Ym32938qvJMxtb326tqGES
-         /v4w==
-X-Forwarded-Encrypted: i=1; AJvYcCWXupRakTo4f1Ejpg9BjaQQqJS/kfVEcMcNMm/5OH7oEeEDvSfzwNQBfBEc0TmhNvTUJYcLUiIigF1i5A/hq4QqY0y4mXtahXFhmw==
-X-Gm-Message-State: AOJu0YySdaTLp57E7BWLcZPnbPieYCxx2r8mXalaMODZgbZUkxPRI2dg
-	uYYq0OMy8RdtdnrPaPXBeaIDxXmE3vzvNqNsCULRWquo6S8bHWvLjz2XtaaVCwpKBfpal9m72IP
-	zswI4ab57rL6h502s6x6wH08JL65fQPTV3BWUq0YeR429tnrv5hJcTpcXPf8=
-X-Received: by 2002:a05:6000:258:b0:343:3e54:6208 with SMTP id m24-20020a056000025800b003433e546208mr405117wrz.55.1711718915641;
-        Fri, 29 Mar 2024 06:28:35 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG0y693U6Mrafzyu7YFm6f17FVsvRLIAvGL111PeLg9URymVxfxN4rrw7+XNw571qiaGR1ycw==
-X-Received: by 2002:a05:6000:258:b0:343:3e54:6208 with SMTP id m24-20020a056000025800b003433e546208mr405040wrz.55.1711718915211;
-        Fri, 29 Mar 2024 06:28:35 -0700 (PDT)
-Received: from sgarzare-redhat (host-87-12-25-33.business.telecomitalia.it. [87.12.25.33])
-        by smtp.gmail.com with ESMTPSA id e11-20020a056000194b00b00341c6b53358sm4171063wry.66.2024.03.29.06.28.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 29 Mar 2024 06:28:34 -0700 (PDT)
-Date: Fri, 29 Mar 2024 14:28:27 +0100
-From: Stefano Garzarella <sgarzare@redhat.com>
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, 
-	Jason Wang <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
-	Richard Weinberger <richard@nod.at>, Anton Ivanov <anton.ivanov@cambridgegreys.com>, 
-	Johannes Berg <johannes@sipsolutions.net>, Paolo Bonzini <pbonzini@redhat.com>, 
-	Stefan Hajnoczi <stefanha@redhat.com>, Jens Axboe <axboe@kernel.dk>, 
-	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
-	Olivia Mackall <olivia@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	Amit Shah <amit@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gonglei <arei.gonglei@huawei.com>, 
-	"David S. Miller" <davem@davemloft.net>, Viresh Kumar <vireshk@kernel.org>, 
-	Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	David Airlie <airlied@redhat.com>, Gerd Hoffmann <kraxel@redhat.com>, 
-	Gurchetan Singh <gurchetansingh@chromium.org>, Chia-I Wu <olvaffe@gmail.com>, 
-	Jean-Philippe Brucker <jean-philippe@linaro.org>, Joerg Roedel <joro@8bytes.org>, Alexander Graf <graf@amazon.com>, 
-	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
-	Paolo Abeni <pabeni@redhat.com>, Eric Van Hensbergen <ericvh@kernel.org>, 
-	Latchesar Ionkov <lucho@ionkov.net>, Dominique Martinet <asmadeus@codewreck.org>, 
-	Christian Schoenebeck <linux_oss@crudebyte.com>, Kalle Valo <kvalo@kernel.org>, 
-	Dan Williams <dan.j.williams@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, 
-	Dave Jiang <dave.jiang@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
-	Pankaj Gupta <pankaj.gupta.linux@gmail.com>, Bjorn Andersson <andersson@kernel.org>, 
-	Mathieu Poirier <mathieu.poirier@linaro.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Vivek Goyal <vgoyal@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, 
-	Anton Yakovlev <anton.yakovlev@opensynergy.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
-	virtualization@lists.linux.dev, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-um@lists.infradead.org, linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
-	linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-gpio@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, iommu@lists.linux.dev, netdev@vger.kernel.org, 
-	v9fs@lists.linux.dev, kvm@vger.kernel.org, linux-wireless@vger.kernel.org, 
-	nvdimm@lists.linux.dev, linux-remoteproc@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-fsdevel@vger.kernel.org, alsa-devel@alsa-project.org, linux-sound@vger.kernel.org
-Subject: Re: [PATCH 01/22] virtio: store owner from modules with
- register_virtio_driver()
-Message-ID: <e2xy5kjdctpitcrev2byqc5gcwntvsd6pfutrvp3l2kfe3llgs@l2xp5opj7xu2>
-References: <20240327-module-owner-virtio-v1-0-0feffab77d99@linaro.org>
- <20240327-module-owner-virtio-v1-1-0feffab77d99@linaro.org>
- <oaoiehcpkjs3wrhc22pwx676pompxml2z5dcq32a6fvsyntonw@hnohrbbp6wpm>
- <d01cc73e-a365-4ce8-a25f-780ea45bc581@linaro.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Y+bud6sf"
+Received: from pps.filterd (m0353722.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 42TERfAA017474;
+	Fri, 29 Mar 2024 14:37:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to; s=pp1;
+ bh=vKefaWdMwBcVLdS1FuMyLE+ur4CqOQmGogvC3qJ8T4Q=;
+ b=Y+bud6sfbt0OxC9FtZ8zAjOHTM14+ewp1ha1UkxUyk1qe4WQsSHFkb2npvgWoP4Pc/g4
+ mxBTzGu7PRkySD7q5gcsp5xU4G30m52iC7ArlLvqL/ZX97ejw28kY85hBLeZ2XiaVBEt
+ hANtUllr3JKu0+mKKwIze8ghT/dNQh8vGzw8ygXsgxhfp9tefooYmr2WMKz4jhIL9hU9
+ 799CR/cDiPTI7xreiMjj6DNLGL1Z5lXkh0wJtwg3YjXg1MNuMMZOJqR2ALZ1cP65snWy
+ Ny/ooTF8Py6o9UWtM2TBTyFyDXYVwmla4imcAH85yjhiquAlZXyUhBoFakusMD8+OzL2 TA== 
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3x5ydy00kb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 29 Mar 2024 14:37:42 +0000
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 42TEAKMg011243;
+	Fri, 29 Mar 2024 14:37:42 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3x2bmmm775-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 29 Mar 2024 14:37:41 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 42TEbcoA44171682
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 29 Mar 2024 14:37:40 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 1ECF62004B;
+	Fri, 29 Mar 2024 14:37:38 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DFDE22005A;
+	Fri, 29 Mar 2024 14:37:36 +0000 (GMT)
+Received: from smtpclient.apple (unknown [9.43.7.146])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Fri, 29 Mar 2024 14:37:36 +0000 (GMT)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <d01cc73e-a365-4ce8-a25f-780ea45bc581@linaro.org>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3774.400.31\))
+Subject: Re: [powerpc] WARN at drivers/scsi/sg.c:2236
+ (sg_remove_sfp_usercontext)
+From: Sachin Sant <sachinp@linux.ibm.com>
+In-Reply-To: <20240329111025.9486-1-Alexander@wetzel-home.de>
+Date: Fri, 29 Mar 2024 20:07:24 +0530
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <81266270-42F4-48F9-9139-8F0C3F0A6553@linux.ibm.com>
+References: <5375B275-D137-4D5F-BE25-6AF8ACAE41EF@linux.ibm.com>
+ <20240329111025.9486-1-Alexander@wetzel-home.de>
+To: Alexander Wetzel <Alexander@wetzel-home.de>
+X-Mailer: Apple Mail (2.3774.400.31)
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: V7NNS4aE-Ft2NLM8nu6PukoXe5f5MP6i
+X-Proofpoint-ORIG-GUID: V7NNS4aE-Ft2NLM8nu6PukoXe5f5MP6i
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-29_13,2024-03-28_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 clxscore=1015
+ priorityscore=1501 bulkscore=0 mlxlogscore=999 adultscore=0
+ lowpriorityscore=0 malwarescore=0 impostorscore=0 phishscore=0
+ suspectscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2403210000 definitions=main-2403290129
 
-On Fri, Mar 29, 2024 at 01:07:31PM +0100, Krzysztof Kozlowski wrote:
->On 29/03/2024 12:42, Stefano Garzarella wrote:
->>> };
->>>
->>> -int register_virtio_driver(struct virtio_driver *driver)
->>> +int __register_virtio_driver(struct virtio_driver *driver, struct module *owner)
->>> {
->>> 	/* Catch this early. */
->>> 	BUG_ON(driver->feature_table_size && !driver->feature_table);
->>> 	driver->driver.bus = &virtio_bus;
->>> +	driver->driver.owner = owner;
->>> +
->>
->> `.driver.name =  KBUILD_MODNAME` also seems very common, should we put
->> that in the macro as well?
->
->This is a bit different thing. Every driver is expected to set owner to
->itself (THIS_MODULE), but is every driver name KBUILD_MODNAME?
 
-Nope, IIUC we have 2 exceptions:
-- drivers/firmware/arm_scmi/virtio.c
-- arch/um/drivers/virt-pci.c
 
->Remember that this overrides whatever driver actually put there.
+> Can you check the debug patch below and provide output?
+> When I'm right the warning should be gone and you should just get the
+> "Modification triggered" instead. When I'm wrong we should at least =
+see,
+> how many references d_ref has left.
+>=20
 
-They can call __register_virtio_driver() where we can add the `name`
-parameter. That said, I don't have a strong opinion, we can leave it
-as it is.
+With the debug patch applied, code says d_ref value is 2
 
-Thanks,
-Stefano
+# ./ioctl_sg01=20
+tst_test.c:1741: TINFO: LTP version: 20210524-2511-g00b497c47
+tst_test.c:1625: TINFO: Timeout per run is 1h 00m 30s
+ioctl_sg01.c:83: TINFO: Found SCSI device /dev/sg0
+[   36.016630] ------------[ cut here ]------------
+[   36.016674] WARNING: CPU: 19 PID: 460 at drivers/scsi/sg.c:2238 =
+sg_remove_sfp_usercontext+0x270/0x298 [sg]
+[   36.016707] Modules linked in: rpadlpar_io rpaphp xsk_diag =
+nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_reject_inet =
+nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct nft_chain_nat nf_nat =
+nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 bonding tls rfkill ip_set =
+nf_tables nfnetlink sunrpc binfmt_misc pseries_rng vmx_crypto xfs =
+libcrc32c sd_mod sr_mod t10_pi crc64_rocksoft_generic cdrom =
+crc64_rocksoft crc64 sg ibmvscsi scsi_transport_srp ibmveth fuse
+[   36.016834] CPU: 19 PID: 460 Comm: kworker/19:1 Kdump: loaded Not =
+tainted 6.9.0-rc1-next-20240328-dirty #3
+[   36.016849] Hardware name: IBM,9080-HEX POWER10 (raw) 0x800200 =
+0xf000006 of:IBM,FW1060.00 (NH1060_018) hv:phyp pSeries
+[   36.016868] Workqueue: events sg_remove_sfp_usercontext [sg]
+[   36.016889] NIP:  c008000015cf4110 LR: c008000015cf4000 CTR: =
+c0000000005393b0
+[   36.016903] REGS: c00000009414fae0 TRAP: 0700   Not tainted  =
+(6.9.0-rc1-next-20240328-dirty)
+[   36.016921] MSR:  800000000282b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE>  =
+CR: 44000448  XER: 00000000
+[   36.016962] CFAR: c008000015cf400c IRQMASK: 0  [   36.016962] GPR00: =
+c008000015cf4000 c00000009414fd80 c008000015d18900 0000000000000000  [   =
+36.016962] GPR04: 00000000c0000000 0000000000000023 c000000008dee000 =
+0000000000000022  [   36.016962] GPR08: 000000038a6d0000 =
+0000000000000002 0000000000000000 c008000015cf8c10  [   36.016962] =
+GPR12: c0000000005393b0 c00000038ffe8b00 c0000000001a2bac =
+c000000008e4e980  [   36.016962] GPR16: 0000000000000000 =
+0000000000000000 0000000000000000 0000000000000000  [   36.016962] =
+GPR20: c00000038c993b00 c000000008dea030 c000000008dea000 =
+c0000000a2712000  [   36.016962] GPR24: 0000000000000000 =
+c00000000c3bd380 c0000000045ab205 c000000008deb330  [   36.016962] =
+GPR28: c00000038c993b00 c000000008dea080 c000000008deb328 =
+c00000000c3bd418  [   36.017107] NIP [c008000015cf4110] =
+sg_remove_sfp_usercontext+0x270/0x298 [sg]
+[   36.017129] LR [c008000015cf4000] =
+sg_remove_sfp_usercontext+0x160/0x298 [sg]
+[   36.017144] Call Trace:
+[   36.017148] [c00000009414fd80] [c008000015cf4000] =
+sg_remove_sfp_usercontext+0x160/0x298 [sg] (unreliable)
+[   36.017169] [c00000009414fe40] [c00000000019337c] =
+process_one_work+0x20c/0x4f4
+[   36.017189] [c00000009414fef0] [c0000000001942fc] =
+worker_thread+0x378/0x544
+[   36.017208] [c00000009414ff90] [c0000000001a2cdc] kthread+0x138/0x140
+[   36.017225] [c00000009414ffe0] [c00000000000df98] =
+start_kernel_thread+0x14/0x18
+[   36.017241] Code: 3bf90098 e8c98310 3d220000 e8698010 48004509 =
+e8410018 7ec3b378 48004b15 e8410018 81390098 2c090001 4182ff04 =
+<0fe00000> 80990098 3d220000 78840020  [   36.017289] ---[ end trace =
+0000000000000000 ]---
+[   36.017302] d_ref=3D2
+ioctl_sg01.c:124: TPASS: Output buffer is empty, no data leaked
+[   44.707319] d_ref=3D2
 
+Summary:
+passed   1
+failed   0
+broken   0
+skipped  0
+warnings 0
+
+
+=E2=80=94 Sachin=
