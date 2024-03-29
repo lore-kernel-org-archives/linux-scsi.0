@@ -1,63 +1,63 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6BA545955
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 20:48:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A198113BC04
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 20:48:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711745332; cv=none; b=ox+ugb06docYaDrqi5op8ZYrRD61Lzi3bleiCjJaVoGqza2bNd6Jo1lTDxD91SxJKHxfi+GV49xkr2fZ1UWnNX3e09sHqkAuvQ4jM3Q7doQxGim7EvrmXEoPub6K/AVP4+BV1FLYWBppozonsKVMoNh3u79ROZPBiCsSA1J4JZ8=
+	t=1711745337; cv=none; b=R0PuMXGgHjftheocgMqB7G35AEAUSfYfQiV3787fH3qqmw1XlHGWiHmCyvx8SwEXnnJO6u26kdc3QR4AapcJbWLgwxNyzwA+0wNBO5/beYwlrpgglWsihWbr8MMeGQw5U4Iia9qjizSyv0PUJGuimo41OZZmmvspveCHEJEE2Y8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711745332; c=relaxed/simple;
-	bh=BP7pHzMFsulC5h5RfnNlVkbRbr65ixQCUgccOfbpOGc=;
+	s=arc-20240116; t=1711745337; c=relaxed/simple;
+	bh=noY0Ok43Br9Lq9vxVD8O578wOnnwfbfMJqrIM3jYkv0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cnWZ2+qCQH3g2KET0GeSrG8vA4lf6Ac7I1gT961agcHUYqfAph9Dvx5fLYR23oe3LE8YErNcQp06qYcRopeaj81boFvkJPHE9bO4X2xJqOXxFHIqsd0SAGczLr2RHWNQIG1Ha2KxQd58gYS55P9pji3OgyVOH6DuaxvIP88tVMY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WtxErGAO; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version:Content-Type; b=Kemgqd2jUIq1X3BzAQb8WSnZciJ3a23+5FxoPwW0iaLXBGhH5AVBPKVkg7BTkHx7tFZrDPVIIMCpMPyrXZZRT3gqBbgEuhSlkHg4GlSZTvz/LrBbZwOy6Uaol/4/jNQ4WvX85XCT29a3MazFhBDcxjpV9+F2t9F69GlzA6rrQ/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LC3784WG; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WtxErGAO"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LC3784WG"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1711745329;
+	s=mimecast20190719; t=1711745334;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=c4OnoxFSVXPqXgZAXqDum+B43kEJjiL2qzIJ+ix8ScM=;
-	b=WtxErGAOEH7wgmq4Bs2CKq8z8zaqPOylcKHcO/81ugi9lXIXNjxkO+59viV7703RLGJWII
-	YjQQMRX5QFcTzANcqyKJRkHGdrD168bSUeUqJwujvFlzoPxtIFejeY9NBGb9F8V9Nwwhm0
-	Dr80Pw0mloB9BmHHacWKoVm+m8DBr0A=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=+uex28Uh2UrmMwKWwWQdWkljJkUfVw1qoAdqpkkJAvI=;
+	b=LC3784WGNwHDpgi+e7sSH/tsGMaAc1YW87Wj09DGuIr/+KcBMhM0sTp2ea+R4XebbAnLuc
+	z371yWufDoGjh7ySCoeWtWsCirt3Dqpb+F8nREftmPP+H7+24opDcVXHlK2Ox/QGInemYX
+	QDss2pH2D05aeVXWC8+n6APillYN5Bk=
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
+ [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-116-8ZXKI4KnOrCQ9vH_ZFiwbw-1; Fri, 29 Mar 2024 16:48:48 -0400
-X-MC-Unique: 8ZXKI4KnOrCQ9vH_ZFiwbw-1
-Received: by mail-qv1-f69.google.com with SMTP id 6a1803df08f44-69680b07160so27358196d6.0
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 13:48:48 -0700 (PDT)
+ us-mta-133-0s-tA4UIOe6qP39tY5UcAQ-1; Fri, 29 Mar 2024 16:48:53 -0400
+X-MC-Unique: 0s-tA4UIOe6qP39tY5UcAQ-1
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-698ec7e66e1so12381036d6.2
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 13:48:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711745324; x=1712350124;
+        d=1e100.net; s=20230601; t=1711745329; x=1712350129;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=c4OnoxFSVXPqXgZAXqDum+B43kEJjiL2qzIJ+ix8ScM=;
-        b=FVtX9EChq2zVGn4HAE4NuoqUU53kNrJtuZkBCMIYC6928FgSwrdb3gcwXReSejh1Ll
-         ahiI859cAPHHHjiaIIeTNmdVgjTjfWllu7AyjQX7qnhnV/WzvaTu41PBrEa1HjwIQDME
-         BgcRMD9gy7eftIy+bGWhOKBff0463Cpyk7rrZV9I4AeuQ6fj6vMQVMR+8MhSgtoevaxa
-         aRfFQH9X0IfR0Hespj+a/qCPDzdJ0w+RKalbIL7TCuVwuGEnZ6Do5lfI0//EvdKJSVPT
-         PoORsgLA3PrZ11wwJS2kTch8+LVHvEk7Ei8CaLVCCgmRgRWdMQO3PrayrclcItzTm+jn
-         +aCg==
-X-Forwarded-Encrypted: i=1; AJvYcCUsgCf5nhtAcew3TEF2AXTraupPLtgjWqwC4u2zWF3E444KqIJ/Y0i/3rdZPAEjeyvG18LanKshFTlq/qWbqUTfuUIzZ8Dox0YrOw==
-X-Gm-Message-State: AOJu0YxwxHx9Xc13KZXngGwfLocBzD1Crqw2rdjGKcUMwEOpTAFFslhK
-	IWRnPkeBy5qOkwetqUySbZKLcE3cCuELOIkHHn7adEwwQWSqMXhJAIg3yzCVB/rIBrdOMLxXT1D
-	7Br1j7movXZjIbINwZvg3lRKPq52Ia9NbmIPYc07gebHyU6kEEYJH96REQEc=
-X-Received: by 2002:a0c:9a91:0:b0:698:f39f:841f with SMTP id y17-20020a0c9a91000000b00698f39f841fmr2060279qvd.20.1711745324156;
-        Fri, 29 Mar 2024 13:48:44 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFJf7oVmqD60ifmlE6hginnH1lrLHud0fYzJl7uMi++kQu2bupDlSX6vEV/iu1GxrCkHuddlQ==
-X-Received: by 2002:a0c:9a91:0:b0:698:f39f:841f with SMTP id y17-20020a0c9a91000000b00698f39f841fmr2060248qvd.20.1711745323770;
-        Fri, 29 Mar 2024 13:48:43 -0700 (PDT)
+        bh=+uex28Uh2UrmMwKWwWQdWkljJkUfVw1qoAdqpkkJAvI=;
+        b=Wi5lKccspLIpL4RNA+s8/Xq8YqErCgSGIOXF94zVWrRdBdOnUh5NNQ21vSvJE2PBOv
+         CoUE/3Zn4tPXly1EXSEB2B3vFaqXv01x1UdJ1TRqdPTCPCW8aTGr9cLEGqDmOUNpxwrf
+         OxXEyGe9E4OwuYryg3ssq2tYboaOo6OZTOPhHBIa1g24N2V+jer0PpYvU9mqgfE4NEqd
+         RS652CrPiDoOoJQL/ou7vNjcWoDIIveYY2brqrZlNtJdCcZbzJ0gqlpKEKTQ+1gaVfQe
+         ob+PolegNfxTADaLwtM0nup/CYfeWccOYSFg8pMrCDKTGFLXn+Rqn0FqVatTrnofKF+m
+         ylgA==
+X-Forwarded-Encrypted: i=1; AJvYcCU/CXLvwxiWUoyZSNFhg9NGx/cczHX4rPjmyw17LflIqFzh2/13vSvlnikCR6fjqVGbi/3RJJNlpTED3CN0Ls7lAEqgP3XTB3IJUw==
+X-Gm-Message-State: AOJu0YwBbjWklPbIDnb3IfyoY3ZzWq1Ty8hyQZ4+SUwDOtPNivqamcxN
+	Rx8mTY6VgNtdhaSN/q+QKNUN4g/1w1u7kIXlMR1Pe88Q268QxiA3DCYWH4+8UAhWFMNHrAHPiiE
+	XTp87D79uooUD5giB7Amwq/5tR3KBW29kEiJhKpj14PUYAnMg2E094JN+G98=
+X-Received: by 2002:a0c:b542:0:b0:696:a324:cd9e with SMTP id w2-20020a0cb542000000b00696a324cd9emr3095520qvd.29.1711745328980;
+        Fri, 29 Mar 2024 13:48:48 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFvBfgYmwP1iGTeLUYx8CVUhOtv1wYg6+LYE6N5bTtRV/i7BJo/aa22Q4+l3Q6ah0cplyRTFg==
+X-Received: by 2002:a0c:b542:0:b0:696:a324:cd9e with SMTP id w2-20020a0cb542000000b00696a324cd9emr3095504qvd.29.1711745328590;
+        Fri, 29 Mar 2024 13:48:48 -0700 (PDT)
 Received: from x1gen2nano.redhat.com ([2600:1700:1ff0:d0e0::33])
-        by smtp.gmail.com with ESMTPSA id jz10-20020a0562140e6a00b00698f27c6460sm794271qvb.110.2024.03.29.13.48.42
+        by smtp.gmail.com with ESMTPSA id jz10-20020a0562140e6a00b00698f27c6460sm794271qvb.110.2024.03.29.13.48.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 29 Mar 2024 13:48:43 -0700 (PDT)
+        Fri, 29 Mar 2024 13:48:45 -0700 (PDT)
 From: Andrew Halaney <ahalaney@redhat.com>
 To: Andy Gross <agross@kernel.org>,
 	Bjorn Andersson <andersson@kernel.org>,
@@ -76,12 +76,11 @@ Cc: Andrew Halaney <ahalaney@redhat.com>,
 	Will Deacon <will@kernel.org>,
 	linux-arm-msm@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v5 01/11] scsi: ufs: qcom: Perform read back after writing
- reset bit
-Date: Fri, 29 Mar 2024 15:46:43 -0500
-Message-ID: <20240329-ufs-reset-ensure-effect-before-delay-v5-1-181252004586@redhat.com>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v5 02/11] scsi: ufs: qcom: Perform read back after writing
+ REG_UFS_SYS1CLK_1US
+Date: Fri, 29 Mar 2024 15:46:44 -0500
+Message-ID: <20240329-ufs-reset-ensure-effect-before-delay-v5-2-181252004586@redhat.com>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240329-ufs-reset-ensure-effect-before-delay-v5-0-181252004586@redhat.com>
 References: <20240329-ufs-reset-ensure-effect-before-delay-v5-0-181252004586@redhat.com>
@@ -95,9 +94,8 @@ Content-Type: text/plain; charset="utf-8"
 X-Mailer: b4 0.13.0
 Content-Transfer-Encoding: quoted-printable
 
-Currently, the reset bit for the UFS provided reset controller (used by=0D
-its phy) is written to, and then a mb() happens to try and ensure that=0D
-hit the device. Immediately afterwards a usleep_range() occurs.=0D
+Currently after writing to REG_UFS_SYS1CLK_1US a mb() is used to ensure=0D
+that write has gone through to the device.=0D
 =0D
 mb() ensure that the write completes, but completion doesn't mean that=0D
 it isn't stored in a buffer somewhere. The recommendation for=0D
@@ -108,53 +106,32 @@ be seen over here:=0D
 =0D
     https://youtu.be/i6DayghhA8Q?si=3DMiyxB5cKJXSaoc01&t=3D1678=0D
 =0D
-Let's do that to ensure the bit hits the device. By doing so and=0D
-guaranteeing the ordering against the immediately following=0D
-usleep_range(), the mb() can safely be removed.=0D
+Let's do that to ensure the bit hits the device. Because the mb()'s=0D
+purpose wasn't to add extra ordering (on top of the ordering guaranteed=0D
+by writel()/readl()), it can safely be removed.=0D
 =0D
-Fixes: 81c0fc51b7a7 ("ufs-qcom: add support for Qualcomm Technologies Inc p=
-latforms")=0D
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>=0D
+Fixes: f06fcc7155dc ("scsi: ufs-qcom: add QUniPro hardware support and powe=
+r optimizations")=0D
 Reviewed-by: Can Guo <quic_cang@quicinc.com>=0D
 Signed-off-by: Andrew Halaney <ahalaney@redhat.com>=0D
 ---=0D
- drivers/ufs/host/ufs-qcom.h | 12 ++++++------=0D
- 1 file changed, 6 insertions(+), 6 deletions(-)=0D
+ drivers/ufs/host/ufs-qcom.c | 2 +-=0D
+ 1 file changed, 1 insertion(+), 1 deletion(-)=0D
 =0D
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h=0D
-index 9dd9a391ebb7..b9de170983c9 100644=0D
---- a/drivers/ufs/host/ufs-qcom.h=0D
-+++ b/drivers/ufs/host/ufs-qcom.h=0D
-@@ -151,10 +151,10 @@ static inline void ufs_qcom_assert_reset(struct ufs_h=
-ba *hba)=0D
- 	ufshcd_rmwl(hba, UFS_PHY_SOFT_RESET, UFS_PHY_SOFT_RESET, REG_UFS_CFG1);=0D
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c=0D
+index 06859e17b67b..804dc8153e7b 100644=0D
+--- a/drivers/ufs/host/ufs-qcom.c=0D
++++ b/drivers/ufs/host/ufs-qcom.c=0D
+@@ -501,7 +501,7 @@ static int ufs_qcom_cfg_timers(struct ufs_hba *hba, u32=
+ gear,=0D
+ 		 * make sure above write gets applied before we return from=0D
+ 		 * this function.=0D
+ 		 */=0D
+-		mb();=0D
++		ufshcd_readl(hba, REG_UFS_SYS1CLK_1US);=0D
+ 	}=0D
  =0D
- 	/*=0D
--	 * Make sure assertion of ufs phy reset is written to=0D
--	 * register before returning=0D
-+	 * Dummy read to ensure the write takes effect before doing any sort=0D
-+	 * of delay=0D
- 	 */=0D
--	mb();=0D
-+	ufshcd_readl(hba, REG_UFS_CFG1);=0D
- }=0D
- =0D
- static inline void ufs_qcom_deassert_reset(struct ufs_hba *hba)=0D
-@@ -162,10 +162,10 @@ static inline void ufs_qcom_deassert_reset(struct ufs=
-_hba *hba)=0D
- 	ufshcd_rmwl(hba, UFS_PHY_SOFT_RESET, 0, REG_UFS_CFG1);=0D
- =0D
- 	/*=0D
--	 * Make sure de-assertion of ufs phy reset is written to=0D
--	 * register before returning=0D
-+	 * Dummy read to ensure the write takes effect before doing any sort=0D
-+	 * of delay=0D
- 	 */=0D
--	mb();=0D
-+	ufshcd_readl(hba, REG_UFS_CFG1);=0D
- }=0D
- =0D
- /* Host controller hardware version: major.minor.step */=0D
+ 	return 0;=0D
 =0D
 -- =0D
 2.44.0=0D
