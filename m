@@ -1,91 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66C0B1EEE4;
-	Fri, 29 Mar 2024 19:30:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DFA23985A;
+	Fri, 29 Mar 2024 20:37:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711740633; cv=none; b=Y3AO3jOXTEgQYgdkbMV5ewrZXrVKIo6X4CYShjKv6NdKcjbw3VUuXTgX6iKbaKNUnVKVChX5FkkEdkpv3iXyTc2gQOx0ld+O0FfG7VjD1gKw/ao3DGZC7AyK12+hK3ag1Y2SAycLRM/tO1/Ih8FrgIdrAOgSzW7O5mNPsiyhcTQ=
+	t=1711744656; cv=none; b=nK54uWWaTwslp6Ds7GcehG0se7ikNvSAZhnRyokWxaB188a9uGG7HIpSBcS0CbZ6DobMadSOH4aVf7xAi5V8c2NoMg541def13+mO5qlPMe96B5xZqW+Hzvelcw7qpqCVlV2g9sKuYsO6ya7fMFNCOJUEVgtKkPL3u/7HLtO5mM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711740633; c=relaxed/simple;
-	bh=kASKGM3dFtExpzEE03kTs35TIgPe+csliIufLHzIK04=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=UqowPDwocud2Wj+bZuOSSys0qv9GjoET7RZzSWGxGa3G6E/OBej94f4wXaAe8vZCZsubIQhZhS6gBt4K1VKYAff947m6odSezcJPV4n1DrxVukivW4s5hRZyS0HxXvAB5WBwYM8kjXxqlhP2jF38ZpDyzoX86MS8xRz258oc/PA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IVV3npmS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1711744656; c=relaxed/simple;
+	bh=d+rhaQeE4XFKYd1O2K6qSIHBuk+O1S/KN9jXVfQHUGg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=Pcq1tyBC5rrqoQT6bZzaeozIEBq6qjOX7Q2xWNBrasnky+ddkaV/YZWN7Ec1lfbkgoNwoymR8ZpWeH5xnKE/70wMiGklFHZYkIHPTJ8r9svvcIQHB991WbvS8IR9hwXgETaxiMS1mu0POE3rP6dOkCXoDi/yHdpAnnn3GKFCrJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=t1T2dU2k; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IVV3npmS"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 293A4C43390;
-	Fri, 29 Mar 2024 19:30:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711740633;
-	bh=kASKGM3dFtExpzEE03kTs35TIgPe+csliIufLHzIK04=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=IVV3npmSePL8advnxP77niTJn9r5VWn3Rp+dlR8NGJ9lX2oLIqkoGV+xDPWNxKxDQ
-	 Vy1L2g8YCGgRSXrLc/sQkv/2M4J9jxdAA8SAbhGR8ajFTlmfsqHLf0fvOTAPm2dcKv
-	 R1fVsKFXQ0PjDCVdjZFjTagXNRerIfdbo2okMOvrjklmOXE9qqZC9SCAN3EPi44fip
-	 ZCq07ahttvJ9JoOo07ITMoNBIgDCC6Y+Xv77EcLFfSARbiSqQFxIHg2hw6SwpkmRbP
-	 ts7yiXSanAtz/RnbfgXbCMeoFa7uggmPCtKepIwsnK9u0syfJQLIrvmxPSuoFye3BV
-	 B+EvADBhn/jTg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 0FC90D2D0EE;
-	Fri, 29 Mar 2024 19:30:33 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="t1T2dU2k"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V5sfQ2q2QzlgTGW;
+	Fri, 29 Mar 2024 20:37:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1711744652; x=1714336653; bh=XSrD+I5G2xuzgmbmL6BGldgz
+	7UUYDzW35s5Oy1nLOsA=; b=t1T2dU2kxtPDSFUPNGYTj84cTtPhV0DWFlt1Mtxm
+	Jx3jCEkbtfF4Ucz5B5JnjlryerMfCc7ssv3OEO4FW/27/3qfQ55BgRHdSuOuy6Os
+	XD8OlwbGGq38ct7uZTxzqkU8Uaob+dTE0UWvER4+fQ74f9AVGfvKwTkcisqcx8U5
+	Orvu/Z+CTzWAat21niWb/As7XQ32cJU7JrZUsS0UwV31RMy0M0ZSfhG6hXErQCc+
+	Rha3dZneWI1iEVZooeYJM2fa2Rvz600jablTSckxoDnFQYRRdFru9FAtz4WT8U9I
+	bOkaCvU++OzNDIlUm2WcLztVOJFsIttpGhfIBirxTOO7AA==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id gY31OGqN4otv; Fri, 29 Mar 2024 20:37:32 +0000 (UTC)
+Received: from [192.168.3.219] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V5sfK5ctlzlgTHp;
+	Fri, 29 Mar 2024 20:37:29 +0000 (UTC)
+Message-ID: <8f8bf2dd-5a73-4952-ad76-dc0c79c65237@acm.org>
+Date: Fri, 29 Mar 2024 13:37:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH 0/9] enabled -Wformat-truncation for clang
-From: patchwork-bot+netdevbpf@kernel.org
-Message-Id: 
- <171174063305.18563.745216419087873927.git-patchwork-notify@kernel.org>
-Date: Fri, 29 Mar 2024 19:30:33 +0000
-References: <20240326223825.4084412-1-arnd@kernel.org>
-In-Reply-To: <20240326223825.4084412-1-arnd@kernel.org>
-To: Arnd Bergmann <arnd@kernel.org>
-Cc: llvm@lists.linux.dev, arnd@arndb.de, dmitry.torokhov@gmail.com,
- claudiu.manoil@nxp.com, vladimir.oltean@nxp.com, kuba@kernel.org,
- saeedm@nvidia.com, leon@kernel.org, aelior@marvell.com, manishc@marvell.com,
- hdegoede@redhat.com, ilpo.jarvinen@linux.intel.com, luzmaximilian@gmail.com,
- hare@kernel.org, martin.petersen@oracle.com, deller@gmx.de,
- masahiroy@kernel.org, nathan@kernel.org, nicolas@fjasle.eu,
- johannes@sipsolutions.net, perex@perex.cz, tiwai@suse.com,
- ndesaulniers@google.com, morbo@google.com, justinstitt@google.com,
- linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
- netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
- platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-kbuild@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- alsa-devel@alsa-project.org, linux-sound@vger.kernel.org
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 10/30] block: Fake max open zones limit when there is
+ no limit
+To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
+ Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
+ linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
+ Christoph Hellwig <hch@lst.de>
+References: <20240328004409.594888-1-dlemoal@kernel.org>
+ <20240328004409.594888-11-dlemoal@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240328004409.594888-11-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hello:
+On 3/27/24 5:43 PM, Damien Le Moal wrote:
+> +	 * zone write plugsso that the user is aware of the potential
+                       ^^^^^^^
 
-This series was applied to netdev/net-next.git (main)
-by Jakub Kicinski <kuba@kernel.org>:
+A space is missing.
 
-On Tue, 26 Mar 2024 23:37:59 +0100 you wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> With randconfig build testing, I found only eight files that produce
-> warnings with clang when -Wformat-truncation is enabled. This means
-> we can just turn it on by default rather than only enabling it for
-> "make W=1".
-> 
-> [...]
+Thanks,
 
-Here is the summary with links:
-  - [2/9] enetc: avoid truncating error message
-    https://git.kernel.org/netdev/net-next/c/9046d581ed58
-  - [3/9] qed: avoid truncating work queue length
-    https://git.kernel.org/netdev/net-next/c/954fd908f177
-  - [4/9] mlx5: avoid truncating error message
-    https://git.kernel.org/netdev/net-next/c/b324a960354b
-
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+Bart.
