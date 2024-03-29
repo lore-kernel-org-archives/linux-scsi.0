@@ -1,140 +1,202 @@
-Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B92E148787
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 11:19:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACE316A325
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 11:35:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711711154; cv=none; b=t5aPLwnchOpdD2AlbmFwEgWGY/n5C9Qfe2E/EN6QpqCMOLOrjzZZOa/P1FyWWWcZN96tunC+L/Avg/tQVroUyHn1qhJ0rKHg9fB0R2aVkx4K8JcN1BEagLEQUmka4LGRHjvhG4Kr1tgczBSzsFDLGrjD8gOYjmZab3rzIGT2lmk=
+	t=1711712142; cv=none; b=i7Ob2uznAnUoIYdV2JCy8X4IJvmIeqstqsxX9KcHUhhGkirkVJUIYmsd/djN/LH/k/2VKnF1ynicpi5OCSZP/EaZ0AIY0+sVKdz0ziJXjH2LWzrmbfxihdsCLT/QUQOr1a3DVvHQbgGAEp/31jCNKkaKAEnlnvroJ3X1lthevKw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711711154; c=relaxed/simple;
-	bh=ZrviXutq2dr435AUYJjbLGSGv3c9p2DlZU+PRLOghiA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RxrtYrBeE9pLCSutCh8Runh2uFw55XsoJ6fX51bEA4+lQSw7zbRf1wpinmqCjxWCceyUFSqvauIbfMN+3aU9WFJgEySHK5gdLTnSKDzBbatBXU9JF3oRMto5ezReVZxNV+eemfiv2064Qq/JVPUwh/J7OENc3eUS617dGfsgbPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=r/rSvynl; arc=none smtp.client-ip=5.252.227.236
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
+	s=arc-20240116; t=1711712142; c=relaxed/simple;
+	bh=rTBkgbqY6fJlg+R5mG7/nmv3uvnCknOKMRSsuyxn8xk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=r5uGE5iO1vtxy+D0oM+4RVIdCWxroq9vO358ONrj0DgsbAdNcSjd5CqC4Vp8t03tI9GFVud2GhquE05UgvxiUZHYZnrGI1uWG86DuD5nvfkaNDq3/blocHCB3IezO57COJyYeMm/gOaEFVmb4bewbPa39U4AKRfby10rxdndH9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=l1P5UfsW; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="r/rSvynl"
-From: Alexander Wetzel <Alexander@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-	s=wetzel-home; t=1711710643;
-	bh=ZrviXutq2dr435AUYJjbLGSGv3c9p2DlZU+PRLOghiA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=r/rSvynlz3W8TbpsIKNUWqG4mk9PVFbFdnEkeP9XdK9sUhhDuoKu4mgZI1Ehzjd0f
-	 6fQqfxAzQcDAGh+z8nm9/E2+WF6pbbvYzGCXFN6TNl+txRZyzELTkJsZxjhOaBvu83
-	 r4KbgLQ9PbwF+cPSXGnq22j2XNy2zRnnGaUWRJnc=
-To: sachinp@linux.ibm.com
-Cc: Alexander@wetzel-home.de,
-	bvanassche@acm.org,
-	linux-scsi@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	martin.petersen@oracle.com
-Subject: Re: [powerpc] WARN at drivers/scsi/sg.c:2236 (sg_remove_sfp_usercontext)
-Date: Fri, 29 Mar 2024 12:10:25 +0100
-Message-ID: <20240329111025.9486-1-Alexander@wetzel-home.de>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <5375B275-D137-4D5F-BE25-6AF8ACAE41EF@linux.ibm.com>
-References: <5375B275-D137-4D5F-BE25-6AF8ACAE41EF@linux.ibm.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="l1P5UfsW"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-33ff53528ceso1265921f8f.0
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 04:35:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1711712138; x=1712316938; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=SHWnqVWhESCF28jPQj1jqSBG2HWFvDAYH4hNZmw67to=;
+        b=l1P5UfsWMaios8DSGcOK8XZrmJuIEnLGt6X7D2d3UWqXtlTP+XL2xL5C9ZgtMn7rpZ
+         7g2GJbf6pYruEQg0BTU+Mtwih+gnwZXrTGvfQDyIyB1R4WsMBkfiDPKY4e/IKmaXDSKU
+         vdENM/+GlnbXAYIABxSp5NwQ9lthejVc0mBv4eWhSD8CjNk7B9vnyANEx+1oEcWLwuVP
+         W6Gexkx1lA6q1QBbKUoA77sSUEgk4IQRMQqQZGv3z0Vy+IkqALptS6w0twCjT0oFlFKv
+         oPE7SmnrtJHGUtFbTPHMie0paPQeb0YBrQ/R5ZPQNmh9T+aW8Ls/tKhZXHF7/BAK/+6K
+         yyvQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1711712138; x=1712316938;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=SHWnqVWhESCF28jPQj1jqSBG2HWFvDAYH4hNZmw67to=;
+        b=mX032VgPrHyU5Zw9Eh68jQZrH1SSGGy8uM4ncs8Lg2dAnvrDifaJkrmshndXmICdGO
+         KUPQPQ/9Goww/ZaZLcNtRvQsa5gvLKZNji6MWbYsMmZGNJ/TBhHYo6Y/v5+lB0z4TF9k
+         mE8cT7XJda/OXw8gU0rlmLSY0oYmdoeFBW5Tjw3ObeBvEkAfM0lENOPR1r56EAF4MCLO
+         2PnZGWFz27nI+ylwHMUzeaVuvwlOwLH1Ug7z4EhQ8XNGx8UBE8FeE3AGsMdP+7KaIPdk
+         RyumXlcreaMfSi/YuFJRWA9bxKnXohaBigKSvOvvmQUlGJhr2ABUrwIN1C6RUKNtsi2j
+         n5tw==
+X-Forwarded-Encrypted: i=1; AJvYcCVXxmflrvEOHIlzbx7rAnqqDmw4gsbAphtfku8QGRDGOdwSOXo3SQ0qrafyp4RFcLeaUaZ6oeuDfrxSifIXt2Ymc6bRxWQgUI2AQw==
+X-Gm-Message-State: AOJu0Yx8bwGvwqAygySawFhZRaswOTqfwtzgGI3DVg9wB0f+nul8Aus2
+	f1TXySw/iEwhPAssbOOjqRsWSnRVlsFgTxtCxATY3OTc31VAIaW/GGM2nRFEl6A=
+X-Google-Smtp-Source: AGHT+IErTnUou0HaGnzrNWoIoQAUN1hmJepx7dgqCCJjDop9Ee4NvMHttnyDMc4spmgneYx5tVGNiw==
+X-Received: by 2002:a5d:63c4:0:b0:341:d912:1fec with SMTP id c4-20020a5d63c4000000b00341d9121fecmr1210632wrw.49.1711712138011;
+        Fri, 29 Mar 2024 04:35:38 -0700 (PDT)
+Received: from [192.168.1.20] ([178.197.223.50])
+        by smtp.gmail.com with ESMTPSA id bq24-20020a5d5a18000000b0033e45930f35sm4026809wrb.6.2024.03.29.04.35.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 Mar 2024 04:35:37 -0700 (PDT)
+Message-ID: <1303b572-719e-410d-a11a-3f17a5bb3b63@linaro.org>
+Date: Fri, 29 Mar 2024 12:35:33 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 09/22] gpio: virtio: drop owner assignment
+To: Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
+ Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Richard Weinberger <richard@nod.at>,
+ Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+ Johannes Berg <johannes@sipsolutions.net>,
+ Paolo Bonzini <pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>,
+ Jens Axboe <axboe@kernel.dk>, Marcel Holtmann <marcel@holtmann.org>,
+ Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+ Olivia Mackall <olivia@selenic.com>, Herbert Xu
+ <herbert@gondor.apana.org.au>, Amit Shah <amit@kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Gonglei <arei.gonglei@huawei.com>, "David S. Miller" <davem@davemloft.net>,
+ Viresh Kumar <vireshk@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
+ David Airlie <airlied@redhat.com>, Gerd Hoffmann <kraxel@redhat.com>,
+ Gurchetan Singh <gurchetansingh@chromium.org>, Chia-I Wu
+ <olvaffe@gmail.com>, Jean-Philippe Brucker <jean-philippe@linaro.org>,
+ Joerg Roedel <joro@8bytes.org>, Alexander Graf <graf@amazon.com>,
+ Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+ Paolo Abeni <pabeni@redhat.com>, Eric Van Hensbergen <ericvh@kernel.org>,
+ Latchesar Ionkov <lucho@ionkov.net>,
+ Dominique Martinet <asmadeus@codewreck.org>,
+ Christian Schoenebeck <linux_oss@crudebyte.com>,
+ Stefano Garzarella <sgarzare@redhat.com>, Kalle Valo <kvalo@kernel.org>,
+ Dan Williams <dan.j.williams@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
+ Ira Weiny <ira.weiny@intel.com>, Pankaj Gupta
+ <pankaj.gupta.linux@gmail.com>, Bjorn Andersson <andersson@kernel.org>,
+ Mathieu Poirier <mathieu.poirier@linaro.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Vivek Goyal <vgoyal@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>,
+ Anton Yakovlev <anton.yakovlev@opensynergy.com>,
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+ virtualization@lists.linux.dev, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-um@lists.infradead.org,
+ linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+ linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ iommu@lists.linux.dev, netdev@vger.kernel.org, v9fs@lists.linux.dev,
+ kvm@vger.kernel.org, linux-wireless@vger.kernel.org, nvdimm@lists.linux.dev,
+ linux-remoteproc@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, alsa-devel@alsa-project.org,
+ linux-sound@vger.kernel.org
+References: <20240327-module-owner-virtio-v1-0-0feffab77d99@linaro.org>
+ <20240327-module-owner-virtio-v1-9-0feffab77d99@linaro.org>
+ <CAMRc=McY6PJj7fmLkNv07ogcYq=8fUb2o6w2uA1=D9cbzyoRoA@mail.gmail.com>
+Content-Language: en-US
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
+ 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
+ D2GYIS41Kv4Isx2dEFh+/Q==
+In-Reply-To: <CAMRc=McY6PJj7fmLkNv07ogcYq=8fUb2o6w2uA1=D9cbzyoRoA@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-> Following WARN_ON_ONCE is triggered while running LTP tests
-> (specifically ioctl_sg01) on IBM Power booted with 6.9.0-rc1-next-20240328
->
-> [   64.230233] ------------[ cut here ]------------
-> [   64.230269] WARNING: CPU: 10 PID: 452 at drivers/scsi/sg.c:2236 sg_remove_sfp_usercontext+0x270/0x280 [sg]
-> [   64.230302] Modules linked in: rpadlpar_io rpaphp xsk_diag nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 bonding tls rfkill ip_set nf_tables nfnetlink sunrpc binfmt_misc pseries_rng vmx_crypto xfs libcrc32c sd_mod sr_mod t10_pi crc64_rocksoft_generic cdrom crc64_rocksoft crc64 sg ibmvscsi ibmveth scsi_transport_srp fuse
-> [   64.230420] CPU: 10 PID: 452 Comm: kworker/10:1 Kdump: loaded Not tainted 6.9.0-rc1-next-20240328 #2
-> [   64.230438] Hardware name: IBM,9080-HEX POWER10 (raw) 0x800200 0xf000006 of:IBM,FW1060.00 (NH1060_018) hv:phyp pSeries
-> [   64.230449] Workqueue: events sg_remove_sfp_usercontext [sg]
-> [   64.230468] NIP:  c008000015c34110 LR: c008000015c33ffc CTR: c0000000005393b0
-> [   64.230485] REGS: c00000000c1efae0 TRAP: 0700   Not tainted  (6.9.0-rc1-next-20240328)
-> [   64.230498] MSR:  800000000282b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE>  CR: 44000408  XER: 00000000
-> [   64.230535] CFAR: c008000015c3400c IRQMASK: 0
-> [   64.230535] GPR00: c008000015c33ffc c00000000c1efd80 c008000015c58900 c00000000ca8ae98
-> [   64.230535] GPR04: 00000000c0000000 0000000000000023 c000000007c2e000 0000000000000022
-> [   64.230535] GPR08: 000000038a130000 0000000000000002 0000000000000000 c008000015c38bc0
-> [   64.230535] GPR12: c0000000005393b0 c00000038fff3f00 c0000000001a2bac c000000007c7a9c0
-> [   64.230535] GPR16: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
-> [   64.230535] GPR20: c00000038c3f3b00 c000000007c10030 c000000007c10000 c0000000901c0000
-> [   64.230535] GPR24: 0000000000000000 c00000000ca8ae00 c0000000045a5805 c000000007c11330
-> [   64.230535] GPR28: c00000038c3f3b00 c000000007c10080 c000000007c11328 c000000002fdee54
-> [   64.230671] NIP [c008000015c34110] sg_remove_sfp_usercontext+0x270/0x280 [sg]
-> [   64.230690] LR [c008000015c33ffc] sg_remove_sfp_usercontext+0x15c/0x280 [sg]
-> [   64.230709] Call Trace:
-> [   64.230716] [c00000000c1efd80] [c008000015c33ffc] sg_remove_sfp_usercontext+0x15c/0x280 [sg] (unreliable)
-> [   64.230740] [c00000000c1efe40] [c00000000019337c] process_one_work+0x20c/0x4f4
-> [   64.230767] [c00000000c1efef0] [c0000000001942fc] worker_thread+0x378/0x544
-> [   64.230787] [c00000000c1eff90] [c0000000001a2cdc] kthread+0x138/0x140
-> [   64.230801] [c00000000c1effe0] [c00000000000df98] start_kernel_thread+0x14/0x18
-> [   64.230819] Code: e8c98310 3d220000 e8698010 480044bd e8410018 7ec3b378 48004ac9 e8410018 38790098 81390098 2c090001 4182ff04 <0fe00000> 4bfffefc 000247e0 00000000
-> [   64.230857] ---[ end trace 0000000000000000 ]—
->
-> This WARN_ON was introduced with
-> commit 27f58c04a8f438078583041468ec60597841284d
->     scsi: sg: Avoid sg device teardown race
->
-> Reverting the patch avoids the warning. The test case passes irrespective of the
-> patch is present of not.
->
+On 29/03/2024 11:27, Bartosz Golaszewski wrote:
+> On Wed, Mar 27, 2024 at 1:45 PM Krzysztof Kozlowski
+> <krzysztof.kozlowski@linaro.org> wrote:
+>>
+>> virtio core already sets the .owner, so driver does not need to.
+>>
+>> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+>>
+>> ---
+>>
+>> Depends on the first patch.
+>> ---
+>>  drivers/gpio/gpio-virtio.c | 1 -
+>>  1 file changed, 1 deletion(-)
+>>
+>> diff --git a/drivers/gpio/gpio-virtio.c b/drivers/gpio/gpio-virtio.c
+>> index fcc5e8c08973..9fae8e396c58 100644
+>> --- a/drivers/gpio/gpio-virtio.c
+>> +++ b/drivers/gpio/gpio-virtio.c
+>> @@ -653,7 +653,6 @@ static struct virtio_driver virtio_gpio_driver = {
+>>         .remove                 = virtio_gpio_remove,
+>>         .driver                 = {
+>>                 .name           = KBUILD_MODNAME,
+>> -               .owner          = THIS_MODULE,
+>>         },
+>>  };
+>>  module_virtio_driver(virtio_gpio_driver);
+>>
+>> --
+>> 2.34.1
+>>
+> 
+> Applied, thanks!
 
-The new WARN_ON_ONCE is only an additional logic check. When it
-triggers it also should trigger when you undo the rest of the change.
+I expressed dependency in two places: cover letter and this patch.
+Please drop it, because without dependency this won't work. Patch could
+go with the dependency and with your ack or next cycle.
 
-But when it triggers something with the driver logic must be off.
-(Or my understanding of the intent of the code is worse than assumed:-)
-
-Looking into the d_ref logic I see two additional problems not addressed
-by the original patch when sg_add_sfp() fails:
- 1) sg_open() is then also calling first scsi_device_put() and then
-    sg_device_destroy() via kref_put(). That's the wrong order.
-
- 2) When sg_add_sfp() fails we never call kref_get(&sdp->d_ref).
-    Thus we shoud not call kref_get() here at all.
-
-Thus your warning above could be triggered by an error within
-sg_add_sfp(): In that case d_ref would already be zero when the code
-gets to the warning.
-
-Can you check the debug patch below and provide output?
-When I'm right the warning should be gone and you should just get the
-"Modification triggered" instead. When I'm wrong we should at least see,
-how many references d_ref has left.
-
-Alexander
----
- drivers/scsi/sg.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index ff6894ce5404..1c27d5f8f384 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -373,7 +373,8 @@ sg_open(struct inode *inode, struct file *filp)
- 	scsi_autopm_put_device(sdp->device);
- sdp_put:
- 	scsi_device_put(sdp->device);
--	goto sg_put;
-+	pr_warn("%s: Modification triggered\n", __func__);
-+	return retval;
- }
- 
- /* Release resources associated with a successful sg_open()
-@@ -2233,7 +2234,8 @@ sg_remove_sfp_usercontext(struct work_struct *work)
- 			"sg_remove_sfp: sfp=0x%p\n", sfp));
- 	kfree(sfp);
- 
--	WARN_ON_ONCE(kref_read(&sdp->d_ref) != 1);
-+	if(WARN_ON_ONCE(kref_read(&sdp->d_ref) != 1))
-+		printk(KERN_WARNING "d_ref=%u\n", kref_read(&sdp->d_ref));
- 	kref_put(&sdp->d_ref, sg_device_destroy);
- 	scsi_device_put(device);
- 	module_put(THIS_MODULE);
--- 
-2.44.0
+Best regards,
+Krzysztof
 
