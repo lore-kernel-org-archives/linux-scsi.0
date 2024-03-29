@@ -1,76 +1,91 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4457D2C859;
-	Fri, 29 Mar 2024 19:00:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66C0B1EEE4;
+	Fri, 29 Mar 2024 19:30:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711738823; cv=none; b=jkHMljxErPtQ4G1Wop8BfJNDonDfcByH5yVY5/kxi51mMH8OA/TDDjSrE5QQr4Q5e7oTElc+13MczJn801BSnalC4HEyUcTwcyFvFTAa/LITVz5U/KPtXkResBLU/F8kEG4pU47J0p5ELfzZWop6Ppc1zugBkdUE8Jrt7xLuR/w=
+	t=1711740633; cv=none; b=Y3AO3jOXTEgQYgdkbMV5ewrZXrVKIo6X4CYShjKv6NdKcjbw3VUuXTgX6iKbaKNUnVKVChX5FkkEdkpv3iXyTc2gQOx0ld+O0FfG7VjD1gKw/ao3DGZC7AyK12+hK3ag1Y2SAycLRM/tO1/Ih8FrgIdrAOgSzW7O5mNPsiyhcTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711738823; c=relaxed/simple;
-	bh=g7Av2jin4sX0Cfb78/pBPBNfyidDPOykp9LCP0eWApg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=LBSxvly78jqCoyyF3OXgqy46L+Fm/tC8Y66ciOKGGrcWeqgaAELEMSlMmzS5oBtVeyOg2xs3d9BruhvB3whP4L8cnzXVgng34h7zk58+4EjeoUYKtzPAJT6IVco2zFdzkfae6pcvAg66gQ22L/ppKjvdk6YTr+0Iqf8YowHRoXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=399cq4Xg; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1711740633; c=relaxed/simple;
+	bh=kASKGM3dFtExpzEE03kTs35TIgPe+csliIufLHzIK04=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=UqowPDwocud2Wj+bZuOSSys0qv9GjoET7RZzSWGxGa3G6E/OBej94f4wXaAe8vZCZsubIQhZhS6gBt4K1VKYAff947m6odSezcJPV4n1DrxVukivW4s5hRZyS0HxXvAB5WBwYM8kjXxqlhP2jF38ZpDyzoX86MS8xRz258oc/PA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IVV3npmS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="399cq4Xg"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V5qVD51PVzlgTGW;
-	Fri, 29 Mar 2024 19:00:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1711738818; x=1714330819; bh=g7Av2jin4sX0Cfb78/pBPBNf
-	yidDPOykp9LCP0eWApg=; b=399cq4XgVFCAZleHjaMjkk4Dxz80eXehdQuOh3Il
-	N/xxtb52kFk+EnmbeXSc55NK98tQrHiBX5qGwHPsGM7Wyfh+dJGkxU/kHwtgkqSu
-	Jcp7xrkbNiHI/P+bEJxyL2BzvdY3t55N25/V2sOb/kHtsmF9t5FMmyJ6GpoCGQYl
-	Bdr6EVgtt0lVBy7GowlZy+Sa0Sp8+6AdaYLngZNCbLh5tguBeX8M35tGr6pjgU4K
-	ijBqqQekpzB1E1aYObWhiCfFMPzXmkUCGwfIootc1ALsLE3jf6m/Me+1TcA6QuWQ
-	dRJ2z3PZdx9Asl0tjJROWVx0p2xYfseLBSlHN5NFx33drQ==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id PaHJm4o6KFQU; Fri, 29 Mar 2024 19:00:18 +0000 (UTC)
-Received: from [192.168.3.219] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V5qV76jybzlgTHp;
-	Fri, 29 Mar 2024 19:00:15 +0000 (UTC)
-Message-ID: <17a9b0ce-1423-408a-8c70-767218572d64@acm.org>
-Date: Fri, 29 Mar 2024 12:00:13 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IVV3npmS"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 293A4C43390;
+	Fri, 29 Mar 2024 19:30:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711740633;
+	bh=kASKGM3dFtExpzEE03kTs35TIgPe+csliIufLHzIK04=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=IVV3npmSePL8advnxP77niTJn9r5VWn3Rp+dlR8NGJ9lX2oLIqkoGV+xDPWNxKxDQ
+	 Vy1L2g8YCGgRSXrLc/sQkv/2M4J9jxdAA8SAbhGR8ajFTlmfsqHLf0fvOTAPm2dcKv
+	 R1fVsKFXQ0PjDCVdjZFjTagXNRerIfdbo2okMOvrjklmOXE9qqZC9SCAN3EPi44fip
+	 ZCq07ahttvJ9JoOo07ITMoNBIgDCC6Y+Xv77EcLFfSARbiSqQFxIHg2hw6SwpkmRbP
+	 ts7yiXSanAtz/RnbfgXbCMeoFa7uggmPCtKepIwsnK9u0syfJQLIrvmxPSuoFye3BV
+	 B+EvADBhn/jTg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 0FC90D2D0EE;
+	Fri, 29 Mar 2024 19:30:33 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 26/30] block: Move zone related debugfs attribute to
- blk-zoned.c
-To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
- linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
- Christoph Hellwig <hch@lst.de>
-References: <20240328004409.594888-1-dlemoal@kernel.org>
- <20240328004409.594888-27-dlemoal@kernel.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240328004409.594888-27-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH 0/9] enabled -Wformat-truncation for clang
+From: patchwork-bot+netdevbpf@kernel.org
+Message-Id: 
+ <171174063305.18563.745216419087873927.git-patchwork-notify@kernel.org>
+Date: Fri, 29 Mar 2024 19:30:33 +0000
+References: <20240326223825.4084412-1-arnd@kernel.org>
+In-Reply-To: <20240326223825.4084412-1-arnd@kernel.org>
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: llvm@lists.linux.dev, arnd@arndb.de, dmitry.torokhov@gmail.com,
+ claudiu.manoil@nxp.com, vladimir.oltean@nxp.com, kuba@kernel.org,
+ saeedm@nvidia.com, leon@kernel.org, aelior@marvell.com, manishc@marvell.com,
+ hdegoede@redhat.com, ilpo.jarvinen@linux.intel.com, luzmaximilian@gmail.com,
+ hare@kernel.org, martin.petersen@oracle.com, deller@gmx.de,
+ masahiroy@kernel.org, nathan@kernel.org, nicolas@fjasle.eu,
+ johannes@sipsolutions.net, perex@perex.cz, tiwai@suse.com,
+ ndesaulniers@google.com, morbo@google.com, justinstitt@google.com,
+ linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
+ netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
+ platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ linux-kbuild@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ alsa-devel@alsa-project.org, linux-sound@vger.kernel.org
 
-On 3/27/24 5:44 PM, Damien Le Moal wrote:
-> block/blk-mq-debugfs-zone.c contains a single debugfs attribute
-> function. Defining this outside of block/blk-zoned.c does not really
-> help in any way, so move this zone related debugfs attribute to
-> block/blk-zoned.c and delete block/blk-mq-debugfs-zone.c.
+Hello:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+This series was applied to netdev/net-next.git (main)
+by Jakub Kicinski <kuba@kernel.org>:
+
+On Tue, 26 Mar 2024 23:37:59 +0100 you wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> With randconfig build testing, I found only eight files that produce
+> warnings with clang when -Wformat-truncation is enabled. This means
+> we can just turn it on by default rather than only enabling it for
+> "make W=1".
+> 
+> [...]
+
+Here is the summary with links:
+  - [2/9] enetc: avoid truncating error message
+    https://git.kernel.org/netdev/net-next/c/9046d581ed58
+  - [3/9] qed: avoid truncating work queue length
+    https://git.kernel.org/netdev/net-next/c/954fd908f177
+  - [4/9] mlx5: avoid truncating error message
+    https://git.kernel.org/netdev/net-next/c/b324a960354b
+
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
