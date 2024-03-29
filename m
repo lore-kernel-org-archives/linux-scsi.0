@@ -1,48 +1,48 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F9A879DF;
-	Fri, 29 Mar 2024 21:45:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5B011E897;
+	Fri, 29 Mar 2024 21:47:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711748714; cv=none; b=f0T4RU4MrSeKg6y5hSz7ralPuXyJ3GmkfleZN+8ZB7vY9MmfTXtLcopLpiK+3dKP9Q8fO7Nz1NKN52iJbQMAYcYR3oNRhN4PJKEjZrnmSO42eel5P3NDIiH1Ho7j8dm+Ak2OV4sk93VljXnaMQi9Q9G5dsC1nXmW8dC9RKERjQI=
+	t=1711748872; cv=none; b=hHk0nekHoIPv/rws/Ks3SiNb0IfsyINJl4WxtqzjrVw6gJ8uDj7x5P7/rjm0cuzQB/sTBnkH5quhEunNXr0CVFZzsyi7psEHDR9yPbhLRqTznVIN3RMCniUKFKyybbuwTBqY9yPrgkqs2EFJuRzzG+t2intRbsyLsRcFrw10nGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711748714; c=relaxed/simple;
+	s=arc-20240116; t=1711748872; c=relaxed/simple;
 	bh=FRIggP1YvWWV3rj+5WU1Cj2nMoZrQOSbDSPE/2jMC40=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=cQbhWLGdLv56FA+g4e1Qn0OTMyo1PrUHqIVNQkbVdzIa4MPUO2oq/4sxQ3AFO6s8xlArUsx1gn0KBOfEHpltlc8iRFWk6eeM/028ssXMt1PEdzw0L+nsJl2orgmS4B2ncVQbrrKlVKLCxsMHL2hc6WKxrf9bt1bRVobUmZ9/wXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3p8xQGqR; arc=none smtp.client-ip=199.89.1.12
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JjdI+bz/mrpBe5XksTJ9iREl3SwofDtbu5AKcjiowdaJNJ/wlpfyv5BGNj+9UNekGVlfJKDa8ZNvTjCpDPHCH+ZM1vS8VG29yMd3cIp8K861WMu52mxpIrgve4OQNuk653HCygZlxakLlc2rFkPhADwZKcart38JNSox8YAvMKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=bKYTxqYX; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3p8xQGqR"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="bKYTxqYX"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V5v8S6K9dzlgVnN;
-	Fri, 29 Mar 2024 21:45:12 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V5vCV0WkLzlgVnN;
+	Fri, 29 Mar 2024 21:47:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1711748710; x=1714340711; bh=FRIggP1YvWWV3rj+5WU1Cj2n
-	MoZrQOSbDSPE/2jMC40=; b=3p8xQGqRCoLavO27/ItRd0QrNFLp7MDHlamTXy/m
-	9u0HPVVWMfPYvV8JgBPGaea0nXLRsEU9Cb5oF5owc1+iTC8k72KXB+SXMuh0GcHC
-	YKmDjW4nW0VvKWH4aA8iiJU1UA6yJYoprWiUk5Lj5k458nE3TfSCMQSUBwSz7UJk
-	ClQgkK5KobK2uxuM+tMpXzxTxcXdVWdGh6viOqoGthEdLy6Hl3CbIB73r9U9YWSs
-	h37XQubBIH1VmlC6JJA2XPyKJHib3PTQzcLO+yBzCIG5OkSMN+dQ1dayaQKN50t7
-	3NPVmOuF1yNvKiHad2KTHO8F7QZQW2m90LtBdWgrC7bzjw==
+	 s=mr01; t=1711748866; x=1714340867; bh=FRIggP1YvWWV3rj+5WU1Cj2n
+	MoZrQOSbDSPE/2jMC40=; b=bKYTxqYXCw646WBgxS5DRbf9Rc4CvljYd3iLl0cS
+	ppNDFiZGebbixYIq8RCThOZ9lXeWWr+uYfj3IggjSa7NV1nZeJrX/wR9Z66Gi2nJ
+	nCBwKLuZYyaklO91h9ZFXviJ8GmhsjE4Z8hsTgV8LBrG67+4eo9JonNww3D9nab8
+	UAWgwgTPNDYWI5esRnfi8pXTCwfvgCa6xnOm4NVx5uS0g5LiqmFChh2g4trRg3NG
+	aw7z1GEpT2++KkG9LMPP3ANjhhC7qx8a1NSXLhFhTI/0eJ7acUg/YhwAs9MUkaNO
+	Ec4ZzVCwbzdzfePHKS/oSNl7C1O/D8IJyxeGsMhfqy+1Tw==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Hee33N_fJNrP; Fri, 29 Mar 2024 21:45:10 +0000 (UTC)
+ id 3idGS4ZxiJui; Fri, 29 Mar 2024 21:47:46 +0000 (UTC)
 Received: from [192.168.3.219] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V5v8N0jWczlgTGW;
-	Fri, 29 Mar 2024 21:45:07 +0000 (UTC)
-Message-ID: <df018c8c-ac3c-4556-bfc4-6d44bb877718@acm.org>
-Date: Fri, 29 Mar 2024 14:45:06 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V5vCK3Y88zlgTGW;
+	Fri, 29 Mar 2024 21:47:41 +0000 (UTC)
+Message-ID: <56e0b858-598c-4730-88e8-901b88d01f51@acm.org>
+Date: Fri, 29 Mar 2024 14:47:39 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,19 +50,25 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 25/30] block: Do not check zone type in
- blk_check_zone_append()
-To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
- linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
- Christoph Hellwig <hch@lst.de>
-References: <20240328004409.594888-1-dlemoal@kernel.org>
- <20240328004409.594888-26-dlemoal@kernel.org>
+Subject: Re: [PATCH v5 06/11] scsi: ufs: cdns-pltfrm: Perform read back after
+ writing HCLKDIV
+To: Andrew Halaney <ahalaney@redhat.com>, Andy Gross <agross@kernel.org>,
+ Bjorn Andersson <andersson@kernel.org>,
+ Konrad Dybcio <konrad.dybcio@linaro.org>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Hannes Reinecke <hare@suse.de>, Janek Kotas <jank@cadence.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Can Guo <quic_cang@quicinc.com>, Anjana Hari <quic_ahari@quicinc.com>
+Cc: Will Deacon <will@kernel.org>, linux-arm-msm@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+References: <20240329-ufs-reset-ensure-effect-before-delay-v5-0-181252004586@redhat.com>
+ <20240329-ufs-reset-ensure-effect-before-delay-v5-6-181252004586@redhat.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240328004409.594888-26-dlemoal@kernel.org>
+In-Reply-To: <20240329-ufs-reset-ensure-effect-before-delay-v5-6-181252004586@redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
