@@ -1,79 +1,91 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 673AA13CF86;
-	Fri, 29 Mar 2024 20:50:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9C4E13BC02
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Mar 2024 21:12:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711745456; cv=none; b=UtxOgH5b/Xr2OcbAlWDA645dJdgJnqjwCmkq4+XXQ97poU5MXqP0fgizO6GrGQwYlmS9Q74DaWjRqmnRUmP4ew/nkm1YfAdbwYB2N//1IvN7My2Hjgk2NIlJdFIPBwFkXl87QJCehxj1f2ko7bX8p45lO6gWLojH8XtAPyR/MUg=
+	t=1711746728; cv=none; b=TBuMwzIxV8bLi+qcQI7s2PGRwAUci2EATN5jrtTlBN6GNLx/tn6JU01C3toWyijsJKBWaiPUiPoi8PW2wi/L2Jlcl0ei3WZk05LrXlaEn18ZixKbJOaJKZw1x0hoNBFeoUU1eJGGX/Qg5SEkTvVZ6AWjgDrzekCPXa3HCe6h+ag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711745456; c=relaxed/simple;
-	bh=jMLgFwpxBdFq0TFc0DHNHDX6cPOMxB7QBIM6UOuMfPI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=fLUCrVHjvsSr7+60hsCGaNRZd/U40yyR2LX/PBnuZXYf+G5RIYkYwtqj+Kqi4NGOKC4hqg1FFV8m2CZePGA3qX65R49LgNDpvdZU1pteK2YqZytb2W28b84hBdvwJeygg06mtxc7AwLG572UeP5kCTxPWa1Vike0+HpcrwjlRDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=UqnpTApg; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="UqnpTApg"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V5sxm5xVhzlgTGW;
-	Fri, 29 Mar 2024 20:50:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1711745450; x=1714337451; bh=jMLgFwpxBdFq0TFc0DHNHDX6
-	cPOMxB7QBIM6UOuMfPI=; b=UqnpTApglH539cBh1pI5bWpp6+banvNYVn7WUBhK
-	rZZTP45cT2KgZSi4cX8iWLD9+nlzvqYgnyaZc9YqdX5sDNUZd7g6t4pclARv+gMw
-	P2sv1icCXZUEDbTqkDlZrC9L2EicIb+/zTwLN/g9Mj91O1MaaocEgc6QFXWX4Z6a
-	kkKFJb3A5eES5ET6vBQ8x8ASXjhweerDce18kjj8hzaQOaZZNrQheVPUtektnuUk
-	+BeM7DPHMCq8UMXzR/t4ib51znpdCFx+EhtwkebI51kSOiDeZ2CoVd1i0/N9OO9m
-	7PD2k5dsCpOwWT+A5bH/TugqQoT0x8twaXUeQEj1c7ibyQ==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id eb5u15kDXwiH; Fri, 29 Mar 2024 20:50:50 +0000 (UTC)
-Received: from [192.168.3.219] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V5sxg553dzlgTHp;
-	Fri, 29 Mar 2024 20:50:47 +0000 (UTC)
-Message-ID: <38c6905b-85fe-49b9-b5d4-92ca233c1656@acm.org>
-Date: Fri, 29 Mar 2024 13:50:45 -0700
+	s=arc-20240116; t=1711746728; c=relaxed/simple;
+	bh=Abug/1AlTVrkf5hoU+XeSHjL1x+TGk/87EavF9x/BFc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JU/LZd64nStTKxcyZOuCu5mhCz8BYDmcPf+2tbejXFNSd5aasduNSS1kKNrZgayu/RiAAygvuYQsdH43R8Ti1TFysmKwCH9aKmrE94ZDo4KkbGUd5OogBXdf2GRA5cqwe0UlLU3h6sULSRk6n+y4tapuU9VzzSHqCi7TmgKfCmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+	(Exim 4.92)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rqJVy-0001yH-0S; Fri, 29 Mar 2024 22:11:54 +0100
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rqJVx-009GFU-Hx; Fri, 29 Mar 2024 22:11:53 +0100
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.96)
+	(envelope-from <ukl@pengutronix.de>)
+	id 1rqJVx-00DTby-1Y;
+	Fri, 29 Mar 2024 22:11:53 +0100
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/4] scsi: a4000t: Mark driver struct with __refdata to prevent section mismatch
+Date: Fri, 29 Mar 2024 22:11:42 +0100
+Message-ID:  <743c3cfaf12b9f61f66afa5529ac126c856e4d11.1711746359.git.u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1711746359.git.u.kleine-koenig@pengutronix.de>
+References: <cover.1711746359.git.u.kleine-koenig@pengutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 11/30] block: Allow zero value of
- max_zone_append_sectors queue limit
-To: Damien Le Moal <dlemoal@kernel.org>, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
- linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
- Christoph Hellwig <hch@lst.de>
-References: <20240328004409.594888-1-dlemoal@kernel.org>
- <20240328004409.594888-12-dlemoal@kernel.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240328004409.594888-12-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1438; i=u.kleine-koenig@pengutronix.de; h=from:subject:message-id; bh=Abug/1AlTVrkf5hoU+XeSHjL1x+TGk/87EavF9x/BFc=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBmBy6QQWBCfh1ljFFUWoreRFgJSKNprv25A13+x KtQHBetN3GJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZgcukAAKCRCPgPtYfRL+ TntLB/9EPkvxDhLxC/dP/J1d5lku5oO57nuWP1JUJ24B4Eig/oUqmOIB3+LMhMMLbTuwM24AjHs JrEp/xS0LMeX7ujvmBXYC1O2WpaG+D4VDnlD5AgRqrKFVuyq/flC9Y3kSS1O9a8iX34B5lJDVqz 2xvFVaZF0y8T0pLVMdA7/aT1JoRoqxNSSTJEkrhri98BmQNwP30eLtlkMLvTh7AxhdbuSp6Lb+w GqDbXhdClNSn4M0aep+zJXIn2ccvKyIRzgBcl/OAY6melzUihIWxGwb0pZK/hvPvOeMdQ2MTkGu x/CN54+6ndPif0jaxYsQa8vYbcnOeop6strleN2sBVaWFgsk
+X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
 
-On 3/27/24 5:43 PM, Damien Le Moal wrote:
-> In preparation for adding a generic zone append emulation using zone
-> write plugging, allow device drivers supporting zoned block device to
-> set a the max_zone_append_sectors queue limit of a device to 0 to
-> indicate the lack of native support for zone append operations and that
-> the block layer should emulate these operations using regular write
-> operations.
+As described in the added code comment, a reference to .exit.text is ok
+for drivers registered via module_platform_driver_probe(). Make this
+explicit to prevent the following section mismatch warning
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+	WARNING: modpost: drivers/scsi/a4000t: section mismatch in reference: amiga_a4000t_scsi_driver+0x8 (section: .data) -> amiga_a4000t_scsi_remove (section: .exit.text)
 
+that triggers on an allmodconfig W=1 build.
+
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/scsi/a4000t.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/a4000t.c b/drivers/scsi/a4000t.c
+index e435fc06a624..d9103adc87fe 100644
+--- a/drivers/scsi/a4000t.c
++++ b/drivers/scsi/a4000t.c
+@@ -108,7 +108,13 @@ static void __exit amiga_a4000t_scsi_remove(struct platform_device *pdev)
+ 	release_mem_region(res->start, resource_size(res));
+ }
+ 
+-static struct platform_driver amiga_a4000t_scsi_driver = {
++/*
++ * amiga_a4000t_scsi_remove() lives in .exit.text. For drivers registered via
++ * module_platform_driver_probe() this is ok because they cannot get unbound at
++ * runtime. So mark the driver struct with __refdata to prevent modpost
++ * triggering a section mismatch warning.
++ */
++static struct platform_driver amiga_a4000t_scsi_driver __refdata = {
+ 	.remove_new = __exit_p(amiga_a4000t_scsi_remove),
+ 	.driver   = {
+ 		.name	= "amiga-a4000t-scsi",
+-- 
+2.43.0
 
