@@ -1,48 +1,28 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 231F91DFE3;
-	Mon,  1 Apr 2024 17:51:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+Received: from ns2.wdyn.eu (ns2.wdyn.eu [5.252.227.236])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id AC3CD51C2B;
+	Mon,  1 Apr 2024 19:01:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.252.227.236
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711993895; cv=none; b=AYmaXjYzAbIaovBB7C/e3oifMZFBrLBZIvw2UZHrH7q0rDTJJUakIkM+MZsAfGkkhhY6I7WFRDbwypBJnvFpuLraKVgxz4fZNOoCW0KZcr6EjT7Chj91x7Jg9bgGIZYkJ9vUAQP0AaI8SeWz/IOhZVlwZFGVr9K/XWL4XkSJaAI=
+	t=1711998123; cv=none; b=OTtGOjt/c7Cv7OAcBvYcoPuoVREDBCflJ8PQ0KiY6ePXeiE8pCY8uTX3ZjOFeqXTjTyVZhAi8yoaoVl9y2qhljba5HWUSofnn3vf7+pGiS61rRkwVSmr4i7ZNHgth2KTe9fC/5i2HxPiBpDxUDdYPvRRPhCo62iKJRZr6g9Aio8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711993895; c=relaxed/simple;
-	bh=ioSWayF7uY/dgwbMcRfOuGfTwEGp+bs+y0xYOqeJp4E=;
+	s=arc-20240116; t=1711998123; c=relaxed/simple;
+	bh=zcx1JiWSTwMh76T+53t+ENEUyvzu/m9vpw98SiAWwR4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Kl/UIGAkYT1ZG21nqe1bNupeVNletsERrTWYXII62hYnwl6RIwV3dtxzvZYU1pSTma8r211JFyui4GLTMrVgIlrxhZwEhcVuHkQuz1YQ3jykxA0S1YNhNzD2ihe+yiakFmkCV3tFm+E1e/7tJ2lmL7q78AXLLNtNGOWrFJDqqbg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xaiCOF+z; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=ClgzJ1xnbM1pOtOhNGEBuP0uI7K8bTs8Ua2r3W0KKVlnGJQ+91XyUpYiapKtPJBCiE3kWAuwJYBJ3xDdR0VHX3Gn+Iq8wfl7lbkfwB88Z2RSGyAWZDXzaeHaN5lwt+q2A9bNsQceHz6gfg7cQktRYEak/Ypc6j4B3vh5RUjXHHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de; spf=pass smtp.mailfrom=wetzel-home.de; dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b=mtANK2cY; arc=none smtp.client-ip=5.252.227.236
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wetzel-home.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wetzel-home.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xaiCOF+z"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V7dqT4KsnzlgTGW;
-	Mon,  1 Apr 2024 17:51:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:references:content-language:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1711993890; x=1714585891; bh=/OTmkNbmoe0ZoUmaMXMYk1vr
-	09M1+HtSGOgtYQirrCA=; b=xaiCOF+zIKeGRCeztiuU5Du0dElnRxNbejvpi12V
-	JlMYjAZACh01rOHigixprn013YQxppKDobvDIqyrIPZwbi1t/m44wbRJ6vyxCNDD
-	eQ3ItBsBmPWAXN/AnXhhuCsTeHm0TDIQ45zuLZDQUQlxBm2Rup2EPncjNP1bkWvc
-	GhZ6ByJyiuvFgv9R0Ds+xjILlsa3QGXUp1QhUDmvX2uHHBfXwQAblZjlDBmaznOi
-	tY8ePctirmA5ehlOPhCENvflwUdbBhJHfm167aljzO609WhRW2Rb6dU8rBiRLb7b
-	DcskcX9wrNw2H2D8cij/bVFbk8TKBx7CzaJsownc31z/eQ==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id C5w9o98hycQw; Mon,  1 Apr 2024 17:51:30 +0000 (UTC)
-Received: from [100.96.154.173] (unknown [104.132.1.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V7dqN6X14zlgTHp;
-	Mon,  1 Apr 2024 17:51:28 +0000 (UTC)
-Message-ID: <2af548ae-8877-4e8d-8dc2-541b3d6e6330@acm.org>
-Date: Mon, 1 Apr 2024 10:51:27 -0700
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="mtANK2cY"
+Message-ID: <5bad35f6-70e1-4887-8e31-01e437ba3b94@wetzel-home.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+	s=wetzel-home; t=1711998116;
+	bh=zcx1JiWSTwMh76T+53t+ENEUyvzu/m9vpw98SiAWwR4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=mtANK2cY79o19r6zXPWQEU+rmYS3Xa8P+ez5A6F518n8BrAfqHmFbxZdgzvAAYwqt
+	 pGdohL+Ix6GiHR+uX7R6FtDBlzPt0roRnariCtJ8hkF9/3DjqvUIDW/J4tcdQZ1Hoy
+	 87r4x7VAlTAKJxstW78yh27sNyyvEii6fTCJsU80=
+Date: Mon, 1 Apr 2024 21:01:52 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,32 +30,104 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: sd: unregister device if device_add_disk() failed
- in sd_probe()
-Content-Language: en-US
-To: Yu Kuai <yukuai1@huaweicloud.com>, linan666@huaweicloud.com,
- jejb@linux.ibm.com, martin.petersen@oracle.com, mcgrof@kernel.org,
- hch@lst.de, "yukuai (C)" <yukuai3@huawei.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linan122@huawei.com, yi.zhang@huawei.com, houtao1@huawei.com,
- yangerkun@huawei.com
-References: <20231208082335.1754205-1-linan666@huaweicloud.com>
- <6066205b-bdc8-4434-cc2d-3ce06004ae47@huaweicloud.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <6066205b-bdc8-4434-cc2d-3ce06004ae47@huaweicloud.com>
+Subject: Re: [PATCH v2] scsi: sg: Avoid race in error handling & drop bogus
+ warn
+To: Bart Van Assche <bvanassche@acm.org>, dgilbert@interlog.com
+Cc: gregkh@linuxfoundation.org, sachinp@linux.ibm.com,
+ linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ martin.petersen@oracle.com, stable@vger.kernel.org
+References: <81266270-42F4-48F9-9139-8F0C3F0A6553@linux.ibm.com>
+ <20240401100317.5395-1-Alexander@wetzel-home.de>
+ <a8b8aabf-250d-46c0-a9b8-fba414e3cfcc@acm.org>
+Content-Language: en-US, de-DE
+From: Alexander Wetzel <alexander@wetzel-home.de>
+In-Reply-To: <a8b8aabf-250d-46c0-a9b8-fba414e3cfcc@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 3/31/24 18:31, Yu Kuai wrote:
-> I was shocked that this patch is still there. This patch is easy and
-> straightforward.
+On 01.04.24 19:09, Bart Van Assche wrote:
+> On 4/1/24 03:03, Alexander Wetzel wrote:
+>> commit 27f58c04a8f4 ("scsi: sg: Avoid sg device teardown race")
+>> introduced an incorrect WARN_ON_ONCE() and missed a sequence where
+>> sg_device_destroy() was used after scsi_device_put().
 > 
-> LGTM
-> Reviewed-by: Yu Kuai <yukuai3@huawei.com>
+> Isn't that too negative? I think that the WARN_ON_ONCE() mentioned above
+> has proven to be useful: it helped to catch a bug.
 > 
-> BTW, Nan, it will be better if you have a reporducer for this.
-Agreed that a reproducer would help. No information is present in the
-patch description about how this issue was detected nor about how it was
-tested. That probably would have encouraged reviewers.
 
-Bart.
+It helped to find the other issue. But the WARN_ON_ONCE() here is still 
+plain wrong. Any only explained by my lack of understanding of the code 
+and stupid assumptions I should have checked a bit more.
+
+The warning always triggers when we have more than one user of the sg 
+device (and then free one of them).
+While trying to understand the issue I tripped over the other wrong 
+sequence. Which is probably very seldom really executed...
+
+That said I can of course update the wording when you have a better 
+suggestion. But I only have some variations of "Ups... sorry. I thought 
+that was a good idea. Turns out it's not"
+
+
+>> sg_device_destroy() is accessing the parent scsi_device request_queue 
+>> which
+>> will already be set to NULL when the preceding call to scsi_device_put()
+>> removed the last reference to the parent scsi_device.
+>>
+>> Drop the incorrect WARN_ON_ONCE() - allowing more than one concurrent
+>> access to the sg device - and make sure sg_device_destroy() is not used
+>> after scsi_device_put() in the error handling.
+>>
+>> Link: 
+>> https://lore.kernel.org/all/5375B275-D137-4D5F-BE25-6AF8ACAE41EF@linux.ibm.com
+>> Fixes: 27f58c04a8f4 ("scsi: sg: Avoid sg device teardown race")
+> 
+> The "goto sg_put" removed by this patch was introduced by commit
+> cc833acbee9d ("sg: O_EXCL and other lock handling"). Since the latter
+> commit is older than the one mentioned above, shouldn't the Fixes tag
+> refer to the latter commit?
+> 
+
+The order was not wrong till commit db59133e9279 ("scsi: sg: fix 
+blktrace debugfs entries leakage"), the one my original patch tried to 
+fix. Prior to that one sg_device_destroy() was not using the scsi device 
+request_queue.
+
+I guess I (or one maintainer) could add that commit here again, too...
+
+My reasoning here is, that this patch here fixes what my first patch got 
+wrong.
+Which is already heading into the stable trees. And I would prefer to 
+not have any kernel release with commit 27f58c04a8f4 ("scsi: sg: Avoid 
+sg device teardown race")  without this fix, too.
+
+
+>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>> index 386981c6976a..833c9277419b 100644
+>> --- a/drivers/scsi/sg.c
+>> +++ b/drivers/scsi/sg.c
+>> @@ -372,8 +372,9 @@ sg_open(struct inode *inode, struct file *filp)
+>>   error_out:
+>>       scsi_autopm_put_device(sdp->device);
+>>   sdp_put:
+>> +    kref_put(&sdp->d_ref, sg_device_destroy);
+>>       scsi_device_put(sdp->device);
+>> -    goto sg_put;
+>> +    return retval;
+>>   }
+> 
+> Please add a comment above "return retval" that explains which code will
+> drop the sg reference.
+> 
+
+Hm, don't get that. That kref_put() is the one dropping the reference.
+The matching kref_get() is in sg_add_sfp(). Which is called a few lines 
+prior to the code here (line 350).
+
+The patch is literally only swapping the order of scsi_device_put() and 
+kref_put().
+
+Which *again* causes a use-after free. So I'll send out v3 immediately 
+and if any of the thinks discussed here require a v4 we'll do that.
+
+Alexander
