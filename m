@@ -1,64 +1,99 @@
-Received: from mx2.usergate.com (mx2.usergate.com [46.229.79.1])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FCE610F1;
-	Mon,  1 Apr 2024 06:34:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.229.79.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9595C8F6E
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Apr 2024 07:08:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711953291; cv=none; b=IEIs1RZOFawKwYeKIeUxa1GXNxW397Zfmmqm5P9jhcN3Bz9+JAe8dqdYoBkbte4KKu8DJwEiIk+5vZYhNjaZUUv4k0yDxTHKs4m7oC1EXtzfGCb5wsBvzBlHRIzNQjhXnuLbI6SP27NOgtkebq0ltXXDdG63Nawm9l65vl/0lkM=
+	t=1711955298; cv=none; b=CzNH0zTB+ru408FBGH5pu1mCpQn1drTE98pKPTJFJ7obPIXfWwYd0RH3RpWVNitn4uFy4Az2LKn8AemGXSW4jolMDQQIIcvaM4mGCZ5AMe28+cMrxwffF37xGq4aN6SdGE/L4+0J4HSkIymeezZBPxeTKN4fU4XaEMbFM9u1gYk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711953291; c=relaxed/simple;
-	bh=g3kKNBeSxCXtJC/2ghym1i87QEqVcPCGl4pvQJeMAWU=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=XdLS5p9FeEdBzQh5yszRBmWoniX2HMNpiB1vbwreiDSV2KWF3qcjnkcLrIm8PoumyHyJxyFS92iJxGnkWXFKfMUmLiVt4HSDBxPFMC/YE329FFeCjJaR58Fds83qz6EcdGPxrfC7TuSqhN/YBSSfo68cE9IvVcYxtF5QGEuaHp0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com; spf=pass smtp.mailfrom=usergate.com; arc=none smtp.client-ip=46.229.79.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=usergate.com
-Received: from mail.usergate.com[192.168.90.36] by mx2.usergate.com with ESMTP id
-	 AEBED27C39F1428DAFA9DA846F2A5809; Mon, 1 Apr 2024 13:34:38 +0700
-From: Aleksandr Aprelkov <aaprelkov@usergate.com>
-To: Hannes Reinecke <hare@suse.com>
-CC: Aleksandr Aprelkov <aaprelkov@usergate.com>,"James E.J. Bottomley" <jejb@linux.ibm.com>,"Martin K. Petersen" <martin.petersen@oracle.com>,<linux-scsi@vger.kernel.org>,<linux-kernel@vger.kernel.org>,<lvc-project@linuxtesting.org>
-Subject: [PATCH] scsi: aic79xx: add scb NULL check in ahd_handle_ign_wide_residue()
-Date: Mon, 1 Apr 2024 13:34:17 +0700
-Message-ID: <20240401063418.596364-1-aaprelkov@usergate.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1711955298; c=relaxed/simple;
+	bh=GUOmv+Y0WjHvNCS+PlzAw3YfnpaPNR2c84gdnY8xRqU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BgdJIze40KUWraaXys8H7ogAhF8Eyc2Qf3nAwYCCx9RZ9BWe5Mby132TMnizRHeLc27T1Vd7VCwMJubA0l02rX+6vsfrCWtn8VOJVaKOvGOrGRNa6wWREFe2ULXiyt8QtdJQtYawOGPi2FzkPc9pU7F+QNDEZWcRHMFfMNhPNQc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dYeZ6iDs; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dYeZ6iDs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FB85C433F1;
+	Mon,  1 Apr 2024 07:08:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1711955298;
+	bh=GUOmv+Y0WjHvNCS+PlzAw3YfnpaPNR2c84gdnY8xRqU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=dYeZ6iDsVL2MAHqOXr2Oc36CEpe9FkGaTN8+PdAEpNLPNuBOH3r+TpqMBCFVhCQKl
+	 peyTJHzCADtKLC1auvi8v+xoHUSdtruamVdcoWBGhoaq1kQhfSVhoI6sVyHbA3SMbv
+	 v90HyVCge7wfb4DTzax65Z+lox0d8oZUSVfX78N3uhKTOuvNqHklUZoYvKkC3/LpH7
+	 pg9Twr7examE+Nid8tOCKdnMqQRFp/MLISi/ZgMF0YIV4Nfrmb4HWoqMeyX8LnF1Mc
+	 v3lW/Yd7lfIC4RyWXiTmuub0MgS8ShEmznaIA86OLRZ+fJViwyRATkLpzPgngaINVy
+	 FhHLkQmhwFomw==
+Message-ID: <98d9748f-a723-4b35-9ff6-1e425fe5d5b2@kernel.org>
+Date: Mon, 1 Apr 2024 16:08:16 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: ESLSRV-EXCH-01.esafeline.com (192.168.90.36) To
- nsk02-mbx01.esafeline.com (10.10.1.35)
-X-Message-Id: BF037BEAB1D44598BF2C2B973BE6A734
-X-MailFileId: F9AC490D2C974D1BA7DF8BBA20C15E28
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] scsi: hisi_sas: Modify the deadline for
+ ata_wait_after_reset()
+To: chenxiang <chenxiang66@hisilicon.com>, jejb@linux.vnet.ibm.com,
+ martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, linux-scsi@vger.kernel.org
+References: <20240401054914.721093-1-chenxiang66@hisilicon.com>
+ <20240401054914.721093-3-chenxiang66@hisilicon.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20240401054914.721093-3-chenxiang66@hisilicon.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-If ahd_lookup_scb() returns NULL and (ahd_inb() & DPHASE) != 0
-NULL pointer dereference happens inside ahd_get_transfer_dir()
+On 4/1/24 14:49, chenxiang wrote:
+> From: Yihang Li <liyihang9@huawei.com>
+> 
+> We found that the second parameter of function ata_wait_after_reset() is
+> incorrectly used. We call smp_ata_check_ready_type() to poll the device
+> type until the 30s timeout, so the correct deadline should be (jiffies +
+> 30000).
+> 
+> Fixes: 3c2673a09cf1 ("scsi: hisi_sas: Fix SATA devices missing issue during I_T nexus reset")
+> Signed-off-by: xiabing <xiabing12@h-partners.com>
+> Signed-off-by: Yihang Li <liyihang9@huawei.com>
+> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> ---
+>  drivers/scsi/hisi_sas/hisi_sas_main.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> index 097dfe4b620d..7245600aedb2 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -1796,8 +1796,10 @@ static int hisi_sas_debug_I_T_nexus_reset(struct domain_device *device)
+>  
+>  	if (dev_is_sata(device)) {
+>  		struct ata_link *link = &device->sata_dev.ap->link;
+> +		unsigned long deadline = ata_deadline(jiffies,
+> +				HISI_SAS_WAIT_PHYUP_TIMEOUT / HZ * 1000);
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+At the very least, you should use jiffies_to_msecs() here. But I do not see the
+point though given that ata_deadline will do "jiffies + msecs_to_jiffies()".
 
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Aleksandr Aprelkov <aaprelkov@usergate.com>
----
- drivers/scsi/aic7xxx/aic79xx_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+So may be calling:
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 3e3100dbfda3..bac23ee11c62 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -5664,7 +5664,7 @@ ahd_handle_ign_wide_residue(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
- 	 * Perhaps add datadir to some spare bits in the hscb?
- 	 */
- 	if ((ahd_inb(ahd, SEQ_FLAGS) & DPHASE) == 0
--	 || ahd_get_transfer_dir(scb) != CAM_DIR_IN) {
-+	 || (scb && ahd_get_transfer_dir(scb) != CAM_DIR_IN)) {
- 		/*
- 		 * Ignore the message if we haven't
- 		 * seen an appropriate data phase yet.
+	rc = ata_wait_after_reset(link, jiffies + HISI_SAS_WAIT_PHYUP_TIMEOUT,
+				  smp_ata_check_ready_type);
+
+May be simpler and more readable.
+
+>  
+> -		rc = ata_wait_after_reset(link, HISI_SAS_WAIT_PHYUP_TIMEOUT,
+> +		rc = ata_wait_after_reset(link, deadline,
+>  					  smp_ata_check_ready_type);
+>  	} else {
+>  		msleep(2000);
+
 -- 
-2.34.1
+Damien Le Moal
+Western Digital Research
 
