@@ -1,24 +1,24 @@
-Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBF138F5C
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Apr 2024 05:53:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C448F5D
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Apr 2024 05:53:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711950829; cv=none; b=dzq8yWjVzaVqX08coN06jrZ/r166vPDgWMZcFxU+t/T7ibE46ylOXb0wGdTEvz1+MKVo0IdokH6Fq4Xc80HLL38Jy1gTFobLlgUEHpGHWzcdeGMMpDCABIoWvMUChs644bNoTN4ulOsc1mke+UskhmbMUJ9fKqiZl8NInhkVTgs=
+	t=1711950830; cv=none; b=RvsQ//KHr+OAyQEtHqUy1Gjs6kZtyHu6ra9IUQ/uR3Z76XowvUQTz6ZIVF6Gk78pICPXt/WPEffvf4FMXF1wTJ14rAc/QrssiwV7QBMMfl/6xJhT5JN9xlcd+Z9BWXIMBJ/shRtI6/LFeXZkq1KeS/n3IzO7tgthWW7QDNCmV3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711950829; c=relaxed/simple;
-	bh=JZVI8UYINDYADXlHQvgofMOzMm02S6wJuzzLP8vlub8=;
+	s=arc-20240116; t=1711950830; c=relaxed/simple;
+	bh=tFYAKVhy05tLEUWmMrpR1YivBL+S6HeR4C/ClSNWONg=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jMCvEjAPu7PRrSZFIjVZeKAAayxdDvAiFGEsAXF/MP2+3rEf0FIsFXlFRjJDWvqmkUjshcSixDebScE0X+Fr2lvXv9DHwJbXy+vXyNzKsOt1IIGMreGmzvUbGZI43uVPwXtDt7to0JqA5wVG3C+z0O4qPA35yh9n0mhTMXrFZPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=hisilicon.com; spf=pass smtp.mailfrom=hisilicon.com; arc=none smtp.client-ip=45.249.212.35
+	 MIME-Version:Content-Type; b=izE6d76XKjYkGdF2oJ1yTdGqZKZmkV+bT6NMTxh0H5eyMnMzXOCWCVgiSXvj7Kw6qEwJKNXK2Yuvv2Ja9NANsfS9NSMIumaI9kXsOq5wNiYdvP5+RRQ34jaxkp9AjohE+PDZiL/amuP/u/t93BSpc/XtCBjuBMcKHpmnzH8WvW4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=hisilicon.com; spf=pass smtp.mailfrom=hisilicon.com; arc=none smtp.client-ip=45.249.212.189
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=hisilicon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hisilicon.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4V7Kqz27KDz1R9dJ;
-	Mon,  1 Apr 2024 13:50:55 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.194])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4V7Krj046vzNmjZ;
+	Mon,  1 Apr 2024 13:51:33 +0800 (CST)
 Received: from kwepemd200015.china.huawei.com (unknown [7.221.188.21])
-	by mail.maildlp.com (Postfix) with ESMTPS id 66437180060;
+	by mail.maildlp.com (Postfix) with ESMTPS id 202E5140415;
 	Mon,  1 Apr 2024 13:53:39 +0800 (CST)
 Received: from huawei.com (10.67.165.2) by kwepemd200015.china.huawei.com
  (7.221.188.21) with Microsoft SMTP Server (version=TLS1_2,
@@ -27,9 +27,9 @@ Received: from huawei.com (10.67.165.2) by kwepemd200015.china.huawei.com
 From: chenxiang <chenxiang66@hisilicon.com>
 To: <jejb@linux.vnet.ibm.com>, <martin.petersen@oracle.com>
 CC: <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>
-Subject: [PATCH 2/2] scsi: hisi_sas: Modify the deadline for ata_wait_after_reset()
-Date: Mon, 1 Apr 2024 13:49:14 +0800
-Message-ID: <20240401054914.721093-3-chenxiang66@hisilicon.com>
+Subject: [PATCH 1/2] scsi: hisi_sas: Handle the NCQ error returned by D2H frame
+Date: Mon, 1 Apr 2024 13:49:13 +0800
+Message-ID: <20240401054914.721093-2-chenxiang66@hisilicon.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <20240401054914.721093-1-chenxiang66@hisilicon.com>
 References: <20240401054914.721093-1-chenxiang66@hisilicon.com>
@@ -44,37 +44,41 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
  kwepemd200015.china.huawei.com (7.221.188.21)
 
-From: Yihang Li <liyihang9@huawei.com>
+From: Xingui Yang <yangxingui@huawei.com>
 
-We found that the second parameter of function ata_wait_after_reset() is
-incorrectly used. We call smp_ata_check_ready_type() to poll the device
-type until the 30s timeout, so the correct deadline should be (jiffies +
-30000).
+We find that some disks use D2H frame instead of SDB frame to return NCQ
+error. Currently, only the I/O corresponding to the D2H frame is processed
+in this scenario, which does not meet the processing requirements of the
+NCQ error scenario.
+So we set dev_status to HISI_SAS_DEV_NCQ_ERR and abort all I/Os of the disk
+in this scenario.
 
-Fixes: 3c2673a09cf1 ("scsi: hisi_sas: Fix SATA devices missing issue during I_T nexus reset")
-Signed-off-by: xiabing <xiabing12@h-partners.com>
-Signed-off-by: Yihang Li <liyihang9@huawei.com>
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 097dfe4b620d..7245600aedb2 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1796,8 +1796,10 @@ static int hisi_sas_debug_I_T_nexus_reset(struct domain_device *device)
- 
- 	if (dev_is_sata(device)) {
- 		struct ata_link *link = &device->sata_dev.ap->link;
-+		unsigned long deadline = ata_deadline(jiffies,
-+				HISI_SAS_WAIT_PHYUP_TIMEOUT / HZ * 1000);
- 
--		rc = ata_wait_after_reset(link, HISI_SAS_WAIT_PHYUP_TIMEOUT,
-+		rc = ata_wait_after_reset(link, deadline,
- 					  smp_ata_check_ready_type);
- 	} else {
- 		msleep(2000);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 7d2a33514538..3935fa6bc72b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2244,7 +2244,14 @@ slot_err_v3_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+ 		if ((dw0 & CMPLT_HDR_RSPNS_XFRD_MSK) &&
+ 		    (sipc_rx_err_type & RX_FIS_STATUS_ERR_MSK)) {
+-			ts->stat = SAS_PROTO_RESPONSE;
++			if (task->ata_task.use_ncq) {
++				struct domain_device *device = task->dev;
++				struct hisi_sas_device *sas_dev =
++						device->lldd_dev;
++				sas_dev->dev_status = HISI_SAS_DEV_NCQ_ERR;
++				slot->abort = 1;
++			} else
++				ts->stat = SAS_PROTO_RESPONSE;
+ 		} else if (dma_rx_err_type & RX_DATA_LEN_UNDERFLOW_MSK) {
+ 			ts->residual = trans_tx_fail_type;
+ 			ts->stat = SAS_DATA_UNDERRUN;
 -- 
 2.30.0
 
