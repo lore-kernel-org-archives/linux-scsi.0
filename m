@@ -1,48 +1,48 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC471481B8;
-	Mon,  1 Apr 2024 17:10:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7A951DFE3;
+	Mon,  1 Apr 2024 17:49:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711991412; cv=none; b=cERhnDxww2WKc1EoI1vWEDqIT9wNjIuRXIS9FPDjxoaxCSFl1+vAJhCzvPYm3Sj0LiBH0ss1YFJEqR0JlFAajHmysIwlRzJRn1kBJNIYu/RVn+r27U68vT02odc/tCaVqQUhYhdGHizEJOPV41Yn/XmVVG2kVMub530QO7FAM+E=
+	t=1711993799; cv=none; b=QrU2GVk2Ch02oBMkBp4ZVogLEPVxDer5qVSyQS2HgWTCUaB8Cs3pL90M2NW+UfM6M/AOLvp5Lp0cPNWbQg63fWZq0l9Z/66ctVHVtMQ5zTqOL74Q2+qYEqdIuJ0zFonN2P4YNEYxKFGjGGAy5m8g1ikuaTcPV1yfvIFpz7GQoTI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711991412; c=relaxed/simple;
-	bh=OHHDYqVdBQMR6VKojyn4SweMs/KowhBYCBTrwuIvjig=;
+	s=arc-20240116; t=1711993799; c=relaxed/simple;
+	bh=0Lsq5qG7Op258QzJlgfWQaCKAZFa4k8JLBKF+U4I5Ww=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WfjTZzmCAnMaEn3miJgyQE4T8dbL0BaSpMQP9WqWPCeAC3uBSjSxhhqDArruQEeyv8Izx6A2R7J70NQI8g45LbqdLz7iN8mqwzi0VrXJJkWe+k7BM3nqbEdj+Zbm80Mhe+C/EZ/6G6BOYQqDT0+yhIti0dYs38hAQ8i9RlZ/fVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=p6lG2fJP; arc=none smtp.client-ip=199.89.1.12
+	 In-Reply-To:Content-Type; b=rBuJaDzz5QyGhRmGLWo28//mJ/xKOQloTEAKotCjeXW/q/GFs/9ccWzW5m+HguHQP79AOdwpKI5+sEUNpMhxGIYLCntfD7q3IyybovUEP6tNe3cQqqZVxqY4Ln8ZpxfVmlHEBEOkn5jTR2YIRwe6hQJblIi+q03BkAPIWbckM1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4Jw4mWhe; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="p6lG2fJP"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4Jw4mWhe"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V7cvb1rNyzlgTGW;
-	Mon,  1 Apr 2024 17:10:03 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V7dnd0QS6zlgTGW;
+	Mon,  1 Apr 2024 17:49:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:references:content-language:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1711991399; x=1714583400; bh=1o92p1iKBdPwfQBISSmyjUU6
-	GZIxSKmRhiV8vXyFFZ4=; b=p6lG2fJP23uiQWdoS1ZScT3P/vz53S3CxFGmauwX
-	oF9cRXI0lSm9Ov4Lgf2TboIScLi2BviC2rn1nbjsXPxaZ8MdtCKnNAnLqbfW6hh/
-	c/uaoFuZ7Mws98IHyVm5zJa+4caGwJsshCFU/Vt+pgmZvQ4JoxOpgJRWiErZYVG0
-	+2Gfo2kJFcfIV8F9yE/ZcS8v8SL+JhJ5L5+fPyNCSoxqp+D7cZKTM8OonA0iWjWG
-	jPpCaHl9tfZ8xq6YO74wFcMb1qFCd0CXaWgNuFK0+B/XvyrssVWFFQPcNhWMx5xa
-	QfU2+PUGAysY6nPHeqZesz9l/8FnaghI9dw/VHx4Md/crA==
+	 s=mr01; t=1711993793; x=1714585794; bh=3aS9fjkX6tN76YzPo3xB7NYr
+	A2s4BoUyM+VqTM+665Y=; b=4Jw4mWheS2jIaEYmZlHV7q4pkFt5/nu/FCfCYr/4
+	xAFiF2sZbaMauAZFuRhoVOevPuP0sZDLvCp4Z8PCKLGso+w/mdEncIphcEVAlDcD
+	3jWLa4GPvIOCdnEiDbAnJ2vx0BO3olseDecRViw95TcQnWH004HWLTEU3IKpqLBi
+	hcvPZhjonqIpZIhh3UX/gJl14yBoJsfwSAdXWFfMHo+y1TT91whaAHagKwiqK9Ki
+	DWQN8iQcyE7rcXMHLgWfl7NzrQKLYiWjPx8oY9ftFBfPd4My+FcNAN6ZL47m7hR8
+	3rDum5ON9pO1cNPzfjMZh/Cmz1CHvsH7yjskFjWWIAPG8A==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id AmvmDwiwV-Af; Mon,  1 Apr 2024 17:09:59 +0000 (UTC)
+ id NCgN9-qSKE04; Mon,  1 Apr 2024 17:49:53 +0000 (UTC)
 Received: from [100.96.154.173] (unknown [104.132.1.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V7cvV68vmzlgTHp;
-	Mon,  1 Apr 2024 17:09:58 +0000 (UTC)
-Message-ID: <a8b8aabf-250d-46c0-a9b8-fba414e3cfcc@acm.org>
-Date: Mon, 1 Apr 2024 10:09:57 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V7dnW5nQ6zlgTHp;
+	Mon,  1 Apr 2024 17:49:51 +0000 (UTC)
+Message-ID: <1c65d12e-3821-4cae-a268-4f2755ad53af@acm.org>
+Date: Mon, 1 Apr 2024 10:49:50 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,61 +50,48 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: sg: Avoid race in error handling & drop bogus
- warn
+Subject: Re: [PATCH] scsi: sd: unregister device if device_add_disk() failed
+ in sd_probe()
 Content-Language: en-US
-To: Alexander Wetzel <Alexander@wetzel-home.de>, dgilbert@interlog.com
-Cc: gregkh@linuxfoundation.org, sachinp@linux.ibm.com,
- linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- martin.petersen@oracle.com, stable@vger.kernel.org
-References: <81266270-42F4-48F9-9139-8F0C3F0A6553@linux.ibm.com>
- <20240401100317.5395-1-Alexander@wetzel-home.de>
+To: linan666@huaweicloud.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+ mcgrof@kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com,
+ houtao1@huawei.com, yangerkun@huawei.com
+References: <20231208082335.1754205-1-linan666@huaweicloud.com>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240401100317.5395-1-Alexander@wetzel-home.de>
+In-Reply-To: <20231208082335.1754205-1-linan666@huaweicloud.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 4/1/24 03:03, Alexander Wetzel wrote:
-> commit 27f58c04a8f4 ("scsi: sg: Avoid sg device teardown race")
-> introduced an incorrect WARN_ON_ONCE() and missed a sequence where
-> sg_device_destroy() was used after scsi_device_put().
-
-Isn't that too negative? I think that the WARN_ON_ONCE() mentioned above
-has proven to be useful: it helped to catch a bug.
-
-> sg_device_destroy() is accessing the parent scsi_device request_queue which
-> will already be set to NULL when the preceding call to scsi_device_put()
-> removed the last reference to the parent scsi_device.
+On 12/8/23 00:23, linan666@huaweicloud.com wrote:
+> From: Li Nan <linan122@huawei.com>
 > 
-> Drop the incorrect WARN_ON_ONCE() - allowing more than one concurrent
-> access to the sg device - and make sure sg_device_destroy() is not used
-> after scsi_device_put() in the error handling.
+> "if device_add() succeeds, you should call device_del() when you want to
+> get rid of it."
 > 
-> Link: https://lore.kernel.org/all/5375B275-D137-4D5F-BE25-6AF8ACAE41EF@linux.ibm.com
-> Fixes: 27f58c04a8f4 ("scsi: sg: Avoid sg device teardown race")
+> In sd_probe(), device_add_disk() fails when device_add() has already
+> succeeded, so change put_device() to device_unregister() to ensure device
+> resources are released.
+> 
+> Fixes: 2a7a891f4c40 ("scsi: sd: Add error handling support for add_disk()")
+> Signed-off-by: Li Nan <linan122@huawei.com>
+> ---
+>   drivers/scsi/sd.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 542a4bbb21bc..d81cbeee06eb 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3736,7 +3736,7 @@ static int sd_probe(struct device *dev)
+>   
+>   	error = device_add_disk(dev, gd, NULL);
+>   	if (error) {
+> -		put_device(&sdkp->disk_dev);
+> +		device_unregister(&sdkp->disk_dev);
+>   		put_disk(gd);
+>   		goto out;
+>   	}
 
-The "goto sg_put" removed by this patch was introduced by commit
-cc833acbee9d ("sg: O_EXCL and other lock handling"). Since the latter
-commit is older than the one mentioned above, shouldn't the Fixes tag
-refer to the latter commit?
-
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 386981c6976a..833c9277419b 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -372,8 +372,9 @@ sg_open(struct inode *inode, struct file *filp)
->   error_out:
->   	scsi_autopm_put_device(sdp->device);
->   sdp_put:
-> +	kref_put(&sdp->d_ref, sg_device_destroy);
->   	scsi_device_put(sdp->device);
-> -	goto sg_put;
-> +	return retval;
->   }
-
-Please add a comment above "return retval" that explains which code will
-drop the sg reference.
-
-Thanks,
-
-Bart.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
