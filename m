@@ -1,26 +1,26 @@
 Received: from mx2.usergate.com (mx2.usergate.com [46.229.79.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1D8853BE;
-	Mon,  1 Apr 2024 06:10:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FCE610F1;
+	Mon,  1 Apr 2024 06:34:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.229.79.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711951846; cv=none; b=mSB59Kp0HB6d9gJsUog+0SoEKxEiptkLtMCn9yZVQOIGR8aDft2qsCNeJxZDjhdtNGNlUxSaT8o/y6+9KlCBy5mqzL3YEhQVErLwFwH04YtH2/ACJaPz0d3eyMQDVr6RGtT1IrM9e5zwXLpYOrJZWJKt5Szi17WqNFefEraP8Kw=
+	t=1711953291; cv=none; b=IEIs1RZOFawKwYeKIeUxa1GXNxW397Zfmmqm5P9jhcN3Bz9+JAe8dqdYoBkbte4KKu8DJwEiIk+5vZYhNjaZUUv4k0yDxTHKs4m7oC1EXtzfGCb5wsBvzBlHRIzNQjhXnuLbI6SP27NOgtkebq0ltXXDdG63Nawm9l65vl/0lkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711951846; c=relaxed/simple;
-	bh=+UHLdCQTMrUw8WO10zf7gQvU/OLD5joucmE9A0+3Iog=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=envy35H0yujQsLTA6BJbxVcIgk/UkI05KGjIVXKvUN9PK+hs/hpgrmHoZBmE2UbGqW9JLd65XN2dEJ6YDgqJO3m/Xrg3jYwH9m7cJkpnI8Yyyr+lnzFDpYMepm13UbrME2vKvDBQ0MvseJIdFdcax61CnbtE6U2K+HFrgHnIUMs=
+	s=arc-20240116; t=1711953291; c=relaxed/simple;
+	bh=g3kKNBeSxCXtJC/2ghym1i87QEqVcPCGl4pvQJeMAWU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=XdLS5p9FeEdBzQh5yszRBmWoniX2HMNpiB1vbwreiDSV2KWF3qcjnkcLrIm8PoumyHyJxyFS92iJxGnkWXFKfMUmLiVt4HSDBxPFMC/YE329FFeCjJaR58Fds83qz6EcdGPxrfC7TuSqhN/YBSSfo68cE9IvVcYxtF5QGEuaHp0=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com; spf=pass smtp.mailfrom=usergate.com; arc=none smtp.client-ip=46.229.79.1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=usergate.com
 Received: from mail.usergate.com[192.168.90.36] by mx2.usergate.com with ESMTP id
-	 8FF7B9684B1C4A189249FF167EC005ED; Mon, 1 Apr 2024 13:10:26 +0700
+	 AEBED27C39F1428DAFA9DA846F2A5809; Mon, 1 Apr 2024 13:34:38 +0700
 From: Aleksandr Aprelkov <aaprelkov@usergate.com>
 To: Hannes Reinecke <hare@suse.com>
 CC: Aleksandr Aprelkov <aaprelkov@usergate.com>,"James E.J. Bottomley" <jejb@linux.ibm.com>,"Martin K. Petersen" <martin.petersen@oracle.com>,<linux-scsi@vger.kernel.org>,<linux-kernel@vger.kernel.org>,<lvc-project@linuxtesting.org>
-Subject: [PATCH] scsi: aic79xx: add scb NULL check in ahd_handle_msg_reject()
-Date: Mon, 1 Apr 2024 13:10:09 +0700
-Message-ID: <20240401061010.589751-1-aaprelkov@usergate.com>
+Subject: [PATCH] scsi: aic79xx: add scb NULL check in ahd_handle_ign_wide_residue()
+Date: Mon, 1 Apr 2024 13:34:17 +0700
+Message-ID: <20240401063418.596364-1-aaprelkov@usergate.com>
 X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -32,11 +32,11 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-ClientProxiedBy: ESLSRV-EXCH-01.esafeline.com (192.168.90.36) To
  nsk02-mbx01.esafeline.com (10.10.1.35)
-X-Message-Id: 216EAD62768046DBA990E016335F1F2F
-X-MailFileId: 71D8BFED459B4CA494BB17C93467D2DF
+X-Message-Id: BF037BEAB1D44598BF2C2B973BE6A734
+X-MailFileId: F9AC490D2C974D1BA7DF8BBA20C15E28
 
-If ahd_lookup_scb() returns NULL and ahd_sent_msg() checks are false,
-then NULL pointer dereference happens
+If ahd_lookup_scb() returns NULL and (ahd_inb() & DPHASE) != 0
+NULL pointer dereference happens inside ahd_get_transfer_dir()
 
 Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
@@ -47,18 +47,18 @@ Signed-off-by: Aleksandr Aprelkov <aaprelkov@usergate.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 3e3100dbfda3..9e0fafa12e87 100644
+index 3e3100dbfda3..bac23ee11c62 100644
 --- a/drivers/scsi/aic7xxx/aic79xx_core.c
 +++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -5577,7 +5577,7 @@ ahd_handle_msg_reject(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
- 		       "Using asynchronous transfers\n",
- 		       ahd_name(ahd), devinfo->channel,
- 		       devinfo->target, devinfo->lun);
--	} else if ((scb->hscb->control & SIMPLE_QUEUE_TAG) != 0) {
-+	} else if (scb && (scb->hscb->control & SIMPLE_QUEUE_TAG) != 0) {
- 		int tag_type;
- 		int mask;
- 
+@@ -5664,7 +5664,7 @@ ahd_handle_ign_wide_residue(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
+ 	 * Perhaps add datadir to some spare bits in the hscb?
+ 	 */
+ 	if ((ahd_inb(ahd, SEQ_FLAGS) & DPHASE) == 0
+-	 || ahd_get_transfer_dir(scb) != CAM_DIR_IN) {
++	 || (scb && ahd_get_transfer_dir(scb) != CAM_DIR_IN)) {
+ 		/*
+ 		 * Ignore the message if we haven't
+ 		 * seen an appropriate data phase yet.
 -- 
 2.34.1
 
