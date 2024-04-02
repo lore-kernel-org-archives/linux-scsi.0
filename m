@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B58686255;
-	Tue,  2 Apr 2024 12:39:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EE5A79B87;
+	Tue,  2 Apr 2024 12:39:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712061577; cv=none; b=b5UwEjtGO8Xj5TeZojr49dKol/OUsHX39zFTCIKo6PVOret/Hp9VhbK3WawdZW9pk12f5uNK64Syzj1oF1xfliX43EkNeS7GG7mrxOniPzRpWyqib0yHuMv60uli1yE7fJemTiIogrjA7jVxlT/4oB4GGfYLMwdJw4k457+OZqs=
+	t=1712061578; cv=none; b=VguBSbkPCAryORTtYx10UX6JbDUOI3pn0y2pValKfs/uB6My4Oqsu9EUCekXudzdduUY73V733ArqJSUeEi/vgviBVD61UQM1C62feWXFFlIzo9KtkbcXUQKXgxa3kvyk3+K2xK/nOelWz+1zGUO9jOrIjnjdcWR+jBr5nAmeDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712061577; c=relaxed/simple;
-	bh=jNxt9mxQ0OVSkknrW2iliekrTL5/DMXv6mGiCTkj0Ks=;
+	s=arc-20240116; t=1712061578; c=relaxed/simple;
+	bh=QZgv+xE6/DvIx4QxqigBnvigKxG904ShLC1cBr+YSco=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=g40ombqkcd9Kjxc1m8+dNOS8ToiPSEI60DDXa34rmRKdZ0bVuND/GrN7DtQT4vHSlypBX4dcdotVSbE9YKSXCyoEsLKDgk+2RKtZYyahzovMkIuD32b+jeJgjJFMFiPOurdPQQsyO/JIgrZxGNHj+t5d45FNBxLC/9xzF2U0GFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TUjBa4tq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=j+5kD2DMywhtAExW3W+dvLI9/BTtab9/sNJp+jt9QHMrsKUFcXMouNasbdCqh18k9l+B9euFQ02ZBt0jFAkB5sB+eDcG8//Q0RkgjYPWMlsTOHIUsdLdHz4RjaS37pvOCKiLIw51uAnI1zb8fcoqMKQf9c5mqkSHCMFP0GFhcaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kOSMhMaB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TUjBa4tq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E180AC433A6;
-	Tue,  2 Apr 2024 12:39:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kOSMhMaB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48C20C433B1;
+	Tue,  2 Apr 2024 12:39:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712061577;
-	bh=jNxt9mxQ0OVSkknrW2iliekrTL5/DMXv6mGiCTkj0Ks=;
+	s=k20201202; t=1712061578;
+	bh=QZgv+xE6/DvIx4QxqigBnvigKxG904ShLC1cBr+YSco=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=TUjBa4tqCspV1rTuWT2+ttAowYav4WxR+ia81hJyyl4wIYZ/CdNcy5LOOEPXwwIxh
-	 DNIu7TiTxn6r30jB5I+uzVZ+qY4uanmmPZ5+2dqMt/mVA567nY0NAnVsyIxOarE0WH
-	 FtZjZyvV/ukMTXLGwjjS9GL0qV72heWm7UuhZu2OKqNuffO35x4L0F+7sV2x5CM4vF
-	 k2pcSU8CLuHTiTl3/EzGjkaZRbQDTGmQorFFagB8ofq4pLqOEbGf/eflPktnlZROeC
-	 YDtBzGSDjkdRwzABrwbB/hfv3R1TG6Z0qHJncBPFqiHO/5ZKRAbLMhJlrbnUsZuTKP
-	 HQgmL3DgdjqIA==
+	b=kOSMhMaBNk0OD5d1GPUHbbtPdCm1DmQdSf11N2T4idQD+2Nq6Dp8OOA4x/p/qeD29
+	 FMW2rpkaw8H74QlJvn/nZnCGIS9QfVmQc/vCvIL3XARmaYWY2EK+xUne1r0mRNGlo0
+	 sBAgckOCks+C0IWhSHaUkg2CMzjp/8DRhkUfAvVvYKURVF1GZGm7jHodE8pqy5k24x
+	 TyZFoH3ZP0Uy2XDc/fAxZwie3Rf+3UoxKnGOPdTjePrvkf4u8g/lNFt856njUhy/Fm
+	 DrWp7+jHMF+Trs2pRDdIZOOW412q5mZQ5Traoa2BDRGrdTaJie8ce3NVW6JNrgUSac
+	 NO6RiwJowiZcg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-block@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
@@ -36,9 +36,9 @@ To: linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	Keith Busch <kbusch@kernel.org>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v4 19/28] block: Remove BLK_STS_ZONE_RESOURCE
-Date: Tue,  2 Apr 2024 21:38:58 +0900
-Message-ID: <20240402123907.512027-20-dlemoal@kernel.org>
+Subject: [PATCH v4 20/28] block: Simplify blk_revalidate_disk_zones() interface
+Date: Tue,  2 Apr 2024 21:38:59 +0900
+Message-ID: <20240402123907.512027-21-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240402123907.512027-1-dlemoal@kernel.org>
 References: <20240402123907.512027-1-dlemoal@kernel.org>
@@ -50,145 +50,166 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The zone append emulation of the scsi disk driver was the only driver
-using BLK_STS_ZONE_RESOURCE. With this code removed,
-BLK_STS_ZONE_RESOURCE is now unused. Remove this macro definition and
-simplify blk_mq_dispatch_rq_list() where this status code was handled.
+The only user of blk_revalidate_disk_zones() second argument was the
+SCSI disk driver (sd). Now that this driver does not require this
+update_driver_data argument, remove it to simplify the interface of
+blk_revalidate_disk_zones(). Also update the function kdoc comment to
+be more accurate (i.e. there is no gendisk ->revalidate method).
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-mq.c            | 26 --------------------------
- drivers/scsi/scsi_lib.c   |  1 -
- include/linux/blk_types.h | 20 ++++----------------
- 3 files changed, 4 insertions(+), 43 deletions(-)
+ block/blk-zoned.c              | 21 +++++++--------------
+ drivers/block/null_blk/zoned.c |  2 +-
+ drivers/block/ublk_drv.c       |  2 +-
+ drivers/block/virtio_blk.c     |  2 +-
+ drivers/md/dm-zone.c           |  2 +-
+ drivers/nvme/host/core.c       |  2 +-
+ drivers/scsi/sd_zbc.c          |  2 +-
+ include/linux/blkdev.h         |  3 +--
+ 8 files changed, 14 insertions(+), 22 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index e09c23760bea..66dc289f5bee 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1924,19 +1924,6 @@ static void blk_mq_handle_dev_resource(struct request *rq,
- 	__blk_mq_requeue_request(rq);
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index c60d5f074585..b0fafbb5b3f9 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -1728,21 +1728,17 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
+ /**
+  * blk_revalidate_disk_zones - (re)allocate and initialize zone bitmaps
+  * @disk:	Target disk
+- * @update_driver_data:	Callback to update driver data on the frozen disk
+  *
+- * Helper function for low-level device drivers to check and (re) allocate and
+- * initialize a disk request queue zone bitmaps. This functions should normally
+- * be called within the disk ->revalidate method for blk-mq based drivers.
++ * Helper function for low-level device drivers to check, (re) allocate and
++ * initialize resources used for managing zoned disks. This function should
++ * normally be called by blk-mq based drivers when a zoned gendisk is probed
++ * and when the zone configuration of the gendisk changes (e.g. after a format).
+  * Before calling this function, the device driver must already have set the
+  * device zone size (chunk_sector limit) and the max zone append limit.
+  * BIO based drivers can also use this function as long as the device queue
+  * can be safely frozen.
+- * If the @update_driver_data callback function is not NULL, the callback is
+- * executed with the device request queue frozen after all zones have been
+- * checked.
+  */
+-int blk_revalidate_disk_zones(struct gendisk *disk,
+-			      void (*update_driver_data)(struct gendisk *disk))
++int blk_revalidate_disk_zones(struct gendisk *disk)
+ {
+ 	struct request_queue *q = disk->queue;
+ 	sector_t zone_sectors = q->limits.chunk_sectors;
+@@ -1809,13 +1805,10 @@ int blk_revalidate_disk_zones(struct gendisk *disk,
+ 	 * referencing the bitmaps).
+ 	 */
+ 	blk_mq_freeze_queue(q);
+-	if (ret > 0) {
++	if (ret > 0)
+ 		ret = disk_update_zone_resources(disk, &args);
+-		if (update_driver_data)
+-			update_driver_data(disk);
+-	} else {
++	else
+ 		pr_warn("%s: failed to revalidate zones\n", disk->disk_name);
+-	}
+ 	if (ret)
+ 		disk_free_zone_resources(disk);
+ 	blk_mq_unfreeze_queue(q);
+diff --git a/drivers/block/null_blk/zoned.c b/drivers/block/null_blk/zoned.c
+index 159746b0661c..34f4d273df38 100644
+--- a/drivers/block/null_blk/zoned.c
++++ b/drivers/block/null_blk/zoned.c
+@@ -179,7 +179,7 @@ int null_register_zoned_dev(struct nullb *nullb)
+ 		disk->disk_name,
+ 		queue_emulates_zone_append(q) ? "emulated" : "native");
+ 
+-	return blk_revalidate_disk_zones(disk, NULL);
++	return blk_revalidate_disk_zones(disk);
  }
  
--static void blk_mq_handle_zone_resource(struct request *rq,
--					struct list_head *zone_list)
--{
--	/*
--	 * If we end up here it is because we cannot dispatch a request to a
--	 * specific zone due to LLD level zone-write locking or other zone
--	 * related resource not being available. In this case, set the request
--	 * aside in zone_list for retrying it later.
--	 */
--	list_add(&rq->queuelist, zone_list);
--	__blk_mq_requeue_request(rq);
--}
--
- enum prep_dispatch {
- 	PREP_DISPATCH_OK,
- 	PREP_DISPATCH_NO_TAG,
-@@ -2022,7 +2009,6 @@ bool blk_mq_dispatch_rq_list(struct blk_mq_hw_ctx *hctx, struct list_head *list,
- 	struct request *rq;
- 	int queued;
- 	blk_status_t ret = BLK_STS_OK;
--	LIST_HEAD(zone_list);
- 	bool needs_resource = false;
+ void null_free_zoned_dev(struct nullb_device *dev)
+diff --git a/drivers/block/ublk_drv.c b/drivers/block/ublk_drv.c
+index ab6af84e327c..851c78913de2 100644
+--- a/drivers/block/ublk_drv.c
++++ b/drivers/block/ublk_drv.c
+@@ -221,7 +221,7 @@ static int ublk_get_nr_zones(const struct ublk_device *ub)
  
- 	if (list_empty(list))
-@@ -2064,23 +2050,11 @@ bool blk_mq_dispatch_rq_list(struct blk_mq_hw_ctx *hctx, struct list_head *list,
- 		case BLK_STS_DEV_RESOURCE:
- 			blk_mq_handle_dev_resource(rq, list);
- 			goto out;
--		case BLK_STS_ZONE_RESOURCE:
--			/*
--			 * Move the request to zone_list and keep going through
--			 * the dispatch list to find more requests the drive can
--			 * accept.
--			 */
--			blk_mq_handle_zone_resource(rq, &zone_list);
--			needs_resource = true;
--			break;
- 		default:
- 			blk_mq_end_request(rq, ret);
- 		}
- 	} while (!list_empty(list));
- out:
--	if (!list_empty(&zone_list))
--		list_splice_tail_init(&zone_list, list);
--
- 	/* If we didn't flush the entire list, we could have told the driver
- 	 * there was more coming, but that turned out to be a lie.
+ static int ublk_revalidate_disk_zones(struct ublk_device *ub)
+ {
+-	return blk_revalidate_disk_zones(ub->ub_disk, NULL);
++	return blk_revalidate_disk_zones(ub->ub_disk);
+ }
+ 
+ static int ublk_dev_param_zoned_validate(const struct ublk_device *ub)
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index 42dea7601d87..c1af0a7d56c8 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -1543,7 +1543,7 @@ static int virtblk_probe(struct virtio_device *vdev)
  	 */
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 2e28e2360c85..9ca96116bd33 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1870,7 +1870,6 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 	case BLK_STS_OK:
- 		break;
- 	case BLK_STS_RESOURCE:
--	case BLK_STS_ZONE_RESOURCE:
- 		if (scsi_device_blocked(sdev))
- 			ret = BLK_STS_DEV_RESOURCE;
- 		break;
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 29b3170431e7..ffe0c112b128 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -136,18 +136,6 @@ typedef u16 blk_short_t;
-  */
- #define BLK_STS_DEV_RESOURCE	((__force blk_status_t)13)
+ 	if (IS_ENABLED(CONFIG_BLK_DEV_ZONED) && lim.zoned) {
+ 		blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, vblk->disk->queue);
+-		err = blk_revalidate_disk_zones(vblk->disk, NULL);
++		err = blk_revalidate_disk_zones(vblk->disk);
+ 		if (err)
+ 			goto out_cleanup_disk;
+ 	}
+diff --git a/drivers/md/dm-zone.c b/drivers/md/dm-zone.c
+index 174fda0a301c..99d27fba01d3 100644
+--- a/drivers/md/dm-zone.c
++++ b/drivers/md/dm-zone.c
+@@ -169,7 +169,7 @@ static int dm_revalidate_zones(struct mapped_device *md, struct dm_table *t)
+ 	 * our table for dm_blk_report_zones() to use directly.
+ 	 */
+ 	md->zone_revalidate_map = t;
+-	ret = blk_revalidate_disk_zones(disk, NULL);
++	ret = blk_revalidate_disk_zones(disk);
+ 	md->zone_revalidate_map = NULL;
  
--/*
-- * BLK_STS_ZONE_RESOURCE is returned from the driver to the block layer if zone
-- * related resources are unavailable, but the driver can guarantee the queue
-- * will be rerun in the future once the resources become available again.
-- *
-- * This is different from BLK_STS_DEV_RESOURCE in that it explicitly references
-- * a zone specific resource and IO to a different zone on the same device could
-- * still be served. Examples of that are zones that are write-locked, but a read
-- * to the same zone could be served.
-- */
--#define BLK_STS_ZONE_RESOURCE	((__force blk_status_t)14)
--
+ 	if (ret) {
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 943d72bdd794..c9955ecd1790 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2150,7 +2150,7 @@ static int nvme_update_ns_info_block(struct nvme_ns *ns,
+ 	blk_mq_unfreeze_queue(ns->disk->queue);
+ 
+ 	if (blk_queue_is_zoned(ns->queue)) {
+-		ret = blk_revalidate_disk_zones(ns->disk, NULL);
++		ret = blk_revalidate_disk_zones(ns->disk);
+ 		if (ret && !nvme_first_scan(ns->disk))
+ 			goto out;
+ 	}
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index d0ead9858954..806036e48abe 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -572,7 +572,7 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+ 	blk_queue_max_zone_append_sectors(q, 0);
+ 
+ 	flags = memalloc_noio_save();
+-	ret = blk_revalidate_disk_zones(disk, NULL);
++	ret = blk_revalidate_disk_zones(disk);
+ 	memalloc_noio_restore(flags);
+ 	if (ret) {
+ 		sdkp->zone_info = (struct zoned_disk_info){ };
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 8013198a78c2..186ba63ecc16 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -337,8 +337,7 @@ int blkdev_report_zones(struct block_device *bdev, sector_t sector,
+ 		unsigned int nr_zones, report_zones_cb cb, void *data);
+ int blkdev_zone_mgmt(struct block_device *bdev, enum req_op op,
+ 		sector_t sectors, sector_t nr_sectors);
+-int blk_revalidate_disk_zones(struct gendisk *disk,
+-		void (*update_driver_data)(struct gendisk *disk));
++int blk_revalidate_disk_zones(struct gendisk *disk);
+ 
  /*
-  * BLK_STS_ZONE_OPEN_RESOURCE is returned from the driver in the completion
-  * path if the device returns a status indicating that too many zone resources
-@@ -155,7 +143,7 @@ typedef u16 blk_short_t;
-  * after the number of open zones decreases below the device's limits, which is
-  * reported in the request_queue's max_open_zones.
-  */
--#define BLK_STS_ZONE_OPEN_RESOURCE	((__force blk_status_t)15)
-+#define BLK_STS_ZONE_OPEN_RESOURCE	((__force blk_status_t)14)
- 
- /*
-  * BLK_STS_ZONE_ACTIVE_RESOURCE is returned from the driver in the completion
-@@ -164,20 +152,20 @@ typedef u16 blk_short_t;
-  * after the number of active zones decreases below the device's limits, which
-  * is reported in the request_queue's max_active_zones.
-  */
--#define BLK_STS_ZONE_ACTIVE_RESOURCE	((__force blk_status_t)16)
-+#define BLK_STS_ZONE_ACTIVE_RESOURCE	((__force blk_status_t)15)
- 
- /*
-  * BLK_STS_OFFLINE is returned from the driver when the target device is offline
-  * or is being taken offline. This could help differentiate the case where a
-  * device is intentionally being shut down from a real I/O error.
-  */
--#define BLK_STS_OFFLINE		((__force blk_status_t)17)
-+#define BLK_STS_OFFLINE		((__force blk_status_t)16)
- 
- /*
-  * BLK_STS_DURATION_LIMIT is returned from the driver when the target device
-  * aborted the command because it exceeded one of its Command Duration Limits.
-  */
--#define BLK_STS_DURATION_LIMIT	((__force blk_status_t)18)
-+#define BLK_STS_DURATION_LIMIT	((__force blk_status_t)17)
- 
- /**
-  * blk_path_error - returns true if error may be path related
+  * Independent access ranges: struct blk_independent_access_range describes
 -- 
 2.44.0
 
