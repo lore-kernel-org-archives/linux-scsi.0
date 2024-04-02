@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 157441E531;
-	Tue,  2 Apr 2024 23:24:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBBA35822D;
+	Tue,  2 Apr 2024 23:38:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712100286; cv=none; b=WpUJCyvaXkfHyJswGEtGNO3wh7rRvSaj7DZffM13w8FTll9//kqfDZkUL1y5tz43/2yeZK+b4aoBKwMSCPvwDJssY113vQXHEs5reEQk6TTvmgCRAiMDp1mU6Px1uFB8EX0onf2vo7Ihaiyld/953q4U83t8l1w7s7Z+meApfUw=
+	t=1712101099; cv=none; b=jZfScqcV96xRinRDxjhcs3KgnotYGb9XI68KNr0qXau7Lvs0glQx6H/UdlmHPvlm+D1bOe+RBX58M1Q5h62PTmR8QfMfg4rKRAX65QalvgQRmk5O5VtUVyNhN+qMf3EZC/q+QDoJYdBpXWImpxwCD2MCjPLRnnBT+gOztO4OaYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712100286; c=relaxed/simple;
-	bh=SOcZmrJfqQWxyRrd5zPsb0SS4XNlrFrejR2keRnseV4=;
+	s=arc-20240116; t=1712101099; c=relaxed/simple;
+	bh=sgzdOOTlPRAcyjDATGjL0e/ioWdozPuqfHkfUOvJzhY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mv3qZ3w/4Hjf25CDtooQ3XcMOdkRw7lV8IpFFU+1JV2LutW/lImoWrpzc7elyfd5Ro+hHkGsBlAlg/oQuxAOQs+9roodWCEJdBQXoGTWeKW5/ASfevMiQxpFnp0XbgHNeL9OJaXxnmHd3lB83euDIJM89SKkQtOF5kZeoOmdxZE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UDo1c+tC; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=gj7r3jlr93UtofpkmOFuDgCqFQn71tmuMylFOMkB9DHz0m2XE1fnBSmKKIkyAeLBlgwFqJdPI6Z2fTckejUUrNfurEly9EghB2TuysmoZ9it+P3EvRPlZNV0nai+tg1Zm9yTrnRVnpa5rJdqqgqP1TuQLSlRUkOlLm2+bFGR4y8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZV5Bdh8O; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UDo1c+tC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 576F6C433F1;
-	Tue,  2 Apr 2024 23:24:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZV5Bdh8O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0203AC433C7;
+	Tue,  2 Apr 2024 23:38:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712100285;
-	bh=SOcZmrJfqQWxyRrd5zPsb0SS4XNlrFrejR2keRnseV4=;
+	s=k20201202; t=1712101098;
+	bh=sgzdOOTlPRAcyjDATGjL0e/ioWdozPuqfHkfUOvJzhY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=UDo1c+tCNp/2smLd5/d1j/Qxh5i7+6sQQE/akTCYPQzi0uokgij/08ZiMKqbPtKWw
-	 0gar+cTToqgQcYSkP+ZWuJwjrkY4wmjJLSIhVcaEMASiAN+JH+q/3TJm/ZTVTYJP8F
-	 WUjWN5Ke4G0iq68+VzPr8KEJ0Sh2tQzFbCXml891QjePPaI3s7jnO9qmK+ru1L8DPq
-	 yPst2pTlCr59CtPo7/cwyz4n45SbDQ0V7D3cTw59NDMu08FjVccOt7Fmc1suFDSDbb
-	 689ikLQAZVTDcBJqFM4Ap2fQL8yLTYT1bOc5Z5An6OckOpgTdAtGJfWucFNRgWIkn7
-	 xHlxZkx/XdIAw==
-Message-ID: <dac7ec14-7819-46dd-82b0-fd009523c743@kernel.org>
-Date: Wed, 3 Apr 2024 08:24:37 +0900
+	b=ZV5Bdh8OIS5ylPi6KFi0KwQIIr+qg3NK5KE9CxpEW+4kEjnQNpjSm2REcBpnDM1y+
+	 Kf2CB5YvES8uRsi2zfP9lSysTzoC6F6q9erqwbtJIVQq++KjABdyu01CmrecCCkfrz
+	 k8eedIkEEjpsf6Vn/GxapPMSpWQp1NhyEXEVu9sUk0BUszhLqY5LGOhrPkZ5rHWwWo
+	 seIRIwGopTZkvqiE4f06kP8Pi4azW1VTpGhjZ8NENGen2cGZgXhvfoLIryY+wiEpxG
+	 LSblSMkLL0l+uyFjKF0w4ylQxFPTzf/fFMVOqfB2b5UM7/w6TtRGS0/WzIP0ZBGV4o
+	 hkSa7cRNSDL5w==
+Message-ID: <e923b1cf-9683-4029-8a39-c66aa8fb2647@kernel.org>
+Date: Wed, 3 Apr 2024 08:38:15 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,57 +35,70 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/23] block: add a helper to cancel atomic queue limit
- updates
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Niklas Cassel <cassel@kernel.org>,
- Takashi Sakamoto <o-takashi@sakamocchi.jp>,
- Sathya Prakash <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
- "Juergen E. Fischer" <fischer@norbit.de>,
- Xiang Chen <chenxiang66@hisilicon.com>,
- HighPoint Linux Team <linux@highpoint-tech.com>,
- Tyrel Datwyler <tyreld@linux.ibm.com>, Brian King <brking@us.ibm.com>,
- Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
- Mike Christie <michael.christie@oracle.com>,
- John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
- Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>,
- Jack Wang <jinpu.wang@cloud.ionos.com>, Nilesh Javali <njavali@marvell.com>,
- GR-QLogic-Storage-Upstream@marvell.com,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
- Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
- linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
- MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
- linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
- usb-storage@lists.one-eyed-alien.net
-References: <20240402130645.653507-1-hch@lst.de>
- <20240402130645.653507-2-hch@lst.de>
+Subject: Re: [PATCH v4 07/28] block: Introduce zone write plugging
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+ linux-scsi@vger.kernel.org, "Martin K . Petersen"
+ <martin.petersen@oracle.com>, dm-devel@lists.linux.dev,
+ Mike Snitzer <snitzer@redhat.com>, linux-nvme@lists.infradead.org,
+ Keith Busch <kbusch@kernel.org>
+References: <20240402123907.512027-1-dlemoal@kernel.org>
+ <20240402123907.512027-8-dlemoal@kernel.org> <20240402161213.GB3527@lst.de>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240402130645.653507-2-hch@lst.de>
+In-Reply-To: <20240402161213.GB3527@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 4/2/24 22:06, Christoph Hellwig wrote:
-> Drivers might have to perform complex actions to determine queue limits,
-> and those might fail.  Add a helper to cancel a queue limit update
-> that can be called in those cases.
+On 4/3/24 01:12, Christoph Hellwig wrote:
+>> +static inline struct blk_zone_wplug *
+>> +disk_lookup_zone_wplug(struct gendisk *disk, sector_t sector)
+>> +{
+>> +	unsigned int zno = disk_zone_no(disk, sector);
+>> +	unsigned int idx = hash_32(zno, disk->zone_wplugs_hash_bits);
+>> +	struct blk_zone_wplug *zwplug;
+>> +
+>> +	rcu_read_lock();
+>> +	hlist_for_each_entry_rcu(zwplug, &disk->zone_wplugs_hash[idx], node) {
+>> +		if (zwplug->zone_no == zno)
+>> +			goto unlock;
+>> +	}
+>> +	zwplug = NULL;
+>> +
+>> +unlock:
+>> +	rcu_read_unlock();
+>> +	return zwplug;
+>> +}
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Did we lose an atomic_inc_unless_zero here?  This now just does a lookup
+> under RCU, but nothing to prevent the zwplug from beeing freed?
 
-Looks good to me.
+Nope. When disk_lookup_zone_wplug() is called directly, it is always for
+handling requests/bios which are holding a reference on the plug and because
+there are requests/BIOs in-flight, the plug is marked as busy
+(BLK_ZONE_WPLUG_PLUGGED or BLK_ZONE_WPLUG_ERROR are set). In such state, the
+plug is always hashed given that disk_should_remove_zone_wplug() retturns false
+for busy plugs. So there is no reference increase here. The
+atomic_inc_not_zero() is in disk_get_zone_wplug() which calls
+disk_lookup_zone_wplug() + atomic_inc_not_zero() within an
+rcu_read_lock()/rcu_read_unlock() section.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> 
+>> +	/* Resize the zone write plug memory pool if needed. */
+>> +	if (disk->zone_wplugs_pool->min_nr != pool_size)
+>> +		return mempool_resize(disk->zone_wplugs_pool, pool_size);
+> 
+> Note that a mempool_resize to the current size work just fine.  It takes
+> a pointless lock, but given that this is something that doesn't happen
+> frequently that probably doesn't matter.
+> 
+>> +#include <linux/mempool.h>
+> 
+>> +	mempool_t		*zone_wplugs_pool;
+> 
+> Please use struct mempool_s here so that you only need a forward
+> declaration instead of pulling in another header.
 
 -- 
 Damien Le Moal
