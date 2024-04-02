@@ -1,33 +1,50 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BCD6140E4D;
-	Tue,  2 Apr 2024 16:12:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D53715A496;
+	Tue,  2 Apr 2024 17:35:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712074338; cv=none; b=DBTqgV3Bli6XRi/g7JLTP+KPdxX0epmOeB37Vjy13MLvQQX4BFe3clw3RYvVHRAp7ujCBPKmvjj0tvoam4SoeBWnbLOMe7Gkae5/xCMbkrlk5EQobsNSzxrwdp6JgpBoIn7sxegnCc9ny7+lMVzp46UA2wGdjHyenfDY+wZTmyU=
+	t=1712079312; cv=none; b=XRbMCl7VL1KXVqBVAm8helNT8eA302X3OaKokXfxgHl2g3Ej119ZyA4/SaZYWX0iNyq0o/ToHmQmaxBQRDiGbg4UZfr/z0dKspDAuQ05QMxMpsQY91khLpo0PG3/agwCcuCaTZnsJMQLgR4bMGPxbmbFbsD4VDGbAU55jEJIRpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712074338; c=relaxed/simple;
-	bh=A4USTVRH9rcWxotvG2CFX4iRoo+9995zKoAWz0yeV6o=;
+	s=arc-20240116; t=1712079312; c=relaxed/simple;
+	bh=wBzm8T6Rb34bpqT8Nq4+CojqhG7K4UEU04DtqV8upio=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dcwMRUARD/k+kbia/bcOxireYyLHjy+66w04WIhGjFeh5sD5xwANt8JL03x4SrH3YLV9HaXYRRAqJAptxjBlBb0G2oM4qQvQ2WaImmfv8ecdg3Q90e0awrqB0iArXQDrf4hY0MqTajND2fhwZWjWZ5q4bojtAoDFktecOLLsCoo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 63DDF68BFE; Tue,  2 Apr 2024 18:12:13 +0200 (CEST)
-Date: Tue, 2 Apr 2024 18:12:13 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
-	linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 07/28] block: Introduce zone write plugging
-Message-ID: <20240402161213.GB3527@lst.de>
-References: <20240402123907.512027-1-dlemoal@kernel.org> <20240402123907.512027-8-dlemoal@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=fNmIWI21F9lLUBNLCiYfc5L71HQxm9X1683g9H/W6thR65fkHDtbGy3RCYp7If1wFz68kmJuU11ru2TG31Wd8s4frzR0iiPeLlOAWaVgIB8UFa7jDXGx3jfexdEMpovFKHRBdDec096pUAGcSuq+K0xEw0jXAEWLRjifJ5gCPcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RxQQ1VEH; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RxQQ1VEH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D085CC433F1;
+	Tue,  2 Apr 2024 17:35:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712079312;
+	bh=wBzm8T6Rb34bpqT8Nq4+CojqhG7K4UEU04DtqV8upio=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=RxQQ1VEHWgEPT1gb+G4jyVk0mqkUI51x7+PHLcooEtUgUnJf/tIA7miamZ/EDDP5c
+	 yGw8Hzmzx9sTXwcfa5Dw9O6OofDPLYISF0nUMRe3MIKOzGXkoAUcnT/yegABGHGo9l
+	 +QTs7orcgkCIe/3UBRVGNGV0Dqo8oYfnFFXDmSYm2Cg+xv2IxLJKGDj6JzvJrmM+o7
+	 oRB1C5OIbPfppwyC2g3idUgOmJoheRXKnfdp8QJhu5zQlwCrhhhmqXSBb5K+3tAksk
+	 tb2pPY3F5rjha/cB88tnBb1kh0hueBUyvKehpqYssZYsxD56j84BHePlz6+RTaQMij
+	 fbWy4GWFfTOaw==
+Date: Tue, 2 Apr 2024 12:35:08 -0500
+From: Bjorn Andersson <andersson@kernel.org>
+To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+	Konrad Dybcio <konrad.dybcio@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+	Rob Herring <robh+dt@kernel.org>, Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Andy Gross <agross@kernel.org>, 
+	Andy Gross <andy.gross@linaro.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] arm64: dts: qcom: msm8996: Add missing UFS host
+ controller reset
+Message-ID: <g4a6gl47kfjx47ww36qnwp7zgvbd5gi5r7d26ibitfrybaa3l4@gvnz2mhsdf4s>
+References: <20240129-ufs-core-reset-fix-v1-0-7ac628aa735f@linaro.org>
+ <20240129-ufs-core-reset-fix-v1-3-7ac628aa735f@linaro.org>
+ <CAA8EJpphzwoCaetGfnM8dE478ic1-BMqXKA3XVLeC9j5BBu3SA@mail.gmail.com>
+ <20240130065550.GF32821@thinkpad>
+ <CAA8EJpqZYp0C8rT8E=LoVo9fispLNhBn8CEgx1-iMqN_2MQXfg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,48 +53,35 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240402123907.512027-8-dlemoal@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <CAA8EJpqZYp0C8rT8E=LoVo9fispLNhBn8CEgx1-iMqN_2MQXfg@mail.gmail.com>
 
-> +	/* We can remove zone write plugs for zones that are empty or full. */
-> +	return !zwplug->wp_offset ||
-> +		zwplug->wp_offset >= disk->zone_capacity;
+On Fri, Feb 09, 2024 at 10:16:25PM +0200, Dmitry Baryshkov wrote:
+> On Tue, 30 Jan 2024 at 08:55, Manivannan Sadhasivam
+> <manivannan.sadhasivam@linaro.org> wrote:
+> >
+> > On Mon, Jan 29, 2024 at 11:44:15AM +0200, Dmitry Baryshkov wrote:
+> > > On Mon, 29 Jan 2024 at 09:55, Manivannan Sadhasivam
+> > > <manivannan.sadhasivam@linaro.org> wrote:
+> > > >
+> > > > UFS host controller reset is required for the drivers to properly reset the
+> > > > controller. Hence, add it.
+> > > >
+> > > > Fixes: 57fc67ef0d35 ("arm64: dts: qcom: msm8996: Add ufs related nodes")
+> > > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > >
+> > > I think I had issues previously when I attempted to reset the
+> > > controller, but it might be because of the incomplete clocks
+> > > programming. Let met check whether it works first.
+> > >
+> >
+> > Sure. Please let me know.
+> 
+> With the clocking fixes in place (I'll send them in a few minutes) and
+> with this patch the UFS breaks in the following way:
+> 
 
-Nit: this condition easily fits onto a single line.
+Was this further reviewed/investigated? What would you like me to do
+with this patch?
 
-> +static inline struct blk_zone_wplug *
-> +disk_lookup_zone_wplug(struct gendisk *disk, sector_t sector)
-> +{
-> +	unsigned int zno = disk_zone_no(disk, sector);
-> +	unsigned int idx = hash_32(zno, disk->zone_wplugs_hash_bits);
-> +	struct blk_zone_wplug *zwplug;
-> +
-> +	rcu_read_lock();
-> +	hlist_for_each_entry_rcu(zwplug, &disk->zone_wplugs_hash[idx], node) {
-> +		if (zwplug->zone_no == zno)
-> +			goto unlock;
-> +	}
-> +	zwplug = NULL;
-> +
-> +unlock:
-> +	rcu_read_unlock();
-> +	return zwplug;
-> +}
-
-Did we lose an atomic_inc_unless_zero here?  This now just does a lookup
-under RCU, but nothing to prevent the zwplug from beeing freed?
-
-> +	/* Resize the zone write plug memory pool if needed. */
-> +	if (disk->zone_wplugs_pool->min_nr != pool_size)
-> +		return mempool_resize(disk->zone_wplugs_pool, pool_size);
-
-Note that a mempool_resize to the current size work just fine.  It takes
-a pointless lock, but given that this is something that doesn't happen
-frequently that probably doesn't matter.
-
-> +#include <linux/mempool.h>
-
-> +	mempool_t		*zone_wplugs_pool;
-
-Please use struct mempool_s here so that you only need a forward
-declaration instead of pulling in another header.
+Regards,
+Bjorn
