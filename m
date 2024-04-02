@@ -1,122 +1,159 @@
-Received: from mail-yb1-f181.google.com (mail-yb1-f181.google.com [209.85.219.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC29115A4BF
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Apr 2024 19:25:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FA7A2E415
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Apr 2024 20:33:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712085946; cv=none; b=tsQBNTztY9aNCBO0V/uNBwNV6Md1Quyyh9tw+q87zPNRTtdbWw5ZVmjolrVJS1gwdl/cs6rT5KLRs9os2XdSBcEpcG2yhIAezZWpoqg7w1BnT6Xb8KMu78aycFGiPi/kRPh6hutDzHCNNnc7fYPrcQc9YI2bpfpOR27fJs3TCB0=
+	t=1712090018; cv=none; b=Hed5cGzbhPAm7vm69GhD/+Ad9xMv7Nzhra2tnd0S7mhtieffnWh/J1KmC0/w8C3OzKg+/tUnAR8QCaDA1+nhrc/SpgTifJr0tBQVn68PrGHY057S7FfcEEMFPm7cJCLtU6XNgJPRuUgBmQ/QyWNC0TVzbhQw3Cx1TQ4mjINdwew=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712085946; c=relaxed/simple;
-	bh=nuVk2rrPA+78ak46RlwfYXTFyzdDDE2jrqhHVoV+Z1A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=aLJ0lRiS89A//5GwmHcELOmY6BLFJ/9jXdc5ykX62xV3kpXBNZSaPeNodL9ghgMZeNtfoDFxnyc/5PSP6u9Fg2Y1/Yuc2Lhwt5And9d8p4yptdK1BcEW3/1kDl0bv98cIAnhOg/D3xgKIxVq3DQyU3N311T4UZXvHQQeCqKeGZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=eRUKtcdW; arc=none smtp.client-ip=209.85.219.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1712090018; c=relaxed/simple;
+	bh=ROySLNzi2sYnSa/JtIXRjIYuaaAEqJzMqCJdYS2UTqE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Gx9m8mGq760hvnSDE5AjKz0BNKiIy0u85kyj3aDQFD3ZDeXyG+oxUZNld5M3NSjLPTYnrqkOQbYM5zubVvOCpIku8+yzMQMnHSIarfr/i6EWr+Tf5v/nmrOPItAtshCgvFh9NLvRu7dqrMYSQXVOWkiJKHcfTc7Uo3duZTZLW/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=NbtCvpUZ; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="eRUKtcdW"
-Received: by mail-yb1-f181.google.com with SMTP id 3f1490d57ef6-dd02fb9a31cso4837374276.3
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Apr 2024 12:25:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1712085943; x=1712690743; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Wt5s0i3Bf+a37LH9mW+EUzfbFaTvXfHBxqu8Vrd66jY=;
-        b=eRUKtcdWpe86riGzbCKgEMCvzWTToENpdJAPyKlfdEsr5PvWRL3utQ9r8TpBC7focN
-         j07zITPYqxGQRBL+l1Y4LFCUWZRVsv3h7iiDAqzKB2hKYt7EpYJfvDT2P4HFBl8zOkdj
-         V5AqF6oJ90MXGqdSsA2AAvv3q3yVeaY/vMkgcFUCUtX24PYWVSI4uXanASX1+EK/eipd
-         CKPiHMPgfO/+7VRw3s483x0njYoF4HaFXv4Qc/9SDT7YxBViSeyaAvK1HmwYT8zdxhKD
-         lX1KmDoIn3YEpBXpV/vqrOhV7jdbRtgjc1KvprkdxSwMzUiejJChi51BC8kFEcwylNww
-         fMmw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712085943; x=1712690743;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Wt5s0i3Bf+a37LH9mW+EUzfbFaTvXfHBxqu8Vrd66jY=;
-        b=rp/ckXbjeIwwVzrOrMc9VMEI9dieN55JWQzIuCzGTDPE3Pbal1BmO2ADST9q3Uzljn
-         v9EbqfYhC/Jl0gbuogueyXAKebnPp4IdRqCplveueMh1lotqowyEY+1rCYYaz8II+iOt
-         yC1H79GHaSwQK2t8IgDazxL82/IMarJJBSu7hR9/mffk4vC1Br6Nb/0d1OzwzTaD2Gy5
-         PZEwi0P/AoOkD4Ko8USTj2uT45o7RFkq3uJbPOLvMlDgp4KYk8B2dDLm4pyTaOP2xTg1
-         sCeg2zqywtg6GHj4jFiXaDVdaJy/YQVokLgPmVgISluD08TimCmQic4WXI0YRjesPDGs
-         od1Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXnDEbGXeaFvO/6uU3Oy2XzcPZI3l3pocuSIkd7qGpQBjbyYoyCyX/DmjXkqrRGVbe42M61B/LrIHrVUu4TEh34HW3lwFWo8zwJig==
-X-Gm-Message-State: AOJu0YwKviH3MbF5nzY0/5Ats56fLY06wOWylCnwMYeG29FjgpbsgZrX
-	Zbenz/OSN+rjkFOS+jL/wzwwOtJ/AKNZMycGkA1qz9B344eXKMpyZqGCXwWMqrQuJMcMrbpCmAB
-	enzQVBjmIUhcw68TsqJ05tU5gvZncOfesFLZjaw==
-X-Google-Smtp-Source: AGHT+IF0NCPeZnC/FxDzoqpqrxq4T4tmylOUOl34+HGr8LAiprE09JWVEjadMflb9rYYLe9n6G9XkDK88BIiin+WUmw=
-X-Received: by 2002:a25:b90d:0:b0:dd1:2f58:292b with SMTP id
- x13-20020a25b90d000000b00dd12f58292bmr10593508ybj.9.1712085942918; Tue, 02
- Apr 2024 12:25:42 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NbtCvpUZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1712090015;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=XkVVzn7sUlZgXUm5P4BgsrM9gYYoxT1YIoFUz7D2uhU=;
+	b=NbtCvpUZtQ/dWb+sAvdbDoUsGMhEuinz2W8Co67s0B/UIAaNLiXJGu7Z+cyx+sxES9ykpi
+	nLh9AfgSfXtOxt1K3dfMYXunjTM8HNKEOb6jPlIKrGJ2RSNib4jCeUzIaMX0bcrJUXd4O7
+	difLW6PrhPZ8Pi4mo73xsCxnYGfFwz4=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-209-ywO5jcPyNGiEQomcpy8Y7w-1; Tue, 02 Apr 2024 16:33:32 -0400
+X-MC-Unique: ywO5jcPyNGiEQomcpy8Y7w-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 16C6F946322;
+	Tue,  2 Apr 2024 20:33:31 +0000 (UTC)
+Received: from localhost (unknown [10.39.193.21])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id EF28B17AA0;
+	Tue,  2 Apr 2024 20:33:26 +0000 (UTC)
+Date: Tue, 2 Apr 2024 16:33:21 -0400
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	David Hildenbrand <david@redhat.com>,
+	Gerd Hoffmann <kraxel@redhat.com>,
+	Richard Weinberger <richard@nod.at>,
+	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Paolo Bonzini <pbonzini@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+	Olivia Mackall <olivia@selenic.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Amit Shah <amit@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Gonglei <arei.gonglei@huawei.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Sudeep Holla <sudeep.holla@arm.com>,
+	Cristian Marussi <cristian.marussi@arm.com>,
+	Viresh Kumar <vireshk@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	David Airlie <airlied@redhat.com>,
+	Gurchetan Singh <gurchetansingh@chromium.org>,
+	Chia-I Wu <olvaffe@gmail.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Daniel Vetter <daniel@ffwll.ch>,
+	Jean-Philippe Brucker <jean-philippe@linaro.org>,
+	Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Alexander Graf <graf@amazon.com>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Eric Van Hensbergen <ericvh@kernel.org>,
+	Latchesar Ionkov <lucho@ionkov.net>,
+	Dominique Martinet <asmadeus@codewreck.org>,
+	Christian Schoenebeck <linux_oss@crudebyte.com>,
+	Stefano Garzarella <sgarzare@redhat.com>,
+	Kalle Valo <kvalo@kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>, Ira Weiny <ira.weiny@intel.com>,
+	Pankaj Gupta <pankaj.gupta.linux@gmail.com>,
+	Bjorn Andersson <andersson@kernel.org>,
+	Mathieu Poirier <mathieu.poirier@linaro.org>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Vivek Goyal <vgoyal@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>,
+	Anton Yakovlev <anton.yakovlev@opensynergy.com>,
+	Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+	virtualization@lists.linux.dev, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-um@lists.infradead.org,
+	linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	iommu@lists.linux.dev, netdev@vger.kernel.org, v9fs@lists.linux.dev,
+	kvm@vger.kernel.org, linux-wireless@vger.kernel.org,
+	nvdimm@lists.linux.dev, linux-remoteproc@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	alsa-devel@alsa-project.org, linux-sound@vger.kernel.org
+Subject: Re: [PATCH v2 06/25] virtio_blk: drop owner assignment
+Message-ID: <20240402203321.GD2507314@fedora>
+References: <20240331-module-owner-virtio-v2-0-98f04bfaf46a@linaro.org>
+ <20240331-module-owner-virtio-v2-6-98f04bfaf46a@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240129-ufs-core-reset-fix-v1-0-7ac628aa735f@linaro.org>
- <20240129-ufs-core-reset-fix-v1-3-7ac628aa735f@linaro.org>
- <CAA8EJpphzwoCaetGfnM8dE478ic1-BMqXKA3XVLeC9j5BBu3SA@mail.gmail.com>
- <20240130065550.GF32821@thinkpad> <CAA8EJpqZYp0C8rT8E=LoVo9fispLNhBn8CEgx1-iMqN_2MQXfg@mail.gmail.com>
- <g4a6gl47kfjx47ww36qnwp7zgvbd5gi5r7d26ibitfrybaa3l4@gvnz2mhsdf4s>
-In-Reply-To: <g4a6gl47kfjx47ww36qnwp7zgvbd5gi5r7d26ibitfrybaa3l4@gvnz2mhsdf4s>
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date: Tue, 2 Apr 2024 22:25:32 +0300
-Message-ID: <CAA8EJppOPrSfD=VkHm8M0P07=mN_BikT=cGvLe6UFL3OpKVWzA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] arm64: dts: qcom: msm8996: Add missing UFS host
- controller reset
-To: Bjorn Andersson <andersson@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	Konrad Dybcio <konrad.dybcio@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Rob Herring <robh+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Andy Gross <agross@kernel.org>, Andy Gross <andy.gross@linaro.org>, 
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-
-On Tue, 2 Apr 2024 at 20:35, Bjorn Andersson <andersson@kernel.org> wrote:
->
-> On Fri, Feb 09, 2024 at 10:16:25PM +0200, Dmitry Baryshkov wrote:
-> > On Tue, 30 Jan 2024 at 08:55, Manivannan Sadhasivam
-> > <manivannan.sadhasivam@linaro.org> wrote:
-> > >
-> > > On Mon, Jan 29, 2024 at 11:44:15AM +0200, Dmitry Baryshkov wrote:
-> > > > On Mon, 29 Jan 2024 at 09:55, Manivannan Sadhasivam
-> > > > <manivannan.sadhasivam@linaro.org> wrote:
-> > > > >
-> > > > > UFS host controller reset is required for the drivers to properly reset the
-> > > > > controller. Hence, add it.
-> > > > >
-> > > > > Fixes: 57fc67ef0d35 ("arm64: dts: qcom: msm8996: Add ufs related nodes")
-> > > > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > > >
-> > > > I think I had issues previously when I attempted to reset the
-> > > > controller, but it might be because of the incomplete clocks
-> > > > programming. Let met check whether it works first.
-> > > >
-> > >
-> > > Sure. Please let me know.
-> >
-> > With the clocking fixes in place (I'll send them in a few minutes) and
-> > with this patch the UFS breaks in the following way:
-> >
->
-> Was this further reviewed/investigated? What would you like me to do
-> with this patch?
-
-I'd say, hold until we can understand what is going on.
-
-Mani, If you have any ideas what can be causing the issue, I'm open to
-testing any ideas or any patches from your side.
-Judging that the UFS breaks after toggling the reset, we might be
-missing some setup steps.
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="n4/kSvCMF0M05hCx"
+Content-Disposition: inline
+In-Reply-To: <20240331-module-owner-virtio-v2-6-98f04bfaf46a@linaro.org>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
 
 
+--n4/kSvCMF0M05hCx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--- 
-With best wishes
-Dmitry
+On Sun, Mar 31, 2024 at 10:43:53AM +0200, Krzysztof Kozlowski wrote:
+> virtio core already sets the .owner, so driver does not need to.
+>=20
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+>=20
+> ---
+>=20
+> Depends on the first patch.
+> ---
+>  drivers/block/virtio_blk.c | 1 -
+>  1 file changed, 1 deletion(-)
+
+Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
+
+--n4/kSvCMF0M05hCx
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmYMa5EACgkQnKSrs4Gr
+c8j8dggAqO8KJXvt+0JqXmgxsfDAxN196OA9Q6Rm7VF0fuMhGpVUUh/iuOtkH59k
+ho0oB9szUvz/1tXZEJPtShx/omt2iENmq22unjzWE7ZmNimALVjtXPaZNTCkYxJn
+Z9//Ks9v/lHCNFzLjSiKC94ktRVJLDXSmG7uEpbeutDrzN9TWRJ8DNnylKmm+qWR
+VDiL3/2+03gC5B/LovTli4ozZuS4JlG37Tnh2Z8ACNrcFC74nv45KtNuQLR+hNy8
+12jEUGkhADWps+fQH7bZebswT9ePfwTfA1xh0pXeeWKCkaiKcgFhZH+JcNQLkwkx
+fC80yZK4qnvU1SmzK2tpfzAk7jUMtQ==
+=5tJl
+-----END PGP SIGNATURE-----
+
+--n4/kSvCMF0M05hCx--
+
