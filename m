@@ -1,116 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06FC717C69;
-	Tue,  2 Apr 2024 04:49:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CFCD1B809;
+	Tue,  2 Apr 2024 06:02:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712033378; cv=none; b=GboywZ5WOf8T6XsSjQFBouP28xHUwuhcBNWUrOZUT4rEwh1blXL83TchmWRsOZL8/x15wanCHtXs75d6pfOkStcgm4k7jTCTT/oC1Vdv9tIeF9yaKoy7849yS2hqX5Su2K4aRWosdq8xY66RDpk+cfKrF5Jb2TfWBdZNul7sa1A=
+	t=1712037737; cv=none; b=qzSnIDO1OUvePlwqIUj5GRY42ZxYFto31ySs03Tcq9qrzpQ4KCTghIaALvRvh3QV7BYojAw9y5Yfpeha3GCLdXEeft4wUFWM+1sPM2lrnp+8DPIcZUGacQFfA8/9cFnDv6RSzQFI3zd7L/sIpITZ3mRAN1wRp67Xn9PXBemo3JA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712033378; c=relaxed/simple;
-	bh=HQDW3ERhmazGPaTptv5BcbYjzluSXrBysFXL+s0zZTI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CQKZIVAE3fXX8j0zcsv5C7FiBkG/YQTQhmvC4kHVR0ea3xP++1qfuvl29aqu7/yh8oQgI5e7BIGXt+U7CUC6vnLhK0mK9ZGOa/4fz0kco8PReV9IydhlMpss8VsMLxIkh0vU5ewEngTgYv5fkmKmvtfif5xc39esEuX+XZulOsI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZUhhC6Bo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712037737; c=relaxed/simple;
+	bh=Cbgxut4mvPDkO4bygdas+MVVnDdH9sN6VZh/k+ADYuQ=;
+	h=Content-Type:Subject:From:In-Reply-To:Date:Cc:Message-Id:
+	 References:To:MIME-Version; b=hlS2aj6+W7HcqgwAlFJRiySmEREZ7c6NUayVrFDaA5i3Gu0SbWI9c7MRX9T0iBx47/u7GHEfnSvgCK3xn/7VchU/82W0iUyABmV5MB5J+TCE4vetInzwSpAS6RfWeKItKEQgh0bpfg+51n3A9+UbBOpMG1vG0DTsWr0LQMjHcwc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ksdJFMMP; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZUhhC6Bo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C899C433C7;
-	Tue,  2 Apr 2024 04:49:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712033377;
-	bh=HQDW3ERhmazGPaTptv5BcbYjzluSXrBysFXL+s0zZTI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ZUhhC6BorLMhZ9OipVKnviMUmboMnGAM7QgD2vHP0Pb3DPuUtRJRcmvFxo+1KPOYn
-	 xTRjo+n70N/9+xNo1aCYu2GbH5cdKNbnkCxxdfy7Y1M2InC86p57u4VbUrKw2NM+r7
-	 +mEodWczZ5zWVCzQufJmnjBOFaUB6f+vYPpkjlu+6YoosoTc1iuo3fIAMEbQ614V9Y
-	 30Op1vzJOE4vnfmwhENdvYdjZIoi9dwBOe68OvN3pMwJgoHzgyWcWTFbxyphuwPw1t
-	 FxUO0X7Uf79j0/h9ccYIMNv4WMZU9BlehJjUpRRz8qUyn8oOz1RUcXDiBlWahykLiw
-	 dX4rZlYLKGydw==
-Date: Tue, 2 Apr 2024 10:19:28 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Andrew Halaney <ahalaney@redhat.com>
-Cc: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>, Janek Kotas <jank@cadence.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Can Guo <quic_cang@quicinc.com>,
-	Anjana Hari <quic_ahari@quicinc.com>, Will Deacon <will@kernel.org>,
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 11/11] scsi: ufs: core: Remove unnecessary wmb() prior
- to writing run/stop regs
-Message-ID: <20240402044928.GF2933@thinkpad>
-References: <20240329-ufs-reset-ensure-effect-before-delay-v5-0-181252004586@redhat.com>
- <20240329-ufs-reset-ensure-effect-before-delay-v5-11-181252004586@redhat.com>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ksdJFMMP"
+Received: from pps.filterd (m0353723.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 4325SUUp027429;
+	Tue, 2 Apr 2024 06:01:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=content-type : subject :
+ from : in-reply-to : date : cc : message-id : references : to :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=Cbgxut4mvPDkO4bygdas+MVVnDdH9sN6VZh/k+ADYuQ=;
+ b=ksdJFMMPm5uDIyHm1mAYDbxq4ffm8hp2k3PHdav1XwqglAcgASzMivNEDBvvV4TlC6vn
+ 3cwToVUemGug0RpNNaz7SMOhoB8sRMVzbekTgTNEV+e6wm8hP41vhfSVgEIc5mAJJ0kR
+ FbyMwjo8CTFPqFpUYfN7fhcCoCI1G+GqTd1zfxmhsD8psq/sZeemU8nc6sdklMmTMp8a
+ 8DctYUA1rP65b4Md9433PKhJ6h1cr1dd33JEEVjmIyYIddMHAX3vB7e5qYyqGcEbq1Ux
+ RhtQZChfz5HUHjdl9zmCLrHwT/K/5SjI1zapk124k7gZIuMmDQmAdiow+OVmVG1ye21T 1w== 
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3x8bw4g22n-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 02 Apr 2024 06:01:57 +0000
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 4322TAMc029563;
+	Tue, 2 Apr 2024 06:01:46 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 3x6ys2v6yd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 02 Apr 2024 06:01:46 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+	by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 43261hh654657390
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 2 Apr 2024 06:01:45 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 15A2020043;
+	Tue,  2 Apr 2024 06:01:43 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0419F20065;
+	Tue,  2 Apr 2024 06:01:41 +0000 (GMT)
+Received: from smtpclient.apple (unknown [9.43.121.120])
+	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Tue,  2 Apr 2024 06:01:40 +0000 (GMT)
+Content-Type: text/plain;
+	charset=utf-8
+Subject: Re: [PATCH v3] scsi: sg: Avoid race in error handling & drop bogus
+ warn
+From: Sachin Sant <sachinp@linux.ibm.com>
+In-Reply-To: <20240401191038.18359-1-Alexander@wetzel-home.de>
+Date: Tue, 2 Apr 2024 11:31:29 +0530
+Cc: dgilbert@interlog.com, gregkh@linuxfoundation.org,
+        Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        stable@vger.kernel.org
+Message-Id: <3FD93D06-41E6-4026-BCD9-574A724F18CD@linux.ibm.com>
+References: <81266270-42F4-48F9-9139-8F0C3F0A6553@linux.ibm.com>
+ <20240401191038.18359-1-Alexander@wetzel-home.de>
+To: Alexander Wetzel <Alexander@wetzel-home.de>
+X-Mailer: Apple Mail (2.3774.500.171.1.1)
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: iSOHUPgrqfw7kjrX1LFMWl7t2lVCUUoC
+X-Proofpoint-GUID: iSOHUPgrqfw7kjrX1LFMWl7t2lVCUUoC
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240329-ufs-reset-ensure-effect-before-delay-v5-11-181252004586@redhat.com>
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-02_02,2024-04-01_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 impostorscore=0
+ adultscore=0 malwarescore=0 priorityscore=1501 mlxscore=0 phishscore=0
+ mlxlogscore=922 lowpriorityscore=0 clxscore=1011 spamscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2403210000 definitions=main-2404020041
 
-On Fri, Mar 29, 2024 at 03:46:53PM -0500, Andrew Halaney wrote:
-> Currently a wmb() is used to ensure that writes to the
-> UTP_TASK_REQ_LIST_BASE* regs are completed prior to following writes to
-> the run/stop registers.
-> 
-> wmb() ensure that the write completes, but completion doesn't mean that
-> it isn't stored in a buffer somewhere. The recommendation for
-> ensuring the bits have taken effect on the device is to perform a read
-> back to force it to make it all the way to the device. This is
-> documented in device-io.rst and a talk by Will Deacon on this can
-> be seen over here:
-> 
->     https://youtu.be/i6DayghhA8Q?si=MiyxB5cKJXSaoc01&t=1678
-> 
-> But, none of that is necessary here. All of the writel()/readl()'s here
-> are to the same endpoint, so they will be ordered. There's no subsequent
-> delay() etc that requires it to have taken effect already, so no
-> readback is necessary here.
-> 
-> For that reason just drop the wmb() altogether.
-> 
-> Fixes: 897efe628d7e ("scsi: ufs: add missing memory barriers")
-> Signed-off-by: Andrew Halaney <ahalaney@redhat.com>
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-- Mani
-
+> On 2 Apr 2024, at 12:40=E2=80=AFAM, Alexander Wetzel <Alexander@wetzel-ho=
+me.de> wrote:
+>=20
+> commit 27f58c04a8f4 ("scsi: sg: Avoid sg device teardown race")
+> introduced an incorrect WARN_ON_ONCE() and missed a sequence where
+> sg_device_destroy() was used after scsi_device_put().
+>=20
+> sg_device_destroy() is accessing the parent scsi_device request_queue whi=
+ch
+> will already be set to NULL when the preceding call to scsi_device_put()
+> removed the last reference to the parent scsi_device.
+>=20
+> Drop the incorrect WARN_ON_ONCE() - allowing more than one concurrent
+> access to the sg device - and make sure sg_device_destroy() is not used
+> after scsi_device_put() in the error handling.
+>=20
+> Link: https://lore.kernel.org/all/5375B275-D137-4D5F-BE25-6AF8ACAE41EF@li=
+nux.ibm.com
+> Fixes: 27f58c04a8f4 ("scsi: sg: Avoid sg device teardown race")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
 > ---
->  drivers/ufs/core/ufshcd.c | 6 ------
->  1 file changed, 6 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index a2f2941450fd..cf6a24e550f0 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -4769,12 +4769,6 @@ int ufshcd_make_hba_operational(struct ufs_hba *hba)
->  	ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
->  			REG_UTP_TASK_REQ_LIST_BASE_H);
->  
-> -	/*
-> -	 * Make sure base address and interrupt setup are updated before
-> -	 * enabling the run/stop registers below.
-> -	 */
-> -	wmb();
-> -
->  	/*
->  	 * UCRDY, UTMRLDY and UTRLRDY bits must be 1
->  	 */
-> 
-> -- 
-> 2.44.0
-> 
-> 
 
--- 
-மணிவண்ணன் சதாசிவம்
+Thanks for the fix. I tested this patch and confirm it fixes the reported p=
+roblem.
+
+Tested-by: Sachin Sant <sachinp@linux.ibm.com>
+
+
+=E2=80=94 Sachin
