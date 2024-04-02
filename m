@@ -1,34 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B92018172E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C27D783CD4;
 	Tue,  2 Apr 2024 13:07:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712063228; cv=none; b=e1lM3SkQTOzG5zaweaAipWzg/MqyTuGUCQt8GndgbfQnhgG1n4SBYybPhvzH/Ze2TIZWzAQd5JV6wLgvczzYqi3fW6vvr/D4TUUmWs9FXGGR0yB5iqsdQw8d1UZP1bQOQMnxP+kH5Qfl/ESBaNue04nOrVVkPD+2wHHUWuhKQss=
+	t=1712063228; cv=none; b=K6S/HGh6GHMbXPTULg/koESYE1TdHCm146cMqfAqy+0LOg9T9dOaOodoy1/quQykwSPivkiGJTzrahZzSsvUOpAiCj2n/jRHPvv1fB96OZ3X+iPGPVbtD3MElJQpagLEAUv9cwjfPq7/8nqSdGKNmHxaBjDwV/+5HjFOKVHOqLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1712063228; c=relaxed/simple;
-	bh=2G2qEquSvx52a0PIlUVbUSvg2J45WYjkbhYl2DUcWj4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=QXjGgfghGv1bFWRGFW4zMXJkJhR3s4hZE0XCGb5Y4ejrqcz1szuvTGwMqq4GuILHCT1/9LhC7XXbeCK+n2Ta7keQFq46CLniyinEBv0GMMbuGFUx7m/R1lRMWVhpOIQoaX1Tnif1zk6617L5sKsfFLqSXe0ji4R6L8GIGNLsr24=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=5AkjCBFQ; arc=none smtp.client-ip=198.137.202.133
+	bh=D7JcJf5lW/nzXp/yCy9EfyN3UYaCdaFumjv+LGK1570=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=lU2GtRBaIB8363YpAFluq0Z/1Cc2IOCrfP8/X9aV7xdTiIUsaRFUr0Gnt/d614SXloSan4Aq832wnlf+ltGLE8z7kDxMsj6am3ETQR+w+FQrDI6+WvLFJn54TUyQGj69sXq7RxsylfaX8uRmiU2i8p67lwDzQzqqEkBIZHWrhqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=R2MxJ9Yr; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="5AkjCBFQ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="R2MxJ9Yr"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=WnMplBC7d5smH4h7cTd7I8II3Hw8mKB1V3xXI/Gj8Ow=; b=5AkjCBFQhxjVS5LWWNi/NcO0iV
-	++ife0rQkF5+K7pHBfNcw0qOjQ1Ni+NZziD4wUzw9LdougAsm7bg4SMKyHjQG6kpjQxdP2ABQpvrt
-	wrmtZQzz8hm/ZL9E8QXJY7jijlRSqnIlZDqSWqzkoreREb97xrGaoZ9ebTBgQ5p+VRwKCUamm/iWr
-	Oyr7FHydwy18VyBgTNoT+vm+eKGmgq2FrycG1sifTr9htnvkdJK7ZHMLnWHvOreWJG1KeGzpXqAQX
-	xyIuYdZiJzkwE7vUmttLZbVmVjWY/5d33qG+EloZo5g3jGbw7cpNFoA2s/dx9Asf4D+dTJvl0uJ+C
-	hNgI+mbg==;
+	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=Y6R85ITUqUhwT/3IQ1uLG/rghT5v0IaA7UulK+Ug8sg=; b=R2MxJ9Yr1BVlXxF84Ucl7ICA8T
+	rQZzabNCFpjStk6hZiIiont3ft5uHx8DkLAWtJk/5zAkpJO5aHteinHY1EUw+zd8US1h/E2mO7Plk
+	rD0GSftuofZ79m3HhJanX0V74OZGNv79e6BymzUuQNAQufaLrRUMEKuvVxgARPInnZcC9jcRmEkWo
+	HJxZgiVe+aSEVwI3NYYPU6IndNoIvzyEFArln7Yvcf4sYJSP+VNAY8xgRxwz+i9I1qFqp/pO9nXX1
+	UMcA2TT+cQH8RurB9XfblljG7HjpHamvgJNIe8BQBceWiNVmNJ2Dj/NvUy0KcxvKit2DLlbl+xHdj
+	Ylh/qAMg==;
 Received: from [2001:4bb8:199:60a5:c70:4a89:bc61:2] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rrdqh-0000000BFIS-12gL;
-	Tue, 02 Apr 2024 13:06:47 +0000
+	id 1rrdqp-0000000BFL1-15TB;
+	Tue, 02 Apr 2024 13:06:56 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -71,10 +72,12 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-samsung-soc@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net
-Subject: convert SCSI to atomic queue limits, part 1 (v2)
-Date: Tue,  2 Apr 2024 15:06:22 +0200
-Message-Id: <20240402130645.653507-1-hch@lst.de>
+Subject: [PATCH 03/23] mpi3mr: pass queue_limits to bsg_setup_queue
+Date: Tue,  2 Apr 2024 15:06:25 +0200
+Message-Id: <20240402130645.653507-4-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240402130645.653507-1-hch@lst.de>
+References: <20240402130645.653507-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -84,89 +87,53 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+Pass the limits to bsg_setup_queue instead of setting them up on the live
+queue.
 
-this series converts the SCSI midlayer and LLDDs to use atomic queue limits
-API.  It is pretty straight forward, except for the mpt3mr driver which
-does really weird and probably already broken things by setting limits
-from unlocked device iteration callbacks.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: John Garry <john.g.garry@oracle.com>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/scsi/mpi3mr/mpi3mr_app.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-I will probably defer the (more complicated) ULD changes to the next
-merge window as they would heavily conflict with Damien's zone write
-plugging series.  With that the series could go in through the SCSI
-tree if Jens' ACKs the core block layer bits.
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index ce5445eb9d0e4e..05e061fc6d3a06 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -1838,6 +1838,10 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
+ {
+ 	struct device *bsg_dev = &mrioc->bsg_dev;
+ 	struct device *parent = &mrioc->shost->shost_gendev;
++	struct queue_limits lim = {
++		.max_hw_sectors		= MPI3MR_MAX_APP_XFER_SECTORS,
++		.max_segments		= MPI3MR_MAX_APP_XFER_SEGMENTS,
++	};
+ 
+ 	device_initialize(bsg_dev);
+ 
+@@ -1853,20 +1857,14 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
+ 		return;
+ 	}
+ 
+-	mrioc->bsg_queue = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), NULL,
++	mrioc->bsg_queue = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
+ 			mpi3mr_bsg_request, NULL, 0);
+ 	if (IS_ERR(mrioc->bsg_queue)) {
+ 		ioc_err(mrioc, "%s: bsg registration failed\n",
+ 		    dev_name(bsg_dev));
+ 		device_del(bsg_dev);
+ 		put_device(bsg_dev);
+-		return;
+ 	}
+-
+-	blk_queue_max_segments(mrioc->bsg_queue, MPI3MR_MAX_APP_XFER_SEGMENTS);
+-	blk_queue_max_hw_sectors(mrioc->bsg_queue, MPI3MR_MAX_APP_XFER_SECTORS);
+-
+-	return;
+ }
+ 
+ /**
+-- 
+2.39.2
 
-Changes since v1:
- - print a different warning message for queue_limits_commit failure vs
-   ->device_configure failure
- - cancel the queue limits update when ->device_configure fails
- - spelling fixes
- - improve comments
-
-Diffstat:
- block/blk-settings.c                        |  245 ----------------------------
- block/bsg-lib.c                             |    6 
- drivers/ata/ahci.h                          |    2 
- drivers/ata/libata-sata.c                   |   11 -
- drivers/ata/libata-scsi.c                   |   19 +-
- drivers/ata/libata.h                        |    3 
- drivers/ata/pata_macio.c                    |   11 -
- drivers/ata/sata_mv.c                       |    2 
- drivers/ata/sata_nv.c                       |   24 +-
- drivers/ata/sata_sil24.c                    |    2 
- drivers/firewire/sbp2.c                     |   13 -
- drivers/message/fusion/mptfc.c              |    1 
- drivers/message/fusion/mptsas.c             |    1 
- drivers/message/fusion/mptscsih.c           |    2 
- drivers/message/fusion/mptspi.c             |    1 
- drivers/s390/block/dasd_eckd.c              |    6 
- drivers/scsi/aha152x.c                      |    8 
- drivers/scsi/aic94xx/aic94xx_init.c         |    2 
- drivers/scsi/hisi_sas/hisi_sas.h            |    3 
- drivers/scsi/hisi_sas/hisi_sas_main.c       |    7 
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c      |    2 
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c      |    2 
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c      |    7 
- drivers/scsi/hosts.c                        |    6 
- drivers/scsi/hptiop.c                       |    8 
- drivers/scsi/ibmvscsi/ibmvfc.c              |    5 
- drivers/scsi/imm.c                          |   12 -
- drivers/scsi/ipr.c                          |   10 -
- drivers/scsi/isci/init.c                    |    2 
- drivers/scsi/iscsi_tcp.c                    |    2 
- drivers/scsi/libsas/sas_scsi_host.c         |    7 
- drivers/scsi/megaraid/megaraid_sas.h        |    2 
- drivers/scsi/megaraid/megaraid_sas_base.c   |   29 +--
- drivers/scsi/megaraid/megaraid_sas_fusion.c |    3 
- drivers/scsi/mpi3mr/mpi3mr.h                |    1 
- drivers/scsi/mpi3mr/mpi3mr_app.c            |   12 -
- drivers/scsi/mpi3mr/mpi3mr_os.c             |   76 +++-----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c        |   18 --
- drivers/scsi/mvsas/mv_init.c                |    2 
- drivers/scsi/pm8001/pm8001_init.c           |    2 
- drivers/scsi/pmcraid.c                      |   11 -
- drivers/scsi/ppa.c                          |    8 
- drivers/scsi/qla2xxx/qla_os.c               |    6 
- drivers/scsi/scsi_lib.c                     |   40 +---
- drivers/scsi/scsi_scan.c                    |   74 ++++----
- drivers/scsi/scsi_transport_fc.c            |   15 +
- drivers/scsi/scsi_transport_iscsi.c         |    6 
- drivers/scsi/scsi_transport_sas.c           |    4 
- drivers/staging/rts5208/rtsx.c              |   24 +-
- drivers/ufs/core/ufs_bsg.c                  |    3 
- drivers/ufs/core/ufshcd.c                   |    3 
- drivers/ufs/host/ufs-exynos.c               |    8 
- drivers/usb/image/microtek.c                |    8 
- drivers/usb/storage/scsiglue.c              |   57 ++----
- drivers/usb/storage/uas.c                   |   29 +--
- drivers/usb/storage/usb.c                   |   10 +
- include/linux/blkdev.h                      |   26 +-
- include/linux/bsg-lib.h                     |    3 
- include/linux/libata.h                      |   10 -
- include/linux/mmc/host.h                    |    4 
- include/scsi/libsas.h                       |    3 
- include/scsi/scsi_host.h                    |    9 +
- include/scsi/scsi_transport.h               |    2 
- include/scsi/scsi_transport_fc.h            |    1 
- include/ufs/ufshcd.h                        |    1 
- 65 files changed, 347 insertions(+), 595 deletions(-)
