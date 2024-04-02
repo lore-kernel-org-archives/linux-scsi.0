@@ -1,103 +1,96 @@
-Received: from szxga06-in.huawei.com (szxga06-in.huawei.com [45.249.212.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCB962C80
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Apr 2024 01:10:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC03E8BEA
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Apr 2024 01:11:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712020245; cv=none; b=McktcjcX0Y2gnE4rDE66etIleoDATJZi8f4TklXfV4WvA1EmryVEg+cB17NAa6TF2rMW085mVJONaeu+Prb8Ue0VdkHoz6d0AMViOjE7fqug/ZMccmRuVX8Hs4d57pdxoKAhoII/cUipMVIFf10uOi9sMYhwd1uTWZX4ETk0x5Q=
+	t=1712020265; cv=none; b=tV+8EkU/boroSNKjBl+TsLqEw/6i5lsTcmQUP8NGRMTIk7uXNGBcQik7QBJj4J0Y2HbRPew4QIlywLXwHewcKfo6lclhXx0dtNZOWkpq6wvyP/8RORqyfLmYsm6Ssv+ncnFIfQeTaXr4JSfiHMQ6IJ+amqcwCJIxKHkEB3hhlU0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712020245; c=relaxed/simple;
-	bh=V8/St27ArTQL5tqlObHwhQetQTujD8T37bvwLFIYaIU=;
-	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=J1OPkYIy9Gn0zWrp1XpTctEwf/wt4bZtYySnGdjSKGx1ghyyUGbAbtfpL4C8/EV6hPIHvj2a/b84iZf2e6ICgbJ3xHWW0o9jVwvAd1aPa5ortSz87KoP4m0wrKhew6zVHJenpshvZkYpz78hD6MhGGydT9QA/15QvCpX6/K/iJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=hisilicon.com; spf=pass smtp.mailfrom=hisilicon.com; arc=none smtp.client-ip=45.249.212.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=hisilicon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hisilicon.com
-Received: from mail.maildlp.com (unknown [172.19.88.214])
-	by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4V7qY53WGFz1wpc2;
-	Tue,  2 Apr 2024 09:09:45 +0800 (CST)
-Received: from kwepemd200015.china.huawei.com (unknown [7.221.188.21])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3FF131A016C;
-	Tue,  2 Apr 2024 09:10:37 +0800 (CST)
-Received: from [10.40.193.166] (10.40.193.166) by
- kwepemd200015.china.huawei.com (7.221.188.21) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.28; Tue, 2 Apr 2024 09:10:36 +0800
-Subject: Re: [PATCH 1/2] scsi: hisi_sas: Handle the NCQ error returned by D2H
- frame
-To: Damien Le Moal <dlemoal@kernel.org>, <jejb@linux.vnet.ibm.com>,
-	<martin.petersen@oracle.com>
-References: <20240401054914.721093-1-chenxiang66@hisilicon.com>
- <20240401054914.721093-2-chenxiang66@hisilicon.com>
- <415f65a7-ffaf-42a2-a1b5-6182ccc3c3cd@kernel.org>
-CC: <linuxarm@huawei.com>, <linux-scsi@vger.kernel.org>
-From: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Message-ID: <dbe0c5b9-d014-a289-612e-32c71b8ac202@hisilicon.com>
-Date: Tue, 2 Apr 2024 09:10:36 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.2.0
+	s=arc-20240116; t=1712020265; c=relaxed/simple;
+	bh=K+gIFnrbGtUGSzuM7iuQNdshssEBZGFOgEQZnAusgK0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=dYmTcduhgGT/OPQxjp9BRp+7atWOZ16lkRCsXsSlT9B8PJVgwsmDalcuLuz+aHWirONYgmw1H9h6J/6NRYiYXP61vZlV0NUCc+vZh6SQDisiJ1kgtYIlGB+nCipoM97L6fF/MWeNK/EhD3Iw2A1Ce9grvN4e69xZNNcQkNsWafs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=jXogWh9/; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jXogWh9/"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 431HoWTr027615;
+	Tue, 2 Apr 2024 01:10:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2023-11-20;
+ bh=0FmXWKhEiIfLmfWM0BRbXQ/54sMWUqT3DHYjy69rZFo=;
+ b=jXogWh9/Ntfn+e8xQHjrNPAWceDzqhqs8yLj8YWNT4J+cRCqHvpgzqetqxBWBVgE6Aff
+ ascBpg3I+DMEEdGWf/jF48/gbZJeGBuihRN9XGD3DyjvExycObpKfFfQUTypIODqNYqU
+ d0QDok5CbnTaljkPESN0uQg2XyIZS3qymnjO3dPByWMtkS4r7l9iEBjsfrTy0rUujoCf
+ vU03+fJxCC3K1d07O1GdAleFUPRvkvgn43ijEvdgnf80xOX8SYwKscqa1GRlMMP44YMI
+ tV92HF3SGbwWnjeSi1udy93zfRYUGXm/NjPGTSkTj4iahGM3oxMFL3x44MIIwduRBgv1 mQ== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x6abubh91-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 02 Apr 2024 01:10:55 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 431N0xeR021368;
+	Tue, 2 Apr 2024 01:10:55 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3x6966c8fg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 02 Apr 2024 01:10:55 +0000
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4321AsND020327;
+	Tue, 2 Apr 2024 01:10:54 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3x6966c8db-1;
+	Tue, 02 Apr 2024 01:10:54 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Igor Pylypiv <ipylypiv@google.com>
+Subject: Re: [PATCH] scsi: libsas: Fix declaration of ncq priority attributes
+Date: Mon,  1 Apr 2024 21:10:43 -0400
+Message-ID: <171202016133.2068687.1746458816502971332.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240327020122.439424-1-dlemoal@kernel.org>
+References: <20240327020122.439424-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <415f65a7-ffaf-42a2-a1b5-6182ccc3c3cd@kernel.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemd200015.china.huawei.com (7.221.188.21)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-01_18,2024-04-01_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0
+ mlxlogscore=874 adultscore=0 malwarescore=0 spamscore=0 mlxscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2403210000 definitions=main-2404020007
+X-Proofpoint-ORIG-GUID: Vavud4fwIfnhviiP_QYRLqylBIsuRv0u
+X-Proofpoint-GUID: Vavud4fwIfnhviiP_QYRLqylBIsuRv0u
 
-Hi Damien,
+On Wed, 27 Mar 2024 11:01:22 +0900, Damien Le Moal wrote:
 
+> Commit b4d3ddd2df7 ("scsi: libsas: Define NCQ Priority sysfs attributes
+> for SATA devices") introduced support for ATA NCQ priority control for
+> ATA devices managed by libsas. This commit introduces the
+> ncq_prio_supported and ncq_prio_enable sysfs device attributes to
+> discover and control the use of this features, similarly to libata.
+> However, libata publicly declares these device attributes and export
+> them for use in ATA low level drivers. This leads to a compilation error
+> when libsas and libata are built-in due to the double definition:
+> 
+> [...]
 
-在 2024/4/1 星期一 15:10, Damien Le Moal 写道:
-> On 4/1/24 14:49, chenxiang wrote:
->> From: Xingui Yang <yangxingui@huawei.com>
->>
->> We find that some disks use D2H frame instead of SDB frame to return NCQ
->> error. Currently, only the I/O corresponding to the D2H frame is processed
->> in this scenario, which does not meet the processing requirements of the
->> NCQ error scenario.
->> So we set dev_status to HISI_SAS_DEV_NCQ_ERR and abort all I/Os of the disk
->> in this scenario.
->>
->> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
->> ---
->>   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 9 ++++++++-
->>   1 file changed, 8 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
->> index 7d2a33514538..3935fa6bc72b 100644
->> --- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
->> +++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
->> @@ -2244,7 +2244,14 @@ slot_err_v3_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
->>   	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
->>   		if ((dw0 & CMPLT_HDR_RSPNS_XFRD_MSK) &&
->>   		    (sipc_rx_err_type & RX_FIS_STATUS_ERR_MSK)) {
->> -			ts->stat = SAS_PROTO_RESPONSE;
->> +			if (task->ata_task.use_ncq) {
->> +				struct domain_device *device = task->dev;> +				struct hisi_sas_device *sas_dev =
->> +						device->lldd_dev;
-> Missing blank line after the declaration. And why the line split for the above
-> declaration ? That fits in 80 chars line...
+Applied to 6.10/scsi-queue, thanks!
 
-Will change it in next version.
+[1/1] scsi: libsas: Fix declaration of ncq priority attributes
+      https://git.kernel.org/mkp/scsi/c/0ff10cb7f818
 
->
->> +				sas_dev->dev_status = HISI_SAS_DEV_NCQ_ERR;
->> +				slot->abort = 1;
->> +			} else
->> +				ts->stat = SAS_PROTO_RESPONSE;
-> Missing the curly brackets here.
-
-
-Will change it in next version.
-
->
->>   		} else if (dma_rx_err_type & RX_DATA_LEN_UNDERFLOW_MSK) {
->>   			ts->residual = trans_tx_fail_type;
->>   			ts->stat = SAS_DATA_UNDERRUN;
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
