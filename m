@@ -1,180 +1,100 @@
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32BF417583;
-	Wed,  3 Apr 2024 11:48:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712144913; cv=fail; b=AKyapKJK9SGhsW4732zULzmCecF0Tib8S6UKV7D6VQb8TD9VCCCjAHE+MUrHPbixwzKgRArBOOUt64aDvOX3DIy/V/7ewZhpmB4wOAdFYTsGwcnR6UU2TzdgY0BdBLAUzb/D5Eq1KSeKQtJmeVgrMAjOg46UyYPPxuDt5Mnh77s=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712144913; c=relaxed/simple;
-	bh=m3gWaZJJ2S4bEC7Eiq2lGy7y+bSAesVW1AKfM5nrnPQ=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=AE+OHqhqgLK4TX7Ap3xxlvwVSjxoa+VowJa/4u0nuetDECKGhCoLtaoFH9yuYU/4iD8fr6tWYArR5yPdyuxur0ac0FPI0pD0/6MKgCSkRrR3Hj+s5YGmVfNypUZZ32QHWHe4YYB/fQPkBl4hiqmy7UxnH1/kfhy/7M3PCHvFEao=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=WMuLA+nf; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=T/2oeYFS; arc=fail smtp.client-ip=216.71.154.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91531145B2A
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Apr 2024 12:12:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712146337; cv=none; b=r3GCqXpRNt8cNZp4Avwv0faY5IEhKRPB+D/+a2HCoyGFQq40jOG8C66CZS/5H2e2A5hypAs8YjshxU0Ki5d/jJkLOp/OUK3GLUNogxdgzlwmkrFhwRI+CQNRuHS4nlSgNtepVdnJPW/3XjsIDJFLzX4s9VPwBfSfXJTuSHqO5TY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712146337; c=relaxed/simple;
+	bh=brj4KkxiuzB/cTaKYABW0xgl0MAd+mDFIIil3DRUwDQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RsARC/SVe+kUeYDHh61n3ndJ/mhS9y8xFlNr9s+CnZQA8ArUvpC86XczCYmmrl6eceDgD9+D+2YFVeL9comJKcRBYUB1sWf8IcqOcxh5YgYDakmH4EtnnHu7MZRFmQbWzI0R/fKxffOia2igMcj9QPAwTh+ZzRGT5Daw0pPIBug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ecKGVZdU; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="WMuLA+nf";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="T/2oeYFS"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1712144911; x=1743680911;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=m3gWaZJJ2S4bEC7Eiq2lGy7y+bSAesVW1AKfM5nrnPQ=;
-  b=WMuLA+nf3cYq814WECj8PjBDuY/LR0E19xfEAOQ8Aw07ZcYfgqqM+aH4
-   wANwCSjgP+iYpkPC8Op9UPCMJA6ddmjugdIZHgFVHhMiAkW/jLNaIgKR1
-   Jxo9qkKmOLFo7/tX+USEHLHn0InH2uaLHKpdHNjjP3AbKefP/7QNUMz9f
-   XCPycQDlsyeA8PJR2iCNrFQ3CU8V4aNNtJnUibwuZm8LrRB3Y7t4jMMiY
-   woW76w0KJX9gFa8kvsTovsakTpZpOQ1ipZn8BvfcGjno9LKHeLyUpHFz3
-   XQzB9cvhqYWbQOmcyhFLITVhH+QgBdGODCllmXHq9fQ5GMZMrxh1HA4Np
-   w==;
-X-CSE-ConnectionGUID: 9fQnMUwLSje06LufEYeS7w==
-X-CSE-MsgGUID: UUJ9LQ4QQAyCRc/N0QVWgA==
-X-IronPort-AV: E=Sophos;i="6.07,177,1708358400"; 
-   d="scan'208";a="12633034"
-Received: from mail-mw2nam10lp2100.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.100])
-  by ob1.hgst.iphmx.com with ESMTP; 03 Apr 2024 19:48:29 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VJsiYUQbf9l+SgJmIf4GTdJtiPZK1hZKfxRQl5Rt2Ik/FbYaehagrUSQ5Ce6X06Ms0Jh/Praq42wktD+2zBqXwoN5kVh2OvhRBS1W05zjVeR1r9NXtAL4MyAkbzYwRGyveztXTwxoT31Sed6pjyFZsltuv+JvwNOFV1ErY8YW7No6Gnxpj7s+f0p1hZCRkvA5t8HSVnzqQKsesPZMvwHOith+B9N97WlzP56IyxDhvv13+TyJ/SllJrb9zbz6iEQM346Bsj8dR900nspqCoSV2FLq23oW3nW83JbgTWQfEb25XiVLcjNyNSCFwJgswxta1J+3rgT8wNT8NOnnnMlCg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ec0v5/taZyNZN/Do9/tBAB4vB7E/zrGlhmkAcIBEkiU=;
- b=WuGFXJhimJYnyozftInnSMh7RMuJyYznW+FiFOI9PQ5Zw5oZZ1UVOPms6L7XUGS0kb4kan51VWE9bdPnlyo1cs95SHDG02uY6HS5y+NuNvOh9UDdeotxSOsXd8AqQU/LjL1hW7xQUiW8UNUpHYDiHzk2YNXwcfwjdDlZDJhFHCWnpsJebQSvqPP1QXqz1GVgJvZysQZwfUmFSi/2IYugA1UGBFQq6OqZ1TdIjxOYS1TupsSLECGxEsow3roiHj0yW9YOGsGqUWj/DiXnMZKbQAOaw7GrWy5gTpk/x/LUmFQncV6djBWcG9m7fqr+ZHjFUErMl2mFVwquuQ21KrrLuQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ecKGVZdU"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1e0d82c529fso53653465ad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Apr 2024 05:12:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ec0v5/taZyNZN/Do9/tBAB4vB7E/zrGlhmkAcIBEkiU=;
- b=T/2oeYFSSgbLmVuD5URyRlZevAUznxlcDX09oC1tNAPs6AbsC8rqdUyvP3jccnU2LQtPqZFgPvthgv0su0PY2VLk+t74aGR5DLHOj+TxdgnZ8ACJrhIdvMGK5wwtUXA0iWzky2j7cLhs244yQaatbSxIqF91z/XP7XFEfjn2paY=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- PH7PR04MB8684.namprd04.prod.outlook.com (2603:10b6:510:24f::5) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.7409.46; Wed, 3 Apr 2024 11:48:27 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::5395:f1:f080:8605]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::5395:f1:f080:8605%3]) with mapi id 15.20.7409.042; Wed, 3 Apr 2024
- 11:48:27 +0000
-From: Avri Altman <Avri.Altman@wdc.com>
-To: Avri Altman <Avri.Altman@wdc.com>, "James E . J . Bottomley"
-	<jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-CC: "hch@infradead.org" <hch@infradead.org>, Bart Van Assche
-	<bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2 0/1] Remove support for legacy UFS
-Thread-Topic: [PATCH v2 0/1] Remove support for legacy UFS
-Thread-Index: AQHagBbTPGmMe7yWeEGGwUC6QErk2LFWeSaw
-Date: Wed, 3 Apr 2024 11:48:26 +0000
-Message-ID:
- <DM6PR04MB6575D506E6E426B8B57F3C2DFC3D2@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20240327071714.757-1-avri.altman@wdc.com>
-In-Reply-To: <20240327071714.757-1-avri.altman@wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|PH7PR04MB8684:EE_
-x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info:
- uPHIAVfEYAmJUTMKhNcTo5uJKAj04X8XosvyZYktZqMjbDJFK1BexieS4iCMcbgoLOzKu15V5Ioo1sqLVdxJ14cbCMb/hmbc+JpIiqHR2tqdVJxFyk+bjday0RJW7x/6Kt8skkPP4dXrZFXwwZVm8pki3HkYzxZ4UD2P7PhOg9PQBYtEfjSneHiUqEs1FB+O4xGtaPNVrlzi1JUBjJXYdufS+ANg183edxasSUk0f32Y9adAhz8TV+dq2Qx2Q8jQ4X/a3dB5BoDvVgpu0RsMRGHOZ+r3XMw2OO9uT0xh2Td3YR913tdXJH9rGFzZ/YPv2lfb7PDLbKTD49QhI9Id+BQKg9xTGwrkXv0RRtV1/Z3H4EY68Xmt/wxGsWlS7q0Wx/Zz5gJaRbj8+C3uY3tk6B2vV7YF1jac1pSK6BUh+tYOVuBhhW4Rg8avHR64pjQD7n8m3gYhxQEyXzZQvrN7s/z9iAcPMfJDs0aGk5QOeUAzEPdYibFuQ5E8vv7iKsG6Yx9SjqCw+ieOV2vf9Qr7h8TICIl9QUgcaP6NayaTgwkubBVqWHTiy1UnfcorH8W9fPZGPlvcsmriaHbL1sDClSdMWj/3OK/4+9SMqrbfB3FjuTDOIY0NFfmVE6DWhjItDxTnZZ7ZzguLj+amMzRcTkYMgiU54bDn6acVGHOen44=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?76p1QBlanRl+fDj8RV3a40Z0o3AXm70jG9d2+X/rjgPeRvDedky9UCPdV7HB?=
- =?us-ascii?Q?N3wM+6pS4ZlOJnWTbM6KDq/EMYP9/jTXJy5WH6ioW3z0PAQVM+VN0ZrALStg?=
- =?us-ascii?Q?z0ClR2LjAGP8kYx/gH1kWio1RMlysRRv9k6xFurWKlKUEm1ywUh/aUxa8GA+?=
- =?us-ascii?Q?5yyTwPsyA1Sn+7uf4KAnetAO5HZ25x1lrTPQ624nPvlQLoVPaHpjyCnjWKTS?=
- =?us-ascii?Q?sKQ1BeNJWg/3EQcxUqHBS+EqRUArECrIi4Lz8NL3kn4gYpIu7Aa2wGDAjamI?=
- =?us-ascii?Q?3hEik5B8YnTrsMATNtj4lO9ogB2pVA8dNyBg5x0F5KKlj9bWl5L+BGZ4LDgv?=
- =?us-ascii?Q?aAd65Dkt1Dry05oH432KwhyVfcn1nweM/91XDoSvtFa4djQZOf9J65SE2ND1?=
- =?us-ascii?Q?IlWJhjpAH/mhwZUA4JhHM3EZ0ZvRBWV9OCDXPVAQTsDlhRobmko7sRpYp07m?=
- =?us-ascii?Q?N51/h6/1LxheKeZvGlj2zitBGCFyzHlHcbNeZj6oyHykO/FcEi5GTIj2JlJa?=
- =?us-ascii?Q?xVDnI7Ix55SqOdBzSsia0woZRkwfbIFm46G87d/2K5x2wSP9EsDYEb3OjGFn?=
- =?us-ascii?Q?6A8bhyIYn44kPnObZwzxNPl5+FW1wxSMbm0fT0DAp7X0WLyPT8kOSf0qqEYJ?=
- =?us-ascii?Q?FuBP6crKsWkJ09hY5zKzv8/4ZMTHMhDupX1IJNSvHPPPHi6hDr3xHZBQ9QzS?=
- =?us-ascii?Q?CsvMNvxrZgvDwYbFP6/1vUE+jXNfsYVNhn26zN8ElOwH8+sgi7P4FBpZu0Kx?=
- =?us-ascii?Q?VOKZFktjK5ve1PzFCclxKthlfhI69GutdkR/c6ffAgnLD0XCZidabUm7J9bW?=
- =?us-ascii?Q?AfNf2dI18EyZCk78f4uAZMIm9lMC8/47pXOTdL3L05+1C7LMtRpcEOYjWeac?=
- =?us-ascii?Q?puK2IuZy8sFGeHgflosE0rrGB6Qc6cztUuhXJ7utjkI3L9dd1NG1TYhtmAt3?=
- =?us-ascii?Q?TcsH6e+89kbaiYLtFoMD3OstmmMu2QmCEFNi3/DFa0L+1AulLdVBs1Dru34Q?=
- =?us-ascii?Q?1hsUolLYwyQ0FmEtys3TMgDyS2B2awlsDeIWkI+/TD1s20NdWKRnVWxYEIY6?=
- =?us-ascii?Q?V7rajLibHeGH5lV+aTVLs435fI+5GUHoTpzmqeLFhq+iZ/3GCZ2l5N98t25Z?=
- =?us-ascii?Q?dOFiDQw9plFyjG8C/u3Bs//lgzyALB8o3rxLkbZXx7QaKX2JU7wEcF3G021F?=
- =?us-ascii?Q?LEl0KmQVk7vCLDy1QAchK+DnDhmtfljZz4ac3CW0Lg+y1bEfi9Zg3OejlEh8?=
- =?us-ascii?Q?RYcAkEjJUOoZoAG6qWH+8sf5h6vzwXOUjb/oKQTMtgCpKo8OZ9qe+qiujDCP?=
- =?us-ascii?Q?NbMSmZJUeXGBpaCKeThKg1Bejds1dEj7+bLJbOB42Nok7g9pn912+LeNhUsT?=
- =?us-ascii?Q?2HuR/DWnRfcFbggKFZiA4DdIUSihXRhLvOVOn3y1CFiyaHXKDlJ3mHYBh0+s?=
- =?us-ascii?Q?AzLdk1V25j0HMpuTE6WxgybDEfxmUo9zs8zw4MZt/exY62567QpSlStqHlRt?=
- =?us-ascii?Q?3RjRnkth1JLnq7xGq1/A4uKe11YoUIz4GQ9iSf77saNVQxQOp/euA08dpKjI?=
- =?us-ascii?Q?3w1xaxnQjmZf5NJ+lzxZ1Wt9ipAJZjyxA7Gcm+O2?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=linaro.org; s=google; t=1712146336; x=1712751136; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=BruioLBkFU/4Gr8BIJ48KpNZhiGvLxDKNkifr5Fva6A=;
+        b=ecKGVZdU8bhNPOpAvLxziCRXwbUZUX8cMZsuid5A/T/ooIhW/535QZ/1NlopqlyS9C
+         dCx4gdliNUeIHps69L+yl7pi+6fMraB0ek0+OmtX5Otla7doi6uEyKpBTNSTi63f5dA8
+         docrsXAbau2BcyALZwP1Bkj6DExFqjBZ06elIc4qLhnBO/iUXGe0MpfPFdJndxKsaRiQ
+         AZQYeFBp4BJMaAQFx1WUvW0Vzhjym5bZ26pxkBZmPBzdUjPzQimi+Uoq0X0HOLTX2ehr
+         qDui1+k6p5UTfYpQSYT0YvH+xX91jIqVfG4t47NqubEqn8XK6PFv6yhFnDGj42QoGCHb
+         lYAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712146336; x=1712751136;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=BruioLBkFU/4Gr8BIJ48KpNZhiGvLxDKNkifr5Fva6A=;
+        b=u5ENKV6WIXZh2rOKHAYycEi7/t6910BP+hq3K8AZjw5LtK0Y4eDbwT6YYfUueLhu7D
+         u8hAX1DrL2TSsr70BnxmjWeNrzSQlcDGpG59kP1wX+C5WFtNxKzk9V0aTDRG/xN7MkWH
+         jOP7NG9rMrnN48qU6P6cZepzUm+mgs4Yek450hhnk6wxLxWErZANcPMu/RHRWdRiAvKN
+         18vMUyJqDpkttdcHjqfRNI31qwsajXZnVqVXBgg3T70GnhzIxbD0CNR3guvQwKQMLnUx
+         A9pwhZyNKb9HAmVUxBQAXNP3Z63uCCvoR0cvvF82P0jX2b8ztLeSFDUVVAJ9OMgAP0A8
+         qCqg==
+X-Forwarded-Encrypted: i=1; AJvYcCWdav70IKNdmuYtCzDSaN6rVq/zemoF7saOBS8QzErPlF9QITVMjmPkQMRhTH/mgBOInRLXMutexZNMdeMOj0QWxpdrh+btC93DUw==
+X-Gm-Message-State: AOJu0YzVj5zTfC+w3/H/XXI+5fvegys8uElePK5SQUHD9Lb554YTEOMJ
+	5GVSRUBg/x1WX9f/eXBpxNnTW9PwzSO/C2hFGMcdu3/Q0+CRVe2ddkp1F7VJuQ==
+X-Google-Smtp-Source: AGHT+IG9NG4VxPu4A8bz2c/Sxzuq1eBAlbG1/HgvyTLPbTBK7p4H9R0/kt20ykZuifHv/l0Kuczj7A==
+X-Received: by 2002:a17:902:784d:b0:1e2:7aaf:65bc with SMTP id e13-20020a170902784d00b001e27aaf65bcmr3297593pln.34.1712146335487;
+        Wed, 03 Apr 2024 05:12:15 -0700 (PDT)
+Received: from thinkpad ([103.28.246.48])
+        by smtp.gmail.com with ESMTPSA id j8-20020a170902da8800b001e205884ac6sm13072185plx.20.2024.04.03.05.12.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 03 Apr 2024 05:12:15 -0700 (PDT)
+Date: Wed, 3 Apr 2024 17:42:10 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Konrad Dybcio <konrad.dybcio@linaro.org>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Amit Pundir <amit.pundir@linaro.org>
+Subject: Re: [PATCH] scsi: ufs: qcom: Add missing interconnect bandwidth
+ values for Gear 5
+Message-ID: <20240403121210.GJ25309@thinkpad>
+References: <20240401-ufs-icc-fix-v1-1-3bac41bdfa7a@linaro.org>
+ <e2206445-d560-43ad-8fb1-f0b4967493f2@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	Hx3bQULEPSmotFPfY1vmvLiVeJCZvofgJeGVXU+hQ3z4yzkI2Oornh6MKG0BXgKzTADzCBVU/zEpTfcqtXYczSwgXZh57WZ7VQ14ABna51U4Ur0Gc2/TxReS9QAkAp7fTQkeGqJC8gI7Ip4xNMg1ywjn1eJlrkX6ngh3qGmqIH5ULGUs4jq7ccUsO4Kw+bxvuXGXVUUEUKk2500DBEkRZDV0sLgvfDG69kUv1aca83Calw1FvgOP6pwOSj87j8N+q3fsBWn3UGxS0IyJ4OVTdavTdMFtnKi1b/3AKdBBDoBfrW/4YEiwGvPl/fzcb62gC2KeCQGQ8c8J8sKbm02UG9a+3+zcMVar245bm5l4NfN/Z3K/wk6tSeRvFbCJdxt55u97AlPaufyAqa5xjyiAkWmJmN1tn4iB4/h3WPL9FnU1JNYxwlT+86zdfY2sEE0Lu7HuEIagr0vu7Zkv0D0+18Fg20ybKykF/zJhlM2/vqbklO/w96uucSJ/4gNQggyVlPhc9S+SGY3ODNQAnXZOQtGCvChc4Qa7XT/1X2oBTNDTUIAATBb26a2Al5VibKI6a+xvuWyZjNr7vyjqFQ+GXu+6kuLH6eX/7a8V4ABBT1IRGJZAh5f46QJlKENjM5b9
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d4867168-b922-4be1-033c-08dc53d3f990
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Apr 2024 11:48:26.9396
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 8EyioNHS5u6Qmb19/+6mpYMm6wXMcF1qcGZFWle2F6INgtUMB2IuiGIu/0taYqnYSX1WnCm7ocnfeYnHCXGIKg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR04MB8684
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <e2206445-d560-43ad-8fb1-f0b4967493f2@linaro.org>
 
-Martin hi,
-Could you please take a look at this?
-I have another cleanup series pending.
+On Tue, Apr 02, 2024 at 04:48:40PM +0200, Konrad Dybcio wrote:
+> On 1.04.2024 5:09 PM, Manivannan Sadhasivam wrote:
+> > These entries are necessary to scale the interconnect bandwidth while
+> > operating in Gear 5.
+> > 
+> > Cc: Amit Pundir <amit.pundir@linaro.org>
+> > Fixes: 03ce80a1bb86 ("scsi: ufs: qcom: Add support for scaling interconnects")
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> 
+> Skimming through the code, could ufs_qcom_get_bw_table use a
+> WARN_ON_ONCE(nullcheck)?
+> 
+> FWIW, this change looks sane (without checking the numbers)
+> 
 
-Thanks,
-Avri
+This really makes sense. Will add a patch in v2.
 
-> UFS1.0 and UFS1.1, published in the early 2010s, were more of a proof of
-> concept rather than a mature functional spec. Toshiba was the only
-> device manufacturer with the most accomplished phy team to come up with
-> a small UFS1.0 device. Alas, there were no commercial platforms it can
-> be paired with. Even UFS2.0 that was published in 2013, didn't really
-> make it to the market: too moot to take effect. It's not until UFS2.1
-> that was published in 2016, were a myriad of devices and platforms
-> flooded the market. Designated to mobile devices, dictates a rapid short
-> lives for those platforms. Hence, we can safely remove those pre-UFS2.1
-> pieces of code.
->=20
-> Changes from v1:
->  - remove ufshcd_get_local_unipro_ver which practically mean squashing
->    patch 1 & 2 into a single patch (Christoph)
->  - restore an if clause to avoid functional change in
->    ufshcd_compl_one_cqe (Bart)
->=20
->=20
-> Avri Altman (1):
->   scsi: ufs: Remove support for old UFSHCI versions
->=20
->  drivers/ufs/core/ufshcd.c   | 174 +++---------------------------------
->  drivers/ufs/host/ufs-qcom.c |   3 +-
->  include/ufs/ufshcd.h        |   2 -
->  include/ufs/ufshci.h        |   7 --
->  4 files changed, 15 insertions(+), 171 deletions(-)
->=20
-> --
-> 2.42.0
+- Mani
 
+-- 
+மணிவண்ணன் சதாசிவம்
