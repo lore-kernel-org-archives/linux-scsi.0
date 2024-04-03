@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBBA35822D;
-	Tue,  2 Apr 2024 23:38:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E17E115AC4;
+	Wed,  3 Apr 2024 00:33:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712101099; cv=none; b=jZfScqcV96xRinRDxjhcs3KgnotYGb9XI68KNr0qXau7Lvs0glQx6H/UdlmHPvlm+D1bOe+RBX58M1Q5h62PTmR8QfMfg4rKRAX65QalvgQRmk5O5VtUVyNhN+qMf3EZC/q+QDoJYdBpXWImpxwCD2MCjPLRnnBT+gOztO4OaYE=
+	t=1712104414; cv=none; b=mBIHp9hgS7MNLZtcG0AKWmWnMSu1IuWAQBZFY6xdgUq3ZVzay5SGCCOc6YK73Q4d9hHf4tbnpDmKfAy8tajbm1F2TH7iyn257uNQi0Wj32lhXjmsbWmXMvhvHlBRGC5RZROwnkw1d2/xfPJIRJ9bomuWglJDMCws7O/80a2sL24=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712101099; c=relaxed/simple;
-	bh=sgzdOOTlPRAcyjDATGjL0e/ioWdozPuqfHkfUOvJzhY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gj7r3jlr93UtofpkmOFuDgCqFQn71tmuMylFOMkB9DHz0m2XE1fnBSmKKIkyAeLBlgwFqJdPI6Z2fTckejUUrNfurEly9EghB2TuysmoZ9it+P3EvRPlZNV0nai+tg1Zm9yTrnRVnpa5rJdqqgqP1TuQLSlRUkOlLm2+bFGR4y8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZV5Bdh8O; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712104414; c=relaxed/simple;
+	bh=9rVFT8lEiXwwEQGVXwFX3otLVQCYNh4uDYylC4oXnT8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=uumJEb3PEayHC8XGUJl4S2PKnzgj+DEXc9o3A/GBZAxOa1Nqx7Es0ats/m9jtEFxpD3PrvZIzCuPTyU5654afaPSkABum563eKmY2R495RPb3QhTIOclLQAXA1XoDnZlC2rNLFlycmi2Uv1x9QIz/SltW0hltbeC8RUF2f8gaSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hIvT5O9g; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZV5Bdh8O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0203AC433C7;
-	Tue,  2 Apr 2024 23:38:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hIvT5O9g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E49C1C433F1;
+	Wed,  3 Apr 2024 00:33:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712101098;
-	bh=sgzdOOTlPRAcyjDATGjL0e/ioWdozPuqfHkfUOvJzhY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ZV5Bdh8OIS5ylPi6KFi0KwQIIr+qg3NK5KE9CxpEW+4kEjnQNpjSm2REcBpnDM1y+
-	 Kf2CB5YvES8uRsi2zfP9lSysTzoC6F6q9erqwbtJIVQq++KjABdyu01CmrecCCkfrz
-	 k8eedIkEEjpsf6Vn/GxapPMSpWQp1NhyEXEVu9sUk0BUszhLqY5LGOhrPkZ5rHWwWo
-	 seIRIwGopTZkvqiE4f06kP8Pi4azW1VTpGhjZ8NENGen2cGZgXhvfoLIryY+wiEpxG
-	 LSblSMkLL0l+uyFjKF0w4ylQxFPTzf/fFMVOqfB2b5UM7/w6TtRGS0/WzIP0ZBGV4o
-	 hkSa7cRNSDL5w==
-Message-ID: <e923b1cf-9683-4029-8a39-c66aa8fb2647@kernel.org>
-Date: Wed, 3 Apr 2024 08:38:15 +0900
+	s=k20201202; t=1712104413;
+	bh=9rVFT8lEiXwwEQGVXwFX3otLVQCYNh4uDYylC4oXnT8=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=hIvT5O9g/kS5pPbKKfu8tYXKO6LLPT1S2P6ShP5DThpaqhnFYWotIK3vzLOCuTLNs
+	 2ItIfydaybA/kQP9c4kRpVQBo15OOl57fVMDxB35dDmx+bYjZcLHe1oqVTJRujN/Bb
+	 vpWvJm65jTpGIqJIZhFYVV9YrxLuPuaKlC0Dsy2mjA76P1Y7xRexmeMhmZXErrK/H3
+	 fVPkNkFxdAZkZHbaMe6k29VpRkAow/13qUiTEHnisBDf8QdGMsAmd7x5qHLOqEdMWG
+	 OPy3u6S8CElVS1LqzjncpJHaY9kR38z+c5XWtYr7ujHR1C6v8kmx031RxsQs4nCmY7
+	 YoHCFyCr1LOsA==
+Message-ID: <2703a06b-9144-4f44-b14e-fb94cc235b9d@kernel.org>
+Date: Wed, 3 Apr 2024 09:33:30 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,69 +36,75 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v4 07/28] block: Introduce zone write plugging
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
- linux-scsi@vger.kernel.org, "Martin K . Petersen"
- <martin.petersen@oracle.com>, dm-devel@lists.linux.dev,
- Mike Snitzer <snitzer@redhat.com>, linux-nvme@lists.infradead.org,
- Keith Busch <kbusch@kernel.org>
+To: Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org,
+ Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
+ linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
+ Christoph Hellwig <hch@lst.de>
 References: <20240402123907.512027-1-dlemoal@kernel.org>
- <20240402123907.512027-8-dlemoal@kernel.org> <20240402161213.GB3527@lst.de>
+ <20240402123907.512027-8-dlemoal@kernel.org>
+ <25fd8351-d649-445f-84fb-ed1705275859@suse.de>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20240402161213.GB3527@lst.de>
+In-Reply-To: <25fd8351-d649-445f-84fb-ed1705275859@suse.de>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 4/3/24 01:12, Christoph Hellwig wrote:
->> +static inline struct blk_zone_wplug *
->> +disk_lookup_zone_wplug(struct gendisk *disk, sector_t sector)
+On 4/3/24 03:26, Hannes Reinecke wrote:
+>> diff --git a/block/bio.c b/block/bio.c
+>> index d24420ed1c4c..4ece8cef1fbe 100644
+>> --- a/block/bio.c
+>> +++ b/block/bio.c
+>> @@ -1576,6 +1576,13 @@ void bio_endio(struct bio *bio)
+>>       if (!bio_integrity_endio(bio))
+>>           return;
+>>   +    /*
+>> +     * For BIOs handled through a zone write plug, signal the completion
+>> +     * of the BIO so that the next plugged BIO can be submitted.
+>> +     */
+>> +    if (bio_zone_write_plugging(bio))
+>> +        blk_zone_write_plug_bio_endio(bio);
+>> +
+> 
+> Can't we move this check into blk_zone_write_plug_bio_endio()?
+> We'd need to check it anyway ...
+
+The goal here is to avoid a useless function call for regular devices or read
+BIOs. There is no double check as the flag is not checked again in
+blk_zone_write_plug_bio_endio(). Same comment for the other points you raised
+(except the last one, see below).
+
+If you really insist, I could play games with inline functions to "hide" the
+check though.
+
+>> +/*
+>> + * Called from bio_attempt_back_merge() when a BIO was merged with a request.
+>> + */
+>> +void blk_zone_write_plug_bio_merged(struct bio *bio)
 >> +{
->> +	unsigned int zno = disk_zone_no(disk, sector);
->> +	unsigned int idx = hash_32(zno, disk->zone_wplugs_hash_bits);
->> +	struct blk_zone_wplug *zwplug;
+>> +    struct blk_zone_wplug *zwplug;
+>> +    unsigned long flags;
 >> +
->> +	rcu_read_lock();
->> +	hlist_for_each_entry_rcu(zwplug, &disk->zone_wplugs_hash[idx], node) {
->> +		if (zwplug->zone_no == zno)
->> +			goto unlock;
->> +	}
->> +	zwplug = NULL;
+>> +    /*
+>> +     * If the BIO was already plugged, then we were called through
+>> +     * blk_zone_write_plug_attempt_merge() -> blk_attempt_bio_merge().
+>> +     * For this case, blk_zone_write_plug_attempt_merge() will handle the
+>> +     * zone write pointer offset update.
+>> +     */
+>> +    if (bio_flagged(bio, BIO_ZONE_WRITE_PLUGGING))
+>> +        return;
 >> +
->> +unlock:
->> +	rcu_read_unlock();
->> +	return zwplug;
->> +}
-> 
-> Did we lose an atomic_inc_unless_zero here?  This now just does a lookup
-> under RCU, but nothing to prevent the zwplug from beeing freed?
+> See? you have to check anyway ...
 
-Nope. When disk_lookup_zone_wplug() is called directly, it is always for
-handling requests/bios which are holding a reference on the plug and because
-there are requests/BIOs in-flight, the plug is marked as busy
-(BLK_ZONE_WPLUG_PLUGGED or BLK_ZONE_WPLUG_ERROR are set). In such state, the
-plug is always hashed given that disk_should_remove_zone_wplug() retturns false
-for busy plugs. So there is no reference increase here. The
-atomic_inc_not_zero() is in disk_get_zone_wplug() which calls
-disk_lookup_zone_wplug() + atomic_inc_not_zero() within an
-rcu_read_lock()/rcu_read_unlock() section.
+This is the only function checking again, and for a good reason as the comment
+above the check explains.
 
 > 
->> +	/* Resize the zone write plug memory pool if needed. */
->> +	if (disk->zone_wplugs_pool->min_nr != pool_size)
->> +		return mempool_resize(disk->zone_wplugs_pool, pool_size);
+> Cheers,
 > 
-> Note that a mempool_resize to the current size work just fine.  It takes
-> a pointless lock, but given that this is something that doesn't happen
-> frequently that probably doesn't matter.
-> 
->> +#include <linux/mempool.h>
-> 
->> +	mempool_t		*zone_wplugs_pool;
-> 
-> Please use struct mempool_s here so that you only need a forward
-> declaration instead of pulling in another header.
+> Hannes
 
 -- 
 Damien Le Moal
