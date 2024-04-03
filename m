@@ -1,48 +1,48 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8278A156242;
-	Wed,  3 Apr 2024 23:09:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C33D29CA
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Apr 2024 23:20:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712185768; cv=none; b=Pf1CM7O8bqsgUKujaiOMrWGL6F7xr3C6leTfqbpNj7Q7UjJOSLWi7kY1LvCmYrmucCpRlo6QdHNJ4wL1gjgZuFHXwxIfIYVWr9jwUgMPlFdUUQZZjzNNcDN0pkfWjpxEMN/QWsdC8qI/vE3OndnytcyUn5dOY00+k8nAetEJXvc=
+	t=1712186453; cv=none; b=PH7mFSQJJu6y4NDFoxxU6YT/PEhGaKsTPfj9IeDMVB540DpssGoqwanBBepT5ylBg8Hiylpvg5Tx0+oewU04GyXXXKhG7/iw7s1TTnAuAKG4nDM3y4ySBtrcrlZ/otRbd1ENaZ+oDwHXOZMTU39RndXd8CHIIejwJSRO621uwtc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712185768; c=relaxed/simple;
-	bh=JZaWqQe7qrNbxm00OG1kS0UmQaJfbXU4V+FHQI8UPkc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rPMLij3NeLeEzubPrDLvxSiq3XJ3YvRMWmL/NBlv56X4FoCeyZCGUAJ3sj/N3OCbK/rNlBUBVbBPmqT+yvOMMPK0iSEsE8ciJ7+VqZJ9s8XJio95oDbjwcSgMyAVQCP8r6mI0UEid3lGSLD6l9UOqOkD8zrppTHpdWOLHf8fE5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=wjnAgY7D; arc=none smtp.client-ip=199.89.1.11
+	s=arc-20240116; t=1712186453; c=relaxed/simple;
+	bh=SVPJSCc/kzYeBx3Hm+KXt0+4c83hf7OMsuqnXLRM0hA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=mEF4+LS7t2JeC+caRnqUWaEYylRLz1BB7D2o/273Yq/1qdwAf3Gv4k+4yvKOmKLQMKu3DspDKUW84o1rq0feyMCCUgSxz0/uUEXblnPcLd/TlM7dI9Y52SuZgi0rXppfKIfuy+flYOLCF7eYv9tGf1bs4bzOG3MuvqbOCOmmMnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=XZ7UJUn5; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="wjnAgY7D"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="XZ7UJUn5"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4V90nK18LBz6Cnk95;
-	Wed,  3 Apr 2024 23:09:25 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V912W4SKVzlgTGW;
+	Wed,  3 Apr 2024 23:20:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1712185760; x=1714777761; bh=2iktK6EUqVrZltsHFkD8iQNl
-	AoVI85pdNh4NREaFQQk=; b=wjnAgY7DJk3eQXExyR6DTTtNWIrOEQzEVZZdTr2s
-	LL/yv4n4CccIVSbw9qZvw5TVwBKV89u/eOhyjdmq+AX0yqdhbPXP9P7pUXql/3hk
-	p3S/yYmLN9h7lC7r35RNx6gLfn6CgtaTv1iL0SHLHX5+NyzbwxtTJ7ERwOY54GIv
-	mLjV6v2/hOrvV1nHYzwM74OhzhFHz/W7L0mspWPoNEVxNxNNs2K4mS58U+mck2Kx
-	XstsgagdajwpgE6YxNAciIB9tNUOXdm1jBZs4hb+6bOR6epOiYs8pDmgYSnVpwhD
-	a4Ms7a25LUr+PrjYXJOeXSowGdWX+FFRz2xbIaVekqswkw==
+	 s=mr01; t=1712186450; x=1714778451; bh=4B7993YMbmrr/nj4BU6y5xaR
+	P2QHKWHVqBY5+/MGLUI=; b=XZ7UJUn5XysX7rsVAe7QV3mQ40GvpE/+pL0eSb8F
+	pAnE+5+Cai4im/aPZI78MPoTgRuF4LSibO1LN4Fp9tMW6tGK4xrKtL1bKMTpLVUU
+	IQYeCFd6tMbHC7fM/6k5+8WIX21ReWwfoEkFEEpZ2rqyKDJ4n9Tvf8pSNHFBdIgQ
+	avUL4pRuVAdX+IIyEe1zrOSFgZlZJKOHglp9hcOFKB4nwmeduyg/VXilHaPCnpS7
+	4gclpilZ00XzwKLJ6LMKBMnm7BADAcX5mbskTJgbJCwIsB0YE1AZtmVc4m/V8fJj
+	JmPBYUv7Rf2o3KiQMGi847nQPqu1PaJVo0e7VpRZDtbHXw==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id z13YD-kBBspr; Wed,  3 Apr 2024 23:09:20 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id IgN042vKiPjd; Wed,  3 Apr 2024 23:20:50 +0000 (UTC)
 Received: from [192.168.3.219] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4V90nB3PMYz6Cnk94;
-	Wed,  3 Apr 2024 23:09:18 +0000 (UTC)
-Message-ID: <13a50e06-2b35-4cc6-a3ea-d6e070195db7@acm.org>
-Date: Wed, 3 Apr 2024 16:09:15 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V912T21KxzlgTHp;
+	Wed,  3 Apr 2024 23:20:48 +0000 (UTC)
+Message-ID: <2a17e63b-6567-4d6c-abe2-309304bc9ea2@acm.org>
+Date: Wed, 3 Apr 2024 16:20:47 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,52 +50,32 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: lpfc: Fix a possible null pointer dereference
-To: Huai-Yuan Liu <qq810974084@gmail.com>, james.smart@broadcom.com,
- dick.kennedy@broadcom.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- baijiaju1990@outlook.com
-References: <20240403014006.969441-1-qq810974084@gmail.com>
+Subject: Re: startup BUG at lib/string_helpers.c from scsi fusion mptsas
+To: Charles Bertsch <cbertsch@cox.net>, justinstitt@google.com,
+ linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
+References: <5445ba0f-3e27-4d43-a9ba-0cc22ada2fce@cox.net>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240403014006.969441-1-qq810974084@gmail.com>
+In-Reply-To: <5445ba0f-3e27-4d43-a9ba-0cc22ada2fce@cox.net>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 4/2/24 6:40 PM, Huai-Yuan Liu wrote:
-> In function lpfc_xcvr_data_show, the memory allocation with kmalloc might
-> fail, thereby making rdp_context a null pointer. In the following context
-> and functions that use this pointer, there are dereferencing operations,
-> leading to null pointer dereference.
-> 
-> To fix this issue, a null pointer check should be added. If it is null,
-> write error message and jump to 'out_free_rdp'.
-> 
-> Fixes: 479b0917e447 ("scsi: lpfc: Create a sysfs entry called lpfc_xcvr_data for transceiver info")
-> Signed-off-by: Huai-Yuan Liu <qq810974084@gmail.com>
-> ---
->   drivers/scsi/lpfc/lpfc_attr.c | 5 +++++
->   1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-> index b1c9107d3408..b11e5114b7f2 100644
-> --- a/drivers/scsi/lpfc/lpfc_attr.c
-> +++ b/drivers/scsi/lpfc/lpfc_attr.c
-> @@ -1904,6 +1904,11 @@ lpfc_xcvr_data_show(struct device *dev, struct device_attribute *attr,
->   
->   	/* Get transceiver information */
->   	rdp_context = kmalloc(sizeof(*rdp_context), GFP_KERNEL);
-> +	if (!rdp_context) {
-> +		len = scnprintf(buf, PAGE_SIZE - len,
-> +				"ERROR: Not enough memory\n");
-> +		goto out_free_rdp;
-> +	}
->   
-
-Has this patch been verified with checkpatch? Checkpatch should have
-reported the following for the above patch:
-
-   Possible unnecessary 'out of memory' message
+On 4/1/24 3:43 PM, Charles Bertsch wrote:
+> 45e833f0e5bb1985721d4a52380db47c5dad2d49 is the first bad commit
+> commit 45e833f0e5bb1985721d4a52380db47c5dad2d49
+> Author: Justin Stitt <justinstitt@google.com>
+> Date:=C2=A0=C2=A0 Tue Oct 3 22:15:45 2023 +0000
+>=20
+>  =C2=A0=C2=A0=C2=A0 scsi: message: fusion: Replace deprecated strncpy()=
+ with strscpy()
+>=20
+>  =C2=A0=C2=A0=C2=A0 strncpy() is deprecated for use on NUL-terminated d=
+estination=20
+> strings [1]
+>  =C2=A0=C2=A0=C2=A0 and as such we should prefer more robust and less a=
+mbiguous string
+>  =C2=A0=C2=A0=C2=A0 interfaces.
+Justin, can you please take a look at this email and its attachments?
 
 Thanks,
 
