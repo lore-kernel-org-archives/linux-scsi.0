@@ -1,48 +1,48 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C33D29CA
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Apr 2024 23:20:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCF3115699F;
+	Wed,  3 Apr 2024 23:24:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712186453; cv=none; b=PH7mFSQJJu6y4NDFoxxU6YT/PEhGaKsTPfj9IeDMVB540DpssGoqwanBBepT5ylBg8Hiylpvg5Tx0+oewU04GyXXXKhG7/iw7s1TTnAuAKG4nDM3y4ySBtrcrlZ/otRbd1ENaZ+oDwHXOZMTU39RndXd8CHIIejwJSRO621uwtc=
+	t=1712186685; cv=none; b=Sv4YekEj1lJsptjPmebZ0WZR8UqjAhoorxoohxuhtqDBqRAMU0tQzdZKOEEsnWqnAk6Hw/IMN2ryJLTnQQGR1Vcup21mXq0VIEsN0Qh3qJ9l9TCiEjaCIF6GeMOzAPRg9G6yCtAFWLC9oDsb+2mLnwU8VpGIyzQ5FkgukQfbWgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712186453; c=relaxed/simple;
-	bh=SVPJSCc/kzYeBx3Hm+KXt0+4c83hf7OMsuqnXLRM0hA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=mEF4+LS7t2JeC+caRnqUWaEYylRLz1BB7D2o/273Yq/1qdwAf3Gv4k+4yvKOmKLQMKu3DspDKUW84o1rq0feyMCCUgSxz0/uUEXblnPcLd/TlM7dI9Y52SuZgi0rXppfKIfuy+flYOLCF7eYv9tGf1bs4bzOG3MuvqbOCOmmMnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=XZ7UJUn5; arc=none smtp.client-ip=199.89.1.12
+	s=arc-20240116; t=1712186685; c=relaxed/simple;
+	bh=pM9/ZTgzDuoqN/5Yhyq+wRZbOGlNKVeDvrBFQoAeICU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=a6vxe1MRS4PAUcgky/ZVePxNV/DkLsIgGgeCR9FSMK+NV1R2SMGJ5OXhEZlN7wabFBy7ve4a9I36BXNOU1L2rQLUlIAVtOYFXgceFJ0gFzw4YwgCY/s+SkOPdxQRI7Yy7p7hFU+eiMbdSgbrXZdSbUiIad000KJ2+gqFOahPlTM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xQ0RU73w; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="XZ7UJUn5"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xQ0RU73w"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V912W4SKVzlgTGW;
-	Wed,  3 Apr 2024 23:20:51 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4V916s06JBz6Cnk90;
+	Wed,  3 Apr 2024 23:24:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1712186450; x=1714778451; bh=4B7993YMbmrr/nj4BU6y5xaR
-	P2QHKWHVqBY5+/MGLUI=; b=XZ7UJUn5XysX7rsVAe7QV3mQ40GvpE/+pL0eSb8F
-	pAnE+5+Cai4im/aPZI78MPoTgRuF4LSibO1LN4Fp9tMW6tGK4xrKtL1bKMTpLVUU
-	IQYeCFd6tMbHC7fM/6k5+8WIX21ReWwfoEkFEEpZ2rqyKDJ4n9Tvf8pSNHFBdIgQ
-	avUL4pRuVAdX+IIyEe1zrOSFgZlZJKOHglp9hcOFKB4nwmeduyg/VXilHaPCnpS7
-	4gclpilZ00XzwKLJ6LMKBMnm7BADAcX5mbskTJgbJCwIsB0YE1AZtmVc4m/V8fJj
-	JmPBYUv7Rf2o3KiQMGi847nQPqu1PaJVo0e7VpRZDtbHXw==
+	 s=mr01; t=1712186674; x=1714778675; bh=GaQ3wPBf1YSzPwOXZZP9FBPm
+	vGGpXPI+orClqrHPrcc=; b=xQ0RU73w4BqPafKh/fPsEu8hQffToqmiLfI21YNR
+	+Lsa0TPbjLGMNhhWLaGRtEsILMNnlBeS/jpfJT9USwAiD8sTllzpxCM7pPhEi8Us
+	meXxi3CXg5IvPAb1bVh2jqy+aeJhNmdYTcRhQ7g8JsnXmpvuMrKfKaGgl33e6bp6
+	32MPgxBqYz4GNrLrIW2f1nNxrtQAk/AlMvqf1blRY0Ls4uWBePPzt8MYFCWcu23e
+	rjD4ZtMiH+Ex6Bbl4B2BQtOhZjNbmZaaMlShoDwQYBqw3RC7Hpi72/9d3QpXrO5n
+	hTtFsytDveFU7cxZXQgPk2L1RLMg2YlmhCj0FZOkvzxZMA==
 X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id IgN042vKiPjd; Wed,  3 Apr 2024 23:20:50 +0000 (UTC)
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id KA4xZDbc_6iY; Wed,  3 Apr 2024 23:24:34 +0000 (UTC)
 Received: from [192.168.3.219] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V912T21KxzlgTHp;
-	Wed,  3 Apr 2024 23:20:48 +0000 (UTC)
-Message-ID: <2a17e63b-6567-4d6c-abe2-309304bc9ea2@acm.org>
-Date: Wed, 3 Apr 2024 16:20:47 -0700
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4V916m20SRz6Cnk8y;
+	Wed,  3 Apr 2024 23:24:31 +0000 (UTC)
+Message-ID: <bc800bdd-6563-40ba-bc8d-e98b87748c15@acm.org>
+Date: Wed, 3 Apr 2024 16:24:30 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,32 +50,33 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: startup BUG at lib/string_helpers.c from scsi fusion mptsas
-To: Charles Bertsch <cbertsch@cox.net>, justinstitt@google.com,
- linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
-References: <5445ba0f-3e27-4d43-a9ba-0cc22ada2fce@cox.net>
+Subject: Re: [PATCH v3] scsi: sg: Avoid race in error handling & drop bogus
+ warn
+To: Alexander Wetzel <Alexander@wetzel-home.de>, dgilbert@interlog.com
+Cc: gregkh@linuxfoundation.org, sachinp@linux.ibm.com,
+ linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ martin.petersen@oracle.com, stable@vger.kernel.org
+References: <81266270-42F4-48F9-9139-8F0C3F0A6553@linux.ibm.com>
+ <20240401191038.18359-1-Alexander@wetzel-home.de>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <5445ba0f-3e27-4d43-a9ba-0cc22ada2fce@cox.net>
+In-Reply-To: <20240401191038.18359-1-Alexander@wetzel-home.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 
-On 4/1/24 3:43 PM, Charles Bertsch wrote:
-> 45e833f0e5bb1985721d4a52380db47c5dad2d49 is the first bad commit
-> commit 45e833f0e5bb1985721d4a52380db47c5dad2d49
-> Author: Justin Stitt <justinstitt@google.com>
-> Date:=C2=A0=C2=A0 Tue Oct 3 22:15:45 2023 +0000
->=20
->  =C2=A0=C2=A0=C2=A0 scsi: message: fusion: Replace deprecated strncpy()=
- with strscpy()
->=20
->  =C2=A0=C2=A0=C2=A0 strncpy() is deprecated for use on NUL-terminated d=
-estination=20
-> strings [1]
->  =C2=A0=C2=A0=C2=A0 and as such we should prefer more robust and less a=
-mbiguous string
->  =C2=A0=C2=A0=C2=A0 interfaces.
-Justin, can you please take a look at this email and its attachments?
+On 4/1/24 12:10 PM, Alexander Wetzel wrote:
+> @@ -301,11 +302,12 @@ sg_open(struct inode *inode, struct file *filp)
+>   
+>   	/* This driver's module count bumped by fops_get in <linux/fs.h> */
+>   	/* Prevent the device driver from vanishing while we sleep */
+> -	retval = scsi_device_get(sdp->device);
+> +	device = sdp->device;
+> +	retval = scsi_device_get(device);
+>   	if (retval)
+>   		goto sg_put;
+
+Are all the sdp->device -> device changes essential? Isn't there a
+preference to minimize patches that will end up in the stable trees?
 
 Thanks,
 
