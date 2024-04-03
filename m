@@ -1,106 +1,79 @@
-Received: from mail-pj1-f67.google.com (mail-pj1-f67.google.com [209.85.216.67])
+Received: from mail-ej1-f67.google.com (mail-ej1-f67.google.com [209.85.218.67])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92331D29B;
-	Wed,  3 Apr 2024 01:40:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.67
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95D6C14F70;
+	Wed,  3 Apr 2024 01:58:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.67
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712108417; cv=none; b=T+6P2Hrywf11wHtaZ/TI40aPFkbXCGaX/RXkEsZlgUTQTP2li3uycMF7IobygT11Z70r2LTcv0Z83aWxiSsrrkbeE0c/nK5WaQeYDl+T9W3WLV08KKSq6P3G1hvxCIdgxChGVfgx2FsvkHjSO9Bt5YwfaKuuopbtGGJs00E4Jj4=
+	t=1712109527; cv=none; b=F77i5u9P780/84ajp1nqZnxce6JWY2mpFD7OPwn0mp785+HkTwkqg4CVMhGQz/H+uR0F+YnpteaKaegC8HfUbrdkhmAIjLYF7fxNfVw237TFb8x0QDOeOCAkLYWWJmr0SvUafQIc1hfZn3FN06YPx2R45i+b0PRlcMdlC6oeoL8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712108417; c=relaxed/simple;
-	bh=+R0L3fbUAwMuP4zU+FqvteBWJzn7D8l7WzQcKHfHy7M=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=dNkNS92SBj3Wh2Y+ATL2lgHmS750H8UEfr24afzqsMWesfIo0LiXSyoAVE6vNVU8yMQmIJKtoS6d02eyjhNezvWRxNIonMBlj/SDNuPPI9Un+i/+OpTPT5IVxosCG8U9y+2fyiOvavZvkp6BdTYwvHqld+/5Lg4ehkhb6blBc74=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ONo16Ut1; arc=none smtp.client-ip=209.85.216.67
+	s=arc-20240116; t=1712109527; c=relaxed/simple;
+	bh=P5gMzQDSLC5kMsvczBxa8S7hTV3vMPUzG5Tk87DXxek=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ev2aO9ZWIpXeKXTJTh2gqnY3VrxROdCRjouCatLMGT13zb0BIpn+vE4ZViD5T2GvOao+gMPO9+rrp4QTWYO6CBXjVqfHj3Iyyp5qDvglgx2E+JggLKiESjna7zYhm5N/iRzeZNGTHV8J+R85qyINYHZDvBFq/1YpPEjdpjGSI4A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ntga7ORo; arc=none smtp.client-ip=209.85.218.67
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ONo16Ut1"
-Received: by mail-pj1-f67.google.com with SMTP id 98e67ed59e1d1-2a2601f0562so999097a91.0;
-        Tue, 02 Apr 2024 18:40:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ntga7ORo"
+Received: by mail-ej1-f67.google.com with SMTP id a640c23a62f3a-a466fc8fcccso743262966b.1;
+        Tue, 02 Apr 2024 18:58:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1712108416; x=1712713216; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Fh/SNg739z3tPcMMVWuLhLjyN3VYUDkGO69sFSfgsFE=;
-        b=ONo16Ut1dVhWDeUHDSuCHctJNk0aZhyp6BbnpwEqzAFQMpc7h/lpsr6uxtYDYtdRtc
-         HPcQEgwnRWexGmRmDst+POkXjMGB/291up1Jr3G2ZBWTUCVDlq2j94KfsOq7ns29wCy+
-         6+/ZT5sKjtPrAZVmIclZW1owJe/OWcwPbQ2FhrrQbJx0lsLgjpXanZUX2fjy44/TtLvj
-         KbCDeAPJpdnAYfUB25EwYHCuVUG1Hq5q7pT/3zD+3yvYkrSX6GsKMl+IxH5A6l5tRDp7
-         kg2On3fNUxssZPX1QJ02Ci6qDGpELE2bIP3STdx6yh0oFNY7smgrazQXddrBp37j8l5G
-         oyFQ==
+        d=gmail.com; s=20230601; t=1712109524; x=1712714324; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=P5gMzQDSLC5kMsvczBxa8S7hTV3vMPUzG5Tk87DXxek=;
+        b=ntga7ORozf1eJhUyPAmApfYEQY4r1sm/DcSnUVUYD4fr+pBFP5+j0IhRgqYNIwlHu9
+         Grl68JPeS1Vvho3JbV5i/hqIHT0cbZCoAyUfle+impGWPAelSgwCLgWnoaGk42SUFBpb
+         zkQybN17BcgOSZGZXSAZD1EzddW9MTTwVRmwJaU12QHTjI0CEdVvGmaNh7Y/JPK+FkY/
+         i4MMJbTnt7007fVlMyZpo5I8PUEeDP7XdLkWYM5emGPL9JOV/1lp56lJBOo5JNX8t1XO
+         qLXf2ak02vBew0scChpWXnmyYPUOqGSFTWG5OGuy9LHA57TAEYdUtYDhVmXbpTCNd3bR
+         7sQg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712108416; x=1712713216;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=1e100.net; s=20230601; t=1712109524; x=1712714324;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=Fh/SNg739z3tPcMMVWuLhLjyN3VYUDkGO69sFSfgsFE=;
-        b=QspKFxB6ymUUK2vz7jXrZUuJSS3g8uz/5ftob/CweKC4bS7KxSYk1B+In+X5+yToSy
-         7cTXXSajtHC+nyNo7vTGSg6WFGqJeBfgZs6puBHxCWTuPDunL1BXB2RoLilMrepD0805
-         8hZde1tfRJhoom+xqj3ZspT0iijAT4RSXKtMPBTUrZyuaCBO7Z2kQYVFsbevEKRIXGxV
-         RbR5Vld+cRtxcRo+w8L8/8oeQpUbsmhZYPdx9SLfr7RhlqbMf3Vl+cQuGNwgFuMn72sv
-         6wHOIzN0gBcnGXc1SMUoPNHMxp0jVNtyZwELufroEANmEqzyFZ8LzyDlJjqvyXaIXLH3
-         Fsgw==
-X-Forwarded-Encrypted: i=1; AJvYcCXwQZGqu55d3MN/ZIUk6fYVUFMAe/mjoJ1Z/eoMq6RIfGef0iF22XTBsI7KuTOvLiFYODJuut1Eqjk4QtE06/d85/+prVBgoiSFyaUo
-X-Gm-Message-State: AOJu0YzgpEqaXNGozNIiEb/I6b83nzi40U4GyX7lqdQD/HSpO/4+BV+R
-	owN9D5cLfWt6Q31cRvvNRVhrq99Sn0y2Ak3bvBydzIzlU1i7weo0ZHQamVS2pocV6MVO56c=
-X-Google-Smtp-Source: AGHT+IEGIwvBOEybaWEwLmntVJFoPa1TyRl5IIAhnhkIdUZb4xQk5nSUcwRBkDqFAirNCPgj+dvcOQ==
-X-Received: by 2002:a17:90a:62c5:b0:2a0:8f31:a359 with SMTP id k5-20020a17090a62c500b002a08f31a359mr13185913pjs.39.1712108415773;
-        Tue, 02 Apr 2024 18:40:15 -0700 (PDT)
-Received: from lhy-a01-ubuntu22.. ([106.39.42.164])
-        by smtp.gmail.com with ESMTPSA id m14-20020a17090ab78e00b0029c68206e2bsm10246894pjr.0.2024.04.02.18.40.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Apr 2024 18:40:15 -0700 (PDT)
-From: Huai-Yuan Liu <qq810974084@gmail.com>
-To: james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	baijiaju1990@outlook.com,
-	Huai-Yuan Liu <qq810974084@gmail.com>
-Subject: [PATCH] scsi: lpfc: Fix a possible null pointer dereference
-Date: Wed,  3 Apr 2024 09:40:06 +0800
-Message-Id: <20240403014006.969441-1-qq810974084@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        bh=P5gMzQDSLC5kMsvczBxa8S7hTV3vMPUzG5Tk87DXxek=;
+        b=qGzwT1bF7arxm8NfSnUY0ktFb51O3pljpDr4tbAVI24uyQ2SYcYMEx0jHWKWZmIC3L
+         xgQsQ/8xGf/OKA5HjZNAfSVs1ec6VMFIimxDBIcnl/YuhfSnlYkdbk+erQGgTnm3b2Ed
+         PfKTynL4VJQKgKaBN+XBFb3Ipb4riU6bakV0AZhJkUKpkI1E8BcFgGDosIXDfViU/ISi
+         qj0a2RWmfGTMfx9rVXxiv8b/HfoufQXrW0w9R2GRPfSYEJe5V9RRNPOgDBOQt1yIENaR
+         C2/JHBTXLe/1lcHlUPJ8rR09srsPVHpqMr+72zWVNq5BJD5UBkhH3iVFcyseiBpY107P
+         2x1g==
+X-Forwarded-Encrypted: i=1; AJvYcCUN5w083yobeAheuYva8UMCZ/gxOUp6qYSMKPSQIuKD8BmfVCRRJ6NZw/BTYQCaBvKqScyZwAgmv6Gqn60o1KDFVjK3UyxUYufBAZmo
+X-Gm-Message-State: AOJu0YyMXUS1bQUMK/nI2AYiEmnAnkuM5erKQFdQkvU7BdYzKbKaswEL
+	wSyNP5iiDG9VfkGV6Cy14P063V4gc/jdYOgrMnx0qoWX50e2pk6MHy9QxTWjrRLDw5/2xSeFY7O
+	9eXF5l0Qd9fDeeB91rYAG6+vVq0A=
+X-Google-Smtp-Source: AGHT+IHhzeOSt16zxaIQe+QZT55B1iDcstdCdCAAubzdydc0eDyoR2JXnSmKzxRvJVi30HDJZH0KC77enNH9TYS68Sc=
+X-Received: by 2002:a17:906:39c2:b0:a4e:7f22:cfc2 with SMTP id
+ i2-20020a17090639c200b00a4e7f22cfc2mr897367eje.28.1712109523766; Tue, 02 Apr
+ 2024 18:58:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20240403014006.969441-1-qq810974084@gmail.com>
+In-Reply-To: <20240403014006.969441-1-qq810974084@gmail.com>
+From: =?UTF-8?B?5YiY5oCA6L+c?= <qq810974084@gmail.com>
+Date: Wed, 3 Apr 2024 09:58:07 +0800
+Message-ID: <CAH9++vHEB7+oyYk3kDioiYCFf9Z=-EjRG--vrUBx7J6QdKRsMQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: Fix a possible null pointer dereference
+To: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.ibm.com, 
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	baijiaju1990@outlook.com
+Content-Type: text/plain; charset="UTF-8"
 
-In function lpfc_xcvr_data_show, the memory allocation with kmalloc might
-fail, thereby making rdp_context a null pointer. In the following context 
-and functions that use this pointer, there are dereferencing operations,
-leading to null pointer dereference.
+Hi,
 
-To fix this issue, a null pointer check should be added. If it is null, 
-write error message and jump to 'out_free_rdp'.
+I'm a newbie in the Linux community. Due to my oversight, the patch I
+submitted has an extra blank line, causing two consecutive emails to
+lack a subject. However, these emails are identical in content to the
+one with a subject. Please review the email with a subject. Apologies
+for any confusion caused.
 
-Fixes: 479b0917e447 ("scsi: lpfc: Create a sysfs entry called lpfc_xcvr_data for transceiver info")
-Signed-off-by: Huai-Yuan Liu <qq810974084@gmail.com>
----
- drivers/scsi/lpfc/lpfc_attr.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index b1c9107d3408..b11e5114b7f2 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -1904,6 +1904,11 @@ lpfc_xcvr_data_show(struct device *dev, struct device_attribute *attr,
- 
- 	/* Get transceiver information */
- 	rdp_context = kmalloc(sizeof(*rdp_context), GFP_KERNEL);
-+	if (!rdp_context) {
-+		len = scnprintf(buf, PAGE_SIZE - len,
-+				"ERROR: Not enough memory\n");
-+		goto out_free_rdp;
-+	}
- 
- 	rc = lpfc_get_sfp_info_wait(phba, rdp_context);
- 	if (rc) {
--- 
-2.34.1
-
+Thanks,
+Liu.
