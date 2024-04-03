@@ -1,199 +1,175 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC5147175E;
-	Wed,  3 Apr 2024 08:43:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 777E856471;
+	Wed,  3 Apr 2024 09:14:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712133814; cv=none; b=g0sJOZbPFXvigTEaZllJ/14sVphP+SlCKR84Mh1TfZHt5kgg/pnsTvWUGED0T9Cjpu0GRhmhAc/LdkDjZcTGJWaSyS6kg8bHMkSBQgUdPK//4hGg+hBB4BK0JT6Kl7JUagxsfjGV3xYwn5dSA7JzxB3yPgitP/Rw6Fuljm8bKqY=
+	t=1712135651; cv=none; b=mHv5v2BuiULx457c6/qLuQtnSCzvszDyavWJvx75MZmwOTSHe5TliriwKfs9iKHpziRVXNmyQ74UfWfd/EDjqwVKkH08POP+9jDrWDp1XIjNWNN5zi56bH7qLarJI+kRTriplcs9atvQu70taT3PDe15ATRjvPZr9SBVL4W1v44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712133814; c=relaxed/simple;
-	bh=hPHMUb1vA3c7mNoljCMpztbl/aa0WSEspPgXFo8VucY=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nLWLRLp3sYMHlUwBcw+S0npQtuU3IRqUHn3dHOu+74ir95WiZbPF20MXRbV6PY71f8gTTTEPUvk45FnWhwh9h1vMrUZiy3DM+H5RRyHUgW9Lx7QN5LXnudGUoaD/JuCRsqRmAl0yVG8OD9xaaXrbuc6F8/sSEZHeg7TUyVsfgW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dxMfY1Ez; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712135651; c=relaxed/simple;
+	bh=bZq0rD5KiJxbGyvQb/XEzn9LUcVm4yswpSv88dX9nmI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sX5dP8NHjpVy4kZHIBeVNrcq1GBE9O9W42DQ8DxeyqahvIh4LMhm7l4wHBcXcvGdDPsUXeAKHMckmBWlL0+ikIHZj8NN0NzwgkF++NjmAk9oL6rxj2XqmC4pzC7OJRJnPGFJlO7CWbKcdYWh+iJpZEepTBJYF8rHxz4952bsFOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G1rSTq2g; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dxMfY1Ez"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A34EC43399;
-	Wed,  3 Apr 2024 08:43:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G1rSTq2g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BC9BC433C7;
+	Wed,  3 Apr 2024 09:13:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712133814;
-	bh=hPHMUb1vA3c7mNoljCMpztbl/aa0WSEspPgXFo8VucY=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=dxMfY1EzYuqnHgAcrJpZ2naC+zRPiEjXr/+sY3UC2MVWR6RmHsbA2GUaXqEojfsL7
-	 i2c2HE7W1egULkI4uqtZNhJ8A/U/IgDYNH/Qday+4jEaMjFTCa+U0Gb4CfXYElK9ed
-	 zQXRlokC8ltnf60kQG+eaYDYfPN56hFor+N5h8tmgeJThGUwLuyinnSWZYTuQo+CLa
-	 xjO8+lElDjhIOxS/AEVZTdlsehxiEjn9tihR4Rsb/9UAKByFVMfBc2cuU7TftRtPqm
-	 cEV9BujjeEy+6KWH1eHOoiT0naUMrC5oWbP9rQqRt5Z9+9qj0wY6avuNdP3D/cig6w
-	 XQ2PLnI+eX3Mw==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-block@vger.kernel.org,
-	Jens Axboe <axboe@kernel.dk>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	dm-devel@lists.linux.dev,
-	Mike Snitzer <snitzer@redhat.com>,
-	linux-nvme@lists.infradead.org,
-	Keith Busch <kbusch@kernel.org>,
-	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v5 28/28] block: Do not special-case plugging of zone write operations
-Date: Wed,  3 Apr 2024 17:42:47 +0900
-Message-ID: <20240403084247.856481-29-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20240403084247.856481-1-dlemoal@kernel.org>
-References: <20240403084247.856481-1-dlemoal@kernel.org>
+	s=k20201202; t=1712135651;
+	bh=bZq0rD5KiJxbGyvQb/XEzn9LUcVm4yswpSv88dX9nmI=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=G1rSTq2gywOxFwfLMdqh7qECus3WHP07qERZ0GtkigtronOFreYYbj2DY7o4GJAuf
+	 oZcWqYuX9S+yINjNot/Bp8IG/Vi80ILjCS2//Ok2dQJAT6HaTBOFMamLWGUliYxUPA
+	 8BVbBtudthBAzSBfr4+Y4azAlGCuU+iRCMYsvOKYoUSZTcQ7PfGs/HopPAE4pcoQU+
+	 BbJhflh1B4w4H2blhxzV6+JjWy5ghyw29+l1oTVl0f9DGG94s9opUckIyY0h5WleuU
+	 3Bq427YWzfKwCbID07SgygmaByiWT5aDeupc6m3NnvqJSnGpeOlcXf+zMqgHPhs136
+	 haNwFSyBb+J4A==
+Message-ID: <f68a9bef-cbd8-4d85-afd4-55516d9925ed@kernel.org>
+Date: Wed, 3 Apr 2024 11:13:50 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 33/34] drivers: remove incorrect of_match_ptr/ACPI_PTR
+ annotations
+To: Arnd Bergmann <arnd@kernel.org>, linux-kernel@vger.kernel.org,
+ Corey Minyard <minyard@acm.org>, Peter Huewe <peterhuewe@gmx.de>,
+ Jarkko Sakkinen <jarkko@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+ Moritz Fischer <mdf@kernel.org>, Wu Hao <hao.wu@intel.com>,
+ Xu Yilun <yilun.xu@intel.com>, Jiri Kosina <jikos@kernel.org>,
+ Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+ Michael Hennerich <michael.hennerich@analog.com>,
+ Peter Rosin <peda@axentia.se>, Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+ Iyappan Subramanian <iyappan@os.amperecomputing.com>,
+ Keyur Chudgar <keyur@os.amperecomputing.com>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Yisen Zhuang <yisen.zhuang@huawei.com>, Salil Mehta
+ <salil.mehta@huawei.com>, Tony Lindgren <tony@atomide.com>,
+ Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>,
+ Alexandre Belloni <alexandre.belloni@bootlin.com>,
+ Xiang Chen <chenxiang66@hisilicon.com>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Russell King <linux@armlinux.org.uk>, Jiri Slaby <jirislaby@kernel.org>,
+ Jacky Huang <ychuang3@nuvoton.com>, Shan-Chun Hung <schung@nuvoton.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Jason Gunthorpe <jgg@ziepe.ca>,
+ Tom Rix <trix@redhat.com>, =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?=
+ <u.kleine-koenig@pengutronix.de>, Randy Dunlap <rdunlap@infradead.org>,
+ Rob Herring <robh@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
+ openipmi-developer@lists.sourceforge.net, linux-integrity@vger.kernel.org,
+ dmaengine@vger.kernel.org, linux-fpga@vger.kernel.org,
+ linux-input@vger.kernel.org, linux-i2c@vger.kernel.org,
+ netdev@vger.kernel.org, linux-omap@vger.kernel.org,
+ linux-rtc@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-staging@lists.linux.dev, linux-serial@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+References: <20240403080702.3509288-1-arnd@kernel.org>
+ <20240403080702.3509288-34-arnd@kernel.org>
+Content-Language: en-US
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20240403080702.3509288-34-arnd@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-With the block layer zone write plugging being automatically done for
-any write operation to a zone of a zoned block device, a regular request
-plugging handled through current->plug can only ever see at most a
-single write request per zone. In such case, any potential reordering
-of the plugged requests will be harmless. We can thus remove the special
-casing for write operations to zones and have these requests plugged as
-well. This allows removing the function blk_mq_plug and instead directly
-using current->plug where needed.
+On 03/04/2024 10:06, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> When building with CONFIG_OF and/or CONFIG_ACPI disabled but W=1 extra
+> warnings enabled, a lot of driver cause a warning about an unused
+> ID table:
+> 
+> drivers/char/tpm/tpm_ftpm_tee.c:356:34: error: unused variable 'of_ftpm_tee_ids' [-Werror,-Wunused-const-variable]
+> drivers/dma/img-mdc-dma.c:863:34: error: unused variable 'mdc_dma_of_match' [-Werror,-Wunused-const-variable]
+> drivers/fpga/versal-fpga.c:62:34: error: unused variable 'versal_fpga_of_match' [-Werror,-Wunused-const-variable]
+> drivers/i2c/muxes/i2c-mux-ltc4306.c:200:34: error: unused variable 'ltc4306_of_match' [-Werror,-Wunused-const-variable]
+> drivers/i2c/muxes/i2c-mux-reg.c:242:34: error: unused variable 'i2c_mux_reg_of_match' [-Werror,-Wunused-const-variable]
+> drivers/memory/pl353-smc.c:62:34: error: unused variable 'pl353_smc_supported_children' [-Werror,-Wunused-const-variable]
+> drivers/regulator/pbias-regulator.c:136:34: error: unused variable 'pbias_of_match' [-Werror,-Wunused-const-variable]
+> drivers/regulator/twl-regulator.c:552:34: error: unused variable 'twl_of_match' [-Werror,-Wunused-const-variable]
+> drivers/regulator/twl6030-regulator.c:645:34: error: unused variable 'twl_of_match' [-Werror,-Wunused-const-variable]
+> drivers/scsi/hisi_sas/hisi_sas_v2_hw.c:3635:36: error: unused variable 'sas_v2_acpi_match' [-Werror,-Wunused-const-variable]
+> drivers/staging/pi433/pi433_if.c:1359:34: error: unused variable 'pi433_dt_ids' [-Werror,-Wunused-const-variable]
+> drivers/tty/serial/amba-pl011.c:2945:34: error: unused variable 'sbsa_uart_of_match' [-Werror,-Wunused-const-variable]
+> 
+> The fix is always to just remove the of_match_ptr() and ACPI_PTR() wrappers
+> that remove the reference, rather than adding another #ifdef just for build
+> testing for a configuration that doesn't matter in practice.
+> 
+> I considered splitting up the large patch into per subsystem patches, but since
+> it's really just the same thing everywhere it feels better to do it all at once.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/char/ipmi/ipmb_dev_int.c          | 2 +-
+>  drivers/char/tpm/tpm_ftpm_tee.c           | 2 +-
+>  drivers/dma/img-mdc-dma.c                 | 2 +-
+>  drivers/fpga/versal-fpga.c                | 2 +-
+>  drivers/hid/hid-google-hammer.c           | 6 ++----
+>  drivers/i2c/muxes/i2c-mux-ltc4306.c       | 2 +-
+>  drivers/i2c/muxes/i2c-mux-reg.c           | 2 +-
+>  drivers/input/touchscreen/wdt87xx_i2c.c   | 2 +-
+>  drivers/mux/adg792a.c                     | 2 +-
+>  drivers/net/ethernet/apm/xgene-v2/main.c  | 2 +-
+>  drivers/net/ethernet/hisilicon/hns_mdio.c | 2 +-
+>  drivers/regulator/pbias-regulator.c       | 2 +-
+>  drivers/regulator/twl-regulator.c         | 2 +-
+>  drivers/regulator/twl6030-regulator.c     | 2 +-
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
----
- block/blk-core.c       |  6 ------
- block/blk-merge.c      |  3 +--
- block/blk-mq.c         |  7 +------
- block/blk-mq.h         | 31 -------------------------------
- include/linux/blkdev.h | 12 ------------
- 5 files changed, 2 insertions(+), 57 deletions(-)
+I covered regulators here the same way:
+https://lore.kernel.org/all/20230310214553.275450-5-krzysztof.kozlowski@linaro.org/
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index e1a5344c2257..47400a4fe851 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -907,12 +907,6 @@ int bio_poll(struct bio *bio, struct io_comp_batch *iob, unsigned int flags)
- 	    !test_bit(QUEUE_FLAG_POLL, &q->queue_flags))
- 		return 0;
- 
--	/*
--	 * As the requests that require a zone lock are not plugged in the
--	 * first place, directly accessing the plug instead of using
--	 * blk_mq_plug() should not have any consequences during flushing for
--	 * zoned devices.
--	 */
- 	blk_flush_plug(current->plug, false);
- 
- 	/*
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 7a9f8187ea62..3228868283a4 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -1112,10 +1112,9 @@ static enum bio_merge_status blk_attempt_bio_merge(struct request_queue *q,
- bool blk_attempt_plug_merge(struct request_queue *q, struct bio *bio,
- 		unsigned int nr_segs)
- {
--	struct blk_plug *plug;
-+	struct blk_plug *plug = current->plug;
- 	struct request *rq;
- 
--	plug = blk_mq_plug(bio);
- 	if (!plug || rq_list_empty(plug->mq_list))
- 		return false;
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index e1e13d755033..045b195faad4 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1330,11 +1330,6 @@ void blk_execute_rq_nowait(struct request *rq, bool at_head)
- 
- 	blk_account_io_start(rq);
- 
--	/*
--	 * As plugging can be enabled for passthrough requests on a zoned
--	 * device, directly accessing the plug instead of using blk_mq_plug()
--	 * should not have any consequences.
--	 */
- 	if (current->plug && !at_head) {
- 		blk_add_rq_to_plug(current->plug, rq);
- 		return;
-@@ -2932,7 +2927,7 @@ static void blk_mq_use_cached_rq(struct request *rq, struct blk_plug *plug,
- void blk_mq_submit_bio(struct bio *bio)
- {
- 	struct request_queue *q = bdev_get_queue(bio->bi_bdev);
--	struct blk_plug *plug = blk_mq_plug(bio);
-+	struct blk_plug *plug = current->plug;
- 	const int is_sync = op_is_sync(bio->bi_opf);
- 	struct blk_mq_hw_ctx *hctx;
- 	unsigned int nr_segs = 1;
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index f75a9ecfebde..260beea8e332 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -365,37 +365,6 @@ static inline void blk_mq_clear_mq_map(struct blk_mq_queue_map *qmap)
- 		qmap->mq_map[cpu] = 0;
- }
- 
--/*
-- * blk_mq_plug() - Get caller context plug
-- * @bio : the bio being submitted by the caller context
-- *
-- * Plugging, by design, may delay the insertion of BIOs into the elevator in
-- * order to increase BIO merging opportunities. This however can cause BIO
-- * insertion order to change from the order in which submit_bio() is being
-- * executed in the case of multiple contexts concurrently issuing BIOs to a
-- * device, even if these context are synchronized to tightly control BIO issuing
-- * order. While this is not a problem with regular block devices, this ordering
-- * change can cause write BIO failures with zoned block devices as these
-- * require sequential write patterns to zones. Prevent this from happening by
-- * ignoring the plug state of a BIO issuing context if it is for a zoned block
-- * device and the BIO to plug is a write operation.
-- *
-- * Return current->plug if the bio can be plugged and NULL otherwise
-- */
--static inline struct blk_plug *blk_mq_plug( struct bio *bio)
--{
--	/* Zoned block device write operation case: do not plug the BIO */
--	if (IS_ENABLED(CONFIG_BLK_DEV_ZONED) &&
--	    bdev_op_is_zoned_write(bio->bi_bdev, bio_op(bio)))
--		return NULL;
--
--	/*
--	 * For regular block devices or read operations, use the context plug
--	 * which may be NULL if blk_start_plug() was not executed.
--	 */
--	return current->plug;
--}
--
- /* Free all requests on the list */
- static inline void blk_mq_free_requests(struct list_head *list)
- {
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d8cc24a1635b..5b86af75a29f 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1300,18 +1300,6 @@ static inline unsigned int bdev_zone_no(struct block_device *bdev, sector_t sec)
- 	return disk_zone_no(bdev->bd_disk, sec);
- }
- 
--/* Whether write serialization is required for @op on zoned devices. */
--static inline bool op_needs_zoned_write_locking(enum req_op op)
--{
--	return op == REQ_OP_WRITE || op == REQ_OP_WRITE_ZEROES;
--}
--
--static inline bool bdev_op_is_zoned_write(struct block_device *bdev,
--					  enum req_op op)
--{
--	return bdev_is_zoned(bdev) && op_needs_zoned_write_locking(op);
--}
--
- static inline sector_t bdev_zone_sectors(struct block_device *bdev)
- {
- 	struct request_queue *q = bdev_get_queue(bdev);
--- 
-2.44.0
+but just like SPI and ASoC, Mark did not agree to pick them up.
+
+Best regards,
+Krzysztof
 
