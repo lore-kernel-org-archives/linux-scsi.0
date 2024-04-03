@@ -1,60 +1,60 @@
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1438F535DB;
-	Wed,  3 Apr 2024 06:56:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A4F35BAC3;
+	Wed,  3 Apr 2024 06:57:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712127375; cv=none; b=S3fSYQMdsg9N0VrLTJp+Arz3dmG8qkQGf8bJ6wcozrX4KeiO4y5b5TOoFVOW2pQY+Ae6HKsaxSe7VzvpszQCANLuViEpLbLNie1JevagAOCjzSj8BnWoLAs9NGjxshG1a6Oya1yFOngnur/ZiXbYSD7uuI2kSN4Bh4YR7XQsu+g=
+	t=1712127473; cv=none; b=nPHbf/blBOHDqrW19ZugN3TFWTULZzzULoZQIrwpo5KMqtR5yTCpPc5t/R1oGV+/B6jp4oDp6rlajiSkpBhiais4PqKuQljH9jkZGSJTG/cQjZ+5Lznka7ip6E809XkU3leUk5ktpzObD97mm0lJauNaWIv3+p192FkP0Z2BDmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712127375; c=relaxed/simple;
-	bh=yL3q+xzhsCyPFdZwLBK8YolBvlQOKdjfkBfDmnWRsF4=;
+	s=arc-20240116; t=1712127473; c=relaxed/simple;
+	bh=LeU2F4hGX+6UwTGGc3QgRWl1I7vMrAZ4ERo3NXAIuPg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RkEoIlkYpos89LN6eUQbzMQbZ7VO1Gb5USus1cXeNbB1yk+RwPmyUBXOPhG/0jPBThXvyfkItN68ZQRDRBnl12Ranqo3wNwN1yfZ8qzNnhnvoCFsGBrIWj6ZPIgcBlZNji2lJ7eEKfT9YdSjUv6jwivkGzhjx3m1QJr1unZ8Ddc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=JUOWiYhh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=kTNESN5D; arc=none smtp.client-ip=195.135.223.130
+	 In-Reply-To:Content-Type; b=uxN9VRcmVvBl/iL35V8RKqD4Jug2HIyzLSVRFU7giN/Igwb3dCUwvrOnyJvgKWrrhGtgXzHTpz2RHerjDDPoSco/aoRpAnsXQ2Q83Fokn36QyIplV4vZ3duFJOB7ZdgSKJgXkAYQhrZiiBF/Dzkavv+y6E8wlwsYKGYLgN4Uhdg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=i6KqNjJ1; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=sEJYbLO8; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="JUOWiYhh";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="kTNESN5D"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="i6KqNjJ1";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="sEJYbLO8"
 Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [10.150.64.98])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 44B4A35018;
-	Wed,  3 Apr 2024 06:56:10 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 2A8AF35022;
+	Wed,  3 Apr 2024 06:57:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1712127370; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1712127470; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=2JPKnv8ufKXjiY3Ji98K500DideLp43dhs8OiEWxtFk=;
-	b=JUOWiYhhVJOEd8gsLYvTm/4SrGbNcmm8mmLlvKv59m7oQFYvQanUMB/yKlJRZeaMZtNdyM
-	usZ3VOhy6bKhWLNnepuLK1XTK4GojkAD0l6aFAqdPEjI5KyroRyOgCK0dhxgr0egi9PbpS
-	1F4Frp0YcGLndRxfdk9hiomNsRqVVK8=
+	bh=GN2NendZI8uhGOIc2ZG6EvcgsB9oPHr1xy77WG1FFkI=;
+	b=i6KqNjJ1kCHP5vVy+IedCUyU1yIfjSV/kI3wtQ303OMB1tr6p8IFOPCKvFx+a2Ex3dKDsR
+	BZgQVvBr1h9Syn/F2QkpDRq1VjjOi4MreW/qPBicthFegGhH7ON2LY+U5DbuoYsIYSOYLi
+	DKBXy3Hr7HuOtSGYxU5yXrTu7e4GXAE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1712127370;
+	s=susede2_ed25519; t=1712127470;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=2JPKnv8ufKXjiY3Ji98K500DideLp43dhs8OiEWxtFk=;
-	b=kTNESN5DjDwDAYejbs3jVAmTaKkBjkRDt4yCITrJQkxaEDcMud4dTMujQ9ojPk57dB53zK
-	ehNLP5S93MoVXOAw==
+	bh=GN2NendZI8uhGOIc2ZG6EvcgsB9oPHr1xy77WG1FFkI=;
+	b=sEJYbLO8PoRGMFiyh3LXEDaXWQssxMEWER3W8vTa9FZePqrBQ4rJMoqkbSp0Zxwhnv6grw
+	6bNZpt6aIozjSmBw==
 Authentication-Results: smtp-out1.suse.de;
 	none
 Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 87AA013357;
-	Wed,  3 Apr 2024 06:56:07 +0000 (UTC)
+	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 2050013357;
+	Wed,  3 Apr 2024 06:57:46 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id +EznHof9DGbeDAAAn2gu4w
-	(envelope-from <hare@suse.de>); Wed, 03 Apr 2024 06:56:07 +0000
-Message-ID: <c5e9ce6e-5137-4579-8895-256c85f7ac4b@suse.de>
-Date: Wed, 3 Apr 2024 08:56:07 +0200
+	id CG4TA+r9DGbeDAAAn2gu4w
+	(envelope-from <hare@suse.de>); Wed, 03 Apr 2024 06:57:46 +0000
+Message-ID: <30cf444f-7942-4e24-8fb8-030b73ea9ce5@suse.de>
+Date: Wed, 3 Apr 2024 08:57:45 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -62,8 +62,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/23] ufs-exynos: move setting the the dma alignment to
- the init method
+Subject: Re: [PATCH 09/23] scsi: use the atomic queue limits API in
+ scsi_add_lun
 Content-Language: en-US
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -96,48 +96,45 @@ Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
  linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
  usb-storage@lists.one-eyed-alien.net
 References: <20240402130645.653507-1-hch@lst.de>
- <20240402130645.653507-9-hch@lst.de>
+ <20240402130645.653507-10-hch@lst.de>
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240402130645.653507-9-hch@lst.de>
+In-Reply-To: <20240402130645.653507-10-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -3.48
-X-Spamd-Result: default: False [-3.48 / 50.00];
-	 ARC_NA(0.00)[];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 XM_UA_NO_VERSION(0.01)[];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 BAYES_HAM(-2.19)[96.12%];
-	 MIME_GOOD(-0.10)[text/plain];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 NEURAL_HAM_SHORT(-0.20)[-0.999];
-	 RCPT_COUNT_TWELVE(0.00)[42];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[lst.de:email,suse.de:email,acm.org:email,samsung.com:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 RCVD_TLS_ALL(0.00)[];
-	 MID_RHS_MATCH_FROM(0.00)[]
+X-Spamd-Result: default: False [-1.37 / 50.00];
+	BAYES_HAM(-1.08)[88.02%];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[42];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap2.dmz-prg2.suse.org:rdns,imap2.dmz-prg2.suse.org:helo,lst.de:email,suse.de:email,acm.org:email]
+X-Spam-Score: -1.37
 X-Spam-Level: 
 X-Spam-Flag: NO
 
 On 4/2/24 15:06, Christoph Hellwig wrote:
-> Use the SCSI host's dma_alignment field and set it in ->init and remove
-> the now unused config_scsi_dev method.
+> Switch scsi_add_lun to use the atomic queue limits API to update the
+> max_hw_sectors for devices with quirks.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 > Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
 > Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/ufs/core/ufshcd.c     | 3 ---
->   drivers/ufs/host/ufs-exynos.c | 8 ++------
->   include/ufs/ufshcd.h          | 1 -
->   3 files changed, 2 insertions(+), 10 deletions(-)
+>   drivers/scsi/scsi_scan.c | 28 +++++++++++++++-------------
+>   1 file changed, 15 insertions(+), 13 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
