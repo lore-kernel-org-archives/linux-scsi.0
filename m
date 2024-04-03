@@ -1,100 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B588C14E2DC;
-	Wed,  3 Apr 2024 16:09:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACB7C14F9E1;
+	Wed,  3 Apr 2024 16:27:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712160590; cv=none; b=tMzNNRwvuL4xKu3ObIZreVIYllJX0VEwnt/9/8A9m83Y6EXAavLbiAO26dJm+dct40OW8b0IrFb4AK5wimx0arKEaeuS2QMi5484j3+J2fe0i2Kw8/+449DDCg2tvvusRqoDxEbwKaO0/n/RWy6vyas726DFXQ1J9mNIuI4cS+w=
+	t=1712161622; cv=none; b=CcBE1+L5MK6vG8pkC6VelUHfwL3tlqfm43vKY0pg14ehrECtFh15yrlEotvjtcygo4/uZdqLrMO7nqNeolKvncYpOpMM/zNWc8hOKj7XlApycfSbP26i5UKRBywaZ8hVUkM/20FC3nGuLtCu3uilpMnsGid94/YfIjBdI4rLzXY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712160590; c=relaxed/simple;
-	bh=8hzZGuG3Djlgf0qMwrfrn4bWy2pLWmCCjfypaPd6iaU=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:From:To:Cc:
-	 References:In-Reply-To; b=tJaGtwjEjTezCb56WYqyDf0bl03EZxpj8BiJulTlSG/m95BaVKr7XaVQwgkSAHlT7aHjzTF8byu4fD6Lh10WsoKifcpnI1QoMsY5+pBvmZXSO+SCbj7Syb09/5iJK5uSjlrA9cgtNy0UxZxDgh73e+aHoeiV/tx/09miV/2PXc8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jcKjSobB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712161622; c=relaxed/simple;
+	bh=GQ/Rb2a92J5Ir4blww52T7ahTeQB0Ow+ZtEZv9AjOxk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cbzeBOxkb2mniRYaMBD1ZXYnbKmsUtvL7il2r78qmLQAx8BYDVgnGW/aNDLzn9OXDsb9XXUSioEreYIkwSQxA3ZRfBumvKQhXWcWVhgJ4Bp/pX30ubLL88aT9jnJlDNqurYqlt0Yp49D8xYVFR9EIYAQ10m+zwV0iY5Y+HKXn7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=k+KaayxM; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jcKjSobB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93D70C433B1;
-	Wed,  3 Apr 2024 16:09:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712160590;
-	bh=8hzZGuG3Djlgf0qMwrfrn4bWy2pLWmCCjfypaPd6iaU=;
-	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-	b=jcKjSobBys2AwDWtHUg+nZNz255hX8YJ8clocbZnVtIj0h52DY808t+gVnLSzkMLC
-	 X2jjQFAvUGmd4lb2M/HiK8OYAD4oRg6oM2wRSk/RtDyPOErdicM/kRH7ZmaFffstdd
-	 A5uhuABW7lcrvZbj6juYMAQtimJyqGFQZcIGMI0EOpEDTaFtJn8kgeNnGah9Hgz94S
-	 IOzUjSSG8Dy1PPZNqM66yJrWCw2X5fzAFrh0GVmZ1l/EQYOliuMJ261ne92VmHIt0M
-	 aZaraEfx5h6OpkWv3gkSRGiGucYprWgAnxL9Gst4Y9JBTDvukYB1H1HajHS8VYD79T
-	 fVNVTde8ha+Ew==
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="k+KaayxM"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4V8qs008kHz6Cnk8s;
+	Wed,  3 Apr 2024 16:27:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:references:content-language:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1712161617; x=1714753618; bh=rJr6c2TsvOVSrSHj9bLAu908
+	h6x2a2x3rAYmyWwx6bo=; b=k+KaayxMp/CMHphAZmsbICFQjXsFzckonBXBQeAt
+	uCYoQJPhL1Fjz+21DpG5HXoJMTh3RsMfpJ1ebaJ6vEFZCka8qHWGCmmmV7s250bg
+	UcSUqkqLboAai7LcwYTf3IW17NnRWZrDkuhxFZ3/bG6QRj624kNhTi4cHDtNU7gP
+	r4MREbTQt5kbVzIyXskKiGh3xqrlaKNIYzOqKeNJGb5N+7C5ADL1lsEJ73vvn3qT
+	qCk5UM0aJvP+ZqoJ9gew+U7YFeAtzpPzcl/C1g2jmtwZmu1WN84q8XXOth2LbwNU
+	vD6ZFarWxUQlpO+T8iJ/QfBeriG+KwXxJt3x+oGw/YKOLg==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id gZSzaLgRLrrU; Wed,  3 Apr 2024 16:26:57 +0000 (UTC)
+Received: from [100.96.154.173] (unknown [104.132.1.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4V8qrw10xhz6Cnk8m;
+	Wed,  3 Apr 2024 16:26:55 +0000 (UTC)
+Message-ID: <66431679-26f0-48eb-8303-35e151481292@acm.org>
+Date: Wed, 3 Apr 2024 09:26:55 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 03 Apr 2024 19:09:38 +0300
-Message-Id: <D0AM9RGC7D65.2V9TFGBOSF3LN@kernel.org>
-Subject: Re: [PATCH 33/34] drivers: remove incorrect of_match_ptr/ACPI_PTR
- annotations
-From: "Jarkko Sakkinen" <jarkko@kernel.org>
-To: "Arnd Bergmann" <arnd@kernel.org>, <linux-kernel@vger.kernel.org>,
- "Corey Minyard" <minyard@acm.org>, "Peter Huewe" <peterhuewe@gmx.de>,
- "Vinod Koul" <vkoul@kernel.org>, "Moritz Fischer" <mdf@kernel.org>, "Wu
- Hao" <hao.wu@intel.com>, "Xu Yilun" <yilun.xu@intel.com>, "Jiri Kosina"
- <jikos@kernel.org>, "Benjamin Tissoires" <benjamin.tissoires@redhat.com>,
- "Michael Hennerich" <michael.hennerich@analog.com>, "Peter Rosin"
- <peda@axentia.se>, "Dmitry Torokhov" <dmitry.torokhov@gmail.com>, "Iyappan
- Subramanian" <iyappan@os.amperecomputing.com>, "Keyur Chudgar"
- <keyur@os.amperecomputing.com>, "David S. Miller" <davem@davemloft.net>,
- "Eric Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>,
- "Paolo Abeni" <pabeni@redhat.com>, "Yisen Zhuang"
- <yisen.zhuang@huawei.com>, "Salil Mehta" <salil.mehta@huawei.com>, "Tony
- Lindgren" <tony@atomide.com>, "Liam Girdwood" <lgirdwood@gmail.com>, "Mark
- Brown" <broonie@kernel.org>, "Alexandre Belloni"
- <alexandre.belloni@bootlin.com>, "Xiang Chen" <chenxiang66@hisilicon.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Russell King" <linux@armlinux.org.uk>, "Jiri
- Slaby" <jirislaby@kernel.org>, "Jacky Huang" <ychuang3@nuvoton.com>,
- "Shan-Chun Hung" <schung@nuvoton.com>
-Cc: "Arnd Bergmann" <arnd@arndb.de>, "Jason Gunthorpe" <jgg@ziepe.ca>, "Tom
- Rix" <trix@redhat.com>, =?utf-8?q?Uwe_Kleine-K=C3=B6nig?=
- <u.kleine-koenig@pengutronix.de>, "Randy Dunlap" <rdunlap@infradead.org>,
- "Rob Herring" <robh@kernel.org>, "Linus Walleij"
- <linus.walleij@linaro.org>, <openipmi-developer@lists.sourceforge.net>,
- <linux-integrity@vger.kernel.org>, <dmaengine@vger.kernel.org>,
- <linux-fpga@vger.kernel.org>, <linux-input@vger.kernel.org>,
- <linux-i2c@vger.kernel.org>, <netdev@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-rtc@vger.kernel.org>,
- <linux-scsi@vger.kernel.org>, <linux-staging@lists.linux.dev>,
- <linux-serial@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-X-Mailer: aerc 0.17.0
-References: <20240403080702.3509288-1-arnd@kernel.org>
- <20240403080702.3509288-34-arnd@kernel.org>
-In-Reply-To: <20240403080702.3509288-34-arnd@kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/1] scsi: ufs: Remove support for old UFSHCI versions
+Content-Language: en-US
+To: Avri Altman <avri.altman@wdc.com>,
+ "James E . J . Bottomley" <jejb@linux.ibm.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Bean Huo <beanhuo@micron.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240327071714.757-1-avri.altman@wdc.com>
+ <20240327071714.757-2-avri.altman@wdc.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240327071714.757-2-avri.altman@wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed Apr 3, 2024 at 11:06 AM EEST, Arnd Bergmann wrote:
-> diff --git a/drivers/char/tpm/tpm_ftpm_tee.c b/drivers/char/tpm/tpm_ftpm_=
-tee.c
-> index 2ea4882251cf..0c453f3f928d 100644
-> --- a/drivers/char/tpm/tpm_ftpm_tee.c
-> +++ b/drivers/char/tpm/tpm_ftpm_tee.c
-> @@ -362,7 +362,7 @@ MODULE_DEVICE_TABLE(of, of_ftpm_tee_ids);
->  static struct platform_driver ftpm_tee_plat_driver =3D {
->  	.driver =3D {
->  		.name =3D "ftpm-tee",
-> -		.of_match_table =3D of_match_ptr(of_ftpm_tee_ids),
-> +		.of_match_table =3D of_ftpm_tee_ids,
->  	},
->  	.shutdown =3D ftpm_plat_tee_shutdown,
->  	.probe =3D ftpm_plat_tee_probe,
+On 3/27/24 00:17, Avri Altman wrote:
+> UFS spec version 2.1 was published more than 10 years ago. It is
+> vanishingly unlikely that even there are out there platforms that uses
+> earlier host controllers, let alone that those ancient platforms will
+> ever run a V6.10 kernel.  Thus, remove support of host controllers prior
+> to UFS2.1.
 
-For this portion:
+According to this website, Pixel 1 devices have a UFSHCI 2.0 controller:
+https://www.gsmarena.com/google_pixel-8346.php. There may be other
+smartphones that have a UFSHCI 2.0 controller. Hence, I'm not sure we
+can drop support for UFSHCI 2.0 controllers from the kernel.
 
-Reviewed-by: Jarkko Sakkinen <jarkko@kernel.org>
+Thanks,
 
-[can be included to possible new revisions if it stays same]
-
-BR, Jarkko
+Bart.
