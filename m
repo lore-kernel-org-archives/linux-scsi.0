@@ -1,121 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f65.google.com (mail-oo1-f65.google.com [209.85.161.65])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9852210A0D;
-	Wed,  3 Apr 2024 01:02:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B524168A8;
+	Wed,  3 Apr 2024 01:27:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712106155; cv=none; b=vBZQAeH8ow2zT3Hpak9WzYcCHpKlX4v/VbvvPIIcIEiT8QlLAVQtmIpUkt+D7MOk7smVc2su3VjD0ZNPPQHWESo1GmL22QyxRi3nL9LHj2dGPQgfpUgS0aSWu2NhVdaeVoZCUIh6Tya6woUPQgea057eujqaZ5v+8sp4DAvQKhA=
+	t=1712107647; cv=none; b=cO9q+zrZRr0W36WtEoLXactc8XljbLmazy9WNMwZF6avBT8mvCM0MlzaAKSbePtlIXmj55chrk6aRSYvGZ5JD6E3oln6nfljVG3iop1RwmkwmXsJajcGrsjJKQpjZbaacmaRWmfG+TZVNU3Y8tH8kg6TFoGwze66EV4GXyq/U0I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712106155; c=relaxed/simple;
-	bh=kzgwLdsL4OudUwPrRRSPRtFvw3mEHVc9aO/Nux6tJOs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=R6Zxpq97ErgTiP+Klh2RxD+iXIOYrnl5iGnafno5fv2DX2bWq2cpvES44yKq8HqpwslAdFV3pWX1FbsG6Yghe2FuCm9rFOnrnqg+aIUjuGdSrTimmmv2WlW4taNVB3KEzouBdoviBHzuASoR9Di1T+xVEMFo0B5SPl9qThGRmPY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j/WsTKmG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712107647; c=relaxed/simple;
+	bh=gpiz8ytPP4xNPIcRFhDKhFYNxujxRb4J0v0+KGwLOhQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gMPcKzwpeJFwNpjU4GZQzOEgkUJYiRlAf4Jn+W9FiGZx9BK+ERLk1T0DYSVRDSHKlWgbNoNJ0exe192oOE7JArvDu3MQg6W1hTPcEOZepHk/U0XpizkChUyq2i5P/jleTVUMdY+oxOZWOY0N8I1qip2jrCt5BAitgzlp0Eo6VoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fVxnuDC0; arc=none smtp.client-ip=209.85.161.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j/WsTKmG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A71CEC433C7;
-	Wed,  3 Apr 2024 01:02:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712106155;
-	bh=kzgwLdsL4OudUwPrRRSPRtFvw3mEHVc9aO/Nux6tJOs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=j/WsTKmGI70YaCEBXfrg3yAAQyr/QbNeES4W3bPqzfs9wnji+dRQOlTQD4J9k7sRY
-	 nwlo+vB34Za3Oo5kUbWjbf8xQGMBV8PlGB+2HQLqLQnuJlnWFjJH7UVFJRigzc+9BS
-	 zFtRiDHycscQNh6GCixrP5TOx/ezsYoLPxoYdi4MYfXf5OikeDpWNr2AO2WJzLMQak
-	 LXAC3824kBL9t6F/UcWVng3ePi1HK6RrbKEmVN8OpB3VbcxLjME1FPMtZnf4mOvjD4
-	 c9huh4rdbqqgwyl4EUlZDwfQfuZfEMpe6txECbCWhxO2/mQqqMHouksQ3V9qQetZYe
-	 rgBlfwhN8sO2A==
-Message-ID: <084cc8bd-bbc7-491f-b196-51ccd3d97620@kernel.org>
-Date: Wed, 3 Apr 2024 10:02:32 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fVxnuDC0"
+Received: by mail-oo1-f65.google.com with SMTP id 006d021491bc7-5a5272035d3so3489772eaf.1;
+        Tue, 02 Apr 2024 18:27:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1712107645; x=1712712445; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=QgF+noOD10kOlj0U+9VFK/2VpTAYYndo6kiRXQ7BdA4=;
+        b=fVxnuDC08rvIXdDsInSahAPw/zX8d721ZLyOBtj+DbyD2de5IJWrn/GmXd54NH+XSC
+         nGWAV7l0sfU51qLfqHxRKf2F+BYCTV2c7tSpEySEiH0zVDbGYzxMOnC1J+D3Z1uCMRG7
+         u24gWVoOVKOyGiPtKnAIsvP6lu41YMab5sXuX5OWWd8CUN5LfZVzFAgx45b1P6B8khUY
+         2DEsL06qWRZ/f/G0eF7s+yJavj5kE8r2Shu3QlqyPZZQp4JY8HTWYeESQWW09iwSIf0f
+         dkpwABVuM5IkoB007trBvkCb1PlnU34yep14YRPickAyWpWuA0FUNVYPVEK/W6XMUUjH
+         mRug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712107645; x=1712712445;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=QgF+noOD10kOlj0U+9VFK/2VpTAYYndo6kiRXQ7BdA4=;
+        b=LZ33+59CfcIsBw9RkhK01sXRq380Q8EPyT7KHMdxB5zxqRct8uJm5HpkxvPfVWev0m
+         /0JyIVYLfXBAUGgLzVCt/oEyXpiHbxxCGvwSnssSCP+AmIvI2t11t+6FVEY2zLe6K/vf
+         KEdg1NelGXEla8StXytW06DATKYeVQ/80x2UfZPmCiGeyDIj9xDTsp60UwvKd10+6Lx6
+         SIgu3tqHWAljX/jQv6F6NF0GaMEMM1fflKjKVOScqiXQhnzmsHrzKOplrKlT3qcOanQ7
+         GU8B8bOQpJ2it9jfpZxkKJMOKD4gdZSVY+PMo5G06w3ssSh7/vwCUn+Kf1vGWoSRV+7c
+         jbaw==
+X-Forwarded-Encrypted: i=1; AJvYcCX/nQ9jKALimfg0ghZm2f4d477Pm52Kka/4BOGT1uWV3hi7aIVI7SXTpWHViiFYfp/4sC5PJ3dOFZhC/QysOybibYzicvauWt3ePY43
+X-Gm-Message-State: AOJu0YyAj3mVoWygTjJ4m/BB1rOtcM0BxYwJpKKGexEFAuAtFrBwcW//
+	MbfRoPabMcTrFQzJj1/94HG83KfE92EzfGode2EtD5OZvYZNZ/z8
+X-Google-Smtp-Source: AGHT+IHtWX0h3Qqb90nofrtFDZgM6ojzuJUIsoy8nqk1QL9MdJ7XYyEolKWEcEUTbBV+0DQUVexZBQ==
+X-Received: by 2002:a05:6358:5411:b0:17b:f672:4abe with SMTP id u17-20020a056358541100b0017bf6724abemr1260296rwe.16.1712107645033;
+        Tue, 02 Apr 2024 18:27:25 -0700 (PDT)
+Received: from test-virtual-machine.localdomain ([106.39.42.164])
+        by smtp.gmail.com with ESMTPSA id l4-20020a639844000000b005dc9439c56bsm10278665pgo.13.2024.04.02.18.27.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Apr 2024 18:27:24 -0700 (PDT)
+From: Huai-Yuan Liu <qq810974084@gmail.com>
+To: james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	baijiaju1990@outlook.com,
+	Huai-Yuan Liu <qq810974084@gmail.com>
+Subject: 
+Date: Wed,  3 Apr 2024 09:27:15 +0800
+Message-Id: <20240403012715.3058-1-qq810974084@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 07/28] block: Introduce zone write plugging
-To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@redhat.com>,
- linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>
-References: <20240402123907.512027-1-dlemoal@kernel.org>
- <20240402123907.512027-8-dlemoal@kernel.org> <20240402161213.GB3527@lst.de>
- <e923b1cf-9683-4029-8a39-c66aa8fb2647@kernel.org>
- <a68d7e70-d82f-4a09-8b9c-db5e902a3663@kernel.dk>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <a68d7e70-d82f-4a09-8b9c-db5e902a3663@kernel.dk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 4/3/24 10:01, Jens Axboe wrote:
-> On 4/2/24 5:38 PM, Damien Le Moal wrote:
->> On 4/3/24 01:12, Christoph Hellwig wrote:
->>>> +static inline struct blk_zone_wplug *
->>>> +disk_lookup_zone_wplug(struct gendisk *disk, sector_t sector)
->>>> +{
->>>> +	unsigned int zno = disk_zone_no(disk, sector);
->>>> +	unsigned int idx = hash_32(zno, disk->zone_wplugs_hash_bits);
->>>> +	struct blk_zone_wplug *zwplug;
->>>> +
->>>> +	rcu_read_lock();
->>>> +	hlist_for_each_entry_rcu(zwplug, &disk->zone_wplugs_hash[idx], node) {
->>>> +		if (zwplug->zone_no == zno)
->>>> +			goto unlock;
->>>> +	}
->>>> +	zwplug = NULL;
->>>> +
->>>> +unlock:
->>>> +	rcu_read_unlock();
->>>> +	return zwplug;
->>>> +}
->>>
->>> Did we lose an atomic_inc_unless_zero here?  This now just does a lookup
->>> under RCU, but nothing to prevent the zwplug from beeing freed?
->>
->> Nope. When disk_lookup_zone_wplug() is called directly, it is always
->> for handling requests/bios which are holding a reference on the plug
->> and because there are requests/BIOs in-flight, the plug is marked as
->> busy (BLK_ZONE_WPLUG_PLUGGED or BLK_ZONE_WPLUG_ERROR are set). In such
->> state, the plug is always hashed given that
->> disk_should_remove_zone_wplug() retturns false for busy plugs. So
->> there is no reference increase here. The atomic_inc_not_zero() is in
->> disk_get_zone_wplug() which calls disk_lookup_zone_wplug() +
->> atomic_inc_not_zero() within an rcu_read_lock()/rcu_read_unlock()
->> section.
-> 
-> But doing a lookup under rcu, dropping it, and then returning the unit
-> without an increment is just a horrible pattern. Regardless of whether
-> it's safe or not. And as most callers do the atomic_inc anyway, some of
-> then outside rcu lock, this looks horrible buggy.
-> 
-> Please just unify it all and have it follow the idiomatic rcu lookup
-> pattern, which is:
-> 
-> rcu_read_lock();
-> item = lookup();
-> if (atomic_inc_not_zero(item->ref)) {
-> 	rcu_read_unlock();
-> 	return item;
-> }
-> 
-> rcu_read_unlock();
-> return NULL;
-> 
-> as that is well understood, and your code most certainly does not look
-> safe nor sane in that regard.
-> 
-> And probably kill that atomic_inc() helper you have as well while at it.
+Subject: [PATCH] scsi: lpfc: Fix a possible null pointer dereference
 
-OK.
+In function lpfc_xcvr_data_show, the memory allocation with kmalloc might
+fail, thereby making rdp_context a null pointer. In the following context 
+and functions that use this pointer, there are dereferencing operations,
+leading to null pointer dereference.
 
-> 
+To fix this issue, a null pointer check should be added. If it is null, 
+write error message and jump to 'out_free_rdp'.
 
+Fixes: 479b0917e447 ("scsi: lpfc: Create a sysfs entry called lpfc_xcvr_data for transceiver info")
+Signed-off-by: Huai-Yuan Liu <qq810974084@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_attr.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index b1c9107d3408..b11e5114b7f2 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -1904,6 +1904,11 @@ lpfc_xcvr_data_show(struct device *dev, struct device_attribute *attr,
+ 
+ 	/* Get transceiver information */
+ 	rdp_context = kmalloc(sizeof(*rdp_context), GFP_KERNEL);
++	if (!rdp_context) {
++		len = scnprintf(buf, PAGE_SIZE - len,
++				"ERROR: Not enough memory\n");
++		goto out_free_rdp;
++	}
+ 
+ 	rc = lpfc_get_sfp_info_wait(phba, rdp_context);
+ 	if (rc) {
 -- 
-Damien Le Moal
-Western Digital Research
+2.34.1
 
