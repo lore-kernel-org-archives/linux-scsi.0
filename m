@@ -1,60 +1,60 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFFE24D13B;
-	Wed,  3 Apr 2024 07:00:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78E7B59B6C;
+	Wed,  3 Apr 2024 07:06:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712127658; cv=none; b=WWYB6myH7VhJh2RJzYTHa54vMgY5EEHoWeQWsRAbCghY0Jr9NnQPk6MFZcA5LcPD40ciwx3IinpC1DHH1F35IGncvlI4FIOh/CuvU6cSEmBe23yCwGR/npuo39+9HvfbGJ8YKW24Yu6S6flXAzwv2p/iBjbIWjGsDNUKdfzUefo=
+	t=1712127981; cv=none; b=IJZVYbXbVuf7h4aCJIRTWopQLQTYW6mvfhp5+pgAOKxq7Gk9yz2mKZSv1/MffXoyqwwidhD8hFXiV4uEC7uUw82iuhjco4MCqVbsKmF+mRGa1gmK2iqXvtmWWeqzPhSDRmAHGEkex3fNYV/x3zIe16rdQmQpWg/K8H4ZW7DNBZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712127658; c=relaxed/simple;
-	bh=WvhA3jEbtippXSoVcbWJaNBfh5cjyeHSowgQPJHGOzw=;
+	s=arc-20240116; t=1712127981; c=relaxed/simple;
+	bh=huDHheKMY5U475bzaGJTBzo8Q4KK113xdOgQZbqtBQA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NxYSLeO/rI+gabkAlN4FtRvD2qM3W/5UNT9cv8/75nV50yiDT0WqvSi+0JIiOwo0jpKEWLHh046MxNyjY/DSWiaKSF4QovoTJ4ihsMSF27madB8SAR3EkOE/6PNQz0KSoH9IIYJkJTNq3lcSvVNhxa5lVsTlKNnL43TnVLlHs1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=QB3hsxew; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=bnvnFsWx; arc=none smtp.client-ip=195.135.223.130
+	 In-Reply-To:Content-Type; b=DOu0DSCHrPAxEuEVCnvgMksebFalG15UkHj0YIG5IHtHv6hrI9ZT4adMMg2FOMBxf+UDEAtpYfLN1Bn6FF69MCv016L+DDzw80fbwcHQBU/KWRsa/I0Wp1WfRjH5ZqdtULJ3BtGzBlgwk64ChY5mCRArhd4ZVmDP76qz2PN6z60=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=szckVdgs; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=eG2x1N0U; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="QB3hsxew";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="bnvnFsWx"
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:98])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="szckVdgs";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="eG2x1N0U"
+Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [10.150.64.98])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id EE9E935023;
-	Wed,  3 Apr 2024 07:00:54 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 3C3725C3A6;
+	Wed,  3 Apr 2024 07:06:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1712127655; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1712127976; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=VStNnPFhhkcWzvAWZLJlbNI7t7EFEcfNzWUOZ1J8U2A=;
-	b=QB3hsxewMMgKhr30NMiUm/00T3O4w/lnehX3R2SryCUDnolMz89vM3Wer0qQOHsktaoNW4
-	LfSKAC1fkd7rdnZRpoJ8KJ6AbpjIdlHdFc9QZX3ovNSUKJNJ9wirDdIgSorddTvH4MN3E1
-	H0aRdRfM4oCqMbCSD9SnJf7HA9mvr8E=
+	bh=wIvsQfFIhfnJPerBO+JoS38ScrQ+EYMMEjWxZ5bIlsM=;
+	b=szckVdgs7Bt9xjOjcM+YeKNSSn9qcJJPOOUGp4y+B0vEbB7f6iHdH7AkW5pLSQnefHaHRL
+	ODNiErxXCjNWqMGtXNjQmdAAcy4TdTGFxSJtYPsnc1O+t/txm14uLbNOvMcmi7LPxS0m3g
+	aunKNQehXdktYBG/s6QdjhrDhdBP7f4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1712127655;
+	s=susede2_ed25519; t=1712127976;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=VStNnPFhhkcWzvAWZLJlbNI7t7EFEcfNzWUOZ1J8U2A=;
-	b=bnvnFsWxlcqj/t4M+LaObN7H9y9n1E4PTw9UKBPok51GCuLDMzXgyXC4rGIQTWdtpKuyJf
-	smu/MDUDwNbr4UDQ==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=none
+	bh=wIvsQfFIhfnJPerBO+JoS38ScrQ+EYMMEjWxZ5bIlsM=;
+	b=eG2x1N0Ux9i7YH334r9nHzv3GUkooSAe1Sfgtc4HJ45jmgk9eLpN7s4aaDNvXpCe+xylyG
+	NIRrPgCWlBul+tBQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
 Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 0914413357;
-	Wed,  3 Apr 2024 07:00:51 +0000 (UTC)
+	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id A476913357;
+	Wed,  3 Apr 2024 07:06:14 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id e5qXOqP+DGalDgAAn2gu4w
-	(envelope-from <hare@suse.de>); Wed, 03 Apr 2024 07:00:51 +0000
-Message-ID: <d6e7fe8a-4677-4ca8-8db1-d186dbdbb461@suse.de>
-Date: Wed, 3 Apr 2024 09:00:51 +0200
+	id MvFsJub/DGZnEAAAn2gu4w
+	(envelope-from <hare@suse.de>); Wed, 03 Apr 2024 07:06:14 +0000
+Message-ID: <9f555953-6b41-4962-8f43-339326e30d6a@suse.de>
+Date: Wed, 3 Apr 2024 09:06:12 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -62,8 +62,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 10/23] scsi: add a device_configure method to the host
- template
+Subject: Re: [PATCH 11/23] megaraid_sas: switch to using ->device_configure
 Content-Language: en-US
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -96,61 +95,111 @@ Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
  linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
  usb-storage@lists.one-eyed-alien.net
 References: <20240402130645.653507-1-hch@lst.de>
- <20240402130645.653507-11-hch@lst.de>
+ <20240402130645.653507-12-hch@lst.de>
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240402130645.653507-11-hch@lst.de>
+In-Reply-To: <20240402130645.653507-12-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: 2.52
+X-Spamd-Result: default: False [-3.29 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[42];
+	MIME_TRACE(0.00)[0:+];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap2.dmz-prg2.suse.org:rdns,imap2.dmz-prg2.suse.org:helo,suse.de:email,lst.de:email]
+X-Spam-Score: -3.29
+X-Spam-Level: 
 X-Spam-Flag: NO
-X-Spamd-Bar: ++
-X-Spamd-Result: default: False [2.52 / 50.00];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 XM_UA_NO_VERSION(0.01)[];
-	 TO_DN_SOME(0.00)[];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 MX_GOOD(-0.01)[];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 R_DKIM_NA(2.20)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_MATCH_FROM(0.00)[];
-	 BAYES_HAM(-0.07)[62.73%];
-	 ARC_NA(0.00)[];
-	 FROM_HAS_DN(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 NEURAL_SPAM_LONG(0.70)[0.199];
-	 RCPT_COUNT_TWELVE(0.00)[42];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[lst.de:email,suse.de:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 RCVD_TLS_ALL(0.00)[]
-X-Spam-Level: **
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: EE9E935023
 
 On 4/2/24 15:06, Christoph Hellwig wrote:
-> This is a version of ->slave_configure that also takes a queue_limits
-> structure that the caller applies, and thus allows drivers to reconfigure
-> the queue using the atomic queue limits API.
-> 
-> In the long run it should also replace ->slave_configure entirely as
-> there is no need to have two different methods here, and the slave
-> name in addition to being politically charged also has no basis in
-> the SCSI standards or the kernel code.
+> Switch to the ->device_configure method instead of ->slave_configure
+> and update the block limits on the passed in queue_limits instead
+> of using the per-limit accessors.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
->   drivers/scsi/scsi_scan.c | 47 ++++++++++++++++++++++------------------
->   include/scsi/scsi_host.h |  4 ++++
->   2 files changed, 30 insertions(+), 21 deletions(-)
+>   drivers/scsi/megaraid/megaraid_sas.h        |  2 +-
+>   drivers/scsi/megaraid/megaraid_sas_base.c   | 29 ++++++++++++---------
+>   drivers/scsi/megaraid/megaraid_sas_fusion.c |  3 ++-
+>   3 files changed, 20 insertions(+), 14 deletions(-)
 > 
-I would have loved to move all drivers over to ->device_configure, but I 
-guess that can be done at a later time.
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+> index 56624cbf7fa5e7..5680c6cdb22193 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas.h
+> +++ b/drivers/scsi/megaraid/megaraid_sas.h
+> @@ -2701,7 +2701,7 @@ int megasas_get_ctrl_info(struct megasas_instance *instance);
+>   int
+>   megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend);
+>   void megasas_set_dynamic_target_properties(struct scsi_device *sdev,
+> -					   bool is_target_prop);
+> +		struct queue_limits *lim, bool is_target_prop);
+>   int megasas_get_target_prop(struct megasas_instance *instance,
+>   			    struct scsi_device *sdev);
+>   void megasas_get_snapdump_properties(struct megasas_instance *instance);
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index 3d4f13da1ae873..def0d905b6d9e3 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -1888,7 +1888,7 @@ static struct megasas_instance *megasas_lookup_instance(u16 host_no)
+>   * Returns void
+>   */
+>   void megasas_set_dynamic_target_properties(struct scsi_device *sdev,
+> -					   bool is_target_prop)
+> +		struct queue_limits *lim, bool is_target_prop)
+>   {
+>   	u16 pd_index = 0, ld;
+>   	u32 device_id;
+> @@ -1915,8 +1915,10 @@ void megasas_set_dynamic_target_properties(struct scsi_device *sdev,
+>   			return;
+>   		raid = MR_LdRaidGet(ld, local_map_ptr);
+>   
+> -		if (raid->capability.ldPiMode == MR_PROT_INFO_TYPE_CONTROLLER)
+> -			blk_queue_update_dma_alignment(sdev->request_queue, 0x7);
+> +		if (raid->capability.ldPiMode == MR_PROT_INFO_TYPE_CONTROLLER) {
+> +			if (lim)
+> +				lim->dma_alignment = 0x7;
+> +		}
+>   
+>   		mr_device_priv_data->is_tm_capable =
+>   			raid->capability.tmCapable;
+> @@ -1967,7 +1969,8 @@ void megasas_set_dynamic_target_properties(struct scsi_device *sdev,
+>    *
+>    */
+>   static inline void
+> -megasas_set_nvme_device_properties(struct scsi_device *sdev, u32 max_io_size)
+> +megasas_set_nvme_device_properties(struct scsi_device *sdev,
+> +		struct queue_limits *lim, u32 max_io_size)
+>   {
+>   	struct megasas_instance *instance;
+>   	u32 mr_nvme_pg_size;
+> @@ -1976,10 +1979,10 @@ megasas_set_nvme_device_properties(struct scsi_device *sdev, u32 max_io_size)
+>   	mr_nvme_pg_size = max_t(u32, instance->nvme_page_size,
+>   				MR_DEFAULT_NVME_PAGE_SIZE);
+>   
+> -	blk_queue_max_hw_sectors(sdev->request_queue, (max_io_size / 512));
+> +	lim->max_hw_sectors = max_io_size / 512;
+> +	lim->virt_boundary_mask = mr_nvme_pg_size - 1;
+>   
+>   	blk_queue_flag_set(QUEUE_FLAG_NOMERGES, sdev->request_queue);
+> -	blk_queue_virt_boundary(sdev->request_queue, mr_nvme_pg_size - 1);
+>   }
+That now looks odd.
+We're taking great pains to have everything in queue_limits and avoid 
+having to use the request_queue directly, yet this one call we're missing.
+Wouldn't it make sense to move that into queue_limits, too?
 
 Cheers,
 
