@@ -1,99 +1,152 @@
-Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D98086FE04
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Apr 2024 22:47:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D78F71723;
+	Thu,  4 Apr 2024 22:53:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712270840; cv=none; b=S7dh8wPZoLGpk1ptnIHcAc0z9cXbC0NWv4ri07pbXr+T69eDzBYV1YK3Uuj9rvHa2eeQlaaPwgN0sXPjEIFY3ShBcYGrmQsXmYfYivNONlQA+cehnC4rMFiscrZPjfEX16tSFwRMDBIZZu+dCdXrTP3tvZVet4Bm7HTPhBkyqOI=
+	t=1712271203; cv=none; b=CQHoQL6+vktB/WTYdn0XDtDQarNlL4Iwp1gxFX0D7LTA5Qw+zgYPa159skWaEMjlYCBeyExL+V1UXKBonxOWPtLjjHrF7L6gyW2st/YYhQ8HpFsK+wxnXtf/+sKM+kj9MH8pUW/eZiiu3pZ/VLYh5kgN9v/aGLfQS7zxfoivkEo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712270840; c=relaxed/simple;
-	bh=GK5pzepmmVWYbFilAnNrZGPMclLybNJcKRLNfoanMhs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OcEadwiphbFAGRUXLejbIgBkRTGiQBNLcK4TTnZagmlhcwlIp7h4iWzw7cswOisMdyoAhP42NKnDc6yrHkl6eUGhsbTyiaV6R8P+rUSbf0ftNlbDAgwgRcQFs59hno+1LO/M3MBAm7rb5CkK68XWkFV0i7o+dDk0CvNT+lK6i4c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=CsyJ2LyR; arc=none smtp.client-ip=209.85.208.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1712271203; c=relaxed/simple;
+	bh=nHDeIZjgG/ABq+COPbhriixxj1CJ1aiFsFPnz9B5/Ew=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nzXPltvc/38mxa0NM3bUVoz3/WDmJV9bb4Gffd77wvu/IRggzZ5bcSn0Ahz1dyD3UxIdk8C9x/x6KqNR3HfzjMM1eCmSdUtrmOv9wgJLJxxiAmHZ214Jkl4+nW3AGm91VaCm+GxrJ4Jomqbwu0L/Y6jd2OM2OZ6H4HDP1ghhQq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jI6yA9Ei; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="CsyJ2LyR"
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-5684db9147dso1885767a12.2
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Apr 2024 15:47:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1712270837; x=1712875637; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/LRQveA4Bd5KOhVN4LdN0SZIxg6xig22B4uSHmKqtVc=;
-        b=CsyJ2LyRvS8oihuylvfNysGQ1V2xxZVNKyjMpdEt+MyVGmcs3N9ztGytRmPZEuKk1t
-         t53cS6ruhGKwSZYmWExltNW/QaEYOH5ujc+fxwVWLz+91WplaR4G22N6rue5OEeqSPp6
-         HLZSAnHruo1GWvwlE2OqYbeyZgztyQYbJioakH8aYPteYZ2a1v6WoKhrrjS8lYaV5v6k
-         Y6zn9oZ3PAnYmINB4E4U5Mm7rVNGMo3Brr4JydWiL6pO4hN/kE3QvrvWugLRujxCbu8m
-         oszJiEpqDypwCBFk1IBvJ/ChPWQpJgNwPhW1wq8dA+xeOCidlPQFSoloVtWonnLyfnsS
-         Qvig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712270837; x=1712875637;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=/LRQveA4Bd5KOhVN4LdN0SZIxg6xig22B4uSHmKqtVc=;
-        b=MSNcXM1MCF3iMAhI0s+64hNXK6ZFIabGpZ92ygQr9gUBOBVjsFy+8ydy1g9EzhMUec
-         J1+UTcW8cZo0pisRXzd5J6e1JbSFX8WcYj92X0zVMD8JE+kMflMgV0Zqslv5kqZGC/wz
-         yaUaUNN7NSjqBI48SzANQil8czmfj8zt5xx2MaQc2hwL2q+X73xf9FVOI/Ha7IIWLmP5
-         wnimd7j0w6kXALPkdHrmPyJ9qlVqKPxS4DFZ9qtllwzMsrKVhIVEbzmIWvx64Hg6WLh2
-         grgGGPg93jwmKNCagim7Clkk7T7SjZlJF+hwwdhuiwLnruSNkjybjmTU3D0KLPkFixAp
-         ovQA==
-X-Forwarded-Encrypted: i=1; AJvYcCV5PQTjx4rpSPSx4PcZTjN1PPQtR/xSJMrzwhAwbXQXGxJBc1rIVgL1ebam98nzXZ/9ruWkXHpaa1jtyTwBu8ZuaFalTNt7lV1hMw==
-X-Gm-Message-State: AOJu0YxC4KAricaFzcF4mjuYTwMyQ+XUN3bNkqTuKKIVyehki2/+EOIv
-	PdvUskbd8xrxsvdiMx8HFgTbZJpVDHhHb/62cm/y/3XQQmadVb8LbGFzn+LhTwU81aU/9UpH/Ss
-	sJvrCnpuH8S0rJYD8LaSqj2QU4OWfdtJ6+wRz
-X-Google-Smtp-Source: AGHT+IEnCDKX45B3lu6sWf7htDSEIXJOE3CMEpgNyU8zZ5TzJ1ZTV6KrZtaHDn65ZZ6HiF90Ulsta1n4Fp9LqDkg6Lk=
-X-Received: by 2002:a50:8d58:0:b0:56c:3b74:ea4 with SMTP id
- t24-20020a508d58000000b0056c3b740ea4mr2641806edt.21.1712270837030; Thu, 04
- Apr 2024 15:47:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jI6yA9Ei"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1712271202; x=1743807202;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=nHDeIZjgG/ABq+COPbhriixxj1CJ1aiFsFPnz9B5/Ew=;
+  b=jI6yA9Ein2vQr/xrpwN8Wdagm7yBeJxof7VWn5CEPxe/EsC71g1w9spL
+   Y+VSCINywYjsWn4HO8pgnux8klDq/AJ4LGrR0UIyHE2tduDWPEIrx6IRg
+   Fpe7WN5hDQpt/GaO7Fo0cb2yFBTxU1Tgjq+EeDtn6R1yEEP9CoggIE28E
+   XHyyct9M1XPrvh6lVz6z7eW5Plzsyl0MpUh/X76w5Fj0weCWVjYMHycQt
+   r7J+3KzNtqMPZFwbTN1M8Ux+1+g6Z6Bc1CNRqylefVbjnTnrZnySJjGI/
+   HaY73yb3c9C07Q99wWYCCrNFAcsH+Yd+Nh1d3IDcDISvD8zA4rCAm1a8S
+   w==;
+X-CSE-ConnectionGUID: AxPZNNiXQ+Sm++dRuJQXTQ==
+X-CSE-MsgGUID: DGEll113QRa54DvJegj47A==
+X-IronPort-AV: E=McAfee;i="6600,9927,11034"; a="7747184"
+X-IronPort-AV: E=Sophos;i="6.07,180,1708416000"; 
+   d="scan'208";a="7747184"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Apr 2024 15:53:21 -0700
+X-CSE-ConnectionGUID: DMVI8dVNQt+mFpCKldjuFw==
+X-CSE-MsgGUID: qHDgff3ISNujXJMguBDG9Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.07,180,1708416000"; 
+   d="scan'208";a="50191958"
+Received: from lkp-server01.sh.intel.com (HELO e61807b1d151) ([10.239.97.150])
+  by fmviesa001.fm.intel.com with ESMTP; 04 Apr 2024 15:53:14 -0700
+Received: from kbuild by e61807b1d151 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1rsVxH-0001b6-2d;
+	Thu, 04 Apr 2024 22:53:11 +0000
+Date: Fri, 5 Apr 2024 06:52:21 +0800
+From: kernel test robot <lkp@intel.com>
+To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
+	sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
+	conor+dt@kernel.org, vkoul@kernel.org, kishon@kernel.org,
+	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+	s.nawrocki@samsung.com, cw00.choi@samsung.com, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, chanho61.park@samsung.com,
+	ebiggers@kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+	linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-clk@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	tudor.ambarus@linaro.org, andre.draszik@linaro.org,
+	saravanak@google.com, willmcvicker@google.com,
+	Peter Griffin <peter.griffin@linaro.org>
+Subject: Re: [PATCH 08/17] clk: samsung: gs101: add support for cmu_hsi2
+Message-ID: <202404050633.EZfOttFD-lkp@intel.com>
+References: <20240404122559.898930-9-peter.griffin@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <5445ba0f-3e27-4d43-a9ba-0cc22ada2fce@cox.net> <CAFhGd8pTAKGcu2uLzUDDxto1sk5-9zQevsrXp-xL0cdPcGYaGg@mail.gmail.com>
- <5ac64c472d739a15d513ad21ca1ae7f8543ad91c.camel@HansenPartnership.com>
- <CAFhGd8pg78F1vkd6su6FeF3s0wgF8BdJH+cOUsUdqLmuK6O+Pg@mail.gmail.com>
- <f8b8380bf69a93c94974daaa4e2d119d8fcc6d0f.camel@HansenPartnership.com> <784db8a20a3ddeb6c0498f2b31719e5198da6581.camel@HansenPartnership.com>
-In-Reply-To: <784db8a20a3ddeb6c0498f2b31719e5198da6581.camel@HansenPartnership.com>
-From: Justin Stitt <justinstitt@google.com>
-Date: Thu, 4 Apr 2024 15:47:05 -0700
-Message-ID: <CAFhGd8r1gGCAbsebK-4fD+cPeUCMgUG_XTx5fKa3cqJwNEEM8Q@mail.gmail.com>
-Subject: Re: startup BUG at lib/string_helpers.c from scsi fusion mptsas
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Charles Bertsch <cbertsch@cox.net>, linux-scsi@vger.kernel.org, 
-	MPT-FusionLinux.pdl@broadcom.com, Kees Cook <keescook@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240404122559.898930-9-peter.griffin@linaro.org>
 
-Cc'ing Kees.
+Hi Peter,
 
-On Thu, Apr 4, 2024 at 3:33=E2=80=AFPM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> But additionally this is a common pattern in SCSI: using strncpy to
-> zero terminate fields that may be unterminated in the exchange protocol
-> so we can send them to sysfs or otherwise treat them as strings.  That
-> means we might have this problem in other drivers you've converted ...
+kernel test robot noticed the following build warnings:
 
-Correct. Although certain conditions must be met:
+[auto build test WARNING on krzk/for-next]
+[also build test WARNING on robh/for-next clk/clk-next linus/master v6.9-rc2 next-20240404]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-1) length argument is larger than source but less than or equal to destinat=
-ion
-2) source is not NUL-terminated
-3) sizes known at compile-time
+url:    https://github.com/intel-lab-lkp/linux/commits/Peter-Griffin/dt-bindings-clock-google-gs101-clock-add-HSI2-clock-management-unit/20240404-205113
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux.git for-next
+patch link:    https://lore.kernel.org/r/20240404122559.898930-9-peter.griffin%40linaro.org
+patch subject: [PATCH 08/17] clk: samsung: gs101: add support for cmu_hsi2
+config: arm64-defconfig (https://download.01.org/0day-ci/archive/20240405/202404050633.EZfOttFD-lkp@intel.com/config)
+compiler: aarch64-linux-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240405/202404050633.EZfOttFD-lkp@intel.com/reproduce)
 
-I think fortified strscpy needs to be a bit more lenient towards
-source buffer overreads when we know strscpy should just truncate and
-NUL-terminate.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202404050633.EZfOttFD-lkp@intel.com/
 
-Kees, what do you think?
+All warnings (new ones prefixed by >>):
 
->
-> James
->
->
+   In file included from drivers/clk/samsung/clk-gs101.c:16:
+>> drivers/clk/samsung/clk-gs101.c:3640:7: warning: 'mout_hsi2_mmc_card_p' defined but not used [-Wunused-const-variable=]
+    3640 | PNAME(mout_hsi2_mmc_card_p)     = { "fout_shared2_pll", "fout_shared3_pll",
+         |       ^~~~~~~~~~~~~~~~~~~~
+   drivers/clk/samsung/clk.h:229:44: note: in definition of macro 'PNAME'
+     229 | #define PNAME(x) static const char * const x[] __initconst
+         |                                            ^
+>> drivers/clk/samsung/clk-gs101.c:3633:7: warning: 'mout_hsi2_bus_p' defined but not used [-Wunused-const-variable=]
+    3633 | PNAME(mout_hsi2_bus_p)          = { "dout_cmu_shared0_div4",
+         |       ^~~~~~~~~~~~~~~
+   drivers/clk/samsung/clk.h:229:44: note: in definition of macro 'PNAME'
+     229 | #define PNAME(x) static const char * const x[] __initconst
+         |                                            ^
+>> drivers/clk/samsung/clk-gs101.c:3631:7: warning: 'mout_hsi2_pcie_p' defined but not used [-Wunused-const-variable=]
+    3631 | PNAME(mout_hsi2_pcie_p)         = { "oscclk", "dout_cmu_shared2_div2" };
+         |       ^~~~~~~~~~~~~~~~
+   drivers/clk/samsung/clk.h:229:44: note: in definition of macro 'PNAME'
+     229 | #define PNAME(x) static const char * const x[] __initconst
+         |                                            ^
+>> drivers/clk/samsung/clk-gs101.c:3628:7: warning: 'mout_hsi2_ufs_embd_p' defined but not used [-Wunused-const-variable=]
+    3628 | PNAME(mout_hsi2_ufs_embd_p)     = { "oscclk", "dout_cmu_shared0_div4",
+         |       ^~~~~~~~~~~~~~~~~~~~
+   drivers/clk/samsung/clk.h:229:44: note: in definition of macro 'PNAME'
+     229 | #define PNAME(x) static const char * const x[] __initconst
+         |                                            ^
+
+
+vim +/mout_hsi2_mmc_card_p +3640 drivers/clk/samsung/clk-gs101.c
+
+  3627	
+> 3628	PNAME(mout_hsi2_ufs_embd_p)	= { "oscclk", "dout_cmu_shared0_div4",
+  3629					    "dout_cmu_shared2_div2", "fout_spare_pll" };
+  3630	
+> 3631	PNAME(mout_hsi2_pcie_p)		= { "oscclk", "dout_cmu_shared2_div2" };
+  3632	
+> 3633	PNAME(mout_hsi2_bus_p)		= { "dout_cmu_shared0_div4",
+  3634					    "dout_cmu_shared1_div4",
+  3635					    "dout_cmu_shared2_div2",
+  3636					    "dout_cmu_shared3_div2",
+  3637					    "fout_spare_pll", "oscclk", "oscclk",
+  3638					    "oscclk" };
+  3639	
+> 3640	PNAME(mout_hsi2_mmc_card_p)	= { "fout_shared2_pll", "fout_shared3_pll",
+  3641					    "dout_cmu_shared0_div4", "fout_spare_pll" };
+  3642	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
