@@ -1,48 +1,48 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 412171C6BC;
-	Thu,  4 Apr 2024 16:55:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B38DD17BA8;
+	Thu,  4 Apr 2024 16:57:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712249732; cv=none; b=JdQBHrTgP9U6QjnfhOc/HSYvxl5lamXRIYo6BiBCnNdQqGLqHqnNE0LQvn5K1e1CzPJkPiM84cO6hAogrqgGWVUPhDJcQviJXkOwhPKG1lUsmi+IXVpxi6Jel7ZkFzDg0Gb85b9KA3cPrmL60WYXOKQBXMSfA1pkl65JEMHbIrU=
+	t=1712249823; cv=none; b=CLX1bnqx16zVAM+cHwt2YdKGBK7fM9KqCym8L20x1sd0LqlRUCtu75RyurbFAapfAJgfpYXLAZIJZ7kdQRZRXVddbccM9b92ogwx2NFYqlXNC2XBLpB463eOrNnOYEVGQHythLEsHEQ4DM9oZSvOSzbwYLSNfiAV86zUZSk8uJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712249732; c=relaxed/simple;
-	bh=8lQtW1kp7macBz9tX7shCodlhTYazmDMYCkB9n1ZCuU=;
+	s=arc-20240116; t=1712249823; c=relaxed/simple;
+	bh=ZOMLDwTDvaOPkx3hr4wdk+6+YXmZbgmTSDuQk0pW44U=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HiZk3Isb+u0DZprJkAH+4VYNabv3OddIBnN42HWFVgeVDS7bT4V/kJBh6+vEufrC/0YTydKpMur6ps6KmM0G3xhP4juLjw6g5vbm9kMIasXhf7o5Ft0uQA60UvoSaVH/TgG+X0UL5DWguhOw9dzvONR0HTXDv4fi3zgMcizS2F8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Ez4neXk7; arc=none smtp.client-ip=199.89.1.12
+	 In-Reply-To:Content-Type; b=N8fQEuEB1A+TpyF8/cA1IWK1/W39ouvmrdKH0jMOgOYLTrXU/Q2QXqWeWcSLZPeWkQ6BnytdX7XvyGEwk1miPiXVaLzBq4BsqjIw+udre7iyfcZrjwwBh9wSZp+Dt4RBFZN8qtveOxm7jpycfBfWkqnaMya3bK23MD1VxvVI7l8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Gv+WvMz6; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Ez4neXk7"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Gv+WvMz6"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V9SRQ368yzlgTGW;
-	Thu,  4 Apr 2024 16:55:30 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V9ST91smhzlgTGW;
+	Thu,  4 Apr 2024 16:57:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:references:content-language:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1712249719; x=1714841720; bh=ZPij4v4Q1/Tj4lhxhuIsLToh
-	gUfceO3NthUEwaR+ETY=; b=Ez4neXk7Nh2qjov4cYKcL6CSs7f5UCE1l27BZHaO
-	THv2b6Bu0s4/N8wpETOOfkbGU/9GO/KM3+prcjHyP/ZhiwstRtql/bg+gf5epCY5
-	r4cC37Bns1I30xjLNNgVW3XS3MqVBsaLidTU6eMi4mWzlM30bo2M5N+SnGs3QVnU
-	q4vws7Hkvvo90QhMxD6KEy+mcrJn3Rfyg2VdF+sezt42jePr52mlayRvNF20tEXA
-	EspmPffypngn6UticUMaoOspe+wYz4ToG96L7Rh4AwxGiQ84hdRqZRLBXPCBT7vK
-	5OXyHE7T6v+JMX49m6sJjmTaU53giAPJ8uj86vII+sHIFA==
+	 s=mr01; t=1712249812; x=1714841813; bh=5v5iMJrhr92ajSpicNdBGcbn
+	QO35Gg4ei5aK8q/jLec=; b=Gv+WvMz6VEfVcuDiXqYdAGdaMixeKvrKkYtUIYMS
+	mb9/JU2O/XiWADdi8ruLUFiAMusmPgFLl4fn/AeNQ3k7el43eweKxQwi/+DRrCUt
+	p/sv6aEwZFFZNaP2o1H42IIV+n2s+zAPANcsp6MZ6nWmv8b+ZLY1lVbAocYv+k00
+	LnoYrgf7hEoXiAIEjdT+rwF6AiO/y7CS3B/Zm5cP+C1CHW85TOLBqVqJiDzkzGZn
+	o/d23U2fdVdPdnWLmPrICnIIjMtYyqeMVv5XRHq+i/cUmfLSPe9IV7qHaKOnySQ1
+	n4H/MjbVYE3SHnAr4AlRmSDRt0GcoqQep3eqHUkee5ZCDQ==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id mOUqj_SbWF1Q; Thu,  4 Apr 2024 16:55:19 +0000 (UTC)
+ id ROX_SkAJtjED; Thu,  4 Apr 2024 16:56:52 +0000 (UTC)
 Received: from [100.96.154.173] (unknown [104.132.1.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V9SR63jR1zlgTHp;
-	Thu,  4 Apr 2024 16:55:14 +0000 (UTC)
-Message-ID: <8011f224-04f2-40b6-84ad-fc0fb3d10b16@acm.org>
-Date: Thu, 4 Apr 2024 09:55:13 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V9SSv06MTzlgTHp;
+	Thu,  4 Apr 2024 16:56:46 +0000 (UTC)
+Message-ID: <f272dc57-dc2c-46f2-8390-e801fa5c4bf8@acm.org>
+Date: Thu, 4 Apr 2024 09:56:45 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,7 +50,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 03/23] mpi3mr: pass queue_limits to bsg_setup_queue
+Subject: Re: [PATCH 05/23] scsi_transport_fc: add a max_bsg_segments field to
+ struct fc_function_template
 Content-Language: en-US
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -82,28 +83,20 @@ Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
  linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
  usb-storage@lists.one-eyed-alien.net
 References: <20240402130645.653507-1-hch@lst.de>
- <20240402130645.653507-4-hch@lst.de>
+ <20240402130645.653507-6-hch@lst.de>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240402130645.653507-4-hch@lst.de>
+In-Reply-To: <20240402130645.653507-6-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 4/2/24 06:06, Christoph Hellwig wrote:
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> index ce5445eb9d0e4e..05e061fc6d3a06 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-> @@ -1838,6 +1838,10 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
->   {
->   	struct device *bsg_dev = &mrioc->bsg_dev;
->   	struct device *parent = &mrioc->shost->shost_gendev;
-> +	struct queue_limits lim = {
-> +		.max_hw_sectors		= MPI3MR_MAX_APP_XFER_SECTORS,
-> +		.max_segments		= MPI3MR_MAX_APP_XFER_SEGMENTS,
-> +	};
-
-Can 'lim' be declared 'static const'?
+> ibmvfc only supports a single segment for BSG FC passthrough.  Instead of
+> having it set a queue limits after creating the BSD queues, add a field so
+                                                   ^^^
+                                                   BSG?
+> that the FC transport can set it before allocating the queue.
 
 Thanks,
 
 Bart.
+
