@@ -1,118 +1,93 @@
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39FD713A418
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Apr 2024 12:27:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0504C1E4A2;
+	Thu,  4 Apr 2024 13:01:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712233673; cv=none; b=OUnoyTN+uvMkChO88RVifeBXN9VHoahI8M9iIkff2plqYSn/nH52Qa/59XPvOLOWJAZceyM/3XmVS9Ig3vxbhBCZLwpGj2LHzsX8423SGmeDT+Duxo098kr4nI1vVdB1dBQIyAjfdwnFB4vDBXdQ8NY0uuqQW4nFbXSQNtdE9sM=
+	t=1712235693; cv=none; b=dd+PqNSlBpVQL2O/I9DFg1ycK+uPDEZYA9mwMu1FsKMq+htvssuJn/15+8/k2kQA4btTYfwMMhwG0Z5R2kFvoAfoFXYXlsAMXOsXT8nEU11+mM5qrnU8UTbkLKc+Rb/SbbrxklqGY+cG0IQvWRscmpkIJjIlb46I+iz/Jym0E5o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712233673; c=relaxed/simple;
-	bh=1usg8EVo8lpQx89y6EqbzjPZs8xvMoC2TNFiu1OGw0Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ghnuwNNwUHsyOuiq7Wf0JmVWOrcjG4q9EZCvn3EErqy3+dREFLGlOVQA5YqfkWOlSQsD3zxuF0YcGh55sljmXl/KFTdiTHqgdVYn/JAGl0FyzZjD2HgqHsYyvZfCFB/9f/ap3mVPwU+0QATtNaSvoEsO/lbwRaca/kS2Jky9GyA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=WZIzIfnH; arc=none smtp.client-ip=209.85.221.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1712235693; c=relaxed/simple;
+	bh=ahPv2aISO6mwkEDr+g7AhXKh7nD0iQvZKFDvKrjlLnE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lzTaQx4w0vqGN5xez61hVHedwX/nyHJ3mx/bu/qe0bsqTH5V8X9PDKQV+Of7nhpOtR6u4iGltlldQOjfYpH1DwY2ETtWhcuezW4k2Bt+OCC5FvHbNgsH1hICogPVeHMGLo4M1jJuKYJ9HzVrIGfhYGY1slPvqLyOV+TFvJdiI2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=ZdKmzqsq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="WZIzIfnH"
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-34339f01cd2so674287f8f.2
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Apr 2024 05:27:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1712233669; x=1712838469; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=v2/Kxl6LpRi19aNU0GnPRsNjsIub/vSGQr1JFgUlFR8=;
-        b=WZIzIfnH6HJ7sajXhnlneF1gm+bprHF1U58Ah9UEwE+H9i6X2vMO4oV6ihl31ghRwl
-         MNRQYj8fjJZletlEGf74dOmfA+EuisSxrs2Tw7Z/52TAy0DCubRAWXXIpYo7hGREiO2f
-         auejeMaB2Seshjovc5VYLUa55cRKk8YN/w4lHTlDzM++NOFLJXVBM6RzNRUDoOOXUoH0
-         HA/wWgMobQp26f9xQq76gMQexyXcpc+6gjUIFUQCotuW4xA8isLyDkAaxVtvQNddGv23
-         HXHsiTteEBllJNCkSNO2/vaTYr2OtkN409KlidGqsuVThurbaxN82/9q99XmQpBUdBzd
-         cT4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712233669; x=1712838469;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=v2/Kxl6LpRi19aNU0GnPRsNjsIub/vSGQr1JFgUlFR8=;
-        b=TNb3xL7vvV43O+C2ebFOMuAjsVdCEAfmhpSNdIYK0KxlD2oJ5a+q+nUUWHNcVhMjt0
-         w8slbi1F5IqEJEdg+1LbsZ0y20+iTKWNy3MFd+oOXKooFrIKDJH9RbAQc1xdaZsTucv7
-         tAbEc/qdspquSwvyqDNnqsG0KJd5GwJ58xhRJmraOetcajq/qzNB+Tq1c86ek9/BKbi6
-         rC1iU+TET3cDxahw089CNciqmznva/ieU6i7SgdziRSzHLUP6XmQqOh/QItMUUmtz9g1
-         ZZDRZ9N1FhB2RIYtkVDRwYMiHf4uo9zq6kkafrlGXhGY14DGz8b0b8s5mvViwhJb8Pxz
-         fc/A==
-X-Gm-Message-State: AOJu0YySgwLn8mGSnE0nfRT9xfmed3VYLu7CuUsSTumYXyQ7bd9/cVdm
-	dOUJ07zu3M3nrn9/hONwjTqNTM9DgXGTd1WBMebZZflBBfHAGVP4kpUJ7GSokXs=
-X-Google-Smtp-Source: AGHT+IE4lWG03NrsYGIMb38leE/EL6KNHhTvu/DlJtCiu5w5jF8R4KkplAWIhngCJVQJeXTuDbWSsA==
-X-Received: by 2002:a5d:58e6:0:b0:343:419d:ba87 with SMTP id f6-20020a5d58e6000000b00343419dba87mr1780461wrd.13.1712233669746;
-        Thu, 04 Apr 2024 05:27:49 -0700 (PDT)
-Received: from gpeter-l.roam.corp.google.com ([148.252.128.204])
-        by smtp.gmail.com with ESMTPSA id bu14-20020a056000078e00b003434b41c83fsm12106303wrb.81.2024.04.04.05.27.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Apr 2024 05:27:49 -0700 (PDT)
-From: Peter Griffin <peter.griffin@linaro.org>
-To: mturquette@baylibre.com,
-	sboyd@kernel.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	vkoul@kernel.org,
-	kishon@kernel.org,
-	alim.akhtar@samsung.com,
-	avri.altman@wdc.com,
-	bvanassche@acm.org,
-	s.nawrocki@samsung.com,
-	cw00.choi@samsung.com,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	chanho61.park@samsung.com,
-	ebiggers@kernel.org
-Cc: linux-scsi@vger.kernel.org,
-	linux-phy@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	linux-clk@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	tudor.ambarus@linaro.org,
-	andre.draszik@linaro.org,
-	saravanak@google.com,
-	willmcvicker@google.com,
-	Peter Griffin <peter.griffin@linaro.org>
-Subject: [PATCH 17/17] MAINTAINERS: Add phy-gs101-ufs file to Tensor GS101.
-Date: Thu,  4 Apr 2024 13:25:59 +0100
-Message-ID: <20240404122559.898930-18-peter.griffin@linaro.org>
-X-Mailer: git-send-email 2.44.0.478.gd926399ef9-goog
-In-Reply-To: <20240404122559.898930-1-peter.griffin@linaro.org>
-References: <20240404122559.898930-1-peter.griffin@linaro.org>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="ZdKmzqsq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43D6CC433C7;
+	Thu,  4 Apr 2024 13:01:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1712235692;
+	bh=ahPv2aISO6mwkEDr+g7AhXKh7nD0iQvZKFDvKrjlLnE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZdKmzqsqsd9SZw520Qu8YgIgS0NDnyZXU3FV3KZiW/sen/MPZWNYwZEVu54qwCyEq
+	 bvmed3ixm6wbYMKfm7GX2PSBVE3kEzxZdtH7Y86qBGgvveFk03zXJft18HS9Nhq6DD
+	 Mwcm4yMvmlNVJrmiXJgGF2YHRfbHh/lgZ56aRKoY=
+Date: Thu, 4 Apr 2024 15:01:29 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Takashi Sakamoto <o-takashi@sakamocchi.jp>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"Juergen E. Fischer" <fischer@norbit.de>,
+	Xiang Chen <chenxiang66@hisilicon.com>,
+	HighPoint Linux Team <linux@highpoint-tech.com>,
+	Tyrel Datwyler <tyreld@linux.ibm.com>,
+	Brian King <brking@us.ibm.com>, Lee Duncan <lduncan@suse.com>,
+	Chris Leech <cleech@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+	Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+	linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net
+Subject: Re: [PATCH 22/23] uas: switch to using ->device_configure to
+ configure queue limits
+Message-ID: <2024040422-justify-portfolio-4a66@gregkh>
+References: <20240402130645.653507-1-hch@lst.de>
+ <20240402130645.653507-23-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240402130645.653507-23-hch@lst.de>
 
-Add the newly created ufs phy for GS101 to MAINTAINERS.
+On Tue, Apr 02, 2024 at 03:06:44PM +0200, Christoph Hellwig wrote:
+> Switch to the ->device_configure method instead of ->slave_alloc
+> and update the block limits on the passed in queue_limits instead
+> of using the per-limit accessors.
+> 
+> Note that uas was the only driver setting these size limits from
+> ->slave_alloc and not ->slave_configure and this makes it match
+> everyone else.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>  drivers/usb/storage/uas.c | 16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
 
-Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
----
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 491d48f7c2fa..48ac9bd64f22 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9256,6 +9256,7 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/clock/google,gs101-clock.yaml
- F:	arch/arm64/boot/dts/exynos/google/
- F:	drivers/clk/samsung/clk-gs101.c
-+F:	drivers/phy/samsung/phy-gs101-ufs.c
- F:	include/dt-bindings/clock/google,gs101.h
- K:	[gG]oogle.?[tT]ensor
- 
--- 
-2.44.0.478.gd926399ef9-goog
-
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
