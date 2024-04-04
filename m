@@ -1,74 +1,99 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C0F55D73B
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Apr 2024 08:06:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4C2B71753;
+	Thu,  4 Apr 2024 08:45:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712217971; cv=none; b=pYiu6+Ik/cnvfEfsZuRoeCeqbJPnbpUD0QenuqunycRHuO6k9EfQyfafO0QvMALX0SXKDMqvbn7wFS2Qgijy0zSz6kqEC2ISY6H+gxIqLxC8AgAXqf6+PpaHBL6YnqSm+DmO4Pnbj/mOmzmfq8B9s5ztXsWa4ZYSVDV8HR5DS+I=
+	t=1712220329; cv=none; b=WDVqEo/j7ampoZj5iavK95SYm1RcTGMuNQUyT/Ka0qbGt5EYx+x00iCJmzxDg33ipwee0hOcbx4TRK1gzoPf70Zp7Jxt0lifgU7pUdzb0vdCK3KVCnc3/XdTuCdgl+dt5/0XMle6fZDmPH5uKChqkEygkgyOtLZrZ+i0U/m6RS8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712217971; c=relaxed/simple;
-	bh=+wHpL4ELB4tfY8mzxRYQtTI5PgupGQUzD7JeK2UYRc8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Content-Type; b=INfkxXS9FDkMm9o9cPeapcsnzvkPTGYo6C5PIvOeBW/AJii0rTxhvLEfq7Hd0UH4TRdv6BDSolw2Tt5C5gydz0sq5OzDAVVtVI1lgnD+WWwciB6/Tt9Hyg0PMrWFfx4PZVNTusOIlD9kLVj9Tns6gf+bkPdHFTeIcewUBuEL1tY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MO8NHEjd; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1712220329; c=relaxed/simple;
+	bh=nNjYtJ6W1Mtr1ivn7OkdkKbS7g/qq3oceFOOT1o1db0=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=kNNNEOpzKYYDcSk3Avn+Wm8GRVn5vacx4jDxlFkkBcB4F6kCKWIMgy4za1k1KNYEz118fN0e0nhrSLYLXHQgRA1YbudFdV07Iwskygt7zDZA7JitJwoV/ML4ElH4130jcHeM0+2qjAwl+7DMUdeYN4pVimUA3ajeJuaA1iGpPnQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iSFBUhrw; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MO8NHEjd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1712217969;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+wHpL4ELB4tfY8mzxRYQtTI5PgupGQUzD7JeK2UYRc8=;
-	b=MO8NHEjdOT59jMwV9vJCLiu3I6hXHfu22YBhqrJ+ka0QTOg96SohokllvQywWQWWAxoNOI
-	m37uKUaUSk5Qj8LRpVru4TlY8vd75idCRqRmcq7zooYmFUmAv8k7PfEKgUpWpHZig0OfEp
-	c4AbqMc6LtEe8PCzkh+Lr4cV+k5jyJ4=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-267-UYPTYBspN9qlv0OOHA16hQ-1; Thu, 04 Apr 2024 04:06:05 -0400
-X-MC-Unique: UYPTYBspN9qlv0OOHA16hQ-1
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2a25f6ca48dso635716a91.2
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Apr 2024 01:06:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iSFBUhrw"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-4162b74f28dso1264275e9.1;
+        Thu, 04 Apr 2024 01:45:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1712220326; x=1712825126; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=nNjYtJ6W1Mtr1ivn7OkdkKbS7g/qq3oceFOOT1o1db0=;
+        b=iSFBUhrwuKYqSn5YQCHr6yrUhN1SfDassB/mjveJ9Jd58n9MRCoXJUWqBqeyFb2RhN
+         VdbNe4adJHgYtRHgDBLZYDPYLYo+KvNHKpXtyldaJQol8dbXL/q35D5jZvaiYdXLC4QH
+         crByPX+ov3O/qBSvfs9qjcMeeu9OVUX8Sh0NRypobpN/3ySDEc+POhL92iXAWcl+/eq0
+         Oy5meYwq42v9s0uAxyeukKX8yYweuTa1IQVK5klapUuFdSIDKJhX3gIoIb6xoc3hg29v
+         wPzmXImRK/nngjTVC8wDoA/RGqIPglWhJWYKetR55UFNSd9UCSLwbRsQWMl+0vyfU8Kk
+         I+bg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712217964; x=1712822764;
-        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+wHpL4ELB4tfY8mzxRYQtTI5PgupGQUzD7JeK2UYRc8=;
-        b=YUMW6a2FeZxC2oBjr3+Lbt6FdgcZ+dQcGyvbKYTv9jmKs/mZLB2FltCXX4rh2QPFLo
-         yYYCjOCkiQUqJgypg5yW75KXG8vBtzfdjaPgWJSZUU9/ITwJDURZfrAwFdaXzzZ5EtLv
-         U5Npn6gmJOJTgmpmQOgQnYCbfen4IFPBYZ8fOOPtTwIVdUD28yuPtUBbdNIXcbiy+LNR
-         HTtrWpfd0oxWkb53y9kITbqWGMRRbYq0r+anXKk1V1B1pmXAUWusuUd1SohDyfKbn4LS
-         vm27w6/gwOjx7Os/gwct73055plLkCytw6QoJ49vQ7wUL479JDW1FaiU2v5Lwgoq1rvs
-         PZ1w==
-X-Gm-Message-State: AOJu0YxDhqN82Si/RmIYAyQz9CMQhewcDojiwfHGkS+532F8Oy7glS4t
-	LXs/YXMXyLhKlu5b1PjblswU8OVrcVM6IkJtcu/Twaja0lr+/3wwkYKjXGrn37hGdtkq4s3P0kv
-	6xgFlIvtAFDKKyszofQJWVZFCep36PBmOflJgxVPzNEUGtasZFMifVl4CkIILKjXMQ1D+44jlNV
-	76DaPzn3MEeb6SWiOCQs4JSKEoHJfnE3vucG7RFqHqX1qljxg=
-X-Received: by 2002:a17:90a:ec0d:b0:2a1:2506:b937 with SMTP id l13-20020a17090aec0d00b002a12506b937mr2226151pjy.23.1712217964030;
-        Thu, 04 Apr 2024 01:06:04 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGkKHO/cONwvuFdkQZiZKtVE1dkpTD6nsu31UXIKLCeKirfB5PxDLdPI3NngPMfmQ8LHQ7Nn+2aaHLhjliCgYc=
-X-Received: by 2002:a17:90a:ec0d:b0:2a1:2506:b937 with SMTP id
- l13-20020a17090aec0d00b002a12506b937mr2226133pjy.23.1712217963719; Thu, 04
- Apr 2024 01:06:03 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1712220326; x=1712825126;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=nNjYtJ6W1Mtr1ivn7OkdkKbS7g/qq3oceFOOT1o1db0=;
+        b=xT6SQzZuxByvIV1Ym1rPyLMTlbNJBCnrRBqvoEz/sNgZJjIqdYSm1uGUmO483PMsjv
+         crAmsAWLZL1vY6y30Tl7J6sF6r/83VZo/rqDQHZh4C+Pdmt/2K+64Gedw86GJmZLsIJX
+         mFNpSmzweSaFJtq07jCg5VU5M3FmE9PbI/F+GDwl5SFrpPgkcBfD27Q44QVXw+7foLPN
+         QIw9NCNIbiyNbPyXa/pRbr44QFeubk8YtwYL+5oFINlCfqey1RFOcIVU3ucpD+m8ZOWI
+         YWsjqsjk39NhwcWNIEzAfuhTNF6nDCv0cyjd832n/9yZJc5VNaTDCYRpYyNR/O7JN5pr
+         vb6Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXT7eshOEU12Uo0KvovjYVUFCJMvKkAhzE62Hdq4SvoM6AtJCpu2B8rLnBY95QVSE9KP0LMww+oO/TzESxi538c35qxkk7O6dcZZt35brO5LeoCQPXgcVYtp0ekl8n7z1sNP+TUvezppQ==
+X-Gm-Message-State: AOJu0YwQ527DVTlTN/zNSPfX29BjnH8ISmDnY8M4kp8TiypZytez0/wk
+	tzGCtu/yZe9kighNG1spojCsM9rsnMwDC/HPJRkLKQKLrjsf1B4/
+X-Google-Smtp-Source: AGHT+IFK0eiuIzcxxHIm6H9cFcqoGlHOwosgXeeQW/AkhYd+5IL8TAtp/fI8QWyMKsjgGJmiuHkZew==
+X-Received: by 2002:a05:600c:1d19:b0:415:6afa:1d15 with SMTP id l25-20020a05600c1d1900b004156afa1d15mr1373658wms.28.1712220325810;
+        Thu, 04 Apr 2024 01:45:25 -0700 (PDT)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id bg35-20020a05600c3ca300b004162020cee2sm1930012wmb.4.2024.04.04.01.45.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 Apr 2024 01:45:25 -0700 (PDT)
+Message-ID: <535d994d8498daee40fda2d044cefeeda33ac38b.camel@gmail.com>
+Subject: Re: [PATCH v2 1/1] scsi: ufs: Remove support for old UFSHCI versions
+From: Bean Huo <huobean@gmail.com>
+To: Avri Altman <avri.altman@wdc.com>, "James E . J . Bottomley"
+	 <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Bart Van Assche
+ <bvanassche@acm.org>,  Bean Huo <beanhuo@micron.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 04 Apr 2024 10:45:23 +0200
+In-Reply-To: <20240327071714.757-2-avri.altman@wdc.com>
+References: <20240327071714.757-1-avri.altman@wdc.com>
+	 <20240327071714.757-2-avri.altman@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAGVVp+VPe31d8=Uf=6TwY2v_P-d33kJKxHJPd-zcwq2hz0-3WA@mail.gmail.com>
-In-Reply-To: <CAGVVp+VPe31d8=Uf=6TwY2v_P-d33kJKxHJPd-zcwq2hz0-3WA@mail.gmail.com>
-From: Changhui Zhong <czhong@redhat.com>
-Date: Thu, 4 Apr 2024 16:05:52 +0800
-Message-ID: <CAGVVp+VTfZ4HorQQWR74-BR9S1CCaKJKnG_1R-CJxG3w4XMJmA@mail.gmail.com>
-Subject: Re: [bug report] WARNING: CPU: 2 PID: 987 at drivers/scsi/sg.c:2236
- sg_remove_sfp_usercontext+0x1bc/0x1d0 [sg]
-To: linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 
-looks this issue the same as
-https://lore.kernel.org/linux-scsi/81266270-42F4-48F9-9139-8F0C3F0A6553@linux.ibm.com/T/#m5ac1793fccfc9ea8fe5d1f0df582830ce1ba17fe
+On Wed, 2024-03-27 at 09:17 +0200, Avri Altman wrote:
+> UFS spec version 2.1 was published more than 10 years ago. It is
+> vanishingly unlikely that even there are out there platforms that
+> uses
+> earlier host controllers, let alone that those ancient platforms will
+> ever run a V6.10 kernel.=C2=A0 Thus, remove support of host controllers
+> prior
+> to UFS2.1.
+
+
+>=20
+> This patch removes some legacy tuning calls that no longer apply.
+>=20
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+
+
+Hi Avri,=20
+
+I think it's safe to remove support for UFS versions < UFS 2.1, but not
+100% sure, let me check and give you a solid answer then.
+
+Bean
 
