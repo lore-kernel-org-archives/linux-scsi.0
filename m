@@ -1,154 +1,135 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38CFE1C6A5;
-	Thu,  4 Apr 2024 16:48:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5E5E127B70;
+	Thu,  4 Apr 2024 16:53:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712249327; cv=none; b=fTfPXjgtTs8ZqZFLuF/qb61Dnf3nGehB6sFWZa0CtK9znNpO3TPOYCgaATl0e/A6yhL8UDfD7xJ5emXynPnEQlc/6av1x5my8qB4p2G23HsZ5ancVftxTgUkXht+xO781iIGagv25BoagP77uAykj5OyyoJIL3Zi8o/FYOFgYwQ=
+	t=1712249606; cv=none; b=Nrki/NpXSJzIcszwFT/lATM0SOGWhp+BRik9Mqm09s3E6kO18Z4nz1k/v/bhR9ynyErfW83HyY+UnhW9/hksvbrlPAqy8CZDwDazuSIT8OxGN+YNA/s7/OCsM22C/OOHwaNgO0AvJABGFdVIzrcu0huso7p9aouNqXAO3rpEtkI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712249327; c=relaxed/simple;
-	bh=FItxQKIKnB6xDpTy4OuJ7+aJw2KPqlzMNdwMCbAlF6c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Pfb4GXbGLAP+qyUJNa2wieeOPLptd8Z4YYw3zuZgD7n29dHChK1SW3jjPGbo8yGq6W/aJKHm0EITRFQIPE9UmmeYGU8JZZxmFdVCFdlkviCaQ7cNpkxNcLVmO0af8wPyYfCtwQYBtbvQEu7sNwsYXWa8PyhH86W1wRxM4iu+zCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=mZVvZ5Qt; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1712249606; c=relaxed/simple;
+	bh=SdH54DHBbllrzcbHGYDWtbkgYem6p5gDUyIgqd2Vsy0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JpjEpXvC4hZcuR7GUJ9XHYw+k47luaqN5lO69PWAKqqF5rEr22kLB4qpWSK+5H8nprwGzP4xGaEVhpma7YQwG6aY6dTqrEwY6r/k2ie4auPtLb28KcABbuqJQXNibXDIikuYIrOT19TWdUXUOwMAJgkpZiAJjA/eKNijV2NdwjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=x6xybBpb; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mZVvZ5Qt"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=IAcMzbwzMSdGjUZJwsigBkmbiIdxzP3w50+Ad4sa5UQ=; b=mZVvZ5QtSrlprrhnUVhWEWIU7E
-	sphdhQo7g/IJfa+/FvwlZsRFYmJ5wkNkd4AWif4Utjy+vMZEnwOad5hHf+SRbN7FGKw+i0FGqJBM4
-	yF2PaxBkNGMpqYBfoujAS+qFScyAlz3vNlovdCRtdSYfHINucazB4MwtfIsMPo5qEa0NQKwlFZIUA
-	VfRN+/hUWdkFBdAGtszp5axo9ZNsq2cyjqNAFaNh3mFRGcmLETrtGXGf3qXwEZGqMoZx63OmbHyON
-	JugVn8XGevOpUa3bOez65lUMoibZGmnJJ93pBOBTs99hw8DRim6xKVB8Vqfk/oU+BU912iDFwt/nX
-	hMyfZDfA==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rsQGP-00000008SrU-2u2m;
-	Thu, 04 Apr 2024 16:48:33 +0000
-Date: Thu, 4 Apr 2024 17:48:33 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
-	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-	io-uring@vger.kernel.org, nilay@linux.ibm.com,
-	ritesh.list@gmail.com
-Subject: Re: [PATCH v6 00/10] block atomic writes
-Message-ID: <Zg7Z4aJtn3SxY5w1@casper.infradead.org>
-References: <20240326133813.3224593-1-john.g.garry@oracle.com>
- <ZgOXb_oZjsUU12YL@casper.infradead.org>
- <c4c0dad5-41a4-44b4-8f40-2a250571180b@oracle.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="x6xybBpb"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V9SP00GDKzlgTGW;
+	Thu,  4 Apr 2024 16:53:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:references:content-language:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1712249589; x=1714841590; bh=ZDHIypNAZMTo+VzP8iaJudcx
+	+oAEkGDyDOLcGqvzK2U=; b=x6xybBpbU7doAbetK6BxrMB/jZL/nTWFcpNORO6H
+	io8W0ddeWENBxGFBRtHAfTjBs5gbFUi91BTmwYOOuEDu5ZOKKgkFX59QF8J7/Odd
+	TPrhccLRXWXF5Trlh6f8oErGIRlojrsu6je9HsPPp0emWSd2pomXeVn2Aa0WMaVI
+	R0mfEVdUDbdMXY3EbwFF3ALOIc2NpQ6hWf7LbAyfd+ULeIvuQyFdS/bAoLFv14LB
+	HbkWbG/veVURXO256b47z/ScW3gmmSeaBDvg82/5/HihGZF29+nIKgEF9da+8S99
+	ivJ7tZl5BmbmlXX0jWkmH9elXjPqz1wouAxTXsQtwdmr7w==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id O2BQcxkjvo_y; Thu,  4 Apr 2024 16:53:09 +0000 (UTC)
+Received: from [100.96.154.173] (unknown [104.132.1.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V9SNd04btzlgTHp;
+	Thu,  4 Apr 2024 16:53:04 +0000 (UTC)
+Message-ID: <bb458d47-5b5a-43c0-8cae-211b82b16309@acm.org>
+Date: Thu, 4 Apr 2024 09:53:03 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c4c0dad5-41a4-44b4-8f40-2a250571180b@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/23] block: add a helper to cancel atomic queue limit
+ updates
+Content-Language: en-US
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Takashi Sakamoto <o-takashi@sakamocchi.jp>,
+ Sathya Prakash <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ "Juergen E. Fischer" <fischer@norbit.de>,
+ Xiang Chen <chenxiang66@hisilicon.com>,
+ HighPoint Linux Team <linux@highpoint-tech.com>,
+ Tyrel Datwyler <tyreld@linux.ibm.com>, Brian King <brking@us.ibm.com>,
+ Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+ Mike Christie <michael.christie@oracle.com>,
+ John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ Jack Wang <jinpu.wang@cloud.ionos.com>, Nilesh Javali <njavali@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+ Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+ MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+ megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+ linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
+ usb-storage@lists.one-eyed-alien.net
+References: <20240402130645.653507-1-hch@lst.de>
+ <20240402130645.653507-2-hch@lst.de>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240402130645.653507-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Mar 27, 2024 at 01:37:41PM +0000, John Garry wrote:
-> On 27/03/2024 03:50, Matthew Wilcox wrote:
-> > On Tue, Mar 26, 2024 at 01:38:03PM +0000, John Garry wrote:
-> > > The goal here is to provide an interface that allows applications use
-> > > application-specific block sizes larger than logical block size
-> > > reported by the storage device or larger than filesystem block size as
-> > > reported by stat().
-> > > 
-> > > With this new interface, application blocks will never be torn or
-> > > fractured when written. For a power fail, for each individual application
-> > > block, all or none of the data to be written. A racing atomic write and
-> > > read will mean that the read sees all the old data or all the new data,
-> > > but never a mix of old and new.
-> > > 
-> > > Three new fields are added to struct statx - atomic_write_unit_min,
-> > > atomic_write_unit_max, and atomic_write_segments_max. For each atomic
-> > > individual write, the total length of a write must be a between
-> > > atomic_write_unit_min and atomic_write_unit_max, inclusive, and a
-> > > power-of-2. The write must also be at a natural offset in the file
-> > > wrt the write length. For pwritev2, iovcnt is limited by
-> > > atomic_write_segments_max.
-> > > 
-> > > There has been some discussion on supporting buffered IO and whether the
-> > > API is suitable, like:
-> > > https://lore.kernel.org/linux-nvme/ZeembVG-ygFal6Eb@casper.infradead.org/
-> > > 
-> > > Specifically the concern is that supporting a range of sizes of atomic IO
-> > > in the pagecache is complex to support. For this, my idea is that FSes can
-> > > fix atomic_write_unit_min and atomic_write_unit_max at the same size, the
-> > > extent alignment size, which should be easier to support. We may need to
-> > > implement O_ATOMIC to avoid mixing atomic and non-atomic IOs for this. I
-> > > have no proposed solution for atomic write buffered IO for bdev file
-> > > operations, but I know of no requirement for this.
-> > 
-> > The thing is that there's no requirement for an interface as complex as
-> > the one you're proposing here.  I've talked to a few database people
-> > and all they want is to increase the untorn write boundary from "one
-> > disc block" to one database block, typically 8kB or 16kB.
-> > 
-> > So they would be quite happy with a much simpler interface where they
-> > set the inode block size at inode creation time,
+On 4/2/24 06:06, Christoph Hellwig wrote:
+> Drivers might have to perform complex actions to determine queue limits,
+> and those might fail.  Add a helper to cancel a queue limit update
+> that can be called in those cases.
 > 
-> We want to support untorn writes for bdev file operations - how can we set
-> the inode block size there? Currently it is based on logical block size.
-
-ioctl(BLKBSZSET), I guess?  That currently limits to PAGE_SIZE, but I
-think we can remove that limitation with the bs>PS patches.
-
-> > and then all writes to
-> > that inode were guaranteed to be untorn.  This would also be simpler to
-> > implement for buffered writes.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   include/linux/blkdev.h | 13 +++++++++++++
+>   1 file changed, 13 insertions(+)
 > 
-> We did consider that. Won't that lead to the possibility of breaking
-> existing applications which want to do regular unaligned writes to these
-> files? We do know that mysql/innodb does have some "compressed" mode of
-> operation, which involves regular writes to the same file which wants untorn
-> writes.
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index c3e8f7cf96be9e..ded7f66dc4b964 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -892,6 +892,19 @@ int queue_limits_commit_update(struct request_queue *q,
+>   		struct queue_limits *lim);
+>   int queue_limits_set(struct request_queue *q, struct queue_limits *lim);
+>   
+> +/**
+> + * queue_limits_cancel_update - cancel an atomic update of queue limits
+> + * @q:		queue to update
+> + *
+> + * This functions cancels an atomic update of the queue limits started by
+> + * queue_limits_start_update() and should be used when an error occurs after
+> + * starting update.
+> + */
+> +static inline void queue_limits_cancel_update(struct request_queue *q)
+> +{
+> +	mutex_unlock(&q->limits_lock);
+> +}
 
-If you're talking about "regular unaligned buffered writes", then that
-won't break.  If you cross a folio boundary, the result may be torn,
-but if you're crossing a block boundary you expect that.
+At least in scsi_add_lun() there are multiple statements between
+queue_limits_start_update(), queue_limits_cancel_update() and
+queue_limits_commit_update(). Has it been considered to use __cleanup()
+to invoke queue_limits_commit_update() when the end of the current scope
+is reached? I think that would make code that uses the
+queue_limits_*_update() functions easier to verify. For an example of
+how to use the __cleanup() macro, see e.g. the __free() and
+no_free_ptr() macros in <linux/cleanup.h>.
 
-> Furthermore, untorn writes in HW are expensive - for SCSI anyway. Do we
-> always want these for such a file?
+Thanks,
 
-Do untorn writes actually exist in SCSI?  I was under the impression
-nobody had actually implemented them in SCSI hardware.
+Bart.
 
-> We saw untorn writes as not being a property of the file or even the inode
-> itself, but rather an attribute of the specific IO being issued from the
-> userspace application.
-
-The problem is that keeping track of that is expensive for buffered
-writes.  It's a model that only works for direct IO.  Arguably we
-could make it work for O_SYNC buffered IO, but that'll require some
-surgery.
-
-> > Who's asking for this more complex interface?
-> 
-> It's not a case of someone specifically asking for this interface. This is
-> just a proposal to satisfy userspace requirement to do untorn writes in a
-> generic way.
-> 
-> From a user point-of-view, untorn writes for a regular file can be enabled
-> for up to a specific size* with FS_IOC_SETFLAGS API. Then they need to
-> follow alignment and size rules for issuing untorn writes, but they would
-> always need to do this. In addition, the user may still issue regular
-> (tearable) writes to the file.
-> 
-> * I think that we could change this to only allow writes for that specific
-> size, which was my proposal for buffered IO.
-> 
-> Thanks,
-> John
-> 
