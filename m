@@ -1,48 +1,48 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE50112B82;
-	Thu,  4 Apr 2024 17:14:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED81E12B82;
+	Thu,  4 Apr 2024 17:17:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712250883; cv=none; b=t9Bve7bMOzEVj0q0diVu+lPHaNfhARwCZ7022y+y9bRnLw4Rv+dh0pEQB8vePhTqcuqaLctDfUSR/y/82xocNl5BsUc+1VQH3LZhlGSV0F+W32y+jsw/wCBwj9TgxklT0eG7irKA6vZl8C9/IImfC4u3Yi96C2+bbei5pSEAMMY=
+	t=1712251055; cv=none; b=NTdAWFYh/SB/a6od/c7Q4IfEch2Tg1dw+bAsz2ahigg9WELJteyx1GRsM8nXmCXWDWgLSn61I7YNOXOEITtOeX5f6EEA1uLoabmPqr4NDjfLJxT2OS1A1PO3whFBfeNpiqOIxCMeskLPiBJFsKQEp7yq+S3Q/ktHSRNfgz9AiLM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712250883; c=relaxed/simple;
-	bh=0ThKWEb5Va9lCoiyDiwM4Fd3MTLd1O5J3WXqdVyM5uY=;
+	s=arc-20240116; t=1712251055; c=relaxed/simple;
+	bh=HQkSNFPA1A8z8KFsn8EP/LhL18xwv+Q6EHrk7q5IWRI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=owncQIDdPTvBMm/xpf+4OpBHsd3QyvHO0QEsM/iM8AOCF9iAvHDzNHBPGUc/OIsqqFTX4YpAPbuLH/I6vx0N0+5dvwZEWho8qRw8UjEBlup/TpjzVIxXGyxP/4Pg+sTLZsTDNmBzq3nd/+1W/YyuMvFo+dt5DpzM8UReC5Qab/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4elaLUQp; arc=none smtp.client-ip=199.89.1.12
+	 In-Reply-To:Content-Type; b=O+xSA+XizROq+mPc33oNKmFyHPGxB5lrJgJ2C0itDkcomA9m9n1oIirRUP/fspFcCAGWtNzojwZTZ9ZqK9SK/tePAHrxWNK1So6Uav4iUQ1C0qxfteKML7ACzlx9mmnh41bhfIqwiWTDbEr9oa9U/9zY/YvYU41FraoYeMQDLT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=mV1rUhRp; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4elaLUQp"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="mV1rUhRp"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V9SsY12nqzlgTGW;
-	Thu,  4 Apr 2024 17:14:41 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V9Swr0G9KzlgTGW;
+	Thu,  4 Apr 2024 17:17:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:references:content-language:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1712250871; x=1714842872; bh=jr0JFFiQtpqpO8gPLnOaQNi8
-	PjSCGPDkwB+DlLUzoY4=; b=4elaLUQp4IMwetRsTHRLmmo0zrN6Qp0hf96RHuIC
-	Mz/BqirWSarCcj8tGDWEKQ46bNPHfIb5XvGkBpH2aB0fYIsi7N16IcqDs8Kp+yxI
-	4uAlF0lO1cPfoDoZoBfFBUSzttViTbttepvVHGi9N+6wBCwvyb69cr58l49dFYmX
-	WxnJIV9hf4Q3iEn+QaxTfZeO3gRUHjEdScAU3KM4KKREvi49BagTI5dXgh3F3sWy
-	hB+Ftmv+Z1Roq1Zv8kv9lt/0iC2nA2INrgSIpaQmclVS6mGXO9v1PsEDkPPpbUSc
-	WemTiq2m1eGAKTGQXFvVvsuKZLuBiac8Lx1XdXCGNkb9/A==
+	 s=mr01; t=1712251040; x=1714843041; bh=HQkSNFPA1A8z8KFsn8EP/LhL
+	18xwv+Q6EHrk7q5IWRI=; b=mV1rUhRpiLK3JtnTfoW/DCj2IKNyiTgFu8q7NvE5
+	mAihlZXrDrhN2kfIGftTNJeyYI/rhbAQj9WyrrsxJAaj7jV61es28ep3EIAeEIPu
+	TRhO3ho2fQIa9ytLEY4CMfE3xjF/2YRYm36H/h8200tpPrJ63y4GmQKmGpthrXyY
+	yrHuOfDzCG9MBhD7arjYKAL+WZBRQE2CMT2ellqEJVOhDBff/vNs37tsx3VEj8Mb
+	Y5jw4ESAs95KnNRwQdeKtXXd6nS/lFbA30X1ij2OtyTzRSIR5QERlOGLDI/DWKEk
+	WrhM2qB00ZwEqIUMBPNvcvb3JoDogkaV/XziWlRPBkUSew==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id CLtdbJxEdr2m; Thu,  4 Apr 2024 17:14:31 +0000 (UTC)
+ id QVqTQJGwJwvO; Thu,  4 Apr 2024 17:17:20 +0000 (UTC)
 Received: from [100.96.154.173] (unknown [104.132.1.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V9SsH0BryzlgTHp;
-	Thu,  4 Apr 2024 17:14:26 +0000 (UTC)
-Message-ID: <b3c2fb51-2655-43b8-b741-201dd3fa2a2e@acm.org>
-Date: Thu, 4 Apr 2024 10:14:26 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V9SwW6YjTzlgTHp;
+	Thu,  4 Apr 2024 17:17:15 +0000 (UTC)
+Message-ID: <9aa90db8-fcc4-414f-a4e3-ee33ff78fb2d@acm.org>
+Date: Thu, 4 Apr 2024 10:17:15 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,11 +50,11 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 10/23] scsi: add a device_configure method to the host
- template
+Subject: Re: [PATCH 12/23] mpt3sas: switch to using ->device_configure
 Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>
 Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
  Takashi Sakamoto <o-takashi@sakamocchi.jp>,
  Sathya Prakash <sathya.prakash@broadcom.com>,
@@ -83,20 +83,39 @@ Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
  linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
  usb-storage@lists.one-eyed-alien.net
 References: <20240402130645.653507-1-hch@lst.de>
- <20240402130645.653507-11-hch@lst.de>
+ <20240402130645.653507-13-hch@lst.de>
+ <031d6f0c-7d94-4adc-b194-929dbfe80c6b@suse.de>
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240402130645.653507-11-hch@lst.de>
+In-Reply-To: <031d6f0c-7d94-4adc-b194-929dbfe80c6b@suse.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 4/2/24 06:06, Christoph Hellwig wrote:
-> This is a version of ->slave_configure that also takes a queue_limits
-> structure that the caller applies, and thus allows drivers to reconfigure
-> the queue using the atomic queue limits API.
-> 
-> In the long run it should also replace ->slave_configure entirely as
-> there is no need to have two different methods here, and the slave
-> name in addition to being politically charged also has no basis in
-> the SCSI standards or the kernel code.
+On 4/3/24 00:08, Hannes Reinecke wrote:
+> On 4/2/24 15:06, Christoph Hellwig wrote:
+>> @@ -2687,8 +2686,7 @@ scsih_slave_configure(struct scsi_device *sdev)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 **/
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 blk_queue_flag_=
+set(QUEUE_FLAG_NOMERGES,
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 sdev->request_queue);
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 blk_queue_virt_boundary(sd=
+ev->request_queue,
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0 ioc->page_size - 1);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 lim->virt_boundary_mask =3D=
+ ioc->page_size - 1;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+> Here the same argument as done for the previous patch could be made; if=
+=20
+> we had the possibility to set NOMERGES in the queue limits we could do=20
+> away with the reference to the request queue here.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Another possibility is to remove all code from drivers that sets
+QUEUE_FLAG_NOMERGES. I agree with Christoph that drivers shouldn't set
+that flag.
+
+Thanks,
+
+Bart.
+
