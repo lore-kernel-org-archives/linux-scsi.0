@@ -1,48 +1,37 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED81E12B82;
-	Thu,  4 Apr 2024 17:17:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FF2B1F61C;
+	Thu,  4 Apr 2024 17:33:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712251055; cv=none; b=NTdAWFYh/SB/a6od/c7Q4IfEch2Tg1dw+bAsz2ahigg9WELJteyx1GRsM8nXmCXWDWgLSn61I7YNOXOEITtOeX5f6EEA1uLoabmPqr4NDjfLJxT2OS1A1PO3whFBfeNpiqOIxCMeskLPiBJFsKQEp7yq+S3Q/ktHSRNfgz9AiLM=
+	t=1712252027; cv=none; b=JXljr+u9Q1OLw15eco+AcWYEQTHIxdrZ3fCUUAgc8G33wsITwTwaK1oY6Q3WjQ9VBjy4viu7P9Zgp8ei0t4HLc/BKacKcejX4I071INd5TkJpbCm51EFIyTW1LLfhJItddoTOgkOWyPzr1V0eXFxzF/Id6P60d0bd7JAlVolkRg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712251055; c=relaxed/simple;
-	bh=HQkSNFPA1A8z8KFsn8EP/LhL18xwv+Q6EHrk7q5IWRI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=O+xSA+XizROq+mPc33oNKmFyHPGxB5lrJgJ2C0itDkcomA9m9n1oIirRUP/fspFcCAGWtNzojwZTZ9ZqK9SK/tePAHrxWNK1So6Uav4iUQ1C0qxfteKML7ACzlx9mmnh41bhfIqwiWTDbEr9oa9U/9zY/YvYU41FraoYeMQDLT8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=mV1rUhRp; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1712252027; c=relaxed/simple;
+	bh=doQitWhcREUucrKSoXjTMVT5G7H4c7wT88p3P9zRIBY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:Cc:From:
+	 In-Reply-To:Content-Type; b=RdTyd8go8lSP46rsMRug6v5fF7YSB8vZcHu8qRMcauSvyXBKDJTs6kvDTN8tIF7kP4XMm8ToEWT76UevhNzkahg3cr9B+GuFbjD1QITbwrSzMaE2f3UkCrPMQTpyanCTykc7AquNRsDFqEi1O8byusIfmMVtM+ngEwpMYvfcJds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=v9psreqD; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="mV1rUhRp"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4V9Swr0G9KzlgTGW;
-	Thu,  4 Apr 2024 17:17:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:references:content-language:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1712251040; x=1714843041; bh=HQkSNFPA1A8z8KFsn8EP/LhL
-	18xwv+Q6EHrk7q5IWRI=; b=mV1rUhRpiLK3JtnTfoW/DCj2IKNyiTgFu8q7NvE5
-	mAihlZXrDrhN2kfIGftTNJeyYI/rhbAQj9WyrrsxJAaj7jV61es28ep3EIAeEIPu
-	TRhO3ho2fQIa9ytLEY4CMfE3xjF/2YRYm36H/h8200tpPrJ63y4GmQKmGpthrXyY
-	yrHuOfDzCG9MBhD7arjYKAL+WZBRQE2CMT2ellqEJVOhDBff/vNs37tsx3VEj8Mb
-	Y5jw4ESAs95KnNRwQdeKtXXd6nS/lFbA30X1ij2OtyTzRSIR5QERlOGLDI/DWKEk
-	WrhM2qB00ZwEqIUMBPNvcvb3JoDogkaV/XziWlRPBkUSew==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id QVqTQJGwJwvO; Thu,  4 Apr 2024 17:17:20 +0000 (UTC)
-Received: from [100.96.154.173] (unknown [104.132.1.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4V9SwW6YjTzlgTHp;
-	Thu,  4 Apr 2024 17:17:15 +0000 (UTC)
-Message-ID: <9aa90db8-fcc4-414f-a4e3-ee33ff78fb2d@acm.org>
-Date: Thu, 4 Apr 2024 10:17:15 -0700
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="v9psreqD"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	Content-Type:In-Reply-To:From:Cc:References:To:Subject:MIME-Version:Date:
+	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+	bh=ND8ykMVV3E5+HLxjXKeng5Frf4NNoBw+6beGYw/Y9Wg=; b=v9psreqD1j9YeRI4P8sv+9kFGr
+	yVOBZUxh9jqTkqllUpojAoM17YI2XSMahcLp7Vpjpah3wcQCi3Lu62RIR2uu+2ZR+6+XeQxUmomRc
+	aGuojZnu/Ovy3q8zk85QTPQ6EJ1oAeKGr0FsrtyTftMQ5+iC3zv4cr4djbX4OESJDe4h66upvTrPU
+	88g9k4TIlRRfNM7GP2Gu1+sUFDJc8GYDcSIa1SeUtbCOs0TO1pY5EofEHfe5QgvA1OxjiPVnH+mgd
+	gLeE1Qg4QsT7QQSGlJbWfUZfg4vGUsOioK9RFS9S3wJvVUc9hJ0QzJzDcSRBb5T6HnXBvw0DSxWeD
+	KA03qBfA==;
+Received: from [50.53.2.121] (helo=[192.168.254.15])
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rsQy9-00000003f2Z-0s4d;
+	Thu, 04 Apr 2024 17:33:45 +0000
+Message-ID: <b5e73e45-4951-4eb0-91fd-2cb5998c8061@infradead.org>
+Date: Thu, 4 Apr 2024 10:33:43 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,72 +39,86 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/23] mpt3sas: switch to using ->device_configure
+Subject: Re: Kernel Trace in recent 6.1.8n kernels
+To: Tim Tassonis <stuff@decentral.ch>, LKML <linux-kernel@vger.kernel.org>
+References: <b8dbce0c-31b4-4762-9779-6e973806433a@decentral.ch>
 Content-Language: en-US
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
- Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen"
- <martin.petersen@oracle.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- Takashi Sakamoto <o-takashi@sakamocchi.jp>,
- Sathya Prakash <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
- "Juergen E. Fischer" <fischer@norbit.de>,
- Xiang Chen <chenxiang66@hisilicon.com>,
- HighPoint Linux Team <linux@highpoint-tech.com>,
- Tyrel Datwyler <tyreld@linux.ibm.com>, Brian King <brking@us.ibm.com>,
- Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
- Mike Christie <michael.christie@oracle.com>,
- John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
- Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>,
- Jack Wang <jinpu.wang@cloud.ionos.com>, Nilesh Javali <njavali@marvell.com>,
- GR-QLogic-Storage-Upstream@marvell.com,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
- Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
- linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
- MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
- linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
- usb-storage@lists.one-eyed-alien.net
-References: <20240402130645.653507-1-hch@lst.de>
- <20240402130645.653507-13-hch@lst.de>
- <031d6f0c-7d94-4adc-b194-929dbfe80c6b@suse.de>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <031d6f0c-7d94-4adc-b194-929dbfe80c6b@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Cc: stable <stable@vger.kernel.org>, linux-scsi@vger.kernel.org
+From: Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <b8dbce0c-31b4-4762-9779-6e973806433a@decentral.ch>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On 4/3/24 00:08, Hannes Reinecke wrote:
-> On 4/2/24 15:06, Christoph Hellwig wrote:
->> @@ -2687,8 +2686,7 @@ scsih_slave_configure(struct scsi_device *sdev)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 **/
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 blk_queue_flag_=
-set(QUEUE_FLAG_NOMERGES,
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 sdev->request_queue);
->> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 blk_queue_virt_boundary(sd=
-ev->request_queue,
->> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0 ioc->page_size - 1);
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 lim->virt_boundary_mask =3D=
- ioc->page_size - 1;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
-> Here the same argument as done for the previous patch could be made; if=
-=20
-> we had the possibility to set NOMERGES in the queue limits we could do=20
-> away with the reference to the request queue here.
+[+ stable & scsi]
 
-Another possibility is to remove all code from drivers that sets
-QUEUE_FLAG_NOMERGES. I agree with Christoph that drivers shouldn't set
-that flag.
+On 4/3/24 3:49 PM, Tim Tassonis wrote:
+> Hi all
+> 
+> Maybe this is the wrong list, as it probably only affects the 6.1.8n LTS kernel releases.
+> 
+> 
+> I noticed that since 6.1.80 or so, all my boxes print a trace when rebooting or halting, right at the end. It starts with drivers/scsi/scsi_lib.c
+> 
+> As everything seems already done by then, there is no "real" problem occuring, but maybe someone knows why this suddenly started to happen.
+> 
+> 
+> With qemu and the serial options, I managed to get the actual trace in text:
+> 
+>      Unmounting all other currently mounted file systems...[ 58.632670] EXT4-fs (sda1): re-mounted. Quota mode: none.
+>   * [  OK  ]
+> [   58.684029] EXT4-fs (sda1): re-mounted. Quota mode: none.
+>   *   Bringing down the loopback interface... [  OK  ]
+> [   58.809326] ------------[ cut here ]------------
+> [   58.813524] WARNING: CPU: 0 PID: 2755 at drivers/scsi/scsi_lib.c:214 scsi_execute_cmd+0x3b/0x2b0
+> [   58.828052] Modules linked in: cfg80211 8021q garp mrp stp ipv6 crc_ccitt joydev hid_generic usbhid snd_seq_midi snd_seq_midi_event psmouse ppdev serio_raw atkbd libps2 vivaldi_fmap uhci_hcd ehci_pci ehci_hcd snd_ens1370 bochs drm_vram_helper snd_rawmidi usbcore drm_ttm_helper sr_mod usb_common snd_pcm cdrom e1000 i2c_piix4 ttm pcspkr gameport pata_acpi parport_pc parport i8042 qemu_fw_cfg serio rtc_cmos floppy snd_seq snd_seq_device snd_timer snd soundcore fuse
+> [   58.873677] CPU: 0 PID: 2755 Comm: halt Not tainted 6.1.84 #1
+> [   58.876424] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
+> [   58.884106] RIP: 0010:scsi_execute_cmd+0x3b/0x2b0
+> [   58.885558] Code: 89 cc 55 44 89 c5 53 48 83 ec 10 4c 8b 74 24 50 48 89 0c 24 4d 85 f6 0f 84 44 02 00 00 49 83 3e 00 74 21 41 83 7e 08 60 74 1a <0f> 0b b8 ea ff ff ff 48 83 c4 10 5b 5d 41 5c 41 5d 41 5e 41 5f c3
+> [   58.891998] RSP: 0018:ffffc90000153d98 EFLAGS: 00010287
+> [   58.893500] RAX: ffffc90000153df8 RBX: ffff888003d22000 RCX: 0000000000000000
+> [   58.895480] RDX: 0000000000000022 RSI: 0000000000000022 RDI: ffff888003d22000
+> [   58.897583] RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000002710
+> [   58.900276] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000002710
+> [   58.902209] R13: ffff888003d22000 R14: ffffc90000153df8 R15: ffffc90000153e28
+> [   58.904084] FS:  00007f097a95b680(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
+> [   58.906285] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   58.907451] CR2: 00007f097a8f5431 CR3: 000000000406e000 CR4: 00000000000006f0
+> [   58.908928] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> [   58.910326] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> [   58.911770] Call Trace:
+> [   58.912438]  <TASK>
+> [   58.912977]  ? __warn+0x78/0xd0
+> [   58.913751]  ? scsi_execute_cmd+0x3b/0x2b0
+> [   58.914757]  ? report_bug+0xe6/0x170
+> [   58.916267]  ? handle_bug+0x3c/0x70
+> [   58.917020]  ? exc_invalid_op+0x13/0x60
+> [   58.917807]  ? asm_exc_invalid_op+0x16/0x20
+> [   58.918675]  ? scsi_execute_cmd+0x3b/0x2b0
+> [   58.919524]  ata_cmd_ioctl+0x112/0x2b0
+> [   58.920435]  blkdev_ioctl+0x12e/0x260
+> [   58.921322]  __x64_sys_ioctl+0x8b/0xc0
+> [   58.922115]  do_syscall_64+0x42/0x90
+> [   58.922953]  entry_SYSCALL_64_after_hwframe+0x64/0xce
+> [   58.924002] RIP: 0033:0x7f097a87616b
+> [   58.924748] Code: 00 48 89 44 24 18 31 c0 48 8d 44 24 60 c7 04 24 10 00 00 00 48 89 44 24 08 48 8d 44 24 20 48 89 44 24 10 b8 10 00 00 00 0f 05 <89> c2 3d 00 f0 ff ff 77 1c 48 8b 44 24 18 64 48 2b 04 25 28 00 00
+> [   58.928687] RSP: 002b:00007fff1e70b5b0 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+> [   58.930465] RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007f097a87616b
+> [   58.932545] RDX: 00007fff1e70b614 RSI: 000000000000031f RDI: 0000000000000004
+> [   58.933964] RBP: 0000000000000000 R08: 0000000000000073 R09: 0000558c7857a343
+> [   58.935349] R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000020
+> [   58.936727] R13: 0000558c77faf088 R14: 0000000000000001 R15: 0000000000000000
+> [   58.938165]  </TASK>
+> [   58.938617] ---[ end trace 0000000000000000 ]---
+> [   58.940450] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+> [   58.941662] sd 0:0:0:0: [sda] Stopping disk
+> [   58.971754] ACPI: PM: Preparing to enter system sleep state S5
+> [   58.973005] reboot: Power down
+> 
+> 
+> Bye
+> Tim
+> 
 
-Thanks,
-
-Bart.
-
+-- 
+#Randy
