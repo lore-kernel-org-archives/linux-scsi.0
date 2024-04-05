@@ -1,124 +1,127 @@
-Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B22612B141
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Apr 2024 07:38:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85DA3225D6;
+	Fri,  5 Apr 2024 07:45:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712302726; cv=none; b=H0w6NKS/X6twm8hGoLmAPIoTQpXUZddR5YRwzLiuZfngSy3WStJmRnYNw+p7cEpOJ9GmYnw9URFA5GB7TTeJuTMI3Nzqp6r+4G2+a5JOjflbkXXMLx4MHR9NJbJuqjWH+lCQxGNzrgB1wrRz4ssNrKiuBB8lVysl7ciGgCwAkws=
+	t=1712303156; cv=none; b=ewS+Sypg7gBdLG4AuAPu63nTSvps3qhf+Uyvv+oIuuEb7j+H9UhCXkxzscDmYl0ph6HeNAwTdtYvkqsvXi05PwxLxn8RUrlUoGbFqFVgxln80eaQnA1t1HgNeAOs/OJTopWwkUN+UMytHGH+HSv/KLTEn53wTvyaWXtBIyfA9EY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712302726; c=relaxed/simple;
-	bh=xFcwRdTwA4TzkokrASxaN9DG3qMv3QQuyut1PFwZfZQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=aO/oJj9RsFsWQDnDuSV9fjcoT+De8hzEnpH6sSwuLLsLvHGGMW4ZFmntHbBsvpkyT6Yd0pDXIAhBgp5opei2zKAePU83JzJVgCzjhzkl8bc0OHNrq8X+LYRmCP7/ktHByo3g4P9vUWSrtJg+DpKUf+p4BzrDihPalHs5FuxsCEk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=DQgyZXI3; arc=none smtp.client-ip=209.85.221.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1712303156; c=relaxed/simple;
+	bh=AQ5k1Ebe5Fm4EtDbJnnbbMyqhwHlWArxIYkQrss7lyM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XjiJm0mdcQ8cBP7jUUUJlrEDwAgBDypF+dl3+Z1S1NdPSlJpaFDSj1nFqmfSWeAPVArikpP6014H7jIb7ewM71nUcgKKnGbyCUHgqoERovH3An76XTnZRuyKE5hYVCgeCgqK0HmyDtip/RoC5j9d0ed05BqsZlre4dQAIZhG+DY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H6YfLLej; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DQgyZXI3"
-Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-343e986aa6cso56462f8f.1
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2024 00:38:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1712302723; x=1712907523; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=oRN7BO8gsn/Gv38F95MOeso16MuC+d8zGIKmfkHHaDA=;
-        b=DQgyZXI3x1STatr+0V5Ro3Wk0y7erpHx4qLdWtvEXBILyNtVpuItEyFDo89+HGD7WE
-         npdnvmeWQRs1q8SnfAXTkXrDwmobn9X6VTpDl9rHVi/WqjKQSnp/o4+ajvQI2L9hh6si
-         MTT3K7L4VUCVHvsIOl8TKyh/E1p+Q1CMlLEL16Lq+Zk5jn56rnGpx3z3xKKlBM+kHAS6
-         Wym1s2q3CTOTL/rPMZ0CgIkI5ANQpG6W1X3M9O81E81oRSCJ9hldOk4frB0u8BGJmRLu
-         lVlpjKxa5bR8WG1FqmIZzOvNRC4K1sr+aidt+zX+ziwTEs/VG8L07rHAN0cvR9BoMh+T
-         2K+A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712302723; x=1712907523;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=oRN7BO8gsn/Gv38F95MOeso16MuC+d8zGIKmfkHHaDA=;
-        b=LXqdcL53GlOY7OImZ2Wf112yHCU0ElV/wSKKz4zN949mQV8HvxMrMvV3mhrlLXgnNV
-         M1NSF6PkeTg5qOBbDUDObaW0Iw+auXyRzhgBRM42TNTKwNFvll6ihAWPQ00DUvKsU9uJ
-         JB/UCqLuhM19lqqgZEQhd6ANCRYWf79UDQCNme7P9vUT64Ds2w+W+eVdoXI+AQcb0Lu4
-         TFxGhKtfBejQWeVKRWt4vUbaiqf4eQNUvsLn93h9Q/xKTFXUpHkQH5I+BpT5SNLnH8Wy
-         JwT2sPZt91U+v4emTtUzjavfu8IZuCc2JsZFgXLZkQL0xgc3i92d0ApQQmDWtMZROEPf
-         NMOQ==
-X-Gm-Message-State: AOJu0Yyj/Y/7kjYBy7rVdDbKB2WpBEqDLKFM+jkH7yh+uCwhTIWhllMZ
-	7NBcNGPUAGZl77dwKVeafLRo1nmnkY6XCdV0ohvkZnbk1vMWQME+MNTlCufHF6o=
-X-Google-Smtp-Source: AGHT+IFwiMH8B1ar/OpUPlryON/lBUN5RQvLyQ7JRAx2qevkuOIGYn3OYMCBDXtlsBDfdcoJKEIrbw==
-X-Received: by 2002:a5d:4906:0:b0:341:c589:8aea with SMTP id x6-20020a5d4906000000b00341c5898aeamr502410wrq.63.1712302722944;
-        Fri, 05 Apr 2024 00:38:42 -0700 (PDT)
-Received: from draszik.lan ([80.111.64.44])
-        by smtp.gmail.com with ESMTPSA id p13-20020a5d638d000000b00343ad4bca7dsm1317091wru.85.2024.04.05.00.38.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Apr 2024 00:38:42 -0700 (PDT)
-Message-ID: <391a874522a4141b4bc7f0314a9e50d27142123a.camel@linaro.org>
-Subject: Re: [PATCH 05/17] arm64: dts: exynos: gs101: enable cmu-hsi2 clock
- controller
-From: =?ISO-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>
-To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com, 
- sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-  vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
- avri.altman@wdc.com,  bvanassche@acm.org, s.nawrocki@samsung.com,
- cw00.choi@samsung.com,  jejb@linux.ibm.com, martin.petersen@oracle.com,
- chanho61.park@samsung.com,  ebiggers@kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org, 
-	devicetree@vger.kernel.org, linux-clk@vger.kernel.org, 
-	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org, 
-	saravanak@google.com, willmcvicker@google.com
-Date: Fri, 05 Apr 2024 08:38:41 +0100
-In-Reply-To: <20240404122559.898930-6-peter.griffin@linaro.org>
-References: <20240404122559.898930-1-peter.griffin@linaro.org>
-	 <20240404122559.898930-6-peter.griffin@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3-1 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H6YfLLej"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 919F4C433C7;
+	Fri,  5 Apr 2024 07:45:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712303156;
+	bh=AQ5k1Ebe5Fm4EtDbJnnbbMyqhwHlWArxIYkQrss7lyM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=H6YfLLejAxrZxxFNmjJgj/DW4+tTj3G9EynkBu6+EjBdNBFsqwTa27hG1DyS9p/jW
+	 iUSEtKfvPy0ojzIrAdob/11+KUIZqo5biJn2I8RaDbPurUTY/TkmCs574+a/7fys66
+	 OOgdvcA3vefeoQ/EPg+cd+wVk55vxMSDoloZ3/mqQrGo5RNKKWPv0ctWGKLo+bb/X6
+	 5oHtkt5orCMp1He1kCoYbvuuljT17NKw8/Vwj04fTqA/quhN6i3HmRs/fi665HppaP
+	 fbwXfBrNmq9Uv9lBEpsW1IeLH0NepdDptBixolDwDP696lxgpRZPlKBV1pRo3kZX2B
+	 vKGsQ01pK3BKw==
+Message-ID: <948a70ed-e3de-41d6-ada8-b547aa004ef0@kernel.org>
+Date: Fri, 5 Apr 2024 09:45:46 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/17] HSI2, UFS & UFS phy support for Tensor GS101
+To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
+ sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, bvanassche@acm.org, s.nawrocki@samsung.com,
+ cw00.choi@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+ chanho61.park@samsung.com, ebiggers@kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
+ devicetree@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org,
+ andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
+References: <20240404122559.898930-1-peter.griffin@linaro.org>
+Content-Language: en-US
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20240404122559.898930-1-peter.griffin@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thu, 2024-04-04 at 13:25 +0100, Peter Griffin wrote:
-> Enable the cmu_hsi2 clock management unit. It feeds some of
-> the high speed interfaces such as PCIe and UFS.
->=20
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
-> ---
-> =C2=A0arch/arm64/boot/dts/exynos/google/gs101.dtsi | 12 ++++++++++++
-> =C2=A01 file changed, 12 insertions(+)
->=20
-> diff --git a/arch/arm64/boot/dts/exynos/google/gs101.dtsi b/arch/arm64/bo=
-ot/dts/exynos/google/gs101.dtsi
-> index eddb6b326fde..38ac4fb1397e 100644
-> --- a/arch/arm64/boot/dts/exynos/google/gs101.dtsi
-> +++ b/arch/arm64/boot/dts/exynos/google/gs101.dtsi
-> @@ -1253,6 +1253,18 @@ pinctrl_hsi1: pinctrl@11840000 {
-> =C2=A0			interrupts =3D <GIC_SPI 471 IRQ_TYPE_LEVEL_HIGH 0>;
-> =C2=A0		};
-> =C2=A0
-> +		cmu_hsi2: clock-controller@14400000 {
-> +			compatible =3D "google,gs101-cmu-hsi2";
-> +			reg =3D <0x14400000 0x4000>;
-> +			#clock-cells =3D <1>;
-> +			clocks =3D <&ext_24_5m>,
-> +				 <&cmu_top CLK_DOUT_CMU_HSI2_BUS>,
-> +				 <&cmu_top CLK_DOUT_CMU_HSI2_PCIE>,
-> +				 <&cmu_top CLK_DOUT_CMU_HSI2_UFS_EMBD>,
-> +				 <&cmu_top CLK_DOUT_CMU_HSI2_MMC_CARD>;
-> +			clock-names =3D "oscclk", "bus", "pcie", "ufs_embd", "mmc_card";
-> +		};
+On 04/04/2024 14:25, Peter Griffin wrote:
+> Hi folks,
+> 
+> This series adds support for the High Speed Interface (HSI) 2 clock
+> management unit, UFS controller and UFS phy calibration/tuning for GS101.
+> 
+> With this series applied, UFS is now functional! The SKhynix HN8T05BZGKX015
+> can be enumerated, partitions mounted etc. This then allows us to move away
+> from the initramfs rootfs we have been using for development so far.
+> 
+> The intention is this series will be merged via Krzysztofs Samsung Exynos
+> tree(s). This series is rebased on next-20240404.
+> 
+> The series is broadly split into the following parts:
+> 1) dt-bindings documentation updates
+> 2) gs101 device tree updates
+> 3) Prepatory patches for samsung-ufs driver
+> 4) GS101 ufs-phy support
+> 5) Prepatory patches for ufs-exynos driver
+> 6) GS101 ufs-exynos support
 
-This doesn't build because you didn't add the clock ids in the binding patc=
-h.
+UFS phy and host should go through their trees. What is the
+reason/need/requirement to put it into this patchset and merge via
+Samsung SoC tree?
 
-Other than that,
-
-Reviewed-by: Andr=C3=A9 Draszik <andre.draszik@linaro.org>
-
-> +
-> =C2=A0		pinctrl_hsi2: pinctrl@14440000 {
-> =C2=A0			compatible =3D "google,gs101-pinctrl";
-> =C2=A0			reg =3D <0x14440000 0x00001000>;
+Best regards,
+Krzysztof
 
