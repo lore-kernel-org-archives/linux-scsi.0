@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F29E712D20D;
-	Fri,  5 Apr 2024 07:46:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FE0013F458;
+	Fri,  5 Apr 2024 07:49:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712303192; cv=none; b=ezGO7Xgb06o1qPZES7UpGMNuuQI6CC29GVfs8NrOeDKKTYN4KL0bm/3QyVfg2gFOiFdUz2m8cQVAZYUmjFsXzpx4EdkewMEdZzAfsiIUtph0UlSeLrLSA38Kj2YUPLacDP1izw93QxSCBlSzoWGGH9zEvqeHwwecj421HwhZkyM=
+	t=1712303369; cv=none; b=gB2N6dK5Oy5oWwgEpWf4XsEjG34O6YiJRPjq/2Achy5jDOalbQ6pDLUK6jhhRhVKglH6RV2L83BRnKtfsQ5OKquQhW53xH9rInxlbJT971vL+Dt8DwP5uqBmY9ICyxJ0+3nRnRe+4Y1Srv09jXnVfdcimcv4R5xW9wr37vB1xiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712303192; c=relaxed/simple;
-	bh=19hgbaU3P8IPVBIhjWEumRz5j4TbX2VV6q6o2CVSkvM=;
+	s=arc-20240116; t=1712303369; c=relaxed/simple;
+	bh=ZJTGERD/YWH3ZHY5NVcihAMNX3eLH1+py0PDKgq8rm8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ilS1Ocyx3tvKU8couYEozvhLbu0FDCADZAi8E1gKvwe3gsS0Axqi9kjmYBkFLaoqyn9JSpHM8YlaE1P8cf6jzF/9HuS34LCuoD0EHz+o45lNkWKpHUdzOP7FD37vuo8sD9Uz5tfE/2JaCmiLJkJg2WHgH+PkJLQ297IO4GkBJTw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lZcNmWC+; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=qPN5mPxuBKH9CObOsrrmoZpfTvrimYA6qgLcp5KCmr6GTlA5mHKJW+oEHm/dfrNyt96k4BpuyCOdHXxkajbWU5KbI6biEHpJYs39k6XkwvzisTJOhhU8w2JoRv6Yq59PxVtyxfHPzCNvw239YcW5hoHbprtB1R5VV/B+Cg36L2I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S6o2xXn1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lZcNmWC+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FE9EC433C7;
-	Fri,  5 Apr 2024 07:46:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S6o2xXn1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C291C433F1;
+	Fri,  5 Apr 2024 07:49:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712303191;
-	bh=19hgbaU3P8IPVBIhjWEumRz5j4TbX2VV6q6o2CVSkvM=;
+	s=k20201202; t=1712303369;
+	bh=ZJTGERD/YWH3ZHY5NVcihAMNX3eLH1+py0PDKgq8rm8=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=lZcNmWC+TCfv6qwk4WglYGPuJyGJRbLBcYD/z1wDkQUV5HMeZVQ0FGTxtd1yd94mf
-	 kT/R32qUkNvn++EHnRIKZtWVzOeNQTnh8t4LyUNLajF6S8NwCj+jHn30weB+U7OVEz
-	 AnDEfedoT/0FIjOdERSkE/xn111acd8qiJWt1xY2ku6gYyv2s6sqESmg0Mipin4nXh
-	 wx3phujkHPN6hc9iNk/Px0QP8kmJW5FjH6yt2fKh4d8ytVBAxbIqIoPOH9CCfdzpE7
-	 U0uc1aYrl6BZzCUrE+WFu1tYbleQzo7Ctrx5BqIcQGibp2QPUQnaoKYndGekbChhVC
-	 IkgMZqtlliY7g==
-Message-ID: <6457f778-e42a-4240-9a38-c1300ef23ddb@kernel.org>
-Date: Fri, 5 Apr 2024 09:46:22 +0200
+	b=S6o2xXn19pnsdKoRz+6MuQLhuHNuCzeN09JuKbE9X0JpzWwTf6dAbBauCD+ZhWtdf
+	 i3cdaESyPFQu21r85bXjtPmSODN8f445FEggyI5JOC+hhs1H936y142zwHyOFGoCME
+	 KRHbY5S+w3R2SJa1q7t7AgzIWPPQSyoj2QTxRa0DAD5uPMVAMnJoVrmPqBiHiaKUxN
+	 VSFEDymPbu5jM5p2j/hmO/Z9ixRxBrgewPQvpIn7CosQ7+45wR3efhFxb9YF3ZD2rB
+	 4fR5QYPvHoYX5ufga/dkepP4LH6ykpHTP2cfIFn1nfHx1LXbABFk4TCdgJF+1FbG6p
+	 6mW8MN94HS6TQ==
+Message-ID: <a82e9859-b74e-44e8-a256-317b8c3fe6b7@kernel.org>
+Date: Fri, 5 Apr 2024 09:49:18 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,10 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/17] dt-bindings: clock: google,gs101-clock: add HSI2
- clock management unit
-To: =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>,
- Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
+Subject: Re: [PATCH 03/17] dt-bindings: ufs: exynos-ufs: Add gs101 compatible
+To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
  sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
  vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
  avri.altman@wdc.com, bvanassche@acm.org, s.nawrocki@samsung.com,
@@ -48,10 +46,9 @@ Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
  devicetree@vger.kernel.org, linux-clk@vger.kernel.org,
  linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org,
- saravanak@google.com, willmcvicker@google.com
+ andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
 References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-2-peter.griffin@linaro.org>
- <d1aaa3a350315b8eb60aaee416fad4382385ca3a.camel@linaro.org>
+ <20240404122559.898930-4-peter.griffin@linaro.org>
 Content-Language: en-US
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -97,64 +94,134 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <d1aaa3a350315b8eb60aaee416fad4382385ca3a.camel@linaro.org>
+In-Reply-To: <20240404122559.898930-4-peter.griffin@linaro.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 05/04/2024 09:15, André Draszik wrote:
-> Hi Pete,
+On 04/04/2024 14:25, Peter Griffin wrote:
+> Add dedicated google,gs101-ufs compatible for Google Tensor gs101
+> SoC.
 > 
-> On Thu, 2024-04-04 at 13:25 +0100, Peter Griffin wrote:
->> Add dt schema documentation and clock IDs for the High Speed Interface
->> 2 (HSI2) clock management unit. This CMU feeds high speed interfaces
->> such as PCIe and UFS.
->>
->> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
->> ---
->>  .../bindings/clock/google,gs101-clock.yaml    | 30 +++++++++++++++++--
->>  1 file changed, 28 insertions(+), 2 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/clock/google,gs101-clock.yaml b/Documentation/devicetree/bindings/clock/google,gs101-
->> clock.yaml
->> index 1d2bcea41c85..a202fd5d1ead 100644
->> --- a/Documentation/devicetree/bindings/clock/google,gs101-clock.yaml
->> +++ b/Documentation/devicetree/bindings/clock/google,gs101-clock.yaml
->> @@ -32,14 +32,15 @@ properties:
->>        - google,gs101-cmu-misc
->>        - google,gs101-cmu-peric0
->>        - google,gs101-cmu-peric1
->> +      - google,gs101-cmu-hsi2
+> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+> ---
+>  .../bindings/ufs/samsung,exynos-ufs.yaml      | 51 +++++++++++++++----
+>  1 file changed, 42 insertions(+), 9 deletions(-)
 > 
-> Can you keep this alphabetical and add hsi before misc please.
->>  
->>    clocks:
->>      minItems: 1
->> -    maxItems: 3
->> +    maxItems: 5
->>  
->>    clock-names:
->>      minItems: 1
->> -    maxItems: 3
->> +    maxItems: 5
->>  
->>    "#clock-cells":
->>      const: 1
->> @@ -112,6 +113,31 @@ allOf:
->>              - const: bus
->>              - const: ip
->>  
->> +  - if:
->> +      properties:
->> +        compatible:
->> +          contains:
->> +            enum:
->> +              - google,gs101-cmu-hsi2
-> 
-> this block should also come before misc please.
-> 
-> Once done, feel free to add
+> diff --git a/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
+> index b2b509b3944d..898da6c0e94f 100644
+> --- a/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
+> @@ -12,12 +12,10 @@ maintainers:
+>  description: |
+>    Each Samsung UFS host controller instance should have its own node.
+>  
+> -allOf:
+> -  - $ref: ufs-common.yaml
+> -
+>  properties:
+>    compatible:
+>      enum:
+> +      - google,gs101-ufs
+>        - samsung,exynos7-ufs
+>        - samsung,exynosautov9-ufs
+>        - samsung,exynosautov9-ufs-vh
+> @@ -38,14 +36,12 @@ properties:
+>        - const: ufsp
+>  
+>    clocks:
+> -    items:
+> -      - description: ufs link core clock
+> -      - description: unipro main clock
+> +    minItems: 2
+> +    maxItems: 5
 
-Yes, please, ack for both.
+Keep here minItems and:
+
++            - description: ufs link core clock
++            - description: unipro main clock
++            - description: fmp clock
++            - description: ufs aclk clock
++            - description: ufs pclk clock
+
+>  
+>    clock-names:
+> -    items:
+> -      - const: core_clk
+> -      - const: sclk_unipro_main
+> +    minItems: 2
+> +    maxItems: 5
+
+Similarly here
+
+>  
+>    phys:
+>      maxItems: 1
+> @@ -72,6 +68,43 @@ required:
+>    - clocks
+>    - clock-names
+>  
+> +allOf:
+> +  - $ref: ufs-common.yaml
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            const: google,gs101-ufs
+> +
+> +    then:
+> +      properties:
+> +        clocks:
+
+Enough is:
+minItems: 5
+
+> +          items:
+
+and drop the items since they are defined in top-level.
+
+Your original code is correct, but with my approach we keep the list
+synced between variants, at least part of the list. If another variant
+appears, then maybe it will go back to your approach, but maybe we can
+still have the same clocks and their order.
+
+
+> +            - description: ufs link core clock
+> +            - description: unipro main clock
+> +            - description: fmp clock
+> +            - description: ufs aclk clock
+> +            - description: ufs pclk clock
+> +
+> +        clock-names:
+
+minItems: 5
+
+> +          items:
+> +            - const: core_clk
+> +            - const: sclk_unipro_main
+> +            - const: fmp
+> +            - const: ufs_aclk
+> +            - const: ufs_pclk
+> +    else:
+> +      properties:
+> +        clocks:
+
+maxItems: 2
+
+> +          items:
+> +            - description: ufs link core clock
+> +            - description: unipro main clock
+> +
+> +        clock-names:
+
+maxItems: 2
+
+> +          items:
+> +            - const: core_clk
+> +            - const: sclk_unipro_main
+> +
+>  unevaluatedProperties: false
+>  
+>  examples:
 
 Best regards,
 Krzysztof
