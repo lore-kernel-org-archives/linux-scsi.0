@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FE0013F458;
-	Fri,  5 Apr 2024 07:49:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B89E613FD94;
+	Fri,  5 Apr 2024 07:50:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712303369; cv=none; b=gB2N6dK5Oy5oWwgEpWf4XsEjG34O6YiJRPjq/2Achy5jDOalbQ6pDLUK6jhhRhVKglH6RV2L83BRnKtfsQ5OKquQhW53xH9rInxlbJT971vL+Dt8DwP5uqBmY9ICyxJ0+3nRnRe+4Y1Srv09jXnVfdcimcv4R5xW9wr37vB1xiI=
+	t=1712303454; cv=none; b=L1xZ6qsviEy6WQUuGrKuRKb4jx7OfigLkHOAm3z6MRfaXIGbpmf0DGEYWhUsynzAMzfGDO2pjlBILFYj2O7voKYY4UAhMJPHyLKAHwhR0OB2SAYQ5A7hyGGQeQUA6eyeDE5VaoHYkh7LZ7N8Dsq2hmnVo3cTz23329bryCJ056M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712303369; c=relaxed/simple;
-	bh=ZJTGERD/YWH3ZHY5NVcihAMNX3eLH1+py0PDKgq8rm8=;
+	s=arc-20240116; t=1712303454; c=relaxed/simple;
+	bh=JyJ89rbzOtx8jRedKtrMiTIwWcw0hOGEynsIeFi/ofw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qPN5mPxuBKH9CObOsrrmoZpfTvrimYA6qgLcp5KCmr6GTlA5mHKJW+oEHm/dfrNyt96k4BpuyCOdHXxkajbWU5KbI6biEHpJYs39k6XkwvzisTJOhhU8w2JoRv6Yq59PxVtyxfHPzCNvw239YcW5hoHbprtB1R5VV/B+Cg36L2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S6o2xXn1; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=sV2iivhQWzcbxnwGRoGciXWLNUqVvW0kd3183FYG4b7Imm08Stlquadqk5AnKWnxU0B2Gq1EHmlPOh9LHVUyAb+LqeuZSC3VPk9LDKA6rsso4Tf4q4WBmPaM/0ux38cvQBIpeUfeNpWWowmWXhlqHBP7UzB6gWP3LfYKi8aH4ts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s/n0mjoW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S6o2xXn1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C291C433F1;
-	Fri,  5 Apr 2024 07:49:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s/n0mjoW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D74F0C433C7;
+	Fri,  5 Apr 2024 07:50:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712303369;
-	bh=ZJTGERD/YWH3ZHY5NVcihAMNX3eLH1+py0PDKgq8rm8=;
+	s=k20201202; t=1712303454;
+	bh=JyJ89rbzOtx8jRedKtrMiTIwWcw0hOGEynsIeFi/ofw=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=S6o2xXn19pnsdKoRz+6MuQLhuHNuCzeN09JuKbE9X0JpzWwTf6dAbBauCD+ZhWtdf
-	 i3cdaESyPFQu21r85bXjtPmSODN8f445FEggyI5JOC+hhs1H936y142zwHyOFGoCME
-	 KRHbY5S+w3R2SJa1q7t7AgzIWPPQSyoj2QTxRa0DAD5uPMVAMnJoVrmPqBiHiaKUxN
-	 VSFEDymPbu5jM5p2j/hmO/Z9ixRxBrgewPQvpIn7CosQ7+45wR3efhFxb9YF3ZD2rB
-	 4fR5QYPvHoYX5ufga/dkepP4LH6ykpHTP2cfIFn1nfHx1LXbABFk4TCdgJF+1FbG6p
-	 6mW8MN94HS6TQ==
-Message-ID: <a82e9859-b74e-44e8-a256-317b8c3fe6b7@kernel.org>
-Date: Fri, 5 Apr 2024 09:49:18 +0200
+	b=s/n0mjoW+7lGRT7j0O+PZcEtfMqNNx3zZ3V0qMnTUEc6eDenQekL4X0hJeUirLwHK
+	 8AUPJtpBtK0FzpQm+8W4BzNAoIyIJpAXw+2J3AaaHyRkptMC7Uixh9nD5mmxzqFhOQ
+	 2XAfg2ra1/JW2WZp2/gIqEhF2O1GvGsiPrUdBGts4Nc0n3n/4IL+OVNCFUPZGmOuFl
+	 jnXA90hIbJxWwS3dHx68+FZy09iGkqfOcrkXPShlS5xld0NbLCyADMaMn7PmmR6UkC
+	 Si2VlqS/vnCL/yY70HWXGnVJuNRkNNEyDS0x3uREpaakyv0kz/QocnRsuTuWeG3sz0
+	 /4d5Xqj8q11Cg==
+Message-ID: <ce8275b0-efa8-47fe-a4a8-471fac9afa10@kernel.org>
+Date: Fri, 5 Apr 2024 09:50:43 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,7 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 03/17] dt-bindings: ufs: exynos-ufs: Add gs101 compatible
+Subject: Re: [PATCH 04/17] dt-bindings: phy: samsung,ufs-phy: Add dedicated
+ gs101-ufs-phy compatible
 To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
  sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
  vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
@@ -48,7 +49,7 @@ Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
  linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org,
  andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
 References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-4-peter.griffin@linaro.org>
+ <20240404122559.898930-5-peter.griffin@linaro.org>
 Content-Language: en-US
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -94,134 +95,25 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <20240404122559.898930-4-peter.griffin@linaro.org>
+In-Reply-To: <20240404122559.898930-5-peter.griffin@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 04/04/2024 14:25, Peter Griffin wrote:
-> Add dedicated google,gs101-ufs compatible for Google Tensor gs101
-> SoC.
+> Update dt schema to include the gs101 ufs phy compatible.
 > 
 > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
 > ---
->  .../bindings/ufs/samsung,exynos-ufs.yaml      | 51 +++++++++++++++----
->  1 file changed, 42 insertions(+), 9 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
-> index b2b509b3944d..898da6c0e94f 100644
-> --- a/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
-> @@ -12,12 +12,10 @@ maintainers:
->  description: |
->    Each Samsung UFS host controller instance should have its own node.
->  
-> -allOf:
-> -  - $ref: ufs-common.yaml
-> -
->  properties:
->    compatible:
->      enum:
-> +      - google,gs101-ufs
->        - samsung,exynos7-ufs
->        - samsung,exynosautov9-ufs
->        - samsung,exynosautov9-ufs-vh
-> @@ -38,14 +36,12 @@ properties:
->        - const: ufsp
->  
->    clocks:
-> -    items:
-> -      - description: ufs link core clock
-> -      - description: unipro main clock
-> +    minItems: 2
-> +    maxItems: 5
+>  Documentation/devicetree/bindings/phy/samsung,ufs-phy.yaml | 1 +
+>  1 file changed, 1 insertion(+)
 
-Keep here minItems and:
+This should go via phy tree. DTS should not depend on other subsystems.
 
-+            - description: ufs link core clock
-+            - description: unipro main clock
-+            - description: fmp clock
-+            - description: ufs aclk clock
-+            - description: ufs pclk clock
-
->  
->    clock-names:
-> -    items:
-> -      - const: core_clk
-> -      - const: sclk_unipro_main
-> +    minItems: 2
-> +    maxItems: 5
-
-Similarly here
-
->  
->    phys:
->      maxItems: 1
-> @@ -72,6 +68,43 @@ required:
->    - clocks
->    - clock-names
->  
-> +allOf:
-> +  - $ref: ufs-common.yaml
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            const: google,gs101-ufs
-> +
-> +    then:
-> +      properties:
-> +        clocks:
-
-Enough is:
-minItems: 5
-
-> +          items:
-
-and drop the items since they are defined in top-level.
-
-Your original code is correct, but with my approach we keep the list
-synced between variants, at least part of the list. If another variant
-appears, then maybe it will go back to your approach, but maybe we can
-still have the same clocks and their order.
+If, after resending as separate series, phy does not take patches for
+longer time, feel free to ping me, but first let's try to go via phy/UFS.
 
 
-> +            - description: ufs link core clock
-> +            - description: unipro main clock
-> +            - description: fmp clock
-> +            - description: ufs aclk clock
-> +            - description: ufs pclk clock
-> +
-> +        clock-names:
-
-minItems: 5
-
-> +          items:
-> +            - const: core_clk
-> +            - const: sclk_unipro_main
-> +            - const: fmp
-> +            - const: ufs_aclk
-> +            - const: ufs_pclk
-> +    else:
-> +      properties:
-> +        clocks:
-
-maxItems: 2
-
-> +          items:
-> +            - description: ufs link core clock
-> +            - description: unipro main clock
-> +
-> +        clock-names:
-
-maxItems: 2
-
-> +          items:
-> +            - const: core_clk
-> +            - const: sclk_unipro_main
-> +
->  unevaluatedProperties: false
->  
->  examples:
+Reviewed-by: Krzysztof Kozlowski <krzk@kernel.org>
 
 Best regards,
 Krzysztof
