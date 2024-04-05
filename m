@@ -1,152 +1,128 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 672AB26AFD
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Apr 2024 07:12:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3163C22F0C
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Apr 2024 07:15:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712301146; cv=none; b=rk8yBjb0nM6Wk/IIiBi7DBRYc0DBLUs/Yla9MldihgBGGTR44dqqRmWzfhzpopSuGeyDsIIRn4aBPP8APU0CMnyctPOSCes58ioBXCAPSCyOK6GvFlfW6hGT0e+f6a9bbps9W9vOgDyPGW24Xe0yLUl2qqamLQDMh6WEK1Ie1o8=
+	t=1712301315; cv=none; b=r48bBLmQ3k39mWdQdNazuq4Xzw/D8uIRXv+5bP79NM213o4VqXM/+c4vF8JRt46cpFpOopZ4WwkABaJ0/AFL88aHfxeT2/Prq+hvZiWwwuecarM1BE4LVRIs1WkUs6jkocOjKJ5ua75bs6MNR4q71fxQd/g5QsRRLJEC+2dRi6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712301146; c=relaxed/simple;
-	bh=cEnW8idM7VN5XFwYHiOc4IetFhJwD4CGFbBP7KHBkkM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
-	 References; b=ZaI7NA66hgSAKRuol64Pf9XCOANvMuvTZexg/DnJwdwkZUPXgf/F57e4W6VenPazlOYrwForVQVFE99HC6YZXkw2y/JiRnsIdkcFVNb2yQW407+LHbzIFwi57ro4PPvJBp9TucVXGEXH7QC6oZzXay+NbrerkmxKuDuu42rXowQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=J8hjm88l; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1712301315; c=relaxed/simple;
+	bh=ZQRZDYqA6aP2iutVThlq5tpmCslswP1QsB6CFhMiTH0=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=IWTZfhjO4yyOdWKTmnou5H3oA1GNUzT0MSlL5TR5nsRwaJTxgn7C4pkmLjU0mhQ4Qb8+aqQTuauMHRx92vkae1tpx2XhRoINtSXVNuqYDvZTJ3q7/AJidFe1AOsVNnNWGdEoQgv9y3yGxCrZbKLkSh2zu4ERVQgOq+SnS7sN+Mg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=l3bIWWY/; arc=none smtp.client-ip=209.85.221.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="J8hjm88l"
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20240405071219epoutp043aa1da7f95f04dcdccbc8c9e4616c21f~DUNB0V_IS1477314773epoutp04Q
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Apr 2024 07:12:19 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20240405071219epoutp043aa1da7f95f04dcdccbc8c9e4616c21f~DUNB0V_IS1477314773epoutp04Q
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1712301139;
-	bh=9r+juJE3qz21CeqL4wvnikvqrJqOObHZeY1eDWH8+Do=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=J8hjm88l7iA6JMPtPG/wF0DDs9rePBn15Rf+vyupQ96DTP38RW330d/dlePnkBORc
-	 70LqzWyjJZZ6bUK6P+UmyPXrz4wsGFRueo9NsJdqHI0+RQ8dBf1HNSbGdYo8eZ6RZ5
-	 ztLHwzi2cHPzQgpLvV1mDdpSBhiyT1ceHCUVHcgs=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-	epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-	20240405071218epcas2p1855b124a4c6bf1d9af50772fd608dea8~DUNBPayJB2290522905epcas2p1g;
-	Fri,  5 Apr 2024 07:12:18 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.36.90]) by
-	epsnrtp1.localdomain (Postfix) with ESMTP id 4V9qS21p58z4x9Py; Fri,  5 Apr
-	2024 07:12:18 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-	epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-	16.52.09665.254AF066; Fri,  5 Apr 2024 16:12:18 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
-	20240405071217epcas2p470124e9f6e9066cb5cdc7f78557042e3~DUNALWEm_2316423164epcas2p4-;
-	Fri,  5 Apr 2024 07:12:17 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240405071217epsmtrp11216db7a0da614fe45986cb5f04ae0f5~DUNAKJftw1926919269epsmtrp1B;
-	Fri,  5 Apr 2024 07:12:17 +0000 (GMT)
-X-AuditID: b6c32a47-93fff700000025c1-af-660fa4529c57
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	9C.BA.07541.154AF066; Fri,  5 Apr 2024 16:12:17 +0900 (KST)
-Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20240405071217epsmtip2e610d3f7babf7ce393fbfb3b63f331c6~DUM-3VPQG0135401354epsmtip2M;
-	Fri,  5 Apr 2024 07:12:17 +0000 (GMT)
-From: SEO HOYOUNG <hy50.seo@samsung.com>
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
-	kwangwon.min@samsung.com, kwmad.kim@samsung.com, sh425.lee@samsung.com,
-	quic_nguyenb@quicinc.com, cpgs@samsung.com, h10.kim@samsung.com
-Cc: SEO HOYOUNG <hy50.seo@samsung.com>
-Subject: [PATCH v1] scsi: ufs: core: changing the status to check inflight
-Date: Fri,  5 Apr 2024 16:16:01 +0900
-Message-Id: <20240405071601.84337-1-hy50.seo@samsung.com>
-X-Mailer: git-send-email 2.26.0
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="l3bIWWY/"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-343b7c015a8so1135077f8f.1
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2024 00:15:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1712301311; x=1712906111; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=ZQRZDYqA6aP2iutVThlq5tpmCslswP1QsB6CFhMiTH0=;
+        b=l3bIWWY/IFYuc9EnYBDUw2KNP/3XIc3wx3uNdkURRHVYFjj4+ptGWAAtrRwUM26XNB
+         rCLITauGDpFeNUG3dzdOJrOlZjxLMA8CD6jfaVETR2gWzgRHQ9RXQRl9eH82NWwcgqru
+         a2LzHgRINeHxgjKYAOmbiFTawM28I8aUgbr8f2SILPfQogLU67k06aUni3AusZcmFzqH
+         p+fDEZFI+FzbzpSBDj87riWTP0e6YDXfRizDGrtNx2Vi+Ui8zbz7tZx3zEceV6tRnUZZ
+         j5uxLjfr9ZF0oFK8VEq5m852GbgPEhSKEbwuW2kCuq1wpoSl+2v+OSoe3wDCEvSGWs4D
+         LV9g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712301311; x=1712906111;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ZQRZDYqA6aP2iutVThlq5tpmCslswP1QsB6CFhMiTH0=;
+        b=FPuByidnrTncn5bTS2cDCk2tZOAo83mzYj/t41c8gqRTt8oOBBXxDO2jkRDefU3xfU
+         dw42CN2xWTRx61vLinlRlWPmzA+zABxEeN3oqctbH3YDfKLLwOZOntTOfnb9AvsQ6W1I
+         8Dt6w2LMTLjbeNsZK89oVlzMhXmhVesLsd1F7+ins7ZIzfcoNxr6FeWzRrsioFBtYsUj
+         lZ4kHW16bl6t2qbKX5i1UBVQ40NDbsghDgyZNCSu84qiVYdbXTk6Bk2YsEQQzKQNDfKF
+         HqWP4PZSh+WggLPthOljUH2oXJuC9EvFM7HJdiHI4l9HVvgY5t/RfVj+/J12wy2nRQmo
+         CT4g==
+X-Gm-Message-State: AOJu0Ywt52Sy+x99aUUwfvFFiwK8nDEC3YdetvfSCxyw+9v8YN9//v8z
+	LaXfEmZ7miR2jAjhiA8KenvRV7QDExNhXHiYOEQHNGxnXps2CxAeuxyc/IjF94s=
+X-Google-Smtp-Source: AGHT+IF3TQ9xIZ1T/P0vZPLv2tjkqzrrnsOBy+FFNKa6jwX5G7cmYjLQCMB/2P2Fzf20qbcX8C+AiQ==
+X-Received: by 2002:adf:f184:0:b0:343:d06e:51c8 with SMTP id h4-20020adff184000000b00343d06e51c8mr387939wro.18.1712301311433;
+        Fri, 05 Apr 2024 00:15:11 -0700 (PDT)
+Received: from draszik.lan ([80.111.64.44])
+        by smtp.gmail.com with ESMTPSA id f11-20020a5d568b000000b00343c9ce4b50sm1279358wrv.53.2024.04.05.00.15.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Apr 2024 00:15:11 -0700 (PDT)
+Message-ID: <d1aaa3a350315b8eb60aaee416fad4382385ca3a.camel@linaro.org>
+Subject: Re: [PATCH 01/17] dt-bindings: clock: google,gs101-clock:  add HSI2
+ clock management unit
+From: =?ISO-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>
+To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com, 
+ sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+  vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
+ avri.altman@wdc.com,  bvanassche@acm.org, s.nawrocki@samsung.com,
+ cw00.choi@samsung.com,  jejb@linux.ibm.com, martin.petersen@oracle.com,
+ chanho61.park@samsung.com,  ebiggers@kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org, 
+	devicetree@vger.kernel.org, linux-clk@vger.kernel.org, 
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org, 
+	saravanak@google.com, willmcvicker@google.com
+Date: Fri, 05 Apr 2024 08:15:09 +0100
+In-Reply-To: <20240404122559.898930-2-peter.griffin@linaro.org>
+References: <20240404122559.898930-1-peter.griffin@linaro.org>
+	 <20240404122559.898930-2-peter.griffin@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.50.3-1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDJsWRmVeSWpSXmKPExsWy7bCmqW7QEv40g1eHuC0ezNvGZvHy51U2
-	i4MPO1kspn34yWzx8pCmxd/bF1ktVi9+wGKx6MY2JoutN3ayWNzccpTF4vKuOWwW3dd3sFks
-	P/6PyWLqi+PsFkv/vWVx4Pe4fMXbY8KiA4we39d3sHl8fHqLxWPinjqPvi2rGD0+b5LzaD/Q
-	zRTAEZVtk5GamJJapJCal5yfkpmXbqvkHRzvHG9qZmCoa2hpYa6kkJeYm2qr5OIToOuWmQN0
-	upJCWWJOKVAoILG4WEnfzqYov7QkVSEjv7jEVim1ICWnwLxArzgxt7g0L10vL7XEytDAwMgU
-	qDAhO2Pi10WMBfc5Kz5tfsfWwDiFo4uRk0NCwERizaMtzF2MXBxCAjsYJf6+6WMFSQgJfGKU
-	2PPdByLxDcjeeZ4dpuNB3xlGiMReRok/x++yQzg/GCWOL7kMVsUmoCGx5tghJhBbROAyk8Sf
-	ZWYgNrOAmsTnu8tYQGxhAS+J93N/g9WzCKhKzF92lhnE5hWwlDh//QLUNnmJRQ2/mSDighIn
-	Zz5hgZgjL9G8dTbY3RICMzkkGi43AhVxADkuEq832kD0Cku8Or4Fao6UxMv+NnaIkmKJWQur
-	IVobGCUOzZ4FVWMsMetZOyNIDbOApsT6XfoQ5coSR25BbeWT6Dj8F6qaV6Jh42+oibwSHW1C
-	EGEliTNzb0OFJSQOzs6BCHtIfF/ymBEStLESN86/Zp7AqDALyVuzkLw1C+GEBYzMqxjFUguK
-	c9NTi40KjOGxm5yfu4kRnIy13Hcwznj7Qe8QIxMH4yFGCQ5mJRHebgfeNCHelMTKqtSi/Pii
-	0pzU4kOMpsCAnsgsJZqcD8wHeSXxhiaWBiZmZobmRqYG5krivPda56YICaQnlqRmp6YWpBbB
-	9DFxcEo1MMW17Pg3TenjD2aDjsm/H2RO/KN3NrxwGrv0BnnmuRt4e9ic7j54/Onmvt7N56+b
-	WNooqx/2r1ms8/ZxyYTDa5jM7A807XOt/16Tf6ZsyqSyLZovblf7rE2bsFVHSogv2vuYU3tL
-	AreVhNASZcMSjv6LOzO5eIu3m6resMxZtPGEgehyAbe/VdfZDGasnbdqQ+rhUx/yPpkqLahn
-	mB3oPeFzdYSl0+25cyyjTMJm/JPbuvT6S8HrazJnzpgW5B3UdSl53YczYWWPPaROzJC5a6dX
-	bN+2qev8p+9pZ1ke3LjAXh8VrLXHSZNF7cs09hcxbda8YYKNhRHFemfcllvE12wLXnLPK37x
-	0+mFfyZdlVFiKc5INNRiLipOBAAlOmUxTwQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrCLMWRmVeSWpSXmKPExsWy7bCSvG7gEv40g5tn1S0ezNvGZvHy51U2
-	i4MPO1kspn34yWzx8pCmxd/bF1ktVi9+wGKx6MY2JoutN3ayWNzccpTF4vKuOWwW3dd3sFks
-	P/6PyWLqi+PsFkv/vWVx4Pe4fMXbY8KiA4we39d3sHl8fHqLxWPinjqPvi2rGD0+b5LzaD/Q
-	zRTAEcVlk5Kak1mWWqRvl8CVMfHrIsaC+5wVnza/Y2tgnMLRxcjJISFgIvGg7wxjFyMXh5DA
-	bkaJhlfbmCESEhL/FzcxQdjCEvdbjrBCFH1jlJjx8DZYEZuAhsSaY4eYQBIiAk+ZJE4c6gJL
-	MAuoSXy+u4wFxBYW8JJ4P/c3O4jNIqAqMX/ZWbAaXgFLifPXL7BDbJCXWNTwmwkiLihxcuYT
-	Fog58hLNW2czT2Dkm4UkNQtJagEj0ypGydSC4tz03GTDAsO81HK94sTc4tK8dL3k/NxNjOCI
-	0NLYwXhv/j+9Q4xMHIyHGCU4mJVEeLsdeNOEeFMSK6tSi/Lji0pzUosPMUpzsCiJ8xrOmJ0i
-	JJCeWJKanZpakFoEk2Xi4JRqYMpXPXJkX9CGtn+fH8+vnGTVsVKIYfJdhmY2h9Cb5+qerHyZ
-	dW2v95fc82d4vd2mWv5lPPW19PQuj1rm1y3u6pzTiyTE2ry0759XeSP77KC6icWLj0HKy/27
-	KhfO1y8NnnPu+2atXXFX6/WZPfnUHn4Lcr47MZtra8+KjfueTflx8ZHoxzzfSklXVffZ7Wsj
-	/JuaNZpLPRhqrs+ZL7tJeUJE4WITzeia9CWqKpn3ror1hKY6/HlY6nq697vHIuHbW1eXx3S8
-	PmlUevauCk/h0o0e9reeXVhn+K1KyyxYLmPJVR0JcY4SiTO+6yx2/EzRTri0+NM9/X82vxqF
-	Yp6v/zw7O/jtRDfP8ISaKM6zv5RYijMSDbWYi4oTAZzMngD3AgAA
-X-CMS-MailID: 20240405071217epcas2p470124e9f6e9066cb5cdc7f78557042e3
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240405071217epcas2p470124e9f6e9066cb5cdc7f78557042e3
-References: <CGME20240405071217epcas2p470124e9f6e9066cb5cdc7f78557042e3@epcas2p4.samsung.com>
 
-According to below the patch applied, lrbp->cmd do not will NULL
-after call release_scsi_cmd()
-So check the rq->state unconditionally even if it is completed normally
-in ufshcd_cmd_inflight()
-
-If occurred abort status and tm_cmd timeout, will run err_handler
-for re-init UFS.
-Then err_handler will check pending request for clearing cmd.
-At that time, check if the state of rq is not MQ_RQ_IDLE.
-In other words, check if it is MQ_RQ_COMPLETE or MQ_RQ_IN_FLIGHT.
-If rq->state is MQ_RQ_COMPLETE, it is already completed in the block,
-so there is no need to process the queue.
-
-Link: https://lore.kernel.org/linux-scsi/20230517223157.1068210-3-bvanassche@acm.org/
-Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 21429eec1b82..3f47ea584cb1 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3088,7 +3088,7 @@ bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd)
- 		return false;
- 
- 	rq = scsi_cmd_to_rq(cmd);
--	if (!blk_mq_request_started(rq))
-+	if (blk_mq_rq_state(rq) != MQ_RQ_IN_FLIGHT)
- 		return false;
- 
- 	return true;
--- 
-2.26.0
+SGkgUGV0ZSwKCk9uIFRodSwgMjAyNC0wNC0wNCBhdCAxMzoyNSArMDEwMCwgUGV0ZXIgR3JpZmZp
+biB3cm90ZToKPiBBZGQgZHQgc2NoZW1hIGRvY3VtZW50YXRpb24gYW5kIGNsb2NrIElEcyBmb3Ig
+dGhlIEhpZ2ggU3BlZWQgSW50ZXJmYWNlCj4gMiAoSFNJMikgY2xvY2sgbWFuYWdlbWVudCB1bml0
+LiBUaGlzIENNVSBmZWVkcyBoaWdoIHNwZWVkIGludGVyZmFjZXMKPiBzdWNoIGFzIFBDSWUgYW5k
+IFVGUy4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBQZXRlciBHcmlmZmluIDxwZXRlci5ncmlmZmluQGxp
+bmFyby5vcmc+Cj4gLS0tCj4gwqAuLi4vYmluZGluZ3MvY2xvY2svZ29vZ2xlLGdzMTAxLWNsb2Nr
+LnlhbWzCoMKgwqAgfCAzMCArKysrKysrKysrKysrKysrKy0tCj4gwqAxIGZpbGUgY2hhbmdlZCwg
+MjggaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvRG9jdW1l
+bnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2Nsb2NrL2dvb2dsZSxnczEwMS1jbG9jay55YW1s
+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2Nsb2NrL2dvb2dsZSxnczEwMS0K
+PiBjbG9jay55YW1sCj4gaW5kZXggMWQyYmNlYTQxYzg1Li5hMjAyZmQ1ZDFlYWQgMTAwNjQ0Cj4g
+LS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2Nsb2NrL2dvb2dsZSxnczEw
+MS1jbG9jay55YW1sCj4gKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2Ns
+b2NrL2dvb2dsZSxnczEwMS1jbG9jay55YW1sCj4gQEAgLTMyLDE0ICszMiwxNSBAQCBwcm9wZXJ0
+aWVzOgo+IMKgwqDCoMKgwqDCoCAtIGdvb2dsZSxnczEwMS1jbXUtbWlzYwo+IMKgwqDCoMKgwqDC
+oCAtIGdvb2dsZSxnczEwMS1jbXUtcGVyaWMwCj4gwqDCoMKgwqDCoMKgIC0gZ29vZ2xlLGdzMTAx
+LWNtdS1wZXJpYzEKPiArwqDCoMKgwqDCoCAtIGdvb2dsZSxnczEwMS1jbXUtaHNpMgoKQ2FuIHlv
+dSBrZWVwIHRoaXMgYWxwaGFiZXRpY2FsIGFuZCBhZGQgaHNpIGJlZm9yZSBtaXNjIHBsZWFzZS4K
+PiDCoAo+IMKgwqAgY2xvY2tzOgo+IMKgwqDCoMKgIG1pbkl0ZW1zOiAxCj4gLcKgwqDCoCBtYXhJ
+dGVtczogMwo+ICvCoMKgwqAgbWF4SXRlbXM6IDUKPiDCoAo+IMKgwqAgY2xvY2stbmFtZXM6Cj4g
+wqDCoMKgwqAgbWluSXRlbXM6IDEKPiAtwqDCoMKgIG1heEl0ZW1zOiAzCj4gK8KgwqDCoCBtYXhJ
+dGVtczogNQo+IMKgCj4gwqDCoCAiI2Nsb2NrLWNlbGxzIjoKPiDCoMKgwqDCoCBjb25zdDogMQo+
+IEBAIC0xMTIsNiArMTEzLDMxIEBAIGFsbE9mOgo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAt
+IGNvbnN0OiBidXMKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgLSBjb25zdDogaXAKPiDCoAo+
+ICvCoCAtIGlmOgo+ICvCoMKgwqDCoMKgIHByb3BlcnRpZXM6Cj4gK8KgwqDCoMKgwqDCoMKgIGNv
+bXBhdGlibGU6Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoCBjb250YWluczoKPiArwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoCBlbnVtOgo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAtIGdvb2dsZSxn
+czEwMS1jbXUtaHNpMgoKdGhpcyBibG9jayBzaG91bGQgYWxzbyBjb21lIGJlZm9yZSBtaXNjIHBs
+ZWFzZS4KCk9uY2UgZG9uZSwgZmVlbCBmcmVlIHRvIGFkZAoKUmV2aWV3ZWQtYnk6IEFuZHLDqSBE
+cmFzemlrIDxhbmRyZS5kcmFzemlrQGxpbmFyby5vcmc+CgoKPiArCj4gK8KgwqDCoCB0aGVuOgo+
+ICvCoMKgwqDCoMKgIHByb3BlcnRpZXM6Cj4gK8KgwqDCoMKgwqDCoMKgIGNsb2NrczoKPiArwqDC
+oMKgwqDCoMKgwqDCoMKgIGl0ZW1zOgo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIC0gZGVzY3Jp
+cHRpb246IEV4dGVybmFsIHJlZmVyZW5jZSBjbG9jayAoMjQuNTc2IE1IeikKPiArwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoCAtIGRlc2NyaXB0aW9uOiBIaWdoIFNwZWVkIEludGVyZmFjZSBidXMgY2xv
+Y2sgKGZyb20gQ01VX1RPUCkKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAtIGRlc2NyaXB0aW9u
+OiBIaWdoIFNwZWVkIEludGVyZmFjZSBwY2llIGNsb2NrIChmcm9tIENNVV9UT1ApCj4gK8KgwqDC
+oMKgwqDCoMKgwqDCoMKgwqAgLSBkZXNjcmlwdGlvbjogSGlnaCBTcGVlZCBJbnRlcmZhY2UgdWZz
+IGNsb2NrIChmcm9tIENNVV9UT1ApCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqAgLSBkZXNjcmlw
+dGlvbjogSGlnaCBTcGVlZCBJbnRlcmZhY2UgbW1jIGNsb2NrIChmcm9tIENNVV9UT1ApCj4gKwo+
+ICvCoMKgwqDCoMKgwqDCoCBjbG9jay1uYW1lczoKPiArwqDCoMKgwqDCoMKgwqDCoMKgIGl0ZW1z
+Ogo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIC0gY29uc3Q6IG9zY2Nsawo+ICvCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgIC0gY29uc3Q6IGJ1cwo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIC0gY29u
+c3Q6IHBjaWUKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAtIGNvbnN0OiB1ZnNfZW1iZAo+ICvC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgIC0gY29uc3Q6IG1tY19jYXJkCj4gKwo+IMKgYWRkaXRpb25h
+bFByb3BlcnRpZXM6IGZhbHNlCj4gwqAKPiDCoGV4YW1wbGVzOgoK
 
