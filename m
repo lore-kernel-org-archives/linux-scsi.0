@@ -1,126 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f50.google.com (mail-lf1-f50.google.com [209.85.167.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B42AC171CC;
-	Fri,  5 Apr 2024 08:00:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30151143860;
+	Fri,  5 Apr 2024 08:11:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712304019; cv=none; b=kWknw4tbB6RbwsdHN0gwXnw21nmhD6qeMQVpKQJ13zJPrYptrH288kw7hsJiF86A+rd41jFIuWQkz+pBFNuawmeZvX8aqcv2zizDDi9B6jEa7x0L4XyHNEleNAPuij9MNtbvbjuYIqc899zt32sucgWA4aj8fIsNJ9Z8GluVwYQ=
+	t=1712304706; cv=none; b=OP6bVTFypUgcR/OO3mlXx2WFBjkpmapbsFAGYtHLXgCoj5Q6Fw3lMyvqBMvbnTp6zq6xJaJHbZ0GaJqeWBGmAxewbQ/q4J38yQ9umLEZaCLHI5wiuKxfHzm96+ylefV1fuF7lQ6ORF7YynHg+7kofAdagO9P/U8f1+WAK7EdQso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712304019; c=relaxed/simple;
-	bh=IZRrX7XpE+4FP7wBYx2ZuBhTerHvqKeOEt7zeIB6fbk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bYFnBHdZfKcwHnAyEA9IEJbVsRdUmdNESrZ7ooQvWvWsaKiOZBDIOJdmBoGfXD8bVQU6Og0EzZp63GGPlAitS+CJIFYi1m3ngNDQpwVppdW8fYfV6+TY6W83nEnzRA2UlZoYhaod+uhrz8oM7AlN6av4uXkugOFqfNCWq7I6+oo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u96lNQ9g; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712304706; c=relaxed/simple;
+	bh=yi8PAHg0FKEHeQospJGwgER/voQz1Dbxm5AeM7nY/n0=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=bat/kDzIyqfX4vUPvz0KDh35VEPotdFgOw05o5a8RGLL8qsoxc4TXbAvO1cTZ3j2Cw/EFanIiPTXCuWcFx2B7t+eUHlHnbKXO8bckuqrvFwk909Mt2trtiuhRS3CZLfwQsKSAST+ScQamYEWIxh5fzPPkZRW8i5MBSlNPM0NRWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=V5W2zGwy; arc=none smtp.client-ip=209.85.167.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u96lNQ9g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E4FCC433C7;
-	Fri,  5 Apr 2024 08:00:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712304019;
-	bh=IZRrX7XpE+4FP7wBYx2ZuBhTerHvqKeOEt7zeIB6fbk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=u96lNQ9g7rzhJVO5YSuaTSLcO8l5TZxj9nriXwg/NHXCi2gc5Zqor0K2wLhWMgS+0
-	 KDodbIO9tf8r1jtwW0vhcC4qg5CcEgHNcmOP617kX2to7ha62nzjLUH5GMYf/AFxPz
-	 D9vNsUpCbelB/vauSI6/zcY0t4kCC3TbBM9KmWBrav0TdaC20aP+j8BczWSp6/LmCg
-	 J9OViP8NYXY0VnygybjrslNd6CV9QYVo5WXmTLZxbBOOFsohSSCOUDXtUPU/nawV+b
-	 zZE3gWV7gE/i7P8B3GIUyKp7QiV1rybvULLtaK2sfiGSajTa+lJhncklkQf7IpmEla
-	 6l0uSJRLKP/nw==
-Message-ID: <9f202f3a-fec8-4570-8c37-64927bdbb276@kernel.org>
-Date: Fri, 5 Apr 2024 10:00:07 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V5W2zGwy"
+Received: by mail-lf1-f50.google.com with SMTP id 2adb3069b0e04-516c97ddcd1so2184833e87.2;
+        Fri, 05 Apr 2024 01:11:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1712304703; x=1712909503; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=yi8PAHg0FKEHeQospJGwgER/voQz1Dbxm5AeM7nY/n0=;
+        b=V5W2zGwyXnQa4KavoDhSQ92NT8zHe3kSzPX2ps2p0FQ+P4nGnKUON4TRBxsirNBSmH
+         7AwAEz6bew+a/ivEZtGjyyDkpBovER1jXeobCRckxZAtO9CuCzvEfxusK1nI2hMctdqL
+         ZKFefLEVXSA3med/MVGgScXAIzZwnfYBnRiREiqLe/Mm+NdOnf5NnhqQeupaX5WbQVeV
+         1jKo7hC4R9Zs/C0uT6olYcGtmH6PJlWJeXq4uL2It3pEez0+YO1/zmWlbHv1x6VQKyFU
+         jexI9BVXPmPZ4DXPW1UhB35RpF3kLdWQeZpTXdEs73PqLO2vtZPPO6yOCSfAsOTw9aFd
+         meeA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712304703; x=1712909503;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=yi8PAHg0FKEHeQospJGwgER/voQz1Dbxm5AeM7nY/n0=;
+        b=P8a5vCpe8S4N1eQ/bRJIMIrVkv26ScCBbdC0vf8r4lZPetq/pesfT/wzlRnQZwwNVF
+         omk+1e1kGz/PeTbb36JGoLvWMqXejROEs1JItbygWt5jRdgiX8FMDk1O6TyO7emc/R+j
+         n4nEbb6i6F7/7LcJppBi3lBmiUSbl6d+lp2NIdgOBLUjQAHha7cuRtqfDOsPPWMCj3Gb
+         sUIC+LdmUmzCDWn+ZQcQwijvnaAlGTBUIihcd5Zpqg2TrWCVwo7V8HOD4iHiiuF+sqbc
+         /HvdQmPcs60xQIga3OQoRMfSaQDv8TpkJx1oG8VEaYEzxfZW67DuTE5teFaoQBO6Vard
+         3JEg==
+X-Forwarded-Encrypted: i=1; AJvYcCUxIZeivwVJ/InZ9wg6p4EpU4fq5APm8WKagHPcCZ9BdKflwAAwqD1TMSIMB58Ct2wzdOwVJn8U/6pndWnLQ3ctVKFXUYHv8Fueci4TeUaIAYhtBGx0tczSqpASbDUEsWDH8yp9eQfnGg==
+X-Gm-Message-State: AOJu0YzCqvzYb8JsOpQ72yaUr5SaJT+qBPbHEgt+FZr4qnnHSS75jv9B
+	g78732G6ksVYnRREHyLDClj2+MvpB357BTO0S7jIixlYvT9jP+2K
+X-Google-Smtp-Source: AGHT+IEBl+NGUmAKsMMIjq3va74DO9HZXUY2YYjJkt/EkqMvCQ8eSxSObJ3o1yUFzc3pe8iGvN6xdQ==
+X-Received: by 2002:a05:6512:459:b0:513:c60a:5fc0 with SMTP id y25-20020a056512045900b00513c60a5fc0mr474146lfk.0.1712304703038;
+        Fri, 05 Apr 2024 01:11:43 -0700 (PDT)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id e10-20020adffc4a000000b00343a66f6be4sm1394300wrs.24.2024.04.05.01.11.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Apr 2024 01:11:42 -0700 (PDT)
+Message-ID: <0d8ff9ae438537272d40c801f5f5e1b6fb213363.camel@gmail.com>
+Subject: Re: [PATCH v2 1/1] scsi: ufs: Remove support for old UFSHCI versions
+From: Bean Huo <huobean@gmail.com>
+To: Avri Altman <avri.altman@wdc.com>, "James E . J . Bottomley"
+	 <jejb@linux.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Bart Van Assche
+ <bvanassche@acm.org>,  Bean Huo <beanhuo@micron.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 05 Apr 2024 10:11:41 +0200
+In-Reply-To: <20240327071714.757-2-avri.altman@wdc.com>
+References: <20240327071714.757-1-avri.altman@wdc.com>
+	 <20240327071714.757-2-avri.altman@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 17/17] MAINTAINERS: Add phy-gs101-ufs file to Tensor
- GS101.
-To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
- sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
- avri.altman@wdc.com, bvanassche@acm.org, s.nawrocki@samsung.com,
- cw00.choi@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
- chanho61.park@samsung.com, ebiggers@kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
- devicetree@vger.kernel.org, linux-clk@vger.kernel.org,
- linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org,
- andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
-References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-18-peter.griffin@linaro.org>
-Content-Language: en-US
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 fv0=
-In-Reply-To: <20240404122559.898930-18-peter.griffin@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 04/04/2024 14:25, Peter Griffin wrote:
-> Add the newly created ufs phy for GS101 to MAINTAINERS.
-> 
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
-> ---
->  MAINTAINERS | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 491d48f7c2fa..48ac9bd64f22 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -9256,6 +9256,7 @@ S:	Maintained
->  F:	Documentation/devicetree/bindings/clock/google,gs101-clock.yaml
->  F:	arch/arm64/boot/dts/exynos/google/
->  F:	drivers/clk/samsung/clk-gs101.c
-> +F:	drivers/phy/samsung/phy-gs101-ufs.c
+On Wed, 2024-03-27 at 09:17 +0200, Avri Altman wrote:
+> UFS spec version 2.1 was published more than 10 years ago. It is
+> vanishingly unlikely that even there are out there platforms that
+> uses
+> earlier host controllers, let alone that those ancient platforms will
+> ever run a V6.10 kernel.=C2=A0 Thus, remove support of host controllers
+> prior
+> to UFS2.1.
+>=20
+> This patch removes some legacy tuning calls that no longer apply.
+>=20
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
 
-This could go also via phy-tree:
-
-Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
-
-Best regards,
-Krzysztof
-
+Acked-by: Bean Huo <beanhuo@micron.com>
