@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C67E636134;
-	Fri,  5 Apr 2024 04:42:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40918364DC;
+	Fri,  5 Apr 2024 04:42:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712292154; cv=none; b=tk1Bc6RRO9LqAG3IICHM2o0cAb4cLF78LS+M/lgb7D8XY0ZFdJn+7HASHWjuH4EuVQwufSI2UtrIbdYspiJWDkIERpIts/j07m/Vew6q24AERVXv5g6WNS0RwsDQWlKPq3L8Bx7mrMgmib84LRNUg/yES0hbtDEJcLt1MIcx75g=
+	t=1712292156; cv=none; b=oDDAaOAGH65UTQz1CEAvVuqIgRNntzfeTPod9qcoKJkPuevLGpRbehhEQOzWg+d3Rl+5Q/HmiyGphccORSvUzN7t+w0AGYQdS0Ey+B6xU0xNjwHhlRo7JvIZdeH5ilrwcOK0qabNWFv9WO/VhKmAcR7FE2NPmG6NCIswV8PMJUk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712292154; c=relaxed/simple;
-	bh=6t2uKnadDY2kbMGbnciF6esBAlnT+cB5PZhf+JXo1Iw=;
+	s=arc-20240116; t=1712292156; c=relaxed/simple;
+	bh=bZ6CmoUZHeF0V+yCdDX4vQwkiIgUMYj2IlheLcYsEw4=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y893D0posRYTWPZ+7DLPgBmL5s+J3SD4R9qg3DHHTqtuktixRB4nf2G4VOuwfp55RaUHILsPaM32qDd2UZPrso12FlvMqSp0fEQOSerzP7tNkvV12snTsSBX7PRIgT4MYtJ94F9AxtRkcUpLXt9dzLrIkBGOV+lAak8Svci1hCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xu/vMxIo; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=t/SHX4EDv/QrMueKCQ4MxXBTHrq2EdyY0F8ryeFmiQRjfPGISAuznrBmkszSnQUQo3t8oGVmmHRvtZzfhq5dlT9R8Pl7bucFZ2u5bhsAyrmYeiZIvC5QwAGv9lwERz+x6vtpmffVEi8SaZE+g4wXU+Fw3BdsaOQAalh1Cmth4Gg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ehQC4oNY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xu/vMxIo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D8B3C43390;
-	Fri,  5 Apr 2024 04:42:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ehQC4oNY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F256CC433C7;
+	Fri,  5 Apr 2024 04:42:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712292154;
-	bh=6t2uKnadDY2kbMGbnciF6esBAlnT+cB5PZhf+JXo1Iw=;
+	s=k20201202; t=1712292156;
+	bh=bZ6CmoUZHeF0V+yCdDX4vQwkiIgUMYj2IlheLcYsEw4=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=Xu/vMxIoG1pizu1nQuRtrbMsJofl9vTQN+Rq1H9AKa7gRzYscnZ5ZBGh4DCeWhhv9
-	 KVTZpwIe2QCcKiMcVrVo4Lk9oXnShJ4qfi4IPu5iJ3t4DuRiI4E+LFLGgvkXCWNPor
-	 LWYE51UYT5BgzGKNGpFlsHhcCFdDm8dujQsugeA4U9GX4FupWLZ9ijNtLoAVaelUxu
-	 ayD0rBlxciaM0wXNC2Hk3vrpKlbJxQ1aS4P1GJbfxaRYfANHD70pZc1GhwDXorXvN3
-	 /CG2i5NVFYWo8QgxGHX2n2gDfIFLGnxraHClDiTxK8ZtrFPNNksoVXdy4Z/nH/iU+7
-	 Bq9PElIqKItJw==
+	b=ehQC4oNYoS7eV9v/xjeCQc0uguM7tdTrX+cULWOZzCPYiiNx2vCqw8PA2Iky0huz8
+	 rYnyFrNIP/uJFy6LrOLmKVIprZP0q3hC9/ZJhbrJ4auotTlr3om9rtLiUoq0Q1q3ea
+	 awvVKl7/36F0oHn2FDxkkRBTpVaUjbJjJ//7x9lgdLegnefpU1hWcuS12/m8LDAa8p
+	 jDa2wnKwYb+1bZcyx0DJkA5krnUvyrKVFw15nTi/lYUhRdrSBvJQJb3pi7u2SAz2av
+	 7dUXRk1/wv3nMHBuaO/clOIyVFqH5mdIew9BqzICkiQabnjTe+KCbzKJ3QYOlEwHko
+	 bBl+09RbHYNOQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-block@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
@@ -36,9 +36,9 @@ To: linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	Keith Busch <kbusch@kernel.org>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v6 17/28] null_blk: Introduce fua attribute
-Date: Fri,  5 Apr 2024 13:41:56 +0900
-Message-ID: <20240405044207.1123462-18-dlemoal@kernel.org>
+Subject: [PATCH v6 18/28] nvmet: zns: Do not reference the gendisk conv_zones_bitmap
+Date: Fri,  5 Apr 2024 13:41:57 +0900
+Message-ID: <20240405044207.1123462-19-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240405044207.1123462-1-dlemoal@kernel.org>
 References: <20240405044207.1123462-1-dlemoal@kernel.org>
@@ -50,96 +50,41 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add the fua configfs attribute and module parameter to allow
-configuring if the device supports FUA or not. Using this attribute
-has an effect on the null_blk device only if memory backing is enabled
-together with a write cache (cache_size option).
-
-This new attribute allows configuring a null_blk device with a write
-cache but without FUA support. This is convenient to test the block
-layer flush machinery.
+The gendisk conventional zone bitmap is going away. So to check for the
+presence of conventional zones on a zoned target device, always use
+report zones.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
 Tested-by: Hans Holmberg <hans.holmberg@wdc.com>
 ---
- drivers/block/null_blk/main.c     | 12 ++++++++++--
- drivers/block/null_blk/null_blk.h |  1 +
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ drivers/nvme/target/zns.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/block/null_blk/main.c b/drivers/block/null_blk/main.c
-index a5a50ba6ad9f..578660b1ad01 100644
---- a/drivers/block/null_blk/main.c
-+++ b/drivers/block/null_blk/main.c
-@@ -225,6 +225,10 @@ static unsigned long g_cache_size;
- module_param_named(cache_size, g_cache_size, ulong, 0444);
- MODULE_PARM_DESC(mbps, "Cache size in MiB for memory-backed device. Default: 0 (none)");
- 
-+static bool g_fua = true;
-+module_param_named(fua, g_fua, bool, 0444);
-+MODULE_PARM_DESC(zoned, "Enable/disable FUA support when cache_size is used. Default: true");
-+
- static unsigned int g_mbps;
- module_param_named(mbps, g_mbps, uint, 0444);
- MODULE_PARM_DESC(mbps, "Limit maximum bandwidth (in MiB/s). Default: 0 (no limit)");
-@@ -446,6 +450,7 @@ NULLB_DEVICE_ATTR(virt_boundary, bool, NULL);
- NULLB_DEVICE_ATTR(no_sched, bool, NULL);
- NULLB_DEVICE_ATTR(shared_tags, bool, NULL);
- NULLB_DEVICE_ATTR(shared_tag_bitmap, bool, NULL);
-+NULLB_DEVICE_ATTR(fua, bool, NULL);
- 
- static ssize_t nullb_device_power_show(struct config_item *item, char *page)
- {
-@@ -593,6 +598,7 @@ static struct configfs_attribute *nullb_device_attrs[] = {
- 	&nullb_device_attr_no_sched,
- 	&nullb_device_attr_shared_tags,
- 	&nullb_device_attr_shared_tag_bitmap,
-+	&nullb_device_attr_fua,
- 	NULL,
- };
- 
-@@ -671,7 +677,7 @@ nullb_group_drop_item(struct config_group *group, struct config_item *item)
- static ssize_t memb_group_features_show(struct config_item *item, char *page)
- {
- 	return snprintf(page, PAGE_SIZE,
--			"badblocks,blocking,blocksize,cache_size,"
-+			"badblocks,blocking,blocksize,cache_size,fua,"
- 			"completion_nsec,discard,home_node,hw_queue_depth,"
- 			"irqmode,max_sectors,mbps,memory_backed,no_sched,"
- 			"poll_queues,power,queue_mode,shared_tag_bitmap,"
-@@ -763,6 +769,8 @@ static struct nullb_device *null_alloc_dev(void)
- 	dev->no_sched = g_no_sched;
- 	dev->shared_tags = g_shared_tags;
- 	dev->shared_tag_bitmap = g_shared_tag_bitmap;
-+	dev->fua = g_fua;
-+
- 	return dev;
- }
- 
-@@ -1920,7 +1928,7 @@ static int null_add_dev(struct nullb_device *dev)
- 
- 	if (dev->cache_size > 0) {
- 		set_bit(NULLB_DEV_FL_CACHE, &nullb->dev->flags);
--		blk_queue_write_cache(nullb->q, true, true);
-+		blk_queue_write_cache(nullb->q, true, dev->fua);
- 	}
- 
- 	nullb->q->queuedata = nullb;
-diff --git a/drivers/block/null_blk/null_blk.h b/drivers/block/null_blk/null_blk.h
-index a9c5df650ddb..3234e6c85eed 100644
---- a/drivers/block/null_blk/null_blk.h
-+++ b/drivers/block/null_blk/null_blk.h
-@@ -105,6 +105,7 @@ struct nullb_device {
- 	bool no_sched; /* no IO scheduler for the device */
- 	bool shared_tags; /* share tag set between devices for blk-mq */
- 	bool shared_tag_bitmap; /* use hostwide shared tags */
-+	bool fua; /* Support FUA */
- };
- 
- struct nullb {
+diff --git a/drivers/nvme/target/zns.c b/drivers/nvme/target/zns.c
+index 3148d9f1bde6..0021d06041c1 100644
+--- a/drivers/nvme/target/zns.c
++++ b/drivers/nvme/target/zns.c
+@@ -52,14 +52,10 @@ bool nvmet_bdev_zns_enable(struct nvmet_ns *ns)
+ 	if (get_capacity(bd_disk) & (bdev_zone_sectors(ns->bdev) - 1))
+ 		return false;
+ 	/*
+-	 * ZNS does not define a conventional zone type. If the underlying
+-	 * device has a bitmap set indicating the existence of conventional
+-	 * zones, reject the device. Otherwise, use report zones to detect if
+-	 * the device has conventional zones.
++	 * ZNS does not define a conventional zone type. Use report zones
++	 * to detect if the device has conventional zones and reject it if
++	 * it does.
+ 	 */
+-	if (ns->bdev->bd_disk->conv_zones_bitmap)
+-		return false;
+-
+ 	ret = blkdev_report_zones(ns->bdev, 0, bdev_nr_zones(ns->bdev),
+ 				  validate_conv_zones_cb, NULL);
+ 	if (ret < 0)
 -- 
 2.44.0
 
