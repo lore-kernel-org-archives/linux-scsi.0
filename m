@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F47A14388A;
-	Fri,  5 Apr 2024 07:59:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B42AC171CC;
+	Fri,  5 Apr 2024 08:00:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712303986; cv=none; b=RqAtWfpkXNAHELWIWg5g3ZwDDfdh3oOafSSH55oS05o8+pS3XzuMtXH/K88mERDl7dXfG6OXd4CeLj9dsJNbGMA4bepUGLjft2iTAMR5/OMx6U2/CGzysf9xfCgaFFIcvl1fkZgXtbqt648rDMD8O5Pm8Z/6x9kH+Si1P+a9l0A=
+	t=1712304019; cv=none; b=kWknw4tbB6RbwsdHN0gwXnw21nmhD6qeMQVpKQJ13zJPrYptrH288kw7hsJiF86A+rd41jFIuWQkz+pBFNuawmeZvX8aqcv2zizDDi9B6jEa7x0L4XyHNEleNAPuij9MNtbvbjuYIqc899zt32sucgWA4aj8fIsNJ9Z8GluVwYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712303986; c=relaxed/simple;
-	bh=ePzd0LSkACD8Q2qGi5ZvnhDdOvBVVEucTM70RJBuCAo=;
+	s=arc-20240116; t=1712304019; c=relaxed/simple;
+	bh=IZRrX7XpE+4FP7wBYx2ZuBhTerHvqKeOEt7zeIB6fbk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Bw9m6z4pjlbC1z9N6LZSJ7oEHz8YBNer3Jz4diLLzctWlNFCmHLnopOjPkJLNocnUhu2OM/PwXxayfqCAr/4xX3dbCNwjvei9fJLK0OHtQ9URUZ0VANPwdIyXC9IW6hGlqNI/P6Pos0rROrQNnFvJXgmmU9axZfaSqa5umG7bM8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G2gUWf/s; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=bYFnBHdZfKcwHnAyEA9IEJbVsRdUmdNESrZ7ooQvWvWsaKiOZBDIOJdmBoGfXD8bVQU6Og0EzZp63GGPlAitS+CJIFYi1m3ngNDQpwVppdW8fYfV6+TY6W83nEnzRA2UlZoYhaod+uhrz8oM7AlN6av4uXkugOFqfNCWq7I6+oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u96lNQ9g; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G2gUWf/s"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A4A9C433F1;
-	Fri,  5 Apr 2024 07:59:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u96lNQ9g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E4FCC433C7;
+	Fri,  5 Apr 2024 08:00:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712303986;
-	bh=ePzd0LSkACD8Q2qGi5ZvnhDdOvBVVEucTM70RJBuCAo=;
+	s=k20201202; t=1712304019;
+	bh=IZRrX7XpE+4FP7wBYx2ZuBhTerHvqKeOEt7zeIB6fbk=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=G2gUWf/s3vEsCIqJ2cdhWadkVGKdrYXh0c9nCfX+o4zCuZz3SnKTHvK3JNhtvWkG3
-	 LRN+ZCVUa0C4MeGnZg8xdEBbpw4S9U4LNpqIwkFxpNMoYkIXap6yuQCzDOqYQ6BDJa
-	 m5VN6/uvhO7Jf2Hh2p2hsTjU/1VeH927qY9skA6UVuX9Xzyy1TiG6Q36NEUHHlxGed
-	 X/sZDNLkzwynFa+b5eqk9rez2QH9g929/pKc/3czJdItd40c4jxxpkjuxZotzoTq0c
-	 lQomSVXv6JjfMbTCGfkax+xUIJYcd+hgFrUfUEWX5xX/feaDs91cwGt80WGXKkS+7N
-	 8iUe/9OcMembQ==
-Message-ID: <16d21771-dded-4c1d-90b0-f3ac03be0726@kernel.org>
-Date: Fri, 5 Apr 2024 09:59:34 +0200
+	b=u96lNQ9g7rzhJVO5YSuaTSLcO8l5TZxj9nriXwg/NHXCi2gc5Zqor0K2wLhWMgS+0
+	 KDodbIO9tf8r1jtwW0vhcC4qg5CcEgHNcmOP617kX2to7ha62nzjLUH5GMYf/AFxPz
+	 D9vNsUpCbelB/vauSI6/zcY0t4kCC3TbBM9KmWBrav0TdaC20aP+j8BczWSp6/LmCg
+	 J9OViP8NYXY0VnygybjrslNd6CV9QYVo5WXmTLZxbBOOFsohSSCOUDXtUPU/nawV+b
+	 zZE3gWV7gE/i7P8B3GIUyKp7QiV1rybvULLtaK2sfiGSajTa+lJhncklkQf7IpmEla
+	 6l0uSJRLKP/nw==
+Message-ID: <9f202f3a-fec8-4570-8c37-64927bdbb276@kernel.org>
+Date: Fri, 5 Apr 2024 10:00:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 16/17] scsi: ufs: host: ufs-exynos: Add support for Tensor
- gs101 SoC
+Subject: Re: [PATCH 17/17] MAINTAINERS: Add phy-gs101-ufs file to Tensor
+ GS101.
 To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
  sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
  vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
@@ -49,7 +49,7 @@ Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
  linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org,
  andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
 References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-17-peter.griffin@linaro.org>
+ <20240404122559.898930-18-peter.griffin@linaro.org>
 Content-Language: en-US
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -95,27 +95,29 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <20240404122559.898930-17-peter.griffin@linaro.org>
+In-Reply-To: <20240404122559.898930-18-peter.griffin@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 04/04/2024 14:25, Peter Griffin wrote:
-> Add a dedicated compatible and drv_data with associated
-> hooks for gs101 SoC found on Pixel 6.
-> 
-> Note we make use of the previously added EXYNOS_UFS_OPT_UFSPR_SECURE
-> option, to skip initialisation of UFSPR registers as these are only
-> accessible via SMC call.
-> 
-> EXYNOS_UFS_OPT_TIMER_TICK_SELECT option is also set to select tick
-> source. This has been done so as not to effect any existing platforms.
-> 
-> DBG_OPTION_SUITE on gs101 has different address offsets to other SoCs
-> so these register offsets now come from uic_attr struct.
+> Add the newly created ufs phy for GS101 to MAINTAINERS.
 > 
 > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
 > ---
+>  MAINTAINERS | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 491d48f7c2fa..48ac9bd64f22 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9256,6 +9256,7 @@ S:	Maintained
+>  F:	Documentation/devicetree/bindings/clock/google,gs101-clock.yaml
+>  F:	arch/arm64/boot/dts/exynos/google/
+>  F:	drivers/clk/samsung/clk-gs101.c
+> +F:	drivers/phy/samsung/phy-gs101-ufs.c
 
+This could go also via phy-tree:
 
 Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
 
