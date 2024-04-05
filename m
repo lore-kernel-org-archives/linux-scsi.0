@@ -1,151 +1,131 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E58516E897
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Apr 2024 14:50:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09FA916F909
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Apr 2024 15:46:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712328619; cv=none; b=N+R7ZnNdgmQJLp8H80FHUgmXCTF5Cw73UG8+2o60dEEtbaFgVK9or3DHEFGE4xIrpjIDT29ejDgdaST1PCfNT5D1mD2DC2c0ODjSzii2Im0qZhGzYqSCoMMNC7YPGllO8JM02c1iolkPilBQDZ7iNsa2N3erYFdznwGiSOW5Qa4=
+	t=1712332009; cv=none; b=sjSZv/B6Kfi/DBQXLG2C+aNiXBnzsyUKCaeXE2ratLJe1Ei+hjg3Kce6X6MtreL+pSjotjvG9y1OQg9jEP3OCE2YtTjCEZLUXqbdpijyEVXfNvNkz1OLb7gfcVA7x7jYXSFAKRyOe7qlwT7L3fY/tcz81JN9ArvhQRa16AM6KPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712328619; c=relaxed/simple;
-	bh=f1RkwhPeAUS3cZ6kCj+dmzs89sUycWjsVlzvjgHIiLE=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=UpnbewZ6zT67ExSnXgCSdzLiMwuawXCbGCGx3iHGZMgHDVac+jCO2C4brXxgzIaWDGhiDUpJ4wuT8hGsWuJ73s1eiAv7KOdDu9VOkkuQ8wZzn2rX+HM9rHqBdty9uzjMEs1chGaaufe48sQBvYBSsA/eN3+K85AJGCYc7A12Rk0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MIaGaTEH; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+	s=arc-20240116; t=1712332009; c=relaxed/simple;
+	bh=jUADTu38D03I4Ry2sPtTsYlXDDX8IthBPUcAPHRcmC4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WxtDnmW/TKc3RPTfxmJtJZBjFxVBMu9ze2S9/ZmYFo4eHfyuNwzKvkxWzv+7264lJRWE+MZZ4tYuHVpLL9KFCWo4mdIX4ZqcQAw05gcihf1IrtFkVlT6bGOICrFb49mxxEE8NIq9+I5W/aNYrhFbzbA8eTgqDUTPQVHnuhXsorU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=redhat.com; arc=none smtp.client-ip=209.85.160.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MIaGaTEH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1712328616;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XBj727h/u4J/KZBO20py+azndrqh7+ZG5fTGby2SUWM=;
-	b=MIaGaTEH6/W96CZj337hIiuc1gy40ni7opuXL1A4cFtlq2G5bd5zV+57ik60C2C5xwtIhY
-	qcJEAg1uwzWULq76r31w4nbZ34S6Hsx3O0oxM5Et05bGbywuGAaHX6006w/3haEgcPz4Dz
-	dpLkF5BqDfDSZ778ntsOp5e/FKFOyQ0=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-86-OwbujdfnMWGVZubNDx9tUQ-1; Fri,
- 05 Apr 2024 10:50:12 -0400
-X-MC-Unique: OwbujdfnMWGVZubNDx9tUQ-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id E34DA3813F3B;
-	Fri,  5 Apr 2024 14:50:11 +0000 (UTC)
-Received: from [10.22.16.70] (unknown [10.22.16.70])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id 863FE20239F3;
-	Fri,  5 Apr 2024 14:50:11 +0000 (UTC)
-Message-ID: <310a1082-94e3-4f7e-9089-53882bbf979b@redhat.com>
-Date: Fri, 5 Apr 2024 10:50:11 -0400
+Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-432fa3f6847so12334831cf.2
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2024 08:46:46 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712332006; x=1712936806;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6rbAxhTU3trm8omv2Bw7/7acDjs036CDj3MB035wsvw=;
+        b=ssvV7t88JCpZtGQSxUi2BoWgljEaDtfvrsbb44hpeLqAXAeEG8if4II0XuoOQ/Opdq
+         0Ktq07S1VyDrGlJybl8WhCImjlPsxLgLr36rRC5Af3B94vuvIaR3NHz3WGhmKSF+AW9q
+         Pz0jA7AxljbMzdBDSszldBDVqc5hRD07wjqgxD+FJzMkf90YHAhkDfhuOPOqodFpm/Xn
+         6tVVnVPqeJ570ZmXIGnoks/2zQmdnkxovukLgWFHNzFlBq4DCwOPUmlUsSVWNvOuH6x2
+         Ps8fy/Cm5MZY5Kzbp6Qe8I7aXDWiOHhHw/oTDOSmImhZhdTKnQkzG3Jni1jJC67me4Wa
+         ZgQQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWPp/Ke+9Q/RuWdKgPzpXcbsAkO2yP+22vvctWUhcctZUb0sCfOnqSLGx/sp1+Nkm2zsJDx+rtBIYeGCvaB81+u1iRxHBjZb+2Vqw==
+X-Gm-Message-State: AOJu0YxSG5tM/2NznkM6Gxq6z0O5oDZmigOmHKCeO8domF7W0S1vCUA4
+	XOSzeO0debChld8XT6L4Fok+Bfn1/acF0yjPQNe8VcHU3urCClJDHmM6+1KYpQ==
+X-Google-Smtp-Source: AGHT+IEXwj4lJiAs5E/QO+Sa6vdj5AXAThaYh2DQXIrBkzcrcg7oaujlyRW+rioUqrlHYgkWfdpcnQ==
+X-Received: by 2002:a05:622a:5e8d:b0:434:61bc:9e22 with SMTP id er13-20020a05622a5e8d00b0043461bc9e22mr1787408qtb.24.1712332005953;
+        Fri, 05 Apr 2024 08:46:45 -0700 (PDT)
+Received: from localhost (pool-68-160-141-91.bstnma.fios.verizon.net. [68.160.141.91])
+        by smtp.gmail.com with ESMTPSA id bw9-20020a05622a098900b004330090b874sm852109qtb.95.2024.04.05.08.46.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Apr 2024 08:46:45 -0700 (PDT)
+Date: Fri, 5 Apr 2024 11:46:44 -0400
+From: Mike Snitzer <snitzer@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v6 12/28] dm: Use the block layer zone append emulation
+Message-ID: <ZhAc5JL9KwoDdiOO@redhat.com>
+References: <20240405044207.1123462-1-dlemoal@kernel.org>
+ <20240405044207.1123462-13-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: John Meneghini <jmeneghi@redhat.com>
-Subject: Re: [PATCH] qedi: Fix crash while reading debugfs attribute.
-To: martin.petersen@oracle.com, Manish Rangankar <mrangankar@marvell.com>
-Cc: GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
- Martin Hoyer <mhoyer@redhat.com>, Nilesh Javali <njavali@marvell.com>
-References: <20240327091100.14405-1-mrangankar@marvell.com>
-Content-Language: en-US
-Organization: RHEL Core Storge Team
-In-Reply-To: <20240327091100.14405-1-mrangankar@marvell.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240405044207.1123462-13-dlemoal@kernel.org>
 
-Martin, we've tested this patch here at Red Hat and found that it fixes the problem.
+On Fri, Apr 05 2024 at 12:41P -0400,
+Damien Le Moal <dlemoal@kernel.org> wrote:
 
-Manish, Please clean up the commit message and submit a v2 patch with a little better description.
+> For targets requiring zone append operation emulation with regular
+> writes (e.g. dm-crypt), we can use the block layer emulation provided by
+> zone write plugging. Remove DM implemented zone append emulation and
+> enable the block layer one.
+> 
+> This is done by setting the max_zone_append_sectors limit of the
+> mapped device queue to 0 for mapped devices that have a target table
+> that cannot support native zone append operations (e.g. dm-crypt).
+> Such mapped devices are flagged with the DMF_EMULATE_ZONE_APPEND flag.
+> dm_split_and_process_bio() is modified to execute
+> blk_zone_write_plug_bio() for such device to let the block layer
+> transform zone append operations into regular writes.  This is done
+> after ensuring that the submitted BIO is split if it straddles zone
+> boundaries. Both changes are implemented unsing the inline helpers
+> dm_zone_write_plug_bio() and dm_zone_bio_needs_split() respectively.
+> 
+> dm_revalidate_zones() is also modified to use the block layer provided
+> function blk_revalidate_disk_zones() so that all zone resources needed
+> for zone append emulation are initialized by the block layer without DM
+> core needing to do anything. Since the device table is not yet live when
+> dm_revalidate_zones() is executed, enabling the use of
+> blk_revalidate_disk_zones() requires adding a pointer to the device
+> table in struct mapped_device. This avoids errors in
+> dm_blk_report_zones() trying to get the table with dm_get_live_table().
+> The mapped device table pointer is set to the table passed as argument
+> to dm_revalidate_zones() before calling blk_revalidate_disk_zones() and
+> reset to NULL after this function returns to restore the live table
+> handling for user call of report zones.
+> 
+> All the code related to zone append emulation is removed from
+> dm-zone.c. This leads to simplifications of the functions __map_bio()
+> and dm_zone_endio(). This later function now only needs to deal with
+> completions of real zone append operations for targets that support it.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Mike Snitzer <snitzer@kernel.org>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Tested-by: Hans Holmberg <hans.holmberg@wdc.com>
+> ---
+>  drivers/md/dm-core.h |   2 +-
+>  drivers/md/dm-zone.c | 476 ++++---------------------------------------
+>  drivers/md/dm.c      |  72 ++++---
+>  drivers/md/dm.h      |   4 +-
+>  4 files changed, 94 insertions(+), 460 deletions(-)
+> 
+> diff --git a/drivers/md/dm-zone.c b/drivers/md/dm-zone.c
+> index eb9832b22b14..174fda0a301c 100644
+> --- a/drivers/md/dm-zone.c
+> +++ b/drivers/md/dm-zone.c
+> @@ -226,41 +154,32 @@ static int dm_zone_revalidate_cb(struct blk_zone *zone, unsigned int idx,
+>  static int dm_revalidate_zones(struct mapped_device *md, struct dm_table *t)
+>  {
+>  	struct gendisk *disk = md->disk;
+> -	unsigned int noio_flag;
+>  	int ret;
+>  
+> -	/*
+> -	 * Check if something changed. If yes, cleanup the current resources
+> -	 * and reallocate everything.
+> -	 */
+> +	/* Revalidate ionly if something changed. */
 
-Tested-by: Martin Hoyer <mhoyer@redhat.com>
-Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Just noticed this ionly typo ^ Please fix.
 
 Thanks,
-
-/John
-
-On 3/27/24 05:11, Manish Rangankar wrote:
-> BUG: unable to handle page fault for address: 00007f4801111000
-> PGD 8000000864df6067 P4D 8000000864df6067 PUD 864df7067 PMD 846028067 PTE 0
-> Oops: 0002 [#1] PREEMPT SMP PTI
-> CPU: 38 PID: 6417 Comm: cat Kdump: loaded Not tainted 6.4.0-150600.9-default #1 SLE15-SP6 6b4f1850a99c4e4121f832c3fb6a8cf64ec22338
-> Hardware name: HPE ProLiant DL380 Gen10/ProLiant DL380 Gen10, BIOS U30 06/15/2023
-> RIP: 0010:memcpy_orig+0xcd/0x130
-> Code: 08 4c 89 54 17 f0 4c 89 5c 17 f8 c3 cc cc cc cc 66 66 2e 0f 1f 84 00 00 00 00 00 66 90 83 fa 08 72 1b 4c 8b 06 4c 8b 4c 16 f8 <4c> 89 07 4c 89 4c 17 f8 c3 cc cc cc cc 66 0f 1f 44 00 00 83 fa 04
-> RSP: 0018:ffffb7a18c3ffc40 EFLAGS: 00010202
-> RAX: 00007f4801111000 RBX: 00007f4801111000 RCX: 000000000000000f
-> RDX: 000000000000000f RSI: ffffffffc0bfd7a0 RDI: 00007f4801111000
-> RBP: ffffffffc0bfd7a0 R08: 725f746f6e5f6f64 R09: 3d7265766f636572
-> R10: ffffb7a18c3ffd08 R11: 0000000000000000 R12: 00007f4881110fff
-> R13: 000000007fffffff R14: ffffb7a18c3ffca0 R15: ffffffffc0bfd7af
-> FS:  00007f480118a740(0000) GS:ffff98e38af00000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 00007f4801111000 CR3: 0000000864b8e001 CR4: 00000000007706e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> PKRU: 55555554
-> Call Trace:
->   <TASK>
->   ? __die_body+0x1a/0x60
->   ? page_fault_oops+0x183/0x510
->   ? exc_page_fault+0x69/0x150
->   ? asm_exc_page_fault+0x22/0x30
->   ? memcpy_orig+0xcd/0x130
->   vsnprintf+0x102/0x4c0
->   sprintf+0x51/0x80
->   qedi_dbg_do_not_recover_cmd_read+0x2f/0x50 [qedi 6bcfdeeecdea037da47069eca2ba717c84a77324]
->   full_proxy_read+0x50/0x80
->   vfs_read+0xa5/0x2e0
->   ? folio_add_new_anon_rmap+0x44/0xa0
->   ? set_pte_at+0x15/0x30
->   ? do_pte_missing+0x426/0x7f0
->   ksys_read+0xa5/0xe0
->   do_syscall_64+0x58/0x80
->   ? __count_memcg_events+0x46/0x90
->   ? count_memcg_event_mm+0x3d/0x60
->   ? handle_mm_fault+0x196/0x2f0
->   ? do_user_addr_fault+0x267/0x890
->   ? exc_page_fault+0x69/0x150
->   entry_SYSCALL_64_after_hwframe+0x72/0xdc
-> RIP: 0033:0x7f4800f20b4d
-> 
-> Reported-by: Martin Hoyer <mhoyer@redhat.com>
-> Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
-> ---
->   drivers/scsi/qedi/qedi_debugfs.c | 12 ++++--------
->   1 file changed, 4 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/scsi/qedi/qedi_debugfs.c b/drivers/scsi/qedi/qedi_debugfs.c
-> index 8deb2001dc2f..37eed6a27816 100644
-> --- a/drivers/scsi/qedi/qedi_debugfs.c
-> +++ b/drivers/scsi/qedi/qedi_debugfs.c
-> @@ -120,15 +120,11 @@ static ssize_t
->   qedi_dbg_do_not_recover_cmd_read(struct file *filp, char __user *buffer,
->   				 size_t count, loff_t *ppos)
->   {
-> -	size_t cnt = 0;
-> -
-> -	if (*ppos)
-> -		return 0;
-> +	char buf[64];
-> +	int len;
->   
-> -	cnt = sprintf(buffer, "do_not_recover=%d\n", qedi_do_not_recover);
-> -	cnt = min_t(int, count, cnt - *ppos);
-> -	*ppos += cnt;
-> -	return cnt;
-> +	len = sprintf(buf, "do_not_recover=%d\n", qedi_do_not_recover);
-> +	return simple_read_from_buffer(buffer, count, ppos, buf, len);
->   }
->   
->   static int
-
+Mike
