@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 175CD24B26;
-	Fri,  5 Apr 2024 04:42:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C701F614;
+	Fri,  5 Apr 2024 04:42:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712292137; cv=none; b=r8KYRG0sv6pGJ29tjTioFI49CAXzpK+A+BwS3K21kTTqE6ZKwx7inkbNqr3OcxXq2a8t63lFpjxCwsHoW/7iiJNbFEi7XIFSzeotteVDOIrc8Y7MQsdHqlEsN9pmanHghuqabxPT29mWK786+hntB5YFz49XUDF/lTG9SM3x87E=
+	t=1712292138; cv=none; b=kq20FtvTMM6f0iqI2IvF5KgEjdG6nhPgABkvtSrHktV5R+MGUCRAwYAIdQiR2CC/N7LmsT1AEYq68J86FjneIgbrOQC0WVH6Ab4XZnVkIRnYzV9T9zjIx++nbZd+pIaOFUc9Xo5R7jx8TIefWOiKSrxl7c/PFRFVX1Sj8QQxAZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712292137; c=relaxed/simple;
-	bh=Psfl/jmWSX5gl8cykLhLSXQA1aPpWSzL1AVZwTM+VIc=;
+	s=arc-20240116; t=1712292138; c=relaxed/simple;
+	bh=FIR28aVGhJW8E0GXpe6VFYz9Z36VPZVoS0wi8u1x8o8=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NMDN8Hqf8NKSFNQgAoOvJz178ZQDqKinPO7Oz9z+meEjEOxWXuTqQW17Hb1c13zkdCHaFKtGB2jb4gDajHMg00+2l9Y/bA7LXJH7yEVoc5FANulD9WSVFUsDS5L863H7wLCkapeO4ZlZM6Z13LtVqQQcokxLCFjPqZAcAqovZrU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HUL8/poB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=mSASFRg9gEP6Ty8zsCaRfLCtWhJDPvLg+4lP++7EUY5LpxS99DLNam5bBzYi3cVEEBZrS1F/tg0glJsXEkw5bCF0ujjqPo+fEzmXPUEx/k2w6BgV1p0hJ6IpZiJ6D0qFJ/YlJXg1ym6P+cmlk6DJK7J2548oZjhu424kaIGu7xE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FSrHjTVM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HUL8/poB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5561C433B2;
-	Fri,  5 Apr 2024 04:42:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FSrHjTVM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 431DAC433F1;
+	Fri,  5 Apr 2024 04:42:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712292136;
-	bh=Psfl/jmWSX5gl8cykLhLSXQA1aPpWSzL1AVZwTM+VIc=;
+	s=k20201202; t=1712292138;
+	bh=FIR28aVGhJW8E0GXpe6VFYz9Z36VPZVoS0wi8u1x8o8=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=HUL8/poB3QOW7waEYho9vvystJ0O3nU3TAUP8SbPmpQ1d+udWUTMvZvXGO9bU0Xf+
-	 nO8CMRMNAKFS0+WeB/QUqbbi8L9yXRhsOTl1SuAn/gu7WA1FrTcREfaujTQxjSwKir
-	 dVidztx/46eTtRqPWG1biOtZ3ND6zyfKNxNEW8+bm8F8r8MDekN61ytQq77fijeHDR
-	 rGw6itKrcMLhlVdDdXkZaSSxoVwfwud0mvogp6JFOqkZGAJklozJN8vkwYHW337n0X
-	 bZx5Tahj61lHmGtU1+L2S4HD4bZVc4+oqpt4WGJ6SwFm36TBu1nSgtrhBvkd6TKECE
-	 E8MDgQ6f8AwUQ==
+	b=FSrHjTVM8pNJbl5S+mxTEsyATbQmDb3BjbXAjzuTRQkqvXegQefFcdcINzthyw4dv
+	 gmkPaz00As9wQWxxJ1ymam9SgIlkaC1pCYLcD1G8ZSo3g1tWRzZ3UuNfwkZyRyXUm1
+	 rdN6p/Sfx0fP9clsmyYmXbV0YYKDo/NsAGN89CdhKmiDrb9+CKptKxZnOePbzRWqsw
+	 LIe/kMYALiTp7WiCd2nwLFSbUolJo6V4iU2XqYOnuEnxn8s1s/e2CsY3PXG2pZj2m1
+	 jZunoHR3zhZchOaAL/jbL5jP4HFLLoAfRDe1/ap5YNOlL6DYxnd5sBG1rHj1DadzzQ
+	 EOR4f6F+mjEOA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-block@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
@@ -36,9 +36,9 @@ To: linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	Keith Busch <kbusch@kernel.org>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v6 05/28] block: Allow using bio_attempt_back_merge() internally
-Date: Fri,  5 Apr 2024 13:41:44 +0900
-Message-ID: <20240405044207.1123462-6-dlemoal@kernel.org>
+Subject: [PATCH v6 06/28] block: Remember zone capacity when revalidating zones
+Date: Fri,  5 Apr 2024 13:41:45 +0900
+Message-ID: <20240405044207.1123462-7-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240405044207.1123462-1-dlemoal@kernel.org>
 References: <20240405044207.1123462-1-dlemoal@kernel.org>
@@ -50,59 +50,111 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Remove "static" from the definition of bio_attempt_back_merge() and
-declare this function in block/blk.h to allow using it internally from
-other block layer files. The definition of enum bio_merge_status is
-also moved to block/blk.h.
+In preparation for adding zone write plugging, modify
+blk_revalidate_disk_zones() to get the capacity of zones of a zoned
+block device. This capacity value as a number of 512B sectors is stored
+in the gendisk zone_capacity field.
+
+Given that host-managed SMR disks (including zoned UFS drives) and all
+known NVMe ZNS devices have the same zone capacity for all zones
+blk_revalidate_disk_zones() returns an error if different capacities are
+detected for different zones.
+
+This also adds check to verify that the values reported by the device
+for zone capacities are correct, that is, that the zone capacity is
+never 0, does not exceed the zone size and is equal to the zone size for
+conventional zones.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Tested-by: Hans Holmberg <hans.holmberg@wdc.com>
 ---
- block/blk-merge.c | 8 +-------
- block/blk.h       | 8 ++++++++
- 2 files changed, 9 insertions(+), 7 deletions(-)
+ block/blk-zoned.c      | 26 ++++++++++++++++++++++++++
+ include/linux/blkdev.h |  1 +
+ 2 files changed, 27 insertions(+)
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 4e3483a16b75..3363b1321908 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -972,13 +972,7 @@ static void blk_account_io_merge_bio(struct request *req)
- 	part_stat_unlock();
- }
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index da0f4b2a8fa0..23d9bb21c459 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -438,6 +438,7 @@ struct blk_revalidate_zone_args {
+ 	unsigned long	*conv_zones_bitmap;
+ 	unsigned long	*seq_zones_wlock;
+ 	unsigned int	nr_zones;
++	unsigned int	zone_capacity;
+ 	sector_t	sector;
+ };
  
--enum bio_merge_status {
--	BIO_MERGE_OK,
--	BIO_MERGE_NONE,
--	BIO_MERGE_FAILED,
--};
--
--static enum bio_merge_status bio_attempt_back_merge(struct request *req,
-+enum bio_merge_status bio_attempt_back_merge(struct request *req,
- 		struct bio *bio, unsigned int nr_segs)
- {
- 	const blk_opf_t ff = bio_failfast(bio);
-diff --git a/block/blk.h b/block/blk.h
-index 17786052f32d..bca50a9510c8 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -269,6 +269,14 @@ static inline void bio_integrity_free(struct bio *bio)
- unsigned long blk_rq_timeout(unsigned long timeout);
- void blk_add_timer(struct request *req);
+@@ -482,9 +483,20 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
+ 		return -ENODEV;
+ 	}
  
-+enum bio_merge_status {
-+	BIO_MERGE_OK,
-+	BIO_MERGE_NONE,
-+	BIO_MERGE_FAILED,
-+};
++	if (!zone->capacity || zone->capacity > zone->len) {
++		pr_warn("%s: Invalid zone capacity\n",
++			disk->disk_name);
++		return -ENODEV;
++	}
 +
-+enum bio_merge_status bio_attempt_back_merge(struct request *req,
-+		struct bio *bio, unsigned int nr_segs);
- bool blk_attempt_plug_merge(struct request_queue *q, struct bio *bio,
- 		unsigned int nr_segs);
- bool blk_bio_list_merge(struct request_queue *q, struct list_head *list,
+ 	/* Check zone type */
+ 	switch (zone->type) {
+ 	case BLK_ZONE_TYPE_CONVENTIONAL:
++		if (zone->capacity != zone->len) {
++			pr_warn("%s: Invalid conventional zone capacity\n",
++				disk->disk_name);
++			return -ENODEV;
++		}
+ 		if (!args->conv_zones_bitmap) {
+ 			args->conv_zones_bitmap =
+ 				blk_alloc_zone_bitmap(q->node, args->nr_zones);
+@@ -500,6 +512,18 @@ static int blk_revalidate_zone_cb(struct blk_zone *zone, unsigned int idx,
+ 			if (!args->seq_zones_wlock)
+ 				return -ENOMEM;
+ 		}
++
++		/*
++		 * Remember the capacity of the first sequential zone and check
++		 * if it is constant for all zones.
++		 */
++		if (!args->zone_capacity)
++			args->zone_capacity = zone->capacity;
++		if (zone->capacity != args->zone_capacity) {
++			pr_warn("%s: Invalid variable zone capacity\n",
++				disk->disk_name);
++			return -ENODEV;
++		}
+ 		break;
+ 	case BLK_ZONE_TYPE_SEQWRITE_PREF:
+ 	default:
+@@ -595,6 +619,7 @@ int blk_revalidate_disk_zones(struct gendisk *disk,
+ 	blk_mq_freeze_queue(q);
+ 	if (ret > 0) {
+ 		disk->nr_zones = args.nr_zones;
++		disk->zone_capacity = args.zone_capacity;
+ 		swap(disk->seq_zones_wlock, args.seq_zones_wlock);
+ 		swap(disk->conv_zones_bitmap, args.conv_zones_bitmap);
+ 		if (update_driver_data)
+@@ -608,6 +633,7 @@ int blk_revalidate_disk_zones(struct gendisk *disk,
+ 
+ 	kfree(args.seq_zones_wlock);
+ 	kfree(args.conv_zones_bitmap);
++
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(blk_revalidate_disk_zones);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index ec7bd7091467..4e81f714cca7 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -191,6 +191,7 @@ struct gendisk {
+ 	 * blk_mq_unfreeze_queue().
+ 	 */
+ 	unsigned int		nr_zones;
++	unsigned int		zone_capacity;
+ 	unsigned long		*conv_zones_bitmap;
+ 	unsigned long		*seq_zones_wlock;
+ #endif /* CONFIG_BLK_DEV_ZONED */
 -- 
 2.44.0
 
