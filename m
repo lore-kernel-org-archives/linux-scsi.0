@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C88B714290C;
-	Fri,  5 Apr 2024 07:57:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3D1C142914;
+	Fri,  5 Apr 2024 07:57:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712303823; cv=none; b=p60sVtClb9F2s2vRdxT1o4sAcdCK7bIJ2xizPUGqMQOWFAbXL2DKaCaN27jCM6Cc0bEJ1huLUDo+c/Uv91usmVZOost/iw72YCBHTmlVNdpobjCpqzXGCaw31CMwniPM0Io26OhLp9KVXbEDPA8s7BrekRN5wWni6Jy9WG+yBxs=
+	t=1712303843; cv=none; b=PrC2sHwmwlKd819T4g2+eKGtE8z4j4oWiQKbYJFJFXV2LYhfi0FpLfkNgPsOvbVGKLUrpROvh7dhp+nsAEjl+XzniOteonlRr3XLhVzNIOXGssYFEKq811EYyx+1EozP24ulHoZkS5KiXTJmmiT4+PWaruI/lbV6XixuTZ6e/Rk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712303823; c=relaxed/simple;
-	bh=33wFx3NkD4cy+uyEswkMiyavXJ0x0BjDGcMLOKy8nGk=;
+	s=arc-20240116; t=1712303843; c=relaxed/simple;
+	bh=4E4/4HltPu4swIB6EYsvPn/zoIkzVjr84YGE4JNMn5k=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HfT9Ozk6RGFwQjUdwVOrpkelmmoIao/JlAzEdM9cqVIuddrz876vW5/nAAADHfmLGURK1KYCg1v05iw1wOFlcRxcxwx8bKqugTJbqG78/98jz3Tr+eImuVay4h3o4gl/eadF/4GtlTANeDqJAXcPVhaId1rqI6VWwuwwfmYIyG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YZnYtHhy; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Q+nH3uQss2YDzH19KoHfwZvOfQEUnCjbScrRIEK1H6OFmhCjXGYC5uOKf+8cyqV9iGGLT2bdDvAAUNTZ0siSohyitm2nWY44T3tZJqA62tuV43ZI4/SJKcnyXBxX0UeLxV3Ca81PphvkU7rDaBehUnDJZn3nwKYUVQJ8FU0DGyg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E4Z9q/62; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YZnYtHhy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E649C433C7;
-	Fri,  5 Apr 2024 07:56:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E4Z9q/62"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13C0DC433F1;
+	Fri,  5 Apr 2024 07:57:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712303823;
-	bh=33wFx3NkD4cy+uyEswkMiyavXJ0x0BjDGcMLOKy8nGk=;
+	s=k20201202; t=1712303843;
+	bh=4E4/4HltPu4swIB6EYsvPn/zoIkzVjr84YGE4JNMn5k=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=YZnYtHhyVvxCy6lfsRe3qGaptJiDkHysPaiao2gil6amh7xrIv1XWvpfp36beZO0e
-	 2UGp5336jfJKbU15WyCxOo1IZXg6dUmuV+7K2xEw2MS54Kmnb18Ui1Gq7qjNjT0enw
-	 fjtOihOt86YiYaX7inPOS7Bpt12C3cM/JLbJnRhsZ58hSiqS0WEwpSxTOZexwYtOhz
-	 8mtc5eZ266MLmW/k5GUUxhpfCFsKcA4Vxk5Ba/9UYGjbbylBVPD2XyqynJD2KrWviu
-	 04YEkVKkTW8xID0e41B/oJHXhxXBWyq4WzddbmflilfRDsyY8xA9xIGYuPZtMtMYW1
-	 jYduPs+RN4WJQ==
-Message-ID: <9cc2e219-e720-48fd-9b27-69e99ddaa6b3@kernel.org>
-Date: Fri, 5 Apr 2024 09:56:50 +0200
+	b=E4Z9q/6223Juoz6w3lpxl+vrqW09e/K/Qqpvqrb+QQTvnngo5BrcGT2o6TKOVqgYD
+	 XjjsvVd/8OPQ9yVMqPAe3+eIyXSHr0Dhe31Gww07VY+8OD9S/O2z1s/ksSZJ9uOpBn
+	 xAVtpusuWpKMvhF0kbXtMl7gCI8u2vLZ9YJ2AhGUdCbCWh1vfUla+fLnyDB500v21C
+	 4RBw9Pvth6TiNePx/sHD7KP8JeJSzuBPp4PU1+ekZV44S4fp2ji3UFptvVE8KDFvkO
+	 loPuwACxrALUMguVoKVje8Bx4k46AAnrNbY1RdvzllswP9CSgarstgPQLq8Vy64k2C
+	 94BbpY36CRLnw==
+Message-ID: <dc2d8e34-6105-4029-bb46-c0d895315995@kernel.org>
+Date: Fri, 5 Apr 2024 09:57:12 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 10/17] phy: samsung-ufs: ufs: Add SoC callbacks for
- calibration and clk data recovery
+Subject: Re: [PATCH 11/17] phy: samsung-ufs: ufs: Add support for gs101 UFS
+ phy tuning
 To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
  sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
  vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
@@ -49,7 +49,7 @@ Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
  linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org,
  andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
 References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-11-peter.griffin@linaro.org>
+ <20240404122559.898930-12-peter.griffin@linaro.org>
 Content-Language: en-US
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -95,20 +95,16 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <20240404122559.898930-11-peter.griffin@linaro.org>
+In-Reply-To: <20240404122559.898930-12-peter.griffin@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 04/04/2024 14:25, Peter Griffin wrote:
-> Some SoCs like gs101 don't fit in well with the existing pll lock and
-> clock data recovery (CDR) callback used by existing exynos platforms.
-> 
-> Allow SoCs to specifify and implement their own calibration and CDR
-> functions that can be called by the generic samsung phy code.
+> Add the m-phy tuning values for gs101 UFS phy and SoC callbacks
+> gs101_phy_wait_for_calibration() and gs101_phy_wait_for_cdr_lock().
 > 
 > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
 > ---
-
 
 Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
