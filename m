@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CEC11428FF;
-	Fri,  5 Apr 2024 07:57:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D47B143883;
+	Fri,  5 Apr 2024 07:58:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712303877; cv=none; b=Dpm0G+szPtDqHTfgpxja6Z05Kne/dB69o+7ONlxSv5hvIP137dvijXhuUgpHeb+FZb63YLlZPeo3iunZDqnEKA50nvnyB8eTMuYvXhVVWnGfOhEYOwxWEEBFdAHM47aILMV3d07a/L8aZxBAIbMgFgBbYO8NK/DhyqG8CAw7rCE=
+	t=1712303899; cv=none; b=ZEj2CzAFilNZhGU7+bZMpfBdtMXyfH0Yjv5BGKvVzxbZWBKKsd2U4Cd8vt05/4v0bdEebCgocs2Z4FK+bVq+hizwMYh0L83gt8R0Zyv2LEiWpuXWy0hqkKWylHkHIEWdOt1y8cn7HJk6E8hn9jD9hIRzjPy6Qu5vrwJ59CkHSsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712303877; c=relaxed/simple;
-	bh=vMOow+9voS/gKWVwyoPoZCYnHy8tZBtjHgVaY+AQRi8=;
+	s=arc-20240116; t=1712303899; c=relaxed/simple;
+	bh=ONtymIOkObhYMYvWNAyP+6x+F196OJJA4CRLyPZi+0s=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Oz0QrK1rgSKmTeuYOfG0qmJXVVl7xijBVmg/q+RjiTPccpn2CE44/alvx/oSSTo9HXGlRrkndXEx+viSfzaDhNSwk+KlZExOs4tVLU6kVcAg9244ukuEJgwUej0/LyqMh1ltsWSaWrkY9BoLkA/ipx25RD79WDjdbyh4zKd1xxE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LQ8xSJ/I; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=RcVHX0HnqaXT8+JENQOMDlKHU74CkzOLxiTWt/Zd/Ptni3zafJtyrCSEL7Dat4QylgG2f506oI7R2HPlnYXu1tCO1HR46hSQWEicjDHp9kEsQMDfYAvC1Ol2E2fCTuHR5PnbanYaoLH9bMARTOqkS8xujJ0VI87kpoCKX+P3V/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hxjsLwb7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LQ8xSJ/I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58510C433F1;
-	Fri,  5 Apr 2024 07:57:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hxjsLwb7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44636C433F1;
+	Fri,  5 Apr 2024 07:58:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712303876;
-	bh=vMOow+9voS/gKWVwyoPoZCYnHy8tZBtjHgVaY+AQRi8=;
+	s=k20201202; t=1712303899;
+	bh=ONtymIOkObhYMYvWNAyP+6x+F196OJJA4CRLyPZi+0s=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=LQ8xSJ/I66hUAfh/Ds2O1m0OrkYNboSbxL2llymE848D85eDFhEsxIS0YCFAdC96q
-	 VtZ2vG5WP7HxI141LERHupQ4mIis87W5mPmsY3LBBHpyTXKEBmiiFKCCCB5Tq/U5aK
-	 6BtKsI0Pg9Rhdgfyt3RbmjhZyP9r+Qu3cEKoFi8jIoQZWBKtPxZAJSpZi56jNBwykD
-	 vDvGQSWbIZJHgi0cMq6zZJJmuZGPf5wEsCx15ryBx3NWtxor4XCE8Ko8Nnhf/5yjXl
-	 IEyGHEyeaDPyLS2FaRwXnrrQO4rWY6FlQoUWbMfndeRK2fYk/Vz2FuCIM+LcOG9tuE
-	 gFgwRYYDIynhg==
-Message-ID: <26f153a1-0767-4041-b66c-9741e484a6b5@kernel.org>
-Date: Fri, 5 Apr 2024 09:57:45 +0200
+	b=hxjsLwb7QOiOEeXFVEDhfA6+8uxdBy+DLE6LfIQXyVDINePAp+ilLrvp+wB+jCX7/
+	 NHhZi+XNiZIObPPGBp5+3UDcxJhmfs7CJNbwPApUsckUbJAvltQBCfbwXinO3vZ2RC
+	 gVJ5EGZDCXkucetCrT3tdN1lKD04PqYJjCVdcH+IiN8zL88QVFEbozkdLga5Sjk1az
+	 JMByWLG9t+YPsEx9yU8Bgxxh/N+WfVJnTH0ka6YlTPIyG1bdDJQ5/DM7AIVW/T42NL
+	 LeXY7WlycQTYBQJkyK4XhUphyjUvMQJY4uNoDPm+Io9e1hW+tOOvycLUMdJ3lQwysP
+	 ECI/3MsbFesSw==
+Message-ID: <29ba6dd6-4983-40c1-ae0d-d21187f84e4c@kernel.org>
+Date: Fri, 5 Apr 2024 09:58:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/17] scsi: ufs: host: ufs-exynos: Add
- EXYNOS_UFS_OPT_UFSPR_SECURE option
+Subject: Re: [PATCH 13/17] scsi: ufs: host: ufs-exynos: add
+ EXYNOS_UFS_OPT_TIMER_TICK_SELECT option
 To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
  sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
  vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
@@ -49,7 +49,7 @@ Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
  linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org,
  andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
 References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-13-peter.griffin@linaro.org>
+ <20240404122559.898930-14-peter.griffin@linaro.org>
 Content-Language: en-US
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -95,15 +95,20 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <20240404122559.898930-13-peter.griffin@linaro.org>
+In-Reply-To: <20240404122559.898930-14-peter.griffin@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 04/04/2024 14:25, Peter Griffin wrote:
-> This option is intended to be set on platforms whose ufspr
-> registers are only accessible via smc call (such as gs101).
+> This option is intended to be set for SoCs that have HCI_V2P1_CTRL
+> register and can select their tick source via IA_TICK_SEL bit.
+> 
+> Source clock selection for timer tick
+> 0x0 = Bus clock (aclk)
+> 0x1 = Function clock (mclk)
 > 
 > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+> ---
 
 Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
