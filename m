@@ -1,175 +1,308 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 444F817278B;
-	Fri,  5 Apr 2024 20:40:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712349608; cv=fail; b=b1z7A2UvRng07lGLUhC6mOsHxgr6ZsTzkWtDFYjVtbsi6IZJ4XLmyMJd+58pWqG6RzW21gYU5Q0A7Z4PXMoS+Hbj6VzPYVAxbtdMSuiqmN+6BVvAsRHh+L6VjO+rQXwPMrtEEzRIuQ9JyhixtPc+aQtpy8sWm6gmckOEUTZczf8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712349608; c=relaxed/simple;
-	bh=MWBVn/NtCPLIX7Wzw20M/YtLFHs5oSs5mCEkyFVgEAU=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=u02ruP3LDu0HsO8w9iY2A7Py6ypYW/XFl+Y6x6ttrBBg9n9iPiC42sngaHBFcnb6gT4pIuaPvxRGf/RYrxw/JqV2Sd2dy1yue8ddNnT7ZFTCBZ/YNs863sBA0H+DKVHLZOXQ9VP7IW9g/wsiU4U5MlUtvGGEYNRK2AwjKKcjfhk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=InLjki7L; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=HSBy9/XL; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF9971C6A8;
+	Fri,  5 Apr 2024 20:46:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712350008; cv=none; b=ewVUUa38hkcMyqIkEEB60ZXf8mtMGVvE4NdPgKVgi3FwRZw5KKk+DAeCmAwbT9P2kZZmhpL1OCiGZnlh1zTBGox2tqConGTnqPOF2bX375XCIcoXYMYNBji+atf450/dnaZJ/JjXY0L1wKvW4IufhGritrQrYA7h2Lf9dPVq1lk=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712350008; c=relaxed/simple;
+	bh=uuPCN6wqFUOdJsAQfmaY5KY1dY6RxEX+pul1FeONIfU=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=Y5SX2s1TF6o6mMAs/gbj6NjoXtKqt2gab3G94GMLULKitduCJjG6J+8b5bIyg1o8VML5Frio8P/b9NH8O7nLvjhVFVymK0lSPme3sW18rYeFC9frEFsxY6Et1mHPLFJbq4suRglsltox2LQYPYIEhlMhzbb1j8ZwPlHkyvY5ykY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=Xr4SZ/bs; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=fS1lE3rz; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="InLjki7L";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="HSBy9/XL"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 435JdmNB015792;
-	Fri, 5 Apr 2024 20:39:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : in-reply-to : message-id : references : date : content-type :
- mime-version; s=corp-2023-11-20;
- bh=/uNeJ/W2HDlJuStTRn9DEKwR4RyUDaWKc6J075LFFlE=;
- b=InLjki7LRmYEQvrfIQixN33Cm9rTUzr2eSNNZMs0HQRdkmuYgFbh0ZlrJQGaI+FnRvq9
- 5Jc8qbibGXa2mKEKMEkKp49wdbcKKtyaeA6SO3pCk5k1h0AC1Ep+wepQD+dLrfuGfcFu
- VodOqJuRsYxuVl+I9lTvQxL6LvVJJr0hoYwnXdv9QYqj1hEFmLIcS4s86/9oaJRvwk/R
- 4JHIscVXPe5nGeHFip8JadyEvTgPOZb2MwEJ1TjJ0uXwwDtXiTmBKq83i6bDVhGyYD93
- RecR7YO3zOUlMGBuQm8+RjStmaDscfC0slgnzTE6pUFCoB5xWl7XqZXx8wgXRYxTyjX7 CA== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3x9f8pc9kh-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 05 Apr 2024 20:39:50 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 435J6imP039368;
-	Fri, 5 Apr 2024 20:39:49 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2101.outbound.protection.outlook.com [104.47.55.101])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3x9emt35dt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 05 Apr 2024 20:39:49 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=byr32rx+3q7xrDScVfr6ze1PgqOS6477Eu0JLZwqEKDilStubzoQpY5jg7p7P5GeoIaSjz01hi0xF0rMy3fkZ61Vx7OOCMa+/tgmylM2qdqSHVm7nK+q/gRUjvO347tpWXDzIwB7rv5OUhxOskKYggvML5jmfuQ1BACQ1XLbd8hmNcHq199NvMgEuGdyNqyAu7AXOv1Pzv7bi9PgFNQmBSClKnNsn1W8cvAe5VRzq4WIUj9l4q+QTLQvoTYiQQsDVzCMo+850hqq59nCiXCCIwiSa7h4Bb9XeRCJe+SiaQU+XDs+qs1NydydD0OuK42zy5EFL9aPGxpHmHPk+cRdxA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/uNeJ/W2HDlJuStTRn9DEKwR4RyUDaWKc6J075LFFlE=;
- b=n8wLmrPx+jJtX64ALW7Eae5kokPOq2TrhiqSTK8DE1nzo7nEuMgAbIH2p93Z+nz7WPbhPXtmzhjCifHzqWsH9diNGvB8kkqVM8cTlUH97dqRtSODNSM47j18kg5Fv79qRJpPuaOEaPAZNu4NHXSt7DnWeTSsecw8XKxohY0HdSawESb5YvQQlGWter9Ad30f0VpJDm0SFeom6Z915bos7zem4/VrxRR4Yor1ZMJReD8WBDzg3Tiavr/MqcNyA24asi+WzPHqJKU1B5qbL04vj+AWkTEibrkcG8LN8lY80l7QSi/AHrV50JIJPtpD2GIIkWdiiF/uB4gwfkgMQKzQtg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/uNeJ/W2HDlJuStTRn9DEKwR4RyUDaWKc6J075LFFlE=;
- b=HSBy9/XLO2y0MjEqoUqqfjf/2Aso08m8y6OgUV6zvEHcFwptCJJxGnomh2j0FqYuHQZQaMApEe5Zxd55YAStQakM9USZmOH3llOmU4FJnOKl2mekrwBQIqDYye/AQIwRBBuOUS+8Fxyi/zw6vA7ipa/RNT4hdJdSxFTpkrWhd/s=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by MN2PR10MB4365.namprd10.prod.outlook.com (2603:10b6:208:199::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Fri, 5 Apr
- 2024 20:39:46 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::7856:8db7:c1f6:fc59]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::7856:8db7:c1f6:fc59%4]) with mapi id 15.20.7409.042; Fri, 5 Apr 2024
- 20:39:46 +0000
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen"
- <martin.petersen@oracle.com>,
-        dm-devel@lists.linux.dev, Mike Snitzer
- <snitzer@redhat.com>,
-        linux-nvme@lists.infradead.org, Keith Busch
- <kbusch@kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v6 00/28] Zone write plugging
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <20240405044207.1123462-1-dlemoal@kernel.org> (Damien Le Moal's
-	message of "Fri, 5 Apr 2024 13:41:39 +0900")
-Organization: Oracle Corporation
-Message-ID: <yq1y19rsfx3.fsf@ca-mkp.ca.oracle.com>
-References: <20240405044207.1123462-1-dlemoal@kernel.org>
-Date: Fri, 05 Apr 2024 16:39:44 -0400
-Content-Type: text/plain
-X-ClientProxiedBy: PH7PR13CA0022.namprd13.prod.outlook.com
- (2603:10b6:510:174::24) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="Xr4SZ/bs";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="fS1lE3rz"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1712350005;
+	bh=uuPCN6wqFUOdJsAQfmaY5KY1dY6RxEX+pul1FeONIfU=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=Xr4SZ/bsJAr8F5x8879X59uod0seKQhjGbCptux+O+UXYlJNonJV2rvLz/TyaGgLO
+	 z+udZli3cCye3wh85X4Hcq5wJMRXnAjLTw8KBS+Ni41QHLXiTXUj8QZF3EH5XyycWo
+	 I0rJYiBZnKq//c8lRCFv17dtIR3FdpfwlCPb2C6Q=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 1E72D12810B9;
+	Fri,  5 Apr 2024 16:46:45 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id WI1CXITx1cSE; Fri,  5 Apr 2024 16:46:45 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1712350004;
+	bh=uuPCN6wqFUOdJsAQfmaY5KY1dY6RxEX+pul1FeONIfU=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=fS1lE3rzRHfZ0FRWrgVdDo2Xl70qTSV4v8TFjiUwThMGhqWbrp6C8viTMFTXZxO+a
+	 SgUyoZkkwkFBDcaoB627lxKaBPEmVZ0IEu2xKhiKn2oXMbsybxiL6O/H5/PIibu8Se
+	 pOXHezZ6Y9ZlhCDGKXI1rcM7nS18Sy+f8kfyi3l4=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits))
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 667C31281086;
+	Fri,  5 Apr 2024 16:46:44 -0400 (EDT)
+Message-ID: <fa81207eef6f94b71de19640dec34fe6199c90d3.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.9-rc2
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Fri, 05 Apr 2024 16:46:42 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|MN2PR10MB4365:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	n3O7wD10WnpzKh5xbYN8kRHF4FUr9Hj57T0OwORV08FOrLAMQ3ZeetDk8SDTNf8fXifyKDw/Ee8x0e0FxVjZliXA3H5FUPKIesTEJVzGgT2Y7QzTBoGxP7Hmmp4HvHdcpFLEPA9u55+8knAuO0lWkfAhD/nzNx9o9Ad52ABn35R1x4SrjPN0LzO+DYEWRrodqX+VuHsLuDLMCZ8cJOckyDsL4Pd3FQcDwcJ+TV99iA8OCCvolPqvUGiG7u0Owu/f+dO5Lp5h64IOqpWoxA7mNA/XGEYJf+b5WC23pbqQ6yL6mqNUudNk+YqgehQ7kMExk3JdI9T7KZV1Fc1DpfH2yFqHajooBadKqLku4WhZ37LBOfCIbGO7f0tcIpuuUMgnJzJEQLYcTN0hJ4NlR5FrGJ2LqCFCR39nWTLuEMiTj2y9fgxDhSvAHL19fdcYJs4a74MhwXBnR/3/wiXU76myRNQqhdjQ9I1NsM+l5l3OZcbN5TrYgFPk9Xe36dQTMGo0hMCvZc9BngEJmWiwQm3/8IwO9rf7hRMXYDqagd8EvX79J3jrP3hacltd5dq7rtdzb6shD8EP2PJFqC2Sg+3xVZ5UzrUPRXnxvF7S/65o1JZuRZ7fV1dFoV1hFuvTvce5oDhgRuzBnLPeWoSa3we7OrbkqnuWy1mHKEV9VAx+rDg=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(1800799015)(376005);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?BKvND2N+LsUJv6Lt88gdfkOI8u9kQTSztFV06Q2WIb5C9Mpoo7aeSciKXId/?=
- =?us-ascii?Q?Ntoa3Bt4MDWmTErhK/pF5Kv8LroJQ9r5RmG+i5Rt5un7WdnJ8llQreAV1xVr?=
- =?us-ascii?Q?KeZMdN7Atr4CqmmkB95lvOGIxA7hJMZbWYBKAupXtG8D8ECJ2E7QHQuax0fo?=
- =?us-ascii?Q?N/PK40CCdoY3pr+shEQwUvbl4rcn9WigLkHQ9MQG4xH8EerozpMvMkZMgdDs?=
- =?us-ascii?Q?9Pfzo6vCIdzFVkjpqgteyinCHNmCqMV8dxL7LZK2uPZxYed2atdtobVfZXKR?=
- =?us-ascii?Q?oaqwk7+OTcVqbWLX2Yz5aP3WSZgMO49kzZ16kYlm3JThMC/stySdF1buscc5?=
- =?us-ascii?Q?hA03cyG55nJg1sSssLcCteHXLhtn55SeJYOJEiIxbqmkWAKKL7pwrwc9ofqu?=
- =?us-ascii?Q?bjrnOThlEYvWaXhiw5aXy0R5ioycFcYL8CTiDSdM1VpU8//ASVqmkIvY/Gl8?=
- =?us-ascii?Q?ZFhdEyCWl28QeCeRYiRUi8TvJmsnaXyoCJ8dqOlnuqAIF78LZhn1Gkl1Ck3Q?=
- =?us-ascii?Q?MmjzEdVIbFvA6Puus+pkfki5jad0W9DfuCqJ4V34mMG7wa3ZkuP0xbN8Pkni?=
- =?us-ascii?Q?tu1x532TTOn4Kz7CF6HE0gEGcGYyVc3VkPfZFhTqfOUVzZ+WfxW+GdsG9gL4?=
- =?us-ascii?Q?A+7AoPs7nHgAEHPbHcHtET5Y2i6izX5CVb+O0blBI0Yi1224PfFyb04yRQWg?=
- =?us-ascii?Q?A34Bhml7HyxpaKOJmhEJ5uSBmlieFKbkxIq7tuB7RSbTVKZfkTVLFy1rEVxS?=
- =?us-ascii?Q?0802LCZ6g5z6TQa6pZjeCZNno/uQll9A0ab5/5WQQ+v/QmCN5x5RLYAioXRM?=
- =?us-ascii?Q?O94KvWVutSeJQqtHSOzeCpBYUZ1R6p0X2UzMDEmLcL6X6LiIfB8v2Dr2zg6d?=
- =?us-ascii?Q?2JUgSfegPDrLsOz18g8WLUOogUI8rN4xYQtw8+sJ7LIrvue2qL5iAUGOmuGv?=
- =?us-ascii?Q?nMgeXWV7uOepwdaSCq4yKBz2PcGVfkuZ6/RHkG9ss+l6mSO2Zxj5KuocjzXP?=
- =?us-ascii?Q?sSX9GhAJKvFvePFB+5Z9AcdSDqiyevgvCbsC7OGxd8qDvkiK6mGzPc9XlMn7?=
- =?us-ascii?Q?6kGERIKZPjaKg6CEPXlpRcP8AnMx/Ics06BHOXk9Lomw4o/su4u5mhUgG51R?=
- =?us-ascii?Q?kBTBEfqvFjHbmSr/r3vtYqNWu0N1gHQX/6VPuI3nzUTibPmw/nBdfM3uHQjo?=
- =?us-ascii?Q?aXy/U4X2VMno6v73HSDu5pQ2S0RAvUd8wt70uNiVZKtGS9N6nPuvX+SCEknk?=
- =?us-ascii?Q?gVHp2vZBLRWzovQGqQQy2UYbJwXAnKkHG0TYwdj3fESNd/2KsYWJ9lUYT2dr?=
- =?us-ascii?Q?K3eNd11OGfVC+BWwu8F7nRbUsfEhe5Yf7dT+zqtMzj1chJzZH/2DFdtsBR4p?=
- =?us-ascii?Q?INmUI97bxpug+UTG38JvfyzjCkzZfTzyr1SxuYpsiu8OfsIu+ZdLSbMDxf2m?=
- =?us-ascii?Q?8KrxuXBsHcjycHyCT5JIV4cM5Z9x/mn3Sm6vcuxlmCPzHrkVGexyRO0hJPf9?=
- =?us-ascii?Q?YCpi8IvMLteRv6ebvr8IN5Iee0rnJnB4sl5MrMkRgxQEKFqYTrhvc4Xixlw/?=
- =?us-ascii?Q?0nKCOK2HOqCXbKJ5ArdTf3CdgNIwM0ecHLOalFwxZ2UwwGnz2zW8otQryBVf?=
- =?us-ascii?Q?Tw=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	+TsLAtyrhzU1tcIC41A+XXvg0dn+jGjYgY+SAWWUJxxwJqBVxbSw98GpG8af1ociyBMML/lpsY5QZQPHVMEmWQunK+n+/aCLPqVeJQcf2KRBZMZOMtBNhUtcLmFS5mFl3LjJ9nHgz7Tlc8QpNEi32an+RZnCS6JH0P7xJ8HG+PG/hvaD2mBROSFZQeu4N+yMF0jAJJ13TPcBjbgPOxdpcnpGp1EY/gUrFWJu5p+TuGG+CxVz9nprwdCEscl3msampub/6T8UfYaG65Ks+Z/hPZi3nSMryVXNkSWr3czsYJV0LDlhundMGWvLe3AR/g/6KIF8W9KDtNT4AsStS/L5QKfYMegwEIzWHpA8FnPy1M8lxsRh1ZpGf54nBQNx0qexZyR7o/FIFSro9etkQt6JIsV7tVcWb42P8wg11Jmp6n0OlmgbMg6pKn1zcEDnzo+/DK2/lnMIENNXIhx+UTQMBI1Dz7PpwP8JMEuTwUTtqG0DsHolwWpul7I4uGs8G7C8Z7Zs06vM2FrsXzeioJj2vV0kiCnBAOr72ToaSw0TnZy3oFghmGP8TQZHTkF9GTKcAWDRvi1vvskH4BADyBr2BCM6tEK2LhbvzhqC9UsTbcM=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4a683923-e4e2-4cc1-7065-08dc55b087f1
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Apr 2024 20:39:46.4831
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0WV7igvqUnbbrKimeD6qja4vvgxLYf3pBAK+L4hhYOhvyB8BcNUUP0MkVpG9KBuCPHFoTrW2YHVyNSedYdP857VfTfLzYJGCF2A4DOx67y0=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR10MB4365
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-04-05_25,2024-04-05_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=942 spamscore=0
- suspectscore=0 malwarescore=0 phishscore=0 bulkscore=0 adultscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2404010000 definitions=main-2404050147
-X-Proofpoint-GUID: 39J2ExAYgxLEkfyBpJqYXIh4wDcPH7Jv
-X-Proofpoint-ORIG-GUID: 39J2ExAYgxLEkfyBpJqYXIh4wDcPH7Jv
+Content-Transfer-Encoding: 7bit
+
+The most important is the libsas fix, which is a problem for DMA to a
+kmalloc'd structure too small causing cache line interference.  The
+other fixes (all in drivers) are mostly for allocation length fixes,
+error leg unwinding, suspend races and a missing retry.
+
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Arnd Bergmann (1):
+      scsi: mylex: Fix sysfs buffer lengths
+
+Li Nan (1):
+      scsi: sd: Unregister device if device_add_disk() failed in sd_probe()
+
+Peter Wang (2):
+      scsi: ufs: core: Fix MCQ mode dev command timeout
+      scsi: ufs: core: WLUN suspend dev/link state error recovery
+
+Yihang Li (1):
+      scsi: libsas: Align SMP request allocation to ARCH_DMA_MINALIGN
 
 
-Damien,
+and the diffstat:
 
-> The patch series introduces zone write plugging (ZWP) as the new
-> mechanism to control the ordering of writes to zoned block devices.
-> ZWP replaces zone write locking (ZWL) which is implemented only by
-> mq-deadline today. ZWP also allows emulating zone append operations
-> using regular writes for zoned devices that do not natively support
-> this operation (e.g. SMR HDDs). This patch series removes the scsi
-> disk driver and device mapper zone append emulation to use ZWP
-> emulation.
+ drivers/scsi/libsas/sas_expander.c |  2 +-
+ drivers/scsi/myrb.c                | 20 ++++++++++----------
+ drivers/scsi/myrs.c                | 24 ++++++++++++------------
+ drivers/scsi/sd.c                  |  2 +-
+ drivers/ufs/core/ufshcd.c          |  9 +++++++--
+ 5 files changed, 31 insertions(+), 26 deletions(-)
 
-Did another pass and this looks good to me.
+With full diff below.
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+James
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+---
+
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 5c261005b74e..f6e6db8b8aba 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -135,7 +135,7 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
+ 
+ static inline void *alloc_smp_req(int size)
+ {
+-	u8 *p = kzalloc(size, GFP_KERNEL);
++	u8 *p = kzalloc(ALIGN(size, ARCH_DMA_MINALIGN), GFP_KERNEL);
+ 	if (p)
+ 		p[0] = SMP_REQUEST;
+ 	return p;
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index ca2e932dd9b7..f684eb5e0489 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -1775,9 +1775,9 @@ static ssize_t raid_state_show(struct device *dev,
+ 
+ 		name = myrb_devstate_name(ldev_info->state);
+ 		if (name)
+-			ret = snprintf(buf, 32, "%s\n", name);
++			ret = snprintf(buf, 64, "%s\n", name);
+ 		else
+-			ret = snprintf(buf, 32, "Invalid (%02X)\n",
++			ret = snprintf(buf, 64, "Invalid (%02X)\n",
+ 				       ldev_info->state);
+ 	} else {
+ 		struct myrb_pdev_state *pdev_info = sdev->hostdata;
+@@ -1796,9 +1796,9 @@ static ssize_t raid_state_show(struct device *dev,
+ 		else
+ 			name = myrb_devstate_name(pdev_info->state);
+ 		if (name)
+-			ret = snprintf(buf, 32, "%s\n", name);
++			ret = snprintf(buf, 64, "%s\n", name);
+ 		else
+-			ret = snprintf(buf, 32, "Invalid (%02X)\n",
++			ret = snprintf(buf, 64, "Invalid (%02X)\n",
+ 				       pdev_info->state);
+ 	}
+ 	return ret;
+@@ -1886,11 +1886,11 @@ static ssize_t raid_level_show(struct device *dev,
+ 
+ 		name = myrb_raidlevel_name(ldev_info->raid_level);
+ 		if (!name)
+-			return snprintf(buf, 32, "Invalid (%02X)\n",
++			return snprintf(buf, 64, "Invalid (%02X)\n",
+ 					ldev_info->state);
+-		return snprintf(buf, 32, "%s\n", name);
++		return snprintf(buf, 64, "%s\n", name);
+ 	}
+-	return snprintf(buf, 32, "Physical Drive\n");
++	return snprintf(buf, 64, "Physical Drive\n");
+ }
+ static DEVICE_ATTR_RO(raid_level);
+ 
+@@ -1903,15 +1903,15 @@ static ssize_t rebuild_show(struct device *dev,
+ 	unsigned char status;
+ 
+ 	if (sdev->channel < myrb_logical_channel(sdev->host))
+-		return snprintf(buf, 32, "physical device - not rebuilding\n");
++		return snprintf(buf, 64, "physical device - not rebuilding\n");
+ 
+ 	status = myrb_get_rbld_progress(cb, &rbld_buf);
+ 
+ 	if (rbld_buf.ldev_num != sdev->id ||
+ 	    status != MYRB_STATUS_SUCCESS)
+-		return snprintf(buf, 32, "not rebuilding\n");
++		return snprintf(buf, 64, "not rebuilding\n");
+ 
+-	return snprintf(buf, 32, "rebuilding block %u of %u\n",
++	return snprintf(buf, 64, "rebuilding block %u of %u\n",
+ 			rbld_buf.ldev_size - rbld_buf.blocks_left,
+ 			rbld_buf.ldev_size);
+ }
+diff --git a/drivers/scsi/myrs.c b/drivers/scsi/myrs.c
+index a1eec65a9713..e824be9d9bbb 100644
+--- a/drivers/scsi/myrs.c
++++ b/drivers/scsi/myrs.c
+@@ -947,9 +947,9 @@ static ssize_t raid_state_show(struct device *dev,
+ 
+ 		name = myrs_devstate_name(ldev_info->dev_state);
+ 		if (name)
+-			ret = snprintf(buf, 32, "%s\n", name);
++			ret = snprintf(buf, 64, "%s\n", name);
+ 		else
+-			ret = snprintf(buf, 32, "Invalid (%02X)\n",
++			ret = snprintf(buf, 64, "Invalid (%02X)\n",
+ 				       ldev_info->dev_state);
+ 	} else {
+ 		struct myrs_pdev_info *pdev_info;
+@@ -958,9 +958,9 @@ static ssize_t raid_state_show(struct device *dev,
+ 		pdev_info = sdev->hostdata;
+ 		name = myrs_devstate_name(pdev_info->dev_state);
+ 		if (name)
+-			ret = snprintf(buf, 32, "%s\n", name);
++			ret = snprintf(buf, 64, "%s\n", name);
+ 		else
+-			ret = snprintf(buf, 32, "Invalid (%02X)\n",
++			ret = snprintf(buf, 64, "Invalid (%02X)\n",
+ 				       pdev_info->dev_state);
+ 	}
+ 	return ret;
+@@ -1066,13 +1066,13 @@ static ssize_t raid_level_show(struct device *dev,
+ 		ldev_info = sdev->hostdata;
+ 		name = myrs_raid_level_name(ldev_info->raid_level);
+ 		if (!name)
+-			return snprintf(buf, 32, "Invalid (%02X)\n",
++			return snprintf(buf, 64, "Invalid (%02X)\n",
+ 					ldev_info->dev_state);
+ 
+ 	} else
+ 		name = myrs_raid_level_name(MYRS_RAID_PHYSICAL);
+ 
+-	return snprintf(buf, 32, "%s\n", name);
++	return snprintf(buf, 64, "%s\n", name);
+ }
+ static DEVICE_ATTR_RO(raid_level);
+ 
+@@ -1086,7 +1086,7 @@ static ssize_t rebuild_show(struct device *dev,
+ 	unsigned char status;
+ 
+ 	if (sdev->channel < cs->ctlr_info->physchan_present)
+-		return snprintf(buf, 32, "physical device - not rebuilding\n");
++		return snprintf(buf, 64, "physical device - not rebuilding\n");
+ 
+ 	ldev_info = sdev->hostdata;
+ 	ldev_num = ldev_info->ldev_num;
+@@ -1098,11 +1098,11 @@ static ssize_t rebuild_show(struct device *dev,
+ 		return -EIO;
+ 	}
+ 	if (ldev_info->rbld_active) {
+-		return snprintf(buf, 32, "rebuilding block %zu of %zu\n",
++		return snprintf(buf, 64, "rebuilding block %zu of %zu\n",
+ 				(size_t)ldev_info->rbld_lba,
+ 				(size_t)ldev_info->cfg_devsize);
+ 	} else
+-		return snprintf(buf, 32, "not rebuilding\n");
++		return snprintf(buf, 64, "not rebuilding\n");
+ }
+ 
+ static ssize_t rebuild_store(struct device *dev,
+@@ -1190,7 +1190,7 @@ static ssize_t consistency_check_show(struct device *dev,
+ 	unsigned short ldev_num;
+ 
+ 	if (sdev->channel < cs->ctlr_info->physchan_present)
+-		return snprintf(buf, 32, "physical device - not checking\n");
++		return snprintf(buf, 64, "physical device - not checking\n");
+ 
+ 	ldev_info = sdev->hostdata;
+ 	if (!ldev_info)
+@@ -1198,11 +1198,11 @@ static ssize_t consistency_check_show(struct device *dev,
+ 	ldev_num = ldev_info->ldev_num;
+ 	myrs_get_ldev_info(cs, ldev_num, ldev_info);
+ 	if (ldev_info->cc_active)
+-		return snprintf(buf, 32, "checking block %zu of %zu\n",
++		return snprintf(buf, 64, "checking block %zu of %zu\n",
+ 				(size_t)ldev_info->cc_lba,
+ 				(size_t)ldev_info->cfg_devsize);
+ 	else
+-		return snprintf(buf, 32, "not checking\n");
++		return snprintf(buf, 64, "not checking\n");
+ }
+ 
+ static ssize_t consistency_check_store(struct device *dev,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 3cf898670290..58fdf679341d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3920,7 +3920,7 @@ static int sd_probe(struct device *dev)
+ 
+ 	error = device_add_disk(dev, gd, NULL);
+ 	if (error) {
+-		put_device(&sdkp->disk_dev);
++		device_unregister(&sdkp->disk_dev);
+ 		put_disk(gd);
+ 		goto out;
+ 	}
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index e30fd125988d..a0f8e930167d 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3217,7 +3217,9 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+ 
+ 		/* MCQ mode */
+ 		if (is_mcq_enabled(hba)) {
+-			err = ufshcd_clear_cmd(hba, lrbp->task_tag);
++			/* successfully cleared the command, retry if needed */
++			if (ufshcd_clear_cmd(hba, lrbp->task_tag) == 0)
++				err = -EAGAIN;
+ 			hba->dev_cmd.complete = NULL;
+ 			return err;
+ 		}
+@@ -9791,7 +9793,10 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 
+ 	/* UFS device & link must be active before we enter in this function */
+ 	if (!ufshcd_is_ufs_dev_active(hba) || !ufshcd_is_link_active(hba)) {
+-		ret = -EINVAL;
++		/*  Wait err handler finish or trigger err recovery */
++		if (!ufshcd_eh_in_progress(hba))
++			ufshcd_force_error_recovery(hba);
++		ret = -EBUSY;
+ 		goto enable_scaling;
+ 	}
+ 
+
