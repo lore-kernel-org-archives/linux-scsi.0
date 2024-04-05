@@ -1,131 +1,112 @@
-Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09FA916F909
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Apr 2024 15:46:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1491A1EB36;
+	Fri,  5 Apr 2024 18:43:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712332009; cv=none; b=sjSZv/B6Kfi/DBQXLG2C+aNiXBnzsyUKCaeXE2ratLJe1Ei+hjg3Kce6X6MtreL+pSjotjvG9y1OQg9jEP3OCE2YtTjCEZLUXqbdpijyEVXfNvNkz1OLb7gfcVA7x7jYXSFAKRyOe7qlwT7L3fY/tcz81JN9ArvhQRa16AM6KPg=
+	t=1712342635; cv=none; b=FiR6yHUT3ucg0h5/XSFVQdZkt7oHkPUqQKW2AxN1hCiVaqo2xzIG8Bo4qi4Rpvu+YMuahQWSiKtLqSOjynWdcmrgxFptSfTmwwaGWlGVpnoKu99njbHKlnELVl8KICeYlw8sFRwqMuSAi3ARiiRFlhhBEevqqY8BDZZ7sJt+xw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712332009; c=relaxed/simple;
-	bh=jUADTu38D03I4Ry2sPtTsYlXDDX8IthBPUcAPHRcmC4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WxtDnmW/TKc3RPTfxmJtJZBjFxVBMu9ze2S9/ZmYFo4eHfyuNwzKvkxWzv+7264lJRWE+MZZ4tYuHVpLL9KFCWo4mdIX4ZqcQAw05gcihf1IrtFkVlT6bGOICrFb49mxxEE8NIq9+I5W/aNYrhFbzbA8eTgqDUTPQVHnuhXsorU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=redhat.com; arc=none smtp.client-ip=209.85.160.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Received: by mail-qt1-f179.google.com with SMTP id d75a77b69052e-432fa3f6847so12334831cf.2
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Apr 2024 08:46:46 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712332006; x=1712936806;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=6rbAxhTU3trm8omv2Bw7/7acDjs036CDj3MB035wsvw=;
-        b=ssvV7t88JCpZtGQSxUi2BoWgljEaDtfvrsbb44hpeLqAXAeEG8if4II0XuoOQ/Opdq
-         0Ktq07S1VyDrGlJybl8WhCImjlPsxLgLr36rRC5Af3B94vuvIaR3NHz3WGhmKSF+AW9q
-         Pz0jA7AxljbMzdBDSszldBDVqc5hRD07wjqgxD+FJzMkf90YHAhkDfhuOPOqodFpm/Xn
-         6tVVnVPqeJ570ZmXIGnoks/2zQmdnkxovukLgWFHNzFlBq4DCwOPUmlUsSVWNvOuH6x2
-         Ps8fy/Cm5MZY5Kzbp6Qe8I7aXDWiOHhHw/oTDOSmImhZhdTKnQkzG3Jni1jJC67me4Wa
-         ZgQQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWPp/Ke+9Q/RuWdKgPzpXcbsAkO2yP+22vvctWUhcctZUb0sCfOnqSLGx/sp1+Nkm2zsJDx+rtBIYeGCvaB81+u1iRxHBjZb+2Vqw==
-X-Gm-Message-State: AOJu0YxSG5tM/2NznkM6Gxq6z0O5oDZmigOmHKCeO8domF7W0S1vCUA4
-	XOSzeO0debChld8XT6L4Fok+Bfn1/acF0yjPQNe8VcHU3urCClJDHmM6+1KYpQ==
-X-Google-Smtp-Source: AGHT+IEXwj4lJiAs5E/QO+Sa6vdj5AXAThaYh2DQXIrBkzcrcg7oaujlyRW+rioUqrlHYgkWfdpcnQ==
-X-Received: by 2002:a05:622a:5e8d:b0:434:61bc:9e22 with SMTP id er13-20020a05622a5e8d00b0043461bc9e22mr1787408qtb.24.1712332005953;
-        Fri, 05 Apr 2024 08:46:45 -0700 (PDT)
-Received: from localhost (pool-68-160-141-91.bstnma.fios.verizon.net. [68.160.141.91])
-        by smtp.gmail.com with ESMTPSA id bw9-20020a05622a098900b004330090b874sm852109qtb.95.2024.04.05.08.46.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Apr 2024 08:46:45 -0700 (PDT)
-Date: Fri, 5 Apr 2024 11:46:44 -0400
-From: Mike Snitzer <snitzer@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v6 12/28] dm: Use the block layer zone append emulation
-Message-ID: <ZhAc5JL9KwoDdiOO@redhat.com>
-References: <20240405044207.1123462-1-dlemoal@kernel.org>
- <20240405044207.1123462-13-dlemoal@kernel.org>
+	s=arc-20240116; t=1712342635; c=relaxed/simple;
+	bh=ZEC1qMsL2GXr2LN1cOLgyDd0sOBWxyJv/iuho8smCfY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=KfRsmM+3D2i6CuUO6PeYZ3HM8/OzqE4Z/zDN533Jo798vmBCctZaisfYNHwwcEsxT92INRLfhozfp39WD1dBHbkpXiL1XdChGj75LAXgA5TUme+OmJ1Hb7dMb0HBHh1pTAH+BWnyne1TweQjKdXfAqe//2p+Rl+J4LIk+HbMj7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=hGoBIkun; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="hGoBIkun"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VB6lX1bTlz6ChQsS;
+	Fri,  5 Apr 2024 18:41:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:references:content-language:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1712342497; x=1714934498; bh=VNC7WePIHudWvJ0AAT9LZu0v
+	6qRSozA1WrVYvu0F6II=; b=hGoBIkunSTVoGIkPld3Aw27ohCl1CyzhZ/kiGQH4
+	NBK/EOhy7WJgdJRDY37TbiJWLu4ordrIJrk0KgoozgD+oyo9/OE0F0K2xTDGt6IK
+	WxeUC2qVXW18x0+J21Dkn9hbXrMDjElDiyRaCunipep5sFaJBGk1g+yfJevNq/Wm
+	LEBwmMyP3TK/eSRGzXQtAdqzD5PKcdMJF8z+CH8MwIigJ+KP8RSYfGqRRj2gWJy/
+	5zecRrtx0YxQaOgFWGROMwC4oasM5eGyLO9xgPCv7KRfGVWpIDC5jEdweZnKfiqp
+	MWgyuqRneOsuatsnJqkjozSjZXuOSStLlhwvT4JcI+c5vA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id frwn6AeDHquf; Fri,  5 Apr 2024 18:41:37 +0000 (UTC)
+Received: from [100.96.154.173] (unknown [104.132.1.77])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VB6lM6wGRz6ChQs1;
+	Fri,  5 Apr 2024 18:41:35 +0000 (UTC)
+Message-ID: <a70f1a3d-1ec9-496b-9b93-5d4b06b4f967@acm.org>
+Date: Fri, 5 Apr 2024 11:41:35 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240405044207.1123462-13-dlemoal@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] scsi: ufs: core: changing the status to check inflight
+Content-Language: en-US
+To: SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+ kwangwon.min@samsung.com, kwmad.kim@samsung.com, sh425.lee@samsung.com,
+ quic_nguyenb@quicinc.com, cpgs@samsung.com, h10.kim@samsung.com
+References: <CGME20240405071217epcas2p470124e9f6e9066cb5cdc7f78557042e3@epcas2p4.samsung.com>
+ <20240405071601.84337-1-hy50.seo@samsung.com>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240405071601.84337-1-hy50.seo@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Apr 05 2024 at 12:41P -0400,
-Damien Le Moal <dlemoal@kernel.org> wrote:
+On 4/5/24 00:16, SEO HOYOUNG wrote:
+> According to below the patch applied, lrbp->cmd do not will NULL
+> after call release_scsi_cmd()
+> So check the rq->state unconditionally even if it is completed normally
+> in ufshcd_cmd_inflight()
+> 
+> If occurred abort status and tm_cmd timeout, will run err_handler
+> for re-init UFS.
+> Then err_handler will check pending request for clearing cmd.
+> At that time, check if the state of rq is not MQ_RQ_IDLE.
+> In other words, check if it is MQ_RQ_COMPLETE or MQ_RQ_IN_FLIGHT.
+> If rq->state is MQ_RQ_COMPLETE, it is already completed in the block,
+> so there is no need to process the queue.
 
-> For targets requiring zone append operation emulation with regular
-> writes (e.g. dm-crypt), we can use the block layer emulation provided by
-> zone write plugging. Remove DM implemented zone append emulation and
-> enable the block layer one.
-> 
-> This is done by setting the max_zone_append_sectors limit of the
-> mapped device queue to 0 for mapped devices that have a target table
-> that cannot support native zone append operations (e.g. dm-crypt).
-> Such mapped devices are flagged with the DMF_EMULATE_ZONE_APPEND flag.
-> dm_split_and_process_bio() is modified to execute
-> blk_zone_write_plug_bio() for such device to let the block layer
-> transform zone append operations into regular writes.  This is done
-> after ensuring that the submitted BIO is split if it straddles zone
-> boundaries. Both changes are implemented unsing the inline helpers
-> dm_zone_write_plug_bio() and dm_zone_bio_needs_split() respectively.
-> 
-> dm_revalidate_zones() is also modified to use the block layer provided
-> function blk_revalidate_disk_zones() so that all zone resources needed
-> for zone append emulation are initialized by the block layer without DM
-> core needing to do anything. Since the device table is not yet live when
-> dm_revalidate_zones() is executed, enabling the use of
-> blk_revalidate_disk_zones() requires adding a pointer to the device
-> table in struct mapped_device. This avoids errors in
-> dm_blk_report_zones() trying to get the table with dm_get_live_table().
-> The mapped device table pointer is set to the table passed as argument
-> to dm_revalidate_zones() before calling blk_revalidate_disk_zones() and
-> reset to NULL after this function returns to restore the live table
-> handling for user call of report zones.
-> 
-> All the code related to zone append emulation is removed from
-> dm-zone.c. This leads to simplifications of the functions __map_bio()
-> and dm_zone_endio(). This later function now only needs to deal with
-> completions of real zone append operations for targets that support it.
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> Reviewed-by: Mike Snitzer <snitzer@kernel.org>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Tested-by: Hans Holmberg <hans.holmberg@wdc.com>
-> ---
->  drivers/md/dm-core.h |   2 +-
->  drivers/md/dm-zone.c | 476 ++++---------------------------------------
->  drivers/md/dm.c      |  72 ++++---
->  drivers/md/dm.h      |   4 +-
->  4 files changed, 94 insertions(+), 460 deletions(-)
-> 
-> diff --git a/drivers/md/dm-zone.c b/drivers/md/dm-zone.c
-> index eb9832b22b14..174fda0a301c 100644
-> --- a/drivers/md/dm-zone.c
-> +++ b/drivers/md/dm-zone.c
-> @@ -226,41 +154,32 @@ static int dm_zone_revalidate_cb(struct blk_zone *zone, unsigned int idx,
->  static int dm_revalidate_zones(struct mapped_device *md, struct dm_table *t)
->  {
->  	struct gendisk *disk = md->disk;
-> -	unsigned int noio_flag;
->  	int ret;
->  
-> -	/*
-> -	 * Check if something changed. If yes, cleanup the current resources
-> -	 * and reallocate everything.
-> -	 */
-> +	/* Revalidate ionly if something changed. */
+The above description does not explain the motivation for this patch
+very well. How about the following description?
 
-Just noticed this ionly typo ^ Please fix.
+"ufshcd_cmd_inflight() is used to check whether or not a command is
+in progress. Make it skip commands that have already completed by
+changing the !blk_mq_request_started(rq) check into blk_mq_rq_state(rq) 
+!= MQ_RQ_IN_FLIGHT. We cannot rely on lrbp->cmd since lrbp->cmd is not
+cleared when a command completes."
+
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 21429eec1b82..3f47ea584cb1 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -3088,7 +3088,7 @@ bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd)
+>   		return false;
+>   
+>   	rq = scsi_cmd_to_rq(cmd);
+> -	if (!blk_mq_request_started(rq))
+> +	if (blk_mq_rq_state(rq) != MQ_RQ_IN_FLIGHT)
+>   		return false;
+>   
+>   	return true;
+
+Please convert the two return statements into a single return statement,
+e.g. as follows:
+
+	return cmd &&
+	    blk_mq_rq_state(scsi_cmd_to_rq(cmd)) == MQ_RQ_IN_FLIGHT;
 
 Thanks,
-Mike
+
+Bart.
