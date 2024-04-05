@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD646140370;
-	Fri,  5 Apr 2024 07:51:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AFF913CAA6;
+	Fri,  5 Apr 2024 07:53:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712303486; cv=none; b=FKnMV8yV3848OsBIplCiJkMDSBSM7jG4i6MSj9LhTtEBBZQ1e7KxzBh26Vprzi72lzo7nEb7uWFqI9W8CxivoRvWnB759cnjFe7MtfYkglLwqyihRpPeIegmovrSMmqRpH+Y20NJrfMCflL8tq9jHLS2GslbG11gLRhaB2PS+sA=
+	t=1712303603; cv=none; b=Hh/Cig1eGs4nsaFOsIA+ydLPIFRm7TalV2/IwRKfHJUoAdt1TEUiy+GZ1h1w6s5rrX5wO7+UDuVQs50aZsLSE0nj0YDIxCk7LhIYAgxJjoZ0YTih+u0Ak9HbBKIxQ6+X8Ro3mJAjcLx0IuULWOt3dJVYpM8E6NHWa2usIPyJqhw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712303486; c=relaxed/simple;
-	bh=hy+66NGPDCuyO88jk9doLTSP/pAvwzzvwk2CzBCUp+c=;
+	s=arc-20240116; t=1712303603; c=relaxed/simple;
+	bh=O2yHsk3jOUiEXpOOLddsz32luavlff5y+lISpOYrfwk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lOSe/TtyFMpoGYL+pVym3qmioPjcej1Is+1RvGm/Is/eauY8lXNadaDCHvja5wghGUxwPSuMt8ewD+nC5rvXSNEtSd8stKBK/gA0vhZ7htCrRwPDGOh3nZoUOhgcqzsgv1AfYadE/WOHrLk2mRh2IHLcZqZmJ2AWnlNoYtdYX9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UvNAG0sf; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=PQKaKVV7W+gfNvDLPTcK5AvbDGCDXosnfpqgSyND0J7AzMWavucX56X5pyXjqVTuoI3hos1JLt8rjWHA8Q6Bq0M0Kn7E93ebNPjXkMEOr1YC/SBXobxXOB/Sg8TaJDc2wWacBq32A3WNrDJW4XTuBp8T1CF0HNHqIRgvws991iI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J89Yh1DA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UvNAG0sf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D3C1C43390;
-	Fri,  5 Apr 2024 07:51:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J89Yh1DA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7ED91C433C7;
+	Fri,  5 Apr 2024 07:53:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712303486;
-	bh=hy+66NGPDCuyO88jk9doLTSP/pAvwzzvwk2CzBCUp+c=;
+	s=k20201202; t=1712303602;
+	bh=O2yHsk3jOUiEXpOOLddsz32luavlff5y+lISpOYrfwk=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=UvNAG0sfPsbWqLkWaw8zngmWW2byGpvEER8XgGJwJjBYjfjX/hwM1egjarlBeIn8X
-	 hTjYeAgArTAqFRg0K36QeR2HpP0MDv8PNNyxnXQCvaEif+SS1AahPTXhOSLyHefXju
-	 iGAhnK5qFxtphr+GlO6+7bjQcGnJ5i4Rzaw3p5n/fvr1etwLHASLb5s81LByHvIt1V
-	 YP/nn2QEfhheC+f8XfxcIOSrtxVAVDZ8zuimAl5D7eHIXBuFNRvH77zY8QBQCyUHhJ
-	 rgrdLfxsvyNsMYqmL3ov4cT7pXKKE1xtxgg9h3LKEbTTNj6TWnzHKV7CuhWjSP5Q8A
-	 kmfGm6fCb//tw==
-Message-ID: <5fec5719-9714-49d6-ac1e-9cd75557daf3@kernel.org>
-Date: Fri, 5 Apr 2024 09:51:15 +0200
+	b=J89Yh1DAphsL/Nzxb9JeaVErFLQCLvspMZDuFUfAhvcUV1eqmCS4/FyNcjSHQE+YN
+	 B1xN28k1/udDkEILWSV2yl84P7QFOihgbvyqIgxO5ewzuikHWdBMccoLd0a0mbgGdJ
+	 aDIr8B0pBBzye86XutRf1f4XKlCZ5Tq0+dJLjxaojURQdsbUXLfOplDW4FcKIEFUjz
+	 EFzhNxOWz+VEWNx2wn8UlvHOQEwQ4EP5shZSNxoNiKrHwFSVeiMHeATxcc4Z6h3ApH
+	 DObzvSzltjf3CNTfpOFVA19yJuYiQqyAlIrJ1oRHfFQ2PRtNxJYCzlcv0EogkgMqFD
+	 wdf/roOIR+8FA==
+Message-ID: <4ed72378-672e-46d6-9f29-fa118f598739@kernel.org>
+Date: Fri, 5 Apr 2024 09:53:10 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 05/17] arm64: dts: exynos: gs101: enable cmu-hsi2 clock
- controller
+Subject: Re: [PATCH 07/17] arm64: dts: exynos: gs101: Add ufs, ufs-phy and ufs
+ regulator dt nodes
 To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
  sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
  vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
@@ -49,7 +49,7 @@ Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
  linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org,
  andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
 References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-6-peter.griffin@linaro.org>
+ <20240404122559.898930-8-peter.griffin@linaro.org>
 Content-Language: en-US
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -95,22 +95,92 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <20240404122559.898930-6-peter.griffin@linaro.org>
+In-Reply-To: <20240404122559.898930-8-peter.griffin@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 04/04/2024 14:25, Peter Griffin wrote:
-> Enable the cmu_hsi2 clock management unit. It feeds some of
-> the high speed interfaces such as PCIe and UFS.
+> Enable the ufs controller, ufs phy and ufs regulator in device tree.
 > 
 > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
 > ---
->  arch/arm64/boot/dts/exynos/google/gs101.dtsi | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
+>  .../boot/dts/exynos/google/gs101-oriole.dts   | 17 +++++++++
+>  arch/arm64/boot/dts/exynos/google/gs101.dtsi  | 35 +++++++++++++++++++
+
+If you wish you can split DTSI and DTS into separate patches. Up to you.
+
+>  2 files changed, 52 insertions(+)
 > 
+> diff --git a/arch/arm64/boot/dts/exynos/google/gs101-oriole.dts b/arch/arm64/boot/dts/exynos/google/gs101-oriole.dts
+> index 6be15e990b65..986eb5c9898a 100644
+> --- a/arch/arm64/boot/dts/exynos/google/gs101-oriole.dts
+> +++ b/arch/arm64/boot/dts/exynos/google/gs101-oriole.dts
+> @@ -53,6 +53,14 @@ button-power {
+>  			wakeup-source;
+>  		};
+>  	};
+> +
+> +	ufs_0_fixed_vcc_reg: regulator-0 {
+> +		compatible = "regulator-fixed";
+> +		regulator-name = "ufs-vcc";
+> +		gpio = <&gpp0 1 0>;
 
+Use defines for GPIO flags, but more important: are you sure this is not
+coming from a PMIC? What's the voltage? It looks like a stub for missing
+PMIC, because UFS voltages are usually provided by PMIC.
 
-Was it really compiled?
+> +		regulator-boot-on;
+> +		enable-active-high;
+> +	};
+>  };
+>  
+>  &ext_24_5m {
+> @@ -106,6 +114,15 @@ &serial_0 {
+>  	status = "okay";
+>  };
+>  
+> +&ufs_0 {
+> +	status = "okay";
+> +	vcc-supply = <&ufs_0_fixed_vcc_reg>;
+> +};
+> +
+> +&ufs_0_phy {
+> +	status = "okay";
+> +};
+> +
+>  &usi_uart {
+>  	samsung,clkreq-on; /* needed for UART mode */
+>  	status = "okay";
+> diff --git a/arch/arm64/boot/dts/exynos/google/gs101.dtsi b/arch/arm64/boot/dts/exynos/google/gs101.dtsi
+> index 608369cec47b..9c94829bf14c 100644
+> --- a/arch/arm64/boot/dts/exynos/google/gs101.dtsi
+> +++ b/arch/arm64/boot/dts/exynos/google/gs101.dtsi
+> @@ -1277,6 +1277,41 @@ pinctrl_hsi2: pinctrl@14440000 {
+>  			interrupts = <GIC_SPI 503 IRQ_TYPE_LEVEL_HIGH 0>;
+>  		};
+>  
+> +		ufs_0_phy: phy@17e04000 {
+> +			compatible = "google,gs101-ufs-phy";
+> +			reg = <0x14704000 0x3000>;
+> +			reg-names = "phy-pma";
+> +			samsung,pmu-syscon = <&pmu_system_controller>;
+> +			#phy-cells = <0>;
+> +			clocks = <&ext_24_5m>;
+> +			clock-names = "ref_clk";
+> +			status = "disabled";
+> +		};
+> +
+> +		ufs_0: ufs@14700000 {
+> +			compatible = "google,gs101-ufs";
+> +
+
+Drop blank line.
+
+> +			reg = <0x14700000 0x200>,
+> +			      <0x14701100 0x200>,
+> +			      <0x14780000 0xa000>,
+> +			      <0x14600000 0x100>;
+
 
 Best regards,
 Krzysztof
