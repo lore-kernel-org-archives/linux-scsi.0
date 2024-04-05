@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 654022E631;
-	Fri,  5 Apr 2024 04:42:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D78E42E851;
+	Fri,  5 Apr 2024 04:42:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712292150; cv=none; b=KHpP/vGPGTF0J1RHNn2BOgxxuiUoSk8+v5jlJ25S1arKmBnuH9YL2iShhaSEkaLMgX2mmVcdhFTrqAayJbfqlXoxOOb2BZwmKcq+0p/o89tsyuEWL3szvbSwClEQUve+1Lk0/Nj/rFl99QFwlOx4VFbCh5ixvhQrfNFtZYM4TEM=
+	t=1712292151; cv=none; b=YS3comoAkeoPv6XUwcgTIai2iIm+t/UROMUlUysy9Fl40CzGm/yCiag7gcZRpcesudEAuKvFrv26/Z3YIIQ8ZW+4R+IKS8wiIL+6HikrHr4iWSni724WAKsrkZP5LP513lHPl8AuzVF4K0Ce9hVh8A+xBK/h1JmOA1ir9hir28k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712292150; c=relaxed/simple;
-	bh=+UsofTSRNCMlf94NYmjkPcbpOdXaDsiqajIToD4TkE4=;
+	s=arc-20240116; t=1712292151; c=relaxed/simple;
+	bh=YARcYpByiC8z1QdFM74x6voKyEeLX1LQj+WGr00zNUQ=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uJ6JLZUwd4xWkr59ugvuOEz/g9kEBJJ0Uhmv6Tvq36+VZrUNp57EBZsPoyJ9GtBo7v0JR1PYdbd0IV5Dci3NeojEI7egY+HXptGeh1cPwdTc1bORFeLPUC4V8HeTPfJBz9fK0P71L5JcMU23VPhFE2wIA32cXI9OVBDuftrRJxc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ta6cMJY/; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=g1xRV9eZ8d3yhobq1eo+izAvctzNXCa3x5j4qXFLyxGyg1NAz6Yy+m/2X4N5y54eaxuUifdo9NwWvbmTuXQmygMaynyCBL3qugws44qTtaOzeZS782CbsJkk4vUU6AbF9d7pFvxbTQ21lOCaQAB5WRyE1Z+5K86l5zIgpR4o93w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NmRujvtv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ta6cMJY/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21FB0C43390;
-	Fri,  5 Apr 2024 04:42:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NmRujvtv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92C02C433A6;
+	Fri,  5 Apr 2024 04:42:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712292150;
-	bh=+UsofTSRNCMlf94NYmjkPcbpOdXaDsiqajIToD4TkE4=;
+	s=k20201202; t=1712292151;
+	bh=YARcYpByiC8z1QdFM74x6voKyEeLX1LQj+WGr00zNUQ=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=ta6cMJY/NeXh0miQ+0OY7xXqshJoVs7GaZwqlNfiLa2Vlg4jrGn5LSQk5N+Fo+JWc
-	 vwgBpDzCnEb7SCfdG7EgJLtObZtbb18mc+7Oj8Stpn+mgusx36Zp9/9SQOaTYQridY
-	 X2AwvsuSkv8zX7PZCJI/w/m0qiiWtda5MW/HcEkkrJK08SaP9UXUmOHq1HbhyswylS
-	 jgmnISVcAnfvflk2n6GkTCp3QZiuhgIDjZJzQcYcySzt/TASGdfDLsYKmyBhUcgmKN
-	 CrIqTeRN7GcqBY/pBaFCUxtdgp0XcaA1uyiHWoq1GITf3n4LlQ4z/Rn9IVAxTi03Ec
-	 SdKlkHettNYdg==
+	b=NmRujvtvzT8w/hIhtPuhOrktgTI6B41KnkW4YWzYTgUPkZ4W6wzFlta2UwnZQ5x5K
+	 Amk4u9JM+0pLs4NjEas5eAbAK5+7dRHb1+cY/sluYPDL6rnVvdWzyQNbVyKuzv3n7S
+	 kORA0l4krB4VUpjukhShj58wWCx8fdeJB3xFXQS8d72iqlaTQ9fZNQpmoy9TVaWdQN
+	 qYYzkDei9aNB0jxRQFAzikE0hr9UMbtO1WUt+pgJu5w5bCsYSfEYSiSbuym1vSKqgF
+	 uR1P5BerNxym+RNqrzt6KkurIQ8DCU3oS5rbxur1MDQMYbDSlCbOm13RebVseF12fo
+	 sudsfYmEwcFHg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-block@vger.kernel.org,
 	Jens Axboe <axboe@kernel.dk>,
@@ -36,9 +36,9 @@ To: linux-block@vger.kernel.org,
 	linux-nvme@lists.infradead.org,
 	Keith Busch <kbusch@kernel.org>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v6 14/28] ublk_drv: Do not request ELEVATOR_F_ZBD_SEQ_WRITE elevator feature
-Date: Fri,  5 Apr 2024 13:41:53 +0900
-Message-ID: <20240405044207.1123462-15-dlemoal@kernel.org>
+Subject: [PATCH v6 15/28] null_blk: Do not request ELEVATOR_F_ZBD_SEQ_WRITE elevator feature
+Date: Fri,  5 Apr 2024 13:41:54 +0900
+Message-ID: <20240405044207.1123462-16-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240405044207.1123462-1-dlemoal@kernel.org>
 References: <20240405044207.1123462-1-dlemoal@kernel.org>
@@ -50,36 +50,35 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-With zone write plugging enabled at the block layer level, any zone
+With zone write plugging enabled at the block layer level, a zoned
 device can only ever see at most a single write operation per zone.
 There is thus no need to request a block scheduler with strick per-zone
 sequential write ordering control through the ELEVATOR_F_ZBD_SEQ_WRITE
-feature. Removing this allows using a zoned ublk device with any
+feature. Removing this allows using a zoned null_blk device with any
 scheduler, including "none".
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
 Tested-by: Hans Holmberg <hans.holmberg@wdc.com>
 ---
- drivers/block/ublk_drv.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/block/null_blk/zoned.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/block/ublk_drv.c b/drivers/block/ublk_drv.c
-index bea3d5cf8a83..ab6af84e327c 100644
---- a/drivers/block/ublk_drv.c
-+++ b/drivers/block/ublk_drv.c
-@@ -249,8 +249,7 @@ static int ublk_dev_param_zoned_validate(const struct ublk_device *ub)
- static void ublk_dev_param_zoned_apply(struct ublk_device *ub)
- {
- 	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, ub->ub_disk->queue);
--	blk_queue_required_elevator_features(ub->ub_disk->queue,
--					     ELEVATOR_F_ZBD_SEQ_WRITE);
-+
- 	ub->ub_disk->nr_zones = ublk_get_nr_zones(ub);
- }
+diff --git a/drivers/block/null_blk/zoned.c b/drivers/block/null_blk/zoned.c
+index 1689e2584104..8e217f8fadcd 100644
+--- a/drivers/block/null_blk/zoned.c
++++ b/drivers/block/null_blk/zoned.c
+@@ -165,7 +165,6 @@ int null_register_zoned_dev(struct nullb *nullb)
+ 	struct request_queue *q = nullb->q;
  
+ 	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
+-	blk_queue_required_elevator_features(q, ELEVATOR_F_ZBD_SEQ_WRITE);
+ 	nullb->disk->nr_zones = bdev_nr_zones(nullb->disk->part0);
+ 	return blk_revalidate_disk_zones(nullb->disk, NULL);
+ }
 -- 
 2.44.0
 
