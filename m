@@ -1,60 +1,66 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F707125C1
-	for <linux-scsi@vger.kernel.org>; Sat,  6 Apr 2024 01:59:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82532125DC;
+	Sat,  6 Apr 2024 01:59:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712368772; cv=none; b=bTMzk7IgXfpARcR19Zp/+hYQyvVxSNuTUPUI7SLqIUlKBvSDsi1b1ANGWw1rJyljZqhg4nrbevgCooWIIy70AiekiEt9coTP20eg8SgJv5s5ksqaUepNqqTZPgo5x8qBSVNvaop8h8dnWY6sHZitUj6Nq03Vl5SoD/HZTo8hHws=
+	t=1712368773; cv=none; b=UmGgOCSbsmjSwYasqCRdjMOwXhgBdNgYZOZJnYBaLjpyyIZoand2s0PGWSV85UwA4C+2MiuN9GLsGxqzU5/9Giw8IwSeLemHeu7nC4xAirHdje6SQ8tGD7BEeNEqAD254zDTU3SL97ILFruuLI0hKeMJIMg3zSLvte1+t1YpqQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712368772; c=relaxed/simple;
-	bh=sTsY7gc2Pzg7lRLEDYPSR69Nn7dQb1XDVJz8idUBsRE=;
+	s=arc-20240116; t=1712368773; c=relaxed/simple;
+	bh=Z7VCcSKqAqefSjmsmcNaIRDZm19lO+XBUKel61A0WCs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AY896/z0QtZ5+xEQSY6gi5/tpQ5O+RHYjdXAdRUdVVPCnfEoBPhDAaInTeHwwQFr32ORwDoly2X9SuplbbsjyYl2BUZgkVQvqNpZN8XrP13ziDjDPoeXaZ/WlUH6uqIADxiCs3tIW+0cDn5aAgNLmtd6CoLh7BJqrG9AYmiaDnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=kgHhXMfP; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=QIgFQxe6UyQe8tAvtOdm62BIwTtAONmK0TJcz5ySKj0lD1aw+ds4NJWzBnmypvturarQ1CpuYuviEO/ozHI2RQHgrCh8Sr993+86Oh63zBUkvh56XvIhLya8wVlKvgFu+4n+JZVbzNKY+NuZxK/p5FFrOPXD+vkrMwBjSnyJbx4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=T6PPfuHf; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kgHhXMfP"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 4361vqQx021307;
-	Sat, 6 Apr 2024 01:59:00 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="T6PPfuHf"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 4361iHBc024192;
+	Sat, 6 Apr 2024 01:58:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=BRL5UMBM5Mnu9D8VkJz0u9c/CK9OPa597UJwpi3pXio=;
- b=kgHhXMfPksl56TovHZ7ByZoMUAPJfl8s8TOqa4pn+lqvX+9u6AeMuuFVeAiQLnNiSdg3
- 67+eqshjlchITQe0RhTUFfWoZXkxAc2CQfe4qAKNjPngYTWLYsMJ/3JReLqJ4DultEYb
- wkP5f+LKMarmlMyYdNOark9mLng0fL4pGBSPuJA2U9KVQTX7Ypbqy9sAUyis9bBFoShp
- AhCZJap94bflePOSkO9Ll0BnQDo7cu8PaeVofpw0oN2IJsxAqXpKkSX9bbraqlooY0YB
- 7O69hsHKq5xa/x26pG1Hhv5y839/tzgkkhPB3aZhtNHSNjr4bvotNuXe4q/PNbyLOkq1 UA== 
+ bh=JrIVJnIlZ2irb8MalvkujLN8fFv5qjkoRcrej4VnBOg=;
+ b=T6PPfuHfv4wO2CsQJIDJyrUJ9U2FuDP/9WpbDqwyrZUZybylCYcJk6LXZS5oud+/xsec
+ oCrw1jMQ9WC3TwOovHJ4fx8FWR4TVcrLWaP5WhBpWDU66L4B0YRatiSYsEEf9d0AZ1yz
+ n7kQQSQEgSbs+LHSrC44XWYJGd1w4wG9314OoT4n6WS/C4HNSyIm6/dtc5EcYgIEuHYt
+ Hp++3KDhOy0oSxXy4+/KwCEx1Ymw59+ABw6UFPas6zFlULcxQN2NJW885CMncAQQKZtO
+ 6BZG8AUajMswFVssE9uCvrbIazeIkUp/qNI71AeJxOO3fHwF8QX0z1Z7iTZ5D/6SaYu0 Ww== 
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xaw64000u-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xaw02006w-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 06 Apr 2024 01:59:00 +0000
+	Sat, 06 Apr 2024 01:58:56 +0000
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4361XQT6032329;
-	Sat, 6 Apr 2024 01:58:53 GMT
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4361XVQd032535;
+	Sat, 6 Apr 2024 01:58:55 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3xavu3reqh-1
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3xavu3rer6-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 06 Apr 2024 01:58:53 +0000
+	Sat, 06 Apr 2024 01:58:55 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4361wqvZ000912;
-	Sat, 6 Apr 2024 01:58:53 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4361wqvb000912;
+	Sat, 6 Apr 2024 01:58:54 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3xavu3repx-2;
-	Sat, 06 Apr 2024 01:58:53 +0000
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3xavu3repx-3;
+	Sat, 06 Apr 2024 01:58:54 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: jejb@linux.vnet.ibm.com, chenxiang <chenxiang66@hisilicon.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linuxarm@huawei.com,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] Some small fixes for hisi_sas
-Date: Fri,  5 Apr 2024 21:58:32 -0400
-Message-ID: <171236847472.2627662.4478375644460855233.b4-ty@oracle.com>
+To: Quinn Tran <qutran@marvell.com>, Dan Carpenter <dan.carpenter@linaro.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Larry Wisneski <Larry.Wisneski@marvell.com>,
+        Duane Grigsby <duane.grigsby@marvell.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] scsi: qla2xxx: Fix off by one in qla_edif_app_getstats()
+Date: Fri,  5 Apr 2024 21:58:33 -0400
+Message-ID: <171236847476.2627662.10581186530455800083.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20240402035513.2024241-1-chenxiang66@hisilicon.com>
-References: <20240402035513.2024241-1-chenxiang66@hisilicon.com>
+In-Reply-To: <5c125b2f-92dd-412b-9b6f-fc3a3207bd60@moroto.mountain>
+References: <5c125b2f-92dd-412b-9b6f-fc3a3207bd60@moroto.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,33 +73,24 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-04-06_01,2024-04-05_02,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
- bulkscore=0 mlxlogscore=999 mlxscore=0 adultscore=0 phishscore=0
+ bulkscore=0 mlxlogscore=635 mlxscore=0 adultscore=0 phishscore=0
  spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2404010000 definitions=main-2404060013
-X-Proofpoint-GUID: 2jpbLmtjJSD0P8xtM5apPyHhqeb1Lf_C
-X-Proofpoint-ORIG-GUID: 2jpbLmtjJSD0P8xtM5apPyHhqeb1Lf_C
+X-Proofpoint-ORIG-GUID: 6Q3V5RB-qL-JeDFNg1it--MnBuCI3wtO
+X-Proofpoint-GUID: 6Q3V5RB-qL-JeDFNg1it--MnBuCI3wtO
 
-On Tue, 02 Apr 2024 11:55:11 +0800, chenxiang wrote:
+On Tue, 02 Apr 2024 12:56:54 +0300, Dan Carpenter wrote:
 
-> This series contain two small fixes including:
-> - Handle the NCQ error returned by D2H frame;
-> - Correct the deadline value for ata_wait_after_reset() in
-> function hisi_sas_debug_I_T_nexus_reset();
+> The app_reply->elem[] array is allocated earlier in this function and it
+> has app_req.num_ports elements.  Thus this > comparison needs to be >=
+> to prevent memory corruption.
 > 
-> Chang Log v1 -> v2:
-> - Add one blank line after declaration;
-> - Keep the line which fits in 80 chars in one line;
-> - Directly use jiffies + HISI_SAS_WAIT_PHYUP_TIMEOUT in stead
-> of using ata_deadline();
 > 
-> [...]
 
 Applied to 6.9/scsi-fixes, thanks!
 
-[1/2] scsi: hisi_sas: Handle the NCQ error returned by D2H frame
-      https://git.kernel.org/mkp/scsi/c/358e919a351f
-[2/2] scsi: hisi_sas: Modify the deadline for ata_wait_after_reset()
-      https://git.kernel.org/mkp/scsi/c/0098c55e0881
+[1/1] scsi: qla2xxx: Fix off by one in qla_edif_app_getstats()
+      https://git.kernel.org/mkp/scsi/c/4406e4176f47
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
