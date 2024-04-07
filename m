@@ -1,44 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADF6452F7D;
-	Sun,  7 Apr 2024 13:11:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4848E65E02;
+	Sun,  7 Apr 2024 13:12:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712495501; cv=none; b=I1MOv32wySaZxt6IEJdXsg6/7CMLrf1yfXPsMDFj6xZ9k/FiOohqE/LUhNUOZnAE+TKZ0k1KQsu/F42LCfXdRhOpUdUoEn3e5WCJryaLFUTF2CuYdFAt6OV7ydWKeirccZvg3NzSGBZ+AxDPumdcDGSUEToGFbIawVk2FuQiejE=
+	t=1712495521; cv=none; b=KGHEXawWDbwITsfDyYKALUpZ8rBo25lRVKX2ZtJI2YPUsfnXNcY/LFwfRurrSatIkLFylQzgwKM9Wvo6hQxVVVuv8CWugUgbYDLUSl3H4e/sqE2MkoWoyOq0jIJZxhFUHDN8/5J8WS4WxeQfWO/FN6FgaSbCRLbpZ++goBf2sT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712495501; c=relaxed/simple;
-	bh=7HKnDkjbN7wVIAs9pKtsT904pSc1EH39QCVIhU/HJBU=;
+	s=arc-20240116; t=1712495521; c=relaxed/simple;
+	bh=GvcEo2TtaGFeuJ0C6PQOnRmHWCvt0cLf3mBs6Q3kM9c=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=VdtBTBvr/I4KUff5vixBCZhO5ze7S5A48qcfx1/NYKYYFGfwFt7oBC9f+i2sevjQ37wQ8KpM8bDD6rXRw3SkWt4TU07U9E4YKwr/A1l4pqQfkXdF+ZPEH+27eP3Z6bAeCDOUOwvyoOmvapqtaRxPMlmouVNTWe0cJG9+ntR5oHw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RmnWRdnC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=U5QEgbp5/4L3KJp9sqNCDnSwLE7igPF04LPIxpUQD4lh127UKJQvVN1diOg4o0VPpB7eWv+y/AuHkSsRQQiKJQhUvZvqD8oVb073RHgc2dOYrHMCglK8ZvFC5RvLfRgYegKfcFt1iGT0+ENteVPXj0lCLZTIaw/sYdiHGEIFXEY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ugH7fR1y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RmnWRdnC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51AD6C43399;
-	Sun,  7 Apr 2024 13:11:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ugH7fR1y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 691BDC433C7;
+	Sun,  7 Apr 2024 13:11:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712495501;
-	bh=7HKnDkjbN7wVIAs9pKtsT904pSc1EH39QCVIhU/HJBU=;
+	s=k20201202; t=1712495520;
+	bh=GvcEo2TtaGFeuJ0C6PQOnRmHWCvt0cLf3mBs6Q3kM9c=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=RmnWRdnCD6RfG+RRtagEloN15mblD7qse7PUdT03G8QYVfPQDm2+P7fooyoiQ2Cpj
-	 RDTV2mT/9ZY1p8TTE2omcymNE/x3htMJqddlgCY9X483sP521B/1aGN4O477NcEKfi
-	 28txTMow/EZqbP1M+UkfOJfogB6SCPXsRc3DQzgqaXr+5xSChBiPgmpAvQ8UabRR0/
-	 1Chz2oizQmTbUBvPa86Dnbp4km3O0BNpaxHRMapOYA12lS0iucr0fxiUBzztch655v
-	 QY0ouEoiR6PzkBFt2JpSbxCPMdlI8nZJKHtzt0wYF2nt2VUX+YmGxavs6hu9Yvs/UI
-	 TDI7aPyex8l4A==
+	b=ugH7fR1yV5I8NkOdlZqRHCHRtW25dUiBHZPj8Y489W5c5e0q0UCDGMvYNARCPFqnh
+	 VId5pZkdkYU1fylTwtAlaWJeUASkOTCLtfGInJoPCcqKXhrBirs9ePUiuEDK+oT9wM
+	 cksDWMU8tHSPrCI5JwMJMEUjiOdw+zYjcAgsS00nQd3esJg4Xm0sJtRz0H2NqJijDP
+	 HdO1vCyA4WvbJh9inAPiAyn/REd4k5CBDkI6VtX1IaUEkOTvXLwX12Ulf/bHxHPh1Q
+	 eu5qwHrupDL+G70gEHPXsvFWbxczljDOKEjheKK6v15pKJndr8vGrmbdOHwZiKRSa3
+	 IlCNyFF2/30eA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
+Cc: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	sreekanth.reddy@broadcom.com,
 	jejb@linux.ibm.com,
+	chandrakanth.patil@broadcom.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.8 07/25] scsi: lpfc: Use a dedicated lock for ras_fwlog state
-Date: Sun,  7 Apr 2024 09:10:55 -0400
-Message-ID: <20240407131130.1050321-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.8 17/25] scsi: mpi3mr: Avoid memcpy field-spanning write WARNING
+Date: Sun,  7 Apr 2024 09:11:05 -0400
+Message-ID: <20240407131130.1050321-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240407131130.1050321-1-sashal@kernel.org>
 References: <20240407131130.1050321-1-sashal@kernel.org>
@@ -53,235 +57,60 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.8.4
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
 
-[ Upstream commit f733a76ea0a9a84aee4ac41b81fad4d610ecbd8e ]
+[ Upstream commit 429846b4b6ce9853e0d803a2357bb2e55083adf0 ]
 
-To reduce usage of and contention for hbalock, a separate dedicated lock is
-used to protect ras_fwlog state.
+When the "storcli2 show" command is executed for eHBA-9600, mpi3mr driver
+prints this WARNING message:
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20240305200503.57317-8-justintee8345@gmail.com
+  memcpy: detected field-spanning write (size 128) of single field "bsg_reply_buf->reply_buf" at drivers/scsi/mpi3mr/mpi3mr_app.c:1658 (size 1)
+  WARNING: CPU: 0 PID: 12760 at drivers/scsi/mpi3mr/mpi3mr_app.c:1658 mpi3mr_bsg_request+0x6b12/0x7f10 [mpi3mr]
+
+The cause of the WARN is 128 bytes memcpy to the 1 byte size array "__u8
+replay_buf[1]" in the struct mpi3mr_bsg_in_reply_buf. The array is intended
+to be a flexible length array, so the WARN is a false positive.
+
+To suppress the WARN, remove the constant number '1' from the array
+declaration and clarify that it has flexible length. Also, adjust the
+memory allocation size to match the change.
+
+Suggested-by: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Signed-off-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Link: https://lore.kernel.org/r/20240323084155.166835-1-shinichiro.kawasaki@wdc.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc.h         |  1 +
- drivers/scsi/lpfc/lpfc_attr.c    |  4 ++--
- drivers/scsi/lpfc/lpfc_bsg.c     | 20 ++++++++++----------
- drivers/scsi/lpfc/lpfc_debugfs.c | 12 ++++++------
- drivers/scsi/lpfc/lpfc_init.c    |  3 +++
- drivers/scsi/lpfc/lpfc_sli.c     | 20 ++++++++++----------
- 6 files changed, 32 insertions(+), 28 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_app.c    | 2 +-
+ include/uapi/scsi/scsi_bsg_mpi3mr.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index be016732ab2ea..9670cb2bf198e 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -1429,6 +1429,7 @@ struct lpfc_hba {
- 	struct timer_list inactive_vmid_poll;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 0380996b5ad27..55d590b919476 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -1644,7 +1644,7 @@ static long mpi3mr_bsg_process_mpt_cmds(struct bsg_job *job)
+ 	if ((mpirep_offset != 0xFF) &&
+ 	    drv_bufs[mpirep_offset].bsg_buf_len) {
+ 		drv_buf_iter = &drv_bufs[mpirep_offset];
+-		drv_buf_iter->kern_buf_len = (sizeof(*bsg_reply_buf) - 1 +
++		drv_buf_iter->kern_buf_len = (sizeof(*bsg_reply_buf) +
+ 					   mrioc->reply_sz);
+ 		bsg_reply_buf = kzalloc(drv_buf_iter->kern_buf_len, GFP_KERNEL);
  
- 	/* RAS Support */
-+	spinlock_t ras_fwlog_lock; /* do not take while holding another lock */
- 	struct lpfc_ras_fwlog ras_fwlog;
- 
- 	uint32_t iocb_cnt;
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index d3a5d6ecdf7d2..6f97a04171c44 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -5864,9 +5864,9 @@ lpfc_ras_fwlog_buffsize_set(struct lpfc_hba  *phba, uint val)
- 	if (phba->cfg_ras_fwlog_func != PCI_FUNC(phba->pcidev->devfn))
- 		return -EINVAL;
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irq(&phba->ras_fwlog_lock);
- 	state = phba->ras_fwlog.state;
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irq(&phba->ras_fwlog_lock);
- 
- 	if (state == REG_INPROGRESS) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI, "6147 RAS Logging "
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index 595dca92e8db5..593b1cf78979e 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -5070,12 +5070,12 @@ lpfc_bsg_get_ras_config(struct bsg_job *job)
- 		bsg_reply->reply_data.vendor_reply.vendor_rsp;
- 
- 	/* Current logging state */
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irq(&phba->ras_fwlog_lock);
- 	if (ras_fwlog->state == ACTIVE)
- 		ras_reply->state = LPFC_RASLOG_STATE_RUNNING;
- 	else
- 		ras_reply->state = LPFC_RASLOG_STATE_STOPPED;
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irq(&phba->ras_fwlog_lock);
- 
- 	ras_reply->log_level = phba->ras_fwlog.fw_loglevel;
- 	ras_reply->log_buff_sz = phba->cfg_ras_fwlog_buffsize;
-@@ -5132,13 +5132,13 @@ lpfc_bsg_set_ras_config(struct bsg_job *job)
- 
- 	if (action == LPFC_RASACTION_STOP_LOGGING) {
- 		/* Check if already disabled */
--		spin_lock_irq(&phba->hbalock);
-+		spin_lock_irq(&phba->ras_fwlog_lock);
- 		if (ras_fwlog->state != ACTIVE) {
--			spin_unlock_irq(&phba->hbalock);
-+			spin_unlock_irq(&phba->ras_fwlog_lock);
- 			rc = -ESRCH;
- 			goto ras_job_error;
- 		}
--		spin_unlock_irq(&phba->hbalock);
-+		spin_unlock_irq(&phba->ras_fwlog_lock);
- 
- 		/* Disable logging */
- 		lpfc_ras_stop_fwlog(phba);
-@@ -5149,10 +5149,10 @@ lpfc_bsg_set_ras_config(struct bsg_job *job)
- 		 * FW-logging with new log-level. Return status
- 		 * "Logging already Running" to caller.
- 		 **/
--		spin_lock_irq(&phba->hbalock);
-+		spin_lock_irq(&phba->ras_fwlog_lock);
- 		if (ras_fwlog->state != INACTIVE)
- 			action_status = -EINPROGRESS;
--		spin_unlock_irq(&phba->hbalock);
-+		spin_unlock_irq(&phba->ras_fwlog_lock);
- 
- 		/* Enable logging */
- 		rc = lpfc_sli4_ras_fwlog_init(phba, log_level,
-@@ -5268,13 +5268,13 @@ lpfc_bsg_get_ras_fwlog(struct bsg_job *job)
- 		goto ras_job_error;
- 
- 	/* Logging to be stopped before reading */
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irq(&phba->ras_fwlog_lock);
- 	if (ras_fwlog->state == ACTIVE) {
--		spin_unlock_irq(&phba->hbalock);
-+		spin_unlock_irq(&phba->ras_fwlog_lock);
- 		rc = -EINPROGRESS;
- 		goto ras_job_error;
- 	}
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irq(&phba->ras_fwlog_lock);
- 
- 	if (job->request_len <
- 	    sizeof(struct fc_bsg_request) +
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index ea9b42225e629..20662b4f339eb 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -2196,12 +2196,12 @@ static int lpfc_debugfs_ras_log_data(struct lpfc_hba *phba,
- 
- 	memset(buffer, 0, size);
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irq(&phba->ras_fwlog_lock);
- 	if (phba->ras_fwlog.state != ACTIVE) {
--		spin_unlock_irq(&phba->hbalock);
-+		spin_unlock_irq(&phba->ras_fwlog_lock);
- 		return -EINVAL;
- 	}
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irq(&phba->ras_fwlog_lock);
- 
- 	list_for_each_entry_safe(dmabuf, next,
- 				 &phba->ras_fwlog.fwlog_buff_list, list) {
-@@ -2252,13 +2252,13 @@ lpfc_debugfs_ras_log_open(struct inode *inode, struct file *file)
- 	int size;
- 	int rc = -ENOMEM;
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irq(&phba->ras_fwlog_lock);
- 	if (phba->ras_fwlog.state != ACTIVE) {
--		spin_unlock_irq(&phba->hbalock);
-+		spin_unlock_irq(&phba->ras_fwlog_lock);
- 		rc = -EINVAL;
- 		goto out;
- 	}
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irq(&phba->ras_fwlog_lock);
- 
- 	if (check_mul_overflow(LPFC_RAS_MIN_BUFF_POST_SIZE,
- 			       phba->cfg_ras_fwlog_buffsize, &size))
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 7820a1a7aa6d1..858ca395c0bf0 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7698,6 +7698,9 @@ lpfc_setup_driver_resource_phase1(struct lpfc_hba *phba)
- 				"NVME" : " "),
- 			(phba->nvmet_support ? "NVMET" : " "));
- 
-+	/* ras_fwlog state */
-+	spin_lock_init(&phba->ras_fwlog_lock);
-+
- 	/* Initialize the IO buffer list used by driver for SLI3 SCSI */
- 	spin_lock_init(&phba->scsi_buf_list_get_lock);
- 	INIT_LIST_HEAD(&phba->lpfc_scsi_buf_list_get);
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index c00b945947b1d..e1821072552a5 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -6849,9 +6849,9 @@ lpfc_ras_stop_fwlog(struct lpfc_hba *phba)
- {
- 	struct lpfc_ras_fwlog *ras_fwlog = &phba->ras_fwlog;
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irq(&phba->ras_fwlog_lock);
- 	ras_fwlog->state = INACTIVE;
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irq(&phba->ras_fwlog_lock);
- 
- 	/* Disable FW logging to host memory */
- 	writel(LPFC_CTL_PDEV_CTL_DDL_RAS,
-@@ -6894,9 +6894,9 @@ lpfc_sli4_ras_dma_free(struct lpfc_hba *phba)
- 		ras_fwlog->lwpd.virt = NULL;
- 	}
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irq(&phba->ras_fwlog_lock);
- 	ras_fwlog->state = INACTIVE;
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irq(&phba->ras_fwlog_lock);
- }
+diff --git a/include/uapi/scsi/scsi_bsg_mpi3mr.h b/include/uapi/scsi/scsi_bsg_mpi3mr.h
+index c72ce387286ad..30a5c1a593764 100644
+--- a/include/uapi/scsi/scsi_bsg_mpi3mr.h
++++ b/include/uapi/scsi/scsi_bsg_mpi3mr.h
+@@ -382,7 +382,7 @@ struct mpi3mr_bsg_in_reply_buf {
+ 	__u8	mpi_reply_type;
+ 	__u8	rsvd1;
+ 	__u16	rsvd2;
+-	__u8	reply_buf[1];
++	__u8	reply_buf[];
+ };
  
  /**
-@@ -6998,9 +6998,9 @@ lpfc_sli4_ras_mbox_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 		goto disable_ras;
- 	}
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irq(&phba->ras_fwlog_lock);
- 	ras_fwlog->state = ACTIVE;
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irq(&phba->ras_fwlog_lock);
- 	mempool_free(pmb, phba->mbox_mem_pool);
- 
- 	return;
-@@ -7032,9 +7032,9 @@ lpfc_sli4_ras_fwlog_init(struct lpfc_hba *phba,
- 	uint32_t len = 0, fwlog_buffsize, fwlog_entry_count;
- 	int rc = 0;
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irq(&phba->ras_fwlog_lock);
- 	ras_fwlog->state = INACTIVE;
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irq(&phba->ras_fwlog_lock);
- 
- 	fwlog_buffsize = (LPFC_RAS_MIN_BUFF_POST_SIZE *
- 			  phba->cfg_ras_fwlog_buffsize);
-@@ -7095,9 +7095,9 @@ lpfc_sli4_ras_fwlog_init(struct lpfc_hba *phba,
- 	mbx_fwlog->u.request.lwpd.addr_lo = putPaddrLow(ras_fwlog->lwpd.phys);
- 	mbx_fwlog->u.request.lwpd.addr_hi = putPaddrHigh(ras_fwlog->lwpd.phys);
- 
--	spin_lock_irq(&phba->hbalock);
-+	spin_lock_irq(&phba->ras_fwlog_lock);
- 	ras_fwlog->state = REG_INPROGRESS;
--	spin_unlock_irq(&phba->hbalock);
-+	spin_unlock_irq(&phba->ras_fwlog_lock);
- 	mbox->vport = phba->pport;
- 	mbox->mbox_cmpl = lpfc_sli4_ras_mbox_cmpl;
- 
 -- 
 2.43.0
 
