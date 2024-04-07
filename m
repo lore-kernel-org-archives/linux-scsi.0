@@ -1,167 +1,322 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DE8713B29D;
-	Sun,  7 Apr 2024 13:14:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712495675; cv=none; b=RCRr0rfOxGH23O8L6xtGRMPEG9RZRZBU0Cx7fhwVnbszOz/Qw2NOBci1HQ+1nrgSrvMOL0g3gIMoF3EpND0lajZk9/wjvjBrjMhVqVP/pUqukoQpwJylJkVcDCP54gyjD+b895A5Xxp5GkiTT0qvq7UUXl63jw5bfO4xODBRpeI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712495675; c=relaxed/simple;
-	bh=qn1vLds62PDgaGFwp8BUiBVbDYEwhVc3XEFa4QUsOFg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IE/e+gZ5irqaVMYesXAsr6eFhObx8ClX3/c+HN5EORGaylUh+SA7S8UDnzd0XADAXpdn4I9iGadSUE1covcM2r02lPyAd6MLylhiu4xNm09jVmnk6kvYcyvKLGvyc3nYgkdjajaNUf7ocX+ubS5aa++A5VCHzJsT9zg8fHZb6HE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=naCTr6V9; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8D191429E;
+	Sun,  7 Apr 2024 13:20:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712496023; cv=fail; b=arkPiImscMKyeM+LiV8IyQfAX/TmSG02wxpirXW9z40ekqkC+K0biY8xg8j553e3cLF8es/kZ48Vv5EeRQAcQ2IHs3gSqr0Kq1gmikXVWujYZFnPe2dAwoxLNxds/HmAtHi7UE4WOPSjhDuV7rAv8ZgL2yRCTSnxki3KqAc2hfo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712496023; c=relaxed/simple;
+	bh=WFf9FhB+fg6X2hsmu7/gzohtZDDTjg5TaIewJ2kuWYk=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=cJApF/gLbKAdGwd049i3yFaPdjjyjVQm9s+xaJkd7ZpM3fixlfpfD12/wZ9BmbStXNZZgpoWiIzASwdCFg6oprlFobKw9NpfR99HMIRhARll+A0JS9yiw0iotaGfesyhPU6eXN4NgftYBOhcsPfytsCqWnvZXukHH0tA3eiy/6I=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=MOLzeE+z; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=WW4DM6G+; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="naCTr6V9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0535C43394;
-	Sun,  7 Apr 2024 13:14:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712495675;
-	bh=qn1vLds62PDgaGFwp8BUiBVbDYEwhVc3XEFa4QUsOFg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=naCTr6V9+7SZ9sbBnjmV9Q6Pz18VO5GviZ9jn+O1NW1oCOXSxCBiWMqx54NGnIVFV
-	 oDjAV4QsYqR0+MsB6SyuRqqZSK/5f25lZLdeVHPpVKXfA/q6OcE6ixID+oiy4UoQ2C
-	 uZCMRf8uzXjcAj9uACgdgFq+JITTxBxa35MCHbbVU2rWakpoZ5wUNba+vWZoNiZevj
-	 /sp+qjlJGmnynvoUgdo5E4jKWUBClCMpxAV39i9jKFWMVLT9IjhMDdZTiKU9kJpbIs
-	 rJKh12HcXVLsntmeOX/UcqtOrPlhP3sCDJrDQXVuQhPGWeFkueOWK3A9PLK26ScDBF
-	 mNh2GYzM66wew==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Saurav Kashyap <skashyap@marvell.com>,
-	Guangwu Zhang <guazhang@redhat.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	jhasan@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	jejb@linux.ibm.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 5/5] scsi: bnx2fc: Remove spin_lock_bh while releasing resources after upload
-Date: Sun,  7 Apr 2024 09:14:25 -0400
-Message-ID: <20240407131426.1053736-5-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240407131426.1053736-1-sashal@kernel.org>
-References: <20240407131426.1053736-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MOLzeE+z";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="WW4DM6G+"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 437Bpmhf003244;
+	Sun, 7 Apr 2024 13:20:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : in-reply-to : message-id : references : date : content-type :
+ mime-version; s=corp-2023-11-20;
+ bh=/ikt2BOFtR2N4dE9TQUHcoL7ZbI5cpyUzwjGNA9K01g=;
+ b=MOLzeE+zyKeQ+UV2PkuDjENZxttl13njoaApmsaHkuCFXaI1miEgUdLmW13LCTFT/s3T
+ XCT/4pPFsj7V4lAT89a52cU11KFgYbe+3XaiSimZ8w8D8o0UIijhXwcCIUls708TDjyg
+ FN8SNwiEG66aXl5PD0i7Me8sOcSRaSDf9MEPahGjXusFNwCdrwanjf7N/HHgpj//7Ped
+ dlvLkk7PyBhIGL+8VCP5wg+Q9p3Vq7UA9YgC4RZmaSQVL1iifkUJ4yki5bDuWxDxro4a
+ wRiATeaStsiPYzybKe1FddOBxJnOtJUbAcHcFoZy0cY9Gl4Mc45f6nM3kRGImqC0vfxs Aw== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xax9b1570-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sun, 07 Apr 2024 13:20:05 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 437BhxP1002841;
+	Sun, 7 Apr 2024 13:20:04 GMT
+Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam02lp2040.outbound.protection.outlook.com [104.47.56.40])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3xavuas529-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sun, 07 Apr 2024 13:20:04 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Rsb9xg77ocvxpP4EQoG71b1x818v3Kf6G0+NleFqH0XaopRZp3y2fkriNAc365vmlIgKJoHPg1xRpVr6z78G29LK5Cc5OEsg35QVn5rl9W9Rf54+SI/fx5yoWHhwR+l3ixrXS1tXjs1o8WWYeBts8I2WH08k9XaxOl9iSO4X3djf35h1Iy7ulIoU0LB3PPhkaOSKSkbqNletJFRp52TI6EGWuO2dOL5FzkdSGj4kEcX1TquCv67Ejs/iA0t9bNTh7y68s/nNYFalqEFVgwdyhAPrvCXN4q0NETtamTO++4wL/kR2VPS4rMOIyYl8kO+1DT4sLtiSkjNFR70AgUS/YA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/ikt2BOFtR2N4dE9TQUHcoL7ZbI5cpyUzwjGNA9K01g=;
+ b=A/SAR4ozd0baVpbHXN96wtw6KSukYR2Ium+JsiThhbXOkQ7y0qIQt2HuRoAnZpWjsEs8dtg9i3CCi5A5Gqa/mSaKhxvm38vYNyxq+Qc4Bjuhtj7Rbtm+ZZfR9fdu7pRdjb8vAEfENXrTYVQccfI3xg23AcNw+WSG0oNOHiDRgMQuA5D4W5YS/F1acbXkAM4QJLysVm5IlzsGZabTOixdWvDGM8YFYEAc0U3HUeTBYHWbCAoyHjwct3q5uZ9AefYdxTcx7YMVjBaVLJCDztsxffvR1Y4o96FyOSTHpTBVUPB18FHlSXIBIWTzwu7RRlLClSilTLX7shT2j+CsK7s5Ng==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/ikt2BOFtR2N4dE9TQUHcoL7ZbI5cpyUzwjGNA9K01g=;
+ b=WW4DM6G+zkiWM6CP4ua0EmpN9GpA0cT3gsBWNViMS3crnIgOs8lifPrB/Pwa3xHrrPLfvWgvg6kRFIK9UnN2+M20E89R2olH0C+EEMqYIU/95+JJT8qZKphc8lmoCYUUyM4+NZ0PvLlyHIGA3pZNEgjI+vAH/gIAdWAw9RH1NgQ=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB5642.namprd10.prod.outlook.com (2603:10b6:510:f9::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.54; Sun, 7 Apr
+ 2024 13:20:02 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::7856:8db7:c1f6:fc59]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::7856:8db7:c1f6:fc59%4]) with mapi id 15.20.7409.042; Sun, 7 Apr 2024
+ 13:20:00 +0000
+To: John David Anglin <dave.anglin@bell.net>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Bart Van
+ Assche <bvanassche@acm.org>,
+        linux-parisc <linux-parisc@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>
+Subject: Re: Broken Domain Validation in 6.1.84+
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <03ef7afd-98f5-4f1b-8330-329f47139ddf@bell.net> (John David
+	Anglin's message of "Sat, 6 Apr 2024 12:16:15 -0400")
+Organization: Oracle Corporation
+Message-ID: <yq1wmp9pb0d.fsf@ca-mkp.ca.oracle.com>
+References: <b0670b6f-b7f7-4212-9802-7773dcd7206e@bell.net>
+	<d1fc0b8d-4858-4234-8b66-c8980f612ea2@acm.org>
+	<db784080-2268-4e6d-84bd-b33055a3331b@bell.net>
+	<028352c6-7e34-4267-bbff-10c93d3596d3@acm.org>
+	<cf78b204-9149-4462-8e82-b8f98859004b@bell.net>
+	<6cb06622e6add6309e8dbb9a8944d53d1b9c4aaa.camel@HansenPartnership.com>
+	<03ef7afd-98f5-4f1b-8330-329f47139ddf@bell.net>
+Date: Sun, 07 Apr 2024 09:19:57 -0400
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR13CA0045.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c2::20) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.311
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|PH0PR10MB5642:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	ENr3vZgZbMdxoEz5FpOVAouv6RC0JfLbHbOYledDTtqdrSqaT++dNomeZMB0gF4lSqdETDLqCP6ro2po++EuEUrE3Pq0S/43LLwp0wfWTqJdj8EeVczod/S2S/nR87E3oO1RQYrmw0IkzTxd1UjI+2fHWRxyHeCDHnsCoiNdwGYa6/OwtrDGfUCafSp0HSYbvwqsEdNPJy2kgpRb0X+rZhxvJ3/N4PV5g/Tyqz7lbWHh3uWBO6LGnQHAnWuJjGanyKzg5C9NlWcuOPnNov2JIpI3/+fNURJiKGGZNoU/N9BVMO1BdJCBwDQ76BGEXNCM1Ofezx1V9yfxnIR++0JZUOSdeFEqLrUotXEcziK69dOnf8xZwaM2oOPLc11ybc/X4LoBVyvAVLXCuCOP+NZ710i8aSZ8oF5G2Co55CKNKXFR/JiwmHdxe23IKIat/1Z52HGf3542I0FjnLs0+Xn/pUgBkU0ELDBweGyY429eh7CMrlcOOHKoK0sIEIqVNmVr4KLAG/R43L57mnRU9FPWywNf7Y6yzUec8Jx6Mu6V8wTIHgL4IZx4SJANnsaWiGP7cE6ocPCQ/IIuPlBcPnHbSV4KyApoTSyC1DF5+ZbDrbV6V3M+OET97rVfrs347yvN
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?us-ascii?Q?fyRjcugTK4jbclECHkAO4HUSCL+/0PXBWs8k2+L3xf27kAvUZ7bQQs6weZef?=
+ =?us-ascii?Q?uK++zzTLb+SsgYl01SwZC1pRlKGUPXMvWt4svy4gkYqM50zEofQR3ex6rCBG?=
+ =?us-ascii?Q?lOdmQ9KC2DdNOt1wggtUPOeekgGUAJEnrmBirC8hNMMksjrvAqB2AbLGLghR?=
+ =?us-ascii?Q?YVMmIkQZMCYBWc3i9iQ8NiR4ZhsiXbLS2lLGuvTNYB9+zn6e1Str493IOba3?=
+ =?us-ascii?Q?j+WYkZTRVamfTFubz1AOFyOcdT3md55j/GLZj9TbKwcJlH5XTtVGB5Pvtzce?=
+ =?us-ascii?Q?aSlIcQzWfV1zmLfxwMNmpviU0TpXFzifl9ZhCfsteYpV4C77JpoDUFYwCjBK?=
+ =?us-ascii?Q?LgzNhNltKHP45/ddMOHQ7ozOE63pN+jn5YbhxFPStR/L6/nX82ggbfSHsgKn?=
+ =?us-ascii?Q?1ofJSwTM4/nfsPOE+BDXnKlMApM/a82YlHwcBQZVh9NRREA5KvsaTZVadvXr?=
+ =?us-ascii?Q?XWpezof8v0bEaFJhdHPkTnz6N6EsWqJ1VMgQhKk7bhUUusFhvM3+rYjdoQRj?=
+ =?us-ascii?Q?qJB/Nfq+lNLTl1GbUSp5N7WeQAKnZW1jk0fOB1cWd/nQn8iBZvKfLjMUbtIh?=
+ =?us-ascii?Q?Ppkqa9OfZpKfYAW3cEKErSG/jOTK38VT7hgXpV6UPnl+nbZMIyksEafU4oJP?=
+ =?us-ascii?Q?wDjXUonlydbcUTlIfHOPuWsL0NK4jDTAmlWfotu8BgWnRnMI2lAsFK1nRT2/?=
+ =?us-ascii?Q?LcC8mRSBtXP/bhrmV/0b9IDaRZcVhlh1+McYPxmN5vz/WwrrC9XGqA3rUTv4?=
+ =?us-ascii?Q?Ni8U8bW7U+IlD/ljLsqNw//vgLpSOetnTk3RotPaOJ8jjrNeJzT4nwA08s5E?=
+ =?us-ascii?Q?cKdzwBDOBSGyU/hnvZtFX70bYtyMQsBJzPds4CJrK1cXoJn0PYUm5Z4qPNFB?=
+ =?us-ascii?Q?owgDLu3bcx1ORYL8/188Sphh1o7I65smVk1ipO2DVSRAkamXsUpHXrhZ766G?=
+ =?us-ascii?Q?KgGmGBqw7HwL0KEw8FOZyjAAIlmbcKGM13qycicqGcaZOSdnK6XMzR34bdEE?=
+ =?us-ascii?Q?E61U3Iben3rGuL4hoN4CuExRmHUrKd8SjceEEEB0y9zphtWC9UhC004TH2Hn?=
+ =?us-ascii?Q?Xf2e2CrEjLwDWlfK7aBM3zm34qxoffdJ1hSMOFlZISvZJQIgVXsBOR6JYSDg?=
+ =?us-ascii?Q?TVvqWbE8Nz34o03JkCg7iBl9OQR1aZhNPLKe1iNoZFXAnD5yHzz0t98+w2Aw?=
+ =?us-ascii?Q?X2DD+m2kJYh+ECGw/h0wOE2dFQIMk592PwA5KzEKvyauwROHwd+OHcbUZGFb?=
+ =?us-ascii?Q?u0K+60orCnQ+tmlB/+piBHKs5CWW7vMBcg3c6V53JwktzuS2yIzP6StTKtDb?=
+ =?us-ascii?Q?qdx4jvSe6Cgt0Sz93nElw+N9CPO8rDghzOh/tlKl4wI+aKKQk7YXJC6dST9/?=
+ =?us-ascii?Q?Mq6ruh1llqR2h+dB1gwV8QXvVJ88Hzu0DeeW7m7p6/uDXza5+SSy5Jrc4e4q?=
+ =?us-ascii?Q?RfpCQFLIOxkgb6YpnxVnoHpIuVvbX3N8VB94brqOw26AFvi9UA7P/iPVwYs6?=
+ =?us-ascii?Q?sY+uGvOKg+xwPxtXXBqXwK89afvqSK5/HhaNKoIgoIL9/mS5HOg3lRXJjltN?=
+ =?us-ascii?Q?tyaZ8koEWTHN8+ezzn/PYiJXocpgn82bQTc5ORNwgg5kAfhSjUhLLoSkb1ql?=
+ =?us-ascii?Q?7Q=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	jN5I0dHuGynKSgGxZfOiVxTnFg+1+2z/fLiE2PaES5A7E/O/w+R/IlW/FtVx1tVDGEUMLXiKUv+cGo7+IOpVOGLdp6er9ZuP1LKU1M3TGcVSP3fo9KXyvH+Q0rQgFvg3tUM+6bxNTTbi7kOAHy/shE9KRnikCzOvLHk1pvPEeqcUrXvGRwEgxXSfEtMrOqiXhiQ+p3+wWuJyWAAlcP4yuns4FMgGdDGtqWeraU4sgevV9WE8JC/fw2sqQWAb5ugDYIgneenLLZNhXbBAjXJCl4nlmdmrigr1RQmHmmX6v8rrQlu6UU/4T0lMH2j6OaWzvths/HCyN1vIs+NHCF8vmFoFgvGOSZYAa37dpfZTxcGF1B+LSgC5jZCnuOi5EUCSrBzSlZZk/zh1SbZJTT+hb12qfplIPwH1xQ8rssJhYjMfflVYj2JcAJd4EJnf715eeRwDMYHlRmHRz8l3YINe0ATvpncPONnOv+ku5r7y489N65VRa1XoKi2tpOuXannBzXTSHrNr0ojMUnhZhqJzDoMlMO6zGKT/Enka0Vk2Y3HwvDw8G5s4bs0pil6/kiDZ6eB5iUFYibzG+nVDHOiL/cwM6kZI+vXzWy7jul7mv/g=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e84d5011-550c-4ce4-561e-08dc57056d44
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Apr 2024 13:20:00.1640
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: dqRvvuiaStj0Atl4AAbrg7YhHkxLQgSqHzRnJ1ZaMK6rxoxmeVEYN+JcFcbQ6xGUMJt+IzKZiDDxDPiN0l3YbwGp77uoBtaYUZe6CHWxyZk=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5642
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-07_07,2024-04-05_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ adultscore=0 malwarescore=0 bulkscore=0 suspectscore=0 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2404010000 definitions=main-2404070106
+X-Proofpoint-GUID: ut1iN2m_6Sz5uTHpke8fC756pxsn99L_
+X-Proofpoint-ORIG-GUID: ut1iN2m_6Sz5uTHpke8fC756pxsn99L_
 
-From: Saurav Kashyap <skashyap@marvell.com>
 
-[ Upstream commit c214ed2a4dda35b308b0b28eed804d7ae66401f9 ]
+Dave,
 
-The session resources are used by FW and driver when session is offloaded,
-once session is uploaded these resources are not used. The lock is not
-required as these fields won't be used any longer. The offload and upload
-calls are sequential, hence lock is not required.
+> This change depends on the above change:
+> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?h=linux-6.1.y&id=b73dd5f9997279715cd450ee8ca599aaff2eabb9
+>
+> Thus, more than just the initial patch needs to be backed out.
 
-This will suppress following BUG_ON():
+I'd really prefer to not bring any of the intrusive scsi_execute changes
+back to 6.1.
 
-[  449.843143] ------------[ cut here ]------------
-[  449.848302] kernel BUG at mm/vmalloc.c:2727!
-[  449.853072] invalid opcode: 0000 [#1] PREEMPT SMP PTI
-[  449.858712] CPU: 5 PID: 1996 Comm: kworker/u24:2 Not tainted 5.14.0-118.=
-el9.x86_64 #1
-Rebooting.
-[  449.867454] Hardware name: Dell Inc. PowerEdge R730/0WCJNT, BIOS 2.3.4 1=
-1/08/2016
-[  449.876966] Workqueue: fc_rport_eq fc_rport_work [libfc]
-[  449.882910] RIP: 0010:vunmap+0x2e/0x30
-[  449.887098] Code: 00 65 8b 05 14 a2 f0 4a a9 00 ff ff 00 75 1b 55 48 89 =
-fd e8 34 36 79 00 48 85 ed 74 0b 48 89 ef 31 f6 5d e9 14 fc ff ff 5d c3 <0f=
-> 0b 0f 1f 44 00 00 41 57 41 56 49 89 ce 41 55 49 89 fd 41 54 41
-[  449.908054] RSP: 0018:ffffb83d878b3d68 EFLAGS: 00010206
-[  449.913887] RAX: 0000000080000201 RBX: ffff8f4355133550 RCX: 000000000d4=
-00005
-[  449.921843] RDX: 0000000000000001 RSI: 0000000000001000 RDI: ffffb83da53=
-f5000
-[  449.929808] RBP: ffff8f4ac6675800 R08: ffffb83d878b3d30 R09: 00000000000=
-efbdf
-[  449.937774] R10: 0000000000000003 R11: ffff8f434573e000 R12: 00000000000=
-01000
-[  449.945736] R13: 0000000000001000 R14: ffffb83da53f5000 R15: ffff8f43d4e=
-a3ae0
-[  449.953701] FS:  0000000000000000(0000) GS:ffff8f529fc80000(0000) knlGS:=
-0000000000000000
-[  449.962732] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  449.969138] CR2: 00007f8cf993e150 CR3: 0000000efbe10003 CR4: 00000000003=
-706e0
-[  449.977102] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 00000000000=
-00000
-[  449.985065] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 00000000000=
-00400
-[  449.993028] Call Trace:
-[  449.995756]  __iommu_dma_free+0x96/0x100
-[  450.000139]  bnx2fc_free_session_resc+0x67/0x240 [bnx2fc]
-[  450.006171]  bnx2fc_upload_session+0xce/0x100 [bnx2fc]
-[  450.011910]  bnx2fc_rport_event_handler+0x9f/0x240 [bnx2fc]
-[  450.018136]  fc_rport_work+0x103/0x5b0 [libfc]
-[  450.023103]  process_one_work+0x1e8/0x3c0
-[  450.027581]  worker_thread+0x50/0x3b0
-[  450.031669]  ? rescuer_thread+0x370/0x370
-[  450.036143]  kthread+0x149/0x170
-[  450.039744]  ? set_kthread_struct+0x40/0x40
-[  450.044411]  ret_from_fork+0x22/0x30
-[  450.048404] Modules linked in: vfat msdos fat xfs nfs_layout_nfsv41_file=
-s rpcsec_gss_krb5 auth_rpcgss nfsv4 dns_resolver dm_service_time qedf qed c=
-rc8 bnx2fc libfcoe libfc scsi_transport_fc intel_rapl_msr intel_rapl_common=
- x86_pkg_temp_thermal intel_powerclamp dcdbas rapl intel_cstate intel_uncor=
-e mei_me pcspkr mei ipmi_ssif lpc_ich ipmi_si fuse zram ext4 mbcache jbd2 l=
-oop nfsv3 nfs_acl nfs lockd grace fscache netfs irdma ice sd_mod t10_pi sg =
-ib_uverbs ib_core 8021q garp mrp stp llc mgag200 i2c_algo_bit drm_kms_helpe=
-r syscopyarea sysfillrect sysimgblt mxm_wmi fb_sys_fops cec crct10dif_pclmu=
-l ahci crc32_pclmul bnx2x drm ghash_clmulni_intel libahci rfkill i40e libat=
-a megaraid_sas mdio wmi sunrpc lrw dm_crypt dm_round_robin dm_multipath dm_=
-snapshot dm_bufio dm_mirror dm_region_hash dm_log dm_zero dm_mod linear rai=
-d10 raid456 async_raid6_recov async_memcpy async_pq async_xor async_tx raid=
-6_pq libcrc32c crc32c_intel raid1 raid0 iscsi_ibft squashfs be2iscsi bnx2i =
-cnic uio cxgb4i cxgb4 tls
-[  450.048497]  libcxgbi libcxgb qla4xxx iscsi_boot_sysfs iscsi_tcp libiscs=
-i_tcp libiscsi scsi_transport_iscsi edd ipmi_devintf ipmi_msghandler
-[  450.159753] ---[ end trace 712de2c57c64abc8 ]---
+Could you please try the patch below on top of v6.1.80?
 
-Reported-by: Guangwu Zhang <guazhang@redhat.com>
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Link: https://lore.kernel.org/r/20240315071427.31842-1-skashyap@marvell.com
+Thanks!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+
+From 87441914d491c01b73b949663c101056a9d9b8c7 Mon Sep 17 00:00:00 2001
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Date: Tue, 13 Feb 2024 09:33:06 -0500
+Subject: [PATCH] scsi: sd: usb_storage: uas: Access media prior to querying
+ device properties
+
+[ Upstream commit 321da3dc1f3c92a12e3c5da934090d2992a8814c ]
+
+It has been observed that some USB/UAS devices return generic properties
+hardcoded in firmware for mode pages for a period of time after a device
+has been discovered. The reported properties are either garbage or they do
+not accurately reflect the characteristics of the physical storage device
+attached in the case of a bridge.
+
+Prior to commit 1e029397d12f ("scsi: sd: Reorganize DIF/DIX code to
+avoid calling revalidate twice") we would call revalidate several
+times during device discovery. As a result, incorrect values would
+eventually get replaced with ones accurately describing the attached
+storage. When we did away with the redundant revalidate pass, several
+cases were reported where devices reported nonsensical values or would
+end up in write-protected state.
+
+An initial attempt at addressing this issue involved introducing a
+delayed second revalidate invocation. However, this approach still
+left some devices reporting incorrect characteristics.
+
+Tasos Sahanidis debugged the problem further and identified that
+introducing a READ operation prior to MODE SENSE fixed the problem and that
+it wasn't a timing issue. Issuing a READ appears to cause the devices to
+update their state to reflect the actual properties of the storage
+media. Device properties like vendor, model, and storage capacity appear to
+be correctly reported from the get-go. It is unclear why these devices
+defer populating the remaining characteristics.
+
+Match the behavior of a well known commercial operating system and
+trigger a READ operation prior to querying device characteristics to
+force the device to populate the mode pages.
+
+The additional READ is triggered by a flag set in the USB storage and
+UAS drivers. We avoid issuing the READ for other transport classes
+since some storage devices identify Linux through our particular
+discovery command sequence.
+
+Link: https://lore.kernel.org/r/20240213143306.2194237-1-martin.petersen@oracle.com
+Fixes: 1e029397d12f ("scsi: sd: Reorganize DIF/DIX code to avoid calling revalidate twice")
+Cc: stable@vger.kernel.org
+Reported-by: Tasos Sahanidis <tasos@tasossah.com>
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Tested-by: Tasos Sahanidis <tasos@tasossah.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/bnx2fc/bnx2fc_tgt.c | 2 --
- 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_=
-tgt.c
-index e3d1c7c440c8c..c7d6842b293da 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-@@ -834,7 +834,6 @@ static void bnx2fc_free_session_resc(struct bnx2fc_hba =
-*hba,
-=20
- 	BNX2FC_TGT_DBG(tgt, "Freeing up session resources\n");
-=20
--	spin_lock_bh(&tgt->cq_lock);
- 	ctx_base_ptr =3D tgt->ctx_base;
- 	tgt->ctx_base =3D NULL;
-=20
-@@ -890,7 +889,6 @@ static void bnx2fc_free_session_resc(struct bnx2fc_hba =
-*hba,
- 				    tgt->sq, tgt->sq_dma);
- 		tgt->sq =3D NULL;
- 	}
--	spin_unlock_bh(&tgt->cq_lock);
-=20
- 	if (ctx_base_ptr)
- 		iounmap(ctx_base_ptr);
---=20
-2.43.0
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 31b5273f43a7..349b1455a2c6 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3284,6 +3284,24 @@ static bool sd_validate_opt_xfer_size(struct scsi_disk *sdkp,
+ 	return true;
+ }
+ 
++static void sd_read_block_zero(struct scsi_disk *sdkp)
++{
++	unsigned int buf_len = sdkp->device->sector_size;
++	char *buffer, cmd[10] = { };
++
++	buffer = kmalloc(buf_len, GFP_KERNEL);
++	if (!buffer)
++		return;
++
++	cmd[0] = READ_10;
++	put_unaligned_be32(0, &cmd[2]); /* Logical block address 0 */
++	put_unaligned_be16(1, &cmd[7]);	/* Transfer 1 logical block */
++
++	scsi_execute_req(sdkp->device, cmd, DMA_FROM_DEVICE, buffer, buf_len,
++			 NULL, SD_TIMEOUT, sdkp->max_retries, NULL);
++	kfree(buffer);
++}
++
+ /**
+  *	sd_revalidate_disk - called the first time a new disk is seen,
+  *	performs disk spin up, read_capacity, etc.
+@@ -3323,7 +3341,13 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	 */
+ 	if (sdkp->media_present) {
+ 		sd_read_capacity(sdkp, buffer);
+-
++		/*
++		 * Some USB/UAS devices return generic values for mode pages
++		 * until the media has been accessed. Trigger a READ operation
++		 * to force the device to populate mode pages.
++		 */
++		if (sdp->read_before_ms)
++			sd_read_block_zero(sdkp);
+ 		/*
+ 		 * set the default to rotational.  All non-rotational devices
+ 		 * support the block characteristics VPD page, which will
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index c54e9805da53..12cf9940e5b6 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -179,6 +179,13 @@ static int slave_configure(struct scsi_device *sdev)
+ 		 */
+ 		sdev->use_192_bytes_for_3f = 1;
+ 
++		/*
++		 * Some devices report generic values until the media has been
++		 * accessed. Force a READ(10) prior to querying device
++		 * characteristics.
++		 */
++		sdev->read_before_ms = 1;
++
+ 		/*
+ 		 * Some devices don't like MODE SENSE with page=0x3f,
+ 		 * which is the command used for checking if a device
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index de3836412bf3..ed22053b3252 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -878,6 +878,13 @@ static int uas_slave_configure(struct scsi_device *sdev)
+ 	if (devinfo->flags & US_FL_CAPACITY_HEURISTICS)
+ 		sdev->guess_capacity = 1;
+ 
++	/*
++	 * Some devices report generic values until the media has been
++	 * accessed. Force a READ(10) prior to querying device
++	 * characteristics.
++	 */
++	sdev->read_before_ms = 1;
++
+ 	/*
+ 	 * Some devices don't like MODE SENSE with page=0x3f,
+ 	 * which is the command used for checking if a device
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index d2751ed536df..1504d3137cc6 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -204,6 +204,7 @@ struct scsi_device {
+ 	unsigned use_10_for_rw:1; /* first try 10-byte read / write */
+ 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
+ 	unsigned set_dbd_for_ms:1; /* Set "DBD" field in mode sense */
++	unsigned read_before_ms:1;	/* perform a READ before MODE SENSE */
+ 	unsigned no_report_opcodes:1;	/* no REPORT SUPPORTED OPERATION CODES */
+ 	unsigned no_write_same:1;	/* no WRITE SAME command */
+ 	unsigned use_16_for_rw:1; /* Use read/write(16) over read/write(10) */
