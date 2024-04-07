@@ -1,406 +1,167 @@
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+Received: from out5-smtp.messagingengine.com (out5-smtp.messagingengine.com [66.111.4.29])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B046F111AA;
-	Sun,  7 Apr 2024 06:04:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BEA1184D;
+	Sun,  7 Apr 2024 06:16:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=66.111.4.29
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712469869; cv=none; b=k6/VmWnlfCt2szCD6Pr3ErehNlFCItyHOwntCZ/l6xQqhK4PbROgWpnwXfXvma+cZkMYC3asY15Cx5egMHtIlpNNLwjfSx1Qwp0JffEhRcUrC+B3HL72Zept+srSS3DUaycnfnSPQpMwMatQo5NhCH7a9yfqN3QzBq9Ke9rSW8M=
+	t=1712470573; cv=none; b=uz/dxrax4mr1AfOPEy7+iSfk5iNEKlKphIciX8NK5wdjLXxRht3HC0ODSGJniYKs+wWWN0ssIWeAvNE+fqj+Wd+cFUNkczEdUVWelWyU1CoTp2JKpxStG45FPkSt4Q0XIQZpaNgpSHX+KqOMst0iZZeZoV8P+w/nI+5wHtC7iXE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712469869; c=relaxed/simple;
-	bh=t/ajfETUN+LYoOt+WkqShoD9CjGX5UIn9BP5Mlcq4II=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LegjU1iwS1lr9ZHqe/TbkHnvTsUe2DRKTul04U6Wwhh2fyKnXn6nkIiBvQYnNtw9jqnZ7P2arirlee8gZy+/Eb4TXNCnNvvkSHUn+PlDNie6yUL7alw7Iv0BDh36bYjs3B2CS+FEQEIXtbgy1sVYeKMVhiuU7Wf+USkTQg+5g10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=c2PSSwk0; arc=none smtp.client-ip=68.232.141.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1712470573; c=relaxed/simple;
+	bh=4JR4gU9/R1FHNfnsbBkUcbItC6g0bxKrpbGJYEYfhWk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OyGofyGJMmYTNABZF6DJIFphFGzcmMO9qQibDAarURb6jm5YEetKg890QeDukYlsS1A5u112bGTAU5CvKaUa69750cnV4sMSwzTDhHcheIJOZL1FPwuvoQi0cZwdXV/6ZUFhlEqFIwMzk2OIqHCHEl7zGYxNOnwnHs+GSsxHSCQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com; spf=pass smtp.mailfrom=kroah.com; dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b=IxYx4FUL; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=e7W4fPwS; arc=none smtp.client-ip=66.111.4.29
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kroah.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kroah.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="c2PSSwk0"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1712469866; x=1744005866;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=t/ajfETUN+LYoOt+WkqShoD9CjGX5UIn9BP5Mlcq4II=;
-  b=c2PSSwk0BF9TSBzdGgjkMGllI7cGcM1Hw/lDJXjq58GLrU2C0Po3DqNL
-   9PtIlU4dLOFhaIsBevA1MaXnh03n9v/VBKeATIdFK4am/Du9Ex+dzpZjG
-   vDIdXg7bn60wxduzW9q3CyrvnxWmx+RBPObo2vVhabF225Bw+o2t7khM6
-   vwUJ5Mvx+ljtLBMsJJYTtqimTtKCPSxQWHz3c1YlQjMHek7NWyYy+joGY
-   S1lAEyRCsC6/KrGUulOGgxhaoKXzp52uUcVChofZKwsDXyBbSO6rG2ndg
-   FznaHZZAm1f/fe3VVUa6GLRZPn7t5Eha3aKxv/hOF0Y75OCsg1uaiZZ23
-   Q==;
-X-CSE-ConnectionGUID: tb9yxORlSeCSbTKqU2Sa4A==
-X-CSE-MsgGUID: j2L+ma3jSESQB0EHME0agw==
-X-IronPort-AV: E=Sophos;i="6.07,184,1708358400"; 
-   d="scan'208";a="13672855"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Apr 2024 14:04:20 +0800
-IronPort-SDR: CF3CTaqM97YM6VqhCBP007CpkMsekEPP9v7HM4BMqnc5nkfw+sUT4tmbg0NouCRkm0Qe/ugded
- /Bq6kEBmFj5g==
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 06 Apr 2024 22:07:10 -0700
-IronPort-SDR: GvFU5KAuaErs4WtKF1+9RXL/MJB/xR5s+YQOwOW/z5bFn2lOO7Knp36BS6dnDeR7AE/zXL/43Y
- XQL2G5nJbb4Q==
-WDCIronportException: Internal
-Received: from bxygm33.ad.shared ([10.45.31.229])
-  by uls-op-cesaip02.wdc.com with ESMTP; 06 Apr 2024 23:04:17 -0700
-From: Avri Altman <avri.altman@wdc.com>
-To: "James E . J . Bottomley" <jejb@linux.ibm.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
+	dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b="IxYx4FUL";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="e7W4fPwS"
+Received: from compute7.internal (compute7.nyi.internal [10.202.2.48])
+	by mailout.nyi.internal (Postfix) with ESMTP id 3AC945C005A;
+	Sun,  7 Apr 2024 02:16:10 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute7.internal (MEProxy); Sun, 07 Apr 2024 02:16:10 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=cc
+	:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm2; t=1712470570;
+	 x=1712556970; bh=JEk39uRPAoWfc5DoeHTKEuGid0eaG1D4d9g3dwMxXEw=; b=
+	IxYx4FULUMKZC+WWzz95i/9VjNphS0lp/Kflj9S0fkP0QDA3WQI0kgIyKhpB1N/2
+	ioffGvTktMAFtqeyArzyDvKjxDoHyUOD9Qdsa8Z9+DfBvZpf0hTswXyVd/qbcQN7
+	/s9eRldrPV2E12BhYHmkLPHtb0RQqcOQc5r9Nf/eKQwKYi8qtwuxR1/x/wFf7evu
+	4IN6mdZYf8A8pN8NDcS2BdK1FSBk8mQyMrqJCVD0uBYc/VTRBgjHP+0blT7YGy2C
+	gJvOalyBMzgM28VYroMkQ+Scsh3DgvtP+V/UwK0oEKI64bOtuSWjZa6b4BVHSXzn
+	CeeIWf1iGylU8TyF4r9q0g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1712470570; x=
+	1712556970; bh=JEk39uRPAoWfc5DoeHTKEuGid0eaG1D4d9g3dwMxXEw=; b=e
+	7W4fPwSqbm1XUfGU3DqKQiD8ULVEkl9PP91bvgtkvC2YxBgd46xVKOL5rASAJpxx
+	gmL42bivepJOKZ24BCc844550j1a4IDQfwy6ie2/zGN/J3R8benG0e/qu6qK+SSG
+	oI9sSbJNBOETdGDYA4KWmjWGGdrXkVlynT5c5mbaFJaNmcviU61Lr2+IoiDfEdtJ
+	Yf4vcDj3hCYmWAq3ZkaCRXAEinKrop6u1r6gHD1DqiMbw5GWNyngCggYoWBm5u1X
+	aDuzf6RI5jA5VAC7RDf1XkHFTn+kO8daJpTDDwF2CRgdzJ5LgdDghVBYjwd/mcCW
+	9yWuabSE9hPieBbpYcA7w==
+X-ME-Sender: <xms:KToSZvrS85a42OxsHK5Gy4qLhCdoBAwqPGGLMcs7iENIZCieDVq5sw>
+    <xme:KToSZpqMy-ek5vsAymnj2GIXGedNHK0u3G4kSmN6tPaUHq_xw0HpXMVgARWWfIHec
+    bUrlWEbOCz_Hw>
+X-ME-Received: <xmr:KToSZsORVbNYTiSBxXGLiSd0NjOYBT3RxM7ZONWARifL0tPjrkV7fhArQBw-ZBIzQZfZNu6BxT7XIITPi02OEikATvYJ0r0VLFPFCw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrudegfedguddthecutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enucfjughrpeffhffvvefukfhfgggtugfgjgesthekredttddtudenucfhrhhomhepifhr
+    vghgucfmjfcuoehgrhgvgheskhhrohgrhhdrtghomheqnecuggftrfgrthhtvghrnheple
+    etveehgfelleejleeikeeljeeuieekffegteejveejueelgfevhfeiieejieetnecuffho
+    mhgrihhnpeekuddrihhtpdektddrihhtpdhkvghrnhgvlhdrohhrghenucevlhhushhtvg
+    hrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehgrhgvgheskhhrohgrhhdr
+    tghomh
+X-ME-Proxy: <xmx:KjoSZi6uC_sTPGSEDqr5Q8exUfXVIkvf5Bdu4rH7AEw6KgUgUvqO5w>
+    <xmx:KjoSZu5BIhVJPR6Y6A7PGPXRV9TmiC0b87KXUP1QnR2llE3aG4X9xQ>
+    <xmx:KjoSZqiCIHOzjohjaFyUlTQ-7HJjxLcpLgHSrHi93N0H2YzLUfOxYA>
+    <xmx:KjoSZg4juM_gA_hTojAbO_x2dyCb8wQGO5Uwgn43FhigU5tm4cVKVQ>
+    <xmx:KjoSZhLCQdjC4F6JNwkhSVA9h6bWtRR45FzKEGJz5moaEATbOZRI04yOuhqS>
+Feedback-ID: i787e41f1:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sun,
+ 7 Apr 2024 02:16:09 -0400 (EDT)
+Date: Sun, 7 Apr 2024 08:16:06 +0200
+From: Greg KH <greg@kroah.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: John David Anglin <dave.anglin@bell.net>,
 	Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v3 1/1] scsi: ufs: Remove support for old UFSHCI versions
-Date: Sun,  7 Apr 2024 09:04:10 +0300
-Message-ID: <20240407060412.856-2-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20240407060412.856-1-avri.altman@wdc.com>
-References: <20240407060412.856-1-avri.altman@wdc.com>
+	linux-parisc <linux-parisc@vger.kernel.org>,
+	linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: Broken Domain Validation in 6.1.84+
+Message-ID: <2024040722-seminar-policy-72d8@gregkh>
+References: <b0670b6f-b7f7-4212-9802-7773dcd7206e@bell.net>
+ <d1fc0b8d-4858-4234-8b66-c8980f612ea2@acm.org>
+ <db784080-2268-4e6d-84bd-b33055a3331b@bell.net>
+ <028352c6-7e34-4267-bbff-10c93d3596d3@acm.org>
+ <cf78b204-9149-4462-8e82-b8f98859004b@bell.net>
+ <6cb06622e6add6309e8dbb9a8944d53d1b9c4aaa.camel@HansenPartnership.com>
+ <03ef7afd-98f5-4f1b-8330-329f47139ddf@bell.net>
+ <189127aefff8abdabd41312663ee58c06de9de87.camel@HansenPartnership.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <189127aefff8abdabd41312663ee58c06de9de87.camel@HansenPartnership.com>
 
-UFS spec version 2.1 was published more than 10 years ago. It is
-vanishingly unlikely that even there are out there platforms that uses
-earlier host controllers, let alone that those ancient platforms will
-ever run a V6.10 kernel.  To be extra cautious, leave out support for
-UFSHCI2.0 as well, and just remove support of host controllers prior
-to UFS2.0.
+On Sat, Apr 06, 2024 at 02:51:36PM -0400, James Bottomley wrote:
+> [cc stable to see if they have any ideas about fixing this]
+> On Sat, 2024-04-06 at 12:16 -0400, John David Anglin wrote:
+> > On 2024-04-06 11:06 a.m., James Bottomley wrote:
+> > > On Sat, 2024-04-06 at 10:30 -0400, John David Anglin wrote:
+> > > > On 2024-04-05 3:36 p.m., Bart Van Assche wrote:
+> > > > > On 4/4/24 13:07, John David Anglin wrote:
+> > > > > > On 2024-04-04 12:32 p.m., Bart Van Assche wrote:
+> > > > > > > Can you please help with verifying whether this kernel warn
+> > > > > > > ing is only triggered by the 6.1 stable kernel series or
+> > > > > > > whether it is also
+> > > > > > > triggered by a vanilla kernel, e.g. kernel v6.8? That will 
+> > > > > > > tell us whether we 
+> > > > > > > need to review the upstream changes or the backp
+> > > > > > > orts on the v6.1 branch.
+> > > > > > Stable kernel v6.8.3 is okay.
+> > > > > Would it be possible to bisect this issue on the linux-6.1.y
+> > > > > branch? That probably will be faster than reviewing all
+> > > > > backports
+> > > > > of SCSI patches on that branch.
+> > > > The warning triggers with v6.1.81.  It doesn't trigger with
+> > > > v6.1.80.
+> > > It's this patch:
+> > > 
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?h=linux-6.1.y&id=cf33e6ca12d814e1be2263cb76960d0019d7fb94
+> > > 
+> > > The specific problem being that the update to scsi_execute doesn't
+> > > set the sense_len that the WARN_ON is checking.
+> > > 
+> > > This isn't a problem in mainline because we've converted all uses
+> > > of scsi_execute.  Stable needs to either complete the conversion or
+> > > back out the inital patch. This change depends on the above change:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?h=linux-6.1.y&id=b73dd5f9997279715cd450ee8ca599aaff2eabb9
+> > 
+> > Thus, more than just the initial patch needs to be backed out.
+> 
+> OK, so the reason the bad patch got pulled in is because it's a
+> precursor of this fixes tagged backport:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?h=linux-6.1.y&id=b73dd5f9997279715cd450ee8ca599aaff2eabb9
+> 
+> Which is presumably the other patch you had to back out to fix the
+> issue.
+> 
+> The problem is that Mike's series updating and then removing
+> scsi_execute() went into the tree as one series, so no-one notice the
+> first patch had this bug because the buggy routine got removed at the
+> end of the series.  This also means there's nothing to fix and backport
+> in upstream.
+> 
+> The bug is also more widely spread than simply domain validation,
+> because every use of scsi_execute in the current stable tree will trip
+> this.
+> 
+> I'm not sure what the best fix is.  I can certainly come up with a one
+> line fix for stable adding the missing length in the #define, but it
+> can't come from upstream as stated above.  We could back the two
+> patches out then do a stable specific fix for the UAS problem (I don't
+> think we can leave the UAS patch backed out because the problem was
+> pretty serious).
+> 
+> What does stable want to do?
 
-This patch removes some legacy tuning calls that no longer apply.
+We want to do whatever is in Linus's tree if at all possible.  Or revert
+anything we applied that we shouldn't have.  Either one is fine with us,
+just let us know what to do here.
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
-Acked-by: Bean Huo <beanhuo@micron.com>
----
- drivers/ufs/core/ufshcd.c   | 158 +++---------------------------------
- drivers/ufs/host/ufs-qcom.c |   3 +-
- include/ufs/ufshcd.h        |   2 -
- include/ufs/ufshci.h        |  13 +--
- 4 files changed, 15 insertions(+), 161 deletions(-)
+thanks,
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 62c8575f2c67..c72ef87ea867 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -748,8 +748,6 @@ static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
-  */
- static inline u32 ufshcd_get_intr_mask(struct ufs_hba *hba)
- {
--	if (hba->ufs_version == ufshci_version(1, 0))
--		return INTERRUPT_MASK_ALL_VER_10;
- 	if (hba->ufs_version <= ufshci_version(2, 0))
- 		return INTERRUPT_MASK_ALL_VER_11;
- 
-@@ -990,30 +988,6 @@ bool ufshcd_is_hba_active(struct ufs_hba *hba)
- }
- EXPORT_SYMBOL_GPL(ufshcd_is_hba_active);
- 
--u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba)
--{
--	/* HCI version 1.0 and 1.1 supports UniPro 1.41 */
--	if (hba->ufs_version <= ufshci_version(1, 1))
--		return UFS_UNIPRO_VER_1_41;
--	else
--		return UFS_UNIPRO_VER_1_6;
--}
--EXPORT_SYMBOL(ufshcd_get_local_unipro_ver);
--
--static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
--{
--	/*
--	 * If both host and device support UniPro ver1.6 or later, PA layer
--	 * parameters tuning happens during link startup itself.
--	 *
--	 * We can manually tune PA layer parameters if either host or device
--	 * doesn't support UniPro ver 1.6 or later. But to keep manual tuning
--	 * logic simple, we will only do manual tuning if local unipro version
--	 * doesn't support ver1.6 or later.
--	 */
--	return ufshcd_get_local_unipro_ver(hba) < UFS_UNIPRO_VER_1_6;
--}
--
- /**
-  * ufshcd_pm_qos_init - initialize PM QoS request
-  * @hba: per adapter instance
-@@ -2674,14 +2648,7 @@ static void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
- {
- 	u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
- 
--	if (hba->ufs_version == ufshci_version(1, 0)) {
--		u32 rw;
--		rw = set & INTERRUPT_MASK_RW_VER_10;
--		set = rw | ((set ^ intrs) & intrs);
--	} else {
--		set |= intrs;
--	}
--
-+	set |= intrs;
- 	ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
- }
- 
-@@ -2694,16 +2661,7 @@ static void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs)
- {
- 	u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
- 
--	if (hba->ufs_version == ufshci_version(1, 0)) {
--		u32 rw;
--		rw = (set & INTERRUPT_MASK_RW_VER_10) &
--			~(intrs & INTERRUPT_MASK_RW_VER_10);
--		set = rw | ((set & intrs) & ~INTERRUPT_MASK_RW_VER_10);
--
--	} else {
--		set &= ~intrs;
--	}
--
-+	set &= ~intrs;
- 	ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
- }
- 
-@@ -2715,21 +2673,17 @@ static void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs)
-  * @upiu_flags: flags required in the header
-  * @cmd_dir: requests data direction
-  * @ehs_length: Total EHS Length (in 32â€bytes units of all Extra Header Segments)
-- * @legacy_type: UTP_CMD_TYPE_SCSI or UTP_CMD_TYPE_DEV_MANAGE
-  */
- static void
- ufshcd_prepare_req_desc_hdr(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 			    u8 *upiu_flags, enum dma_data_direction cmd_dir,
--			    int ehs_length, enum utp_cmd_type legacy_type)
-+			    int ehs_length)
- {
- 	struct utp_transfer_req_desc *req_desc = lrbp->utr_descriptor_ptr;
- 	struct request_desc_header *h = &req_desc->header;
- 	enum utp_data_direction data_direction;
- 
--	if (hba->ufs_version <= ufshci_version(1, 1))
--		lrbp->command_type = legacy_type;
--	else
--		lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
-+	lrbp->command_type = UTP_CMD_TYPE_UFS_STORAGE;
- 
- 	*h = (typeof(*h)){ };
- 
-@@ -2863,7 +2817,7 @@ static int ufshcd_compose_devman_upiu(struct ufs_hba *hba,
- 	u8 upiu_flags;
- 	int ret = 0;
- 
--	ufshcd_prepare_req_desc_hdr(hba, lrbp, &upiu_flags, DMA_NONE, 0, UTP_CMD_TYPE_DEV_MANAGE);
-+	ufshcd_prepare_req_desc_hdr(hba, lrbp, &upiu_flags, DMA_NONE, 0);
- 
- 	if (hba->dev_cmd.type == DEV_CMD_TYPE_QUERY)
- 		ufshcd_prepare_utp_query_req_upiu(hba, lrbp, upiu_flags);
-@@ -2887,8 +2841,7 @@ static void ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	unsigned int ioprio_class = IOPRIO_PRIO_CLASS(req_get_ioprio(rq));
- 	u8 upiu_flags;
- 
--	ufshcd_prepare_req_desc_hdr(hba, lrbp, &upiu_flags,
--				    lrbp->cmd->sc_data_direction, 0, UTP_CMD_TYPE_SCSI);
-+	ufshcd_prepare_req_desc_hdr(hba, lrbp, &upiu_flags, lrbp->cmd->sc_data_direction, 0);
- 	if (ioprio_class == IOPRIO_CLASS_RT)
- 		upiu_flags |= UPIU_CMD_FLAGS_CP;
- 	ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
-@@ -5559,15 +5512,12 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
- 		ufshcd_release_scsi_cmd(hba, lrbp);
- 		/* Do not touch lrbp after scsi done */
- 		scsi_done(cmd);
--	} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
--		   lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
--		if (hba->dev_cmd.complete) {
--			if (cqe) {
--				ocs = le32_to_cpu(cqe->status) & MASK_OCS;
--				lrbp->utr_descriptor_ptr->header.ocs = ocs;
--			}
--			complete(hba->dev_cmd.complete);
-+	} else if (hba->dev_cmd.complete) {
-+		if (cqe) {
-+			ocs = le32_to_cpu(cqe->status) & MASK_OCS;
-+			lrbp->utr_descriptor_ptr->header.ocs = ocs;
- 		}
-+		complete(hba->dev_cmd.complete);
- 	}
- }
- 
-@@ -7220,7 +7170,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 
- 	ufshcd_setup_dev_cmd(hba, lrbp, cmd_type, 0, tag);
- 
--	ufshcd_prepare_req_desc_hdr(hba, lrbp, &upiu_flags, DMA_NONE, 0, UTP_CMD_TYPE_DEV_MANAGE);
-+	ufshcd_prepare_req_desc_hdr(hba, lrbp, &upiu_flags, DMA_NONE, 0);
- 
- 	/* update the task tag in the request upiu */
- 	req_upiu->header.task_tag = tag;
-@@ -7372,7 +7322,7 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba *hba, struct utp_upiu_req *r
- 
- 	ufshcd_setup_dev_cmd(hba, lrbp, DEV_CMD_TYPE_RPMB, UFS_UPIU_RPMB_WLUN, tag);
- 
--	ufshcd_prepare_req_desc_hdr(hba, lrbp, &upiu_flags, DMA_NONE, ehs, UTP_CMD_TYPE_DEV_MANAGE);
-+	ufshcd_prepare_req_desc_hdr(hba, lrbp, &upiu_flags, DMA_NONE, ehs);
- 
- 	/* update the task tag */
- 	req_upiu->header.task_tag = tag;
-@@ -8359,83 +8309,6 @@ static void ufs_put_device_desc(struct ufs_hba *hba)
- 	dev_info->model = NULL;
- }
- 
--/**
-- * ufshcd_tune_pa_tactivate - Tunes PA_TActivate of local UniPro
-- * @hba: per-adapter instance
-- *
-- * PA_TActivate parameter can be tuned manually if UniPro version is less than
-- * 1.61. PA_TActivate needs to be greater than or equal to peerM-PHY's
-- * RX_MIN_ACTIVATETIME_CAPABILITY attribute. This optimal value can help reduce
-- * the hibern8 exit latency.
-- *
-- * Return: zero on success, non-zero error value on failure.
-- */
--static int ufshcd_tune_pa_tactivate(struct ufs_hba *hba)
--{
--	int ret = 0;
--	u32 peer_rx_min_activatetime = 0, tuned_pa_tactivate;
--
--	ret = ufshcd_dme_peer_get(hba,
--				  UIC_ARG_MIB_SEL(
--					RX_MIN_ACTIVATETIME_CAPABILITY,
--					UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
--				  &peer_rx_min_activatetime);
--	if (ret)
--		goto out;
--
--	/* make sure proper unit conversion is applied */
--	tuned_pa_tactivate =
--		((peer_rx_min_activatetime * RX_MIN_ACTIVATETIME_UNIT_US)
--		 / PA_TACTIVATE_TIME_UNIT_US);
--	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TACTIVATE),
--			     tuned_pa_tactivate);
--
--out:
--	return ret;
--}
--
--/**
-- * ufshcd_tune_pa_hibern8time - Tunes PA_Hibern8Time of local UniPro
-- * @hba: per-adapter instance
-- *
-- * PA_Hibern8Time parameter can be tuned manually if UniPro version is less than
-- * 1.61. PA_Hibern8Time needs to be maximum of local M-PHY's
-- * TX_HIBERN8TIME_CAPABILITY & peer M-PHY's RX_HIBERN8TIME_CAPABILITY.
-- * This optimal value can help reduce the hibern8 exit latency.
-- *
-- * Return: zero on success, non-zero error value on failure.
-- */
--static int ufshcd_tune_pa_hibern8time(struct ufs_hba *hba)
--{
--	int ret = 0;
--	u32 local_tx_hibern8_time_cap = 0, peer_rx_hibern8_time_cap = 0;
--	u32 max_hibern8_time, tuned_pa_hibern8time;
--
--	ret = ufshcd_dme_get(hba,
--			     UIC_ARG_MIB_SEL(TX_HIBERN8TIME_CAPABILITY,
--					UIC_ARG_MPHY_TX_GEN_SEL_INDEX(0)),
--				  &local_tx_hibern8_time_cap);
--	if (ret)
--		goto out;
--
--	ret = ufshcd_dme_peer_get(hba,
--				  UIC_ARG_MIB_SEL(RX_HIBERN8TIME_CAPABILITY,
--					UIC_ARG_MPHY_RX_GEN_SEL_INDEX(0)),
--				  &peer_rx_hibern8_time_cap);
--	if (ret)
--		goto out;
--
--	max_hibern8_time = max(local_tx_hibern8_time_cap,
--			       peer_rx_hibern8_time_cap);
--	/* make sure proper unit conversion is applied */
--	tuned_pa_hibern8time = ((max_hibern8_time * HIBERN8TIME_UNIT_US)
--				/ PA_HIBERN8_TIME_UNIT_US);
--	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HIBERN8TIME),
--			     tuned_pa_hibern8time);
--out:
--	return ret;
--}
--
- /**
-  * ufshcd_quirk_tune_host_pa_tactivate - Ensures that host PA_TACTIVATE is
-  * less than device PA_TACTIVATE time.
-@@ -8508,11 +8381,6 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
- 
- static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
- {
--	if (ufshcd_is_unipro_pa_params_tuning_req(hba)) {
--		ufshcd_tune_pa_tactivate(hba);
--		ufshcd_tune_pa_hibern8time(hba);
--	}
--
- 	ufshcd_vops_apply_dev_quirks(hba);
- 
- 	if (hba->dev_quirks & UFS_DEVICE_QUIRK_PA_TACTIVATE)
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 0c067d56305c..cca190d1c577 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -534,8 +534,7 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 		 * and device TX LCC are disabled once link startup is
- 		 * completed.
- 		 */
--		if (ufshcd_get_local_unipro_ver(hba) != UFS_UNIPRO_VER_1_41)
--			err = ufshcd_disable_host_tx_lcc(hba);
-+		err = ufshcd_disable_host_tx_lcc(hba);
- 
- 		break;
- 	default:
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index a35e12f8e68b..431af365cf5e 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1390,8 +1390,6 @@ void ufshcd_release(struct ufs_hba *hba);
- 
- void ufshcd_clkgate_delay_set(struct device *dev, unsigned long value);
- 
--u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba);
--
- int ufshcd_get_vreg(struct device *dev, struct ufs_vreg *vreg);
- 
- int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 88193f5540e5..385e1c6b8d60 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -355,12 +355,8 @@ enum {
- 
- /* Interrupt disable masks */
- enum {
--	/* Interrupt disable mask for UFSHCI v1.0 */
--	INTERRUPT_MASK_ALL_VER_10	= 0x30FFF,
--	INTERRUPT_MASK_RW_VER_10	= 0x30000,
--
- 	/* Interrupt disable mask for UFSHCI v1.1 */
--	INTERRUPT_MASK_ALL_VER_11	= 0x31FFF,
-+	INTERRUPT_MASK_ALL_VER_11       = 0x31FFF,
- 
- 	/* Interrupt disable mask for UFSHCI v2.1 */
- 	INTERRUPT_MASK_ALL_VER_21	= 0x71FFF,
-@@ -425,13 +421,6 @@ union ufs_crypto_cfg_entry {
-  * Request Descriptor Definitions
-  */
- 
--/* Transfer request command type */
--enum utp_cmd_type {
--	UTP_CMD_TYPE_SCSI		= 0x0,
--	UTP_CMD_TYPE_UFS		= 0x1,
--	UTP_CMD_TYPE_DEV_MANAGE		= 0x2,
--};
--
- /* To accommodate UFS2.0 required Command type */
- enum {
- 	UTP_CMD_TYPE_UFS_STORAGE	= 0x1,
--- 
-2.42.0
-
+greg k-h
