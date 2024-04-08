@@ -1,47 +1,52 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D21431860
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Apr 2024 02:54:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DD6717EF;
+	Mon,  8 Apr 2024 02:54:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712544873; cv=none; b=P1Se/7bvvP5hjuQzQmFl4zCvH2QBm6iFkWDwP2QTnRJv9yOuvs4s5iCY3W1JbmefB6IAucfrYNpCMH9+Di3BAVcvmyAGGG0ZpebQV5f20QS56I5w6iVhz8Wd+Y2MAtiodB1WVFe8jftfXA5vg3QxYwhWMGTs4WWhjHBGS6kOkwc=
+	t=1712544873; cv=none; b=dnvl81bWd6X0U4c/uRtH5+FK9VT6KQAdDa3bK39h3Vszdd+YtI32Bk5LMXdpxNhQeohhI2IIBE18QKL/w7SsfDLCHxZQfrwuW+H+TnH8G4HrAxh387SrHgBe0wN9PKMLUxO/zmZcpXgkCZrEWf5Q04p0uPufJKZKKV30VE42hK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1712544873; c=relaxed/simple;
-	bh=fZ0ki1BC5nv0GPcsixNa0dxew2Ji6gEyUwdq1J6SUuc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Y1QJf0MDdfXd5t9xN2aDqGD806q9R6304AYEfw+axlbooh1zxrQBdYw7n2JF1RjJ0JFOIJEiLBjO0A1PpP+Vz+Wy0H2I20Tt/4lClzr4shPY/5dzuI3vpg2qrfTFtFyEiE/2K1rEmxFaVLsETuNx4bdvo0/X4aVSJ3A5rxxwO10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=m//9W+Jb; arc=none smtp.client-ip=198.137.202.133
+	bh=gRV4N5xFYiInE+BHk6JlA221X5cSHeaIFbd90umqfVo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=e4A9HDg+U8M5Mr71HEoKKnPGfPfVEKxfNYVpOF05y9aaLUKCKLmc/vObSOdpKHwI/KCH4Ge+B+RzMF97ww9APxqzA/FEETAImzkYgJ+H6gKyuUbWT5yeGFiVAqISlwZj+527FkypfxiP1eHHJYO1imCfUIJ4pAWNz6yfCaM5KYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wsmjHel6; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="m//9W+Jb"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wsmjHel6"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=VM+0J8e+0hA4kWELiu8/dsyjlme/YSoD1PnAY52mqVw=; b=m//9W+Jbl79oWI305kgQOUTq0P
-	ghQg44oNbc5sXoSfoWUjEWyuSOEYOunxB4zdeoWDsG/Dr+ODBy9nMY/L4e6TrnUMo1bjXiNph21oc
-	DUhJ6LM2emD3g1O8hFDuoIWaIANtF72q2GQx25uJRaYIydh8GVFG+dFZw3HZboly7XoQ8hF7JCMh4
-	C1UZ3d9oJtoHMqBz47Kw7HGpjO2Pf6ydtXlBq8w2vo5DDERZELTlCkgp0gOaTmXHpxtxgBTXDcsdM
-	JR9wFPgc8RXpbXXGmM3iQkISFJUSLYmXqxfW0fIFH4+oEOgsEsYwe89MpCy1cSIRYlPnNeEWAVEeS
-	wuDu1ywQ==;
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=ezkU5mMjz5A11jgyDYvnajpAqZ2htzfK9oaZIm4uNd8=; b=wsmjHel6lSKY+Sa3I96c5LcXEx
+	T6EoL1aJPCogjyD/prWwQBnG8O/ISMkN+HpV2BXenw1EAT4xnmhYsMTeWzStxPzJx59gyUfQoX/GO
+	3XBKqSU3QQx8Qz07CeBBkQC2c0f6XdDNdJYOKiPFcU9/lFcEYLkuoFnyFZUW48tquAK+IzlboHSZv
+	vD/xegC1eaeXqczi33vzhxZwtpZQd/3jpt2edgq1rvraawC5N4P6VvqkPQ7IZ4rTDpex0w/eqC4ne
+	1ToHPd9ve1zsffn49O4yBQ0+COl9+xqzb4mDuvyPoajzi0wLuLgUyr6q4mDUgcpzewrlCbUd+apgY
+	R2eIBXkA==;
 Received: from [50.53.2.121] (helo=bombadil.infradead.org)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rtf9T-0000000E7aj-0lHZ;
-	Mon, 08 Apr 2024 02:54:31 +0000
+	id 1rtf9Q-0000000E7aj-2PWl;
+	Mon, 08 Apr 2024 02:54:28 +0000
 From: Randy Dunlap <rdunlap@infradead.org>
 To: linux-scsi@vger.kernel.org
 Cc: Randy Dunlap <rdunlap@infradead.org>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 8/8] scsi: scsi_transport_srp: fix a couple of kernel-doc warnings
-Date: Sun,  7 Apr 2024 19:54:25 -0700
-Message-ID: <20240408025425.18778-9-rdunlap@infradead.org>
+	Doug Gilbert <dgilbert@interlog.com>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Max Gurtovoy <mgurtovoy@nvidia.com>,
+	linux-rdma@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	Hannes Reinecke <hare@suse.de>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	linux-doc@vger.kernel.org
+Subject: [PATCH 0/8] scsi: documentation: clean up docs and fix kernel-doc
+Date: Sun,  7 Apr 2024 19:54:17 -0700
+Message-ID: <20240408025425.18778-1-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20240408025425.18778-1-rdunlap@infradead.org>
-References: <20240408025425.18778-1-rdunlap@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,41 +55,39 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a struct short description and a function return value to prevent
-kernel-doc warnings:
+Clean up some SCSI doc files and fix kernel-doc in 6 header files in
+include/scsi/.
 
-scsi_transport_srp.h:77: warning: missing initial short description on line:
- * struct srp_function_template
-scsi_transport_srp.h:132: warning: No description found for return value of 'srp_chkready'
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
----
+ [PATCH 1/8] scsi: documentation: clean up overview
+ [PATCH 2/8] scsi: documentation: clean up scsi_mid_low_api.rst
+ [PATCH 3/8] scsi: core: add kernel-doc for scsi_msg_to_host_byte()
+ [PATCH 4/8] scsi: iser: fix @read_stag kernel-doc warning
+ [PATCH 5/8] scsi: libfcoe: fix a slew of kernel-doc warnings
+ [PATCH 6/8] scsi: core: add function return kernel-doc for 2 functions
+ [PATCH 7/8] scsi: scsi_transport_fc: add kernel-doc for function return
+ [PATCH 8/8] scsi: scsi_transport_srp: fix a couple of kernel-doc warnings
+
+ Documentation/driver-api/scsi.rst       |   15 ++++++-------
+ Documentation/scsi/scsi_mid_low_api.rst |   20 ++++++++---------
+ include/scsi/iser.h                     |    2 -
+ include/scsi/libfcoe.h                  |   25 +++++++++++++++-------
+ include/scsi/scsi.h                     |    7 +++---
+ include/scsi/scsi_cmnd.h                |    2 +
+ include/scsi/scsi_transport_fc.h        |    5 +---
+ include/scsi/scsi_transport_srp.h       |    4 +--
+ 8 files changed, 46 insertions(+), 34 deletions(-)
+
+
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
+Cc: Doug Gilbert <dgilbert@interlog.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>
+Cc: Max Gurtovoy <mgurtovoy@nvidia.com>
+Cc: linux-rdma@vger.kernel.org
+Cc: target-devel@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>
 Cc: Bart Van Assche <bvanassche@acm.org>
-
- include/scsi/scsi_transport_srp.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff -- a/include/scsi/scsi_transport_srp.h b/include/scsi/scsi_transport_srp.h
---- a/include/scsi/scsi_transport_srp.h
-+++ b/include/scsi/scsi_transport_srp.h
-@@ -74,7 +74,7 @@ struct srp_rport {
- };
- 
- /**
-- * struct srp_function_template
-+ * struct srp_function_template - template for SRP initiator drivers
-  *
-  * Fields that are only relevant for SRP initiator drivers:
-  * @has_rport_state: Whether or not to create the state, fast_io_fail_tmo and
-@@ -124,7 +124,7 @@ enum scsi_timeout_action srp_timed_out(s
-  * srp_chkready() - evaluate the transport layer state before I/O
-  * @rport: SRP target port pointer.
-  *
-- * Returns a SCSI result code that can be returned by the LLD queuecommand()
-+ * Returns: a SCSI result code that can be returned by the LLD queuecommand()
-  * implementation. The role of this function is similar to that of
-  * fc_remote_port_chkready().
-  */
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org
