@@ -1,178 +1,268 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1949D13F424;
-	Mon,  8 Apr 2024 14:32:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712586755; cv=fail; b=ckCT4UwIOmcs+zhIiCJBTa3IZjxqRW8wAopeUVaOYW2Hdp5lm4KGTvgTxcwJqw1YCAcMgFEIXbJjsy2O19BqHPB7NLp3+lkas01HxhB9Wy+n14KK15FOePnsGFYgcGqDerm78RTLTJYxKsD9rKDcfP/J8ajsg3TV8nkoKVbB4O8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712586755; c=relaxed/simple;
-	bh=eAPoXqAnDSJT67jfyWtJlKYDB+yXhLeGQ/zqTpwLfxo=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=UknTL/EAE9pPCb57Q1gxsljypaN0/HEk3BnMyQ/wpqOhQCLNs/G5kzeJDANz12gYytGLIoSruWDA67t+JhWu8wcr/BiXfcKFYPc1OGoDLZl0+K0K3t1PsA6VQZu8/Wq3CrpWLI/sHGcwLFaVhSwyelLmDM+27ipi5E0dTw66QNY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=lmLVmFK7; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=wXJJBntT; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C8FD1CD21
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Apr 2024 14:49:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712587764; cv=none; b=IhvL3oT6molKg1mnLlS459gDKRX25JJtMpk6U3CZG71QBAkkfDx6NlNZCdhTm+Dr2FuG3TuA4VqItZ8DUfiOUdRZ1AQODPdK4Ij1WulLybre39mGGy0DZbYriSlhfMBLiuTpbVfhQmrIGDVrCgj1TZbbh/6sU9qKNvh8Z5Ay9RM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712587764; c=relaxed/simple;
+	bh=kqABwm4SeRyyWpDPZiCA1IIfX5kotHTU4sIUNm44rds=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Qql7Kx0bSdzElV+2w/4wZOx6GQ3sltdEIrmyqyfxMMzIr9iDi6frMjrBZ8axbJID4dGreQLrPONDuz1az+5aqs4x5kmWUlXJw9xcFTcMzm6xg21wDVcxCKha00xZOHmzC4r7i5ioHe2YaRiS0lgf/GQjkZpCx8tf/x6FroSHasM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=CajWZAZ9; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lmLVmFK7";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="wXJJBntT"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 438ENwKv014629;
-	Mon, 8 Apr 2024 14:32:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : in-reply-to : message-id : references : date : content-type :
- mime-version; s=corp-2023-11-20;
- bh=KkwEeI8T0wqIzQEIqRSlnUDEOWjUPNeQ4Ca+5UYL92o=;
- b=lmLVmFK7Vi7+KikgaefwBuOZ3FZVrbthKI+5aX4sLnh1fISZk/dPxK90fcwk7an/KEu+
- v/sapL9FmNh3C44SOOFuGN+J0AijlmhZ2Oe2xKuaXMUHrS2kt2MOU24lELZHZm0PBgyd
- 7ootDQmL7MXQLUmAZuG7NrvgilnWLVrU+0s+YCp/MdqY3ea08cLmUsARkcGC5kL0rncz
- zMaKHW6vy801QDrcUR9dhcvGi3k67zxJR0MYnRgFMnC/EQGbAYAxzBDFRJtbJLnPJrIj
- O41dC+nTpI+7O7SDgJwznmc0quUUXYyF5OqOgMWtXxU2GdWteTei+jK30XmSNKQZnz70 6A== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xavtf2v93-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 08 Apr 2024 14:32:18 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 438E0Vvu007843;
-	Mon, 8 Apr 2024 14:32:17 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2168.outbound.protection.outlook.com [104.47.55.168])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3xavu5hktg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 08 Apr 2024 14:32:17 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Lw9OaodrNGT0NeUKK0TgzR9bfNluuS6axjSXwplB+2rMR3ker/mLpiHDMiBmlkz0LDJfTCsl/6roXgbe9MgEHncybVoRaMj2p3fhEi3YRa+8emd9xHx0t13MEIKSqszgzoSBhvxN7pUTcw+nirFT4P/tuSZ+cF0/Rce9eaP6wCAmMI07OQf8jD1izvj+VvVeTjio0ryeC5LZNgUwN+R5oilmEeTCeX+1WtktFOlMjZWbYSMAiS2rMCHbPBiPptL1Z2jGJnfR09vXsSJNNdSVw+OFsexOd3WUBHpeQ+UgZ7i6ptbEMqv5eEEGhpVunnJ6BLtHR4f9+Q9c/eScRDH14A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KkwEeI8T0wqIzQEIqRSlnUDEOWjUPNeQ4Ca+5UYL92o=;
- b=cqNA/En51iuwqPv7Qwqd9iCbMGBOMXyz6ZLP5VPU9EhX3D4HxwPGRW2cj1ymLMQaI4Jb7RuFPK2Xp6hX4AY9nqMk/2IYrDOw+221Y87+nLTNSYIxP3yYKU+M2PXudO7cKA1n1Yi4Zqu7VaMjtj+ljEZ2DNfns1sGS8vclD+baIWscV++lZcn+QrAQl22WkN0o8DiO0nEwuApameQJzcfEgaJrRM23dMSBl2kPCKCWj09PrY7slx4d3aFUMpTHCqlk8fbVytqgknagU6do62Z8V47IEbyV2hSnW5IRH4WiS+eb6lSay7JXx8RQobvRydymNqWhPqK3puLFpQHaB1Kcw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="CajWZAZ9"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-41551639550so31742645e9.2
+        for <linux-scsi@vger.kernel.org>; Mon, 08 Apr 2024 07:49:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KkwEeI8T0wqIzQEIqRSlnUDEOWjUPNeQ4Ca+5UYL92o=;
- b=wXJJBntTrY9AVKy7BqO3WK3dmnq5QRhjaVCVSJkhtKzc5gy7HVWAyUOvJT+Vq5Riy60nTTyxM1qUKfL9tQyNvhr8IYDgFYjmD2xcny8z4Qd6uIncBJDJZbRdUkDpffxuQ3rcTywmFXgB+dGYvSkntWDJl1LL8Le1J/FCVvxkK7Q=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by DM3PR10MB7969.namprd10.prod.outlook.com (2603:10b6:0:45::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Mon, 8 Apr
- 2024 14:32:15 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::7856:8db7:c1f6:fc59]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::7856:8db7:c1f6:fc59%4]) with mapi id 15.20.7409.042; Mon, 8 Apr 2024
- 14:32:15 +0000
-To: John David Anglin <dave.anglin@bell.net>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley
- <James.Bottomley@HansenPartnership.com>,
-        Bart Van Assche
- <bvanassche@acm.org>,
-        linux-parisc <linux-parisc@vger.kernel.org>,
-        linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>
-Subject: Re: Broken Domain Validation in 6.1.84+
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <450f1fa5-c564-46d6-8066-9becc5091d5a@bell.net> (John David
-	Anglin's message of "Mon, 8 Apr 2024 10:17:50 -0400")
-Organization: Oracle Corporation
-Message-ID: <yq1le5oorjp.fsf@ca-mkp.ca.oracle.com>
-References: <b0670b6f-b7f7-4212-9802-7773dcd7206e@bell.net>
-	<d1fc0b8d-4858-4234-8b66-c8980f612ea2@acm.org>
-	<db784080-2268-4e6d-84bd-b33055a3331b@bell.net>
-	<028352c6-7e34-4267-bbff-10c93d3596d3@acm.org>
-	<cf78b204-9149-4462-8e82-b8f98859004b@bell.net>
-	<6cb06622e6add6309e8dbb9a8944d53d1b9c4aaa.camel@HansenPartnership.com>
-	<03ef7afd-98f5-4f1b-8330-329f47139ddf@bell.net>
-	<yq1wmp9pb0d.fsf@ca-mkp.ca.oracle.com>
-	<d04f4358-6c27-46b6-be26-4d42eebc2acc@bell.net>
-	<yq1r0fgotqd.fsf@ca-mkp.ca.oracle.com>
-	<450f1fa5-c564-46d6-8066-9becc5091d5a@bell.net>
-Date: Mon, 08 Apr 2024 10:32:12 -0400
-Content-Type: text/plain
-X-ClientProxiedBy: MN2PR14CA0028.namprd14.prod.outlook.com
- (2603:10b6:208:23e::33) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        d=linaro.org; s=google; t=1712587761; x=1713192561; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=0EE/MOgIxft1vfD//KGXquYTb4qzSH0XjrabPn5Q8lo=;
+        b=CajWZAZ9A4VNb96o21snoUhAZo9hBeNkQ6dtDuj8xCdU2nKuw4K5hTsPYNmdRXVFH+
+         pEG1aVh5mRCdgZW43o0r3f1RaoqFtSmFxkkPjO/TgxgrR/b65L5aOTEoVOiTMonqFKny
+         tOfc5xfWhkTRo0qVsmC0PFDvcvHwH9czTuKWJJ9d/GS5kzsCzI7xEYl2C4u/mEiir/CD
+         eDSiBH4G7xG8bFt7ebCwKtLKMuZT2NnmwvO0BMt4PkxKgD6bPPv2d0IJDTCtQ9WZBtm3
+         erwF3dtoi5+ttRz4xQ3boax104TkbLM4Vn26KGPw6K2JRCAt2feGjpsy0j4freT0jfDO
+         +YpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712587761; x=1713192561;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=0EE/MOgIxft1vfD//KGXquYTb4qzSH0XjrabPn5Q8lo=;
+        b=aEKn2Qy1SImDtFJtiQPuAwkqXufCoTC8pSyhk0YXAvTjqpiNuUdcDC6ICWEkKHOUx/
+         c1BxGtqS1wkzm2tbFipZNV0uY6WppTidog4t7DT+vHAoVfda0GBcJE78nNB3tPUx8OgD
+         siX27k+AKS0hFcpvXFwAiVIv/MVrPMfEXF+cENbJKDNljT4/QaNYLbISfvTWfkSDeOQc
+         0BPV97MnGGtNPVnlyyNU12aQKfg9DFeCzUrffzorA+i9dSyc46DZ9eqm6Til27IeeFpD
+         dUmUagLeKd+6bop6aDQklJ/K+8dHzC5o1kRKJKnlrK4PyNWaTwr4H1ky9C0cE209C2G9
+         7lJw==
+X-Gm-Message-State: AOJu0YyS2XkqoaLhFDb8EthqhOR6pW05bocJets4GzO/ZFI8/5Da1yFL
+	915BdNNKCCNaRHb8U/M0Piy0tnknSZJT/aACgnEj5cdzE1qPJfz8mbnGs53Qs48=
+X-Google-Smtp-Source: AGHT+IGG9i5K+adcR32eYKb2R1dhdhIu35XUgoAG2pjKiBFFLAOeBkyufatVzBbZUYaV4XpDPUBWWg==
+X-Received: by 2002:a05:600c:3acb:b0:416:7222:8a78 with SMTP id d11-20020a05600c3acb00b0041672228a78mr2201360wms.37.1712587760913;
+        Mon, 08 Apr 2024 07:49:20 -0700 (PDT)
+Received: from draszik.lan ([80.111.64.44])
+        by smtp.gmail.com with ESMTPSA id dr20-20020a5d5f94000000b0033ea499c645sm9303171wrb.4.2024.04.08.07.49.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 08 Apr 2024 07:49:20 -0700 (PDT)
+Message-ID: <6c2b060b3b32b2da46bafbdc33236c319b6cec62.camel@linaro.org>
+Subject: Re: [PATCH 08/17] clk: samsung: gs101: add support for cmu_hsi2
+From: =?ISO-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>
+To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com, 
+ sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+  vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
+ avri.altman@wdc.com,  bvanassche@acm.org, s.nawrocki@samsung.com,
+ cw00.choi@samsung.com,  jejb@linux.ibm.com, martin.petersen@oracle.com,
+ chanho61.park@samsung.com,  ebiggers@kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org, 
+	devicetree@vger.kernel.org, linux-clk@vger.kernel.org, 
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org, 
+	saravanak@google.com, willmcvicker@google.com
+Date: Mon, 08 Apr 2024 15:49:18 +0100
+In-Reply-To: <20240404122559.898930-9-peter.griffin@linaro.org>
+References: <20240404122559.898930-1-peter.griffin@linaro.org>
+	 <20240404122559.898930-9-peter.griffin@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3-1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|DM3PR10MB7969:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	axyLmnrEm4+OELZmbx13jsfKUpn8JpGDFEQDAs3zwgW3PBdmJodid1ChtRV4wQx6oWG1Yo6Uvr51vrI1KmIrrWPWV8HXEGWXS35z4VGgahnci4dfoMQ5GgFr3nsV24z/5uTDTo6F5dSulMmOwKwxoh/MlLvXPN/ORwx2SiNBX+upTTQi+nfLVA7nYFDhxThq43TriHGV4RPsl4Bj+ysn3lBN8UJ7bEYgdh45BL+HhtkzBNEipcJlNzJc4MMrfjFreyaJZ39OXjP2o0xGQ9bZWpojmR9+TlrmYhmbOTmi82IYWHiasitD2sPXNzXlzrGAZax6GXoSEGIJ3fV5GPdx+QUtYblodQU8H1r8VAMi8bhDhfIwd9qFk6JO/67g0uTycftF2hmdfX2PjkS9S87BPApgKNv63OAWXhA5HuCbK7pC9M94ekFsueadBr4CWhWqKCiOpxtFhcCp3LJ3uu5GFmdoeOJ6jJ1YR3pmEhTW82Nb8wnk+9+5slwjTsDBJVVJJ1zzZeCHw8tABi6G0YxNqmiLw+b4DC96ZUOLdP6rU6IbVYLb7+qZhrULK9b4JAvVTAX8MdffQAj8B03vwjt1gJdxBL/GYwxAWee3ETsXVUE=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(1800799015)(376005);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?xtKZLLvKW2XFdm6Fbz9J1T2Ci3Q2+QWfr7j5UOmgZ5K7y3CAb2U/UCv1eyRh?=
- =?us-ascii?Q?c1j7UxQRBH7BJXKB/q79ZAv58Gi5EKVb+S3PPuKwylXvoDahKg+AtH0MJqAe?=
- =?us-ascii?Q?OoAawZ3/js/rpFJmQyesJZTnUyo0soPsPUWYTLlBYzPpqsMwWSs6tofAi/Gk?=
- =?us-ascii?Q?mqbGvrawK19o7gU95wr397WKxNuxOPqhTnutSE/lTMfnxKX99bzxCVNvubeC?=
- =?us-ascii?Q?rymqaEZ37Dp7q+bYLWN2S290v25F+y+p+vFdPagJLqyi3XGhz23twDdc1yRf?=
- =?us-ascii?Q?QYyJaWRVJr0KxH9bRrDm04nLF4lN5H8MuLUaQKFphXXD2CSXQNybJfPC/YTH?=
- =?us-ascii?Q?cCgKYoa6MDbyN1x1s9cH0FUcS8N0TXX5frjctZ76s9110s9v7sa1u5li+BA4?=
- =?us-ascii?Q?njxg9ekXxhu4Voa16kIreCRUvrvB+zcS1vTcvScM6L8tV30icoUFkEyR+wYx?=
- =?us-ascii?Q?2RYGsaHpX1UzAa1CeOQsFkF5cYe54EBE0kmCQ7V9BA6VaV54NTjwOtdi88T3?=
- =?us-ascii?Q?HMx+Q5fOsQ26jWWuKDDMnss4sBezesJar8neh+Hw8Rm4NLpDj6LfHReLrPvt?=
- =?us-ascii?Q?8QVFqd/dwWwHUylJ82C9PhNig7FGQr3cSFnAC3CrCScY0gkVMNjhsFV563he?=
- =?us-ascii?Q?8gW+Ldj7hO4wjQ488UTwodVP+Reeg0N7fmK99uerzF+Uw4bmdSlGagL7ZFeW?=
- =?us-ascii?Q?62R6ZbgoBmJ+bGeCzLIYgX8Y0AMCsoiMso+NSRsfCQRaM60EDhgc+uLgWf60?=
- =?us-ascii?Q?TvRF9TWbvSCwg8OohxUj8nTIMlWPUpZ5gvNqCsZ0PW/AkaGg4LKwyOysZaUu?=
- =?us-ascii?Q?ED+S3IBF96h0z2oHBSITJeExU5n4swT483Pqyetq94VW1qWDUM5mDMYnXfMZ?=
- =?us-ascii?Q?ZfhgBCydPqLAhbTcScF3VapOz4Z1g/OC3pQqjyjOvojqAFEXl52BzK4t5/ql?=
- =?us-ascii?Q?rSWQAZqHsUze2aAsE5HkR4kRpWtvzpUam9WWrFUUOJpVX1tD/ZU3A6WEqAGZ?=
- =?us-ascii?Q?bIjlItLH3Ie+os7iPbIEmsovJecyBK+T1WDmAPPp/mq2Z+Mtu+yrs58NYRwt?=
- =?us-ascii?Q?efDr1SRU8XXRP9jndgOFmOKZbQQ9A4FkBheLHOrLK27nmhrVce/aR9W0cKIJ?=
- =?us-ascii?Q?x2el4XjZ+jRsAyPjc4KGQuQSh2vHEtCGrBXloRDfdceOYl4o/uUpn7pIyw2r?=
- =?us-ascii?Q?2+ATH2WvPZMCYo5GTOR4VJmg0LXd9SlLqUV5DKjCqWBkSKa43aVa2oWgPSlw?=
- =?us-ascii?Q?E3Kj3HSonT8DBVhr9zW6+TNY/Goe/CLOck8Ugs34NrjrRKI+kIzGRxL91G7f?=
- =?us-ascii?Q?UtN2TnPMksF4oUH2j8oFYri09/SiRCQ99Y4qg/CQWZ5ICZGuD/TrSr/I24z1?=
- =?us-ascii?Q?I3pnuWvmYfNSRW8PQ3h87JxAmHX0/aGCQGdXlWYQQbPRoyVkGrI23d6M2Wxl?=
- =?us-ascii?Q?PDm0quweoxgNnVncDqIZtd+dq60kMFTyvl4uW0zHbuYaDwSRD2cGtS61mx5H?=
- =?us-ascii?Q?gs9NxNIwG5mxOLlXjr/kh0miVPpI/KZjpYvekHHCNlHM+broeEKdOKvGab23?=
- =?us-ascii?Q?5i9q2wZwTxmuXvRRh+oke0RC9FAXDTA/Pb5hHnTkwCuYhNLJu2wQxSnRCf4/?=
- =?us-ascii?Q?gQ=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	UaIQAgzUwUrP6UoMIsGXDfcc5Woth1vsZ16NuKEL1BKk7wwR/OtZrW0EwshW+UhZaNhEiKAAMTQkUG5wV8E0h4u1o62cHG51dGhWLw0KXl0I5EaAgGjEeSDqUUXcN0n2PpZ1bJxuznKznYJ+kjgZD/kI9sEfdH69NmSwyMhvz+mP4DLI3SXvHZmkO2uk/wxDqx014gWESR/ytBucoZjIhkfXQAicnnm+dJezVZqZtnnSWYDtaL5jP1R/VpXmIsCQazzhV31Ef18Twu9b7Tx0cu3JvDGIydNSr1PFaa1Ij24ohkmvsSZnMNN4f8H1p2JM0/cxpP5FKCDBUYYJHt3dhvr24x5aaA056BukQRzbIJ1xUd95aaYxy1fVu1mLTj3LKVIqXT0dtJ03el9wU0F+1S/WWywZIOlVs7EVGS/GRUohziWG0iEkYPQjsd8mIlxfxtDIioMMG177Z1xd0wEe0tIbWiJNxL0Ra+YCnVoGR/ofglLd+2rE1bANiI3K8YV8MltjtldJar94M03BtYvOZaQ/pbCCEfEbFwntjhoxkc7aufmLUmYdCvSdFlrj9H+ISjQXjmK8HCUdZs07htGPOVtxn3+dKxOePIsq/wO7Nk8=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0606d8de-1171-4287-c283-08dc57d8af84
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2024 14:32:14.9958
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: /+6fzytntcWVjTzPdWvQf5Zd/1Th8gmSlseS+rFxNF4lPbBfE8F3R0ayV5cStKDzMOD+ADp5BSx46WZ2WWWEnxSTUDocdM9ABVYP6epV014=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM3PR10MB7969
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-04-08_13,2024-04-05_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=868 suspectscore=0
- mlxscore=0 adultscore=0 phishscore=0 bulkscore=0 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2404010000 definitions=main-2404080112
-X-Proofpoint-GUID: fNcAbMvdj0vNkERNU-FLlTYe2QcQHErj
-X-Proofpoint-ORIG-GUID: fNcAbMvdj0vNkERNU-FLlTYe2QcQHErj
+
+Hi Pete,
+
+On Thu, 2024-04-04 at 13:25 +0100, Peter Griffin wrote:
+> CMU_HSI2 is the clock management unit used for the hsi2 block.
+> HSI stands for High Speed Interface and as such it generates
+> clocks for PCIe, UFS and MMC card.
+>=20
+> This patch adds support for the muxes, dividers, and gates in
+> cmu_hsi2.
+>=20
+> CLK_GOUT_HSI2_HSI2_CMU_HSI2_PCLK is marked as CLK_IS_CRITICAL
+> as disabling it leads to an immediate system hang.
+>=20
+> CLK_GOUT_HSI2_SYSREG_HSI2_PCLK is also marked CLK_IS_CRITICAL.
+> A hang is not observed with fine grained clock control, but
+> UFS IP does not function with syscon controlling this clock
+> just around hsi2_sysreg register accesses.
+
+Would it make sense to add this clock to the &ufs_0 node in the DTS
+instead? Seems more natural than a clock that's constantly enabled?
+
+> [...]
+>=20
+> Updated regex for clock name mangling
+> =C2=A0=C2=A0=C2=A0 sed \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|^PLL_LOCKTIME_PLL_\([^_]=
+\+\)|fout_\L\1_pll|' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|^PLL_CON0_MUX_CLKCMU_\([=
+^_]\+\)_\(.*\)|mout_\L\1_\2|' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|^PLL_CON0_PLL_\(.*\)|mou=
+t_pll_\L\1|' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|^CLK_CON_MUX_MUX_CLK_\(.=
+*\)|mout_\L\1|' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e '/^PLL_CON[1-4]_[^_]\+_/d' =
+\
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e '/^[^_]\+_CMU_[^_]\+_CONTRO=
+LLER_OPTION/d' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e '/^CLKOUT_CON_BLK_[^_]\+_CM=
+U_[^_]\+_CLKOUT0/d' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|_IPCLKPORT||' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|_RSTNSYNC||' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|_G4X2_DWC_PCIE_CTL||' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|_G4X1_DWC_PCIE_CTL||' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|_PCIE_SUB_CTRL||' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|_INST_0||g' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|_LN05LPE||' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|_TM_WRAPPER||' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|_SF||' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|^CLK_CON_DIV_DIV_CLK_\([=
+^_]\+\)_\(.*\)|dout_\L\1_\2|' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|^CLK_CON_BUF_CLKBUF_\([^=
+_]\+\)_\(.*\)|gout_\L\1_\2|' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|^CLK_CON_GAT_CLK_BLK_\([=
+^_]\+\)_UID_\(.*\)|gout_\L\1_\2|' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|^gout_[^_]\+_[^_]\+_cmu_=
+\([^_]\+\)_pclk$|gout_\1_\1_pclk|' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|^CLK_CON_GAT_GOUT_BLK_\(=
+[^_]\+\)_UID_\(.*\)|gout_\L\1_\2|' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e 's|^CLK_CON_GAT_CLK_\([^_]\=
++\)_\(.*\)|gout_\L\1_clk_\L\1_\2|' \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 \
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 -e '/^\(DMYQCH\|PCH\|QCH\|QUEU=
+E\)_/d'
+
+Thank you for the updated regex.
+
+> ---
+> =C2=A0drivers/clk/samsung/clk-gs101.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 | 558 +++++++++++++++++++++++
+> =C2=A0include/dt-bindings/clock/google,gs101.h |=C2=A0 63 +++
+> =C2=A02 files changed, 621 insertions(+)
+>=20
+> diff --git a/drivers/clk/samsung/clk-gs101.c b/drivers/clk/samsung/clk-gs=
+101.c
+> index d065e343a85d..b9f84c7d5c22 100644
+> --- a/drivers/clk/samsung/clk-gs101.c
+> +++ b/drivers/clk/samsung/clk-gs101.c
+> @@ -22,6 +22,7 @@
+> =C2=A0#define CLKS_NR_MISC	(CLK_GOUT_MISC_XIU_D_MISC_ACLK + 1)
+> =C2=A0#define CLKS_NR_PERIC0	(CLK_GOUT_PERIC0_SYSREG_PERIC0_PCLK + 1)
+> =C2=A0#define CLKS_NR_PERIC1	(CLK_GOUT_PERIC1_SYSREG_PERIC1_PCLK + 1)
+> +#define CLKS_NR_HSI2	(CLK_GOUT_HSI2_XIU_P_HSI2_ACLK + 1)
+> =C2=A0
+> =C2=A0/* ---- CMU_TOP ---------------------------------------------------=
+---------- */
+> =C2=A0
+> @@ -3409,6 +3410,560 @@ static const struct samsung_cmu_info peric1_cmu_i=
+nfo __initconst =3D {
+> =C2=A0	.clk_name		=3D "bus",
+> =C2=A0};
+> =C2=A0
+> +/* ---- CMU_HSI2 -------------------------------------------------------=
+--- */
+
+This comment is shorter that all the other similar comments in this file.
+
+> [...]
+> +
+> +PNAME(mout_hsi2_bus_user_p)	=3D { "oscclk", "dout_cmu_hsi2_bus" };
+> +PNAME(mout_hsi2_pcie_user_p)	=3D { "oscclk", "dout_cmu_hsi2_pcie" };
+> +PNAME(mout_hsi2_ufs_embd_user_p) =3D { "oscclk", "dout_cmu_hsi2_ufs_embd=
+" };
+> +PNAME(mout_hsi2_mmc_card_user_p) =3D { "oscclk", "dout_cmu_hsi2_mmc_card=
+" };
+
+Can you make these alphabetical, too, please, which would also match their =
+usage
+below:
+
+> +
+> +static const struct samsung_mux_clock hsi2_mux_clks[] __initconst =3D {
+> +	MUX(CLK_MOUT_HSI2_BUS_USER, "mout_hsi2_bus_user", mout_hsi2_bus_user_p,
+> +	=C2=A0=C2=A0=C2=A0 PLL_CON0_MUX_CLKCMU_HSI2_BUS_USER, 4, 1),
+> +	MUX(CLK_MOUT_HSI2_MMC_CARD_USER, "mout_hsi2_mmc_card_user",
+> +	=C2=A0=C2=A0=C2=A0 mout_hsi2_mmc_card_user_p, PLL_CON0_MUX_CLKCMU_HSI2_=
+MMC_CARD_USER,
+> +	=C2=A0=C2=A0=C2=A0 4, 1),
+> +	MUX(CLK_MOUT_HSI2_PCIE_USER, "mout_hsi2_pcie_user",
+> +	=C2=A0=C2=A0=C2=A0 mout_hsi2_pcie_user_p, PLL_CON0_MUX_CLKCMU_HSI2_PCIE=
+_USER,
+> +	=C2=A0=C2=A0=C2=A0 4, 1),
+> +	MUX(CLK_MOUT_HSI2_UFS_EMBD_USER, "mout_hsi2_ufs_embd_user",
+> +	=C2=A0=C2=A0=C2=A0 mout_hsi2_ufs_embd_user_p, PLL_CON0_MUX_CLKCMU_HSI2_=
+UFS_EMBD_USER,
+> +	=C2=A0=C2=A0=C2=A0 4, 1),
+> +};
+> +
+> +static const struct samsung_gate_clock hsi2_gate_clks[] __initconst =3D =
+{
+> +
+
+Here and below: all these extra empty lines are not needed.
+
+> +	GATE(CLK_GOUT_HSI2_PCIE_GEN4_1_PCIE_003_PHY_REFCLK_IN,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 "gout_hsi2_pcie_gen4_1_pcie_003_phy_refclk_in"=
+,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 "mout_hsi2_pcie_user",
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 CLK_CON_GAT_CLK_BLK_HSI2_UID_PCIE_GEN4_1_IPCLK=
+PORT_PCIE_003_PCIE_SUB_CTRL_INST_0_PHY_REFCLK_IN,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 21, 0, 0),
+> +
+> +	GATE(CLK_GOUT_HSI2_PCIE_GEN4_1_PCIE_004_PHY_REFCLK_IN,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 "gout_hsi2_pcie_gen4_1_pcie_004_phy_refclk_in"=
+,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 "mout_hsi2_pcie_user",
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 CLK_CON_GAT_CLK_BLK_HSI2_UID_PCIE_GEN4_1_IPCLK=
+PORT_PCIE_004_PCIE_SUB_CTRL_INST_0_PHY_REFCLK_IN,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 21, 0, 0),
+> +
+> +	GATE(CLK_GOUT_HSI2_SSMT_PCIE_IA_GEN4A_1_ACLK,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 "gout_hsi2_ssmt_pcie_ia_gen4a_1_aclk",
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 "mout_hsi2_bus_user",
+
+The two strings fit on the same line.
+
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 CLK_CON_GAT_CLK_BLK_HSI2_UID_SSMT_PCIE_IA_GEN4=
+A_1_IPCLKPORT_ACLK,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 21, 0, 0),
+> +
+> +	GATE(CLK_GOUT_HSI2_SSMT_PCIE_IA_GEN4A_1_PCLK,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 "gout_hsi2_ssmt_pcie_ia_gen4a_1_pclk",
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 "mout_hsi2_bus_user",
+
+dito.
+
+> [...]
+> +	/* Disabling this clock makes the system hang. Mark the clock as critic=
+al. */
+> +	GATE(CLK_GOUT_HSI2_HSI2_CMU_HSI2_PCLK,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 "gout_hsi2_hsi2_cmu_hsi2_pclk", "mout_hsi2_bus=
+_user",
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 CLK_CON_GAT_GOUT_BLK_HSI2_UID_HSI2_CMU_HSI2_IP=
+CLKPORT_PCLK,
+> +	=C2=A0=C2=A0=C2=A0=C2=A0 21, CLK_IS_CRITICAL, 0),
+
+I have a similar clock in USB, which also causes a hang if off, I wonder wh=
+at we
+could do better here.
 
 
-> The patch I received by mail was in html format and wasn't installable
-> by simply saving message. So, I used link in message.
->
-> I see I can change view of mail to plain text. Maybe I can copy the
-> plain text view to a patch file.
+Cheers,
+Andre'
 
-Peculiar. You can grab the raw mail from lore:
-
-https://lore.kernel.org/linux-scsi/yq1wmp9pb0d.fsf@ca-mkp.ca.oracle.com/raw
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
