@@ -1,332 +1,94 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sonic305-19.consmr.mail.sg3.yahoo.com (sonic305-19.consmr.mail.sg3.yahoo.com [106.10.241.82])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADB146FC5
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Apr 2024 05:01:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94F847462
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Apr 2024 05:23:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=106.10.241.82
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712552490; cv=none; b=Qw122MypM+ZoazA+VCapRXv957DTHyQA3/cYrtkx8TdnPtKXpu+juBLDeXoiNL+toMrMG/zRMG4dZsVrzdySX6UqUvszjt5KlzbceYLsXOJnxY0P5S8WYBOhzqxAjfc1ZYCkYqx3GYHuIqGJ0XyHV8KnSEI2Lf+E7e/sgjQgphE=
+	t=1712553829; cv=none; b=Nqaz/ZEObNJ6H5Ssx18oLc29/XZHoCARSE/gwnxmL6oJbDX95BLQMNWJ/30264yC43Kt1lfLHczkXmYEYHdo7I9mqwtydZjJEvrk/Z3C8rBeGUNYukkwqi00D1Tqd14PEWv5+F7BIKIxp0zwaQ70OO7hbYfSOAq8XNgnBKZo9MI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712552490; c=relaxed/simple;
-	bh=ja15TCw7SkQKcmsT8ZGixhM5TKWrOPMU8NqlC9QXBY0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=aS5V3WeZRY4tjlWKgKcmphTakL38thkS3gouz3hSmCJ8S2HFqUUwy+wL19ndHSNmCbZZuuOcWATdvHXYCoMAKX7KvuKTSrPFVlzjwq2aBFWec8uFeM9EqaXLMZlilHpNIruQqjG0FaTgHOZjgU5mssai2pCXjlG1gdl63c27rtk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AfvXL+5u; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1712553829; c=relaxed/simple;
+	bh=PReI1OJ5NbQ3wJ+SPio2KV1uPPookuWfMPRF03SjYkA=;
+	h=Date:From:To:Cc:Message-ID:In-Reply-To:References:Subject:
+	 MIME-Version:Content-Type; b=jGyQgLpLzdAqOhfLIHN/C/kUPOOqVEf7/MHErJg6C5VTIpQwcJ1tOOp4ao8GacOE2j9GLHGcVzv7Ur4TaBJZV+4mejch3Iv3iJGeu8fw7RdT8/6nx3UC4qmKVsAUaB1Ld9PLVgesz4Huu1CvNV1svw9iO7DQr0PPwJZMiQrG4Oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=fedoraproject.org; spf=fail smtp.mailfrom=fedoraproject.org; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=lJHOKAxu; arc=none smtp.client-ip=106.10.241.82
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=fedoraproject.org
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=fedoraproject.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AfvXL+5u"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1712552486;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=dqn+h5WVq4ajXurGecQKuk0SxWjZ9IvU4F1fayXtGk8=;
-	b=AfvXL+5uR8EryuHPa6AyH6RKfbF9M6P2zF5gTTQG1HKAJM8LdYSgSwlTTRW8AO6nHlKJRV
-	gpNo+i4TZ9TfeMWKHbTRDiyPBpTQZlp2/YBh8bRbX6/kq/wLH0jUofTufY5GLRMiKHR7mI
-	W3fv2S5BCkwGyxLcuY2it9YQnt1a3VU=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-107-RxxAQLrDOYqEmYmWFKBmkQ-1; Mon, 08 Apr 2024 01:01:22 -0400
-X-MC-Unique: RxxAQLrDOYqEmYmWFKBmkQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 1B15785710B;
-	Mon,  8 Apr 2024 05:01:22 +0000 (UTC)
-Received: from kaapi.redhat.com (unknown [10.74.16.34])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 862FD200B09C;
-	Mon,  8 Apr 2024 05:01:19 +0000 (UTC)
-From: Prasad Pandit <ppandit@redhat.com>
-To: Hannes Reinecke <hare@suse.com>
-Cc: linux-scsi@vger.kernel.org,
-	Prasad Pandit <pjp@fedoraproject.org>
-Subject: [PATCH] scsi: aic7xxx: indent kconfig help text
-Date: Mon,  8 Apr 2024 10:31:10 +0530
-Message-ID: <20240408050110.3679890-1-ppandit@redhat.com>
+	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="lJHOKAxu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1712553818; bh=PReI1OJ5NbQ3wJ+SPio2KV1uPPookuWfMPRF03SjYkA=; h=Date:From:Reply-To:To:Cc:In-Reply-To:References:Subject:From:Subject:Reply-To; b=lJHOKAxuNnQJZRi++GwoFwjLaUvcfPFxE8XF876BIzRNdXg5Ksuo+yl66jLXEpWd4WBKQ4ExIPzvlsWYS/CYrhv9nMxcOGMbbtBHH+wIMTUKcoX1cfahAru74ApIs8kuLfmCgQSlfSbcDJTYUpgx02xkrj1yOaesRDVXtFk8Ochh40AeFFP/H+kngO+D7eNb/w+bBNzm0zvwOz3P4yO6PxhmE/TrXSmWzwAzQzFPz/96Wp7mx/n00FAE11I2UhqYGMthG+V2UPrrIhXigZMxSwy/3kIjWN31JFjmwz+cptpVPFFwvUEFNCu9KzWkNz10YQho/OvcyaWrsY+m+wx+aQ==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1712553818; bh=rJJxNGAIw96xsYpd2Wa+w4ntdytOTxLrWa+AjYCytlB=; h=X-Sonic-MF:Date:From:To:Subject:From:Subject; b=NILHldmUnS20GC+xKSst0925fgCeYLedWVNsEq1ksgwWFnLJQWai+Cowp2FFVyqf+Dd/WD1pgDHpvRwOa8iLsWSgvOLfKsbmCN/ejeKF1uG1hzaYPHt7KsoonxNRYsSEheMmNXy6ekxbuHZzOyH24thJu1JMtXUTEoetoQE+G8tg47rtUfdgrMtqayyA2Vr4SUajAKn7KAKPRAPoV1p4oKhIDrKVpD/EXKms2QEGh0ocr6kUi79kFp+bGOa3/lvYzMOgX2SccwA2tIKgOYWcfhD2QXC6zl7jd2TGEP18EZt4BlDt07gv+FmtiqdYXTFv2Etq9EVd4S4rOTJPRWq1dQ==
+X-YMail-OSG: 5kHQiTsVM1nzos_Z.Fc02SuEgVFlt63c9HTLhgVnvBRa17nX_ayhfmvx1CiKsEU
+ dhNKy5o9KFlt3.7v1H4LYqPbzXJmEmjn9mOSjpou.YgSogue6acDS.x7OA7.Y_vM_H99uD7x01UI
+ VthNuXdF8cdWO13ztew_etBGwgwwBt1_4T1z1ZI_ugt5nhvGEEaTTeOw7qqDhvEw8yMVUOF18e39
+ _6UXjQGQLBxkpW5fW5vKbfgPcN9AovyOKdNgzsrfqwgXxEtBHaosBcI16z.YeVYTJvt8VPhGmDiq
+ cQZPDfIxWBh0IkLtnJBIKvWeoCWRrHLMlDPIMVoGeUqUmsu8CcRNnGKEHdYysc5wBJ5ax4VDKIUk
+ njrVv2fZ4aj43D4LKjfkEeuluJTTtgesM2kmrHjI047AIJtdn8bo.hCT8vP7eNyxnmuogDKzKlkl
+ MmN0Es3Je247CtgbvqJfDsUwPdngnyFF0RUUqI1g6xuCsv8KIP87YwAAbtspHF7KhVrQMhwb5a7j
+ cWa2PxBgd2nlEU0SpjrgVe47ev.5OmG20voVCQ3MlngS1HfyLtur9kZRd2LEoQ_iCLrjjFaaNNnU
+ a90czHUP6bbxwPjGytNFnCr3.U1QCIp3SaMG5i1kXD34TLqGmO2fLfq_21ASpJCBWND9vrvRyNMq
+ PC3fHJ8KH0LHd6a03qq6eEvPOkl1SUgAikLDGBChgdcMI7x0_sFO38iFbBpZ6U3_oYgFMPYxE5oY
+ RnnqEupKL2EKVl3p2eN4tueYLW0vhQgeH38fvOKVSDQAyaDjevHG12CRP5AkGXw0kouL6YdSNFjg
+ fXB96jjEbCm_iOsDPXZWi5uTJZXuGktQK0qrWTf_G2YPKgv4.FfaAvNi.eAFl4rNWrDUcCY676ZK
+ z1KTdJtCIQC5_vKxmefNJro.bgI5wEB1mwDXI9bVkB.GbxOydXsqR1LA6MFvibXnmOxOftGDZWxr
+ TJKqp8VT6_hFDljpqP8pXFmMkDRefNHxIdlqOthLTkTJopBj29S7r9cAIQHV79yZkuVM5sL.OR3e
+ KWWjpdfj3knHRi4KYqkG4IJOkbtRr9cpAPDKWIJ76nRALmy9shjl4NOzjkgBSuEF4eqv7tUNRoEz
+ 9cmrS_m7MogY.1bfOXDXB7Oj_Hy6.1FkfYgUyVt1bZN5Y_W5t0Knm9HESSiDT7lXtMl2hMnQRWzR
+ uJQ.A4k8mBONDQB.zwHTAnq8ilJ2w0bczV_SDZ3BO_Fa23gqAueio56VRhxp4PRlMc9GdIQTUKXQ
+ w7HDgaTIs5XvyJQvYtMirU9v2syYVgTqcr6OF3vAvDZMHeIXvY44MtE2ZNwcjO7.xDPRs6AQHJMG
+ CUdHGDVEfHZ0V5MH756k79pnO1.Pa6KvqgfEXtzvvufNz3RUYFzoZlrWaXw_uMIRZUrY8CgvuaU4
+ FNPxDZN7HGpB7dMRlZfHF9RgizzsjCphwAgNgw7OvcnYuLlGnD9YdDDjhq0qV2zid1kYBiR.vbw1
+ sv9.0PmrmMouehiz7iu_lX0kkSO7WYvK6fYLX0fxvhIJRzuh8vt0_Yc0UuVRzjUg7R0ERsd3Cbuf
+ rXxxjSl_9CoMG0hHAxN285RwnrlNQH4zBTNlA3fkvMQvnMmcSRCAaZsuorkpstcG3hByL4GIA1Zd
+ ._NlZgZe5M2Miagy8qQGd.CnhJO93xxffdx3FbnFXoPf23ELy3QOW06fuz6bMivH7a8PB6MG0rll
+ vWIAB6Kk9okAbY9LgHWqlhqjGH3kSVRuUPrE4s65G8EXkLsbU.3VMKVymOPp7Rap4mW0HUCI9g87
+ wIigcIvmt79CnYGi2pH574id3jhSk9qReau_f.vqV7Ne0BGOctsxKeTZVZQV_dloEAdho80zeg92
+ AClgzRwTm2Efg9TjSG6SZH263RxmA5MK2GTnXgX7d77pHiM5MaJzamYqECtXpCSvkAkTdKtHrNZL
+ V8rM6QhdGWeZbavhwkJYpgfLR6rdHUuoquf.zaYeYIJPwkjEpZAi6ACbeFim84ZpE_GezdQOrgkq
+ Ccmr52wyc_35zvw5sAGmtInxoZxDdCyNx0.AtUTyo2PyHsqsf0HLUFC3D_Tfrp39nbA7bECiu5QN
+ wFgq8ZIkXsBDpiEpHe73KL7RVauYlnq6bvU_o77l5okLwrkUnL8Zu83aWhkP5wPUENxuIYyqgTqO
+ 64_Rj_CRpw4m9xIZQ_dzFtipm6jqjeyUrtZexGqCQgcOgNuZXwZ6VJUyhR6HFijvYXbRHrAOas.x
+ t3qiemZDdamQHd.B92X635Zfd3Rqab7K8xjVf_yyU_Em9EA2HQMAu.5cS_tmyiVUjRdlRS7SW
+X-Sonic-MF: <pjp@fedoraproject.org>
+X-Sonic-ID: f1914840-01ca-47ad-9f32-d32a8639d281
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic305.consmr.mail.sg3.yahoo.com with HTTP; Mon, 8 Apr 2024 05:23:38 +0000
+Date: Mon, 8 Apr 2024 05:23:32 +0000 (UTC)
+From: Prasad Pandit <pjp@fedoraproject.org>
+Reply-To: Prasad Pandit <pj.pandit@yahoo.in>
+To: Kashyap Desai <kashyap.desai@broadcom.com>, 
+	Sumit Saxena <sumit.saxena@broadcom.com>, 
+	"Shivasharan S." <shivasharan.srikanteshwara@broadcom.com>, 
+	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Cc: "megaraidlinux.pdl@broadcom.com" <megaraidlinux.pdl@broadcom.com>, 
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Message-ID: <961050424.4042540.1712553812936@mail.yahoo.com>
+In-Reply-To: <1265686183.1518841.1711608367704@mail.yahoo.com>
+References: <20240311121127.1281159-1-ppandit@redhat.com> <1981046737.3660465.1710764698242@mail.yahoo.com> <1265686183.1518841.1711608367704@mail.yahoo.com>
+Subject: Re: [PATCH v1] scsi: megaraid: indent Kconfig option help text
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.6
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: WebService/1.1.22205 YMailNorrin
 
-From: Prasad Pandit <pjp@fedoraproject.org>
+>>On Thursday, 28 March, 2024 at 12:16:07 pm IST, Prasad Pandit wrote:
+>>>On Monday, 18 March, 2024 at 05:54:58 pm IST, Prasad Pandit wrote:=C2=A0
+>>>From: Prasad Pandit <pjp@fedoraproject.org>
+>>>Fix indentation of megaraid options help text by adding
+>>>leading spaces. Generally help text is indented by couple
+>>>of spaces more beyond the leading tab <\t> character.
+>>
+>>Ping..!
+>
+>Ping...!
 
-Fix indentation of config option's help text by adding
-leading spaces. Generally help text is indented by two
-more spaces beyond the leading tab <\t> character.
-It helps Kconfig parsers to read file without error.
+->=C2=A0https://lore.kernel.org/linux-scsi/1981046737.3660465.1710764698242=
+@mail.yahoo.com/T/#t
 
-Signed-off-by: Prasad Pandit <pjp@fedoraproject.org>
+Ping...!(just checking)
 ---
- drivers/scsi/aic7xxx/Kconfig.aic79xx | 75 ++++++++++-----------
- drivers/scsi/aic7xxx/Kconfig.aic7xxx | 97 ++++++++++++++--------------
- 2 files changed, 87 insertions(+), 85 deletions(-)
-
-diff --git a/drivers/scsi/aic7xxx/Kconfig.aic79xx b/drivers/scsi/aic7xxx/Kconfig.aic79xx
-index 4bc53eec4c83..863f0932ef59 100644
---- a/drivers/scsi/aic7xxx/Kconfig.aic79xx
-+++ b/drivers/scsi/aic7xxx/Kconfig.aic79xx
-@@ -8,79 +8,80 @@ config SCSI_AIC79XX
- 	depends on PCI && HAS_IOPORT && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
--	This driver supports all of Adaptec's Ultra 320 PCI-X
--	based SCSI controllers.
-+	  This driver supports all of Adaptec's Ultra 320 PCI-X
-+	  based SCSI controllers.
- 
- config AIC79XX_CMDS_PER_DEVICE
- 	int "Maximum number of TCQ commands per device"
- 	depends on SCSI_AIC79XX
- 	default "32"
- 	help
--	Specify the number of commands you would like to allocate per SCSI
--	device when Tagged Command Queueing (TCQ) is enabled on that device.
-+	  Specify the number of commands you would like to allocate per SCSI
-+	  device when Tagged Command Queueing (TCQ) is enabled on that device.
- 
--	This is an upper bound value for the number of tagged transactions
--	to be used for any device.  The aic7xxx driver will automatically
--	vary this number based on device behavior.  For devices with a
--	fixed maximum, the driver will eventually lock to this maximum
--	and display a console message indicating this value.
-+	  This is an upper bound value for the number of tagged transactions
-+	  to be used for any device.  The aic7xxx driver will automatically
-+	  vary this number based on device behavior.  For devices with a
-+	  fixed maximum, the driver will eventually lock to this maximum
-+	  and display a console message indicating this value.
- 
--	Due to resource allocation issues in the Linux SCSI mid-layer, using
--	a high number of commands per device may result in memory allocation
--	failures when many devices are attached to the system.  For this reason,
--	the default is set to 32.  Higher values may result in higher performance
--	on some devices.  The upper bound is 253.  0 disables tagged queueing.
-+	  Due to resource allocation issues in the Linux SCSI mid-layer, using
-+	  a high number of commands per device may result in memory allocation
-+	  failures when many devices are attached to the system.  For this
-+	  reason, the default is set to 32. Higher values may result in higher
-+	  performance on some devices. The upper bound is 253. 0 disables
-+	  tagged queueing.
- 
--	Per device tag depth can be controlled via the kernel command line
--	"tag_info" option.  See Documentation/scsi/aic79xx.rst for details.
-+	  Per device tag depth can be controlled via the kernel command line
-+	  "tag_info" option.  See Documentation/scsi/aic79xx.rst for details.
- 
- config AIC79XX_RESET_DELAY_MS
- 	int "Initial bus reset delay in milli-seconds"
- 	depends on SCSI_AIC79XX
- 	default "5000"
- 	help
--	The number of milliseconds to delay after an initial bus reset.
--	The bus settle delay following all error recovery actions is
--	dictated by the SCSI layer and is not affected by this value.
-+	  The number of milliseconds to delay after an initial bus reset.
-+	  The bus settle delay following all error recovery actions is
-+	  dictated by the SCSI layer and is not affected by this value.
- 
--	Default: 5000 (5 seconds)
-+	  Default: 5000 (5 seconds)
- 
- config AIC79XX_BUILD_FIRMWARE
- 	bool "Build Adapter Firmware with Kernel Build"
- 	depends on SCSI_AIC79XX && !PREVENT_FIRMWARE_BUILD
- 	help
--	This option should only be enabled if you are modifying the firmware
--	source to the aic79xx driver and wish to have the generated firmware
--	include files updated during a normal kernel build.  The assembler
--	for the firmware requires lex and yacc or their equivalents, as well
--	as the db v1 library.  You may have to install additional packages
--	or modify the assembler Makefile or the files it includes if your
--	build environment is different than that of the author.
-+	  This option should only be enabled if you are modifying the firmware
-+	  source to the aic79xx driver and wish to have the generated firmware
-+	  include files updated during a normal kernel build.  The assembler
-+	  for the firmware requires lex and yacc or their equivalents, as well
-+	  as the db v1 library.  You may have to install additional packages
-+	  or modify the assembler Makefile or the files it includes if your
-+	  build environment is different than that of the author.
- 
- config AIC79XX_DEBUG_ENABLE
- 	bool "Compile in Debugging Code"
- 	depends on SCSI_AIC79XX
- 	default y
- 	help
--	Compile in aic79xx debugging code that can be useful in diagnosing
--	driver errors.
-+	  Compile in aic79xx debugging code that can be useful in diagnosing
-+	  driver errors.
- 
- config AIC79XX_DEBUG_MASK
- 	int "Debug code enable mask (16383 for all debugging)"
- 	depends on SCSI_AIC79XX
- 	default "0"
- 	help
--	Bit mask of debug options that is only valid if the
--	CONFIG_AIC79XX_DEBUG_ENABLE option is enabled.  The bits in this mask
--	are defined in the drivers/scsi/aic7xxx/aic79xx.h - search for the
--	variable ahd_debug in that file to find them.
-+	  Bit mask of debug options that is only valid if the
-+	  CONFIG_AIC79XX_DEBUG_ENABLE option is enabled.  The bits in this mask
-+	  are defined in the drivers/scsi/aic7xxx/aic79xx.h - search for the
-+	  variable ahd_debug in that file to find them.
- 
- config AIC79XX_REG_PRETTY_PRINT
- 	bool "Decode registers during diagnostics"
- 	depends on SCSI_AIC79XX
- 	default y
- 	help
--	Compile in register value tables for the output of expanded register
--	contents in diagnostics.  This make it much easier to understand debug
--	output without having to refer to a data book and/or the aic7xxx.reg
--	file.
-+	  Compile in register value tables for the output of expanded register
-+	  contents in diagnostics.  This make it much easier to understand debug
-+	  output without having to refer to a data book and/or the aic7xxx.reg
-+	  file.
-diff --git a/drivers/scsi/aic7xxx/Kconfig.aic7xxx b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-index f0425145a5f4..8f87f2d8ba9f 100644
---- a/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-+++ b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-@@ -8,84 +8,85 @@ config SCSI_AIC7XXX
- 	depends on (PCI || EISA) && HAS_IOPORT && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
--	This driver supports all of Adaptec's Fast through Ultra 160 PCI
--	based SCSI controllers as well as the aic7770 based EISA and VLB
--	SCSI controllers (the 274x and 284x series).  For AAA and ARO based
--	configurations, only SCSI functionality is provided.
-+	  This driver supports all of Adaptec's Fast through Ultra 160 PCI
-+	  based SCSI controllers as well as the aic7770 based EISA and VLB
-+	  SCSI controllers (the 274x and 284x series).  For AAA and ARO based
-+	  configurations, only SCSI functionality is provided.
- 
--	To compile this driver as a module, choose M here: the
--	module will be called aic7xxx.
-+	  To compile this driver as a module, choose M here: the
-+	  module will be called aic7xxx.
- 
- config AIC7XXX_CMDS_PER_DEVICE
- 	int "Maximum number of TCQ commands per device"
- 	depends on SCSI_AIC7XXX
- 	default "32"
- 	help
--	Specify the number of commands you would like to allocate per SCSI
--	device when Tagged Command Queueing (TCQ) is enabled on that device.
-+	  Specify the number of commands you would like to allocate per SCSI
-+	  device when Tagged Command Queueing (TCQ) is enabled on that device.
- 
--	This is an upper bound value for the number of tagged transactions
--	to be used for any device.  The aic7xxx driver will automatically
--	vary this number based on device behavior.  For devices with a
--	fixed maximum, the driver will eventually lock to this maximum
--	and display a console message indicating this value.
-+	  This is an upper bound value for the number of tagged transactions
-+	  to be used for any device.  The aic7xxx driver will automatically
-+	  vary this number based on device behavior.  For devices with a
-+	  fixed maximum, the driver will eventually lock to this maximum
-+	  and display a console message indicating this value.
- 
--	Due to resource allocation issues in the Linux SCSI mid-layer, using
--	a high number of commands per device may result in memory allocation
--	failures when many devices are attached to the system.  For this reason,
--	the default is set to 32.  Higher values may result in higher performance
--	on some devices.  The upper bound is 253.  0 disables tagged queueing.
-+	  Due to resource allocation issues in the Linux SCSI mid-layer, using
-+	  a high number of commands per device may result in memory allocation
-+	  failures when many devices are attached to the system.  For this
-+	  reason, the default is set to 32.  Higher values may result in higher
-+	  performance on some devices. The upper bound is 253. 0 disables tagged
-+	  queueing.
- 
--	Per device tag depth can be controlled via the kernel command line
--	"tag_info" option.  See Documentation/scsi/aic7xxx.rst for details.
-+	  Per device tag depth can be controlled via the kernel command line
-+	  "tag_info" option.  See Documentation/scsi/aic7xxx.rst for details.
- 
- config AIC7XXX_RESET_DELAY_MS
- 	int "Initial bus reset delay in milli-seconds"
- 	depends on SCSI_AIC7XXX
- 	default "5000"
- 	help
--	The number of milliseconds to delay after an initial bus reset.
--	The bus settle delay following all error recovery actions is
--	dictated by the SCSI layer and is not affected by this value.
-+	  The number of milliseconds to delay after an initial bus reset.
-+	  The bus settle delay following all error recovery actions is
-+	  dictated by the SCSI layer and is not affected by this value.
- 
--	Default: 5000 (5 seconds)
-+	  Default: 5000 (5 seconds)
- 
- config AIC7XXX_BUILD_FIRMWARE
- 	bool "Build Adapter Firmware with Kernel Build"
- 	depends on SCSI_AIC7XXX && !PREVENT_FIRMWARE_BUILD
- 	help
--	This option should only be enabled if you are modifying the firmware
--	source to the aic7xxx driver and wish to have the generated firmware
--	include files updated during a normal kernel build.  The assembler
--	for the firmware requires lex and yacc or their equivalents, as well
--	as the db v1 library.  You may have to install additional packages
--	or modify the assembler Makefile or the files it includes if your
--	build environment is different than that of the author.
-+	  This option should only be enabled if you are modifying the firmware
-+	  source to the aic7xxx driver and wish to have the generated firmware
-+	  include files updated during a normal kernel build.  The assembler
-+	  for the firmware requires lex and yacc or their equivalents, as well
-+	  as the db v1 library.  You may have to install additional packages
-+	  or modify the assembler Makefile or the files it includes if your
-+	  build environment is different than that of the author.
- 
- config AIC7XXX_DEBUG_ENABLE
- 	bool "Compile in Debugging Code"
- 	depends on SCSI_AIC7XXX
- 	default y
- 	help
--	Compile in aic7xxx debugging code that can be useful in diagnosing
--	driver errors.
-+	  Compile in aic7xxx debugging code that can be useful in diagnosing
-+	  driver errors.
- 
- config AIC7XXX_DEBUG_MASK
--        int "Debug code enable mask (2047 for all debugging)"
--        depends on SCSI_AIC7XXX
--        default "0"
--        help
--	Bit mask of debug options that is only valid if the
--	CONFIG_AIC7XXX_DEBUG_ENABLE option is enabled.  The bits in this mask
--	are defined in the drivers/scsi/aic7xxx/aic7xxx.h - search for the
--	variable ahc_debug in that file to find them.
-+	int "Debug code enable mask (2047 for all debugging)"
-+	depends on SCSI_AIC7XXX
-+	default "0"
-+	help
-+	  Bit mask of debug options that is only valid if the
-+	  CONFIG_AIC7XXX_DEBUG_ENABLE option is enabled.  The bits in this mask
-+	  are defined in the drivers/scsi/aic7xxx/aic7xxx.h - search for the
-+	  variable ahc_debug in that file to find them.
- 
- config AIC7XXX_REG_PRETTY_PRINT
--        bool "Decode registers during diagnostics"
--        depends on SCSI_AIC7XXX
-+	bool "Decode registers during diagnostics"
-+	depends on SCSI_AIC7XXX
- 	default y
--        help
--	Compile in register value tables for the output of expanded register
--	contents in diagnostics.  This make it much easier to understand debug
--	output without having to refer to a data book and/or the aic7xxx.reg
--	file.
-+	help
-+	  Compile in register value tables for the output of expanded register
-+	  contents in diagnostics.  This make it much easier to understand debug
-+	  output without having to refer to a data book and/or the aic7xxx.reg
-+	  file.
--- 
-2.44.0
-
+=C2=A0 - Prasad
