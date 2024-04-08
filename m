@@ -1,191 +1,173 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 661271E489;
-	Mon,  8 Apr 2024 17:50:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712598658; cv=none; b=PuKsa9Ynp7KC0trXFVsf5BX0cCd8xm1A0ZMJaNN64CI6h6ne2lTZWzoTVR/BghlULNgempesDMHplZrMnWwYQFlD4HgbPR/R2GnsoUvHXSpsN39N7iZjSK//iOAUbVE5ywf40zvziWnkBm78QgJGgp2LMTaNz86ZckFqV3Lk/74=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712598658; c=relaxed/simple;
-	bh=hMSsV4hhO/Vfk3AcQkgzg1GidVri54SqYdrlQPYIQ4A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s3qdd0qeuSeOS0h4COPtuL5wulu9uPMUl1JHqIBGXQ5UL1mfEs/kOKaQEgWzaJLzr6CqMyS4kMPoExkfvGkzUHN8Yz9jpGKER7LJoOD3KzyefwQOn1I5rtk42dQ0/YVdXojJoXdbJHs4mexrOa8+rK/bRI6b80Ykh7DqHfM5xGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=P24GjNhM; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF510F51B;
+	Mon,  8 Apr 2024 19:12:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712603550; cv=fail; b=UHBdkN8sWhHQMn04zf7ERb2fyGGyG4LWuymkcq+TCMQZqzHl/9vFyiKQJ/DaRMQxZeWC1e9wKp2HVQM0eWpwEEeDFikpy+XcRIT1cvXGyU543R3U9ld03VFMKkMMM9SQJbNgU1PwIKfKVRZJAPhKvyK0xFxkSVm9SHKuoh1aZRQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712603550; c=relaxed/simple;
+	bh=dQ4tKGD4/9JEO2ljrb5PBPH7Sv0ZRPgFu3vp0TJTEa0=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=FEhmzGWRSZ8kP7VZoKTCKYA9K8cjAXeGUOGq1z5iEZwsmymUq6uMP1KE4EyqaXt5WTM2y8fELxNPcpXZSFZIZejWuXyKO4kyR3Kw4nIwbxaufMdA/0RaTeYFaM7pvza+MpRY1JeKF9ac0wJGQM/mJRFaFKsZZd8drjp7if1eqac=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Imp4gCCb; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=kWrSlaHu; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="P24GjNhM"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=FDDqbeNGhoXcnFk6nkXqY1HUDUdyMKYatROs/wiu+Jo=; b=P24GjNhMaw6vUYUb8COhMvk2An
-	Lxregwp4jXT0W+/9Vywm6B1WQsruBZHLSHfl8YnBTo3I3t2EHYSvS0VNaEKyU5DDytq59hbEY+afo
-	yBKy0S0uVq1MMxHzlD0160IwP4xxT1MYLGLEdvST7S+s7udgWA9n11N0txup4Aba4NfgMP6fDacZc
-	9a0gmU3xMWbWvw0UdSoSnJqr2sSv3sbKKDa7yJt+dNNw27SZqf3YpRw8RjE2K+ayOC96fQyWCZgVJ
-	iVWL56inha+/+3m7wmfgXqN6JOuz0kzM6u+OaC5I9o8JItgHwHXhpPRSwUyuKMcWM191mR4muHEUl
-	cZk8xt4A==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rtt8p-0000000GObq-3IQ1;
-	Mon, 08 Apr 2024 17:50:47 +0000
-Date: Mon, 8 Apr 2024 10:50:47 -0700
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Matthew Wilcox <willy@infradead.org>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier.gonz@samsung.com>,
-	axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
-	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-	io-uring@vger.kernel.org, nilay@linux.ibm.com,
-	ritesh.list@gmail.com
-Subject: Re: [PATCH v6 00/10] block atomic writes
-Message-ID: <ZhQud1NbO4aMt0MH@bombadil.infradead.org>
-References: <20240326133813.3224593-1-john.g.garry@oracle.com>
- <ZgOXb_oZjsUU12YL@casper.infradead.org>
- <c4c0dad5-41a4-44b4-8f40-2a250571180b@oracle.com>
- <Zg7Z4aJtn3SxY5w1@casper.infradead.org>
- <f3c1d321-0dfc-466f-9f6a-fe2f0513d944@oracle.com>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Imp4gCCb";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="kWrSlaHu"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 438ENprN012239;
+	Mon, 8 Apr 2024 19:12:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : in-reply-to : message-id : references : date : content-type :
+ mime-version; s=corp-2023-11-20;
+ bh=XQ8rJQFEiWkTQmRdZdq7iUmyDN+8A2IbDTVj7g4VD3U=;
+ b=Imp4gCCbFUTpKujngpPVO7fwnwK7oacbu9yzRrdvk3J/dmdEOxOH+GEMYY4pUx5WCvFl
+ WRbD5KVRWmFjbkeRPboRbTBdpFtGyCv8hhk2swqmu8odLVrs3yzYPadghlAGTbpaf/Dn
+ KaQFDKgU2x02P1YWyzbJCMdfRAy4sBxhPCbi0LOVVPRhDTqHFGfAEF+EuhiE76KG1AmE
+ bGWqHz6aczqJxL5ruukfJZwdTUnmJI9Wb2UcDJ4SLtY8S+8uMog4i0wJVkREzIWU0IJl
+ vb0K2pj9EQbC8NHZ8kqRXc3nPoz9rhZYFSrbsiNev1yAlret+TajYpVQXsXAks/f2A8T 5g== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xax0ukg5c-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 08 Apr 2024 19:12:22 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 438Ifr8I007875;
+	Mon, 8 Apr 2024 19:12:21 GMT
+Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam04lp2040.outbound.protection.outlook.com [104.47.73.40])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3xavu5w5s9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 08 Apr 2024 19:12:21 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=gu4VwYdZQRT5m1BG3ej/TprO4KU514Vq8iTfkQ1XXcC0DNYbOwEVf0LyLt5WyWvvIbzdZnWpnju7/IBf6TD5CEEYEi78WxhFl9OfFU2WxhIEzuZ3qQ9N2JTSiyK77bTOJzMs80M+iGVuVKoLOY+rA8z4Gx6tDa2RigI1iD96GpBbFC/QV/06Chc9NlHiThY/RZYUysNTeeXSHWQWsIZGc7N+4+w80gRLMkfOQXovv3rzg0cEEg19zhJWr/5BTuFI9f47jdmqAyJrfwxh6GvKHpJ/5vs5jcGk5/3j07+2rotQQB8VPd6XpS1PmV+nXeYfKWLAlpkpxT5OjEFFbhevPg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=XQ8rJQFEiWkTQmRdZdq7iUmyDN+8A2IbDTVj7g4VD3U=;
+ b=dvpV8bFhyWphCQKyi1aUybt7+C8T+IOY7orHbJyI9ObbT2JlujLi5BEs7Aqd/ZDFDpQvcNYh+s2/boUYdNJijNVJQY3D0JZvJ56p6a6aCiZzsA8XZk0y3D8tR6iUax+D02G8TJC0/edbQrszyupJegPKh0EZw954tl7VJibsJRPDDZV3wSUIBoij/ckOv0YKzCdzJavnVWQC7zymKDkuhMe/Tk14NgToI93p7E6jqe4LuEKmMwVsFbJC5cTDZzciRO+hmbYBJObtH6bF0UPmkVtJ20YnvMgZ9mUJpe6TgvBmXQVXgDpe+PVwxgCkrs9MVb8LK+ZwYi+SHykQl8CR+Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XQ8rJQFEiWkTQmRdZdq7iUmyDN+8A2IbDTVj7g4VD3U=;
+ b=kWrSlaHubYXI9foqdJI6wYjRPI9EAz/+qSec4hdt2jqBVOEZqi04UVIIJDjEpLGrmmQE717XyfpzpZ/iElqr/1yqu3VjVDNLW5zDEGsA1oQ/VdZl2D3ImE5s49Pjnk78T5Zb9oNdbjzb1HDTQnyEaLxifhvUpboZ5mip0dnEDWA=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by DM4PR10MB7475.namprd10.prod.outlook.com (2603:10b6:8:187::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Mon, 8 Apr
+ 2024 19:12:18 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::7856:8db7:c1f6:fc59]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::7856:8db7:c1f6:fc59%4]) with mapi id 15.20.7409.042; Mon, 8 Apr 2024
+ 19:12:18 +0000
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bjorn Andersson
+ <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        "James
+ E.J. Bottomley" <jejb@linux.ibm.com>,
+        linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Amit Pundir
+ <amit.pundir@linaro.org>
+Subject: Re: [PATCH v2 0/2] scsi: ufs: qcom: Add missing interconnect
+ bandwidth values for Gear 5
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <20240406035642.GB2678@thinkpad> (Manivannan Sadhasivam's message
+	of "Sat, 6 Apr 2024 09:26:42 +0530")
+Organization: Oracle Corporation
+Message-ID: <yq1a5m3pt33.fsf@ca-mkp.ca.oracle.com>
+References: <20240403-ufs-icc-fix-v2-0-958412a5eb45@linaro.org>
+	<yq1o7anqo62.fsf@ca-mkp.ca.oracle.com>
+	<20240406035642.GB2678@thinkpad>
+Date: Mon, 08 Apr 2024 15:12:16 -0400
+Content-Type: text/plain
+X-ClientProxiedBy: MN2PR16CA0011.namprd16.prod.outlook.com
+ (2603:10b6:208:134::24) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f3c1d321-0dfc-466f-9f6a-fe2f0513d944@oracle.com>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|DM4PR10MB7475:EE_
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 
+	9KqxIjqhJ9w3xyxnGsO+HW/bTPymyzwtuGdFYKtj0WdUc5SDQymI72zwPnm2PynAXhrLcWXomX+TNaHX170iAynJeOTGIttWCULBqSmIpmS7X6Kruqt5lUYMBcmTLzow4UutJK56DOksO6c68LAvpJZiDXMF2QvEOARyJJ+mHBV2uR14nmkypxfjGepuJlpCe7chFiYhmOdD1Gwy4sefg8sKmpf8L4A3hY/Ts320Q7j/DDSEsm7QcwUJFSqQEp0labJ4sRN10py/YCKVvL+6D6IxdidHZHbEFZ15koyiRBz4zgtqN6t3YQSJTLcYsHS6f6mBdgTVARkv60np+GsbxxwgVZif8R80O00Hjzm6xSVF5XfPs+lPBiW0JzfxWzQKZ6rYfPZYquDwF3xCWuHmxMLFhH+4SxZBlfN8uCWj40d4dleJE384AxMm4quhy9G+I1/pM5pO8q8M5inMJSpADlZ5gsCsrl33mdXiQIjigGTB4irHeW5IB71/mJsO4Qqi+mqCFZssodl237vKrIVTweDiabNgoGExiSevuyUJW6hEdqHnx1/z/DttEiDDTKK1ZkhPZOC1uXGx48ycY6ZWF/s73HJUarNOCKCvdXOv7th9MoEnjNpSbtRgmFGZJnn1tA7YxTOn7y5BtXYmzLKDN6vxFPf6gCTr5sBZV3reAy4=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(1800799015)(376005);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?us-ascii?Q?xdByDDVnidah2oEbVjGmQ1BdvfQZLvk1sfNlKU6wd9fIxqWFX92ey2fwyOd3?=
+ =?us-ascii?Q?24ClF/DPzTeXQqadjzFjsxk7q9hEMjKjfjXGa6xGr/4zP8p+4lv5yHX3q+tz?=
+ =?us-ascii?Q?3voF9CEwLhlqXJYpq2nunBi4QTeoTJoK+ChZhy/rqI2gvHrLXdVVCuO4kygw?=
+ =?us-ascii?Q?GPf2O6HNoTOVr0guyUi1vwUjlz804HVC2ogOZwQqD36bg1YBL01yFByy/85Z?=
+ =?us-ascii?Q?R/dT9Jq3tg/q7yr9Fnp2GGpVOCo9btus+D0jsuVrmxa+5wjuCW55CBEEnh4o?=
+ =?us-ascii?Q?bsTJ10oEjwQ4izOtuNMhOPqHHyQPXeiLChfQCuulhdb1t32ExL56llXMHD4G?=
+ =?us-ascii?Q?3dwrD9Zx66vlpjijLPKGB4xUiWVPA8SLRQQzx//4RcHukEeaJEEzJU6Yer2t?=
+ =?us-ascii?Q?RzAS5W1FY54XSyuWUrZfhRH+BWhZrA5Wftd81mjt+5cLClsS5vRCc+2GPsWB?=
+ =?us-ascii?Q?uINf2xlNBRLeM87LDeTEWlSt9WRBsjwpktPzTrc3Ck2GdFWEtWrJw8GMFzhB?=
+ =?us-ascii?Q?/adE6j2Gg8qDpxceUYH1HOV7HxoUx8a0Jnl7gDGisLMCk5AANGAKoXk6RSXG?=
+ =?us-ascii?Q?gtx+eHe7PqIAv/Np2i0sW4RbWxxX/EIsf06tp1ok6Ts71n6/c56GBuIV9Pl5?=
+ =?us-ascii?Q?9jMVDYN8f+V31KNL+wOTNR8qYHR4aG04INNGVD6WiGkSN7FeYSyxVWsmdC2j?=
+ =?us-ascii?Q?zA8mNBwKtRwPxAzwy3UJHK/K61J/YP6UPsTb7AK1G0jAQ1NhuE8mJaLXjz71?=
+ =?us-ascii?Q?rJoQ6Ub5MPvFSpso1dkNYswyOk4N13wHbC6PR7wLqmsqFtWPsdZ5YboGOBTI?=
+ =?us-ascii?Q?MYPa8GM+YA7nYq0cmQ16qCuu4lwZK+ba9ZCxal4Go4tVXyYdXzE+Vh+q4I/D?=
+ =?us-ascii?Q?M4D80ZoPqJ1TZI8dBDNrwJGvvsxcG6Gi37UPiaZlcmlR5kdCSMnAIqpfqgEO?=
+ =?us-ascii?Q?1PXfSo/sUEHH7uXIY1eiTf6hYDklJ0Rv9mvg2U4Bhjr0dTJB+rMV0MB0e+q4?=
+ =?us-ascii?Q?MCayVUecwWOfGXJluUdFGDQbjrUFlCE8YAfDDJTEG5uaee/Oj9ij03rYAL29?=
+ =?us-ascii?Q?fxAEuhjIAoyqE7ytHGcPOK95OXO/b9JN4hRygnbnmjfLzjZJaFs1EyZB2Ls7?=
+ =?us-ascii?Q?NDPCpYzpm8UTYahDWlw7tBtrN9lcXD09M2CNeZ5NCVlHyWqp2YoA14TalC8P?=
+ =?us-ascii?Q?tT6MRDbQfldSw3zfv/K6ZGNdfHENE6HmiWK+xXLxQI6RaNM7irVwUxhODftU?=
+ =?us-ascii?Q?w9EQ4H/QDwYvnyknvMTQJ+DP8tsFdLP+WTt6vnl9KQb+0JzTrDj4JE4dKmHo?=
+ =?us-ascii?Q?6tlS4oi3nNFrGT2YaC9bKdr6HqKvLhkBBkDixN1/PS31K/3+3sIuUj6iajEb?=
+ =?us-ascii?Q?+xzc5LkkQw/0YQuid/d7IyJIInzwnnf4c0UjMOfmMElXthBmfHBSZ/qoTfcZ?=
+ =?us-ascii?Q?tTg2HVyPPemuvIUbneiM+iNuq8zpU8hFh9uaILaR3imfLbc5YUbPtO2I8mwZ?=
+ =?us-ascii?Q?44U+Bb3IGZOjE37GbzdVvr2P4nzX3ZVl2LTR5bz5lA4Pq52XDR6qkGP9XONw?=
+ =?us-ascii?Q?B0Rj0MH1YPb4EiJlIfgxvG2nsrYJvci3lzdDHPcWLr/VA3cJzgX7JP4gOmlx?=
+ =?us-ascii?Q?/Q=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	0nAGGxbYlMV3vtM0s24/131pf63f6CoPA1qbVwH/mSMQwN52yihzKEE7pQSF+CcR+0baFXKNE8te9VV9myjpDpqxTHLdsnVCMQskRowfGAl36/NaerBvLxn1bu9jOqkkBqoGtWN9Vgo9VGrOHj6+MCykthkTZ0I47ne5Qf0UHdyLC6WWT5tJKl6C/3xt8dKMyM7RSHXIGpPCUqbcorFuQYOBjUXl01/M9XDm/Vql0mKWHt3zBO6j+XLJqHOjiwOONxPcZfg1xbQVvmRAqoE05GU1O6fsYyMDHIS7HaWseUkUvI6ir/Gs9mJ2jLe5+EinTD9cVSlsbMXdTzU/QzhJ/foa2JeaO5o2Sazr4/QkIE8RS5TmDsLAEs+9TijUE4P3JdI4ZfNJ7ZhWxQdfR0KF2+/1VFZJBygC1Lby6USc6U+Fyse6TfC3z5Oa/BbsevL4VCInQU2bPV1hoH/xycVbWP8mFnjWtcHmrPDgavha9Y20kvxUZ89AxeEhlmysT3T/CsJ7W+DAgPBL78F6ZEC55b4EYZSmdgSSv3k3sroGVsSvb+kQNGE+i/jRhcw5YVRQkb0S6OBtBhQtIjxqZ78So0f2ZFQ5/w9y94WypdkJJdA=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8fa263de-2ab2-4177-caee-08dc57ffcef4
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2024 19:12:18.1354
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: v/fFcauF8dEHq2EGqbPQRd3CxKLNImSneR4utPk2ptK98d2SqUQ2Av+f2lewt0zM1seCzMfKxJP3z9jAqezn59owlszueWy0cBEri7y6sFg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB7475
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-08_16,2024-04-05_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
+ mlxscore=0 adultscore=0 phishscore=0 bulkscore=0 spamscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2404010000 definitions=main-2404080148
+X-Proofpoint-GUID: dwET0qQXXLxOrvvrGGtAoO5M139auOVL
+X-Proofpoint-ORIG-GUID: dwET0qQXXLxOrvvrGGtAoO5M139auOVL
 
-On Fri, Apr 05, 2024 at 11:06:00AM +0100, John Garry wrote:
-> On 04/04/2024 17:48, Matthew Wilcox wrote:
-> > > > The thing is that there's no requirement for an interface as complex as
-> > > > the one you're proposing here.  I've talked to a few database people
-> > > > and all they want is to increase the untorn write boundary from "one
-> > > > disc block" to one database block, typically 8kB or 16kB.
-> > > > 
-> > > > So they would be quite happy with a much simpler interface where they
-> > > > set the inode block size at inode creation time,
-> > > We want to support untorn writes for bdev file operations - how can we set
-> > > the inode block size there? Currently it is based on logical block size.
-> > ioctl(BLKBSZSET), I guess?  That currently limits to PAGE_SIZE, but I
-> > think we can remove that limitation with the bs>PS patches.
 
-I can say a bit more on this, as I explored that. Essentially Matthew,
-yes, I got that to work but it requires a set of different patches. We have
-what we tried and then based on feedback from Chinner we have a
-direction on what to try next. The last effort on that front was having the
-iomap aops for bdev be used and lifting the PAGE_SIZE limit up to the
-page cache limits. The crux on that front was that we end requiring
-disabling BUFFER_HEAD and that is pretty limitting, so my old
-implementation had dynamic aops so to let us use the buffer-head aops
-only when using filesystems which require it and use iomap aops
-otherwise. But as Chinner noted we learned through the DAX experience
-that's not a route we want to again try, so the real solution is to
-extend iomap bdev aops code with buffer-head compatibility.
+Manivannan,
 
-> We want a consistent interface for bdev and regular files, so that would
-> need to work for FSes also. FSes(XFS) work based on a homogeneous inode
-> blocksize, which is the SB blocksize.
+> Thanks Martin! But patch 1/2 is actually a fix that needs to be merged
+> for 6.9, since starting from 6.9 we are seeing the crash on some Qcom
+> boards.
+>
+> But patch 2/2 is just an improvement, so it can be part of 6.10.
 
-There are two aspects to this and it is important to differentiate them.
+OK, done!
 
-1) LBA formats used
-2) When a large atomic is supported and you want to use smaller LBA formats
-
-When the LBA format, and so logical block size is say 16k, the LBS
-patches with the above mentioned patches enable IOs to the block device
-to be atomic to say 16k.
-
-But to remain flexible we want to support a world where 512 byte and 4k
-LBA formats are still used, and you *optionally* want to leverage say
-16k atomics. Today's block device topology enables this only with a knob
-to userspace to allow userspace to override the sector size for the
-filesystem. In practice today if you want to use 4k IOs you just format
-the drive to use 4k LBA format. However, an alternative at laest for
-NVMe today is to support say 16k atomic with an 4k or 512 LBA format.
-This essentially *lifts* the physical block size to 16k while keeping
-the logical block size at the LBA format, so 4k or 512 bytes. What you
-*could* do with this, from the userspace side of things is at mkfs you
-can *opt* in to use a larger sector size up to the physical block size.
-When you do this the block device still has a logical block size of the
-LBA format, but all IOs the filesystem would use use the larger sector
-size you opted in for.
-
-I suspect this is a use case where perhaps the max folio order could be
-set for the bdev in the future, the logical block size the min order,
-and max order the large atomic.
-
-> Furthermore, we would seem to be mixing different concepts here. Currently
-> in Linux we say that a logical block size write is atomic. In the block
-> layer, we split BIOs on LBS boundaries. iomap creates BIOs based on LBS
-> boundaries. But writing a FS block is not always guaranteed to be atomic, as
-> far as I'm concerned.
-
-True. To be clear above paragraph refers to LBS as logical block size.
-
-However when a filesystem sets the min order, and it should be respected.
-I agree that when you don't set the sector size to 16k you are not forcing the
-filesystem to use 16k IOs, the metadata can still be 4k. But when you
-use a 16k sector size, the 16k IOs should be respected by the
-filesystem.
-
-Do we break BIOs to below a min order if the sector size is also set to
-16k?  I haven't seen that and its unclear when or how that could happen.
-
-At least for NVMe we don't need to yell to a device to inform it we want
-a 16k IO issued to it to be atomic, if we read that it has the
-capability for it, it just does it. The IO verificaiton can be done with
-blkalgn [0].
-
-Does SCSI *require* an 16k atomic prep work, or can it be done implicitly?
-Does it need WRITE_ATOMIC_16?
-
-[0] https://github.com/dagmcr/bcc/tree/blkalgn
-
-> So just increasing the inode block size / FS block size does not
-> really change anything, in itself.
-
-If we're breaking up IOs when a min order is set for an inode, that
-would need to be looked into, but we're not seeing that.
-
-> > Do untorn writes actually exist in SCSI?  I was under the impression
-> > nobody had actually implemented them in SCSI hardware.
-> 
-> I know that some SCSI targets actually atomically write data in chunks >
-> LBS. Obviously atomic vs non-atomic performance is a moot point there, as
-> data is implicitly always atomically written.
-> 
-> We actually have an mysql/innodb port of this API working on such a SCSI
-> target.
-
-I suspect IO verification with the above tool should prove to show the
-same if you use a filesystem with a larger sector size set too, and you
-just would not have to do any changes to userspace other than the
-filesystem creation with say mkfs.xfs params of -b size=16k -s size=16k
-
-> However I am not sure about atomic write support for other SCSI targets.
-
-Good to know!
-
-> > > We saw untorn writes as not being a property of the file or even the inode
-> > > itself, but rather an attribute of the specific IO being issued from the
-> > > userspace application.
-> > The problem is that keeping track of that is expensive for buffered
-> > writes.  It's a model that only works for direct IO.  Arguably we
-> > could make it work for O_SYNC buffered IO, but that'll require some
-> > surgery.
-> 
-> To me, O_ATOMIC would be required for buffered atomic writes IO, as we want
-> a fixed-sized IO, so that would mean no mixing of atomic and non-atomic IO.
-
-Would using the same min and max order for the inode work instead?
-
-  Luis
+-- 
+Martin K. Petersen	Oracle Linux Engineering
