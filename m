@@ -1,182 +1,101 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f47.google.com (mail-oa1-f47.google.com [209.85.160.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9339238F96
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Apr 2024 08:30:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34723524D1
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Apr 2024 10:05:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712565031; cv=none; b=IWbj/4J+5r0rElgS3RtT7ojOqSb0hYxjdUU0tOcmRQ7FVpjAnM6meAa8xgdtxVZWbcM6Mebdo8jNQIN6UXv9SZcFTB5WfHt/C6KtlYoLjby9oZsb4OQ49wFxPJpyxyMvGiPrIW1an6G0+qutTDX88mvH1cTfpv0II1Nm+UflWcI=
+	t=1712570736; cv=none; b=uBZyq2/I5QA1E6K+Hh6cBlQPZn0sPuEWpq+AX8fI812LozLtvMYEPPUNepqvsczq1fFoCdXiAjo2RBE5pnPV4gLOaBnpCDHSRp/9WDdTD31TupIrHGtqSu4rqlEDyr5J7jFTEEB6GIgXObCvEXOjTmr8FhP8B4RszMArRX/rJyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712565031; c=relaxed/simple;
-	bh=SjoKRikooQ4rEt9uMbPK7q5uiAWzzXZcdF0Tuaxrr7U=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=PyxMGvajk5+oINX7a8RwfXhXw+sogaoT7ozgCAb20NE9/cC1tOdJ2Y6V4V8/6S6gIf8FK0jH/+qTx1bfegNz+lAK2WdBbUzMy8imQ9B+Ls8fDdW9UVwc+1XXPMWsKVJhIlamf27ZOIS20qJYdNZUoExy99TX1ibyiMOrOAYLcVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Z7kJ1jj9; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1712570736; c=relaxed/simple;
+	bh=OsJTelcc7tlBV2QwkwR67SVR5ZBOd+QZDuhUnZw4FFg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t5pTqUXBVY1vzjf6s23PgC+ILchj+3xCjedn/PfpqOWhC2kl42L80rIZ7Vqf4gxSurwEd+4DF3jt3r8lzTVi+fX/1K40sUsDWWdKFrJw7xNx0kZ+SPKanOF6Nd8ba0HAaQE+sTbDVk/Lm1bDB8+wpFabJkqBTt/liQJe4mS7dEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com; spf=none smtp.mailfrom=smartx.com; dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b=Ba7RVx2n; arc=none smtp.client-ip=209.85.160.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=smartx.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Z7kJ1jj9"
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20240408083021epoutp011fb6ab2f5baa36b3ec5bbf6d7b29f5fe~EQNBQCbQ40579905799epoutp01W
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Apr 2024 08:30:21 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20240408083021epoutp011fb6ab2f5baa36b3ec5bbf6d7b29f5fe~EQNBQCbQ40579905799epoutp01W
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1712565021;
-	bh=9xA2wuGcrIdnD6QeGCy6pEWH3ESJOZu31jlHG5iQwik=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=Z7kJ1jj9MYf5CiYovRq/Ur5n5kClTRjQmZkb0MozYiehYWGMcoqzWCYNe9w/rTZbV
-	 zP75BK8Q2LzWKLbw5EswMttKCEPI/m3PLqpLHIYBv/Gti4IpkaTaI1acON2gdwjolf
-	 wXyH40CIJPezyvYNXXsp2ff8wbNrUL3L5zN/ZbO8=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-	20240408083021epcas5p491258648313d8da9b58c4a4934efc60a~EQNAsQgpS0206302063epcas5p4y;
-	Mon,  8 Apr 2024 08:30:21 +0000 (GMT)
-Received: from epsmgec5p1-new.samsung.com (unknown [182.195.38.178]) by
-	epsnrtp1.localdomain (Postfix) with ESMTP id 4VCj2g6XtLz4x9Pr; Mon,  8 Apr
-	2024 08:30:19 +0000 (GMT)
-Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
-	epsmgec5p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	5E.EC.19431.B1BA3166; Mon,  8 Apr 2024 17:30:19 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-	20240408083019epcas5p429571d61b25b95490b913fcabc7f59d5~EQM-CUC7b1593915939epcas5p4J;
-	Mon,  8 Apr 2024 08:30:19 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240408083019epsmtrp1fa891c230381087b44984bc443f55da4~EQM-AK4XT0109201092epsmtrp1a;
-	Mon,  8 Apr 2024 08:30:19 +0000 (GMT)
-X-AuditID: b6c32a50-f57ff70000004be7-f2-6613ab1bfa7a
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	20.74.07541.B1BA3166; Mon,  8 Apr 2024 17:30:19 +0900 (KST)
-Received: from INBRO000447 (unknown [107.122.12.5]) by epsmtip2.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20240408083014epsmtip26c7beec99df2675222e2fb04202b7b6e~EQM60mQBJ1598715987epsmtip29;
-	Mon,  8 Apr 2024 08:30:14 +0000 (GMT)
-From: "Alim Akhtar" <alim.akhtar@samsung.com>
-To: "'Peter Griffin'" <peter.griffin@linaro.org>, <mturquette@baylibre.com>,
-	<sboyd@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
-	<conor+dt@kernel.org>, <vkoul@kernel.org>, <kishon@kernel.org>,
-	<avri.altman@wdc.com>, <bvanassche@acm.org>, <s.nawrocki@samsung.com>,
-	<cw00.choi@samsung.com>, <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<chanho61.park@samsung.com>, <ebiggers@kernel.org>
-Cc: <linux-scsi@vger.kernel.org>, <linux-phy@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-clk@vger.kernel.org>,
-	<linux-samsung-soc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <tudor.ambarus@linaro.org>,
-	<andre.draszik@linaro.org>, <saravanak@google.com>,
-	<willmcvicker@google.com>
-In-Reply-To: <20240404122559.898930-1-peter.griffin@linaro.org>
-Subject: RE: [PATCH 00/17] HSI2, UFS & UFS phy support for Tensor GS101
-Date: Mon, 8 Apr 2024 14:00:13 +0530
-Message-ID: <04d401da898e$fd57ec10$f807c430$@samsung.com>
+	dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b="Ba7RVx2n"
+Received: by mail-oa1-f47.google.com with SMTP id 586e51a60fabf-222a9eae9a7so2228110fac.3
+        for <linux-scsi@vger.kernel.org>; Mon, 08 Apr 2024 03:05:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=smartx-com.20230601.gappssmtp.com; s=20230601; t=1712570734; x=1713175534; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=eBLG7eQZNN9ZhfgeoyOekEyjLAkk752YA5M9Sq+ECMQ=;
+        b=Ba7RVx2nkMlPZYV1qgmwM//g6czFp8lPWZLAJt3JoO+pv7iEgbCGEsHksV9F4/qMBi
+         N3EuTdaWJVh+GFE46PZOK6TFYOInI2t7Q0mJexjgsUn7ycpyejoVHpXjUhhObShY9Lmh
+         9EYPdQ0vp40up4vZnEn3Dri/ExXsZ5tIbwis51XvKHcJumPBfBv7JChsu5FOdPUmigeD
+         ZjdLjBfeJcmFL9s/AJ+syajnnZnNm7PFR52WEpgpVvtMrpzI+v4pJBKf05z32zrWKygD
+         F9z/7M//CiK6irQ4ihrSRRQcbeDG3LwZQz12o2Ylz4XxdZEwqVR7KnpqhEAvI+Rzeyrj
+         pI4w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712570734; x=1713175534;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=eBLG7eQZNN9ZhfgeoyOekEyjLAkk752YA5M9Sq+ECMQ=;
+        b=h0UmibelT5I3lThjof2afrk3oJPCXv2k8MrRt16w7k9NhY6MuLKkgofks/i/D3RA0a
+         1fGKi+01hDEq8muOHkc06cAK0kmpneV/m4fTaQVXjgb8SSALGNifrVILo6MytIgJ40Ou
+         E4dQVWmGxGs0Q9CxSKMK7juXzbQ1i/OuCUCDfzqEB1P9mKdoiGBw7mlPRBgbLnJkdLRV
+         wdQJoiJDLMkJR+zP6h482MXRhzd8CAbEMni+9MlBo8R8FLOuViMYEg7ZHWezx4iqwcQK
+         Q+2x00ESP2Xe2ALDCtjlPX9wk4PHWzGAVPQLytl4OreVbiaxW5KqZv/i415W01R5pHCR
+         kGvA==
+X-Forwarded-Encrypted: i=1; AJvYcCWGMnBk6KVD4vl3tfczl4IL5nLxfwcn0Gqey9SL4ZS4q5DGB/63asUSCS5BBcOmHNqA7yXQy3DGDvp6JTggepNPpzyoyT5PjVzUXg==
+X-Gm-Message-State: AOJu0Yw1/p9x7/gwpfZsagAXvr80LOrrnRnM1te1IQpmWo/cz+JY+hiR
+	J1s65e5zXtrUeWpStJP1sHTRJdY1LmkbXRezm317pyiNy46AKqq51TJybBKaYtY=
+X-Google-Smtp-Source: AGHT+IEx7VTx0K0yOwbxPA8x0d94YSdl3SQSAKztRAl4yW5VnRP8hMQdfy/b/azX8aClfP0obPVdAQ==
+X-Received: by 2002:a05:6870:f70a:b0:22e:7460:d2a8 with SMTP id ej10-20020a056870f70a00b0022e7460d2a8mr9628681oab.42.1712570733497;
+        Mon, 08 Apr 2024 03:05:33 -0700 (PDT)
+Received: from localhost.localdomain ([103.172.41.206])
+        by smtp.googlemail.com with ESMTPSA id fe15-20020a056a002f0f00b006ea8cc9250bsm6144272pfb.44.2024.04.08.03.05.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 08 Apr 2024 03:05:33 -0700 (PDT)
+From: Lei Chen <lei.chen@smartx.com>
+To: Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Lei Chen <lei.chen@smartx.com>,
+	megaraidlinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH RESEND] scsi: megaraid_sas: make module parameter scmd_timeout writable
+Date: Mon,  8 Apr 2024 06:05:03 -0400
+Message-ID: <20240408100505.1732370-1-lei.chen@smartx.com>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQG67MGYnqOHzIYqhKHsGv8jtpiocwJaURTOsYpwP3A=
-Content-Language: en-us
-X-Brightmail-Tracker: H4sIAAAAAAAAA01Ta1BUZRiec9mziwkdFsJvgEncLJEEdpXFbxkuMoCcwgkaHUlnCo/s4TLA
-	7s5e0popTVkkQC6TmeKahIW0psBCuHGTuEjcJAOW60ARRGBAIAOSsMRysPj3vO88z/e8z/vN
-	y8P4l7iOvHiZmlHK6EQBsQUvr9/t6u502y5G2FIggmWTpTicWOom4OW/lzDYef91+F31QxT2
-	zI9z4I2Ghxx4p2oZg/m95Shs1K5icCJ3iICG300cOJsxxIGdFToCZusXcHilowaF6T1GAt5q
-	MqPwUUsILL5ixuFqlZEL6/+6wIFpdSsENJtKcDjX/x78YfAnDOrnVpEDTlRnVxg106vlUnkG
-	DWXQf0pQg6YqgsrOr0Wo0q/PULNj/TiVWaZHqCeGl6kLteloxAvHE3zjGFrKKF0YWbRcGi+L
-	9ROEHY4KihJ7C0XuIgncL3CR0UmMnyD4UIT7wfjEtRUIXN6nEzVrrQhapRJ4+vsq5Ro14xIn
-	V6n9BIxCmqjwUnio6CSVRhbrIWPUPiKhcK94jXgiIc6Q/gRTzNicXikIP4vc25qGWPEA6QXu
-	nruJpiFbeHyyCgGZqfe5bDGHgCXjCMYWCwhoe1zHeS651v4ZbsF8shoBxZmBaQhvDf+JgGd7
-	LG2CdAfGmymERWtP5mKgprh7/SGMHELBgPY8YWFZkQHgk5FMxILtyFCQXV2yboCTO4HpZ/16
-	35qUgKKxPILFtqD56ui6MUZuB/emdBg7kAtYGivgWIawJ32A9qtolrINTDQ2rKcB5C9WoG+y
-	E2H5weDX5BKcxXZgsqmMy2JHMJGVwrW8A0gK5C87su04MHWraEMaAGq7dLiFgpG7QVGFJ2tl
-	Ay4+G0VZpTVITeGz7FfB+enuDSMnkJOevrFBCvReHcCzkR25m3LlbsqVuylA7v9meQiuRxwZ
-	hSoplokWK0TuMubUf78dLU8yIOvn4RZhRG4Xr3jUISgPqUMADxPYWx8W28bwraX0Bx8ySnmU
-	UpPIqOoQ8dq2czDHl6Lla/clU0eJvCRCL29vby/JPm+RYJv1Y+11KZ+MpdVMAsMoGOVzHcqz
-	cjyLRh0xDS+brad29XVUbm8pnBWDmsIHMVXOYb49T6sDM2o+8jff8Ms42le5WPiFwTm09VSw
-	acehhPIY2j0v5wT1bdNMe2SQ8I2db/441aHI0updP56r35WyaMVpGvOdfFEQGtk17vB2zNFy
-	dX/qK9PSEIf9+XitP/qujjjZtpggdLMVHzlZt6dZ13y9a6htZLbHrNFWu3158FJrOBZwRnV6
-	9MHYYLhzc1nweIjIteLzZPu3Gusr+UGtW+8EFmf/Zpy/GxNyXKKz+WM+o2Dv8DtPL+/L6i/l
-	Tz+a95GbGr5PzhtwC45sCUIkyweGjzmsXENfm/Rs7z8WWIafWxaX098sLNYP/SPAVXG0yA1T
-	quh/AXnKHTOnBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrLIsWRmVeSWpSXmKPExsWy7bCSvK70auE0gwv9vBZbXm1msXj58yqb
-	xbQPP5ktLu/Xtliz9xyTxfUvz1kt5h85x2qxds8fZotFN7YxWRxt/c9s8XLWPTaLTY+vsVp8
-	7LnHanF51xw2iwmrvrFYzDi/j8mi+/oONovlx/8xWVw85WqxYcY/Fov/e3awWxx+085q0XXo
-	L5vFv2sbWSw+3Yqz2HnnBLPFqk//GR2kPS5f8fZ4f6OV3WPBplKPTas62TzuXNvD5jFh0QFG
-	j81L6j0+Pr3F4tG3ZRWjx+dNch7tB7qZArijuGxSUnMyy1KL9O0SuDI2dX9mLnjPV/F3mX8D
-	43aeLkZODgkBE4nZZyezdDFycQgJ7GaU6Jn9hxUiIS1xfeMEdghbWGLlv+fsEEXPGCWajpxg
-	A0mwCehK7FjcxgaSEBFYxyzx/d4zJpAEs8ALJomzl+IgOiYwSsyZ3AI2ilPAXqLxUR8jiC0s
-	4C4xYe9GsHUsAioS1y6sAovzClhKrH+6gA3CFpQ4OfMJ0H0cQEP1JNo2MkLMl5fY/nYOM8R1
-	ChI/ny5jBSkREbCSaF2YDFEiLvHy6BH2CYzCs5AMmoUwaBaSQbOQdCxgZFnFKJlaUJybnpts
-	WGCYl1quV5yYW1yal66XnJ+7iRGcQrQ0djDem/9P7xAjEwfjIUYJDmYlEd5gU8E0Id6UxMqq
-	1KL8+KLSnNTiQ4zSHCxK4ryGM2anCAmkJ5akZqemFqQWwWSZODilGpguyf3eHm1yub7kf0Pw
-	Sdv6NZ+fzwzZcynF7rxG3tuSu0/nlk8wSTTJlF7wsn1amX4fl87LKY/Z5r1InrJz40v+1y7/
-	FiQ3cV5vrbK7laVopBmzPePXa7OT31Za6T4tNLD5GS/iUqebyqr79WGarlVKcVisUdiTCzHX
-	hZUS9cLvfvqxJijr8M9np561TJ9dnbu9df72w4nzjLTXMi9bVqO7bUHHjSovTcmDkpPm7BfM
-	uW5eaLygSuX4ezmZ+Xv2bbxdNlU3dtuZX03Sqt5sdawSH2JmNhR3bG9yD/zIlTlv4Tab56vz
-	94hFXVEvK1B0yd8vXXzQInPO/+qYsyXRaZcFfeKkRDKSEhhNFqbbHldiKc5INNRiLipOBADk
-	2iCOkAMAAA==
-X-CMS-MailID: 20240408083019epcas5p429571d61b25b95490b913fcabc7f59d5
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240404122615epcas5p3812bd7c825bf604fc474bbcdf40d11f6
-References: <CGME20240404122615epcas5p3812bd7c825bf604fc474bbcdf40d11f6@epcas5p3.samsung.com>
-	<20240404122559.898930-1-peter.griffin@linaro.org>
+Content-Transfer-Encoding: 8bit
 
-Hi Peter
+When an scmd times out, block layer calls megasas_reset_timer to
+make further decisions. scmd_timeout indicates when an scmd is really
+timed-out. If we want to make this process more fast, we can decrease
+this value. This patch allows users to change this value in run-time.
 
-> -----Original Message-----
-> From: Peter Griffin <peter.griffin@linaro.org>
-> Sent: Thursday, April 4, 2024 5:56 PM
-> To: mturquette@baylibre.com; sboyd@kernel.org; robh@kernel.org;
-> krzk+dt@kernel.org; conor+dt@kernel.org; vkoul@kernel.org;
-> kishon@kernel.org; alim.akhtar@samsung.com; avri.altman@wdc.com;
-> bvanassche@acm.org; s.nawrocki@samsung.com; cw00.choi@samsung.com;
-> jejb@linux.ibm.com; martin.petersen@oracle.com;
-> chanho61.park@samsung.com; ebiggers@kernel.org
-> Cc: linux-scsi@vger.kernel.org; linux-phy@lists.infradead.org;
-> devicetree@vger.kernel.org; linux-clk@vger.kernel.org; linux-samsung-
-> soc@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; tudor.ambarus@linaro.org;
-> andre.draszik@linaro.org; saravanak@google.com;
-> willmcvicker@google.com; Peter Griffin <peter.griffin@linaro.org>
-> Subject: [PATCH 00/17] HSI2, UFS & UFS phy support for Tensor GS101
-> 
-> Hi folks,
-> 
-> 
-> Question
-> ========
-> 
-> Currently the link comes up in Gear 3 due to ufshcd_init_host_params()
-> host_params initialisation. If I update that to use UFS_HS_G4 for
-negotiation
-> then the link come up in Gear 4. I propose (in a future patch) to use VER
-> register offset 0x8 to determine whether to set G4 capability or not (if
-major
-> version is >= 3).
-> 
-> The bitfield of VER register in gs101 docs is
-> 
-> RSVD [31:16] Reserved
-> MJR [15:8] Major version number
-> MNR [7:4] Minor version number
-> VS [3:0] Version Suffix
-> 
-> Can anyone confirm if other Exynos platforms supported by this driver have
-> the same register, and if it conforms to the bitfield described above?
-> 
+Signed-off-by: Lei Chen <lei.chen@smartx.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-VER (offset 0x8) is standard UFS HCI spec, so all vendor need to have this
-(unless something really wrong with the HW)
-Yes, Exynos and FSD SoC has these bitfield implemented.
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 3d4f13da1ae8..2a165e5dc7a3 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -91,7 +91,7 @@ module_param(dual_qdepth_disable, int, 0444);
+ MODULE_PARM_DESC(dual_qdepth_disable, "Disable dual queue depth feature. Default: 0");
  
-> 
-> 2.44.0.478.gd926399ef9-goog
-
+ static unsigned int scmd_timeout = MEGASAS_DEFAULT_CMD_TIMEOUT;
+-module_param(scmd_timeout, int, 0444);
++module_param(scmd_timeout, int, 0644);
+ MODULE_PARM_DESC(scmd_timeout, "scsi command timeout (10-90s), default 90s. See megasas_reset_timer.");
+ 
+ int perf_mode = -1;
+-- 
+2.44.0
 
