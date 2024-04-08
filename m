@@ -1,43 +1,47 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C75E17C2
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Apr 2024 02:54:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD58617F7;
+	Mon,  8 Apr 2024 02:54:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712544872; cv=none; b=hCRWFuCmnaOVAQljqbFrSRv55CXqkLW1jRJ3JwNA6UNfRyW3L+dKC8GzO4QgCvZvj3cVutba6pDF1PjUe16jLdDY83M4ONKt5OpYiuNlHx/5EKPL75IipmuFMCcuGjxIfPwjmiH0s83Rr+dHmreeX2Kkkqw2YyLgmXdIRMrRgFA=
+	t=1712544872; cv=none; b=bWDS3PM26xRLobvpVnVdShpuGVGzzbgA7amV3RuzwqFHiEcdEtpMQDinWHfHaW+/BSlE8KQnbFBimd924voSkj7lNsQaDzGRx+2hJyYJzD5gBeC99ZtzLOoj4mIOnnYOiM4NaOCquntT6JIzFgoTAoSPvqrABjHqukJ2Agaetqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1712544872; c=relaxed/simple;
-	bh=zKjb/jPCMrQwXReBlD/nI3Zwb4e2eiuTkP82CQHSbXs=;
+	bh=94RvMc6Rf0UIsnYRM2ZlngrhDBe/mSI9V8l2Gsna8QA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YwklWOUgPbOSQjS2o0E2v2LvZyk8YMpDu4RyuvltMQBStEmBv2fNTI77o4uktkk06O6A/Ic5cT2XgaABGtWmXkIFONsusjvvx5oLTbzxGjxSthb/DphsWalQkyVilPp4meaz77xneXWW4k2aq8hRLqOAjAWhNfQcZn0f1BSw+gk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=rPzHZnSb; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=twA4HHnZv3gkuRizWXCMUZG5Hu9W1ypKTXMhg/aYDsfgv+j+fZHq5e/zsK01t4EwqKxM//CsoBw3+Y+GhBLyJPUHoOzaYL4fogcF3/5220lXNiusB6JpOtvE7/iZS9GL1wpGEKIOgcRIxKzgML8iUYljkvP8PsuC/mL8rwBZW+0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=s7zvsb0F; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rPzHZnSb"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="s7zvsb0F"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Uc5mqXNRr9J9NGsmtDt/wAh7o+QREKqBSBaqbFAcKUM=; b=rPzHZnSbVWsUdQgOlvhIpJNmWW
-	uDDNK5D2kquJPl9e7nPntyvMZd7GuufN6dFKt70Qp6b2GnhwN0awQiIkLM4AgBsKaAtzsH476yNQ7
-	lSfDVR3XVCGF6TB3sLwhP/44fGf4V39cUtUgW521yCWU1QPz6jnop7GzoVvU44Js96MTa/zT0I44J
-	ob9QtFwgqFc40XTquzCpZ0zHwXYg2GeXaIYou1EicnhhUjfOIjB37pChura1zgaTDFwta8wL3ssHd
-	pQSUdVajn5zoUFpy0511Ptu3y/pIUESNZGLgsl6XyoDrwMOq1FW1dZNsl1dcNrhRCFDDDwDP67Ep/
-	1BfgtxQw==;
+	bh=sVZokRLRtK/U1jkTDOTUDvOWvOdsjK6uSS0rAvoMvMU=; b=s7zvsb0FszY3b8Zjx3MaQsPz6c
+	J+9tShR/usOzuGoOe9mjdBVGE8Afqk9VwBM6KnmdVSQ4bt3/u20STOWDCBzyAK34uZdbPuWEigubv
+	JO0GTIZJo6P0v/tDUbtKns/v2I15RPbLgYXaldVUNbvd7FKySEOuRN7ylM8S9UwlUXafqZeMwp3Aw
+	04wm3TKLe7mmnsSsv5G82rUlfORZyyj+NEALgljEUx2fXNOtysCoXj+ARLIeWlB0SSKVhSMAqnG5i
+	SjxHPqpkySPz9kkWlX17RS/T2Zt3FR+upavdCEj0KAvYwqQOhkb6Om3t7B8s3VqiN3A6kUU9nDiaV
+	l42C0+3w==;
 Received: from [50.53.2.121] (helo=bombadil.infradead.org)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rtf9R-0000000E7aj-3plK;
-	Mon, 08 Apr 2024 02:54:29 +0000
+	id 1rtf9S-0000000E7aj-106x;
+	Mon, 08 Apr 2024 02:54:30 +0000
 From: Randy Dunlap <rdunlap@infradead.org>
 To: linux-scsi@vger.kernel.org
 Cc: Randy Dunlap <rdunlap@infradead.org>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/8] scsi: core: add kernel-doc for scsi_msg_to_host_byte()
-Date: Sun,  7 Apr 2024 19:54:20 -0700
-Message-ID: <20240408025425.18778-4-rdunlap@infradead.org>
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Max Gurtovoy <mgurtovoy@nvidia.com>,
+	linux-rdma@vger.kernel.org,
+	target-devel@vger.kernel.org
+Subject: [PATCH 4/8] scsi: iser: fix @read_stag kernel-doc warning
+Date: Sun,  7 Apr 2024 19:54:21 -0700
+Message-ID: <20240408025425.18778-5-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240408025425.18778-1-rdunlap@infradead.org>
 References: <20240408025425.18778-1-rdunlap@infradead.org>
@@ -49,29 +53,33 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add entries for missing documentation to prevent kernel-doc warnings:
+Correct kernel-doc comments for struct iser_ctrl to prevent warnings:
 
-scsi_cmnd.h:365: warning: Function parameter or struct member 'cmd' not described in 'scsi_msg_to_host_byte'
-scsi_cmnd.h:365: warning: Function parameter or struct member 'msg' not described in 'scsi_msg_to_host_byte'
+iser.h:76: warning: Function parameter or struct member 'read_stag' not described in 'iser_ctrl'
+iser.h:76: warning: Excess struct member 'reaf_stag' description in 'iser_ctrl'
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 ---
 Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org
+Cc: Sagi Grimberg <sagi@grimberg.me>
+Cc: Max Gurtovoy <mgurtovoy@nvidia.com>
+Cc: linux-rdma@vger.kernel.org
+Cc: target-devel@vger.kernel.org
 
- include/scsi/scsi_cmnd.h |    2 ++
- 1 file changed, 2 insertions(+)
+ include/scsi/iser.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -- a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -353,6 +353,8 @@ static inline u8 get_host_byte(struct sc
- 
- /**
-  * scsi_msg_to_host_byte() - translate message byte
-+ * @cmd: the SCSI command
-+ * @msg: the SCSI parallel message byte to translate
-  *
-  * Translate the SCSI parallel message byte to a matching
-  * host byte setting. A message of COMMAND_COMPLETE indicates
+diff -- a/include/scsi/iser.h b/include/scsi/iser.h
+--- a/include/scsi/iser.h
++++ b/include/scsi/iser.h
+@@ -63,7 +63,7 @@ struct iser_cm_hdr {
+  * @rsvd:         reserved
+  * @write_stag:   write rkey
+  * @write_va:     write virtual address
+- * @reaf_stag:    read rkey
++ * @read_stag:    read rkey
+  * @read_va:      read virtual address
+  */
+ struct iser_ctrl {
