@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2532C12FF94;
-	Tue,  9 Apr 2024 14:38:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D24F912FF94;
+	Tue,  9 Apr 2024 14:38:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712673524; cv=none; b=mUOBZU91dVeVM68OEsDyU9ffXx7d/nODFgzBAwzr6cgYwlSFeOBcwNQQTnn0ZzAqMbjqWM2aOTWECiAEyGSMCSy7GAYkq4jZxkh9yui/O2/Gqvwxj7l3h2akZwWM/41W5yEJjrN2whhNN+rgVPpOnw4X973Dc0zajIrnKKftNnA=
+	t=1712673527; cv=none; b=uPVjIOQVPedq/ase7lvQXnRffUhzcPmT5hBvo3EbVYRoVKK4b2gaXD98sxEDy1A9CpVJwUror5Q33UPUMr/a33/lPEBX1JELLuQXW5zWuL/lxGcAr+FkFZR17dgOCR253T7r2gVV8iI8Al0TN53+tHQ0a2fq1uD7+8s5PnQjvjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712673524; c=relaxed/simple;
-	bh=kQagpPPOUq0SfSCwGLXK2TImVAsPbb2O6j8bOAzpRvk=;
+	s=arc-20240116; t=1712673527; c=relaxed/simple;
+	bh=Nq4mzOcspJxKptNLRGNTAAwyRhMaJZkG2xELTRcF3JY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=CQtHQpV4lLaTSdH9cPlsM+J5SNEX5Hs1YSx9MDMMK/YKgVny8PG/tITGRgnheJooJoKfr6Y5E/Djm9rsQ7L7rRMbIvC+Y5tm2u9sXJ6zhY1TtWKWFGERDy6lGoKieeQu3CuCyHNq3GBjWEqo8VDrTzN9ZRWksZp+ZtjPW765Bwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XRv/eawl; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=moKgQh1b9x5MA16u6yW4V/MSzqnySbE7YZwCS2mxCMaQm6KXgDgDAE5x9Qlwjo1nDXE7GGFkIAAoQM/44XNu1E9k9EQjG4JHYkEsAh/P2pWqISmW8kCAeJuWS/E3h0kmIY0E4L/3vOw84l3bQ5uZxhyg7vTuFrZ6Q56zKIYFDTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=t49nIlxj; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XRv/eawl"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="t49nIlxj"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=SZyzmpnjk4FheRLYyA90eDeg4CmfzjMaU8l+KnZbwcY=; b=XRv/eawlHdk4nU7ebxCA3OB0qm
-	aGPAuAkDikOI2tkWhvWrnH4qXeP0fzNcjYFh0p5SpVuzqKn85Yxn5bMAbhJ8Nw3U4X3EIUB3Myd3z
-	IC8Ft4sTQpzbN0QHYBtgc8Cai2Buc+SxUSoTQlATjgQBA5M44YiUORHDOrMIrg2rqMa6Q/h/1SZEZ
-	rl+kcdOVe/8Q12UktxGEkyG3wV2qwbDZ0y6h+unSx9SR5JbxrJEsNXvXTKuRiU8AJTxtfto/qQgLM
-	ON8Z+bmZntfJX7Cq4HAgms9OICk0aye38MlJGWyd/dGrdAu+J7hs9GTMXmW+PBxzs1B7dpniJICl+
-	9BpmuQyA==;
+	bh=oOzGzNJBoU44rEzjCKb52VWSHMlCwSe4hv+WebdEwa8=; b=t49nIlxj7uOo8e+Fhc87Q753t5
+	llx/mLCUYGyaFoKTMJ5mH/9Hx+RV1YE0WEMerWD6pMO7+15YymhEBzLdY/HzkD9gRLJDzwYCVGd3f
+	elbWhbhlUXcL4O5sBB83c2GnwuGnA86PjlHdrjZqmtZ+xbksbE8GnY89bQFEa5ydpz3Sb+z2CGEuj
+	j5zy1gQFLTQX1xr6knDV3B6Ft1DZZQwZOR6x4dj9KlYq7EElLAcFinxdXLvvqGigqAkWEXLwDmRo6
+	uAF/UdSk6ks6LqEQF8NbyYh37EYm2NSc03UIm08ERpfQVqIiWb0YJKMHkg39F/yiQ9az3Er6/Seqq
+	WtyzWE2Q==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ruCcM-00000002SAb-0yff;
-	Tue, 09 Apr 2024 14:38:34 +0000
+	id 1ruCcP-00000002SCK-0jjf;
+	Tue, 09 Apr 2024 14:38:37 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -73,9 +73,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net,
 	Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 16/23] pmcraid: switch to using ->device_configure
-Date: Tue,  9 Apr 2024 16:37:41 +0200
-Message-Id: <20240409143748.980206-17-hch@lst.de>
+Subject: [PATCH 17/23] usb-storage: switch to using ->device_configure
+Date: Tue,  9 Apr 2024 16:37:42 +0200
+Message-Id: <20240409143748.980206-18-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240409143748.980206-1-hch@lst.de>
 References: <20240409143748.980206-1-hch@lst.de>
@@ -92,57 +92,103 @@ Switch to the ->device_configure method instead of ->slave_configure
 and update the block limits on the passed in queue_limits instead
 of using the per-limit accessors.
 
+Also use the proper atomic queue limit update helpers and freeze the
+queue when updating max_hw_sectors from sysfs.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/pmcraid.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/usb/storage/scsiglue.c | 36 ++++++++++++++++++++--------------
+ 1 file changed, 21 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 0614b7e366b776..0efe2fc8b30826 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -197,8 +197,9 @@ static int pmcraid_slave_alloc(struct scsi_device *scsi_dev)
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index eb4ba03e082d89..b31464740f6c86 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -82,7 +82,7 @@ static int slave_alloc (struct scsi_device *sdev)
+ 	return 0;
  }
  
- /**
-- * pmcraid_slave_configure - Configures a SCSI device
-+ * pmcraid_device_configure - Configures a SCSI device
-  * @scsi_dev: scsi device struct
-+ * @lim: queue limits
-  *
-  * This function is executed by SCSI mid layer just after a device is first
-  * scanned (i.e. it has responded to an INQUIRY). For VSET resources, the
-@@ -209,7 +210,8 @@ static int pmcraid_slave_alloc(struct scsi_device *scsi_dev)
-  * Return value:
-  *	  0 on success
-  */
--static int pmcraid_slave_configure(struct scsi_device *scsi_dev)
-+static int pmcraid_device_configure(struct scsi_device *scsi_dev,
-+		struct queue_limits *lim)
+-static int slave_configure(struct scsi_device *sdev)
++static int device_configure(struct scsi_device *sdev, struct queue_limits *lim)
  {
- 	struct pmcraid_resource_entry *res = scsi_dev->hostdata;
+ 	struct us_data *us = host_to_us(sdev->host);
+ 	struct device *dev = us->pusb_dev->bus->sysdev;
+@@ -97,31 +97,28 @@ static int slave_configure(struct scsi_device *sdev)
  
-@@ -233,8 +235,7 @@ static int pmcraid_slave_configure(struct scsi_device *scsi_dev)
- 		scsi_dev->allow_restart = 1;
- 		blk_queue_rq_timeout(scsi_dev->request_queue,
- 				     PMCRAID_VSET_IO_TIMEOUT);
--		blk_queue_max_hw_sectors(scsi_dev->request_queue,
--				      PMCRAID_VSET_MAX_SECTORS);
-+		lim->max_hw_sectors = PMCRAID_VSET_MAX_SECTORS;
+ 		if (us->fflags & US_FL_MAX_SECTORS_MIN)
+ 			max_sectors = PAGE_SIZE >> 9;
+-		if (queue_max_hw_sectors(sdev->request_queue) > max_sectors)
+-			blk_queue_max_hw_sectors(sdev->request_queue,
+-					      max_sectors);
++		lim->max_hw_sectors = min(lim->max_hw_sectors, max_sectors);
+ 	} else if (sdev->type == TYPE_TAPE) {
+ 		/*
+ 		 * Tapes need much higher max_sector limits, so just
+ 		 * raise it to the maximum possible (4 GB / 512) and
+ 		 * let the queue segment size sort out the real limit.
+ 		 */
+-		blk_queue_max_hw_sectors(sdev->request_queue, 0x7FFFFF);
++		lim->max_hw_sectors = 0x7FFFFF;
+ 	} else if (us->pusb_dev->speed >= USB_SPEED_SUPER) {
+ 		/*
+ 		 * USB3 devices will be limited to 2048 sectors. This gives us
+ 		 * better throughput on most devices.
+ 		 */
+-		blk_queue_max_hw_sectors(sdev->request_queue, 2048);
++		lim->max_hw_sectors = 2048;
  	}
  
  	/*
-@@ -3668,7 +3669,7 @@ static const struct scsi_host_template pmcraid_host_template = {
- 	.eh_host_reset_handler = pmcraid_eh_host_reset_handler,
+ 	 * The max_hw_sectors should be up to maximum size of a mapping for
+ 	 * the device. Otherwise, a DMA API might fail on swiotlb environment.
+ 	 */
+-	blk_queue_max_hw_sectors(sdev->request_queue,
+-		min_t(size_t, queue_max_hw_sectors(sdev->request_queue),
+-		      dma_max_mapping_size(dev) >> SECTOR_SHIFT));
++	lim->max_hw_sectors = min_t(size_t,
++		lim->max_hw_sectors, dma_max_mapping_size(dev) >> SECTOR_SHIFT);
  
- 	.slave_alloc = pmcraid_slave_alloc,
--	.slave_configure = pmcraid_slave_configure,
-+	.device_configure = pmcraid_device_configure,
- 	.slave_destroy = pmcraid_slave_destroy,
- 	.change_queue_depth = pmcraid_change_queue_depth,
- 	.can_queue = PMCRAID_MAX_IO_CMD,
+ 	/*
+ 	 * We can't put these settings in slave_alloc() because that gets
+@@ -582,13 +579,22 @@ static ssize_t max_sectors_store(struct device *dev, struct device_attribute *at
+ 		size_t count)
+ {
+ 	struct scsi_device *sdev = to_scsi_device(dev);
++	struct queue_limits lim;
+ 	unsigned short ms;
++	int ret;
+ 
+-	if (sscanf(buf, "%hu", &ms) > 0) {
+-		blk_queue_max_hw_sectors(sdev->request_queue, ms);
+-		return count;
+-	}
+-	return -EINVAL;
++	if (sscanf(buf, "%hu", &ms) <= 0)
++		return -EINVAL;
++
++	blk_mq_freeze_queue(sdev->request_queue);
++	lim = queue_limits_start_update(sdev->request_queue);
++	lim.max_hw_sectors = ms;
++	ret = queue_limits_commit_update(sdev->request_queue, &lim);
++	blk_mq_unfreeze_queue(sdev->request_queue);
++
++	if (ret)
++		return ret;
++	return count;
+ }
+ static DEVICE_ATTR_RW(max_sectors);
+ 
+@@ -626,7 +632,7 @@ static const struct scsi_host_template usb_stor_host_template = {
+ 	.this_id =			-1,
+ 
+ 	.slave_alloc =			slave_alloc,
+-	.slave_configure =		slave_configure,
++	.device_configure =		device_configure,
+ 	.target_alloc =			target_alloc,
+ 
+ 	/* lots of sg segments can be handled */
 -- 
 2.39.2
 
