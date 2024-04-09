@@ -1,102 +1,109 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1418158843
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Apr 2024 20:40:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F2A6158855
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Apr 2024 20:41:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712695202; cv=none; b=ZZF85soFw6HgBYMgh0/yKEDCusNfVTxPKBvWSa7X/b8AAhr4FuA6i9nhedcL9S43V3kwVeIb1IgGmNKHxO7sAyDdg5SxOIukYLkRWiParS79buctw6rjWejaTNGeyrRmYIVHgnSSkJd+KVwjkA/DIbZKJH8I0aNHHOWewxr13XU=
+	t=1712695296; cv=none; b=s+ghsSNZifb0OMYDjr/076D4HJBwEg+iKd8Hau3jqWccFj+5PPwcD4VJoC+/+KgXzzKrFfpdvYpfR+MtiSE8f7fqXo0pyetm0+GE91cNETh4JQ3UqPYFmWT26AaJjY0Kc3tKf4gGqDINCYOZcpYgQYv7WReXJntXPc0P+/Qs5T0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712695202; c=relaxed/simple;
-	bh=yk2BDxM+7Y4i2zDVZmBIPZBAOJ1qHub6vL1uG2mZ+jk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=A8CgM1x3F+G5YeCGF2jjxM/BFVBVaOBpgzJ9WttvaNUnJ3C0Lsinn8WQVlbXsVlgTphvUzuk6XQo0S1so6LcNPLlY1KnT3UG8Pb5Ck3uCAeWAYBqzDKjcwcUQLBkAAnEVHXWak6PtqSCMOlGMWSJUiP7H5VeXVaZsIJbjZGqLNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=UHzE1cSQ; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1712695296; c=relaxed/simple;
+	bh=wY3Tsys7No0fWkG23G2qBuXiDPpIozc4aciGCS5wmRM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gn3X8wy3wSjjrQBYM0/H0JfIdh8fs6lEKlQbLmATpt7fX8WYaWIN0EadmWaoTatoVpTYEjrj2ztPLCliEaLvIhIXU0NPRLZ01V9cONqQJKzSLg6u8phqsalBGj54U6NjMUXFUG8eO8dHNv4bC1dtpec0+w0q+0e3cqUKfinwBy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=raknCfZu; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="UHzE1cSQ"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-41551500a7eso48764885e9.2
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Apr 2024 13:40:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="raknCfZu"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1e42a6158d5so12815ad.0
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Apr 2024 13:41:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1712695199; x=1713299999; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=v4I8phARquuRtcJ9dGFSKVepYNDlwt0kz9QDOiZ7JmM=;
-        b=UHzE1cSQKqEBp/pxy40KjElSwJJVlkuiCz15tbrinBYCAGS5lKxZriYqNqh1Ibnguy
-         0GYZiPWSCmxu0niNsW0AthVlkCMDqhAFI5YM4+U1YGGMLuJl9ejSVYGGhsFBM/pjraaH
-         vZ2rEbQx/5dhfqc7RQ4EFZea6HrNlkQM0W64v7anZvEn7dU0k7rExodTrQ9+dxkSU3tw
-         8TkR6Yqpv1LLljzdNZOh2VomNb/vcR1JaUD/cUeSQpYMFDiqRSIBdMSlNhtmNokwrRBd
-         i7dOCHJNwY0XoPnHuhowoNmtjnjk8EmOXcdaIoP8SfGA3ACehkw/GVtkO6itXZpP0Jyp
-         tydQ==
+        d=google.com; s=20230601; t=1712695294; x=1713300094; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=aBPjFQ8hMYlMnU6esFGPlUb9Zp07ztNfKHIa+vIGGrw=;
+        b=raknCfZutyJ2aQjqu+natmuMmUa/Ps8jcdXRTZ5fNGzedj9Js1wpwPNDGniOfLpg8J
+         GYXOrVFqP3DKFctIPHtLtahFJlRqva2kf/ZaMK8AzZjUhfGM4LWyOQEMd1buzz3FKYf2
+         5Bg5IJi00dHTKOSXx3J9Oh+gEf0LdA7kGgmdOfNODaA9tfi9VOzMdRPdP9Gm8s1oeiw6
+         Zz3vZBPmNUQASeT728Mkq4VjhLSOyA7s9uHZqIRHmaVI5JMwx4wXbDV2b7p9Ah1Bla9E
+         iL2x0irOqvFygnCnn4C4Glx/OC2XFiIKjTl4UfRsKRQT+R8fyPxgvzI1ieknPCBCm5Qc
+         Vk3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712695199; x=1713299999;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=v4I8phARquuRtcJ9dGFSKVepYNDlwt0kz9QDOiZ7JmM=;
-        b=HAxgINqM9sZzb6pWbmrtiIA6cuma22lbWXft9oLrHV4GxnHpmZ9XGPFUArXT9nEdck
-         9sy+phuaVyFZ796ibvCrESdeLOtAJYsu3YMP09tWByQACFnw0mOPmMhVlNxF0NYCk4Hv
-         /aJZ26Z+/FeCURHmViFfGtHAWarTuRW9eB8suYBVOcCUeiDPvJZBhjrnD7kNSkO8ufhw
-         utQL87fahWBsIzATiBMEDRtM2rhY+lMDnR6dJEGcuouBErSEP7rWZKU2r77dv91vOaeW
-         KoNyMphWxFq7wL+ofrWTQ1+JqTKYX7v7Zis0uBHBMrA6THq+N6anyHWKgPX7NvUkO9Hl
-         8mbg==
-X-Forwarded-Encrypted: i=1; AJvYcCWbGvvuHbNNu1ZQ7R3UCDcySzSFmZr34hLXR/Cqwc5YubR0/UZLgus7Jf+SvyBk1Fc8y9AVbmbaKmhXT1RtgcZVNoM3Ija6LQ21jg==
-X-Gm-Message-State: AOJu0YwzGb/9BVbOVROUhvbKl7LrkUvWp3/iNMJdu0E3cKAilyXC+eBt
-	wuTQuzrdtye9/Na68n94ZOTyGPbzRNtTwtpFs3W9BE0WSueMhmPhyO2YZxTcHBKpV3T4LjBhl+F
-	J
-X-Google-Smtp-Source: AGHT+IGeDCGRn+eN+K867Alrf3EerOJpky7viAd5Dpu+DzEMbQjNs30y2mzbObgPmejllvI8RirF0g==
-X-Received: by 2002:a05:600c:310c:b0:414:102f:27b8 with SMTP id g12-20020a05600c310c00b00414102f27b8mr515611wmo.32.1712695199233;
-        Tue, 09 Apr 2024 13:39:59 -0700 (PDT)
-Received: from krzk-bin.. ([178.197.223.16])
-        by smtp.gmail.com with ESMTPSA id m5-20020a5d56c5000000b00341ce80ea66sm12267111wrw.82.2024.04.09.13.39.57
+        d=1e100.net; s=20230601; t=1712695294; x=1713300094;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aBPjFQ8hMYlMnU6esFGPlUb9Zp07ztNfKHIa+vIGGrw=;
+        b=Y99bv3MbeXh7yRXTi9WsXco6ANMrMQ0S3liHhRzFZCueN8YQNsOHRRuOeMI73nFGZj
+         QLE9fW3+dCoGqeLH9M65NFzOXcDRMpDR8rVE6eRlOo/B2xOPTkkww5wUpXXQsEFpi6av
+         P57RzSeDPWQ9e7cVX/R0SjwNpQ9R7ZMJfyN8WiLcpq+9zjCtjF0ThwQ7vBdbjBv78TBK
+         vP6kAMdBagsCowpW9j8SaDX5REIVR3qnh/YMpLNX5eR89YwX0O1V5iLv6flT2+oZYOm2
+         LoKfrmND9Tn4p4op1sPj66Vk5/KfpQnQxWoFGX3fr4kpES4OnxHjdFHVZXTTD1cwyFDj
+         N55w==
+X-Forwarded-Encrypted: i=1; AJvYcCUQTB5lLgLQl32GHpmJ1y9XSK2Twvlg5lGBY8qeF+D4JDM1kwsG+u7+Z6wbdmrGSUnhiAF74nCWzyn69AlCoCnbx9cnaZH1HKNCaA==
+X-Gm-Message-State: AOJu0YzZXHwA+J6fCHS7I/iRGgQ6KRJAK6UiUg4iVtlng1yn4Z4mzsfv
+	mury42/G0DMyajwjaaltHkfvNmLXjqz4ODYp0ZoDe0Gbh0wmiCDikAkjMYwWZw==
+X-Google-Smtp-Source: AGHT+IGWleD6b0XLIiDlZ3DPfoEnHis9+A23HCbPUKH0mt9fVcwSxprCA8POCPYBt+97qwpMM8ZBaA==
+X-Received: by 2002:a17:902:e842:b0:1e2:3991:9e9 with SMTP id t2-20020a170902e84200b001e2399109e9mr63681plg.0.1712695294230;
+        Tue, 09 Apr 2024 13:41:34 -0700 (PDT)
+Received: from google.com (201.215.168.34.bc.googleusercontent.com. [34.168.215.201])
+        by smtp.gmail.com with ESMTPSA id ja21-20020a170902efd500b001e0da190a07sm9346560plb.167.2024.04.09.13.41.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Apr 2024 13:39:58 -0700 (PDT)
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-To: Peter Wang <peter.wang@mediatek.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
+        Tue, 09 Apr 2024 13:41:33 -0700 (PDT)
+Date: Tue, 9 Apr 2024 13:41:30 -0700
+From: William McVicker <willmcvicker@google.com>
+To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	linux-scsi@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	Will McVicker <willmcvicker@google.com>
-Subject: [PATCH] scsi: ufs: mediatek: fix module autoloading
-Date: Tue,  9 Apr 2024 22:39:54 +0200
-Message-Id: <20240409203954.80484-1-krzysztof.kozlowski@linaro.org>
-X-Mailer: git-send-email 2.34.1
+	Peter Griffin <peter.griffin@linaro.org>, andre.draszik@linaro.org,
+	tudor.ambarus@linaro.org, kernel-team@android.com,
+	linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1] scsi: ufs: exynos: Support module autoloading
+Message-ID: <ZhWn-jKhqSihx8qA@google.com>
+References: <20240409202203.1308163-1-willmcvicker@google.com>
+ <d9c5524c-afd6-40bc-bf63-10df87bcd952@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d9c5524c-afd6-40bc-bf63-10df87bcd952@linaro.org>
 
-Add MODULE_DEVICE_TABLE(), so the module could be properly autoloaded
-based on the alias from of_device_id table.
+On 04/09/2024, Krzysztof Kozlowski wrote:
+> On 09/04/2024 22:22, Will McVicker wrote:
+> > Export the module alias information using the MODULE_DEVICE_TABLE()
+> > macro in order to support auto-loading this module for devices that
+> > support it.
+> > 
+> > $ modinfo -F alias out/linux/drivers/ufs/host/ufs-exynos.ko
+> > of:N*T*Ctesla,fsd-ufsC*
+> > of:N*T*Ctesla,fsd-ufs
+> > of:N*T*Csamsung,exynosautov9-ufs-vhC*
+> > of:N*T*Csamsung,exynosautov9-ufs-vh
+> > of:N*T*Csamsung,exynosautov9-ufsC*
+> > of:N*T*Csamsung,exynosautov9-ufs
+> > of:N*T*Csamsung,exynos7-ufsC*
+> > of:N*T*Csamsung,exynos7-ufs
+> 
+> That part is redundant, you just copied result of of_device_id. No need
+> to resend just for this.
 
-Cc: Will McVicker <willmcvicker@google.com>
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
----
- drivers/ufs/host/ufs-mediatek.c | 1 +
- 1 file changed, 1 insertion(+)
+Well the point of including this snippet is to show that it's working.
+Without this patch, `modinfo -F alias ufs-exynos.ko` doesn't return
+anything. I'm fine with not including it either way though.
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 0b0c923b1d7b..c4f997196c57 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -52,6 +52,7 @@ static const struct of_device_id ufs_mtk_of_match[] = {
- 	{ .compatible = "mediatek,mt8183-ufshci" },
- 	{},
- };
-+MODULE_DEVICE_TABLE(of, ufs_mtk_of_match);
- 
- /*
-  * Details of UIC Errors
--- 
-2.34.1
+Thanks,
+Will
 
+> 
+> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> 
+> Best regards,
+> Krzysztof
+> 
