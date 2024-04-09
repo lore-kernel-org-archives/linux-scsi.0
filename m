@@ -1,118 +1,146 @@
-Received: from smtp-fw-52003.amazon.com (smtp-fw-52003.amazon.com [52.119.213.152])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3284B127B4E;
-	Tue,  9 Apr 2024 11:45:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.119.213.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5AE12D753;
+	Tue,  9 Apr 2024 12:51:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712663153; cv=none; b=njl/IZizOHf9Oy2AvUpkEgQLImugWOneEnneYLjndQlNeObg/eiCozv7bhqOyYEBjt+QMCAXbclZhfJaiwmb+P7Yr70WZ/zYkJ5QyUw7rPf7X8hobtFPj/0935KPeCmBDhCU98C4x2T950AlV69bSUdyUXqP7ClOFme8nHd/+FM=
+	t=1712667080; cv=none; b=lQTL/pVBk/FSX8c8V2gPgvkVoJ5m5LBHfpGZnlW8t6iPSKaJqoj/7bmtru/NXoMCrYUCOOSnwsDc9IZnL1/si9jKJAJFQb7gjBf9sXl0o5E5zfNYjyKzTBTni/KYgVjLLI0QFlkTFuPDk8FZl+DkJTc1KzhWHKJ3W8EG9f4wmDk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712663153; c=relaxed/simple;
-	bh=GFjr+qUI/xJlRfC49pDYbbQ+5mOHCUk/2gN5wZX0VPA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=lBIR1ZzgNFAiDhBZgiwFTJ1Hjbtgxh5r2XlqjC9uK91LBmTo0zonDD0RFLMilwlSPXoKVCFuu7RFValzVMoe7lSmHU/wR3KLx2txQVIah3cPmVakFvodIiyvfOU99UkKhMWn7HIsMlQWeYtdowO9yUrUIx5A89DElmMUefkbEi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.de; dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b=Re2MZHX5; arc=none smtp.client-ip=52.119.213.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
+	s=arc-20240116; t=1712667080; c=relaxed/simple;
+	bh=DjNT0L5DEzFWRydMIfmLZI/hD2TY6TxAHIauI8t1flQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=glGkR8tihU6wGZ+/ePK/5qo/oSTwnM5os7iOw/glZNH2XjcEK82kuzlh0mjGDPqdxcBIoeVuyPmsabPMqQwtoPUiqU67I5CpgxRZV0Fi38p52bigyB5YJ6HzGb9JQMDyHWUMhH2opLbHk3zjkQvuJNNZQtHaSci+uYq/iQgC1UA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TEsNCgBU; arc=none smtp.client-ip=209.85.208.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="Re2MZHX5"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TEsNCgBU"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-56e48d0a632so4808470a12.2;
+        Tue, 09 Apr 2024 05:51:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1712663151; x=1744199151;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=GFjr+qUI/xJlRfC49pDYbbQ+5mOHCUk/2gN5wZX0VPA=;
-  b=Re2MZHX5GydCM8B6KilkbcXlSGPSLv0DHVNAFcmqvWsd0IZ1NH+wl46p
-   jp+rvzqYg9VvAX9wn3JpJghaHuXQWE2yPEhE8P08rq+2tVNxto7uD3tbV
-   QrLFtsNiMvuJGKG0kOuG7Rz2NIhkvDaaqqVhKqvF/2RhKVIbglEWBhS4x
-   g=;
-X-IronPort-AV: E=Sophos;i="6.07,189,1708387200"; 
-   d="scan'208";a="650727234"
-Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO smtpout.prod.us-west-2.prod.farcaster.email.amazon.dev) ([10.43.8.6])
-  by smtp-border-fw-52003.iad7.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2024 11:45:43 +0000
-Received: from EX19MTAUWC002.ant.amazon.com [10.0.21.151:49900]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.27.169:2525] with esmtp (Farcaster)
- id 3f52ccb2-10c8-4639-a2de-4651f9e21034; Tue, 9 Apr 2024 11:45:42 +0000 (UTC)
-X-Farcaster-Flow-ID: 3f52ccb2-10c8-4639-a2de-4651f9e21034
-Received: from EX19D020UWC004.ant.amazon.com (10.13.138.149) by
- EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.28; Tue, 9 Apr 2024 11:45:38 +0000
-Received: from [0.0.0.0] (10.253.83.51) by EX19D020UWC004.ant.amazon.com
- (10.13.138.149) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.28; Tue, 9 Apr
- 2024 11:45:22 +0000
-Message-ID: <7c82670e-6063-4b0f-9bbf-805a0d949d84@amazon.com>
-Date: Tue, 9 Apr 2024 13:45:18 +0200
+        d=gmail.com; s=20230601; t=1712667077; x=1713271877; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pLZRWIxxIpIyRano383QAFQNgeysi1fKEMitJfkcMIg=;
+        b=TEsNCgBUnSDGjuWAwZ6tEQiGc+Dk10FI24vnZMah2UzznwmbSo691z+lAKF85ZScDc
+         Q4X7Rx1RL88dJ2sg7ouSzZDXhIQL4vyAG0ImliKf3HXDcFNsggO2oRtWpRC3pP1l9Zje
+         BjWRvS3HQwZXmApOUP4uWAw0iZ9DB8xCB+P1wCdP9+CrvVpgoX0wwWF6ZJn+Jd5XqIGz
+         kHr83CV7Xdr0Y3u6jbikzq7+za10A+69W16LjR02gYrOXkxMH+a8Qwwb0Q5QZJpXxvnw
+         3xUYX70LeK8sYEiKXNGhE5Gbj1h2B4giuEUPsv7yfrcc+Bq8LMD+ujrsY3hDt/BsCqAr
+         YoCw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712667077; x=1713271877;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=pLZRWIxxIpIyRano383QAFQNgeysi1fKEMitJfkcMIg=;
+        b=c8B3A43rC77gbJY6UaStMEZLzDFIOhtFrCofmSBFBppX0vVSG5njY9oyJhJrSh1ycn
+         eCaabwjRZBfpCZwB+nF0gQR/dTnkF6cx2IAGjl8cCSyL66Lc0G5Wj7wc+mYVzKtqKmWG
+         s43+MWZw6zRhBuPrCNaYcTZyCzmorJh0nDlZaW8ioyeRxlJinBFkv4rOIVVUPoK7RoRX
+         ksKxr6kkAkTTsGu2hTNDC69MKHPnA39KdGo8klz1f+vs9CSFtjn77N3F5a+mGclHeUY4
+         60KGi5sxIv18wM14SBsHEMRZDc4g8ugEfJfYUXu2hIU9HZD5kw2WKf9TZRvnEoRkDhc1
+         5z5w==
+X-Gm-Message-State: AOJu0YyKax/bE041JyPXCLwyMyvofG3a3J1HgXY5/zFSNzZGvPP63mZ3
+	KZzwK8SJpY7ijpm7Q76e+SuOlFln1DSPaBqbN9pFaKCBp26IhNP6SMVtJCWYP+xgedkCksG79jS
+	AI/i5YsnDwyEvqx7GBBBvZqrbg4hvcQkEfT+a80M5
+X-Google-Smtp-Source: AGHT+IHqqbdEqfhqTMpWmBSPML4xCExE0zWXW/QZYTjqy5r4C2uX+Lj6ovqOlaO1cnzmjHzOmb/yasrCZh4idaWK3IY=
+X-Received: by 2002:a17:906:b24b:b0:a4e:7b8e:35ae with SMTP id
+ ce11-20020a170906b24b00b00a4e7b8e35aemr7764103ejb.38.1712667076605; Tue, 09
+ Apr 2024 05:51:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 15/25] misc: nsm: drop owner assignment
-Content-Language: en-US
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, "Michael S. Tsirkin"
-	<mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Xuan Zhuo
-	<xuanzhuo@linux.alibaba.com>, Jonathan Corbet <corbet@lwn.net>, "David
- Hildenbrand" <david@redhat.com>, Gerd Hoffmann <kraxel@redhat.com>, "Richard
- Weinberger" <richard@nod.at>, Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-	Johannes Berg <johannes@sipsolutions.net>, Paolo Bonzini
-	<pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, Jens Axboe
-	<axboe@kernel.dk>, Marcel Holtmann <marcel@holtmann.org>, "Luiz Augusto von
- Dentz" <luiz.dentz@gmail.com>, Olivia Mackall <olivia@selenic.com>, Herbert
- Xu <herbert@gondor.apana.org.au>, Amit Shah <amit@kernel.org>, Arnd Bergmann
-	<arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gonglei
-	<arei.gonglei@huawei.com>, "David S. Miller" <davem@davemloft.net>, "Sudeep
- Holla" <sudeep.holla@arm.com>, Cristian Marussi <cristian.marussi@arm.com>,
-	Viresh Kumar <vireshk@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>, David Airlie <airlied@redhat.com>,
-	Gurchetan Singh <gurchetansingh@chromium.org>, Chia-I Wu <olvaffe@gmail.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard
-	<mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, Daniel Vetter
-	<daniel@ffwll.ch>, Jean-Philippe Brucker <jean-philippe@linaro.org>, "Joerg
- Roedel" <joro@8bytes.org>, Will Deacon <will@kernel.org>, Robin Murphy
-	<robin.murphy@arm.com>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski
-	<kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Eric Van Hensbergen
-	<ericvh@kernel.org>, Latchesar Ionkov <lucho@ionkov.net>, Dominique Martinet
-	<asmadeus@codewreck.org>, Christian Schoenebeck <linux_oss@crudebyte.com>,
-	Stefano Garzarella <sgarzare@redhat.com>, Kalle Valo <kvalo@kernel.org>, "Dan
- Williams" <dan.j.williams@intel.com>, Vishal Verma
-	<vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, Ira Weiny
-	<ira.weiny@intel.com>, "Pankaj Gupta" <pankaj.gupta.linux@gmail.com>, Bjorn
- Andersson <andersson@kernel.org>, Mathieu Poirier
-	<mathieu.poirier@linaro.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Vivek Goyal
-	<vgoyal@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, "Anton Yakovlev"
-	<anton.yakovlev@opensynergy.com>, Jaroslav Kysela <perex@perex.cz>, Takashi
- Iwai <tiwai@suse.com>
-CC: <virtualization@lists.linux.dev>, <linux-doc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-um@lists.infradead.org>,
-	<linux-block@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>,
-	<linux-crypto@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-gpio@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-	<iommu@lists.linux.dev>, <netdev@vger.kernel.org>, <v9fs@lists.linux.dev>,
-	<kvm@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<nvdimm@lists.linux.dev>, <linux-remoteproc@vger.kernel.org>,
-	<linux-scsi@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-	<alsa-devel@alsa-project.org>, <linux-sound@vger.kernel.org>
-References: <20240331-module-owner-virtio-v2-0-98f04bfaf46a@linaro.org>
- <20240331-module-owner-virtio-v2-15-98f04bfaf46a@linaro.org>
-From: Alexander Graf <graf@amazon.com>
-In-Reply-To: <20240331-module-owner-virtio-v2-15-98f04bfaf46a@linaro.org>
-X-ClientProxiedBy: EX19D035UWA002.ant.amazon.com (10.13.139.60) To
- EX19D020UWC004.ant.amazon.com (10.13.138.149)
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-Content-Transfer-Encoding: base64
+References: <CAEkJfYOs-szTK0rYvDw5UNGfzbTG_7RvjqFOZA=c6LXvxdUt2g@mail.gmail.com>
+In-Reply-To: <CAEkJfYOs-szTK0rYvDw5UNGfzbTG_7RvjqFOZA=c6LXvxdUt2g@mail.gmail.com>
+From: Sam Sun <samsun1006219@gmail.com>
+Date: Tue, 9 Apr 2024 20:51:04 +0800
+Message-ID: <CAEkJfYMcdmXAhe9oTpEPGL+_661PNAvM58Y+irwnbLW8FKohNw@mail.gmail.com>
+Subject: Re: [Bug] UBSAN: shift-out-of-bounds in sg_build_indirect
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com, 
+	dgilbert@interlog.com, syzkaller@googlegroups.com, xrivendell7@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Ck9uIDMxLjAzLjI0IDEwOjQ0LCBLcnp5c3p0b2YgS296bG93c2tpIHdyb3RlOgo+IHZpcnRpbyBj
-b3JlIGFscmVhZHkgc2V0cyB0aGUgLm93bmVyLCBzbyBkcml2ZXIgZG9lcyBub3QgbmVlZCB0by4K
-Pgo+IFNpZ25lZC1vZmYtYnk6IEtyenlzenRvZiBLb3psb3dza2kgPGtyenlzenRvZi5rb3psb3dz
-a2lAbGluYXJvLm9yZz4KCgpSZXZpZXdlZC1ieTogQWxleGFuZGVyIEdyYWYgPGdyYWZAYW1hem9u
-LmNvbT4KCgpBbGV4CgoKCgpBbWF6b24gRGV2ZWxvcG1lbnQgQ2VudGVyIEdlcm1hbnkgR21iSApL
-cmF1c2Vuc3RyLiAzOAoxMDExNyBCZXJsaW4KR2VzY2hhZWZ0c2Z1ZWhydW5nOiBDaHJpc3RpYW4g
-U2NobGFlZ2VyLCBKb25hdGhhbiBXZWlzcwpFaW5nZXRyYWdlbiBhbSBBbXRzZ2VyaWNodCBDaGFy
-bG90dGVuYnVyZyB1bnRlciBIUkIgMTQ5MTczIEIKU2l0ejogQmVybGluClVzdC1JRDogREUgMjg5
-IDIzNyA4NzkKCgo=
+On Mon, Mar 25, 2024 at 8:57=E2=80=AFPM Sam Sun <samsun1006219@gmail.com> w=
+rote:
+>
+> Dear developers and maintainers,
+>
+> We encountered a shift-out-of-bounds bug while using our modified
+> Syzkaller. It is tested against linux kernel 6.9-rc1. Kernel config
+> and C repro are attached to this email. The UBSAN report is listed
+> below.
+>
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+> UBSAN: shift-out-of-bounds in /home/sy/linux-original/drivers/scsi/sg.c:1=
+902:13
+> shift exponent 64 is too large for 32-bit type 'int'
+> CPU: 1 PID: 8078 Comm: syz-executor748 Not tainted 6.7.0-rc7 #1
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+> 1.13.0-1ubuntu1.1 04/01/2014
+> Call Trace:
+>  <TASK>
+>  __dump_stack lib/dump_stack.c:88 [inline]
+>  dump_stack_lvl+0x136/0x150 lib/dump_stack.c:106
+>  ubsan_epilogue lib/ubsan.c:217 [inline]
+>  __ubsan_handle_shift_out_of_bounds+0x24b/0x430 lib/ubsan.c:387
+>  sg_build_indirect.cold+0x1b/0x20 drivers/scsi/sg.c:1902
+>  sg_build_reserve+0xc4/0x180 drivers/scsi/sg.c:2012
+>  sg_add_sfp drivers/scsi/sg.c:2194 [inline]
+>  sg_open+0xde4/0x1810 drivers/scsi/sg.c:350
+>  chrdev_open+0x269/0x770 fs/char_dev.c:414
+>  do_dentry_open+0x6d3/0x18d0 fs/open.c:948
+>  do_open fs/namei.c:3622 [inline]
+>  path_openat+0x1e1e/0x26d0 fs/namei.c:3779
+>  do_filp_open+0x1c9/0x410 fs/namei.c:3809
+>  do_sys_openat2+0x160/0x1c0 fs/open.c:1437
+>  do_sys_open fs/open.c:1452 [inline]
+>  __do_sys_openat fs/open.c:1468 [inline]
+>  __se_sys_openat fs/open.c:1463 [inline]
+>  __x64_sys_openat+0x140/0x1f0 fs/open.c:1463
+>  do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+>  do_syscall_64+0x40/0x110 arch/x86/entry/common.c:83
+>  entry_SYSCALL_64_after_hwframe+0x63/0x6b
+> RIP: 0033:0x7f48cf37f80b
+> Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85
+> c0 75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d
+> 00 f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+> RSP: 002b:00007ffd29cd7d40 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+> RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f48cf37f80b
+> RDX: 0000000000000041 RSI: 00007ffd29cd7dc0 RDI: 00000000ffffff9c
+> RBP: 00007ffd29cd7dc0 R08: 000000000000ffff R09: 00007ffd29cd7c50
+> R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000041
+> R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+>  </TASK>
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D
+>
+> If you have any questions, please contact us.
+> Reported by: Yue Sun <samsun1006219@gmail.com>
+> Reported by: xingwei lee <xrivendell7@gmail.com>
+>
+> Best Regards,
+> Yue
 
+We further analyzed the root cause of this bug. In function
+sg_build_indirect of drivers/scsi/sg.c, variable order of line 1900 is
+calculated out using get_order(num), and num comes from
+scatter_elem_sz. If scatter_elem_sz is equal or below zero, the order
+returned will be 52, so that PAGE_SHIFT + order is 64, which is larger
+than 32 bits int range, causing shift-out-of bound. This bug is tested
+and still remains in the latest upstream linux (6.9-rc3).
+If you have any questions, please contact us.
+
+Best,
+Yue
