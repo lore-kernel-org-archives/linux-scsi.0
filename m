@@ -1,138 +1,118 @@
-Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp-fw-52003.amazon.com (smtp-fw-52003.amazon.com [52.119.213.152])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 438886E5EF
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Apr 2024 07:12:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3284B127B4E;
+	Tue,  9 Apr 2024 11:45:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.119.213.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712646740; cv=none; b=jmDPyNRyQfNwXOX3aLsSGm5sSKcXwcBEjvwvgsrFGOm7qnbnE3IaApTw72zbKXahfKw3lin6wL7q4E23VZSgGdByOjm3b3gh9HSHo6pPfxiJU1hgHOtzVJvEiNDz4vh/R/3jxUnaXJ1OBjPuu9Mj9k58uRjKFLYm5PS50G0uXjQ=
+	t=1712663153; cv=none; b=njl/IZizOHf9Oy2AvUpkEgQLImugWOneEnneYLjndQlNeObg/eiCozv7bhqOyYEBjt+QMCAXbclZhfJaiwmb+P7Yr70WZ/zYkJ5QyUw7rPf7X8hobtFPj/0935KPeCmBDhCU98C4x2T950AlV69bSUdyUXqP7ClOFme8nHd/+FM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712646740; c=relaxed/simple;
-	bh=Ho8UuDKDn3dJomXIyDB+aaax60ogHDfzU1mNE6Decww=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=UN8JaAXYgl1uCTG7RY8g6CeJmrTxmZBjjQull5YEhlZ0ygrB2nxI9IWrmklOK7ZI5vXe08brMLQMcBD+3hRtqYErF10JrhVKF2gYV5mO6W25kBad0hM1YQDFN09Kf9bSk0w4SBPI80Ynu2DMZJndfUBNVazEiXSla+31rXophPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com; spf=none smtp.mailfrom=smartx.com; dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b=n22DMnwC; arc=none smtp.client-ip=209.85.128.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=smartx.com
+	s=arc-20240116; t=1712663153; c=relaxed/simple;
+	bh=GFjr+qUI/xJlRfC49pDYbbQ+5mOHCUk/2gN5wZX0VPA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=lBIR1ZzgNFAiDhBZgiwFTJ1Hjbtgxh5r2XlqjC9uK91LBmTo0zonDD0RFLMilwlSPXoKVCFuu7RFValzVMoe7lSmHU/wR3KLx2txQVIah3cPmVakFvodIiyvfOU99UkKhMWn7HIsMlQWeYtdowO9yUrUIx5A89DElmMUefkbEi4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.de; dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b=Re2MZHX5; arc=none smtp.client-ip=52.119.213.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b="n22DMnwC"
-Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-6151d79db7bso60414297b3.1
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Apr 2024 00:12:17 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="Re2MZHX5"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=smartx-com.20230601.gappssmtp.com; s=20230601; t=1712646736; x=1713251536; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Zwdl6n9vid2pyIfyEa4g1TqkRuZa9yIoK4Qc9NMFsP8=;
-        b=n22DMnwCs1PEEVheGAw8UAD5e/X8NWSNkhbpzfaBufCKbSyeiyEEPYikK07QihWM1v
-         u9H3jZT5aEoN+8iRSRzd2djA4X3FZhWzydvznEWJ793n2H5WOqikfn6WcmrS595/9mFG
-         4IUIWPzHYFshdIh8StBCiH7uALxa9ECI8cVipPCK3ixnzr7+NHMANuboj21WdOAnKNKf
-         V1N8MCTBMd5yxeHN0VkuCB4bji8xl83/VmEAjUs1/R7LwGFIOJvzc7Lsr9vpG3K7oC5p
-         EcovvdFGlaopmO1jQf9B/uXnhCHtbxRNBoMzqa0GVzdpqD1DX+hcgsONa3M7zVSxtYDL
-         3LPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712646736; x=1713251536;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Zwdl6n9vid2pyIfyEa4g1TqkRuZa9yIoK4Qc9NMFsP8=;
-        b=pABCpJ6wyEi1F5TFwKoz9zkPzWJOe9pR+ktThrOHws5yZBL4LuiaVyrJFt9rvtWsT6
-         KdXFALddK3f/95CwYl+VHFagOxEWN6BwneIImfPOsqQU8q6M3AnFLE2UTDHfq4obDDFe
-         SFFEgdHUD3LTn04Sm7LEMEC9+7U4i9N1L6hFgZ9Q3Aob8zhC4Ss6UywR+z20FG+F8woZ
-         BFHGWzHPSNVbushqUi4VLzDmRqRwB1ohkNqjKU1DkckQ3oObZzd2WliDz5pohXd25B3F
-         Y/pb4De0Yq5xh+csipLk/WySXU96VKpMVPosVKgvhSe/80Gsg7Y9VQnsHhRQeMbShZDg
-         7n+A==
-X-Forwarded-Encrypted: i=1; AJvYcCUfH5ZK4bez1rdfhDQH/YstHS9whvm0E0EpX+N+3ovUKb1LmoMSdE2n2NjgmkqNMAQW4s7jyNNn3NsLUcjkBS8Jowg4U0erOGAjbg==
-X-Gm-Message-State: AOJu0YzX06euMSyPAj5U9fKAvV8KojNOi24PqvYAnegrUNkiMp3sfMXT
-	6GdPSRuV6c4DpwG1jZrYgTI9wDWpAHnmil2M3QMN0lMhYHr/xx9idkrGpgTJ6iW5GMinjNqetHZ
-	asW09gga81GurWvdfTUKKiiQDtpPwx2raMpMR1Q==
-X-Google-Smtp-Source: AGHT+IFat9CYqWKiYnLWAs0EVd6FZ7PSZb9/eXaufs/Tvltb/meSM8Aog6IPhuwAY3wADjmm83qe3Ul9tXpVm7VB6CA=
-X-Received: by 2002:a81:a18b:0:b0:615:378a:1130 with SMTP id
- y133-20020a81a18b000000b00615378a1130mr10371259ywg.17.1712646735554; Tue, 09
- Apr 2024 00:12:15 -0700 (PDT)
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
+  t=1712663151; x=1744199151;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=GFjr+qUI/xJlRfC49pDYbbQ+5mOHCUk/2gN5wZX0VPA=;
+  b=Re2MZHX5GydCM8B6KilkbcXlSGPSLv0DHVNAFcmqvWsd0IZ1NH+wl46p
+   jp+rvzqYg9VvAX9wn3JpJghaHuXQWE2yPEhE8P08rq+2tVNxto7uD3tbV
+   QrLFtsNiMvuJGKG0kOuG7Rz2NIhkvDaaqqVhKqvF/2RhKVIbglEWBhS4x
+   g=;
+X-IronPort-AV: E=Sophos;i="6.07,189,1708387200"; 
+   d="scan'208";a="650727234"
+Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO smtpout.prod.us-west-2.prod.farcaster.email.amazon.dev) ([10.43.8.6])
+  by smtp-border-fw-52003.iad7.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Apr 2024 11:45:43 +0000
+Received: from EX19MTAUWC002.ant.amazon.com [10.0.21.151:49900]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.27.169:2525] with esmtp (Farcaster)
+ id 3f52ccb2-10c8-4639-a2de-4651f9e21034; Tue, 9 Apr 2024 11:45:42 +0000 (UTC)
+X-Farcaster-Flow-ID: 3f52ccb2-10c8-4639-a2de-4651f9e21034
+Received: from EX19D020UWC004.ant.amazon.com (10.13.138.149) by
+ EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.28; Tue, 9 Apr 2024 11:45:38 +0000
+Received: from [0.0.0.0] (10.253.83.51) by EX19D020UWC004.ant.amazon.com
+ (10.13.138.149) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.28; Tue, 9 Apr
+ 2024 11:45:22 +0000
+Message-ID: <7c82670e-6063-4b0f-9bbf-805a0d949d84@amazon.com>
+Date: Tue, 9 Apr 2024 13:45:18 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240408100505.1732370-1-lei.chen@smartx.com> <e0179895-5d06-4c47-98f2-635175a05cf7@oracle.com>
- <CAKcXpBxp4ziNBTeNco9sxwE3TH2=GFJ4tGdapy8DGpnZjV_1qA@mail.gmail.com>
-In-Reply-To: <CAKcXpBxp4ziNBTeNco9sxwE3TH2=GFJ4tGdapy8DGpnZjV_1qA@mail.gmail.com>
-From: Lei Chen <lei.chen@smartx.com>
-Date: Tue, 9 Apr 2024 15:12:03 +0800
-Message-ID: <CAKcXpBxZWxVY4dmBQWOv9_oACY1u4NZLCrmpxeorQZeCtM2imw@mail.gmail.com>
-Subject: Re: [PATCH RESEND] scsi: megaraid_sas: make module parameter
- scmd_timeout writable
-To: John Garry <john.g.garry@oracle.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, 
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, 
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>, 
-	"James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 15/25] misc: nsm: drop owner assignment
+Content-Language: en-US
+To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, "Michael S. Tsirkin"
+	<mst@redhat.com>, Jason Wang <jasowang@redhat.com>, Xuan Zhuo
+	<xuanzhuo@linux.alibaba.com>, Jonathan Corbet <corbet@lwn.net>, "David
+ Hildenbrand" <david@redhat.com>, Gerd Hoffmann <kraxel@redhat.com>, "Richard
+ Weinberger" <richard@nod.at>, Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+	Johannes Berg <johannes@sipsolutions.net>, Paolo Bonzini
+	<pbonzini@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, Jens Axboe
+	<axboe@kernel.dk>, Marcel Holtmann <marcel@holtmann.org>, "Luiz Augusto von
+ Dentz" <luiz.dentz@gmail.com>, Olivia Mackall <olivia@selenic.com>, Herbert
+ Xu <herbert@gondor.apana.org.au>, Amit Shah <amit@kernel.org>, Arnd Bergmann
+	<arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gonglei
+	<arei.gonglei@huawei.com>, "David S. Miller" <davem@davemloft.net>, "Sudeep
+ Holla" <sudeep.holla@arm.com>, Cristian Marussi <cristian.marussi@arm.com>,
+	Viresh Kumar <vireshk@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
+	Bartosz Golaszewski <brgl@bgdev.pl>, David Airlie <airlied@redhat.com>,
+	Gurchetan Singh <gurchetansingh@chromium.org>, Chia-I Wu <olvaffe@gmail.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard
+	<mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, Daniel Vetter
+	<daniel@ffwll.ch>, Jean-Philippe Brucker <jean-philippe@linaro.org>, "Joerg
+ Roedel" <joro@8bytes.org>, Will Deacon <will@kernel.org>, Robin Murphy
+	<robin.murphy@arm.com>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski
+	<kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Eric Van Hensbergen
+	<ericvh@kernel.org>, Latchesar Ionkov <lucho@ionkov.net>, Dominique Martinet
+	<asmadeus@codewreck.org>, Christian Schoenebeck <linux_oss@crudebyte.com>,
+	Stefano Garzarella <sgarzare@redhat.com>, Kalle Valo <kvalo@kernel.org>, "Dan
+ Williams" <dan.j.williams@intel.com>, Vishal Verma
+	<vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, Ira Weiny
+	<ira.weiny@intel.com>, "Pankaj Gupta" <pankaj.gupta.linux@gmail.com>, Bjorn
+ Andersson <andersson@kernel.org>, Mathieu Poirier
+	<mathieu.poirier@linaro.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Vivek Goyal
+	<vgoyal@redhat.com>, Miklos Szeredi <miklos@szeredi.hu>, "Anton Yakovlev"
+	<anton.yakovlev@opensynergy.com>, Jaroslav Kysela <perex@perex.cz>, Takashi
+ Iwai <tiwai@suse.com>
+CC: <virtualization@lists.linux.dev>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-um@lists.infradead.org>,
+	<linux-block@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>,
+	<linux-crypto@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-gpio@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+	<iommu@lists.linux.dev>, <netdev@vger.kernel.org>, <v9fs@lists.linux.dev>,
+	<kvm@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<nvdimm@lists.linux.dev>, <linux-remoteproc@vger.kernel.org>,
+	<linux-scsi@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+	<alsa-devel@alsa-project.org>, <linux-sound@vger.kernel.org>
+References: <20240331-module-owner-virtio-v2-0-98f04bfaf46a@linaro.org>
+ <20240331-module-owner-virtio-v2-15-98f04bfaf46a@linaro.org>
+From: Alexander Graf <graf@amazon.com>
+In-Reply-To: <20240331-module-owner-virtio-v2-15-98f04bfaf46a@linaro.org>
+X-ClientProxiedBy: EX19D035UWA002.ant.amazon.com (10.13.139.60) To
+ EX19D020UWC004.ant.amazon.com (10.13.138.149)
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Transfer-Encoding: base64
 
-Sorry for the non plain text format.
+Ck9uIDMxLjAzLjI0IDEwOjQ0LCBLcnp5c3p0b2YgS296bG93c2tpIHdyb3RlOgo+IHZpcnRpbyBj
+b3JlIGFscmVhZHkgc2V0cyB0aGUgLm93bmVyLCBzbyBkcml2ZXIgZG9lcyBub3QgbmVlZCB0by4K
+Pgo+IFNpZ25lZC1vZmYtYnk6IEtyenlzenRvZiBLb3psb3dza2kgPGtyenlzenRvZi5rb3psb3dz
+a2lAbGluYXJvLm9yZz4KCgpSZXZpZXdlZC1ieTogQWxleGFuZGVyIEdyYWYgPGdyYWZAYW1hem9u
+LmNvbT4KCgpBbGV4CgoKCgpBbWF6b24gRGV2ZWxvcG1lbnQgQ2VudGVyIEdlcm1hbnkgR21iSApL
+cmF1c2Vuc3RyLiAzOAoxMDExNyBCZXJsaW4KR2VzY2hhZWZ0c2Z1ZWhydW5nOiBDaHJpc3RpYW4g
+U2NobGFlZ2VyLCBKb25hdGhhbiBXZWlzcwpFaW5nZXRyYWdlbiBhbSBBbXRzZ2VyaWNodCBDaGFy
+bG90dGVuYnVyZyB1bnRlciBIUkIgMTQ5MTczIEIKU2l0ejogQmVybGluClVzdC1JRDogREUgMjg5
+IDIzNyA4NzkKCgo=
 
-On Mon, Apr 8, 2024 at 8:30=E2=80=AFPM John Garry <john.g.garry@oracle.com>=
- wrote:
->
-> On 08/04/2024 11:05, Lei Chen wrote:
-> > When an scmd times out, block layer calls megasas_reset_timer to
-> > make further decisions. scmd_timeout indicates when an scmd is really
-> > timed-out.
->
-> What does really timed-out mean?
-
-scsi_times_out will call eh_timed_out (in megaraid driver, this
-indicates megasas_reset_timer),
-megasas_reset_timer determines whether a scmd is timed out. If not, it
-will return
-BLK_EH_RESET_TIMER to tell the block layer to reset the timer and do nothin=
-g.
->
->
-> > If we want to make this process more fast, we can decrease
-> > this value. This patch allows users to change this value in run-time.
-> >
-> > Signed-off-by: Lei Chen <lei.chen@smartx.com>
-> > ---
-> >   drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
-> >   1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/m=
-egaraid/megaraid_sas_base.c
-> > index 3d4f13da1ae8..2a165e5dc7a3 100644
-> > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > @@ -91,7 +91,7 @@ module_param(dual_qdepth_disable, int, 0444);
-> >   MODULE_PARM_DESC(dual_qdepth_disable, "Disable dual queue depth featu=
-re. Default: 0");
-> >
-> >   static unsigned int scmd_timeout =3D MEGASAS_DEFAULT_CMD_TIMEOUT;
-> > -module_param(scmd_timeout, int, 0444);
-> > +module_param(scmd_timeout, int, 0644);
-> >   MODULE_PARM_DESC(scmd_timeout, "scsi command timeout (10-90s), defaul=
-t 90s. See megasas_reset_timer.");
-> >
-> >   int perf_mode =3D -1;
->
-> I don't know why megaraid_sas has special handling here (and bypasses
-> SCSI midlayer).
->
-> If the host is overloaded and you get a time-out as a command simply
-> could not be handled in time, can you alternatively try reducing the
-> scsi device queue depth?
-
-
-Yeah, scsi layer and drivers already have some methods to control the
-queue depth. For megaraid driver,
-it will throttle queue depth in megasas_reset_timer. But since scsi
-disks on the same megaraid card share
- the queue depth,  that will impact other scsi disks.
-In most cases, a scsi disk is more likely to be misworking than a RAID
-card, which makes scmd wrong and retry.
-We want to adjust scmd_timeout without reloading the driver to make
-scmds against abnormal scsi disks completed faster.
