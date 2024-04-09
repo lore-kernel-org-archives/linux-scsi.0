@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D24F912FF94;
-	Tue,  9 Apr 2024 14:38:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FC2F381C8;
+	Tue,  9 Apr 2024 14:38:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712673527; cv=none; b=uPVjIOQVPedq/ase7lvQXnRffUhzcPmT5hBvo3EbVYRoVKK4b2gaXD98sxEDy1A9CpVJwUror5Q33UPUMr/a33/lPEBX1JELLuQXW5zWuL/lxGcAr+FkFZR17dgOCR253T7r2gVV8iI8Al0TN53+tHQ0a2fq1uD7+8s5PnQjvjg=
+	t=1712673530; cv=none; b=AvNfUS8OmEejh6ybHQ9NbiUyztcLPofnF93yWTwB6hv7w5Ip2Dc3dhYvdXJS2hOGIKY+tVreX8C7UiN2pQ/mwvDhLeORcVHygVIFCufUsMprpDY2/3XuTaQtmCrVvMdWW8E/qz3VF3+kaBhbxTXh7jlwKyZ7wNXteSwuMN8WTQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712673527; c=relaxed/simple;
-	bh=Nq4mzOcspJxKptNLRGNTAAwyRhMaJZkG2xELTRcF3JY=;
+	s=arc-20240116; t=1712673530; c=relaxed/simple;
+	bh=EtA3Iu9tqW3suBZCCoNr/xZL8WzZgz2EOJfVKb9Jhy0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=moKgQh1b9x5MA16u6yW4V/MSzqnySbE7YZwCS2mxCMaQm6KXgDgDAE5x9Qlwjo1nDXE7GGFkIAAoQM/44XNu1E9k9EQjG4JHYkEsAh/P2pWqISmW8kCAeJuWS/E3h0kmIY0E4L/3vOw84l3bQ5uZxhyg7vTuFrZ6Q56zKIYFDTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=t49nIlxj; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=CMA3T2HuZcy1oLd6zfxO0DsOjKRF9J33AQunu55SAFoIMe/arqyOyPO2N8k8uiqJdHfaUjjDIcXScvFX8oeNnT/HsFNBie4jHdsNjdOCVfHkPGYNVoqbu4e74lfybjFOtW7kJpKNpkbFcA43/FPZiaCH7QymbAXirPdpA5Ei+xI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=yf8StvHH; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="t49nIlxj"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="yf8StvHH"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=oOzGzNJBoU44rEzjCKb52VWSHMlCwSe4hv+WebdEwa8=; b=t49nIlxj7uOo8e+Fhc87Q753t5
-	llx/mLCUYGyaFoKTMJ5mH/9Hx+RV1YE0WEMerWD6pMO7+15YymhEBzLdY/HzkD9gRLJDzwYCVGd3f
-	elbWhbhlUXcL4O5sBB83c2GnwuGnA86PjlHdrjZqmtZ+xbksbE8GnY89bQFEa5ydpz3Sb+z2CGEuj
-	j5zy1gQFLTQX1xr6knDV3B6Ft1DZZQwZOR6x4dj9KlYq7EElLAcFinxdXLvvqGigqAkWEXLwDmRo6
-	uAF/UdSk6ks6LqEQF8NbyYh37EYm2NSc03UIm08ERpfQVqIiWb0YJKMHkg39F/yiQ9az3Er6/Seqq
-	WtyzWE2Q==;
+	bh=bgTY6jxHS96XqmiG7/hrLio0Tc7FMdntpATfuYvKN6I=; b=yf8StvHHgPooeYLI5TBbMDF7X6
+	HgFNpN8LXPDsoU3MznnqIbs04U65grjMPc2WebA0ikADcZ1nsCCpAUanw+wiPRmvXozkpncmvZfdG
+	uTPTLWafxJ2EQIxUc4JilHmpBA30Qk55UrykahSOGihe1qjQbwhA06zkLAAXb5t7jtoDAFSsIq1YX
+	PEu7CiOm8ZTJRK6AGRaITyfsKrvMXeS9csju9pDH/Ig4PWhCDg75sEhZYnNfm7RyRTCJxV5Ne84Mo
+	b/aXSvKqjwH8x8i53SZSqj6K20Aay5Hk3j9fA8Hzmv40MvB3sKeGQi5P5o4A0ZOGftRko+ttoxBpr
+	hR3wc05g==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ruCcP-00000002SCK-0jjf;
-	Tue, 09 Apr 2024 14:38:37 +0000
+	id 1ruCcS-00000002SDd-0iWt;
+	Tue, 09 Apr 2024 14:38:40 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -73,9 +73,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net,
 	Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 17/23] usb-storage: switch to using ->device_configure
-Date: Tue,  9 Apr 2024 16:37:42 +0200
-Message-Id: <20240409143748.980206-18-hch@lst.de>
+Subject: [PATCH 18/23] sata_nv: switch to using ->device_configure
+Date: Tue,  9 Apr 2024 16:37:43 +0200
+Message-Id: <20240409143748.980206-19-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240409143748.980206-1-hch@lst.de>
 References: <20240409143748.980206-1-hch@lst.de>
@@ -92,103 +92,86 @@ Switch to the ->device_configure method instead of ->slave_configure
 and update the block limits on the passed in queue_limits instead
 of using the per-limit accessors.
 
-Also use the proper atomic queue limit update helpers and freeze the
-queue when updating max_hw_sectors from sysfs.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/usb/storage/scsiglue.c | 36 ++++++++++++++++++++--------------
- 1 file changed, 21 insertions(+), 15 deletions(-)
+ drivers/ata/sata_nv.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index eb4ba03e082d89..b31464740f6c86 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -82,7 +82,7 @@ static int slave_alloc (struct scsi_device *sdev)
- 	return 0;
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 0a0cee755bde73..d0a8eb0e8011d0 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -296,7 +296,8 @@ static void nv_nf2_freeze(struct ata_port *ap);
+ static void nv_nf2_thaw(struct ata_port *ap);
+ static void nv_ck804_freeze(struct ata_port *ap);
+ static void nv_ck804_thaw(struct ata_port *ap);
+-static int nv_adma_slave_config(struct scsi_device *sdev);
++static int nv_adma_device_configure(struct scsi_device *sdev,
++		struct queue_limits *lim);
+ static int nv_adma_check_atapi_dma(struct ata_queued_cmd *qc);
+ static enum ata_completion_errors nv_adma_qc_prep(struct ata_queued_cmd *qc);
+ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc);
+@@ -318,7 +319,8 @@ static void nv_adma_tf_read(struct ata_port *ap, struct ata_taskfile *tf);
+ static void nv_mcp55_thaw(struct ata_port *ap);
+ static void nv_mcp55_freeze(struct ata_port *ap);
+ static void nv_swncq_error_handler(struct ata_port *ap);
+-static int nv_swncq_slave_config(struct scsi_device *sdev);
++static int nv_swncq_device_configure(struct scsi_device *sdev,
++		struct queue_limits *lim);
+ static int nv_swncq_port_start(struct ata_port *ap);
+ static enum ata_completion_errors nv_swncq_qc_prep(struct ata_queued_cmd *qc);
+ static void nv_swncq_fill_sg(struct ata_queued_cmd *qc);
+@@ -380,7 +382,7 @@ static const struct scsi_host_template nv_adma_sht = {
+ 	.can_queue		= NV_ADMA_MAX_CPBS,
+ 	.sg_tablesize		= NV_ADMA_SGTBL_TOTAL_LEN,
+ 	.dma_boundary		= NV_ADMA_DMA_BOUNDARY,
+-	.slave_configure	= nv_adma_slave_config,
++	.device_configure	= nv_adma_device_configure,
+ 	.sdev_groups		= ata_ncq_sdev_groups,
+ 	.change_queue_depth     = ata_scsi_change_queue_depth,
+ 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
+@@ -391,7 +393,7 @@ static const struct scsi_host_template nv_swncq_sht = {
+ 	.can_queue		= ATA_MAX_QUEUE - 1,
+ 	.sg_tablesize		= LIBATA_MAX_PRD,
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	.slave_configure	= nv_swncq_slave_config,
++	.device_configure	= nv_swncq_device_configure,
+ 	.sdev_groups		= ata_ncq_sdev_groups,
+ 	.change_queue_depth     = ata_scsi_change_queue_depth,
+ 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
+@@ -661,7 +663,8 @@ static void nv_adma_mode(struct ata_port *ap)
+ 	pp->flags &= ~NV_ADMA_PORT_REGISTER_MODE;
  }
  
--static int slave_configure(struct scsi_device *sdev)
-+static int device_configure(struct scsi_device *sdev, struct queue_limits *lim)
+-static int nv_adma_slave_config(struct scsi_device *sdev)
++static int nv_adma_device_configure(struct scsi_device *sdev,
++		struct queue_limits *lim)
  {
- 	struct us_data *us = host_to_us(sdev->host);
- 	struct device *dev = us->pusb_dev->bus->sysdev;
-@@ -97,31 +97,28 @@ static int slave_configure(struct scsi_device *sdev)
- 
- 		if (us->fflags & US_FL_MAX_SECTORS_MIN)
- 			max_sectors = PAGE_SIZE >> 9;
--		if (queue_max_hw_sectors(sdev->request_queue) > max_sectors)
--			blk_queue_max_hw_sectors(sdev->request_queue,
--					      max_sectors);
-+		lim->max_hw_sectors = min(lim->max_hw_sectors, max_sectors);
- 	} else if (sdev->type == TYPE_TAPE) {
- 		/*
- 		 * Tapes need much higher max_sector limits, so just
- 		 * raise it to the maximum possible (4 GB / 512) and
- 		 * let the queue segment size sort out the real limit.
- 		 */
--		blk_queue_max_hw_sectors(sdev->request_queue, 0x7FFFFF);
-+		lim->max_hw_sectors = 0x7FFFFF;
- 	} else if (us->pusb_dev->speed >= USB_SPEED_SUPER) {
- 		/*
- 		 * USB3 devices will be limited to 2048 sectors. This gives us
- 		 * better throughput on most devices.
- 		 */
--		blk_queue_max_hw_sectors(sdev->request_queue, 2048);
-+		lim->max_hw_sectors = 2048;
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+@@ -740,8 +743,8 @@ static int nv_adma_slave_config(struct scsi_device *sdev)
+ 		rc = dma_set_mask(&pdev->dev, pp->adma_dma_mask);
  	}
  
- 	/*
- 	 * The max_hw_sectors should be up to maximum size of a mapping for
- 	 * the device. Otherwise, a DMA API might fail on swiotlb environment.
- 	 */
--	blk_queue_max_hw_sectors(sdev->request_queue,
--		min_t(size_t, queue_max_hw_sectors(sdev->request_queue),
--		      dma_max_mapping_size(dev) >> SECTOR_SHIFT));
-+	lim->max_hw_sectors = min_t(size_t,
-+		lim->max_hw_sectors, dma_max_mapping_size(dev) >> SECTOR_SHIFT);
- 
- 	/*
- 	 * We can't put these settings in slave_alloc() because that gets
-@@ -582,13 +579,22 @@ static ssize_t max_sectors_store(struct device *dev, struct device_attribute *at
- 		size_t count)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct queue_limits lim;
- 	unsigned short ms;
-+	int ret;
- 
--	if (sscanf(buf, "%hu", &ms) > 0) {
--		blk_queue_max_hw_sectors(sdev->request_queue, ms);
--		return count;
--	}
--	return -EINVAL;
-+	if (sscanf(buf, "%hu", &ms) <= 0)
-+		return -EINVAL;
-+
-+	blk_mq_freeze_queue(sdev->request_queue);
-+	lim = queue_limits_start_update(sdev->request_queue);
-+	lim.max_hw_sectors = ms;
-+	ret = queue_limits_commit_update(sdev->request_queue, &lim);
-+	blk_mq_unfreeze_queue(sdev->request_queue);
-+
-+	if (ret)
-+		return ret;
-+	return count;
+-	blk_queue_segment_boundary(sdev->request_queue, segment_boundary);
+-	blk_queue_max_segments(sdev->request_queue, sg_tablesize);
++	lim->seg_boundary_mask = segment_boundary;
++	lim->max_segments = sg_tablesize;
+ 	ata_port_info(ap,
+ 		      "DMA mask 0x%llX, segment boundary 0x%lX, hw segs %hu\n",
+ 		      (unsigned long long)*ap->host->dev->dma_mask,
+@@ -1868,7 +1871,8 @@ static void nv_swncq_host_init(struct ata_host *host)
+ 	writel(~0x0, mmio + NV_INT_STATUS_MCP55);
  }
- static DEVICE_ATTR_RW(max_sectors);
  
-@@ -626,7 +632,7 @@ static const struct scsi_host_template usb_stor_host_template = {
- 	.this_id =			-1,
- 
- 	.slave_alloc =			slave_alloc,
--	.slave_configure =		slave_configure,
-+	.device_configure =		device_configure,
- 	.target_alloc =			target_alloc,
- 
- 	/* lots of sg segments can be handled */
+-static int nv_swncq_slave_config(struct scsi_device *sdev)
++static int nv_swncq_device_configure(struct scsi_device *sdev,
++		struct queue_limits *lim)
+ {
+ 	struct ata_port *ap = ata_shost_to_port(sdev->host);
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
 -- 
 2.39.2
 
