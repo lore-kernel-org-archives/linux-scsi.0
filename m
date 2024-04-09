@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93C27135A7F;
-	Tue,  9 Apr 2024 14:38:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2532C12FF94;
+	Tue,  9 Apr 2024 14:38:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712673521; cv=none; b=aIxc0WMg64etZ80UEEvvEk6vzdNLloybFmFK7QTto1amYwel7+5MOQFZ3YQCtTLdGn6WioffS7gac5MtvcoRavzo3mCogr5/Mgp6/jy66K+HMElA5V20CYShdrwodrmOayH/en6ldbgPoPm2rJDMa/q+NvwG5EpoYiamDUKdfTc=
+	t=1712673524; cv=none; b=mUOBZU91dVeVM68OEsDyU9ffXx7d/nODFgzBAwzr6cgYwlSFeOBcwNQQTnn0ZzAqMbjqWM2aOTWECiAEyGSMCSy7GAYkq4jZxkh9yui/O2/Gqvwxj7l3h2akZwWM/41W5yEJjrN2whhNN+rgVPpOnw4X973Dc0zajIrnKKftNnA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712673521; c=relaxed/simple;
-	bh=Q2a2Vuy3Hyhv6ns2jLrgWhQTEn4lx4xV+k4GvvaNMzo=;
+	s=arc-20240116; t=1712673524; c=relaxed/simple;
+	bh=kQagpPPOUq0SfSCwGLXK2TImVAsPbb2O6j8bOAzpRvk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=kS+dAub4UIAIX1W1QJrqTLdJf4hDKGl8OIp1YO5NdizbYlG3ZeoYYzA1mVhVcL4T1+aT0wjx/+v8GFJgJCxRsD05Phb7DKaVEa6AdbLW6jkMt4M9tdbLCcIx6v50Br52Ka2CVEBmJg1qM6j+8N0+5U78EIzisx5N2b2NFe6+DFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=FP2lfPlt; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=CQtHQpV4lLaTSdH9cPlsM+J5SNEX5Hs1YSx9MDMMK/YKgVny8PG/tITGRgnheJooJoKfr6Y5E/Djm9rsQ7L7rRMbIvC+Y5tm2u9sXJ6zhY1TtWKWFGERDy6lGoKieeQu3CuCyHNq3GBjWEqo8VDrTzN9ZRWksZp+ZtjPW765Bwo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XRv/eawl; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FP2lfPlt"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XRv/eawl"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=laYvUn5io1AYOWOC1+Nnk9PRyfmaFig8uP3M4PW1qWw=; b=FP2lfPltnRny+t6M+WJAyeXA2A
-	QOcoK3qCQE8hVwQCMB9oJ2qWcuENQjtcUuMR0LSiPp4AAPfAlJP4YRf+tcZBLquG9S8YIdRf9+yVm
-	Ro+Ql/x8MiDI/KV1EiW++PF4RTS1TB5tuyED3htMMNOYC4/W5mak7Al8qTqY/lSUfrgReqzgpTNNy
-	7PjTEsztUbIO47/Vo4Y7E4KwuISr8GnLV8MqlMQ6fbQrcK9+233fSR/rBETxck2XtN1aLlkF33loC
-	b2bjaPCqWl3PUxuvSvN4a0OnGEqBqY//kGhrM3W3zz4wJ6TigYgs6NWOMSpAu8/hlVxaHiUXB2DYs
-	tN4w8IJA==;
+	bh=SZyzmpnjk4FheRLYyA90eDeg4CmfzjMaU8l+KnZbwcY=; b=XRv/eawlHdk4nU7ebxCA3OB0qm
+	aGPAuAkDikOI2tkWhvWrnH4qXeP0fzNcjYFh0p5SpVuzqKn85Yxn5bMAbhJ8Nw3U4X3EIUB3Myd3z
+	IC8Ft4sTQpzbN0QHYBtgc8Cai2Buc+SxUSoTQlATjgQBA5M44YiUORHDOrMIrg2rqMa6Q/h/1SZEZ
+	rl+kcdOVe/8Q12UktxGEkyG3wV2qwbDZ0y6h+unSx9SR5JbxrJEsNXvXTKuRiU8AJTxtfto/qQgLM
+	ON8Z+bmZntfJX7Cq4HAgms9OICk0aye38MlJGWyd/dGrdAu+J7hs9GTMXmW+PBxzs1B7dpniJICl+
+	9BpmuQyA==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ruCcJ-00000002S9L-34V8;
-	Tue, 09 Apr 2024 14:38:32 +0000
+	id 1ruCcM-00000002SAb-0yff;
+	Tue, 09 Apr 2024 14:38:34 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -73,9 +73,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net,
 	Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 15/23] ipr: switch to using ->device_configure
-Date: Tue,  9 Apr 2024 16:37:40 +0200
-Message-Id: <20240409143748.980206-16-hch@lst.de>
+Subject: [PATCH 16/23] pmcraid: switch to using ->device_configure
+Date: Tue,  9 Apr 2024 16:37:41 +0200
+Message-Id: <20240409143748.980206-17-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240409143748.980206-1-hch@lst.de>
 References: <20240409143748.980206-1-hch@lst.de>
@@ -96,51 +96,53 @@ Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/ipr.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/pmcraid.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 3819f7c42788bc..388c8a10295a67 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -4769,15 +4769,17 @@ static void ipr_slave_destroy(struct scsi_device *sdev)
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 0614b7e366b776..0efe2fc8b30826 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -197,8 +197,9 @@ static int pmcraid_slave_alloc(struct scsi_device *scsi_dev)
  }
  
  /**
-- * ipr_slave_configure - Configure a SCSI device
-+ * ipr_device_configure - Configure a SCSI device
-  * @sdev:	scsi device struct
-+ * @lim:	queue limits
+- * pmcraid_slave_configure - Configures a SCSI device
++ * pmcraid_device_configure - Configures a SCSI device
+  * @scsi_dev: scsi device struct
++ * @lim: queue limits
   *
-  * This function configures the specified scsi device.
-  *
+  * This function is executed by SCSI mid layer just after a device is first
+  * scanned (i.e. it has responded to an INQUIRY). For VSET resources, the
+@@ -209,7 +210,8 @@ static int pmcraid_slave_alloc(struct scsi_device *scsi_dev)
   * Return value:
-  * 	0 on success
-  **/
--static int ipr_slave_configure(struct scsi_device *sdev)
-+static int ipr_device_configure(struct scsi_device *sdev,
+  *	  0 on success
+  */
+-static int pmcraid_slave_configure(struct scsi_device *scsi_dev)
++static int pmcraid_device_configure(struct scsi_device *scsi_dev,
 +		struct queue_limits *lim)
  {
- 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *) sdev->host->hostdata;
- 	struct ipr_resource_entry *res;
-@@ -4798,7 +4800,7 @@ static int ipr_slave_configure(struct scsi_device *sdev)
- 			sdev->no_report_opcodes = 1;
- 			blk_queue_rq_timeout(sdev->request_queue,
- 					     IPR_VSET_RW_TIMEOUT);
--			blk_queue_max_hw_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
-+			lim->max_hw_sectors = IPR_VSET_MAX_SECTORS;
- 		}
- 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 	struct pmcraid_resource_entry *res = scsi_dev->hostdata;
  
-@@ -6397,7 +6399,7 @@ static const struct scsi_host_template driver_template = {
- 	.eh_device_reset_handler = ipr_eh_dev_reset,
- 	.eh_host_reset_handler = ipr_eh_host_reset,
- 	.slave_alloc = ipr_slave_alloc,
--	.slave_configure = ipr_slave_configure,
-+	.device_configure = ipr_device_configure,
- 	.slave_destroy = ipr_slave_destroy,
- 	.scan_finished = ipr_scan_finished,
- 	.target_destroy = ipr_target_destroy,
+@@ -233,8 +235,7 @@ static int pmcraid_slave_configure(struct scsi_device *scsi_dev)
+ 		scsi_dev->allow_restart = 1;
+ 		blk_queue_rq_timeout(scsi_dev->request_queue,
+ 				     PMCRAID_VSET_IO_TIMEOUT);
+-		blk_queue_max_hw_sectors(scsi_dev->request_queue,
+-				      PMCRAID_VSET_MAX_SECTORS);
++		lim->max_hw_sectors = PMCRAID_VSET_MAX_SECTORS;
+ 	}
+ 
+ 	/*
+@@ -3668,7 +3669,7 @@ static const struct scsi_host_template pmcraid_host_template = {
+ 	.eh_host_reset_handler = pmcraid_eh_host_reset_handler,
+ 
+ 	.slave_alloc = pmcraid_slave_alloc,
+-	.slave_configure = pmcraid_slave_configure,
++	.device_configure = pmcraid_device_configure,
+ 	.slave_destroy = pmcraid_slave_destroy,
+ 	.change_queue_depth = pmcraid_change_queue_depth,
+ 	.can_queue = PMCRAID_MAX_IO_CMD,
 -- 
 2.39.2
 
