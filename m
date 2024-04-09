@@ -1,146 +1,111 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5AE12D753;
-	Tue,  9 Apr 2024 12:51:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17D10130E47;
+	Tue,  9 Apr 2024 13:48:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712667080; cv=none; b=lQTL/pVBk/FSX8c8V2gPgvkVoJ5m5LBHfpGZnlW8t6iPSKaJqoj/7bmtru/NXoMCrYUCOOSnwsDc9IZnL1/si9jKJAJFQb7gjBf9sXl0o5E5zfNYjyKzTBTni/KYgVjLLI0QFlkTFuPDk8FZl+DkJTc1KzhWHKJ3W8EG9f4wmDk=
+	t=1712670512; cv=none; b=puMoAlSsR0M7Avc1e9YJGeBV32yNL7a/CB3yyAgH7a8SRf7W/soqv76FDfi4/TnJ3m1dUgIBLGvJSopnorGzrdK13HoVK27l+RszdsArvOPobPDOWDVwuALPaJd445vf/qD5jZTCzSzW46w+gEYzkVJ19uS46MBYc0uBWzMcuIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712667080; c=relaxed/simple;
-	bh=DjNT0L5DEzFWRydMIfmLZI/hD2TY6TxAHIauI8t1flQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=glGkR8tihU6wGZ+/ePK/5qo/oSTwnM5os7iOw/glZNH2XjcEK82kuzlh0mjGDPqdxcBIoeVuyPmsabPMqQwtoPUiqU67I5CpgxRZV0Fi38p52bigyB5YJ6HzGb9JQMDyHWUMhH2opLbHk3zjkQvuJNNZQtHaSci+uYq/iQgC1UA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TEsNCgBU; arc=none smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1712670512; c=relaxed/simple;
+	bh=lY/4wKOh/DIkoH73lXxAFPUPx0Fw/2iox1dE6fYg0V4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WKOkVx6CJCij7ToaAzas08ZvRO3hl8jAJ0c6RwraY2gCypi9iIzYUBmxI0One/inPv57BFQTB8QJPnLKNtkRR9FpYFzvuyA5pL5BfV3h2aAMCJW5PCxl9RFRiFPeqVZW0XpaplPY/bsuktjguK1Wr8ZEvssnMSbG1JFXKTxpkoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=jk/4sfVz; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TEsNCgBU"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-56e48d0a632so4808470a12.2;
-        Tue, 09 Apr 2024 05:51:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1712667077; x=1713271877; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pLZRWIxxIpIyRano383QAFQNgeysi1fKEMitJfkcMIg=;
-        b=TEsNCgBUnSDGjuWAwZ6tEQiGc+Dk10FI24vnZMah2UzznwmbSo691z+lAKF85ZScDc
-         Q4X7Rx1RL88dJ2sg7ouSzZDXhIQL4vyAG0ImliKf3HXDcFNsggO2oRtWpRC3pP1l9Zje
-         BjWRvS3HQwZXmApOUP4uWAw0iZ9DB8xCB+P1wCdP9+CrvVpgoX0wwWF6ZJn+Jd5XqIGz
-         kHr83CV7Xdr0Y3u6jbikzq7+za10A+69W16LjR02gYrOXkxMH+a8Qwwb0Q5QZJpXxvnw
-         3xUYX70LeK8sYEiKXNGhE5Gbj1h2B4giuEUPsv7yfrcc+Bq8LMD+ujrsY3hDt/BsCqAr
-         YoCw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712667077; x=1713271877;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=pLZRWIxxIpIyRano383QAFQNgeysi1fKEMitJfkcMIg=;
-        b=c8B3A43rC77gbJY6UaStMEZLzDFIOhtFrCofmSBFBppX0vVSG5njY9oyJhJrSh1ycn
-         eCaabwjRZBfpCZwB+nF0gQR/dTnkF6cx2IAGjl8cCSyL66Lc0G5Wj7wc+mYVzKtqKmWG
-         s43+MWZw6zRhBuPrCNaYcTZyCzmorJh0nDlZaW8ioyeRxlJinBFkv4rOIVVUPoK7RoRX
-         ksKxr6kkAkTTsGu2hTNDC69MKHPnA39KdGo8klz1f+vs9CSFtjn77N3F5a+mGclHeUY4
-         60KGi5sxIv18wM14SBsHEMRZDc4g8ugEfJfYUXu2hIU9HZD5kw2WKf9TZRvnEoRkDhc1
-         5z5w==
-X-Gm-Message-State: AOJu0YyKax/bE041JyPXCLwyMyvofG3a3J1HgXY5/zFSNzZGvPP63mZ3
-	KZzwK8SJpY7ijpm7Q76e+SuOlFln1DSPaBqbN9pFaKCBp26IhNP6SMVtJCWYP+xgedkCksG79jS
-	AI/i5YsnDwyEvqx7GBBBvZqrbg4hvcQkEfT+a80M5
-X-Google-Smtp-Source: AGHT+IHqqbdEqfhqTMpWmBSPML4xCExE0zWXW/QZYTjqy5r4C2uX+Lj6ovqOlaO1cnzmjHzOmb/yasrCZh4idaWK3IY=
-X-Received: by 2002:a17:906:b24b:b0:a4e:7b8e:35ae with SMTP id
- ce11-20020a170906b24b00b00a4e7b8e35aemr7764103ejb.38.1712667076605; Tue, 09
- Apr 2024 05:51:16 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="jk/4sfVz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8499DC433C7;
+	Tue,  9 Apr 2024 13:48:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1712670511;
+	bh=lY/4wKOh/DIkoH73lXxAFPUPx0Fw/2iox1dE6fYg0V4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=jk/4sfVzp/FqUu/E9Kv984LFB+BDnS4hpA6X7Xur98C4l2OpU0LQqrhXzdPxhLC5g
+	 maOM8QLXXPrlFxo+/o9nCh64QqB7E3dqEk4OBCFZ6kUJK0CQyaBup3A2HduHoP68sP
+	 nI956a18HBaBun5llmCJ9uH74oCtXxtH8ceqT1oI=
+Date: Tue, 9 Apr 2024 15:48:28 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Corey Minyard <minyard@acm.org>,
+	Peter Huewe <peterhuewe@gmx.de>,
+	Jarkko Sakkinen <jarkko@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+	Moritz Fischer <mdf@kernel.org>, Wu Hao <hao.wu@intel.com>,
+	Xu Yilun <yilun.xu@intel.com>, Jiri Kosina <jikos@kernel.org>,
+	Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+	Michael Hennerich <michael.hennerich@analog.com>,
+	Peter Rosin <peda@axentia.se>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Iyappan Subramanian <iyappan@os.amperecomputing.com>,
+	Keyur Chudgar <keyur@os.amperecomputing.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Yisen Zhuang <yisen.zhuang@huawei.com>,
+	Salil Mehta <salil.mehta@huawei.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Liam Girdwood <lgirdwood@gmail.com>,
+	Mark Brown <broonie@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	Xiang Chen <chenxiang66@hisilicon.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Jacky Huang <ychuang3@nuvoton.com>,
+	Shan-Chun Hung <schung@nuvoton.com>, Arnd Bergmann <arnd@arndb.de>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Tom Rix <trix@redhat.com>,
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
+	Randy Dunlap <rdunlap@infradead.org>, Rob Herring <robh@kernel.org>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	openipmi-developer@lists.sourceforge.net,
+	linux-integrity@vger.kernel.org, dmaengine@vger.kernel.org,
+	linux-fpga@vger.kernel.org, linux-input@vger.kernel.org,
+	linux-i2c@vger.kernel.org, netdev@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-rtc@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
+	linux-serial@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 33/34] drivers: remove incorrect of_match_ptr/ACPI_PTR
+ annotations
+Message-ID: <2024040921-propose-scorer-a319@gregkh>
+References: <20240403080702.3509288-1-arnd@kernel.org>
+ <20240403080702.3509288-34-arnd@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAEkJfYOs-szTK0rYvDw5UNGfzbTG_7RvjqFOZA=c6LXvxdUt2g@mail.gmail.com>
-In-Reply-To: <CAEkJfYOs-szTK0rYvDw5UNGfzbTG_7RvjqFOZA=c6LXvxdUt2g@mail.gmail.com>
-From: Sam Sun <samsun1006219@gmail.com>
-Date: Tue, 9 Apr 2024 20:51:04 +0800
-Message-ID: <CAEkJfYMcdmXAhe9oTpEPGL+_661PNAvM58Y+irwnbLW8FKohNw@mail.gmail.com>
-Subject: Re: [Bug] UBSAN: shift-out-of-bounds in sg_build_indirect
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, jejb@linux.ibm.com, 
-	dgilbert@interlog.com, syzkaller@googlegroups.com, xrivendell7@gmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240403080702.3509288-34-arnd@kernel.org>
 
-On Mon, Mar 25, 2024 at 8:57=E2=80=AFPM Sam Sun <samsun1006219@gmail.com> w=
-rote:
->
-> Dear developers and maintainers,
->
-> We encountered a shift-out-of-bounds bug while using our modified
-> Syzkaller. It is tested against linux kernel 6.9-rc1. Kernel config
-> and C repro are attached to this email. The UBSAN report is listed
-> below.
->
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
-> UBSAN: shift-out-of-bounds in /home/sy/linux-original/drivers/scsi/sg.c:1=
-902:13
-> shift exponent 64 is too large for 32-bit type 'int'
-> CPU: 1 PID: 8078 Comm: syz-executor748 Not tainted 6.7.0-rc7 #1
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-> 1.13.0-1ubuntu1.1 04/01/2014
-> Call Trace:
->  <TASK>
->  __dump_stack lib/dump_stack.c:88 [inline]
->  dump_stack_lvl+0x136/0x150 lib/dump_stack.c:106
->  ubsan_epilogue lib/ubsan.c:217 [inline]
->  __ubsan_handle_shift_out_of_bounds+0x24b/0x430 lib/ubsan.c:387
->  sg_build_indirect.cold+0x1b/0x20 drivers/scsi/sg.c:1902
->  sg_build_reserve+0xc4/0x180 drivers/scsi/sg.c:2012
->  sg_add_sfp drivers/scsi/sg.c:2194 [inline]
->  sg_open+0xde4/0x1810 drivers/scsi/sg.c:350
->  chrdev_open+0x269/0x770 fs/char_dev.c:414
->  do_dentry_open+0x6d3/0x18d0 fs/open.c:948
->  do_open fs/namei.c:3622 [inline]
->  path_openat+0x1e1e/0x26d0 fs/namei.c:3779
->  do_filp_open+0x1c9/0x410 fs/namei.c:3809
->  do_sys_openat2+0x160/0x1c0 fs/open.c:1437
->  do_sys_open fs/open.c:1452 [inline]
->  __do_sys_openat fs/open.c:1468 [inline]
->  __se_sys_openat fs/open.c:1463 [inline]
->  __x64_sys_openat+0x140/0x1f0 fs/open.c:1463
->  do_syscall_x64 arch/x86/entry/common.c:52 [inline]
->  do_syscall_64+0x40/0x110 arch/x86/entry/common.c:83
->  entry_SYSCALL_64_after_hwframe+0x63/0x6b
-> RIP: 0033:0x7f48cf37f80b
-> Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85
-> c0 75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d
-> 00 f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
-> RSP: 002b:00007ffd29cd7d40 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
-> RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f48cf37f80b
-> RDX: 0000000000000041 RSI: 00007ffd29cd7dc0 RDI: 00000000ffffff9c
-> RBP: 00007ffd29cd7dc0 R08: 000000000000ffff R09: 00007ffd29cd7c50
-> R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000041
-> R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
->  </TASK>
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
->
-> If you have any questions, please contact us.
-> Reported by: Yue Sun <samsun1006219@gmail.com>
-> Reported by: xingwei lee <xrivendell7@gmail.com>
->
-> Best Regards,
-> Yue
+On Wed, Apr 03, 2024 at 10:06:51AM +0200, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> When building with CONFIG_OF and/or CONFIG_ACPI disabled but W=1 extra
+> warnings enabled, a lot of driver cause a warning about an unused
+> ID table:
+> 
+> drivers/char/tpm/tpm_ftpm_tee.c:356:34: error: unused variable 'of_ftpm_tee_ids' [-Werror,-Wunused-const-variable]
+> drivers/dma/img-mdc-dma.c:863:34: error: unused variable 'mdc_dma_of_match' [-Werror,-Wunused-const-variable]
+> drivers/fpga/versal-fpga.c:62:34: error: unused variable 'versal_fpga_of_match' [-Werror,-Wunused-const-variable]
+> drivers/i2c/muxes/i2c-mux-ltc4306.c:200:34: error: unused variable 'ltc4306_of_match' [-Werror,-Wunused-const-variable]
+> drivers/i2c/muxes/i2c-mux-reg.c:242:34: error: unused variable 'i2c_mux_reg_of_match' [-Werror,-Wunused-const-variable]
+> drivers/memory/pl353-smc.c:62:34: error: unused variable 'pl353_smc_supported_children' [-Werror,-Wunused-const-variable]
+> drivers/regulator/pbias-regulator.c:136:34: error: unused variable 'pbias_of_match' [-Werror,-Wunused-const-variable]
+> drivers/regulator/twl-regulator.c:552:34: error: unused variable 'twl_of_match' [-Werror,-Wunused-const-variable]
+> drivers/regulator/twl6030-regulator.c:645:34: error: unused variable 'twl_of_match' [-Werror,-Wunused-const-variable]
+> drivers/scsi/hisi_sas/hisi_sas_v2_hw.c:3635:36: error: unused variable 'sas_v2_acpi_match' [-Werror,-Wunused-const-variable]
+> drivers/staging/pi433/pi433_if.c:1359:34: error: unused variable 'pi433_dt_ids' [-Werror,-Wunused-const-variable]
+> drivers/tty/serial/amba-pl011.c:2945:34: error: unused variable 'sbsa_uart_of_match' [-Werror,-Wunused-const-variable]
+> 
+> The fix is always to just remove the of_match_ptr() and ACPI_PTR() wrappers
+> that remove the reference, rather than adding another #ifdef just for build
+> testing for a configuration that doesn't matter in practice.
+> 
+> I considered splitting up the large patch into per subsystem patches, but since
+> it's really just the same thing everywhere it feels better to do it all at once.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-We further analyzed the root cause of this bug. In function
-sg_build_indirect of drivers/scsi/sg.c, variable order of line 1900 is
-calculated out using get_order(num), and num comes from
-scatter_elem_sz. If scatter_elem_sz is equal or below zero, the order
-returned will be 52, so that PAGE_SHIFT + order is 64, which is larger
-than 32 bits int range, causing shift-out-of bound. This bug is tested
-and still remains in the latest upstream linux (6.9-rc3).
-If you have any questions, please contact us.
-
-Best,
-Yue
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
