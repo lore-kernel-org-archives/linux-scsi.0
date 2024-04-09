@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB3922D781;
-	Tue,  9 Apr 2024 14:38:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF0532C695;
+	Tue,  9 Apr 2024 14:38:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712673492; cv=none; b=kt2QrPBUJSqNDnX9dM//y37/PyRMQIRX0k7Mz8lopQ2VYPVhpWsHjxR592/Os8s1Os0j7IDuvFbReaKVqHAdLCASNR9VZkHKXcAnPiF4phLfUb8ukaFErnufzXCunNZIV9FKt+Gj/Eo7TQHUSRlXQrhZFhe1227iLIrzVNFE10E=
+	t=1712673493; cv=none; b=gcPq0WHD7+G1E3AG5VI33zw1tN8DxoPexH6vTVmS6aOCGsmR4+qXyDEgFmneMpESLMuhd9w2LFwko++8+jBIL6tZz/Ra5HG8Gt+rnnPmHgPgHtRCxsIHI+Ax1KZnxscLrBZgwVG9Ok7OHHN8Pmzz82dEBVuAoK8RDuDCjbsU0og=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712673492; c=relaxed/simple;
-	bh=WWYKPGj9czOqLTO0oX9N/l4w+cm5zbzGbk+M3GLZboE=;
+	s=arc-20240116; t=1712673493; c=relaxed/simple;
+	bh=hOemByO5WgYltIs4RqgB0djileS9eDKxHul+XFaguiY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=CXVjGFBfz8bj0v5g6TFgpb/+bZHHFjAgSUioLZuYqvMtTniFuiwjov3wn8SRMXMqs8au1z/ocd8TtfXWVke4+ekf5T+vM6ENVHcGSBAsOUdhAnU2x7ymAR5B8HGNHmIjLItukNkbHFEWKVrqFPq5umDIRX1ylBbzuu39TG5pZ80=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fLPg523d; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=FJpeMcNhfwok+JcM/V2ZpoujJgImse6aEFPEqcWmHLiuhuQ8kx+7d9ebFOkhzmPnqHzHggsVFfvExg93EgBeQQBhsySXyhm2K0J7MD6Xf+PRc34S0szpEmytOsGHcRh/0lFa7oInTRFrPDOw/+yvw5S1cwA12w1+vV/v0UrxMoo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=YjuIPpiD; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fLPg523d"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YjuIPpiD"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=X+gXVF78AgUh7bwzkprwZK7b92TFqgltEgDLxNaodqo=; b=fLPg523dfnH0RTzcadCtiXmfuu
-	AJH/gG+ptmJmZHKCEDqSG4SN+IAs+DHm499u3i6VeUPBonHNomz5fUMtA9Z8ylPOpN9fwVRuVKf1w
-	2b5XQs7VUdF64Zaltfk76I9JRy5AxhWAQhuxxPW8Z9xR6IvDn3I7H3QWyeKlzj65fMjiSDMv3tBIq
-	x8KSxddyfEAwixu/wczVt9qaK782OeQj1fFFeh1zjF68xdtS2Fa6i3sHLdh+ouKXMgJs7JN/pD6gl
-	Kv7by94ZotET5HGuW04HYxEc4PWci+vslRktdteqryi4T+CXtjXuVHW8IGoHwDjCHqitv3d5kVl8a
-	sro5b6bQ==;
+	bh=D8DxquL1CuBNuSFc3gPk4WkvzemBPok3WoQ6pw/OFO4=; b=YjuIPpiDDqP1jjM+Pk3XSw24bu
+	2K1ugy2hc+vqmMr/juYxMKvU9pN1kGxHZybEJV6la2A4WLxdvFe0kni2ka/jJDP9N2rjxSr5oyabt
+	KVpHe0FdCXCgDGAOmaY0HZhns9MhqNK+1+wyTpzx/zvMVREDZHKKAwLnnBfFxnnCDyn26U8g6hk3w
+	Qc5NqC5ay1+zLJGQ9qqDq/vEbvvG/jnnqnjOLEEFWgv6OCiExmsLZiPjMDx1F4TOhgUYnpzPgs0ik
+	2pGkQ4qUsqMvNxTof4BFeIS8RicWPJ6cEKjIUOJ7mRk1Efo6dKfMOA33zQ2c24CMHFttn2XYzm4rA
+	UYoxvu6w==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ruCbn-00000002Ruc-1TRV;
-	Tue, 09 Apr 2024 14:37:59 +0000
+	id 1ruCbi-00000002Rta-0Tzi;
+	Tue, 09 Apr 2024 14:37:54 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -72,10 +72,11 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-samsung-soc@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net,
+	Kanchan Joshi <joshi.k@samsung.com>,
 	Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 03/23] mpi3mr: pass queue_limits to bsg_setup_queue
-Date: Tue,  9 Apr 2024 16:37:28 +0200
-Message-Id: <20240409143748.980206-4-hch@lst.de>
+Subject: [PATCH 01/23] block: add a helper to cancel atomic queue limit updates
+Date: Tue,  9 Apr 2024 16:37:26 +0200
+Message-Id: <20240409143748.980206-2-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240409143748.980206-1-hch@lst.de>
 References: <20240409143748.980206-1-hch@lst.de>
@@ -88,54 +89,42 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Pass the limits to bsg_setup_queue instead of setting them up on the live
-queue.
+Drivers might have to perform complex actions to determine queue limits,
+and those might fail.  Add a helper to cancel a queue limit update
+that can be called in those cases.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
+Reviewed-by: Kanchan Joshi <joshi.k@samsung.com>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/mpi3mr/mpi3mr_app.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ include/linux/blkdev.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index a45406fae2629b..3c309e8c3a2bc8 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -1845,6 +1845,10 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
- {
- 	struct device *bsg_dev = &mrioc->bsg_dev;
- 	struct device *parent = &mrioc->shost->shost_gendev;
-+	struct queue_limits lim = {
-+		.max_hw_sectors		= MPI3MR_MAX_APP_XFER_SECTORS,
-+		.max_segments		= MPI3MR_MAX_APP_XFER_SEGMENTS,
-+	};
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index c3e8f7cf96be9e..ded7f66dc4b964 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -892,6 +892,19 @@ int queue_limits_commit_update(struct request_queue *q,
+ 		struct queue_limits *lim);
+ int queue_limits_set(struct request_queue *q, struct queue_limits *lim);
  
- 	device_initialize(bsg_dev);
- 
-@@ -1860,20 +1864,14 @@ void mpi3mr_bsg_init(struct mpi3mr_ioc *mrioc)
- 		return;
- 	}
- 
--	mrioc->bsg_queue = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), NULL,
-+	mrioc->bsg_queue = bsg_setup_queue(bsg_dev, dev_name(bsg_dev), &lim,
- 			mpi3mr_bsg_request, NULL, 0);
- 	if (IS_ERR(mrioc->bsg_queue)) {
- 		ioc_err(mrioc, "%s: bsg registration failed\n",
- 		    dev_name(bsg_dev));
- 		device_del(bsg_dev);
- 		put_device(bsg_dev);
--		return;
- 	}
--
--	blk_queue_max_segments(mrioc->bsg_queue, MPI3MR_MAX_APP_XFER_SEGMENTS);
--	blk_queue_max_hw_sectors(mrioc->bsg_queue, MPI3MR_MAX_APP_XFER_SECTORS);
--
--	return;
- }
- 
- /**
++/**
++ * queue_limits_cancel_update - cancel an atomic update of queue limits
++ * @q:		queue to update
++ *
++ * This functions cancels an atomic update of the queue limits started by
++ * queue_limits_start_update() and should be used when an error occurs after
++ * starting update.
++ */
++static inline void queue_limits_cancel_update(struct request_queue *q)
++{
++	mutex_unlock(&q->limits_lock);
++}
++
+ /*
+  * Access functions for manipulating queue properties
+  */
 -- 
 2.39.2
 
