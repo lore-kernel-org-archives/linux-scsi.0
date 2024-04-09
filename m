@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F61B4F608;
-	Tue,  9 Apr 2024 14:38:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B75E4F608;
+	Tue,  9 Apr 2024 14:38:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712673503; cv=none; b=Y4nTY0uyQvNlm0B8q+cT4VNgIYyYzc3d7nogAbSnLDwGGbIiyiXO8MDZo9PrlPk8CjzBURnPRnYK4kqiLCeOj6fsXSRbspAkYuAlAloKwQW1gUXTFPWVIU5aZs5dQPhf1C2I7HmE3CPJi32hoeTH07V0KUlO73E/z3cQcsayVcU=
+	t=1712673506; cv=none; b=nH7ndHXKYg6bxleH/1jKAKjH450PAWzfy40ydYGIapGjOCvZA/rDp6/8h7r1Jiu23J81KZch5dc7e+R1L/JbzORXUfXOOwWxEL4Y+zImJshBEtQDam8Ws/6JjF6zBUYJaVKVrrTDKSYf3yJC7yeGPOkQ4k3/NZ4yjdom3FS6nCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712673503; c=relaxed/simple;
-	bh=U1Jy4wiR3xBGVQDdRURxvtw6jcvP4vyBENE45Fv5WvI=;
+	s=arc-20240116; t=1712673506; c=relaxed/simple;
+	bh=lYjFJZxdsCLuVAQvQDY5Zw0rWqYSzp3gRJZNnKzr0VI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EUzmULXvWTQev3wg03OGEtRWGKnVyZ12TRWIdvn0ahMD+ma13LCCfTXz8zc43vTPtlM54UXQPG7nnkHLm6XMsrFE48k/mxRkD4pdo459nssF7p5IOHO53KIP55HnIFNRUsxmoHJWij+I/jOUFeixLXYhvWnCjv8Xvly0449g8so=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hR1JCnzW; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=iJYJf3REW+CzE6dnhn6c1avZBk0rAAOBo5StUiN9b75xym5ibm5enq42bsBMd3suBN50r6uLom4sTQzj5aL1/cVADpUjh9pmzIZ+jruy2/ntE+AaBdR6ksAfmrwN4bQcSajynRfPHuei8CZoSREWkJ5j95MeJmc6g322TTItST8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=clGFOpBq; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hR1JCnzW"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="clGFOpBq"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=WJI6Oazk+WcsLHxVYJxCBR1YsfJp9TR8JpFx60lcVzM=; b=hR1JCnzWjvcMeXu1qw8KVGo0Kz
-	TG9MLR/wTYzgpBm8T72fiOzr5VPyh8kSThzjkZWBuuhPUZXsGpaQ7MYk1jcDnYqmtmlgujRYhKyNr
-	0d6BTA0BaYt4JgFW7TLjVLE3chzA9vETHVrttPayVJQkHP69835I/1LxTNh1s72dp5JMMGeLjkvbr
-	8kHowuK0QFZonOkFt7+iHeGNrhg/BXN/TePTdfXA+ojGjbwEY/InpQqVEpSyZIzByqOtEQYpPGs9V
-	wkpE/ZhsNr9wS5OfiI/jyBLR+Q0rIGVqY4DXHStdmXQL0lJ5C2Vz0PQKYD3vukzhJ0beuvn7OfEPh
-	w5cFCy5A==;
+	bh=VTfZ5Vvuh7yJPIR02HZcek9cCdk7ZE6FVNyM0wSZfLY=; b=clGFOpBqr7HdKLQCxYGnoUJj14
+	JYZfoXLd9f1UhU+nthgI2hMd9i19CQ8WqDjdpumEE/L2iFYTmN8nxFVfvN+j/tJbdITt+2HgO9I9g
+	TDqiSbRAhVuM6N2q9Z5j5uvM1POCn9nDhc2UKfCtjbJa0kfiCZ7cjtx9STK2QRGP4tvDdof2H8kI4
+	qcLHp5L9a8WmK59lVp1tPmgWp69eQOyeNx25MxgrectddlS+uPSj1T7oACi4605/d4R2J29rjoSfh
+	j/TkVR0HEI9Ob5jF+HdNXxI2FPgoUDwc168Udl1DGP52g5Fh47abDUuQzVVMl0/sIFMH9Qiux3/62
+	TsQQUQgg==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ruCbx-00000002RxA-0ptr;
-	Tue, 09 Apr 2024 14:38:09 +0000
+	id 1ruCbz-00000002Ry4-3Tw1;
+	Tue, 09 Apr 2024 14:38:12 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -73,9 +73,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net,
 	Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 07/23] scsi: add a dma_alignment field to the host and host template
-Date: Tue,  9 Apr 2024 16:37:32 +0200
-Message-Id: <20240409143748.980206-8-hch@lst.de>
+Subject: [PATCH 08/23] ufs-exynos: move setting the the dma alignment to the init method
+Date: Tue,  9 Apr 2024 16:37:33 +0200
+Message-Id: <20240409143748.980206-9-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20240409143748.980206-1-hch@lst.de>
 References: <20240409143748.980206-1-hch@lst.de>
@@ -88,330 +88,79 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Get drivers out of the business of having to call the block layer
-dma alignment limits helpers themselves.
+Use the SCSI host's dma_alignment field and set it in ->init and remove
+the now unused config_scsi_dev method.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/firewire/sbp2.c           |  6 ------
- drivers/message/fusion/mptfc.c    |  1 +
- drivers/message/fusion/mptsas.c   |  1 +
- drivers/message/fusion/mptscsih.c |  2 --
- drivers/message/fusion/mptspi.c   |  1 +
- drivers/scsi/hosts.c              |  6 ++++++
- drivers/scsi/iscsi_tcp.c          |  2 +-
- drivers/scsi/qla2xxx/qla_os.c     |  6 +++---
- drivers/scsi/scsi_lib.c           | 11 ++---------
- drivers/staging/rts5208/rtsx.c    | 24 ++++++++++++------------
- drivers/usb/image/microtek.c      |  8 +-------
- drivers/usb/storage/scsiglue.c    | 11 +++++------
- drivers/usb/storage/uas.c         | 13 ++++++-------
- include/scsi/scsi_host.h          |  3 +++
- 14 files changed, 42 insertions(+), 53 deletions(-)
+ drivers/ufs/core/ufshcd.c     | 3 ---
+ drivers/ufs/host/ufs-exynos.c | 8 ++------
+ include/ufs/ufshcd.h          | 1 -
+ 3 files changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
-index e779d866022b9f..8f7810b2a4c10f 100644
---- a/drivers/firewire/sbp2.c
-+++ b/drivers/firewire/sbp2.c
-@@ -1500,12 +1500,6 @@ static int sbp2_scsi_slave_alloc(struct scsi_device *sdev)
- 
- 	sdev->allow_restart = 1;
- 
--	/*
--	 * SBP-2 does not require any alignment, but we set it anyway
--	 * for compatibility with earlier versions of this driver.
--	 */
--	blk_queue_update_dma_alignment(sdev->request_queue, 4 - 1);
--
- 	if (lu->tgt->workarounds & SBP2_WORKAROUND_INQUIRY_36)
- 		sdev->inquiry_len = 36;
- 
-diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
-index c459f709107b7c..a3c17c4fe69c54 100644
---- a/drivers/message/fusion/mptfc.c
-+++ b/drivers/message/fusion/mptfc.c
-@@ -129,6 +129,7 @@ static const struct scsi_host_template mptfc_driver_template = {
- 	.sg_tablesize			= MPT_SCSI_SG_DEPTH,
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
-+	.dma_alignment			= 511,
- 	.shost_groups			= mptscsih_host_attr_groups,
- };
- 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 300f8e955a5319..30cb4f64e77047 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -2020,6 +2020,7 @@ static const struct scsi_host_template mptsas_driver_template = {
- 	.sg_tablesize			= MPT_SCSI_SG_DEPTH,
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
-+	.dma_alignment			= 511,
- 	.shost_groups			= mptscsih_host_attr_groups,
- 	.no_write_same			= 1,
- };
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 9080a73b4ea64a..6c3f25cc33ff99 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -2438,8 +2438,6 @@ mptscsih_slave_configure(struct scsi_device *sdev)
- 		"tagged %d, simple %d\n",
- 		ioc->name,sdev->tagged_supported, sdev->simple_tags));
- 
--	blk_queue_dma_alignment (sdev->request_queue, 512 - 1);
--
- 	return 0;
- }
- 
-diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-index 6c5920db1e9dc5..574b882c9a8540 100644
---- a/drivers/message/fusion/mptspi.c
-+++ b/drivers/message/fusion/mptspi.c
-@@ -843,6 +843,7 @@ static const struct scsi_host_template mptspi_driver_template = {
- 	.sg_tablesize			= MPT_SCSI_SG_DEPTH,
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
-+	.dma_alignment			= 511,
- 	.shost_groups			= mptscsih_host_attr_groups,
- };
- 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 4f495a41ec4aae..a67a98bd7ae2d7 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -478,6 +478,12 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
- 	else
- 		shost->max_segment_size = BLK_MAX_SEGMENT_SIZE;
- 
-+	/* 32-byte (dword) is a common minimum for HBAs. */
-+	if (sht->dma_alignment)
-+		shost->dma_alignment = sht->dma_alignment;
-+	else
-+		shost->dma_alignment = 3;
-+
- 	/*
- 	 * assume a 4GB boundary, if not set
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 62c8575f2c67ed..83227c8708599b 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5274,9 +5274,6 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
  	 */
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 8e14cea15f9808..60688f18fac6f7 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -943,6 +943,7 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
- 	shost->max_id = 0;
- 	shost->max_channel = 0;
- 	shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
-+	shost->dma_alignment = 0;
+ 	sdev->silence_suspend = 1;
  
- 	rc = iscsi_host_get_max_scsi_cmds(shost, cmds_max);
- 	if (rc < 0)
-@@ -1065,7 +1066,6 @@ static int iscsi_sw_tcp_slave_configure(struct scsi_device *sdev)
- 	if (conn->datadgst_en)
- 		blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES,
- 				   sdev->request_queue);
--	blk_queue_dma_alignment(sdev->request_queue, 0);
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 6a1900e96a5a5f..fcb06df2ce4e68 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1957,9 +1957,6 @@ qla2xxx_slave_configure(struct scsi_device *sdev)
- 	scsi_qla_host_t *vha = shost_priv(sdev->host);
- 	struct req_que *req = vha->req;
- 
--	if (IS_T10_PI_CAPABLE(vha->hw))
--		blk_queue_update_dma_alignment(sdev->request_queue, 0x7);
+-	if (hba->vops && hba->vops->config_scsi_dev)
+-		hba->vops->config_scsi_dev(sdev);
 -
- 	scsi_change_queue_depth(sdev, req->max_q_depth);
- 	return 0;
- }
-@@ -3575,6 +3572,9 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		    QLA_SG_ALL : 128;
- 	}
+ 	ufshcd_crypto_register(hba, q);
  
-+	if (IS_T10_PI_CAPABLE(base_vha->hw))
-+		host->dma_alignment = 0x7;
+ 	return 0;
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 734d40f99e31e6..7ffc28e2278420 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -1187,6 +1187,8 @@ static int exynos_ufs_init(struct ufs_hba *hba)
+ 		goto out;
+ 	exynos_ufs_specify_phy_time_attr(ufs);
+ 	exynos_ufs_config_smu(ufs);
 +
- 	ret = scsi_add_host(host, &pdev->dev);
- 	if (ret)
- 		goto probe_failed;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index f1936f98abe3e2..26b51406c477e3 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1985,15 +1985,8 @@ void scsi_init_limits(struct Scsi_Host *shost, struct queue_limits *lim)
- 	lim->seg_boundary_mask = shost->dma_boundary;
- 	lim->max_segment_size = shost->max_segment_size;
- 	lim->virt_boundary_mask = shost->virt_boundary_mask;
--
--	/*
--	 * Set a reasonable default alignment:  The larger of 32-byte (dword),
--	 * which is a common minimum for HBAs, and the minimum DMA alignment,
--	 * which is set by the platform.
--	 *
--	 * Devices that require a bigger alignment can increase it later.
--	 */
--	lim->dma_alignment = max(4, dma_get_cache_alignment()) - 1;
-+	lim->dma_alignment = max_t(unsigned int,
-+		shost->dma_alignment, dma_get_cache_alignment() - 1);
++	hba->host->dma_alignment = SZ_4K - 1;
+ 	return 0;
  
- 	if (shost->no_highmem)
- 		lim->bounce = BLK_BOUNCE_HIGH;
-diff --git a/drivers/staging/rts5208/rtsx.c b/drivers/staging/rts5208/rtsx.c
-index 86d32e3b3282a5..c4f54c311d0549 100644
---- a/drivers/staging/rts5208/rtsx.c
-+++ b/drivers/staging/rts5208/rtsx.c
-@@ -70,18 +70,6 @@ static int slave_alloc(struct scsi_device *sdev)
- 
- static int slave_configure(struct scsi_device *sdev)
- {
--	/*
--	 * Scatter-gather buffers (all but the last) must have a length
--	 * divisible by the bulk maxpacket size.  Otherwise a data packet
--	 * would end up being short, causing a premature end to the data
--	 * transfer.  Since high-speed bulk pipes have a maxpacket size
--	 * of 512, we'll use that as the scsi device queue's DMA alignment
--	 * mask.  Guaranteeing proper alignment of the first buffer will
--	 * have the desired effect because, except at the beginning and
--	 * the end, scatter-gather buffers follow page boundaries.
--	 */
--	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
--
- 	/* Set the SCSI level to at least 2.  We'll leave it at 3 if that's
- 	 * what is originally reported.  We need this to avoid confusing
- 	 * the SCSI layer with devices that report 0 or 1, but need 10-byte
-@@ -219,6 +207,18 @@ static const struct scsi_host_template rtsx_host_template = {
- 	/* limit the total size of a transfer to 120 KB */
- 	.max_sectors =                  240,
- 
-+	/*
-+	 * Scatter-gather buffers (all but the last) must have a length
-+	 * divisible by the bulk maxpacket size.  Otherwise a data packet
-+	 * would end up being short, causing a premature end to the data
-+	 * transfer.  Since high-speed bulk pipes have a maxpacket size
-+	 * of 512, we'll use that as the scsi device queue's DMA alignment
-+	 * mask.  Guaranteeing proper alignment of the first buffer will
-+	 * have the desired effect because, except at the beginning and
-+	 * the end, scatter-gather buffers follow page boundaries.
-+	 */
-+	.dma_alignment =		511,
-+
- 	/* emulated HBA */
- 	.emulated =			1,
- 
-diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
-index 8c8fa71c69c411..9f758241d9d376 100644
---- a/drivers/usb/image/microtek.c
-+++ b/drivers/usb/image/microtek.c
-@@ -328,12 +328,6 @@ static int mts_slave_alloc (struct scsi_device *s)
+ out:
+@@ -1510,11 +1512,6 @@ static int fsd_ufs_pre_link(struct exynos_ufs *ufs)
  	return 0;
  }
  
--static int mts_slave_configure (struct scsi_device *s)
+-static void exynos_ufs_config_scsi_dev(struct scsi_device *sdev)
 -{
--	blk_queue_dma_alignment(s->request_queue, (512 - 1));
--	return 0;
+-	blk_queue_update_dma_alignment(sdev->request_queue, SZ_4K - 1);
 -}
 -
- static int mts_scsi_abort(struct scsi_cmnd *srb)
+ static int fsd_ufs_post_link(struct exynos_ufs *ufs)
  {
- 	struct mts_desc* desc = (struct mts_desc*)(srb->device->host->hostdata[0]);
-@@ -631,8 +625,8 @@ static const struct scsi_host_template mts_scsi_host_template = {
- 	.can_queue =		1,
- 	.this_id =		-1,
- 	.emulated =		1,
-+	.dma_alignment =	511,
- 	.slave_alloc =		mts_slave_alloc,
--	.slave_configure =	mts_slave_configure,
- 	.max_sectors=		256, /* 128 K */
+ 	int i;
+@@ -1583,7 +1580,6 @@ static const struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
+ 	.hibern8_notify			= exynos_ufs_hibern8_notify,
+ 	.suspend			= exynos_ufs_suspend,
+ 	.resume				= exynos_ufs_resume,
+-	.config_scsi_dev		= exynos_ufs_config_scsi_dev,
  };
  
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index 1d14c678f3d3e3..eb4ba03e082d89 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -75,12 +75,6 @@ static int slave_alloc (struct scsi_device *sdev)
- 	 */
- 	sdev->inquiry_len = 36;
- 
--	/*
--	 * Some host controllers may have alignment requirements.
--	 * We'll play it safe by requiring 512-byte alignment always.
--	 */
--	blk_queue_update_dma_alignment(sdev->request_queue, (512 - 1));
--
- 	/* Tell the SCSI layer if we know there is more than one LUN */
- 	if (us->protocol == USB_PR_BULK && us->max_lun > 0)
- 		sdev->sdev_bflags |= BLIST_FORCELUN;
-@@ -638,6 +632,11 @@ static const struct scsi_host_template usb_stor_host_template = {
- 	/* lots of sg segments can be handled */
- 	.sg_tablesize =			SG_MAX_SEGMENTS,
- 
-+	/*
-+	 * Some host controllers may have alignment requirements.
-+	 * We'll play it safe by requiring 512-byte alignment always.
-+	 */
-+	.dma_alignment =		511,
- 
- 	/*
- 	 * Limit the total size of a transfer to 120 KB.
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 71ace274761f18..0668182e1c469c 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -824,13 +824,6 @@ static int uas_slave_alloc(struct scsi_device *sdev)
- 
- 	sdev->hostdata = devinfo;
- 
--	/*
--	 * The protocol has no requirements on alignment in the strict sense.
--	 * Controllers may or may not have alignment restrictions.
--	 * As this is not exported, we use an extremely conservative guess.
--	 */
--	blk_queue_update_dma_alignment(sdev->request_queue, (512 - 1));
--
- 	if (devinfo->flags & US_FL_MAX_SECTORS_64)
- 		blk_queue_max_hw_sectors(sdev->request_queue, 64);
- 	else if (devinfo->flags & US_FL_MAX_SECTORS_240)
-@@ -912,6 +905,12 @@ static const struct scsi_host_template uas_host_template = {
- 	.eh_device_reset_handler = uas_eh_device_reset_handler,
- 	.this_id = -1,
- 	.skip_settle_delay = 1,
-+	/*
-+	 * The protocol has no requirements on alignment in the strict sense.
-+	 * Controllers may or may not have alignment restrictions.
-+	 * As this is not exported, we use an extremely conservative guess.
-+	 */
-+	.dma_alignment = 511,
- 	.dma_boundary = PAGE_SIZE - 1,
- 	.cmd_size = sizeof(struct uas_cmd_info),
+ static struct ufs_hba_variant_ops ufs_hba_exynosauto_vh_ops = {
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index a35e12f8e68baa..93afb726213f0c 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -374,7 +374,6 @@ struct ufs_hba_variant_ops {
+ 	int	(*get_outstanding_cqs)(struct ufs_hba *hba,
+ 				       unsigned long *ocqs);
+ 	int	(*config_esi)(struct ufs_hba *hba);
+-	void	(*config_scsi_dev)(struct scsi_device *sdev);
  };
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 6d77c48e8311fb..b0948ab69e0fa6 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -405,6 +405,8 @@ struct scsi_host_template {
- 	 */
- 	unsigned int max_segment_size;
  
-+	unsigned int dma_alignment;
-+
- 	/*
- 	 * DMA scatter gather segment boundary limit. A segment crossing this
- 	 * boundary will be split in two.
-@@ -614,6 +616,7 @@ struct Scsi_Host {
- 	unsigned int max_sectors;
- 	unsigned int opt_sectors;
- 	unsigned int max_segment_size;
-+	unsigned int dma_alignment;
- 	unsigned long dma_boundary;
- 	unsigned long virt_boundary_mask;
- 	/*
+ /* clock gating state  */
 -- 
 2.39.2
 
