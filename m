@@ -1,95 +1,112 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f201.google.com (mail-pl1-f201.google.com [209.85.214.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A093153BD2;
-	Tue,  9 Apr 2024 17:22:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87462157A46
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Apr 2024 20:22:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712683334; cv=none; b=Qgx76LMlMRgCMjNXfHjLnC4zE2ipxxq0xQpKtWHizviB4zebj/QnjwpP6LT6UyVc7puryI0nH2gA59Xol6H6l9bfyAf4v3c6//PtdzqYQNVGtbkxv7c//cxU/i3nRXuErf/ajJVzxcIJwf7QqWcsKjUIcJIFoZQOsFWocu+rnmU=
+	t=1712694131; cv=none; b=LCKS1C8Rwk6+CNbhDE21xTuHeqKQH3/PXDMWth1QTd8vRKyXGx7jxjOFVwXdE8R1bMqksvFk/u4cbVeRWoYDixiQG6bpYmEmnpNPUKoUfiVUYwXCChzvt3vmNt8AlLR5NpNMFkhprfzSV6BMHw5xUSxAinswkh/IDigb6s9AXpA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712683334; c=relaxed/simple;
-	bh=FV8T5ZxL0VBdZ1fdF5/j1pGUzTmlXKhQ8ugt2RX6Zg4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=RAgwIviN48LiUN2otqfii1p1Gns7wbDc+D2b8dYSDsoLksdYRp9aJPAJeI3lDtvm+j1/MaUQQJMDQKT+/9VC9VfR4dFHtsaVYI+XuelT5RDWVNyEoQawcYQgcdC9ln5UjJEPaPiY5MlY207wWrRsLWhOBWsijUGWq//sfKNeS+w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=HL1a5/OJ; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1712694131; c=relaxed/simple;
+	bh=LP0AE5/PUtGSyLNbe3rFEA3/mjUNWVbbofmFlYStYaU=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=SIwYRiw48ZVwucOKViUG1AaIMfFm32KzbqLhZnbDUSbPeZOCHyCwexjeadmpyLvaVHdEzeD8qY/lzbl7poDiMYcSFUFKhplqPl7mpeJ+cqP6KOXdndsve/1FKD83jo2rn1sB8ImQ0dUlDjtqY9bkFKSF7iIujc5ulHy/tsm+cNU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--willmcvicker.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=qIOjafEK; arc=none smtp.client-ip=209.85.214.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--willmcvicker.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="HL1a5/OJ"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VDXnp0mvzz6Cnk8s;
-	Tue,  9 Apr 2024 17:22:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:references:content-language:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1712683320; x=1715275321; bh=BmiyWVLUgBdQ3Xc8G+8c67Tu
-	AAXUVgBLzSiNGT/ygcg=; b=HL1a5/OJfAWe2ZSrZjpdwgD0xChks8N0+uSfVYeK
-	PbBlFE7LKjx4z7MkRPw11p50qXiK2/rZKN+9uUNnfDiDtrlVdgkNehUd4NP+I04q
-	TdNVQA9swVyvKDg1/avtelf6Ad2tHSD8xgc03XfLkeSVG/WQQiY5GJJzDECvdjrG
-	frfzkz6SkHBZFgs8IHHba7dg3MHbNel8OYwZsssRwL+f5okoj45ehVv19ILeeTmS
-	WgxUwaOhCNoInn85Uw4Bd2lpQeHC9/flBEj8PY0yzC4L4euz/e6ZNZFogX0L+m+B
-	ETjuqZxaVdlrsSPiytR6W1Vebf6tPZpF8Xx04Pv2hL5wqA==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id TdnRVpxAjYXN; Tue,  9 Apr 2024 17:22:00 +0000 (UTC)
-Received: from [100.125.77.89] (unknown [104.132.0.89])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VDXng36pdz6Cnk8m;
-	Tue,  9 Apr 2024 17:21:59 +0000 (UTC)
-Message-ID: <7b22b4b5-ddf9-42e3-9603-4f2422c31333@acm.org>
-Date: Tue, 9 Apr 2024 10:21:58 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qIOjafEK"
+Received: by mail-pl1-f201.google.com with SMTP id d9443c01a7336-1e2a5cb5455so62016195ad.2
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Apr 2024 13:22:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1712694128; x=1713298928; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=li70RG4leC6BXT61G6ins6TrGephnT1pmJh8LVW4448=;
+        b=qIOjafEKF6gK2ACResldhYXO7ScfyaQDN/R5/AHjQTsIxMM7a+h/lSRGt/+riBXOIk
+         dIvXqdOB6KJ0PUiPPWhtVzdmb+dng41tdpnlTKg4POjY2Er/dMRfdxPCPlFvXw9E+omD
+         dr0SL8WlomT3H6IGm4FKdSewRmAe2+3AxJLiCBfxIMfBjOVUlyMcb9u3IsRZXq7CeqTS
+         wvGHht/7ec1kaKEgyTUCJD3mBIAD5JBKqEibO1eNFigUsOCSsAX1lif+jY22SlGXJBvO
+         s1y8wpVsJwsqZiPZHY0Gmgc2Nu1Flwdd4d5c8VvYVKn8BqJ2QIQZ43aTt+CKMsrQCqUN
+         fcQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712694128; x=1713298928;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=li70RG4leC6BXT61G6ins6TrGephnT1pmJh8LVW4448=;
+        b=mmIpE1uJv2DeQYXvn7Q4XfIZQeWzRMn5udxDRwoKHRA3jr3DKoANjS9YJ7WXqmR53t
+         BIRCYyCxyqPNdOKIEbtuHI1aq766tZWrDa/zjzYwmcE5/wFmm/rOHSxg2b5TCC3VtAhl
+         Opxo93hV/ffmes7cAxxJPxtihJBHAtpxIXXx5fctmXQ6GcHcoJIyQLlzRjnONEkoNqTK
+         zriMgjV/kj+JhrZFgfAxxkyuavl1vDghVWjPQ9mnki7NjYu0zTGnSmmaBgOmOsf2FnCq
+         kdCRJ/2ezQNc2Q936SwbU8g/FffkJCrPHN8gr405jtgCGCXgbwzNvSQ8XEPlngyAZ6eU
+         5Aqg==
+X-Forwarded-Encrypted: i=1; AJvYcCWXsShosEu+WY+m5EW+YFXXG9mahXjVpLhoRbNV7UARvcwKDgnatAJ5k6xowlF732WQaUv61DrcbFAyyf7O6SIUY0SQ7IG3hYS5Qg==
+X-Gm-Message-State: AOJu0Yygs/wPLnDpfQOBkpyYEDd7ky9Vyzf30QQtUvhOA6yCQ1C7m7Xo
+	Una1mu+oYkmlXgQIqn0O6g/pAqwPg+/dHUGwVPpRTtxPz5nCMKW3/Mu/q8sqsO43gGEJl3Otk7g
+	VcCOfe6eTwOyhL+QQkBShNEXKfA==
+X-Google-Smtp-Source: AGHT+IFRUiwCI1bVLGrKHHupMeWnTyEsNBKU9AP3ld9A7X1GTUv6ZAcQK10ulcSFjVO9m9GOgSGuiYAPdF1BHs6+B/o=
+X-Received: from wmcvicker.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:5ebe])
+ (user=willmcvicker job=sendgmr) by 2002:a17:902:f2c9:b0:1e3:e092:53b9 with
+ SMTP id h9-20020a170902f2c900b001e3e09253b9mr29282plc.4.1712694127914; Tue,
+ 09 Apr 2024 13:22:07 -0700 (PDT)
+Date: Tue,  9 Apr 2024 13:22:02 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: ufs: core: changing the status to check inflight
-Content-Language: en-US
-To: SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
- jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
- kwangwon.min@samsung.com, kwmad.kim@samsung.com, sh425.lee@samsung.com,
- quic_nguyenb@quicinc.com, cpgs@samsung.com, h10.kim@samsung.com
-References: <CGME20240409062901epcas2p3eb8f13336c2dbf978db1ce980a75b3cb@epcas2p3.samsung.com>
- <20240409063254.145363-1-hy50.seo@samsung.com>
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240409063254.145363-1-hy50.seo@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.44.0.683.g7961c838ac-goog
+Message-ID: <20240409202203.1308163-1-willmcvicker@google.com>
+Subject: [PATCH v1] scsi: ufs: exynos: Support module autoloading
+From: Will McVicker <willmcvicker@google.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc: Peter Griffin <peter.griffin@linaro.org>, andre.draszik@linaro.org, 
+	tudor.ambarus@linaro.org, Will McVicker <willmcvicker@google.com>, kernel-team@android.com, 
+	linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 4/8/24 23:32, SEO HOYOUNG wrote:
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 21429eec1b82..c940f52d9003 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -3082,16 +3082,7 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
->    */
->   bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd)
->   {
-> -	struct request *rq;
-> -
-> -	if (!cmd)
-> -		return false;
-> -
-> -	rq = scsi_cmd_to_rq(cmd);
-> -	if (!blk_mq_request_started(rq))
-> -		return false;
-> -
-> -	return true;
-> +	return cmd && (blk_mq_rq_state(scsi_cmd_to_rq(cmd)) == MQ_RQ_IN_FLIGHT);
->   }
+Export the module alias information using the MODULE_DEVICE_TABLE()
+macro in order to support auto-loading this module for devices that
+support it.
 
-There are superfluous parentheses in the above return statement. It is
-unusual in Linux kernel code to surround equality tests with
-parentheses.
+$ modinfo -F alias out/linux/drivers/ufs/host/ufs-exynos.ko
+of:N*T*Ctesla,fsd-ufsC*
+of:N*T*Ctesla,fsd-ufs
+of:N*T*Csamsung,exynosautov9-ufs-vhC*
+of:N*T*Csamsung,exynosautov9-ufs-vh
+of:N*T*Csamsung,exynosautov9-ufsC*
+of:N*T*Csamsung,exynosautov9-ufs
+of:N*T*Csamsung,exynos7-ufsC*
+of:N*T*Csamsung,exynos7-ufs
 
-Anyway:
+Signed-off-by: Will McVicker <willmcvicker@google.com>
+---
+ drivers/ufs/host/ufs-exynos.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Note, I tested this on a Pixel 6 device with the UFS patch series in
+[1]. With both this patch and [1], the ufs-exynos module autoloads on
+boot.
+
+[1] https://lore.kernel.org/all/20240404122559.898930-1-peter.griffin@linaro.org/
+
+diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
+index 734d40f99e31..1795860a2f06 100644
+--- a/drivers/ufs/host/ufs-exynos.c
++++ b/drivers/ufs/host/ufs-exynos.c
+@@ -1748,6 +1748,7 @@ static const struct of_device_id exynos_ufs_of_match[] = {
+ 	  .data       = &fsd_ufs_drvs },
+ 	{},
+ };
++MODULE_DEVICE_TABLE(of, exynos_ufs_of_match);
+ 
+ static const struct dev_pm_ops exynos_ufs_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
+
+base-commit: 2c71fdf02a95b3dd425b42f28fd47fb2b1d22702
+-- 
+2.44.0.683.g7961c838ac-goog
+
