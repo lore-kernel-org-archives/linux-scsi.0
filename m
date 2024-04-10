@@ -1,107 +1,108 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2825158DB1;
-	Tue,  9 Apr 2024 23:27:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E36E27F
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Apr 2024 00:08:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712705280; cv=none; b=rfGvuo8aD7IfxPH46mcZrfK3mYENEG8m8v4SSHm6am6iJTj8Yr+cD6SHl0CnVP2k2l1Ed8YmeOH5zdTb1iientcoQpLFwlPxdj2xGA1w8fQe7ghgQ9KqtrA3iVWx73KjI1h792q1YYmsdIszSYCIpiSQDwb7fT8xtuCQVUbsDKU=
+	t=1712707691; cv=none; b=XYWkiLoZG9g8j8CDLUXNhNWcAXjYW3ZCvl3F/jNL1unhE3JAirJfWccF5Wx4qEIWqxOTbs6cG1voAucL1PIqWCWVmTmWvuMIhjuZbCSX4eCscHeE0EE60kTXTVh2bw7+CO/CZbEx3mmwRf7RDZSDzQ85oKG4o/8l/YIPQHEKk3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712705280; c=relaxed/simple;
-	bh=9N1x6vVhyTE6Jp+O4+IgUFScstE7oh5a1d9B61+MizE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Rvvnws7TVGVbWblaOZsrHd02Gwl8RZS5Ii+VQYJJ4FYvTqH6Vy6mykREct1MwXMe7dWmhrS1URM9lElUeXTbJpgMdNEXn1WK8TQWt8BePwbuMavko2b6tuNvdI70o3XZ3cJAsK6RYrTyjZJvb8M5dF41iFqVnOAWa1kDwqGBuJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=RPjEU8sn; arc=none smtp.client-ip=199.89.1.11
+	s=arc-20240116; t=1712707691; c=relaxed/simple;
+	bh=7Xz5KKaHT1zxtkk/RrV0RsSEHN+gbOnLBhPOZGnN4KM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qEjqiDJMpY6hzh/PzhSJH4BixrisgbEYvAqZ3Gl3s97Ok0mFqydMCMuyGxHn6XsnJAYwERGT6nfnNhWnxUttBPiJBVm5jfUZsObfRWEPNI0S9NEFHPw2GfFbFce99krrFKQ87CTZ4Z4wKnIkfOVmrMo+Ec8SR3Z3lhnDfUfavgE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=szX8R/Ha; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="RPjEU8sn"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="szX8R/Ha"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VDhvx0WRzz6Cnk8s;
-	Tue,  9 Apr 2024 23:27:57 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VDjpJ1zwrz6Cnk8s;
+	Wed, 10 Apr 2024 00:08:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1712705273; x=1715297274; bh=QUAKIGsvSxfZk359RZHOvv+y
-	iXTmsMPY7rIXyiSGUfI=; b=RPjEU8sn4jRk9s1PiOSdiLJBBX21ZLWEne9E96VX
-	sAaEBH40Y9p7ReuuDOVSUKeVHEaczGO8LCMmGJv9I8/1Y3L9iOtp8vtTh7P8NkjO
-	ZGo6j93YOEdHmk4lMGo+zTRly9w0/0MV7ODtOnpTnblJUCVTW/xwnGFPQ8HHvhU5
-	L6NrJ4xGg7h+NJ4IKpVcALaHfxPunHKg75wHUj7oJH9GuYuiSGRAl417/34q7X/6
-	uYszys7WPjn0zkXIm1e86VB15TRKPTkDJd49ioPDkGfFIkShtNoH2ISrQuYu+FAR
-	VhYVq+FnBK6ZwHH1umB1F/KLH2pLeopo3CbZY72I3vUP4w==
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1712707682; x=1715299683; bh=CTHJ1z5TufKah2byQ0ZzloAyxvw6bkwN7/r
+	8XYKyMYU=; b=szX8R/HaqXPWly2sWBBOlMZn37LAoSTybcmJ5IG66xkp1Tn8VTo
+	zrBzE/8Z1iCHpOIBqCaaY2Wl9fqBw+2GUSb5rHqFVxDAjTCXVtwMlPz9M/YWS8OP
+	IQw21gSUhERV9ZYpoE/Rfe/5XHDhAoaktz62Ql3j+6Hutu/T+sV3/zjpOcboucYl
+	nbjZtRxjS2cKR7KoDO3JyUTc9/GfasNGejPixczwpGYCmJzG8NSOIxeOK8pvIo1i
+	Ci+LCOAlSQ6PxZuHhDvxRVR+PIeAz+x05B7p9O8jhPer+l5ghoopO7rv2SBsy7bc
+	Zje89aIvm3/s+X3mvofC4Hz8TnVQTg+1ivw==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id wQuuyXwLUbEW; Tue,  9 Apr 2024 23:27:53 +0000 (UTC)
-Received: from [192.168.3.219] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+ id EsU3YOEUgY94; Wed, 10 Apr 2024 00:08:02 +0000 (UTC)
+Received: from bvanassche-glaptop2.roam.corp.google.com (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VDhvr5xWCz6Cnk8m;
-	Tue,  9 Apr 2024 23:27:52 +0000 (UTC)
-Message-ID: <37c51970-1408-4a71-926a-780c663e5572@acm.org>
-Date: Tue, 9 Apr 2024 16:27:51 -0700
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VDjp71CtHz6Cnk8m;
+	Wed, 10 Apr 2024 00:07:58 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	"Bao D . Nguyen" <quic_nguyenb@quicinc.com>,
+	Stanley Chu <stanley.chu@mediatek.com>,
+	Can Guo <quic_cang@quicinc.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Stanley Jhu <chu.stanley@gmail.com>,
+	Po-Wen Kao <powen.kao@mediatek.com>,
+	ChanWoo Lee <cw9316.lee@samsung.com>,
+	Yang Li <yang.lee@linux.alibaba.com>
+Subject: [PATCH] scsi/ufs: Fix ufshcd_mcq_sqe_search()
+Date: Tue,  9 Apr 2024 17:07:45 -0700
+Message-ID: <20240410000751.1047758-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.44.0.478.gd926399ef9-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/1] scsi: ufs: Remove support for old UFSHCI versions
-To: Avri Altman <avri.altman@wdc.com>,
- "James E . J . Bottomley" <jejb@linux.ibm.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Bean Huo <beanhuo@micron.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240407060412.856-1-avri.altman@wdc.com>
- <20240407060412.856-2-avri.altman@wdc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240407060412.856-2-avri.altman@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 4/6/24 11:04 PM, Avri Altman wrote:
-> UFS spec version 2.1 was published more than 10 years ago. It is
-> vanishingly unlikely that even there are out there platforms that uses
-> earlier host controllers, let alone that those ancient platforms will
-> ever run a V6.10 kernel.  To be extra cautious, leave out support for
-> UFSHCI2.0 as well, and just remove support of host controllers prior
-> to UFS2.0.
-> 
-> This patch removes some legacy tuning calls that no longer apply.
-> 
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
-> Acked-by: Bean Huo <beanhuo@micron.com>
-> ---
->   drivers/ufs/core/ufshcd.c   | 158 +++---------------------------------
->   drivers/ufs/host/ufs-qcom.c |   3 +-
->   include/ufs/ufshcd.h        |   2 -
->   include/ufs/ufshci.h        |  13 +--
->   4 files changed, 15 insertions(+), 161 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 62c8575f2c67..c72ef87ea867 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -748,8 +748,6 @@ static int ufshcd_wait_for_register(struct ufs_hba *hba, u32 reg, u32 mask,
->    */
->   static inline u32 ufshcd_get_intr_mask(struct ufs_hba *hba)
->   {
-> -	if (hba->ufs_version == ufshci_version(1, 0))
-> -		return INTERRUPT_MASK_ALL_VER_10;
->   	if (hba->ufs_version <= ufshci_version(2, 0))
->   		return INTERRUPT_MASK_ALL_VER_11;
+Fix the calculation of the utrd pointer. This patch addresses the followi=
+ng
+Coverity complaint:
 
-Is the patch description in sync with the patch itself? The patch
-description says that support for UFSHCI 2.0 is removed while the
-above if-condition only evaluates to true for UFSHCI 2.0 and older
-controllers.
+CID 1538170: (#1 of 1): Extra sizeof expression (SIZEOF_MISMATCH)
+suspicious_pointer_arithmetic: Adding sq_head_slot * 32UL /* sizeof (stru=
+ct
+utp_transfer_req_desc) */ to pointer hwq->sqe_base_addr of type struct
+utp_transfer_req_desc * is suspicious because adding an integral value to
+this pointer automatically scales that value by the size, 32 bytes, of th=
+e
+pointed-to type, struct utp_transfer_req_desc. Most likely, the
+multiplication by sizeof (struct utp_transfer_req_desc) in this expressio=
+n
+is extraneous and should be eliminated.
 
-Thanks,
+Cc: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
+Cc: Can Guo <quic_cang@quicinc.com>
+Fixes: 8d7290348992 ("scsi: ufs: mcq: Add supporting functions for MCQ ab=
+ort")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufs-mcq.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Bart.
-
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 768bf87cd80d..005d63ab1f44 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -601,8 +601,7 @@ static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba=
+,
+ 	addr =3D le64_to_cpu(cmd_desc_base_addr) & CQE_UCD_BA;
+=20
+ 	while (sq_head_slot !=3D hwq->sq_tail_slot) {
+-		utrd =3D hwq->sqe_base_addr +
+-				sq_head_slot * sizeof(struct utp_transfer_req_desc);
++		utrd =3D hwq->sqe_base_addr + sq_head_slot;
+ 		match =3D le64_to_cpu(utrd->command_desc_base_addr) & CQE_UCD_BA;
+ 		if (addr =3D=3D match) {
+ 			ufshcd_mcq_nullify_sqe(utrd);
