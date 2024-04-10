@@ -1,93 +1,81 @@
-Received: from omta011.uswest2.a.cloudfilter.net (omta011.uswest2.a.cloudfilter.net [35.164.127.234])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B8C515AAD6
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Apr 2024 21:16:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.164.127.234
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D52A13E497;
+	Wed, 10 Apr 2024 22:53:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712783790; cv=none; b=SX7XkD5zbFboXetIc7+lz89jHNhIy6w1iH5lhX/BpGynEyHQ2+/60oVtPEW+kX6mjrZY9YcK7geZyOmEJkz+zd4vAC6Mq3NPWICkxXcDtKIVbsbif+oUCVkxWdtMzsdQZaTAP6la0Rm7q1ckRbiFUUsYzhSy371NevYqiq6lCtk=
+	t=1712789630; cv=none; b=WMFjsvfmAz3mkQuuf0gAYiAwbccdIKbfhw59oD0ebmKRM1HXCfKehGrzup8EaGId7usS+UOrErUilUn7vqZUCg6/SUyzM+p5L6aac5pHxJEq8mBiX8EogRog/jXI/BTKJS/vhNHtBd6EKBgAo3HfffpcBbWN+ApaXbUqoXZl8i0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712783790; c=relaxed/simple;
-	bh=CaT36sSbg4LDExScuG9DOttWcPSlUb8E89zoa2jmlHQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eVwcPd58uUWrrHzdLlSfDtRGX7dzUCyqNji/u5yMTtzu/1ix2X1BqbrjpCHp2wUQaMJ9TPKiCEyCfdwy9JVg9vpzmhK8OZiRrnBU/xrmr6QgVxv7vJHNp7ZYz4R2x0peFkDFtX/jaq6hmQHRBJ1bf4tZP+cbTQc4myzHaMNC7X0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cox.net; spf=pass smtp.mailfrom=cox.net; dkim=pass (2048-bit key) header.d=cox.net header.i=@cox.net header.b=HwWuNPdf; arc=none smtp.client-ip=35.164.127.234
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cox.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cox.net
+	s=arc-20240116; t=1712789630; c=relaxed/simple;
+	bh=+SF8fRD5qtMuzpo19NhWUcRSgrgCUtWHLitNvMbRUCg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PzH5o2zLqz1Ucxv/KxItPwVC8RO05pgjTiAq+X/C/6knB/DlE/Gmm84uq5cJrtwiMe5+KKdSLZO6F5TLJU94tdX55NNWjAsK8ZuXlzbi9nzwpFkjAdhjYFg1Wzm3ky8zeyFCZ4Vbj9atOwx5f9b5t2oVqoH57qwp6FRWFcGsvQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=GJtMIjNj; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cox.net header.i=@cox.net header.b="HwWuNPdf"
-Received: from cxr.smtp.a.cloudfilter.net ([10.0.17.211])
-	by cmsmtp with ESMTP
-	id uYC1rrNl3sYF3ufHQrUCmk; Wed, 10 Apr 2024 21:14:52 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=cox.net; s=c20240122;
-	t=1712783692; bh=CaT36sSbg4LDExScuG9DOttWcPSlUb8E89zoa2jmlHQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=HwWuNPdfIoFRP4BqbDysg+5MpxEpEjpx3d/qjRpl9pZUldi1czpgra1FwfSL0YBFy
-	 +XgUtLNfZw599U9oUOT86pPFwVGtIh4GQZqjwhqghKmdBo3wwOKcN9Ri1yGWEqmbPE
-	 J+55NtrrUS24oOc0DHWy4zuVFrGZp5V87uxoXVXXpbCvQofXge3jtl1RSrBIJp+kbW
-	 dskyr2X3i1snMt2feB4lGXEhsNqAzSbf1z6TF7rGWvybkbHboTCpNm4/hSXvJHWUBS
-	 sBYg5f2GQ2+HhQfxDapoB8dbNHrVZNz3AZbEI+sGRMai2ydCCUC6ZNPHg+wEm3wG/2
-	 LRSfBJZwKiH5A==
-Received: from [192.168.33.113] ([70.190.229.154])
-	by cmsmtp with ESMTPSA
-	id ufHIrPDy61WbsufHPrByy0; Wed, 10 Apr 2024 21:14:52 +0000
-Authentication-Results: ; auth=pass (PLAIN) smtp.auth=cbertsch@cox.net
-X-Authority-Analysis: v=2.4 cv=Mqzx6Hae c=1 sm=1 tr=0 ts=6617014c
- a=sEpYCS07hqR8Zql/TXGVUg==:117 a=sEpYCS07hqR8Zql/TXGVUg==:17
- a=IkcTkHD0fZMA:10 a=VwQbUJbxAAAA:8 a=cm27Pg_UAAAA:8 a=zid2hPHv1umveBVInocA:9
- a=QEXdDO2ut3YA:10 a=AjGcO6oz07-iQ99wixmX:22 a=xmb-EsYY8bH0VWELuYED:22
-Message-ID: <4eb3efc8-a5d5-4c5a-a0d8-a2a5377b72f1@cox.net>
-Date: Wed, 10 Apr 2024 14:14:44 -0700
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GJtMIjNj"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=+0GBmcwTyMhAOkoLxmQrxueXW3lGrGIZ8d1OHjV7ylM=; b=GJtMIjNjW41SrtG8JRyeUyv1YK
+	3/LJY8P60iIIigbcUK7nRIOG5SAxG9rk+7qqoUeoeruVCBueT9pP2tC+GnYuXFaJs3z9so25cEihh
+	Xo7Gc5b+4nEQcKGzf68LqxzhWau+RLyP2fh/nQ9rV9kFMewdxavcXr90oaxnCSXWYDEKUFwuZIBuA
+	4RewKyRIxhxMa/ug9Fqqj+ecU9DLl6OIIm3wes6nThakVfuKPbIcCZfTOkqViwwdAu4SOk0oZTTXv
+	4pQKbDIKxSS51l/NZa3AZXDpH4pdhSjuxGDTtBUHefUTa2VxgbhtP0jzBsv1wU7ao3k/TI4T9Kwep
+	YEzX5s9w==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rugp4-00000009KiJ-11gu;
+	Wed, 10 Apr 2024 22:53:42 +0000
+Date: Wed, 10 Apr 2024 15:53:41 -0700
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
+	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
+	io-uring@vger.kernel.org, nilay@linux.ibm.com,
+	ritesh.list@gmail.com, willy@infradead.org
+Subject: Re: [PATCH v6 02/10] block: Call blkdev_dio_unaligned() from
+ blkdev_direct_IO()
+Message-ID: <ZhcYddRtAoMghtvr@bombadil.infradead.org>
+References: <20240326133813.3224593-1-john.g.garry@oracle.com>
+ <20240326133813.3224593-3-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: startup BUG at lib/string_helpers.c from scsi fusion mptsas
-To: Justin Stitt <justinstitt@google.com>, Kees Cook <keescook@chromium.org>
-Cc: linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
-References: <5445ba0f-3e27-4d43-a9ba-0cc22ada2fce@cox.net>
- <CAFhGd8pTAKGcu2uLzUDDxto1sk5-9zQevsrXp-xL0cdPcGYaGg@mail.gmail.com>
- <d45631ac-3ee6-45cc-8b5a-fab130ce39d7@cox.net>
- <CAFhGd8p=R4P6J9KoMGcXij=fN=9sixVzjuz95TLKP1TexnvV8Q@mail.gmail.com>
- <202404081602.1B1773256@keescook>
- <CAFhGd8pdTzJae4257o5fNBiJ+GdRUzoCDH3xe6cTMqBHcsR=AA@mail.gmail.com>
-Content-Language: en-US
-From: Charles Bertsch <cbertsch@cox.net>
-In-Reply-To: <CAFhGd8pdTzJae4257o5fNBiJ+GdRUzoCDH3xe6cTMqBHcsR=AA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CMAE-Envelope: MS4xfMpq+9BMiitn944rQBfue+cXFmuiS5+2QzC2KH0lZuOs3qd6xgs8ZfpEsseeY8cxa6JsdovOXQyA3o5to9HaSKqNCYkO9uthsTDpQR3AksUSZqKtu+VF
- WiwsqggKyS9f08aW66HHd8qevP3KD6zBRax7941yXzD+G/ipUAImek6twudlxZ/gAkWuR6PmqgWPkxxve8wEjoXNkkSD/B1vIXVHBtmh1bN29NRGl3gY01MW
- oq9T7a3QDsLvTyJGn51+KGWKQRXoyxtipxhZ1EpvMp/eVOiDTsmi08yQHgfLX4+5IgxvpledOwLlypFKoeS4zL3YO1js3ZExFdL0jjtrFmg=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240326133813.3224593-3-john.g.garry@oracle.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-On 4/10/24 13:51, Justin Stitt wrote:
-...
+On Tue, Mar 26, 2024 at 01:38:05PM +0000, John Garry wrote:
+> blkdev_dio_unaligned() is called from __blkdev_direct_IO(),
+> __blkdev_direct_IO_simple(), and __blkdev_direct_IO_async(), and all these
+> are only called from blkdev_direct_IO().
 > 
-> For visibility, Kees has a series [1] which introduces memtostr and
-> also fixes up drivers/message/fusion/mptsas.c.
+> Move the blkdev_dio_unaligned() call to the common callsite,
+> blkdev_direct_IO().
 > 
-> Charles, can you try out that series?
+> Pass those functions the bdev pointer from blkdev_direct_IO() as it is non-
+> trivial to calculate.
 > 
->> --
->> Kees Cook
-> 
-> [1]: https://lore.kernel.org/all/20240410023155.2100422-2-keescook@chromium.org/
-> 
-> Thanks
-> Justin
+> Reviewed-by: Keith Busch <kbusch@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
 
-Success!
+Reviewed-by: Luis Chamberlain <mcgrof@kernel.org>
 
-I was able to apply the patches for include/linux/string.h and for 
-drivers/message/fusion/mptsas.c (as needed for this test hardware). 
-Clean build, identified as 6.9.0-rc3_64+. System boots. scsi interface 
-found, disks found, and some test scripts run successfully.
+I think this patch should just be sent separately already and not part
+of this series.
 
-Thanks
-Charles Bertsch
-
-
-
+  Luis
