@@ -1,183 +1,145 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12ED11779B4;
-	Wed, 10 Apr 2024 17:36:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B6DBAD4E
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Apr 2024 18:33:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712770571; cv=none; b=ufmzr/kxYKt4NTP9Vv/eyTUSMaAz2nDiGNT+ZRYVTmMm1G/mQsE14HMOrFdWgvhHIM5FJDKArOnrFEXbSj0bgtL4EKpga4XvUrbH1K7UQLRwes1vtQswpNIqRC9ztZKUYjB7XbjU8znidFZTGR/kkgr3JHiRrWt6kt9tmREXylg=
+	t=1712774034; cv=none; b=AmfWCjaW7F9KZGl5lLAtsSG8isfgeU3Ks3FVgWfzT28vZEWouMqnvy80Op6I/Cb6hupWlWbtVo7ioZuh3nV1V1kJtBJbFcTYFOmA5dV8Xb23BIG+SOosKxmDS2thjSYTzrTf9xFTqK1ZxK6CbHUYQgNdmmMYCXq8F70Fo3YgxJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712770571; c=relaxed/simple;
-	bh=s7AlPHnjW1gFs3weqR//JnIAW3hG+/Mp+aTuvYmxgTU=;
+	s=arc-20240116; t=1712774034; c=relaxed/simple;
+	bh=AXG6RJVXKDt+/DjwiwTtJ2dE7tTZOrDLGSw7IO1r/+Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p2+x3X32CoKrZ801XtkYFNGmkdaDWfFjB3IA9loQOFj+haLX+43yX/Qrqx0UVHKz2mKYkJhVdUEuz67bSAPtr4mMpb+FH5h03XTzcdKa4Z0aPLJ98l6kBSsGYiWHwwnMnpqbGgQrgr1WO8tVj0ye7KrJMr1S9CA6R6ITlRItAw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Wo/su6ux; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=pwQ8usD0; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Wo/su6ux; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=pwQ8usD0; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	 Content-Type:Content-Disposition:In-Reply-To; b=IRXzHMy3wYfE7O2ehkZYAPzxRS/RhXLW/bOtf2ugWMm5rTZhC6hPieto6SnyOLcoiVYzQx66BfsHEhRfkefE74cTwOesZPvUjb703usV7tx9IJKRV+L1EQIUbeRyUe13Qnm87o7uengtGApqub7OTWEwbrireeh0HWUKSBZzcq0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=VWR5Y3wJ; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Wo/su6ux";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="pwQ8usD0";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Wo/su6ux";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="pwQ8usD0"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 3395033A89;
-	Wed, 10 Apr 2024 17:36:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1712770567;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0ZHHE5aOwQ1Ezn/ab1buAuDtcCLPcpIIchKLIUxoBbM=;
-	b=Wo/su6uxAz3KDCet7sG1IMbLmZNu/s492NxBN+stUG6oo2qYtuABn+4iFfLZA7KwEty81H
-	IdrOqxowTjwdMcGmvVJuVhd3KhUwlHGwlvUKUWet7620GxVeKx3CiehY9/HodlAMarXBGu
-	QKA3ILsUtN07gfz8aoS5W8ffx3zw7mU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1712770567;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0ZHHE5aOwQ1Ezn/ab1buAuDtcCLPcpIIchKLIUxoBbM=;
-	b=pwQ8usD0NAyGD6U1k6UXV+bVfsviAAMcwHC0rXMTXFxYTDSQht5I5OMD0LYFtofyWnG5ZB
-	JIolcEC5hlnuCvCg==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1712770567;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0ZHHE5aOwQ1Ezn/ab1buAuDtcCLPcpIIchKLIUxoBbM=;
-	b=Wo/su6uxAz3KDCet7sG1IMbLmZNu/s492NxBN+stUG6oo2qYtuABn+4iFfLZA7KwEty81H
-	IdrOqxowTjwdMcGmvVJuVhd3KhUwlHGwlvUKUWet7620GxVeKx3CiehY9/HodlAMarXBGu
-	QKA3ILsUtN07gfz8aoS5W8ffx3zw7mU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1712770567;
-	h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-	 cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0ZHHE5aOwQ1Ezn/ab1buAuDtcCLPcpIIchKLIUxoBbM=;
-	b=pwQ8usD0NAyGD6U1k6UXV+bVfsviAAMcwHC0rXMTXFxYTDSQht5I5OMD0LYFtofyWnG5ZB
-	JIolcEC5hlnuCvCg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EFAAD13691;
-	Wed, 10 Apr 2024 17:36:06 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 20hgOgbOFmZrWQAAD6G6ig
-	(envelope-from <dsterba@suse.cz>); Wed, 10 Apr 2024 17:36:06 +0000
-Date: Wed, 10 Apr 2024 19:28:37 +0200
-From: David Sterba <dsterba@suse.cz>
-To: Jan Kara <jack@suse.cz>
-Cc: Matthew Wilcox <willy@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>,
-	axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de,
-	kent.overstreet@gmail.com, joern@lazybastard.org,
-	miquel.raynal@bootlin.com, richard@nod.at, vigneshr@ti.com,
-	sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com,
-	gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com,
-	dsterba@suse.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
-	nico@fluxnic.net, xiang@kernel.org, chao@kernel.org, tytso@mit.edu,
-	adilger.kernel@dilger.ca, jack@suse.com, konishi.ryusuke@gmail.com,
-	akpm@linux-foundation.org, hare@suse.de, p.raghav@samsung.com,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
-	linux-mtd@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-bcachefs@vger.kernel.org,
-	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-	linux-nilfs@vger.kernel.org, yukuai3@huawei.com,
-	yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH RFC v3 for-6.8/block 09/17] btrfs: use bdev apis
-Message-ID: <20240410172837.GO3492@suse.cz>
-Reply-To: dsterba@suse.cz
-References: <20231221085712.1766333-1-yukuai1@huaweicloud.com>
- <20231221085712.1766333-10-yukuai1@huaweicloud.com>
- <ZYcZi5YYvt5QHrG9@casper.infradead.org>
- <20240104114958.f3cit5q7syp3tn3a@quack3>
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="VWR5Y3wJ"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6ed0e9ccca1so3901416b3a.0
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Apr 2024 11:33:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1712774032; x=1713378832; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=hVCerfmQhkum0yIRABrdvwqbTpQW1aJkY1zYTHRoGBE=;
+        b=VWR5Y3wJ+xp9jDf40vXWpj/h8dt6K5tZdr21vslB207blGuHt5PyaFDsFCfao1D9PG
+         EWmb3J+ghTxgfG89ERErGbi4a/nYPxm/eevNkvDqQ9k5blgGqbgJHNUMQ97ujRBo/Fnp
+         7guhFJAuHPUKUWnZvjmaL501yFemF8vc8eYZM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712774032; x=1713378832;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=hVCerfmQhkum0yIRABrdvwqbTpQW1aJkY1zYTHRoGBE=;
+        b=CyfVLpp+SOv88HqVg+7i816PNa8gIGBmwDf3/xUAIZZ1z/4+8emL400YJKdxWTz/tJ
+         EBR2rf5567iLZpeyjaqrkUAcYcBxVALtV1o9HBhe9yPmoEtWjFkeM2LZDjXu2UV6C2Ow
+         EySN/lxX9QTVRgo3iZlOwlZMfJefXLfCdsDkH8y6nXy5AMzxM254sp4lP5XzjMcYocKA
+         INiosGxCxRrbCN4jJ6RJqiBcgjYBctW3BmVLAzK6HUM1tIqYoegZNoNv75GfMlrTEIZg
+         t8v/8/Qf3FJcc8vROjD7WNiPRcHkn4TX6aCBTCNDbNSSAU7A8aidARhgec8C9hLYM1yj
+         lhdQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVcmM0vxOWxAgi3q0kkF4XMALRBtIhjfa5M4LOZ7AtEvNSBUGsFIhtk+/5EFbjRF6WHtkS+Cnfc3jT7Kt95iuadjKNADDdSstCVgA==
+X-Gm-Message-State: AOJu0Yy4e84YWN1ND4ZWNRL/+FDzA6JNOtBwNbeckXCAm4n4VQDiB221
+	tp8CtxhKdjUrH0V6Eilia5U92JS1Qhv5f6Hnp+vs6H4qrDCHAe2NO5tJk8BjNg==
+X-Google-Smtp-Source: AGHT+IG7MfM1fYKWn8ghxeYU/65fuLZA+NPjkKP9uCGydgjLdCYH2Vdfb9Q7ZcXytxDQ7da1w5ozew==
+X-Received: by 2002:a05:6a00:9288:b0:6ea:d794:ccee with SMTP id jw8-20020a056a00928800b006ead794cceemr3862401pfb.17.1712774031421;
+        Wed, 10 Apr 2024 11:33:51 -0700 (PDT)
+Received: from www.outflux.net ([198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id i6-20020a056a00004600b006ead618c010sm10352691pfk.192.2024.04.10.11.33.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Apr 2024 11:33:50 -0700 (PDT)
+Date: Wed, 10 Apr 2024 11:33:50 -0700
+From: Kees Cook <keescook@chromium.org>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	Justin Stitt <justinstitt@google.com>,
+	Andy Shevchenko <andy@kernel.org>, linux-hardening@vger.kernel.org,
+	Charles Bertsch <cbertsch@cox.net>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
+	linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com,
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH 1/5] string.h: Introduce memtostr() and memtostr_pad()
+Message-ID: <202404101132.7D845EF323@keescook>
+References: <20240410021833.work.750-kees@kernel.org>
+ <20240410023155.2100422-1-keescook@chromium.org>
+ <CAHp75VeOQ+x3WgFeG89X=kGUo=w=ztkdBkA3_K6yy+2mWV83AA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20240104114958.f3cit5q7syp3tn3a@quack3>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
-X-Spam-Flag: NO
-X-Spam-Score: -2.50
-X-Spam-Level: 
-X-Spamd-Result: default: False [-2.50 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	HAS_REPLYTO(0.30)[dsterba@suse.cz];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_TWELVE(0.00)[49];
-	TO_DN_SOME(0.00)[];
-	ARC_NA(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RCVD_TLS_ALL(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLtpaten8pmzgjg419jubxqoa7)];
-	REPLYTO_ADDR_EQ_FROM(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[infradead.org,huaweicloud.com,kernel.dk,citrix.com,suse.de,gmail.com,lazybastard.org,bootlin.com,nod.at,ti.com,linux.ibm.com,oracle.com,fb.com,toxicpanda.com,suse.com,zeniv.linux.org.uk,kernel.org,fluxnic.net,mit.edu,dilger.ca,linux-foundation.org,samsung.com,vger.kernel.org,lists.xenproject.org,lists.infradead.org,lists.ozlabs.org,huawei.com];
-	RCVD_COUNT_TWO(0.00)[2];
-	TAGGED_RCPT(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHp75VeOQ+x3WgFeG89X=kGUo=w=ztkdBkA3_K6yy+2mWV83AA@mail.gmail.com>
 
-On Thu, Jan 04, 2024 at 12:49:58PM +0100, Jan Kara wrote:
-> On Sat 23-12-23 17:31:55, Matthew Wilcox wrote:
-> > On Thu, Dec 21, 2023 at 04:57:04PM +0800, Yu Kuai wrote:
-> > > @@ -3674,16 +3670,17 @@ struct btrfs_super_block *btrfs_read_dev_one_super(struct block_device *bdev,
-> > >  		 * Drop the page of the primary superblock, so later read will
-> > >  		 * always read from the device.
-> > >  		 */
-> > > -		invalidate_inode_pages2_range(mapping,
-> > > -				bytenr >> PAGE_SHIFT,
-> > > +		invalidate_bdev_range(bdev, bytenr >> PAGE_SHIFT,
-> > >  				(bytenr + BTRFS_SUPER_INFO_SIZE) >> PAGE_SHIFT);
-> > >  	}
-> > >  
-> > > -	page = read_cache_page_gfp(mapping, bytenr >> PAGE_SHIFT, GFP_NOFS);
-> > > -	if (IS_ERR(page))
-> > > -		return ERR_CAST(page);
-> > > +	nofs_flag = memalloc_nofs_save();
-> > > +	folio = bdev_read_folio(bdev, bytenr);
-> > > +	memalloc_nofs_restore(nofs_flag);
-> > 
-> > This is the wrong way to use memalloc_nofs_save/restore.  They should be
-> > used at the point that the filesystem takes/releases whatever lock is
-> > also used during reclaim.  I don't know btrfs well enough to suggest
-> > what lock is missing these annotations.
+On Wed, Apr 10, 2024 at 07:08:10AM +0300, Andy Shevchenko wrote:
+> On Wed, Apr 10, 2024 at 5:31 AM Kees Cook <keescook@chromium.org> wrote:
+> >
+> > Another ambiguous use of strncpy() is to copy from strings that may not
+> > be NUL-terminated. These cases depend on having the destination buffer
+> > be explicitly larger than the source buffer's maximum size, having
+> > the size of the copy exactly match the source buffer's maximum size,
+> > and for the destination buffer to get explicitly NUL terminated.
+> >
+> > This usually happens when parsing protocols or hardware character arrays
+> > that are not guaranteed to be NUL-terminated. The code pattern is
+> > effectively this:
+> >
+> >         char dest[sizeof(src) + 1];
+> >
+> >         strncpy(dest, src, sizeof(src));
+> >         dest[sizeof(dest) - 1] = '\0';
+> >
+> > In practice it usually looks like:
+> >
+> > struct from_hardware {
+> >         ...
+> >         char name[HW_NAME_SIZE] __nonstring;
+> >         ...
+> > };
+> >
+> >         struct from_hardware *p = ...;
+> >         char name[HW_NAME_SIZE + 1];
+> >
+> >         strncpy(name, p->name, HW_NAME_SIZE);
+> >         name[NW_NAME_SIZE] = '\0';
+> >
+> > This cannot be replaced with:
+> >
+> >         strscpy(name, p->name, sizeof(name));
+> >
+> > because p->name is smaller and not NUL-terminated, so FORTIFY will
+> > trigger when strnlen(p->name, sizeof(name)) is used. And it cannot be
+> > replaced with:
+> >
+> >         strscpy(name, p->name, sizeof(p->name));
+> >
+> > because then "name" may contain a 1 character early truncation of
+> > p->name.
+> >
+> > Provide an unambiguous interface for converting a maybe not-NUL-terminated
+> > string to a NUL-terminated string, with compile-time buffer size checking
+> > so that it can never fail at runtime: memtostr() and memtostr_pad(). Also
+> > add KUnit tests for both.
 > 
-> In principle I agree with you but in this particular case I agree the ask
-> is just too big. I suspect it is one of btrfs btree locks or maybe
-> chunk_mutex but I doubt even btrfs developers know and maybe it is just a
-> cargo cult. And it is not like this would be the first occurence of this
-> anti-pattern in btrfs - see e.g. device_list_add(), add_missing_dev(),
-> btrfs_destroy_delalloc_inodes() (here the wrapping around
-> invalidate_inode_pages2() looks really weird), and many others...
+> Obvious question, why can't strscpy() be fixed for this corner case?
 
-The pattern is intentional and a temporary solution before we could
-implement the scoped NOFS. Functions calling allocations get converted
-from GFP_NOFS to GFP_KERNEL but in case they're called from a context
-that either holds big locks or can recursively enter the filesystem then
-it's protected by the memalloc calls. This should not be surprising.
-What may not be obvious is which locks or kmalloc calling functions it
-could be, this depends on the analysis of the function call chain and
-usually there's enough evidence why it's needed.
+We would lose the ability to detect normal out-of-bounds reads, or at
+least make them ambiguous. I really want these APIs to have distinct and
+dependable semantics/behaviors.
+
+-- 
+Kees Cook
