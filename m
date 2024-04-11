@@ -1,93 +1,67 @@
-Received: from out-181.mta1.migadu.com (out-181.mta1.migadu.com [95.215.58.181])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD464339B1
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Apr 2024 17:49:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFBC629416;
+	Thu, 11 Apr 2024 18:23:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712857773; cv=none; b=PHs2uEifow4LWNMqy2jHIOULHiNjiXz5iYfvb+dxlMH95BqMhkvVfhVPQyi1kGKbMWOQjfi0Nb17+bMrc440NG24wExtQv/occ9JJEjOBSYvvSzq1WXKg/VtA3EBfxKOfzQz/2FfgZLcgOHMjtykIk2pitJC9GS1bQ9vDHoDa08=
+	t=1712859798; cv=none; b=Pv108EgrcrXzzxVpUDsK3jUdH4d3EolwUxhlY4uLmy9CZBO6+6DwHxzUHj1ehV+JG4YsdQ6QGoqWUNRSLneQ2AAETJibse3EbjqDzhhg76i4yCvG4DV71ORDQGtPvW2fDqi2P3vcJ/6IOu/w8SmtE9IUoFuHhSOCUfHHE6jY3jU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712857773; c=relaxed/simple;
-	bh=JMTdAGD8MD/pbkdj+J+tnzBU2KPanJ0Go33kBW0D9C0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=SeUMhxjCjYayrfBdKWfVmSM12YKMXwA1nS7e4hx0Mobq6/oyTS3Y8d/aEg+AJMR6RlfeSb0ekZis+TwvqmR7QlGCvHIFgb0BPmqFsD3aeMnloXbmDAftuTHzYLP+VTNl2Vo4bCVHdTIOsH14RzMKCcC5VJ2y2iKM88wKlWsDDQ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=aI/Km0ji; arc=none smtp.client-ip=95.215.58.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1712859798; c=relaxed/simple;
+	bh=FRIggP1YvWWV3rj+5WU1Cj2nMoZrQOSbDSPE/2jMC40=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=uJApwUQdkMU2LVnA3kOAdmT5QabOQmsc4DpkWamx54uHIY7xr2B6n9oFUQTqNeCOBPV4huteUp8c3jRd4vThSlzQEpfio9y7T3bwgiXGM6Xj/azWTq/6MbrpILtxDY0H5uPYV5QGnb7FDW/bJboLAdTFjMNC0Pj3l3q4CV142wE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ztVqzLNc; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="aI/Km0ji"
-Date: Thu, 11 Apr 2024 13:49:21 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1712857769;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V/TZdE1FK3O4qkESTbUB1nUL6z8CdzrLZmjris90VHw=;
-	b=aI/Km0jiSMVL4A1tCs8hlsrV66vbuWxJKZ+EgkonCW2LmuJAGBaIivtgu4+3HhSKhbSBh3
-	uS3+3l/YqK0GsHToDiJSOy8jQgouByPKNokiyLYxRwngjkex1lryU/nDL4TDH7+GmcHLtc
-	35AcbG0Y+MpEd8VLadpzkGxeP5lZ1Bo=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Kent Overstreet <kent.overstreet@linux.dev>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, roger.pau@citrix.com, colyli@suse.de, 
-	kent.overstreet@gmail.com, joern@lazybastard.org, miquel.raynal@bootlin.com, richard@nod.at, 
-	vigneshr@ti.com, sth@linux.ibm.com, hoeppner@linux.ibm.com, hca@linux.ibm.com, 
-	gor@linux.ibm.com, agordeev@linux.ibm.com, jejb@linux.ibm.com, 
-	martin.petersen@oracle.com, clm@fb.com, josef@toxicpanda.com, dsterba@suse.com, 
-	viro@zeniv.linux.org.uk, brauner@kernel.org, nico@fluxnic.net, xiang@kernel.org, 
-	chao@kernel.org, tytso@mit.edu, adilger.kernel@dilger.ca, jack@suse.com, 
-	konishi.ryusuke@gmail.com, willy@infradead.org, akpm@linux-foundation.org, hare@suse.de, 
-	p.raghav@samsung.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org, linux-mtd@lists.infradead.org, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, linux-bcachefs@vger.kernel.org, 
-	linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org, 
-	linux-ext4@vger.kernel.org, linux-nilfs@vger.kernel.org, yukuai3@huawei.com, 
-	yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH RFC v3 for-6.8/block 07/17] bcachefs: remove dead
- function bdev_sectors()
-Message-ID: <2pat6ombemqnq5wjl6eb4lbip2pfgg5tkubmbwqphvcvpdc6cu@poiexziaa2q4>
-References: <20231221085712.1766333-1-yukuai1@huaweicloud.com>
- <20231221085712.1766333-8-yukuai1@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ztVqzLNc"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VFp3L30MYz6Cnk8t;
+	Thu, 11 Apr 2024 18:23:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1712859787; x=1715451788; bh=FRIggP1YvWWV3rj+5WU1Cj2n
+	MoZrQOSbDSPE/2jMC40=; b=ztVqzLNcki93qPYwl22dc3jRpgrZo5cKjYRQ4Bf2
+	W0+E8Uhn4JBUUmVyEPYlp6qI+lHns4xGuIHTWiWR3nTD3cvm7biTShu6x4hocQxF
+	gFIlD1uxRzTJVktZSgZ0Gr+JlxtHmoZn4ywiD+NQe/rxbdfACNdpHWPpueB1zvH5
+	1e66aOsdJQtPp+er3Wxnq/ZHDRi18Cwly6fyAxc2sgKdkj2F3Tl4+7hhhi06r0S/
+	Dwp9/6D5W8v4gXgY2vuiaun9m9iwpe5Oooqbn8ofqHafXbllD5vyDkNVmOtOwqig
+	rSauuP6Tz7D3/luY1aHG3s05ur0cL10kUsYkpQG3FVp7qw==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id L8PhjzVZZJ8Z; Thu, 11 Apr 2024 18:23:07 +0000 (UTC)
+Received: from [100.96.154.26] (unknown [104.132.0.90])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VFp3C5dfhz6Cnk8m;
+	Thu, 11 Apr 2024 18:23:03 +0000 (UTC)
+Message-ID: <7c546232-0ad5-4ad3-bb12-2927c1b65c0e@acm.org>
+Date: Thu, 11 Apr 2024 11:23:01 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231221085712.1766333-8-yukuai1@huaweicloud.com>
-X-Migadu-Flow: FLOW_OUT
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] scsi: ufs: core: changing the status to check inflight
+To: SEO HOYOUNG <hy50.seo@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
+ kwangwon.min@samsung.com, kwmad.kim@samsung.com, sh425.lee@samsung.com,
+ quic_nguyenb@quicinc.com, cpgs@samsung.com, h10.kim@samsung.com
+References: <CGME20240411071042epcas2p4b2e6937a952e6dfa879db166983b1c54@epcas2p4.samsung.com>
+ <20240411071444.51873-1-hy50.seo@samsung.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240411071444.51873-1-hy50.seo@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Dec 21, 2023 at 04:57:02PM +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> bdev_sectors() is not used hence remove it.
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-
-Acked-by: Kent Overstreet <kent.overstreet@linux.dev>
-
-> ---
->  fs/bcachefs/util.h | 5 -----
->  1 file changed, 5 deletions(-)
-> 
-> diff --git a/fs/bcachefs/util.h b/fs/bcachefs/util.h
-> index 2984b57b2958..22a0acc1704f 100644
-> --- a/fs/bcachefs/util.h
-> +++ b/fs/bcachefs/util.h
-> @@ -516,11 +516,6 @@ static inline unsigned fract_exp_two(unsigned x, unsigned fract_bits)
->  void bch2_bio_map(struct bio *bio, void *base, size_t);
->  int bch2_bio_alloc_pages(struct bio *, size_t, gfp_t);
->  
-> -static inline sector_t bdev_sectors(struct block_device *bdev)
-> -{
-> -	return bdev->bd_inode->i_size >> 9;
-> -}
-> -
->  #define closure_bio_submit(bio, cl)					\
->  do {									\
->  	closure_get(cl);						\
-> -- 
-> 2.39.2
-> 
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
