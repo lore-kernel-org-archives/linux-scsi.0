@@ -1,161 +1,86 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67A7B13E401
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Apr 2024 07:10:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AFE12EAE5;
+	Thu, 11 Apr 2024 07:29:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712819449; cv=none; b=qNNEQqN4IeEpHeS2UaZXa6MS3zsWiCoPqDmx89t0Rqcvmu6UQ4LPoYqXhtCt4u36yorzB0qayA2kWRGXSA7GxTnbK2egqygzymjdV31lRJWmKrPEvhO5AUXF6l+38MHLPF89TyzdrtFYrHdjUqVJhBFC0cMLJEWKy2ILQ5YVn2M=
+	t=1712820555; cv=none; b=Bp0OeJUC86qb6GvEmzSPnyOC0UHR8vVnU3Eq2G5ZpUNyaiISmSmHq7u6v6P7DpaPk6xim40ArHmBK3VSxUFiL1+h8xvsaTMVXqGXBh27CKsK7X/HLAnFyk1WiGLidaXQQqVe/qmnsxwL6d1EI/Ni+HNftsKuBF3Zhg7aWiakvp4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712819449; c=relaxed/simple;
-	bh=EVrrGbITq6iY1+riebn7BmWva7odfM/dc+M8apZJsbk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
-	 References; b=b3/lLtv+lEm4iRJinCbu6ik7vnfvbC2WSWWKGgCx0Q7AlXGZy0ByLJHjos1FKJvMSLcl6r6QQdRJuC1hKrxfnkWTUNTa3MCQhjLlyrGrkF8Wpqjk2ORD7aU0P5MLAYqanJuaJ0kGbp2/ZsR3/Od+LDA28j+3bsXCEEw9C14ELMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=HLXTbNFO; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1712820555; c=relaxed/simple;
+	bh=qhh+HFgnD5ox2Pc3uLoIsj/1W0p7M3Gm7DG3ga5Iuks=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BOxIyueJeIeKrJRZxv2ypyYXoEvJ8rouc8ExE5ak21fbtTt/I4zra+QVo/z2+vkgZr05bRItC6GsLDHscEDFiwF3VTz1ff6W0l8h9V8pgP4eGKfqagDx20j9qOn+qeXpuHBc5/gkw8jjSNgjj33s7VFknDakbXT4WwfJTWuolSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=qf2Xukhu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="HLXTbNFO"
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20240411071044epoutp03499d1936e9fb7be60994e48d894480f9~FKDWpP9Yg2393323933epoutp03P
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Apr 2024 07:10:44 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20240411071044epoutp03499d1936e9fb7be60994e48d894480f9~FKDWpP9Yg2393323933epoutp03P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1712819444;
-	bh=zVTnUQHv886FrPUVq7+WRcst/8IszsvzOiHELYTRM4Q=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=HLXTbNFO1TrH7dJM4cA5ghQdyg+scQATWASlRi0RrqKUGCSVcCX8EiTxE1ollqjBj
-	 yi9MOeiek/6Xx2n6OSkF+cfH1lFLUWkdHFuE2cPOiXkuVbA2S9OEe9lFD4v1bqfy7p
-	 q1zh8Hic8qq6b3SS06mZh9jGWoV9QlILBG66jHtE=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-	epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-	20240411071043epcas2p4f4f3f01b427d0aa827a057608b6ea64b~FKDWBERXA0511405114epcas2p4m;
-	Thu, 11 Apr 2024 07:10:43 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.36.99]) by
-	epsnrtp1.localdomain (Postfix) with ESMTP id 4VFW7Q60s7z4x9Q1; Thu, 11 Apr
-	2024 07:10:42 +0000 (GMT)
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-	epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-	2A.99.09640.2FC87166; Thu, 11 Apr 2024 16:10:42 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
-	20240411071042epcas2p4b2e6937a952e6dfa879db166983b1c54~FKDU5YhP40511405114epcas2p4j;
-	Thu, 11 Apr 2024 07:10:42 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240411071042epsmtrp151f16100e8b264a1de75943ef94c66ce~FKDU4ULWa2252922529epsmtrp18;
-	Thu, 11 Apr 2024 07:10:42 +0000 (GMT)
-X-AuditID: b6c32a48-01f5ca80000025a8-88-66178cf24864
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	21.54.07541.2FC87166; Thu, 11 Apr 2024 16:10:42 +0900 (KST)
-Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20240411071042epsmtip1a0e5464db6a74fe1adfd6a7cc2e38d72~FKDUngiKF0441504415epsmtip1R;
-	Thu, 11 Apr 2024 07:10:42 +0000 (GMT)
-From: SEO HOYOUNG <hy50.seo@samsung.com>
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
-	kwangwon.min@samsung.com, kwmad.kim@samsung.com, sh425.lee@samsung.com,
-	quic_nguyenb@quicinc.com, cpgs@samsung.com, h10.kim@samsung.com
-Cc: SEO HOYOUNG <hy50.seo@samsung.com>
-Subject: [PATCH v3] scsi: ufs: core: changing the status to check inflight
-Date: Thu, 11 Apr 2024 16:14:44 +0900
-Message-Id: <20240411071444.51873-1-hy50.seo@samsung.com>
-X-Mailer: git-send-email 2.26.0
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="qf2Xukhu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38138C433F1;
+	Thu, 11 Apr 2024 07:29:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1712820554;
+	bh=qhh+HFgnD5ox2Pc3uLoIsj/1W0p7M3Gm7DG3ga5Iuks=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qf2Xukhuq1tpqB93E5tlI6wEqqggG95z+q9BPaj3lw5a4Jl9su80qPULn9XnCnDd+
+	 65USnrsGSp5WqRnW5CNFyq3bpEpbYA1d5JDtP8FWAsIfu5Rh0a+jg3nSmV0ljdUvU3
+	 Zt3Yokb2Y66K+PqruJk6dhrDDAV3hWeZuMBYyshw=
+Date: Thu, 11 Apr 2024 09:29:11 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: John David Anglin <dave.anglin@bell.net>,
+	James Bottomley <James.Bottomley@hansenpartnership.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	linux-parisc <linux-parisc@vger.kernel.org>,
+	linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: Broken Domain Validation in 6.1.84+
+Message-ID: <2024041155-croon-dried-f649@gregkh>
+References: <b0670b6f-b7f7-4212-9802-7773dcd7206e@bell.net>
+ <d1fc0b8d-4858-4234-8b66-c8980f612ea2@acm.org>
+ <db784080-2268-4e6d-84bd-b33055a3331b@bell.net>
+ <028352c6-7e34-4267-bbff-10c93d3596d3@acm.org>
+ <cf78b204-9149-4462-8e82-b8f98859004b@bell.net>
+ <6cb06622e6add6309e8dbb9a8944d53d1b9c4aaa.camel@HansenPartnership.com>
+ <03ef7afd-98f5-4f1b-8330-329f47139ddf@bell.net>
+ <yq1wmp9pb0d.fsf@ca-mkp.ca.oracle.com>
+ <b3df77f6-2928-46cd-a7ee-f806d4c937d1@bell.net>
+ <yq1frvvpymp.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrHJsWRmVeSWpSXmKPExsWy7bCmue6nHvE0g/3LDCwezNvGZvHy51U2
-	i4MPO1kspn34yWzx8pCmxd/bF1ktVi9+wGKx6MY2JoutN3ayWNzccpTF4vKuOWwW3dd3sFks
-	P/6PyWLqi+PsFkv/vWVx4Pe4fMXbY8KiA4we39d3sHl8fHqLxWPinjqPvi2rGD0+b5LzaD/Q
-	zRTAEZVtk5GamJJapJCal5yfkpmXbqvkHRzvHG9qZmCoa2hpYa6kkJeYm2qr5OIToOuWmQN0
-	upJCWWJOKVAoILG4WEnfzqYov7QkVSEjv7jEVim1ICWnwLxArzgxt7g0L10vL7XEytDAwMgU
-	qDAhO+PGuRtMBSu4Kj4u3sbewHiBo4uRk0NCwESiZ+VVli5GLg4hgR2MEld23YVyPjFK3P43
-	lRHC+cYo8W3PdEaYlt9H+6Gq9jJKvDx3gRnC+cEo0X24FayKTUBDYs2xQ0wgtojAZSaJP8vM
-	QGxmATWJz3eXsYDYwgJeEkcbj7OC2CwCqhJL9u8Ai/MKWEr0bV7FDLFNXmJRw28miLigxMmZ
-	T1gg5shLNG+dDbZYQmAmh8S369ehGlwkpsxvYoOwhSVeHd/CDmFLSbzsbwOyOYDsYolZC6sh
-	ehsYJQ7NngVVYywx61k7I0gNs4CmxPpd+hDlyhJHbkGt5ZPoOPwXqppXomHjb6iJvBIdbUIQ
-	YSWJM3NvQ4UlJA7OzoEIe0h0LHoDDhwhgViJ53e3sE5gVJiF5K9ZSP6ahXDCAkbmVYxiqQXF
-	uempxUYFJvD4Tc7P3cQITshaHjsYZ7/9oHeIkYmD8RCjBAezkgivtJZomhBvSmJlVWpRfnxR
-	aU5q8SFGU2BIT2SWEk3OB+aEvJJ4QxNLAxMzM0NzI1MDcyVx3nutc1OEBNITS1KzU1MLUotg
-	+pg4OKUamKRS3pXxLp04o/7gK/Y/UhIWnzK+2lWabGacldfLGsurtnDzg2mysw+dmMV+pqu5
-	/trEupe+a5/1HXfenHL2fHTF3iLr0Js6SizGnWJtsTENAjuzP0ZODS8JyGC5eD32lU28eLra
-	8WfN0kE7zio7zlyrwmFgmf9ywuf4SRMLfcyDnqVeqz/P6cdR4dwVdXJ1XOOKhc9lItZ9KRfZ
-	1Lrxh4fF1l/Ln7Rn9/7YZ7mk3cj8/VzJqRNiLuaeu5p1dOFn3t6Zfy4wTZSrCD3Barr30fUd
-	a/T/+kQfPRnQs5HNjJ3xssc9U0G3GTW3F+kv/qCbW6NWHZ35QvWtzxLe3lm7cq7rHU2yXDuP
-	b0cgq9dJeyWW4oxEQy3mouJEAAJDc2FRBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrCLMWRmVeSWpSXmKPExsWy7bCSnO6nHvE0g/sbuCwezNvGZvHy51U2
-	i4MPO1kspn34yWzx8pCmxd/bF1ktVi9+wGKx6MY2JoutN3ayWNzccpTF4vKuOWwW3dd3sFks
-	P/6PyWLqi+PsFkv/vWVx4Pe4fMXbY8KiA4we39d3sHl8fHqLxWPinjqPvi2rGD0+b5LzaD/Q
-	zRTAEcVlk5Kak1mWWqRvl8CVcePcDaaCFVwVHxdvY29gvMDRxcjJISFgIvH7aD9LFyMXh5DA
-	bkaJaxc3sEMkJCT+L25igrCFJe63HGGFKPrGKPGpt4cZJMEmoCGx5tghJpCEiMBTJokTh7rA
-	EswCahKf7y5jAbGFBbwkjjYeZwWxWQRUJZbs3wEW5xWwlOjbvIoZYoO8xKKG30wQcUGJkzOf
-	sEDMkZdo3jqbeQIj3ywkqVlIUgsYmVYxSqYWFOem5yYbFhjmpZbrFSfmFpfmpesl5+duYgRH
-	hJbGDsZ78//pHWJk4mA8xCjBwawkwiutJZomxJuSWFmVWpQfX1Sak1p8iFGag0VJnNdwxuwU
-	IYH0xJLU7NTUgtQimCwTB6dUA9PKBatYHuQt2LRUXbYxK8fKXcS2Wl/RuaVdXEtxceAD991M
-	alPCFXl5cx6+cpsutjZzZ7hm6I+UGVw3KoP05c2jT5ya7RF95YLoPtZti7j8Cnet7DgixRdw
-	mefeyfIEa7ZvNZsXhFlzTn+xRLTmf8w2juyU1XPcVk1gfH4qZNcD6xvPlXbt6V/e2cN2Y9ax
-	uzPOtH+zsdh5fbaWUETS3EtNekHvWD+v9t/at+oht8K9TN79e8UERAJjb9m/K+E9tiUl8sbl
-	SNZFLd5TFzBYLQlgzHCe+ST9X/V8jxhjvr2utg9/zrS7dl/gm0pBKh+LQHv7Kb7i//d/l81Q
-	4NCzC3/F3Sc9zVPozUzbgAsl85RYijMSDbWYi4oTAUrSb9r3AgAA
-X-CMS-MailID: 20240411071042epcas2p4b2e6937a952e6dfa879db166983b1c54
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240411071042epcas2p4b2e6937a952e6dfa879db166983b1c54
-References: <CGME20240411071042epcas2p4b2e6937a952e6dfa879db166983b1c54@epcas2p4.samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq1frvvpymp.fsf@ca-mkp.ca.oracle.com>
 
-ufshcd_cmd_inflight() is used to check whether or not a command is
-in progress.
-Make it skip commands that have already completed by changing the
-!blk_mq_request_started(rq) check into blk_mq_rq_state(rq)
-!= MQ_RQ_IN_FLIGHT.
-We cannot rely on lrbp->cmd since lrbp->cmd is not cleared
-when a command completes.
+On Mon, Apr 08, 2024 at 01:19:50PM -0400, Martin K. Petersen wrote:
+> 
+> Dave,
+> 
+> >> Could you please try the patch below on top of v6.1.80?
+> > Works okay on top of v6.1.80:
+> >
+> > [   30.952668] scsi 6:0:0:0: Direct-Access     HP 73.4G ST373207LW       HPC1 PQ: 0 ANSI: 3
+> > [   31.072592] scsi target6:0:0: Beginning Domain Validation
+> > [   31.139334] scsi 6:0:0:0: Power-on or device reset occurred
+> > [   31.186227] scsi target6:0:0: Ending Domain Validation
+> > [   31.240482] scsi target6:0:0: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS RTI WRFLOW PCOMP (6.25 ns, offset 63)
+> > [   31.462587] ata5: SATA link down (SStatus 0 SControl 0)
+> > [   31.618798] scsi 6:0:2:0: Direct-Access     HP 73.4G ST373207LW       HPC1 PQ: 0 ANSI: 3
+> > [   31.732588] scsi target6:0:2: Beginning Domain Validation
+> > [   31.799201] scsi 6:0:2:0: Power-on or device reset occurred
+> > [   31.846724] scsi target6:0:2: Ending Domain Validation
+> > [   31.900822] scsi target6:0:2: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS RTI WRFLOW PCOMP (6.25 ns, offset 63)
+> 
+> Great, thanks for testing!
+> 
+> Greg, please revert the following commits from linux-6.1.y:
+> 
+> b73dd5f99972 ("scsi: sd: usb_storage: uas: Access media prior to querying device properties")
+> cf33e6ca12d8 ("scsi: core: Add struct for args to execution functions")
+> 
+> and include the patch below instead.
 
-v1 -> v2: convert the two return statements into a single return statement
-And modified comment of commit
+Now done, thanks!
 
-v2 -> v3: remove superfluous parentheses in the above return statement
-
-Link: https://lore.kernel.org/linux-scsi/20230517223157.1068210-3-bvanassche@acm.org/
-Signed-off-by: SEO HOYOUNG <hy50.seo@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 21429eec1b82..a99f7ab85f12 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3082,16 +3082,7 @@ static int ufshcd_compose_dev_cmd(struct ufs_hba *hba,
-  */
- bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd)
- {
--	struct request *rq;
--
--	if (!cmd)
--		return false;
--
--	rq = scsi_cmd_to_rq(cmd);
--	if (!blk_mq_request_started(rq))
--		return false;
--
--	return true;
-+	return cmd && blk_mq_rq_state(scsi_cmd_to_rq(cmd)) == MQ_RQ_IN_FLIGHT;
- }
- 
- /*
--- 
-2.26.0
-
+greg k-h
