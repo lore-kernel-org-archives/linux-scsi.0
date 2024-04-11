@@ -1,63 +1,118 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.smtpout.orange.fr (smtp-27.smtpout.orange.fr [80.12.242.27])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F264218AE0;
-	Thu, 11 Apr 2024 19:09:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA0B817C6A;
+	Thu, 11 Apr 2024 20:24:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.27
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712862564; cv=none; b=s4cdwiD+3kabfMDwD7FmppQqqSA8d9MpqcvS4Y1whRAdyySS3FnKBFG0XdrMlqN7Txad15d45bHgufCtNdSd9Dm48WPv+EL7deO9ndr9MH8cPKVsLCf9DqXnt7Ek+1GqIxDXWrzmyWLgTI8mqy9YxUJasegwoyX+8hXmxdp04Y0=
+	t=1712867046; cv=none; b=IIMQHyOHU10964xjmyecUxwErI9ZpY/eI91Ixot2UDdSFdpv7jHg7H1EVzisTVU/dYlZ40M2o8xsbgGbKodzMmeTnLiqtJ82jfN9l8HVZfFgfjUEfZnGvQilGro0G5ufYaRytnNVDDzWRvtSeKYprFsYRKYgXVoIOreu3gtWaPQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712862564; c=relaxed/simple;
-	bh=hDbpAi+COaOsAEb1bsy59WwssefNfq1c1N11vrfipTc=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=OnoVxWP5gDRIZJOcD6k++8n/T6rWilZTVvocToITvVUF77CI5HWB1C9a1eOYx/gpeLhvCIGdUbKMz1xgu3791dkVBf+gXYfcvy7RpUq9B051bymWwNUjQ8D2YEipoHcWKaQVRrj2npKZ/l6VeVCy38q9Xquv4ywZGO+g4JtrzdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uxet7s5a; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712867046; c=relaxed/simple;
+	bh=QhmZqca6i4GwVv1XAcc9IrrgLk4abiFm/4Wl1hb/8sw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=R+q9P76gGpRrO7rGHoG85kD3J5l/gsvHfEkVuueG62aNA6G1C4zDdkYK28ZIkguOhiKEKe/L2kRBWoXddGR7JsHx1jNhYT+6BVMJYCmuyDQLzw+N6Ezu3T5JAWXyM4XpHlGlQ6qQFE41Np724XIXvcodmv8Wzc+ZTMPSxT9ESbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=QMCudDh1; arc=none smtp.client-ip=80.12.242.27
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uxet7s5a"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D74ADC072AA;
-	Thu, 11 Apr 2024 19:09:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712862563;
-	bh=hDbpAi+COaOsAEb1bsy59WwssefNfq1c1N11vrfipTc=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=uxet7s5azq+V5vQWMqEjOKKluyEsDwBc4KnzKDTFb7rOyiJJ9PyD8c2IXb/gRUtKo
-	 Tex+9IuazASar49X5+W8McV8l79xiVhvb1XZHUM5BuxaFG5GWrfKPig/W4Xie5V+Qf
-	 BT9JWUs+/CrpDgKCFXrOVg0FsoWjA+7r8jKRYraunkOeQ9pYWkP1Xow+jPUwpCNTiM
-	 3coqgx4I8CSLCf8dkFsZfSaVjiQkiFBzbefpUJ18CPSIIq8IZgPVEM1idlOM+Bdzlf
-	 0mTKREv0nK1JT8tfNS5j/v/agbLfzDijUVGeWNXv6s3nerWeY7ViVi1mZoB/DX3y6s
-	 1gr+G1wUWYLzw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id CC58CC433E9;
-	Thu, 11 Apr 2024 19:09:23 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.9-rc3
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <3151adf5a1e0566e930454aac1a7c60722f5c711.camel@HansenPartnership.com>
-References: <3151adf5a1e0566e930454aac1a7c60722f5c711.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <3151adf5a1e0566e930454aac1a7c60722f5c711.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 4406e4176f47177f5e51b4cc7e6a7a2ff3dbfbbd
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: ab4319fdbcdca30842b76a30e2acdd52ca8d0729
-Message-Id: <171286256383.2172.11057473275474472460.pr-tracker-bot@kernel.org>
-Date: Thu, 11 Apr 2024 19:09:23 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="QMCudDh1"
+Received: from [192.168.1.18] ([86.243.17.157])
+	by smtp.orange.fr with ESMTPA
+	id v0xXr4JUAqkPUv0xYrdLi7; Thu, 11 Apr 2024 22:23:54 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1712867034;
+	bh=v4sYyES8feRyP/YNHQ4HOBPVocESBHJ4p6aCiQtSavI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:From;
+	b=QMCudDh14uA+N4VCUkUhGD3njd4hP+Nm+dZR+AHIvomm17cl8lhe+OEOieTe2tfCd
+	 CSwaIP3rEU56ONRmKGTfz4ao9J8mzI9LnAVCKVmuUmS//1uy7UrVyFnucM+4esuv/T
+	 oo+W9WibJxCGBDkR1ETwHvYgNw2WqclnTcAwFFkQCDIl+7Og0xYMtfR6Ce6O1eg8Xj
+	 TprE9TDFAvWBbHv9DdeSW7gw0cL9SbIVgyxiFM+NCmvp8psAM0yRbsFF/z/qBtmvhS
+	 tk8PC6grRGcBt957JhfI8k8joswKv/XfbhH8qO5/V5krr5vlKn6DDKJ1S1Ygk95Ha3
+	 gYl5m7R2w2/OA==
+X-ME-Helo: [192.168.1.18]
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Thu, 11 Apr 2024 22:23:54 +0200
+X-ME-IP: 86.243.17.157
+Message-ID: <da50e56a-cb59-4815-800d-81742e5294df@wanadoo.fr>
+Date: Thu, 11 Apr 2024 22:23:45 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] treewide: Fix common grammar mistake "the the"
+To: Thorsten Blum <thorsten.blum@toblux.com>, robin.murphy@arm.com
+Cc: cocci@inria.fr, dri-devel@lists.freedesktop.org,
+ ecryptfs@vger.kernel.org, intel-gfx@lists.freedesktop.org,
+ intel-xe@lists.freedesktop.org, io-uring@vger.kernel.org,
+ kernel-janitors@vger.kernel.org, linux-afs@lists.infradead.org,
+ linux-arch@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-perf-users@vger.kernel.org,
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, linux-unionfs@vger.kernel.org,
+ linux-wireless@vger.kernel.org, netfs@lists.linux.dev,
+ speakup@linux-speakup.org, Randy Dunlap <rdunlap@infradead.org>,
+ Tyler Hicks <code@tyhicks.com>
+References: <f2d1bb68-7ab7-4bbf-a1b1-88334ba52bab@arm.com>
+ <20240411171145.535123-3-thorsten.blum@toblux.com>
+Content-Language: en-MW
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+In-Reply-To: <20240411171145.535123-3-thorsten.blum@toblux.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-The pull request you sent on Thu, 11 Apr 2024 08:37:02 -0400:
+Le 11/04/2024 à 19:11, Thorsten Blum a écrit :
+> Use `find . -type f -exec sed -i 's/\<the the\>/the/g' {} +` to find all
+> occurrences of "the the" and replace them with a single "the".
+> 
+> In arch/arm/include/asm/unwind.h replace "the the" with "to the".
+> 
+> Changes only comments and documentation - no code changes.
+> 
+> Signed-off-by: Thorsten Blum <thorsten.blum@toblux.com>
+> Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
+> Reviewed-by: Tyler Hicks <code@tyhicks.com>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+...
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/ab4319fdbcdca30842b76a30e2acdd52ca8d0729
+> --- a/drivers/scsi/isci/host.h
+> +++ b/drivers/scsi/isci/host.h
+> @@ -244,7 +244,7 @@ enum sci_controller_states {
+>   	SCIC_INITIALIZED,
+>   
+>   	/**
+> -	 * This state indicates the the controller is in the process of becoming
 
-Thank you!
+maybe: that the?
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+> +	 * This state indicates the controller is in the process of becoming
+>   	 * ready (i.e. starting).  In this state no new IO operations are permitted.
+>   	 * This state is entered from the INITIALIZED state.
+>   	 */
+
+...
+
+> diff --git a/io_uring/kbuf.c b/io_uring/kbuf.c
+> index 3aa16e27f509..503244e8470a 100644
+> --- a/io_uring/kbuf.c
+> +++ b/io_uring/kbuf.c
+> @@ -731,7 +731,7 @@ struct io_buffer_list *io_pbuf_get_bl(struct io_ring_ctx *ctx,
+>   	 * going away, if someone is trying to be sneaky. Look it up under rcu
+>   	 * so we know it's not going away, and attempt to grab a reference to
+>   	 * it. If the ref is already zero, then fail the mapping. If successful,
+> -	 * the caller will call io_put_bl() to drop the the reference at at the
+> +	 * the caller will call io_put_bl() to drop the reference at at the
+
+Not strictly related to your patch, but "at at".
+
+>   	 * end. This may then safely free the buffer_list (and drop the pages)
+>   	 * at that point, vm_insert_pages() would've already grabbed the
+>   	 * necessary vma references.
+
+...
+
+CJ
+
