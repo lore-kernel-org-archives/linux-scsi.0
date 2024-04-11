@@ -1,75 +1,125 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD6A92E648;
-	Thu, 11 Apr 2024 18:32:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A943616419;
+	Thu, 11 Apr 2024 19:07:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712860379; cv=none; b=Ys3htqDW5hn7/Ps2VLe1dHqWq/XgB/yb56o1ixn6sfnOtutTuCnFsTk8lPmcPNisNsmG9WW7EWp4pm/AII7fLgHSndfiEKFCrhrTxFD4uEgukslTa7rxAckCh993GNRro+RZfBISIrLCpMBUlJM9chqMsQYeHGGpqLbWmPeRzyQ=
+	t=1712862468; cv=none; b=PxOukDSlGv2paI+DZpOT4F5mqdX2fn4fLq8kn3eMycFGrnYe42zD8bt3aKVj/UxyYBspm6U7JzyG9jGxbnrcIL88awZUBbU/vktrvcBPN9bH5p3eoRJRG0dEz1T4j1eGAhSgofOPad0pqDfK56B6i/7SO+Oy2jhJZguWcM+DpHU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712860379; c=relaxed/simple;
-	bh=PD4Rq4W481XE02wN1L8egVrSphLnZDE/5wUQV1tuxoA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gphOh7uOLlE7QmNh8W3qLTmLn4Q1kdHFMl541pObQq6neYBe3U4Tf9zR3BDUTJfDSZDqJ+Da5AiwXZNTAuG9H7P7kz+/+ZDfTKqaSCFfuBIc27SaPuMMmugnCDxDyiT8QgkrM/1V9ylmdIEpZy183kHQNGkHtgqje8QINq+EJtQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=29zMudxn; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1712862468; c=relaxed/simple;
+	bh=p3xSOxPuATlO71p9cnskaQJETJN0PeGN1xAKog1Qdp4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iPnogClrvwI4Po/Gbpg0s0nvtKKBqzrE8scEHcoOj1z8BCQFOJggtvbq9sPblZoak1ugy40S/ensGwBFqiRrEzaZM6XesXqYpQOAztGIr13u4+clwZpj8xwQs/fLDfNP/x/ygJixMVmYPMF1ex/BldR/7npXXUUIXE7NucgCCzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ADyqhdI3; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="29zMudxn"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VFpGd0Y7Rz6Cnk8t;
-	Thu, 11 Apr 2024 18:32:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1712860374; x=1715452375; bh=joEZF4PZ/4PCQq6e7Lo+KVIu
-	C23IHujteHggRqCxv0s=; b=29zMudxn/gxyq7ijpfFZeUBn8zAKy4MAF6VTdxoI
-	YVEJdtR4DsiWGaCtphgyjWIHGEfs4b7nCT4+kZsoJf0m5Q4GIlm2mOFxwu1RDW/5
-	aaGvOCLJ7GolNI3H90J13zkjPvVcNeVGZVOLqR79g9/qV4KncGwykWM0wsVyqRU3
-	8ZnZKeSC/FBti+3BtsFhD9LxdYsqq2TedtFdXTUTH+BiPlOcO0970+6+1VGFI5zF
-	G8Jz0nZ7eMwVKRTTgMjBQfZlL4Nad6sVRVqtcoFa1KXqLxD4A3kQR/UgLPFwoOx5
-	zp0z39M97qUwQSDZGcoySiRiLTuDyRbuOrcS9r45/LVNUw==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id q49H48TrprJT; Thu, 11 Apr 2024 18:32:54 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VFpGZ08t6z6Cnk8m;
-	Thu, 11 Apr 2024 18:32:53 +0000 (UTC)
-Message-ID: <df5244be-f4de-451a-8bef-e2816ab6660e@acm.org>
-Date: Thu, 11 Apr 2024 11:32:51 -0700
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ADyqhdI3"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=PcZdbAxSEwXG3C61TyMUijUHCCvRVt8slQPN1FDjo1k=; b=ADyqhdI3aTXSxUH/1EFE7yxMaw
+	Q/QzwIQp/Krx4PAZO26/s23+4WUezyP+nlstWI47eqnw9vZDe7z/lyJIztc/96TDC49tOC1plCsR2
+	zHy/WFYe0Kw56iwPRg64drflom1IXRv9eRYpFdHBk9eGmtNolVadhrxb6suoJ0hIVGWEZhPmZTPYg
+	rosmBvK/anQCPG0g9QahmGRPMjF6Z3lCQfxGj2kLxRhSIrl9CfEqcWT6LUTPP8E9eoliydSsex3HU
+	4j7XG1TVO6TdnYQ//KK/md0lE/EhlDTciT0dgNlRVUCfFA+ZzNSkrDvXI1mmHqQlIfglCNXCKzMvH
+	IzGtMSjA==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1ruzls-0000000Dp2X-0ZEf;
+	Thu, 11 Apr 2024 19:07:40 +0000
+Date: Thu, 11 Apr 2024 12:07:40 -0700
+From: Luis Chamberlain <mcgrof@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Matthew Wilcox <willy@infradead.org>,
+	Pankaj Raghav <p.raghav@samsung.com>,
+	Daniel Gomez <da.gomez@samsung.com>,
+	Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier.gonz@samsung.com>,
+	axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
+	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
+	io-uring@vger.kernel.org, nilay@linux.ibm.com,
+	ritesh.list@gmail.com
+Subject: Re: [PATCH v6 00/10] block atomic writes
+Message-ID: <Zhg0_Pvlh9zy4zzG@bombadil.infradead.org>
+References: <20240326133813.3224593-1-john.g.garry@oracle.com>
+ <ZgOXb_oZjsUU12YL@casper.infradead.org>
+ <c4c0dad5-41a4-44b4-8f40-2a250571180b@oracle.com>
+ <Zg7Z4aJtn3SxY5w1@casper.infradead.org>
+ <f3c1d321-0dfc-466f-9f6a-fe2f0513d944@oracle.com>
+ <ZhQud1NbO4aMt0MH@bombadil.infradead.org>
+ <b0789a97-7dcf-48aa-9980-8525942dabfa@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 1/1] scsi: ufs: Remove support for old UFSHCI versions
-To: Avri Altman <avri.altman@wdc.com>,
- "James E . J . Bottomley" <jejb@linux.ibm.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Bean Huo <beanhuo@micron.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240410183720.908-1-avri.altman@wdc.com>
- <20240410183720.908-2-avri.altman@wdc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240410183720.908-2-avri.altman@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b0789a97-7dcf-48aa-9980-8525942dabfa@oracle.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 
-On 4/10/24 11:37, Avri Altman wrote:
-> UFS spec version 2.1 was published more than 10 years ago. It is
-> vanishingly unlikely that even there are out there platforms that uses
-> earlier host controllers, let alone that those ancient platforms will
-> ever run a V6.10 kernel.  To be extra cautious, leave out removal of
-> UFSHCI 2.0 support from this patch, and just remove support of host
-> controllers prior to UFS2.0.
+On Wed, Apr 10, 2024 at 09:34:36AM +0100, John Garry wrote:
+> On 08/04/2024 18:50, Luis Chamberlain wrote:
+> > I agree that when you don't set the sector size to 16k you are not forcing the
+> > filesystem to use 16k IOs, the metadata can still be 4k. But when you
+> > use a 16k sector size, the 16k IOs should be respected by the
+> > filesystem.
+> > 
+> > Do we break BIOs to below a min order if the sector size is also set to
+> > 16k?  I haven't seen that and its unclear when or how that could happen.
+> 
+> AFAICS, the only guarantee is to not split below LBS.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+It would be odd to split a BIO given a inode requirement size spelled
+out, but indeed I don't recall verifying this gaurantee.
+
+> > At least for NVMe we don't need to yell to a device to inform it we want
+> > a 16k IO issued to it to be atomic, if we read that it has the
+> > capability for it, it just does it. The IO verificaiton can be done with
+> > blkalgn [0].
+> > 
+> > Does SCSI*require*  an 16k atomic prep work, or can it be done implicitly?
+> > Does it need WRITE_ATOMIC_16?
+> 
+> physical block size is what we can implicitly write atomically.
+
+Yes, and also on flash to avoid read modify writes.
+
+> So if you
+> have a 4K PBS and 512B LBS, then WRITE_ATOMIC_16 would be required to write
+> 16KB atomically.
+
+Ugh. Why does SCSI requires a special command for this?
+
+Now we know what would be needed to bump the physical block size, it is
+certainly a different feature, however I think it would be good to
+evaluate that world too. For NVMe we don't have such special write
+requirements.
+
+I put together this kludge with the last patches series of LBS + the
+bdev cache aops stuff (which as I said before needs an alternative
+solution) and just the scsi atomics topology + physical block size
+change to easily experiment to see what would break:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=20240408-lbs-scsi-kludge
+
+Using a larger sector size works but it does not use the special scsi
+atomic write.
+
+> > > To me, O_ATOMIC would be required for buffered atomic writes IO, as we want
+> > > a fixed-sized IO, so that would mean no mixing of atomic and non-atomic IO.
+> > Would using the same min and max order for the inode work instead?
+> 
+> Maybe, I would need to check further.
+
+I'd be happy to help review too.
+
+  Luis
