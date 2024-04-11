@@ -1,101 +1,106 @@
-Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD7A1F9C3;
-	Thu, 11 Apr 2024 01:18:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 460575CBD;
+	Thu, 11 Apr 2024 04:33:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=82.195.75.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712798283; cv=none; b=EBhAz/7jFlrZZ7unQfoU9WeF3SeiEiQ2WzJ5ZDzw3LGxyyyMX4KfKdbQ0eohFVraHoOwSIqA07Y614FfnGCh0FjDSVCcACnZoQCNPAE+6WLV9CiXD9MCaJxjndhMg/VBls2xvKzXxKdkH0KOGLYPOmZpSg38Du9qwILnz92ryYA=
+	t=1712810017; cv=none; b=NDy9jEYRDpax8xudJoQW7wBVJlbsk4nO3zaZ/v/0YLln0ttq3waiG5FWpMw/XaEletxTCvBVE9CFkP6X/PDFzfg/JeMyhSfemFyr2rI9RfCU8D3Wf0TcJcQZrtnLYQpzguyMddDrgt1Wp+IE+JZoFJ+GruNuw743DM8vWQc/RSI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712798283; c=relaxed/simple;
-	bh=IdNO/D8xCAne2eE4Ei5IJ6ZuRNSULbSmSxqEk1i36xg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=C70VgkH+DbTX96qJfn+PAjJuqrXDAwGM/hEew8/N1Xi9nR430PKkoOhaFFiDlZnvzRxgT7iKdEO2wkRy6aWh3rulny3rcdL8kaLOsdj6XQ/Y3OR7KlHUOpwZJJ1lDR8L2JVspU4dQyduIHQlay8IbNRJwY+8gw+3eNhFcFyZBeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QCHcIdd2; arc=none smtp.client-ip=209.85.218.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1712810017; c=relaxed/simple;
+	bh=9X+PjMjMteDeHZkxEoky+iWM5pNEjgeb4ckxulg6FnA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qEXRz9Sv2pE0xN/J1JPTVR+qRQ0oeCW7+ysmKuWX5davJt3d+k2nOXLuUMXqgrJLB+4ZiP/cgJvZsy+UznEpBXhZt/5wVhMNHeMtg1Qx/WoFR6etyevFF2ypSUe4Tc4D5pCogGbusrG+wbxWA73TZIGDWDebfR6xsdSKXQEvq3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=none smtp.mailfrom=debian.org; dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b=NJT1x/+d; arc=none smtp.client-ip=82.195.75.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QCHcIdd2"
-Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-a5213f0f85dso129853066b.3;
-        Wed, 10 Apr 2024 18:18:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1712798280; x=1713403080; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=IdNO/D8xCAne2eE4Ei5IJ6ZuRNSULbSmSxqEk1i36xg=;
-        b=QCHcIdd2+sWA5RxIc1sk4QNuaKkvXlFzAvEmq1lWY7Zw8FFDgbSm14BCScS4jtKmSl
-         rspKlddqF7dMx8G1A9ADkaCmw7Mq5f8e9Mp/CRwv8GVTPjBiNgF9bJ4G+oS3GgvSsTDI
-         NW1kuIdl9C6W5QOr6KWT4dV+vK1Dp+LI0JyHF0ipqWr+j3dZBYTanhpCwBGhOGoG3uek
-         QBqOO7JLdKJO+R6rcxH9m9KZLTDQsVgKI2rY7bWsx/4wi2s2ea8o0CEzpruk1w8l7Vc7
-         mJZas04jC5INde3Pf6NRrso/Yh6th8SjS83Ilq2rARpaCN0pLq4ve3d9cs2VzzFINhDM
-         0Kdw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712798280; x=1713403080;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=IdNO/D8xCAne2eE4Ei5IJ6ZuRNSULbSmSxqEk1i36xg=;
-        b=xDvPNtnWgS4x/Muy5IyWYhceTTm/DAtds/52UyHxXXfRHPPeB8ip/fpnvR9oRDeu4q
-         xaqVRd56rWfQwz6ZrceAcJxGw5mjMbQCbEdCoyE62ma364I2dTQmoYE12FnuS09EbBIE
-         Q+yR1CItdMKrnaFa798IRglFqdqPIX75PrGcz0t797tSjdX6J4c4l4HCA3zvWXn1Ygeb
-         RxrH9LoS38njSTZzcxut9mifQPEInu13wwFa8wFgrzktNdFxABgFelpPkAK397kqOnu9
-         brDsUCumbF3Ymj9Vv8UVVqGhnZrYeCaM9I24575Iv7p1IdYze3T/OxfJCKuG9nj/tzjP
-         g5EQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUZQSEmfjONypy+6yg3rWZE6Cyms9ax8Gp/KQBiGyZGeWfpJ9AdAUyz1LoiPopeFNK00G6zk49zaEa68rVyZ8BdLtfUNESlY3jHQg==
-X-Gm-Message-State: AOJu0YzLXeTgp7hPS9RqVtXuHou4xoZs6acxaumkgioZG4dBio20OKhs
-	vpq4cHvzSfPC72WpEbNw3Uqo6Is9HrDWN+KsJaPwZHTBzs9WezyVb17JOcoVP7DVpqe0/t8gwZD
-	INLM9MEMqYPwUn34Qg0j7uNlbcqM=
-X-Google-Smtp-Source: AGHT+IGznegtYWrOTSeB/hsLXCP7bBxdABTfr3ekOz4Guuzj4H4gYHx/vhBUmH8Pyy6vS2W4xXdv5eVBxVplZT7YGOY=
-X-Received: by 2002:a17:906:7308:b0:a51:885a:c0a with SMTP id
- di8-20020a170906730800b00a51885a0c0amr2807595ejc.61.1712798279840; Wed, 10
- Apr 2024 18:17:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.b="NJT1x/+d"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
+	s=smtpauto.stravinsky; h=X-Debian-User:In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=0xy0RSu0FBM75EE/MzdLyTdZbtB79ssgCE2mlIY1v5s=; b=NJT1x/+dzc3HpsTSEkzjqdrf0h
+	4cRu0nFH6tl2xw/kg+v6DQO7JLtOQSZD2MO+YWOqL70Bl56AV+jLtDGORb8WxQYthz4pWVxgpGnEb
+	AbFXL0MTZsjRF/gz3zcrZiPcuJeu0sqEK52x14LotS0FcBOOv39h2+ku0RsRuFP97+YLHuv0caw5G
+	wMp7Eq19dQqc4G4Khdqa266GRALYnyhlEr53FEwr9JwOT0/kXpdOcmRTp7yFMmptQ++a9VWgHbs9I
+	NynjYGiChAafBRbkONZNLjd3S5GT6UOeU6HGuxugFIGfJMRBAbHQZL+4sItp3W+W/+ceSEbKk76O7
+	TlyWsaiA==;
+Received: from authenticated user
+	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+	(Exim 4.94.2)
+	(envelope-from <kibi@debian.org>)
+	id 1rum7u-001Xyy-9X; Thu, 11 Apr 2024 04:33:30 +0000
+Date: Thu, 11 Apr 2024 06:33:27 +0200
+From: Cyril Brulebois <kibi@debian.org>
+To: James Bottomley <jejb@linux.ibm.com>
+Cc: regressions@lists.linux.dev, stable@vger.kernel.org,
+	Mike Christie <michael.christie@oracle.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>, gregkh@linuxfoundation.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Christoph Hellwig <hch@lst.de>,
+	John Garry <john.g.garry@oracle.com>, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Diederik de Haas <didi.debian@cknow.org>,
+	Salvatore Bonaccorso <carnil@debian.org>
+Subject: Re: [REGRESSION] Loss of some SMART information in v6.1.81
+Message-ID: <20240411043327.m5unlpweoslnzzce@mraw.org>
+Organization: Debian
+References: <20240410193207.qnb75osxuk4ovvm6@mraw.org>
+ <0655cea93e52928d3e4a12b4fe2d2a4375492ed3.camel@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAEkJfYOs-szTK0rYvDw5UNGfzbTG_7RvjqFOZA=c6LXvxdUt2g@mail.gmail.com>
- <CAEkJfYMcdmXAhe9oTpEPGL+_661PNAvM58Y+irwnbLW8FKohNw@mail.gmail.com> <2d5e3b6c-3a66-4f74-8367-51fa55bf0a1a@acm.org>
-In-Reply-To: <2d5e3b6c-3a66-4f74-8367-51fa55bf0a1a@acm.org>
-From: Sam Sun <samsun1006219@gmail.com>
-Date: Thu, 11 Apr 2024 09:17:48 +0800
-Message-ID: <CAEkJfYMcLycLfaRzhn=DmQjAuLHn29wSXN0b0Zf0oJr=sDVBTg@mail.gmail.com>
-Subject: Re: [Bug] UBSAN: shift-out-of-bounds in sg_build_indirect
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	martin.petersen@oracle.com, jejb@linux.ibm.com, dgilbert@interlog.com, 
-	syzkaller@googlegroups.com, xrivendell7@gmail.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="x225b5f4ap2p7arx"
+Content-Disposition: inline
+In-Reply-To: <0655cea93e52928d3e4a12b4fe2d2a4375492ed3.camel@linux.ibm.com>
+X-Debian-User: kibi
+
+
+--x225b5f4ap2p7arx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Apr 10, 2024 at 12:59=E2=80=AFAM Bart Van Assche <bvanassche@acm.or=
-g> wrote:
->
-> On 4/9/24 05:51, Sam Sun wrote:
-> > We further analyzed the root cause of this bug. In function
-> > sg_build_indirect of drivers/scsi/sg.c, variable order of line 1900 is
-> > calculated out using get_order(num), and num comes from
-> > scatter_elem_sz. If scatter_elem_sz is equal or below zero, the order
-> > returned will be 52, so that PAGE_SHIFT + order is 64, which is larger
-> > than 32 bits int range, causing shift-out-of bound. This bug is tested
-> > and still remains in the latest upstream linux (6.9-rc3).
-> > If you have any questions, please contact us.
->
-> Thank you for having root-caused this issue and also for having shared
-> your root-cause analysis. Do you perhaps plan to post a patch that fixes
-> this issue?
->
-> Thanks,
->
-> Bart.
->
+James Bottomley <jejb@linux.ibm.com> (2024-04-10):
+> This is a different manifestation of the same bug in stable that was
+> introduced by a backport of scsi_execute_cmd.  The proposed fix for the
+> domain validation problem here will also sort out this problem:
+>=20
+> https://lore.kernel.org/linux-scsi/yq1frvvpymp.fsf@ca-mkp.ca.oracle.com/
 
-Sure, I am glad to help! But it is my first time submitting a patch, I
-need to find some instructions. I would appreciate if you could help
-me out. Also, I need to double check the patch to avoid introducing a
-new one. It might take some time.
+Thanks for the pointer! I've just confirmed this, and I'll follow up
+there.
 
-Best,
-Yue
+
+Cheers,
+--=20
+Cyril Brulebois (kibi@debian.org)            <https://debamax.com/>
+D-I release manager -- Release team member -- Freelance Consultant
+
+--x225b5f4ap2p7arx
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEtg6/KYRFPHDXTPR4/5FK8MKzVSAFAmYXaBUACgkQ/5FK8MKz
+VSD9xg/9GEc++o6wJulDZVizBrO3tZpCsV9wW7+fEFJd7Lb2Wp3KDhubYoYI1Nmt
+tct6p0VsUU0RZ0rmd0tq4HfF+DpkL/1xN7AG024BJJxjn5ut6j253y/nfA4YIUZc
+KwQQ3IEU+NlkKUh510RV8aJ8C4Zu8IX5S4G1ijp0tigFTJuD/Sj4RpS9Njcrmq71
+bENUCYb/W4nfdjrQ5u5DwYLitDC7duABnJw7HlvK7G71r78+LHIVRJ8JfgLgGssj
+DEo6eX1/h/YF/Ov+9It34/KIZOFZoXvRWyQ9SFvjWIYPtug4tETRoClvucIaJSjF
+3i13+T6r7TSVGihQskcsxKypWN/d4yr5kizp8nLc1UdEqZxPCv0YIFsNZcFxYp/R
+DqiFfpq3G/7I+Pl2tL320Ej2jPSe2pm+OYhqM34CenioiW2TxjVn0tWdzcBL4QU7
+XyFYjM/h1gMB4mvtrw3bAQQajBT+zMyCZQCG3k17hL3FCA8sPpYpIWXbnnDMAlD/
+Tf31Er4lnedTttVQ3PVo5xEhy9cPvNYRbBRkg7xPT+htfY0fcM1plMbz96kfMF1e
+Caao801hRtZoP0N7j1mKahXdJga3Z/oBGlS+yhI2fmwR1wRzZJ8JUpSuhvYfqGhv
+EAsC6Z67Urgk3hoOAcbLS4AwaEXvA11LXAlAooFxDGs3kubF9CY=
+=RLmB
+-----END PGP SIGNATURE-----
+
+--x225b5f4ap2p7arx--
