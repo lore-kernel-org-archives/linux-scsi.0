@@ -1,37 +1,40 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20D0F13ADC;
-	Thu, 11 Apr 2024 15:13:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 154DEFBEF;
+	Thu, 11 Apr 2024 15:14:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712848399; cv=none; b=pEK4+7MVatbTy6goEo2CweqIiVtaOlXXMNiQ+i2/CzexVEIR3yUf8qvIMferVpHMirGpoIvZ0pKDYfnyK5BL+HJ+S39k5Fk6WSihKotk0UxuvYSw6D063b2ZA30d6UL8BIGLU2dEP58V2oIDsCxHR1e1knT5MQjEeQK0Wb6FJVA=
+	t=1712848479; cv=none; b=P1+9R9lW/BZTp/zmkHlbkNj76IJSWHTcYVdfLVn2iXUS7uH6pZfOThdwDk31jyySjAPP0qvKKJo4qqeMzrIAZ0I5XlC6SUdQ9pYecDY7c+ic+M2UCssWS6Zomtq2fofH5omOoJNNqh9/5EtFoAWX7e4cJP43xsCh2QDmOpnlNrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712848399; c=relaxed/simple;
-	bh=pN56ayWZsVC8Qsmxepu8PbsNstNvWyI8do9fFIC3f0E=;
+	s=arc-20240116; t=1712848479; c=relaxed/simple;
+	bh=uOpSXnhxv2OHawhHyAEzb/JljiqQBa6kpiy/MPdPczU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tc1ykkZQuNnkHO+r52jlJf4vFhj9p1MgE5wIMi/53CLCY1mHdVsjXqo89TYGDZYauSrBfitO6YgRF5MCVXlLb5H1VV+AH+7dA0NUF6fQ5zfIbj+rQ6QYI3FdGLI4X6G80SppGWjujEjVmi7lybIgB8ii5ASPbMgBpS4b5pYvCwU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=R7pDm3GO; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 In-Reply-To:Content-Type; b=J+4k3r/GTF6QLsSX/9I5oDf9VJj6dChbGphm7gL200dSKw4c/ebspWOCRaMMMTiYdhKqJcd98xZlXpxcOb/zOa+n45IWwfUCSULK8guHLSJ0s3B1S9MEwO+M/RtE1TOXqIjdTTkUOr+mUR3/isxsUg8keAeHQiwhnyNsOO+oxiE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=ZkXHfrn8; arc=none smtp.client-ip=46.235.227.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="R7pDm3GO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-	bh=h/MHPqAJUaQnVuOJ9LRPRm8bT9y8j34KRGcWL/KK0UA=; b=R7pDm3GO8Ii5Ili8nlCHbqY/ci
-	HwQiGoHrPt0/QFJGLkfOYWapAgqNSD0m7dN47qkovXWmIJGWNxm24EBH2uEXCEf1pwbP/T0uTO8gR
-	/rf/ABFbrwhzwh1YaFsnJvOjD4FFPRlfjqXYQ4RRF8PPw0rOa25/OIn9ZdvO0hQc8wJpxKcRL7i/l
-	0y/jb12ZbyYiTzdtSNeuMI4b98guH1CwWtzoAnQiVaDAeoxaKUcUwh1eqyGFcqjXXvAmxC4RhZeLx
-	5jIDVlbbv4+L8DyPrR2/AwByKwg+ryYd7CukrFp9FKQQRznSA/iPSrw4ecKOwVRqeyHtPJVHvE+yq
-	YiNbS37w==;
-Received: from [50.53.2.121] (helo=[192.168.254.15])
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ruw71-0000000CgHE-2Zjz;
-	Thu, 11 Apr 2024 15:13:15 +0000
-Message-ID: <5ca63761-93e4-47e2-8fd0-e300a08f044a@infradead.org>
-Date: Thu, 11 Apr 2024 08:13:13 -0700
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="ZkXHfrn8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1712848476;
+	bh=uOpSXnhxv2OHawhHyAEzb/JljiqQBa6kpiy/MPdPczU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=ZkXHfrn8RIBm5pjCFyk7iuukhhhPGZ1yL/8DNBa5B9pIf0xN3Aqc4LVy9lgy6tlmI
+	 y3dSZvS/gjlrVmmTDtJhX/kHFD2PNHTgWpHW60pxjG3V36NXiOT3Cy5epyHpPS8iLZ
+	 cwj0ya/578AqYLQRsOyWCH9GlIp8SqBILrzkw7SrECMAB5+WUAJvmAaO+DQdQG5gUp
+	 ania2AcQ7rCppjv7a4rpv2l2O3KnIegc9lMrFALU0wBjDDGMG36P6nTaMFyGpZ0Y8l
+	 0302z/HUP1ClfH/2at5P3TqZelQ5Xd5t89yxsm0qQ/z5lA/SMqqMBEFxuIR8gcEltO
+	 oP1bTGDYJ0hIg==
+Received: from [100.113.186.2] (cola.collaboradmins.com [195.201.22.229])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: kholk11)
+	by madrid.collaboradmins.com (Postfix) with ESMTPSA id 198D137813C0;
+	Thu, 11 Apr 2024 15:14:35 +0000 (UTC)
+Message-ID: <f7fcbae7-fd54-4ad5-8dc6-4deb80088b79@collabora.com>
+Date: Thu, 11 Apr 2024 17:14:34 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,71 +42,91 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] treewide: Fix common grammar mistake "the the"
-To: Thorsten Blum <thorsten.blum@toblux.com>, kernel-janitors@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-s390@vger.kernel.org, speakup@linux-speakup.org,
- intel-gfx@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
- dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-afs@lists.infradead.org,
- ecryptfs@vger.kernel.org, netfs@lists.linux.dev,
- linux-fsdevel@vger.kernel.org, linux-unionfs@vger.kernel.org,
- linux-arch@vger.kernel.org, io-uring@vger.kernel.org, cocci@inria.fr,
- linux-perf-users@vger.kernel.org
-References: <20240411150437.496153-4-thorsten.blum@toblux.com>
+Subject: Re: [PATCH v2 7/8] dt-bindings: ufs: mediatek,ufs: Document
+ additional clocks
+To: Conor Dooley <conor@kernel.org>
+Cc: linux-scsi@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ bvanassche@acm.org, robh@kernel.org, krzysztof.kozlowski+dt@linaro.org,
+ conor+dt@kernel.org, peter.wang@mediatek.com, chu.stanley@gmail.com,
+ jejb@linux.ibm.com, martin.petersen@oracle.com, lgirdwood@gmail.com,
+ broonie@kernel.org, matthias.bgg@gmail.com, stanley.chu@mediatek.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+References: <20240411114300.169055-1-angelogioacchino.delregno@collabora.com>
+ <20240411114300.169055-8-angelogioacchino.delregno@collabora.com>
+ <20240411-filth-trekker-8a8c185d589b@spud>
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 Content-Language: en-US
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20240411150437.496153-4-thorsten.blum@toblux.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20240411-filth-trekker-8a8c185d589b@spud>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-
-
-On 4/11/24 8:04 AM, Thorsten Blum wrote:
-> Use `find . -type f -exec sed -i 's/\<the the\>/the/g' {} +` to find all
-> occurrences of "the the" and replace them with a single "the".
+Il 11/04/24 17:10, Conor Dooley ha scritto:
+> On Thu, Apr 11, 2024 at 01:42:59PM +0200, AngeloGioacchino Del Regno wrote:
+>> Add additional clocks, used on all MediaTek SoCs' UFSHCI controllers:
 > 
-> Changes only comments and documentation - no code changes.
-> 
-> Signed-off-by: Thorsten Blum <thorsten.blum@toblux.com>
-> ---
->  Documentation/trace/histogram.rst                 | 2 +-
->  arch/arm/Kconfig                                  | 4 ++--
->  arch/arm/include/asm/unwind.h                     | 2 +-
->  arch/arm64/Kconfig                                | 2 +-
->  arch/arm64/kernel/entry-ftrace.S                  | 2 +-
->  arch/s390/kernel/perf_cpum_sf.c                   | 2 +-
->  arch/s390/kernel/sthyi.c                          | 2 +-
->  drivers/accessibility/speakup/speakup_soft.c      | 2 +-
->  drivers/gpu/drm/i915/display/intel_crt.c          | 2 +-
->  drivers/gpu/drm/i915/i915_request.c               | 2 +-
->  drivers/mailbox/Kconfig                           | 2 +-
->  drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    | 4 ++--
->  drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c | 2 +-
->  drivers/scsi/bfa/bfa_fcs_rport.c                  | 2 +-
->  drivers/scsi/fcoe/fcoe_ctlr.c                     | 2 +-
->  drivers/scsi/isci/host.h                          | 2 +-
->  drivers/scsi/isci/remote_device.h                 | 2 +-
->  drivers/scsi/isci/remote_node_context.h           | 2 +-
->  drivers/scsi/isci/task.c                          | 2 +-
->  fs/afs/flock.c                                    | 2 +-
->  fs/ecryptfs/keystore.c                            | 2 +-
->  fs/netfs/direct_read.c                            | 2 +-
->  fs/netfs/direct_write.c                           | 2 +-
->  fs/overlayfs/super.c                              | 2 +-
->  include/uapi/asm-generic/fcntl.h                  | 2 +-
->  io_uring/kbuf.c                                   | 2 +-
->  lib/zstd/common/fse_decompress.c                  | 2 +-
->  lib/zstd/decompress/zstd_decompress_block.c       | 2 +-
->  scripts/coccinelle/misc/badty.cocci               | 2 +-
->  tools/perf/Documentation/perf-diff.txt            | 2 +-
->  30 files changed, 32 insertions(+), 32 deletions(-)
+> I appreciate being told they're on all, rather than it being unsaid and
+> having to ask.
 > 
 
-Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
+You're welcome :-)
 
-Thanks.
+>> some of these clocks are optional and used only for scaling purposes
+>> to save power, or to improve performance in the case of the crypt
+>> clocks.
+>>
+>> Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+>> ---
+>>   .../devicetree/bindings/ufs/mediatek,ufs.yaml      | 14 +++++++++++++-
+>>   1 file changed, 13 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+>> index e2c276da3f2c..21b038db100c 100644
+>> --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+>> +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+>> @@ -26,11 +26,23 @@ properties:
+>>             - const: mediatek,mt8183-ufshci
+>>   
+>>     clocks:
+>> -    maxItems: 1
+>> +    minItems: 1
+> 
+> Could you add an itemised list to the clocks property please?
+> 
 
--- 
-#Randy
+Not really... Honestly, I'm not confident that the description will be 100%
+correct for all of them... can we do that at a later time, when I will be
+really that much confident in writing down a proper description for each
+of them?
+
+The only thing that I'm really sure of is exactly what I wrote in this commit,
+nothing less, nothing more... for now :')
+
+Cheers,
+Angelo
+
+>>   
+>>     clock-names:
+>> +    minItems: 1
+>>       items:
+>>         - const: ufs
+>> +      - const: ufs-aes
+> 
+> 
+>> +      - const: ufs-tick
+>> +      - const: unipro-sys
+>> +      - const: unipro-tick
+>> +      - const: ufs-sap
+>> +      - const: ufs-tx-symbol
+>> +      - const: ufs-rx-symbol
+>> +      - const: ufs-mem
+>> +      - const: crypt-mux
+>> +      - const: crypt-lp
+>> +      - const: crypt-perf
+>>   
+>>     phys:
+>>       maxItems: 1
+>> -- 
+>> 2.44.0
+>>
+
