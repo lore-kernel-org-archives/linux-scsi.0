@@ -1,172 +1,254 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AE3E13DDD6;
-	Thu, 11 Apr 2024 12:22:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712838159; cv=fail; b=rwKy8IApJTxLF4UEERxrMW3BGeMmBFwJNNRXjSvql0UY3B3b40FrY63z3zfyIbU7BVIgl4DCcPuh/OU2ExOGeGv8t46Dz4cTeA1DY35guWbiJx5SqyjA6g2AY8mbLOmpRmcA1oKH1kCFLSYOnixSlBT3bjcmrAOe0x/y+j1b1T4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712838159; c=relaxed/simple;
-	bh=S+C0tJM4U8b7lSs7ZaJPWjT98SQyPKchQayR0XZxwog=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=KB/IWd7FgUPOUJKedOGEDpa9gQ3dh21NFwyT/rGNyBuLncrWnEQolYzq+ENEFohAKKJEgEAJkalYngew2mRtGC/RM1N6D430ic1mBEJX6ctz0EYnTEW93+x4BbmBisYYzzLPie8q4vUa1KEEx6Z7tT6106h5irLXh8WMhRcqFyQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Ak1AbbYg; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Jy5Gm+em; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEBA05382;
+	Thu, 11 Apr 2024 12:37:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712839028; cv=none; b=oJjsQHrlEbkR9XDbMqPyEtLpjmfgbNeY3xHaP263Zhm6s99Kf+hjGP1Ru7Cbvr8AhRbu6k8aDKGkaXhud9RzBbjLkOf8yQfheY56SjeY1S1CZn16hEHPDfaRa08dVli0PHUSy2VzinsdmnIFTLnqcstfHFppPSNhg88n+sj9h40=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712839028; c=relaxed/simple;
+	bh=n6j8zNMrwmiiRC69tMRLHWQzNA+exQtyre1IxHuHuMQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=SnKC6QQXq0mYBfQZCrKGQYsBhCxj2P4OyBuGp52fdLKH4hYF4nOzFjdY5zISxUosxCbMKCttSj9a1L2FNesDSfBKvVYlGXrQo/236ascCFlWi3nXyj+pfk+u6cb94GNu1hFVdORxuhJzjq2ERLQikn4QxEB6dd8C5jXnfzRmWYY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=GSIDfOnu; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=GSIDfOnu; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ak1AbbYg";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Jy5Gm+em"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43B9mfs9028088;
-	Thu, 11 Apr 2024 12:22:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : in-reply-to : message-id : references : date : content-type :
- mime-version; s=corp-2023-11-20;
- bh=KMJNNDJHfoOiNpC373VmztPBMVrfh0QO8NNCHErf/t4=;
- b=Ak1AbbYgaEj149X06K8BcdKMFYE6t3oQdkmpZPSDO8/7C85InadOFG+pRjplX8U07aAZ
- ev8j/+1Ov8Y1W4L49cq38blZNAFhc8RiT0+GjgxEfQW89uujlXmIRBw7r6s4SMw3Arbw
- B5+IS7r+kU/KXjXcCrdQNJySFgXpWn0ZmxPIieAstBH/j+tjqJmDXWKYsM0qUYSYmvaF
- 4CmPoI8J/I86jsnQL7AFCUxoQYjd0UdbUPrgSdlcOgnSWeTObLlOD7uv2Pg52c5uiOtm
- 24byFd2TVHJ0xffGE2GDNojmN/bHdNe97z8H6NBM4/9L9OdACz0OO7qpZ/1AxRa/w1GS sQ== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xaw029gpk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 11 Apr 2024 12:22:34 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 43BB0KE9010830;
-	Thu, 11 Apr 2024 12:22:33 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3xavu9ecf9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 11 Apr 2024 12:22:33 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=k+u7WM7ifIgHMJTZdmYlCfJvzCY/flat9Tix6Dg+WUS7dvoy5dfFOf398thrWDi6pnyr3OtDanfmTzMDLM7s1DbxtMUHBc+wt3Yp8eItdq0td3t3rOwoOWq51QQM7XFJcoEpI0OlTh0oTqLYh31lXDXt7HLOGblM8i6Q2XaiDEb8j3lYHpFO5IT9KtYW85PFDNizQdQMwvRXSM+t2wjTzqYkQxtkejieSvyzPLWuDZ2q5QOcjiny8BSUH7BRWoMwB0NYuX5wza876RmBUctMujK1vyFdRUUyxFs7M9/uk1/vv17WVKnv5GdMlByhIFrdFZkLuqJ7O5jnt9eQ4xcuyw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=KMJNNDJHfoOiNpC373VmztPBMVrfh0QO8NNCHErf/t4=;
- b=FxhOkLul7g47She5QLkwAXDZCMirkEK7YEK7vA9PZdVg29PGajul/5Zqn9ugtnVRAvM+wKrreOY3+XeVQ0AyOdSmyhMGHcTmrn8ahw37b741Z8yfFGIwLSMM+lFDOxw7xfxsqOXlKvhgvhZqnXeJN4Ge9GMOsVgxVuKzw5zxEQ+XaLzGFmHXxGnUZ4LxvPeaxnjfE3rQLlHN2GpPzq0ydZOFZRHbmC334aCPVtIsY/YSdRM0DQreBmSEMOhXMjW3/rTJlHVoDoJVNfbZCV9npL11R1C9RkGEzEieG4kjwRy/gDxtgHst8Ah92mOqmHl4O7n0N5bdADhbzEZ8/wb4BQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KMJNNDJHfoOiNpC373VmztPBMVrfh0QO8NNCHErf/t4=;
- b=Jy5Gm+eminT6ySWtQLV0go7RgndUJUvfL0+SZOFxwPzwP9bWjVE3AwLajRY8t/iaeCfKnsiGaPvLXXOTl8Ip8ILmWyLH8eKlai8VnH+L3u8ueqjCJXvqOQfdBy/JTx4iyea8BDWPMH8IFuOGP+ttVBO1s01hWmxtWfwIf18nmfE=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by DS7PR10MB5054.namprd10.prod.outlook.com (2603:10b6:5:38e::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Thu, 11 Apr
- 2024 12:22:31 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::7856:8db7:c1f6:fc59]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::7856:8db7:c1f6:fc59%4]) with mapi id 15.20.7409.042; Thu, 11 Apr 2024
- 12:22:31 +0000
-To: Chris Rankin <rankincj@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Linux Stable <stable@vger.kernel.org>,
-        Greg
- KH <gregkh@linuxfoundation.org>
-Subject: Re: Fwd: [PATCH 6.8 000/143] 6.8.6-rc1 review
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <CAK2bqV+d-ffQB_nHEnCcTp9mjHAq-LOb3WtaqXZK2Bk64UywNQ@mail.gmail.com>
-	(Chris Rankin's message of "Thu, 11 Apr 2024 13:08:27 +0100")
-Organization: Oracle Corporation
-Message-ID: <yq1ttk8ks5f.fsf@ca-mkp.ca.oracle.com>
-References: <CAK2bqV+kpG5cm5py24TusikZYO=_vWg7CVEN3oTywVhnq1mhjQ@mail.gmail.com>
-	<2024041125-surgery-pending-cd06@gregkh>
-	<CAK2bqVJcsjZE8k87_xNU-mQ3xXm58eCFMdouSVEMkkT57wCQFg@mail.gmail.com>
-	<CAK2bqV+d-ffQB_nHEnCcTp9mjHAq-LOb3WtaqXZK2Bk64UywNQ@mail.gmail.com>
-Date: Thu, 11 Apr 2024 08:22:29 -0400
-Content-Type: text/plain
-X-ClientProxiedBy: MN2PR19CA0059.namprd19.prod.outlook.com
- (2603:10b6:208:19b::36) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="GSIDfOnu";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="GSIDfOnu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1712839024;
+	bh=n6j8zNMrwmiiRC69tMRLHWQzNA+exQtyre1IxHuHuMQ=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=GSIDfOnufc/dzaXWn/4LTxbwiNSoY6WqjsQLpQTZdDKQN+Mvdl2xq180s+G4L49CL
+	 SnRXdxNeclxN4WA/2VuMrtOdOnaoQSxZJajQXez9Vk5SUun2ZOnKcyUD7yylDgZfxX
+	 oOY1wln8L7fjeBt+X9YP36YUmwp2xZkZ5oxaD2MI=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id B418D1287E36;
+	Thu, 11 Apr 2024 08:37:04 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id Rlcv9m6pWbHo; Thu, 11 Apr 2024 08:37:04 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1712839024;
+	bh=n6j8zNMrwmiiRC69tMRLHWQzNA+exQtyre1IxHuHuMQ=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=GSIDfOnufc/dzaXWn/4LTxbwiNSoY6WqjsQLpQTZdDKQN+Mvdl2xq180s+G4L49CL
+	 SnRXdxNeclxN4WA/2VuMrtOdOnaoQSxZJajQXez9Vk5SUun2ZOnKcyUD7yylDgZfxX
+	 oOY1wln8L7fjeBt+X9YP36YUmwp2xZkZ5oxaD2MI=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 020BE1287E28;
+	Thu, 11 Apr 2024 08:37:03 -0400 (EDT)
+Message-ID: <3151adf5a1e0566e930454aac1a7c60722f5c711.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.9-rc3
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Thu, 11 Apr 2024 08:37:02 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|DS7PR10MB5054:EE_
-X-MS-Office365-Filtering-Correlation-Id: 804bc6b0-9fba-4e08-a8ce-08dc5a220f5b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	/9yK+QiybETm6bj65xmkEja8irfHzhnPyxTjbsL3ELFwfh0ceyZZn2bYIgOdh58YQNh0yXwWTlEjRF7cr0aGRPrv+0K/60M/aGfzBAIw5zNsDYK8vGOTvopyNH8Uwg/hgl6i7HuDBfJ9a2rXoBNNRqqgj8G/jFzjnFd8hRhTJdCluApUOEVTi3TUuSDpK3Hf9KDIeXR5X9COGL4Vo44/yX2p0wDP7t9MS9SdVP6shfnWni4B1fEQzjf4KRn7ZvesY0C+HSS/NVDR7uM57mVvzSS4M+VqWIbLmtCwrNiw7AhFwq+tu7nbQRNKWh1XYhmALSt+betQ+j6SOsjRh1kEGlj8JRGXnXlb0eW/6IzG139JZ6wDnKWUirLqSO75FktpZ8mGjcjFQMjfWsK9TBJ8PpCIkyG8lILgMuZXWLFmmL2EbrbVOX32kQL+1r8nuwFSuO8U0xXQNuxXElUZxldOlzuNOi1tr1yjZ5/vp2kJ9nmsabjh0+tcLRHLnjXBOlHvjFcJvKjN7uJOaR5qJCEjVeTFcwuBw/k/JTFhHgk1SqoUOliL+o6RjuTusmYO9zy6+rtgHJ8xgifTPeQyqW2ztvWU18R5I51NAaCVdAKNedFL1FYux1t4jDnIVRronOH69c/CIB7Br16JyjwinbjRa+IIyotcBNf/DTKDOKwpJT4=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?79+Nt1wcyQKNEfqNcz7u7M+vk4lRAV4HoBt6lX8mrFrIITiBQfa7Xc19NcPX?=
- =?us-ascii?Q?4SB97WvFpP7yc1nbkVKpW7pf77S9Tl2us2HKqkWpeDrl298m7QyErJRSfFBH?=
- =?us-ascii?Q?aRq1MfwteZ+S4ljlm/Guawait6VpSyBhCy6pOcO8P1UNdOwmI0ghgYlwc/eV?=
- =?us-ascii?Q?28Bq8zI6Vv+2HF6xFdKq2YFDG+qmM3WtLknt0UZp82bY9kKJqICp8xH9jTXR?=
- =?us-ascii?Q?izTY3WqOX9DxWkv4A4ngRSo6BJIY7ZJ5q4TokyJffBXqEtPzEFy/lXK5mmVj?=
- =?us-ascii?Q?6VFSRmb+e5FPE3x408kCRLNwMY4EL5oZemKQ3OXHHwWu7CTKXSlxX+0R58XT?=
- =?us-ascii?Q?/+TTd29DC5JlcwuMMY1OVJb7KfmyHSX8BRhUjhjK9vA7hAzPQ2wXeF3ab0wO?=
- =?us-ascii?Q?OOlryukP+CjKdQFff/jOJa9NpKJQRMAWe41jUVVFsDKHeM++cJ+IWlBF+BCo?=
- =?us-ascii?Q?z5XPXUVCSWYjw2rOu3tTWCDk2tycoVHxI9QEp5IYWePlKnHGEVIzx/TjuXzY?=
- =?us-ascii?Q?HPKkiUOWHGZUdfwnGstgflw7qqX0RanUf4A+YhxpS9IrfH969x/ialfv7Lro?=
- =?us-ascii?Q?oAtLOtIIlEtgQnmgaeBs75X/sftzASpZamtgWSGaqhhGFeoHJTh630rnpY1Y?=
- =?us-ascii?Q?qXDlb+UIFoUdTZhQv7ZNqT5Hjk9/GfRFYCa7UxKOawTSIRSQ1VrxgfqTINCe?=
- =?us-ascii?Q?OdOVR/PBMx8aEuL7XDH6gXzK1ztpmkN/VQQDSkpAf5yycFiAxYQo8kSN09EH?=
- =?us-ascii?Q?lgp2liDoInw8YLzCdeHypwyctGYzdLfn22h0MGuUxKbb0Un0/SyOhyGfg3Ag?=
- =?us-ascii?Q?GP27YfrCPVABOFd3a3D+Wcs01YZJ3yOsWZEZCqnFukFdKjWGtKmNAu7mKeYG?=
- =?us-ascii?Q?KzyDt/LDnBagtOOCDMUx2LRL43X0QyPVS8VrEn5/4eys1kDDdFxAyDiZyoa/?=
- =?us-ascii?Q?veo9KH3tZ3POl8A984cS/srswT+Iz1XQjNo3h6+yCo14bx9c7CT2vR0wo35j?=
- =?us-ascii?Q?rSKrVBH3coB12HE2afs+NAhKk9ANY4oq6T6qERqRgWj0Zj5q9C5+xA+SL9+1?=
- =?us-ascii?Q?GE2P2wVFyGg7diUCQfjLPY4Io/XXubNBy3uUXTx8PYTWkXFVv7r8wAKBbBPD?=
- =?us-ascii?Q?sIZTO833Z1pkmAYmuHuNxr9Sc7QeiRu+FfTwFKhcjmD3PXWoqGejHqicg4mf?=
- =?us-ascii?Q?AStRj32wAENevG/IkepnXaqyfkXCI7NZigoMyClS8mpKqMKLgyL6hkCisEhg?=
- =?us-ascii?Q?aqgnZneTSURwUP599tPovzQSMocEiWvRuMnjcwBWZw22THMqQ/ZtbD92MtVg?=
- =?us-ascii?Q?pu+6dA9YUZbIrnnuk7LkhK9NKXP7GDL9J8fQDQutzdjg2B898/O2j/E67rwu?=
- =?us-ascii?Q?jk5uaEP3lDW1j/cWThtiWWtgxegiDS59MH7MwKH3E+8HmI5Eb27b8HvWy7kH?=
- =?us-ascii?Q?RoTHI8M4+ZF1HSYXdkbHdfYczGwCmCkyVfiXWedAU6bObPulFje/+4jgHA8M?=
- =?us-ascii?Q?7HUT7LLvNfKsEn87zSGPUPxerLAqscuwdjQgUijMV2tbHGJ+6ajgjR0Ulg4G?=
- =?us-ascii?Q?9D0UWIskUjNEpsVSViOZpjn8G/bXYS6QNMMo/uqRew9lCq8681wm0GReDySY?=
- =?us-ascii?Q?Pg=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	JO6cvR4aGQjD+bnODsAoEZ2e3mGSsJsAu+E/Iye4FSh///eXR+FV09gnEldwGwilH7ckkY945FA03mImwNYdyXzxJvD/0/9Kc+aa2RVQSLvBr1166DUSnUQZWSqz7vusLQXYwMztFGIskwOoj3mKdQNFJXgu1zlX+pati0zdEHFi1flzPJlROkAskKJLrO0Q/Q8+S6uLg6lKb7G+jFxCdhZt6af/a/fdSuTc4GP2yNVICEech9pHPgMIXoSQXnLNrI1L2Gff8LxQS5U2+is8xRCWMVLIR06rGaF7f6S4zvTJGcdg+0TY4HdMz8y96Lnm742VgeOfzz1SXlmxF1JH948btqh8l/9jpa3ZPm9R3F3q3obtQQBAbd9xrpftS42W6T+JRhT0cSSo8lKOkauHKcKMsJTA8x/P5DW50uq1XeqOZDrJ5JSxH2nvfpv8P1mt9VSB1x/gQaWPZgWkV2a6YzclhWXlqix0MjNi7Q6qdEh/5XOh3wlHk0IQdchfK7cF0yWLOVJswzEf1VRxs77x6G9h26D/wba8PvaxlLjU4It18CXxB+9U9/Mb4K9y52wx1nZdqSWPQfhurrQivo9uzeIdtSAvAruPWO8GERkcaB0=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 804bc6b0-9fba-4e08-a8ce-08dc5a220f5b
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2024 12:22:31.3739
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: NKAYYKWKBdf8+Hor88p/0JeVvTCDAMV4fXAPW5GM6tguS+G63a6+/hO6TA1s3IOxbcIfGhz0NoLe5pC6iaB+eIm49nc4UVRGGX6hKGpjmZw=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB5054
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-04-11_06,2024-04-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- suspectscore=0 spamscore=0 mlxscore=0 bulkscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2404010000 definitions=main-2404110089
-X-Proofpoint-ORIG-GUID: VTVpoTM573EYuqD5qEozznxZJqofMCEZ
-X-Proofpoint-GUID: VTVpoTM573EYuqD5qEozznxZJqofMCEZ
+Content-Transfer-Encoding: 7bit
 
+The most important fix is the sg one because the regression it fixes
+(spurious warning and use after final put) is already backported to
+stable.  The next biggest impact is the target fix for wrong
+credentials used to load a module because it's affecting new kernels
+installed on selinux based distributions.  The other three fixes are an
+obvious off by one and SATA protocol issues.
 
-Chris,
+The patch is available here:
 
-> I have seen a patch circulated but pulled from 6.8.5 for this issue:
->
->> scsi: sg: Avoid sg device teardown race
->> [ Upstream commit 27f58c04a8f438078583041468ec60597841284d ]
->
-> I think I have hit this issue in 6.8.4. Is there a patch ready for
-> this bug yet please?
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-I merged the fix last week. I'm assuming it'll go to Linus soon.
+The short changelog is:
 
-  https://git.kernel.org/mkp/scsi/c/d4e655c49f47
+Alexander Wetzel (1):
+      scsi: sg: Avoid race in error handling & drop bogus warn
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Dan Carpenter (1):
+      scsi: qla2xxx: Fix off by one in qla_edif_app_getstats()
+
+Maurizio Lombardi (1):
+      scsi: target: Fix SELinux error when systemd-modules loads the target module
+
+Xiang Chen (2):
+      scsi: hisi_sas: Modify the deadline for ata_wait_after_reset()
+      scsi: hisi_sas: Handle the NCQ error returned by D2H frame
+
+And the diffstat:
+
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 10 +++++++++-
+ drivers/scsi/qla2xxx/qla_edif.c        |  2 +-
+ drivers/scsi/sg.c                      | 18 ++++++++++--------
+ drivers/target/target_core_configfs.c  | 12 ++++++++++++
+ 5 files changed, 33 insertions(+), 11 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 097dfe4b620d..35f8e00850d6 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1797,7 +1797,7 @@ static int hisi_sas_debug_I_T_nexus_reset(struct domain_device *device)
+ 	if (dev_is_sata(device)) {
+ 		struct ata_link *link = &device->sata_dev.ap->link;
+ 
+-		rc = ata_wait_after_reset(link, HISI_SAS_WAIT_PHYUP_TIMEOUT,
++		rc = ata_wait_after_reset(link, jiffies + HISI_SAS_WAIT_PHYUP_TIMEOUT,
+ 					  smp_ata_check_ready_type);
+ 	} else {
+ 		msleep(2000);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 7d2a33514538..34f96cc35342 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -2244,7 +2244,15 @@ slot_err_v3_hw(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+ 		if ((dw0 & CMPLT_HDR_RSPNS_XFRD_MSK) &&
+ 		    (sipc_rx_err_type & RX_FIS_STATUS_ERR_MSK)) {
+-			ts->stat = SAS_PROTO_RESPONSE;
++			if (task->ata_task.use_ncq) {
++				struct domain_device *device = task->dev;
++				struct hisi_sas_device *sas_dev = device->lldd_dev;
++
++				sas_dev->dev_status = HISI_SAS_DEV_NCQ_ERR;
++				slot->abort = 1;
++			} else {
++				ts->stat = SAS_PROTO_RESPONSE;
++			}
+ 		} else if (dma_rx_err_type & RX_DATA_LEN_UNDERFLOW_MSK) {
+ 			ts->residual = trans_tx_fail_type;
+ 			ts->stat = SAS_DATA_UNDERRUN;
+diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
+index 26e6b3e3af43..dcde55c8ee5d 100644
+--- a/drivers/scsi/qla2xxx/qla_edif.c
++++ b/drivers/scsi/qla2xxx/qla_edif.c
+@@ -1100,7 +1100,7 @@ qla_edif_app_getstats(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
+ 
+ 		list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
+ 			if (fcport->edif.enable) {
+-				if (pcnt > app_req.num_ports)
++				if (pcnt >= app_req.num_ports)
+ 					break;
+ 
+ 				app_reply->elem[pcnt].rekey_count =
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 386981c6976a..baf870a03ecf 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -285,6 +285,7 @@ sg_open(struct inode *inode, struct file *filp)
+ 	int dev = iminor(inode);
+ 	int flags = filp->f_flags;
+ 	struct request_queue *q;
++	struct scsi_device *device;
+ 	Sg_device *sdp;
+ 	Sg_fd *sfp;
+ 	int retval;
+@@ -301,11 +302,12 @@ sg_open(struct inode *inode, struct file *filp)
+ 
+ 	/* This driver's module count bumped by fops_get in <linux/fs.h> */
+ 	/* Prevent the device driver from vanishing while we sleep */
+-	retval = scsi_device_get(sdp->device);
++	device = sdp->device;
++	retval = scsi_device_get(device);
+ 	if (retval)
+ 		goto sg_put;
+ 
+-	retval = scsi_autopm_get_device(sdp->device);
++	retval = scsi_autopm_get_device(device);
+ 	if (retval)
+ 		goto sdp_put;
+ 
+@@ -313,7 +315,7 @@ sg_open(struct inode *inode, struct file *filp)
+ 	 * check if O_NONBLOCK. Permits SCSI commands to be issued
+ 	 * during error recovery. Tread carefully. */
+ 	if (!((flags & O_NONBLOCK) ||
+-	      scsi_block_when_processing_errors(sdp->device))) {
++	      scsi_block_when_processing_errors(device))) {
+ 		retval = -ENXIO;
+ 		/* we are in error recovery for this device */
+ 		goto error_out;
+@@ -344,7 +346,7 @@ sg_open(struct inode *inode, struct file *filp)
+ 
+ 	if (sdp->open_cnt < 1) {  /* no existing opens */
+ 		sdp->sgdebug = 0;
+-		q = sdp->device->request_queue;
++		q = device->request_queue;
+ 		sdp->sg_tablesize = queue_max_segments(q);
+ 	}
+ 	sfp = sg_add_sfp(sdp);
+@@ -370,10 +372,11 @@ sg_open(struct inode *inode, struct file *filp)
+ error_mutex_locked:
+ 	mutex_unlock(&sdp->open_rel_lock);
+ error_out:
+-	scsi_autopm_put_device(sdp->device);
++	scsi_autopm_put_device(device);
+ sdp_put:
+-	scsi_device_put(sdp->device);
+-	goto sg_put;
++	kref_put(&sdp->d_ref, sg_device_destroy);
++	scsi_device_put(device);
++	return retval;
+ }
+ 
+ /* Release resources associated with a successful sg_open()
+@@ -2233,7 +2236,6 @@ sg_remove_sfp_usercontext(struct work_struct *work)
+ 			"sg_remove_sfp: sfp=0x%p\n", sfp));
+ 	kfree(sfp);
+ 
+-	WARN_ON_ONCE(kref_read(&sdp->d_ref) != 1);
+ 	kref_put(&sdp->d_ref, sg_device_destroy);
+ 	scsi_device_put(device);
+ 	module_put(THIS_MODULE);
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index c1fbcdd16182..c40217f44b1b 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -3672,6 +3672,8 @@ static int __init target_core_init_configfs(void)
+ {
+ 	struct configfs_subsystem *subsys = &target_core_fabrics;
+ 	struct t10_alua_lu_gp *lu_gp;
++	struct cred *kern_cred;
++	const struct cred *old_cred;
+ 	int ret;
+ 
+ 	pr_debug("TARGET_CORE[0]: Loading Generic Kernel Storage"
+@@ -3748,11 +3750,21 @@ static int __init target_core_init_configfs(void)
+ 	if (ret < 0)
+ 		goto out;
+ 
++	/* We use the kernel credentials to access the target directory */
++	kern_cred = prepare_kernel_cred(&init_task);
++	if (!kern_cred) {
++		ret = -ENOMEM;
++		goto out;
++	}
++	old_cred = override_creds(kern_cred);
+ 	target_init_dbroot();
++	revert_creds(old_cred);
++	put_cred(kern_cred);
+ 
+ 	return 0;
+ 
+ out:
++	target_xcopy_release_pt();
+ 	configfs_unregister_subsystem(subsys);
+ 	core_dev_release_virtual_lun0();
+ 	rd_module_exit();
+
