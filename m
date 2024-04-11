@@ -1,147 +1,101 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58D4D946F;
-	Thu, 11 Apr 2024 00:38:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD7A1F9C3;
+	Thu, 11 Apr 2024 01:18:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712795925; cv=none; b=Z0gp6J/sxA47O1Ixvev/36tZjnsb5xY0uLFtATuDYmFGUeqWYLzpaRwuUnVkVGrrlUUyZ9ONWgczWsBiubotEcSKaghhntXSDOOddhglih4VoYCtHrSdxleTJwnGpco+Sg5x41ziAMGXSm04xywyTfd9iyUlG9CPNLtEuMXjurU=
+	t=1712798283; cv=none; b=EBhAz/7jFlrZZ7unQfoU9WeF3SeiEiQ2WzJ5ZDzw3LGxyyyMX4KfKdbQ0eohFVraHoOwSIqA07Y614FfnGCh0FjDSVCcACnZoQCNPAE+6WLV9CiXD9MCaJxjndhMg/VBls2xvKzXxKdkH0KOGLYPOmZpSg38Du9qwILnz92ryYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712795925; c=relaxed/simple;
-	bh=W0yvgk4HYg+/L0IQ8HK3ESN9oPLBuDLxptzYSWkPpc8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IrWKqjaq2qoDVREvY93Zoa/KkDdv7Fc2qpic7931mPs9eQHbimFyMQ4KixJif6/j80KG2kfA0jxdiYFJN4jGTl+749LJTS74vMKy7EbA/d27DgNzDwfIT7+hRXmaoGFaLD7SxJ2Y+K8EwJJwtg7Qs9hgmFZzM1GMQf2PApLiASc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=jzSUeYbF; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1712798283; c=relaxed/simple;
+	bh=IdNO/D8xCAne2eE4Ei5IJ6ZuRNSULbSmSxqEk1i36xg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=C70VgkH+DbTX96qJfn+PAjJuqrXDAwGM/hEew8/N1Xi9nR430PKkoOhaFFiDlZnvzRxgT7iKdEO2wkRy6aWh3rulny3rcdL8kaLOsdj6XQ/Y3OR7KlHUOpwZJJ1lDR8L2JVspU4dQyduIHQlay8IbNRJwY+8gw+3eNhFcFyZBeY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QCHcIdd2; arc=none smtp.client-ip=209.85.218.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jzSUeYbF"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=0y/StUI641o9BanPyuvxNVnM75yOu8dqMCwLb08ZeaU=; b=jzSUeYbF76eftu2Uxlpd+g8UyC
-	bCYxXfoUcQkccIgXePFUpxdaD64xV2V+85xXNe01q/k7YMQD0kftP0eIxahavEwTuP7YHE1Y/Jzrd
-	w0qPY5t6CA/16uxsQkLrROrSuORCKI0bg+FCj8ZVmKFW5DWXssbk+H5extAUhDLqB5l7K3IobopA3
-	Hr9Ji3H4tUwQNQ9znK8p6AAsahJ5SyJjBk5Dysa38GRbhIB3BhjzAFV909GHjzTaCO27imevzm8EZ
-	OKbQpsokz0960Fa5N6uzK9kYA4pE9mDE+79A2/SpAxH2wWTvncTA2jSrVUsjXAeNZL8E/2qD1MV8r
-	jrPWnUmg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1ruiSa-00000009h9y-0wFj;
-	Thu, 11 Apr 2024 00:38:36 +0000
-Date: Wed, 10 Apr 2024 17:38:36 -0700
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Matthew Wilcox <willy@infradead.org>,
-	John Garry <john.g.garry@oracle.com>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier.gonz@samsung.com>,
-	axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
-	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-	io-uring@vger.kernel.org, nilay@linux.ibm.com,
-	ritesh.list@gmail.com
-Subject: Re: [PATCH v6 00/10] block atomic writes
-Message-ID: <ZhcxDOWy9j8mzs_u@bombadil.infradead.org>
-References: <20240326133813.3224593-1-john.g.garry@oracle.com>
- <ZgOXb_oZjsUU12YL@casper.infradead.org>
- <c4c0dad5-41a4-44b4-8f40-2a250571180b@oracle.com>
- <Zg7Z4aJtn3SxY5w1@casper.infradead.org>
- <f3c1d321-0dfc-466f-9f6a-fe2f0513d944@oracle.com>
- <ZhQud1NbO4aMt0MH@bombadil.infradead.org>
- <ZhYQANQATz82ytl1@casper.infradead.org>
- <94d6d88b-b0e7-491d-94e8-dc9e5fba5620@suse.de>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QCHcIdd2"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-a5213f0f85dso129853066b.3;
+        Wed, 10 Apr 2024 18:18:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1712798280; x=1713403080; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=IdNO/D8xCAne2eE4Ei5IJ6ZuRNSULbSmSxqEk1i36xg=;
+        b=QCHcIdd2+sWA5RxIc1sk4QNuaKkvXlFzAvEmq1lWY7Zw8FFDgbSm14BCScS4jtKmSl
+         rspKlddqF7dMx8G1A9ADkaCmw7Mq5f8e9Mp/CRwv8GVTPjBiNgF9bJ4G+oS3GgvSsTDI
+         NW1kuIdl9C6W5QOr6KWT4dV+vK1Dp+LI0JyHF0ipqWr+j3dZBYTanhpCwBGhOGoG3uek
+         QBqOO7JLdKJO+R6rcxH9m9KZLTDQsVgKI2rY7bWsx/4wi2s2ea8o0CEzpruk1w8l7Vc7
+         mJZas04jC5INde3Pf6NRrso/Yh6th8SjS83Ilq2rARpaCN0pLq4ve3d9cs2VzzFINhDM
+         0Kdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712798280; x=1713403080;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=IdNO/D8xCAne2eE4Ei5IJ6ZuRNSULbSmSxqEk1i36xg=;
+        b=xDvPNtnWgS4x/Muy5IyWYhceTTm/DAtds/52UyHxXXfRHPPeB8ip/fpnvR9oRDeu4q
+         xaqVRd56rWfQwz6ZrceAcJxGw5mjMbQCbEdCoyE62ma364I2dTQmoYE12FnuS09EbBIE
+         Q+yR1CItdMKrnaFa798IRglFqdqPIX75PrGcz0t797tSjdX6J4c4l4HCA3zvWXn1Ygeb
+         RxrH9LoS38njSTZzcxut9mifQPEInu13wwFa8wFgrzktNdFxABgFelpPkAK397kqOnu9
+         brDsUCumbF3Ymj9Vv8UVVqGhnZrYeCaM9I24575Iv7p1IdYze3T/OxfJCKuG9nj/tzjP
+         g5EQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUZQSEmfjONypy+6yg3rWZE6Cyms9ax8Gp/KQBiGyZGeWfpJ9AdAUyz1LoiPopeFNK00G6zk49zaEa68rVyZ8BdLtfUNESlY3jHQg==
+X-Gm-Message-State: AOJu0YzLXeTgp7hPS9RqVtXuHou4xoZs6acxaumkgioZG4dBio20OKhs
+	vpq4cHvzSfPC72WpEbNw3Uqo6Is9HrDWN+KsJaPwZHTBzs9WezyVb17JOcoVP7DVpqe0/t8gwZD
+	INLM9MEMqYPwUn34Qg0j7uNlbcqM=
+X-Google-Smtp-Source: AGHT+IGznegtYWrOTSeB/hsLXCP7bBxdABTfr3ekOz4Guuzj4H4gYHx/vhBUmH8Pyy6vS2W4xXdv5eVBxVplZT7YGOY=
+X-Received: by 2002:a17:906:7308:b0:a51:885a:c0a with SMTP id
+ di8-20020a170906730800b00a51885a0c0amr2807595ejc.61.1712798279840; Wed, 10
+ Apr 2024 18:17:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <94d6d88b-b0e7-491d-94e8-dc9e5fba5620@suse.de>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+References: <CAEkJfYOs-szTK0rYvDw5UNGfzbTG_7RvjqFOZA=c6LXvxdUt2g@mail.gmail.com>
+ <CAEkJfYMcdmXAhe9oTpEPGL+_661PNAvM58Y+irwnbLW8FKohNw@mail.gmail.com> <2d5e3b6c-3a66-4f74-8367-51fa55bf0a1a@acm.org>
+In-Reply-To: <2d5e3b6c-3a66-4f74-8367-51fa55bf0a1a@acm.org>
+From: Sam Sun <samsun1006219@gmail.com>
+Date: Thu, 11 Apr 2024 09:17:48 +0800
+Message-ID: <CAEkJfYMcLycLfaRzhn=DmQjAuLHn29wSXN0b0Zf0oJr=sDVBTg@mail.gmail.com>
+Subject: Re: [Bug] UBSAN: shift-out-of-bounds in sg_build_indirect
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	martin.petersen@oracle.com, jejb@linux.ibm.com, dgilbert@interlog.com, 
+	syzkaller@googlegroups.com, xrivendell7@gmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Apr 10, 2024 at 08:20:37AM +0200, Hannes Reinecke wrote:
-> On 4/10/24 06:05, Matthew Wilcox wrote:
-> > On Mon, Apr 08, 2024 at 10:50:47AM -0700, Luis Chamberlain wrote:
-> > > On Fri, Apr 05, 2024 at 11:06:00AM +0100, John Garry wrote:
-> > > > On 04/04/2024 17:48, Matthew Wilcox wrote:
-> > > > > > > The thing is that there's no requirement for an interface as complex as
-> > > > > > > the one you're proposing here.  I've talked to a few database people
-> > > > > > > and all they want is to increase the untorn write boundary from "one
-> > > > > > > disc block" to one database block, typically 8kB or 16kB.
-> > > > > > > 
-> > > > > > > So they would be quite happy with a much simpler interface where they
-> > > > > > > set the inode block size at inode creation time,
-> > > > > > We want to support untorn writes for bdev file operations - how can we set
-> > > > > > the inode block size there? Currently it is based on logical block size.
-> > > > > ioctl(BLKBSZSET), I guess?  That currently limits to PAGE_SIZE, but I
-> > > > > think we can remove that limitation with the bs>PS patches.
-> > > 
-> > > I can say a bit more on this, as I explored that. Essentially Matthew,
-> > > yes, I got that to work but it requires a set of different patches. We have
-> > > what we tried and then based on feedback from Chinner we have a
-> > > direction on what to try next. The last effort on that front was having the
-> > > iomap aops for bdev be used and lifting the PAGE_SIZE limit up to the
-> > > page cache limits. The crux on that front was that we end requiring
-> > > disabling BUFFER_HEAD and that is pretty limitting, so my old
-> > > implementation had dynamic aops so to let us use the buffer-head aops
-> > > only when using filesystems which require it and use iomap aops
-> > > otherwise. But as Chinner noted we learned through the DAX experience
-> > > that's not a route we want to again try, so the real solution is to
-> > > extend iomap bdev aops code with buffer-head compatibility.
-> > 
-> > Have you tried just using the buffer_head code?  I think you heard bad
-> > advice at last LSFMM.  Since then I've landed a bunch of patches which
-> > remove PAGE_SIZE assumptions throughout the buffer_head code, and while
-> > I haven't tried it, it might work.  And it might be easier to make work
-> > than adding more BH hacks to the iomap code.
-> > 
-> > A quick audit for problems ...
-> > 
-> > __getblk_slow:
-> >         if (unlikely(size & (bdev_logical_block_size(bdev)-1) ||
-> >                          (size < 512 || size > PAGE_SIZE))) {
-> > 
-> > cont_expand_zero (not used by bdev code)
-> > cont_write_begin (ditto)
-> > 
-> > That's all I spot from a quick grep for PAGE, offset_in_page() and kmap.
-> > 
-> > You can't do a lot of buffer_heads per folio, because you'll overrun
-> >          struct buffer_head *bh, *head, *arr[MAX_BUF_PER_PAGE];
-> > in block_read_full_folio(), but you can certainly do _one_ buffer_head
-> > per folio, and that's all you need for bs>PS.
-> > 
-> Indeed; I got a patch here to just restart the submission loop if one
-> reaches the end of the array. But maybe submitting one bh at a time and
-> using plugging should achieve that same thing. Let's see.
+On Wed, Apr 10, 2024 at 12:59=E2=80=AFAM Bart Van Assche <bvanassche@acm.or=
+g> wrote:
+>
+> On 4/9/24 05:51, Sam Sun wrote:
+> > We further analyzed the root cause of this bug. In function
+> > sg_build_indirect of drivers/scsi/sg.c, variable order of line 1900 is
+> > calculated out using get_order(num), and num comes from
+> > scatter_elem_sz. If scatter_elem_sz is equal or below zero, the order
+> > returned will be 52, so that PAGE_SHIFT + order is 64, which is larger
+> > than 32 bits int range, causing shift-out-of bound. This bug is tested
+> > and still remains in the latest upstream linux (6.9-rc3).
+> > If you have any questions, please contact us.
+>
+> Thank you for having root-caused this issue and also for having shared
+> your root-cause analysis. Do you perhaps plan to post a patch that fixes
+> this issue?
+>
+> Thanks,
+>
+> Bart.
+>
 
-That's great to hear, what about a target filesystem? Without a
-buffer-head filesystem to test I'm not sure we'd get enough test
-coverage.
+Sure, I am glad to help! But it is my first time submitting a patch, I
+need to find some instructions. I would appreciate if you could help
+me out. Also, I need to double check the patch to avoid introducing a
+new one. It might take some time.
 
-The block device cache isn't exaclty a great filesystem target to test
-correctness.
-
-> > > I suspect this is a use case where perhaps the max folio order could be
-> > > set for the bdev in the future, the logical block size the min order,
-> > > and max order the large atomic.
-> > 
-> > No, that's not what we want to do at all!  Minimum writeback size needs
-> > to be the atomic size, otherwise we have to keep track of which writes
-> > are atomic and which ones aren't.  So, just set the logical block size
-> > to the atomic size, and we're done.
-> > 
-> +1. My thoughts all along.
-
-Oh, hrm yes, but let's test it out then...
-
-  Luis
+Best,
+Yue
