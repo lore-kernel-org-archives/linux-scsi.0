@@ -1,93 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F09A910788;
-	Thu, 11 Apr 2024 15:11:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20D0F13ADC;
+	Thu, 11 Apr 2024 15:13:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712848309; cv=none; b=gB8bcXUkx7dO3Dm/6OgMRcGSMKqIw/IDQZRUwgvMqcdc5Y766bzt/P1S4Qkmf3Pe/Sompvo0Eu8wCCb9zNAalSgFG98+H7SqXoJjmN8cIHfymeze7Za199I/lyn02tK/fCnyHM3di17mOUezg5ZcXD4bdSvJ5QfLlryLb1Gs91w=
+	t=1712848399; cv=none; b=pEK4+7MVatbTy6goEo2CweqIiVtaOlXXMNiQ+i2/CzexVEIR3yUf8qvIMferVpHMirGpoIvZ0pKDYfnyK5BL+HJ+S39k5Fk6WSihKotk0UxuvYSw6D063b2ZA30d6UL8BIGLU2dEP58V2oIDsCxHR1e1knT5MQjEeQK0Wb6FJVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712848309; c=relaxed/simple;
-	bh=6T6KZL6GFm5dCTrVlwn00hy4RM4V0SGfVe6aPd1R7eA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AXjP49Ltkg862doEPnF9ndHmggsblbg1YW0Lo5VvTuAu0jKtNjhe2TSnyO3h85XOy+OEwvlsURUwGiuhA1Le+BcdwkDglpl64Xl+bND0fKMxecKERbrH6vTqHuulFXg6sQZA4mM96oDAIgrYXr88hUylDI3O4BHPCej2efjmJes=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r2A2hrdj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712848399; c=relaxed/simple;
+	bh=pN56ayWZsVC8Qsmxepu8PbsNstNvWyI8do9fFIC3f0E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=tc1ykkZQuNnkHO+r52jlJf4vFhj9p1MgE5wIMi/53CLCY1mHdVsjXqo89TYGDZYauSrBfitO6YgRF5MCVXlLb5H1VV+AH+7dA0NUF6fQ5zfIbj+rQ6QYI3FdGLI4X6G80SppGWjujEjVmi7lybIgB8ii5ASPbMgBpS4b5pYvCwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=R7pDm3GO; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r2A2hrdj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BDB7C072AA;
-	Thu, 11 Apr 2024 15:11:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712848308;
-	bh=6T6KZL6GFm5dCTrVlwn00hy4RM4V0SGfVe6aPd1R7eA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=r2A2hrdjEIVuibFBNrpS6BXjfhhCO05wWLAaKYLRqQcVPWKaqNLFKaPHciCf3PO+F
-	 mj/sg8ThQ0VSWezR2Ba75wqGNZOulphcaRR3aChjQbQ+Cl9PdIPdbfzxKzCYDUeBXV
-	 yYXUVuThosnEIAeahGHEiqkyTG565GwMW1PJ8ZYRN84BB2CgsqM0d3FM1zO3jVYhGf
-	 /rRDrgcSDXhXdoMCORo9IqTgYHSttoNdoqoHSK9/B5s5wzsAPKKr/WTmWwUoN5Yg0T
-	 N5Czod5VdhjhP/CjgtlndGxZ13eDoXQkV8j2tR5HsbENJ1Jt6RcXJdwVSsQlM1o8aa
-	 aiSi8C2dYJSuQ==
-Date: Thu, 11 Apr 2024 16:11:42 +0100
-From: Conor Dooley <conor@kernel.org>
-To: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Cc: linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
-	avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org,
-	krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-	peter.wang@mediatek.com, chu.stanley@gmail.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, lgirdwood@gmail.com, broonie@kernel.org,
-	matthias.bgg@gmail.com, stanley.chu@mediatek.com,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 8/8] dt-bindings: ufs: mediatek,ufs: Document optional
- dvfsrc/va09 regulators
-Message-ID: <20240411-oaf-stove-b291a21ef404@spud>
-References: <20240411114300.169055-1-angelogioacchino.delregno@collabora.com>
- <20240411114300.169055-9-angelogioacchino.delregno@collabora.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="R7pDm3GO"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+	bh=h/MHPqAJUaQnVuOJ9LRPRm8bT9y8j34KRGcWL/KK0UA=; b=R7pDm3GO8Ii5Ili8nlCHbqY/ci
+	HwQiGoHrPt0/QFJGLkfOYWapAgqNSD0m7dN47qkovXWmIJGWNxm24EBH2uEXCEf1pwbP/T0uTO8gR
+	/rf/ABFbrwhzwh1YaFsnJvOjD4FFPRlfjqXYQ4RRF8PPw0rOa25/OIn9ZdvO0hQc8wJpxKcRL7i/l
+	0y/jb12ZbyYiTzdtSNeuMI4b98guH1CwWtzoAnQiVaDAeoxaKUcUwh1eqyGFcqjXXvAmxC4RhZeLx
+	5jIDVlbbv4+L8DyPrR2/AwByKwg+ryYd7CukrFp9FKQQRznSA/iPSrw4ecKOwVRqeyHtPJVHvE+yq
+	YiNbS37w==;
+Received: from [50.53.2.121] (helo=[192.168.254.15])
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1ruw71-0000000CgHE-2Zjz;
+	Thu, 11 Apr 2024 15:13:15 +0000
+Message-ID: <5ca63761-93e4-47e2-8fd0-e300a08f044a@infradead.org>
+Date: Thu, 11 Apr 2024 08:13:13 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="eEVVjrii83EVReKE"
-Content-Disposition: inline
-In-Reply-To: <20240411114300.169055-9-angelogioacchino.delregno@collabora.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] treewide: Fix common grammar mistake "the the"
+To: Thorsten Blum <thorsten.blum@toblux.com>, kernel-janitors@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-s390@vger.kernel.org, speakup@linux-speakup.org,
+ intel-gfx@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
+ dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-afs@lists.infradead.org,
+ ecryptfs@vger.kernel.org, netfs@lists.linux.dev,
+ linux-fsdevel@vger.kernel.org, linux-unionfs@vger.kernel.org,
+ linux-arch@vger.kernel.org, io-uring@vger.kernel.org, cocci@inria.fr,
+ linux-perf-users@vger.kernel.org
+References: <20240411150437.496153-4-thorsten.blum@toblux.com>
+Content-Language: en-US
+From: Randy Dunlap <rdunlap@infradead.org>
+In-Reply-To: <20240411150437.496153-4-thorsten.blum@toblux.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
 
---eEVVjrii83EVReKE
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Apr 11, 2024 at 01:43:00PM +0200, AngeloGioacchino Del Regno wrote:
-> Document the optional dvfsrc-vcore and va09 regulators used for,
-> respectively, crypt boost and internal MPHY power management in
-> when powering on/off the (external) MediaTek UFS PHY.
->=20
-> Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@coll=
-abora.com>
+On 4/11/24 8:04 AM, Thorsten Blum wrote:
+> Use `find . -type f -exec sed -i 's/\<the the\>/the/g' {} +` to find all
+> occurrences of "the the" and replace them with a single "the".
+> 
+> Changes only comments and documentation - no code changes.
+> 
+> Signed-off-by: Thorsten Blum <thorsten.blum@toblux.com>
+> ---
+>  Documentation/trace/histogram.rst                 | 2 +-
+>  arch/arm/Kconfig                                  | 4 ++--
+>  arch/arm/include/asm/unwind.h                     | 2 +-
+>  arch/arm64/Kconfig                                | 2 +-
+>  arch/arm64/kernel/entry-ftrace.S                  | 2 +-
+>  arch/s390/kernel/perf_cpum_sf.c                   | 2 +-
+>  arch/s390/kernel/sthyi.c                          | 2 +-
+>  drivers/accessibility/speakup/speakup_soft.c      | 2 +-
+>  drivers/gpu/drm/i915/display/intel_crt.c          | 2 +-
+>  drivers/gpu/drm/i915/i915_request.c               | 2 +-
+>  drivers/mailbox/Kconfig                           | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    | 4 ++--
+>  drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.c | 2 +-
+>  drivers/scsi/bfa/bfa_fcs_rport.c                  | 2 +-
+>  drivers/scsi/fcoe/fcoe_ctlr.c                     | 2 +-
+>  drivers/scsi/isci/host.h                          | 2 +-
+>  drivers/scsi/isci/remote_device.h                 | 2 +-
+>  drivers/scsi/isci/remote_node_context.h           | 2 +-
+>  drivers/scsi/isci/task.c                          | 2 +-
+>  fs/afs/flock.c                                    | 2 +-
+>  fs/ecryptfs/keystore.c                            | 2 +-
+>  fs/netfs/direct_read.c                            | 2 +-
+>  fs/netfs/direct_write.c                           | 2 +-
+>  fs/overlayfs/super.c                              | 2 +-
+>  include/uapi/asm-generic/fcntl.h                  | 2 +-
+>  io_uring/kbuf.c                                   | 2 +-
+>  lib/zstd/common/fse_decompress.c                  | 2 +-
+>  lib/zstd/decompress/zstd_decompress_block.c       | 2 +-
+>  scripts/coccinelle/misc/badty.cocci               | 2 +-
+>  tools/perf/Documentation/perf-diff.txt            | 2 +-
+>  30 files changed, 32 insertions(+), 32 deletions(-)
+> 
 
-Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
 
-btw:
-<stanley.chu@mediatek.com>: host mailgw01.mediatek.com[216.200.240.184] sai=
-d:
-    550 Relaying mail to stanley.chu@mediatek.com is not allowed (in reply =
-to
-    RCPT TO command)
+Thanks.
 
-We should probably delete them from the binding (and maybe add yourself).
-
---eEVVjrii83EVReKE
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZhf9rgAKCRB4tDGHoIJi
-0gdGAQCnKsqnZe2hv36Mjb03LruoALs7tf9nb2U0ZuIQcbhPMQD+LNrShTAhHbLs
-R7ovr7nrZo1R+StUSKtpTyBux4Z+KQ8=
-=LZcM
------END PGP SIGNATURE-----
-
---eEVVjrii83EVReKE--
+-- 
+#Randy
