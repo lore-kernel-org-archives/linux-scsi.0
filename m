@@ -1,40 +1,40 @@
 Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 154DEFBEF;
-	Thu, 11 Apr 2024 15:14:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7F05134B0;
+	Thu, 11 Apr 2024 15:15:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712848479; cv=none; b=P1+9R9lW/BZTp/zmkHlbkNj76IJSWHTcYVdfLVn2iXUS7uH6pZfOThdwDk31jyySjAPP0qvKKJo4qqeMzrIAZ0I5XlC6SUdQ9pYecDY7c+ic+M2UCssWS6Zomtq2fofH5omOoJNNqh9/5EtFoAWX7e4cJP43xsCh2QDmOpnlNrI=
+	t=1712848508; cv=none; b=tIVOWeGq9uh+ZFVQZLKqB12XpzYyY2rLGQEIomSgbMHtigwHYrItI9XquF3rZH1974MUSwmw86DYg9nDCaRgX1dVxZISyYJAD8k2GhU0EJ5Q5cQlCvVglyfQYihdse7egZvXy/SyTgf+5GL/KynGJ7wZBCg+2DQxqsVfBMKtkIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712848479; c=relaxed/simple;
-	bh=uOpSXnhxv2OHawhHyAEzb/JljiqQBa6kpiy/MPdPczU=;
+	s=arc-20240116; t=1712848508; c=relaxed/simple;
+	bh=JYFfYgPqUFb865Mf27i1hGQL9j2iqDH7TZlTJELDLRs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J+4k3r/GTF6QLsSX/9I5oDf9VJj6dChbGphm7gL200dSKw4c/ebspWOCRaMMMTiYdhKqJcd98xZlXpxcOb/zOa+n45IWwfUCSULK8guHLSJ0s3B1S9MEwO+M/RtE1TOXqIjdTTkUOr+mUR3/isxsUg8keAeHQiwhnyNsOO+oxiE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=ZkXHfrn8; arc=none smtp.client-ip=46.235.227.194
+	 In-Reply-To:Content-Type; b=KCEhu8Enm54f2U2brCjQSD9jOsne+v2Z/XX3tH2BR5s0cG8JkNJ1fy7JR8ttlSp7B49rx25k+SmU70VqV6cJGTcGeL2cFPOupWWTo7U4LLgnZgBL/EbPJpb9A7Sul9vQaohC9G8HdDY7+XHFbFOf6essvTWzPO/PnGCkRBP9UoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=FiqyGx3B; arc=none smtp.client-ip=46.235.227.194
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="ZkXHfrn8"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="FiqyGx3B"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1712848476;
-	bh=uOpSXnhxv2OHawhHyAEzb/JljiqQBa6kpiy/MPdPczU=;
+	s=mail; t=1712848505;
+	bh=JYFfYgPqUFb865Mf27i1hGQL9j2iqDH7TZlTJELDLRs=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=ZkXHfrn8RIBm5pjCFyk7iuukhhhPGZ1yL/8DNBa5B9pIf0xN3Aqc4LVy9lgy6tlmI
-	 y3dSZvS/gjlrVmmTDtJhX/kHFD2PNHTgWpHW60pxjG3V36NXiOT3Cy5epyHpPS8iLZ
-	 cwj0ya/578AqYLQRsOyWCH9GlIp8SqBILrzkw7SrECMAB5+WUAJvmAaO+DQdQG5gUp
-	 ania2AcQ7rCppjv7a4rpv2l2O3KnIegc9lMrFALU0wBjDDGMG36P6nTaMFyGpZ0Y8l
-	 0302z/HUP1ClfH/2at5P3TqZelQ5Xd5t89yxsm0qQ/z5lA/SMqqMBEFxuIR8gcEltO
-	 oP1bTGDYJ0hIg==
+	b=FiqyGx3Bf9yVBYg3tO7PjAsHN5EgcUUShJZl7ueLYtfX3wIKj4COemgGompwfQ2TX
+	 eHySSC4a5g6ktoxoKwTlQwUSaVxnkeM2+YjpgPMBGzdZ+tw+OnFaD8puJoF83WZvFv
+	 uZIih6V4EqpdTio+ar1qzIHksWOsMgyMs+KZ9zSni+WsUXyx76Wxw3gzjrbUBxY2wK
+	 AD/9E02Yb3pGjyj0wvWU344sMBSEs2AGalKt/0cEy145/bRHnMPcpB0QPvXq/SQx5R
+	 62wawEgW8U+n6Zge6u6eY7MTPnSpU93xGj+HKdmFZJ4kRZxsNC1PVJYrE3F7uKmacQ
+	 U0y7Lg45gxUBw==
 Received: from [100.113.186.2] (cola.collaboradmins.com [195.201.22.229])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kholk11)
-	by madrid.collaboradmins.com (Postfix) with ESMTPSA id 198D137813C0;
-	Thu, 11 Apr 2024 15:14:35 +0000 (UTC)
-Message-ID: <f7fcbae7-fd54-4ad5-8dc6-4deb80088b79@collabora.com>
-Date: Thu, 11 Apr 2024 17:14:34 +0200
+	by madrid.collaboradmins.com (Postfix) with ESMTPSA id DC7E037813C0;
+	Thu, 11 Apr 2024 15:15:03 +0000 (UTC)
+Message-ID: <de76dc16-8edd-4322-927e-61cdac374a3a@collabora.com>
+Date: Thu, 11 Apr 2024 17:15:03 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,8 +42,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 7/8] dt-bindings: ufs: mediatek,ufs: Document
- additional clocks
+Subject: Re: [PATCH v2 8/8] dt-bindings: ufs: mediatek,ufs: Document optional
+ dvfsrc/va09 regulators
 To: Conor Dooley <conor@kernel.org>
 Cc: linux-scsi@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
  bvanassche@acm.org, robh@kernel.org, krzysztof.kozlowski+dt@linaro.org,
@@ -53,80 +53,31 @@ Cc: linux-scsi@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org
 References: <20240411114300.169055-1-angelogioacchino.delregno@collabora.com>
- <20240411114300.169055-8-angelogioacchino.delregno@collabora.com>
- <20240411-filth-trekker-8a8c185d589b@spud>
+ <20240411114300.169055-9-angelogioacchino.delregno@collabora.com>
+ <20240411-oaf-stove-b291a21ef404@spud>
 From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 Content-Language: en-US
-In-Reply-To: <20240411-filth-trekker-8a8c185d589b@spud>
+In-Reply-To: <20240411-oaf-stove-b291a21ef404@spud>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Il 11/04/24 17:10, Conor Dooley ha scritto:
-> On Thu, Apr 11, 2024 at 01:42:59PM +0200, AngeloGioacchino Del Regno wrote:
->> Add additional clocks, used on all MediaTek SoCs' UFSHCI controllers:
-> 
-> I appreciate being told they're on all, rather than it being unsaid and
-> having to ask.
-> 
-
-You're welcome :-)
-
->> some of these clocks are optional and used only for scaling purposes
->> to save power, or to improve performance in the case of the crypt
->> clocks.
+Il 11/04/24 17:11, Conor Dooley ha scritto:
+> On Thu, Apr 11, 2024 at 01:43:00PM +0200, AngeloGioacchino Del Regno wrote:
+>> Document the optional dvfsrc-vcore and va09 regulators used for,
+>> respectively, crypt boost and internal MPHY power management in
+>> when powering on/off the (external) MediaTek UFS PHY.
 >>
 >> Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
->> ---
->>   .../devicetree/bindings/ufs/mediatek,ufs.yaml      | 14 +++++++++++++-
->>   1 file changed, 13 insertions(+), 1 deletion(-)
->>
->> diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
->> index e2c276da3f2c..21b038db100c 100644
->> --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
->> +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
->> @@ -26,11 +26,23 @@ properties:
->>             - const: mediatek,mt8183-ufshci
->>   
->>     clocks:
->> -    maxItems: 1
->> +    minItems: 1
 > 
-> Could you add an itemised list to the clocks property please?
+> Acked-by: Conor Dooley <conor.dooley@microchip.com>
 > 
-
-Not really... Honestly, I'm not confident that the description will be 100%
-correct for all of them... can we do that at a later time, when I will be
-really that much confident in writing down a proper description for each
-of them?
-
-The only thing that I'm really sure of is exactly what I wrote in this commit,
-nothing less, nothing more... for now :')
-
-Cheers,
-Angelo
-
->>   
->>     clock-names:
->> +    minItems: 1
->>       items:
->>         - const: ufs
->> +      - const: ufs-aes
+> btw:
+> <stanley.chu@mediatek.com>: host mailgw01.mediatek.com[216.200.240.184] said:
+>      550 Relaying mail to stanley.chu@mediatek.com is not allowed (in reply to
+>      RCPT TO command)
 > 
-> 
->> +      - const: ufs-tick
->> +      - const: unipro-sys
->> +      - const: unipro-tick
->> +      - const: ufs-sap
->> +      - const: ufs-tx-symbol
->> +      - const: ufs-rx-symbol
->> +      - const: ufs-mem
->> +      - const: crypt-mux
->> +      - const: crypt-lp
->> +      - const: crypt-perf
->>   
->>     phys:
->>       maxItems: 1
->> -- 
->> 2.44.0
->>
+> We should probably delete them from the binding (and maybe add yourself).
 
+Yeah, count that done for v3 (tomorrow)!
+
+Cheers
