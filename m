@@ -1,448 +1,180 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54F07286AC
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Apr 2024 09:14:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 005C44D58E
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Apr 2024 09:32:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=210.61.82.184
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712913264; cv=fail; b=L+5QAJpERMSRNzhtN0A9VT4XiSI0Z+M9DJzT4y0jAESdO5WGFqQM+kKfhlu9jlfo01JzlgS4ldEBrhhFvkr0V7mqQ40TA+aYFJQ3oDgWfV7BMfu01wNp+RSmq6D1VzKEckNdrZ8Dg5MatBo8WzTqkQ+4tq9zPn3Lpfs1slrdBP4=
+	t=1712914376; cv=fail; b=KaHsuLtkCdwGRzrUDkXrd+ka5nEAlFMPsZGI1a0ngljXa+EudcY6pfBsrduSIgZ55/uF0EXL3gAHwVCpbd7sxnNWk1Mf1ozHyxRXLyfUf/JqRP5msmwIBfG/pAQRhezrgayVley0HDzhu+x4lwhMjFX+BdwSOVqxwfn3dllTJ/w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712913264; c=relaxed/simple;
-	bh=SFmdW/DEmJhjlFdCjwjBd7NCn1VD0tuN+dIpznyoPaE=;
+	s=arc-20240116; t=1712914376; c=relaxed/simple;
+	bh=tdw1gjna1TkxxaWpxlJaQ7CKgRqYBSfazci/qAl0F14=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=CTgf/IO9JQF1VdQcF4KvJz7k0wkvgAvdBIBcU0EifNndEeuciUlMKfowXg1HVR1jjaV6fRrSWkA/kXb2aMmivE4aCXz3iK1UdEhGFILd9aVbzuVUOqy0l/9JIwIzCZQXbiK1bfPX1QlmguY7I6FnvmA4H2FjM22tvSr15hJ4O9I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=QJL0xF88; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=rw/Pknfy; arc=fail smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	 Content-Type:MIME-Version; b=Ky1//x9adpBCZyTj5bmQ5QqNTHCBxtyP9y6OpkLXmtvowS0W0XQFHA4m8NYqGDVHF3SnDpn0dICOWA+o9GVN7MOwopp7Vp8E+Hp+hpid7Vv7+VNJ1MWTwffo21ATYFjRte2+iWGZFxo5TSIWzBU9Arf5h4d9pzC+pyGAz3QhxWI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=l+WxN1EV; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=QllCvAAJ; arc=fail smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="QJL0xF88";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="rw/Pknfy"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1712913262; x=1744449262;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=SFmdW/DEmJhjlFdCjwjBd7NCn1VD0tuN+dIpznyoPaE=;
-  b=QJL0xF88+8jTP3g+vcHk+dSHlawckDe1uGYXKjxB204jO5RS/UzbZmsD
-   FuehX6YJgZ1fgtNrNY20le1CL1s1L+6uyNNaudvXVjwra6OOp1XbYH1w+
-   xU1F5nOp65RqgVOJos6LSgw4TzHeyh6su/C2LvdEeIBXpyF1P2GzhFjJP
-   G6ayU88eoMepJLwFhDNjME1iLWKv/RHrY2EnaG1R8ST2Qcvy3Ky4SLj2z
-   dgJuYnKk9Lh/TyiKGCNXAM2X0rGdF8hmY0xdXuDzDW/7T2b9LH+S5NCXC
-   EXd3PRqBpo1Nrn5VaPUkOqkTU8gSYHDN1Km+bFiCv/U+oUVnc9aPa+mGo
-   w==;
-X-CSE-ConnectionGUID: g12L7x4mTIeURSgeeJ26BQ==
-X-CSE-MsgGUID: 6QoV28U7QmC4bacV6EZAug==
-X-IronPort-AV: E=Sophos;i="6.07,195,1708358400"; 
-   d="scan'208";a="13844044"
-Received: from mail-mw2nam10lp2101.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.101])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Apr 2024 17:14:19 +0800
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="l+WxN1EV";
+	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="QllCvAAJ"
+X-UUID: 9f4f8156f8af11ee935d6952f98a51a9-20240412
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=tdw1gjna1TkxxaWpxlJaQ7CKgRqYBSfazci/qAl0F14=;
+	b=l+WxN1EVG9w97bSGFp4Wfs8SMCgJyvA5VZMSKMXuPNctCZgSMYaVkZL6IIQW7/ohFLixkjjI3MnZkfPfmDP8lV1wtNpSDhrjPW6xgcQ4lkunBnj70tmquHX2zEbws+lD2a1ltaLyGA73SUSrr5QwwIZIeMzdTgztfKN4rDO2ftw=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.37,REQID:a1eab08c-f77b-4708-84e9-cc229723acec,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:6f543d0,CLOUDID:02359982-4f93-4875-95e7-8c66ea833d57,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
+	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 9f4f8156f8af11ee935d6952f98a51a9-20240412
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 929354826; Fri, 12 Apr 2024 17:32:47 +0800
+Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
+ mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Fri, 12 Apr 2024 17:32:45 +0800
+Received: from SINPR02CU002.outbound.protection.outlook.com (172.21.101.237)
+ by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Fri, 12 Apr 2024 17:32:45 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=b+4hnZb7pzN3HWiInQA4eAb1pgHleDl2iQ8HK/8en/wqO4xln+bgcY/kuPFzOWsR255P0Yt9hMHlILmaFc4O3kyxxVXvqAyUrZpc63Yx49oZ2nrLQz4uxaj6m5n99mH3BOZCUjylZKbdQcPZfkG3grDPDubrb73FUZUAqef+mtiG9ixzBmGDM/n6s1BN19neRjE/VoCNu1VJNGK+VRSyFF2CJPikZ0Q89eWmkihZPza7nywGZ6x/J7MxnRfHG8G458rGhXZj+XDhbXk5XZeZvZPb/3cv2+vKL5O6lI60tNTQ9FMHCuf4xKPxAVYzmPeW+LMuNOvh369iBhHlmXROMg==
+ b=WfX+g11T5tbbQZWu5C78jP7ESZxdCmvFTmFSIx3wvngM6wbrnTP/09xhD5sDuTes8vWajhH3HhQD8IKqP8uCbwGPJmNOpTOYZ3m9sttKYWHOG2m8cR+RkGdtRpMIYed6Rut2WbqQhRPAck64eVQbugQ9NEDTJfpJda6jSjZlxAdsekXlPgRxv9g/FK06o5HkwALgDhbJaK6db0FH5VJ1Ff+r2QfV63qp9fLsNkwCDB+yvniYqWyJM/tPKvTgfY1Ac/zJxzDXYYkaODRUD9h7HRF4pXE8/wZBxYWKgw/wkUU0ZUuI6Im0hSZPqTjBgL1KJy8RAxm2pBkUO9aPV0gg6Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8i5tb7NRJOUjWBgAZLIJlzmtN656fSQG0dVC7M9M+Yk=;
- b=YOVJ3HkKLja88QEc3idPHE0qYz/AGWJZPUcwfuaNTGZfNOfDXpsIm+JSrhzL348Ffy0nHEmlLiE5GbZ8PSFofscz6yxumLfSEMXZ5wp4QuPb2HjLiPYrzqdFwJIg2UX2+pVP5lgJA8ACU01cTtkLnHloFr2hmb2RMfhyCnn9G/Hwz1Xt+LCSTf/sVHuVpyrwOgMP4gYvJXBL1ks0C43cpdpcSJEDFFLNcFRCRfSOWL9bkv1aZick6Zi9YyXks3T45UNB6fVPu4Q0lGh0TKiDXnPfirKGuUipCNIBff8hRa4SfX7a2VYoJ3Zumu8mYqrTunbHyXVmedXsVWgPpMJO/Q==
+ bh=tdw1gjna1TkxxaWpxlJaQ7CKgRqYBSfazci/qAl0F14=;
+ b=OOoPSTDH5yM0AQdL2T3RtDvTmNUucKz7c7B3MFWc9UYyNEme63T8e8gQ8USRBpKBci6HpTsdxGn0q6OQoQDst4OPMdh9B+YUUcCFsE+4Of0Yf8113daJri0GBEahxqWSofIIJxFeIyB9ZQRVEdwb3AwQtv9nXgo1xJikJMdw05cSYHd992qgXgdP+q60AYnsT6vm/XZJKQeJ0tWp6WtF5F7yYPZkvf5Sj1fOodQhditI4iDzuoCTL8XCGsZHXGAJ/4ydhjuVLPOXBvnxqOodZEc4xLshmQM9VCc5YbuWeFwFwFlOtBToYk9bnjV6JjqSQkVaKFkVaUX/WBs6HbWwDQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+ smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
+ dkim=pass header.d=mediatek.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8i5tb7NRJOUjWBgAZLIJlzmtN656fSQG0dVC7M9M+Yk=;
- b=rw/PknfyitkcsTODuxKq10q7qmGdketncnFWRbnD33Lq5SswURmXczHAZ184PUpyNNJaIo0RDLRiV0f7ZNLDcNiLpBmMOTX9tpsehm4ssu6dXMRRoTvrnwNY4qe3QX2UVTgGQ1JqKzvtP+anWmFJSxVgbzyFkHKDAErg9i1Bi/M=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB6313.namprd04.prod.outlook.com (2603:10b6:5:1e5::18) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.7409.55; Fri, 12 Apr 2024 09:14:18 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::5395:f1:f080:8605]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::5395:f1:f080:8605%3]) with mapi id 15.20.7409.053; Fri, 12 Apr 2024
- 09:14:18 +0000
-From: Avri Altman <Avri.Altman@wdc.com>
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
+ bh=tdw1gjna1TkxxaWpxlJaQ7CKgRqYBSfazci/qAl0F14=;
+ b=QllCvAAJ7rOPa4pAbbVKHH0H7YuxB8Y7emTF/Vw2yGbCmBNzsLPhHV9jR/Jb7KE9/t1o1G2s9m5BdS4C3E3TLR2CTXq5pus8d4saQMM5b+87xWJRYfjrUK/BOMYtm5f7BBkZNSY9mlcFXHC9RTXe0Px1gcSgIqb+q/h8LOTHLNs=
+Received: from SI2PR03MB5609.apcprd03.prod.outlook.com (2603:1096:4:129::11)
+ by TYSPR03MB8670.apcprd03.prod.outlook.com (2603:1096:405:8c::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.45; Fri, 12 Apr
+ 2024 09:32:43 +0000
+Received: from SI2PR03MB5609.apcprd03.prod.outlook.com
+ ([fe80::dcdd:6cf0:8378:c97b]) by SI2PR03MB5609.apcprd03.prod.outlook.com
+ ([fe80::dcdd:6cf0:8378:c97b%3]) with mapi id 15.20.7409.042; Fri, 12 Apr 2024
+ 09:32:43 +0000
+From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
+To: "bvanassche@acm.org" <bvanassche@acm.org>, "martin.petersen@oracle.com"
 	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J.
- Bottomley" <jejb@linux.ibm.com>, Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>, Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>, Stanley Jhu
-	<chu.stanley@gmail.com>, Po-Wen Kao <powen.kao@mediatek.com>, Can Guo
-	<quic_cang@quicinc.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, ChanWoo
- Lee <cw9316.lee@samsung.com>, Yang Li <yang.lee@linux.alibaba.com>, zhanghui
-	<zhanghui31@xiaomi.com>, Keoseong Park <keosung.park@samsung.com>, Peter Wang
-	<peter.wang@mediatek.com>, Bean Huo <beanhuo@micron.com>, Maramaina Naresh
-	<quic_mnaresh@quicinc.com>, Akinobu Mita <akinobu.mita@gmail.com>
-Subject: RE: [PATCH 3/4] scsi: ufs: Make the polling code report which command
+CC: "zhanghui31@xiaomi.com" <zhanghui31@xiaomi.com>,
+	"quic_mnaresh@quicinc.com" <quic_mnaresh@quicinc.com>,
+	"quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>, "jejb@linux.ibm.com"
+	<jejb@linux.ibm.com>, "akinobu.mita@gmail.com" <akinobu.mita@gmail.com>,
+	"beanhuo@micron.com" <beanhuo@micron.com>, "avri.altman@wdc.com"
+	<avri.altman@wdc.com>, "cw9316.lee@samsung.com" <cw9316.lee@samsung.com>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+	"chu.stanley@gmail.com" <chu.stanley@gmail.com>,
+	=?utf-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?= <Powen.Kao@mediatek.com>,
+	"keosung.park@samsung.com" <keosung.park@samsung.com>,
+	"konrad.dybcio@linaro.org" <konrad.dybcio@linaro.org>, "andersson@kernel.org"
+	<andersson@kernel.org>, "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+	"yang.lee@linux.alibaba.com" <yang.lee@linux.alibaba.com>
+Subject: Re: [PATCH 3/4] scsi: ufs: Make the polling code report which command
  has been completed
 Thread-Topic: [PATCH 3/4] scsi: ufs: Make the polling code report which
  command has been completed
-Thread-Index: AQHajGzmBkHd1l3FvEahZp3YizHLU7FkWhjg
-Date: Fri, 12 Apr 2024 09:14:18 +0000
-Message-ID:
- <DM6PR04MB6575F0D8B742E1328E73CB97FC042@DM6PR04MB6575.namprd04.prod.outlook.com>
+Thread-Index: AQHajGzqI5sK1vJFzk+MA3f1mzFbgLFkX98A
+Date: Fri, 12 Apr 2024 09:32:43 +0000
+Message-ID: <a5d76eba8f40d05c47f3b1e0642f9532b058c345.camel@mediatek.com>
 References: <20240412000246.1167600-1-bvanassche@acm.org>
- <20240412000246.1167600-4-bvanassche@acm.org>
+	 <20240412000246.1167600-4-bvanassche@acm.org>
 In-Reply-To: <20240412000246.1167600-4-bvanassche@acm.org>
-Accept-Language: en-US
+Accept-Language: zh-TW, en-US
 Content-Language: en-US
 X-MS-Has-Attach:
 X-MS-TNEF-Correlator:
+x-mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
+ header.d=none;dmarc=none action=none header.from=mediatek.com;
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|DM6PR04MB6313:EE_
-x-ms-office365-filtering-correlation-id: bf005329-bd4b-41f3-7a8f-08dc5ad0ee82
-wdcipoutbound: EOP-TRUE
+x-ms-traffictypediagnostic: SI2PR03MB5609:EE_|TYSPR03MB8670:EE_
+x-ms-office365-filtering-correlation-id: dcebc092-b58c-457d-c5bc-08dc5ad3817a
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info:
- VtlRc0d5BlkXNrvEiUIgImJISe9rL0ZXv5WfGnl1Iuw3LD1SnfrNlG+nd+ayOha3rI7fGkeKe7oFij1kXnM4tBd0MwlqVy2Ufxan6Hp0qKkC/KMLfC+pqQ9ai9OqYSBxNio6UlGJNd54FHQ+RqDfodGwD1D1UT4GeO0u9ecdsMIeiE/5n24P7sZFIgWWbeJjqYfdsHyEH5cnjyOgWhf0jli1brtTWB6ef5V3sUNu+0Bz/KTSdWsAd68ybOwMCnE9nvrndHXz39zYEx8/IG3aZ/riL9Tk0Fwsg8N9tZ7ncFFcvq/uzgP5zbQKepuQfBmT6nf0xX7YEezOre4dPhqajCi9q6076MYLl+HGPMKZdI1ql5l2kD26Y1pZ1RCN0DJJyZShZzKbxe8Gh+xl4Qd4iU+459mrPm/sD1lyMSMCWpCsJ1mBqWJOSB+lRGh+mVfW80p6n+b1ispaV1iBSTsY/UqpkOzrJ1SM5qVnBpzMYm1K0cr+eVntVpC2ZN5E8y6ymbZAJN/tqHror9HO29VYIRCaKxGUyc31XIuOy9DJfFTPgjyQ8GYQjj9wb/hXcWY6V5AwUFBrvVKNAtgjaldbccuDSfVAfkEyp7U9oSwhkXwb5StQ1E0zFZdp2DeamBZsvYc7dXbzRnUdLL9YLOg/xTbohjnyszTxiWmHMa434PX1ThzDKBebYVNPb2BFqLDNJfTYX2IrSMujEunyz8JaEdxi5qqs/AgwZwGHwNzgG/8=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(1800799015)(376005)(7416005)(38070700009);DIR:OUT;SFP:1101;
+x-microsoft-antispam-message-info: H/vzYB91evOn8Qz3FhWPRTYSfRBIH3ZfHugFjNgT7gJ06fE+Z7HJ7SgXR9/15o5WCo0E8/4NzJHsJ2Ahzyqy9fqedwGc6UStjOn82/fcuk1sHXdzg7PCuyGSIiZVfbEju4YB1AkBDLS1aVCMVqFs31SXdyGpxHYvk+isrr810KoudBNeduAkH0ugyySxZR31k9OvvEXo4jetek3xD33tmHDGO+Lagdn+I2Y/Pg0RJHP5wxmGT1aJS1/UGiOXd7FU4RGxXTAqGO7olDNXEkw8f1bg5MP2iHfOqkyjFDzl/SGY8lHU+pDwntd3nSKc/ahdLdUQb4MDzcPGzew2ZSAIBBvCsvZf2DdGE5w4OYwrT7yRqwQlZPkkPlFXZJBmtYRG7nQB5EqjedACkZOuyR4w+w82BQnx02yzkyktgWGMn1y43+IEOv1OAT3wN8rHz8N5won9CQXZDtgpMhS7NUyTqPdeEpcL/+UZz1YYl9aWXUYxWiiq38WGibxzjaxCOYkhCRJVPAoWLme1bBGPIdt0Sj6r24wrew1EPunVRMcz9CHmA0zk5GNg3PQBpO4QB5pdR5J9pS4UoJh4EAl5OjlebRUcGxG2tbsXK+4iUyxOfRnQQSZL38uOWr5E+ivVXjJny6bMJzMADDYNlfoXqQXa+G+qIrmyukdkPLA4SHi9wleqDyp1r/f6jY7qnmzlVB0AFQ2OE3ETus8nMY74RW7x+sttqFmt6OoFhB54QN1inSI=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SI2PR03MB5609.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(1800799015)(376005)(7416005)(38070700009);DIR:OUT;SFP:1101;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?xB2f8iz+y1+3Cv2RPoe8DFCvlExvRcHfoivOArSIrd7tkydDZ7f269YBesgz?=
- =?us-ascii?Q?Y//e4Sh1OTNQQN+07/DwPecRJpG0hihlxqU89CLpgjNC7KuBabcQsOPma4b1?=
- =?us-ascii?Q?5Y6hVb2mBV8qZssCaPgfr/w98z/veMSD0nQx17yp7T75DxjW06LgHGtnTYYf?=
- =?us-ascii?Q?J0MuPM7ZRM8m+6l3hV1pG/MlNLzGT1pGiSJQbpzbOYtb3JuZerKAL3mMwjsZ?=
- =?us-ascii?Q?Z4moc/j/AAab7mpEBsx77OB3fu56PLEzx/lZKjJz1IjP3KwnimflFtiVcEyD?=
- =?us-ascii?Q?KtuCF/zVhcNX7wa08CwTwDTyEk2YTGiWgqv+YkYB6ZVuTalgpqpw4QNQyLEs?=
- =?us-ascii?Q?Zn3FiNmBhq7DvwaQLpAWCU6x0cnLZcgRCFLtD6D9Q0jUnOKzqap0mmzzrwLV?=
- =?us-ascii?Q?Cj/b29efg2bTCCMjYnOj8gSoyN9nZeFZswFZajdh9261TaKy8hEeZB735NNs?=
- =?us-ascii?Q?QdQTOVT3Nm2M9v6jYY8d91lszeejT22Kc4m5pLcMbVovoBle+v3Ed/k5O457?=
- =?us-ascii?Q?G/I3DfjcExmW9pwSG+U0673uq5TsFXOraGm/ipP31yHQKlOsR0ONqbdDIeR8?=
- =?us-ascii?Q?MHTHm9HRLHd4kYRU5oExeFWoI2112I8RZtTsYKz8R67mK08eL/UhCAG4UmpR?=
- =?us-ascii?Q?onU7xpxcnD17ZE86AsLBRtr8fBzO00jfArNNNsUTnv2aJKDOJaLZaoKkbl8B?=
- =?us-ascii?Q?fZrnURNbDHlEJKg3cyc7PZxU+tZILkF5DPie9a5uUaz8kY8Y8gaE6pdgbuQ6?=
- =?us-ascii?Q?Dq3B6INjR9Ea+jv68wKndiQ2oNrc6cmrODc9cvj8gbGuOLmoImv4Dcciuw8m?=
- =?us-ascii?Q?JYuX7A+9FLkKR/8+ZG1S8/OSP2yImPCJibfi5aLNO0ieCTCJWpFgFQ6TQIoc?=
- =?us-ascii?Q?JXSAcyBjFQUd4FMLtMZfkSmx+XyCSTAa3Ftlc44/F6eEQmCidb1Qt6DAnBcm?=
- =?us-ascii?Q?dAcx3RVIEqphMpMmawiamadCeUZcsHCYAo87DCDhzuWkB6Y2nmY6CuUy41Wa?=
- =?us-ascii?Q?LyKVqqzqZBBLtDbwyPgfAHvMkmBh1yLdhYTLqi/y9vQEe5ZGGw1nu/lfFE4V?=
- =?us-ascii?Q?3th6EMIMhNA+PINz4N+98akpy/OxD/nA4XqIVaprzHaq5MlOBFkMPFagJ+eX?=
- =?us-ascii?Q?AsALPOD18kU1QymQ4YiiiN+iPiMRJFMlyqhbNiO8JPnnYCgoaO6ZllN3ubLh?=
- =?us-ascii?Q?HWpMOOdydbyD71Ys/lI7nWNw2i777zoVfWba90rB3bAdr38awGqm0f/0KcAH?=
- =?us-ascii?Q?xIlnWBjY1AH1J0qRzivYgEH8ZyisPSUFvOoJh184pmw++O4fFI75wRiDhpqa?=
- =?us-ascii?Q?IXBW11nshFbu2rql4xdR0ngoZ05G5RU78qP6nvVUwZeLk8C46R4EA0vd0nVI?=
- =?us-ascii?Q?6+Ff9B68cWVjmDLNosRV0l50BtfX3PWOlQzEm33UyIDoTu+K84blOAadDBqV?=
- =?us-ascii?Q?KbcJzZ177AMJG18Sbwre6Phr34gxnjM82o0Y7+Te1FZU/UXmPIxM3IepS6Bh?=
- =?us-ascii?Q?4evT7zlwqQudUkJEHoFGK/s4XDBmUQMofLW9gyvqYQEzW3RyR/Zzob4A7GTQ?=
- =?us-ascii?Q?8+vzR4gl4qrz575210HZxZNaK/632Frq5BTzcoM/?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?cU1Mc245Y2JQK3dhVU80YlJMSlpBaGtML1ZDUFlxd3RPQzRKQ3p1aTM4a0h5?=
+ =?utf-8?B?bmNYLzVZMlVJWFp3aC9Yd3RkUmo0OWhCYXZEN1hER3ZQRFZnN0ZTS3dJL3F1?=
+ =?utf-8?B?ZkYzWE1iMWNoTG9jZ2FHdlhZdjhQRUF3T0J6bmFnYS84Lys2ZmZBM1RQN3BE?=
+ =?utf-8?B?TlVaMXBGc0RKc1oyN08yZ0FESW0ycjJlajNKZ0s4TjVwb29nUXhyK0JGVTBj?=
+ =?utf-8?B?cm1ZdWVUT2docE14ZjBHQnRpZmtkbDZQQ3I0TnI4aXYyM2ZCaW9vOS9DUjNt?=
+ =?utf-8?B?MmdzeWlCV29WMUI3dDhqQlM3UjVCQWZLajVGZUZCQzU2bDg5WDZtSG9VM2hM?=
+ =?utf-8?B?dFV3aFQyOU1NZS94ZWV4TVRaU1dKbGhOazhGWnJjS09qdDZVZEpaSk9Jb1hN?=
+ =?utf-8?B?akZTcE9VaUV3aDhwSWNvSmg5WGFaQU9sZ3ZCbEtNVWhkVmpjOFE1SnZ1ZUJB?=
+ =?utf-8?B?Q2E5Nk01RUVGVmxQelFncXJrZkV6Zko3TmFlcTdtbFgzNk9EVmJqVTYraXow?=
+ =?utf-8?B?cVBLaWhWWEdOK2tlemRyVmhTOW1tUk45M2YvNzFycEpRaFRTMDU0WG1yd1Jz?=
+ =?utf-8?B?SVgvRFdYNTFIS0s1N3pGbnNMTVdBQ2xCemI3VDNvUWFmcmJyNFJwWEhjd1k2?=
+ =?utf-8?B?K1ZJUG9TNFRhSE9CdjZ3L0lBMkxhUHYrTEUyNzI3dW5ER3N0Q1VqNnR5SFJE?=
+ =?utf-8?B?UGhWTUsralh4dUtWdXFGLytuTDk2bG5VV29XNUJkczNObXRYcVpyRDR3V3BM?=
+ =?utf-8?B?c0I5N2JxOW1yaFU5dTkyQWVWM1NoMEVLbDhjNG5mQ1B0ZXh4NGJVZDAyd2Rr?=
+ =?utf-8?B?UmpQaHZ2dm03OFZuc08yN2xUcFJ2Um1lR3U0Y1VyYWx2WVFjUm5ZMGVCTHp2?=
+ =?utf-8?B?V3B2ZzFPdS9pTjF0d1FZZ2tzc3RvOU1lQ01jMXVpcW9jSTFlbG1KYXdsZGdF?=
+ =?utf-8?B?akNESkZBd0dFQTRKOTNTR0kxT05TL1VrY0t4TThFR25sL0ZRdUF6Wmd4c1ps?=
+ =?utf-8?B?TE9VcVp1R1F0SWhoK0QvYlMrWWhBVXd4TjYydkdhTExFa1ROQTFiS29KUURu?=
+ =?utf-8?B?ai9haVMvbGtLVWlYTFFxZU1SNWtHbGdlZDlma2c0eVFMcXhGTFhCbWg5V3ZF?=
+ =?utf-8?B?bnQ2RC9mUmM1eWZqSEIxNUoyN3YyVklLWGNNb2tmS0ZiVGFZcHVjVTRSWjZx?=
+ =?utf-8?B?SkdvU3lUNzFIVWxQMkhEKzI5alpYNlc4WVJmWlcyYllnK1J6TEYrVWR3SHp6?=
+ =?utf-8?B?ZjVIRkQ0eVNxZnJEQVUzT2QvaXFSdTNKVmJRRFhCclFwMEpZZjc3cG53QjQv?=
+ =?utf-8?B?UmxDQ3VRT2VUbmJQVmh6cGFsVGcxUVM3WHhFUDJNWnc4MTN2V3VUOWYzdWVL?=
+ =?utf-8?B?V0FmYzg4Zml0RnhVcjFFbWN6bklmUDUxbFRYK25HYmUwZFJIWkU4bXRuNlF5?=
+ =?utf-8?B?SkE4RkEvV3Nhbm9udTZtTE03VzIwRVNxNXRUemU5Z2h2Sm9Yai9DNElseGRq?=
+ =?utf-8?B?NXJZTE1PcXp6M1pkS25iUTh4YjZKWEd0eXdmNFIzelpyTTdKMld3YUxncTJr?=
+ =?utf-8?B?ajVFWGlzU2o4ZEZNdzREb2JlRGJuQkFMd0RBK3RhQmlKekczZWxGekRaYlVu?=
+ =?utf-8?B?cnlvdkFFM0xLcUZKdmYzRkgrUUI3ZDJ0eUc5dzlYWmU3SGw5eHg2ck9vN3ZD?=
+ =?utf-8?B?NE5OaUFiUVdVd21oZjhReVE1MTFIWkp0VFcwcVlMQXhJQ3lyaHl2T2YrUG5p?=
+ =?utf-8?B?SnpRREdvemNYMEZvRHVHWmcvVXkrUEljNXdmNnhxNHl5c21tTzl3QnR6bWt4?=
+ =?utf-8?B?YUx0YjY2UEVmTU1vNHIyNmg3ejNDaU1vY21Qdm5OM1BteVN0K2JtNiswSklR?=
+ =?utf-8?B?L3ZVckNHV0lNNnlDak1JTGtsMjNtOGU2ekJMbFFkd2ZXdCtlaU9nd2k5cGhr?=
+ =?utf-8?B?WGhoeEVmbTdtSUtUQXcwbXVTNGFYWFpJTXV5dkcwcWkvV3ZPMkp0c1UrM1cz?=
+ =?utf-8?B?MzdpMzlnUWFWaTdnWWJRNGVsQVNNeVJWNHprb09OdytKcmdpdk81OGhXVG9v?=
+ =?utf-8?B?cksvOHZvZlF6aGJTU1N5eC94YUxXeHFYWDB3NzdOZ0lXVElycW4yM1kvNUlU?=
+ =?utf-8?B?VGJIU3RVMDdhMjFyVEJZd2plVng4cmw1bTNGM1NmK2lpSUdtV2E2bWk0Tzh3?=
+ =?utf-8?B?NFE9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <2527D6880A99C34BA9F01C14DB15F80E@apcprd03.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	BENBOlDhV8BUxuNS0XTse1OCkpZIun15isd+7QRob0mXKYeyBacE/YmsPzqLKnFk3jLFNX7tM2S52MReH0VKk5NPD0Ag5sLYOLZAN6ZU0YgGKqmIZlOAewoFr3wyaO6IYYPNr+2eos9M7vOgDQ6k/3PApLMri/mfS9zYth5jNVrv9GHGFEAsRHVR5IGHap/jGmxjJ4j4f0W8YQHn0sV9Cn5a2WWXSJE54eeTkiy0w2Ne3LVFVnJzDZhvK/2RPgPXGOnceu9gBBma0UGXEcVvLzeG28nPyuI+A6AtpTENCP84lsNLUiEoCr88M8bD8ODEc/xr/PYOo7RRYC2NHOpCpB9LCENRBt/CTCElb1spBNrIrljpxarDPUxxnJa7GEPzFfpTKqIDyAH68n2qr1mBGoe9f/RGuLMg2y0k6rsan5VwEPIajkuDij57blupAiqIfYHYkUpSyTG8/cl4XEfpdNo58VytxSdliwKK0aW8s3as7ZOZx+1LfJ3IciQSLi1WqLg7+IWOn/d5P4xVBQObSyLlzvBvim5+b2Izga9wwA6TpfrNLpl12flRYV28e24DccxGYy/XluMaJzDcjkcuK+piT/ik85e4Znfac5wkh+foDMvSZd2yDZzZ3Fwiot9c
-X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bf005329-bd4b-41f3-7a8f-08dc5ad0ee82
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Apr 2024 09:14:18.0783
+X-MS-Exchange-CrossTenant-AuthSource: SI2PR03MB5609.apcprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dcebc092-b58c-457d-c5bc-08dc5ad3817a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Apr 2024 09:32:43.6467
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: uG1g1MP97kqxU+MUiavLRDexaUxkQeTh4TO1+ktrgMKsI+76Wr/P2ZnQTmyWnujIPRP6wdxIS+redyM2TxPKew==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB6313
+X-MS-Exchange-CrossTenant-userprincipalname: x71qNcDbCxn+wP1ExJKulzX3ePUkSX7wnSdOj81jM2530t1R8IhnlifjzkGyD2Z4bkQLM4+CcpvbQ52kmlgbIw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYSPR03MB8670
+X-MTK: N
 
-> Prepare for introducing a new __ufshcd_poll() caller that will need to
-> know whether or not a specific command has been completed.
->=20
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/ufs/core/ufs-mcq.c     | 23 +++++++++++++-------
->  drivers/ufs/core/ufshcd-priv.h |  4 ++--
->  drivers/ufs/core/ufshcd.c      | 39 +++++++++++++++++++++++-----------
->  drivers/ufs/host/ufs-qcom.c    |  2 +-
->  include/ufs/ufshcd.h           |  3 ++-
->  5 files changed, 47 insertions(+), 24 deletions(-)
->=20
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index 228975caf68e..5a02e1b3b3a5 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -268,17 +268,20 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba,
-> struct cq_entry *cqe)
->         return div_u64(addr, ufshcd_get_ucd_size(hba));
->  }
->=20
-> -static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
-> -                                  struct ufs_hw_queue *hwq)
-> +/* Returns true if and only if @compl_cmd has been completed. */
-> +static bool ufshcd_mcq_process_cqe(struct ufs_hba *hba,
-> +                                  struct ufs_hw_queue *hwq,
-> +                                  struct scsi_cmnd *compl_cmd)
->  {
->         struct cq_entry *cqe =3D ufshcd_mcq_cur_cqe(hwq);
-> -       int tag =3D ufshcd_mcq_get_tag(hba, cqe);
->=20
->         if (cqe->command_desc_base_addr) {
-> -               ufshcd_compl_one_cqe(hba, tag, cqe);
-> -               /* After processed the cqe, mark it empty (invalid) entry=
- */
-> +               const int tag =3D ufshcd_mcq_get_tag(hba, cqe);
-> +               /* Mark the CQE as invalid. */
->                 cqe->command_desc_base_addr =3D 0;
-> +               return ufshcd_compl_one_cqe(hba, tag, cqe, compl_cmd);
->         }
-> +       return false;
->  }
-Maybe elaborate on explaining why the tag isn't enough to designate the com=
-pleting command?
-
-Thanks,
-Avri
-
-
-
->=20
->  void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
-> @@ -289,7 +292,7 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba
-> *hba,
->=20
->         spin_lock_irqsave(&hwq->cq_lock, flags);
->         while (entries > 0) {
-> -               ufshcd_mcq_process_cqe(hba, hwq);
-> +               ufshcd_mcq_process_cqe(hba, hwq, NULL);
->                 ufshcd_mcq_inc_cq_head_slot(hwq);
->                 entries--;
->         }
-> @@ -299,8 +302,10 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba
-> *hba,
->         spin_unlock_irqrestore(&hwq->cq_lock, flags);
->  }
->=20
-> +/* Clears *@compl_cmd if and only if *@compl_cmd has been completed. */
->  unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
-> -                                      struct ufs_hw_queue *hwq)
-> +                                      struct ufs_hw_queue *hwq,
-> +                                      struct scsi_cmnd **compl_cmd)
->  {
->         unsigned long completed_reqs =3D 0;
->         unsigned long flags;
-> @@ -308,7 +313,9 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct
-> ufs_hba *hba,
->         spin_lock_irqsave(&hwq->cq_lock, flags);
->         ufshcd_mcq_update_cq_tail_slot(hwq);
->         while (!ufshcd_mcq_is_cq_empty(hwq)) {
-> -               ufshcd_mcq_process_cqe(hba, hwq);
-> +               if (ufshcd_mcq_process_cqe(hba, hwq,
-> +                                          compl_cmd ? *compl_cmd : NULL)=
-)
-> +                       *compl_cmd =3D NULL;
->                 ufshcd_mcq_inc_cq_head_slot(hwq);
->                 completed_reqs++;
->         }
-> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-> index fb4457a84d11..42802fd689fb 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -61,8 +61,8 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum
-> query_opcode opcode,
->  int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
->         enum flag_idn idn, u8 index, bool *flag_res);
->  void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
-> -void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
-> -                         struct cq_entry *cqe);
-> +bool ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
-> +                         struct cq_entry *cqe, struct scsi_cmnd *compl_c=
-md);
->  int ufshcd_mcq_init(struct ufs_hba *hba);
->  int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
->  int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 66198eee51b0..08abdd763c51 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -5540,9 +5540,12 @@ void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
->   * @hba: per adapter instance
->   * @task_tag: the task tag of the request to be completed
->   * @cqe: pointer to the completion queue entry
-> + * @compl_cmd: if not NULL, check whether this command has been
-> completed
-> + *
-> + * Returns: true if and only if @compl_cmd has been completed.
->   */
-> -void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
-> -                         struct cq_entry *cqe)
-> +bool ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
-> +                         struct cq_entry *cqe, struct scsi_cmnd *compl_c=
-md)
->  {
->         struct ufshcd_lrb *lrbp;
->         struct scsi_cmnd *cmd;
-> @@ -5559,6 +5562,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int
-> task_tag,
->                 ufshcd_release_scsi_cmd(hba, lrbp);
->                 /* Do not touch lrbp after scsi done */
->                 scsi_done(cmd);
-> +               return cmd =3D=3D compl_cmd;
->         } else if (lrbp->command_type =3D=3D UTP_CMD_TYPE_DEV_MANAGE ||
->                    lrbp->command_type =3D=3D UTP_CMD_TYPE_UFS_STORAGE) {
->                 if (hba->dev_cmd.complete) {
-> @@ -5569,6 +5573,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int
-> task_tag,
->                         complete(hba->dev_cmd.complete);
->                 }
->         }
-> +       return false;
->  }
->=20
->  /**
-> @@ -5577,12 +5582,15 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba,
-> int task_tag,
->   * @completed_reqs: bitmask that indicates which requests to complete
->   */
->  static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
-> -                                       unsigned long completed_reqs)
-> +                                       unsigned long completed_reqs,
-> +                                       struct scsi_cmnd **compl_cmd)
->  {
->         int tag;
->=20
->         for_each_set_bit(tag, &completed_reqs, hba->nutrs)
-> -               ufshcd_compl_one_cqe(hba, tag, NULL);
-> +               if (ufshcd_compl_one_cqe(hba, tag, NULL,
-> +                                        compl_cmd ? *compl_cmd : NULL))
-> +                       *compl_cmd =3D NULL;
->  }
->=20
->  /* Any value that is not an existing queue number is fine for this const=
-ant. */
-> @@ -5609,7 +5617,8 @@ static void ufshcd_clear_polled(struct ufs_hba *hba=
-,
->   * Return: > 0 if one or more commands have been completed or 0 if no
->   * requests have been completed.
->   */
-> -static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
-> +static int __ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num=
-,
-> +                        struct scsi_cmnd **compl_cmd)
->  {
->         struct ufs_hba *hba =3D shost_priv(shost);
->         unsigned long completed_reqs, flags;
-> @@ -5620,7 +5629,7 @@ static int ufshcd_poll(struct Scsi_Host *shost,
-> unsigned int queue_num)
->                 WARN_ON_ONCE(queue_num =3D=3D
-> UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
->                 hwq =3D &hba->uhq[queue_num];
->=20
-> -               return ufshcd_mcq_poll_cqe_lock(hba, hwq);
-> +               return ufshcd_mcq_poll_cqe_lock(hba, hwq, compl_cmd);
->         }
->=20
->         spin_lock_irqsave(&hba->outstanding_lock, flags);
-> @@ -5637,11 +5646,16 @@ static int ufshcd_poll(struct Scsi_Host *shost,
-> unsigned int queue_num)
->         spin_unlock_irqrestore(&hba->outstanding_lock, flags);
->=20
->         if (completed_reqs)
-> -               __ufshcd_transfer_req_compl(hba, completed_reqs);
-> +               __ufshcd_transfer_req_compl(hba, completed_reqs, compl_cm=
-d);
->=20
->         return completed_reqs !=3D 0;
->  }
->=20
-> +static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
-> +{
-> +       return __ufshcd_poll(shost, queue_num, NULL);
-> +}
-> +
->  /**
->   * ufshcd_mcq_compl_pending_transfer - MCQ mode function. It is
->   * invoked from the error handler context or ufshcd_host_reset_and_resto=
-re()
-> @@ -5685,7 +5699,7 @@ static void
-> ufshcd_mcq_compl_pending_transfer(struct ufs_hba *hba,
->                         }
->                         spin_unlock_irqrestore(&hwq->cq_lock, flags);
->                 } else {
-> -                       ufshcd_mcq_poll_cqe_lock(hba, hwq);
-> +                       ufshcd_mcq_poll_cqe_lock(hba, hwq, NULL);
->                 }
->         }
->  }
-> @@ -6960,7 +6974,7 @@ static irqreturn_t
-> ufshcd_handle_mcq_cq_events(struct ufs_hba *hba)
->                         ufshcd_mcq_write_cqis(hba, events, i);
->=20
->                 if (events & UFSHCD_MCQ_CQIS_TAIL_ENT_PUSH_STS)
-> -                       ufshcd_mcq_poll_cqe_lock(hba, hwq);
-> +                       ufshcd_mcq_poll_cqe_lock(hba, hwq, NULL);
->         }
->=20
->         return IRQ_HANDLED;
-> @@ -7453,7 +7467,7 @@ static int ufshcd_eh_device_reset_handler(struct
-> scsi_cmnd *cmd)
->                             lrbp->lun =3D=3D lun) {
->                                 ufshcd_clear_cmd(hba, pos);
->                                 hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_c=
-md_to_rq(lrbp-
-> >cmd));
-> -                               ufshcd_mcq_poll_cqe_lock(hba, hwq);
-> +                               ufshcd_mcq_poll_cqe_lock(hba, hwq, NULL);
->                         }
->                 }
->                 err =3D 0;
-> @@ -7481,7 +7495,8 @@ static int ufshcd_eh_device_reset_handler(struct
-> scsi_cmnd *cmd)
->                                 __func__, pos);
->                 }
->         }
-> -       __ufshcd_transfer_req_compl(hba, pending_reqs & ~not_cleared_mask=
-);
-> +       __ufshcd_transfer_req_compl(hba, pending_reqs & ~not_cleared_mask=
-,
-> +                                   NULL);
->=20
->  out:
->         hba->req_abort_count =3D 0;
-> @@ -7658,7 +7673,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->                 dev_err(hba->dev,
->                 "%s: cmd was completed, but without a notifying intr, tag=
- =3D %d",
->                 __func__, tag);
-> -               __ufshcd_transfer_req_compl(hba, 1UL << tag);
-> +               __ufshcd_transfer_req_compl(hba, 1UL << tag, NULL);
->                 goto release;
->         }
->=20
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index b3ca9b3bf94b..0598cd8f53dd 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -1704,7 +1704,7 @@ static irqreturn_t ufs_qcom_mcq_esi_handler(int irq=
-,
-> void *data)
->         struct ufs_hw_queue *hwq =3D &hba->uhq[id];
->=20
->         ufshcd_mcq_write_cqis(hba, 0x1, id);
-> -       ufshcd_mcq_poll_cqe_lock(hba, hwq);
-> +       ufshcd_mcq_poll_cqe_lock(hba, hwq, NULL);
->=20
->         return IRQ_HANDLED;
->  }
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 4ba826fe7b62..8fac282e0476 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -1263,7 +1263,8 @@ void ufshcd_mcq_config_mac(struct ufs_hba *hba,
-> u32 max_active_cmds);
->  u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i);
->  void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i);
->  unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
-> -                                        struct ufs_hw_queue *hwq);
-> +                                      struct ufs_hw_queue *hwq,
-> +                                      struct scsi_cmnd **compl_cmd);
->  void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
->  void ufshcd_mcq_enable_esi(struct ufs_hba *hba);
->  void ufshcd_mcq_enable(struct ufs_hba *hba);
+T24gVGh1LCAyMDI0LTA0LTExIGF0IDE3OjAyIC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
+DQo+ICAJIA0KPiBFeHRlcm5hbCBlbWFpbCA6IFBsZWFzZSBkbyBub3QgY2xpY2sgbGlua3Mgb3Ig
+b3BlbiBhdHRhY2htZW50cyB1bnRpbA0KPiB5b3UgaGF2ZSB2ZXJpZmllZCB0aGUgc2VuZGVyIG9y
+IHRoZSBjb250ZW50Lg0KPiAgUHJlcGFyZSBmb3IgaW50cm9kdWNpbmcgYSBuZXcgX191ZnNoY2Rf
+cG9sbCgpIGNhbGxlciB0aGF0IHdpbGwgbmVlZA0KPiB0bw0KPiBrbm93IHdoZXRoZXIgb3Igbm90
+IGEgc3BlY2lmaWMgY29tbWFuZCBoYXMgYmVlbiBjb21wbGV0ZWQuDQo+IA0KPiBTaWduZWQtb2Zm
+LWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJ2YW5hc3NjaGVAYWNtLm9yZz4NCj4gDQoNCkhpIEJhcnQs
+DQoNClBsZWFzZSBhbHNvIGNoYW5nZSB1ZnMtbWVkYXRlay5jIHVmc2hjZF9tY3FfcG9sbF9jcWVf
+bG9jayB1c2FnZS4NCg0KDQpUaGFua3MuDQpQZXRlcg0KDQo=
