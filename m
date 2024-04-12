@@ -1,118 +1,117 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f45.google.com (mail-ot1-f45.google.com [209.85.210.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC94C6AA7;
-	Fri, 12 Apr 2024 02:06:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3571D2EE;
+	Fri, 12 Apr 2024 02:07:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712887570; cv=none; b=lfzVe5HPytpNO1+jfQBnew+nWPzwWLV0ja4xR8QEaUVpwWV97/oyV0tbsz0yhfsWNSqpxmNEEgLAvHuB4xw9UzTwU8l5lW3Tvhf1PWoDMRlHm6WiZWDsCeGFwt9S3iL45yvojpG8z5+SJFKkLZ6CvoYH7+70knn0GVzdlwuAEGo=
+	t=1712887630; cv=none; b=rSbh4AG/nwadUMssYqIakgPByy5oxqd6aFQzKl6drDTD8/ukkZcVRTjutOdXNbQnUxzj4abujlHLF5RmauJSlkjDx5lB3UZw5mt4F96h+K4BQ90WvyFUsGV3NUHDto4FmO2fEMo212Ci9kGYsafWsKxVzauEUprdyuIZwUfDvx8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712887570; c=relaxed/simple;
-	bh=aEoL6rKKCvTLMxooTa5IZCl3dhZS8a58XFdV9z0DRDk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mMrB3BpoRUU5Vk34oyrX8vEipAsBRp+6wNPhQfIcSoIPuvgQd7WHeDY7sapes01uc7YfaPdVYxH6Vnz4vlocDMXkWveBHid+Cj80EG9tvsoFToRwkBv0SUHONA63eZ8mZEwuhs30KndqL0eW13HDyDADbwPVdvu7a1Kvhbwl1t8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=WM+TyW4r; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1712887630; c=relaxed/simple;
+	bh=60BZzF8BNgSsUgTTshvUxN8bG3W4By4BvdyfWmqvgOU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=b+HnRHXOLwtFg6zhOYQSW5oLSLaCOSvZC0ZaIchlqL0RlCEMYq5ACMYZUSwbm46JxhAEYAQC7bX0G5YWwD5ZLV6gn5yH2panuNPFCvgLsscUP99YztcrHEIBI1BhljuwwItVaiZ9+tTW4sqJOUB/hfF6IiGVyboKWfMq/qWWOfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JyGtoZ8t; arc=none smtp.client-ip=209.85.210.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WM+TyW4r"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43C1U0UE014810;
-	Fri, 12 Apr 2024 02:05:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2023-11-20;
- bh=xwYRaxiFWquBhWbskhSYaTqpZAhykH/cmH/6Jc6WzHQ=;
- b=WM+TyW4raQ4ya05K8XioeGRjSwNLzM5SPPG5vRPDFIIq+Y7e5b1/uDFw1uDb5yonfTJB
- hRbcW99ZiLAHZRtDZw01OCuDeIfyqV+00NDqVtOk+sEpRiuom/j65WHj9PCcICjECoHm
- EPa1rXY/2bycPOpse3Uv4oY9EDRe3VM3jgy61jty7GW5/BnXrbu2lCZHT+HNjPXz2RrE
- UAMeSZh0/XsZl3fnCMgPZv6jrCbtFeIKRju9cZChQXIneKbXu2piSp4aQ6KvGc2Z+Kg/
- YYspAeRaHJCR3NtaF5mKXMeiXmYBR2GQcv4eYYnQkJAOHK3f5kesD3Fy069SwqrY2SYl OA== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xax9baq80-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 12 Apr 2024 02:05:35 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 43C01jPY040068;
-	Fri, 12 Apr 2024 02:05:33 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3xavugmd3k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 12 Apr 2024 02:05:33 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 43C25UFs013100;
-	Fri, 12 Apr 2024 02:05:33 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3xavugmd1x-7;
-	Fri, 12 Apr 2024 02:05:33 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Doug Gilbert <dgilbert@interlog.com>, Sagi Grimberg <sagi@grimberg.me>,
-        Max Gurtovoy <mgurtovoy@nvidia.com>, linux-rdma@vger.kernel.org,
-        target-devel@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>, Jonathan Corbet <corbet@lwn.net>,
-        linux-doc@vger.kernel.org
-Subject: Re: [PATCH 0/8] scsi: documentation: clean up docs and fix kernel-doc
-Date: Thu, 11 Apr 2024 22:05:14 -0400
-Message-ID: <171288602656.3729249.13953839600529757224.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20240408025425.18778-1-rdunlap@infradead.org>
-References: <20240408025425.18778-1-rdunlap@infradead.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JyGtoZ8t"
+Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-6ea0db2727bso288707a34.2;
+        Thu, 11 Apr 2024 19:07:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1712887628; x=1713492428; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=BI/E4xZpsZgGvOK+0fbls7pB8r+Eacn0LRNQzVubPRc=;
+        b=JyGtoZ8tzMgcZ/c1/p3IL09+AucJjzExFIQySIwGPeZbvX8ZIWUqX8oR+pupBCEpaM
+         BG8Cmx71V68pwMrGJqysTqeXOn9IBnfhYrL5FZqhpUv9laG25LIO9U3GpV9PMD9DOj9o
+         h+CtW7LUR74nNDCYukmYyO8o/vvl22rkZfOeWDpn7Gm7b09zijq5oi8C97Z9n7VF4JEy
+         ELnT46BTL+VbB7sOjAG/CbtOGMFuHvKbbwvgW+K4y8gucE1fSaLSRBYcGPPTiV9fQatq
+         SwcOuNP02BPEEAhK0g8VkDd5JqsaAf6WhLi+zsGRHSOBLM/5z1jF2oL0GAfV7qhrmZn/
+         ASsA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712887628; x=1713492428;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=BI/E4xZpsZgGvOK+0fbls7pB8r+Eacn0LRNQzVubPRc=;
+        b=h1p8cR9csLQMfgK+91sHAV7ksxx/cc5Cid7JMAZmTsV86OIHGGXoEBbXizmP4p4Odx
+         iF8hA+PVtYUfZp50RklQPCpHtt9cKsYuwRzqshMi3Z6LVQecHS+NE+wTbHCyQXj7wpK0
+         Lg0PywqSm9mBTaJHe2QqiklJ7pgDob/KA0Ifc7NSPpEDmJdYujMUqxhyO/frSJNDUtVQ
+         f7Efsl7VyzT/IG5xJhapxNXuu7tLI7j28GkabNYYBNbEXezD8tuoKDsLyFVkgVbDIcEo
+         MRd+bZoRxSj0lkfoCv8jaklINeb8Si4yefPIPZfNnmp+87LdrTr7I1tHEol9xhkUjRNp
+         xIHQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVpi7yeLeUOLm/DgHhq9xxtbUq13N8gaIN6WE6cVR8mqBS/h9hW/RCZJTocc5vZznPGL+8VBY04iZJU3eRvoiZx0MZDCD8vV3leZfJPO56KQ8tj0abos+LvJWR+52VHpYXCb7FtAZGbsw==
+X-Gm-Message-State: AOJu0Ywtwoe2kvo5XsTeP/37F9kh5x9pFFK44BmQ2GqQp/KWX/bi8Alu
+	1OvAn6jd7stU9qCtGBUZkv2XOLhp2q4OJXaGEctZE8n8fWnW+uPRRTcUL2M+8fk=
+X-Google-Smtp-Source: AGHT+IGD1Sj1bKaeH5/O/xGy5IGnCY8RQ9f3vi5uEHbe/PSg7XznxaGVbElrhYXXN8TP1t5MUScWIw==
+X-Received: by 2002:a05:6830:1311:b0:6eb:5c07:5098 with SMTP id p17-20020a056830131100b006eb5c075098mr587399otq.4.1712887627713;
+        Thu, 11 Apr 2024 19:07:07 -0700 (PDT)
+Received: from [0.0.0.0] (74.211.104.32.16clouds.com. [74.211.104.32])
+        by smtp.gmail.com with ESMTPSA id bx33-20020a056a02052100b005f0bc6d04adsm1492781pgb.46.2024.04.11.19.07.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 11 Apr 2024 19:07:07 -0700 (PDT)
+Message-ID: <2c1a070d-7595-4a7b-a234-99e2c56d801f@gmail.com>
+Date: Fri, 12 Apr 2024 10:07:01 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-04-11_14,2024-04-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 mlxlogscore=999
- bulkscore=0 suspectscore=0 adultscore=0 spamscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2404010000
- definitions=main-2404120014
-X-Proofpoint-GUID: L0F8yIw-Iyir1sXCL4c_lfKYTx4PnGg0
-X-Proofpoint-ORIG-GUID: L0F8yIw-Iyir1sXCL4c_lfKYTx4PnGg0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 0/3] SCSI: Fix issues between removing device and error
+ handle
+To: Wenchao Hao <haowenchao2@huawei.com>,
+ "James E . J . Bottomley" <jejb@linux.ibm.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240307144311.73735-1-haowenchao2@huawei.com>
+Content-Language: en-US
+From: Wenchao Hao <haowenchao22@gmail.com>
+In-Reply-To: <20240307144311.73735-1-haowenchao2@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Sun, 07 Apr 2024 19:54:17 -0700, Randy Dunlap wrote:
-
-> Clean up some SCSI doc files and fix kernel-doc in 6 header files in
-> include/scsi/.
+On 2024/3/7 22:43, Wenchao Hao wrote:
+> I am testing SCSI error handle with my previous scsi_debug error
+> injection patches, and found some issues when removing device and
+> error handler happened together.
 > 
+> These issues are triggered because devices in removing would be skipped
+> when calling shost_for_each_device().
 > 
->  [PATCH 1/8] scsi: documentation: clean up overview
->  [PATCH 2/8] scsi: documentation: clean up scsi_mid_low_api.rst
->  [PATCH 3/8] scsi: core: add kernel-doc for scsi_msg_to_host_byte()
->  [PATCH 4/8] scsi: iser: fix @read_stag kernel-doc warning
->  [PATCH 5/8] scsi: libfcoe: fix a slew of kernel-doc warnings
->  [PATCH 6/8] scsi: core: add function return kernel-doc for 2 functions
->  [PATCH 7/8] scsi: scsi_transport_fc: add kernel-doc for function return
->  [PATCH 8/8] scsi: scsi_transport_srp: fix a couple of kernel-doc warnings
+
+Friendly ping...
+
+
+> The issues are found:
+> 1. statistic info printed at beginning of scsi_error_handler is wrong
+> 2. device reset is not triggered
 > 
-> [...]
+> V4:
+>  - Remove the forth patch which fix IO hang when device removing
+>    becaust the issue is fixed by commit '6df0e077d76bd (scsi: core:
+>    Kick the requeue list after inserting when flushing)'
+> 
+> V3:
+>   - Update patch description
+>   - Update comments of functions added
+> 
+> V2:
+>   - Fix IO hang by run all devices' queue after error handler
+>   - Do not modify shost_for_each_device() directly but add a new
+>     helper to iterate devices but do not skip devices in removing
+> 
+> Wenchao Hao (3):
+>   scsi: core: Add new helper to iterate all devices of host
+>   scsi: scsi_error: Fix wrong statistic when print error info
+>   scsi: scsi_error: Fix device reset is not triggered
+> 
+>  drivers/scsi/scsi.c        | 46 ++++++++++++++++++++++++++------------
+>  drivers/scsi/scsi_error.c  |  4 ++--
+>  include/scsi/scsi_device.h | 25 ++++++++++++++++++---
+>  3 files changed, 56 insertions(+), 19 deletions(-)
+> 
 
-Applied to 6.10/scsi-queue, thanks!
-
-[1/8] scsi: documentation: clean up scsi_mid_low_api.rst
-      https://git.kernel.org/mkp/scsi/c/c3bf7774fa24
-[2/8] scsi: documentation: clean up overview
-      https://git.kernel.org/mkp/scsi/c/293fcea539b5
-[3/8] scsi: core: add kernel-doc for scsi_msg_to_host_byte()
-      https://git.kernel.org/mkp/scsi/c/fcf8829fd993
-[4/8] scsi: iser: fix @read_stag kernel-doc warning
-      https://git.kernel.org/mkp/scsi/c/11d99e91846a
-[5/8] scsi: libfcoe: fix a slew of kernel-doc warnings
-      https://git.kernel.org/mkp/scsi/c/d9c911824145
-[6/8] scsi: core: add function return kernel-doc for 2 functions
-      https://git.kernel.org/mkp/scsi/c/8d523f0f5383
-[7/8] scsi: scsi_transport_fc: add kernel-doc for function return
-      https://git.kernel.org/mkp/scsi/c/007c04e53526
-[8/8] scsi: scsi_transport_srp: fix a couple of kernel-doc warnings
-      https://git.kernel.org/mkp/scsi/c/a2530eb748ff
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
