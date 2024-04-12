@@ -1,48 +1,48 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2D76199B0;
-	Fri, 12 Apr 2024 22:41:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47A67225D7;
+	Fri, 12 Apr 2024 22:49:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712961707; cv=none; b=Sy2DUGMkKZz3aV5dObPTj/7A7yV1PXwfqM1G/h8yUwd4RluhfCmxUvLryDff2mt233IprhjdGVxUrjkaKhetMyTghM9Ge858d9Ruq6MrGYYTYqaPCgpp+lbIfJoVV+0SwCt333MtuWTgZbbySWH843dNkws8DK98/uELrz0ij5A=
+	t=1712962173; cv=none; b=ZU6627XWmPu5P8IDw6/lvXKOJq1FlOQGnFVa5UyRCrS78RaVYJd26FtiDOADHtLCI44iNfLpvRwqQWjx9qFap45FfS/aJoku9AcTPUgVNWQaYARxrLJX47kbII0nW5oB0ipUrdnMGQ4LG/0Awse5yQMOlDXE2vjWZtZbGPTuics=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712961707; c=relaxed/simple;
-	bh=d01sFWMNY6a5XivqzMMU563V1spLodoyo8ZrymDB7ZA=;
+	s=arc-20240116; t=1712962173; c=relaxed/simple;
+	bh=/jT/AmCpsrHeiPRDhEexKpZTtbNP+mUYlC8O4cRo/vk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eYkA/Fl3c0gJ480tQ/iGzg/Jsm7CFMJarmvP/525HJ8Kdajc1PhxeEBM9dr2lKr1qVSh1o/xzVR93ajBquLqgz6l33KnNvAkSuEOkdl7cMRad4YFjezIU1cVWJIh9ikXPjTbVNEUysMqx2pOO1jpNXiPjJIqtrs1dvkMzAp2AUg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Vh1cDWep; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=Rv3zYxjF7Rad4QLYfnefGy4F293RzMVxfDiDIlVXWZ71KEb1Xazoqsf/RxYCi7cdkHY9b4/V080eboNcidN6nTYb3IUwBwpKpHrYK7oL3IPHk+07gGdTwQ6AIyd2dauR5EJnKj+pHp052Hbjm51qpUDTyXnQYZURCC3kukgsxNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=AHMttIcm; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Vh1cDWep"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="AHMttIcm"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VGWl741yKz6Cnk8t;
-	Fri, 12 Apr 2024 22:41:39 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VGWwB4QbQz6Cnk8t;
+	Fri, 12 Apr 2024 22:49:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1712961697; x=1715553698; bh=fYguIvZmJIb2TUXHYrG6frK4
-	BRkxztbHQmXUidBOhRk=; b=Vh1cDWep0/G7QfcgRWMqwgStJR7BcFauTD0vOpGu
-	5L/n4QLowlIL/OTIcOHV917C0ToI1xhV5Mng7RyzttDMXEOUg+jiWxHB7ZIhtr1G
-	php3JEqSm+PSXQw8BPIyFZMXQ1CqORLs2nsAQQOs3TXHXi5nOI1vyvcnR/m9hUsU
-	gNHYDRjahRMt52WlWLRH/K1c9WcjNl9FxNjMeeE7wAQiJDE/snYknrOHoMa7nT8A
-	KI4zRFh0I18I2jTBHvoSr3DADEXqhFPAMPuo2aUKLO+xH0yQtOaRthqmJ6C7iOtn
-	vCbdLP2jmynnHAJ+aiNF53hKJzz0WaMCsSLBMnAh8offUA==
+	 s=mr01; t=1712962166; x=1715554167; bh=czbZbnWbOnnHwe4/SxmmZnUf
+	rVFJbZlvz64gCqIYWi4=; b=AHMttIcmjmw0T39PNhphPSj+4P1PjotE5mhXPaYm
+	AUtDNwHzyNOSpyerjkghvZrXc4Ul3vedUQq+G8hZ/HgS66uguilOhJAquPG8RFTj
+	3fS5c9dP6ahi8fI6JPyV4FF/2jeOOya3HlwAHk+/U1XQtt5jo0lsPtiQIU4YbC9T
+	QdXKajd2mWFwgkc0rZ0E3BJzwvOXaODWDNpMGKaV7Dmf22+rCyZQvpVfGzMAFPWc
+	pC9vSm/5sMqMXmd28KoJ0TXsX9RrPSrTsFfyc5EZmEfIogJc1W240XIwsUjwciPH
+	cQJhoGlHjGbMs13kS8wOPmG1r2TmO6tvvOebGHbpyVkpZA==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id KkPfYSOjsqdc; Fri, 12 Apr 2024 22:41:37 +0000 (UTC)
+ id iI0JBVcoaPHh; Fri, 12 Apr 2024 22:49:26 +0000 (UTC)
 Received: from [192.168.3.219] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VGWl52XbVz6Cnk8m;
-	Fri, 12 Apr 2024 22:41:36 +0000 (UTC)
-Message-ID: <37519dbb-ea60-49f8-a77b-4109cf616ed1@acm.org>
-Date: Fri, 12 Apr 2024 15:41:35 -0700
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VGWw540GXz6Cnk8m;
+	Fri, 12 Apr 2024 22:49:25 +0000 (UTC)
+Message-ID: <2ab31b48-5f89-4ada-848d-89b844f6a6f5@acm.org>
+Date: Fri, 12 Apr 2024 15:49:24 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,22 +50,64 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: sd: Only print updates to permanent stream count
-To: John Garry <john.g.garry@oracle.com>, jejb@linux.ibm.com,
- martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240412094407.496251-1-john.g.garry@oracle.com>
+Subject: Re: [Bug] UBSAN: shift-out-of-bounds in sg_build_indirect
+To: Sam Sun <samsun1006219@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com, jejb@linux.ibm.com, dgilbert@interlog.com,
+ syzkaller@googlegroups.com, xrivendell7@gmail.com
+References: <CAEkJfYOs-szTK0rYvDw5UNGfzbTG_7RvjqFOZA=c6LXvxdUt2g@mail.gmail.com>
+ <CAEkJfYMcdmXAhe9oTpEPGL+_661PNAvM58Y+irwnbLW8FKohNw@mail.gmail.com>
+ <2d5e3b6c-3a66-4f74-8367-51fa55bf0a1a@acm.org>
+ <CAEkJfYMcLycLfaRzhn=DmQjAuLHn29wSXN0b0Zf0oJr=sDVBTg@mail.gmail.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240412094407.496251-1-john.g.garry@oracle.com>
+In-Reply-To: <CAEkJfYMcLycLfaRzhn=DmQjAuLHn29wSXN0b0Zf0oJr=sDVBTg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 4/12/24 2:44 AM, John Garry wrote:
-> Just rescanning a partition causes a print similar to the following to
-> appear:
-> [    1.484964] sd 0:0:0:0: [sda] permanent stream count = 5
-> 
-> This is bothersome, so only print this message for an update.
+On 4/10/24 6:17 PM, Sam Sun wrote:
+> On Wed, Apr 10, 2024 at 12:59=E2=80=AFAM Bart Van Assche <bvanassche@ac=
+m.org> wrote:
+>>
+>> On 4/9/24 05:51, Sam Sun wrote:
+>>> We further analyzed the root cause of this bug. In function
+>>> sg_build_indirect of drivers/scsi/sg.c, variable order of line 1900 i=
+s
+>>> calculated out using get_order(num), and num comes from
+>>> scatter_elem_sz. If scatter_elem_sz is equal or below zero, the order
+>>> returned will be 52, so that PAGE_SHIFT + order is 64, which is large=
+r
+>>> than 32 bits int range, causing shift-out-of bound. This bug is teste=
+d
+>>> and still remains in the latest upstream linux (6.9-rc3).
+>>> If you have any questions, please contact us.
+>>
+>> Thank you for having root-caused this issue and also for having shared
+>> your root-cause analysis. Do you perhaps plan to post a patch that fix=
+es
+>> this issue?
+>=20
+> Sure, I am glad to help! But it is my first time submitting a patch, I
+> need to find some instructions. I would appreciate if you could help
+> me out. Also, I need to double check the patch to avoid introducing a
+> new one. It might take some time.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+The process for contributing a patch is as follows:
+1. Clone the Linux kernel tree for the subsystem you want to contribute
+    to. For SCSI, this is the for-next branch in
+    git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+2. Make your changes to the code.
+3. Commit your changes (git commit -as), chose a patch title and explain
+    what has been changed and also why.
+4. Convert your changes into a patch, e.g. by running this command:
+      git format-patch -1
+5. Check the patch with scripts/checkpatch.pl.
+6. Send your patch with git send-email to Martin Petersen and Cc the
+    linux-scsi mailing list.
+
+More information is available here:
+https://docs.kernel.org/process/submitting-patches.html
+
+Best regards,
+
+Bart.
