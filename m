@@ -1,60 +1,48 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E714E18E1D;
-	Sun, 14 Apr 2024 20:50:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FB994A24
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Apr 2024 01:33:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713127829; cv=none; b=IdRXfZGti5F40Sw9Fx5EI5/7wL1FmtESzl05rLJzYhpKIV62wbOoyqaq9l2ACQCKXPXNYC6ai0Tqw9TeLUAyz6mlLfuEHUv0iYPUkwjTKDAvAXttYOjzUASRYKIej5cMNGmf1ZonsAV4xk3dFX8RO8ahksvYYE68IgLuwV8NXwk=
+	t=1713144806; cv=none; b=UTkQ4v+Qft186noSnCJJHEdLXNidXtJhb2ZiMqnacj6Chxrqgu8XVYHiUCjs7zz8ZxlOPsBKugrQhi2o9ZOirdnPFUnmg3ZtkFhmlApmT7WgotYuRrTFnNDAKlS8T0bPTQHGlLJvfGxS9g3lCEuwv7d3CoOAc6+cAHaMAdRy+uo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713127829; c=relaxed/simple;
-	bh=F4vbb1SRBmgpVZuLjWS+M3TEdCeLFcPYBYURh/MbXT0=;
+	s=arc-20240116; t=1713144806; c=relaxed/simple;
+	bh=F2rIAoTp54Qmq7emZuYcIm67C5QoCkZGgLnae8WK4zc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Mc+exxCff8uAxzVsfms1bpHhD+gtrdzaTw8LUONsKi8xVdZajzJEdyTnXFEi4jXqpnjeV2vJWh9NEfPPlEke5oIzq8kA0Vak4fnZ2sbjAzjWxSiAN8751zo+AyzIxo3SSAiWyRcqMVWWYfK2qdYybbDNE/gR5pQAVm2l9wd74Xk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PtLHbReA; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=kTq8Su2ySmDPXuxB7SWSTVotAl86aM6BOrO8KD2tLsMiAh+zlY/GlCfgbTxJ27e2Wd4ox4gYTCTzbMqaT9+h+L4IjzMASyt4xd9tQNkX7cZjyTr7IdtQxZiPES7z0g+wFTDqtn+tSWQVL0WnUesAU45roBoyJI8uCbOrTa//qhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SpddOXyP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PtLHbReA"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Fsqo+TcihzvYrlHKzsufMdVp0+RBP5LCcQAVZASLf7k=; b=PtLHbReA2YowMxzMDhLrmIA2MJ
-	yJYbXJQ0ZbYLQ/SMNhgGTcDpPfRZkAI6xThUkPM1wevXaJ7rbvA4AFVvUeDD2joY6ZUCHJixCmCkY
-	MtEJo+KT6LUT2oeZUpWWvQI56Tf3GWsYHPZC0y3thYyQsc4k8zFKAALCBBtX1nj08Tcjt934Qn5aX
-	IQBVwS55vs5QwynPLaqOgWi+bNbOwhZlCW1uLtVUmtpsSsoROR/XJVSnkNDkIxnmmyET8yFI9D7Ao
-	CAQnNJFsm/ei3C4lwrxQUPQXwOKDDNL9R21DHi4SjGA0B05DcPMAs9lPAxPMAgoT1j5Z+as759b6W
-	g95FC3eg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rw6no-00000006NUn-3vr6;
-	Sun, 14 Apr 2024 20:50:17 +0000
-Date: Sun, 14 Apr 2024 13:50:16 -0700
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: John Garry <john.g.garry@oracle.com>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier.gonz@samsung.com>,
-	axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
-	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-	io-uring@vger.kernel.org, nilay@linux.ibm.com,
-	ritesh.list@gmail.com
-Subject: Re: [PATCH v6 00/10] block atomic writes
-Message-ID: <ZhxBiLSHuW35aoLB@bombadil.infradead.org>
-References: <20240326133813.3224593-1-john.g.garry@oracle.com>
- <ZgOXb_oZjsUU12YL@casper.infradead.org>
- <c4c0dad5-41a4-44b4-8f40-2a250571180b@oracle.com>
- <Zg7Z4aJtn3SxY5w1@casper.infradead.org>
- <f3c1d321-0dfc-466f-9f6a-fe2f0513d944@oracle.com>
- <ZhQud1NbO4aMt0MH@bombadil.infradead.org>
- <ZhYQANQATz82ytl1@casper.infradead.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SpddOXyP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B97BEC072AA;
+	Mon, 15 Apr 2024 01:33:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713144805;
+	bh=F2rIAoTp54Qmq7emZuYcIm67C5QoCkZGgLnae8WK4zc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=SpddOXyPm6hBrY/qUsoG+sbj1n9P4L3IKjXgGybPNI5dQWv8bOFhvpk9TkmBOnWMU
+	 845RO2pJBgWiWQMh0UYp1I9r2zxWmJPdQ7qMCDswwCnkg623LMgdrC1zPPBgKAtd3s
+	 Smy2AByQYqaFb5CjSbilJrRGMtDR2tsOpk2vTCuvOTgdluANXv/YVmMg9teC7BjpNs
+	 VGq+9v5bUv/FvTu/lr9KeSMxpxDx6ZcXmjhdegbTx4a9Vt0BYltmlixTsCqBFaJTjk
+	 kKttFBMl55sIvJkUI1tJ6aFsaLDWCn/H+Rs98iFCoeIRsIl8fIKq0ARHqCxh6UFy4C
+	 BMHIn1xc0NpQw==
+Date: Sun, 14 Apr 2024 20:33:21 -0500
+From: Bjorn Andersson <andersson@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
+	Peter Wang <peter.wang@mediatek.com>, Konrad Dybcio <konrad.dybcio@linaro.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Stanley Jhu <chu.stanley@gmail.com>, 
+	Can Guo <quic_cang@quicinc.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
+	Po-Wen Kao <powen.kao@mediatek.com>, ChanWoo Lee <cw9316.lee@samsung.com>, 
+	Yang Li <yang.lee@linux.alibaba.com>, Keoseong Park <keosung.park@samsung.com>, 
+	zhanghui <zhanghui31@xiaomi.com>, Bean Huo <beanhuo@micron.com>, 
+	Maramaina Naresh <quic_mnaresh@quicinc.com>, Akinobu Mita <akinobu.mita@gmail.com>, 
+	Avri Altman <avri.altman@wdc.com>
+Subject: Re: [PATCH] scsi: ufs: Remove .get_hba_mac()
+Message-ID: <ozm4y6q7r7ikwrtffgslxvw45ok625r5gjvdbgiyegrzavd2xe@45jyef4lfp4b>
+References: <20240412174158.3050361-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -63,47 +51,24 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZhYQANQATz82ytl1@casper.infradead.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <20240412174158.3050361-1-bvanassche@acm.org>
 
-On Wed, Apr 10, 2024 at 05:05:20AM +0100, Matthew Wilcox wrote:
-> On Mon, Apr 08, 2024 at 10:50:47AM -0700, Luis Chamberlain wrote:
-> > On Fri, Apr 05, 2024 at 11:06:00AM +0100, John Garry wrote:
-> > > On 04/04/2024 17:48, Matthew Wilcox wrote:
-> > > > > > The thing is that there's no requirement for an interface as complex as
-> > > > > > the one you're proposing here.  I've talked to a few database people
-> > > > > > and all they want is to increase the untorn write boundary from "one
-> > > > > > disc block" to one database block, typically 8kB or 16kB.
-> > > > > > 
-> > > > > > So they would be quite happy with a much simpler interface where they
-> > > > > > set the inode block size at inode creation time,
-> > > > > We want to support untorn writes for bdev file operations - how can we set
-> > > > > the inode block size there? Currently it is based on logical block size.
-> > > > ioctl(BLKBSZSET), I guess?  That currently limits to PAGE_SIZE, but I
-> > > > think we can remove that limitation with the bs>PS patches.
-> > 
-> > I can say a bit more on this, as I explored that. Essentially Matthew,
-> > yes, I got that to work but it requires a set of different patches. We have
-> > what we tried and then based on feedback from Chinner we have a
-> > direction on what to try next. The last effort on that front was having the
-> > iomap aops for bdev be used and lifting the PAGE_SIZE limit up to the
-> > page cache limits. The crux on that front was that we end requiring
-> > disabling BUFFER_HEAD and that is pretty limitting, so my old
-> > implementation had dynamic aops so to let us use the buffer-head aops
-> > only when using filesystems which require it and use iomap aops
-> > otherwise. But as Chinner noted we learned through the DAX experience
-> > that's not a route we want to again try, so the real solution is to
-> > extend iomap bdev aops code with buffer-head compatibility.
+On Fri, Apr 12, 2024 at 10:41:29AM -0700, Bart Van Assche wrote:
+> Simplify the UFSHCI core and also the UFSHCI host drivers by removing
+> the .get_hba_mac() callback and by reading the NUTRS register field
+> instead.
 > 
-> Have you tried just using the buffer_head code?  I think you heard bad
-> advice at last LSFMM.  Since then I've landed a bunch of patches which
-> remove PAGE_SIZE assumptions throughout the buffer_head code, and while
-> I haven't tried it, it might work.  And it might be easier to make work
-> than adding more BH hacks to the iomap code.
 
-I have considered it but the issue is that *may work* isn't good enough and
-without a test plan for buffer-heads on a real filesystem this may never
-suffice. Addressing a buffere-head iomap compat for the block device cache
-is less error prone here for now.
+This quite clearly states that the change is merely a cleanup. Can you
+confirm that (capabilities & 0xff) + 1 read back as 64 on both Mediatek
+and Qualcomm platforms? Such that this indeed is merely a cleanup...
 
-  Luis
+If not, please split the change in two; one that drops the callback in
+favor of always using MAX_SUPP_MAC, and a separate change that instead
+reads the value back.
+
+
+Please provide a clear problem description in your commit messages.
+
+Regards,
+Bjorn
