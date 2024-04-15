@@ -1,135 +1,152 @@
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70B79179AE;
-	Mon, 15 Apr 2024 03:14:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6B10225DA
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Apr 2024 07:22:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713150874; cv=none; b=dcpz63KQq+1vzIh3IxjwFwlX+rBE4X1LRp933up0VD7Wx4PkWhmPqCUp7dNf0prZ4rI5Ojfo1ncFHuIwHU7zc1hsWY4ZQ7rmfsld2L71Q+kmXyoo6U+a/0BkvcfCC9gFZyr6jYGn/Cquh7rPA698QGhqLll3+dkgzqNYWK/95Ok=
+	t=1713165736; cv=none; b=VLHfh8nqIQtp+vo7BxVU82XfVp7gKgLu04CRCc4a3eKorbjIQ0ypWB9r6Z4/DeJRw7vSIXzjE5RLCwovNuOfRqOmdiW7m90w2Zy14VvCf8K7Qnk1KHKY1j9aE2rfqE6eZQlqYWxx2yLXxyEjroQ5HOBk3JDEPyhmbcT59muuOIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713150874; c=relaxed/simple;
-	bh=lHw0gdEyiCY7Mi3sAPf1DuaLoh7gDBT5neXVCqv7pTY=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=twFtjSadjmYAok5oV6BSu0T6b7TeTATwDp+Pn3wh8R9YDkGZfXLKM4FTSMyfpwNXwJ+0mxP/v9Ms//tpT2aIjFVd0C07sJEnu+92Ep/N1MmjMu/GhP1gntjJK3L3eqXlKZ/f+Vu7B5mcs0Ta6JFZW5VrUHiD7ZONehWt2e5H7us=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nFKcCqyj; arc=none smtp.client-ip=209.85.218.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1713165736; c=relaxed/simple;
+	bh=EFWHoK5R9Oc/kFo8qDnbyN07hO5vFWjhVfMCyHiKdIc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=tqzKZPhlmdbTMbomZJEGY0xRX3ZeXYt31WaSbsvzA+EhFA8orObkBrUoIfvAjCJ1kq6ZdiHjt760mrhJCAV5gJ6BdEhBsPEwDHcir/G8euZKAjOYO9/lECU7CRpz0kPhY0Y/M9CK6d3ve0CbRDXxGiUiUOdwiB2zoi3xSg9HSQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=LVV4VXEb; arc=none smtp.client-ip=67.231.156.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nFKcCqyj"
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a4715991c32so341546666b.1;
-        Sun, 14 Apr 2024 20:14:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1713150870; x=1713755670; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=O4EQFEyafzgbhZkzPTOOAT0aiBW1/kDcV3Vy9h4f6bA=;
-        b=nFKcCqyjIyZqkmPa447wIQSAUMPKm9Zk/Ewkz9Sia54cvKkIay8kru/ae3GcSVc1/U
-         5rbG6lUb7IjAT4wiG4j+8z7V0KE/J4VdEBwPLGXkxKPLYJrYbkapOqvKWg0MhKzqCjLq
-         XIvoKG2EgjTcNPGvuChYqWncQcN1/oUaj0TDVcVnxUDePnXRQO6ZfOsl1X1Uiq7pFtOE
-         FIYFHisFWnuAu6O310DVAdZ8FpvjXmaiRmTiItO4VjVHtNA4Tic4NnfW4qmLEKjg5Jmc
-         g6k3xIak6TWM+xvrerHvJzRNZun/bc1HnaziVurHGDvFWSPAX0kpSatwME5jAPCLecza
-         IJ0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713150870; x=1713755670;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=O4EQFEyafzgbhZkzPTOOAT0aiBW1/kDcV3Vy9h4f6bA=;
-        b=k493VXsT8IVbckrqVKxBMNrjJaFGCWwXo3xfiRIXzTSlppcuoYgOyvwg72Mjku/ue2
-         FrSiyWvf9cmRjRO+AHoZ6GZZs2vuHfgp8ovtnY/bkFo3ZM492ZqTKPblDtLShgBKLUBH
-         Le0KF+Tb18ly3mINDiTr5R6ZtLq3H2bx7XqVeCWFvY6FrTHZOoYpawmP2GTnci7EFNNn
-         mUsCnJVBVHmxsbwDcZi+5z0OWZKbcQxaCAT5//cJ7gAG44SlE670Q0oUQJ1H4pqvzqcL
-         rlaXB+JpUnsfRZ57RTjPoABbTdamcfyKxOriQnR/plg3mDg3/V6GTbhIIvPSqsYXss2b
-         fIDg==
-X-Gm-Message-State: AOJu0YyzgmPVmSdzzBmpR1WHGbxmhiWWmqqwgWJGNQ3POp+KpWAnuPhM
-	XjmopLV9Vy4QQ8BK3w9pEkMVm7Pg/uLEIl+8yMOjir/DEa8d8wuZoslNcmt0P7MBwuQvwh0gXlR
-	5l28rmg/a8gHErGMfvXcwYB0HuMo5wu4G084=
-X-Google-Smtp-Source: AGHT+IHlGaESNILMFofR/Zg0+l3dFM0T+xlNWgwdqSRE503ObGRCL3qe3HZc/dQYg1JOWA51ZS1UHqFE1Z5UKW+Po7s=
-X-Received: by 2002:a17:906:6a09:b0:a52:2c4f:7831 with SMTP id
- qw9-20020a1709066a0900b00a522c4f7831mr7038807ejc.4.1713150870233; Sun, 14 Apr
- 2024 20:14:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="LVV4VXEb"
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 43EMoKYM011435;
+	Mon, 15 Apr 2024 00:22:06 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
+	from:to:cc:subject:date:message-id:mime-version
+	:content-transfer-encoding:content-type; s=pfpt0220; bh=SPCgYEq1
+	IjvgPpO/Y4ffADPvnfyRPNcxMC6rW7AJxcY=; b=LVV4VXEbJWW7tcCiLIaZAqk7
+	qZmmZAxbQg59VLkK40H+JmXiKtraVbLfc+OpdCjqkPfkSq62v4NNBXavHCXGdbCk
+	sSECri9gVCEUjn5cfhKXVv6Vfkj0/eWu4COhqp2idjUMvBkP+E4nTv1hX/p6plar
+	uXvIvDTw2o3NSI/ubp1QWsD+2SmqrkJp1rEGR07ghYGXnxBRaQmvCNTpgCDJuaJW
+	Zl29VXsQjnR6yceV0NStxo14g66ScDE2E013GAfPgtLztYwFLHQpO48tiuuiVW92
+	KYv545lHNvAux8WR7Xv7XknW7j6oLwAkhMhXb7LQwLrIB/FnvKh/AqMr1LPGwQ==
+Received: from dc5-exch05.marvell.com ([199.233.59.128])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3xfsjg3nvm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 15 Apr 2024 00:22:06 -0700 (PDT)
+Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
+ DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.4; Mon, 15 Apr 2024 00:22:05 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
+ (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.4 via Frontend
+ Transport; Mon, 15 Apr 2024 00:22:05 -0700
+Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
+	by maili.marvell.com (Postfix) with ESMTP id E030C3F706D;
+	Mon, 15 Apr 2024 00:22:02 -0700 (PDT)
+From: Manish Rangankar <mrangankar@marvell.com>
+To: <martin.petersen@oracle.com>
+CC: <GR-QLogic-Storage-Upstream@marvell.com>, <linux-scsi@vger.kernel.org>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        Martin Hoyer <mhoyer@redhat.com>, John Meneghini <jmeneghi@redhat.com>
+Subject: [PATCH v2] qedi: Fix crash while reading debugfs attribute.
+Date: Mon, 15 Apr 2024 12:51:55 +0530
+Message-ID: <20240415072155.30840-1-mrangankar@marvell.com>
+X-Mailer: git-send-email 2.23.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Sam Sun <samsun1006219@gmail.com>
-Date: Mon, 15 Apr 2024 11:14:18 +0800
-Message-ID: <CAEkJfYNguDt47=KnEUX7tLwx_46ggBx3Oh3-3dAcZxqndL_OWQ@mail.gmail.com>
-Subject: [PATCH] drivers: scsi: fix shift-out-of-bounds in sg_build_indirect
-To: linux-kernel@vger.kernel.org, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, xrivendell7@gmail.com, 
-	Bart Van Assche <bvanassche@acm.org>, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-GUID: BGxhKaeRaI_45qkAncFrVjAnArLQRYmH
+X-Proofpoint-ORIG-GUID: BGxhKaeRaI_45qkAncFrVjAnArLQRYmH
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-15_06,2024-04-09_01,2023-05-22_02
 
-The get_order(0) is undefined. If scatter_elem_sz is equal or below
-zero, the order returned will be 52, so that PAGE_SHIFT + order is 64,
-which is larger than 32 bits int range, causing shift-out-of bound.
-scatter_elem_sz equals or below zero is not allowed in the
-sg_build_indirect().
+The qedi_dbg_do_not_recover_cmd_read() function invokes sprintf()
+directly on a __user pointer, which results into the crash.
 
-UBSAN: shift-out-of-bounds in /home/sy/linux-original/drivers/scsi/sg.c:1902:13
-shift exponent 64 is too large for 32-bit type 'int'
-CPU: 1 PID: 8078 Comm: syz-executor748 Not tainted 6.7.0-rc7 #1
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-1.13.0-1ubuntu1.1 04/01/2014
+To fix this issue, use a small local stack buffer for sprintf() and then
+call simple_read_from_buffer(), which in turns make the copy_to_user()
+call.
+
+BUG: unable to handle page fault for address: 00007f4801111000
+PGD 8000000864df6067 P4D 8000000864df6067 PUD 864df7067 PMD 846028067 PTE 0
+Oops: 0002 [#1] PREEMPT SMP PTI
+Hardware name: HPE ProLiant DL380 Gen10/ProLiant DL380 Gen10, BIOS U30 06/15/2023
+RIP: 0010:memcpy_orig+0xcd/0x130
+RSP: 0018:ffffb7a18c3ffc40 EFLAGS: 00010202
+RAX: 00007f4801111000 RBX: 00007f4801111000 RCX: 000000000000000f
+RDX: 000000000000000f RSI: ffffffffc0bfd7a0 RDI: 00007f4801111000
+RBP: ffffffffc0bfd7a0 R08: 725f746f6e5f6f64 R09: 3d7265766f636572
+R10: ffffb7a18c3ffd08 R11: 0000000000000000 R12: 00007f4881110fff
+R13: 000000007fffffff R14: ffffb7a18c3ffca0 R15: ffffffffc0bfd7af
+FS:  00007f480118a740(0000) GS:ffff98e38af00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f4801111000 CR3: 0000000864b8e001 CR4: 00000000007706e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+PKRU: 55555554
 Call Trace:
  <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x136/0x150 lib/dump_stack.c:106
- ubsan_epilogue lib/ubsan.c:217 [inline]
- __ubsan_handle_shift_out_of_bounds+0x24b/0x430 lib/ubsan.c:387
- sg_build_indirect.cold+0x1b/0x20 drivers/scsi/sg.c:1902
- sg_build_reserve+0xc4/0x180 drivers/scsi/sg.c:2012
- sg_add_sfp drivers/scsi/sg.c:2194 [inline]
- sg_open+0xde4/0x1810 drivers/scsi/sg.c:350
- chrdev_open+0x269/0x770 fs/char_dev.c:414
- do_dentry_open+0x6d3/0x18d0 fs/open.c:948
- do_open fs/namei.c:3622 [inline]
- path_openat+0x1e1e/0x26d0 fs/namei.c:3779
- do_filp_open+0x1c9/0x410 fs/namei.c:3809
- do_sys_openat2+0x160/0x1c0 fs/open.c:1437
- do_sys_open fs/open.c:1452 [inline]
- __do_sys_openat fs/open.c:1468 [inline]
- __se_sys_openat fs/open.c:1463 [inline]
- __x64_sys_openat+0x140/0x1f0 fs/open.c:1463
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0x40/0x110 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x63/0x6b
----[ end trace ]---
+ ? __die_body+0x1a/0x60
+ ? page_fault_oops+0x183/0x510
+ ? exc_page_fault+0x69/0x150
+ ? asm_exc_page_fault+0x22/0x30
+ ? memcpy_orig+0xcd/0x130
+ vsnprintf+0x102/0x4c0
+ sprintf+0x51/0x80
+ qedi_dbg_do_not_recover_cmd_read+0x2f/0x50 [qedi 6bcfdeeecdea037da47069eca2ba717c84a77324]
+ full_proxy_read+0x50/0x80
+ vfs_read+0xa5/0x2e0
+ ? folio_add_new_anon_rmap+0x44/0xa0
+ ? set_pte_at+0x15/0x30
+ ? do_pte_missing+0x426/0x7f0
+ ksys_read+0xa5/0xe0
+ do_syscall_64+0x58/0x80
+ ? __count_memcg_events+0x46/0x90
+ ? count_memcg_event_mm+0x3d/0x60
+ ? handle_mm_fault+0x196/0x2f0
+ ? do_user_addr_fault+0x267/0x890
+ ? exc_page_fault+0x69/0x150
+ entry_SYSCALL_64_after_hwframe+0x72/0xdc
+RIP: 0033:0x7f4800f20b4d
 
-Fix it by setting the minimum num to PAGE_SIZE, and change the type of
-scatter_elem_sz to uint.
-
-Reported-by: Yue Sun <samsun1006219@gmail.com>
-Reported by: xingwei lee <xrivendell7@gmail.com>
-Signed-off-by: Yue Sun <samsun1006219@gmail.com>
+Tested-by: Martin Hoyer <mhoyer@redhat.com>
+Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
 ---
- drivers/scsi/sg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+v2:
+Commit message clean up.
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 9d7b7db75e4b..6199481be585 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1586,7 +1586,7 @@ sg_remove_device(struct device *cl_dev, struct
-class_interface *cl_intf)
-     kref_put(&sdp->d_ref, sg_device_destroy);
+ drivers/scsi/qedi/qedi_debugfs.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/qedi/qedi_debugfs.c b/drivers/scsi/qedi/qedi_debugfs.c
+index 8deb2001dc2f..37eed6a27816 100644
+--- a/drivers/scsi/qedi/qedi_debugfs.c
++++ b/drivers/scsi/qedi/qedi_debugfs.c
+@@ -120,15 +120,11 @@ static ssize_t
+ qedi_dbg_do_not_recover_cmd_read(struct file *filp, char __user *buffer,
+ 				 size_t count, loff_t *ppos)
+ {
+-	size_t cnt = 0;
+-
+-	if (*ppos)
+-		return 0;
++	char buf[64];
++	int len;
+ 
+-	cnt = sprintf(buffer, "do_not_recover=%d\n", qedi_do_not_recover);
+-	cnt = min_t(int, count, cnt - *ppos);
+-	*ppos += cnt;
+-	return cnt;
++	len = sprintf(buf, "do_not_recover=%d\n", qedi_do_not_recover);
++	return simple_read_from_buffer(buffer, count, ppos, buf, len);
  }
-
--module_param_named(scatter_elem_sz, scatter_elem_sz, int, S_IRUGO | S_IWUSR);
-+module_param_named(scatter_elem_sz, scatter_elem_sz, uint, S_IRUGO | S_IWUSR);
- module_param_named(def_reserved_size, def_reserved_size, int,
-            S_IRUGO | S_IWUSR);
- module_param_named(allow_dio, sg_allow_dio, int, S_IRUGO | S_IWUSR);
-@@ -1837,7 +1837,7 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd
-* sfp, int buff_size)
-     if (mx_sc_elems < 0)
-         return mx_sc_elems;    /* most likely -ENOMEM */
-
--    num = scatter_elem_sz;
-+    num = max(scatter_elem_sz, PAGE_SIZE);
-     if (unlikely(num != scatter_elem_sz_prev)) {
-         if (num < PAGE_SIZE) {
-             scatter_elem_sz = PAGE_SIZE;
+ 
+ static int
 -- 
-2.34.1
+2.35.3
+
