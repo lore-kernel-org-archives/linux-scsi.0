@@ -1,79 +1,87 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29D9182D93;
-	Mon, 15 Apr 2024 17:26:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C88FB25601;
+	Mon, 15 Apr 2024 21:18:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713201991; cv=none; b=YXoTpZTEcf85XOW/79ZMGQSfp9DXgg3CXzQURBLOEYyHBuwi+vzi9oba7c7GlGOwTdWg2bMAVxszaDHatkmKRA2wQvV2jPwUz3jFKlxnFMwwfJcy0J7DjmNcZ97KBOJOKL16AGAa0E8lCmtYpiPVbgsehIMUIBEPcfYfmzOmcwY=
+	t=1713215927; cv=none; b=ICTQH6RfwE2lrHU1YC78CNwH2tyXc6TcI5yoAZJ4al6LTbWtVc+c+phf2lpWiZMqK8H2EDHsdamrK8Hao3GDXPl8UKKPjFX3dsj4ke6z+gYlxN6hMoemVBK7W7n8Fo4WKd5Gov/ldS6CKXN0CAUDFVroLoAar/k/wfD2I+twvjI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713201991; c=relaxed/simple;
-	bh=gdtpSZeek4WxRDYyyqJtK/AcbBU0P9+7sC1xniRLlV4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=h63L0EMumDmI9o5Ik1+Jcw7ECysEFOkqV/w4+vGh542iAu6jEd7FAvEjuYXuOEGLfVQIc0KqnapAbyfxypn9g4otqYT3DK+EOYIYYHDK5RGC4xYT3FpsgFTueIAisycA/xnz8Jk0dkB98wnKa5DJmSOMSpRUldTBURe8joxMiXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=o+UJcLmz; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1713215927; c=relaxed/simple;
+	bh=EIMA/Lom4s4J3a8zeR2nuXbkOuAimmCY/e6T8tXxKbQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QAQZfdA0ESSUJFjI7K/EXmRtYcSbObQnArbvU+QX8aZ14ZxoE2f+/vX5boEtGipBI2AfrurQfNggeUsV6Rp+maAQ+OiSnJJXyDvN0VUYRTf98YUcRl4UNKrgSChZ/lVjzQ+xq/hv5Jcdp/7seK/kGTHtIq4cdsfEME5gp+lsSnM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=k1gFawta; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="o+UJcLmz"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4VJDc5485CzlgTHp;
-	Mon, 15 Apr 2024 17:26:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1713201988; x=1715793989; bh=yEI0tBPFIPNtNRdhFblfE9OP
-	YM2lTomLnreEVEQMdKA=; b=o+UJcLmzCjA0xhxvZ7J+CEQqPpOzjv7ohgodgvep
-	gCW5SC/+QL4Ggcg84XY2YPtsc962fU+MA70o/o2oEnd4ja7bQRzB30w04K6uX0oR
-	OnHDkcm5B7l2OdHmunNvnNJjEigxdTNrJqDtOYNs1KLfJWeDFMEIiK5kU0/7KFAw
-	oINbLdpgbLR7dNlsxnxd/AobV61tw1qwU5j2mNU5xSGTjYq+2tw7uv0omxo9YJSv
-	0UwdONM4qfK4keZfJPM9YPwziewUAlRyxARH5nvEGHqR4AB7Cj07iMJb3WYnONFq
-	f91rdUXOTCV9E7Ooq4uTqPrWsYRQP4PDneAiA13F4WLF/Q==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id msOUn97a8RmL; Mon, 15 Apr 2024 17:26:28 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4VJDc31rlczlgTsK;
-	Mon, 15 Apr 2024 17:26:27 +0000 (UTC)
-Message-ID: <48043100-a817-4ca2-a141-60e3ab9cbfef@acm.org>
-Date: Mon, 15 Apr 2024 10:26:26 -0700
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="k1gFawta"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=oq3OSv09Zcq3l/SCWQSioSa37PYcwwKSz6uiDlE9w/E=; b=k1gFawtalSNyx93OW2ft4AbbZm
+	mL+127agePKR7DWE1EgzM8K2Sdu0btd1XQeD8Wzl2tmTNdgWmn92sRrCehFh8u/+qHAagyvQyrV+I
+	wglcZ0HQmPiryp3ay1AfYi9TzgEYQTdT7rPBLPlWeJzkacLKZXrdbwV9HsWzpaSjGI3Si8Mpfr2S0
+	0hiTTpWQOGyNpghwLESRQBYRaWfsk2cg6KJWgLE1zDszdu8yt8sfPIvBeNWyhWxqIe1CYWPFC33pc
+	4OQTnxL2Sln3ZByHLOn89dz27uUzxYSHVKBEuo/ChmtRraFlSsjkqf650IGawzGSeX5oHG74Pa4Vl
+	djp37vKQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rwTig-0000000GWYM-3AgF;
+	Mon, 15 Apr 2024 21:18:30 +0000
+Date: Mon, 15 Apr 2024 22:18:30 +0100
+From: Matthew Wilcox <willy@infradead.org>
+To: Luis Chamberlain <mcgrof@kernel.org>
+Cc: John Garry <john.g.garry@oracle.com>,
+	Pankaj Raghav <p.raghav@samsung.com>,
+	Daniel Gomez <da.gomez@samsung.com>,
+	Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier.gonz@samsung.com>,
+	axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
+	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
+	io-uring@vger.kernel.org, nilay@linux.ibm.com,
+	ritesh.list@gmail.com
+Subject: Re: [PATCH v6 00/10] block atomic writes
+Message-ID: <Zh2ZptLxnwa_jtSk@casper.infradead.org>
+References: <20240326133813.3224593-1-john.g.garry@oracle.com>
+ <ZgOXb_oZjsUU12YL@casper.infradead.org>
+ <c4c0dad5-41a4-44b4-8f40-2a250571180b@oracle.com>
+ <Zg7Z4aJtn3SxY5w1@casper.infradead.org>
+ <f3c1d321-0dfc-466f-9f6a-fe2f0513d944@oracle.com>
+ <ZhQud1NbO4aMt0MH@bombadil.infradead.org>
+ <ZhYQANQATz82ytl1@casper.infradead.org>
+ <ZhxBiLSHuW35aoLB@bombadil.infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] drivers: scsi: fix shift-out-of-bounds in
- sg_build_indirect
-To: Sam Sun <samsun1006219@gmail.com>, linux-kernel@vger.kernel.org,
- martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, xrivendell7@gmail.com,
- syzkaller-bugs@googlegroups.com
-References: <CAEkJfYNguDt47=KnEUX7tLwx_46ggBx3Oh3-3dAcZxqndL_OWQ@mail.gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CAEkJfYNguDt47=KnEUX7tLwx_46ggBx3Oh3-3dAcZxqndL_OWQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZhxBiLSHuW35aoLB@bombadil.infradead.org>
 
-On 4/14/24 20:14, Sam Sun wrote:
-> -    num = scatter_elem_sz;
-> +    num = max(scatter_elem_sz, PAGE_SIZE);
+On Sun, Apr 14, 2024 at 01:50:16PM -0700, Luis Chamberlain wrote:
+> On Wed, Apr 10, 2024 at 05:05:20AM +0100, Matthew Wilcox wrote:
+> > Have you tried just using the buffer_head code?  I think you heard bad
+> > advice at last LSFMM.  Since then I've landed a bunch of patches which
+> > remove PAGE_SIZE assumptions throughout the buffer_head code, and while
+> > I haven't tried it, it might work.  And it might be easier to make work
+> > than adding more BH hacks to the iomap code.
+> 
+> I have considered it but the issue is that *may work* isn't good enough and
+> without a test plan for buffer-heads on a real filesystem this may never
+> suffice. Addressing a buffere-head iomap compat for the block device cache
+> is less error prone here for now.
 
-Shouldn't the following statements be modified instead of the above
-statement? I think these are the only statements that can cause
-scatter_elem_sz to become smaller than PAGE_SIZE:
+Is it really your position that testing the code I already wrote is
+harder than writing and testing some entirely new code?  Surely the
+tests are the same for both.
 
-	scatter_elem_sz = ret_sz;
-	scatter_elem_sz_prev = ret_sz;
-
-Thanks,
-
-Bart.
+Besides, we aren't talking about a filesystem on top of the bdev here.
+We're talking about accessing the bdev's page cache directly.
