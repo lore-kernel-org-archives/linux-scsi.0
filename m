@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 248E174C0C;
-	Mon, 15 Apr 2024 13:00:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C68E57317F;
+	Mon, 15 Apr 2024 13:00:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713186022; cv=none; b=THYw4CGR0Ic9HsXYKMjBWX3WUfJK8HqECUSNS9OgvOOonWLEXsbeR5eE4k4rFaJGFm/InfKk6ZHeKcLZvnePvO/zKOtlGQKDSPxKBtSop8ke653tOMyqMDDmBc7QJYcSVnFafVG0FTFuVwc1ANw16NMP50dRBVJl/nLTdNuuzoY=
+	t=1713186050; cv=none; b=bc1Pjo89k9IwTGuA4ptyhh0lN/p4ZLU0MxYwMsHumd2lopIhtunpB/K9wuexGpV8C7unXxSwTAj5Exjsu9ZFrJH771DyPb9iQl+8Xj7XbYvee8ApxijjwD6wBUj41IFnmrfjQDjYh1SGGgWYKYmfrDQS+tgCZ9DgCOJmSSc2eQk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713186022; c=relaxed/simple;
-	bh=k1NHarrRf6+0evlATOpqE9bsBp5lnGFC65EI2aXuFVg=;
+	s=arc-20240116; t=1713186050; c=relaxed/simple;
+	bh=gFXhpJysJPGuXbcIUji4D5PA3EJTVGXCEd//a8Dkdns=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UlDkXUbb+FKkRaCsZaCsQUrkxQPK9rMvPYLmEqeEY4EPWGR7sf7wyBk9hOxfc7hWgV+vgpmPaNiO+9rxZ4sY1ahyorfdqdLLVXQBCi07hbbU9Z7+/brFDCVgpyfZSYu8wqzprYYVVaZRtdWcLK9uHa/ee3+0HXGvHl9IfPI8ppc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YYV8yr1B; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ag16Pyc8/v7v3c5ImiPwWv8uIY8ilS1moRo6rktcH/cy3PWz8jdBr2Nt+VXGlYnbdEW9QzflZJWhqPYbX8VkBTgokJRVUMgsWbz/XgXRGSJGo9kjym0MIk8hAT8Kgu0ei9Z8UVCPvaeNYozLViowIbBBVHUSBDNyHYrG0H8mUEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X+qh7+JX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YYV8yr1B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A79CC113CC;
-	Mon, 15 Apr 2024 13:00:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X+qh7+JX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F38BBC2BD10;
+	Mon, 15 Apr 2024 13:00:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713186021;
-	bh=k1NHarrRf6+0evlATOpqE9bsBp5lnGFC65EI2aXuFVg=;
+	s=k20201202; t=1713186050;
+	bh=gFXhpJysJPGuXbcIUji4D5PA3EJTVGXCEd//a8Dkdns=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YYV8yr1BxQ8bEDR53ZXi1krWC2JwmtpDUQAKTgtQNR/woH2FPCaPGiWE4HFUzm6hK
-	 VOZQ0pmrS0AYtMm3JUk2TPSGWJGdRqVIaX3SxH6bXN73YqDvmSh7eKn7JJMl5Nh+hQ
-	 n9pWGWgvN4laYTYI8T4+zcKXnx95fjv0ddFenNS9q5qPrisMcZO5pMWMLv0xRqK8FU
-	 NO9MCoZ/hG3rY+5jNOCOYWNH0ebCgiWDd3A+huW9GXIQDUXoFoqackzBPute7ksLFg
-	 r2mIipvDd1VAupk2DicE6mpnxj0kAutIpS8/Zcjb3jZVyBffComsq7/YPkpaCOUEy6
-	 lFTF/cd/Mebxg==
-Date: Mon, 15 Apr 2024 14:00:16 +0100
+	b=X+qh7+JX/x1EW79kqiWY4vAPsXJARYvMII4b6oB3Su0n3rgAi67ZqH7eFotLhSluZ
+	 Szt2K44M8DO7amY6lU2kMWLbRXUNG5ZC46gUy0zHEaG390nB13JIe4Rwl62IehI5YW
+	 w0BdqCjQVct4HblJEIinAq3WGFZX1mvtB6JFcHjlnAXFeDO6bF/95Mi9MqQbkjyRYB
+	 Yr0aeQA8HhJ4wdGDEQWOV28/Q87JVdLsM6jJwQnwQP1uabGPwY2S3lPwVCD3Q2MYvj
+	 OU3mhq4yp2Q1D5enQ8AzV2E35epNQrigp0pnNUiJafe6X1nrjSdThMtPnrj2CAAkNJ
+	 pCHN50U9telPA==
+Date: Mon, 15 Apr 2024 14:00:44 +0100
 From: Conor Dooley <conor@kernel.org>
 To: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 Cc: linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
@@ -37,11 +37,11 @@ Cc: linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
 	matthias.bgg@gmail.com, devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
 	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v4 7/8] dt-bindings: ufs: mediatek,ufs: Document
- additional clocks
-Message-ID: <20240415-happiness-reenact-6598d7b32435@spud>
+Subject: Re: [PATCH v4 5/8] dt-bindings: ufs: mediatek,ufs: Document MT8192
+ compatible with MT8183
+Message-ID: <20240415-quaking-silicon-e98cac305bee@spud>
 References: <20240415110012.148871-1-angelogioacchino.delregno@collabora.com>
- <20240415110012.148871-8-angelogioacchino.delregno@collabora.com>
+ <20240415110012.148871-6-angelogioacchino.delregno@collabora.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,75 +49,44 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="93PiK0lDfTnn6QRe"
+	protocol="application/pgp-signature"; boundary="7VZHj/xqicOvVrmG"
 Content-Disposition: inline
-In-Reply-To: <20240415110012.148871-8-angelogioacchino.delregno@collabora.com>
+In-Reply-To: <20240415110012.148871-6-angelogioacchino.delregno@collabora.com>
 
 
---93PiK0lDfTnn6QRe
+--7VZHj/xqicOvVrmG
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Apr 15, 2024 at 01:00:11PM +0200, AngeloGioacchino Del Regno wrote:
-> Add additional clocks, used on all MediaTek SoCs' UFSHCI controllers:
-> some of these clocks are optional and used only for scaling purposes
-> to save power, or to improve performance in the case of the crypt
-> clocks.
+On Mon, Apr 15, 2024 at 01:00:09PM +0200, AngeloGioacchino Del Regno wrote:
+> The MT8192 UFS controller is compatible with the MT8183 one:
+> document this by allowing to assign both compatible strings
+> "mediatek,mt8192-ufshci", "mediatek,mt8183-ufshci" to the UFSHCI node.
+>=20
+> Moreover, since no MT8192 devicetree ever declared any UFSHCI node,
+> disallow specifying only the MT8192 compatible.
+>=20
+> In preparation for adding MT8195 to the mix, the MT8192 compatible
+> was added as enum instead of const.
+>=20
+> Also, while at it, replace Stanley Chu with me in the maintainers
+> field, as he is unreachable and his email isn't active anymore.
 >=20
 > Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@coll=
 abora.com>
 
 Acked-by: Conor Dooley <conor.dooley@microchip.com>
 
-> ---
->  .../devicetree/bindings/ufs/mediatek,ufs.yaml     | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
->=20
-> diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Do=
-cumentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> index 5728e750761f..1df8779ee902 100644
-> --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> @@ -23,11 +23,24 @@ properties:
->            - const: mediatek,mt8183-ufshci
-> =20
->    clocks:
-> -    maxItems: 1
-> +    minItems: 1
-> +    maxItems: 12
-> =20
->    clock-names:
-> +    minItems: 1
->      items:
->        - const: ufs
-> +      - const: ufs-aes
-> +      - const: ufs-tick
-> +      - const: unipro-sys
-> +      - const: unipro-tick
-> +      - const: ufs-sap
-> +      - const: ufs-tx-symbol
-> +      - const: ufs-rx-symbol
-> +      - const: ufs-mem
-> +      - const: crypt-mux
-> +      - const: crypt-lp
-> +      - const: crypt-perf
-> =20
->    phys:
->      maxItems: 1
-> --=20
-> 2.44.0
->=20
-
---93PiK0lDfTnn6QRe
+--7VZHj/xqicOvVrmG
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZh0k4AAKCRB4tDGHoIJi
-0mEcAQCL6JDQAVAMOHj599dEhcGaBzsjjotAhC16jd/M9usHrgD5AYNnPqgEhjhv
-gRib2qn9ljMx3UT9oOUw9481wleicQQ=
-=urMw
+iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZh0k/AAKCRB4tDGHoIJi
+0oGyAP9q76hXD18n90xaMMymxRKrhzGMtdg5ikpw3IkeCOxQiwD/RjOm1GlQs/q9
+5EhQIN3rerOGKrdYGgLZzpX3goItPQE=
+=7MNQ
 -----END PGP SIGNATURE-----
 
---93PiK0lDfTnn6QRe--
+--7VZHj/xqicOvVrmG--
