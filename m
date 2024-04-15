@@ -1,40 +1,48 @@
-Received: from mout.web.de (mout.web.de [217.72.192.78])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C84C471B3B;
-	Mon, 15 Apr 2024 15:07:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.78
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8521B84A5C
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Apr 2024 17:17:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713193657; cv=none; b=BbmsrImOm/ClJntHsvcQ0I/E5E64SvpDsVrFAhYVvOEaX1Quj0VrKWnMYrh/n/9GFH959wlL4tPjuPC9Nli4KfdZdAkxY9jC08sNwmhj6dJSQhURGu9/Gs50oKDhT1a9Uw/3/GLpYPG7dnBHgkA0yfZluGUC5F3DjpYU1KYfFA0=
+	t=1713201433; cv=none; b=PFRoDHnZ/wpYdRxqoyks5Xjvfsn1jp8dmCjp8fy41/6DUp4jlOFFh8H7bRNhDRBPmJAjDkA9/o/Rt8/u4ColjHUGJt5xW+gnvOk7mORYu52wyJMmIKnox7U/6/GBuKxX9yCvw08aVRb6jXK72+QWqs8WL6tHsiA67jgUfYhWSwk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713193657; c=relaxed/simple;
-	bh=emgz6QBKDimwdJBAJ7LQ7441HPWa2vqJvQcWuqrELQ8=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=TSYTAVOdg9H5qO6Jf+Zt0tAd3wrqP9OKMr0EBR8CXF8ikmq2Hy4AEd+cbGpD4oAFKxhjaod3xOXeCcl8WugfGJ2k+9b0RcyhyPoAlS/F9/2p0GO7fLaZVeN324u0zw/fIoo+jx9M4I+WFJOKDUxCfpr5/qkCmBL/DRJ4GkhVGu8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=SBLSGHmK; arc=none smtp.client-ip=217.72.192.78
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1713201433; c=relaxed/simple;
+	bh=U6QS15fOD+cL0Px0YyBzYPtMHFROtnH9oXR22aKF+Rg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lo1mlp2Jl9UKDq5oVFeWlpXLDMTm/qjBrOSNsGw5Gt/K85TGDr98LPvqzqdseHt2bW71Xz5VnEYKr7O0q0afawbXn0S7y1z7Sb1XJ8RDNEMtgL1WOki/lxXaWu1hV+ZRBHSeT0LGRCBMSNMzfF19oR6DHOjIvCUAv66ht5md2gc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=uOgs1j/O; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="SBLSGHmK"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1713193633; x=1713798433; i=markus.elfring@web.de;
-	bh=emgz6QBKDimwdJBAJ7LQ7441HPWa2vqJvQcWuqrELQ8=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=SBLSGHmKz2ARTmGyMPUv4aNk6Kv2dQPqVUSD6nmGNGP92hbXvHuf1dVZrK8essQj
-	 lBz+ZDBxOngb73DhFMzdiBREU1/+B3XtSR4vzRm7jsM21I83TANUjKRwGNbU9CBUt
-	 Bbk7wq4SFiAnMpVNRI0i5VxmskObA2lM2CNYsiWXSmdRie59zd/toQWE6L5oHi6Ki
-	 G/bFj30z99qqFBFwRByd0q+mRlbPGaWaQLGjPO75qvkP8Qo3/Qe2YchGG7rAw/VKz
-	 0i3iLRWr/L9NhOqVtHqTIvP5XPTBo/0s/hExvZbICpX4wrRmi8Tfhsn6RVzUky4BF
-	 B2LCYvfmjM/i1KcWTA==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.21] ([94.31.80.95]) by smtp.web.de (mrweb106
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1MCol0-1s5Dc10XuC-0095eM; Mon, 15
- Apr 2024 17:07:13 +0200
-Message-ID: <99598b98-8550-4dca-beea-4c2d61d46f78@web.de>
-Date: Mon, 15 Apr 2024 17:07:09 +0200
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="uOgs1j/O"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VJDPF6XDQz6Cnk8t;
+	Mon, 15 Apr 2024 17:17:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1713201419; x=1715793420; bh=UIzBHXUtHYC6PFCpbeFor5Y1
+	D/yYU1J90L+1KbYS52o=; b=uOgs1j/OtqXjtN8jYys0Q9A/tTXFU4zjtKhRuYD/
+	RPFkqcY7l0pX+BEJlLkdL9VLeNaNbHhaWA8CpUQo4362p+cLtWp2gm1D1cUMsKy4
+	qK3G8MTagaUBHhs0My+LxBEGgg5GHLaxbBzjbEXi5lOmZg8KWsN0Ho4xAFQZObxt
+	Gk2QFXFZDmajcx5re9oEyNMK+7YxEzTV888VzjQ7tk6sH4W92OLyhbWeg7EKRyo5
+	xowVsdeSaEQR018UXQMAergRbsARlrvNJmyU+qu4RLcjg7KOYfeazfj7LNDnPpGK
+	dnW52wLsIHhlisckAHZI99UniTGQsEx0jOAb5RgZOFZk5g==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 2cnZbko1DR-F; Mon, 15 Apr 2024 17:16:59 +0000 (UTC)
+Received: from [100.96.154.26] (unknown [104.132.0.90])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VJDP20Wplz6Cnk8m;
+	Mon, 15 Apr 2024 17:16:53 +0000 (UTC)
+Message-ID: <a2631fa2-ef13-44b4-be04-967eb3c2a9c5@acm.org>
+Date: Mon, 15 Apr 2024 10:16:48 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,45 +50,44 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-To: Wenchao Hao <haowenchao2@huawei.com>, linux-scsi@vger.kernel.org,
- kernel-janitors@vger.kernel.org, "James E. J. Bottomley"
- <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
- Hongxiang Lou <louhongxiang@huawei.com>
-References: <20240307144311.73735-1-haowenchao2@huawei.com>
-Subject: Re: [PATCH v4 0/3] SCSI: Fix issues between removing device and error
- handle
-Content-Language: en-GB
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20240307144311.73735-1-haowenchao2@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:izUBwOSRW+Fblv0kjxF4VBtGny4pVfwwEQZR41GrApqty52fkLo
- pcNE+Hm7fo738bynpdceUAqqSpZEg6WAANQkO3/tC3hKfWYgjPHt7G9S6oUc7kz5febtJj7
- DvnfhYX+RB4XdOnZZpB5fDdBmJb1prTXYbUTI40wDCF9TtpMpRda/QUIJeT2BEFvKk9HJmx
- o7c0aSaaHUMVmKT03me6A==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:GG8nbAqW1m4=;6W/vM4M4GzDaZ9VGuYjUyRMcB8a
- 1tu+Fm6SOAXcUPhDr+Phf3kvdIcY+uoAUkMGtmKI7gAREQ5Q2tTa0pxTdsRE4wox1cuZdV0VU
- W1JOqc1f1snWTNHiQHAAYZ+0OyUMFukAB2XJ1UFvR0YV7OFaQgatjYjBm3VC9OG2dpIgm94vS
- utp3NC9Q0yVxQnN3smCfGookJjxHjlsn0QfyEiktTsWfX4bSmS6Yovl+UIWC59ZYeppduMNY/
- YcBJ0BbEikdFCXovRKDDB2rhkwdk6TxW8vL24mrRuvWAvFAcr2H2amUqel74KXg0kWK+VuxHO
- XyOd2TVO9vDjzYFzC0pzQvmz/JOTGZ5jbpxa5f8o9wmfmpdPOoT6s7HXeDiU38ua5caj72SD5
- TSLxWNeiOUtKGf9E51IEGVmKlsrGTER3jKtkusXOj6VY7PbWiROZuqZl7O90mY1Ul2LC6TuYb
- kfEM7r8aWHrXCZBZ2RAcOG38y+D970FmQ/8h+Auo4hhcbv8m2++84up7DhegQZHrrQmWeZhfr
- UaQtCp+8/0T3EefoYP1XK25FY4jXVvYkqIFCPobFvMbjcAJ+68mgMs7ccM2uzTX0mrQ/AGvut
- lyLiXXr24BQWxufdbFfLw7xQqEOFH61LW/kvtWqzhbTesj+B8Vv6DabiPvwi2rfUlPk5BSyGs
- VjyfNBpCUIzkUY9VUGta284VdY4NjOte3uYjl+20U+nNF/hBIQRjrUI9aQRzaxnzXqsMTVgSD
- eVWU7GgzRS5n0qVUvAP9y8ba/aeSsO8jkN3gdZoW8nyg8Lh9LwbsNbu0oJ5GyAnxxV034w/ta
- brRlFv85TyvzUwjquphj+c30WAVN8AX2a0aKksvaIXRpI=
+Subject: Re: [PATCH] scsi: ufs: Remove .get_hba_mac()
+To: Bjorn Andersson <andersson@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ Peter Wang <peter.wang@mediatek.com>,
+ Konrad Dybcio <konrad.dybcio@linaro.org>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Stanley Jhu <chu.stanley@gmail.com>, Can Guo <quic_cang@quicinc.com>,
+ "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+ Po-Wen Kao <powen.kao@mediatek.com>, ChanWoo Lee <cw9316.lee@samsung.com>,
+ Yang Li <yang.lee@linux.alibaba.com>,
+ Keoseong Park <keosung.park@samsung.com>, zhanghui <zhanghui31@xiaomi.com>,
+ Bean Huo <beanhuo@micron.com>, Maramaina Naresh <quic_mnaresh@quicinc.com>,
+ Akinobu Mita <akinobu.mita@gmail.com>, Avri Altman <avri.altman@wdc.com>
+References: <20240412174158.3050361-1-bvanassche@acm.org>
+ <ozm4y6q7r7ikwrtffgslxvw45ok625r5gjvdbgiyegrzavd2xe@45jyef4lfp4b>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ozm4y6q7r7ikwrtffgslxvw45ok625r5gjvdbgiyegrzavd2xe@45jyef4lfp4b>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-=E2=80=A6
-> These issues are triggered because devices in removing would be skipped
-> when calling shost_for_each_device().
-=E2=80=A6
+On 4/14/24 18:33, Bjorn Andersson wrote:
+> On Fri, Apr 12, 2024 at 10:41:29AM -0700, Bart Van Assche wrote:
+>> Simplify the UFSHCI core and also the UFSHCI host drivers by removing
+>> the .get_hba_mac() callback and by reading the NUTRS register field
+>> instead.
+> 
+> This quite clearly states that the change is merely a cleanup. Can you
+> confirm that (capabilities & 0xff) + 1 read back as 64 on both Mediatek
+> and Qualcomm platforms? Such that this indeed is merely a cleanup...
 
-How do you think about to add the tag =E2=80=9CFixes=E2=80=9D to any of yo=
-ur patches?
+I'm waiting for feedback from MediaTek and Qualcomm to learn whether or
+not their controllers comply with this aspect of the UFSHCI 4.0
+standard.
 
-Regards,
-Markus
+Thanks,
+
+Bart.
