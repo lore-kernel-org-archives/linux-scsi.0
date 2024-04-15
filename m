@@ -1,55 +1,62 @@
-Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
+Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8288B22EFB
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Apr 2024 07:37:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 627731EB48;
+	Mon, 15 Apr 2024 07:54:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713166627; cv=none; b=Q47HgpGbYRQXGsm+N1lagUDfXMf84peHiqSruevt/+LC6kPRrqSp9FiAnMdh4l1UgoDn/Ez5Jcwhq55R2uIWcU3Rgz7+ZrbT3z1bCO5LxWEREhihWUSHmz8RVpH1QweLM6GEcHCpESKwb1WAtZWT9kuRkLhDrl8t6c8UVoyNpjQ=
+	t=1713167660; cv=none; b=YSheOdotsMxWGs9VocXUPld8c675Jf0sacoWcaY/ALKOaQ9rcBVs7v98k4gKkDO6nKI16UJBhWleUQSGdh0Ym4dAaBOhGflJzPaJKasq4ZhOq4E/pE6bS8XZWLzohg5shXGuko1Ieah0w0soQXHF4kQAMQ3XG5Gj4CGhRSAdezM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713166627; c=relaxed/simple;
-	bh=ibWcRCVCYVlKYAzuKDlgU7jKnQpeojkQvcPR28/ZxZ0=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=GeYxf6mh3YOys0FGeHYmWgCJTqYk7Ru/1eWGRFrKP2DazLXrpZl6V0z64q+0GWdiGRPxL3zE7n2hCFd+xZlXFysFVYYdlnWWPracMEBJmU7vu0WDK9r1neWGi94rxKFVNQ9gWP1nwE4BzM8WskXdTmT5i+LpDxQ4MJcej9WA1LI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=PCdlYNK7; arc=none smtp.client-ip=67.231.156.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
+	s=arc-20240116; t=1713167660; c=relaxed/simple;
+	bh=vl5BpkbTStY55bvHTyQ3BacPHOvSGMwq87YZ8SJnIzg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=LENfowVjuHx+0Eewpu9ANGrl9GaVff66zgxOkqVmQMCWLA2ecuCV2TG2lemd6usP7ZUQuF2liuXzK/jGmUsrRg+yim9Px9pOi1a8qLwztWl9zzXVONOvkMbz6CmLH9eqvcTdJdVJyR/4/hMR8sW1fR0eB3Z/ehhEKzqd5OjBGpY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=g9/UszsZ; arc=none smtp.client-ip=46.235.227.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="PCdlYNK7"
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 43ELwg2M007746;
-	Mon, 15 Apr 2024 00:37:02 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
-	from:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding:content-type; s=pfpt0220; bh=JY+ArcEp
-	m/xaUFePhNjV8cLkXT/T8gT4KAREu7ILsgo=; b=PCdlYNK73OM9ccwkW9zruwvI
-	S4cMXDDzMy53rxxkSkF3W3/H+FsART0UbHB46pDtHgzAKnNry8SKOOeWXrQd2ORf
-	cf55YQacjb7DJrbODDc/1V0Hex3GmcqSOf9DLxwvmoRreLHWY6dctJQEg9UqofCS
-	+IqtDNnf6JLEBl9F5FO2mJYUXmfkkwj1gni1NLhtu6/tRDKrXSuWNgkYUaBYsN2p
-	4eTZrekFzf8/J9IWkytsAKx6c2qO2zr/w2KVC5SsuhCPJjonbmBToFpvtjNsZtex
-	7s8xFohNE8OAYzYFTY1StEH6nBBhR3zsKtxrRTK1jce8R82nnWfaWtb8Zg4weA==
-Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3xfsjg3q74-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 15 Apr 2024 00:37:02 -0700 (PDT)
-Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
- DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.4; Mon, 15 Apr 2024 00:37:01 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
- (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.4 via Frontend
- Transport; Mon, 15 Apr 2024 00:37:01 -0700
-Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
-	by maili.marvell.com (Postfix) with ESMTP id 44FE63F7069;
-	Mon, 15 Apr 2024 00:36:59 -0700 (PDT)
-From: Saurav Kashyap <skashyap@marvell.com>
-To: <martin.petersen@oracle.com>
-CC: <GR-QLogic-Storage-Upstream@marvell.com>, <linux-scsi@vger.kernel.org>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        kernel test robot <lkp@intel.com>
-Subject: [PATCH] qedf: Fix uninitalize warning from kernel test robot.
-Date: Mon, 15 Apr 2024 13:06:54 +0530
-Message-ID: <20240415073654.31859-1-skashyap@marvell.com>
-X-Mailer: git-send-email 2.23.1
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="g9/UszsZ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1713167652;
+	bh=vl5BpkbTStY55bvHTyQ3BacPHOvSGMwq87YZ8SJnIzg=;
+	h=From:To:Cc:Subject:Date:From;
+	b=g9/UszsZSXZ7DApaQAOHTtwn9Xm+hPngJMc6TQcmevXbTBCusw5FDfTt+dqbe/zDP
+	 yxe6GdOPwJ28a0LsFy2sC+9e+JH/ujUSixVYyr93/jpr+u+V+pP2QfCbF7Nqu7i2PM
+	 vD0rU3Zui6X7HzBz+/GQq20U0Btg/5DIAVwok/TGmaNPwl+oWG1j4b/eI1V+X4Hk6B
+	 SnOMXVqE6AVk0/xcpqqNS9Ekib7sqPnnGuBHD7pgOB33HVNv3UfyriKU/CmaPlfM8r
+	 DK11VevgjQG6IK9lB7pPrLX9IapHRapNjIlYcttx/6ast077U2RZR/U9LPYuo96vmD
+	 6E9Wmnfxc0ivw==
+Received: from IcarusMOD.eternityproject.eu (cola.collaboradmins.com [195.201.22.229])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: kholk11)
+	by madrid.collaboradmins.com (Postfix) with ESMTPSA id ADA1C3780894;
+	Mon, 15 Apr 2024 07:54:10 +0000 (UTC)
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+To: linux-scsi@vger.kernel.org
+Cc: alim.akhtar@samsung.com,
+	avri.altman@wdc.com,
+	bvanassche@acm.org,
+	robh@kernel.org,
+	krzysztof.kozlowski+dt@linaro.org,
+	conor+dt@kernel.org,
+	peter.wang@mediatek.com,
+	chu.stanley@gmail.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	lgirdwood@gmail.com,
+	broonie@kernel.org,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	stanley.chu@mediatek.com,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v3 0/8] MediaTek UFS fixes and cleanups - Part 1
+Date: Mon, 15 Apr 2024 09:53:58 +0200
+Message-ID: <20240415075406.47543-1-angelogioacchino.delregno@collabora.com>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -57,43 +64,63 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-GUID: GAqf-WUpX0KzECEoFrjDgOjRBxEdXyc1
-X-Proofpoint-ORIG-GUID: GAqf-WUpX0KzECEoFrjDgOjRBxEdXyc1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-04-15_06,2024-04-09_01,2023-05-22_02
 
-Fixes uininitalize qedf warning.
+Changes in v3:
+ - Disallowed mt8192 compatible in isolation
+ - Added maxItems to clocks
 
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202403160959.uNobO4UE-lkp@intel.com/
----
- drivers/scsi/qedf/qedf_main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Changes in v2:
+ - Rebased over next-20240409 (because of merge issue for patch 1)
+ - Added ufs: prefix to patch 1
+ - Added forgotten ufs-rx-symbol clock to the binding
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index d4563d28d98f..b97a8712d3f6 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -919,14 +919,14 @@ void qedf_ctx_soft_reset(struct fc_lport *lport)
- 	struct qedf_ctx *qedf;
- 	struct qed_link_output if_link;
- 
-+	qedf = lport_priv(lport);
-+
- 	if (lport->vport) {
- 		clear_bit(QEDF_STAG_IN_PROGRESS, &qedf->flags);
- 		printk_ratelimited("Cannot issue host reset on NPIV port.\n");
- 		return;
- 	}
- 
--	qedf = lport_priv(lport);
--
- 	qedf->flogi_pending = 0;
- 	/* For host reset, essentially do a soft link up/down */
- 	atomic_set(&qedf->link_state, QEDF_LINK_DOWN);
+
+This series performs some fixes and cleanups for the MediaTek UFSHCI
+controller driver.
+
+In particular, while adding the MT8195 compatible to the mediatek,ufs
+binding, I noticed that it was allowing just one clock, completely
+ignoring the optional ones, including the crypt-xxx clocks, all of
+the optional regulators, and other properties.
+
+Between all the other properties, two are completely useless, as they
+are there just to activate features that, on SoCs that don't support
+these, won't anyway be activated because of missing clocks or missing
+regulators, or missing other properties;
+as for the other vendor-specific properties, like ufs-disable-ah8,
+ufs-broken-vcc, ufs-pmc-via-fastauto, since the current merge window
+is closing, I didn't do extensive research so I've left them in place
+but didn't add them to the devicetree binding yet.
+
+The plan is to check those later and eventually give them a removal
+treatment, or add them to the bindings in a part two series.
+
+For now, at least, this is already a big improvement.
+
+P.S.: The only SoC having UFSHCI upstream is MT8183, which only has
+just one clock, and *nothing else* uses properties, clocks, etc that
+were renamed in this cleanup.
+
+Cheers!
+
+
+AngeloGioacchino Del Regno (8):
+  scsi: ufs: ufs-mediatek: Remove useless mediatek,ufs-support-va09
+    property
+  scsi: ufs: ufs-mediatek: Fix property name for crypt boost voltage
+  scsi: ufs: ufs-mediatek: Remove useless mediatek,ufs-boost-crypt
+    property
+  scsi: ufs: ufs-mediatek: Avoid underscores in crypt clock names
+  dt-bindings: ufs: mediatek,ufs: Document MT8192 compatible with MT8183
+  dt-bindings: ufs: mediatek,ufs: Document MT8195 compatible
+  dt-bindings: ufs: mediatek,ufs: Document additional clocks
+  dt-bindings: ufs: mediatek,ufs: Document optional dvfsrc/va09
+    regulators
+
+ .../devicetree/bindings/ufs/mediatek,ufs.yaml | 25 ++++-
+ drivers/ufs/host/ufs-mediatek.c               | 91 +++++++++++--------
+ 2 files changed, 76 insertions(+), 40 deletions(-)
+
 -- 
-2.23.1
+2.44.0
 
