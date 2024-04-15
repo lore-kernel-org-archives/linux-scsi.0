@@ -1,95 +1,104 @@
-Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07C6D6CDAD;
-	Mon, 15 Apr 2024 11:00:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C5076025;
+	Mon, 15 Apr 2024 12:49:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713178831; cv=none; b=b0AKDvgKmzRqjqlT9N2SMKgrFC2Q86+JSfNEKVrBQxRtwg0bAqa+Q0G/A5VqdUkweJRF6DD3EacTMepRCvgYYr3KfhAN5zPP0h7Lo6JfzWUECWBkAXoseh9YwnDW1JkNCQHLRcEgrM4uSPrWwNANIpG9u8YjChK/0Y9DUu+WAxQ=
+	t=1713185358; cv=none; b=raa2QmELP6yAh0VH9cPCyYQ0cDA5HETcAI09iCLtKoRBo86r8sjOc9T/RpohYPZDmqIh+isOszG6kuRWVURyKSbsFuHaeGQYCcPfJct4B5aoe9885ROEu668k+8u2T8LpTmLmmP9m/yeCdHYKRGmlZcjCkqaljbj/MzQkPr9hk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713178831; c=relaxed/simple;
-	bh=Y1uqBUPVNGc10mDuk9ItFOcl/06l4dJLjdZpRz+FbPE=;
+	s=arc-20240116; t=1713185358; c=relaxed/simple;
+	bh=xeF/Zq3a01ro9m11LFhlH6sAGGaai4u4gzl+O3dH0T8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MSgYdM5bozBmjHsysRs4NlZ90FS8FtP1nVQI2VdHKNtv14yplJrhjQFSUnJAsk/VlBa9hOcPf8iw6bU4okplzGOnTUbTl1IpnBS7UTD9dB6pFBINPUaB5Q2Z04iEyM5REbswC2PJvEfR4mFYyGIpuV4BWF/6boXHpaoFbzFTUNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=oFqOrkCq; arc=none smtp.client-ip=46.235.227.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	 MIME-Version; b=BNxLvBwfqvqOP1BgrVdu+4aVD8Fupl3JKPj7t7SqZDFAS4IMbE9JV16CQj4nprS6kvkx7713Lx1zCmjeOVPNhQNtWR3/JIZn9Hp3L1WEuyKjLD+C5Q782fg58z1osExqPfLmRtklZlfQveyiInDgPPUgdqcmXhnC+4tw1hcVs+0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AfWPQRr2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="oFqOrkCq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1713178827;
-	bh=Y1uqBUPVNGc10mDuk9ItFOcl/06l4dJLjdZpRz+FbPE=;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AfWPQRr2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2351C4AF0F;
+	Mon, 15 Apr 2024 12:49:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713185357;
+	bh=xeF/Zq3a01ro9m11LFhlH6sAGGaai4u4gzl+O3dH0T8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=oFqOrkCqMTSBRYOnWA6mmPsL5ckxO3phYo8v091hzbBSYGJP+AlgdxA/QzqBWSmJx
-	 vfnfG6JEIni9jizg9F5aFgKFADsHQ4ks7pKZOP/G/fsZLojtSUoPaVWRz7uac0fcD0
-	 ZuSqYv9pfQLKelJJDOMXBGnfyG1IiwJr51jQGYR42kzZsT6y5z2dXPi6GgXQnHa/SJ
-	 /Q+fb0z1Ry477hrZcysZTDuqO77TIUm54YNettLANpoh+lp+nnuvjMqOl8iKTSVf0c
-	 evUie7Er2VaF+cIHkxwEmiLvDm+zFOizog1JgSdoFbWZ8WbAKPxfk8HYaq68BZ9tGM
-	 sW3pxEEPzym/A==
-Received: from IcarusMOD.eternityproject.eu (cola.collaboradmins.com [195.201.22.229])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: kholk11)
-	by madrid.collaboradmins.com (Postfix) with ESMTPSA id 5E0DE3780022;
-	Mon, 15 Apr 2024 11:00:26 +0000 (UTC)
-From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-To: linux-scsi@vger.kernel.org
-Cc: alim.akhtar@samsung.com,
-	avri.altman@wdc.com,
-	bvanassche@acm.org,
-	robh@kernel.org,
-	krzysztof.kozlowski+dt@linaro.org,
-	conor+dt@kernel.org,
-	peter.wang@mediatek.com,
+	b=AfWPQRr2HFI4gDeBmLh7Hqo9jLfYzh8p/wsIMVa7v4qqQuHTePCuSh2fvlTmv6X8l
+	 1FYNoxWkbmrX+6SgYCRPOWGvC1VS7JLXLsIsqYBPl6xJsm5wtAnNYtW39IXo3w6h0j
+	 DxAuLrou3IrriFUOgajW+3CY5WP2MYHcV+8TAHxB2TKC21t22iNPEs3C+sko8TIFUW
+	 519FzRcWhbcaO/HPiW2nulLQHCbrIUBVaMl5GGC/JbsQxoGir8d+hSJa6njhlqJmtH
+	 i1WPNexqmIu+GUyFD4e2/bb2ZUmhgqU3h/JrzIE9YqgHw0Gm8Qd3mS5Z8QThQ7CDBY
+	 Rhka+qXd+D0rA==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Peter Wang <peter.wang@mediatek.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
 	jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	lgirdwood@gmail.com,
-	broonie@kernel.org,
 	matthias.bgg@gmail.com,
 	angelogioacchino.delregno@collabora.com,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
+	stanley.chu@mediatek.com,
+	avri.altman@wdc.com,
+	quic_cang@quicinc.com,
+	quic_nguyenb@quicinc.com,
+	manivannan.sadhasivam@linaro.org,
+	beanhuo@micron.com,
+	linux-scsi@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
-	Conor Dooley <conor.dooley@microchip.com>
-Subject: [PATCH v4 8/8] dt-bindings: ufs: mediatek,ufs: Document optional dvfsrc/va09 regulators
-Date: Mon, 15 Apr 2024 13:00:12 +0200
-Message-ID: <20240415110012.148871-9-angelogioacchino.delregno@collabora.com>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20240415110012.148871-1-angelogioacchino.delregno@collabora.com>
-References: <20240415110012.148871-1-angelogioacchino.delregno@collabora.com>
+	linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.8 05/15] scsi: ufs: core: WLUN suspend dev/link state error recovery
+Date: Mon, 15 Apr 2024 06:02:45 -0400
+Message-ID: <20240415100311.3126785-5-sashal@kernel.org>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240415100311.3126785-1-sashal@kernel.org>
+References: <20240415100311.3126785-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.8.6
 Content-Transfer-Encoding: 8bit
 
-Document the optional dvfsrc-vcore and va09 regulators used for,
-respectively, crypt boost and internal MPHY power management in
-when powering on/off the (external) MediaTek UFS PHY.
+From: Peter Wang <peter.wang@mediatek.com>
 
-Acked-by: Conor Dooley <conor.dooley@microchip.com>
-Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+[ Upstream commit 6bc5e70b1c792b31b497e48b4668a9a2909aca0d ]
+
+When wl suspend error occurs, for example BKOP or SSU timeout, the host
+triggers an error handler and returns -EBUSY to break the wl suspend
+process.  However, it is possible for the runtime PM to enter wl suspend
+again before the error handler has finished, and return -EINVAL because the
+device is in an error state. To address this, ensure that the rumtime PM
+waits for the error handler to finish, or trigger the error handler in such
+cases, because returning -EINVAL can cause the I/O to hang.
+
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Link: https://lore.kernel.org/r/20240329015036.15707-1-peter.wang@mediatek.com
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ufs/core/ufshcd.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-index 1df8779ee902..b74a2464196d 100644
---- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-@@ -48,6 +48,8 @@ properties:
-   reg:
-     maxItems: 1
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 3b89c9d4aa404..14a6a100fcdb0 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -9745,7 +9745,10 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
  
-+  dvfsrc-vcore-supply: true
-+  va09-supply: true
-   vcc-supply: true
+ 	/* UFS device & link must be active before we enter in this function */
+ 	if (!ufshcd_is_ufs_dev_active(hba) || !ufshcd_is_link_active(hba)) {
+-		ret = -EINVAL;
++		/*  Wait err handler finish or trigger err recovery */
++		if (!ufshcd_eh_in_progress(hba))
++			ufshcd_force_error_recovery(hba);
++		ret = -EBUSY;
+ 		goto enable_scaling;
+ 	}
  
- required:
 -- 
-2.44.0
+2.43.0
 
