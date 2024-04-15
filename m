@@ -1,92 +1,86 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout.web.de (mout.web.de [217.72.192.78])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C68E57317F;
-	Mon, 15 Apr 2024 13:00:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C84C471B3B;
+	Mon, 15 Apr 2024 15:07:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.72.192.78
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713186050; cv=none; b=bc1Pjo89k9IwTGuA4ptyhh0lN/p4ZLU0MxYwMsHumd2lopIhtunpB/K9wuexGpV8C7unXxSwTAj5Exjsu9ZFrJH771DyPb9iQl+8Xj7XbYvee8ApxijjwD6wBUj41IFnmrfjQDjYh1SGGgWYKYmfrDQS+tgCZ9DgCOJmSSc2eQk=
+	t=1713193657; cv=none; b=BbmsrImOm/ClJntHsvcQ0I/E5E64SvpDsVrFAhYVvOEaX1Quj0VrKWnMYrh/n/9GFH959wlL4tPjuPC9Nli4KfdZdAkxY9jC08sNwmhj6dJSQhURGu9/Gs50oKDhT1a9Uw/3/GLpYPG7dnBHgkA0yfZluGUC5F3DjpYU1KYfFA0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713186050; c=relaxed/simple;
-	bh=gFXhpJysJPGuXbcIUji4D5PA3EJTVGXCEd//a8Dkdns=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ag16Pyc8/v7v3c5ImiPwWv8uIY8ilS1moRo6rktcH/cy3PWz8jdBr2Nt+VXGlYnbdEW9QzflZJWhqPYbX8VkBTgokJRVUMgsWbz/XgXRGSJGo9kjym0MIk8hAT8Kgu0ei9Z8UVCPvaeNYozLViowIbBBVHUSBDNyHYrG0H8mUEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X+qh7+JX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713193657; c=relaxed/simple;
+	bh=emgz6QBKDimwdJBAJ7LQ7441HPWa2vqJvQcWuqrELQ8=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=TSYTAVOdg9H5qO6Jf+Zt0tAd3wrqP9OKMr0EBR8CXF8ikmq2Hy4AEd+cbGpD4oAFKxhjaod3xOXeCcl8WugfGJ2k+9b0RcyhyPoAlS/F9/2p0GO7fLaZVeN324u0zw/fIoo+jx9M4I+WFJOKDUxCfpr5/qkCmBL/DRJ4GkhVGu8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=SBLSGHmK; arc=none smtp.client-ip=217.72.192.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X+qh7+JX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F38BBC2BD10;
-	Mon, 15 Apr 2024 13:00:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713186050;
-	bh=gFXhpJysJPGuXbcIUji4D5PA3EJTVGXCEd//a8Dkdns=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=X+qh7+JX/x1EW79kqiWY4vAPsXJARYvMII4b6oB3Su0n3rgAi67ZqH7eFotLhSluZ
-	 Szt2K44M8DO7amY6lU2kMWLbRXUNG5ZC46gUy0zHEaG390nB13JIe4Rwl62IehI5YW
-	 w0BdqCjQVct4HblJEIinAq3WGFZX1mvtB6JFcHjlnAXFeDO6bF/95Mi9MqQbkjyRYB
-	 Yr0aeQA8HhJ4wdGDEQWOV28/Q87JVdLsM6jJwQnwQP1uabGPwY2S3lPwVCD3Q2MYvj
-	 OU3mhq4yp2Q1D5enQ8AzV2E35epNQrigp0pnNUiJafe6X1nrjSdThMtPnrj2CAAkNJ
-	 pCHN50U9telPA==
-Date: Mon, 15 Apr 2024 14:00:44 +0100
-From: Conor Dooley <conor@kernel.org>
-To: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Cc: linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
-	avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org,
-	krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-	peter.wang@mediatek.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, lgirdwood@gmail.com, broonie@kernel.org,
-	matthias.bgg@gmail.com, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v4 5/8] dt-bindings: ufs: mediatek,ufs: Document MT8192
- compatible with MT8183
-Message-ID: <20240415-quaking-silicon-e98cac305bee@spud>
-References: <20240415110012.148871-1-angelogioacchino.delregno@collabora.com>
- <20240415110012.148871-6-angelogioacchino.delregno@collabora.com>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="SBLSGHmK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1713193633; x=1713798433; i=markus.elfring@web.de;
+	bh=emgz6QBKDimwdJBAJ7LQ7441HPWa2vqJvQcWuqrELQ8=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=SBLSGHmKz2ARTmGyMPUv4aNk6Kv2dQPqVUSD6nmGNGP92hbXvHuf1dVZrK8essQj
+	 lBz+ZDBxOngb73DhFMzdiBREU1/+B3XtSR4vzRm7jsM21I83TANUjKRwGNbU9CBUt
+	 Bbk7wq4SFiAnMpVNRI0i5VxmskObA2lM2CNYsiWXSmdRie59zd/toQWE6L5oHi6Ki
+	 G/bFj30z99qqFBFwRByd0q+mRlbPGaWaQLGjPO75qvkP8Qo3/Qe2YchGG7rAw/VKz
+	 0i3iLRWr/L9NhOqVtHqTIvP5XPTBo/0s/hExvZbICpX4wrRmi8Tfhsn6RVzUky4BF
+	 B2LCYvfmjM/i1KcWTA==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.21] ([94.31.80.95]) by smtp.web.de (mrweb106
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MCol0-1s5Dc10XuC-0095eM; Mon, 15
+ Apr 2024 17:07:13 +0200
+Message-ID: <99598b98-8550-4dca-beea-4c2d61d46f78@web.de>
+Date: Mon, 15 Apr 2024 17:07:09 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="7VZHj/xqicOvVrmG"
-Content-Disposition: inline
-In-Reply-To: <20240415110012.148871-6-angelogioacchino.delregno@collabora.com>
-
-
---7VZHj/xqicOvVrmG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+To: Wenchao Hao <haowenchao2@huawei.com>, linux-scsi@vger.kernel.org,
+ kernel-janitors@vger.kernel.org, "James E. J. Bottomley"
+ <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+ Hongxiang Lou <louhongxiang@huawei.com>
+References: <20240307144311.73735-1-haowenchao2@huawei.com>
+Subject: Re: [PATCH v4 0/3] SCSI: Fix issues between removing device and error
+ handle
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20240307144311.73735-1-haowenchao2@huawei.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:izUBwOSRW+Fblv0kjxF4VBtGny4pVfwwEQZR41GrApqty52fkLo
+ pcNE+Hm7fo738bynpdceUAqqSpZEg6WAANQkO3/tC3hKfWYgjPHt7G9S6oUc7kz5febtJj7
+ DvnfhYX+RB4XdOnZZpB5fDdBmJb1prTXYbUTI40wDCF9TtpMpRda/QUIJeT2BEFvKk9HJmx
+ o7c0aSaaHUMVmKT03me6A==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:GG8nbAqW1m4=;6W/vM4M4GzDaZ9VGuYjUyRMcB8a
+ 1tu+Fm6SOAXcUPhDr+Phf3kvdIcY+uoAUkMGtmKI7gAREQ5Q2tTa0pxTdsRE4wox1cuZdV0VU
+ W1JOqc1f1snWTNHiQHAAYZ+0OyUMFukAB2XJ1UFvR0YV7OFaQgatjYjBm3VC9OG2dpIgm94vS
+ utp3NC9Q0yVxQnN3smCfGookJjxHjlsn0QfyEiktTsWfX4bSmS6Yovl+UIWC59ZYeppduMNY/
+ YcBJ0BbEikdFCXovRKDDB2rhkwdk6TxW8vL24mrRuvWAvFAcr2H2amUqel74KXg0kWK+VuxHO
+ XyOd2TVO9vDjzYFzC0pzQvmz/JOTGZ5jbpxa5f8o9wmfmpdPOoT6s7HXeDiU38ua5caj72SD5
+ TSLxWNeiOUtKGf9E51IEGVmKlsrGTER3jKtkusXOj6VY7PbWiROZuqZl7O90mY1Ul2LC6TuYb
+ kfEM7r8aWHrXCZBZ2RAcOG38y+D970FmQ/8h+Auo4hhcbv8m2++84up7DhegQZHrrQmWeZhfr
+ UaQtCp+8/0T3EefoYP1XK25FY4jXVvYkqIFCPobFvMbjcAJ+68mgMs7ccM2uzTX0mrQ/AGvut
+ lyLiXXr24BQWxufdbFfLw7xQqEOFH61LW/kvtWqzhbTesj+B8Vv6DabiPvwi2rfUlPk5BSyGs
+ VjyfNBpCUIzkUY9VUGta284VdY4NjOte3uYjl+20U+nNF/hBIQRjrUI9aQRzaxnzXqsMTVgSD
+ eVWU7GgzRS5n0qVUvAP9y8ba/aeSsO8jkN3gdZoW8nyg8Lh9LwbsNbu0oJ5GyAnxxV034w/ta
+ brRlFv85TyvzUwjquphj+c30WAVN8AX2a0aKksvaIXRpI=
 
-On Mon, Apr 15, 2024 at 01:00:09PM +0200, AngeloGioacchino Del Regno wrote:
-> The MT8192 UFS controller is compatible with the MT8183 one:
-> document this by allowing to assign both compatible strings
-> "mediatek,mt8192-ufshci", "mediatek,mt8183-ufshci" to the UFSHCI node.
->=20
-> Moreover, since no MT8192 devicetree ever declared any UFSHCI node,
-> disallow specifying only the MT8192 compatible.
->=20
-> In preparation for adding MT8195 to the mix, the MT8192 compatible
-> was added as enum instead of const.
->=20
-> Also, while at it, replace Stanley Chu with me in the maintainers
-> field, as he is unreachable and his email isn't active anymore.
->=20
-> Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@coll=
-abora.com>
+=E2=80=A6
+> These issues are triggered because devices in removing would be skipped
+> when calling shost_for_each_device().
+=E2=80=A6
 
-Acked-by: Conor Dooley <conor.dooley@microchip.com>
+How do you think about to add the tag =E2=80=9CFixes=E2=80=9D to any of yo=
+ur patches?
 
---7VZHj/xqicOvVrmG
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZh0k/AAKCRB4tDGHoIJi
-0oGyAP9q76hXD18n90xaMMymxRKrhzGMtdg5ikpw3IkeCOxQiwD/RjOm1GlQs/q9
-5EhQIN3rerOGKrdYGgLZzpX3goItPQE=
-=7MNQ
------END PGP SIGNATURE-----
-
---7VZHj/xqicOvVrmG--
+Regards,
+Markus
