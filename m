@@ -1,38 +1,38 @@
 Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C5602E851;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ACD936120;
 	Mon, 15 Apr 2024 07:54:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713167663; cv=none; b=AciU1TuGNKEMMtUDc4z0iD5soNksM3faD3hIvnwHi3fXlBGCyCXkNnz/zZp1Mt6LjFqcOW7Y7mjGmP+rXwonPeRll76kyor4meg8gRvG9HPXsBhR03LptbtLuEHT/Jz7a6A8qf2gRzML8P5RKQkEdwq2nD9eQ11Dew+rET7Z2Ds=
+	t=1713167663; cv=none; b=O6g+VCbH7Tg/VTHhiJrhGZIJTDSS6d8tY4nHcoeXDvfmUwxaQIJEH1GWh52cIVGHr9afLX4mab0F33QqCpWQvxXbi46WDbZVhzLMSDA6486a1ydXjgVKjyTVEzhzKGDE5tmvoTB2HrqYUj/uocymUAMec2Bqsgvv3xOiva9rlHA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1713167663; c=relaxed/simple;
-	bh=WY8EthFDmZfJZmt27wVTY3epf3S/NvCwlH2R04NWsW0=;
+	bh=CqzKZd4vjnj7h8MQHLZ+d4uf+/wUuKKChJa/MWda7XQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OKUsy53HHRSglMpRo6nBhOfKGA01lWDPuFM+gS56suBZuk8+N0B4OCwC77qZUJQhxvLJwHhBs17DZeonfCIdkE+yuxKBuZ9fixoOceGEv4PyjYFIvvzCQSuJlG53yhY4IWTRZwAks+GqFkaZ0DlyGMg7yw+yFQkqB5vZQeWfWs4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=06YlTsWS; arc=none smtp.client-ip=46.235.227.194
+	 MIME-Version; b=cYk6kDsKVBBUXaK25HV39A925sQGQt+e2bku5b/i/uI5DkoQZ+4pO6yh8s6X/ylpmrjds7FrI5IM5s9W2EzuwJ3mif2UqRBgLx4UHtbKD8udCq6EZOl7S8xvqZpfcTK3ku127nQ4Rtu/1g4t5ZJzMlD25XpHmO9/le7OwsI90OI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=onc2rJxj; arc=none smtp.client-ip=46.235.227.194
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="06YlTsWS"
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="onc2rJxj"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1713167655;
-	bh=WY8EthFDmZfJZmt27wVTY3epf3S/NvCwlH2R04NWsW0=;
+	s=mail; t=1713167659;
+	bh=CqzKZd4vjnj7h8MQHLZ+d4uf+/wUuKKChJa/MWda7XQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=06YlTsWSw3P6sipl21AV67ZJAklMLTB1VvDKsbs4zFwaFu9kNK/aopglKAGrhMTlQ
-	 6pPzsjN2z7W8PGAwfP/0BNYqYx7AfxMJAYIWlbWxnhbFxmI7slGXJzKh5pq+EtFtD4
-	 ybNyWDa/8+iUwWz4kKwvXpRLQDINSuBsV8y3/rHlCu3e52BFqp2f3A1KT3PADf6YW9
-	 Dc+RlzmFpEIEEPKJuyWkyDLRQI6szHjKkZPKPpN1+6iupPQ9lQLom16OTXTXSn4F+w
-	 mYl/qiwedGS1CdXv/k6ekANa3L4Cu7ZXor01RrCFyxR/0dhPU/36i+9pJ/RzwEJPUT
-	 haRALaePvEhEQ==
+	b=onc2rJxjkWbPZah2WuFKV0fdhQWeh+XGcbfkjKJMUGgt2370dHgdH8uecgoPrixB/
+	 /KNmvHqpqOjekfJ7XV3YGnX4ubynn670NnqR8qsOpIoHfZFwacNNCZJKoF4yEsK7q3
+	 uUE/F9VgalZqSN5dhdcZynOhuJ4dRhbtVXRmM90gRlIyoC/6McBzipMWPkHYnsUtM1
+	 By8t/a45kugn3BnPmJRaNmQhufgprNNNjm0pUKAY+PRl9ufQ0VhFqA3mEedSP6Y5CI
+	 pjAXyasKqX1ZHeZjq/dqb9GTUgkK9sWCttGKxfLuJatuePYSf5mfRJYRSEM3+XOdyE
+	 IAsSVnBAcw82Q==
 Received: from IcarusMOD.eternityproject.eu (cola.collaboradmins.com [195.201.22.229])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: kholk11)
-	by madrid.collaboradmins.com (Postfix) with ESMTPSA id CEA123782043;
-	Mon, 15 Apr 2024 07:54:13 +0000 (UTC)
+	by madrid.collaboradmins.com (Postfix) with ESMTPSA id 83A3937820EF;
+	Mon, 15 Apr 2024 07:54:18 +0000 (UTC)
 From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 To: linux-scsi@vger.kernel.org
 Cc: alim.akhtar@samsung.com,
@@ -54,9 +54,9 @@ Cc: alim.akhtar@samsung.com,
 	linux-kernel@vger.kernel.org,
 	linux-mediatek@lists.infradead.org,
 	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v3 2/8] scsi: ufs: ufs-mediatek: Fix property name for crypt boost voltage
-Date: Mon, 15 Apr 2024 09:54:00 +0200
-Message-ID: <20240415075406.47543-3-angelogioacchino.delregno@collabora.com>
+Subject: [PATCH v3 5/8] dt-bindings: ufs: mediatek,ufs: Document MT8192 compatible with MT8183
+Date: Mon, 15 Apr 2024 09:54:03 +0200
+Message-ID: <20240415075406.47543-6-angelogioacchino.delregno@collabora.com>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240415075406.47543-1-angelogioacchino.delregno@collabora.com>
 References: <20240415075406.47543-1-angelogioacchino.delregno@collabora.com>
@@ -68,38 +68,39 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Rename "boost-crypt-vcore-min" to "mediatek,boost-crypt-microvolt":
-this is a vendor specific property and needs the "mediatek," prefix,
-moreover, this is not defining a minimum voltage per-se;
+The MT8192 UFS controller is compatible with the MT8183 one:
+document this by allowing to assign both compatible strings
+"mediatek,mt8192-ufshci", "mediatek,mt8183-ufshci" to the UFSHCI node.
 
-Even if technically a call to regulator_set_voltage() does indeed
-internally set a VMIN for a regulator, the API also supports other
-calls to set VMIN-VMAX constraints, so this "vcore-min"->"microvolt"
-rename is performed in order to avoid confusion, other than adding
-the "microvolt" suffix to it (as this does take microvolts!).
+Moreover, since no MT8192 devicetree ever declared any UFSHCI node,
+disallow specifying only the MT8192 compatible.
 
-Fixes: 590b0d2372fe ("scsi: ufs-mediatek: Support performance mode for inline encryption engine")
+In preparation for adding MT8195 to the mix, the MT8192 compatible
+was added as enum instead of const.
+
 Signed-off-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 ---
- drivers/ufs/host/ufs-mediatek.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index e4643ac49033..688d85909ad6 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -595,9 +595,9 @@ static void ufs_mtk_init_boost_crypt(struct ufs_hba *hba)
- 		goto disable_caps;
- 	}
+diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+index 32fd535a514a..2f4b0a40bd5e 100644
+--- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+@@ -14,9 +14,10 @@ allOf:
  
--	if (of_property_read_u32(dev->of_node, "boost-crypt-vcore-min",
-+	if (of_property_read_u32(dev->of_node, "mediatek,boost-crypt-microvolt",
- 				 &volt)) {
--		dev_info(dev, "failed to get boost-crypt-vcore-min");
-+		dev_info(dev, "failed to get mediatek,boost-crypt-microvolt");
- 		goto disable_caps;
- 	}
+ properties:
+   compatible:
+-    enum:
+-      - mediatek,mt8183-ufshci
+-      - mediatek,mt8192-ufshci
++    items:
++      - enum:
++          - mediatek,mt8192-ufshci
++      - const: mediatek,mt8183-ufshci
  
+   clocks:
+     maxItems: 1
 -- 
 2.44.0
 
