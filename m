@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A1E678676;
-	Mon, 15 Apr 2024 12:49:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A07285293;
+	Mon, 15 Apr 2024 12:50:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713185365; cv=none; b=IEgY9owMZBWhOOAvckZ/Poiu29GCwujsddn0I3/CL3hFEUJ8iCPEeD0dmPbd0wSWHEQbzh1Ho3hT2+FW9AMxWnpc7Xnhnh5LnaniaK3MDF4fkmRNskuoDcXTuz1J/DssS2cUImtThD9Soz25qZKXBjXJVsogVspvW7EdE+1XqXc=
+	t=1713185402; cv=none; b=NCjNaD2hosqc19+P0cRdmdHA9Cum9wrFxxCvJvDvKfjhHytaLtBFcADRd5/YyQHtcEm+B3JkIYUOZWge1o8ktuMa4VK1INsUTM1tl6m040Ae/3fGd1HZsCusGIggAM8vfMPrgIzpSwqRoQa9QeDZdFGIDNEbs5R95m/e+muTuWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713185365; c=relaxed/simple;
-	bh=6bzgEIhKA6CeQaTfg8ENrNbGmzaOmGDRBZQ5wVFTRJo=;
+	s=arc-20240116; t=1713185402; c=relaxed/simple;
+	bh=s47cdW7+juh03SCq6QFN4+wAqadPWwm5ERPpWRoCDow=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ThZP/tyMV5POAmbfUHH1x9vhOwJb8dRy2dPVLUuHvcyaBvWvi0Hu9MZQwVYrVA7MLox434kShOPIU+6A11EmrNdTp57G/sH+5BhiNCINMVIXDltyibmDeBWF1SBIwbkpsHuTfC/WORnCEH/PU4O1mdUC51V/3xMNzxn3Wu27hUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rYS3VPhL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=uCyFLBu9odNQWbhmZYcnrrkJIMTGqbfaBExbjdYmS91rjYJnydxGCFXRlC6Jc5XtJrilnk/cr8omQChQTiikIggIfVYvsguHgpu0c31vnYHtWM2bUj2bTC2alUXhoDZSX5taSerlSjTfoS0nuiX9+uQMCeoOTnIYjk5aEr1lWss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lDqXy1zH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rYS3VPhL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2542CC3277B;
-	Mon, 15 Apr 2024 12:49:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lDqXy1zH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 336E8C2BD10;
+	Mon, 15 Apr 2024 12:50:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713185365;
-	bh=6bzgEIhKA6CeQaTfg8ENrNbGmzaOmGDRBZQ5wVFTRJo=;
+	s=k20201202; t=1713185402;
+	bh=s47cdW7+juh03SCq6QFN4+wAqadPWwm5ERPpWRoCDow=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=rYS3VPhL570YLwluqOiBb5CJhLuWhVjviJje7E5CCIRDp5YvloO3UIwy0pPzdOUX2
-	 dRrJxdCUfBh+vV6lpjQc2PoMtKyHucCU8j1GJ9QumcCwzdepwKL0+3NkXwa2gRnZfz
-	 hv9NoigpNN2BkSqal0x760bk7vPzSbJJLkYes3Udx4WWyV2OakZjbVUQacwvyhcL/2
-	 bjIOWbdh4AtSXJSnQSm3F5HSGdT+ZSiNj0Q4npza9g9p2dSSBUaAii+tYttxa+5ZKm
-	 1NLzEsQR+TLzAImVjJlIRpUOLu5DDwKypybfBWniz+SmixooRbKdAymShKcSGw1jr1
-	 tzBjj/TB8tPlQ==
+	b=lDqXy1zH3ScAofun5w60bVZ1JEkvdqHtTvq1klFOiCR8oX5HfbfwUJ0fpMBbnqn6T
+	 6PHryPT3952Q/iZW6JEhuRSMDZvKHsa93gxvFddsgONlFyIkOjEG2DP3JelbhDyNhG
+	 eQ8P2OrAxrOZbJfaVsFNn0E6QtdK6VamD/eqvcC/66t8msJNM9jSRDqnGbim0fyh7z
+	 WyOfzROFCYVoZlJCWM0q4MRhpkbVygnMyFgw6uWfo2kbm6G9D+hWD8BqRV2DQRt/ok
+	 /S4kE0WztAN0R6Lm6LNkGT7FvN37MKKueBaYDziacs+6/MgQkMClwJOs6aNXrkagWe
+	 vzildnL2MToZw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -40,17 +40,17 @@ Cc: Peter Wang <peter.wang@mediatek.com>,
 	quic_cang@quicinc.com,
 	avri.altman@wdc.com,
 	quic_nguyenb@quicinc.com,
-	manivannan.sadhasivam@linaro.org,
 	beanhuo@micron.com,
+	manivannan.sadhasivam@linaro.org,
 	linux-scsi@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.8 07/15] scsi: ufs: core: Fix MCQ mode dev command timeout
-Date: Mon, 15 Apr 2024 06:02:47 -0400
-Message-ID: <20240415100311.3126785-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 04/12] scsi: ufs: core: WLUN suspend dev/link state error recovery
+Date: Mon, 15 Apr 2024 06:03:39 -0400
+Message-ID: <20240415100358.3127162-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240415100311.3126785-1-sashal@kernel.org>
-References: <20240415100311.3126785-1-sashal@kernel.org>
+In-Reply-To: <20240415100358.3127162-1-sashal@kernel.org>
+References: <20240415100358.3127162-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -59,44 +59,46 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.8.6
+X-stable-base: Linux 6.6.27
 Content-Transfer-Encoding: 8bit
 
 From: Peter Wang <peter.wang@mediatek.com>
 
-[ Upstream commit 2a26a11e9c258b14be6fd98f8a85f20ac1fff66e ]
+[ Upstream commit 6bc5e70b1c792b31b497e48b4668a9a2909aca0d ]
 
-When a dev command times out in MCQ mode, a successfully cleared command
-should cause a retry. However, because we currently return 0, the caller
-considers the command a success which causes the following error to be
-logged: "Invalid offset 0x0 in descriptor IDN 0x9, length 0x0".
-
-Retry if clearing the command was successful.
+When wl suspend error occurs, for example BKOP or SSU timeout, the host
+triggers an error handler and returns -EBUSY to break the wl suspend
+process.  However, it is possible for the runtime PM to enter wl suspend
+again before the error handler has finished, and return -EINVAL because the
+device is in an error state. To address this, ensure that the rumtime PM
+waits for the error handler to finish, or trigger the error handler in such
+cases, because returning -EINVAL can cause the I/O to hang.
 
 Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-Link: https://lore.kernel.org/r/20240328111244.3599-1-peter.wang@mediatek.com
+Link: https://lore.kernel.org/r/20240329015036.15707-1-peter.wang@mediatek.com
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/ufs/core/ufshcd.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 14a6a100fcdb0..4a07a18cf835d 100644
+index ee9119b708f01..8005373e20bae 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -3172,7 +3172,9 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+@@ -9547,7 +9547,10 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
  
- 		/* MCQ mode */
- 		if (is_mcq_enabled(hba)) {
--			err = ufshcd_clear_cmd(hba, lrbp->task_tag);
-+			/* successfully cleared the command, retry if needed */
-+			if (ufshcd_clear_cmd(hba, lrbp->task_tag) == 0)
-+				err = -EAGAIN;
- 			hba->dev_cmd.complete = NULL;
- 			return err;
- 		}
+ 	/* UFS device & link must be active before we enter in this function */
+ 	if (!ufshcd_is_ufs_dev_active(hba) || !ufshcd_is_link_active(hba)) {
+-		ret = -EINVAL;
++		/*  Wait err handler finish or trigger err recovery */
++		if (!ufshcd_eh_in_progress(hba))
++			ufshcd_force_error_recovery(hba);
++		ret = -EBUSY;
+ 		goto enable_scaling;
+ 	}
+ 
 -- 
 2.43.0
 
