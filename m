@@ -1,48 +1,48 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAE6F137921;
-	Tue, 16 Apr 2024 19:18:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51D28137934;
+	Tue, 16 Apr 2024 19:20:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713295117; cv=none; b=S01ohVwhoBBwkz7vS9i6Vx7WnsJNVB77Eh6qNpk1joubxZOL2Yj6LGZiuqTUnesDjNCMe8YEnlz+dd88+YbIKRMRdq98B4HAVCRAFxe7ERy/SfGe7qbVdR6I/gfU3jmKPoiKB/KjhqLURKMx+bcDFbUXeOP4aol0nK2JwlSRRxw=
+	t=1713295211; cv=none; b=Yt+9aqD2vEZasuAGt+GAxwRlinKcEnYGFjiW1X/4U3zO1u2iiuK14lYd2VUxiY49TskUgxF1nTbrMH6ioCbu7MXZcyxS0ZvI/9bF9h9ikTtvs9NWZtM8I93IfDfKNXEzgRTQspuaL9FyWVFesxHIj3E71US198PErJadysewRzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713295117; c=relaxed/simple;
-	bh=eFsQnwS6PGFtgDcFaHJVKvrfFzDGNqbI1upRmAGSdUs=;
+	s=arc-20240116; t=1713295211; c=relaxed/simple;
+	bh=ogCtVrBRBgX+wHrNXPPVDs4aHPlnhEfxlOiisGGj0kA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Zefl1IMeAE2ZuHJIeYFuQlsuTAt8gL/UQwhKNwiKc5XPZePJLrXefg7Unh3acPFLjOhbxGXKbpYXpT+RHT2OTo71SwG9SPXg6ufg+eEhbyCpZjfcA0xYaK2KawEJEdiux+bG3uMD6eWsf+tacV0Q0XNI/BGbvL03S6/pwHxwgwY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=fx8QpHx7; arc=none smtp.client-ip=199.89.1.12
+	 In-Reply-To:Content-Type; b=VPhz5odAIaK/d7EaVIq+PTknPLGBeqN7Fg5X/A1fJPzIgh3fxe74NBebI4/lhVeQTtLnzpPQV9YOhjPpiEuatrOoILbOp9fS+JU7169x8iyy0BlIvEBswbN07jw9iGcjebSZFx/zhb9MQ4KzS0Pta2fJJl0XihmWDZHeVoDNg00=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=b2zqqvY7; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="fx8QpHx7"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="b2zqqvY7"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4VJv2s5Ty9zlgTHp;
-	Tue, 16 Apr 2024 19:18:29 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VJv4n5dDGz6Cnk8s;
+	Tue, 16 Apr 2024 19:20:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1713295108; x=1715887109; bh=eFsQnwS6PGFtgDcFaHJVKvrf
-	FzDGNqbI1upRmAGSdUs=; b=fx8QpHx7MdXz4DWNF5sKx2pET/oKMw17BAId9stL
-	5lzAFPohxQeKZACWn35Z8lu+Ne42NFD8qXLHVetH5fTj1WFay6FH1Gfn/XoYRCKx
-	kEYjzppO5JLFiPFgqOIcYv1hRVcxoy+yoL6LB9e8FQT8QgyxCPb8qFiv2vo0laLq
-	/+sX5Uc/C0O7KWaFLCidfxjTC1Xu2wpCB1soWkDo6WptScusk9a38o+3Zf90YLEu
-	HOBCLE0o5RKQaDzZ/SnkeEumTTSmZliH1sY2f5G7OSVCbTZfBi4umZWPkczglsW9
-	Pr7t9qwMb1oSjIo5s0agNOQYGEhfWupQHcPtSrFWZEl31g==
+	 s=mr01; t=1713295208; x=1715887209; bh=Xdyvfbt1TIkpxYSFrkkGBbE7
+	xEwlKwVi2d5imCHf7/s=; b=b2zqqvY7wz5e6ZOxPCQE6VaPaRXCBNn95peMnK7j
+	j1ivgWvHtajM/diwASlsYvhtlLoMPXIGp75uXKvbd9h3sHduXJhFO1CRUx673CRR
+	1HdXyKgrQzt7I9e2saiVJqKaIVqegFsNtJjCNvsVy5A5Gtw/083aPLnjussG8OOF
+	YljCr8czGkEG6j9W/40gt3d9G6K2qvn87/ULVwRL93tbX2qOAxb7xVp6bkTNW/8q
+	gA3hGi3TGvHQ1cFXXedhdJK6wumi2YxgRt7nS5Hs2JO+kpPwiYpwKZe/u038hkKc
+	uXOoC1c/55gIddLkF9YDrT6r85hyPCvcpP8X48faw0/ezA==
 X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id gvqFSUSqaQat; Tue, 16 Apr 2024 19:18:28 +0000 (UTC)
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id HNb3CA8AzuaF; Tue, 16 Apr 2024 19:20:08 +0000 (UTC)
 Received: from [100.96.154.26] (unknown [104.132.0.90])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4VJv2q3mZZzlgTsK;
-	Tue, 16 Apr 2024 19:18:27 +0000 (UTC)
-Message-ID: <0b031b8f-c07c-42ef-af93-7336439d3c37@acm.org>
-Date: Tue, 16 Apr 2024 12:18:25 -0700
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VJv4l1xk3z6Cnk8m;
+	Tue, 16 Apr 2024 19:20:06 +0000 (UTC)
+Message-ID: <0beac395-0c89-4fa6-b4a1-d0565373e60a@acm.org>
+Date: Tue, 16 Apr 2024 12:20:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,29 +50,35 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/4] scsi: ufs: core: Make use of guard(spinlock_irqsave)
+Subject: Re: [PATCH 4/4] scsi: ufs: core: Make use of guard(mutex)
 To: Avri Altman <avri.altman@wdc.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20240416102348.614-1-avri.altman@wdc.com>
- <20240416102348.614-2-avri.altman@wdc.com>
+ <20240416102348.614-5-avri.altman@wdc.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240416102348.614-2-avri.altman@wdc.com>
+In-Reply-To: <20240416102348.614-5-avri.altman@wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 4/16/24 03:23, Avri Altman wrote:
-> +#define SERIALIZE_HOST_IRQSAVE(hba) guard(spinlock_irqsave)(hba->host->host_lock)
+> @@ -5682,9 +5681,8 @@ int ufshcd_write_ee_control(struct ufs_hba *hba)
+>   {
+>   	int err;
+>   
+> -	mutex_lock(&hba->ee_ctrl_mutex);
+> +	guard(mutex)(&hba->ee_ctrl_mutex);
+>   	err = __ufshcd_write_ee_control(hba, hba->ee_ctrl_mask);
+> -	mutex_unlock(&hba->ee_ctrl_mutex);
+>   	if (err)
+>   		dev_err(hba->dev, "%s: failed to write ee control %d\n",
+>   			__func__, err);
 
-Something I have brought up before: what does the host lock protect in
-the UFS driver? Rather than reworking the code that acquires and
-releases the host lock, all uses of the host lock should be eliminated
-from the UFS driver. The host lock should be replaced with new locks of
-which it is clearly documented what member variables these new locks
-protect.
+This change moves the dev_err() statement inside the code block
+protected by ee_ctrl_mutex. Please do not make such changes in this
+patch.
 
 Thanks,
 
 Bart.
-
