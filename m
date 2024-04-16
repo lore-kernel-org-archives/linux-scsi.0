@@ -1,158 +1,101 @@
-Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98ED212E48;
-	Tue, 16 Apr 2024 03:09:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6556F35280;
+	Tue, 16 Apr 2024 06:32:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713236983; cv=none; b=HI48VtHCKYHq+wqSdBVTx4zgvvL1oZbpOKcpuyoNxgn/9m6ft5inlhZCNzfUkPPrA7OTJCEW4gkP2oxBRySdUxu2Y1Mfrjt3a+/eul9GCVKEdY2n+/EVM5DMw0E47+lncGhdOYMO6dZ/9WfMmfazrpibiNPvaL0mkXGX6X7utKA=
+	t=1713249147; cv=none; b=SUzWmEEGs7XCP/XwhPdyd/bF11JKB1OxvmxOXHmMHHlm27vSzRLzdGVZGm2mZ66p4TqEFvVZRtctBoUGhBYGNJidf7FjBA+0wSPx4+t4d3lkNGTKMu8VpDnhhGbWTFatpDsKn08bGq9jEH2HfldCNYo2X8AsBIhDZZF8vvlEyo0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713236983; c=relaxed/simple;
-	bh=lpF0oJa0WGrlcK+RmBCLs6iVDc79ONJGE0ALQEh7ls4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RxHIwjHU+Q62YUz92qBkw+3Wfd+yrWZBfyouzLRkdoY9NP5dF8iFEWFqQK6C2reCdXmF47zBVbakBjoDUE63vSCJeVCiJvShefz12ADYBIdJ9s1xChqIYjffzFXpMA3YYcCUbUfsyNG24powmKlwAOje8Eg8YVMetNJhUeTL2vs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4VJTTX13FLz1RCqg;
-	Tue, 16 Apr 2024 11:06:40 +0800 (CST)
-Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 64C01180064;
-	Tue, 16 Apr 2024 11:09:37 +0800 (CST)
-Received: from localhost.localdomain (10.50.165.33) by
- dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.28; Tue, 16 Apr 2024 11:09:37 +0800
-From: Xingui Yang <yangxingui@huawei.com>
-To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
-Subject: [PATCH] scsi: libsas: Fix exp-attached end device cannot be scanned in again after probe failed
-Date: Tue, 16 Apr 2024 03:07:27 +0000
-Message-ID: <20240416030727.17074-1-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.17.1
+	s=arc-20240116; t=1713249147; c=relaxed/simple;
+	bh=L0uSowqXWaOKHmbvtmcvv3CH+kLSNUKlVoz9ET8Wz6M=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Qa8VYHEudPY31JJdD+UU8OZdqvQpGv63AKNF0svQfSVw5Xh14AvyPonaoC+epHbVT2kirsG2Ztp7qkHmFUqbHzVwuS7gRculL+TF8BHMVN6jdz+4OggZZPfEI9NylsARd5l/6DvLjtKOVYneZntETr1M9c68zDe7CLNDZgLkYzo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kwJ/DjB3; arc=none smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kwJ/DjB3"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-a523dad53e0so509272466b.1;
+        Mon, 15 Apr 2024 23:32:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1713249145; x=1713853945; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=uvT0ik8y9YSN8TDWnzi97O0pi4EAtF0id/yb9bB2ojE=;
+        b=kwJ/DjB33koeKyzv4BjVTnC43isP4efqTrl03W4nc5rUUQKqNEAmQ9x5EZAf9u6AVC
+         KE24d9n0Udu80DA0pEbn8R+8jWHZ8W84xWZ8LkWRIJA81E/+AYb2g3BXEfTgnSFJzBX0
+         bxHmI/m85ggSaj9PU+vWGinTmr+P71/Q7glHUZTLDBLfONWZn2QTdEoAzU1qpv5axMVR
+         U+3V/cGUKpWsa8q6wW1JyGVs/bNqPBvwJws8IiedWIB/9LiFivl1zIt4CyipA1Sjr5ZE
+         BSAB5nfPEZopLWobjCxjjbHoO0m0bzkoEBKRV4iqqDGuX+xG29OKTAVV3e5jNDERaM2+
+         RoJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713249145; x=1713853945;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=uvT0ik8y9YSN8TDWnzi97O0pi4EAtF0id/yb9bB2ojE=;
+        b=lMmTOumPSzZqpDy43jVEHZel1Ut1WBNa1VWOm7T4K4usSzeX/eGCkXeI1kLL82qKSp
+         KVezE9g81HlQ3nT3BE6FGvVoT7VFF/9PByUb4TsS8R9w0IqxMPGL29VqZfJRt4ekFqyL
+         VBx3oIxi2QI56R2BPLxs5r2+ZZNBw6jHz9iEsaly6jkgICByFb/95j6QYf07mEMTiZ/9
+         yZ3NEa6FHTCtS+vxIbKH2uGdQO23HTviTQFS78ppKMXbZESvl60fHiFxL85CQ/16yyPK
+         GmlsWISLpS1Zqo9EW3Z5irpeqcNBttMNN4RtH3hckxZY3NHMKq4IJxFElVPfL7dEzc8a
+         W8HQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXktxvWw7p2h+X3yalTSQse6ta0rZS52r5fHPC20S8GGGAATTfkhyY4SVg3Yo/ZU74Am4YQaeZB1X65M0Y7nq32l5HwJHhu4FliMw==
+X-Gm-Message-State: AOJu0YydB0INslDQP7H6Hhh8xIpDq6t6QJjEGQjoy8zuC14jNwv6tMlE
+	rzuUiSqZa9+7VoK8LaR1DIoLv1MQJbZRoKX4hJ4g2mI1s3zuQaS++UQNSNu/etKRkRNMcl8ykL6
+	7D3mCK8pPURgCD+9VjdYcOm3JZdM=
+X-Google-Smtp-Source: AGHT+IFxCqi2XVU3mI19z9HnKc+NcVHkZkkUQWCwzy9Il40jnhoF1q2Jp8UC32a+LmEsQ3Lc2W0VGzTG/8DDEWMGnLg=
+X-Received: by 2002:a17:906:8d1:b0:a52:1bba:7458 with SMTP id
+ o17-20020a17090608d100b00a521bba7458mr1427775eje.0.1713249144472; Mon, 15 Apr
+ 2024 23:32:24 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpemd100001.china.huawei.com (7.185.36.94)
+References: <CAEkJfYNguDt47=KnEUX7tLwx_46ggBx3Oh3-3dAcZxqndL_OWQ@mail.gmail.com>
+ <48043100-a817-4ca2-a141-60e3ab9cbfef@acm.org>
+In-Reply-To: <48043100-a817-4ca2-a141-60e3ab9cbfef@acm.org>
+From: Sam Sun <samsun1006219@gmail.com>
+Date: Tue, 16 Apr 2024 14:32:12 +0800
+Message-ID: <CAEkJfYP1eieCj72nnbWQFOq3PmDi_amtRfrG89kViiQy+bePaA@mail.gmail.com>
+Subject: Re: [PATCH] drivers: scsi: fix shift-out-of-bounds in sg_build_indirect
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-kernel@vger.kernel.org, martin.petersen@oracle.com, 
+	linux-scsi@vger.kernel.org, xrivendell7@gmail.com, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-We found that it is judged as broadcast flutter and exits directly when the
-exp-attached end device reconnects after the end device probe failed.
+On Tue, Apr 16, 2024 at 1:26=E2=80=AFAM Bart Van Assche <bvanassche@acm.org=
+> wrote:
+>
+> On 4/14/24 20:14, Sam Sun wrote:
+> > -    num =3D scatter_elem_sz;
+> > +    num =3D max(scatter_elem_sz, PAGE_SIZE);
+>
+> Shouldn't the following statements be modified instead of the above
+> statement? I think these are the only statements that can cause
+> scatter_elem_sz to become smaller than PAGE_SIZE:
+>
+>         scatter_elem_sz =3D ret_sz;
+>         scatter_elem_sz_prev =3D ret_sz;
+>
 
-[78779.654026] sas: broadcast received: 0
-[78779.654037] sas: REVALIDATING DOMAIN on port 0, pid:10
-[78779.654680] sas: ex 500e004aaaaaaa1f phy05 change count has changed
-[78779.662977] sas: ex 500e004aaaaaaa1f phy05 originated BROADCAST(CHANGE)
-[78779.662986] sas: ex 500e004aaaaaaa1f phy05 new device attached
-[78779.663079] sas: ex 500e004aaaaaaa1f phy05:U:8 attached: 500e004aaaaaaa05 (stp)
-[78779.693542] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] found
-[78779.701155] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
-[78779.707864] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
-...
-[78835.161307] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
-[78835.171344] sas: sas_probe_sata: for exp-attached device 500e004aaaaaaa05 returned -19
-[78835.180879] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] is gone
-[78835.187487] sas: broadcast received: 0
-[78835.187504] sas: REVALIDATING DOMAIN on port 0, pid:10
-[78835.188263] sas: ex 500e004aaaaaaa1f phy05 change count has changed
-[78835.195870] sas: ex 500e004aaaaaaa1f phy05 originated BROADCAST(CHANGE)
-[78835.195875] sas: ex 500e004aaaaaaa1f rediscovering phy05
-[78835.196022] sas: ex 500e004aaaaaaa1f phy05:U:A attached: 500e004aaaaaaa05 (stp)
-[78835.196026] sas: ex 500e004aaaaaaa1f phy05 broadcast flutter
-[78835.197615] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
+Yes, these statements are the only statements that modify
+scatter_elem_sz. However, ret_sz will never be less than PAGE_SIZE,
+since it is calculated by 1 << (PAGE_SIZE + order), and order will not
+be less than zero. So I think these statements do not need to be
+modified.
 
-The cause of the problem is that the related ex_phy information was not
-cleared after the end device probe failed. In order to solve the above
-problem, a function sas_ex_unregister_end_dev() is defined to clear the
-ex_phy information and unregister the end device when the exp-attached end
-device probe failed.
+scatter_elem_sz is also exported to userspace by sysfs interface
+(macro module_param_named()), and privileged users could modify it to
+any int they want. So I also set the exported type to uint in this
+patch. Should I also change the type of scatter_elem_sz and
+scatter_elem_sz_prev also to uint?
 
-As the sata device is an asynchronous probe, the sata device may probe
-failed after done REVALIDATING DOMAIN. Then after the port is added to the
-sas_port_del_list, the port will not be deleted until the end of the next
-REVALIDATING DOMAIN and sas_destruct_ports() is called. A warning about
-creating a duplicate port will occur in the new REVALIDATING DOMAIN when
-the end device reconnects. Therefore, the previous destroy_list and
-sas_port_del_list should be handled before REVALIDATING DOMAIN.
-
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
- drivers/scsi/libsas/sas_discover.c |  2 ++
- drivers/scsi/libsas/sas_expander.c | 16 ++++++++++++++++
- drivers/scsi/libsas/sas_internal.h |  6 +++++-
- 3 files changed, 23 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 8fb7c41c0962..aae90153f4c6 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -517,6 +517,8 @@ static void sas_revalidate_domain(struct work_struct *work)
- 	struct sas_ha_struct *ha = port->ha;
- 	struct domain_device *ddev = port->port_dev;
- 
-+	sas_destruct_devices(port);
-+	sas_destruct_ports(port);
- 	/* prevent revalidation from finding sata links in recovery */
- 	mutex_lock(&ha->disco_mutex);
- 	if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)) {
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index f6e6db8b8aba..6ae1f4aaaf61 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1856,6 +1856,22 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
- 	}
- }
- 
-+void sas_ex_unregister_end_dev(struct domain_device *dev)
-+{
-+	struct domain_device *parent = dev->parent;
-+	struct expander_device *parent_ex = &parent->ex_dev;
-+	int i;
-+
-+	for (i = 0; i < parent_ex->num_phys; i++) {
-+		struct ex_phy *phy = &parent_ex->ex_phy[i];
-+
-+		if (sas_phy_match_dev_addr(dev, phy)) {
-+			sas_unregister_devs_sas_addr(parent, i, true);
-+			break;
-+		}
-+	}
-+}
-+
- static int sas_discover_bfs_by_root_level(struct domain_device *root,
- 					  const int level)
- {
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 3804aef165ad..434f928c2ed8 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -50,6 +50,7 @@ void sas_discover_event(struct asd_sas_port *port, enum discover_event ev);
- 
- void sas_init_dev(struct domain_device *dev);
- void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev);
-+void sas_ex_unregister_end_dev(struct domain_device *dev);
- 
- void sas_scsi_recover_host(struct Scsi_Host *shost);
- 
-@@ -145,7 +146,10 @@ static inline void sas_fail_probe(struct domain_device *dev, const char *func, i
- 		func, dev->parent ? "exp-attached" :
- 		"direct-attached",
- 		SAS_ADDR(dev->sas_addr), err);
--	sas_unregister_dev(dev->port, dev);
-+	if (dev->parent && !dev_is_expander(dev->dev_type))
-+		sas_ex_unregister_end_dev(dev);
-+	else
-+		sas_unregister_dev(dev->port, dev);
- }
- 
- static inline void sas_fill_in_rphy(struct domain_device *dev,
--- 
-2.17.1
-
+Best Regards,
+Yue
