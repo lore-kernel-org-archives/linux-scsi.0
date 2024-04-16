@@ -1,143 +1,112 @@
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f43.google.com (mail-oo1-f43.google.com [209.85.161.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35AF6127E28;
-	Tue, 16 Apr 2024 10:24:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06FA271B30
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Apr 2024 10:28:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713263068; cv=none; b=bv8yGezOLrjBky3WpE2ypvwk7p7RI/2DmTYEcBTMiZePMoo8salBi/FC59OZbdkjmy6WD4n34aeHtobra6/rVeOX4S09agbtKwPgydhZWfLQ9GhSvICGv3LLWzshJCeUouZSDSozbeMpJCKpypKQWH+laZSK1T5+yCtG653TIgc=
+	t=1713263323; cv=none; b=G1JXqaOg2u1bz6kfSfwcenyvG8bk4E2I70pBZM10IFGLv6HI0lKpgWWLEpdDUdRXruSRQ3soR9CujYVuKcA0N26X6RdGKrwSE5gxnfszZMPlO27OTZ5s0F0GKkS3f/5jl5zdizBaG6Phw0aCwi+tWPTQEQDM1o/GNIHB1DUUheI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713263068; c=relaxed/simple;
-	bh=hTcCxJ81W6DpF6AmJDnsbXoTrSkwCNqtFbf41sEPkZs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BBHK3GkEY7M9Lh0fmw9V6eO9Ecb1Kr3n7cPvj0n4OPMnW0vsVoI6MI+p/983ROzeU/oxVHg9wuIoepDuvzWZGGmFzGrIvxo97fZZ/ABv362MTCAiXrCBWl3SuPGr/E0b99sjXEQU5LK2aLIjNtruKF2iuxWyqTuoTXaDGlALS8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=dxh1bB8D; arc=none smtp.client-ip=216.71.153.144
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1713263323; c=relaxed/simple;
+	bh=gXScnn7hEl87X0LHuVINW9LoVC2gyqeNWlwiwXYKs4A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=feaQgxHTmujiM3we/tDdq8Ceob6ds9vhuLpdVsLZQigwoqMCLboeDf6JeLhhA1qnOHWRguNWFzKB0EfIXy/r5RnBlarhy5MLcoDFztev/qzAJl7mHUjxneZ+zpeXmn3b4e/+Vou4fLHfY7gAhMD2WL0koOmQ4Vul5lEzy924vRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hdKv9A7+; arc=none smtp.client-ip=209.85.161.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="dxh1bB8D"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1713263066; x=1744799066;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=hTcCxJ81W6DpF6AmJDnsbXoTrSkwCNqtFbf41sEPkZs=;
-  b=dxh1bB8D7AgwoysOn7ASQ8w+moJCFcotaJmLEZf2ehnaFd0hpP+f2Gdz
-   DTV2x2gxa3pZhZ1VcS2LzgQU550SR73tonS/aQ0j7qVqTL0wNN2dZAdNU
-   Z8ED3q7L2eKPfiX6th2V62+usCTmQ73zl9njzyO9H17zAFqi+ZQvQFLdZ
-   TFriYhP8mMW5jRM5Ji+irCxGUAhUG4AVK5JavIRPMzGah/UpcDc8RC2hV
-   EZRJhmCtk+qj8AvAfPHlvpiReQYdH2mmPA8ZPvmBrjt4scoh1p6qufUkw
-   FIaSAtzxCO13dw9ZO/mBuDpdrc9GUFsZ1hxTRiEpmLpOqH5FST0U0lrrr
-   Q==;
-X-CSE-ConnectionGUID: +UgUWEwHSEeQN7R4duybgw==
-X-CSE-MsgGUID: nmW7dhJnStiVgCQk9+a/XQ==
-X-IronPort-AV: E=Sophos;i="6.07,205,1708358400"; 
-   d="scan'208";a="14796379"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Apr 2024 18:24:25 +0800
-IronPort-SDR: S9EzlP8rGimqOvlQBymaOb1hpbL/GsejJ+awZAWUqE+L6Att5pQukYob02+9D3JVid9VkInjRE
- 877yLG2odv0g==
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 16 Apr 2024 02:27:03 -0700
-IronPort-SDR: QieiRUn5/lbHJYF3wN3c7A0+5ShprdOBLi5+H1V0jxVwd/YvfnlSu7NvCZ+AB+ouGasTG0rJZo
- 3yhjtGfPVAYhxbB5iNHos1LV/9fNh12D39gC8CFDkDREowNe6Rd08phorO7HtFHLM0v1my7tP5
- YJj3cO1ScnPp48zu8CFNTHzJ2Ij0wGdeOowEXrhDZCSmYbDJjivzNzTMYyonHaC5Om+ywaP8G/
- 1bYF4y6BSQYkxlScRl4zOy+D/pJubrsHb8F/ai+plOrymqTI1huGFSOOHS90kQTEWG7kpT97ld
- DUs=
-WDCIronportException: Internal
-Received: from bxygm33.ad.shared ([10.45.31.229])
-  by uls-op-cesaip01.wdc.com with ESMTP; 16 Apr 2024 03:24:23 -0700
-From: Avri Altman <avri.altman@wdc.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 4/4] scsi: ufs: core: Make use of guard(mutex)
-Date: Tue, 16 Apr 2024 13:23:48 +0300
-Message-ID: <20240416102348.614-5-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20240416102348.614-1-avri.altman@wdc.com>
-References: <20240416102348.614-1-avri.altman@wdc.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hdKv9A7+"
+Received: by mail-oo1-f43.google.com with SMTP id 006d021491bc7-5aa28cde736so2474126eaf.1
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Apr 2024 03:28:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1713263321; x=1713868121; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=gXScnn7hEl87X0LHuVINW9LoVC2gyqeNWlwiwXYKs4A=;
+        b=hdKv9A7+Y9zW7yIVLwQVu0RoSY0kp0nc1FOJVW7N89Z4k4IxwzGF1BJvplkVMHXBxl
+         s+J5vXnuxaQIpfIPVccqRLum5dVHoJ8be3GJHRZk4wffNInRtVjyAOI8uxPAeawlU7Na
+         OWrbVuc7XYOpllPVcO0knJMdnTcQYxtYC4wqwXM9u71knbX6ie+9Lp8s3csdMgO+cyZc
+         TMQ+7wbsyg2XXE7IPQUJZdE3T1INlP7L7uwEv9ZDHScIYvBt8oHlobo4Z3dBUi/1aWSO
+         cTi7YFbEqXQIfDMye3512OST9IWAle2r5km9EEfDas4oCRcilhJG0LXkrNcd5IgyMybC
+         R8Bw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713263321; x=1713868121;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=gXScnn7hEl87X0LHuVINW9LoVC2gyqeNWlwiwXYKs4A=;
+        b=pXaIZHR1/blZmdCiZ5EttOJ0e6/dFwEl60cG2mCRZcBce6Xf/AgidJJh+pjttGEl1w
+         DBmsO+C0rvRyG5XMrK7lTI0RFr4yrrXY1KIEAypE07StYkd3doKKiR04Fb4RXzQyQtob
+         tYs3SZV0fOxReTcXQGxtQTkXzqJMSyuQTLsTREQZP6WCcH7Nqp3EorubEH8S6i54ZNTZ
+         +8nP957PgiFFr+NAyxey2orTu0/E4KjbeRAmjsNCOpre/bnNcbFw8KGqtEBL7sbBb2w0
+         LiEdantekUjbynrEn5e1/ft9Q47Ty3Y/x8eLtp2lMzO13YhJ4PpB4MPOgZ49mglyOK42
+         g1uw==
+X-Forwarded-Encrypted: i=1; AJvYcCUgE6N5/8XjiPnM3sgj1PkJoKRGimPnjMoIzBWnOWtgjNqtPa1lDwMnSqee5uqccLYblKOclrxX3isK5ffafyBDExCVBqjJkvEKqg==
+X-Gm-Message-State: AOJu0YxGdEqkz+iHbe/vgxJ7QZbKgc3iLkIjv7w3GhPCEKR92Wym5paS
+	uPZcbijLay+QFPhI5YKcExxXfBU7fIejjr3txQzUkc7nE6oMt1/wxqwcnE+bLGASvHCFqPMlGlw
+	eCRlOZNE4aFbYbuIaAeDk3VyXuoDCp/yqihDKRA==
+X-Google-Smtp-Source: AGHT+IE+KH4+3J+4bWImbLmf/i6TMO+pjq+Zhj12DdRm1Ocu0R700WdkfWb+yJ4DCJJOFwu9s9QfuRU794n8yE834po=
+X-Received: by 2002:a05:6820:1e16:b0:5aa:676e:9ad9 with SMTP id
+ dh22-20020a0568201e1600b005aa676e9ad9mr12599912oob.2.1713263321084; Tue, 16
+ Apr 2024 03:28:41 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20240404122559.898930-1-peter.griffin@linaro.org> <948a70ed-e3de-41d6-ada8-b547aa004ef0@kernel.org>
+In-Reply-To: <948a70ed-e3de-41d6-ada8-b547aa004ef0@kernel.org>
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Tue, 16 Apr 2024 11:28:30 +0100
+Message-ID: <CADrjBPoo4uwiv1x1mNdtNUiaYkbksTre19AYT-ZtzjXaV63CyQ@mail.gmail.com>
+Subject: Re: [PATCH 00/17] HSI2, UFS & UFS phy support for Tensor GS101
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
+	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	s.nawrocki@samsung.com, cw00.choi@samsung.com, jejb@linux.ibm.com, 
+	martin.petersen@oracle.com, chanho61.park@samsung.com, ebiggers@kernel.org, 
+	linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org, 
+	devicetree@vger.kernel.org, linux-clk@vger.kernel.org, 
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org, 
+	andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
+Content-Type: text/plain; charset="UTF-8"
 
-Replace few lock/unlock instances.
+Hi Krzysztof,
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/ufs/core/ufshcd.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+On Fri, 5 Apr 2024 at 08:45, Krzysztof Kozlowski <krzk@kernel.org> wrote:
+>
+> On 04/04/2024 14:25, Peter Griffin wrote:
+> > Hi folks,
+> >
+> > This series adds support for the High Speed Interface (HSI) 2 clock
+> > management unit, UFS controller and UFS phy calibration/tuning for GS101.
+> >
+> > With this series applied, UFS is now functional! The SKhynix HN8T05BZGKX015
+> > can be enumerated, partitions mounted etc. This then allows us to move away
+> > from the initramfs rootfs we have been using for development so far.
+> >
+> > The intention is this series will be merged via Krzysztofs Samsung Exynos
+> > tree(s). This series is rebased on next-20240404.
+> >
+> > The series is broadly split into the following parts:
+> > 1) dt-bindings documentation updates
+> > 2) gs101 device tree updates
+> > 3) Prepatory patches for samsung-ufs driver
+> > 4) GS101 ufs-phy support
+> > 5) Prepatory patches for ufs-exynos driver
+> > 6) GS101 ufs-exynos support
+>
+> UFS phy and host should go through their trees. What is the
+> reason/need/requirement to put it into this patchset and merge via
+> Samsung SoC tree?
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 3c62b69bbd52..c4b6b8276c20 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4240,7 +4240,8 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	int ret;
- 	bool reenable_intr = false;
- 
--	mutex_lock(&hba->uic_cmd_mutex);
-+	guard(mutex)(&hba->uic_cmd_mutex);
-+
- 	ufshcd_add_delay_before_dme_cmd(hba);
- 
- 	scoped_guard(spinlock_irqsave, hba->host->host_lock) {
-@@ -4310,8 +4311,6 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 		}
- 	}
- 
--	mutex_unlock(&hba->uic_cmd_mutex);
--
- 	return ret;
- }
- 
-@@ -5682,9 +5681,8 @@ int ufshcd_write_ee_control(struct ufs_hba *hba)
- {
- 	int err;
- 
--	mutex_lock(&hba->ee_ctrl_mutex);
-+	guard(mutex)(&hba->ee_ctrl_mutex);
- 	err = __ufshcd_write_ee_control(hba, hba->ee_ctrl_mask);
--	mutex_unlock(&hba->ee_ctrl_mutex);
- 	if (err)
- 		dev_err(hba->dev, "%s: failed to write ee control %d\n",
- 			__func__, err);
-@@ -5697,7 +5695,7 @@ int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
- 	u16 new_mask, ee_ctrl_mask;
- 	int err = 0;
- 
--	mutex_lock(&hba->ee_ctrl_mutex);
-+	guard(mutex)(&hba->ee_ctrl_mutex);
- 	new_mask = (*mask & ~clr) | set;
- 	ee_ctrl_mask = new_mask | *other_mask;
- 	if (ee_ctrl_mask != hba->ee_ctrl_mask)
-@@ -5707,7 +5705,6 @@ int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
- 		hba->ee_ctrl_mask = ee_ctrl_mask;
- 		*mask = new_mask;
- 	}
--	mutex_unlock(&hba->ee_ctrl_mutex);
- 	return err;
- }
- 
-@@ -6316,11 +6313,10 @@ static void ufshcd_force_error_recovery(struct ufs_hba *hba)
- 
- static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
- {
--	mutex_lock(&hba->wb_mutex);
-+	guard(mutex)(&hba->wb_mutex);
- 	down_write(&hba->clk_scaling_lock);
- 	hba->clk_scaling.is_allowed = allow;
- 	up_write(&hba->clk_scaling_lock);
--	mutex_unlock(&hba->wb_mutex);
- }
- 
- static void ufshcd_clk_scaling_suspend(struct ufs_hba *hba, bool suspend)
--- 
-2.42.0
+Good point, there is no requirement for it to all go via Samsung SoC
+tree I will remove that from the cover letter in future versions.
+I see Vinod has already queued the phy parts of the series which is great :-)
 
+regards,
+
+Peter
