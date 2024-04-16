@@ -1,55 +1,55 @@
-Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
+Received: from mail-oo1-f50.google.com (mail-oo1-f50.google.com [209.85.161.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC119129A93
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Apr 2024 11:57:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B2485644
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Apr 2024 12:14:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713268625; cv=none; b=QtyfzPkfvAhtbZ0GmlXb4GsxxlYSpvnaEr4DrHqWyW2mTS4J7kohi1TPwcFFbiIF8ycvXA2MbmGQHmZITsVvuFK7OqrijGL/0DBudRsQZEbWuOfhalLDB4bU+bsh5f4XRsAXQGrqCYU7Z9QxwSBjd6/JnlBduFo0nle6oWs6M7Q=
+	t=1713269648; cv=none; b=snv3rWK/88vwZhWQOwF7wyhMdlFK1vZNeET9Ak/VY6ZHh8O4LRfW81RsXiKPM2e8UlnGzIZMTmLkJ//eex20CNsWdWG5BAhNswNZO/V0xeM2kUdXN6drCJ6nkbfhXxpE4b/k2SxGc4U/ZVQk/zpuCXynDD8RBuyz8wxfh3474WI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713268625; c=relaxed/simple;
-	bh=vIl3v//FVA36XrKiforyh9hY0/yXzSMuW90U1Lzldf4=;
+	s=arc-20240116; t=1713269648; c=relaxed/simple;
+	bh=48Gr5eNn+Ssi4i2JyFoZuqgowPbwgV2AjpZpW+lUl3I=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EyFwSfqa+eEKAgarOzTiMEvT6oreEhLRNLcOXumy/FG1nxP+Hihd0fTNIwjiUEFdRX1meVkyV81kwqgfS5opxHNqoDg3l8VriduGKYMjWO/sr+/W0naug5U6zMBrAEji0MM/6C/YYwCGP6Woot2fBLu2b2XQ5Gh4u4J6yVrOCa0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=qAWrIJSB; arc=none smtp.client-ip=209.85.161.49
+	 To:Cc:Content-Type; b=NJvYNZ0OH+5swrIxo15Za/72IZjUSuy7MJu8tdcKKkmEfgVl5H5gJl5HBoojhhSFEaQpG4Mh/BZeSBiUWtjTjKOan1m6LPQjOZa0L2raehXtKgCYtrXQcr0SDZgrN25iYwzGihNrx/ufsrGjnw2vYMFfo4sETxZWgRDeCsbSIn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=TgTsVXOy; arc=none smtp.client-ip=209.85.161.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="qAWrIJSB"
-Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-5aa1e9527d1so3060240eaf.1
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Apr 2024 04:57:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="TgTsVXOy"
+Received: by mail-oo1-f50.google.com with SMTP id 006d021491bc7-5aa17c29ba0so2533465eaf.3
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Apr 2024 05:14:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1713268623; x=1713873423; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1713269646; x=1713874446; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ophtYrF9IpPwZurMvgYV2hp9I3BGj1tkL8j63ZRtc2I=;
-        b=qAWrIJSBaImnX5AI81q+IaPhDKBY5xYc6kTf40ixeVO8Vn8qqUOGKLZNpdiyguEcD8
-         osusODQ1FeE3OolyPUzXBkJE5b6qYdrRFT1i4fBvgC3SuI/JWDWh8RajZkmP5f8+rhnw
-         aaILeP6Aunaf8nFMdBvn1gp/IE12Kp2Nl5SYLhcpDt51Tu7y7qYQdcigN91BrCrpAKtu
-         EqqhQXRBoa7Z/Z4N3fJKss6XN93vDpG9jLh4XUi4GgGdo3iyFuW1qbVK/ESFRwJ6O75r
-         OeWWLX8AHiWzM6QmHV2B4lNH/sNEEEv8G/9ltoIAwNgOxtZLTO7f12qmS2QXTDadUhlP
-         qP6A==
+        bh=Z6x8KfkMeFuCLUkF0VuQt50edEuiXuMJGbYVUcWevqo=;
+        b=TgTsVXOy1BpfAVmNZd6pMis8Xm+uhVRYhI58Qf5crvUjjKkK2v9QVI4lbTBpSMDkdc
+         pg1Rakbv+OYxgl3xZ88b3I60ow/heXASw5e0dysEHExpeoiAZdCIxAVD1WtzUnAR+yCd
+         meOrqtKhi0Zpen295B1WWAqNwm9L7+waTIs/ZNjlwGwlFcjjdZ9CumLzTI+59roVspIL
+         L3DYE/ADhw7hpVujQQpAUOsDq3n7CN1UWKyOXcQSHuWE9ZYCyb+ZXkMYq4WRrxjJRhKW
+         N4eLvb+KucEpq7wDI2B8ZD2sTNJ2TeI2n06jtbZUFVAHCyrN8OJyuw8zkSJ9IDzYIcyq
+         WU4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713268623; x=1713873423;
+        d=1e100.net; s=20230601; t=1713269646; x=1713874446;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ophtYrF9IpPwZurMvgYV2hp9I3BGj1tkL8j63ZRtc2I=;
-        b=oSyE2uS+9D77Xoc5pl0vPHexIb44nv2EGirysLsdUYwNCU3TmV1+CywcSSTc1QRhJm
-         ujTnfSjvp9taZePJyq7m1k8LyMt20HDBellz7afu8k2r4JLY02GGwrDMxeg+kn6CQp7W
-         FrPeK/QocpYE5BhcKcb062nsvGtDNaxnlGkyNpQWgLcYul2QRmg3F40Ltn4tCMh2rHwM
-         /Xxnv58xf2g3ituepy/32wfUuAe+3QgXDZW3Zfo/Hy/72q5v2QCEfxI6zQr2V3iPqPF+
-         sGo2XzXlDQ+eOKEFzTFr8RySOILWUWPIcfo+ELPeU6F0tRdvQbwgk2R4g5tZGAt97nUL
-         Ce0Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUtjiKwhJlZKWL8H1fW3piFkxQZJ5fVkHaMFQMIrHqvmEg8HWP4ZZPo3aWrRNTWt/ACuWEssZAViCv3u56Zu9ea6ohg8VRexaYV5w==
-X-Gm-Message-State: AOJu0YwQpY7gYFHuai2bNQl4aYaQaIN61J/xzZ10Fkv5u6rKrEQ7v8xz
-	R7rlJJh8wwK1zmKybOg1Dld/ODaVg9A9HvwQGSaJj3x7gFOkkhTRVSnkmg32xjTZ7kCWx1zBRLa
-	Wx4Egf9VLaiaJbrsyZb/f61tj8NZXrIGYIJ3M+Q==
-X-Google-Smtp-Source: AGHT+IGdAJXHt7mAsVZuzt9JgE7vdWoLagtGQT3T15A+kBPHpQZl6zuXKVT8ycszrHB5VvpVeZdYSex6pwkAq/Bp7sg=
-X-Received: by 2002:a4a:aecb:0:b0:5ac:9efc:3b02 with SMTP id
- v11-20020a4aaecb000000b005ac9efc3b02mr5501112oon.8.1713268621486; Tue, 16 Apr
- 2024 04:57:01 -0700 (PDT)
+        bh=Z6x8KfkMeFuCLUkF0VuQt50edEuiXuMJGbYVUcWevqo=;
+        b=viD4Z66eZAHeQRC5uQOaXMaAHwbqJ2/7rjYr9oxBp0/tReQR62avSX1ioRDFmHTU5l
+         ALRxRVyHviNMaqkNzYZoSXbtnLPH+liKFwCG0pEQmMaXj4GTpEDVZjhIN7V2Dwth44fu
+         dJfBsju8siBTfyvyQbKS817eypskSwkI4iFICJ6FuTx7rH0cC3/kLA3W1L0cRtakBgFw
+         mnq8N6YqC3xE31HlpWYTaZJ9HfVV5ClQ3KHk9FWyqAtQAMuVD86gZ6Eda9ovTKDbdxc0
+         hg5HPbuU9Y2yCEYkf0w4xmttJU6OdmfahvcJCAgH0ZMtVUyqA9WVELerZ54hBab99vW2
+         OAnA==
+X-Forwarded-Encrypted: i=1; AJvYcCVnSkz5v1mCjMPaUA424zTwvNu36jcoy9C8Z9YyvppOm3Gn5AgIMKQLGl7TNaiQFAa/duUEXEJ+/nvvjIHx3MlL8uYC2PO89kM09Q==
+X-Gm-Message-State: AOJu0YwOKNmMSxRHz90lR9Fhqb9OXmBVA5Ahh04dSDrt+6IOcuqkuTSK
+	9T5+zCwPkPUQ+thK6Bv0Tva5FkFazpoQttvD2AWBNtSaf6RSnB3RgsKpPt9hxUPMOOlDNgpbcIf
+	dXqU/O1ssQ/blId5qmuNica8tvGByxgUXkZWnBA==
+X-Google-Smtp-Source: AGHT+IHjbw9BdGe0LBffamuGVcO3Fjs/dxkO1OlPwbcLBOwnYZIDIIIMJZvaH9S0UdI3wP+pcdkx10/t2jWsgTG3mgE=
+X-Received: by 2002:a4a:9893:0:b0:5ac:9fc0:cc6a with SMTP id
+ a19-20020a4a9893000000b005ac9fc0cc6amr6760168ooj.4.1713269645676; Tue, 16 Apr
+ 2024 05:14:05 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -57,12 +57,12 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-6-peter.griffin@linaro.org> <391a874522a4141b4bc7f0314a9e50d27142123a.camel@linaro.org>
-In-Reply-To: <391a874522a4141b4bc7f0314a9e50d27142123a.camel@linaro.org>
+ <20240404122559.898930-7-peter.griffin@linaro.org> <560e9a5b236728f62be4bfd8df187071c4bffb23.camel@linaro.org>
+In-Reply-To: <560e9a5b236728f62be4bfd8df187071c4bffb23.camel@linaro.org>
 From: Peter Griffin <peter.griffin@linaro.org>
-Date: Tue, 16 Apr 2024 12:56:50 +0100
-Message-ID: <CADrjBPqwLt6gzwMpkZvxp5sC-owdDYUN91F0-nV2NvEzek_v9g@mail.gmail.com>
-Subject: Re: [PATCH 05/17] arm64: dts: exynos: gs101: enable cmu-hsi2 clock controller
+Date: Tue, 16 Apr 2024 13:13:54 +0100
+Message-ID: <CADrjBPois-nLGkNdXRp9SF2t4xv1fr4MvSK7yT-7GA+QwkA2NA@mail.gmail.com>
+Subject: Re: [PATCH 06/17] arm64: dts: exynos: gs101: Add the hsi2 sysreg node
 To: =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
 Cc: mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org, 
 	krzk+dt@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
@@ -81,64 +81,44 @@ Hi Andr=C3=A9,
 
 Thanks for the review.
 
-On Fri, 5 Apr 2024 at 08:38, Andr=C3=A9 Draszik <andre.draszik@linaro.org> =
+On Fri, 5 Apr 2024 at 08:33, Andr=C3=A9 Draszik <andre.draszik@linaro.org> =
 wrote:
 >
+> Hi Pete,
+>
 > On Thu, 2024-04-04 at 13:25 +0100, Peter Griffin wrote:
-> > Enable the cmu_hsi2 clock management unit. It feeds some of
-> > the high speed interfaces such as PCIe and UFS.
+> > This has some configuration bits such as sharability that
+> > are required by UFS.
 > >
 > > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
 > > ---
-> >  arch/arm64/boot/dts/exynos/google/gs101.dtsi | 12 ++++++++++++
-> >  1 file changed, 12 insertions(+)
+> >  arch/arm64/boot/dts/exynos/google/gs101.dtsi | 6 ++++++
+> >  1 file changed, 6 insertions(+)
 > >
 > > diff --git a/arch/arm64/boot/dts/exynos/google/gs101.dtsi b/arch/arm64/=
 boot/dts/exynos/google/gs101.dtsi
-> > index eddb6b326fde..38ac4fb1397e 100644
+> > index 38ac4fb1397e..608369cec47b 100644
 > > --- a/arch/arm64/boot/dts/exynos/google/gs101.dtsi
 > > +++ b/arch/arm64/boot/dts/exynos/google/gs101.dtsi
-> > @@ -1253,6 +1253,18 @@ pinctrl_hsi1: pinctrl@11840000 {
-> >                       interrupts =3D <GIC_SPI 471 IRQ_TYPE_LEVEL_HIGH 0=
->;
+> > @@ -1265,6 +1265,12 @@ cmu_hsi2: clock-controller@14400000 {
+> >                       clock-names =3D "oscclk", "bus", "pcie", "ufs_emb=
+d", "mmc_card";
 > >               };
 > >
-> > +             cmu_hsi2: clock-controller@14400000 {
-> > +                     compatible =3D "google,gs101-cmu-hsi2";
-> > +                     reg =3D <0x14400000 0x4000>;
-> > +                     #clock-cells =3D <1>;
-> > +                     clocks =3D <&ext_24_5m>,
-> > +                              <&cmu_top CLK_DOUT_CMU_HSI2_BUS>,
-> > +                              <&cmu_top CLK_DOUT_CMU_HSI2_PCIE>,
-> > +                              <&cmu_top CLK_DOUT_CMU_HSI2_UFS_EMBD>,
-> > +                              <&cmu_top CLK_DOUT_CMU_HSI2_MMC_CARD>;
-> > +                     clock-names =3D "oscclk", "bus", "pcie", "ufs_emb=
-d", "mmc_card";
-> > +             };
+> > +             sysreg_hsi2: syscon@14420000 {
+> > +                     compatible =3D "google,gs101-hsi2-sysreg", "sysco=
+n";
+> > +                     reg =3D <0x14420000 0x1000>;
 >
-> This doesn't build because you didn't add the clock ids in the binding pa=
-tch.
+> Should the length not be 0x10000?
 
-These clock IDs are for cmu_top, not cmu_hsi2. They were added as part
-of the initial gs101/Oriole upstream support series in the following
-commit
+The downstream kernel uses a length of 0x1000 for all the
+foobar-sysreg nodes, but checking the specs it does indeed seem that
+the length should be 0x10000 (and that is what we've used for all the
+other sysreg nodes upstream).
 
-commit 0a910f1606384a5886a045e36b1fc80a7fa6706b
-Author: Peter Griffin <peter.griffin@linaro.org>
-Date:   Sat Dec 9 23:30:48 2023 +0000
-
-    dt-bindings: clock: Add Google gs101 clock management unit bindings
-
-    Provide dt-schema documentation for Google gs101 SoC clock controller.
-    Currently this adds support for cmu_top, cmu_misc and cmu_apm.
-
-    Reviewed-by: Sam Protsenko <semen.protsenko@linaro.org>
-    Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
-    Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-    Link: https://lore.kernel.org/r/20231209233106.147416-3-peter.griffin@l=
-inaro.org
-    Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Will update this in v2.
 
 regards,
 
-Peter
+Pete
