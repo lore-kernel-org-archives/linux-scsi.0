@@ -1,43 +1,77 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12890171079;
-	Wed, 17 Apr 2024 17:01:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E74A61487DE
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2024 17:35:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713373266; cv=none; b=KuUpTbLAhdi0bqnh3FqwQGQhfJd2IgMfekBXTwn5Q+DHwfuaYWzj6NMWV7a2cnhQQbEx69mFDbCauXSg3e5bVGzqM1v2nE9Pqx5uIoqyuwY/Cwr0bpCyO/6awHGNvIE2VXic4oPA21Rut6X1Uv1Istci53GSjLJUl/3plPRqZzY=
+	t=1713375351; cv=none; b=Kwomr1dYPdKFd0kbuBf18Rm4r8JBmXBu9Zjq0XSzirjiHpwbkZvUGTfrLLUayuZHeovfSjCiMUbgPv9e4YWHtFVyu0zlOH7j2EYhmoOlkSOLdhr45zX/3m8954trb6n1Egew/y7Rk61smvgxABZwcyRX8LzUTaszbeo7Xveyj4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713373266; c=relaxed/simple;
-	bh=nKeVeNgCcSI+26qQh+IsYhy1VrdQuFRSqA7SFnpQJeE=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=TxCixQNk0hmc2bJbvmtvX30tMrF+4DSn7knxXFsqXfstXY2czCY5fYFIFNbJm/9BDwP23oLzwM+1If+U083OduGgvEOl+/yqnXBKDyLSd+JrvrIPCFPJfF27OS53NMZfaYYnGznXA2Uyv/asaWinIjE6JIedhS8C20x0Lmmor2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XxHSYhkP; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1713375351; c=relaxed/simple;
+	bh=EUEq5eCikvb1PA+1pE5jT5oLwrFNWhGgWfY9hb71rBI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sSgu61zjTGubS3ahTCx767nVjRKRq9TAXhGLTRGdfh2bFtvIwRBugTXiugL3nkluibiPcaixdpjCJfM0iDZfWfd34ZMe1f315L8AKHYq+gZ8jC2+0SYOiiktZiyEWOMfgI1SiE95zGy2JO3ee7I4cPHzNyqF52cwFI3qnmjLR40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=NsJKJOXw; arc=none smtp.client-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XxHSYhkP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
-	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=8vdoC1n4NAGT51zT+XjZG+byDRcMNbmlIj/N6lUsVwg=; b=XxHSYhkP78vnJXr5/ru9AvKGXA
-	lONfc7ZJWmnQXT3d5x5ISPQdxCHO8rKYhbxpKj9pWh3ovmQdYcFg78TedrrV5/5xzTxEhqiVrBiog
-	WnxvR/ra+zuLcI4ns7qg45glSwti8l0u1LSAGewJxEm3UgYi+LFYX563hQw1MJexJB6BhCkeDH9Me
-	3TYfDZ4zWAA5utfC+3Ki8UzUlzi26APyPUUxj0y0X86HCnWD8+uIxoopV+hAJ9WtPvLjFhgk4Xvoq
-	5JUUyAyM8wA6QfYjm1HJN5uS0DKHEc5Ofc51brgBoWOuhNzFflnOTpz5o/b9zE+BDE+vzC8ENuSWt
-	2PPTNetQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rx8ea-00000003KIC-220d;
-	Wed, 17 Apr 2024 17:01:00 +0000
-Date: Wed, 17 Apr 2024 18:01:00 +0100
-From: Matthew Wilcox <willy@infradead.org>
-To: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-	linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-	bpf@vger.kernel.org
-Cc: lsf-pc@lists.linux-foundation.org
-Subject: [LSF/MM/BPF TOPIC] Running BOF
-Message-ID: <ZiAATJkOF-FulDyS@casper.infradead.org>
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="NsJKJOXw"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6e46dcd8feaso19177b3a.2
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2024 10:35:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1713375349; x=1713980149; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=pBJiH4urg4DBG6eZbcNPwgnZOdXfIaMFo9RuiRFHB0E=;
+        b=NsJKJOXwccHJwQ85rjFYE5qWw9ab4sPiSFGsQinb/nv07xhBj94Ty+ttoygJ0Ayekz
+         IIgZxNprKvMkfksYKhW89s9hAPPiknzK/5deAJu7lU0fzVuUuzZEBlx/o2LjL3ZEwbWS
+         JOzOo19mCKfQko9dmQUoQpDC+YeeC3P/p0bH4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713375349; x=1713980149;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pBJiH4urg4DBG6eZbcNPwgnZOdXfIaMFo9RuiRFHB0E=;
+        b=GVmrHml2wLoFzp4NksDe4LjLSxJLBLXMGnJPMdwbwvSNfAgsMEjza0yCvOqNKeh2S4
+         JwdN26iKNuY9LEoSq4HT4bqIB5FJzwgkyW0Hj8AQhlb8hRptVKuge9IZoBxpIkt9hnx+
+         hHVqLT3MAr+DC4yQplalLFL7583TtCXttjsQFpESrDksXgzqLd3DmEtt8ISd9JIokZIY
+         22sNJ9P4wfEECGLwitEDaKh/vj73Jad/o4K8IBUAU5ZkGE1F85nKrFi61uZGm17bj/sg
+         Wg15uFSxWU0DFm45siW+05aI0Ry3ODdWFHJqO5BTjcgbnYlE/EMgo7h9GqAxBi1eWlD/
+         sCiw==
+X-Forwarded-Encrypted: i=1; AJvYcCV80h33CUSwHIZdoIoMBG7dmQXdrGx0RQBR1Ua8xUliDhuL+2M/NDGxitkFI0IlOmCQwql50QOhj2e+dZmwP7XDERsQ9nFQ1fi17w==
+X-Gm-Message-State: AOJu0YyvYKEpPkRpgd7v9hiNOoJGL0ylRhxoTwaBBMYeFS0uLffRx7gs
+	4GQ4/D5C1d4e1i3/Sh7/uWQMTbIjWPdTvYPa4oTKXq7eG3yIWrElHDjyzEoQNg==
+X-Google-Smtp-Source: AGHT+IGRhXAn8BnFec3OXIieh95t6IYTWzPHJKZQXAIRwjXtFeTGFo/I0JMHxUAOWhgdyp8JVnjm6A==
+X-Received: by 2002:a05:6a00:22c4:b0:6ec:ec8f:d588 with SMTP id f4-20020a056a0022c400b006ecec8fd588mr281477pfj.16.1713375349095;
+        Wed, 17 Apr 2024 10:35:49 -0700 (PDT)
+Received: from www.outflux.net ([198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id gx15-20020a056a001e0f00b006e71aec34a8sm10927754pfb.167.2024.04.17.10.35.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 17 Apr 2024 10:35:48 -0700 (PDT)
+Date: Wed, 17 Apr 2024 10:35:47 -0700
+From: Kees Cook <keescook@chromium.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Charles Bertsch <cbertsch@cox.net>,
+	Justin Stitt <justinstitt@google.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Andy Shevchenko <andy@kernel.org>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
+	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
+	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH 0/5] scsi: Avoid possible run-time warning with long
+ manufacturer strings
+Message-ID: <202404171035.BDFF28D@keescook>
+References: <20240410021833.work.750-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -46,25 +80,64 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20240410021833.work.750-kees@kernel.org>
 
-As in previous years, I'll be heading out for a run each morning and I'd
-be delighted to have company.  Assuming our normal start time (breakfast
-at 8am, sessions at 9am), I'll aim for a 6:30am start so we can go
-for an hour, have half an hour to shower etc, then get to breakfast.
-We'll meet just outside the Hilton main lobby on Temple Street.
+On Tue, Apr 09, 2024 at 07:31:49PM -0700, Kees Cook wrote:
+> Hi,
+> 
+> Another code pattern using the gloriously ambiguous strncpy() function was
+> turning maybe not-NUL-terminated character arrays into NUL-terminated
+> strings. In these cases, when strncpy() is replaced with strscpy()
+> it creates a situation where if the non-terminated string takes up the
+> entire character array (i.e. it is not terminated) run-time warnings
+> from CONFIG_FORTIFY_SOURCE will trip, since strscpy() was expecting to
+> find a NUL-terminated source but checking for the NUL would walk off
+> the end of the source buffer.
+> 
+> In doing an instrumented build of the kernel to find these cases, it
+> seems it was almost entirely a code pattern used in the SCSI subsystem,
+> so the creation of the new helper, memtostr(), can land via the SCSI
+> tree. And, as it turns out, inappropriate conversions have been happening
+> for several years now, some of which even moved through strlcpy() first
+> (and were never noticed either).
+> 
+> This series fixes all 4 of the instances I could find in the SCSI
+> subsystem.
 
-I don't know Salt Lake City at all.  I'll be arriving a few days in
-advance, so I'll scout various routes then.  It seems inevitable that
-we'll head up Ensign Peak one day (6 mile round trip from the Hilton
-with 348m of elevation) and probably do something involving City Creek /
-Bonneville Boulevard another day.  If anyone does know the various trails,
-I'd be delighted to listen to your advice.
+Friendly ping. Can the SCSI tree pick this up, or should I take it
+through the hardening tree?
 
-Running pace will be negotiated by whoever shows up; I'll be tapering for
-the Ottawa marathon two weeks later, so I'm not going to be pushing for
-a fast pace.  This is a social group run, not a training opportunity.
-People who want to do more or less are welcome to start with us and
-break off as they choose.
+Thanks!
 
-You don't need to sign up for this, but if you let me know whether you're
-showing up, I might wait a few extra minutes for you if you're late ;-)
+-Kees
+
+> 
+> Thanks,
+> 
+> -Kees
+> 
+> Kees Cook (5):
+>   string.h: Introduce memtostr() and memtostr_pad()
+>   scsi: mptfusion: Avoid possible run-time warning with long
+>     manufacturer strings
+>   scsi: mpt3sas: Avoid possible run-time warning with long manufacturer
+>     strings
+>   scsi: mpi3mr: Avoid possible run-time warning with long manufacturer
+>     strings
+>   scsi: qla2xxx: Avoid possible run-time warning with long model_num
+> 
+>  drivers/message/fusion/mptsas.c          | 14 +++----
+>  drivers/scsi/mpi3mr/mpi3mr_transport.c   | 14 +++----
+>  drivers/scsi/mpt3sas/mpt3sas_base.c      |  2 +-
+>  drivers/scsi/mpt3sas/mpt3sas_transport.c | 14 +++----
+>  drivers/scsi/qla2xxx/qla_mr.c            |  6 +--
+>  include/linux/string.h                   | 49 ++++++++++++++++++++++++
+>  lib/strscpy_kunit.c                      | 26 +++++++++++++
+>  7 files changed, 93 insertions(+), 32 deletions(-)
+> 
+> -- 
+> 2.34.1
+> 
+
+-- 
+Kees Cook
