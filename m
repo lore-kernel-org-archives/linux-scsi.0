@@ -1,41 +1,59 @@
-Received: from mout.web.de (mout.web.de [212.227.15.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f174.google.com (mail-pg1-f174.google.com [209.85.215.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E419A140389;
-	Wed, 17 Apr 2024 15:49:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 801CA147C8D;
+	Wed, 17 Apr 2024 16:39:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713368968; cv=none; b=TWxwQg6+nWd0js5bWPSXkhBGACzR9iC/wTFkHHVK36Bg6VKUWYPwZXSQfE5HnURrAqB7XZ7lqK2rgBoQ8EkWGyFZuDtIvMH6PzNvxUAFfV4R26Atxmp8lRslbDyl+xyYUnY+jZH3BPMRhK4y1EDly85r71GJlI1KutXmLvjM+0Y=
+	t=1713371980; cv=none; b=PHdWjka8UTXuu9FQa8GQ01AwXWEX71PHOCmv/jqHLl0fKwvId9DSJ924TPtOzGlfNoqUKSNdn9gUsi8cZZ86ZSIIMmU8WXWVj5NCVwhrfar1D/uYbk7CJIzpChALkeAin9BCZhfboE1CmyHJY7UuWwPMnF4XHBJkuli+jjdEheQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713368968; c=relaxed/simple;
-	bh=i+P82q/tekMc6tNfNG2RWz3zLZWMY0FAb26UI7miaxA=;
+	s=arc-20240116; t=1713371980; c=relaxed/simple;
+	bh=aWTPDq9p7jQ/4H76/mW9C1YBC1szIVSw3Mc/rYRFAek=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aOAdgNwjMmk6aAmlL/tLbsh9w/fufDzy027ZgYdpoANgX+Z1uL9w3XQvLXgBnf0Phd0Lth9Hu9XhjPRZP4MkYr3VH5odF5Yen6AqUgT4Utyt6xzn0sjm6y+ZFJMC/1FgZuygAvlrl1Av/zp7s9r5gzvkxKGrfj3MgsVwZqWf19w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=K/nRFmq3; arc=none smtp.client-ip=212.227.15.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	 In-Reply-To:Content-Type; b=QOsrvk5Ee0KxtzuQxUU7zScMDWsAjWQ5Jl8MWyzVGo396kX/hBa4hkAPJVVHqZ47ygdxxgE8ZywgoBYh8OcINB1jUBNYBayYGtdmWuhyiPHi51e6mAr7S7n2iBWj5JO0LylizyxD5E7XPBMt9uqv35CJm5HNI+Asz+37suxfgcE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=g/AWQjr4; arc=none smtp.client-ip=209.85.215.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="K/nRFmq3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1713368918; x=1713973718; i=markus.elfring@web.de;
-	bh=i+P82q/tekMc6tNfNG2RWz3zLZWMY0FAb26UI7miaxA=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=K/nRFmq3doFBdGMs9j3Yx6hycO2x50V3yW2mJiz01T+NVfq4+8W9AGzaCGYtwRnu
-	 QaAEQpYVXURmxVxfiENn8HrEWa2EamQ7xINx5Fc4FUpoY/jzXFQWYSdTgLmv/Mskj
-	 Ry7Kjh6rYDUyVDpFPpwa9YJe4Bs5tK3XemCcnCI5n6VA5D/NIM7yKGCxpAF9OEI6v
-	 Oq9YWC+U52zGHqi9Sy8xoV0KukYMzyALTEAbZVu+53NJvCmWJJc9ymLVcU3Qh8SWR
-	 xWGfRXI7GILqG+e4a0yDqzpNvojBehBv0D1ieq5CeobzP8KTvkIa6CZhC/r0K5YMl
-	 foY1/0UoQK4Kc66cgA==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.21] ([94.31.85.95]) by smtp.web.de (mrweb005
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1MOUtm-1s6P2R3sly-00N7pz; Wed, 17
- Apr 2024 17:48:37 +0200
-Message-ID: <4b9a14d0-b4bd-4b91-8466-5f8849b0c08e@web.de>
-Date: Wed, 17 Apr 2024 17:48:35 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g/AWQjr4"
+Received: by mail-pg1-f174.google.com with SMTP id 41be03b00d2f7-5d3907ff128so4575668a12.3;
+        Wed, 17 Apr 2024 09:39:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1713371979; x=1713976779; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=I7Zh42cClUUxS34CpnuDLFTWaHNT2a1g8mM8QHZw6C8=;
+        b=g/AWQjr4sjil5Es/t8rl7gS7pSKKLHW/RzJ1zfqyNVKJ/zZkLWCKvdEp0DchKCfJc1
+         4weUsfQ8OfYWlL0C9GNDhrCsSPVnG2BWSoJ4441DXE7dBDRpKy/SObfu/qMbyiI9Cf8P
+         Oe859fgN/FCQ1l7yxYGRyPc2tDt8rQt+PEixRjsKzCZFXX3DE8TJtty4q+8iS/Ac+Ly3
+         M1n3DmlDOUkRMN23vDGKWzftlxV8V52NAFdDm1CxDk5ntUOnxyvdo9UvjnH+x+ugrlYT
+         r+ZAgLNxWksPuwgHp74hrSdEIS4XibmwiZPoXX5x0H+q2do8+LYZoI3l09XJuA+g/WLo
+         sImw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713371979; x=1713976779;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=I7Zh42cClUUxS34CpnuDLFTWaHNT2a1g8mM8QHZw6C8=;
+        b=OjnPZ6E+0EUhmbin/Dyg0LfLSc4w9wzjJYI1QZkBmgQjsF1HWvEZCKVGRcF01B/0P6
+         +cOgoDn0UhC1vuF14o7ihxHoF9a0WOqW647tz4af2y2eiZ5FAgsSVkBmdNNka0shTCvU
+         eziadnaxcKBZvI4dmRaIJRjATZ5YuDNrEIM1lkJC6bIJPuLw96CIAVilvPlduxXCJH6W
+         VYjjEdZ9vCH6yxYr5B0LjaSGJU4aLoz1rgFaG1+mYJbiqYC+YHu7QzrVdkr/BsHPd9EA
+         VnQTz9yGZE4cKcdfjuPWFn8pU3oj2nWmYxAG+3BDB9EdcjA2/uICQDkEna25FyN5XtmZ
+         DGGw==
+X-Forwarded-Encrypted: i=1; AJvYcCVUA4LCFF62sI1CtVSUDzB0Rgv5RYLCtScuuE6+D0fNLhOGjuzw+IsuvBhXsVnxMis7mmlej918MoVe8FmoHAALZzVrOEzaawegCxyJRrqZ9kSVOcfniIsKUqCIZbUw1Tc15rcywBqXgNF1nG1zXxpHqPODtQKZYmt6pK+nHtyd31+LacDcPz6mdg==
+X-Gm-Message-State: AOJu0Yz9CUwpStCuhpUXbbckhCK4JRtzMFWPqC6/L0EO3Sj+niTUjcL1
+	Vgz03AcLIgjGGQjvQiDiCPA4C03+98uomjHIdXjsh51REENKrieRIbMrUtJMuBg=
+X-Google-Smtp-Source: AGHT+IFsgpgKF4MpNGRI12HFX8X1jR4fq2uA3v5uQF83Vql6HROO8gtLkEMXQdJU4OMr5Az/Juz0QQ==
+X-Received: by 2002:a17:90a:886:b0:2ab:99d5:ae11 with SMTP id v6-20020a17090a088600b002ab99d5ae11mr658653pjc.20.1713371978710;
+        Wed, 17 Apr 2024 09:39:38 -0700 (PDT)
+Received: from [0.0.0.0] (74.211.104.32.16clouds.com. [74.211.104.32])
+        by smtp.gmail.com with ESMTPSA id t1-20020a17090aae0100b002a2d8d34009sm1577329pjq.27.2024.04.17.09.39.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 Apr 2024 09:39:38 -0700 (PDT)
+Message-ID: <1b8f0217-5c4b-4436-88d4-ec3c88ae7179@gmail.com>
+Date: Thu, 18 Apr 2024 00:39:33 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,8 +63,9 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [v4 0/3] SCSI: Fix issues between removing device and error
  handle
-To: Wenchao Hao <haowenchao22@gmail.com>, Julia Lawall
- <julia.lawall@inria.fr>, linux-scsi@vger.kernel.org,
+Content-Language: en-US
+To: Markus Elfring <Markus.Elfring@web.de>,
+ Julia Lawall <julia.lawall@inria.fr>, linux-scsi@vger.kernel.org,
  kernel-janitors@vger.kernel.org, "James E. J. Bottomley"
  <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Wenchao Hao <haowenchao2@huawei.com>, LKML <linux-kernel@vger.kernel.org>
@@ -55,41 +74,28 @@ References: <20240307144311.73735-1-haowenchao2@huawei.com>
  <b55da065-dbbb-4d8e-8baf-50807b507cc4@gmail.com>
  <173b55ca-cde-ab3-be92-d9c8b4b6b5c@inria.fr>
  <799944de-dcee-46a8-b43b-8876177c61a2@gmail.com>
-Content-Language: en-GB
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <799944de-dcee-46a8-b43b-8876177c61a2@gmail.com>
+ <4b9a14d0-b4bd-4b91-8466-5f8849b0c08e@web.de>
+From: Wenchao Hao <haowenchao22@gmail.com>
+In-Reply-To: <4b9a14d0-b4bd-4b91-8466-5f8849b0c08e@web.de>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:l8gXR0DDWYxOQAa7TWh9N40VLCl2PgZ0Uyevu68+Kn0pOqf39WJ
- XZrIhvzeM1qK50ABQkrhIiRxrHsQfobUOOV/CFtjYXtmgH93cyKOTMOVgLpmdn8QLcjFrLh
- 3PCuv/6tcfIONuzt8nroibmq2jbRXmVuyP3BSNtgwqWEYiY1ica4ZM8QsQInJMQQmdgdW4n
- FH0MllNrH+6FwBKHEHY7Q==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:2hyj7KGRkig=;cU+8XFuLsqheAqdENeGUw0MzhTn
- 7OX3IZnDRImJVWCv+bZhg1EytFTq7vdhuLNnjXCKXDLvKSWskNdKDbCJ6h6OSbOzvKdgYC2EQ
- aA1OpGdeI9qS6QaNwxPQY3fHIAPRgVVBcXnAsZkasgrjLupY8Bd8fKw+54+fE5jR+Tzv+l2uP
- JgnQWe84cP4bPMhAmXOQHE4L271wMshE4pQu9INTJKkISI8eQA1naqfa4C3JTTKwDTL14eVql
- OTJioJi0JArBSmNrHjR65QFNdeexhWBKRmLMjLFpDAW28utEhCC02Xomorjb8wNHUshb7wN6u
- vZJKc+36RLkn2Ms6RnEqAiIVo9V3CIzmWCe9O1Du4BHUlPAP6Rzkm3W/upKWbTHVVqhWNRBIS
- yU474PaP++fWUM1NvqZZMZLnHH4dy8BYMHLAdfzfljOsQ+ddHL2OvrnuMzHlw/SmhE6GcG8PE
- vfaxodxtjjnmQgpS2iXxsDuhb9X1nMTU3bcUe4Hxg7X5MamlmNfpSvu80sOhnlASf4VI8ZXaz
- utt+oHdO5YkVnMLyFFiAYtR774EUujsY2L6qS3VtCjEPLYxOzP7pWQEejcvkH48nGrHG23Hgs
- uTp9OBxYigIiU1Z+pLB1JwlnRjvKo44mNfOtGj2Z/2VwYPgWNIRxgysDngGihiXwRUtjTqQ5c
- u/WkZALwh8Yu57Vnf+dAxtu6pnaeM5+uIwufggBTz8P3t2iRauVzWz0tuMcJVZ3raG2SxTZ0s
- L5KfV7M/CO++ZO0CTUAH7MzkrZ1IYCL+5q/cJ7ddqRignPjY/7MaWq/6ASmHByTUhpoR1ZoPc
- GhdzG3vpIydQ66ICoT2Y2AlIVLKc1aqF6r7ZllJw/Bf28=
+Content-Transfer-Encoding: 8bit
 
->> Search in process/submitting-patches.rst for Fixes:
->
-> These issues are introduced at first version of git record, which is
-> 1da177e4c3f4 ("Linux-2.6.12-rc2"). I think "Fixes" tag should not added
-> for this commit.
+On 4/17/24 11:48 PM, Markus Elfring wrote:
+>>> Search in process/submitting-patches.rst for Fixes:
+>>
+>> These issues are introduced at first version of git record, which is
+>> 1da177e4c3f4 ("Linux-2.6.12-rc2"). I think "Fixes" tag should not added
+>> for this commit.
+> 
+> I suggest to take also another look at information in a table
+> like “Releases fixed in v6.8” from the article “Development statistics for 6.8”
+> by Jonathan Corbet.
+> https://lwn.net/Articles/964106/
+> 
 
-I suggest to take also another look at information in a table
-like =E2=80=9CReleases fixed in v6.8=E2=80=9D from the article =E2=80=9CDe=
-velopment statistics for 6.8=E2=80=9D
-by Jonathan Corbet.
-https://lwn.net/Articles/964106/
+Thank you, I found some Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2") in this article.
+Then I searched in git log and found these "Fixes" tag too. 
 
-Regards,
-Markus
+> Regards,
+> Markus
+
