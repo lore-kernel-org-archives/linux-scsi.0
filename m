@@ -1,111 +1,181 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D08915A4CF;
-	Tue, 16 Apr 2024 21:11:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9659F1860;
+	Wed, 17 Apr 2024 01:47:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713301871; cv=none; b=KHmkV4StHvAcVJ7aj4cYEFBCRNniO4LCJCvCJpw5EcbNv06FVon5tKRuvN7j/bjs2+PWjsHh5IUt86Byq6k0iQS/Ycgok8tF5YjlfONXeyqS8kF9afSYQxeayJtLNkJee8jsviGH/DgoqLgxJvvwWyC5MxFOCk+a0WrTOZZRhis=
+	t=1713318423; cv=none; b=GLe1ei6NfoGzkRp608lQmCZDVkMDhOX0vPDdr9Du34PtwR60xD70mUd3QZ2DMOlEQkejcu17nvKURWhGWQ3fb6CeW9waboS9e2agFO8zyyYJEAJNjWzsjCo9epC/i2qtpplKDJlBRTkM+tZ+zRMfG9bGBOHbQiKBUPLHzDLMQO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713301871; c=relaxed/simple;
-	bh=8FNV3zbi4W0+s5iELgnOQOr6ZJQLzz3pHFBU0pDSGJc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=J1n/8/c3XiYz9hEBVubiDSH96+nPSyQ8y/7ZbvectoBIahUA2m5Wu/nUZ3eTcwDIlw3vFXL6/6L+tGuwdx3x5ogjiYDzxD3K7wXgGuv+lnytbxlLmvu0p7CfcmJUdljUMemf6SbdRCaJfjsG9L9GCi1H6KqHPb8w+9U7rBx3s2M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=e/VN90jy; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="e/VN90jy"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=FRN0S0UrdEiWG4B5xuc/QvC+4jIMUlM9ivvZ43mxxCA=; b=e/VN90jySWq7d6XlyBQgn7rs3s
-	AB6sQMjNqGP7kHOZRUxvLv1PlxeTKJU1QlDocHcG7Sk6ezLyKIZLtFc1Kv01cBGJCYbKrkBGhppnz
-	RdCDVzplL6GgCvgY9WxCkdNOk0db7H9pR5PCWaG6viMfEi/NWo9vYJsHICdP1374dGYBb+Hg9zg7C
-	d/c7mYXYvYTX+uzESF+M4iIf4TzuqsN9oBNYY40MhgyypVIlbBZLLJS2v99LboMM3MKOcQi9Uq07T
-	3WhvCC9iOEV0Un8JNpAiRR7JMuzQRPCufe7TnGJPkZPUHXDDn8KP75jb+dXzq/DYlmzLcSVrvkCpI
-	DBZ09n7A==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rwq4z-0000000Dp1F-3nSD;
-	Tue, 16 Apr 2024 21:11:01 +0000
-Date: Tue, 16 Apr 2024 14:11:01 -0700
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: John Garry <john.g.garry@oracle.com>,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Daniel Gomez <da.gomez@samsung.com>,
-	Javier =?iso-8859-1?Q?Gonz=E1lez?= <javier.gonz@samsung.com>,
-	axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
-	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-	io-uring@vger.kernel.org, nilay@linux.ibm.com,
-	ritesh.list@gmail.com
-Subject: Re: [PATCH v6 00/10] block atomic writes
-Message-ID: <Zh7pZUwmQXF-qC6D@bombadil.infradead.org>
-References: <20240326133813.3224593-1-john.g.garry@oracle.com>
- <ZgOXb_oZjsUU12YL@casper.infradead.org>
- <c4c0dad5-41a4-44b4-8f40-2a250571180b@oracle.com>
- <Zg7Z4aJtn3SxY5w1@casper.infradead.org>
- <f3c1d321-0dfc-466f-9f6a-fe2f0513d944@oracle.com>
- <ZhQud1NbO4aMt0MH@bombadil.infradead.org>
- <ZhYQANQATz82ytl1@casper.infradead.org>
- <ZhxBiLSHuW35aoLB@bombadil.infradead.org>
- <Zh2ZptLxnwa_jtSk@casper.infradead.org>
+	s=arc-20240116; t=1713318423; c=relaxed/simple;
+	bh=bXZ0Rp0h17UB1hcmbq235by/qZ83UmcjE47df4yAB+Q=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=AIOJpLoQy6OZFDt7AsL9VF/78V9pQVLMNnVJ/7OROwCYXagrvH8gQqZDN4IDjwPpx1znky9e0WHGZuBiyT5/Hl3kR4Eu3AHoxGowlKog+jzsBRdFi1wWxkQjic0F3Tz9cT8v5IcW/uZ/aaMU50nfL1sGmuzRWkTgaePtuZbMg00=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4VK3bg5jhxz2CclN;
+	Wed, 17 Apr 2024 09:43:59 +0800 (CST)
+Received: from canpemm500002.china.huawei.com (unknown [7.192.104.244])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8B6611A016C;
+	Wed, 17 Apr 2024 09:46:57 +0800 (CST)
+Received: from canpemm500004.china.huawei.com (7.192.104.92) by
+ canpemm500002.china.huawei.com (7.192.104.244) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Wed, 17 Apr 2024 09:46:57 +0800
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Wed, 17 Apr 2024 09:46:56 +0800
+Subject: Re: [PATCH] scsi: libsas: Fix exp-attached end device cannot be
+ scanned in again after probe failed
+To: Xingui Yang <yangxingui@huawei.com>, <john.g.garry@oracle.com>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<damien.lemoal@opensource.wdc.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
+References: <20240416030727.17074-1-yangxingui@huawei.com>
+From: Jason Yan <yanaijie@huawei.com>
+Message-ID: <e33272f8-1ff5-561f-60a3-b4d24fe27c6b@huawei.com>
+Date: Wed, 17 Apr 2024 09:46:56 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Zh2ZptLxnwa_jtSk@casper.infradead.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <20240416030727.17074-1-yangxingui@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ canpemm500004.china.huawei.com (7.192.104.92)
 
-On Mon, Apr 15, 2024 at 10:18:30PM +0100, Matthew Wilcox wrote:
-> On Sun, Apr 14, 2024 at 01:50:16PM -0700, Luis Chamberlain wrote:
-> > On Wed, Apr 10, 2024 at 05:05:20AM +0100, Matthew Wilcox wrote:
-> > > Have you tried just using the buffer_head code?  I think you heard bad
-> > > advice at last LSFMM.  Since then I've landed a bunch of patches which
-> > > remove PAGE_SIZE assumptions throughout the buffer_head code, and while
-> > > I haven't tried it, it might work.  And it might be easier to make work
-> > > than adding more BH hacks to the iomap code.
-> > 
-> > I have considered it but the issue is that *may work* isn't good enough and
-> > without a test plan for buffer-heads on a real filesystem this may never
-> > suffice. Addressing a buffere-head iomap compat for the block device cache
-> > is less error prone here for now.
+Hi Xingui,
+
+On 2024/4/16 11:07, Xingui Yang wrote:
+> We found that it is judged as broadcast flutter and exits directly when the
+> exp-attached end device reconnects after the end device probe failed.
+
+Can you please describe how to reproduce this issue in detail?
+
+Thanks,
+Jason
+
 > 
-> Is it really your position that testing the code I already wrote is
-> harder than writing and testing some entirely new code?  Surely the
-> tests are the same for both.
+> [78779.654026] sas: broadcast received: 0
+> [78779.654037] sas: REVALIDATING DOMAIN on port 0, pid:10
+> [78779.654680] sas: ex 500e004aaaaaaa1f phy05 change count has changed
+> [78779.662977] sas: ex 500e004aaaaaaa1f phy05 originated BROADCAST(CHANGE)
+> [78779.662986] sas: ex 500e004aaaaaaa1f phy05 new device attached
+> [78779.663079] sas: ex 500e004aaaaaaa1f phy05:U:8 attached: 500e004aaaaaaa05 (stp)
+> [78779.693542] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] found
+> [78779.701155] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
+> [78779.707864] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+> ...
+> [78835.161307] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
+> [78835.171344] sas: sas_probe_sata: for exp-attached device 500e004aaaaaaa05 returned -19
+> [78835.180879] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] is gone
+> [78835.187487] sas: broadcast received: 0
+> [78835.187504] sas: REVALIDATING DOMAIN on port 0, pid:10
+> [78835.188263] sas: ex 500e004aaaaaaa1f phy05 change count has changed
+> [78835.195870] sas: ex 500e004aaaaaaa1f phy05 originated BROADCAST(CHANGE)
+> [78835.195875] sas: ex 500e004aaaaaaa1f rediscovering phy05
+> [78835.196022] sas: ex 500e004aaaaaaa1f phy05:U:A attached: 500e004aaaaaaa05 (stp)
+> [78835.196026] sas: ex 500e004aaaaaaa1f phy05 broadcast flutter
+> [78835.197615] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
+> 
+> The cause of the problem is that the related ex_phy information was not
+> cleared after the end device probe failed. In order to solve the above
+> problem, a function sas_ex_unregister_end_dev() is defined to clear the
+> ex_phy information and unregister the end device when the exp-attached end
+> device probe failed.
+> 
+> As the sata device is an asynchronous probe, the sata device may probe
+> failed after done REVALIDATING DOMAIN. Then after the port is added to the
+> sas_port_del_list, the port will not be deleted until the end of the next
+> REVALIDATING DOMAIN and sas_destruct_ports() is called. A warning about
+> creating a duplicate port will occur in the new REVALIDATING DOMAIN when
+> the end device reconnects. Therefore, the previous destroy_list and
+> sas_port_del_list should be handled before REVALIDATING DOMAIN.
+> 
+> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+> ---
+>   drivers/scsi/libsas/sas_discover.c |  2 ++
+>   drivers/scsi/libsas/sas_expander.c | 16 ++++++++++++++++
+>   drivers/scsi/libsas/sas_internal.h |  6 +++++-
+>   3 files changed, 23 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+> index 8fb7c41c0962..aae90153f4c6 100644
+> --- a/drivers/scsi/libsas/sas_discover.c
+> +++ b/drivers/scsi/libsas/sas_discover.c
+> @@ -517,6 +517,8 @@ static void sas_revalidate_domain(struct work_struct *work)
+>   	struct sas_ha_struct *ha = port->ha;
+>   	struct domain_device *ddev = port->port_dev;
+>   
+> +	sas_destruct_devices(port);
+> +	sas_destruct_ports(port);
+>   	/* prevent revalidation from finding sata links in recovery */
+>   	mutex_lock(&ha->disco_mutex);
+>   	if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)) {
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> index f6e6db8b8aba..6ae1f4aaaf61 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -1856,6 +1856,22 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
+>   	}
+>   }
+>   
+> +void sas_ex_unregister_end_dev(struct domain_device *dev)
+> +{
+> +	struct domain_device *parent = dev->parent;
+> +	struct expander_device *parent_ex = &parent->ex_dev;
+> +	int i;
+> +
+> +	for (i = 0; i < parent_ex->num_phys; i++) {
+> +		struct ex_phy *phy = &parent_ex->ex_phy[i];
+> +
+> +		if (sas_phy_match_dev_addr(dev, phy)) {
+> +			sas_unregister_devs_sas_addr(parent, i, true);
+> +			break;
+> +		}
+> +	}
 
-The compat code would only allow large folios for iomap, and use
-buffer-heads for non-large folios, so nothing much would change except
-a special wrapper.
+Did you mean this end device is a wide-port end device ? How could this 
+happen?
 
-> Besides, we aren't talking about a filesystem on top of the bdev here.
-> We're talking about accessing the bdev's page cache directly.
-
-Sure, but my concern was the lack of testing for buffer-head large
-folios. While for iomap we'd at least have done the ton of work to
-stress test testing large folios while testing XFS with it.
-
-While the block device cache is not a proper full blown filesystem,
-it just means since no filesystem has been tested with buffer heads with
-large folios its a possible minefield waiting to explode due to lack of
-testing.
-
-Is writing a proper test plan for the block device cache code with
-buffer-heads with large folios less work than writing the compat code
-for the block device cache? I concede that I'm not sure.
-
-I'm happy to try it out to see what blows up.
-
-  Luis
+> +}
+> +
+>   static int sas_discover_bfs_by_root_level(struct domain_device *root,
+>   					  const int level)
+>   {
+> diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+> index 3804aef165ad..434f928c2ed8 100644
+> --- a/drivers/scsi/libsas/sas_internal.h
+> +++ b/drivers/scsi/libsas/sas_internal.h
+> @@ -50,6 +50,7 @@ void sas_discover_event(struct asd_sas_port *port, enum discover_event ev);
+>   
+>   void sas_init_dev(struct domain_device *dev);
+>   void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev);
+> +void sas_ex_unregister_end_dev(struct domain_device *dev);
+>   
+>   void sas_scsi_recover_host(struct Scsi_Host *shost);
+>   
+> @@ -145,7 +146,10 @@ static inline void sas_fail_probe(struct domain_device *dev, const char *func, i
+>   		func, dev->parent ? "exp-attached" :
+>   		"direct-attached",
+>   		SAS_ADDR(dev->sas_addr), err);
+> -	sas_unregister_dev(dev->port, dev);
+> +	if (dev->parent && !dev_is_expander(dev->dev_type))
+> +		sas_ex_unregister_end_dev(dev);
+> +	else
+> +		sas_unregister_dev(dev->port, dev);
+>   }
+>   
+>   static inline void sas_fill_in_rphy(struct domain_device *dev,
+> 
