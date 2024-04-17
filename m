@@ -1,59 +1,59 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 115EC146A88;
-	Wed, 17 Apr 2024 15:18:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4149C140E29;
+	Wed, 17 Apr 2024 15:29:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713367113; cv=none; b=LZQjsmuRYgFl44YsII90MEaJyOob8NCd6fUTaY6RBrO/1mD7guj7ckWnNAPXTSNpxGnpaldDrngSWB4PtEh8acqy9agy0xxuhxa4K5vpic1lXFNyiB2NXR/t5rwzHay0Ksa83sQ4LgXYlyaNaaH0IsEA8QBi9NjImrIVI6CkLcY=
+	t=1713367762; cv=none; b=DGtUsNcNBtLrbvI6uViNcdxR9xFhw/sq1Z6vNuK+lt6xsJsz0/yIlomnZVE1YcJhlP2ND0PPjnU2gPbvBsWbavAB3Z6AK646s0MJXWa4Bg47ab3NbSH9lyqoqqT/V1wmyqIfuxMNu5X8KoOFQJZ3UUQtR2X05Jb4L2fDPNXTxNs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713367113; c=relaxed/simple;
-	bh=8dGXf0wYcoHnqoxRukrTZ+kAcHgbVzlWtiKzjsskiQc=;
+	s=arc-20240116; t=1713367762; c=relaxed/simple;
+	bh=JJKZdCegfysQDUJDhmEa1HfDa5Mld4/NHwyvW6mvxh8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SDmRKFSI3CC3TqWb7KubPhJMmRi4tcx2C4F65P2DzboeWlwnsC8uy9YeQjD4U38VL4zuR3NIC6aQpkv5SgbHw/DOMNn7w311biaQNx6RJcHDWlCUkE6ZKHFljuBg2npw+vM9pwgKbWFf1JnMuwl74y6fHmi8YJwqM/HU4nPn8AI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IPeZr1oH; arc=none smtp.client-ip=209.85.210.180
+	 In-Reply-To:Content-Type; b=W5rSOJuePJWaVu5pAbhxwor7r1WjLuU4lYdy8SbvXRWWslAzPAsi4F8b3bavX4qCkxYI/7pZU5BKkepGLufqbjSFupAEQYfcsAzmDzmpXzY6oyxPeqgy223vl7ZbbhTQuTxqOg5lyS012Vfkqm/vJ3H7fijxdEkyiAoofpNu3aM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dxpkMzWI; arc=none smtp.client-ip=209.85.210.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IPeZr1oH"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-6edb76d83d0so5179149b3a.0;
-        Wed, 17 Apr 2024 08:18:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dxpkMzWI"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6f074520c8cso484380b3a.0;
+        Wed, 17 Apr 2024 08:29:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1713367110; x=1713971910; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1713367760; x=1713972560; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=SIgFFZLecsePVrnq+R5s2r3jNwlP/UK/gaG+Jcsiuig=;
-        b=IPeZr1oHJePkeZ24cTUZp+DhpiQepCIJJTeIWi09DmMRgN0wuKDs+cbVaZywQq8Ggx
-         eykUsciNUDmZm+qDusAVRnRoOu2VuiTH07nLA+JfNIaNB3y5Rk6Mop+5JF94yevrAjLB
-         owNmrb2gVeWwBpM74DBWTOio+F2ZPfg0N00V+pJniBfajvn6qFkAE/14HOak5Ugtj0Fy
-         4CHMSNAERo6pvATqXHb9aC01GVtKvtyUpPXE68zIv1GnobUj6A8wzVzz6cS735FkF+xr
-         3T7vM5ewepGst0FLOd0kRtcD6ez/dsw3WcLRnYI1Yrh4V1sRgCRJEBmCGs8S8vXJFEYN
-         jPVA==
+        bh=iurkqvs8sKKn4Q2YtZJNLHutAewVDfUM7mbbRZhIB/w=;
+        b=dxpkMzWIsYceRKNjkYIMEr522gxGAcEq7a9+Yu7Sey3gsIiw0CclK2m8kch/CGvid6
+         zo2EqeWqZANehOy6LMxKzExhqRjqKl6KX/5/YGTOPi1Bl/5P/TrI2wW74e0ckiIRi3nl
+         v/E3SlmGBazb2fhR9JJ5Kg0xl+wy1/mfTWMWjwFDdddNPXTDywcItTqRRPPjwl+Iw8Ub
+         2Wa/iT/JaE1LltEYdTBsj1IVecW8DyfIDpv3skRuBBjOkcKtMW5KJVQgaBFl884Fh129
+         JZg/PSs5op8q/27NzLWxttdJQ/2hQQd68/0NTdEN8ECjI3UW2POCmt83n1qX+ykQ+lqy
+         x+xw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713367110; x=1713971910;
+        d=1e100.net; s=20230601; t=1713367760; x=1713972560;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SIgFFZLecsePVrnq+R5s2r3jNwlP/UK/gaG+Jcsiuig=;
-        b=S0GXfLyXKtC5JoafJypaCl3g3PknCNZVZIClxTR88ngrnfI4A7hpPlJb38GMhaN8Y3
-         bo80hS8lPKpKT47jZ6kvu6kyUGmO18jwF+75pRddKayGlTE0QpK1mHVuc8CTMpFt2eet
-         rdWqnOVEFF2r9garbCzBkoVEKdqLQT7SBWgBgs2vJ5LyV9GZ2GoBTwdF9hyXhm+8L9fJ
-         qi+TOi9sg6z6hr9XndyDNxC8qq39pSF2zPK9BcfO2YB3pdLzgK1FcdkKCNTTvZZdMJAK
-         XLJ6t2t5k3vGktFZsJ/FIxjEbgfZ4Y4C4EQTqjAf+DVWRNz4KcccqSS51CzoChXU0/QO
-         EFpA==
-X-Forwarded-Encrypted: i=1; AJvYcCXq1Lhvg3+3kEQ9MKCJLuqlqlS1Rac/pNDAhAsdjyTrnZsw9FfBJOhaeZrcA+D4UvzofFQAwGTFnyGr2HjHTCYR/1NxFWGNXlKjEC9Bc9M6vHOSl0pHsnexjzu+50feYHDfkYjnmzobSTx2aPyGIWs01n7I48E9UBRgz0Vzgc0t7/xrqFta2MJtBg==
-X-Gm-Message-State: AOJu0YzJ1eL1bUVmSSR1ZQr+PxfsCtmp9MMbbIR3DPz4fg1r8H2zxqDz
-	1haNQ4DuF/lV/MJXQIjHk/zaSFOPjeVRmQTKCUoEicge5Ttvp/eD
-X-Google-Smtp-Source: AGHT+IGCkof/gEUUMQases2g9Oi5H1uf3PPSLWp/woJwDEzngUgmhG0OR+y82bcnr1Z1TJNhvbc8sg==
-X-Received: by 2002:a05:6a00:1782:b0:6ec:fdcc:40b9 with SMTP id s2-20020a056a00178200b006ecfdcc40b9mr21742938pfg.9.1713367110234;
-        Wed, 17 Apr 2024 08:18:30 -0700 (PDT)
+        bh=iurkqvs8sKKn4Q2YtZJNLHutAewVDfUM7mbbRZhIB/w=;
+        b=GrTKK3/CAOfTc7Twg0W6iP6gHb3KaLH5WgHOJBDUoVuxOu2owVH1qToRe4DFtxpzZj
+         1kOa7xgFJqhTzQBT8zKuAEEC4yMhch5LrhgLnEOpFqB2CKHtj9Nj96oDD70NJ0fOfoQi
+         MUaWp/1JHVUibLSfSyZ+ZCpQuQorSYv8Ef0v1e90dQIxTDExQU6rqS8wwYX8ZmdFGwoN
+         uqW8ZOfe87w676RCttQmF53V++DnGZS/7MHf7WT1ZEqmrNTQyUc/zF7Bi3tqFKGMjBB7
+         2sciBe9bzLhN4uMlAJkZIAqUcTb+nneyQMo0vQrj0DQxB9B3L9z6OKgFtTf0HW3jTP2d
+         D3wQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXWh2mvR61ln22ufAkSPf7J67QUgCFELfAZj0lQpLbDRze3pZWrWGPAP2t5RVCQom+TTNtRUZZj/eawN8xQc9W0sngjcBU6vFS0rSpWpca2EM119KgDPckigshu3unsaOp1tH5h3/Pqd7pnfytD3wD+zaSG6sNHZczFOpojd6vt2O7PIxsTZN6Lkg==
+X-Gm-Message-State: AOJu0YxQjgG4mjbHRgo/lWzqH1TMOjy04fnme7x8MT3oE4KOM+9VPS7/
+	f+5mw7cAHg/go0wJiZXAz7wQtT5OWf4j575BaLPabF6jORZGk1I/
+X-Google-Smtp-Source: AGHT+IGmYPRURmWR+ziu5qBnkjRFlT0LocAqF3OQvw2Fn6wCykVDUJMHCfSpCkVo670MFilU1AExYg==
+X-Received: by 2002:a05:6a00:1a8d:b0:6ed:5655:a02a with SMTP id e13-20020a056a001a8d00b006ed5655a02amr16071220pfv.30.1713367760295;
+        Wed, 17 Apr 2024 08:29:20 -0700 (PDT)
 Received: from [0.0.0.0] (74.211.104.32.16clouds.com. [74.211.104.32])
-        by smtp.gmail.com with ESMTPSA id fh39-20020a056a00392700b006e69a142458sm10676701pfb.213.2024.04.17.08.18.27
+        by smtp.gmail.com with ESMTPSA id g12-20020aa79dcc000000b006f01fbc63basm3591048pfq.89.2024.04.17.08.29.18
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 17 Apr 2024 08:18:29 -0700 (PDT)
-Message-ID: <d5e682e6-30e4-410c-972c-998fbcd12ddd@gmail.com>
-Date: Wed, 17 Apr 2024 23:18:26 +0800
+        Wed, 17 Apr 2024 08:29:20 -0700 (PDT)
+Message-ID: <799944de-dcee-46a8-b43b-8876177c61a2@gmail.com>
+Date: Wed, 17 Apr 2024 23:29:16 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -103,7 +103,9 @@ On 4/17/24 11:06 PM, Julia Lawall wrote:
 > Search in process/submitting-patches.rst for Fixes:
 > 
 
-Thank you, I would add this tag in my next post.
+These issues are introduced at first version of git record, which is
+1da177e4c3f4 ("Linux-2.6.12-rc2"). I think "Fixes" tag should not added
+for this commit.
 
 > julia
 > 
