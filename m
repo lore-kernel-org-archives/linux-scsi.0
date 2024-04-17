@@ -1,175 +1,152 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7A6E184D;
-	Wed, 17 Apr 2024 07:47:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2CA7D07E;
+	Wed, 17 Apr 2024 08:14:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713340056; cv=none; b=Oo1g6xJhcHWTtq5FVHBZUie/+vD6XvoUhJvhz0daP4l5eLZLw8qnL26vmQb/3DfDFGi1Qr+BDhqeLqqK5b0VXZX4WEecE7r4re2++2IzdRCPV4s3EHT8OmmiSS8rKjwv/LW/p//rpa3Fj/ujgniey1vFFFRm4QpYyBb/99/1wUE=
+	t=1713341679; cv=none; b=MCPFHP+WahtUAjYdfi7MKsjSxHC7mWQBZqlYOAUPwbPbjEBA4gJPTcoBTnt76z0rTLSyAHUrk/XTHlOEqmC0WeirwoEBnU/UoBDRK9hUgiKxR7w3GRcQT5RURiSkLUZ8BpMcObn1O5XcE7NULCo2sNI7j5M+G1YYlLHTqygu8r4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713340056; c=relaxed/simple;
-	bh=eCpFTVKwTLYh++bVeb5ZtIuNSRESvlh36dLYyd9SQ2Q=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=YGKqayQXEVghouot0Ut/yMUkQz45mrDs4SHZooQIbPn8RG5X7HBuVGGvO8Fv4in2utuzKetv878JNBu6vRyHSWuUk7/2ln6kl+TvDVmJ+kn7xE9StbspADr1S/4SD56SZdNkau4zde8VonuFUFejVQ8PhdKLUeZdAMKMO3wH6II=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.194])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4VKCdr3Z3pzYdQP;
-	Wed, 17 Apr 2024 15:46:24 +0800 (CST)
-Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id CBE57140419;
-	Wed, 17 Apr 2024 15:47:25 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.28; Wed, 17 Apr 2024 15:47:25 +0800
-Message-ID: <e7e26224-0e0c-f6bf-d24e-5a9a6d84a8e1@huawei.com>
-Date: Wed, 17 Apr 2024 15:47:25 +0800
+	s=arc-20240116; t=1713341679; c=relaxed/simple;
+	bh=nxKyq4H0ET8o57EUkk9BeFnAgDxkoDenfHs8BMo7Gwc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Bycw3nihI86PPAwWsY1JRbW25s828Vhyz40oMtJ3aHEKc8V+dJrnGRL9FEp/4DjDHi5hUGq9dr7G7Yv7C2qe946msh4NvdAOD9KJuwCWEuZCSALckC7mx+84yhnHOVc8oXCOZElhVWBtkT1Lia1HpM2MMyK7kDfRBjPL5dAggPc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=RkLV/o1P; arc=none smtp.client-ip=46.235.227.194
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="RkLV/o1P"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1713341669;
+	bh=nxKyq4H0ET8o57EUkk9BeFnAgDxkoDenfHs8BMo7Gwc=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=RkLV/o1PU9ese6veoTStGg4K/NZagOdBE6LolLHaXNkrnLu/YEag41lL2b3bdSr37
+	 Wh86fihPy7t3RocZmjM4JxFj080dJXzwuKOKMQohdyQAhfxnNx7wDlHFOT90mlCgqW
+	 /hXnYC462KYH89DE2Tx+Oavowvd7RNcp0LXlcYJ9UyAQeL56BZK4WLW/JI2dkCrdJg
+	 pciBYIEo/3AHBXF17BXKSmnhzALaMatAJ7lNRuXY8NdpevP1Z5dbWGCec4JlO73+L8
+	 sZ1JCNimKuKWPqqGI4H+5aggw8DGG7JRzbtCSuFbTgbiVDeIKbr/vKs3ikzyEXFdf+
+	 3Y0aQxTbbaA8Q==
+Received: from [100.113.186.2] (cola.collaboradmins.com [195.201.22.229])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: kholk11)
+	by madrid.collaboradmins.com (Postfix) with ESMTPSA id B6E033780629;
+	Wed, 17 Apr 2024 08:14:28 +0000 (UTC)
+Message-ID: <ecd7c691-db47-42aa-ab19-f554c20774af@collabora.com>
+Date: Wed, 17 Apr 2024 10:14:28 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH] scsi: libsas: Fix exp-attached end device cannot be
- scanned in again after probe failed
-Content-Language: en-CA
-To: Jason Yan <yanaijie@huawei.com>, <john.g.garry@oracle.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
-References: <20240416030727.17074-1-yangxingui@huawei.com>
- <e33272f8-1ff5-561f-60a3-b4d24fe27c6b@huawei.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <e33272f8-1ff5-561f-60a3-b4d24fe27c6b@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 3/8] scsi: ufs: ufs-mediatek: Remove useless
+ mediatek,ufs-boost-crypt property
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "jejb@linux.ibm.com" <jejb@linux.ibm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+ "bvanassche@acm.org" <bvanassche@acm.org>,
+ "broonie@kernel.org" <broonie@kernel.org>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ "robh@kernel.org" <robh@kernel.org>,
+ "lgirdwood@gmail.com" <lgirdwood@gmail.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "krzysztof.kozlowski+dt@linaro.org" <krzysztof.kozlowski+dt@linaro.org>,
+ "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+ Chen-Yu Tsai <wenst@chromium.org>, Alexandre Mergnat <amergnat@baylibre.com>
+References: <20240415110012.148871-1-angelogioacchino.delregno@collabora.com>
+ <20240415110012.148871-4-angelogioacchino.delregno@collabora.com>
+ <c9634a286fbdb4c98a7fe6703a4eb10d66dfcb9e.camel@mediatek.com>
+ <4d60e9e4-9eae-4b0a-abb2-b1ad3d278fc9@collabora.com>
+ <93db93aa7eb24a255f97a1a1e8e8d936dc908258.camel@mediatek.com>
+ <f3920433-b0fa-4a64-9653-e385bf1eb5c7@collabora.com>
+ <d11e174d85c7f5a9b4ffe5fb2bb15dfd5823f83e.camel@mediatek.com>
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Content-Language: en-US
+In-Reply-To: <d11e174d85c7f5a9b4ffe5fb2bb15dfd5823f83e.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggpemm500003.china.huawei.com (7.185.36.56) To
- dggpemd100001.china.huawei.com (7.185.36.94)
 
-
-
-On 2024/4/17 9:46, Jason Yan wrote:
-> Hi Xingui,
-> 
-> On 2024/4/16 11:07, Xingui Yang wrote:
->> We found that it is judged as broadcast flutter and exits directly 
->> when the
->> exp-attached end device reconnects after the end device probe failed.
-> 
-> Can you please describe how to reproduce this issue in detail?
-The test steps we currently construct are to simulate link abnormalities 
-and adjust the rate of the remote phy when running IO on all disks.
-
-When the sata disk is probed and the IDENTIFY command is sent to the 
-disk, the expander return rate is abnormal, causing sata disk probe 
-fail. But there may be many reasons for device probe failure, including 
-expander or disk instability or link abnormalities.
-
-> 
-> Thanks,
-> Jason
-> 
+Il 16/04/24 15:05, Peter Wang (王信友) ha scritto:
+> On Tue, 2024-04-16 at 12:38 +0200, AngeloGioacchino Del Regno wrote:
+>> Il 16/04/24 12:31, Peter Wang (王信友) ha scritto:
+>>>
+>>>> Yes this causes -> less than half of a millisecond <- of
+>>>> additional
+>>>> boot time
+>>>> if the dvfsrc-supply is present but boost-microvolt is not.
+>>>>
+>>>> I really don't see the problem with that :-)
+>>>>
+>>>
+>>> Adding a little bit of boot time to one smartphone might not be a
+>>> problem, but when you consider a billion smartphones each adding a
+>>> little bit, the cumulative effect becomes significant. The power
+>>> consumption of these accumulated times will continue to increase,
+>>> contributing to the Earth's carbon emissions. Moreover, removing
+>>> the
+>>> master switch for this feature doesn't seem to have any benefits
+>>> other
+>>> than not having to set it in the DTS. Similarly, the master switch
+>>> for
+>>> VA09 seems to have more disadvantage.
+>>>
 >>
->> [78779.654026] sas: broadcast received: 0
->> [78779.654037] sas: REVALIDATING DOMAIN on port 0, pid:10
->> [78779.654680] sas: ex 500e004aaaaaaa1f phy05 change count has changed
->> [78779.662977] sas: ex 500e004aaaaaaa1f phy05 originated 
->> BROADCAST(CHANGE)
->> [78779.662986] sas: ex 500e004aaaaaaa1f phy05 new device attached
->> [78779.663079] sas: ex 500e004aaaaaaa1f phy05:U:8 attached: 
->> 500e004aaaaaaa05 (stp)
->> [78779.693542] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] found
->> [78779.701155] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
->> [78779.707864] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
->> ...
->> [78835.161307] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 
->> tries: 1
->> [78835.171344] sas: sas_probe_sata: for exp-attached device 
->> 500e004aaaaaaa05 returned -19
->> [78835.180879] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] is gone
->> [78835.187487] sas: broadcast received: 0
->> [78835.187504] sas: REVALIDATING DOMAIN on port 0, pid:10
->> [78835.188263] sas: ex 500e004aaaaaaa1f phy05 change count has changed
->> [78835.195870] sas: ex 500e004aaaaaaa1f phy05 originated 
->> BROADCAST(CHANGE)
->> [78835.195875] sas: ex 500e004aaaaaaa1f rediscovering phy05
->> [78835.196022] sas: ex 500e004aaaaaaa1f phy05:U:A attached: 
->> 500e004aaaaaaa05 (stp)
->> [78835.196026] sas: ex 500e004aaaaaaa1f phy05 broadcast flutter
->> [78835.197615] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
+>> Sorry, but I still don't see how a few *microseconds* more of boot
+>> time can
+>> be significant, even related to power consumption during boot.
 >>
->> The cause of the problem is that the related ex_phy information was not
->> cleared after the end device probe failed. In order to solve the above
->> problem, a function sas_ex_unregister_end_dev() is defined to clear the
->> ex_phy information and unregister the end device when the exp-attached 
->> end
->> device probe failed.
+>> If that was a few milliseconds, then I'd agree with you, but that's
+>> not the case.
 >>
->> As the sata device is an asynchronous probe, the sata device may probe
->> failed after done REVALIDATING DOMAIN. Then after the port is added to 
->> the
->> sas_port_del_list, the port will not be deleted until the end of the next
->> REVALIDATING DOMAIN and sas_destruct_ports() is called. A warning about
->> creating a duplicate port will occur in the new REVALIDATING DOMAIN when
->> the end device reconnects. Therefore, the previous destroy_list and
->> sas_port_del_list should be handled before REVALIDATING DOMAIN.
+>> Removing the master switch has a benefit: you *lose* a few
+>> microseconds of boot
+>> time (so, boots in *few microseconds LESS*) on platforms that would
+>> have this set
+>> in devicetree, as this property is redundant with the other
+>> activation checks
+>> for those features.
 >>
->> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->> ---
->>   drivers/scsi/libsas/sas_discover.c |  2 ++
->>   drivers/scsi/libsas/sas_expander.c | 16 ++++++++++++++++
->>   drivers/scsi/libsas/sas_internal.h |  6 +++++-
->>   3 files changed, 23 insertions(+), 1 deletion(-)
+>> So, there you go: if the majority of MediaTek platforms are already
+>> using this
+>> crypt boost feature, then this commit reduces carbon emissions, as
+>> those would
+>> boot in a few less microseconds.
 >>
->> diff --git a/drivers/scsi/libsas/sas_discover.c 
->> b/drivers/scsi/libsas/sas_discover.c
->> index 8fb7c41c0962..aae90153f4c6 100644
->> --- a/drivers/scsi/libsas/sas_discover.c
->> +++ b/drivers/scsi/libsas/sas_discover.c
->> @@ -517,6 +517,8 @@ static void sas_revalidate_domain(struct 
->> work_struct *work)
->>       struct sas_ha_struct *ha = port->ha;
->>       struct domain_device *ddev = port->port_dev;
->> +    sas_destruct_devices(port);
->> +    sas_destruct_ports(port);
->>       /* prevent revalidation from finding sata links in recovery */
->>       mutex_lock(&ha->disco_mutex);
->>       if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)) {
->> diff --git a/drivers/scsi/libsas/sas_expander.c 
->> b/drivers/scsi/libsas/sas_expander.c
->> index f6e6db8b8aba..6ae1f4aaaf61 100644
->> --- a/drivers/scsi/libsas/sas_expander.c
->> +++ b/drivers/scsi/libsas/sas_expander.c
->> @@ -1856,6 +1856,22 @@ static void sas_unregister_devs_sas_addr(struct 
->> domain_device *parent,
->>       }
->>   }
->> +void sas_ex_unregister_end_dev(struct domain_device *dev)
->> +{
->> +    struct domain_device *parent = dev->parent;
->> +    struct expander_device *parent_ex = &parent->ex_dev;
->> +    int i;
->> +
->> +    for (i = 0; i < parent_ex->num_phys; i++) {
->> +        struct ex_phy *phy = &parent_ex->ex_phy[i];
->> +
->> +        if (sas_phy_match_dev_addr(dev, phy)) {
->> +            sas_unregister_devs_sas_addr(parent, i, true);
->> +            break;
->> +        }
->> +    }
 > 
-> Did you mean this end device is a wide-port end device ? How could this 
-> happen?
+> But the majority platfomrs dosen't need this feature.
+> This feature is only for legacy chip which at least 4 years ago.
+> 
 
-No, the end device described here is a non-expander device. Such as: 
-sata/sas disk. But these devices are exp-attached.
+Upstream supports platforms that do and don't need this feature, and having
+redundant device tree properties performing the same checks is not just
+suboptimal but plain wrong.
 
-Thanks.
-Xingui
+Adding to this, devicetree describes the hardware - and there is no physical
+hardware switch that needs this redundant property, this means that the
+property that is getting removed in this commit (and the va09 one in another
+commit of this series) is a *software switch*, not HW.
+
+Keep in mind, also, that this feature (and again, the va09 one as well) has
+a specific requirement to be supported - and this is what the code does even
+without the software switch to add it.
+
+In case there's any need to disallow such feature from a specific SoC, the DT
+bindings can be modified such that a specific compatible string would disallow
+adding the required regulator and/or boost-microvolt properties.
+
+Besides, I want to remind you that there is no reason to drop support, or have
+them unreliably working, or use hacks, for SoCs that are "old" - especially
+when this is a driver that works on both old and new ones.
+
+Regards,
+Angelo
