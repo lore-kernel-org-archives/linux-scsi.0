@@ -1,191 +1,188 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 913E3817;
-	Thu, 18 Apr 2024 00:35:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713400554; cv=fail; b=P7j7ReyZ6RsIRq0uSmcEgxcx7PQf7/I3SSOcbGjj/wbqkbeCUCEmDfSU0rmXgTOFUzr0GQg9Yux6Vj4GdS5qHj6AoI2Ojao4qwzF+ZSWmUiMfvQWrHMeAC834pqHy2XBmjKV7n45xF5ymagbpawaUEznMiDXazp1WWh6A8it/nY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713400554; c=relaxed/simple;
-	bh=6YmkxSwLoJSBnhNAO20+fvIOZLassIb9K9oGnL4BQ58=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=axZm/Co4ef+hErohWn3iOBuWBvAiLcgTPb9gnZf7M84Zi/2awbW8HNy3vlSZ/+hPiOJ7SSDMuG4GMMaCdP9hXFYHgKGEV30kR3msGPbEmXSgvXTxG1f/j2ecdIHrTE+3ACreOj5iVp2nrfYRtr/bQewz9iJ3iEoJgdcQYkCBnKI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=gQTzRdaE; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=USyE8ZrM; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gQTzRdaE";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="USyE8ZrM"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43HM4UD1009525;
-	Thu, 18 Apr 2024 00:35:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : in-reply-to : message-id : references : date : content-type :
- mime-version; s=corp-2023-11-20;
- bh=PnkEoeGPhR8cjo+FyybQq7dk8DAh/0EuTSqvxNic2PY=;
- b=gQTzRdaEhUPOpFto6F+3OgDjM4fXdlesiBZoMFQaV/D0PKXIXWRjBdl4aemxIVkOJwjV
- zv92//oElqOmgzllU4JTTzmXpnWZN8Om/LqeswgPFtSxPcb2N0oxz/s4qG5MUuV43Xfy
- Ugi1LMrJT5cpg79Dp+UPUPiCfudJgSnF/6abw/kXjSxmtwwF8rZLc/kyTxQCj0B3XOi8
- MU6pb6LmiaWLof3iaM0oVPkfWODMhsTt9ub8LE38W7SKGcjINBhM4kSzY+nxIbHWn9zE
- Dbf97lMDmD7AGiIU+6DcFP5icx1z6GwyLQpsIM5L3zm0M2A2IAZvtzcjc1NxaSXLWSxH CA== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xfjkv94xa-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 18 Apr 2024 00:35:36 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 43I0Xx4F005105;
-	Thu, 18 Apr 2024 00:35:34 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3xfggfwj3v-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 18 Apr 2024 00:35:34 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WWUWdA7+Tf6fg/76z3q+2q2JRkTRs2SGwmARPI1jVfrwLOxesRjumvVpM69n/bdtMPfGRueS8jJLPkZiBpGgxOaUPpSllrS/eDOUE9Xo/2itQ0kXNyWAsXJYZ1XsVMdWZVny0HT0Moa9vhZvZUrg7p4jLPoaylgnAMW//WIcI+n+a8NCobEwRliGRfwvkkNxiyNlFP/ywFvTZrbAu95FkpvUOQs2OkcRm6yf4h8l/pNByGFpIQJbS2OyS43T/rZGW5kz6dKnKuKM4N5gmFW3WIhp7joT25gVzjI7ETtoXST8zlVAndBZAhqDG82C7lry6yGZuj2LU8tHrsqBU9uslA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PnkEoeGPhR8cjo+FyybQq7dk8DAh/0EuTSqvxNic2PY=;
- b=iGUwBZait869Mu21gk1ZUcPiOpCdHuRnY5jYZtC0PMTa+Bba+ewtQvI7OPj55FDMyId2pKnIp3YIen2+Xu+QCO42lS4YVF3xj9YcQZ4STFbbugiFH3fY7+U/CiXVgIfmaOCXT/kQ+RS32t3osvg49yXXd26JKMYdBGhIMWpmL6nrbVuNP6Me+qM5IpU2JjKo4WLsK6q4sGmmAklUKyWBhykVg2sr4CoMEhwKcwzXYou1U3Q3c7Iq4ciPY+hdMZNX8Y+zkxoPlL6esNGnnlh4DFNd9auLU/E/1G6JyEw/QewXvTsRyKmK8M0U4aI/Dm/Uc1/TYo/r8iVpevInbAV9iA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PnkEoeGPhR8cjo+FyybQq7dk8DAh/0EuTSqvxNic2PY=;
- b=USyE8ZrM5PAZK1UFBlDfuD0IJIXFsb5esxSA9KGfI61y35xdDFQCaDdb2bxuzS6vsi4yJGK1x9b0GjPSx1X2EiFoNgzwN2wKogEBMGDLFO0M0CGa2YGeN1Q1Buxqat+DWdhr9k8rFcWJAgQrlt2SnGsKv5pj51zDSFt1bbahTno=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by BLAPR10MB5060.namprd10.prod.outlook.com (2603:10b6:208:333::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7472.37; Thu, 18 Apr
- 2024 00:35:17 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::7856:8db7:c1f6:fc59]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::7856:8db7:c1f6:fc59%4]) with mapi id 15.20.7409.042; Thu, 18 Apr 2024
- 00:35:17 +0000
-To: Kees Cook <keescook@chromium.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Charles Bertsch
- <cbertsch@cox.net>,
-        Justin Stitt <justinstitt@google.com>,
-        Bart Van
- Assche <bvanassche@acm.org>,
-        Andy Shevchenko <andy@kernel.org>,
-        Sathya
- Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy
- <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani
- <suganath-prabu.subramani@broadcom.com>,
-        "James E.J. Bottomley"
- <jejb@linux.ibm.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit
- Saxena <sumit.saxena@broadcom.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Himanshu Madhani
- <himanshu.madhani@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        mpi3mr-linuxdrv.pdl@broadcom.com,
-        GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH 0/5] scsi: Avoid possible run-time warning with long
- manufacturer strings
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <202404171035.BDFF28D@keescook> (Kees Cook's message of "Wed, 17
-	Apr 2024 10:35:47 -0700")
-Organization: Oracle Corporation
-Message-ID: <yq1ttjzecfv.fsf@ca-mkp.ca.oracle.com>
-References: <20240410021833.work.750-kees@kernel.org>
-	<202404171035.BDFF28D@keescook>
-Date: Wed, 17 Apr 2024 20:35:15 -0400
-Content-Type: text/plain
-X-ClientProxiedBy: BY3PR10CA0030.namprd10.prod.outlook.com
- (2603:10b6:a03:255::35) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53A1279E1;
+	Thu, 18 Apr 2024 01:46:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1713404802; cv=none; b=dpO0/1HckMQiDbjVIybMftmqC53doMkTsUAEBAOe6pnRJYuNGPiK/PhaLN5JelARI4UpOcAkoCRK1FW9rxYyppG4X0eCYIZ8V7DylUV52AdOxEnZEmBG8LFrfcMlfSQa1Un+iyI61rjPxy/b2DLeItl1J7MVeesGDHb08mbCIt4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1713404802; c=relaxed/simple;
+	bh=+Jtc80/f6T5S8x4XYhR5idzmi06r2nnPA1lCZQ9L49c=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=cE2YdvIgOe/VJbYM1XOQFCNYnE4hYlRGAeFmUVSXelfFtK1Ixoexa0k1b4siQtBQYqC0DvgDR7RfNjzf+EJFCzQEWSsz6+Ot4fWwgpmuUKya68W4IfaY5MsIB5DBgNPyXQwDIL/KLvIK/m/LmgG7LPRYcrkZHzaBtLCM+pJL12w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4VKgYS0Y04zNncx;
+	Thu, 18 Apr 2024 09:44:12 +0800 (CST)
+Received: from canpemm500005.china.huawei.com (unknown [7.192.104.229])
+	by mail.maildlp.com (Postfix) with ESMTPS id 7D64818007C;
+	Thu, 18 Apr 2024 09:46:36 +0800 (CST)
+Received: from canpemm500004.china.huawei.com (7.192.104.92) by
+ canpemm500005.china.huawei.com (7.192.104.229) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Thu, 18 Apr 2024 09:46:36 +0800
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Thu, 18 Apr 2024 09:46:35 +0800
+Subject: Re: [PATCH] scsi: libsas: Fix exp-attached end device cannot be
+ scanned in again after probe failed
+To: yangxingui <yangxingui@huawei.com>, <john.g.garry@oracle.com>,
+	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+	<damien.lemoal@opensource.wdc.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
+References: <20240416030727.17074-1-yangxingui@huawei.com>
+ <e33272f8-1ff5-561f-60a3-b4d24fe27c6b@huawei.com>
+ <e7e26224-0e0c-f6bf-d24e-5a9a6d84a8e1@huawei.com>
+From: Jason Yan <yanaijie@huawei.com>
+Message-ID: <59f29a27-a7c4-6278-d5ac-be802027b603@huawei.com>
+Date: Thu, 18 Apr 2024 09:46:35 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|BLAPR10MB5060:EE_
-X-MS-Office365-Filtering-Correlation-Id: 619584b9-1c4b-4524-35e8-08dc5f3f6b92
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	Rm9+TOT/KHBeHg01AiYucuh+q0sntqOeRrzK1oHD8Bki7aueBotXg5GBCE5o/aH5aWM2aV2+cJxoRuZ09b+Wa3CevLvI504IIo5UIyENK4PKC4hkGN5yLY+TWJG4GtfTp/YJK3rjhTazwD1Ql3JXVyYsWG/5xtLLmfwUzOFBW1VvueNx2KYtZvoeHQ8BHSMzpK8K3c9/+ddaVbOYQ3z1mgI3ybdI5MGh4qxtiuIaXqL8XzA0CUrV7R72jfcTRB/y3Sf++SG9jsAc/cV/zVQ1RbZRyQHPC6m7YO3Q3UjRhAfZzB+j7SzTyjmH9zlmdxRenZGNQu7L9OsZ06GCOO8I+oLEdaVdEMuPp9S0P2O4x1tRZELUVuVaR+w5qDH2h5H5qNO0iIqgLQBfnc0WHObZ3CuW2SvpvEuDQeIzcPiapeZ8MObQNrDg9FqCl9LjUlvg9EEFkFm8KP60MqckI5fLRHJm6xF5osO48NbtTdbRUsgWHLbbPfaKw+kBiF9xxdMA1+NdLKv3WxlOMSb0+GapMJtLuZIKmMt+IDSmzP245Zk0zHvLI6uPp9eyk6To1JYYdYVJmzOCk5RGfluLz6pgTfZ2MUI8nqs49zQF0nNUYtqM6sN+kXfAdegJ537C9OtvIz3ceMCVvPaLiilNyw3y6MHHQlTJPQSbRjEMu8fNxuAS0TTM6nMTyAP0MLAxUvrSeLXWC1WbKqlfW9yw3H3g0Q==
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(7416005)(376005)(1800799015)(3613699003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?ygyUvnhsnjf6+Wrjts9YueOOaBd1qVvSTSaxY3Fv6jNXTpwTmXbG8ImIlvCA?=
- =?us-ascii?Q?ZFtRh8s5PZ79hsgSxevo5RaRFuJ8IBahsCvheJ2wBMde/hgYhaMlZWk9YG8T?=
- =?us-ascii?Q?XH6OOCL6wvjqF2i99G6EpndHOiFNQ1zKxjAsxnCLg8vQc6eVXMWJQIj4abIx?=
- =?us-ascii?Q?IQqb2l0Dw76zMJw3CEKg6pyPdv0hFJLmw/nEkYXOmyt9rS8dBVpwe82bJjZT?=
- =?us-ascii?Q?nn2qxpX2S1G1hWBfdZmoFvMFw8xekZIUOqEcUY0k3ALWCwOzuHmovk0F89Dg?=
- =?us-ascii?Q?RJHi3iB+4Eccktf+u97eQsuDnWp6nz1m0MPPEWPNVdNuXUQH0GiNsUomy7ea?=
- =?us-ascii?Q?7QKEoIduwOfaYVZkg96e/ffAMc9tewM7OehhXGNWYixw+l5dQyjFpQbm7KIO?=
- =?us-ascii?Q?gVPrO7SlROUHzXMzxrErJbJ/rcna1jzMmrVXigm5c9Af3NeEqcJ1w7MhxF9x?=
- =?us-ascii?Q?APi4zw9d3D0+ctz+SvqsF8S/DUn37HigUzU5dQu9XrUigME6TntJ95ICagtD?=
- =?us-ascii?Q?W1oGHaICFxuu4bzKycETZ0ikj8DKfFGX9Lvcb58aO1FfMoa85f69u3x8K/Ph?=
- =?us-ascii?Q?9Y1ks9ORD3W7elQ7PkPvFDh6uCi2AN5lQWrAsR63jikNcXBJ04+y9YbOEj1i?=
- =?us-ascii?Q?/6/SRvQCJ5AoS5zf85/t2YR1yg1bpHDAEZm8tW3N5KFNLiKOuGgcFF7UNLO4?=
- =?us-ascii?Q?wvgNkl9itK7MjNY8FvepRJjNEH1/GgDoF+6oKS1Uw4yAX6qQkqnRRLXeS3x+?=
- =?us-ascii?Q?5PSeAc5okPYv53Sm6mj6fIEswj8jUO/4o0z+OaHxZzBKksm4fDuZc6290Wg4?=
- =?us-ascii?Q?choT+5n5uMqGnUYOvJ/AhNNmLFITCrA9BdNMl825ZTul5jj9tVYu3yPYcXnK?=
- =?us-ascii?Q?4rZINL0J9uf5TJN9zE1TfwWb2d/rDaMgnm7yCXNzlLW6ClRcj6eqEs7qmLu9?=
- =?us-ascii?Q?J12pLqJXwtyjrEk0HT2V3271zNtOiKpDDCIyCsHBZx/sydsyg6qj91/KeO2w?=
- =?us-ascii?Q?Oo5o97ZsbAqztLmWyFv7DsKXhR2KOY8kLiGf11DkB9uSXJdvtUVeFAi/x1+R?=
- =?us-ascii?Q?9FZW1D+zHfHjmsaPBop4ktYzQZ2MmMs022EH8i42N27Pyw9EMuy8ImEzoB8h?=
- =?us-ascii?Q?7QjbiMqpmkSGkbS8OM16LeUhsv9ZvrVqprjZ0uvLlwdLLTYAPZgjk0xjiNoa?=
- =?us-ascii?Q?7o8MClt1lhQywGtNsofPaTqUy3ctuDy8zXHBgZkac4sAXSFRa4saMFJNDbSM?=
- =?us-ascii?Q?b25e2YSwE1KxXkGgZ+vMGY3tMlAg6W93IIAi1exXrkneqBOVfV2OdcDiQMaw?=
- =?us-ascii?Q?pljx6ee0/zCYZ29iZ4mpk2A2rkjboeVZ5TvdaGkR5y4ypyHUI+tDrPimNuaz?=
- =?us-ascii?Q?918vZbHe/7yl6CldkE6WjYV0yGdHYP449Rbbgiy8BVG9veAHEIRxx26utIce?=
- =?us-ascii?Q?9+GuarBZZlDMs4eN/ndIk8NIPK3ltrWvHoy//HIX1axNDZOkTjXVTXoOUbsI?=
- =?us-ascii?Q?d08QNe7K+XlpTjGb8TzXhAz88ByymQ3V7tHZH91tnmWZBu/MM7+7RcffkBW5?=
- =?us-ascii?Q?p3yFUyTpaXXC0CRO+QpO5r96eafCxoItAaXR8btIt8VsqgZhvNDC7exopxY/?=
- =?us-ascii?Q?tQ=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	qk1MbkqVsmp/dJRCQmCVoWGdQWFrijRhIujXrnzuhNV++yTQM08NAuLz/UP28K1HF7+ZGrDEYkjHn5My7V8yzrEly5T6o8VqmGDTekayok2o8YUihkXXvjUQTfvMcXuPXr97U+ogED/NB83+4Pxk0uw5jOJMwBY7TGCYOa6Q8ipNp+0JCZNdrVfHee3QKKeH0Sf0DBSZT7oPWZvljAWqUy/JKfq1KN9z6/wRzEx1SbnvVenOVODpLrGPUnU3LcO/1KCGNieJOKh38bAKKTtoexQKmHE/e9HbBI65lI1ylTrtgb0Yl2FOqCcrcPyrbvQEWnjqTXZAKFw/GhXI5/GeHkQxHX+ZnIETl5myyZ7tOsDxLfbsEqq+h7KVhR/MkLF8vFcs4fhLuXB17bw4pn6ugGScH3B0IT7iGQmb/D0yzuqrVzcosYJB8YF4delRTP+dwakHaEFfYibIvbW0p7mdXd5/LGptJaGvatjdoYuczCNzDMPrgmvePIjcbiq9TqJlV10h/4N6NE2Qjzc4SvKVXUSXbEsKNcGzL9rgF4EqVkhVo16wpur+KJ7f4k9wqOHSlPnRA78zJe0tAALyK4pGclkPChDqiytPxAGgCbtV1/g=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 619584b9-1c4b-4524-35e8-08dc5f3f6b92
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Apr 2024 00:35:17.3194
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Yent+Lnk/ptArS2LEK5ZeZF8REwHonJ6eo6rmZwaYCmVaYGZ3kNX3nY466j2twPlVZllzP7kpCHg/vMNPqysIgpPpBmBCJcBruP1pggYpvk=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB5060
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-04-17_20,2024-04-17_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0
- mlxlogscore=931 suspectscore=0 bulkscore=0 spamscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2404010000 definitions=main-2404180002
-X-Proofpoint-ORIG-GUID: zSnjforsdS7HmlhjS64SI92nzOe1g723
-X-Proofpoint-GUID: zSnjforsdS7HmlhjS64SI92nzOe1g723
+In-Reply-To: <e7e26224-0e0c-f6bf-d24e-5a9a6d84a8e1@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ canpemm500004.china.huawei.com (7.192.104.92)
 
+On 2024/4/17 15:47, yangxingui wrote:
+> 
+> 
+> On 2024/4/17 9:46, Jason Yan wrote:
+>> Hi Xingui,
+>>
+>> On 2024/4/16 11:07, Xingui Yang wrote:
+>>> We found that it is judged as broadcast flutter and exits directly 
+>>> when the
+>>> exp-attached end device reconnects after the end device probe failed.
+>>
+>> Can you please describe how to reproduce this issue in detail?
+> The test steps we currently construct are to simulate link abnormalities 
+> and adjust the rate of the remote phy when running IO on all disks.
+> 
+> When the sata disk is probed and the IDENTIFY command is sent to the 
+> disk, the expander return rate is abnormal, causing sata disk probe 
+> fail. But there may be many reasons for device probe failure, including 
+> expander or disk instability or link abnormalities.
+> 
+>>
+>> Thanks,
+>> Jason
+>>
+>>>
+>>> [78779.654026] sas: broadcast received: 0
+>>> [78779.654037] sas: REVALIDATING DOMAIN on port 0, pid:10
+>>> [78779.654680] sas: ex 500e004aaaaaaa1f phy05 change count has changed
+>>> [78779.662977] sas: ex 500e004aaaaaaa1f phy05 originated 
+>>> BROADCAST(CHANGE)
+>>> [78779.662986] sas: ex 500e004aaaaaaa1f phy05 new device attached
+>>> [78779.663079] sas: ex 500e004aaaaaaa1f phy05:U:8 attached: 
+>>> 500e004aaaaaaa05 (stp)
+>>> [78779.693542] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] found
+>>> [78779.701155] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
+>>> [78779.707864] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+>>> ...
+>>> [78835.161307] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 
+>>> tries: 1
+>>> [78835.171344] sas: sas_probe_sata: for exp-attached device 
+>>> 500e004aaaaaaa05 returned -19
+>>> [78835.180879] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] is gone
+>>> [78835.187487] sas: broadcast received: 0
+>>> [78835.187504] sas: REVALIDATING DOMAIN on port 0, pid:10
+>>> [78835.188263] sas: ex 500e004aaaaaaa1f phy05 change count has changed
+>>> [78835.195870] sas: ex 500e004aaaaaaa1f phy05 originated 
+>>> BROADCAST(CHANGE)
+>>> [78835.195875] sas: ex 500e004aaaaaaa1f rediscovering phy05
+>>> [78835.196022] sas: ex 500e004aaaaaaa1f phy05:U:A attached: 
+>>> 500e004aaaaaaa05 (stp)
+>>> [78835.196026] sas: ex 500e004aaaaaaa1f phy05 broadcast flutter
+>>> [78835.197615] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
+>>>
+>>> The cause of the problem is that the related ex_phy information was not
+>>> cleared after the end device probe failed. In order to solve the above
+>>> problem, a function sas_ex_unregister_end_dev() is defined to clear the
+>>> ex_phy information and unregister the end device when the 
+>>> exp-attached end
+>>> device probe failed.
+>>>
+>>> As the sata device is an asynchronous probe, the sata device may probe
+>>> failed after done REVALIDATING DOMAIN. Then after the port is added 
+>>> to the
+>>> sas_port_del_list, the port will not be deleted until the end of the 
+>>> next
+>>> REVALIDATING DOMAIN and sas_destruct_ports() is called. A warning about
+>>> creating a duplicate port will occur in the new REVALIDATING DOMAIN when
+>>> the end device reconnects. Therefore, the previous destroy_list and
+>>> sas_port_del_list should be handled before REVALIDATING DOMAIN.
+>>>
+>>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+>>> ---
+>>>   drivers/scsi/libsas/sas_discover.c |  2 ++
+>>>   drivers/scsi/libsas/sas_expander.c | 16 ++++++++++++++++
+>>>   drivers/scsi/libsas/sas_internal.h |  6 +++++-
+>>>   3 files changed, 23 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/libsas/sas_discover.c 
+>>> b/drivers/scsi/libsas/sas_discover.c
+>>> index 8fb7c41c0962..aae90153f4c6 100644
+>>> --- a/drivers/scsi/libsas/sas_discover.c
+>>> +++ b/drivers/scsi/libsas/sas_discover.c
+>>> @@ -517,6 +517,8 @@ static void sas_revalidate_domain(struct 
+>>> work_struct *work)
+>>>       struct sas_ha_struct *ha = port->ha;
+>>>       struct domain_device *ddev = port->port_dev;
+>>> +    sas_destruct_devices(port);
+>>> +    sas_destruct_ports(port);
+>>>       /* prevent revalidation from finding sata links in recovery */
+>>>       mutex_lock(&ha->disco_mutex);
+>>>       if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)) {
+>>> diff --git a/drivers/scsi/libsas/sas_expander.c 
+>>> b/drivers/scsi/libsas/sas_expander.c
+>>> index f6e6db8b8aba..6ae1f4aaaf61 100644
+>>> --- a/drivers/scsi/libsas/sas_expander.c
+>>> +++ b/drivers/scsi/libsas/sas_expander.c
+>>> @@ -1856,6 +1856,22 @@ static void 
+>>> sas_unregister_devs_sas_addr(struct domain_device *parent,
+>>>       }
+>>>   }
+>>> +void sas_ex_unregister_end_dev(struct domain_device *dev)
+>>> +{
+>>> +    struct domain_device *parent = dev->parent;
+>>> +    struct expander_device *parent_ex = &parent->ex_dev;
+>>> +    int i;
+>>> +
+>>> +    for (i = 0; i < parent_ex->num_phys; i++) {
+>>> +        struct ex_phy *phy = &parent_ex->ex_phy[i];
+>>> +
+>>> +        if (sas_phy_match_dev_addr(dev, phy)) {
+>>> +            sas_unregister_devs_sas_addr(parent, i, true);
+>>> +            break;
+>>> +        }
+>>> +    }
+>>
+>> Did you mean this end device is a wide-port end device ? How could 
+>> this happen?
+> 
+> No, the end device described here is a non-expander device. Such as: 
+> sata/sas disk. But these devices are exp-attached.
 
-Hi Kees!
-
->> This series fixes all 4 of the instances I could find in the SCSI
->> subsystem.
->
-> Friendly ping. Can the SCSI tree pick this up, or should I take it
-> through the hardening tree?
-
-It's on my list of series to review. Have a couple of fires going right
-now.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+If it is not a wide port, why do they have the same sas address here? 
+Why do you add this function to unregister these PHYs? And the last 
+parameter of sas_unregister_devs_sas_addr() means the last PHY of the 
+wide port, you just all passed true, it is irrational.
+> 
+> Thanks.
+> Xingui
+> .
