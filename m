@@ -1,128 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C0F5174EC0;
-	Thu, 18 Apr 2024 17:31:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44627174EFF
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2024 17:40:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713461486; cv=none; b=LVQWipSvGMGSeqM8g5yenyT+TZMSHs4TK8zICPSBA9/lzwVdSj+N11RdUanA38DtqzYuxNaE643LY2j6NyM88A/t040zV9hGl0Gk3vO9WTsRZUOo2PZpEK9/1ivUO6KSM4MUWUCdwv+ZMS7xapHMvubriguPxkuLB2SZDaKpxzk=
+	t=1713462043; cv=none; b=iYNvOyXODFsxkkDPHt7UyG2Vd+ZYGxlfWe5z2kb/ZDO10kDOZyZhMnwwGLDKsuSI2NrP4Z8ivCi4onl0tpGlqAj0WWSAzD7ZtZJo8mV0vwFo8RRC454/XsYaKY/mdVDzwVjUh2JcPsy1ifRlOKQCYhaSUo2EhmqVBwPxEmhV/bg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713461486; c=relaxed/simple;
-	bh=mFPrCvLrxIQNqZjqRYLBKfQaqDsb+b6XIi+X1/IuX4U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kahSpW+RwymD4Sw2jZiBF6c1x0A4i44B/YUUwtPyUKyvSiBHqnZvjypx63w4v2/q3cn5uQu906BzfNWA4Tj/wc801DzcwnajAPZNdsoI4jkUXKF6cQE886a8PKqWpIXXCIO7VnZhwXw98I7O6SM+NP2/1uZCqvvBvaWZ/K+DAJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qYbkzIfb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713462043; c=relaxed/simple;
+	bh=FmPKRIB0vDy4zhpyj6WsFvnKmu3PIPghHZcwDpm7UEw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XAxYHMWDaRYq1GzJW0vdl810flZ3uR++fAQzg7zCWPmtJl+FP8TogBI3hidnEtp8w/z/LGUsRul8s4TR15avVlQZkQ2OLPChbnxtIHJWyklULopMGD4KQQl7zTwdUzBllZczQ7OYCDHbKUu/Aos9FBLr9SwA26cb+JgouVikhy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=Iv71FbM3; arc=none smtp.client-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qYbkzIfb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1C45C113CC;
-	Thu, 18 Apr 2024 17:31:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713461485;
-	bh=mFPrCvLrxIQNqZjqRYLBKfQaqDsb+b6XIi+X1/IuX4U=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=qYbkzIfbWVr3khBjHDqenfNvOnPfCGCwBBWvd+w5VQuHy0miIF/vJnPxf0FZAm53E
-	 FZMGUtDr4SNCyq6y8hpmKr/sEZOrfimXsaEgCRbjmll5zwC98a/9OUiOPqu3vz+1iu
-	 vgFTK0j64M6x4VlQgE4zHMZVk0h88jDuyXLenRIDgo0HFHBLQyCZA4zxpnFnYhsiAO
-	 oEQfvxcpw0Z4VEyaaGoHL0fPglvinh6cdVyxJryetbpYxS3mGm8LkSIl9SPlx1yLhP
-	 GyZ0lS5LX7EabElZMv+8a+DjUYG9c1X0DAXLBwzckfQGttyZMOR6zrQ186ofUwxoTu
-	 u6Jz03pC6PKTw==
-Message-ID: <702adf23-868b-4e0f-8565-9ca35850bb00@kernel.org>
-Date: Thu, 18 Apr 2024 19:31:20 +0200
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Iv71FbM3"
+Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2a614b0391dso996700a91.1
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2024 10:40:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1713462041; x=1714066841; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=mTqhhBAtzyk3Y9s85bxHLdZZZetoeXscUaMMXvGt+IA=;
+        b=Iv71FbM3sqROqfmgrQCVYIxSFOCYldhNEV5t5SMg4dygVf6l0xiy0AhMGQg6t5aEVH
+         XeXnDcsYEMGGIKXlAqR7XZhGmnj+G8HKInS3vi24KDISE664b+MxpQNi7WCmECpsthrf
+         tyq4fDK85fQFZfJQ5PbeVBz+8srtNXfI6fvPc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713462041; x=1714066841;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mTqhhBAtzyk3Y9s85bxHLdZZZetoeXscUaMMXvGt+IA=;
+        b=bcAUhJ8rFLiACQkLbLlI6N6dm482UwwHiUILTVxIoidT+fO2uXr3MUiOUr507Ov4qV
+         Pv2a9dtS5jZmhNa1TkWxh+J1+BAAm03/PPsHNDVNuzBV7l4uv6QZ4ko24FzBsxnP9zaJ
+         fChNl/TgKbTVj/uz0SfW3jZ5u6LS6ykGgWmz+elWxrd/WOkVqhUN5886NvJiREaMm8+l
+         TK6aMPKtlA5n4aCtD1MBllc7iyEL1ndpfD1I/IAzdp60td7NnO12dVsKi+TyD3nwWw7p
+         OYe3VQzHF9aevvN2OAGS8wlbOsvD6OfAeQQlANNSg87ovCQfkha84E54PofZcSKdMiWQ
+         FMoA==
+X-Forwarded-Encrypted: i=1; AJvYcCWEl0V/G/V/8S9i1MiiEeA60cnEFNaxjM7RcGoY7r1Yu6pUO63N5wB3/unlvZu1encuNzrFT7DsEIHMKb+egldSJNPgtCW76NIOMA==
+X-Gm-Message-State: AOJu0YyiA1brS1fBhvsWrWwDDvateI6q4bpZ+S9A7HxsMToPIgFpAYK0
+	Ndq1KS3QUH9NbqzrLRe3VIlo8rtRsjZsqOGgYFQX9kZKUIeyxLqR0k+fk+TDew==
+X-Google-Smtp-Source: AGHT+IF/jJgvVvcAiBGDTdy1S/NUp/TuYY23Ix3/ItUaAh2s9FW406qVNmGBDyZHak2a+xJEHWf2jA==
+X-Received: by 2002:a17:90a:4894:b0:2a5:4d59:950e with SMTP id b20-20020a17090a489400b002a54d59950emr3243619pjh.27.1713462041529;
+        Thu, 18 Apr 2024 10:40:41 -0700 (PDT)
+Received: from www.outflux.net ([198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id h8-20020a17090a3d0800b002a2a3aebb38sm1861443pjc.48.2024.04.18.10.40.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 Apr 2024 10:40:40 -0700 (PDT)
+Date: Thu, 18 Apr 2024 10:40:40 -0700
+From: Kees Cook <keescook@chromium.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Charles Bertsch <cbertsch@cox.net>,
+	Justin Stitt <justinstitt@google.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Andy Shevchenko <andy@kernel.org>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
+	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org,
+	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH 0/5] scsi: Avoid possible run-time warning with long
+ manufacturer strings
+Message-ID: <202404181039.1457626B@keescook>
+References: <20240410021833.work.750-kees@kernel.org>
+ <202404171035.BDFF28D@keescook>
+ <yq1ttjzecfv.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/17] arm64: dts: exynos: gs101: Add ufs, ufs-phy and ufs
- regulator dt nodes
-To: Peter Griffin <peter.griffin@linaro.org>
-Cc: mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org,
- krzk+dt@kernel.org, conor+dt@kernel.org, vkoul@kernel.org,
- kishon@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
- bvanassche@acm.org, s.nawrocki@samsung.com, cw00.choi@samsung.com,
- jejb@linux.ibm.com, martin.petersen@oracle.com, chanho61.park@samsung.com,
- ebiggers@kernel.org, linux-scsi@vger.kernel.org,
- linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
- linux-clk@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- tudor.ambarus@linaro.org, andre.draszik@linaro.org, saravanak@google.com,
- willmcvicker@google.com
-References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-8-peter.griffin@linaro.org>
- <4ed72378-672e-46d6-9f29-fa118f598739@kernel.org>
- <CADrjBPpaR86R6FMwMqos7ojVfDpGxS=ygW50UBCy1DTsoXHJgQ@mail.gmail.com>
-Content-Language: en-US
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 fv0=
-In-Reply-To: <CADrjBPpaR86R6FMwMqos7ojVfDpGxS=ygW50UBCy1DTsoXHJgQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq1ttjzecfv.fsf@ca-mkp.ca.oracle.com>
 
-On 18/04/2024 15:20, Peter Griffin wrote:
+On Wed, Apr 17, 2024 at 08:35:15PM -0400, Martin K. Petersen wrote:
 > 
-> s_ldo8_reg: LDO8S {
->     regulator-name = "S2MPG11_LDO8";
->     regulator-min-microvolt = <1127800>;
->     regulator-max-microvolt = <1278600>;
->     regulator-always-on;
->     regulator-initial-mode = <SEC_OPMODE_SUSPEND>;
->     channel-mux-selection = <0x28>;
->     schematic-name = "L8S_UFS_VCCQ";
->     subsys-name = "UFS";
->  };
+> Hi Kees!
 > 
-> So I think you're correct this is a stub pending full pmic support. I
-> propose in v2 to add a comment similar to what we have in
-> exynos850-e850-96.dts today above the regulator-fixed node like /*
-> TODO: Remove this once PMIC is implemented  */?
+> >> This series fixes all 4 of the instances I could find in the SCSI
+> >> subsystem.
+> >
+> > Friendly ping. Can the SCSI tree pick this up, or should I take it
+> > through the hardening tree?
 > 
+> It's on my list of series to review. Have a couple of fires going right
+> now.
 
-Sounds good.
+Okay, thanks! I just wanted to make sure it got picked up for v6.9 since
+it fixes a real-world issue. :)
 
-Best regards,
-Krzysztof
-
+-- 
+Kees Cook
