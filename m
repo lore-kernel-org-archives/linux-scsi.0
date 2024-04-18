@@ -1,132 +1,210 @@
-Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
+Received: from mail-oo1-f51.google.com (mail-oo1-f51.google.com [209.85.161.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6F8F158A05
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2024 09:00:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3228D15D5BE
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2024 13:20:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713430806; cv=none; b=MdnNw65eske7eCURhT7LrQx08ddi2VmcWNvk5uoE2DaChjUM4GZj4CnhLE4706ecIEAobaQ3QJlESc6WZQHBAm8b0SwsDN9toa3WjyIejrWsoNz1RwTdiJDX4+RArDvGoLUf1mxAOjguJWXfH8TIVrOLNLL0ZrtjnvT/jP7JWgc=
+	t=1713446428; cv=none; b=sqr+NUa3TKspzC2K0cF0HkCak1cHi78ABVnyYf4I7RVQCnauynPvDqK04F/NJXPb0A0JrnnG66+aiIzmCLaSQDOw7PiMyGOa1Hx0Stxn7pTHFqvH1srQoTn+xvinlQkXq2E1GAiUe3p0CUrI+I3U+s/dEzrI+mgF5SBibOunk3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713430806; c=relaxed/simple;
-	bh=6M7IX6GMRSrb8NNcdYzNd99hn5EHjqT7ZWdZdWCow8o=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=TZEflXVB0H+f9VCP+lrHOuA+Ct+t8IBEPXkvi7ewhjh/SRUSB7kUmdQExH7evWJFfPq/bHxgt8lULmEf3l6Bw7IOGf+QsrP38Trbe8kQE/1mwMXBiwc0aUzcT4moTjNCZ6niv18IQWhP26i8r7jEh8sfZLGG06ccPVZhteoaRWA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=QdbnyEBe; arc=none smtp.client-ip=209.85.208.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1713446428; c=relaxed/simple;
+	bh=Ij0WftYV/5ZMg5fO9jgZuOZnGI9lrIxnyxWRy7o1chQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=FA/z6TzQcbQ0mILTYtBMfddFus1zJJBpgw00D1f00hlwpF+icxv74amDinmHAh7nAzexoCTrlHgRb5hlbFkHGIZ0k0ij8VhLIhYmp+JkRXzMfuPZAm34VusGivY5rwC2q4G1dk882NTadngsv5aAeWJ9Vcsfao1NhiDaUnhVq9E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hI9W2kT7; arc=none smtp.client-ip=209.85.161.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="QdbnyEBe"
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-2db17e8767cso10508211fa.3
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2024 02:00:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hI9W2kT7"
+Received: by mail-oo1-f51.google.com with SMTP id 006d021491bc7-5aa400b917dso542739eaf.0
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2024 06:20:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1713430802; x=1714035602; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=6M7IX6GMRSrb8NNcdYzNd99hn5EHjqT7ZWdZdWCow8o=;
-        b=QdbnyEBe6nDPly3QN8DbvzceIu1PX/esEPXAc2NtPU4QVmucdMM2Ql+uHCTIO3MdZP
-         dLlzfoCg4seieZkel/RAnSdLiUxXAIOwbxxZBCaCQkPGyZmoEsdORjWG6ixr9bBu/PVc
-         9HYvJOTW0T4awOrRDgGJpk0XlsIiMi0ZZNum9QljqnmyZv71djFptcIQPwl7le/8WiRe
-         N/Ax76/f+QJ79yp49aMavu2mEIo71p/fQTmQRKibTl8Y7DqJUiQvesdF5bSZp5RCVwQD
-         b42b8oe40gM5XVbcp/EnV0efgy7KXjCLeNUoD7PSUAftlHFvxwQGNJFDofWpReaNr8f6
-         vDPA==
+        d=linaro.org; s=google; t=1713446426; x=1714051226; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=kv/eRlfqI9fnVJrlsdInFKVMVhQmcxt9AimltQ38bU4=;
+        b=hI9W2kT7VEnNzepqozO6CsirkQ87gJT6BbCrodwmQQVbLuVDsUJiKI3tykUM+HP9S/
+         eed/NaEkNHh98ebwISsdFegj5BfJ/0evAevx4fqGvdtEWP9SLJ37AaVOTYZxk9AeCMuW
+         rWKXaHY6mqr7ZU2YOopgr0+uyjh4+9fVu/6+fY19xw7h+KIvkcaQ0hlLhCJe0LpM7oiS
+         rdi7eKufPWOhtCqaERieSSJxr+aSPStPlWT7sGo7cVTBpLJmkD6mdDnUkHD5LnLeupD/
+         YgLLYz9ogrq1UkWYu1zryJDjZd7ISd84phdqd07AG3DpP/LDSWuyXtgxRijsnZK5eC1h
+         yOlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713430802; x=1714035602;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=6M7IX6GMRSrb8NNcdYzNd99hn5EHjqT7ZWdZdWCow8o=;
-        b=iHcTgL70A4z219BkwqR6yzZj81SoxyLuIRjcqk5NVFuT2cMNUq2QSaofSmUY7Y4IB/
-         AYo6EI6yrXmgkSeFKSAnnjwx9gZ6dskA45YbEGJKvKlUlBGUkD4RZOJLq8bU+KphrC1E
-         RM+GQFs6xLbeCNbI+hK7iaDuAXZ60eBxfDYNhxvZChHz5rcZ0RCSIG1y4vZRSICPEkkv
-         xrOVJf220vzZXoxR1wU2TLqQGB6xEZkYENc5751p0/2HlQTFMrniY1An0N3WuVt4YIDO
-         tzCtvmYcQFkWc6eXQLXTP6MhPT9JWQfCCmhRThLCGQE9EgSqr8Jd3Bzw4MqKxUK3yOMQ
-         c47w==
-X-Forwarded-Encrypted: i=1; AJvYcCU7fU+svvXwg9BKMuFyqNC2rYYhVABjO6n00M+m970cFmHtRR9c7R54JDsN6gnVj/rNHMHsQS8inpmw+xDJlGK5qqAuR1sP64/RuA==
-X-Gm-Message-State: AOJu0YwnVNMY6atiNtxn/uIuMdd3HC1rmZhDcxma0SW4oKVUrGDGQPnG
-	ZzQmgi9UBJnXtLKQVLauQ0O4zTN9dq4aAbdXn0vIq9NW1HEVtNW06QGiN+I00N96t//51B5DiFA
-	g
-X-Google-Smtp-Source: AGHT+IF619CwKkS66uxSEGqX2Je9W4nejrOIpTM2ur25OC4nbCBDHznxTahGCYrQCKIrEVUiKj0P7g==
-X-Received: by 2002:ac2:464f:0:b0:518:b7dd:36a3 with SMTP id s15-20020ac2464f000000b00518b7dd36a3mr1028130lfo.54.1713430801831;
-        Thu, 18 Apr 2024 02:00:01 -0700 (PDT)
-Received: from apollon.wilcks.net (dslb-090-186-231-154.090.186.pools.vodafone-ip.de. [90.186.231.154])
-        by smtp.gmail.com with ESMTPSA id j23-20020aa7ca57000000b0056e0376286bsm610563edt.24.2024.04.18.02.00.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Apr 2024 02:00:01 -0700 (PDT)
-Message-ID: <e8214e77ac70f452d0b4145d2fa3289263953b27.camel@suse.com>
-Subject: Re: [PATCH] scsi_lib: Align max_sectors to kb
-From: Martin Wilck <martin.wilck@suse.com>
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Hannes
- Reinecke <hare@kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley
-	 <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
-Date: Thu, 18 Apr 2024 11:00:00 +0200
-In-Reply-To: <5707dfc3-f8e2-4050-9bba-029facc32ca9@suse.de>
-References: <20240418070015.27781-1-hare@kernel.org>
-	 <20240418070304.GA26607@lst.de>
-	 <5707dfc3-f8e2-4050-9bba-029facc32ca9@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.0 
+        d=1e100.net; s=20230601; t=1713446426; x=1714051226;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kv/eRlfqI9fnVJrlsdInFKVMVhQmcxt9AimltQ38bU4=;
+        b=a6o68vGsbaRWD9uxLkUKvnIbcmsdZNNO66HcEJQJDSUFFcgIrkNCCzwrUNlPF/ej4r
+         aFTiWSZ/AnAef6EGcx3qvSJfBAy+vWF0NISMYAz643TyZoj6ZWPTPOGywDWY5drmmGIK
+         HYuXv4WLeCI90AebalOpd4J86gS3LWzqPywVdx2ubJ1ewcU8nKYJPUIsWqLr/YYSc4i/
+         HdtTauKElHpV09Eger0AQu2kmrzgDIVu7owEydvHDTCHDzHrk4CP268EKZeDQCNSHUTi
+         DAkL6YgIKYLxDDCvPu9kEpPiV0jp5fRYXQUVCuFOoHNOZp5iwKZhfhUAr2fbXtJ/H2WG
+         +CIQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXHBGg+0pCr8E4t+6dKBAdikcDVW5LVhyVUwftAH8sTq47x0rKKsFt/eTDXDJyjy3xlXuC2zX+fKoChPK9ltkF6ye8Dbw/JQtnRTw==
+X-Gm-Message-State: AOJu0Yw1BNJ2Y2raGwacZW3VjWNmv9fbhgCJWvvhHjdvQEnddAJ0dvt5
+	GgKxOv5evD9N3+fzXhtffVSwvEq/KQgzzMJiKmtMcOmJGnMaXfLeDTlhOGMMyNMjw462AeFSP5c
+	L/1SkgXyfFtsaN9Hq9dIBSTKL297WURYs25dhGg==
+X-Google-Smtp-Source: AGHT+IHb/MdViNDEYLGDlZta2cUpYEdAdq/Zq5yJhTp7tH/XZ2cMCev0RXDqyzn43o1+A8jwrKM5rxrFUIw8Q5yDYVo=
+X-Received: by 2002:a4a:ac89:0:b0:5aa:676e:9ad9 with SMTP id
+ b9-20020a4aac89000000b005aa676e9ad9mr3474499oon.2.1713446426269; Thu, 18 Apr
+ 2024 06:20:26 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20240404122559.898930-1-peter.griffin@linaro.org>
+ <20240404122559.898930-8-peter.griffin@linaro.org> <4ed72378-672e-46d6-9f29-fa118f598739@kernel.org>
+In-Reply-To: <4ed72378-672e-46d6-9f29-fa118f598739@kernel.org>
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Thu, 18 Apr 2024 14:20:15 +0100
+Message-ID: <CADrjBPpaR86R6FMwMqos7ojVfDpGxS=ygW50UBCy1DTsoXHJgQ@mail.gmail.com>
+Subject: Re: [PATCH 07/17] arm64: dts: exynos: gs101: Add ufs, ufs-phy and ufs
+ regulator dt nodes
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
+	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	s.nawrocki@samsung.com, cw00.choi@samsung.com, jejb@linux.ibm.com, 
+	martin.petersen@oracle.com, chanho61.park@samsung.com, ebiggers@kernel.org, 
+	linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org, 
+	devicetree@vger.kernel.org, linux-clk@vger.kernel.org, 
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org, 
+	andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, 2024-04-18 at 09:42 +0200, Hannes Reinecke wrote:
-> On 4/18/24 09:03, Christoph Hellwig wrote:
-> > On Thu, Apr 18, 2024 at 09:00:15AM +0200, Hannes Reinecke wrote:
-> > > max_sectors can be modified via sysfs, but only in kb units.
-> >=20
-> > Yes.
-> >=20
-> > > Which leads to a misalignment on stacked devices if the original
-> > > max_sector size is an odd number.
-> >=20
-> > How?
-> >=20
->=20
-> That's an issue we've been seeing during testing:
-> https://lore.kernel.org/dm-devel/7742003e19b5a49398067dc0c59dfa8ddeffc3d7=
-.camel@suse.com/
->=20
-> While this can be fixed in userspace (Martin Wilck provided a
-> patchset
-> to multipath-tools), what I find irritating is that we will always
-> display the max_sectors setting in kb, even if the actual value is
-> not
-> kb aligned.
-> _And_ we allow to modify that value (again in kb units). Which means=20
-> that we _never_ are able to reset it to its original value.
+Hi Krzysztof,
 
-User space has no way to determine whether the actual max_sectors value
-in the kernel is even or odd. By reading max_sectors_kb and writing it
-back, one may actually change the kernel-internal value by rounding it
-down to the next even number. This can cause breakage if the device
-being changed is a multipath path device.
+Thanks for your review feedback.
 
-Wrt Hannes' patch: It would fix the issue on the kernel side, but user
-space would still have no means to determine whether this patch applied
-or not, except for checking the kernel version, which is unreliable.
-For user space, it would be more helpful to add a "max_sectors" sysfs
-attribute that exposes the actual value in blocks.
+On Fri, 5 Apr 2024 at 08:53, Krzysztof Kozlowski <krzk@kernel.org> wrote:
+>
+> On 04/04/2024 14:25, Peter Griffin wrote:
+> > Enable the ufs controller, ufs phy and ufs regulator in device tree.
+> >
+> > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+> > ---
+> >  .../boot/dts/exynos/google/gs101-oriole.dts   | 17 +++++++++
+> >  arch/arm64/boot/dts/exynos/google/gs101.dtsi  | 35 +++++++++++++++++++
+>
+> If you wish you can split DTSI and DTS into separate patches. Up to you.
 
-> > Note that we really should not stack max_sectors anyway, as it's
-> > only
-> > used for splitting in the lower device to start with.
->=20
-> If that's the case, why don't we inhibit the modification for=20
-> max_sectors on the lower devices?
+Thanks for the heads up
+>
+> >  2 files changed, 52 insertions(+)
+> >
+> > diff --git a/arch/arm64/boot/dts/exynos/google/gs101-oriole.dts b/arch/arm64/boot/dts/exynos/google/gs101-oriole.dts
+> > index 6be15e990b65..986eb5c9898a 100644
+> > --- a/arch/arm64/boot/dts/exynos/google/gs101-oriole.dts
+> > +++ b/arch/arm64/boot/dts/exynos/google/gs101-oriole.dts
+> > @@ -53,6 +53,14 @@ button-power {
+> >                       wakeup-source;
+> >               };
+> >       };
+> > +
+> > +     ufs_0_fixed_vcc_reg: regulator-0 {
+> > +             compatible = "regulator-fixed";
+> > +             regulator-name = "ufs-vcc";
+> > +             gpio = <&gpp0 1 0>;
+>
+> Use defines for GPIO flags,
 
-I vote for allowing changes to max_sectors_kb only for devices that
-don't have anything stacked on top, even though my late testing
-indicates that it's only a real problem with request-based dm aka
-multipath. After all, max_sectors only needs to be manipulated in rare
-situations, and would be generally recommended to do this in an udev
-rule early during boot.
+Will fix in v2
 
-Regards,
-Martin
+> but more important: are you sure this is not
+> coming from a PMIC? What's the voltage? It looks like a stub for missing
+> PMIC, because UFS voltages are usually provided by PMIC.
 
+UFS vcc is 1.2v. The gpio signal from gs101 SoC is called BOOTLD0, and
+it is connected to slave pmic (S2MPG11) UFS_EN signal which is a gpio
+enabled voltage rail for UFS (LDO8S).
+
+The downstream driver code declares the UFS supply as regulator-fixed
+even though it has a fully featured regulator driver for the pmic,
+with the LDO8S regulator exposed. Checking the DT for the pmic the min
+and max volt are different, so using regulator-fixed seems wrong for
+downstream.
+
+s_ldo8_reg: LDO8S {
+    regulator-name = "S2MPG11_LDO8";
+    regulator-min-microvolt = <1127800>;
+    regulator-max-microvolt = <1278600>;
+    regulator-always-on;
+    regulator-initial-mode = <SEC_OPMODE_SUSPEND>;
+    channel-mux-selection = <0x28>;
+    schematic-name = "L8S_UFS_VCCQ";
+    subsys-name = "UFS";
+ };
+
+So I think you're correct this is a stub pending full pmic support. I
+propose in v2 to add a comment similar to what we have in
+exynos850-e850-96.dts today above the regulator-fixed node like /*
+TODO: Remove this once PMIC is implemented  */?
+
+regards,
+
+Peter.
+
+
+
+
+>
+> > +             regulator-boot-on;
+> > +             enable-active-high;
+> > +     };
+> >  };
+> >
+> >  &ext_24_5m {
+> > @@ -106,6 +114,15 @@ &serial_0 {
+> >       status = "okay";
+> >  };
+> >
+> > +&ufs_0 {
+> > +     status = "okay";
+> > +     vcc-supply = <&ufs_0_fixed_vcc_reg>;
+> > +};
+> > +
+> > +&ufs_0_phy {
+> > +     status = "okay";
+> > +};
+> > +
+> >  &usi_uart {
+> >       samsung,clkreq-on; /* needed for UART mode */
+> >       status = "okay";
+> > diff --git a/arch/arm64/boot/dts/exynos/google/gs101.dtsi b/arch/arm64/boot/dts/exynos/google/gs101.dtsi
+> > index 608369cec47b..9c94829bf14c 100644
+> > --- a/arch/arm64/boot/dts/exynos/google/gs101.dtsi
+> > +++ b/arch/arm64/boot/dts/exynos/google/gs101.dtsi
+> > @@ -1277,6 +1277,41 @@ pinctrl_hsi2: pinctrl@14440000 {
+> >                       interrupts = <GIC_SPI 503 IRQ_TYPE_LEVEL_HIGH 0>;
+> >               };
+> >
+> > +             ufs_0_phy: phy@17e04000 {
+> > +                     compatible = "google,gs101-ufs-phy";
+> > +                     reg = <0x14704000 0x3000>;
+> > +                     reg-names = "phy-pma";
+> > +                     samsung,pmu-syscon = <&pmu_system_controller>;
+> > +                     #phy-cells = <0>;
+> > +                     clocks = <&ext_24_5m>;
+> > +                     clock-names = "ref_clk";
+> > +                     status = "disabled";
+> > +             };
+> > +
+> > +             ufs_0: ufs@14700000 {
+> > +                     compatible = "google,gs101-ufs";
+> > +
+>
+> Drop blank line.
+>
+> > +                     reg = <0x14700000 0x200>,
+> > +                           <0x14701100 0x200>,
+> > +                           <0x14780000 0xa000>,
+> > +                           <0x14600000 0x100>;
+>
+>
+> Best regards,
+> Krzysztof
+>
