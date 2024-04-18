@@ -1,193 +1,159 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50A856FB0;
-	Thu, 18 Apr 2024 02:42:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D4E563D5
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2024 02:56:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713408176; cv=none; b=q9APcIaSjMVsTv/FGkir+jm7F8VXAbvEX0KNHncJTCZn3ohaw6bnwKXTL5uagzfmfz8dZzMVYgtjrCmovAtmbowr67zJIK74AUTSNK1dS4LverU+x34ITROpZ7Eu2BcaBGa+R488kgFb34bJ9npPPN7Zm/EiH8/Y+hDi+rnufEg=
+	t=1713408961; cv=none; b=obaPVEg1B07QKolZnaW4DFd+ee+PPSU5HQZUgN2j2BLnea2qn28D0UGReeusfxVDME/B8hftP6JYPGCWAKdR7NDGwFP/1kXtVhC+NvyyAnvoJsH1Fn20Fc35PqL5/9oMelEzG6Fqp/ZH9pkTsl5HMYegMSnmzZdYfyF51/mJjGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713408176; c=relaxed/simple;
-	bh=lyNSUQkG5hAPF0cdgrzZAOyzvIpcbVYT5Loo2w3/q+Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=s5HiCvvCd4tz+8uZOefKvpIqqp58VXA6lnfLgCNLfQrEqEpljjpTz7sxtM1J7g206DNoessCm3s8Vf2HfqR5P93/4OYC2m90USj1yZ8Nv0YJP6ssMeBGCrOv4N9II3iww2mtED4uk1Nt9pxnUysUqHthmw8hYr6NMhsAGCrpFvU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.252])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4VKhpK6byvzNrvV;
-	Thu, 18 Apr 2024 10:40:25 +0800 (CST)
-Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 5F9FF18006D;
-	Thu, 18 Apr 2024 10:42:50 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.28; Thu, 18 Apr 2024 10:42:50 +0800
-Message-ID: <f1d32ff4-dba3-037b-b9f1-f20feab1304a@huawei.com>
-Date: Thu, 18 Apr 2024 10:42:49 +0800
+	s=arc-20240116; t=1713408961; c=relaxed/simple;
+	bh=ZbMTj2LcTG25khgbXRykONXFN3HlOFtzAntYKZIsrP8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=N4knV3KaIl4IBKXMIlL4GXAD8J5JPaod/VksyQmsbA1XxtPbCCoBDCI7d3xljN65UFL7IASPNlB9pIjB+10WIZqxXr7WqM6djtvyGzBNNIEHvdwVOy2sYLfga9lNH/CRD5CSu4WO0BjXlOne3cBMc2P25jEOr8+jcYszBB4/wB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QHlO4G+K; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QHlO4G+K"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1e40042c13eso3199115ad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Apr 2024 19:56:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1713408959; x=1714013759; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=90b5Pk3JLEXPuwNPofcOB7rj3EMCJuvhStc2PAZZ7YA=;
+        b=QHlO4G+Kz+/F744j1SI0XHlbDPLB75qz5GAaR9/HjiWFCyaMmM5b8ZdPK5ProJ6y+Y
+         HWYl9agodW1u/J2jCak7H6uzpKX3bt5H2b4f94wrgqfB/qhPIWjI4NqhZuHwUKp3vOEx
+         fpzaqy/vDU7tlFN1bns832xGq7ckZL8zb8pdICdcS93XQSfVAlR9HofFAHwBAnuLS1s6
+         gG9ul5hFafSAm56NaHhchlIgRW4M+IVdGdCM+VX+C3n3vwTAHSIdPp1Kzpg3nD8euoFF
+         m88g3WArx9togtAPYZrt65DXxL7evt/3Tm/e6pyHZ8an8X5GUE4h/j+/oinIO9KGAOo4
+         +D6w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713408959; x=1714013759;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=90b5Pk3JLEXPuwNPofcOB7rj3EMCJuvhStc2PAZZ7YA=;
+        b=rPzek0Ai6zP3iOigfA8Lml+xvwpaz1IsqXC+KREe2VtazN0+tZ746aQVB0sIEiLEo6
+         jxfeRhT199AS8TO3iXSjBublA/kY7xI4gpM2oEL+3ll7CRy6KFRp0dyulTjUNBdH8ESd
+         zTxGv8wK7E0cHvcf/ww5xvH+wDEK4ZVAMrBqhmpACstxhruHNnpoLXfFyk66vQ22i+8Q
+         pTm+vZewSoONlKrePQFNKc3z9AchxjwiK4LKU9PNakaToWOe3I7903Cra+dqP4C97xTC
+         dCYD15QAUbuTnxOxkFP06ipZk6+nQI6pyQG/+zkGXcgrznSAIALOYlQ3IBtl4yG99+xV
+         5FgA==
+X-Gm-Message-State: AOJu0YyChESHcaTLZ/Hbs9p2SkIqaoN45X6h1bsvTdP0bOi74Kz+mQSU
+	GM4/a2DnUa5vFwHXiFaRPYEoQCrkuIdhoy5f1/AwKUoDrUAL4XXf
+X-Google-Smtp-Source: AGHT+IGDGFXb5xipnkLazhaMuLzTpZAYCtcRiZLXhbUaJB7ILiGQ5Qy5XBryxE2Tp8gQGz542xTO4A==
+X-Received: by 2002:a17:902:bcc7:b0:1e8:1dc0:601f with SMTP id o7-20020a170902bcc700b001e81dc0601fmr1445036pls.55.1713408959503;
+        Wed, 17 Apr 2024 19:55:59 -0700 (PDT)
+Received: from [0.0.0.0] (74.211.104.32.16clouds.com. [74.211.104.32])
+        by smtp.gmail.com with ESMTPSA id x6-20020a170902820600b001e43df03096sm371921pln.30.2024.04.17.19.55.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 17 Apr 2024 19:55:59 -0700 (PDT)
+Message-ID: <6f9b424a-040d-4c82-ad2a-cea4684548b0@gmail.com>
+Date: Thu, 18 Apr 2024 10:55:53 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH] scsi: libsas: Fix exp-attached end device cannot be
- scanned in again after probe failed
-Content-Language: en-CA
-To: Jason Yan <yanaijie@huawei.com>, <john.g.garry@oracle.com>,
-	<jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
-References: <20240416030727.17074-1-yangxingui@huawei.com>
- <e33272f8-1ff5-561f-60a3-b4d24fe27c6b@huawei.com>
- <e7e26224-0e0c-f6bf-d24e-5a9a6d84a8e1@huawei.com>
- <59f29a27-a7c4-6278-d5ac-be802027b603@huawei.com>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <59f29a27-a7c4-6278-d5ac-be802027b603@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 4/4] scsi: ufs: Check for completion from the timeout
+ handler
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ Avri Altman <avri.altman@wdc.com>, Stanley Jhu <chu.stanley@gmail.com>,
+ Can Guo <quic_cang@quicinc.com>, Peter Wang <peter.wang@mediatek.com>,
+ "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+ Andrew Halaney <ahalaney@redhat.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Bean Huo <beanhuo@micron.com>
+References: <20240416171357.1062583-1-bvanassche@acm.org>
+ <20240416171357.1062583-5-bvanassche@acm.org>
+Content-Language: en-US
+From: Wenchao Hao <haowenchao22@gmail.com>
+In-Reply-To: <20240416171357.1062583-5-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggpemm500007.china.huawei.com (7.185.36.183) To
- dggpemd100001.china.huawei.com (7.185.36.94)
 
-Hi Jason,
-
-On 2024/4/18 9:46, Jason Yan wrote:
-> On 2024/4/17 15:47, yangxingui wrote:
->>
->>
->> On 2024/4/17 9:46, Jason Yan wrote:
->>> Hi Xingui,
->>>
->>> On 2024/4/16 11:07, Xingui Yang wrote:
->>>> We found that it is judged as broadcast flutter and exits directly 
->>>> when the
->>>> exp-attached end device reconnects after the end device probe failed.
->>>
->>> Can you please describe how to reproduce this issue in detail?
->> The test steps we currently construct are to simulate link 
->> abnormalities and adjust the rate of the remote phy when running IO on 
->> all disks.
->>
->> When the sata disk is probed and the IDENTIFY command is sent to the 
->> disk, the expander return rate is abnormal, causing sata disk probe 
->> fail. But there may be many reasons for device probe failure, 
->> including expander or disk instability or link abnormalities.
->>
->>>
->>> Thanks,
->>> Jason
->>>
->>>>
->>>> [78779.654026] sas: broadcast received: 0
->>>> [78779.654037] sas: REVALIDATING DOMAIN on port 0, pid:10
->>>> [78779.654680] sas: ex 500e004aaaaaaa1f phy05 change count has changed
->>>> [78779.662977] sas: ex 500e004aaaaaaa1f phy05 originated 
->>>> BROADCAST(CHANGE)
->>>> [78779.662986] sas: ex 500e004aaaaaaa1f phy05 new device attached
->>>> [78779.663079] sas: ex 500e004aaaaaaa1f phy05:U:8 attached: 
->>>> 500e004aaaaaaa05 (stp)
->>>> [78779.693542] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] found
->>>> [78779.701155] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
->>>> [78779.707864] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
->>>> ...
->>>> [78835.161307] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 
->>>> 0 tries: 1
->>>> [78835.171344] sas: sas_probe_sata: for exp-attached device 
->>>> 500e004aaaaaaa05 returned -19
->>>> [78835.180879] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] is gone
->>>> [78835.187487] sas: broadcast received: 0
->>>> [78835.187504] sas: REVALIDATING DOMAIN on port 0, pid:10
->>>> [78835.188263] sas: ex 500e004aaaaaaa1f phy05 change count has changed
->>>> [78835.195870] sas: ex 500e004aaaaaaa1f phy05 originated 
->>>> BROADCAST(CHANGE)
->>>> [78835.195875] sas: ex 500e004aaaaaaa1f rediscovering phy05
->>>> [78835.196022] sas: ex 500e004aaaaaaa1f phy05:U:A attached: 
->>>> 500e004aaaaaaa05 (stp)
->>>> [78835.196026] sas: ex 500e004aaaaaaa1f phy05 broadcast flutter
->>>> [78835.197615] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
->>>>
->>>> The cause of the problem is that the related ex_phy information was not
->>>> cleared after the end device probe failed. In order to solve the above
->>>> problem, a function sas_ex_unregister_end_dev() is defined to clear the
->>>> ex_phy information and unregister the end device when the 
->>>> exp-attached end
->>>> device probe failed.
->>>>
->>>> As the sata device is an asynchronous probe, the sata device may probe
->>>> failed after done REVALIDATING DOMAIN. Then after the port is added 
->>>> to the
->>>> sas_port_del_list, the port will not be deleted until the end of the 
->>>> next
->>>> REVALIDATING DOMAIN and sas_destruct_ports() is called. A warning about
->>>> creating a duplicate port will occur in the new REVALIDATING DOMAIN 
->>>> when
->>>> the end device reconnects. Therefore, the previous destroy_list and
->>>> sas_port_del_list should be handled before REVALIDATING DOMAIN.
->>>>
->>>> Signed-off-by: Xingui Yang <yangxingui@huawei.com>
->>>> ---
->>>>   drivers/scsi/libsas/sas_discover.c |  2 ++
->>>>   drivers/scsi/libsas/sas_expander.c | 16 ++++++++++++++++
->>>>   drivers/scsi/libsas/sas_internal.h |  6 +++++-
->>>>   3 files changed, 23 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/scsi/libsas/sas_discover.c 
->>>> b/drivers/scsi/libsas/sas_discover.c
->>>> index 8fb7c41c0962..aae90153f4c6 100644
->>>> --- a/drivers/scsi/libsas/sas_discover.c
->>>> +++ b/drivers/scsi/libsas/sas_discover.c
->>>> @@ -517,6 +517,8 @@ static void sas_revalidate_domain(struct 
->>>> work_struct *work)
->>>>       struct sas_ha_struct *ha = port->ha;
->>>>       struct domain_device *ddev = port->port_dev;
->>>> +    sas_destruct_devices(port);
->>>> +    sas_destruct_ports(port);
->>>>       /* prevent revalidation from finding sata links in recovery */
->>>>       mutex_lock(&ha->disco_mutex);
->>>>       if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)) {
->>>> diff --git a/drivers/scsi/libsas/sas_expander.c 
->>>> b/drivers/scsi/libsas/sas_expander.c
->>>> index f6e6db8b8aba..6ae1f4aaaf61 100644
->>>> --- a/drivers/scsi/libsas/sas_expander.c
->>>> +++ b/drivers/scsi/libsas/sas_expander.c
->>>> @@ -1856,6 +1856,22 @@ static void 
->>>> sas_unregister_devs_sas_addr(struct domain_device *parent,
->>>>       }
->>>>   }
->>>> +void sas_ex_unregister_end_dev(struct domain_device *dev)
->>>> +{
->>>> +    struct domain_device *parent = dev->parent;
->>>> +    struct expander_device *parent_ex = &parent->ex_dev;
->>>> +    int i;
->>>> +
->>>> +    for (i = 0; i < parent_ex->num_phys; i++) {
->>>> +        struct ex_phy *phy = &parent_ex->ex_phy[i];
->>>> +
->>>> +        if (sas_phy_match_dev_addr(dev, phy)) {
->>>> +            sas_unregister_devs_sas_addr(parent, i, true);
->>>> +            break;
->>>> +        }
->>>> +    }
->>>
->>> Did you mean this end device is a wide-port end device ? How could 
->>> this happen?
->>
->> No, the end device described here is a non-expander device. Such as: 
->> sata/sas disk. But these devices are exp-attached.
+On 2024/4/17 1:13, Bart Van Assche wrote:
+> If ufshcd_abort() returns SUCCESS for an already completed command then
+> that command is completed twice. This results in a crash. Prevent this by
+> checking whether a command has completed without completion interrupt from
+> the timeout handler. This CL fixes the following kernel crash:
 > 
-> If it is not a wide port, why do they have the same sas address here? 
-> Why do you add this function to unregister these PHYs? And the last 
-> parameter of sas_unregister_devs_sas_addr() means the last PHY of the 
-> wide port, you just all passed true, it is irrational.
-The non-expander end device does not have a wide port, such as a sata 
-disk, and there is only one ex_phy corresponding to it. This function 
-finds the ex_phy corresponding to the end dev through dev->sas_addr, 
-then clears the ex_phy information and unregister the end device.
+> Unable to handle kernel NULL pointer dereference at virtual address 0000000000000000
+> Call trace:
+>  dma_direct_map_sg+0x70/0x274
+>  scsi_dma_map+0x84/0x124
+>  ufshcd_queuecommand+0x3fc/0x880
+>  scsi_queue_rq+0x7d0/0x111c
+>  blk_mq_dispatch_rq_list+0x440/0xebc
+>  blk_mq_do_dispatch_sched+0x5a4/0x6b8
+>  __blk_mq_sched_dispatch_requests+0x150/0x220
+>  __blk_mq_run_hw_queue+0xf0/0x218
+>  __blk_mq_delay_run_hw_queue+0x8c/0x18c
+>  blk_mq_run_hw_queue+0x1a4/0x360
+>  blk_mq_sched_insert_requests+0x130/0x334
+>  blk_mq_flush_plug_list+0x138/0x234
+>  blk_flush_plug_list+0x118/0x164
+>  blk_finish_plug()
+>  read_pages+0x38c/0x408
+>  page_cache_ra_unbounded+0x230/0x2f8
+>  do_sync_mmap_readahead+0x1a4/0x208
+>  filemap_fault+0x27c/0x8f4
+>  f2fs_filemap_fault+0x28/0xfc
+>  __do_fault+0xc4/0x208
+>  handle_pte_fault+0x290/0xe04
+>  do_handle_mm_fault+0x52c/0x858
+>  do_page_fault+0x5dc/0x798
+>  do_translation_fault+0x40/0x54
+>  do_mem_abort+0x60/0x134
+>  el0_da+0x40/0xb8
+>  el0t_64_sync_handler+0xc4/0xe4
+>  el0t_64_sync+0x1b4/0x1b8
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/ufs/core/ufshcd.c | 19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index c552bf391f79..c44515605031 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -8880,6 +8880,25 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+>  static enum scsi_timeout_action ufshcd_eh_timed_out(struct scsi_cmnd *scmd)
+>  {
+>  	struct ufs_hba *hba = shost_priv(scmd->device->host);
+> +	struct scsi_cmnd *cmd2 = scmd;
+> +
+> +	WARN_ON_ONCE(!scmd);
+> +
+> +	if (is_mcq_enabled(hba)) {
+> +		struct request *rq = scsi_cmd_to_rq(scmd);
+> +		struct ufs_hw_queue *hwq = ufshcd_mcq_req_to_hwq(hba, rq);
+> +
+> +		ufshcd_mcq_poll_cqe_lock(hba, hwq, &cmd2);
+> +	} else {
+> +		__ufshcd_poll(hba->host, UFSHCD_POLL_FROM_INTERRUPT_CONTEXT,
+> +			      &cmd2);
+> +	}
+> +	if (cmd2 == NULL) {
+> +		sdev_printk(KERN_INFO, scmd->device,
+> +			    "%s: cmd with tag %#x has already been completed\n",
+> +			    __func__, blk_mq_unique_tag(scsi_cmd_to_rq(scmd)));
 
-Thanks,
-Xingui
+Would here cause a UAF because the scsi_cmnd has already been completed?
+If UAF would not happen, I think maybe scmd_printk() would be better than sdev_printk()
+
+> +		return SCSI_EH_DONE;
+> +	}
+>  
+>  	if (!hba->system_suspending) {
+>  		/* Activate the error handler in the SCSI core. */
+> 
+
