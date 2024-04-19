@@ -1,63 +1,232 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFF0217AD9C;
-	Thu, 18 Apr 2024 19:14:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68F2D387
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Apr 2024 00:55:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713467674; cv=none; b=Wc/ao7g5PyudzqeDJVl7Jp8OqT2Xrl1kVcpZcGiz4WvBkR0xPvNWKUU0xoKDNaxkq8/HUl/6JvIVbG6Zpdqx9GBGfZmzPAflq57xx1zeamUKiMh8zynSe6bhArhNfNG+j8TIL1yYrqVp+FxdtpoDF2vSaltvQsm+yYv/VLdFl1c=
+	t=1713488106; cv=none; b=Mz8cICgYKEXP6fhAdHP/G5SmQIsAlF558tloiV7xBsOkKulfPG3HgOByisxFIOMFlxAiX4May6jsPBXAEC7CqFK9qVEh4GS1UBOLefOBhCRgstuEAbMVPe6rVhJGwPJPQ+bppcokXbnSImOBAC6q+rTMXfcPm1lrCvDAEbWkFW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713467674; c=relaxed/simple;
-	bh=nFoKo1xuaXZSvIzO5GlLMDjGiqvk6Nv48usVZZ8JbCU=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=lT/8aa0LiSxpt8eDB48leemR8XpCLxryuyypJTxqJSVvo1IUX0vOgbOtPkMTPhEW+quiuRDoJkoyZnBw8LYjlfx0p1nRlkKn2yfH+IlW/EmYFEvqu/Yt+4xMToQZKSHonP5Ig1uLnayXxvlaoQ+PZko2PFWjwFWu5+V0HYELwtA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r/vXA7Y4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713488106; c=relaxed/simple;
+	bh=DmUNL2COPHBY5Y8PRyActAxu/Qn373LVMF6LIXs0bgk=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=MkuN6D2veM/ljBnFDzYpxVqFe4NxJ0oyVY/U469yApZ41WgyzdiBTwAJp7hqMLy8O4ZXve/WS8tgjtKDhZsOL6DuNloYeqjZ5Q1al3BtdnDOLBsq2vkv3GrBX13G8bF4p6C0asrL1uDlTfo7XjdsqXBDJgQ5SJvMbaRlunma5IY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=g92tMy88; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r/vXA7Y4"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 96FD7C116B1;
-	Thu, 18 Apr 2024 19:14:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713467674;
-	bh=nFoKo1xuaXZSvIzO5GlLMDjGiqvk6Nv48usVZZ8JbCU=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=r/vXA7Y4vjy8K7s3ioL+IocXsRkLG6p3ewXIqO44ikFenlH7SDyWPPOtv+zv3Y9ON
-	 x77zKW5Yrqm8+Rf+q3jkBLoCmOFxBNGOuGLZ1P5Jkda6ENflzkf4xIaWELWaTGv6ps
-	 InA0wBkz0T27xwkVB1mN4Fi3DDLgpvq5zNthjb/a/EMKO5lxa1WJ+pFitlZ+kfrnz3
-	 uV0nbFQcPUaUIfWu0vTakjXg0eR9Mv/TuHwrmpV0DxrAvnW2Usns2k5Sqrd2mQtfya
-	 pDrpVlM1o4Gm26lNeFm1Xy7hMA2UjyyKBY1lALyB6ZsAAqLd8O4doU0J1AX314e7Wd
-	 Wb71FSW6VE0BA==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 89E22C43619;
-	Thu, 18 Apr 2024 19:14:34 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.9-rc4
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <14ac270fbf39d20eb8fd8a94a73cb2ae75d9acec.camel@HansenPartnership.com>
-References: <14ac270fbf39d20eb8fd8a94a73cb2ae75d9acec.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <14ac270fbf39d20eb8fd8a94a73cb2ae75d9acec.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: ca91259b775f6fd98ae5d23bb4eec101d468ba8d
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 2668e3ae2ef36d5e7c52f818ad7d90822c037de4
-Message-Id: <171346767455.7721.654682711532032513.pr-tracker-bot@kernel.org>
-Date: Thu, 18 Apr 2024 19:14:34 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g92tMy88"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1713488103;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DmUNL2COPHBY5Y8PRyActAxu/Qn373LVMF6LIXs0bgk=;
+	b=g92tMy88l6n1Kb9MDNl585gd9JXAOhksBJoCK75jAFosOGiMHZg4poL1fUTfvqLzRIr0OC
+	39b4CoJSHIVwt8HM1nEyRAG4yhia74lm0842p3in0dXIVkGVA0UBPctLNMxno/GWHCketR
+	nFBMl+eMjCqsBrg50CzaY1RZsRqnuzE=
+Received: from mail-oa1-f71.google.com (mail-oa1-f71.google.com
+ [209.85.160.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-390-zCjd5sX7PpqZU3-_pfWzHQ-1; Thu, 18 Apr 2024 20:55:01 -0400
+X-MC-Unique: zCjd5sX7PpqZU3-_pfWzHQ-1
+Received: by mail-oa1-f71.google.com with SMTP id 586e51a60fabf-22ef0423c3bso1702463fac.2
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Apr 2024 17:55:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713488100; x=1714092900;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=DmUNL2COPHBY5Y8PRyActAxu/Qn373LVMF6LIXs0bgk=;
+        b=vrppmpubLhykHiLscGTGXjJwPRSXXWsMOEg3rU1/v1uh05bcCqhTYhpHb6jhrUAIe3
+         PQL/mD4lyImRsjYvQLC4SleBbRs4RIkh9Q2s9W8ygbHpl4fhXaK9+Zy6jqMKB/X4YHIL
+         AjMjyGwOjsUNx0HDmIchO2b9kFSsVd+/zUsczRndi6zhdL8WQK1WcGiLajhAG+rIoxla
+         oVGbFnE3PYcxOqJlkPMWCpOX5zIfUOpWarY8pxyA9NxwRbfLnfdPxVnLMc+R03ft3IW5
+         mf0NNwsitSwfmsYqmBbEZQayV8UISXJABhGvz2QHUGHJdr4oDAFBysDX55mFW7otzOR8
+         JmyA==
+X-Forwarded-Encrypted: i=1; AJvYcCW87iUxKru7CXMQJ7TyL1RXhXFkH0yuSAW49ChhGidQxEo8Rl0dhk7u8nbTNTkUDhVSh78q5XAC4TbkmkTuEtfBK3IvApGYk5er0A==
+X-Gm-Message-State: AOJu0Yzv84I/ylikVlFJtMraN5Eg9S4NjCt420u/g9MG6tcQSGuyVoUb
+	FdZKKNqntxIxOMIbcSdOav40yuGUXJRFDONwao9CWJDxe9GNeQ5BHYM00FyF0gLx3pjaEAH1PYW
+	tdP1Zpgnais5mUmg9BYK+xmmY8YUyO6r677vduVLDumiFKM5kiiJtPhdBoM9piv5SjIk=
+X-Received: by 2002:a05:6870:1ec4:b0:22e:76c1:ddce with SMTP id pc4-20020a0568701ec400b0022e76c1ddcemr796448oab.6.1713488100240;
+        Thu, 18 Apr 2024 17:55:00 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHfuR+Wl8hoKxEmiemqX0A/HnZkYkxTW/MYUXIuGvlZitBXaH7Vggm79vBe9OuDkc+qYIlPWg==
+X-Received: by 2002:a05:6870:1ec4:b0:22e:76c1:ddce with SMTP id pc4-20020a0568701ec400b0022e76c1ddcemr796435oab.6.1713488099861;
+        Thu, 18 Apr 2024 17:54:59 -0700 (PDT)
+Received: from ?IPv6:2600:6c64:4e7f:603b:2613:173:a68a:fce8? ([2600:6c64:4e7f:603b:2613:173:a68a:fce8])
+        by smtp.gmail.com with ESMTPSA id na11-20020a0568706c0b00b0022ef1057fc1sm644445oab.32.2024.04.18.17.54.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 Apr 2024 17:54:59 -0700 (PDT)
+Message-ID: <e60a75a470c00d8d2313b9aa340011dcc93d64c0.camel@redhat.com>
+Subject: Re: [PATCH] V2 scsi_mod: Add a new parameter to scsi_mod to control
+From: Laurence Oberman <loberman@redhat.com>
+To: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+ emilne@redhat.com,  jpittman@redhat.com, jmeneghi@redhat.com,
+ Bart.VanAssche@wdc.com
+Date: Thu, 18 Apr 2024 20:54:57 -0400
+In-Reply-To: <20240418181038.198242-1-loberman@redhat.com>
+References: <20240418181038.198242-1-loberman@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
 
-The pull request you sent on Thu, 18 Apr 2024 14:39:42 -0400:
+T24gVGh1LCAyMDI0LTA0LTE4IGF0IDE0OjEwIC0wNDAwLCBMYXVyZW5jZSBPYmVybWFuIHdyb3Rl
+Ogo+IFJlc2VuZCBvZiB0aGlzIHBhdGNoIGFzIFYyIGFnYWluc3QgTWFydGluJ3MgdHJlZS4KPiBD
+aGFuZ2VzOiBSZW1vdmVkIGluaXRpYWxpemF0aW9uIG9mIGdsb2JhbCB2YXJpYWJsZQo+IHN0b3Jh
+Z2VfcXVpZXRfZGlzY292ZXJ5Cj4gCj4gVGhpcyBuZXcgcGFyYW1ldGVyIHN0b3JhZ2VfcXVpZXRf
+ZGlzY292ZXJ5IGRlZmF1bHRzIHRvIDAgYW5kIGJlaGF2aW9yCj4gaXMKPiB1bmNoYW5nZWQuIElm
+IGl0cyBzZXQgdG8gMSBvbiB0aGUga2VybmVsIGxpbmUgdGhlbiBzZF9wcmludGsgYW5kCj4gc2Rl
+dl9wcmludGsgYXJlIGRpc2FibGVkIGZvciBwcmludGluZy4gVGhlIGRlZmF1bHQgbG9nZ2luZyBj
+YW4gYmUKPiByZS1lbmFibGVkIGFueSB0aW1lIGFmdGVyIGJvb3QgdXNpbmcgL2V0Yy9zeXNjdGwu
+Y29uZiBieSBzZXR0aW5nCj4gZGV2LnNjc2kuc3RvcmFnZV9xdWlldF9kaXNjb3ZlcnkgPSAwLgo+
+IHN5c3RjdGwgLXcgZGV2LnNjc2kuc3RvcmFnZV9xdWlldF9kaXNjb3Zlcnk9MCB3aWxsIGFsc28g
+Y2hhbmdlIGl0Cj4gaW1tZWRpYXRlbHkgYmFjayB0byBsb2dnaW5nLiBpCj4gVXNlcnMgY2FuIGxl
+YXZlIGl0IHNldCB0byAxIG9uIHRoZSBrZXJuZWwgbGluZSBhbmQgMCBpbiB0aGUgY29uZiBmaWxl
+Cj4gc28gaXQgY2hhbmdlcyBiYWNrIHRvIGRlZmF1bHQgYWZ0ZXIgcmMuc3lzaW5pdC4KPiBUaGlz
+IHNvbHZlcyB0aGUgdG91Z2ggcHJvYmxlbSBvZiBzeXN0ZW1zIHdpdGggMTAwMCdzIG9mCj4gc3Rv
+cmFnZSBMVU5TIGNvbnN1bWluZyBhIHN5c3RlbSBhbmQgcHJldmVudGluZyBpdCBmcm9tIGJvb3Rp
+bmcgZHVlIHRvCj4gTk1JJ3MgYW5kIHRpbWVvdXRzIGR1ZSB0byB1ZGV2IHRyaWdnZXJzLgo+IAo+
+IFNpZ25lZC1vZmYtYnk6IExhdXJlbmNlIE9iZXJtYW4gPGxvYmVybWFuQHJlZGhhdC5jb20+Cj4g
+LS0tCj4gwqBEb2N1bWVudGF0aW9uL3Njc2kvc2NzaS1wYXJhbWV0ZXJzLnJzdCB8IDE2ICsrKysr
+KysrKysrKysrKysKPiDCoE1ha2VmaWxlwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHzCoCAyICstCj4gwqBkcml2ZXJzL3Njc2kvc2Nz
+aS5jwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgfMKgIDYgKysrKysrCj4g
+wqBkcml2ZXJzL3Njc2kvc2NzaV9zeXNjdGwuY8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB8wqAg
+NSArKysrKwo+IMKgZHJpdmVycy9zY3NpL3NkLmjCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqAgfCAxMSArKysrKysrKy0tLQo+IMKgaW5jbHVkZS9zY3NpL3Njc2lfZGV2
+aWNlLmjCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgfMKgIDggKysrKysrLS0KPiDCoDYgZmlsZXMg
+Y2hhbmdlZCwgNDIgaW5zZXJ0aW9ucygrKSwgNiBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0
+IGEvRG9jdW1lbnRhdGlvbi9zY3NpL3Njc2ktcGFyYW1ldGVycy5yc3QKPiBiL0RvY3VtZW50YXRp
+b24vc2NzaS9zY3NpLXBhcmFtZXRlcnMucnN0Cj4gaW5kZXggYzQyYzU1ZTFlMjVlLi5lYzIzNzJk
+YjgyYmQgMTAwNjQ0Cj4gLS0tIGEvRG9jdW1lbnRhdGlvbi9zY3NpL3Njc2ktcGFyYW1ldGVycy5y
+c3QKPiArKysgYi9Eb2N1bWVudGF0aW9uL3Njc2kvc2NzaS1wYXJhbWV0ZXJzLnJzdAo+IEBAIC05
+Myw2ICs5MywyMiBAQCBwYXJhbWV0ZXJzIG1heSBiZSBjaGFuZ2VkIGF0IHJ1bnRpbWUgYnkgdGhl
+Cj4gY29tbWFuZAo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoFMzOTAtdG9vbHMgcGFja2FnZSwgYXZhaWxhYmxlIGZvciBkb3dubG9hZCBhdAo+IMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoAo+IGh0dHBzOi8vZ2l0
+aHViLmNvbS9pYm0tczM5MC1saW51eC9zMzkwLXRvb2xzL2Jsb2IvbWFzdGVyL3NjcmlwdHMvc2Nz
+aQo+IF9sb2dnaW5nX2xldmVsCj4gwqAKPiArwqDCoMKgwqDCoMKgwqBzY3NpX21vZC5zdG9yYWdl
+X3F1aWV0X2Rpc2NvdmVyeT0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqAgW1NDU0ldIGEgcGFyYW1ldGVyIHRvIGNvbnRyb2wgdGhlIHByaW50aW5nCj4gZnJv
+bQo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHNkZXZf
+cHJpbnRrIGFuZCBzZF9wcmludGsgZm9yIHN5c3RlbXMgd2l0aAo+IGxhcmdlCj4gK8KgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgYW1vdW50cyBvZiBMVU5TLgo+
+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIERlZmF1bHRz
+IHRvIDAgc28gdW5jaGFuZ2VkIGJlaGF2aW9yLgo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgIElmIHNjc2lfbW9kLnN0b3JhZ2VfcXVpZXRfZGlzY292ZXJ5
+PTEgaXMKPiBhZGRlZCBib290IGxpbmUKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoCB0aGVuIHRoZSBtZXNzYWdlcyBhcmUgbm90IHByaW50ZWQgYW5kIGNh
+biBiZQo+IGVuYWJsZWQKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoCBhZnRlciBib290IHZpYQo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgIGVjaG8gMCA+Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqAKPiAvc3lzL21vZHVsZS9zY3NpX21vZC9wYXJhbWV0ZXJzL3N0b3Jh
+Z2VfcXVpZXRfZGlzY292ZXJ5Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqAgQW5vdGhlciBvcHRpb24gaXMgdXNpbmcKPiArwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBzeXNjdGwgLXcKPiBkZXYuc2NzaS5zdG9yYWdl
+X3F1aWV0X2Rpc2NvdmVyeT0wLgo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgIExlYXZpbmcgdGhpcyBzZXQgdG8gMCBpbiAvZXRjL3N5c2N0bC5jb25mCj4g
+YW5kIHNldHRpbmcKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoCBpdCB0byAxIG9uIHRoZSBrZXJuZWwgbGluZSB3aWxsIGhlbHAgZm9yCj4gdGhlc2UgbGFy
+Z2UKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBMVU4g
+Y291bnQgY29uZmlndXJhdGlvbnMgYW5kIGVuc3VyZSBpdHMgYmFjawo+IG9uIGFmdGVyIGJvb3Qu
+Cj4gKwo+IMKgwqDCoMKgwqDCoMKgwqBzY3NpX21vZC5zY2FuPcKgwqBbU0NTSV0gc3luYyAoZGVm
+YXVsdCkgc2NhbnMgU0NTSSBidXNzZXMgYXMKPiB0aGV5IGFyZQo+IMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGRpc2NvdmVyZWQuwqAgYXN5bmMgc2NhbnMg
+dGhlbSBpbiBrZXJuZWwKPiB0aHJlYWRzLAo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoGFsbG93aW5nIGJvb3QgdG8gcHJvY2VlZC7CoCBub25lIGlnbm9y
+ZXMgdGhlbSwKPiBleHBlY3RpbmcKPiBkaWZmIC0tZ2l0IGEvTWFrZWZpbGUgYi9NYWtlZmlsZQo+
+IGluZGV4IDc2M2I2NzkyZDNkNS4uNWVmZmE4M2EzMmFiIDEwMDY0NAo+IC0tLSBhL01ha2VmaWxl
+Cj4gKysrIGIvTWFrZWZpbGUKPiBAQCAtMiw3ICsyLDcgQEAKPiDCoFZFUlNJT04gPSA2Cj4gwqBQ
+QVRDSExFVkVMID0gOQo+IMKgU1VCTEVWRUwgPSAwCj4gLUVYVFJBVkVSU0lPTiA9IC1yYzEKPiAr
+RVhUUkFWRVJTSU9OID0gLXJjMS5sb2JlCj4gwqBOQU1FID0gSHVyciBkdXJyIEknbWEgbmluamEg
+c2xvdGgKPiDCoAo+IMKgIyAqRE9DVU1FTlRBVElPTioKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9z
+Y3NpL3Njc2kuYyBiL2RyaXZlcnMvc2NzaS9zY3NpLmMKPiBpbmRleCAzZTBjMDM4MTI3N2EuLjM4
+ZGI2ODg2MWJiZSAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaS5jCj4gKysrIGIvZHJp
+dmVycy9zY3NpL3Njc2kuYwo+IEBAIC03Niw2ICs3Niw5IEBACj4gwqAgKiBEZWZpbml0aW9ucyBh
+bmQgY29uc3RhbnRzLgo+IMKgICovCj4gwqAKPiAraW50IHN0b3JhZ2VfcXVpZXRfZGlzY292ZXJ5
+Owo+ICtFWFBPUlRfU1lNQk9MKHN0b3JhZ2VfcXVpZXRfZGlzY292ZXJ5KTsKPiArCj4gwqAvKgo+
+IMKgICogTm90ZSAtIHRoZSBpbml0aWFsIGxvZ2dpbmcgbGV2ZWwgY2FuIGJlIHNldCBoZXJlIHRv
+IGxvZyBldmVudHMgYXQKPiBib290IHRpbWUuCj4gwqAgKiBBZnRlciB0aGUgc3lzdGVtIGlzIHVw
+LCB5b3UgbWF5IGVuYWJsZSBsb2dnaW5nIHZpYSB0aGUgL3Byb2MKPiBpbnRlcmZhY2UuCj4gQEAg
+LTk3OSw2ICs5ODIsOSBAQCBNT0RVTEVfTElDRU5TRSgiR1BMIik7Cj4gwqAKPiDCoG1vZHVsZV9w
+YXJhbShzY3NpX2xvZ2dpbmdfbGV2ZWwsIGludCwgU19JUlVHT3xTX0lXVVNSKTsKPiDCoE1PRFVM
+RV9QQVJNX0RFU0Moc2NzaV9sb2dnaW5nX2xldmVsLCAiYSBiaXQgbWFzayBvZiBsb2dnaW5nCj4g
+bGV2ZWxzIik7Cj4gK21vZHVsZV9wYXJhbShzdG9yYWdlX3F1aWV0X2Rpc2NvdmVyeSwgaW50LCBT
+X0lSVUdPfFNfSVdVU1IpOwo+ICtNT0RVTEVfUEFSTV9ERVNDKHN0b3JhZ2VfcXVpZXRfZGlzY292
+ZXJ5LCAiSWYgc2V0IHRvIDEgd2lsbCBzaWxlbmNlCj4gU0NTSSBhbmQgXAo+ICvCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqBBTFVBIGRpc2NvdmVyeSBsb2dnaW5nIG9uIGJvb3QiKTsKPiDC
+oAo+IMKgc3RhdGljIGludCBfX2luaXQgaW5pdF9zY3NpKHZvaWQpCj4gwqB7Cj4gZGlmZiAtLWdp
+dCBhL2RyaXZlcnMvc2NzaS9zY3NpX3N5c2N0bC5jIGIvZHJpdmVycy9zY3NpL3Njc2lfc3lzY3Rs
+LmMKPiBpbmRleCAwOTM3NzRkNzc1MzQuLjEzYzdlZTRhNjIxMiAxMDA2NDQKPiAtLS0gYS9kcml2
+ZXJzL3Njc2kvc2NzaV9zeXNjdGwuYwo+ICsrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX3N5c2N0bC5j
+Cj4gQEAgLTE4LDYgKzE4LDExIEBAIHN0YXRpYyBzdHJ1Y3QgY3RsX3RhYmxlIHNjc2lfdGFibGVb
+XSA9IHsKPiDCoMKgwqDCoMKgwqDCoMKgwqAgLm1heGxlbsKgwqDCoMKgwqDCoMKgPSBzaXplb2Yo
+c2NzaV9sb2dnaW5nX2xldmVsKSwKPiDCoMKgwqDCoMKgwqDCoMKgwqAgLm1vZGXCoMKgwqDCoMKg
+wqDCoMKgwqA9IDA2NDQsCj4gwqDCoMKgwqDCoMKgwqDCoMKgIC5wcm9jX2hhbmRsZXLCoD0gcHJv
+Y19kb2ludHZlYyB9LAo+ICvCoMKgwqDCoMKgwqDCoHsgLnByb2NuYW1lwqDCoMKgwqDCoD0gInN0
+b3JhZ2VfcXVpZXRfZGlzY292ZXJ5IiwKPiArwqDCoMKgwqDCoMKgwqDCoCAuZGF0YcKgwqDCoMKg
+wqDCoMKgwqDCoD0gJnN0b3JhZ2VfcXVpZXRfZGlzY292ZXJ5LAo+ICvCoMKgwqDCoMKgwqDCoMKg
+IC5tYXhsZW7CoMKgwqDCoMKgwqDCoD0gc2l6ZW9mKHN0b3JhZ2VfcXVpZXRfZGlzY292ZXJ5KSwK
+PiArwqDCoMKgwqDCoMKgwqDCoCAubW9kZcKgwqDCoMKgwqDCoMKgwqDCoD0gMDY0NCwKPiArwqDC
+oMKgwqDCoMKgwqDCoCAucHJvY19oYW5kbGVywqA9IHByb2NfZG9pbnR2ZWMgfSwKPiDCoH07Cj4g
+wqAKPiDCoHN0YXRpYyBzdHJ1Y3QgY3RsX3RhYmxlX2hlYWRlciAqc2NzaV90YWJsZV9oZWFkZXI7
+Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zZC5oIGIvZHJpdmVycy9zY3NpL3NkLmgKPiBp
+bmRleCA1YzQyODVhNTgyYjIuLmUxY2ZmMzdjYTY5ZSAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3Nj
+c2kvc2QuaAo+ICsrKyBiL2RyaXZlcnMvc2NzaS9zZC5oCj4gQEAgLTE2MiwxMSArMTYyLDE2IEBA
+IHN0YXRpYyBpbmxpbmUgc3RydWN0IHNjc2lfZGlzawo+ICpzY3NpX2Rpc2soc3RydWN0IGdlbmRp
+c2sgKmRpc2spCj4gwqDCoMKgwqDCoMKgwqDCoHJldHVybiBkaXNrLT5wcml2YXRlX2RhdGE7Cj4g
+wqB9Cj4gwqAKPiArZXh0ZXJuIGludCBzdG9yYWdlX3F1aWV0X2Rpc2NvdmVyeTsKPiArCj4gwqAj
+ZGVmaW5lIHNkX3ByaW50ayhwcmVmaXgsIHNkc2ssIGZtdCwKPiBhLi4uKcKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBcCj4gLcKgwqDCoMKg
+wqDCoMKgIChzZHNrKS0+ZGlzawo+ID/CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoFwKPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIHNkZXZfcHJlZml4X3ByaW50ayhw
+cmVmaXgsIChzZHNrKS0KPiA+ZGV2aWNlLMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+XAo+ICvCoMKgwqDCoMKgwqDCoGRvCj4ge8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoFwKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgaWYKPiAoIXN0b3JhZ2VfcXVpZXRfZGlzY292ZXJ5KcKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoFwKPiArwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgIChzZHNrKS0+ZGlzawo+ID/CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+XAo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgc2Rldl9w
+cmVmaXhfcHJpbnRrKHByZWZpeCwgKHNkc2spLQo+ID5kZXZpY2UswqDCoMKgwqDCoMKgXAo+IMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqAgKHNkc2spLT5kaXNrLT5kaXNrX25hbWUsIGZtdCwgIyNhKQo+IDrCoMKgwqBcCj4gLcKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBzZGV2X3ByaW50ayhwcmVmaXgsIChzZHNrKS0+ZGV2aWNl
+LCBmbXQsICMjYSkKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoHNkZXZfcHJpbnRrKHByZWZpeCwgKHNkc2spLT5kZXZpY2UsIGZtdCwKPiAjI2EpO8KgwqBc
+Cj4gK8KgwqDCoMKgwqDCoMKgfSB3aGlsZSAoMCkKPiDCoAo+IMKgI2RlZmluZSBzZF9maXJzdF9w
+cmludGsocHJlZml4LCBzZHNrLCBmbXQsCj4gYS4uLinCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgXAo+IMKgwqDCoMKgwqDCoMKgwqBkbwo+IHvCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBcCj4g
+ZGlmZiAtLWdpdCBhL2luY2x1ZGUvc2NzaS9zY3NpX2RldmljZS5oIGIvaW5jbHVkZS9zY3NpL3Nj
+c2lfZGV2aWNlLmgKPiBpbmRleCA5YzU0MGY1NDY4ZWIuLjBhZDBjMzg3ODgzZSAxMDA2NDQKPiAt
+LS0gYS9pbmNsdWRlL3Njc2kvc2NzaV9kZXZpY2UuaAo+ICsrKyBiL2luY2x1ZGUvc2NzaS9zY3Np
+X2RldmljZS5oCj4gQEAgLTMwMiw4ICszMDIsMTIgQEAgX19wcmludGYoNCwgNSkgdm9pZAo+IMKg
+c2Rldl9wcmVmaXhfcHJpbnRrKGNvbnN0IGNoYXIgKiwgY29uc3Qgc3RydWN0IHNjc2lfZGV2aWNl
+ICosIGNvbnN0Cj4gY2hhciAqLAo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgY29u
+c3QgY2hhciAqLCAuLi4pOwo+IMKgCj4gLSNkZWZpbmUgc2Rldl9wcmludGsobCwgc2RldiwgZm10
+LAo+IGEuLi4pwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoFwKPiAtwqDCoMKgwqDCoMKgwqBzZGV2X3ByZWZpeF9wcmludGsobCwg
+c2RldiwgTlVMTCwgZm10LCAjI2EpCj4gK2V4dGVybiBpbnQgc3RvcmFnZV9xdWlldF9kaXNjb3Zl
+cnk7Cj4gKwo+ICsjZGVmaW5lIHNkZXZfcHJpbnRrKGwsIHNkZXYsIGZtdCwgYS4uLikgKHvCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBcCj4gK8KgwqDCoMKgwqDCoMKg
+aWYgKCFzdG9yYWdlX3F1aWV0X2Rpc2NvdmVyeSnCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBcCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoHNkZXZfcHJlZml4X3ByaW50ayhsLCBzZGV2LCBOVUxMLCBmbXQsICMjYSk7wqDCoMKgwqBc
+Cj4gK8KgwqDCoMKgwqDCoMKgfSkKPiDCoAo+IMKgX19wcmludGYoMywgNCkgdm9pZAo+IMKgc2Nt
+ZF9wcmludGsoY29uc3QgY2hhciAqLCBjb25zdCBzdHJ1Y3Qgc2NzaV9jbW5kICosIGNvbnN0IGNo
+YXIgKiwKPiAuLi4pOwoKUmVwbHlpbmcgdG8gbXkgb3duIG1lc3NhZ2U6CgpBZnRlciByZXZpZXcg
+d2lsbCBzZW5kIGEgVjMKCkkganVzdCBub3RpY2VkIHRoZSBwYXRjaCBpbmNsdWRlZCB0aGUgTWFr
+ZWZpbGUgYW5kIHRoYXQgc2hvdWxkIG5vdCBiZQppbmNsdWRlZC4KQWxzbyBTdWJqZWN0IHdhcyB0
+cnVuY2F0ZWQgc28gd2lsbCBmaXggdGhhdCB0b28uCgpUaGFua3MKTGF1cmVuY2UKCg==
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/2668e3ae2ef36d5e7c52f818ad7d90822c037de4
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
