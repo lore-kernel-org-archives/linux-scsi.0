@@ -1,99 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DC1520EB
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Apr 2024 07:18:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 116627EB;
+	Sat, 20 Apr 2024 12:42:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713597500; cv=none; b=AV1ZC0tvVlH1MJoHNvgwwAVJx7CtXNkPExHSwgudglsv8jdmdzSf0Qr7sAiddUomvW6Ba4wjj3C5NSvK8bWatEzpEAQm4zRPLOhJWSU4H0jN5abOJG4loJPs80CzXZuUbc+M7/Co7ipO8cHYlkdUqmq9MspdapxL0JYwp5s/PBo=
+	t=1713616972; cv=none; b=jVedj7DRJz8iB72cqD/lk2tV49WhoZ4aQrLT528KJv9HmQn91FAgRCbd+sDLHzMxQdU6cULiVmascmfVr4yYuEjXMCtMuDKf/6SHwvo8KDHrMetaRT7LhemPh3pcLJJRMvPCDHRHYyQ09hnGPIyuDQkGB6vNlzDtqGetwcqYUCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713597500; c=relaxed/simple;
-	bh=ti/TRdQ0FdUAD92qspAbyjs3Pqzo8XkBNB5ASOImmDk=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=BJrq3FPizCn83iE+F0aalb6RvtbGX407QJg3V4xUi401JU+1gyYMABO8/CltZN0yypddveJCHSmewpCk6ROt1JLdytc3jxyR9rjNnNlY65kj5xbHVqMr1XjyygirzXr0QEv7IdBxUWFwYoH1SVhdIFLjy/8rwVFx+X1woX9Kx2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oTrCRnh2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713616972; c=relaxed/simple;
+	bh=5/hr0Mzp7QzNVogN6AM38E/79ROQzQNR4VUsuZMoYKc=;
+	h=Message-ID:Subject:From:To:Date:Content-Type:MIME-Version; b=eo6iTzqImhp23HcRxK8emBXXvbms844taTGh/wvmkedyLT3YMm4uUNAhYbTp2+0J70RF0KC8bvLsiQHyKlJISNtR5FfNAF4LPJKabOH9udcds51VDD3efFsjne6i/6WwJXPMOBaQCEX2QdeCiYf1C2kgJvwxnQebKCGR3oN/vHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=YdlNkD4n; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=YdlNkD4n; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oTrCRnh2"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 98644C113CE
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Apr 2024 07:18:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713597499;
-	bh=ti/TRdQ0FdUAD92qspAbyjs3Pqzo8XkBNB5ASOImmDk=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=oTrCRnh2MrdMAIk/6xhIgt83xAhUmReqacdt/qyUkOHVige8Z9UbX9nv/FOOA6ISu
-	 DNQqfQ6X/YtNwhmw9Egd3+SLVMZB7omua1VrgyW0W4hZ1CRMzIO7hlrMfNrFqdEY/0
-	 E+W7kEnGKtNCOFgzrmXMFRmnaapREAWfwrExyU3pVzX2qmKJEg3wi7+O4en9fkHzJB
-	 wpOsuTLuDUgd7x4H3QzJNOuccHRFpSQgZtcXNp0boj2Szs0ZR8vXFSf+QfF4D1if+V
-	 aB2anJ+ScCrDNhjB+PxWXujlttlxTDon5KVvRqSI5JqI4oV92/jg4hukoyf1bjPPpB
-	 CQubNqBBT35OQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 8AA9DC433E5; Sat, 20 Apr 2024 07:18:19 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 198923] Linux 4.15.4+: Write on Ext4 causes system block
-Date: Sat, 20 Apr 2024 07:18:19 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bekeanloinse@gmail.com
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: DUPLICATE
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-198923-11613-u4NxxJr1HJ@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-198923-11613@https.bugzilla.kernel.org/>
-References: <bug-198923-11613@https.bugzilla.kernel.org/>
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="YdlNkD4n";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="YdlNkD4n"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1713616969;
+	bh=5/hr0Mzp7QzNVogN6AM38E/79ROQzQNR4VUsuZMoYKc=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=YdlNkD4nKNSuk/K2S6AOlt1Si8rUR+Hck+daJRSVy18YGxS+VQMJ3+HN40vOumyq/
+	 BvPUk0kIvI5AZ6p0S7Dx4b/Kgo02bWLEhtJwH2BOZsg1nkZ+j5ASVIPfYyr36PhYYT
+	 8Z6WeXagIYqIfdm7f8d5cs0z5ZdlL712yQbJru3s=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 511A91281C77;
+	Sat, 20 Apr 2024 08:42:49 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id E69Gx8GAeK9c; Sat, 20 Apr 2024 08:42:49 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1713616969;
+	bh=5/hr0Mzp7QzNVogN6AM38E/79ROQzQNR4VUsuZMoYKc=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=YdlNkD4nKNSuk/K2S6AOlt1Si8rUR+Hck+daJRSVy18YGxS+VQMJ3+HN40vOumyq/
+	 BvPUk0kIvI5AZ6p0S7Dx4b/Kgo02bWLEhtJwH2BOZsg1nkZ+j5ASVIPfYyr36PhYYT
+	 8Z6WeXagIYqIfdm7f8d5cs0z5ZdlL712yQbJru3s=
+Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id B5E3C1281C31;
+	Sat, 20 Apr 2024 08:42:48 -0400 (EDT)
+Message-ID: <31678fc9077af80a2a5648c2bb6c116053e07be7.camel@HansenPartnership.com>
+Subject: [PATCH] MAINTAINERS: update to working email address
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: keyrings@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, 
+	linux-kernel <linux-kernel@vger.kernel.org>
+Date: Sat, 20 Apr 2024 08:42:46 -0400
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D198923
+jejb@linux.ibm.com no longer works.
 
-Bekean Loinse (bekeanloinse@gmail.com) changed:
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ MAINTAINERS | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bekeanloinse@gmail.com
+diff --git a/MAINTAINERS b/MAINTAINERS
+index c23fda1aa1f0..e5121ff5e60e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11995,7 +11995,7 @@ F:	include/keys/encrypted-type.h
+ F:	security/keys/encrypted-keys/
+ 
+ KEYS-TRUSTED
+-M:	James Bottomley <jejb@linux.ibm.com>
++M:	James Bottomley <James.Bottomley@HansenPartnership.com>
+ M:	Jarkko Sakkinen <jarkko@kernel.org>
+ M:	Mimi Zohar <zohar@linux.ibm.com>
+ L:	linux-integrity@vger.kernel.org
+@@ -19669,7 +19669,7 @@ F:	drivers/scsi/sg.c
+ F:	include/scsi/sg.h
+ 
+ SCSI SUBSYSTEM
+-M:	"James E.J. Bottomley" <jejb@linux.ibm.com>
++M:	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+ M:	"Martin K. Petersen" <martin.petersen@oracle.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Maintained
+-- 
+2.35.3
 
---- Comment #14 from Bekean Loinse (bekeanloinse@gmail.com) ---
-(In reply to Theodore Tso from comment #8)
-> The people you need to contact are on the linux-scsi@vger.kernel.org mail=
-ing
-> list.  They are extremely unlikely to be following this bugzilla issue.=20
-> You'll need to ping the mailing list thread on the linux-scsi mailing lis=
-t.=20
-> Or contact the two SCSI maintainers:
->=20
-> SCSI SUBSYSTEM
-> M:    "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-> T:    git https://heardleunlimited.com/
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
-> M:    "Martin K. Petersen" <martin.petersen@oracle.com>
-> T:    git git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
->=20
-> Or try contacting the patch author in question, Bart Van Assche
-> <bart.vanassche@wdc.com>.   There's not much we (the ext4 developers) can=
- do
-> here to help.
 
-Since it is a duplicate of bugzilla #198861, kindly close this entry.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
