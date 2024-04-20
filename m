@@ -1,76 +1,59 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 851AC13118B
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Apr 2024 19:36:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DC1520EB
+	for <linux-scsi@vger.kernel.org>; Sat, 20 Apr 2024 07:18:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713555379; cv=none; b=Tp8Tulv2d/uzfIAK1Q7SRxtHO1DqOhTQbXtQKNyUBGBuVpomrTjraQtuzOAq01bRBFndbtu012iPSTbPYk7JTDdiy3gNgS5aArJ+yVoifXMCneOBfUyPXcMzKc3lJBAaGWYI2rpfzC11EwARROpNy7h1xczL3R42xiSP3EwsFnk=
+	t=1713597500; cv=none; b=AV1ZC0tvVlH1MJoHNvgwwAVJx7CtXNkPExHSwgudglsv8jdmdzSf0Qr7sAiddUomvW6Ba4wjj3C5NSvK8bWatEzpEAQm4zRPLOhJWSU4H0jN5abOJG4loJPs80CzXZuUbc+M7/Co7ipO8cHYlkdUqmq9MspdapxL0JYwp5s/PBo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713555379; c=relaxed/simple;
-	bh=9RemURLgiNhMGmPJlyhUunAHZxkDRj8sIUS7tq0ct5o=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=q+4KkjsBbqn5T/HXI56Xz9x/6ugoRoh66tQRLhYyyoylZ/sQAcBGG/DrsfY1f69VsIESYJWtddWB317cEnLQPKm5Ujc6seTAHE0XuAHiXSL245h4C2oDWGz/B3uo3S+dL19nTkU+wxqAn8QE0IFXHrG5h+uwQiyh5gMVzWHzdDs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=e2GpLQ//; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1713597500; c=relaxed/simple;
+	bh=ti/TRdQ0FdUAD92qspAbyjs3Pqzo8XkBNB5ASOImmDk=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=BJrq3FPizCn83iE+F0aalb6RvtbGX407QJg3V4xUi401JU+1gyYMABO8/CltZN0yypddveJCHSmewpCk6ROt1JLdytc3jxyR9rjNnNlY65kj5xbHVqMr1XjyygirzXr0QEv7IdBxUWFwYoH1SVhdIFLjy/8rwVFx+X1woX9Kx2I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oTrCRnh2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="e2GpLQ//"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1713555376;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9RemURLgiNhMGmPJlyhUunAHZxkDRj8sIUS7tq0ct5o=;
-	b=e2GpLQ//oYjN3If0nT/aSPLfVmIXbbqfww7TtJ3Kaey+9jqA4on9qRj7lMKV78qCnDOJSA
-	HABjvBJcjUqP8+W24X7SjSi9VM3R8253vCG0icwSufbV87HZudTQ6S4LmHxtstpKmBE8qG
-	8uGAbQzpb7dtVdqqw6RMg/dlgxrT0fM=
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
- [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-20-hoakdeCwPqW9sOWjS-Onvw-1; Fri, 19 Apr 2024 15:36:15 -0400
-X-MC-Unique: hoakdeCwPqW9sOWjS-Onvw-1
-Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-436d9e571c1so26793741cf.0
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Apr 2024 12:36:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713555374; x=1714160174;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=9RemURLgiNhMGmPJlyhUunAHZxkDRj8sIUS7tq0ct5o=;
-        b=WAm80l1R8bUMSWbkFD750T27BKzrATzlBBC6o5bKtO43AVn7M3BO7n1Ej5uoFlLkaK
-         1UFvUpyPuLzwIC89SuiRamagvUjdt+I2IEqpDNSiMDInvJL4MVQdv15zaUbPh/sMoW/g
-         1+OH+Q6Gq3CqVcOb1xXAZyf8ROJEG5w0pLlrh/LELOr26UHkmMEBJGa+A9oVhc5RDKHM
-         JmeXyE+V5svSNGm/wJoFGpuIdjTvCbRe8gwsaK7gBN+SBesaZTcC2dhPT6GNwLLY+bgB
-         Z7gmxA9iaU6RxVcyxHVzB9ZWjE/j5kOzlFHNxhoBNywmTs9qSTdim6NxKePrYoq/yyyY
-         LxIQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXz4A5lLSsWGwJ/UuLtQsSPTX+45I6zGSeOa0Uvi5l0J+aqOAHDrky3laAvjqbeuLtoIUIoe3urex0cdc/9pbwCw1zqSwbxfUQtuA==
-X-Gm-Message-State: AOJu0YxFFwrjCGtHHhcpjNh0qA6scQ33prrJcBUa7BJxIWbxIdB4lMmE
-	B5MxyuPFrFMqsWaEvmagb0+celJelrKf0JtAvX4ngD4JWCwew6+MQ+2/1NIDstzNcuG3N0QKcll
-	uXebfmJ4RN0dfU2HI5OlLQoYaUdhbPHaAAZ2PyMHVL0cXqf5E/bJuyQCahI0=
-X-Received: by 2002:ac8:5f12:0:b0:436:5ca6:cd8f with SMTP id x18-20020ac85f12000000b004365ca6cd8fmr3663716qta.53.1713555374617;
-        Fri, 19 Apr 2024 12:36:14 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IF2pos9yNQ3U4n9xCSRw5PFhPxsiJnwvGO/DRmMXGJu1nTkJT3YURbBmT4sYXdJZB4nmw+qSw==
-X-Received: by 2002:ac8:5f12:0:b0:436:5ca6:cd8f with SMTP id x18-20020ac85f12000000b004365ca6cd8fmr3663702qta.53.1713555374350;
-        Fri, 19 Apr 2024 12:36:14 -0700 (PDT)
-Received: from ?IPv6:2600:6c64:4e7f:603b:2613:173:a68a:fce8? ([2600:6c64:4e7f:603b:2613:173:a68a:fce8])
-        by smtp.gmail.com with ESMTPSA id x14-20020ac84a0e000000b00436c05b12a6sm1824564qtq.60.2024.04.19.12.36.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Apr 2024 12:36:14 -0700 (PDT)
-Message-ID: <47e8a845f19f8723ae5a913dcb20c85a2355f5b6.camel@redhat.com>
-Subject: Re: [PATCH] V2 scsi_mod: Add a new parameter to scsi_mod to control
-From: Laurence Oberman <loberman@redhat.com>
-To: michael.christie@oracle.com, martin.petersen@oracle.com, 
-	linux-scsi@vger.kernel.org, emilne@redhat.com, jpittman@redhat.com, 
-	jmeneghi@redhat.com, Bart.VanAssche@wdc.com
-Date: Fri, 19 Apr 2024 15:36:13 -0400
-In-Reply-To: <d82ee3b2-ded7-4020-a286-e9aff060572e@oracle.com>
-References: <20240418181038.198242-1-loberman@redhat.com>
-	 <d82ee3b2-ded7-4020-a286-e9aff060572e@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oTrCRnh2"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 98644C113CE
+	for <linux-scsi@vger.kernel.org>; Sat, 20 Apr 2024 07:18:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1713597499;
+	bh=ti/TRdQ0FdUAD92qspAbyjs3Pqzo8XkBNB5ASOImmDk=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=oTrCRnh2MrdMAIk/6xhIgt83xAhUmReqacdt/qyUkOHVige8Z9UbX9nv/FOOA6ISu
+	 DNQqfQ6X/YtNwhmw9Egd3+SLVMZB7omua1VrgyW0W4hZ1CRMzIO7hlrMfNrFqdEY/0
+	 E+W7kEnGKtNCOFgzrmXMFRmnaapREAWfwrExyU3pVzX2qmKJEg3wi7+O4en9fkHzJB
+	 wpOsuTLuDUgd7x4H3QzJNOuccHRFpSQgZtcXNp0boj2Szs0ZR8vXFSf+QfF4D1if+V
+	 aB2anJ+ScCrDNhjB+PxWXujlttlxTDon5KVvRqSI5JqI4oV92/jg4hukoyf1bjPPpB
+	 CQubNqBBT35OQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 8AA9DC433E5; Sat, 20 Apr 2024 07:18:19 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 198923] Linux 4.15.4+: Write on Ext4 causes system block
+Date: Sat, 20 Apr 2024 07:18:19 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: bekeanloinse@gmail.com
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: DUPLICATE
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-198923-11613-u4NxxJr1HJ@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-198923-11613@https.bugzilla.kernel.org/>
+References: <bug-198923-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -78,51 +61,39 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Fri, 2024-04-19 at 14:28 -0500, michael.christie@oracle.com wrote:
-> On 4/18/24 1:10 PM, Laurence Oberman wrote:
-> > Resend of this patch as V2 against Martin's tree.
-> > Changes: Removed initialization of global variable
-> > storage_quiet_discovery
-> >=20
-> > This new parameter storage_quiet_discovery defaults to 0 and
-> > behavior is
-> > unchanged. If its set to 1 on the kernel line then sd_printk and
-> > sdev_printk are disabled for printing. The default logging can be
-> > re-enabled any time after boot using /etc/sysctl.conf by setting
-> > dev.scsi.storage_quiet_discovery =3D 0.
-> > systctl -w dev.scsi.storage_quiet_discovery=3D0 will also change it
-> > immediately back to logging. i
-> > Users can leave it set to 1 on the kernel line and 0 in the conf
-> > file
-> > so it changes back to default after rc.sysinit.
-> > This solves the tough problem of systems with 1000's of
-> > storage LUNS consuming a system and preventing it from booting due
-> > to
-> > NMI's and timeouts due to udev triggers.
-> >=20
->=20
-> I didn't see v1 so maybe this was already asked. Why can you use the
-> existing SCSI_LOG infrastructure for this?
->=20
-> For example, are the printks that are causing you problems specific
-> calls that are not already covered by SCSI_LOG, like the sdev_printk
-> in
-> scsi_probe_lun? Do we just want to have those covered by a new
-> SCSI_LOG
-> value like SCSI_LOG_DISCOVERY?
->=20
->=20
->=20
+https://bugzilla.kernel.org/show_bug.cgi?id=3D198923
 
-Mike and Bart, Thank you
+Bekean Loinse (bekeanloinse@gmail.com) changed:
 
-I think I looked at this some years back and customers wanted an off
-during boot but then on workflow.
-I sent the patch a few years back but the problem has not gone away so
-I resent.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bekeanloinse@gmail.com
 
-Back Monday after review of your suggestions.
+--- Comment #14 from Bekean Loinse (bekeanloinse@gmail.com) ---
+(In reply to Theodore Tso from comment #8)
+> The people you need to contact are on the linux-scsi@vger.kernel.org mail=
+ing
+> list.  They are extremely unlikely to be following this bugzilla issue.=20
+> You'll need to ping the mailing list thread on the linux-scsi mailing lis=
+t.=20
+> Or contact the two SCSI maintainers:
+>=20
+> SCSI SUBSYSTEM
+> M:    "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+> T:    git https://heardleunlimited.com/
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
+> M:    "Martin K. Petersen" <martin.petersen@oracle.com>
+> T:    git git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+>=20
+> Or try contacting the patch author in question, Bart Van Assche
+> <bart.vanassche@wdc.com>.   There's not much we (the ext4 developers) can=
+ do
+> here to help.
 
-Regards
-Laurence
+Since it is a duplicate of bugzilla #198861, kindly close this entry.
 
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
