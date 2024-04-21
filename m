@@ -1,273 +1,161 @@
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61CA5374F7;
-	Sat, 20 Apr 2024 20:09:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EC0541C72
+	for <linux-scsi@vger.kernel.org>; Sun, 21 Apr 2024 22:13:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713643746; cv=none; b=kJX25dh7P2LEJIO5IVp1Ka4/0mb6huDzUfEXIWDAw+9WY16s9LJcuDlXKnogmxRVk7P+yJjEDyclfYd7ovOaLRht1G65Ng/WZY2ebWuF/YsSGrGAdqbX2tYx2SYfmNpMoVAoXnfZBUeX9wJvrbwRWY6it+JQEIk4CtmOa1s4Lms=
+	t=1713737600; cv=none; b=WjVMU5kRkGResekKrLfLCL7CTj4HyocAPdsWwIi0JUrW67jecgvEj6z4mmqz4SVG9cGm2dTCgyIgCI0USi9adDLMLKl8Hw5Tdi1oxdJXYklsbCJ5Yy7cLbIXt97O+HS40kSz2vKix2zqpJUH8kPUqor7UzEdbSZuQjrx2/kqC9M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713643746; c=relaxed/simple;
-	bh=NRJ6iqRtJPQzhm+uZTGBeb1nQEvmOrudm7MhknkvQcE=;
-	h=Message-ID:In-Reply-To:References:From:Date:Subject:To:Cc; b=s8NlqfJv3X6PBkEsWuz2ZyePeuKyPXe1fowBMW2HNC22AZjzftzfvj7bhJpUqSFnXr4MWoSZ9BHxownXsWFSe2KcdmZgwygmxAOzU9vMeo/AQi2om9FrIH6o6ZbMwsyCzdruI3xC+b7sbFAgsg+3s2sUQTlm5g03ltUCSwVMWyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout1.hostsharing.net (Postfix) with ESMTPS id D459E30008CA3;
-	Sat, 20 Apr 2024 22:09:02 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id CE71A10C1B1; Sat, 20 Apr 2024 22:09:02 +0200 (CEST)
-Message-ID: <b11792137186f5a6794f12fdf891d0c6d51b3557.1713608122.git.lukas@wunner.de>
-In-Reply-To: <cover.1713608122.git.lukas@wunner.de>
-References: <cover.1713608122.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sat, 20 Apr 2024 22:00:06 +0200
-Subject: [PATCH 6/6] scsi: Use device_show_string() helper for sysfs
- attributes
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org
-Cc: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, Tyrel Datwyler <tyreld@linux.ibm.com>, Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com, Don Brace <don.brace@microchip.com>, storagedev@microchip.com, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+	s=arc-20240116; t=1713737600; c=relaxed/simple;
+	bh=06S2EbtHUxnc0u+ydjCrvQr0ZBpiAtq57HrMibhotN4=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=blNyoAADDLhuxtlefyYJZjciQMMFAldvY+MQS/K/F48tu2iBzQF4f4V7qfU7Kkiq+UpoQrlZavtRMDN/eIBc8hRJkajBHYU5ENSu4HBpf2l9QDc2gC1KQgq3FyFD/rW1Hww7+UrH8C2oRefFuMOT2kPkuVXCJWKm6SJLbtLHW4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JW+Ejvge; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JW+Ejvge"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1713737597;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zP1GYZ+tMvIonsOyzxe4apRAGWBw1vIkezAujdrMmFg=;
+	b=JW+Ejvge6GfIXUW9Nhu3bmWeSXsGlZkQ9xNFbcLs4Lx25NGrn8Dq45c1aQ2tJZyYxLfw9W
+	K3Je8zV0cJtyPuSxp2qEspxo1tvJlak5SpOwPNhyZ5h+YQ+uV5Rw23y7SP3OzZbAXr07+g
+	IenhjE9mnBbxIAYyi1v6AHadf2AkChc=
+Received: from mail-yw1-f197.google.com (mail-yw1-f197.google.com
+ [209.85.128.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-124-J-rbGuIBOguaLuWCUcZ_dg-1; Sun, 21 Apr 2024 18:13:15 -0400
+X-MC-Unique: J-rbGuIBOguaLuWCUcZ_dg-1
+Received: by mail-yw1-f197.google.com with SMTP id 00721157ae682-61ac32822bcso86069977b3.1
+        for <linux-scsi@vger.kernel.org>; Sun, 21 Apr 2024 15:13:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713737595; x=1714342395;
+        h=content-transfer-encoding:mime-version:user-agent:references
+         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=zP1GYZ+tMvIonsOyzxe4apRAGWBw1vIkezAujdrMmFg=;
+        b=UfptkdyzRQTDDrIfnE6MVKwQg60frkoOZ0BhllKDiTAMXDnuKM4WIGdm+nlvq9KQbx
+         c/l/4ZtyVj60Rh5wRFLNd/5zrXSR6JgzXdrfz/89zhRL95Q6VALPT7kbbqBkL9u7AAEf
+         XAqWjQnOUinL3dCcqM5fYpS8fZgBLavIHCymXIefjNqxKaD2HIlJJHKyf9td0FaOK583
+         /CtjbSnFPuJexO9NKk06VHiO/fGuFcUFil1ifgDDECHamEjRyYPSHEEyNRUtNXmyakoE
+         iwwQZaFNbHzV7k1HpviRerxGivAVY5ysCoVviQTc3UxnftU2o2h8UWwzlW/RUVx863J/
+         p9Ww==
+X-Forwarded-Encrypted: i=1; AJvYcCXSKWA2lHQqUIVbIJqDkv8zxTK876FI7A89Xpnz+e1Bf4YknSNbB9iDQeU4hwsbc6ifxRvyzSjo2Saj+AUhbr42rCI1KRE+vYEFxA==
+X-Gm-Message-State: AOJu0YzNbKaYCuYVBTrbehud2S8KhwC3It52SQ37MQRL4oNDACPIZpPr
+	U8kBRKgiRWw8/OJQEPxh4pvW3Gl4hkFmYXLBJ93uR2tvW56nKNjY0QPu/WIsJnh62Qf3ashEZmS
+	cSVYeld+bSkShKcvDKQlt7TkMxImRdI80Sdof1NNp8ghPzHqKMgEPKv8A5V4=
+X-Received: by 2002:a5b:60c:0:b0:dcf:6122:ccec with SMTP id d12-20020a5b060c000000b00dcf6122ccecmr8851254ybq.36.1713737595153;
+        Sun, 21 Apr 2024 15:13:15 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH7+UsXK9zOXgVd276Ln/OJlcad9vv3yreNnDQCUm0InJioCNE2tbIZBfNZxkyXNQrOyqoXFg==
+X-Received: by 2002:a5b:60c:0:b0:dcf:6122:ccec with SMTP id d12-20020a5b060c000000b00dcf6122ccecmr8851238ybq.36.1713737594740;
+        Sun, 21 Apr 2024 15:13:14 -0700 (PDT)
+Received: from syn-2600-6c64-4e7f-603b-9b92-b2ac-3267-27e9.biz6.spectrum.com ([2600:6c64:4e7f:603b:9b92:b2ac:3267:27e9])
+        by smtp.gmail.com with ESMTPSA id t4-20020a0c8d84000000b0069be29e160fsm2597767qvb.141.2024.04.21.15.13.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 21 Apr 2024 15:13:13 -0700 (PDT)
+Message-ID: <51960080a06b9e02ca8d539fe0e696a5e520f3b7.camel@redhat.com>
+Subject: Re: [PATCH] V2 scsi_mod: Add a new parameter to scsi_mod to control
+From: Laurence Oberman <loberman@redhat.com>
+To: michael.christie@oracle.com, martin.petersen@oracle.com, 
+	linux-scsi@vger.kernel.org, emilne@redhat.com, jpittman@redhat.com, 
+	jmeneghi@redhat.com, Bart.VanAssche@wdc.com
+Date: Sun, 21 Apr 2024 18:13:12 -0400
+In-Reply-To: <47e8a845f19f8723ae5a913dcb20c85a2355f5b6.camel@redhat.com>
+References: <20240418181038.198242-1-loberman@redhat.com>
+	 <d82ee3b2-ded7-4020-a286-e9aff060572e@oracle.com>
+	 <47e8a845f19f8723ae5a913dcb20c85a2355f5b6.camel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.40.4 (3.40.4-9.el9) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Deduplicate sysfs ->show() callbacks which expose a string at a static
-memory location.  Use the newly introduced device_show_string() helper
-in the driver core instead by declaring those sysfs attributes with
-DEVICE_STRING_ATTR_RO().
+On Fri, 2024-04-19 at 15:36 -0400, Laurence Oberman wrote:
+> On Fri, 2024-04-19 at 14:28 -0500, michael.christie@oracle.com wrote:
+> > On 4/18/24 1:10 PM, Laurence Oberman wrote:
+> > > Resend of this patch as V2 against Martin's tree.
+> > > Changes: Removed initialization of global variable
+> > > storage_quiet_discovery
+> > > 
+> > > This new parameter storage_quiet_discovery defaults to 0 and
+> > > behavior is
+> > > unchanged. If its set to 1 on the kernel line then sd_printk and
+> > > sdev_printk are disabled for printing. The default logging can be
+> > > re-enabled any time after boot using /etc/sysctl.conf by setting
+> > > dev.scsi.storage_quiet_discovery = 0.
+> > > systctl -w dev.scsi.storage_quiet_discovery=0 will also change it
+> > > immediately back to logging. i
+> > > Users can leave it set to 1 on the kernel line and 0 in the conf
+> > > file
+> > > so it changes back to default after rc.sysinit.
+> > > This solves the tough problem of systems with 1000's of
+> > > storage LUNS consuming a system and preventing it from booting
+> > > due
+> > > to
+> > > NMI's and timeouts due to udev triggers.
+> > > 
+> > 
+> > I didn't see v1 so maybe this was already asked. Why can you use
+> > the
+> > existing SCSI_LOG infrastructure for this?
+> > 
+> > For example, are the printks that are causing you problems specific
+> > calls that are not already covered by SCSI_LOG, like the
+> > sdev_printk
+> > in
+> > scsi_probe_lun? Do we just want to have those covered by a new
+> > SCSI_LOG
+> > value like SCSI_LOG_DISCOVERY?
+> > 
+> > 
+> > 
+> 
+> Mike and Bart, Thank you
+> 
+> I think I looked at this some years back and customers wanted an off
+> during boot but then on workflow.
+> I sent the patch a few years back but the problem has not gone away
+> so
+> I resent.
+> 
+> Back Monday after review of your suggestions.
+> 
+> Regards
+> Laurence
 
-No functional change intended.
+Hello folks
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/scsi/bfa/bfad_attr.c             | 28 ++++++------------------
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 11 ++--------
- drivers/scsi/mvsas/mv_init.c             | 10 ++-------
- drivers/scsi/qla2xxx/qla_attr.c          | 11 ++--------
- drivers/scsi/smartpqi/smartpqi_init.c    | 11 +++-------
- 5 files changed, 16 insertions(+), 55 deletions(-)
+OK I remember why I did it this way. (Back in 2021)
+There are too many places sdev_printk is called, not as bad for
+sd_printk but still a lot of changes so doing it in the macro was the
+most sensible. It also masks all the ALUA messages.
 
-diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
-index e96e4b6df265..54bc1539e1e9 100644
---- a/drivers/scsi/bfa/bfad_attr.c
-+++ b/drivers/scsi/bfa/bfad_attr.c
-@@ -853,13 +853,6 @@ bfad_im_hw_version_show(struct device *dev, struct device_attribute *attr,
- 	return sysfs_emit(buf, "%s\n", hw_ver);
- }
- 
--static ssize_t
--bfad_im_drv_version_show(struct device *dev, struct device_attribute *attr,
--				char *buf)
--{
--	return sysfs_emit(buf, "%s\n", BFAD_DRIVER_VERSION);
--}
--
- static ssize_t
- bfad_im_optionrom_version_show(struct device *dev,
- 			 struct device_attribute *attr, char *buf)
-@@ -901,13 +894,6 @@ bfad_im_num_of_ports_show(struct device *dev, struct device_attribute *attr,
- 			bfa_get_nports(&bfad->bfa));
- }
- 
--static ssize_t
--bfad_im_drv_name_show(struct device *dev, struct device_attribute *attr,
--				char *buf)
--{
--	return sysfs_emit(buf, "%s\n", BFAD_DRIVER_NAME);
--}
--
- static ssize_t
- bfad_im_num_of_discovered_ports_show(struct device *dev,
- 			struct device_attribute *attr, char *buf)
-@@ -944,15 +930,15 @@ static          DEVICE_ATTR(symbolic_name, S_IRUGO,
- 				bfad_im_symbolic_name_show, NULL);
- static          DEVICE_ATTR(hardware_version, S_IRUGO,
- 				bfad_im_hw_version_show, NULL);
--static          DEVICE_ATTR(driver_version, S_IRUGO,
--				bfad_im_drv_version_show, NULL);
-+static		DEVICE_STRING_ATTR_RO(driver_version, S_IRUGO,
-+				BFAD_DRIVER_VERSION);
- static          DEVICE_ATTR(option_rom_version, S_IRUGO,
- 				bfad_im_optionrom_version_show, NULL);
- static          DEVICE_ATTR(firmware_version, S_IRUGO,
- 				bfad_im_fw_version_show, NULL);
- static          DEVICE_ATTR(number_of_ports, S_IRUGO,
- 				bfad_im_num_of_ports_show, NULL);
--static          DEVICE_ATTR(driver_name, S_IRUGO, bfad_im_drv_name_show, NULL);
-+static		DEVICE_STRING_ATTR_RO(driver_name, S_IRUGO, BFAD_DRIVER_NAME);
- static          DEVICE_ATTR(number_of_discovered_ports, S_IRUGO,
- 				bfad_im_num_of_discovered_ports_show, NULL);
- 
-@@ -963,11 +949,11 @@ static struct attribute *bfad_im_host_attrs[] = {
- 	&dev_attr_node_name.attr,
- 	&dev_attr_symbolic_name.attr,
- 	&dev_attr_hardware_version.attr,
--	&dev_attr_driver_version.attr,
-+	&dev_attr_driver_version.attr.attr,
- 	&dev_attr_option_rom_version.attr,
- 	&dev_attr_firmware_version.attr,
- 	&dev_attr_number_of_ports.attr,
--	&dev_attr_driver_name.attr,
-+	&dev_attr_driver_name.attr.attr,
- 	&dev_attr_number_of_discovered_ports.attr,
- 	NULL,
- };
-@@ -988,11 +974,11 @@ static struct attribute *bfad_im_vport_attrs[] = {
- 	&dev_attr_node_name.attr,
- 	&dev_attr_symbolic_name.attr,
- 	&dev_attr_hardware_version.attr,
--	&dev_attr_driver_version.attr,
-+	&dev_attr_driver_version.attr.attr,
- 	&dev_attr_option_rom_version.attr,
- 	&dev_attr_firmware_version.attr,
- 	&dev_attr_number_of_ports.attr,
--	&dev_attr_driver_name.attr,
-+	&dev_attr_driver_name.attr.attr,
- 	&dev_attr_number_of_discovered_ports.attr,
- 	NULL,
- };
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 68b99924ee4f..2fca17cf8b51 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3613,12 +3613,6 @@ static void ibmvscsis_remove(struct vio_dev *vdev)
- 	kfree(vscsi);
- }
- 
--static ssize_t system_id_show(struct device *dev,
--			      struct device_attribute *attr, char *buf)
--{
--	return sysfs_emit(buf, "%s\n", system_id);
--}
--
- static ssize_t partition_number_show(struct device *dev,
- 				     struct device_attribute *attr, char *buf)
- {
-@@ -3982,8 +3976,7 @@ static const struct target_core_fabric_ops ibmvscsis_ops = {
- 
- static void ibmvscsis_dev_release(struct device *dev) {};
- 
--static struct device_attribute dev_attr_system_id =
--	__ATTR(system_id, S_IRUGO, system_id_show, NULL);
-+static DEVICE_STRING_ATTR_RO(system_id, S_IRUGO, system_id);
- 
- static struct device_attribute dev_attr_partition_number =
- 	__ATTR(partition_number, S_IRUGO, partition_number_show, NULL);
-@@ -3992,7 +3985,7 @@ static struct device_attribute dev_attr_unit_address =
- 	__ATTR(unit_address, S_IRUGO, unit_address_show, NULL);
- 
- static struct attribute *ibmvscsis_dev_attrs[] = {
--	&dev_attr_system_id.attr,
-+	&dev_attr_system_id.attr.attr,
- 	&dev_attr_partition_number.attr,
- 	&dev_attr_unit_address.attr,
- };
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 43ebb331e216..2a25d574feb9 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -691,13 +691,7 @@ static struct pci_driver mvs_pci_driver = {
- 	.remove		= mvs_pci_remove,
- };
- 
--static ssize_t driver_version_show(struct device *cdev,
--				   struct device_attribute *attr, char *buffer)
--{
--	return sysfs_emit(buffer, "%s\n", DRV_VERSION);
--}
--
--static DEVICE_ATTR_RO(driver_version);
-+static DEVICE_STRING_ATTR_RO(driver_version, 0444, DRV_VERSION);
- 
- static ssize_t interrupt_coalescing_store(struct device *cdev,
- 					  struct device_attribute *attr,
-@@ -772,7 +766,7 @@ static void __exit mvs_exit(void)
- }
- 
- static struct attribute *mvst_host_attrs[] = {
--	&dev_attr_driver_version.attr,
-+	&dev_attr_driver_version.attr.attr,
- 	&dev_attr_interrupt_coalescing.attr,
- 	NULL,
- };
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 44449c70a375..d4b420aef4a8 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1067,13 +1067,6 @@ qla2x00_free_sysfs_attr(scsi_qla_host_t *vha, bool stop_beacon)
- 
- /* Scsi_Host attributes. */
- 
--static ssize_t
--qla2x00_driver_version_show(struct device *dev,
--			  struct device_attribute *attr, char *buf)
--{
--	return scnprintf(buf, PAGE_SIZE, "%s\n", qla2x00_version_str);
--}
--
- static ssize_t
- qla2x00_fw_version_show(struct device *dev,
- 			struct device_attribute *attr, char *buf)
-@@ -2412,7 +2405,7 @@ qla2x00_dport_diagnostics_show(struct device *dev,
- static DEVICE_ATTR(dport_diagnostics, 0444,
- 	   qla2x00_dport_diagnostics_show, NULL);
- 
--static DEVICE_ATTR(driver_version, S_IRUGO, qla2x00_driver_version_show, NULL);
-+static DEVICE_STRING_ATTR_RO(driver_version, S_IRUGO, qla2x00_version_str);
- static DEVICE_ATTR(fw_version, S_IRUGO, qla2x00_fw_version_show, NULL);
- static DEVICE_ATTR(serial_num, S_IRUGO, qla2x00_serial_num_show, NULL);
- static DEVICE_ATTR(isp_name, S_IRUGO, qla2x00_isp_name_show, NULL);
-@@ -2478,7 +2471,7 @@ static DEVICE_ATTR(port_no, 0444, qla2x00_port_no_show, NULL);
- static DEVICE_ATTR(fw_attr, 0444, qla2x00_fw_attr_show, NULL);
- 
- static struct attribute *qla2x00_host_attrs[] = {
--	&dev_attr_driver_version.attr,
-+	&dev_attr_driver_version.attr.attr,
- 	&dev_attr_fw_version.attr,
- 	&dev_attr_serial_num.attr,
- 	&dev_attr_isp_name.attr,
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 385180c98be4..f11cf590b2a9 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -6892,12 +6892,6 @@ static ssize_t pqi_firmware_version_show(struct device *dev,
- 	return scnprintf(buffer, PAGE_SIZE, "%s\n", ctrl_info->firmware_version);
- }
- 
--static ssize_t pqi_driver_version_show(struct device *dev,
--	struct device_attribute *attr, char *buffer)
--{
--	return scnprintf(buffer, PAGE_SIZE, "%s\n", DRIVER_VERSION BUILD_TIMESTAMP);
--}
--
- static ssize_t pqi_serial_number_show(struct device *dev,
- 	struct device_attribute *attr, char *buffer)
- {
-@@ -7066,7 +7060,8 @@ static ssize_t pqi_host_enable_r6_writes_store(struct device *dev,
- 	return count;
- }
- 
--static DEVICE_ATTR(driver_version, 0444, pqi_driver_version_show, NULL);
-+static DEVICE_STRING_ATTR_RO(driver_version, 0444,
-+	DRIVER_VERSION BUILD_TIMESTAMP);
- static DEVICE_ATTR(firmware_version, 0444, pqi_firmware_version_show, NULL);
- static DEVICE_ATTR(model, 0444, pqi_model_show, NULL);
- static DEVICE_ATTR(serial_number, 0444, pqi_serial_number_show, NULL);
-@@ -7083,7 +7078,7 @@ static DEVICE_ATTR(enable_r6_writes, 0644,
- 	pqi_host_enable_r6_writes_show, pqi_host_enable_r6_writes_store);
- 
- static struct attribute *pqi_shost_attrs[] = {
--	&dev_attr_driver_version.attr,
-+	&dev_attr_driver_version.attr.attr,
- 	&dev_attr_firmware_version.attr,
- 	&dev_attr_model.attr,
- 	&dev_attr_serial_number.attr,
--- 
-2.43.0
+Adding another KERN_xxx and LOGLEVEL_xxx won't fly and Enterprise
+customers want the normal log behavior after boot.
+So I think other than adding a single extra module parameter this
+solution is the cleanest and makes sense. 
+Using rate_limiting is not what customers want after boot to ensure
+device logging is back as normal. It's only the boot challenges that
+cause problems.
+This change other than adding the single extra option defaults to ZERO
+changed behavior so I am asking for this please to be considered.
+It is way too common now for Enterprise customers to have these multi-
+thousand lun paths and devices. 
+
+Sincerely
+Laurence
+
+
+
+
+
 
