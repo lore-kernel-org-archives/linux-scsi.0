@@ -1,55 +1,55 @@
-Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
+Received: from mail-oa1-f49.google.com (mail-oa1-f49.google.com [209.85.160.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CAC6147C93
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Apr 2024 12:40:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C51C152185
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Apr 2024 14:56:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713789650; cv=none; b=tZ+CWWGj1siXBZnW21y2xexK/TBLGKTJ5QKj6sujD6kxA1n2Qqu6IbyU5bWV5Qrg5Q2XguMVVh6BqQusLRms2jCjEMVbny8361mL97IMZmgX1ZUK5DJRNb6H8vSb/wCvBbhH+AOPUO/nsHU2FX7URX7xWN30e5Ucll1dM6wq/Ek=
+	t=1713797767; cv=none; b=AaS7GF2+DI00ASnl9zFuAGz7OF3nup2gkQS/3c2aU++evCBZdVRW9yXjc7UtE3FRq0YasTNihWRk07oyMCHUGl2GSQZ7Bh2lnIitAu8lJfAWHpO1nMMhGlWjL+owRc4YtbFB4CFKFsbe/7QZ8qyptO0WioNVqWuxP/4PVsU1Q0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713789650; c=relaxed/simple;
-	bh=rHwtqOJ7hfOxjOvIBhN3DOgNQntQgRNTBmHT3TVb85g=;
+	s=arc-20240116; t=1713797767; c=relaxed/simple;
+	bh=imsekkblo55XmgjAaWRpZaTVc+ZBiFNXzC9IucNVpbg=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=YImfYO4scfOj6F2rHz/eUFBn/VsFK3EBcJxOQpRcvPqkdY2Ity8J347uL6q2Y1ZXKh9eIEfM48zFyQXOaSUTes4kw8Xsj4TsDAhQhjHGX2sgg9C32IxtQ97pdTw1F5ZoLeZ+u0WAWxmyKTb1gzzW5obg7Xzrc1DxNVX0PHXc44U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=MB2WIfh4; arc=none smtp.client-ip=209.85.167.174
+	 To:Cc:Content-Type; b=P9k8Iif+T4gavH79Y55cAdQBMih4efM9KM2+8dNoxzDHKhGwp+WiYqgCvFQhUaJFQ/5SLRd83Kfqim7cwqmGj81lbjAq7ihasFesh7heokWK4iKpqFrt1CV9PAqvGgBK4D7c7nKa8z8bRkkWBS4CDqWJlOPLcEqK/Y1k16p8jvs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=U4HjiUXU; arc=none smtp.client-ip=209.85.160.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="MB2WIfh4"
-Received: by mail-oi1-f174.google.com with SMTP id 5614622812f47-3c75075ad30so1411759b6e.3
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Apr 2024 05:40:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="U4HjiUXU"
+Received: by mail-oa1-f49.google.com with SMTP id 586e51a60fabf-23489b56559so2493099fac.1
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Apr 2024 07:56:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1713789648; x=1714394448; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1713797765; x=1714402565; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=CG4hPexSWedosu3J2N32I42487kxLi51E4WCYQ7z86Q=;
-        b=MB2WIfh4rnpQvPmiUpr5uUnAIHibvLzy+iAN3xVwvrhEaW0XYXtPsUEb+iP/lShDmH
-         dtlFEsrvpKGphAw5yaIjDYshejPLgxIQiJYL+WWO4Pdmh2nIqbJoIl2xygXzgocgpx92
-         dMH8Oypugo07UY7vrx+JMOtxIHtet4Ecl6Zr1LkMCLo29tX3ypPgmmiTAdNbR/KYB1+s
-         KFVky1O5yt7228LjC2k+7AyRUv9N4AyJStrzgWziosLnrhA0Qs68qGgowC2rjSW8x+jX
-         ON6rah4tqFo1KZ+8IijvfUGbY8IdSpUl227PawVTzkwib7eyPaHenxFXln/JIl4P9R/n
-         O5rA==
+        bh=NTOg8DkAW/3dkpxikcsk436y8h1eZe1SfUF5lmW3ku0=;
+        b=U4HjiUXUk7RxfDBJM02w61BKjrevJJkbVQ4n308mTss7ZrXCgsfziCIwLKxShfByoo
+         hWFUPwgoHrnn3+txvd+/dIRdrUyblWZBxXoIwQ7UOUEt5AXEp3fu6NW1YR9Euv3EQx5h
+         I1rveApyv3uw4B8KPrC6Jknj+jJkMsDnxzmLngWhjRpXz52q9hKfhn6LfI2E+KADBrKI
+         r+uDdkRm9scQAFyNYr+06lPE2DWOuUWWkQvldJVTr7zvmAQ4ictOwHFJ3K+eaL8sVheP
+         2p/ckccpkJIi/sQewygszj8wg3710ivlA+IL92IGQ0r+8UQMLXtriqxQHG6s6r8iYUjm
+         58zw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713789648; x=1714394448;
+        d=1e100.net; s=20230601; t=1713797765; x=1714402565;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=CG4hPexSWedosu3J2N32I42487kxLi51E4WCYQ7z86Q=;
-        b=YsRnTI91+5qsh2mZOr1utqIDR9HwiaG0mK/zGLYjU1Afoc/NMsaBMi0LzZDqZKLGVc
-         /d19omiynF+f5/c3S2jD65U1SfZylm6lgpoA1YkhCiC19RKQWwlW9A+IUKsiArOMzAzd
-         JpUAdheyAf6O/BVGSwCdYEcQS4G275z48Gv6lsSo4JJwzN12XYSkfs7pOdxrS2anWEqS
-         IaOIbqFJf0hdr3CV2ymKn71UVqmSVPkDs9QTGJOFZKyPPov52Z6p8ktqN1vyZ4T6gpy1
-         vzRoxEXNkACcV5aIKbZ3yte1sZIrBZfaSBfcURYAwoSbyZBhfzlK+UI0MIMnhcihDg5g
-         tykQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWjN/s4Lt8YukLM4xlEzyQ8Z4Rq63nN1uV/08ZEqtt7n4oXZTckcblI0k3gC1Gdt4pPmlQfvxG8Sp8HC47goELnt/6RvRJDv6B/4Q==
-X-Gm-Message-State: AOJu0YxyL/MZtSldyyeGV8rRW5jIIqKl8z2tV3YZiqEzgLvUbpQOMYSB
-	7apfNn0KDAWmvfnAFcuIc58n2AE0OtTah9FZUX5OqO3BxybDADIO6imThgUkUByhENcDhW9s55/
-	1TPEzqSNNLGRGUINA5fEw4H3P7Ehfxgy5pV8wuA==
-X-Google-Smtp-Source: AGHT+IEMfGJHMTEml1VRNaAfoa4qnzNHZkeLKuW9Vl9je272KzGmuVy0hJtkx+vfLt1IPHkVf/BJiDOJlfCqo09Adjo=
-X-Received: by 2002:a05:6870:b601:b0:233:5557:c6a2 with SMTP id
- cm1-20020a056870b60100b002335557c6a2mr14543327oab.34.1713789647808; Mon, 22
- Apr 2024 05:40:47 -0700 (PDT)
+        bh=NTOg8DkAW/3dkpxikcsk436y8h1eZe1SfUF5lmW3ku0=;
+        b=Ha125vxHeNRkrNebrUbM2ob7yLqZRXUqakpLwoGJ87AW+f2SB+0NqISPYySYWVCs9I
+         6Qd6R8BvKwY/UxzJpV0sOHF07amMZ+qqWA1Jt4zQsrtq7j9sbGf7/C+YsF/MI0TNWXkO
+         +LRQT1YNMhvG6baMCdxDxruDf2pFhsVTzKK5dtAvOrdyGjTnmxI+J2zsR2HkPlXzuKic
+         jyZMD7UuH9p7A6P4tcMWt6pxw8Ua/gIdJvhhbJPS5N0zHJRFLeva+OufPkoSYZacOWni
+         /5+wK+D7rEf3h/qf0f+VEh3KZZ+1blypvUWPGA1bejbNyxx3gxSLMTShnzDK3lkyFfWO
+         5l2A==
+X-Forwarded-Encrypted: i=1; AJvYcCUjOr4/MKTTKQmkq5yCo5HtXgSFeZx5Ufvv4I1H8RH7iKucvSFa9cn7GnirUX+oYVH7rNjZFjQv+hAmz5TKa+s/DrOT8Gvv+ulsuA==
+X-Gm-Message-State: AOJu0YxyxvCVabfAZDqYS1W+K2x1gv7X4F3iGG3u6jVKo07Lo8VEIS6P
+	4EA3WiCSi3i4impoqV4/jIWeAAI/bn+v1H6FzgUu3UkKzs6sf/Ck9KU3ZOqNPEk99GHToMpF07i
+	m7BpevT9Q8sMiLJ1KHl2dPPH+iKOGbXptEH1MiQ==
+X-Google-Smtp-Source: AGHT+IHTzGHT1v9LeibIhpXISDP5Up0NDJE//bpDlntvJJiW0sMwcyQm0rL5VdwsrhLb5OjnZBVN3sPtCblaMnzwbwM=
+X-Received: by 2002:a05:6870:1318:b0:21f:aba0:772d with SMTP id
+ 24-20020a056870131800b0021faba0772dmr10853360oab.39.1713797765495; Mon, 22
+ Apr 2024 07:56:05 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -57,13 +57,12 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-10-peter.griffin@linaro.org> <95bcdc942cba564f78a6f2fe4cde892575838d5c.camel@linaro.org>
-In-Reply-To: <95bcdc942cba564f78a6f2fe4cde892575838d5c.camel@linaro.org>
+ <20240404122559.898930-9-peter.griffin@linaro.org> <61f427ab3793def23d80d94457ff1568cae5ee11.camel@linaro.org>
+In-Reply-To: <61f427ab3793def23d80d94457ff1568cae5ee11.camel@linaro.org>
 From: Peter Griffin <peter.griffin@linaro.org>
-Date: Mon, 22 Apr 2024 13:40:36 +0100
-Message-ID: <CADrjBPrnWzT6raAtuswC0AE6EEwtQ7sTUkm8SjpBh=3nibcmSQ@mail.gmail.com>
-Subject: Re: [PATCH 09/17] phy: samsung-ufs: use exynos_get_pmu_regmap_by_phandle()
- to obtain PMU regmap
+Date: Mon, 22 Apr 2024 15:55:54 +0100
+Message-ID: <CADrjBPqAyWzuw9TmdE1XRQ2BkYojR8r7nnH7JcRWc9_xOpUgHg@mail.gmail.com>
+Subject: Re: [PATCH 08/17] clk: samsung: gs101: add support for cmu_hsi2
 To: =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
 Cc: mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org, 
 	krzk+dt@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
@@ -80,37 +79,83 @@ Content-Transfer-Encoding: quoted-printable
 
 Hi Andr=C3=A9,
 
-Thanks for the review feedback.
-
-On Fri, 5 Apr 2024 at 08:04, Andr=C3=A9 Draszik <andre.draszik@linaro.org> =
+On Thu, 4 Apr 2024 at 14:24, Andr=C3=A9 Draszik <andre.draszik@linaro.org> =
 wrote:
 >
-> On Thu, 2024-04-04 at 13:25 +0100, Peter Griffin wrote:
-> > This allows us to obtain a PMU regmap that is created by the exynos-pmu
-> > driver. Platforms such as gs101 require exynos-pmu created regmap to
-> > issue SMC calls for PMU register accesses. Existing platforms still get
-> > a MMIO regmap as before.
-> >
-> > Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
-> > ---
-> >  drivers/phy/samsung/phy-samsung-ufs.c | 5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/phy/samsung/phy-samsung-ufs.c b/drivers/phy/samsun=
-g/phy-samsung-ufs.c
-> > index 183c88e3d1ec..c567efafc30f 100644
-> > --- a/drivers/phy/samsung/phy-samsung-ufs.c
-> > +++ b/drivers/phy/samsung/phy-samsung-ufs.c
-> > @@ -18,6 +18,7 @@
-> >  #include <linux/phy/phy.h>
-> >  #include <linux/platform_device.h>
-> >  #include <linux/regmap.h>
-> > +#include <linux/soc/samsung/exynos-pmu.h>
+> Hi Pete,
 >
-> You can now drop the include of linux/mfd/syscon.h
+> Thanks for this!
+>
+> I haven't reviewed this, but one immediate comment...
+>
+> On Thu, 2024-04-04 at 13:25 +0100, Peter Griffin wrote:
+> > [...]
+> > diff --git a/drivers/clk/samsung/clk-gs101.c b/drivers/clk/samsung/clk-=
+gs101.c
+> > index d065e343a85d..b9f84c7d5c22 100644
+> > --- a/drivers/clk/samsung/clk-gs101.c
+> > +++ b/drivers/clk/samsung/clk-gs101.c
+> > @@ -22,6 +22,7 @@
+> >  #define CLKS_NR_MISC (CLK_GOUT_MISC_XIU_D_MISC_ACLK + 1)
+> >  #define CLKS_NR_PERIC0       (CLK_GOUT_PERIC0_SYSREG_PERIC0_PCLK + 1)
+> >  #define CLKS_NR_PERIC1       (CLK_GOUT_PERIC1_SYSREG_PERIC1_PCLK + 1)
+> > +#define CLKS_NR_HSI2 (CLK_GOUT_HSI2_XIU_P_HSI2_ACLK + 1)
+>
+> Can you please keep the #defines alphabetical (hsi before misc).
 
-I'll send a followup patch for this.
+Will fix
 
-Thanks,
+>
+> >
+> >  /* ---- CMU_TOP ------------------------------------------------------=
+------- */
+> >
+> > @@ -3409,6 +3410,560 @@ static const struct samsung_cmu_info peric1_cmu=
+_info __initconst =3D {
+> >       .clk_name               =3D "bus",
+> >  };
+> >
+> > +/* ---- CMU_HSI2 -----------------------------------------------------=
+----- */
+>
+> and this code block should be earlier in the file
+
+Will fix
+>
+> > [..]
+>
+> >  static int __init gs101_cmu_probe(struct platform_device *pdev)
+> > @@ -3432,6 +3987,9 @@ static const struct of_device_id gs101_cmu_of_mat=
+ch[] =3D {
+> >       }, {
+> >               .compatible =3D "google,gs101-cmu-peric1",
+> >               .data =3D &peric1_cmu_info,
+> > +     }, {
+> > +             .compatible =3D "google,gs101-cmu-hsi2",
+> > +             .data =3D &hsi2_cmu_info,
+> >       }, {
+>
+> and this block should move up
+
+Will fix
+>
+> >       },
+> >  };
+> > diff --git a/include/dt-bindings/clock/google,gs101.h b/include/dt-bind=
+ings/clock/google,gs101.h
+> > index 3dac3577788a..ac239ce6821b 100644
+> > --- a/include/dt-bindings/clock/google,gs101.h
+> > +++ b/include/dt-bindings/clock/google,gs101.h
+> > @@ -518,4 +518,67 @@
+> >  #define CLK_GOUT_PERIC1_CLK_PERIC1_USI9_USI_CLK              45
+> >  #define CLK_GOUT_PERIC1_SYSREG_PERIC1_PCLK           46
+> >
+> > +/* CMU_HSI2 */
+>
+> and all these defines, too.
+
+Will fix.
+
+regards,
 
 Peter
