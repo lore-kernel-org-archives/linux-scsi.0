@@ -1,161 +1,136 @@
-Received: from mail-oa1-f49.google.com (mail-oa1-f49.google.com [209.85.160.49])
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C51C152185
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Apr 2024 14:56:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36934153BF7;
+	Mon, 22 Apr 2024 16:42:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713797767; cv=none; b=AaS7GF2+DI00ASnl9zFuAGz7OF3nup2gkQS/3c2aU++evCBZdVRW9yXjc7UtE3FRq0YasTNihWRk07oyMCHUGl2GSQZ7Bh2lnIitAu8lJfAWHpO1nMMhGlWjL+owRc4YtbFB4CFKFsbe/7QZ8qyptO0WioNVqWuxP/4PVsU1Q0c=
+	t=1713804133; cv=none; b=j9nVy3iTdobqmNFp+zVB7SZPDfqmSuAKFGuQnJkn0+mD+s5HRF4ceku+KK19mUcwpq9CRL9C6Aj0cpuwlTHjrjhNYcTEjGBXhmFYWOz2q+8etT15GezaaqMpuNsgVZoYCUTvug0w/AcGD5QcWZI5YK1dqQ73e9wFRsoTB61SfFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713797767; c=relaxed/simple;
-	bh=imsekkblo55XmgjAaWRpZaTVc+ZBiFNXzC9IucNVpbg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=P9k8Iif+T4gavH79Y55cAdQBMih4efM9KM2+8dNoxzDHKhGwp+WiYqgCvFQhUaJFQ/5SLRd83Kfqim7cwqmGj81lbjAq7ihasFesh7heokWK4iKpqFrt1CV9PAqvGgBK4D7c7nKa8z8bRkkWBS4CDqWJlOPLcEqK/Y1k16p8jvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=U4HjiUXU; arc=none smtp.client-ip=209.85.160.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1713804133; c=relaxed/simple;
+	bh=4k4l2I6DGmn+gj2ky1zg3DSJ96wBO9Y/fF4JVtQyMUw=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=W/49fHBM3N9nmdWZNc6IpQI+PCnKZa3FW9NFRV/dqDmrKpVJSIos1HWjfnl1ZvUJvAjGwNJiusqOp3nGgZWGyMZAxQ40Y1jAcCQdIeOAgcRJ2E8oET33FLmuZwiAlpPdAa1M1oXATU7hGu/O1E4WPArbgjb5VX4YDjy56s/7FZk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b/KvQ4Ex; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="U4HjiUXU"
-Received: by mail-oa1-f49.google.com with SMTP id 586e51a60fabf-23489b56559so2493099fac.1
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Apr 2024 07:56:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b/KvQ4Ex"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1e5b6e8f662so35962175ad.0;
+        Mon, 22 Apr 2024 09:42:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1713797765; x=1714402565; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NTOg8DkAW/3dkpxikcsk436y8h1eZe1SfUF5lmW3ku0=;
-        b=U4HjiUXUk7RxfDBJM02w61BKjrevJJkbVQ4n308mTss7ZrXCgsfziCIwLKxShfByoo
-         hWFUPwgoHrnn3+txvd+/dIRdrUyblWZBxXoIwQ7UOUEt5AXEp3fu6NW1YR9Euv3EQx5h
-         I1rveApyv3uw4B8KPrC6Jknj+jJkMsDnxzmLngWhjRpXz52q9hKfhn6LfI2E+KADBrKI
-         r+uDdkRm9scQAFyNYr+06lPE2DWOuUWWkQvldJVTr7zvmAQ4ictOwHFJ3K+eaL8sVheP
-         2p/ckccpkJIi/sQewygszj8wg3710ivlA+IL92IGQ0r+8UQMLXtriqxQHG6s6r8iYUjm
-         58zw==
+        d=gmail.com; s=20230601; t=1713804131; x=1714408931; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=kJ/s9bshwX2Z/U5SUCiWUY86dhIqbJUGtlQVX2ISVdU=;
+        b=b/KvQ4ExVqmKddxjtkltFTZA8xjaGylYDvtpyAAFC0HFjf+zGYSOOFc/ZAe4sa1IZw
+         bHnlwvVp0WErMqfs+c1MeIBqcvu8xPl1O4kkjapKVEwuQ0973EFKQ7UYklh5C/mWWNBt
+         ADIDxtF2JHmOtDOct5pvXbULwX3zlWbS/BOKU+8t1AnyD4kjrpFo2MBGJbXRJXoEUKPn
+         3A40ERdsmjIzadR0eD+LotnW/cJe7jCi+x2CnFkHxjA8ANsN8m9KNFtj1X6CdlymIkAa
+         g1uxDlZlO30XnOWm4Qi8o77ruXGEDUcuHeG01FNTft6JGryX3/CTNAXQZA9nYLQy02f4
+         /rLg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713797765; x=1714402565;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=NTOg8DkAW/3dkpxikcsk436y8h1eZe1SfUF5lmW3ku0=;
-        b=Ha125vxHeNRkrNebrUbM2ob7yLqZRXUqakpLwoGJ87AW+f2SB+0NqISPYySYWVCs9I
-         6Qd6R8BvKwY/UxzJpV0sOHF07amMZ+qqWA1Jt4zQsrtq7j9sbGf7/C+YsF/MI0TNWXkO
-         +LRQT1YNMhvG6baMCdxDxruDf2pFhsVTzKK5dtAvOrdyGjTnmxI+J2zsR2HkPlXzuKic
-         jyZMD7UuH9p7A6P4tcMWt6pxw8Ua/gIdJvhhbJPS5N0zHJRFLeva+OufPkoSYZacOWni
-         /5+wK+D7rEf3h/qf0f+VEh3KZZ+1blypvUWPGA1bejbNyxx3gxSLMTShnzDK3lkyFfWO
-         5l2A==
-X-Forwarded-Encrypted: i=1; AJvYcCUjOr4/MKTTKQmkq5yCo5HtXgSFeZx5Ufvv4I1H8RH7iKucvSFa9cn7GnirUX+oYVH7rNjZFjQv+hAmz5TKa+s/DrOT8Gvv+ulsuA==
-X-Gm-Message-State: AOJu0YxyxvCVabfAZDqYS1W+K2x1gv7X4F3iGG3u6jVKo07Lo8VEIS6P
-	4EA3WiCSi3i4impoqV4/jIWeAAI/bn+v1H6FzgUu3UkKzs6sf/Ck9KU3ZOqNPEk99GHToMpF07i
-	m7BpevT9Q8sMiLJ1KHl2dPPH+iKOGbXptEH1MiQ==
-X-Google-Smtp-Source: AGHT+IHTzGHT1v9LeibIhpXISDP5Up0NDJE//bpDlntvJJiW0sMwcyQm0rL5VdwsrhLb5OjnZBVN3sPtCblaMnzwbwM=
-X-Received: by 2002:a05:6870:1318:b0:21f:aba0:772d with SMTP id
- 24-20020a056870131800b0021faba0772dmr10853360oab.39.1713797765495; Mon, 22
- Apr 2024 07:56:05 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1713804131; x=1714408931;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kJ/s9bshwX2Z/U5SUCiWUY86dhIqbJUGtlQVX2ISVdU=;
+        b=Jjhx5n9zDJO/pzvhwTbNWv313ErPfuaQ7AqfOkj4qjwKs+toTSu1htvfARpipuKPIt
+         xYTOreRF2dI/hnA7UrpxHwZHXTwXZYtn6Kbp4723IzCHD41rb4Gq/eBKTQft/B9mdE9d
+         IciwO9ad/2mbs1kqLaSyFE9Ai/xs9YlUfO3oGzAh2m69XdRR6d02sn7xNc0pSsdMDs8V
+         kX/Hv5o1AaZAj0BO7Y08JkbyySXm50Igq7Oqj0YHAMAGaTw21YHOFATISbVoL9oi00Sj
+         lnmD+xVPBAR2t8dTuL8tbntmEkbc86J7HJy/tyKFUn4s4OisXWGGiQymjuJM1VYghDqj
+         A7dg==
+X-Forwarded-Encrypted: i=1; AJvYcCUPqxGYGtFRAyc8CCsYku3dM9LQ/VebXybl/GoVvDeVsJjekBJh49+xYoLlvPRHMVcy/9CaRVE4OGM5XDINFfpyK7ejc87/JNtiCEqiQlbOM5yxxEbjy9iy9EXSbrcMOc3PSoMGu940oqVNlbKugz+Q40hhBzv9nULvBiUXRbINlkTn2odvPwBejkE0NzcQ9oYx+HoI9M9c3jE1eT0=
+X-Gm-Message-State: AOJu0YwKnX+HVTzxsIdt8T0L60ncD2EmKLD9lxtnKuppEKH447deGt3I
+	FmeLJl0lwViOOEqyewCKdmcqDl41JH8crO7d1rWeaIC8KeezohE1
+X-Google-Smtp-Source: AGHT+IED/ttmM4v5ReF4QaWXjGqNL66DutVSsH/8jOtbJsWcX9E8Nfp6e2ZYUo/WyQMOpfHpKmMv3A==
+X-Received: by 2002:a17:902:d4c7:b0:1e2:76ad:cb2 with SMTP id o7-20020a170902d4c700b001e276ad0cb2mr10960924plg.15.1713804131274;
+        Mon, 22 Apr 2024 09:42:11 -0700 (PDT)
+Received: from [127.0.1.1] ([2001:ee0:50f5:5d0:f32d:f608:a763:3732])
+        by smtp.googlemail.com with ESMTPSA id p3-20020a170902780300b001e7b8c21ebesm8461702pll.225.2024.04.22.09.42.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Apr 2024 09:42:10 -0700 (PDT)
+From: Bui Quang Minh <minhquangbui99@gmail.com>
+Subject: [PATCH 0/5] Ensure the copied buf is NULL terminated
+Date: Mon, 22 Apr 2024 23:41:35 +0700
+Message-Id: <20240422-fix-oob-read-v1-0-e02854c30174@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240404122559.898930-1-peter.griffin@linaro.org>
- <20240404122559.898930-9-peter.griffin@linaro.org> <61f427ab3793def23d80d94457ff1568cae5ee11.camel@linaro.org>
-In-Reply-To: <61f427ab3793def23d80d94457ff1568cae5ee11.camel@linaro.org>
-From: Peter Griffin <peter.griffin@linaro.org>
-Date: Mon, 22 Apr 2024 15:55:54 +0100
-Message-ID: <CADrjBPqAyWzuw9TmdE1XRQ2BkYojR8r7nnH7JcRWc9_xOpUgHg@mail.gmail.com>
-Subject: Re: [PATCH 08/17] clk: samsung: gs101: add support for cmu_hsi2
-To: =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
-Cc: mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
-	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
-	s.nawrocki@samsung.com, cw00.choi@samsung.com, jejb@linux.ibm.com, 
-	martin.petersen@oracle.com, chanho61.park@samsung.com, ebiggers@kernel.org, 
-	linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org, 
-	devicetree@vger.kernel.org, linux-clk@vger.kernel.org, 
-	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org, 
-	saravanak@google.com, willmcvicker@google.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAD+TJmYC/x2MQQqAIBAAvyJ7bkFNsPpKdLBcay8aChGIf086D
+ sNMhUKZqcAiKmR6uHCKHdQg4LhcPAnZdwYttZFGawz8Yko7ZnIe1ezIhimMVinoyZ2p+3+3bq1
+ 91dxRI14AAAA=
+To: Jesse Brandeburg <jesse.brandeburg@intel.com>, 
+ Tony Nguyen <anthony.l.nguyen@intel.com>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Paul M Stillwell Jr <paul.m.stillwell.jr@intel.com>, 
+ Rasesh Mody <rmody@marvell.com>, Sudarsana Kalluru <skalluru@marvell.com>, 
+ GR-Linux-NIC-Dev@marvell.com, Krishna Gudipati <kgudipat@brocade.com>, 
+ Anil Gurumurthy <anil.gurumurthy@qlogic.com>, 
+ Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Fabian Frederick <fabf@skynet.be>, Saurav Kashyap <skashyap@marvell.com>, 
+ Javed Hasan <jhasan@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com, 
+ Nilesh Javali <nilesh.javali@cavium.com>, Arun Easi <arun.easi@cavium.com>, 
+ Manish Rangankar <manish.rangankar@cavium.com>, 
+ Vineeth Vijayan <vneethv@linux.ibm.com>, 
+ Peter Oberparleiter <oberpar@linux.ibm.com>, 
+ Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+ Alexander Gordeev <agordeev@linux.ibm.com>, 
+ Christian Borntraeger <borntraeger@linux.ibm.com>, 
+ Sven Schnelle <svens@linux.ibm.com>
+Cc: intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ Saurav Kashyap <saurav.kashyap@cavium.com>, linux-s390@vger.kernel.org, 
+ Jens Axboe <axboe@kernel.dk>, Bui Quang Minh <minhquangbui99@gmail.com>
+X-Mailer: b4 0.13.0
 
-Hi Andr=C3=A9,
+Hi everyone,
 
-On Thu, 4 Apr 2024 at 14:24, Andr=C3=A9 Draszik <andre.draszik@linaro.org> =
-wrote:
->
-> Hi Pete,
->
-> Thanks for this!
->
-> I haven't reviewed this, but one immediate comment...
->
-> On Thu, 2024-04-04 at 13:25 +0100, Peter Griffin wrote:
-> > [...]
-> > diff --git a/drivers/clk/samsung/clk-gs101.c b/drivers/clk/samsung/clk-=
-gs101.c
-> > index d065e343a85d..b9f84c7d5c22 100644
-> > --- a/drivers/clk/samsung/clk-gs101.c
-> > +++ b/drivers/clk/samsung/clk-gs101.c
-> > @@ -22,6 +22,7 @@
-> >  #define CLKS_NR_MISC (CLK_GOUT_MISC_XIU_D_MISC_ACLK + 1)
-> >  #define CLKS_NR_PERIC0       (CLK_GOUT_PERIC0_SYSREG_PERIC0_PCLK + 1)
-> >  #define CLKS_NR_PERIC1       (CLK_GOUT_PERIC1_SYSREG_PERIC1_PCLK + 1)
-> > +#define CLKS_NR_HSI2 (CLK_GOUT_HSI2_XIU_P_HSI2_ACLK + 1)
->
-> Can you please keep the #defines alphabetical (hsi before misc).
+I found that some drivers contains an out-of-bound read pattern like this
 
-Will fix
+	kern_buf = memdup_user(user_buf, count);
+	...
+	sscanf(kern_buf, ...);
 
->
-> >
-> >  /* ---- CMU_TOP ------------------------------------------------------=
-------- */
-> >
-> > @@ -3409,6 +3410,560 @@ static const struct samsung_cmu_info peric1_cmu=
-_info __initconst =3D {
-> >       .clk_name               =3D "bus",
-> >  };
-> >
-> > +/* ---- CMU_HSI2 -----------------------------------------------------=
------ */
->
-> and this code block should be earlier in the file
+The sscanf can be replaced by some other string-related functions. This
+pattern can lead to out-of-bound read of kern_buf in string-related
+functions.
 
-Will fix
->
-> > [..]
->
-> >  static int __init gs101_cmu_probe(struct platform_device *pdev)
-> > @@ -3432,6 +3987,9 @@ static const struct of_device_id gs101_cmu_of_mat=
-ch[] =3D {
-> >       }, {
-> >               .compatible =3D "google,gs101-cmu-peric1",
-> >               .data =3D &peric1_cmu_info,
-> > +     }, {
-> > +             .compatible =3D "google,gs101-cmu-hsi2",
-> > +             .data =3D &hsi2_cmu_info,
-> >       }, {
->
-> and this block should move up
+This series fix the above issue by replacing memdup_user with
+memdup_user_nul or allocating count + 1 buffer then writing the NULL
+terminator to end of buffer after userspace copying.
 
-Will fix
->
-> >       },
-> >  };
-> > diff --git a/include/dt-bindings/clock/google,gs101.h b/include/dt-bind=
-ings/clock/google,gs101.h
-> > index 3dac3577788a..ac239ce6821b 100644
-> > --- a/include/dt-bindings/clock/google,gs101.h
-> > +++ b/include/dt-bindings/clock/google,gs101.h
-> > @@ -518,4 +518,67 @@
-> >  #define CLK_GOUT_PERIC1_CLK_PERIC1_USI9_USI_CLK              45
-> >  #define CLK_GOUT_PERIC1_SYSREG_PERIC1_PCLK           46
-> >
-> > +/* CMU_HSI2 */
->
-> and all these defines, too.
+Thanks,
+Quang Minh.
 
-Will fix.
+Signed-off-by: Bui Quang Minh <minhquangbui99@gmail.com>
+---
+Bui Quang Minh (5):
+      drivers/net/ethernet/intel-ice: ensure the copied buf is NULL terminated
+      drivers/net/brocade-bnad: ensure the copied buf is NULL terminated
+      drivers/scsi/bfa/bfad: ensure the copied buf is NULL terminated
+      drivers/scsi/qedf: ensure the copied buf is NULL terminated
+      drivers/s390/cio: ensure the copied buf is NULL terminated
 
-regards,
+ drivers/net/ethernet/brocade/bna/bnad_debugfs.c | 4 ++--
+ drivers/net/ethernet/intel/ice/ice_debugfs.c    | 8 ++++----
+ drivers/s390/cio/cio_inject.c                   | 3 ++-
+ drivers/scsi/bfa/bfad_debugfs.c                 | 4 ++--
+ drivers/scsi/qedf/qedf_debugfs.c                | 2 +-
+ 5 files changed, 11 insertions(+), 10 deletions(-)
+---
+base-commit: ed30a4a51bb196781c8058073ea720133a65596f
+change-id: 20240422-fix-oob-read-19ae7f8f3711
 
-Peter
+Best regards,
+-- 
+Bui Quang Minh <minhquangbui99@gmail.com>
+
