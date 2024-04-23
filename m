@@ -1,116 +1,152 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2422E200106;
-	Mon, 22 Apr 2024 23:59:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F18D5F505;
+	Tue, 23 Apr 2024 06:51:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713830369; cv=none; b=nFQT5k2CbU3PBPqBvczgTJwapQTBswGfh/PcILaXAzzMwKLv5r5+ACvcjtC9LYZmpwa+XtrvHwoQa5XEeC4oJZjrFHKp64zBzUN7KiHHQDhjZ37du4aWALphCbYhkdkuWTpj1mzBfhcRFUhUksmLUwGrw4aTaptSEUWKOVARW2I=
+	t=1713855103; cv=none; b=YPprvMEU2hOMq2x/ALeoIK8kcuhxmBRU/c1rELMXTXburP4GPpNsWgqfTv2TlEuW1S071au5SXQNIkCY7msJ7tToeP1wUluPWcQVlsxcEuBNClDOMWaHjUfGaKqA4Nlw3cEqpuPgJOooFot6NdQlZ6MhTmR5K8jZTDaHW9LCi8g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713830369; c=relaxed/simple;
-	bh=IXYU0oV9HyFUX2KPKaztr5WrKO/mFdj3zWK9i50s2Eo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PEQnX354qdmTiCXURbUa2Phkm9yVUxNL8KUKzRdvg3ZXclktnqr6EL7ZeL8AdYDXFtvEk5TJzDY2G9IOPqwBCrYmSETLa4r25GnCJji15o/z99rVQSqs+QLNyfKG9vVKTEBiofBr7YCoXQW+/eiO47drq7vmPdVZQ7dauwQV8/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nkZkQzZ4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1713855103; c=relaxed/simple;
+	bh=QperoU/mvTPRltqXgO/IwLoya48jN35EvU9e2LuVbn8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FoUtwfucOD5MAb6OAyRSCQUYAkRY3RVBz/O+QUcqdEWBQtLUaLGHW52lsRSM6OFImJZ8S2hPSJa9Q04Ep7usVD/cAENpCu/2KMrMRM83UL7p36ctj6IQ07uIIHRPby0xKzX524XLLkYOG8mrrGOMotklghow/PdkveGBwntdgtk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=p1KCIPLA; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nkZkQzZ4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B2BCC2BD11;
-	Mon, 22 Apr 2024 23:59:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713830369;
-	bh=IXYU0oV9HyFUX2KPKaztr5WrKO/mFdj3zWK9i50s2Eo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=nkZkQzZ4rz60OY1j0X8+PRInHoJ2KKVkLFDmyxwGWepwPDQML1PRSv/oSYoNZGBdf
-	 BlOB68MtstglAW9fwDgJL0PwxA4ADebXfxuNmlfUbq9ugdU/vwIrslynU2oxevL7q/
-	 f+PprwADx/AJ7vdjGtdD+MzP3c//x5Nclhsw4GRC4bcJomliEeZEYr1Cxy2Ymt4nFR
-	 UX0fPJF45OLWdgizEufhrvdFBghjEu7IIbSzD5g4ZX6ezCYyTcXOoH250/sMrG0a8v
-	 WhcTlnKFvs58XDB25UcWfeGJkfBLKwjuWTx+idpm2E581SLluPgR2pB74rOy3/dNaP
-	 vRk+5JNoRp4MQ==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Maurizio Lombardi <mlombard@redhat.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 5/7] scsi: target: Fix SELinux error when systemd-modules loads the target module
-Date: Mon, 22 Apr 2024 19:20:37 -0400
-Message-ID: <20240422232040.1616527-5-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240422232040.1616527-1-sashal@kernel.org>
-References: <20240422232040.1616527-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="p1KCIPLA"
+Received: from pps.filterd (m0353726.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43N6WiAK032224;
+	Tue, 23 Apr 2024 06:51:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=pp1; bh=0vDYHtZfJ1aUyePbfpMoafpgYffvxy1KKavTMUyKAF4=;
+ b=p1KCIPLA0+3M/jOTJH91Ettn+kfkxFl9NTIwFZkm/W9bK1jNyvqDyW7u7eyRNiT2sHct
+ ykLF3vRjDdn61hsC1nO5dBh4XmTDd0Oa1toeaQZ/0x3My4VFJ5oPg2D9yS84c65Huu+c
+ dnjYWyrHG2dj8tYNBLIYnoDpnStf3ZwBWi9WL68PmylT+N2qQPo9uarstANzXbl82Cce
+ L26wYggPXUsxa/yyjkJOBDKuK6xXsHe6p6a5p3V4xzY1AXnI89/UmmdSGhPn+WyIJ5MR
+ GLM9dQZXRPFnxN6uA5VTFDa6X9LMRHEjDTQpS5c7GQnr9lCg2do4q/diWsEjB4qvBYoB PQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3xp7t6g10p-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 23 Apr 2024 06:51:02 +0000
+Received: from m0353726.ppops.net (m0353726.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 43N6p1NU002965;
+	Tue, 23 Apr 2024 06:51:02 GMT
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3xp7t6g10g-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 23 Apr 2024 06:51:01 +0000
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 43N6fD5W020920;
+	Tue, 23 Apr 2024 06:51:00 GMT
+Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3xmrdyv8r3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 23 Apr 2024 06:51:00 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 43N6osOE41681280
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 23 Apr 2024 06:50:56 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id A1EEE2004D;
+	Tue, 23 Apr 2024 06:50:54 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 2956D20040;
+	Tue, 23 Apr 2024 06:50:54 +0000 (GMT)
+Received: from osiris (unknown [9.152.212.60])
+	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Tue, 23 Apr 2024 06:50:54 +0000 (GMT)
+Date: Tue, 23 Apr 2024 08:50:52 +0200
+From: Heiko Carstens <hca@linux.ibm.com>
+To: Bui Quang Minh <minhquangbui99@gmail.com>
+Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Tony Nguyen <anthony.l.nguyen@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Paul M Stillwell Jr <paul.m.stillwell.jr@intel.com>,
+        Rasesh Mody <rmody@marvell.com>,
+        Sudarsana Kalluru <skalluru@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
+        Krishna Gudipati <kgudipat@brocade.com>,
+        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Fabian Frederick <fabf@skynet.be>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Javed Hasan <jhasan@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Nilesh Javali <nilesh.javali@cavium.com>,
+        Arun Easi <arun.easi@cavium.com>,
+        Manish Rangankar <manish.rangankar@cavium.com>,
+        Vineeth Vijayan <vneethv@linux.ibm.com>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>, intel-wired-lan@lists.osuosl.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Saurav Kashyap <saurav.kashyap@cavium.com>,
+        linux-s390@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 5/5] drivers/s390/cio: ensure the copied buf is NULL
+ terminated
+Message-ID: <20240423065052.10211-C-hca@linux.ibm.com>
+References: <20240422-fix-oob-read-v1-0-e02854c30174@gmail.com>
+ <20240422-fix-oob-read-v1-5-e02854c30174@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.312
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240422-fix-oob-read-v1-5-e02854c30174@gmail.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: JfbWZJYjgQ-6sEoUNR3sO4YsC4Gb-N7m
+X-Proofpoint-ORIG-GUID: dN-FvMKmlspL8yk4i7YrijWq2YdDYnU8
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-23_04,2024-04-22_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 suspectscore=0
+ priorityscore=1501 mlxscore=0 malwarescore=0 adultscore=0
+ lowpriorityscore=0 phishscore=0 mlxlogscore=965 bulkscore=0
+ impostorscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2404010000 definitions=main-2404230019
 
-From: Maurizio Lombardi <mlombard@redhat.com>
+On Mon, Apr 22, 2024 at 11:41:40PM +0700, Bui Quang Minh wrote:
+> Currently, we allocate a lbuf-sized kernel buffer and copy lbuf from
+> userspace to that buffer. Later, we use scanf on this buffer but we don't
+> ensure that the string is terminated inside the buffer, this can lead to
+> OOB read when using scanf. Fix this issue by allocating 1 more byte to at
+> the end of buffer and write NULL terminator to the end of buffer after
+> userspace copying.
+> 
+> Fixes: a4f17cc72671 ("s390/cio: add CRW inject functionality")
+> Signed-off-by: Bui Quang Minh <minhquangbui99@gmail.com>
+> ---
+>  drivers/s390/cio/cio_inject.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/s390/cio/cio_inject.c b/drivers/s390/cio/cio_inject.c
+> index 8613fa937237..9b69fbf49f60 100644
+> --- a/drivers/s390/cio/cio_inject.c
+> +++ b/drivers/s390/cio/cio_inject.c
+> @@ -95,10 +95,11 @@ static ssize_t crw_inject_write(struct file *file, const char __user *buf,
+>  		return -EINVAL;
+>  	}
+>  
+> -	buffer = vmemdup_user(buf, lbuf);
+> +	buffer = vmemdup_user(buf, lbuf + 1);
+>  	if (IS_ERR(buffer))
+>  		return -ENOMEM;
+>  
+> +	buffer[lbuf] = '\0';
 
-[ Upstream commit 97a54ef596c3fd24ec2b227ba8aaf2cf5415e779 ]
+This would read one byte too much from user space, and could potentially
+fault.
 
-If the systemd-modules service loads the target module, the credentials of
-that userspace process will be used to validate the access to the target db
-directory.  SELinux will prevent it, reporting an error like the following:
-
-kernel: audit: type=1400 audit(1676301082.205:4): avc: denied  { read }
-for  pid=1020 comm="systemd-modules" name="target" dev="dm-3"
-ino=4657583 scontext=system_u:system_r:systemd_modules_load_t:s0
-tcontext=system_u:object_r:targetd_etc_rw_t:s0 tclass=dir permissive=0
-
-Fix the error by using the kernel credentials to access the db directory
-
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-Link: https://lore.kernel.org/r/20240215143944.847184-2-mlombard@redhat.com
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/target/target_core_configfs.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index f6b1549f41422..10fbfa7df46ab 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -3240,6 +3240,8 @@ static int __init target_core_init_configfs(void)
- {
- 	struct configfs_subsystem *subsys = &target_core_fabrics;
- 	struct t10_alua_lu_gp *lu_gp;
-+	struct cred *kern_cred;
-+	const struct cred *old_cred;
- 	int ret;
- 
- 	pr_debug("TARGET_CORE[0]: Loading Generic Kernel Storage"
-@@ -3316,11 +3318,21 @@ static int __init target_core_init_configfs(void)
- 	if (ret < 0)
- 		goto out;
- 
-+	/* We use the kernel credentials to access the target directory */
-+	kern_cred = prepare_kernel_cred(&init_task);
-+	if (!kern_cred) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+	old_cred = override_creds(kern_cred);
- 	target_init_dbroot();
-+	revert_creds(old_cred);
-+	put_cred(kern_cred);
- 
- 	return 0;
- 
- out:
-+	target_xcopy_release_pt();
- 	configfs_unregister_subsystem(subsys);
- 	core_dev_release_virtual_lun0();
- 	rd_module_exit();
--- 
-2.43.0
-
+Why isn't this simply memdup_user_nul() like all others, which would do the
+right thing?
