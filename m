@@ -1,158 +1,276 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+Received: from mail-oo1-f42.google.com (mail-oo1-f42.google.com [209.85.161.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBC108F5E;
-	Tue, 23 Apr 2024 14:46:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E236D13CA97
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Apr 2024 17:46:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713883610; cv=none; b=dEZeWkMq2nsCZJ/nUKUbv3x65aeXG+GofpfnWtw8iOckCpcsX9D9xe3M3nYaEFIMPZhjAaEAOkfz7bD9B8ran+DV4+c8BdIn06vFAH36yOGzklmVLyH+2CFQgoqqPZTXXYv4Q/hybucWEPJ6WRYWhZegIrtsZE8hzn/ws+lW+pk=
+	t=1713894366; cv=none; b=i13EW7R00QU5VztaYBiiE2//zZ7AZX24fJuQpg8HxiVr2AQraRQeGyrgkbYVSlamJYaM9miuG0Sebv4IleBeNsy2Yp3t0ikKH9Ze+bQycNrLotyTzg9oEsf5hgaS3Y/wfAy521rLzpGaQ7cWD/mENZvWoD0nG1SuJOMTr5EorBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713883610; c=relaxed/simple;
-	bh=ToGncwj89AClxloq2GR3iiMSNF1CUJnuDODivUGYRAo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mA7QD4hK2Hj1Ng+BY3LoPVFeWioVIPD3uMOZnuaiUtFD/uSJ2HFAiHrLN0/cMtqb55HTYtvUgeqTaVHC6yatAK7hZB59zc6RYUWseWHM+TpNd9vwrUoE9j0p2/KGyB/KD0OUrD3obY1zMvdEt800b7lDqvenBt5cI1XjClW0vRI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DWbbKtvH; arc=none smtp.client-ip=209.85.210.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1713894366; c=relaxed/simple;
+	bh=jnAd/2sSEJ0WMtjOyYGX1bWKZAuyDHWJ/L9RphxwCAU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Ty5JCMZA6aBhdM/KQGxaRmUU1T9RZL7jDeFQpulEPTLJWBPW2v0NjqCiEceiraDXNgTkihx7UNRqoXWejKFinl19JDoWb2aQEMYrkvM2OIId/1hwtuxv6JDat82OqJ7l3OmGslnYGUnWb9Ouv8oMm3KGGMN+NYbBPA0gl8XGR38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=q5fQyOLn; arc=none smtp.client-ip=209.85.161.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DWbbKtvH"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6f103b541aeso2862068b3a.3;
-        Tue, 23 Apr 2024 07:46:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="q5fQyOLn"
+Received: by mail-oo1-f42.google.com with SMTP id 006d021491bc7-5ad0f58c74eso40355eaf.1
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Apr 2024 10:46:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1713883608; x=1714488408; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Vb/jtEQiqMYQ/ISAQh9mg0MTb6zQnFx3hOrCArI3w1E=;
-        b=DWbbKtvHDAMwRw51MQT/rsxrsRjCAkZaOczYUrHsiLHWSnc+6qxwEdTC0m1THnAbcs
-         3vrCdNWRkhImjZz2HbxRg0+2ddHQNoQUCLbExcy0baU4PpTZvnZ8Q/WeSY9TeQjkFyRg
-         xebZuErcwDN8h2O4GcIQHHUYPBgzapZJ+yTHTx5BPc7hsB5H5ZeXxv1OgwFNBuSRqdDD
-         vYKHfE7rTz0trpu+m49fUQXPAddmOsK01hnT+UEbygM3KMG/Ini1bmApMbBdnoRX3Ucs
-         YQnvw7frWjb2uaPFQq7jGTmOnDhuRdriHYNEnadW60flv3rJkxaNdekV9JK6Kj7kx7UU
-         889A==
+        d=linaro.org; s=google; t=1713894363; x=1714499163; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=o3mo6Mk3SX0kmzv/thEaB5W9SO6Cld9rTNEVyk3LNv4=;
+        b=q5fQyOLnyClGY2zV+51CCMidc5Ja2V25hkdC2ccWaMDTk450rOyzBHvFrrPCT5ASp0
+         bQrIzDRziKJYDhO/7KC6GZLKXJdBDTODasPF89JRY3saYOAXNkTyektOj/eWznqiuGeb
+         RDS7N8vRvkCkQvKOvNE1tXH0mkSP7Qmj3zeIllvYSHe9dSGk4gLY37tOKDWXJUcf1V6x
+         y7f56cKVLkr/rvi3xg4DslYDSRgfxlAOBKfLTy54ZWFKpMbh3kcq0MWUCyDb3FWVLaXo
+         cnTt+6SG7pItUFcR2cNIzslSUABRRzs6SZtxbOmNEVISLUuv6dLbbn//ribnPRFr112T
+         yKHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713883608; x=1714488408;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Vb/jtEQiqMYQ/ISAQh9mg0MTb6zQnFx3hOrCArI3w1E=;
-        b=Yj22KoMIMbgR3Qt4ons/OSTtL79sRiKf30ppw4o+hxnJ3LzI37aZdhgZFJKaoPGNCz
-         HaRoN7h/noRo3Bf3bfaJWIHAcY6GZZSTK5aSMBeHnyZ6TzfEDxRGdELqikZ01xFZQfy6
-         Ip2l2BBmg/gLzYHdRI9CSbyaF8AmUXE9fSjRodiSgdVjOojiOHY7OaYitABq2k86giUE
-         mVDGoBiS+5GdRU9cH0dVW34srmS90fpo3LOQZTo1MG/lcVh8n6Cu//PMydchTmTAdVlH
-         P2wExGYCvu7wLm57t4qLpC14dk56syTsSEgy9XmuYnNi6/nDjnv9bkMIVS2NWBnFFHUK
-         zOUw==
-X-Forwarded-Encrypted: i=1; AJvYcCVRzvOIiYB6u8nwICMC6ZzZUji5PAbn+LrzPcm6x8WGnD6VwXCWLto2OIZQ85c5SSv4Y6WkZBnNA2a2vz8tUC4aq7PfKBbO9olXFmMTJ/4fCQsaebRYowM7S54AAi4GrZEqf0Cm4KMHzIMmqwqwGO29rETmmSoyQlimwz636I7LHJQ4okMpfhfQy0d9D9xQqnbv122rcC3Fq7fCIUI=
-X-Gm-Message-State: AOJu0YwsAvAFBdyeplJDKZfEUMnuEjpWKO7d94MQDWZXpcqQioLBROef
-	uBdvNym3121+/kUAnQYqdid2a1rB/H6C+I1wMMeeSa3ed0yYK/Of
-X-Google-Smtp-Source: AGHT+IE1b3OGo1AOOyHI2O/gtQLNNZdbLcFXucTipISHaNiAukcRoQ6PFKyPGYCIilU3YAqWXr+loQ==
-X-Received: by 2002:a05:6a21:2792:b0:1aa:6a28:cf6e with SMTP id rn18-20020a056a21279200b001aa6a28cf6emr12043604pzb.48.1713883607972;
-        Tue, 23 Apr 2024 07:46:47 -0700 (PDT)
-Received: from ?IPV6:2001:ee0:50f5:5d0:b2f6:b23d:3030:9638? ([2001:ee0:50f5:5d0:b2f6:b23d:3030:9638])
-        by smtp.gmail.com with ESMTPSA id l185-20020a6391c2000000b005ffd8019f01sm3689182pge.20.2024.04.23.07.46.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 23 Apr 2024 07:46:47 -0700 (PDT)
-Message-ID: <e4f5cbd0-c803-4c3c-9703-f52e56864106@gmail.com>
-Date: Tue, 23 Apr 2024 21:46:35 +0700
+        d=1e100.net; s=20230601; t=1713894363; x=1714499163;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=o3mo6Mk3SX0kmzv/thEaB5W9SO6Cld9rTNEVyk3LNv4=;
+        b=X6+O+I1BhyegxYlvUKrZj2GQPpP859rX5nvksNLbMrjx7SlIT6SOGXdp/nt8oLunCu
+         glkfXymwUL/l6kgLwriJ/ur+0Ix3TmRuodLaG1tnbmqW2ionfS1bNpU+pUp1QseQItRc
+         LrsCIlyj7nNBL7g1l+h5+1WBDYOAcDYRO+QCNA5Pa5Kn6uwm1gaObxoDgLPARsnbr52V
+         Jwcjzb08TNdWWSgfIcKyZu/boseAYvI2DYdjtQU5quXmCpYJd7wTeYpOLG2p2qZDiMz2
+         zajK5IU8Vm5103NqGq2aZ6fXslDi4TA8el9y5w7BNlsf/deiF6v5YwETMYSFNtOTQsm5
+         7VhA==
+X-Forwarded-Encrypted: i=1; AJvYcCWIZ680H0peefUrLq11vxxuympP/0GUTUEN6pmzQ3+yedN/Y6aho+vfFlWCrPyE9YilXyHCCWhWFmNKMRhkcDbF6CIDDdoAOpo3Nw==
+X-Gm-Message-State: AOJu0YwTihKtuWGQibRPO9WVY4QQoCdvMd1IfwBun7EH+UcYZm9SAe9f
+	3oN9IxWH3PCHdiQ72Ue1n+sSgEg17NGypik+g/5Ni+Boq2a4TpN99LlrENLQW1UdaWSlnx1wtKU
+	Z6yL+uvWmvMqB+SDIP9jICrc8GUlgK9ai2mv6Gg==
+X-Google-Smtp-Source: AGHT+IFjQt3mfbwBR44wWtiV52Fvs+JYmX+pN7lhEf2mhrvRbg8R0D5V2WdJQGT9SPtHiTXEX5fgYqJFaSu9KML7oR8=
+X-Received: by 2002:a4a:8554:0:b0:5aa:22f5:a908 with SMTP id
+ l20-20020a4a8554000000b005aa22f5a908mr1685739ooh.1.1713894362907; Tue, 23 Apr
+ 2024 10:46:02 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5/5] drivers/s390/cio: ensure the copied buf is NULL
- terminated
-To: Heiko Carstens <hca@linux.ibm.com>
-Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>,
- Tony Nguyen <anthony.l.nguyen@intel.com>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Paul M Stillwell Jr <paul.m.stillwell.jr@intel.com>,
- Rasesh Mody <rmody@marvell.com>, Sudarsana Kalluru <skalluru@marvell.com>,
- GR-Linux-NIC-Dev@marvell.com, Krishna Gudipati <kgudipat@brocade.com>,
- Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
- Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Fabian Frederick <fabf@skynet.be>, Saurav Kashyap <skashyap@marvell.com>,
- Javed Hasan <jhasan@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
- Nilesh Javali <nilesh.javali@cavium.com>, Arun Easi <arun.easi@cavium.com>,
- Manish Rangankar <manish.rangankar@cavium.com>,
- Vineeth Vijayan <vneethv@linux.ibm.com>,
- Peter Oberparleiter <oberpar@linux.ibm.com>,
- Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev
- <agordeev@linux.ibm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>,
- Sven Schnelle <svens@linux.ibm.com>, intel-wired-lan@lists.osuosl.org,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, Saurav Kashyap <saurav.kashyap@cavium.com>,
- linux-s390@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-References: <20240422-fix-oob-read-v1-0-e02854c30174@gmail.com>
- <20240422-fix-oob-read-v1-5-e02854c30174@gmail.com>
- <20240423065052.10211-C-hca@linux.ibm.com>
-Content-Language: en-US
-From: Bui Quang Minh <minhquangbui99@gmail.com>
-In-Reply-To: <20240423065052.10211-C-hca@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20240404122559.898930-1-peter.griffin@linaro.org>
+ <20240404122559.898930-9-peter.griffin@linaro.org> <6c2b060b3b32b2da46bafbdc33236c319b6cec62.camel@linaro.org>
+In-Reply-To: <6c2b060b3b32b2da46bafbdc33236c319b6cec62.camel@linaro.org>
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Tue, 23 Apr 2024 18:45:50 +0100
+Message-ID: <CADrjBPrNqJ6FNKZTgVxST1en-hRdyZFmJe42uwerSnDSmgifbg@mail.gmail.com>
+Subject: Re: [PATCH 08/17] clk: samsung: gs101: add support for cmu_hsi2
+To: =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
+Cc: mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
+	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	s.nawrocki@samsung.com, cw00.choi@samsung.com, jejb@linux.ibm.com, 
+	martin.petersen@oracle.com, chanho61.park@samsung.com, ebiggers@kernel.org, 
+	linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org, 
+	devicetree@vger.kernel.org, linux-clk@vger.kernel.org, 
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org, 
+	saravanak@google.com, willmcvicker@google.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 4/23/24 13:50, Heiko Carstens wrote:
-> On Mon, Apr 22, 2024 at 11:41:40PM +0700, Bui Quang Minh wrote:
->> Currently, we allocate a lbuf-sized kernel buffer and copy lbuf from
->> userspace to that buffer. Later, we use scanf on this buffer but we don't
->> ensure that the string is terminated inside the buffer, this can lead to
->> OOB read when using scanf. Fix this issue by allocating 1 more byte to at
->> the end of buffer and write NULL terminator to the end of buffer after
->> userspace copying.
->>
->> Fixes: a4f17cc72671 ("s390/cio: add CRW inject functionality")
->> Signed-off-by: Bui Quang Minh <minhquangbui99@gmail.com>
->> ---
->>   drivers/s390/cio/cio_inject.c | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/s390/cio/cio_inject.c b/drivers/s390/cio/cio_inject.c
->> index 8613fa937237..9b69fbf49f60 100644
->> --- a/drivers/s390/cio/cio_inject.c
->> +++ b/drivers/s390/cio/cio_inject.c
->> @@ -95,10 +95,11 @@ static ssize_t crw_inject_write(struct file *file, const char __user *buf,
->>   		return -EINVAL;
->>   	}
->>   
->> -	buffer = vmemdup_user(buf, lbuf);
->> +	buffer = vmemdup_user(buf, lbuf + 1);
->>   	if (IS_ERR(buffer))
->>   		return -ENOMEM;
->>   
->> +	buffer[lbuf] = '\0';
-> 
-> This would read one byte too much from user space, and could potentially
-> fault.
-> 
-> Why isn't this simply memdup_user_nul() like all others, which would do the
-> right thing?
+Hi Andr=C3=A9,
 
-Thanks for your review. It's my mistake, I blindly follow the pattern in 
-rvu_debugfs
+On Mon, 8 Apr 2024 at 15:49, Andr=C3=A9 Draszik <andre.draszik@linaro.org> =
+wrote:
+>
+> Hi Pete,
+>
+> On Thu, 2024-04-04 at 13:25 +0100, Peter Griffin wrote:
+> > CMU_HSI2 is the clock management unit used for the hsi2 block.
+> > HSI stands for High Speed Interface and as such it generates
+> > clocks for PCIe, UFS and MMC card.
+> >
+> > This patch adds support for the muxes, dividers, and gates in
+> > cmu_hsi2.
+> >
+> > CLK_GOUT_HSI2_HSI2_CMU_HSI2_PCLK is marked as CLK_IS_CRITICAL
+> > as disabling it leads to an immediate system hang.
+> >
+> > CLK_GOUT_HSI2_SYSREG_HSI2_PCLK is also marked CLK_IS_CRITICAL.
+> > A hang is not observed with fine grained clock control, but
+> > UFS IP does not function with syscon controlling this clock
+> > just around hsi2_sysreg register accesses.
+>
+> Would it make sense to add this clock to the &ufs_0 node in the DTS
+> instead? Seems more natural than a clock that's constantly enabled?
 
-static ssize_t rvu_dbg_qsize_write(struct file *filp,
-				   const char __user *buffer, size_t count,
-				   loff_t *ppos, int blktype)
+Will add this to ufs node in v2.
+
+>
+> > [...]
+> >
+> > Updated regex for clock name mangling
+> >     sed \
+> >         -e 's|^PLL_LOCKTIME_PLL_\([^_]\+\)|fout_\L\1_pll|' \
+> >         \
+> >         -e 's|^PLL_CON0_MUX_CLKCMU_\([^_]\+\)_\(.*\)|mout_\L\1_\2|' \
+> >         -e 's|^PLL_CON0_PLL_\(.*\)|mout_pll_\L\1|' \
+> >         -e 's|^CLK_CON_MUX_MUX_CLK_\(.*\)|mout_\L\1|' \
+> >         -e '/^PLL_CON[1-4]_[^_]\+_/d' \
+> >         -e '/^[^_]\+_CMU_[^_]\+_CONTROLLER_OPTION/d' \
+> >         -e '/^CLKOUT_CON_BLK_[^_]\+_CMU_[^_]\+_CLKOUT0/d' \
+> >         \
+> >         -e 's|_IPCLKPORT||' \
+> >         -e 's|_RSTNSYNC||' \
+> >         -e 's|_G4X2_DWC_PCIE_CTL||' \
+> >         -e 's|_G4X1_DWC_PCIE_CTL||' \
+> >         -e 's|_PCIE_SUB_CTRL||' \
+> >         -e 's|_INST_0||g' \
+> >         -e 's|_LN05LPE||' \
+> >         -e 's|_TM_WRAPPER||' \
+> >         -e 's|_SF||' \
+> >         \
+> >         -e 's|^CLK_CON_DIV_DIV_CLK_\([^_]\+\)_\(.*\)|dout_\L\1_\2|' \
+> >         \
+> >         -e 's|^CLK_CON_BUF_CLKBUF_\([^_]\+\)_\(.*\)|gout_\L\1_\2|' \
+> >         -e 's|^CLK_CON_GAT_CLK_BLK_\([^_]\+\)_UID_\(.*\)|gout_\L\1_\2|'=
+ \
+> >         -e 's|^gout_[^_]\+_[^_]\+_cmu_\([^_]\+\)_pclk$|gout_\1_\1_pclk|=
+' \
+> >         -e 's|^CLK_CON_GAT_GOUT_BLK_\([^_]\+\)_UID_\(.*\)|gout_\L\1_\2|=
+' \
+> >         -e 's|^CLK_CON_GAT_CLK_\([^_]\+\)_\(.*\)|gout_\L\1_clk_\L\1_\2|=
+' \
+> >         \
+> >         -e '/^\(DMYQCH\|PCH\|QCH\|QUEUE\)_/d'
+>
+> Thank you for the updated regex.
+>
+> > ---
+> >  drivers/clk/samsung/clk-gs101.c          | 558 +++++++++++++++++++++++
+> >  include/dt-bindings/clock/google,gs101.h |  63 +++
+> >  2 files changed, 621 insertions(+)
+> >
+> > diff --git a/drivers/clk/samsung/clk-gs101.c b/drivers/clk/samsung/clk-=
+gs101.c
+> > index d065e343a85d..b9f84c7d5c22 100644
+> > --- a/drivers/clk/samsung/clk-gs101.c
+> > +++ b/drivers/clk/samsung/clk-gs101.c
+> > @@ -22,6 +22,7 @@
+> >  #define CLKS_NR_MISC (CLK_GOUT_MISC_XIU_D_MISC_ACLK + 1)
+> >  #define CLKS_NR_PERIC0       (CLK_GOUT_PERIC0_SYSREG_PERIC0_PCLK + 1)
+> >  #define CLKS_NR_PERIC1       (CLK_GOUT_PERIC1_SYSREG_PERIC1_PCLK + 1)
+> > +#define CLKS_NR_HSI2 (CLK_GOUT_HSI2_XIU_P_HSI2_ACLK + 1)
+> >
+> >  /* ---- CMU_TOP ------------------------------------------------------=
+------- */
+> >
+> > @@ -3409,6 +3410,560 @@ static const struct samsung_cmu_info peric1_cmu=
+_info __initconst =3D {
+> >       .clk_name               =3D "bus",
+> >  };
+> >
+> > +/* ---- CMU_HSI2 -----------------------------------------------------=
+----- */
+>
+> This comment is shorter that all the other similar comments in this file.
+
+Will fix
+>
+> > [...]
+> > +
+> > +PNAME(mout_hsi2_bus_user_p)  =3D { "oscclk", "dout_cmu_hsi2_bus" };
+> > +PNAME(mout_hsi2_pcie_user_p) =3D { "oscclk", "dout_cmu_hsi2_pcie" };
+> > +PNAME(mout_hsi2_ufs_embd_user_p) =3D { "oscclk", "dout_cmu_hsi2_ufs_em=
+bd" };
+> > +PNAME(mout_hsi2_mmc_card_user_p) =3D { "oscclk", "dout_cmu_hsi2_mmc_ca=
+rd" };
+>
+> Can you make these alphabetical, too, please, which would also match thei=
+r usage
+> below:
+
+Will fix
+>
+> > +
+> > +static const struct samsung_mux_clock hsi2_mux_clks[] __initconst =3D =
 {
-	cmd_buf = memdup_user(buffer, count + 1);
-	if (IS_ERR(cmd_buf))
-		return -ENOMEM;
+> > +     MUX(CLK_MOUT_HSI2_BUS_USER, "mout_hsi2_bus_user", mout_hsi2_bus_u=
+ser_p,
+> > +         PLL_CON0_MUX_CLKCMU_HSI2_BUS_USER, 4, 1),
+> > +     MUX(CLK_MOUT_HSI2_MMC_CARD_USER, "mout_hsi2_mmc_card_user",
+> > +         mout_hsi2_mmc_card_user_p, PLL_CON0_MUX_CLKCMU_HSI2_MMC_CARD_=
+USER,
+> > +         4, 1),
+> > +     MUX(CLK_MOUT_HSI2_PCIE_USER, "mout_hsi2_pcie_user",
+> > +         mout_hsi2_pcie_user_p, PLL_CON0_MUX_CLKCMU_HSI2_PCIE_USER,
+> > +         4, 1),
+> > +     MUX(CLK_MOUT_HSI2_UFS_EMBD_USER, "mout_hsi2_ufs_embd_user",
+> > +         mout_hsi2_ufs_embd_user_p, PLL_CON0_MUX_CLKCMU_HSI2_UFS_EMBD_=
+USER,
+> > +         4, 1),
+> > +};
+> > +
+> > +static const struct samsung_gate_clock hsi2_gate_clks[] __initconst =
+=3D {
+> > +
+>
+> Here and below: all these extra empty lines are not needed.
 
-	cmd_buf[count] = '\0';
-}
+Will fix
+>
+> > +     GATE(CLK_GOUT_HSI2_PCIE_GEN4_1_PCIE_003_PHY_REFCLK_IN,
+> > +          "gout_hsi2_pcie_gen4_1_pcie_003_phy_refclk_in",
+> > +          "mout_hsi2_pcie_user",
+> > +          CLK_CON_GAT_CLK_BLK_HSI2_UID_PCIE_GEN4_1_IPCLKPORT_PCIE_003_=
+PCIE_SUB_CTRL_INST_0_PHY_REFCLK_IN,
+> > +          21, 0, 0),
+> > +
+> > +     GATE(CLK_GOUT_HSI2_PCIE_GEN4_1_PCIE_004_PHY_REFCLK_IN,
+> > +          "gout_hsi2_pcie_gen4_1_pcie_004_phy_refclk_in",
+> > +          "mout_hsi2_pcie_user",
+> > +          CLK_CON_GAT_CLK_BLK_HSI2_UID_PCIE_GEN4_1_IPCLKPORT_PCIE_004_=
+PCIE_SUB_CTRL_INST_0_PHY_REFCLK_IN,
+> > +          21, 0, 0),
+> > +
+> > +     GATE(CLK_GOUT_HSI2_SSMT_PCIE_IA_GEN4A_1_ACLK,
+> > +          "gout_hsi2_ssmt_pcie_ia_gen4a_1_aclk",
+> > +          "mout_hsi2_bus_user",
+>
+> The two strings fit on the same line.
 
-I will send a patch to fix this too.
+Will fix
+>
+> > +          CLK_CON_GAT_CLK_BLK_HSI2_UID_SSMT_PCIE_IA_GEN4A_1_IPCLKPORT_=
+ACLK,
+> > +          21, 0, 0),
+> > +
+> > +     GATE(CLK_GOUT_HSI2_SSMT_PCIE_IA_GEN4A_1_PCLK,
+> > +          "gout_hsi2_ssmt_pcie_ia_gen4a_1_pclk",
+> > +          "mout_hsi2_bus_user",
+>
+> dito.
 
-For this case, as the original code uses vmemdup_user, which internally 
-uses kvmalloc not kmalloc, so I try to keep the original behavior. And 
-vmemdup_user does not have the counterpart vmemdup_user_nul. I can 
-kvmalloc(lbuf + 1), then copy_to_user(lbuf) and set buffer[lbuf] = '\0' 
-or do you think I should create vmemdup_user_nul?
+Will fix
 
-Thanks,
-Quang Minh.
+regards,
+
+Peter
+
+
+>
+> > [...]
+> > +     /* Disabling this clock makes the system hang. Mark the clock as =
+critical. */
+> > +     GATE(CLK_GOUT_HSI2_HSI2_CMU_HSI2_PCLK,
+> > +          "gout_hsi2_hsi2_cmu_hsi2_pclk", "mout_hsi2_bus_user",
+> > +          CLK_CON_GAT_GOUT_BLK_HSI2_UID_HSI2_CMU_HSI2_IPCLKPORT_PCLK,
+> > +          21, CLK_IS_CRITICAL, 0),
+>
+> I have a similar clock in USB, which also causes a hang if off, I wonder =
+what we
+> could do better here.
+>
+>
+> Cheers,
+> Andre'
+>
