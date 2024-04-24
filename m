@@ -1,143 +1,187 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8F2E158DDD;
-	Wed, 24 Apr 2024 11:56:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F22F5158867;
+	Wed, 24 Apr 2024 14:44:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713959789; cv=none; b=kJq7/AaAZ5GIua2sg+Z9f9FJCL6TsXcV6S9FHjdHD05b9sTVwhtyYcByyPX+fm6sVXG85G/+RrAzVE+nCeoNTnv3bWHEZjPRNHHylGsILVCbV5+VEu2wuaNmqEfEvRp7n20iZA1eF6vT2WVzmsdsLUJZC4xjdlEXMUYqrOQlQHs=
+	t=1713969883; cv=none; b=RpSw/2xdRsnhNJxIFd/w/9Iz87nrnfsuVHlyTWDxNzLh032IVcvMtB61TEVD361kSoG1naBdAwCua97c4H6bgYO4ICS1tYQ7z8uD6lIsglmBVvtICnqtaKT9Xqg82ABFp1id4GzfeV6LafU0bNv8huwu+VEzkglTztBqhpJRDe4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713959789; c=relaxed/simple;
-	bh=tAHa0uAP1XOIzwk0meIwhRRVXUzUhQWgzB2b6tqoVDI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qewSW49Oh/Xgjy+uoaVlZkhPNVvXo+YyDqdMLiPs42tDaDHiX2JZ3Eno8K9K+d88FCPjHuf6B18SfV+1zrvKatCz3dJrRjIMKFkasmNJ/UMkoKNjCSCBmkm8cczsibeIMpypfqCNa77d+9Lqoc5omhpxHO/JpZslACftPIanAbE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=Id80e8du; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1713969883; c=relaxed/simple;
+	bh=pFnSYolVK1sAbkMTB3+L70JGd/1tIizk76RsmxUjoqM=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=fLTl5aqQQAdcTv8eAnrpGU6ewqStUln+m5vawgkcVNgH4skj0HkyvntqgQM6u+6OWMHbdkiH6e8HClsJlBArT0FUHwXnqaGjFZTdXBnHNGAv7O0+vAUk4KPp6BLAxvud+CZMkTfxePLv1wj1wXM3Nq51ssrjN4Of4tBNEYsalMo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fCycvUDI; arc=none smtp.client-ip=209.85.210.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Id80e8du"
-Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43OBqf4c020542;
-	Wed, 24 Apr 2024 11:56:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=pp1; bh=XpH7mlduGY+teRfPIZDry1r3MxwXhD+lR2HCJ3M7h20=;
- b=Id80e8du9KRHgkzMQaMuQ9JzazbKiuyAGb974iHcfri4PgE4w2/QmgBfdkh/FLLn4LEq
- slJgP6wLd6NmCKlAWqINqRJ7aCEz+kr/wb8DiAmKvSDbm8Si8MDPkmIIHIdN5FlUK5CA
- Kndcr3Xd9hVkD6HFYLYiZZYwRlwXgnIeFrSHXdtKTLyH0fGGU0JfHZlVZkdyh2qzw8Jh
- yPDnqJHqHMrpMwnbAORuuLmHCGDnYYMl8TFBda3wNUm7Xd8kCwrfL+u52ZI/lMHblLRX
- 7LVpJyYvnSrdqPhzC2gnGDG3oZ5gxAnGHcWrRhDGv1wU3TXdIbmQDbjusoaqGgNMTUHX 6A== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3xq0sag3k9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 24 Apr 2024 11:56:08 +0000
-Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 43OBu7rI027504;
-	Wed, 24 Apr 2024 11:56:07 GMT
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3xq0sag3k4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 24 Apr 2024 11:56:07 +0000
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 43O9AlZS005355;
-	Wed, 24 Apr 2024 11:56:06 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3xmx3cj5ym-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 24 Apr 2024 11:56:06 +0000
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 43OBu1o138732126
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 24 Apr 2024 11:56:03 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 078132004F;
-	Wed, 24 Apr 2024 11:56:01 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 492CE2004D;
-	Wed, 24 Apr 2024 11:55:59 +0000 (GMT)
-Received: from osiris (unknown [9.171.4.217])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Wed, 24 Apr 2024 11:55:59 +0000 (GMT)
-Date: Wed, 24 Apr 2024 13:55:57 +0200
-From: Heiko Carstens <hca@linux.ibm.com>
-To: Bui Quang Minh <minhquangbui99@gmail.com>
-Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Paul M Stillwell Jr <paul.m.stillwell.jr@intel.com>,
-        Rasesh Mody <rmody@marvell.com>,
-        Sudarsana Kalluru <skalluru@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
-        Krishna Gudipati <kgudipat@brocade.com>,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Fabian Frederick <fabf@skynet.be>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Nilesh Javali <nilesh.javali@cavium.com>,
-        Arun Easi <arun.easi@cavium.com>,
-        Manish Rangankar <manish.rangankar@cavium.com>,
-        Vineeth Vijayan <vneethv@linux.ibm.com>,
-        Peter Oberparleiter <oberpar@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>, intel-wired-lan@lists.osuosl.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Saurav Kashyap <saurav.kashyap@cavium.com>,
-        linux-s390@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 5/5] drivers/s390/cio: ensure the copied buf is NULL
- terminated
-Message-ID: <20240424115557.26193-A-hca@linux.ibm.com>
-References: <20240422-fix-oob-read-v1-0-e02854c30174@gmail.com>
- <20240422-fix-oob-read-v1-5-e02854c30174@gmail.com>
- <20240423065052.10211-C-hca@linux.ibm.com>
- <e4f5cbd0-c803-4c3c-9703-f52e56864106@gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fCycvUDI"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6ee0642f718so785638b3a.0;
+        Wed, 24 Apr 2024 07:44:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1713969881; x=1714574681; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=9AlBe3kk5ztZRFTkgvZ6SOgy/VblETXj3psnO1nVDEQ=;
+        b=fCycvUDIOelkS1dIvzCtIVwLCZRWx1Y0EF1FOiCQSMmO15VYNxelHGAePzA7m9Brdl
+         d7TtVvfeBL4iOO6qgu1acrGAYFoTV+k4vA8II+5i3jQ1EWD8UzhGbmRn9r4/c4Mq4kXZ
+         5gdJEEFPNUGT19YbG4frN+6n3pnfxHfDd7Ydp0EJaTcbA9wSGY5I6L8kfTk7DXXuMo5w
+         R2tdH3zXsXSGCzoF+oriam75hPEB9nOeJnRW1HIXlv65VyWlSBUsqA/t4crP/bwOnjtt
+         Lkop+/SXf0jCSwTy7kMx/FuW1iJb3aLa9F+jdBll5r0sUZpWYJeGHY3hgWWCd6e3GDzM
+         13HA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713969881; x=1714574681;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=9AlBe3kk5ztZRFTkgvZ6SOgy/VblETXj3psnO1nVDEQ=;
+        b=CVsE4b4DHRFPWk4ZSy7+w5xbDLByfWamryGOcBdsOCKdy0OXDudm5El4O8fyFlV0Kn
+         m3j3KTAs1c/MS6wtN/SeG0htNQNU62gZN/PBYrsyzqIboCOI159neKvzSIdeuZzkuIsW
+         QtVIEiM2b1FWnzdBdw8Z3j1cDFsEqHcRFTxJm3CUGcRCfHTWPqzhTHDCSGRpkERP/p2t
+         EvWKsaoeyvX6UyF+PSkrFoJx3Lgxb9wKHc8DtJsbANslLGngGZ/fc/JRTbt0e7YmU0pn
+         itI+VqRWGYjgq2As9yNjYb9HIGcj4cwrFD9gE7MR0Hd0ObMOKsrZTuiBneRZo1y7oSk2
+         ChjQ==
+X-Forwarded-Encrypted: i=1; AJvYcCW5TFuIgRYyiNLi54bsy6UBqp5NJVPe8aJjSWR6/tTCOEoh54irVxs3OkKOlsu5Ogys6nFVQyEtt2H9G1Ju+VrMikaYdKLVX+iewPkOtQnYKN0Jn9jhpQcn8zoYgMbhQ9Sswkg0uF3nesyvdDwg8rFwisToXGEMzbaNavTwWGAjFZk44y9ZQEibaT1qbUUXAU5QL3nz7LCin1UIKso=
+X-Gm-Message-State: AOJu0YwVavca6xjkRj9RttTQ7zMPfTlsoLxDmbJKiy9ibZfmYzRMF3z3
+	/XFsqpNYXUcvqgWjRHu6N22YsCDLsKwQJmQ0Jfq0AI3z+P+5O/Mi
+X-Google-Smtp-Source: AGHT+IEZ2apyKdcveQJKiKV0/EodXodOYVr/N97y8zIovzzSFGYRD4Ce2vZBNWEv4JnoIEF0HZVlwg==
+X-Received: by 2002:a05:6a20:3c8a:b0:1a9:97ab:d09a with SMTP id b10-20020a056a203c8a00b001a997abd09amr4044692pzj.16.1713969880981;
+        Wed, 24 Apr 2024 07:44:40 -0700 (PDT)
+Received: from [127.0.1.1] ([2001:ee0:50f5:5d0:6ca6:7f20:5242:67cc])
+        by smtp.googlemail.com with ESMTPSA id a5-20020aa78e85000000b006e554afa254sm11495743pfr.38.2024.04.24.07.44.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Apr 2024 07:44:40 -0700 (PDT)
+From: Bui Quang Minh <minhquangbui99@gmail.com>
+Subject: [PATCH v2 0/6] Ensure the copied buf is NUL terminated
+Date: Wed, 24 Apr 2024 21:44:17 +0700
+Message-Id: <20240424-fix-oob-read-v2-0-f1f1b53a10f4@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e4f5cbd0-c803-4c3c-9703-f52e56864106@gmail.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: uhfqRBb54eWKPef2hDdJnIwSrSgU2j72
-X-Proofpoint-ORIG-GUID: gLWakaQraUUUlMZLADf4xlA10NLu8ZwJ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
- definitions=2024-04-24_08,2024-04-23_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=767
- lowpriorityscore=0 malwarescore=0 mlxscore=0 suspectscore=0 spamscore=0
- priorityscore=1501 bulkscore=0 impostorscore=0 phishscore=0 clxscore=1015
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2404010000 definitions=main-2404240046
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAMEaKWYC/3WMQQ6CMBBFr0Jm7ZhOqSm68h6GRS1TmESoaQ3Rk
+ N7dyt7l+z/vbZA5CWe4NBskXiVLXCroQwN+csvIKENl0EobZbTGIG+M8Y6J3YB0dmxDF1pLBFV
+ 5Jq7/nrv1lSfJr5g+e32l3/ontBIqZKW7k/GtImuu4+zkcfRxhr6U8gUzNIQ7qAAAAA==
+To: Jesse Brandeburg <jesse.brandeburg@intel.com>, 
+ Tony Nguyen <anthony.l.nguyen@intel.com>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Paul M Stillwell Jr <paul.m.stillwell.jr@intel.com>, 
+ Rasesh Mody <rmody@marvell.com>, Sudarsana Kalluru <skalluru@marvell.com>, 
+ GR-Linux-NIC-Dev@marvell.com, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, 
+ Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Fabian Frederick <fabf@skynet.be>, Saurav Kashyap <skashyap@marvell.com>, 
+ GR-QLogic-Storage-Upstream@marvell.com, 
+ Nilesh Javali <nilesh.javali@cavium.com>, Arun Easi <arun.easi@cavium.com>, 
+ Manish Rangankar <manish.rangankar@cavium.com>, 
+ Vineeth Vijayan <vneethv@linux.ibm.com>, 
+ Peter Oberparleiter <oberpar@linux.ibm.com>, 
+ Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, 
+ Alexander Gordeev <agordeev@linux.ibm.com>, 
+ Christian Borntraeger <borntraeger@linux.ibm.com>, 
+ Sven Schnelle <svens@linux.ibm.com>, Sunil Goutham <sgoutham@marvell.com>, 
+ Linu Cherian <lcherian@marvell.com>, Geetha sowjanya <gakula@marvell.com>, 
+ Jerin Jacob <jerinj@marvell.com>, hariprasad <hkelam@marvell.com>, 
+ Subbaraya Sundeep <sbhatta@marvell.com>
+Cc: intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ Saurav Kashyap <saurav.kashyap@cavium.com>, linux-s390@vger.kernel.org, 
+ Jens Axboe <axboe@kernel.dk>, Bui Quang Minh <minhquangbui99@gmail.com>, 
+ Przemek Kitszel <przemyslaw.kitszel@intel.com>
+X-Mailer: b4 0.13.0
 
-On Tue, Apr 23, 2024 at 09:46:35PM +0700, Bui Quang Minh wrote:
-> > > -	buffer = vmemdup_user(buf, lbuf);
-> > > +	buffer = vmemdup_user(buf, lbuf + 1);
-> > >   	if (IS_ERR(buffer))
-> > >   		return -ENOMEM;
-> > > +	buffer[lbuf] = '\0';
-> > 
-> > This would read one byte too much from user space, and could potentially
-> > fault.
-> > 
-> > Why isn't this simply memdup_user_nul() like all others, which would do the
-> > right thing?
-...
-> For this case, as the original code uses vmemdup_user, which internally uses
-> kvmalloc not kmalloc, so I try to keep the original behavior. And
-> vmemdup_user does not have the counterpart vmemdup_user_nul. I can
-> kvmalloc(lbuf + 1), then copy_to_user(lbuf) and set buffer[lbuf] = '\0' or
-> do you think I should create vmemdup_user_nul?
+Hi everyone,
 
-There is no need for vmalloc() instead of kmalloc() for this particular
-case. The input string is supposed to be rather short (see the sscanf()
-call). So converting to memdup_user_nul() is sufficient and solves the
-potential problem.
+I found that some drivers contains an out-of-bound read pattern like this
+
+	kern_buf = memdup_user(user_buf, count);
+	...
+	sscanf(kern_buf, ...);
+
+The sscanf can be replaced by some other string-related functions. This
+pattern can lead to out-of-bound read of kern_buf in string-related
+functions.
+
+This series fix the above issue by replacing memdup_user with
+memdup_user_nul.
+
+Thanks,
+Quang Minh.
+
+To: Jesse Brandeburg <jesse.brandeburg@intel.com>
+To: Tony Nguyen <anthony.l.nguyen@intel.com>
+To: David S. Miller <davem@davemloft.net>
+To: Eric Dumazet <edumazet@google.com>
+To: Jakub Kicinski <kuba@kernel.org>
+To: Paolo Abeni <pabeni@redhat.com>
+To: Paul M Stillwell Jr <paul.m.stillwell.jr@intel.com>
+To: Rasesh Mody <rmody@marvell.com>
+To: Sudarsana Kalluru <skalluru@marvell.com>
+To: GR-Linux-NIC-Dev@marvell.com
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>
+To: Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>
+To: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+To: Martin K. Petersen <martin.petersen@oracle.com>
+To: Fabian Frederick <fabf@skynet.be>
+To: Saurav Kashyap <skashyap@marvell.com>
+To: GR-QLogic-Storage-Upstream@marvell.com
+To: Nilesh Javali <nilesh.javali@cavium.com>
+To: Arun Easi <arun.easi@cavium.com>
+To: Manish Rangankar <manish.rangankar@cavium.com>
+To: Vineeth Vijayan <vneethv@linux.ibm.com>
+To: Peter Oberparleiter <oberpar@linux.ibm.com>
+To: Heiko Carstens <hca@linux.ibm.com>
+To: Vasily Gorbik <gor@linux.ibm.com>
+To: Alexander Gordeev <agordeev@linux.ibm.com>
+To: Christian Borntraeger <borntraeger@linux.ibm.com>
+To: Sven Schnelle <svens@linux.ibm.com>
+To: Dupuis, Chad <chad.dupuis@cavium.com>
+To: Sunil Goutham <sgoutham@marvell.com>
+To: Linu Cherian <lcherian@marvell.com>
+To: Geetha sowjanya <gakula@marvell.com>
+To: Jerin Jacob <jerinj@marvell.com>
+To: hariprasad <hkelam@marvell.com>
+To: Subbaraya Sundeep <sbhatta@marvell.com>
+Cc: intel-wired-lan@lists.osuosl.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: Saurav Kashyap <saurav.kashyap@cavium.com>
+Cc: linux-s390@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Bui Quang Minh <minhquangbui99@gmail.com>
+
+Changes in v2:
+- Patch 5: use memdup_user_nul instead
+- Add patch 6
+- Link to v1: https://lore.kernel.org/r/20240422-fix-oob-read-v1-0-e02854c30174@gmail.com
+
+---
+Bui Quang Minh (6):
+      ice: ensure the copied buf is NUL terminated
+      bna: ensure the copied buf is NUL terminated
+      bfa: ensure the copied buf is NUL terminated
+      qedf: ensure the copied buf is NUL terminated
+      cio: ensure the copied buf is NUL terminated
+      octeontx2-af: avoid off-by-one read from userspace
+
+ drivers/net/ethernet/brocade/bna/bnad_debugfs.c         | 4 ++--
+ drivers/net/ethernet/intel/ice/ice_debugfs.c            | 8 ++++----
+ drivers/net/ethernet/marvell/octeontx2/af/rvu_debugfs.c | 4 +---
+ drivers/s390/cio/cio_inject.c                           | 2 +-
+ drivers/scsi/bfa/bfad_debugfs.c                         | 4 ++--
+ drivers/scsi/qedf/qedf_debugfs.c                        | 2 +-
+ 6 files changed, 11 insertions(+), 13 deletions(-)
+---
+base-commit: ed30a4a51bb196781c8058073ea720133a65596f
+change-id: 20240422-fix-oob-read-19ae7f8f3711
+
+Best regards,
+-- 
+Bui Quang Minh <minhquangbui99@gmail.com>
+
