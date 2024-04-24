@@ -1,224 +1,250 @@
-Received: from mx0a-00154904.pphosted.com (mx0a-00154904.pphosted.com [148.163.133.20])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0119D29E
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 08:59:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=148.163.133.20
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713949184; cv=fail; b=EKsWOWhRzwFs54j5ZyDt14hV0YTGFGy1ZuZWDK1FEZJRFJtVIZpF8XMgescHAELrrqif0gbv+EnYbtH+Vb5RE777gRX//+P3kPws1m0P46g6FzogwOjGAtlS6pWfNiz7jSlzOWA2HxQz216eGmqzTryJOOL/lFI6bxTbpZSMvxk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713949184; c=relaxed/simple;
-	bh=u9IHpOjIOW+wALqL6LHqTOocFn50tY2BJ6vvDbIRvdc=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=YODdUsKRf7Y0QrPNg+ZhERHAJXCtLet8yod6E6A+F+v3y1sc5LO/8HLFFCHapYyIV+qSY7qWFFhPnaKlKxrupyUkOPZDDVnup3HjwhIc/atgFF3XNF9+64aKNwfBdbdkwTi23EJQhDBEB8ofHuseglQ2JrV4YRrNM6Oww9Zr6k0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=Dell.com; spf=pass smtp.mailfrom=dell.com; dkim=pass (2048-bit key) header.d=dell.com header.i=@dell.com header.b=nCHAOde8; arc=fail smtp.client-ip=148.163.133.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=Dell.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=dell.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F4005158A31
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 09:14:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1713950064; cv=none; b=XJ6wdNFWkIxCOuNwDhBGrTdnLVJp0OfqiIsyCHXX96B0ZlzdMJyiQN2dHIZPvQu3h70gX2PJ+9fgoZB+xfTv/eYEUWf7J7ePOYy4sAtMGT5NeWRLCPA6DJjYGxDQzYzkJsl51qaoK9qJkClcjh9pun/KafG7Ly1KHMGam4QKy8g=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1713950064; c=relaxed/simple;
+	bh=ooxJjvqsnAzrQy7qiazVWeifhCKc96JIk9+VIseSBQo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=erHh0Xdioj8DQH5PU9u8JGwBO2M4++WMUzDwco1A+J19tgP/EfBuDyGeCW4Q5uKbDVv0mNrLnq3vS9BUnw2x11cAIaz2qB5L+79Mo5bWi4efUXYt2TLw/ROIiOwkukR54rB6pfnjk8SW6XGY2ENb4eJpAoCVcDivfgO0n2B17u8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nu6TonVM; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=dell.com header.i=@dell.com header.b="nCHAOde8"
-Received: from pps.filterd (m0170392.ppops.net [127.0.0.1])
-	by mx0a-00154904.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43O2IXXT007240;
-	Wed, 24 Apr 2024 04:59:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dell.com; h=from : to : cc :
- subject : date : message-id : content-type : content-transfer-encoding :
- mime-version; s=smtpout1; bh=u9IHpOjIOW+wALqL6LHqTOocFn50tY2BJ6vvDbIRvdc=;
- b=nCHAOde8w7rrnFfiN9xX2ZjG3SZtk5nDHHBaq4uV+sgPNaFOitaGGEJ/rSxnYIco8nQR
- ccyhRbY+oCynUIVVWO/185zX+mTXk7KCxDCTK8od85BW4Q4rJBBT8/ucwuaSBXDjlNB9
- xPS77jIwzziSA/ElPootZsSP1PFmrYOvwKh2FNm7c/jEMOQJYelEa+HpF/tz64Qh3Ml0
- IlNwePCUvO7nooDvZCERRaFHCK9l/VedPBgPF7kF8qH6SNyF9B7FG14coDnuwVdFGBnF
- IXb2I2+OlLj8yvlKU0MsWlKvwSgnBbdhLTOyMnXmc7BFPTxmqiwaUiq3iFa+dALwzZzR xA== 
-Received: from mx0a-00154901.pphosted.com (mx0a-00154901.pphosted.com [67.231.149.39])
-	by mx0a-00154904.pphosted.com (PPS) with ESMTPS id 3xm8vf0ch0-1
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nu6TonVM"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43O6XAWC014995;
+	Wed, 24 Apr 2024 09:14:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	message-id:date:mime-version:subject:to:cc:references:from
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=FUqU+IvXr2Vv2oG8tDP3wcEqKESAS4OSNlAJPWGK3QY=; b=nu
+	6TonVMMIo1ap3gwR2udjW7J+SuZa2VEvKwMNVBLrq6Ic4kvmz294MTuPG5ZpaKCF
+	YwwvK0+OXtLGbl/I1IKwUsBR7cBCjYeC9WC/+Z9Uv54bnZhUV+HQGfdcxHiQNkgs
+	H/pU/otjU65VTflRo82ruaPCP+HWl6TvrK9+vSoSC8YLgAbXeu7Ia1ZpenCbe7u7
+	H1qd73Al6AIBVkAJTjYNo+BZyOP/SuUOKZwmj1VtBCSi8kiCi8Bq0AZHmicRVeDO
+	BZkcSTbzh5PkHSdVTfsSL3ympDxfoavlIdmoo+S194/MBDN/kuixJigz7tZTZHy2
+	ta+FHqY+Y/Vxf65erIJw==
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xpv9e0der-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 24 Apr 2024 04:59:40 -0400
-Received: from pps.filterd (m0142693.ppops.net [127.0.0.1])
-	by mx0a-00154901.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43O8W6KV026347;
-	Wed, 24 Apr 2024 04:59:39 -0400
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2168.outbound.protection.outlook.com [104.47.56.168])
-	by mx0a-00154901.pphosted.com (PPS) with ESMTPS id 3xpw5nsp6a-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 24 Apr 2024 04:59:39 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=glNsPJShtXD6NGuZDtAG+/qOIrddFZODDNT75h5LmnpL6EBkViA8NIotcVaRAeuXJPFIm8C8bSuJcmnwlMa/9fNYHwTqr3q0yzaF/H14bt9n2hfLj7pF8DW4wSl9Ke4sbKow9TgXAjRRTZyWWjQOp1NYNIb/rbFT6jU7b2YR4NUPklvub2BmHrr/q7ie36GHSls6928MtcRsA+7zj+Lyb/ecJ/0dSbXRG7vsoXeUjNnu/e7yNd+zDb7eoJ8d7wauA9x4KPd7WuoOBegavAXw95xi+C1/RzrR2tqPJt3Z0U1gR3Hg1MZqFds1txQrBZ9CC0wKH9u2yz93jaU2O6TVPw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=u9IHpOjIOW+wALqL6LHqTOocFn50tY2BJ6vvDbIRvdc=;
- b=FukaEe9YtISaFS8JcbBfE0e5R77vUoi85R69MMkrlV61S9LkIi3heD0djBSrPp3HPYZIVBKuG4+fVdAHSw+kh0bJs7Dx0NmklCtZLmK28dji0vdNtwCmUJgqv52DsmwXP5iV60MzzSBTs5SmanG4pY2kVGUqAZW8UZR0hVNKSe6fyAU68/3jQ0btSDmqQphd39jezVIMpUkZ+8K5f9ujjEJKVyL44dHGDGLfiXN6jXd7Ujf7DvQQNwuHyEu34Hl6V60TkIQsXdkQY831FeTaCrxZHASjazhilmf0kYmWY4uftMOfEqY6UO2cBlbblXncUQb1FTyFpvCDE6dLjSSjXQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=dell.com; dmarc=pass action=none header.from=dell.com;
- dkim=pass header.d=dell.com; arc=none
-Received: from SJ0PR19MB5415.namprd19.prod.outlook.com (2603:10b6:a03:3e2::13)
- by SA1PR19MB4959.namprd19.prod.outlook.com (2603:10b6:806:1a6::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7472.44; Wed, 24 Apr
- 2024 08:59:36 +0000
-Received: from SJ0PR19MB5415.namprd19.prod.outlook.com
- ([fe80::74b4:8ac3:e695:ed47]) by SJ0PR19MB5415.namprd19.prod.outlook.com
- ([fe80::74b4:8ac3:e695:ed47%5]) with mapi id 15.20.7519.021; Wed, 24 Apr 2024
- 08:59:36 +0000
-From: "Li, Eric (Honggang)" <Eric.H.Li@Dell.com>
-To: "james.bottomley@hansenpartnership.com"
-	<James.Bottomley@HansenPartnership.com>,
-        "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Issue in sas_ex_discover_dev() for multiple level of SAS expanders in
- a domain
-Thread-Topic: Issue in sas_ex_discover_dev() for multiple level of SAS
- expanders in a domain
-Thread-Index: AdqWJbfhv3GSaG0rTeK0+6km85YpNw==
-Date: Wed, 24 Apr 2024 08:59:35 +0000
-Message-ID: 
- <SJ0PR19MB5415BBBE841D8272DB2C67D6C4102@SJ0PR19MB5415.namprd19.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: 
- MSIP_Label_73dd1fcc-24d7-4f55-9dc2-c1518f171327_ActionId=c72966a7-d738-4949-9a39-373528caf1eb;MSIP_Label_73dd1fcc-24d7-4f55-9dc2-c1518f171327_ContentBits=0;MSIP_Label_73dd1fcc-24d7-4f55-9dc2-c1518f171327_Enabled=true;MSIP_Label_73dd1fcc-24d7-4f55-9dc2-c1518f171327_Method=Standard;MSIP_Label_73dd1fcc-24d7-4f55-9dc2-c1518f171327_Name=No
- Protection (Label Only) - Internal
- Use;MSIP_Label_73dd1fcc-24d7-4f55-9dc2-c1518f171327_SetDate=2024-04-24T08:58:21Z;MSIP_Label_73dd1fcc-24d7-4f55-9dc2-c1518f171327_SiteId=945c199a-83a2-4e80-9f8c-5a91be5752dd;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SJ0PR19MB5415:EE_|SA1PR19MB4959:EE_
-x-ms-office365-filtering-correlation-id: 5c596912-b9f8-47f7-21c3-08dc643cddb3
-x-exotenant: 2khUwGVqB6N9v58KS13ncyUmMJd8q4
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 
- =?gb2312?B?Z3I2ZkdCTUViTSt3ejRnR09nd0tWbDFCTkFpcTg3ZXBhcXlGT0Y3YTFubzJj?=
- =?gb2312?B?OXpGMTk2UkI4c2orUVRnZUpvNHFrVmNtZnRpZmxwdEFUK1Y2T1NleDVpcDBR?=
- =?gb2312?B?MFRiRXFPN2U4WjJiV2NIK2g0S2hZckJoQWJKNlhYMzJwaVIyOUJnOS9IYVUx?=
- =?gb2312?B?Vzg0bVRYcE1YNEdjSGFPcmZxWGk3bHI3UXpqTGFCSlpUT1Y1UkNjSCtkT0pT?=
- =?gb2312?B?RWVMWlNCdVFOK0E0d3lnT00vZzZHa3dzWkx5RnNYMURpbDVlaWEzbmc0Z1hQ?=
- =?gb2312?B?Rnd1QlI1bUI4bXliRmtVYkZWc3dZWUJpL2F4RmxHbzFrWElQSkZqTGVkV2pT?=
- =?gb2312?B?QWtqb1poU1FGTG9TWUwxRHNObHFWcXJzTTUxaVV5UzFRTW5zZ1FXQ0lUdm9k?=
- =?gb2312?B?WGI3aUFWN2gydDJseW93MXVMay9hWmtRdHpMdjByVHhSYmxHSFV3KzIvRWl3?=
- =?gb2312?B?Lzg1YTBPYU1Ja2ljTElORElBenExdS9SWmU3UzlkTzMvU3lJNHZBNGVOQ1hS?=
- =?gb2312?B?Z3Fka3FQL0dIdk5NYWFVa25OMVVsZW1BTnhjTEhlRmQrcUJSb1YycXEwalVo?=
- =?gb2312?B?Rk02UHFSN3ZRTGpXL1lPMmNWWHNkakdRZTNiNUpJL0x1YXJOT0hNYTlrL1Fa?=
- =?gb2312?B?b0htOHFBeFBlK2RPQ1FLd0RrTFd3QWNyM2w5VXIzU0RsUDN6ZGJqYWxtcFBz?=
- =?gb2312?B?RSsram5RcDQ5N0wrZ3VyWUdCdFU2c0srSVJKUlNYcHJzVnluTWVESE0yZ25U?=
- =?gb2312?B?c2d3TlZVZ2tnRmFDOUcyVFlPSVIwMXRlUmdlamxhdWlNZlJKU3IwY291OWw3?=
- =?gb2312?B?Q3ArVkJDUlJEeU1lZUR4MFFVOUVnQXVZUTFwZUVDeG4yWkhjRkZCd1FsNFhB?=
- =?gb2312?B?d1JQTjVwSWhJME1kZ1NBTktoM0kyaDRPZkpYRnBwY3lnVC9IRVB1aEttOTds?=
- =?gb2312?B?MWxPRFZEOW9oWHRBQ0dCTGpvZ0d2ZS8yOHM5TDExdG0wSmJkOGF5OUlRcUgx?=
- =?gb2312?B?cEN5MHhOaktsaGxYK3dhK0RMbkp2SzdkdGdMZkJxdTVNNGIrTEJWVENDTWV4?=
- =?gb2312?B?SWNySW1pbjZQYklDMGg5RW1YVFZnNHlneGJveis4bGdMY2tZR3BKUG5rb2Ey?=
- =?gb2312?B?ZUVqc0lqaXZEaHMvbWpURzBvZjNGYXNkUlB2MEFRRlp2bWpsdUQvUjJJS1Vv?=
- =?gb2312?B?c3Bqb09Yb0t0STBsc1JqYUQ4aWF6bTdicmErcDErYVlpWUI5d2hhQ3pWOWIw?=
- =?gb2312?B?SzN2Q21oK2dVSHNHTmxnM2htbUFyRU5NaXlOYmZWek82T3lzQXgvYTVvZ2N4?=
- =?gb2312?B?UlNRMUhWcDIxbDlLUUlYOFdLSlVDYmVVY1N6dkNTUHdodlhMYVJWamtiRTNY?=
- =?gb2312?B?Zm1iVnZaT3hId1lLd3ZiTm9HcStyV09uU0JzcHN0S1VKWjM2cGZhSGVSVFBI?=
- =?gb2312?B?ZHF0MTlNN0NYWnJMa0ZGNTI4QjlHTHJuWmhkVW9QeTcwc29IbUZMUExrazQv?=
- =?gb2312?B?WERST3E3bHQ5c1RuQ1BGYmlUR0EvYmFaRVhtWCtnQ05vQ0FOU0wvNzZuSWJt?=
- =?gb2312?B?NkV3OWlxbmhhYTJGSjREZ25zTFNLc1B4MEY1ZkFiYXkvSlRjY0lJYndOUUZG?=
- =?gb2312?B?dkFvZnowcG4rSVNnTHNlYWs0b0FacUZHMmhlc1lmdGROYzV2NUkvZ3JFZlVF?=
- =?gb2312?B?SE1BZlR0Q3FnYmZySjNHVERheGR5bDRpRks4Tkg0R0dXMExjU2xQMW5QM3Ju?=
- =?gb2312?B?YTFOVis1NXRwYkthSldUaTloWUEreGdBZGpVZjJrUCt1NW1ORWhxaVNsUFB4?=
- =?gb2312?B?QS9xL0ZqWGh4MHQwUXpBUT09?=
-x-forefront-antispam-report: 
- CIP:255.255.255.255;CTRY:;LANG:zh-cn;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR19MB5415.namprd19.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(1800799015)(376005)(366007)(38070700009);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: 
- =?gb2312?B?YWRLZXIzZTNSMHlXc0xON2hSeVVTcmtGZDRaYWpBWCt6ZUsvZUticGdJaE1N?=
- =?gb2312?B?OFBzZTNCcm1ON1RYTC9nOGxoNThTY3hRMGl6ZE56d2s0OFQ1UEw3WWxFTXU2?=
- =?gb2312?B?cmNNY3JZMG0vRTY4TVhtMU80K1NKUGpiZElKL21tbHNYZnkwVFVjRWNpSlBE?=
- =?gb2312?B?N0s1UURkV1E1WEJSKzZPNGcxbVl3SE9YQWdiTjBFbStvNmc1akpIUFpMUjh6?=
- =?gb2312?B?TFR1SzlvTkZ2WFZWRGRsb0JIaEhhVTVDbGwxVnBlbUpJSVlPMXFpUk5PdXRB?=
- =?gb2312?B?a280dW03aXdQck5zUXZSb0RmbmlIU0pSRkx0NHJXRVhtNTlKam9lTjRFZndr?=
- =?gb2312?B?K2dGalNtem01VlZhdmVPR3VlcU16dzl1clpVRG1CVTNBSUo0RDdwbitWT1NC?=
- =?gb2312?B?UERPdk5WYXZOL2doTUxRS25UZ2s1UTVXcG9xbHJRdVRPdVVObTVoYXNYb2hR?=
- =?gb2312?B?dGl2Zk4wREU4YlZvdVZBdWkwNmJyYkZGWGJMNzRycGZoYndlbFdkYlArcEZw?=
- =?gb2312?B?WnB6ZW94TjJVejhYVVV6WVFyejFrU21pZTU4NWhjRkdOazM4eTZMYnlSVHNY?=
- =?gb2312?B?N0ZzRWFZUGtBYXhZM2xuY2ZqZGgvVGd1WnhIRmdEYmljQjRLREUwMk8zSXZh?=
- =?gb2312?B?bk9tb1NCeGIwQXNrdmROa3NtcWVYNVEzdzAxN1d4QXlZek1nTmhYWW0vcFY1?=
- =?gb2312?B?ejNjV1BhbmRkZTdTUlk3V1g0dEpMNDRGRUI4SUF5cU52YUU2d29SRjZmVXNB?=
- =?gb2312?B?WGpwOXF2eDJzTFp3Sks2a1BjbnA3RUhTdlNpaUhscXZpZTlRbE5YZE5XT0VF?=
- =?gb2312?B?alVIR2lHMXdQOFZQTStxTjBtRU92OGNCNjNtNG5aU3czY3hUUEIraE5Najc1?=
- =?gb2312?B?dWUvRFpRRTRIQWVHZ0RIUWhiZnYrd3pPODdleG1rSEhxc2xhNTF2K1hJSG5B?=
- =?gb2312?B?T29xMnU4U0ZueHFHVW5JUUZnYkpyZEVIMVNSb01IRE9Gb1p3R1Y0M0xYUy9U?=
- =?gb2312?B?eHNnYlVQOWI5cHlqUEJvbzBMODNCdkZhb0dxWG1CWnVBR1NtZi8yVUhycXMy?=
- =?gb2312?B?alNaUmJkMTNncDJLK2RxbElKTHVkVTl5eTErN2JpbmxVdm84ZG85UklubXF3?=
- =?gb2312?B?QjRVSDJPd1BQaDlRUWdBclZFRDRhWklzYkRpQW9vQzR5UVA4cUluekRrUmNs?=
- =?gb2312?B?N2EyRmtzRlZVdEllZG84R1pFVDZTN3RidjFwUVBkUVVPem5pOWZNY2l3VE9W?=
- =?gb2312?B?T29JWmd1UE44SDB5VSszdStja2R1a0VKdnR0YW1sTGVDbzRycGZJeG5OZWJR?=
- =?gb2312?B?aHpVZ3JJU0RBZlZmVmNJNnB4Ukt2cTlqUzlXWko0WC8zTTNqTlFWVE8wd0Q4?=
- =?gb2312?B?M05vZ0xEVytWWnFRMFJDbElzMjhkUUdJbmFTd1MrV3BBaytWL09Oa2U3NFIr?=
- =?gb2312?B?MkhhUFFtd0l1Y1d0RFhIMkhCdmdDV2xBZC9wajdVWk91QzlKN0g1SnVJdW5F?=
- =?gb2312?B?NloxWTJEU1hvcStJbFltOWJ6VmtIUi9iclN4MWdJRXlEaktUQzNxTG8zb1Y5?=
- =?gb2312?B?amtVTHE4QW81cURuaGEyUWZpcnNnV0hUc2FPaGI5Vi9USUIrbVJyVGFhSGRK?=
- =?gb2312?B?QVo1WDd0OHpxbHFCV2FsOHRYSGl4bDQ4RGI2Z2RkNDc1WXNDNkRaUzBiZldP?=
- =?gb2312?B?Q05pY3lPNWQ3WmU2b0F3eU9ZM2JTMytQckxlaUl0MmtWbjBaeWpieEhYWFFI?=
- =?gb2312?B?NkdhMlNBMnFHQlprTkdRYUQ1TnVCWXBaODF1aWhqUmRBQUhURU9LaElmNFhR?=
- =?gb2312?B?am0rU3gvQ2prcFlRUXg1WWdIUE9UVjJVdkppalVVQ2c1d1UzWm1pNjdaU1p0?=
- =?gb2312?B?a2JrY2RUM24vU0VyWVVld3daQldJRzBrOUw0RTdmQ1ZsZmVoWVlUWDNtc3Y1?=
- =?gb2312?B?RHZXRlo5cWJTdDFMRHFWSEFGS2hTTlZaQmVKYk1ZNlh1K054WjJUVExFZE5Q?=
- =?gb2312?B?M0pGWjQxT2NTd1JseWdRa3JJSXA4SUxhc1lveEdURWgxa3Z3Y1VZdjl3ZEZ3?=
- =?gb2312?B?WS9qZXErWHJmSlhqN3BzUS9jemh3Zy9leENPcld1K1UwTGhZZTFsWVQxY0JY?=
- =?gb2312?Q?eeY4=3D?=
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+	Wed, 24 Apr 2024 09:14:15 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43O9EEOo004751
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 24 Apr 2024 09:14:14 GMT
+Received: from [10.217.216.18] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 24 Apr
+ 2024 02:14:10 -0700
+Message-ID: <2d0c0aee-0dcb-7ac3-907c-ee477d5fc376@quicinc.com>
+Date: Wed, 24 Apr 2024 14:44:07 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: Dell.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SJ0PR19MB5415.namprd19.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5c596912-b9f8-47f7-21c3-08dc643cddb3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 24 Apr 2024 08:59:35.9688
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 945c199a-83a2-4e80-9f8c-5a91be5752dd
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: rjqWLWxkoGMh/a7XUJHUOINsco6PQi4b1PzbJUh8MMc4M5RyEjcabEOUhEtE6zMSD9DYOsR89x30Uce+jKOHUQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR19MB4959
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH 1/1] Revert "scsi: ufs: core: Only suspend clock scaling
+ if scaling down"
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
+        "quic_sartgarg@quicinc.com" <quic_sartgarg@quicinc.com>,
+        "quic_bhaskarv@quicinc.com" <quic_bhaskarv@quicinc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "quic_narepall@quicinc.com" <quic_narepall@quicinc.com>,
+        "quic_pragalla@quicinc.com" <quic_pragalla@quicinc.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>
+References: <20240228053421.19700-1-quic_rampraka@quicinc.com>
+ <a585c5a82fdb36b543d48568d0c5ae1265642f26.camel@mediatek.com>
+ <bd253a59-de58-2184-a818-82ef1ed8c962@quicinc.com>
+ <768897ca7336df5b159c7d39e467b5b74f49b3b4.camel@mediatek.com>
+Content-Language: en-US
+From: Ram Prakash Gupta <quic_rampraka@quicinc.com>
+In-Reply-To: <768897ca7336df5b159c7d39e467b5b74f49b3b4.camel@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: EQuYIOiR1DOqrU4buLA6QE2ZH44-GePL
+X-Proofpoint-ORIG-GUID: EQuYIOiR1DOqrU4buLA6QE2ZH44-GePL
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
  definitions=2024-04-24_06,2024-04-23_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- suspectscore=0 spamscore=0 bulkscore=0 mlxlogscore=999 clxscore=1015
- adultscore=0 phishscore=0 mlxscore=0 lowpriorityscore=0 impostorscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2404010000 definitions=main-2404240038
-X-Proofpoint-ORIG-GUID: C9uO8SukCoMEXD9qVfzCGxFbsROUXQzj
-X-Proofpoint-GUID: C9uO8SukCoMEXD9qVfzCGxFbsROUXQzj
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 clxscore=1015
- mlxscore=0 spamscore=0 suspectscore=0 mlxlogscore=999 malwarescore=0
- impostorscore=0 priorityscore=1501 adultscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2404010000
- definitions=main-2404240038
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
+ priorityscore=1501 malwarescore=0 mlxscore=0 phishscore=0 mlxlogscore=999
+ clxscore=1011 spamscore=0 adultscore=0 lowpriorityscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2404010003
+ definitions=main-2404240039
 
-SGksDQoNClRoZXJlIGlzIGFuIGlzc3VlIGluIHRoZSBmdW5jdGlvbiBzYXNfZXhfZGlzY292ZXJf
-ZGV2KCkgd2hlbiBJIGhhdmUgbXVsdGlwbGUgU0FTIGV4cGFuZGVycyBjaGFpbmVkIHVuZGVyIG9u
-ZSBTQVMgcG9ydCBvbiBTQVMgY29udHJvbGxlci4NCg0KSW4gdGhpcyBmdW5jdGlvbiwgd2UgZmly
-c3QgY2hlY2sgd2hldGhlciB0aGUgUEhZoa9zIGF0dGFjaGVkX3Nhc19hZGRyZXNzIGlzIGFscmVh
-ZHkgcHJlc2VudCBpbiB0aGUgU0FTIGRvbWFpbiwgYW5kIHRoZW4gY2hlY2sgaWYgdGhpcyBQSFkg
-YmVsb25ncyB0byBhbiBleGlzdGluZyBwb3J0IG9uIHRoaXMgU0FTIGV4cGFuZGVyLg0KSSB0aGlu
-ayB0aGlzIGhhcyBhbiBpc3N1ZSBpZiB0aGlzIFNBUyBleHBhbmRlciB1c2UgYSB3aWRlIHBvcnQg
-Y29ubmVjdGluZyBhIGRvd25zdHJlYW0gU0FTIGV4cGFuZGVyLg0KVGhpcyBpcyBiZWNhdXNlIGlm
-IHRoZSBQSFkgYmVsb25ncyB0byBhbiBleGlzdGluZyBwb3J0IG9uIHRoaXMgU0FTIGV4cGFuZGVy
-LCB0aGUgYXR0YWNoZWQgU0FTIGFkZHJlc3Mgb2YgdGhpcyBwb3J0IG11c3QgYWxyZWFkeSBiZSBw
-cmVzZW50IGluIHRoZSBkb21haW4gYW5kIGl0IHJlc3VsdHMgaW4gZGlzYWJsaW5nIHRoYXQgcG9y
-dC4NCkkgZG9uoa90IHRoaW5rIHRoYXQgaXMgd2hhdCB3ZSBleHBlY3QuDQoNCkluIG9sZCByZWxl
-YXNlICg0LngpLCBhdCB0aGUgZW5kIG9mIHRoaXMgZnVuY3Rpb24sIGl0IHdvdWxkIG1ha2UgYWRk
-aXRpb24gc2FzX2V4X2pvaW5fd2lkZV9wb3J0KCkgY2FsbCBmb3IgYW55IHBvc3NpYmx5IFBIWXMg
-dGhhdCBjb3VsZCBiZSBhZGRlZCBpbnRvIHRoZSBTQVMgcG9ydC4NClRoaXMgd2lsbCBtYWtlIHN1
-YnNlcXVlbnQgUEhZcyAob3RoZXIgdGhhbiB0aGUgZmlyc3QgUEhZIG9mIHRoYXQgcG9ydCkgYmVp
-bmcgbWFya2VkIHRvIERJU0NPVkVSRUQgc28gdGhhdCB0aGlzIGZ1bmN0aW9uIHdvdWxkIG5vdCBi
-ZSBpbnZva2VkIG9uIHRob3NlIHN1YnNlcXVlbnQgUEhZcyAoaW4gdGhhdCBwb3J0KS4NCkJ1dCBw
-b3RlbnRpYWwgcXVlc3Rpb24gaGVyZSBpcyB3ZSBkaWRuoa90IGNvbmZpZ3VyZSB0aGUgcGVyLVBI
-WSByb3V0aW5nIHRhYmxlIGZvciB0aG9zZSBQSFlzLg0KQXMgSSBkb26hr3QgaGF2ZSBzdWNoIFNB
-UyBleHBhbmRlciBvbiBoYW5kLCBJIGFtIG5vdCBzdXJlIHdoYXShr3MgaW1wYWN0IChtYXliZSBq
-dXN0IHBlcmZvcm1hbmNlL2JhbmR3aWR0aCBpbXBhY3QpLg0KQnV0IGF0IGxlYXN0LCBpdCBkaWRu
-oa90IGltcGFjdCB0aGUgZnVuY3Rpb25hbGl0eSBvZiB0aGF0IHBvcnQuDQoNCkJ1dCBpbiB2NS4z
-IG9yIGxhdGVyIHJlbGVhc2UsIHRoYXQgcGFydCBvZiBjb2RlIHdhcyByZW1vdmVkIChpbiB0aGUg
-Y29tbWl0IGExYjZmYjk0N2Y5MjMpLg0KQW5kIHRoaXMgY2F1c2VkIHRoaXMgcHJvYmxlbSBvY2N1
-cnJlZCAoZG93bnN0cmVhbSBwb3J0IG9mIHRoYXQgU0FTIGV4cGFuZGVyIHdhcyBkaXNhYmxlZCBh
-bmQgYWxsIGRvd25zdHJlYW0gU0FTIGRldmljZXMgd2VyZSByZW1vdmVkIGZyb20gdGhlIGRvbWFp
-bikuDQoNClJlZ2FyZHMuDQpFcmljIExpDQoNClNQRSwgRGVsbEVNQw0KMy9GIEtJQyAxLCAyNTIj
-IFNvbmdodSBSb2FkLCBZYW5nUHUgRGlzdHJpY3QsIFNIQU5HSEFJDQorODYtMjEtNjAzNi00Mzg0
-DQoNCg0KSW50ZXJuYWwgVXNlIC0gQ29uZmlkZW50aWFsDQo=
+
+
+On 3/5/2024 6:25 PM, Peter Wang (王信友) wrote:
+> On Tue, 2024-03-05 at 12:59 +0530, Ram Prakash Gupta wrote:
+>>   	
+>> External email : Please do not click links or open attachments until
+>> you have verified the sender or the content.
+>>   
+>>
+>> On 2/29/2024 1:21 PM, Peter Wang (王信友) wrote:
+>>> On Wed, 2024-02-28 at 11:04 +0530, Ram Prakash Gupta wrote:
+>>>>    
+>>>> External email : Please do not click links or open attachments
+>> until
+>>>> you have verified the sender or the content.
+>>>>    This reverts commit 1d969731b87f122108c50a64acfdbaa63486296e.
+>>>> Approx 28% random perf IO degradation is observed by suspending
+>> clk
+>>>> scaling only when clks are scaled down. Concern for original fix
+>> was
+>>>> power consumption, which is already taken care by clk gating by
+>>>> putting
+>>>> the link into hibern8 state.
+>>>>
+>>>> Signed-off-by: Ram Prakash Gupta <quic_rampraka@quicinc.com>
+>>>> ---
+>>>>    drivers/ufs/core/ufshcd.c | 2 +-
+>>>>    1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>>>> index c416826762e9..f6be18db031c 100644
+>>>> --- a/drivers/ufs/core/ufshcd.c
+>>>> +++ b/drivers/ufs/core/ufshcd.c
+>>>> @@ -1586,7 +1586,7 @@ static int ufshcd_devfreq_target(struct
+>> device
+>>>> *dev,
+>>>>    ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+>>>>    
+>>>>    out:
+>>>> -if (sched_clk_scaling_suspend_work && !scale_up)
+>>>> +if (sched_clk_scaling_suspend_work)
+>>>>    queue_work(hba->clk_scaling.workq,
+>>>>       &hba->clk_scaling.suspend_work);
+>>>>    
+>>>> -- 
+>>>> 2.17.1
+>>>
+>>> Hi Ram,
+>>>
+>>> It is logic wrong to keep high gear when no read/write traffic.
+>>> Even high gear turn off clock and enter hibernate, there still have
+>>> other power consume hardhware to keep IO in high gear, ex. CPU
+>> latency,
+>>> CPU power.
+>>>
+>> By CPU latency and power, do you mean the QoS/bus vote from ufs
+>> driver?
+>> if yes, in that case if clk gating kicks in, it means ufs is already
+>> in
+>> hibernate state and there is no point keeping the votes (pm qos &
+>> bus
+>> votes) from ufs driver. And as part of clk gating, qos and other
+>> votes
+>> on SoC can be removed then no power concern would be there.
+>>
+> 
+> Not only pm qos vote, but also vcore raise is needed for mediatek hw
+> design. And this core voltage is used for our entire SoC. Which means
+> The power impact is very huge for mediatek.
+> 
+> 
+>> Now with your implementation, since scaling is not suspended, in
+>> next
+>> window of devfreq polling will get lowest possible load when active
+>> request count is zero, because of which devfreq will scale down the
+>> clock. So next request would always be completed with low clock
+>> frequency, which is not desirable from performance point of view
+> 
+> If a polling period without any IO traffic, it should scale down right?
+> If IO is busy then scale up.
+> If IO is not busy then scale down.
+> It is basic logic.
+> 
+> 
+>> when
+>> power consumption is already taken care in clk gating.
+>>
+>>> Besides, clock scaling is designed for power concern, not for
+>>> performance. If you want to keep high performance, you can just
+>> turn
+>>> off clock scaling and keep in highest gear.
+>>>
+>> I think its about striking a right balance. And if there is really a
+>> big
+>> power concern on mediatek boards, clock gating can be made bit more
+>> aggressive there by removing the all votes (qos, bus) from ufs driver
+>> on
+>> SoC as part of clock gating. Also is clock scaling disabled on
+>> mediatek
+>> platforms?
+>>
+> 
+> Mediatek has use clock gating.
+> But, there still have a window after enter auto-hibernate and clock
+> gati
+> ng. This window power waste is not reasonalbe.
+> 
+> 
+>>> Finally, mediatek dosen't suffer performance drop with this patch.
+>>> Could you help list the test procedure and performance drop data
+>> more
+>>> detail? I am curious that in what scenario your random drop 28%.
+>>> And I think your dvfs parameter could be the drop reason.
+>>>
+>> There is no specific environment or procedure used, I am just using
+>> antutu benchmark to get the numbers. And random IO numbers are
+>> degraded
+>> by approx 28%.
+>>
+> 
+> Have you try another dvfs setting?
+> For example, enlarge polling period to make scale down harder?
+> 
+> Anyway, I think it is not correct to benefit from performance gain
+> through a kernel bug (scale up when no IO on-going)
+> 
+> 
+> Thanks.
+> Peter
+> 
+Hi Peter,
+
+I tried different dvfs settings, none is helping including enlarged 
+polling period time, its degrading perf numbers as its taking longer 
+time to scale up when the load is high and clk is low.
+
+I checked from power side on qualcomm boards, suspending with zero 
+request is not impacting power hence I am consider a vops to add which 
+can help your use case too, I tested this vops and it works fine on 
+qualcomm boards.
+
+here is a small snippet of a different approach using vops, which I am 
+planning to push under a separate mail subject to remove this deadlock 
+between mediatek and qualcomm, scaling config.
+
+-       if (sched_clk_scaling_suspend_work && !scale_up)
++       if (sched_clk_scaling_suspend_work && 
+hba->clk_scaling.no_req_suspend)
++               queue_work(hba->clk_scaling.workq,
++                          &hba->clk_scaling.suspend_work);
++       else if (sched_clk_scaling_suspend_work && !scale_up)
+
+Here no_req_suspend would be false by default, so would hit else if 
+case, which is desirable for mediatek boards. For qualcomm, 
+no_req_suspend would set it to true via vops. please let me know if this 
+is ok for you.
+
+Thanks,
+Ram
