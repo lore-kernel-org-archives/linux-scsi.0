@@ -1,102 +1,76 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 410C315EFC2;
-	Wed, 24 Apr 2024 15:17:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 972D816D9B3
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 15:59:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713971838; cv=none; b=SNEHZ5AYwJS3UtO2/8Vli/pNQW705XloWEYzT2wQmTmUTRFKxO3w7O8kz19a5BWcfjxKuHtsiwJSWQ1Cbi+gqCEGkHUQltaJA+Cy2FKiFGu9+R4kT9IlDrHRg/xPA7sZs5dARwdi468E6BeMHLk5bVyNw54glvi6WHBxA+HEZuI=
+	t=1713974376; cv=none; b=H1JQOpKdUwDPObEV7jFmn9+11Ccgqkqlxd0jQ7cTvx5M9rhc78hxQq6w2qHFGLOo3wRZKOpCCxXqw+piW+V0bCSKI1jk66xYaEKLiORZkbiVw/DYjENbsB9Fbpoybg81Gb44/W4Atu9UqOVD4j1AyCC6E8vrxv4AvVahXdpfbzk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713971838; c=relaxed/simple;
-	bh=lxUuics4jmlqF3JSO6RqVRtlVjf5w9O3L4++yNBHbuE=;
+	s=arc-20240116; t=1713974376; c=relaxed/simple;
+	bh=0GiSfYTnN6d165IOBQzb694rnUh8tyUWWbTI6T31ybQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t2YNXpSLCyKSrIV4v9z4sFSB9vuZuYvDtcKH7JBuWhCkL19bpmxtt3oDTpnqcGjzkt2PLoE3IoR+UKirJCxv0lj4gt+71yRdVSdbPI3GjSs3slKi+BzA2C7RJd3oOw8wTgKmslcVl+Jx3neEXUQhICWRHTX7/dP7YLHd0S4pLk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=jcO+Had0; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=GOkJU980Gi3xvIa2W9W0VoYVaVYP6i5xsjctP8KVN4Mk7Y4DwbjYexTjaVejQBphmndGe33YHN7l5OLhI4aPqMVDxb5MMqvEggWI12K5KZRCSabgAlZmmBLKrF60oZHFDWyDfUhBsUBi1LO1ykt0jPftmQ48cdMhFCbERXaQ5zE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=JbZOhrpT; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="jcO+Had0"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43OEvP0q032428;
-	Wed, 24 Apr 2024 15:17:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=pp1; bh=LRXZigEswTP7y+kxZAU4wvy9qxPw5anZoKBCkQwQ0VQ=;
- b=jcO+Had0aSg52rZjlhEaia1uEq0IAOPidGvLK3ScMBO1iM2O9dpLxgdeiGZ1EU59bfil
- y5ZiP3JKZbUHYXoV5/EbsA9QHzFiHOxznQEQa1+yRMo1JjdMmsnAu7UsIHRnBvU8Vj+Q
- nzIaegcCM7US4b15+hGy2iFLTVx2jtQEJWW5HkPNLlGuU1K7q3qP8zkyrKIa1/bQxhGd
- vNSLIpahPzDfeQZTiEO9sRzTxhrMd3i8X59qGNBc7Sfjvm+55EK69kqDKtSIz5oaIm8x
- P03VgAi8NBw7tJ7TAyc3zNr9SQEXLYcFwyrpRS4cZtVir0/TVa1D0VE59tj1RjWXkGUU gg== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3xq49x01h2-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 24 Apr 2024 15:17:04 +0000
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 43OFH3Ut032269;
-	Wed, 24 Apr 2024 15:17:04 GMT
-Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3xq49x01gs-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 24 Apr 2024 15:17:03 +0000
-Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma23.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 43OCad22015430;
-	Wed, 24 Apr 2024 15:17:02 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3xmshmc5aa-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 24 Apr 2024 15:17:02 +0000
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 43OFGuq732375212
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 24 Apr 2024 15:16:58 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 4CEC520040;
-	Wed, 24 Apr 2024 15:16:56 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9F3D32004D;
-	Wed, 24 Apr 2024 15:16:55 +0000 (GMT)
-Received: from li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com (unknown [9.155.204.135])
-	by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Wed, 24 Apr 2024 15:16:55 +0000 (GMT)
-Date: Wed, 24 Apr 2024 17:16:54 +0200
-From: Alexander Gordeev <agordeev@linux.ibm.com>
-To: Bui Quang Minh <minhquangbui99@gmail.com>
-Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Paul M Stillwell Jr <paul.m.stillwell.jr@intel.com>,
-        Rasesh Mody <rmody@marvell.com>,
-        Sudarsana Kalluru <skalluru@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
-        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
-        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Fabian Frederick <fabf@skynet.be>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Nilesh Javali <nilesh.javali@cavium.com>,
-        Arun Easi <arun.easi@cavium.com>,
-        Manish Rangankar <manish.rangankar@cavium.com>,
-        Vineeth Vijayan <vneethv@linux.ibm.com>,
-        Peter Oberparleiter <oberpar@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        Sunil Goutham <sgoutham@marvell.com>,
-        Linu Cherian <lcherian@marvell.com>,
-        Geetha sowjanya <gakula@marvell.com>, Jerin Jacob <jerinj@marvell.com>,
-        hariprasad <hkelam@marvell.com>,
-        Subbaraya Sundeep <sbhatta@marvell.com>,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Saurav Kashyap <saurav.kashyap@cavium.com>, linux-s390@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v2 5/6] cio: ensure the copied buf is NUL terminated
-Message-ID: <ZikiZsSTGUUM69GE@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
-References: <20240424-fix-oob-read-v2-0-f1f1b53a10f4@gmail.com>
- <20240424-fix-oob-read-v2-5-f1f1b53a10f4@gmail.com>
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="JbZOhrpT"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1e9320c2ef6so31542715ad.2
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 08:59:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1713974375; x=1714579175; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=3WnnPsbn6LQ0620dM71ztuHhda8zUa4oNBqxG0zPojc=;
+        b=JbZOhrpTlsJnQLzZ365dtjwupe70dJDCEXDimOBMkR3Bg7+zZd3iVL9+c/fblvuOJR
+         x0/p7JzcKbF5JES4niDrqp9telHI2uMJwCUzDwhUzTuXKR6QJJzAvzo4uhChsQDsbZmc
+         tiA0z6vwEp4T0MncXqV7aYzXI91gWY/TuKhuY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713974375; x=1714579175;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3WnnPsbn6LQ0620dM71ztuHhda8zUa4oNBqxG0zPojc=;
+        b=Brs140xelAdPs3GNVucvcR9OQbTuqCs9U4H39xLR1/yOi36Nvz3pKAv1w9s1jtIE3c
+         v9pXYH1eOH0B/KaJpjabtQEocfkT/Gfzi0fEsHTmnnJHRI0H6/bcqFDAsMNHBBGxyRpM
+         epK4QWyiXgB7D1hWQOFuX4GpNtewz+0CuPGtzbh3yhpghd+c/rTphNXVVaXzgTc+5+Vj
+         tO3gXDa5zMCVcA69+QXHEc39PKWbCW4WuBxYxGi8LaXGaIylf4CRb7eYUv+6Hit/9HRS
+         hzs5Q0K49vIaJf4Jqkt/VyQ4zBT4Y/xm8+xfs2+FpBSCUfR7l9M8Fv3cikl9lJBYE+iY
+         b/jA==
+X-Forwarded-Encrypted: i=1; AJvYcCVMjoHfdW4t8olMp8ipDg8bx1casZoOSfpdOG9L8oO4wCvu7LCNymGcTvDTddjaeGErzv/8He6bOrH3Se2j4uKzWD49E7wZpdKUpw==
+X-Gm-Message-State: AOJu0YzW/t4hBXhN7ELm4M8tw3u2MSjYCW5wAq2I+07VepEQK+uzG1n9
+	1K3KKs9PeIUzITWciHw+KGiINdResuEp/Ke/UmZMkLFFfdVHZquXGrl0lHJMEw==
+X-Google-Smtp-Source: AGHT+IFH25XoxrsKcb6phfTBuhyybN5yfvn80JCnlXdGkC8eys5A64GweFI7pjlxIx0ItdNyWbfEnQ==
+X-Received: by 2002:a17:903:11c3:b0:1e9:9c6e:9732 with SMTP id q3-20020a17090311c300b001e99c6e9732mr3467740plh.19.1713974374923;
+        Wed, 24 Apr 2024 08:59:34 -0700 (PDT)
+Received: from www.outflux.net ([198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id p9-20020a170902bd0900b001e4565a2596sm12100439pls.92.2024.04.24.08.59.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Apr 2024 08:59:34 -0700 (PDT)
+Date: Wed, 24 Apr 2024 08:59:33 -0700
+From: Kees Cook <keescook@chromium.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Justin Stitt <justinstitt@google.com>,
+	Andy Shevchenko <andy@kernel.org>, linux-hardening@vger.kernel.org,
+	Charles Bertsch <cbertsch@cox.net>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
+	linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com,
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH 1/5] string.h: Introduce memtostr() and memtostr_pad()
+Message-ID: <202404240858.0FDD390@keescook>
+References: <20240410021833.work.750-kees@kernel.org>
+ <20240410023155.2100422-1-keescook@chromium.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -105,29 +79,66 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240424-fix-oob-read-v2-5-f1f1b53a10f4@gmail.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: fZkGofveKPRbJZUl0Si2IEFY5soD-mFd
-X-Proofpoint-ORIG-GUID: JvjdeUHiZLMhgcceAmf2eHuewusCBopA
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
- definitions=2024-04-24_12,2024-04-24_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- adultscore=0 impostorscore=0 lowpriorityscore=0 malwarescore=0 bulkscore=0
- mlxscore=0 spamscore=0 suspectscore=0 mlxlogscore=892 phishscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2404010000 definitions=main-2404240059
+In-Reply-To: <20240410023155.2100422-1-keescook@chromium.org>
 
-On Wed, Apr 24, 2024 at 09:44:22PM +0700, Bui Quang Minh wrote:
-> Currently, we allocate a lbuf-sized kernel buffer and copy lbuf from
-> userspace to that buffer. Later, we use scanf on this buffer but we don't
-> ensure that the string is terminated inside the buffer, this can lead to
-> OOB read when using scanf. Fix this issue by using memdup_user_nul instead.
+On Tue, Apr 09, 2024 at 07:31:50PM -0700, Kees Cook wrote:
+> Another ambiguous use of strncpy() is to copy from strings that may not
+> be NUL-terminated. These cases depend on having the destination buffer
+> be explicitly larger than the source buffer's maximum size, having
+> the size of the copy exactly match the source buffer's maximum size,
+> and for the destination buffer to get explicitly NUL terminated.
 > 
-> Fixes: a4f17cc72671 ("s390/cio: add CRW inject functionality")
-> Signed-off-by: Bui Quang Minh <minhquangbui99@gmail.com>
-> ---
->  drivers/s390/cio/cio_inject.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> This usually happens when parsing protocols or hardware character arrays
+> that are not guaranteed to be NUL-terminated. The code pattern is
+> effectively this:
+> 
+> 	char dest[sizeof(src) + 1];
+> 
+> 	strncpy(dest, src, sizeof(src));
+> 	dest[sizeof(dest) - 1] = '\0';
+> 
+> In practice it usually looks like:
+> 
+> struct from_hardware {
+> 	...
+> 	char name[HW_NAME_SIZE] __nonstring;
+> 	...
+> };
+> 
+> 	struct from_hardware *p = ...;
+> 	char name[HW_NAME_SIZE + 1];
+> 
+> 	strncpy(name, p->name, HW_NAME_SIZE);
+> 	name[NW_NAME_SIZE] = '\0';
+> 
+> This cannot be replaced with:
+> 
+> 	strscpy(name, p->name, sizeof(name));
+> 
+> because p->name is smaller and not NUL-terminated, so FORTIFY will
+> trigger when strnlen(p->name, sizeof(name)) is used. And it cannot be
+> replaced with:
+> 
+> 	strscpy(name, p->name, sizeof(p->name));
+> 
+> because then "name" may contain a 1 character early truncation of
+> p->name.
+> 
+> Provide an unambiguous interface for converting a maybe not-NUL-terminated
+> string to a NUL-terminated string, with compile-time buffer size checking
+> so that it can never fail at runtime: memtostr() and memtostr_pad(). Also
+> add KUnit tests for both.
+> 
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Applied, thanks!
+FYI,
+
+As the string KUnit tests have seen some refactoring, I'm taking this
+patch and refactoring it onto my tree. Once the SCSI fixes are reviewed, if
+we want to land them in -next, it's probably easiest for them to go via
+my tree.
+
+-Kees
+
+-- 
+Kees Cook
