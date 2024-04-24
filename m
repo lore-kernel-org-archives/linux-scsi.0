@@ -1,59 +1,44 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FE7D143868;
-	Tue, 23 Apr 2024 21:18:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 823F5328DB
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 05:00:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713907132; cv=none; b=Oepp8k84rmu+uMoDAkeKUfOcUcyGbYoiDVHo2yqGPpf+HQtpUXAzMcJymgMbG8mttewKIcDkYw717AHPRC56vpS7lR5t8I/8p0RRX5Y9iDVgaUOj52uXCtyJBMo7Z3ZF5pmOfHZeA+kaLISz/WCZ+OMYThidiRPEN17w2CekIB4=
+	t=1713934843; cv=none; b=CylJaCaOsU+/17W/bxdEvltCjxMCkcM4S7nG/4tOEvqUB3bxm5kQxUGZL89m59nn1puT8zv7QEfMkVmpTWrnJYvhvxLZyxVgUw4myhAC4j61jldNXnTwUXUOgriPkHDkAOTKn8Yu86PfSZMvOVWJu0QkVAG6EnFmfS1084JYAcw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713907132; c=relaxed/simple;
-	bh=odZkNKxOuyBfEnaOqYjDaNuTGmJkTByxigLuItAxkuI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IjKDqBmMHAE8k3foU7BRvAnJ99Od/azQS8pIVFb2b0qwyIuIZHZipeVzU6vVErW9QhFLNicqpyZv1nkW+hLkx5U60AehExZhyDYzPsxIs01NWF8UV/AR4Vt92ziqX0QTBw9UQThQeNLndc2/BPJKnw53zZECk0KNN4OAdg0RdA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aqsQPL2o; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1713934843; c=relaxed/simple;
+	bh=ao7OQcZmdLwMtq0LXrStUfPWeIy5vwwYewymO8xOfGk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gt0OhjQ9tPNoZDLZunIl6oPqXkfMfNXq71D+9scCVRUb/A94+1N1QcotzfhlYeMbQls/2nJS9x1yuV+sFPwHYJXHpMsyASeyVVaejWbYB3PATjXznBh/3/XQmpkoNX/sZPq1JGunDZzp4LcL/N5L4maSvgvP35hoDttgj22RlaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=4V1nInOZ; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aqsQPL2o"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1713907131; x=1745443131;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=odZkNKxOuyBfEnaOqYjDaNuTGmJkTByxigLuItAxkuI=;
-  b=aqsQPL2o/7m7y0wmKsVfFCRYwRYpIM2GRWXfMs2bZTZGprLK7asjhKwS
-   1kbo5ot5HlYCO8rj9yIOtFLqsDjMmiWhA3o/YuwWFa/sFvsifPSsBqgS/
-   hItqN6CM0j4gCoP9AcRcsKQ1lq+DnXrOe1rJ/8raqqcugLB8u98X523bC
-   e+Ju8H2/limwi6qxVuQnlNhPhlu8ITiJnz0q20yi7kEyVAzFSlH9SIhWZ
-   Ku9nNKWvcvJubG1VlEtUegy9lh7b7QC4mvu0zwcJ1MCxeL4DpyTkneQdp
-   WCEV3Kay5YN+oCWo8fW62bQ5thH8wUVJWFj7op8RjHQWd82mgM3DIYV41
-   A==;
-X-CSE-ConnectionGUID: /ToywuwvSJ6bpGIPguBSsA==
-X-CSE-MsgGUID: yyNhyqdGRR2fyT47g10jdQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11053"; a="9623608"
-X-IronPort-AV: E=Sophos;i="6.07,222,1708416000"; 
-   d="scan'208";a="9623608"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Apr 2024 14:18:51 -0700
-X-CSE-ConnectionGUID: ZcCK3jZLT6mKBgqt5TMv6Q==
-X-CSE-MsgGUID: x8LCblCySIqS4mcEyvF+Wg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,222,1708416000"; 
-   d="scan'208";a="24526472"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmviesa006.fm.intel.com with ESMTP; 23 Apr 2024 14:18:49 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-	id 5595A28A; Wed, 24 Apr 2024 00:18:48 +0300 (EEST)
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 1/1] scsi: Don't use "proxy" headers
-Date: Wed, 24 Apr 2024 00:18:43 +0300
-Message-ID: <20240423211843.3996046-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.43.0.rc1.1336.g36b5255a03ac
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="4V1nInOZ"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=a8bRH9wZdl8Jspq814n02nI4lzQI3ApiT0uTFUVXPeA=; b=4V1nInOZfrcXr1uW2Sjuj+tikP
+	IkLvz5eMEYR45jHHWPORZ13qVE1I9ylS/OrKvgVufEDXbwKvQL2KI8odAHVTMawNGc+k0S7bjW4Lu
+	4mLOzOt+6m8Vi2TGpLNfUiYibr/mYX9aHfOlciTYLc4HdeyB4m08TByCXq+G+hYKHA6wkV5obFUDR
+	KOJmzzJDMUU3gcw/y3KrE02hYAxQTOsHLxnOtiXG0iXEDD1w4uhlwjuzcbagtioNLCiqo/1VOXV/N
+	/wIc23XDEcfCQPldJN4/cV9hqVfbMTvxfTzlUOSuLlconiVdP2PUGFQ8nnDWhu5ssQXSuOEMeSjPs
+	gZ3Q4/4g==;
+Received: from [50.53.4.147] (helo=bombadil.infradead.org)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1rzUkI-00000002bkb-3yjO;
+	Wed, 24 Apr 2024 05:00:39 +0000
+From: Randy Dunlap <rdunlap@infradead.org>
+To: linux-scsi@vger.kernel.org
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: libfc.h: add some kernel-doc comments
+Date: Tue, 23 Apr 2024 22:00:38 -0700
+Message-ID: <20240424050038.31403-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -62,30 +47,108 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Update header inclusions to follow IWYU (Include What You Use)
-principle.
+Complete the kernel-doc notation for enum fc_lport_state. This fixes
+7 kernel-doc warnings.
+In struct fc_rport_priv, change 'event_callback' to 'lld_event_callback'
+to match the struct member name.
+In struct fc_fcp_pkt, add a description for 'timer_delay' to eliminate
+one kernel-doc warning.
+Add return value notation for 3 functions. This fixes 3 kernel-doc
+warnings.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+There are still 12 warnings for struct members not described in struct
+fc_rport_priv and struct fc_lport, e.g:
+
+libfc.h:218: warning: Function parameter or struct member 'event' not described in 'fc_rport_priv'
+libfc.h:760: warning: Function parameter or struct member 'vlan' not described in 'fc_lport'
+
+Warnings that are fixed in this patch:
+
+libfc.h:75: warning: Enum value 'LPORT_ST_RNN_ID' not described in enum 'fc_lport_state'
+libfc.h:75: warning: Enum value 'LPORT_ST_RSNN_NN' not described in enum 'fc_lport_state'
+libfc.h:75: warning: Enum value 'LPORT_ST_RSPN_ID' not described in enum 'fc_lport_state'
+libfc.h:75: warning: Enum value 'LPORT_ST_RPA' not described in enum 'fc_lport_state'
+libfc.h:75: warning: Enum value 'LPORT_ST_DHBA' not described in enum 'fc_lport_state'
+libfc.h:75: warning: Enum value 'LPORT_ST_DPRT' not described in enum 'fc_lport_state'
+libfc.h:75: warning: Excess enum value 'LPORT_ST_RPN_ID' description in 'fc_lport_state'
+
+libfc.h:218: warning: Excess struct member 'event_callback' description in 'fc_rport_priv'
+
+libfc.h:793: warning: No description found for return value of 'fc_lport_test_ready'
+libfc.h:835: warning: No description found for return value of 'fc_lport_init_stats'
+libfc.h:856: warning: No description found for return value of 'lport_priv'
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 ---
- include/scsi/scsi.h | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ include/scsi/libfc.h |   18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index d90645f06a3a..96b350366670 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -7,8 +7,9 @@
- #define _SCSI_SCSI_H
- 
- #include <linux/types.h>
--#include <linux/scatterlist.h>
--#include <linux/kernel.h>
-+
-+#include <asm/param.h>
-+
- #include <scsi/scsi_common.h>
- #include <scsi/scsi_proto.h>
- #include <scsi/scsi_status.h>
--- 
-2.43.0.rc1.1336.g36b5255a03ac
-
+diff -- a/include/scsi/libfc.h b/include/scsi/libfc.h
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -44,11 +44,16 @@
+  * @LPORT_ST_DISABLED: Disabled
+  * @LPORT_ST_FLOGI:    Fabric login (FLOGI) sent
+  * @LPORT_ST_DNS:      Waiting for name server remote port to become ready
+- * @LPORT_ST_RPN_ID:   Register port name by ID (RPN_ID) sent
++ * @LPORT_ST_RNN_ID:   Register port name by ID (RNN_ID) sent
++ * @LPORT_ST_RSNN_NN:  Waiting for host symbolic node name
++ * @LPORT_ST_RSPN_ID:  Waiting for host symbolic port name
+  * @LPORT_ST_RFT_ID:   Register Fibre Channel types by ID (RFT_ID) sent
+  * @LPORT_ST_RFF_ID:   Register FC-4 Features by ID (RFF_ID) sent
+  * @LPORT_ST_FDMI:     Waiting for mgmt server rport to become ready
+- * @LPORT_ST_RHBA:
++ * @LPORT_ST_RHBA:     Register HBA
++ * @LPORT_ST_RPA:      Register Port Attributes
++ * @LPORT_ST_DHBA:     Deregister HBA
++ * @LPORT_ST_DPRT:     Deregister Port
+  * @LPORT_ST_SCR:      State Change Register (SCR) sent
+  * @LPORT_ST_READY:    Ready for use
+  * @LPORT_ST_LOGO:     Local port logout (LOGO) sent
+@@ -183,7 +188,7 @@ struct fc_rport_libfc_priv {
+  * @r_a_tov:        Resource allocation timeout value (in msec)
+  * @rp_mutex:       The mutex that protects the remote port
+  * @retry_work:     Handle for retries
+- * @event_callback: Callback when READY, FAILED or LOGO states complete
++ * @lld_event_callback: Callback when READY, FAILED or LOGO states complete
+  * @prli_count:     Count of open PRLI sessions in providers
+  * @rcu:	    Structure used for freeing in an RCU-safe manner
+  */
+@@ -289,6 +294,7 @@ struct fc_seq_els_data {
+  * @timer:           The command timer
+  * @tm_done:         Completion indicator
+  * @wait_for_comp:   Indicator to wait for completion of the I/O (in jiffies)
++ * @timer_delay:     FCP packet timer delay in jiffies
+  * @data_len:        The length of the data
+  * @cdb_cmd:         The CDB command
+  * @xfer_len:        The transfer length
+@@ -788,6 +794,8 @@ void fc_fc4_deregister_provider(enum fc_
+ /**
+  * fc_lport_test_ready() - Determine if a local port is in the READY state
+  * @lport: The local port to test
++ *
++ * Returns: %true if local port is in the READY state, %false otherwise
+  */
+ static inline int fc_lport_test_ready(struct fc_lport *lport)
+ {
+@@ -830,6 +838,8 @@ static inline void fc_lport_state_enter(
+ /**
+  * fc_lport_init_stats() - Allocate per-CPU statistics for a local port
+  * @lport: The local port whose statistics are to be initialized
++ *
++ * Returns: %0 on success, %-ENOMEM on failure
+  */
+ static inline int fc_lport_init_stats(struct fc_lport *lport)
+ {
+@@ -851,6 +861,8 @@ static inline void fc_lport_free_stats(s
+ /**
+  * lport_priv() - Return the private data from a local port
+  * @lport: The local port whose private data is to be retrieved
++ *
++ * Returns: the local port's private data pointer
+  */
+ static inline void *lport_priv(const struct fc_lport *lport)
+ {
