@@ -1,114 +1,68 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtpbgbr1.qq.com (smtpbgbr1.qq.com [54.207.19.206])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8B82139CEB
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 05:53:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2DF8153504
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 07:47:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.207.19.206
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713938005; cv=none; b=QeGUipJ0mZSTeYNsrLJwRlYz29pDEfW/7Pr5/3vumh2tnjex4zAOpljTB91ZXY0z0evrajPeRPX3N620MiXBmf2DB6j0z++5q1nqF0SnhCp7kVI+nRkziWq+fCfU3uIy6lqxOw1dRxZO0zR20aRSQuD9DvRzb/28U9kKJf1s5+k=
+	t=1713944857; cv=none; b=MnulsBL9Eefp+t6+uTEx9M+ieDUAg2VMimSWcnNU95lPjOEJ/mrD0NyiywP2lpULOfyXRbqYNfIBG5K3QlK59GNxdsIJUcPCpLeIhUf2fHCY55I7DNke6sPkcVtvActd7nr1++sOXa/ZNKPfUxPQQgQeclBQW3Zumz8Svp52uxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713938005; c=relaxed/simple;
-	bh=IRxJE/wIKbxOswf4pmb9STJKAX9/TsGdAvyH5AO9CW0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TUopNqMDqlPFp96Ldc3WIdszu5K2FdO2HT1VMFPETHxF7+g+7hXf9EPV7R9hPZeGUFjzQXX1o15sYDTmiImWGjY6bVOZkfBhFHGigJraVjSoKaSDT55Gz7V/5UZZhdQUB7kofba9clw+tBibWnfqgHZxWy4DfUIWBEFRwillxrE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=m2lJpM95; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="m2lJpM95"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=yQsNnqDaJ1cIMb3CJ4G/eD92oiIlTwLiMpxTp5fFPeI=; b=m2lJpM95/iMdV5ihLeH62AQlD9
-	jO/qwVWZE5SIMCFl86gh1IBjwFpkzKXIWahp9wuYys0EhuoD6dHVnazCQxL2L8kmdyD7BwFOxy6OU
-	JOKdJXRiuQY/BU30raEa5Ryz/uOTcoL+tiMzwlwh5WKbffbfPPQ6LVPxHgCtrpTCZNxcglxyXmjXC
-	xBTG5whS7abpkqItr3oVge6oBllRqgtJqPuIbHoFwJdThBcldMkiTCRTP5ODg4P5VY6u9MeLQnXZX
-	CbBeVG0LvVFVtKB75sT1V6/rYt1QMeOtpsJJJP7KZ2iX6IiVtHkhkMgZ6ptl0jQtkxZedxjv2Wy65
-	cmfQwRtg==;
-Received: from [50.53.4.147] (helo=bombadil.infradead.org)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1rzVZL-00000002lWc-1Pdp;
-	Wed, 24 Apr 2024 05:53:23 +0000
-From: Randy Dunlap <rdunlap@infradead.org>
+	s=arc-20240116; t=1713944857; c=relaxed/simple;
+	bh=GwfYEtEdorBv1h6qCWcbEOayFQW1OqjHWYypzeMXDfw=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type; b=ixitHeLvUqOPJ89lQp9A8LpWQby3yp3BwQD7UuvUx3coenfkw+e+Csk34UQ+Aep7NfCKh+MhDpnRsFXVuJOsdU5khOpLy+TLznrR8tz+g3mxlW8zxOjAUqcVHtunvx18u6jXgTJuSNJSo1TDySxHCjuKdT+zwXPwe2aI9DUX5ZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; arc=none smtp.client-ip=54.207.19.206
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+X-QQ-mid: bizesmtpsz1t1713944840trc2j3m
+X-QQ-Originating-IP: 0IcKWWtPfJaTPjsu0R4YZ6vrySQZ3E1liW8gGvkGKsI=
+Received: from winn-pc ( [113.57.152.160])
+	by bizesmtp.qq.com (ESMTP) with SMTP id 0
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 15:47:18 +0800 (CST)
+X-QQ-SSF: 01400000000000I0I000000A0000000
+X-QQ-FEAT: HPkwb3INVpAGiWRfmby7PFE/Qgq/fD7U9q8QZJgNiBVWvizLSP22YH1zRC6+I
+	UvpjpqHVKBtrKCWUwp9d92rUqL+1rj0rX1ToFHi4KIXfbeSrZ2g8mlqH4Za394Xf4uV+8Zl
+	f5vbH+/gKlTdXsUWgAcdZfzAUdMZ/QU8TCLouCrVeoibz6IxMtZ+z1OrypiCPszX4gkg/Bm
+	aEAVjRQDJfEjSE+btf89ibO2H9IfQkuOwrf+0of+kJV4B4YV0b1IAKwuD15N9bpZixcvaNK
+	4FTH/oCC740wkJzeEuDebnhCwt1MDBK5qYmA65EmEdO4LlNcB6T0DoZB5d6JdUaawHMFHVb
+	yqKupWh5/RJ+enO65n1Yw7unZfT9fUNNYjU79KfNpz9rbWIGWnwpGc8+ydj1A==
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 1879610637823835156
+Date: Wed, 24 Apr 2024 15:47:18 +0800
+From: Winston Wen <wentao@uniontech.com>
 To: linux-scsi@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	mpi3mr-linuxdrv.pdl@broadcom.com
-Subject: [PATCH] scsi: mpi3mr: fix some kernel-doc warnings in scsi_bsg_mpi3mr.h
-Date: Tue, 23 Apr 2024 22:53:22 -0700
-Message-ID: <20240424055322.1400-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.44.0
+Subject: unsafe shutdown during system restart
+Message-ID: <482E2895A2BA14A6+20240424154718.47b5976d@winn-pc>
+Organization: Uniontech
+X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtpsz:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6a-1
 
-Correct the name of a struct in kernel-doc to match the actual
-function name.
-Add kernel-doc comments for 2 reserved fields to match comments
-for other reserved fields.
-Correct the kernel-doc comments for a nested struct to eliminate
-kernel-doc warnings for them.
+Hi,
 
-Warnings fixed here are:
+I noticed that my hard drive had an unsafe shutdown during system
+restart. I have done some related research and found that a stop
+command will be sent to the hard drive during system shutdown, but
+not during system restart. 
 
-scsi_bsg_mpi3mr.h:419: warning: expecting prototype for struct mpi3mr_bsg_buf_entry_list. Prototype was for struct mpi3mr_buf_entry_list instead
+Is there a way to avoid the unsafe shutdown? Or is it the
+responsibility of the firmware to send the stop command to the hard
+drive before shutdown? 
 
-scsi_bsg_mpi3mr.h:435: warning: Function parameter or struct member 'rsvd2' not described in 'mpi3mr_bsg_mptcmd'
-scsi_bsg_mpi3mr.h:456: warning: Function parameter or struct member 'rsvd3' not described in 'mpi3mr_bsg_packet'
+And why doesn't the kernel send the stop command in system restart? I
+am indeed curious about it, and I would greatly appreciate it if anyone
+could help me clarify it. :)
 
-scsi_bsg_mpi3mr.h:456: warning: Excess struct member 'drvrcmd' description in 'mpi3mr_bsg_packet'
-scsi_bsg_mpi3mr.h:456: warning: Excess struct member 'mptcmd' description in 'mpi3mr_bsg_packet'
+Thanks!
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com
----
- include/uapi/scsi/scsi_bsg_mpi3mr.h |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+-- 
+Thanks,
+Winston
 
-diff -- a/include/uapi/scsi/scsi_bsg_mpi3mr.h b/include/uapi/scsi/scsi_bsg_mpi3mr.h
---- a/include/uapi/scsi/scsi_bsg_mpi3mr.h
-+++ b/include/uapi/scsi/scsi_bsg_mpi3mr.h
-@@ -401,7 +401,7 @@ struct mpi3mr_buf_entry {
- 	__u32	buf_len;
- };
- /**
-- * struct mpi3mr_bsg_buf_entry_list - list of user buffer
-+ * struct mpi3mr_buf_entry_list - list of user buffer
-  * descriptor for MPI Passthrough requests.
-  *
-  * @num_of_entries: Number of buffer descriptors
-@@ -424,6 +424,7 @@ struct mpi3mr_buf_entry_list {
-  * @mrioc_id: Controller ID
-  * @rsvd1: Reserved
-  * @timeout: MPI request timeout
-+ * @rsvd2: Reserved
-  * @buf_entry_list: Buffer descriptor list
-  */
- struct mpi3mr_bsg_mptcmd {
-@@ -441,8 +442,9 @@ struct mpi3mr_bsg_mptcmd {
-  * @cmd_type: represents drvrcmd or mptcmd
-  * @rsvd1: Reserved
-  * @rsvd2: Reserved
-- * @drvrcmd: driver request structure
-- * @mptcmd: mpt request structure
-+ * @rsvd3: Reserved
-+ * @cmd.drvrcmd: driver request structure
-+ * @cmd.mptcmd: mpt request structure
-  */
- struct mpi3mr_bsg_packet {
- 	__u8	cmd_type;
