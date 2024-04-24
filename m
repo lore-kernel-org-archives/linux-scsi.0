@@ -1,144 +1,102 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 972D816D9B3
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 15:59:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E00D16C6B0
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 16:52:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713974376; cv=none; b=H1JQOpKdUwDPObEV7jFmn9+11Ccgqkqlxd0jQ7cTvx5M9rhc78hxQq6w2qHFGLOo3wRZKOpCCxXqw+piW+V0bCSKI1jk66xYaEKLiORZkbiVw/DYjENbsB9Fbpoybg81Gb44/W4Atu9UqOVD4j1AyCC6E8vrxv4AvVahXdpfbzk=
+	t=1713977563; cv=none; b=nycSFocA8igTTDrC9vnTXVg9jQ2cFnby3eg1BLsye/nDyuqQmNYfZgbKiRr80VV4m9Ch7MUJjZDGiopL6C032IgdzgtKda58GDMU8S4XjVC3Dj+IKYDpxaKUk3ArPaf24gOYJ8a7YPmFxQDeSV6lhaanim3HDFhhhVDVSvrpito=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713974376; c=relaxed/simple;
-	bh=0GiSfYTnN6d165IOBQzb694rnUh8tyUWWbTI6T31ybQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GOkJU980Gi3xvIa2W9W0VoYVaVYP6i5xsjctP8KVN4Mk7Y4DwbjYexTjaVejQBphmndGe33YHN7l5OLhI4aPqMVDxb5MMqvEggWI12K5KZRCSabgAlZmmBLKrF60oZHFDWyDfUhBsUBi1LO1ykt0jPftmQ48cdMhFCbERXaQ5zE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=JbZOhrpT; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	s=arc-20240116; t=1713977563; c=relaxed/simple;
+	bh=kfefPbBv2p+596/zjC8TGqc/f+fUGhjZo9fBV6pyK+8=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=n6C4kBOy+A2sFebafjvAIaH6quzo9J6NfWgFTG3ptS9WAOSNunBRcEqSMai+uX/CTv7qMZO6WZTGQlAyss/9B3KtaVq+ESa/lM8xpO+UoBQEJ3SOJ7hnS0DexGM8zMPKMLd/wZSbn8ZXw/KbbbLrxtB79BXOSo6/7EsuIO16OJ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KnuOnN1C; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="JbZOhrpT"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1e9320c2ef6so31542715ad.2
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 08:59:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1713974375; x=1714579175; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=3WnnPsbn6LQ0620dM71ztuHhda8zUa4oNBqxG0zPojc=;
-        b=JbZOhrpTlsJnQLzZ365dtjwupe70dJDCEXDimOBMkR3Bg7+zZd3iVL9+c/fblvuOJR
-         x0/p7JzcKbF5JES4niDrqp9telHI2uMJwCUzDwhUzTuXKR6QJJzAvzo4uhChsQDsbZmc
-         tiA0z6vwEp4T0MncXqV7aYzXI91gWY/TuKhuY=
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KnuOnN1C"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1713977560;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=kfefPbBv2p+596/zjC8TGqc/f+fUGhjZo9fBV6pyK+8=;
+	b=KnuOnN1CPzc+DAS4I7f5ergwlFhB0hC0POYbAqHHx+p/v9b1d728UEsEGcK93t075H9w+x
+	4fCB5GklUuHpYY1FmKcjQ7uAO54qP88Sl3rRA7iz/8euhI7Mvm6qoUfeyc/lCwSrWZ5tPD
+	UsRpjCV1yiEROMkU2KVblE9BEGVk9uk=
+Received: from mail-yb1-f199.google.com (mail-yb1-f199.google.com
+ [209.85.219.199]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-592-cexH2YziMgq4QR4gDbJMYw-1; Wed, 24 Apr 2024 12:52:38 -0400
+X-MC-Unique: cexH2YziMgq4QR4gDbJMYw-1
+Received: by mail-yb1-f199.google.com with SMTP id 3f1490d57ef6-de45d8ec875so154300276.3
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Apr 2024 09:52:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1713974375; x=1714579175;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3WnnPsbn6LQ0620dM71ztuHhda8zUa4oNBqxG0zPojc=;
-        b=Brs140xelAdPs3GNVucvcR9OQbTuqCs9U4H39xLR1/yOi36Nvz3pKAv1w9s1jtIE3c
-         v9pXYH1eOH0B/KaJpjabtQEocfkT/Gfzi0fEsHTmnnJHRI0H6/bcqFDAsMNHBBGxyRpM
-         epK4QWyiXgB7D1hWQOFuX4GpNtewz+0CuPGtzbh3yhpghd+c/rTphNXVVaXzgTc+5+Vj
-         tO3gXDa5zMCVcA69+QXHEc39PKWbCW4WuBxYxGi8LaXGaIylf4CRb7eYUv+6Hit/9HRS
-         hzs5Q0K49vIaJf4Jqkt/VyQ4zBT4Y/xm8+xfs2+FpBSCUfR7l9M8Fv3cikl9lJBYE+iY
-         b/jA==
-X-Forwarded-Encrypted: i=1; AJvYcCVMjoHfdW4t8olMp8ipDg8bx1casZoOSfpdOG9L8oO4wCvu7LCNymGcTvDTddjaeGErzv/8He6bOrH3Se2j4uKzWD49E7wZpdKUpw==
-X-Gm-Message-State: AOJu0YzW/t4hBXhN7ELm4M8tw3u2MSjYCW5wAq2I+07VepEQK+uzG1n9
-	1K3KKs9PeIUzITWciHw+KGiINdResuEp/Ke/UmZMkLFFfdVHZquXGrl0lHJMEw==
-X-Google-Smtp-Source: AGHT+IFH25XoxrsKcb6phfTBuhyybN5yfvn80JCnlXdGkC8eys5A64GweFI7pjlxIx0ItdNyWbfEnQ==
-X-Received: by 2002:a17:903:11c3:b0:1e9:9c6e:9732 with SMTP id q3-20020a17090311c300b001e99c6e9732mr3467740plh.19.1713974374923;
-        Wed, 24 Apr 2024 08:59:34 -0700 (PDT)
-Received: from www.outflux.net ([198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id p9-20020a170902bd0900b001e4565a2596sm12100439pls.92.2024.04.24.08.59.34
+        d=1e100.net; s=20230601; t=1713977557; x=1714582357;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=kfefPbBv2p+596/zjC8TGqc/f+fUGhjZo9fBV6pyK+8=;
+        b=pE+KqCB5zxs//9vw1Xju8Dhc6RfxPLh93qhm2Mz30hKujc81XYuFDHgyEhOiua8XIg
+         9ETeQ6R8ma856CC9ApOTO1SBitlFf7/++ZrlcqCTrrMZHYLOEKtj6lFi3gS9mBabZBw/
+         /9Vh1aWseI/0cN/Y33UYoDqYHda4J73qCqMlzQKq9vTjNdjhhIBSpT9kizQdJU8m40n1
+         /oIYH1N6Cf3t4hscSnWBf2R1m9Sav4limdd0EZvCSe2qOO6LMu40AqEwlfAJ3RqfDGXp
+         95F+l2DW0SrNO0LS6IiFZ5qhAujCNBY7vXh1MsIi3USA/VbAKAqBGO2OuyiDTgKy7GA4
+         /S7w==
+X-Forwarded-Encrypted: i=1; AJvYcCWmW7srdGnIJv7528W/8UU8/HP2MVXOGzI8j7H55TJyURp05h/UFPM8EYmbxpFIbL2Lt4FKRW57YVCHzO1RgLuWOj11sGVKwRUrCw==
+X-Gm-Message-State: AOJu0YwEIZxKWuRmqgcEdVWpHxY8rWJyG7afF5cY1ggrxmThIneW5n/F
+	sUEzfVtVH1axgsc5F4+CKZyTUa0ToBE+5y7McZ8MAWtjXkT+ZHSsiNqvz+T2rTj1kcv2kf1o481
+	pt1y9WF3Sz7e8KbFpto9byton8yjmCPry3xrPgMDAP6kC6eSDTGccsvwzg2DpzZNqfXk=
+X-Received: by 2002:a25:69d4:0:b0:de4:6ef8:2778 with SMTP id e203-20020a2569d4000000b00de46ef82778mr3182307ybc.29.1713977556975;
+        Wed, 24 Apr 2024 09:52:36 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGxxIJ5pNf/rQZSNEQ6WCD/GhFmiR9OawjAA1kjrn2J9KGe/4EQ9u03lJmHfHkW3TQA4A0wsQ==
+X-Received: by 2002:a25:69d4:0:b0:de4:6ef8:2778 with SMTP id e203-20020a2569d4000000b00de46ef82778mr3182292ybc.29.1713977556646;
+        Wed, 24 Apr 2024 09:52:36 -0700 (PDT)
+Received: from ?IPv6:2600:6c64:4e7f:603b:fc4d:8b7c:e90c:601a? ([2600:6c64:4e7f:603b:fc4d:8b7c:e90c:601a])
+        by smtp.gmail.com with ESMTPSA id 185-20020a250bc2000000b00dc74d5e3ff7sm3206694ybl.31.2024.04.24.09.52.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Apr 2024 08:59:34 -0700 (PDT)
-Date: Wed, 24 Apr 2024 08:59:33 -0700
-From: Kees Cook <keescook@chromium.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Justin Stitt <justinstitt@google.com>,
-	Andy Shevchenko <andy@kernel.org>, linux-hardening@vger.kernel.org,
-	Charles Bertsch <cbertsch@cox.net>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Himanshu Madhani <himanshu.madhani@oracle.com>,
-	linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com,
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH 1/5] string.h: Introduce memtostr() and memtostr_pad()
-Message-ID: <202404240858.0FDD390@keescook>
-References: <20240410021833.work.750-kees@kernel.org>
- <20240410023155.2100422-1-keescook@chromium.org>
+        Wed, 24 Apr 2024 09:52:36 -0700 (PDT)
+Message-ID: <134b44cec24e0480f8df4e9bc0f0c1e28df24887.camel@redhat.com>
+Subject: Re: unsafe shutdown during system restart
+From: Laurence Oberman <loberman@redhat.com>
+To: Winston Wen <wentao@uniontech.com>, linux-scsi@vger.kernel.org
+Date: Wed, 24 Apr 2024 12:52:35 -0400
+In-Reply-To: <482E2895A2BA14A6+20240424154718.47b5976d@winn-pc>
+References: <482E2895A2BA14A6+20240424154718.47b5976d@winn-pc>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240410023155.2100422-1-keescook@chromium.org>
 
-On Tue, Apr 09, 2024 at 07:31:50PM -0700, Kees Cook wrote:
-> Another ambiguous use of strncpy() is to copy from strings that may not
-> be NUL-terminated. These cases depend on having the destination buffer
-> be explicitly larger than the source buffer's maximum size, having
-> the size of the copy exactly match the source buffer's maximum size,
-> and for the destination buffer to get explicitly NUL terminated.
-> 
-> This usually happens when parsing protocols or hardware character arrays
-> that are not guaranteed to be NUL-terminated. The code pattern is
-> effectively this:
-> 
-> 	char dest[sizeof(src) + 1];
-> 
-> 	strncpy(dest, src, sizeof(src));
-> 	dest[sizeof(dest) - 1] = '\0';
-> 
-> In practice it usually looks like:
-> 
-> struct from_hardware {
-> 	...
-> 	char name[HW_NAME_SIZE] __nonstring;
-> 	...
-> };
-> 
-> 	struct from_hardware *p = ...;
-> 	char name[HW_NAME_SIZE + 1];
-> 
-> 	strncpy(name, p->name, HW_NAME_SIZE);
-> 	name[NW_NAME_SIZE] = '\0';
-> 
-> This cannot be replaced with:
-> 
-> 	strscpy(name, p->name, sizeof(name));
-> 
-> because p->name is smaller and not NUL-terminated, so FORTIFY will
-> trigger when strnlen(p->name, sizeof(name)) is used. And it cannot be
-> replaced with:
-> 
-> 	strscpy(name, p->name, sizeof(p->name));
-> 
-> because then "name" may contain a 1 character early truncation of
-> p->name.
-> 
-> Provide an unambiguous interface for converting a maybe not-NUL-terminated
-> string to a NUL-terminated string, with compile-time buffer size checking
-> so that it can never fail at runtime: memtostr() and memtostr_pad(). Also
-> add KUnit tests for both.
-> 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+On Wed, 2024-04-24 at 15:47 +0800, Winston Wen wrote:
+> Hi,
+>=20
+> I noticed that my hard drive had an unsafe shutdown during system
+> restart. I have done some related research and found that a stop
+> command will be sent to the hard drive during system shutdown, but
+> not during system restart.=20
+>=20
+> Is there a way to avoid the unsafe shutdown? Or is it the
+> responsibility of the firmware to send the stop command to the hard
+> drive before shutdown?=20
+>=20
+> And why doesn't the kernel send the stop command in system restart? I
+> am indeed curious about it, and I would greatly appreciate it if
+> anyone
+> could help me clarify it. :)
+>=20
+> Thanks!
+>=20
+Which Distro are you using, where you are seeing this.
+And what is the kernel version.
 
-FYI,
+Regards
+Laurence
 
-As the string KUnit tests have seen some refactoring, I'm taking this
-patch and refactoring it onto my tree. Once the SCSI fixes are reviewed, if
-we want to land them in -next, it's probably easiest for them to go via
-my tree.
-
--Kees
-
--- 
-Kees Cook
