@@ -1,33 +1,40 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout.web.de (mout.web.de [212.227.15.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E96581CFA9;
-	Thu, 25 Apr 2024 10:47:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B40B612A177;
+	Thu, 25 Apr 2024 11:31:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714042057; cv=none; b=foVWXwpcNiV/MRd/CsG4nZS2xk+ukhboEIaWCEt1L9SyL/+QcJYunNYFE1Ccq2BxVRdKRDXTYc7fWOZ8b6zfpCCrlPIzRLGQqWUj7uM+Ci/mYSceI9d38HMeV/2X0Gjjq8K0zhHt0Kh2iMm2IuNwdXk4NQ1riBOFNxw+Oy6bpMU=
+	t=1714044699; cv=none; b=F/dlZlUbEcWbdcd6sjAFYK2OyzjP7p/qrkYAZfAnINlcB7VpMtTHrK/KhyldfYgZHhwHJyOEEQUz26U5bZ02w0HWytkurZ4NrsI3cFrup4eZZRM6HGIV8dNpxXqq8sIhsDsJVE5vYDh7XDfExLMxaQoGrN4zAdpur4o22hZk4Ng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714042057; c=relaxed/simple;
-	bh=l2oN0apwOiempgVQoJgZseQpsSAT0VXcChaYnxGf5No=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EdT8w1ZR3bwJ1uYnwnWnvYbWRWnqVsIufb0Tgn+DgWR8I2A6OGb7OwfqUeMgQCnGlcDgyxwqWlr/C+l1EdepmoKQ4IH0rYyHtKfhfXcfnsYBir1SvxGyGqGsmEsvE+u8TX/nYeDsaIr9vQE1aXNgU5AvBSqW2/Ug/+rPuoSbI5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=grUwHalg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714044699; c=relaxed/simple;
+	bh=Ez2bxHXu5SIbri+3JxnQYlp/HhXRtM9O9+3SjmOrYl8=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=O33qsR8ibg1LI0os2moBUnbHPgVWFPRbXN1sw47IHfr8Yh9R8um6EQAcGeUbXVBB5pWDTgYu/cx8Qd8+zgMEXy0hwqW/RgjtBEVdn6/CP391+/pY95hAgV4WdhaZhHHh9tuA0LoDrdRXcTXbOEgqi4ViFrsisCwzzSnXYVf5SYE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=JDgv6BOS; arc=none smtp.client-ip=212.227.15.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="grUwHalg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8685C2BBFC;
-	Thu, 25 Apr 2024 10:47:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714042056;
-	bh=l2oN0apwOiempgVQoJgZseQpsSAT0VXcChaYnxGf5No=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=grUwHalgTFeirub4RVOOgYoOFWiFJT7ZuWldcDOCNt/9OhA6Q9AISETZbg+78W3Nh
-	 bqUz4vpDhUmJqN/rkNOAwc/4WmkDGQoD7Y9Bq1pqbGmrG3jqU+9N61epUzUSbslHoi
-	 p4hln/h3yFHopxYsWvz0s2rpQ8py14u5d0aRXAzv+6FAxbmWVhqiobYAz/dy6pFlyB
-	 smPcuITe3RCuIcxgRvzgv5N0Bj+JArZb2GhOgEYRS92kG+IEENBPEQ08jX/6FVWF+p
-	 wJmWkVvBvrfrUaR0v34xA5/agrcXEPWTmiiulr+m1pI32Gt30TsmSHHBZ2mAXsvtBa
-	 UyZVMyl2bdg5A==
-Message-ID: <97b173c3-052f-498c-b0f9-58e60e9f29cf@kernel.org>
-Date: Thu, 25 Apr 2024 12:47:27 +0200
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="JDgv6BOS"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1714044671; x=1714649471; i=markus.elfring@web.de;
+	bh=Ez2bxHXu5SIbri+3JxnQYlp/HhXRtM9O9+3SjmOrYl8=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=JDgv6BOS+3ptpfg/FGSvGR/jwOZ0ShR0z/Ulf/cX78rpae/JrXHyi8q/qGmGYhuS
+	 BWP18nkCLwBOKchkwCEYFlt1qQETat3VpvGnC1QXEnyGC15lZMLK2Nt4m3Bb+vQjV
+	 eVq4n4CqAQywhoK3NyPcMgCEWBGQp1UjyOQiz0qpuVyE2chuEoGQEJ9jUGkEgsljP
+	 XBSkuQk9zBFk2SieVGMS63owBH303N62ElWcaUm827xRu6w/lU6a413yKwMp3XFTp
+	 MTfuktHH1/tM3eTjstdY1oSDYCT6/AsvGQZtYRjKXU+ByHonjrodUY3l547eAwJgl
+	 ZlMKrBwm26a2YvYxXw==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.21] ([94.31.85.95]) by smtp.web.de (mrweb006
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 1MtPvm-1spIDR1Tgs-00utGA; Thu, 25
+ Apr 2024 13:31:11 +0200
+Message-ID: <443fb75b-948b-430f-be33-170e6f592280@web.de>
+Date: Thu, 25 Apr 2024 13:31:02 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,155 +42,56 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 00/14] HSI2, UFS & UFS phy support for Tensor GS101
-To: Peter Griffin <peter.griffin@linaro.org>
-Cc: mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org,
- krzk+dt@kernel.org, conor+dt@kernel.org, vkoul@kernel.org,
- kishon@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
- bvanassche@acm.org, s.nawrocki@samsung.com, cw00.choi@samsung.com,
- jejb@linux.ibm.com, martin.petersen@oracle.com,
- James.Bottomley@hansenpartnership.com, ebiggers@kernel.org,
- linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
- devicetree@vger.kernel.org, linux-clk@vger.kernel.org,
- linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org,
- andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
-References: <20240423205006.1785138-1-peter.griffin@linaro.org>
- <1c6f5984-7f9f-47e3-98c3-3c3671512675@kernel.org>
- <CADrjBPq_0nUYRABKpskRF_dhHu+4K=duPVZX==0pr+cjSL_caQ@mail.gmail.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 fv0=
-In-Reply-To: <CADrjBPq_0nUYRABKpskRF_dhHu+4K=duPVZX==0pr+cjSL_caQ@mail.gmail.com>
+To: Yongzhi Liu <hyperlyzcs@gmail.com>,
+ GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+ kernel-janitors@vger.kernel.org,
+ James Bottomley <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Nilesh Javali <njavali@marvell.com>, Saurav Kashyap <skashyap@marvell.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+ Himanshu Madhani <himanshu.madhani@oracle.com>, huntazhang@tencent.com,
+ jitxie@tencent.com
+References: <20240425093744.22207-1-hyperlyzcs@gmail.com>
+Subject: Re: [PATCH] scsi: qla2xxx: Fix double free of fcport in error
+ handling path
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20240425093744.22207-1-hyperlyzcs@gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:qgYE2j9FnfcZ5w3AGFM0qf7qU03OwoE/pxhkXiYg3RKajS0rl5K
+ Er/6ZWmyWgSnhtwheqS4bpaCVVti+dEhPCKrdBJYq+CJVeFcLGCpfX55k/aTZvC0MN4w9HA
+ ZlkAed4Vnf8E6zgeIpUL99xEJm9pN9z2c4wTluiRn+d5TeUyacUTWCu/bymspQA9DF9mVa5
+ Au9bHiXP6t8t8UbEcZQBw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:gRl9QCJFNIU=;d8YLuQIeac7D/k7QKBPPGe8MT+R
+ pE5GZJ+hXkDYikK+jF5vES6Rva2pvjw8U1lDsnkNN//V/z7fNAOIrLv8SY2659RNMzu8BnBjw
+ vCqaZpgMI1Rmvr1qU1C4sRya9mZAHzDDOcCcRIElQ3qdMr10qRJD0/xloF3oiZtOH2N1Krx9f
+ 7zfgmJrCYpqUGfLbbPvNplIokWKpa409Q4kLEX5lL2EhLP55L/3+YZnWrTxnfktNiGflIVf7K
+ 88FY0Q0Xr1zaqeuvoEtpXFVmnQFVXv075e+jLAKs4hM5l0WLRINF2mlXFY3tTqbD8UbdjSlp0
+ Fz0PeNhI23FGzLwXznEGgxhn5PGu70qyWNZwu1xkcEL9iEsVq06rn9gRiXZRFzS4bH/Ib7JPP
+ p3sFKdd5mKgl8I+C0agY6bdWSaR7shVDM5QkiJvlmvABwASnVKmPabC2mPYha1jn1Uc7nQWfv
+ 2KOMgOG8DVPw6Ldg4ULsSmvqOR9UtdjOyCP6v7UnQklsbCFITaxNbOcWSHrQOEQtZDrks1cnk
+ mbi7Xo3461cPhQr1UwWpYPv5d5Ry4TiPXRHDxllD6yGI9nuqIm37ACTclNFlpqNz65jen4KTw
+ 9x9iO0Ixft8Q7J5CkkSYgynAioedrD++itK4gNw8aCwfv1lIeEUz9ZNV1Un2QtT51QXJcZm0S
+ FQDUWDI0e7LBy5lUrpglb/L1KcPl9284hZG51GjqaXJqn9lkiNJyPWAlmWj0z/ZDmLc6tXYAZ
+ 0tW8RzO9pcQEih4f/Qv77TZchm0wQNMjXw4H+Ygdr2/qOvjHxBd7RQrS+USSIVuZpN87uUPMN
+ ugW/tcp9X+ouUI2tyc4AvQcRYH9vCltfNNxlshR4bJEV0=
 
-On 25/04/2024 12:31, Peter Griffin wrote:
-> Hi Krzysztof,
-> 
-> On Thu, 25 Apr 2024 at 08:08, Krzysztof Kozlowski <krzk@kernel.org> wrote:
->>
->> On 23/04/2024 22:49, Peter Griffin wrote:
->>> Hi James, Martin, Alim, Bart, Krzysztof, Vinod, all
->>>
->>> Firstly, many thanks to everyone who reviewed and tested v1.
->>>
->>> This series adds support for the High Speed Interface (HSI) 2 clock
->>> management unit, UFS controller and UFS phy calibration/tuning for GS101
->>> found in Pixel 6.
->>>
->>> With this series applied, UFS is now functional on gs101. The SKhynix
->>> HN8T05BZGKX015 can be enumerated, partitions mounted etc. This allows us to
->>> move away from the initramfs rootfs we have been using for development so far.
->>>
->>> Merge Strategy
->>> 1) UFS driver/bindings via UFS/SCSI tree (James / Martin / Alim)
->>> 2) GS101 DTS/DTSI should go via Krzysztofs Exynos SoC tree
->>> 3) Clock driver/bindings via Clock tree (Krzysztof / Stephen)
->>> 4) PHY driver/bindings via PHY tree (Vinod)
->>>
->>> The v2 series has been rebased on next-20240422, as such all the phy parts
->>> which were already queued by Vinod have been dropped. Two new phy patches
->>> are added to address review feedback received after the patches were queued.
->>>
->>> The series is broadly split into the following parts:
->>> 1) dt-bindings documentation updates
->>> 2) gs101/oriole dts & dtsi updates
->>> 3) Prepatory patches for ufs-exynos driver
->>> 4) GS101 ufs-exynos support
->>> 5) gs101 phy fixes
->>>
->>
->> I asked to split, otherwise please explain why PHY and UFS depends on
->> DTS and clk.
-> 
-> Seems I misunderstood your feedback. I thought you just want me to
-> make clear who was merging what from the series via which tree. But
-> you want separate series?
-> 
-> 1) ufs host dt bindings & driver
-> 2) minor phy fixes series (most patches got applied already for phy)
-> 
-> What do you want for cmu_hsi2 clocks and dts/dtsi? The device tree
-> depends on the clock bindings to compile
+=E2=80=A6
+> Fix this by cleaning up the redundant qla2x00_free_fcport().
+=E2=80=A6
 
-This is not specific to Samsung Soc, Qualcomm soc or any other arm-soc.
-Independent patches for different subsystems should not be put together
-in one patchset. You create false impression of dependencies, grow CC
-list, cause issues when applying (I cannot just apply entire set with
-one command, but need to run multiple commands (!!!), plus certain
-subsystems will reject your patchset because they take everything or
-nothing) and possible bisection issues (because patches which should be
-tested independently, are put together so testing does not uncover
-undocumented dependencies).
+I suggest to avoid duplicate error handling code a bit more
+also for the implementation of the function =E2=80=9Cqla24xx_els_dcmd_iocb=
+=E2=80=9D.
+https://elixir.bootlin.com/linux/v6.9-rc5/source/drivers/scsi/qla2xxx/qla_=
+iocb.c#L2751
 
-Almost never combine independent patches which are targeted to entirely
-different subsystems. There are exceptions, but regular feature work is
-not one of them.
+See also:
+https://wiki.sei.cmu.edu/confluence/display/c/MEM12-C.+Consider+using+a+go=
+to+chain+when+leaving+a+function+on+error+when+using+and+releasing+resourc=
+es
 
-Subsystem is everything in top level of drivers/ and drivers/soc/ (or
-kind of arch/arm64/boot/dts/, but that tricky because
-Tesla/Google/Exynos are one subsystem). Or whatever is there in
-MAINTAINERS file.
-
-I don't know, we keep repeating this over multiple times, so it could be
-added to some docs, but people do not read docs...
-
-1. Drivers and driver bindings go to subsystems.
-2. DTS and board compatibles go to soc.
-a. Any dependency on driver is a near-NAK.
-b. Any dependency on headers must be clearly expressed, because headers
-cannot be back-merged from subsystem tree to DTS tree.
-c. Any usage or usage of bindings from other sets must be clearly
-expressed (linked).
-3. drivers/soc go to soc.
-
-Things from list above targeting the same maintainer tree, can be
-combined in one series, with dependencies expressed in patch changelogs
-or cover letter.
-
-Best regards,
-Krzysztof
-
+Regards,
+Markus
