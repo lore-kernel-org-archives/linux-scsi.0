@@ -1,112 +1,128 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+Received: from mail-oo1-f43.google.com (mail-oo1-f43.google.com [209.85.161.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F154D28F7;
-	Thu, 25 Apr 2024 09:37:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3426208B0
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Apr 2024 10:31:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714037879; cv=none; b=EFdbdm8wVGETxwsk1XsBSuiG+ETAZNkDRxVdwhxct67k4/oiGIaNLhxRVp9N2TwJ27uMQf02T7UELeT87lNtHYOgKJfFo+pkmjIzr06yaZdYca1T+6fwuN5vc3DUH1/Gu7OPC71U+8UqItESXoO2O4oeTJ6MCc5AiTbNbKCymrg=
+	t=1714041074; cv=none; b=clOJq1WZnxu4dCtx2FVjKLBDyAR/QsUavS97dG8TQSY45QgXraqgm85sQHdq0wF2CH+7w+itupV4gR+ykUoqpiVanxWAm1EkUlFmkzIx/FujEFhdJvbDBObnPxxY9um90t4G7YYa0VYqApmU8XPWGD+SpHzEl7/Vs7fH0CIScJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714037879; c=relaxed/simple;
-	bh=B2QnoUC7+LFWaRs4o1LMiByLwNslJDQSlWXTtB7gBKk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Evlp9CN6TP0BHwf/gA6qRdokCxZIxeq6fZGGZi2Fdtu9sIwZRi+a4jpVawKxe1sZb+p4jEG4Uxi/e+Eb00cPreJ9M+TbBpoaCckqPN4G8JeHc88vLTTB2ZVFT7XUiQ8c6DmRks6EURhkfhyueSIVGbmMLRfMuQkX0hUanEaLK6w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Iu2Awh/K; arc=none smtp.client-ip=209.85.210.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1714041074; c=relaxed/simple;
+	bh=xN9PtKBvyMktmSfmEeNUmxWtUYxk59jPOkkFgsg7R2o=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=SRx2U5Z2NU/Ug5EBRM5gZURQ2MWHISZA1Fxjs1FpEjygfQQ5SccVTWecORHNkr3o8AgVTGUXBopGXreN4NjhSlGmm40jik8iGGHcpsYQQmiITy70s9aUPV7jtbjgFfFh5YgxUA2RQxwhJ5DKx5RP9lTt/UM01qHH1RbSOHwv2v0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Dxlnf/mo; arc=none smtp.client-ip=209.85.161.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Iu2Awh/K"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6ed3cafd766so731153b3a.0;
-        Thu, 25 Apr 2024 02:37:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Dxlnf/mo"
+Received: by mail-oo1-f43.google.com with SMTP id 006d021491bc7-5ad2da2196bso383980eaf.3
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Apr 2024 03:31:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714037877; x=1714642677; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=DGzKI3EXkY4x8FVQwjB0FHYCOu3rJrUkYNddsUIIYmA=;
-        b=Iu2Awh/Ka6kuC281L6SjyUCRTkiqHdwpi7c6TJ2WZUgMv874GqbkO7YXTR2j3DzFDT
-         c9Pq+slq33ZK9RuYFOr9pE5JIIobSRmh5kcGzMoFk8DyMgFWNCxBgzsEeY3xawepdQ6V
-         p3NXlKuZRTp0FaPT9vWPi2XjdQ6suekoRiTc870WdKPots+6ZOBrvpZtf7UUJhHWja/S
-         HIOsnyjalMOfUICpf5TH+HWB2ZI4Lf8M7SJzmA5J6roNc9j1tHL4w8ILgv86QUAtmpXV
-         Y4gCqVbOiCIB5bpVvahdqWJg1WZmJiug1Oq3Yp86P6NHjbBTOUhRjt+lRwGQPoUps9JM
-         OtSw==
+        d=linaro.org; s=google; t=1714041072; x=1714645872; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=xN9PtKBvyMktmSfmEeNUmxWtUYxk59jPOkkFgsg7R2o=;
+        b=Dxlnf/moo14SsVqyHA/PQOXlfZmr6ZihgMMXZPQbNsoq6DN2Uw5TkRu5yWnmVqCTxo
+         FGoxjlTiKTsVJs3Aq5aa+7dVDc8/zccq6VGlmkr4h4AHurD+f/iE/FtYWabLYbfCYEie
+         tosakCbp8T9AVkLbF+chNAd7rjaljSRRgHyMoBS/ASn+HllLnCgWGddcUlbJfDFzRtQM
+         JY7HS4YvSH+XC3m+5tR7RU20VLsfwgKnSp9nYNOim+zlYMq8LPW7BF2s9jTueNbj5WFW
+         8wkLWIOdyXyMQUyWGMTrLwp1Vd4albeZpOq5/Z53mL9kCZ4H2QX7S8pgLJ7/0VVJpwkm
+         VGbQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714037877; x=1714642677;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=1e100.net; s=20230601; t=1714041072; x=1714645872;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=DGzKI3EXkY4x8FVQwjB0FHYCOu3rJrUkYNddsUIIYmA=;
-        b=dn0ZuzOutgdGWL3Q6aO745+nq3p0pOpV0ue1/4bhPxCDD76Ew9mMdTj1iptaqcXb7K
-         pOYIi2zCfycDplrF0VXTd6MI7d9O1j0ye3npBBBKC9Vy5GMld0aZotbBVguOimGluLq7
-         vbCA+wOWxswfuQcPBE93WyOYAGS1MrNDhiiIlePr5Qlyak9DrP0UEQUyYTRr/UTRlGz8
-         2STnCTDNqYSYbuI5bikQph7zUubGfsyf/Z07FXl1k13GqYyLsgT3Bdl8fPmmh05W6Xe0
-         sl9k1d+E/sLjgzwdjI2+eEBmrcIDzKesMgQXWUYoh9d2NRz7c2qF5Ypg4aeZzO4GuUqH
-         +qiQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUL+7aah29PiEMeOgjyW8KACfZg5gVFPYw2DRyCpUgLa2qVOvM+YecCEeOujfno9lWm1Nwf3jX65SROTDti1sbBCofs06//VPzJdRIHsMruCQoe6RmVTMH45lZePiTEVVreldQ8sv065w==
-X-Gm-Message-State: AOJu0YyDBBEmKE1MbM0DUT+V17FS4UEta6FlPQZ1GSknJlHT3j6IMyat
-	gs+o7xr9qdHQmi5ANVyr1Rv/MkDHBCH0SJVVyS3GcewB2v/6dE/M
-X-Google-Smtp-Source: AGHT+IFKAcb89md+m4w+P6J7vPjdhv1NtjyZqxzk8PLc206EV3uuh6oa2kHLHIULqqT3GsbHEbilxQ==
-X-Received: by 2002:a05:6a00:190c:b0:6ed:de6f:d762 with SMTP id y12-20020a056a00190c00b006edde6fd762mr6411562pfi.6.1714037877239;
-        Thu, 25 Apr 2024 02:37:57 -0700 (PDT)
-Received: from VM-147-239-centos.localdomain ([43.132.141.3])
-        by smtp.gmail.com with ESMTPSA id u11-20020a056a00124b00b006eab7ca005esm13209145pfi.18.2024.04.25.02.37.54
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 25 Apr 2024 02:37:56 -0700 (PDT)
-From: Yongzhi Liu <hyperlyzcs@gmail.com>
-To: skashyap@marvell.com,
-	njavali@marvell.com,
-	martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com
-Cc: himanshu.madhani@oracle.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	jitxie@tencent.com,
-	huntazhang@tencent.com,
-	Yongzhi Liu <hyperlyzcs@gmail.com>
-Subject: [PATCH] scsi: qla2xxx: Fix double free of fcport in error handling path
-Date: Thu, 25 Apr 2024 17:37:44 +0800
-Message-Id: <20240425093744.22207-1-hyperlyzcs@gmail.com>
-X-Mailer: git-send-email 2.36.1
+        bh=xN9PtKBvyMktmSfmEeNUmxWtUYxk59jPOkkFgsg7R2o=;
+        b=mnWxGuiRLSk2oVlOTULs+h2YzPoOUCdGIdR0VBaw8P7jiqtpCBbmmIMRlIKrg0Eyfj
+         IzXB/1U8Ak4JYwFmrLKCkREB6HpE9u3XL3yMgkloau3iwJi1DChkFkIIr+3BX3ENuuGW
+         oQEf4+INPtxwBPxGlr9Wrr79is3BCYqxCv6fyYeohyYo2LSnzmTyicpUIdeFNNZEQmLM
+         xTQFocPRxZiBW+PRLLzK93qJhn3omDMkI2Xve5TfNsZaWJNvxwZWXgHd5UyfZ2ZgrIjL
+         L5+27b9t5YwXiTRIXhcTE5VNqKX9VXSAer+UmcDcZu3kieatt+Ra4V1AfOo/4q+MbAN5
+         cgTA==
+X-Forwarded-Encrypted: i=1; AJvYcCWEumhxwOS5xYXxofg1LlY7BDejq8R9ypwzrS8TKFo8kRyf8Z1CWUVAyZBxlNnW46Np/BHjjmpIisVR6yMyM8b9/qQoQR1xn/X99g==
+X-Gm-Message-State: AOJu0Yz3gYMTMQnF3r3MlEf21tlwJOwdN0Fb9bC69G0n4kOc5gso45HY
+	0QM6jGwVRzHNfqS0n1TAmCOOtlhFQdMDU15DxVmE/6apAKdCFlUMjGkaDMtxvYoNXaNtn7otIQY
+	yYD8KsP784M0Y/4pC3/w9SFiavIaAFK2QvTiAUg==
+X-Google-Smtp-Source: AGHT+IGO/471Mzvi/y2z1aDjn5L+UJBxWcuj8IJK6cDIoDb05k6uE4IKvnf9QACW7GCx8TFESueCWiwBoN73OQOn6LA=
+X-Received: by 2002:a4a:ab82:0:b0:5ac:bdbf:8a31 with SMTP id
+ m2-20020a4aab82000000b005acbdbf8a31mr5448764oon.8.1714041071820; Thu, 25 Apr
+ 2024 03:31:11 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20240423205006.1785138-1-peter.griffin@linaro.org> <1c6f5984-7f9f-47e3-98c3-3c3671512675@kernel.org>
+In-Reply-To: <1c6f5984-7f9f-47e3-98c3-3c3671512675@kernel.org>
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Thu, 25 Apr 2024 11:31:00 +0100
+Message-ID: <CADrjBPq_0nUYRABKpskRF_dhHu+4K=duPVZX==0pr+cjSL_caQ@mail.gmail.com>
+Subject: Re: [PATCH v2 00/14] HSI2, UFS & UFS phy support for Tensor GS101
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: mturquette@baylibre.com, sboyd@kernel.org, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, vkoul@kernel.org, kishon@kernel.org, 
+	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	s.nawrocki@samsung.com, cw00.choi@samsung.com, jejb@linux.ibm.com, 
+	martin.petersen@oracle.com, James.Bottomley@hansenpartnership.com, 
+	ebiggers@kernel.org, linux-scsi@vger.kernel.org, 
+	linux-phy@lists.infradead.org, devicetree@vger.kernel.org, 
+	linux-clk@vger.kernel.org, linux-samsung-soc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	tudor.ambarus@linaro.org, andre.draszik@linaro.org, saravanak@google.com, 
+	willmcvicker@google.com
+Content-Type: text/plain; charset="UTF-8"
 
-When dma_alloc_coherent() or qla2x00_start_sp() return an error,
-the callback function qla2x00_els_dcmd_sp_free in qla2x00_sp_release
-will call qla2x00_free_fcport() to kfree fcport. We shouldn't call
-qla2x00_free_fcport() again in the error handling path.
+Hi Krzysztof,
 
-Fix this by cleaning up the redundant qla2x00_free_fcport().
+On Thu, 25 Apr 2024 at 08:08, Krzysztof Kozlowski <krzk@kernel.org> wrote:
+>
+> On 23/04/2024 22:49, Peter Griffin wrote:
+> > Hi James, Martin, Alim, Bart, Krzysztof, Vinod, all
+> >
+> > Firstly, many thanks to everyone who reviewed and tested v1.
+> >
+> > This series adds support for the High Speed Interface (HSI) 2 clock
+> > management unit, UFS controller and UFS phy calibration/tuning for GS101
+> > found in Pixel 6.
+> >
+> > With this series applied, UFS is now functional on gs101. The SKhynix
+> > HN8T05BZGKX015 can be enumerated, partitions mounted etc. This allows us to
+> > move away from the initramfs rootfs we have been using for development so far.
+> >
+> > Merge Strategy
+> > 1) UFS driver/bindings via UFS/SCSI tree (James / Martin / Alim)
+> > 2) GS101 DTS/DTSI should go via Krzysztofs Exynos SoC tree
+> > 3) Clock driver/bindings via Clock tree (Krzysztof / Stephen)
+> > 4) PHY driver/bindings via PHY tree (Vinod)
+> >
+> > The v2 series has been rebased on next-20240422, as such all the phy parts
+> > which were already queued by Vinod have been dropped. Two new phy patches
+> > are added to address review feedback received after the patches were queued.
+> >
+> > The series is broadly split into the following parts:
+> > 1) dt-bindings documentation updates
+> > 2) gs101/oriole dts & dtsi updates
+> > 3) Prepatory patches for ufs-exynos driver
+> > 4) GS101 ufs-exynos support
+> > 5) gs101 phy fixes
+> >
+>
+> I asked to split, otherwise please explain why PHY and UFS depends on
+> DTS and clk.
 
-Fixes: 82f522ae0d97 ("scsi: qla2xxx: Fix double free of fcport")
-Signed-off-by: Yongzhi Liu <hyperlyzcs@gmail.com>
----
- drivers/scsi/qla2xxx/qla_iocb.c | 2 --
- 1 file changed, 2 deletions(-)
+Seems I misunderstood your feedback. I thought you just want me to
+make clear who was merging what from the series via which tree. But
+you want separate series?
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 0b41e8a06602..faec66bd1951 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2751,7 +2751,6 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
- 	if (!elsio->u.els_logo.els_logo_pyld) {
- 		/* ref: INIT */
- 		kref_put(&sp->cmd_kref, qla2x00_sp_release);
--		qla2x00_free_fcport(fcport);
- 		return QLA_FUNCTION_FAILED;
- 	}
- 
-@@ -2776,7 +2775,6 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
- 	if (rval != QLA_SUCCESS) {
- 		/* ref: INIT */
- 		kref_put(&sp->cmd_kref, qla2x00_sp_release);
--		qla2x00_free_fcport(fcport);
- 		return QLA_FUNCTION_FAILED;
- 	}
- 
--- 
-2.36.1
+1) ufs host dt bindings & driver
+2) minor phy fixes series (most patches got applied already for phy)
 
+What do you want for cmu_hsi2 clocks and dts/dtsi? The device tree
+depends on the clock bindings to compile
+
+Thanks,
+
+Peter.
