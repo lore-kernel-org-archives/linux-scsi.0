@@ -1,146 +1,129 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from smtpbgsg2.qq.com (smtpbgsg2.qq.com [54.254.200.128])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A6F513AA3C;
-	Wed, 24 Apr 2024 19:53:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 771354C74
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Apr 2024 00:56:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.254.200.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713988401; cv=none; b=QiAoFxonruzAzcbNeQA2P7UzZdv5ondbKLuIvBqbE6aqx+Mm/hGUTadFEY434x90HoHky9NWmf4zkj3XnUN1Eyl6IyG3db+qtac5x+duVOfI9EqB3y/F+bl7ARgKJSYm1C4v5X86SczzOTzqdQwIDUDPmBLS3aQtqQhQdzCqofk=
+	t=1714006623; cv=none; b=PRzKpcx1h9hWuL+a+SBPuRY3AVn4XV2pgMOvoSGUSGxoBeRV/ZuAGI0ZeBlEgwMIvxUMoLc95SQWYN3l3hFiRGeLvwuET1qypkwv/n4cvqDSINZ1YdRKzvmG5lEfqlkR7awsGVE/2aj+PpNBmzZpATedho8ZqVPsKQvrqSmxNIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713988401; c=relaxed/simple;
-	bh=HZkky1K43bSZGSblXrPp3EAM8NlSsdMp1ndHmpJJXwQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F9sre4X63L8JWcpCzYErGtvkide1MuY7ZO0gxpgJW5AIE37SdYatd9t7WNx6meKxNoGogjTMYoM4hIsV0dvmMLcK27AtpTfj0bTFlDszFldAwLb8SWtgFTbbYuSsZhkDWDy8CQ2+vKZ1Rwhc1lgu0y37BbjgTk4/0hYp7bo8nLU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NTTcczTr; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NTTcczTr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C1C2DC113CD;
-	Wed, 24 Apr 2024 19:53:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1713988401;
-	bh=HZkky1K43bSZGSblXrPp3EAM8NlSsdMp1ndHmpJJXwQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NTTcczTrGnFaxAa1kcfspxMTN3/ePhg12mnST33XA49fFlgQuXuSnkLe26jrPzCQC
-	 J1oxZAICxWCxa0bAApRRhf6JBaQ298OaMehmKj74FeKFuCnfBNpYeswE9haIIg+jmz
-	 Q/QZUKJAI7MbPzLLi+8YOH+Xfv/R053F0CiIy/BzGEVmHB91IganAP727lrF/IA+R6
-	 bm6D3XwKX35MsHWKr/tUh/MtpWNiq3t9KVNMlP07PO0lnGKkPp7XTeEu+B8yu+Hzin
-	 AiV94wDgJFifjC7MInUtd5m20iQLLKrdS+4QKpuas+p82FqLW4tgeDwJsB8Tm5FSZ3
-	 3Ak4vINNx/EJw==
-Date: Wed, 24 Apr 2024 14:53:18 -0500
-From: Rob Herring <robh@kernel.org>
-To: Peter Griffin <peter.griffin@linaro.org>
-Cc: mturquette@baylibre.com, sboyd@kernel.org, krzk+dt@kernel.org,
-	conor+dt@kernel.org, vkoul@kernel.org, kishon@kernel.org,
-	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-	s.nawrocki@samsung.com, cw00.choi@samsung.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, James.Bottomley@hansenpartnership.com,
-	ebiggers@kernel.org, linux-scsi@vger.kernel.org,
-	linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-clk@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	tudor.ambarus@linaro.org, andre.draszik@linaro.org,
-	saravanak@google.com, willmcvicker@google.com
-Subject: Re: [PATCH v2 03/14] dt-bindings: ufs: exynos-ufs: Add gs101
- compatible
-Message-ID: <20240424195318.GA367166-robh@kernel.org>
-References: <20240423205006.1785138-1-peter.griffin@linaro.org>
- <20240423205006.1785138-4-peter.griffin@linaro.org>
+	s=arc-20240116; t=1714006623; c=relaxed/simple;
+	bh=VjhoX67lXHaEvZ5plNqVGYNpg3kF6NW9yMZR35MeM0U=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=aRbv1+e8nWh3Ap0dhK9+ObhIJMQ8oVxoALuV+PiX+zsznbXNhKsnr8NtIJXpWwotD5ZY7tOafHeoH9Xa4M3UAHJ5Gn6iYaia5NZ/FYIJFZViyZ57OIrUe5f8Qi5V1bfE+UsYYjSp9atsXqI3KGnK5jb05gJX/v9nl06ipZ5ILRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=uniontech.com; spf=pass smtp.mailfrom=uniontech.com; arc=none smtp.client-ip=54.254.200.128
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=uniontech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uniontech.com
+X-QQ-mid: bizesmtp79t1714006596tmhhz576
+X-QQ-Originating-IP: 9MPUbJmb3pdI+reCQX49KwhZvOZfwoVZvxiYqA7MR/g=
+Received: from winn-pc ( [113.57.152.160])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Thu, 25 Apr 2024 08:56:35 +0800 (CST)
+X-QQ-SSF: 01400000000000I0I000000A0000000
+X-QQ-FEAT: abxxcdK0JW6kPYqIWq0gNhxcU+3R+WEPRyE35wMvN5gusvwWu/MM304YWKl5V
+	bo9hLFGxZ5Yz0SAPs2CdzIUBaMrz7gjVVJauMZ039EkNzzkW1mo8HbVTwQhAFVIx+Pdpr4Z
+	jgxC8WPZazweolnUw+udBT044rdedPSob28Qq/Kp60N7y542Lpa+roPPSqL1xjhMdWvOdBl
+	magsTCt4sFrcw/pyYak3QyQEjh6ItRefJW8jvBY9PDnJW7qxKDZkKFZ+UHUrvKPN9oPn8UM
+	rZcGc0lhxVo89KlY7vVVNxYzxNp3k1N6i6dZxUBHjJSIU06HTJWvKX/F5BQQd+IGTA0xoN8
+	ShSV7/c4euWv0ycMaNqhpAthDHPUSts++BJdfAAjGM02uIN1Rn2VwLcdoKbrMM6++AqbsI5
+X-QQ-GoodBg: 1
+X-BIZMAIL-ID: 12203184866180681449
+Date: Thu, 25 Apr 2024 08:56:34 +0800
+From: Winston Wen <wentao@uniontech.com>
+To: Laurence Oberman <loberman@redhat.com>
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: unsafe shutdown during system restart
+Message-ID: <2FA6AD2D5F670978+20240425085634.241b5616@winn-pc>
+In-Reply-To: <134b44cec24e0480f8df4e9bc0f0c1e28df24887.camel@redhat.com>
+References: <482E2895A2BA14A6+20240424154718.47b5976d@winn-pc>
+	<134b44cec24e0480f8df4e9bc0f0c1e28df24887.camel@redhat.com>
+Organization: Uniontech
+X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240423205006.1785138-4-peter.griffin@linaro.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:uniontech.com:qybglogicsvrgz:qybglogicsvrgz6a-1
 
-On Tue, Apr 23, 2024 at 09:49:55PM +0100, Peter Griffin wrote:
-> Add dedicated google,gs101-ufs compatible for Google Tensor gs101
-> SoC.
-> 
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
-> ---
->  .../bindings/ufs/samsung,exynos-ufs.yaml      | 38 +++++++++++++++++--
->  1 file changed, 35 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
-> index b2b509b3944d..1179527d29d1 100644
-> --- a/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml
-> @@ -12,12 +12,10 @@ maintainers:
->  description: |
->    Each Samsung UFS host controller instance should have its own node.
->  
-> -allOf:
-> -  - $ref: ufs-common.yaml
-> -
->  properties:
->    compatible:
->      enum:
-> +      - google,gs101-ufs
->        - samsung,exynos7-ufs
->        - samsung,exynosautov9-ufs
->        - samsung,exynosautov9-ufs-vh
-> @@ -38,14 +36,24 @@ properties:
->        - const: ufsp
->  
->    clocks:
-> +    minItems: 2
->      items:
->        - description: ufs link core clock
->        - description: unipro main clock
-> +      - description: fmp clock
-> +      - description: ufs aclk clock
-> +      - description: ufs pclk clock
-> +      - description: sysreg clock
->  
->    clock-names:
-> +    minItems: 2
->      items:
->        - const: core_clk
->        - const: sclk_unipro_main
-> +      - const: fmp
-> +      - const: ufs_aclk
-> +      - const: ufs_pclk
+On Wed, 24 Apr 2024 12:52:35 -0400
+Laurence Oberman <loberman@redhat.com> wrote:
 
-'ufs_' is redundant.
-
-> +      - const: sysreg
->  
->    phys:
->      maxItems: 1
-> @@ -72,6 +80,30 @@ required:
->    - clocks
->    - clock-names
->  
-> +allOf:
-> +  - $ref: ufs-common.yaml
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            const: google,gs101-ufs
-> +
-> +    then:
-> +      properties:
-> +        clocks:
-> +          minItems: 6
-> +
-> +        clock-names:
-> +          minItems: 6
-> +
-> +    else:
-> +      properties:
-> +        clocks:
-> +          maxItems: 2
-> +
-> +        clock-names:
-> +          maxItems: 2
-> +
->  unevaluatedProperties: false
->  
->  examples:
-> -- 
-> 2.44.0.769.g3c40516874-goog
+> On Wed, 2024-04-24 at 15:47 +0800, Winston Wen wrote:
+> > Hi,
+> > 
+> > I noticed that my hard drive had an unsafe shutdown during system
+> > restart. I have done some related research and found that a stop
+> > command will be sent to the hard drive during system shutdown, but
+> > not during system restart. 
+> > 
+> > Is there a way to avoid the unsafe shutdown? Or is it the
+> > responsibility of the firmware to send the stop command to the hard
+> > drive before shutdown? 
+> > 
+> > And why doesn't the kernel send the stop command in system restart?
+> > I am indeed curious about it, and I would greatly appreciate it if
+> > anyone
+> > could help me clarify it. :)
+> > 
+> > Thanks!
+> >   
+> Which Distro are you using, where you are seeing this.
+> And what is the kernel version.
 > 
+> Regards
+> Laurence
+> 
+> 
+
+Hi Laurence,
+
+Thank you for your reply!
+
+I found it on Deepin 20, with a 4.19 kernel and a sata disk from a
+Chinese manufacturer. 
+
+After undergoing a disk stress test (fio), I found that the write
+performance of the disk was poor for a period of time after rebooting. 
+
+The disk manufacturer did some troubleshooting and tracing, and
+told me that the disk did not receive the stop command during the
+reboot process, so it will take some time to rebuild the internal data
+structure after being powered on again. 
+
+They showed me a list of commands they traced, and during the shutdown
+process, they would receive a STANDBY IMMEDIATE command after FLUSH
+CACHE EXT, but not during the restart process. 
+
+Then I did some tests to confirm. I enabled dev.scsi.logging_level in
+the debian12 virtual machine (with 6.6 kernel) and collected logs on
+system reboot and shutdown. During the shutdown, the "Stopping disk"
+log can be seen, but it is not present during the reboot. 
+
+I also hope to do some comparative testing on other hard drives, but I
+did not find the unsafe shutdown related field in the smart information
+of the sata disk (maybe I just missed it), so I give up. 
+
+I am not an expert in scsi, so I took a temporary look at the relevant
+code and found sd_shutdown based on the "Stopping disk" log, and I also
+browsed some related commits and discussions.
+
+I feel that this may be a firmware implementation issue, but I'm not so
+sure, so I come to the community to ask for some advice. 
+
+Just now, I tested another machine (also Deepin system, but American
+Megatrends firmware), the Seagate's sata disk does not increase
+power_cycle_count during the reboot. I think maybe this is the
+right behavior of the firmware. 
+
+Welcome any suggestions and corrections, and thanks for all replies!
+
+
+-- 
+Thanks,
+Winston
+
