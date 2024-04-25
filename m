@@ -1,31 +1,71 @@
-Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E8F53EA86;
-	Thu, 25 Apr 2024 08:28:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F154D28F7;
+	Thu, 25 Apr 2024 09:37:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714033699; cv=none; b=CrGCGxlFmv+bwzHAnJZLosAeUoJzk9d1SYPV4sn7SvJBLAYnLD5eRkln7CbV0j/zsUpaEqUocPL/bJ6DyreC7oDWQeYa6jIkR8qkiu2OfNzoLX/obe9tiLRw6Z7t/gG/I+s99Or+UeqnxDp2hqWV+Oq0GJuomH9kCKke6bK7hu0=
+	t=1714037879; cv=none; b=EFdbdm8wVGETxwsk1XsBSuiG+ETAZNkDRxVdwhxct67k4/oiGIaNLhxRVp9N2TwJ27uMQf02T7UELeT87lNtHYOgKJfFo+pkmjIzr06yaZdYca1T+6fwuN5vc3DUH1/Gu7OPC71U+8UqItESXoO2O4oeTJ6MCc5AiTbNbKCymrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714033699; c=relaxed/simple;
-	bh=bjj4W06ZrZrg6lhW2BBj9PMprnn35s2f3gB+hiw2rYk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pvTQcQQCxlnw2iSQ8HsE0D7h6oKzZG3X3cHxfFbn4T6q0DPWW+6r6i4F6MybfIKVBBgxvqecEF5hO9iAVioiW/gAux25HlFCXN3qw0Tnzm1b2LRmz20ud4nkHFe8GAQXXgvfPsk9p87dm62FT9F9nhbk4kKnwBpmGXPZaMpzoIk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost (unknown [124.16.138.129])
-	by APP-01 (Coremail) with SMTP id qwCowADX3hobFCpmk58qAA--.7266S2;
-	Thu, 25 Apr 2024 16:28:11 +0800 (CST)
-From: Chen Ni <nichen@iscas.ac.cn>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
+	s=arc-20240116; t=1714037879; c=relaxed/simple;
+	bh=B2QnoUC7+LFWaRs4o1LMiByLwNslJDQSlWXTtB7gBKk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Evlp9CN6TP0BHwf/gA6qRdokCxZIxeq6fZGGZi2Fdtu9sIwZRi+a4jpVawKxe1sZb+p4jEG4Uxi/e+Eb00cPreJ9M+TbBpoaCckqPN4G8JeHc88vLTTB2ZVFT7XUiQ8c6DmRks6EURhkfhyueSIVGbmMLRfMuQkX0hUanEaLK6w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Iu2Awh/K; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Iu2Awh/K"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6ed3cafd766so731153b3a.0;
+        Thu, 25 Apr 2024 02:37:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1714037877; x=1714642677; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=DGzKI3EXkY4x8FVQwjB0FHYCOu3rJrUkYNddsUIIYmA=;
+        b=Iu2Awh/Ka6kuC281L6SjyUCRTkiqHdwpi7c6TJ2WZUgMv874GqbkO7YXTR2j3DzFDT
+         c9Pq+slq33ZK9RuYFOr9pE5JIIobSRmh5kcGzMoFk8DyMgFWNCxBgzsEeY3xawepdQ6V
+         p3NXlKuZRTp0FaPT9vWPi2XjdQ6suekoRiTc870WdKPots+6ZOBrvpZtf7UUJhHWja/S
+         HIOsnyjalMOfUICpf5TH+HWB2ZI4Lf8M7SJzmA5J6roNc9j1tHL4w8ILgv86QUAtmpXV
+         Y4gCqVbOiCIB5bpVvahdqWJg1WZmJiug1Oq3Yp86P6NHjbBTOUhRjt+lRwGQPoUps9JM
+         OtSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714037877; x=1714642677;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=DGzKI3EXkY4x8FVQwjB0FHYCOu3rJrUkYNddsUIIYmA=;
+        b=dn0ZuzOutgdGWL3Q6aO745+nq3p0pOpV0ue1/4bhPxCDD76Ew9mMdTj1iptaqcXb7K
+         pOYIi2zCfycDplrF0VXTd6MI7d9O1j0ye3npBBBKC9Vy5GMld0aZotbBVguOimGluLq7
+         vbCA+wOWxswfuQcPBE93WyOYAGS1MrNDhiiIlePr5Qlyak9DrP0UEQUyYTRr/UTRlGz8
+         2STnCTDNqYSYbuI5bikQph7zUubGfsyf/Z07FXl1k13GqYyLsgT3Bdl8fPmmh05W6Xe0
+         sl9k1d+E/sLjgzwdjI2+eEBmrcIDzKesMgQXWUYoh9d2NRz7c2qF5Ypg4aeZzO4GuUqH
+         +qiQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUL+7aah29PiEMeOgjyW8KACfZg5gVFPYw2DRyCpUgLa2qVOvM+YecCEeOujfno9lWm1Nwf3jX65SROTDti1sbBCofs06//VPzJdRIHsMruCQoe6RmVTMH45lZePiTEVVreldQ8sv065w==
+X-Gm-Message-State: AOJu0YyDBBEmKE1MbM0DUT+V17FS4UEta6FlPQZ1GSknJlHT3j6IMyat
+	gs+o7xr9qdHQmi5ANVyr1Rv/MkDHBCH0SJVVyS3GcewB2v/6dE/M
+X-Google-Smtp-Source: AGHT+IFKAcb89md+m4w+P6J7vPjdhv1NtjyZqxzk8PLc206EV3uuh6oa2kHLHIULqqT3GsbHEbilxQ==
+X-Received: by 2002:a05:6a00:190c:b0:6ed:de6f:d762 with SMTP id y12-20020a056a00190c00b006edde6fd762mr6411562pfi.6.1714037877239;
+        Thu, 25 Apr 2024 02:37:57 -0700 (PDT)
+Received: from VM-147-239-centos.localdomain ([43.132.141.3])
+        by smtp.gmail.com with ESMTPSA id u11-20020a056a00124b00b006eab7ca005esm13209145pfi.18.2024.04.25.02.37.54
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 25 Apr 2024 02:37:56 -0700 (PDT)
+From: Yongzhi Liu <hyperlyzcs@gmail.com>
+To: skashyap@marvell.com,
+	njavali@marvell.com,
+	martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com
+Cc: himanshu.madhani@oracle.com,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Chen Ni <nichen@iscas.ac.cn>
-Subject: [PATCH] scsi: aha1740: use dma_mapping_error to check map errors
-Date: Thu, 25 Apr 2024 16:28:03 +0800
-Message-Id: <20240425082803.829150-1-nichen@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+	jitxie@tencent.com,
+	huntazhang@tencent.com,
+	Yongzhi Liu <hyperlyzcs@gmail.com>
+Subject: [PATCH] scsi: qla2xxx: Fix double free of fcport in error handling path
+Date: Thu, 25 Apr 2024 17:37:44 +0800
+Message-Id: <20240425093744.22207-1-hyperlyzcs@gmail.com>
+X-Mailer: git-send-email 2.36.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -33,45 +73,40 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowADX3hobFCpmk58qAA--.7266S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7GryrJF13JF45Zr1DAw4kXrb_yoW3Zrg_ua
-	y2krn7Cw4DGr12gF1UtrZ8Ar9F93y0qF4S9rs2q3ZxAayrWryDWFy0vr98CwsrZ3yUCayr
-	ZwnrZryxZrnFgjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbcxFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
-	0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK67AK6r43
-	MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr
-	0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0E
-	wIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJV
-	W8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAI
-	cVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjMKZJUUUUU==
-X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
 
-The return value of dma_map_single() should be checked by
-dma_mapping_error(). Update the check accordingly.
+When dma_alloc_coherent() or qla2x00_start_sp() return an error,
+the callback function qla2x00_els_dcmd_sp_free in qla2x00_sp_release
+will call qla2x00_free_fcport() to kfree fcport. We shouldn't call
+qla2x00_free_fcport() again in the error handling path.
 
-Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
+Fix this by cleaning up the redundant qla2x00_free_fcport().
+
+Fixes: 82f522ae0d97 ("scsi: qla2xxx: Fix double free of fcport")
+Signed-off-by: Yongzhi Liu <hyperlyzcs@gmail.com>
 ---
- drivers/scsi/aha1740.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_iocb.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
-index 3d18945abaf7..9768be6fc919 100644
---- a/drivers/scsi/aha1740.c
-+++ b/drivers/scsi/aha1740.c
-@@ -598,7 +598,7 @@ static int aha1740_probe (struct device *dev)
- 	host->ecb_dma_addr = dma_map_single (&edev->dev, host->ecb,
- 					     sizeof (host->ecb),
- 					     DMA_BIDIRECTIONAL);
--	if (!host->ecb_dma_addr) {
-+	if (dma_mapping_error(&edev->dev, host->ecb_dma_addr)) {
- 		printk (KERN_ERR "aha1740_probe: Couldn't map ECB, giving up\n");
- 		goto err_host_put;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 0b41e8a06602..faec66bd1951 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2751,7 +2751,6 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	if (!elsio->u.els_logo.els_logo_pyld) {
+ 		/* ref: INIT */
+ 		kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-		qla2x00_free_fcport(fcport);
+ 		return QLA_FUNCTION_FAILED;
  	}
+ 
+@@ -2776,7 +2775,6 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	if (rval != QLA_SUCCESS) {
+ 		/* ref: INIT */
+ 		kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-		qla2x00_free_fcport(fcport);
+ 		return QLA_FUNCTION_FAILED;
+ 	}
+ 
 -- 
-2.25.1
+2.36.1
 
