@@ -1,128 +1,136 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDB1014A8F
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Apr 2024 02:57:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C784817E;
+	Thu, 25 Apr 2024 07:08:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714013869; cv=none; b=RXoDmWH7GEF7rsW5tYzopkQL2v6Xur6edJofZuOw3+O2O5NWAXpCs75123k0iMK99uArzmskTuQ8gX+qxtOulBe4p4jC/3KZ5CHyjxYGtD2IoE5+7JeGILqGb3quSVxFte+TFRsVQv87cDRVeBMhgBtZrbSUkL4IPjIfllsWCms=
+	t=1714028922; cv=none; b=bnIs50EZSUekPCzHcrOCUsn+V6p0eoeZ9/MFP2m85WVfLp4QEDvbPS3qTgor3uKsQTW1knpf9sjLiI0FTZTrS6xfPu9EkY9KXzT0KiUllZG6r0xF2jRcPCyWIhiQY4YJ2uZ4+4XMKovSCIqK750NoIH+wTqbmdrVdslTwkrfBto=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714013869; c=relaxed/simple;
-	bh=mOaX0aN5GdQ+4he2dbSA3m4paQF6TH+COfTE/KmsZtk=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=YYV1RWVIlN+iOLl+oXMIlK/hfeh+DIhe64D2T5GytuYoPWzd16A/IabI6o+z5lXvZPBoodIShQQmppx8RUFnnvUR+BbHkBxOwyxbHTc+Fay+uIkFjyR1OyDEQx8ymB77KbEN0ZoJwKpRMNS6P55kBDYb+pYuH7K0QVJZX60UOdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4VQ0p82F4Bz1ymc4;
-	Thu, 25 Apr 2024 10:55:12 +0800 (CST)
-Received: from canpemm100003.china.huawei.com (unknown [7.192.104.85])
-	by mail.maildlp.com (Postfix) with ESMTPS id 0C9651401E9;
-	Thu, 25 Apr 2024 10:57:44 +0800 (CST)
-Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm100003.china.huawei.com (7.192.104.85) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Thu, 25 Apr 2024 10:57:43 +0800
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Thu, 25 Apr 2024 10:57:43 +0800
-Subject: Re: Issue in sas_ex_discover_dev() for multiple level of SAS
- expanders in a domain
-To: John Garry <john.g.garry@oracle.com>, "Li, Eric (Honggang)"
-	<Eric.H.Li@Dell.com>, "james.bottomley@hansenpartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <SJ0PR19MB5415BBBE841D8272DB2C67D6C4102@SJ0PR19MB5415.namprd19.prod.outlook.com>
- <09dd80bb-09f9-481f-a7a7-b9227b6f928f@oracle.com>
-From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <b1a5552c-689e-d220-88d3-56d24752be5b@huawei.com>
-Date: Thu, 25 Apr 2024 10:57:43 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	s=arc-20240116; t=1714028922; c=relaxed/simple;
+	bh=WK3IIsj2k+XFoe/9zTARNV+xrwTUvh5SAaxj5Dhb+cY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=dnXB3udNdDSBA6v5X5oiEhW7HVHcscTBjB3fFsqH6FDKVx/DcF+fKZa/rpUoCpVzk93OqTnBoNKAChmsjt0pteLzqZGBZpH4czd8kw1Ni+CaCY5d5nnbT6fosgIcg/xeYoj/gSFnOVHMJzrXFwNfx8hiHX5JC0ecPViC9mPblqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kBhWMc3A; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kBhWMc3A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D2A3C113CC;
+	Thu, 25 Apr 2024 07:08:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1714028921;
+	bh=WK3IIsj2k+XFoe/9zTARNV+xrwTUvh5SAaxj5Dhb+cY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=kBhWMc3Ac4yW+TuIiNd73YL1NwccRH0B9fSW2HZA9AObgNcf70/34V+OXVTxTM4i9
+	 rupcl08trJpFc/x8+4sZ/FIYV4aSrp4UYkaaY1BSyytDU8FVMVDQHQFramDmCa7GBu
+	 KkALIsSDpeyK20oUkf4YzmnS9JgikdBrCDDCq4pjAgR31H4FSiv5utoKTQMoTuRuja
+	 1sTmblklWCUnXGjCTS/+pG1qnI0nK9vhuy4qPFTZo4e8AD8Q5tkBn9PwU+wyLi9FK6
+	 8OBwik0gJ1z+fRMWYE9dUljRVBo22o4GP4cMiRD/yeHTo0MXCPlcNJ7NKSmczbiviN
+	 tPc8vi8IQ+aQg==
+Message-ID: <1c6f5984-7f9f-47e3-98c3-3c3671512675@kernel.org>
+Date: Thu, 25 Apr 2024 09:08:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <09dd80bb-09f9-481f-a7a7-b9227b6f928f@oracle.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 00/14] HSI2, UFS & UFS phy support for Tensor GS101
+To: Peter Griffin <peter.griffin@linaro.org>, mturquette@baylibre.com,
+ sboyd@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ vkoul@kernel.org, kishon@kernel.org, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, bvanassche@acm.org, s.nawrocki@samsung.com,
+ cw00.choi@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+ James.Bottomley@HansenPartnership.com, ebiggers@kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-phy@lists.infradead.org,
+ devicetree@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, tudor.ambarus@linaro.org,
+ andre.draszik@linaro.org, saravanak@google.com, willmcvicker@google.com
+References: <20240423205006.1785138-1-peter.griffin@linaro.org>
+From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- canpemm500004.china.huawei.com (7.192.104.92)
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20240423205006.1785138-1-peter.griffin@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 2024/4/24 18:46, John Garry wrote:
-> On 24/04/2024 09:59, Li, Eric (Honggang) wrote:
->> Hi,
->>
->> There is an issue in the function sas_ex_discover_dev() when I have 
->> multiple SAS expanders chained under one SAS port on SAS controller.
+On 23/04/2024 22:49, Peter Griffin wrote:
+> Hi James, Martin, Alim, Bart, Krzysztof, Vinod, all
 > 
-> I think typically we can't and so don't test such a setup.
-
-Eric,
-
-I also don't understand why you need such a setup. Can you explain more 
-details of your topology?
-
+> Firstly, many thanks to everyone who reviewed and tested v1.
 > 
->>
->> In this function, we first check whether the PHY’s 
->> attached_sas_address is already present in the SAS domain, and then 
->> check if this PHY belongs to an existing port on this SAS expander.
->> I think this has an issue if this SAS expander use a wide port 
->> connecting a downstream SAS expander.
->> This is because if the PHY belongs to an existing port on this SAS 
->> expander, the attached SAS address of this port must already be 
->> present in the domain and it results in disabling that port.
->> I don’t think that is what we expect.
->>
->> In old release (4.x), at the end of this function, it would make 
->> addition sas_ex_join_wide_port() call for any possibly PHYs that could 
->> be added into the SAS port.
->> This will make subsequent PHYs (other than the first PHY of that port) 
->> being marked to DISCOVERED so that this function would not be invoked 
->> on those subsequent PHYs (in that port).
->> But potential question here is we didn’t configure the per-PHY routing 
->> table for those PHYs.
->> As I don’t have such SAS expander on hand, I am not sure what’s impact 
->> (maybe just performance/bandwidth impact).
->> But at least, it didn’t impact the functionality of that port.
->>
->> But in v5.3 or later release, that part of code was removed (in the 
->> commit a1b6fb947f923).
+> This series adds support for the High Speed Interface (HSI) 2 clock
+> management unit, UFS controller and UFS phy calibration/tuning for GS101
+> found in Pixel 6.
 > 
-> Jason, can you please check this?
-
-The removed code is only for races before we serialize the event 
-processing. All PHYs will still be scanned one by one and add to the 
-wide port if they have the same address. So are you encountering a real 
-issue? If so, can you share the full log?
-
-Thanks,
-Jason
-
-祝一切顺利！
-
+> With this series applied, UFS is now functional on gs101. The SKhynix
+> HN8T05BZGKX015 can be enumerated, partitions mounted etc. This allows us to
+> move away from the initramfs rootfs we have been using for development so far.
 > 
-> Thanks!
+> Merge Strategy
+> 1) UFS driver/bindings via UFS/SCSI tree (James / Martin / Alim)
+> 2) GS101 DTS/DTSI should go via Krzysztofs Exynos SoC tree
+> 3) Clock driver/bindings via Clock tree (Krzysztof / Stephen)
+> 4) PHY driver/bindings via PHY tree (Vinod)
 > 
->> And this caused this problem occurred (downstream port of that SAS 
->> expander was disabled and all downstream SAS devices were removed from 
->> the domain).
->>
->> Regards.
->> Eric Li
->>
->> SPE, DellEMC
->> 3/F KIC 1, 252# Songhu Road, YangPu District, SHANGHAI
->> +86-21-6036-4384
->>
->>
->> Internal Use - Confidential
+> The v2 series has been rebased on next-20240422, as such all the phy parts
+> which were already queued by Vinod have been dropped. Two new phy patches
+> are added to address review feedback received after the patches were queued.
 > 
-> .
+> The series is broadly split into the following parts:
+> 1) dt-bindings documentation updates
+> 2) gs101/oriole dts & dtsi updates
+> 3) Prepatory patches for ufs-exynos driver
+> 4) GS101 ufs-exynos support
+> 5) gs101 phy fixes
+> 
+
+I asked to split, otherwise please explain why PHY and UFS depends on
+DTS and clk.
+
+Best regards,
+Krzysztof
+
