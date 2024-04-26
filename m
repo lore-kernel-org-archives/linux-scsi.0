@@ -1,55 +1,35 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ABD3136A
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Apr 2024 02:01:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A37D71C3E;
+	Fri, 26 Apr 2024 02:30:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714096862; cv=none; b=mfSsbO/G22667BbsKL5FyYlRhihCJBGDLfs/6omQjGLoR3RgGfv9i7WTdNzsSagCdHMtpbRrv7pPGhOh9PpOzsqh2Nx7pY4cLl8MsW7ruiZIVSHBxjeOJ0MEQMYnfE7CRHFmilYs4ZiEEYiQbiFhVH0cpywbacFv2XVXp5RRQus=
+	t=1714098628; cv=none; b=HH7+7RjzJpXKX9uqECgAHtH9M029jsqdn/FqFR43dUUrODShZ8ZrOtRsQJXNnLr2kJ1Q1dr8llhtfSYvrCGtA7WD24oFQIU/XiHyZdUYpFgxIFCWHcX6Zx7g7dShMAbw2Zi8G7JjNQjF6IHhvIiSI5aMVRXvaIsXTQKoNTqcWt4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714096862; c=relaxed/simple;
-	bh=GQfuH5YTSGhHallDCU2fAesfsmKI6zWPza9fM9rj8WM=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=AUkPM8BYQsAR/oxi0WVkSJGpWtMxtOxIZ61u2/oOmBvBc0pQE+lZYnW7Pv4eyrkfdh9VHbBh20oGwhTEWiVyn/PM8Ykhi74PmjsOZzuGMc9YGCxenaajKqqFc1fUuXklNqVBNy96nemAHWbsWyS/6uT+HiIOiJ0XVxO35QmTcCM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=ftagARx0; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1714098628; c=relaxed/simple;
+	bh=eurkqHk3uRy+1rn1ochibBTH2vrQVR6SvX9c5yj2Uag=;
+	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc; b=FS2Xh4Wc3XuqXO9IUFE9ZOYjR6BZ1FADqx9dgTlMtOucoRra9AM9l8mF5bWFiI0e346TspkQYeYQZlYwd1248FU5ORmaEoLX/H/Gud8Tzdhe/i2l4BWVL4wWVqMNyS0BSmExdvnaW6F/Oi6lEEq5mjN1ABjHsbpfHOREjgcuVYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NOPT3X7I; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ftagARx0"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43PKr798009048;
-	Fri, 26 Apr 2024 02:00:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : mime-version : content-transfer-encoding;
- s=corp-2023-11-20; bh=c13dEa2aprHDGTV6QJiaJjcK0eFnUNt3FKwbyLGwYCg=;
- b=ftagARx08W46gmsVA1q2rWIBZskrlNu7bjNNM2RVtaKuoXy1boKsSfEtwNJ9BDOMLr8w
- mKLI3APOLAE7iPkMuhiOv6FKUTlfOtQGw2QG2RfvbTlp4gq1HafhRwLe1fv20CX5R0NP
- 4LyHb1xDHjBsTr6zIcmcgH1joQ2IhB0Fw/lCuDyk9yB/pJsO68uiwIQakxIipol8q3fo
- tLsCMJ5G3W6EoZqMuUAW4PIq0zUvB+ZHeRIKNXNwmIJ5m5gWGZlVBkNvnGSELFa3loUo
- t44z8V8sWyba7uOeNLPRtUhEPobQabsvMhpjmMdRABkuf8rkexujIS4MgWLgtcLQQ9tR EQ== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3xm44f4ccf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 26 Apr 2024 02:00:58 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 43Q023ak030866;
-	Fri, 26 Apr 2024 02:00:57 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3xm45b616w-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 26 Apr 2024 02:00:57 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 43Q20vrQ002527;
-	Fri, 26 Apr 2024 02:00:57 GMT
-Received: from hmadhani-upstream.osdevelopmeniad.oraclevcn.com (hmadhani-upstream.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.255.48])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3xm45b616b-1;
-	Fri, 26 Apr 2024 02:00:57 +0000
-From: himanshu.madhani@oracle.com
-To: GR-QLogic-Storage-Upstream@marvell.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH] qla2xxx: Fix debugfs output for fw_resource_count
-Date: Fri, 26 Apr 2024 02:00:56 +0000
-Message-ID: <20240426020056.3639406-1-himanshu.madhani@oracle.com>
-X-Mailer: git-send-email 2.41.0.rc2
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NOPT3X7I"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2F0BBC2BBFC;
+	Fri, 26 Apr 2024 02:30:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1714098628;
+	bh=eurkqHk3uRy+1rn1ochibBTH2vrQVR6SvX9c5yj2Uag=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+	b=NOPT3X7IeFl2EkRwRIVLn4bp/lBz/P9PVLpmU9i7nHEZYzqAUBm4JX8rsMrSnUrHN
+	 biPRfnqFQwOqKrc2TyuER/CO+VOUls/m+Bfs6Tn8XAL3l4UkdOhHhk76HEj4cwp4hQ
+	 NVdcdArE9v4DyIPjgZHDoIE3elvaxeY7BjGuHqNUi3HvZKjRjiffVLypz+eCRBMvtk
+	 9ngzeTfWdgizj3jykjL6O7COU44bMoHxTyA009S8sPutklby/m3IAfmRrx71xeNJVJ
+	 uWblH+kbfyJIZ3Z7B+4JMlVR8Xu42lFf2i0lGzxILzaWRd/57kt/uZGL9wqNi70AK5
+	 i5D4EHTpsudSw==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 17608C43140;
+	Fri, 26 Apr 2024 02:30:28 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -57,44 +37,64 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
- definitions=2024-04-26_02,2024-04-25_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0 mlxscore=0
- mlxlogscore=999 bulkscore=0 malwarescore=0 spamscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2404010000
- definitions=main-2404260011
-X-Proofpoint-ORIG-GUID: IEYAs-sm-M3FUb3MnfcVdtJ8x0AYxcOZ
-X-Proofpoint-GUID: IEYAs-sm-M3FUb3MnfcVdtJ8x0AYxcOZ
+Subject: Re: [PATCH v2 0/6] Ensure the copied buf is NUL terminated
+From: patchwork-bot+netdevbpf@kernel.org
+Message-Id: 
+ <171409862809.13456.12723948130853178022.git-patchwork-notify@kernel.org>
+Date: Fri, 26 Apr 2024 02:30:28 +0000
+References: <20240424-fix-oob-read-v2-0-f1f1b53a10f4@gmail.com>
+In-Reply-To: <20240424-fix-oob-read-v2-0-f1f1b53a10f4@gmail.com>
+To: Bui Quang Minh <minhquangbui99@gmail.com>
+Cc: jesse.brandeburg@intel.com, anthony.l.nguyen@intel.com,
+ davem@davemloft.net, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+ paul.m.stillwell.jr@intel.com, rmody@marvell.com, skalluru@marvell.com,
+ GR-Linux-NIC-Dev@marvell.com, anil.gurumurthy@qlogic.com,
+ sudarsana.kalluru@qlogic.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, fabf@skynet.be, skashyap@marvell.com,
+ GR-QLogic-Storage-Upstream@marvell.com, nilesh.javali@cavium.com,
+ arun.easi@cavium.com, manish.rangankar@cavium.com, vneethv@linux.ibm.com,
+ oberpar@linux.ibm.com, hca@linux.ibm.com, gor@linux.ibm.com,
+ agordeev@linux.ibm.com, borntraeger@linux.ibm.com, svens@linux.ibm.com,
+ sgoutham@marvell.com, lcherian@marvell.com, gakula@marvell.com,
+ jerinj@marvell.com, hkelam@marvell.com, sbhatta@marvell.com,
+ intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ saurav.kashyap@cavium.com, linux-s390@vger.kernel.org, axboe@kernel.dk,
+ przemyslaw.kitszel@intel.com
 
-From: Himanshu Madhani <himanshu.madhani@oracle.com>
+Hello:
 
-DebugFS output for fw_resource_count shows:
+This series was applied to netdev/net.git (main)
+by Jakub Kicinski <kuba@kernel.org>:
 
-estimate exchange used[0] high water limit [1945] n        estimate iocb2 used [0] high water limit [5141]
-        estimate exchange2 used[0] high water limit [1945]
+On Wed, 24 Apr 2024 21:44:17 +0700 you wrote:
+> Hi everyone,
+> 
+> I found that some drivers contains an out-of-bound read pattern like this
+> 
+> 	kern_buf = memdup_user(user_buf, count);
+> 	...
+> 	sscanf(kern_buf, ...);
+> 
+> [...]
 
-Which shows incorrect display due to missing newline in seq_print().
+Here is the summary with links:
+  - [v2,1/6] ice: ensure the copied buf is NUL terminated
+    https://git.kernel.org/netdev/net/c/666854ea9cad
+  - [v2,2/6] bna: ensure the copied buf is NUL terminated
+    https://git.kernel.org/netdev/net/c/8c34096c7fdf
+  - [v2,3/6] bfa: ensure the copied buf is NUL terminated
+    (no matching commit)
+  - [v2,4/6] qedf: ensure the copied buf is NUL terminated
+    (no matching commit)
+  - [v2,5/6] cio: ensure the copied buf is NUL terminated
+    (no matching commit)
+  - [v2,6/6] octeontx2-af: avoid off-by-one read from userspace
+    https://git.kernel.org/netdev/net/c/f299ee709fb4
 
-Fixes: 5f63a163ed2f1 ("scsi: qla2xxx: Fix exchange oversubscription for management commands")
-Signed-off-by: Himanshu Madhani <himanshu.madhani@oracle.com>
----
- drivers/scsi/qla2xxx/qla_dfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 55ff3d7482b3..7375d00fe30f 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -274,7 +274,7 @@ qla_dfs_fw_resource_cnt_show(struct seq_file *s, void *unused)
- 		seq_printf(s, "Driver: estimate iocb used [%d] high water limit [%d]\n",
- 			   iocbs_used, ha->base_qpair->fwres.iocbs_limit);
- 
--		seq_printf(s, "estimate exchange used[%d] high water limit [%d] n",
-+		seq_printf(s, "estimate exchange used[%d] high water limit [%d] \n",
- 			   exch_used, ha->base_qpair->fwres.exch_limit);
- 
- 		if (ql2xenforce_iocb_limit == 2) {
+You are awesome, thank you!
 -- 
-2.41.0.rc2
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
