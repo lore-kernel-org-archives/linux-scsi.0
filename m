@@ -1,100 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A37D71C3E;
-	Fri, 26 Apr 2024 02:30:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 300D014430A;
+	Fri, 26 Apr 2024 10:16:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714098628; cv=none; b=HH7+7RjzJpXKX9uqECgAHtH9M029jsqdn/FqFR43dUUrODShZ8ZrOtRsQJXNnLr2kJ1Q1dr8llhtfSYvrCGtA7WD24oFQIU/XiHyZdUYpFgxIFCWHcX6Zx7g7dShMAbw2Zi8G7JjNQjF6IHhvIiSI5aMVRXvaIsXTQKoNTqcWt4=
+	t=1714126567; cv=none; b=TNiYNnLtHOT0Um9idrCGQwDh2WPh+OBbzEcV5G0KSdMW5qre4aOXxQFTeQxXYAKjcSdgP/tLvw3+B+ZulLLBubQnYyrrx4vGgg4KqiopD6t2M+Fwn0XntboflBM/R4XFqa9yHHRcvKQeMhZ8qHGO4O8DyyifTQp0YOQQUpsCUMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714098628; c=relaxed/simple;
-	bh=eurkqHk3uRy+1rn1ochibBTH2vrQVR6SvX9c5yj2Uag=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=FS2Xh4Wc3XuqXO9IUFE9ZOYjR6BZ1FADqx9dgTlMtOucoRra9AM9l8mF5bWFiI0e346TspkQYeYQZlYwd1248FU5ORmaEoLX/H/Gud8Tzdhe/i2l4BWVL4wWVqMNyS0BSmExdvnaW6F/Oi6lEEq5mjN1ABjHsbpfHOREjgcuVYg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NOPT3X7I; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714126567; c=relaxed/simple;
+	bh=Aaok4akx8+JwelwN/ppsY7WbWfpSN8p1AaPa1nlurvo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Wy7hX/Is9hEnnXtk6hHBewqkAQWPc2qxlj5Ofi5j78a2PWD0haGXim6atmRsE5NSzUM8R5AwVmGne21imm6mexOfRQDJCGYqm51ftYNom4Cj8+9PnDzcTvqkcLGPtZsq2IVIcQrvzENNDEHtBtOkD/eVEMo6qSU9EA0WxbWhslE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=msW2IDHk; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NOPT3X7I"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2F0BBC2BBFC;
-	Fri, 26 Apr 2024 02:30:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714098628;
-	bh=eurkqHk3uRy+1rn1ochibBTH2vrQVR6SvX9c5yj2Uag=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=NOPT3X7IeFl2EkRwRIVLn4bp/lBz/P9PVLpmU9i7nHEZYzqAUBm4JX8rsMrSnUrHN
-	 biPRfnqFQwOqKrc2TyuER/CO+VOUls/m+Bfs6Tn8XAL3l4UkdOhHhk76HEj4cwp4hQ
-	 NVdcdArE9v4DyIPjgZHDoIE3elvaxeY7BjGuHqNUi3HvZKjRjiffVLypz+eCRBMvtk
-	 9ngzeTfWdgizj3jykjL6O7COU44bMoHxTyA009S8sPutklby/m3IAfmRrx71xeNJVJ
-	 uWblH+kbfyJIZ3Z7B+4JMlVR8Xu42lFf2i0lGzxILzaWRd/57kt/uZGL9wqNi70AK5
-	 i5D4EHTpsudSw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 17608C43140;
-	Fri, 26 Apr 2024 02:30:28 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="msW2IDHk"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 43QA3CRq012436;
+	Fri, 26 Apr 2024 10:15:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=pp1; bh=Aaok4akx8+JwelwN/ppsY7WbWfpSN8p1AaPa1nlurvo=;
+ b=msW2IDHklridPA49V4Yn6HHDnEqXh+aKAz0bWIaNe0idSkv7PvIbkpYeYc9esxhPabzW
+ 4X4CMusBRpMEzG4/LmnYXrL8IcwCVKFzFskC5zzdH2qnizCHK2kPsASdowEkMCp76sba
+ BPKCL33+JNzpY4IS+CeFNJIpUjIsTAqpHs0bdkzjH+Lu9h7Gyv7Ldlr26w8/ipvnUjha
+ VbM2+zZdSp6jDJZiWyk0gzAIth9gkvj65KKHMrf/h6nXkToaBxgJhQtK/N/8afpfZbY1
+ N39Pacl5FM+QS2nAxapGZLI981J2wF2FwIZVAOfPxb41EJjC5iqsoWHhwM2T6AGDOpS/ vA== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3xra62g0uq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 26 Apr 2024 10:15:48 +0000
+Received: from m0360072.ppops.net (m0360072.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 43QAFllU030841;
+	Fri, 26 Apr 2024 10:15:47 GMT
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3xra62g0uj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 26 Apr 2024 10:15:47 +0000
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma22.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 43Q8N5Sn021021;
+	Fri, 26 Apr 2024 10:10:46 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3xmre0f8u9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 26 Apr 2024 10:10:46 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 43QAAeZn30540508
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 26 Apr 2024 10:10:42 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8446420063;
+	Fri, 26 Apr 2024 10:10:40 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 3285C2004D;
+	Fri, 26 Apr 2024 10:10:37 +0000 (GMT)
+Received: from li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com (unknown [9.171.4.163])
+	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
+	Fri, 26 Apr 2024 10:10:37 +0000 (GMT)
+Date: Fri, 26 Apr 2024 12:10:35 +0200
+From: Alexander Gordeev <agordeev@linux.ibm.com>
+To: Bui Quang Minh <minhquangbui99@gmail.com>,
+        Jakub Kicinski <kuba@kernel.org>
+Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Tony Nguyen <anthony.l.nguyen@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Paul M Stillwell Jr <paul.m.stillwell.jr@intel.com>,
+        Rasesh Mody <rmody@marvell.com>,
+        Sudarsana Kalluru <skalluru@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
+        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Fabian Frederick <fabf@skynet.be>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Nilesh Javali <nilesh.javali@cavium.com>,
+        Arun Easi <arun.easi@cavium.com>,
+        Manish Rangankar <manish.rangankar@cavium.com>,
+        Vineeth Vijayan <vneethv@linux.ibm.com>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        Sunil Goutham <sgoutham@marvell.com>,
+        Linu Cherian <lcherian@marvell.com>,
+        Geetha sowjanya <gakula@marvell.com>, Jerin Jacob <jerinj@marvell.com>,
+        hariprasad <hkelam@marvell.com>,
+        Subbaraya Sundeep <sbhatta@marvell.com>,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Saurav Kashyap <saurav.kashyap@cavium.com>, linux-s390@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v2 5/6] cio: ensure the copied buf is NUL terminated
+Message-ID: <Zit9myOJp0SYFL1F@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
+References: <20240424-fix-oob-read-v2-0-f1f1b53a10f4@gmail.com>
+ <20240424-fix-oob-read-v2-5-f1f1b53a10f4@gmail.com>
+ <ZikiZsSTGUUM69GE@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH v2 0/6] Ensure the copied buf is NUL terminated
-From: patchwork-bot+netdevbpf@kernel.org
-Message-Id: 
- <171409862809.13456.12723948130853178022.git-patchwork-notify@kernel.org>
-Date: Fri, 26 Apr 2024 02:30:28 +0000
-References: <20240424-fix-oob-read-v2-0-f1f1b53a10f4@gmail.com>
-In-Reply-To: <20240424-fix-oob-read-v2-0-f1f1b53a10f4@gmail.com>
-To: Bui Quang Minh <minhquangbui99@gmail.com>
-Cc: jesse.brandeburg@intel.com, anthony.l.nguyen@intel.com,
- davem@davemloft.net, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
- paul.m.stillwell.jr@intel.com, rmody@marvell.com, skalluru@marvell.com,
- GR-Linux-NIC-Dev@marvell.com, anil.gurumurthy@qlogic.com,
- sudarsana.kalluru@qlogic.com, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, fabf@skynet.be, skashyap@marvell.com,
- GR-QLogic-Storage-Upstream@marvell.com, nilesh.javali@cavium.com,
- arun.easi@cavium.com, manish.rangankar@cavium.com, vneethv@linux.ibm.com,
- oberpar@linux.ibm.com, hca@linux.ibm.com, gor@linux.ibm.com,
- agordeev@linux.ibm.com, borntraeger@linux.ibm.com, svens@linux.ibm.com,
- sgoutham@marvell.com, lcherian@marvell.com, gakula@marvell.com,
- jerinj@marvell.com, hkelam@marvell.com, sbhatta@marvell.com,
- intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
- saurav.kashyap@cavium.com, linux-s390@vger.kernel.org, axboe@kernel.dk,
- przemyslaw.kitszel@intel.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZikiZsSTGUUM69GE@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: nwzmHa-XFUQKTaw4oYDH1K-dtAII8FVL
+X-Proofpoint-GUID: fy_d-znjR1XF0iGIbw_36HPeZjIuI1Lh
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
+ definitions=2024-04-26_09,2024-04-26_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ lowpriorityscore=0 priorityscore=1501 impostorscore=0 bulkscore=0
+ adultscore=0 mlxscore=0 spamscore=0 phishscore=0 malwarescore=0
+ mlxlogscore=721 suspectscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2404010000 definitions=main-2404260067
 
-Hello:
+On Wed, Apr 24, 2024 at 05:16:56PM +0200, Alexander Gordeev wrote:
+> Applied, thanks!
 
-This series was applied to netdev/net.git (main)
-by Jakub Kicinski <kuba@kernel.org>:
+Hi Jakub,
 
-On Wed, 24 Apr 2024 21:44:17 +0700 you wrote:
-> Hi everyone,
-> 
-> I found that some drivers contains an out-of-bound read pattern like this
-> 
-> 	kern_buf = memdup_user(user_buf, count);
-> 	...
-> 	sscanf(kern_buf, ...);
-> 
-> [...]
+I just want to make sure you do not have plans to pull this patch
+via the net tree, right? (I schedulled it for the s390 tree already).
 
-Here is the summary with links:
-  - [v2,1/6] ice: ensure the copied buf is NUL terminated
-    https://git.kernel.org/netdev/net/c/666854ea9cad
-  - [v2,2/6] bna: ensure the copied buf is NUL terminated
-    https://git.kernel.org/netdev/net/c/8c34096c7fdf
-  - [v2,3/6] bfa: ensure the copied buf is NUL terminated
-    (no matching commit)
-  - [v2,4/6] qedf: ensure the copied buf is NUL terminated
-    (no matching commit)
-  - [v2,5/6] cio: ensure the copied buf is NUL terminated
-    (no matching commit)
-  - [v2,6/6] octeontx2-af: avoid off-by-one read from userspace
-    https://git.kernel.org/netdev/net/c/f299ee709fb4
-
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+Thanks!
