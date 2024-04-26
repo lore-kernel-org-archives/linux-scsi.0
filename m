@@ -1,80 +1,66 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB6661487F2;
-	Fri, 26 Apr 2024 14:29:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F70146A4;
+	Fri, 26 Apr 2024 19:11:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714141778; cv=none; b=bwSsokwvcWOVJ5R0675PJjJv09wIeplSq83aXUIstm1xyFFtvuLsIXLTZWVHJt3ozvgic946Ebqe/X7oPfYgN1zFMmCgm8VnoausDaAh6gKqu2zPU+fkNNmCjMiRvkJbSH9lVUw5qdXvkxaGek7ZxlOpiXo6OsVYooabm9uI+lI=
+	t=1714158694; cv=none; b=nPo2y/dVvjIqF+OvXSeBftwrqDnsJVo7aUNIOmebyvJDp/Fg+Z7TxLsktAv3TF6qiq6TmucgQp0IvUrFsREVWop2aW5RnZuBgYyGI8Amm1MptHOO+XKC71DkSgL5XLBY8pMvXf/1LcEdioDmFSwmMjJnHMeFNakwK4KDqF6OWas=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714141778; c=relaxed/simple;
-	bh=D3wKqM03L7wKjDEPdv4b0+dxrNwGKgX3ntMzPx9bXCI=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=b+Tzm2Pw1oo/kWIZs9fC1V/jSts7nDGW6d99wXTXxRcilBkj4hJE8LEWpkGyieQcbNyiO6kE1A2qPvWvHcWwm8U8Fq4ivw4zEOkPJervoI4UykxJXMWscKmxQKKOeSmMHKRSd+b00p1nQ/L3ceyrzodVYV57DKugC8RLb3c5yLg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jC4/NKyP; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1714158694; c=relaxed/simple;
+	bh=XUdr7nZ1LWSQx5wvYOHZw265cdc3ykPmcH+6/9UHKPI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=QryEn/wKYBpm5EtW7K74rcswkHww0asKF7J8xA1SC/GzbckSie7q0eNxdKzwBNqX7oBQvnqKHj92C6f5X8O3DQe9eHdT8iDBml0kzAy8YySJHLtUOW+pUj4aNWlb8PZbFAgQ8HJbvEmVHbUzad+LMpWefhI9lDdDZoYqImjl5cY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qhSQ6sJV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jC4/NKyP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA6B9C113CD;
-	Fri, 26 Apr 2024 14:29:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qhSQ6sJV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6489CC113CD;
+	Fri, 26 Apr 2024 19:11:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714141777;
-	bh=D3wKqM03L7wKjDEPdv4b0+dxrNwGKgX3ntMzPx9bXCI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=jC4/NKyPtYBapka0fEDWLEC+l8sFcA8lrkKpQ4+IBz5j3DoHvd12xkr4IZl3Gu9Mm
-	 pi0Mr4hMYvA9ajOcMreC5jOkf7IllNBsmBzSIlXEF4vJmQzzB4OWN1dbCkEdQ0lzjj
-	 BLzVkvqIIXy80MpHe5kjbzUbbmiVBuUYeg92zMjUUd/Wyu3DDE3qmUgeLcS6o4hXTG
-	 17Ctw4aZRuj97Desn+YWKTaaNo2q3RPFfOgBCEPQiJsMBiwk5qoIs8GNtPGPPD0ZE2
-	 Xxhy3jfy5o90qR8UsvuaWAWlvtf3V9dmcEhA6sz2eNLwvZrKzyQxt2NHEp4JeaY5pG
-	 hgNVTuUjUHzjw==
-Date: Fri, 26 Apr 2024 07:29:34 -0700
-From: Jakub Kicinski <kuba@kernel.org>
-To: Alexander Gordeev <agordeev@linux.ibm.com>
-Cc: Bui Quang Minh <minhquangbui99@gmail.com>, Jesse Brandeburg
- <jesse.brandeburg@intel.com>, Tony Nguyen <anthony.l.nguyen@intel.com>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet
- <edumazet@google.com>, Paolo Abeni <pabeni@redhat.com>, Paul M Stillwell Jr
- <paul.m.stillwell.jr@intel.com>, Rasesh Mody <rmody@marvell.com>, Sudarsana
- Kalluru <skalluru@marvell.com>, GR-Linux-NIC-Dev@marvell.com, Anil
- Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru
- <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley"
- <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Fabian Frederick <fabf@skynet.be>, Saurav
- Kashyap <skashyap@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
- Nilesh Javali <nilesh.javali@cavium.com>, Arun Easi <arun.easi@cavium.com>,
- Manish Rangankar <manish.rangankar@cavium.com>, Vineeth Vijayan
- <vneethv@linux.ibm.com>, Peter Oberparleiter <oberpar@linux.ibm.com>, Heiko
- Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, Christian
- Borntraeger <borntraeger@linux.ibm.com>, Sven Schnelle
- <svens@linux.ibm.com>, Sunil Goutham <sgoutham@marvell.com>, Linu Cherian
- <lcherian@marvell.com>, Geetha sowjanya <gakula@marvell.com>, Jerin Jacob
- <jerinj@marvell.com>, hariprasad <hkelam@marvell.com>, Subbaraya Sundeep
- <sbhatta@marvell.com>, intel-wired-lan@lists.osuosl.org,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, Saurav Kashyap <saurav.kashyap@cavium.com>,
- linux-s390@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v2 5/6] cio: ensure the copied buf is NUL terminated
-Message-ID: <20240426072934.776f7b4d@kernel.org>
-In-Reply-To: <Zit9myOJp0SYFL1F@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
-References: <20240424-fix-oob-read-v2-0-f1f1b53a10f4@gmail.com>
-	<20240424-fix-oob-read-v2-5-f1f1b53a10f4@gmail.com>
-	<ZikiZsSTGUUM69GE@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
-	<Zit9myOJp0SYFL1F@li-008a6a4c-3549-11b2-a85c-c5cc2836eea2.ibm.com>
+	s=k20201202; t=1714158693;
+	bh=XUdr7nZ1LWSQx5wvYOHZw265cdc3ykPmcH+6/9UHKPI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qhSQ6sJVIPWNk2Tlq8ZyUWJAXvcEksEoqwroEyfWhYQPAi5oSSW4O7Cyx7j61DCcv
+	 rKoX3fOtSlHVSPIXWIB53HsNJx3ehmrD2LOpONQF68yeBRT9M4+nWS8oGiFExejdYP
+	 KDqXbRpVJQOp1HQTeykhB1EREirY0q1pVlY0uy4VSb1nGnvr7oXr4HClH3K5oORxkS
+	 3518oOHGy1cjg4rn8dH9pRowzQABkONLuFSAcmp8tOAwNUcUmUsxy44LwWimq7HT0A
+	 IXdnqv1i37F/Zpkm1fXgCg6IoRh/UdKUDNDMvBbfDij/fLNYMeOzuqgCth3t0lpYjp
+	 k93dzeLg7LoiQ==
+Date: Fri, 26 Apr 2024 14:11:30 -0500
+From: Rob Herring <robh@kernel.org>
+To: Peter Griffin <peter.griffin@linaro.org>
+Cc: linux-samsung-soc@vger.kernel.org, bvanassche@acm.org,
+	James.Bottomley@hansenpartnership.com, willmcvicker@google.com,
+	saravanak@google.com, tudor.ambarus@linaro.org, conor+dt@kernel.org,
+	devicetree@vger.kernel.org, alim.akhtar@samsung.com,
+	andre.draszik@linaro.org, martin.petersen@oracle.com,
+	krzk+dt@kernel.org, linux-scsi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, kernel-team@android.com,
+	linux-kernel@vger.kernel.org, avri.altman@wdc.com
+Subject: Re: [PATCH v3 1/6] dt-bindings: ufs: exynos-ufs: Add gs101 compatible
+Message-ID: <171415865280.2674676.16238135633423140947.robh@kernel.org>
+References: <20240426122004.2249178-1-peter.griffin@linaro.org>
+ <20240426122004.2249178-2-peter.griffin@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240426122004.2249178-2-peter.griffin@linaro.org>
 
-On Fri, 26 Apr 2024 12:10:35 +0200 Alexander Gordeev wrote:
-> On Wed, Apr 24, 2024 at 05:16:56PM +0200, Alexander Gordeev wrote:
-> > Applied, thanks!  
-> 
-> Hi Jakub,
-> 
-> I just want to make sure you do not have plans to pull this patch
-> via the net tree, right? (I schedulled it for the s390 tree already).
 
-Yes, go for it. I picked 1, 2 and 6, no interest in the other 3 :)
+On Fri, 26 Apr 2024 13:19:59 +0100, Peter Griffin wrote:
+> Add dedicated google,gs101-ufs compatible for Google Tensor gs101
+> SoC.
+> 
+> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+> ---
+>  .../bindings/ufs/samsung,exynos-ufs.yaml      | 38 +++++++++++++++++--
+>  1 file changed, 35 insertions(+), 3 deletions(-)
+> 
+
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+
