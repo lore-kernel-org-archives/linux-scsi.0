@@ -1,135 +1,128 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 564C31411D3
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Apr 2024 20:13:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51FC1177990
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Apr 2024 20:41:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714421604; cv=none; b=os9rz0vssZ/JliTZ5xHVzf9rMuR09nxhgQdSJETIVAqYBX6TAqRqcXy7aervHewTnk37xk0CNtufhMU2yuuUj8bbYyxeKP+VGbrxrtMvnkTiKMz6Ig/8rJ3n/L1kSClYF3WzBopwLuE0YX1DVRp9wQ8vZ0DwqM5xOQNS6O7KOA0=
+	t=1714423302; cv=none; b=QucmARu8khfvunI1mvVlcUglEjIRk1BBaEfEMZV8QS9kGqsaXm6LG6CHBzeEzKEBThYz57u3Sk3rvyY2i5QwZKWwBptGsJhI8KE94y6VK82vl2w/W6Z3OzKOxNvoTseTNey0nd04iWla1QJ43DJb1KiKewfrTNES6nuN2zOe4/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714421604; c=relaxed/simple;
-	bh=Wpz9boe/w8KT9hr5B4n4S8JECxM9pa+bGQT6Fr8iw4g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aguFmXNuY/tumTRSD3kt9TJgGJAW8nQO3ofi0xiAZnU++usbiAtTfu1ARlYnk1y+zG2kDfKLsi1AY9ZuzE1Q0E8myEdSnhBSsj/5KbaCtDVso0+Btidv8Cyl001dtDeLsk+BqSWVLMyikDFm0Q9NioOXrUQi8yL/mWWm5qh+8OM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=OhPo1yH+; arc=none smtp.client-ip=209.85.210.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="OhPo1yH+"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-6ecf05fd12fso4410002b3a.2
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Apr 2024 13:13:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1714421603; x=1715026403; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=BXjzsh/nfrNV74+/Eg/rT8Fya+BcYBRXBPB+VYkGIr8=;
-        b=OhPo1yH+CQsaHtevEsQPziFBtmiv7UnZc8xCKssikeC82GIEG5U0OnktR/nMyi9mP1
-         QeGKdnSrzfuRLR2homs1QDJQDu6Suuopgl6LgeCU6Wjfe/M8xVshT0p5mI2ItIDqPZRS
-         bTDvZnGG1pylYyK2NhR8QH4qqmGY3ZQAhk8Pg=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714421603; x=1715026403;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=BXjzsh/nfrNV74+/Eg/rT8Fya+BcYBRXBPB+VYkGIr8=;
-        b=dBRvHBbZjSLbqYnP6q7R6riks+NiN7v+Yih/AWjpvExen/J240n6UZYvy3De2mJWxh
-         jScYXPDamHtuaxjFfpGNZdO4BG3hamC4xs6oFT/YyTi5wpAhn7cVli8j+BJxBivRudN2
-         6HVU90Lwwc7/nRvPXIe93kQlTFISm29VFoNNLr8klAYI8OsYw5gALav+V/XAu4XzstSg
-         zt+sIwyY0ETOy2P9jh5aiixK/FYfc7tS7rpYAkZ9I3UDomaGVScw56LDB2dmlBDjT0sh
-         iUhQrC13ONHyKbbD7VxQQ+GlN+UJt5LtmtHzioYlRXaqo0VD3evLDEZqYHep7aEQEsYz
-         i4Mg==
-X-Forwarded-Encrypted: i=1; AJvYcCU9+gyzMmZrnQb97iawOtJHHirc4WkoP+suMFir027cVEarUnh5+Hvp0VewSP+E+vGJ6eaIE1eZ7xNVpLC60Q7G0VqDNWSHnk1eNA==
-X-Gm-Message-State: AOJu0YyfV5bs1lh0YC3wia0D/wuil/wG13gY6quJDbXbAr1SdrHww5nj
-	uGeFKnsCRf1di+SZWztZ1DfIlYqVVv2xpQlokPq7rfQ7R1ZdVsAOgZ5W2AOGvg==
-X-Google-Smtp-Source: AGHT+IHx20vgzODxO0CmjBxc3eLPOcVrUqtUBQgDReCQFkXCxJwNnQAZ4SSCabovup0+fIe8uoMO0A==
-X-Received: by 2002:a05:6a20:43ab:b0:1af:597f:ffa4 with SMTP id i43-20020a056a2043ab00b001af597fffa4mr620907pzl.14.1714421602751;
-        Mon, 29 Apr 2024 13:13:22 -0700 (PDT)
-Received: from www.outflux.net ([198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id b8-20020a170902d50800b001eab473021fsm6336073plg.168.2024.04.29.13.13.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Apr 2024 13:13:22 -0700 (PDT)
-Date: Mon, 29 Apr 2024 13:13:21 -0700
-From: Kees Cook <keescook@chromium.org>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Erick Archer <erick.archer@outlook.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Justin Stitt <justinstitt@google.com>,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v3] scsi: csiostor: Use kcalloc() instead of kzalloc()
-Message-ID: <202404291259.3A8EE11@keescook>
-References: <AS8PR02MB7237BA2BBAA646DFDB21C63B8B392@AS8PR02MB7237.eurprd02.prod.outlook.com>
- <202404291019.5AC903A@keescook>
- <yq17cgg58sp.fsf@ca-mkp.ca.oracle.com>
+	s=arc-20240116; t=1714423302; c=relaxed/simple;
+	bh=ShCokyp7WaKHXsOH1IP5K/hVAlu8BqMuRCrIfNBGjdM=;
+	h=From:Subject:To:Message-ID:Date:MIME-Version:Content-Type; b=HkziADuj465/tC3hqSbcNXEhDhdaN+Z0+x/Pnerw6XeQfi4c32WUSWOFM2azRkZoKfsgxyp2W4kTUhatia1LMqbWZXfBcgR4RLPHpq+h0a3I9o4bNIUOSJer2Mvz/EOkevwQg4Vb98yCM5f+E3nco/D2aLYYwG8mybilbvUv1nU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
+Received: from [192.168.1.105] (178.176.72.208) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Mon, 29 Apr
+ 2024 23:41:22 +0300
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: [PATCH] scsi: sym53c8xx_2: hipd: clean up error path in
+ sym_alloc_ccb()
+To: "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, Matthew Wilcox <willy@infradead.org>,
+	<linux-scsi@vger.kernel.org>
+Organization: Open Mobile Platform
+Message-ID: <9bb4378b-dbf7-954e-9d89-3f25aca70cb1@omp.ru>
+Date: Mon, 29 Apr 2024 23:41:22 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq17cgg58sp.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 04/29/2024 20:26:07
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 59
+X-KSE-AntiSpam-Info: Lua profiles 184981 [Apr 29 2024]
+X-KSE-AntiSpam-Info: Version: 6.1.0.4
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 18 0.3.18
+ b9d6ada76958f07c6a68617a7ac8df800bc4166c
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {relay has no DNS name}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.72.208 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 178.176.72.208 in (user)
+ dbl.spamhaus.org}
+X-KSE-AntiSpam-Info:
+	127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: ApMailHostAddress: 178.176.72.208
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 59
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 04/29/2024 20:30:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 4/29/2024 5:01:00 PM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-On Mon, Apr 29, 2024 at 02:31:19PM -0400, Martin K. Petersen wrote:
-> 
-> Kees,
-> 
-> >> This patch seems to be lost. Gustavo reviewed it on January 15, 2024
-> >> but the patch has not been applied since.
-> >
-> > This looks correct to me. I can pick this up if no one else snags it?
-> 
-> I guess my original reply didn't make it out, I don't see it in the
-> archives.
-> 
-> My objections were:
-> 
->  1. The original code is more readable to me than the proposed
->     replacement.
+In sym_alloc_ccb(), if sym_calloc_dma() call fails, the code tries to call
+sym_mfree_dma() on the cp local variable which is still NULL at this point.
+Get rid of the meaningless code under the out_free label and, while at it,
+get rid of the useless cp variable initializer...
 
-I guess this is a style preference. I find the proposed easier to read.
-It also removes lines while doing it. :)
+Found by Linux Verification Center (linuxtesting.org) with the Svace static
+analysis tool.
 
->  2. The original code has worked since introduced in 2012. Nobody has
->     touched it since, presumably it's fine.
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-The code itself is fine unless you have a 32-bit system with a malicious
-card, so yeah, near zero risk.
+---
+The patch is against the for-next branch of Martin Petersen's scsi.git repo.
 
->  3. I don't have the hardware and thus no way of validating the proposed
->     changes.
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |    8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-This is kind of an ongoing tension we have between driver code and
-refactoring efforts. And this isn't a case where we can show identical
-binary output, since this actively adds overflow checking via kcalloc()
-internals.
-
-> So what is the benefit of me accepting this patch? We have had several
-> regressions in these conversions. Had one just last week, almost
-> identical in nature to the one at hand.
-
-People are working through large piles of known "weak code patterns"
-with the goal of reaching 0 instances in the kernel. Usually this is for
-ongoing greater compiler flag coverage, but this particular one is
-harder for the compiler to warn on, so it's from Coccinelle patterns.
-
-> I am all for fixing code which is undergoing active use and development.
-> But I really don't see the benefit of updating a legacy driver which
-> hasn't seen updates in ages. Why risk introducing a regression?
-
-I see a common pattern where "why risk introducing a regression?" gets
-paired with "we can't test this code". I'm really not sure what to do
-about this given how much the kernel is changing all the time.
-
-In this particular case, I guess all I can say is that it is a trivially
-correct change that uses a more robust API and more idiomatic allocation
-sizeof()s (i.e. use the sizeof() of what is being allocated, not a
-potentially disconnected struct name).
-
--Kees
-
--- 
-Kees Cook
+Index: scsi/drivers/scsi/sym53c8xx_2/sym_hipd.c
+===================================================================
+--- scsi.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ scsi/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -4862,7 +4862,7 @@ void sym_free_ccb (struct sym_hcb *np, s
+  */
+ static struct sym_ccb *sym_alloc_ccb(struct sym_hcb *np)
+ {
+-	struct sym_ccb *cp = NULL;
++	struct sym_ccb *cp;
+ 	int hcode;
+ 
+ 	/*
+@@ -4877,7 +4877,7 @@ static struct sym_ccb *sym_alloc_ccb(str
+ 	 */
+ 	cp = sym_calloc_dma(sizeof(struct sym_ccb), "CCB");
+ 	if (!cp)
+-		goto out_free;
++		return NULL;
+ 
+ 	/*
+ 	 *  Count it.
+@@ -4919,10 +4919,6 @@ static struct sym_ccb *sym_alloc_ccb(str
+ 	sym_insque_head(&cp->link2_ccbq, &np->dummy_ccbq);
+ #endif
+ 	return cp;
+-out_free:
+-	if (cp)
+-		sym_mfree_dma(cp, sizeof(*cp), "CCB");
+-	return NULL;
+ }
+ 
+ /*
