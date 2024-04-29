@@ -1,103 +1,159 @@
-Received: from mout.web.de (mout.web.de [212.227.15.14])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB05ED28D;
-	Mon, 29 Apr 2024 05:13:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4633D9449
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Apr 2024 05:32:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714367605; cv=none; b=BED3j11u8ahbVT5su3cN0MuY1gpRpcbLxzQXehEA1nT7n6k66CsvbOHRJ/ZtNC8mwbEdN48X1IXEBY/wvUOln3d2HBH5IvCuKYjJ148Ov8J6+aDLfHenWP3HkRq6HEYnkBn7q4Kb4SDLagiwi8GGtyIihXg8i/Q3jo7IZ7MIe6g=
+	t=1714368773; cv=none; b=FH33snHB2WpI1aM21cnKEj0fm/ltdjixmnq3moJooYsYqWYl/93tPgoJBz7xcAZMgYxEZ7+4V5vjv7MwDvImoZlnK79P80D/wGbvDXr8DLZxYpSzTBVJEMsiim9Nu8MS30RDviwFRbU+uX2xjeSIejw14Ih9YFxlF21uczCx0Qw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714367605; c=relaxed/simple;
-	bh=6MCnqWatVGDcoOaSP4XU/7z/EyzaAOWkNis5N5nlYaM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EwpGxhVS2BGxLqataUAgGAhUkYKWBDjIC14cMjvaY0lpl/zlvIalyV2fW+RXlb8ddSWLj+/kIiREj8ANaEwUjzGcoqTwZvumfF9jt9n2xTfOmWWhARFTYhO+gcLLfP2Y3G5mxKMX6rcR/wKqZPCtV6qQFKuMkvaHiy6AgsCIfeU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=ggtbx8GZ; arc=none smtp.client-ip=212.227.15.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1714368773; c=relaxed/simple;
+	bh=cGC9l+MrRE5sqvYyYQlGKM/FjfiGLdS+vExxrYcgFgE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=YaX2c5DrEhNa/Gn7NAvdS0P5ES7GflhqKySrQEttQQWwzu1vwFEzJqBzAprgkjRM51+Vp4zgTc4f/tNLp9pjKcAOp8S1KWhwSnVVm2K6NijDNymJJXW47fqQp3fLC4Ti3MUw+DMX1tGiTUQl8M58buZDyFS95pzH5GpChDW92z8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=UOjj1mB9; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="ggtbx8GZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1714367581; x=1714972381; i=markus.elfring@web.de;
-	bh=6MCnqWatVGDcoOaSP4XU/7z/EyzaAOWkNis5N5nlYaM=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
-	 References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding:cc:content-transfer-encoding:
-	 content-type:date:from:message-id:mime-version:reply-to:subject:
-	 to;
-	b=ggtbx8GZyoxvcRXMXVSA4+UD1FYD6gKjIJKwXeOBPgHQQiw2WpgTUKxSAIMPmP5U
-	 ja/Vg6xCGt9KSSjV46bo4eY7tdG4BUnU8BNy5ARLoUzuuKL1HdN0bxAEbH4KF/uaO
-	 RM+ZJFppmeQAuiKmtNZ+trpL02zSL9jEndRcDU6lnsMV7jDFQhj79f9fmHpmRbRxg
-	 L/cSC/gzGT1CoZRkFv1VYB0HfYnwEx+Mj0FodfGmiS+7JucAI7EwxaEggYJDPe5qT
-	 L2jqnwzPNRmPk7nHRnms53No3nAhsNYuZb06eRCgB8B89aXdPfXJln5Y1yTW3PUtB
-	 uJcOwt2zGvubhdCfig==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.21] ([94.31.85.95]) by smtp.web.de (mrweb005
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1M4sbr-1rzNuc2MmV-00DN2m; Mon, 29
- Apr 2024 07:13:01 +0200
-Message-ID: <9c711441-6e79-422f-9405-ee271929e77c@web.de>
-Date: Mon, 29 Apr 2024 07:12:17 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="UOjj1mB9"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43T4bKWw022283;
+	Mon, 29 Apr 2024 05:32:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	message-id:date:mime-version:subject:to:cc:references:from
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=Ht/MFyXNDUabN91ycQWGe0F3ru4RrnUlsaTDPw6gMbo=; b=UO
+	jj1mB9C04MVkBa/Sfknkgau2dW5Q+D1eC4NBrSPRtig5+r9cjmSvbK1vHm8X6fxN
+	jCkHkXhMfL5Qg51xNs4rhRTNtJUGPfTUQtLS9697nf5w/xOJD1Rrn8FZSoS7kFrF
+	hMHOeZR9EjKzgj4zXCNJbZR5lBu9Eq2R4TYVeaGKvotOtnqNRWV0JqOikSuz5ROl
+	22z2BkaA1SRQ6AtbO5eUPrYnt60K0Zg7ChOnhLDeTC+x2+emhcYMFV7fCFbFi5g5
+	ouFklm2ZIB/FVPxX9Bc3LP+GnA6mk+DW/TYieCz0kkBKZgsWvZoNHJpdPnMwM5Bz
+	E5NTiLWy+EElXmPswu6A==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xrravjv1a-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 29 Apr 2024 05:32:44 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43T5Wh6h015084
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 29 Apr 2024 05:32:43 GMT
+Received: from [10.216.15.162] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sun, 28 Apr
+ 2024 22:32:39 -0700
+Message-ID: <45a050ca-3ff3-5235-283a-72d8f92aba65@quicinc.com>
+Date: Mon, 29 Apr 2024 11:02:34 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2] scsi: qla2xxx: Fix double free of fcport in error
- handling path
-To: Yongzhi Liu <hyperlyzcs@gmail.com>,
- GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
- kernel-janitors@vger.kernel.org,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Nilesh Javali <njavali@marvell.com>, Saurav Kashyap <skashyap@marvell.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
- Himanshu Madhani <himanshu.madhani@oracle.com>, huntazhang@tencent.com,
- jitxie@tencent.com
-References: <443fb75b-948b-430f-be33-170e6f592280@web.de>
- <20240428113404.12522-1-hyperlyzcs@gmail.com>
-Content-Language: en-GB
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20240428113404.12522-1-hyperlyzcs@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:RuBQhBXJ9LkR6nSLm4sThUW+g2XoGD7/LUNVqS786SrnlYGBLVV
- C5U/OXjjhn4AEinIdtRTdTjpUrvc8f/QFW8YY37sKQ5Wpy0nlvayt60g1xRdSAhO1PP8QhP
- 2Iio2UYT65lSCOuW5E0cFskmlk85yMF2mWQVoPEOLT2uAXicawGIa3ds7PD7o5SfPyzFCgl
- eMPBPzYHOszZTfwxkL6ZQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:+YnWFr0EOwE=;N+eqH2g0sE03ptK/f70HTfP0LH9
- 0yWmlGSL4qjaK8f16suCY1Taqs/oigN+Nubl2NkXlCGapzcb5/zO6jrJVOQJdDVKEtZZREZB+
- pn9CUFptwZtJ3PTZK4XOw+EX9btyaqzTvLNgejrEtcWleAM9Ph4DgzUnyO6v7jV0IZFaIRG6O
- +9dus4XM6r3DWH6m3DWF0bKMWvojk3SuluS6lswz2fjIc46VHNogJJgaYfZKosX0i4lIf0nTJ
- Xry+McXnhmVfw44FMR6Ixcpcu68jX7QO6imEWfga1sp0K6iR0NSNZ0OiglNa8e/j2G82acQ6U
- WW5UBCy7ICCX+NKZKocCG9m+Jm0q4JgXgZMP7NYrMv4xD/6fNJ/6jzUIM66drfvpve/VkuL9X
- SufAaia7oXJJkuh3/52uiV6nookfzS7uQ/5DsOwEBOsm4zQxaDCN6tBGyUCvdqovyAllbOS0/
- 7QdrRRnrK9NSeoe9bJZDPYONWKUYa9Pz0D8w+XomK/m44bE0nY0b2YrF5zwhRvAW7DESuGGHD
- VwElIyZAWbGltFGD3/VoU0ls+MCQzXiqv309F02XFd7F01vCw25f57zNlUkdLMXzjRqyonf17
- xPeVI5OSqldMdZqBoiOhPStVRG7n9RO81quKpbh7VRHiChSNcbdxLhCCm6GV9CGqESQ5/bgex
- QhUzLz27k4F+3Zd7IdW0z1zeKonAjyw+Oh9FmqD52IhPaR0r0A9FYSWyW/xf32s47LWoM9CXj
- 3B8WvVVrw5Q6R5miY7KH2gpEkxqiyLySysapCMMGzJnuu8ZOZAgkNDuTPT1wO/5SdrQgEZwdl
- VmkL/a0ZiLem96avyLciboD4SL64BgYXCokLj2wSI2GBI=
-
-=E2=80=A6> Fix this by cleaning up the redundant qla2x00_free_fcport() and
-> replacing error handling with a goto chain.
-
-I imagine that there can be a need to provide the desired software adjustm=
-ent
-as a patch series with two separate update steps.
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
-cumentation/process/submitting-patches.rst?h=3Dv6.9-rc5#n81
-
-* Deletion of inappropriate function calls
-
-* Optimisation of exception handling
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH 1/1] Revert "scsi: ufs: core: Only suspend clock scaling
+ if scaling down"
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
+        "quic_sartgarg@quicinc.com" <quic_sartgarg@quicinc.com>,
+        "quic_bhaskarv@quicinc.com" <quic_bhaskarv@quicinc.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "quic_narepall@quicinc.com" <quic_narepall@quicinc.com>,
+        "quic_pragalla@quicinc.com" <quic_pragalla@quicinc.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>
+References: <20240228053421.19700-1-quic_rampraka@quicinc.com>
+ <a585c5a82fdb36b543d48568d0c5ae1265642f26.camel@mediatek.com>
+ <bd253a59-de58-2184-a818-82ef1ed8c962@quicinc.com>
+ <768897ca7336df5b159c7d39e467b5b74f49b3b4.camel@mediatek.com>
+ <2d0c0aee-0dcb-7ac3-907c-ee477d5fc376@quicinc.com>
+ <5e71880541ad80f545f045816ab9f13d4a89003a.camel@mediatek.com>
+Content-Language: en-US
+From: Ram Prakash Gupta <quic_rampraka@quicinc.com>
+In-Reply-To: <5e71880541ad80f545f045816ab9f13d4a89003a.camel@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 6AIlESQ-7RNpcjYeiuYIC-s-WUMbRx_g
+X-Proofpoint-ORIG-GUID: 6AIlESQ-7RNpcjYeiuYIC-s-WUMbRx_g
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
+ definitions=2024-04-29_02,2024-04-26_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 suspectscore=0
+ lowpriorityscore=0 phishscore=0 mlxscore=0 adultscore=0 priorityscore=1501
+ impostorscore=0 malwarescore=0 mlxlogscore=999 spamscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2404010003
+ definitions=main-2404290035
 
 
 
-How do you think about to refer to the affected function
-(instead of the hint =E2=80=9Cerror handling path=E2=80=9D) in the summary=
- phrase?
+On 4/25/2024 6:45 PM, Peter Wang (王信友) wrote:
+> On Wed, 2024-04-24 at 14:44 +0530, Ram Prakash Gupta wrote:
+>>
+>> Hi Peter,
+>>
+>> I tried different dvfs settings, none is helping including enlarged
+>> polling period time, its degrading perf numbers as its taking longer
+>> time to scale up when the load is high and clk is low.
+>>
+>> I checked from power side on qualcomm boards, suspending with zero
+>> request is not impacting power hence I am consider a vops to add
+>> which
+>> can help your use case too, I tested this vops and it works fine on
+>> qualcomm boards.
+>>
+>> here is a small snippet of a different approach using vops, which I
+>> am
+>> planning to push under a separate mail subject to remove this
+>> deadlock
+>> between mediatek and qualcomm, scaling config.
+>>
+>> -       if (sched_clk_scaling_suspend_work && !scale_up)
+>> +       if (sched_clk_scaling_suspend_work &&
+>> hba->clk_scaling.no_req_suspend)
+>> +               queue_work(hba->clk_scaling.workq,
+>> +                          &hba->clk_scaling.suspend_work);
+>>
+> 
+> Hi Ram,
+> 
+> It is weird for me that if no_req_suspend is true, queue suspend work?
+> Dosen't "no_req_suspend" simply mean "do not suspend"?
+> 
+> Thanks
+> Peter
 
-Regards,
-Markus
+Hi Peter,
+
+well I intended to shorthand the naming of macro for "no request 
+suspend", meaning suspend when there is no request, which I want to 
+control in the scaling logic.
+
+I am open to suggestion on name of the variable if you suggest any other 
+meaningful name.
+
+and earlier the logic was, scaling was getting suspended when there were 
+no request, that we would like to keep via vops for qcom board, rest 
+everyone can use the default existing logic.
+
+Thanks,
+Ram
+> 
+> 
+> 
+>> +       else if (sched_clk_scaling_suspend_work && !scale_up)
+>>
+>> Here no_req_suspend would be false by default, so would hit else if
+>> case, which is desirable for mediatek boards. For qualcomm,
+>> no_req_suspend would set it to true via vops. please let me know if
+>> this
+>> is ok for you.
+>>
+>> Thanks,
+>> Ram
