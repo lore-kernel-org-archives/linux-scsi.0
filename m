@@ -1,133 +1,124 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mout.web.de (mout.web.de [212.227.15.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B96912837E;
-	Tue, 30 Apr 2024 09:12:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54F56128816;
+	Tue, 30 Apr 2024 09:55:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714468321; cv=none; b=IAlSu1z9IivQWlvi0nwFlCIGNaLvdIi7hs2I5jxUAd0GvVf7BY3cc8stpUIEku93KhHfUX92zyYYKjjvDDzQHBRSgNpevWCzxXHxbx/Ax2lq0/O88T+abVjp9lDm9yRzeKfJvgoX9KY3OkCehVeSj1a10k5mAj5OLiNMOwAXm0s=
+	t=1714470955; cv=none; b=Qj0Xk3TuljMrW6YqLUpAiElFULMVeR/9+Hfwm87HUeo7ywJIA5b0ynETJBvmKCK5PrQ9MXXqmRtBDE1MxiwoVrig/OJDWhZFuHz6wT8JzJehTQ0OQGVar6wL7pcCg9/icDsFq+6VLEdmR8Yno3Q4WCCCCc9pCcuHQWSjLiSW7Dk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714468321; c=relaxed/simple;
-	bh=v4A0+zB+bgfLv7B2Shkzwh+aLCop35/3aLd00MNBlW8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=GFRiBGoFqF3/dyQlS6t36PG8G2Dn3aN7rewQsxxCYGXhQdwRtwskXNVPwX/ni+3mV0NlZCCYTsq7Zw5apgFaTUGhQ/yfe0Uyxj20s1k7cZ344uGeTg/q0Y6j5MQU6ozAs0DEZ22C9rJbI5SPnbhbCaJ8G2vCuVll9ebunP7nuKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ADwR8ruy; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1714470955; c=relaxed/simple;
+	bh=+PUXHtgYh9FKYDiZd8KDZ2yAOK6C6Lie2+Mixx+MvJk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GyMIZxmMRbmAX8hcpwUT7i2NOIEz2AtY0BWTJmwRDEtpd/YZhA4Uo787xHSQlGMTgqZF6UsADV/gTEcfJzqr3wkzuAGArJeMP1MwKsorSxwIbKZLlBCcvxypmfKo6BS7uoKx3PyCYLWttKZjnVrEhfrxqdSdF4HKrW+DGgcHJ0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=WP3D70cO; arc=none smtp.client-ip=212.227.15.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ADwR8ruy"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1ec5387aed9so1787685ad.3;
-        Tue, 30 Apr 2024 02:12:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714468320; x=1715073120; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0z6Ou6PFGBqj/BLnd55H4THR7b5BFV54qKTEzG/ZWXM=;
-        b=ADwR8ruysKRAct921l4zl8TSu8WVS9RQPpMbfMCPiU7NDPMpx4Bbj7OhRgeJI8qyy5
-         RFji0JTmH7eLfoIwy1zgyY4XsQD0TYIzQIwDh+T4HMfISlBBuxZCQpFMqXuOwpJGPbuv
-         2Wqfm1uxJQEN0b0vG0ToAtGXCrlTpfqhO1htIJvXGUVAtkS7LnSGw5Iyh4mj18m3HJhC
-         185mvJqfwLUijrIapiR66jozS+EnClHJG3OXXpMCmvsR+38rRZ2lntKXl6dZcYeEwm/w
-         HNuk0ztxS165KURiVXpnhAjrlOnf3LfAYeSscLTFpl4d068Pq0MP1+igDf7czUiWAEcK
-         BdbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714468320; x=1715073120;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0z6Ou6PFGBqj/BLnd55H4THR7b5BFV54qKTEzG/ZWXM=;
-        b=wGBk7nc0FX981xF95QcW66LCNkFwMsDYAvXU/IN8sZ0+kBCvixoDqlV4rSp3G2oFQ7
-         ygo6SAvCoCJ6KObAq3OVu0d1163GBmlbAO0M4wbyxItATNb7B0MSIW7vunbLwPzTz7wC
-         MI8VkFawj1tkj/B2pD3fyHL1joj3i4dw404W+BRAqd0VEHafmFKPOjDDJ1qAp+Q3x1ly
-         cyrWlSKoOKmSAzsLLVEjhtFey4WdJSA1YlhSiNP+X6XZ1gPOeJO6cTRj9VwFMr7xqEVt
-         JIflSCVNMtiRswg+NRKKlfNNAuw+iA2KhQFnyx7XIp8qOQ73mHY3W3O5XFvow9E4+jll
-         JcJQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWJEFt88INOvsKEapsd1+Uug0HcNoRmdZ1h9ZITmijUMpTAPAkczZobm9ASSPYssOpqyLOrN++S9iJmVQ58G5i84soHZGlJXF7FWu7vK4Rp7YrlTWcJ0t+gB75vxc0WFVNa3z2Al6P25A==
-X-Gm-Message-State: AOJu0YxCBct3ePM2Ore2IUrq5o6iSBrpYtRDx0c9Dv4ENEJrNPNKwf+B
-	+2UR6q/2/PGkbu+JnKndT+FQJcG5tKvuYsR9GFrNSp9WYRtU37kg
-X-Google-Smtp-Source: AGHT+IGWffpy9LYMK7EyQUIMaIoclMALmLM4JYJSZshdxPdlw9eSpSoOHwyr7kDPFOZSWNn975Q5pg==
-X-Received: by 2002:a17:902:d2c8:b0:1eb:1462:1abe with SMTP id n8-20020a170902d2c800b001eb14621abemr14410845plc.69.1714468319983;
-        Tue, 30 Apr 2024 02:11:59 -0700 (PDT)
-Received: from VM-147-239-centos.localdomain ([43.132.141.4])
-        by smtp.gmail.com with ESMTPSA id kh5-20020a170903064500b001e47bf10536sm21845806plb.69.2024.04.30.02.11.57
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 30 Apr 2024 02:11:59 -0700 (PDT)
-From: Yongzhi Liu <hyperlyzcs@gmail.com>
-To: skashyap@marvell.com,
-	Markus.Elfring@web.de,
-	njavali@marvell.com,
-	martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com
-Cc: himanshu.madhani@oracle.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	jitxie@tencent.com,
-	huntazhang@tencent.com,
-	Yongzhi Liu <hyperlyzcs@gmail.com>
-Subject: [PATCH V3 2/2] scsi: qla2xxx: Optimisation of exception handling in qla24xx_els_dcmd_iocb
-Date: Tue, 30 Apr 2024 17:11:44 +0800
-Message-Id: <20240430091144.10744-2-hyperlyzcs@gmail.com>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20240430091144.10744-1-hyperlyzcs@gmail.com>
-References: <9c711441-6e79-422f-9405-ee271929e77c@web.de>
- <20240430091144.10744-1-hyperlyzcs@gmail.com>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="WP3D70cO"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1714470934; x=1715075734; i=markus.elfring@web.de;
+	bh=N7SA7MPcICDmmkKmu7E2XaGuN9QOw+7JhRdGPcVHTYI=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:Subject:To:Cc:
+	 References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding:cc:content-transfer-encoding:
+	 content-type:date:from:message-id:mime-version:reply-to:subject:
+	 to;
+	b=WP3D70cOsvnaFmUPf9hOCxO9Xt5zfEGk69OfK3Egf8X9Sgk12WTlkjfCrY9ZRQu+
+	 ryIMS5GgWmQrhLPYV5csvdEHRo18+I0G82cgnJMm35v8uuic18GvcmsBGVBwulU07
+	 M1IqWFJGUXc7kypCbMOXQZJwlM3cCR+UjYW8XexY5bxgob6pmPBm05zBnuvQ5IXAJ
+	 NxwNK8JpWu5dqPT7t71BnXZDENGEMFEwDQGooQGHnxc2lJf7nGsPV+J9ECAbkb9gb
+	 06Vw/clP0uhAHN6p8g+uSv6j8PMktGlPP6Auswfu+v6eV8ZVkjTeBhuu/TIVyFrhK
+	 t4rtHZQbYwdiHpAd+A==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.21] ([94.31.85.95]) by smtp.web.de (mrweb005
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 1Mfc4q-1sYdBO1FYe-00mAqT; Tue, 30
+ Apr 2024 11:55:34 +0200
+Message-ID: <54e83ce6-0f9d-45c2-92c7-a41fdb812314@web.de>
+Date: Tue, 30 Apr 2024 11:55:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V3 1/2] scsi: qla2xxx: Fix double free of fcport in
+ qla24xx_els_dcmd_iocb
+To: Yongzhi Liu <hyperlyzcs@gmail.com>,
+ GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+ kernel-janitors@vger.kernel.org,
+ James Bottomley <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Nilesh Javali <njavali@marvell.com>, Saurav Kashyap <skashyap@marvell.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+ Himanshu Madhani <himanshu.madhani@oracle.com>, huntazhang@tencent.com,
+ jitxie@tencent.com
+References: <9c711441-6e79-422f-9405-ee271929e77c@web.de>
+ <20240430091144.10744-1-hyperlyzcs@gmail.com>
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20240430091144.10744-1-hyperlyzcs@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:M4mgAuj24p5GXrYB+rUdjCKuxKH4dN/z01KrH1d3E0ue+DGv4aW
+ ciE0r0Po8gooDJByIU2N0O4m+E4NnnFzhkomcnsUpvF6HpBKkC4GBM+9Te2RREyDamkgXyo
+ /EJjYbd6S27KVLeB51UXi7S5aINbNVvnqe8dvsG5pPZ/JU8uY4WDtrKza/j5jQ2/MoMTjGT
+ A0/ze+laE4ct9UkDmaGgA==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:xnnnl6+YVLE=;xeE/n0XHGDxpJQ0CevP9kGdutxS
+ g9btpkvaRhOiJE77U3pw5fnljnnFQH5pYAiN57vcaB0xwO/ye21AA3dpkRmyQnEUMKjDa3hzg
+ YNMLArheBftq8dfeDGepO6hKgjf1iI0BMwQ0236O1g4lPjR0UgilvYWEzC2J4stt5ywAJ5ItS
+ kRsGiBJ4sOq7V6Vm2ef0FHjA5V1fB1ojNMh4MX0SL7YCvSkMY2v/P3Ie7a2bBTWL9/5ykJked
+ B4/2KtCI6/awJROqlVzPJuoVnpO1tMkp0HD4cv6Bs1iyArwZK/I1dt8usaLUMWFP4/2ywx1D6
+ JXXpmgVA8J+qI0kfWoK0/NwctXyn1L7J+i+0SFz/AedV65ufZySDqiibDLCMwty31Kf6hQrTt
+ 6sIFwnTkBeROeaE5JQrY86FLt9PcnyZRgqN9ktaEz1KQMNe0U/OfF2CDZnD9Nj4ZUoQWLmQwa
+ Y/yP33X1P7ScmoJETMjT2FQ4kDe9anKrLsWz0Gi9O1L7elMAEwfD1DYxXfd7mLIcvlYuoiXHM
+ EgwbOofMXMGPDX23RS/1MO4Q3seL8V/MsOX8myvcL67IOymIgBTETFxlQ8vGMzFOzDGE3DxKu
+ UQmyguuJ8cXH/exswoBFtTg7qdm/VXO1EP2VoUypNzdV4VPVI73KliEtcU6152Z5oWu28Ljsd
+ gpnUkuwhjgKbGDuH4mr2+lFi2se7Jc1MGBFeoHHgMfwNvERfDtTAXE3pVLJHokP0/GsdXuTyo
+ bl9SAx0xtRoQOcJ98p+PTl14BTnbsWLKNAKVQVMgU0fi7GRiioHls6AsdWFOtupXwWG0xUD9t
+ leX0Wk3PVCqeiNvGOK4cTRKZk8fTtR/L+Tdi0koODolGA=
 
-To avoid duplicate error handling code a bit more, use more common goto
-chain in qla24xx_els_dcmd_iocb.
+* I would usually expect a corresponding cover letter for patch series.
 
-Signed-off-by: Yongzhi Liu <hyperlyzcs@gmail.com>
----
-V2 -> V3: Improve patch summary and provide a patch serises with two separate update steps
-V1 -> V2: Optimisation of exception handling
+* Would you like to add parentheses to the function name in the summary ph=
+rase?
 
- drivers/scsi/qla2xxx/qla_iocb.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index faec66bd1951..a3a3904cbb47 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2749,9 +2749,8 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
- 			    GFP_KERNEL);
- 
- 	if (!elsio->u.els_logo.els_logo_pyld) {
--		/* ref: INIT */
--		kref_put(&sp->cmd_kref, qla2x00_sp_release);
--		return QLA_FUNCTION_FAILED;
-+		rval = QLA_FUNCTION_FAILED;
-+		goto put_ref;
- 	}
- 
- 	memset(&logo_pyld, 0, sizeof(struct els_logo_payload));
-@@ -2773,9 +2772,8 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
- 
- 	rval = qla2x00_start_sp(sp);
- 	if (rval != QLA_SUCCESS) {
--		/* ref: INIT */
--		kref_put(&sp->cmd_kref, qla2x00_sp_release);
--		return QLA_FUNCTION_FAILED;
-+		rval = QLA_FUNCTION_FAILED;
-+		goto put_ref;
- 	}
- 
- 	ql_dbg(ql_dbg_io, vha, 0x3074,
-@@ -2784,7 +2782,7 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
- 	    fcport->d_id.b.area, fcport->d_id.b.al_pa);
- 
- 	wait_for_completion(&elsio->u.els_logo.comp);
--
-+put_ref:
- 	/* ref: INIT */
- 	kref_put(&sp->cmd_kref, qla2x00_sp_release);
- 	return rval;
--- 
-2.36.1
+> When dma_alloc_coherent() or qla2x00_start_sp() return an error,
 
+                                                  call returned?
+
+
+> the callback function qla2x00_els_dcmd_sp_free in qla2x00_sp_release
+> will call qla2x00_free_fcport() to kfree fcport. We shouldn't call
+
+                                     free =E2=80=9Cfcport=E2=80=9D?
+
+
+> qla2x00_free_fcport() again in the error handling path.
+
+                                                    paths?
+
+
+
+> Fix this by cleaning the duplicate qla2x00_free_fcport() calls up.
+
+Would the wording =E2=80=9CThus delete duplicate qla2x00_free_fcport() cal=
+ls.=E2=80=9D be a bit nicer?
+
+
+=E2=80=A6
+> ---
+> V2 -> V3: Improve patch summary and provide a patch serises with two sep=
+arate update steps
+=E2=80=A6
+
+* How do you think about to avoid the repetition of version identifiers
+  (according to the selected enumeration style)?
+
+* You would probably like to avoid another typo here.
+
+Regards,
+Markus
