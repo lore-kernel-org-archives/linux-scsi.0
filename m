@@ -1,97 +1,120 @@
-Received: from wfout4-smtp.messagingengine.com (wfout4-smtp.messagingengine.com [64.147.123.147])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E089579DC;
-	Tue, 30 Apr 2024 01:54:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.147.123.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B38088801;
+	Tue, 30 Apr 2024 09:11:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714442049; cv=none; b=Gg03QtywyCsxU2q+0MLxeGw3z3nrgO7LN22yKX4cy1jHVBPe1Nzk0PF9pJS9zPOy8SYpy9yqdDvpJvvLLVOrXGA5FxpMniQUiQZAlWiLVuG6Yal5Vn/it6o9w/NLupXq0ZkEocLt1q6MERh2uPtJ4pew8QnQWSvX4PwL7rM2cCQ=
+	t=1714468318; cv=none; b=HaaMhybK0JepO9Hq0c/BXh94dKFE4DZNRsz7FsGAmr3XgALTkSqg7wCDJOEhTJeRj+zIfWrH734SLpDsGluhF+abHa4w2tcCjjRYZc98Xtwdi19/aP+JGP8vUotOjrkiyNe2VrEKVhQ1Hq1SgPgBBui2yUub45fius7oCJ4VtUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714442049; c=relaxed/simple;
-	bh=/pKumPOlfhaWlo9dOCFEE/29YIst6MSj0NpY1zurQuI=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=W1+5Al46JqYdUq6DVKcZ/JPDkU4tpklu2DFCniDa5hsjo32KjGWAAG55BGyVymteaqiSMmIioifZcDylwW31HAZZnsUJ8BbEau4gljGzN/Gx0w97c6Vri9daQUwL0hjjsu8hg+s2/CAKUgyJofxoSr4yGKWGQJoV3SAdHA1O5f4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=R+FcX0ZK; arc=none smtp.client-ip=64.147.123.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+	s=arc-20240116; t=1714468318; c=relaxed/simple;
+	bh=STiwPfQ3FgfC68RgCrPFSAvD0HXwevrsh2MHG2P+BxQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=auCcAx+MUYWnRUxhf9/ijDtVPxKByLxgiOhC0AcbfyqJf2pNSlgdxi4es3scTYEvMrVNQWoeb3JFH8NDt2aI3Ac/bmQjGYP0ZHmb6GIysk7AEJvDeNKZ78q+vrOJim1YIkY7MkhNpWMCozHanpq3T0O7nKRx/ZA9rUkeXVxukdQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E8XKojoH; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="R+FcX0ZK"
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
-	by mailfout.west.internal (Postfix) with ESMTP id 4D9D51C00171;
-	Mon, 29 Apr 2024 21:54:05 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute2.internal (MEProxy); Mon, 29 Apr 2024 21:54:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-	fm3; t=1714442044; x=1714528444; bh=TvQfAezCIQpgNjRX/9FITqcxG7cy
-	pBbpvMsEhvlw3CI=; b=R+FcX0ZKSCBWt1V2G4IvUL2lxCHIzkfDskXzqeUbMs1e
-	ybgch9ILFtGGF0T+KN64ac/LAC/KCaR++MwBCTpWpf2kUJi0Drc8DLLTqGVlVxyp
-	IISN/vYnjUEilbbMICs/0kcKnSUi1xp5L1ZTimSDzNIRlh22D5A/wnJ7yBn22gX0
-	B01V4CMPmJ5OaScZE3XFyEZI8kK8XssgaYBzu/PsTToJRbEOBKRN+/TuzxknyZtN
-	fh30/Wo/JglVY3BTrzGRAW4A5uzZXyMkLrDFm1b6kGtwv7uQFHqgpw03R7Gybgje
-	QuF2+amjMi0AY53qA/WE62m2RJr3zzm8BFBqvlYenA==
-X-ME-Sender: <xms:PE8wZkhsO6P6t4d9NxUY3Ismc5FW4uHt9cORQXv2sXcMBDuok9m9Fg>
-    <xme:PE8wZtDm622xwiiHW_VYSOPCuQPcjL4gqFunEyyj1dG3xZi3-WXsFC_BECCwYB8OB
-    xEJsrpWAay-N3VGuHY>
-X-ME-Received: <xmr:PE8wZsF-8N1YAlsksLftXmPMxwhLuvfavM8M1yEDKbibOlLrOfqmBtv0D_x1CAk3XlojpbFx_0RdcZhiInWPLdUaGvm3orYD1fA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrvdduvddghedvucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcu
-    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
-    htthgvrhhnpeelueehleehkefgueevtdevteejkefhffekfeffffdtgfejveekgeefvdeu
-    heeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    hfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:PE8wZlTKFg7wBMZZKH3xggMyM5np0dnjB9ffa_UpUxRV5gylO7-QUw>
-    <xmx:PE8wZhxiLxPPmMCOwL-ISbcMhJrTj0rQNkuVQCiIw0R77CYFu_7mcQ>
-    <xmx:PE8wZj6KCPjjBM7D9ygSuDamrmVkJC_fJyEO3zrG1JK8Fb99b_mVcg>
-    <xmx:PE8wZuwhnO-AGfQ9wb43QqRsDHa54ui2wMpuT4Z0M6aRxaHGG0x-3Q>
-    <xmx:PE8wZhcogwxLQTgjCHDHFBy31huu0HdPWkGff1fW7f2Kwzf9zK3NBOG2>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
- 29 Apr 2024 21:54:01 -0400 (EDT)
-Date: Tue, 30 Apr 2024 11:54:27 +1000 (AEST)
-From: Finn Thain <fthain@linux-m68k.org>
-To: Kees Cook <keescook@chromium.org>
-cc: "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    Erick Archer <erick.archer@outlook.com>, 
-    "James E.J. Bottomley" <jejb@linux.ibm.com>, 
-    Bjorn Helgaas <bhelgaas@google.com>, Justin Stitt <justinstitt@google.com>, 
-    "Gustavo A. R. Silva" <gustavoars@kernel.org>, linux-scsi@vger.kernel.org, 
-    linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v3] scsi: csiostor: Use kcalloc() instead of kzalloc()
-In-Reply-To: <202404291259.3A8EE11@keescook>
-Message-ID: <070eccee-25c1-05ae-0ae8-7c6fe2eff82f@linux-m68k.org>
-References: <AS8PR02MB7237BA2BBAA646DFDB21C63B8B392@AS8PR02MB7237.eurprd02.prod.outlook.com> <202404291019.5AC903A@keescook> <yq17cgg58sp.fsf@ca-mkp.ca.oracle.com> <202404291259.3A8EE11@keescook>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E8XKojoH"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1ec4dd8525cso2231925ad.3;
+        Tue, 30 Apr 2024 02:11:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1714468316; x=1715073116; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gQBoYvZPsCYcuSR3qK1bJQWQDiuW4fONQZ/4zoSfa0A=;
+        b=E8XKojoH6+RoFi5Unum/E7wXNxLCFnxUGOUKtqwXL6hWHEghwshwNHzPnorzEP01ue
+         q/Piv16eSTJpHoY5AmmHxHEGNhM3TPF5Av4ftwNRE+L5xo5Bbfif1bTjNnRdWCBBtJgO
+         ykWR1JBWzjgzVI0dcYEhsn6zWHPEkOi9qwRyLY52hvMhpuj4cdyr8QKsP3KqbbZJPeVe
+         ZlFvEO3SFSbk3kqlOxzVhnDqYN3nZAbKX0PE/MZ/tT7IYU3lxZ0wmN+3IaObX/OqKavL
+         fHnzHvP4bTKhTYFtje/mMteSrvP4oCycnvFGWFMDJdLZkOkCL2nkJBjshhdkv9QGRHk0
+         Jq2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714468316; x=1715073116;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=gQBoYvZPsCYcuSR3qK1bJQWQDiuW4fONQZ/4zoSfa0A=;
+        b=QQSQv3u/WfeA9EC5KrmQ6RioDpwHIfBAq2Nc/MzD7IPKXGvlYP9kWWHusDPG8BwEr4
+         3UthGvzteAMOmIiAZ2ZXvpi4Oc6xPdJUo0fP1tydXzH2nkFvKIkqwmKzIlgioHFxXF2N
+         lVl0Dl48Jj279Lbt/dOIp6CnMXkOcQ4dAUccreUMUKMW2igjdU/QbyDDqM9zDWdJEcZR
+         cG16NA+9hUMFzTTowy65S9zj84ITi3SusCr02txZ3UQYwH+uK8VOLqfOR3k0AcUAaBWK
+         y1ClUUjm6hFJS1IX5hI2vs06u9W28nN03LiFk4lCMG757e8eUid3h8RXl0jpliZ2Vayy
+         jf7Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWpzfCmB9Uj5Eiibn5qkII5RpEgKHqGqQ4KgbNciwemD221cgRb4RvsvoifvTkcfdTIRzGSfB2XCOlKXYQ6U4G5tSSpZJSUX2X/jt++lKPhQtNAwiGUcxLjEI0fAjphfhdC0SP33qjn1Q==
+X-Gm-Message-State: AOJu0Yw2eoFw9b6hekYHq0oa2gvLHlUuGUE/7/UgIpb5+dWb3FuygPfY
+	5Lvpfu6mryTLA0RFHUYgPfvq2cu/v6F3AxkKbzfzSfcJlh0a+ARA
+X-Google-Smtp-Source: AGHT+IGdQj3RvvilGjPqOJ+D1q8N7cU48eNqNv6tzSAfI1/lYpJcwu9FZdy2EjkD8mzyUnt6enes0A==
+X-Received: by 2002:a17:902:d543:b0:1ea:c7a4:7e8 with SMTP id z3-20020a170902d54300b001eac7a407e8mr11288084plf.17.1714468315953;
+        Tue, 30 Apr 2024 02:11:55 -0700 (PDT)
+Received: from VM-147-239-centos.localdomain ([43.132.141.4])
+        by smtp.gmail.com with ESMTPSA id kh5-20020a170903064500b001e47bf10536sm21845806plb.69.2024.04.30.02.11.53
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 30 Apr 2024 02:11:55 -0700 (PDT)
+From: Yongzhi Liu <hyperlyzcs@gmail.com>
+To: skashyap@marvell.com,
+	Markus.Elfring@web.de,
+	njavali@marvell.com,
+	martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com
+Cc: himanshu.madhani@oracle.com,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	jitxie@tencent.com,
+	huntazhang@tencent.com,
+	Yongzhi Liu <hyperlyzcs@gmail.com>
+Subject: [PATCH V3 1/2] scsi: qla2xxx: Fix double free of fcport in qla24xx_els_dcmd_iocb
+Date: Tue, 30 Apr 2024 17:11:43 +0800
+Message-Id: <20240430091144.10744-1-hyperlyzcs@gmail.com>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <9c711441-6e79-422f-9405-ee271929e77c@web.de>
+References: <9c711441-6e79-422f-9405-ee271929e77c@web.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 
+When dma_alloc_coherent() or qla2x00_start_sp() return an error,
+the callback function qla2x00_els_dcmd_sp_free in qla2x00_sp_release
+will call qla2x00_free_fcport() to kfree fcport. We shouldn't call
+qla2x00_free_fcport() again in the error handling path.
 
-On Mon, 29 Apr 2024, Kees Cook wrote:
+Fix this by cleaning the duplicate qla2x00_free_fcport() calls up.
 
-> this isn't a case where we can show identical binary output, since this 
-> actively adds overflow checking via kcalloc() internals.
-> 
-> ...
-> 
-> it is a trivially correct change that uses a more robust API and more 
-> idiomatic allocation sizeof()s
+Fixes: 82f522ae0d97 ("scsi: qla2xxx: Fix double free of fcport")
+Signed-off-by: Yongzhi Liu <hyperlyzcs@gmail.com>
+---
+V2 -> V3: Improve patch summary and provide a patch serises with two separate update steps
+V1 -> V2: Optimisation of exception handling
 
-If a change is "trivially correct" then the proof is trivial too.
+ drivers/scsi/qla2xxx/qla_iocb.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Based only on what you wrote above, omitting the overflow check would give 
-binary equivalence. That validates the driver change (for hardware you 
-lack).
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 0b41e8a06602..faec66bd1951 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -2751,7 +2751,6 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	if (!elsio->u.els_logo.els_logo_pyld) {
+ 		/* ref: INIT */
+ 		kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-		qla2x00_free_fcport(fcport);
+ 		return QLA_FUNCTION_FAILED;
+ 	}
+ 
+@@ -2776,7 +2775,6 @@ qla24xx_els_dcmd_iocb(scsi_qla_host_t *vha, int els_opcode,
+ 	if (rval != QLA_SUCCESS) {
+ 		/* ref: INIT */
+ 		kref_put(&sp->cmd_kref, qla2x00_sp_release);
+-		qla2x00_free_fcport(fcport);
+ 		return QLA_FUNCTION_FAILED;
+ 	}
+ 
+-- 
+2.36.1
 
-But, since a build without the overflow check must contain a second 
-change, you must validate that change too by showing that kcalloc() 
-internals still work for every other caller. (You do this using hardware 
-you have.)
