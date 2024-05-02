@@ -1,100 +1,173 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BB3D17B507;
-	Thu,  2 May 2024 19:51:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0906C25753;
+	Thu,  2 May 2024 20:34:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714679469; cv=none; b=B0O6J8fPqrrHz7RjaKoJMb8OS0qW637fqXaymee4Eik44nXxWRlR3n1v57IUH7/OhjJD8g04yQB/EYkD4jfdKXmlFuvhYMFV3C3L8kgKQNJ5BgdVwz8BTNGtNXo7U+nC6TBhQTn9dnMPETIifGYFDixKHcKKU7EIJyrWPl+/520=
+	t=1714682081; cv=none; b=Vzvk7O6L0tnqSp1qxBljXH2P23K+Hm4TDsu0SgExcN+E7tmnwXvFHq//ASfhX8MFM1D7Nnb3ufSepl4JkHhejP2f02G2vXhm8EgJnChfM5BE0m4HpakQwEIW4DBrQqrsv9MQskmpihglarb+A0PYViIfOFaqKmBfOHtWIywFkGo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714679469; c=relaxed/simple;
-	bh=FWiK0dGbKFr03CLSGRaUZUePCfPRUdEj6iROZy7l32E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=IXmL6LvLwTzGTdV+YmvU0GUtdYjZcuLo+QZMIOzRDV+RDHPZonZ5bLLX1Hg1q6srUGPxLeK1h/ccLtF8bWVr02ORhJ8rFLWQmOza/6jj4KFfUGl/Cz2lyYsTw8ojS5ZTjkk1mr/0eH2S2WP9pWL09otZc6oMsOvE0p6OwbJXIXM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YWjwivL5; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1714682081; c=relaxed/simple;
+	bh=ttXSEqgNaGYlbpHkS2ay2w+BGg6nbkrWQ/iPHovZYb8=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=Nf8UYrVA/6K6uQGmSg3rgyOh0Mlm/IfaXNdIoYR1gkFRIfy6Hg+ZFcCvFCuL173igQFQKxhdrio/cJqA2vXtke/rUr+tR2otAYPj/GUuQVDLSLlfKGEFRPMkvyDrs8T/le7PQT30lXZeOR/5MakFOGCdI++MXaxcAK7aaQZLUV4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=R1Az1bhb; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YWjwivL5"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-41c7ac73fddso41845245e9.3;
-        Thu, 02 May 2024 12:51:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1714679466; x=1715284266; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=0aGztHs3AzXvbd06Of34MGwgGFfC850xs6oX7gVaHTg=;
-        b=YWjwivL5H1SX9H8e3nkO3NCBALrYPwV7BwSlbSYt0fKC7HG3XFHn2AB7q/0Md8N/0R
-         Kfn7H9MhcVnq5gAp+Dlb73quSvEXnim9G5aYEpoPY578sb30Fno8CYHJmjEbtHB/zvZX
-         Jqfpgr59xKsLQNICpohhml1YrSIsNa0xsVhiHPXqEa2Ayt72ynMl6QMApOf5LiBb+I3A
-         JaMTEyonkFJ74+B8c2CrdLt0qKRF20OUHuXdtAbB1gxaYfXY6QLx5Cjtw365YKicGKtr
-         Y+rEJY/eb83LFRMn5b/Hoa1DUv/2SKdynj4MWyHg4tkNkXAgBMHrGdnVw60CyLTXAGan
-         AwvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714679466; x=1715284266;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0aGztHs3AzXvbd06Of34MGwgGFfC850xs6oX7gVaHTg=;
-        b=rXgGjncR65SXem2DH8CQKOrULM+UU9Ct931itS0ktf9E28o2Yw2A0t6vfZ759h9RTg
-         qjta6Q06u7TfZPr0E1RznAr7mkz6V5m9EtjFy+P9sbD9NRY33k+L3nzIjEHo2EnaD+Xs
-         hlelxkbpvx5qsQcFmAeJrBTzJH+LOhgmyrLgM1fuAH59RshhwfZAbUKYt+irrjJlDR+/
-         6Ev87mwBL4giYlyhgbs3azrlU+Ezhg+nSQ/jZw+vGuxFiKol5o+ZStCWQGJ4FaaVyKVU
-         dcYWWmtIV3u8ydusoGoTKx5PAxoNJfGrayryuv4wGSRbVZ1K1DJvM5dYVfeVquFpMjMl
-         NDVw==
-X-Forwarded-Encrypted: i=1; AJvYcCUNyisy27myDTJRbuSneCcHzPNOZA7mXWAmbhlW8tiQcWVoRq4JPTYDPRzQcC/nmMoh3GdKse3WoUn5XlkQvDiI8WQuIetMGZoUwT0NCY7fodeMniJVXimrHQkpxyyBpCvy/F6turWBDQ==
-X-Gm-Message-State: AOJu0YwBRFToi565/AZWpM+86EFT836SjKpb8qju8domQH0veBCIz+2p
-	jNyX8Z54jHmFGNSJbsRneT+sML5GZpb6iSsZNfkGUFJvcdpHTCOC
-X-Google-Smtp-Source: AGHT+IHHp6tBlSEk3uj3fBaBTxA7VzebiPhluCE+6GDZCwVg3xoENfDcGWY/jyX/qJ2MCenu21Qp3Q==
-X-Received: by 2002:a05:600c:4454:b0:41b:d08e:8ce with SMTP id v20-20020a05600c445400b0041bd08e08cemr717600wmn.33.1714679465525;
-        Thu, 02 May 2024 12:51:05 -0700 (PDT)
-Received: from ?IPV6:2003:c5:8705:13dc:c5cd:ee6f:81e6:6614? (p200300c5870513dcc5cdee6f81e66614.dip0.t-ipconnect.de. [2003:c5:8705:13dc:c5cd:ee6f:81e6:6614])
-        by smtp.gmail.com with ESMTPSA id e6-20020a17090681c600b00a4e657a5f1asm872948ejx.112.2024.05.02.12.51.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 May 2024 12:51:05 -0700 (PDT)
-Message-ID: <4fe336f1-0441-4697-9da5-45a5f7a4007a@gmail.com>
-Date: Thu, 2 May 2024 21:51:03 +0200
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="R1Az1bhb"
+Received: from apais-vm1.0synte4vioeebbvidf5q0vz2ua.xx.internal.cloudapp.net (unknown [52.183.86.224])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 74FF9206B4F6;
+	Thu,  2 May 2024 13:34:38 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 74FF9206B4F6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1714682078;
+	bh=+lQIkPk/QRwGLvJaABVHpfk2bsKn+OK5GGtbW+NWBq4=;
+	h=From:To:Cc:Subject:Date:From;
+	b=R1Az1bhbZ1U2kukMUltUxFXqjNQs5oqcLebOvX2J+TwfYcx8ex6Pa/3lD1SFfvyzF
+	 gMPhr48V7XMiAp50rN6k+ip0/k71dY1VVjcNEUNkC1FzobY1A7jEdLnBmFC0t3EHrl
+	 3ClkqKrgfg1QAvwKmn1v7IZ3aVQJFD6N2lqMO0zs=
+From: Allen Pais <apais@linux.microsoft.com>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	target-devel@vger.kernel.org,
+	megaraidlinux.pdl@broadcom.com,
+	jejb@linux.ibm.com,
+	hare@suse.com,
+	martin.petersen@oracle.com,
+	linuxdrivers@attotech.com,
+	tyreld@linux.ibm.com,
+	mpe@ellerman.id.au,
+	npiggin@gmail.com,
+	christophe.leroy@csgroup.eu,
+	aneesh.kumar@kernel.org,
+	naveen.n.rao@linux.ibm.com,
+	artur.paszkiewicz@intel.co,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	shivasharan.srikanteshwara@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	jinpu.wang@cloud.ionos.com
+Subject: [PATCH 0/1] Convert tasklets to bottom half workqueues
+Date: Thu,  2 May 2024 20:34:32 +0000
+Message-Id: <20240502203433.15811-1-apais@linux.microsoft.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: Allow RTT negotiation
-To: Avri Altman <avri.altman@wdc.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240502131943.7292-1-avri.altman@wdc.com>
-Content-Language: en-US
-From: Bean Huo <huobean@gmail.com>
-In-Reply-To: <20240502131943.7292-1-avri.altman@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
-Avri,
+I am submitting this patch which converts instances of tasklets
+in drivers/scsi/* to bottom half workqueues. I appreciate your
+feedback and suggestion on the changes.
 
-On 02.05.24 3:19 PM, Avri Altman wrote:
-> +	/* RTT override makes sense only for UFS-4.0 and above */
-> +	if (dev_info->wspecversion < 0x400)
-> +		return;
-> +
-> +	rtt = min_t(int, desc_buf[DEVICE_DESC_PARAM_RTT_CAP], hba->nortt);
-> +	/* rtt is 2 after manufacturing */
-> +	if (rtt < 3)
-> +		return;
-> +
-> +	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-> +				    QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &rtt))
-> +		dev_err(hba->dev, "failed writing bMaxNumOfRTT\n");
-> +}
+Note: The patch is only compile tested.
 
-bMaxNumOfRTT is Persistent Property,  do we need to re-write every time 
-power cycle?
+In the patcheset, you will notice *FIXME* in two places:
+1. pm8001/pm8001_init.c @ pm8001_work(struct work_struct *t)
+2. pmcraid.c @ pmcraid_work_function(struct work_struct *t)
 
-Kind regards,
+The current implementation limits context-aware processing
+within work functions due to the lack of a mechanism to identify
+the source work_struct in the array. The proposed solution wraps
+each work_struct with a struct work_wrapper, adding crucial context
+like the array index and a reference to the parent data structure.
 
-Bean
+Ex:
 
+#define SOME_CONSTANT 10
+struct xxx_data {
+
+.....
+struct work_struct work[SOME_CONSTANT]:
+.....
+};
+
+The xxx_data module currently uses an array of work_structs
+for scheduling work, but it lacks the ability to identify which
+array element is associated with a specific invocation of the work
+function. This limitation prevents the execution of context-specific
+actions based on the source of the work request.
+
+The proposed solution is to introduce a struct work_wrapper that
+encapsulates each work_struct along with additional metadata,
+including an index and a pointer to the parent xxx_data structure.
+This enhancement allows the work function to access necessary
+context information.
+
+Changes:
+
+1. Definition of struct work_wrapper:
+
+struct work_wrapper {
+    struct work_struct work;
+    struct xxx_data *data;
+    int index;
+};
+
+struct xxx_data {
+    struct work_wrapper work[SOME_CONSTANT];
+};
+
+During initialization:
+
+for (int i = 0; i < SOME_CONSTANT; i++) {
+    p->work[i].data = p;
+    p->work[i].index = i;
+    INIT_WORK(&p->work[i].work, work_func);
+}
+
+And it's usage in the handler:
+
+void work_func(struct work_struct *t)
+{
+    struct work_wrapper *wrapper = from_work(wrapper, t, work);
+    struct xxx_data *a = wrapper->data;
+    int index = wrapper->index;
+
+    ....
+}
+
+If the above is solution is acceptable, I can have the same
+incorporated in version 2.
+
+Thanks.
+
+Allen Pais (1):
+  [RFC] scsi: Convert from tasklet to BH workqueue
+
+ drivers/scsi/aic7xxx/aic7xxx_osm.c          |  2 +-
+ drivers/scsi/aic94xx/aic94xx_hwi.c          | 14 ++--
+ drivers/scsi/aic94xx/aic94xx_hwi.h          |  5 +-
+ drivers/scsi/aic94xx/aic94xx_scb.c          | 36 +++++-----
+ drivers/scsi/aic94xx/aic94xx_task.c         | 14 ++--
+ drivers/scsi/aic94xx/aic94xx_tmf.c          | 34 +++++-----
+ drivers/scsi/esas2r/esas2r.h                | 12 ++--
+ drivers/scsi/esas2r/esas2r_init.c           | 14 ++--
+ drivers/scsi/esas2r/esas2r_int.c            | 18 ++---
+ drivers/scsi/esas2r/esas2r_io.c             |  2 +-
+ drivers/scsi/esas2r/esas2r_main.c           | 16 ++---
+ drivers/scsi/ibmvscsi/ibmvfc.c              | 16 ++---
+ drivers/scsi/ibmvscsi/ibmvfc.h              |  3 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c            | 16 ++---
+ drivers/scsi/ibmvscsi/ibmvscsi.h            |  3 +-
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c    | 15 ++---
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h    |  3 +-
+ drivers/scsi/isci/host.c                    | 12 ++--
+ drivers/scsi/isci/host.h                    |  8 +--
+ drivers/scsi/isci/init.c                    |  4 +-
+ drivers/scsi/megaraid/mega_common.h         |  5 +-
+ drivers/scsi/megaraid/megaraid_mbox.c       | 21 +++---
+ drivers/scsi/megaraid/megaraid_sas.h        |  4 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 32 +++++----
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 16 ++---
+ drivers/scsi/mvsas/mv_init.c                | 27 ++++----
+ drivers/scsi/mvsas/mv_sas.h                 |  9 +--
+ drivers/scsi/pm8001/pm8001_init.c           | 57 ++++++++--------
+ drivers/scsi/pm8001/pm8001_sas.h            |  2 +-
+ drivers/scsi/pmcraid.c                      | 75 ++++++++++-----------
+ drivers/scsi/pmcraid.h                      |  5 +-
+ 31 files changed, 249 insertions(+), 251 deletions(-)
+
+-- 
+2.17.1
 
