@@ -1,200 +1,207 @@
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44BB72135B;
-	Fri,  3 May 2024 10:44:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.153.141
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714733047; cv=fail; b=KXmAenhf0ewz5pSMANLkxFEHQ8VLF1yveYek37dS1xS1DErNM35OGisZyeH/1B/yFGShvjx5AmF9uL2p0LR5OuODFFdqasN1GC1JbgTZevVH8HwiIEqZqWUlzzi2vVImBbmKPvfzCpN4JUmY/seG7LWDvVcoReVz/TF9ifNleI8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714733047; c=relaxed/simple;
-	bh=C+fdFZyOdoU6E2xUYit67BAKex+e+Csp1aPD6A5PBg8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Vnp1pkQMqgdblgnd9nHvt7j/9G7S8cNwiebCimqoY0ebsWl2hCY1W9lX0ZTtVS1sgtULSaGvFkZ5ig+GinmY3wCSik/Vdf+JscdZoF+S0KOs+Dvzi2J90qUt/5MVehLH2nHt5v8twXPfcc2a+IKubw++0n5f9+8SGHQ2Kul8mI4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=nAOI6/9K; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=kBmJmwla; arc=fail smtp.client-ip=216.71.153.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DE5B152180;
+	Fri,  3 May 2024 11:35:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.144
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1714736160; cv=none; b=UTBJvQVamfzWxLNmdq4u58x97VoHAP6dVV/J+0ZQvsY00H08x3t/ERz+0HYnIA/rCfzyI8iPZJBAiunrew6nseTtaueHzTpSANfUZr3AN5ZQYgGJRX5aL8f9uaLc8VT8EvjSLQ6x8YY/23IQ51oq+iwKrqO6FOFRNej0UV367aQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1714736160; c=relaxed/simple;
+	bh=ypwfenohYs5/BL5XItPbndcHSZruV5YSn8gwJyQHoo0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FwUKFxqETxheSs30EyCMmnop80yxf/trNU8sSmReTWfv6nD9TYeMSSUf7mWmeMbt3di590oJ9hrDVM41wn+O7JliyJqy0i/UX8G4RsKj1B/Gimf8t7HpaoJY8Xnd06/sKGn24r5ZlN1HpCEXT1pipOjmDJAj6N3jN8zToD9ckGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Ld3QoGyS; arc=none smtp.client-ip=216.71.153.144
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="nAOI6/9K";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="kBmJmwla"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Ld3QoGyS"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1714733046; x=1746269046;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=C+fdFZyOdoU6E2xUYit67BAKex+e+Csp1aPD6A5PBg8=;
-  b=nAOI6/9KPajzxyiJoEJtwnqg8w59K6XcUccVK/rxZf1l4phELzlOjbjN
-   WT+OeQeZmCIJXZl3a+YFvVzvtPuH1pC7CLayj60ADQg4RK9hEqxNNyfpK
-   f+obCaXC7D0wXgvvNRVo/Rqb0VOC4A1XNWzjIO2sQGr18lhVuXh0GKqB0
-   ojBkb8XJv6jIVElTNL8OkuFQ24921IzN4520wWgrK7oAP0mKcDtkg3jw/
-   fAqjG6FhG3dI4Zj1IYpQBMx4/MlBUSzAFLjWeqiZkXpy8l8d09BIReMWp
-   u77L5mL5KfgNI4r3J8P0o2sf8qW7AMO+MAUhRoXZ8bCdT1PQWiDoUgPU/
-   w==;
-X-CSE-ConnectionGUID: aGrhGeQrT6WqoIRC01+57g==
-X-CSE-MsgGUID: U8NTCfrPT4SnGD5C8ASuvg==
+  t=1714736158; x=1746272158;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=ypwfenohYs5/BL5XItPbndcHSZruV5YSn8gwJyQHoo0=;
+  b=Ld3QoGyS64stJV8tgBz1BItJf7f/lo++cTEJTv384s4qP91cRQW7YeIZ
+   mQ0aY/eFieZ4ZWNnun+rD82HaQvGbDL8iXwQgbid0YNcXiYW9IqZ1m4tM
+   1Y5xxjJ1Mwd6XpNSnZZrQ1LQ13pgzkH/001bNMeVs8yqizRwELNbCxV+Y
+   /TsAGX2FONdB6f/G24iiIz/PCmRSG6JmG73eJqi8+Dqm+WA/2/ETotnlr
+   fjmi8fwRo2GOTVeh/tBzXUZ2V5brrwGOs7iPpB9w8opl6igmwwT0xKv39
+   GpkZWcnRxWAQL4H5eeEj+fQtVateG6Zlc8O/OcjGzcsdshQqhXMJyYY8/
+   Q==;
+X-CSE-ConnectionGUID: BQuYb8ezTl2ndWpwkHD+rw==
+X-CSE-MsgGUID: D1eitS8zQfq8FQncT0OmPA==
 X-IronPort-AV: E=Sophos;i="6.07,251,1708358400"; 
-   d="scan'208";a="15257871"
-Received: from mail-dm6nam12lp2169.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.169])
-  by ob1.hgst.iphmx.com with ESMTP; 03 May 2024 18:43:58 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=e61Q7tbuliQ7dabfKbrX6fzgTjdoLHRz67mzNs/4616Sx7YuYc9bvSUGAyEOMAVvAL3OZuxU87YTNfwZMnscREXnXRJETCq/UBWyGx+74ECt5h0XutNXkctxnhMtsx8LLiZoWb30J3LprBZYxpaqdNgZLm6zu4luefhXaLiGVvl4WRc6AOuQtlupmxML/c+uy0EJgna1qoKg9fYWQkQHBQxRHSh1bK2JXEB+tnZbPvagYCQbwF5hmPrvENOJub6mPrstvSL/dY4qGkX+8UqAR8+FJY5VBEiuNewPwGrkDHy44AYHJXk7foWV6aKPgaqwrORawTmpA41fasSGSwZhUw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=C+fdFZyOdoU6E2xUYit67BAKex+e+Csp1aPD6A5PBg8=;
- b=gm6VuM1j7bfqhGo4p/Vxn+9GUBjtVfDH8QTYDcsAfKZcvRmy/JkhJlDqgM6i1ig7QGOhO9y9eOQOdto1WnXNnmn7UrBxf2NBIG2BgHfeSF60PGNIepkib8hFc0kz1S7CXJPnEgugFYO37FAyTryKPljNEC9n0/lcxjgLE+vJxNbU8H1LB/FPT/Lpp+axPkVFp1nDk2DT1JjQXVBibQxB499hS0Z5q1qKUSrC92OetAwQ2JgkpWuBeeNhwcbiZgtTOwqQEPFmKmpGrZ8iUWmAxanxzOtCtaNgyWZcNr20lH8HyaZz5k7ehlO7v2zgwyQAqlgzXHrrv7h4dlUGOk4q2Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=C+fdFZyOdoU6E2xUYit67BAKex+e+Csp1aPD6A5PBg8=;
- b=kBmJmwlaHqTVVz3aBPScCfRpBlcgwQJ+KNUunCChixDPjGyUFE3wzKDTTzwoUUcIuku6OY6pE6SKbE9TxRk7DUw9gECKgzrMZMXgmG905V5ikFg4lsK2go5SXEkjweSFTxbT+pQPLbCjzDqTgCmQLQgnoM2IvfJ92h/e43JKl8U=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM8PR04MB7944.namprd04.prod.outlook.com (2603:10b6:8:6::9) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.7544.30; Fri, 3 May 2024 10:43:56 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::73a8:8d4e:8c05:62a5]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::73a8:8d4e:8c05:62a5%5]) with mapi id 15.20.7544.029; Fri, 3 May 2024
- 10:43:56 +0000
-From: Avri Altman <Avri.Altman@wdc.com>
-To: Bean Huo <huobean@gmail.com>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: Bart Van Assche <bvanassche@acm.org>, Bean Huo <beanhuo@micron.com>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] scsi: ufs: Allow RTT negotiation
-Thread-Topic: [PATCH] scsi: ufs: Allow RTT negotiation
-Thread-Index: AQHanJN3smS5sBuLWEmHzoXjg+8MlbGEWvmAgAD4/OA=
-Date: Fri, 3 May 2024 10:43:56 +0000
-Message-ID:
- <DM6PR04MB6575A1337E81A241CD37FCB1FC1F2@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20240502131943.7292-1-avri.altman@wdc.com>
- <4fe336f1-0441-4697-9da5-45a5f7a4007a@gmail.com>
-In-Reply-To: <4fe336f1-0441-4697-9da5-45a5f7a4007a@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6575:EE_|DM8PR04MB7944:EE_
-x-ms-office365-filtering-correlation-id: 36e89da1-9dfa-4668-2c16-08dc6b5def01
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230031|366007|376005|1800799015|38070700009;
-x-microsoft-antispam-message-info:
- =?utf-8?B?VkZzUXIwQWVLOHFpblV4ZEJFNVBIR0Y3MnVpanhkOG1yaHhHUXA3ZUNWaUZN?=
- =?utf-8?B?WUhCNzdjbU5JazU5RHlONnAvUlZ1Y011d05raVZ6SmFnWXpZdHFZUnhwQWUw?=
- =?utf-8?B?ZHJSUTN4UGtMb0EwVjBuV0lPcU0zdGpRZjBKa0VRTm01NG1NTXBoampSQlNL?=
- =?utf-8?B?WFBRb3FJTUxaMlBuVWRtbXF2Q2Nnc2UrSm5lay9IYjIzVzB2c1FDTjB0ZUxK?=
- =?utf-8?B?ekNhZVdHc2Q5dGZReDA3OGE3QkdzNDJFYWNOcFdCVlVyUG0xOXB4ODRiUDkv?=
- =?utf-8?B?VlBXM0VjbS85bC9weFNxTzZtL0RoUE9pVUNOZkZhUnRvbDBFbnlna0Ficito?=
- =?utf-8?B?UkJxMUMzbGtCdG9hOGllSGYrM0cwd2xYR2podldUZUVVSHRGY09uRnIvb1pQ?=
- =?utf-8?B?VnEzUUFma2lyb0ZEZ2VkK2N5WkdqRnZZYkcxNjBFSzdxTzU1RFg1Q29MVDFu?=
- =?utf-8?B?QkhoVkpUbmI5andKT2pTQjNOSnpBdmwxMzhlYXZvaS9ZSGtiZ2I2QldncDVy?=
- =?utf-8?B?V2xYL1ZiaWxFQUtnc2JPUDhZZlZ4RVliVHZIMkZmVW93dkowZEcrdlREMkUz?=
- =?utf-8?B?ZzlVWEdIUFpIUzNoTVNFTm1MV2lPVitCTi9tamUxRDFjTWRLMlpHclFYK1Q4?=
- =?utf-8?B?Q0t4SysxNDFPY2Y0UXNpQW1DbkZkVHI5WWFqbVB4SWtxdnZwYXREcUlwUHFa?=
- =?utf-8?B?SEk3N0Y3RjVzWW11b0p6RUJEdzQ2TC9tSXM3SG03ZEp5TWc3SjZFNnRKYUt4?=
- =?utf-8?B?SVdRRFd1a0NXbXFQa0kwZ1BKaExyTjBQdktBdzRFWjFQYi9wRmRqS2ladFJ4?=
- =?utf-8?B?RWF3Tlo4b3l5WnJYMmNSMU9WSVA0Y2dOTXoraWErNTlCM2dDdUJLRUZHVGxP?=
- =?utf-8?B?Q1gxTVRKcWpDZmtJRlFzSm1mcFZ2SzgzMEJ2SUxzREw3VXNTaXI4dGxIRGp6?=
- =?utf-8?B?NGlWTHdzZUZWVG5VenNkdkpKNXNIN1hxZzBEQU01UkdLK29vL2NKaHk5a0s3?=
- =?utf-8?B?T3Z3cVJrMjhNSjNjdktJdDRsdHBWaXIrbzgvKy9qakNMT1lVb09lSUFLZ3VK?=
- =?utf-8?B?OVlLRmJxMkh0OGwvL0trbmY5MDVPYUdXbFlzVTljM0VDZm5VWUlqVWxpNUcw?=
- =?utf-8?B?Sis3Y0tGL1ZDUGpQeTI4MUg2aGNLUzZ6MlVmS2N2V0F5WmlmNTVrZk9idFpC?=
- =?utf-8?B?Z1IydFVCY2R3ZWwxRlVzNDJDRDFyTUhvU2hZWUlyMGdSTDcvanBjOGJTVHow?=
- =?utf-8?B?V2dwOCtPa3VLcU0xRDRQYWNnQ0pGV2w2QXRlWm9mZnV0NnpObEtsaEJJM2RO?=
- =?utf-8?B?cU5kNmFsSlJjNWZWbW5SdndWS2ROeUc2c2ZCbGFyMUJ2NjRENmlYYi9VR0ZB?=
- =?utf-8?B?QW9wQjhmNmZ2L3N5N3Zka2U3N3lYMm9FLyt1a2FWTC9LOUU0RTVhaGN3aExF?=
- =?utf-8?B?WUxycEY5aitEb0cxTU9xcnZTZU04UUYzU09aN0UwY0hoMGFkdS9yYXVmenZW?=
- =?utf-8?B?T05VRi9ZYUpIejE0QW1zMFJRQkRtL29sQnoyUmo3MzdtRGRFNXZwUXgwYU1k?=
- =?utf-8?B?RUYwUnpwMGtKTVF5UXdKUUFQaDBFc3lHYlpTM1QvdkF4aURZOFR6cUQ4bnYr?=
- =?utf-8?B?eDFxdzRXWG4zZytRMW9QcjZYWXY3eUpsejRuVkRzQXNIVGFRSXJMdVFkNVN3?=
- =?utf-8?B?ci9zODhUSEo3OE1yakpDUnl6RXFuYXk2S05MSERvUE1hZVZ2UzNWeDZiMzBa?=
- =?utf-8?B?S3RGNG5SMlFMSWhLak5YQlliVE9wMFBQaFZmSmwydXVYeHZ6bzNuU2hPUnh2?=
- =?utf-8?B?bGJaZTVSNG9vdzh4V3kyZz09?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015)(38070700009);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?UFY1U0REeU9tY0JUWTlaOWtRSnpGQjVScjBCVUFmYXJUZHUxWm9Fbkc2cjhQ?=
- =?utf-8?B?ZXFhSE1MenlSMDFLS3U3ZW5rdWtVYVpoaThRVnFBMDhvOURGd2FKcFhjVnFq?=
- =?utf-8?B?M01UWkFmRXV6TDNFS1lqZ0trbFoyU2V0dzdVZ3VBSkJRbjJkTlZzRGcwRTRw?=
- =?utf-8?B?YjNGbUFUMThRV09ZYjUydXJtNHBBZTdGSlBpdlRxNTJpWThUY2RiQzhuUlJ1?=
- =?utf-8?B?MU9sQXlhaXRlSHVRbVI0V0RXa3paTFJhUDJ6TjhjZ2FGYXVsaGtlSVMzM3ZH?=
- =?utf-8?B?Ujh0TWxUWVROeFE3QUpOMnYwS0wzeUtJWGo1ZkIvK1RTaG1lS3RwZmRWMUNp?=
- =?utf-8?B?NjJES0g1aC9JenRuZ3VHWktXTjNTWk5wK3FkQkVuTVJTTlFQY1NRNXExTUo5?=
- =?utf-8?B?bTk1bnNEeS9UU2NnY3pCeWdoQ1JncFh2cFlQUlF1TU1QWE0yL1o5VUVUdE1s?=
- =?utf-8?B?YUhXeEZ5WlhTOE5GSS9WRElmS0xDcVBlTDBDZVVYcEp3Ukt4ai9BU2Jtcm56?=
- =?utf-8?B?WVdaNFpWcEE0TXZTUjRBQnZLM2p5aTVCTkFjanl4YTRodUxycXNnZ0dYZXBW?=
- =?utf-8?B?VnBQNnVpb0xjQW85cEEzSkRSb0VOREZNdFRsZ1gvVEdKT0lDZi9ZNW1PbmhU?=
- =?utf-8?B?aU5XWW0ydGlMQm9aU3dDQ2RZMzZndTVabGl2UXVDMGpoL1hBeU5Zb0t5amkx?=
- =?utf-8?B?ZE9SZjZQRFJYV1FoTnMxbklTMFdqbk1VNnAyZ2owWEVSSnV3K0RsNXFoclBn?=
- =?utf-8?B?SnhrWURydzY2N3VqTStaaU5wZmQ4dTA1b3RkK0JQS2pGQVdBRXBNMkY1THpK?=
- =?utf-8?B?RCtwbDVMZnRDY01CWU1lbTV1OTIyWDJqRGlHblRObHpYaUFQWXZicmZRRWhF?=
- =?utf-8?B?U1BNems0YlEzOXp0WDZsd2g1Q2VlU3lTZU9pZU8zMENBazNRaVNTcU1USzkw?=
- =?utf-8?B?WWJYMDNJOFFHem9qUm13RWdBOHNPK0FlWlNMTEtOc2g4aVZIZUNNV2lwUUFw?=
- =?utf-8?B?VjhUSlhVMElSS2N6TjVJWTBZWlFNaEhiZjdCMzQvaVVHZzViWTVJZml2VDZ0?=
- =?utf-8?B?Y28xRWZ4dmZBTGxoMXdWWi85UW9BYWZhdHFLcTVoRzVsNnlsdWpKR2J3WExl?=
- =?utf-8?B?TVNnOUQzajZwOEt0eU92UzV6VDhrMCtWT1VadDExRmhYVEVVMjh2bnVteVpZ?=
- =?utf-8?B?ell3MnBWaUxUVkFxdXFkeVlUWmhKa1NNcjZrQWVTVzBYNzlVL3p1Z2dHcjRO?=
- =?utf-8?B?S0NEajlNckhYUVhYK2NiK3lIOVQwVklwRXk2SkJ6QXYrRGYwaVZhVG5URVNy?=
- =?utf-8?B?MGFJMk1FaDJ5ejVOY1VLaVVkdXIzcVNNMEI5Ri91YkUvT3dBVDBIMzA3UnNz?=
- =?utf-8?B?c2lsQkdIMGZWQ24yTFMzcys4RFFLMDU2eG40b0ZRNm5oZHlzUEVWa1V3eDd2?=
- =?utf-8?B?OTJzMkErYnNjY0g0Sncyc1NZdnBrOHhVb2xsRm5xWjdsdDJHcTdjR2hwV2ox?=
- =?utf-8?B?UGl0MzZkVmUxd3ZGK0hXRncvT2dDM1FUemlCc0N6QlIxZWlZRVYzWVZORDh5?=
- =?utf-8?B?cVloUUNCaWd4Yit0UjBFOXJ4b1ZJbUFSYWxIMnJ5dDZJZC90NjBuVUJnQjRE?=
- =?utf-8?B?Mkw0dGZkVGxBMWdFdFlEeUxBZmdIZFhUYmNKNGwrSEtqNTB2RTFBMzE4TzBi?=
- =?utf-8?B?a0o1dEpRUDhZUzVaU0kxbmJ3Z3phaHdkWDdsRlZuUHZCcnFjMis0QkdldG5B?=
- =?utf-8?B?NUJJaFQ0RUEwSFNvYS9GVWtuMHlIT1QzNzVDR3JJWjV2d2d3Rlo0b0lCOXZ6?=
- =?utf-8?B?UkVuOWJ2MU9zQWVBL2xqMW5rR3VyMzFXVnQ2Z0RDQlo2RHRCQmpkdkdKOGdR?=
- =?utf-8?B?bGtmaHRkQWZwRjArNnBUVEpRZE0rVU92U2FYL21LaTZER1dZbjd3LzM1dWc3?=
- =?utf-8?B?UmRaRmtGc2dDSTQ0NVQ4L3pyayt1RWRvSjNOZmpqQjBVK2JBOFJONkppK2sv?=
- =?utf-8?B?OW9ZdlltYW5xSldnYWNqYnhFbXlFTzJ6R0g1c2hkZGd6MVVXM2g5QVdsbkRY?=
- =?utf-8?B?QS9VSXlBeEdHL3R1TVlPMG9wdEFRd2MyN1F0RXdjMWFrLzVBbXZ4Z3Nja3BZ?=
- =?utf-8?Q?xG8TTMsTVjnxXIulb8grYSmIX?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+   d="scan'208";a="16253413"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 03 May 2024 19:34:45 +0800
+IronPort-SDR: t1Ddt0WGoFUq78daPjWte9BpFI3BsGwSn0mPvgRlEje5LnkamwPxFrVFof7cvVFv+QIvpidqKm
+ cuKlzT5LHgXxJ2qP7gmuxs1qhatL6krRMtfYUx8MdkytkawaST9zZjYs7OCiV6MzrYn+uh5qzN
+ 63Q3Kmv7+Hf3Hycyve5qnE5WMu0Do8kyFUe+wP6FxkmxzjFSVP0ufDv7EQNpBjLfBocEhMv7P6
+ wKomTNxjgGiluqd9q87FcSYJEgzazCOVACarpaGsa/UYSRfxLPGzMIrx7vr4DbUotnQBHk3QUE
+ kF0=
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 03 May 2024 03:42:41 -0700
+IronPort-SDR: 7Al3XXRLnUZ6oOFHuW70cf2UeRZQwpFexmhEWPnNY4tXqhWMVwcdxx1CXdaovDu1Rss01YZoK5
+ 6Fg/BWCbxw6CoPOfHsv3hhD7bxPZ5n6D4diRS9r8MC26fjZgeNIeI9IdtkDX/Eke+VpyV0jieO
+ RvdrcO/RA58iUef11M0XsqT7Rrbc61o4NXXZRTQDeayQlE43T/GWakjfZZXmRnpYXMtsAqiSKw
+ eifQbF3W9EHPVtXakuGGUa0jTTQhhJZ0VbxFQyZtjI18ymkhT88mc0Us51hREuR9/GKanrbg5T
+ Hv8=
+WDCIronportException: Internal
+Received: from 5cg1421g9c.ad.shared (HELO BXYGM33.ad.shared) ([10.225.33.173])
+  by uls-op-cesaip02.wdc.com with ESMTP; 03 May 2024 04:34:40 -0700
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v2] scsi: ufs: Allow RTT negotiation
+Date: Fri,  3 May 2024 14:34:29 +0300
+Message-ID: <20240503113429.7220-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	phkzRkuKTOvFLzOnr2stFmjUiZyVC0bYzczhn4XbDgbPdht1V23z9pRsyGGR4HIUJ4RM6lCcaFvfR3oLqX6jwETWQZwryDbqIQDjLIIBb7EM4nX1NN03c7hfbJuw0fYcpEHdmpx/1j3s7ZT92mhBZ9K/Gj1F55C97A6xI8efgaGnJP42K+tFg9nBLkWFjvanteKDVHCvWVgjLPhOHQv/ibEFRzflw8td5+0cI+qcj/XihtpDup0HyEoQTGa7CCDR/qErtqRU62KjXMPR2gVnlLLZ6p8+kfd5U6aA+Wb97GlwakyY5NGTMzLVtCJvfAeZ8b4CDVt92gXtaI5KpkXzSuS8yOXQA2KeP8Nip+kVUtGPEI0nmHj+74gFGHEDcPkQ2IpiGiUhO1Kcg88WuAb1AHP3vep0DKWobGGQYTe1PorjhvruPLGsMOxmkCnF4dVJPiwDwAtZkhd/4HJsDxPiHvbQx8uiTFnuqiNCcT/O3f5UNhsi8g83c8LIPGRIUTwAFtmVnThQp1x83gfsfqygCluzLuo2Rpj8p8demqJVl5IGzILz42WLdYHrJJ588nfqevd5ZHUPH0CjMaG0L8c5eSvtSvgVcjZ4TOFdtd3udBNWmq3uqIQtnjF1dulRcogK
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 36e89da1-9dfa-4668-2c16-08dc6b5def01
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 May 2024 10:43:56.5221
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Xu/i2c4jC1WtDbnbfMPeblLUu9Bv+h9aGZmXfkcS3kRPWfc71Isn53SRT/vOnNnqDckAt6oVSiRfunSBJ1SgSA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM8PR04MB7944
+Content-Transfer-Encoding: 8bit
 
-PiBBdnJpLA0KPiANCj4gT24gMDIuMDUuMjQgMzoxOSBQTSwgQXZyaSBBbHRtYW4gd3JvdGU6DQo+
-ID4gKyAgICAgLyogUlRUIG92ZXJyaWRlIG1ha2VzIHNlbnNlIG9ubHkgZm9yIFVGUy00LjAgYW5k
-IGFib3ZlICovDQo+ID4gKyAgICAgaWYgKGRldl9pbmZvLT53c3BlY3ZlcnNpb24gPCAweDQwMCkN
-Cj4gPiArICAgICAgICAgICAgIHJldHVybjsNCj4gPiArDQo+ID4gKyAgICAgcnR0ID0gbWluX3Qo
-aW50LCBkZXNjX2J1ZltERVZJQ0VfREVTQ19QQVJBTV9SVFRfQ0FQXSwgaGJhLT5ub3J0dCk7DQo+
-ID4gKyAgICAgLyogcnR0IGlzIDIgYWZ0ZXIgbWFudWZhY3R1cmluZyAqLw0KPiA+ICsgICAgIGlm
-IChydHQgPCAzKQ0KPiA+ICsgICAgICAgICAgICAgcmV0dXJuOw0KPiA+ICsNCj4gPiArICAgICBp
-ZiAodWZzaGNkX3F1ZXJ5X2F0dHJfcmV0cnkoaGJhLCBVUElVX1FVRVJZX09QQ09ERV9XUklURV9B
-VFRSLA0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBRVUVSWV9BVFRSX0lE
-Tl9NQVhfTlVNX09GX1JUVCwgMCwgMCwgJnJ0dCkpDQo+ID4gKyAgICAgICAgICAgICBkZXZfZXJy
-KGhiYS0+ZGV2LCAiZmFpbGVkIHdyaXRpbmcgYk1heE51bU9mUlRUXG4iKTsgfQ0KPiANCj4gYk1h
-eE51bU9mUlRUIGlzIFBlcnNpc3RlbnQgUHJvcGVydHksICBkbyB3ZSBuZWVkIHRvIHJlLXdyaXRl
-IGV2ZXJ5IHRpbWUNCj4gcG93ZXIgY3ljbGU/DQpDb3JyZWN0Lg0KTW9yZW92ZXIsIGRvbid0IHdh
-bnQgdG8gb3ZlcnJpZGUgdXNlLXNwYWNlIHNob3VsZCBpdCB3YXMgd3JpdHRlbi4NCldpbGwgZml4
-Lg0KDQpUaGFua3MsDQpBdnJpDQoNCj4gDQo+IEtpbmQgcmVnYXJkcywNCj4gDQo+IEJlYW4NCj4g
-DQoNCg==
+The rtt-upiu packets precede any data-out upiu packets, thus
+synchronizing the data input to the device: this mostly applies to write
+operations, but there are other operations that requires rtt as well.
+
+There are several rules binding this rtt - data-out dialog, specifically
+There can be at most outstanding bMaxNumOfRTT such packets.  This might
+have an effect on write performance (sequential write in particular), as
+each data-out upiu must wait for its rtt sibling.
+
+UFSHCI expects bMaxNumOfRTT to be min(bDeviceRTTCap, NORTT). However,
+as of today, there does not appears to be no-one who sets it: not the
+host controller nor the driver.  It wasn't an issue up to now:
+bMaxNumOfRTT is set to 2 after manufacturing, and wasn't limiting the
+write performance.
+
+UFS4.0, and specifically gear 5 changes this, and requires the device to
+be more attentive.  This doesn't come free - the device has to allocate
+more resources to that end, but the sequential write performance
+improvement is significant. Early measurements shows 25% gain when
+moving from rtt 2 to 9. Therefore, set bMaxNumOfRTT to be
+min(bDeviceRTTCap, NORTT) as UFSHCI expects.
+
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+
+---
+Changes since v1:
+- bMaxNumOfRTT is a Persistent attribute - do not override if it was
+  written (Bean)
+---
+ drivers/ufs/core/ufshcd.c | 36 ++++++++++++++++++++++++++++++++++++
+ include/ufs/ufshcd.h      |  2 ++
+ include/ufs/ufshci.h      |  1 +
+ 3 files changed, 39 insertions(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0819ddafe7a6..c472bfdf071e 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -102,6 +102,9 @@
+ /* Default RTC update every 10 seconds */
+ #define UFS_RTC_UPDATE_INTERVAL_MS (10 * MSEC_PER_SEC)
+ 
++/* bMaxNumOfRTT is equal to two after device manufacturing */
++#define DEFAULT_MAX_NUM_RTT 2
++
+ /* UFSHC 4.0 compliant HC support this mode. */
+ static bool use_mcq_mode = true;
+ 
+@@ -2405,6 +2408,8 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+ 	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
+ 	hba->reserved_slot = hba->nutrs - 1;
+ 
++	hba->nortt = FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT, hba->capabilities) + 1;
++
+ 	/* Read crypto capabilities */
+ 	err = ufshcd_hba_init_crypto_capabilities(hba);
+ 	if (err) {
+@@ -8119,6 +8124,35 @@ static void ufshcd_ext_iid_probe(struct ufs_hba *hba, u8 *desc_buf)
+ 	dev_info->b_ext_iid_en = ext_iid_en;
+ }
+ 
++static void ufshcd_rtt_set(struct ufs_hba *hba, u8 *desc_buf)
++{
++	struct ufs_dev_info *dev_info = &hba->dev_info;
++	u32 rtt = 0;
++	u32 dev_rtt = 0;
++
++	/* RTT override makes sense only for UFS-4.0 and above */
++	if (dev_info->wspecversion < 0x400)
++		return;
++
++	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++				    QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &dev_rtt)) {
++		dev_err(hba->dev, "failed reading bMaxNumOfRTT\n");
++		return;
++	}
++
++	/* do not override if it was already written */
++	if (dev_rtt != DEFAULT_MAX_NUM_RTT)
++		return;
++
++	rtt = min_t(int, desc_buf[DEVICE_DESC_PARAM_RTT_CAP], hba->nortt);
++	if (rtt == dev_rtt)
++		return;
++
++	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++				    QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &rtt))
++		dev_err(hba->dev, "failed writing bMaxNumOfRTT\n");
++}
++
+ void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
+ 			     const struct ufs_dev_quirk *fixups)
+ {
+@@ -8278,6 +8312,8 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 	if (hba->ext_iid_sup)
+ 		ufshcd_ext_iid_probe(hba, desc_buf);
+ 
++	ufshcd_rtt_set(hba, desc_buf);
++
+ 	/*
+ 	 * ufshcd_read_string_desc returns size of the string
+ 	 * reset the error value
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index bad88bd91995..d74bd2d67b06 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -819,6 +819,7 @@ enum ufshcd_mcq_opr {
+  * @capabilities: UFS Controller Capabilities
+  * @mcq_capabilities: UFS Multi Circular Queue capabilities
+  * @nutrs: Transfer Request Queue depth supported by controller
++ * @nortt - Max outstanding RTTs supported by controller
+  * @nutmrs: Task Management Queue depth supported by controller
+  * @reserved_slot: Used to submit device commands. Protected by @dev_cmd.lock.
+  * @ufs_version: UFS Version to which controller complies
+@@ -957,6 +958,7 @@ struct ufs_hba {
+ 
+ 	u32 capabilities;
+ 	int nutrs;
++	int nortt;
+ 	u32 mcq_capabilities;
+ 	int nutmrs;
+ 	u32 reserved_slot;
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index 385e1c6b8d60..c50f92bf2e1d 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -68,6 +68,7 @@ enum {
+ /* Controller capability masks */
+ enum {
+ 	MASK_TRANSFER_REQUESTS_SLOTS		= 0x0000001F,
++	MASK_NUMBER_OUTSTANDING_RTT		= 0x0000FF00,
+ 	MASK_TASK_MANAGEMENT_REQUEST_SLOTS	= 0x00070000,
+ 	MASK_EHSLUTRD_SUPPORTED			= 0x00400000,
+ 	MASK_AUTO_HIBERN8_SUPPORT		= 0x00800000,
+-- 
+2.42.0
+
