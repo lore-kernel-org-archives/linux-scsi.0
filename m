@@ -1,35 +1,34 @@
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D00533D8;
-	Sat,  4 May 2024 14:31:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 950431EF15;
+	Sat,  4 May 2024 15:36:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714833108; cv=none; b=fIOSrXyCvh+bzsE24U5gFKFs5cktDHYBHMLfOsodDlurRZSEDcaoWzKdyGtYfS+3HQQvtzboZvs3FijgcxmC5pQ5oW87QQt6bR2qe8rN9ga1cKmsECQnVyBkg28Tt/5Abm7D2LwAC7SPF19TeZ0vHL2FZOsKVOapNZPR2Azrzbo=
+	t=1714836983; cv=none; b=E5Qo2Uwp7awEGE1Fk5ZI+NKg2fBV3X69YM8O/oXSrXXDtYrMdwGeK470YfUNtrNi97IsB5AF3m9u9cDkS6Qe8At2R4i2UFV6n0m3Eu8YyctVEd1F+n4q2q6s+PYEf3idkOTkGd08Ma8tNLJTjrcM/ERaeIMomJgjrMrH5HIfqUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714833108; c=relaxed/simple;
-	bh=ocpnnfd8vO1ZXDw0k7uVLJrLdgKTWsFe7g9KPbqBpRQ=;
+	s=arc-20240116; t=1714836983; c=relaxed/simple;
+	bh=nwu87VDHK729eGU2R6RqtqlA5jPb1XtrfjcVNZX2UW8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ymnk2TiepjKVtDuM+OFkYusALG5F8X0SZN7h4De88iU1XZxpa/fxM4q2xPZRVW+CkE+pUtzYNt0WdL98uXaFsDkffr+yLiRkcuKEn+3BMMv8TFgg1JDzz689S7tLvzdfnkbXVKB9QcCWSeDYnrckRek/htO6L9RiDK0YEBfRAH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.95.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout1.hostsharing.net (Postfix) with ESMTPS id 8667D300102B7;
-	Sat,  4 May 2024 16:31:42 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 672E936599; Sat,  4 May 2024 16:31:42 +0200 (CEST)
-Date: Sat, 4 May 2024 16:31:42 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	linux-kernel@vger.kernel.org
-Cc: Michael Ellerman <mpe@ellerman.id.au>, linuxppc-dev@lists.ozlabs.org,
-	Jean Delvare <jdelvare@suse.com>,
+	 Content-Type:Content-Disposition:In-Reply-To; b=J21/PYB7qQ2+f0S3VyffdpUEX8AnVZuizU+THbuxGVAXkjodOpWl7hWWD3mzzgbjJgXgj48uUlR0AQL93hdqFivcEcW0NZbJzjUEaScPaoMkGfLsu1aAh3fN3JaTnRcMg9MBZXrMFKjBVCgm+7O+wdFiT9F2F2quwQOMPkUAeQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=gOU9LDkG; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="gOU9LDkG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92CBEC072AA;
+	Sat,  4 May 2024 15:36:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1714836983;
+	bh=nwu87VDHK729eGU2R6RqtqlA5jPb1XtrfjcVNZX2UW8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=gOU9LDkGC/Nk0n7vDBEZnWdd/OxMBxqcUv0bWurd537fHJ4jcdyDDcv+QbZAK3nE/
+	 ++E8Cs160Smi3bmrYhGFtE6q5sBfTKr4b7AubdwbVrdiO9sZW2n1rHLERpHgtLVwFL
+	 eCOt84oekveT8FaBGhnj3Hf2FmZa93ZVT3j5PrVE=
+Date: Sat, 4 May 2024 17:36:20 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, linux-kernel@vger.kernel.org,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	linuxppc-dev@lists.ozlabs.org, Jean Delvare <jdelvare@suse.com>,
 	Guenter Roeck <linux@roeck-us.net>, linux-hwmon@vger.kernel.org,
 	Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
 	linux-rdma@vger.kernel.org, Shuai Xue <xueshuai@linux.alibaba.com>,
@@ -59,8 +58,9 @@ Cc: Michael Ellerman <mpe@ellerman.id.au>, linuxppc-dev@lists.ozlabs.org,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
 Subject: Re: [PATCH 0/6] Deduplicate string exposure in sysfs
-Message-ID: <ZjZGzg5LFU2AT3_D@wunner.de>
+Message-ID: <2024050409-confident-delouse-a976@gregkh>
 References: <cover.1713608122.git.lukas@wunner.de>
+ <ZjZGzg5LFU2AT3_D@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -69,38 +69,39 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cover.1713608122.git.lukas@wunner.de>
+In-Reply-To: <ZjZGzg5LFU2AT3_D@wunner.de>
 
-Dear Greg,
-
-On Sat, Apr 20, 2024 at 10:00:00PM +0200, Lukas Wunner wrote:
-> Introduce a generic ->show() callback to expose a string as a device
-> attribute in sysfs.  Deduplicate various identical callbacks across
-> the tree.
+On Sat, May 04, 2024 at 04:31:42PM +0200, Lukas Wunner wrote:
+> Dear Greg,
 > 
-> Result:  Minus 216 LoC, minus 1576 bytes vmlinux size (x86_64 allyesconfig).
+> On Sat, Apr 20, 2024 at 10:00:00PM +0200, Lukas Wunner wrote:
+> > Introduce a generic ->show() callback to expose a string as a device
+> > attribute in sysfs.  Deduplicate various identical callbacks across
+> > the tree.
+> > 
+> > Result:  Minus 216 LoC, minus 1576 bytes vmlinux size (x86_64 allyesconfig).
+> > 
+> > This is a byproduct of my upcoming PCI device authentication v2 patches.
+> > 
+> > 
+> > Lukas Wunner (6):
+> >   driver core: Add device_show_string() helper for sysfs attributes
+> >   hwmon: Use device_show_string() helper for sysfs attributes
+> >   IB/qib: Use device_show_string() helper for sysfs attributes
+> >   perf: Use device_show_string() helper for sysfs attributes
+> >   platform/x86: Use device_show_string() helper for sysfs attributes
+> >   scsi: Use device_show_string() helper for sysfs attributes
 > 
-> This is a byproduct of my upcoming PCI device authentication v2 patches.
+> This series hasn't been applied to driver-core-next AFAICS and the
+> merge window is drawing closer.
 > 
+> So far only patches 1, 2 and 5 have been ack'ed by the respective
+> subsystem maintainers.  If the missing acks are the reason it hasn't
+> been applied, would it be possibe to apply only 1, 2 and 5?
 > 
-> Lukas Wunner (6):
->   driver core: Add device_show_string() helper for sysfs attributes
->   hwmon: Use device_show_string() helper for sysfs attributes
->   IB/qib: Use device_show_string() helper for sysfs attributes
->   perf: Use device_show_string() helper for sysfs attributes
->   platform/x86: Use device_show_string() helper for sysfs attributes
->   scsi: Use device_show_string() helper for sysfs attributes
+> I would then resubmit the other ones individually to the subsystem
+> maintainers in the next cycle.
 
-This series hasn't been applied to driver-core-next AFAICS and the
-merge window is drawing closer.
+I'll just pick it up now, thanks!
 
-So far only patches 1, 2 and 5 have been ack'ed by the respective
-subsystem maintainers.  If the missing acks are the reason it hasn't
-been applied, would it be possibe to apply only 1, 2 and 5?
-
-I would then resubmit the other ones individually to the subsystem
-maintainers in the next cycle.
-
-Thanks!
-
-Lukas
+greg k-h
