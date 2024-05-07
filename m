@@ -1,138 +1,143 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FA546BFC0
-	for <linux-scsi@vger.kernel.org>; Tue,  7 May 2024 09:10:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 294C214D451
+	for <linux-scsi@vger.kernel.org>; Tue,  7 May 2024 09:12:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715073057; cv=none; b=qyXyaoo5Qu2AArp60MViDTsdFTKT2MowjCKSUPxZuardLfVMwZXRx4eA03CwT3dUtcCBFTbMwriyx0bT5LeFcsDFOeldegI0koIRo76WJsj/HHLMipopwk/eJphKid/xnJ3EKy5zgXTVhqMmJVZ7VYkTE52STHmH33uQELJ2HKs=
+	t=1715073140; cv=none; b=ooJ4reZJkW1/kMb0Blt3wnP5Aq/mA8f+2beKSnnDwqZBj1aGuc1aRdiTJv/A/5/lKDm9yw7qW2lKQGtvrDa2nXJhycl+ZcbvDxB8FESmJ+0ILM+HFBprsIHnppnP5JqetZkNHqwg8drVlzvnVKFXNKci34AHQe2SO1+AxsLuoMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715073057; c=relaxed/simple;
-	bh=TOviUTBTYg8bZF4vS4xiXzkSLeTJ/VEm3Qep0h1Qn4M=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=EAe3dXA77fSNJkMRV/scsKtEQrYS3LjI6F85MPAIE5bcvCy6XfXEQdlmQYkxWOrwSB1vo0VhmQMqfvZbtTGQmwkewYJ1b1/i4KK8fu8TvLEqmvtlYk1gMqo0s83xq/eULfcqIDzQ5heotgVHwqEF1TXd0KLyjdm+BtXuHzB5oCA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=P4Bw/5nY; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=bDJPr44Z; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1715073140; c=relaxed/simple;
+	bh=VJYq9hH6rq1H8WWmpEWC39L8qDwxA3D67QJ9JSQkURs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=tAygclpiu9U4nk7WpjRSR1iMX5J0Wo20x0SL/5kqbe10RKnmGaPzb8HzsqX08ZmTOVFE/h0umYwSKsOh+WhibEFf6j/S+AClzfvXy6clWyho3+iaD3AMW8w2z8mHOydtWLzweNhTOsHGAlA9jf3qILRTj0prIMiLvktB8xGBszs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mL1iNdOa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="P4Bw/5nY";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="bDJPr44Z"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 61DD7206C8;
-	Tue,  7 May 2024 09:10:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1715073053; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wZux9p7BC/x4qi61wvU6BAJ9BuHKut7SfVZDT+CMvqE=;
-	b=P4Bw/5nYsuItM9eLjGOCkWbl4NhAv8RRLYDZqhQpdDbZT+BtoD4XK93oMNGXmm+3JYd34x
-	whHpRNXkRn1OVQuJss2qPPwqieT0vEOe0ZHUj/lhRJv3QMYfsCY5DtnXdcgo6Y4o3cB+H2
-	AOI/PO8lFYDG8uD+OpO5DMvhWk1rrWw=
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.com header.s=susede1 header.b=bDJPr44Z
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1715073052; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wZux9p7BC/x4qi61wvU6BAJ9BuHKut7SfVZDT+CMvqE=;
-	b=bDJPr44ZpNkjDWoEH/XYxGOVWVu/vBvmnYWW0qfpYEdvbtCDtSjvf0ioL4K+lMXDyXJsUX
-	8CYURpqGSDCPvTzyaBJZXTqg8RJB3GvN9BqY6YyEgoBhxEMKvzIZyhhxrnVrT0BDCS0swa
-	q9vVeLGSPHzEsZUDrnsU52idWX76wNY=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1EFA9139CB;
-	Tue,  7 May 2024 09:10:52 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id ln/8BRzwOWaqSQAAD6G6ig
-	(envelope-from <mwilck@suse.com>); Tue, 07 May 2024 09:10:52 +0000
-Message-ID: <cd3e2be2ee204a614f69b76f7eefcc50b1e9c4b2.camel@suse.com>
-Subject: Re: [PATCH v2] I/O errors for ALUA state transitions
-From: Martin Wilck <mwilck@suse.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke
-	 <hare@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, Ewan Milne
-	 <emilne@redhat.com>, Bart Van Assche <bvanassche@acm.org>, 
-	linux-scsi@vger.kernel.org, Rajashekhar M A <rajs@netapp.com>
-Date: Tue, 07 May 2024 11:10:51 +0200
-In-Reply-To: <20240506055433.GA5220@lst.de>
-References: <20240503195606.13120-1-mwilck@suse.com>
-	 <20240506055433.GA5220@lst.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.0 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mL1iNdOa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75938C2BBFC;
+	Tue,  7 May 2024 09:12:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1715073139;
+	bh=VJYq9hH6rq1H8WWmpEWC39L8qDwxA3D67QJ9JSQkURs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=mL1iNdOa7du3foqjfyM/uapbnM1NnIvGhSLtspOIC4lDwmxrDpjmlNzJNJYUzu5YE
+	 kcWhBL42vHf56a9e8ZiZW5VIWFFkxJVGvlWDFDyoIipdy5HS8YO8bqNrPsRJAv725V
+	 XY7dFvtFOiIa2m/6+5J1is/5aEEBDCPI3/sJMLvH10FO9dVL5vhAhbLJG0wrO8Utga
+	 nxvsIG8AzWTtCZcA/IcKjD1XuOFNhFzG049OLGIRzrQfhGRE5G9SbNiuCyh2EU7YeD
+	 4hdS1jACfxL5/GLG3JrwcJwupTJ0gvZEW1whgTX0R0eDokKrVMRJP3VjfhL5nwgN6k
+	 B41DERXj7ch5A==
+Message-ID: <f342709a-6a7b-4cc0-973d-62efd2d32277@kernel.org>
+Date: Tue, 7 May 2024 18:12:17 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Spam-Flag: NO
-X-Spam-Score: -4.23
-X-Rspamd-Action: no action
-X-Rspamd-Queue-Id: 61DD7206C8
-X-Spam-Level: 
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.23 / 50.00];
-	BAYES_HAM(-2.72)[98.78%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.com:s=susede1];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[8];
-	DKIM_TRACE(0.00)[suse.com:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] I/O errors for ALUA state transitions
+To: Martin Wilck <martin.wilck@suse.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+ James Bottomley <jejb@linux.vnet.ibm.com>, Ewan Milne <emilne@redhat.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+ Martin Wilck <mwilck@suse.com>, Rajashekhar M A <rajs@netapp.com>
+References: <20240503195606.13120-1-mwilck@suse.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20240503195606.13120-1-mwilck@suse.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, 2024-05-06 at 07:54 +0200, Christoph Hellwig wrote:
-> > -static enum scsi_disposition alua_check_sense(struct scsi_device
-> > *sdev,
-> > -					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct
-> > scsi_sense_hdr *sense_hdr)
-> > +static enum scsi_disposition alua_handle_state_transition(struct
-> > scsi_device *sdev)
-> > =C2=A0{
-> > =C2=A0	struct alua_dh_data *h =3D sdev->handler_data;
-> > =C2=A0	struct alua_port_group *pg;
-> > =C2=A0
-> > +	/*
-> > +	 * LUN Not Accessible - ALUA state transition
-> > +	 */
-> > +	rcu_read_lock();
-> > +	pg =3D rcu_dereference(h->pg);
-> > +	if (pg)
-> > +		pg->state =3D SCSI_ACCESS_STATE_TRANSITIONING;
-> > +	rcu_read_unlock();
-> > +	alua_check(sdev, false);
-> > +	return NEEDS_RETRY;
->=20
-> This always returns NEEDS_RETRY, so you can drop the return value
-> entirely and handle this in the callers.
->=20
+On 5/4/24 04:56, Martin Wilck wrote:
+> When a host is configured with a few LUNs and IO is running,
+> injecting FC faults repeatedly leads to path recovery problems.
+> The LUNs have 4 paths each and 3 of them come back active after
+> say an FC fault which makes two of the paths go down, instead of
+> all 4. This happens after several iterations of continuous FC faults.
+> 
+> Reason here is that we're returning an I/O error whenever we're
+> encountering sense code 06/04/0a (LOGICAL UNIT NOT ACCESSIBLE,
+> ASYMMETRIC ACCESS STATE TRANSITION) instead of retrying.
+> 
+> mwilck: Resending a modified version of this patch, which was originally
+> authored by Rajashekhar M A from Netapp, and submitted in 2021.
+> Moved the changes to alua_check_sense() as suggested by Mike Christie [1].
+> Evan Milne had raised the question whether pg->state should be set to
+> transitioning in the UA case [2]. I believe that doing this is
+> correct. SCSI_ACCESS_STATE_TRANSITIONING by itself doesn't cause I/O
+> errors. Our handler schedules an RTPG, which will only result in an I/O
+> error condition if the transitioning timeout expires.
+> 
+> [1] https://lore.kernel.org/all/0bc96e82-fdda-4187-148d-5b34f81d4942@oracle.com/
+> [2] https://lore.kernel.org/all/CAGtn9r=kicnTDE2o7Gt5Y=yoidHYD7tG8XdMHEBJTBraVEoOCw@mail.gmail.com/
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Martin Wilck <mwilck@suse.com>
+> Co-authored-by: Rajashekhar M A <rajs@netapp.com>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 34 +++++++++++++---------
+>  1 file changed, 20 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index a226dc1b65d7..682d5bb53d14 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -414,28 +414,34 @@ static char print_alua_state(unsigned char state)
+>  	}
+>  }
+>  
+> -static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
+> -					      struct scsi_sense_hdr *sense_hdr)
+> +static enum scsi_disposition alua_handle_state_transition(struct scsi_device *sdev)
+>  {
+>  	struct alua_dh_data *h = sdev->handler_data;
+>  	struct alua_port_group *pg;
+>  
+> +	/*
+> +	 * LUN Not Accessible - ALUA state transition
+> +	 */
+> +	rcu_read_lock();
+> +	pg = rcu_dereference(h->pg);
+> +	if (pg)
+> +		pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
+> +	rcu_read_unlock();
+> +	alua_check(sdev, false);
+> +	return NEEDS_RETRY;
+> +}
+> +
+> +static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
+> +					      struct scsi_sense_hdr *sense_hdr)
+> +{
+>  	switch (sense_hdr->sense_key) {
+>  	case NOT_READY:
+> -		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
+> -			/*
+> -			 * LUN Not Accessible - ALUA state transition
+> -			 */
+> -			rcu_read_lock();
+> -			pg = rcu_dereference(h->pg);
+> -			if (pg)
+> -				pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
+> -			rcu_read_unlock();
+> -			alua_check(sdev, false);
+> -			return NEEDS_RETRY;
+> -		}
+> +		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a)
 
-I liked being able to write "return alua_handle_state_transition(...)"
-in the caller. But np, I'll change it.
+Please keep the comment that spells out what this asc/ascq is.
 
-Martin
+> +			return alua_handle_state_transition(sdev);
+>  		break;
+>  	case UNIT_ATTENTION:
+> +		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a)
+> +			return alua_handle_state_transition(sdev);
+>  		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
+>  			/*
+>  			 * Power On, Reset, or Bus Device Reset.
+
+-- 
+Damien Le Moal
+Western Digital Research
 
