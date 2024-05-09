@@ -1,183 +1,121 @@
-Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E03572C87C;
-	Thu,  9 May 2024 02:12:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D250D13BC3C
+	for <linux-scsi@vger.kernel.org>; Thu,  9 May 2024 03:52:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715220762; cv=none; b=EZ1Bj+faHzqH8v3p4YbxLD40m1BDpfVW//UhdSQbeLgc7SYNA23FgcE08OPfRnmwSXxpcOC0nRf4urPtV6L4m2LrL7uSoNRm6kuUlkvzaxdp2W2FC1hXpj95K+Au4qbcjH8omPnWvGRqDD3IhBW2vkt+Hkv82pJmCUDJcxUKRVg=
+	t=1715226777; cv=none; b=KDy4Q3IgM7/6+LS5rIHv8qPLX62NEohXAGhWPvsSQ7emjJaCeXrQKn5JQURQGIqfGE1HQJA84Z9AzeCOi4uw0Eav884PZH87HU1pk/1zSkO0ROuJegLjmyJmJmaH1Fy7DVAXo4qzOz0kjmMkzLVRIxqcJwhnrxyCiQzB8qwWFBY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715220762; c=relaxed/simple;
-	bh=/uVroRiOxF+R0oE6nrBdHJHTO1ppc5bIKNcNE0c6FIE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WNsmndNQRnijfStSiTQNnrxfX2okLlfBNAFQBqzIX845cxcA6kZmxhXroejPgiPFdI11LSzvSYcmRhDYc9HiJy2VMMZGhRYmJD7fieccqmFFqJx5nT/j8IZKsxGyLP0gk8ucqx74BqCkZkFFQAIv3CypoQ1DYo1o91Cvsi8FWew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=c7BUuaKc; arc=none smtp.client-ip=209.85.218.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="c7BUuaKc"
-Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-a59a609dd3fso68956566b.0;
-        Wed, 08 May 2024 19:12:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20230601; t=1715220759; x=1715825559; darn=vger.kernel.org;
-        h=in-reply-to:autocrypt:from:references:cc:to:content-language
-         :subject:user-agent:mime-version:date:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=/uVroRiOxF+R0oE6nrBdHJHTO1ppc5bIKNcNE0c6FIE=;
-        b=c7BUuaKcFMfa6QpdF3ZqCl8dz0Aev+btZn+4UfWJHfQrHsnb3PXrjir6AvYH3ZzSnG
-         DHYaaKPQGfT+t3tcxjlkwak9OnQUCJhUviIcpKDu5InTli1Oo9AVKflAI+UGHYrla79t
-         TpSA0GNEgmfDSUB0cWQYdRoh8IODlOjV8lgVbS6UzFzyrzgwxzCCkuInRVgyG5+5EPY5
-         soanAzQlsSG/oaGfwX70Rt9I9vbmn8aebux0k/OQotnQxOL1/Jsgkbhm0VR57sgDMIXx
-         CIMyHiTKrLIR0AG3mhhYWOm6Mg4BPOyKfoEkRzjIxpUXYWKlsFRt5wXOB5lacIoSeNxz
-         Jf9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715220759; x=1715825559;
-        h=in-reply-to:autocrypt:from:references:cc:to:content-language
-         :subject:user-agent:mime-version:date:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=/uVroRiOxF+R0oE6nrBdHJHTO1ppc5bIKNcNE0c6FIE=;
-        b=EmSrTFoGSvuMWhP0on6R593FqZHVRoquyMsBJJw8qf85PtFiByqEu12G2SSk2J3/dJ
-         wqcu4Qkqgp2KqJxxLWiUcI8e+Ng12yV0/hjYi7QpNqpI7xxC7Y4skJZfvljf/bUp82v7
-         ya3RAhqcWEdVEHrPNWTQsnxuBloUMcvSBEVOcZas+qrXlioumLn/8O5wmmKyrLtUrQOk
-         OcwZ1I+5YPdz8+LgPEMErQ7F8/xntn2e2z6Lo+7a8tIDBPDiGz+E98+WsS2n1l2dPhin
-         4w+N1Nuk4GXhl+tLv5MiOzcCOwHl8d7FM39Oj9/jNwNmCR3YEjUUhtzzV9c6UnrXgtgx
-         c5hg==
-X-Forwarded-Encrypted: i=1; AJvYcCUvtFmRIeFRJizinST+o0K2VUT71FVzSP0ziox+xZ6UUUE3sl3mHL0EEdsupnOpMKpA7XHcgmyh0c9xlnhyguq+njt+Pw/ZzQJaY/GONAUspWRad20w/y9n0YfX5PsX0WBC+jFv
-X-Gm-Message-State: AOJu0YxXfizH3LeMItXJvKWq1V7WagQWCg06JGL6UwQBUygQxRzog1t5
-	MJcgwxy88z6MtbN6ckhA4av4KtSWxiQzBYE2ElZMZxxWdetaqMM=
-X-Google-Smtp-Source: AGHT+IEv1To3WKcCXF4IZYX+eZGt5q9jhPlEMNAhblrtluvAEEmhPegE1njyo4Th1V9WHIGFeovlVw==
-X-Received: by 2002:a17:907:76f4:b0:a59:a85c:a5ca with SMTP id a640c23a62f3a-a5a115bd150mr96847266b.7.1715220759028;
-        Wed, 08 May 2024 19:12:39 -0700 (PDT)
-Received: from [192.168.1.3] (p5b2b48dd.dip0.t-ipconnect.de. [91.43.72.221])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a5a1781d548sm22676966b.34.2024.05.08.19.12.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 May 2024 19:12:38 -0700 (PDT)
-Message-ID: <5c354987-e373-4d6c-aa55-4030f1a31503@googlemail.com>
-Date: Thu, 9 May 2024 04:12:36 +0200
+	s=arc-20240116; t=1715226777; c=relaxed/simple;
+	bh=ze7qEioftqx5LL7FJOIJRd8F0TFzml7UeGuxfuguLBU=;
+	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=T5V2WQc0wOAusRWJ5HYbYtkbvitq/YE0IxyvtEGtkE1kpWYIWksXfC619orrqsDzHdk0e5bhQ5hGyccP+OqftgXQTu346fcu96Bbjp5F2deCKdlAEAKJBxz1eOT2ZxA4mj57oz+NtEoNSKDsSfiPl5z0wSHyTsxOoGaNzTdb+iw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4VZdLF1gzVztTSl;
+	Thu,  9 May 2024 11:49:25 +0800 (CST)
+Received: from canpemm500003.china.huawei.com (unknown [7.192.105.39])
+	by mail.maildlp.com (Postfix) with ESMTPS id 2109A1400D7;
+	Thu,  9 May 2024 11:52:52 +0800 (CST)
+Received: from canpemm500004.china.huawei.com (7.192.104.92) by
+ canpemm500003.china.huawei.com (7.192.105.39) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Thu, 9 May 2024 11:52:51 +0800
+Received: from [10.174.179.14] (10.174.179.14) by
+ canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.35; Thu, 9 May 2024 11:52:51 +0800
+Subject: Re: Issue in sas_ex_discover_dev() for multiple level of SAS
+ expanders in a domain
+To: "Li, Eric (Honggang)" <Eric.H.Li@Dell.com>, John Garry
+	<john.g.garry@oracle.com>, "james.bottomley@hansenpartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "Martin K . Petersen"
+	<martin.petersen@oracle.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <SJ0PR19MB5415BBBE841D8272DB2C67D6C4102@SJ0PR19MB5415.namprd19.prod.outlook.com>
+ <SJ0PR19MB5415831DB91059696672B163C4172@SJ0PR19MB5415.namprd19.prod.outlook.com>
+ <SJ0PR19MB54152CB3D611259510902505C41A2@SJ0PR19MB5415.namprd19.prod.outlook.com>
+ <c004da1f-b9fe-4641-9d0f-162eabde0101@oracle.com>
+ <PH0PR19MB54115A3BDCD9319781FA652FC41F2@PH0PR19MB5411.namprd19.prod.outlook.com>
+ <823ab904-33a3-4ed0-8794-cb36b9ad636b@oracle.com>
+ <SJ0PR19MB5415F1D35AFB4039A426079CC41C2@SJ0PR19MB5415.namprd19.prod.outlook.com>
+ <PH0PR19MB5411390C5A29A953CAA70062C4E42@PH0PR19MB5411.namprd19.prod.outlook.com>
+ <7081399f-d4e8-4af9-9cff-2bcb1e4c6064@oracle.com>
+ <SJ0PR19MB5415A5F70B0D51BA96CBC76DC4E42@SJ0PR19MB5415.namprd19.prod.outlook.com>
+ <b82bee4f-67b7-4355-a152-1f13d4918220@oracle.com>
+ <SJ0PR19MB5415CFA77DCC17E0BFAEEF76C4E52@SJ0PR19MB5415.namprd19.prod.outlook.com>
+ <eb90005b-1ef7-4bb6-bc62-84af5a03e3e7@oracle.com>
+ <SJ0PR19MB54152471D18241A020914B2AC4E52@SJ0PR19MB5415.namprd19.prod.outlook.com>
+From: Jason Yan <yanaijie@huawei.com>
+Message-ID: <0c4ea5fd-9013-4ade-0597-b42626fe5757@huawei.com>
+Date: Thu, 9 May 2024 11:52:51 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (Windows)
-Subject: Re: Kernel 6.8.4 regression: aacraid controller not initialized any
- more, system boot hangs
-Content-Language: de-DE
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org,
- linux-kernel@vger.kernel.org, regressions@leemhuis.info,
- regressions@lists.linux.dev
-References: <eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com>
- <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
-From: Peter Schneider <pschneider1968@googlemail.com>
-Autocrypt: addr=pschneider1968@googlemail.com; keydata=
- xjMEY58biBYJKwYBBAHaRw8BAQdADPnoGTrfCUCyH7SZVkFtnlzsFpeKANckofR4WVLMtMzN
- L1BldGVyIFNjaG5laWRlciA8cHNjaG5laWRlcjE5NjhAZ29vZ2xlbWFpbC5jb20+wpwEExYK
- AEQCGyMFCQW15qgFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AWIQSjgovXlszhGoyt6IZu
- OpLJLD/yRAUCY58b8AIZAQAKCRBuOpLJLD/yRIeIAQD0+/LMdKHM6AJdPCt+e9Z92BMybfnN
- RtGqkdZWtvdhDQD9FJkGh/3PFtDinimB8UOB7Gi6AGxt9Nu9ne7PvHa0KQXOOARjnxuIEgor
- BgEEAZdVAQUBAQdAw2GRwTf5HJlO6CCigzqH6GUKOjqR1xJ+3nR5EbBze0sDAQgHwn4EGBYK
- ACYWIQSjgovXlszhGoyt6IZuOpLJLD/yRAUCY58biAIbDAUJBbXmqAAKCRBuOpLJLD/yRONS
- AQCwB9qiEQoSnxHodu8kRuvUxXKIqN7701W+INXtFGtJygEAyPZH3/vSBJ4A7GUG7BZyQRcr
- ryS0CUq77B7ZkcI1Nwo=
-In-Reply-To: <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------0vf3HL9Ft144MVPrbYb3Y7ZK"
+In-Reply-To: <SJ0PR19MB54152471D18241A020914B2AC4E52@SJ0PR19MB5415.namprd19.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ canpemm500004.china.huawei.com (7.192.104.92)
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------0vf3HL9Ft144MVPrbYb3Y7ZK
-Content-Type: multipart/mixed; boundary="------------6sr3i0pFB7m39sU7z2d4VxOW";
- protected-headers="v1"
-From: Peter Schneider <pschneider1968@googlemail.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org,
- linux-kernel@vger.kernel.org, regressions@leemhuis.info,
- regressions@lists.linux.dev
-Message-ID: <5c354987-e373-4d6c-aa55-4030f1a31503@googlemail.com>
-Subject: Re: Kernel 6.8.4 regression: aacraid controller not initialized any
- more, system boot hangs
-References: <eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com>
- <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
+On 2024/5/8 16:29, Li, Eric (Honggang) wrote:
+>> -----Original Message-----
+>> From: John Garry <john.g.garry@oracle.com>
+>> Sent: Wednesday, May 8, 2024 3:48 PM
+>> To: Li, Eric (Honggang) <Eric.H.Li@Dell.com>; Jason Yan <yanaijie@huawei.com>;
+>> james.bottomley@hansenpartnership.com; Martin K . Petersen <martin.petersen@oracle.com>
+>> Cc: linux-scsi@vger.kernel.org
+>> Subject: Re: Issue in sas_ex_discover_dev() for multiple level of SAS expanders in a domain
+>>
+>>
+>> [EXTERNAL EMAIL]
+>>
+>> On 08/05/2024 01:59, Li, Eric (Honggang) wrote:
+>>>>> Call to sas_ex_join_wide_port() makes the rest PHYs associated with
+>>>>> that existing port
+>>>> (making it become wideport) and set up sysfs between the PHY and
+>>>> port. > Set PHY_STATE_DISCOVERED would make the rest PHYs not being
+>>>> scanned/discovered again (as this wide port is already scanned).
+>>>>
+>>>> If you can just confirm that re-adding the code to set phy_state =
+>>>> DISCOVERED is good enough to see the SAS disks again, then this can
+>>>> be further discussed. >>
+>>> OK. I will work on that and keep you updated.
+>>
+>> I expect a flow like this for scanning of the downstream expander:
+>>
+>> sas_discover_new(struct domain_device *dev [upstream expander], int
+>> phy_id_a) -> sas_ex_discover_devices(single = -1) ->
+>> sas_ex_discover_dev(phy_id_b) for each phy in @dev non-vacant and non-discovered ->
+>> sas_ex_discover_expander( [downstream expander]) for first phy scanned which belongs to
+>> downstream expander.
+>>
+>> And following that we have continue to scan phys in sas_ex_discover_devices(single = -1) ->
+>> sas_ex_discover_dev(phy_id_b) ->
+>> sas_ex_join_wide_port() ->  for each non-vacant and non-discovered phy in phy_id_b which
+>> matches that downstream expander.
+>>
+>> Can you see why this does not actually work/occur?
+>>
+> 
+> before calling sas_ex_join_wide_port(), sas_dev_present_in_domain() finds the attached_sas_address of PHY (phy_id_b) is already in the domain of that root port, and then disable all PHYs to that downstream expander (in sas_ex_disable_port(dev, attached_sas_addr))
+> Therefore, I think we need to switch the order of function call to sas_ex_join_wide_port() and sas_dev_present_in_domain().
 
---------------6sr3i0pFB7m39sU7z2d4VxOW
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+If this is true then all cascaded expanders will have this issue, I 
+wonder why the test guys have not report it until now.
 
-SGkgTWFydGluLA0KDQpBbSAwOS4wNS4yMDI0IHVtIDAzOjM4IHNjaHJpZWIgTWFydGluIEsu
-IFBldGVyc2VuOg0KID4NCiA+IEhpIFBldGVyIQ0KID4NCiA+IFRoYW5rcyBmb3IgdGhlIGRl
-dGFpbGVkIGJ1ZyByZXBvcnQuDQoNClRoYW5rcyB0aGF0IHlvdSBhcmUgbG9va2luZyBpbnRv
-IHRoZSBpc3N1ZSEgSSB0aG91Z2h0IEknZCBiZSBhbHNvIENDJ2luZyB0aGUgcmVsZXZhbnQg
-DQpyZWdyZXNzaW9ucyB0cmFja2VyK21haWxpbmcgbGlzdC4gRm9yIHJlZmVyZW5jZSwgbXkg
-b3JpZ2luYWwgbWVzc2FnZSBjYW4gYmUgZm91bmQgaGVyZToNCg0KaHR0cHM6Ly9sb3JlLmtl
-cm5lbC5vcmcvYWxsL2VlYzZlYmJmLTA2MWItNGE3Yi05NmRjLWVhNzQ4YWE0ZDAzNUBnb29n
-bGVtYWlsLmNvbS8NCg0KWy4uLl0NCg0KID4gQ2FuIHlvdSBwbGVhc2Ugc2VuZCBtZSB0aGUg
-b3V0cHV0IG9mOg0KID4NCiA+ICMgc2dfdnBkIC1hIC9kZXYvc2RhDQogPiAjIHNnX3JlYWRj
-YXAgLWwgL2Rldi9zZGENCiA+DQogPiB3aGVyZSBzZGEgaXMgb25lIG9mIHRoZSBhYWNyYWlk
-IHZvbHVtZXMuDQoNCg0KSGVyZSB5b3UgZ28uLi4gc2RhIGlzIHRoZSAxVGlCIFJBSUQxIGFy
-cmF5LCBzZGIgaXMgdGhlIDVUaUIgUkFJRDUgYXJyYXkuDQoNCg0Kcm9vdEBsaW51czp+IyB1
-bmFtZSAtcg0KNi41LjEzLTUtcHZlDQpyb290QGxpbnVzOn4jIHNnX3ZwZCAtYSAvZGV2L3Nk
-YQ0KU3VwcG9ydGVkIFZQRCBwYWdlcyBWUEQgcGFnZToNCiAgIFN1cHBvcnRlZCBWUEQgcGFn
-ZXMgW3N2XQ0KICAgVW5pdCBzZXJpYWwgbnVtYmVyIFtzbl0NCiAgIERldmljZSBpZGVudGlm
-aWNhdGlvbiBbZGldDQoNClVuaXQgc2VyaWFsIG51bWJlciBWUEQgcGFnZToNCiAgIFVuaXQg
-c2VyaWFsIG51bWJlcjogNTBDMEI4MkQNCg0KRGV2aWNlIElkZW50aWZpY2F0aW9uIFZQRCBw
-YWdlOg0KICAgQWRkcmVzc2VkIGxvZ2ljYWwgdW5pdDoNCiAgICAgZGVzaWduYXRvciB0eXBl
-OiBUMTAgdmVuZG9yIGlkZW50aWZpY2F0aW9uLCAgY29kZSBzZXQ6IEFTQ0lJDQogICAgICAg
-dmVuZG9yIGlkOiBBREFQVEVDDQogICAgICAgdmVuZG9yIHNwZWNpZmljOiBBUlJBWSAgICAg
-ICAgICAgNTBDMEI4MkQNCiAgICAgZGVzaWduYXRvciB0eXBlOiBFVUktNjQgYmFzZWQsICBj
-b2RlIHNldDogQmluYXJ5DQogICAgICAgMHgyZGI4YzA1MDAwZDAwMDAwDQpyb290QGxpbnVz
-On4jIHNnX3JlYWRjYXAgLWwgL2Rldi9zZGENClJlYWQgQ2FwYWNpdHkgcmVzdWx0czoNCiAg
-ICBQcm90ZWN0aW9uOiBwcm90X2VuPTAsIHBfdHlwZT0wLCBwX2lfZXhwb25lbnQ9MA0KICAg
-IExvZ2ljYWwgYmxvY2sgcHJvdmlzaW9uaW5nOiBsYnBtZT0wLCBsYnByej0wDQogICAgTGFz
-dCBMQkE9MTk5ODU2NTM3NSAoMHg3NzFmYWZmZiksIE51bWJlciBvZiBsb2dpY2FsIGJsb2Nr
-cz0xOTk4NTY1Mzc2DQogICAgTG9naWNhbCBibG9jayBsZW5ndGg9NTEyIGJ5dGVzDQogICAg
-TG9naWNhbCBibG9ja3MgcGVyIHBoeXNpY2FsIGJsb2NrIGV4cG9uZW50PTANCiAgICBMb3dl
-c3QgYWxpZ25lZCBMQkE9MA0KSGVuY2U6DQogICAgRGV2aWNlIHNpemU6IDEwMjMyNjU0NzI1
-MTIgYnl0ZXMsIDk3NTg2Mi4wIE1pQiwgMTAyMy4yNyBHQg0Kcm9vdEBsaW51czp+IyBzZ192
-cGQgLWEgL2Rldi9zZGINClN1cHBvcnRlZCBWUEQgcGFnZXMgVlBEIHBhZ2U6DQogICBTdXBw
-b3J0ZWQgVlBEIHBhZ2VzIFtzdl0NCiAgIFVuaXQgc2VyaWFsIG51bWJlciBbc25dDQogICBE
-ZXZpY2UgaWRlbnRpZmljYXRpb24gW2RpXQ0KDQpVbml0IHNlcmlhbCBudW1iZXIgVlBEIHBh
-Z2U6DQogICBVbml0IHNlcmlhbCBudW1iZXI6IDg3MTgxNjJEDQoNCkRldmljZSBJZGVudGlm
-aWNhdGlvbiBWUEQgcGFnZToNCiAgIEFkZHJlc3NlZCBsb2dpY2FsIHVuaXQ6DQogICAgIGRl
-c2lnbmF0b3IgdHlwZTogVDEwIHZlbmRvciBpZGVudGlmaWNhdGlvbiwgIGNvZGUgc2V0OiBB
-U0NJSQ0KICAgICAgIHZlbmRvciBpZDogQURBUFRFQw0KICAgICAgIHZlbmRvciBzcGVjaWZp
-YzogQVJSQVkgICAgICAgICAgIDg3MTgxNjJEDQogICAgIGRlc2lnbmF0b3IgdHlwZTogRVVJ
-LTY0IGJhc2VkLCAgY29kZSBzZXQ6IEJpbmFyeQ0KICAgICAgIDB4MmQxNjE4ODcwMGQwMDAw
-MA0Kcm9vdEBsaW51czp+IyBzZ19yZWFkY2FwIC1sIC9kZXYvc2RiDQpSZWFkIENhcGFjaXR5
-IHJlc3VsdHM6DQogICAgUHJvdGVjdGlvbjogcHJvdF9lbj0wLCBwX3R5cGU9MCwgcF9pX2V4
-cG9uZW50PTANCiAgICBMb2dpY2FsIGJsb2NrIHByb3Zpc2lvbmluZzogbGJwbWU9MCwgbGJw
-cno9MA0KICAgIExhc3QgTEJBPTk3NjIyMjIwNzkgKDB4MjQ1ZGZhZmZmKSwgTnVtYmVyIG9m
-IGxvZ2ljYWwgYmxvY2tzPTk3NjIyMjIwODANCiAgICBMb2dpY2FsIGJsb2NrIGxlbmd0aD01
-MTIgYnl0ZXMNCiAgICBMb2dpY2FsIGJsb2NrcyBwZXIgcGh5c2ljYWwgYmxvY2sgZXhwb25l
-bnQ9MA0KICAgIExvd2VzdCBhbGlnbmVkIExCQT0wDQpIZW5jZToNCiAgICBEZXZpY2Ugc2l6
-ZTogNDk5ODI1NzcwNDk2MCBieXRlcywgNDc2NjcxMC4wIE1pQiwgNDk5OC4yNiBHQiwgNS4w
-MCBUQg0KDQoNCkJlc3RlIEdyw7zDn2UsDQpQZXRlciBTY2huZWlkZXINCg0KLS0gDQpDbGlt
-YiB0aGUgbW91bnRhaW4gbm90IHRvIHBsYW50IHlvdXIgZmxhZywgYnV0IHRvIGVtYnJhY2Ug
-dGhlIGNoYWxsZW5nZSwNCmVuam95IHRoZSBhaXIgYW5kIGJlaG9sZCB0aGUgdmlldy4gQ2xp
-bWIgaXQgc28geW91IGNhbiBzZWUgdGhlIHdvcmxkLA0Kbm90IHNvIHRoZSB3b3JsZCBjYW4g
-c2VlIHlvdS4gICAgICAgICAgICAgICAgICAgIC0tIERhdmlkIE1jQ3VsbG91Z2ggSnIuDQoN
-Ck9wZW5QR1A6ICAweEEzODI4QkQ3OTZDQ0UxMUE4Q0FERTg4NjZFM0E5MkM5MkMzRkYyNDQN
-CkRvd25sb2FkOiBodHRwczovL3d3dy5wZXRlcnMtbmV0enBsYXR6LmRlL2Rvd25sb2FkL3Bz
-Y2huZWlkZXIxOTY4X3B1Yi5hc2MNCmh0dHBzOi8va2V5cy5tYWlsdmVsb3BlLmNvbS9wa3Mv
-bG9va3VwP29wPWdldCZzZWFyY2g9cHNjaG5laWRlcjE5NjhAZ29vZ2xlbWFpbC5jb20NCmh0
-dHBzOi8va2V5cy5tYWlsdmVsb3BlLmNvbS9wa3MvbG9va3VwP29wPWdldCZzZWFyY2g9cHNj
-aG5laWRlcjE5NjhAZ21haWwuY29tDQoNCg==
+Thanks,
+Jason
 
---------------6sr3i0pFB7m39sU7z2d4VxOW--
+祝一切顺利
 
---------------0vf3HL9Ft144MVPrbYb3Y7ZK
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-wnsEABYIACMWIQSjgovXlszhGoyt6IZuOpLJLD/yRAUCZjwxFAUDAAAAAAAKCRBuOpLJLD/yRHt8
-AP0ZMUE5HT5W4eXGolfab8zPa3WiCAdmmPE/CexEU5ZSFAD9HlRhacx4D5/jl6naYaKlBMRJevmv
-RpcTxqTjrT3oYg0=
-=rNP1
------END PGP SIGNATURE-----
-
---------------0vf3HL9Ft144MVPrbYb3Y7ZK--
+> 
