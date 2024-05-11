@@ -1,165 +1,134 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from EUR04-HE1-obe.outbound.protection.outlook.com (mail-he1eur04olkn2045.outbound.protection.outlook.com [40.92.73.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11F4126AC1
-	for <linux-scsi@vger.kernel.org>; Sat, 11 May 2024 03:41:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715398890; cv=none; b=m+8bTpSso0888GnaCi1nn1behn9PXCgXFwZrV28oQRMPoKc5d9hnQvmje2vWq45tKMQxvF0mDdrlULlrB9cnuKEoEyeG6Cb4T5yX9Oylk6G+qHPG2PwgE3yunUgIKvX6rdJX9F9ox5ZgFvsmha277f+dn7hbPwxi42/cbcOXqB8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715398890; c=relaxed/simple;
-	bh=nliTbCtikCRz9HdIXTVeNq40RsRmVieoTJIGZkExtCA=;
-	h=Subject:To:CC:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=OMYl/Prf+05LbM5WbHAKDS3PU6ksmNgOQmkhv+OYclW5VME521OEiVdNdpnvqdyMeMj9+tIbbaUyL4o8b+KTP06GEmAKcw3+vqLPQL3SBAX5hNCraXlfulCwTuulR5eUKzi6QsJdAzJIYsmA0tEsNrOhXFVMg0TaH1MYFYzwmiA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4VbrzR2WqczgYvy;
-	Sat, 11 May 2024 11:37:23 +0800 (CST)
-Received: from canpemm500010.china.huawei.com (unknown [7.192.105.118])
-	by mail.maildlp.com (Postfix) with ESMTPS id 2CE1F1800AA;
-	Sat, 11 May 2024 11:41:18 +0800 (CST)
-Received: from canpemm500004.china.huawei.com (7.192.104.92) by
- canpemm500010.china.huawei.com (7.192.105.118) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Sat, 11 May 2024 11:41:11 +0800
-Received: from [10.174.179.14] (10.174.179.14) by
- canpemm500004.china.huawei.com (7.192.104.92) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Sat, 11 May 2024 11:41:10 +0800
-Subject: Re: Issue in sas_ex_discover_dev() for multiple level of SAS
- expanders in a domain
-To: "Li, Eric (Honggang)" <Eric.H.Li@Dell.com>, John Garry
-	<john.g.garry@oracle.com>, "james.bottomley@hansenpartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <SJ0PR19MB5415BBBE841D8272DB2C67D6C4102@SJ0PR19MB5415.namprd19.prod.outlook.com>
- <SJ0PR19MB5415831DB91059696672B163C4172@SJ0PR19MB5415.namprd19.prod.outlook.com>
- <SJ0PR19MB54152CB3D611259510902505C41A2@SJ0PR19MB5415.namprd19.prod.outlook.com>
- <c004da1f-b9fe-4641-9d0f-162eabde0101@oracle.com>
- <PH0PR19MB54115A3BDCD9319781FA652FC41F2@PH0PR19MB5411.namprd19.prod.outlook.com>
- <823ab904-33a3-4ed0-8794-cb36b9ad636b@oracle.com>
- <SJ0PR19MB5415F1D35AFB4039A426079CC41C2@SJ0PR19MB5415.namprd19.prod.outlook.com>
- <PH0PR19MB5411390C5A29A953CAA70062C4E42@PH0PR19MB5411.namprd19.prod.outlook.com>
- <7081399f-d4e8-4af9-9cff-2bcb1e4c6064@oracle.com>
- <SJ0PR19MB5415A5F70B0D51BA96CBC76DC4E42@SJ0PR19MB5415.namprd19.prod.outlook.com>
- <b82bee4f-67b7-4355-a152-1f13d4918220@oracle.com>
- <SJ0PR19MB5415CFA77DCC17E0BFAEEF76C4E52@SJ0PR19MB5415.namprd19.prod.outlook.com>
- <eb90005b-1ef7-4bb6-bc62-84af5a03e3e7@oracle.com>
- <SJ0PR19MB54152471D18241A020914B2AC4E52@SJ0PR19MB5415.namprd19.prod.outlook.com>
-From: Jason Yan <yanaijie@huawei.com>
-Message-ID: <ec087459-ae19-f593-f046-846c041e397d@huawei.com>
-Date: Sat, 11 May 2024 11:41:10 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F29953390;
+	Sat, 11 May 2024 11:18:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.73.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1715426339; cv=fail; b=Dt2rkwEf5MM5SVQ3u/0Tqc3Wr6QE3XHhtsCDztKC4GjiTEpIkgL7aYW+XBb/RCuGbVRFWOELAM9ADCnDvx74w8uzRXbJrfANPNckR/qRtaGh6jZIspJzkw3OZ7mUOHmC06jhEDma/j+YxkoDhgtD39PC8DEtMh9L41t1pRrlvDg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1715426339; c=relaxed/simple;
+	bh=uMZZVQ3kPsHlN3AIfE0bR21QsKcbOzVSCcDf+vuUbOY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=oqWDMXvDjHjWxtTZSjaE9Z0F066cV3ZCIMOSWdAk2j/aEL9OQ907qTcs9m60k1nDNYXFACV38SqbyYjoIK5SBTGKuhq2G/fHXQlm9rdyjeyS62tkl0Z5QbFxjk+l1Y+gC9OE3yldNdo0wyq+smcYUVkE79UGy7+Q7uyxqgnt9x0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=jsooCApb; arc=fail smtp.client-ip=40.92.73.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="jsooCApb"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BfU/8l80TJQu5xRHfM5vWdzQw6eKYsdcAYctvTzgk6couZc46KFDOT83kqr11SvkZnUCjT4ho+HsaCOGwmrJq1WgVVpCui366GmhF5QyRUwRRlZOXiqYyEmWU3X0enPTUoC8mrbHfKIpWmoVH6h85qKJxJKHRzklTgLLnrKD3m0O+7XyTJgfkY0LOedM330P2whaLy4f3lgE7zNOai6c/lnFRxqa+ZSHtYUiI+pB4+N5BEXehefqno7OZfSz8bVMZ/fEwqq3de34ZP2oBOPr8FCjy4bIbZ9qLJIy8dzza+JFmybGqjPRTLO/XDAEriPW3dP2SKgwe2HFocwp1yGDqg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=02prNc+2KpAXKIDg3UuXVJGJ7t636sA/5HsJ8IMfbjU=;
+ b=afEbVsQTy9EOPtmTaW02vai6Y9Y3f6aV6aoPz+bV/CbAKNOzoX5UBKpY6rKrFz46SzJ32fjJSHtjh0GEk4Jf4c1dG5L8HAZmCTgUTkDWP/Ca6fyQohrATCVeV38v9bFS9cAO5RaFb13sBnDM1FkPL+KItCpa4IzW8+Pviu8iX7DpapJ3e2V6BWkahdIihF/ZqWWcPb9IRsF9BSRkfi0RJgO27J0r7/U4lf5LmNh4k7/qP73z8dWjA4ZaJnBRL8CuagHdlMFARA/OfODOURJZukIKqQD921EKfJ+ZBviSmkbtOQiSfMsHD1zaRFU5UqKnAAaIFFFbQWiyeBXzjbCmwQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=02prNc+2KpAXKIDg3UuXVJGJ7t636sA/5HsJ8IMfbjU=;
+ b=jsooCApb1GRsnxKoPvZIX7TVuFUGbvgf9rxdx/fMWZ5taZ3l7AJ28w89IEZ7qy5SV5lynspOsqH88qax0faByqd7KC9ILZ1a7c1cWDutIwnRkYVkqOnw4DfRocyOk2HQw8FAI/mfw0siKkpl4I+tZM6LTzg78Pui9wlgZsAbY+ntw3YeQ0D+hUqaLsXgccVv9kARIw1VKk+qPP00UkfOtXwkqERFxhiaDDNBeDMwU0KZg46lNMPQqSvNB9w57KIcfJP4wSoPOqsXHqKhsKdJIPHL2NobO28JrDOGXigW/Yz8xZsq1uq5oL7cwB8xvvy+66tO3Qut8mlLJQb0swIm0A==
+Received: from AS8PR02MB7237.eurprd02.prod.outlook.com (2603:10a6:20b:3f1::10)
+ by AM7PR02MB6068.eurprd02.prod.outlook.com (2603:10a6:20b:1a1::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7544.55; Sat, 11 May
+ 2024 11:18:49 +0000
+Received: from AS8PR02MB7237.eurprd02.prod.outlook.com
+ ([fe80::409b:1407:979b:f658]) by AS8PR02MB7237.eurprd02.prod.outlook.com
+ ([fe80::409b:1407:979b:f658%5]) with mapi id 15.20.7544.052; Sat, 11 May 2024
+ 11:18:49 +0000
+Date: Sat, 11 May 2024 13:18:46 +0200
+From: Erick Archer <erick.archer@outlook.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Kees Cook <keescook@chromium.org>,
+	Finn Thain <fthain@linux-m68k.org>
+Cc: Erick Archer <erick.archer@outlook.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Justin Stitt <justinstitt@google.com>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: Re: [PATCH v3] scsi: csiostor: Use kcalloc() instead of kzalloc()
+Message-ID:
+ <AS8PR02MB72370EC6DA36600475300FC28BE02@AS8PR02MB7237.eurprd02.prod.outlook.com>
+References: <AS8PR02MB7237BA2BBAA646DFDB21C63B8B392@AS8PR02MB7237.eurprd02.prod.outlook.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <AS8PR02MB7237BA2BBAA646DFDB21C63B8B392@AS8PR02MB7237.eurprd02.prod.outlook.com>
+X-TMN: [f52T9AcyEzrRgDldOA0aInv1ESLIrKUV]
+X-ClientProxiedBy: MA4P292CA0006.ESPP292.PROD.OUTLOOK.COM
+ (2603:10a6:250:2d::16) To AS8PR02MB7237.eurprd02.prod.outlook.com
+ (2603:10a6:20b:3f1::10)
+X-Microsoft-Original-Message-ID: <20240511111846.GB3139@titan>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <SJ0PR19MB54152471D18241A020914B2AC4E52@SJ0PR19MB5415.namprd19.prod.outlook.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- canpemm500004.china.huawei.com (7.192.104.92)
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AS8PR02MB7237:EE_|AM7PR02MB6068:EE_
+X-MS-Office365-Filtering-Correlation-Id: 754762f1-d637-4ea1-2d17-08dc71ac2157
+X-Microsoft-Antispam:
+	BCL:0;ARA:14566002|461199019|3412199016|440099019|1602099003|1710799017;
+X-Microsoft-Antispam-Message-Info:
+	x4IFrhVBC8rQx1qujeoD/qyYb5C1GJmQQwasxYeAPMzhbuvQA7FvXoJZFPAdB0TfooUUBt/mtQaZlA5L438/yiNVIX/X7lcpL66KA9QBpt/R0Y7mG3gwPHj9cihPM9ooOsVJN1xhGuse8zySBNtbFAobwhmSo3qemxPDnZyYijyzFXf/OXGU1WFQb7IEt583cClX55PavlqjG24NPsIRHVygC5fTCoCp9GHBu3cCCIu+dzQnekBl2lJ2srf+4CA0ttEkKgAgm6Ml3ys8dbX99ladmFi7vyIv4V6g6ybZbzP4QHT95+IyjhdGPChYzuXyUkoju9qcap3XWai+U/cBaXijZvyNQW18ddX1sN7+dOt4FFSUTMKtFKbJB7Oyqk9U2h+CeM4ndyKvkSF+/XeTSFH+FsUWWfRQTvPor4EyspETu/Lnpyee1X+v+O5wsd/rgGQAZC5ZOgIGB6+zoNUnyeTiOUmPXY2lTkr0r44U1gzRkdo+uIbelirDBYCy/3OfiQcOwS+/J+MHeheIrIebglAkrMUIAStXfNtDTf4S5H8z6LqT3h98AgZ7d4Huy2vtKVZKUWq6O0qVnrhC4Rwg7Zx1MUe6DoYGhvOE4Ks6rbJSW6txs7yo9SXnr803ruKUsMaeS4Ul805nzAGpDXiWXXh6BhYaUZdyMOPnyyiyFA8bQzf7bqlQYy/3Bjqh35cn
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?lXoqp6Eq+oLh5vmzumgOCtOcgumCgu9cNgoRHjS9a3bD4CDRbOq6dpVV77RC?=
+ =?us-ascii?Q?YZOXzHLo0ITS2zk0DYAURa2QG5DNOYxSRfBq/84EqQ7fEqs6n/M8Xi8CNiTP?=
+ =?us-ascii?Q?s8pGE9zYpFt/xfBHL7iL3tvcszjbid0MVxy62TKSLQMAfNHfOFcm+I90i/ds?=
+ =?us-ascii?Q?ov82dAmkqJSpLnVkzKEws64hsGMLRZGcf2awN5/mBRPtKo8tVuGarFOwFXiA?=
+ =?us-ascii?Q?wrPivya6JnASr8yRmGys03s+ibAueOhTok2TdOGaC48m4NKWLvhzRpeP3jxY?=
+ =?us-ascii?Q?c4VCpUfZpeFiQ+OgINV3xyjVe0/tCtJ1PWFukMTpSDvEEVV2jIB4SRYVtjh6?=
+ =?us-ascii?Q?uPB/sFBoso092CFo7eWAZhQ289T2SFJeieyrd8NcrYxoG3+k0TBBqnfDgDgN?=
+ =?us-ascii?Q?Wb0BuVqLWTgvhfP7YIG2VVZ9RFvYtCFvwsnHwe/5coKTIXA9qCy1uil4/Uvg?=
+ =?us-ascii?Q?dDMRRk8wKGD9ZASJpca+zaFZWi+f3qIWjINEcSyBr0uYTSuBSyY1fT1ojY9b?=
+ =?us-ascii?Q?DxoJN+CSwITwAmOZUOSDXuOCDo+/D12Tmk5qQx1uzwQPfPRImJXReBsPhvl2?=
+ =?us-ascii?Q?zxtLykE1fJByB0StMxISBsekkjEUBUAnC3mjS6qWT3/Ho436a7vsEKFP1E0O?=
+ =?us-ascii?Q?LQf/35HjHL+K4BGowgFqp7nmTCOvMz9MYJ7L6KyYOoE6tI6oWyq+kqQxxuP7?=
+ =?us-ascii?Q?4uSQ5GdY6ECSuME2Z8slnChjd/dg3Pn3lujRZzbNIuPKr8NABiWAE+emgRcW?=
+ =?us-ascii?Q?O1h/8+TBdVW2SbbqSbYyeaSLMzQk3xeFBdgvFtlfyRwBfxxvZNIe+Sw/sUcE?=
+ =?us-ascii?Q?KZQLl7sGHDPKgJA0B254mzACmIoB2OT0SSYuGQj8DUEuMV2ZGP7tmesgez4g?=
+ =?us-ascii?Q?PvJdA6MNjbYcPjo+NtuY+vW0E5n3i9VgD6EjrqkfxI+mba2z7tJYwdC11EKl?=
+ =?us-ascii?Q?Yl68qKfunCfzF1HIF/T1WPzfpuQnsE+cWFhOxyjcNK8VW9q2uLX4CscVwpI5?=
+ =?us-ascii?Q?qFqYqx4SUgUeQw0+/jEpZD0z+pOUfaU3pHJPfF8GTocT2yoAUzItLzMkCU9U?=
+ =?us-ascii?Q?vdEA6GY0LKJEQeuyL6g59/+AI6csejQah1Z3wLoHyMlpV10JwAK2MiZ2qGe3?=
+ =?us-ascii?Q?qxEIh8MwUNkgkKorSB/6gTssUrZKnRU7hMUxYUYEqxyTAcNOPU+SF8AKsNIK?=
+ =?us-ascii?Q?P5YY+mQb0+5h4YiIE/oljifeiriHRqOe3Oc4Mlf0Ls/j7adMyVgjZcuYVkqh?=
+ =?us-ascii?Q?2hCRHyPYs8JzuEjJCDxr?=
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 754762f1-d637-4ea1-2d17-08dc71ac2157
+X-MS-Exchange-CrossTenant-AuthSource: AS8PR02MB7237.eurprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2024 11:18:48.9155
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM7PR02MB6068
 
-On 2024/5/8 16:29, Li, Eric (Honggang) wrote:
->> -----Original Message-----
->> From: John Garry <john.g.garry@oracle.com>
->> Sent: Wednesday, May 8, 2024 3:48 PM
->> To: Li, Eric (Honggang) <Eric.H.Li@Dell.com>; Jason Yan <yanaijie@huawei.com>;
->> james.bottomley@hansenpartnership.com; Martin K . Petersen <martin.petersen@oracle.com>
->> Cc: linux-scsi@vger.kernel.org
->> Subject: Re: Issue in sas_ex_discover_dev() for multiple level of SAS expanders in a domain
->>
->>
->> [EXTERNAL EMAIL]
->>
->> On 08/05/2024 01:59, Li, Eric (Honggang) wrote:
->>>>> Call to sas_ex_join_wide_port() makes the rest PHYs associated with
->>>>> that existing port
->>>> (making it become wideport) and set up sysfs between the PHY and
->>>> port. > Set PHY_STATE_DISCOVERED would make the rest PHYs not being
->>>> scanned/discovered again (as this wide port is already scanned).
->>>>
->>>> If you can just confirm that re-adding the code to set phy_state =
->>>> DISCOVERED is good enough to see the SAS disks again, then this can
->>>> be further discussed. >>
->>> OK. I will work on that and keep you updated.
->>
->> I expect a flow like this for scanning of the downstream expander:
->>
->> sas_discover_new(struct domain_device *dev [upstream expander], int
->> phy_id_a) -> sas_ex_discover_devices(single = -1) ->
->> sas_ex_discover_dev(phy_id_b) for each phy in @dev non-vacant and non-discovered ->
->> sas_ex_discover_expander( [downstream expander]) for first phy scanned which belongs to
->> downstream expander.
->>
->> And following that we have continue to scan phys in sas_ex_discover_devices(single = -1) ->
->> sas_ex_discover_dev(phy_id_b) ->
->> sas_ex_join_wide_port() ->  for each non-vacant and non-discovered phy in phy_id_b which
->> matches that downstream expander.
->>
->> Can you see why this does not actually work/occur?
->>
+Hi Martin, Kees and Finn,
+
+On Sat, Mar 30, 2024 at 05:17:53PM +0100, Erick Archer wrote:
+> Use 2-factor multiplication argument form kcalloc() instead
+> of kzalloc().
 > 
-> before calling sas_ex_join_wide_port(), sas_dev_present_in_domain() finds the attached_sas_address of PHY (phy_id_b) is already in the domain of that root port, and then disable all PHYs to that downstream expander (in sas_ex_disable_port(dev, attached_sas_addr))
-> Therefore, I think we need to switch the order of function call to sas_ex_join_wide_port() and sas_dev_present_in_domain().
+> Also, it is preferred to use sizeof(*pointer) instead of
+> sizeof(type) due to the type of the variable can change and
+> one needs not change the former (unlike the latter).
+> 
+> Link: https://github.com/KSPP/linux/issues/162
+> Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> Signed-off-by: Erick Archer <erick.archer@outlook.com>
+> ---
+> 
+Thank you very much for the reviews and comments.
 
-Hi Eric,
-
-Can you test the following patch to see if it works?
-
-Author: Jason Yan <yanaijie@huawei.com>
-Date:   Sat May 11 11:33:35 2024 +0800
-
-     scsi: libsas: Skip disable PHYs which can form wide ports
-
-     Signed-off-by: Jason Yan <yanaijie@huawei.com>
-
-diff --git a/drivers/scsi/libsas/sas_expander.c 
-b/drivers/scsi/libsas/sas_expander.c
-index f6e6db8b8aba..39a86857bc52 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -618,15 +618,17 @@ static void sas_ex_disable_port(struct 
-domain_device *dev, u8 *sas_addr)
-         }
-  }
-
--static int sas_dev_present_in_domain(struct asd_sas_port *port,
-+static int sas_dev_present_in_domain(struct domain_device *dev,
-                                             u8 *sas_addr)
-  {
--       struct domain_device *dev;
-+       struct domain_device *tmp;
-
-         if (SAS_ADDR(port->sas_addr) == SAS_ADDR(sas_addr))
-                 return 1;
--       list_for_each_entry(dev, &port->dev_list, dev_list_node) {
--               if (SAS_ADDR(dev->sas_addr) == SAS_ADDR(sas_addr))
-+       list_for_each_entry(tmp, &dev->port->dev_list, dev_list_node) {
-+               if (tmp->parent == dev)
-+                       continue;
-+               if (SAS_ADDR(tmp->sas_addr) == SAS_ADDR(sas_addr))
-                         return 1;
-         }
-         return 0;
-@@ -973,7 +975,7 @@ static int sas_ex_discover_dev(struct domain_device 
-*dev, int phy_id)
-                 return 0;
-         }
-
--       if (sas_dev_present_in_domain(dev->port, ex_phy->attached_sas_addr))
-+       if (sas_dev_present_in_domain(dev, ex_phy->attached_sas_addr))
-                 sas_ex_disable_port(dev, ex_phy->attached_sas_addr);
-
-         if (ex_phy->attached_dev_type == SAS_PHY_UNUSED) {
-
-
-
-
+Regards,
+Erick
