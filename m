@@ -1,32 +1,28 @@
-Received: from ssh248.corpemail.net (ssh248.corpemail.net [210.51.61.248])
+Received: from mx2.usergate.com (mx2.usergate.com [46.229.79.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46CC614D2B2;
-	Mon, 13 May 2024 12:01:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.51.61.248
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 895B414F103;
+	Mon, 13 May 2024 12:27:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.229.79.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715601674; cv=none; b=RmZmOmtqG8SIwRomyCbuUV68buVw4S27vJ7lERtonirwj2ZRVOKhrXyIyHFQ40zymu/3f4o971Gk7DlbwUFE9yPRC/yYjUsNBnBCmH/MmloLW5isiuPgPUBs+dtYL+iCmVNSK5+ru/KAZfHAL0jp3Cc8R3m13w+5WcjSc3VCZA8=
+	t=1715603242; cv=none; b=mLvKsiubRIZ8Tb8tGs3yLPHkFbbtIlkhFGqJAfc/EWV6cMlR4e+TBW7qQo5/g6NEoe9n8hKxAS5keFEhBTW8OqPERAQF/tGlgNi77wN5xrVtRL5f9T82YBMDxXgpodwOsS50B+HuUc1uIet/pgFgvwIVs6JGNiUTdNdYUvqlk+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715601674; c=relaxed/simple;
-	bh=k5JrDD6kO9aJnux0YwQJArQrE0p+HvVa2V2MWegmWx4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=GG3ITV59Cqf0pUMIRnLVK9magDjosh7SwI7w8XNcH6hmKxYBkao7kxlX54PauhvJoNQ8XYrPtZ/L+Rx5H08Lk8f9xU5wBzeCPgAEdRTV3/dE1d5y/8dbgocTuBBkuhH1pLGCLQBuF8NXvD62pQQIYSI5oiNALMzhHJrdG0r7ojQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com; spf=pass smtp.mailfrom=inspur.com; arc=none smtp.client-ip=210.51.61.248
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=inspur.com
-Received: from ssh248.corpemail.net
-        by ssh248.corpemail.net ((D)) with ASMTP (SSL) id KJO00057;
-        Mon, 13 May 2024 20:00:57 +0800
-Received: from localhost.localdomain (10.94.9.159) by
- jtjnmail201605.home.langchao.com (10.100.2.5) with Microsoft SMTP Server id
- 15.1.2507.35; Mon, 13 May 2024 20:01:02 +0800
-From: Deming Wang <wangdeming@inspur.com>
-To: <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC: <MPT-FusionLinux.pdl@broadcom.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Deming Wang <wangdeming@inspur.com>
-Subject: [PATCH] scsi: mpt3sas: Adding parameter descriptions to the _scsih_set_debug_level
-Date: Mon, 13 May 2024 07:59:56 -0400
-Message-ID: <20240513115956.1576-1-wangdeming@inspur.com>
-X-Mailer: git-send-email 2.31.1
+	s=arc-20240116; t=1715603242; c=relaxed/simple;
+	bh=oKiXlEtPAhBwR95eRclzYiHrEd8EvaNuezey49g8C9U=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=a0FPFQM2SiAPieINiiXbjINy1KdDVg/kuqjK8MNpf7AOp/H05h7imiqVyZ46VnQoK4JmFi9yEmvUcCc6T8C4lfzqQH150wAfg9H2WF8hHyp2YXOR97lPcJtK9iYeyrhtdESZjQjzaTo9q/eVTOaIng0UXpnvBSmCssqtlfM7aBQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com; spf=pass smtp.mailfrom=usergate.com; arc=none smtp.client-ip=46.229.79.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=usergate.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=usergate.com
+Received: from mail.usergate.com[192.168.90.36] by mx2.usergate.com with ESMTP id
+	 E1AB971BDF504F85A203326A77D2A618; Mon, 13 May 2024 18:56:57 +0700
+From: Aleksandr Aprelkov <aaprelkov@usergate.com>
+To: Hannes Reinecke <hare@suse.com>
+CC: Aleksandr Aprelkov <aaprelkov@usergate.com>,"James E.J. Bottomley" <jejb@linux.ibm.com>,"Martin K. Petersen" <martin.petersen@oracle.com>,<linux-scsi@vger.kernel.org>,<linux-kernel@vger.kernel.org>,<lvc-project@linuxtesting.org>
+Subject: [PATCH v2] scsi: aic7xxx: aic79xx: add scb NULL check in
+	 ahd_handle_msg_reject()
+Date: Mon, 13 May 2024 18:56:35 +0700
+Message-ID: <20240513115635.2507689-1-aaprelkov@usergate.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,35 +31,40 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-tUid: 20245132000575056574ac4176e6ca9cf9ecfe10e65bd
-X-Abuse-Reports-To: service@corp-email.com
-Abuse-Reports-To: service@corp-email.com
-X-Complaints-To: service@corp-email.com
-X-Report-Abuse-To: service@corp-email.com
+X-ClientProxiedBy: ESLSRV-EXCH-01.esafeline.com (192.168.90.36) To
+ nsk02-mbx01.esafeline.com (10.10.1.35)
+X-Message-Id: C5FD6731D51D499D83B2034DEBA6EB62
+X-MailFileId: 4187C307D2FD4A009E8A7EC63635124D
 
-Adding parameter descriptions to the _scsih_set_debug_level.
+If ahd_get_scbptr() returns invalid scb_index then ahd_lookup_skb
+returns NULL. Later in function scb used without check then NULL
+pointer dereference can occur.
 
-Signed-off-by: Deming Wang <wangdeming@inspur.com>
+Add NULL scb check in else if statement so message gets rejected
+
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Aleksandr Aprelkov <aaprelkov@usergate.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+v2: Removed "!= 0" check as Damien Le Moal <dlemoal@kernel.org>
+suggested
+ drivers/scsi/aic7xxx/aic79xx_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 89ef43a5ef86..7b6733aa6174 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -302,8 +302,9 @@ struct _scsi_io_transfer {
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 3e3100dbfda3..6bee62224d86 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -5577,7 +5577,7 @@ ahd_handle_msg_reject(struct ahd_softc *ahd, struct ahd_devinfo *devinfo)
+ 		       "Using asynchronous transfers\n",
+ 		       ahd_name(ahd), devinfo->channel,
+ 		       devinfo->target, devinfo->lun);
+-	} else if ((scb->hscb->control & SIMPLE_QUEUE_TAG) != 0) {
++	} else if (scb && (scb->hscb->control & SIMPLE_QUEUE_TAG)) {
+ 		int tag_type;
+ 		int mask;
  
- /**
-  * _scsih_set_debug_level - global setting of ioc->logging_level.
-- * @val: ?
-- * @kp: ?
-+ * @val: the value of the parameter to be set
-+ * @kp: a pointer to the kernel_param structure, containing information
-+ *      such as the parameter's name, type, and permissions
-  *
-  * Note: The logging levels are defined in mpt3sas_debug.h.
-  */
 -- 
-2.31.1
+2.34.1
 
