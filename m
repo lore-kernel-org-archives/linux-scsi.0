@@ -1,225 +1,163 @@
-Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A8EF1411EE
-	for <linux-scsi@vger.kernel.org>; Tue, 14 May 2024 13:08:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4205B1448F4;
+	Tue, 14 May 2024 13:23:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715692133; cv=none; b=qHTRYVrkLKsnrwIkJYSw3YLEF4A2E7ZIEQDwgPZflZA3MHFdG2Gy1ALOa5RH14Mh/EDrnMteM2idfMsdBoHaKBnC2dZaMLNq5Y5gm2mBiKEMy8Uq715os4QiufrLxUPITgx6xnMObV0s0aEyatNU2+CanW6coyA8FEuq4icA0Qc=
+	t=1715693029; cv=none; b=LyEqiRl8QGAcm1Gx8mqbwdg+nGGagZYXXHZzGCBZZQYfKqhv7Qjezq2w0pwLJ03O7kY7FLONXCjop6nl/1J16g0cPBYO6Gmd4Nyv9KO9EHfw6DzmWNfI+iNdz5LhiKIpZVUbMYUn8xGkvyaeDQu9eZaNFOPzQVhgbzsAHOQRg4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715692133; c=relaxed/simple;
-	bh=79N957sFT+botkrfIwoMhZsYTKAk7xgpP8euBkNNACI=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Uqic/ptN59sNE8+b17rw8aKWOeV/z9D/SKukXDxxETeNoYW6B4S2kv2+qdrsm1ETCGtHx/TUQ5Nh4X82Uft8eevgMlnUSWgJgAFbP2xMUS9A1LXeNlte5y4Rjrh39u2ExlZq6bDPwYAYmeuOIGhOtGSk1dZve48PwF06TwlHl44=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=B2OklwyD; arc=none smtp.client-ip=209.85.218.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1715693029; c=relaxed/simple;
+	bh=i4pIjJe0x16spaf+Nby5Vt3rvwu45Ga15QdtD4TELDw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gtGrUmopzCdamW1vxmoTgmstDAdO0YtrEa/RYbE6QTsNnca/g0K7v4mQWBy+i5ExD/3C7VNaAHj3GMSi6KFBlt2J517nlaoULO0rqnnyLXK7gq8s1es5R7IlJ379YN7/OehtF0/DUr9/Itk4rppfYHY4Yo9C2E+SxkSQWsjxZWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=eV/6kj3W; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="B2OklwyD"
-Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-a59a934ad50so31673566b.1
-        for <linux-scsi@vger.kernel.org>; Tue, 14 May 2024 06:08:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="eV/6kj3W"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-41fc2f7fbb5so30820075e9.1;
+        Tue, 14 May 2024 06:23:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1715692129; x=1716296929; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=7VuwYtf2gX32SkqHPv74weor+XeWeSTj0M9fYMirYNI=;
-        b=B2OklwyDlI6p+o71LKU3862hoJPBAMgmxACRxcOWd9w2QbdAF9KnSw6DWYcO7TOXJe
-         /YL9h9H2pWdPmZB13OTOMXAvS7ba1sITmjabIQvBvCYFK3K0ZLuqjAhVvHxn1tfI+/pJ
-         gYy3p1x9F6Y7HSFtO5CqLGbFhkAC3fBZ7rcPVorkM2C3HgSRjAvMeR7R4BjQ0TceoLWP
-         kiBjvvq1kZ+KWqSvnrWjn61LLu79ddvZ9WmkaF/rsscEHLiVNzpi/jk2LJ4iisfBGMbd
-         970F/dvPn4vm+0vRMamHlDC9z/Pciod7Nimy5va6wu6Ie4vEq4mMafKEjGi/8gWtu8Mm
-         l1Ow==
+        d=googlemail.com; s=20230601; t=1715693026; x=1716297826; darn=vger.kernel.org;
+        h=in-reply-to:autocrypt:from:references:cc:to:content-language
+         :subject:user-agent:mime-version:date:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=i4pIjJe0x16spaf+Nby5Vt3rvwu45Ga15QdtD4TELDw=;
+        b=eV/6kj3WmbNW45slkirTm8SoP1UngqDtc2U+us7koJLzFKjt6yoSRv+0t/9MW47fwC
+         ArQxx0HCKi2rNGSKd5LOvlFVC7pQGCamY88bWOJ6IIsu76xQtb6/K/QVZyic7//N1YrN
+         JwjnLAu2ETI5yHnRNQl8g3DMoar15hiLW/ilLGPYaydyY2iWAKjZU4aAvNq6T9NIwAQ/
+         y26v8F8tFNU/EGwq0RnJxJcnx+yDRhYIKn4vOcI6MCkBwpV7AyaBnM7+6YpjWYqxGTO+
+         q6jf/TLOGxAiYLXvGUQq7PUnACftzN+u7MA00LWP8yXCLmJfKCzmUYLfF7JTQq62mF5Z
+         MTDg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715692129; x=1716296929;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=7VuwYtf2gX32SkqHPv74weor+XeWeSTj0M9fYMirYNI=;
-        b=OYRX127QQZzPxtqx88+6eT5906Xp4TY318j5th2ukhbBWz2ekf6hU+KoTLX0RgiRMa
-         u7CYOgydtR0qibALAFJpPw7+AupLEImKH4kkL0pBpT0VdVVhY9qwfEoD6iVEKHv1bUoU
-         8GylJQ7HVDe34mvssz0dMIS3zp83838JCuKsNgaJ/lo1fNhOVZhr/zL3mV+L4g8ffSlX
-         YBJaTG9sY+IK62MEpilS+mwx/r2GZaGOPlcHN9mAWhSte/e/KjBQboJXW+rciMSUhMoC
-         eISa7KeIuOH2R+W0baIKctWr4NEo+trBNxkaBwAvRT7cjQSiGfaG/gNEm08Ry/mZYpUZ
-         SU5w==
-X-Forwarded-Encrypted: i=1; AJvYcCUZHj/tPzl8cRIiEVvMUvbGda7tM/duJHTgdHK5Bv/nvp8QyU/xdDbBErcmkWDkAd4muamsU48IumejSqnUcizieEKNphQehiB3kA==
-X-Gm-Message-State: AOJu0Yyud7hiWexor8wsPYXWCO0Ns4h2W4BaelLWr5MiszSyr5Yvpm/P
-	Wr0A+03X9/O3wwhTipIQH2aD/6/0XsewKKpuybZV54njHScmT7yihfaAwLwNuw==
-X-Google-Smtp-Source: AGHT+IGNpGJlmgPOxPVJvvSuUoh2Ab97ent0Dok78SJQyBenyIoReygTEJ87C8Nx8095CWPY0R7wOA==
-X-Received: by 2002:a17:906:4443:b0:a59:c728:5420 with SMTP id a640c23a62f3a-a5a2d6786damr842245266b.66.1715692129290;
-        Tue, 14 May 2024 06:08:49 -0700 (PDT)
-Received: from [127.0.1.1] ([149.14.240.163])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a5a1781cf91sm719572466b.1.2024.05.14.06.08.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 May 2024 06:08:48 -0700 (PDT)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Date: Tue, 14 May 2024 15:08:41 +0200
-Subject: [PATCH 2/2] arm64: dts: qcom: Use 'ufshc' as the node name for UFS
- controller nodes
+        d=1e100.net; s=20230601; t=1715693026; x=1716297826;
+        h=in-reply-to:autocrypt:from:references:cc:to:content-language
+         :subject:user-agent:mime-version:date:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=i4pIjJe0x16spaf+Nby5Vt3rvwu45Ga15QdtD4TELDw=;
+        b=gHpsE1gIYKSP7eirzHpmBUHHbD8fJVz4P7tIA7YWsKuNcArwKQs35URdbS6wceMHcx
+         hBa+1scEZJ32QILFAHLyzxL2+7KDh6FGs4M2/azdmrn5EY/a5KStZE0Nfh6u/Z4TNpP0
+         l0KzotZChibTvmfWbx9Dyi5b3fmKqcRolVAB7AyR6ULX7VLVutaF4WYdOdDidX7QrbU4
+         dejeAIQeHWsQ+5bGmyXdHDfz1Xgr8CCqgo0lj1rn/kVsyMM2WcA1cZ9X+2EFoNatdeWk
+         DvMeQkTv2Q5MpLaQFvk2+VAEVz9eX6ffnmGKkYM1t1A+kiW32IWjJpnV+GfQ65BGCW9U
+         kP4g==
+X-Forwarded-Encrypted: i=1; AJvYcCXtxJkMQpigSHSldfRAEKldK0DCLt45HHAZKI13+dIWDZ75BaFCBtz2r8hCYhpodxKUXtuQMJ6kP532p5WTSxRBHOlGyEKAEX/vsW+vJyvRJchg7DPv5IPGtZHIVLqlnmddpi8s
+X-Gm-Message-State: AOJu0YxJ/Pcu4X4E5iBi3wpg3QA0JnNkcSXFVCDnsx7K3kGTe+iZ5/ff
+	tUQjW1tdyMiH2rGyO2zr7KkpzHamBDkMZIfdO5g+xgf+2QYoJ7A=
+X-Google-Smtp-Source: AGHT+IGBidFu3u5LcN0dwJ1l7jTnwnSr7ddHSRHFj1Wk5Lf/7XWy1WnDvx4EYx1pSVYG/e2K7Idp9w==
+X-Received: by 2002:a05:600c:511f:b0:418:5ef3:4a04 with SMTP id 5b1f17b1804b1-41fead59f07mr119358965e9.18.1715693026173;
+        Tue, 14 May 2024 06:23:46 -0700 (PDT)
+Received: from [192.168.1.3] (p5b2b40c2.dip0.t-ipconnect.de. [91.43.64.194])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42013c5fa61sm88956135e9.40.2024.05.14.06.23.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 May 2024 06:23:45 -0700 (PDT)
+Message-ID: <f08ad152-eefa-4748-8a71-6b84117e19b3@googlemail.com>
+Date: Tue, 14 May 2024 15:23:44 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240514-ufs-nodename-fix-v1-2-4c55483ac401@linaro.org>
-References: <20240514-ufs-nodename-fix-v1-0-4c55483ac401@linaro.org>
-In-Reply-To: <20240514-ufs-nodename-fix-v1-0-4c55483ac401@linaro.org>
-To: Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konrad.dybcio@linaro.org>, 
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
- Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>, 
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
- Conor Dooley <conor+dt@kernel.org>, Andy Gross <agross@kernel.org>, 
- cros-qcom-dts-watchers@chromium.org
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-X-Mailer: b4 0.12.4
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4956;
- i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=79N957sFT+botkrfIwoMhZsYTKAk7xgpP8euBkNNACI=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBmQ2JcCiqQHXYXc/pSk57uMz9J0WsiC91fwyJS8
- xlpoaLIiB+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZkNiXAAKCRBVnxHm/pHO
- 9QTmCACOCnfMGexb8BFI5GPfGZQ5LToQiDo/gsJ1usTirkHSeyxIWn1gyL3jxQ3kFuc9eygDYta
- 0nAIdP2pRmsZQQhasFIVv1lIuHHiaDEx/cYWx0F/WNIuS/xZyCuMJouY5v99ljdHkhWiIzbWJ91
- AXgcx9753HE6xY0Zldn2NdmCPEG4DEkefb76hpqz1n5IWM3DP42cIwP/wtZZR7ZaVOzJxcyGubR
- L5FSRcrO/7+rdON2JMt+/38u4NjfLHQIu5Fb2g52zD97po6wCVryPSCZlNcr7ob17eXn8e7/tof
- qPPxmgAnQQnUitrBzGy2LMGVwq4y9PfYK40xnIaUZNBPwbwM
-X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
+User-Agent: Betterbird (Windows)
+Subject: Re: Kernel 6.8.4 regression: aacraid controller not initialized any
+ more, system boot hangs
+Content-Language: de-DE
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org,
+ linux-kernel@vger.kernel.org, regressions@leemhuis.info,
+ regressions@lists.linux.dev
+References: <eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com>
+ <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
+ <c4e8e0b5-fc32-4e26-8c0e-27a996769903@googlemail.com>
+ <yq14jb0twk6.fsf@ca-mkp.ca.oracle.com>
+From: Peter Schneider <pschneider1968@googlemail.com>
+Autocrypt: addr=pschneider1968@googlemail.com; keydata=
+ xjMEY58biBYJKwYBBAHaRw8BAQdADPnoGTrfCUCyH7SZVkFtnlzsFpeKANckofR4WVLMtMzN
+ L1BldGVyIFNjaG5laWRlciA8cHNjaG5laWRlcjE5NjhAZ29vZ2xlbWFpbC5jb20+wpwEExYK
+ AEQCGyMFCQW15qgFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AWIQSjgovXlszhGoyt6IZu
+ OpLJLD/yRAUCY58b8AIZAQAKCRBuOpLJLD/yRIeIAQD0+/LMdKHM6AJdPCt+e9Z92BMybfnN
+ RtGqkdZWtvdhDQD9FJkGh/3PFtDinimB8UOB7Gi6AGxt9Nu9ne7PvHa0KQXOOARjnxuIEgor
+ BgEEAZdVAQUBAQdAw2GRwTf5HJlO6CCigzqH6GUKOjqR1xJ+3nR5EbBze0sDAQgHwn4EGBYK
+ ACYWIQSjgovXlszhGoyt6IZuOpLJLD/yRAUCY58biAIbDAUJBbXmqAAKCRBuOpLJLD/yRONS
+ AQCwB9qiEQoSnxHodu8kRuvUxXKIqN7701W+INXtFGtJygEAyPZH3/vSBJ4A7GUG7BZyQRcr
+ ryS0CUq77B7ZkcI1Nwo=
+In-Reply-To: <yq14jb0twk6.fsf@ca-mkp.ca.oracle.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------PnG437ECAAr56hnFUTpvgz20"
 
-Devicetree binding has documented the node name for UFS controllers as
-'ufshc'. So let's use it instead of 'ufs' which is for the UFS devices.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------PnG437ECAAr56hnFUTpvgz20
+Content-Type: multipart/mixed; boundary="------------cdi051ZZSIdFXMDMKWhP8wq0";
+ protected-headers="v1"
+From: Peter Schneider <pschneider1968@googlemail.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org,
+ linux-kernel@vger.kernel.org, regressions@leemhuis.info,
+ regressions@lists.linux.dev
+Message-ID: <f08ad152-eefa-4748-8a71-6b84117e19b3@googlemail.com>
+Subject: Re: Kernel 6.8.4 regression: aacraid controller not initialized any
+ more, system boot hangs
+References: <eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com>
+ <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
+ <c4e8e0b5-fc32-4e26-8c0e-27a996769903@googlemail.com>
+ <yq14jb0twk6.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq14jb0twk6.fsf@ca-mkp.ca.oracle.com>
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- arch/arm64/boot/dts/qcom/sa8775p.dtsi  | 2 +-
- arch/arm64/boot/dts/qcom/sc7280.dtsi   | 2 +-
- arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 4 ++--
- arch/arm64/boot/dts/qcom/sm6115.dtsi   | 2 +-
- arch/arm64/boot/dts/qcom/sm6125.dtsi   | 2 +-
- arch/arm64/boot/dts/qcom/sm6350.dtsi   | 2 +-
- arch/arm64/boot/dts/qcom/sm8550.dtsi   | 2 +-
- arch/arm64/boot/dts/qcom/sm8650.dtsi   | 2 +-
- 8 files changed, 9 insertions(+), 9 deletions(-)
+--------------cdi051ZZSIdFXMDMKWhP8wq0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-diff --git a/arch/arm64/boot/dts/qcom/sa8775p.dtsi b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-index 231cea1f0fa8..3f65494259aa 100644
---- a/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-@@ -1577,7 +1577,7 @@ rng: rng@10d2000 {
- 			reg = <0 0x010d2000 0 0x1000>;
- 		};
- 
--		ufs_mem_hc: ufs@1d84000 {
-+		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,sa8775p-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
- 			reg = <0x0 0x01d84000 0x0 0x3000>;
- 			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-index 7e7f0f0fb41b..da63e9435130 100644
---- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-@@ -2303,7 +2303,7 @@ pcie1_phy: phy@1c0e000 {
- 			status = "disabled";
- 		};
- 
--		ufs_mem_hc: ufs@1d84000 {
-+		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,sc7280-ufshc", "qcom,ufshc",
- 				     "jedec,ufs-2.0";
- 			reg = <0x0 0x01d84000 0x0 0x3000>;
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-index a5b194813079..9c5437c2540a 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-@@ -2208,7 +2208,7 @@ pcie2a_phy: phy@1c24000 {
- 			status = "disabled";
- 		};
- 
--		ufs_mem_hc: ufs@1d84000 {
-+		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,sc8280xp-ufshc", "qcom,ufshc",
- 				     "jedec,ufs-2.0";
- 			reg = <0 0x01d84000 0 0x3000>;
-@@ -2274,7 +2274,7 @@ ufs_mem_phy: phy@1d87000 {
- 			status = "disabled";
- 		};
- 
--		ufs_card_hc: ufs@1da4000 {
-+		ufs_card_hc: ufshc@1da4000 {
- 			compatible = "qcom,sc8280xp-ufshc", "qcom,ufshc",
- 				     "jedec,ufs-2.0";
- 			reg = <0 0x01da4000 0 0x3000>;
-diff --git a/arch/arm64/boot/dts/qcom/sm6115.dtsi b/arch/arm64/boot/dts/qcom/sm6115.dtsi
-index aca0a87092e4..974e4b6e27a4 100644
---- a/arch/arm64/boot/dts/qcom/sm6115.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm6115.dtsi
-@@ -1175,7 +1175,7 @@ opp-202000000 {
- 			};
- 		};
- 
--		ufs_mem_hc: ufs@4804000 {
-+		ufs_mem_hc: ufshc@4804000 {
- 			compatible = "qcom,sm6115-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
- 			reg = <0x0 0x04804000 0x0 0x3000>, <0x0 0x04810000 0x0 0x8000>;
- 			reg-names = "std", "ice";
-diff --git a/arch/arm64/boot/dts/qcom/sm6125.dtsi b/arch/arm64/boot/dts/qcom/sm6125.dtsi
-index 98ab08356088..20527b254f6b 100644
---- a/arch/arm64/boot/dts/qcom/sm6125.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm6125.dtsi
-@@ -763,7 +763,7 @@ sdhc_2: mmc@4784000 {
- 			status = "disabled";
- 		};
- 
--		ufs_mem_hc: ufs@4804000 {
-+		ufs_mem_hc: ufshc@4804000 {
- 			compatible = "qcom,sm6125-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
- 			reg = <0x04804000 0x3000>, <0x04810000 0x8000>;
- 			reg-names = "std", "ice";
-diff --git a/arch/arm64/boot/dts/qcom/sm6350.dtsi b/arch/arm64/boot/dts/qcom/sm6350.dtsi
-index 24bcec3366ef..66e5ebbbbada 100644
---- a/arch/arm64/boot/dts/qcom/sm6350.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm6350.dtsi
-@@ -1136,7 +1136,7 @@ mmss_noc: interconnect@1740000 {
- 			qcom,bcm-voters = <&apps_bcm_voter>;
- 		};
- 
--		ufs_mem_hc: ufs@1d84000 {
-+		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,sm6350-ufshc", "qcom,ufshc",
- 				     "jedec,ufs-2.0";
- 			reg = <0 0x01d84000 0 0x3000>,
-diff --git a/arch/arm64/boot/dts/qcom/sm8550.dtsi b/arch/arm64/boot/dts/qcom/sm8550.dtsi
-index 3904348075f6..94eea47c24d3 100644
---- a/arch/arm64/boot/dts/qcom/sm8550.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8550.dtsi
-@@ -1957,7 +1957,7 @@ ufs_mem_phy: phy@1d80000 {
- 			status = "disabled";
- 		};
- 
--		ufs_mem_hc: ufs@1d84000 {
-+		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,sm8550-ufshc", "qcom,ufshc",
- 				     "jedec,ufs-2.0";
- 			reg = <0x0 0x01d84000 0x0 0x3000>;
-diff --git a/arch/arm64/boot/dts/qcom/sm8650.dtsi b/arch/arm64/boot/dts/qcom/sm8650.dtsi
-index ba72d8f38420..7c6d2150a1e0 100644
---- a/arch/arm64/boot/dts/qcom/sm8650.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8650.dtsi
-@@ -2509,7 +2509,7 @@ ufs_mem_phy: phy@1d80000 {
- 			status = "disabled";
- 		};
- 
--		ufs_mem_hc: ufs@1d84000 {
-+		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,sm8650-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
- 			reg = <0 0x01d84000 0 0x3000>;
- 
+SGkgTWFydGluLA0KDQpBbSAxNC4wNS4yMDI0IHVtIDE0OjU0IHNjaHJpZWIgTWFydGluIEsu
+IFBldGVyc2VuOg0KPiANCj4gUGV0ZXIsDQo+IA0KPj4gRGlkIHlvdSBoYXZlIGFueSBjaGFu
+Y2UgdG8gbG9vayBpbnRvIHRoaXMgaW4gbW9yZSBkZXB0aD8gRG8geW91IG5lZWQNCj4+IG1v
+cmUgaW5mb3JtYXRpb24gZnJvbSBtZSB0byB0YWNrbGUgdGhpcyBpc3N1ZT8gSSdtIG5vdCBh
+IGtlcm5lbA0KPj4gZGV2ZWxvcGVyLCBqdXN0IGEgdXNlciwgYnV0IEkgZ3Vlc3Mgd2l0aCBw
+cm9wZXIgaW5zdHJ1Y3Rpb24gSSB3b3VsZCBiZQ0KPj4gYWJsZSB0byBjb21waWxlIGFuZCB0
+ZXN0IHBhdGNoZXMuDQo+IA0KPiBJIGFtIGFmcmFpZCBJIGhhdmVuJ3QgaGFkIGEgdGltZSB0
+byBsb29rIGZ1cnRoZXIgaW50byB0aGlzIHlldCBkdWUgdG8NCj4gdHJhdmVsLiBUaGUgYW5u
+dWFsIExTRi9NTS9CUEYgY29uZmVyZW5jZSBpcyB0YWtpbmcgcGxhY2UgdGhpcyB3ZWVrLiBJ
+DQo+IHdpbGwgZ2V0IGJhY2sgdG8geW91IGFzIHNvb24gYXMgcG9zc2libGUuDQoNCk9rLCBn
+cmVhdCwgc28gaGF2ZSBhIGdvb2QgdGltZSB3aGVyZWV2ZXIgdGhpcyBjb25mZXJlbmNlIGlz
+IGdvaW5nIHRvIHRha2UgcGxhY2UhIEl0IGlzbid0IA0KdmVyeSB1cmdlbnQsIGJlY2F1c2Ug
+aW4gdGhlIG1lYW50aW1lIEkgY2FuIGp1c3QgY29udGludWUgdG8gdXNlIHRoZSA2LjUuMTMg
+a2VybmVsIG9uIG15IA0KUHJveG1veCBtYWNoaW5lLiBJIGp1c3Qgd2FudGVkIHRvIHBpbmcg
+eW91IGFnYWluIHNvIHRoaXMgd291bGRuJ3QgZmFsbCB0aHJvdWdoIHRoZSBjcmFja3MuDQoN
+Cj4gQmVmb3JlIEkgbWFrZSBhbnkgcmVjb21tZW5kYXRpb25zIHdydC4gZmlybXdhcmUgdXBk
+YXRlcyBJIHdvdWxkIGxpa2UgdG8NCj4gdW5kZXJzdGFuZCB3aHkgYSBjaGFuZ2UgaW50ZW5k
+ZWQgdG8gbWFrZSBzY2FubmluZyBtb3JlIHJlc2lsaWVudCBhZ2FpbnN0DQo+IGRldmljZSBp
+bXBsZW1lbnRhdGlvbiBlcnJvcnMgaGFzIGhhZCB0aGUgb3Bwb3NpdGUgZWZmZWN0LiBFc3Bl
+Y2lhbGx5DQo+IHNpbmNlIHRoZSBjaGFuZ2UgaW4gcXVlc3Rpb24gcmV2ZXJ0cyB0byBob3cg
+TGludXggaGFzIHNjYW5uZWQgZm9yDQo+IGRldmljZXMgZm9yIGRlY2FkZXMuDQoNCkknbGwg
+bGVhdmUgZXZlcnl0aGluZyBhcyBpdCBpcyBub3csIGFuZCB3b24ndCBjaGFuZ2UgdGhlIGNy
+aW1lIHNjZW5lIHVudGlsIHlvdSB0ZWxsIG1lIA0Kd2hhdCB0byBkbyBuZXh0Lg0KDQoNCkJl
+c3RlIEdyw7zDn2UsDQpQZXRlciBTY2huZWlkZXINCg0KLS0gDQpDbGltYiB0aGUgbW91bnRh
+aW4gbm90IHRvIHBsYW50IHlvdXIgZmxhZywgYnV0IHRvIGVtYnJhY2UgdGhlIGNoYWxsZW5n
+ZSwNCmVuam95IHRoZSBhaXIgYW5kIGJlaG9sZCB0aGUgdmlldy4gQ2xpbWIgaXQgc28geW91
+IGNhbiBzZWUgdGhlIHdvcmxkLA0Kbm90IHNvIHRoZSB3b3JsZCBjYW4gc2VlIHlvdS4gICAg
+ICAgICAgICAgICAgICAgIC0tIERhdmlkIE1jQ3VsbG91Z2ggSnIuDQoNCk9wZW5QR1A6ICAw
+eEEzODI4QkQ3OTZDQ0UxMUE4Q0FERTg4NjZFM0E5MkM5MkMzRkYyNDQNCkRvd25sb2FkOiBo
+dHRwczovL3d3dy5wZXRlcnMtbmV0enBsYXR6LmRlL2Rvd25sb2FkL3BzY2huZWlkZXIxOTY4
+X3B1Yi5hc2MNCmh0dHBzOi8va2V5cy5tYWlsdmVsb3BlLmNvbS9wa3MvbG9va3VwP29wPWdl
+dCZzZWFyY2g9cHNjaG5laWRlcjE5NjhAZ29vZ2xlbWFpbC5jb20NCmh0dHBzOi8va2V5cy5t
+YWlsdmVsb3BlLmNvbS9wa3MvbG9va3VwP29wPWdldCZzZWFyY2g9cHNjaG5laWRlcjE5NjhA
+Z21haWwuY29tDQo=
 
--- 
-2.25.1
+--------------cdi051ZZSIdFXMDMKWhP8wq0--
 
+--------------PnG437ECAAr56hnFUTpvgz20
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+wnsEABYIACMWIQSjgovXlszhGoyt6IZuOpLJLD/yRAUCZkNl4AUDAAAAAAAKCRBuOpLJLD/yRLgl
+APoD1O8x6JDCdgoVHfWedEebUCEpHyuaySPGluRk+qzg3wEAxs6J01Ge68f9KIYi176XiURPg0z8
+NZq5v8L4RHPSwwY=
+=r9NY
+-----END PGP SIGNATURE-----
+
+--------------PnG437ECAAr56hnFUTpvgz20--
