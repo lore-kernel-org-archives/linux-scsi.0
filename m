@@ -1,228 +1,161 @@
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E00D411725;
-	Tue, 14 May 2024 05:08:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92CABF9D4;
+	Tue, 14 May 2024 07:07:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715663323; cv=none; b=YRfv1B58qbv7jTaXREWFodSYOIXSSmQmgv9BhAWhQntOo0xqpdrhyEZQAubemFxrTkDdSdyVd8F0B1rRQ8EZ3jlkloth4VJRzZFWE7zSmauwQ8s/gvSnT4PfR/mnAQJqUgA1UE+ow1iFtAV40HDtdq6ZxNywljlbCiUZPgGLQJ8=
+	t=1715670481; cv=none; b=CZE19RMadOPp0dgCc7NWV9YCIqWjMNABNkBO72WvgbATa1YY4H9enAMYG570IBeIHw2uvRo+pOevQl8+/2wrvdGbvCrlO4bi2zzooUcT154pszgMY8bkVcyR/AJjFGUP4D2104i4vnCgL3aIeGylBJi7U6Tmj7W1UbxMWRuE0+E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715663323; c=relaxed/simple;
-	bh=9yVrBO+AHQnDloFWvZYWWtQBU+q/1LR0KDATw/zbmOI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=haITrrxecaqLsM7ypnxnQjmcUzBsgR+Rki6tdFcqQUNvgDQ9V9B+5HpB9giIeKIJS6ohbCAuCKw3jRfigyw8fcRhhtEuMu2lDUOcvGXtOGhQvvCjH0IQdPl6uV0XAIYT7kTNGnmxWBgVrXlT5yhN6rNdaAACLuIUQop+OeuOYNA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=PuDggRSl; arc=none smtp.client-ip=68.232.141.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1715670481; c=relaxed/simple;
+	bh=X+YkrXgyWzVE1vkaFzWg3Tm00enAzXXtdq+NMhAjH/M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MavnWkbP3bCm+CJe63upFhLdgFu0N+QEr1C0jcARyUlGsW8sEQYqlLI0NAuOzcHwhEEjJHNhRwMJKniehp+2N3Ly9BuVHTOzFN5hXCmGfRMVBapjXqvunk3wZSkH5bjBMcAolFxoiJLWFoBRgdXmvEE7xi7GnVtwWd7BVLSScXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=evv0SBhD; arc=none smtp.client-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="PuDggRSl"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1715663320; x=1747199320;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=9yVrBO+AHQnDloFWvZYWWtQBU+q/1LR0KDATw/zbmOI=;
-  b=PuDggRSl3ZoJNT1fZGw4OQJd+pyQe+pA+Y75i+HhwFnbopfNO2hwE9Bs
-   smS2WzNew7dxcUccfcujQ4ZnF2WsYrGZmpKbx1NxZ/iqucNwVjtEXmQtf
-   AYMkvIPuqgAHAfrUiD3CsYByk4H2ac4gWLPenMNW5qkl7l4uiGtEczU1b
-   eeRRw+ZOCt8uO4Wh6GsTawXkbLx0AylDE7+vmB6cD56KJNitL70iFr9jF
-   nTaRABAkfsT2bkUvgnD2yCF5TD6XHbz9OKnpB6Y3JBm9CtcFF9jJ6KTUF
-   v+2uyCx0QoKkK5A2IaBVdw034TlN1pHhZQNEhguCUey0fe7pDCSrbAm9o
-   g==;
-X-CSE-ConnectionGUID: m5v+ZXkTTdyzLIekbnf1DQ==
-X-CSE-MsgGUID: jGbiQEJdR2WCjlXswkYIPQ==
-X-IronPort-AV: E=Sophos;i="6.08,159,1712592000"; 
-   d="scan'208";a="16511388"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 14 May 2024 13:08:34 +0800
-IronPort-SDR: 6642e440_vp+HjwgzFFKAAuLvFrSsluaGWaGx1ihYuLdWRjcHEN0Eafp
- bHFQxCCFc1/NRvOtIcGjiBsaZqREYajMifNa87Q==
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 13 May 2024 21:10:41 -0700
-WDCIronportException: Internal
-Received: from bxygm33.ad.shared ([10.45.31.229])
-  by uls-op-cesaip01.wdc.com with ESMTP; 13 May 2024 22:08:32 -0700
-From: Avri Altman <avri.altman@wdc.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Bean Huo <beanhuo@micron.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v3] scsi: ufs: Allow RTT negotiation
-Date: Tue, 14 May 2024 08:08:22 +0300
-Message-ID: <20240514050823.735-1-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.42.0
+	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="evv0SBhD"
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-41ffad2426eso36674825e9.3;
+        Tue, 14 May 2024 00:07:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20230601; t=1715670478; x=1716275278; darn=vger.kernel.org;
+        h=in-reply-to:autocrypt:from:content-language:references:cc:to
+         :subject:user-agent:mime-version:date:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=X+YkrXgyWzVE1vkaFzWg3Tm00enAzXXtdq+NMhAjH/M=;
+        b=evv0SBhDWUZd9BGlOo8xhU5F+bFnr/Yg6MbO0B3suAdHjc8R1ottIGxd83TosT/Gmb
+         EekuFr1dbrYErDfFwgWQzOw4J2xsh+sjfHdNOJpdcmiNmXQiBCxRkrsXhLanukjYoRN+
+         pKmpfYYsDhTMkKAFAzMJ01SFKJzOO8qoMhlvMlyEYGmk2y2KnSXxlYjup5td/VLpyq0K
+         4TKxCv5saL9shvQAZX3HI1iGNadNdsYjy5OYMgxAE6oruULVkG8veldC/4w6ZHMQA9BY
+         KQc1+2Cs75niQto+hLvY3wfzBd2H8ag1JalX5uF2zjzG8dXNwGrNVBRFo+MfTt8XZ65N
+         T6LQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1715670478; x=1716275278;
+        h=in-reply-to:autocrypt:from:content-language:references:cc:to
+         :subject:user-agent:mime-version:date:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=X+YkrXgyWzVE1vkaFzWg3Tm00enAzXXtdq+NMhAjH/M=;
+        b=YaAXd1iTWjevBZSQY7LAVq1qmslWXMiclGSooLWdia1R2NSgJjoo4Hr7XFT1eOY5Rh
+         yqW2tkHCgXnR/f3YeivuF7DCd7VmtceJs/hOWh2Ye1/iqcDcfH7m9RUoSYJipyy9DZVd
+         7s7Ze96I65cKlsqKEwqLAUyimtC0YMAh4vR6ZQyeDCB9xT8ZxQZjxJlYrVxbEXC/iZ1R
+         ELCDdoXOivHu2pgTEnRYtll/rvgo+4gewAKscOEa88Zxg3I6SlJlSnEYC5uEdSLN6hO/
+         Z2rjVHT81pLZdJdtGaUCpHnF34b3fjGAvzgJrrbhb1L4ArWgJjFNF6xYlrQaG2/Y8WKf
+         wi/g==
+X-Forwarded-Encrypted: i=1; AJvYcCXSMEr5i4PhhK7C5Hc9CyrjKgrUNFwTM9JcTbQr+tsCWjywstx7HuKBaX7ob9z6FQrdTWtNtbBTv0d/bfvoFhJC3SKgEehZbKRGuGEIuPG8HaLdrdtL644/vXoaF0R82OMM1sQn
+X-Gm-Message-State: AOJu0YxVnjtvUUUIk3KIs01oCaA9ti9dQGd0RZc3pRCV2XIXooj0PY5y
+	c3uQDVYv4AFSysP4yvZTrWB1uWnN2hAZnxnjMNaK6M9ox53z8NHld3kgHTI=
+X-Google-Smtp-Source: AGHT+IEsS63TXT+CNUHhfxEjLBmwVUfEfHU7Zb1RUnpJaRDD56Nb3r+lUE0Fx0YW+PSVfdn2LDRVhA==
+X-Received: by 2002:a05:600c:5252:b0:420:f8:23d6 with SMTP id 5b1f17b1804b1-42000f82681mr109286795e9.36.1715670477628;
+        Tue, 14 May 2024 00:07:57 -0700 (PDT)
+Received: from [192.168.1.3] (p5b2b40c2.dip0.t-ipconnect.de. [91.43.64.194])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42012d9ace5sm79279885e9.2.2024.05.14.00.07.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 14 May 2024 00:07:56 -0700 (PDT)
+Message-ID: <c4e8e0b5-fc32-4e26-8c0e-27a996769903@googlemail.com>
+Date: Tue, 14 May 2024 09:07:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Betterbird (Windows)
+Subject: Re: Kernel 6.8.4 regression: aacraid controller not initialized any
+ more, system boot hangs
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org,
+ linux-kernel@vger.kernel.org, regressions@leemhuis.info,
+ regressions@lists.linux.dev
+References: <eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com>
+ <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
+Content-Language: de-DE
+From: Peter Schneider <pschneider1968@googlemail.com>
+Autocrypt: addr=pschneider1968@googlemail.com; keydata=
+ xjMEY58biBYJKwYBBAHaRw8BAQdADPnoGTrfCUCyH7SZVkFtnlzsFpeKANckofR4WVLMtMzN
+ L1BldGVyIFNjaG5laWRlciA8cHNjaG5laWRlcjE5NjhAZ29vZ2xlbWFpbC5jb20+wpwEExYK
+ AEQCGyMFCQW15qgFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AWIQSjgovXlszhGoyt6IZu
+ OpLJLD/yRAUCY58b8AIZAQAKCRBuOpLJLD/yRIeIAQD0+/LMdKHM6AJdPCt+e9Z92BMybfnN
+ RtGqkdZWtvdhDQD9FJkGh/3PFtDinimB8UOB7Gi6AGxt9Nu9ne7PvHa0KQXOOARjnxuIEgor
+ BgEEAZdVAQUBAQdAw2GRwTf5HJlO6CCigzqH6GUKOjqR1xJ+3nR5EbBze0sDAQgHwn4EGBYK
+ ACYWIQSjgovXlszhGoyt6IZuOpLJLD/yRAUCY58biAIbDAUJBbXmqAAKCRBuOpLJLD/yRONS
+ AQCwB9qiEQoSnxHodu8kRuvUxXKIqN7701W+INXtFGtJygEAyPZH3/vSBJ4A7GUG7BZyQRcr
+ ryS0CUq77B7ZkcI1Nwo=
+In-Reply-To: <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------3k07hvzCU80C7y4hrWzdZar0"
 
-The rtt-upiu packets precede any data-out upiu packets, thus
-synchronizing the data input to the device: this mostly applies to write
-operations, but there are other operations that requires rtt as well.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------3k07hvzCU80C7y4hrWzdZar0
+Content-Type: multipart/mixed; boundary="------------XgrnrIbEqmkVi01629oNH2n6";
+ protected-headers="v1"
+From: Peter Schneider <pschneider1968@googlemail.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org,
+ linux-kernel@vger.kernel.org, regressions@leemhuis.info,
+ regressions@lists.linux.dev
+Message-ID: <c4e8e0b5-fc32-4e26-8c0e-27a996769903@googlemail.com>
+Subject: Re: Kernel 6.8.4 regression: aacraid controller not initialized any
+ more, system boot hangs
+References: <eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com>
+ <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
 
-There are several rules binding this rtt - data-out dialog, specifically
-There can be at most outstanding bMaxNumOfRTT such packets.  This might
-have an effect on write performance (sequential write in particular), as
-each data-out upiu must wait for its rtt sibling.
+--------------XgrnrIbEqmkVi01629oNH2n6
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
 
-UFSHCI expects bMaxNumOfRTT to be min(bDeviceRTTCap, NORTT). However,
-as of today, there does not appears to be no-one who sets it: not the
-host controller nor the driver.  It wasn't an issue up to now:
-bMaxNumOfRTT is set to 2 after manufacturing, and wasn't limiting the
-write performance.
+SGkgTWFydGluLA0KDQptZWFud2hpbGUsIHNvbWUgbW9yZSBwZW9wbGUgd2hvIGZhY2UgdGhl
+IHNhbWUgcHJvYmxlbSBoYXZlIGJlZW4gZ2F0aGVyaW5nIGluIHRoaXMgdGhyZWFkIA0KaW4g
+dGhlIFByb3htb3ggdXNlciBmb3J1bToNCg0KaHR0cHM6Ly9mb3J1bS5wcm94bW94LmNvbS90
+aHJlYWRzL3B2ZS04LTIta2VybmVsLTYtOC00LTItZG9lcy1ub3QtYm9vdC1jYW5ub3QtZmlu
+ZC1yb290LWRldmljZS4xNDU3NjQvDQoNClR3byBvZiB0aGVtIGFsc28gaGF2ZSBhbiBBZGFw
+dGVjIGNvbnRyb2xsZXIsIHdoaWxlIGFub3RoZXIgb25lIGhhcyBhIFBFUkMgSDMxMCBNaW5p
+IChMU0kgDQpiYXNlZCkuDQoNCkRpZCB5b3UgaGF2ZSBhbnkgY2hhbmNlIHRvIGxvb2sgaW50
+byB0aGlzIGluIG1vcmUgZGVwdGg/IERvIHlvdSBuZWVkIG1vcmUgaW5mb3JtYXRpb24gZnJv
+bSANCm1lIHRvIHRhY2tsZSB0aGlzIGlzc3VlPyBJJ20gbm90IGEga2VybmVsIGRldmVsb3Bl
+ciwganVzdCBhIHVzZXIsIGJ1dCBJIGd1ZXNzIHdpdGggcHJvcGVyIA0KaW5zdHJ1Y3Rpb24g
+SSB3b3VsZCBiZSBhYmxlIHRvIGNvbXBpbGUgYW5kIHRlc3QgcGF0Y2hlcy4NCg0KQmVzdGUg
+R3LDvMOfZSwNClBldGVyIFNjaG5laWRlcg0KDQotLSANCkNsaW1iIHRoZSBtb3VudGFpbiBu
+b3QgdG8gcGxhbnQgeW91ciBmbGFnLCBidXQgdG8gZW1icmFjZSB0aGUgY2hhbGxlbmdlLA0K
+ZW5qb3kgdGhlIGFpciBhbmQgYmVob2xkIHRoZSB2aWV3LiBDbGltYiBpdCBzbyB5b3UgY2Fu
+IHNlZSB0aGUgd29ybGQsDQpub3Qgc28gdGhlIHdvcmxkIGNhbiBzZWUgeW91LiAgICAgICAg
+ICAgICAgICAgICAgLS0gRGF2aWQgTWNDdWxsb3VnaCBKci4NCg0KT3BlblBHUDogIDB4QTM4
+MjhCRDc5NkNDRTExQThDQURFODg2NkUzQTkyQzkyQzNGRjI0NA0KRG93bmxvYWQ6IGh0dHBz
+Oi8vd3d3LnBldGVycy1uZXR6cGxhdHouZGUvZG93bmxvYWQvcHNjaG5laWRlcjE5NjhfcHVi
+LmFzYw0KaHR0cHM6Ly9rZXlzLm1haWx2ZWxvcGUuY29tL3Brcy9sb29rdXA/b3A9Z2V0JnNl
+YXJjaD1wc2NobmVpZGVyMTk2OEBnb29nbGVtYWlsLmNvbQ0KaHR0cHM6Ly9rZXlzLm1haWx2
+ZWxvcGUuY29tL3Brcy9sb29rdXA/b3A9Z2V0JnNlYXJjaD1wc2NobmVpZGVyMTk2OEBnbWFp
+bC5jb20NCg0KDQoNCg0KQW0gMDkuMDUuMjAyNCB1bSAwMzozOCBzY2hyaWViIE1hcnRpbiBL
+LiBQZXRlcnNlbjoNCj4gDQo+IEhpIFBldGVyIQ0KPiANCj4gVGhhbmtzIGZvciB0aGUgZGV0
+YWlsZWQgYnVnIHJlcG9ydC4NCj4gDQo+PiA2LjguOCsgICAgICAgICAgV09SS1MgICBSZXZl
+cnQgInNjc2k6IGNvcmU6IENvbnN1bHQgc3VwcG9ydGVkIFZQRCBwYWdlDQo+PiBsaXN0IHBy
+aW9yIHRvIGZldGNoaW5nIHBhZ2UiIC0gVGhpcyByZXZlcnRzIGNvbW1pdA0KPj4gYjVmYzA3
+YTVmYjU2MjE2YTQ5ZTZjMWQwYjE3MmQ1NDY0ZDk5YTg5YiAodGhpcyBpcyB0aGUgZmlyc3Qg
+YmFkIGNvbW1pdA0KPj4gb2YgbXkgYmlzZWN0IHNlc3Npb24sIHNlZSBiZWxvdywgYW5kIGEg
+c2luZ2xlIHBhdGNoIGFzIHBhcnQgb2YgdGhlDQo+PiBhYm92ZSBtZXJnZWQgdGFnICdzY3Np
+LWZpeGVzJykNCj4gDQo+IFRoZSBwdXp6bGluZyB0aGluZyBpcyB0aGF0IHRoZSBwYXRjaCBp
+biBxdWVzdGlvbiByZXN0b3JlcyB0aGUgb3JpZ2luYWwNCj4gYmVoYXZpb3IgaW4gd2hpY2gg
+d2UgZG8gbm90IGF0dGVtcHQgdG8gcXVlcnkgYW55IHBhZ2VzIG5vdCBleHBsaWNpdGx5DQo+
+IHJlcG9ydGVkIGJ5IHRoZSBkZXZpY2UuDQo+IA0KPiBDYW4geW91IHBsZWFzZSBzZW5kIG1l
+IHRoZSBvdXRwdXQgb2Y6DQo+IA0KPiAjIHNnX3ZwZCAtYSAvZGV2L3NkYQ0KPiAjIHNnX3Jl
+YWRjYXAgLWwgL2Rldi9zZGENCj4gDQo+IHdoZXJlIHNkYSBpcyBvbmUgb2YgdGhlIGFhY3Jh
+aWQgdm9sdW1lcy4NCj4gDQo+IFRoYW5rcyENCj4gDQo=
 
-UFS4.0, and specifically gear 5 changes this, and requires the device to
-be more attentive.  This doesn't come free - the device has to allocate
-more resources to that end, but the sequential write performance
-improvement is significant. Early measurements shows 25% gain when
-moving from rtt 2 to 9. Therefore, set bMaxNumOfRTT to be
-min(bDeviceRTTCap, NORTT) as UFSHCI expects.
+--------------XgrnrIbEqmkVi01629oNH2n6--
 
-While at it, allow platform vendors to take precedence having their own
-rtt negotiation mechanism.
+--------------3k07hvzCU80C7y4hrWzdZar0
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature.asc"
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+-----BEGIN PGP SIGNATURE-----
 
----
-Changes since v2:
- - Allow platform vendors to take precedence having their own rtt
-   negotiation mechanism (Peter)
+wnsEABYIACMWIQSjgovXlszhGoyt6IZuOpLJLD/yRAUCZkMNywUDAAAAAAAKCRBuOpLJLD/yRCwp
+AQCQ7e+Eq4H8veOUlyQswf1miAnfnUuv6gJHx8fzCKZitgEA+ZQiQ7a7hoNcNvVQkvkExdTsC207
+mtXOQ/byiSnliAc=
+=WPgk
+-----END PGP SIGNATURE-----
 
-Changes since v1:
-- bMaxNumOfRTT is a Persistent attribute - do not override if it was
-  written (Bean)
-
----
- drivers/ufs/core/ufshcd.c | 39 +++++++++++++++++++++++++++++++++++++++
- include/ufs/ufshcd.h      |  4 ++++
- include/ufs/ufshci.h      |  1 +
- 3 files changed, 44 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 0819ddafe7a6..0407d1064e74 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -102,6 +102,9 @@
- /* Default RTC update every 10 seconds */
- #define UFS_RTC_UPDATE_INTERVAL_MS (10 * MSEC_PER_SEC)
- 
-+/* bMaxNumOfRTT is equal to two after device manufacturing */
-+#define DEFAULT_MAX_NUM_RTT 2
-+
- /* UFSHC 4.0 compliant HC support this mode. */
- static bool use_mcq_mode = true;
- 
-@@ -2405,6 +2408,8 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
- 	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
- 	hba->reserved_slot = hba->nutrs - 1;
- 
-+	hba->nortt = FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT, hba->capabilities) + 1;
-+
- 	/* Read crypto capabilities */
- 	err = ufshcd_hba_init_crypto_capabilities(hba);
- 	if (err) {
-@@ -8119,6 +8124,35 @@ static void ufshcd_ext_iid_probe(struct ufs_hba *hba, u8 *desc_buf)
- 	dev_info->b_ext_iid_en = ext_iid_en;
- }
- 
-+static void ufshcd_rtt_set(struct ufs_hba *hba, u8 *desc_buf)
-+{
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
-+	u32 rtt = 0;
-+	u32 dev_rtt = 0;
-+
-+	/* RTT override makes sense only for UFS-4.0 and above */
-+	if (dev_info->wspecversion < 0x400)
-+		return;
-+
-+	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+				    QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &dev_rtt)) {
-+		dev_err(hba->dev, "failed reading bMaxNumOfRTT\n");
-+		return;
-+	}
-+
-+	/* do not override if it was already written */
-+	if (dev_rtt != DEFAULT_MAX_NUM_RTT)
-+		return;
-+
-+	rtt = min_t(int, desc_buf[DEVICE_DESC_PARAM_RTT_CAP], hba->nortt);
-+	if (rtt == dev_rtt)
-+		return;
-+
-+	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+				    QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &rtt))
-+		dev_err(hba->dev, "failed writing bMaxNumOfRTT\n");
-+}
-+
- void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
- 			     const struct ufs_dev_quirk *fixups)
- {
-@@ -8278,6 +8312,11 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 	if (hba->ext_iid_sup)
- 		ufshcd_ext_iid_probe(hba, desc_buf);
- 
-+	if (hba->vops && hba->vops->rtt_set)
-+		hba->vops->rtt_set(hba, desc_buf);
-+	else
-+		ufshcd_rtt_set(hba, desc_buf);
-+
- 	/*
- 	 * ufshcd_read_string_desc returns size of the string
- 	 * reset the error value
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index bad88bd91995..9237ea65bd26 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -329,6 +329,7 @@ struct ufs_pwr_mode_info {
-  * @get_outstanding_cqs: called to get outstanding completion queues
-  * @config_esi: called to config Event Specific Interrupt
-  * @config_scsi_dev: called to configure SCSI device parameters
-+ * @rtt_set: negotiate rtt
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -374,6 +375,7 @@ struct ufs_hba_variant_ops {
- 	int	(*get_outstanding_cqs)(struct ufs_hba *hba,
- 				       unsigned long *ocqs);
- 	int	(*config_esi)(struct ufs_hba *hba);
-+	void	(*rtt_set)(struct ufs_hba *hba, u8 *desc_buf);
- };
- 
- /* clock gating state  */
-@@ -819,6 +821,7 @@ enum ufshcd_mcq_opr {
-  * @capabilities: UFS Controller Capabilities
-  * @mcq_capabilities: UFS Multi Circular Queue capabilities
-  * @nutrs: Transfer Request Queue depth supported by controller
-+ * @nortt - Max outstanding RTTs supported by controller
-  * @nutmrs: Task Management Queue depth supported by controller
-  * @reserved_slot: Used to submit device commands. Protected by @dev_cmd.lock.
-  * @ufs_version: UFS Version to which controller complies
-@@ -957,6 +960,7 @@ struct ufs_hba {
- 
- 	u32 capabilities;
- 	int nutrs;
-+	int nortt;
- 	u32 mcq_capabilities;
- 	int nutmrs;
- 	u32 reserved_slot;
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 385e1c6b8d60..c50f92bf2e1d 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -68,6 +68,7 @@ enum {
- /* Controller capability masks */
- enum {
- 	MASK_TRANSFER_REQUESTS_SLOTS		= 0x0000001F,
-+	MASK_NUMBER_OUTSTANDING_RTT		= 0x0000FF00,
- 	MASK_TASK_MANAGEMENT_REQUEST_SLOTS	= 0x00070000,
- 	MASK_EHSLUTRD_SUPPORTED			= 0x00400000,
- 	MASK_AUTO_HIBERN8_SUPPORT		= 0x00800000,
--- 
-2.34.1
-
+--------------3k07hvzCU80C7y4hrWzdZar0--
