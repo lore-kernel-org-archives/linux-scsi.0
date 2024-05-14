@@ -1,163 +1,184 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4205B1448F4;
-	Tue, 14 May 2024 13:23:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33B486D1A7
+	for <linux-scsi@vger.kernel.org>; Tue, 14 May 2024 14:04:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715693029; cv=none; b=LyEqiRl8QGAcm1Gx8mqbwdg+nGGagZYXXHZzGCBZZQYfKqhv7Qjezq2w0pwLJ03O7kY7FLONXCjop6nl/1J16g0cPBYO6Gmd4Nyv9KO9EHfw6DzmWNfI+iNdz5LhiKIpZVUbMYUn8xGkvyaeDQu9eZaNFOPzQVhgbzsAHOQRg4k=
+	t=1715695494; cv=none; b=Q9jsID3RWOiUthHYtzczdWiEs9lj5H4p4q96h7A1og8PCKlkkMYGJBP5piJobY3CLv815YCjk1iaf3fxOctkByHh3HOUjtX2v76KosqwOG2PsoUdFo1L8x1XIlUk9biKogsClcMLf8r4Rp+pZf5oEdkZU7Tk1L8IBanuMDiJH3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715693029; c=relaxed/simple;
-	bh=i4pIjJe0x16spaf+Nby5Vt3rvwu45Ga15QdtD4TELDw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gtGrUmopzCdamW1vxmoTgmstDAdO0YtrEa/RYbE6QTsNnca/g0K7v4mQWBy+i5ExD/3C7VNaAHj3GMSi6KFBlt2J517nlaoULO0rqnnyLXK7gq8s1es5R7IlJ379YN7/OehtF0/DUr9/Itk4rppfYHY4Yo9C2E+SxkSQWsjxZWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com; spf=pass smtp.mailfrom=googlemail.com; dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b=eV/6kj3W; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=googlemail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=googlemail.com
+	s=arc-20240116; t=1715695494; c=relaxed/simple;
+	bh=vlBQAD/Tv9YleoM02CxG5iMKGrAvUOnP2IVjZegIufo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t9N+Sri6wynHgMIJ6PYlGtnSiX/9l5XxQafI1MSNgfo/xYwAsumH9KOBtsecWVb4AIBv+zUZTr58TdqYWvo1MpaidAjtV/CNTgVBuAUxFAlGKCXhGwqAI6ttbmH6Wk0fZ5YA8EZDzJaVwfhCOcaVB7jPUsEwWAvJx4FNqsAz8FU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=QWuaKNxc; arc=none smtp.client-ip=209.85.208.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="eV/6kj3W"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-41fc2f7fbb5so30820075e9.1;
-        Tue, 14 May 2024 06:23:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="QWuaKNxc"
+Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-56e6a1edecfso268271a12.1
+        for <linux-scsi@vger.kernel.org>; Tue, 14 May 2024 07:04:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20230601; t=1715693026; x=1716297826; darn=vger.kernel.org;
-        h=in-reply-to:autocrypt:from:references:cc:to:content-language
-         :subject:user-agent:mime-version:date:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=i4pIjJe0x16spaf+Nby5Vt3rvwu45Ga15QdtD4TELDw=;
-        b=eV/6kj3WmbNW45slkirTm8SoP1UngqDtc2U+us7koJLzFKjt6yoSRv+0t/9MW47fwC
-         ArQxx0HCKi2rNGSKd5LOvlFVC7pQGCamY88bWOJ6IIsu76xQtb6/K/QVZyic7//N1YrN
-         JwjnLAu2ETI5yHnRNQl8g3DMoar15hiLW/ilLGPYaydyY2iWAKjZU4aAvNq6T9NIwAQ/
-         y26v8F8tFNU/EGwq0RnJxJcnx+yDRhYIKn4vOcI6MCkBwpV7AyaBnM7+6YpjWYqxGTO+
-         q6jf/TLOGxAiYLXvGUQq7PUnACftzN+u7MA00LWP8yXCLmJfKCzmUYLfF7JTQq62mF5Z
-         MTDg==
+        d=suse.com; s=google; t=1715695490; x=1716300290; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=P9KOgbcaFaqw1h3hRmDmamViBsOOFXbwUuSP4Q/kLpE=;
+        b=QWuaKNxcCPKP37t6TIutqSeBoCOfhS/4udbD/W5SIT5U++LQHOmHiGiMFouDprvV5A
+         1Kmpxxnwr3QvquF84Oj4RB4RfbFLgZoTtvhT0A6vqPPWrF3Tq0WvW6xFmgXk5m585JiH
+         YRD9nS3OHY3/uMXi7J6UW3d/lCXYIGyqCNm6XnvqriKyHEmWqz/+vX3PK4WEXY0MxYbv
+         ef4NevEuL9+QTFxsy5K1ZE6Sqsfc+ilG5JHs9GV+tkphWidjRUOIAeBZSiiJYZmmgNIU
+         k/cA7q0VPFqoxYFE+oQthQxqT5GsLbFRoW3mPXMPdm6AtWyPluUc2zUeH/W2ha7Am2SC
+         gYZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715693026; x=1716297826;
-        h=in-reply-to:autocrypt:from:references:cc:to:content-language
-         :subject:user-agent:mime-version:date:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=i4pIjJe0x16spaf+Nby5Vt3rvwu45Ga15QdtD4TELDw=;
-        b=gHpsE1gIYKSP7eirzHpmBUHHbD8fJVz4P7tIA7YWsKuNcArwKQs35URdbS6wceMHcx
-         hBa+1scEZJ32QILFAHLyzxL2+7KDh6FGs4M2/azdmrn5EY/a5KStZE0Nfh6u/Z4TNpP0
-         l0KzotZChibTvmfWbx9Dyi5b3fmKqcRolVAB7AyR6ULX7VLVutaF4WYdOdDidX7QrbU4
-         dejeAIQeHWsQ+5bGmyXdHDfz1Xgr8CCqgo0lj1rn/kVsyMM2WcA1cZ9X+2EFoNatdeWk
-         DvMeQkTv2Q5MpLaQFvk2+VAEVz9eX6ffnmGKkYM1t1A+kiW32IWjJpnV+GfQ65BGCW9U
-         kP4g==
-X-Forwarded-Encrypted: i=1; AJvYcCXtxJkMQpigSHSldfRAEKldK0DCLt45HHAZKI13+dIWDZ75BaFCBtz2r8hCYhpodxKUXtuQMJ6kP532p5WTSxRBHOlGyEKAEX/vsW+vJyvRJchg7DPv5IPGtZHIVLqlnmddpi8s
-X-Gm-Message-State: AOJu0YxJ/Pcu4X4E5iBi3wpg3QA0JnNkcSXFVCDnsx7K3kGTe+iZ5/ff
-	tUQjW1tdyMiH2rGyO2zr7KkpzHamBDkMZIfdO5g+xgf+2QYoJ7A=
-X-Google-Smtp-Source: AGHT+IGBidFu3u5LcN0dwJ1l7jTnwnSr7ddHSRHFj1Wk5Lf/7XWy1WnDvx4EYx1pSVYG/e2K7Idp9w==
-X-Received: by 2002:a05:600c:511f:b0:418:5ef3:4a04 with SMTP id 5b1f17b1804b1-41fead59f07mr119358965e9.18.1715693026173;
-        Tue, 14 May 2024 06:23:46 -0700 (PDT)
-Received: from [192.168.1.3] (p5b2b40c2.dip0.t-ipconnect.de. [91.43.64.194])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-42013c5fa61sm88956135e9.40.2024.05.14.06.23.45
+        d=1e100.net; s=20230601; t=1715695490; x=1716300290;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=P9KOgbcaFaqw1h3hRmDmamViBsOOFXbwUuSP4Q/kLpE=;
+        b=VSFGG+QSo+q1qIpCxoO6xtl9sPIc1bn1ysYdukWZboDu1GyDwwgLSx7erofaohK4c8
+         ImsoMjd0RUr9BqorOG3LqQWc8c/07QcvjwOxHT005sB9ASeKOHUWIM8Hdr280skw/l7B
+         9nW8j39l7rKz3+09f42AoxvyOeP4hzAy+cOaCbYxO5nK70Xn0rHbmz88g2EhJ9NG/Qad
+         PafZ7dGfi7rsazAoGyDRx8GhguwdNL85RBZro9TU0orV/VcKU/8BV5VxSEO73D5CvQx/
+         kfpTEC5WloCGz0TVqOsAAWjwONpMYhJtckvT2vU1adZQLvs61Kg2NpO8AEcV/tEjAd8E
+         PZzg==
+X-Forwarded-Encrypted: i=1; AJvYcCUED86g4sNjtSmEsr5VYkMYK0Hs7q9m6H/0X9QET/17Zqg5P0f4i1WG9EZvfpmEECDkQn5YOfxLl0Q2co+YPqY0xU5gSNTuHClNhw==
+X-Gm-Message-State: AOJu0YxFETMrTKuTAFo+kVjHbJHgzbry5AYsWoVrnrOVnFPj2hqvBYz7
+	XOKpna0l4+Tcj0bcp+jhNO/tMbpdR2Vui/6Dkc6G3Yq1V5mcNOpANqvslFhjdLA=
+X-Google-Smtp-Source: AGHT+IEDr+IKe4bWuGFBABYwnSY29kQX/wi+lLFK6mriHgr7sEclvfCg6Kr3xFFRaLcScLR5fjbP4w==
+X-Received: by 2002:a17:906:68d5:b0:a59:a078:9e41 with SMTP id a640c23a62f3a-a5a2d5cdb7fmr798257466b.45.1715695490480;
+        Tue, 14 May 2024 07:04:50 -0700 (PDT)
+Received: from localhost (p200300de371aa400e6fd936f426b4ff8.dip0.t-ipconnect.de. [2003:de:371a:a400:e6fd:936f:426b:4ff8])
+        by smtp.gmail.com with UTF8SMTPSA id a640c23a62f3a-a5a17b17844sm722620866b.190.2024.05.14.07.04.49
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 May 2024 06:23:45 -0700 (PDT)
-Message-ID: <f08ad152-eefa-4748-8a71-6b84117e19b3@googlemail.com>
-Date: Tue, 14 May 2024 15:23:44 +0200
+        Tue, 14 May 2024 07:04:50 -0700 (PDT)
+From: Martin Wilck <martin.wilck@suse.com>
+X-Google-Original-From: Martin Wilck <mwilck@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Hannes Reinecke <hare@suse.de>,
+	James Bottomley <jejb@linux.vnet.ibm.com>,
+	Ewan Milne <emilne@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	linux-scsi@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Martin Wilck <mwilck@suse.com>
+Subject: [PATCH v5] I/O errors for ALUA state transitions
+Date: Tue, 14 May 2024 16:03:44 +0200
+Message-ID: <20240514140344.19538-1-mwilck@suse.com>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (Windows)
-Subject: Re: Kernel 6.8.4 regression: aacraid controller not initialized any
- more, system boot hangs
-Content-Language: de-DE
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org,
- linux-kernel@vger.kernel.org, regressions@leemhuis.info,
- regressions@lists.linux.dev
-References: <eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com>
- <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
- <c4e8e0b5-fc32-4e26-8c0e-27a996769903@googlemail.com>
- <yq14jb0twk6.fsf@ca-mkp.ca.oracle.com>
-From: Peter Schneider <pschneider1968@googlemail.com>
-Autocrypt: addr=pschneider1968@googlemail.com; keydata=
- xjMEY58biBYJKwYBBAHaRw8BAQdADPnoGTrfCUCyH7SZVkFtnlzsFpeKANckofR4WVLMtMzN
- L1BldGVyIFNjaG5laWRlciA8cHNjaG5laWRlcjE5NjhAZ29vZ2xlbWFpbC5jb20+wpwEExYK
- AEQCGyMFCQW15qgFCwkIBwICIgIGFQoJCAsCBBYCAwECHgcCF4AWIQSjgovXlszhGoyt6IZu
- OpLJLD/yRAUCY58b8AIZAQAKCRBuOpLJLD/yRIeIAQD0+/LMdKHM6AJdPCt+e9Z92BMybfnN
- RtGqkdZWtvdhDQD9FJkGh/3PFtDinimB8UOB7Gi6AGxt9Nu9ne7PvHa0KQXOOARjnxuIEgor
- BgEEAZdVAQUBAQdAw2GRwTf5HJlO6CCigzqH6GUKOjqR1xJ+3nR5EbBze0sDAQgHwn4EGBYK
- ACYWIQSjgovXlszhGoyt6IZuOpLJLD/yRAUCY58biAIbDAUJBbXmqAAKCRBuOpLJLD/yRONS
- AQCwB9qiEQoSnxHodu8kRuvUxXKIqN7701W+INXtFGtJygEAyPZH3/vSBJ4A7GUG7BZyQRcr
- ryS0CUq77B7ZkcI1Nwo=
-In-Reply-To: <yq14jb0twk6.fsf@ca-mkp.ca.oracle.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------PnG437ECAAr56hnFUTpvgz20"
+Content-Transfer-Encoding: 8bit
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---------------PnG437ECAAr56hnFUTpvgz20
-Content-Type: multipart/mixed; boundary="------------cdi051ZZSIdFXMDMKWhP8wq0";
- protected-headers="v1"
-From: Peter Schneider <pschneider1968@googlemail.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, stable@vger.kernel.org,
- linux-kernel@vger.kernel.org, regressions@leemhuis.info,
- regressions@lists.linux.dev
-Message-ID: <f08ad152-eefa-4748-8a71-6b84117e19b3@googlemail.com>
-Subject: Re: Kernel 6.8.4 regression: aacraid controller not initialized any
- more, system boot hangs
-References: <eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com>
- <yq1cypvwz5o.fsf@ca-mkp.ca.oracle.com>
- <c4e8e0b5-fc32-4e26-8c0e-27a996769903@googlemail.com>
- <yq14jb0twk6.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq14jb0twk6.fsf@ca-mkp.ca.oracle.com>
+When a host is configured with a few LUNs and IO is running,
+injecting FC faults repeatedly leads to path recovery problems.
+The LUNs have 4 paths each and 3 of them come back active after
+say an FC fault which makes two of the paths go down, instead of
+all 4. This happens after several iterations of continuous FC faults.
 
---------------cdi051ZZSIdFXMDMKWhP8wq0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: base64
+Reason here is that we're returning an I/O error whenever we're
+encountering sense code 06/04/0a (LOGICAL UNIT NOT ACCESSIBLE,
+ASYMMETRIC ACCESS STATE TRANSITION) instead of retrying.
 
-SGkgTWFydGluLA0KDQpBbSAxNC4wNS4yMDI0IHVtIDE0OjU0IHNjaHJpZWIgTWFydGluIEsu
-IFBldGVyc2VuOg0KPiANCj4gUGV0ZXIsDQo+IA0KPj4gRGlkIHlvdSBoYXZlIGFueSBjaGFu
-Y2UgdG8gbG9vayBpbnRvIHRoaXMgaW4gbW9yZSBkZXB0aD8gRG8geW91IG5lZWQNCj4+IG1v
-cmUgaW5mb3JtYXRpb24gZnJvbSBtZSB0byB0YWNrbGUgdGhpcyBpc3N1ZT8gSSdtIG5vdCBh
-IGtlcm5lbA0KPj4gZGV2ZWxvcGVyLCBqdXN0IGEgdXNlciwgYnV0IEkgZ3Vlc3Mgd2l0aCBw
-cm9wZXIgaW5zdHJ1Y3Rpb24gSSB3b3VsZCBiZQ0KPj4gYWJsZSB0byBjb21waWxlIGFuZCB0
-ZXN0IHBhdGNoZXMuDQo+IA0KPiBJIGFtIGFmcmFpZCBJIGhhdmVuJ3QgaGFkIGEgdGltZSB0
-byBsb29rIGZ1cnRoZXIgaW50byB0aGlzIHlldCBkdWUgdG8NCj4gdHJhdmVsLiBUaGUgYW5u
-dWFsIExTRi9NTS9CUEYgY29uZmVyZW5jZSBpcyB0YWtpbmcgcGxhY2UgdGhpcyB3ZWVrLiBJ
-DQo+IHdpbGwgZ2V0IGJhY2sgdG8geW91IGFzIHNvb24gYXMgcG9zc2libGUuDQoNCk9rLCBn
-cmVhdCwgc28gaGF2ZSBhIGdvb2QgdGltZSB3aGVyZWV2ZXIgdGhpcyBjb25mZXJlbmNlIGlz
-IGdvaW5nIHRvIHRha2UgcGxhY2UhIEl0IGlzbid0IA0KdmVyeSB1cmdlbnQsIGJlY2F1c2Ug
-aW4gdGhlIG1lYW50aW1lIEkgY2FuIGp1c3QgY29udGludWUgdG8gdXNlIHRoZSA2LjUuMTMg
-a2VybmVsIG9uIG15IA0KUHJveG1veCBtYWNoaW5lLiBJIGp1c3Qgd2FudGVkIHRvIHBpbmcg
-eW91IGFnYWluIHNvIHRoaXMgd291bGRuJ3QgZmFsbCB0aHJvdWdoIHRoZSBjcmFja3MuDQoN
-Cj4gQmVmb3JlIEkgbWFrZSBhbnkgcmVjb21tZW5kYXRpb25zIHdydC4gZmlybXdhcmUgdXBk
-YXRlcyBJIHdvdWxkIGxpa2UgdG8NCj4gdW5kZXJzdGFuZCB3aHkgYSBjaGFuZ2UgaW50ZW5k
-ZWQgdG8gbWFrZSBzY2FubmluZyBtb3JlIHJlc2lsaWVudCBhZ2FpbnN0DQo+IGRldmljZSBp
-bXBsZW1lbnRhdGlvbiBlcnJvcnMgaGFzIGhhZCB0aGUgb3Bwb3NpdGUgZWZmZWN0LiBFc3Bl
-Y2lhbGx5DQo+IHNpbmNlIHRoZSBjaGFuZ2UgaW4gcXVlc3Rpb24gcmV2ZXJ0cyB0byBob3cg
-TGludXggaGFzIHNjYW5uZWQgZm9yDQo+IGRldmljZXMgZm9yIGRlY2FkZXMuDQoNCkknbGwg
-bGVhdmUgZXZlcnl0aGluZyBhcyBpdCBpcyBub3csIGFuZCB3b24ndCBjaGFuZ2UgdGhlIGNy
-aW1lIHNjZW5lIHVudGlsIHlvdSB0ZWxsIG1lIA0Kd2hhdCB0byBkbyBuZXh0Lg0KDQoNCkJl
-c3RlIEdyw7zDn2UsDQpQZXRlciBTY2huZWlkZXINCg0KLS0gDQpDbGltYiB0aGUgbW91bnRh
-aW4gbm90IHRvIHBsYW50IHlvdXIgZmxhZywgYnV0IHRvIGVtYnJhY2UgdGhlIGNoYWxsZW5n
-ZSwNCmVuam95IHRoZSBhaXIgYW5kIGJlaG9sZCB0aGUgdmlldy4gQ2xpbWIgaXQgc28geW91
-IGNhbiBzZWUgdGhlIHdvcmxkLA0Kbm90IHNvIHRoZSB3b3JsZCBjYW4gc2VlIHlvdS4gICAg
-ICAgICAgICAgICAgICAgIC0tIERhdmlkIE1jQ3VsbG91Z2ggSnIuDQoNCk9wZW5QR1A6ICAw
-eEEzODI4QkQ3OTZDQ0UxMUE4Q0FERTg4NjZFM0E5MkM5MkMzRkYyNDQNCkRvd25sb2FkOiBo
-dHRwczovL3d3dy5wZXRlcnMtbmV0enBsYXR6LmRlL2Rvd25sb2FkL3BzY2huZWlkZXIxOTY4
-X3B1Yi5hc2MNCmh0dHBzOi8va2V5cy5tYWlsdmVsb3BlLmNvbS9wa3MvbG9va3VwP29wPWdl
-dCZzZWFyY2g9cHNjaG5laWRlcjE5NjhAZ29vZ2xlbWFpbC5jb20NCmh0dHBzOi8va2V5cy5t
-YWlsdmVsb3BlLmNvbS9wa3MvbG9va3VwP29wPWdldCZzZWFyY2g9cHNjaG5laWRlcjE5NjhA
-Z21haWwuY29tDQo=
+mwilck: The original patch was developed by Rajashekhar M A and Hannes
+Reinecke. I moved the code to alua_check_sense() as suggested by
+Mike Christie [1]. Evan Milne had raised the question whether pg->state
+should be set to transitioning in the UA case [2]. I believe that doing
+this is correct. SCSI_ACCESS_STATE_TRANSITIONING by itself doesn't cause
+I/O errors. Our handler schedules an RTPG, which will only result in
+an I/O error condition if the transitioning timeout expires.
 
---------------cdi051ZZSIdFXMDMKWhP8wq0--
+[1] https://lore.kernel.org/all/0bc96e82-fdda-4187-148d-5b34f81d4942@oracle.com/
+[2] https://lore.kernel.org/all/CAGtn9r=kicnTDE2o7Gt5Y=yoidHYD7tG8XdMHEBJTBraVEoOCw@mail.gmail.com/
 
---------------PnG437ECAAr56hnFUTpvgz20
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature.asc"
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+Co-authored-by: Rajashekhar M A <rajs@netapp.com>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
+---
+Changes v4->v5:
+- changed patch author to myself per discussion with Martin K. Petersen,
+  as we can't get Rajashekhar's S-o-b tag easily. Changed commit message
+  accordingly. No code changes.
+Changes v3->v4:
+- fix a whitespace error (Damien Le Moal)
+Changes v2->v3:
+- drop return value of alua_handle_state_transition() (Christoph Hellwig)
+- handle UNIT ATTENTION in alua_tur(), too (Mike Christie)
+- restore comment in alua_check_sense() (Damien Le Moal)
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 31 +++++++++++++++-------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
------BEGIN PGP SIGNATURE-----
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index a226dc1b65d7..4eb0837298d4 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -414,28 +414,40 @@ static char print_alua_state(unsigned char state)
+ 	}
+ }
+ 
+-static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
+-					      struct scsi_sense_hdr *sense_hdr)
++static void alua_handle_state_transition(struct scsi_device *sdev)
+ {
+ 	struct alua_dh_data *h = sdev->handler_data;
+ 	struct alua_port_group *pg;
+ 
++	rcu_read_lock();
++	pg = rcu_dereference(h->pg);
++	if (pg)
++		pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
++	rcu_read_unlock();
++	alua_check(sdev, false);
++}
++
++static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
++					      struct scsi_sense_hdr *sense_hdr)
++{
+ 	switch (sense_hdr->sense_key) {
+ 	case NOT_READY:
+ 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
+ 			/*
+ 			 * LUN Not Accessible - ALUA state transition
+ 			 */
+-			rcu_read_lock();
+-			pg = rcu_dereference(h->pg);
+-			if (pg)
+-				pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
+-			rcu_read_unlock();
+-			alua_check(sdev, false);
++			alua_handle_state_transition(sdev);
+ 			return NEEDS_RETRY;
+ 		}
+ 		break;
+ 	case UNIT_ATTENTION:
++		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
++			/*
++			 * LUN Not Accessible - ALUA state transition
++			 */
++			alua_handle_state_transition(sdev);
++			return NEEDS_RETRY;
++		}
+ 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
+ 			/*
+ 			 * Power On, Reset, or Bus Device Reset.
+@@ -502,7 +514,8 @@ static int alua_tur(struct scsi_device *sdev)
+ 
+ 	retval = scsi_test_unit_ready(sdev, ALUA_FAILOVER_TIMEOUT * HZ,
+ 				      ALUA_FAILOVER_RETRIES, &sense_hdr);
+-	if (sense_hdr.sense_key == NOT_READY &&
++	if ((sense_hdr.sense_key == NOT_READY ||
++	     sense_hdr.sense_key == UNIT_ATTENTION) &&
+ 	    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
+ 		return SCSI_DH_RETRY;
+ 	else if (retval)
+-- 
+2.44.0
 
-wnsEABYIACMWIQSjgovXlszhGoyt6IZuOpLJLD/yRAUCZkNl4AUDAAAAAAAKCRBuOpLJLD/yRLgl
-APoD1O8x6JDCdgoVHfWedEebUCEpHyuaySPGluRk+qzg3wEAxs6J01Ge68f9KIYi176XiURPg0z8
-NZq5v8L4RHPSwwY=
-=r9NY
------END PGP SIGNATURE-----
-
---------------PnG437ECAAr56hnFUTpvgz20--
