@@ -1,189 +1,188 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 061565684
-	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 11:00:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C1FF14AB4
+	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 11:55:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715770845; cv=none; b=LAx5GfBxGcD6PwOVYRLzVM0wQs+ivsbAiytPiEYvJqAhyaA5m+7qULm90ZgmzRmbsyRrYmxhuaEpZ63+2VmAD2aW33E+2QYAGf4SswE/HY9xJHc+Rb9r5pU9V+83X5wvZqlPVVxonXON12UABP8Z6/oC50GYZgpm6niOOk00AoI=
+	t=1715774102; cv=none; b=j9rj7aaBAa2qUyp9c+kPaG41b9n+1OZfvyX42hmiac1M2anLs8stOdripRRXhnUreyO7qFBekeGs/DNwCKysqVkbV5CsdJKbramUaFiHTRqqVQcAzU6uct8nhbp9YvJxUziV2SYDeu8aNYwhkdx1+JqhOO/iwLuhYVESCCY/Rb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715770845; c=relaxed/simple;
-	bh=J+Hmfj+yXRKDyexdBUckE024dQ8Dcy3gLUX78DwMUlM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WN/o7JbTeMySyPvMWKLdyQIRLsS70ywc6oD9k7slPk/VXfkIgea5uyZKZTwIJvoLCJq8CWykP0d0ENr8hCkDkkw+EfGOLKYdruZQ2SM5DH3x/itwbR6ZAZLZl1OcESOryYZRfl724ED6SPVuGO1l13rz4W0qvXdZZqSfT25M088=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=K92SLe53; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1715774102; c=relaxed/simple;
+	bh=WMu7Bm6+HWXr9zqY/NhM9DY2FP+FDaPb6PyRyC3ZrB0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=dbFaId2F/HpUNSi8zqGXlJHsEgrQCXiV4JgwEkNcItefFbxGXAJbL1/cCHLRMeyRsnhCH1hN40K52JyFk9DEZtc5HAZcpPbowtHY7p1ciERTdbpouR8uktByEkQG6yU10xxhxHTG/fSYEYeQcNS8oNWXjJizLDeaew1f3dPY5YA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=cCodZEdC; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="K92SLe53"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1715770842; x=1747306842;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=J+Hmfj+yXRKDyexdBUckE024dQ8Dcy3gLUX78DwMUlM=;
-  b=K92SLe53LRQwdQbRJiizWQF4n1xBoFpK2Der7/EmG4sROTwQFRAi7o8N
-   WmvrUr4h+DWE6+XDFFg7XNhf4RgtT5+8BMAIwXe8ULNlMQKJLh63IABcH
-   jUofU276GN8HfCxglDKZCab6NF2dLwPbS6iU5q+LT8IzWxu3WwlaYOLAS
-   Zrvysnv06lSwuADQH4URag7eVgTmqyYnNzcAP5YPwddNvY0KTX7iV430t
-   hHQvzNGWZo+0ytCyoUAGCPOGSgkOdWQSZtDTJGaDBlNjhBUOJo22RWaFs
-   QtzB0wT8pBNlNYn/kdoPPITuroHlWV+nwoUs+UWzSlSbrua13By8QKCHI
-   w==;
-X-CSE-ConnectionGUID: RcuP+2M7SN6w2yft9nCNbQ==
-X-CSE-MsgGUID: lyqH1k+3QG2zWH9sLGvMkQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11073"; a="29302695"
-X-IronPort-AV: E=Sophos;i="6.08,161,1712646000"; 
-   d="scan'208";a="29302695"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2024 04:00:42 -0700
-X-CSE-ConnectionGUID: 7UPC0DvKTOizPS439Kc4iw==
-X-CSE-MsgGUID: 0/47tvnmSsyYWIhmx8HErQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,161,1712646000"; 
-   d="scan'208";a="35560125"
-Received: from lkp-server01.sh.intel.com (HELO f8b243fe6e68) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 15 May 2024 04:00:39 -0700
-Received: from kbuild by f8b243fe6e68 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1s7CNA-000CkR-2v;
-	Wed, 15 May 2024 11:00:36 +0000
-Date: Wed, 15 May 2024 19:00:29 +0800
-From: kernel test robot <lkp@intel.com>
-To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cCodZEdC"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-6f44ed6e82fso5862541b3a.3
+        for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 04:55:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1715774099; x=1716378899; darn=vger.kernel.org;
+        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=aCf/bxkvDdvPtP2gCt44BTwHN6RzC5MyJJ1qGaGPqDY=;
+        b=cCodZEdCiEz3jjp/ifE6XfTAdojnIMAjAOl9kaB59KRVqVvQM5/b5YheotBfkvgCrH
+         xijJb6EjM+z0+saaw/KFMUddKajfQAfrI3bGvMfP8eR2O3o4X0Nt/CLQLNazMztDK9Lk
+         nI1F/2ZSyESDKYPukcW0FWxzCQ7GSa1GPXTNw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1715774099; x=1716378899;
+        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=aCf/bxkvDdvPtP2gCt44BTwHN6RzC5MyJJ1qGaGPqDY=;
+        b=p4J80XhJ97ZLMoabZdqC/DPivTQohiZSafjRUglZedlZTIFqxSXGg+vQF71bnVpWGn
+         IsGdluxgb88VNIxXxuGaHTwUyIlZtWdbam25evhsqYHieEy7opdB2lwYfKY3k6PRQ9EJ
+         KoMfjetmvxmfF0tT4kaQ1ekJtBx5kIqRMcaOubQB6aOsGJAs5+d7h9kT8S48J58m7kKQ
+         Qtqn4Yz+4v+FF2poJ0Eez0tCTaz2AeQxCMv1BVnlFq1L2UtKLfRC/LDYREtpxGBPOScl
+         P0lVqNgszoEVckz3V8c3SFxXf0DSW3HAmD5sM1I6VnI38143UT15IiNS5+uPI/fBMzWE
+         37+g==
+X-Gm-Message-State: AOJu0YxgIgUw51dVXjvyNlxLbcYRJQPBahthR2ltYbMScLNpQJB55rvS
+	D4fnnxZnWN3WDO96nJey7YOdOTDyWwuGdT7XFlZVtKg6z24S1/WbThffDZeCVG2dD30L6vdgKU3
+	IySMtnaDx/PZqQ1B6Nz5JJhxy7B8Aw4c59dia6rfLfpSL/iADG6yJkhe3bLXwhgCZD8J/CdJETQ
+	sop+bp6111H0GnXdWcyYhL7pCiL0wxn7kpWZwGUbamdrf/4g/r
+X-Google-Smtp-Source: AGHT+IF4JAygtiGlC9okAahKtYiDAPFunwr5lMJ56XOo0v5406StPi4lKFm2XYOrnTZWPyxl/IteLg==
+X-Received: by 2002:a05:6a21:619:b0:1af:7bbc:a163 with SMTP id adf61e73a8af0-1afde0cd68bmr16031903637.18.1715774099286;
+        Wed, 15 May 2024 04:54:59 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-63411346958sm9819234a12.76.2024.05.15.04.54.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 May 2024 04:54:57 -0700 (PDT)
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
-Cc: oe-kbuild-all@lists.linux.dev, rajsekhar.chundru@broadcom.com,
-	sathya.prakash@broadcom.com, sumit.saxena@broadcom.com,
-	chandrakanth.patil@broadcom.com, prayas.patel@broadcom.com,
+Cc: rajsekhar.chundru@broadcom.com,
+	sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: Re: [PATCH v1 3/6] mpi3mr: Dump driver and dmesg logs into driver
- diag buffer
-Message-ID: <202405151829.zc0uNh0u-lkp@intel.com>
-References: <20240514142858.51992-4-ranjan.kumar@broadcom.com>
+Subject: [PATCH v2 0/6] mpi3mr: Host diag buffer support
+Date: Wed, 15 May 2024 17:21:59 +0530
+Message-Id: <20240515115205.75599-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240514142858.51992-4-ranjan.kumar@broadcom.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+	boundary="000000000000bcc0c106187cc959"
 
-Hi Ranjan,
+--000000000000bcc0c106187cc959
+Content-Transfer-Encoding: 8bit
 
-kernel test robot noticed the following build warnings:
+The controllers managed by mpi3mr driver requires system memory to
+save hardware and firmware diagnostic information, this patch set
+enhances the drivers to provide host memory to the controller for
+diagnostic information.  This patch set also provides driver changes
+to push kernel messages into the diagnostic buffers reserved for the
+driver, so that the information will be available as part of debug
+data fetched from the controller.  In addition, support for
+configuring automatic diagnostic information is added in the driver.
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on jejb-scsi/for-next linus/master v6.9 next-20240515]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Change since v1:
+- Fixed test robot build warnings
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Ranjan-Kumar/mpi3mr-HDB-allocation-and-posting-for-hardware-and-Firmware-buffers/20240514-223346
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20240514142858.51992-4-ranjan.kumar%40broadcom.com
-patch subject: [PATCH v1 3/6] mpi3mr: Dump driver and dmesg logs into driver diag buffer
-config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20240515/202405151829.zc0uNh0u-lkp@intel.com/config)
-compiler: alpha-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240515/202405151829.zc0uNh0u-lkp@intel.com/reproduce)
+Ranjan Kumar (6):
+  mpi3mr: HDB allocation and posting for hardware and Firmware buffers
+  mpi3mr: Driver buffer allocation and posting
+  mpi3mr: Dump driver and dmesg logs into driver diag buffer
+  mpi3mr: Trigger support
+  mpi3mr: Ioctl support for HDB
+  mpi3mr: Update driver version to 8.9.1.0.50
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202405151829.zc0uNh0u-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> drivers/scsi/mpi3mr/mpi3mr_fw.c:1214: warning: Excess function parameter 'prev_offset' description in 'mpi3mr_do_mini_dump'
-
-
-vim +1214 drivers/scsi/mpi3mr/mpi3mr_fw.c
-
-  1202	
-  1203	/**
-  1204	 * mpi3mr_do_mini_dump - copy system logs associated with mrioc.
-  1205	 * @mrioc: Adapter instance reference
-  1206	 * @prev_offset: offset returned from previous operation
-  1207	 *
-  1208	 * Read system logs and search for pattern mpi3mr%d and copy the lines
-  1209	 * into driver diag buffer
-  1210	 *
-  1211	 * Return: next available location in driver diag buffer.
-  1212	 */
-  1213	static int mpi3mr_do_mini_dump(struct mpi3mr_ioc *mrioc)
-> 1214	{
-  1215		int n = 0, lines, pos_mini_dump = 0;
-  1216		struct mpi3mr_kmsg_dumper dumper;
-  1217		size_t len;
-  1218		char buf[201];
-  1219		char *mini_start = "<6> Minidump start\n";
-  1220		char *mini_end = "<6> Minidump end\n";
-  1221	
-  1222		struct mpi3_driver_buffer_header *drv_buff_header = NULL;
-  1223	
-  1224		dumper = mrioc->dump;
-  1225	
-  1226		kmsg_dump_rewind(&dumper.kdumper);
-  1227		while (kmsg_dump_get_line(&dumper.kdumper, 1, NULL, 0, NULL))
-  1228			n++;
-  1229	
-  1230		lines = n;
-  1231		kmsg_dump_rewind(&dumper.kdumper);
-  1232	
-  1233		drv_buff_header = (struct mpi3_driver_buffer_header *)mrioc->drv_diag_buffer;
-  1234		drv_buff_header->signature = 0x43495243;
-  1235		drv_buff_header->logical_buffer_start = 0;
-  1236		drv_buff_header->circular_buffer_size =
-  1237			mrioc->drv_diag_buffer_sz - sizeof(struct mpi3_driver_buffer_header);
-  1238		drv_buff_header->flags =
-  1239			MPI3_DRIVER_DIAG_BUFFER_HEADER_FLAGS_CIRCULAR_BUF_FORMAT_ASCII;
-  1240	
-  1241		if ((pos_mini_dump + strlen(mini_start)
-  1242				    < mrioc->drv_diag_buffer_sz)) {
-  1243			sprintf((char *)mrioc->drv_diag_buffer + pos_mini_dump,
-  1244				"%s\n", mini_start);
-  1245			pos_mini_dump += strlen(mini_start);
-  1246		} else {
-  1247			ioc_info(mrioc, "driver diag buffer is full. minidump is not started\n");
-  1248			goto out;
-  1249		}
-  1250	
-  1251		while (kmsg_dump_get_line(&dumper.kdumper, 1, buf, sizeof(buf), &len)) {
-  1252			if (!lines--)
-  1253				break;
-  1254			if (strstr(buf, mrioc->name) &&
-  1255				((pos_mini_dump + len + strlen(mini_end))
-  1256				    < mrioc->drv_diag_buffer_sz)) {
-  1257				sprintf((char *)mrioc->drv_diag_buffer
-  1258				    + pos_mini_dump, "%s", buf);
-  1259				pos_mini_dump += len;
-  1260			}
-  1261		}
-  1262	
-  1263		if ((pos_mini_dump + strlen(mini_end)
-  1264				    < mrioc->drv_diag_buffer_sz)) {
-  1265			sprintf((char *)mrioc->drv_diag_buffer + pos_mini_dump,
-  1266				"%s\n", mini_end);
-  1267			pos_mini_dump += strlen(mini_end);
-  1268		}
-  1269	
-  1270	out:
-  1271		drv_buff_header->logical_buffer_end =
-  1272			pos_mini_dump - sizeof(struct mpi3_driver_buffer_header);
-  1273	
-  1274		ioc_info(mrioc, "driver diag buffer base_address(including 4K header) 0x%016llx, end_address 0x%016llx\n",
-  1275		    (unsigned long long)mrioc->drv_diag_buffer_dma,
-  1276		    (unsigned long long)mrioc->drv_diag_buffer_dma +
-  1277		    mrioc->drv_diag_buffer_sz);
-  1278		ioc_info(mrioc, "logical_buffer end_address 0x%016llx, logical_buffer_end 0x%08x\n",
-  1279		    (unsigned long long)mrioc->drv_diag_buffer_dma +
-  1280		    drv_buff_header->logical_buffer_end,
-  1281		    drv_buff_header->logical_buffer_end);
-  1282	
-  1283		return pos_mini_dump;
-  1284	}
-  1285	
+ drivers/scsi/mpi3mr/mpi/mpi30_tool.h |   59 ++
+ drivers/scsi/mpi3mr/mpi3mr.h         |  162 +++-
+ drivers/scsi/mpi3mr/mpi3mr_app.c     | 1079 ++++++++++++++++++++++++++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c      |  550 ++++++++++++-
+ drivers/scsi/mpi3mr/mpi3mr_os.c      |  113 +++
+ include/uapi/scsi/scsi_bsg_mpi3mr.h  |    3 +-
+ 6 files changed, 1955 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_tool.h
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.31.1
+
+
+--000000000000bcc0c106187cc959
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+GK2Ee6ez7fr/FL1RWbOPVHJR+deNIorOjW7U5HVwnRYhM1OR4mAkrkqcN+3kwae0KmVO3SDKFd7h
+Ok4L2e1ixyaRTo379Ur3iVTnagglDOliayMGRITBPe0CAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZcmFuamFuLmt1bWFyQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU8WuEiYXvpeCaubgLCCFoyRBc
+8QwwDQYJKoZIhvcNAQELBQADggEBAA5th3yz1fvJCBmK21x68IdDNFC0gmynT76I3fOgslLHc7ey
+lC9VXLb+vJ863blS/WxEOwf0fvc0ks7qYWl8xisInHu5AX9glaooGhLImlzE0l9rDf0tcq2kkgc4
+CXL9UGDEoqdxfRj3j9xn9fm9gpTBWSck6ufc/8RV1TLVjcZvrYkMqQwoVulGkr+HCnzaEFxBRmO/
+nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
+0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIK2pG/2ze+WbFs0D16XuhAE4posjKtn1
+o1fEREn6hSepMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDUx
+NTExNTQ1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQA0rjPSCqij82HvSGGba8VCu5QCx9U8RHPpanjubZ0vX/PvahSA
+7QsgTj4/q+AeTXrCxd0sBQ2CROAC7fj3O7HpzEw4Ml/pcb6LmjV/rmnr3e4Qn4XKXoX+g4tJ3qoW
+Mxliktu/PxaPxxDVvt0vbk1QOuH3MyYtU6Cyg5oN0HfYEeyC+pr2Lq62RT+kcZkDMtM26qTcuC7l
+Aqq0asNH2timkbe2trrLjOOMJ+IiifKGQywxqarU7Itg31GD1lk5yF3cvUu6EGI8qEa1CGbqlg0j
+LRrxkC5PB7UkNnkyh7HEtUGNfCKIUO1+6hpQwhjmJ8KBqzjO+dzASMAwhoUa5YNK
+--000000000000bcc0c106187cc959--
