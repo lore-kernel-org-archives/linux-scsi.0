@@ -1,53 +1,53 @@
-Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
+Received: from mail-oo1-f45.google.com (mail-oo1-f45.google.com [209.85.161.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28AD614AB4
-	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 11:55:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CCD914AB4
+	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 11:55:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715774111; cv=none; b=lHcFoM7Bffehnm/IPKXmu9yQB1WV2APcld+EzglvtWNssf40o3vFboMXsS+/G9rMe60JFjdg1kyc9DKjhvQ0yoDAYZCQ4XOGe2X/zlMmtfS1pR+NrGezxv/L3Y4K4y+PaJn7UACAW7QgK820vybElaK9u/qkQUM59fIUjqx9eZ4=
+	t=1715774114; cv=none; b=Auw0QZq8bcdIE5UrKn2zEllKP7XFqTBpCGR9YLZ+k3UtoS5Zy9us+8nGenEEWOEpUesvRPRiaVrp7uFYRZ9pOCwjU8tInDLKu2SqK58b2RkW5NAGopwjW2c5QGmdqNlkSg0neb1FS/xH8CRn2y8gGMoPjY792CSFL8qSL4h7E2A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715774111; c=relaxed/simple;
-	bh=n4MNB2AztGcxCwf5E34u7nZSYWwL86JUDsdXd2YStiw=;
+	s=arc-20240116; t=1715774114; c=relaxed/simple;
+	bh=QAl9mgmDKsNX8HnbX170dNZfG14doDxMOfeognub8g4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uOQ51F4Z+q2S/QZXMPAI2DiyCtEhkhbtfglwGHq95ciYYUQD1e4D87PFrCGmtb7HHx7gZZ4/TYExtjJUrAeo8aRSL2ecv52mWNw0NzaxzGdTu0NPm+HTubiaai/H+SgogbEhcTjlwScb5hQSdRK5kSM0cMXHIYsCQ4lj2t4wxUw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=OWQDyysP; arc=none smtp.client-ip=209.85.161.49
+	 MIME-Version:Content-Type; b=WQ9A/iwNTOy6saith2ocryrlU7y70J4wBSpPZs6ARfKRnsgJczWCDr8/47IYT648Feue78Butq09+1rg/5bxLjGKKxGlobQvxQXqEPcL3aU+Y3khv7Gwc/QomOHjN3e5ma5bFDSDbvTNDhpdrpk2GKPO0Cm9P9GyNm13JpZIBPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=D54womK6; arc=none smtp.client-ip=209.85.161.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OWQDyysP"
-Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-5b278cdfad6so2705046eaf.3
-        for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 04:55:08 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="D54womK6"
+Received: by mail-oo1-f45.google.com with SMTP id 006d021491bc7-5b28c209095so3040921eaf.0
+        for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 04:55:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1715774107; x=1716378907; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1715774111; x=1716378911; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=vQjjOnLLcuyTIczz9Ad/MbsRJCQN7PZ+iUUnuFETq+s=;
-        b=OWQDyysP1Rr2CG9sSKW9E5Oe8qT1Z9HQ2zsjh9lPk4Gp/bgueY+ejBVlYqz51AW0ep
-         bh7x3dMSV4eyMZwphe6pSTGaFJXWLobU/PXvvP3uhXr00GKUYhWhbvTNiZWl6DE4nnnV
-         X/78AMYOH9VFxAldpWlpRbdoiJo63K4mq7vmo=
+        bh=tRYsVa7bpUgCIDzU10JXGV3YAe0/enuXMdW65JIRhuw=;
+        b=D54womK6+Z8wS0uPu+h+yf20yphe/jA0OTHrzPmXJNdEbt0W39iHsFdbHI3+zhDqSJ
+         07x4GviMWk9JmDH7HoYzHae0f9IDLtm984XavB1InF3P1uvk6pWwncWfBpt6bLe5UXqQ
+         6vdiicLLNwaKr6aDHvrhevH46K3zPUdp71Qqw=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715774107; x=1716378907;
+        d=1e100.net; s=20230601; t=1715774111; x=1716378911;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=vQjjOnLLcuyTIczz9Ad/MbsRJCQN7PZ+iUUnuFETq+s=;
-        b=mrZbsFFpHfI/F3isN6j1EwH1vsxpS63ZEmIGzo/G4++YmJWEH7FO6S2o8ADMAheJtX
-         ZF4coIfRC+RfeTdZ150iFmju8OLNEeGf4+36uiWzk0S8DNFYbhgWxP0d9OOvelM3Fn9b
-         NeBJg5lcLE10fjylkhx3ZYwD6p/RmGZdk1xCDzQFofhbJpkz9QCZQV6zq9DtZv+yb9aB
-         jlhtv5NRq1JB0gyVYedp1kBXS4BoS3zxesOrvrK2plvEU0VnVp2UJVlNlgaBB1xmB+Mh
-         PcDiQvWRfoZ5uRB8xDhbfj/gLZLN6li5+y8P4wXsiiZAIXQkDUV1npJJsmlSBb8Sp6jl
-         DfiQ==
-X-Gm-Message-State: AOJu0YyiaNhuVJxnAApmHdLcmQj8/5P5zlD775ijmMxmlJBQmuEH1I/q
-	UoAoyo12rY4+SbwZi/jW5pVofsXdozuEEayjHlpNwkq/huvyi4SBiFd7atDoNbBj5gzRbOVrz7Z
-	ZACs37aFSKTaUII11v0c7nALCU+rO7NEhaXCUSQkdUF30sMBgnG7pn7gBCYT4vZX9wkxwOjsw4P
-	5QpS4gcwVKNgO/cfzbBQ30CfQoeUwz2JLh/HiLZrzdrQbOJjyy
-X-Google-Smtp-Source: AGHT+IHWCCMuAFzjrqNLRTp9w5waOq460jvih5Ndd+spAMX4UJX7kmSfcbItvI86su8oFbnIWWtZ9w==
-X-Received: by 2002:a05:6358:9399:b0:18e:1e37:59e5 with SMTP id e5c5f4694b2df-193bcfc5cedmr1811763855d.24.1715774107110;
-        Wed, 15 May 2024 04:55:07 -0700 (PDT)
+        bh=tRYsVa7bpUgCIDzU10JXGV3YAe0/enuXMdW65JIRhuw=;
+        b=BMdqG6Nq9Ra6/MfKxxLO8nZcwmCzVIOUx/BEx1SysVNM8EHuHeY2M5hNxLJ30I4RJU
+         Otuu1L7aKZ/mf1Vs3YLMSNq70qW5RW1es3ONcVDBsAowcdwZP56KYYcWt8r2fzEpV9wg
+         bv1fqOxVI04GiUvyMEfOZ111VHbpHeM9Ito10WB8euxDZ+wj6Tgf7d66tVS2PUMh1k/+
+         lyi3N9ZJSIK8zCiJxcoWYhv8XvDrnSwA5GB3VAsjU23J289VbKgwQ4S2ACd6CwB246DR
+         RGgZML1htI0VDi255sWdd7oduqIIfoZP6oQme72K1EfgaAt0lzS0qSBOza1tAegxKOjn
+         Cb6w==
+X-Gm-Message-State: AOJu0YwHcybCYUHfTii7ZPsKcqthVTpEFvDyXGb0J0IICq89y65Dj6Gb
+	7UOnNW0WCUGV8IiHm71EFsZXJvLyq+sjWQQARF/AsxlcFZ6ZFFm89/viJquFm9wzsYReEN48sP5
+	aaQ6leMSq41Kp9+45tAwEsEGtzE6yDbtoqOYkNn0MvI7ORd3d0/cfDGLbRp8pauZSYak7+K7DkZ
+	DfP5HRYvydIjh1mjprS95gfWDcdjlm5UgMnLNIoh6sNVfVcOzr
+X-Google-Smtp-Source: AGHT+IFB5k9d8pa7sQLPzlDwbovHR++C/A9JV7grdo1HUVZlGa7pvL7Lv8vZ9RSaID0+mOAoIyQbLg==
+X-Received: by 2002:a05:6358:262a:b0:186:27f9:d725 with SMTP id e5c5f4694b2df-193bb51451fmr1147798055d.8.1715774111006;
+        Wed, 15 May 2024 04:55:11 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-63411346958sm9819234a12.76.2024.05.15.04.55.03
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-63411346958sm9819234a12.76.2024.05.15.04.55.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 May 2024 04:55:05 -0700 (PDT)
+        Wed, 15 May 2024 04:55:09 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -56,10 +56,11 @@ Cc: rajsekhar.chundru@broadcom.com,
 	sumit.saxena@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v2 2/6] mpi3mr: Driver buffer allocation and posting
-Date: Wed, 15 May 2024 17:22:01 +0530
-Message-Id: <20240515115205.75599-3-ranjan.kumar@broadcom.com>
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	kernel test robot <lkp@intel.com>
+Subject: [PATCH v2 3/6] mpi3mr: Dump driver and dmesg logs into driver diag buffer
+Date: Wed, 15 May 2024 17:22:02 +0530
+Message-Id: <20240515115205.75599-4-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240515115205.75599-1-ranjan.kumar@broadcom.com>
 References: <20240515115205.75599-1-ranjan.kumar@broadcom.com>
@@ -70,319 +71,217 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000342a1f06187ccae2"
+	boundary="000000000000727cd706187cca33"
 
---000000000000342a1f06187ccae2
+--000000000000727cd706187cca33
 Content-Transfer-Encoding: 8bit
 
-This patch adds support for allocating a driver
-diagnostic buffer and posting it to the firmware
-for capturing the driver logs in the controller for further
-debugging.
+This patch adds support for collecting the kernel messages based
+on the driver buffer capture level set in the module parameter
+and copy the pertinent information to the driver diagnostic buffer
+posted to the controller.  The buffer capture and copy will be
+executed when the driver detected the controller in the fault state.
 
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202405151829.zc0uNh0u-lkp@intel.com/
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi/mpi30_tool.h |  13 +++
- drivers/scsi/mpi3mr/mpi3mr.h         |  21 ++++
- drivers/scsi/mpi3mr/mpi3mr_fw.c      | 154 +++++++++++++++++++++++++++
- 3 files changed, 188 insertions(+)
+ drivers/scsi/mpi3mr/mpi/mpi30_tool.h |   2 +
+ drivers/scsi/mpi3mr/mpi3mr.h         |   5 ++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c      | 124 +++++++++++++++++++++++++++
+ 3 files changed, 131 insertions(+)
 
 diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_tool.h b/drivers/scsi/mpi3mr/mpi/mpi30_tool.h
-index 3b960893870f..495933856006 100644
+index 495933856006..8b8b6ba00c7b 100644
 --- a/drivers/scsi/mpi3mr/mpi/mpi30_tool.h
 +++ b/drivers/scsi/mpi3mr/mpi/mpi30_tool.h
-@@ -7,6 +7,7 @@
- 
- #define MPI3_DIAG_BUFFER_TYPE_TRACE	(0x01)
- #define MPI3_DIAG_BUFFER_TYPE_FW	(0x02)
-+#define MPI3_DIAG_BUFFER_TYPE_DRIVER	(0x10)
+@@ -10,6 +10,8 @@
+ #define MPI3_DIAG_BUFFER_TYPE_DRIVER	(0x10)
  #define MPI3_DIAG_BUFFER_ACTION_RELEASE	(0x01)
  
++#define MPI3_DRIVER_DIAG_BUFFER_HEADER_FLAGS_CIRCULAR_BUF_FORMAT_ASCII	(0x00000000)
++
  struct mpi3_diag_buffer_post_request {
-@@ -40,5 +41,17 @@ struct mpi3_diag_buffer_manage_request {
- 	__le16                     reserved0e;
- };
- 
-+struct mpi3_driver_buffer_header {
-+	__le32                     signature;
-+	__le16                     header_size;
-+	__le16                     rtt_file_header_offset;
-+	__le32                     flags;
-+	__le32                     circular_buffer_size;
-+	__le32                     logical_buffer_end;
-+	__le32                     logical_buffer_start;
-+	__le32                     ioc_use_only18[2];
-+	__le32                     reserved20[760];
-+	__le32                     reserved_rttrace[256];
-+};
- 
- #endif
+ 	__le16                     host_tag;
+ 	u8                         ioc_use_only02;
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 4ef96c39c832..dc7e8f461826 100644
+index dc7e8f461826..b6030a665ec8 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -37,6 +37,7 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_tcq.h>
-+#include <linux/kmsg_dump.h>
- #include <uapi/scsi/scsi_bsg_mpi3mr.h>
- #include <scsi/scsi_transport_sas.h>
- 
-@@ -195,6 +196,13 @@ extern atomic64_t event_counter;
- 
- #define MPI3MR_HDB_TRIGGER_TYPE_GLOBAL          3
- 
-+/* Driver Host Diag Buffer (drv_db) */
-+#define MPI3MR_MIN_DIAG_HOST_BUFFER_SZ		((32 * 1024) + \
-+	sizeof(struct mpi3_driver_buffer_header))
-+#define MPI3MR_DEFAULT_DIAG_HOST_BUFFER_SZ	((512 * 1024) + \
-+	sizeof(struct mpi3_driver_buffer_header))
-+#define MPI3MR_UEFI_DIAG_HOST_BUFFER_OFFSET	(16 * 1024)
-+
- /* SGE Flag definition */
- #define MPI3MR_SGEFLAGS_SYSTEM_SIMPLE_END_OF_LIST \
- 	(MPI3_SGE_FLAGS_ELEMENT_TYPE_SIMPLE | MPI3_SGE_FLAGS_DLAS_SYSTEM | \
-@@ -218,6 +226,12 @@ extern atomic64_t event_counter;
+@@ -226,6 +226,10 @@ extern atomic64_t event_counter;
  #define MPI3MR_WRITE_SAME_MAX_LEN_256_BLKS 256
  #define MPI3MR_WRITE_SAME_MAX_LEN_2048_BLKS 2048
  
-+/* Driver diag buffer levels */
-+enum mpi3mr_drv_db_level {
-+	MRIOC_DRV_DB_DISABLED = 0,
-+	MRIOC_DRV_DB_MINI = 1,
-+	MRIOC_DRV_DB_FULL = 2,
++struct mpi3mr_kmsg_dumper {
++	struct kmsg_dump_iter kdumper;
 +};
- 
- /**
-  * struct mpi3mr_nvme_pt_sge -  Structure to store SGEs for NVMe
-@@ -1113,6 +1127,10 @@ struct scmd_priv {
-  * @ioctl_chain_sge: DMA buffer descriptor for IOCTL chain
-  * @ioctl_resp_sge: DMA buffer descriptor for Mgmt cmd response
-  * @ioctl_sges_allocated: Flag for IOCTL SGEs allocated or not
-+ * @drv_diag_buffer: Diagnostic host buffer virtual address
-+ * @drv_diag_buffer_dma: Diagnostic host buffer DMA address
-+ * @drv_diag_buffer_sz: Diagnostic host buffer size
-+ *
-  */
- struct mpi3mr_ioc {
- 	struct list_head list;
-@@ -1310,6 +1328,9 @@ struct mpi3mr_ioc {
- 	struct diag_buffer_desc diag_buffers[MPI3MR_MAX_NUM_HDB];
- 	struct mpi3_driver_page2 *driver_pg2;
- 	spinlock_t trigger_lock;
-+	void *drv_diag_buffer;
-+	dma_addr_t drv_diag_buffer_dma;
-+	u32 drv_diag_buffer_sz;
++
+ /* Driver diag buffer levels */
+ enum mpi3mr_drv_db_level {
+ 	MRIOC_DRV_DB_DISABLED = 0,
+@@ -1331,6 +1335,7 @@ struct mpi3mr_ioc {
+ 	void *drv_diag_buffer;
+ 	dma_addr_t drv_diag_buffer_dma;
+ 	u32 drv_diag_buffer_sz;
++	struct mpi3mr_kmsg_dumper dump;
  };
  
  /**
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index fbd6f32f79ce..5937054b3cdb 100644
+index 5937054b3cdb..ea489654de81 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -22,6 +22,17 @@ static int poll_queues;
- module_param(poll_queues, int, 0444);
- MODULE_PARM_DESC(poll_queues, "Number of queues for io_uring poll mode. (Range 1 - 126)");
- 
-+int drv_db_level = 1;
-+module_param(drv_db_level, int, 0444);
-+MODULE_PARM_DESC(drv_db_level, "Driver diagnostic buffer level(Default=1).\n\t\t"
-+		"options:\n\t\t"
-+		"0 = disabled:  Driver diagnostic buffer not captured\n\t\t"
-+		"1 = minidump:  Driver diagnostic buffer captures prints\n\t\t"
-+		"related to specific mrioc instance\n\t\t"
-+		"2 = fulldump:  Driver diagnostic buffer captures prints\n\t\t"
-+		"related to specific mrioc instance and complete dmesg logs"
-+		);
-+
- #if defined(writeq) && defined(CONFIG_64BIT)
- static inline void mpi3mr_writeq(__u64 b, volatile void __iomem *addr)
- {
-@@ -872,6 +883,31 @@ static int mpi3mr_setup_isr(struct mpi3mr_ioc *mrioc, u8 setup_one)
- 	return retval;
- }
- 
-+static const struct {
-+	enum mpi3mr_drv_db_level value;
-+	char *name;
-+} mpi3mr_drv_db[] = {
-+	{ MRIOC_DRV_DB_DISABLED, "disabled (uefi dump is enabled)" },
-+	{ MRIOC_DRV_DB_MINI, "minidump" },
-+	{ MRIOC_DRV_DB_FULL, "fulldump" },
-+};
-+static const char *mpi3mr_drv_db_name(enum mpi3mr_drv_db_level drv_db_level)
-+{
-+	int i;
-+	char *name = NULL;
-+
-+	/* Start with Disabled */
-+	name = mpi3mr_drv_db[0].name;
-+
-+	for (i = 0; i < ARRAY_SIZE(mpi3mr_drv_db); i++) {
-+		if (mpi3mr_drv_db[i].value == drv_db_level) {
-+			name = mpi3mr_drv_db[i].name;
-+			break;
-+		}
-+	}
-+	return name;
-+}
-+
- static const struct {
- 	enum mpi3mr_iocstate value;
- 	char *name;
-@@ -1238,6 +1274,102 @@ static int mpi3mr_issue_and_process_mur(struct mpi3mr_ioc *mrioc,
- 	return retval;
+@@ -1200,6 +1200,126 @@ static void mpi3mr_alloc_ioctl_dma_memory(struct mpi3mr_ioc *mrioc)
+ 	mpi3mr_free_ioctl_dma_memory(mrioc);
  }
  
 +/**
-+ * mpi3mr_alloc_issue_host_diag_buf - Allocate and send host diag buffer
++ * mpi3mr_do_mini_dump - copy system logs associated with mrioc.
++ * @mrioc: Adapter instance reference
++ * Read system logs and search for pattern mpi3mr%d and copy the lines
++ * into driver diag buffer
++ *
++ * Return: next available location in driver diag buffer.
++ */
++static int mpi3mr_do_mini_dump(struct mpi3mr_ioc *mrioc)
++{
++	int n = 0, lines, pos_mini_dump = 0;
++	struct mpi3mr_kmsg_dumper dumper;
++	size_t len;
++	char buf[201];
++	char *mini_start = "<6> Minidump start\n";
++	char *mini_end = "<6> Minidump end\n";
++
++	struct mpi3_driver_buffer_header *drv_buff_header = NULL;
++
++	dumper = mrioc->dump;
++
++	kmsg_dump_rewind(&dumper.kdumper);
++	while (kmsg_dump_get_line(&dumper.kdumper, 1, NULL, 0, NULL))
++		n++;
++
++	lines = n;
++	kmsg_dump_rewind(&dumper.kdumper);
++
++	drv_buff_header = (struct mpi3_driver_buffer_header *)mrioc->drv_diag_buffer;
++	drv_buff_header->signature = 0x43495243;
++	drv_buff_header->logical_buffer_start = 0;
++	drv_buff_header->circular_buffer_size =
++		mrioc->drv_diag_buffer_sz - sizeof(struct mpi3_driver_buffer_header);
++	drv_buff_header->flags =
++		MPI3_DRIVER_DIAG_BUFFER_HEADER_FLAGS_CIRCULAR_BUF_FORMAT_ASCII;
++
++	if ((pos_mini_dump + strlen(mini_start)
++			    < mrioc->drv_diag_buffer_sz)) {
++		sprintf((char *)mrioc->drv_diag_buffer + pos_mini_dump,
++			"%s\n", mini_start);
++		pos_mini_dump += strlen(mini_start);
++	} else {
++		ioc_info(mrioc, "driver diag buffer is full. minidump is not started\n");
++		goto out;
++	}
++
++	while (kmsg_dump_get_line(&dumper.kdumper, 1, buf, sizeof(buf), &len)) {
++		if (!lines--)
++			break;
++		if (strstr(buf, mrioc->name) &&
++			((pos_mini_dump + len + strlen(mini_end))
++			    < mrioc->drv_diag_buffer_sz)) {
++			sprintf((char *)mrioc->drv_diag_buffer
++			    + pos_mini_dump, "%s", buf);
++			pos_mini_dump += len;
++		}
++	}
++
++	if ((pos_mini_dump + strlen(mini_end)
++			    < mrioc->drv_diag_buffer_sz)) {
++		sprintf((char *)mrioc->drv_diag_buffer + pos_mini_dump,
++			"%s\n", mini_end);
++		pos_mini_dump += strlen(mini_end);
++	}
++
++out:
++	drv_buff_header->logical_buffer_end =
++		pos_mini_dump - sizeof(struct mpi3_driver_buffer_header);
++
++	ioc_info(mrioc, "driver diag buffer base_address(including 4K header) 0x%016llx, end_address 0x%016llx\n",
++	    (unsigned long long)mrioc->drv_diag_buffer_dma,
++	    (unsigned long long)mrioc->drv_diag_buffer_dma +
++	    mrioc->drv_diag_buffer_sz);
++	ioc_info(mrioc, "logical_buffer end_address 0x%016llx, logical_buffer_end 0x%08x\n",
++	    (unsigned long long)mrioc->drv_diag_buffer_dma +
++	    drv_buff_header->logical_buffer_end,
++	    drv_buff_header->logical_buffer_end);
++
++	return pos_mini_dump;
++}
++
++/**
++ * mpi3mr_do_dump - copy system logs into driver diag buffer.
 + * @mrioc: Adapter instance reference
 + *
-+ * Issue diagnostic buffer post (unconditional) MPI request through admin queue
-+ * and wait for the completion of it or time out.
-+ *
-+ * Return: 0 on success non-zero on failure
++ * Return: Nothing.
 + */
-+static int mpi3mr_alloc_issue_host_diag_buf(struct mpi3mr_ioc *mrioc)
++static void mpi3mr_do_dump(struct mpi3mr_ioc *mrioc)
 +{
-+	struct mpi3_diag_buffer_post_request diag_buf_post_req;
-+	dma_addr_t buf_dma_addr;
-+	u32 buf_sz;
-+	int retval = -1;
++	int offset = 0;
++	size_t dump_size;
++	struct mpi3_driver_buffer_header *drv_buff_header = NULL;
 +
-+	ioc_info(mrioc, "driver diag buffer level = %s.\n",
-+			mpi3mr_drv_db_name(drv_db_level));
++	if (!mrioc->drv_diag_buffer)
++		return;
 +
-+	if (!mrioc->drv_diag_buffer) {
-+		mrioc->drv_diag_buffer_sz =
-+			    MPI3MR_DEFAULT_DIAG_HOST_BUFFER_SZ;
-+		mrioc->drv_diag_buffer =
-+			dma_alloc_coherent(&mrioc->pdev->dev,
-+			    mrioc->drv_diag_buffer_sz,
-+			    &mrioc->drv_diag_buffer_dma, GFP_KERNEL);
-+		if (!mrioc->drv_diag_buffer) {
-+			mrioc->drv_diag_buffer_sz =
-+			    MPI3MR_MIN_DIAG_HOST_BUFFER_SZ;
-+			mrioc->drv_diag_buffer =
-+				dma_alloc_coherent(&mrioc->pdev->dev,
-+				mrioc->drv_diag_buffer_sz,
-+				&mrioc->drv_diag_buffer_dma, GFP_KERNEL);
-+		}
-+		if (!mrioc->drv_diag_buffer) {
-+			ioc_warn(mrioc, "%s:%d:failed to allocate buffer\n",
-+			    __func__, __LINE__);
-+			mrioc->drv_diag_buffer_sz = 0;
-+			return retval;
-+		}
-+		/* TBD - memset to Zero once feature is stable */
-+		memset(mrioc->drv_diag_buffer, 0x55, mrioc->drv_diag_buffer_sz);
-+	}
++	memset(mrioc->drv_diag_buffer, 0, mrioc->drv_diag_buffer_sz);
 +
-+	buf_dma_addr = mrioc->drv_diag_buffer_dma;
-+	buf_sz = mrioc->drv_diag_buffer_sz;
++	if (drv_db_level == MRIOC_DRV_DB_DISABLED)
++		return;
 +
-+	memset(&diag_buf_post_req, 0, sizeof(diag_buf_post_req));
-+	mutex_lock(&mrioc->init_cmds.mutex);
-+	if (mrioc->init_cmds.state & MPI3MR_CMD_PENDING) {
-+		ioc_err(mrioc, "sending driver diag buffer post is failed due to command in use\n");
-+		mutex_unlock(&mrioc->init_cmds.mutex);
-+		return retval;
-+	}
-+	mrioc->init_cmds.state = MPI3MR_CMD_PENDING;
-+	mrioc->init_cmds.is_waiting = 1;
-+	mrioc->init_cmds.callback = NULL;
-+	diag_buf_post_req.host_tag = cpu_to_le16(MPI3MR_HOSTTAG_INITCMDS);
-+	diag_buf_post_req.function = MPI3_FUNCTION_DIAG_BUFFER_POST;
-+	diag_buf_post_req.type = MPI3_DIAG_BUFFER_TYPE_DRIVER;
-+	diag_buf_post_req.address = le64_to_cpu(buf_dma_addr);
-+	diag_buf_post_req.length = le32_to_cpu(buf_sz);
++	/* Copy controller specific logs */
++	offset += mpi3mr_do_mini_dump(mrioc);
++	if (drv_db_level != MRIOC_DRV_DB_FULL)
++		return;
 +
-+	init_completion(&mrioc->init_cmds.done);
-+	retval = mpi3mr_admin_request_post(mrioc, &diag_buf_post_req,
-+	    sizeof(diag_buf_post_req), 1);
-+	if (retval) {
-+		ioc_err(mrioc, "posting driver diag buffer failed\n");
-+		goto out_unlock;
-+	}
-+	wait_for_completion_timeout(&mrioc->init_cmds.done,
-+	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
-+	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
-+		ioc_err(mrioc, "posting driver diag buffer timed out\n");
-+		mpi3mr_check_rh_fault_ioc(mrioc,
-+		    MPI3MR_RESET_FROM_DIAG_BUFFER_POST_TIMEOUT);
-+		retval = -1;
-+		goto out_unlock;
-+	}
-+	retval = 0;
-+	if ((mrioc->init_cmds.ioc_status & MPI3_IOCSTATUS_STATUS_MASK)
-+	    != MPI3_IOCSTATUS_SUCCESS)
-+		ioc_warn(mrioc,
-+		    "driver diag buffer post returned with ioc_status(0x%04x) log_info(0x%08x)\n",
-+		    (mrioc->init_cmds.ioc_status & MPI3_IOCSTATUS_STATUS_MASK),
-+		    mrioc->init_cmds.ioc_loginfo);
-+	else
-+		ioc_info(mrioc, "driver diag buffer of size %dKB posted successfully\n",
-+		    mrioc->drv_diag_buffer_sz / 1024);
++	kmsg_dump_rewind(&mrioc->dump.kdumper);
++	kmsg_dump_get_buffer(&mrioc->dump.kdumper, true,
++		mrioc->drv_diag_buffer + offset,
++		mrioc->drv_diag_buffer_sz - offset, &dump_size);
 +
-+out_unlock:
-+	mrioc->init_cmds.state = MPI3MR_CMD_NOTUSED;
-+	mutex_unlock(&mrioc->init_cmds.mutex);
-+	return retval;
++	drv_buff_header = (struct mpi3_driver_buffer_header *)
++	    mrioc->drv_diag_buffer;
++	drv_buff_header->logical_buffer_end += dump_size;
++	ioc_info(mrioc, "logical_buffer end_address(0x%016llx), logical_buffer_end(0x%08x)\n",
++	    (unsigned long long)mrioc->drv_diag_buffer_dma +
++	    drv_buff_header->logical_buffer_end,
++	    drv_buff_header->logical_buffer_end);
 +}
 +
  /**
-  * mpi3mr_revalidate_factsdata - validate IOCFacts parameters
-  * during reset/resume
-@@ -4168,6 +4300,13 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 		goto out_failed;
- 	}
- 
-+	dprint_reset(mrioc, "posting driver diag buffer\n");
-+	retval = mpi3mr_alloc_issue_host_diag_buf(mrioc);
-+	if (retval) {
-+		ioc_err(mrioc, "failed to post driver diag buffer\n");
-+		goto out_failed;
-+	}
-+
- 	ioc_info(mrioc, "controller initialization completed successfully\n");
- 	return retval;
- out_failed:
-@@ -4358,6 +4497,13 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
- 	} else
- 		ioc_info(mrioc, "port enable completed successfully\n");
- 
-+	dprint_reset(mrioc, "posting driver diag buffer\n");
-+	retval = mpi3mr_alloc_issue_host_diag_buf(mrioc);
-+	if (retval) {
-+		ioc_err(mrioc, "failed to post driver diag buffer\n");
-+		goto out_failed;
-+	}
-+
- 	ioc_info(mrioc, "controller %s completed successfully\n",
- 	    (is_resume)?"resume":"re-initialization");
- 	return retval;
-@@ -4669,6 +4815,14 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
+  * mpi3mr_clear_reset_history - clear reset history
+  * @mrioc: Adapter instance reference
+@@ -2767,6 +2887,7 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
+ 		if (!mrioc->diagsave_timeout) {
+ 			mpi3mr_print_fault_info(mrioc);
+ 			ioc_warn(mrioc, "diag save in progress\n");
++			mpi3mr_do_dump(mrioc);
  		}
- 	}
+ 		if ((mrioc->diagsave_timeout++) <= MPI3_SYSIF_DIAG_SAVE_TIMEOUT)
+ 			goto schedule_work;
+@@ -5311,6 +5432,9 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_ioc_disable_intr(mrioc);
  
-+	if (mrioc->drv_diag_buffer) {
-+		dma_free_coherent(&mrioc->pdev->dev,
-+		    mrioc->drv_diag_buffer_sz, mrioc->drv_diag_buffer,
-+		    mrioc->drv_diag_buffer_dma);
-+		mrioc->drv_diag_buffer = NULL;
-+		mrioc->drv_diag_buffer_sz = 0;
-+	}
-+
- 	kfree(mrioc->throttle_groups);
- 	mrioc->throttle_groups = NULL;
- 
+ 	if (snapdump) {
++		dprint_reset(mrioc,
++		    "soft_reset_handler: saving snapdump\n");
++		mpi3mr_do_dump(mrioc);
+ 		mpi3mr_set_diagsave(mrioc);
+ 		retval = mpi3mr_issue_reset(mrioc,
+ 		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT, reset_reason);
 -- 
 2.31.1
 
 
---000000000000342a1f06187ccae2
+--000000000000727cd706187cca33
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -453,13 +352,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIE169QG6sKEm8Uxb5n/SL2GHKUsAJt4Z
-Qwe/AzZodscrMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDUx
-NTExNTUwN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJ1nWPwnffwjRO9Cq+bQErv1j6OXqbKQ
+Drt+XgfRHezPMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDUx
+NTExNTUxMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQAs/G1QndZe3qIBraEvKo3S/5B7oytaC8CMPVlZoCyaMZAjOUj7
-ulRYMHvnYkHsA5iYHR5C5aOR6r3EZu149Ajv3qjVRoIcD1l0g4O7ly/MfMlfPgdbn2U/ewOCn7Is
-k0yma4uwvs8Y+dOMGdHPSaCvnFTd5/rik08DWJwWvLp1VGA7INSgc9DwYdQlFgXqvTergXlLqDdD
-PxqHFmPu8YaxBCtSodeK8HZWUYZXujLQrKUl7QFo45iVML33fQMVzX8PT0nrQnvEm/mae0ljQrAI
-qI1/nWBDv7YlDhQ5rIBWRGMPqWwU0bhcrDYdi/BgSOuBrOfWvzOaG/ncLmdZ9Nrs
---000000000000342a1f06187ccae2--
+ATANBgkqhkiG9w0BAQEFAASCAQCrEIQ/bdVy9SGwmpFOyX1UlRc7koxUBhNAd4szHHQneXrt3jbP
+IoleokbqyERHdDbFlF6TI2W2ht/n8Jm7r81d3xi9genWWBGer/GZLMCNdh0MNgLYMVBDWxHphmEZ
+A0FyuQGdCWtNUB054a9xreJRnxqb3DffvbPR3zFdr8niOlYJgPN3w2Pb7ogFCDAkc/WOc7ck4F4P
+JydTpD3muGaZ19XiSbK4qJjudHZZ6AMJiiw2xH6SE41i9uqYU/LTkHR31h7sZr4UU6g8HELcT8yW
+ZFTiOrstiP+iGW6e+mXx+8M9VRzzHoXUzD8bCOK7UVnVUgyrGK+sdLgWtrLrDi0l
+--000000000000727cd706187cca33--
