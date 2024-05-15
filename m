@@ -1,93 +1,133 @@
-Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D65257CAB
-	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 09:11:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E72D4EB20
+	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 09:59:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715764283; cv=none; b=EFYcHAXcHRumDcuQ6PKCr5Rs5uCyVDxdAy1bU/UuBA6ldU6T0XmtFfizTrpPGKh2rbfd9p5cObaZkMntwuV/Wo0TlT71pp0L+aztIf5oDCCzdxo9OG2JqyIakwb0FFEMx4iBwuO9ttBqcsIKV6PQWmYzrM1iB8Ak++fTNZjwOtA=
+	t=1715767183; cv=none; b=iY/xgf3q1CwKXp9G3MG2X2y5jU1D0MgnhfGxLQdhnf/O3NsXnJHLUofP8R+D4iBHxg67W8brLwAGIyA+QXkVBU0ntuYHUhGagD+ovSTNwFS7lK57a7bEQ3YIYj7fV1ugg+qhRVgPldt3LdHxIg8hLZV0SO6pPh0FB265laZNJmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715764283; c=relaxed/simple;
-	bh=OYm8WDWL0EjTBx7B9e60vgRgip+YJ257i52ew/zu3Wc=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mY2fXOCDmll6h+V19vQ61NBqb0M1w/jErGsDmQA0dqeJaDnDyxT0b8lUbEJthpkhcKvrKDZhiK3ooTwKjlZe1xhwgT+Ehdo6lHIt6bYH9d1eMF67yf5NpZ0P+b+CqaYNWDduEORvuf4NPi3xrHBxA4QsKyvsNaRh3qUHZM8VDRs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=ga2j2DZY; arc=none smtp.client-ip=67.231.148.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
+	s=arc-20240116; t=1715767183; c=relaxed/simple;
+	bh=6fSq7acfWIb+p3oiQNEiEmUcRMs/hp6EJoH9GYmxJJg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oz03SN7ZNXzUrOmnvhjvTeU26HvgnQRvibelopfO1LJ4Snet5OWO7JUCnUtsAm2ca4taDCF3oLlw36YskYXVrnjNMgeypN/KP5CE3p/QHfW0kwxfK2rwXIdxhfus2Y1fCiSYDrSfAEfu2G1Gx7fga6rcEJcqoFtUw2XnBy3gnZM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MxRm56DV; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="ga2j2DZY"
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44F5TTMD031884
-	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 02:11:15 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-transfer-encoding:content-type; s=
-	pfpt0220; bh=Q8W2JD7WXR4kIrD7/52Y4+m23e2NScFVECoutPhErEY=; b=ga2
-	j2DZYbFFqBkjLodxmO10dHkU0UddxPqCR7ejR4eoso++/niDi6GWRMngg5/B0jzl
-	67idf6TQ4Xbpk67ScGwSt3aSdxeltE6azmdwAyV1nXiGXv46Udu5IXRXoUxZ7gKC
-	3NTtX9plU6HVKgcY0VaWq8wloumeOSsiYVgTsXJ3AOuhIXebSTWPb0D4P8EUsX9i
-	XZzO/IiNFrsLxosHRcGLCBKxZoJcjJ+7t1tOiCLG2xXm7IzmAZIqpNmGUYRf0IvW
-	L6w8JUa3eagWEn28ZH+fXhVSRxs1RBVUM1tl7/jYjmYY6ieqknfX9sSj9xUA0IPF
-	1FLUF1bmdPQ5nZMUgZA==
-Received: from dc5-exch05.marvell.com ([199.233.59.128])
-	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3y4pxtrj93-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 15 May 2024 02:11:15 -0700 (PDT)
-Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
- DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.4; Wed, 15 May 2024 02:11:15 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
- (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.4 via Frontend
- Transport; Wed, 15 May 2024 02:11:15 -0700
-Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
-	by maili.marvell.com (Postfix) with ESMTP id 281A23F705C;
-	Wed, 15 May 2024 02:11:12 -0700 (PDT)
-From: Saurav Kashyap <skashyap@marvell.com>
-To: <martin.petersen@oracle.com>
-CC: <GR-QLogic-Storage-Upstream@marvell.com>, <linux-scsi@vger.kernel.org>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>
-Subject: [PATCH v2 3/3] qedf: Memset qed_slowpath_params to zero before use.
-Date: Wed, 15 May 2024 14:41:01 +0530
-Message-ID: <20240515091101.18754-4-skashyap@marvell.com>
-X-Mailer: git-send-email 2.23.1
-In-Reply-To: <20240515091101.18754-1-skashyap@marvell.com>
-References: <20240515091101.18754-1-skashyap@marvell.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MxRm56DV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1715767181; x=1747303181;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=6fSq7acfWIb+p3oiQNEiEmUcRMs/hp6EJoH9GYmxJJg=;
+  b=MxRm56DVQYpQyj57/5/aL6GUjR1QQFZXYDuhlnTu1MVpBnJ94sgHCEri
+   09yrCu1a7R01ICZzMaQ7xhKpOGtp3HTNwI7NrcfNuPU9G2g7rNN4HftL1
+   ljXcDscKZILmcje76wRsAY22BPVEUJ6iEHPreDzhS60tfoaVyVRlGEYi/
+   Ge1oJywh82E41pQnKuWYyk1PpebyjfuBiRMzUvkADcQlQBxp74wsj5Khq
+   ksTVYGCE4FvZRxdE1ppCJO/4oSBBTflb27b6Ma8kVz7dvnP7PJk0Bn8da
+   MbJig2Q+bC/YRU4rGVEZ1BCrYWLCeYr9f3MWoxh8Lp3ijZre8ScqmVowF
+   g==;
+X-CSE-ConnectionGUID: 8t4JpEFuQx+plJlJc+EvYQ==
+X-CSE-MsgGUID: HONEgynnQCqvzxbS6YeK0w==
+X-IronPort-AV: E=McAfee;i="6600,9927,11073"; a="11660388"
+X-IronPort-AV: E=Sophos;i="6.08,161,1712646000"; 
+   d="scan'208";a="11660388"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2024 02:59:40 -0700
+X-CSE-ConnectionGUID: vPp/Vu1+QXi5aI8IMSvV3Q==
+X-CSE-MsgGUID: JMieIsOwSEagVb643J50IA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,161,1712646000"; 
+   d="scan'208";a="30931715"
+Received: from lkp-server01.sh.intel.com (HELO f8b243fe6e68) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 15 May 2024 02:59:37 -0700
+Received: from kbuild by f8b243fe6e68 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1s7BQ6-000ChX-36;
+	Wed, 15 May 2024 09:59:34 +0000
+Date: Wed, 15 May 2024 17:58:50 +0800
+From: kernel test robot <lkp@intel.com>
+To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: oe-kbuild-all@lists.linux.dev, rajsekhar.chundru@broadcom.com,
+	sathya.prakash@broadcom.com, sumit.saxena@broadcom.com,
+	chandrakanth.patil@broadcom.com, prayas.patel@broadcom.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: Re: [PATCH v1 1/6] mpi3mr: HDB allocation and posting for hardware
+ and Firmware buffers
+Message-ID: <202405151758.7xrJz6rp-lkp@intel.com>
+References: <20240514142858.51992-2-ranjan.kumar@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: lr2d8jVTY9FGQ61q3ot9d7FbGTvo9bx1
-X-Proofpoint-GUID: lr2d8jVTY9FGQ61q3ot9d7FbGTvo9bx1
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.11.176.26
- definitions=2024-05-15_04,2024-05-14_01,2023-05-22_02
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240514142858.51992-2-ranjan.kumar@broadcom.com>
 
-- Memset qed_slowpath_params to zero before use.
+Hi Ranjan,
 
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qedf/qedf_main.c | 1 +
- 1 file changed, 1 insertion(+)
+kernel test robot noticed the following build warnings:
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index c98cc666e3e9..b97a8712d3f6 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3473,6 +3473,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	}
- 
- 	/* Start the Slowpath-process */
-+	memset(&slowpath_params, 0, sizeof(struct qed_slowpath_params));
- 	slowpath_params.int_mode = QED_INT_MODE_MSIX;
- 	slowpath_params.drv_major = QEDF_DRIVER_MAJOR_VER;
- 	slowpath_params.drv_minor = QEDF_DRIVER_MINOR_VER;
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on jejb-scsi/for-next linus/master v6.9 next-20240515]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Ranjan-Kumar/mpi3mr-HDB-allocation-and-posting-for-hardware-and-Firmware-buffers/20240514-223346
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20240514142858.51992-2-ranjan.kumar%40broadcom.com
+patch subject: [PATCH v1 1/6] mpi3mr: HDB allocation and posting for hardware and Firmware buffers
+config: alpha-allyesconfig (https://download.01.org/0day-ci/archive/20240515/202405151758.7xrJz6rp-lkp@intel.com/config)
+compiler: alpha-linux-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240515/202405151758.7xrJz6rp-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202405151758.7xrJz6rp-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/mpi3mr/mpi3mr_app.c:460: warning: Function parameter or struct member 'trigger_data' not described in 'mpi3mr_set_trigger_data_in_hdb'
+>> drivers/scsi/mpi3mr/mpi3mr_app.c:460: warning: Excess function parameter 'data' description in 'mpi3mr_set_trigger_data_in_hdb'
+
+
+vim +460 drivers/scsi/mpi3mr/mpi3mr_app.c
+
+   443	
+   444	/**
+   445	 * mpi3mr_set_trigger_data_in_hdb - Updates HDB trigger type and
+   446	 * trigger data
+   447	 *
+   448	 * @hdb: HDB pointer
+   449	 * @type: Trigger type
+   450	 * @data: Trigger data
+   451	 * @force: Trigger overwrite flag
+   452	 *
+   453	 * Updates trigger type and trigger data based on parameter
+   454	 * passed to this function
+   455	 *
+   456	 * Return: Nothing
+   457	 */
+   458	void mpi3mr_set_trigger_data_in_hdb(struct diag_buffer_desc *hdb,
+   459		u8 type, union mpi3mr_trigger_data *trigger_data, bool force)
+ > 460	{
+   461		if ((!force) && (hdb->trigger_type != MPI3MR_HDB_TRIGGER_TYPE_UNKNOWN))
+   462			return;
+   463		hdb->trigger_type = type;
+   464		if (!trigger_data)
+   465			memset(&hdb->trigger_data, 0, sizeof(*trigger_data));
+   466		else
+   467			memcpy(&hdb->trigger_data, trigger_data, sizeof(*trigger_data));
+   468	}
+   469	
+
 -- 
-2.23.1
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
