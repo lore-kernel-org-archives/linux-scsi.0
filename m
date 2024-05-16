@@ -1,53 +1,53 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pf1-f182.google.com (mail-pf1-f182.google.com [209.85.210.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A277314D2B1
-	for <linux-scsi@vger.kernel.org>; Thu, 16 May 2024 15:23:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5429014D2B1
+	for <linux-scsi@vger.kernel.org>; Thu, 16 May 2024 15:23:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715873010; cv=none; b=HASP/SqKP20FAzS80Wr7hks/xVfMYjW15T0r3SfDNQ+C0llCGBMoyPcu5B45Bh+jpKhifBYyTibbNPfvNL8IfZSyfFHO7l+pAUiUWIeyh6Xqq5nPjqyKI3hih5RitSWl4+10FY/DhV5ghUjaGT7W9TaouZK6CoKnnwgOk8+9FFU=
+	t=1715873013; cv=none; b=hlbUiLvtqI30AANVfLzWyoHX5QSPh4KzbbyuQLgQuMI3wZPpH9zz/Ic4vCEhJBTwfZerSwpvbdIrRYWeiwUfPfRyvvpdwusaG8yvN01eJ1/efZnaEpuanc1TipVKGoxFeGNIoRrMXFdg0w/hR+7T8SuM7PpXMWO2lJqk025VPAo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715873010; c=relaxed/simple;
-	bh=ck20YsukSjZOucGc7Lrk58Hfh8OuV5dlasghYEkNsuo=;
+	s=arc-20240116; t=1715873013; c=relaxed/simple;
+	bh=4uLnGxGWnmR14b/Qd6+nkRf2fTHypsUZL2+vbeg34YQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=n3dc2TkoG45HAjYp2dOHCNzqPz7uUQkO2yiui/s2GliZ/LVKxWY5nRVu0lolrBrqp6Pse54RJ4HlB1Nh7vPglTKfCgcO12QNefCAj8ll3ToFyWBbIZ6iG0SYyvWqdvkPEq1oWspuu0OPk5gbzw8KBTN+tp1fsT0yiDIDG0ZpMBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=SjAUdEmi; arc=none smtp.client-ip=209.85.210.176
+	 MIME-Version:Content-Type; b=hA2KMjAmqeCbEmhhPbLWpCIinpWfSlVjc1M3qVFcZxPJ1OIMMGPMfl7duLYEfmaY318WTjYLGS3M2fRC0M4AwvY9dkSn6cfAj9HJuvkhAqfAQqRcDhb9lT0B6c3hS66LyOkh4f9uP9n5CnfBqM76xDfQA8dbNJG3g5KtWdib040=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=EBT3qrS4; arc=none smtp.client-ip=209.85.210.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="SjAUdEmi"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-6f44ed6e82fso334708b3a.3
-        for <linux-scsi@vger.kernel.org>; Thu, 16 May 2024 08:23:28 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="EBT3qrS4"
+Received: by mail-pf1-f182.google.com with SMTP id d2e1a72fcca58-6f4472561f1so366910b3a.0
+        for <linux-scsi@vger.kernel.org>; Thu, 16 May 2024 08:23:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1715873007; x=1716477807; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1715873011; x=1716477811; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=8JZPa6r3SOiiEL2pndI6/jJMicffWDCnTzBIPZaeB4E=;
-        b=SjAUdEmi//2rMKPPvtK8YO8wHRuueorCYjQTIs7tIo2HruqfJxcJdx8eFpap7LC3hI
-         sm9/ATql3O9GWG0maTWwBloIaD0U4yJekcgQqcf2Jc3oOmiv6hobDwg1FCPmw4xBoTnW
-         xB38CCsr2xl4HhGLpn5fUjugxwJwuP4FqmW1M=
+        bh=5HnWtUmQanPc7XbRnZO7RuHkJ9A9cctfLWWI3ojQQ4U=;
+        b=EBT3qrS48+grvgm2dahIi6HQ9JIU/twbNR/eD9RN1hNZETBOVqSmCPFNepS1Xw/qHe
+         o7Hae8/2ZQSpKSDy75UKXX7ofsxqqTwRUVS2kYZ5HPm0ggD9AJHytn3iuOIGVbJteXkl
+         7TOeEi9KTNsVtGeZKuBsrlmPgwF7YYUblQSuA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715873007; x=1716477807;
+        d=1e100.net; s=20230601; t=1715873011; x=1716477811;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=8JZPa6r3SOiiEL2pndI6/jJMicffWDCnTzBIPZaeB4E=;
-        b=tNNINfgY4IB2BxG3j2dYQeuRpEqLbPUlwij3Rwbvy8/tngbG+DRK6bJX0cV2HmrV2K
-         5w+eyDtkZIvxqoCdpckOmqqZiZlbO0HjID21gP03dnofcCzMeu4rob0ssw+R5jR6NgSO
-         /Tg/7P7oNnt7ma7KnIwc77uYl29LQb1Ag0yph5XkXiQ0evXKBO/RZYkV3F3VGuYziJZW
-         nduW7tP03r+cgu39kg4NQRIGYt3W2WV5uTV7C6IU06ASeweXTO0VzoaWzOqqFmvrB5We
-         bEFa4dKj6MlOhqprCVrWMjVjXlHJ1kVJDAR47V2Sl47f9YEOw+yk3VMmFDdcKGRQijyu
-         uIDA==
-X-Gm-Message-State: AOJu0YwscJteTHtR6UbfOP7RqgGiwQewF2xu8gPceKp/DLM1XUkIiTAb
-	dwHpDgu9nWLfRWtwy144wtm2/l/9/F9i4YA+iMZzepoFtm24SJxdIy1JjOkHtpMBE9NVVWP5ELF
-	jku25Xm5Pgg7SX4VHnid+hVMOpXsrGodUe1J8KBKE7YLoc1afTC76dQdnaQocSyT/14h2WSLxoD
-	C/K5rJrtv6tgZvVrWmZLL5yPAL2ZT7Dgsjl85up+IO0eUVM+vI
-X-Google-Smtp-Source: AGHT+IGitZ0/ChLqc6jcjyqySodhoDxWPBrn+ZDLjnDjb01TS0AV9uSSuLoRdDybNEj6TtAaRucBLA==
-X-Received: by 2002:a05:6a21:3a97:b0:1b0:260e:fe71 with SMTP id adf61e73a8af0-1b0260f2744mr3621064637.60.1715873007274;
-        Thu, 16 May 2024 08:23:27 -0700 (PDT)
+        bh=5HnWtUmQanPc7XbRnZO7RuHkJ9A9cctfLWWI3ojQQ4U=;
+        b=bPor2NlLmZzDbiGC97cIlTKmCKd7R4O13h5+3/V56g++TfVbmu/PDfuS1DfxTEkcs2
+         ALKBeYHqqr9judW8I1TK9R6Z2wjBTO0obd8BWX2ObfTu5uAiD0EG+jQBW1fy83Zc/xXh
+         OsfXxi7CcIkPIGHzBxuYR/BqtyH5hZ7vj/ZhkZM7Ll7Nu6ueXoePxxHao+L9ciOi//cT
+         m8ai571KhRwPOkWgUBsggKQO8Br2uWjyLFpxaDd2UKE2Ra9UUXh4ixFGCbWPBAt0J2AP
+         g75ODjcvx1nEJlhCgj3D7rtpnzLZxwcu+iXD6yG0R9H4a704v/GlhmrXeEUunPLZQMEU
+         lZ2w==
+X-Gm-Message-State: AOJu0Yzao/2udUAzhdWhzw8ROcwusHQNpWxnoDOIiPKk7ZFLL73ZB66k
+	+gvdtwKkqO3J9X4cv7HZPf9/sDW4IAor3LOBzSQMKu59nA4tRSYbKI1UM1FpSN8Mn1k3TfrZT2V
+	6joELnCIpaHhCM4zVzos7FDHk/nDhBAvo846++hgbeq2dgg01dqYGM9oloOB6dWOnSe71pwPjjZ
+	7xvu8sBzQrOJz+/9JZZpH+x9Apf7mEFRUSgbptR+bSE6k1P+uP
+X-Google-Smtp-Source: AGHT+IHy7set2IafviIzWa+Z5PRchWIIRxhxaBjkZS221UPg2PnV0Yqg/ZImBC0m+F39G1jgeu4mrw==
+X-Received: by 2002:a05:6a00:845:b0:6ed:de30:9e43 with SMTP id d2e1a72fcca58-6f4e038a1d2mr31762312b3a.32.1715873011051;
+        Thu, 16 May 2024 08:23:31 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-6f4d2a83d3dsm13241749b3a.65.2024.05.16.08.23.24
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-6f4d2a83d3dsm13241749b3a.65.2024.05.16.08.23.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 May 2024 08:23:26 -0700 (PDT)
+        Thu, 16 May 2024 08:23:29 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -57,9 +57,9 @@ Cc: rajsekhar.chundru@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v3 5/6] mpi3mr: Ioctl support for HDB
-Date: Thu, 16 May 2024 20:50:09 +0530
-Message-Id: <20240516152010.88227-6-ranjan.kumar@broadcom.com>
+Subject: [PATCH v3 6/6] mpi3mr: Update driver version to 8.9.1.0.50
+Date: Thu, 16 May 2024 20:50:10 +0530
+Message-Id: <20240516152010.88227-7-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240516152010.88227-1-ranjan.kumar@broadcom.com>
 References: <20240516152010.88227-1-ranjan.kumar@broadcom.com>
@@ -70,357 +70,38 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000001be09d061893d1d0"
+	boundary="00000000000054d579061893d10e"
 
---0000000000001be09d061893d1d0
+--00000000000054d579061893d10e
 Content-Transfer-Encoding: 8bit
 
-This patch provides interfaces for applications
-to manage the host diagnostic buffers and update
-the automatic diag buffer capture triggers.
+Update driver version to 8.9.1.0.50
 
-Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h        |  14 ++
- drivers/scsi/mpi3mr/mpi3mr_app.c    | 265 ++++++++++++++++++++++++++++
- include/uapi/scsi/scsi_bsg_mpi3mr.h |   3 +-
- 3 files changed, 281 insertions(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 259f58b347fd..e27e37650f92 100644
+index e27e37650f92..0762e8a9e6bd 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -201,6 +201,20 @@ extern atomic64_t event_counter;
- #define MPI3MR_HDB_TRIGGER_TYPE_SOFT_RESET      4
- #define MPI3MR_HDB_TRIGGER_TYPE_FW_RELEASED     5
+@@ -57,8 +57,8 @@ extern struct list_head mrioc_list;
+ extern int prot_mask;
+ extern atomic64_t event_counter;
  
-+#define MPI3MR_HDB_REFRESH_TYPE_RESERVED	0
-+#define MPI3MR_HDB_REFRESH_TYPE_CURRENT		1
-+#define MPI3MR_HDB_REFRESH_TYPE_DEFAULT		2
-+#define MPI3MR_HDB_HDB_REFRESH_TYPE_PERSISTENT	3
-+
-+#define MPI3MR_DEFAULT_HDB_SZ  (4 * 1024 * 1024)
-+#define MPI3MR_MAX_NUM_HDB     2
-+
-+#define MPI3MR_HDB_QUERY_ELEMENT_TRIGGER_FORMAT_INDEX   0
-+#define MPI3MR_HDB_QUERY_ELEMENT_TRIGGER_FORMAT_DATA    1
-+
-+
-+
-+
- /* Driver Host Diag Buffer (drv_db) */
- #define MPI3MR_MIN_DIAG_HOST_BUFFER_SZ		((32 * 1024) + \
- 	sizeof(struct mpi3_driver_buffer_header))
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 7ad904153b1b..84a712cb87d3 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -940,6 +940,259 @@ static struct mpi3mr_ioc *mpi3mr_bsg_verify_adapter(int ioc_number)
- 	return NULL;
- }
+-#define MPI3MR_DRIVER_VERSION	"8.8.1.0.50"
+-#define MPI3MR_DRIVER_RELDATE	"5-March-2024"
++#define MPI3MR_DRIVER_VERSION	"8.9.1.0.50"
++#define MPI3MR_DRIVER_RELDATE	"14-May-2024"
  
-+/**
-+ * mpi3mr_bsg_refresh_hdb_triggers - Refresh HDB trigger data
-+ * @mrioc: Adapter instance reference
-+ * @job: BSG Job pointer
-+ *
-+ * This function reads the controller trigger config page as
-+ * defined by the input page type and refreshes the driver's
-+ * local trigger information structures with the controller's
-+ * config page data.
-+ *
-+ * Return: 0 on success and proper error codes on failure
-+ */
-+static long
-+mpi3mr_bsg_refresh_hdb_triggers(struct mpi3mr_ioc *mrioc,
-+				struct bsg_job *job)
-+{
-+	struct mpi3mr_bsg_out_refresh_hdb_triggers refresh_triggers;
-+	uint32_t data_out_sz;
-+	u8 page_action;
-+	long rval = -EINVAL;
-+
-+	data_out_sz = job->request_payload.payload_len;
-+
-+	if (data_out_sz != sizeof(refresh_triggers)) {
-+		dprint_bsg_err(mrioc, "%s: invalid size argument\n",
-+		    __func__);
-+		return rval;
-+	}
-+
-+	if (mrioc->unrecoverable) {
-+		dprint_bsg_err(mrioc, "%s: unrecoverable controller\n",
-+		    __func__);
-+		return -EFAULT;
-+	}
-+	if (mrioc->reset_in_progress) {
-+		dprint_bsg_err(mrioc, "%s: reset in progress\n", __func__);
-+		return -EAGAIN;
-+	}
-+
-+	sg_copy_to_buffer(job->request_payload.sg_list,
-+	    job->request_payload.sg_cnt,
-+	    &refresh_triggers, sizeof(refresh_triggers));
-+
-+	switch (refresh_triggers.page_type) {
-+	case MPI3MR_HDB_REFRESH_TYPE_CURRENT:
-+		page_action = MPI3_CONFIG_ACTION_READ_CURRENT;
-+		break;
-+	case MPI3MR_HDB_REFRESH_TYPE_DEFAULT:
-+		page_action = MPI3_CONFIG_ACTION_READ_DEFAULT;
-+		break;
-+	case MPI3MR_HDB_HDB_REFRESH_TYPE_PERSISTENT:
-+		page_action = MPI3_CONFIG_ACTION_READ_PERSISTENT;
-+		break;
-+	default:
-+		dprint_bsg_err(mrioc,
-+		    "%s: unsupported refresh trigger, page_type %d\n",
-+		    __func__, refresh_triggers.page_type);
-+		return rval;
-+	}
-+	rval = mpi3mr_refresh_trigger(mrioc, page_action);
-+
-+	return rval;
-+}
-+
-+/**
-+ * mpi3mr_bsg_upload_hdb - Upload a specific HDB to user space
-+ * @mrioc: Adapter instance reference
-+ * @job: BSG Job pointer
-+ *
-+ * Return: 0 on success and proper error codes on failure
-+ */
-+static long mpi3mr_bsg_upload_hdb(struct mpi3mr_ioc *mrioc,
-+				  struct bsg_job *job)
-+{
-+	struct mpi3mr_bsg_out_upload_hdb upload_hdb;
-+	struct diag_buffer_desc *diag_buffer;
-+	uint32_t data_out_size;
-+	uint32_t data_in_size;
-+
-+	data_out_size = job->request_payload.payload_len;
-+	data_in_size = job->reply_payload.payload_len;
-+
-+	if (data_out_size != sizeof(upload_hdb)) {
-+		dprint_bsg_err(mrioc, "%s: invalid size argument\n",
-+		    __func__);
-+		return -EINVAL;
-+	}
-+
-+	sg_copy_to_buffer(job->request_payload.sg_list,
-+			  job->request_payload.sg_cnt,
-+			  &upload_hdb, sizeof(upload_hdb));
-+
-+	if ((!upload_hdb.length) || (data_in_size != upload_hdb.length)) {
-+		dprint_bsg_err(mrioc, "%s: invalid length argument\n",
-+		    __func__);
-+		return -EINVAL;
-+	}
-+	diag_buffer = mpi3mr_diag_buffer_for_type(mrioc, upload_hdb.buf_type);
-+	if ((!diag_buffer) || (!diag_buffer->addr)) {
-+		dprint_bsg_err(mrioc, "%s: invalid buffer type %d\n",
-+		    __func__, upload_hdb.buf_type);
-+		return -EINVAL;
-+	}
-+
-+	if ((diag_buffer->status != MPI3MR_HDB_BUFSTATUS_RELEASED) &&
-+	    (diag_buffer->status != MPI3MR_HDB_BUFSTATUS_POSTED_PAUSED)) {
-+		dprint_bsg_err(mrioc,
-+		    "%s: invalid buffer status %d for type %d\n",
-+		    __func__, diag_buffer->status, upload_hdb.buf_type);
-+		return -EINVAL;
-+	}
-+
-+	if ((upload_hdb.start_offset + upload_hdb.length) > diag_buffer->size) {
-+		dprint_bsg_err(mrioc,
-+		    "%s: invalid start offset %d, length %d for type %d\n",
-+		    __func__, upload_hdb.start_offset, upload_hdb.length,
-+		    upload_hdb.buf_type);
-+		return -EINVAL;
-+	}
-+	sg_copy_from_buffer(job->reply_payload.sg_list,
-+			    job->reply_payload.sg_cnt,
-+	    (diag_buffer->addr + upload_hdb.start_offset),
-+	    data_in_size);
-+	return 0;
-+}
-+
-+/**
-+ * mpi3mr_bsg_repost_hdb - Re-post HDB
-+ * @mrioc: Adapter instance reference
-+ * @job: BSG job pointer
-+ *
-+ * This function retrieves the HDB descriptor corresponding to a
-+ * given buffer type and if the HDB is in released status then
-+ * posts the HDB with the firmware.
-+ *
-+ * Return: 0 on success and proper error codes on failure
-+ */
-+static long mpi3mr_bsg_repost_hdb(struct mpi3mr_ioc *mrioc,
-+				  struct bsg_job *job)
-+{
-+	struct mpi3mr_bsg_out_repost_hdb repost_hdb;
-+	struct diag_buffer_desc *diag_buffer;
-+	uint32_t data_out_sz;
-+
-+	data_out_sz = job->request_payload.payload_len;
-+
-+	if (data_out_sz != sizeof(repost_hdb)) {
-+		dprint_bsg_err(mrioc, "%s: invalid size argument\n",
-+		    __func__);
-+		return -EINVAL;
-+	}
-+	if (mrioc->unrecoverable) {
-+		dprint_bsg_err(mrioc, "%s: unrecoverable controller\n",
-+		    __func__);
-+		return -EFAULT;
-+	}
-+	if (mrioc->reset_in_progress) {
-+		dprint_bsg_err(mrioc, "%s: reset in progress\n", __func__);
-+		return -EAGAIN;
-+	}
-+
-+	sg_copy_to_buffer(job->request_payload.sg_list,
-+			  job->request_payload.sg_cnt,
-+			  &repost_hdb, sizeof(repost_hdb));
-+
-+	diag_buffer = mpi3mr_diag_buffer_for_type(mrioc, repost_hdb.buf_type);
-+	if ((!diag_buffer) || (!diag_buffer->addr)) {
-+		dprint_bsg_err(mrioc, "%s: invalid buffer type %d\n",
-+		    __func__, repost_hdb.buf_type);
-+		return -EINVAL;
-+	}
-+
-+	if (diag_buffer->status != MPI3MR_HDB_BUFSTATUS_RELEASED) {
-+		dprint_bsg_err(mrioc,
-+		    "%s: invalid buffer status %d for type %d\n",
-+		    __func__, diag_buffer->status, repost_hdb.buf_type);
-+		return -EINVAL;
-+	}
-+
-+	if (mpi3mr_issue_diag_buf_post(mrioc, diag_buffer)) {
-+		dprint_bsg_err(mrioc, "%s: post failed for type %d\n",
-+		    __func__, repost_hdb.buf_type);
-+		return -EFAULT;
-+	}
-+	mpi3mr_set_trigger_data_in_hdb(diag_buffer,
-+	    MPI3MR_HDB_TRIGGER_TYPE_UNKNOWN, NULL, 1);
-+
-+	return 0;
-+}
-+
-+/**
-+ * mpi3mr_bsg_query_hdb - Handler for query HDB command
-+ * @mrioc: Adapter instance reference
-+ * @job: BSG job pointer
-+ *
-+ * This function prepares and copies the host diagnostic buffer
-+ * entries to the user buffer.
-+ *
-+ * Return: 0 on success and proper error codes on failure
-+ */
-+static long mpi3mr_bsg_query_hdb(struct mpi3mr_ioc *mrioc,
-+				 struct bsg_job *job)
-+{
-+	long rval = 0;
-+	struct mpi3mr_bsg_in_hdb_status *hbd_status;
-+	struct mpi3mr_hdb_entry *hbd_status_entry;
-+	u32 length, min_length;
-+	u8 i;
-+	struct diag_buffer_desc *diag_buffer;
-+	uint32_t data_in_sz = 0;
-+
-+	data_in_sz = job->request_payload.payload_len;
-+
-+	length = (sizeof(*hbd_status) + ((MPI3MR_MAX_NUM_HDB - 1) *
-+		    sizeof(*hbd_status_entry)));
-+	hbd_status = kmalloc(length, GFP_KERNEL);
-+	if (!hbd_status)
-+		return -ENOMEM;
-+	hbd_status_entry = &hbd_status->entry[0];
-+
-+	hbd_status->num_hdb_types = MPI3MR_MAX_NUM_HDB;
-+	for (i = 0; i < MPI3MR_MAX_NUM_HDB; i++) {
-+		diag_buffer = &mrioc->diag_buffers[i];
-+		hbd_status_entry->buf_type = diag_buffer->type;
-+		hbd_status_entry->status = diag_buffer->status;
-+		hbd_status_entry->trigger_type = diag_buffer->trigger_type;
-+		memcpy(&hbd_status_entry->trigger_data,
-+		    &diag_buffer->trigger_data,
-+		    sizeof(hbd_status_entry->trigger_data));
-+		hbd_status_entry->size = (diag_buffer->size / 1024);
-+		hbd_status_entry++;
-+	}
-+	hbd_status->element_trigger_format =
-+		MPI3MR_HDB_QUERY_ELEMENT_TRIGGER_FORMAT_DATA;
-+
-+	if (data_in_sz < 4) {
-+		dprint_bsg_err(mrioc, "%s: invalid size passed\n", __func__);
-+		rval = -EINVAL;
-+		goto out;
-+	}
-+	min_length = min(data_in_sz, length);
-+	if (job->request_payload.payload_len >= min_length) {
-+		sg_copy_from_buffer(job->request_payload.sg_list,
-+				    job->request_payload.sg_cnt,
-+				    hbd_status, min_length);
-+		rval = 0;
-+	}
-+out:
-+	kfree(hbd_status);
-+	return rval;
-+}
-+
-+
- /**
-  * mpi3mr_enable_logdata - Handler for log data enable
-  * @mrioc: Adapter instance reference
-@@ -1368,6 +1621,18 @@ static long mpi3mr_bsg_process_drv_cmds(struct bsg_job *job)
- 	case MPI3MR_DRVBSG_OPCODE_PELENABLE:
- 		rval = mpi3mr_bsg_pel_enable(mrioc, job);
- 		break;
-+	case MPI3MR_DRVBSG_OPCODE_QUERY_HDB:
-+		rval = mpi3mr_bsg_query_hdb(mrioc, job);
-+		break;
-+	case MPI3MR_DRVBSG_OPCODE_REPOST_HDB:
-+		rval = mpi3mr_bsg_repost_hdb(mrioc, job);
-+		break;
-+	case MPI3MR_DRVBSG_OPCODE_UPLOAD_HDB:
-+		rval = mpi3mr_bsg_upload_hdb(mrioc, job);
-+		break;
-+	case MPI3MR_DRVBSG_OPCODE_REFRESH_HDB_TRIGGERS:
-+		rval = mpi3mr_bsg_refresh_hdb_triggers(mrioc, job);
-+		break;
- 	case MPI3MR_DRVBSG_OPCODE_UNKNOWN:
- 	default:
- 		pr_err("%s: unsupported driver command opcode %d\n",
-diff --git a/include/uapi/scsi/scsi_bsg_mpi3mr.h b/include/uapi/scsi/scsi_bsg_mpi3mr.h
-index c72ce387286a..92a0eb190e1c 100644
---- a/include/uapi/scsi/scsi_bsg_mpi3mr.h
-+++ b/include/uapi/scsi/scsi_bsg_mpi3mr.h
-@@ -296,6 +296,7 @@ struct mpi3mr_hdb_entry {
-  * multiple hdb entries.
-  *
-  * @num_hdb_types: Number of host diag buffer types supported
-+ * @element_trigger_format: Element trigger format
-  * @rsvd1: Reserved
-  * @rsvd2: Reserved
-  * @rsvd3: Reserved
-@@ -303,7 +304,7 @@ struct mpi3mr_hdb_entry {
-  */
- struct mpi3mr_bsg_in_hdb_status {
- 	__u8	num_hdb_types;
--	__u8	rsvd1;
-+	__u8    element_trigger_format;
- 	__u16	rsvd2;
- 	__u32	rsvd3;
- 	struct mpi3mr_hdb_entry entry[1];
+ #define MPI3MR_DRIVER_NAME	"mpi3mr"
+ #define MPI3MR_DRIVER_LICENSE	"GPL"
 -- 
 2.31.1
 
 
---0000000000001be09d061893d1d0
+--00000000000054d579061893d10e
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -491,13 +172,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIBFjY9sLJnJc5Bkv3XeDF4fQM5HMK2Pw
-wGnRmpQz3uWGMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDUx
-NjE1MjMyN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHOZxa+FvFTan+f6GrEB0GSDf3O8R5G4
+CNxP44rQZbvNMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDUx
+NjE1MjMzMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQDN3+E9s1J9/R4EbtxnDKbX957NZxYWwFHaoK9x9dVIHLqIosM8
-lSU1CN0mVGYGF8qtjbBrYZ5a+3yRiz1FNWRLw5/cd/NvijetzaMQZv2dmsBMB/YLo30vtlEN1MtH
-vFk9eq0duendakNj/MSbUHw61U9MGFkl6fu/IVdRfB48C0X0Xbul4fqs+RRlrIiwPnrnEnvB7g8F
-2DGzVd8yXF9S2JvJgOFTZJWybH+KQP1lhmqtkG9k9v9WjV9LH+A9ZW52s+9LNJ34wr1Xc8q3/MhH
-c3br6/t80XXe4MvnmArPadu1KBVJl78dQiESLO1/4CuX+Zxb8K/DuuqcJbzTW4oc
---0000000000001be09d061893d1d0--
+ATANBgkqhkiG9w0BAQEFAASCAQAiDR0kiiXt/De6TeEbzrc2nPRlI7k/q6rZUzmJ8l+JDb3VP48G
+oT0aGxx+pIAmyxizpWXr2z129Kal3nSHA9n6B5CN8i1y2mVHUYGTjmxn3VFBow2KkrhwwJ1zYUTD
+2sHRGkBSMBrXU4aamCu+PNY900hJ2FDk1BvoK0jeT3CuZMNvTnDRiuJzVAPd9tGEUMymVEVbjJdd
+0WWCHh6NVfTZSM7OuYPil5n/ZndDE0Ir0XEjzp/7W/dhhZYLf32tzRfXxYKEyGBSWf1Xmc9QRmOs
+t1KV+UTLea6hmbVQkpD8lxsScQ5fjIgkdFsoJrVT2rP4LgnrCRjGDmwF+Gu5ovOw
+--00000000000054d579061893d10e--
