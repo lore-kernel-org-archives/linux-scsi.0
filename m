@@ -1,80 +1,228 @@
-Received: from mail-ot1-f52.google.com (mail-ot1-f52.google.com [209.85.210.52])
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 617FD1DFEF
-	for <linux-scsi@vger.kernel.org>; Thu, 16 May 2024 14:41:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBF6B14B971;
+	Thu, 16 May 2024 14:50:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715870515; cv=none; b=ejGu5LdMLFFYegheFgMdI7lngDIk0IIimSj4gmx+vustGltz2o7tV2GrkccpLzSrIUYwREBvFhS22ZqM/3G4NhrRsaHfNPqySS/fgXUzipZjkvx+FeUvjVfTk94PPSGmTL0XMnCiw0oy142iTg8DdRqDJz6xm8r69bnvPNNo4vk=
+	t=1715871020; cv=none; b=SucZe1pU8l97syog7hTeuhxg9Anstycgwpl4zeLfo/S7kXI5bOfiGB6l5PwgUJVTt77TnrNKBP6xNrcxMs5o4nAWg4ks/0Qg462dV21uwTO6xf3v/3QF+GgzRetfVgoDpfeKcEc1LkxM29Y9ahrfHVD2jJVvxh/pwom8whyczLA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715870515; c=relaxed/simple;
-	bh=TLfldiVwYsbYT/cjMroyIE55EF+VzSOe9U9KRh2pYf0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=B78XHc7bqpbS5aAXGJN//CA4yh+t1E1op33SmRcOTDDnOLS/iZKUtkyGK2bLEmq30wVgYWdDv3vTIOaIdedXRv/QFbvxlROcdw6j5cwWRe24EokJjO0/NVuDghsySOAeRutJ3FNKLHfvX/edbRlgBDSraYHbWaQshwVrLuJBz1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zettlmeissl.de; spf=pass smtp.mailfrom=zettlmeissl.de; dkim=pass (2048-bit key) header.d=zettlmeissl.de header.i=@zettlmeissl.de header.b=Jyy9Cbhd; arc=none smtp.client-ip=209.85.210.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zettlmeissl.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zettlmeissl.de
+	s=arc-20240116; t=1715871020; c=relaxed/simple;
+	bh=Ow0v95Uup8/7MFmhGLWu6krrPJTmVr8G3Fg8RZz/dBY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ja/qy+hBQX5fpo0tMtAWVDYzMR1MkojwoWhuSPaaJYcpfsXzXMSWg6jtjpn/4M5aRw8Q4FXa0uohj8lj7zMUAVa0kr7K6CVelYq42p/NP45cVlW6lRV6rSKZWtEuGt2Aj0BLshakCd2Pl5c7v5EeN0OtYizcJjSnX1b2gvQ2pN8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GKrYCfUI; arc=none smtp.client-ip=209.85.210.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=roeck-us.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zettlmeissl.de header.i=@zettlmeissl.de header.b="Jyy9Cbhd"
-Received: by mail-ot1-f52.google.com with SMTP id 46e09a7af769-6f0ede03023so123942a34.0
-        for <linux-scsi@vger.kernel.org>; Thu, 16 May 2024 07:41:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GKrYCfUI"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6f44e3fd382so269294b3a.1;
+        Thu, 16 May 2024 07:50:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=zettlmeissl.de; s=2024-02-28; t=1715870512; x=1716475312; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=TLfldiVwYsbYT/cjMroyIE55EF+VzSOe9U9KRh2pYf0=;
-        b=Jyy9CbhdCqLb1SwbpT1u/m0Gb66MOTX26UVr/80d1qQMhAqT2PlbAlkywkhrehelPF
-         UnA8fCrSPzyy7/fnmIEpemgH4cAbljRTlymwMgqYo9S22o/gprHw29/fKrwmN4yy9oEF
-         ByIKwqm+koIEopa1e29wjZoA9Zaavg56YIg1l9pMJH1lnfZnz9beLkL83esMuccxkeMq
-         72u5ki8xvGbBxOuYCcXqVcgPp+2cxkTYCeKSRHQ1kJH6baz846OFovIPykqD8dwd0+Jh
-         IQ1q0gChQVTqxr0a9owqbdzFaF4xzFqt5Thos3NG9bc+R2Z03X4qrSS9ByInACz5AZ5F
-         deqg==
+        d=gmail.com; s=20230601; t=1715871018; x=1716475818; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=MP0twiF5szRNTbqcyBLQLKZi2/rxtByviGx0EcGxOTI=;
+        b=GKrYCfUI7qaW88Qs0Kg3VHR8/pQfFjfw/BQlJ9HCnzdP5cLiTkLppYuHuoiRNnlZxU
+         DYwp28g2y8p/3+srvisoMnKTs2alkbdCdmg4lLCgnzPfWCzNpSm/eUq5GYzro/e/9Afb
+         hughZC88VoHXvkXU1DHJRWhaVj80c/3IQw3VG9Q380MAv7X4jLMsHOI7yQ/UJZ7ZVEg7
+         WqFbfLsDqu/4K+6vJiIOV9mjft/D8ntH3t/tx+3d3TjfwE/zhwGSqInNECoZfaJvMLUl
+         vjzxPheoxafNgxAMYP439pspAYZSKY92Dtb3AZaVcy6pit+2Z+6ZqOutQyxFZfm2TDox
+         e4qw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715870512; x=1716475312;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=TLfldiVwYsbYT/cjMroyIE55EF+VzSOe9U9KRh2pYf0=;
-        b=o002n9/wsFZ2CmNMcVaRpUI7pPT5uNSbgnEHTy6ZdUwaxyXO6X5/WdS9sIHYswcjer
-         XiTkkt/74yoh0xiYscU5WULc5wDW75OnBcz0iQYUjAoqd97HxXAua6pCttckRIvVkvMw
-         gVNgJdKrL3UESYLOLo6GSUdSqrMtaRB8SVhvU1zFzRnqr27C0LRMY2cUMD7l3aNFAfTt
-         0hmzbSjC+85wPIpdz0Pa5KIha0k02aeYViVgBTkvlInDI5qu/Mgw9ZutjXf1H5XGgzgC
-         gUh8pAWGwOMZaVZwLUFfDFSo9SmYYsbPdv8PsAyYrAflDL98zRwT3l35Wac/TaI4QC5o
-         xKnw==
-X-Gm-Message-State: AOJu0YxYfdQAyJlhBarJbDl0uk02sKz1UjZ2Su8oVM7EpRXWv/Fz6JC/
-	wG0irVyE8Sg1jFJCwCbHsJs8ndKA7Gdf1Yy0/YeS7+ScR1bT4eagc7Z6MxqdTHIGjwmu0naOOFv
-	rsds=
-X-Google-Smtp-Source: AGHT+IEGebozsG5JlEuYzUgWx+iEZvH5EDD6kBjo5eOeoAE+jbKJR7DB6huNSJ25INBXMQj1RI+K0g==
-X-Received: by 2002:a05:6830:486c:b0:6f0:f967:ca46 with SMTP id 46e09a7af769-6f0f967d48amr6665350a34.1.1715870511984;
-        Thu, 16 May 2024 07:41:51 -0700 (PDT)
-Received: from mail-oo1-f51.google.com (mail-oo1-f51.google.com. [209.85.161.51])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-5b2f1faceeasm957854eaf.7.2024.05.16.07.41.51
-        for <linux-scsi@vger.kernel.org>
+        d=1e100.net; s=20230601; t=1715871018; x=1716475818;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:sender:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=MP0twiF5szRNTbqcyBLQLKZi2/rxtByviGx0EcGxOTI=;
+        b=ncq4P5i/+1KRVW8fxrZWDsmCiKzBa2qzQrkNgw3DIXIT2Km8BHy9pqX4Ff9jHn29hT
+         /PVnBCAEcXxU1DzB3aMmnVSXrYI0W9y/Kjz9F3f60egV6qbxH1dsX+altul1bl3knNzX
+         GNuNwTQL0s4IuSBnPI1CF1B4f8Nz7xWwRISmlzzZb1klgbKjAB6MZCo3+/GPnkpHplKq
+         IN/GYBeRicWe2Y+vI+nLyn2UO29s9JHP1LLq/mv9vAkWDaU3Ud/4kaeElZUkphdW8ckM
+         oYP2jk75opqQMrpVehZL7rRZE0crvegXv+zOMBOb2AovBeql08KFsXPl4//wv6YaKWKo
+         Am7w==
+X-Forwarded-Encrypted: i=1; AJvYcCUCSHYnkX79s9BvXw++wxqb0tKy6CCfcMH0wZQ3NuOEYMDPkPJcOD6ABS0QOpaKNe6mt8Y0qrIn7Wr3nQO0vaV4ATEyZybD+88jHrUy/z6RfbuO4rxoQ6zVCGq1FNVeRwk7twJBGIfbf2i9+ow7H+RwE8C37wK3grR93bkj6JwR6fufIdCWuQVvxGKn+Tv/IN8wW2LiRaec+vglqn7BMc/XeCk9si6oLKz6NJqPpZIwH3skz3Th24v7DZUmb3d6Zhs=
+X-Gm-Message-State: AOJu0YzayE+S2ckuJp4M8iuop3YS9Pn0YtlekgSNGN27Fov+iZqSJxqH
+	NEq+opqfzp70FO6oUk1gdHO3FIsJQ9e6V80gwSEUm8uwy0oD11rh
+X-Google-Smtp-Source: AGHT+IEjLvbm8iyXDAcWu0p+GOnFTegqjLav9pOIelHGm3MRwqZb470HN3SqNz1iNHgjhG+UV5VyqQ==
+X-Received: by 2002:a05:6a20:43a3:b0:1af:ab09:c555 with SMTP id adf61e73a8af0-1afde201c7emr21317705637.47.1715871017985;
+        Thu, 16 May 2024 07:50:17 -0700 (PDT)
+Received: from ?IPV6:2600:1700:e321:62f0:329c:23ff:fee3:9d7c? ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ef0c138b79sm140026125ad.260.2024.05.16.07.50.14
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 May 2024 07:41:51 -0700 (PDT)
-Received: by mail-oo1-f51.google.com with SMTP id 006d021491bc7-5b2e93fddafso146893eaf.0
-        for <linux-scsi@vger.kernel.org>; Thu, 16 May 2024 07:41:51 -0700 (PDT)
-X-Received: by 2002:a05:6870:f688:b0:229:eb17:3c08 with SMTP id
- 586e51a60fabf-24111b0eb4cmr10160365fac.4.1715870511178; Thu, 16 May 2024
- 07:41:51 -0700 (PDT)
+        Thu, 16 May 2024 07:50:16 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Message-ID: <7df05966-36ea-4d37-99bc-1cf01b4ed921@roeck-us.net>
+Date: Thu, 16 May 2024 07:50:13 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <Zi5YTR98mKEsPqQQ@zettlmeissl.de>
-In-Reply-To: <Zi5YTR98mKEsPqQQ@zettlmeissl.de>
-From: =?UTF-8?Q?Max_Zettlmei=C3=9Fl?= <max@zettlmeissl.de>
-Date: Thu, 16 May 2024 16:41:15 +0200
-X-Gmail-Original-Message-ID: <CACjvM=ckhu0iiWYEuGp3vAkVN2guFr5CLm-AkLkLB3f0W4gc=w@mail.gmail.com>
-Message-ID: <CACjvM=ckhu0iiWYEuGp3vAkVN2guFr5CLm-AkLkLB3f0W4gc=w@mail.gmail.com>
-Subject: Re: Oops (nullpointer dereference) in SCSI subsystem
-To: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 04/23] scsi: initialize scsi midlayer limits before
+ allocating the queue
+To: John Garry <john.g.garry@oracle.com>, Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Takashi Sakamoto <o-takashi@sakamocchi.jp>,
+ Sathya Prakash <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ "Juergen E. Fischer" <fischer@norbit.de>,
+ Xiang Chen <chenxiang66@hisilicon.com>,
+ HighPoint Linux Team <linux@highpoint-tech.com>,
+ Tyrel Datwyler <tyreld@linux.ibm.com>, Brian King <brking@us.ibm.com>,
+ Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+ Mike Christie <michael.christie@oracle.com>, Jason Yan
+ <yanaijie@huawei.com>, Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ Jack Wang <jinpu.wang@cloud.ionos.com>, Nilesh Javali <njavali@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+ Alan Stern <stern@rowland.harvard.edu>, linux-block@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+ MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+ megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+ linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org,
+ usb-storage@lists.one-eyed-alien.net, Hannes Reinecke <hare@suse.de>
+References: <20240409143748.980206-1-hch@lst.de>
+ <20240409143748.980206-5-hch@lst.de>
+ <ce2bf6af-4382-4fe1-b392-cc6829f5ceb2@roeck-us.net>
+ <a8c39499-1410-4251-bf26-36763f5f56b0@oracle.com>
+ <08beb913-f525-49e2-8ef2-f62e9d466e53@roeck-us.net>
+ <ff3277c1-f3ea-4e12-aeb6-548b97d42589@oracle.com>
+Content-Language: en-US
+From: Guenter Roeck <linux@roeck-us.net>
+Autocrypt: addr=linux@roeck-us.net; keydata=
+ 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
+ mDW4+i+XlNFUPUYMrIKi9joBhu18ssf5i5Q=
+In-Reply-To: <ff3277c1-f3ea-4e12-aeb6-548b97d42589@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Since there has been no reply to my report yet: Did I correctly
-interpret the source of the crash in the stack trace and do you have
-all information which you might require?
+On 5/16/24 06:08, John Garry wrote:
+> On 15/05/2024 17:52, Guenter Roeck wrote:
+>> max_segment_size is 65280; PAGE_SIZE is 65536; BLK_MAX_SEGMENT_SIZE is 65536
+>> WARNING: CPU: 0 PID: 12 at block/blk-settings.c:202 blk_validate_limits+0x2d4/0x364
+>> ...
+>>
+>> This is with PPC_BOOK3S_64 which selects a default page size of 64k.
+>> Looking at the old code, I think it did what you suggested above,
+>>
+>> void blk_queue_max_segment_size(struct request_queue *q, unsigned int max_size)
+>> {
+>>          if (max_size < PAGE_SIZE) {
+>>                  max_size = PAGE_SIZE;
+>>                  printk(KERN_INFO "%s: set to minimum %d\n",
+>>                         __func__, max_size);
+>>          }
+>> ...
+>>
+>> but assuming that the driver requested a lower limit on purpose that
+>> may not be the best solution.
+> 
+> Right, it is relied on that PAGE_SIZE can fit into a segment.
+> 
+>>
+>> Never mind, though - I updated my test configuration to explicitly
+>> configure the page size to 4k to work around the problem. With that,
+>> please consider this report a note in case someone hits the problem
+>> on a real system (and sorry for the noise).
+> 
+> Other controllers do have a 4K segment limit and are broken on systems with 16/64K PAGE_SIZE, like:
+> 
+> https://lore.kernel.org/linux-block/20230612203314.17820-1-bvanassche@acm.org/
+> 
+
+Understood, only it isn't just 4k segment limit with 16/64k page size, but more
+generally any system with segment limit < PAGE_SIZE.
+
+It is a bit sad that support for affected configurations is [now ?] broken
+because above patch series was rejected (and, no, that has nothing to do
+with me working for the same company as the submitter of that patch series -
+that is me testing the upstream kernel with qemu).
+
+Given that various controllers are affected by that problem, would it be
+acceptable to submit patches such as the following to avoid runtime failures ?
+
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index 817838e2f70e..6adf9105b5fb 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -1380,6 +1380,8 @@ static int __init pata_macio_init(void)
+  {
+         int rc;
+
++       BUILD_BUG_ON(MAX_DBDMA_SEG < PAGE_SIZE);
++
+         if (!machine_is(powermac))
+                 return -ENODEV;
+
+or, alternatively,
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index b595494ab9b4..d7bd64702109 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -789,6 +789,7 @@ config PATA_JMICRON
+  config PATA_MACIO
+         tristate "Apple PowerMac/PowerBook internal 'MacIO' IDE"
+         depends on PPC_PMAC
++       depends on PAGE_SIZE_LESS_THAN_64KB
+         help
+           Most IDE capable PowerMacs have IDE busses driven by a variant
+            of this controller which is part of the Apple chipset used on
+
+Thanks,
+Guenter
+
