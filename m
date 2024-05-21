@@ -1,76 +1,118 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8788811184;
-	Mon, 20 May 2024 18:18:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA53514A8E;
+	Tue, 21 May 2024 02:31:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716229082; cv=none; b=ZHZC9gA/sWvB4SmPvQXK6F0IPNwNAshwZb1ypOKoXk03mIr9z4SOARrVAG+Kdh2EcloNiKZIh0UuqvcewFiAOCLPvkCwMz8QQp7zmAwbeuR/wuu6qdYip5howCv2L9xl4Cr1F2dGfAgGUjm6MtqHpIPjcOtdZ0WZJ0Gxx/MdJ1M=
+	t=1716258682; cv=none; b=KksRJy8GMVuRZIa2PHutQIJFVvadcOIHgZG8h7m3F/Og6y+7Dh5+i9ymB/aQzYIGJGWorEETXlSYGftpeQEMttDjli25VJbbeuYxq95Qls8PmATYjEXDxT3boRsONmux4+a8ezRxj/BNlDeILqi4qQx5VZUGoYix+oaa2pD/WsU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716229082; c=relaxed/simple;
-	bh=WcCO4d4GjlDnujm5kCtE0YKhrxDLCETLwxLDlOuPbqg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PhpcLSxUsMMkk5twNIGseo3HZ4ePqq2/tdrFXnLI9Sbu2lxcHoYPBHgOk8ZHUU7+cG378AgkNbaE4YT6ZFFDUm6KpGD1eeVV74QTnVpHhRjS5trVCcKRQFwDda/6Znpv7YLg2eLE3qyVLZMmnd22fffT6tzNHcSSi0/zWh9J2nI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=cHhZJ4hM; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1716258682; c=relaxed/simple;
+	bh=ZSX+wvOF3eqvyPaF2POW7kz2n72QyRVioknBx/xaoiI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YK1w1DEVfrGTuC0UyL2DrcIIRvR5USlhWP/8UrCpKS58p7PAQcdjt2ekAyh2hnGwm5aN0m+nQY33eEGYAKC7qljWP85TGqAmKPLP+Nny1C+sli1yBW7RDBGWwnZ7wnf4jv8cEekdEVC1Z72FaZZBnkbJ3nRz/dHB/V/8VhysfOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=mLbiSGXT; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="cHhZJ4hM"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Vjm5N5ChXzlgT1M;
-	Mon, 20 May 2024 18:18:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1716229078; x=1718821079; bh=WcCO4d4GjlDnujm5kCtE0YKh
-	rxDLCETLwxLDlOuPbqg=; b=cHhZJ4hMoUTCe9Qi5Mxc0gbPMrAe6wONUikfFIC3
-	pUxlx3uwOmWQ6SZ3uVLMOWOaB71WQC50vnRIGWP8nXBQDNbnPgGIAb/CAhxdjxnp
-	SbZ1O/fRW/t5HvJw06H0ftxz5Od3GuxrwNc7rU6ZKTKECCtjhnSxM0HSU+KR+ire
-	VI3MG42ApI/t4PaFpDTcQmX0wbcRTUcMSlxwhDei0i80Bn198+TmYUwd5Tql0GVa
-	wMHyJyI+ogyGax9Eb6MDVOkh7YfxewrYCECfGrbGG7z+Ldd13vRPK7mVA+8UkrxA
-	ZB4tCQQwssqxJMYaqsdH0WB4dQhqlHQ72+uwDyJIfEWPYQ==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id HJPHqkP1405j; Mon, 20 May 2024 18:17:58 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Vjm5H6xVtzlgT1K;
-	Mon, 20 May 2024 18:17:55 +0000 (UTC)
-Message-ID: <84c1e98d-1217-4956-909f-d51fdf2f555e@acm.org>
-Date: Mon, 20 May 2024 11:17:54 -0700
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mLbiSGXT"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 44KN0AcU006153;
+	Tue, 21 May 2024 02:31:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2023-11-20;
+ bh=jztGpo4CZLNydWCIM3JweZ/8H1o+ivOHncHsXRiVk8s=;
+ b=mLbiSGXTjkxm2GQ6wG9WstJbvS7ms2YNYNhjlGtke+3bv8AKuvwrgK/Tsjez/O/tNfmJ
+ NeCT8bcMNSh03AUM5+6KS32oCcdDKRHI/Qyd2nhGQ2yRyPUTXMqQr3dymuP7u+uMEDpU
+ JOhNlalTnaQ7Vgk3ehyoe1UwjICcSmD1gBB5Lzz2f/AnmhtbVLob/4KgKiyPYPGF/5SS
+ ZNNbBCnE/xXWafnbtxw4s2jBQ9n2FPchv0Z0JI01Y09wJgYoZkeucPLbKRHB4vHMwdNs
+ lR7/qZtlGn0Czac1/gznL92YEg6HSDoKeNuZvp7r5lQgI6GQwwFUfXJ0tf7vGfaqpHdX Eg== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3y6jx2bxyr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 21 May 2024 02:31:16 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 44L02LEX035965;
+	Tue, 21 May 2024 02:31:16 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3y6js7320u-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 21 May 2024 02:31:16 +0000
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 44L2UmN5040510;
+	Tue, 21 May 2024 02:31:15 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3y6js7320g-1;
+	Tue, 21 May 2024 02:31:15 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org,
+        Peter Schneider <pschneider1968@googlemail.com>
+Subject: [PATCH] scsi: core: Handle devices which return an unusually large VPD page count
+Date: Mon, 20 May 2024 22:30:40 -0400
+Message-ID: <20240521023040.2703884-1-martin.petersen@oracle.com>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com>
+References: <eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] ufs: mcq: Convert MCQ_CFG_n to a inline function
-To: Minwoo Im <minwoo.im@samsung.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- Joel Granados <j.granados@samsung.com>, gost.dev@samsung.com,
- Asutosh Das <quic_asutoshd@quicinc.com>
-References: <20240519221457.772346-1-minwoo.im@samsung.com>
- <CGME20240519222607epcas2p1c485b3cc264fdabc2c1e90daf228664d@epcas2p1.samsung.com>
- <20240519221457.772346-3-minwoo.im@samsung.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240519221457.772346-3-minwoo.im@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.12.28.16
+ definitions=2024-05-21_01,2024-05-17_03,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 spamscore=0
+ mlxlogscore=999 adultscore=0 bulkscore=0 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2405010000
+ definitions=main-2405210019
+X-Proofpoint-GUID: BM5harIC2eKaN6T2WUWdoOB8o2M1LlUw
+X-Proofpoint-ORIG-GUID: BM5harIC2eKaN6T2WUWdoOB8o2M1LlUw
 
-On 5/19/24 15:14, Minwoo Im wrote:
-> Unlike the previous patch, this patch does not fix any issues, but,
-> inline functions are much more preferred over macros, so this patch
-> converted MCQ_CFG_n macro in ufs-mcq to an inline function along with
-> the previous patch.
+Peter Schneider reported that a system would no longer boot after
+updating to 6.8.4.  Peter bisected the issue and identified commit
+b5fc07a5fb56 ("scsi: core: Consult supported VPD page list prior to
+fetching page") as being the culprit.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Turns out the enclosure device in Peter's system reports a byteswapped
+page length for VPD page 0. It reports "02 00" as page length instead
+of "00 02". This causes us to attempt to access 516 bytes (page length
++ header) of information despite only 2 pages being present.
+
+Limit the page search scope to the size of our VPD buffer to guard
+against devices returning a larger page count than requested.
+
+Cc: stable@vger.kernel.org
+Reported-by: Peter Schneider <pschneider1968@googlemail.com>
+Tested-by: Peter Schneider <pschneider1968@googlemail.com>
+Fixes: b5fc07a5fb56 ("scsi: core: Consult supported VPD page list prior to fetching page")
+Link: https://lore.kernel.org/all/eec6ebbf-061b-4a7b-96dc-ea748aa4d035@googlemail.com/
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/scsi.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 3e0c0381277a..f0464db3f9de 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -350,6 +350,13 @@ static int scsi_get_vpd_size(struct scsi_device *sdev, u8 page)
+ 		if (result < SCSI_VPD_HEADER_SIZE)
+ 			return 0;
+ 
++		if (result > sizeof(vpd)) {
++			dev_warn_once(&sdev->sdev_gendev,
++				      "%s: long VPD page 0 length: %d bytes\n",
++				      __func__, result);
++			result = sizeof(vpd);
++		}
++
+ 		result -= SCSI_VPD_HEADER_SIZE;
+ 		if (!memchr(&vpd[SCSI_VPD_HEADER_SIZE], page, result))
+ 			return 0;
+-- 
+2.44.0
+
