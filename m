@@ -1,82 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BCF718EB1
-	for <linux-scsi@vger.kernel.org>; Wed, 22 May 2024 09:06:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB2FD13B7AB;
+	Wed, 22 May 2024 11:46:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716368798; cv=none; b=XmB8E5WOK4cCcFK3fVd9zIFiX6XNHKMXqPOxY8U5d2NsGJ5bowzgys9QBIC4TZh/3Y1PSytnx9MrN8ApUfrQw265BYLQdmlzEP5w+KNUr3yp9BE64A2MWUm9c3h1hY9IfedgKP5DUa7Yc4gA8FldKB3YPHGL2GeOnmJGpQ7bYyU=
+	t=1716378394; cv=none; b=haf5Cic9dvFP6HBMj0rpxUJ5NJvhO532JTUz+/tM42a555X0T3uPFZJPdJz7t0IqKj8F6s1uAboqxUo24CzY/TVaa/zTVA6cxjIcm6ijksyp3egVC/QEauqYTXjiZ6F+6e4MXJs77DYKUKT+QTJ6qoaG8zyYJb4p3oT1y7kDLnk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716368798; c=relaxed/simple;
-	bh=x3DP1oymv+I7KMXjlRkq9u282sPbIaVjg1GuUjtDRKk=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=EXHaJPTF3Lr5PuF2N9GdAOC7zJIzMCE2WLijDNfdQna4Y2non69YTZA3/zRDP5Q9/c+BxgduChjNylcXClCKkkgQ2GZ/Q1FSyRi9R75fiNHtAYLHAZlWISa1Sv5GgizVGrEJ8yYAD6mDb/w8S2l5q15S5BcORD7j4iyp+CWjk1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jAcRSw9C; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jAcRSw9C"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 934F2C32789
-	for <linux-scsi@vger.kernel.org>; Wed, 22 May 2024 09:06:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716368797;
-	bh=x3DP1oymv+I7KMXjlRkq9u282sPbIaVjg1GuUjtDRKk=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=jAcRSw9C5qQuSgnXjGeq3p0Pj9aB9Glb/EdKXUTqZFQG4tRC+kwC6xZuVumLtvIaf
-	 XfADdi6XK+phTm4fjljXYhgR8gN8ko8KGHqJqP51mhgpt4hdmIcWsH5FnCN/Etz/BR
-	 oStUjUx3usHn8LWvy12MbBcI7RNWex4d/vBKuBz6SV/odqkgV8FnzmZKT1sNAhK8zX
-	 XYbVh5Kf3Z3EMAbV8Ond1PZMOn0dXSnNTqLs2STMsuT2GRtoYDlQuuYfO1shIewCVV
-	 oVF85s4QfokLwEEyZkkcMsluUOju31FdJEdKthXT2RpaFPJgS7/HEkscjDL9JmeF0U
-	 gu9JAyDJblysQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 8599EC53B7F; Wed, 22 May 2024 09:06:37 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 218866] Extra /dev/sd.. entries for a fake raid on Z10PE-D16 WS
- motherboard.
-Date: Wed, 22 May 2024 09:06:37 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: marc_debruyne@telenet.be
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cf_kernel_version
-Message-ID: <bug-218866-11613-EcOfHzZjxq@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-218866-11613@https.bugzilla.kernel.org/>
-References: <bug-218866-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=arc-20240116; t=1716378394; c=relaxed/simple;
+	bh=bRm9H4UquR51tvU1Bqm9NuZgpFhBOUcsrWpB5jVm+cQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dj9I6uTYGNvLiHz2u99oxHC0Z32CCaXDeIeIREfSe149kMJ0cNHBpNQBAWNM58W4qNwy4GesZaLrYO/CTyHwhyu/KR+clnkVauK0+UnbNPQL7aVmWv/7m9l4sASbPTM6vhsKa6vB5PFVL9qpip3rsq/twntp06XeURxiJoLxKxE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.194])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4VkqDQ4fHdzxNdL;
+	Wed, 22 May 2024 19:42:46 +0800 (CST)
+Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 2412B140133;
+	Wed, 22 May 2024 19:46:28 +0800 (CST)
+Received: from localhost.localdomain (10.50.165.33) by
+ dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.34; Wed, 22 May 2024 19:46:27 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <gregkh@linuxfoundation.org>, <rafael@kernel.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>, <liyihang9@huawei.com>,
+	<kangfenglong@huawei.com>
+Subject: [PATCH] driver core: Add log when devtmpfs create node failed
+Date: Wed, 22 May 2024 11:43:46 +0000
+Message-ID: <20240522114346.42951-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemd100001.china.huawei.com (7.185.36.94)
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D218866
+Currently, no exception information is output when devtmpfs create node
+failed, so add log info for it.
 
-Marc Debruyne (marc_debruyne@telenet.be) changed:
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
+ drivers/base/core.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-     Kernel Version|6.8.3                       |6.9.1
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 5f4e03336e68..32a41e0472b2 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -3691,7 +3691,10 @@ int device_add(struct device *dev)
+ 		if (error)
+ 			goto SysEntryError;
+ 
+-		devtmpfs_create_node(dev);
++		error = devtmpfs_create_node(dev);
++		if (error)
++			pr_info("devtmpfs create node for %s failed: %d\n",
++				dev_name(dev), error);
+ 	}
+ 
+ 	/* Notify clients of device addition.  This call must come
+-- 
+2.17.1
 
---- Comment #1 from Marc Debruyne (marc_debruyne@telenet.be) ---
-Upgraded kernel to 6.9.1-gentoo-x86_64 (6.9.1)
-
-same result.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
