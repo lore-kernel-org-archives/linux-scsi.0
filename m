@@ -1,63 +1,65 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2B4D17758;
-	Wed, 22 May 2024 07:02:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E03067CF30;
+	Wed, 22 May 2024 07:02:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716361332; cv=none; b=qX1nRjXUxAmNa9giB52ZGjeS++aCru3/LzIfVeWGTRrKCaZceqL+HwktDttvVydhBKw3RO8P7JBtw0qJnLEwed6tr2TqEUCJYwAUYAnGW6nkRjkHl3+virrR28kc6RsEVNMOlGBz+ViSTJRizk/y54yFkKAuwGPOG9QnIZtWmaw=
+	t=1716361336; cv=none; b=X27w4ynTI0Qr7pCTvESCXdGBrRo5HOL5+bpi5Xsva+A5oOMRrSxhmEg+GBgUFCqtaQVft/+M2d90KQSC36mozw+QPLu+z7+XyCY0lU2SDvWLQjy9qrKRYWdp+y07m1YuYer1FTBj5ELiMkjTQv2+aJTKDSordt67YFG4YKDK7jk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716361332; c=relaxed/simple;
-	bh=1UfZkb4B2JrKG4crbIuSVRNoZKf1gDZK+5FboRIfZ+o=;
+	s=arc-20240116; t=1716361336; c=relaxed/simple;
+	bh=fwaRCWvzPvI1UmPHLUZKAImIxm8Wv7EvZHtxRXetqwc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Ldlsxv0hwJkriSqERMLLpBwlHA2bOOoOzzoL9RqGxNdic27js1Gxad11CQFTL1zGos7HvFoHfPjimA3scf6dE1D0HVsctNTDJEGi2PNQi2CX9Nbn1s9AAiuR9pSzrr4x3HfsqH59AqmxJ1FfDVv/AO8Lb58qJJyDzZrERb04QNM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nDDlW6Ws; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=C/apSQHvfZUc3Mv4gCrU8VXJkBMI/NfRjeyCg42v+RGxpbcMXaQjzRH3i93J3MBAXoocbULjyq5rXWiP1H6c8VMCNfxYkIfFwIxLmYNnZHLGqz/OzRvocmQNHTlMkdIIRbDFN90IVwFhoZDGyJrs3/8g34fHaUaEK+MVXxAmAE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=DD+jnv9q; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nDDlW6Ws"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44LJIwQT028232;
-	Wed, 22 May 2024 07:01:56 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="DD+jnv9q"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44M2lb74021188;
+	Wed, 22 May 2024 07:01:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-type; s=qcppdkim1; bh=qRTPNRgzLNaqp1abE7ty
-	bw26shArfVhyaTLRSm7ms2c=; b=nDDlW6Wstt+A9qTzA04c6OEeiYi8xI0b/JZC
-	2aA1BeYxF0HQEL6gtXeXMjnZBoDfnrOVb/qDBmESu2vLy4d1sC1pa4GGzHnzoo5O
-	VlAU5walmtF2klYgMBOGZA/tVeRGqpzF9O+Xuln7CB0M89QImlAXAWhpxgdx9q8p
-	ApHI5lAG/rYmHAEhhbgaxO5W6apS5O0wJH4/fNFpKM52i3UMWf/5g9doTwFmoIsQ
-	LD8hJxo8Bpl3aGWK2Q3qMk13/mxmBLAX+QwKm8ZlAHZ2zn3UNlLy4R4CLNgz/jkV
-	qyXJvfEDDgxQE15WSG8x/pbjEGv+50s3shxb+xcuCG2t41FVqA==
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3y6n3tgsgs-1
+	:mime-version:content-type; s=qcppdkim1; bh=+RQpj1uiYR9HcyCBb06k
+	V7GZV1kTw9b4x8ql1LSTPLs=; b=DD+jnv9qvMyi2gAG1UtqQhlmIjzS5CKTcKQT
+	CCtrBkG92yP4bf3Ji57p+cWNIgU4i8SF4M4C9WbzcmQoHcTmALM62j4SAqqgEXei
+	fSAyGIWZLS+oDv8W5Vvu4N8Dz5oV8mGhUC/mpfcOVzzrF025xoBT8CgZeLWjkFLL
+	lbNHznu6RYCGrJNdGg39yVa+/vUxtHkKJT+3NPkSKkUQkCoC33FldXVMFV3WFcu7
+	Dj8HL+ERsqQZsWRQOb2VJF22GsLIcemJlkk2eqxF/3000iq7kiTXQqUd5MH8BPKp
+	F7b7qg/fliOD2X9hLbacZJPbGwLE54pHbxNY5Wkoa6aSt3BDOQ==
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3y6psnfyk4-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 May 2024 07:01:56 +0000 (GMT)
+	Wed, 22 May 2024 07:01:55 +0000 (GMT)
 Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 44M71tJB009742
+	by NASANPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 44M71sBb015306
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 22 May 2024 07:01:55 GMT
+	Wed, 22 May 2024 07:01:54 GMT
 Received: from stor-berry.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 22 May 2024 00:01:54 -0700
+ 15.2.1544.9; Wed, 22 May 2024 00:01:53 -0700
 From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
 To: <quic_cang@quicinc.com>, <quic_nitirawa@quicinc.com>, <bvanassche@acm.org>,
         <avri.altman@wdc.com>, <beanhuo@micron.com>, <adrian.hunter@intel.com>,
         <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio
-	<konrad.dybcio@linaro.org>,
-        Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley"
 	<jejb@linux.ibm.com>,
-        "open list:ARM/QUALCOMM SUPPORT"
-	<linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v1 2/2] scsi: ufs: qcom: Update the UIC Command Timeout
-Date: Wed, 22 May 2024 00:01:28 -0700
-Message-ID: <8e5593feaac75660ff132d67ee5d9130e628fefb.1716359578.git.quic_nguyenb@quicinc.com>
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Peter Wang
+	<peter.wang@mediatek.com>,
+        Manivannan Sadhasivam
+	<manivannan.sadhasivam@linaro.org>,
+        Po-Wen Kao <powen.kao@mediatek.com>,
+        Maramaina Naresh <quic_mnaresh@quicinc.com>,
+        open list
+	<linux-kernel@vger.kernel.org>
+Subject: [PATCH v1 1/2] scsi: ufs: core: Support Updating UIC Command Timeout
+Date: Wed, 22 May 2024 00:01:27 -0700
+Message-ID: <292d7702e946ca513af51236ca9e38bf1b1eb269.1716359578.git.quic_nguyenb@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1716359578.git.quic_nguyenb@quicinc.com>
 References: <cover.1716359578.git.quic_nguyenb@quicinc.com>
@@ -72,53 +74,97 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: VVfVq3LnP2y92wbQrY89XTQZH3k5garw
-X-Proofpoint-ORIG-GUID: VVfVq3LnP2y92wbQrY89XTQZH3k5garw
+X-Proofpoint-GUID: sSGXS21wCljIOqtcj_TPU4pgcgI6DcKR
+X-Proofpoint-ORIG-GUID: sSGXS21wCljIOqtcj_TPU4pgcgI6DcKR
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.12.28.16
  definitions=2024-05-22_03,2024-05-21_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=0
- bulkscore=0 priorityscore=1501 malwarescore=0 mlxlogscore=999
- lowpriorityscore=0 phishscore=0 spamscore=0 impostorscore=0 clxscore=1011
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ malwarescore=0 bulkscore=0 phishscore=0 impostorscore=0 adultscore=0
+ mlxlogscore=999 clxscore=1011 priorityscore=1501 suspectscore=0
+ spamscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2405010000 definitions=main-2405220050
 
-Change the UIC command timeout to 2 seconds.
-This extra time is to allow the uart occasionally print long
-debug messages and logging from different modules during
-product development. With the default hardcoded 500ms timeout,
-the uart printing with interrupt disabled may cause the UIC command
-interrupt get starved, resulting in a UIC command timeout and
-eventually a watchdog timeout.
-When a product development completes, the vendors may
-select a different UIC command timeout as desired.
+The default UIC command timeout still remains 500ms.
+Allow vendor drivers to override the UIC command timeout if desired.
+
+In a real product, the 500ms timeout value is probably good enough.
+However, during the product development where there are a lot of
+logging and debug messages being printed to the uart console,
+interrupt starvations happen occasionally because the uart may
+print long debug messages from different modules in the system.
+While printing, the uart may have interrupts disabled for more
+than 500ms, causing UIC command timeout.
+The UIC command timeout would trigger more printing from the
+UFS driver, and eventually a watchdog timeout may occur unnecessarily.
 
 Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 ---
- drivers/ufs/host/ufs-qcom.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/ufs/core/ufshcd.c | 9 ++++++---
+ include/ufs/ufshcd.h      | 2 ++
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 79f8cb3..4649e0f 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -49,6 +49,7 @@ enum {
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 21429ee..c440caf 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2460,7 +2460,7 @@ static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
+ {
+ 	u32 val;
+ 	int ret = read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
+-				    500, UIC_CMD_TIMEOUT * 1000, false, hba,
++				    500, hba->uic_cmd_timeout * 1000, false, hba,
+ 				    REG_CONTROLLER_STATUS);
+ 	return ret == 0;
+ }
+@@ -2520,7 +2520,7 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ 	lockdep_assert_held(&hba->uic_cmd_mutex);
  
- #define QCOM_UFS_MAX_GEAR 4
- #define QCOM_UFS_MAX_LANE 2
-+#define QCOM_UIC_CMD_TIMEOUT_MS 2000
+ 	if (wait_for_completion_timeout(&uic_cmd->done,
+-					msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
++					msecs_to_jiffies(hba->uic_cmd_timeout))) {
+ 		ret = uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT;
+ 	} else {
+ 		ret = -ETIMEDOUT;
+@@ -4298,7 +4298,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 	}
  
- enum {
- 	MODE_MIN,
-@@ -1111,6 +1112,8 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 		dev_warn(dev, "%s: failed to configure the testbus %d\n",
- 				__func__, err);
+ 	if (!wait_for_completion_timeout(hba->uic_async_done,
+-					 msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
++					 msecs_to_jiffies(hba->uic_cmd_timeout))) {
+ 		dev_err(hba->dev,
+ 			"pwr ctrl cmd 0x%x with mode 0x%x completion timeout\n",
+ 			cmd->command, cmd->argument3);
+@@ -10690,6 +10690,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 			    FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3);
+ 	}
  
-+	hba->uic_cmd_timeout = QCOM_UIC_CMD_TIMEOUT_MS;
++	if (!hba->uic_cmd_timeout)
++		hba->uic_cmd_timeout = UIC_CMD_TIMEOUT;
 +
- 	return 0;
+ 	/* Hold auto suspend until async scan completes */
+ 	pm_runtime_get_sync(dev);
+ 	atomic_set(&hba->scsi_block_reqs_cnt, 0);
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index a35e12f..47e3bdf 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -917,6 +917,7 @@ enum ufshcd_mcq_opr {
+  * @ufs_rtc_update_work: A work for UFS RTC periodic update
+  * @pm_qos_req: PM QoS request handle
+  * @pm_qos_enabled: flag to check if pm qos is enabled
++ * @uic_cmd_timeout: timeout in ms for UIC commands
+  */
+ struct ufs_hba {
+ 	void __iomem *mmio_base;
+@@ -1085,6 +1086,7 @@ struct ufs_hba {
+ 	struct delayed_work ufs_rtc_update_work;
+ 	struct pm_qos_request pm_qos_req;
+ 	bool pm_qos_enabled;
++	u32 uic_cmd_timeout;
+ };
  
- out_variant_clear:
+ /**
 -- 
 2.7.4
 
