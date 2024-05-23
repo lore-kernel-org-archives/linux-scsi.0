@@ -1,166 +1,117 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 212B346AF;
-	Thu, 23 May 2024 11:01:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED598174C;
+	Thu, 23 May 2024 12:58:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716462110; cv=none; b=lIEn/WKcAZS3Trx7pFpL2tGuB+5JycrxiErq1alVM7BAdlgPzNRP/eFPe5BXbSqvmAmvKLrRxrN54ephjtuEsg+vuj5WbTfjkrpFCPBZ7mBZEqF7VLE4tk94wRw2acmGHOf1wcwJiKo14voBYoFia+9F2pzc4O+qHBEem84BKF0=
+	t=1716469122; cv=none; b=rj3Z2ohpF+5N+wDSoxD01t0b0Cu/o4HCw69PFmlmh77r1buDJpBeDy7JwRU9x4cXJqJZq21aMyTZ4LKobCcZTLhnNYGtyGZAkyDrx4sv5Pe339HY7hkcbiz9jtfN5aAH6JNJBugccVZ1mvL+3my1boBcGQhDmZfnDdYF2LZHZzQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716462110; c=relaxed/simple;
-	bh=4u59vjcCwefd5WAf6c0pCJI3+Xi+nJGFKnocFAIqYX8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=NGqmOLdORbD9LwqhMb138lk2hZGHQUQXkaLl4oJv5xRokeUjt/PckC30YJdUeRSneHcBGunNIBh1kcuVqghC2CL8+FMioDqnBtZzLSoB79VKnnV60gKMneecev8gX3A8z3f43Es+VrWftndNnDAS1P7jowDB5g0/teROFzU8WLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4VlQBG0pl8zxQKf;
-	Thu, 23 May 2024 18:57:58 +0800 (CST)
-Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id A51FB180060;
-	Thu, 23 May 2024 19:01:40 +0800 (CST)
-Received: from [10.67.120.108] (10.67.120.108) by
- dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.34; Thu, 23 May 2024 19:01:40 +0800
-Message-ID: <8e959699-0f74-2fc2-4e24-467b485838a1@huawei.com>
-Date: Thu, 23 May 2024 19:01:40 +0800
+	s=arc-20240116; t=1716469122; c=relaxed/simple;
+	bh=oV2ZFplCblWKmN/I2j0dD142TAdaLRkSzUlqV4hF1yw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UVHOGJYw4BNsK2XFMA4H0XmPITH1HGxtfspuebeeBo4cLmBNLEMmsI2YQ/RvNVvfKN+xecVxukP17FuHrXnRF511aLxPJIiozviBwOhJ572ad1z+gQQK8D4p3J9y8VDUEUILaY71KLG17YZwpkn45TxJ+cqEEvmVkegKP78y1zo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=Mkd3Bh4L; arc=none smtp.client-ip=216.71.154.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Mkd3Bh4L"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1716469120; x=1748005120;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=oV2ZFplCblWKmN/I2j0dD142TAdaLRkSzUlqV4hF1yw=;
+  b=Mkd3Bh4L9L4QcsfG96chEZ1gX7gfq0IvK4RMLWJ+LIyw5nYlYkLoLByc
+   oolW+pbEayY/91spqDHckmLYDZa9jStsW7Zs11uIlA13ZJOh6uwBEUiIK
+   M4DJOecVD14nhMUxP3OlHG5ZN0sJ0oYl5QVJJwQkY0eSKD0EqaKLNFaaJ
+   TfKzGqn3+3thnDgObg0NQNnDvALzg8Eymm+QzH4+kk1kCf3YjUh8NojIJ
+   foDvKRxPjtYz/U54vEBQaKpQ86bJGV4IC6VlfklM2C1H4EPsgzK233XQc
+   eNl/eVhFYeWLB0tE90vCqrFbI97KXFoyulhG1ToKOH6XVKqniUoTNrgd+
+   A==;
+X-CSE-ConnectionGUID: B1vBICsYTTuwkvbP7gcZhQ==
+X-CSE-MsgGUID: K+g1x1t8Rg+4LYSgjzX96w==
+X-IronPort-AV: E=Sophos;i="6.08,182,1712592000"; 
+   d="scan'208";a="17062539"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 23 May 2024 20:58:39 +0800
+IronPort-SDR: 664f3136_ZssmQlMpJAR0S2alNUERHDIT1Ml7xFl4ZRQpOX5+WaltTJS
+ 0WIQvBy2mg1Myl1BL6ika/A38lJZM7LsO8ZFa7g==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 23 May 2024 05:06:14 -0700
+WDCIronportException: Internal
+Received: from bxygm33.ad.shared ([10.45.31.229])
+  by uls-op-cesaip02.wdc.com with ESMTP; 23 May 2024 05:58:38 -0700
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>,
+	Bean Huo <beanhuo@micron.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v5 0/3] scsi: ufs: Allow RTT negotiation
+Date: Thu, 23 May 2024 15:58:23 +0300
+Message-ID: <20240523125827.818-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH] driver core: Add log when devtmpfs create node failed
-Content-Language: en-CA
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: <rafael@kernel.org>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-	<prime.zeng@hisilicon.com>, <liyihang9@huawei.com>, <kangfenglong@huawei.com>
-References: <20240522114346.42951-1-yangxingui@huawei.com>
- <2024052221-pulverize-worrisome-37fb@gregkh>
- <794b5fa3-0135-80cc-4b55-f48a430a58ca@huawei.com>
- <2024052316-confused-payback-5658@gregkh>
- <68b110da-ea20-fa03-be26-49dd3a04f835@huawei.com>
- <2024052354-legibly-willow-7134@gregkh>
-From: yangxingui <yangxingui@huawei.com>
-In-Reply-To: <2024052354-legibly-willow-7134@gregkh>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggpemm100018.china.huawei.com (7.185.36.206) To
- dggpemd100001.china.huawei.com (7.185.36.94)
+Content-Transfer-Encoding: 8bit
 
+The rtt-upiu packets precede any data-out upiu packets, thus
+synchronizing the data input to the device: this mostly applies to write
+operations, but there are other operations that requires rtt as well.
 
+There are several rules binding this rtt - data-out dialog, specifically
+There can be at most outstanding bMaxNumOfRTT such packets.  This might
+have an effect on write performance (sequential write in particular), as
+each data-out upiu must wait for its rtt sibling.
 
-On 2024/5/23 17:35, Greg KH wrote:
-> On Thu, May 23, 2024 at 05:23:07PM +0800, yangxingui wrote:
->> Hi Greg,
->>
->> On 2024/5/23 15:25, Greg KH wrote:
->>> On Thu, May 23, 2024 at 09:50:09AM +0800, yangxingui wrote:
->>>> Hi, Greg
->>>>
->>>> On 2024/5/22 20:23, Greg KH wrote:
->>>>> On Wed, May 22, 2024 at 11:43:46AM +0000, Xingui Yang wrote:
->>>>>> Currently, no exception information is output when devtmpfs create node
->>>>>> failed, so add log info for it.
->>>>>
->>>>> Why?  Who is going to do something with this?
->>>> We execute the lsscsi command after the disk is connected, we occasionally
->>>> find that some disks do not have dev nodes and these disks cannot be used.
->>>
->>> Ok, but why do you think that devtmpfs create failed?
->> I found that lsscsi will traverse the dev node and obtain device major and
->> min. If no matching dev node is found, it will display "-       ".
->>>
->>>> However, there is no abnormal log output during disk scanning. We analyze
->>>> that it may be caused by the failure of devtmpfs create dev node, so the log
->>>> is added here.
->>>
->>> But is that the case?  Why is devtmpfs failing?  Shouldn't we fix that
->>> instead?
->> My subsequent reply touches on these points.
->>>
->>>> The lscsi command query results and kernel logs as follows:
->>>>
->>>> [root@localhost]# lsscsi
->>>> [9:0:4:0]	disk	ATA	ST10000NM0086-2A SN05	-
->>>>
->>>> kernel: [586669.541218] hisi_sas_v3_hw 0000:b4:04.0: phyup: phy0
->>>> link_rate=10(sata)
->>>> kernel: [586669.541341] sas: phy-9:0 added to port-9:0, phy_mask:0x1
->>>> (5000000000000900)
->>>> kernel: [586669.541511] sas: DOING DISCOVERY on port 0, pid:2330731
->>>> kernel: [586669.541518] hisi_sas_v3_hw 0000:b4:04.0: dev[4:5] found
->>>> kernel: [586669.630816] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
->>>> kernel: [586669.665960] hisi_sas_v3_hw 0000:b4:04.0: phydown: phy0
->>>> phy_state=0xe
->>>> kernel: [586669.665964] hisi_sas_v3_hw 0000:b4:04.0: ignore flutter phy0
->>>> down
->>>> kernel: [586669.863360] hisi_sas_v3_hw 0000:b4:04.0: phyup: phy0
->>>> link_rate=10(sata)
->>>> kernel: [586670.024482] ata19.00: ATA-10: ST10000NM0086-2AA101, SN05, max
->>>> UDMA/133
->>>> kernel: [586670.024487] ata19.00: 19532873728 sectors, multi 16: LBA48 NCQ
->>>> (depth 32), AA
->>>> kernel: [586670.027471] ata19.00: configured for UDMA/133
->>>> kernel: [586670.027490] sas: --- Exit sas_scsi_recover_host: busy: 0 failed:
->>>> 0 tries: 1
->>>> kernel: [586670.037541] sas: ata19: end_device-9:0:
->>>> model:ST10000NM0086-2AA101 serial:            ZA2B3PR2
->>>> kernel: [586670.100856] scsi 9:0:4:0: Direct-Access     ATA ST10000NM0086-2A
->>>> SN05 PQ: 0 ANSI: 5
->>>> kernel: [586670.101114] sd 9:0:4:0: [sdk] 19532873728 512-byte logical
->>>> blocks: (10.0 TB/9.10 TiB)
->>>> kernel: [586670.101116] sd 9:0:4:0: [sdk] 4096-byte physical blocks
->>>> kernel: [586670.101125] sd 9:0:4:0: [sdk] Write Protect is off
->>>> kernel: [586670.101137] sd 9:0:4:0: [sdk] Write cache: enabled, read cache:
->>>> enabled, doesn't support DPO or FUA
->>>> kernel: [586670.101620] sd 9:0:4:0: Attached scsi generic sg10 type 0
->>>> kernel: [586670.101714] sas: DONE DISCOVERY on port 0, pid:2330731, result:0
->>>> kernel: [586670.101731] sas: sas_form_port: phy0 belongs to port0
->>>> already(1)!
->>>> kernel: [586670.152512] sd 9:0:4:0: [sdk] Attached SCSI disk
->>>
->>> Looks like sdk was found properly, what's the problem?
->>
->> Yes, this problem occurs occasionally. There is no exception log when
->> scanning the disk, but the disk cannot be used. It has been confirmed that
->> it is related to fio testing. When the dev node does not exist, fio may
->> actively create this file.
-> 
-> So that's a userspace issue.  If a device node is to be created, and the
-> file is already present with that name, yes, we will fail to create it
-> as obviously userspace did not want us to do so.
-> 
-> It's not the kernel's job to protect userspace from doing foolish things
-> itself, right?  :)
-Yes.
-> 
->> If we want to solve this problem, should we delete the existing files first
->> when creating a dev node?
-> 
-> No.
-Ok.
-> 
->> Or just print a prompt indicating that the dev node creation failed.
-> 
-> We can do that, but will that cause error messages to be printed out for
-> normal situations today where userspace does this on purpose?
-> 
-> Again, this isn't fixing the root problem here (which is userspace doing
-> something it shouldn't be doing), adding kernel log messages might be
-> just noise at this point in time given that it has been operating this
-> way for many years, if not decades.
-Yes, there is currently no fix for the problem, and it doesn't usually 
-happen. Once it occurs, the device will be unavailable and difficult to 
-locate. In addition, there are many possibilities for the failure of 
-devtmpfs to create a dev node, including currently recognized scenarios 
-and memory allocation failures, etc.
+UFSHCI expects bMaxNumOfRTT to be min(bDeviceRTTCap, NORTT). However,
+as of today, there does not appear to be no-one who sets it: not the
+host controller nor the driver.  It wasn't an issue up to now:
+bMaxNumOfRTT is set to 2 after manufacturing, and wasn't limiting the
+write performance.
 
-Thanks,
-Xingui
-.
+UFS4.0, and specifically gear 5 changes this, and requires the device to
+be more attentive.  This doesn't come free - the device has to allocate
+more resources to that end, but the sequential write performance
+improvement is significant. Early measurements shows 25% gain when
+moving from rtt 2 to 9. Therefore, set bMaxNumOfRTT to be
+min(bDeviceRTTCap, NORTT) as UFSHCI expects.
+
+v4 -> v5:
+Quiesce the queues before writing bMaxNumOfRTT (Bart)
+Make bDeviceRTTCap available in ufshcd_device_params_init() (Bart)
+
+v3 -> v4:
+Allow bMaxNumOfRTT to be configured via sysfs (Bart)
+
+v2 -> v3:
+Allow platform vendors to take precedence having their own rtt
+negotiation mechanism (Peter)
+
+v1 -> v2:
+bMaxNumOfRTT is a Persistent attribute - do not override if it was
+written (Bean)
+
+Avri Altman (3):
+  scsi: ufs: Allow RTT negotiation
+  scsi: ufs: Allow platform vendors to set rtt
+  scsi: ufs: sysfs: Make max_number_of_rtt read-write
+
+ Documentation/ABI/testing/sysfs-driver-ufs | 14 +++--
+ drivers/ufs/core/ufs-sysfs.c               | 72 +++++++++++++++++++++-
+ drivers/ufs/core/ufshcd-priv.h             | 12 ++++
+ drivers/ufs/core/ufshcd.c                  | 53 ++++++++++++----
+ include/ufs/ufs.h                          |  2 +
+ include/ufs/ufshcd.h                       |  4 ++
+ include/ufs/ufshci.h                       |  1 +
+ 7 files changed, 139 insertions(+), 19 deletions(-)
+
+-- 
+2.34.1
+
