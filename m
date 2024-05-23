@@ -1,91 +1,146 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FC1A1CAA6;
-	Wed, 22 May 2024 21:02:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C92837E
+	for <linux-scsi@vger.kernel.org>; Thu, 23 May 2024 00:23:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716411722; cv=none; b=CUbUiMgCfoFdbLxDEmnjwPPzO7SQM58kOz5viKbSu1lC7eA/qtoMY/t710LiMzeiHJN+zbSd7fC9n2C4AV8k+82TXi97zFxgGkeJlXBJQssB0p3LycsKrA8YNavMf29eNlftM2wnl3OTsaj1+3w2JT6tN4uY0A7WBVIcKLXoZnM=
+	t=1716423810; cv=none; b=lyDIeE8Aq6qtf6u51u9QKjt+NgAbRrMBJWkmaLQe2m5p2KUqMfptWyJw+dSnKRzfeD8q6Qob+yZvVONsVMZ42226b4pDw6HP4uHOs8VxOg1FI9RkbjpFDiLtyT8yTUsEmd7z0bjLW/t0ymk96d6UkiBv5cJsecGiYCs9ylY4UBc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716411722; c=relaxed/simple;
-	bh=er7P36jIArk3ujM8x9Cy03xPyL1nefNS9QVEIwttV+U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gIonnEh6LtKuSAOocxNSgZFX3NIMucr2Dx9PmLYCbBXRIrC00mV66gpinkhNrAtM2BMmONMZo28aiWvzxj2VjatR3k3pur4sD4Q7tDvXZP34w8zSWTBk7hIrQysQWqZJvn4n2bLLC8QgzRVTJHM5vPh1uYgIKY2aCIsszHPWgqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dXWVEvto; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1716423810; c=relaxed/simple;
+	bh=aBFl6NoNCYEgzTWuk4Xg5V4yj/L2vRLZ5FrXJZWqsW4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=ZZkRSJQmUotc1qKWwpWoFYPcRuWikj/cO6HKoy5zIMaDsCKM7Ry1Zk6mzNLLrpd6lo1CjylG9O1ZA+68/u7Qzo6vWqY5R8uVbsxMjRCvtzvOXkc9NJlsthkF2Xjb+hwHj2OjxoIQvDfs4FQLM9CRBylIqrlvkCzlAHkTh5I71Bg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=cOYMj7fs; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dXWVEvto"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Vl3dh2jgnz6Cnk9V;
-	Wed, 22 May 2024 21:02:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1716411715; x=1719003716; bh=Atjv96qq2OAJtNvHEuhpPZvH
-	JqM/RL80by+9suRd8jY=; b=dXWVEvtowpQ/rT7tagj4HNILifmUfKkdishecPh+
-	MZxW074xv03njCj4qBGGmx1YkWMVGBQtEdFWKWofKAsDhLmBEvMAN8rWI3YFGwIA
-	Mqu0FHc338dszAqlPs6ayXz7Sz6+UBQTbGb77FJwgHgvT8X/yNaH88IR7A6R/r47
-	ywyGHCk45eSBz9ZMVyvgg1+6rsrEpP4x8Qh6EAfoM9aLf2D+1XFU1EraKR1DIB23
-	6EpH69ahHuOtVpXP4Dj4FeDKtF2ZXu/LHtLjOdCW5SeTPaykIsXq3dgcXrJZbZ33
-	JYi5jljhi+70lM8JXqw7Y/CARw+rKZ5gn4Ju0h2crqSG1w==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id D78-WJJWmQKg; Wed, 22 May 2024 21:01:55 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Vl3dW10Lrz6Cnk9B;
-	Wed, 22 May 2024 21:01:50 +0000 (UTC)
-Message-ID: <bdd52dc0-85dd-4000-b5dd-c2c22f5b8ba1@acm.org>
-Date: Wed, 22 May 2024 14:01:49 -0700
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="cOYMj7fs"
+Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20240523002324epoutp044478400cc462a09c162660816ad134a4~R9lse9wsX2644926449epoutp048
+	for <linux-scsi@vger.kernel.org>; Thu, 23 May 2024 00:23:24 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20240523002324epoutp044478400cc462a09c162660816ad134a4~R9lse9wsX2644926449epoutp048
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1716423804;
+	bh=bxbj9vt7C7y18tsnTS/FCojRnLKLZliPPTlfmq6LKHk=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=cOYMj7fsIsfk/fNJzC94alFaVCdj/iXqCk6zyzsUqlOh0AQgkl1h4oR0LlGLf0Xbh
+	 z5VGbco7Hq25/tE7CMzjSibb0pUPQ8eoSsvjBMgSUF0t+5YgwoSpX8ZI61T+kcdXMR
+	 i2gU0pspcJjK20B9Tp8DY/sexZZJPAaPLP9HACG4=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTP id
+	20240523002323epcas1p4740006fec15f67c3c7fe37592d4e89a1~R9lsAclkC1730517305epcas1p4d;
+	Thu, 23 May 2024 00:23:23 +0000 (GMT)
+Received: from epsmges1p4.samsung.com (unknown [182.195.38.248]) by
+	epsnrtp2.localdomain (Postfix) with ESMTP id 4Vl863202Kz4x9Pt; Thu, 23 May
+	2024 00:23:23 +0000 (GMT)
+Received: from epcas1p4.samsung.com ( [182.195.41.48]) by
+	epsmges1p4.samsung.com (Symantec Messaging Gateway) with SMTP id
+	7E.88.10158.B7C8E466; Thu, 23 May 2024 09:23:23 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20240523002322epcas1p2a63dfc646a2b2dd8fcadad2a8807bcee~R9lrCKqcu0290602906epcas1p24;
+	Thu, 23 May 2024 00:23:22 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20240523002322epsmtrp2cc595954cd7d71202618b62dc197f8c4~R9lrBRRF80430204302epsmtrp2l;
+	Thu, 23 May 2024 00:23:22 +0000 (GMT)
+X-AuditID: b6c32a38-8e1ff700000027ae-3b-664e8c7b8a8e
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	AE.89.08390.A7C8E466; Thu, 23 May 2024 09:23:22 +0900 (KST)
+Received: from lee.. (unknown [10.253.100.232]) by epsmtip2.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20240523002322epsmtip2601973feec3adc41b834b58dfd4c5949~R9lqzQNzn1770717707epsmtip2m;
+	Thu, 23 May 2024 00:23:22 +0000 (GMT)
+From: Chanwoo Lee <cw9316.lee@samsung.com>
+To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+	stanley.chu@mediatek.com, quic_nguyenb@quicinc.com, quic_cang@quicinc.com,
+	powen.kao@mediatek.com, yang.lee@linux.alibaba.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Chanwoo Lee <cw9316.lee@samsung.com>
+Subject: [PATCH] ufs:mcq:Fixing Error Output for ufshcd_try_to_abort_task in
+ ufshcd_mcq_abort
+Date: Thu, 23 May 2024 09:22:57 +0900
+Message-Id: <20240523002257.1068373-1-cw9316.lee@samsung.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 2/2] scsi: ufs: qcom: Update the UIC Command Timeout
-To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, quic_cang@quicinc.com,
- quic_nitirawa@quicinc.com, avri.altman@wdc.com, beanhuo@micron.com,
- adrian.hunter@intel.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konrad.dybcio@linaro.org>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <cover.1716359578.git.quic_nguyenb@quicinc.com>
- <8e5593feaac75660ff132d67ee5d9130e628fefb.1716359578.git.quic_nguyenb@quicinc.com>
- <2ec8a7a6-c2cd-4861-9a43-8a4652e0f116@acm.org>
- <f9595b82-66f9-dce2-7fba-c42b1eacf962@quicinc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <f9595b82-66f9-dce2-7fba-c42b1eacf962@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrIJsWRmVeSWpSXmKPExsWy7bCmgW51j1+aQWsHt8WDedvYLF7+vMpm
+	Me3DT2aLGafaWC029nNYXN41h82i+/oONovlx/8xWby9+5/FYtK1DWwWU18cZ7dYuvUmo8W7
+	xsOMDrwel694e0ybdIrNY+dDS4+Wk/tZPD4+vcXiMXFPnUffllWMHp83yXm0H+hmCuCMyrbJ
+	SE1MSS1SSM1Lzk/JzEu3VfIOjneONzUzMNQ1tLQwV1LIS8xNtVVy8QnQdcvMATpaSaEsMacU
+	KBSQWFyspG9nU5RfWpKqkJFfXGKrlFqQklNgVqBXnJhbXJqXrpeXWmJlaGBgZApUmJCd8fHZ
+	ApaCj+wVp/pFGxh3snUxcnBICJhInJ1k1sXIxSEksINR4u30bjYI5xOjROvu04wQzjdGibU/
+	VrJ2MXKCdTxe0gOV2MsosevHNWYI5wmjRMOeLnaQuWwCWhK3j3mDNIgInGCSuPMsGcRmFtCQ
+	+NN2kQ3EFhaIl7h8cjcjiM0ioCqxp/Et2AJeAVuJbyuWMEMsk5fYf/AsM0RcUOLkzCcsEHPk
+	JZq3zgbbKyHQyyFxZ+49qAYXieY5J5kgbGGJV8e3sEPYUhKf3+1lg2hoZpRY+OY4VPcERokv
+	H2+zQVTZSzS3NoNDhllAU2L9Ln2IbXwS7772sEICjFeio00IolpFYk7XOTaY+R9vPIaGkIfE
+	9P1TwA4VEoiV2PZuLeMERrlZSH6YheSHWQjLFjAyr2IUSy0ozk1PLTYsMIFHZHJ+7iZGcFrV
+	stjBOPftB71DjEwcjIcYJTiYlUR4o1f6pgnxpiRWVqUW5ccXleakFh9iNAWG6kRmKdHkfGBi
+	zyuJNzSxNDAxMzKxMLY0NlMS5z1zpSxVSCA9sSQ1OzW1ILUIpo+Jg1OqgcnV4rXc1UWex6ct
+	nGpdfWXSx6Z5ae9XlxStXaudrcotbmLMEuD8lP1b3N0fbZyXBZbfOLN2ieCm9Ek/TR3DPBQm
+	m11bHu8yJ7nrm+yaiYoBj0NFq6Z98ktmcuMO/KTrdqBF9eD31yuX/RAxZS7r38g3+fS8pa7T
+	C/bz+08v6gw980DkdYpg2IZnKT7xc7cdNcreU5Z59MnpjftmWnCnqpmUfhSSDxD5q2zzJE13
+	UqdD1Zoff18XmfTErWC/cu/L63c+V4tNii9e1VjzqenEAV3NBukdPgwvN01cblLyWPRT3uaz
+	B168L5+iv+Vhq4Hot6QG+bkXl6uyaSuu/MU1+5vaUl7VCqvwTdyvtCLK7x1WYinOSDTUYi4q
+	TgQAHS5u3DQEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrNLMWRmVeSWpSXmKPExsWy7bCSvG5Vj1+awfs2ZYsH87axWbz8eZXN
+	YtqHn8wWM061sVps7OewuLxrDptF9/UdbBbLj/9jsnh79z+LxaRrG9gspr44zm6xdOtNRot3
+	jYcZHXg9Ll/x9pg26RSbx86Hlh4tJ/ezeHx8eovFY+KeOo++LasYPT5vkvNoP9DNFMAZxWWT
+	kpqTWZZapG+XwJXx8dkCloKP7BWn+kUbGHeydTFyckgImEg8XtLD2MXIxSEksJtR4t/cl1AJ
+	KYnd+88D2RxAtrDE4cPFEDWPGCWuv+gEi7MJaEncPuYNEhcRuMYk0Xz7GStIL7OAhsSftotg
+	c4QFYiV2zJkFZrMIqErsaXwLVsMrYCvxbcUSZohd8hL7D55lhogLSpyc+YQFYo68RPPW2cwT
+	GPlmIUnNQpJawMi0ilEytaA4Nz232LDAKC+1XK84Mbe4NC9dLzk/dxMjOPy1tHYw7ln1Qe8Q
+	IxMH4yFGCQ5mJRHe6JW+aUK8KYmVValF+fFFpTmpxYcYpTlYlMR5v73uTRESSE8sSc1OTS1I
+	LYLJMnFwSjUwzdLcIKjiMUn30NVnhXPtNv/ITpfQWrnG8iKL4anplcU+e5dsPVzFdT25+uGK
+	lVvMf67QY2K3XrKn4di/15z6fpdYP548ukcqbtfbKy82C/I99/RaFLBZWXHm01SPPSvqzBK3
+	d9sWLn91SOqgh3vKpOU+W+ddcnr8yUdLVU/hx96a++u+d6qeNGJluzJh8zOpR8rXnXYdf50W
+	x6vPzXJJ54n9vStKfBZLbjFtORnFMvve/D7tQz8TmOTfhfwy3mNsyaq2gfW5ybNYgUktq3oe
+	uqutmuR9wvC2fbmPqMVS74yPHP/SmH3q/TMq5HT/c7xXffHTPT7m4rGOzXrJHbsYM98x+u3K
+	2PdBeHvo55KWGiWW4oxEQy3mouJEABuUXQ3uAgAA
+X-CMS-MailID: 20240523002322epcas1p2a63dfc646a2b2dd8fcadad2a8807bcee
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240523002322epcas1p2a63dfc646a2b2dd8fcadad2a8807bcee
+References: <CGME20240523002322epcas1p2a63dfc646a2b2dd8fcadad2a8807bcee@epcas1p2.samsung.com>
 
-On 5/22/24 13:56, Bao D. Nguyen wrote:
-> On 5/22/2024 11:18 AM, Bart Van Assche wrote:
->> Since the described issue is only encountered during development, why to
->> modify the UIC command timeout unconditionally?
-> 
-> The vendors can enjoy the default 500ms UIC timeout if they prefer.
-> As long as they don't write to hba->uic_cmd_timeout in the vendor's initialization routine, the default value of 500ms will be used.
+An error unrelated to ufshcd_try_to_abort_task is being output and
+can cause confusion. So, I modified it to output the result of abort
+fail. This modification was similarly revised by referring to the
+ufshcd_abort function.
 
-Since this issue is not vendor specific, I think it would be better to
-modify the UFSHCI core driver only. Has it been considered to introduce a
-kernel module parameter for setting the UIC command timeout instead of the
-approach of this patch? As you probably know there are multiple mechanisms
-for specifying kernel module parameters, e.g. the bootargs parameter in the
-device tree.
+Signed-off-by: Chanwoo Lee <cw9316.lee@samsung.com>
+---
+ drivers/ufs/core/ufs-mcq.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Thanks,
-
-Bart.
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 005d63ab1f44..fc24d1af1fe8 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -667,9 +667,11 @@ int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
+ 	 * in the completion queue either. Query the device to see if
+ 	 * the command is being processed in the device.
+ 	 */
+-	if (ufshcd_try_to_abort_task(hba, tag)) {
++	err = ufshcd_try_to_abort_task(hba, tag);
++	if (err) {
+ 		dev_err(hba->dev, "%s: device abort failed %d\n", __func__, err);
+ 		lrbp->req_abort_skip = true;
++		err = FAILED;
+ 		goto out;
+ 	}
+ 
+-- 
+2.34.1
 
