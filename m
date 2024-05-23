@@ -1,129 +1,163 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D64B39AF9;
-	Thu, 23 May 2024 05:42:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CDAC3CF51;
+	Thu, 23 May 2024 07:25:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716442948; cv=none; b=Jdy8Gd2qffrniuwc/ZW8a1vy/s8/3DWZ07lCOjp34/AFkkprlrLvqpJNmZPoIcUka8zs2QgeT6UvM00F4eeDNWIkpYxGSVVnNZztDpjbf1LkIU/NiszUfAQsAXFCBtWB7QxMn8jjRXuZPDJXqsc0kEIGl1s7eYUcySBiF4DonUA=
+	t=1716449144; cv=none; b=fDrbt9tUwvL1uzs2z7eYY3k6dyFqNY6TUY3KAtrXNqA8gretGue6QNKy5eFzxDCbRZIL9wYulfDn/GvyoTTovzv92APVDmuZnicWEhr/XpqbVK/iy3xyk4KXgetl0FWDkFcMK+KobL2o9dODg6zcRoMV3Q4Fk8rUcEmPk7z2PXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716442948; c=relaxed/simple;
-	bh=Y1VXwDvxGAnVnlR04JsLrkNPdKxtHxOw44VCzccAUPo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=TbkT2w9jo5m0Z3jf8TFnK7mGidUYlpligN8hGsqqlKmiXJMZcsFVcs+WYEvtNX93SZkG3FaMeFpVcCPphd3T3ThV8JHZ/GoLpTfhQuEyjiuMP7yMUdhFt4hB5Xu8yOU36MD5Hy98oDg7/s7U4bmzv5TY6uMyjEZvwDQ0lOwDhFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=j1WEB2tb; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1716449144; c=relaxed/simple;
+	bh=OtoMM2EnLYopfSClknn+vskVbP9LcVlEYgkZXxAy70o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rSjTOXv6vn67eCfTtkH0Il/sihfgDfnfoznIAeMl/ZACq3uqn0Eu4NjQUuAPAhjOp2GZI39xBGdrtTIkWBReCgcEBZv8LcObnJOQowwQSaVBvOxm5EXVGptn2ndX5O+YRHLUxWAHVQMuZVTrMm1IfEbSFTEkctb1nm/LEyiBIYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=l2ra1qxB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="j1WEB2tb"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44N4bTfS017045;
-	Thu, 23 May 2024 05:42:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	/U9ryxChaVrHIu5gC0OQEG+gB2a/wA1FmQs1ySyoP90=; b=j1WEB2tbbVqkfzZS
-	0qW+F64TFxGj3Sm9ZKeKCvzcEcs+A+EyRdVxgTFhRbr/qmBU5cmlzOtYeM998V2a
-	a45WwCfaBoYLaj5o4ppQ7TH5uyT0udG500qJ5TlkH7QHwGT1QrI2Rutlq4EISuhD
-	B3jpikfCptGmcKrlbGo3J/1DDNDxh7Hf0MGWyb61fJmIv1TH21rK/xwUUwKwEIKF
-	XyXVMOHl4FYM0ZZ/MzG0aNXM6g1xLGXkPOsgKaWUuv3MIwp7waO+KEm7zLwhCqk0
-	aoRldNN+rgHVgLkjpVZ9xLgPho0GXoXAAIQNFSnbC8dmOoEACaIkOVVqUA/WkmlF
-	+T4FbA==
-Received: from nasanppmta04.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3y9xxe03ab-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 23 May 2024 05:42:16 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 44N5gEwm022938
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 23 May 2024 05:42:15 GMT
-Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 22 May
- 2024 22:42:14 -0700
-Message-ID: <a6950702-536c-af82-4eae-6f9cc2c3baaa@quicinc.com>
-Date: Wed, 22 May 2024 22:42:14 -0700
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="l2ra1qxB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BD25C2BD10;
+	Thu, 23 May 2024 07:25:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1716449143;
+	bh=OtoMM2EnLYopfSClknn+vskVbP9LcVlEYgkZXxAy70o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=l2ra1qxB1P/JpnSBpEDFO9rzUWGpdqdI0rJMLESTsydrLtm6zEvZ1rDRQlxHxootq
+	 oIm5al4hs9GIeWOLK7hRRSOZ/d8US5HPO5xVjkiiXnsyaT1aP9LxqPhSkRuSdq0MVT
+	 jTSh6RT+fM5EkJuEL4KvFIK+uODE3h8jvwIi3qf4=
+Date: Thu, 23 May 2024 09:25:40 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: yangxingui <yangxingui@huawei.com>
+Cc: rafael@kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+	prime.zeng@hisilicon.com, liyihang9@huawei.com,
+	kangfenglong@huawei.com
+Subject: Re: [PATCH] driver core: Add log when devtmpfs create node failed
+Message-ID: <2024052316-confused-payback-5658@gregkh>
+References: <20240522114346.42951-1-yangxingui@huawei.com>
+ <2024052221-pulverize-worrisome-37fb@gregkh>
+ <794b5fa3-0135-80cc-4b55-f48a430a58ca@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH v1 2/2] scsi: ufs: qcom: Update the UIC Command Timeout
-Content-Language: en-US
-To: Avri Altman <Avri.Altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
-        "quic_nitirawa@quicinc.com"
-	<quic_nitirawa@quicinc.com>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Bjorn Andersson
-	<andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        "Manivannan
- Sadhasivam" <manivannan.sadhasivam@linaro.org>,
-        "James E.J. Bottomley"
-	<jejb@linux.ibm.com>,
-        "open list:ARM/QUALCOMM SUPPORT"
-	<linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <cover.1716359578.git.quic_nguyenb@quicinc.com>
- <8e5593feaac75660ff132d67ee5d9130e628fefb.1716359578.git.quic_nguyenb@quicinc.com>
- <2ec8a7a6-c2cd-4861-9a43-8a4652e0f116@acm.org>
- <f9595b82-66f9-dce2-7fba-c42b1eacf962@quicinc.com>
- <bdd52dc0-85dd-4000-b5dd-c2c22f5b8ba1@acm.org>
- <DM6PR04MB6575FAF59F9F3499BEC4128CFCF42@DM6PR04MB6575.namprd04.prod.outlook.com>
-From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-In-Reply-To: <DM6PR04MB6575FAF59F9F3499BEC4128CFCF42@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: l7PSWFsDcmJaTaLfgHQQRpLzC6ozpM-u
-X-Proofpoint-ORIG-GUID: l7PSWFsDcmJaTaLfgHQQRpLzC6ozpM-u
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.12.28.16
- definitions=2024-05-23_02,2024-05-22_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- malwarescore=0 phishscore=0 impostorscore=0 spamscore=0 mlxscore=0
- mlxlogscore=999 adultscore=0 bulkscore=0 priorityscore=1501 suspectscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2405010000 definitions=main-2405230036
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <794b5fa3-0135-80cc-4b55-f48a430a58ca@huawei.com>
 
-On 5/22/2024 8:18 PM, Avri Altman wrote:
->> On 5/22/24 13:56, Bao D. Nguyen wrote:
->>> On 5/22/2024 11:18 AM, Bart Van Assche wrote:
->>>> Since the described issue is only encountered during development, why to
->>>> modify the UIC command timeout unconditionally?
->>>
->>> The vendors can enjoy the default 500ms UIC timeout if they prefer.
->>> As long as they don't write to hba->uic_cmd_timeout in the vendor's
->> initialization routine, the default value of 500ms will be used.
->>
->> Since this issue is not vendor specific, I think it would be better to
->> modify the UFSHCI core driver only. Has it been considered to introduce a
->> kernel module parameter for setting the UIC command timeout instead of the
->> approach of this patch? As you probably know there are multiple mechanisms
->> for specifying kernel module parameters, e.g. the bootargs parameter in the
->> device tree.
-> Since the problem statement is "During product development...", why not just a debugfs?
+On Thu, May 23, 2024 at 09:50:09AM +0800, yangxingui wrote:
+> Hi, Greg
+> 
+> On 2024/5/22 20:23, Greg KH wrote:
+> > On Wed, May 22, 2024 at 11:43:46AM +0000, Xingui Yang wrote:
+> > > Currently, no exception information is output when devtmpfs create node
+> > > failed, so add log info for it.
+> > 
+> > Why?  Who is going to do something with this?
+> We execute the lsscsi command after the disk is connected, we occasionally
+> find that some disks do not have dev nodes and these disks cannot be used.
 
-Hi Avri, if I am not mistaken, debugfs is not available at the initial 
-stage of ufs probe/init time right?
+Ok, but why do you think that devtmpfs create failed?
+
+> However, there is no abnormal log output during disk scanning. We analyze
+> that it may be caused by the failure of devtmpfs create dev node, so the log
+> is added here.
+
+But is that the case?  Why is devtmpfs failing?  Shouldn't we fix that
+instead?
+
+> The lscsi command query results and kernel logs as follows:
+> 
+> [root@localhost]# lsscsi
+> [9:0:4:0]	disk	ATA	ST10000NM0086-2A SN05	-
+> 
+> kernel: [586669.541218] hisi_sas_v3_hw 0000:b4:04.0: phyup: phy0
+> link_rate=10(sata)
+> kernel: [586669.541341] sas: phy-9:0 added to port-9:0, phy_mask:0x1
+> (5000000000000900)
+> kernel: [586669.541511] sas: DOING DISCOVERY on port 0, pid:2330731
+> kernel: [586669.541518] hisi_sas_v3_hw 0000:b4:04.0: dev[4:5] found
+> kernel: [586669.630816] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+> kernel: [586669.665960] hisi_sas_v3_hw 0000:b4:04.0: phydown: phy0
+> phy_state=0xe
+> kernel: [586669.665964] hisi_sas_v3_hw 0000:b4:04.0: ignore flutter phy0
+> down
+> kernel: [586669.863360] hisi_sas_v3_hw 0000:b4:04.0: phyup: phy0
+> link_rate=10(sata)
+> kernel: [586670.024482] ata19.00: ATA-10: ST10000NM0086-2AA101, SN05, max
+> UDMA/133
+> kernel: [586670.024487] ata19.00: 19532873728 sectors, multi 16: LBA48 NCQ
+> (depth 32), AA
+> kernel: [586670.027471] ata19.00: configured for UDMA/133
+> kernel: [586670.027490] sas: --- Exit sas_scsi_recover_host: busy: 0 failed:
+> 0 tries: 1
+> kernel: [586670.037541] sas: ata19: end_device-9:0:
+> model:ST10000NM0086-2AA101 serial:            ZA2B3PR2
+> kernel: [586670.100856] scsi 9:0:4:0: Direct-Access     ATA ST10000NM0086-2A
+> SN05 PQ: 0 ANSI: 5
+> kernel: [586670.101114] sd 9:0:4:0: [sdk] 19532873728 512-byte logical
+> blocks: (10.0 TB/9.10 TiB)
+> kernel: [586670.101116] sd 9:0:4:0: [sdk] 4096-byte physical blocks
+> kernel: [586670.101125] sd 9:0:4:0: [sdk] Write Protect is off
+> kernel: [586670.101137] sd 9:0:4:0: [sdk] Write cache: enabled, read cache:
+> enabled, doesn't support DPO or FUA
+> kernel: [586670.101620] sd 9:0:4:0: Attached scsi generic sg10 type 0
+> kernel: [586670.101714] sas: DONE DISCOVERY on port 0, pid:2330731, result:0
+> kernel: [586670.101731] sas: sas_form_port: phy0 belongs to port0
+> already(1)!
+> kernel: [586670.152512] sd 9:0:4:0: [sdk] Attached SCSI disk
+
+Looks like sdk was found properly, what's the problem?
 
 > 
-> Thanks,
-> Avri
-> 
->>
->> Thanks,
->>
->> Bart.
-> 
+> > 
+> > > 
+> > > Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+> > > ---
+> > >   drivers/base/core.c | 5 ++++-
+> > >   1 file changed, 4 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/base/core.c b/drivers/base/core.c
+> > > index 5f4e03336e68..32a41e0472b2 100644
+> > > --- a/drivers/base/core.c
+> > > +++ b/drivers/base/core.c
+> > > @@ -3691,7 +3691,10 @@ int device_add(struct device *dev)
+> > >   		if (error)
+> > >   			goto SysEntryError;
+> > > -		devtmpfs_create_node(dev);
+> > > +		error = devtmpfs_create_node(dev);
+> > > +		if (error)
+> > > +			pr_info("devtmpfs create node for %s failed: %d\n",
+> > > +				dev_name(dev), error);
+> > 
+> > Why is an error message pr_info()?
+> Do you recommend using pr_err()?
 
+Do not print errors at the information level :)
+
+> > And again, why is this needed?  If this needs to be checked, why are you
+> > now checking it but ignoring the error?
+> > 
+> > What would this help with?
+> As above, we want to get the error info when the dev node fails to be
+> created. We currently haven't figured out how to handle this exception well.
+> But judging from the problems we are currently encountering, some may be
+> because the corresponding dev node already exists, causing the creation to
+> fail, but the node information is incorrect and the device cannot be used.
+> as follows:
+> [root@localhost]# ll /dev/sdk
+> -rw-------. 1 root root 5368709120 Jul 8 09:51 /dev/sdk
+
+Looks like the device node is created to me.  What is incorrect about
+it, the values?  What is 'll' an alias for?  And are you sure that other
+tools aren't getting the device node creation uevent and doing something
+with it in userspace?  How do you know this is the kernel failing?
+
+Wait, is /dev/sdk really a device node and not a file?  Perhaps
+something else wrote to it first, before it was created?  And that's why
+devtmpfs couldn't create it.  That sounds like a userspace error,
+nothing the kernel can do about it.
+
+thanks,
+
+greg k-h
