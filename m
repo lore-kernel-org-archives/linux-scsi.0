@@ -1,119 +1,157 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FE6E1AACC
-	for <linux-scsi@vger.kernel.org>; Fri, 24 May 2024 10:23:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8CFB1AACC;
+	Fri, 24 May 2024 10:26:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716546216; cv=none; b=bxCUOlnMHTSo63cx19WoAzJ4bD4TUzhSp2LYRf6hRufz95Qa/fqbVe0VGSLe15PR+RzVuZyv8tjaJUXEnhqJaEv0V7EitAIi8NjMAQH+zbt9cFsluub47ejMUs8tteUr6ONMT3C6qa6K1XFTW4EIVxzqU9MWtTEP9YVj4AMKV3g=
+	t=1716546392; cv=none; b=S3bQdSfGrELS5YL+aqd1HVINeWf/yZpYHtPdSDpQB6zrQ6zWYLZCxyKeo0Hwn//Jy8L3/qYs4wcEnxNM1YHPNOPEzJk+Rf5cuGUsEB8M7Z+PpLDvSa7shKNWguse1vhUXn6IflfRKj2wc7Oj9hox4yoKke0K9e344SkD48pIVm4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716546216; c=relaxed/simple;
-	bh=Hp62JRH7fBFDHTu8z2+KieVTNS7vV6kL4JD+Ttwjm8g=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=RSX3Q6uB6hbLAwdiJn3yc+oWFjOBqA6kuYpjRlVlHgANjDXayPrK5u+ROFEIm6IABOxIANn67blJpeu02WUwD/MWnsOFSItlcZnfKSv9dn8UmFcPaUEGh/2IKtfsqmpm4OrVmIPIZaIavCO70/6GpLYLIBXUkCJUyT5D3qcZgSU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Put+Tq49; arc=none smtp.client-ip=209.85.221.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1716546392; c=relaxed/simple;
+	bh=M7BPVny6GRqRCRrBPsePpinTmhcQxMXr2fj7fwqN5P4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ZipC5ZqMAXB+xEAz1TIZLpROJGbyR0aQWTcFRcMTlGnSnksq4Z+PVYGjdCP1hMBYfwA2VVUayWcDkIJbTembBhOwFRSVRCNR3MZJy0XpZIms4cQB5NNRuHmaRV3zVvA+6KNaLEsN/gC+ywtECRLqvT6GikDMxUCWTokoX4TvI9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=hSWw7+pA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=x9wUFStH; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=hSWw7+pA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=x9wUFStH; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Put+Tq49"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-351d309bbecso5942794f8f.2
-        for <linux-scsi@vger.kernel.org>; Fri, 24 May 2024 03:23:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1716546213; x=1717151013; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=j9qYGdI05rHlt3uGBuCNSns/bXUWAMsuc0IhCnTGmHk=;
-        b=Put+Tq49jpP+AFpo9pu6xteEpJqcZq+c7jIbt7p7wmp1PhX7+PbiYcgxEYlNFfhkjp
-         2frbWlMLIjg2XfTb46nXS0dsSSgukHpAdjFPXP9amZDvjZCejFnTK/Y42UdmizxjiIig
-         ZCej/ymXuHPbN1J17ekiHBERTx8GeyOV+p7NqNm8tV8bFO8u2BN/vJSmRxPD4UE/Q7/x
-         gGB8Jdew4eOMwTLgtFaacCGsGHMASi4eiIK84mElQyk/n62zSLAs7pHW/ePiePj+7ODm
-         t6gXsn/VoyvdZcM+S64nxE6YeBWjvSPD7YZlBddMjbkUOhhmlnzgXbohbHSgCb8gL5ZX
-         nEiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1716546213; x=1717151013;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=j9qYGdI05rHlt3uGBuCNSns/bXUWAMsuc0IhCnTGmHk=;
-        b=MwwDaZA1y4G46eGc16YMTyODdh8Bh8T0ZZ22c3H+5imm5jQqB5TsHXQEThyPeaDmDG
-         cBCd7+2dMZ3jNptkTbiD8Jm879NO7TvHSwRAaBypIHNpBQojwsuICI5nwiPC7bvR8HvR
-         qsuX5LMYvWSARu4oSeO2Kw1sukLxgxLVa1SCcmBcj7BqijohgSEf8BV4SYJ5PvQAZnTK
-         9a9YKa97P5nCPSk49lT8oQnyhobtsHrcoL/fjmwtIloDpVm2KzoL1sjsAczEiIVCN6Gl
-         BvKAPxCKQyPD4dvCajg0H9CFcu/ai9gOib35ouECC4nOMyy9WIG+CRMtzJdIYx5U4Ev5
-         f0ww==
-X-Forwarded-Encrypted: i=1; AJvYcCUHmtTmbPQfUoJRZMZS1TzIjYRcvRln+xx3AvZtpl+SUWcqCYlLWt5R4GScdcegFHaTmItH0gm+HDDFF3kiFJje0B6SSZL08vtsbw==
-X-Gm-Message-State: AOJu0YyJHff+GKQN1DM5MU4kH4o/7K5lLPUnHj/TvW0GOsSXm3f+KQYY
-	HHY3xzUAKXqa8RCXFq1O73G4UIsyVX2vurhyXd51YlUH7CaZTo7uMRKAb1ijVpM=
-X-Google-Smtp-Source: AGHT+IEncD44/P2Gy3Hq3Kxz3mOKCL0EIO460sPzqVblgji/kygEVNnuVuxfLVfBfIL3bfT/t4P7Ew==
-X-Received: by 2002:adf:ce06:0:b0:354:f2b0:ebda with SMTP id ffacd0b85a97d-35527056594mr1545790f8f.10.1716546213123;
-        Fri, 24 May 2024 03:23:33 -0700 (PDT)
-Received: from localhost ([102.222.70.76])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-35586a15c2bsm1263579f8f.113.2024.05.24.03.23.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 May 2024 03:23:32 -0700 (PDT)
-Date: Fri, 24 May 2024 13:23:29 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: thenzl@redhat.com
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: mpi3mr: Sanitise num_phys
-Message-ID: <d5823d3c-3761-457f-82e9-a910c7c9aee2@moroto.mountain>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="hSWw7+pA";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="x9wUFStH";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="hSWw7+pA";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="x9wUFStH"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 019D933A27;
+	Fri, 24 May 2024 10:26:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1716546389; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cst0lpLCKeUOXJy5RfbmatmpaHhsUx8Kv9oyqv7TXXA=;
+	b=hSWw7+pA168/443wCSXvZxpJ5LZLVBOlXCGSdD3I8VXGKtAvPeVFACaYF3YF1L47/Tl0oR
+	XMmWtGHwRayep2gYZk3uF4NtPUT0vOapwScYSVac1P/ZXgBWzbec7e8cFU7yWuAeg+7hFC
+	w0l+iwisEDzFqFb7+tBpeVf9o0UfcNk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1716546389;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cst0lpLCKeUOXJy5RfbmatmpaHhsUx8Kv9oyqv7TXXA=;
+	b=x9wUFStHTsPss42ckStJt+JuzE4tT7N8v5a64jUgRlyXAuk1QOoDnKS8LHtw2dYKjCNZOD
+	PfKVjN2krbFV8WDw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1716546389; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cst0lpLCKeUOXJy5RfbmatmpaHhsUx8Kv9oyqv7TXXA=;
+	b=hSWw7+pA168/443wCSXvZxpJ5LZLVBOlXCGSdD3I8VXGKtAvPeVFACaYF3YF1L47/Tl0oR
+	XMmWtGHwRayep2gYZk3uF4NtPUT0vOapwScYSVac1P/ZXgBWzbec7e8cFU7yWuAeg+7hFC
+	w0l+iwisEDzFqFb7+tBpeVf9o0UfcNk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1716546389;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cst0lpLCKeUOXJy5RfbmatmpaHhsUx8Kv9oyqv7TXXA=;
+	b=x9wUFStHTsPss42ckStJt+JuzE4tT7N8v5a64jUgRlyXAuk1QOoDnKS8LHtw2dYKjCNZOD
+	PfKVjN2krbFV8WDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D872413A6B;
+	Fri, 24 May 2024 10:26:28 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id ++f9M1RrUGZjCgAAD6G6ig
+	(envelope-from <hare@suse.de>); Fri, 24 May 2024 10:26:28 +0000
+Message-ID: <a51b79db-c48c-4bd1-a32b-28c72e9edbb8@suse.de>
+Date: Fri, 24 May 2024 12:26:28 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] scsi: core: Pass sdev to blk_mq_alloc_queue()
+To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+ martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, hch@lst.de
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ himanshu.madhani@oracle.com
+References: <20240524084829.2132555-1-john.g.garry@oracle.com>
+ <20240524084829.2132555-2-john.g.garry@oracle.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240524084829.2132555-2-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.56 / 50.00];
+	BAYES_HAM(-2.27)[96.59%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.997];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
+X-Spam-Score: -3.56
+X-Spam-Flag: NO
 
-Hello Tomas Henzl,
+On 5/24/24 10:48, John Garry wrote:
+> When calling scsi_alloc_sdev() -> blk_mq_alloc_queue(), we don't pass
+> the sdev as the queuedata, but rather manually set it afterwards. Just
+> pass to blk_mq_alloc_queue() to have automatically set.
+> 
+> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> ---
+>   drivers/scsi/scsi_scan.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 463ce6e23dc6..ec54d58fb6c0 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -334,7 +334,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+>   	sdev->sg_reserved_size = INT_MAX;
+>   
+>   	scsi_init_limits(shost, &lim);
+> -	q = blk_mq_alloc_queue(&sdev->host->tag_set, &lim, NULL);
+> +	q = blk_mq_alloc_queue(&sdev->host->tag_set, &lim, sdev);
+>   	if (IS_ERR(q)) {
+>   		/* release fn is set up in scsi_sysfs_device_initialise, so
+>   		 * have to free and put manually here */
+> @@ -344,7 +344,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+>   	}
+>   	kref_get(&sdev->host->tagset_refcnt);
+>   	sdev->request_queue = q;
+> -	q->queuedata = sdev;
+>   
+>   	depth = sdev->host->cmd_per_lun ?: 1;
+>   
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Commit 3668651def2c ("scsi: mpi3mr: Sanitise num_phys") from Feb 26,
-2024 (linux-next), leads to the following Smatch static checker
-warning:
+Cheers,
 
-	drivers/scsi/mpi3mr/mpi3mr_transport.c:1371 mpi3mr_sas_port_add()
-	warn: array off by one? 'mr_sas_node->phy[i]'
+Hannes
 
-drivers/scsi/mpi3mr/mpi3mr_transport.c
-    1352         mr_sas_port->hba_port = hba_port;
-    1353         mpi3mr_sas_port_sanity_check(mrioc, mr_sas_node,
-    1354             mr_sas_port->remote_identify.sas_address, hba_port);
-    1355 
-    1356         if (mr_sas_node->num_phys > sizeof(mr_sas_port->phy_mask) * 8)
-    1357                 ioc_info(mrioc, "max port count %u could be too high\n",
-    1358                     mr_sas_node->num_phys);
-    1359 
-    1360         for (i = 0; i < mr_sas_node->num_phys; i++) {
-    1361                 if ((mr_sas_node->phy[i].remote_identify.sas_address !=
-    1362                     mr_sas_port->remote_identify.sas_address) ||
-    1363                     (mr_sas_node->phy[i].hba_port != hba_port))
-    1364                         continue;
-    1365 
-    1366                 if (i > sizeof(mr_sas_port->phy_mask) * 8) {
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This check is wrong.  It should be >=.  But also ->phy_mask is a u64
-when probably it should be a u32.
-
-    1367                         ioc_warn(mrioc, "skipping port %u, max allowed value is %zu\n",
-    1368                             i, sizeof(mr_sas_port->phy_mask) * 8);
-    1369                         goto out_fail;
-    1370                 }
---> 1371                 list_add_tail(&mr_sas_node->phy[i].port_siblings,
-    1372                     &mr_sas_port->phy_list);
-    1373                 mr_sas_port->num_phys++;
-    1374                 mr_sas_port->phy_mask |= (1 << i);
-                                                   ^^^^^^
-There are a bunch of "1 << i" shifts in this file and they'll shift wrap
-if i >= 32.  Then the ->phy_mask is tested with ffs() which takes an
-int.  So everything above bit 31 is not going to work.
-
-    1375         }
-    1376 
-    1377         if (!mr_sas_port->num_phys) {
-    1378                 ioc_err(mrioc, "failure at %s:%d/%s()!\n",
-    1379                     __FILE__, __LINE__, __func__);
-    1380                 goto out_fail;
-    1381         }
-
-regards,
-dan carpenter
