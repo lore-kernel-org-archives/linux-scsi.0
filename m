@@ -1,103 +1,146 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA76B126F3D
-	for <linux-scsi@vger.kernel.org>; Fri, 24 May 2024 13:13:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CD901E52C;
+	Fri, 24 May 2024 13:56:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716556429; cv=none; b=cvSTRfjJvM4HqH55KRgvB3wB4LWgzY+dtbgOlZ8fW6jEFbL9ednJBoCbYrL2xuG1mYQonmy6JWltjp/gcOgaTthpUqmbKw441LBopO5RY2z0tJv8CZ0ZFflHbfrN6KlET0/waIjY075zRB05fWST9mSXxGDJOiQ0pKE6CTLCJAs=
+	t=1716558998; cv=none; b=b2/oMG1IVDwKX2rWDsgUaJHvqC5M6CW81ar263lAjKVhczPyE0HpY6qOBHaEEL3wYQnNKagPau6QUpkctNJ+WVWxGBirX/O2IwZHe7lvdsxAg4VMc+2rpbPIaX3X33B2weCmG19omWvFZhARZzmsOASVRn6P4EGRF4CTomy17AU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716556429; c=relaxed/simple;
-	bh=Spotd7VUV3LOJWBXqXST+L3OG4IHY4VSxIbbI8wsRQw=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=F0sUPWZTXBjO4OxRvTpuCHA+LT0wp1iEugyohLsI/Sgq1pAJNS4ORHMcLMh+2xjeX6z3/G5FpeLh6EL8ey7maWsWsQvLWS+g2ZiucY2R+E6eksjxHmpSOAEwKszyJz7Vgadvv6Z6+/3soqlxApjEMR4BGfxa8114hbEEGAyDkZM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hz17h9Yd; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1716558998; c=relaxed/simple;
+	bh=Lt4Ysqyp3DAJQDdpLcTWTsF1u1XL683siKidltmMTlQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MGUUW+KHskk0eEN36Or3q3hqMHRHK0LmtdFqDx5hHZe6kKX/svaYAWftU/qk4tSZlMNPA4LAoeuDyGarg4itp6wGLm1FT6b95TKYQQXfQKu6he4be0NL5c4bAe1YTwDsoMOYlwkVjvL+JzMY1edaM89/1j7Q/RP6oBAxka/upK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=D69qkga7; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hz17h9Yd"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4D510C3277B
-	for <linux-scsi@vger.kernel.org>; Fri, 24 May 2024 13:13:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716556429;
-	bh=Spotd7VUV3LOJWBXqXST+L3OG4IHY4VSxIbbI8wsRQw=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=hz17h9YdHbqfjNZQTbdYLof2C84xlQ0F0P9ZVw6f0AY8cEEOvT88qc/eNyh0xAFPr
-	 ZLZvScRjxT73rNAbiITLBBGK4QUntldycdg5NhMJEm3/tXM4/6x1wJEKb7CjnE33sd
-	 eT+MmGSPBJ54K0uqBA8RCPhBc7H2pIkAqukl/S2j/s6RznoIxcxKvILvCGvFp+Xsgk
-	 plDawGgwCQDmLhKK/Zdd8TEBASci4BbKZPGRkZfW3rKUReQxX7zoF0z8hZX0+6pT5o
-	 6it9C/+itkZc0Sdj5IKIlKl57flrWb0dlQxO8ugv7QOoFaVjOLwsiuxfXrjGRQ9j7D
-	 o7JtKIxUeN7xA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 42556C53BB0; Fri, 24 May 2024 13:13:49 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 218866] Extra /dev/sd.. entries for a fake raid on Z10PE-D16 WS
- motherboard.
-Date: Fri, 24 May 2024 13:13:48 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: marc_debruyne@telenet.be
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-218866-11613-QXZUURJSZ9@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-218866-11613@https.bugzilla.kernel.org/>
-References: <bug-218866-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="D69qkga7"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Vm65v6p0Fz6Cnk98;
+	Fri, 24 May 2024 13:56:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1716558992; x=1719150993; bh=IIIctu9hujJGoH9Xop4DEZcp
+	4zNfKuFNTzuRxNev4TE=; b=D69qkga7f2UqaNV+tMiQb8H1SmohgcZGJPtGQHnk
+	IRdvpKssq+lEDxVs3rY8daA3kDUKBwFTS75KwOzL6ppdFbId2Cu+gIb/2PKurUyI
+	qLCVb5K2D+0n7hRvB9klY3TFuwJeuAi3D905J6Ncwm9DpDK3d89MLKUodEsauxct
+	FWSJwnK7l+ovwGhXOQlQ3pUxNmYUN9eqevZNjpAWjClXQ2CBJsJLDZlS/ffFcgiB
+	hmBeEZVMmVAPiO3POfspDOYy4kZf/gzJRoCvNnKxMooc21LhDhR/pDELs2pOPQS8
+	yUJGn8jFTCS2m0nUcxQC3Quzj9Eb1+AQzIUjlrUgVSaQ+A==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id uvIgXipl3rIb; Fri, 24 May 2024 13:56:32 +0000 (UTC)
+Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Vm65p0CJcz6Cnk94;
+	Fri, 24 May 2024 13:56:29 +0000 (UTC)
+Message-ID: <7d719385-beee-4780-ac6b-8c5cace90b1e@acm.org>
+Date: Fri, 24 May 2024 06:56:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 2/3] scsi: ufs: Allow platform vendors to set rtt
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "hch@infradead.org" <hch@infradead.org>,
+ "Avri.Altman@wdc.com" <Avri.Altman@wdc.com>
+Cc: "beanhuo@micron.com" <beanhuo@micron.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+References: <20240523125827.818-1-avri.altman@wdc.com>
+ <20240523125827.818-3-avri.altman@wdc.com> <Zk8-rwjFvgP714Mn@infradead.org>
+ <DM6PR04MB65758584960580363D43AED4FCF42@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <Zk9Anwk1HEjUzSxc@infradead.org>
+ <0a57d6bab739d6a10584f2baba115d00dfc9c94c.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <0a57d6bab739d6a10584f2baba115d00dfc9c94c.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D218866
+On 5/23/24 23:06, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-
+> mediatek.c
+> index c4f997196c57..f8725f3374f7 100644
+> --- a/drivers/ufs/host/ufs-mediatek.c
+> +++ b/drivers/ufs/host/ufs-mediatek.c
+> @@ -1777,6 +1777,32 @@ static int ufs_mtk_config_esi(struct ufs_hba
+> *hba)
+>          return ufs_mtk_config_mcq(hba, true);
+>   }
+>  =20
+> +static void ufs_mtk_set_rtt(struct ufs_hba *hba)
+> +{
+> +       struct ufs_dev_info *dev_info =3D &hba->dev_info;
+> +       u32 rtt =3D 0;
+> +       u32 dev_rtt =3D 0;
+> +
+> +       /* RTT override makes sense only for UFS-4.0 and above */
+> +       if (dev_info->wspecversion < 0x400)
+> +               return;
+> +
+> +       if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
+> +                                   QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0,
+> 0, &dev_rtt)) {
+> +               dev_err(hba->dev, "failed reading bMaxNumOfRTT\n");
+> +               return;
+> +       }
+> +
+> +       /* override if not mediatek support */
+> +       if (dev_rtt =3D=3D MTK_MAX_NUM_RTT)
+> +               return;
+> +
+> +       rtt =3D MTK_MAX_NUM_RTT;
+> +       if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+> +                                   QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0,
+> 0, &rtt))
+> +               dev_err(hba->dev, "failed writing bMaxNumOfRTT\n");
+> +}
+> +
+>   /*
+>    * struct ufs_hba_mtk_vops - UFS MTK specific variant operations
+>    *
+> @@ -1805,6 +1831,7 @@ static const struct ufs_hba_variant_ops
+> ufs_hba_mtk_vops =3D {
+>          .op_runtime_config   =3D ufs_mtk_op_runtime_config,
+>          .mcq_config_resource =3D ufs_mtk_mcq_config_resource,
+>          .config_esi          =3D ufs_mtk_config_esi,
+> +       .set_rtt             =3D ufs_mtk_set_rtt,
+>   };
+>  =20
+>   /**
+> diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-
+> mediatek.h
+> index 3ff17e95afab..05d76a6bd772 100644
+> --- a/drivers/ufs/host/ufs-mediatek.h
+> +++ b/drivers/ufs/host/ufs-mediatek.h
+> @@ -189,4 +189,7 @@ struct ufs_mtk_host {
+>   /* MTK delay of autosuspend: 500 ms */
+>   #define MTK_RPM_AUTOSUSPEND_DELAY_MS 500
+>  =20
+> +/* MTK RTT support number */
+> +#define MTK_MAX_NUM_RTT 2
+> +
+>   #endif /* !_UFS_MEDIATEK_H */
 
---- Comment #6 from Marc Debruyne (marc_debruyne@telenet.be) ---
-(In reply to Martin K. Petersen from comment #4)
-> Looks like the partition table is invalid:
->=20
-> [    3.037149] GPT:Primary header thinks Alt. header is not at the end of
-> the disk.
-> [    3.037151] GPT:1951170559 !=3D 1953525167
-> [    3.037153] GPT:Alternate GPT header not at the end of the disk.
-> [    3.037154] GPT:1951170559 !=3D 1953525167
-> [    3.037156] GPT: Use GNU Parted to correct GPT errors.
-> [    3.037168]  sdd: sdd1 sdd2 sdd3 sdd4 sdd5 sdd6 sdd7 sdd8 sdd9 sdd10
-> sdd11 sdd12 sdd13 sdd14 sdd15 sdd16 sdd17 sdd18 sdd19 sdd20
-> [    3.037441] GPT:Primary header thinks Alt. header is not at the end of
-> the disk.
-> [    3.037443] GPT:1951170559 !=3D 1953525167
-> [    3.037445] GPT:Alternate GPT header not at the end of the disk.
-> [    3.037446] GPT:1951170559 !=3D 1953525167
-> [    3.037448] GPT: Use GNU Parted to correct GPT errors.
-> [    3.037459]  sde: sde1 sde2 sde3 sde4 sde5 sde6 sde7 sde8 sde9 sde10
-> sde11 sde12 sde13 sde14 sde15 sde16 sde17 sde18 sde19 sde20
+The above patch would result in duplication of code. We should avoid
+code duplication if that's reasonably possible. Instead of applying the
+above patch, I propose to add a callback function pointer in struct
+ufs_hba_variant_ops that returns the maximum RTT value supported by the
+host driver.
 
-/dev/ssd and /dev/sde are members of a raid 1 array.
-This array is a fake raid. It's a LSI Software RAID witch is standard avail=
-able
-on the ASUS Z10PE-D16 WS motherboard. The firmware uses the end part of the
-disk.
+Thanks,
 
-Note that the partitions 1 to 15 do not have this problem.
-The partitions 16 to 20 contain a windows 11 system and 2 LFS systems which=
- are
-fully operational. (In Windows only the raid partitions are visible).
+Bart.
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
