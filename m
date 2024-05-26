@@ -1,47 +1,47 @@
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2704EBA2E;
-	Sun, 26 May 2024 08:17:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9108DDB1;
+	Sun, 26 May 2024 08:17:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716711434; cv=none; b=HCB5OJCavLKMXuPjMkxRKk70Z5Rbrb6tUkTnUyHwVze5P39M3aa4JSWESIIC0c0KJ8i/4QYV0aL1B0orVPDLnc9TPwlozEwTCgNmtX0G0kxXL5kvM9qEyoS1t1+vHADpGMc1VWtyTArILVfAcOmkfZheeneVwD3/mcVCBFSwJBc=
+	t=1716711450; cv=none; b=sZKgkzEroDB4VywruoXea4oOQgYVOb5BCmEq6DDdfCvMdVMo0PJv7CAYjLlnQsAyGJHzmNgwh1/H9byox7KVd4MfDi4OLiPjB6bdE0mVLBvDZ8Kctaev24oyht/jqM0ptgb6HFAuJs655IAmJpz7OyC3jelT+n7lDSOU+OW59qQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716711434; c=relaxed/simple;
-	bh=UCC5TS2CQlSaPMDD1x5Ly5A/uK8AolxB07TI54mtakY=;
+	s=arc-20240116; t=1716711450; c=relaxed/simple;
+	bh=82iiPS45Hw7sp9NIsgaE3UMiiOB6uJGN6zPAufQZWSQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tlRNOgM7lNpmQy4FfddGo8qlK3mrpdwNzlbqnEVv86ytK97cTeL4zTCTEWIvEFkatDXLX6sqpsvUCz4CFyuQ2xWH73K2MT//jIczMMdYZAAMkvbotDjFDbOB7pFyaGY9pDKvy7inUZyNDyYoJXm9QQld+GqwmNOhU0sI7ZRZNJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=P7d8xiT4; arc=none smtp.client-ip=216.71.153.141
+	 MIME-Version; b=PjGWPamHG4l2xb+nVfYGCAiD8uEeCJ2ltmc/wocs7H+1uRmu1QLC4l3uDJ1sYHU1IISvz4kR8Qp/Ip9Pheg8d+oHwJ3Xnvj9lDDhWvscjLWXUbwkZVCTIjKH76wc1Zv9w4u+coPJD5Zht8CQSYyYTV/IIIEpoTzMnK6SQmZ6vsc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=QsLiCf6o; arc=none smtp.client-ip=216.71.154.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="P7d8xiT4"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="QsLiCf6o"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1716711433; x=1748247433;
+  t=1716711449; x=1748247449;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=UCC5TS2CQlSaPMDD1x5Ly5A/uK8AolxB07TI54mtakY=;
-  b=P7d8xiT4SMGFk8yQu56PzXI2zI+seRqOPyJhU02zwW4qr8FmfrjIbFfA
-   GfsDZ+b0G/0arSJwU3010Z+u42GNl1LCtjULCTnwib8ES7LkKoT6ZJWUI
-   kmPI9DWY9YVIi4msV3AxdcUPs9XkMbia0ugawt/N6/P50/GL4w2UW+O+o
-   59ZpW/wRaH1MuU1O1ubr6k9oKRnOkkhwfdzcCC4YSmXNa4B2eG6Moui4r
-   LSGN+DlIaKlxNn9OBie/XCWIwYgGagq3ENaFDvHNdT0DVfTx2RnhtCy6a
-   p1wjuO6e/sK2gl1F1q/zPxosMOLXIPigY4kTmOanUb1C45HJf7C1Ryav1
-   g==;
-X-CSE-ConnectionGUID: UOIsl7gJRkG3EUhn/DBzSw==
-X-CSE-MsgGUID: Va1GcJyWTEu4onzRUoJfhw==
+  bh=82iiPS45Hw7sp9NIsgaE3UMiiOB6uJGN6zPAufQZWSQ=;
+  b=QsLiCf6oqD6yMgGKRPA8VKFzX7vovOG0YmwFChjae3dY8kj0xRL3iY5A
+   a97nvJzfMJ06opPdmEL7+Js+AifZlfliP4A6y3yqC/IvLNLwwgfQ+h36p
+   ULKdAe6cpqDmxA4pxrCXIbtTxKMrEI0eOVVfzSFsbQtZpJPcMVb0ShOE7
+   NPS7QOT2LT6nX7nxkGx5fttW0BLt5A6UH8cR+AbdOOw1tQmmZZ0zhMpAe
+   Uo0aHnSbOWet1UIaxbpQNSyS/mb1aQTNpp8WtEDihO9h1arhbiTDyPtq7
+   2KltrdZbb8tHtr3ZetlObTFh0zw4cwz9e83FX7gAx6EhNpofU5qL2rNg8
+   w==;
+X-CSE-ConnectionGUID: V5sd2rmTRG+4LYxLdLwZ6w==
+X-CSE-MsgGUID: iHDQFV45Sbi2KBznArwaJg==
 X-IronPort-AV: E=Sophos;i="6.08,190,1712592000"; 
-   d="scan'208";a="17018929"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 26 May 2024 16:17:13 +0800
-IronPort-SDR: 6652e3bc_4K2Tu0apUU0RtwIbbyZ+45DEn7n+GsIO97zfGnZ+YbHmXet
- 3ap8J5fKcye8eseZnROU/Q0cfqctwZ2WZepm90A==
+   d="scan'208";a="16614402"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 26 May 2024 16:17:22 +0800
+IronPort-SDR: 6652e3c5_7akhMHIqKsHJz/AU+1GAIcTr6l6cIV9RziLbCI86A7kLexX
+ kUu2vkLM8viaVSauHqEJqtYyfmq4mNsH6x+B4Vw==
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 May 2024 00:24:45 -0700
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 26 May 2024 00:24:54 -0700
 WDCIronportException: Internal
 Received: from bxygm33.ad.shared ([10.45.31.229])
-  by uls-op-cesaip02.wdc.com with ESMTP; 26 May 2024 01:17:10 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 26 May 2024 01:17:20 -0700
 From: Avri Altman <avri.altman@wdc.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Bart Van Assche <bvanassche@acm.org>,
@@ -50,9 +50,9 @@ Cc: Bart Van Assche <bvanassche@acm.org>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v6 2/3] scsi: ufs: Maximum RTT supported by the host driver
-Date: Sun, 26 May 2024 11:16:35 +0300
-Message-ID: <20240526081636.2064-3-avri.altman@wdc.com>
+Subject: [PATCH v6 3/3] scsi: ufs: sysfs: Make max_number_of_rtt read-write
+Date: Sun, 26 May 2024 11:16:36 +0300
+Message-ID: <20240526081636.2064-4-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20240526081636.2064-1-avri.altman@wdc.com>
 References: <20240526081636.2064-1-avri.altman@wdc.com>
@@ -64,82 +64,166 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Allow platform vendors to take precedence having their own max rtt
-support.  This makes sense because the host controller's nortt
-characteristic may vary among vendors.
-
-while at it, set this value for Mediatek, as requested by Peter -
-https://lore.kernel.org/all/0a57d6bab739d6a10584f2baba115d00dfc9c94c.camel@mediatek.com/
+Given the importance of the RTT parameter, we want to be able to
+configure it via sysfs. This is because UFS users should be discouraged
+from change UFS device parameters without the UFSHCI driver being aware
+of these changes.
 
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/ufs/core/ufshcd.c       | 6 +++++-
- drivers/ufs/host/ufs-mediatek.c | 1 +
- drivers/ufs/host/ufs-mediatek.h | 3 +++
- include/ufs/ufshcd.h            | 2 ++
- 4 files changed, 11 insertions(+), 1 deletion(-)
+ Documentation/ABI/testing/sysfs-driver-ufs | 14 +++--
+ drivers/ufs/core/ufs-sysfs.c               | 68 +++++++++++++++++++++-
+ drivers/ufs/core/ufshcd-priv.h             | 24 ++++++++
+ 3 files changed, 99 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7df8bcacbe7e..b62023a6c306 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8144,7 +8144,11 @@ static void ufshcd_set_rtt(struct ufs_hba *hba)
- 	if (dev_rtt != DEFAULT_MAX_NUM_RTT)
- 		return;
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 5bf7073b4f75..fe943ce76c60 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -920,14 +920,16 @@ Description:	This file shows whether the configuration descriptor is locked.
  
--	rtt = min_t(int, dev_info->rtt_cap, hba->nortt);
-+	if (hba->vops && hba->vops->max_num_rtt)
-+		rtt = hba->vops->max_num_rtt;
-+	else
-+		rtt = min_t(int, dev_info->rtt_cap, hba->nortt);
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/max_number_of_rtt
+ What:		/sys/bus/platform/devices/*.ufs/attributes/max_number_of_rtt
+-Date:		February 2018
+-Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Date:		May 2024
++Contact:	Avri Altman <avri.altman@wdc.com>
+ Description:	This file provides the maximum current number of
+-		outstanding RTTs in device that is allowed. The full
+-		information about the attribute could be found at
+-		UFS specifications 2.1.
++		outstanding RTTs in device that is allowed. bMaxNumOfRTT is a
++		read-write persistent attribute and is equal to two after device
++		manufacturing. It shall not be set to a value greater than
++		bDeviceRTTCap value, and it may be set only when the hw queues are
++		empty.
+ 
+-		The file is read only.
++		The file is read write.
+ 
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/exception_event_control
+ What:		/sys/bus/platform/devices/*.ufs/attributes/exception_event_control
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index 3d049967f6bc..48ac708b8795 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -1340,6 +1340,73 @@ static const struct attribute_group ufs_sysfs_flags_group = {
+ 	.attrs = ufs_sysfs_device_flags,
+ };
+ 
++static ssize_t max_number_of_rtt_show(struct device *dev,
++				      struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	u32 rtt;
++	int ret;
 +
- 	if (rtt == dev_rtt)
- 		return;
- 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index c4f997196c57..c7a0ab9b1f59 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1785,6 +1785,7 @@ static int ufs_mtk_config_esi(struct ufs_hba *hba)
-  */
- static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
- 	.name                = "mediatek.ufshci",
-+	.max_num_rtt         = MTK_MAX_NUM_RTT,
- 	.init                = ufs_mtk_init,
- 	.get_ufs_hci_version = ufs_mtk_get_ufs_hci_version,
- 	.setup_clocks        = ufs_mtk_setup_clocks,
-diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index 3ff17e95afab..05d76a6bd772 100644
---- a/drivers/ufs/host/ufs-mediatek.h
-+++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -189,4 +189,7 @@ struct ufs_mtk_host {
- /* MTK delay of autosuspend: 500 ms */
- #define MTK_RPM_AUTOSUSPEND_DELAY_MS 500
- 
-+/* MTK RTT support number */
-+#define MTK_MAX_NUM_RTT 2
++	down(&hba->host_sem);
++	if (!ufshcd_is_user_access_allowed(hba)) {
++		up(&hba->host_sem);
++		return -EBUSY;
++	}
 +
- #endif /* !_UFS_MEDIATEK_H */
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index d74bd2d67b06..ef04ec8aad69 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -295,6 +295,7 @@ struct ufs_pwr_mode_info {
- /**
-  * struct ufs_hba_variant_ops - variant specific callbacks
-  * @name: variant name
-+ * @max_num_rtt: maximum RTT supported by the host
-  * @init: called when the driver is initialized
-  * @exit: called to cleanup everything done in init
-  * @get_ufs_hci_version: called to get UFS HCI version
-@@ -332,6 +333,7 @@ struct ufs_pwr_mode_info {
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-+	int	max_num_rtt;
- 	int	(*init)(struct ufs_hba *);
- 	void    (*exit)(struct ufs_hba *);
- 	u32	(*get_ufs_hci_version)(struct ufs_hba *);
++	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++		QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &rtt);
++	ufshcd_rpm_put_sync(hba);
++
++	if (ret)
++		goto out;
++
++	ret = sysfs_emit(buf, "0x%08X\n", rtt);
++
++out:
++	up(&hba->host_sem);
++	return ret;
++}
++
++static ssize_t max_number_of_rtt_store(struct device *dev,
++				       struct device_attribute *attr,
++				       const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	struct ufs_dev_info *dev_info = &hba->dev_info;
++	unsigned int rtt;
++	int ret;
++
++	if (kstrtouint(buf, 0, &rtt))
++		return -EINVAL;
++
++	if (rtt > dev_info->rtt_cap) {
++		dev_err(dev, "rtt can be at most bDeviceRTTCap\n");
++		return -EINVAL;
++	}
++
++	down(&hba->host_sem);
++	if (!ufshcd_is_user_access_allowed(hba)) {
++		ret = -EBUSY;
++		goto out;
++	}
++
++	ufshcd_rpm_get_sync(hba);
++	ufshcd_freez_hw_queues(hba);
++
++	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++		QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &rtt);
++
++	ufshcd_unfreez_hw_queues(hba);
++	ufshcd_rpm_put_sync(hba);
++
++out:
++	up(&hba->host_sem);
++	return ret < 0 ? ret : count;
++}
++
++static DEVICE_ATTR_RW(max_number_of_rtt);
++
+ static inline bool ufshcd_is_wb_attrs(enum attr_idn idn)
+ {
+ 	return idn >= QUERY_ATTR_IDN_WB_FLUSH_STATUS &&
+@@ -1387,7 +1454,6 @@ UFS_ATTRIBUTE(max_data_in_size, _MAX_DATA_IN);
+ UFS_ATTRIBUTE(max_data_out_size, _MAX_DATA_OUT);
+ UFS_ATTRIBUTE(reference_clock_frequency, _REF_CLK_FREQ);
+ UFS_ATTRIBUTE(configuration_descriptor_lock, _CONF_DESC_LOCK);
+-UFS_ATTRIBUTE(max_number_of_rtt, _MAX_NUM_OF_RTT);
+ UFS_ATTRIBUTE(exception_event_control, _EE_CONTROL);
+ UFS_ATTRIBUTE(exception_event_status, _EE_STATUS);
+ UFS_ATTRIBUTE(ffu_status, _FFU_STATUS);
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index f42d99ce5bf1..2cdbe6b48d96 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -32,6 +32,30 @@ static inline bool ufshcd_is_wb_buf_flush_allowed(struct ufs_hba *hba)
+ 		!(hba->quirks & UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL);
+ }
+ 
++static inline void ufshcd_freez_hw_queues(struct ufs_hba *hba)
++{
++	struct scsi_device *sdev;
++
++	shost_for_each_device(sdev, hba->host) {
++		if (sdev == hba->ufs_device_wlun)
++			continue;
++		blk_mq_freeze_queue(sdev->request_queue);
++		blk_mq_quiesce_queue(sdev->request_queue);
++	}
++}
++
++static inline void ufshcd_unfreez_hw_queues(struct ufs_hba *hba)
++{
++	struct scsi_device *sdev;
++
++	shost_for_each_device(sdev, hba->host) {
++		if (sdev == hba->ufs_device_wlun)
++			continue;
++		blk_mq_unquiesce_queue(sdev->request_queue);
++		blk_mq_unfreeze_queue(sdev->request_queue);
++	}
++}
++
+ #ifdef CONFIG_SCSI_UFS_HWMON
+ void ufs_hwmon_probe(struct ufs_hba *hba, u8 mask);
+ void ufs_hwmon_remove(struct ufs_hba *hba);
 -- 
 2.34.1
 
