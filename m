@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6561A194C82;
-	Mon, 27 May 2024 14:16:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C16A71C9EC9;
+	Mon, 27 May 2024 14:17:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716819383; cv=none; b=AC/mP8zB7vuEdqRjeRaUFH2ekiepHEMAdvsBFnksh+fXAnj98vwPch9NehPL4y1C3wpMll6t/HXisYqaaKte+NB9Nez43AqiOwE2p15ZObeSc8eQ3kLYveNZqvyQOa6zQ9NWBUQZemttAKR16fquIpGiTpJHFAB0wnHX4DCNG5M=
+	t=1716819459; cv=none; b=Kz2OU7mDq+5OJON1tw0iZinTcjqxQ0HDPSrc9Lsr9oY8CosYKCXKLq8v1CgC2ARJfKHm79alN6q4g2Vo0kkemKZqfY8vYe2Y9Zw/3Srx5MsJhUuMZ8vLArEPCZwIQWnlO8B4eiXQupmVl48r4/QXiqLPmx5hTlfNLOdpeLQfjyA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716819383; c=relaxed/simple;
+	s=arc-20240116; t=1716819459; c=relaxed/simple;
 	bh=tNphdjirBb9tdMxisUu7AmYR16l1TQhNBoK7qKrb16g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ji9wNofnHiTZD6CrEcawkLY0pJ3+TZMvsZT1LmP23JYn/pRGG7l1GpQ37F/kHs9dw6iupmDqQv1yX673/v6ZARjP/MAT2Dzxi2ZRp+YiExnXsfszlbF4EYYM0ZITVxDe3dtk/iLHk+N/+4sA/5w2Gk3zbytDV+U1f+K3B+3VJ1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z3GhvYH6; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=LkoZhJIniV8Gkg+E3XCptRHjFWrr750hoOm6itH8VMoEzn2QmbA0mTZgtIpW/EsmrgbypBe7qUpdCYOGghPAmWbUU3WWp3/t2wfVjgWu/WO8QwrlrWZ98ayKQTOBXl26Vx7jcxdfuFKntiWpZpHukRBKu8XyZn2nDy9WLgzoLEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iK10sT7A; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z3GhvYH6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 146A5C2BBFC;
-	Mon, 27 May 2024 14:16:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iK10sT7A"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E851C4AF07;
+	Mon, 27 May 2024 14:17:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716819383;
+	s=k20201202; t=1716819459;
 	bh=tNphdjirBb9tdMxisUu7AmYR16l1TQhNBoK7qKrb16g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Z3GhvYH64Qou1w0CG/9QpHDbGTpYJVsG5QyXbEpmuoCiKaUwVb37MoQvauZqy10aL
-	 I2DmNW3Hi27sBvbIGMoFxDHHkiSBjRl7ujxznBE+Dq06FStlLPL51iq5Pa/rlR7tiq
-	 3Re1AJBFLWTSesBadXGCXw/dJ31dCEGFU1SuXrGlQC/Tz8+DM8yVYID9D7AvduaIIH
-	 kIUVOGn5RGPwJsPPe4EXG7LBoWFZS9Vyf4HZaIAlN/PTa1ApJNh5LmFTCA4+Dpe8fT
-	 nPt9W6leMY0Rr0ntB4AUW+dAHb35KO/gPWsotXYLFmyKb6XjU8Pfj5Yx7OgoPCdWdO
-	 pLjkS/HKSIDRQ==
+	b=iK10sT7Aaptx3ozU4MV0q7UuVeqZRw7ylYNi9EH3iFL8zDU+lKmLc7HYLvLGUtnCd
+	 kYE4uic9PUb5QUisearvakpRt0F1Da2yr4j1hvhzJLv+QRrzKwp9QXAyfetoSzhVA1
+	 r5g96kuYLUmdMKR3+eSUa1KD+TnQE+K1qHH6BpE4bDmnFYzFAYN7b3LRH+WXv4lpDz
+	 L/Pjz20KwMBGlm1yGKjL3RB6qfY3F6taA4L56SS1l4ljO62zdO/AKDHH0W9lG0lSWZ
+	 8nLXJKzip8/r8YaKCd4/EUgGewOo+S9STHYfHhNE1vl1BT7MhTK1/q4BfEbPdkCxsy
+	 O5Gtq5+gKfYgw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -38,12 +38,12 @@ Cc: Manish Rangankar <mrangankar@marvell.com>,
 	GR-QLogic-Storage-Upstream@marvell.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 10/21] scsi: qedi: Fix crash while reading debugfs attribute
-Date: Mon, 27 May 2024 10:15:21 -0400
-Message-ID: <20240527141551.3853516-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 08/17] scsi: qedi: Fix crash while reading debugfs attribute
+Date: Mon, 27 May 2024 10:16:45 -0400
+Message-ID: <20240527141712.3853988-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240527141551.3853516-1-sashal@kernel.org>
-References: <20240527141551.3853516-1-sashal@kernel.org>
+In-Reply-To: <20240527141712.3853988-1-sashal@kernel.org>
+References: <20240527141712.3853988-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,7 +52,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.32
+X-stable-base: Linux 6.1.92
 Content-Transfer-Encoding: 8bit
 
 From: Manish Rangankar <mrangankar@marvell.com>
