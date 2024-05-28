@@ -1,89 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADDDE175AB
-	for <linux-scsi@vger.kernel.org>; Tue, 28 May 2024 18:29:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C20B513AD0E;
+	Tue, 28 May 2024 21:56:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716920940; cv=none; b=VK0Mp7VXv9MODgEk1zed/EkeHnUV2dktqxUThxxczI5Mno/Ekc3gELaMv5RYPs5hUduo/6dA+9hS+LYncH563Nq2iBtbK5ZsuxVpHOkUwzBKuL/OeiAzqNJJmwpt23Abde2G9djkOIpoIR1wfuh7jOexzdtyYCnSx8vCXal7kwU=
+	t=1716933422; cv=none; b=E/KJpwgIS25y+lKM8/I7U3LmRbAv+ziSoxc5ZTtIIdorR4JHedK1njC4hlzoz0V30l3075W1Xqe+IheTcCL8tXpbIMHo7VKg+K5OHm1g8KIti0Z5/6bpvaGbUYDj2/3j77V/w9nPpIxYf8jbCZBylRmmEN/DD/oXEQ5fufkyBrQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716920940; c=relaxed/simple;
-	bh=S1nu9/sJymZS/jcQ81Os6n8mHhUka48MMic4ClOLC2w=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=o2H2ZZMft+qM3SMZu4smPuOxfNcl84jfBbVG8BFY/w6EQ2MBOZ9hj+WBbawSLRH5h2KRMB+lOgpTC58J3NNMuexK8AYDVV7HfrkiW10A6+4Bfdpssngt11tMQGaUt277/16rw0vH1JR1WyjFNBuufdgCml0kvEUiTX8oQDrZwYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GlJmYqIj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1716933422; c=relaxed/simple;
+	bh=ohEurSGig2qE42glJYdmj/T6mbwtgrXzuwprHjyXuO8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=E8hFJ16x/QLUjnfw2FPnbsQKHXm9AE49MvLg2qMalBgWNvVMwEXmQaNm9qFppwxoHSo8/dZgO6K4KeMQQ8FtVXgZ4OtEELQ5Ard09PdDEMh0eRgbJ+d2ekv2eD2lrvpQAePY02vDlndS+KAJuD/e0ORTRPv8SfOo2evnvSrCPG0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=Rgc1OEeV; arc=none smtp.client-ip=46.235.229.95
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GlJmYqIj"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4026AC4AF07
-	for <linux-scsi@vger.kernel.org>; Tue, 28 May 2024 18:29:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716920940;
-	bh=S1nu9/sJymZS/jcQ81Os6n8mHhUka48MMic4ClOLC2w=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=GlJmYqIjA3pMR4fFyEr+2hGAYLAGQyHcBKkxW9CZ5EM1s8YvGpV5Vd9a29aP0vIJK
-	 WoQH6XRvEBMnhYmMp+CaC7mKGjgQXNznLLnInEafOeCq9Rv/XtSMYMOvES8X/pq7Jw
-	 pBgR3jv/ytyR5uBVvLYSG18TMzEdFJRsxCxcV2LuagCTSTswqCFzGktJLZVGMGZ8dJ
-	 oSkc1mNIJUp02GHYGiCENx8qB0lnj1ICotPECf2GVR8m6/iGMgEW1buSq5hvUxB0T4
-	 dFzd0BYrIjxrDMrpZUip8aFJ1H3f4vuU5RZkhAJHGar9WBTp3FSkNluaKC8497Usl6
-	 Ct3Lq/RwK1DjA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 2D982C53B7F; Tue, 28 May 2024 18:29:00 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 218866] Extra /dev/sd.. entries for a fake raid on Z10PE-D16 WS
- motherboard.
-Date: Tue, 28 May 2024 18:28:59 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: phill@thesusis.net
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-218866-11613-UAbV25GRRO@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-218866-11613@https.bugzilla.kernel.org/>
-References: <bug-218866-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="Rgc1OEeV"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
+	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
+	:Subject; bh=WbJJ4Mwx5sika0WW/PColmV60EevJ2qmfZcxLyzIi1Y=; b=Rgc1OEeVx/XGV7Xc
+	ppIdYp6lNvmF2dPgpWNYD/fYZrXxEVfWQ9ai+LEHfiZiro2g+XcVVnpSkLmhktd5F6zspY6bbljzR
+	HMPlIFF9CPe5FK8RC+dUw1ahoZ8HDcU3eOn27eeb3/NiMkwq1ByyXdKDYb8qkHumnaZ2KqOQGZ66Z
+	u+BmH8Pj/UhW/ljU0wRGBCZqsOVO7jpIzH4oUWesxwTX2UQLZmTG4YInD0MoyrvAhansqBBuld/0T
+	CXwBKFS9IFOrEN0GCxqGreEnFsR35bHuMr62csWRucGU4Nw2JVkHIF4dkAp72+7Sw8VQUi6cpxzdJ
+	fGkzhM1l4xU21yMrOA==;
+Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
+	by mx.treblig.org with esmtp (Exim 4.96)
+	(envelope-from <linux@treblig.org>)
+	id 1sC4oI-0033Ie-1M;
+	Tue, 28 May 2024 21:56:46 +0000
+From: linux@treblig.org
+To: njavali@marvell.com,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Dr. David Alan Gilbert" <linux@treblig.org>
+Subject: [PATCH] scsi: qla2xxx: remove unused struct 'scsi_dif_tuple'
+Date: Tue, 28 May 2024 22:56:40 +0100
+Message-ID: <20240528215640.91771-1-linux@treblig.org>
+X-Mailer: git-send-email 2.45.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D218866
+From: "Dr. David Alan Gilbert" <linux@treblig.org>
 
-Phillip Susi (phill@thesusis.net) changed:
+'scsi_dif_tuple' is unused since
+commit 8cb2049c7448 ("[SCSI] qla2xxx: T10 DIF - Handle uninitalized
+sectors.").
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |phill@thesusis.net
+Remove it.
 
---- Comment #9 from Phillip Susi (phill@thesusis.net) ---
-This is no bug.  Fake raids are, well, fake.  The kernel sees both individu=
-al
-disks and since they are mirror images of each other, both have the same
-partitions on them.
+Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
+---
+ drivers/scsi/qla2xxx/qla_isr.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-The dmraid utility can be used to recognize the fake raid metadata and
-configure the kernel device mapper to access the raid, and with the -Z swit=
-ch,
-it will remove the partitions from the underlying individual disks from the
-kernel's view.
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index d48007e18288..fe98c76e9be3 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3014,12 +3014,6 @@ qla2x00_handle_sense(srb_t *sp, uint8_t *sense_data, uint32_t par_sense_len,
+ 	}
+ }
+ 
+-struct scsi_dif_tuple {
+-	__be16 guard;       /* Checksum */
+-	__be16 app_tag;         /* APPL identifier */
+-	__be32 ref_tag;         /* Target LBA or indirect LBA */
+-};
+-
+ /*
+  * Checks the guard or meta-data for the type of error
+  * detected by the HBA. In case of errors, we set the
+-- 
+2.45.1
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
