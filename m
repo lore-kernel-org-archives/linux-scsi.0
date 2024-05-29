@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAE12F37;
-	Wed, 29 May 2024 08:00:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FA4F1A0B0A;
+	Wed, 29 May 2024 08:05:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716969638; cv=none; b=CrfIl1nLm6NyhCS9Q5zTZjsC62Br+wX+E96NfAGkGC0YzJB0xBe0EdS/nYjjKTz4yZ+f1shkxWnjk8CGcGWtINUkFHc5DsL05TeJ+7UwODrhwUiMa5IwbQ3s9qj2OJgH492qtRYiXz5Vva2HK+LDSrPcmai66r7KNNsGWVtB+N0=
+	t=1716969915; cv=none; b=HC23GG7m8eM/bfieact5N2WG6ridm87bx+MagttUP9Y5xiqYNcYdkpAzfwiXHMT9jBtF4LxjOlWkIV1qVEhdy4W/1sVGrzpyOvS+Ot5tB1RHfEVvIqpknvs4kLxJiplrg5u4BbBFRG+QUoccFhzmb5D1976BkBorSOYBw/rw5xk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716969638; c=relaxed/simple;
-	bh=G8ukn4/ipULjaA61nZoKSh0N7cnsV0YBmRdlGxpAHeY=;
+	s=arc-20240116; t=1716969915; c=relaxed/simple;
+	bh=blmbzNIoOv7Q3qES0R0/fx18waY7Hk11DTOByTzWHdc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XA9CjoMo2W73/RRL1lGlUS0Xbb71R+jRCD4BQ3y98nkRHqAULAwIprjJ38KF1EIMoEt37KMPUI99gRBo7BjYR8z2tDWLNfmd2zDJOYOhO/C6odsAXZBsdwp1fVlaklNt/eKsVMoW+1SdvMkNX9waOKfr1As0JcoNzs5dIWSQq1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SuVzllmY; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=RUUuuO8u4t45KotInKcM5w442SurpQMkBiYb/9APh0RelpRh+2ZInNAQ/QgXQid8wLpojrtsB1IpsLaBQZmHxMEmC8qlsIsw5AIh/YLUEtpiKzgEoo4WLQcxYg5adBp2lIEzo8Vw6ON9HKpGd+rXUgyOOCd6jC1b0hgAMoh1nsM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SFYbjMJR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SuVzllmY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1365C2BD10;
-	Wed, 29 May 2024 08:00:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SFYbjMJR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC3FAC2BD10;
+	Wed, 29 May 2024 08:05:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1716969637;
-	bh=G8ukn4/ipULjaA61nZoKSh0N7cnsV0YBmRdlGxpAHeY=;
+	s=k20201202; t=1716969914;
+	bh=blmbzNIoOv7Q3qES0R0/fx18waY7Hk11DTOByTzWHdc=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=SuVzllmYSRfquuJcDcRWnc0GHSPtFNyp26AyBluVbJ0up4tbRtITWjDNuKs1XeKsj
-	 9unRV1rYyOv2gxNp3rc+jY9sEkrRoqVZBHFucwYGOw+cZtDcO5G4HtfEKacdVyOA5g
-	 6mlURbCvBUcRD04eBHxPfjMS/Igzp8+knm7PD62kn5RYL66jlTq5s1KxPqTq4ABeHL
-	 J7gn1nDulWyl0ZYRxhgciUY+N6bzgokG2U4wmuyIXgq6xnWCSKMrB/TqQkHYeFuDg7
-	 CGmud4af4+/jP58GUdbsQFpcZukByzTLb1+jCTWsClYve1yVdsTgRE9/fLAmqjluGl
-	 t4JqpvDKBOzCw==
-Message-ID: <8878dcb7-5f18-4e34-b917-ee5e1ee15cff@kernel.org>
-Date: Wed, 29 May 2024 17:00:34 +0900
+	b=SFYbjMJRJ6TIxFXkpgxG4GyzyI/tGBapJQlaGBsNH35uF5q0J/+ufhABOEt5aku5A
+	 OGZ/sMeIOSXH403CaXaX972OKhKJYoQKJJDBM5BKOy6U8Nl6vudfsO6HMEQn0f+nwQ
+	 EEJNnQcb59MH+bO1MBxpMjGfNAxOzKZEQYEFEGgG3tXhnEMyC0CEKrwsbiSwmPGa0h
+	 XlxMBzvwrj6cpKyibCWOGaP3KUxu2jy3ox/5rATAy/QYehwu9ehrekMkeR3fcUmmMZ
+	 Z5STO7HCskML/36YIjpBFP0Bm0HiT4KQ6nulMQvLBqHtZ3L7qdm7OgC52ERnL5CdaG
+	 wz7IMJehNc1hg==
+Message-ID: <f39216c0-f11d-4d4a-ae40-b4cf82e4760e@kernel.org>
+Date: Wed, 29 May 2024 17:05:11 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/12] ubd: untagle discard vs write zeroes not support
- handling
+Subject: Re: [PATCH 02/12] block: take io_opt and io_min into account for
+ max_sectors
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Richard Weinberger <richard@nod.at>,
@@ -49,57 +49,39 @@ Cc: Richard Weinberger <richard@nod.at>,
  nbd@other.debian.org, ceph-devel@vger.kernel.org,
  xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org
 References: <20240529050507.1392041-1-hch@lst.de>
- <20240529050507.1392041-2-hch@lst.de>
+ <20240529050507.1392041-3-hch@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20240529050507.1392041-2-hch@lst.de>
+In-Reply-To: <20240529050507.1392041-3-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 5/29/24 14:04, Christoph Hellwig wrote:
-> Discard and Write Zeroes are different operation and implemented
-> by different fallocate opcodes for ubd.  If one fails the other one
-> can work and vice versa.
+> The soft max_sectors limit is normally capped by the hardware limits and
+> an arbitrary upper limit enforced by the kernel, but can be modified by
+> the user.  A few drivers want to increase this limit (nbd, rbd) or
+> adjust it up or down based on hardware capabilities (sd).
 > 
-> Split the code to disable the operations in ubd_handler to only
-> disable the operation that actually failed.
+> Change blk_validate_limits to default max_sectors to the optimal I/O
+> size, or upgrade it to the preferred minimal I/O size if that is
+> larger than the kernel default if no optimal I/O size is provided based
+> on the logic in the SD driver.
 > 
-> Fixes: 50109b5a03b4 ("um: Add support for DISCARD in the UBD Driver")
+> This keeps the existing kernel default for drivers that do not provide
+> an io_opt or very big io_min value, but picks a much more useful
+> default for those who provide these hints, and allows to remove the
+> hacks to set the user max_sectors limit in nbd, rbd and sd.
+> 
+> Note that rd picks a different value for the optimal I/O size vs the
+> user max_sectors value, so this is a bit of a behavior change that
+> could use careful review from people familiar with rbd.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  arch/um/drivers/ubd_kern.c | 11 ++++++++---
->  1 file changed, 8 insertions(+), 3 deletions(-)
-> 
-> diff --git a/arch/um/drivers/ubd_kern.c b/arch/um/drivers/ubd_kern.c
-> index ef805eaa9e013d..a79a3b7c33a647 100644
-> --- a/arch/um/drivers/ubd_kern.c
-> +++ b/arch/um/drivers/ubd_kern.c
-> @@ -471,9 +471,14 @@ static void ubd_handler(void)
->  		for (count = 0; count < n/sizeof(struct io_thread_req *); count++) {
->  			struct io_thread_req *io_req = (*irq_req_buffer)[count];
->  
-> -			if ((io_req->error == BLK_STS_NOTSUPP) && (req_op(io_req->req) == REQ_OP_DISCARD)) {
-> -				blk_queue_max_discard_sectors(io_req->req->q, 0);
-> -				blk_queue_max_write_zeroes_sectors(io_req->req->q, 0);
-> +			if (io_req->error == BLK_STS_NOTSUPP) {
-> +				struct request_queue *q = io_req->req->q;
-> +
-> +				if (req_op(io_req->req) == REQ_OP_DISCARD)
-> +					blk_queue_max_discard_sectors(q, 0);
-> +				if (req_op(io_req->req) == REQ_OP_WRITE_ZEROES)
 
-Nit: this can be an "else if".
-
-Otherwise, looks OK to me.
+Looks OK to me.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-> +					blk_queue_max_write_zeroes_sectors(q,
-> +							0);
->  			}
->  			blk_mq_end_request(io_req->req, io_req->error);
->  			kfree(io_req);
 
 -- 
 Damien Le Moal
