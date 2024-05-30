@@ -1,84 +1,99 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1AD84D8BF;
-	Thu, 30 May 2024 20:09:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 349B415886D
+	for <linux-scsi@vger.kernel.org>; Thu, 30 May 2024 21:37:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717099763; cv=none; b=Hhl+DGjYKyO9xXR85yFUQ3Aq4qSYHPZGgXb7uOYVnD4TfQJZvThdJjbnYqe8lbmVP2ymVqOUqn6W7a5dxDq4mEXZXaFMKirbt33fKcJ1V4E5mIxlP3f5K+TVsdorGN8ZG+qNCGapK1L9mL2j/Y/iIsCM68b+3BKG6fLm2hUNGKU=
+	t=1717105042; cv=none; b=LX9GfiWTErY9jRMypLEe+S5He+g48dPuOr97Ph9jL6meOsSx6P/f2Vxqoq5pZTKNHwIheq1Bq8dglf2D/936CKbgGMrzdpx5wkJQTNzYNU8XGaw6K7qp3FNINrfBZoJDctFjmxWuvNtGcOPtJnDCfqEERwqXCIwXNYFWDg5zZDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717099763; c=relaxed/simple;
-	bh=7tR/h9bUU3ufTl+LbkOMaqMvZgQ0PvIO8Z8PkBE6qrY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=l6U2SC4C5C8pImxfoKC7lyk0mTcgY1GC/e8Lc8lM4c1l9SgqfhIaFKHfeMVnt20Kcqj6W7siQV0zltdxWVHNnhic7Y1WzfkEiHIkuAyaQoLex+JQhfCMHoIkv+Uf5LHEsJ29aLXT1OqoQpt1ECypW1UW/OdxvU1fgWQBYFD0UiY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=nQibsLkJ; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1717105042; c=relaxed/simple;
+	bh=BgYb3dEulMCMlLVHLPeAfF/6t4BJKpxedVJm1Zo/PVY=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ub/dqpsvpbA+SCSI2gXcYlQ8CkbKNzYWbLjqo+nzijVKkholbkb0to76jeXR3fqeHe8S6GexEjZUtgGO/1qGWKoXekRt/iqwjFBHjcYbuNPjmeWU+cIqn2NVVMdZW2f6Kom8JtfzwnjgHRH8wd04SvGaetn9Q9W2UOJX/ZiMhNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=AdUTLtem; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="nQibsLkJ"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Vqy5F1Q97zlgMVW;
-	Thu, 30 May 2024 20:09:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1717099757; x=1719691758; bh=72TYEp9qG+JFxDJOhc8vL98i
-	94kXdGccHRpnAQFkti8=; b=nQibsLkJj+e718qU89zq/w3b+Xj7bZcJX1t4S5Ib
-	6Y2TqQaSrn/m9KkYDg8nG47BrzEZi5y6e/fkqJH0jKclSqaBOiW4YJTNeGb1Sp0q
-	ZkAl4cqRGtJ9BhVg3y0q9c8DIYnTeW34UN3c12ZZq8UlXTpwStkplQ+/oORhUCu1
-	CTLLln6gMBNxvppMEcu/G6wtlrVMp25vVLoBMfI4CsCDWdrrCAO59XEhKrT6cbhE
-	Cef818A+XIhDPVWZrIoeq54kVP/vsyNbked97rhR5i8C7RP7qmtB77Ne3Id9P9eD
-	p014OI2YgEP5j/ozLgrC3mtdb8oHumiTveZFFAH+BafSnw==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id AYBsZ1kn-wfP; Thu, 30 May 2024 20:09:17 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Vqy5720mhzlgMVV;
-	Thu, 30 May 2024 20:09:14 +0000 (UTC)
-Message-ID: <12bdbf52-d97c-4c47-8e8b-bfc10bbdc985@acm.org>
-Date: Thu, 30 May 2024 13:09:14 -0700
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="AdUTLtem"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 44UCuCf3003481;
+	Thu, 30 May 2024 21:36:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-type:date:from:message-id:mime-version:subject:to; s=
+	qcppdkim1; bh=KRtyUpBgoUL+n2NZHqq5zFJRab8KAoOM9NKu8a9Mhik=; b=Ad
+	UTLtemKqpQPmF6WMMkgJpGX+a3AhHiXpagPkMJ8dYxyVOPM2ZgnOogz3nulJvcgc
+	ZxOfof3ZTBPIzxYvkl7aTaha9TW+8NpZdmia2Ab5iG0bEMRfctegrHGoDytim+UB
+	tF72OR6Pt4Nm1huvCt1S/FEhbL9TNfUdDalO6k0mArZQtIhy7ItJWSq13CfE76NR
+	JZO//N2stiEtWL1obvTImZzqiXSB1meE3EKHF2aTh2NoJeDvgwlXRGFYBURobLPr
+	63P5Oi9oImDW0Lqf+9NRTTFUmlGAcTsblAeXw59bzJZa83VYtHqa+sq9GQ9Q0GIC
+	3swpdaOY7m6D9oippmHw==
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yesw5h5cq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 May 2024 21:36:55 +0000 (GMT)
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+	by NASANPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 44ULasSE024026
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 May 2024 21:36:54 GMT
+Received: from stor-berry.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Thu, 30 May 2024 14:36:53 -0700
+From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+To: <quic_cang@quicinc.com>, <quic_nitirawa@quicinc.com>, <bvanassche@acm.org>,
+        <avri.altman@wdc.com>, <beanhuo@micron.com>, <adrian.hunter@intel.com>,
+        <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Subject: [PATCH v2 0/1] Allow platform drivers to update UIC command timeout
+Date: Thu, 30 May 2024 14:36:39 -0700
+Message-ID: <cover.1717104518.git.quic_nguyenb@quicinc.com>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/12] block: add special APIs for run-time disabling of
- discard and friends
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Richard Weinberger <richard@nod.at>,
- Anton Ivanov <anton.ivanov@cambridgegreys.com>,
- Johannes Berg <johannes@sipsolutions.net>, Josef Bacik
- <josef@toxicpanda.com>, Ilya Dryomov <idryomov@gmail.com>,
- Dongsheng Yang <dongsheng.yang@easystack.cn>,
- =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
- linux-um@lists.infradead.org, linux-block@vger.kernel.org,
- nbd@other.debian.org, ceph-devel@vger.kernel.org,
- xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org
-References: <20240529050507.1392041-1-hch@lst.de>
- <20240529050507.1392041-13-hch@lst.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240529050507.1392041-13-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: jH7GMED0zcR-seukeQl2hTK2YNZb94dn
+X-Proofpoint-GUID: jH7GMED0zcR-seukeQl2hTK2YNZb94dn
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.12.28.16
+ definitions=2024-05-30_17,2024-05-30_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ mlxlogscore=999 phishscore=0 malwarescore=0 impostorscore=0 bulkscore=0
+ suspectscore=0 priorityscore=1501 clxscore=1015 spamscore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2405170001 definitions=main-2405300162
 
-On 5/28/24 22:04, Christoph Hellwig wrote:
-> A few drivers optimistically try to support discard, write zeroes and
-> secure erase and disable the features from the I/O completion handler
-> if the hardware can't support them.  This disable can't be done using
-> the atomic queue limits API because the I/O completion handlers can't
-> take sleeping locks or freezer the queue.  Keep the existing clearing
-> of the relevant field to zero, but replace the old blk_queue_max_*
-> APIs with new disable APIs that force the value to 0.
+The UIC command timeout default value remains as 500ms.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Allow platform drivers to change the UIC command timeout as they wish.
+During product development where a lot of debug logging/printing can
+occur, the uart may print from different modules with interrupt disabled
+for more than 500ms, causing interrupt starvation and UIC command timeout
+as a result. The UIC command timeout may eventually cause a watchdog
+timeout unnecessarily. With this change, the platform drivers can set a
+different UIC command timeout as desired. The supported values range
+from 500ms to 2 seconds.
+
+v1 -> v2: - Created kernel module parameter namely uic_cmd_timeout
+            as recommended by Bart. Addressed some other comments.
+          - Un-do the change in the include/ufs/ufshcd.h file
+            which added the uic_cmd_timeout field to the hba struct.
+	  - Removed the patch 2 in the series where the UIC command
+	    timeout value was overridden by the platform driver.
+
+Bao D. Nguyen (1):
+  scsi: ufs: core: Support Updating UIC Command Timeout
+
+ drivers/ufs/core/ufshcd.c | 35 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 30 insertions(+), 5 deletions(-)
+
+-- 
+2.7.4
 
