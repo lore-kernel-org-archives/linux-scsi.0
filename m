@@ -1,49 +1,83 @@
-Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 0D6645645E
-	for <linux-scsi@vger.kernel.org>; Thu, 30 May 2024 19:03:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.131.102.5
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1377158874;
+	Thu, 30 May 2024 19:44:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717095791; cv=none; b=Vpz9RWXn3UnQsinj2bEKH818JbYQZEoAWdY4JkMbY++zruaL2B4zWhn5+xaIkpwe31+wCw+0LvmBkWI4YRAzCEeOYZ02q4qtB/WaC1tnuZbfTaPcksLdSUvFwTaXwlrRT7UVMMAaCU35xl54EAXR9OJupUc4h/cOcy5TUMxPegc=
+	t=1717098295; cv=none; b=n3iwWoy+bgP/jr2vaYyLnLbb2jgPYXz7vwvX9mPOlNwm+utcBRTKIzxX6aQuJIOfEKG1UDqKd0186OUqQqGfsJn7JWXFLb1CdGOjjEvR5ET7sBzmT6bGCwYQGm121grhb8cpwRnqarCzRgzLCSz7aPhAfMo0tBXf4YptC/S7CEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717095791; c=relaxed/simple;
-	bh=0lKhfZlDBAa7HoACl2A4qma59lizY6S5/5RG+YrWO44=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cdkIlION/G34jeo8Ns/xkQCOF0cAcYKiR7MS9mMYrz0edND8xGXI9LTjmkTGZmQKBs1yHHMXdbv+5w2vcRzfryIOqQUdG88o4b8jdrA+jhs28zdfIjvxRVLLY7kyTAPsNJJefEPXLCmZ7pnCBr6Ho47DCj91Otw75Fo5OytYJcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=rowland.harvard.edu; spf=pass smtp.mailfrom=netrider.rowland.org; arc=none smtp.client-ip=192.131.102.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=rowland.harvard.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=netrider.rowland.org
-Received: (qmail 14304 invoked by uid 1000); 30 May 2024 15:03:01 -0400
-Date: Thu, 30 May 2024 15:03:01 -0400
-From: Alan Stern <stern@rowland.harvard.edu>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Pierre Tomon <pierretom+12@ik.me>,
-  USB mailing list <linux-usb@vger.kernel.org>,
-  SCSI development list <linux-scsi@vger.kernel.org>
-Subject: Re: [Bug 218890] reset SuperSpeed USB device number 2 using xhci_hcd
-Message-ID: <70dd7ae0-b6b1-48e1-bb59-53b7c7f18274@rowland.harvard.edu>
-References: <bug-218890-208809@https.bugzilla.kernel.org/>
- <bug-218890-208809-ISXsODEmWC@https.bugzilla.kernel.org/>
+	s=arc-20240116; t=1717098295; c=relaxed/simple;
+	bh=NqD7BFqcvpYiPPucUb5Xs7cfQLPshp0Z3ca0XeE2TaQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jwBn2wtixZ6CeRTs491ctFnZYKQHY+hHIJ7pXETRHpH7fpjK8nJmSUhUyL5FVI7UoS2M335UBx09LUeUe0sw0u2t4FvHNWH0B4QdOXu1tz139T1k3LQ1f7ek/InhmV0eSiZovuKrycsp6caH/uL6yjhFKANrOi9+LPP3P72D8Xk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=O+dyHa1D; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="O+dyHa1D"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4VqxY061N4zlgMVV;
+	Thu, 30 May 2024 19:44:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1717098288; x=1719690289; bh=1qawYRnNtHLyKkfk2KIuL7Vw
+	Fij1fGlSBD1rE6Kec4k=; b=O+dyHa1DO+LxwuvN37caN3rc79Al5B59aVt872Yy
+	myvPBRd3qJOpB/ssbZf9DD6jeQwG3oky5nPyGHmKtOjLfDnHlE+e3wVIfqzpWjOs
+	6hfPZNndbOYIdhdiprqYgfQpwZxp2KIDZmAsJBYG5LuLkM6flrrsn+Z7CP3aCzDV
+	pwN4+gbFQD4bp6z4s36qcFNV+1waUaRjvrfL+xtNhs1hivVR8LlUKLXvQ4CEJ/sF
+	RymJznQ8+fPT5LcsiI4IQupBmhHjJpPce8ad1C01w5LQVIcRKBZRcPzwxcXH/hff
+	wu+Gqo4QOptIYFBfw/rmjL36jeH02rPcp9YADbGYnOeaDg==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id XhrHqHFE5lIy; Thu, 30 May 2024 19:44:48 +0000 (UTC)
+Received: from [100.96.154.26] (unknown [104.132.0.90])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4VqxXv0mMXzlgMVR;
+	Thu, 30 May 2024 19:44:46 +0000 (UTC)
+Message-ID: <2384c3c9-5629-4438-a87b-0e05e1b6f5cc@acm.org>
+Date: Thu, 30 May 2024 12:44:46 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-218890-208809-ISXsODEmWC@https.bugzilla.kernel.org/>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/12] ubd: untagle discard vs write zeroes not support
+ handling
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Richard Weinberger <richard@nod.at>,
+ Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+ Johannes Berg <johannes@sipsolutions.net>, Josef Bacik
+ <josef@toxicpanda.com>, Ilya Dryomov <idryomov@gmail.com>,
+ Dongsheng Yang <dongsheng.yang@easystack.cn>,
+ =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+ linux-um@lists.infradead.org, linux-block@vger.kernel.org,
+ nbd@other.debian.org, ceph-devel@vger.kernel.org,
+ xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org
+References: <20240529050507.1392041-1-hch@lst.de>
+ <20240529050507.1392041-2-hch@lst.de>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240529050507.1392041-2-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, May 30, 2024 at 05:08:36PM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=218890
+On 5/28/24 22:04, Christoph Hellwig wrote:
+> Discard and Write Zeroes are different operation and implemented
+> by different fallocate opcodes for ubd.  If one fails the other one
+> can work and vice versa.
+> 
+> Split the code to disable the operations in ubd_handler to only
+> disable the operation that actually failed.
 
-Martin:
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-This bug report was bisected down to your commit 321da3dc1f3c ("scsi: 
-sd: usb_storage: uas: Access media prior to querying device 
-properties").  Apparently the drive in question doesn't like READ(10) 
-commands but it does work with READ(16).
-
-Can you provide a test patch that updates the new sd_read_block_zero() 
-routine to issue READ(16) if the drive has more than 4G logical blocks?
-
-Alan Stern
