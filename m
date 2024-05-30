@@ -1,47 +1,47 @@
 Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE36617CA0C;
-	Thu, 30 May 2024 14:25:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BDF617D8B0;
+	Thu, 30 May 2024 14:25:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.141.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717079130; cv=none; b=mJhOXN+mna+go2qG7Wm56R9i1QIqfk4v8OXbiFXo97BBg3ta0few9cnyhg/m8fuIZCj3EtChc6f8IPVr3pC/NHSxnizpj5VyPaZ4sHWZhPJaMy0y3J8Ze8ctrqxRi4v5O23zOJrD1jwKC9Z57WVMGAjEeLP3lTNJL9bKYgXOa/U=
+	t=1717079131; cv=none; b=JzuyjG9icxK4NqbhGw4Q2uBj3E76xNJlPO9BkGlmEoPyhUkR4OTexKOc/vhwVvWT69fhnIGoXL7STN7db8+CkCDJ9JhNK/iVHoPrfudgoYUjNz8YITsXlz29qwWUCxiYJKiE6lPXzgoCWt+U4ygMhMLZwysIr1ZlTP3bJKiZZQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717079130; c=relaxed/simple;
-	bh=Be0e/vNxgm3ptlT7UnPrSlYrs+tflE84SuIM05UQEE8=;
+	s=arc-20240116; t=1717079131; c=relaxed/simple;
+	bh=7/QrT6jhzfNvn0Ke6Bta3BWpn8kfq5OdV84xVX7LB6g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JUlvK6KpqQpZNUETKe+ux25JSW6dM10mphguKUzaIKYG4T1GTVFZLKAhS9od6ubLwRGwmzM5BpWl+cPnUEJT26mZlUbLcw4VEYLz2OMzdtkIvf4ZQpM/s9Yar/8Jlk/zPCrsQiQ+W9uaAPoBHoR1ekMjZEw0VUVTOmNsXJzEgzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=mgyk1izo; arc=none smtp.client-ip=68.232.141.245
+	 MIME-Version; b=SEIrWJYbgXmMEVA/gkQapMYjBydsHYew4Yx87ApYoWUL1O7cTlTUnICX9nT0EQLJtTdQew9aRDtAWXAsa6BbADL9HSmhowvHkSltQ7Nq6uBwy40nG4ZDkLALP22/XbKbZkiCNxeLfH42YYt4xHlW+wRO2pfYMoQg0KY1qr2Cay8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=eHV47qqj; arc=none smtp.client-ip=68.232.141.245
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="mgyk1izo"
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="eHV47qqj"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1717079127; x=1748615127;
+  t=1717079129; x=1748615129;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Be0e/vNxgm3ptlT7UnPrSlYrs+tflE84SuIM05UQEE8=;
-  b=mgyk1izoxMRTzlJBRCtuDYte6YFpzU0k0GTLRP+sW+F3CVFfDW0aTBqr
-   vx0ke26huUS+zKoV6qFMpESK9tD4AMe9Kq8vUl5wevh1DIt3cAO5myQB/
-   ZsSAsRvsa8F009bV383ceH4xJ+bEy13W2pJGR4KLswbVu++8mFi3AoNdV
-   dXLrD1qb6NT+THBdXNmhxWsEL19xm9SV61WExoFSuLOs6/7oAzIKs4jWv
-   rOOVYI44s7ClbABFvWVzDmp/T+Qp3DC0xHp07WJ5Z9HmidV5+H8dpxv/k
-   RFk6VJPtQEGzsEmo3BPgdxZyyMg5U5LkRIQRdciTomWgKe2Ro0wOthv2V
-   g==;
-X-CSE-ConnectionGUID: zpE7Bmb6RAWHp4FctYhKag==
-X-CSE-MsgGUID: XxvMD7hXSRqartnapI6SiA==
+  bh=7/QrT6jhzfNvn0Ke6Bta3BWpn8kfq5OdV84xVX7LB6g=;
+  b=eHV47qqjQFdUYBwf8rRHVfzoKjBF84NiWYJYC0IFg9C6v6kYiQ3ItXWy
+   kFkm+FjCeThoJzcQMZrrKA9CNdv1wZDib36qQnlVihtYquN8cOHusMnvG
+   xk1sX3HRGtvEcOBJOIPvs2IcBzJFqqlPOnkuA7eaJPwfyMsCX1ErGNOPT
+   hQPbsc4n+J/iErlkuxNIrD8USz2e8FSkNGMxKMolUVGiDZvOC/Th1948U
+   fe1YONpaYDbyIGn+5mipRMry8NiPoXcfnUpO7SYTIKh0b/b925UDLseYN
+   +kWsp0JW0G8uudaVnsgXSxmX4k5CAph6QyWs1SmwTC4tNr1DUzOAS8f2h
+   w==;
+X-CSE-ConnectionGUID: oMhzLP1CTeScdcjxKm9TNw==
+X-CSE-MsgGUID: oHg1sLYgR5+uGdKwp0sMbg==
 X-IronPort-AV: E=Sophos;i="6.08,201,1712592000"; 
-   d="scan'208";a="17923531"
+   d="scan'208";a="17923540"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 30 May 2024 22:25:21 +0800
-IronPort-SDR: 66587eab_BvYxVTzoCd4Eef1RHRPstdLjKI2CqGVdRYx048VK4DV+xA7
- Kd2gsOaWBohw9bDBuunftqKvG2p0dfTZ7eEDxSQ==
+  by ob1.hgst.iphmx.com with ESMTP; 30 May 2024 22:25:29 +0800
+IronPort-SDR: 66587eb3_ANzKSgMx/OSOTpIeEaAbD7rAeczJFgY9SMGGL+pUNUxHirz
+ ly3jMLo2DbVq5VT+7XzUY/LNsrStecux26tLomA==
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 May 2024 06:27:08 -0700
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 30 May 2024 06:27:16 -0700
 WDCIronportException: Internal
 Received: from bxygm33.ad.shared ([10.45.31.229])
-  by uls-op-cesaip01.wdc.com with ESMTP; 30 May 2024 07:25:19 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 30 May 2024 07:25:28 -0700
 From: Avri Altman <avri.altman@wdc.com>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Bart Van Assche <bvanassche@acm.org>,
@@ -50,9 +50,9 @@ Cc: Bart Van Assche <bvanassche@acm.org>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v7 1/3] scsi: ufs: Allow RTT negotiation
-Date: Thu, 30 May 2024 17:25:07 +0300
-Message-ID: <20240530142510.734-2-avri.altman@wdc.com>
+Subject: [PATCH v7 3/3] scsi: ufs: sysfs: Make max_number_of_rtt read-write
+Date: Thu, 30 May 2024 17:25:09 +0300
+Message-ID: <20240530142510.734-4-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20240530142510.734-1-avri.altman@wdc.com>
 References: <20240530142510.734-1-avri.altman@wdc.com>
@@ -64,160 +64,135 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The rtt-upiu packets precede any data-out upiu packets, thus
-synchronizing the data input to the device: this mostly applies to write
-operations, but there are other operations that requires rtt as well.
-
-There are several rules binding this rtt - data-out dialog, specifically
-There can be at most outstanding bMaxNumOfRTT such packets.  This might
-have an effect on write performance (sequential write in particular), as
-each data-out upiu must wait for its rtt sibling.
-
-UFSHCI expects bMaxNumOfRTT to be min(bDeviceRTTCap, NORTT). However,
-as of today, there does not appears to be no-one who sets it: not the
-host controller nor the driver.  It wasn't an issue up to now:
-bMaxNumOfRTT is set to 2 after manufacturing, and wasn't limiting the
-write performance.
-
-UFS4.0, and specifically gear 5 changes this, and requires the device to
-be more attentive.  This doesn't come free - the device has to allocate
-more resources to that end, but the sequential write performance
-improvement is significant. Early measurements shows 25% gain when
-moving from rtt 2 to 9. Therefore, set bMaxNumOfRTT to be
-min(bDeviceRTTCap, NORTT) as UFSHCI expects.
+Given the importance of the RTT parameter, we want to be able to
+configure it via sysfs. This is because UFS users should be discouraged
+from change UFS device parameters without the UFSHCI driver being aware
+of these changes.
 
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 38 ++++++++++++++++++++++++++++++++++++++
- include/ufs/ufs.h         |  2 ++
- include/ufs/ufshcd.h      |  2 ++
- include/ufs/ufshci.h      |  1 +
- 4 files changed, 43 insertions(+)
+ Documentation/ABI/testing/sysfs-driver-ufs | 14 +++--
+ drivers/ufs/core/ufs-sysfs.c               | 73 +++++++++++++++++++++-
+ 2 files changed, 80 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 0cf07194bbe8..dda6d7e44436 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -102,6 +102,9 @@
- /* Default RTC update every 10 seconds */
- #define UFS_RTC_UPDATE_INTERVAL_MS (10 * MSEC_PER_SEC)
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index 5bf7073b4f75..fe943ce76c60 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -920,14 +920,16 @@ Description:	This file shows whether the configuration descriptor is locked.
  
-+/* bMaxNumOfRTT is equal to two after device manufacturing */
-+#define DEFAULT_MAX_NUM_RTT 2
-+
- /* UFSHC 4.0 compliant HC support this mode. */
- static bool use_mcq_mode = true;
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/max_number_of_rtt
+ What:		/sys/bus/platform/devices/*.ufs/attributes/max_number_of_rtt
+-Date:		February 2018
+-Contact:	Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
++Date:		May 2024
++Contact:	Avri Altman <avri.altman@wdc.com>
+ Description:	This file provides the maximum current number of
+-		outstanding RTTs in device that is allowed. The full
+-		information about the attribute could be found at
+-		UFS specifications 2.1.
++		outstanding RTTs in device that is allowed. bMaxNumOfRTT is a
++		read-write persistent attribute and is equal to two after device
++		manufacturing. It shall not be set to a value greater than
++		bDeviceRTTCap value, and it may be set only when the hw queues are
++		empty.
  
-@@ -2405,6 +2408,8 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
- 	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
- 	hba->reserved_slot = hba->nutrs - 1;
+-		The file is read only.
++		The file is read write.
  
-+	hba->nortt = FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT, hba->capabilities) + 1;
-+
- 	/* Read crypto capabilities */
- 	err = ufshcd_hba_init_crypto_capabilities(hba);
- 	if (err) {
-@@ -8121,6 +8126,35 @@ static void ufshcd_ext_iid_probe(struct ufs_hba *hba, u8 *desc_buf)
- 	dev_info->b_ext_iid_en = ext_iid_en;
- }
- 
-+static void ufshcd_set_rtt(struct ufs_hba *hba)
-+{
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
-+	u32 rtt = 0;
-+	u32 dev_rtt = 0;
-+
-+	/* RTT override makes sense only for UFS-4.0 and above */
-+	if (dev_info->wspecversion < 0x400)
-+		return;
-+
-+	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+				    QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &dev_rtt)) {
-+		dev_err(hba->dev, "failed reading bMaxNumOfRTT\n");
-+		return;
-+	}
-+
-+	/* do not override if it was already written */
-+	if (dev_rtt != DEFAULT_MAX_NUM_RTT)
-+		return;
-+
-+	rtt = min_t(int, dev_info->rtt_cap, hba->nortt);
-+	if (rtt == dev_rtt)
-+		return;
-+
-+	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
-+				    QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &rtt))
-+		dev_err(hba->dev, "failed writing bMaxNumOfRTT\n");
-+}
-+
- void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
- 			     const struct ufs_dev_quirk *fixups)
- {
-@@ -8256,6 +8290,8 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 				      desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
- 	dev_info->bqueuedepth = desc_buf[DEVICE_DESC_PARAM_Q_DPTH];
- 
-+	dev_info->rtt_cap = desc_buf[DEVICE_DESC_PARAM_RTT_CAP];
-+
- 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
- 
- 	err = ufshcd_read_string_desc(hba, model_index,
-@@ -8508,6 +8544,8 @@ static int ufshcd_device_params_init(struct ufs_hba *hba)
- 		goto out;
- 	}
- 
-+	ufshcd_set_rtt(hba);
-+
- 	ufshcd_get_ref_clk_gating_wait(hba);
- 
- 	if (!ufshcd_query_flag_retry(hba, UPIU_QUERY_OPCODE_READ_FLAG,
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index b6003749bc83..853e95957c31 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -592,6 +592,8 @@ struct ufs_dev_info {
- 	enum ufs_rtc_time rtc_type;
- 	time64_t rtc_time_baseline;
- 	u32 rtc_update_period;
-+
-+	u8 rtt_cap; /* bDeviceRTTCap */
+ What:		/sys/bus/platform/drivers/ufshcd/*/attributes/exception_event_control
+ What:		/sys/bus/platform/devices/*.ufs/attributes/exception_event_control
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index 3d049967f6bc..e80a32421a8c 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -1340,6 +1340,78 @@ static const struct attribute_group ufs_sysfs_flags_group = {
+ 	.attrs = ufs_sysfs_device_flags,
  };
  
- /*
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index bad88bd91995..d74bd2d67b06 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -819,6 +819,7 @@ enum ufshcd_mcq_opr {
-  * @capabilities: UFS Controller Capabilities
-  * @mcq_capabilities: UFS Multi Circular Queue capabilities
-  * @nutrs: Transfer Request Queue depth supported by controller
-+ * @nortt - Max outstanding RTTs supported by controller
-  * @nutmrs: Task Management Queue depth supported by controller
-  * @reserved_slot: Used to submit device commands. Protected by @dev_cmd.lock.
-  * @ufs_version: UFS Version to which controller complies
-@@ -957,6 +958,7 @@ struct ufs_hba {
- 
- 	u32 capabilities;
- 	int nutrs;
-+	int nortt;
- 	u32 mcq_capabilities;
- 	int nutmrs;
- 	u32 reserved_slot;
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 385e1c6b8d60..c50f92bf2e1d 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -68,6 +68,7 @@ enum {
- /* Controller capability masks */
- enum {
- 	MASK_TRANSFER_REQUESTS_SLOTS		= 0x0000001F,
-+	MASK_NUMBER_OUTSTANDING_RTT		= 0x0000FF00,
- 	MASK_TASK_MANAGEMENT_REQUEST_SLOTS	= 0x00070000,
- 	MASK_EHSLUTRD_SUPPORTED			= 0x00400000,
- 	MASK_AUTO_HIBERN8_SUPPORT		= 0x00800000,
++static ssize_t max_number_of_rtt_show(struct device *dev,
++				      struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	u32 rtt;
++	int ret;
++
++	down(&hba->host_sem);
++	if (!ufshcd_is_user_access_allowed(hba)) {
++		up(&hba->host_sem);
++		return -EBUSY;
++	}
++
++	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++		QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &rtt);
++	ufshcd_rpm_put_sync(hba);
++
++	if (ret)
++		goto out;
++
++	ret = sysfs_emit(buf, "0x%08X\n", rtt);
++
++out:
++	up(&hba->host_sem);
++	return ret;
++}
++
++static ssize_t max_number_of_rtt_store(struct device *dev,
++				       struct device_attribute *attr,
++				       const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	struct ufs_dev_info *dev_info = &hba->dev_info;
++	struct scsi_device *sdev;
++	unsigned int rtt;
++	int ret;
++
++	if (kstrtouint(buf, 0, &rtt))
++		return -EINVAL;
++
++	if (rtt > dev_info->rtt_cap) {
++		dev_err(dev, "rtt can be at most bDeviceRTTCap\n");
++		return -EINVAL;
++	}
++
++	down(&hba->host_sem);
++	if (!ufshcd_is_user_access_allowed(hba)) {
++		ret = -EBUSY;
++		goto out;
++	}
++
++	ufshcd_rpm_get_sync(hba);
++
++	shost_for_each_device(sdev, hba->host)
++		blk_mq_freeze_queue(sdev->request_queue);
++
++	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++		QUERY_ATTR_IDN_MAX_NUM_OF_RTT, 0, 0, &rtt);
++
++	shost_for_each_device(sdev, hba->host)
++		blk_mq_unfreeze_queue(sdev->request_queue);
++
++	ufshcd_rpm_put_sync(hba);
++
++out:
++	up(&hba->host_sem);
++	return ret < 0 ? ret : count;
++}
++
++static DEVICE_ATTR_RW(max_number_of_rtt);
++
+ static inline bool ufshcd_is_wb_attrs(enum attr_idn idn)
+ {
+ 	return idn >= QUERY_ATTR_IDN_WB_FLUSH_STATUS &&
+@@ -1387,7 +1459,6 @@ UFS_ATTRIBUTE(max_data_in_size, _MAX_DATA_IN);
+ UFS_ATTRIBUTE(max_data_out_size, _MAX_DATA_OUT);
+ UFS_ATTRIBUTE(reference_clock_frequency, _REF_CLK_FREQ);
+ UFS_ATTRIBUTE(configuration_descriptor_lock, _CONF_DESC_LOCK);
+-UFS_ATTRIBUTE(max_number_of_rtt, _MAX_NUM_OF_RTT);
+ UFS_ATTRIBUTE(exception_event_control, _EE_CONTROL);
+ UFS_ATTRIBUTE(exception_event_status, _EE_STATUS);
+ UFS_ATTRIBUTE(ffu_status, _FFU_STATUS);
 -- 
 2.34.1
 
