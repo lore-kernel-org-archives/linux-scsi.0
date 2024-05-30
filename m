@@ -1,90 +1,76 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C021558B8;
-	Thu, 30 May 2024 14:28:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13C2A145A01
+	for <linux-scsi@vger.kernel.org>; Thu, 30 May 2024 15:04:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717079307; cv=none; b=ZoVrDsBl0gcFYlXCZOp09nUCA8edR2krUCg4cZwiQhTKIyqv65xIRLAtTDkhvyKHem7nqDGXh0ciVUq8S1z0kH8OoYwEkJ68FwSfPaGcKTI8WWOU5TwRNJxpPau3JU4NXe0I1g4S3XDdgOFTG6Irhd7DpclAJjtXLYpM2X3cVnc=
+	t=1717081471; cv=none; b=HSbyPMdgC9mJ1AHaDFwT3EyPbR8z1J8maIYh6tq9u8i8MlWC8Fc7BpjoCZsKZ9RpnsRySlQQ7hiRaWLwIw9Up6sJh/mfy+1m9sd81sQCFkJ5AC1MmERbUaCYqfwD0hhFoYBFgr4DGMVzsQbjlml99E+ieytigq6e1CbMstEGXeM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717079307; c=relaxed/simple;
-	bh=TepJdMu5Kgqt4hFWQ/knF8KsMyDM2pCe5l3NAhbAlr0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=rcJRKpULeaPItAlhIfJQzkbMadeOVDNIXP32MeJ2FKNZYCeYPHobWpaG/+BM7cSp4CgLdV77TUOI4OQ+wTwZ/K14mGPUkaxFIaIkZtcgOpMrf1Qhgje4twQkeYAJ+XEQDqLPF265mqqoykvv9JSgy4g8JK+2rYaSLXJO0Mz2nyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=Gq9AAZ2u; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="Gq9AAZ2u"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
-	s=201909; t=1717079303;
-	bh=TepJdMu5Kgqt4hFWQ/knF8KsMyDM2pCe5l3NAhbAlr0=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=Gq9AAZ2u93VW1D0x6Na4RcZUHk90fmGkZEWk8KeWCfGT4bL493v8+w0tcTJ9hsRkM
-	 4XDO0HcsykkcEpCJdlsHn8IcqCapHKhg3S8aluPMzfsmu2wtre70g04ccbHxsqlKfx
-	 C4cqvFpr/umZfy9AnM6SmI/NdUQ+q8oLGNvbALKhHqY83jJI6xkA2LwnPuh21keJ22
-	 LlU1LoJ0GcAzcYfDUhR1TB49I6xrk3V6xFU+rqyCAF4HK6bTrCm3nUrys+1upui+ze
-	 mXbO3gkQecvwBuSOjmSecncOMEgipu1oC1HgQkrjIy0dSNoyFcs2Z4Z6PLRsNJOq6u
-	 x12ptIkbo4bhw==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4VqpWp35Nwz4wcC;
-	Fri, 31 May 2024 00:28:22 +1000 (AEST)
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: "Linux regression tracking (Thorsten Leemhuis)" <regressions@leemhuis.info>
-Cc: John Garry <john.g.garry@oracle.com>, Jens Axboe <axboe@kernel.dk>,
- "Martin K. Petersen" <martin.petersen@oracle.com>, Damien Le Moal
- <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
- linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org, benh@kernel.crashing.org,
- linuxppc-dev@lists.ozlabs.org, Guenter Roeck <linux@roeck-us.net>,
- Christoph Hellwig <hch@lst.de>, Linux kernel regressions list
- <regressions@lists.linux.dev>
-Subject: Re: [PATCH 04/23] scsi: initialize scsi midlayer limits before
- allocating the queue
-In-Reply-To: <8734pz4gdh.fsf@mail.lhotse>
-References: <20240520151536.GA32532@lst.de>
- <fc6a2243-6982-45e9-a640-9d98c29a8f53@leemhuis.info>
- <8734pz4gdh.fsf@mail.lhotse>
-Date: Fri, 31 May 2024 00:28:21 +1000
-Message-ID: <87wmnb2x2y.fsf@mail.lhotse>
+	s=arc-20240116; t=1717081471; c=relaxed/simple;
+	bh=eKtYororToSKtmxNQEcvcFmprET7yhBZ7lTtUsP1bQs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=s5c1tBaeIxjpG3eVziZ+4awEP0HD3clcAOq/RTufRsgEw2be22n4uBWVSn8kcYlctWPl0cAeW9RjJ0NPZbyyp1uD3v+QRfRNu3GeaIezZIUTh+kljP0dvfRqM/k/3wUcgF4F7+5PCsX7n1QFg0A+jxIcm+sK3UmFJFG/Mh6Ydwc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-57a196134d1so987353a12.2
+        for <linux-scsi@vger.kernel.org>; Thu, 30 May 2024 08:04:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717081468; x=1717686268;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=UjRI6k1pnyFmfsy/h6IOqESLGa47Wobef0S2P34bIx0=;
+        b=J69COBkjIP0OH5eEvwBtM+hFztaZezomrgm7aOvT/faFbZiuLdkvJekbfQpkr9vSTA
+         o8zxUmRY7oI+WVV0LE3nUz1XDDTNZHQerC9z3mjGY9zxLoHaNzjAay8HU/470yUOsmop
+         yLBAisJUiOSLMmRRPFdJeOzbvMFaroQxixtklK7Q6DE5s1g1MdSSAEMcyHPekvsy5R7x
+         kObBOw8VObfu4QzTD9X1r7MOj8HTKO5LMualeAdRK6+RrkWBm8iq5i7+VUrXBlMmSYPC
+         l/JhEurHj+6MP8X3jo9j0ZCYWwiPukzZqaAxjkBEnSa44ARMXVW+Ft+neBKk7bj/mHuW
+         EmAA==
+X-Forwarded-Encrypted: i=1; AJvYcCU75QgF5IFrh5JCDxuEmC9C4MFuB6nTxNTTkL8G3w0skPozuQ3jS/A6pkrle79Sjm5/cnuW8qgIEKDHmIWSg6A5Rka1G+lx5d70HA==
+X-Gm-Message-State: AOJu0YxlQtFWnEhP3XVyjbDrJJ/dRCJnwSLFutLDo696cOHHVIw6+JCm
+	c/kp7xTqpa+88w8ZZ5qhOxDm6quzCsddY0mqp0xlw0UtlAoyubwi
+X-Google-Smtp-Source: AGHT+IEqVCK28kSitDJkVAlWQY/CY/i3mjwS3mrDq9HQa5kw3kQTrgO2ledsMVJAavCaKrXlkxqw8w==
+X-Received: by 2002:a17:906:8c6:b0:a65:b33a:3574 with SMTP id a640c23a62f3a-a65e891383bmr164732866b.0.1717081468073;
+        Thu, 30 May 2024 08:04:28 -0700 (PDT)
+Received: from gmail.com (fwdproxy-lla-003.fbsv.net. [2a03:2880:30ff:3::face:b00c])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a626cda8481sm826580066b.213.2024.05.30.08.04.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 May 2024 08:04:27 -0700 (PDT)
+Date: Thu, 30 May 2024 08:04:25 -0700
+From: Breno Leitao <leitao@debian.org>
+To: sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+	suganath-prabu.subramani@broadcom.com
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Subject: Re: mpt3sas: BUG: KASAN: slab-out-of-bounds in _scsih_add_device
+Message-ID: <ZliVeTQU31yTwECi@gmail.com>
+References: <ZkNcALr3W3KGYYJG@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZkNcALr3W3KGYYJG@gmail.com>
 
-Michael Ellerman <mpe@ellerman.id.au> writes:
-> "Linux regression tracking (Thorsten Leemhuis)" <regressions@leemhuis.info> writes:
->> [CCing the regression list, as it should be in the loop for regressions:
->> https://docs.kernel.org/admin-guide/reporting-regressions.html]
->>
->> On 20.05.24 17:15, Christoph Hellwig wrote:
->>> Adding ben and the linuxppc list.
->>
->> Hmm, no reply and no other progress to get this resolved afaics. So lets
->> bring Michael into the mix, he might be able to help out.
->
-> Sorry I didn't see the original forward for some reason.
->
-> I haven't seen this on my G5, but it's hard drive is on SATA. I think
-> the CDROM is pata_macio, but there isn't a disk in the drive to test
-> with.
->
->> BTW TWIMC: a PowerMac G5 user user reported similar symptoms here
->> recently: https://bugzilla.kernel.org/show_bug.cgi?id=218858
->
-> AFAICS that report is from a 4K page size kernel (Page orders: ...
-> virtual = 12), so there must be something else going on?
+On Tue, May 14, 2024 at 05:41:36AM -0700, Breno Leitao wrote:
+> Hello,
+> 
+> I am running 6.9 kernel in one of my machines, and it shows the
+> following KASAN issue. I've tested in linux-next also, and the problem
+> is there also. In fact, the snippet below is from linux-next
+> (a17ef9e6c2c1cf0fc6cd6ca6a9ce525c67d1da7f)
+> 
+> Is this a known problem?
 
-No that's wrong. The actual hardware page size is 4K, but
-CONFIG_PAGE_SIZE and PAGE_SHIFT etc. is 64K.
+Hello Sathya, Sreekanth, Suganath
 
-So at least for this user the driver used to work with 64K pages, and
-now doesn't.
+Have you had a chance to look at this report? This seems an important
+issue that can end up corrupting memory.
 
-cheers
+Thanks
+Breno
