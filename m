@@ -1,564 +1,424 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9054E6F2F6;
-	Thu, 30 May 2024 09:18:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717060701; cv=fail; b=DNg2LpEXv5Pn4cnFa8rGVzFlSSdm7agWvwg1aWyc1Fk6yIO50s/U/urZkLZSec61NCZTZTSUqOD0Mb1dg8s1NS4Qa9x2LJ7EGQB6IznJ9lwXlTeP2zcV+7xPkz7Tos35T9j6NfXmlxIsH/yUZFTrsMy2Ofba1aKEhUK8fXMaPMY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717060701; c=relaxed/simple;
-	bh=veKFwid068RyUd8W1xKG0kw25hZi+ouAw1qmTdpUqPA=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=Y3HnbK/HUdCSt87kujOm2F8vSO9bps48qIjHrZd3LqR5M+dKpKKB2VGCXOk4GvlDlkhkOrSd8UfrL22HeqZAvTeV7GmihAVtTLFscAHWRZ716gySQ4Q34iIlx5Qpv8Tn93HlAjB20KRcRfbKIQNVdekAv2JrNYcOYqwu2i9J56w=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 44U7n5hV002784;
-	Thu, 30 May 2024 09:16:43 GMT
-DKIM-Signature: =?UTF-8?Q?v=3D1;_a=3Drsa-sha256;_c=3Drelaxed/relaxed;_d=3Doracle.com;_h?=
- =?UTF-8?Q?=3Dcc:content-transfer-encoding:content-type:date:from:in-reply?=
- =?UTF-8?Q?-to:message-id:mime-version:references:subject:to;_s=3Dcorp-202?=
- =?UTF-8?Q?3-11-20;_bh=3DBdPYxC5USHVULUTy7ZfZqhM+RCgM6BcNA8YOCr9E+nE=3D;_b?=
- =?UTF-8?Q?=3DiEXCWqw7ljieCh6HQcv6moF6g6zlOtYTs6l/bQyZBV7mrEjbMzJiceT6F0TR?=
- =?UTF-8?Q?mJYApcHD_rrmIiuOIR//EoyWR5w5CSCCTXNENc+IUNFx3eivp4gh377HOwdhGXi?=
- =?UTF-8?Q?LP5i7sN6kjGLHM_LDBfpz+1caJFy25YoJCcGZ/fD/OU2M+YZLB4kMTCD69tUswW?=
- =?UTF-8?Q?3N8vMnLx5eV8OkcTv0Xc_vNISwufG4aQ5sr3GKcT/Xq7FCrvNjhtKsIEv90+n7P?=
- =?UTF-8?Q?+gACPMVFAPtt9crp60YwPRs3dr_smafucRx/zlmlFgn9uu1Q+J/CM2vjEQXkAQ3?=
- =?UTF-8?Q?uxyo1jJ1rqG7DC7kE0Kqc8IyI4bl7JCo_Mw=3D=3D_?=
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3yb8fcghay-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 30 May 2024 09:16:43 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 44U7Jqpe006215;
-	Thu, 30 May 2024 09:16:42 GMT
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2042.outbound.protection.outlook.com [104.47.55.42])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3yd7c6pax4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 30 May 2024 09:16:42 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZW4sdwt7nQbdjT0+fvotSJ75hJ6npAhUXI5NdHvh5g2RfO7Hwze0n6s4G7cAHt5sM7X2WtDBBIjEVtGgby77A+ClUiEEERrhNwsldrqxryazhuHk5ou7HAB5cNLPT9RuywPSPtBJxKEfr2b19fM2xMP911XbMN9HPtFlE8saewhwqJtkhvVSbPAg8DCxN3hXyf84ug3gHb0sz+fEuR3KELd3qgrluqMkrcjbpCSvNpTKIvZAl8hJYsIULC7JIvXVKG9eEzs9OUInDVTmSWxH9lvDF7uTRgPeBdEI4Vx+xN3+sihlxpPD1k/ioz6RTGWx7AGkO/97mo0nYRPoKptH0Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BdPYxC5USHVULUTy7ZfZqhM+RCgM6BcNA8YOCr9E+nE=;
- b=MxU1uyBe/4XWuZlHRz6ZGJ//6QpvoPjDgaSd3O0hpy4VHW1FKCqSfE04+mAGBtdbxoYWqCUHOyGsTS2P/9xlDtT8XnZ+LhvY0R5Vd95y2NAnjwGhp4xgVLBXB3sbAsBonL5WRbbXn0DjH9NSfjgUnnTwIEhEs4cvGQRqyUtu4dJ2HGLMSYWC/iPr63WwiOmOhrxrCtgmsx5x64f+6e9/9zVXTFWxMNhGyg93UvvaLsue55s/d2FjpgKWvjnh8wJy3jrDClGkKIJyV57+rifk4KX+Pm9/9bI/KQtbCB2kUqIIUt3SuMxwaxr8QlFdg57WNNJiDjxXgGEZyxMIXlNwhA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BdPYxC5USHVULUTy7ZfZqhM+RCgM6BcNA8YOCr9E+nE=;
- b=G/7QTVDgO+k85ObUI8TepKa4ed7WFzUGZgaPA/T1NlpuXHcU5g6u/DK/lJFVobL9IyH3DZgHV7oNkueIPT1RrT/AuDv25KcA5Mk5siotZ7nswU82hU2RiKjTMiHDBmwJmkT3sO/vg+heGPGmcBgVVb9ScoszC+PtHlQMwESHSG8=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by PH0PR10MB5706.namprd10.prod.outlook.com (2603:10b6:510:148::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7633.22; Thu, 30 May
- 2024 09:16:39 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%5]) with mapi id 15.20.7633.018; Thu, 30 May 2024
- 09:16:39 +0000
-Message-ID: <1a1854bb-1f28-44d1-a4ac-30872bd6c3c8@oracle.com>
-Date: Thu, 30 May 2024 10:16:33 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 09/12] sd: convert to the atomic queue limits API
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Richard Weinberger <richard@nod.at>,
-        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Josef Bacik
- <josef@toxicpanda.com>, Ilya Dryomov <idryomov@gmail.com>,
-        Dongsheng Yang <dongsheng.yang@easystack.cn>,
-        =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
-        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
-        nbd@other.debian.org, ceph-devel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org
-References: <20240529050507.1392041-1-hch@lst.de>
- <20240529050507.1392041-10-hch@lst.de>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20240529050507.1392041-10-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AM9P193CA0024.EURP193.PROD.OUTLOOK.COM
- (2603:10a6:20b:21e::29) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38C26558B9;
+	Thu, 30 May 2024 09:46:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1717062368; cv=none; b=q0bn2xMiDkJE91LgUO01OwsWEMExAjFj6zFuXMlpD1Bh6aF117v1ve79D6JtZMVwIyyfmAHLG2iIfcCD2bxE5ftm/MrfPV02MjKW96KjvrLgcLmXYgFySuTPtiPlvcjYONco9+pq1atPBNjb9Wn5l252m0gWqama0VUnKxd7pL8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1717062368; c=relaxed/simple;
+	bh=ZCg8NSt18VIXcQRHLFOoRZguatTnXNwJD1nbCmfbq78=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Io7tULXDY2WoaOGqK0nhEw64nQNqkpZYMQr9p8GZ5i9jRdV5x6VpovHqIiI/gWX4JuM2NbpTLQko/phHkFZhBm/oxPxwu75vMwA52zDGpLqjf22MdoVTBoE9tjagxcEc3CrWa3KssdRKhqNYPUQQYXo7gdzHgnTWwXaYgRjbwfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 67cc117e1e6911ef9305a59a3cc225df-20240530
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.38,REQID:19d9c4a2-2657-43ce-a88d-8222360ff813,IP:15,
+	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:1,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:16
+X-CID-INFO: VERSION:1.1.38,REQID:19d9c4a2-2657-43ce-a88d-8222360ff813,IP:15,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:1,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:16
+X-CID-META: VersionHash:82c5f88,CLOUDID:1d9ebe5babadecece3ca4d0a8df4f688,BulkI
+	D:240530174554FR76ZIML,BulkQuantity:0,Recheck:0,SF:19|43|74|66|38|24|72|10
+	2,TC:nil,Content:0,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:
+	nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_MISS
+	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_DIGIT_LEN
+	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
+	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
+	IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_EXISTED, SN_EXISTED
+	SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_BAD, CIE_GOOD
+	CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_T1
+	AMN_GOOD, AMN_C_TI, AMN_C_BU, ABX_MISS_RDNS
+X-UUID: 67cc117e1e6911ef9305a59a3cc225df-20240530
+X-User: mengfanhui@kylinos.cn
+Received: from localhost.localdomain [(223.70.159.255)] by mailgw.kylinos.cn
+	(envelope-from <mengfanhui@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1087431886; Thu, 30 May 2024 17:45:53 +0800
+From: mengfanhui <mengfanhui@kylinos.cn>
+To: kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	shivasharan.srikanteshwara@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	mengfanhui@kylinos.cn
+Cc: liuyun01@kylinos.cn,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	geliang@kernel.org
+Subject: [PATCH 2/2] scsi: megaraid_sas: Add megasas_dcmd_timeout helper
+Date: Thu, 30 May 2024 17:45:14 +0800
+Message-Id: <20240530094514.2750723-2-mengfanhui@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240530094514.2750723-1-mengfanhui@kylinos.cn>
+References: <20240530094514.2750723-1-mengfanhui@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH0PR10MB5706:EE_
-X-MS-Office365-Filtering-Correlation-Id: 58489bb1-ca80-451c-ae61-08dc80893636
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230031|366007|1800799015|7416005|376005;
-X-Microsoft-Antispam-Message-Info: 
-	=?utf-8?B?Zk0xKzhCaGd6TXRoNUJzU21JbVY5VEkrRVA4TndzUW1Ycm5kUnRnWmozM3Fs?=
- =?utf-8?B?UGpOYTVxdXYrdlI3bHlUSTY3c3Q3SHBVODBFRWYra25zaDdXbEJUUnV6ME5w?=
- =?utf-8?B?OWFldVYvMHhRdVkvNmFQcHRnSjFlWDdLT0szV1RDanpKQWxPMURhbmJUSjlo?=
- =?utf-8?B?NEMrMzZzWHlKeE9SRTNESGN4YmE0ekIxWHlIZHZvdWdaaVpIZXRFRFREQktw?=
- =?utf-8?B?R2RocTEvczQ4ZUhJZ3p0RmZDaEpzWGkxREtBejJVWjlyN05yc1Rtak5YUWpF?=
- =?utf-8?B?dk54SVlSaURrQ3lFZmtEV3NZWjVRNG5KamtqRzFHNFlVdTBmZDFHRFFWbjBi?=
- =?utf-8?B?Mmh2bmtTYnZHTnpEOVRTcVRzSUJvQmpLQUNsV0xaK2o5aklIdzUvZ3ZGVXlT?=
- =?utf-8?B?SGxHdk1hbmNxdklPQnp2VVovYUhWRE0xK1lHaGhhbGo1cVlrLzg4VDZyMDVu?=
- =?utf-8?B?U1JjZVlrYW5QK2tKZnRPV25VQlhTZFE0am5hbnlXbWoxdlE4cWpuU2ZjUGR2?=
- =?utf-8?B?MmlYMmN0UlRpYVF4VDRNTVBTMlVzVURhcytXSmtXRnU0T1J5Q1VXK2FwSTNK?=
- =?utf-8?B?QzRwemsxbGxTeWNhZ3Z0bUZ1V250YXN5NEU2VjZxbXFqZGVGRUgzYVIyNVN0?=
- =?utf-8?B?TW82K05MM3hYQUlQQ2xNMUlUWmpDNTRtWVRTZlI3ZGJ0RGJvYS9wOFdHTjh4?=
- =?utf-8?B?c1ZXUkkxdnluYk1yUjJPbmoxRkxNM3MvaElUSjNDTm5pTFMzWWNMVWhxSkQ3?=
- =?utf-8?B?Umlwb01mMU16a3VRQWxMRHlpNk9jcGxWMDVuTCthQkVSQ3FEdW4vcVJLY3lB?=
- =?utf-8?B?RS9Ddk9FZTV5MHpMdy8vRTRSaXp4T0JHaU1pNjRObVFzaU1GenFwWWhGRGNO?=
- =?utf-8?B?WmtMbmw1UXFoMVd6dXlyM0dJbjM0cVFRaXVjdmRCbG1DSHZNL2JYZXZsTi9l?=
- =?utf-8?B?VzMrSzVETUFFUGpFZitUWVJOSlNDMXJFQlEzQTdNYjlXZUwrZjN2SDh0cENM?=
- =?utf-8?B?cVpvcFRuTEhVQ0pCUWs4NGpnN1ZiN3I4Zkw4K0NvSi9yWnlIT0Y4RktLTDVl?=
- =?utf-8?B?cUFpeklwdDdXM29WaGx1VXNjak9KVkF2eDFpRTNsenVaMWZIL3ZKSW94OTc2?=
- =?utf-8?B?TUcxRU1HNWV2QWx3Y1FrWTVYWDJSWDVSMi8rVGhtSi96OGdhTTRja2N6TW1y?=
- =?utf-8?B?cHd5U3Z0TFZHUDM2K2dIZG9rN3JqK2xWY0RFVVVqVWpTZTRvbnM2KytZNnNF?=
- =?utf-8?B?UmFiQUdCaUw1UFYrSnRzWSt5dEJycW1sUjI3N0hXVEdGcDlBVHVhZWZTa2pK?=
- =?utf-8?B?UHJYbXhJOTdzaGFzSEd0VktpTXIzaSt2Y2RtR3NHbUdaRUI5RXRnWkRGOVRP?=
- =?utf-8?B?WXpXbndBTGp1aCtBRlc2dFloNFFMVFRQbEZwb3RIMnZXalVDYnBWdVBjOENa?=
- =?utf-8?B?eW5qa0xKVjllZXVjNHdoanhOYk5CZ1hrdFJGNFNxOURoTnlhdkxYYUZuRWxN?=
- =?utf-8?B?aGU3YzVLMEhFajByTXlQWTYxYUZFSERETmdIbTNIYjdMTnR2a0V3Y1J0QXJL?=
- =?utf-8?B?elRTNG1nbVJkQTRMOG4vbHl5TjBqaDNKMGFzclRITXVsUndVbU1uMTYwTXpN?=
- =?utf-8?B?aTI2VFRhbmpmQnYxVU9ieXcwNnAraStPTjBaaVpTRFpSM0hUenl6anZLdU45?=
- =?utf-8?B?dktJcEszckovaVRpSnVPSnFtYXFkTXBmZXNkSzkxNkJXeEY2MFVJN3JBPT0=?=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(1800799015)(7416005)(376005);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?amJLcStFaDB3aGZZZndOMzkyRGQvc3BFeUNZNUtkN25iNVoxUnJlWkZzam81?=
- =?utf-8?B?VXcyU3dXYU5sRjl0Ylh3TlBqWXo5VnFCR3B4UEtvNDRIeER3WmNPRXRScmRx?=
- =?utf-8?B?REZKY3hIRDhjaStkRExVd3I2eGRmYTk2Smd0NnBMcGh6d1dtTEhxVHIwa0dY?=
- =?utf-8?B?UEZ6OHhnMm9MN2NLQ0svUjE4TTN6ZHF6dHBwRUd1cVdQRHp5RXNXbWlaeTdC?=
- =?utf-8?B?V2ZsNFNzY2x5RzkxNEhuZExaZkhJMTh3SkdwdG43TFdUWkI5SWVSTmN5d1ZI?=
- =?utf-8?B?NndIS0Z6VUpaMVAzMjE5NzVWSE5Ib05FaVBsZTA0SVVqVDlGc3hMNVBUajJL?=
- =?utf-8?B?SDROVTlRV2ZwaUxWNWQ4Q1hrOGtCOXNjckovNmZreUxiRVlJRWR2QnJmVGJL?=
- =?utf-8?B?UWtzV1hadmd1ckc0ZGQ5eU1uRGVWb0kzK25HcGp5eitYN1NGTWZCdURWTUNW?=
- =?utf-8?B?NkdvMS8xVWpBL3FDZWdNWktLQW9xR2R6RW5PK1NidTI2Q2JsUGFFVjVHOWFM?=
- =?utf-8?B?NGd5SXBxekZ1cEZCNVRjSEkyQ3U5Tlp0M0ZkQUJWRGxvWXgvSGZOM3RPMTlz?=
- =?utf-8?B?U0VMb1hOanF4NzlqTC9ibjI2ZXFKZGFsZTJDb3dQL3UxZ3BOSVhoamlEcFhi?=
- =?utf-8?B?WS80SkZWZ2o2SHdVSEx3ZWcrUWpHUm1JM0dkTVdnZGxqRjVDRS9MTUxlSjdR?=
- =?utf-8?B?SUkvcVQzSmx3ZFVoSDVia1crYXdQMk9IWlFmbDFMRG5GMkhzTTNaRnpwbGp3?=
- =?utf-8?B?WUx0bURzeHBhTU1mTzlkbDExcEZ3dm1VRDVDb0xTZ0pSZWxSNjIwVzJxKzJt?=
- =?utf-8?B?MHZhL1ZPaEpydXhKaDAxUi9PeEFZZXF5TjJKekx1Y2hCb0FnMklFaUxVWmF6?=
- =?utf-8?B?K3NiVmZxZ0VpUjlUZjA1d3RFcXlYaFk1VEMxd3gxdTlHTExqR1hJc0dFajRq?=
- =?utf-8?B?TzMzbG5UMWFoMnJaMVkrQm01cDZ0L1M4a2wyMlp5WXlMWWhYVjVvN2UrNnRY?=
- =?utf-8?B?bCtjcDNCVG0wTkRqM0l2bGxPVFp3WDlUdHdmcmJxUTd1TE5RRm41dU9BaTFY?=
- =?utf-8?B?aWgwTnFyeFMvcUJ6Kzc5OVZDY1FXMkZKOTF2TWdhT3djMUtudVNETzQxeDd2?=
- =?utf-8?B?c0s5TkE3bFhVd2NEWVBxMk1Pd3J4MThKTmhLWllZRnYvUDBxMzlCZHdpa2FJ?=
- =?utf-8?B?MUxJVHdEUGE4SSt0Z2U5cmhyVHRGenp3RHk5bUNEYnBpazlnbVJWKzJGRUQ2?=
- =?utf-8?B?ZUNmVnJtaExlZTFONGFyZDgvUkxMZENzNzhLOStYSzZ2TGRyanpjUFB5enlj?=
- =?utf-8?B?anN6ekFNM2wrM2RzS3lRdkwvRFM4UHB6NXVzeWVRQ3JWTW93ejNMS01YZ3JH?=
- =?utf-8?B?Y0haMWh3a3ZaZ0ljaTBLOGFQNFVlQ1NhMHJXVUlHT1FRNGpKQjFWSDBtQkFt?=
- =?utf-8?B?OHRXQldRaTZaTnpFY0h4TmFqQlRVUjA4aFRVUWxCN29zOCtlajZ3YVR2aTB0?=
- =?utf-8?B?MTJyeTNqR3g5YjkwMTRrcHRzeGhqZDBLN1lKNjZpd29FNjZKd1ZWSE5TZEhO?=
- =?utf-8?B?VzlUQUlKajRSU1N4czhWdWdxK1llU2RoNS9KT0VFa3RLWkFFRENRSjAzU1Vo?=
- =?utf-8?B?Y01zOFFMODJPaEQ4bTkrbkdzd2ZjRGEvTVBYZlN3RXdWN1V1U25MWG1sN0NM?=
- =?utf-8?B?bmtQYm40c3JmZVowL0xnYmg2VWd3VEcxTzMyQzREWE9kRm5kT2plczExS1Fm?=
- =?utf-8?B?RDVrbzkzcG1odGZSZWE0TlZsSzU4bGZpM3FDQXBFYlVibitaRVEwMDlqd0xZ?=
- =?utf-8?B?RWpETGp2L1VQRVlHQ0RJT0NxTWltZWxwU1hhSlNmbFBSZTFCNUppb2hFMTJn?=
- =?utf-8?B?Y0tPVVpRL0w1U21EU2FIQVhkVEphdGdjOGJYcEdFc1RjVnZ2S1FnT1ZFamdR?=
- =?utf-8?B?eWdBbmhyYTcxK09QSFk1T3BCUWVsTDhUSVVMSzIyTlVmRXV0T1UrQTJSRW5P?=
- =?utf-8?B?bTJrZnluNm1vNTkyaW5aS1psTFV4QWN2RnZuNHE3Z0RFK1MwalV4RXVaeWt3?=
- =?utf-8?B?U1RvMWxYYjh0QW9QR3B4c0dsVmVPRFlJR3pITFhCWFJTaFNEcWgvK1lNbFdx?=
- =?utf-8?B?b3R2a0l6YktNWmRMcU9jYndBWFUvWHNzenk0TEVOUEs3QWlMcFU2RnZtaGVD?=
- =?utf-8?B?c0E9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	UKTJAUO3q0sghuFUKdNK7rSr3+26ZMaipkdPiZvhJNc6wEVZhwno+clU5y4O/Pp2HdYW9iY9QMLMMu16TGOXKV3oMqO6rCXomRyHdIh/WZfnTafxZz4bl4UmIM1aGNnza2BXXAKWMZhOy89w23kxxkLdAvcbSne+mnYN+gYyu7tBvhFK8HSJ0LyLN22ccrn8smNq6J3SS6TQxzSGOnTYS6o7//CFbHNaxMIx5yrdTbVTyM7juYmbzAKLezaOGOmFtu14XqszW5g5ilg3xVRAKAtNPlQ1UVvjqyIbahZr71mY+wKwbf0jJSiIyb3sQPinnCkfuOvXDXSGFWGk7WdKk6Kg2elkAL0MtyuzKyp8WFRxFURwuezmn8qYPRAVucqDnqEPXAVEdNx1UOd3F7bpYuRtRa2xDXL7LN8lY4qFNaaFTk2rnxKAhk7pgfiAPoaQtLchXox5YiNwAymXCHJi9qo4iFJIjwEDrTiPRcLepaAWdUPt4qYGcDZXXMW8XftWdeFHEbUV7EDIED/sBj8hfOAGscwNl2qU6E7IYjlsm9EBer516R1/bQotVqeWKIlKz5QLaotXqC9hIEHT5GXx1HmqlLAFlMZe5/AytMHkTeg=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 58489bb1-ca80-451c-ae61-08dc80893636
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 May 2024 09:16:39.0204
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: B5GSa65PHgdF5oTKzy44z/QFhMi5Un1nMJTu2pndw9ivSAwVhBMG/01UeobuMRTKqOVi2hMHLSMrwmVHN7oHSQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5706
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.650,FMLib:17.12.28.16
- definitions=2024-05-30_06,2024-05-28_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0 bulkscore=0
- suspectscore=0 mlxscore=0 adultscore=0 spamscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2405010000
- definitions=main-2405300069
-X-Proofpoint-GUID: j10R_a81KfEQxABw76oXQWImEvLQnw5t
-X-Proofpoint-ORIG-GUID: j10R_a81KfEQxABw76oXQWImEvLQnw5t
+Content-Transfer-Encoding: 8bit
 
-On 29/05/2024 06:04, Christoph Hellwig wrote:
-> Assign all queue limits through a local queue_limits variable and
-> queue_limits_commit_update so that we can't race updating them from
-> multiple places, and free the queue when updating them so that
-> in-progress I/O submissions don't see half-updated limits.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/scsi/sd.c     | 126 ++++++++++++++++++++++++------------------
->   drivers/scsi/sd.h     |   6 +-
->   drivers/scsi/sd_zbc.c |  15 ++---
->   3 files changed, 84 insertions(+), 63 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 2d08b69154b995..03e67936b27928 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -101,12 +101,13 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
->   
->   #define SD_MINORS	16
->   
-> -static void sd_config_discard(struct scsi_disk *, unsigned int);
-> -static void sd_config_write_same(struct scsi_disk *);
-> +static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
-> +		unsigned int mode);
+DCMD timeout is handled in many places, it makes sense to
+add a hepler to handle it. This patch adds a new helper
+named megasas_dcmd_timeout() to reduce duplicate code.
 
-Are there any reasons why we keep forward declarations like this? 
-AFAICS, this sd_config_discard forward declaration could be removed.
+Co-developed-by: Jackie Liu <liuyun01@kylinos.cn>
+Signed-off-by: Jackie Liu <liuyun01@kylinos.cn>
+Signed-off-by: mengfanhui <mengfanhui@kylinos.cn>
+Suggested-by: Geliang Tang <geliang@kernel.org>
+---
+ drivers/scsi/megaraid/megaraid_sas.h        |   2 +
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 199 ++++----------------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  34 +---
+ 3 files changed, 38 insertions(+), 197 deletions(-)
 
-> +static void sd_config_write_same(struct scsi_disk *sdkp,
-> +		struct queue_limits *lim);
->   static int  sd_revalidate_disk(struct gendisk *);
->   static void sd_unlock_native_capacity(struct gendisk *disk);
->   static void sd_shutdown(struct device *);
-> -static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
->   static void scsi_disk_release(struct device *cdev);
->   
->   static DEFINE_IDA(sd_index_ida);
-> @@ -456,7 +457,8 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
->   {
->   	struct scsi_disk *sdkp = to_scsi_disk(dev);
->   	struct scsi_device *sdp = sdkp->device;
-> -	int mode;
-> +	struct queue_limits lim;
-> +	int mode, err;
->   
->   	if (!capable(CAP_SYS_ADMIN))
->   		return -EACCES;
-> @@ -472,8 +474,13 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
->   	if (mode < 0)
->   		return -EINVAL;
->   
-> -	sd_config_discard(sdkp, mode);
-> -
-> +	lim = queue_limits_start_update(sdkp->disk->queue);
-> +	sd_config_discard(sdkp, &lim, mode);
-> +	blk_mq_freeze_queue(sdkp->disk->queue);
-> +	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
-> +	blk_mq_unfreeze_queue(sdkp->disk->queue);
-> +	if (err)
-> +		return err;
->   	return count;
->   }
->   static DEVICE_ATTR_RW(provisioning_mode);
-> @@ -556,6 +563,7 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
->   {
->   	struct scsi_disk *sdkp = to_scsi_disk(dev);
->   	struct scsi_device *sdp = sdkp->device;
-> +	struct queue_limits lim;
->   	unsigned long max;
->   	int err;
->   
-> @@ -577,8 +585,13 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
->   		sdkp->max_ws_blocks = max;
->   	}
->   
-> -	sd_config_write_same(sdkp);
-> -
-> +	lim = queue_limits_start_update(sdkp->disk->queue);
-> +	sd_config_write_same(sdkp, &lim);
-> +	blk_mq_freeze_queue(sdkp->disk->queue);
-> +	err = queue_limits_commit_update(sdkp->disk->queue, &lim);
-> +	blk_mq_unfreeze_queue(sdkp->disk->queue);
-> +	if (err)
-> +		return err;
->   	return count;
->   }
->   static DEVICE_ATTR_RW(max_write_same_blocks);
-> @@ -827,17 +840,15 @@ static void sd_disable_discard(struct scsi_disk *sdkp)
->   	blk_queue_max_discard_sectors(sdkp->disk->queue, 0);
->   }
->   
-> -static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
-> +static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
-> +		unsigned int mode)
->   {
-> -	struct request_queue *q = sdkp->disk->queue;
->   	unsigned int logical_block_size = sdkp->device->sector_size;
->   	unsigned int max_blocks = 0;
->   
-> -	q->limits.discard_alignment =
-> -		sdkp->unmap_alignment * logical_block_size;
-> -	q->limits.discard_granularity =
-> -		max(sdkp->physical_block_size,
-> -		    sdkp->unmap_granularity * logical_block_size);
-> +	lim->discard_alignment = sdkp->unmap_alignment * logical_block_size;
-> +	lim->discard_granularity = max(sdkp->physical_block_size,
-> +			sdkp->unmap_granularity * logical_block_size);
->   	sdkp->provisioning_mode = mode;
->   
->   	switch (mode) {
-> @@ -875,7 +886,8 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
->   		break;
->   	}
->   
-> -	blk_queue_max_discard_sectors(q, max_blocks * (logical_block_size >> 9));
-> +	lim->max_hw_discard_sectors = max_blocks *
-> +		(logical_block_size >> SECTOR_SHIFT);
->   }
->   
->   static void *sd_set_special_bvec(struct request *rq, unsigned int data_len)
-> @@ -1010,9 +1022,9 @@ static void sd_disable_write_same(struct scsi_disk *sdkp)
->   	blk_queue_max_write_zeroes_sectors(sdkp->disk->queue, 0);
->   }
->   
-> -static void sd_config_write_same(struct scsi_disk *sdkp)
-> +static void sd_config_write_same(struct scsi_disk *sdkp,
-> +		struct queue_limits *lim)
->   {
-> -	struct request_queue *q = sdkp->disk->queue;
->   	unsigned int logical_block_size = sdkp->device->sector_size;
->   
->   	if (sdkp->device->no_write_same) {
-> @@ -1066,8 +1078,8 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
->   	}
->   
->   out:
-> -	blk_queue_max_write_zeroes_sectors(q, sdkp->max_ws_blocks *
-> -					 (logical_block_size >> 9));
-> +	lim->max_write_zeroes_sectors =
-> +		sdkp->max_ws_blocks * (logical_block_size >> 9);
-
-Would it be ok to use SECTOR_SHIFT here? A similar change is made in 
-sd_config_discard(), above
-
->   }
->   
->   static blk_status_t sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
-> @@ -2523,7 +2535,7 @@ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
->   #define READ_CAPACITY_RETRIES_ON_RESET	10
->   
->   static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
-> -						unsigned char *buffer)
-> +		struct queue_limits *lim, unsigned char *buffer)
->   {
->   	unsigned char cmd[16];
->   	struct scsi_sense_hdr sshdr;
-> @@ -2597,7 +2609,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
->   
->   	/* Lowest aligned logical block */
->   	alignment = ((buffer[14] & 0x3f) << 8 | buffer[15]) * sector_size;
-> -	blk_queue_alignment_offset(sdp->request_queue, alignment);
-> +	lim->alignment_offset = alignment;
->   	if (alignment && sdkp->first_scan)
->   		sd_printk(KERN_NOTICE, sdkp,
->   			  "physical block alignment offset: %u\n", alignment);
-> @@ -2608,7 +2620,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
->   		if (buffer[14] & 0x40) /* LBPRZ */
->   			sdkp->lbprz = 1;
->   
-> -		sd_config_discard(sdkp, SD_LBP_WS16);
-> +		sd_config_discard(sdkp, lim, SD_LBP_WS16);
->   	}
->   
->   	sdkp->capacity = lba + 1;
-> @@ -2711,13 +2723,14 @@ static int sd_try_rc16_first(struct scsi_device *sdp)
->    * read disk capacity
->    */
->   static void
-> -sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
-> +sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
-> +		unsigned char *buffer)
->   {
->   	int sector_size;
->   	struct scsi_device *sdp = sdkp->device;
->   
->   	if (sd_try_rc16_first(sdp)) {
-> -		sector_size = read_capacity_16(sdkp, sdp, buffer);
-> +		sector_size = read_capacity_16(sdkp, sdp, lim, buffer);
->   		if (sector_size == -EOVERFLOW)
->   			goto got_data;
->   		if (sector_size == -ENODEV)
-> @@ -2737,7 +2750,7 @@ sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
->   			int old_sector_size = sector_size;
->   			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
->   					"Trying to use READ CAPACITY(16).\n");
-> -			sector_size = read_capacity_16(sdkp, sdp, buffer);
-> +			sector_size = read_capacity_16(sdkp, sdp, lim, buffer);
->   			if (sector_size < 0) {
->   				sd_printk(KERN_NOTICE, sdkp,
->   					"Using 0xffffffff as device size\n");
-> @@ -2796,9 +2809,8 @@ sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
->   		 */
->   		sector_size = 512;
->   	}
-> -	blk_queue_logical_block_size(sdp->request_queue, sector_size);
-> -	blk_queue_physical_block_size(sdp->request_queue,
-> -				      sdkp->physical_block_size);
-> +	lim->logical_block_size = sector_size;
-> +	lim->physical_block_size = sdkp->physical_block_size;
->   	sdkp->device->sector_size = sector_size;
->   
->   	if (sdkp->capacity > 0xffffffff)
-> @@ -3220,11 +3232,11 @@ static unsigned int sd_discard_mode(struct scsi_disk *sdkp)
->   	return SD_LBP_DISABLE;
->   }
->   
-> -/**
-> - * sd_read_block_limits - Query disk device for preferred I/O sizes.
-> - * @sdkp: disk to query
-> +/*
-> + * Query disk device for preferred I/O sizes.
->    */
-> -static void sd_read_block_limits(struct scsi_disk *sdkp)
-> +static void sd_read_block_limits(struct scsi_disk *sdkp,
-> +		struct queue_limits *lim)
->   {
->   	struct scsi_vpd *vpd;
->   
-> @@ -3258,7 +3270,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
->   			sdkp->unmap_alignment =
->   				get_unaligned_be32(&vpd->data[32]) & ~(1 << 31);
->   
-> -		sd_config_discard(sdkp, sd_discard_mode(sdkp));
-> +		sd_config_discard(sdkp, lim, sd_discard_mode(sdkp));
->   	}
->   
->    out:
-> @@ -3278,10 +3290,10 @@ static void sd_read_block_limits_ext(struct scsi_disk *sdkp)
->   }
->   
->   /**
-
-below is not a kernel doc comment
-
-> - * sd_read_block_characteristics - Query block dev. characteristics
-> - * @sdkp: disk to query
-> + * Query block dev. characteristics
->    */
-> -static void sd_read_block_characteristics(struct scsi_disk *sdkp)
-> +static void sd_read_block_characteristics(struct scsi_disk *sdkp,
-> +		struct queue_limits *lim)
->   {
->   	struct request_queue *q = sdkp->disk->queue;
->   	struct scsi_vpd *vpd;
-> @@ -3307,29 +3319,26 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
->   
->   #ifdef CONFIG_BLK_DEV_ZONED /* sd_probe rejects ZBD devices early otherwise */
->   	if (sdkp->device->type == TYPE_ZBC) {
-> -		/*
-> -		 * Host-managed.
-> -		 */
-> -		disk_set_zoned(sdkp->disk);
-> +		lim->zoned = true;
->   
->   		/*
->   		 * Per ZBC and ZAC specifications, writes in sequential write
->   		 * required zones of host-managed devices must be aligned to
->   		 * the device physical block size.
->   		 */
-> -		blk_queue_zone_write_granularity(q, sdkp->physical_block_size);
-> +		lim->zone_write_granularity = sdkp->physical_block_size;
->   	} else {
->   		/*
->   		 * Host-aware devices are treated as conventional.
->   		 */
-> -		WARN_ON_ONCE(blk_queue_is_zoned(q));
-> +		lim->zoned = false;
->   	}
->   #endif /* CONFIG_BLK_DEV_ZONED */
->   
->   	if (!sdkp->first_scan)
->   		return;
->   
-> -	if (blk_queue_is_zoned(q))
-> +	if (lim->zoned)
->   		sd_printk(KERN_NOTICE, sdkp, "Host-managed zoned block device\n");
->   	else if (sdkp->zoned == 1)
->   		sd_printk(KERN_NOTICE, sdkp, "Host-aware SMR disk used as regular disk\n");
-> @@ -3605,8 +3614,10 @@ static int sd_revalidate_disk(struct gendisk *disk)
->   	struct scsi_device *sdp = sdkp->device;
->   	struct request_queue *q = sdkp->disk->queue;
->   	sector_t old_capacity = sdkp->capacity;
-> +	struct queue_limits lim;
->   	unsigned char *buffer;
->   	unsigned int dev_max;
-> +	int err;
->   
->   	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
->   				      "sd_revalidate_disk\n"));
-> @@ -3627,12 +3638,14 @@ static int sd_revalidate_disk(struct gendisk *disk)
->   
->   	sd_spinup_disk(sdkp);
->   
-> +	lim = queue_limits_start_update(sdkp->disk->queue);
-> +
->   	/*
->   	 * Without media there is no reason to ask; moreover, some devices
->   	 * react badly if we do.
->   	 */
->   	if (sdkp->media_present) {
-> -		sd_read_capacity(sdkp, buffer);
-> +		sd_read_capacity(sdkp, &lim, buffer);
->   		/*
->   		 * Some USB/UAS devices return generic values for mode pages
->   		 * until the media has been accessed. Trigger a READ operation
-> @@ -3651,10 +3664,10 @@ static int sd_revalidate_disk(struct gendisk *disk)
->   
->   		if (scsi_device_supports_vpd(sdp)) {
->   			sd_read_block_provisioning(sdkp);
-> -			sd_read_block_limits(sdkp);
-> +			sd_read_block_limits(sdkp, &lim);
->   			sd_read_block_limits_ext(sdkp);
-> -			sd_read_block_characteristics(sdkp);
-> -			sd_zbc_read_zones(sdkp, buffer);
-> +			sd_read_block_characteristics(sdkp, &lim);
-> +			sd_zbc_read_zones(sdkp, &lim, buffer);
->   			sd_read_cpr(sdkp);
->   		}
->   
-> @@ -3683,28 +3696,33 @@ static int sd_revalidate_disk(struct gendisk *disk)
->   	q->limits.max_dev_sectors = logical_to_sectors(sdp, dev_max);
-
-
-is setting q->limits.max_dev_sectors directly proper?
-
->   
->   	if (sd_validate_min_xfer_size(sdkp))
-> -		blk_queue_io_min(sdkp->disk->queue,
-> -				 logical_to_bytes(sdp, sdkp->min_xfer_blocks));
-> +		lim.io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
->   	else
-> -		blk_queue_io_min(sdkp->disk->queue, 0);
-> +		lim.io_min = 0;
->   
->   	/*
->   	 * Limit default to SCSI host optimal sector limit if set. There may be
->   	 * an impact on performance for when the size of a request exceeds this
->   	 * host limit.
->   	 */
-> -	q->limits.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
-> +	lim.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
->   	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
-> -		q->limits.io_opt = min_not_zero(q->limits.io_opt,
-> +		lim.io_opt = min_not_zero(lim.io_opt,
->   				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
->   	}
->   
->   	sdkp->first_scan = 0;
->   
->   	set_capacity_and_notify(disk, logical_to_sectors(sdp, sdkp->capacity));
-> -	sd_config_write_same(sdkp);
-> +	sd_config_write_same(sdkp, &lim);
->   	kfree(buffer);
->   
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 91570c5e8456..d96dc446c3aa 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2761,5 +2761,7 @@ void megasas_setup_debugfs(struct megasas_instance *instance);
+ void megasas_destroy_debugfs(struct megasas_instance *instance);
+ int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num);
+ int dcmd_timeout_ocr_possible(struct megasas_instance *instance);
++void megasas_dcmd_timeout(struct megasas_instance *instance,
++			struct megasas_cmd *cmd);
+ 
+ #endif				/*LSI_MEGARAID_SAS_H */
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index ba8061ea2078..9325a011746d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4531,6 +4531,30 @@ int dcmd_timeout_ocr_possible(struct megasas_instance *instance)
+ 		return INITIATE_OCR;
+ }
+ 
++/*
++ * megasas_dcmd_timeout -	Classification processing dcmd timeout.
++ * @instance:				Adapter soft state
++ */
++void megasas_dcmd_timeout(struct megasas_instance *instance, struct megasas_cmd *cmd)
++{
++	switch (dcmd_timeout_ocr_possible(instance)) {
++	case INITIATE_OCR:
++		cmd->flags |= DRV_DCMD_SKIP_REFIRE;
++		mutex_unlock(&instance->reset_mutex);
++		megasas_reset_fusion(instance->host,
++					MFI_IO_TIMEOUT_OCR);
++		mutex_lock(&instance->reset_mutex);
++		break;
++	case KILL_ADAPTER:
++		megaraid_sas_kill_hba(instance);
++		break;
++	case IGNORE_TIMEOUT:
++		dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
++			__func__, __LINE__);
++		break;
++	}
++}
++
+ static void
+ megasas_get_pd_info(struct megasas_instance *instance, struct scsi_device *sdev)
+ {
+@@ -4582,24 +4606,7 @@ megasas_get_pd_info(struct megasas_instance *instance, struct scsi_device *sdev)
+ 		break;
+ 
+ 	case DCMD_TIMEOUT:
+-
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			mutex_unlock(&instance->reset_mutex);
+-			megasas_reset_fusion(instance->host,
+-				MFI_IO_TIMEOUT_OCR);
+-			mutex_lock(&instance->reset_mutex);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+-				__func__, __LINE__);
+-			break;
+-		}
+-
++		megasas_dcmd_timeout(instance, cmd);
+ 		break;
+ 	}
+ 
+@@ -4678,29 +4685,7 @@ megasas_get_pd_list(struct megasas_instance *instance)
+ 			instance->pd_list_not_supported = 1;
+ 		break;
+ 	case DCMD_TIMEOUT:
+-
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			/*
+-			 * DCMD failed from AEN path.
+-			 * AEN path already hold reset_mutex to avoid PCI access
+-			 * while OCR is in progress.
+-			 */
+-			mutex_unlock(&instance->reset_mutex);
+-			megasas_reset_fusion(instance->host,
+-						MFI_IO_TIMEOUT_OCR);
+-			mutex_lock(&instance->reset_mutex);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d \n",
+-				__func__, __LINE__);
+-			break;
+-		}
+-
++		megasas_dcmd_timeout(instance, cmd);
+ 		break;
+ 
+ 	case DCMD_SUCCESS:
+@@ -4805,29 +4790,7 @@ megasas_get_ld_list(struct megasas_instance *instance)
+ 		megaraid_sas_kill_hba(instance);
+ 		break;
+ 	case DCMD_TIMEOUT:
+-
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			/*
+-			 * DCMD failed from AEN path.
+-			 * AEN path already hold reset_mutex to avoid PCI access
+-			 * while OCR is in progress.
+-			 */
+-			mutex_unlock(&instance->reset_mutex);
+-			megasas_reset_fusion(instance->host,
+-						MFI_IO_TIMEOUT_OCR);
+-			mutex_lock(&instance->reset_mutex);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+-				__func__, __LINE__);
+-			break;
+-		}
+-
++		megasas_dcmd_timeout(instance, cmd);
+ 		break;
+ 
+ 	case DCMD_SUCCESS:
+@@ -4925,28 +4888,7 @@ megasas_ld_list_query(struct megasas_instance *instance, u8 query_type)
+ 		ret = megasas_get_ld_list(instance);
+ 		break;
+ 	case DCMD_TIMEOUT:
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			/*
+-			 * DCMD failed from AEN path.
+-			 * AEN path already hold reset_mutex to avoid PCI access
+-			 * while OCR is in progress.
+-			 */
+-			mutex_unlock(&instance->reset_mutex);
+-			megasas_reset_fusion(instance->host,
+-						MFI_IO_TIMEOUT_OCR);
+-			mutex_lock(&instance->reset_mutex);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+-				__func__, __LINE__);
+-			break;
+-		}
+-
++		megasas_dcmd_timeout(instance, cmd);
+ 		break;
+ 	case DCMD_SUCCESS:
+ 		tgtid_count = le32_to_cpu(ci->count);
+@@ -5081,22 +5023,7 @@ megasas_host_device_list_query(struct megasas_instance *instance,
+ 		break;
+ 
+ 	case DCMD_TIMEOUT:
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			mutex_unlock(&instance->reset_mutex);
+-			megasas_reset_fusion(instance->host,
+-				MFI_IO_TIMEOUT_OCR);
+-			mutex_lock(&instance->reset_mutex);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+-				 __func__, __LINE__);
+-			break;
+-		}
++		megasas_dcmd_timeout(instance, cmd);
+ 		break;
+ 	case DCMD_FAILED:
+ 		dev_err(&instance->pdev->dev,
+@@ -5232,22 +5159,7 @@ void megasas_get_snapdump_properties(struct megasas_instance *instance)
+ 		break;
+ 
+ 	case DCMD_TIMEOUT:
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			mutex_unlock(&instance->reset_mutex);
+-			megasas_reset_fusion(instance->host,
+-				MFI_IO_TIMEOUT_OCR);
+-			mutex_lock(&instance->reset_mutex);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+-				__func__, __LINE__);
+-			break;
+-		}
++		megasas_dcmd_timeout(instance, cmd);
+ 	}
+ 
+ 	if (ret != DCMD_TIMEOUT)
+@@ -5372,22 +5284,7 @@ megasas_get_ctrl_info(struct megasas_instance *instance)
+ 		break;
+ 
+ 	case DCMD_TIMEOUT:
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			mutex_unlock(&instance->reset_mutex);
+-			megasas_reset_fusion(instance->host,
+-				MFI_IO_TIMEOUT_OCR);
+-			mutex_lock(&instance->reset_mutex);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+-				__func__, __LINE__);
+-			break;
+-		}
++		megasas_dcmd_timeout(instance, cmd);
+ 		break;
+ 	case DCMD_FAILED:
+ 		megaraid_sas_kill_hba(instance);
+@@ -5454,20 +5351,8 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
+ 		ret = megasas_issue_polled(instance, cmd);
+ 
+ 	if (ret == DCMD_TIMEOUT) {
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			megasas_reset_fusion(instance->host,
+-					MFI_IO_TIMEOUT_OCR);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+-				__func__, __LINE__);
+-			break;
+-		}
++		megasas_dcmd_timeout(instance, cmd);
++
+ 	} else
+ 		megasas_return_cmd(instance, cmd);
+ 
+@@ -6840,23 +6725,7 @@ megasas_get_target_prop(struct megasas_instance *instance,
+ 
+ 	switch (ret) {
+ 	case DCMD_TIMEOUT:
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			mutex_unlock(&instance->reset_mutex);
+-			megasas_reset_fusion(instance->host,
+-					     MFI_IO_TIMEOUT_OCR);
+-			mutex_lock(&instance->reset_mutex);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev,
+-				 "Ignore DCMD timeout: %s %d\n",
+-				 __func__, __LINE__);
+-			break;
+-		}
++		megasas_dcmd_timeout(instance, cmd);
+ 		break;
+ 
+ 	default:
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index f0aeb1ee83a2..1d0991650062 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1371,22 +1371,7 @@ megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
+ 		instance->pd_seq_map_id++;
+ 		break;
+ 	case DCMD_TIMEOUT:
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			mutex_unlock(&instance->reset_mutex);
+-			megasas_reset_fusion(instance->host,
+-					     MFI_IO_TIMEOUT_OCR);
+-			mutex_lock(&instance->reset_mutex);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+-				 __func__, __LINE__);
+-			break;
+-		}
++		megasas_dcmd_timeout(instance, cmd);
+ 		break;
+ 	case DCMD_FAILED:
+ 		dev_err(&instance->pdev->dev,
+@@ -1476,22 +1461,7 @@ megasas_get_ld_map_info(struct megasas_instance *instance)
+ 
+ 	switch (ret) {
+ 	case DCMD_TIMEOUT:
+-		switch (dcmd_timeout_ocr_possible(instance)) {
+-		case INITIATE_OCR:
+-			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
+-			mutex_unlock(&instance->reset_mutex);
+-			megasas_reset_fusion(instance->host,
+-					     MFI_IO_TIMEOUT_OCR);
+-			mutex_lock(&instance->reset_mutex);
+-			break;
+-		case KILL_ADAPTER:
+-			megaraid_sas_kill_hba(instance);
+-			break;
+-		case IGNORE_TIMEOUT:
+-			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+-				 __func__, __LINE__);
+-			break;
+-		}
++		megasas_dcmd_timeout(instance, cmd);
+ 		break;
+ 	case DCMD_FAILED:
+ 		dev_err(&instance->pdev->dev,
+-- 
+2.25.1
 
