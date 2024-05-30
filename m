@@ -1,76 +1,87 @@
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13C2A145A01
-	for <linux-scsi@vger.kernel.org>; Thu, 30 May 2024 15:04:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3124218755F
+	for <linux-scsi@vger.kernel.org>; Thu, 30 May 2024 16:38:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717081471; cv=none; b=HSbyPMdgC9mJ1AHaDFwT3EyPbR8z1J8maIYh6tq9u8i8MlWC8Fc7BpjoCZsKZ9RpnsRySlQQ7hiRaWLwIw9Up6sJh/mfy+1m9sd81sQCFkJ5AC1MmERbUaCYqfwD0hhFoYBFgr4DGMVzsQbjlml99E+ieytigq6e1CbMstEGXeM=
+	t=1717087117; cv=none; b=DQEoBvrea6n2WV9BKqKc99FU0sVXTwPB+SRN3rGTCmA+Fbo0CPJ4xWuM+QxbbA8w7IMvE2w7MANOfR99efIs9JuSSrjI83OkLttN2OYSW+0wDZMonOfZMlPlO7NugccltUkJYzfj6sqBumtmVfdB0uSi45z0J78lyvOJqGQMwOo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717081471; c=relaxed/simple;
-	bh=eKtYororToSKtmxNQEcvcFmprET7yhBZ7lTtUsP1bQs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s5c1tBaeIxjpG3eVziZ+4awEP0HD3clcAOq/RTufRsgEw2be22n4uBWVSn8kcYlctWPl0cAeW9RjJ0NPZbyyp1uD3v+QRfRNu3GeaIezZIUTh+kljP0dvfRqM/k/3wUcgF4F7+5PCsX7n1QFg0A+jxIcm+sK3UmFJFG/Mh6Ydwc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.208.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-57a196134d1so987353a12.2
-        for <linux-scsi@vger.kernel.org>; Thu, 30 May 2024 08:04:29 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717081468; x=1717686268;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UjRI6k1pnyFmfsy/h6IOqESLGa47Wobef0S2P34bIx0=;
-        b=J69COBkjIP0OH5eEvwBtM+hFztaZezomrgm7aOvT/faFbZiuLdkvJekbfQpkr9vSTA
-         o8zxUmRY7oI+WVV0LE3nUz1XDDTNZHQerC9z3mjGY9zxLoHaNzjAay8HU/470yUOsmop
-         yLBAisJUiOSLMmRRPFdJeOzbvMFaroQxixtklK7Q6DE5s1g1MdSSAEMcyHPekvsy5R7x
-         kObBOw8VObfu4QzTD9X1r7MOj8HTKO5LMualeAdRK6+RrkWBm8iq5i7+VUrXBlMmSYPC
-         l/JhEurHj+6MP8X3jo9j0ZCYWwiPukzZqaAxjkBEnSa44ARMXVW+Ft+neBKk7bj/mHuW
-         EmAA==
-X-Forwarded-Encrypted: i=1; AJvYcCU75QgF5IFrh5JCDxuEmC9C4MFuB6nTxNTTkL8G3w0skPozuQ3jS/A6pkrle79Sjm5/cnuW8qgIEKDHmIWSg6A5Rka1G+lx5d70HA==
-X-Gm-Message-State: AOJu0YxlQtFWnEhP3XVyjbDrJJ/dRCJnwSLFutLDo696cOHHVIw6+JCm
-	c/kp7xTqpa+88w8ZZ5qhOxDm6quzCsddY0mqp0xlw0UtlAoyubwi
-X-Google-Smtp-Source: AGHT+IEqVCK28kSitDJkVAlWQY/CY/i3mjwS3mrDq9HQa5kw3kQTrgO2ledsMVJAavCaKrXlkxqw8w==
-X-Received: by 2002:a17:906:8c6:b0:a65:b33a:3574 with SMTP id a640c23a62f3a-a65e891383bmr164732866b.0.1717081468073;
-        Thu, 30 May 2024 08:04:28 -0700 (PDT)
-Received: from gmail.com (fwdproxy-lla-003.fbsv.net. [2a03:2880:30ff:3::face:b00c])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a626cda8481sm826580066b.213.2024.05.30.08.04.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 May 2024 08:04:27 -0700 (PDT)
-Date: Thu, 30 May 2024 08:04:25 -0700
-From: Breno Leitao <leitao@debian.org>
-To: sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-	suganath-prabu.subramani@broadcom.com
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
-Subject: Re: mpt3sas: BUG: KASAN: slab-out-of-bounds in _scsih_add_device
-Message-ID: <ZliVeTQU31yTwECi@gmail.com>
-References: <ZkNcALr3W3KGYYJG@gmail.com>
+	s=arc-20240116; t=1717087117; c=relaxed/simple;
+	bh=6UtMqZpRNWrL3nIFw/8T90/lJaugYzl4/vUkUamCx6A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sXrGM2pwSTV4k5VTeUbmNY7K2DQg6ZrPpImO/HjSDQ4VHNSYlAkA8H/sWKv3+kiDGjBxbAMI4Tb03bth6zu4RIULNJpitNvJt6E0KRBdQZyc/TWEXGf/mTyp7g0uioyQ4hh5q5ij/JMHrtSPqmjxUuazS5JC7rddcf3C5loH0QM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=T+th69ew; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="T+th69ew"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VqsQ33frXz6Cnk9B;
+	Thu, 30 May 2024 16:38:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1717087113; x=1719679114; bh=L4KgsKEoMkfQae9uN7DEOpgQ
+	XdnbFIWdit3iB443Eos=; b=T+th69ew5077bgJyeu3AbDPtvaUi2ZCyZhbEDTVq
+	JafqdrBY3w4Sp6hhHv548y7BsNVSb3RhjEFpK7jk6/qpc9E6kNaa2kJXjXIYTq27
+	61MV0tcf6cjY1VmQ/zE4Crc9EmofMjg6+Ofc9F2hGd+ErlopKi/VZ+7hJrM5IAko
+	+FI0Fe/XDZux4/yMJKwf6jmC+pODZEVvvx4Tavs7gleABbiCRoE/wKGMckB0v29J
+	OWr7zu3lNml/bcS7vWAVu9WjBxiBMrjgzdPOGKsX11ChhSif/EajtCkRKiNZK/Wv
+	pySDhnmm8FZcUNZpl/d5S2yjnhViMddR1FKYSndwElVn4A==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id mtbJFbr7QAxl; Thu, 30 May 2024 16:38:33 +0000 (UTC)
+Received: from [100.125.73.196] (unknown [104.132.0.68])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VqsQ13Lxqz6Cnk97;
+	Thu, 30 May 2024 16:38:33 +0000 (UTC)
+Message-ID: <effa6f38-50a0-4760-bcf6-71bdfac24ea6@acm.org>
+Date: Thu, 30 May 2024 09:38:32 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZkNcALr3W3KGYYJG@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [REGRESSION] USB flash drive unusable with constant resets, since
+ commit 4f53138fff
+To: Joao Machado <jocrismachado@gmail.com>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+ regressions@lists.linux.dev
+References: <CACLx9VdpUanftfPo2jVAqXdcWe8Y43MsDeZmMPooTzVaVJAh2w@mail.gmail.com>
+ <493e6372-cb4d-4f1f-9803-17d37a0fcbc4@acm.org>
+ <CACLx9VdOeY6ZXEwGp-FOQY5VKJzgN6jJZQMhOdY9WnQjm07KSA@mail.gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CACLx9VdOeY6ZXEwGp-FOQY5VKJzgN6jJZQMhOdY9WnQjm07KSA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, May 14, 2024 at 05:41:36AM -0700, Breno Leitao wrote:
-> Hello,
-> 
-> I am running 6.9 kernel in one of my machines, and it shows the
-> following KASAN issue. I've tested in linux-next also, and the problem
-> is there also. In fact, the snippet below is from linux-next
-> (a17ef9e6c2c1cf0fc6cd6ca6a9ce525c67d1da7f)
-> 
-> Is this a known problem?
+On 5/30/24 02:46, Joao Machado wrote:
+> Tried the patch over commit 1613e604df0. Issue persists.
+> Attached git and journal logs - notice here usb is using xhci_hcd 
+> instead of ehci-pci, but this is because it's a different 
+> computer/environment than the one originally reported.
 
-Hello Sathya, Sreekanth, Suganath
+Thank you for having shared the systemd journal. In that journal I found
+the following:
 
-Have you had a chance to look at this report? This seems an important
-issue that can end up corrupting memory.
+May 30 10:23:56 archlinux kernel: scsi 6:0:0:0: bflags = 0x0
+May 30 10:23:56 archlinux kernel: scsi 6:0:0:0: Direct-Access 
+Kingston DataTraveler G2  1.00 PQ: 0 ANSI: 2
 
-Thanks
-Breno
+This is unexpected. It seems like the new entry in
+scsi_static_device_list is being ignored?
+
++       {"Kingston", "DataTraveler G2", NULL, BLIST_SKIP_IO_HINTS},
+
+Thanks,
+
+Bart.
