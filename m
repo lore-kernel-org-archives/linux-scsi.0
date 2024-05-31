@@ -1,39 +1,37 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D01F97BB12;
-	Fri, 31 May 2024 05:55:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B53E17D071;
+	Fri, 31 May 2024 06:08:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717134903; cv=none; b=skx/YAjQMNPlkG0NCoTA2XhzUIzPE05juRDDNn7b17nJM3Kp/UuX4RWX3GBl2oQdIBwOdFAZMUdMOPWl5QxN7dSgfezpIl81/IJk6utAwG4XtnREvHMl6lSbC+Zd/2NrE+CHSclVGdTlyQNbfLwc1kqtS+B3nFcMKMCdBpuO/xQ=
+	t=1717135715; cv=none; b=bRnvjZ78Qoj9s2r43zsWybd/JnW1BqUurHDsb82kYwZvLL37gFTMTBaEShtWMz4VytE5kNX9eBEJzk6i8nFB/iUs3mOoOraJ71SO3bagrFqeknxZMsT0wAzHqstvvpV2uJ4xSiBKVfmFKKhY3/5pKFnb0vWxeDRENdqyvOfSgyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717134903; c=relaxed/simple;
-	bh=chPSGR/11YkWOFauxo+0E/vjNh8ogei45o7Ss1ekzEg=;
+	s=arc-20240116; t=1717135715; c=relaxed/simple;
+	bh=9Lq7tTCG32vvV5D4xtot6/ifQLTN+b3T5AJN9EhOLao=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KT49w9xCol6VRcFR6QkEZsm4WsYdIT7dxZk+rYzGPQMRGlWAo4c02vUlSsdbfHmsMVyAJGtucRu03mCU8VI2Tt2OzqUfHzUM8SmZqKXHuiOCqSMyKipPtXsqdsLC1KNQ8IeetCcKLukvC69RZaSIiBeq4Kl/5g7Uz8RVEPd1eMY=
+	 Content-Type:Content-Disposition:In-Reply-To; b=WwoMWsenjvJScSXiDi+KKLN76ay+SxzFQHFGPHnfzRw4KQ+EBUrvX81XAhCR2Z4Ok2gYA1cpw4Zfqz36hs+/bp908ouKr05i35eI+1ne6saWXxQXOztjJiiP/28zM9HeF4hKc4WeyfOYYI1RPdE9soR6Ctmk6ra7CpU/JUhGtuM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id D3CD568BFE; Fri, 31 May 2024 07:54:56 +0200 (CEST)
-Date: Fri, 31 May 2024 07:54:56 +0200
+	id CE58A68BEB; Fri, 31 May 2024 08:08:27 +0200 (CEST)
+Date: Fri, 31 May 2024 08:08:27 +0200
 From: Christoph Hellwig <hch@lst.de>
-To: Ilya Dryomov <idryomov@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+To: Michael Ellerman <mpe@ellerman.id.au>
+Cc: "Linux regression tracking (Thorsten Leemhuis)" <regressions@leemhuis.info>,
+	John Garry <john.g.garry@oracle.com>, Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Richard Weinberger <richard@nod.at>,
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Dongsheng Yang <dongsheng.yang@easystack.cn>,
-	Roger Pau Monn?? <roger.pau@citrix.com>,
-	linux-um@lists.infradead.org, linux-block@vger.kernel.org,
-	nbd@other.debian.org, ceph-devel@vger.kernel.org,
-	xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 02/12] block: take io_opt and io_min into account for
- max_sectors
-Message-ID: <20240531055456.GC17396@lst.de>
-References: <20240529050507.1392041-1-hch@lst.de> <20240529050507.1392041-3-hch@lst.de> <CAOi1vP-F0FO4WTnrEt7FC-uu2C8NTbejvJQQGdZqT475c2G1jA@mail.gmail.com>
+	Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	benh@kernel.crashing.org, linuxppc-dev@lists.ozlabs.org,
+	Guenter Roeck <linux@roeck-us.net>, Christoph Hellwig <hch@lst.de>,
+	Linux kernel regressions list <regressions@lists.linux.dev>
+Subject: Re: [PATCH 04/23] scsi: initialize scsi midlayer limits before
+ allocating the queue
+Message-ID: <20240531060827.GA17723@lst.de>
+References: <20240520151536.GA32532@lst.de> <fc6a2243-6982-45e9-a640-9d98c29a8f53@leemhuis.info> <8734pz4gdh.fsf@mail.lhotse> <87wmnb2x2y.fsf@mail.lhotse>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,29 +40,17 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOi1vP-F0FO4WTnrEt7FC-uu2C8NTbejvJQQGdZqT475c2G1jA@mail.gmail.com>
+In-Reply-To: <87wmnb2x2y.fsf@mail.lhotse>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Thu, May 30, 2024 at 09:48:06PM +0200, Ilya Dryomov wrote:
-> For rbd, this change effectively lowers max_sectors from 4M to 64K or
-> less and that is definitely not desirable.  From previous interactions
-> with users we want max_sectors to match max_hw_sectors -- this has come
-> up a quite a few times over the years.  Some people just aren't aware
-> of the soft cap and the fact that it's adjustable and get frustrated
-> over the time poured into debugging their iostat numbers for workloads
-> that can send object (set) size I/Os.
+On Fri, May 31, 2024 at 12:28:21AM +1000, Michael Ellerman wrote:
+> No that's wrong. The actual hardware page size is 4K, but
+> CONFIG_PAGE_SIZE and PAGE_SHIFT etc. is 64K.
 > 
-> Looking at the git history, we lowered io_opt from objset_bytes to
-> opts->alloc_size in commit [1], but I guess io_opt was lowered just
-> along for the ride.  What that commit was concerned with is really
-> discard_granularity and to a smaller extent io_min.
-> 
-> How much difference does io_opt make in the real world?  If what rbd
-> does stands in the way of a tree-wide cleanup, I would much rather bump
-> io_opt back to objset_bytes (i.e. what max_user_sectors is currently
-> set to).
+> So at least for this user the driver used to work with 64K pages, and
+> now doesn't.
 
-The only existing in-kernel usage is to set the readahead size.
-Based on your comments I seems like we should revert io_opt to
-objset to ->alloc_size in a prep patch?
+Which suggested that the communicated max_hw_sectors is wrong, and
+previously we were saved by the block layer increasing it to
+PAGE_SIZE after a warning.  Should we just increment it to 64k?
 
