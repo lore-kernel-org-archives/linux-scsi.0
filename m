@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DEE9768EA;
-	Fri, 31 May 2024 07:49:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70837768EA;
+	Fri, 31 May 2024 07:49:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717141753; cv=none; b=R2en13/bU3XvQkm2JMwpH2lST8kFFewMcnK4IEDIjOYG6BANUpFSzwBKylkPc04PebvinIA9T/5eIPBcSVW1e1Azp/wRwKMDkm6xHF0k/L9vewfrjVS/BowPt3LRMXJMj6RYbTWpbQ9sDJYqtYwJkRnPSturLE+oAdwvKBcvgvs=
+	t=1717141756; cv=none; b=emAGTISbN4fGChx6sjSp3otzd+0zt6eZQGuG72I+V+BEroZu/HL7V8tq9h6lRRkAbVwUkXiIw6IlFJv0AdMwB5YJSysJGDf2OsTTLQQbRx0KTV5ucY9R828jLKkZOpkaCVVNpRKak/YNRwLFnXOsYMAvwFo7HYSE0b1c+5/dHvQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717141753; c=relaxed/simple;
-	bh=VeoBC+ZyGhvAObHuWDXL8ya+YIxg1lSxMLlNDY3pwk0=;
+	s=arc-20240116; t=1717141756; c=relaxed/simple;
+	bh=o89m6LBJuxQKPM5Z37dzmX/EqhoCrIYaYK8brwhByNY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PIIsgJwbxyXqwk/Y/58+gUhh4MsGNYwhVeJg8epCRv8gLhZS2hZ3DbFgnVgHXkc7En+jhB70fBBi5ZQzgM1dCJCMcfFeUl1mFC6yk3cKHTUy5DWIfTgrbO1BXUP3Sdi/SAZwRYhsjt+pTlnrASkzVo0zs9LqpB0oBZg7URX7vM8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=ixc7sU02; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=rMCa2WfQKfy422SX1H4iKD5zThmdJQULf2wSfGKLU62DkcodEoi2UpVYgvcqLjox8RC/XEuAxBpi/JWIzRKtSGweBQlda7YMF5aX+V7YWQzOjJhvlcUSyJySlAPnV+qL4878wJAUHXmJ/bHz3s58feKF68Ma0YxB+LLyYFLzO8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=QZrkdfl3; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ixc7sU02"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QZrkdfl3"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=rb1OF73CoqNaiVO8CqTHVc8xH4T7Xk6a2c9CxacCVxo=; b=ixc7sU02vm0CYaeNZLVqmJqr1F
-	w3t3CHukX6Y/WrwEBPmir631IGBTKvdXkr3Gx7sPqVqokxqFFVlywpqEW1Ike10ParnnBt1UYNr5g
-	oxfWZdjBwiqVCxtSkH5LykBrDs6zXobZzMgztC7hMbwDnMSYlJqmNgh8Q9kC05ZfeL1SBTCNAFVWE
-	+8sLD6+qG9QyI/eL8OKGy0oMy9FUSqpJQy2NiOWqYRZmyBUvVUNO6Lvocvevg3GFFr1HQvo+FKyWO
-	zjfg3D4GZ3IuWhl7HByairPmkUxGxODsK90DtnOBsC9OwFCM9RkfiY/ajKZ3KzidolhxQDvM0BqsD
-	2Z40FzGQ==;
+	bh=wVVN+ho4qP+ZR7D7NuzXuwmQjlkhywzU3nSc/hJClAc=; b=QZrkdfl3DDyuwh2a7Q4n0400qr
+	04KjE55KXAnyTNn+jHpVvd09LViptfhuL2m6pO+SqoYzByvZ1uF6g3hbEvHVQuscZYGiv9qH9dKXI
+	7F+/G+I9owuYVx+yMsBAYl6nRr4jTXOPQ+EOU6xXNTsTgwkw0BnnxmoX271AreMLl9v4vf9/OjuKt
+	bLMly1lAU6mCENiG10UTLoTmXL4lVxHMQ/KPsUQQQFv71494Ap5HBXNBWltj1sb2kw9kQscDv6dTO
+	Le0XTwBOV6AoUM3S00jTLpkzkDVSA1w3wBDuxfSX71QSRVMI2L4W9NtLQARIGXjDUkr0iRaK1i/Y0
+	SDmnPCyg==;
 Received: from 2a02-8389-2341-5b80-5ba9-f4da-76fa-44a9.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:5ba9:f4da:76fa:44a9] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sCx0c-00000009Xgz-3ZvO;
-	Fri, 31 May 2024 07:49:08 +0000
+	id 1sCx0g-00000009Xih-13mT;
+	Fri, 31 May 2024 07:49:10 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
@@ -48,9 +48,9 @@ Cc: Richard Weinberger <richard@nod.at>,
 	linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	Damien Le Moal <dlemoal@kernel.org>
-Subject: [PATCH 09/14] sd: factor out a sd_discard_mode helper
-Date: Fri, 31 May 2024 09:48:04 +0200
-Message-ID: <20240531074837.1648501-10-hch@lst.de>
+Subject: [PATCH 10/14] sd: cleanup zoned queue limits initialization
+Date: Fri, 31 May 2024 09:48:05 +0200
+Message-ID: <20240531074837.1648501-11-hch@lst.de>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240531074837.1648501-1-hch@lst.de>
 References: <20240531074837.1648501-1-hch@lst.de>
@@ -63,71 +63,61 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Split the logic to pick the right discard mode into a little helper
-to prepare for further changes.
+Consolidate setting zone-related queue limits in sd_zbc_read_zones
+instead of splitting them between sd_zbc_revalidate_zones and
+sd_zbc_read_zones, and move the early_zone_information initialization
+in sd_zbc_read_zones above setting up the queue limits.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/sd.c | 37 ++++++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
+ drivers/scsi/sd_zbc.c | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 0dbc6eb7a7cac3..39eddfac09ef8f 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3201,6 +3201,25 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- 	return;
- }
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 806036e48abeda..1c24c844e8d178 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -565,12 +565,6 @@ int sd_zbc_revalidate_zones(struct scsi_disk *sdkp)
+ 	sdkp->zone_info.zone_blocks = zone_blocks;
+ 	sdkp->zone_info.nr_zones = nr_zones;
  
-+static unsigned int sd_discard_mode(struct scsi_disk *sdkp)
-+{
-+	if (!sdkp->lbpvpd) {
-+		/* LBP VPD page not provided */
-+		if (sdkp->max_unmap_blocks)
-+			return SD_LBP_UNMAP;
-+		return SD_LBP_WS16;
-+	}
-+
-+	/* LBP VPD page tells us what to use */
-+	if (sdkp->lbpu && sdkp->max_unmap_blocks)
-+		return SD_LBP_UNMAP;
-+	if (sdkp->lbpws)
-+		return SD_LBP_WS16;
-+	if (sdkp->lbpws10)
-+		return SD_LBP_WS10;
-+	return SD_LBP_DISABLE;
-+}
-+
- /**
-  * sd_read_block_limits - Query disk device for preferred I/O sizes.
-  * @sdkp: disk to query
-@@ -3239,23 +3258,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 			sdkp->unmap_alignment =
- 				get_unaligned_be32(&vpd->data[32]) & ~(1 << 31);
- 
--		if (!sdkp->lbpvpd) { /* LBP VPD page not provided */
+-	blk_queue_chunk_sectors(q,
+-			logical_to_sectors(sdkp->device, zone_blocks));
 -
--			if (sdkp->max_unmap_blocks)
--				sd_config_discard(sdkp, SD_LBP_UNMAP);
--			else
--				sd_config_discard(sdkp, SD_LBP_WS16);
+-	/* Enable block layer zone append emulation */
+-	blk_queue_max_zone_append_sectors(q, 0);
 -
--		} else {	/* LBP VPD page tells us what to use */
--			if (sdkp->lbpu && sdkp->max_unmap_blocks)
--				sd_config_discard(sdkp, SD_LBP_UNMAP);
--			else if (sdkp->lbpws)
--				sd_config_discard(sdkp, SD_LBP_WS16);
--			else if (sdkp->lbpws10)
--				sd_config_discard(sdkp, SD_LBP_WS10);
--			else
--				sd_config_discard(sdkp, SD_LBP_DISABLE);
--		}
-+		sd_config_discard(sdkp, sd_discard_mode(sdkp));
- 	}
+ 	flags = memalloc_noio_save();
+ 	ret = blk_revalidate_disk_zones(disk);
+ 	memalloc_noio_restore(flags);
+@@ -625,6 +619,10 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, u8 buf[SD_BUF_SIZE])
+ 	if (ret != 0)
+ 		goto err;
  
-  out:
++	nr_zones = round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_blocks);
++	sdkp->early_zone_info.nr_zones = nr_zones;
++	sdkp->early_zone_info.zone_blocks = zone_blocks;
++
+ 	/* The drive satisfies the kernel restrictions: set it up */
+ 	blk_queue_flag_set(QUEUE_FLAG_ZONE_RESETALL, q);
+ 	if (sdkp->zones_max_open == U32_MAX)
+@@ -632,10 +630,10 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, u8 buf[SD_BUF_SIZE])
+ 	else
+ 		disk_set_max_open_zones(disk, sdkp->zones_max_open);
+ 	disk_set_max_active_zones(disk, 0);
+-	nr_zones = round_up(sdkp->capacity, zone_blocks) >> ilog2(zone_blocks);
+-
+-	sdkp->early_zone_info.nr_zones = nr_zones;
+-	sdkp->early_zone_info.zone_blocks = zone_blocks;
++	blk_queue_chunk_sectors(q,
++			logical_to_sectors(sdkp->device, zone_blocks));
++	/* Enable block layer zone append emulation */
++	blk_queue_max_zone_append_sectors(q, 0);
+ 
+ 	return 0;
+ 
 -- 
 2.43.0
 
