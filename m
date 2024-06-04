@@ -1,202 +1,364 @@
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f44.google.com (mail-ot1-f44.google.com [209.85.210.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE3E20317
-	for <linux-scsi@vger.kernel.org>; Mon,  3 Jun 2024 17:52:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717437129; cv=fail; b=WOdn/ryvnVm5PUA10qHMSxD0RlfeiX5Y01na7A2KpqgFpBvoYxb17aP2ZVF3fOCDOA+BrkrBFEdxBUx6X+1X7Crajgom5vrkeEJFnBHxpmE1dUffIXp8ubYaRYiuquFTtJRV3efwasl87uQs82ZUjhhlWKG39hQwxNtAvkoRPYs=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717437129; c=relaxed/simple;
-	bh=oPlVB9CJXHUVGQ5/UApwDpDqHdGecoW8DBSJwZ8AOwU=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=dSFHifczTt6wkLRghrW1ZsH7GWPO1IEcZTDZnmYSVHqeeXbjGFQdqVuTQtksKquiQW78infMRvhiFEtLR0vcvZjwCLoXLR0ZxOPhF4LK8MsCLOOCi/oXixSxrQ/6B18Z5rfsS176j+D+H3U55NSG4CARhEReSRhv+9siXuajtNI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=gyqElgRT; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=rf4NtjBf; arc=fail smtp.client-ip=216.71.154.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85FA22A8D0;
+	Tue,  4 Jun 2024 05:10:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.44
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1717477839; cv=none; b=n6jJovWHguMmUlfbd+GcmnthR538nifurzhe8+kkhs98uTq4TixJV8heySyW+cYoCH3gS9+uNLuuukbJ70UozfirnnXFuRV8g33ImrHJH2Kt+XZ6SAryfzTeIQVPkyhMvUmQPtrWA3x+cVg2mqm96B4eH75CBrPjPoO2UeRBa54=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1717477839; c=relaxed/simple;
+	bh=cXg9Uh+mwdg7QtODtpq80TFwDa4ZVOdly16SztyY8+w=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=euaHWL72Hh+Hr/Z2btTu5CTpJgtx6WRk/1k2T0x+mlLIDL6kJuSAgfuAYzsASLldEKZCrqUNUiO0/Toyj+mV3LC2wS/NzaHGz7s2LpqcJmGIuJFm7JNBX4qn4XJbmrcuLALEz8Or3OP1C+IRtDoM4cTfYoVl9U8P19XdlLYfEC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KpkzF69L; arc=none smtp.client-ip=209.85.210.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="gyqElgRT";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="rf4NtjBf"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1717437127; x=1748973127;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=oPlVB9CJXHUVGQ5/UApwDpDqHdGecoW8DBSJwZ8AOwU=;
-  b=gyqElgRTa20KOy0oWVYEyMZaHaTl4ee0V/mAWY6yphrOtQ48nhEBmcLe
-   Z+nE/JUVnP0Bwsmg6kiGStrZkRXOZYO7aFdWqChNsVbjOhNlUqdo2tyUw
-   Jm7Vdz9Hwfava0eMe1NVZAlsLCwP87JxO+7DCa9vbkLDLTJG0Cbb1GyCo
-   4Z1A8rwOTd/nk+8TsPvqK1aQqzeVPrI8HdVdFUUiFz7lF7pfOTTwczGuz
-   syDCY2v6rHPzKE7fbTofbiR3zqUojVFvNcP9y8X3zQx9TCqjmdEsK3a+k
-   LKS1f7X3X140a/ZvW1hbJ5EcbOfYSl0W3pkurCpkOYO9WadGByd4gUgY1
-   Q==;
-X-CSE-ConnectionGUID: nlgz+3L3QLCS2moLRwaukw==
-X-CSE-MsgGUID: iy9JRkAoQgCx76RsAeE6vg==
-X-IronPort-AV: E=Sophos;i="6.08,212,1712592000"; 
-   d="scan'208";a="17356549"
-Received: from mail-bn8nam12lp2169.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.169])
-  by ob1.hgst.iphmx.com with ESMTP; 04 Jun 2024 01:52:00 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EuvB1GiJpu9qFB/0nU93+7fcbgRRtao71bGoSFMU0zxnZt058ZFDA/uap+TnWL5ANIG/YRpQy5tAFTPmGteyNuD96zGjNlGD5crX79ak8yI0kXH53Y01FpYdwvTWBFuW2ovH+PC8HvAe0P+qCxy7BNEQ/cPEWgdkhaQOfvUZV8XjdtJJJF7F/o5Gt6kbBBky+GGty5OevGxQ2gadrJuymMN/Ig/ZRvdY47w8TRXRl25tYtnF2mqB/CjHoouDmHxuKS7iLLhZ+V3U3dXegA+MhRCG9fR2HdnBIw8kEAalN02SnxCvtasT+4czMhBiFpsAeTJKkLH6yRNXb96B3yczoQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oPlVB9CJXHUVGQ5/UApwDpDqHdGecoW8DBSJwZ8AOwU=;
- b=ZfQzEMPlogt6UJFywlRpJo1l1NftQQXIJPNKTZbs3F++99qWI2eRyEginP7tBI+ZJaYHbvH02m/Z3cDchXZ0woew4E0BN2/dHupLdykk2bOqEs7S6VOgrEHn0nRilXXpqa8p95eSSM2KpIQmRccMFV9+twime7rRJEEWw7ci2AOT7jaSRVeZH9T9ukFv/wO0/SSGRn5Da3aQGemhVOAF/o+Jv0W+8kmeML1/CYsRKSNGaSrfEXCkQgO5DTQrXxHF3TeHFtR3C4rJE8/lgsvhuk+LxFn88vP9S6AMpUxajOBETqLzIwH7qb8XlqFI6kUA8t/5RbWDcApPPtEHnh+hVg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KpkzF69L"
+Received: by mail-ot1-f44.google.com with SMTP id 46e09a7af769-6f8d2ec8652so3067792a34.3;
+        Mon, 03 Jun 2024 22:10:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oPlVB9CJXHUVGQ5/UApwDpDqHdGecoW8DBSJwZ8AOwU=;
- b=rf4NtjBfoTTKg2kqvF0XmeEouawCMary9RMEEb95ZA02QwTtfXB5IkiCxJqoflDmAkVQ81s1IZWa4LDmrdS6nK2TkpbanzGZ19x5s3nn19RhFyPmYlzgtffxDD6qvkYtjyrD1/oE38hQkWpjaEWuX0EY9Tg8RJUZOVuVxYX07xM=
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
- by PH7PR04MB8612.namprd04.prod.outlook.com (2603:10b6:510:245::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7587.35; Mon, 3 Jun
- 2024 17:51:58 +0000
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::ee22:5d81:bfcf:7969]) by PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::ee22:5d81:bfcf:7969%4]) with mapi id 15.20.7633.021; Mon, 3 Jun 2024
- 17:51:58 +0000
-From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 0/4] Declare local functions static
-Thread-Topic: [PATCH 0/4] Declare local functions static
-Thread-Index: AQHatdrO/pTFXj6ab0mdwHJAhKii4bG2Ub6A
-Date: Mon, 3 Jun 2024 17:51:58 +0000
-Message-ID: <b6ac9234-8f76-41ac-9fea-c6f2c2028908@wdc.com>
-References: <20240603172311.1587589-1-bvanassche@acm.org>
-In-Reply-To: <20240603172311.1587589-1-bvanassche@acm.org>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-user-agent: Mozilla Thunderbird
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH0PR04MB7416:EE_|PH7PR04MB8612:EE_
-x-ms-office365-filtering-correlation-id: a7d9cf18-a8f2-4b5d-c2bb-08dc83f5dd4f
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230031|366007|1800799015|376005|38070700009;
-x-microsoft-antispam-message-info:
- =?utf-8?B?NHl0UGRCa01NRjg3SURXZ3JPVEhOdkoxaXVSR1pDODhhVC9mNVNydWdETGl5?=
- =?utf-8?B?Q0s2SFlMY2dMRHMzYkgyQW1xbmlSUERmTkVSNDlFVzJYL0xuNjg4TzBPeWJs?=
- =?utf-8?B?UG5tU2dHTWJmWmczNnMvLzJUS25WV1F3RDJqQmx3RXFGR1J1bk5Vbnh2cHMw?=
- =?utf-8?B?d3pETVN3dkFpUjZiN3B2NGZudkNGbFFxZHJ1WkZXUGJ2V1dyV0RUMUdZaFdD?=
- =?utf-8?B?RHNLUHBCSytpQmdZRE9oVHpONlQyZTVSOWh2UjVLVmRmcW9SUExvcU9PK2Rj?=
- =?utf-8?B?aXVjSE5nbWRsNXdnTGw1UVVRTXFLTEM4NnhlQ2w0bHFRMXpUeUlwb3VXYWw1?=
- =?utf-8?B?Nk5IelRUa3E0VU82NU9TZ1NHaXdsOU5xdU5lVmlsWE5mYVliQWI2WjNMT3h1?=
- =?utf-8?B?MC9UMGZOVWMwK0RpUk9NZG5mU3JyUm14Z3o4RGYyWTJlNjNHSWpSMVoxeGl4?=
- =?utf-8?B?TmUvVFBTYnhRVUJBczBBSFRGRkZCUGxTN0ZWZ2llVmlsSXgyaW1maUhRRVJ6?=
- =?utf-8?B?amdjeTlpVHlSR2NOWFhjTWx1eHJKTkc1ZjAvRitvVFlTS1haWEFNZ2FpQjdx?=
- =?utf-8?B?SFpPMzBIUm1aTjhEQktHam4zcEZ4Qm54NEx6L1hIYUFpZWlvRWt6cWZPY3FG?=
- =?utf-8?B?dTNwRU4vTWg2TGRGeFA4UnFxdjZ3c1MzTTFBSWorOTJDYUpESDBTSDVqemV6?=
- =?utf-8?B?dUFELzBTMmFYR0xEQTZ0Qy9VWUFWOGs1ZUFhSnAvK1d5Y09rSVI5R2twVGRC?=
- =?utf-8?B?WTBUUTRTVTlJeExxR0VwcDJKNDd3Q2ZYZTRUVjMyZjAxVFQ5STNzSzEvVnZH?=
- =?utf-8?B?a1hkYmtMb0dRMkNmSmg4WDdZMWo1RHUrQWpWRmRQeTBIZWlObG0zbGtkL2hG?=
- =?utf-8?B?Z0d2Uktmem52N3NlSUZNTzZ5QU1OajBiSnhiemtmU1FkcDlBbDhHSWN0czRl?=
- =?utf-8?B?N2dzS213d2tKOUMzZHJkODQ1VGR5MURseTJ4ZHpueHljSlJPUVZzQlpINmhQ?=
- =?utf-8?B?a0N3djhCUEdVVkxCN05sSlBxSHQ3Slc2VHcvV3ljMWdsaUxKS1liMjJSY1hO?=
- =?utf-8?B?SUhMM0RXTklJRVA5SUtEUlhKaTY5N3NCQlVEOXBWTTR4SW5tcjhuOVlmRXdu?=
- =?utf-8?B?eDUvb2VHU2R3Q3prb093WElLbTJPeGxCMmxISmphNCt4RFZDQ1hGeTBtM1Zu?=
- =?utf-8?B?cWdnWS9KczdTSUhQbzgxRlU3czF6c21mSHNSeEpKdzdhbXRKLzJzMlkwNWp3?=
- =?utf-8?B?Z21Yd21QRTl2ZzliYzRWZzd0UWtIcjl4TVlIaTJyaUo2WStXTDdwVWxYSE1q?=
- =?utf-8?B?cENVOUV1b3dNOGhxR3c2TS9GNGMxWlRSeUFwSnJTTUZJblFXb2lTOEhrQmdy?=
- =?utf-8?B?MGFmSFVvZkJtUWt1dHRPSEZwZ3Z2WGhFYzhud0l6SjQraVFtdG5ON2NOK1ds?=
- =?utf-8?B?enlKNTdsOW9hNzBPTGIwbmwvUU9zZ25rc1dRSVpaMlNQRE55U2wxSlFUeWIx?=
- =?utf-8?B?bjdJWDlaOFgxbTE1MityNGFVNVNxWno2WFg5b2F0cXR1K0wyd05pUUtaOW9P?=
- =?utf-8?B?RFNlTzBtVzlIM2U3WHQ2cW1zQXZTYXorOFA1Ui9KbUxFa3JOMmRsV1NUYnVx?=
- =?utf-8?B?K2hzeGpabHFyRkFCRlBKUFdIYzlQRUFMc1BYTHgyb05WVlRBVGdLWjd3M2pz?=
- =?utf-8?B?MnVLcWV5L2tIZHRqR01YR0lIUjlwc1VqU2J0S2hXdHBUbGkrTk51Vi9XZGlY?=
- =?utf-8?B?V3JMM1FLamxhR0U1eVFCMUVGejNpTUNyKy9SYnlGTnFlUlpOWkMybCt4REt0?=
- =?utf-8?Q?ksF2R/dyyjJz8OdGLqO5l8/EzO71Y94lCmqIs=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(1800799015)(376005)(38070700009);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?emV0bytjNExwWW5ZVEM2WlVpM2NiT004dmNyZVlEUGN2Ly9iTVF3aE5zSjht?=
- =?utf-8?B?MWM0RlNPMkh1OTRqbFl0K1VEdVUvU1NtVDJFUHhHU0JDMXQzT3p6eXRhRkJU?=
- =?utf-8?B?dk41UmdWbkxMNkxoNXpQdTFMaTFXeUxvNmVuTTVOSDdDSlJUNHBSMXZNWXlI?=
- =?utf-8?B?NUN1ZXZQelgrL0pyWk41T29jWUNuOHNsc3NhT3cxUUMySG5iY2lLSjdvNmlS?=
- =?utf-8?B?cHFjMDZYRlh3eVAvSVFWSFo4aitxNytFQU1Hajdmb3k2N01pU05UUVJ5anlL?=
- =?utf-8?B?Mklta2xkSXkwOC9MRHJiTXJLdkg0MVZLZE5Yckx5YkwzSUcwWXRtVHkxWU5p?=
- =?utf-8?B?VjFNSmJxTzFYS2tFL2U0TG1TSW5iK2lFS3g2QllQS0J6R1JLNjRMK3ZaUjdL?=
- =?utf-8?B?S2R2ZlJ4S1h1eXF4b0lPNnNvSENiM3M0YlhHUkRwZ0Uva3UvZWxQbzZjV0Zm?=
- =?utf-8?B?RXdWWkxrNHdMeHV3OENtMDN2MExseVlHMnJXNW9sa3lDaDJ2UnFRRm96Z25W?=
- =?utf-8?B?alJVQW84U1BuZjhLTGNGWlFraWphT2twR0RwRWJTMXU5WDZLWk4veTFhZDI2?=
- =?utf-8?B?YjFoL3NtbEE1UHdPRGlnUzdoZmJsQ29DLzltVExBV1piMHE3dmRtUCs5Mmor?=
- =?utf-8?B?dU0xeTNob0FzQTk4T3l5TmlyZGRYVHhDdnlyS1p3R016RTdscU0yUjQzaDZu?=
- =?utf-8?B?UXo5QWhlOHEzOXgvWEM2MzJCSkloM0RrUCt2N2U0T0hwQUtaRytXVnJTYno4?=
- =?utf-8?B?ZUVuM3RVUmE4WWxVRVh4VGNLbnd0dFdMSkdJZ1AxaUNUQkxkRVdhUGZQNENO?=
- =?utf-8?B?V2E3ZjlVNFFJZUVEL1NxcUFpNlBWaUpFOHA3M21kblRXZWgwSk5BY1p4bG5Y?=
- =?utf-8?B?UzdMcVNYVjdIZDl0eFhBRzhvNFdtRG1sWVV1VHpOek16VUdkQUxleHZSRGlv?=
- =?utf-8?B?UVRVQUxBVXp0NjdlcDkvSlRFd3VlZ29UMW1UMjJjMFlBekhhd3l0ZGh1enNW?=
- =?utf-8?B?emFCVDkzNWdGaDZYaWhGdkhuaGVVdnRVTDRBV1Y5eVY5eis4dndWekhCSnFu?=
- =?utf-8?B?NU1NaVg1T3RwNEN0MUJnOS8rVE5ZRGcwc2ZJbFZIaXprNllNSENsa0E1Nkp3?=
- =?utf-8?B?VjA5M1JESFRGUUFGZnlvMFFiODIzSDRoSFoyQllhT2pCM0VNNVZodTc2WHl2?=
- =?utf-8?B?TVh4Z01ZcjNPNlVldXYrNy9OaEZZTXVCUEdlWUkrbkJiZVFPdFdUS3g4by9B?=
- =?utf-8?B?N2tSWXFTUEI4ZUNraUdiY0E5NkFmSTlnZ0gzTmlSTG01aU5QelhFb3ZQOEtq?=
- =?utf-8?B?b0dLbnBXZWxnczJsMU9nV2prZmhTa1lvNDlmTW9objBDdk95S0hORWJOekRr?=
- =?utf-8?B?T2YwY2g2blVnR2ZkMW40aVRIU0FHWHJmZm5neEo3bU91dDRLUUFQK0xiV0Rm?=
- =?utf-8?B?K2Y5WnFqUmNJblRyVExYcFZUODRHYkw0aktoUytyRWZmaUFOZG1nR1RBaXFC?=
- =?utf-8?B?QmdJOUlBbUNlbUtnVEh6cy8xTzhqa3c1bjhlaXZqWnZmRmhSS0c4bVVmREZz?=
- =?utf-8?B?NXhnamtuaVJRODl0TTN6eURGS1JNV25La3RUYUk5cVJzTDhsSkdqOUVTSjcw?=
- =?utf-8?B?MVg4Y3RWRnZHRlpReGVvaWdmL2RjRUlBRFVGVEZoOTdJRm5BdWVRM1JCVEtp?=
- =?utf-8?B?SS81UGJSUlNIZlJXM01XaGhtRTdDR3A4ZUlWaHVEM0UyUVl5NGgxNG03ZnV1?=
- =?utf-8?B?M2VPa1ZiM1BPZkxtYVpkeDBZckFqMWNxbUwwUFU1b1VvNDM1eTRTb0M0M2ZN?=
- =?utf-8?B?emcxNVV1TlAvUEpiZlFvVElMS0p2MHFCdzJIZTU5NDRPU0cwQTZLUVcrREM0?=
- =?utf-8?B?M0FBUTBES3loTDZBTjk0RXg0cUlad2hIbHpmTWxlc1k5R3h3TXExK2xsSkVp?=
- =?utf-8?B?Ukl2L1UrTzZjMXZXRG90bUpLcjFHNndobVhLRlZmMFBmcGJJMGNXTkVxN3ln?=
- =?utf-8?B?ZHdYYmNhV1BUaTFNamRlN3JNU0R3QkxIamVUWGVjUFJWQTB4UzJtZFQ4Q0hR?=
- =?utf-8?B?OVk1ME1ycFZGSHhLOHZMRFVqWjZqWFF2RktIVTNMVXljV2lYYXQwU3pvcHJq?=
- =?utf-8?B?YXN3VHMrNE9vdUtLTDkrUW92cWU4THdHWTh2ZDMxdmRlbGlodzdJaDBOcDM3?=
- =?utf-8?B?dkpRc3RqVGFDVHhxcWg4WXpJKzRCL2sxUm94U3dhSmZiVDhYTmdRQlBxaFNK?=
- =?utf-8?B?NDlTbTlpSWhubmxrOWcvbFBsTVlRPT0=?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <4D440E4270E9D4438A1426CC9DDEFBFA@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        d=gmail.com; s=20230601; t=1717477836; x=1718082636; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:reply-to:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=lR9xxF67xkv8Jh6JeaRQRfZn3f3Gas3sg1WacLeR+Fw=;
+        b=KpkzF69L5rg6zs6U2SVIyJIyyDUucKXFC0pioDpHf9onZmemJFDWwcM64vNqcF2ulM
+         mx/66etouP5ttqbGpt0TDb90xKNHG9V8Y5Fjhav7OaLXrjbAiseAXvF+ddNO0KtSs+Gp
+         /iq5B+fEdZUr2cFL0n7f62owAH0QfuiM1wPpXylv9oSWDsVOz5XaLHSDKSTbPphwUevb
+         7hfOF7HUZenwir/3nkxXBgH5EA7Hu6zKqQaZ7UIUronKyIigMkJm+sNUVxtt2seuzNQR
+         4kbPy2Izwf6mW9iPadJEwXREgo4i2yFxWi8rez/COFyjKcvDCJqd9+hDDq1hGpmb0oBN
+         JubA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717477836; x=1718082636;
+        h=content-transfer-encoding:mime-version:reply-to:message-id:date
+         :subject:cc:to:from:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=lR9xxF67xkv8Jh6JeaRQRfZn3f3Gas3sg1WacLeR+Fw=;
+        b=hy32HnTc8imqJC8Bu5P7fbr9Vc0YNzNfu/mW9Y12fWpkokd44Nk0W6tZZ7fNDBZw9p
+         6PbFUFXVoCWA/VFtVsEyfRQUYQKxSs6lI50b6vscrt7G8bJZbN9gTp+xXmaMsuf92id0
+         JrVUv6o25ITUrPZL4R/zdQMCVUbyMj1HV5dlZ92UrpxDiavClxF3LCdvZgwQCI+9Ub8i
+         d5gLdQHpgEsBXkEmQecppVEp2OOftKQQIxq730yBREvRDiYNDQchBaXFNM8E5+YdAvka
+         S4XJ/nuMevY3wCJziIEM/jweKN2nUC9qMD0E/N9UU6bLiVg6zmKlZj+Y7Y2mGOOls6dU
+         xfig==
+X-Forwarded-Encrypted: i=1; AJvYcCXAxSjQysLLNM+Ib77QqmOxpFeKeUs5/4LXz+h9PMy9rOiPgMx6LDDASkJ50O3J7ZPpFUOQyPjAXjc9OwYIDNnel/iqLHXhCJ4V7mT67I6HgoU/91Btt+U8uohB3svk6cdc7M7y5Yj6YVbqeLy2W+Q6ezb7W0c1qFQw8bMQd61I8AuixOJfPYnRp/6SDbt3NAAKON56VtTgJGoDBgWKvQdCEnI4PSwUjohuuRoa9PNcEuni0sGS1etDR7TXzfc=
+X-Gm-Message-State: AOJu0YxF6tJZkNH9nDASAXak8XSc6WlRrCJbSiSm4s0PTwic28+QOCwa
+	jqQlA6UZJWxyzUCBAbItp9yd9ZgrHvFRPzVU0haYcMubaq7wPsmX
+X-Google-Smtp-Source: AGHT+IEya7cZOohNIqUZ/PLElWCaPIt+W1R3BZWdLXmWEbtERH6DJ1vLUCCh+IvPi3IGCg/P506MIA==
+X-Received: by 2002:a05:6870:718b:b0:24f:c0bc:5ac6 with SMTP id 586e51a60fabf-2508b9b3b00mr12243100fac.11.1717477836142;
+        Mon, 03 Jun 2024 22:10:36 -0700 (PDT)
+Received: from localhost.localdomain (c-67-161-114-176.hsd1.wa.comcast.net. [67.161.114.176])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70242c270c7sm6298153b3a.220.2024.06.03.22.10.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Jun 2024 22:10:35 -0700 (PDT)
+From: mhkelley58@gmail.com
+X-Google-Original-From: mhklinux@outlook.com
+To: kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	tglx@linutronix.de,
+	mingo@redhat.com,
+	bp@alien8.de,
+	dave.hansen@linux.intel.com,
+	x86@kernel.org,
+	hpa@zytor.com,
+	lpieralisi@kernel.org,
+	kw@linux.com,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	arnd@arndb.de,
+	linux-hyperv@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Cc: maz@kernel.org,
+	den@valinux.co.jp,
+	jgowans@amazon.com,
+	dawei.li@shingroup.cn
+Subject: [RFC 00/12] Hyper-V guests use Linux IRQs for channel interrupts
+Date: Mon,  3 Jun 2024 22:09:28 -0700
+Message-Id: <20240604050940.859909-1-mhklinux@outlook.com>
+X-Mailer: git-send-email 2.25.1
+Reply-To: mhklinux@outlook.com
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	9+y0Fh56uwW+Fvfm0qKjevfio4Ti+/s59rR/UEjc5ocoCgZuVz07qv1GxBlHEDzVLm1tNXKcbb88yWAbCR4jJo6RKmnhr/azP6wwieXB1h59v0UrX/fQ1P50TM0Zcevp2DyrK/k9UArD5ThPaBMwZhYOZ0bj5UEuqfzuK8VB+UdwLei1F5MXDCcY9uNqTByN1FcmG1rwDNDMs4+WPLwf3YKgguc2L7nqDtDIG2HM8f2ZVJO7uUad4dSwb4XmJGRno/Y4EifZ+OKhcXgF8eMgsIMhuB/TF5gUUFvSHcBXrOcErWHiKj4YSl/w5xJ11qGU81AwJHrTUjhVzPFAvivSa9E4qzeP6HCB9T93ky1yjNs0W5JnHJwKC01G5AXAP+wc/iZ+hAKkXSTqEg81N0LFNYeAAJBMBpDQvBGqhaj9nwQ5lHH2+Ux4HmIT7A5RZwBwwzKlHjO3PlbQRy3IlLGatY1ENhvM12BO2aA4equFazrkBUHzTx3B2V2NDmGbcvpVxWVqT1PbYsAcFGueUH7BajE9hgIlcNF2cTYB2bGnPv3gJfrPgYsII41g40TMwET8kouyF+4ezSVnw7fMQzmUXfTQfPVfGpbYYkGU+wEvpRZfx/3JB/oVMaj8qSOvSGWJ
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a7d9cf18-a8f2-4b5d-c2bb-08dc83f5dd4f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Jun 2024 17:51:58.2786
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ofMzxs1sL1bG4PIOV0z4ssQLSPKNHtPuRM7ZaEpLUzavz3f9RyCAnJoFHRMFwLjwLWDfCDFEFT9VFgXcqxTJN+cui/TjqfHdZ4Flp7SI0Ik=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR04MB8612
+Content-Transfer-Encoding: 8bit
 
-T24gMDMuMDYuMjQgMTk6MjMsIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4gSGkgTWFydGluLA0K
-PiANCj4gVGhlcmUgYXJlIHNldmVyYWwgMzItYml0IEFSTSBTQ1NJIGRyaXZlcnMgdGhhdCB0cmln
-Z2VyIGNvbXBpbGVyIHdhcm5pbmdzIGFib3V0DQo+IG1pc3NpbmcgZnVuY3Rpb24gZGVjbGFyYXRp
-b25zLiBUaGlzIHBhdGNoIHNlcmllcyBmaXhlcyB0aGVzZSBjb21waWxlciB3YXJuaW5ncw0KPiBi
-eSBkZWNsYXJpbmcgbG9jYWwgZnVuY3Rpb25zIHN0YXRpYy4gUGxlYXNlIGNvbnNpZGVyIHRoaXMg
-cGF0Y2ggc2VyaWVzIGZvciB0aGUNCj4gbmV4dCBtZXJnZSB3aW5kb3cuDQo+IA0KPiBUaGFua3Ms
-DQo+IA0KPiBCYXJ0Lg0KPiANCj4gQmFydCBWYW4gQXNzY2hlICg0KToNCj4gICAgc2NzaTogYWNv
-cm5zY3NpOiBEZWNsYXJlIGxvY2FsIGZ1bmN0aW9ucyBzdGF0aWMNCj4gICAgc2NzaTogY3VtYW5h
-OiBEZWNsYXJlIGxvY2FsIGZ1bmN0aW9ucyBzdGF0aWMNCj4gICAgc2NzaTogZWVzb3g6IERlY2xh
-cmUgbG9jYWwgZnVuY3Rpb25zIHN0YXRpYw0KPiAgICBzY3NpOiBwb3dlcnRlYzogRGVjbGFyZSBs
-b2NhbCBmdW5jdGlvbnMgc3RhdGljDQo+IA0KPiAgIGRyaXZlcnMvc2NzaS9hcm0vYWNvcm5zY3Np
-LmMgfCA5ICsrKystLS0tLQ0KPiAgIGRyaXZlcnMvc2NzaS9hcm0vY3VtYW5hXzIuYyAgfCAyICst
-DQo+ICAgZHJpdmVycy9zY3NpL2FybS9lZXNveC5jICAgICB8IDIgKy0NCj4gICBkcml2ZXJzL3Nj
-c2kvYXJtL3Bvd2VydGVjLmMgIHwgMiArLQ0KPiAgIDQgZmlsZXMgY2hhbmdlZCwgNyBpbnNlcnRp
-b25zKCspLCA4IGRlbGV0aW9ucygtKQ0KPiANCj4gDQo+IA0KDQpGb3IgdGhlIHNlcmllcywNClJl
-dmlld2VkLWJ5OiBKb2hhbm5lcyBUaHVtc2hpcm4gPGpvaGFubmVzLnRodW1zaGlybkB3ZGM+DQo=
+From: Michael Kelley <mhklinux@outlook.com>
+
+This patch set makes significant changes in how Linux guests running on Hyper-V
+handle interrupts from VMBus devices. It's "RFC" because of the level of change,
+and because I'm interested in macro-level feedback on the whole idea. The usual
+detailed-level code review feedback is also welcome.
+
+Background
+----------
+Linux guests running on Hyper-V are presented with a range of synthetic
+devices, including storage, networking, mouse, keyboard, etc. Guests are also
+presented with management-related pseudo-devices, including time
+synchronization, heartbeat, and host-initiated shutdown. These devices use the
+VMBus connection between the host and the guest, and each device has one or
+more VMBus channels for passing messages between the host and guest.
+Separately, a control path exists for creating and tearing down VMBus channels
+when needed. Hyper-V VMBus and its synthetic devices play a role similar to
+virtio and virtio devices.
+
+The host interrupts the guest when it sends a new message to the guest in an
+otherwise empty channel, and when it sends a new control message to the guest.
+All interrupts are multiplexed onto a single per-CPU architectural interrupt as
+defined by the processor architecture. On arm64, this architectural interrupt
+is a PPI, and is represented in Linux as a Linux per-CPU IRQ. The x86/x64
+architecture does not provide per-CPU interrupts, so Linux reserves a fixed x86
+interrupt vector (HYPERVISOR_CALLBACK_VECTOR) on all CPUs, with a hard-coded
+interrupt handler. No Linux IRQ is assigned on x86/x64.
+
+The interrupt handler for the architectural interrupt is the VMBus interrupt
+handler, and it runs whenever the host generates an interrupt for a channel or
+a control message. The VMBus interrupt handler consults data structures
+provided by the per-CPU Hyper-V synthetic interrupt controller (synic) to
+determine which channel or channels have a pending interrupt, or if there is a
+pending control message. When doing this demultiplexing, the VMBus interrupt
+handler directly invokes the per-device handlers, and processes any control
+messages.
+
+In this scheme, the individual VMBus devices and their channels are not
+modelled as Linux IRQs. /proc/interrupts shows counts for the top-level
+architectural interrupt, but not for the individual VMBus devices. The VMBus
+driver has implemented separate reporting of per-device data under /sys.
+Similarly, /proc/irq/<nn> does not show affinity information for individual
+VMBus devices, and the affinity cannot be changed via /proc/irq. Again, a
+separate interface under /sys is provided for changing the vCPU that a VMBus
+channel should interrupt.
+
+What's New
+----------
+Linux kernel community members have commented that it would be better for the
+Hyper-V synic and the handling of VMBus channel interrupts to be modelled as
+Linux IRQs. Then they would participate in existing IRQ handling mechanisms,
+and not need something separate under /sys. This patch set provides such an
+implementation.
+
+With this patch set, the output of /proc/interrupts looks like this in a Linux
+guest on a Hyper-V x86/x64 Generation 2 VM with 8 vCPUs (the columns for
+CPUs 2 thru 5 are omitted due to text width considerations):
+
+           CPU0       CPU1        CPU6       CPU7
+  8:          0          0           0          0   IO-APIC   8-edge      rtc0
+  9:          2          0           0          0   IO-APIC   9-fasteoi   acpi
+ 24:      16841          0           0          0     VMBus   7  heartbeat
+ 25:          1          0           0          0     VMBus   9  shutdown
+ 26:       6752          0           0          0     VMBus  10  timesync
+ 27:          1          0           0          0     VMBus  11  vss
+ 28:      22095          0           0          0     VMBus  14  pri@storvsc1
+ 29:          0         85           0          0     VMBus  15  pri@storvsc0
+ 30:          3          0           0          0     VMBus   1  balloon
+ 31:        106          0           0          0     VMBus   3  mouse
+ 32:         73          0           0          0     VMBus   4  keyboard
+ 33:          6          0           0          0     VMBus   5  framebuffer
+ 34:          0          0           0          0     VMBus  13  netvsc
+ 35:          1          0           0          0     VMBus   8  kvp
+ 36:          0          0           0          0     VMBus  16  netvsc
+ 37:          0          0           0          0     VMBus  17  netvsc
+ 38:          0          0           0          0     VMBus  18  netvsc
+ 39:          0          0        2375          0     VMBus  19  netvsc
+ 40:          0          0           0       1178     VMBus  20  netvsc
+ 41:       1003          0           0          0     VMBus  21  netvsc
+ 42:          0       4337           0          0     VMBus  22  netvsc
+ 43:          0          0           0          0     VMBus  23  sub@storvsc1
+ 44:          0          0           0          0     VMBus  24  sub@storvsc0
+NMI:          0          0           0          0   Non-maskable interrupts
+LOC:          0          0           0          0   Local timer interrupts
+SPU:          0          0           0          0   Spurious interrupts
+PMI:          0          0           0          0   Performance monitoring interrupts
+IWI:          1          0           0          2   IRQ work interrupts
+RTR:          0          0           0          0   APIC ICR read retries
+RES:        411        233         349        318   Rescheduling interrupts
+CAL:     135236      29211       99526      36424   Function call interrupts
+TLB:          0          0           0          0   TLB shootdowns
+TRM:          0          0           0          0   Thermal event interrupts
+THR:          0          0           0          0   Threshold APIC interrupts
+DFR:          0          0           0          0   Deferred Error APIC interrupts
+MCE:          0          0           0          0   Machine check exceptions
+MCP:        109        109         109        109   Machine check polls
+HYP:         71          0           0          0   Hypervisor callback interrupts
+HRE:          0          0           0          0   Hyper-V reenlightenment interrupts
+HVS:     183391     109695      181539     339239   Hyper-V stimer0 interrupts
+ERR:          0
+MIS:          0
+PIN:          0          0           0          0   Posted-interrupt notification event
+NPI:          0          0           0          0   Nested posted-interrupt event
+PIW:          0          0           0          0   Posted-interrupt wakeup event
+
+IRQs 24 thru 44 are the VMBus channel IRQs that didn't previously exist. Some
+devices, such as storvsc and netvsc, have multiple channels, each of which has
+a separate IRQ. The HYP line now shows counts only for control messages instead
+of for all VMBus interrupts. The HVS line continues to show Hyper-V synthetic
+timer (stimer0) interrupts. (In older versions of Hyper-V where stimer0
+interrupts are delivered as control messages, those interrupts are accounted
+for on the HYP line. Since this is legacy behavior, it seemed unnecessary to
+create a separate Linux IRQ to model these messages.)
+
+The basic approach is to update the VMBus channel create/open/close/delete
+infrastructure, and the VMBus interrupt handler, to create and process the
+additional IRQs. The goal is that individual VMBus drivers require no code
+changes to work with the new IRQs. However, a driver may optionally annotate
+the IRQ using knowledge that only the driver has. For example, in the above
+/proc/interrupts output, the storvsc driver for synthetic disks has been
+updated to distinguish the primary channel from the subchannels, and to
+distinguish controller 0 from controller 1. Since storvsc models a SCSI
+controller, the numeric designations are set to match the "host0" and "host1"
+SCSI controllers that could be seen with "lsscsi -H -v". Similarly annotating
+the "netvsc" entries is a "to do" item.
+
+In furtherance of the "no changes to existing VMBus drivers" goal, all VMBus
+IRQs use the same interrupt handler. Each channel has a callback function
+associated with it, and the interrupt handler invokes this callback in the same
+way as before VMBus IRQs were introduced.
+
+VMBus code creates a standalone linear IRQ domain for the VMBus IRQs. The hwirq
+#'s are the VMBus channel relid's, which are integers in the range 1 to 2047.
+Each relid uniquely identifies a VMBus channel, and a channel interrupt from
+the host provides the relid. A mapping from IRQ to hwirq (relid) is created
+when a new channel is created, and the mapping is deleted when the channel is
+deleted, so adding and removing VMBus devices in a running VM is fully
+functional.
+
+Getting the IRQ counting correct requires a new IRQ flow handler in
+/kernel/irq/chip.c. See Patch 6. The existing flow handlers don't handle this
+case, and creating a custom flow handler outside of chip.c isn't feasible
+because the needed components aren't available to code outside of /kernel/irq.
+
+When a guest CPU is taken offline, Linux automatically changes the affinity of
+IRQs assigned to that CPU so that the IRQ is handled on another CPU that is
+still online. Unfortunately, VMBus channel IRQs are not able to take advantage
+of that mechanism. At the point the mechanism runs, it isn't possible to know
+when Hyper-V started interrupting the new CPU; hence pending interrupts may be
+stranded on the old offline CPU. Existing VMBus code in Linux prevents a CPU
+from going offline when a VMBus channel interrupt is affined to it, and that
+code must be retained. Of course, VMBus channel IRQs can manually be affined to
+a different CPU, which could then allow a CPU to be taken offline. I have an
+idea for a somewhat convoluted way to allow the automatic Linux mechanism to
+work, but that will be another patch set.
+
+Having VMBus channel interrupts appear in /proc/irq means that user-space
+irqbalance can change the affinity of the interrupts, where previously it could
+not. For example, this gives irqbalance the ability to change (and perhaps
+degrade) the default affinity configuration that was designed to maximize
+network throughput. This is yet another reason to disable irqbalance in VM
+images.
+
+The custom VMBus entries under /sys are retained for backwards compatibility,
+but they are integrated. For example, changing the affinity via /proc/irq is
+reflected in /sys/bus/vmbus/devices/<guid>/channels/<nn>/cpu, and vice versa.
+
+Patches
+-------
+The patches have been tested on x86/x64 Generation 1 and Generation 2 VMs, and
+on arm64 VMs.
+
+* Patches 1 and 2 fixes some error handling that is needed by subsequent
+patches. They could be applied independent of this patch set.
+
+* Patches 3,4, and 5 add support for IRQ names, and add annotations in the
+storvsc and the Hyper-V vPCI driver so that descriptions in /proc/interrupts
+convey useful information.
+
+* Patch 6 adds a new IRQ flow handler needed to properly account for IRQs as
+VMBus IRQs or as the top-level architectural interrupt.
+
+* Patch 7 creates the new IRQ domain for VMBus channel IRQs.
+
+* Patch 8 allocates the VMBus channel IRQs, and creates the mapping between
+VMBus relid (used as the hwirq) and the Linux IRQ number. That mapping is then
+used for lookups.
+
+* Patch 9 does request_irq() for the new VMBus channel IRQs, and converts the
+top-level VMBus architectural interrupt handler to use the new VMBus channel
+IRQs for handling channel interrupts. With this patch, /proc/interrupts shows
+counts for the VMBus channel IRQs.
+
+* Patch 10 implements the irq_set_affinity() function for VMBus channel IRQs,
+and integrates it with the existing Hyper-V-specific sysfs mechanism for
+changing the CPU that a VMBus channel will interrupt.
+
+* Patch 11 updates hv_synic_cleanup() during CPU offlining to handle the lack
+of waiting for the MODIFYCHANNEL message in vmbus_irq_set_affinity() in Patch
+10.
+
+* Patch 12 fixes a race in VMBus channel interrupt assignments that existed
+prior to this patch set when taking a CPU offline.
+
+Open Topics
+-----------
+* The performance impact of the additional IRQ processing in the interrupt path
+appears to be minimal, based on looking at the code. Measurements are still to
+be taken to confirm this.
+
+* Does the netvsc driver have sufficient information to annotate what appears
+in /proc/interrupts, particularly when multiple synthetic NICs are present? At
+first glance, it appears that the identifying info isn't generated until after
+vmbus_open() is called, and by then it's too late to do the IRQ annotation.
+Need some input from a netvsc expert.
+
+* The VMBus irq domain and irq chip data structures are placed in the
+vmbus_connection structure. Starting with VMBus protocol version 5.0, the VMBus
+host side supports multiple connections from a single guest instance (see
+commit ae20b254306a6). While there's no upstream kernel code that creates
+multiple VMBus connections, it's unclear whether the IRQ domain should be
+global across all VMBus connection, or per connection. Are relid's global (to
+the VM) or per connection?
+
+* I have not tried or tested any hv_sock channels. Is there a handy test
+program that would be convenient for opening multiple hv_sock connections to
+the guest, have them persist long enough to see what /proc/interrupts shows,
+and try changing the IRQ affinity?
+
+* I have not tried or tested Linux guest hibernation paths.
+
+The patches build and run against 6.10-rc2 and next-20240603.
+
+Michael Kelley (12):
+  Drivers: hv: vmbus: Drop unsupported VMBus devices earlier
+  Drivers: hv: vmbus: Fix error path that deletes non-existent sysfs
+    group
+  Drivers: hv: vmbus: Add an IRQ name to VMBus channels
+  PCI: hv: Annotate the VMBus channel IRQ name
+  scsi: storvsc: Annotate the VMBus channel IRQ name
+  genirq: Add per-cpu flow handler with conditional IRQ stats
+  Drivers: hv: vmbus: Set up irqdomain and irqchip for the VMBus
+    connection
+  Drivers: hv: vmbus: Allocate an IRQ per channel and use for relid
+    mapping
+  Drivers: hv: vmbus: Use Linux IRQs to handle VMBus channel interrupts
+  Drivers: hv: vmbus: Implement vmbus_irq_set_affinity
+  Drivers: hv: vmbus: Wait for MODIFYCHANNEL to finish when offlining
+    CPUs
+  Drivers: hv: vmbus: Ensure IRQ affinity isn't set to a CPU going
+    offline
+
+ arch/x86/kernel/cpu/mshyperv.c      |   9 +-
+ drivers/hv/channel.c                | 125 ++++------
+ drivers/hv/channel_mgmt.c           | 139 ++++++++----
+ drivers/hv/connection.c             |  48 ++--
+ drivers/hv/hv.c                     |  90 +++++++-
+ drivers/hv/hv_common.c              |   2 +-
+ drivers/hv/hyperv_vmbus.h           |  22 +-
+ drivers/hv/vmbus_drv.c              | 338 +++++++++++++++++++---------
+ drivers/pci/controller/pci-hyperv.c |   5 +
+ drivers/scsi/storvsc_drv.c          |   9 +
+ include/asm-generic/mshyperv.h      |   9 +-
+ include/linux/hyperv.h              |   9 +
+ include/linux/irq.h                 |   1 +
+ kernel/irq/chip.c                   |  29 +++
+ 14 files changed, 567 insertions(+), 268 deletions(-)
+
+-- 
+2.25.1
+
