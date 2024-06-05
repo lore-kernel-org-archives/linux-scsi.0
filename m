@@ -1,39 +1,59 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89C4D4962C;
-	Wed,  5 Jun 2024 08:32:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C14361946A6;
+	Wed,  5 Jun 2024 08:33:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717576371; cv=none; b=NHsNYTXaY07V4I/YWSkvWcAVAbA54rh/kfDECdsL5pQibd95zZWRSnlBOtsjtpRyzlK1q7ea6jbF7GO4V9z4xXKjUdZ4LLZjIS9CjRrnzJQzWDKJnF0yuWY7CERbME4Wbf9EfFsP+BbDE5P/dpUMLq9OutjwFBPZOhSG1IOjd80=
+	t=1717576418; cv=none; b=ect/AN0G0/lltsCup3+D3TCbPOq756EZXB2gGKUuTx3aC26mvgJ0W4SDuTH3Yjz2iMGt/7K5wmqgvwgvu0AwlOW19O18DTQ2dNVeJtZOP1BBECuNflygKQs/E3Nj6pRGOIJU/uBrULI1kp4oIUvIKX6EKNrzRslg6EZlcTgEzW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717576371; c=relaxed/simple;
-	bh=b/ObxG1GZpzF8QN6XmS3pDXqPfQIe/hDt6IZgEOHG/M=;
+	s=arc-20240116; t=1717576418; c=relaxed/simple;
+	bh=0ki2g+VTCwzVsFNHek0KlzrsIdaBwLLZykPJAo3HDAg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZK2S1duhKq8HGz7Jm4G/nPc7DDZLqHDqi+9evKV2BdJMpHIgGltxguCcNH6+PsyKMPkNAhgT7zn2SHX2SNvpR/tgMDpZtA3Bb0cDpeu9ebXj1gaLKpOxthklBWz/H9ZLPUfi1vgYpVjp/jf1woR0eGeUwuXJ2hdYkl4PsFhaR5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 91D4267373; Wed,  5 Jun 2024 10:32:46 +0200 (CEST)
-Date: Wed, 5 Jun 2024 10:32:46 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, axboe@kernel.dk, kbusch@kernel.org,
-	hch@lst.de, sagi@grimberg.me, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
-	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-	io-uring@vger.kernel.org, nilay@linux.ibm.com,
-	ritesh.list@gmail.com, willy@infradead.org,
-	Himanshu Madhani <himanshu.madhani@oracle.com>
-Subject: Re: [PATCH v7 4/9] block: Add core atomic write support
-Message-ID: <20240605083245.GC20984@lst.de>
-References: <20240602140912.970947-1-john.g.garry@oracle.com> <20240602140912.970947-5-john.g.garry@oracle.com> <749f9615-2fd2-49a3-9c9e-c725cb027ad3@suse.de> <a84ad9de-a274-4bdf-837a-03c38a32288a@oracle.com> <ee20a47d-3131-41c2-a2fc-39017f535527@suse.de> <76850f4f-0bd0-48ae-92f4-e3af38039938@oracle.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=WQrZW+i9A7UbyBQLBlR7Qv00FmNE5Aybvy0FM2COudbzRJgBK8V0fwwmUMw2D9k1LlMOgP3h5ihbquM42GvaUkQQGpm4UC3KGwNZu1yMRIdd6GCMAFkIHCLcSAQ22pvJnlPtivy7eXOY8x/tgC6x81z9VuZJQ5iGI3gpMcVpsIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.218.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-a68ee841138so395213666b.1;
+        Wed, 05 Jun 2024 01:33:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717576415; x=1718181215;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=MgwvGbeQ51aSYhN/1Av3F23kdDADeU11qf5jY73T9Ig=;
+        b=nq8DmIWapq69t9aeJ9UOAaGDBdw/0YEQSz8QNyFiLoDvOcl23yGTs08TcAsJ5dZDpd
+         g5jG3mpGXz+jpVbyxFLa5qaaMpEx+M7SzAuRHDGfWL/ywqS28dRSviwJAp6TbrGJf7/u
+         HCbpunG7BoK9/03mOdGYTUoOty2+5lTYBU8akMLkBdVGPFSCX54/wvbmdfAThxdjhW9I
+         e2jlBCfuIRq3SwnLbdkXyclXjXCvD40olmb7vtGj8cT7P4LtbtyjKE2LkQv5rbttRjsG
+         7VQPgEjnIZvW50SOtoeuWjndr4vkw3ZVg0Br/Up2lVPgTKGMkPmtxVZ5OVoA1YwKke88
+         2foA==
+X-Forwarded-Encrypted: i=1; AJvYcCV95xsQRPi+AAoJCH178Mzoc5kN8RWAM4lSD6ezKSO1tTzbmKaShmrc684ttP5MnKi0kZzoOkgrPf5VMuoeQ8rdicnEV5aSCiNawnmd9DOeaSyk1e5YvGqFgJQDYUK7YLvPg2hY+tB5Gg==
+X-Gm-Message-State: AOJu0Yy0e4X3xan2h6CBywWAcW0mmd6fZkddchngR+Rqqjo+lukRmvZA
+	d7jkDSbUYhqGKxlJTmVL0vU77JHOBzdrL7WnjGu2cH/8uE/RFnKT2rl/LQ==
+X-Google-Smtp-Source: AGHT+IFhhK3cHNOzxeodK/r10BVtnQPMSBk/Ho3mnf7jPU6AFdAroZauygoZN8/FzYprLbC6102FbA==
+X-Received: by 2002:a17:907:9707:b0:a68:9ce3:c896 with SMTP id a640c23a62f3a-a699fa9bcf3mr130111166b.24.1717576414865;
+        Wed, 05 Jun 2024 01:33:34 -0700 (PDT)
+Received: from gmail.com (fwdproxy-lla-009.fbsv.net. [2a03:2880:30ff:9::face:b00c])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a68c99d5fa4sm563584566b.189.2024.06.05.01.33.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Jun 2024 01:33:34 -0700 (PDT)
+Date: Wed, 5 Jun 2024 01:33:32 -0700
+From: Breno Leitao <leitao@debian.org>
+To: Keith Busch <kbusch@kernel.org>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>, leit@meta.com,
+	"open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <MPT-FusionLinux.pdl@broadcom.com>,
+	"open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <linux-scsi@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] mpt3sas: Avoid test/set_bit() operating in non-allocated
+ memory
+Message-ID: <ZmAi3DoEBuv4txOL@gmail.com>
+References: <20240531180055.950704-1-leitao@debian.org>
+ <Zlo81SBdvflQ_38O@kbusch-mbp.dhcp.thefacebook.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,21 +62,30 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <76850f4f-0bd0-48ae-92f4-e3af38039938@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <Zlo81SBdvflQ_38O@kbusch-mbp.dhcp.thefacebook.com>
 
-On Mon, Jun 03, 2024 at 02:29:26PM +0100, John Garry wrote:
-> I think that some of the logic could be re-used. 
-> rq_straddles_atomic_write_boundary() is checked in merging of reqs/bios (to 
-> see if the resultant req straddles a boundary).
->
-> So instead of saying: "will the resultant req straddle a boundary", 
-> re-using path like blk_rq_get_max_sectors() -> blk_chunk_sectors_left(), we 
-> check "is there space within the boundary limit to add this req/bio". We 
-> need to take care of front and back merges, though.
+On Fri, May 31, 2024 at 03:10:45PM -0600, Keith Busch wrote:
+> On Fri, May 31, 2024 at 11:00:54AM -0700, Breno Leitao wrote:
 
-Yes, we've used the trick to pass in the relevant limit in explicitly
-to reuse infrastructure in other places, e.g. max_hw_sectors vs
-max_zone_append_sectors for adding to a bio while respecting hardware
-limits.
+> > @@ -8529,6 +8535,12 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+> >  	ioc->pend_os_device_add_sz = (ioc->facts.MaxDevHandle / 8);
+> >  	if (ioc->facts.MaxDevHandle % 8)
+> >  		ioc->pend_os_device_add_sz++;
+> > +
+> > +	/* pend_os_device_add_sz should have, at least, the minimal room
+> > +	 * for set_bit()/test_bit(), otherwise out-of-memory may occur
+> > +	 */
+> > +	ioc->pend_os_device_add_sz = ALIGN(ioc->pend_os_device_add_sz,
+> > +					   sizeof(unsigned long));
+> >  	ioc->pend_os_device_add = kzalloc(ioc->pend_os_device_add_sz,
+> >  	    GFP_KERNEL);
+> >  	if (!ioc->pend_os_device_add) {
 
+> Do we need similiar ALIGN for _base_check_ioc_facts_changes() too?
+
+Yes, that would help as well. Since it will protect
+->device_remove_in_progress and others from the same problem.
+
+Let me send a v2.
+
+Thanks!
