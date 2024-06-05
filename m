@@ -1,74 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5260D17559;
-	Wed,  5 Jun 2024 17:04:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AB5E13A400;
+	Wed,  5 Jun 2024 19:15:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717607072; cv=none; b=qUoOH0UwABSd6IHHaBQnpP0tICMbqODiDy4jNH0nAwGgRqGxH8ixK9Rzh9N2fRYCsHoKtajWy6QusG8D4h6pCnVr0dATZODq8XlxV1Ew67qUney3EeQf2C1e/G7rWxLCdMuxWoAqmUpsHt2yLt/qRWtenNzagfszhBIvYLHIuaQ=
+	t=1717614941; cv=none; b=RPITI1M29VbaGMTRdvXFof23VCWp3Kz+MnR/K5UfM3gs9bHqmBATb0glxM56sVUsmWKFx7p5GmLHsPietiNxNgwvpUWIPRIQ9ZbsjvseHZw0CM41toL7o1EEIcSiSsxP8Ug1zhC+sW9a3t7VOAiJmMeUcYOPGUZ+IO5uK3bOslY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717607072; c=relaxed/simple;
-	bh=nhFWFsp+9ExjOIXbu0vBmHM9s9CAsaCAVQQ7E358h9U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=r2E5snRV8u7tRQ3KcR7YjCNoZVPB2C2FhMzIn8p324IQhJRNpv3UMrf7Fe8AbyZ63QQyz8mo+CRcG/0AHOWj3eASp2yMHZgvDXu2okkFZG4g2k9nKOYRnZ9GSg/b4UaQ82SjrAILDqYOgC3qBpoVjE5mvGsEshcYf7AmelzbJIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fa1YcfXG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717614941; c=relaxed/simple;
+	bh=PSWN472Wnorxu4k9ywdhZ+5eQVpHQixWKDSbnDQYmvc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MfyqTDRYdK1M9xGUa/A1oNx2+kD/n5HhNleMLfbbjo8lgXpj2jViraqmJ7Nou90IXW4QuiJCuvCNWn9Cj+YYBL8DKEyORjSkl0Uh8dKqaNkvrpqlnvH4ZBcKqvS2RekPF8hmBYa6eYcf9o+GSw6u8crO0WBq0GSt54pX5hoGmPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=HqU0hIq5; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fa1YcfXG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30B7AC2BD11;
-	Wed,  5 Jun 2024 17:04:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717607072;
-	bh=nhFWFsp+9ExjOIXbu0vBmHM9s9CAsaCAVQQ7E358h9U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=fa1YcfXGmjcOXmffGBJge6qX26nr1zo/kXEqmVo1su2WdAIlSKFcpEiDDS2DDH2Fx
-	 HpaQiGe7X51iLeB+wcUeUGyRuenIfOBL59LWtA6H+MaVPZyNyYdcIV3LphhusJWYzz
-	 l1VnWcAL95uFrkuPXeK3r4PhzYPOERC8x2bcAoo1m5LLKKRqDpP2fHvHaldLPsrwtq
-	 rgFQE7CGpMotRiVYDgSEGAgmhai9hhAUNSsg+WUE+1P/WYNaOpU4RmLWSX61ew/mJm
-	 558DLmWiXztnaPcho+7DEHIHLR6trO3Yw80kOi8ZLgda3ENjPjgPdjyxxuCT6RMmQy
-	 d+YcPETCnTAdg==
-Date: Wed, 5 Jun 2024 11:04:28 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Breno Leitao <leitao@debian.org>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Chaitra P B <chaitra.basappa@broadcom.com>, leit@meta.com,
-	stable@vger.kernel.org,
-	"open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <MPT-FusionLinux.pdl@broadcom.com>,
-	"open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <linux-scsi@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] mpt3sas: Avoid test/set_bit() operating in
- non-allocated memory
-Message-ID: <ZmCanHvLTo_RjZsA@kbusch-mbp.dhcp.thefacebook.com>
-References: <20240605085530.499432-1-leitao@debian.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="HqU0hIq5"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VvccW3XJkz6CmQvG;
+	Wed,  5 Jun 2024 19:15:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1717614937; x=1720206938; bh=F7zsNdmnby97gLElUEVqV1uV
+	tQADs+pescSr74QdCVQ=; b=HqU0hIq52Vp5574Xuw1Xpdbx3JvX36wx6DBqFCtH
+	E/w4jP9v105RMCEhx2p9vFZ8cRxlJS3PpTQxXP632VhEGwCLqDHz5oG7i0wCcDQS
+	pH/U+R1eTUFCytFXJzzQzJJ4i6WTzgqhzVmfC4F4cjg8H4TcXU7uS9NVeaVAGE3q
+	Gg1mm7dtPEy6pjZSqO/Bn7Ud98b/NHF+3JUY3QwsYNxLfi7DBbPJfcjOQSJlpR3H
+	3amXtDHA5CBzG2oIwvj1KJadYXzZZKtZC/XS0h5RrX6obTQnb0Yfy20kW1qVG7tL
+	f1ni9oD/RDCQHI2aID/r8tIBcv0wbL/gTq2ihr0gwhQ8GA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id yXFPYd83rbJl; Wed,  5 Jun 2024 19:15:37 +0000 (UTC)
+Received: from [192.168.132.235] (unknown [65.117.37.195])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VvccS6D9yz6Cnk8s;
+	Wed,  5 Jun 2024 19:15:36 +0000 (UTC)
+Message-ID: <9b382d5d-b02b-4dc8-8142-d6b2a1b06ab6@acm.org>
+Date: Wed, 5 Jun 2024 13:15:36 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240605085530.499432-1-leitao@debian.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: sd: Use READ(16) when reading block zero on
+ large capacity disks
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org
+Cc: stable@vger.kernel.org, Pierre Tomon <pierretom+12@ik.me>,
+ Alan Stern <stern@rowland.harvard.edu>
+References: <50211dcb-dc40-4bb5-8168-8f102f6bfb5c@acm.org>
+ <20240605022521.3960956-1-martin.petersen@oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240605022521.3960956-1-martin.petersen@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Jun 05, 2024 at 01:55:29AM -0700, Breno Leitao wrote:
-> There is a potential out-of-bounds access when using test_bit() on a
-> single word. The test_bit() and set_bit() functions operate on long
-> values, and when testing or setting a single word, they can exceed the
-> word boundary. KASAN detects this issue and produces a dump:
+On 6/4/24 20:25, Martin K. Petersen wrote:
+> Commit 321da3dc1f3c ("scsi: sd: usb_storage: uas: Access media prior
+> to querying device properties") triggered a read to LBA 0 before
+> attempting to inquire about device characteristics. This was done
+> because some protocol bridge devices will return generic values until
+> an attached storage device's media has been accessed.
 > 
-> 	 BUG: KASAN: slab-out-of-bounds in _scsih_add_device.constprop.0 (./arch/x86/include/asm/bitops.h:60 ./include/asm-generic/bitops/instrumented-atomic.h:29 drivers/scsi/mpt3sas/mpt3sas_scsih.c:7331) mpt3sas
+> Pierre Tomon reported that this change caused problems on a large
+> capacity external drive connected via a bridge device. The bridge in
+> question does not appear to implement the READ(10) command.
 > 
-> 	 Write of size 8 at addr ffff8881d26e3c60 by task kworker/u1536:2/2965
-> 
-> For full log, please look at [1].
-> 
-> Make the allocation at least the size of sizeof(unsigned long) so that
-> set_bit() and test_bit() have sufficient room for read/write operations
-> without overwriting unallocated memory.
+> Issue a READ(16) instead of READ(10) when a device has been identified
+> as preferring 16-byte commands (use_16_for_rw heuristic).
 
-Looks good.
-
-Reviewed-by: Keith Busch <kbusch@kernel.org>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
