@@ -1,86 +1,74 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BFDF1CD25;
-	Wed,  5 Jun 2024 16:56:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5260D17559;
+	Wed,  5 Jun 2024 17:04:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717606593; cv=none; b=I9wLD2p51oEk2VTPt0fuk5IQDYWOuKSLp7ue6aqZNelWk12mdhHRlQIvU/3VW3fTd0R8h8DKT89JARkU1FCjYYHusncM+S41QDaWY5qQvnmNxFTPtXErjM+Mzbo3sESMd7uO5dcTd95L5zsp6W4Rs66p5XGdHvnh3BMA2BB9hoE=
+	t=1717607072; cv=none; b=qUoOH0UwABSd6IHHaBQnpP0tICMbqODiDy4jNH0nAwGgRqGxH8ixK9Rzh9N2fRYCsHoKtajWy6QusG8D4h6pCnVr0dATZODq8XlxV1Ew67qUney3EeQf2C1e/G7rWxLCdMuxWoAqmUpsHt2yLt/qRWtenNzagfszhBIvYLHIuaQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717606593; c=relaxed/simple;
-	bh=VIkUI+8noKmui9Dd8MhGalJEjmjpC3rRm8d4AOslBqM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aFsrBNDRoSEAffk/Zf3Axjp/pj42hbYicNYeZiXN8vlZYt1AwtaJNn0tBtsIoY+Cz7wEFUMcBi78SZ0yfja8VCPSAypUH1vpKVUVwMfgMGsGX1GFX3r09hOuObub7aIZkpU1pY7D+U84OxWVmdGFeRMxzasDvtk3NVJ05P7/DSE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=CHNpTwuy; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1717607072; c=relaxed/simple;
+	bh=nhFWFsp+9ExjOIXbu0vBmHM9s9CAsaCAVQQ7E358h9U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=r2E5snRV8u7tRQ3KcR7YjCNoZVPB2C2FhMzIn8p324IQhJRNpv3UMrf7Fe8AbyZ63QQyz8mo+CRcG/0AHOWj3eASp2yMHZgvDXu2okkFZG4g2k9nKOYRnZ9GSg/b4UaQ82SjrAILDqYOgC3qBpoVjE5mvGsEshcYf7AmelzbJIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fa1YcfXG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="CHNpTwuy"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4VvYWz0TttzlgMVV;
-	Wed,  5 Jun 2024 16:56:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1717606586; x=1720198587; bh=uMMIDLFYhjKDbpd2fVFvbQHY
-	dZeC9BpYMZt3FtU3l/Y=; b=CHNpTwuyyQ2/Vw+IkJ0iRF/7h/7YGhNvMCg/32TL
-	92IZfq8YZO3ziQ0am696c97F561j5gzc11NKsXCsB5/SpJWCe82ka68Bdl09oG0S
-	+gjsmtrB7eqY03TqFxiIcnmZycxEp6K49t/dH85CZW8xs/RqXV1gf94TWBkNoJrj
-	yWzw8Y68OKiqhXcP+fdZJtAB5VnR2GCHFhXCUvoXWlMux42NoEo955Is9AvAmT/M
-	NabPbblfBkTnPxAvzLTNx5k0eudDF0SaB51zZMU3ZkxMbxwvcKeCTAFApma+xO0h
-	T5/MqxPngZ6T31tuxqZ/5PYBaRmfwRpUe7J7nUEatzw/Qw==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 3f_26z_J4OVI; Wed,  5 Jun 2024 16:56:26 +0000 (UTC)
-Received: from [192.168.132.235] (unknown [65.117.37.195])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4VvYWp4Cw7zlgMVS;
-	Wed,  5 Jun 2024 16:56:21 +0000 (UTC)
-Message-ID: <3e49207a-1efc-4fe6-99c2-8cdd9c24664c@acm.org>
-Date: Wed, 5 Jun 2024 10:56:20 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fa1YcfXG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30B7AC2BD11;
+	Wed,  5 Jun 2024 17:04:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1717607072;
+	bh=nhFWFsp+9ExjOIXbu0vBmHM9s9CAsaCAVQQ7E358h9U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=fa1YcfXGmjcOXmffGBJge6qX26nr1zo/kXEqmVo1su2WdAIlSKFcpEiDDS2DDH2Fx
+	 HpaQiGe7X51iLeB+wcUeUGyRuenIfOBL59LWtA6H+MaVPZyNyYdcIV3LphhusJWYzz
+	 l1VnWcAL95uFrkuPXeK3r4PhzYPOERC8x2bcAoo1m5LLKKRqDpP2fHvHaldLPsrwtq
+	 rgFQE7CGpMotRiVYDgSEGAgmhai9hhAUNSsg+WUE+1P/WYNaOpU4RmLWSX61ew/mJm
+	 558DLmWiXztnaPcho+7DEHIHLR6trO3Yw80kOi8ZLgda3ENjPjgPdjyxxuCT6RMmQy
+	 d+YcPETCnTAdg==
+Date: Wed, 5 Jun 2024 11:04:28 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Breno Leitao <leitao@debian.org>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Chaitra P B <chaitra.basappa@broadcom.com>, leit@meta.com,
+	stable@vger.kernel.org,
+	"open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <MPT-FusionLinux.pdl@broadcom.com>,
+	"open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)" <linux-scsi@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] mpt3sas: Avoid test/set_bit() operating in
+ non-allocated memory
+Message-ID: <ZmCanHvLTo_RjZsA@kbusch-mbp.dhcp.thefacebook.com>
+References: <20240605085530.499432-1-leitao@debian.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 12/12] block: move integrity information into queue_limits
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
- Dan Williams <dan.j.williams@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
- Ira Weiny <ira.weiny@intel.com>, Keith Busch <kbusch@kernel.org>,
- Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>,
- linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
-References: <20240605063031.3286655-1-hch@lst.de>
- <20240605063031.3286655-13-hch@lst.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240605063031.3286655-13-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240605085530.499432-1-leitao@debian.org>
 
-On 6/5/24 00:28, Christoph Hellwig wrote:
->   	if (!dix && scsi_host_dix_capable(sdp->host, 0)) {
-> -		dif = 0; dix = 1;
-> +		dif = 0;
-> +		dix = 1;
->   	}
+On Wed, Jun 05, 2024 at 01:55:29AM -0700, Breno Leitao wrote:
+> There is a potential out-of-bounds access when using test_bit() on a
+> single word. The test_bit() and set_bit() functions operate on long
+> values, and when testing or setting a single word, they can exceed the
+> word boundary. KASAN detects this issue and produces a dump:
+> 
+> 	 BUG: KASAN: slab-out-of-bounds in _scsih_add_device.constprop.0 (./arch/x86/include/asm/bitops.h:60 ./include/asm-generic/bitops/instrumented-atomic.h:29 drivers/scsi/mpt3sas/mpt3sas_scsih.c:7331) mpt3sas
+> 
+> 	 Write of size 8 at addr ffff8881d26e3c60 by task kworker/u1536:2/2965
+> 
+> For full log, please look at [1].
+> 
+> Make the allocation at least the size of sizeof(unsigned long) so that
+> set_bit() and test_bit() have sufficient room for read/write operations
+> without overwriting unallocated memory.
 
-Although the above change looks fine to me, it is unrelated to the
-other changes in this patch?
+Looks good.
 
-Thanks,
-
-Bart.
-
+Reviewed-by: Keith Busch <kbusch@kernel.org>
