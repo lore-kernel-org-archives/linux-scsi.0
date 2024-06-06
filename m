@@ -1,63 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58E5113AA31;
-	Thu,  6 Jun 2024 21:47:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06592535C8
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Jun 2024 23:08:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717710457; cv=none; b=LIdoTiwVlVoauNpDaUAcv0+rLYxJrhuKz2gy4FLCiPm5IHpJmrowbzRjDV5e7g701/3k91qCMl91vKV93+MOJwtJsu4s7uctLP+qPKhJAhTqqa3IKlNBtZsP9kKebIqfXfMLyxL86A2Nflx08verfTzsX/FOPqoCFcfRPpZRZGA=
+	t=1717715326; cv=none; b=lwaxK+o+ROT4cvYKSrgrtqyBtLNN1O+0hQlq1EftahIkeNcdEeLoyv5EaiT4HWLR7JivI6f+N/wqJNxUyuqbV9Hqbf+2WI8pqRaySO/tiFKwxFYVvF+mx5Zc9g3BxV5ZdDfNC9F/+qow9GBsGFINTbZzZ6df2QzgsC3KxYQdwxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717710457; c=relaxed/simple;
-	bh=4zIzx33sDkv7R/xxA8g1AIqLRslHINgKj7vaNorjoiI=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=ssl+DfRzOqUhmXyX3csyt6tgl0yI/ijd5qOhtQGdmWue6SGlkhIIxja0GCUV+HnmAyqrT7pJtw1WRFUMkkC56KLSMg8sMU6NF0d7muN8eKbm2z+UUPDWr4g0l9/MjLsM+AFYnMOvWeCSzoLi+pl04Hk/oYzrXsJhcbp4yGOia8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b9PPRtnf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717715326; c=relaxed/simple;
+	bh=ivHRm8Gc/TIPEtghMOHVC9hUSg8uXYUJQq6cqKdRRG4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WNDGir++jh296iTe0lqFmA1KZ1Yr//awRSQ5NmdhNYFbWsw+PN7kWo2+U8KWRWRBu3Ra2HVtHuxxGZ3dPu63AqBKdbgA5vhZQsx5VB6gkN780Xbs6EGYKSEEPFIJGF5nG/eHnePqxNvynQRDevNVTlCOXO5DXZ9DbjZnOpypRQ4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bNcEs2PL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b9PPRtnf"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D9E0EC32786;
-	Thu,  6 Jun 2024 21:47:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bNcEs2PL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE4DDC2BD10;
+	Thu,  6 Jun 2024 23:08:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717710456;
-	bh=4zIzx33sDkv7R/xxA8g1AIqLRslHINgKj7vaNorjoiI=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=b9PPRtnf8ECEr+x/ibCIBqd01CbBTu6QtMbXUhXoUpwniZ1eIWfzy2wQu8bpWd2Pt
-	 /WOvmCFcJNkYw4sUjTZ1zw2ZgiQiqb6JlfORG7CoE9aO3pPjM4Cz2DHwYohH3RokeG
-	 eyqKfYXfXkcJtF6J3GWLRogdfkJN7gVLQ4ZXdcN3ZRHDR56HyZjfI/0j/Rv/b1PrT7
-	 vBSDVFoqgHUMRMgCzfEvfuwF6YKGd2nUfh8jhFUtE3rcS1gq0w0zxmCEil7RAYdpoT
-	 B3L5ZfRRXmJJyzMhdbVo2ViWHSyvaKFSi78ZHLbUt7ZSchCHUQ2Ow2Nby5kcMu3XbY
-	 reex8DCxWV4kQ==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id CA846D2039E;
-	Thu,  6 Jun 2024 21:47:36 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.10-rc2
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <f91727d00e7d2c0084c71022bb0884442fd1e13e.camel@HansenPartnership.com>
-References: <f91727d00e7d2c0084c71022bb0884442fd1e13e.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <f91727d00e7d2c0084c71022bb0884442fd1e13e.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: d53b681ce9ca7db5ef4ecb8d2cf465ae4a031264
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 8a92980606e3585d72d510a03b59906e96755b8a
-Message-Id: <171771045682.14151.12228229203179950219.pr-tracker-bot@kernel.org>
-Date: Thu, 06 Jun 2024 21:47:36 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	s=k20201202; t=1717715325;
+	bh=ivHRm8Gc/TIPEtghMOHVC9hUSg8uXYUJQq6cqKdRRG4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=bNcEs2PLB+CcrUbVUtMKnvgMD6Ox3GRmW2V9oarfBqYixCiQduX7/N1rqBZcpmEhs
+	 ToivSK8yJ2aQbn793s3qcKSnxM4mtT7Hr0ItDrHVbQoODGO1/LcErCmEGLqnAhaVV9
+	 sMQiuRECsqWQrTscMQVq8z0SVtW/p30+nL+yhHcTs73ZCnbNJ28DNW23UklKI6uoF/
+	 Me/Syo2SjZyoaFuW4mEKfutMkbmqOm2w9JNl8eX757w0MPUtJz1z4wSFqtO8K5BQWQ
+	 kQhDjRsPDN7TfP/tUg9B9hcA+rCiraotPewb2tV4w8Jjhhsu4fv2BmxGxrVCeZtYww
+	 B6sICjLtiupFw==
+Message-ID: <7e27dc26-ab23-465f-8cd2-97e635fc37b3@kernel.org>
+Date: Fri, 7 Jun 2024 08:08:43 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: core: Disabe CDL by default
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Cc: Niklas Cassel <cassel@kernel.org>
+References: <20240606054606.55624-1-dlemoal@kernel.org>
+ <03766042-bfa8-44bf-9684-44a912ad2c73@acm.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <03766042-bfa8-44bf-9684-44a912ad2c73@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The pull request you sent on Thu, 06 Jun 2024 15:03:50 -0400:
+On 6/7/24 00:48, Bart Van Assche wrote:
+> On 6/5/24 23:46, Damien Le Moal wrote:
+>> For scsi devices supporting the Command Duration Limits feature set, the
+>> user can enable/disable this feature use through the sysfs device
+>> attribute cdl_enable. This attribute modification triggers a call to
+>> scsi_cdl_enable() to enable and disable the feature for ATA devices and
+>> set the scsi device cdl_enable to the user provided bool value.
+> 
+> Do we really need to disable CDL by default? Has it been considered to
+> enable CDL by default if the Command Duration Limit mode pages that have
+> been defined in SPC-5 are supported?
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+We cannot do that as that would potentially break users of ATA NCQ priority. The
+reason is that for ATA drives that support both NCQ priority and CDL, if CDL is
+enabled, NCQ priority cannot be used. If we were to change CDL to be enabled by
+default, NCQ priority users would need to disable it before enabling NCQ
+priority. That can break existing setups.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/8a92980606e3585d72d510a03b59906e96755b8a
-
-Thank you!
+And this has been like this since kernel 6.5, so I am not going to change this now.
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Damien Le Moal
+Western Digital Research
+
