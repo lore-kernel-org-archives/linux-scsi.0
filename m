@@ -1,91 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F112A6F08E;
-	Thu,  6 Jun 2024 20:54:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58E5113AA31;
+	Thu,  6 Jun 2024 21:47:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717707267; cv=none; b=svwK87q6AOICi1z7v5Grjx+XUKKr4dZw6WoqmmjdS0qzbGiKyv8wbbBIq+Ft0VRjG2jig0iR+KvV9op0i14WcaaJdIloy4MGX731H6qgs+fXE19QH3PUzZ2G/ERYvyiOprdjP1O9XKZRhONSGG19J6N2d008Yk3RKrV11PhYAew=
+	t=1717710457; cv=none; b=LIdoTiwVlVoauNpDaUAcv0+rLYxJrhuKz2gy4FLCiPm5IHpJmrowbzRjDV5e7g701/3k91qCMl91vKV93+MOJwtJsu4s7uctLP+qPKhJAhTqqa3IKlNBtZsP9kKebIqfXfMLyxL86A2Nflx08verfTzsX/FOPqoCFcfRPpZRZGA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717707267; c=relaxed/simple;
-	bh=aeXGQdzPsVZ4cpuieF65ifFWcRnv+FQafZ2EDIxzKb0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ByOgyId/g1LOj0Np4IJ1IbWqLBXicXhlia8rQS1sEEzSRqO8gRMM4VDbGZn7Axd/iBkIuGdufkRKQDw8xOMG/Y3nAgtgejRpLGBtt0yOva3bpc92vu9e17PIcNrob2mu0+AaACC/6w/pZXvTT//k2pEPx+wAwgx4RzMgqE58q/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LoTyV14v; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717710457; c=relaxed/simple;
+	bh=4zIzx33sDkv7R/xxA8g1AIqLRslHINgKj7vaNorjoiI=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=ssl+DfRzOqUhmXyX3csyt6tgl0yI/ijd5qOhtQGdmWue6SGlkhIIxja0GCUV+HnmAyqrT7pJtw1WRFUMkkC56KLSMg8sMU6NF0d7muN8eKbm2z+UUPDWr4g0l9/MjLsM+AFYnMOvWeCSzoLi+pl04Hk/oYzrXsJhcbp4yGOia8s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b9PPRtnf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LoTyV14v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D4EBC2BD10;
-	Thu,  6 Jun 2024 20:54:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b9PPRtnf"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id D9E0EC32786;
+	Thu,  6 Jun 2024 21:47:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717707266;
-	bh=aeXGQdzPsVZ4cpuieF65ifFWcRnv+FQafZ2EDIxzKb0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LoTyV14v/jAiVGP0AATfPdsSbN8gtFnuY7baOKfWSmqxVwsrDKIj4HRRxuCGZma51
-	 550tMfBDqLisPoGIOjoMm1TmNWQgLk1ARDtUT+IpDmshoSp6wbqVH9G3Ky8sYlSdfS
-	 9EWrbUHKC+mueUd4/JAmfaaP0CFiBoUZiFmM5JehmrAR/wpuW9dibjzGT9+JjtcwYO
-	 tiSzaRx3ftMqPb93b4bx/F2ssP503CKzdnu7Ey5nPMJ+R+f5D5lnLS7xSDEryk37Uc
-	 38fOfjY9AQfguhiCpUIEL0ZMUcqix0vlYtOCPEuCb1ap34Lquz+jFofat0l3twBUrC
-	 C2M9rrysLxZvw==
-Date: Thu, 6 Jun 2024 14:54:24 -0600
-From: "Rob Herring (Arm)" <robh@kernel.org>
-To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bjorn Andersson <andersson@kernel.org>, linux-scsi@vger.kernel.org,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org,
-	Conor Dooley <conor+dt@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v5] dt-bindings: ufs: qcom,ufs: drop source clock entries
-Message-ID: <171770726231.3843186.17154781456146316329.robh@kernel.org>
-References: <20240528-msm8996-fix-ufs-v5-1-b475c341126e@linaro.org>
+	s=k20201202; t=1717710456;
+	bh=4zIzx33sDkv7R/xxA8g1AIqLRslHINgKj7vaNorjoiI=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=b9PPRtnf8ECEr+x/ibCIBqd01CbBTu6QtMbXUhXoUpwniZ1eIWfzy2wQu8bpWd2Pt
+	 /WOvmCFcJNkYw4sUjTZ1zw2ZgiQiqb6JlfORG7CoE9aO3pPjM4Cz2DHwYohH3RokeG
+	 eyqKfYXfXkcJtF6J3GWLRogdfkJN7gVLQ4ZXdcN3ZRHDR56HyZjfI/0j/Rv/b1PrT7
+	 vBSDVFoqgHUMRMgCzfEvfuwF6YKGd2nUfh8jhFUtE3rcS1gq0w0zxmCEil7RAYdpoT
+	 B3L5ZfRRXmJJyzMhdbVo2ViWHSyvaKFSi78ZHLbUt7ZSchCHUQ2Ow2Nby5kcMu3XbY
+	 reex8DCxWV4kQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id CA846D2039E;
+	Thu,  6 Jun 2024 21:47:36 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.10-rc2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <f91727d00e7d2c0084c71022bb0884442fd1e13e.camel@HansenPartnership.com>
+References: <f91727d00e7d2c0084c71022bb0884442fd1e13e.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <f91727d00e7d2c0084c71022bb0884442fd1e13e.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: d53b681ce9ca7db5ef4ecb8d2cf465ae4a031264
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 8a92980606e3585d72d510a03b59906e96755b8a
+Message-Id: <171771045682.14151.12228229203179950219.pr-tracker-bot@kernel.org>
+Date: Thu, 06 Jun 2024 21:47:36 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240528-msm8996-fix-ufs-v5-1-b475c341126e@linaro.org>
 
+The pull request you sent on Thu, 06 Jun 2024 15:03:50 -0400:
 
-On Tue, 28 May 2024 16:36:48 +0300, Dmitry Baryshkov wrote:
-> There is no need to mention and/or to touch in any way the intermediate
-> (source) clocks. Drop them from MSM8996 UFSHCD schema, making it follow
-> the example lead by all other platforms.
-> 
-> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-> ---
-> Changes in v5:
-> - Rebased on top of linux-next
-> - Dropped arm64 / DT patches applied by Bjorn
-> - Link to v4: https://lore.kernel.org/r/20240408-msm8996-fix-ufs-v4-0-ee1a28bf8579@linaro.org
-> 
-> Changes in v4:
-> - Rebased on top of linux-next to resolve conflict with UFS schema
->   changes
-> - Link to v3: https://lore.kernel.org/r/20240218-msm8996-fix-ufs-v3-0-40aab49899a3@linaro.org
-> 
-> Changes in v3:
-> - dropped the patch conflicting with Yassine's patch that got accepted
-> - Cc stable on the UFS change (Manivannan)
-> - Fixed typos in the commit message (Manivannan)
-> - Link to v2: https://lore.kernel.org/r/20240213-msm8996-fix-ufs-v2-0-650758c26458@linaro.org
-> 
-> Changes in v2:
-> - Dropped patches adding RX_SYMBOL_1_CLK, MSM8996 uses single lane
->   (Krzysztof).
-> - Link to v1: https://lore.kernel.org/r/20240209-msm8996-fix-ufs-v1-0-107b52e57420@linaro.org
-> ---
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 12 +++++-------
->  1 file changed, 5 insertions(+), 7 deletions(-)
-> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Applied, thanks!
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/8a92980606e3585d72d510a03b59906e96755b8a
 
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
