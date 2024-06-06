@@ -1,149 +1,132 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88D1713C676;
-	Thu,  6 Jun 2024 09:34:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765991953B5;
+	Thu,  6 Jun 2024 11:15:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717666447; cv=none; b=tfca36MbpJusgtPj1q2UWuGBEvbB3BGcy2JnOUZ7oJ5s9/BrOEbb8wuYRj6jJ4qaXxmgdCYrczgCUQeyt/KKlV9CLdRboY6KHXTxeWMmxD4JIBPsWmF4RIPIPOYG1+9VwE4FtXYA7OzyoloiCRE9HDYyoFAbdEjWAgQ16O0b9MY=
+	t=1717672505; cv=none; b=AO7sJ2fAhCjkvg6RgMH/VaqopSfKX07wDiqd44rapuUcXAmHYykjVf8g+1ur0niHcstSSiDu73lyhlBtHwTkQJ1PfgUC1qkL2vOkEptAu9yGov9wEF4EAn/ydYQ3NPy+gwyMzlTLTq6cPZ9H8/tWxI14GD7ZXlPFKC+vHUL4xi8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717666447; c=relaxed/simple;
-	bh=7CsufZK2miEU5UnmC5oGSmYNS+ai0Uwb0uhJhcKAtRo=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=Ywfjb1WfPRLuVCJ2YD6JL3W/P6Klq9n7Z5PfqRmHf0Tb3G8ejpyRfVBjaaTj8OJ95atp8h6j2xxWhlEQJ9j2oayYkcT/RALcvZ35dVN1atHRUH1M6OikLlrHGDLGQZX+CZChzkhaoFXG4MDFd6Gc+3irt7YgXb0eniT7KI1SKVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=MATPO10Q; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=YGCAIQIF; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1717672505; c=relaxed/simple;
+	bh=P8r1tAkblITJ7kuGQyJFOBAGEE7nFQZlWfQQ9+/eIbM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kMBSXaP3+HAAusg3KYYJObShm+fQ/lWIGFGJU5ueDgbPSVdbI+ZqKV8rBE0OO0nQDQBrCIVe5mPVSth3UNggw9LNSNC1EOrotHDvF5D/Sg5V1pS69LUgVCwYSKK5/CVKlLKC+HWadOUAekRypfd+9Fy87wX51TT5RV1By2eZUkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=nXEUUmHi; arc=none smtp.client-ip=150.107.74.76
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="MATPO10Q";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="YGCAIQIF"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1717666443;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GI0Ast9VZDly/xi6jCxjuQpHUZTGPm46ngg6M3zfBXs=;
-	b=MATPO10QOHKv4k4VQnrpfoCLSbqRmbY7gqT/F7T0Lc/2E7Du63oB8161P4q5JWozu3fZnB
-	V9RDyzJh7XWLYDycTqRoUWo2plgch3aRjBVw4XZSkNQNjZvqWHAT9K73qLd8nN0rKfCezR
-	Bp18ybroip0aRG4RB4z2CLeZ5dBwCqJ129sBCgauC9Ok0NyqMbHNvXlLWaGPfMJDdgC1aW
-	1SCPm4PXh9MoYg0TniyHUitOsT2qoJgTjF2aFxkh2/JlM+j4ONJmcdKHivsjP+Q4SU/D6g
-	cfGOJyLnD7ell8quwLO5W77UB0wdhQtYpvI8JHvTB8xeEEA7ZtyGSV72RTe36Q==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1717666443;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GI0Ast9VZDly/xi6jCxjuQpHUZTGPm46ngg6M3zfBXs=;
-	b=YGCAIQIFH0BDyKRWYSb4HAgVmuTgJ2BKHKaHx9TT01zEtsSvWNKJWbqK6SEyypSe+CHCDb
-	ASnT1HJAMDuvaFBA==
-To: Michael Kelley <mhklinux@outlook.com>, "kys@microsoft.com"
- <kys@microsoft.com>, "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
- "wei.liu@kernel.org" <wei.liu@kernel.org>, "decui@microsoft.com"
- <decui@microsoft.com>, "mingo@redhat.com" <mingo@redhat.com>,
- "bp@alien8.de" <bp@alien8.de>, "dave.hansen@linux.intel.com"
- <dave.hansen@linux.intel.com>, "x86@kernel.org" <x86@kernel.org>,
- "hpa@zytor.com" <hpa@zytor.com>, "lpieralisi@kernel.org"
- <lpieralisi@kernel.org>, "kw@linux.com" <kw@linux.com>, "robh@kernel.org"
- <robh@kernel.org>, "bhelgaas@google.com" <bhelgaas@google.com>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
- <martin.petersen@oracle.com>, "arnd@arndb.de" <arnd@arndb.de>,
- "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>
-Cc: "maz@kernel.org" <maz@kernel.org>, "den@valinux.co.jp"
- <den@valinux.co.jp>, "jgowans@amazon.com" <jgowans@amazon.com>,
- "dawei.li@shingroup.cn" <dawei.li@shingroup.cn>
-Subject: RE: [RFC 06/12] genirq: Add per-cpu flow handler with conditional
- IRQ stats
-In-Reply-To: <SN6PR02MB4157AD9DE6D3F45EC5F5595DD4FA2@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <20240604050940.859909-1-mhklinux@outlook.com>
- <20240604050940.859909-7-mhklinux@outlook.com> <87h6e860f8.ffs@tglx>
- <SN6PR02MB415737FF6F7B40A1CD20C4A9D4F82@SN6PR02MB4157.namprd02.prod.outlook.com>
- <87zfrz4jce.ffs@tglx>
- <SN6PR02MB415706390CB0E8FD599B6494D4F92@SN6PR02MB4157.namprd02.prod.outlook.com>
- <87cyov4glm.ffs@tglx>
- <SN6PR02MB4157AD9DE6D3F45EC5F5595DD4FA2@SN6PR02MB4157.namprd02.prod.outlook.com>
-Date: Thu, 06 Jun 2024 11:34:03 +0200
-Message-ID: <87le3i2z5g.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="nXEUUmHi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
+	s=201909; t=1717672496;
+	bh=JkMBHpq5K4ie+dfHpGJjCUD7zTfjKpLevGsS4Gkp3Mo=;
+	h=From:To:Cc:Subject:Date:From;
+	b=nXEUUmHiHHZhMfTLqAfWPU4HerXeYWMJtunn0PvlF4di3y67hn37mGLFF9awnrkD5
+	 qrk328KUcQi/8DamBIXcYuQd6sgdPo4ymjWbEFwQ7jZxB4FUU/pYmDGCpefnb3/b6g
+	 6RA9fwnz+RYxkkAgont6xbe5h1sdAz1jb26tUuYY7TNJjq12YSpSbhDRg3WcbZkwEw
+	 Jxkqg+sPV9K9klXKYv2gvf3mJCQwniM/M3LmM3qEjb/zEnwvpEHQmZP+ziCzT9RurX
+	 1hrepvtq0dkhjBwWMt6cfpVQDD2nrcqQ60qkK1391r8vAfoh9SUYwWXA2XIJ5Hikso
+	 tR9/WQv+MKAPA==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Vw1vM4l74z4wc5;
+	Thu,  6 Jun 2024 21:14:55 +1000 (AEST)
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: martin.petersen@oracle.com,
+	dlemoal@kernel.org,
+	cassel@kernel.org
+Cc: hch@lst.de,
+	john.g.garry@oracle.com,
+	linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	<linuxppc-dev@lists.ozlabs.org>,
+	regressions@lists.linux.dev,
+	doru.iorgulescu1@gmail.com
+Subject: [PATCH] ata: pata_macio: Fix max_segment_size with PAGE_SIZE == 64K
+Date: Thu,  6 Jun 2024 21:14:45 +1000
+Message-ID: <20240606111445.400001-1-mpe@ellerman.id.au>
+X-Mailer: git-send-email 2.45.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jun 06 2024 at 03:14, Michael Kelley wrote:
-> From: Thomas Gleixner <tglx@linutronix.de> Sent: Wednesday, June 5, 2024 7:20 AM
->> 
->> On Wed, Jun 05 2024 at 13:45, Michael Kelley wrote:
->> > From: Thomas Gleixner <tglx@linutronix.de> Sent: Wednesday, June 5, 2024 6:20 AM
->> >
->> > In /proc/interrupts, the double-counting isn't a problem, and is
->> > potentially helpful as you say. But /proc/stat, for example, shows a total
->> > interrupt count, which will be roughly double what it was before. That
->> > /proc/stat value then shows up in user space in vmstat, for example.
->> > That's what I was concerned about, though it's not a huge problem in
->> > the grand scheme of things.
->> 
->> That's trivial to solve. We can mark interrupts to be excluded from
->> /proc/stat accounting.
->> 
->
-> OK.  On x86, some simple #ifdef'ery in arch_irq_stat_cpu() can filter
-> out the HYP interrupts. But what do you envision on arm64, where
-> there is no arch_irq_stat_cpu()?  On arm64, the top-level interrupt is a
-> normal Linux IRQ, and its count is included in the "kstat.irqs_sum" field
-> with no breakout by IRQ. Identifying the right IRQ and subtracting it
-> out later looks a lot uglier than the conditional stats accounting.
+The pata_macio driver advertises a max_segment_size of 0xff00, because
+the hardware doesn't cope with requests >= 64K.
 
-Sure. There are two ways to solve that:
+However the SCSI core requires max_segment_size to be at least
+PAGE_SIZE, which is a problem for pata_macio when the kernel is built
+with 64K pages.
 
-1) Introduce a IRQ_NO_PER_CPU_STATS flag, mark the interrupt
-   accordingly and make the stats increment conditional on it.
-   The downside is that the conditional affects every interrupt.
+In older kernels the SCSI core would just increase the segment size to
+be equal to PAGE_SIZE, however since the commit tagged below it causes a
+warning and the device fails to probe:
 
-2) Do something like this:
+  WARNING: CPU: 0 PID: 26 at block/blk-settings.c:202 .blk_validate_limits+0x2f8/0x35c
+  CPU: 0 PID: 26 Comm: kworker/u4:1 Not tainted 6.10.0-rc1 #1
+  Hardware name: PowerMac7,2 PPC970 0x390202 PowerMac
+  ...
+  NIP .blk_validate_limits+0x2f8/0x35c
+  LR  .blk_alloc_queue+0xc0/0x2f8
+  Call Trace:
+    .blk_alloc_queue+0xc0/0x2f8
+    .blk_mq_alloc_queue+0x60/0xf8
+    .scsi_alloc_sdev+0x208/0x3c0
+    .scsi_probe_and_add_lun+0x314/0x52c
+    .__scsi_add_device+0x170/0x1a4
+    .ata_scsi_scan_host+0x2bc/0x3e4
+    .async_port_probe+0x6c/0xa0
+    .async_run_entry_fn+0x60/0x1bc
+    .process_one_work+0x228/0x510
+    .worker_thread+0x360/0x530
+    .kthread+0x134/0x13c
+    .start_kernel_thread+0x10/0x14
+  ...
+  scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
 
-static inline
-void __handle_percpu_irq(struct irq_desc *desc, irqreturn_t (*handle)(struct irq_desc *))
-{
-	struct irq_chip *chip = irq_desc_get_chip(desc);
+Although the hardware can't cope with a 64K segment, the driver
+already deals with that internally by splitting large requests in
+pata_macio_qc_prep(). That is how the driver has managed to function
+until now on 64K kernels.
 
-	if (chip->irq_ack)
-		chip->irq_ack(&desc->irq_data);
+So fix the driver to advertise a max_segment_size of 64K, which avoids
+the warning and keeps the SCSI core happy.
 
-	handle(desc);
+Fixes: afd53a3d8528 ("scsi: core: Initialize scsi midlayer limits before allocating the queue")
+Reported-by: Guenter Roeck <linux@roeck-us.net>
+Closes: https://lore.kernel.org/all/ce2bf6af-4382-4fe1-b392-cc6829f5ceb2@roeck-us.net/
+Reported-by: Doru Iorgulescu <doru.iorgulescu1@gmail.com>
+Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218858
+Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/ata/pata_macio.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-	if (chip->irq_eoi)
-		chip->irq_eoi(&desc->irq_data);
-}
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index 817838e2f70e..3cb455a32d92 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -915,10 +915,13 @@ static const struct scsi_host_template pata_macio_sht = {
+ 	.sg_tablesize		= MAX_DCMDS,
+ 	/* We may not need that strict one */
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+-	/* Not sure what the real max is but we know it's less than 64K, let's
+-	 * use 64K minus 256
++	/*
++	 * The SCSI core requires the segment size to cover at least a page, so
++	 * for 64K page size kernels this must be at least 64K. However the
++	 * hardware can't handle 64K, so pata_macio_qc_prep() will split large
++	 * requests.
+ 	 */
+-	.max_segment_size	= MAX_DBDMA_SEG,
++	.max_segment_size	= SZ_64K,
+ 	.device_configure	= pata_macio_device_configure,
+ 	.sdev_groups		= ata_common_sdev_groups,
+ 	.can_queue		= ATA_DEF_QUEUE,
+-- 
+2.45.1
 
-void handle_percpu_irq(struct irq_desc *desc)
-{
-	/*
-	 * PER CPU interrupts are not serialized. Do not touch
-	 * desc->tot_count.
-	 */
-	__kstat_incr_irqs_this_cpu(desc);
-	__handle_percpu_irq(desc, handle_irq_event_percpu);
-}
-
-void handle_percpu_irq_nostat(struct irq_desc *desc)
-{
-	__this_cpu_inc(desc->kstat_irqs->cnt);
-	__handle_percpu_irq(desc, __handle_irq_event_percpu);
-}
- 
-So that keeps the interrupt accounted for in /proc/interrupts. If you
-don't want that remove the __this_cpu_inc() and mark the interrupt with
-irq_set_status_flags(irq, IRQ_HIDDEN). That will exclude it from
-/proc/interrupts too.
-
-Thanks,
-
-        tglx
