@@ -1,155 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AAC37196D94
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Jun 2024 15:13:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E185B196D8A;
+	Thu,  6 Jun 2024 15:38:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717686812; cv=none; b=RPC+xRdxfIBt4xcTOX0e0tLZAasiC6xHWIbXrmTdWNr0zHdYLikBZ3PPqUrAWOJMn/j2/IHNUFASSNCStykSMX42eLMhPi8a4QRb7jxZISHjODTx6Sn1hUHZHz42adBCO+7+WgfhR17oRExeHk2wgMr5RkC/Ej1wMtI5XHifnbU=
+	t=1717688338; cv=none; b=mRTb3EcWSqGLdh9EyoVixT+1DEpi32fXlHb+47giSifQg5RpvYJ2YdX3yqqxfDctT2dhxHE1OZwLUOd+P7cvuxkDcolaL4v38cWM9GF7tPsjgTKxEGNWTGQz+U0FCy90ezwXo7+3lpI1R0XsyEd9bUZ0/c3Ry8d1KM5/dj5j+GI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717686812; c=relaxed/simple;
-	bh=t1NClZJ9i9gSVf1UhO7/Vu06ESFTeDfS6F4SO8Q3UII=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lhprKHag747gSd15H1FfUzSiSsuT4WNt2knD2D2vEpquhumYKB5Qt3WkGNZkpmZMGH3Fy4q35+/cyJ2JXvJQnNJ4++a8WGE8wK4nPA1h7BbOtFVSw7uEV+mr7X8ELGbPAv6c7lC9WpTgZkMddSXF8ZVNE1UP4sgaXTp5u1bqJLw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xm4/XD74; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717688338; c=relaxed/simple;
+	bh=0fqhwtTCMwg3nN0kbPbaQFo+LrZaFWCeNCebgPd87gw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jqusvW1N6Mvk/RJOaA4eNn9yolyPLdkPwX8eMxBZz0doNGTIUb6IwBFmA0UbLrKN5gUl+X3WwAJkCWOVwNjMnO/5/9i4BrHqLYz5guv7WBO3HtJ1WBR5F+5/SP02FFfdT5dLQ7mIGQJWk1n2PL42jD7rUKkJZxSg84Eps3SQxEQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4vcq+ZeJ; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xm4/XD74"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46C15C2BD10;
-	Thu,  6 Jun 2024 15:13:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717686811;
-	bh=t1NClZJ9i9gSVf1UhO7/Vu06ESFTeDfS6F4SO8Q3UII=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Xm4/XD74TjWz6DDRNV0R4ZIY0fgipGFnE7mLH1ncsz+eeb82nx7a9jmNBv+m8FEhH
-	 kkqNLyEqUY4VTznk4Pvbv+wXzu7XOqbNR5VyQoCW8Aa+VQ+JwVa4TitVwQZu6rSwgm
-	 xLwnpN/KnSa8tdvUirq3xeeQ3KUbgT5pLUauDnBK+TiCde/cbC6XSPKyplFoIqm96V
-	 xqE4UcLQe8Q1PLtmKO0TpNSZg0NmJqugoVvIPDEjqxP57wYNVwSLTtO77Dt8aKwFKM
-	 wJvjeZ6c3m34xXIzEA3b5V8TPL0oU9x1aRVzsHH6+F0i6+JiAKttqpSEFbkouEcUJB
-	 FV7ljQnYTjFqg==
-Date: Thu, 6 Jun 2024 17:13:26 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: core: Disabe CDL by default
-Message-ID: <ZmHSFucV02L5R3Ni@ryzen.lan>
-References: <20240606054606.55624-1-dlemoal@kernel.org>
- <ZmG4XfHEbfhje2Zp@ryzen.lan>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4vcq+ZeJ"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Vw7lt02qZz6Cnk9X;
+	Thu,  6 Jun 2024 15:38:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1717688322; x=1720280323; bh=maVyEw5qAJ9exIjeLqhPdHWd
+	OFMAGD+uPnPP3rBtN3k=; b=4vcq+ZeJ2Tz8h7FvTWtkYye5ybBsQeKzH7LiB/h4
+	RYBFunjMs54P5sT/WycS/guHMkgCJiCBlloYezqTZ7mr4FVcPxejYkxIFpmibeR4
+	gNcRz8zWHzoBC0D/RNYq4CY9i+rCWkWp9HSvPl+aI/mGFgL3HEgyEyWWFY0FP7RT
+	p4mDdyjMwbI/dAP+dOok6Euj9jCvqV3uWVKT/LC4nIMzdjWLziQV0jQRBqkROenn
+	QBV7UL2/XVsMrQPtjqxzYzZ1APOdCg5KIjvDbKk6qP23vrMGcWMj4GMZHuvMCcMv
+	TzcM9QPqn10RI6Vb3+k9KbjWoPv2Osa6VBpxuHAfjkFXBQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id w919G5Ov9keK; Thu,  6 Jun 2024 15:38:42 +0000 (UTC)
+Received: from [172.20.24.239] (unknown [204.98.150.10])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Vw7lg5CCkz6Cnk9W;
+	Thu,  6 Jun 2024 15:38:39 +0000 (UTC)
+Message-ID: <2cbf3443-de1c-4bfc-a249-afd1a4e13211@acm.org>
+Date: Thu, 6 Jun 2024 09:38:38 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZmG4XfHEbfhje2Zp@ryzen.lan>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 04/12] block: remove the blk_integrity_profile structure
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
+ Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
+ Ira Weiny <ira.weiny@intel.com>, Keith Busch <kbusch@kernel.org>,
+ Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>,
+ linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+References: <20240605063031.3286655-1-hch@lst.de>
+ <20240605063031.3286655-5-hch@lst.de>
+ <fee6338e-4aae-456c-90a3-228a19fae58a@acm.org> <20240606045048.GC8395@lst.de>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240606045048.GC8395@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Jun 06, 2024 at 03:23:41PM +0200, Niklas Cassel wrote:
-> Hello Damien,
->
-> s/Disabe/Disable/
-> in $subject
->
-> On Thu, Jun 06, 2024 at 02:46:06PM +0900, Damien Le Moal wrote:
-> > For scsi devices supporting the Command Duration Limits feature set, the
-> > user can enable/disable this feature use through the sysfs device
-> > attribute cdl_enable. This attribute modification triggers a call to
-> > scsi_cdl_enable() to enable and disable the feature for ATA devices and
-> > set the scsi device cdl_enable to the user provided bool value.
-> >
-> > However, for ATA devices, a drive may spin-up with the CDL feature
-> > either enabled or disabled by default, depending on the drive. But the
-> > scsi device cdl_enable field is always initialized to false (CDL
-> > disabled), regardless of the actual device CDL feature state.
-> >
-> > Add a call to scsi_cdl_enable() in scsi_cdl_check() to make sure that
-> > the device-side state of the CDL feature always matches the scsi device
-> > cdl_enable field state, thus avoiding inconsistencies for devices that
-> > have CDL enabled when first scanned. This implies that CDL will always
-> > be disabled, as it should be, when the system first scans the devices.
-> >
-> > Reported-by: Scott McCoy <scott.mccoy@wdc.com>
-> > Fixes: 1b22cfb14142 ("scsi: core: Allow enabling and disabling command duration limits")
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> > ---
-> >  drivers/scsi/scsi.c | 7 +++++++
-> >  1 file changed, 7 insertions(+)
-> >
-> > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> > index 3e0c0381277a..9e9576066e8d 100644
-> > --- a/drivers/scsi/scsi.c
-> > +++ b/drivers/scsi/scsi.c
-> > @@ -666,6 +666,13 @@ void scsi_cdl_check(struct scsi_device *sdev)
-> >		sdev->use_10_for_rw = 0;
-> >
-> >		sdev->cdl_supported = 1;
-> > +
-> > +		/*
-> > +		 * If the device supports CDL, make sure that the current drive
-> > +		 * feature status is consistent with the user controlled
-> > +		 * cdl_enable state.
-> > +		 */
-> > +		scsi_cdl_enable(sdev, sdev->cdl_enable);
-> >	} else {
-> >		sdev->cdl_supported = 0;
-> >	}
->
-> Perhaps I'm missing something here, but since this is only a problem for
-> ATA devices, where the device might have CDL enabled on the device,
-> but disabled in sysfs, why isn't this code disabling it:
-> https://github.com/torvalds/linux/blob/v6.10-rc2/drivers/ata/libata-core.c#L2551-L2572
->
-> The whole point of that code is to keep the device in sync with the
-> device/sysfs value.
->
-> Can't we modify ata_dev_config_cdl() such that we can avoid doing basically
-> the same sync (only needed for ATA devices) in two different functions?
+On 6/5/24 22:50, Christoph Hellwig wrote:
+> On Wed, Jun 05, 2024 at 10:31:27AM -0600, Bart Van Assche wrote:
+>>> +	case BLK_INTEGRITY_CSUM_CRC64:
+>>> +		if (bi->flags & BLK_INTEGRITY_REF_TAG)
+>>> +			return "EXT-DIF-TYPE1-CRC64";
+>>> +		return "EXT-DIF-TYPE3-CRC64";
+>>> +	default:
+>>> +		return "nop";
+>>> +	}
+>>> +}
+>>
+>> Since bi->csum_type has an enumeration type, please leave out the "default:"
+>> and move return "nop" outside the switch statement. This will make the
+>> compiler issue a warning if a new enumeration label would be added without
+>> updating the above switch statement. Otherwise this patch looks good to me.
+> 
+> For that to work you'd need to make csum_type the enum type and not an
+> unsigned char, which would bloat the block limits.  You'd also need to
+> keep the return "nop" where it is, but use the explicit case instead of
+> the default.
 
-So what I don't see right now is, the libata code:
+Has it been considered to add __packed to the definition of enum
+blk_integerity_checksum such that its size changes from 4 to 1 bytes and to
+change "unsigned char csum_type" into  "enum blk_integerity csum_type"?
 
-	val = get_unaligned_le64(&ap->sector_buf[8]);
-	cdl_enabled = val & BIT_ULL(63) && val & BIT_ULL(21);
-	if (dev->flags & ATA_DFLAG_CDL_ENABLED) {
-		if (!cdl_enabled) {
-			/* Enable CDL on the device */
-			err_mask = ata_dev_set_feature(dev, SETFEATURES_CDL, 1);
-			if (err_mask) {
-				ata_dev_err(dev,
-					    "Enable CDL feature failed\n");
-				goto not_supported;
-			}
-		}
-	} else {
-		if (cdl_enabled) {
-			/* Disable CDL on the device */
-			err_mask = ata_dev_set_feature(dev, SETFEATURES_CDL, 0);
-			if (err_mask) {
-				ata_dev_err(dev,
-					    "Disable CDL feature failed\n");
-				goto not_supported;
-			}
-		}
-	}
+Thanks,
+
+Bart.
 
 
-cdl_enabled was from a ata_read_log_page(..., ATA_LOG_CURRENT_SETTINGS, ...)
-call, so it should get the value directly from the device, which IIUC,
-is enabled by default, so it should be enabled.
-
-ATA_DFLAG_CDL_ENABLED
-is from ata_mselect_control_ata_feature(), so translated MODE SELECT,
-but no one should have called this at scsi probe time, so I would
-expect ATA_DFLAG_CDL_ENABLED to not be set.
-
-Is the problem really when at scsi probe time, or is it when the
-user writes the sysfs value the first time where things go wrong?
-
-The commit message mentions "thus avoiding inconsistencies for devices
-that have CDL enabled when first scanned", but perhaps you could be
-explain in more detail why the current code is not working?
-
-
-Kind regards,
-Niklas
