@@ -1,111 +1,100 @@
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6164B3A1A8
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Jun 2024 08:47:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.58.86.151
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26CBD13FD8A
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Jun 2024 09:31:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717663676; cv=none; b=E2FCmE6qrHxSC+d50ZvbG6cT+UKz39xfYS0aaP4U6zgLJ+EY/mig8rqoT1Qd+P397lfFp7Rn/uQdNTNTY61Pu7c0wLEswIKawGH75WbtqL/slU/seS1472f4kfWoOM9IYapSLJLyXha31AVhR1assCFjoKKTOuhVJuVfhEgvjA4=
+	t=1717666283; cv=none; b=OvwOvcV/qfcr2fwtgtCrF8p6durk7cHQz9oIXkMMfj++qgqHlRgCyIXeCB991JeFqYWXOTNWvWWJikw5Cx7ezjoW5kfxhG/7uifEsKZ62ghB1kj6rCCoAqeiF+v5aWnpBcNYlI/Z26yOxaK1sUQBBaHWX8RqgPMzD0qFFWNQ7h0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717663676; c=relaxed/simple;
-	bh=5SCALM9/pCCYNvxyrEIe9yl/FOdRJs0JUlO3rA77C4w=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 MIME-Version:Content-Type; b=gcbLBa2tBVF0myP04zi9QtCw4C0YZ7WWZcaemp7JiRP7YFbgycm6Ack76Q3ff/gMspIMlhUlU6cZVEFu0xS7OD/VPUumw3iO+T+1opYA19QDfsDmAWbH4i14l5WPco3frDC0KlZyStIB/gcSyo0VSytLhQB0ygGpI1gXZ/arfCQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ACULAB.COM; spf=pass smtp.mailfrom=aculab.com; arc=none smtp.client-ip=185.58.86.151
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ACULAB.COM
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aculab.com
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-235-hxMZyz40PyK1pBTMtYucjg-1; Thu, 06 Jun 2024 09:47:45 +0100
-X-MC-Unique: hxMZyz40PyK1pBTMtYucjg-1
-Received: from AcuMS.Aculab.com (10.202.163.4) by AcuMS.aculab.com
- (10.202.163.4) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Thu, 6 Jun
- 2024 09:47:11 +0100
-Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
- id 15.00.1497.048; Thu, 6 Jun 2024 09:47:11 +0100
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Breno Leitao' <leitao@debian.org>, Sathya Prakash
-	<sathya.prakash@broadcom.com>, Sreekanth Reddy
-	<sreekanth.reddy@broadcom.com>, Suganath Prabu Subramani
-	<suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Chaitra P B <chaitra.basappa@broadcom.com>
-CC: "leit@meta.com" <leit@meta.com>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>, Keith Busch <kbusch@kernel.org>, "open
- list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)"
-	<MPT-FusionLinux.pdl@broadcom.com>, "open list:LSILOGIC MPT FUSION DRIVERS
- (FC/SAS/SPI)" <linux-scsi@vger.kernel.org>, open list
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2] mpt3sas: Avoid test/set_bit() operating in
- non-allocated memory
-Thread-Topic: [PATCH v2] mpt3sas: Avoid test/set_bit() operating in
- non-allocated memory
-Thread-Index: AQHatyYXo+PuMyVExkerpGT7XDYd+bG6bGDA
-Date: Thu, 6 Jun 2024 08:47:11 +0000
-Message-ID: <f5bfddf9ec23402498df688e98f6bb29@AcuMS.aculab.com>
-References: <20240605085530.499432-1-leitao@debian.org>
-In-Reply-To: <20240605085530.499432-1-leitao@debian.org>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
+	s=arc-20240116; t=1717666283; c=relaxed/simple;
+	bh=W7r8KdFrhP7mEzSZRrGfmoVUnxE74HNPyd9VnYEvwvo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YjpP89IZEP8qN57ADGI0rUtXe+askSZqBAoRKpphuBhZ7KZLr7xnvmHTjlRxSGpriPpcdZDCPqcNtduJtg8+v5KjGeF0iHCbzaaLPq8p8cydQyNNajQ4hdW8EzlDfLoye4ORV/pMR4I1N1SLwL/nOh7oYrP0eeIxFFbpZKnrYTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=EBB3jeI8; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EBB3jeI8"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=1kuoks9zLbjLaFUk1cEoVg0OuBWGpj4Rk4bsiDCnds0=; b=EBB3jeI8LgJ5zv/5iTxoGdZYGl
+	OB0uwG/jWCEcw2UIep2IZH4Qz9S5td/SKGcLxsP/FLh6PIpYK3ZyG+UxMrDeufN4rgfR9/zCqqmxE
+	sWGhvTz5SyhJjr4MEQn5ubAyneWgl4b61v8EM/9uFaKtGUdJzfY7ZRvC1L/U4sszkQ144bsyPWtz7
+	3oEbo2oTsZCF0ADFsQ2e7etWw7Q9JyjiLEL+PbMGGYmN5iXI2plp+0IFhRp4rXHR6b/VCXT+qEBVJ
+	QBZ/FQKbLYTEsfKmRDoqYn4abGFy5OvPOvP1fd+j87A99G9a0FYoT9+yBiBMNYh+BoIVp0kWUkz/1
+	F1ZgBUTA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sF9Sq-00000009CNU-3Dm4;
+	Thu, 06 Jun 2024 09:31:20 +0000
+Date: Thu, 6 Jun 2024 02:31:20 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Subject: Re: [PATCH] scsi: mpi3mr: Fix SATA NCQ priority support
+Message-ID: <ZmGB6I1OQ5TZOHAn@infradead.org>
+References: <20240606054749.55708-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240606054749.55708-1-dlemoal@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Breno Leitao <leitao@debian.org>
-> Sent: 05 June 2024 09:55
->=20
-> There is a potential out-of-bounds access when using test_bit() on a
-> single word. The test_bit() and set_bit() functions operate on long
-> values, and when testing or setting a single word, they can exceed the
-> word boundary. KASAN detects this issue and produces a dump:
->=20
-> =09 BUG: KASAN: slab-out-of-bounds in _scsih_add_device.constprop.0
-> (./arch/x86/include/asm/bitops.h:60 ./include/asm-generic/bitops/instrume=
-nted-atomic.h:29
-> drivers/scsi/mpt3sas/mpt3sas_scsih.c:7331) mpt3sas
->=20
-> =09 Write of size 8 at addr ffff8881d26e3c60 by task kworker/u1536:2/2965
->=20
-> For full log, please look at [1].
->=20
-> Make the allocation at least the size of sizeof(unsigned long) so that
-> set_bit() and test_bit() have sufficient room for read/write operations
-> without overwriting unallocated memory.
->=20
-...
-> @@ -8512,6 +8512,12 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
->  =09ioc->pd_handles_sz =3D (ioc->facts.MaxDevHandle / 8);
->  =09if (ioc->facts.MaxDevHandle % 8)
->  =09=09ioc->pd_handles_sz++;
-> +=09/* pd_handles_sz should have, at least, the minimal room
-> +=09 * for set_bit()/test_bit(), otherwise out-of-memory touch
-> +=09 * may occur
-> +=09 */
-> +=09ioc->pd_handles_sz =3D ALIGN(ioc->pd_handles_sz, sizeof(unsigned long=
-));
+On Thu, Jun 06, 2024 at 02:47:49PM +0900, Damien Le Moal wrote:
+> The function mpi3mr_qcmd() of the mpi3mr driver is able to indicate to
+> the HBA if a read or write command directed at a SATA device should be
+> executed using NCQ high priority, if the request uses the RT priority
+> class and the user has enabled NCQ priority through sysfs.
+> 
+> However, unlike the mpt3sas driver, the mpi3mr driver does not define
+> the sas_ncq_prio_supported and sas_ncq_prio_enable sysfs attributes, so
+> the ncq_prio_enable field of struct mpi3mr_sdev_priv_data is never
+> actually set and NCQ Priority cannot ever be used.
+> 
+> Fix this by defining these missing atributes to allow a user to check if
+> a device supports NCQ priority and to enable/disable the use of NCQ
+> priority. To do this, lift the function scsih_ncq_prio_supp() out of the
+> mpt3sas driver and make it the generic scsi device function
+> scsi_ncq_prio_supported(). Nothing in that function is hardware
+> specific, so this function can be used for both the mpt3sas driver and
+> the mpi3mr driver.
+
+Shouldn't this move into the SAS transport class instead then?
+
+> +/**
+> + * scsi_ncq_prio_supported - Check for NCQ command priority support
+> + * @sdev: SCSI device
+> + *
+> + * Check if a (SATA) device supports NCQ priority. For non-SATA devices,
+> + * this always return false.
+> + */
+> +bool scsi_ncq_prio_supported(struct scsi_device *sdev)
+> +{
+> +	struct scsi_vpd *vpd;
+> +	bool ncq_prio_supported = false;
 > +
->  =09ioc->pd_handles =3D kzalloc(ioc->pd_handles_sz,
->  =09    GFP_KERNEL);
+> +	rcu_read_lock();
+> +	vpd = rcu_dereference(sdev->vpd_pg89);
+> +	if (vpd && vpd->len >= 214)
+> +		ncq_prio_supported = (vpd->data[213] >> 4) & 1;
+> +	rcu_read_unlock();
+> +
+> +	return ncq_prio_supported;
+> +}
+> +EXPORT_SYMBOL_GPL(scsi_ncq_prio_supported);
 
-That is entirely stupid code.
-IIRC there is a BITMAP_SIZE() that does ((x) + 63u) & ~63)/8
-(on 64bit systems).
-
-=09David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1=
-PT, UK
-Registration No: 1397386 (Wales)
+This also feels kinda out of place in the core SCSI code and more in
+scope for the SAS transport class, even if the other code can't
+move there for whatever reason.
 
