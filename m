@@ -1,132 +1,75 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 765991953B5;
-	Thu,  6 Jun 2024 11:15:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 326421953A4
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Jun 2024 12:11:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717672505; cv=none; b=AO7sJ2fAhCjkvg6RgMH/VaqopSfKX07wDiqd44rapuUcXAmHYykjVf8g+1ur0niHcstSSiDu73lyhlBtHwTkQJ1PfgUC1qkL2vOkEptAu9yGov9wEF4EAn/ydYQ3NPy+gwyMzlTLTq6cPZ9H8/tWxI14GD7ZXlPFKC+vHUL4xi8=
+	t=1717675872; cv=none; b=iCQUOkVTgHyQQRsQYwivAHY/dSuRU+P42RWisD24WCkhBiEYcR0khmxCRGhew7cV+I3lQmS9p+NcVzMj4bA2b/8Xvxyofv0YeNDUI0tZMSQvE4noe77nfutTDZIKNKc0btVXDA/NVvaDpG+CXcvqsKntNW//MHukkpVLOtoopU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717672505; c=relaxed/simple;
-	bh=P8r1tAkblITJ7kuGQyJFOBAGEE7nFQZlWfQQ9+/eIbM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kMBSXaP3+HAAusg3KYYJObShm+fQ/lWIGFGJU5ueDgbPSVdbI+ZqKV8rBE0OO0nQDQBrCIVe5mPVSth3UNggw9LNSNC1EOrotHDvF5D/Sg5V1pS69LUgVCwYSKK5/CVKlLKC+HWadOUAekRypfd+9Fy87wX51TT5RV1By2eZUkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=nXEUUmHi; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
+	s=arc-20240116; t=1717675872; c=relaxed/simple;
+	bh=0EHidEDhi0TaJ4Ns+H4Mt2KWMA29OVMotZ3pKBw2O7Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ma+v2Mq57nxcpR2QWfNNE1HP7Ihx51aRxxov/UVMLD05crbbIuqpqWGFcuuQiJ2CbKQVCctGN0IrRzOMonmhMOq3Y0G/FXL9GpFEoFgwixwMlp8bvQfyvvuKt3/daS3mg3oLL+7j6/5jIYkb+h7d0z9gjBiWFCvQW5vaS+jXXS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kAVhHYgh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="nXEUUmHi"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
-	s=201909; t=1717672496;
-	bh=JkMBHpq5K4ie+dfHpGJjCUD7zTfjKpLevGsS4Gkp3Mo=;
-	h=From:To:Cc:Subject:Date:From;
-	b=nXEUUmHiHHZhMfTLqAfWPU4HerXeYWMJtunn0PvlF4di3y67hn37mGLFF9awnrkD5
-	 qrk328KUcQi/8DamBIXcYuQd6sgdPo4ymjWbEFwQ7jZxB4FUU/pYmDGCpefnb3/b6g
-	 6RA9fwnz+RYxkkAgont6xbe5h1sdAz1jb26tUuYY7TNJjq12YSpSbhDRg3WcbZkwEw
-	 Jxkqg+sPV9K9klXKYv2gvf3mJCQwniM/M3LmM3qEjb/zEnwvpEHQmZP+ziCzT9RurX
-	 1hrepvtq0dkhjBwWMt6cfpVQDD2nrcqQ60qkK1391r8vAfoh9SUYwWXA2XIJ5Hikso
-	 tR9/WQv+MKAPA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4Vw1vM4l74z4wc5;
-	Thu,  6 Jun 2024 21:14:55 +1000 (AEST)
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: martin.petersen@oracle.com,
-	dlemoal@kernel.org,
-	cassel@kernel.org
-Cc: hch@lst.de,
-	john.g.garry@oracle.com,
-	linux-ide@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	<linuxppc-dev@lists.ozlabs.org>,
-	regressions@lists.linux.dev,
-	doru.iorgulescu1@gmail.com
-Subject: [PATCH] ata: pata_macio: Fix max_segment_size with PAGE_SIZE == 64K
-Date: Thu,  6 Jun 2024 21:14:45 +1000
-Message-ID: <20240606111445.400001-1-mpe@ellerman.id.au>
-X-Mailer: git-send-email 2.45.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kAVhHYgh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68884C32782;
+	Thu,  6 Jun 2024 12:11:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1717675872;
+	bh=0EHidEDhi0TaJ4Ns+H4Mt2KWMA29OVMotZ3pKBw2O7Q=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=kAVhHYgh3tGun5mBd6lbMomXNwcIdhm2Mmspci5YUaTE+zFFChk0O15FekuXW1Qpi
+	 0arpJEeJpd+6qUunXec9lI46d4NcbA+xY+6VxDZXx8G9qCbMk7AtZdkb+i/OP0PZMY
+	 MK5PgbUBgSvOAXgVeNFGASEjfzcfkU3/M3V3l9hLmLasvIDjhHsuaZThl4ZPaGa11n
+	 pi/OekMiX0O/obL+LCTCRsLmVqFzS7UodFhALHmw0FrF95Ta9UWbBUY/eFSF0p+XOU
+	 DYbPphAxQrS+l674Fpys4nluaCVmUxM2Bl4SrEMlXQdNPDuEaxMsftWKHhI8lQzdzx
+	 asWUGKl9dEvvQ==
+Message-ID: <5f464af3-4c57-46d9-b554-6c537b04e7eb@kernel.org>
+Date: Thu, 6 Jun 2024 21:11:09 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: core: Disabe CDL by default
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, Niklas Cassel <cassel@kernel.org>
+References: <20240606054606.55624-1-dlemoal@kernel.org>
+ <ZmGCQTIjZjEpTJUR@infradead.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <ZmGCQTIjZjEpTJUR@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The pata_macio driver advertises a max_segment_size of 0xff00, because
-the hardware doesn't cope with requests >= 64K.
+On 6/6/24 18:32, Christoph Hellwig wrote:
+> On Thu, Jun 06, 2024 at 02:46:06PM +0900, Damien Le Moal wrote:
+>> However, for ATA devices, a drive may spin-up with the CDL feature
+>> either enabled or disabled by default, depending on the drive. But the
+>> scsi device cdl_enable field is always initialized to false (CDL
+>> disabled), regardless of the actual device CDL feature state.
+> 
+> The same should be true for native SCSI as well, right?
 
-However the SCSI core requires max_segment_size to be at least
-PAGE_SIZE, which is a problem for pata_macio when the kernel is built
-with 64K pages.
+Nope, because SPC does not define a knob to turn CDL on/off on the device. For
+SAS drives, if CDL is supported, it is always enabled/usable. This is why
+scsi_enable_cdl() is reduced to setting sdev->cdl_enable only (and also why
+there that ugly "if (is_ata)".
 
-In older kernels the SCSI core would just increase the segment size to
-be equal to PAGE_SIZE, however since the commit tagged below it causes a
-warning and the device fails to probe:
+> 
+> The patch itself looks good, though:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-  WARNING: CPU: 0 PID: 26 at block/blk-settings.c:202 .blk_validate_limits+0x2f8/0x35c
-  CPU: 0 PID: 26 Comm: kworker/u4:1 Not tainted 6.10.0-rc1 #1
-  Hardware name: PowerMac7,2 PPC970 0x390202 PowerMac
-  ...
-  NIP .blk_validate_limits+0x2f8/0x35c
-  LR  .blk_alloc_queue+0xc0/0x2f8
-  Call Trace:
-    .blk_alloc_queue+0xc0/0x2f8
-    .blk_mq_alloc_queue+0x60/0xf8
-    .scsi_alloc_sdev+0x208/0x3c0
-    .scsi_probe_and_add_lun+0x314/0x52c
-    .__scsi_add_device+0x170/0x1a4
-    .ata_scsi_scan_host+0x2bc/0x3e4
-    .async_port_probe+0x6c/0xa0
-    .async_run_entry_fn+0x60/0x1bc
-    .process_one_work+0x228/0x510
-    .worker_thread+0x360/0x530
-    .kthread+0x134/0x13c
-    .start_kernel_thread+0x10/0x14
-  ...
-  scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
+Thanks.
 
-Although the hardware can't cope with a 64K segment, the driver
-already deals with that internally by splitting large requests in
-pata_macio_qc_prep(). That is how the driver has managed to function
-until now on 64K kernels.
-
-So fix the driver to advertise a max_segment_size of 64K, which avoids
-the warning and keeps the SCSI core happy.
-
-Fixes: afd53a3d8528 ("scsi: core: Initialize scsi midlayer limits before allocating the queue")
-Reported-by: Guenter Roeck <linux@roeck-us.net>
-Closes: https://lore.kernel.org/all/ce2bf6af-4382-4fe1-b392-cc6829f5ceb2@roeck-us.net/
-Reported-by: Doru Iorgulescu <doru.iorgulescu1@gmail.com>
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218858
-Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/ata/pata_macio.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 817838e2f70e..3cb455a32d92 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -915,10 +915,13 @@ static const struct scsi_host_template pata_macio_sht = {
- 	.sg_tablesize		= MAX_DCMDS,
- 	/* We may not need that strict one */
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
--	/* Not sure what the real max is but we know it's less than 64K, let's
--	 * use 64K minus 256
-+	/*
-+	 * The SCSI core requires the segment size to cover at least a page, so
-+	 * for 64K page size kernels this must be at least 64K. However the
-+	 * hardware can't handle 64K, so pata_macio_qc_prep() will split large
-+	 * requests.
- 	 */
--	.max_segment_size	= MAX_DBDMA_SEG,
-+	.max_segment_size	= SZ_64K,
- 	.device_configure	= pata_macio_device_configure,
- 	.sdev_groups		= ata_common_sdev_groups,
- 	.can_queue		= ATA_DEF_QUEUE,
 -- 
-2.45.1
+Damien Le Moal
+Western Digital Research
 
