@@ -1,66 +1,91 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0B8028376;
-	Thu,  6 Jun 2024 05:54:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E7A6770F9
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Jun 2024 06:30:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717653254; cv=none; b=MY+p/sLEKi+Hpwj6IddyPXhmCcLhkWDB4G9lyT/4w9PRlUmTKMYd2naw/bMKmJdlmZ7WLzWAPonFlU6rXlNUWasZs8yqvmTephMx9Jns8IkAcydPVnFSFIc1Z79RpWE03oBXIBpWZJSJa90okvhynKWjy88Ypc77scAh+KzMI0Q=
+	t=1717655444; cv=none; b=B8vOoGH46zbGwzl/yREHPHSpsbap8eiVldsCEfywDss/dR+f1tyqneEHbgnj46Sp00xz0GGrNRMnSoJ4XQ2n7m8OQoZSXjpSdEGsw0041qlsH0KKSlc3cuqplI4k50ZQFmOstoCHKd2EM/t4U+N6LUSdLRSJla3GL06TZHmm+dY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717653254; c=relaxed/simple;
-	bh=QAgsoikseMC/U92jpGqQlmDkiPMIM9Digq+OV/CqAa4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ke4r3S9jXA/U0rtlDZH3pw83tKfB9AZ4tucMWcOwgcML7t04OrqIJDIE3P0LoMno4SvXRQCrVegdbhRn6EAU/0QH7ohUJvFY0/0asboKWq8SXz1Rnfa+SaDHIjHxtyA0XVr+7VAYMpXS5AKluigsXObEkrndlyge+G68e8Fxu0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 513FC68CFE; Thu,  6 Jun 2024 07:54:08 +0200 (CEST)
-Date: Thu, 6 Jun 2024 07:54:08 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Christoph Hellwig <hch@lst.de>,
-	"Linux regression tracking (Thorsten Leemhuis)" <regressions@leemhuis.info>,
-	John Garry <john.g.garry@oracle.com>, Jens Axboe <axboe@kernel.dk>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	benh@kernel.crashing.org, linuxppc-dev@lists.ozlabs.org,
-	Guenter Roeck <linux@roeck-us.net>,
-	Linux kernel regressions list <regressions@lists.linux.dev>,
-	doru.iorgulescu1@gmail.com
-Subject: Re: [PATCH 04/23] scsi: initialize scsi midlayer limits before
- allocating the queue
-Message-ID: <20240606055408.GA9379@lst.de>
-References: <20240520151536.GA32532@lst.de> <fc6a2243-6982-45e9-a640-9d98c29a8f53@leemhuis.info> <8734pz4gdh.fsf@mail.lhotse> <87wmnb2x2y.fsf@mail.lhotse> <20240531060827.GA17723@lst.de> <87sexy2yny.fsf@mail.lhotse> <87wmn3pntq.fsf@mail.lhotse>
+	s=arc-20240116; t=1717655444; c=relaxed/simple;
+	bh=AMkaXye/IgD3XuHEkVsmSZIJrIZykK1f41X0hFiOvqo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=HNOptgbmYhId+/QjYFoOtvFyl8jY19BmPQYhpjdiU4TpGD4Z1IBxt0uYkZ4ZFIhbk7rkg/PKftNoIMcHh21RUyQpsIl7P9tbiRhI83jZ3aTqWf/pMx02s2VTEPnVSvi56TvtI5wqTBcMkFSRAGeM+I9K8P/KqhtaeXjXdtuhv54=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=WSmmy26i; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="WSmmy26i"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-35e4be5bd7fso657808f8f.1
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Jun 2024 23:30:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1717655441; x=1718260241; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Xb1aTIKqnCa6pPO/mwgnoF+k95Ug37iMONFe351z//A=;
+        b=WSmmy26iY8bTmaQkA31eDX9RpdKPJhrF2SsjKY6ZvdV56WCqQbozIBYfg5nvusQ+fF
+         a+bQVuWP5MSlDTJxvdVFGnZz9oQ4eDaz3DoS2UOb0c+FYQpHs+C6e0iE/vgWjM2ST4b7
+         7LE5ojc6KDxrvY2WVNrpqamZ3tuoKezQqeneXn29iLxGv9u7Qg9fPLenjSVdFIu9ZCFI
+         fVFW06nQA/XYwKV6t8E1tzxtb39/q3GlP3YCH3nv7yUwBwIxTX79n6UnwP1XIXPPBsAv
+         leszcIFBye9W+M+4PHb45LJMsCx+rwCF7Vu2WDVoDnK7X4DNPq+BqZ4UlFNh7k8a84hI
+         unMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717655441; x=1718260241;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Xb1aTIKqnCa6pPO/mwgnoF+k95Ug37iMONFe351z//A=;
+        b=p8xnXZ4bKY4Kq1323EiOI/gq60JJnvlzAFrHxTjlA5PgRnq/4waG0Vloe5RjC8F7HV
+         /MKQvqRK1HWgVxicLi6R3/cRuFMRH2wV/7cV5lkuNEhPEiZUghzGCIqAjxpugg0oYX+6
+         XKg790Nv2BWN26bMvN4yXjdX8yqUx4DKcWrD8NoAkD8zHbgSs8wk3HrSlWEWgqbSbAyV
+         UPESVFblaHvHZH25MWMpWmjDIA3kpRMRQvlK3vC8kSQVCKrVB9wrrvLCcynrfSC/ZhmH
+         tATQHdUT9w8SkD1GgvchLWNksL4NKSi66GICtXfrnyG/i388wYd4abIJtnSJjRs05Ibd
+         WjBA==
+X-Forwarded-Encrypted: i=1; AJvYcCXB+Y8Y0YNWSaZgRrALfCklVAoHgknVRmhzfKlZvL1dO1yGjSpJv8dTVGzMJmgg74E7ggG0q9yWagt30DH6KislNqpkH5MVZyUxqQ==
+X-Gm-Message-State: AOJu0Yw7MAlEVZeaWiGOgd8kvDkLEYei8Zn1I/3qHW+Uw9FN+7PTvHhw
+	CEmhUsWdZWWzGINz1UbK0K1UjHx0ydMkKhqj1vsXIeAbsaTlvjekRxOrL9OFxsL/JufWLNGhwmx
+	R
+X-Google-Smtp-Source: AGHT+IEXqD5EgpuXIBPjTWIIfTAtJQjXTOnOLdJx/Qm17nIB6q9Z38oRFaF1mLcqWpGcYsafpDzPkQ==
+X-Received: by 2002:a5d:4bcb:0:b0:354:faf4:fa87 with SMTP id ffacd0b85a97d-35e84057d18mr3414053f8f.3.1717655440686;
+        Wed, 05 Jun 2024 23:30:40 -0700 (PDT)
+Received: from ?IPV6:2001:a61:139b:bf01:c0fa:2aad:468a:2d84? ([2001:a61:139b:bf01:c0fa:2aad:468a:2d84])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-35ef5d293f6sm679335f8f.12.2024.06.05.23.30.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 05 Jun 2024 23:30:39 -0700 (PDT)
+Message-ID: <4a60e45b-de56-414f-85eb-71541e5d2cf5@suse.com>
+Date: Thu, 6 Jun 2024 08:30:37 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87wmn3pntq.fsf@mail.lhotse>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] uas: set host status byte on data completion error
+To: Shantanu Goel <sgoel01@yahoo.com>, Oliver Neukum <oneukum@suse.com>
+Cc: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <675774215.2024605.1717624320352.ref@mail.yahoo.com>
+ <675774215.2024605.1717624320352@mail.yahoo.com>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <675774215.2024605.1717624320352@mail.yahoo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Jun 05, 2024 at 10:37:53PM +1000, Michael Ellerman wrote:
-> On the other hand increasing max_segment_size to 64K while leaving MAX_DBDMA_SEG
-> at 0xff00 seems to work fine. And that's effectively what's been happening on
-> existing kernels until now.
 
-Exactly.
 
-> 
-> The only question is whether that violates some assumption elsewhere in the
-> SCSI layer?
+On 05.06.24 23:52, Shantanu Goel wrote:
+> Hi,
+Hi,
 
-It shouldn't.
+thank you for the patch. Good catch.
+Could you submit in the form that the Docuemntation describes?
+That is inline and not attached, with your sign off also
+inline, preferably generated with the script?
 
-> Anyway patch below that works for me on v6.10-rc2.
+	Regards
+		Oliver
 
-This looks good to me:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 
