@@ -1,116 +1,109 @@
-Received: from mail.ozlabs.org (gandalf.ozlabs.org [150.107.74.76])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sonic301-20.consmr.mail.gq1.yahoo.com (sonic301-20.consmr.mail.gq1.yahoo.com [98.137.64.146])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01458DDC9;
-	Fri,  7 Jun 2024 03:10:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=150.107.74.76
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55BD779DC
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2024 03:40:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=98.137.64.146
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717729835; cv=none; b=ZZVMeiYZCVSCZpFmtrMT1levWnBo+KedIxjKY/PBwaPJyaXDSCiyKAS3GF8M74LgVJMPHd52zvCZgjZ0ZtpEyewCV0+nmBmTaZe9TjPkYOc5CXbuc6HGNMboHpOGWDFckw/eEr+gxzJ2LsaR0CKogWh8J6t7x02FrVwT0afpZd4=
+	t=1717731642; cv=none; b=PNwkFvEEBp8dI16sDn6Kb0hbi9upZKt/cKWBq5jT5s73JjftJIXv5onQmM/oN0P6FGk7mJcCMZqStN3OFxvyM74LqZTTV0p/r4gCt6VNSeYOE3MEM/ntPIIIadrdu5M/QgEvOcDBm6M7N80X7rhP9esGZ8Mi6+v76gXwK0pgVjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717729835; c=relaxed/simple;
-	bh=KBYXw1WdE0b2j8hw4gwU5u0YhldC95Lt4Kb/R5RmV4w=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=oOl9ytkrQMOcODut/FLHfBHh54WnxSxgo+z63yRXc5vA+Mlcecm/+GHiF/wjBF7EvPY1NCxJAvWLhvoLXYaN1Ttt/kmJNvl1xMzPt61azLbx/xExCyvtofwPpROdz81+dXX4hpfq7xH3e9TerC43WQlSazqlq5DXmgqZzjFpbpg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au; spf=pass smtp.mailfrom=ellerman.id.au; dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b=a+lPQnr+; arc=none smtp.client-ip=150.107.74.76
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ellerman.id.au
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ellerman.id.au
+	s=arc-20240116; t=1717731642; c=relaxed/simple;
+	bh=bue3JtM59gCHPb3/MA4YuPASt++NJ+AkR9hEtDleJQ8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=j8VoS7Ojxje++dkqT74HIEow7I9G8f1aGxmQ6pD1S99pdLbWTrxmzBs9urHBqEPtnEjl57qMAMuB+qgnFKjvuUCUiuxNpDCOSPD6Sx7lL7CIEAPVwG16m5RCc8AvRClliFWxeq2PVgmIF/CRyLLao4MGwTz3a3YQBJlOkfLMtww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=J37sF5+s; arc=none smtp.client-ip=98.137.64.146
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="a+lPQnr+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
-	s=201909; t=1717729830;
-	bh=9lFwEx/JP+T+tWQXbEOOpWSpvQQLktCyT0QZNUBEBwk=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=a+lPQnr+Hnyw9k4PYjdItxkPOKkzpbq1xDGrmf9objw3RJOsGfDNkk6kSXDnqMZAa
-	 JnknCa8WBXOCOPeF6PLMjiqipv2f8aEyttcN+W/h4CKUL6DmOfx/m+uaUzFkhIxrr/
-	 Q/2ZJZeD3PTtuw48WIFqfGAv7imifCi9XSNcA1Xaphf3B/szumvFTpkUjZoAeasVju
-	 Np++rhcJmzGs6m/QnGKZs9p7yuarwU8jTd2NmBsa0MARAmElxFYUmx0feSgupgFiO7
-	 8ArAOcVNEMjnJMXXKdD1ryHmh3JFwOp+KSgzF5E+b0md7so63XmiCVjvXKBFhCqYsE
-	 gS6Efuir3IqzA==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail.ozlabs.org (Postfix) with ESMTPSA id 4VwR5w0Q8qz4wc8;
-	Fri,  7 Jun 2024 13:10:28 +1000 (AEST)
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: martin.petersen@oracle.com, dlemoal@kernel.org, hch@lst.de,
- john.g.garry@oracle.com, linux-ide@vger.kernel.org,
- linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- regressions@lists.linux.dev, doru.iorgulescu1@gmail.com
-Subject: Re: [PATCH] ata: pata_macio: Fix max_segment_size with PAGE_SIZE ==
- 64K
-In-Reply-To: <ZmG0TUiw0Nagwroj@ryzen.lan>
-References: <20240606111445.400001-1-mpe@ellerman.id.au>
- <ZmG0TUiw0Nagwroj@ryzen.lan>
-Date: Fri, 07 Jun 2024 13:10:25 +1000
-Message-ID: <87ikylphwe.fsf@mail.lhotse>
+	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="J37sF5+s"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1717731641; bh=+Jc4NLWEcBYVUaXY827BS4XfdcmOeE+CPKXiNhnJHAA=; h=Date:Subject:To:Cc:References:From:In-Reply-To:From:Subject:Reply-To; b=J37sF5+sZYaXFrlk9a/iW3vVtATXqG5WiAb5h3icse+6mBuR9SX7M5lPjMK0RuJZZxy2xrSAsjV7uAaBwHa4YI6nj9gQFYr0duZrro1h6h4aklsbULrfGsBqIs+7Knyq317RSBG6+crMkL3KTo3GDlFHJCfcBmi5of4F/dkeaD6orsA3efnjhmvUo/qKoSbZSDrrOFIl5gblNDlKCJjH4iHUx2YdXDU3o5/AP8FskepJRq6uUc1KZbyyfOrWrAhumo0Ppe9PvcINX/SpTEmPKGBHDb7Gth1Of08Ry0+0UCB24jS0GABECb788jsm5hjhT9i6guJGoBWSnZlVtkDSRQ==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1717731641; bh=xu+uzunCmbXYz6u8zdUctLPE8hU2cbNDbeR6co7Stxq=; h=X-Sonic-MF:Date:Subject:To:From:From:Subject; b=BzbBEr5RzI9dUyYBbhzPpUKwZLxXRwoQI7TJGDtFig36183eUF2kj2KtyNJfVIKSgOaomSDMwVE9Olj1j0OtE+eSZ403kbYEEPMT9DSNC4ubBHJvjdyKednX0czzSXlysBFA5d9O3zsqf5fTXMYDImznOTz5Gy8fBnpJ+l8FCepO0vHSEu5uRGtuEMrLPInU9ZDHr40IMztfmULeJSvpGPAB+EMJE+p3UrY3EfaZTqgRzfrf5QzCSLjtQZbyg3HQ5ajCe5DK6Bn/EF4byKt6/rtXyqESoHYCxh2/YeeLlB6e69nPimmFm+zdPgJv6vneOK9NfJ4b3vJF62UkXYki+w==
+X-YMail-OSG: jnzRMfIVM1l9v0wbN9a1N2w1UyQVg4B2Dfch0cASSvKGBgMK6afysTr1y5tR.RC
+ 4zu7vztXi6Z.ZYLN.6lEZORt1E1AHbGItOJVDl26iUHjdm0ux_zq7bi7MQopaB1eSD1XhiCqSshJ
+ pmCYHtFWJws.uArFmkhAaSE2YSEEGd2HfJFU4fDpzvL8SaFtDWec0Q4.corVQZrH7oDG7LLJmoj2
+ U1yexc0t_ZonQFQc6QFyPrwpVmZNH4rptpaF20aWiA3UjyGizvUePeAKFL7tVB1LanREpQw.rd7v
+ ojwyk4FpdbrWAwSKUrYCyLnAgIPdpuwB5Kw5hj0xuiq_5LK9R0GTtoI9wTt0rBpVtSCh0ovh1Dn3
+ 6XwxGq9F0NZONxcb74VT0r3cnvbOS4mWv2l3QlvDE.HWGTTu1aMSXqQxOkIq9Q.vLfnKIoZj_KSP
+ y5mu3.M0vyxPZpOlDWaglTK.cMMlsT.e_4X2G.GenfKSs2_RdGsr5Kxj4s3mT1Muf9HZ9d00X.Rx
+ wPdH_rN2HuQWWxEPlgRih66WMfp74U2S2B2_o6u0yqQ9VpLPIAL2ahdxV_dGPRKRq5yk7y58.7lP
+ BOrnsTssBoIVEYuH8pU4_LDAcwXyXDsxaPouTrtXRC_jt06p9Mm2ZxkexJeRKv5gkZKAysfFYQFD
+ AuxsYQhAn5OdtTM81frxPH8WM.VHsFHKzyVU5ylRYftjfoHRW20Lx_8PhzbCMOQM0fHwzbYWFdWD
+ SwoIogm4TBR1EZ76soIxh3A7iltsfx38mvytKk7acbMbg_RVwH8cw25rckCb3eOA7CvzWQc_lfao
+ psaou66n8eCjFPaGbXeZrliapZEDWHGXQOp8Z7WKAbOJtmCrNKL5irdAGsr0CNdzGxuu7OCa4aAM
+ g9vOSAVkoO1hYYzM9w_SthZ2L4TdHiJ0N.hUdB70lcgUgh4bXxGYgHsm9sJzUUCs1RlRRUR8_fWH
+ G4qQBuDia1XfSDQ8SRDIE4kMUimbBEzPaMUNtBYjHnw4NZuHSb_CJ17XQ5BlLylLEUp5IRtZfpVb
+ u2S0OjeZv_cCiwnBUp0p.1faY1wRam5ifZ366MpTdide1jrnsymVYIs1w23YT48wEO.WrmPT1t93
+ wx1U1Nveoj4KQNzZHD3Hip9ct3SI.1r4.ezg_PMoDLk5SUgqc__WJQM.cKzdkbHXWJdbBIIpD.bX
+ OvZQuzE4RyRGLUMaUYBwiimnf1DnGngNV06.nvmVJvJVxH7jeFmOltda6sRipuZZT_1CJjI9l_mF
+ PsWHvFjZiI2gXtd3wp66hJy4MjW7ZUIuOxxX483mVT5uROzB8QFr1aotHyox25OzFgpLrRiR2CLf
+ brAcHj7HeFq.tiO1oVV7gBRQUwi6AnlgRBZWi8LAwppiFDoMvMOibLcpOEb.rTto.qsdtacHgrBJ
+ 9pPqfM2gpqCS3XqCgRA.iNDhOpW7K814Q6xRo_TiHiljD8JZ8BecOijvhp8_7seYjCw4OTJwa5B8
+ QCreSuiM_k6mfDzf5j4ENMK04U3OyUmnN0L.EF3eney7K_Wiyy3RZ9kfCEJk27x.p5myk4ib4Js_
+ LWmMFZMx7pXag5Z89SehYOYfgQXgikG1a2tGLe8ytklXglCcvM068QK1VO.ywbNusRA.YrFCufFj
+ 8kYw30SQ63oEY4CooBaVaj.KdDMnizvBm8yuPvzdOWPmn50e_A3eCdqVlCp0B9niMxYxToXelsXH
+ MWvm4lHHRANNd7hDmYaLCRlY6h4VobLc28S3BB7BxgTOAkDd0PSaOBUKFUyJpLrXxsJJWbvJoNPM
+ dXntspyseLZUgy5YTKpSofhlmn9W8aFSsY_Yuvm6f_EC7_lHdaCe9T5A01ulzRE38mkgy_BRBggp
+ BrbTyhiIYocKdkj4mGBlTuDGKuI6T_PYIgFljkSUTQa3a4sC5m8LbBmlE2BX9O.O3.f7GYnoyRhP
+ FU5gCXkz7P4zzsKsa6XP2n.BP.4.ow8Q_ah9qA_r0gEXGwsp8HhpbnDeKE45MplQE0NgkEHy_19F
+ m2Cc0QEa4cPZJHQgr38.35102aQ0XzyVVYvq4iBHTjKNxCZ7keo6p6k2OHwz9iPXvnxbbu0co6T6
+ VjQwiwtEz.ZAEim1qEVLMM3wqEGCJeOw1QA8nEcUJJiWT9fo28.M9_J0VPUqh0sarzNfMH8yeFBz
+ CxAL.ZibqE_8wRS3ihal.HV89170dEnwQex5ar7zub83KZZGnUcra_4EuNZtdNTvHttaQ_COwTh5
+ Xxy6iNrf8rGDGzrrrG7.KMW7759FwADwHoKqdXX.a890YJT3FGQ--
+X-Sonic-MF: <sgoel01@yahoo.com>
+X-Sonic-ID: 0e569a19-2113-41a8-bdad-a5b9f423f4ec
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic301.consmr.mail.gq1.yahoo.com with HTTP; Fri, 7 Jun 2024 03:40:41 +0000
+Received: by hermes--production-bf1-5cc9fc94c8-f7jgm (Yahoo Inc. Hermes SMTP Server) with ESMTPA ID 384f9e98e1da2ce7f9ca1a16818211fd;
+          Fri, 07 Jun 2024 03:20:23 +0000 (UTC)
+Message-ID: <a5b96b5f-9a6d-4356-afd6-9962829cfaea@yahoo.com>
+Date: Thu, 6 Jun 2024 23:20:20 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] uas: set host status byte on data completion error
+To: Oliver Neukum <oneukum@suse.com>
+Cc: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <675774215.2024605.1717624320352.ref@mail.yahoo.com>
+ <675774215.2024605.1717624320352@mail.yahoo.com>
+ <4a60e45b-de56-414f-85eb-71541e5d2cf5@suse.com>
+Content-Language: en-US
+From: Shantanu Goel <sgoel01@yahoo.com>
+In-Reply-To: <4a60e45b-de56-414f-85eb-71541e5d2cf5@suse.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Mailer: WebService/1.1.22407 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
 
-Niklas Cassel <cassel@kernel.org> writes:
-> On Thu, Jun 06, 2024 at 09:14:45PM +1000, Michael Ellerman wrote:
->> The pata_macio driver advertises a max_segment_size of 0xff00, because
->> the hardware doesn't cope with requests >= 64K.
->> 
->> However the SCSI core requires max_segment_size to be at least
->> PAGE_SIZE, which is a problem for pata_macio when the kernel is built
->> with 64K pages.
->> 
->> In older kernels the SCSI core would just increase the segment size to
->> be equal to PAGE_SIZE, however since the commit tagged below it causes a
->> warning and the device fails to probe:
->> 
->>   WARNING: CPU: 0 PID: 26 at block/blk-settings.c:202 .blk_validate_limits+0x2f8/0x35c
->>   CPU: 0 PID: 26 Comm: kworker/u4:1 Not tainted 6.10.0-rc1 #1
->>   Hardware name: PowerMac7,2 PPC970 0x390202 PowerMac
->>   ...
->>   NIP .blk_validate_limits+0x2f8/0x35c
->>   LR  .blk_alloc_queue+0xc0/0x2f8
->>   Call Trace:
->>     .blk_alloc_queue+0xc0/0x2f8
->>     .blk_mq_alloc_queue+0x60/0xf8
->>     .scsi_alloc_sdev+0x208/0x3c0
->>     .scsi_probe_and_add_lun+0x314/0x52c
->>     .__scsi_add_device+0x170/0x1a4
->>     .ata_scsi_scan_host+0x2bc/0x3e4
->>     .async_port_probe+0x6c/0xa0
->>     .async_run_entry_fn+0x60/0x1bc
->>     .process_one_work+0x228/0x510
->>     .worker_thread+0x360/0x530
->>     .kthread+0x134/0x13c
->>     .start_kernel_thread+0x10/0x14
->>   ...
->>   scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
->> 
->> Although the hardware can't cope with a 64K segment, the driver
->> already deals with that internally by splitting large requests in
->> pata_macio_qc_prep(). That is how the driver has managed to function
->> until now on 64K kernels.
->> 
->> So fix the driver to advertise a max_segment_size of 64K, which avoids
->> the warning and keeps the SCSI core happy.
->> 
->> Fixes: afd53a3d8528 ("scsi: core: Initialize scsi midlayer limits before allocating the queue")
->> Reported-by: Guenter Roeck <linux@roeck-us.net>
->> Closes: https://lore.kernel.org/all/ce2bf6af-4382-4fe1-b392-cc6829f5ceb2@roeck-us.net/
->> Reported-by: Doru Iorgulescu <doru.iorgulescu1@gmail.com>
->> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218858
->> Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
->> Reviewed-by: Christoph Hellwig <hch@lst.de>
->> ---
+On 6/6/24 2:30 AM, Oliver Neukum wrote:
+
 >
-> Applied to libata/for-6.10-fixes:
-> https://git.kernel.org/pub/scm/linux/kernel/git/libata/linux.git/log/?h=for-6.10-fixes
 >
-> With John's Reviewed-by from the other thread:
-> https://lore.kernel.org/linux-ide/171362345502.571343.9746199181827642774.b4-ty@oracle.com/T/#t
+> On 05.06.24 23:52, Shantanu Goel wrote:
+>> Hi,
+> Hi,
+>
+> thank you for the patch. Good catch.
+> Could you submit in the form that the Docuemntation describes?
+> That is inline and not attached, with your sign off also
+> inline, preferably generated with the script?
+>
+>     Regards
+>         Oliver
+>
+>
 
-Thanks.
+Hi Oliver,
 
-cheers
+
+Thanks for your feedback.  I'll regenerate the patch with 
+git-format-patch and resubmit it in a separate email.
+
+
+Regards,
+
+Shantanu
+
+
