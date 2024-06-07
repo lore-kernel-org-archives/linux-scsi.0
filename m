@@ -1,107 +1,117 @@
-Received: from mail-il1-f178.google.com (mail-il1-f178.google.com [209.85.166.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00D5A433CB
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2024 16:16:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D507533CFC
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2024 16:50:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717777000; cv=none; b=cD9kv3vuN4+CN+bbrnnBvesdqM+QggOlHRzZPpr12qWJ3XVFRpIawzkyIamDLvA3sYW9KNZ2HCA+Ocm55AKMhDU89au5J4K/vhNfgXJ9T8ZrC9UY+yhEYWyBbZ9PHdUuNHQQorp2CVgtlkST0WM8K4m0NFkbgPLt5FH7TYyQTeo=
+	t=1717779034; cv=none; b=dpB096/o2GGAIKd6rKtNbHEAfnMxuA/44SnOFrA44r7QBZs92UfMwWZQS6FuYT4nHCNkd5uA2TFhkYQIFzaQaC/fujgjUhoOxhAttEbIIL+UjRT0WAHQpVt8kSnJIs7BY5IpcRrQCJW4KIKBU016Dv8opGmU5ywvzZVkhavPevY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717777000; c=relaxed/simple;
-	bh=bFhJGefdXHVhDjRWCzsTUH+CcYTwmr93kbU33yW/2jo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BKDP1+4KsFxtDOx+w93cKfyDNY91p5ThkwiyDxJXyzIk8JSNQK12IIiIhAeuOmE9s1LhreKhuDqHgLFQ7C6raUYwH8Kh04YTqvdhRfeKOCvl2qZpa6m80bKCNyg1lVHnZtKz/UlPw34Pe7aMMpHBShfHbG1C/L275aJEN9XWuPs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=bFeQRuWO; arc=none smtp.client-ip=209.85.166.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1717779034; c=relaxed/simple;
+	bh=ZRShh94EBIDncgMfKsMEaYZBkckkqMmO406vevpRS78=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=LRXV7lt2kTpdj3QtaNBK2xGEQOSqMFFc8sFOzlS4zmr2M8ZCHzYVpBQySB5siVDw7Wl+aPxaBTt2PpPfLMwpItP2PS1SOt69zTNHFh4eozHQcA81PKzrUsFbzwzEnVcXIl0+3asqoxtdLbTLfvHE6rM9j2miiCTba/7UbywdBUs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=jQbrKH5r; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="bFeQRuWO"
-Received: by mail-il1-f178.google.com with SMTP id e9e14a558f8ab-374b05c4f40so10522705ab.3
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Jun 2024 09:16:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1717776998; x=1718381798; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=5XNfk+KLypQCwCBBs4UHb+/ED2cxM4OqASSQw9tiPs4=;
-        b=bFeQRuWOvF4f7yoTCYswLo2f0heBHdZcmL4wttGLT+PBkGX3vPMNE4oEPMfEllG6L0
-         6U+etV/qPbfrvRvDyAD0D3NLJB56cqYildrlbzHFJvK8ge6N9zFejo747n0zyOOOo0cV
-         b2Ut5IQFuLHiIkRJTTdGwqwcZihJX+VbOHCTZRb1NfV++InfVe38oYISV8tqe3KoNV3n
-         mnCndxLTYJcDpjxumhw6+YMa3sNc4fg+1/it7acSeHEI9c7fStSi411FSf8da3Pf+ejP
-         R+PE+qXcq+DOLkhM+UeSFi5XbhAt0z1bnjgT1zI1tTU/qZYrWGRoj3HZNCpQN+ByGMA6
-         +pLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717776998; x=1718381798;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=5XNfk+KLypQCwCBBs4UHb+/ED2cxM4OqASSQw9tiPs4=;
-        b=PiMFrfddvw2Ga8o2rfjGnEuWf+k+Bc9upBvRvZWqbouyZmhXztVG/dJYEL1YxCw3XA
-         qnivY1BohAvPydIXbHy+Mg23X6BWeUAoYhJVjhzs74j0VRvU1kdpWd+hNyMvNIxbM/Kg
-         H17SBe9VaROH1n8Qc5HS50t9XVYQr3qKWbP9Y7XmQFvjdmN3SIC+ErgID4lTN+LpadNb
-         kzsRZvPoehcHpOg6kw2IBWkvQDz6xHEBuz/0sBtI5Ot1IZDTtzjp/yHRnlXyr3HKXrAp
-         4/y4/zl98OsR1EFlkbZT9pocQIbNHeN0utYiRw7SarOIl1wWoLFLI+Qq7hiy/vR4SCdG
-         gP7A==
-X-Forwarded-Encrypted: i=1; AJvYcCWT4gjqvLKQuZK0VvuKQuGIkVcgeqXRBJkDPmCgVsBS5pbPzcIijR8W5as/BdrPoXaw/KJVvpv34jZfpEOcsDUso9rhfvU0vJXUDA==
-X-Gm-Message-State: AOJu0Yyrn/3dGYFrkjX+OU08fFtMyb+G5bqqAjGRCqan3M7iP23u2Pn9
-	CgP7/C8rhb6xhCwQlzKWApYaeR94W5pkeGqrMzsYjh3culb2AFQKbkYu2lH4hw==
-X-Google-Smtp-Source: AGHT+IH6I4wOb7ZUeor70AwaKwATVUiHhjPz2T+M9MZTEmcbCmCJamS18xSfpbZt4AmOJWMTmlfv+A==
-X-Received: by 2002:a05:6e02:18cf:b0:374:a286:7b3f with SMTP id e9e14a558f8ab-37580349278mr36146935ab.14.1717776997786;
-        Fri, 07 Jun 2024 09:16:37 -0700 (PDT)
-Received: from google.com (166.58.83.34.bc.googleusercontent.com. [34.83.58.166])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-6de3f673686sm2449810a12.31.2024.06.07.09.16.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Jun 2024 09:16:37 -0700 (PDT)
-Date: Fri, 7 Jun 2024 16:16:33 +0000
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: core: Disable CDL by default
-Message-ID: <ZmMyYb8Up9-p1lUs@google.com>
-References: <20240607012507.111488-1-dlemoal@kernel.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jQbrKH5r"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1717779031;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=U7msnklgYBOIfbgcaCxKz002QCLA3EeUmLoFR0q1Nlk=;
+	b=jQbrKH5rzLZwW3s+Iu2zAJTENdmAb/s5HhX4ZElVp/WSlcjg/fFszouotoJT60uZ7pMipT
+	yKJCBo+hyFondDYujNVNLJkiBwwO5Upbn4V0qi1D5EpQm+3wG9J4PRxcoL0Ciz4wR6tzQt
+	dHcA1zsV+AZmwMc64J551NT12lDSZ+M=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-352-mONfFz0OMcW4N61P6CokGA-1; Fri,
+ 07 Jun 2024 12:50:26 -0400
+X-MC-Unique: mONfFz0OMcW4N61P6CokGA-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 788FB3806708;
+	Fri,  7 Jun 2024 16:50:25 +0000 (UTC)
+Received: from file1-rdu.file-001.prod.rdu2.dc.redhat.com (unknown [10.11.5.21])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 32EE43C23;
+	Fri,  7 Jun 2024 16:50:24 +0000 (UTC)
+Received: by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix, from userid 12668)
+	id 0C00330C1C2E; Fri,  7 Jun 2024 16:50:24 +0000 (UTC)
+Received: from localhost (localhost [127.0.0.1])
+	by file1-rdu.file-001.prod.rdu2.dc.redhat.com (Postfix) with ESMTP id 08B043D91D;
+	Fri,  7 Jun 2024 18:50:24 +0200 (CEST)
+Date: Fri, 7 Jun 2024 18:50:23 +0200 (CEST)
+From: Mikulas Patocka <mpatocka@redhat.com>
+To: Mike Snitzer <snitzer@kernel.org>
+cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>, 
+    Dan Williams <dan.j.williams@intel.com>, 
+    Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, 
+    Ira Weiny <ira.weiny@intel.com>, Keith Busch <kbusch@kernel.org>, 
+    Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>, 
+    linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
+    linux-raid@vger.kernel.org, nvdimm@lists.linux.dev, 
+    linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Subject: Re: move integrity settings to queue_limits v2
+In-Reply-To: <ZmMqfj3T9Ft680j6@kernel.org>
+Message-ID: <d686fec1-c883-b02a-f755-b63d2661df6f@redhat.com>
+References: <20240607055912.3586772-1-hch@lst.de> <ZmMqfj3T9Ft680j6@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240607012507.111488-1-dlemoal@kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.1
 
-On Fri, Jun 07, 2024 at 10:25:07AM +0900, Damien Le Moal wrote:
-> For scsi devices supporting the Command Duration Limits feature set, the
-> user can enable/disable this feature use through the sysfs device
-> attribute cdl_enable. This attribute modification triggers a call to
-> scsi_cdl_enable() to enable and disable the feature for ATA devices and
-> set the scsi device cdl_enable field to the user provided bool value.
-> For SCSI devices supporting CDL, the feature set is always enabled and
-> scsi_cdl_enable() is reduced to setting the cdl_enable field.
-> 
-> However, for ATA devices, a drive may spin-up with the CDL feature
-> enabled by default. But the scsi device cdl_enable field is always
-> initialized to false (CDL disabled), regardless of the actual device
-> CDL feature state. For ATA devices managed by libata (or libsas),
-> libata-core always disables the CDL feature set when the device is
-> attached, thus syncing the state of the CDL feature on the device and of
-> the scsi device cdl_enable field. However, for ATA devices connected to
-> a SAS HBA, the CDL feature is not disabled on scan for ATA devices that
-> have this feature enabled by default, leading to an inconsistent state
-> of the feature on the device with the scsi device cdl_enable field.
-> 
-> Avoid this inconsistency by adding a call to scsi_cdl_enable() in
-> scsi_cdl_check() to make sure that the device-side state of the CDL
-> feature set always matches the scsi device cdl_enable field state.
-> This implies that CDL will always be disabled for ATA devices connected
-> to SAS HBAs, which is consistent with libata/libsas initialization of
-> the device.
-> 
-> Reported-by: Scott McCoy <scott.mccoy@wdc.com>
-> Fixes: 1b22cfb14142 ("scsi: core: Allow enabling and disabling command duration limits")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
 
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 
-Thank you!
+On Fri, 7 Jun 2024, Mike Snitzer wrote:
+
+> On Fri, Jun 07, 2024 at 07:58:54AM +0200, Christoph Hellwig wrote:
+> > Hi Jens, hi Martin,
+> > 
+> > this series converts the blk-integrity settings to sit in the queue
+> > limits and be updated through the atomic queue limits API.
+> > 
+> > I've mostly tested this with nvme, scsi is only covered by simple
+> > scsi_debug based tests.
+> > 
+> > For MD I found an pre-existing error handling bug when combining PI
+> > capable devices with not PI capable devices.  The fix was posted here
+> > (and is included in the git branch below):
+> > 
+> >    https://lore.kernel.org/linux-raid/20240604172607.3185916-1-hch@lst.de/
+> > 
+> > For dm-integrity my testing showed that even the baseline fails to create
+> > the luks-based dm-crypto with dm-integrity backing for the authentication
+> > data.  As the failure is non-fatal I've not addressed it here.
+> 
+> Setup is complicated. Did you test in terms of cryptsetup's testsuite?
+> Or something else?
+> 
+> Would really like to see these changes verified to work, with no
+> cryptsetup regressions, before they go in.
+>  
+> > Note that the support for native metadata in dm-crypt by Mikulas will
+> > need a rebase on top of this, but as it already requires another
+> > block layer patch and the changes in this series will simplify it a bit
+> > I hope that is ok.
+> 
+> Should be fine, Mikulas can you verify this series to pass
+> cryptsetup's testsuite before you rebase?
+
+Yes - it passes the cryptsetup testsuite.
+
+Mikulas
+
+> Thanks,
+> Mike
+> 
+
