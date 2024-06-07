@@ -1,80 +1,173 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B1F315698B
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2024 08:00:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D8531CA85;
+	Fri,  7 Jun 2024 10:07:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717747257; cv=none; b=KlRR9O0VQS/lmzNRKnCXhy64eD1JEV6Vujy/uwIHWrNACuFo62eyo2a7UcrGSfMMabRIrJlSGBvl1iNvikZnM0xo33ozPkq3k3/nOtJN2sUCHC1u2reiTEVoWc795yvOElh0Zm8EGOGy6kj3ydMn3HUFfhUYtVLJpk23oOI6TSI=
+	t=1717754868; cv=none; b=G67YcPXEAq0p99gbZW4TUg7OFqOq7GU2Klhvfqyb4u/l7JNVewrHmFbdogfNR/V7wc7Jt8q8VxOTN1T6Dm8oQmultsmFVpe2BeB5U6xByaoi+ZNbzMC1AoLoJrhdjeDMZDiz1vM/NKzyHxVLwb08Tet4ajel6SCIPkGVjpl98w8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717747257; c=relaxed/simple;
-	bh=diFnyy4ca719FS/AhJLlD5iFb324tKUE7jgEhmVNWIQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kBME6vkOCM9CHR38MrF4YIHOF3rm09+uPmdxKltkAh/vnkRkqtQ9cpey+oOPeP8BglW14RRok4/slS6ye0BJQbyzHUxlRQoT4Di+fQRSr6wCIhwHGr2gnbZwtsugP+9AlzF3499Z+J9tCwxvGAtPWljlrQ/nFwPIL/D4dX1lvJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AfdLC3mX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1717754868; c=relaxed/simple;
+	bh=/GIw8ahA38bUcm722/R6YcFYIDZrCeeA/ZikbJOO3FQ=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=AdR5qazC+3cNhGy5vkJ8yGb+evtPbu1mySM/lybxT6Yii8gPMjL+6sE7B6fLAfHVYs254T722M5BXDI0xBNDpEWJmn4M72Ov0AXs/T7FHSPvyCQteT+07nl7KrnIcd5XtlQOfpi0l71ryOA1u8Y31VxltzVQyeJrlO41EzNqA1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=J17X6lNh; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AfdLC3mX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A7B0C2BBFC;
-	Fri,  7 Jun 2024 08:00:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717747256;
-	bh=diFnyy4ca719FS/AhJLlD5iFb324tKUE7jgEhmVNWIQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AfdLC3mXzjnJg+XxeEZTPo0b5yxreGNrItTuUwW5UXSZTysps4zM8Fqk61DvIZmDS
-	 KBK5oD3ASVZqTCFbLF0MXFZ+ZYv3lWqOghNjZbk5gum3NEcFwMfDB9b1tgmUyHHvyV
-	 gjtXK4kfMkceZMEWvGggfkEAeb2x787D1oSm3060FObf1lFL7fvN4m3XUCg524HRyj
-	 655WDoc/zJmPwgxlxNp1x3hstnYX+Zv4n0jx05hz3wYHkK2of70J2eDei753Hi2hy8
-	 /ULhbedR4hPclTw3BlwflLyq4oR53gdSraEVFJylpDPq6ixTBl25HKe26f2UlcqJ1o
-	 mG0UAhopwmc4Q==
-Date: Fri, 7 Jun 2024 10:00:52 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, Igor Pylypiv <ipylypiv@google.com>
-Subject: Re: [PATCH v2] scsi: core: Disable CDL by default
-Message-ID: <ZmK-NIE9bWolH_Fz@ryzen.lan>
-References: <20240607012507.111488-1-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="J17X6lNh"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4579pW0w010897;
+	Fri, 7 Jun 2024 10:07:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:date:from:message-id:subject:to; s=qcppdkim1; bh=w/K8iHCPgKYH
+	40cQaI+c/K8OCvvyQGKDTZokVkkzy8U=; b=J17X6lNhyyV7C205EAtUhfHaLgsx
+	Pkg0uApj1vuFf1oh6hVvXalom9WE4xuXDzdtgUsq6JMv5+vhO9VpNa9jSVvNlT78
+	oxbFod77mPcMIiDzNaQL6tlMSchv0heejiZKWe1Sewaef/SrvM3NdH5oLtnB+KD0
+	PeYSOWOsP3BxWaLF2hv6XOTgZKSP3L5ozgyDUze8qyJIpOf+ao2JtzrVo+eqF+K3
+	z+WAk2XqvQkwwrjgVCNEmMEJw7G0pUgbDISPSGiZavto84/6ih5Id0jM0EQuyXxO
+	wHsx1lHB9n3erHnGafqZ9s14OlN96v9mrY59tZwMnCvltQ9Fn3evLjJpdg==
+Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yjhw0x7re-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 07 Jun 2024 10:07:30 +0000 (GMT)
+Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+	by APTAIPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 457A7Rgk023476;
+	Fri, 7 Jun 2024 10:07:27 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 3yfvqm2f7u-1;
+	Fri, 07 Jun 2024 10:07:27 +0000
+Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 457A7Rpa023471;
+	Fri, 7 Jun 2024 10:07:27 GMT
+Received: from cbsp-sh-gv.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTP id 457A7Q4l023470;
+	Fri, 07 Jun 2024 10:07:27 +0000
+Received: by cbsp-sh-gv.qualcomm.com (Postfix, from userid 393357)
+	id 075AE11D9; Fri,  7 Jun 2024 18:07:25 +0800 (CST)
+From: Ziqi Chen <quic_ziqichen@quicinc.com>
+To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        martin.petersen@oracle.com, quic_ziqichen@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+        quic_rampraka@quicinc.com
+Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Maramaina Naresh <quic_mnaresh@quicinc.com>,
+        Asutosh Das <quic_asutoshd@quicinc.com>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] scsi: ufs: core: quiesce request queues before check pending cmds
+Date: Fri,  7 Jun 2024 18:06:23 +0800
+Message-Id: <1717754818-39863-1-git-send-email-quic_ziqichen@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: vcCb_e2R3oYvQyBfTJu8rAIhtvn70LZW
+X-Proofpoint-GUID: vcCb_e2R3oYvQyBfTJu8rAIhtvn70LZW
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-07_04,2024-06-06_02,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 bulkscore=0
+ phishscore=0 impostorscore=0 priorityscore=1501 mlxscore=0 mlxlogscore=999
+ lowpriorityscore=0 suspectscore=0 malwarescore=0 spamscore=0 clxscore=1011
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2405170001
+ definitions=main-2406070073
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240607012507.111488-1-dlemoal@kernel.org>
 
-On Fri, Jun 07, 2024 at 10:25:07AM +0900, Damien Le Moal wrote:
-> For scsi devices supporting the Command Duration Limits feature set, the
-> user can enable/disable this feature use through the sysfs device
-> attribute cdl_enable. This attribute modification triggers a call to
-> scsi_cdl_enable() to enable and disable the feature for ATA devices and
-> set the scsi device cdl_enable field to the user provided bool value.
-> For SCSI devices supporting CDL, the feature set is always enabled and
-> scsi_cdl_enable() is reduced to setting the cdl_enable field.
-> 
-> However, for ATA devices, a drive may spin-up with the CDL feature
-> enabled by default. But the scsi device cdl_enable field is always
-> initialized to false (CDL disabled), regardless of the actual device
-> CDL feature state. For ATA devices managed by libata (or libsas),
-> libata-core always disables the CDL feature set when the device is
-> attached, thus syncing the state of the CDL feature on the device and of
-> the scsi device cdl_enable field. However, for ATA devices connected to
-> a SAS HBA, the CDL feature is not disabled on scan for ATA devices that
-> have this feature enabled by default, leading to an inconsistent state
-> of the feature on the device with the scsi device cdl_enable field.
-> 
-> Avoid this inconsistency by adding a call to scsi_cdl_enable() in
-> scsi_cdl_check() to make sure that the device-side state of the CDL
-> feature set always matches the scsi device cdl_enable field state.
-> This implies that CDL will always be disabled for ATA devices connected
-> to SAS HBAs, which is consistent with libata/libsas initialization of
-> the device.
-> 
-> Reported-by: Scott McCoy <scott.mccoy@wdc.com>
-> Fixes: 1b22cfb14142 ("scsi: core: Allow enabling and disabling command duration limits")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
+In ufshcd_clock_scaling_prepare(), after scsi layer is blocked,
+ufshcd_pending_cmds() is called to tell whether there are pending
+transactions or not. And only if there is no pending transaction,
+can we proceed to kick start clock scaling sequence.
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+ufshcd_pending_cmds() traverses over all scsi devices and calls
+sbitmap_weight() on their budget_map. The sbitmap_weight() can break
+down to three steps -
+1. Calculates the nr outstanding bits set in the 'word' bitmap.
+2. Calculates the nr outstanding bits set in the 'cleared' bitmap.
+3. Minus the result from step 1 by the result from step 2.
+
+There can be a race condition in below scenario -
+
+Assume there is one pending transaction in the request queue of one scsi
+device, say sda, and the budget token of this request is 0, the 'word'
+is 0x1 and the 'cleared' is 0x0.
+
+1. When step 1 executes, it gets the result as 1.
+2. Before step 2 executes, block layer tries to dispatch a new request
+   to sda. Since scsi layer is blocked, the request cannot pass through
+   scsi layer, but the block layer would anyways do budget_get() and
+   budget_put() to sda's budget map, so the 'word' has become 0x3 and
+   'cleared' has become 0x2 (assume the new request got budget token 1).
+3. When step 2 executes, it gets the result as 1.
+4. When step 3 executes, it gets the result as 0, meaning there is no
+   pending transactions, which is wrong.
+
+Thread A                        Thread B
+ufshcd_pending_cmds()           __blk_mq_sched_dispatch_requests()
+|                               |
+sbitmap_weight(word)            |
+|                               scsi_mq_get_budget()
+|                               |
+|                               scsi_mq_put_budget()
+|                               |
+sbitmap_weight(cleared)
+...
+
+When this race condition happens, clock scaling sequence is kicked start
+with transactions still in flight, leading to subsequent hibernate enter
+failure, broken link, task abort and back to back error recovery.
+
+Fix this race condition by quiescing the request queues before calling
+ufshcd_pending_cmds() so that block layer won't touch the budget map
+when ufshcd_pending_cmds() is working on it. In addition, remove the
+scsi layer blocking/unblocking to reduce redundancies and latencies.
+
+Fixes: 8d077ede48c1 ("scsi: ufs: Optimize the command queueing code")
+Co-developed-by: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+---
+ drivers/ufs/core/ufshcd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 21429ee..1afa862 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1392,7 +1392,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
+ 	 * make sure that there are no outstanding requests when
+ 	 * clock scaling is in progress
+ 	 */
+-	ufshcd_scsi_block_requests(hba);
++	blk_mq_quiesce_tagset(&hba->host->tag_set);
+ 	mutex_lock(&hba->wb_mutex);
+ 	down_write(&hba->clk_scaling_lock);
+ 
+@@ -1401,7 +1401,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
+ 		ret = -EBUSY;
+ 		up_write(&hba->clk_scaling_lock);
+ 		mutex_unlock(&hba->wb_mutex);
+-		ufshcd_scsi_unblock_requests(hba);
++		blk_mq_unquiesce_tagset(&hba->host->tag_set);
+ 		goto out;
+ 	}
+ 
+@@ -1422,7 +1422,7 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool sc
+ 
+ 	mutex_unlock(&hba->wb_mutex);
+ 
+-	ufshcd_scsi_unblock_requests(hba);
++	blk_mq_unquiesce_tagset(&hba->host->tag_set);
+ 	ufshcd_release(hba);
+ }
+ 
+-- 
+2.7.4
+
