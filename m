@@ -1,165 +1,338 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBFEE43AB9
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2024 18:31:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 219A41CD02;
+	Fri,  7 Jun 2024 19:43:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717785121; cv=none; b=OCd+2XqTfE8sTKjDohXUnl6+mUq9wd5Ubh8v/rGKh1nVZ4EXg5luX+9ASbqHEI3/0RHWDhBNywETiAF8zvQARhnhEGcctOLTGfAyboXUWQxenAnvX8/VgxQM7tlgS56sw5G7AY1WYfrCW2niCZzQNB9m2XrljZWpVQvAbfQk0Pw=
+	t=1717789419; cv=none; b=mjshqRvOW3icaJZUqnIqXigvnFtFPsnZykn9EmFUe6whq3WSUtC1HkT9qRhKc/9iFeEA3IIdw0Q9iPJ990ap3Uw9DHx/q15XIlQBNbS9ldZq9Ii329MrSYx9QZwaO1OQ1pxM8U7bWLmtqnGfwMNJ8MueDiv4d/+whI7xvqEEN1Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717785121; c=relaxed/simple;
-	bh=5VGyEcgYUZVsYd3JEKkHt82oXNDR1d8g9jbtXoEWEPo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=WQF0lEj4czK73yWpJ8tIhhu32LZEe/yVh5BK9bjbU/ywZ5yUGGdpzEDvg0Tb2A84xj2IAIug9QGy45ORw0FBkNRbOEmjT2T4SPr7B9Zo7CqvMeHTorAel4QoWD2Uqt3L6uchHR8SgbOTmEma+Bt/xi8goYfxL7zkZ3zxNG1Qmsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=MDHcgyKZ; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1717789419; c=relaxed/simple;
+	bh=8cobZlcEyp9CDfr4HrSZ9SQXkL9DjmZKyYuhhR1B60o=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:To:CC; b=hRWjWjWOMYbsfMy01HMJI9TT/TZ94ZurYAwm+dJlKOxtecymBPEezD5f3yTCgZPEDGhR3m1Ar70+WLCqFxO5ExniksCGgHqUJs/A0vbEucxqog5bfqwh5FwFwsp6U47gi5u1yGmfcqMlyXLZiunH7mlYFJkpYf1PB9bLmVvbWJs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=CDxfiOAH; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="MDHcgyKZ"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20240607183150epoutp04552fd7605f2963c582dcdce7be807583~WzHUDb7zG2265522655epoutp04I
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2024 18:31:50 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20240607183150epoutp04552fd7605f2963c582dcdce7be807583~WzHUDb7zG2265522655epoutp04I
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1717785110;
-	bh=Q7UteAPU1jA8crxsj3DgD2vFH2FK2jVTwOwPPdbKvCw=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=MDHcgyKZ4cKFzzHyh298rfvSpNjrWKLBoXmDd7oVFirJx/15iqgXXR1MuN3zDyIer
-	 PeVDKTUxA5ifTA/F3zWtN3LWJLmOh/33/YK3vn+j49LByq4TOwNYUoLcTOozi9bg0s
-	 Af3+ET9A2brasJoe59n4V4Jce443KSgfC59uOhDw=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-	20240607183149epcas5p4f4e675de6d486120a013e2f505a94038~WzHSqWxtY1183311833epcas5p4W;
-	Fri,  7 Jun 2024 18:31:49 +0000 (GMT)
-Received: from epsmgec5p1new.samsung.com (unknown [182.195.38.182]) by
-	epsnrtp4.localdomain (Postfix) with ESMTP id 4VwqXz4NVDz4x9Pq; Fri,  7 Jun
-	2024 18:31:47 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-	epsmgec5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	A0.D9.08853.31253666; Sat,  8 Jun 2024 03:31:47 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20240607183146epcas5p2274f401a5fa7bcaeab89a814847ab2af~WzHQU3USS2960329603epcas5p2S;
-	Fri,  7 Jun 2024 18:31:46 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20240607183146epsmtrp22776e0f93ea286e1fcb0913b1f4efa82~WzHQT-STE2710127101epsmtrp2M;
-	Fri,  7 Jun 2024 18:31:46 +0000 (GMT)
-X-AuditID: b6c32a44-d67ff70000002295-fd-666352132248
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	E9.CD.18846.21253666; Sat,  8 Jun 2024 03:31:46 +0900 (KST)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20240607183144epsmtip1be7eb2e9bc00f4f582c6ec22f2566f94~WzHOFwhcD3142631426epsmtip1e;
-	Fri,  7 Jun 2024 18:31:44 +0000 (GMT)
-Message-ID: <8d26d133-6fac-531c-d300-5b99678f1cbd@samsung.com>
-Date: Sat, 8 Jun 2024 00:01:43 +0530
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="CDxfiOAH"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 457HZUZD012451;
+	Fri, 7 Jun 2024 19:43:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=AHdKNN+sYSEGCBs/kKLwzr
+	wABfUxALoBlk5QUgSHAP0=; b=CDxfiOAH+StH5QmxCbksFZoqDBvnOtq9p4N2Tr
+	QTnKjdgLS3fqwwZ9VDr6e0gu78McPBi+BPlAkauZHG7LQO7e9ssXc+Fou15FHLha
+	z8bMlxtbwOuSO603WA1cUoY02wScEe3VEyseFnj/QCZiEdfjvgsyLvCQzXbSkbep
+	UbjllV/sGs6lpB+lX25j4kX6LyLjIqImTmxG4hdboU7C5x01ppG/nbICdBaeQAN8
+	wc+aaTRDkMk6xh5SViQ8Tu4VyRZUxY/4jgU6DnGzGLLP0375aQdl4ZPsnul9qFTb
+	+/SkrugZ3tUWFH/2wGXgWBi4EbYOeHSauX/Y/1A2+luhOg7Q==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yjvxye09p-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 07 Jun 2024 19:43:11 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 457JhAKE027188
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 7 Jun 2024 19:43:10 GMT
+Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 7 Jun 2024
+ 12:43:10 -0700
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+Date: Fri, 7 Jun 2024 12:43:09 -0700
+Subject: [PATCH] scsi: add missing MODULE_DESCRIPTION() macros
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
-	Gecko/20100101 Thunderbird/91.13.1
-Subject: Re: [PATCH 04/11] block: remove the blk_integrity_profile structure
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, "Martin K.
- Petersen" <martin.petersen@oracle.com>
-Cc: Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka
-	<mpatocka@redhat.com>, Song Liu <song@kernel.org>, Yu Kuai
-	<yukuai3@huawei.com>, Keith Busch <kbusch@kernel.org>, Sagi Grimberg
-	<sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>,
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20240607055912.3586772-5-hch@lst.de>
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrPJsWRmVeSWpSXmKPExsWy7bCmuq5wUHKawZFeBYvVd/vZLBYsmsti
-	sXL1USaLSYeuMVo8vTqLyWLvLW2L+cueslu0z9/FaNF9fQebxfLj/5gsJnZcZbJY+eMPq8W6
-	1+9ZLE7ckrY4vvwvm8WchWwOAh7n721k8Wg58pbV4/LZUo9NqzrZPDYvqfd4sXkmo8fumw1s
-	Hr3N79g8Pj69xeLxft9VNo/Pm+QCuKOybTJSE1NSixRS85LzUzLz0m2VvIPjneNNzQwMdQ0t
-	LcyVFPISc1NtlVx8AnTdMnOAnlFSKEvMKQUKBSQWFyvp29kU5ZeWpCpk5BeX2CqlFqTkFJgU
-	6BUn5haX5qXr5aWWWBkaGBiZAhUmZGdMun2EpWAxd8XF76eYGhj7ObsYOTkkBEwktn07ztLF
-	yMUhJLCbUWL74dWsEM4nRonTq7tZ4JxVc9vZYFoafy5khEjsZJQ42XMEynnLKDH7zmUmkCpe
-	ATuJT58OsoPYLAIqEmfPvmaHiAtKnJz5hAXEFhVIlvjZdQBsqrCAj8T/5ltgcWYBcYlbT+aD
-	zRERKJX4veQpE8gCZoGFzBL9N6YAORwcbAKaEhcml4LUcAoYSUy/t44RoldeYvvbOcwQl37g
-	kFhw3xHCdpH4fHwVC4QtLPHq+BZ2CFtK4vO7vVCfJUtcmnmOCcIukXi85yCUbS/ReqqfGWQt
-	M9Da9bv0IVbxSfT+fgJ2jYQAr0RHmxBEtaLEvUlPWSFscYmHM5awQpR4SNz4kQgSFhJYyygx
-	rZ1pAqPCLKQwmYXk91lIfpmFsHcBI8sqRsnUguLc9NRk0wLDvNRyeHQn5+duYgSndC2XHYw3
-	5v/TO8TIxMF4iFGCg1lJhNevOD5NiDclsbIqtSg/vqg0J7X4EKMpMHImMkuJJucDs0peSbyh
-	iaWBiZmZmYmlsZmhkjjv69a5KUIC6YklqdmpqQWpRTB9TBycUg1MThMuKNnZX08RcGCIaHom
-	xlby4bLQa/XHH6ZUOug1m83LUL36RHiPxjONvLmnF6n0nOWSXLQ8Z2WvCXN0UNGkxL4LIt9m
-	bCnetClnpbPF9bMOS6bqz3pp9kfInHd28lebtEVvjeQuO31LN9j182PM88zK9KbIcha2r/tf
-	XKs+MKN5Rfqb94+4e7nMdvGaSJ2QNwiYfbpNO3nqKefTa84pf4mx13n39CFf3Z2b695bvDU6
-	ax+eXc96LOmFwb4ZWqG7jqTxr7eaIFdQeZqDU04qbaLa175a3s3SPX6TW5NK37IpMp6z4dmv
-	JPPu+xrhPV1BSboLf25+/WeGgLJk5tadW9sELU1VVql/2hizfO1aJZbijERDLeai4kQA5sVg
-	g3IEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrFIsWRmVeSWpSXmKPExsWy7bCSnK5QUHKawaOH6har7/azWSxYNJfF
-	YuXqo0wWkw5dY7R4enUWk8XeW9oW85c9Zbdon7+L0aL7+g42i+XH/zFZTOy4ymSx8scfVot1
-	r9+zWJy4JW1xfPlfNos5C9kcBDzO39vI4tFy5C2rx+WzpR6bVnWyeWxeUu/xYvNMRo/dNxvY
-	PHqb37F5fHx6i8Xj/b6rbB6fN8kFcEdx2aSk5mSWpRbp2yVwZUy6fYSlYDF3xcXvp5gaGPs5
-	uxg5OSQETCQafy5k7GLk4hAS2M4osa75NwtEQlyi+doPdghbWGLlv+fsEEWvGSVW/dnIBJLg
-	FbCT+PTpIFgRi4CKxNmzr9kh4oISJ2c+ARskKpAs8fLPRLC4sICPxP/mW2BxZqAFt57MB5sj
-	IlAq0f9vBhPIAmaBhcwSi06/ZoPYtpZR4sDTtUAOBwebgKbEhcmlIA2cAkYS0++tY4QYZCbR
-	tbULypaX2P52DvMERqFZSO6YhWTfLCQts5C0LGBkWcUomlpQnJuem1xgqFecmFtcmpeul5yf
-	u4kRHL1aQTsYl63/q3eIkYmD8RCjBAezkgivX3F8mhBvSmJlVWpRfnxRaU5q8SFGaQ4WJXFe
-	5ZzOFCGB9MSS1OzU1ILUIpgsEwenVANTxdN/T21YDvzQ2nY+a+ma6/uK+X88UJbZx//7zO9n
-	/tN+p9zsuyDNE6Bne/5r2BapjJrcVaUMHRN9mUPWP15xu8chRyJX9/ytbS2P9LbtzAhRWhyb
-	f/e02qrpL1Yucb9XYCiw6djzSyu/fJxxedFjqQ8xL2ZquNd/dDxgyqV7XdfWJOSOv/Hdw5d/
-	KvsLfVorwPHZ7fUau+/t/ZnfLwr9qnp9+1LuMxbjq38mHHn1ReTA/sdrahLnrXi8Q8y4zG6D
-	zJuM1/2833ex8bz/Njd2qtbJLscbp+9FZDUUdJifFDH2t9Pf/cVnxsvYhoVn2FZ+eHz9dkGv
-	8tXn7ff4k942X/FIWHggrXgL78FtO298jhBQYinOSDTUYi4qTgQAwDSZfE0DAAA=
-X-CMS-MailID: 20240607183146epcas5p2274f401a5fa7bcaeab89a814847ab2af
-X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240607060043epcas5p1a6d4d8c3536fe3b6e43ad34155803fc2
-References: <20240607055912.3586772-1-hch@lst.de>
-	<CGME20240607060043epcas5p1a6d4d8c3536fe3b6e43ad34155803fc2@epcas5p1.samsung.com>
-	<20240607055912.3586772-5-hch@lst.de>
+Content-Transfer-Encoding: 7bit
+Message-ID: <20240607-md-drivers-scsi-v1-1-17ae31cc4fe5@quicinc.com>
+X-B4-Tracking: v=1; b=H4sIAMxiY2YC/x3M3QqCQBCG4VuROW5gc0WxW4kO9ucrB3KLGRNBv
+ Pe2Dp+D993JoAKjS7OTYhWTV6k4nxpKUygPsORqal3bud4NPGfOKivU2JIJw/u+c4PHGEeq1Vt
+ xl+1/vN6qYzBw1FDS9Ps8pXw2noMtUDqOLxy6tE+AAAAA
+To: Khalid Aziz <khalid@gonehiking.org>,
+        "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        "Hannes
+ Reinecke" <hare@suse.com>, Finn Thain <fthain@linux-m68k.org>,
+        Michael
+ Schmitz <schmitzmic@gmail.com>,
+        James Smart <james.smart@broadcom.com>,
+        Ram
+ Vegesna <ram.vegesna@broadcom.com>,
+        Artur Paszkiewicz
+	<artur.paszkiewicz@intel.com>,
+        "Juergen E. Fischer" <fischer@norbit.de>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <target-devel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
+        "Jeff
+ Johnson" <quic_jjohnson@quicinc.com>
+X-Mailer: b4 0.13.0
+X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: fiNwnI5Q2Lc0oxWWL2LD54E7wO47kZig
+X-Proofpoint-GUID: fiNwnI5Q2Lc0oxWWL2LD54E7wO47kZig
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-07_12,2024-06-06_02,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 spamscore=0
+ mlxscore=0 adultscore=0 bulkscore=0 phishscore=0 priorityscore=1501
+ lowpriorityscore=0 mlxlogscore=999 impostorscore=0 malwarescore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2405170001 definitions=main-2406070145
 
-On 6/7/2024 11:28 AM, Christoph Hellwig wrote:
-> --- a/drivers/md/dm-crypt.c
-> +++ b/drivers/md/dm-crypt.c
-> @@ -1177,7 +1177,7 @@ static int crypt_integrity_ctr(struct crypt_config *cc, struct dm_target *ti)
->   	struct mapped_device *md = dm_table_get_md(ti->table);
->   
->   	/* We require an underlying device with non-PI metadata */
-> -	if (!bi || strcmp(bi->profile->name, "nop")) {
-> +	if (!bi || bi->csum_type != BLK_INTEGRITY_CSUM_NONE) {
->   		ti->error = "Integrity profile not supported.";
->   		return -EINVAL;
+On x86, make allmodconfig && make W=1 C=1 reports:
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/scsi/scsi_common.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/scsi/advansys.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/scsi/BusLogic.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/scsi/aha1740.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/scsi/isci/isci.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/scsi/elx/efct.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/scsi/atp870u.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/scsi/ppa.o
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/scsi/imm.o
 
-I'd rename BLK_INTEGRITY_CSUM_NONE to BLK_INTEGRITY_CSUM_NOP. Overall.
+Add all missing invocations of the MODULE_DESCRIPTION() macro.
 
-Current choice is a bit confusing as it indicates that code is trying to 
-handle "none" case while it is actually trying to handle/support "nop" 
-profile.
+This updates all files which have a MODULE_LICENSE() but which do not
+have a MODULE_DESCRIPTION(), even ones which did not produce the x86
+allmodconfig warnings.
 
-With extended format off:
-# nvme format /dev/nvme0n1 -l 5 -m 0 -i 0 -f
-Success formatting namespace:1
-# cat /sys/block/nvme0n1/integrity/format
-nop
+Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+---
+ drivers/scsi/BusLogic.c             | 1 +
+ drivers/scsi/advansys.c             | 1 +
+ drivers/scsi/aha1542.c              | 1 +
+ drivers/scsi/aha1740.c              | 1 +
+ drivers/scsi/atari_scsi.c           | 1 +
+ drivers/scsi/atp870u.c              | 1 +
+ drivers/scsi/elx/efct/efct_driver.c | 1 +
+ drivers/scsi/g_NCR5380.c            | 1 +
+ drivers/scsi/imm.c                  | 1 +
+ drivers/scsi/initio.c               | 2 ++
+ drivers/scsi/isci/init.c            | 1 +
+ drivers/scsi/mac_scsi.c             | 1 +
+ drivers/scsi/pcmcia/aha152x_stub.c  | 1 +
+ drivers/scsi/ppa.c                  | 1 +
+ drivers/scsi/scsi_common.c          | 1 +
+ drivers/scsi/sr.c                   | 2 ++
+ drivers/scsi/sun3_scsi.c            | 1 +
+ 17 files changed, 19 insertions(+)
 
-With extended format on:
-# nvme format /dev/nvme0n1 -l 5 -m 1 -i 0 -f
-Success formatting namespace:1
-# cat /sys/block/nvme0n1/integrity/format
-none
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index 72ceaf650b0d..2135a2b3e2d0 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -78,6 +78,7 @@ static struct blogic_drvr_options blogic_drvr_options[BLOGIC_MAX_ADAPTERS];
+   BusLogic can be assigned a string by insmod.
+ */
+ 
++MODULE_DESCRIPTION("BusLogic MultiMaster and FlashPoint SCSI Host Adapter driver");
+ MODULE_LICENSE("GPL");
+ #ifdef MODULE
+ static char *BusLogic;
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index ab066bb27a57..fd4fcb37863d 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -11545,6 +11545,7 @@ static void __exit advansys_exit(void)
+ module_init(advansys_init);
+ module_exit(advansys_exit);
+ 
++MODULE_DESCRIPTION("AdvanSys SCSI Adapter driver");
+ MODULE_LICENSE("GPL");
+ MODULE_FIRMWARE("advansys/mcode.bin");
+ MODULE_FIRMWARE("advansys/3550.bin");
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index 9503996c6325..add10098a569 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -1009,6 +1009,7 @@ static int aha1542_biosparam(struct scsi_device *sdev,
+ 
+ 	return 0;
+ }
++MODULE_DESCRIPTION("Adaptec AHA-1542 SCSI host adapter driver");
+ MODULE_LICENSE("GPL");
+ 
+ static int aha1542_init_cmd_priv(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
+index 3d18945abaf7..be7ebbbb9ba8 100644
+--- a/drivers/scsi/aha1740.c
++++ b/drivers/scsi/aha1740.c
+@@ -681,4 +681,5 @@ static __exit void aha1740_exit (void)
+ module_init (aha1740_init);
+ module_exit (aha1740_exit);
+ 
++MODULE_DESCRIPTION("Adaptec AHA1740 SCSI host adapter driver");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index 742625ac7d99..4eb5770aeef5 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -894,4 +894,5 @@ static struct platform_driver atari_scsi_driver __refdata = {
+ module_platform_driver_probe(atari_scsi_driver, atari_scsi_probe);
+ 
+ MODULE_ALIAS("platform:" DRV_MODULE_NAME);
++MODULE_DESCRIPTION("Atari generic SCSI port driver");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
+index 2a748af269c2..3f006b2f39a6 100644
+--- a/drivers/scsi/atp870u.c
++++ b/drivers/scsi/atp870u.c
+@@ -1724,6 +1724,7 @@ static void atp870u_remove (struct pci_dev *pdev)
+ 	atp870u_free_tables(pshost);
+ 	scsi_host_put(pshost);
+ }
++MODULE_DESCRIPTION("ACARD SCSI host adapter driver");
+ MODULE_LICENSE("GPL");
+ 
+ static const struct scsi_host_template atp870u_template = {
+diff --git a/drivers/scsi/elx/efct/efct_driver.c b/drivers/scsi/elx/efct/efct_driver.c
+index 49fd2cfed70c..55d2301bfd7d 100644
+--- a/drivers/scsi/elx/efct/efct_driver.c
++++ b/drivers/scsi/elx/efct/efct_driver.c
+@@ -778,5 +778,6 @@ static void __exit efct_exit(void)
+ module_init(efct_init);
+ module_exit(efct_exit);
+ MODULE_VERSION(EFCT_DRIVER_VERSION);
++MODULE_DESCRIPTION("Emulex Fibre Channel Target driver");
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Broadcom");
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index f6305e3e60f4..1bef131664e0 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -110,6 +110,7 @@ module_param_array(card, int, NULL, 0);
+ MODULE_PARM_DESC(card, "card type (0=NCR5380, 1=NCR53C400, 2=NCR53C400A, 3=DTC3181E, 4=HP C2502)");
+ 
+ MODULE_ALIAS("g_NCR5380_mmio");
++MODULE_DESCRIPTION("Generic NCR5380 driver");
+ MODULE_LICENSE("GPL");
+ 
+ static void g_NCR5380_trigger_irq(struct Scsi_Host *instance)
+diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
+index 21339da505f1..6e779bb14d98 100644
+--- a/drivers/scsi/imm.c
++++ b/drivers/scsi/imm.c
+@@ -1279,4 +1279,5 @@ static struct parport_driver imm_driver = {
+ };
+ module_parport_driver(imm_driver);
+ 
++MODULE_DESCRIPTION("IOMEGA MatchMaker parallel port SCSI host adapter driver");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index 625fd547ee60..82d8b8f8293f 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -2939,6 +2939,7 @@ static void initio_remove_one(struct pci_dev *pdev)
+ 	pci_disable_device(pdev);
+ }
+ 
++MODULE_DESCRIPTION("Initio 9100U(W) driver");
+ MODULE_LICENSE("GPL");
+ 
+ static struct pci_device_id initio_pci_tbl[] = {
+@@ -2961,4 +2962,5 @@ module_pci_driver(initio_pci_driver);
+ 
+ MODULE_DESCRIPTION("Initio INI-9X00U/UW SCSI device driver");
+ MODULE_AUTHOR("Initio Corporation");
++MODULE_DESCRIPTION("TBD");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index de2aefcf2089..d31884f82f2a 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -758,6 +758,7 @@ static __exit void isci_exit(void)
+ 	sas_release_transport(isci_transport_template);
+ }
+ 
++MODULE_DESCRIPTION("Intel(R) C600 Series Chipset SAS Controller driver");
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_FIRMWARE(ISCI_FW_NAME);
+ module_init(isci_init);
+diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
+index a402c4dc4645..f74231ca29e5 100644
+--- a/drivers/scsi/mac_scsi.c
++++ b/drivers/scsi/mac_scsi.c
+@@ -550,4 +550,5 @@ static struct platform_driver mac_scsi_driver __refdata = {
+ module_platform_driver_probe(mac_scsi_driver, mac_scsi_probe);
+ 
+ MODULE_ALIAS("platform:" DRV_MODULE_NAME);
++MODULE_DESCRIPTION("Generic Macintosh NCR5380 driver");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/pcmcia/aha152x_stub.c b/drivers/scsi/pcmcia/aha152x_stub.c
+index 6a6621728c69..1b54ba51a485 100644
+--- a/drivers/scsi/pcmcia/aha152x_stub.c
++++ b/drivers/scsi/pcmcia/aha152x_stub.c
+@@ -75,6 +75,7 @@ module_param(synchronous, int, 0);
+ module_param(reset_delay, int, 0);
+ module_param(ext_trans, int, 0);
+ 
++MODULE_DESCRIPTION("Adaptec AHA152X-compatible PCMCIA SCSI card driver");
+ MODULE_LICENSE("Dual MPL/GPL");
+ 
+ /*====================================================================*/
+diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
+index 8300f0bdddb3..2d9fcc45ad85 100644
+--- a/drivers/scsi/ppa.c
++++ b/drivers/scsi/ppa.c
+@@ -1155,4 +1155,5 @@ static struct parport_driver ppa_driver = {
+ };
+ module_parport_driver(ppa_driver);
+ 
++MODULE_DESCRIPTION("IOMEGA PPA3 parallel port SCSI host adapter driver");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
+index 9c14fdf61037..04749fde1636 100644
+--- a/drivers/scsi/scsi_common.c
++++ b/drivers/scsi/scsi_common.c
+@@ -12,6 +12,7 @@
+ #include <asm/unaligned.h>
+ #include <scsi/scsi_common.h>
+ 
++MODULE_DESCRIPTION("SCSI functions used by both the initiator and the target code");
+ MODULE_LICENSE("GPL v2");
+ 
+ /* Command group 3 is reserved and should never be used.  */
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 7ab000942b97..c4a88f673183 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -68,6 +68,7 @@
+ 
+ 
+ MODULE_DESCRIPTION("SCSI cdrom (sr) driver");
++MODULE_DESCRIPTION("TBD");
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_CDROM_MAJOR);
+ MODULE_ALIAS_SCSI_DEVICE(TYPE_ROM);
+@@ -1007,4 +1008,5 @@ static void __exit exit_sr(void)
+ 
+ module_init(init_sr);
+ module_exit(exit_sr);
++MODULE_DESCRIPTION("SCSI CDROM driver");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index 4a8cc2e8238e..f51702893306 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -666,4 +666,5 @@ static struct platform_driver sun3_scsi_driver = {
+ module_platform_driver_probe(sun3_scsi_driver, sun3_scsi_probe);
+ 
+ MODULE_ALIAS("platform:" DRV_MODULE_NAME);
++MODULE_DESCRIPTION("Sun3 NCR5380 SCSI controller driver");
+ MODULE_LICENSE("GPL");
 
-nop is the case when bi->tuple_size is perfectly valid (i.e. not zero), 
-and the code needs to have support for it.
-none is the case when bi->tuple_size is zero, and the code only needs to 
-ensure that it does nothing.
+---
+base-commit: 19ca0d8a433ff37018f9429f7e7739e9f3d3d2b4
+change-id: 20240607-md-drivers-scsi-e3364073e9b9
 
-That said, the change can be deferred to a future patch as well.
-
-So, looks good!
-
-Reviewed-by: Kanchan Joshi <joshi.k@samsung.com>
