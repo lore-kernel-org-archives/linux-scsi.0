@@ -1,111 +1,86 @@
-Received: from mail-yb1-f202.google.com (mail-yb1-f202.google.com [209.85.219.202])
+Received: from mail-pf1-f202.google.com (mail-pf1-f202.google.com [209.85.210.202])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA0FB198E86
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2024 17:06:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4020C19AD90
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2024 17:57:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717780017; cv=none; b=UoPr72ZDzls29Yi8GK8X0L8AygbIV7T+QL7YMIAluAzl+KGVer0WFUrz9bDrk/a1wrcnfs6ZJ9moO7WW8Dm+YuzpViUvYcgAQobHPW8dBjuFInL6n1th3uoN+z+1A+WRtDJ9+ZvR7hkuATzU4vu54l1prZ+0p7GaldFs02HisKg=
+	t=1717783069; cv=none; b=QAo5VsvSALYkkS29/MtF4pXFNAENwZ8NJWI0JQ1fiQ+SxBC36FRPCpkbyg3psa9t7WUEK1SMT4ykcESpIPxLI5q2LhOgn+51N5flUjDlJRlBh3mTekaGUgJJrzL7HbCmjRURSOltWhSJ0T8y0qq7ULNTbBWhEKkLsPgSItkSwdU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717780017; c=relaxed/simple;
-	bh=iAbPGXH/r5gL1hZgWkLgKCD1/WIGTyanOjQWhd5s0L4=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=b13bBHstMOSN/Kjem4FjWp74WgJE7vDkYG1TCUYU3S37y3Gn9EMOlLLv6Q3HDgQP3DyxfEmfu0HbYvsMMf9BrA+GGvYQn3Pjv+PgEX3/AUzVBOMgUZGNv49/ddI0fQJA/t7LkFHyqytxHgQKJ/HFFbloMw7Ms9eN6v33qmhlAto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=ps715JDL; arc=none smtp.client-ip=209.85.219.202
+	s=arc-20240116; t=1717783069; c=relaxed/simple;
+	bh=8M5R5sbddtd+EtOHByWpR1T0myw7qJde+U5UKaenM9s=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=P+Hbx7WEQ+2dY62BZ11AGDPBDfc9QW+3LrGoL7he5exg0893XnE9d9hhpyFNY1mGBCrRyX98uuwAJjkwnsNozSmnejV2GccxOEafzkpEj90wjd07z/+0+JHaXHYEdEpP5c8Hfi3BZyKGC7ergKMD7povGTfzHECnXCoFqORvBow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=L9kqaOdM; arc=none smtp.client-ip=209.85.210.202
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ps715JDL"
-Received: by mail-yb1-f202.google.com with SMTP id 3f1490d57ef6-dfa75354911so3818497276.0
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Jun 2024 10:06:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="L9kqaOdM"
+Received: by mail-pf1-f202.google.com with SMTP id d2e1a72fcca58-70258e95605so1810457b3a.0
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Jun 2024 10:57:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1717780015; x=1718384815; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+1aQwu1iGrHhm3SengJCu2MFtSP+MYd6cSL40GeM53Y=;
-        b=ps715JDLGptltPdCPW3QatT/4wDBnjFNt4gBDKcCK8kviV6yKg46wfSlqCl9mz7srx
-         y1IpgPGzoNtqDCJ/MRJAfNJ+m23FNx+2Qi27R1nz9oe3Y3T6BRgvPF1uwqyQR2qL+YqM
-         EBk8UmILBL9mjAKMSnz2FFaGwWeQFqlC9ijyCsLlAin0gk1EB4BFVvKO7wh6OBNCyd8i
-         FOZCGApB9gIE5vVD1P04K62kwjaQqd/ahND9iF9x8EaJjqFDCUKLqyrmo/Imq32WIMxE
-         igfHkxN4QPNy0jXghr3W5htLMBjUNFxdGP9wvCMkj5u4EOulOjEG/z+7nZG8fp7BBtcq
-         jFOQ==
+        d=google.com; s=20230601; t=1717783067; x=1718387867; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=ESs0u2tV++sCsmPbje03XNCRerEoVavzKTKXXHcLNgU=;
+        b=L9kqaOdMw1RgLaYnAQ/hRl/OmH8C4isF3VQubDYFt0uxBtZ8z80BytDkFKg4ihdIqD
+         ION1r2imrpgHQpmILuWxAKVT4QVli08iQngYq4u1IyzfxmXCAUnCzhYE89RoiONn5GnZ
+         gF/WP6/ix9AQoNuj1Y/q2WvS1CpoTl/g1XSBhLANgEoLiJI1ncCntQF5Tb7ieqJgCB9A
+         iw2SvYOZv5CfNsjiL8bxdvpUBIdsQhXFyda+qYDFVLhVCauLhUc+thnSvLIMCpCA47dt
+         IESK4DpXxJnyaeQxiRX46or+Kv1nsuXdYFvBxguWYuIfaoydLfC3Tcb/Qc4kM5wlYuU0
+         wiCA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717780015; x=1718384815;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=+1aQwu1iGrHhm3SengJCu2MFtSP+MYd6cSL40GeM53Y=;
-        b=kDQvZp14l0akGk1dzOqH5CfNBJg0bNmW4MS6NSEEGPywLiodo8RJmgME/x5tFokn+X
-         G1Qx850/98ndDM/Lp/jYGXgLrWdgUQf5Iselz8l18hpQHgdkuXwYZ02gu/fYI9A12S59
-         kszS43wutmkNKcCHS+Sm5aXutmfPNGXZCwWZ1X4bJMsLI46EjfcMZZxf2Q61M+U5Iloj
-         FHeKA7VSAZZ6/2S06ke2JvgXiuxNHLBBaIc/9i4Erb8EbJ6V+iii6QRknBAccbX1D0vo
-         VVtQ+Xaja31qIizaTVqSmA1FUPkLr5OfFSrLhsSghrSHF16gYLbXbw9EaB3gom1m5gq1
-         7A5Q==
-X-Gm-Message-State: AOJu0YxGOi7ud273VQXKydVEmuIWybNycW4/DlCFr6U0mey1P+cxFiE1
-	Iqr01AxRyzkOO3UheHFKU5woSHP7Uz0DTc/4TgPyifM+jw6cazxE9GacFB7DxbszVacpyMTEMxt
-	dU/PzldxQSA==
-X-Google-Smtp-Source: AGHT+IEWfyGzm83cGRqGBS0J9f1TYfWuqmEnzU14H2go4y66H8sDPlOOnoW013f8z11MSu4bAHBo7PH7HlEepQ==
+        d=1e100.net; s=20230601; t=1717783067; x=1718387867;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ESs0u2tV++sCsmPbje03XNCRerEoVavzKTKXXHcLNgU=;
+        b=hepCHmMcRxm3BuLS3kRmbbGfQ9b6RjFxPzwjoll1GA0zOiaa2nDbUQzFT2WB8o3567
+         yEeK9WCawM7XOstQ2WYkY978nFSI6UNF5DeA+YiajYa7DSKEA8v84ZKOvUMy+LztghZ7
+         ypBDYY50pVR1vSBNuyLzJgrziKEeqau5dbpO/FdtZa4ZiolYYWPHTQMqJknlkhyAdvZw
+         gRdOaZsgU27uX9+op7mOjR9xQ2/2AVpY2IwKnH4qTwGd95FJcefPWo5xB3V5moD6LXdn
+         APWfW9oovIpMBxdyGkvh3Y+6JuwLAc9EuWpa8pIGaIHRTI3hvbjnqXPY4w1mR+tZeNJl
+         mZGA==
+X-Gm-Message-State: AOJu0YxnGeWpFG0SGIgznp5u1Ug2dS/lFYWO5LuQRPSdA0kHMQBRicv8
+	rvCzfvzKADV8Lg68LsvZWH1Qv2AqawtngT6vo37KiN4RyQbNBVB2PfltzJ1vETMb1BncE76j1ic
+	XqgpEUhQrgw==
+X-Google-Smtp-Source: AGHT+IHrD7lGtUhyWnPgie2iMfmsGFX6Ir3Nqf3BVkCOrhxNuWKJNoWk3xiQ53pt5TEKfPDDHGYsDCIlWh2mng==
 X-Received: from tadamsjr.c.googlers.com ([fda3:e722:ac3:cc00:20:ed76:c0a8:177c])
- (user=tadamsjr job=sendgmr) by 2002:a05:6902:1009:b0:dd9:2d94:cd8a with SMTP
- id 3f1490d57ef6-dfaf6647ademr268916276.9.1717780014727; Fri, 07 Jun 2024
- 10:06:54 -0700 (PDT)
-Date: Fri,  7 Jun 2024 17:06:39 +0000
-In-Reply-To: <20240607170639.3973949-1-tadamsjr@google.com>
+ (user=tadamsjr job=sendgmr) by 2002:a05:6a00:92a9:b0:6f3:8489:90c4 with SMTP
+ id d2e1a72fcca58-7040c741e69mr9712b3a.3.1717783067393; Fri, 07 Jun 2024
+ 10:57:47 -0700 (PDT)
+Date: Fri,  7 Jun 2024 17:57:40 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-References: <20240607170639.3973949-1-tadamsjr@google.com>
 X-Mailer: git-send-email 2.45.2.505.gda0bf45e8d-goog
-Message-ID: <20240607170639.3973949-4-tadamsjr@google.com>
-Subject: [PATCH 3/3] scsi: pm8001: Update log level when reading config table
+Message-ID: <20240607175743.3986625-1-tadamsjr@google.com>
+Subject: [RESEND][PATCH 0/3] small pm80xx driver fixes
 From: TJ Adams <tadamsjr@google.com>
-To: jinpu.wang@cloud.ionos.com
-Cc: linux-scsi@vger.kernel.org, ipylypiv@google.com, 
-	Terrence Adams <tadamsjr@google.com>
+To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Igor Pylypiv <ipylypiv@google.com>, TJ Adams <tadamsjr@google.com>
 Content-Type: text/plain; charset="UTF-8"
 
-From: Terrence Adams <tadamsjr@google.com>
+These are 3 small patches to prevent a kernel crash, prevent ncq from
+being turned off accidentally, and change some logs' levels. Resending
+because I missed some recipients the first time.
 
-Reading the main config table occurs as a part of initialization in
-pm80xx_chip_init(). Because of this it makes more sense to have it be a
-part of the INIT logging.
+Igor Pylypiv (2):
+  scsi: pm80xx: Set phy->enable_completion only when we wait for it
+  scsi: pm80xx: Do not issue hard reset before NCQ EH
 
-Signed-off-by: Terrence Adams <tadamsjr@google.com>
----
- drivers/scsi/pm8001/pm80xx_hwi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Terrence Adams (1):
+  scsi: pm8001: Update log level when reading config table
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index a52ae6841939..8fe886dc5e47 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -568,13 +568,13 @@ static void read_main_config_table(struct pm8001_hba_info *pm8001_ha)
- 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version =
- 		pm8001_mr32(address, MAIN_MPI_INACTIVE_FW_VERSION);
- 
--	pm8001_dbg(pm8001_ha, DEV,
-+	pm8001_dbg(pm8001_ha, INIT,
- 		   "Main cfg table: sign:%x interface rev:%x fw_rev:%x\n",
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.signature,
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.interface_rev,
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.firmware_rev);
- 
--	pm8001_dbg(pm8001_ha, DEV,
-+	pm8001_dbg(pm8001_ha, INIT,
- 		   "table offset: gst:%x iq:%x oq:%x int vec:%x phy attr:%x\n",
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.gst_offset,
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.inbound_queue_offset,
-@@ -582,7 +582,7 @@ static void read_main_config_table(struct pm8001_hba_info *pm8001_ha)
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.int_vec_table_offset,
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.phy_attr_table_offset);
- 
--	pm8001_dbg(pm8001_ha, DEV,
-+	pm8001_dbg(pm8001_ha, INIT,
- 		   "Main cfg table; ila rev:%x Inactive fw rev:%x\n",
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version,
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version);
+ drivers/scsi/pm8001/pm8001_hwi.c | 11 +++++++++++
+ drivers/scsi/pm8001/pm8001_sas.c |  4 +++-
+ drivers/scsi/pm8001/pm80xx_hwi.c |  6 +++---
+ 3 files changed, 17 insertions(+), 4 deletions(-)
+
 -- 
 2.45.2.505.gda0bf45e8d-goog
 
