@@ -1,97 +1,173 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from fhigh3-smtp.messagingengine.com (fhigh3-smtp.messagingengine.com [103.168.172.154])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5481C17BB7
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Jun 2024 21:36:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0B9B33C5;
+	Sat,  8 Jun 2024 00:52:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.154
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717796177; cv=none; b=AYEY2v0pyP1XPCIn0FmiPsGlNoQDmmpkbv6cw2Onf/Gk5M3pToa1P32NpXP5D7djFMmD6JNnj7EpM6S+6rFXCSj94/ceb0fBK5W06d6LqvUFhvHDoIMw45BtFDBCwAT1B8wbevzYjC/pY30k4suPNMD8TX1RGk6Swuc+QNbG2vM=
+	t=1717807959; cv=none; b=cntnIigWMiI5awWt3XjnTYG3Bg9YbhJoybRqzXoHAIhZtXxIaIMnxyiY67zMhHRj6+o9916k4lXiyii9Z9TwlecKXJCbg6tVtqPnwjmYVS+dxtUjmuon6Is3mzntK/q+UT6JAKWspZ/8w0qFigQVAgwBONPf10UPjt4LKYnL/OA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717796177; c=relaxed/simple;
-	bh=w7ulkvBJ8MHNux1vQB4j7ZnSrBo2H1oP/7ItTQ7S4Yk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=O4SFyT+mY8jdkcuEWhx6XJtk6es673WmvdKmsrIrVEoIY3W5oydKuq2Mz35R2i6xUnskcrKm2m09p20yh1korsNBnn7cxCmM9ijuDrlp2CouKdoVta5O1kzJLKfARPW76VYLEb6U2MXpfIpEvccVfWi2DH3O9YQVdgq7Vf/DKDg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=fq/ZHh8i; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1717807959; c=relaxed/simple;
+	bh=eyfpPJgtOIuG1vIFDolKXcOYY3XJke1VYW8FXO8L9lw=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=MhSQ7qNgjbI5CHrN6Uf3HK+TCJu41IftwanSCY0/Hf2p/mfpL8DYjlgiccrkqKMGaSgD+jOyUvNk49XyuMPRfA4E7ENWo8ueOZU0Ua3WCiN2e0pjZSTIWEW3Y3DGTVxvmG0Ln9Kg6zHNfSMIpoT8kuvJwbLvaUUftDiKInaoEVw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=idl3dvWV; arc=none smtp.client-ip=103.168.172.154
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="fq/ZHh8i"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Vwvdq5bGyzlgMVV;
-	Fri,  7 Jun 2024 21:36:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1717796173; x=1720388174; bh=tqLjFiJCgI7d5jali+3FQIJNjOQCM0JGRBD
-	2FkcWyHU=; b=fq/ZHh8i0rrnfKGY6TZ1rnyfHxxt5DkS+R64jwtym3+cGEjOdjE
-	rI7qsMYBlszTqyuE/fxRrFvgw7qMB1AFSCdJ5WyYqlWPe20Uq2c+VKbhddJX1DtY
-	BrHMF7lXnGy6BEGKaK0rKaPfecwsla6VjiOmrqadE5lLAc/SShnExAQYWMZ3wPqn
-	LqJygAYAmHK2dsCNbt4FIzX+fJt5NAORKfReMHq+hYgdJYuh3IdWjdubNWh0/5XP
-	3YuPkMRiylzU/NUrH+L6q7VO7Vm1rQB9xaXudOQQpcx0XYeQC043XnTnPe2HFh57
-	RUPQU7e8cGe7Nlfs1AaymNw3c7x8rtLveew==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id AD7CD0vL946H; Fri,  7 Jun 2024 21:36:13 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Vwvdm59j9zlgMVS;
-	Fri,  7 Jun 2024 21:36:12 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Avri Altman <Avri.Altman@wdc.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] scsi: core: Remove an incorrect comment
-Date: Fri,  7 Jun 2024 14:35:53 -0700
-Message-ID: <20240607213553.1743087-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.45.2.505.gda0bf45e8d-goog
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="idl3dvWV"
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+	by mailfhigh.nyi.internal (Postfix) with ESMTP id BC0DD1140198;
+	Fri,  7 Jun 2024 20:52:35 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute2.internal (MEProxy); Fri, 07 Jun 2024 20:52:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+	fm1; t=1717807955; x=1717894355; bh=/REvkr6D1X9D70grvQc7R30pDYdS
+	TCpuO5alixbgfuw=; b=idl3dvWVn5I9w3VyjDNA4Ubxji9+IShx8UWBbSp3dhEM
+	uOD2N1vgHND86LvmJBRihlxMeCYK1WzJepAkcxLiWtgXhrTmHwRw34Ih/TCWzS6u
+	9ZhLaCYXQbIAWK7Dp5mfFprAllPPt5749QeMLDyWfwASAtlS3hP0kzUzy/Xry6+H
+	eYsIHDHvKkgvwQ/LV543zkojg0qhviuwHwF9nSdfdmKB3ZNatIFeeQoSvkw9pbLE
+	iUnZyp2h3P0xOOFnW6FF+vIvIPJEmJwicXpI2rEQE6/RRVvg7J6sCnu5BcSIRo4G
+	dKoy/nekllowiW68sOkbYj0gQWs5Zwf75fNfFVI1wQ==
+X-ME-Sender: <xms:UqtjZgh_5tCr0UUD52YExB7Dmu-rk0SCxgVLAhlI7RAFbmeHBFVQfQ>
+    <xme:UqtjZpBim1sa_N1BqSVyXFyan7JSjuo9EEvYDCFIFS3m-G1JkuwkMyH8YwQJc-RMx
+    vhP2I717tLzsedCLxw>
+X-ME-Received: <xmr:UqtjZoGv1k___eQlePsqXz2yJvGJapPTvsPH5oqtpWf0pJCxiryuwNbthkUGo8E-2O68N1Pmt7C7az7SZsA0Qjd4J_K-6bJmOU0>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrfedtvddgfeekucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcu
+    vfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgqeenucggtffrrg
+    htthgvrhhnpeelueehleehkefgueevtdevteejkefhffekfeffffdtgfejveekgeefvdeu
+    heeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
+    hfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
+X-ME-Proxy: <xmx:UqtjZhQM5s0kCbeiPk5CsPlJmN7ITTMh8xeiBFxk_JDU9M_OysraDg>
+    <xmx:UqtjZtzggBDkc0AysPkaRowYF_gJ4hojVed-FOenIUh21MTTpdEuqQ>
+    <xmx:UqtjZv4BnGTTGHp89OAwlx_FBQfsUXkUSpfkcBTIlT8P87DQ0eFzVQ>
+    <xmx:UqtjZqye_IxQsC1wIyykMDZd-kOg45Cf_9LW7faBPJH6WOpSiM41Hw>
+    <xmx:U6tjZiK-f8KeBmUYH9rnubMuOprY4Mp9NaUXO_JR1a4AWObb5NqDScKX>
+Feedback-ID: i58a146ae:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
+ 7 Jun 2024 20:52:32 -0400 (EDT)
+Date: Sat, 8 Jun 2024 10:52:45 +1000 (AEST)
+From: Finn Thain <fthain@linux-m68k.org>
+To: Jeff Johnson <quic_jjohnson@quicinc.com>
+cc: Khalid Aziz <khalid@gonehiking.org>, 
+    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    Matthew Wilcox <willy@infradead.org>, Hannes Reinecke <hare@suse.com>, 
+    Michael Schmitz <schmitzmic@gmail.com>, 
+    James Smart <james.smart@broadcom.com>, 
+    Ram Vegesna <ram.vegesna@broadcom.com>, 
+    Artur Paszkiewicz <artur.paszkiewicz@intel.com>, 
+    "Juergen E. Fischer" <fischer@norbit.de>, linux-scsi@vger.kernel.org, 
+    linux-kernel@vger.kernel.org, target-devel@vger.kernel.org, 
+    kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] scsi: add missing MODULE_DESCRIPTION() macros
+In-Reply-To: <20240607-md-drivers-scsi-v1-1-17ae31cc4fe5@quicinc.com>
+Message-ID: <82cdd602-8faf-5cc0-c0b4-87ff1d820474@linux-m68k.org>
+References: <20240607-md-drivers-scsi-v1-1-17ae31cc4fe5@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
 
-The comment that scsi_static_device_list would go away was added more tha=
-n
-18 years ago. Today, that list is still there and 84 additional entries h=
-ave
-been added. This shows that the comment is incorrect. Hence remove that
-comment.
 
-Cc: Avri Altman <Avri.Altman@wdc.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_devinfo.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+On Fri, 7 Jun 2024, Jeff Johnson wrote:
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 85111e14c53b..5c23ab2b98ab 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -39,13 +39,9 @@ static LIST_HEAD(scsi_dev_info_list);
- static char scsi_dev_flags[256];
-=20
- /*
-- * scsi_static_device_list: deprecated list of devices that require
-- * settings that differ from the default, includes black-listed (broken)
-- * devices. The entries here are added to the tail of scsi_dev_info_list
-- * via scsi_dev_info_list_init.
-- *
-- * Do not add to this list, use the command line or proc interface to ad=
-d
-- * to the scsi_dev_info_list. This table will eventually go away.
-+ * scsi_static_device_list: list of devices that require settings that d=
-iffer
-+ * from the default, includes black-listed (broken) devices. The entries=
- here
-+ * are added to the tail of scsi_dev_info_list via scsi_dev_info_list_in=
-it.
-  */
- static struct {
- 	char *vendor;
+> diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+> index 742625ac7d99..4eb5770aeef5 100644
+> --- a/drivers/scsi/atari_scsi.c
+> +++ b/drivers/scsi/atari_scsi.c
+> @@ -894,4 +894,5 @@ static struct platform_driver atari_scsi_driver __refdata = {
+>  module_platform_driver_probe(atari_scsi_driver, atari_scsi_probe);
+>  
+>  MODULE_ALIAS("platform:" DRV_MODULE_NAME);
+> +MODULE_DESCRIPTION("Atari generic SCSI port driver");
+>  MODULE_LICENSE("GPL");
+
+"Atari NCR5380 SCSI driver", please. I don't think the word "generic" 
+applies here. It was a reference to the "generic NCR5380 driver by Drew 
+Eckhardt" from which specialized drivers like this one were derived.
+
+> diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+> index f6305e3e60f4..1bef131664e0 100644
+> --- a/drivers/scsi/g_NCR5380.c
+> +++ b/drivers/scsi/g_NCR5380.c
+> @@ -110,6 +110,7 @@ module_param_array(card, int, NULL, 0);
+>  MODULE_PARM_DESC(card, "card type (0=NCR5380, 1=NCR53C400, 2=NCR53C400A, 3=DTC3181E, 4=HP C2502)");
+>  
+>  MODULE_ALIAS("g_NCR5380_mmio");
+> +MODULE_DESCRIPTION("Generic NCR5380 driver");
+>  MODULE_LICENSE("GPL");
+>  
+>  static void g_NCR5380_trigger_irq(struct Scsi_Host *instance)
+
+"Generic NCR5380/NCR53C400 SCSI driver" please.
+
+This driver actually describes itself as "generic generic NCR5380 driver" 
+which appears to be a joke. The term "generic" was used to mean universal 
+i.e. intended to cover every ISA card implementation.
+
+> diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+> index 625fd547ee60..82d8b8f8293f 100644
+> --- a/drivers/scsi/initio.c
+> +++ b/drivers/scsi/initio.c
+> @@ -2939,6 +2939,7 @@ static void initio_remove_one(struct pci_dev *pdev)
+>  	pci_disable_device(pdev);
+>  }
+>  
+> +MODULE_DESCRIPTION("Initio 9100U(W) driver");
+>  MODULE_LICENSE("GPL");
+>  
+>  static struct pci_device_id initio_pci_tbl[] = {
+> @@ -2961,4 +2962,5 @@ module_pci_driver(initio_pci_driver);
+>  
+>  MODULE_DESCRIPTION("Initio INI-9X00U/UW SCSI device driver");
+>  MODULE_AUTHOR("Initio Corporation");
+> +MODULE_DESCRIPTION("TBD");
+>  MODULE_LICENSE("GPL");
+
+There are now three MODULE_DESCRIPTION macros here.
+
+> diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
+> index a402c4dc4645..f74231ca29e5 100644
+> --- a/drivers/scsi/mac_scsi.c
+> +++ b/drivers/scsi/mac_scsi.c
+> @@ -550,4 +550,5 @@ static struct platform_driver mac_scsi_driver __refdata = {
+>  module_platform_driver_probe(mac_scsi_driver, mac_scsi_probe);
+>  
+>  MODULE_ALIAS("platform:" DRV_MODULE_NAME);
+> +MODULE_DESCRIPTION("Generic Macintosh NCR5380 driver");
+>  MODULE_LICENSE("GPL");
+
+
+"Macintosh NCR5380 SCSI driver", please.
+
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 7ab000942b97..c4a88f673183 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -68,6 +68,7 @@
+>  
+>  
+>  MODULE_DESCRIPTION("SCSI cdrom (sr) driver");
+> +MODULE_DESCRIPTION("TBD");
+>  MODULE_LICENSE("GPL");
+>  MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_CDROM_MAJOR);
+>  MODULE_ALIAS_SCSI_DEVICE(TYPE_ROM);
+> @@ -1007,4 +1008,5 @@ static void __exit exit_sr(void)
+>  
+>  module_init(init_sr);
+>  module_exit(exit_sr);
+> +MODULE_DESCRIPTION("SCSI CDROM driver");
+>  MODULE_LICENSE("GPL");
+
+Three macros here also.
