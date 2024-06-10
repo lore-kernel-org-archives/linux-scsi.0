@@ -1,51 +1,51 @@
-Received: from alln-iport-4.cisco.com (alln-iport-4.cisco.com [173.37.142.91])
+Received: from alln-iport-5.cisco.com (alln-iport-5.cisco.com [173.37.142.92])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1A3212F5B6;
-	Mon, 10 Jun 2024 21:53:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.142.91
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF67814F9DD;
+	Mon, 10 Jun 2024 21:54:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.142.92
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718056443; cv=none; b=TPCZbcqaQgVCdQsbtKK2XYvanG0VxjJoKuo+PLz3dGRyfIAIB6+2w/ASGDMiuXwudTF2YecHz5oPWLK3V1r8zk1MZQsOnwS27RidC7WPLCNCmeuqpTTw2zibATDpRJOFhP1Wu5+gapvKqSOy5ustAiBk4Eti9tchTXA06FCtXME=
+	t=1718056456; cv=none; b=F2E60bZvhfae2QqiYMidrVqHgDMSvej2qZ5PzxDx/4GUe5IlJYv3a0ROMK8b0JWhr6/0UhZMZmM1to4kGpf5xYn7zmFJaKk6ZIPRz0l72er5ZmemcRFx+a2t7x3eM8XGGRrpLpX/FcYio9sXgHeTOWVO2+F7XNOYgUevY+AGxSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718056443; c=relaxed/simple;
-	bh=lFuDAofhdQYkJ+J13EPMV4bJAv+em9ypCa9aLeq9Sag=;
+	s=arc-20240116; t=1718056456; c=relaxed/simple;
+	bh=UhMs3EfnNSPGN7I1tsdOzSX+ISs/R4Qx0Q9oNJ95cVM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=i7DfPPHUAyWcD07OwdT+EB+WhmTAlEGXpw/tqsJavt/+/EUiwEJS+Uxtv4owYEnF+i99PiQBgB+7VnXJlFU2HtMW6v+Taq3Z8szCEgfzIvyomQlm4BCusaTDvFATiJUPtyVXIYd43pCTgIhiFJ7+JKFdt8W1/unS5wRV/she0Ao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=SONdn+74; arc=none smtp.client-ip=173.37.142.91
+	 MIME-Version; b=RDWvGMYhCo90+Q/HcLGyah+9Sj1bQLJ7P23Pz9SVv3gZXoFsfXAxP8b25arnt1y/SW3uCgLzPQ6/O813pvBtizcCcgxWEpgHZZdu12gJYlava0darLDNZmCuUJvoA9oS46Dg36WcdKVKeXG2jSe96hXW9gL0+F+qPN1qTyXdvo8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=bQ2rPxLO; arc=none smtp.client-ip=173.37.142.92
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="SONdn+74"
+	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="bQ2rPxLO"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=57124; q=dns/txt;
-  s=iport; t=1718056439; x=1719266039;
+  d=cisco.com; i=@cisco.com; l=25382; q=dns/txt;
+  s=iport; t=1718056453; x=1719266053;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=mTHoJ6uhUib+LmJtF0YjqK9CIj4w7S9XzEhaTc2iHr0=;
-  b=SONdn+74QZth0q26CPMmPnzC9MfRK4rLvDHyJon9oN8qGBxTXcwvbOnp
-   emdzTvvi3Nfo1dl8ryqU6LtLw5LZAzmymHPRbGA9DV63xIUhvFdqvrdcC
-   04m1gptCAqP3HOY1+SNuwNKAHarlv6JnW4mBFMMfunVvtmUdcESp6b/QR
-   Q=;
-X-CSE-ConnectionGUID: 3uPt4y4CTiOpW9tKyX98TQ==
-X-CSE-MsgGUID: rYh4OE7cT86z1lI55TZRVA==
+  bh=3Gc+XhmiSJeXP0Quj03Elgg8W1+FVZDmHkjxdDPD8RM=;
+  b=bQ2rPxLO5kGwqGAfTZQoCFnf195fY1Lq9xEYyLOcK0NtmVTeN63WmKUM
+   J8D+ET1XIAvYm/ULCa3VTEnvYkvWGcniPfuJUv7LQo5eE/tWaek4LMb0B
+   DoHGyi2bkfGAqlf/ql2HccluAJp4DfmP6iuNgptaWfaLQPnCj5hdblDfG
+   k=;
+X-CSE-ConnectionGUID: 8jxm+11dTpqvwGXXSKPFkQ==
+X-CSE-MsgGUID: SKqD0yzLRv+Llei3jbceEg==
 X-IronPort-AV: E=Sophos;i="6.08,227,1712620800"; 
-   d="scan'208";a="294296209"
+   d="scan'208";a="294807706"
 Received: from alln-core-4.cisco.com ([173.36.13.137])
-  by alln-iport-4.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2024 21:52:50 +0000
+  by alln-iport-5.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2024 21:54:12 +0000
 Received: from localhost.cisco.com ([10.193.101.253])
 	(authenticated bits=0)
-	by alln-core-4.cisco.com (8.15.2/8.15.2) with ESMTPSA id 45ALpBCS012699
+	by alln-core-4.cisco.com (8.15.2/8.15.2) with ESMTPSA id 45ALpBCU012699
 	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Mon, 10 Jun 2024 21:52:50 GMT
+	Mon, 10 Jun 2024 21:54:12 GMT
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
         satishkh@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH 04/14] scsi: fnic: Add support for target based solicited requests and responses
-Date: Mon, 10 Jun 2024 14:50:50 -0700
-Message-Id: <20240610215100.673158-5-kartilak@cisco.com>
+Subject: [PATCH 06/14] scsi: fnic: Add and integrate support for FDMI
+Date: Mon, 10 Jun 2024 14:50:52 -0700
+Message-Id: <20240610215100.673158-7-kartilak@cisco.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240610215100.673158-1-kartilak@cisco.com>
 References: <20240610215100.673158-1-kartilak@cisco.com>
@@ -60,1742 +60,724 @@ X-Authenticated-User: kartilak@cisco.com
 X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
 X-Outbound-Node: alln-core-4.cisco.com
 
-Add support for target based solicited requests and responses.
-Add support for tport definitions and processing.
-Add support for restarting the IT nexus.
+Add support for Fabric-Device Management Interface
+(FDMI) by introducing PCI device IDs for Cisco
+Hardware.
+Introduce a module parameter to enable/disable
+FDMI support.
+Integrate support for FDMI.
 
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
 Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 ---
- drivers/scsi/fnic/fdls_disc.c | 1540 +++++++++++++++++++++++++++++++--
- drivers/scsi/fnic/fnic.h      |    6 +
- drivers/scsi/fnic/fnic_fdls.h |    4 +
- 3 files changed, 1473 insertions(+), 77 deletions(-)
+ drivers/scsi/fnic/Makefile                |   3 +-
+ drivers/scsi/fnic/fdls_disc.c             | 281 ++++++++++++++++++++++
+ drivers/scsi/fnic/fnic.h                  |  72 ++++++
+ drivers/scsi/fnic/fnic_fdls.h             |   2 +-
+ drivers/scsi/fnic/fnic_main.c             |  26 ++
+ drivers/scsi/fnic/fnic_pci_subsys_devid.c | 133 ++++++++++
+ 6 files changed, 515 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/scsi/fnic/fnic_pci_subsys_devid.c
 
+diff --git a/drivers/scsi/fnic/Makefile b/drivers/scsi/fnic/Makefile
+index 3bd6b1c8b643..af156c69da0c 100644
+--- a/drivers/scsi/fnic/Makefile
++++ b/drivers/scsi/fnic/Makefile
+@@ -16,4 +16,5 @@ fnic-y	:= \
+ 	vnic_intr.o \
+ 	vnic_rq.o \
+ 	vnic_wq_copy.o \
+-	vnic_wq.o
++	vnic_wq.o \
++	fnic_pci_subsys_devid.o
 diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
-index 22a2d0c1c78f..d920202d413d 100644
+index ad115de86f15..42127a70c369 100644
 --- a/drivers/scsi/fnic/fdls_disc.c
 +++ b/drivers/scsi/fnic/fdls_disc.c
-@@ -11,6 +11,8 @@
- #include <scsi/fc/fc_fcp.h>
- #include <linux/utsname.h>
+@@ -14,6 +14,8 @@
+ #define FC_FC4_TYPE_SCSI 0x08
  
-+#define FC_FC4_TYPE_SCSI 0x08
-+
  static void fdls_send_rpn_id(struct fnic_iport_s *iport);
++static void fdls_fdmi_register_hba(struct fnic_iport_s *iport);
++static void fdls_fdmi_register_pa(struct fnic_iport_s *iport);
  
  /* Frame initialization */
-@@ -59,6 +61,19 @@ struct fc_rpn_id_s fnic_rpn_id_req = {
- 				  .command = FC_CT_RPN_CMD}
+ /*
+@@ -74,6 +76,66 @@ struct fc_els_prli_s fnic_prli_req = {
+ 	.sp = {.type = 0x08, .flags = 0x0020, .csp = 0xA2000000}
  };
  
 +/*
 + * Variables:
-+ * did, sid, oxid
++ * sid, port_id, port_name
 + */
-+struct fc_els_prli_s fnic_prli_req = {
-+	.fchdr = {.r_ctl = 0x22, .type = 0x01,
-+			  .f_ctl = FNIC_ELS_REQ_FCTL, .rx_id = 0xFFFF},
-+	.command = FC_ELS_PRLI_REQ,
-+	.page_len = 16,
-+	.payload_len = 0x1400,
-+	.sp = {.type = 0x08, .flags = 0x0020, .csp = 0xA2000000}
++struct fc_fdmi_rhba_s fnic_fdmi_rhba = {
++	.fchdr = {.r_ctl = 0x02, .did = {0xFF, 0XFF, 0XFA}, .type = 0x20,
++			  .f_ctl = FNIC_ELS_REQ_FCTL, .ox_id = FNIC_FDMI_REG_HBA_OXID,
++			  .rx_id = 0xFFFF},
++	.fc_ct_hdr = {.rev = 0x01, .fs_type = 0xFA, .fs_subtype = 0x10,
++				  .command = 0x0002},
++	.num_ports = 0x1000000,
++	.num_hba_attributes = 0x9000000,
++	.type_nn = FNIC_FDMI_TYPE_NODE_NAME,
++	.length_nn = 0xc00,
++	.type_manu = FNIC_FDMI_TYPE_MANUFACTURER,
++	.length_manu = 0x1800,
++	.manufacturer = FNIC_FDMI_MANUFACTURER,
++	.type_serial = FNIC_FDMI_TYPE_SERIAL_NUMBER,
++	.length_serial = 0x1400,
++	.type_model = FNIC_FDMI_TYPE_MODEL,
++	.length_model = 0x1000,
++	.type_model_des = FNIC_FDMI_TYPE_MODEL_DES,
++	.length_model_des = 0x3c00,
++	.model_description = FNIC_FDMI_MODEL_DESCRIPTION,
++	.type_hw_ver = FNIC_FDMI_TYPE_HARDWARE_VERSION,
++	.length_hw_ver = 0x1400,
++	.type_dr_ver = FNIC_FDMI_TYPE_DRIVER_VERSION,
++	.length_dr_ver = 0x2000,
++	.type_rom_ver = FNIC_FDMI_TYPE_ROM_VERSION,
++	.length_rom_ver = 0xc00,
++	.type_fw_ver = FNIC_FDMI_TYPE_FIRMWARE_VERSION,
++	.length_fw_ver = 0x1400,
++};
++
++/*
++ * Variables
++ *sid, port_id, port_name
++ */
++struct fc_fdmi_rpa_s fnic_fdmi_rpa = {
++	.fchdr = {.r_ctl = 0x02, .did = {0xFF, 0xFF, 0xFA}, .type = 0x20,
++			  .f_ctl = FNIC_ELS_REQ_FCTL, .ox_id = FNIC_FDMI_RPA_OXID,
++			  .rx_id = 0xFFFF},
++	.fc_ct_hdr = {.rev = 0x01, .fs_type = 0xFA, .fs_subtype = 0x10,
++				  .command = 0x1102},
++	.num_port_attributes = 0x6000000,
++	.type_fc4 = FNIC_FDMI_TYPE_FC4_TYPES,
++	.length_fc4 = 0x2400,
++	.type_supp_speed = FNIC_FDMI_TYPE_SUPPORTED_SPEEDS,
++	.length_supp_speed = 0x800,
++	.type_cur_speed = FNIC_FDMI_TYPE_CURRENT_SPEED,
++	.length_cur_speed = 0x800,
++	.type_max_frame_size = FNIC_FDMI_TYPE_MAX_FRAME_SIZE,
++	.length_max_frame_size = 0x800,
++	.max_frame_size = 0x0080000,
++	.type_os_name = FNIC_FDMI_TYPE_OS_NAME,
++	.length_os_name = 0x1400,
++	.type_host_name = FNIC_FDMI_TYPE_HOST_NAME,
++	.length_host_name = 0x1000,
 +};
 +
  /*
   * Variables:
   * fh_s_id, port_id, port_name
-@@ -123,11 +138,51 @@ struct fc_logo_req_s fnic_logo_req = {
- #define RETRIES_EXHAUSTED(iport)      \
- 	(iport->fabric.retry_counter == FABRIC_LOGO_MAX_RETRY)
- 
-+#define FNIC_TPORT_MAX_NEXUS_RESTART (8)
-+
-+/* Private Functions */
- static void fdls_process_flogi_rsp(struct fnic_iport_s *iport,
- 		   struct fc_hdr_s *fchdr, void *rx_frame);
- static void fnic_fdls_start_plogi(struct fnic_iport_s *iport);
-+static struct fnic_tport_s *fdls_create_tport(struct fnic_iport_s *iport,
-+									  uint32_t fcid,
-+									  uint64_t wwpn);
-+static void fdls_target_restart_nexus(struct fnic_tport_s *tport);
-+static void fdls_start_tport_timer(struct fnic_iport_s *iport,
-+					struct fnic_tport_s *tport, int timeout);
-+
+@@ -172,6 +234,7 @@ static struct fnic_tport_s *fdls_create_tport(struct fnic_iport_s *iport,
+ static void fdls_target_restart_nexus(struct fnic_tport_s *tport);
+ static void fdls_start_tport_timer(struct fnic_iport_s *iport,
+ 					struct fnic_tport_s *tport, int timeout);
++static void fdls_send_fdmi_plogi(struct fnic_iport_s *iport);
  static void fdls_start_fabric_timer(struct fnic_iport_s *iport,
  			int timeout);
-+static void fdls_tport_timer_callback(struct timer_list *t);
-+
-+static uint16_t fdls_alloc_tgt_oxid(struct fnic_iport_s *iport,
-+									uint16_t base)
-+{
-+	int i;
-+	int start, end;
-+
-+	start = base - FDLS_PLOGI_OXID_BASE;
-+	end = start + FDLS_TGT_OXID_BLOCK_SZ;
-+
-+	for (i = start; i < end; i++) {
-+		if (iport->tgt_oxid_pool[i] == 0) {
-+			iport->tgt_oxid_pool[i] = 1;
-+			return (i + FDLS_PLOGI_OXID_BASE);
-+		}
-+	}
-+	return 0xFFFF;
-+}
-+
-+static void fdls_free_tgt_oxid(struct fnic_iport_s *iport, uint16_t oxid)
-+{
-+	struct fnic *fnic = iport->fnic;
-+
-+	if (iport->tgt_oxid_pool[oxid - FDLS_PLOGI_OXID_BASE] != 1) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Freeing unused OXID: 0x%x", oxid);
-+	}
-+	iport->tgt_oxid_pool[oxid - FDLS_PLOGI_OXID_BASE] = 0;
-+}
- 
- static void
- fdls_start_fabric_timer(struct fnic_iport_s *iport, int timeout)
-@@ -153,6 +208,63 @@ fdls_start_fabric_timer(struct fnic_iport_s *iport, int timeout)
- 				 "fabric timer is %d ", timeout);
- }
- 
-+static void
-+fdls_start_tport_timer(struct fnic_iport_s *iport,
-+					   struct fnic_tport_s *tport, int timeout)
-+{
-+	u64 fabric_tov;
-+	struct fnic *fnic = iport->fnic;
-+
-+	if (tport->timer_pending) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport fcid 0x%x: Canceling disc timer\n",
-+					 tport->fcid);
-+		fnic_del_tport_timer_sync();
-+		tport->timer_pending = 0;
-+	}
-+
-+	if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED))
-+		tport->retry_counter++;
-+
-+	fabric_tov = jiffies + msecs_to_jiffies(timeout);
-+	mod_timer(&tport->retry_timer, round_jiffies(fabric_tov));
-+	tport->timer_pending = 1;
-+}
-+
-+void
-+fdls_send_tport_abts(struct fnic_iport_s *iport,
-+					 struct fnic_tport_s *tport)
-+{
-+	uint8_t s_id[3];
-+	uint8_t d_id[3];
-+	struct fnic *fnic = iport->fnic;
-+
-+	struct fc_hdr_s fc_abts_s = {
-+		.r_ctl = 0x81,			/* ABTS */
-+		.cs_ctl = 0x00, .type = 0x00, .f_ctl = FNIC_REQ_ABTS_FCTL, .seq_id =
-+			0x00, .df_ctl = 0x00, .seq_cnt = 0x0000, .rx_id = 0xFFFF,
-+		.param = 0x00000000,	/* bit:0 = 0 Abort a exchange */
-+	};
-+
-+	struct fc_hdr_s *pfc_abts = &fc_abts_s;
-+
-+	hton24(s_id, iport->fcid);
-+	hton24(d_id, tport->fcid);
-+	FNIC_SET_S_ID(pfc_abts, s_id);
-+	FNIC_SET_D_ID(pfc_abts, d_id);
-+	tport->flags |= FNIC_FDLS_TGT_ABORT_ISSUED;
-+
-+	fc_abts_s.ox_id = tport->oxid_used;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "FDLS sending tport abts: tport->state: %d ",
-+				 tport->state);
-+
-+	fnic_send_fcoe_frame(iport, &fc_abts_s, sizeof(struct fc_hdr_s));
-+	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
-+	fdls_start_tport_timer(iport, tport, 2 * iport->r_a_tov);
-+}
-+
- static void fdls_send_fabric_abts(struct fnic_iport_s *iport)
- {
- 	uint8_t fcid[3];
-@@ -338,6 +450,169 @@ static void fdls_send_gpn_ft(struct fnic_iport_s *iport, int fdls_state)
- 	fdls_set_state((&iport->fabric), fdls_state);
- }
- 
-+static void
-+fdls_send_tgt_adisc(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
-+{
-+	struct fc_els_adisc_s adisc;
-+	uint8_t s_id[3];
-+	uint8_t d_id[3];
-+	uint16_t oxid;
-+	struct fnic *fnic = iport->fnic;
-+
-+	memset(&adisc, 0, sizeof(struct fc_els_adisc_s));
-+	adisc.fchdr.r_ctl = 0x22;
-+	adisc.fchdr.type = 0x01;
-+	adisc.fchdr.f_ctl = FNIC_ELS_REQ_FCTL;
-+	adisc.fchdr.rx_id = 0xFFFF;
-+
-+	hton24(s_id, iport->fcid);
-+	hton24(d_id, tport->fcid);
-+	FNIC_SET_S_ID((&adisc.fchdr), s_id);
-+	FNIC_SET_D_ID((&adisc.fchdr), d_id);
-+
-+	oxid = htons(fdls_alloc_tgt_oxid(iport, FDLS_ADISC_OXID_BASE));
-+	if (oxid == 0xFFFF) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Failed to allocate OXID to send ADISC %p", iport);
-+		return;
-+	}
-+
-+	tport->oxid_used = oxid;
-+	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
-+
-+	FNIC_SET_OX_ID((&adisc.fchdr), oxid);
-+	FNIC_SET_NPORT_NAME(adisc, iport->wwpn);
-+	FNIC_SET_NODE_NAME(adisc, iport->wwnn);
-+
-+	memcpy(adisc.fcid, s_id, 3);
-+	adisc.command = FNIC_ELS_ADISC_REQ;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "sending ADISC to tgt fcid: 0x%x", tport->fcid);
-+
-+	fnic_send_fcoe_frame(iport, &adisc, sizeof(struct fc_els_adisc_s));
-+	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
-+	fdls_start_tport_timer(iport, tport, 2 * iport->e_d_tov);
-+}
-+
-+void fdls_delete_tport(struct fnic_iport_s *iport,
-+					   struct fnic_tport_s *tport)
-+{
-+	struct fnic_tport_event_s *tport_del_evt;
-+	struct fnic *fnic = iport->fnic;
-+
-+	if ((tport->state == FDLS_TGT_STATE_OFFLINING)
-+		|| (tport->state == FDLS_TGT_STATE_OFFLINE))
-+		return;
-+
-+	fdls_set_tport_state(tport, FDLS_TGT_STATE_OFFLINING);
-+	/*
-+	 * By setting this flag, the tport will not be seen in a look-up
-+	 * in an RSCN. Even if we move to multithreaded model, this tport
-+	 * will be destroyed and a new RSCN will have to create a new one
-+	 */
-+	tport->flags |= FNIC_FDLS_TPORT_TERMINATING;
-+
-+	if (tport->timer_pending) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport fcid 0x%x: Canceling disc timer\n",
-+					 tport->fcid);
-+		fnic_del_tport_timer_sync();
-+		tport->timer_pending = 0;
-+	}
-+
-+	if (IS_FNIC_FCP_INITIATOR(fnic)) {
-+		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
-+		fnic_rport_exch_reset(iport->fnic, tport->fcid);
-+		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
-+
-+		if (tport->flags & FNIC_FDLS_SCSI_REGISTERED) {
-+			tport_del_evt =
-+				kzalloc(sizeof(struct fnic_tport_event_s), GFP_ATOMIC);
-+			if (!tport_del_evt) {
-+				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Failed to allocate memory for tport fcid: 0x%0x\n",
-+					 tport->fcid);
-+				return;
-+			}
-+			tport_del_evt->event = TGT_EV_RPORT_DEL;
-+			tport_del_evt->arg1 = (void *) tport;
-+			list_add_tail(&tport_del_evt->links, &fnic->tport_event_list);
-+			queue_work(fnic_event_queue, &fnic->tport_work);
-+		} else {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "tport 0x%x not reg with scsi_transport. Freeing locally",
-+				 tport->fcid);
-+			list_del(&tport->links);
-+			kfree(tport);
-+		}
-+	}
-+}
-+
-+static void
-+fdls_send_tgt_plogi(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
-+{
-+	struct fc_els_s plogi;
-+	uint8_t s_id[3];
-+	uint8_t d_id[3];
-+	uint16_t oxid;
-+	struct fnic *fnic = iport->fnic;
-+	uint32_t timeout;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Send tgt PLOGI to fcid: 0x%x", tport->fcid);
-+
-+	memcpy(&plogi, &fnic_plogi_req, sizeof(struct fc_els_s));
-+
-+	hton24(s_id, iport->fcid);
-+	hton24(d_id, tport->fcid);
-+
-+	FNIC_SET_S_ID((&plogi.fchdr), s_id);
-+	FNIC_SET_D_ID((&plogi.fchdr), d_id);
-+	FNIC_SET_RDF_SIZE(plogi.u.csp_plogi, iport->max_payload_size);
-+
-+	oxid = htons(fdls_alloc_tgt_oxid(iport, FDLS_PLOGI_OXID_BASE));
-+	if (oxid == 0xFFFF) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "0x%x: Failed to allocate oxid to send PLOGI to fcid: 0x%x",
-+				 iport->fcid, tport->fcid);
-+		return;
-+	}
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "send tgt PLOGI: tgt fcid: 0x%x oxid: 0x%x", tport->fcid,
-+				 ntohs(oxid));
-+	tport->oxid_used = oxid;
-+	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
-+
-+	FNIC_SET_OX_ID((&plogi.fchdr), oxid);
-+	FNIC_SET_NPORT_NAME(plogi, iport->wwpn);
-+	FNIC_SET_NODE_NAME(plogi, iport->wwnn);
-+
-+	timeout = max(2 * iport->e_d_tov, iport->plogi_timeout);
-+
-+	fnic_send_fcoe_frame(iport, &plogi, sizeof(struct fc_els_s));
-+	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
-+	fdls_start_tport_timer(iport, tport, timeout);
-+}
-+
-+static uint16_t
-+fnic_fc_plogi_rsp_rdf(struct fnic_iport_s *iport,
-+					  struct fc_els_s *plogi_rsp)
-+{
-+	uint16_t b2b_rdf_size = ntohs(plogi_rsp->u.csp_plogi.b2b_rdf_size);
-+	uint16_t spc3_rdf_size =
-+		((uint16_t) (plogi_rsp->spc3[6] << 8 | plogi_rsp->spc3[7]) &
-+		 FNIC_FC_C3_RDF);
-+	struct fnic *fnic = iport->fnic;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "MFS: b2b_rdf_size: 0x%x spc3_rdf_size: 0x%x",
-+			 b2b_rdf_size, spc3_rdf_size);
-+
-+	return MIN(b2b_rdf_size, spc3_rdf_size);
-+}
-+
- static void fdls_send_register_fc4_types(struct fnic_iport_s *iport)
- {
- 	struct fc_rft_id rft_id;
-@@ -387,6 +662,47 @@ static void fdls_send_register_fc4_features(struct fnic_iport_s *iport)
+ static void fdls_tport_timer_callback(struct timer_list *t);
+@@ -453,6 +516,36 @@ static void fdls_send_fabric_plogi(struct fnic_iport_s *iport)
  	fdls_start_fabric_timer(iport, 2 * iport->e_d_tov);
  }
  
-+static void
-+fdls_send_tgt_prli(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
++static void fdls_send_fdmi_plogi(struct fnic_iport_s *iport)
 +{
-+	struct fc_els_prli_s prli;
-+	uint8_t s_id[3];
-+	uint8_t d_id[3];
-+	uint16_t oxid;
++	struct fc_els_s plogi;
++	struct fc_hdr_s *fchdr = &plogi.fchdr;
++	uint8_t fcid[3];
 +	struct fnic *fnic = iport->fnic;
-+	uint32_t timeout;
++	u64 fdmi_tov;
 +
 +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "FDLS sending PRLI to tgt: 0x%x", tport->fcid);
++				 "fcid: 0x%x: FDLS send FDMI PLOGI", iport->fcid);
 +
-+	oxid = htons(fdls_alloc_tgt_oxid(iport, FDLS_PRLI_OXID_BASE));
-+	if (oxid == 0xFFFF) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Failed to allocate OXID to send PRLI %p", iport);
-+		return;
-+	}
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "FDLS sending PRLI to tgt: 0x%x OXID: 0x%x", tport->fcid,
-+				 ntohs(oxid));
++	memcpy(&plogi, &fnic_plogi_req, sizeof(plogi));
 +
-+	tport->oxid_used = oxid;
-+	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
-+	memcpy(&prli, &fnic_prli_req, sizeof(struct fc_els_prli_s));
++	hton24(fcid, iport->fcid);
 +
-+	hton24(s_id, iport->fcid);
-+	hton24(d_id, tport->fcid);
++	FNIC_SET_S_ID(fchdr, fcid);
++	hton24(fcid, 0XFFFFFA);
++	FNIC_SET_D_ID(fchdr, fcid);
++	FNIC_SET_OX_ID(fchdr, FNIC_PLOGI_FDMI_OXID);
++	FNIC_SET_NPORT_NAME(plogi, iport->wwpn);
++	FNIC_SET_NODE_NAME(plogi, iport->wwnn);
++	FNIC_SET_RDF_SIZE(plogi.u.csp_plogi, iport->max_payload_size);
 +
-+	FNIC_SET_S_ID((&prli.fchdr), s_id);
-+	FNIC_SET_D_ID((&prli.fchdr), d_id);
-+	FNIC_SET_OX_ID((&prli.fchdr), oxid);
++	fnic_send_fcoe_frame(iport, &plogi, sizeof(struct fc_els_s));
 +
-+	timeout = max(2 * iport->e_d_tov, iport->plogi_timeout);
-+
-+	fnic_send_fcoe_frame(iport, &prli, sizeof(struct fc_els_prli_s));
-+	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
-+	fdls_start_tport_timer(iport, tport, timeout);
++	fdmi_tov = jiffies + msecs_to_jiffies(5000);
++	mod_timer(&iport->fabric.fdmi_timer, round_jiffies(fdmi_tov));
++	iport->fabric.fdmi_pending = 1;
 +}
 +
- /***********************************************************************
-  * fdls_send_fabric_logo
-  *
-@@ -434,6 +750,208 @@ void fdls_send_fabric_logo(struct fnic_iport_s *iport)
- 	fnic_send_fcoe_frame(iport, &logo, sizeof(struct fc_logo_req_s));
+ static void fdls_send_rpn_id(struct fnic_iport_s *iport)
+ {
+ 	struct fc_rpn_id_s rpn_id;
+@@ -1015,6 +1108,92 @@ struct fnic_tport_s *fnic_find_tport_by_wwpn(struct fnic_iport_s *iport,
+ 	return NULL;
  }
  
-+/***********************************************************************
-+ * fdls_tgt_logout
-+ *
-+ * \brief Send plogo to the remote port
-+ *
-+ * \param[in]  iport   Handle to fnic iport. remote port
-+ *
-+ * \retval void
-+ *
-+ * \note This function does not change or check the fabric/tport state.
-+ *       It the caller responsibility to set the appropriate tport/fabric
-+ *       state when this is called. Normall fdls_tgt_state_plogo.
-+ *       fdls_set_tport_state(tport, fdls_tgt_state_plogo)
-+ *
-+ *\note This could be used to send plogo to nameserver process
-+ *       also not just target processes
-+ *
-+ ***********************************************************************/
-+void fdls_tgt_logout(struct fnic_iport_s *iport,
-+					 struct fnic_tport_s *tport)
++static void fdls_fdmi_register_hba(struct fnic_iport_s *iport)
 +{
-+	struct fc_logo_req_s logo;
-+	uint8_t s_id[3];
-+	uint8_t d_id[3];
++	struct fc_fdmi_rhba_s fdmi_rhba;
++	uint8_t fcid[3];
++	uint16_t len;
++	int err;
 +	struct fnic *fnic = iport->fnic;
++	struct vnic_devcmd_fw_info *fw_info = NULL;
 +
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Sending logo to tport fcid: 0x%x", tport->fcid);
-+	memcpy(&logo, &fnic_logo_req, sizeof(struct fc_logo_req_s));
++	memcpy(&fdmi_rhba, &fnic_fdmi_rhba, sizeof(struct fc_fdmi_rhba_s));
 +
-+	hton24(s_id, iport->fcid);
-+	hton24(d_id, tport->fcid);
++	hton24(fcid, iport->fcid);
++	FNIC_SET_S_ID((&fdmi_rhba.fchdr), fcid);
++	fdmi_rhba.hba_identifier = htonll(iport->wwpn);
++	fdmi_rhba.port_name = htonll(iport->wwpn);
++	fdmi_rhba.node_name = htonll(iport->wwnn);
 +
-+	FNIC_SET_S_ID((&logo.fchdr), s_id);
-+	FNIC_SET_D_ID((&logo.fchdr), d_id);
-+	FNIC_SET_OX_ID((&logo.fchdr), FNIC_TLOGO_REQ_OXID);
++	err = vnic_dev_fw_info(fnic->vdev, &fw_info);
++	if (!err) {
++		snprintf(fdmi_rhba.serial_num, sizeof(fdmi_rhba.serial_num) - 1,
++				 "%s", fw_info->hw_serial_number);
++		snprintf(fdmi_rhba.hardware_ver,
++				 sizeof(fdmi_rhba.hardware_ver) - 1, "%s",
++				 fw_info->hw_version);
++		strscpy(fdmi_rhba.firmware_ver, fw_info->fw_version,
++				sizeof(fdmi_rhba.firmware_ver) - 1);
 +
-+	memcpy(&logo.fcid, s_id, 3);
-+	logo.wwpn = htonll(iport->wwpn);
++		len = ARRAY_SIZE(fdmi_rhba.model);
++		if (fnic->subsys_desc_len >= len)
++			fnic->subsys_desc_len = len - 1;
++		memcpy(&fdmi_rhba.model, fnic->subsys_desc, fnic->subsys_desc_len);
++		fdmi_rhba.model[fnic->subsys_desc_len] = 0x00;
++	}
 +
-+	fnic_send_fcoe_frame(iport, &logo, sizeof(struct fc_logo_req_s));
++	snprintf(fdmi_rhba.driver_ver, sizeof(fdmi_rhba.driver_ver) - 1, "%s",
++			 DRV_VERSION);
++	snprintf(fdmi_rhba.rom_ver, sizeof(fdmi_rhba.rom_ver) - 1, "%s",
++			 "N/A");
++	fnic_send_fcoe_frame(iport, &fdmi_rhba, sizeof(struct fc_fdmi_rhba_s));
 +}
 +
-+static void fdls_tgt_discovery_start(struct fnic_iport_s *iport)
++static void fdls_fdmi_register_pa(struct fnic_iport_s *iport)
 +{
-+	struct fnic_tport_s *tport, *next;
-+	u32 old_link_down_cnt = iport->fnic->link_down_cnt;
++	struct fc_fdmi_rpa_s fdmi_rpa;
++
++	uint8_t fcid[3];
 +	struct fnic *fnic = iport->fnic;
++	u32 port_speed_bm;
++	u32 port_speed = vnic_dev_port_speed(fnic->vdev);
 +
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "0x%x: Starting FDLS target discovery", iport->fcid);
++	memcpy(&fdmi_rpa, &fnic_fdmi_rpa, sizeof(struct fc_fdmi_rpa_s));
++	hton24(fcid, iport->fcid);
++	FNIC_SET_S_ID((&fdmi_rpa.fchdr), fcid);
++	fdmi_rpa.port_name = htonll(iport->wwpn);
 +
-+	list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
-+		if ((old_link_down_cnt != iport->fnic->link_down_cnt)
-+			|| (iport->state != FNIC_IPORT_STATE_READY)) {
-+			break;
-+		}
-+		/* if we marked the tport as deleted due to GPN_FT
-+		 * We should not send ADISC anymore
-+		 */
-+		if ((tport->state == FDLS_TGT_STATE_OFFLINING) ||
-+			(tport->state == FDLS_TGT_STATE_OFFLINE))
-+			continue;
-+
-+		/* For tports which have received RSCN */
-+		if (tport->flags & FNIC_FDLS_TPORT_SEND_ADISC) {
-+			tport->retry_counter = 0;
-+			fdls_set_tport_state(tport, FDLS_TGT_STATE_ADISC);
-+			tport->flags &= ~FNIC_FDLS_TPORT_SEND_ADISC;
-+			fdls_send_tgt_adisc(iport, tport);
-+			continue;
-+		}
-+		if (fdls_get_tport_state(tport) != FDLS_TGT_STATE_INIT) {
-+			/* Not a new port, skip  */
-+			continue;
-+		}
-+		tport->retry_counter = 0;
-+		fdls_set_tport_state(tport, FDLS_TGT_STATE_PLOGI);
-+		fdls_send_tgt_plogi(iport, tport);
++	/* MDS does not support GIGE speed */
++	switch (port_speed) {
++	case DCEM_PORTSPEED_10G:
++	case DCEM_PORTSPEED_20G:
++		/* There is no bit for 20G */
++		port_speed_bm = 0x010000;
++		break;
++	case DCEM_PORTSPEED_25G:
++		port_speed_bm = 0x080000;
++		break;
++	case DCEM_PORTSPEED_40G:
++	case DCEM_PORTSPEED_4x10G:
++		port_speed_bm = 0x020000;
++		break;
++	case DCEM_PORTSPEED_100G:
++		port_speed_bm = 0x040000;
++		break;
++	default:
++		port_speed_bm = 0x8000;
++		break;
 +	}
-+	fdls_set_state((&iport->fabric), FDLS_STATE_TGT_DISCOVERY);
-+}
-+
-+/*
-+ * Function to restart the IT nexus if we received any out of
-+ * sequence PLOGI/PRLI  response from the target.
-+ * The memory for the new tport structure is allocated
-+ * inside fdls_create_tport and added to the iport's tport list.
-+ * This will get freed later during tport_offline/linkdown
-+ * or module unload. The new_tport pointer will go out of scope
-+ * safely since the memory it is
-+ * pointing to it will be freed later
-+ */
-+static void fdls_target_restart_nexus(struct fnic_tport_s *tport)
-+{
-+	struct fnic_iport_s *iport = tport->iport;
-+	struct fnic_tport_s *new_tport = NULL;
-+	uint32_t fcid;
-+	uint64_t wwpn;
-+	int nexus_restart_count;
-+	struct fnic *fnic = iport->fnic;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "tport fcid: 0x%x state: %d restart_count: %d",
-+				 tport->fcid, tport->state, tport->nexus_restart_count);
-+
-+	fcid = tport->fcid;
-+	wwpn = tport->wwpn;
-+	nexus_restart_count = tport->nexus_restart_count;
-+
-+	fdls_delete_tport(iport, tport);
-+
-+	if (nexus_restart_count >= FNIC_TPORT_MAX_NEXUS_RESTART) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Exceeded nexus restart retries tport: 0x%x", fcid);
-+		return;
-+	}
-+
-+	/*
-+	 * Allocate memory for the new tport and add it to
-+	 * iport's tport list.
-+	 * This memory will be freed during tport_offline/linkdown
-+	 * or module unload. The pointer new_tport is safe to go
-+	 * out of scope when this function returns, since the memory
-+	 * it is pointing to is guaranteed to be freed later
-+	 * as mentioned above.
-+	 */
-+	new_tport = fdls_create_tport(iport, fcid, wwpn);
-+	if (!new_tport) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Error creating new tport: 0x%x", fcid);
-+		return;
-+	}
-+
-+	new_tport->nexus_restart_count = nexus_restart_count + 1;
-+	fdls_send_tgt_plogi(iport, new_tport);
-+	fdls_set_tport_state(new_tport, FDLS_TGT_STATE_PLOGI);
-+}
-+
-+struct fnic_tport_s *fnic_find_tport_by_fcid(struct fnic_iport_s *iport,
-+									 uint32_t fcid)
-+{
-+	struct fnic_tport_s *tport, *next;
-+
-+	list_for_each_entry_safe(tport, next, &(iport->tport_list), links) {
-+		if ((tport->fcid == fcid)
-+			&& !(tport->flags & FNIC_FDLS_TPORT_TERMINATING))
-+			return tport;
-+	}
-+	return NULL;
-+}
-+
-+static struct fnic_tport_s *fdls_create_tport(struct fnic_iport_s *iport,
-+								  uint32_t fcid, uint64_t wwpn)
-+{
-+	struct fnic_tport_s *tport;
-+	struct fnic *fnic = iport->fnic;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "FDLS create tport: fcid: 0x%x wwpn: 0x%llx", fcid, wwpn);
-+
-+	tport = kzalloc(sizeof(struct fnic_tport_s), GFP_ATOMIC);
-+	if (!tport) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Memory allocation failure while creating tport: 0x%x\n",
-+			 fcid);
-+		return NULL;
-+	}
-+
-+	tport->max_payload_size = FNIC_FCOE_MAX_FRAME_SZ;
-+	tport->r_a_tov = FNIC_R_A_TOV_DEF;
-+	tport->e_d_tov = FNIC_E_D_TOV_DEF;
-+	tport->fcid = fcid;
-+	tport->wwpn = wwpn;
-+	tport->iport = iport;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Need to setup tport timer callback");
-+
-+	timer_setup(&tport->retry_timer, fdls_tport_timer_callback, 0);
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Added tport 0x%x", tport->fcid);
-+	fdls_set_tport_state(tport, FDLS_TGT_STATE_INIT);
-+	list_add_tail(&tport->links, &iport->tport_list);
-+	atomic_set(&tport->in_flight, 0);
-+	return tport;
-+}
-+
-+struct fnic_tport_s *fnic_find_tport_by_wwpn(struct fnic_iport_s *iport,
-+									 uint64_t wwpn)
-+{
-+	struct fnic_tport_s *tport, *next;
-+
-+	list_for_each_entry_safe(tport, next, &(iport->tport_list), links) {
-+		if ((tport->wwpn == wwpn)
-+			&& !(tport->flags & FNIC_FDLS_TPORT_TERMINATING))
-+			return tport;
-+	}
-+	return NULL;
++	fdmi_rpa.supported_speed = htonl(port_speed_bm);
++	fdmi_rpa.current_speed = htonl(port_speed_bm);
++	fdmi_rpa.fc4_type[2] = 1;
++	snprintf(fdmi_rpa.os_name, sizeof(fdmi_rpa.os_name) - 1, "host%d",
++			 fnic->lport->host->host_no);
++	snprintf(fdmi_rpa.host_name, sizeof(fdmi_rpa.host_name) - 1, "%s",
++			 utsname()->nodename);
++	fnic_send_fcoe_frame(iport, &fdmi_rpa, sizeof(struct fc_fdmi_rpa_s));
 +}
 +
  void fdls_fabric_timer_callback(struct timer_list *t)
  {
  	struct fnic_fdls_fabric_s *fabric = from_timer(fabric, t, retry_timer);
-@@ -548,98 +1066,614 @@ void fdls_fabric_timer_callback(struct timer_list *t)
- 		else {
- 			/* ABTS has timed out (2*ra_tov), we give up */
- 			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
--						 "ABTS timed out. Starting PLOGI: %p", iport);
--			fnic_fdls_start_plogi(iport);
-+						 "ABTS timed out. Starting PLOGI: %p", iport);
-+			fnic_fdls_start_plogi(iport);
-+		}
-+		break;
-+	case FDLS_STATE_REGISTER_FC4_TYPES:
-+		/* scr received a LS_RJT with busy we retry from here */
-+		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
-+			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_register_fc4_types(iport);
-+			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+			return;
-+		}
-+		/* RFT_ID timed out send abts */
-+		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
-+			fdls_send_fabric_abts(iport);
-+		} else {
-+			/* ABTS has timed out (2*ra_tov), we give up */
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "ABTS timed out. Starting PLOGI: %p", iport);
-+			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
-+		}
-+		break;
-+	case FDLS_STATE_REGISTER_FC4_FEATURES:
-+		/* scr received a LS_RJT with busy we retry from here */
-+		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
-+			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_register_fc4_features(iport);
-+			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+			return;
-+		}
-+		/* scr have timed out send abts */
-+		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED))
-+			fdls_send_fabric_abts(iport);
-+		else {
-+			/* ABTS has timed out (2*ra_tov), we give up */
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "ABTS timed out. Starting PLOGI %p", iport);
-+			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
-+		}
-+		break;
-+	case FDLS_STATE_RSCN_GPN_FT:
-+	case FDLS_STATE_SEND_GPNFT:
-+	case FDLS_STATE_GPN_FT:
-+		/* GPN_FT received a LS_RJT with busy we retry from here */
-+		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
-+			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_gpn_ft(iport, iport->fabric.state);
-+			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+			return;
-+		}
-+		/* gpn_gt have timed out send abts */
-+		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
-+			fdls_send_fabric_abts(iport);
-+		} else {
-+			/*
-+			 * ABTS has timed out have waited (2*ra_tov) can
-+			 * retry safely with same exchange id
-+			 */
-+			if (iport->fabric.retry_counter < FDLS_RETRY_COUNT) {
-+				fdls_send_gpn_ft(iport, iport->fabric.state);
-+			} else {
-+				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "ABTS timeout for fabric GPN_FT. Check name server: %p",
-+					 iport);
-+			}
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+}
-+
-+static void fdls_send_delete_tport_msg(struct fnic_tport_s *tport)
+@@ -1205,6 +1384,23 @@ void fdls_fabric_timer_callback(struct timer_list *t)
+ 	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+ }
+ 
++void fdls_fdmi_timer_callback(struct timer_list *t)
 +{
-+	struct fnic_iport_s *iport = (struct fnic_iport_s *) tport->iport;
-+	struct fnic *fnic = iport->fnic;
-+	struct fnic_tport_event_s *tport_del_evt;
-+
-+	if (!IS_FNIC_FCP_INITIATOR(fnic))
-+		return;
-+
-+	tport_del_evt = kzalloc(sizeof(struct fnic_tport_event_s), GFP_ATOMIC);
-+	if (!tport_del_evt) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Failed to allocate memory for tport event fcid: 0x%x",
-+			 tport->fcid);
-+		return;
-+	}
-+	tport_del_evt->event = TGT_EV_TPORT_DELETE;
-+	tport_del_evt->arg1 = (void *) tport;
-+	list_add_tail(&tport_del_evt->links, &fnic->tport_event_list);
-+	queue_work(fnic_event_queue, &fnic->tport_work);
-+}
-+
-+static void fdls_tport_timer_callback(struct timer_list *t)
-+{
-+	struct fnic_tport_s *tport = from_timer(tport, t, retry_timer);
-+	struct fnic_iport_s *iport = (struct fnic_iport_s *) tport->iport;
-+	struct fnic *fnic = iport->fnic;
-+	uint16_t oxid;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&fnic->fnic_lock, flags);
-+	if (!tport->timer_pending) {
-+		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+		return;
-+	}
-+
-+	if (iport->state != FNIC_IPORT_STATE_READY) {
-+		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+		return;
-+	}
-+
-+	if (tport->del_timer_inprogress) {
-+		tport->del_timer_inprogress = 0;
-+		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "tport_del_timer inprogress. Skip timer cb tport fcid: 0x%x\n",
-+			 tport->fcid);
-+		return;
-+	}
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+		 "tport fcid: 0x%x timer pending: %d state: %d retry counter: %d",
-+		 tport->fcid, tport->timer_pending, tport->state,
-+		 tport->retry_counter);
-+
-+	tport->timer_pending = 0;
-+	oxid = ntohs(tport->oxid_used);
-+
-+	/* We retry plogi/prli/adisc frames depending on the tport state */
-+	switch (tport->state) {
-+	case FDLS_TGT_STATE_PLOGI:
-+		/* PLOGI frame received a LS_RJT with busy, we retry from here */
-+		if ((tport->flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (tport->retry_counter < iport->max_plogi_retries)) {
-+			fdls_free_tgt_oxid(iport, oxid);
-+			tport->flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_tgt_plogi(iport, tport);
-+			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+			return;
-+		}
-+		/* Plogi frame has timed out 2*ed_tov send abts */
-+		if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+			fdls_send_tport_abts(iport, tport);
-+		} else if (tport->retry_counter < iport->max_plogi_retries) {
-+			/*
-+			 * ABTS has timed out have waited (2*ra_tov)
-+			 * can retry safely
-+			 * even if with same exchange id
-+			 */
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_plogi(iport, tport);
-+		} else {
-+			/* exceeded plogi retry count */
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_delete_tport_msg(tport);
-+		}
-+		break;
-+	case FDLS_TGT_STATE_PRLI:
-+		/* PRLI received a LS_RJT with busy , hence we retry from here */
-+		if ((tport->flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (tport->retry_counter < FDLS_RETRY_COUNT)) {
-+			fdls_free_tgt_oxid(iport, oxid);
-+			tport->flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_tgt_prli(iport, tport);
-+			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+			return;
-+		}
-+		/* PRLI has time out 2*ed_tov send abts */
-+		if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+			fdls_send_tport_abts(iport, tport);
-+		} else {
-+			/* ABTS has timed out for prli, we go back to PLOGI */
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_plogi(iport, tport);
-+			fdls_set_tport_state(tport, FDLS_TGT_STATE_PLOGI);
-+		}
-+		break;
-+	case FDLS_TGT_STATE_ADISC:
-+		/* ADISC timed out send a ABTS */
-+		if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+			fdls_send_tport_abts(iport, tport);
-+			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+			return;
-+		} else if ((tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)
-+				   && (tport->retry_counter < FDLS_RETRY_COUNT)) {
-+			/*
-+			 * ABTS has timed out have waited (2*ra_tov) can
-+			 * retry safely even if with same exchange id
-+			 */
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_adisc(iport, tport);
-+
-+			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+			return;
-+		}
-+		/* exceeded retry count */
-+		fdls_free_tgt_oxid(iport, oxid);
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "ADISC not responding. Deleting target port: 0x%x",
-+				 tport->fcid);
-+		fdls_send_delete_tport_msg(tport);
-+		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+		return;
-+	default:
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Unknown tport state: 0x%x", tport->state);
-+		break;
-+	}
-+	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+}
-+
-+static void fnic_fdls_start_flogi(struct fnic_iport_s *iport)
-+{
-+	iport->fabric.retry_counter = 0;
-+	fdls_send_fabric_flogi(iport);
-+	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_FLOGI);
-+	iport->fabric.flags = 0;
-+}
-+
-+static void fnic_fdls_start_plogi(struct fnic_iport_s *iport)
-+{
-+	iport->fabric.retry_counter = 0;
-+	fdls_send_fabric_plogi(iport);
-+	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_PLOGI);
-+	iport->fabric.flags &= ~FNIC_FDLS_FABRIC_ABORT_ISSUED;
-+}
-+
-+static void
-+fdls_process_tgt_adisc_rsp(struct fnic_iport_s *iport,
-+						   struct fc_hdr_s *fchdr)
-+{
-+	uint32_t tgt_fcid;
-+	struct fnic_tport_s *tport;
-+	uint8_t *fcid;
-+	uint64_t frame_wwnn;
-+	uint64_t frame_wwpn;
-+	uint16_t oxid;
-+	struct fc_els_adisc_ls_acc_s *adisc_rsp =
-+		(struct fc_els_adisc_ls_acc_s *) fchdr;
-+	struct fc_els_reject_s *els_rjt = (struct fc_els_reject_s *) fchdr;
++	struct fnic_fdls_fabric_s *fabric = from_timer(fabric, t, fdmi_timer);
++	struct fnic_iport_s *iport =
++		container_of(fabric, struct fnic_iport_s, fabric);
 +	struct fnic *fnic = iport->fnic;
 +
-+	fcid = FNIC_GET_S_ID(fchdr);
-+	tgt_fcid = ntoh24(fcid);
-+	tport = fnic_find_tport_by_fcid(iport, tgt_fcid);
-+
-+	if (!tport) {
++	if (iport->fabric.fdmi_retry < 7) {
++		iport->fabric.fdmi_retry++;
 +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Tgt ADISC response tport not found: 0x%x", tgt_fcid);
-+		return;
-+	}
-+	if ((iport->state != FNIC_IPORT_STATE_READY)
-+		|| (tport->state != FDLS_TGT_STATE_ADISC)
-+		|| (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Dropping this ADISC response");
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "iport state: %d tport state: %d Is abort issued on PRLI? %d",
-+			 iport->state, tport->state,
-+			 (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED));
-+		return;
-+	}
-+	if (ntohs(fchdr->ox_id) != ntohs(tport->oxid_used)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Dropping frame from target: 0x%x",
-+			 tgt_fcid);
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Reason: Stale ADISC/Aborted ADISC/OOO frame delivery");
-+		return;
-+	}
-+
-+	switch (adisc_rsp->command) {
-+	case FC_LS_ACC:
-+		if (tport->timer_pending) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "tport 0x%p Canceling fabric disc timer\n",
-+						 tport);
-+			fnic_del_tport_timer_sync();
-+		}
-+		tport->timer_pending = 0;
-+		tport->retry_counter = 0;
-+		oxid = ntohs(fchdr->ox_id);
-+		fdls_free_tgt_oxid(iport, oxid);
-+		frame_wwnn = htonll(adisc_rsp->node_name);
-+		frame_wwpn = htonll(adisc_rsp->nport_name);
-+		if ((frame_wwnn == tport->wwnn) && (frame_wwpn == tport->wwpn)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "ADISC accepted from target: 0x%x. Target logged in",
-+				 tgt_fcid);
-+			fdls_set_tport_state(tport, FDLS_TGT_STATE_READY);
-+		} else {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "Error mismatch frame: ADISC");
-+		}
-+		break;
-+
-+	case FC_LS_REJ:
-+		if (((els_rjt->reason_code == FC_ELS_RJT_LOGICAL_BUSY)
-+			 || (els_rjt->reason_code == FC_ELS_RJT_BUSY))
-+			&& (tport->retry_counter < FDLS_RETRY_COUNT)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "ADISC ret FC_LS_REJ BUSY. Retry from timer routine: 0x%x",
-+				 tgt_fcid);
-+
-+			/* Retry ADISC again from the timer routine. */
-+			tport->flags |= FNIC_FDLS_RETRY_FRAME;
-+		} else {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "ADISC returned FC_LS_REJ from target: 0x%x",
-+						 tgt_fcid);
-+			oxid = ntohs(fchdr->ox_id);
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_delete_tport(iport, tport);
-+		}
-+		break;
++					 "retry fdmi timer %d", iport->fabric.fdmi_retry);
++		fdls_send_fdmi_plogi(iport);
++	} else {
++		iport->fabric.fdmi_pending = 0;
 +	}
 +}
 +
+ static void fdls_send_delete_tport_msg(struct fnic_tport_s *tport)
+ {
+ 	struct fnic_iport_s *iport = (struct fnic_iport_s *) tport->iport;
+@@ -1360,6 +1556,15 @@ static void fnic_fdls_start_plogi(struct fnic_iport_s *iport)
+ 	fdls_send_fabric_plogi(iport);
+ 	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_PLOGI);
+ 	iport->fabric.flags &= ~FNIC_FDLS_FABRIC_ABORT_ISSUED;
 +
-+static void
-+fdls_process_tgt_plogi_rsp(struct fnic_iport_s *iport,
-+						   struct fc_hdr_s *fchdr)
++	if ((fnic_fdmi_support == 1) && (!(iport->flags & FNIC_FDMI_ACTIVE))) {
++		/* we can do FDMI at the same time */
++		iport->fabric.fdmi_retry = 0;
++		timer_setup(&iport->fabric.fdmi_timer, fdls_fdmi_timer_callback,
++					0);
++		fdls_send_fdmi_plogi(iport);
++		iport->flags |= FNIC_FDMI_ACTIVE;
++	}
+ }
+ 
+ static void
+@@ -2440,6 +2645,69 @@ fdls_process_fabric_plogi_rsp(struct fnic_iport_s *iport,
+ 	}
+ }
+ 
++static void fdls_process_fdmi_plogi_rsp(struct fnic_iport_s *iport,
++								struct fc_hdr_s *fchdr)
 +{
-+	uint32_t tgt_fcid;
-+	struct fnic_tport_s *tport;
-+	uint8_t *fcid;
-+	uint16_t oxid;
 +	struct fc_els_s *plogi_rsp = (struct fc_els_s *) fchdr;
 +	struct fc_els_reject_s *els_rjt = (struct fc_els_reject_s *) fchdr;
-+	int max_payload_size;
 +	struct fnic *fnic = iport->fnic;
++	u64 fdmi_tov;
 +
-+	fcid = FNIC_GET_S_ID(fchdr);
-+	tgt_fcid = ntoh24(fcid);
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "FDLS processing target PLOGI response: tgt_fcid: 0x%x",
-+				 tgt_fcid);
-+
-+	tport = fnic_find_tport_by_fcid(iport, tgt_fcid);
-+	if (!tport) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport not found: 0x%x", tgt_fcid);
-+		return;
-+	}
-+	if ((iport->state != FNIC_IPORT_STATE_READY)
-+		|| (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Dropping frame! iport state: %d tport state: %d",
-+					 iport->state, tport->state);
-+		return;
-+	}
-+
-+	if (tport->state != FDLS_TGT_STATE_PLOGI) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "PLOGI rsp recvd in wrong state. Restarting nexus");
-+		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
-+		fdls_free_tgt_oxid(iport, oxid);
-+		fdls_target_restart_nexus(tport);
-+		return;
-+	}
-+
-+	if (ntohs(fchdr->ox_id) != ntohs(tport->oxid_used)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "PLOGI response from target: 0x%x. Dropping frame",
-+			 tgt_fcid);
-+		return;
-+	}
-+
-+	switch (plogi_rsp->command) {
-+	case FC_LS_ACC:
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PLOGI accepted by target: 0x%x", tgt_fcid);
-+		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
-+		fdls_free_tgt_oxid(iport, oxid);
-+		break;
-+
-+	case FC_LS_REJ:
-+		if (((els_rjt->reason_code == FC_ELS_RJT_LOGICAL_BUSY)
-+			 || (els_rjt->reason_code == FC_ELS_RJT_BUSY))
-+			&& (tport->retry_counter < iport->max_plogi_retries)) {
++	if (ntoh24(fchdr->sid) == 0XFFFFFA) {
++		del_timer_sync(&iport->fabric.fdmi_timer);
++		iport->fabric.fdmi_pending = 0;
++		switch (plogi_rsp->command) {
++		case FC_LS_ACC:
 +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "PLOGI ret FC_LS_REJ BUSY. Retry from timer routine: 0x%x",
-+				 tgt_fcid);
-+			/* Retry plogi again from the timer routine. */
-+			tport->flags |= FNIC_FDLS_RETRY_FRAME;
-+			return;
-+		}
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PLOGI returned FC_LS_REJ from target: 0x%x",
-+					 tgt_fcid);
-+		oxid = ntohs(fchdr->ox_id);
-+		fdls_free_tgt_oxid(iport, oxid);
-+		fdls_delete_tport(iport, tport);
-+		return;
-+
-+	default:
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PLOGI not accepted from target fcid: 0x%x",
-+					 tgt_fcid);
-+		return;
-+	}
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Found the PLOGI target: 0x%x and state: %d",
-+				 (unsigned int) tgt_fcid, tport->state);
-+
-+	if (tport->timer_pending) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport fcid 0x%x: Canceling disc timer\n",
-+					 tport->fcid);
-+		fnic_del_tport_timer_sync();
-+	}
-+
-+	tport->timer_pending = 0;
-+	tport->wwpn = htonll(plogi_rsp->nport_name);
-+	tport->wwnn = htonll(plogi_rsp->node_name);
-+
-+	/* Learn the Service Params */
-+
-+	/* Max frame size - choose the lowest */
-+	max_payload_size = fnic_fc_plogi_rsp_rdf(iport, plogi_rsp);
-+	tport->max_payload_size =
-+		MIN(max_payload_size, iport->max_payload_size);
-+
-+	if (tport->max_payload_size < FNIC_MIN_DATA_FIELD_SIZE) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "MFS: tport max frame size below spec bounds: %d",
-+			 tport->max_payload_size);
-+		tport->max_payload_size = FNIC_MIN_DATA_FIELD_SIZE;
-+	}
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+		 "MAX frame size: %d iport max_payload_size: %d tport mfs: %d",
-+		 max_payload_size, iport->max_payload_size,
-+		 tport->max_payload_size);
-+
-+	tport->max_concur_seqs = FNIC_FC_PLOGI_RSP_CONCUR_SEQ(plogi_rsp);
-+
-+	tport->retry_counter = 0;
-+	fdls_set_tport_state(tport, FDLS_TGT_STATE_PRLI);
-+	fdls_send_tgt_prli(iport, tport);
-+}
-+
-+static void
-+fdls_process_tgt_prli_rsp(struct fnic_iport_s *iport,
-+						  struct fc_hdr_s *fchdr)
-+{
-+	uint32_t tgt_fcid;
-+	struct fnic_tport_s *tport;
-+	uint8_t *fcid;
-+	uint16_t oxid;
-+	struct fc_els_prli_s *prli_rsp = (struct fc_els_prli_s *) fchdr;
-+	struct fc_els_reject_s *els_rjt = (struct fc_els_reject_s *) fchdr;
-+	struct fnic_tport_event_s *tport_add_evt;
-+	struct fnic *fnic = iport->fnic;
-+	bool mismatched_tgt = false;
-+
-+	fcid = FNIC_GET_S_ID(fchdr);
-+	tgt_fcid = ntoh24(fcid);
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "FDLS process tgt PRLI response: 0x%x", tgt_fcid);
-+
-+	tport = fnic_find_tport_by_fcid(iport, tgt_fcid);
-+	if (!tport) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport not found: 0x%x", tgt_fcid);
-+		/* Handle or just drop? */
-+		return;
-+	}
-+
-+	if ((iport->state != FNIC_IPORT_STATE_READY)
-+		|| (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Dropping frame! iport st: %d tport st: %d tport fcid: 0x%x",
-+			 iport->state, tport->state, tport->fcid);
-+		return;
-+	}
-+
-+	if (tport->state != FDLS_TGT_STATE_PRLI) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PRLI rsp recvd in wrong state. Restarting nexus");
-+		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
-+		fdls_free_tgt_oxid(iport, oxid);
-+		fdls_target_restart_nexus(tport);
-+		return;
-+	}
-+
-+	if (ntohs(fchdr->ox_id) != ntohs(tport->oxid_used)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Dropping PRLI response from target: 0x%x ",
-+			 tgt_fcid);
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Reason: Stale PRLI response/Aborted PDISC/OOO frame delivery");
-+		return;
-+	}
-+
-+	switch (prli_rsp->command) {
-+	case FC_LS_ACC:
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PRLI accepted from target: 0x%x", tgt_fcid);
-+		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
-+		fdls_free_tgt_oxid(iport, oxid);
-+
-+		if (prli_rsp->sp.type != FC_FC4_TYPE_SCSI) {
++				 "FDLS process fdmi PLOGI response status: FC_LS_ACC\n");
 +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "mismatched target zoned with FC SCSI initiator: 0x%x",
-+				 tgt_fcid);
-+			mismatched_tgt = true;
- 		}
--		break;
--	case FDLS_STATE_REGISTER_FC4_TYPES:
--		/* scr received a LS_RJT with busy we retry from here */
--		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
--			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
--			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
--			fdls_send_register_fc4_types(iport);
--			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+		if (mismatched_tgt) {
-+			fdls_tgt_logout(iport, tport);
-+			fdls_delete_tport(iport, tport);
- 			return;
- 		}
--		/* RFT_ID timed out send abts */
--		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
--			fdls_send_fabric_abts(iport);
--		} else {
--			/* ABTS has timed out (2*ra_tov), we give up */
--			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
--						 "ABTS timed out. Starting PLOGI: %p", iport);
--			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
--		}
- 		break;
--	case FDLS_STATE_REGISTER_FC4_FEATURES:
--		/* scr received a LS_RJT with busy we retry from here */
--		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
--			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
--			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
--			fdls_send_register_fc4_features(iport);
--			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
--			return;
--		}
--		/* scr have timed out send abts */
--		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED))
--			fdls_send_fabric_abts(iport);
--		else {
--			/* ABTS has timed out (2*ra_tov), we give up */
-+
-+	case FC_LS_REJ:
-+		if (((els_rjt->reason_code == FC_ELS_RJT_LOGICAL_BUSY)
-+			 || (els_rjt->reason_code == FC_ELS_RJT_BUSY))
-+			&& (tport->retry_counter < FDLS_RETRY_COUNT)) {
-+
- 			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
--						 "ABTS timed out. Starting PLOGI %p", iport);
--			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
--		}
--		break;
--	case FDLS_STATE_RSCN_GPN_FT:
--	case FDLS_STATE_SEND_GPNFT:
--	case FDLS_STATE_GPN_FT:
--		/* GPN_FT received a LS_RJT with busy we retry from here */
--		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
--			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
--			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
--			fdls_send_gpn_ft(iport, iport->fabric.state);
--			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+				 "PRLI ret FC_LS_REJ BUSY. Retry from timer routine: 0x%x",
-+				 tgt_fcid);
-+
-+			/*Retry Plogi again from the timer routine. */
-+			tport->flags |= FNIC_FDLS_RETRY_FRAME;
- 			return;
--		}
--		/* gpn_gt have timed out send abts */
--		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
--			fdls_send_fabric_abts(iport);
- 		} else {
--			/*
--			 * ABTS has timed out have waited (2*ra_tov) can
--			 * retry safely with same exchange id
--			 */
--			if (iport->fabric.retry_counter < FDLS_RETRY_COUNT) {
--				fdls_send_gpn_ft(iport, iport->fabric.state);
--			} else {
--				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
--					 "ABTS timeout for fabric GPN_FT. Check name server: %p",
--					 iport);
--			}
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "PRLI returned FC_LS_REJ from target: 0x%x",
-+						 tgt_fcid);
-+
-+			oxid = ntohs(fchdr->ox_id);
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_tgt_logout(iport, tport);
-+			fdls_delete_tport(iport, tport);
-+			return;
- 		}
- 		break;
-+
- 	default:
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PRLI not accepted from target: 0x%x", tgt_fcid);
-+		return;
- 		break;
- 	}
--	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
--}
- 
--static void fnic_fdls_start_flogi(struct fnic_iport_s *iport)
--{
--	iport->fabric.retry_counter = 0;
--	fdls_send_fabric_flogi(iport);
--	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_FLOGI);
--	iport->fabric.flags = 0;
--}
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Found the PRLI target: 0x%x and state: %d",
-+				 (unsigned int) tgt_fcid, tport->state);
- 
--static void fnic_fdls_start_plogi(struct fnic_iport_s *iport)
--{
--	iport->fabric.retry_counter = 0;
--	fdls_send_fabric_plogi(iport);
--	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_PLOGI);
--	iport->fabric.flags &= ~FNIC_FDLS_FABRIC_ABORT_ISSUED;
-+	if (tport->timer_pending) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport fcid 0x%x: Canceling disc timer\n",
-+					 tport->fcid);
-+		fnic_del_tport_timer_sync();
-+	}
-+	tport->timer_pending = 0;
-+
-+	oxid = ntohs(FNIC_GET_OX_ID(fchdr));
-+	fdls_free_tgt_oxid(iport, oxid);
-+
-+	/* Learn Service Params */
-+	tport->fcp_csp = ntohl(prli_rsp->sp.csp);
-+	tport->retry_counter = 0;
-+
-+	if (prli_rsp->sp.csp & FCP_SPPF_RETRY)
-+		tport->tgt_flags |= FNIC_FC_RP_FLAGS_RETRY;
-+
-+	/* Check if the device plays Target Mode Function */
-+	if (!(tport->fcp_csp & FCP_PRLI_FUNC_TARGET)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Remote port(0x%x): no target support. Deleting it\n",
-+			 tgt_fcid);
-+		fdls_tgt_logout(iport, tport);
-+		fdls_delete_tport(iport, tport);
-+		return;
-+	}
-+
-+	fdls_set_tport_state(tport, FDLS_TGT_STATE_READY);
-+
-+	/* Inform the driver about new target added */
-+	tport_add_evt = kzalloc(sizeof(struct fnic_tport_event_s), GFP_ATOMIC);
-+	if (!tport_add_evt) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "tport event memory allocation failure: 0x%0x\n",
-+				 tport->fcid);
-+		return;
-+	}
-+	tport_add_evt->event = TGT_EV_RPORT_ADD;
-+	tport_add_evt->arg1 = (void *) tport;
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "iport fcid: 0x%x add tport event fcid: 0x%x\n",
-+			 tport->fcid, iport->fcid);
-+	list_add_tail(&tport_add_evt->links, &fnic->tport_event_list);
-+	queue_work(fnic_event_queue, &fnic->tport_work);
- }
- 
-+
- static void
- fdls_process_rff_id_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr)
- {
-@@ -884,6 +1918,106 @@ fdls_process_scr_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr)
- 	}
- }
- 
-+static void
-+fdls_process_gpn_ft_tgt_list(struct fnic_iport_s *iport,
-+							 struct fc_hdr_s *fchdr, int len)
-+{
-+	struct fc_gpn_ft_rsp_iu_s *gpn_ft_tgt;
-+	struct fc_gpn_ft_rsp_iu_s *gpn_ft_tgt_rem;
-+	struct fnic_tport_s *tport, *next;
-+	uint32_t fcid;
-+	uint64_t wwpn;
-+	int rem_len = len;
-+	u32 old_link_down_cnt = iport->fnic->link_down_cnt;
-+	struct fnic *fnic = iport->fnic;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "0x%x: FDLS process GPN_FT tgt list", iport->fcid);
-+
-+	gpn_ft_tgt =
-+		(struct fc_gpn_ft_rsp_iu_s *) ((uint8_t *) fchdr +
-+								   sizeof(struct fc_hdr_s)
-+								   + sizeof(struct fc_ct_hdr_s));
-+	gpn_ft_tgt_rem = gpn_ft_tgt;
-+	len -= sizeof(struct fc_hdr_s) + sizeof(struct fc_ct_hdr_s);
-+
-+	while (rem_len > 0) {
-+
-+		fcid = ntoh24(gpn_ft_tgt->fcid);
-+		wwpn = ntohll(gpn_ft_tgt->wwpn);
-+
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "tport: 0x%x: ctrl:0x%x", fcid, gpn_ft_tgt->ctrl);
-+
-+		if (fcid == iport->fcid) {
-+			if (gpn_ft_tgt->ctrl & FNIC_FC_GPN_LAST_ENTRY)
-+				break;
-+			gpn_ft_tgt++;
-+			rem_len -= sizeof(struct fc_gpn_ft_rsp_iu_s);
-+			continue;
-+		}
-+
-+		tport = fnic_find_tport_by_wwpn(iport, wwpn);
-+		if (!tport) {
-+			/*
-+			 * New port registered with the switch or first time query
-+			 */
-+			tport = fdls_create_tport(iport, fcid, wwpn);
-+			if (!tport)
-+				return;
-+		}
-+		/*
-+		 * check if this was an existing tport with same fcid
-+		 * but whose wwpn has changed now ,then remove it and
-+		 * create a new one
-+		 */
-+		if (tport->fcid != fcid) {
-+			fdls_delete_tport(iport, tport);
-+			tport = fdls_create_tport(iport, fcid, wwpn);
-+			if (!tport)
-+				return;
-+		}
-+
-+		/*
-+		 * If this GPN_FT rsp is after RSCN then mark the tports which
-+		 * matches with the new GPN_FT list, if some tport is not
-+		 * found in GPN_FT we went to delete that tport later.
-+		 */
-+		if (fdls_get_state((&iport->fabric)) == FDLS_STATE_RSCN_GPN_FT)
-+			tport->flags |= FNIC_FDLS_TPORT_IN_GPN_FT_LIST;
-+
-+		if (gpn_ft_tgt->ctrl & FNIC_FC_GPN_LAST_ENTRY)
-+			break;
-+
-+		gpn_ft_tgt++;
-+		rem_len -= sizeof(struct fc_gpn_ft_rsp_iu_s);
-+	}
-+	if (rem_len <= 0) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "GPN_FT response: malformed/corrupt frame rxlen: %d remlen: %d",
-+			 len, rem_len);
-+	}
-+
-+	/*remove those ports which was not listed in GPN_FT */
-+	if (fdls_get_state((&iport->fabric)) == FDLS_STATE_RSCN_GPN_FT) {
-+		list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
-+
-+			if (!(tport->flags & FNIC_FDLS_TPORT_IN_GPN_FT_LIST)) {
-+				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Remove port: 0x%x not found in GPN_FT list",
-+					 tport->fcid);
-+				fdls_delete_tport(iport, tport);
-+			} else {
-+				tport->flags &= ~FNIC_FDLS_TPORT_IN_GPN_FT_LIST;
-+			}
-+			if ((old_link_down_cnt != iport->fnic->link_down_cnt)
-+				|| (iport->state != FNIC_IPORT_STATE_READY)) {
-+				return;
-+			}
-+		}
-+	}
-+}
-+
- static void
- fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr,
- 						int len)
-@@ -892,6 +2026,9 @@ fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr,
- 	struct fc_gpn_ft_s *gpn_ft_rsp = (struct fc_gpn_ft_s *) fchdr;
- 	uint16_t rsp;
- 	uint8_t reason_code;
-+	int count = 0;
-+	struct fnic_tport_s *tport, *next;
-+	u32 old_link_down_cnt = iport->fnic->link_down_cnt;
- 	struct fnic *fnic = iport->fnic;
- 
- 	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-@@ -928,12 +2065,74 @@ fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr,
- 	case FC_CT_ACC:
- 		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
- 					 "0x%x: GPNFT_RSP accept", iport->fcid);
-+		if (iport->fabric.timer_pending) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "0x%x: Canceling fabric disc timer\n",
-+						 iport->fcid);
-+			fnic_del_fabric_timer_sync();
-+		}
-+		iport->fabric.timer_pending = 0;
-+		iport->fabric.retry_counter = 0;
-+		fdls_process_gpn_ft_tgt_list(iport, fchdr, len);
-+
-+		/*
-+		 * iport state can change only if link down event happened
-+		 * We don't need to undo fdls_process_gpn_ft_tgt_list,
-+		 * that will be taken care in next link up event
-+		 */
-+		if (iport->state != FNIC_IPORT_STATE_READY) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Halting target discovery: fab st: %d iport st: %d ",
-+				 fdls_get_state(fdls), iport->state);
-+			break;
-+		}
-+		fdls_tgt_discovery_start(iport);
- 		break;
- 
- 	case FC_CT_REJ:
- 		reason_code = gpn_ft_rsp->fc_ct_hdr.reason_code;
- 		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
- 					 "0x%x: GPNFT_RSP Reject", iport->fcid);
-+
-+		if (((reason_code == FC_CT_RJT_LOGICAL_BUSY)
-+			 || (reason_code == FC_CT_RJT_BUSY))
-+			&& (fdls->retry_counter < FDLS_RETRY_COUNT)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "0x%x: GPNFT_RSP ret REJ/BSY. Retry from timer routine",
++				 "Sending fdmi registration for port 0x%x\n",
 +				 iport->fcid);
-+			/* Retry again from the timer routine */
-+			fdls->flags |= FNIC_FDLS_RETRY_FRAME;
-+		} else {
++
++			fdls_fdmi_register_hba(iport);
++			fdls_fdmi_register_pa(iport);
++			fdmi_tov = jiffies + msecs_to_jiffies(5000);
++			mod_timer(&iport->fabric.fdmi_timer, round_jiffies(fdmi_tov));
++			iport->fabric.fdmi_pending = 2;
++			break;
++		case FC_LS_REJ:
 +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "0x%x: GPNFT_RSP reject", iport->fcid);
-+			if (iport->fabric.timer_pending) {
-+				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+							 "0x%x: Canceling fabric disc timer\n",
-+							 iport->fcid);
-+				fnic_del_fabric_timer_sync();
++				 "Fabric FDMI PLOGI returned FC_LS_REJ reason: 0x%x",
++				 els_rjt->reason_code);
++
++			if (((els_rjt->reason_code == FC_ELS_RJT_LOGICAL_BUSY)
++				 || (els_rjt->reason_code == FC_ELS_RJT_BUSY))
++				&& (iport->fabric.fdmi_retry < 7)) {
++				iport->fabric.fdmi_retry++;
++				fdls_send_fdmi_plogi(iport);
 +			}
-+			iport->fabric.timer_pending = 0;
-+			iport->fabric.retry_counter = 0;
-+			/*
-+			 * If GPN_FT ls_rjt then we should delete
-+			 * all existing tports
-+			 */
-+			count = 0;
-+			list_for_each_entry_safe(tport, next, &iport->tport_list,
-+									 links) {
-+				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+							 "GPN_FT_REJECT: Remove port: 0x%x",
-+							 tport->fcid);
-+				fdls_delete_tport(iport, tport);
-+				if ((old_link_down_cnt != iport->fnic->link_down_cnt)
-+					|| (iport->state != FNIC_IPORT_STATE_READY)) {
-+					return;
-+				}
-+				count++;
-+			}
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "GPN_FT_REJECT: Removed (0x%x) ports", count);
++			break;
++		default:
++			break;
 +		}
- 		break;
- 
- 	default:
-@@ -1342,6 +2541,141 @@ fdls_process_fabric_abts_rsp(struct fnic_iport_s *iport,
- 	}
- }
- 
-+static void
-+fdls_process_tgt_abts_rsp(struct fnic_iport_s *iport,
-+						  struct fc_hdr_s *fchdr)
-+{
-+	uint32_t s_id;
-+	struct fnic_tport_s *tport;
-+	uint32_t tport_state;
-+	struct fc_abts_ba_acc_s *ba_acc;
-+	struct fc_abts_ba_rjt_s *ba_rjt;
-+	uint16_t oxid;
-+	struct fnic *fnic = iport->fnic;
-+
-+	s_id = ntoh24(fchdr->sid);
-+	ba_acc = (struct fc_abts_ba_acc_s *) fchdr;
-+	ba_rjt = (struct fc_abts_ba_rjt_s *) fchdr;
-+
-+	tport = fnic_find_tport_by_fcid(iport, s_id);
-+	if (!tport) {
-+		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+					 "Received tgt abts rsp with invalid SID: 0x%x", s_id);
-+		return;
 +	}
-+
-+	if (tport->timer_pending) {
-+		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+					 "tport 0x%p Canceling fabric disc timer\n", tport);
-+		fnic_del_tport_timer_sync();
-+	}
-+	if (iport->state != FNIC_IPORT_STATE_READY) {
-+		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+					 "Received tgt abts rsp in iport state(%d). Dropping.",
-+					 iport->state);
-+		return;
-+	}
-+	tport->timer_pending = 0;
-+	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
-+	tport_state = tport->state;
-+	oxid = ntohs(fchdr->ox_id);
-+
-+	/*This abort rsp is for ADISC */
-+	if ((oxid >= FDLS_ADISC_OXID_BASE) && (oxid < FDLS_TGT_OXID_POOL_END)) {
-+		if (fchdr->r_ctl == FNIC_BA_ACC_RCTL) {
-+			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+						 "Received tgt ADISC abts response BA_ACC for OX_ID: 0x%x tgt_fcid: 0x%x",
-+						 ba_acc->ox_id, tport->fcid);
-+		} else if (fchdr->r_ctl == FNIC_BA_RJT_RCTL) {
-+			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+				 "ADISC BA_RJT rcvd tport_fcid: 0x%x tport_state: %d ",
-+				 tport->fcid, tport_state);
-+			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+				 "reason code: 0x%x reason code explanation:0x%x ",
-+				 ba_rjt->reason_code, ba_rjt->reason_explanation);
-+		}
-+		if ((tport->retry_counter < FDLS_RETRY_COUNT)
-+			&& (fchdr->r_ctl == FNIC_BA_ACC_RCTL)) {
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_adisc(iport, tport);
-+			return;
-+		}
-+		fdls_free_tgt_oxid(iport, oxid);
-+		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+					 "ADISC not responding. Deleting target port: 0x%x",
-+					 tport->fcid);
-+		fdls_delete_tport(iport, tport);
-+		if ((iport->state == FNIC_IPORT_STATE_READY)
-+			&& (iport->fabric.state != FDLS_STATE_SEND_GPNFT)
-+			&& (iport->fabric.state != FDLS_STATE_RSCN_GPN_FT)) {
-+			fdls_send_gpn_ft(iport, FDLS_STATE_SEND_GPNFT);
-+		}
-+		/*Restart a discovery of targets */
-+		return;
-+	}
-+
-+	/*This abort rsp is for PLOGI */
-+	if ((oxid >= FDLS_PLOGI_OXID_BASE) && (oxid < FDLS_PRLI_OXID_BASE)) {
-+		if (fchdr->r_ctl == FNIC_BA_ACC_RCTL) {
-+			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+				 "Received tgt PLOGI abts response BA_ACC tgt_fcid: 0x%x",
-+				 tport->fcid);
-+		} else if (fchdr->r_ctl == FNIC_BA_RJT_RCTL) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "PLOGI BA_RJT received for tport_fcid: 0x%x OX_ID: 0x%x",
-+				 tport->fcid, fchdr->ox_id);
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "reason code: 0x%x reason code explanation: 0x%x",
-+				  ba_rjt->reason_code, ba_rjt->reason_explanation);
-+		}
-+		if ((tport->retry_counter < iport->max_plogi_retries)
-+			&& (fchdr->r_ctl == FNIC_BA_ACC_RCTL)) {
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_plogi(iport, tport);
-+			return;
-+		}
-+		fdls_free_tgt_oxid(iport, oxid);
-+		fdls_delete_tport(iport, tport);
-+		/*Restart a discovery of targets */
-+		if ((iport->state == FNIC_IPORT_STATE_READY)
-+			&& (iport->fabric.state != FDLS_STATE_SEND_GPNFT)
-+			&& (iport->fabric.state != FDLS_STATE_RSCN_GPN_FT)) {
-+			fdls_send_gpn_ft(iport, FDLS_STATE_SEND_GPNFT);
-+		}
-+		return;
-+	}
-+
-+	/*This abort rsp is for PRLI */
-+	if ((oxid >= FDLS_PRLI_OXID_BASE) && (oxid < FDLS_ADISC_OXID_BASE)) {
-+		if (fchdr->r_ctl == FNIC_BA_ACC_RCTL) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "0x%x: Received tgt PRLI abts response BA_ACC",
-+				 tport->fcid);
-+		} else if (fchdr->r_ctl == FNIC_BA_RJT_RCTL) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "PRLI BA_RJT received for tport_fcid: 0x%x OX_ID: 0x%x ",
-+				 tport->fcid, fchdr->ox_id);
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "reason code: 0x%x reason code explanation: 0x%x",
-+				 ba_rjt->reason_code,
-+				 ba_rjt->reason_explanation);
-+		}
-+		if ((tport->retry_counter < FDLS_RETRY_COUNT)
-+			&& (fchdr->r_ctl == FNIC_BA_ACC_RCTL)) {
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_prli(iport, tport);
-+			return;
-+		}
-+		fdls_free_tgt_oxid(iport, oxid);
-+		fdls_send_tgt_plogi(iport, tport);	/* go back to plogi */
-+		fdls_set_tport_state(tport, FDLS_TGT_STATE_PLOGI);
-+		return;
-+	}
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Received ABTS response for unknown frame %p", iport);
 +}
 +
- /*
-  * Performs a validation for all FCOE frames and return the frame type
-  */
-@@ -1434,6 +2768,42 @@ fnic_fdls_validate_and_get_frame_type(struct fnic_iport_s *iport,
- 		}
- 	}
- 
-+	/* ELS response from a target */
-+	if ((ntohs(oxid) >= FDLS_PLOGI_OXID_BASE)
-+		&& (ntohs(oxid) < FDLS_PRLI_OXID_BASE)) {
-+		if (!FNIC_FC_FRAME_TYPE_ELS(fchdr)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				"Dropping Unknown frame in PLOGI exchange range type: 0x%x.",
-+				fchdr->type);
-+			return -1;
-+		}
-+		return FNIC_TPORT_PLOGI_RSP;
-+	}
-+	if ((ntohs(oxid) >= FDLS_PRLI_OXID_BASE)
-+		&& (ntohs(oxid) < FDLS_ADISC_OXID_BASE)) {
-+		if (!FNIC_FC_FRAME_TYPE_ELS(fchdr)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				"Dropping Unknown frame in PRLI exchange range type: 0x%x.",
-+				fchdr->type);
-+			return -1;
-+		}
-+		return FNIC_TPORT_PRLI_RSP;
-+	}
++static void fdls_process_fdmi_reg_ack(struct fnic_iport_s *iport,
++									  struct fc_hdr_s *fchdr)
++{
++	struct fnic *fnic = iport->fnic;
 +
-+	if ((ntohs(oxid) >= FDLS_ADISC_OXID_BASE)
-+		&& (ntohs(oxid) < FDLS_TGT_OXID_POOL_END)) {
-+		if (!FNIC_FC_FRAME_TYPE_ELS(fchdr)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				"Dropping Unknown frame in ADISC exchange range type: 0x%x.",
-+				fchdr->type);
-+			return -1;
-+		}
-+		return FNIC_TPORT_ADISC_RSP;
-+	}
-+	if (ntohs(oxid) == FNIC_TLOGO_REQ_OXID) {
-+		return FNIC_TPORT_LOGO_RSP;
-+	}
-+
- 	/*response from fabric */
- 	switch (oxid) {
- 
-@@ -1557,6 +2927,21 @@ void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
- 	case FNIC_FABRIC_GPN_FT_RSP:
- 		fdls_process_gpn_ft_rsp(iport, fchdr, len);
- 		break;
-+	case FNIC_TPORT_PLOGI_RSP:
-+		fdls_process_tgt_plogi_rsp(iport, fchdr);
-+		break;
-+	case FNIC_TPORT_PRLI_RSP:
-+		fdls_process_tgt_prli_rsp(iport, fchdr);
-+		break;
-+	case FNIC_TPORT_ADISC_RSP:
-+		fdls_process_tgt_adisc_rsp(iport, fchdr);
-+		break;
-+	case FNIC_TPORT_LOGO_RSP:
-+		/* Logo response from tgt which we have deleted */
++	if (iport->fabric.fdmi_pending > 0) {
++		iport->fabric.fdmi_pending--;
 +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Logo response from tgt: 0x%x",
-+					 ntoh24(fchdr->sid));
++					 "iport fcid: 0x%x: Received FDMI registration ack\n",
++					 iport->fcid);
++
++		if (iport->fabric.fdmi_pending == 0) {
++			del_timer_sync(&iport->fabric.fdmi_timer);
++			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++						 "iport fcid: 0x%x: Canceling FDMI timer\n",
++						 iport->fcid);
++		}
++	}
++}
++
+ static void
+ fdls_process_fabric_abts_rsp(struct fnic_iport_s *iport,
+ 							 struct fc_hdr_s *fchdr)
+@@ -3367,6 +3635,12 @@ fnic_fdls_validate_and_get_frame_type(struct fnic_iport_s *iport,
+ 		}
+ 		return FNIC_FABRIC_PLOGI_RSP;
+ 
++	case FNIC_PLOGI_FDMI_OXID:
++		return FNIC_FDMI_PLOGI_RSP;
++	case FNIC_FDMI_REG_HBA_OXID:
++	case FNIC_FDMI_RPA_OXID:
++		return FNIC_FDMI_RSP;
++
+ 	case FNIC_SCR_REQ_OXID:
+ 		if (type == FC_LS_ACC) {
+ 			if ((s_id != FC_FABRIC_CONTROLLER)
+@@ -3447,6 +3721,9 @@ void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
+ 	case FNIC_FABRIC_PLOGI_RSP:
+ 		fdls_process_fabric_plogi_rsp(iport, fchdr);
+ 		break;
++	case FNIC_FDMI_PLOGI_RSP:
++		fdls_process_fdmi_plogi_rsp(iport, fchdr);
 +		break;
- 	case FNIC_FABRIC_LOGO_RSP:
- 		fdls_process_fabric_logo_rsp(iport, fchdr);
+ 	case FNIC_FABRIC_RPN_RSP:
+ 		fdls_process_rpn_id_rsp(iport, fchdr);
  		break;
-@@ -1566,7 +2951,8 @@ void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
- 		if ((iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)
- 			&& (oxid >= FNIC_FLOGI_OXID && oxid <= FNIC_RFF_REQ_OXID)) {
- 			fdls_process_fabric_abts_rsp(iport, fchdr);
--		}
-+		} else
-+			fdls_process_tgt_abts_rsp(iport, fchdr);
+@@ -3514,9 +3791,13 @@ void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
+ 	case FNIC_ELS_RLS:
+ 		fdls_process_rls_req(iport, fchdr);
  		break;
++	case FNIC_FDMI_RSP:
++		fdls_process_fdmi_reg_ack(iport, fchdr);
++		break;
  	default:
  		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+ 			 "Received unknown FCoE frame of len: %d. Dropping frame", len);
+ 		break;
+ 	}
+ }
++
 diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 2d5f438f2cc4..92cd17efa40f 100644
+index 92cd17efa40f..7d7009197dbc 100644
 --- a/drivers/scsi/fnic/fnic.h
 +++ b/drivers/scsi/fnic/fnic.h
-@@ -79,6 +79,9 @@
+@@ -82,6 +82,72 @@
+ /* Retry supported by rport (returned by PRLI service parameters) */
+ #define FNIC_FC_RP_FLAGS_RETRY            0x1
  
- #define IS_FNIC_FCP_INITIATOR(fnic) (fnic->role == FNIC_ROLE_FCP_INITIATOR)
- 
-+/* Retry supported by rport (returned by PRLI service parameters) */
-+#define FNIC_FC_RP_FLAGS_RETRY            0x1
++/* Cisco vendor id */
++#define PCI_VENDOR_ID_CISCO						0x1137
++#define PCI_DEVICE_ID_CISCO_VIC_FC				0x0045	/* fc vnic */
++
++/* sereno pcie switch */
++#define PCI_DEVICE_ID_CISCO_SERENO             0x004e
++#define PCI_DEVICE_ID_CISCO_CRUZ               0x007a	/* Cruz */
++#define PCI_DEVICE_ID_CISCO_BODEGA             0x0131	/* Bodega */
++#define PCI_DEVICE_ID_CISCO_BEVERLY            0x025f	/* Beverly */
++
++/* Sereno */
++#define PCI_SUBDEVICE_ID_CISCO_VASONA			0x004f	/* vasona mezz */
++#define PCI_SUBDEVICE_ID_CISCO_COTATI			0x0084	/* cotati mlom */
++#define PCI_SUBDEVICE_ID_CISCO_LEXINGTON		0x0085	/* lexington pcie */
++#define PCI_SUBDEVICE_ID_CISCO_ICEHOUSE			0x00cd	/* Icehouse */
++#define PCI_SUBDEVICE_ID_CISCO_KIRKWOODLAKE		0x00ce	/* KirkwoodLake pcie */
++#define PCI_SUBDEVICE_ID_CISCO_SUSANVILLE		0x012e	/* Susanville MLOM */
++#define PCI_SUBDEVICE_ID_CISCO_TORRANCE			0x0139	/* Torrance MLOM */
++
++/* Cruz */
++#define PCI_SUBDEVICE_ID_CISCO_CALISTOGA		0x012c	/* Calistoga MLOM */
++#define PCI_SUBDEVICE_ID_CISCO_MOUNTAINVIEW		0x0137	/* Cruz Mezz */
++/* Cruz MountTian SIOC */
++#define PCI_SUBDEVICE_ID_CISCO_MOUNTTIAN		0x014b
++#define PCI_SUBDEVICE_ID_CISCO_CLEARLAKE		0x014d	/* ClearLake pcie */
++/* Cruz MountTian2 SIOC */
++#define PCI_SUBDEVICE_ID_CISCO_MOUNTTIAN2		0x0157
++#define PCI_SUBDEVICE_ID_CISCO_CLAREMONT		0x015d	/* Claremont MLOM */
++
++/* Bodega */
++/* VIC 1457 PCIe mLOM */
++#define PCI_SUBDEVICE_ID_CISCO_BRADBURY         0x0218
++#define PCI_SUBDEVICE_ID_CISCO_BRENTWOOD        0x0217	/* VIC 1455 PCIe */
++/* VIC 1487 PCIe mLOM */
++#define PCI_SUBDEVICE_ID_CISCO_BURLINGAME       0x021a
++#define PCI_SUBDEVICE_ID_CISCO_BAYSIDE          0x0219	/* VIC 1485 PCIe */
++/* VIC 1440 Mezz mLOM */
++#define PCI_SUBDEVICE_ID_CISCO_BAKERSFIELD      0x0215
++#define PCI_SUBDEVICE_ID_CISCO_BOONVILLE        0x0216	/* VIC 1480 Mezz */
++#define PCI_SUBDEVICE_ID_CISCO_BENICIA          0x024a	/* VIC 1495 */
++#define PCI_SUBDEVICE_ID_CISCO_BEAUMONT         0x024b	/* VIC 1497 */
++#define PCI_SUBDEVICE_ID_CISCO_BRISBANE         0x02af	/* VIC 1467 */
++#define PCI_SUBDEVICE_ID_CISCO_BENTON           0x02b0	/* VIC 1477 */
++#define PCI_SUBDEVICE_ID_CISCO_TWIN_RIVER       0x02cf	/* VIC 14425 */
++#define PCI_SUBDEVICE_ID_CISCO_TWIN_PEAK        0x02d0	/* VIC 14825 */
++
++/* Beverly */
++#define PCI_SUBDEVICE_ID_CISCO_BERN             0x02de	/* VIC 15420 */
++#define PCI_SUBDEVICE_ID_CISCO_STOCKHOLM        0x02dd	/* VIC 15428 */
++#define PCI_SUBDEVICE_ID_CISCO_KRAKOW           0x02dc	/* VIC 15411 */
++#define PCI_SUBDEVICE_ID_CISCO_LUCERNE          0x02db	/* VIC 15231 */
++#define PCI_SUBDEVICE_ID_CISCO_TURKU            0x02e8	/* VIC 15238 */
++#define PCI_SUBDEVICE_ID_CISCO_TURKU_PLUS       0x02f3	/* VIC 15237 */
++#define PCI_SUBDEVICE_ID_CISCO_ZURICH           0x02df	/* VIC 15230 */
++#define PCI_SUBDEVICE_ID_CISCO_RIGA             0x02e0	/* VIC 15427 */
++#define PCI_SUBDEVICE_ID_CISCO_GENEVA           0x02e1	/* VIC 15422 */
++#define PCI_SUBDEVICE_ID_CISCO_HELSINKI         0x02e4	/* VIC 15235 */
++#define PCI_SUBDEVICE_ID_CISCO_GOTHENBURG       0x02f2	/* VIC 15425 */
++
++struct fnic_pcie_device {
++	u32 device;
++	u8 *desc;
++	u32 subsystem_device;
++	u8 *subsys_desc;
++};
 +
  /*
   * fnic private data per SCSI command.
   * These fields are locked by the hashed io_req_lock.
-@@ -133,6 +136,7 @@ static inline u64 fnic_flags_and_state(struct scsi_cmnd *cmd)
+@@ -134,6 +200,7 @@ static inline u64 fnic_flags_and_state(struct scsi_cmnd *cmd)
+ #define fnic_clear_state_flags(fnicp, st_flags)  \
+ 	__fnic_set_state_flags(fnicp, st_flags, 1)
  
++extern unsigned int fnic_fdmi_support;
  extern unsigned int fnic_log_level;
  extern unsigned int io_completions;
-+extern struct workqueue_struct *fnic_event_queue;
+ extern struct workqueue_struct *fnic_event_queue;
+@@ -366,6 +433,9 @@ struct fnic {
  
- #define FNIC_MAIN_LOGGING 0x01
- #define FNIC_FCS_LOGGING 0x02
-@@ -329,6 +333,8 @@ struct fnic {
- 	struct work_struct flush_work;
- 	struct sk_buff_head frame_queue;
- 	struct list_head tx_queue;
-+	struct work_struct tport_work;
-+	struct list_head tport_event_list;
+ 	/* interrupt resource cache line section */
+ 	____cacheline_aligned struct vnic_intr intr[FNIC_MSIX_INTR_MAX];
++
++	char subsys_desc[14];
++	int subsys_desc_len;
+ };
  
- 	/*** FIP related data members  -- start ***/
- 	void (*set_vlan)(struct fnic *, u16 vlan);
+ static inline struct fnic *fnic_from_ctlr(struct fcoe_ctlr *fip)
+@@ -433,5 +503,7 @@ fnic_chk_state_flags_locked(struct fnic *fnic, unsigned long st_flags)
+ void __fnic_set_state_flags(struct fnic *, unsigned long, unsigned long);
+ void fnic_dump_fchost_stats(struct Scsi_Host *, struct fc_host_statistics *);
+ void fnic_free_txq(struct list_head *head);
++int fnic_get_desc_by_devid(struct pci_dev *pdev, char **desc,
++						   char **subsys_desc);
+ 
+ #endif /* _FNIC_H_ */
 diff --git a/drivers/scsi/fnic/fnic_fdls.h b/drivers/scsi/fnic/fnic_fdls.h
-index 095275698716..9eb25ed9c19f 100644
+index 9eb25ed9c19f..88462363d754 100644
 --- a/drivers/scsi/fnic/fnic_fdls.h
 +++ b/drivers/scsi/fnic/fnic_fdls.h
-@@ -325,6 +325,10 @@ void fdls_send_fabric_logo(struct fnic_iport_s *iport);
- int fnic_fdls_validate_and_get_frame_type(struct fnic_iport_s *iport,
- 								  void *rx_frame, int len,
- 								  int fchdr_offset);
-+void fdls_send_tport_abts(struct fnic_iport_s *iport,
-+						  struct fnic_tport_s *tport);
-+void fdls_delete_tport(struct fnic_iport_s *iport,
-+					   struct fnic_tport_s *tport);
+@@ -329,6 +329,7 @@ void fdls_send_tport_abts(struct fnic_iport_s *iport,
+ 						  struct fnic_tport_s *tport);
+ void fdls_delete_tport(struct fnic_iport_s *iport,
+ 					   struct fnic_tport_s *tport);
++void fdls_fdmi_timer_callback(struct timer_list *t);
  
  /* fnic_fcs.c */
  void fnic_fdls_init(struct fnic *fnic, int usefip);
+@@ -366,4 +367,3 @@ struct fnic_tport_s *fnic_find_tport_by_wwpn(struct fnic_iport_s *iport,
+ 		uint64_t  wwpn);
+ 
+ #endif /* _FNIC_FDLS_H_ */
+-
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 577048e30c12..7d10d603f53b 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -62,6 +62,9 @@ unsigned int fnic_log_level;
+ module_param(fnic_log_level, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(fnic_log_level, "bit mask of fnic logging levels");
+ 
++unsigned int fnic_fdmi_support = 1;
++module_param(fnic_fdmi_support, int, 0644);
++MODULE_PARM_DESC(fnic_fdmi_support, "FDMI support");
+ 
+ unsigned int io_completions = FNIC_DFLT_IO_COMPLETIONS;
+ module_param(io_completions, int, S_IRUGO|S_IWUSR);
+@@ -607,6 +610,8 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	int i;
+ 	unsigned long flags;
+ 	int hwq;
++	char *desc, *subsys_desc;
++	int len;
+ 
+ 	/*
+ 	 * Allocate SCSI Host and set up association between host,
+@@ -640,6 +645,23 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	fnic->fnic_num = fnic_id;
+ 	fnic_stats_debugfs_init(fnic);
+ 
++	/* Find model name from PCIe subsys ID */
++	if (fnic_get_desc_by_devid(pdev, &desc, &subsys_desc) == 0) {
++		pr_info("Model: %s\n", subsys_desc);
++
++		/* Update FDMI model */
++		fnic->subsys_desc_len = strlen(subsys_desc);
++		len = ARRAY_SIZE(fnic->subsys_desc);
++		if (fnic->subsys_desc_len > len)
++			fnic->subsys_desc_len = len;
++		memcpy(fnic->subsys_desc, subsys_desc, fnic->subsys_desc_len);
++		pr_info("FDMI Model: %s\n", fnic->subsys_desc);
++	} else {
++		fnic->subsys_desc_len = 0;
++		pr_info("Model: %s subsys_id: 0x%04x\n", "Unknown",
++				pdev->subsystem_device);
++	}
++
+ 	err = pci_enable_device(pdev);
+ 	if (err) {
+ 		pr_err("Cannot enable PCI device, aborting.\n");
+@@ -1014,6 +1036,9 @@ static void fnic_remove(struct pci_dev *pdev)
+ 		fnic_fcoe_evlist_free(fnic);
+ 	}
+ 
++	if ((fnic_fdmi_support == 1) && (fnic->iport.fabric.fdmi_pending > 0))
++		del_timer_sync(&fnic->iport.fabric.fdmi_timer);
++
+ 	/*
+ 	 * Log off the fabric. This stops all remote ports, dns port,
+ 	 * logs off the fabric. This flushes all rport, disc, lport work
+@@ -1199,3 +1224,4 @@ static void __exit fnic_cleanup_module(void)
+ 
+ module_init(fnic_init_module);
+ module_exit(fnic_cleanup_module);
++
+diff --git a/drivers/scsi/fnic/fnic_pci_subsys_devid.c b/drivers/scsi/fnic/fnic_pci_subsys_devid.c
+new file mode 100644
+index 000000000000..1729c3a7ed05
+--- /dev/null
++++ b/drivers/scsi/fnic/fnic_pci_subsys_devid.c
+@@ -0,0 +1,133 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright 2008 Cisco Systems, Inc.  All rights reserved.
++ * Copyright 2007 Nuova Systems, Inc.  All rights reserved.
++ */
++
++#include <linux/module.h>
++#include <linux/mempool.h>
++#include <linux/string.h>
++#include <linux/slab.h>
++#include <linux/version.h>
++#include <linux/errno.h>
++#include <linux/init.h>
++#include <linux/pci.h>
++#include <linux/interrupt.h>
++#include <linux/irq.h>
++#include <linux/spinlock.h>
++#include <linux/workqueue.h>
++#include <linux/kthread.h>
++#include <linux/if_ether.h>
++#include "fnic.h"
++
++static struct fnic_pcie_device fnic_pcie_device_table[] = {
++	{PCI_DEVICE_ID_CISCO_SERENO, "Sereno", PCI_SUBDEVICE_ID_CISCO_VASONA,
++	 "VIC 1280"},
++	{PCI_DEVICE_ID_CISCO_SERENO, "Sereno", PCI_SUBDEVICE_ID_CISCO_COTATI,
++	 "VIC 1240"},
++	{PCI_DEVICE_ID_CISCO_SERENO, "Sereno",
++	 PCI_SUBDEVICE_ID_CISCO_LEXINGTON, "VIC 1225"},
++	{PCI_DEVICE_ID_CISCO_SERENO, "Sereno", PCI_SUBDEVICE_ID_CISCO_ICEHOUSE,
++	 "VIC 1285"},
++	{PCI_DEVICE_ID_CISCO_SERENO, "Sereno",
++	 PCI_SUBDEVICE_ID_CISCO_KIRKWOODLAKE, "VIC 1225T"},
++	{PCI_DEVICE_ID_CISCO_SERENO, "Sereno",
++	 PCI_SUBDEVICE_ID_CISCO_SUSANVILLE, "VIC 1227"},
++	{PCI_DEVICE_ID_CISCO_SERENO, "Sereno", PCI_SUBDEVICE_ID_CISCO_TORRANCE,
++	 "VIC 1227T"},
++
++	{PCI_DEVICE_ID_CISCO_CRUZ, "Cruz", PCI_SUBDEVICE_ID_CISCO_CALISTOGA,
++	 "VIC 1340"},
++	{PCI_DEVICE_ID_CISCO_CRUZ, "Cruz", PCI_SUBDEVICE_ID_CISCO_MOUNTAINVIEW,
++	 "VIC 1380"},
++	{PCI_DEVICE_ID_CISCO_CRUZ, "Cruz", PCI_SUBDEVICE_ID_CISCO_MOUNTTIAN,
++	 "C3260-SIOC"},
++	{PCI_DEVICE_ID_CISCO_CRUZ, "Cruz", PCI_SUBDEVICE_ID_CISCO_CLEARLAKE,
++	 "VIC 1385"},
++	{PCI_DEVICE_ID_CISCO_CRUZ, "Cruz", PCI_SUBDEVICE_ID_CISCO_MOUNTTIAN2,
++	 "C3260-SIOC"},
++	{PCI_DEVICE_ID_CISCO_CRUZ, "Cruz", PCI_SUBDEVICE_ID_CISCO_CLAREMONT,
++	 "VIC 1387"},
++
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega", PCI_SUBDEVICE_ID_CISCO_BRADBURY,
++	 "VIC 1457"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega",
++	 PCI_SUBDEVICE_ID_CISCO_BRENTWOOD, "VIC 1455"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega",
++	 PCI_SUBDEVICE_ID_CISCO_BURLINGAME, "VIC 1487"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega", PCI_SUBDEVICE_ID_CISCO_BAYSIDE,
++	 "VIC 1485"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega",
++	 PCI_SUBDEVICE_ID_CISCO_BAKERSFIELD, "VIC 1440"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega",
++	 PCI_SUBDEVICE_ID_CISCO_BOONVILLE, "VIC 1480"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega", PCI_SUBDEVICE_ID_CISCO_BENICIA,
++	 "VIC 1495"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega", PCI_SUBDEVICE_ID_CISCO_BEAUMONT,
++	 "VIC 1497"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega", PCI_SUBDEVICE_ID_CISCO_BRISBANE,
++	 "VIC 1467"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega", PCI_SUBDEVICE_ID_CISCO_BENTON,
++	 "VIC 1477"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega",
++	 PCI_SUBDEVICE_ID_CISCO_TWIN_RIVER, "VIC 14425"},
++	{PCI_DEVICE_ID_CISCO_BODEGA, "Bodega",
++	 PCI_SUBDEVICE_ID_CISCO_TWIN_PEAK, "VIC 14825"},
++
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly", PCI_SUBDEVICE_ID_CISCO_BERN,
++	 "VIC 15420"},
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly",
++	 PCI_SUBDEVICE_ID_CISCO_STOCKHOLM, "VIC 15428"},
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly", PCI_SUBDEVICE_ID_CISCO_KRAKOW,
++	 "VIC 15411"},
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly",
++	 PCI_SUBDEVICE_ID_CISCO_LUCERNE, "VIC 15231"},
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly", PCI_SUBDEVICE_ID_CISCO_TURKU,
++	 "VIC 15238"},
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly", PCI_SUBDEVICE_ID_CISCO_GENEVA,
++	 "VIC 15422"},
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly",
++	 PCI_SUBDEVICE_ID_CISCO_HELSINKI, "VIC 15235"},
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly",
++	 PCI_SUBDEVICE_ID_CISCO_GOTHENBURG, "VIC 15425"},
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly",
++	 PCI_SUBDEVICE_ID_CISCO_TURKU_PLUS, "VIC 15237"},
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly", PCI_SUBDEVICE_ID_CISCO_ZURICH,
++	 "VIC 15230"},
++	{PCI_DEVICE_ID_CISCO_BEVERLY, "Beverly", PCI_SUBDEVICE_ID_CISCO_RIGA,
++	 "VIC 15427"},
++
++	{0,}
++};
++
++int fnic_get_desc_by_devid(struct pci_dev *pdev, char **desc,
++						   char **subsys_desc)
++{
++	unsigned short device = PCI_DEVICE_ID_CISCO_VIC_FC;
++	int max = ARRAY_SIZE(fnic_pcie_device_table);
++	struct fnic_pcie_device *t = fnic_pcie_device_table;
++	int index = 0;
++
++	if (memcmp((char *) &pdev->device, (char *) &device, sizeof(short)) !=
++		0)
++		return 1;
++
++	while (t->device != 0) {
++		if (memcmp
++			((char *) &pdev->subsystem_device,
++			 (char *) &t->subsystem_device, sizeof(short)) == 0)
++			break;
++		t++;
++		index++;
++	}
++
++	if (index >= max - 1) {
++		*desc = NULL;
++		*subsys_desc = NULL;
++		return 1;
++	}
++
++	*desc = fnic_pcie_device_table[index].desc;
++	*subsys_desc = fnic_pcie_device_table[index].subsys_desc;
++	return 0;
++}
 -- 
 2.31.1
 
