@@ -1,80 +1,119 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29A3917D35F;
-	Tue, 11 Jun 2024 13:54:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD8E8364AE
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Jun 2024 15:43:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718114071; cv=none; b=tQ+1C3G/g9anLEUIg+nIfJxIF5yttS2d4jSyJQO7P9Xfty9TG5zyPIhiNMbFxwISU/oBlZNArd/YyxlzTD1q+Kh9nCdf9FKb7TD9ZceJ6j20cBfjaSsFlfMlw46I2nOxZrpEjP7YTaFCmtsBZgVlUVpFKbb9iWPdXHAkgs/ImrY=
+	t=1718120616; cv=none; b=JSf1aaaUeJlIu32pLqB5JlLHkPcOFlO0sXn7FTsbD+L2h1mjUqvNXL31Nl4v/uhNtVyveksPf1GO8tRsINO3po4EQS3yCiyTpDHQmldl3rLjO086pyE0z01noVS6vL3IQP10ywEJtTnZhOvf7+Xtxrg7O9C9G6DpOVvA1I1dI4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718114071; c=relaxed/simple;
-	bh=z6Xlm3Myzf0XENt1mtEjLarR3vUfPV0dcq85A+bZWyw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cIquz7TL3cGyNASRVQsxEK/defYvcfA162sD2+yDH+Kli2MSH/Unm2CsD+q9lTJa+iNstPCuVmuxI7+OUcF1g1YsRsi6cqVyXAysICDAckr63GvHps6xoo9xgTbZclufQPMymc/vLfHvO4TIIJGqOY+Uz7Ha1QDsRRxsf5P7uus=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1UEv8Cc6; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1718120616; c=relaxed/simple;
+	bh=hxyesTbSn4JUu13b+/8fKE9DKC9Hdh6kphyvoTo4A04=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SSfLak8ysnU/K/9q/L1xG0Pp+EorjjAUxLpvINQRxZ+V1CPFqU/inhQOzsVZHMDuAxfOzfn+RaVpa4EgbENEBFnSjDxbM5AtjwDs6SCG0D0eBCqH+UrHUsSe7Or1l8eOKKEjqY/9hJda+VAXQ6zx61niQho5MDjLO54VGMN2Ynw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=g3ImpHwF; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1UEv8Cc6"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Vz9C352Vjz6CmSMs;
-	Tue, 11 Jun 2024 13:54:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1718114058; x=1720706059; bh=z6Xlm3Myzf0XENt1mtEjLarR
-	3vUfPV0dcq85A+bZWyw=; b=1UEv8Cc60gybweEB3Y0s2R2ymDfOnYql7xo5mesA
-	fjWjqASreJqTfoY2zA+3eUixDtM9X6KN/0nJgM41GCBOsBoTLqecBsvzSQNfgiAD
-	x1KmkAWF1qVy7ZJVqawLbI3OeOGVJrYvOlqL1Xql/3mI7Of3oShFxussQA3Wounx
-	1CsUtQErv9FiogRloxZtjJY1ZSSt49v1zMldT1oksKk82HoexGFmlOzLGq2TRtt2
-	XxfqUw8GotKoxMyAT2h2owlG2g6KP2D/gq9eqFxgyvULyHaKgRJalIv0MihrMygo
-	opfuwiC9Kb4WMcy537yI+SEUGF83GHW6EKHgmmL/BUWFAw==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id TAXE9hSNYuj5; Tue, 11 Jun 2024 13:54:18 +0000 (UTC)
-Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g3ImpHwF"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1718120612;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=m3mVOlE8X03VcFujwgTUstJqoq0FTNeRmucJ5uXzzb4=;
+	b=g3ImpHwFPd3zYDbSo6+DyCmL/sFBqBusrGTGQ+nUJ1Jc3pjC2QGt6IElAywhXBseiygDNC
+	z6Eh48Xu/zfSEPDq602vJsDch/Zk73o2E+gsTG0mWXmfLdGVuBh2n43fjFcUbiwN2993ci
+	LMQuTert1Fi/8EYVt+zdL5AN8obFP8c=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-541-M7gCHZsfNvaRoPk4wQQxjw-1; Tue,
+ 11 Jun 2024 11:43:27 -0400
+X-MC-Unique: M7gCHZsfNvaRoPk4wQQxjw-1
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Vz9Bv1SMsz6Cnv3Q;
-	Tue, 11 Jun 2024 13:54:14 +0000 (UTC)
-Message-ID: <8005e95f-069c-4cbd-8330-c1395a238b86@acm.org>
-Date: Tue, 11 Jun 2024 06:54:12 -0700
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8414F1956068;
+	Tue, 11 Jun 2024 15:43:15 +0000 (UTC)
+Received: from localhost (unknown [10.39.193.36])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id DD4331954AC1;
+	Tue, 11 Jun 2024 15:43:10 +0000 (UTC)
+Date: Tue, 11 Jun 2024 11:43:09 -0400
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
+	Richard Weinberger <richard@nod.at>,
+	Philipp Reisner <philipp.reisner@linbit.com>,
+	Lars Ellenberg <lars.ellenberg@linbit.com>,
+	Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
+	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
+	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Vineeth Vijayan <vneethv@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
+	drbd-dev@lists.linbit.com, nbd@other.debian.org,
+	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
+	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH 08/26] virtio_blk: remove virtblk_update_cache_mode
+Message-ID: <20240611154309.GA371660@fedora.redhat.com>
+References: <20240611051929.513387-1-hch@lst.de>
+ <20240611051929.513387-9-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: quiesce request queues before check
- pending cmds
-To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
- mani@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
- junwoo80.lee@samsung.com, martin.petersen@oracle.com,
- quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
- quic_rampraka@quicinc.com
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- Peter Wang <peter.wang@mediatek.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Maramaina Naresh <quic_mnaresh@quicinc.com>,
- Asutosh Das <quic_asutoshd@quicinc.com>,
- open list <linux-kernel@vger.kernel.org>
-References: <1717754818-39863-1-git-send-email-quic_ziqichen@quicinc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1717754818-39863-1-git-send-email-quic_ziqichen@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="RRHJimCDVdpqhQ+7"
+Content-Disposition: inline
+In-Reply-To: <20240611051929.513387-9-hch@lst.de>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-On 6/7/24 03:06, Ziqi Chen wrote:
-> Fix this race condition by quiescing the request queues before calling
-> ufshcd_pending_cmds() so that block layer won't touch the budget map
-> when ufshcd_pending_cmds() is working on it. In addition, remove the
-> scsi layer blocking/unblocking to reduce redundancies and latencies.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+--RRHJimCDVdpqhQ+7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Jun 11, 2024 at 07:19:08AM +0200, Christoph Hellwig wrote:
+> virtblk_update_cache_mode boils down to a single call to
+> blk_queue_write_cache.  Remove it in preparation for moving the cache
+> control flags into the queue_limits.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/block/virtio_blk.c | 13 +++----------
+>  1 file changed, 3 insertions(+), 10 deletions(-)
+
+Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
+
+--RRHJimCDVdpqhQ+7
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmZocI0ACgkQnKSrs4Gr
+c8gYxQf+MiHN7lIto5cvBArHuLRaYXdHSqN8WkOxjyk6pKDVJN3zByol4IsQ1or0
+gi3U/1yXaU1lyM8v76HhRI789ZE9OXHiRD8iKWM54w0uldvJLPNzByqsrvapKvmR
+XjYyMxgp/uFJZ4qxg3nonI2Fa2FzSjqA/ct/sTYj8AbXOsOEK/bUZasvnrwUuIhP
+FwODujdCtfIpzMvn4c262LUiz3TOY+p3nH/CSKsYZwR5xiUbbZCf30PKrwN4RcmU
+ti4hIKoOJcLH5gjgeXpfx7jOM/6Qr7eQrEelsDnuMAKYXC9WMj48+O6Cf8mFja4M
+N1txQKX0NepjOjzDmydD5Dx/69S/sg==
+=ehtQ
+-----END PGP SIGNATURE-----
+
+--RRHJimCDVdpqhQ+7--
+
