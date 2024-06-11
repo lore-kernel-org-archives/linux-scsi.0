@@ -1,161 +1,92 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lithops.sigma-star.at (lithops.sigma-star.at [195.201.40.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3746117334F;
-	Tue, 11 Jun 2024 08:19:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533CB17334F;
+	Tue, 11 Jun 2024 08:19:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.201.40.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718093970; cv=none; b=btqx9kQfNKpXKfm1CTJ4V+qR+RXNDmt6Ja5cJjr+PANs7444DntxcNixr5hvjS/P+zm6LvhWgHS27E//Fdu0VlKbbvLy/IUL5jmBwQ2obUC0X2i4iLnAuZ8Gz4N3MktKDPH3r3DSII/3rTBeJ+WOMJAFx+lszZRKFEmL4rOhBcg=
+	t=1718093974; cv=none; b=B4dkQUDMbAwz5aCmau1V/WyCazr6JUG0HAmV6m+F0vFavn+KXqpgzET34Rr3QXmTIVky8EQJce5a7chWoMggZWxhwnvk0dA3OVdZtqDpgXRRwJCkk5NN1mB0yRrIa/qiQN2rU6Yr1tiN//h/EDKjxvI57gGVDnrt3c3ACa8KgIY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718093970; c=relaxed/simple;
-	bh=yBeNdoD88yfDobcwnDihbaCso0dpjGUG/oRyVNNaoY0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QRyDbaqg7E1cgWzpPuJEJR3WsXalwb9DaxMl3/MJqJf3zM5u3dGR2S6X9nb7amVHmTdboEh0LKxAeMAoA+nHnxmSa5Sjk1josTgCAS+8Hwqx716iWYuvAHyV3OL0jANjcDczN30gvsCwF+ctBWuImi8lKO8Uj/9vQ/4aZfz3mnI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Mz5UZyRu; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=q1OceNt6; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Mz5UZyRu; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=q1OceNt6; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Mz5UZyRu";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="q1OceNt6";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Mz5UZyRu";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="q1OceNt6"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 4AADB22D13;
-	Tue, 11 Jun 2024 08:19:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718093967; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GGJw6dDkRs6k2mZvFIE+UpGETGYtBieUVHqbMn2Gy0w=;
-	b=Mz5UZyRupBOC5OyhaduIbHV4wlYjNn2j7sCWgFf6vyQPQnjkDPAfZ6Q/JsN5Cmj6BSiYUF
-	xwezQUEPyxhygG9mxrG/r7jSoy12gHEp2VD+DxfzLjw84R1R+ikRm3duxRjgQt2dRc+rR/
-	zySz8BDz3RCb9rOF3+/OqcxNzULWgh8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718093967;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GGJw6dDkRs6k2mZvFIE+UpGETGYtBieUVHqbMn2Gy0w=;
-	b=q1OceNt62q6MVmBZro11IIzTmhALV7YjKRa+RmhhyhFm32XqJpB3kE67x0ShtykE6k333v
-	IXaAxWMTn07ACfBQ==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718093967; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GGJw6dDkRs6k2mZvFIE+UpGETGYtBieUVHqbMn2Gy0w=;
-	b=Mz5UZyRupBOC5OyhaduIbHV4wlYjNn2j7sCWgFf6vyQPQnjkDPAfZ6Q/JsN5Cmj6BSiYUF
-	xwezQUEPyxhygG9mxrG/r7jSoy12gHEp2VD+DxfzLjw84R1R+ikRm3duxRjgQt2dRc+rR/
-	zySz8BDz3RCb9rOF3+/OqcxNzULWgh8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718093967;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GGJw6dDkRs6k2mZvFIE+UpGETGYtBieUVHqbMn2Gy0w=;
-	b=q1OceNt62q6MVmBZro11IIzTmhALV7YjKRa+RmhhyhFm32XqJpB3kE67x0ShtykE6k333v
-	IXaAxWMTn07ACfBQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 20BA0137DF;
-	Tue, 11 Jun 2024 08:19:26 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 8CuOB44IaGZWXAAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 11 Jun 2024 08:19:26 +0000
-Message-ID: <1208a68f-bac4-4f10-8f67-58eabf5ba89e@suse.de>
-Date: Tue, 11 Jun 2024 10:19:25 +0200
+	s=arc-20240116; t=1718093974; c=relaxed/simple;
+	bh=WiwQcKXWFLbA5+y/XTxdB5b4DaXzfBJ3bVCq5x25wp4=;
+	h=Date:From:To:Message-ID:Subject:MIME-Version:Content-Type; b=fdCPRa4ERBCblAfBgsYsPjVnlLv5unc70hcQT+yr+GQoc5I989Cdxr3++ra5djVRCa6vFfeNuEKhNSPPuWAKa0NXsu9oLMnEb7YKVbZkllxLueraQ79HibDlqLQOhR73AGnxzDvpnkvILdN45IWRloAqPkzW5t6EmpP8io/6HJU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nod.at; spf=fail smtp.mailfrom=nod.at; arc=none smtp.client-ip=195.201.40.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=nod.at
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nod.at
+Received: from localhost (localhost [127.0.0.1])
+	by lithops.sigma-star.at (Postfix) with ESMTP id 9E2B561966AC;
+	Tue, 11 Jun 2024 10:10:06 +0200 (CEST)
+Received: from lithops.sigma-star.at ([127.0.0.1])
+	by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10032)
+	with ESMTP id dq3ga0-vBU1s; Tue, 11 Jun 2024 10:10:05 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+	by lithops.sigma-star.at (Postfix) with ESMTP id CCB0B61966DF;
+	Tue, 11 Jun 2024 10:10:05 +0200 (CEST)
+Received: from lithops.sigma-star.at ([127.0.0.1])
+	by localhost (lithops.sigma-star.at [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id tf6HmT0i1hfW; Tue, 11 Jun 2024 10:10:05 +0200 (CEST)
+Received: from lithops.sigma-star.at (lithops.sigma-star.at [195.201.40.130])
+	by lithops.sigma-star.at (Postfix) with ESMTP id A4C2761966AE;
+	Tue, 11 Jun 2024 10:10:05 +0200 (CEST)
+Date: Tue, 11 Jun 2024 10:10:05 +0200 (CEST)
+From: Richard Weinberger <richard@nod.at>
+To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, 
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, 
+	"linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>, 
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+Message-ID: <259826832.217854.1718093405190.JavaMail.zimbra@nod.at>
+Subject: [ANNOUNCE] Alpine Linux Persistence and Storage Summit 2024
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 08/26] virtio_blk: remove virtblk_update_cache_mode
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
- Richard Weinberger <richard@nod.at>,
- Philipp Reisner <philipp.reisner@linbit.com>,
- Lars Ellenberg <lars.ellenberg@linbit.com>,
- =?UTF-8?Q?Christoph_B=C3=B6hmwalder?= <christoph.boehmwalder@linbit.com>,
- Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
- "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
- =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
- Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai3@huawei.com>, Vineeth Vijayan <vneethv@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
- drbd-dev@lists.linbit.com, nbd@other.debian.org,
- linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
- virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
- linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
- linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-References: <20240611051929.513387-1-hch@lst.de>
- <20240611051929.513387-9-hch@lst.de>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240611051929.513387-9-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spamd-Result: default: False [-8.29 / 50.00];
-	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[37];
-	MID_RHS_MATCH_FROM(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLex1noz7jcsrkfdtgx8bqesde)];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,lst.de:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -8.29
-X-Spam-Flag: NO
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+X-Mailer: Zimbra 8.8.12_GA_3807 (ZimbraWebClient - FF97 (Linux)/8.8.12_GA_3809)
+Thread-Index: uTc1ISVhQXOptDvYOEYQnAc9FxHE/A==
+Thread-Topic: Alpine Linux Persistence and Storage Summit 2024
 
-On 6/11/24 07:19, Christoph Hellwig wrote:
-> virtblk_update_cache_mode boils down to a single call to
-> blk_queue_write_cache.  Remove it in preparation for moving the cache
-> control flags into the queue_limits.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/block/virtio_blk.c | 13 +++----------
->   1 file changed, 3 insertions(+), 10 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+We proudly announce the 7th Alpine Linux Persistence and Storage Summit
+(ALPSS), which will be held September 24th to 27th at the Lizumerhuette
+(https://www.lizumer-huette.at/) in Austria.
 
-Cheers,
+The goal of this conference is to discuss the hot topics in Linux storage
+and file systems, such as persistent memory, NVMe, zoned storage, and I/O
+scheduling in a cool and relaxed setting with spectacular views in the
+Austrian alps.
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+We plan to have a small selection of short and to the point talks with
+lots of room for discussion in small groups, as well as ample downtime
+to enjoy the surrounding.
 
+Attendance is free except for the accommodation and food at the lodge
+but the number of seats is strictly limited.  Cost for accommodation and
+half pension is between 54 and 84 EUR depending on the room category
+and membership in an alpine society.
+
+If you are interested in attending please reserve a seat by mailing your
+favorite topic(s) to:
+
+        alpss-pc@penguingang.at
+
+If you are interested in giving a short and crisp talk please also send
+an abstract to the same address.
+
+The Lizumerhuette is an Alpine Society lodge in a high alpine environment.
+A hike of approximately 2 hours is required to the lodge, and no other
+accommodations are available within walking distance.
+
+Note that unlike the previous years reservations for the lodge are not
+handled through the reservation system.
+
+Check our website at https://www.alpss.at/ for more details.
+
+Thank you on behalf of the program committee:
+
+    Christoph Hellwig
+    Johannes Thumshirn
+    Richard Weinberger
