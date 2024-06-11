@@ -1,289 +1,105 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5BE9171E64
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jun 2024 08:34:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91296171070;
+	Tue, 11 Jun 2024 08:40:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718094877; cv=none; b=QHGp6gvH7qcuEuRHo7GlMkB910q9+NTVXobxyNuqtTf0HSNuI0KOBBgHArNQkzoDpp/+ZZVypuqVif1rqTTqMXdKqFRK4EkND/PeZNg9rj3Wsq93gBdISKAjgMefdisswtmbrHoBkl2X3tJzTyISqs7Xh0I9Ydpod31SFMZWJws=
+	t=1718095253; cv=none; b=mNeF7mp5wgIRMIrtmW2lawzxX+1PFh9qYROpdSgLa+S1K+/PjYv42mzWYELD5javkcHFQDlXusp5bl5AGnFgyLdDvplP9E7ms6GA+PhbXDnj4lwmeJnfs+GrLsOgQObfpUa69iglmkTHK9hXG++Z70ztV1c4gH9UA8q+93SHBdc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718094877; c=relaxed/simple;
-	bh=DiJbxN5BKXq/oAiUNiP5L2cCn+fVPy5nDAqxQ/FEPXM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=udaMFFytGBmPjexQD1+QyhomapmkJhyFB4M4evEu+6FlT8jI5rfIa0FL4G+5Wh1iso8wDYVztmtBm5xBX/K0EPF0G0C9wAkBJHvK3LtzrUcmpal1sMe/kPG5OsugMzGyr0bP+mL12mCR7llw+cy6kwVkXuEx6Yf068jhJ4lnEQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TjN2uzEu; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718095253; c=relaxed/simple;
+	bh=3RHFDRFQ2fBe11TJd37EQZmdJ2dcrT7TBQWPPzeHKiQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=e8X8e7xty1XDiWiwV/rd6bl192QmlXBA6k8zI94B3XKeS1ue2XYi/m+KeFD45pIa3gl8phOANKx4xNpoGZCnIDEgvIIXqMpoYZzYTL7B2efktNVUlAqIDa4NJuyTMcV9ibDKEXoCW/KFD4Lv5ZJx2/SdihS734v8h8hn36aN8MU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dmziEpvV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TjN2uzEu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC7CCC32786;
-	Tue, 11 Jun 2024 08:34:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dmziEpvV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B9DAC2BD10;
+	Tue, 11 Jun 2024 08:40:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718094877;
-	bh=DiJbxN5BKXq/oAiUNiP5L2cCn+fVPy5nDAqxQ/FEPXM=;
-	h=From:To:Cc:Subject:Date:From;
-	b=TjN2uzEuvPOZFFZVsiOCxcJpe+FOIOTGRWcbDlqeBUhxQURoAcJT5xHZrRrgCVX4k
-	 wBsthSGJqfh2WWhXaMJw59YDgMO/y4ecfe9QjLo2zsJSYk3T1oSB7VENpom9QNUm0h
-	 iUNx2KCpMgpCA9BC2W1F7sk/ikdIlQWtk7j34ah3+WqiICsrBczYEfACQyGMHqu8j+
-	 oH2bMutfqTHrShuxAVtZqlpRt6C9X/BWobXtgdWVHUuPurriMvJ6Jhwh3ljxwQMaV/
-	 SR0BfEeLME6UUvBdRy5qAJrnTJ54/fsPFL78NWs76IO/SYS82vGcpdoxfssdZEDFa9
-	 n/z/QHAxBS1mA==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v4] scsi: mpi3mr: Fix ATA NCQ priority support
-Date: Tue, 11 Jun 2024 17:34:35 +0900
-Message-ID: <20240611083435.92961-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.45.2
+	s=k20201202; t=1718095253;
+	bh=3RHFDRFQ2fBe11TJd37EQZmdJ2dcrT7TBQWPPzeHKiQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dmziEpvVoBiTc6obitVD6iaEUXpJ9QyIi6DS8GzorQC8IhhmpGbJXJTNO9clOOdGl
+	 B9Ry9d7h6yFRcRXSyQ9FPXFonA5GoTVxgWN9FOCaj7ZtdUF921V5cJgNb4unJ7LrrN
+	 1XPNEHYrnrvjH5PJkqpnZW912nFXf0lNeCHIPZjziGcUTkp6GVyMNBzjrkYp1ySnu7
+	 dMZxjS4S6113ywdEPr5vL6ZJkimtlIpJDqAl6GxwhR64ON9GvPwL+7i2cVIvGIH5IU
+	 CjT23fcVCMuou1K1yl98dwYI5Gfiu0H5oUkh1fML4jNp5DYLd6dyTXUMWat6HnnDpp
+	 kXjMeZh2LX15Q==
+Date: Tue, 11 Jun 2024 10:40:48 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: TJ Adams <tadamsjr@google.com>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>,
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Igor Pylypiv <ipylypiv@google.com>
+Subject: Re: [PATCH 2/3] scsi: pm80xx: Do not issue hard reset before NCQ EH
+Message-ID: <ZmgNkK8haUisJ5-b@ryzen.lan>
+References: <20240607175743.3986625-1-tadamsjr@google.com>
+ <20240607175743.3986625-3-tadamsjr@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240607175743.3986625-3-tadamsjr@google.com>
 
-The function mpi3mr_qcmd() of the mpi3mr driver is able to indicate to
-the HBA if a read or write command directed at an ATA device should be
-translated to an NCQ read/write command with the high prioiryt bit set
-when the request uses the RT priority class and the user has enabled NCQ
-priority through sysfs.
+Hello Igor, TJ,
 
-However, unlike the mpt3sas driver, the mpi3mr driver does not define
-the sas_ncq_prio_supported and sas_ncq_prio_enable sysfs attributes, so
-the ncq_prio_enable field of struct mpi3mr_sdev_priv_data is never
-actually set and NCQ Priority cannot ever be used.
+On Fri, Jun 07, 2024 at 05:57:42PM +0000, TJ Adams wrote:
+> From: Igor Pylypiv <ipylypiv@google.com>
+> 
+> v6.2 commit 811be570a9a8 ("scsi: pm8001: Use sas_ata_device_link_abort()
 
-Fix this by defining these missing atributes to allow a user to check if
-an ATA device supports NCQ priority and to enable/disable the use of NCQ
-priority. To do this, lift the function scsih_ncq_prio_supp() out of the
-mpt3sas driver and make it the generic scsi sas transport function
-sas_ata_ncq_prio_supported(). Nothing in that function is hardware
-specific, so this function can be used in both the mpt3sas driver and
-the mpi3mr driver.
+Do not specify kernel version (it is irrelevant), SHA1 is enough.
 
-Reported-by: Scott McCoy <scott.mccoy@wdc.com>
-Fixes: 023ab2a9b4ed ("scsi: mpi3mr: Add support for queue command processing")
-Cc: stable@vger.kernel.org
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
----
 
-Changes from v3:
- - Delete stray quotation character in comment describing
-   sas_ata_ncq_prio_supported().
+> to handle NCQ errors") removed duplicate NCQ EH from the pm80xx driver
+> and started relying on libata to handle the NCQ errors. The PM8006
+> controller has a special EH sequence that was added in v4.15 commit
+> 869ddbdcae3b ("scsi: pm80xx: corrected SATA abort handling sequence.").
 
-Changes from v2:
- - Improved comment for the function sas_ata_ncq_prio_supported() as
-   suggested by Niklas.
- - Added review tag
+Do not specify kernel version (it is irrelevant), SHA1 is enough.
 
-Changes from v1:
- - Moved scsih_ncq_prio_supp() to be a function in scsi_transport_sas.c
-   and renamed that function to sas_ata_ncq_prio_supported().
+Since the code added in 869ddbdcae3b still exists in the pm80xx driver,
+I think that you should mention the commits in chronological order.
+(Right now you mention the oldest still existing code last, which seems
+a bit backwards.)
 
- drivers/scsi/mpi3mr/mpi3mr_app.c     | 62 ++++++++++++++++++++++++++++
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  3 --
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  4 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 23 -----------
- drivers/scsi/scsi_transport_sas.c    | 23 +++++++++++
- include/scsi/scsi_transport_sas.h    |  2 +
- 6 files changed, 89 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 1638109a68a0..cd261b48eb46 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -2163,10 +2163,72 @@ persistent_id_show(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR_RO(persistent_id);
- 
-+/**
-+ * sas_ncq_prio_supported_show - Indicate if device supports NCQ priority
-+ * @dev: pointer to embedded device
-+ * @attr: sas_ncq_prio_supported attribute descriptor
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' sdev attribute, only works with SATA devices
-+ */
-+static ssize_t
-+sas_ncq_prio_supported_show(struct device *dev,
-+			    struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
-+	return sysfs_emit(buf, "%d\n", sas_ata_ncq_prio_supported(sdev));
-+}
-+static DEVICE_ATTR_RO(sas_ncq_prio_supported);
-+
-+/**
-+ * sas_ncq_prio_enable_show - send prioritized io commands to device
-+ * @dev: pointer to embedded device
-+ * @attr: sas_ncq_prio_enable attribute descriptor
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read/write' sdev attribute, only works with SATA devices
-+ */
-+static ssize_t
-+sas_ncq_prio_enable_show(struct device *dev,
-+				 struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct mpi3mr_sdev_priv_data *sdev_priv_data =  sdev->hostdata;
-+
-+	if (!sdev_priv_data)
-+		return 0;
-+
-+	return sysfs_emit(buf, "%d\n", sdev_priv_data->ncq_prio_enable);
-+}
-+
-+static ssize_t
-+sas_ncq_prio_enable_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct mpi3mr_sdev_priv_data *sdev_priv_data =  sdev->hostdata;
-+	bool ncq_prio_enable = 0;
-+
-+	if (kstrtobool(buf, &ncq_prio_enable))
-+		return -EINVAL;
-+
-+	if (!sas_ata_ncq_prio_supported(sdev))
-+		return -EINVAL;
-+
-+	sdev_priv_data->ncq_prio_enable = ncq_prio_enable;
-+
-+	return strlen(buf);
-+}
-+static DEVICE_ATTR_RW(sas_ncq_prio_enable);
-+
- static struct attribute *mpi3mr_dev_attrs[] = {
- 	&dev_attr_sas_address.attr,
- 	&dev_attr_device_handle.attr,
- 	&dev_attr_persistent_id.attr,
-+	&dev_attr_sas_ncq_prio_supported.attr,
-+	&dev_attr_sas_ncq_prio_enable.attr,
- 	NULL,
- };
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index bf100a4ebfc3..fe1e96fda284 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -2048,9 +2048,6 @@ void
- mpt3sas_setup_direct_io(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 	struct _raid_device *raid_device, Mpi25SCSIIORequest_t *mpi_request);
- 
--/* NCQ Prio Handling Check */
--bool scsih_ncq_prio_supp(struct scsi_device *sdev);
--
- void mpt3sas_setup_debugfs(struct MPT3SAS_ADAPTER *ioc);
- void mpt3sas_destroy_debugfs(struct MPT3SAS_ADAPTER *ioc);
- void mpt3sas_init_debugfs(void);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 1c9fd26195b8..87784c96249a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -4088,7 +4088,7 @@ sas_ncq_prio_supported_show(struct device *dev,
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 
--	return sysfs_emit(buf, "%d\n", scsih_ncq_prio_supp(sdev));
-+	return sysfs_emit(buf, "%d\n", sas_ata_ncq_prio_supported(sdev));
- }
- static DEVICE_ATTR_RO(sas_ncq_prio_supported);
- 
-@@ -4123,7 +4123,7 @@ sas_ncq_prio_enable_store(struct device *dev,
- 	if (kstrtobool(buf, &ncq_prio_enable))
- 		return -EINVAL;
- 
--	if (!scsih_ncq_prio_supp(sdev))
-+	if (!sas_ata_ncq_prio_supported(sdev))
- 		return -EINVAL;
- 
- 	sas_device_priv_data->ncq_prio_enable = ncq_prio_enable;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 12d08d8ba538..870ec2cb4af4 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -12571,29 +12571,6 @@ scsih_pci_mmio_enabled(struct pci_dev *pdev)
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
--/**
-- * scsih_ncq_prio_supp - Check for NCQ command priority support
-- * @sdev: scsi device struct
-- *
-- * This is called when a user indicates they would like to enable
-- * ncq command priorities. This works only on SATA devices.
-- */
--bool scsih_ncq_prio_supp(struct scsi_device *sdev)
--{
--	struct scsi_vpd *vpd;
--	bool ncq_prio_supp = false;
--
--	rcu_read_lock();
--	vpd = rcu_dereference(sdev->vpd_pg89);
--	if (!vpd || vpd->len < 214)
--		goto out;
--
--	ncq_prio_supp = (vpd->data[213] >> 4) & 1;
--out:
--	rcu_read_unlock();
--
--	return ncq_prio_supp;
--}
- /*
-  * The pci device ids are defined in mpi/mpi2_cnfg.h.
-  */
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 424a89513814..4e33f1661e4c 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -416,6 +416,29 @@ unsigned int sas_is_tlr_enabled(struct scsi_device *sdev)
- }
- EXPORT_SYMBOL_GPL(sas_is_tlr_enabled);
- 
-+/**
-+ * sas_ata_ncq_prio_supported - Check for ATA NCQ command priority support
-+ * @sdev: SCSI device
-+ *
-+ * Check if an ATA device supports NCQ priority using VPD page 89h (ATA
-+ * Information). Since this VPD page is implemented only for ATA devices,
-+ * this function always returns false for SCSI devices.
-+ */
-+bool sas_ata_ncq_prio_supported(struct scsi_device *sdev)
-+{
-+	struct scsi_vpd *vpd;
-+	bool ncq_prio_supported = false;
-+
-+	rcu_read_lock();
-+	vpd = rcu_dereference(sdev->vpd_pg89);
-+	if (vpd && vpd->len >= 214)
-+		ncq_prio_supported = (vpd->data[213] >> 4) & 1;
-+	rcu_read_unlock();
-+
-+	return ncq_prio_supported;
-+}
-+EXPORT_SYMBOL_GPL(sas_ata_ncq_prio_supported);
-+
- /*
-  * SAS Phy attributes
-  */
-diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
-index 0e75b9277c8c..e3b6ce3cbf88 100644
---- a/include/scsi/scsi_transport_sas.h
-+++ b/include/scsi/scsi_transport_sas.h
-@@ -200,6 +200,8 @@ unsigned int sas_is_tlr_enabled(struct scsi_device *);
- void sas_disable_tlr(struct scsi_device *);
- void sas_enable_tlr(struct scsi_device *);
- 
-+bool sas_ata_ncq_prio_supported(struct scsi_device *sdev);
-+
- extern struct sas_rphy *sas_end_device_alloc(struct sas_port *);
- extern struct sas_rphy *sas_expander_alloc(struct sas_port *, enum sas_device_type);
- void sas_rphy_free(struct sas_rphy *);
--- 
-2.45.2
+> The special EH sequence issues a hard reset to a drive before libata EH
+> has a chance to read the NCQ log page. Libata EH gets confused by empty
+> NCQ log page which results in HSM violation. The failed command gets
+> retried a few times and each time fails with the same HSM violation.
+> Finally, libata decides to disable NCQ due to subsequent HSM vioaltions.
 
+s/vioaltions/violations/
+
+I'm not an expert in libsas EH, but I think that your commit message fails
+to explain why this change actually fixes anything. You do not mention the
+relationship between the code that you add pm8001_work_fn() and the
+existing code in pm8001_abort_task(), and the order in which the functions
+get executed.
+
+Does calling sas_execute_internal_abort_dev() from pm8001_work_fn() ensure
+that the libsas EH is never invoked? Or does it cancel the hard reset that
+is part of the "special EH sequence" in pm8001_abort_task() ?
+
+Wouldn't it be better if this was fixed in pm8001_abort_task() or similar
+instead? It appears that the code you add to pm8001_work_fn() (that has a
+very ugly if (pm8006)) is only there to undo or avoid the hard reset that
+is done in pm8001_abort_task() (which also has a very ugly if (pm8006)).
+
+Now we have this ugly if (pm8006) in two different functions... which
+makes my "this could be solved in a nicer way" detector go off.
+
+If this patch (as is) is really the way to go, then I think there should
+be a more detailed reasoning why this change is the most sensible one.
+
+
+Kind regards,
+Niklas
