@@ -1,245 +1,221 @@
-Received: from alln-iport-3.cisco.com (alln-iport-3.cisco.com [173.37.142.90])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEB9A2570;
-	Tue, 11 Jun 2024 17:48:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=173.37.142.90
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718128131; cv=fail; b=Ae6KDyHGhK2d+BpyQuJ0HiFJ+IvdZQN+ch7d2w9RHaU2TcY10Mv4RveCJ3csyiB1wUMEo47CgXDREw2qDWzuGcNsN9wWtdcDy9T55+6qtNCcx+ZRT6f/xX4Isi/imXQDiummdTus9rDHR0ZrS9negeRjK2tRZbyv24c64LSY69I=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718128131; c=relaxed/simple;
-	bh=CX10HQvZTmIwcWPSp8f+B83dyOjb/HZOLC6EKve8b7g=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=EKNDAYxIzQcakTFso99r0fOg2JhM+beugEqBaX6TFPiNU3kBj70P+cgfYaSuU1YUyrZjbsDjWBLYW8wMOtJ18hNPk2SEfD9Io+aQYeXD3VfUVDCdNj3AzQ6D6cF5dxCkoJi9cFxEXrwM0CSKVCkUWYwxDEaM4L/TMu/MyHVKed8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=dR+//mzh; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=l2plHh7B; arc=fail smtp.client-ip=173.37.142.90
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 839486EB55;
+	Tue, 11 Jun 2024 17:56:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1718128617; cv=none; b=Om3cv2sQSgQGsV6M7/cjLAqG2NnzHSoUvys2p2eK6EGdzT/zWRXPT7JWMwV8uZ/PFTFTyjqHsZwsUah4qJRd4cvNS2tf4P3nNjusOkTp8tO8lC5jbMX12QCN9XDupfy285O2w0FkNjuT5z0s7WhPN+Xz4sLrDtDPINP/RdlBg8o=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1718128617; c=relaxed/simple;
+	bh=8TvM/bRqUyTMkSqiC81inFb7tpuM7L3+iH0VcxVDbz8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Jr7ZH5AYY3b5qxi5Co23Lu1bi1TAZS8/gQ55pO9LQrwWuM/bZ12qe7yhLIKtlCnHBnXoC8qX2/JcUYASRUS3xs1YswU3EGgdbm1mvv3Jl2jDXw2OJHjRZQ9rHT79JctPYY1zjD+VBE+VOcYP9Yc74/t6iZ1UL+uw5sp8gjeSmic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jnhoOvfJ; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="dR+//mzh";
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="l2plHh7B"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=448; q=dns/txt; s=iport;
-  t=1718128129; x=1719337729;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=CX10HQvZTmIwcWPSp8f+B83dyOjb/HZOLC6EKve8b7g=;
-  b=dR+//mzhecKlSqpDEXRdBJxCCba9oY5yKz7NnSkPZX35QIA0y6YQau9D
-   hKIJVHedg9fxP6AaUo52kFcpNIHUR5BvoNKN7v9ZbLYnPLgiunfqqYjSJ
-   s6Uir0zigC/6H1lkyoiiRA+VcUaZ05C8SZgj2VbJWqfV/pKRGYUX7EACm
-   c=;
-X-CSE-ConnectionGUID: wkkA2QtNSESgW+Jn/KmkcA==
-X-CSE-MsgGUID: iSsOjAJGS1aMv/N7M7TADg==
-X-IPAS-Result: =?us-ascii?q?A0B3AwC3jGhm/4sNJK1SCB4BAQsSDEAlgR8LgXJSB3OBH?=
- =?us-ascii?q?kiEVYNMA4UtiHGeDIElA1YPAQEBDQEBRAQBAYUGAhaIUQImNAkOAQICAgEBA?=
- =?us-ascii?q?QEDAgMBAQEBAQEBAQEFAQEFAQEBAgEHBYEKE4V0DYZZAQEBAQMSEREMAQE3A?=
- =?us-ascii?q?Q8CAQgOCgICJgICAi8VEAIEAQ0FCBqFQwMBowwBgUACiih6gTKBAYIMAQEGB?=
- =?us-ascii?q?AXddwmBGi6IMQGBWYhjJxuCDYFXgjAHMT6BBQGBWwKBOSmDWTqCL45Dh20Xg?=
- =?us-ascii?q?xWCJYNOhiMmC0OKYAlLfRwDWSECEQFVExcLPgkWAhYDGxQEMA8JCxgOKgY5A?=
- =?us-ascii?q?hIMBgYGWTQCBwQjAwgEA0IDIHERAwQaBAsHd4EOY4E0BBNGAQ2BKolvDIEGg?=
- =?us-ascii?q?ikpgUkngQuDDktshASBawxhiG6BEIE+gWYBg1RMgjkdQAMLbT0UIRQbBQQ6e?=
- =?us-ascii?q?wWqaYQ/KpJsg0hJrUyBMgqEE6FnF4NyAaZGmGUgqEACBAIEBQIPAQEGgWU8g?=
- =?us-ascii?q?VlwFYMiUhkPjiE4g0LJaXg7AgcLAQEDCYpoAQE?=
-IronPort-PHdr: A9a23:fXCCRheUCuyXbiqEwVvj2o9wlGM/eYqcDmcuAtIPkblCdOGk55v9e
- RaZ7vR2h1iPVoLeuLpIiOvT5rjpQndIoY2Av3YLbIFWWlcbhN8XkQ0tDI/NCUDyIPPwKS1vN
- M9DT1RiuXq8NBsdA97wMmXbuWb69jsOAlP6PAtxKP7yH9vRht6r1uS7+LXYYh5Dg3y2ZrYhZ
- BmzpB/a49EfmpAqar5k0BbLr3BUM+hX3jZuIlSe3l7ws8yx55VktS9Xvpoc
-IronPort-Data: A9a23:aBrLOaNAPAj/DifvrR3HlsFynXyQoLVcMsEvi/4bfWQNrUpzgTdVn
- TAdWG7XPqyLZmT0Ktl2b96/oUkP75LUx4RgSnM5pCpnJ55oRWUpJjg4wmPYZX76whjrFRo/h
- ykmQoCdap1yFzmE+0rF3oHJ9RFUzbuPSqf3FNnKMyVwQR4MYCo6gHqPocZh6mJTqYb/W1PlV
- e/a+ZWFZAf7gmcsaAr41orawP9RlKWq0N8nlgRWicBj5Df2i3QTBZQDEqC9R1OQapVUBOOzW
- 9HYx7i/+G7Dlz91Yj9yuu+mGqGiaue60Tmm0hK6aYD76vRxjnBaPpIACRYpQRw/ZwNlMDxG4
- I4lWZSYEW/FN0BX8QgXe0Ew/ypWZcWq9FJbSJSymZT78qHIT5fj6+ptD2hsBJE+wctMDl4N1
- /pfCzUOZTnW0opawJrjIgVtrs0nKM+uN4QFtzQ+izrYFv0hB5vERs0m5/cBg2x23Z4IRK2YP
- pFIAdZsREyojxlnOV4NFJM6leSAjXjkeDoeo1WQzUYyyzKCnVcrjuWyYbI5fPSLft5ynG+6i
- Vmf9kHnRTdFEYOj4BaKpyfEaujn2HmTtJgpPLm58ON6xV6e3GoeDDUIWlah5/q0kEizX5RYM
- UN80i4vq7UisVegVdjVQRK1ujiHswQaVt4WFPc1gDxh0YLd5wKfQ2MDVDMENpottdQ9Qnoh0
- Vrhc87VOAGDeYa9EBq13ryVtji1fyMSKAc/ieUsF2PpP/GLTFkPsy/y
-IronPort-HdrOrdr: A9a23:CC0qRKHw0fHgT9VppLqFrZLXdLJyesId70hD6qkvc203TiXIra
- CTdaogtCMc0AxhKU3I+ertBEGBKUmsjKKdkrNhTYtKOzOW9ldATbsSorcKpgeQeREWmdQtqJ
- uIH5IOb+EYSGIK8/oSgzPIUurIouP3jJxA7N22pxwCPGQaD52IrT0JdTpzeXcGPDWucKBJbq
- Z0kfA33AZIF05nCPiTNz0uZcSGjdvNk57tfB4BADAayCTmt1mVwY+/OSK1mjMFXR1y4ZpKyw
- X4egrCiZmLgrWe8FvxxmXT55NZlJ/K0d1YHvGBjcATN3HFlhuoTJ4JYczAgBkF5MWUrHo6mt
- jFpBkte+5p7WnKQ22zqRzxnyH9zTcV7WP4w1PwuwqgnSW5fkN+NyNyv/MfTvLr0TtngDi66t
- MT44utjesSMfoHplWk2zGHbWAwqqP+mwtQrQdatQ0sbWJZUs4QkWTal3klTavp20nBmdoaOf
- grA8fG6PlMd1SGK3jfo2l02dSpGm8+BxGcXyE5y4aoOhVt7ThEJnEjtYcit2ZF8Ih4R4hP5u
- zCPKgtnLZSTtUOZaY4AOsaW8O4BmHEXBqJaQupUBjaPbBCP2iIp4/84b0z6u3vcJsUzIEqkJ
- CEVF9Dr2Y9d0/nFMXL1pxW9RLGRnm7QF3Wu4xjzok8vqe5SKvgMCWFRlxrm8y8o+8HCsmeQP
- q3MII+OY6rEYIvI/c+4+TTYegkFZBFarxhhj8SYSP7nv72
-X-Talos-CUID: 9a23:Ncuoh2Bq3ACeIFf6EzZk92dOI9wDSVDmw0iTAUn/KmNqQ5TAHA==
-X-Talos-MUID: 9a23:pASzMwpElngDcE/Eep0ezzBZL+BqyoaBMxkEtItBnZahahBZFzjI2Q==
-X-IronPort-Anti-Spam-Filtered: true
-Received: from alln-core-6.cisco.com ([173.36.13.139])
-  by alln-iport-3.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jun 2024 17:48:47 +0000
-Received: from rcdn-opgw-2.cisco.com (rcdn-opgw-2.cisco.com [72.163.7.163])
-	by alln-core-6.cisco.com (8.15.2/8.15.2) with ESMTPS id 45BHmlpg013261
-	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 11 Jun 2024 17:48:47 GMT
-X-CSE-ConnectionGUID: bO8PXi4zQ+OBr5khnZKZIQ==
-X-CSE-MsgGUID: KkXwhLX4QbagS+kdjfo5MQ==
-Authentication-Results: rcdn-opgw-2.cisco.com; dkim=pass (signature verified) header.i=@cisco.com; spf=Pass smtp.mailfrom=kartilak@cisco.com; dmarc=pass (p=reject dis=none) d=cisco.com
-X-IronPort-AV: E=Sophos;i="6.08,230,1712620800"; 
-   d="scan'208";a="15746853"
-Received: from mail-bn8nam04lp2042.outbound.protection.outlook.com (HELO NAM04-BN8-obe.outbound.protection.outlook.com) ([104.47.74.42])
-  by rcdn-opgw-2.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jun 2024 17:48:47 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=f0fEusuUsNIgExEipAs4F2+Atmng0+GlOl7UGZ3dRupyxaJrOk8O6pfAConGmsJHsDiTQbGLMDz64duoY102Uf13ct3GtP0IMsu6v1cJvr7QoQFy3ht9IPrtyo9ZEzKIrPYTBbz1CClJ3rC5RpTcJ2ggeZeS0UcjFYsu0uLJoQ0GtIo/a0BxY1bEeGgyPXctFwhKnYZ2soek0g9a8mTuqA/IA4kToU4a0gkBmyPmCLFFqGTUoOSlTIS7Ag6Acd1cRYBvaT1UrUQ9vehHxLDw6cPgl+OI8vzfBh1obUsPX2tkd++ojnDG3lhfehuZR73krll+LyDkSOjB2KyDxF+fPA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=CX10HQvZTmIwcWPSp8f+B83dyOjb/HZOLC6EKve8b7g=;
- b=OZoFdW0E2CXKhfSA3CwK5cFklPSrGdye1omJFsFmfRwYtOQ7PwIKFRjW6G2bWXji2I729dGaxdwRjnLjaXjRrwF6RTJOtTyJCmQWSfCQrRwxn8QB4FC7SLT9vOmfXK7dZO5MpsbLboA5MtZZtlBD98RassfKaMVBAQ7QUx3r5vlZRwoebOODyjIRQktF/+DC6Q5Tc+vIOxu2+vf2Kt5yqpqUFZGoB7YWP74GrBhgQitLVOHT9V1h4+i/Ps1dYaFUnuFR50Jcjwp8SFiARQi/jsmviDMC/8euKMaLBsBGrvRrTBsumljdIPMtjuMxH9Z1CYVPkOyj8CRFGziQnYbmOw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=cisco.com; dmarc=pass action=none header.from=cisco.com;
- dkim=pass header.d=cisco.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cisco.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CX10HQvZTmIwcWPSp8f+B83dyOjb/HZOLC6EKve8b7g=;
- b=l2plHh7BWNs9Op9qrK1gzK9uM3mGhvA6i6jA/W+xJNUvGIYGwfxvttqZ2owQiufep83DCUE3o3yzJ7x64sd1ocnq3d+5szC5+otOT6v8wXGhUrfo9yuZR0mhz32ycYLJtbradlG7alRVFkSKR45xHN871gTYKg0xlxTvtwzCpyk=
-Received: from SJ0PR11MB5896.namprd11.prod.outlook.com (2603:10b6:a03:42c::19)
- by LV8PR11MB8487.namprd11.prod.outlook.com (2603:10b6:408:1ed::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7633.36; Tue, 11 Jun
- 2024 17:48:44 +0000
-Received: from SJ0PR11MB5896.namprd11.prod.outlook.com
- ([fe80::2081:bcd4:cb3e:e2dd]) by SJ0PR11MB5896.namprd11.prod.outlook.com
- ([fe80::2081:bcd4:cb3e:e2dd%6]) with mapi id 15.20.7633.036; Tue, 11 Jun 2024
- 17:48:44 +0000
-From: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
-To: Hannes Reinecke <hare@suse.de>,
-        "Sesidhar Baddela (sebaddel)"
-	<sebaddel@cisco.com>
-CC: "Arulprabhu Ponnusamy (arulponn)" <arulponn@cisco.com>,
-        "Dhanraj Jhawar
- (djhawar)" <djhawar@cisco.com>,
-        "Gian Carlo Boffa (gcboffa)"
-	<gcboffa@cisco.com>,
-        "Masa Kai (mkai2)" <mkai2@cisco.com>,
-        "Satish Kharat
- (satishkh)" <satishkh@cisco.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 04/14] scsi: fnic: Add support for target based solicited
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jnhoOvfJ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1718128614; x=1749664614;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=8TvM/bRqUyTMkSqiC81inFb7tpuM7L3+iH0VcxVDbz8=;
+  b=jnhoOvfJL3AkK9Mp6rxNkJMsZABKiAFaSz6s5fpAUlpNSNVJyi1X+swX
+   clwdyLCQ8hb2KrvNMiK4AjygvM2siQ6CK+l0yuBg2JuNYoqlCD8m+j+GG
+   PnDbCJYSzbtpt1a3UJVkRIIIh/2lwyw/G/1vyyq997YMebYIEsrhQDmmB
+   635Qfm0k49dC+/KQcqXBE/iaY+eL/iHgE0oj1BvB0CyapLr49R9P7+iMg
+   ueej19DtfkIi67OEgA4fzQXfLwFC3xmSMpR3Vz6Xy0vYbgtlnGnrkz+4u
+   oDiIbOaj+EbekNg5q6PD2ebLpzgde877P3yESIj5XkOsaFWUm7oMSuswb
+   Q==;
+X-CSE-ConnectionGUID: 3wejaKwRQh6N1RxcLSsIwg==
+X-CSE-MsgGUID: EWpfw+l3RJug3DePQXNNAQ==
+X-IronPort-AV: E=McAfee;i="6600,9927,11100"; a="32343810"
+X-IronPort-AV: E=Sophos;i="6.08,230,1712646000"; 
+   d="scan'208";a="32343810"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jun 2024 10:56:54 -0700
+X-CSE-ConnectionGUID: aKk0EH9DSE+dspHKScPDOA==
+X-CSE-MsgGUID: 1je4VS79Q4KtZ0FDWUMtrA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,230,1712646000"; 
+   d="scan'208";a="39378009"
+Received: from lkp-server01.sh.intel.com (HELO 628d7d8b9fc6) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 11 Jun 2024 10:56:51 -0700
+Received: from kbuild by 628d7d8b9fc6 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sH5jk-0000jm-1K;
+	Tue, 11 Jun 2024 17:56:48 +0000
+Date: Wed, 12 Jun 2024 01:56:37 +0800
+From: kernel test robot <lkp@intel.com>
+To: Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, arulponn@cisco.com,
+	djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
+	satishkh@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Karan Tilak Kumar <kartilak@cisco.com>
+Subject: Re: [PATCH 04/14] scsi: fnic: Add support for target based solicited
  requests and responses
-Thread-Topic: [PATCH 04/14] scsi: fnic: Add support for target based solicited
- requests and responses
-Thread-Index: AQHau4CNy6vhW6L1PkehFrT7789Nc7HCkGaAgABGbZA=
-Date: Tue, 11 Jun 2024 17:48:44 +0000
-Message-ID:
- <SJ0PR11MB58969E1EA7204885395CD6BAC3C72@SJ0PR11MB5896.namprd11.prod.outlook.com>
-References: <20240610215100.673158-1-kartilak@cisco.com>
- <20240610215100.673158-5-kartilak@cisco.com>
- <a963acd7-7d93-4cdb-ad9b-045c22ed8ce1@suse.de>
-In-Reply-To: <a963acd7-7d93-4cdb-ad9b-045c22ed8ce1@suse.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SJ0PR11MB5896:EE_|LV8PR11MB8487:EE_
-x-ms-office365-filtering-correlation-id: 348ef5f3-7e21-46dd-0831-08dc8a3ebd39
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230032|376006|366008|1800799016|38070700010;
-x-microsoft-antispam-message-info:
- =?utf-8?B?b0UxRTgxOGpCWHRGWkFPbnYvQlFaZ25sWk9NTW51Vm5HWnZaRStReDdBajVs?=
- =?utf-8?B?ZnNkSFltdGNBSTAwVVVSOWZXTndFeFBrYUgxR0VWRmZadXVqRzZLSUpEZWNn?=
- =?utf-8?B?R0swVUFraGZsaDZXYW5lLzFKbVRid0ZGOUxJSS92dkpHK3U3ZnN1UkZlTktM?=
- =?utf-8?B?TTJLV3hMeUZQTjVuRTgzbUVuNFZjeXc0UzVEa25iMWJsODJzTzhuR1NnME9r?=
- =?utf-8?B?Nkp5Vytmc2NKdmhuVHhHQUZSUExJT1c1M0dyVDJudGxIK2NvaDBYdEYzc3F0?=
- =?utf-8?B?cmZGcTNFUlF1UGlvbEMwNmtjKy9EdnJ2VktZblBFenNabitlZ1N2VGt5T2RL?=
- =?utf-8?B?OEo3UW40V0lRY1orNlhsTkFFV2o0MUxhcFZvTzJhUmVWbE5YYVQrZTVJelhn?=
- =?utf-8?B?Vnd3eFRHYlpjL1F4cXhqNTZuK1JLU0dTSDlsUHY2TVROdHZ6VXJPSGU2OTVq?=
- =?utf-8?B?Rk5yMU1ndGJkWElZNmpvY1RvK1VDVG05dnN1eHdpeXBhMllQamVaRUFFeXEz?=
- =?utf-8?B?TXlSSnB0dFRyNXJMQlVjdSt4Y2VHWk5SMVN4Q04zeDkvWGFtKzlPKzN3UGVL?=
- =?utf-8?B?cjFMK1Z1UTVqSWtodlZvUzRZVmZ1a1UzS0ltK21WZWpiMmVSQmFlalMxN3pX?=
- =?utf-8?B?TENKVllWMDNYQzNEeUhuVDJTOEpzc1Y2Umdjc2xUMzBjR2JsVFJLU2Jmbkp4?=
- =?utf-8?B?WjZGalJ1TkhILzRjYXBOUXdNVXFrU1FUbjVYa04wcFo0eHJreXFzMmxuTWZL?=
- =?utf-8?B?RXVXZ0hUTmptb2RFdnR2Q2M1TGpIZDN5aHJZOVZBRkg0QkdENzFDeW1xRW9i?=
- =?utf-8?B?R2FOa2E1SHpycHR5ZXkwZVo5djhlS3FDRlBUengrcUV6enJjRnpDejJmM20v?=
- =?utf-8?B?ajFTMWVFcVdzcVEveklPSXJjM1UrV1VpZHRVNzlORHRzQWRxcDR3TDNwZzZO?=
- =?utf-8?B?UE5vTzFybmIwOVYxMytDU0dsMmZQczZHWk9ycWM2VExKTlZrQVpFSTBSVlZC?=
- =?utf-8?B?MzVLd2NkWSs1ZGZWbXdENlhiMkhKRDFLZjNhcUhuVzVENlpydVNUVmtSNWxF?=
- =?utf-8?B?anlPWXh5bmpzY09rQmdlZVRKNzk3T0xiNXovaXlqVHNGZjRoLytWRVJHWG5O?=
- =?utf-8?B?dHBMaHNXMFVQQzdoUERhanFuQ0ZBd1dZVStKQWtoNGtoaHpWcDVuSW9nTjdw?=
- =?utf-8?B?OVg5MzFVUVhVUmpxblpUOWkrcDdnSlAyUWxKcTB3NzArY25JRktXUGp4N1Z3?=
- =?utf-8?B?bUdienQ5a2I5WlZqTmx5eWJEZVZSSkhaTWdxU0oxZC9Ra015cVFhNmdaeTM3?=
- =?utf-8?B?MjNNbmx5YjFPMWdEYjFCZS9oOGdFSWk4L1BScUVXTENoTmd3aHlYbEIzMEZJ?=
- =?utf-8?B?Z2pmNTNJZXp5OVdyNGNMUUdBSHFKUTlhUVlKUXVJN0lZSFFZY09mOEhmZVJM?=
- =?utf-8?B?S0NZZ2FCUlI3cys0Z3NZR25pUkhMcmxvUWphM2Z0aHljZW9Bekl3ZTlIaHlo?=
- =?utf-8?B?UmZmcldpaGcrb2ZYWnRkWFJrUVJ6RytucWxmOGROakllK0RucUpHOVdMZVZG?=
- =?utf-8?B?T1Fpc3BSMmpiMDV4cllscWhYU2xXcExDblNZbncyVUtscmx4UC94NkhmQmlt?=
- =?utf-8?B?WWgvSU5ETnVrdnE1cTVUWXkwa2o0cjdBRmg4OGpNV2hYdFBLOVZIamlIaVhP?=
- =?utf-8?B?N3FkKzMxVGpSOGhTTWJ0ekljRlZqT2VpUlF3K2RjMm1pa29RaU96MTFia3Ez?=
- =?utf-8?B?Zjh1b1Mvd21Vc0hyYlpwT1c1dE5tQVNHdXBXMHgyNHRDakQ2TXNYVDNiTXB6?=
- =?utf-8?Q?79pzkESUPD8GZors7wSLTnhS6GlDBIFFTjFUw=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB5896.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230032)(376006)(366008)(1800799016)(38070700010);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?N2VRMTZnZXdkZG43bjZiZEpmVDdCZUlLdm5wOUgyQWVVN1krUkgycEdpOTF3?=
- =?utf-8?B?bnpVWjR4YzdTamIyUUFZc3BqS1JkeFFVNHBxdWY4bEsrVjh1Y0F1TUJZQ1Vp?=
- =?utf-8?B?cVFhUndySnB6ZUdMOXBUNEc3a1Nkbjc5bEFMRk5oUUs1R0laUGR5TW9JbGdv?=
- =?utf-8?B?NHZoQVl5RUVGaUJ5b0RSendNRkVKektwWVh3QjNPaHJ2bXdFYVVKZEFzZE13?=
- =?utf-8?B?RGxFTVV4T1pDSDNoZ1B6N1VCMnU3c3BXTitSRkpkVms0KzlDKzVLeWgwcXFy?=
- =?utf-8?B?cTJEN29oejZ3VVBEVDdXdnRDQ2tRekRIUXJPRnJLMUE1d0gzMHg0bnd0REt2?=
- =?utf-8?B?RGRJNWhqVmt0L09qMVdmek14TUNWT0lSQXU1bDlPTWJ3T1RMMlZ6VlVWZi8r?=
- =?utf-8?B?TkF3enNmRjdyRjlWcWxGM1RndFF2MnRaQXJiOU9OZGZoY0lRVlhqY2s4T1d2?=
- =?utf-8?B?UDVhK1NTUXhEYmNZeitKRUhJbE80NU5jNXpobnBsbVdMcTM4NUJzb2V2ZHAx?=
- =?utf-8?B?dXgwK1hkWWtMTlVPVFhmMnVOblIrcUw2ZHVuT2psR3MzYmRKS2FIYXE3eTc0?=
- =?utf-8?B?VEVqckwxeDVQTGVZMlc2YU5hKytERGdjdDVjdjB4TW9mVTRkVTg0eGJuODE5?=
- =?utf-8?B?TmoreWsxc05pSGxYcEcvN296T2ZkbWxtTzBrNVQwM1JkUnUzcW90amNpcEJK?=
- =?utf-8?B?NlprSkZTc2pWdTFpMkUraDY1NjBZR3ozclZjZXh3RTFqVnFlV3JpbnFkdERr?=
- =?utf-8?B?SVQ3ZllMTHV4MFBjS1dvKzVLMUZKemlmZU9nMTl1RjNtVytaSXNpSTdqQmhP?=
- =?utf-8?B?RDY1NzF3UEViV3FLR0txNkN3dy82eFlkTS9PbWRHQk9SLzc3dHd4Y0M0SmU2?=
- =?utf-8?B?NW01Z1ozbDhzMXdXUlRpN3BRMlM2U1hudmh0d0tUWCs3N1hENkt5d0laSHpp?=
- =?utf-8?B?OGplcXAvVk5RNXBKV2VkeWR5eG0wMXk1cThLZ3JpLzYwS3l6SkFjcHhqcGtk?=
- =?utf-8?B?a2dCaVNxQ2hBWk1ISjlWNXV1UEw4aDlja1ZzZXNRWFpTV1ZVNGdySG9mdk1N?=
- =?utf-8?B?YldIVmdmYVgvRnZPVWZScTR0d1FocDY1alR6bW1LQ09zZWZBTEVxSVpNOURr?=
- =?utf-8?B?bjVXTDBHeUtCSG05LzN4cWJ0MzVZOEVKWlZLa3BnL2wyaGxPNDVLL2NybVBM?=
- =?utf-8?B?WEhPbWdnZUkrT0ZPWUFCdEFFb0Fac05Hbzl3MnBCZHRENUJya2J2K2dUcDBn?=
- =?utf-8?B?TDgva21ESlRNdmMrWWJiN2xiTzhzbFBoanlyTE1KbkIva0xZYnE3M1EvNngx?=
- =?utf-8?B?dXkrTmluZFc0Zm80YlMraXBsaEpUeFZNV0h0Q0ZmUUZaMTJzbjVIQWh0anVp?=
- =?utf-8?B?ZmszdHJhYWZhOFBETVdEb1RINVREaHR1aVAyMG9PdS9CeS8zck5nK29iQUNH?=
- =?utf-8?B?SDVYQnA2aTRxSGdadFhDdVMwSzMyeHN1Sjh4V2NTTFErV0VQbi9VMjFGN3BT?=
- =?utf-8?B?Sm8vSlVGV3BaUTlRaGpGTzdkMzNVdUdkUktXWEdvNGM2Wnc4VDRsQjY4aFZj?=
- =?utf-8?B?ZWNmYytyK1hqeVFxbXFDYm9IK2ZWOFhBbmJycVl4bmsrUDlSeSs2WVVHaFd3?=
- =?utf-8?B?RjBERmRpSmxpN1RVM0hZblYySmpSOWNTWTl5cmcrZFZleG1OLzBDQXgybWQr?=
- =?utf-8?B?Z0daYnpVNDFBNHhqU1E2aUZPZnhNNDN2cHJXdEN4eGRZbGNtUEdUbng3WlhJ?=
- =?utf-8?B?bGd2T2REUXF5akdkVG0rcWIxcUxoa3E2YU8rU3RZMGM2S0g2WWJscTJTMkRu?=
- =?utf-8?B?SzNQb251cTBsYnQzWUtvRGNIUDBOWnlaRGdvbDNWNkpLakZiMEJQWmQySzlE?=
- =?utf-8?B?SVlDK0svYXllczdRMlE3YmQwaGJrT3IvYVF5QkMzNEtoQ0pXMU5ZVHUzYjF0?=
- =?utf-8?B?bFIzYlV4bGNjUEsrc2JWZFBqcis5dFhQTGZvYmhsQktndVdZckNoS204SGY2?=
- =?utf-8?B?R2p2ejJHd0RIajNzb1JjbW5VeE5ZQlp0NEhqcjh0RXBTc0JtZWZ5RWYxbHRk?=
- =?utf-8?B?TEhraStKalk1NjZ2Q0xwT0RXcnhjQkk4Yit0a2x1NUhFSzg5dGFPUE9DQWpq?=
- =?utf-8?Q?bEaPhPf64/xAORsMciljacgWA?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Message-ID: <202406120146.xchlZbqX-lkp@intel.com>
+References: <20240610215100.673158-5-kartilak@cisco.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: cisco.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SJ0PR11MB5896.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 348ef5f3-7e21-46dd-0831-08dc8a3ebd39
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Jun 2024 17:48:44.6584
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 5ae1af62-9505-4097-a69a-c1553ef7840e
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: HmCpP13CIOstdQ0ekR4f6c4DGvorpU8r0fdWknl/8CZEpRB4tibjHpeCb1XrAOvUvrS5OCz7VJicsFLctRDdAg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR11MB8487
-X-Outbound-SMTP-Client: 72.163.7.163, rcdn-opgw-2.cisco.com
-X-Outbound-Node: alln-core-6.cisco.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240610215100.673158-5-kartilak@cisco.com>
 
-T24gVHVlc2RheSwgSnVuZSAxMSwgMjAyNCA2OjMyIEFNLCBIYW5uZXMgUmVpbmVja2UgPGhhcmVA
-c3VzZS5kZT4gd3JvdGU6DQo+IEJldHRlciB1c2UgYSBiaXRtYXAgaGVyZTsgZmRsc19hbGxvY190
-Z3Rfb3hpZCgpIGlzIG5vdCBhdG9taWMsIGFuZCB3aWxsDQo+IG5lZWQgdG8gYmUgbG9ja2VkIHRv
-IGF2b2lkIHJhY2VzLg0KDQpUaGFua3MgZm9yIHlvdXIgcmV2aWV3IGNvbW1lbnRzIHNvIGZhciBI
-YW5uZXMuIEFwcHJlY2lhdGUgeW91IHRha2luZyB0aGUgdGltZS4NCkknbGwgYWRkcmVzcyB0aGVt
-IGluIHRoZSBuZXh0IHZlcnNpb24uDQoNClJlZ2FyZHMsDQpLYXJhbg0K
+Hi Karan,
+
+kernel test robot noticed the following build warnings:
+
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on jejb-scsi/for-next linus/master v6.10-rc3 next-20240611]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Karan-Tilak-Kumar/scsi-fnic-Replace-shost_printk-with-pr_info-pr_err/20240611-060227
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20240610215100.673158-5-kartilak%40cisco.com
+patch subject: [PATCH 04/14] scsi: fnic: Add support for target based solicited requests and responses
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20240612/202406120146.xchlZbqX-lkp@intel.com/config)
+compiler: clang version 18.1.5 (https://github.com/llvm/llvm-project 617a15a9eac96088ae5e9134248d8236e34b91b1)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240612/202406120146.xchlZbqX-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202406120146.xchlZbqX-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/fnic/fdls_disc.c:1926:29: warning: variable 'gpn_ft_tgt_rem' set but not used [-Wunused-but-set-variable]
+    1926 |         struct fc_gpn_ft_rsp_iu_s *gpn_ft_tgt_rem;
+         |                                    ^
+   drivers/scsi/fnic/fdls_disc.c:2208:26: warning: variable 'els_rjt' set but not used [-Wunused-but-set-variable]
+    2208 |         struct fc_els_reject_s *els_rjt;
+         |                                 ^
+   drivers/scsi/fnic/fdls_disc.c:2890:11: warning: variable 's_id' set but not used [-Wunused-but-set-variable]
+    2890 |         uint32_t s_id = 0;
+         |                  ^
+   drivers/scsi/fnic/fdls_disc.c:2891:11: warning: variable 'd_id' set but not used [-Wunused-but-set-variable]
+    2891 |         uint32_t d_id = 0;
+         |                  ^
+   drivers/scsi/fnic/fdls_disc.c:1286:13: warning: unused function 'fnic_fdls_start_flogi' [-Wunused-function]
+    1286 | static void fnic_fdls_start_flogi(struct fnic_iport_s *iport)
+         |             ^~~~~~~~~~~~~~~~~~~~~
+   5 warnings generated.
+
+
+vim +/gpn_ft_tgt_rem +1926 drivers/scsi/fnic/fdls_disc.c
+
+  1920	
+  1921	static void
+  1922	fdls_process_gpn_ft_tgt_list(struct fnic_iport_s *iport,
+  1923								 struct fc_hdr_s *fchdr, int len)
+  1924	{
+  1925		struct fc_gpn_ft_rsp_iu_s *gpn_ft_tgt;
+> 1926		struct fc_gpn_ft_rsp_iu_s *gpn_ft_tgt_rem;
+  1927		struct fnic_tport_s *tport, *next;
+  1928		uint32_t fcid;
+  1929		uint64_t wwpn;
+  1930		int rem_len = len;
+  1931		u32 old_link_down_cnt = iport->fnic->link_down_cnt;
+  1932		struct fnic *fnic = iport->fnic;
+  1933	
+  1934		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+  1935					 "0x%x: FDLS process GPN_FT tgt list", iport->fcid);
+  1936	
+  1937		gpn_ft_tgt =
+  1938			(struct fc_gpn_ft_rsp_iu_s *) ((uint8_t *) fchdr +
+  1939									   sizeof(struct fc_hdr_s)
+  1940									   + sizeof(struct fc_ct_hdr_s));
+  1941		gpn_ft_tgt_rem = gpn_ft_tgt;
+  1942		len -= sizeof(struct fc_hdr_s) + sizeof(struct fc_ct_hdr_s);
+  1943	
+  1944		while (rem_len > 0) {
+  1945	
+  1946			fcid = ntoh24(gpn_ft_tgt->fcid);
+  1947			wwpn = ntohll(gpn_ft_tgt->wwpn);
+  1948	
+  1949			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+  1950					 "tport: 0x%x: ctrl:0x%x", fcid, gpn_ft_tgt->ctrl);
+  1951	
+  1952			if (fcid == iport->fcid) {
+  1953				if (gpn_ft_tgt->ctrl & FNIC_FC_GPN_LAST_ENTRY)
+  1954					break;
+  1955				gpn_ft_tgt++;
+  1956				rem_len -= sizeof(struct fc_gpn_ft_rsp_iu_s);
+  1957				continue;
+  1958			}
+  1959	
+  1960			tport = fnic_find_tport_by_wwpn(iport, wwpn);
+  1961			if (!tport) {
+  1962				/*
+  1963				 * New port registered with the switch or first time query
+  1964				 */
+  1965				tport = fdls_create_tport(iport, fcid, wwpn);
+  1966				if (!tport)
+  1967					return;
+  1968			}
+  1969			/*
+  1970			 * check if this was an existing tport with same fcid
+  1971			 * but whose wwpn has changed now ,then remove it and
+  1972			 * create a new one
+  1973			 */
+  1974			if (tport->fcid != fcid) {
+  1975				fdls_delete_tport(iport, tport);
+  1976				tport = fdls_create_tport(iport, fcid, wwpn);
+  1977				if (!tport)
+  1978					return;
+  1979			}
+  1980	
+  1981			/*
+  1982			 * If this GPN_FT rsp is after RSCN then mark the tports which
+  1983			 * matches with the new GPN_FT list, if some tport is not
+  1984			 * found in GPN_FT we went to delete that tport later.
+  1985			 */
+  1986			if (fdls_get_state((&iport->fabric)) == FDLS_STATE_RSCN_GPN_FT)
+  1987				tport->flags |= FNIC_FDLS_TPORT_IN_GPN_FT_LIST;
+  1988	
+  1989			if (gpn_ft_tgt->ctrl & FNIC_FC_GPN_LAST_ENTRY)
+  1990				break;
+  1991	
+  1992			gpn_ft_tgt++;
+  1993			rem_len -= sizeof(struct fc_gpn_ft_rsp_iu_s);
+  1994		}
+  1995		if (rem_len <= 0) {
+  1996			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+  1997				 "GPN_FT response: malformed/corrupt frame rxlen: %d remlen: %d",
+  1998				 len, rem_len);
+  1999		}
+  2000	
+  2001		/*remove those ports which was not listed in GPN_FT */
+  2002		if (fdls_get_state((&iport->fabric)) == FDLS_STATE_RSCN_GPN_FT) {
+  2003			list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
+  2004	
+  2005				if (!(tport->flags & FNIC_FDLS_TPORT_IN_GPN_FT_LIST)) {
+  2006					FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+  2007						 "Remove port: 0x%x not found in GPN_FT list",
+  2008						 tport->fcid);
+  2009					fdls_delete_tport(iport, tport);
+  2010				} else {
+  2011					tport->flags &= ~FNIC_FDLS_TPORT_IN_GPN_FT_LIST;
+  2012				}
+  2013				if ((old_link_down_cnt != iport->fnic->link_down_cnt)
+  2014					|| (iport->state != FNIC_IPORT_STATE_READY)) {
+  2015					return;
+  2016				}
+  2017			}
+  2018		}
+  2019	}
+  2020	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
