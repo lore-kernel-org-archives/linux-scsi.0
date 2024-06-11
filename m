@@ -1,87 +1,46 @@
-Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD1C15811A
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jun 2024 16:50:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 354913D38E
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Jun 2024 17:36:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718124659; cv=none; b=kHIuSrm/YE0fhNcAv1+ylCkGvYLr39wMaLhsIZR6Vt+swZA0dCtoGHrl12E6dy2BhZQZP0iA8cB9TNltSJLIElLOKCQVcGOyvd9X99sbxtf4HMviywJwmnGAO5KtNNzXcqjz6YCpxe+2M5treen4AfpEtX3ZSBKFhT34yKtB8+g=
+	t=1718127391; cv=none; b=DSsK/09rwm+FeGP74Z/mt9ZbResO4395sGSoNqspCl+V4bRRHroZRqReoGkpS7i1E8x9fHdRp0+JkQvywSp4lR4f/W3Wqz2ePhisnsqhXI5RrBJAXKqIoCRTgSRm60yN5CmW7tDeH97gJVsWn+buTlHJJ8KpM4cbdkW6IFDhcNU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718124659; c=relaxed/simple;
-	bh=2FT/emrK48iE3dx07WXN0ST/iq8T21acuyaCQMRLCLQ=;
+	s=arc-20240116; t=1718127391; c=relaxed/simple;
+	bh=/BqqK/VVtD7v/i9CbUEaT6zRLELdsgQYQZL4OsY0/F0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XzvBwb8DUStzyemn6gx/DpFIK3LRE0cbUoD5ICjA3bt3OrgNzeObmRJ1Sr1C1UX3pPROebC/wM8iN7HAqHJnctxdLyMYrf0xPrvWUPAS06vygwcFE/7e5G0uyRLd2Xi5hItlINFIzpX3E5H/67g/CV/VpC41r/e/cZ6N3G0YE08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com; spf=none smtp.mailfrom=toxicpanda.com; dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b=Zt6ibg/s; arc=none smtp.client-ip=209.85.128.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=toxicpanda.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=toxicpanda.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=S/JANMR0brQa3qJez6OfHsWjSWPHUIB48wSvKAW/Ko3QYVCHq2KVU8GBF6vz+oTBZ3B5cl0NHduWNoOAM1rvFEhzxQj2Ud7hydol8wx2MhpsL3/btJcLSwfHdkR4Fz0itYwu4lIeoJf9jdduxwDcHiNfn9fLNcEknTv2cJJxxUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=2IZgz2AR; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="Zt6ibg/s"
-Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-62a2424ed00so56078427b3.1
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Jun 2024 09:50:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1718124657; x=1718729457; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=k7qH/Egkqtc5OmSCKcG8suDn1pwScsKWRQ+gioBgKgY=;
-        b=Zt6ibg/sXDFPcB1PdqLbi9y9Lq84fI4dtsabAaKnS71DR4ge4yMuB1Z9lS7wA4wHrn
-         shpAYklqhBt+02fv/lI70+9yLugOwkE6jd95eVKnaVgZYxsTh2WCsmHTgQ1UVgNRVLal
-         wmO5N6RWxwgoiytstIBOrWyQFGmt3N38VbBAgwcFn/bnZiw+iwyuahz+8bpIWwoYMk5k
-         XMp/oVXEeglCEkIcBUpukavQm3svwzpoI5LogCeDIIPsZ/TBEY3fH93kounsMrkvv0iU
-         qwThWU60dMvFW8JzcIe4TZiEEXk0LdCstA848HdLhK4LdxhwQLIYyB46hHTq4v902MUD
-         ZUhQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718124657; x=1718729457;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=k7qH/Egkqtc5OmSCKcG8suDn1pwScsKWRQ+gioBgKgY=;
-        b=G0XmfCy/l3UyF88sVanb07OUBjfrlZ9Q+8paNcKv1wKyo/iXocE6siHYdSgDYoWtgg
-         iQpT7zX/6eQO5C9lUfJr8Jpfxa1yqgT3LLeb1k8IsY0MDAVDacYbR4Gl+kjAnb0mAaJP
-         FhaKYuDw3NTQYKAa54DzWjnrJEc8zP8851N1dT81ll7K/R4qevuL2cTBzzsQvFxWDG9X
-         upNYKvU5/dsCLAYZS5sSwooT6/2HDJZGaWEJ8OdNJg2HP2SZJ4vcIjmgWuq2N8/mddTX
-         Dc+NFN5bkUhsHxrtITvqLGQIQvvcv3Tswd4rLSFSTI9Q/ROm3K8C6q34QyXMGfsGpQ9t
-         aijQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVA9FX/DnBWhNCQ7+ObKHlTm1+bLweNkJcn5GM9kCcueRDq2/7e+WLkFwNwaj0ckicptKOPzjXQtWXQHBGAV4kOdtH93eJYV3l6ag==
-X-Gm-Message-State: AOJu0YwFaJodISiQqWXosuS8+K0WkD1w9jS2XExaR5XOdrqb/4qwD/Rs
-	OWTseulP1lAMtaZoL+1YAJjVJO13uWr+BrEc0cfm2ylgjnHFE2KJpBqPAHbiXrE=
-X-Google-Smtp-Source: AGHT+IFLbNcRGoXteJvsvQz9ePKtTqtffGprFSIVvQoC+S7q0aJ0DFFhhqHjAFy+KyUVXYjD8ktBew==
-X-Received: by 2002:a0d:d851:0:b0:618:95a3:70b9 with SMTP id 00721157ae682-62cd565129cmr130634777b3.36.1718124656832;
-        Tue, 11 Jun 2024 09:50:56 -0700 (PDT)
-Received: from localhost (syn-076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-62ccaef2825sm20935207b3.139.2024.06.11.09.50.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Jun 2024 09:50:56 -0700 (PDT)
-Date: Tue, 11 Jun 2024 12:50:55 -0400
-From: Josef Bacik <josef@toxicpanda.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
-	Richard Weinberger <richard@nod.at>,
-	Philipp Reisner <philipp.reisner@linbit.com>,
-	Lars Ellenberg <lars.ellenberg@linbit.com>,
-	Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
-	Ming Lei <ming.lei@redhat.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
-	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>,
-	Vineeth Vijayan <vneethv@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
-	drbd-dev@lists.linbit.com, nbd@other.debian.org,
-	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
-	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
-	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH 09/26] nbd: move setting the cache control flags to
- __nbd_set_size
-Message-ID: <20240611165055.GD247672@perftesting>
-References: <20240611051929.513387-1-hch@lst.de>
- <20240611051929.513387-10-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="2IZgz2AR"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=EujE9XMlYhLGZw29C4addK4kkM4307N1EoWblmsEK7k=; b=2IZgz2AR2MUVm5WkeKmPHJtUlO
+	o7ZpyiR/zmgbxbdGhoBT5V698yScsbFTqSDaPT5vxC6Sz40nlAPCKgn7sjbq5FfZ4Z6fba54ShmJf
+	qn0dfGieWivslfw29yA/F4rmxOt5Wm6pvFUhuVb2mQ5Po/x3OBn1oZ2/1FrN7Iaqoy1AIhIebuUEd
+	WpeV3MKoqDo+KguvBqpMBe16aYsd5FfapV7m1G2xBjc17yn5diLZP0zi2TkiTOOjtvtUyYSDTAv9u
+	o1hnHE5EzD8iIOguiq/jlEei/VZFueAWORH3hJXmIWxh74cn2F8OysXXflXsrwzYPQ7dBOw3Dl/z6
+	28MtiP+A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sH5Q5-00000009gkI-35Lu;
+	Tue, 11 Jun 2024 17:36:29 +0000
+Date: Tue, 11 Jun 2024 10:36:29 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, Avri Altman <Avri.Altman@wdc.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>
+Subject: Re: [PATCH] scsi: core: Remove an incorrect comment
+Message-ID: <ZmiLHY7wjT1kMx98@infradead.org>
+References: <20240607213553.1743087-1-bvanassche@acm.org>
+ <ZmPrGSJvofIjA2fb@infradead.org>
+ <8dff4945-97fb-4ab7-8e7d-065e9755a3f0@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -90,16 +49,20 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240611051929.513387-10-hch@lst.de>
+In-Reply-To: <8dff4945-97fb-4ab7-8e7d-065e9755a3f0@acm.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Jun 11, 2024 at 07:19:09AM +0200, Christoph Hellwig wrote:
-> Move setting the cache control flags in nbd in preparation for moving
-> these flags into the queue_limits structure.
+On Mon, Jun 10, 2024 at 11:08:14AM -0700, Bart Van Assche wrote:
+> How about changing the comment above scsi_static_device_list[] into this?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> /*
+>  * scsi_static_device_list: list of devices that require settings that differ
+>  * from the default, includes black-listed (broken) devices. The entries here
+>  * are added to the tail of scsi_dev_info_list via scsi_dev_info_list_init.
+>  *
+>  * If possible, set the BLIST_* flags from inside the SCSI LLD rather than
+>  * adding an entry to this list.
+>  */
 
-Reviewed-by: Josef Bacik <josef@toxicpanda.com>
+This sounds good to me.
 
-Thanks,
-
-Josef
