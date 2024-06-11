@@ -1,215 +1,1939 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10D16176AD4;
-	Tue, 11 Jun 2024 11:49:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718106568; cv=fail; b=ZdAonQUr/CJScHn4LBqEcdSkGSjBFqKmh+1slJ5vQFor/AYlUijikGm3Uu4qUYOGJub4UTrraEMYfxuHM2girqwfWecQHlt1xzCXUjnV1Nhy8uu4+x8dGovDge+u5Jn5KADNy64ajYxJ0IVA7wUATwLdSZspAGkvOFFArSny8lo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718106568; c=relaxed/simple;
-	bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=BrndXkXzGVMDL/vj5pzyuXvA5P9czWF/NrQZGe12vb2KySNAG3Kj0D5LBp+84sAyeYnltM6z4zxm+O7GS11xp/zaLNVdy2trBDxugBRWJFQuNFJrhANTCdVPgbfEH7XUa+RJ+9mV3ze/8Pdjvb30OEQqHUeJnkK+oae8xNWeTR0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=DHrfbkb7; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=OVto4xmI; arc=fail smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3909A1EA71;
+	Tue, 11 Jun 2024 13:31:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1718112712; cv=none; b=ue+7Swv+eb2Ccqy1EPyU+4h4OFVJwDIxqCadH9G1aBFv9GJ4z69j1D6Uxz15E5xbBahGeZxcaurCzL94EJ8gydEu7V/YTDFyhmutGVULjcElyqdQRtWCiriudzTpIUyKjF9kk37CuwNANwHG0e+4K7fTkIp1KjqkGw9XpAukMCA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1718112712; c=relaxed/simple;
+	bh=C5wm2oZpU6v55iQF3IXEII+cH5NPpF1kPus4z3ED1tQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XYjmd3zPetGEY2IP9oNZG9NaA6y7Wf30E4ZUEfEd14gboVJZeds9B07JE4eBTT8NJ7mXln4zBMEGnnjUSVVN2P+CT/Dar4qIGBFUI9Ro/YnIyeQXz8f6MxW24WS5uug2jpV6IPxa7sI+ttJm2bEpI+rQIoEAHMib9EScsIRkjUg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=uuJcpNdJ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=QmEE1kGG; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=uuJcpNdJ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=QmEE1kGG; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="DHrfbkb7";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="OVto4xmI"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1718106567; x=1749642567;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
-  b=DHrfbkb7HFgM+yY8xguhjN/BM9AHkYQ3wW2Fsr0n9hfchTIIvEFJnc/R
-   6AMdCPWUTYWbhS2AIqaICVidx2Pspvq/2dMqvUN87PxLrbOis5j70CUUa
-   SqmKFEyKLNbtk2Ew2CT7oMcYL72vIRkpfCmXpn9PkB1lrVHo1O7JIexOl
-   SIbjWdH+cn/ZjFqZUCcX/Xo/9q6KVt0kutPjYHJq9uupsL+z04aDirP2Y
-   BubvzwbryFGPVmcNxYTtOQTWQbBAh1gyKygheo+YWdC+Pi1F24IiM3cMn
-   W8pKw1yGmXLU+EEEbl3YeL3ED7c2G0aRnaqaZghhWIsapoYzVHqQwhGln
-   g==;
-X-CSE-ConnectionGUID: JrPDpdWfRG+ZqkmmTiOxOg==
-X-CSE-MsgGUID: E3cjbR6US1mJc3gvMlH95g==
-X-IronPort-AV: E=Sophos;i="6.08,229,1712592000"; 
-   d="scan'208";a="18781831"
-Received: from mail-mw2nam10lp2048.outbound.protection.outlook.com (HELO NAM10-MW2-obe.outbound.protection.outlook.com) ([104.47.55.48])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Jun 2024 19:49:22 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CRmGq6iSB90y4s8aNIFdy1KnNncJpFLUxVfTcv/yRxyNve+RltmXcIEvt1bSKHThU0VlPg28INa8JFeIncYLOuyorWyLraqrqYhY47AVMStS6ZTLCDwkMEjP6L+Yh6V51U04Q4Klft0CXv3xJNk9KWDjp7k/5jUlOH1jzctSHglGH9KsLVwzkAa1XRekLwtWywu/5nkkrWCp/FJ6z2CvjW63ZPFOUPwrzLmDsPHp8HlrGLhAcsuxOpL1BF83X/qmDVRhp3hnqj1UksYcbIADlUWBSzXIEQAynQOHBvd8tumoZlS9CNtm6EOqNQbcBQIc3+mA6UjNEiFzI+Q4WRkp4w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
- b=iO5F3SwUN3X3j77HvgMjY6jG5O7gm7dZZrLDmD0WIOFQAxdRfIZ7BR8wEU9ZMv4qxZjdQcX3RgrKsJCQB5+h7FBo5Rvnzxh9yf/qPpCr5YaaKLndyFNj4h+fxJUnM1HmgMYzeut5iGT+BkoJmEiFET4CVOUNbTIbY1mACXiR3q88O5AVnDLouz7DGwaVjNsrDkBVAyD/80TfEsWxlq0bDJ/WMzaXVkibVOHG9JeCsGBPocarfWyz2IMj7vU2zcKVHi+5hB15gzYfYsZw2ioCshBWZOhEQaY21G8mUhGAF+eCX6MOfsqKJ33eacPbQldtHmTlG2v/gNRzVvspJxF0lA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
- b=OVto4xmIBCZSfAUJmn/NJAVGklt21Os5hPTqNzTajqHqfyRNN/xQkPzIx0w4SrbcjO3PrBonbpVhNOJ+smxroDnUEuwHQyNRVuh8sJ6rhfRV1AdlkCaURdQyWxJ38Jr2v842hXjWVaNAOZs2wpsNceCT0GfYnZH6a+RyQfLDbDA=
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
- by PH0PR04MB7688.namprd04.prod.outlook.com (2603:10b6:510:5f::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7633.37; Tue, 11 Jun
- 2024 11:49:20 +0000
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::ee22:5d81:bfcf:7969]) by PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::ee22:5d81:bfcf:7969%4]) with mapi id 15.20.7633.037; Tue, 11 Jun 2024
- 11:49:20 +0000
-From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-CC: Geert Uytterhoeven <geert@linux-m68k.org>, Richard Weinberger
-	<richard@nod.at>, Philipp Reisner <philipp.reisner@linbit.com>, Lars
- Ellenberg <lars.ellenberg@linbit.com>,
-	=?utf-8?B?Q2hyaXN0b3BoIELDtmhtd2FsZGVy?= <christoph.boehmwalder@linbit.com>,
-	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>, "Michael
- S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
-	=?utf-8?B?Um9nZXIgUGF1IE1vbm7DqQ==?= <roger.pau@citrix.com>, Alasdair Kergon
-	<agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka
-	<mpatocka@redhat.com>, Song Liu <song@kernel.org>, Yu Kuai
-	<yukuai3@huawei.com>, Vineeth Vijayan <vneethv@linux.ibm.com>, "Martin K.
- Petersen" <martin.petersen@oracle.com>, "linux-m68k@lists.linux-m68k.org"
-	<linux-m68k@lists.linux-m68k.org>, "linux-um@lists.infradead.org"
-	<linux-um@lists.infradead.org>, "drbd-dev@lists.linbit.com"
-	<drbd-dev@lists.linbit.com>, "nbd@other.debian.org" <nbd@other.debian.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
-	"virtualization@lists.linux.dev" <virtualization@lists.linux.dev>,
-	"xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-	"linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-	"dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
-	"nvdimm@lists.linux.dev" <nvdimm@lists.linux.dev>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Subject: Re: [PATCH 08/26] virtio_blk: remove virtblk_update_cache_mode
-Thread-Topic: [PATCH 08/26] virtio_blk: remove virtblk_update_cache_mode
-Thread-Index: AQHau79kF7G5+NsLzE2Hf/a9e+yyI7HCc0sA
-Date: Tue, 11 Jun 2024 11:49:20 +0000
-Message-ID: <89d4138d-92b7-4899-a028-277dde4b662f@wdc.com>
-References: <20240611051929.513387-1-hch@lst.de>
- <20240611051929.513387-9-hch@lst.de>
-In-Reply-To: <20240611051929.513387-9-hch@lst.de>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-user-agent: Mozilla Thunderbird
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH0PR04MB7416:EE_|PH0PR04MB7688:EE_
-x-ms-office365-filtering-correlation-id: 89a728e8-ce41-4765-5853-08dc8a0c87ff
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230031|366007|376005|1800799015|7416005|38070700009;
-x-microsoft-antispam-message-info:
- =?utf-8?B?NWQ0OExuMTY3TGJVTzcxS0JUanpBVE9EYWRXNEI2K1BJTmV5a0dpQ0NncXpk?=
- =?utf-8?B?cE9WY3VHRnJtdU9BZzdKUjZGdHkvN2p4MWo3WVI1RUt6V0k4aXVXeng3WEln?=
- =?utf-8?B?QkRXRTYxSUovc2IybSthSUF3NlRMYmwwdTk1cWY4Vk1oc1UrWUlyT1NRRnQ2?=
- =?utf-8?B?ckpac2xud0VldFF1MWZUM3VmY0xWRURCNk9pNEtqZ0VseUF3ejJHUWhDUFFW?=
- =?utf-8?B?M09pbWF4blowenFHNHJSb3oxS2krTDc0eWM0Y2FEenFYOVROd3Y5SGg3Smpv?=
- =?utf-8?B?Q1Rib1FzSkIrdWkvUFg1ajJ5b2QwL3ZIUHlmNDY5QlhlUWhXcWtKRzIvOUdK?=
- =?utf-8?B?dmJMRWJxcVJjNHNYV000QmVBVVl1amFHL2d4SDN1ZnBxNXc1ejR6VjBZU2Ri?=
- =?utf-8?B?NDRVVDlJTFRRSkMvQm1sUGM3NmdQU0t6c0FvY2hENC9paE4yQnlyQWIzNlV1?=
- =?utf-8?B?MnNLQ0JGOFM1VWdwbThtUWJ5Q2orS2kvVDdqOGlxUGdmL2g3K3p1SytBcllq?=
- =?utf-8?B?M2hUeVBMaVZ5VFUxK1BtNTE5TnpDRVc1NHJSL0YvT0tsank0aDRXVG1SVkdL?=
- =?utf-8?B?eTJvcENsMUFvdTZVa24rTWtMRDc0Vlh4SCszRkd5RGxlU0pZMWF0RmZtYWgv?=
- =?utf-8?B?TjZzT21Oem51ci9TcCt1ckx1YURTVVlIOTh3SjRzem9FdTEwWVNSZCt0Y2NO?=
- =?utf-8?B?djhNbkQ0N3FTajEwUThXUzhiQTBnK0FPWklYRy9IamhCL0NXbDBaaksvVVdy?=
- =?utf-8?B?SC9IM3JrMDVsZm9wcjExSHhMUFNqeUpmcjhCNS9IN1pHVGRycVFlRWE4T29w?=
- =?utf-8?B?cXpEZGorNnZrLyszdEpZN1NnS1NweDRTKytCVWNOSjVSVFhscDMzSWZnbmNM?=
- =?utf-8?B?VE13Z3pvcXBraGZNRjBjWU9UYlFXYkRMaCthMmI0MitYbjA2VlI0UEdyUTFT?=
- =?utf-8?B?OVBTbW5qTDBpYlNmRCthbHpUaC8zUHVaL2ptNUZ2b0ZTR2VIYjkvSURxK29o?=
- =?utf-8?B?elkrSDhDRkx3ZC9rbm5qM1h3aEx2c2FqUWJVSEpYaUlxRVAxUFJrU0toWkps?=
- =?utf-8?B?RDBwdmFDcVhtZlFRaHZQNC9TL1RvbitBc3lLTzh6M2I1dVRYWUdkS1V6ZlBV?=
- =?utf-8?B?RmFJNkVUZHF4eFdRMjNUUkQxUnJJSzlzTFFQQ1E0M1RKWUpESzViWkZMaWNC?=
- =?utf-8?B?c1FHSUpTRTRsbXlUWWpRekhTUzBlcUk3dzNJY0xZbVNBcGVKWmdSZ1hpRVVs?=
- =?utf-8?B?WGs3djN3SDZpMmRKVnlJZ0xFdTFLUkNORlhxTlBLZ2dWK1lZdDc2eEN0QnBW?=
- =?utf-8?B?N0ttQUZReGpGZW9qTFE4MDZYTk12dGI1THg1alo0b0NJQkhiQ2xTd3ljc21B?=
- =?utf-8?B?aVNwVnRzTm9wQTM1ZjBKQ2ZXdXRNd0dWY0NYNkI3cFZnVkdEWHZIYWVJeExZ?=
- =?utf-8?B?UEVKODB2MDM5V2V4TVJtcnRxTXVoRDUzMThkZHhVTUtySUJ1blJjazk5Nmhx?=
- =?utf-8?B?cUhmcDAxQ1IvNW16RmlwQ2ZERFdIcXRGMHlQRW1PQXdMMngraE9KOVlxZi92?=
- =?utf-8?B?S0JaUXBYQnJtU1FtNkNaa2JCYjFwWXNXSU5uaE5vTGxDR3RnVGxnU0x0OEx2?=
- =?utf-8?B?RzlNcG1WWHRUVU9LWXd6S2FDMm1kQUd2WnhVK096TU56UXZteWZ6ZnFWNndL?=
- =?utf-8?B?bm5sVXk1dnkrT0loSjQ2RHp1bktzN3hyM0x0M0tHdzFXT090bW5sR3B0R1Fy?=
- =?utf-8?B?S0NEWVNiY0tNUUtvdFQ1L2FSMnIrL2R4U3RYMExRcHFQY1VsMFJpY1V0OThu?=
- =?utf-8?Q?fHqIqB2e0zMkLzeieOsvwqCrxfD1ZTx3fy5Pw=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015)(7416005)(38070700009);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?MHA5UVJ0K1JMZDFzVVBqQllHbHFJbWd6ZEpRSFJGQTVmRFlxbmhMYndCcm91?=
- =?utf-8?B?M3ZzcG1rV0llY3dpZlFtWWNBWm0wenJpNGpPbnR0NUdvMlF4RmxrTHZsWUZC?=
- =?utf-8?B?bGhhWThzQ1hIYTYzaGJjbHR2bVcyaU0wSU54OElwaDlQNk04Y1lXU2RHOFBi?=
- =?utf-8?B?dUwwdklCMHRPOGlmQnU2bkEzV0xFckdzRmVPL2hKZUJDVWFXVU16TkdUTTZI?=
- =?utf-8?B?ZkVWR3VraCtwdlNvbWZnTXVyNWFoWEFMWkcxUk40NmU3VGYxVDZxNDVtRklQ?=
- =?utf-8?B?TjN5K3Z1ZnFBNkREYnpFd2dobWNFTUpDb2VVOGFjM3NxcjRUekd2Sm96UVRP?=
- =?utf-8?B?QzZEN0FlU1R0d1Nub041OU8yNlNIcnJCQzM2ZTJ3dTVHWERBWU1TVEdVSlI5?=
- =?utf-8?B?dTVWN2tMdTJqZFNNKzZXMkdNaFhTRVJHUlFsY0h2YU4rVUNzUDFWdUpwQVFK?=
- =?utf-8?B?ZXdwVVpBSHQ4b2xPRmozR0xEdndZOGRBRjdacUFUU0lqZGtPelh3R3NRQmVh?=
- =?utf-8?B?TkJKbTdycTBEREFhbFdVaGRJQjVPOSt5UGh1QVNRVDFtT2hMeURIVWlXcnZk?=
- =?utf-8?B?UmVSNTFwK05ZNU9OZXZMSklrTUw5UmhMSE5QWlhHbDgrd08xemE0UENoR3JU?=
- =?utf-8?B?SmFQWEUzZmZIbm5UVStmYklKQmtaRDFzMUNLZmFLSFdtN2FuSlZMYmtmcHVv?=
- =?utf-8?B?SlAwL0NWZVpZZ1ViMDNTQjV0TWMxV2RRbXlzZzl2eWtabHJQV3h2aGJLUkRX?=
- =?utf-8?B?RElzbjQ2YXNISjk5K0VkNFRQdndoMnppMXlIQUpFVFdwT1g4TCt3dW1sOWZq?=
- =?utf-8?B?a0NsRVJXcjVSR21mUVpybTJQYzhtd3owbncxRGVPV2lYYjJpenpucFlVcTQ5?=
- =?utf-8?B?Yk8rUDZFODBXbmhuOS82RHpGWVN6dG1TaSs1ajd0Rk5wYzJpU2c3V2IrdWR0?=
- =?utf-8?B?RUhlUjFodTYyT0ZldjBaejhwU21aemZMT3JsL1p1VENWenhoUm1DRzFWMVJq?=
- =?utf-8?B?a2dGYXZKV2Y1VHh2L2RuY2NsVjMvN28zQTVRYXRlcy9hOXNqMW1aME5qLzgw?=
- =?utf-8?B?em5xZzFCekZZblZ2QWd0YWFhQ1cvbmVHZVlGbk9OSlFZdDlDYUZYUjNzVWtY?=
- =?utf-8?B?RjVGSVBOWGRaU1ZKQ1cyMkpTOVN5clM5ejRQTlJkYmljbCtrN0VRQm1SdWYv?=
- =?utf-8?B?bzMxbmZjZHZ2ZTNyajVwejZJcWo1RmhZclNzMjNTUTlhZVEyZGxVZW5RSmtp?=
- =?utf-8?B?ak5LVHQzTEYxSVYrTUppdWtMNHV0d2JScHcyT2N4RXQ0UXl1QVEzNGhBaXNK?=
- =?utf-8?B?UG9yV01iY1g2NlhyVE5aU1FpS08wUXBJTWJDOU1iLzZMNDhzdUVaS21PVlAy?=
- =?utf-8?B?YWR0QkVuSlRyamJFcm9BTGJYZWFjZm0wbklzMlRIUnlxTTRvT0FvYWYwazND?=
- =?utf-8?B?ZjRpZEg3VHFrTHRWWWlLZkVWSHFlT1RFeGpzU3RYQzl3eVF3UE56aWhwQ2d1?=
- =?utf-8?B?TXl2UmVoaVhVVTBKR2JnSDROUGUvUUFUait3WVhGakJDV1U5dGJXTFcxK21Z?=
- =?utf-8?B?dGhGWGszMXJhQ0k3VWo3bU04ZE80VkIzMWVHelVGR244RGlRZzUraHAxaDU4?=
- =?utf-8?B?am9oS2F1L09aUkFNMWtBbjF4NXM3dnYrZFlJK3J6NVBDSFNJbUhSM0RaeHo2?=
- =?utf-8?B?VjFva0RraDZEMlBrM0p1bjE3RGlnVEZjK1NBNUNjWmo5eEpZNnYrU2pMSC90?=
- =?utf-8?B?V21McGNXU2R3UWkwTjdiVXBPTXRaRjJLMmJTUUJ6a2tpQkw2N0J3MzFsb1Q4?=
- =?utf-8?B?VjV5R2lSbkFxSXpVZ3ZmdU8vbXVJRlBqaEpHWFRveUtQbVhrYzhDcjVyWWJF?=
- =?utf-8?B?dGh3MzZBdWlJZUEyQUhsNFY3ZDZvdWd3UXNaQmFPQjZTTk1Cb05qUElIWEJn?=
- =?utf-8?B?OHpqU0ozUXc0SzU5UlRqNXZVVUZuSVdqKy9qQ1RxZXdacGd6cVBBWFJoRjV3?=
- =?utf-8?B?aWJ2eEIxVXB1V3Q3eDZ6b20ydXI2RmZ6N1I3QVRyZDg1Qm81dE9JbVhyMEZv?=
- =?utf-8?B?OWkxcGtwNHBqT3R2L3RJMnE1MUpkU0d6YlFheHUvU2szdW1BQWg0azQrYkd4?=
- =?utf-8?B?QTQ4Yi9IczdobFdDUjdLdkxXSndueG9vcUUvU2Z4bWpJRkJzeWdTYTZmT2JZ?=
- =?utf-8?B?ckE9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <958B41E259453E438A1DB5FF9C75C781@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="uuJcpNdJ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="QmEE1kGG";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="uuJcpNdJ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="QmEE1kGG"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 2806920706;
+	Tue, 11 Jun 2024 13:31:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1718112706; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=l66jYU/gFu2q91izSRp95xYBK7qkPlsCw9NJTP8mgUE=;
+	b=uuJcpNdJCDUeXjjcCtnxwAwqDxRrf7FCTJNC5U58aduIbVOhqKNn3zbdyPBJzJ3IdJouWW
+	qGkfe1yreAYhHJxgLCQU2YOj6XP0C1eJ84JVmuDGfb/0fn3MCg7bOQojUYmV/4kk6xpJXc
+	jeJG5PrNTbkZxaCvbZEgrHuT8f47h7E=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1718112706;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=l66jYU/gFu2q91izSRp95xYBK7qkPlsCw9NJTP8mgUE=;
+	b=QmEE1kGGBskwUPY6v4ruNH1addtVU4k/7sFh04rISv6hF+oJNfCl20GDlDz2z++uUeD8TL
+	9jI1ZkaWloS9LmDQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=uuJcpNdJ;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=QmEE1kGG
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1718112706; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=l66jYU/gFu2q91izSRp95xYBK7qkPlsCw9NJTP8mgUE=;
+	b=uuJcpNdJCDUeXjjcCtnxwAwqDxRrf7FCTJNC5U58aduIbVOhqKNn3zbdyPBJzJ3IdJouWW
+	qGkfe1yreAYhHJxgLCQU2YOj6XP0C1eJ84JVmuDGfb/0fn3MCg7bOQojUYmV/4kk6xpJXc
+	jeJG5PrNTbkZxaCvbZEgrHuT8f47h7E=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1718112706;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=l66jYU/gFu2q91izSRp95xYBK7qkPlsCw9NJTP8mgUE=;
+	b=QmEE1kGGBskwUPY6v4ruNH1addtVU4k/7sFh04rISv6hF+oJNfCl20GDlDz2z++uUeD8TL
+	9jI1ZkaWloS9LmDQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id DAB3B13A55;
+	Tue, 11 Jun 2024 13:31:45 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id FvTWNMFRaGaIPgAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 11 Jun 2024 13:31:45 +0000
+Message-ID: <a963acd7-7d93-4cdb-ad9b-045c22ed8ce1@suse.de>
+Date: Tue, 11 Jun 2024 15:31:45 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	dQw6uzYdE/FnnfxnwjpkW3OgbullM0F/pcQuDv92l5TOph4sKR0fHczCbXxBw5zc/h60Jk6v/g3kf2aFVPiuMYLmWdD0uus26oDDOJnKvSHw1PpSaq1SUGVz9WMxpAbTLRrCBg58vEAS81mnY2M6ZdEKxT3tO0V75X+/r4mD7jv50QHA4T7278REL+/T5ypizLl6wveIKs6Hd+x5S2E4mRyXbI4zaV6X8Xn8uWAHW4jAN0XPGOPnO3ZzoPPrElb8IXZoCbsl97XQ0CeESxrs38qWCIcod6s4IxVQJzqwhjUcWHEMeW7+VrX/9G50f+AqmURZpsBXKQYlUfxe8Et4gh6VmGIBq07SRRlZNsbv8+bWjNvLgimrs1dLC2S73xbMhTos/fTubBOobNUt+fTThGB0KkMSVFOBg7QtJmjsSURPD64/mJdvZJ/OfJEhjL7v/KUMw0qvWDDlBOo7/rCOiqtXADNz03e7C8x2nDeKj81cMMuQHaXiQ5eouZNYjgYxFMfhTr3k3i9YLe6BNPjyoGuAnmmqKfxO0PzdFSP583TCIdW9/1NQFqb4BSKjTAxVZdKv/v7c8BeWp4wpV1/FgyDUGFmobj5x7AOPWeiIqLXmG8/FPKX+vxrn7nf6qOPE
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 89a728e8-ce41-4765-5853-08dc8a0c87ff
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Jun 2024 11:49:20.5036
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: abShtI8J+M5F2N3VJfAC6CnUQqnjNC8m27YeKFq1a1ey9sM9Qw5Nzs0SS0ktb01VOGcWcXfhjpCV/tqsv6p866q7FWxCaD+jL++RMAczM2c=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR04MB7688
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 04/14] scsi: fnic: Add support for target based solicited
+ requests and responses
+To: Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com
+Cc: arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
+ mkai2@cisco.com, satishkh@cisco.com, jejb@linux.ibm.com,
+ martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20240610215100.673158-1-kartilak@cisco.com>
+ <20240610215100.673158-5-kartilak@cisco.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240610215100.673158-5-kartilak@cisco.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 2806920706
+X-Spam-Score: -4.50
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.50 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	XM_UA_NO_VERSION(0.01)[];
+	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 
-TG9va3MgZ29vZCwNClJldmlld2VkLWJ5OiBKb2hhbm5lcyBUaHVtc2hpcm4gPGpvaGFubmVzLnRo
-dW1zaGlybkB3ZGMuY29tPg0K
+On 6/10/24 23:50, Karan Tilak Kumar wrote:
+> Add support for target based solicited requests and responses.
+> Add support for tport definitions and processing.
+> Add support for restarting the IT nexus.
+> 
+> Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
+> Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
+> Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
+> Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+> ---
+>   drivers/scsi/fnic/fdls_disc.c | 1540 +++++++++++++++++++++++++++++++--
+>   drivers/scsi/fnic/fnic.h      |    6 +
+>   drivers/scsi/fnic/fnic_fdls.h |    4 +
+>   3 files changed, 1473 insertions(+), 77 deletions(-)
+> 
+> diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
+> index 22a2d0c1c78f..d920202d413d 100644
+> --- a/drivers/scsi/fnic/fdls_disc.c
+> +++ b/drivers/scsi/fnic/fdls_disc.c
+> @@ -11,6 +11,8 @@
+>   #include <scsi/fc/fc_fcp.h>
+>   #include <linux/utsname.h>
+>   
+> +#define FC_FC4_TYPE_SCSI 0x08
+> +
+>   static void fdls_send_rpn_id(struct fnic_iport_s *iport);
+>   
+>   /* Frame initialization */
+> @@ -59,6 +61,19 @@ struct fc_rpn_id_s fnic_rpn_id_req = {
+>   				  .command = FC_CT_RPN_CMD}
+>   };
+>   
+> +/*
+> + * Variables:
+> + * did, sid, oxid
+> + */
+> +struct fc_els_prli_s fnic_prli_req = {
+> +	.fchdr = {.r_ctl = 0x22, .type = 0x01,
+> +			  .f_ctl = FNIC_ELS_REQ_FCTL, .rx_id = 0xFFFF},
+> +	.command = FC_ELS_PRLI_REQ,
+> +	.page_len = 16,
+> +	.payload_len = 0x1400,
+> +	.sp = {.type = 0x08, .flags = 0x0020, .csp = 0xA2000000}
+> +};
+> +
+>   /*
+>    * Variables:
+>    * fh_s_id, port_id, port_name
+> @@ -123,11 +138,51 @@ struct fc_logo_req_s fnic_logo_req = {
+>   #define RETRIES_EXHAUSTED(iport)      \
+>   	(iport->fabric.retry_counter == FABRIC_LOGO_MAX_RETRY)
+>   
+> +#define FNIC_TPORT_MAX_NEXUS_RESTART (8)
+> +
+> +/* Private Functions */
+>   static void fdls_process_flogi_rsp(struct fnic_iport_s *iport,
+>   		   struct fc_hdr_s *fchdr, void *rx_frame);
+>   static void fnic_fdls_start_plogi(struct fnic_iport_s *iport);
+> +static struct fnic_tport_s *fdls_create_tport(struct fnic_iport_s *iport,
+> +									  uint32_t fcid,
+> +									  uint64_t wwpn);
+> +static void fdls_target_restart_nexus(struct fnic_tport_s *tport);
+> +static void fdls_start_tport_timer(struct fnic_iport_s *iport,
+> +					struct fnic_tport_s *tport, int timeout);
+> +
+>   static void fdls_start_fabric_timer(struct fnic_iport_s *iport,
+>   			int timeout);
+> +static void fdls_tport_timer_callback(struct timer_list *t);
+> +
+> +static uint16_t fdls_alloc_tgt_oxid(struct fnic_iport_s *iport,
+> +									uint16_t base)
+> +{
+> +	int i;
+> +	int start, end;
+> +
+> +	start = base - FDLS_PLOGI_OXID_BASE;
+> +	end = start + FDLS_TGT_OXID_BLOCK_SZ;
+> +
+> +	for (i = start; i < end; i++) {
+> +		if (iport->tgt_oxid_pool[i] == 0) {
+> +			iport->tgt_oxid_pool[i] = 1;
+> +			return (i + FDLS_PLOGI_OXID_BASE);
+> +		}
+> +	}
+> +	return 0xFFFF;
+> +}
+> +
+> +static void fdls_free_tgt_oxid(struct fnic_iport_s *iport, uint16_t oxid)
+> +{
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	if (iport->tgt_oxid_pool[oxid - FDLS_PLOGI_OXID_BASE] != 1) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Freeing unused OXID: 0x%x", oxid);
+> +	}
+> +	iport->tgt_oxid_pool[oxid - FDLS_PLOGI_OXID_BASE] = 0;
+> +}
+>   
+Better use a bitmap here; fdls_alloc_tgt_oxid() is not atomic, and will 
+need to be locked to avoid races.
+
+>   static void
+>   fdls_start_fabric_timer(struct fnic_iport_s *iport, int timeout)
+> @@ -153,6 +208,63 @@ fdls_start_fabric_timer(struct fnic_iport_s *iport, int timeout)
+>   				 "fabric timer is %d ", timeout);
+>   }
+>   
+> +static void
+> +fdls_start_tport_timer(struct fnic_iport_s *iport,
+> +					   struct fnic_tport_s *tport, int timeout)
+> +{
+> +	u64 fabric_tov;
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	if (tport->timer_pending) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "tport fcid 0x%x: Canceling disc timer\n",
+> +					 tport->fcid);
+> +		fnic_del_tport_timer_sync();
+> +		tport->timer_pending = 0;
+> +	}
+> +
+> +	if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED))
+> +		tport->retry_counter++;
+> +
+> +	fabric_tov = jiffies + msecs_to_jiffies(timeout);
+> +	mod_timer(&tport->retry_timer, round_jiffies(fabric_tov));
+> +	tport->timer_pending = 1;
+> +}
+> +
+> +void
+> +fdls_send_tport_abts(struct fnic_iport_s *iport,
+> +					 struct fnic_tport_s *tport)
+> +{
+> +	uint8_t s_id[3];
+> +	uint8_t d_id[3];
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	struct fc_hdr_s fc_abts_s = {
+> +		.r_ctl = 0x81,			/* ABTS */
+> +		.cs_ctl = 0x00, .type = 0x00, .f_ctl = FNIC_REQ_ABTS_FCTL, .seq_id =
+> +			0x00, .df_ctl = 0x00, .seq_cnt = 0x0000, .rx_id = 0xFFFF,
+> +		.param = 0x00000000,	/* bit:0 = 0 Abort a exchange */
+> +	};
+Why do you define this as a local variable, but frames as globals?
+Please make all of these frames global.
+
+> +
+> +	struct fc_hdr_s *pfc_abts = &fc_abts_s;
+> +
+> +	hton24(s_id, iport->fcid);
+> +	hton24(d_id, tport->fcid);
+> +	FNIC_SET_S_ID(pfc_abts, s_id);
+> +	FNIC_SET_D_ID(pfc_abts, d_id);
+> +	tport->flags |= FNIC_FDLS_TGT_ABORT_ISSUED;
+> +
+> +	fc_abts_s.ox_id = tport->oxid_used;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "FDLS sending tport abts: tport->state: %d ",
+> +				 tport->state);
+> +
+> +	fnic_send_fcoe_frame(iport, &fc_abts_s, sizeof(struct fc_hdr_s));
+> +	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
+> +	fdls_start_tport_timer(iport, tport, 2 * iport->r_a_tov);
+> +}
+> +
+>   static void fdls_send_fabric_abts(struct fnic_iport_s *iport)
+>   {
+>   	uint8_t fcid[3];
+> @@ -338,6 +450,169 @@ static void fdls_send_gpn_ft(struct fnic_iport_s *iport, int fdls_state)
+>   	fdls_set_state((&iport->fabric), fdls_state);
+>   }
+>   
+> +static void
+> +fdls_send_tgt_adisc(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
+> +{
+> +	struct fc_els_adisc_s adisc;
+> +	uint8_t s_id[3];
+> +	uint8_t d_id[3];
+> +	uint16_t oxid;
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	memset(&adisc, 0, sizeof(struct fc_els_adisc_s));
+> +	adisc.fchdr.r_ctl = 0x22;
+> +	adisc.fchdr.type = 0x01;
+> +	adisc.fchdr.f_ctl = FNIC_ELS_REQ_FCTL;
+> +	adisc.fchdr.rx_id = 0xFFFF;
+> +
+> +	hton24(s_id, iport->fcid);
+> +	hton24(d_id, tport->fcid);
+> +	FNIC_SET_S_ID((&adisc.fchdr), s_id);
+> +	FNIC_SET_D_ID((&adisc.fchdr), d_id);
+> +
+> +	oxid = htons(fdls_alloc_tgt_oxid(iport, FDLS_ADISC_OXID_BASE));
+> +	if (oxid == 0xFFFF) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Failed to allocate OXID to send ADISC %p", iport);
+> +		return;
+> +	}
+> +
+> +	tport->oxid_used = oxid;
+> +	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
+> +
+> +	FNIC_SET_OX_ID((&adisc.fchdr), oxid);
+> +	FNIC_SET_NPORT_NAME(adisc, iport->wwpn);
+> +	FNIC_SET_NODE_NAME(adisc, iport->wwnn);
+> +
+> +	memcpy(adisc.fcid, s_id, 3);
+> +	adisc.command = FNIC_ELS_ADISC_REQ;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "sending ADISC to tgt fcid: 0x%x", tport->fcid);
+> +
+> +	fnic_send_fcoe_frame(iport, &adisc, sizeof(struct fc_els_adisc_s));
+> +	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
+> +	fdls_start_tport_timer(iport, tport, 2 * iport->e_d_tov);
+
+How do you recover the oxid if fnic_send_fcoe_frame() fails?
+
+> +}
+> +
+> +void fdls_delete_tport(struct fnic_iport_s *iport,
+> +					   struct fnic_tport_s *tport)
+> +{
+> +	struct fnic_tport_event_s *tport_del_evt;
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	if ((tport->state == FDLS_TGT_STATE_OFFLINING)
+> +		|| (tport->state == FDLS_TGT_STATE_OFFLINE))
+> +		return;
+> +
+> +	fdls_set_tport_state(tport, FDLS_TGT_STATE_OFFLINING);
+> +	/*
+> +	 * By setting this flag, the tport will not be seen in a look-up
+> +	 * in an RSCN. Even if we move to multithreaded model, this tport
+> +	 * will be destroyed and a new RSCN will have to create a new one
+> +	 */
+> +	tport->flags |= FNIC_FDLS_TPORT_TERMINATING;
+> +
+> +	if (tport->timer_pending) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "tport fcid 0x%x: Canceling disc timer\n",
+> +					 tport->fcid);
+> +		fnic_del_tport_timer_sync();
+> +		tport->timer_pending = 0;
+> +	}
+> +
+> +	if (IS_FNIC_FCP_INITIATOR(fnic)) {
+> +		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+> +		fnic_rport_exch_reset(iport->fnic, tport->fcid);
+> +		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
+> +
+> +		if (tport->flags & FNIC_FDLS_SCSI_REGISTERED) {
+> +			tport_del_evt =
+> +				kzalloc(sizeof(struct fnic_tport_event_s), GFP_ATOMIC);
+> +			if (!tport_del_evt) {
+> +				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Failed to allocate memory for tport fcid: 0x%0x\n",
+> +					 tport->fcid);
+> +				return;
+> +			}
+> +			tport_del_evt->event = TGT_EV_RPORT_DEL;
+> +			tport_del_evt->arg1 = (void *) tport;
+> +			list_add_tail(&tport_del_evt->links, &fnic->tport_event_list);
+> +			queue_work(fnic_event_queue, &fnic->tport_work);
+> +		} else {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "tport 0x%x not reg with scsi_transport. Freeing locally",
+> +				 tport->fcid);
+> +			list_del(&tport->links);
+> +			kfree(tport);
+> +		}
+> +	}
+> +}
+> +
+I'm slightly curious about locking here.
+You do call spin_lock() etc when calling fnic_rport_exch_reset(), so
+apparently this function runs lockless. But if it does, how do you 
+ensure that 'tport->flags' is not modified after checking, causing
+you do queue an event for a tport which is already unregistered?
+Maybe you should look at reference counting for tports?
+
+> +static void
+> +fdls_send_tgt_plogi(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
+> +{
+> +	struct fc_els_s plogi;
+> +	uint8_t s_id[3];
+> +	uint8_t d_id[3];
+> +	uint16_t oxid;
+> +	struct fnic *fnic = iport->fnic;
+> +	uint32_t timeout;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "Send tgt PLOGI to fcid: 0x%x", tport->fcid);
+> +
+> +	memcpy(&plogi, &fnic_plogi_req, sizeof(struct fc_els_s));
+> +
+> +	hton24(s_id, iport->fcid);
+> +	hton24(d_id, tport->fcid);
+> +
+> +	FNIC_SET_S_ID((&plogi.fchdr), s_id);
+> +	FNIC_SET_D_ID((&plogi.fchdr), d_id);
+> +	FNIC_SET_RDF_SIZE(plogi.u.csp_plogi, iport->max_payload_size);
+> +
+> +	oxid = htons(fdls_alloc_tgt_oxid(iport, FDLS_PLOGI_OXID_BASE));
+> +	if (oxid == 0xFFFF) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "0x%x: Failed to allocate oxid to send PLOGI to fcid: 0x%x",
+> +				 iport->fcid, tport->fcid);
+> +		return;
+> +	}
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "send tgt PLOGI: tgt fcid: 0x%x oxid: 0x%x", tport->fcid,
+> +				 ntohs(oxid));
+> +	tport->oxid_used = oxid;
+> +	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
+> +
+> +	FNIC_SET_OX_ID((&plogi.fchdr), oxid);
+> +	FNIC_SET_NPORT_NAME(plogi, iport->wwpn);
+> +	FNIC_SET_NODE_NAME(plogi, iport->wwnn);
+> +
+> +	timeout = max(2 * iport->e_d_tov, iport->plogi_timeout);
+> +
+> +	fnic_send_fcoe_frame(iport, &plogi, sizeof(struct fc_els_s));
+> +	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
+> +	fdls_start_tport_timer(iport, tport, timeout);
+> +}
+> +
+> +static uint16_t
+> +fnic_fc_plogi_rsp_rdf(struct fnic_iport_s *iport,
+> +					  struct fc_els_s *plogi_rsp)
+> +{
+> +	uint16_t b2b_rdf_size = ntohs(plogi_rsp->u.csp_plogi.b2b_rdf_size);
+> +	uint16_t spc3_rdf_size =
+> +		((uint16_t) (plogi_rsp->spc3[6] << 8 | plogi_rsp->spc3[7]) &
+> +		 FNIC_FC_C3_RDF);
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "MFS: b2b_rdf_size: 0x%x spc3_rdf_size: 0x%x",
+> +			 b2b_rdf_size, spc3_rdf_size);
+> +
+> +	return MIN(b2b_rdf_size, spc3_rdf_size);
+> +}
+> +
+>   static void fdls_send_register_fc4_types(struct fnic_iport_s *iport)
+>   {
+>   	struct fc_rft_id rft_id;
+> @@ -387,6 +662,47 @@ static void fdls_send_register_fc4_features(struct fnic_iport_s *iport)
+>   	fdls_start_fabric_timer(iport, 2 * iport->e_d_tov);
+>   }
+>   
+> +static void
+> +fdls_send_tgt_prli(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
+> +{
+> +	struct fc_els_prli_s prli;
+> +	uint8_t s_id[3];
+> +	uint8_t d_id[3];
+> +	uint16_t oxid;
+> +	struct fnic *fnic = iport->fnic;
+> +	uint32_t timeout;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "FDLS sending PRLI to tgt: 0x%x", tport->fcid);
+> +
+> +	oxid = htons(fdls_alloc_tgt_oxid(iport, FDLS_PRLI_OXID_BASE));
+> +	if (oxid == 0xFFFF) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Failed to allocate OXID to send PRLI %p", iport);
+> +		return;
+> +	}
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "FDLS sending PRLI to tgt: 0x%x OXID: 0x%x", tport->fcid,
+> +				 ntohs(oxid));
+> +
+> +	tport->oxid_used = oxid;
+> +	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
+> +	memcpy(&prli, &fnic_prli_req, sizeof(struct fc_els_prli_s));
+> +
+> +	hton24(s_id, iport->fcid);
+> +	hton24(d_id, tport->fcid);
+> +
+> +	FNIC_SET_S_ID((&prli.fchdr), s_id);
+> +	FNIC_SET_D_ID((&prli.fchdr), d_id);
+> +	FNIC_SET_OX_ID((&prli.fchdr), oxid);
+> +
+> +	timeout = max(2 * iport->e_d_tov, iport->plogi_timeout);
+> +
+> +	fnic_send_fcoe_frame(iport, &prli, sizeof(struct fc_els_prli_s));
+> +	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
+> +	fdls_start_tport_timer(iport, tport, timeout);
+> +}
+> +
+>   /***********************************************************************
+>    * fdls_send_fabric_logo
+>    *
+> @@ -434,6 +750,208 @@ void fdls_send_fabric_logo(struct fnic_iport_s *iport)
+>   	fnic_send_fcoe_frame(iport, &logo, sizeof(struct fc_logo_req_s));
+>   }
+>   
+> +/***********************************************************************
+> + * fdls_tgt_logout
+> + *
+> + * \brief Send plogo to the remote port
+> + *
+> + * \param[in]  iport   Handle to fnic iport. remote port
+> + *
+> + * \retval void
+> + *
+> + * \note This function does not change or check the fabric/tport state.
+> + *       It the caller responsibility to set the appropriate tport/fabric
+> + *       state when this is called. Normall fdls_tgt_state_plogo.
+> + *       fdls_set_tport_state(tport, fdls_tgt_state_plogo)
+> + *
+> + *\note This could be used to send plogo to nameserver process
+> + *       also not just target processes
+> + *
+> + ***********************************************************************/
+
+Please convert to valid kernel-doc format.
+
+> +void fdls_tgt_logout(struct fnic_iport_s *iport,
+> +					 struct fnic_tport_s *tport)
+> +{
+> +	struct fc_logo_req_s logo;
+> +	uint8_t s_id[3];
+> +	uint8_t d_id[3];
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "Sending logo to tport fcid: 0x%x", tport->fcid);
+> +	memcpy(&logo, &fnic_logo_req, sizeof(struct fc_logo_req_s));
+> +
+> +	hton24(s_id, iport->fcid);
+> +	hton24(d_id, tport->fcid);
+> +
+> +	FNIC_SET_S_ID((&logo.fchdr), s_id);
+> +	FNIC_SET_D_ID((&logo.fchdr), d_id);
+> +	FNIC_SET_OX_ID((&logo.fchdr), FNIC_TLOGO_REQ_OXID);
+> +
+> +	memcpy(&logo.fcid, s_id, 3);
+> +	logo.wwpn = htonll(iport->wwpn);
+> +
+> +	fnic_send_fcoe_frame(iport, &logo, sizeof(struct fc_logo_req_s));
+> +}
+> +
+> +static void fdls_tgt_discovery_start(struct fnic_iport_s *iport)
+> +{
+> +	struct fnic_tport_s *tport, *next;
+> +	u32 old_link_down_cnt = iport->fnic->link_down_cnt;
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "0x%x: Starting FDLS target discovery", iport->fcid);
+> +
+> +	list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
+> +		if ((old_link_down_cnt != iport->fnic->link_down_cnt)
+> +			|| (iport->state != FNIC_IPORT_STATE_READY)) {
+> +			break;
+> +		}
+> +		/* if we marked the tport as deleted due to GPN_FT
+> +		 * We should not send ADISC anymore
+> +		 */
+> +		if ((tport->state == FDLS_TGT_STATE_OFFLINING) ||
+> +			(tport->state == FDLS_TGT_STATE_OFFLINE))
+> +			continue;
+
+This check is not atomic, ensure that there are not side-effects.
+Maybe check if the 'state' variable shouldn't be protected.
+
+> +
+> +		/* For tports which have received RSCN */
+> +		if (tport->flags & FNIC_FDLS_TPORT_SEND_ADISC) {
+> +			tport->retry_counter = 0;
+> +			fdls_set_tport_state(tport, FDLS_TGT_STATE_ADISC);
+> +			tport->flags &= ~FNIC_FDLS_TPORT_SEND_ADISC;
+> +			fdls_send_tgt_adisc(iport, tport);
+> +			continue;
+> +		}
+> +		if (fdls_get_tport_state(tport) != FDLS_TGT_STATE_INIT) {
+> +			/* Not a new port, skip  */
+> +			continue;
+> +		}
+> +		tport->retry_counter = 0;
+> +		fdls_set_tport_state(tport, FDLS_TGT_STATE_PLOGI);
+> +		fdls_send_tgt_plogi(iport, tport);
+> +	}
+> +	fdls_set_state((&iport->fabric), FDLS_STATE_TGT_DISCOVERY);
+> +}
+> +
+> +/*
+> + * Function to restart the IT nexus if we received any out of
+> + * sequence PLOGI/PRLI  response from the target.
+> + * The memory for the new tport structure is allocated
+> + * inside fdls_create_tport and added to the iport's tport list.
+> + * This will get freed later during tport_offline/linkdown
+> + * or module unload. The new_tport pointer will go out of scope
+> + * safely since the memory it is
+> + * pointing to it will be freed later
+> + */
+> +static void fdls_target_restart_nexus(struct fnic_tport_s *tport)
+> +{
+> +	struct fnic_iport_s *iport = tport->iport;
+> +	struct fnic_tport_s *new_tport = NULL;
+> +	uint32_t fcid;
+> +	uint64_t wwpn;
+> +	int nexus_restart_count;
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "tport fcid: 0x%x state: %d restart_count: %d",
+> +				 tport->fcid, tport->state, tport->nexus_restart_count);
+> +
+> +	fcid = tport->fcid;
+> +	wwpn = tport->wwpn;
+> +	nexus_restart_count = tport->nexus_restart_count;
+> +
+> +	fdls_delete_tport(iport, tport);
+
+And this can't fail? Really?
+
+> +
+> +	if (nexus_restart_count >= FNIC_TPORT_MAX_NEXUS_RESTART) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Exceeded nexus restart retries tport: 0x%x", fcid);
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * Allocate memory for the new tport and add it to
+> +	 * iport's tport list.
+> +	 * This memory will be freed during tport_offline/linkdown
+> +	 * or module unload. The pointer new_tport is safe to go
+> +	 * out of scope when this function returns, since the memory
+> +	 * it is pointing to is guaranteed to be freed later
+> +	 * as mentioned above.
+> +	 */
+> +	new_tport = fdls_create_tport(iport, fcid, wwpn);
+> +	if (!new_tport) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Error creating new tport: 0x%x", fcid);
+> +		return;
+> +	}
+> +
+> +	new_tport->nexus_restart_count = nexus_restart_count + 1;
+> +	fdls_send_tgt_plogi(iport, new_tport);
+> +	fdls_set_tport_state(new_tport, FDLS_TGT_STATE_PLOGI);
+> +}
+> +
+> +struct fnic_tport_s *fnic_find_tport_by_fcid(struct fnic_iport_s *iport,
+> +									 uint32_t fcid)
+> +{
+> +	struct fnic_tport_s *tport, *next;
+> +
+> +	list_for_each_entry_safe(tport, next, &(iport->tport_list), links) {
+> +		if ((tport->fcid == fcid)
+> +			&& !(tport->flags & FNIC_FDLS_TPORT_TERMINATING))
+> +			return tport;
+> +	}
+> +	return NULL;
+> +}
+> +
+
+Locking?
+The _safe() variants protect against removal from the list, they do
+_not_ protect against removal of the element itself.
+Nor concurrent accesses to the same element.
+
+> +static struct fnic_tport_s *fdls_create_tport(struct fnic_iport_s *iport,
+> +								  uint32_t fcid, uint64_t wwpn)
+> +{
+> +	struct fnic_tport_s *tport;
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "FDLS create tport: fcid: 0x%x wwpn: 0x%llx", fcid, wwpn);
+> +
+> +	tport = kzalloc(sizeof(struct fnic_tport_s), GFP_ATOMIC);
+> +	if (!tport) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "Memory allocation failure while creating tport: 0x%x\n",
+> +			 fcid);
+> +		return NULL;
+> +	}
+> +
+> +	tport->max_payload_size = FNIC_FCOE_MAX_FRAME_SZ;
+> +	tport->r_a_tov = FNIC_R_A_TOV_DEF;
+> +	tport->e_d_tov = FNIC_E_D_TOV_DEF;
+> +	tport->fcid = fcid;
+> +	tport->wwpn = wwpn;
+> +	tport->iport = iport;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "Need to setup tport timer callback");
+> +
+> +	timer_setup(&tport->retry_timer, fdls_tport_timer_callback, 0);
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "Added tport 0x%x", tport->fcid);
+> +	fdls_set_tport_state(tport, FDLS_TGT_STATE_INIT);
+> +	list_add_tail(&tport->links, &iport->tport_list);
+> +	atomic_set(&tport->in_flight, 0);
+> +	return tport;
+> +}
+> +
+> +struct fnic_tport_s *fnic_find_tport_by_wwpn(struct fnic_iport_s *iport,
+> +									 uint64_t wwpn)
+> +{
+> +	struct fnic_tport_s *tport, *next;
+> +
+> +	list_for_each_entry_safe(tport, next, &(iport->tport_list), links) {
+> +		if ((tport->wwpn == wwpn)
+> +			&& !(tport->flags & FNIC_FDLS_TPORT_TERMINATING))
+> +			return tport;
+> +	}
+> +	return NULL;
+> +}
+> +
+>   void fdls_fabric_timer_callback(struct timer_list *t)
+>   {
+>   	struct fnic_fdls_fabric_s *fabric = from_timer(fabric, t, retry_timer);
+> @@ -548,98 +1066,614 @@ void fdls_fabric_timer_callback(struct timer_list *t)
+>   		else {
+>   			/* ABTS has timed out (2*ra_tov), we give up */
+>   			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> -						 "ABTS timed out. Starting PLOGI: %p", iport);
+> -			fnic_fdls_start_plogi(iport);
+> +						 "ABTS timed out. Starting PLOGI: %p", iport);
+> +			fnic_fdls_start_plogi(iport);
+> +		}
+> +		break;
+> +	case FDLS_STATE_REGISTER_FC4_TYPES:
+> +		/* scr received a LS_RJT with busy we retry from here */
+> +		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
+> +			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
+> +			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
+> +			fdls_send_register_fc4_types(iport);
+> +			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +			return;
+Please don't do returns here.
+Convert it into if() {} else if() {} else {} clauses, and call 
+spin_unlock only at the end of the switch.
+
+> +		}
+> +		/* RFT_ID timed out send abts */
+> +		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
+> +			fdls_send_fabric_abts(iport);
+> +		} else {
+> +			/* ABTS has timed out (2*ra_tov), we give up */
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +						 "ABTS timed out. Starting PLOGI: %p", iport);
+> +			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
+> +		}
+> +		break;
+> +	case FDLS_STATE_REGISTER_FC4_FEATURES:
+> +		/* scr received a LS_RJT with busy we retry from here */
+> +		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
+> +			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
+> +			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
+> +			fdls_send_register_fc4_features(iport);
+> +			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +			return;
+Same here.
+
+> +		}
+> +		/* scr have timed out send abts */
+> +		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED))
+> +			fdls_send_fabric_abts(iport);
+> +		else {
+> +			/* ABTS has timed out (2*ra_tov), we give up */
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +						 "ABTS timed out. Starting PLOGI %p", iport);
+> +			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
+> +		}
+> +		break;
+> +	case FDLS_STATE_RSCN_GPN_FT:
+> +	case FDLS_STATE_SEND_GPNFT:
+> +	case FDLS_STATE_GPN_FT:
+> +		/* GPN_FT received a LS_RJT with busy we retry from here */
+> +		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
+> +			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
+> +			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
+> +			fdls_send_gpn_ft(iport, iport->fabric.state);
+> +			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +			return;
+> +		}
+
+And here.
+
+> +		/* gpn_gt have timed out send abts */
+> +		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
+> +			fdls_send_fabric_abts(iport);
+> +		} else {
+> +			/*
+> +			 * ABTS has timed out have waited (2*ra_tov) can
+> +			 * retry safely with same exchange id
+> +			 */
+> +			if (iport->fabric.retry_counter < FDLS_RETRY_COUNT) {
+> +				fdls_send_gpn_ft(iport, iport->fabric.state);
+> +			} else {
+> +				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "ABTS timeout for fabric GPN_FT. Check name server: %p",
+> +					 iport);
+> +			}
+> +		}
+> +		break;
+> +	default:
+> +		break;
+> +	}
+> +	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +}
+> +
+> +static void fdls_send_delete_tport_msg(struct fnic_tport_s *tport)
+> +{
+> +	struct fnic_iport_s *iport = (struct fnic_iport_s *) tport->iport;
+> +	struct fnic *fnic = iport->fnic;
+> +	struct fnic_tport_event_s *tport_del_evt;
+> +
+> +	if (!IS_FNIC_FCP_INITIATOR(fnic))
+> +		return;
+> +
+> +	tport_del_evt = kzalloc(sizeof(struct fnic_tport_event_s), GFP_ATOMIC);
+> +	if (!tport_del_evt) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "Failed to allocate memory for tport event fcid: 0x%x",
+> +			 tport->fcid);
+> +		return;
+> +	}
+> +	tport_del_evt->event = TGT_EV_TPORT_DELETE;
+> +	tport_del_evt->arg1 = (void *) tport;
+> +	list_add_tail(&tport_del_evt->links, &fnic->tport_event_list);
+> +	queue_work(fnic_event_queue, &fnic->tport_work);
+> +}
+> +
+> +static void fdls_tport_timer_callback(struct timer_list *t)
+> +{
+> +	struct fnic_tport_s *tport = from_timer(tport, t, retry_timer);
+> +	struct fnic_iport_s *iport = (struct fnic_iport_s *) tport->iport;
+> +	struct fnic *fnic = iport->fnic;
+> +	uint16_t oxid;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&fnic->fnic_lock, flags);
+> +	if (!tport->timer_pending) {
+> +		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +		return;
+> +	}
+> +
+> +	if (iport->state != FNIC_IPORT_STATE_READY) {
+> +		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +		return;
+> +	}
+> +
+> +	if (tport->del_timer_inprogress) {
+> +		tport->del_timer_inprogress = 0;
+> +		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "tport_del_timer inprogress. Skip timer cb tport fcid: 0x%x\n",
+> +			 tport->fcid);
+> +		return;
+> +	}
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +		 "tport fcid: 0x%x timer pending: %d state: %d retry counter: %d",
+> +		 tport->fcid, tport->timer_pending, tport->state,
+> +		 tport->retry_counter);
+> +
+> +	tport->timer_pending = 0;
+> +	oxid = ntohs(tport->oxid_used);
+> +
+> +	/* We retry plogi/prli/adisc frames depending on the tport state */
+> +	switch (tport->state) {
+> +	case FDLS_TGT_STATE_PLOGI:
+> +		/* PLOGI frame received a LS_RJT with busy, we retry from here */
+> +		if ((tport->flags & FNIC_FDLS_RETRY_FRAME)
+> +			&& (tport->retry_counter < iport->max_plogi_retries)) {
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			tport->flags &= ~FNIC_FDLS_RETRY_FRAME;
+> +			fdls_send_tgt_plogi(iport, tport);
+> +			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +			return;
+Same here.
+
+> +		}
+> +		/* Plogi frame has timed out 2*ed_tov send abts */
+> +		if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
+> +			fdls_send_tport_abts(iport, tport);
+> +		} else if (tport->retry_counter < iport->max_plogi_retries) {
+> +			/*
+> +			 * ABTS has timed out have waited (2*ra_tov)
+> +			 * can retry safely
+> +			 * even if with same exchange id
+> +			 */
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			fdls_send_tgt_plogi(iport, tport);
+> +		} else {
+> +			/* exceeded plogi retry count */
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			fdls_send_delete_tport_msg(tport);
+> +		}
+> +		break;
+> +	case FDLS_TGT_STATE_PRLI:
+> +		/* PRLI received a LS_RJT with busy , hence we retry from here */
+> +		if ((tport->flags & FNIC_FDLS_RETRY_FRAME)
+> +			&& (tport->retry_counter < FDLS_RETRY_COUNT)) {
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			tport->flags &= ~FNIC_FDLS_RETRY_FRAME;
+> +			fdls_send_tgt_prli(iport, tport);
+> +			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +			return;
+
+And here.
+
+> +		}
+> +		/* PRLI has time out 2*ed_tov send abts */
+> +		if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
+> +			fdls_send_tport_abts(iport, tport);
+> +		} else {
+> +			/* ABTS has timed out for prli, we go back to PLOGI */
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			fdls_send_tgt_plogi(iport, tport);
+> +			fdls_set_tport_state(tport, FDLS_TGT_STATE_PLOGI);
+> +		}
+> +		break;
+> +	case FDLS_TGT_STATE_ADISC:
+> +		/* ADISC timed out send a ABTS */
+> +		if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
+> +			fdls_send_tport_abts(iport, tport);
+> +			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +			return;Just call 'break' here instead of spin_unlock/return.
+
+> +		} else if ((tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)
+> +				   && (tport->retry_counter < FDLS_RETRY_COUNT)) {
+> +			/*
+> +			 * ABTS has timed out have waited (2*ra_tov) can
+> +			 * retry safely even if with same exchange id
+> +			 */
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			fdls_send_tgt_adisc(iport, tport);
+> +
+> +			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +			return;
+Same here.
+
+> +		}
+> +		/* exceeded retry count */
+> +		fdls_free_tgt_oxid(iport, oxid);
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "ADISC not responding. Deleting target port: 0x%x",
+> +				 tport->fcid);
+> +		fdls_send_delete_tport_msg(tport);
+
+just call 'break' here.
+
+> +		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +		return;
+> +	default:
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Unknown tport state: 0x%x", tport->state);
+> +		break;
+> +	}
+> +	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +}
+> +
+> +static void fnic_fdls_start_flogi(struct fnic_iport_s *iport)
+> +{
+> +	iport->fabric.retry_counter = 0;
+> +	fdls_send_fabric_flogi(iport);
+> +	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_FLOGI);
+> +	iport->fabric.flags = 0;
+> +}
+> +
+> +static void fnic_fdls_start_plogi(struct fnic_iport_s *iport)
+> +{
+> +	iport->fabric.retry_counter = 0;
+> +	fdls_send_fabric_plogi(iport);
+> +	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_PLOGI);
+> +	iport->fabric.flags &= ~FNIC_FDLS_FABRIC_ABORT_ISSUED;
+> +}
+> +
+> +static void
+> +fdls_process_tgt_adisc_rsp(struct fnic_iport_s *iport,
+> +						   struct fc_hdr_s *fchdr)
+> +{
+> +	uint32_t tgt_fcid;
+> +	struct fnic_tport_s *tport;
+> +	uint8_t *fcid;
+> +	uint64_t frame_wwnn;
+> +	uint64_t frame_wwpn;
+> +	uint16_t oxid;
+> +	struct fc_els_adisc_ls_acc_s *adisc_rsp =
+> +		(struct fc_els_adisc_ls_acc_s *) fchdr;
+> +	struct fc_els_reject_s *els_rjt = (struct fc_els_reject_s *) fchdr;
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	fcid = FNIC_GET_S_ID(fchdr);
+> +	tgt_fcid = ntoh24(fcid);
+> +	tport = fnic_find_tport_by_fcid(iport, tgt_fcid);
+> +
+> +	if (!tport) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Tgt ADISC response tport not found: 0x%x", tgt_fcid);
+> +		return;
+> +	}
+> +	if ((iport->state != FNIC_IPORT_STATE_READY)
+> +		|| (tport->state != FDLS_TGT_STATE_ADISC)
+> +		|| (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "Dropping this ADISC response");
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "iport state: %d tport state: %d Is abort issued on PRLI? %d",
+> +			 iport->state, tport->state,
+> +			 (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED));
+> +		return;
+> +	}
+> +	if (ntohs(fchdr->ox_id) != ntohs(tport->oxid_used)) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "Dropping frame from target: 0x%x",
+> +			 tgt_fcid);
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "Reason: Stale ADISC/Aborted ADISC/OOO frame delivery");
+> +		return;
+> +	}
+> +
+> +	switch (adisc_rsp->command) {
+> +	case FC_LS_ACC:
+> +		if (tport->timer_pending) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +						 "tport 0x%p Canceling fabric disc timer\n",
+> +						 tport);
+> +			fnic_del_tport_timer_sync();
+> +		}
+> +		tport->timer_pending = 0;
+> +		tport->retry_counter = 0;
+> +		oxid = ntohs(fchdr->ox_id);
+> +		fdls_free_tgt_oxid(iport, oxid);
+> +		frame_wwnn = htonll(adisc_rsp->node_name);
+> +		frame_wwpn = htonll(adisc_rsp->nport_name);
+> +		if ((frame_wwnn == tport->wwnn) && (frame_wwpn == tport->wwpn)) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "ADISC accepted from target: 0x%x. Target logged in",
+> +				 tgt_fcid);
+> +			fdls_set_tport_state(tport, FDLS_TGT_STATE_READY);
+> +		} else {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +						 "Error mismatch frame: ADISC");
+> +		}
+> +		break;
+> +
+> +	case FC_LS_REJ:
+> +		if (((els_rjt->reason_code == FC_ELS_RJT_LOGICAL_BUSY)
+> +			 || (els_rjt->reason_code == FC_ELS_RJT_BUSY))
+> +			&& (tport->retry_counter < FDLS_RETRY_COUNT)) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "ADISC ret FC_LS_REJ BUSY. Retry from timer routine: 0x%x",
+> +				 tgt_fcid);
+> +
+> +			/* Retry ADISC again from the timer routine. */
+> +			tport->flags |= FNIC_FDLS_RETRY_FRAME;
+> +		} else {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +						 "ADISC returned FC_LS_REJ from target: 0x%x",
+> +						 tgt_fcid);
+> +			oxid = ntohs(fchdr->ox_id);
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			fdls_delete_tport(iport, tport);
+> +		}
+> +		break;
+> +	}
+> +}
+> +
+> +
+> +static void
+> +fdls_process_tgt_plogi_rsp(struct fnic_iport_s *iport,
+> +						   struct fc_hdr_s *fchdr)
+> +{
+> +	uint32_t tgt_fcid;
+> +	struct fnic_tport_s *tport;
+> +	uint8_t *fcid;
+> +	uint16_t oxid;
+> +	struct fc_els_s *plogi_rsp = (struct fc_els_s *) fchdr;
+> +	struct fc_els_reject_s *els_rjt = (struct fc_els_reject_s *) fchdr;
+> +	int max_payload_size;
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	fcid = FNIC_GET_S_ID(fchdr);
+> +	tgt_fcid = ntoh24(fcid);
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "FDLS processing target PLOGI response: tgt_fcid: 0x%x",
+> +				 tgt_fcid);
+> +
+> +	tport = fnic_find_tport_by_fcid(iport, tgt_fcid);
+> +	if (!tport) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "tport not found: 0x%x", tgt_fcid);
+> +		return;
+> +	}
+> +	if ((iport->state != FNIC_IPORT_STATE_READY)
+> +		|| (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Dropping frame! iport state: %d tport state: %d",
+> +					 iport->state, tport->state);
+> +		return;
+> +	}
+> +
+> +	if (tport->state != FDLS_TGT_STATE_PLOGI) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "PLOGI rsp recvd in wrong state. Restarting nexus");
+> +		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
+> +		fdls_free_tgt_oxid(iport, oxid);
+> +		fdls_target_restart_nexus(tport);
+> +		return;
+> +	}
+> +
+> +	if (ntohs(fchdr->ox_id) != ntohs(tport->oxid_used)) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "PLOGI response from target: 0x%x. Dropping frame",
+> +			 tgt_fcid);
+> +		return;
+> +	}
+> +
+> +	switch (plogi_rsp->command) {
+> +	case FC_LS_ACC:
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "PLOGI accepted by target: 0x%x", tgt_fcid);
+> +		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
+> +		fdls_free_tgt_oxid(iport, oxid);
+> +		break;
+> +
+> +	case FC_LS_REJ:
+> +		if (((els_rjt->reason_code == FC_ELS_RJT_LOGICAL_BUSY)
+> +			 || (els_rjt->reason_code == FC_ELS_RJT_BUSY))
+> +			&& (tport->retry_counter < iport->max_plogi_retries)) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "PLOGI ret FC_LS_REJ BUSY. Retry from timer routine: 0x%x",
+> +				 tgt_fcid);
+> +			/* Retry plogi again from the timer routine. */
+> +			tport->flags |= FNIC_FDLS_RETRY_FRAME;
+> +			return;
+> +		}
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "PLOGI returned FC_LS_REJ from target: 0x%x",
+> +					 tgt_fcid);
+> +		oxid = ntohs(fchdr->ox_id);
+> +		fdls_free_tgt_oxid(iport, oxid);
+> +		fdls_delete_tport(iport, tport);
+> +		return;
+> +
+> +	default:
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "PLOGI not accepted from target fcid: 0x%x",
+> +					 tgt_fcid);
+> +		return;
+> +	}
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "Found the PLOGI target: 0x%x and state: %d",
+> +				 (unsigned int) tgt_fcid, tport->state);
+> +
+> +	if (tport->timer_pending) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "tport fcid 0x%x: Canceling disc timer\n",
+> +					 tport->fcid);
+> +		fnic_del_tport_timer_sync();
+> +	}
+> +
+> +	tport->timer_pending = 0;
+> +	tport->wwpn = htonll(plogi_rsp->nport_name);
+> +	tport->wwnn = htonll(plogi_rsp->node_name);
+> +
+> +	/* Learn the Service Params */
+> +
+> +	/* Max frame size - choose the lowest */
+> +	max_payload_size = fnic_fc_plogi_rsp_rdf(iport, plogi_rsp);
+> +	tport->max_payload_size =
+> +		MIN(max_payload_size, iport->max_payload_size);
+> +
+> +	if (tport->max_payload_size < FNIC_MIN_DATA_FIELD_SIZE) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "MFS: tport max frame size below spec bounds: %d",
+> +			 tport->max_payload_size);
+> +		tport->max_payload_size = FNIC_MIN_DATA_FIELD_SIZE;
+> +	}
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +		 "MAX frame size: %d iport max_payload_size: %d tport mfs: %d",
+> +		 max_payload_size, iport->max_payload_size,
+> +		 tport->max_payload_size);
+> +
+> +	tport->max_concur_seqs = FNIC_FC_PLOGI_RSP_CONCUR_SEQ(plogi_rsp);
+> +
+> +	tport->retry_counter = 0;
+> +	fdls_set_tport_state(tport, FDLS_TGT_STATE_PRLI);
+> +	fdls_send_tgt_prli(iport, tport);
+> +}
+> +
+> +static void
+> +fdls_process_tgt_prli_rsp(struct fnic_iport_s *iport,
+> +						  struct fc_hdr_s *fchdr)
+> +{
+> +	uint32_t tgt_fcid;
+> +	struct fnic_tport_s *tport;
+> +	uint8_t *fcid;
+> +	uint16_t oxid;
+> +	struct fc_els_prli_s *prli_rsp = (struct fc_els_prli_s *) fchdr;
+> +	struct fc_els_reject_s *els_rjt = (struct fc_els_reject_s *) fchdr;
+> +	struct fnic_tport_event_s *tport_add_evt;
+> +	struct fnic *fnic = iport->fnic;
+> +	bool mismatched_tgt = false;
+> +
+> +	fcid = FNIC_GET_S_ID(fchdr);
+> +	tgt_fcid = ntoh24(fcid);
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "FDLS process tgt PRLI response: 0x%x", tgt_fcid);
+> +
+> +	tport = fnic_find_tport_by_fcid(iport, tgt_fcid);
+> +	if (!tport) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "tport not found: 0x%x", tgt_fcid);
+> +		/* Handle or just drop? */
+> +		return;
+> +	}
+> +
+> +	if ((iport->state != FNIC_IPORT_STATE_READY)
+> +		|| (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "Dropping frame! iport st: %d tport st: %d tport fcid: 0x%x",
+> +			 iport->state, tport->state, tport->fcid);
+> +		return;
+> +	}
+> +
+> +	if (tport->state != FDLS_TGT_STATE_PRLI) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "PRLI rsp recvd in wrong state. Restarting nexus");
+> +		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
+> +		fdls_free_tgt_oxid(iport, oxid);
+> +		fdls_target_restart_nexus(tport);
+> +		return;
+> +	}
+> +
+> +	if (ntohs(fchdr->ox_id) != ntohs(tport->oxid_used)) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "Dropping PRLI response from target: 0x%x ",
+> +			 tgt_fcid);
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "Reason: Stale PRLI response/Aborted PDISC/OOO frame delivery");
+> +		return;
+> +	}
+> +
+> +	switch (prli_rsp->command) {
+> +	case FC_LS_ACC:
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "PRLI accepted from target: 0x%x", tgt_fcid);
+> +		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
+> +		fdls_free_tgt_oxid(iport, oxid);
+> +
+> +		if (prli_rsp->sp.type != FC_FC4_TYPE_SCSI) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "mismatched target zoned with FC SCSI initiator: 0x%x",
+> +				 tgt_fcid);
+> +			mismatched_tgt = true;
+>   		}
+> -		break;
+> -	case FDLS_STATE_REGISTER_FC4_TYPES:
+> -		/* scr received a LS_RJT with busy we retry from here */
+> -		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
+> -			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
+> -			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
+> -			fdls_send_register_fc4_types(iport);
+> -			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +		if (mismatched_tgt) {
+> +			fdls_tgt_logout(iport, tport);
+> +			fdls_delete_tport(iport, tport);
+>   			return;
+>   		}
+> -		/* RFT_ID timed out send abts */
+> -		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
+> -			fdls_send_fabric_abts(iport);
+> -		} else {
+> -			/* ABTS has timed out (2*ra_tov), we give up */
+> -			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> -						 "ABTS timed out. Starting PLOGI: %p", iport);
+> -			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
+> -		}
+>   		break;
+> -	case FDLS_STATE_REGISTER_FC4_FEATURES:
+> -		/* scr received a LS_RJT with busy we retry from here */
+> -		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
+> -			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
+> -			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
+> -			fdls_send_register_fc4_features(iport);
+> -			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> -			return;
+> -		}
+> -		/* scr have timed out send abts */
+> -		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED))
+> -			fdls_send_fabric_abts(iport);
+> -		else {
+> -			/* ABTS has timed out (2*ra_tov), we give up */
+> +
+> +	case FC_LS_REJ:
+> +		if (((els_rjt->reason_code == FC_ELS_RJT_LOGICAL_BUSY)
+> +			 || (els_rjt->reason_code == FC_ELS_RJT_BUSY))
+> +			&& (tport->retry_counter < FDLS_RETRY_COUNT)) {
+> +
+>   			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> -						 "ABTS timed out. Starting PLOGI %p", iport);
+> -			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
+> -		}
+> -		break;
+> -	case FDLS_STATE_RSCN_GPN_FT:
+> -	case FDLS_STATE_SEND_GPNFT:
+> -	case FDLS_STATE_GPN_FT:
+> -		/* GPN_FT received a LS_RJT with busy we retry from here */
+> -		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
+> -			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
+> -			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
+> -			fdls_send_gpn_ft(iport, iport->fabric.state);
+> -			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> +				 "PRLI ret FC_LS_REJ BUSY. Retry from timer routine: 0x%x",
+> +				 tgt_fcid);
+> +
+> +			/*Retry Plogi again from the timer routine. */
+> +			tport->flags |= FNIC_FDLS_RETRY_FRAME;
+>   			return;
+> -		}
+> -		/* gpn_gt have timed out send abts */
+> -		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
+> -			fdls_send_fabric_abts(iport);
+>   		} else {
+> -			/*
+> -			 * ABTS has timed out have waited (2*ra_tov) can
+> -			 * retry safely with same exchange id
+> -			 */
+> -			if (iport->fabric.retry_counter < FDLS_RETRY_COUNT) {
+> -				fdls_send_gpn_ft(iport, iport->fabric.state);
+> -			} else {
+> -				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> -					 "ABTS timeout for fabric GPN_FT. Check name server: %p",
+> -					 iport);
+> -			}
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +						 "PRLI returned FC_LS_REJ from target: 0x%x",
+> +						 tgt_fcid);
+> +
+> +			oxid = ntohs(fchdr->ox_id);
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			fdls_tgt_logout(iport, tport);
+> +			fdls_delete_tport(iport, tport);
+> +			return;
+>   		}
+>   		break;
+> +
+>   	default:
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "PRLI not accepted from target: 0x%x", tgt_fcid);
+> +		return;
+>   		break;
+>   	}
+> -	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+> -}
+>   
+That has quite an odd oxid handling. For some places the oxid is 
+released, on others it isn't.
+With no clear indication when.
+If you want to have the oxid reused please add some comments to
+make it clear that this isn't an oversight.
+
+> -static void fnic_fdls_start_flogi(struct fnic_iport_s *iport)
+> -{
+> -	iport->fabric.retry_counter = 0;
+> -	fdls_send_fabric_flogi(iport);
+> -	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_FLOGI);
+> -	iport->fabric.flags = 0;
+> -}
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "Found the PRLI target: 0x%x and state: %d",
+> +				 (unsigned int) tgt_fcid, tport->state);
+>   
+> -static void fnic_fdls_start_plogi(struct fnic_iport_s *iport)
+> -{
+> -	iport->fabric.retry_counter = 0;
+> -	fdls_send_fabric_plogi(iport);
+> -	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_PLOGI);
+> -	iport->fabric.flags &= ~FNIC_FDLS_FABRIC_ABORT_ISSUED;
+> +	if (tport->timer_pending) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "tport fcid 0x%x: Canceling disc timer\n",
+> +					 tport->fcid);
+> +		fnic_del_tport_timer_sync();
+> +	}
+> +	tport->timer_pending = 0;
+> +
+> +	oxid = ntohs(FNIC_GET_OX_ID(fchdr));
+> +	fdls_free_tgt_oxid(iport, oxid);
+> +
+> +	/* Learn Service Params */
+> +	tport->fcp_csp = ntohl(prli_rsp->sp.csp);
+> +	tport->retry_counter = 0;
+> +
+> +	if (prli_rsp->sp.csp & FCP_SPPF_RETRY)
+> +		tport->tgt_flags |= FNIC_FC_RP_FLAGS_RETRY;
+> +
+> +	/* Check if the device plays Target Mode Function */
+> +	if (!(tport->fcp_csp & FCP_PRLI_FUNC_TARGET)) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "Remote port(0x%x): no target support. Deleting it\n",
+> +			 tgt_fcid);
+> +		fdls_tgt_logout(iport, tport);
+> +		fdls_delete_tport(iport, tport);
+> +		return;
+> +	}
+> +
+> +	fdls_set_tport_state(tport, FDLS_TGT_STATE_READY);
+> +
+> +	/* Inform the driver about new target added */
+> +	tport_add_evt = kzalloc(sizeof(struct fnic_tport_event_s), GFP_ATOMIC);
+> +	if (!tport_add_evt) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "tport event memory allocation failure: 0x%0x\n",
+> +				 tport->fcid);
+> +		return;
+> +	}
+> +	tport_add_evt->event = TGT_EV_RPORT_ADD;
+> +	tport_add_evt->arg1 = (void *) tport;
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "iport fcid: 0x%x add tport event fcid: 0x%x\n",
+> +			 tport->fcid, iport->fcid);
+> +	list_add_tail(&tport_add_evt->links, &fnic->tport_event_list);
+> +	queue_work(fnic_event_queue, &fnic->tport_work);
+>   }
+>   
+> +
+>   static void
+>   fdls_process_rff_id_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr)
+>   {
+> @@ -884,6 +1918,106 @@ fdls_process_scr_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr)
+>   	}
+>   }
+>   
+> +static void
+> +fdls_process_gpn_ft_tgt_list(struct fnic_iport_s *iport,
+> +							 struct fc_hdr_s *fchdr, int len)
+> +{
+> +	struct fc_gpn_ft_rsp_iu_s *gpn_ft_tgt;
+> +	struct fc_gpn_ft_rsp_iu_s *gpn_ft_tgt_rem;
+> +	struct fnic_tport_s *tport, *next;
+> +	uint32_t fcid;
+> +	uint64_t wwpn;
+> +	int rem_len = len;
+> +	u32 old_link_down_cnt = iport->fnic->link_down_cnt;
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "0x%x: FDLS process GPN_FT tgt list", iport->fcid);
+> +
+> +	gpn_ft_tgt =
+> +		(struct fc_gpn_ft_rsp_iu_s *) ((uint8_t *) fchdr +
+> +								   sizeof(struct fc_hdr_s)
+> +								   + sizeof(struct fc_ct_hdr_s));
+> +	gpn_ft_tgt_rem = gpn_ft_tgt;
+> +	len -= sizeof(struct fc_hdr_s) + sizeof(struct fc_ct_hdr_s);
+> +
+> +	while (rem_len > 0) {
+> +
+> +		fcid = ntoh24(gpn_ft_tgt->fcid);
+> +		wwpn = ntohll(gpn_ft_tgt->wwpn);
+> +
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "tport: 0x%x: ctrl:0x%x", fcid, gpn_ft_tgt->ctrl);
+> +
+> +		if (fcid == iport->fcid) {
+> +			if (gpn_ft_tgt->ctrl & FNIC_FC_GPN_LAST_ENTRY)
+> +				break;
+> +			gpn_ft_tgt++;
+> +			rem_len -= sizeof(struct fc_gpn_ft_rsp_iu_s);
+> +			continue;
+> +		}
+> +
+> +		tport = fnic_find_tport_by_wwpn(iport, wwpn);
+> +		if (!tport) {
+> +			/*
+> +			 * New port registered with the switch or first time query
+> +			 */
+> +			tport = fdls_create_tport(iport, fcid, wwpn);
+> +			if (!tport)
+> +				return;
+> +		}
+> +		/*
+> +		 * check if this was an existing tport with same fcid
+> +		 * but whose wwpn has changed now ,then remove it and
+> +		 * create a new one
+> +		 */
+> +		if (tport->fcid != fcid) {
+> +			fdls_delete_tport(iport, tport);
+> +			tport = fdls_create_tport(iport, fcid, wwpn);
+> +			if (!tport)
+> +				return;
+> +		}
+> +
+> +		/*
+> +		 * If this GPN_FT rsp is after RSCN then mark the tports which
+> +		 * matches with the new GPN_FT list, if some tport is not
+> +		 * found in GPN_FT we went to delete that tport later.
+> +		 */
+> +		if (fdls_get_state((&iport->fabric)) == FDLS_STATE_RSCN_GPN_FT)
+> +			tport->flags |= FNIC_FDLS_TPORT_IN_GPN_FT_LIST;
+> +
+> +		if (gpn_ft_tgt->ctrl & FNIC_FC_GPN_LAST_ENTRY)
+> +			break;
+> +
+> +		gpn_ft_tgt++;
+> +		rem_len -= sizeof(struct fc_gpn_ft_rsp_iu_s);
+> +	}
+> +	if (rem_len <= 0) {
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +			 "GPN_FT response: malformed/corrupt frame rxlen: %d remlen: %d",
+> +			 len, rem_len);
+> +	}
+> +
+> +	/*remove those ports which was not listed in GPN_FT */
+> +	if (fdls_get_state((&iport->fabric)) == FDLS_STATE_RSCN_GPN_FT) {
+> +		list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
+> +
+> +			if (!(tport->flags & FNIC_FDLS_TPORT_IN_GPN_FT_LIST)) {
+> +				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Remove port: 0x%x not found in GPN_FT list",
+> +					 tport->fcid);
+> +				fdls_delete_tport(iport, tport);
+> +			} else {
+> +				tport->flags &= ~FNIC_FDLS_TPORT_IN_GPN_FT_LIST;
+> +			}
+> +			if ((old_link_down_cnt != iport->fnic->link_down_cnt)
+> +				|| (iport->state != FNIC_IPORT_STATE_READY)) {
+> +				return;
+> +			}
+> +		}
+> +	}
+> +}
+> +
+>   static void
+>   fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr,
+>   						int len)
+> @@ -892,6 +2026,9 @@ fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr,
+>   	struct fc_gpn_ft_s *gpn_ft_rsp = (struct fc_gpn_ft_s *) fchdr;
+>   	uint16_t rsp;
+>   	uint8_t reason_code;
+> +	int count = 0;
+> +	struct fnic_tport_s *tport, *next;
+> +	u32 old_link_down_cnt = iport->fnic->link_down_cnt;
+>   	struct fnic *fnic = iport->fnic;
+>   
+>   	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> @@ -928,12 +2065,74 @@ fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr,
+>   	case FC_CT_ACC:
+>   		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+>   					 "0x%x: GPNFT_RSP accept", iport->fcid);
+> +		if (iport->fabric.timer_pending) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +						 "0x%x: Canceling fabric disc timer\n",
+> +						 iport->fcid);
+> +			fnic_del_fabric_timer_sync();
+> +		}
+> +		iport->fabric.timer_pending = 0;
+> +		iport->fabric.retry_counter = 0;
+> +		fdls_process_gpn_ft_tgt_list(iport, fchdr, len);
+> +
+> +		/*
+> +		 * iport state can change only if link down event happened
+> +		 * We don't need to undo fdls_process_gpn_ft_tgt_list,
+> +		 * that will be taken care in next link up event
+> +		 */
+> +		if (iport->state != FNIC_IPORT_STATE_READY) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "Halting target discovery: fab st: %d iport st: %d ",
+> +				 fdls_get_state(fdls), iport->state);
+> +			break;
+> +		}
+> +		fdls_tgt_discovery_start(iport);
+>   		break;
+>   
+>   	case FC_CT_REJ:
+>   		reason_code = gpn_ft_rsp->fc_ct_hdr.reason_code;
+>   		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+>   					 "0x%x: GPNFT_RSP Reject", iport->fcid);
+> +
+> +		if (((reason_code == FC_CT_RJT_LOGICAL_BUSY)
+> +			 || (reason_code == FC_CT_RJT_BUSY))
+> +			&& (fdls->retry_counter < FDLS_RETRY_COUNT)) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "0x%x: GPNFT_RSP ret REJ/BSY. Retry from timer routine",
+> +				 iport->fcid);
+> +			/* Retry again from the timer routine */
+> +			fdls->flags |= FNIC_FDLS_RETRY_FRAME;
+> +		} else {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +						 "0x%x: GPNFT_RSP reject", iport->fcid);
+> +			if (iport->fabric.timer_pending) {
+> +				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +							 "0x%x: Canceling fabric disc timer\n",
+> +							 iport->fcid);
+> +				fnic_del_fabric_timer_sync();
+> +			}
+> +			iport->fabric.timer_pending = 0;
+> +			iport->fabric.retry_counter = 0;
+> +			/*
+> +			 * If GPN_FT ls_rjt then we should delete
+> +			 * all existing tports
+> +			 */
+> +			count = 0;
+> +			list_for_each_entry_safe(tport, next, &iport->tport_list,
+> +									 links) {
+> +				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +							 "GPN_FT_REJECT: Remove port: 0x%x",
+> +							 tport->fcid);
+> +				fdls_delete_tport(iport, tport);
+> +				if ((old_link_down_cnt != iport->fnic->link_down_cnt)
+> +					|| (iport->state != FNIC_IPORT_STATE_READY)) {
+> +					return;
+> +				}
+> +				count++;
+> +			}
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +						 "GPN_FT_REJECT: Removed (0x%x) ports", count);
+> +		}
+>   		break;
+>   
+>   	default:
+> @@ -1342,6 +2541,141 @@ fdls_process_fabric_abts_rsp(struct fnic_iport_s *iport,
+>   	}
+>   }
+>   
+> +static void
+> +fdls_process_tgt_abts_rsp(struct fnic_iport_s *iport,
+> +						  struct fc_hdr_s *fchdr)
+> +{
+> +	uint32_t s_id;
+> +	struct fnic_tport_s *tport;
+> +	uint32_t tport_state;
+> +	struct fc_abts_ba_acc_s *ba_acc;
+> +	struct fc_abts_ba_rjt_s *ba_rjt;
+> +	uint16_t oxid;
+> +	struct fnic *fnic = iport->fnic;
+> +
+> +	s_id = ntoh24(fchdr->sid);
+> +	ba_acc = (struct fc_abts_ba_acc_s *) fchdr;
+> +	ba_rjt = (struct fc_abts_ba_rjt_s *) fchdr;
+> +
+> +	tport = fnic_find_tport_by_fcid(iport, s_id);
+> +	if (!tport) {
+> +		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
+> +					 "Received tgt abts rsp with invalid SID: 0x%x", s_id);
+> +		return;
+> +	}
+> +
+> +	if (tport->timer_pending) {
+> +		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
+> +					 "tport 0x%p Canceling fabric disc timer\n", tport);
+> +		fnic_del_tport_timer_sync();
+> +	}
+> +	if (iport->state != FNIC_IPORT_STATE_READY) {
+> +		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
+> +					 "Received tgt abts rsp in iport state(%d). Dropping.",
+> +					 iport->state);
+> +		return;
+> +	}
+> +	tport->timer_pending = 0;
+> +	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
+> +	tport_state = tport->state;
+> +	oxid = ntohs(fchdr->ox_id);
+> +
+> +	/*This abort rsp is for ADISC */
+> +	if ((oxid >= FDLS_ADISC_OXID_BASE) && (oxid < FDLS_TGT_OXID_POOL_END)) {
+> +		if (fchdr->r_ctl == FNIC_BA_ACC_RCTL) {
+> +			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
+> +						 "Received tgt ADISC abts response BA_ACC for OX_ID: 0x%x tgt_fcid: 0x%x",
+> +						 ba_acc->ox_id, tport->fcid);
+> +		} else if (fchdr->r_ctl == FNIC_BA_RJT_RCTL) {
+> +			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
+> +				 "ADISC BA_RJT rcvd tport_fcid: 0x%x tport_state: %d ",
+> +				 tport->fcid, tport_state);
+> +			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
+> +				 "reason code: 0x%x reason code explanation:0x%x ",
+> +				 ba_rjt->reason_code, ba_rjt->reason_explanation);
+> +		}
+> +		if ((tport->retry_counter < FDLS_RETRY_COUNT)
+> +			&& (fchdr->r_ctl == FNIC_BA_ACC_RCTL)) {
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			fdls_send_tgt_adisc(iport, tport);
+> +			return;
+> +		}
+> +		fdls_free_tgt_oxid(iport, oxid);
+> +		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
+> +					 "ADISC not responding. Deleting target port: 0x%x",
+> +					 tport->fcid);
+> +		fdls_delete_tport(iport, tport);
+> +		if ((iport->state == FNIC_IPORT_STATE_READY)
+> +			&& (iport->fabric.state != FDLS_STATE_SEND_GPNFT)
+> +			&& (iport->fabric.state != FDLS_STATE_RSCN_GPN_FT)) {
+> +			fdls_send_gpn_ft(iport, FDLS_STATE_SEND_GPNFT);
+> +		}
+> +		/*Restart a discovery of targets */
+> +		return;
+> +	}
+> +
+> +	/*This abort rsp is for PLOGI */
+> +	if ((oxid >= FDLS_PLOGI_OXID_BASE) && (oxid < FDLS_PRLI_OXID_BASE)) {
+> +		if (fchdr->r_ctl == FNIC_BA_ACC_RCTL) {
+> +			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
+> +				 "Received tgt PLOGI abts response BA_ACC tgt_fcid: 0x%x",
+> +				 tport->fcid);
+> +		} else if (fchdr->r_ctl == FNIC_BA_RJT_RCTL) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "PLOGI BA_RJT received for tport_fcid: 0x%x OX_ID: 0x%x",
+> +				 tport->fcid, fchdr->ox_id);
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "reason code: 0x%x reason code explanation: 0x%x",
+> +				  ba_rjt->reason_code, ba_rjt->reason_explanation);
+> +		}
+> +		if ((tport->retry_counter < iport->max_plogi_retries)
+> +			&& (fchdr->r_ctl == FNIC_BA_ACC_RCTL)) {
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			fdls_send_tgt_plogi(iport, tport);
+> +			return;
+> +		}
+> +		fdls_free_tgt_oxid(iport, oxid);
+> +		fdls_delete_tport(iport, tport);
+> +		/*Restart a discovery of targets */
+> +		if ((iport->state == FNIC_IPORT_STATE_READY)
+> +			&& (iport->fabric.state != FDLS_STATE_SEND_GPNFT)
+> +			&& (iport->fabric.state != FDLS_STATE_RSCN_GPN_FT)) {
+> +			fdls_send_gpn_ft(iport, FDLS_STATE_SEND_GPNFT);
+> +		}
+> +		return;
+> +	}
+> +
+> +	/*This abort rsp is for PRLI */
+> +	if ((oxid >= FDLS_PRLI_OXID_BASE) && (oxid < FDLS_ADISC_OXID_BASE)) {
+> +		if (fchdr->r_ctl == FNIC_BA_ACC_RCTL) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "0x%x: Received tgt PRLI abts response BA_ACC",
+> +				 tport->fcid);
+> +		} else if (fchdr->r_ctl == FNIC_BA_RJT_RCTL) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "PRLI BA_RJT received for tport_fcid: 0x%x OX_ID: 0x%x ",
+> +				 tport->fcid, fchdr->ox_id);
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "reason code: 0x%x reason code explanation: 0x%x",
+> +				 ba_rjt->reason_code,
+> +				 ba_rjt->reason_explanation);
+> +		}
+> +		if ((tport->retry_counter < FDLS_RETRY_COUNT)
+> +			&& (fchdr->r_ctl == FNIC_BA_ACC_RCTL)) {
+> +			fdls_free_tgt_oxid(iport, oxid);
+> +			fdls_send_tgt_prli(iport, tport);
+> +			return;
+> +		}
+> +		fdls_free_tgt_oxid(iport, oxid);
+> +		fdls_send_tgt_plogi(iport, tport);	/* go back to plogi */
+> +		fdls_set_tport_state(tport, FDLS_TGT_STATE_PLOGI);
+> +		return;
+> +	}
+> +
+I did comment on dedicated OXIDs in the previous patch. Please, don't. 
+Use a common pool for oxids.
+
+> +	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				 "Received ABTS response for unknown frame %p", iport);
+> +}
+> +
+>   /*
+>    * Performs a validation for all FCOE frames and return the frame type
+>    */
+> @@ -1434,6 +2768,42 @@ fnic_fdls_validate_and_get_frame_type(struct fnic_iport_s *iport,
+>   		}
+>   	}
+>   
+> +	/* ELS response from a target */
+> +	if ((ntohs(oxid) >= FDLS_PLOGI_OXID_BASE)
+> +		&& (ntohs(oxid) < FDLS_PRLI_OXID_BASE)) {
+> +		if (!FNIC_FC_FRAME_TYPE_ELS(fchdr)) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				"Dropping Unknown frame in PLOGI exchange range type: 0x%x.",
+> +				fchdr->type);
+> +			return -1;
+> +		}
+> +		return FNIC_TPORT_PLOGI_RSP;
+> +	}
+> +	if ((ntohs(oxid) >= FDLS_PRLI_OXID_BASE)
+> +		&& (ntohs(oxid) < FDLS_ADISC_OXID_BASE)) {
+> +		if (!FNIC_FC_FRAME_TYPE_ELS(fchdr)) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				"Dropping Unknown frame in PRLI exchange range type: 0x%x.",
+> +				fchdr->type);
+> +			return -1;
+> +		}
+> +		return FNIC_TPORT_PRLI_RSP;
+> +	}
+> +
+> +	if ((ntohs(oxid) >= FDLS_ADISC_OXID_BASE)
+> +		&& (ntohs(oxid) < FDLS_TGT_OXID_POOL_END)) {
+> +		if (!FNIC_FC_FRAME_TYPE_ELS(fchdr)) {
+> +			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +				"Dropping Unknown frame in ADISC exchange range type: 0x%x.",
+> +				fchdr->type);
+> +			return -1;
+> +		}
+> +		return FNIC_TPORT_ADISC_RSP;
+> +	}
+> +	if (ntohs(oxid) == FNIC_TLOGO_REQ_OXID) {
+> +		return FNIC_TPORT_LOGO_RSP;
+> +	}
+> +
+>   	/*response from fabric */
+>   	switch (oxid) {
+>   
+> @@ -1557,6 +2927,21 @@ void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
+>   	case FNIC_FABRIC_GPN_FT_RSP:
+>   		fdls_process_gpn_ft_rsp(iport, fchdr, len);
+>   		break;
+> +	case FNIC_TPORT_PLOGI_RSP:
+> +		fdls_process_tgt_plogi_rsp(iport, fchdr);
+> +		break;
+> +	case FNIC_TPORT_PRLI_RSP:
+> +		fdls_process_tgt_prli_rsp(iport, fchdr);
+> +		break;
+> +	case FNIC_TPORT_ADISC_RSP:
+> +		fdls_process_tgt_adisc_rsp(iport, fchdr);
+> +		break;
+> +	case FNIC_TPORT_LOGO_RSP:
+> +		/* Logo response from tgt which we have deleted */
+> +		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> +					 "Logo response from tgt: 0x%x",
+> +					 ntoh24(fchdr->sid));
+> +		break;
+>   	case FNIC_FABRIC_LOGO_RSP:
+>   		fdls_process_fabric_logo_rsp(iport, fchdr);
+>   		break;
+> @@ -1566,7 +2951,8 @@ void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
+>   		if ((iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)
+>   			&& (oxid >= FNIC_FLOGI_OXID && oxid <= FNIC_RFF_REQ_OXID)) {
+>   			fdls_process_fabric_abts_rsp(iport, fchdr);
+> -		}
+> +		} else
+> +			fdls_process_tgt_abts_rsp(iport, fchdr);
+>   		break;
+>   	default:
+>   		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+> diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+> index 2d5f438f2cc4..92cd17efa40f 100644
+> --- a/drivers/scsi/fnic/fnic.h
+> +++ b/drivers/scsi/fnic/fnic.h
+> @@ -79,6 +79,9 @@
+>   
+>   #define IS_FNIC_FCP_INITIATOR(fnic) (fnic->role == FNIC_ROLE_FCP_INITIATOR)
+>   
+> +/* Retry supported by rport (returned by PRLI service parameters) */
+> +#define FNIC_FC_RP_FLAGS_RETRY            0x1
+> +
+>   /*
+>    * fnic private data per SCSI command.
+>    * These fields are locked by the hashed io_req_lock.
+> @@ -133,6 +136,7 @@ static inline u64 fnic_flags_and_state(struct scsi_cmnd *cmd)
+>   
+>   extern unsigned int fnic_log_level;
+>   extern unsigned int io_completions;
+> +extern struct workqueue_struct *fnic_event_queue;
+>   
+>   #define FNIC_MAIN_LOGGING 0x01
+>   #define FNIC_FCS_LOGGING 0x02
+> @@ -329,6 +333,8 @@ struct fnic {
+>   	struct work_struct flush_work;
+>   	struct sk_buff_head frame_queue;
+>   	struct list_head tx_queue;
+> +	struct work_struct tport_work;
+> +	struct list_head tport_event_list;
+>   
+>   	/*** FIP related data members  -- start ***/
+>   	void (*set_vlan)(struct fnic *, u16 vlan);
+> diff --git a/drivers/scsi/fnic/fnic_fdls.h b/drivers/scsi/fnic/fnic_fdls.h
+> index 095275698716..9eb25ed9c19f 100644
+> --- a/drivers/scsi/fnic/fnic_fdls.h
+> +++ b/drivers/scsi/fnic/fnic_fdls.h
+> @@ -325,6 +325,10 @@ void fdls_send_fabric_logo(struct fnic_iport_s *iport);
+>   int fnic_fdls_validate_and_get_frame_type(struct fnic_iport_s *iport,
+>   								  void *rx_frame, int len,
+>   								  int fchdr_offset);
+> +void fdls_send_tport_abts(struct fnic_iport_s *iport,
+> +						  struct fnic_tport_s *tport);
+> +void fdls_delete_tport(struct fnic_iport_s *iport,
+> +					   struct fnic_tport_s *tport);
+>   
+>   /* fnic_fcs.c */
+>   void fnic_fdls_init(struct fnic *fnic, int usefip);
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+
