@@ -1,207 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80FC812C80F;
-	Wed, 12 Jun 2024 20:54:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28D3A129E64;
+	Wed, 12 Jun 2024 21:41:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718225674; cv=none; b=azl2JmNDlunYFK44YgHactESHNaVciTQwOXG+Vwo5NlbUqElMNvvUr0+VLwwS1rLYj+yqcnghN4lUYoabqV1ISrkpo7n4zG0tOPs2GuftJF1ZWB4K8GdKRfR08iNAEUmY8Giz3fW3hybaXdLV5H5DhSiI7aYbGa+E+3boSkXO0s=
+	t=1718228494; cv=none; b=TCsFylzJoDIZjuqg/FVC9RgOmDbnquqo+nL77bDW2H1GVgewsXstjmCaB8+Kcr2wqkQWI/ySCjIPD/42b1Qh1BjCvbZe8B7+UtlMJ6kmtX7Ghmfg/7qQy5cpZpvSJKlV/14dfxMO9eJ5SuBh7G24GT/k+nMfUZ7e+JC4oXBMl1U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718225674; c=relaxed/simple;
-	bh=tVILRNA+10i0hkRlIosgMNPqnHFXimug2joZuxy2YOI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MvNrkOsMYeJqUn3Et2sgVzCmW71u2u+R4NNSN7KB87/L3q7yV+1dvBZbxHfkRQswgBJN0MvTDfsgPKA7vzBY1pEouLbTIsswL3tYH1LqWRDWNluVP7einkGodC+ROCyhPtp9nU0RoMi81HCaYWJVNf3a+opHdHjmuBUNvTj5hxc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gxrF7MM2; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718228494; c=relaxed/simple;
+	bh=7x2FDvxcUC0zqmhJl7l18I4RbjqoDccV+BJoZyJQjCs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=iulaPd1PgXlVHoLW05XCAIYgWSZeFWU8Pn8N4FYMigOkyx6yShmE4JNve3VViE4s7DSP5pX10+9zBZC64qSq51rYAooif7LSEfhsXsAGPcG6OlafAMfCEkW0HE4MV26EsS8jbDpsXIWN6Oc8tYAdn8Oq4xZfB9j2bKUeUs0vq5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=rqB2Doyn; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gxrF7MM2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E84FBC4AF49;
-	Wed, 12 Jun 2024 20:54:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718225674;
-	bh=tVILRNA+10i0hkRlIosgMNPqnHFXimug2joZuxy2YOI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gxrF7MM2z/1SfSzr34rFnbmtOilWN+UeGZ8ImffgHGY+OhlEfVW6JYpUxuBPyVKG7
-	 aeVuxyoSIZ8qUjXxwU75rxdiXJ8LHD3mlo3JtyVhbMCfLygoeDcGb4VQhzaI+bzRrP
-	 K8IVMlII/kxMi1wWF31ok9wO3s07nTjdiVpEUtUeODjpo0jIg3cphCVv4dOQeOeQMc
-	 4R/as280MGUrbk3OfNRR1aloN9IVBFaAEjaSGybqZS3QhRWC45sjfz+wZE3i5HE2lO
-	 gwWl14Nn1BmZ5xtAG5SYeDP3MESNrtbe78j/1YpnmHQqIgLSfGv3AW5+g5Sqo3pSVj
-	 mXKci5CJ1cozQ==
-Date: Wed, 12 Jun 2024 13:54:33 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
-	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
-	io-uring@vger.kernel.org, nilay@linux.ibm.com,
-	ritesh.list@gmail.com, willy@infradead.org, agk@redhat.com,
-	snitzer@kernel.org, mpatocka@redhat.com, dm-devel@lists.linux.dev,
-	hare@suse.de, Prasad Singamsetty <prasad.singamsetty@oracle.com>
-Subject: Re: [PATCH v8 04/10] fs: Add initial atomic write support info to
- statx
-Message-ID: <20240612205433.GC2764780@frogsfrogsfrogs>
-References: <20240610104329.3555488-1-john.g.garry@oracle.com>
- <20240610104329.3555488-5-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="rqB2Doyn"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4VzzWc1r0qz6Cnk9Y;
+	Wed, 12 Jun 2024 21:41:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1718228489; x=1720820490; bh=7x2FDvxcUC0zqmhJl7l18I4R
+	bjqoDccV+BJoZyJQjCs=; b=rqB2Doyn0hywRAw/D3QbDlO7LAopyoiRAh4wa9iQ
+	v2835DL8uaxGe2EOqRU91P3dJvxqZQfA1bgtEGeFQbKM/1lCOirv8JxKqwg3Kvsl
+	0puzKOgsaQuLa86qP3+LUcA7m+PwyPtRR/SqnKMF6yoFqLDML20SMpcCD/dlrEH/
+	F6diFvl77EMCW4F5AXPkSvpHIFmmp/DeI/l2+Oqw88us3AVk6fw/2UicbEK+m23N
+	NqGrpAJcksrRqBH0Ud/WsbJgvaLrM9JbdKi1dWWQlH/6i+unLutS399KWa6/yDw7
+	azF79WZs3vV3rxGJ5DF6VE7KOIH55ZBB5rSkVkDqf5OL8A==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 7DCoJq-qybHo; Wed, 12 Jun 2024 21:41:29 +0000 (UTC)
+Received: from [100.96.154.26] (unknown [104.132.0.90])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4VzzWX63qJz6Cnk9X;
+	Wed, 12 Jun 2024 21:41:28 +0000 (UTC)
+Message-ID: <48a000f5-ef66-43bc-b501-3ea7bca07c0c@acm.org>
+Date: Wed, 12 Jun 2024 14:41:28 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240610104329.3555488-5-john.g.garry@oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: core: Fix an incorrect comment
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org,
+ linux-usb@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
+ Avri Altman <Avri.Altman@wdc.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20240612203735.4108690-1-bvanassche@acm.org>
+ <20240612203735.4108690-2-bvanassche@acm.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240612203735.4108690-2-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Jun 10, 2024 at 10:43:23AM +0000, John Garry wrote:
-> From: Prasad Singamsetty <prasad.singamsetty@oracle.com>
-> 
-> Extend statx system call to return additional info for atomic write support
-> support for a file.
-> 
-> Helper function generic_fill_statx_atomic_writes() can be used by FSes to
-> fill in the relevant statx fields. For now atomic_write_segments_max will
-> always be 1, otherwise some rules would need to be imposed on iovec length
-> and alignment, which we don't want now.
-> 
-> Signed-off-by: Prasad Singamsetty <prasad.singamsetty@oracle.com>
-> jpg: relocate bdev support to another patch
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+On 6/12/24 1:37 PM, Bart Van Assche wrote:
+> The comment that scsi_static_device_list would go away was added more
+> than 18 years ago. Today, that list is still there and a large number
+> of additional entries have been added. This shows that this comment is
+> incorrect. Hence fix that comment.
 
-Looks fine to me, assuming there's a manpage update lurking somewhere?
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Please ignore this patch - this patch was already posted earlier today.
 
---D
+Thanks,
 
-> ---
->  fs/stat.c                 | 34 ++++++++++++++++++++++++++++++++++
->  include/linux/fs.h        |  3 +++
->  include/linux/stat.h      |  3 +++
->  include/uapi/linux/stat.h | 12 ++++++++++--
->  4 files changed, 50 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/stat.c b/fs/stat.c
-> index 70bd3e888cfa..72d0e6357b91 100644
-> --- a/fs/stat.c
-> +++ b/fs/stat.c
-> @@ -89,6 +89,37 @@ void generic_fill_statx_attr(struct inode *inode, struct kstat *stat)
->  }
->  EXPORT_SYMBOL(generic_fill_statx_attr);
->  
-> +/**
-> + * generic_fill_statx_atomic_writes - Fill in atomic writes statx attributes
-> + * @stat:	Where to fill in the attribute flags
-> + * @unit_min:	Minimum supported atomic write length in bytes
-> + * @unit_max:	Maximum supported atomic write length in bytes
-> + *
-> + * Fill in the STATX{_ATTR}_WRITE_ATOMIC flags in the kstat structure from
-> + * atomic write unit_min and unit_max values.
-> + */
-> +void generic_fill_statx_atomic_writes(struct kstat *stat,
-> +				      unsigned int unit_min,
-> +				      unsigned int unit_max)
-> +{
-> +	/* Confirm that the request type is known */
-> +	stat->result_mask |= STATX_WRITE_ATOMIC;
-> +
-> +	/* Confirm that the file attribute type is known */
-> +	stat->attributes_mask |= STATX_ATTR_WRITE_ATOMIC;
-> +
-> +	if (unit_min) {
-> +		stat->atomic_write_unit_min = unit_min;
-> +		stat->atomic_write_unit_max = unit_max;
-> +		/* Initially only allow 1x segment */
-> +		stat->atomic_write_segments_max = 1;
-> +
-> +		/* Confirm atomic writes are actually supported */
-> +		stat->attributes |= STATX_ATTR_WRITE_ATOMIC;
-> +	}
-> +}
-> +EXPORT_SYMBOL_GPL(generic_fill_statx_atomic_writes);
-> +
->  /**
->   * vfs_getattr_nosec - getattr without security checks
->   * @path: file to get attributes from
-> @@ -659,6 +690,9 @@ cp_statx(const struct kstat *stat, struct statx __user *buffer)
->  	tmp.stx_dio_mem_align = stat->dio_mem_align;
->  	tmp.stx_dio_offset_align = stat->dio_offset_align;
->  	tmp.stx_subvol = stat->subvol;
-> +	tmp.stx_atomic_write_unit_min = stat->atomic_write_unit_min;
-> +	tmp.stx_atomic_write_unit_max = stat->atomic_write_unit_max;
-> +	tmp.stx_atomic_write_segments_max = stat->atomic_write_segments_max;
->  
->  	return copy_to_user(buffer, &tmp, sizeof(tmp)) ? -EFAULT : 0;
->  }
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index e049414bef7d..db26b4a70c62 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -3235,6 +3235,9 @@ extern const struct inode_operations page_symlink_inode_operations;
->  extern void kfree_link(void *);
->  void generic_fillattr(struct mnt_idmap *, u32, struct inode *, struct kstat *);
->  void generic_fill_statx_attr(struct inode *inode, struct kstat *stat);
-> +void generic_fill_statx_atomic_writes(struct kstat *stat,
-> +				      unsigned int unit_min,
-> +				      unsigned int unit_max);
->  extern int vfs_getattr_nosec(const struct path *, struct kstat *, u32, unsigned int);
->  extern int vfs_getattr(const struct path *, struct kstat *, u32, unsigned int);
->  void __inode_add_bytes(struct inode *inode, loff_t bytes);
-> diff --git a/include/linux/stat.h b/include/linux/stat.h
-> index bf92441dbad2..3d900c86981c 100644
-> --- a/include/linux/stat.h
-> +++ b/include/linux/stat.h
-> @@ -54,6 +54,9 @@ struct kstat {
->  	u32		dio_offset_align;
->  	u64		change_cookie;
->  	u64		subvol;
-> +	u32		atomic_write_unit_min;
-> +	u32		atomic_write_unit_max;
-> +	u32		atomic_write_segments_max;
->  };
->  
->  /* These definitions are internal to the kernel for now. Mainly used by nfsd. */
-> diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
-> index 67626d535316..887a25286441 100644
-> --- a/include/uapi/linux/stat.h
-> +++ b/include/uapi/linux/stat.h
-> @@ -126,9 +126,15 @@ struct statx {
->  	__u64	stx_mnt_id;
->  	__u32	stx_dio_mem_align;	/* Memory buffer alignment for direct I/O */
->  	__u32	stx_dio_offset_align;	/* File offset alignment for direct I/O */
-> -	__u64	stx_subvol;	/* Subvolume identifier */
->  	/* 0xa0 */
-> -	__u64	__spare3[11];	/* Spare space for future expansion */
-> +	__u64	stx_subvol;	/* Subvolume identifier */
-> +	__u32	stx_atomic_write_unit_min;	/* Min atomic write unit in bytes */
-> +	__u32	stx_atomic_write_unit_max;	/* Max atomic write unit in bytes */
-> +	/* 0xb0 */
-> +	__u32   stx_atomic_write_segments_max;	/* Max atomic write segment count */
-> +	__u32   __spare1[1];
-> +	/* 0xb8 */
-> +	__u64	__spare3[9];	/* Spare space for future expansion */
->  	/* 0x100 */
->  };
->  
-> @@ -157,6 +163,7 @@ struct statx {
->  #define STATX_DIOALIGN		0x00002000U	/* Want/got direct I/O alignment info */
->  #define STATX_MNT_ID_UNIQUE	0x00004000U	/* Want/got extended stx_mount_id */
->  #define STATX_SUBVOL		0x00008000U	/* Want/got stx_subvol */
-> +#define STATX_WRITE_ATOMIC	0x00010000U	/* Want/got atomic_write_* fields */
->  
->  #define STATX__RESERVED		0x80000000U	/* Reserved for future struct statx expansion */
->  
-> @@ -192,6 +199,7 @@ struct statx {
->  #define STATX_ATTR_MOUNT_ROOT		0x00002000 /* Root of a mount */
->  #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
->  #define STATX_ATTR_DAX			0x00200000 /* File is currently in DAX state */
-> +#define STATX_ATTR_WRITE_ATOMIC		0x00400000 /* File supports atomic write operations */
->  
->  
->  #endif /* _UAPI_LINUX_STAT_H */
-> -- 
-> 2.31.1
-> 
-> 
+Bart.
+
