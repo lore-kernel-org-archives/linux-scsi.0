@@ -1,135 +1,191 @@
-Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A953714F132
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Jun 2024 08:01:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4E7484A22;
+	Wed, 12 Jun 2024 08:33:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718179285; cv=none; b=HnaAojihFTm18iXIll+elGJnaAVo9YqHJxR3Ze1M5WNOQco6afCJDelJ4jbvHJsdbnx09jZ6j27Gq+2NJAtIPGudWmYWUEEz80sCDzcAp1Qm85mJB362Yzq66QR9wP6KcxBScW6OkFNs5lysA8SkGSdt+RvwhtKyQGmMJ5XDR4Q=
+	t=1718181226; cv=none; b=iIdbp2xJSC+BMXBhiDEFb0ibCFNvZONoOfhMGic3gNFI/D11oMQ8BUc+Rcw8dQ1GgzOTREYf+je21YZcAEnBHakTJPwaeIwrRzgW3suMw5uHjkiH020rNadIR23xEITEGj7ASbcWGSef7LDQSAdhFakgP6zK+qXzZ35iA6+l3HE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718179285; c=relaxed/simple;
-	bh=2cExcM3FQdKVHy7cL3IiNx2Bk/UFeUgrDgrQcqyJhl8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oHQk7bpP6ts8iPbVra6eNmsUW0pHVhPPTo9SBylAtsIqC7GZngcoEA4AcZeo7BuMKwXb6szCUZKxxTw2z2NyyieoxK2/3Ihnd4mnOsixAwPXXitOuMQtEIOy+F5FucoFtD+mtwBipyvlEwQJ9IYtQGJ5TQV3WMfKwr19u+yYKeI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=citrix.com; spf=pass smtp.mailfrom=cloud.com; dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b=wGSiQ07I; arc=none smtp.client-ip=209.85.128.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=citrix.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cloud.com
+	s=arc-20240116; t=1718181226; c=relaxed/simple;
+	bh=SuEdPAV6zFASfN6QuboL4vVbuP0MOntQ0ttRpzAV9so=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=o2womhZBgM6wg2rIpOn3DCMj3aeE0yj9aUU5Vj/PpmKDNgOjilGH1bd1CGwlemDpVarOqECUCAkMWn3nCUhPHKO0TjDpnM0Go1ow05MUPT7XI0+0to4MZu1K6BWTGr8eGPIljIv4EUKmNRTpFZt4sKJb5kke/ge5Izegp8IdxlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=t1AnBKfU; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=t8nVDWOx; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=t1AnBKfU; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=t8nVDWOx; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b="wGSiQ07I"
-Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-62fa71027b1so5142707b3.3
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jun 2024 01:01:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=citrix.com; s=google; t=1718179283; x=1718784083; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=1PGf6HlJc1ANQenmlixWu1Sno9FA8D3ndcnX4NZVy9I=;
-        b=wGSiQ07IIsz3I5o3sJPfsRh6+YQ4aS+dl8faDVi6tCb8oJsgDTIAJhb3nIcw252bU0
-         nDpxqZOv3GJrkXMrxGioYAsvh4Pq/cnolHHO/TtN2xI0rAGtwEWsQRY4QkfU7k3Bm65M
-         hGrDJE6dultwgkDJcvbr8RkJ/+8f2Omv1w+bg=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718179283; x=1718784083;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1PGf6HlJc1ANQenmlixWu1Sno9FA8D3ndcnX4NZVy9I=;
-        b=tMgttiiVOJ07lNSQtHaqhm0Aihr0Ihp9ptSzi12YS1GhBeQBXNLanTEMtfcZ+ZmPph
-         /n6hBkZQtZm0shmMxDtAi31YaWPHeFEx97S7TMoih4KgqG+MYVXmedKawGiU5+GEKNLu
-         W8gm62WbGu67Kjup0QuaeJGzaQvWHgheTrjhRup+GJDRy0ezbdmOW3wslGwfSrntIyUu
-         SO3BaAq4bXMR7z3jHLI3bL6qJ//1gG5yGeVe/hnDQUNEVJHa5DepyiCOX7hlCxV7OhVF
-         1Bf4pEyd34+iFs08fFOfeRQccntLYSNPtElLuU8LPixWA9RGw4UkgDdjQ7mMloa3u3K0
-         jn5g==
-X-Forwarded-Encrypted: i=1; AJvYcCV/tvspu2/yHeDDpuRDjG1D59b85v1ks7pB1KJmWgXXCYh9uhbrMdUr+T3sBHGLD5k7rqNP+TPVmlslXcmI+a+uMJKYaU2hcw6x7A==
-X-Gm-Message-State: AOJu0YwVA/hMoMlw0Nd8aNQ4Hu3dNSRjYSfFGDFSlh8krpmicVT2CcmK
-	7gwjhXOChJxP5kCEkrlncs8Y73NkTmzR5mCcPp95ElW2KeWRd9ZN3widgjH9cH4=
-X-Google-Smtp-Source: AGHT+IEk5bObzz8qCZsqdRqFNOU7a/dh67daOPgnEKJGJzh0sP06pKqPApTvT03CHGJxr8rf1zPYww==
-X-Received: by 2002:a81:b647:0:b0:61b:e62e:73f1 with SMTP id 00721157ae682-62fb8a58273mr12605907b3.3.1718179282688;
-        Wed, 12 Jun 2024 01:01:22 -0700 (PDT)
-Received: from localhost ([46.222.2.38])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6b093aff889sm6894416d6.101.2024.06.12.01.01.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 12 Jun 2024 01:01:22 -0700 (PDT)
-Date: Wed, 12 Jun 2024 10:01:18 +0200
-From: Roger Pau =?utf-8?B?TW9ubsOp?= <roger.pau@citrix.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
-	Richard Weinberger <richard@nod.at>,
-	Philipp Reisner <philipp.reisner@linbit.com>,
-	Lars Ellenberg <lars.ellenberg@linbit.com>,
-	Christoph =?utf-8?Q?B=C3=B6hmwalder?= <christoph.boehmwalder@linbit.com>,
-	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>, Alasdair Kergon <agk@redhat.com>,
-	Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>,
-	Vineeth Vijayan <vneethv@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
-	drbd-dev@lists.linbit.com, nbd@other.debian.org,
-	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
-	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
-	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH 10/26] xen-blkfront: don't disable cache flushes when
- they fail
-Message-ID: <ZmlVziizbaboaBSn@macbook>
-References: <20240611051929.513387-1-hch@lst.de>
- <20240611051929.513387-11-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="t1AnBKfU";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="t8nVDWOx";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="t1AnBKfU";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="t8nVDWOx"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id D5432226A9;
+	Wed, 12 Jun 2024 08:33:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1718181222; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ueJMaSkE900pfLLr+27qj+1ZIC482XYU/yIHmHljQ/4=;
+	b=t1AnBKfUF2RsbukpwJEfKaR1aPiqW1F1d+/Q0r/QLz8lTJKWhEUL+idN6Lh9dfM8EFHgq6
+	FvLqysXp7HuSSgb6vtaFelblMCdh3cz+DYfxaXmpKWbsKaZluoquULwdo/zKjCh0WpSJSd
+	ILFxKeGod39vM2r9OVcHeKNh0SXOxdw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1718181222;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ueJMaSkE900pfLLr+27qj+1ZIC482XYU/yIHmHljQ/4=;
+	b=t8nVDWOxFes9cP2i9pSMJXoLhEbVHkPGibpmfF4ugEBpcQU0ghtUHo2DFJz56jxndOrJsX
+	dAHfi2ie+JB4tyCQ==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1718181222; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ueJMaSkE900pfLLr+27qj+1ZIC482XYU/yIHmHljQ/4=;
+	b=t1AnBKfUF2RsbukpwJEfKaR1aPiqW1F1d+/Q0r/QLz8lTJKWhEUL+idN6Lh9dfM8EFHgq6
+	FvLqysXp7HuSSgb6vtaFelblMCdh3cz+DYfxaXmpKWbsKaZluoquULwdo/zKjCh0WpSJSd
+	ILFxKeGod39vM2r9OVcHeKNh0SXOxdw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1718181222;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ueJMaSkE900pfLLr+27qj+1ZIC482XYU/yIHmHljQ/4=;
+	b=t8nVDWOxFes9cP2i9pSMJXoLhEbVHkPGibpmfF4ugEBpcQU0ghtUHo2DFJz56jxndOrJsX
+	dAHfi2ie+JB4tyCQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C019C1372E;
+	Wed, 12 Jun 2024 08:33:42 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id UnetLGZdaWZGXgAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 12 Jun 2024 08:33:42 +0000
+Message-ID: <3b24ef4a-996b-4a8b-89f3-385872573039@suse.de>
+Date: Wed, 12 Jun 2024 10:33:42 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20240611051929.513387-11-hch@lst.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 1/3] scsi: core: Add new helper to iterate all devices
+ of host
+To: Wenchao Hao <haowenchao22@gmail.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240605091731.3111195-1-haowenchao22@gmail.com>
+ <20240605091731.3111195-2-haowenchao22@gmail.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240605091731.3111195-2-haowenchao22@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Score: -4.29
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.29 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.993];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	FREEMAIL_TO(0.00)[gmail.com,HansenPartnership.com,oracle.com,vger.kernel.org];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[5];
+	RCVD_TLS_ALL(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,imap1.dmz-prg2.suse.org:helo]
 
-On Tue, Jun 11, 2024 at 07:19:10AM +0200, Christoph Hellwig wrote:
-> blkfront always had a robust negotiation protocol for detecting a write
-> cache.  Stop simply disabling cache flushes when they fail as that is
-> a grave error.
+On 6/5/24 11:17, Wenchao Hao wrote:
+> shost_for_each_device() would skip devices which is in SDEV_CANCEL or
+> SDEV_DEL state, for some scenarios, we donot want to skip these devices,
+> so add a new macro shost_for_each_device_include_deleted() to handle it.
+> 
+> Following changes are introduced:
+> 
+> 1. Rework scsi_device_get(), add new helper __scsi_device_get() which
+>     determine if skip deleted scsi_device by parameter "skip_deleted".
+> 2. Add new parameter "skip_deleted" to __scsi_iterate_devices() which
+>     is used when calling __scsi_device_get()
+> 3. Update shost_for_each_device() to call __scsi_iterate_devices() with
+>     "skip_deleted" true
+> 4. Add new macro shost_for_each_device_include_deleted() which call
+>     __scsi_iterate_devices() with "skip_deleted" false
+> 
+> Signed-off-by: Wenchao Hao <haowenchao22@gmail.com>
+> ---
+>   drivers/scsi/scsi.c        | 46 ++++++++++++++++++++++++++------------
+>   include/scsi/scsi_device.h | 25 ++++++++++++++++++---
+>   2 files changed, 54 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 3e0c0381277a..5913de543d93 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -735,20 +735,18 @@ int scsi_cdl_enable(struct scsi_device *sdev, bool enable)
+>   	return 0;
+>   }
+>   
+> -/**
+> - * scsi_device_get  -  get an additional reference to a scsi_device
+> +/*
+> + * __scsi_device_get  -  get an additional reference to a scsi_device
+>    * @sdev:	device to get a reference to
+> - *
+> - * Description: Gets a reference to the scsi_device and increments the use count
+> - * of the underlying LLDD module.  You must hold host_lock of the
+> - * parent Scsi_Host or already have a reference when calling this.
+> - *
+> - * This will fail if a device is deleted or cancelled, or when the LLD module
+> - * is in the process of being unloaded.
+> + * @skip_deleted: when true, would return failed if device is deleted
+>    */
+> -int scsi_device_get(struct scsi_device *sdev)
+> +static int __scsi_device_get(struct scsi_device *sdev, bool skip_deleted)
+>   {
+> -	if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL)
+> +	/*
+> +	 * if skip_deleted is true and device is in removing, return failed
+> +	 */
+> +	if (skip_deleted &&
+> +	    (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL))
+>   		goto fail;
 
-It's my understanding the current code attempts to cover up for the
-lack of guarantees the feature itself provides:
+Nack.
+SDEV_DEL means the device is about to be deleted, so we _must not_ 
+access it at all.
 
- * feature-barrier
- *      Values:         0/1 (boolean)
- *      Default Value:  0
- *
- *      A value of "1" indicates that the backend can process requests
- *      containing the BLKIF_OP_WRITE_BARRIER request opcode.  Requests
- *      of this type may still be returned at any time with the
- *      BLKIF_RSP_EOPNOTSUPP result code.
- *
- * feature-flush-cache
- *      Values:         0/1 (boolean)
- *      Default Value:  0
- *
- *      A value of "1" indicates that the backend can process requests
- *      containing the BLKIF_OP_FLUSH_DISKCACHE request opcode.  Requests
- *      of this type may still be returned at any time with the
- *      BLKIF_RSP_EOPNOTSUPP result code.
+Cheers,
 
-So even when the feature is exposed, the backend might return
-EOPNOTSUPP for the flush/barrier operations.
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
-Such failure is tied on whether the underlying blkback storage
-supports REQ_OP_WRITE with REQ_PREFLUSH operation.  blkback will
-expose "feature-barrier" and/or "feature-flush-cache" without knowing
-whether the underlying backend supports those operations, hence the
-weird fallback in blkfront.
-
-I'm unsure whether lack of REQ_PREFLUSH support is not something that
-we should worry about, it seems like it was when the code was
-introduced, but that's > 10y ago.
-
-Overall blkback should ensure that REQ_PREFLUSH is supported before
-exposing "feature-barrier" or "feature-flush-cache", as then the
-exposed features would really match what the underlying backend
-supports (rather than the commands blkback knows about).
-
-Thanks, Roger.
