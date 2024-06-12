@@ -1,80 +1,80 @@
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4E7484A22;
-	Wed, 12 Jun 2024 08:33:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCE1D16C86D;
+	Wed, 12 Jun 2024 08:35:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718181226; cv=none; b=iIdbp2xJSC+BMXBhiDEFb0ibCFNvZONoOfhMGic3gNFI/D11oMQ8BUc+Rcw8dQ1GgzOTREYf+je21YZcAEnBHakTJPwaeIwrRzgW3suMw5uHjkiH020rNadIR23xEITEGj7ASbcWGSef7LDQSAdhFakgP6zK+qXzZ35iA6+l3HE=
+	t=1718181302; cv=none; b=ERvn0MvzSuJZvU5DuriI2osUDgvE2r8WGmnnIo5lzOw5fwcRKVECU5TYyeXfEKB4ed97m3f3ZvfS0ZTLCUYZ8km1+rtd/9YYuS3WGb00LQM+yi7OF4YTpZ1cvKLd0KC6V7k8QuVd1sTbpE7kuYLm6WzGpYQsBYgw7qgAPEMo9zI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718181226; c=relaxed/simple;
-	bh=SuEdPAV6zFASfN6QuboL4vVbuP0MOntQ0ttRpzAV9so=;
+	s=arc-20240116; t=1718181302; c=relaxed/simple;
+	bh=EmrSL3kSXUyeQL8xY73FfjAoGugX+WVDJ2EuF/58iTY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=o2womhZBgM6wg2rIpOn3DCMj3aeE0yj9aUU5Vj/PpmKDNgOjilGH1bd1CGwlemDpVarOqECUCAkMWn3nCUhPHKO0TjDpnM0Go1ow05MUPT7XI0+0to4MZu1K6BWTGr8eGPIljIv4EUKmNRTpFZt4sKJb5kke/ge5Izegp8IdxlY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=t1AnBKfU; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=t8nVDWOx; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=t1AnBKfU; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=t8nVDWOx; arc=none smtp.client-ip=195.135.223.130
+	 In-Reply-To:Content-Type; b=Bcndo46RAQIlc3ucMalGEPYtV4Xoz0RDs+qxBnYJqqCoI5J6puaWtdY2sU12unnduwZhGzWlyOmBuBNQWns2tph9F01JbnaJ2HZDykPhmZkNNurLipBoNlE0/X+O7wEO8XeUfy4TFLv/Rut20FV8PYnKBCFcmKvj5RVsPlVPeyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VyWD2YzY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ttOl3drv; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VyWD2YzY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ttOl3drv; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="t1AnBKfU";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="t8nVDWOx";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="t1AnBKfU";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="t8nVDWOx"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VyWD2YzY";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ttOl3drv";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VyWD2YzY";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ttOl3drv"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id D5432226A9;
-	Wed, 12 Jun 2024 08:33:42 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 15E2034098;
+	Wed, 12 Jun 2024 08:34:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718181222; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1718181299; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ueJMaSkE900pfLLr+27qj+1ZIC482XYU/yIHmHljQ/4=;
-	b=t1AnBKfUF2RsbukpwJEfKaR1aPiqW1F1d+/Q0r/QLz8lTJKWhEUL+idN6Lh9dfM8EFHgq6
-	FvLqysXp7HuSSgb6vtaFelblMCdh3cz+DYfxaXmpKWbsKaZluoquULwdo/zKjCh0WpSJSd
-	ILFxKeGod39vM2r9OVcHeKNh0SXOxdw=
+	bh=8LlGlipcreMWva2qU2h/snzS8eogdqZBY7PivNh3e0s=;
+	b=VyWD2YzYdoApXe1YHgrvTmtMzYp6GICGmgQe+ZHta1eEEw4Jc++kF4Takknl1w6qA7le4r
+	IiNoUTTYxG/tPX1N2GIPWo+0QIBpkP2K7DM0e8KlSRLEAOA3ukLUEnBGxF1Ey+JOZCgrOC
+	/ybweWQiLCbjyFNaJJsu0ruSjc079H4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718181222;
+	s=susede2_ed25519; t=1718181299;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ueJMaSkE900pfLLr+27qj+1ZIC482XYU/yIHmHljQ/4=;
-	b=t8nVDWOxFes9cP2i9pSMJXoLhEbVHkPGibpmfF4ugEBpcQU0ghtUHo2DFJz56jxndOrJsX
-	dAHfi2ie+JB4tyCQ==
+	bh=8LlGlipcreMWva2qU2h/snzS8eogdqZBY7PivNh3e0s=;
+	b=ttOl3drvovNZT8dNdQZd0u4XsPgbPmv4DEnk6whUf9FOKSqf9ZuurtDj//0SB9rzrkc2d6
+	A2djXBeAFViN1hBQ==
 Authentication-Results: smtp-out1.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718181222; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	t=1718181299; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ueJMaSkE900pfLLr+27qj+1ZIC482XYU/yIHmHljQ/4=;
-	b=t1AnBKfUF2RsbukpwJEfKaR1aPiqW1F1d+/Q0r/QLz8lTJKWhEUL+idN6Lh9dfM8EFHgq6
-	FvLqysXp7HuSSgb6vtaFelblMCdh3cz+DYfxaXmpKWbsKaZluoquULwdo/zKjCh0WpSJSd
-	ILFxKeGod39vM2r9OVcHeKNh0SXOxdw=
+	bh=8LlGlipcreMWva2qU2h/snzS8eogdqZBY7PivNh3e0s=;
+	b=VyWD2YzYdoApXe1YHgrvTmtMzYp6GICGmgQe+ZHta1eEEw4Jc++kF4Takknl1w6qA7le4r
+	IiNoUTTYxG/tPX1N2GIPWo+0QIBpkP2K7DM0e8KlSRLEAOA3ukLUEnBGxF1Ey+JOZCgrOC
+	/ybweWQiLCbjyFNaJJsu0ruSjc079H4=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718181222;
+	s=susede2_ed25519; t=1718181299;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ueJMaSkE900pfLLr+27qj+1ZIC482XYU/yIHmHljQ/4=;
-	b=t8nVDWOxFes9cP2i9pSMJXoLhEbVHkPGibpmfF4ugEBpcQU0ghtUHo2DFJz56jxndOrJsX
-	dAHfi2ie+JB4tyCQ==
+	bh=8LlGlipcreMWva2qU2h/snzS8eogdqZBY7PivNh3e0s=;
+	b=ttOl3drvovNZT8dNdQZd0u4XsPgbPmv4DEnk6whUf9FOKSqf9ZuurtDj//0SB9rzrkc2d6
+	A2djXBeAFViN1hBQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C019C1372E;
-	Wed, 12 Jun 2024 08:33:42 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 053B51372E;
+	Wed, 12 Jun 2024 08:34:59 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id UnetLGZdaWZGXgAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 12 Jun 2024 08:33:42 +0000
-Message-ID: <3b24ef4a-996b-4a8b-89f3-385872573039@suse.de>
-Date: Wed, 12 Jun 2024 10:33:42 +0200
+	id PCvWALNdaWaYXgAAD6G6ig
+	(envelope-from <hare@suse.de>); Wed, 12 Jun 2024 08:34:59 +0000
+Message-ID: <15f0fb9b-3b30-413d-9f30-81c246b6bae1@suse.de>
+Date: Wed, 12 Jun 2024 10:34:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,17 +82,17 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/3] scsi: core: Add new helper to iterate all devices
- of host
+Subject: Re: [PATCH v5 2/3] scsi: scsi_error: Fix wrong statistic when print
+ error info
 To: Wenchao Hao <haowenchao22@gmail.com>,
  "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>,
  linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20240605091731.3111195-1-haowenchao22@gmail.com>
- <20240605091731.3111195-2-haowenchao22@gmail.com>
+ <20240605091731.3111195-3-haowenchao22@gmail.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240605091731.3111195-2-haowenchao22@gmail.com>
+In-Reply-To: <20240605091731.3111195-3-haowenchao22@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 X-Spam-Score: -4.29
@@ -119,66 +119,39 @@ X-Spamd-Result: default: False [-4.29 / 50.00];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	RCVD_COUNT_TWO(0.00)[2];
 	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,imap1.dmz-prg2.suse.org:helo]
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
 
 On 6/5/24 11:17, Wenchao Hao wrote:
-> shost_for_each_device() would skip devices which is in SDEV_CANCEL or
-> SDEV_DEL state, for some scenarios, we donot want to skip these devices,
-> so add a new macro shost_for_each_device_include_deleted() to handle it.
+> shost_for_each_device() would skip devices which is in progress of
+> removing, so commands of these devices would be ignored in
+> scsi_eh_prt_fail_stats().
 > 
-> Following changes are introduced:
+> Fix this issue by using shost_for_each_device_include_deleted()
+> to iterate devices in scsi_eh_prt_fail_stats().
 > 
-> 1. Rework scsi_device_get(), add new helper __scsi_device_get() which
->     determine if skip deleted scsi_device by parameter "skip_deleted".
-> 2. Add new parameter "skip_deleted" to __scsi_iterate_devices() which
->     is used when calling __scsi_device_get()
-> 3. Update shost_for_each_device() to call __scsi_iterate_devices() with
->     "skip_deleted" true
-> 4. Add new macro shost_for_each_device_include_deleted() which call
->     __scsi_iterate_devices() with "skip_deleted" false
-> 
+> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
 > Signed-off-by: Wenchao Hao <haowenchao22@gmail.com>
 > ---
->   drivers/scsi/scsi.c        | 46 ++++++++++++++++++++++++++------------
->   include/scsi/scsi_device.h | 25 ++++++++++++++++++---
->   2 files changed, 54 insertions(+), 17 deletions(-)
+>   drivers/scsi/scsi_error.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 3e0c0381277a..5913de543d93 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -735,20 +735,18 @@ int scsi_cdl_enable(struct scsi_device *sdev, bool enable)
->   	return 0;
->   }
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 612489afe8d2..a61fd8af3b1f 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -409,7 +409,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
+>   	int cmd_cancel = 0;
+>   	int devices_failed = 0;
 >   
-> -/**
-> - * scsi_device_get  -  get an additional reference to a scsi_device
-> +/*
-> + * __scsi_device_get  -  get an additional reference to a scsi_device
->    * @sdev:	device to get a reference to
-> - *
-> - * Description: Gets a reference to the scsi_device and increments the use count
-> - * of the underlying LLDD module.  You must hold host_lock of the
-> - * parent Scsi_Host or already have a reference when calling this.
-> - *
-> - * This will fail if a device is deleted or cancelled, or when the LLD module
-> - * is in the process of being unloaded.
-> + * @skip_deleted: when true, would return failed if device is deleted
->    */
-> -int scsi_device_get(struct scsi_device *sdev)
-> +static int __scsi_device_get(struct scsi_device *sdev, bool skip_deleted)
->   {
-> -	if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL)
-> +	/*
-> +	 * if skip_deleted is true and device is in removing, return failed
-> +	 */
-> +	if (skip_deleted &&
-> +	    (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL))
->   		goto fail;
+> -	shost_for_each_device(sdev, shost) {
+> +	shost_for_each_device_include_deleted(sdev, shost) {
+>   		list_for_each_entry(scmd, work_q, eh_entry) {
+>   			if (scmd->device == sdev) {
+>   				++total_failures;
 
-Nack.
-SDEV_DEL means the device is about to be deleted, so we _must not_ 
-access it at all.
+That is wrong. We should rather add a failure counter to the SCSI host, 
+and have the scsi device increase it every time a failure occurs.
+Then we can avoid this loop completely.
 
 Cheers,
 
