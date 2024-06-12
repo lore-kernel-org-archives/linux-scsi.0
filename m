@@ -1,22 +1,22 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F80423769;
-	Wed, 12 Jun 2024 04:46:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 919802574D;
+	Wed, 12 Jun 2024 04:50:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718167568; cv=none; b=GXJ8Dt7d25mmQz1KZNtvTUckAsSt4xhDjAse05EAKzsq+BvIB2UPv7WA9o4bI7N0KnvL3RXrHH0uHTCH50qJmAWwVDbxRwLKw5QBC5mY1Zp06cvVwklQQmGZT2FxyESKI5ve78A36wMECj2USbwKQmponUCC1nwMORg/dWyEHCo=
+	t=1718167833; cv=none; b=HRlT9xuTmzzGxrnsM/CC12AmwlslMtZfokEHJ16ks3tahfsLfbocV9VoRrvHREuQ6JFmzKBAhtwK0Elz5q9rz8Lt2TCALtpx7QYOFzT7MynAFjd82YdryjQwZwh+MGV0ELMrwPyzSKiakCgrkhh0FVzHLGCSbzSfwZZxB1ZbTkU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718167568; c=relaxed/simple;
-	bh=lmEUDVQ2LAtfkGS2NiQcL/waPbmMTp1rN5KRFay4VZc=;
+	s=arc-20240116; t=1718167833; c=relaxed/simple;
+	bh=24WVAZW1MJ2/foqmOc06hguUKkgxj8Jmo0NHu5hLLFw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rTksj1quJJHuqZhRrKJwGeypJoFPOwHm649qpNLE7CozPunYfVWraPl7WUT2ygvMjGMjVRg8CNPAWre0uHpJuIXoc1/mGLls/tmITrO6xfVSoX8HZVH5MXxo7s3WVmksgUNTdJeEu+iCh0rF2yrdkxfL/Gr5HJWc1RVTfkL37wA=
+	 Content-Type:Content-Disposition:In-Reply-To; b=eC2i4elVUoErhq2zMxW5vVp1ho7nvAGpppYY6AG1JRL3otG9UFfHLYCnFuKR62ITsQK81FzT/lSxwC2VtF8RZTl+yT1DG5GUBwDkqKTQqd8Znfr6JZQB9U9gSH2c4WiePzOQoNfpFZEV14Z/XcEHveY4hWxEY0aiez/tdGH2UQc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 2B0FA68BEB; Wed, 12 Jun 2024 06:45:59 +0200 (CEST)
-Date: Wed, 12 Jun 2024 06:45:58 +0200
+	id 27E1B68BEB; Wed, 12 Jun 2024 06:50:27 +0200 (CEST)
+Date: Wed, 12 Jun 2024 06:50:26 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
@@ -43,10 +43,10 @@ Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
 	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
 	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
 	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH 02/26] sd: move zone limits setup out of
- sd_read_block_characteristics
-Message-ID: <20240612044558.GA26468@lst.de>
-References: <20240611051929.513387-1-hch@lst.de> <20240611051929.513387-3-hch@lst.de> <40ca8052-6ac1-4c1b-8c39-b0a7948839f8@kernel.org>
+Subject: Re: [PATCH 10/26] xen-blkfront: don't disable cache flushes when
+ they fail
+Message-ID: <20240612045026.GA26653@lst.de>
+References: <20240611051929.513387-1-hch@lst.de> <20240611051929.513387-11-hch@lst.de> <fdfc024a-368a-4495-8b85-b5ab7741f6d4@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,21 +55,21 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <40ca8052-6ac1-4c1b-8c39-b0a7948839f8@kernel.org>
+In-Reply-To: <fdfc024a-368a-4495-8b85-b5ab7741f6d4@kernel.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Jun 11, 2024 at 02:51:24PM +0900, Damien Le Moal wrote:
-> > -	if (!sd_is_zoned(sdkp))
-> > +	if (!sd_is_zoned(sdkp)) {
-> > +		lim->zoned = false;
+On Tue, Jun 11, 2024 at 04:30:39PM +0900, Damien Le Moal wrote:
+> On 6/11/24 2:19 PM, Christoph Hellwig wrote:
+> > blkfront always had a robust negotiation protocol for detecting a write
+> > cache.  Stop simply disabling cache flushes when they fail as that is
+> > a grave error.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Maybe we should clear the other zone related limits here ? If the drive is
-> reformatted/converted from SMR to CMR (FORMAT WITH PRESET), the other zone
-> limits may be set already, no ?
+> Looks good to me but maybe mention that removal of xlvbd_flush() as well ?
+> And it feels like the "stop disabling cache flushes when they fail" part should
+> be a fix patch sent separately...
 
-Yes, but we would not end up here.  The device type is constant over
-the struct of the scsi_device and we'd have to fully reprobe it.
-
-So we don't need to clear any flags, including the actual zoned flag
-here.
-
+I'll move the patch to the front of the series to get more attention from
+the maintainers, but otherwise the xlvbd_flush remova lis the really
+trivial part here.
