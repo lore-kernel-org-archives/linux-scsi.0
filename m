@@ -1,63 +1,55 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A825181BAB;
-	Wed, 12 Jun 2024 16:53:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36C966EB74
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Jun 2024 17:15:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718211207; cv=none; b=snJj9ZXC7jsSk5x5XpzGM2egSskaCyrfSjDBWrRoMEda1v8zsGGxQvZBT5vijCKgESqcXPm+uwznikzQcHnwMw0oh3o8QiwY1N01WwTQ6T+htNlmMLY4GunRJOdckeODwBL0iHr8BhPbb6Y/PRdH+VnoH+aU+4vCgDS3EKb3fDg=
+	t=1718212531; cv=none; b=t3j9pv/OeMUtyfAQNC9uIM0JsgRfRG2EX3dAcPtS6hp8DVEHgRK+0+Hj3tZtvaW8qXHM28rUyRWfl2nRCBUAlmdX7ZKAK868dLp6cNdKV0wDyhejiWWC2fR8H93U32Rnr4l7ZuiFs9Pnu+RZ3w70iSap0dXsACsmkNfEIB4/dtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718211207; c=relaxed/simple;
-	bh=qVdsce9kI7phLWSg6H8f1oBYl958AVtUymwUn2irbvs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Q5lXF5alz7GCITu1a6hM7nj+i5118zmR9uzkTHmIQoahGRW8JEcQiLQK+NGbcKSbZS1IdPAXi+qyz1ke5GPRePVnuQh1wHp8mHIdF1hYbC1XR21TwW05JfBpvHI5wWAEZ9bJPPA+55vb967BK5KQA1vrKF/MPwRuUPvtbOOp2f8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=k0afUE6r; arc=none smtp.client-ip=199.89.1.11
+	s=arc-20240116; t=1718212531; c=relaxed/simple;
+	bh=I9vtZK+uFJhlUDA6Aq9Yv/UiojMLeWsojGZayi8gHJ0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=B5LAvb/AFWBxZsLT1n+ZWXsSTIz73d6eqpnzyB/wjxSmab/DV9V3L8QnbpJNm1KcdM17RjQ2D45tMuQqTE34ugNCMCJodkZXoz81AGQeZ3MHlH6YrTKHyZpxHMXmcBuoGxAMqmvdN+1VyajeZLdW5LGObOZjjOslzmkZXYZyU7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=TyL/gXUU; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="k0afUE6r"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="TyL/gXUU"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Vzs720TxKz6Cnk8t;
-	Wed, 12 Jun 2024 16:53:18 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Vzscd397LzlgMVW;
+	Wed, 12 Jun 2024 17:15:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1718211193; x=1720803194; bh=yEYek
-	9bgEzYOmdogb2Tp0iSUExccUecXfH9k7dVFWHc=; b=k0afUE6rL2twrqKfTMT7q
-	7HTZ4ZRm5GA09ocoi/y82YPA0JOPT035Qcn6Wy3zN6LfRDdOuRigmiCTMR1MW6DW
-	VkakGL1aNm5s9CDFI7/4ClFCAlmRJl0WKDAPDuk7rcmas/hz3s6tVG4NWdFfNLh9
-	LU+KcmmdV7k9JlK28zwzeSCSgjychtGBjMl3xNGIQKPdaccQNlLCZbQzQcKOUfME
-	qQFib6xaEsuCN/AJIds67nALZEhjXakgbpA/hqs9C7jcitSfbGI3NPraQlkG06Bu
-	1Nv4TWOhQ5Zwq9qym+04Iol1xXbGYNFKiCYyoMJENXpy3W8YQ84LOWBXNgBWtVtu
-	g==
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1718212526; x=1720804527; bh=v0YvfBIqi7u4xDYwG1sC+9Zr+vG5gtgS/Rw
+	5D0SEHGo=; b=TyL/gXUUuANzLkhanTHm+UpkYTulEmLxWyRirR3eYoQnUPkDj7z
+	g7mYGHDxqFJrwmHtgy/84FgNbedQau93xwSVPOZVMACPQ4aAYOA6tpcd5ImwVa77
+	TNcK8JgR3LLg6MSlGLXTE2dsEp31WhA3TwxZgRirv5Oy6Ar/kA0HijUJLtpyJlA8
+	L76m8t5MmSBZi5csaYUZxE4VGZFPrFgTZxCw3pnKOhmg8pY92sGpCN5fZ0ul6iHP
+	5qNI8pyhUwDW/C61Tkd/JMS9elvkvGkMQ6ttuIeZkzeNdHlwAR5TFMUBj9kyA1x5
+	770+h9cYOJJLdaJ6m9m/+ZI6kR3x2bI9e8g==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Uje01OWT_d2e; Wed, 12 Jun 2024 16:53:13 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id lkCC-N1vZf3M; Wed, 12 Jun 2024 17:15:26 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.132.0.90])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Vzs6w14JRz6Cnv3Q;
-	Wed, 12 Jun 2024 16:53:12 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4VzscY3nq5zlgMVV;
+	Wed, 12 Jun 2024 17:15:25 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	linux-scsi@vger.kernel.org,
-	linux-usb@vger.kernel.org,
+Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Joao Machado <jocrismachado@gmail.com>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Christian Heusel <christian@heusel.eu>,
-	stable@vger.kernel.org,
+	Christoph Hellwig <hch@infradead.org>,
+	Avri Altman <Avri.Altman@wdc.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 1/2] scsi: core: Introduce the BLIST_SKIP_IO_HINTS flag
-Date: Wed, 12 Jun 2024 09:52:48 -0700
-Message-ID: <20240612165249.2671204-2-bvanassche@acm.org>
+Subject: [PATCH v2] scsi: core: Fix an incorrect comment
+Date: Wed, 12 Jun 2024 10:15:21 -0700
+Message-ID: <20240612171522.2677600-1-bvanassche@acm.org>
 X-Mailer: git-send-email 2.45.2.505.gda0bf45e8d-goog
-In-Reply-To: <20240612165249.2671204-1-bvanassche@acm.org>
-References: <20240612165249.2671204-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -66,57 +58,45 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Prepare for skipping reading the IO hints VPD page for USB storage device=
-s.
+The comment that scsi_static_device_list would go away was added more
+than 18 years ago. Today, that list is still there and a large number
+of additional entries have been added. This shows that this comment is
+incorrect. Hence fix that comment.
 
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: Joao Machado <jocrismachado@gmail.com>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Christian Heusel <christian@heusel.eu>
-Cc: stable@vger.kernel.org
-Fixes: 4f53138fffc2 ("scsi: sd: Translate data lifetime information")
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Avri Altman <Avri.Altman@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/sd.c           | 4 ++++
- include/scsi/scsi_devinfo.h | 4 +++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 3a43e2209751..fcf3d7730466 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -63,6 +63,7 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_devinfo.h>
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
-@@ -3117,6 +3118,9 @@ static void sd_read_io_hints(struct scsi_disk *sdkp=
-, unsigned char *buffer)
- 	struct scsi_mode_data data;
- 	int res;
+Changes compared to v1: addressed Christoph's review feedback.
+
+ drivers/scsi/scsi_devinfo.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index a7071e71389e..90f1393a23f8 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -39,13 +39,12 @@ static LIST_HEAD(scsi_dev_info_list);
+ static char scsi_dev_flags[256];
 =20
-+	if (sdp->sdev_bflags & BLIST_SKIP_IO_HINTS)
-+		return;
-+
- 	res =3D scsi_mode_sense(sdp, /*dbd=3D*/0x8, /*modepage=3D*/0x0a,
- 			      /*subpage=3D*/0x05, buffer, SD_BUF_SIZE, SD_TIMEOUT,
- 			      sdkp->max_retries, &data, &sshdr);
-diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
-index 6b548dc2c496..fa8721e49dec 100644
---- a/include/scsi/scsi_devinfo.h
-+++ b/include/scsi/scsi_devinfo.h
-@@ -69,8 +69,10 @@
- #define BLIST_RETRY_ITF		((__force blist_flags_t)(1ULL << 32))
- /* Always retry ABORTED_COMMAND with ASC 0xc1 */
- #define BLIST_RETRY_ASC_C1	((__force blist_flags_t)(1ULL << 33))
-+/* Do not read the I/O hints mode page */
-+#define BLIST_SKIP_IO_HINTS	((__force blist_flags_t)(1ULL << 34))
-=20
--#define __BLIST_LAST_USED BLIST_RETRY_ASC_C1
-+#define __BLIST_LAST_USED BLIST_SKIP_IO_HINTS
-=20
- #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
- 			       (__force blist_flags_t) \
+ /*
+- * scsi_static_device_list: deprecated list of devices that require
+- * settings that differ from the default, includes black-listed (broken)
+- * devices. The entries here are added to the tail of scsi_dev_info_list
+- * via scsi_dev_info_list_init.
++ * scsi_static_device_list: list of devices that require settings that d=
+iffer
++ * from the default, includes black-listed (broken) devices. The entries=
+ here
++ * are added to the tail of scsi_dev_info_list via scsi_dev_info_list_in=
+it.
+  *
+- * Do not add to this list, use the command line or proc interface to ad=
+d
+- * to the scsi_dev_info_list. This table will eventually go away.
++ * If possible, set the BLIST_* flags from inside a SCSI LLD rather than
++ * adding an entry to this list.
+  */
+ static struct {
+ 	char *vendor;
