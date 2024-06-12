@@ -1,164 +1,131 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-pf1-f195.google.com (mail-pf1-f195.google.com [209.85.210.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCE1D16C86D;
-	Wed, 12 Jun 2024 08:35:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A1C916D9D7;
+	Wed, 12 Jun 2024 09:31:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718181302; cv=none; b=ERvn0MvzSuJZvU5DuriI2osUDgvE2r8WGmnnIo5lzOw5fwcRKVECU5TYyeXfEKB4ed97m3f3ZvfS0ZTLCUYZ8km1+rtd/9YYuS3WGb00LQM+yi7OF4YTpZ1cvKLd0KC6V7k8QuVd1sTbpE7kuYLm6WzGpYQsBYgw7qgAPEMo9zI=
+	t=1718184697; cv=none; b=C1RbyYBddrsyZ56jn+wHNVsHscOWERuiD/rwoqicjiW8Fxg6ktMp8T1JhdQjtb80fu5j2sTN3KWGVwa12JS94Xv3XVJqfkX0KSHBf/eHuCBjZ57A1VRMXjIw917tDR7OI4ry8MlKNvXhrU/a9kbQx754Wu8kQpa5JSYQ9tINSmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718181302; c=relaxed/simple;
-	bh=EmrSL3kSXUyeQL8xY73FfjAoGugX+WVDJ2EuF/58iTY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Bcndo46RAQIlc3ucMalGEPYtV4Xoz0RDs+qxBnYJqqCoI5J6puaWtdY2sU12unnduwZhGzWlyOmBuBNQWns2tph9F01JbnaJ2HZDykPhmZkNNurLipBoNlE0/X+O7wEO8XeUfy4TFLv/Rut20FV8PYnKBCFcmKvj5RVsPlVPeyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VyWD2YzY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ttOl3drv; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VyWD2YzY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ttOl3drv; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1718184697; c=relaxed/simple;
+	bh=WNOzoJUF5Sd3jb54WNIWO7Ok2KUCrQMO20CYYkK0ZGM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EW+I/oDa32NfcV45Orerj/3nCn9iRpB+IKWMwVxO6J2737gS2LLz5Mr3NQ2ikEghzo4Xbi+owaNuccyNutJsdD5eC1BuatcFq/n2G5FYCDKsNB4dIDlfl2m5WqdONYls7e+QykdS5per7AKDmP+PXwgkJCCa5gFm+OkXAv0NBdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GEz6HYS0; arc=none smtp.client-ip=209.85.210.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VyWD2YzY";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ttOl3drv";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VyWD2YzY";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ttOl3drv"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 15E2034098;
-	Wed, 12 Jun 2024 08:34:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718181299; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8LlGlipcreMWva2qU2h/snzS8eogdqZBY7PivNh3e0s=;
-	b=VyWD2YzYdoApXe1YHgrvTmtMzYp6GICGmgQe+ZHta1eEEw4Jc++kF4Takknl1w6qA7le4r
-	IiNoUTTYxG/tPX1N2GIPWo+0QIBpkP2K7DM0e8KlSRLEAOA3ukLUEnBGxF1Ey+JOZCgrOC
-	/ybweWQiLCbjyFNaJJsu0ruSjc079H4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718181299;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8LlGlipcreMWva2qU2h/snzS8eogdqZBY7PivNh3e0s=;
-	b=ttOl3drvovNZT8dNdQZd0u4XsPgbPmv4DEnk6whUf9FOKSqf9ZuurtDj//0SB9rzrkc2d6
-	A2djXBeAFViN1hBQ==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718181299; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8LlGlipcreMWva2qU2h/snzS8eogdqZBY7PivNh3e0s=;
-	b=VyWD2YzYdoApXe1YHgrvTmtMzYp6GICGmgQe+ZHta1eEEw4Jc++kF4Takknl1w6qA7le4r
-	IiNoUTTYxG/tPX1N2GIPWo+0QIBpkP2K7DM0e8KlSRLEAOA3ukLUEnBGxF1Ey+JOZCgrOC
-	/ybweWQiLCbjyFNaJJsu0ruSjc079H4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718181299;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=8LlGlipcreMWva2qU2h/snzS8eogdqZBY7PivNh3e0s=;
-	b=ttOl3drvovNZT8dNdQZd0u4XsPgbPmv4DEnk6whUf9FOKSqf9ZuurtDj//0SB9rzrkc2d6
-	A2djXBeAFViN1hBQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 053B51372E;
-	Wed, 12 Jun 2024 08:34:59 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id PCvWALNdaWaYXgAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 12 Jun 2024 08:34:59 +0000
-Message-ID: <15f0fb9b-3b30-413d-9f30-81c246b6bae1@suse.de>
-Date: Wed, 12 Jun 2024 10:34:54 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GEz6HYS0"
+Received: by mail-pf1-f195.google.com with SMTP id d2e1a72fcca58-7041e39a5beso3687432b3a.3;
+        Wed, 12 Jun 2024 02:31:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1718184696; x=1718789496; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=7yzsgZOmviXDPRveEaKsBFzgEIXtcAbD/zH2lFEcpTU=;
+        b=GEz6HYS0dIlX2CLFXJSOaK+VJz/35/sGYWlPWtR+46lTDPL/p6TqrNDfyp/yC9KUEW
+         52Rgjh1aVTygvEDtfRTDdtIMcGeR6cDzL0qYB/UzWwsIlr0jm2detLK988u0QkW3hDth
+         Rs+Iwz1/Q/zZERwEiLw5+1K7WdUYKj+rFpBMYkoeCmodFBFhPiT1gG9tm1M5PKfzNla2
+         nrMjuRJtfdUdzjDLJzBI0JMMcOqeol3tXmRFc7I6mZURCayS94COwgwMaeAvzS00Scsg
+         vz9UovPRCrpxRKfbdFp2NYDWX5hKLOZ8rF/Oe1S6mLHAdBBfw3ClqCiGhHNEJgVOiN5E
+         LoyQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718184696; x=1718789496;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=7yzsgZOmviXDPRveEaKsBFzgEIXtcAbD/zH2lFEcpTU=;
+        b=emKGj5Vdet26fhP3TcNCJyBxBE9tmtUFyX1M7ba8aXmcHszfWiz3PGdFVZ0TYOlDwm
+         vt8ZM9cQwepRw4uBPrygpcn0MF71f0UFJIGsCeKRQ73znJ6JnHrKoXaZdLtfxKLvStqQ
+         OF+tT+ffnNZ+XjmpHvNmHWS0tTzbrxRtLh0++o2p6oNQ1NfAz3xrD6mhKrdWWK7NPyLZ
+         yBJCwufQGMhlq+YZ8pZ5i/ZExJpyPjzoyqBTBAnD6EifI854VC/P90w4lQSCPDkRZzNO
+         hI0QfiP9+Npe+V2IcHlhmKxsAxDZzQpopGYgOmp0h/ZO4zVKhN1IiTskGDkrJR9lnj+N
+         6KBQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUEBgkwH2Mfu6gbsmUoJ5Pa8efThXOs2jcNomNkWQ8WR8Vas/QraofBMJvaAd3WuZP8MjKg+6BJMLeKy0W+diyVixmgKQokOunTXYA7
+X-Gm-Message-State: AOJu0YzrkmGw1lcCU9PLKHeVeJKzOpGxaYxmI5ogPsa1NafUT0P+KyPu
+	Kb+wC39W5AFjtDdOexTK5S/rXSc9ST4IaJcsZouwx5iDdxchHltM
+X-Google-Smtp-Source: AGHT+IFcQRCr4rkFrU5kbqsrK+X9/MIFW11p9GdKGUayDLo/CcyYLz7pcnOf9Dy5u/Gs1s15g1BepQ==
+X-Received: by 2002:a05:6a00:1886:b0:705:951e:ed88 with SMTP id d2e1a72fcca58-705bceb0393mr1319701b3a.25.1718184695596;
+        Wed, 12 Jun 2024 02:31:35 -0700 (PDT)
+Received: from lhy-a01-ubuntu22.. ([106.39.42.164])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70596eed610sm5119140b3a.170.2024.06.12.02.31.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Jun 2024 02:31:35 -0700 (PDT)
+From: Huai-Yuan Liu <qq810974084@gmail.com>
+To: linuxdrivers@attotech.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	baijiaju1990@gmail.com,
+	Huai-Yuan Liu <qq810974084@gmail.com>
+Subject: [PATCH] [SCSI] esas2r: fix possible buffer overflow caused by bad DMA value in esas2r_process_vda_ioctl()
+Date: Wed, 12 Jun 2024 17:31:19 +0800
+Message-Id: <20240612093119.296983-1-qq810974084@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/3] scsi: scsi_error: Fix wrong statistic when print
- error info
-To: Wenchao Hao <haowenchao22@gmail.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240605091731.3111195-1-haowenchao22@gmail.com>
- <20240605091731.3111195-3-haowenchao22@gmail.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240605091731.3111195-3-haowenchao22@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -4.29
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.29 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.993];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_TO(0.00)[gmail.com,HansenPartnership.com,oracle.com,vger.kernel.org];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[5];
-	RCVD_TLS_ALL(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email]
 
-On 6/5/24 11:17, Wenchao Hao wrote:
-> shost_for_each_device() would skip devices which is in progress of
-> removing, so commands of these devices would be ignored in
-> scsi_eh_prt_fail_stats().
-> 
-> Fix this issue by using shost_for_each_device_include_deleted()
-> to iterate devices in scsi_eh_prt_fail_stats().
-> 
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Signed-off-by: Wenchao Hao <haowenchao22@gmail.com>
-> ---
->   drivers/scsi/scsi_error.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 612489afe8d2..a61fd8af3b1f 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -409,7 +409,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
->   	int cmd_cancel = 0;
->   	int devices_failed = 0;
->   
-> -	shost_for_each_device(sdev, shost) {
-> +	shost_for_each_device_include_deleted(sdev, shost) {
->   		list_for_each_entry(scmd, work_q, eh_entry) {
->   			if (scmd->device == sdev) {
->   				++total_failures;
+The value vi->function is stored in DMA memory, so it can be modified at
+any time by malicious hardware. In this case, "if (vi->function >= vercnt)"
+can be passed, which may cause buffer overflow and other unexpected 
+execution results in the following code.
 
-That is wrong. We should rather add a failure counter to the SCSI host, 
-and have the scsi device increase it every time a failure occurs.
-Then we can avoid this loop completely.
+To address this issue, vi->function should be assigned to a local value,
+which replaces the use of vi->function.
 
-Cheers,
+Fixes: 26780d9e12ed ("[SCSI] esas2r: ATTO Technology ExpressSAS 6G SAS/SATA RAID Adapter Driver")
+Signed-off-by: Huai-Yuan Liu <qq810974084@gmail.com>
+---
+ drivers/scsi/esas2r/esas2r_vda.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-Hannes
+diff --git a/drivers/scsi/esas2r/esas2r_vda.c b/drivers/scsi/esas2r/esas2r_vda.c
+index 30028e56df63..48af8c05b01d 100644
+--- a/drivers/scsi/esas2r/esas2r_vda.c
++++ b/drivers/scsi/esas2r/esas2r_vda.c
+@@ -70,16 +70,17 @@ bool esas2r_process_vda_ioctl(struct esas2r_adapter *a,
+ 	u32 datalen = 0;
+ 	struct atto_vda_sge *firstsg = NULL;
+ 	u8 vercnt = (u8)ARRAY_SIZE(esas2r_vdaioctl_versions);
++	u8 vi_function = vi->function;
+ 
+ 	vi->status = ATTO_STS_SUCCESS;
+ 	vi->vda_status = RS_PENDING;
+ 
+-	if (vi->function >= vercnt) {
++	if (vi_function >= vercnt) {
+ 		vi->status = ATTO_STS_INV_FUNC;
+ 		return false;
+ 	}
+ 
+-	if (vi->version > esas2r_vdaioctl_versions[vi->function]) {
++	if (vi->version > esas2r_vdaioctl_versions[vi_function]) {
+ 		vi->status = ATTO_STS_INV_VERSION;
+ 		return false;
+ 	}
+@@ -89,14 +90,14 @@ bool esas2r_process_vda_ioctl(struct esas2r_adapter *a,
+ 		return false;
+ 	}
+ 
+-	if (vi->function != VDA_FUNC_SCSI)
++	if (vi_function != VDA_FUNC_SCSI)
+ 		clear_vda_request(rq);
+ 
+-	rq->vrq->scsi.function = vi->function;
++	rq->vrq->scsi.function = vi_function;
+ 	rq->interrupt_cb = esas2r_complete_vda_ioctl;
+ 	rq->interrupt_cx = vi;
+ 
+-	switch (vi->function) {
++	switch (vi_function) {
+ 	case VDA_FUNC_FLASH:
+ 
+ 		if (vi->cmd.flash.sub_func != VDA_FLASH_FREAD
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.34.1
 
