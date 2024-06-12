@@ -1,120 +1,157 @@
-Received: from mail-qt1-f173.google.com (mail-qt1-f173.google.com [209.85.160.173])
+Received: from mail-qv1-f52.google.com (mail-qv1-f52.google.com [209.85.219.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2A3017F504;
-	Wed, 12 Jun 2024 15:13:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8DD1181324
+	for <linux-scsi@vger.kernel.org>; Wed, 12 Jun 2024 15:56:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718205184; cv=none; b=TxLOCN862KLWr442vL5xdXUH0rdQ81Gdnw6wzTm/zhTIVcX3lWNHhPPwE8Jzl19C0p//PkAVSMIyKesLQGEdmB9LelOp+SGmOAu1a7DHCZmcAWkw9UOzHlHKC4oYiVt/LeMbht7EywgkDbJglK6NNgR9Q61Plv/4sRYW71MPyCM=
+	t=1718207781; cv=none; b=jjm7KDB6M23idR7F6R/SAIBEytpxjBqVW0PecdBjFM3lekyN0rAaQrbcKL/CQm5k69aUNdM6WhxIkkRTE2S53rhhRn+Sr7faf/4L+BFrJ2zU9GC/HqIZdiTfEVXXkj9wypk2j9R46raFxtgkBjtuAeFb633zOQoPrVDSnvRIRpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718205184; c=relaxed/simple;
-	bh=CI3a4ZTH6QkNb6fo8QvVrdnNkzWsdTGrepojuhjTqcg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=eGrV1p5+a8G/4QvejpAEHfmilOFurabcTFBNwIIpdkohy2gruf74kO8F2SIt+shoBnKS609A1Zc3ZoHX7qK01gIBi+qmOAisbE9rH1BA10V1UuzXuHjMu2bIqBhq3LBCn6WBxQBOSKN/v26kqsGnttl8B22atkg6TcoD3CaOavo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SdBt74Ka; arc=none smtp.client-ip=209.85.160.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1718207781; c=relaxed/simple;
+	bh=WxiyGuZAC7bj+QrxGa2lDi15MZrXhgJnJEV+bRK2uiI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YeuVgcfArlO5oWRiBE2ZEbsnkQa4rOUCms8k7eXTErFadkqsdecCnxI4Gbr9H4ZoSJ6fvxgCS04sNvZhYBImQ2u7LdvASFPZJwmmiWILP8jyyMGL3ZMY8frf+n+1XY0RHwjfUJ3OJglLxYWkx3AVjFlA0JAzHzNjuooAWDnIwa4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=citrix.com; spf=pass smtp.mailfrom=cloud.com; dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b=V7cG6Ag/; arc=none smtp.client-ip=209.85.219.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=citrix.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SdBt74Ka"
-Received: by mail-qt1-f173.google.com with SMTP id d75a77b69052e-4415e623653so4632791cf.1;
-        Wed, 12 Jun 2024 08:13:02 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b="V7cG6Ag/"
+Received: by mail-qv1-f52.google.com with SMTP id 6a1803df08f44-6afc61f9a2eso170326d6.0
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Jun 2024 08:56:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718205182; x=1718809982; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=XHQXmqxHeWpd8OXnf/8HM51by6gwtLJcxhrxbZ3GwFA=;
-        b=SdBt74KapjbuSKBX7YwpNEAXKm3gUpfJFyGuE5v9YAEVrYDctykXGsBEXoZSuKgcYc
-         M+ZGEzcxOFX5GQcmCWqKMSS1drco3GyphI5wYO+w8j/cMlwsIkj4jSTWxMeZdI5K1D8D
-         87u/qjFCA/pbKAJznJe41F94OG+WuzWGoTOIH5sr9mJTsSL0n6q3zX9ByQZd/HYAXbXP
-         UHK1sV8fKAU6I7YmBQe+btnLdKbBOHxBsnKoankODLMS48swxIfpQxI2NrZtKRmBv15p
-         3WuKSZIRrdkfSpe6cbQVBezb/1pin57YvKnL+UdTXB1sQG1FJek7PPDoFxVu9tTRF+zu
-         MLmA==
+        d=citrix.com; s=google; t=1718207778; x=1718812578; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=0JAgWI6yypeQvJHtBsLjxy9EsiTAtsBZFfQkPH4VMNc=;
+        b=V7cG6Ag/z6iCUMnCyee02CpPpVNNKq0aFi2gbS3Dd7usN46ko1fDHLZJlYgCyUyzgM
+         PkWsxqJiUKaH93GKZqh+J6Tx9GmEzvjLAPs83YmL2Gkt9gUBj/Q88Lr7e+uzv1URoIzD
+         VKiz75cG3gC5YRvgiukyfUkbgvM5OnMGUnJzU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718205182; x=1718809982;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1718207778; x=1718812578;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XHQXmqxHeWpd8OXnf/8HM51by6gwtLJcxhrxbZ3GwFA=;
-        b=utFVhfPj+dXDfEJEYGVxNUmlzXUeR1I1wsL5GXATmhCQxKpWy55QmBufTK7c92+fLj
-         4zeg7uwdL/U7Ao4XvIqJpl4E4KvIPlmfGpTuxd0M2Sgef9TgWvghyaEZzDytvyc/f1uQ
-         dUUicufAqTUNNoAxk7hpCZtbvL4ujSAvhkEoZsmxshgHIiIzYMDdvitiRZPdKCL91mdy
-         Ra8S5TV8V4M9+hoB9+Rl7pMcE0KM0oCry/rk4ZqFFrVsl09CziwjHfn1LyceM6z30Syk
-         Ei0v0Mw0VKHfcdhseKmHN/dH7aaYtn4eV0wf+gG7QcXrbDl6SxQqGZbdmk393ZPx0UEX
-         Zz3w==
-X-Forwarded-Encrypted: i=1; AJvYcCVGEXCxiM1f++kTqWlWRd8rF2aOaPLVs+BuaA41V3/7qKADqXvCky2r/sdLx+clc7Jg/j5uprwCc48nQC6ooJTDZhYSynj/K8Pq1AZnBKe+QFO51HImfsaFXQgrxEb3t/iy/j8L5EmF7Q==
-X-Gm-Message-State: AOJu0Yyk9t09yTdjXTQCQuWE13jPJ1hghtg8bWCMlQqteuSg9uhdq8zo
-	9YyjDCNUMRYPLUJ0fVkefXN9E71xeANTePLA/2VxuINqLeZcbbFI
-X-Google-Smtp-Source: AGHT+IHfUqkiFUdNB7o+p/EPi7/QHlTHXRBGuw+7U9oYj8NY19HT4c3Kg9utIq6uyPK27o/gfKaG5w==
-X-Received: by 2002:a05:622a:148c:b0:43f:ee8c:b2e with SMTP id d75a77b69052e-44159b68890mr34943721cf.29.1718205181674;
-        Wed, 12 Jun 2024 08:13:01 -0700 (PDT)
-Received: from [0.0.0.0] (97.64.23.41.16clouds.com. [97.64.23.41])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4403895aa9asm56189961cf.7.2024.06.12.08.12.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 12 Jun 2024 08:13:01 -0700 (PDT)
-Message-ID: <68b4dbc5-18ee-4dc7-85da-dd420df9bf16@gmail.com>
-Date: Wed, 12 Jun 2024 23:12:56 +0800
+        bh=0JAgWI6yypeQvJHtBsLjxy9EsiTAtsBZFfQkPH4VMNc=;
+        b=ZRE2pWsVKuBc2aVHrgKmBaTZ8r7LzcErgCpNra9YFUeGTkxiPk0h1JC/kFM58vyO1S
+         hFwwetjwDqaN8A4J9SS82LOsGISpr+zqOuWuqGo/rlJPB1bA4ymr99LTzsq2y6Or8Hto
+         yUie697zpIICA8Td8XSp8LrJCpy9lhxM76MHmQ5ChDWrgN/3sxaOqZl0C/ikfJFFbqtX
+         DZVkod4h/AGmbfj2s63rHYAGM8/GZX+K6hRuKLNTUFp9z4s1wKah177+TJbounL9rJzW
+         kGmwO57xkd1nyDubfcULZgY1Aim0TtMo5FO+I+wJPNsLTgg8FnAjKHVfAZgGOXpu/uHy
+         atww==
+X-Forwarded-Encrypted: i=1; AJvYcCWsNUCgSmJAEf0al9iPevJmAyg8gGqT4bwHXDKYYiU6sOHGKqKqjMxKX3GTBvc9RRVdyd/Rzf4jFdDRdX860d/7T/mA54214R1tnQ==
+X-Gm-Message-State: AOJu0YzUkQPcM2hESOe0goZSt/IP5KqGy3Y0UzmsJ4ORZ48Z/0usqvoP
+	KP2UErqHmA+Ct5TYUEv3fZ2eSO6XpcjxoowGf7lrYScNhgPMfwXBoZpv/DUxJfA=
+X-Google-Smtp-Source: AGHT+IH3vJ/Cfk8LzYoeLv9cXT/SgN6Pt3X56xC7VVYFazmjn8i4deMSmAqg4iM25NKqjeo5TBvU1g==
+X-Received: by 2002:a05:6214:2a47:b0:6b0:7365:dde0 with SMTP id 6a1803df08f44-6b2a33de160mr1306776d6.18.1718207777691;
+        Wed, 12 Jun 2024 08:56:17 -0700 (PDT)
+Received: from localhost ([213.195.124.163])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6b0884337e9sm22877866d6.16.2024.06.12.08.56.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Jun 2024 08:56:17 -0700 (PDT)
+Date: Wed, 12 Jun 2024 17:56:15 +0200
+From: Roger Pau =?utf-8?B?TW9ubsOp?= <roger.pau@citrix.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
+	Richard Weinberger <richard@nod.at>,
+	Philipp Reisner <philipp.reisner@linbit.com>,
+	Lars Ellenberg <lars.ellenberg@linbit.com>,
+	Christoph =?utf-8?Q?B=C3=B6hmwalder?= <christoph.boehmwalder@linbit.com>,
+	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>, Alasdair Kergon <agk@redhat.com>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Vineeth Vijayan <vneethv@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
+	drbd-dev@lists.linbit.com, nbd@other.debian.org,
+	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
+	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH 10/26] xen-blkfront: don't disable cache flushes when
+ they fail
+Message-ID: <ZmnFH17bTV2Ot_iR@macbook>
+References: <20240611051929.513387-1-hch@lst.de>
+ <20240611051929.513387-11-hch@lst.de>
+ <ZmlVziizbaboaBSn@macbook>
+ <20240612150030.GA29188@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 2/3] scsi: scsi_error: Fix wrong statistic when print
- error info
-To: Hannes Reinecke <hare@suse.de>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240605091731.3111195-1-haowenchao22@gmail.com>
- <20240605091731.3111195-3-haowenchao22@gmail.com>
- <15f0fb9b-3b30-413d-9f30-81c246b6bae1@suse.de>
-Content-Language: en-US
-From: Wenchao Hao <haowenchao22@gmail.com>
-In-Reply-To: <15f0fb9b-3b30-413d-9f30-81c246b6bae1@suse.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240612150030.GA29188@lst.de>
 
-On 6/12/24 4:34 PM, Hannes Reinecke wrote:
-> On 6/5/24 11:17, Wenchao Hao wrote:
->> shost_for_each_device() would skip devices which is in progress of
->> removing, so commands of these devices would be ignored in
->> scsi_eh_prt_fail_stats().
->>
->> Fix this issue by using shost_for_each_device_include_deleted()
->> to iterate devices in scsi_eh_prt_fail_stats().
->>
->> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
->> Signed-off-by: Wenchao Hao <haowenchao22@gmail.com>
->> ---
->>   drivers/scsi/scsi_error.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index 612489afe8d2..a61fd8af3b1f 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -409,7 +409,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
->>       int cmd_cancel = 0;
->>       int devices_failed = 0;
->>   -    shost_for_each_device(sdev, shost) {
->> +    shost_for_each_device_include_deleted(sdev, shost) {
->>           list_for_each_entry(scmd, work_q, eh_entry) {
->>               if (scmd->device == sdev) {
->>                   ++total_failures;
+On Wed, Jun 12, 2024 at 05:00:30PM +0200, Christoph Hellwig wrote:
+> On Wed, Jun 12, 2024 at 10:01:18AM +0200, Roger Pau Monné wrote:
+> > On Tue, Jun 11, 2024 at 07:19:10AM +0200, Christoph Hellwig wrote:
+> > > blkfront always had a robust negotiation protocol for detecting a write
+> > > cache.  Stop simply disabling cache flushes when they fail as that is
+> > > a grave error.
+> > 
+> > It's my understanding the current code attempts to cover up for the
+> > lack of guarantees the feature itself provides:
 > 
-> That is wrong. We should rather add a failure counter to the SCSI host, and have the scsi device increase it every time a failure occurs.
-> Then we can avoid this loop completely.
+> > So even when the feature is exposed, the backend might return
+> > EOPNOTSUPP for the flush/barrier operations.
 > 
+> How is this supposed to work?  I mean in the worst case we could
+> just immediately complete the flush requests in the driver, but
+> we're really lying to any upper layer.
 
-This function would print the total failure commands and the number of device like following:
+Right.  AFAICT advertising "feature-barrier" and/or
+"feature-flush-cache" could be done based on whether blkback
+understand those commands, not on whether the underlying storage
+supports the equivalent of them.
 
-scsi host4: Total of 3 commands on 2 devices require eh work
+Worst case we can print a warning message once about the underlying
+storage failing to complete flush/barrier requests, and that data
+integrity might not be guaranteed going forward, and not propagate the
+error to the upper layer?
 
-Just add a failure counter to the SCSI host can not record the number of devices.
+What would be the consequence of propagating a flush error to the
+upper layers?
 
-> Cheers,
+> > Such failure is tied on whether the underlying blkback storage
+> > supports REQ_OP_WRITE with REQ_PREFLUSH operation.  blkback will
+> > expose "feature-barrier" and/or "feature-flush-cache" without knowing
+> > whether the underlying backend supports those operations, hence the
+> > weird fallback in blkfront.
 > 
-> Hannes
+> If we are just talking about the Linux blkback driver (I know there
+> probably are a few other implementations) it won't every do that.
+> I see it has code to do so, but the Linux block layer doesn't
+> allow the flush operation to randomly fail if it was previously
+> advertised.  Note that even blkfront conforms to this as it fixes
+> up the return value when it gets this notsupp error to ok.
 
+Yes, I'm afraid it's impossible to know what the multiple incarnations
+of all the scattered blkback implementations possibly do (FreeBSD,
+NetBSD, QEMU and blktap at least I know of).
+
+> > Overall blkback should ensure that REQ_PREFLUSH is supported before
+> > exposing "feature-barrier" or "feature-flush-cache", as then the
+> > exposed features would really match what the underlying backend
+> > supports (rather than the commands blkback knows about).
+> 
+> Yes.  The in-tree xen-blkback does that, but even without that the
+> Linux block layer actually makes sure flushes sent by upper layers
+> always succeed even when not supported.
+
+Given the description of the feature in the blkif header, I'm afraid
+we cannot guarantee that seeing the feature exposed implies barrier or
+flush support, since the request could fail at any time (or even from
+the start of the disk attachment) and it would still sadly be a correct
+implementation given the description of the options.
+
+Thanks, Roger.
