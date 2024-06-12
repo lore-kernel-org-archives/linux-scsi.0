@@ -1,94 +1,86 @@
-Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id 686D684A27
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Jun 2024 19:43:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.131.102.5
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 971512F50;
+	Wed, 12 Jun 2024 20:37:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718221433; cv=none; b=TYATHIdFRyf36piFnnfI+XYoVNXa10axM55jgTZw1ji0GxtQKN8hL9Zz98vAfjSS37xYxHBL9mBKZgbYUsRechzavCFBqX1EpBkjo/2riyvMRYorV1xFmz02wOvE+Mi/MIb+E4S7UAMeKrxwX4LQHN2NTyIhVXR0ChentFZ0+GY=
+	t=1718224666; cv=none; b=fajykIvJH1UWNIhN+m5BGzGgoIPJ6+vUeJSghaLNDhOusOwdRY2qFCQdcxlY9GHxENxpDwhf47iHZia7QLza6963XyDxddDo4Tx7Y8ZSCR1w+egU3ay+dt53sqdVoDWTTJFcgXFtxtvuX9n0jdhFsVxzksF7jlv+cZ0DrZYUl/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718221433; c=relaxed/simple;
-	bh=K6wo7Y8jf68McAtHAhMQrqrLVekb1F1m3zziWZI0S3I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cRVW2WYVYmUxXgHhlRVxKvCEk2dJ+8mT3N/gZv5XFebQCXFmL1JOvwg//NcARYXIT1AMlWNMMvx9eHmU2KLLlfuVZUTMiZMNHR1qwdwcVo7EZiqy63ZMiwlHaMysYTB8MlMNIgMdIQ129PkrLvUMNhnKh2dt2VKoGm/v4PCs9yE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=rowland.harvard.edu; spf=pass smtp.mailfrom=netrider.rowland.org; arc=none smtp.client-ip=192.131.102.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=rowland.harvard.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=netrider.rowland.org
-Received: (qmail 235323 invoked by uid 1000); 12 Jun 2024 15:43:50 -0400
-Date: Wed, 12 Jun 2024 15:43:50 -0400
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-  linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-  Joao Machado <jocrismachado@gmail.com>,
-  Andy Shevchenko <andy.shevchenko@gmail.com>,
-  Christian Heusel <christian@heusel.eu>, stable@vger.kernel.org,
-  Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 2/2] scsi: core: Do not query IO hints for USB devices
-Message-ID: <c0cabdc2-0dcf-4c53-8bd8-c9ce02be0316@rowland.harvard.edu>
-References: <20240612165249.2671204-1-bvanassche@acm.org>
- <20240612165249.2671204-3-bvanassche@acm.org>
- <de4492b5-a681-42bf-99d7-e9ba30dabeb2@rowland.harvard.edu>
- <a7ac0431-2b30-43bf-bb90-1476e33aa6cd@acm.org>
+	s=arc-20240116; t=1718224666; c=relaxed/simple;
+	bh=GnJk4UZAX5oFSBXdoOueGQfU+JgettK7xNaztM/tXFA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SWE76jsVlP8D3xodjA9GiB6z6qMCys9UyQhYk0xhp81P/CnIt+HQ4nMD5l8Tb7gpv150RTk+r9dpSvUWfluC78kuByyAjuUmWnVovtC8fUZywbao8/6yHotrQDzMBUnrtbr7FFxoUULlBCOoX+H0X7phPaJw+3Bh7QD8zrR94do=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=YTDkMFNn; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="YTDkMFNn"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Vzy5z5f00z6CmR5y;
+	Wed, 12 Jun 2024 20:37:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1718224661; x=1720816662; bh=ReW8YQsh0vnkHqXgrSb8mIR6jO6V+3eTiTT
+	WZYW1Mfs=; b=YTDkMFNnS+JKICaFARpDtY3gha/5Twb23hEpCPSbcT/Nt/extng
+	iZwDaWpfdCBPsBgm+sb64M8lmHleqI70YBWE1a8FYMna8gf2QNE8Nm2CHi9cQVRc
+	wbRwOgK9nG52u7AUkyc+Vk38/FkgaKATKuUd9SSz18NmzWpDKVwG37QgEpYO28Ve
+	QniSBfOl8MAyk14WvkNxLuKBPoXSThSDJBL8K3GUHI9jcGMBdIhj3ocQXCX5lO04
+	1IN8cwxpRXyvJoqBk0i9oS9zsOQgxmlbPqWsgkZFJos2mpmzGw/UdG4LWQAMyDiP
+	T18K2aYnJ/28G4YgVZA1bGY7nbY4sS3lq6Q==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id N1EqzgRdyTVa; Wed, 12 Jun 2024 20:37:41 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.132.0.90])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Vzy5x1r5Zz6Cnk9Y;
+	Wed, 12 Jun 2024 20:37:41 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	linux-scsi@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v2 0/2] Do not read the IO hints VPD page from USB storage devices
+Date: Wed, 12 Jun 2024 13:37:31 -0700
+Message-ID: <20240612203735.4108690-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.45.2.505.gda0bf45e8d-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a7ac0431-2b30-43bf-bb90-1476e33aa6cd@acm.org>
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jun 12, 2024 at 12:30:34PM -0700, Bart Van Assche wrote:
-> On 6/12/24 11:08 AM, Alan Stern wrote:
-> > You might want to do the same thing in uas.c.  I don't know if UAS
-> > devices suffer from the same problem, but it wouldn't be surprising if
-> > they do.
-> 
-> Hi Alan,
-> 
-> How about replacing patch 2/2 from this series with the patch below?
+Hi Martin,
 
-That's better, thanks.
+Recently it was reported that reading the IO hints VPD page makes at leas=
+t two
+USB storage devices crash. Hence this patch series that disables reading =
+the IO
+hints VPD page from USB storage devices. Please consider this patch serie=
+s for
+your scsi-fixes branch.
 
-Alan Stern
+Thanks,
 
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-> index b31464740f6c..b4cf0349fd0d 100644
-> --- a/drivers/usb/storage/scsiglue.c
-> +++ b/drivers/usb/storage/scsiglue.c
-> @@ -79,6 +79,12 @@ static int slave_alloc (struct scsi_device *sdev)
->  	if (us->protocol == USB_PR_BULK && us->max_lun > 0)
->  		sdev->sdev_bflags |= BLIST_FORCELUN;
-> 
-> +	/*
-> +	 * Some USB storage devices reset if the IO hints VPD page is queried.
-> +	 * Hence skip that VPD page.
-> +	 */
-> +	sdev->sdev_bflags |= BLIST_SKIP_IO_HINTS;
-> +
->  	return 0;
->  }
-> 
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index a48870a87a29..bb75901b53e3 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -820,6 +820,12 @@ static int uas_slave_alloc(struct scsi_device *sdev)
->  	struct uas_dev_info *devinfo =
->  		(struct uas_dev_info *)sdev->host->hostdata;
-> 
-> +	/*
-> +	 * Some USB storage devices reset if the IO hints VPD page is queried.
-> +	 * Hence skip that VPD page.
-> +	 */
-> +	sdev->sdev_bflags |= BLIST_SKIP_IO_HINTS;
-> +
->  	sdev->hostdata = devinfo;
->  	return 0;
->  }
-> 
+Bart.
+
+Changes compared to v1:
+ - Also set the BLIST_SKIP_IO_HINTS for USB Attached SCSI devices.
+
+Bart Van Assche (2):
+  scsi: core: Introduce the BLIST_SKIP_IO_HINTS flag
+  scsi: core: Do not query IO hints for USB devices
+
+ drivers/scsi/sd.c              | 4 ++++
+ drivers/usb/storage/scsiglue.c | 6 ++++++
+ drivers/usb/storage/uas.c      | 7 +++++++
+ include/scsi/scsi_devinfo.h    | 4 +++-
+ 4 files changed, 20 insertions(+), 1 deletion(-)
+
