@@ -1,81 +1,48 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E76E525632;
-	Thu, 13 Jun 2024 06:27:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C20C137901;
+	Thu, 13 Jun 2024 06:51:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718260069; cv=none; b=XnhGfBz9/NzQFj1w4sZAt1T3Vrm27RQkvO2UdANvVr+LU47TUvo6W7YxJFP5voutkU0aqkJxcY9tHFAKUDt7mG8BZEFH5yCXamLVIcBILxbz31dSUrd6I8PLFppIHg11MjkuX4jKjsSAj2FG2ap3ljDEdXy9n1aH6+UX6AdQYpY=
+	t=1718261507; cv=none; b=SUns7/sSkJeXbU/9PxIZ/m9osvHhVx6Mt5U7yjBxBjR2tBMcSkZmwIlURWxF2mgY5IPnIfTZXjQ4eV00U2fWpNXFVa2hLRD6fqQBBikEoYmOUVCVRxm+b4XYzZmU1gGox2dpLciE0DLcgHI38jk3+Raui1IYYgp8y5gXC/Z5yRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718260069; c=relaxed/simple;
-	bh=8N05ZrcYdaSdzJIVWtXezJaBbiufobkZ7bPvBszzLLY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=qynlrRLB1Oar8VVuFCmvrgb2XD7H8huZfKsZZQg8n5m8Ulqx1umwkBTOZGz9ubJf2oiXymtQJeppE5lMDH+i4h0vkrFkT0tqaP8wISPVfHuoqNyVAM573Ed315Rq7lq9POHQaNGXysgJepddTEFqgJdDHu6VFBH6gz+NwacgpcA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=OLA4ctHp; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=D2iIflGZ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=zrHpMIUm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+c2cjqe6; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="OLA4ctHp";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="D2iIflGZ";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="zrHpMIUm";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+c2cjqe6"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id E4D715CE74;
-	Thu, 13 Jun 2024 06:27:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718260059; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ElbTrtHcGPLHtNQdT2BSZs64OtL7aUUhrtyxF38Z6KQ=;
-	b=OLA4ctHpMgVsIY7659Y2TmEStR5QeQOwX6DN1SZDPndHu5LaCG9bobx7w0gpMVaZxOBdGx
-	38NnCGbw3Wk6VPbLyRi1cqzRt0DI+vjcQnFjJIPe+jgB/YWGalTQ9OzP8LVX0fqeTxR6Da
-	Uw9L6MGOhDp+lZIJmU7Tz/WNljG5ieM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718260059;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ElbTrtHcGPLHtNQdT2BSZs64OtL7aUUhrtyxF38Z6KQ=;
-	b=D2iIflGZ9kr/E8yoo8qNacU5cTyGMS2M3hMxo5rVnfEh+Mn4tDchFBVyTXiW3MMaeBsz0R
-	UXUShF5xZIuc0FAA==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=zrHpMIUm;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=+c2cjqe6
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718260058; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ElbTrtHcGPLHtNQdT2BSZs64OtL7aUUhrtyxF38Z6KQ=;
-	b=zrHpMIUm55G0aZmocdojO82sY1ePqvptEYjWoiC/N0e0wBWzWkw3SU59pVrCoyWtoFgHnL
-	VJwiym/BtbcOi6dpOEGu10OeAnKd7IvsZ+US49+34dxbogNUkznqtI9tBW/Hf1S98OcbFK
-	6aTh7N8mx1/qZ1uq7qu0459yntn4hkU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718260058;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=ElbTrtHcGPLHtNQdT2BSZs64OtL7aUUhrtyxF38Z6KQ=;
-	b=+c2cjqe6JRcTiONrzEPsSzsr/FhSDoBuT+sgDjY4LDIKSp7ykXyw+5t8XC5qSNAplblSmq
-	k+EOksE770AQxDAg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id AEB4213A7F;
-	Thu, 13 Jun 2024 06:27:38 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 8XdsKFqRambWNwAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 13 Jun 2024 06:27:38 +0000
-Message-ID: <698d4b22-719c-4e57-94ed-f507e425ee12@suse.de>
-Date: Thu, 13 Jun 2024 08:27:38 +0200
+	s=arc-20240116; t=1718261507; c=relaxed/simple;
+	bh=DISS2YwDQPYa7mVcT0lvbzeHiuRYqcTkaffTsBkSSe0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MajEPE6Yn4OJb7QjqF50vjlZPbHqsb9oYWd1fgBah0dY+Hn8CHhDjkf+XAASQUMwKxuDe5vTOcqQi600TEVwJF9972CLx2ZpMAJMRp42FGpRJuVPLIJ08bcRw8eiQ+Jw6G8J9zPKqFwEmF/Ygpy6JchNjuVoFFt9a6XI9CIRWbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: e51ce8d6294c11ef9305a59a3cc225df-20240613
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.38,REQID:822aa32b-5aae-44ac-9eb3-141eff61a691,IP:20,
+	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-9,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:11
+X-CID-INFO: VERSION:1.1.38,REQID:822aa32b-5aae-44ac-9eb3-141eff61a691,IP:20,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-9,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:11
+X-CID-META: VersionHash:82c5f88,CLOUDID:279137cffa3aae4917c866d49c9022f9,BulkI
+	D:240613141932DQLUDI5I,BulkQuantity:0,Recheck:0,SF:19|44|64|66|24|72|102,T
+	C:nil,Content:0,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil
+	,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_FSD,TF_CID_SPAM_FSI,TF_CID_SPAM_SNR
+X-UUID: e51ce8d6294c11ef9305a59a3cc225df-20240613
+Received: from node2.com.cn [(39.156.73.10)] by mailgw.kylinos.cn
+	(envelope-from <mengfanhui@kylinos.cn>)
+	(Generic MTA)
+	with ESMTP id 1081659897; Thu, 13 Jun 2024 14:19:30 +0800
+Received: from node2.com.cn (localhost [127.0.0.1])
+	by node2.com.cn (NSMail) with SMTP id A2299B80758A;
+	Thu, 13 Jun 2024 14:19:30 +0800 (CST)
+X-ns-mid: postfix-666A8F72-56615134
+Received: from [172.30.60.81] (unknown [172.30.60.81])
+	by node2.com.cn (NSMail) with ESMTPA id 1E660B80758A;
+	Thu, 13 Jun 2024 06:19:29 +0000 (UTC)
+Message-ID: <453a31c7-cae1-48cd-9f61-1faa78988597@kylinos.cn>
+Date: Thu, 13 Jun 2024 14:19:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -83,186 +50,389 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/3] scsi: core: Add new helper to iterate all devices
- of host
+Subject: Re: [PATCH 2/2] scsi: megaraid_sas: Add megasas_dcmd_timeout helper
+To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+ shivasharan.srikanteshwara@broadcom.com, chandrakanth.patil@broadcom.com
+Cc: liuyun01@kylinos.cn, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, geliang@kernel.org
+References: <20240530094514.2750723-1-mengfanhui@kylinos.cn>
+ <20240530094514.2750723-2-mengfanhui@kylinos.cn>
 Content-Language: en-US
-To: Wenchao Hao <haowenchao22@gmail.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240605091731.3111195-1-haowenchao22@gmail.com>
- <20240605091731.3111195-2-haowenchao22@gmail.com>
- <3b24ef4a-996b-4a8b-89f3-385872573039@suse.de>
- <c1ecd21b-7b97-4ef6-94a1-86b2cf520a67@gmail.com>
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <c1ecd21b-7b97-4ef6-94a1-86b2cf520a67@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-4.50 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	MX_GOOD(-0.01)[];
-	FREEMAIL_TO(0.00)[gmail.com,HansenPartnership.com,oracle.com,vger.kernel.org];
-	TO_DN_SOME(0.00)[];
-	ARC_NA(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RCPT_COUNT_FIVE(0.00)[5];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Queue-Id: E4D715CE74
-X-Spam-Flag: NO
-X-Spam-Score: -4.50
-X-Spam-Level: 
+From: mengfanhui <mengfanhui@kylinos.cn>
+In-Reply-To: <20240530094514.2750723-2-mengfanhui@kylinos.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On 6/12/24 17:06, Wenchao Hao wrote:
-> On 6/12/24 4:33 PM, Hannes Reinecke wrote:
->> On 6/5/24 11:17, Wenchao Hao wrote:
->>> shost_for_each_device() would skip devices which is in SDEV_CANCEL or
->>> SDEV_DEL state, for some scenarios, we donot want to skip these devices,
->>> so add a new macro shost_for_each_device_include_deleted() to handle it.
->>>
->>> Following changes are introduced:
->>>
->>> 1. Rework scsi_device_get(), add new helper __scsi_device_get() which
->>>      determine if skip deleted scsi_device by parameter "skip_deleted".
->>> 2. Add new parameter "skip_deleted" to __scsi_iterate_devices() which
->>>      is used when calling __scsi_device_get()
->>> 3. Update shost_for_each_device() to call __scsi_iterate_devices() with
->>>      "skip_deleted" true
->>> 4. Add new macro shost_for_each_device_include_deleted() which call
->>>      __scsi_iterate_devices() with "skip_deleted" false
->>>
->>> Signed-off-by: Wenchao Hao <haowenchao22@gmail.com>
->>> ---
->>>    drivers/scsi/scsi.c        | 46 ++++++++++++++++++++++++++------------
->>>    include/scsi/scsi_device.h | 25 ++++++++++++++++++---
->>>    2 files changed, 54 insertions(+), 17 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
->>> index 3e0c0381277a..5913de543d93 100644
->>> --- a/drivers/scsi/scsi.c
->>> +++ b/drivers/scsi/scsi.c
->>> @@ -735,20 +735,18 @@ int scsi_cdl_enable(struct scsi_device *sdev, bool enable)
->>>        return 0;
->>>    }
->>>    -/**
->>> - * scsi_device_get  -  get an additional reference to a scsi_device
->>> +/*
->>> + * __scsi_device_get  -  get an additional reference to a scsi_device
->>>     * @sdev:    device to get a reference to
->>> - *
->>> - * Description: Gets a reference to the scsi_device and increments the use count
->>> - * of the underlying LLDD module.  You must hold host_lock of the
->>> - * parent Scsi_Host or already have a reference when calling this.
->>> - *
->>> - * This will fail if a device is deleted or cancelled, or when the LLD module
->>> - * is in the process of being unloaded.
->>> + * @skip_deleted: when true, would return failed if device is deleted
->>>     */
->>> -int scsi_device_get(struct scsi_device *sdev)
->>> +static int __scsi_device_get(struct scsi_device *sdev, bool skip_deleted)
->>>    {
->>> -    if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL)
->>> +    /*
->>> +     * if skip_deleted is true and device is in removing, return failed
->>> +     */
->>> +    if (skip_deleted &&
->>> +        (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == SDEV_CANCEL))
->>>            goto fail;
->>
->> Nack.
->> SDEV_DEL means the device is about to be deleted, so we _must not_ access it at all.
->>
-> 
-> Sorry I added SDEV_DEL here at hand without understanding what it means.
-> Actually, just include scsi_device which is in SDEV_CANCEL would fix the
-> issues I described.
-> 
-> The issues are because device removing concurrent with error handle.
-> Normally, error handle would not be triggered when scsi_device is in
-> SDEV_DEL. Below is my analysis, if it is wrong, please correct me.
-> 
-> If there are scsi_cmnd remain unfinished when removing scsi_device,
-> the removing process would waiting for all commands to be finished.
-> If commands error happened and trigger error handle, the removing
-> process would be blocked until error handle finished, because
-> __scsi_remove_device called  del_gendisk() which would wait all
-> requests to be finished. So now scsi_device is in SDEV_CANCEL.
-> 
-> If the scsi_device is already in SDEV_DEL, then no scsi_cmnd has been
-> dispatched to this scsi_device, then error handle would never triggered.
-> 
-> I want to change the new function __scsi_device_get() as following,
-> please help to review.
-> 
-> /*
->   * __scsi_device_get  -  get an additional reference to a scsi_device
->   * @sdev:	device to get a reference to
->   * @skip_canceled: when true, would return failed if device is deleted
->   */
-> static int __scsi_device_get(struct scsi_device *sdev, bool skip_canceled)
-> {
-> 	/*
-> 	 * if skip_canceled is true and device is in removing, return failed
-> 	 */
-> 	if (sdev->sdev_state == SDEV_DEL ||
-> 	    (sdev->sdev_state == SDEV_CANCEL && skip_canceled))
-> 		goto fail;
-> 	if (!try_module_get(sdev->host->hostt->module))
-> 		goto fail;
-> 	if (!get_device(&sdev->sdev_gendev))
-> 		goto fail_put_module;
-> 	return 0;
-> 
-> fail_put_module:
-> 	module_put(sdev->host->hostt->module);
-> fail:
-> 	return -ENXIO;
-> }
-> 
-I don't think that's required.
-With your above analysis, wouldn't the problem be solved with:
+Can someone help review it? Thank you!
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 775df00021e4..911fcfa80d69 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1470,6 +1470,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
-         if (sdev->sdev_state == SDEV_DEL)
-                 return;
-
-+       scsi_block_when_processing_errors(sdev);
-+
-         if (sdev->is_visible) {
-                 /*
-                  * If scsi_internal_target_block() is running concurrently,
-
-Hmm?
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
-
+=E5=9C=A8 2024/5/30 17:45, mengfanhui =E5=86=99=E9=81=93:
+> DCMD timeout is handled in many places, it makes sense to
+> add a hepler to handle it. This patch adds a new helper
+> named megasas_dcmd_timeout() to reduce duplicate code.
+>=20
+> Co-developed-by: Jackie Liu <liuyun01@kylinos.cn>
+> Signed-off-by: Jackie Liu <liuyun01@kylinos.cn>
+> Signed-off-by: mengfanhui <mengfanhui@kylinos.cn>
+> Suggested-by: Geliang Tang <geliang@kernel.org>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas.h        |   2 +
+>  drivers/scsi/megaraid/megaraid_sas_base.c   | 199 ++++----------------
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c |  34 +---
+>  3 files changed, 38 insertions(+), 197 deletions(-)
+>=20
+> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megara=
+id/megaraid_sas.h
+> index 91570c5e8456..d96dc446c3aa 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas.h
+> +++ b/drivers/scsi/megaraid/megaraid_sas.h
+> @@ -2761,5 +2761,7 @@ void megasas_setup_debugfs(struct megasas_instanc=
+e *instance);
+>  void megasas_destroy_debugfs(struct megasas_instance *instance);
+>  int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_nu=
+m);
+>  int dcmd_timeout_ocr_possible(struct megasas_instance *instance);
+> +void megasas_dcmd_timeout(struct megasas_instance *instance,
+> +			struct megasas_cmd *cmd);
+> =20
+>  #endif				/*LSI_MEGARAID_SAS_H */
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/m=
+egaraid/megaraid_sas_base.c
+> index ba8061ea2078..9325a011746d 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -4531,6 +4531,30 @@ int dcmd_timeout_ocr_possible(struct megasas_ins=
+tance *instance)
+>  		return INITIATE_OCR;
+>  }
+> =20
+> +/*
+> + * megasas_dcmd_timeout -	Classification processing dcmd timeout.
+> + * @instance:				Adapter soft state
+> + */
+> +void megasas_dcmd_timeout(struct megasas_instance *instance, struct me=
+gasas_cmd *cmd)
+> +{
+> +	switch (dcmd_timeout_ocr_possible(instance)) {
+> +	case INITIATE_OCR:
+> +		cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> +		mutex_unlock(&instance->reset_mutex);
+> +		megasas_reset_fusion(instance->host,
+> +					MFI_IO_TIMEOUT_OCR);
+> +		mutex_lock(&instance->reset_mutex);
+> +		break;
+> +	case KILL_ADAPTER:
+> +		megaraid_sas_kill_hba(instance);
+> +		break;
+> +	case IGNORE_TIMEOUT:
+> +		dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+> +			__func__, __LINE__);
+> +		break;
+> +	}
+> +}
+> +
+>  static void
+>  megasas_get_pd_info(struct megasas_instance *instance, struct scsi_dev=
+ice *sdev)
+>  {
+> @@ -4582,24 +4606,7 @@ megasas_get_pd_info(struct megasas_instance *ins=
+tance, struct scsi_device *sdev)
+>  		break;
+> =20
+>  	case DCMD_TIMEOUT:
+> -
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			mutex_unlock(&instance->reset_mutex);
+> -			megasas_reset_fusion(instance->host,
+> -				MFI_IO_TIMEOUT_OCR);
+> -			mutex_lock(&instance->reset_mutex);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+> -				__func__, __LINE__);
+> -			break;
+> -		}
+> -
+> +		megasas_dcmd_timeout(instance, cmd);
+>  		break;
+>  	}
+> =20
+> @@ -4678,29 +4685,7 @@ megasas_get_pd_list(struct megasas_instance *ins=
+tance)
+>  			instance->pd_list_not_supported =3D 1;
+>  		break;
+>  	case DCMD_TIMEOUT:
+> -
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			/*
+> -			 * DCMD failed from AEN path.
+> -			 * AEN path already hold reset_mutex to avoid PCI access
+> -			 * while OCR is in progress.
+> -			 */
+> -			mutex_unlock(&instance->reset_mutex);
+> -			megasas_reset_fusion(instance->host,
+> -						MFI_IO_TIMEOUT_OCR);
+> -			mutex_lock(&instance->reset_mutex);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d \n",
+> -				__func__, __LINE__);
+> -			break;
+> -		}
+> -
+> +		megasas_dcmd_timeout(instance, cmd);
+>  		break;
+> =20
+>  	case DCMD_SUCCESS:
+> @@ -4805,29 +4790,7 @@ megasas_get_ld_list(struct megasas_instance *ins=
+tance)
+>  		megaraid_sas_kill_hba(instance);
+>  		break;
+>  	case DCMD_TIMEOUT:
+> -
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			/*
+> -			 * DCMD failed from AEN path.
+> -			 * AEN path already hold reset_mutex to avoid PCI access
+> -			 * while OCR is in progress.
+> -			 */
+> -			mutex_unlock(&instance->reset_mutex);
+> -			megasas_reset_fusion(instance->host,
+> -						MFI_IO_TIMEOUT_OCR);
+> -			mutex_lock(&instance->reset_mutex);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+> -				__func__, __LINE__);
+> -			break;
+> -		}
+> -
+> +		megasas_dcmd_timeout(instance, cmd);
+>  		break;
+> =20
+>  	case DCMD_SUCCESS:
+> @@ -4925,28 +4888,7 @@ megasas_ld_list_query(struct megasas_instance *i=
+nstance, u8 query_type)
+>  		ret =3D megasas_get_ld_list(instance);
+>  		break;
+>  	case DCMD_TIMEOUT:
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			/*
+> -			 * DCMD failed from AEN path.
+> -			 * AEN path already hold reset_mutex to avoid PCI access
+> -			 * while OCR is in progress.
+> -			 */
+> -			mutex_unlock(&instance->reset_mutex);
+> -			megasas_reset_fusion(instance->host,
+> -						MFI_IO_TIMEOUT_OCR);
+> -			mutex_lock(&instance->reset_mutex);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+> -				__func__, __LINE__);
+> -			break;
+> -		}
+> -
+> +		megasas_dcmd_timeout(instance, cmd);
+>  		break;
+>  	case DCMD_SUCCESS:
+>  		tgtid_count =3D le32_to_cpu(ci->count);
+> @@ -5081,22 +5023,7 @@ megasas_host_device_list_query(struct megasas_in=
+stance *instance,
+>  		break;
+> =20
+>  	case DCMD_TIMEOUT:
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			mutex_unlock(&instance->reset_mutex);
+> -			megasas_reset_fusion(instance->host,
+> -				MFI_IO_TIMEOUT_OCR);
+> -			mutex_lock(&instance->reset_mutex);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+> -				 __func__, __LINE__);
+> -			break;
+> -		}
+> +		megasas_dcmd_timeout(instance, cmd);
+>  		break;
+>  	case DCMD_FAILED:
+>  		dev_err(&instance->pdev->dev,
+> @@ -5232,22 +5159,7 @@ void megasas_get_snapdump_properties(struct mega=
+sas_instance *instance)
+>  		break;
+> =20
+>  	case DCMD_TIMEOUT:
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			mutex_unlock(&instance->reset_mutex);
+> -			megasas_reset_fusion(instance->host,
+> -				MFI_IO_TIMEOUT_OCR);
+> -			mutex_lock(&instance->reset_mutex);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+> -				__func__, __LINE__);
+> -			break;
+> -		}
+> +		megasas_dcmd_timeout(instance, cmd);
+>  	}
+> =20
+>  	if (ret !=3D DCMD_TIMEOUT)
+> @@ -5372,22 +5284,7 @@ megasas_get_ctrl_info(struct megasas_instance *i=
+nstance)
+>  		break;
+> =20
+>  	case DCMD_TIMEOUT:
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			mutex_unlock(&instance->reset_mutex);
+> -			megasas_reset_fusion(instance->host,
+> -				MFI_IO_TIMEOUT_OCR);
+> -			mutex_lock(&instance->reset_mutex);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+> -				__func__, __LINE__);
+> -			break;
+> -		}
+> +		megasas_dcmd_timeout(instance, cmd);
+>  		break;
+>  	case DCMD_FAILED:
+>  		megaraid_sas_kill_hba(instance);
+> @@ -5454,20 +5351,8 @@ int megasas_set_crash_dump_params(struct megasas=
+_instance *instance,
+>  		ret =3D megasas_issue_polled(instance, cmd);
+> =20
+>  	if (ret =3D=3D DCMD_TIMEOUT) {
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			megasas_reset_fusion(instance->host,
+> -					MFI_IO_TIMEOUT_OCR);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+> -				__func__, __LINE__);
+> -			break;
+> -		}
+> +		megasas_dcmd_timeout(instance, cmd);
+> +
+>  	} else
+>  		megasas_return_cmd(instance, cmd);
+> =20
+> @@ -6840,23 +6725,7 @@ megasas_get_target_prop(struct megasas_instance =
+*instance,
+> =20
+>  	switch (ret) {
+>  	case DCMD_TIMEOUT:
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			mutex_unlock(&instance->reset_mutex);
+> -			megasas_reset_fusion(instance->host,
+> -					     MFI_IO_TIMEOUT_OCR);
+> -			mutex_lock(&instance->reset_mutex);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev,
+> -				 "Ignore DCMD timeout: %s %d\n",
+> -				 __func__, __LINE__);
+> -			break;
+> -		}
+> +		megasas_dcmd_timeout(instance, cmd);
+>  		break;
+> =20
+>  	default:
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi=
+/megaraid/megaraid_sas_fusion.c
+> index f0aeb1ee83a2..1d0991650062 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -1371,22 +1371,7 @@ megasas_sync_pd_seq_num(struct megasas_instance =
+*instance, bool pend) {
+>  		instance->pd_seq_map_id++;
+>  		break;
+>  	case DCMD_TIMEOUT:
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			mutex_unlock(&instance->reset_mutex);
+> -			megasas_reset_fusion(instance->host,
+> -					     MFI_IO_TIMEOUT_OCR);
+> -			mutex_lock(&instance->reset_mutex);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+> -				 __func__, __LINE__);
+> -			break;
+> -		}
+> +		megasas_dcmd_timeout(instance, cmd);
+>  		break;
+>  	case DCMD_FAILED:
+>  		dev_err(&instance->pdev->dev,
+> @@ -1476,22 +1461,7 @@ megasas_get_ld_map_info(struct megasas_instance =
+*instance)
+> =20
+>  	switch (ret) {
+>  	case DCMD_TIMEOUT:
+> -		switch (dcmd_timeout_ocr_possible(instance)) {
+> -		case INITIATE_OCR:
+> -			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
+> -			mutex_unlock(&instance->reset_mutex);
+> -			megasas_reset_fusion(instance->host,
+> -					     MFI_IO_TIMEOUT_OCR);
+> -			mutex_lock(&instance->reset_mutex);
+> -			break;
+> -		case KILL_ADAPTER:
+> -			megaraid_sas_kill_hba(instance);
+> -			break;
+> -		case IGNORE_TIMEOUT:
+> -			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
+> -				 __func__, __LINE__);
+> -			break;
+> -		}
+> +		megasas_dcmd_timeout(instance, cmd);
+>  		break;
+>  	case DCMD_FAILED:
+>  		dev_err(&instance->pdev->dev,
