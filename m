@@ -1,112 +1,106 @@
-Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
-	by smtp.subspace.kernel.org (Postfix) with SMTP id A5DC2BA20
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2024 01:25:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.131.102.5
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 975DC3CF74;
+	Thu, 13 Jun 2024 04:47:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718241918; cv=none; b=CIzuvL0Loe47dHNGfrlFCF/vPC2j2EUpBJRDqgmRXrrqYIoMLC8M86+hF7h5iQN6LdHzak+FYVLMk31/w8ewOY5d8ZEGQtdqnH3iF1OLELaamDN6tZcZRX9hM3BS7PuQoGoOixIpiBbm2Oq8nzhRP9heypqKTFtBXor1XjryuaM=
+	t=1718254037; cv=none; b=UYmtFw6y0wzgkuHwaHX+TFdBgLzB7wffDr0c5iosDd8i5+eAe1+ycNiE18tkFvcNnmeVvZ0k2t21V+SbI6l4QwabFtJPLGO5vZbF0dUsySYtweJ001DobzXRU8W3sn/tjTEhTa6HAQWTIDBOpIzdCtEVtUNJCDWmcYsGouXtpCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718241918; c=relaxed/simple;
-	bh=Dy43Ep+dfiP1wMhLybaOZNggtqTx58gNGri+jBBfQ1o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QxIwtYDa906uGO1WdbcxPVc5DCMsrXgNhvw+qlQTvox9uQne1/buDlO/nULKrdh+os4QY5An0RJet9cQagQKSVYqZEBwjJ+AzpKwgf6lKuiPF6Hej3wgpgRY7P6wbWOKU9w8s4AvOXogbRqTmz9t/HNN0CIb+tAwwbKN0V2kH/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=rowland.harvard.edu; spf=pass smtp.mailfrom=netrider.rowland.org; arc=none smtp.client-ip=192.131.102.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=rowland.harvard.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=netrider.rowland.org
-Received: (qmail 244126 invoked by uid 1000); 12 Jun 2024 21:25:15 -0400
-Date: Wed, 12 Jun 2024 21:25:15 -0400
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-  linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-  Joao Machado <jocrismachado@gmail.com>,
-  Andy Shevchenko <andy.shevchenko@gmail.com>,
-  Christian Heusel <christian@heusel.eu>, stable@vger.kernel.org,
-  Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-  Oliver Neukum <oneukum@suse.com>
-Subject: Re: [PATCH v2 2/2] scsi: core: Do not query IO hints for USB devices
-Message-ID: <5c873978-47d7-4409-82fc-d4f3841b5069@rowland.harvard.edu>
-References: <20240612203735.4108690-1-bvanassche@acm.org>
- <20240612203735.4108690-4-bvanassche@acm.org>
+	s=arc-20240116; t=1718254037; c=relaxed/simple;
+	bh=+UMlre/jILmPi2MBsSzppHR9F2E+8mwySeNePP8et2o=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:To:CC; b=FefHyuJVRttY6ATNUS+Or3BP/R5e/36jHsBzHs/LZ5e8zzg6ed/QA0mhyyExrSXjSt3dDXOB+CyVZNjvtn/NpUwOVcSIdwa9GyKTUSgsNYKI0FeH0+kv91OS7aeMFBIMdLQtu2hEmrULZjdOW0CRdWPZPA9ALSQYSguN4l3cfcI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=baDAHnUV; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="baDAHnUV"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45CKn7Sj028125;
+	Thu, 13 Jun 2024 04:47:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=Ik54hdy3eBlrM2wrP1J9ym
+	szxZU4S3qs30TYbwtuuAs=; b=baDAHnUVHqB/FMtCn1ooRXVtGK6nno9e4o9Tvg
+	mtM9okKPByV9IHi8U0J2ixi7/yS0MHpPysVBJ0h31BXW54/NrglhlUBuSc1tyvTX
+	O5EOVnK8uIKvUIQpExqsWnBvJ4t246W//SCVg2wlsS09trS2nNmplEYhY0GgXP/U
+	olnE7ksWQJ7X3pS23/HlbbPbEWRXNct+BMFfhbASMFuLEFgsBkCw9RCboDzC80E9
+	qFlqRuCDjM/jNpCYVoOstbLBRGbaV91qKXh0T+qV0JFC4e+whWYTUUtWhgbymE4Z
+	NemAsofD92FVHjseWe4gKA9UoEDV7a7H8jGlcgwzX8hlL/Cw==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yq83wj5ud-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 13 Jun 2024 04:47:10 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45D4l9iE019830
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 13 Jun 2024 04:47:09 GMT
+Received: from [169.254.0.1] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 12 Jun
+ 2024 21:47:09 -0700
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+Date: Wed, 12 Jun 2024 21:46:59 -0700
+Subject: [PATCH] scsi: ufs: qcom: add missing MODULE_DESCRIPTION() macro
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240612203735.4108690-4-bvanassche@acm.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-ID: <20240612-md-drivers-ufs-host-v1-1-df35924685b8@quicinc.com>
+X-B4-Tracking: v=1; b=H4sIAMJ5amYC/x3MwQqDMAyA4VeRnBeo3RybrzJ2iDa1gVklURHEd
+ 1+343f4/wOMVdigrQ5Q3sRkygX1pYI+UR4YJRSDd/7m7rXHMWBQ2VgN12iYJluQHuSIQnN9Rge
+ lnJWj7P/r613ckTF2SrlPv9dH8rrjSLawwnl+Ab3yIYeEAAAA
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
+        "Jeff
+ Johnson" <quic_jjohnson@quicinc.com>
+X-Mailer: b4 0.13.0
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: rTYAFI87eMfRd-5RPJNBNsxEYMhOsfCD
+X-Proofpoint-ORIG-GUID: rTYAFI87eMfRd-5RPJNBNsxEYMhOsfCD
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-12_12,2024-06-13_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
+ bulkscore=0 spamscore=0 mlxlogscore=999 suspectscore=0 clxscore=1015
+ lowpriorityscore=0 malwarescore=0 priorityscore=1501 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2405170001 definitions=main-2406130031
 
-On Wed, Jun 12, 2024 at 01:37:34PM -0700, Bart Van Assche wrote:
-> Recently it was reported that the following USB storage devices are unusable
-> with Linux kernel 6.9:
-> * Kingston DataTraveler G2
-> * Garmin FR35
-> 
-> This is because attempting to read the IO hint VPD page causes these devices
-> to reset. Hence do not read the IO hint VPD page from USB storage devices.
-> 
-> Cc: Alan Stern <stern@rowland.harvard.edu>
-> Cc: linux-usb@vger.kernel.org
-> Cc: Joao Machado <jocrismachado@gmail.com>
-> Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
-> Cc: Christian Heusel <christian@heusel.eu>
-> Cc: stable@vger.kernel.org
-> Fixes: 4f53138fffc2 ("scsi: sd: Translate data lifetime information")
-> Reported-by: Joao Machado <jocrismachado@gmail.com>
-> Closes: https://lore.kernel.org/linux-scsi/20240130214911.1863909-1-bvanassche@acm.org/T/#mf4e3410d8f210454d7e4c3d1fb5c0f41e651b85f
-> Tested-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> Bisected-by: Christian Heusel <christian@heusel.eu>
-> Reported-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> Closes: https://lore.kernel.org/linux-scsi/CACLx9VdpUanftfPo2jVAqXdcWe8Y43MsDeZmMPooTzVaVJAh2w@mail.gmail.com/
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
+With ARCH=arm64, make allmodconfig && make W=1 C=1 reports:
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/ufs/host/ufs-qcom.o
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Add the missing invocation of the MODULE_DESCRIPTION() macro.
 
->  drivers/usb/storage/scsiglue.c | 6 ++++++
->  drivers/usb/storage/uas.c      | 7 +++++++
->  2 files changed, 13 insertions(+)
-> 
-> diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-> index b31464740f6c..b4cf0349fd0d 100644
-> --- a/drivers/usb/storage/scsiglue.c
-> +++ b/drivers/usb/storage/scsiglue.c
-> @@ -79,6 +79,12 @@ static int slave_alloc (struct scsi_device *sdev)
->  	if (us->protocol == USB_PR_BULK && us->max_lun > 0)
->  		sdev->sdev_bflags |= BLIST_FORCELUN;
->  
-> +	/*
-> +	 * Some USB storage devices reset if the IO hints VPD page is queried.
-> +	 * Hence skip that VPD page.
-> +	 */
-> +	sdev->sdev_bflags |= BLIST_SKIP_IO_HINTS;
-> +
->  	return 0;
->  }
->  
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index a48870a87a29..77fdfb6a90c8 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -21,6 +21,7 @@
->  #include <scsi/scsi.h>
->  #include <scsi/scsi_eh.h>
->  #include <scsi/scsi_dbg.h>
-> +#include <scsi/scsi_devinfo.h>
->  #include <scsi/scsi_cmnd.h>
->  #include <scsi/scsi_device.h>
->  #include <scsi/scsi_host.h>
-> @@ -820,6 +821,12 @@ static int uas_slave_alloc(struct scsi_device *sdev)
->  	struct uas_dev_info *devinfo =
->  		(struct uas_dev_info *)sdev->host->hostdata;
->  
-> +	/*
-> +	 * Some USB storage devices reset if the IO hints VPD page is queried.
-> +	 * Hence skip that VPD page.
-> +	 */
-> +	sdev->sdev_bflags |= BLIST_SKIP_IO_HINTS;
-> +
->  	sdev->hostdata = devinfo;
->  	return 0;
->  }
+Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index cca190d1c577..72f95e2779ce 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1883,4 +1883,5 @@ static struct platform_driver ufs_qcom_pltform = {
+ };
+ module_platform_driver(ufs_qcom_pltform);
+ 
++MODULE_DESCRIPTION("QCOM specific hooks to UFS controller platform driver");
+ MODULE_LICENSE("GPL v2");
+
+---
+base-commit: 83a7eefedc9b56fe7bfeff13b6c7356688ffa670
+change-id: 20240612-md-drivers-ufs-host-a8a0aad539f0
+
