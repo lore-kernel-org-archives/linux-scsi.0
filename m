@@ -1,147 +1,99 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A68713BACB;
-	Thu, 13 Jun 2024 22:57:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F23EF811FE;
+	Thu, 13 Jun 2024 23:18:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718319451; cv=none; b=K4dx1Y0CAvoWxWi5aHd4b2oqmSBN4aWZ4yeOJHKaS9iTRjQEPAWx807q03D0t8bHYg5oSopWkqh6QTgxrl/eL4SCxxXndgtqx6HmYMmaq+DTscJflJNG+e74k2LM7axC3HArABpr9XI1jDINDQGtypFZxNX0IoQRR/BACKEkckc=
+	t=1718320715; cv=none; b=BKHcmtqgUVhkV3rVoLxBC0trmRrGFdcPvooUG1nrCPQDiE8FVrWlO+hql0q+cwsG7cejKH2HqOklHZnBZs3AdiReLF/dQ63c1K0NvThsR6ajQdYxdkaSXUQqU1s1tauTddYuGfINsLNdg3ORdjNe/gSqkHUG5Y7B1woKsxhE6rg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718319451; c=relaxed/simple;
-	bh=G7KHocsG4Y5wPaXfjoT2MP9SGdggRXsgr3HMYexyeSw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Uk8JXhphmixULcx19O4FOy1z1qQGbIla8/3RoVQSPErERVvMeALba7cQGkkEJh+DxV/zn0zSHqND2aDJMXn5t9T7aVUF57AzZXUodqZghzmzEwq//mZOuWx6GMO6+YFacrO0PGdZ7YKORE9/G8BQRlxe/LZJ0o6LDDx1r4ChpjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hWYYGwPH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718320715; c=relaxed/simple;
+	bh=0GmEVnbOy5Dqw6LO3CACFa9e3uDVnQKfVGU+o9gv16I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=Y1fW55rGqaHmcks3YZABtWxHr8hOqP9SGbsz0ZMZA4zxmjkx2PCf4QyJWTJDe0beiYhNUqCeN76Q+I+NIsyWAcKDRu0b6efoDBGiVJeccrTnROk/uPYm9LoOpn5shdJeZgJLBhWsqdtgPKwvSCZuG2uXIjUhQSh1NHfSVidf0Ik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Kuxk/GM+; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hWYYGwPH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E94BC2BBFC;
-	Thu, 13 Jun 2024 22:57:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718319450;
-	bh=G7KHocsG4Y5wPaXfjoT2MP9SGdggRXsgr3HMYexyeSw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=hWYYGwPH5+Geaw35QopXeST/4lTCIx8ohw1QvONSwsjA02Y38NAASqlrghfqhiWoa
-	 Ul6EulWuyfLsgcuA2slA1cNqYJWN8fKCDLrryNkKh6+AyGAoBAIOY5W/pkAhAfndcG
-	 /obmdGDBF+EbHr8MpGz/KvOJdjV+dtSSlaLtr9MDfu5ImFCjZVhIBqJAv9LJsChqEK
-	 xq6quoyu1NP186TOJUF7a/8A8NAUYV3J09CE+ZtWCgqqOysYQPXAPfH/5rAJkuReM1
-	 31mCmNBN4kmCdQX2fEwhDyN7fBuI5r6IIPGv/6jOs+ZQzG5Xa5XAyN0bTeTM2PQjht
-	 yL5Cn2PE+peiA==
-Date: Thu, 13 Jun 2024 17:57:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: martin.petersen@oracle.com, sathya.prakash@broadcom.com,
-	chandrakanth.patil@broadcom.com, ranjan.kumar@broadcom.com,
-	prayas.patel@broadcom.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] mpi3mr: Support PCIe Error Recovery callback
- handlers
-Message-ID: <20240613225727.GA1089062@bhelgaas>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Kuxk/GM+"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45DJH4FI000770;
+	Thu, 13 Jun 2024 23:18:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	EaVJbksqBdaeWCbd2M/+/BZR1EwNQVHurs2U3sClB2s=; b=Kuxk/GM+w/VSdFVr
+	zqtlwTB1yWaDNN3j0lqX/VM9YR8HQfoJDyQJ+P6l4jKSAy0qJYlrOhswaHTZu9ba
+	n7mfDUrSxDl+QZ8Mx0bLeG+gIQzFr/dFD7/Wy4VDpQZp2PqOGeIbT/X3RgXlGjZu
+	lMM+rubSHayGz7Qoq22dz8ec8pWUoy7OlbOxVLblllM+Fdl3Updfrgv/PZBipZaR
+	nt7r/qwvIAvKxf95NNPAC/6EuCTtUJeTYEXgQirvbcY7xcPDPvVvg9HKwdYBG4EC
+	u0j++nw78jvWzz4s3S4rU9yeCRry9kBAssSTB3uGkjo+ePl5pZo/d0cFXpyGuR7B
+	kAAQ7A==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yr6q38h0t-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 13 Jun 2024 23:18:28 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45DNIQj1000452
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 13 Jun 2024 23:18:26 GMT
+Received: from [10.48.243.167] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 13 Jun
+ 2024 16:18:26 -0700
+Message-ID: <f26d6000-0431-42ef-9e1c-bbf4e5010feb@quicinc.com>
+Date: Thu, 13 Jun 2024 16:18:25 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240613190022.4128-2-sumit.saxena@broadcom.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: qcom: add missing MODULE_DESCRIPTION() macro
+Content-Language: en-US
+To: Bart Van Assche <bvanassche@acm.org>,
+        Manivannan Sadhasivam
+	<manivannan.sadhasivam@linaro.org>,
+        "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>,
+        Can Guo <quic_cang@quicinc.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+References: <20240612-md-drivers-ufs-host-v1-1-df35924685b8@quicinc.com>
+ <132dedc1-ee11-44d8-b684-0ffbf994d164@acm.org>
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+In-Reply-To: <132dedc1-ee11-44d8-b684-0ffbf994d164@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: FTzuXVI8-5TGMW7C4_8y2A93QqnTW4iU
+X-Proofpoint-GUID: FTzuXVI8-5TGMW7C4_8y2A93QqnTW4iU
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-13_13,2024-06-13_02,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ bulkscore=0 spamscore=0 mlxlogscore=999 malwarescore=0 phishscore=0
+ adultscore=0 lowpriorityscore=0 mlxscore=0 impostorscore=0 clxscore=1011
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2405170001 definitions=main-2406130166
 
-On Fri, Jun 14, 2024 at 12:30:20AM +0530, Sumit Saxena wrote:
-> This patch adds support for the PCIe error recovery callback handlers which is
-> crucial for the recovery of the controllers. This feature is necessary for
-> addressing the errors reported by the PCI Error Recovery mechanism.
+On 6/13/2024 9:19 AM, Bart Van Assche wrote:
+> On 6/12/24 9:46 PM, Jeff Johnson wrote:
+>> +MODULE_DESCRIPTION("QCOM specific hooks to UFS controller platform driver");
+>>   MODULE_LICENSE("GPL v2");
+> 
+> That sounds weird to me. I think we are better of with no module
+> description than with the above description.
+> 
+> How about the following description?
+> 
+> "Qualcomm UFS host controller driver".
 
-> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
+Sounds good to me. Will spin a v2.
 
-> +mpi3mr_pcierr_detected(struct pci_dev *pdev, pci_channel_state_t state)
-> +{
-> +	struct Scsi_Host *shost;
-> +	struct mpi3mr_ioc *mrioc;
-> +	unsigned int timeout = MPI3MR_RESET_TIMEOUT;
-> +
-> +	dev_info(&pdev->dev, "%s: callback invoked state(%d)\n", __func__,
-> +	    state);
-> +
-> +	shost = pci_get_drvdata(pdev);
-> +	mrioc = shost_priv(shost);
-
-This will be a NULL pointer dereference if shost is NULL.  But I think
-that's OK, and you don't need the check below, because we should never
-get here if either shost or mrioc is NULL unless the code is broken,
-and in that case we *want* the NULL pointer oops so we can fix it.
-
-> +	if (!shost || !mrioc) {
-> +		dev_err(&pdev->dev, "device not available\n");
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +	}
-
-> +static pci_ers_result_t mpi3mr_pcierr_slot_reset(struct pci_dev *pdev)
-> +{
-> +	struct Scsi_Host *shost;
-> +	struct mpi3mr_ioc *mrioc;
-> +	unsigned int timeout = MPI3MR_RESET_TIMEOUT;
-> +
-> +	dev_info(&pdev->dev, "%s: callback invoked\n", __func__);
-> +
-> +	shost = pci_get_drvdata(pdev);
-> +	mrioc = shost_priv(shost);
-> +
-> +	if (!shost || !mrioc) {
-> +		dev_err(&pdev->dev, "device not available\n");
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +	}
-
-Same here.
-
-> +static void mpi3mr_pcierr_resume(struct pci_dev *pdev)
-> +{
-> +	struct Scsi_Host *shost;
-> +	struct mpi3mr_ioc *mrioc;
-> +
-> +	dev_info(&pdev->dev, "%s: callback invoked\n", __func__);
-> +
-> +	shost = pci_get_drvdata(pdev);
-> +	mrioc = shost_priv(shost);
-> +
-> +	if (!shost || !mrioc) {
-> +		dev_err(&pdev->dev, "device not available\n");
-> +		return;
-> +	}
-
-Same here.
-
-> +	pci_aer_clear_nonfatal_status(pdev);
-
-Why is there here?  No other driver does this.
-
-> +static pci_ers_result_t mpi3mr_pcierr_mmio_enabled(struct pci_dev *pdev)
-> +{
-> +	struct Scsi_Host *shost;
-> +	struct mpi3mr_ioc *mrioc;
-> +
-> +	dev_info(&pdev->dev, "%s: callback invoked\n", __func__);
-> +
-> +	shost = pci_get_drvdata(pdev);
-> +	mrioc = shost_priv(shost);
-> +
-> +	if (!shost || !mrioc) {
-> +		dev_err(&pdev->dev, "device not available\n");
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +	}
-
-Same here.
-
-> +static struct pci_error_handlers mpi3mr_err_handler = {
-> +	.error_detected = mpi3mr_pcierr_detected,
-
-I think it's nice if the function name includes the function pointer
-name, i.e., ".error_detected = mpi3mr_error_detected" (or
-"mpi3mr_pci_error_detected" if you prefer).
-
-That way 'git grep -A5 ".*pci_ers_result_t.*error_detected"' finds
-most of them for comparison.
-
-> +	.mmio_enabled = mpi3mr_pcierr_mmio_enabled,
-> +	.slot_reset = mpi3mr_pcierr_slot_reset,
-> +	.resume = mpi3mr_pcierr_resume,
-> +};
