@@ -1,50 +1,51 @@
 Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FD502F34
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2024 19:04:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E989CF9F8
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2024 19:04:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718305461; cv=none; b=qxYA3PV3tYDPhqtcgT57NS0adtAuqNpZ3Tui1svuAxIZ8OAm7iDpFp0W2cAj+erTKnynBruU6YnWcsdzBHuPZ5bVa9MjTfcRihRvCR5hNYJDNVQKfcXX/57RtmKB8n+vON/163n9OZU/CODfzhjC62mpd8Mg+sswynBbdet9ChM=
+	t=1718305465; cv=none; b=CltY2UGKVA8NBFVxVjqLysy/A5YVbdnXmirvR2o8iDPsmvbjTEVINLERCUNMbGjJwH6tpvJwlpyceIv54QQ4EtAKUmtx0/4ampFSLVaZhMVmq1pk36eLjsfwotBC2ooV5uqxuIhKcrz2+BkW221cq1WeYE/uSB5zstlYkb6jylc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718305461; c=relaxed/simple;
-	bh=Fh9BrsjaDY7VJTCyr120+EEUN38qEawzukzNmRJA6pE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=J6hyVCq1cfUw2oQUdclfz2rG6wj167ypCEpVDA9xSiNyjhQxVQYeNznWu4YMTKmIVyxD/YvDQ24SeMtPpYwXbP25+Fr8VHgQ1ZqBXsNYOoxG4N8UiW8jiaMjKkFQkVvn5jF0AnOGvpI6/Tns4QrunR7J5yho88CDDuqlyONhL8M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=LzC0yl4M; arc=none smtp.client-ip=209.85.214.182
+	s=arc-20240116; t=1718305465; c=relaxed/simple;
+	bh=w+c8N3EtcBhNWmmnINWY+BmWEEj5Qvry1xjjQub//aE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=YIIcU8+VGuEusqI3YkOlWwYfJRS8yOeKisrvjt3zW8F3zrazdDBLyL0P2MHK+a79H6N8rvLIPLD7BlvpUIJj4b8LfIpMqhrMbhqMBqAHK4SmTLpZdnqBObH0XrjUqdRxVbkUv026ACRhtqtjdLPEyV9fMDS0t++H63p7Y2EcA2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=AJfme48G; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LzC0yl4M"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1f47f07aceaso12892275ad.0
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2024 12:04:20 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="AJfme48G"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1f6e183f084so10941115ad.1
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2024 12:04:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1718305459; x=1718910259; darn=vger.kernel.org;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=O2ZdWTnf0OswqH9uPRG2b+YsWlbmVw6uMXMLvy1w5ZU=;
-        b=LzC0yl4MYbr7BqrIRtz1/QUDZwm+0yAuCMS/9nNGDjRt4R6edV7C/C7YzRVW3A5VXZ
-         GRhR7mVNbKaa4XIxPTW0s7pqfm6A602n7mIuXHL7a1s7Y989lx7jncwZaATjl7Fq+mwQ
-         e3SvWc4kOK6VYWDJTkOo0NdolZidhpT3jsMeA=
+        d=broadcom.com; s=google; t=1718305463; x=1718910263; darn=vger.kernel.org;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=US5A9me3mxLMt6n8DXgFGsYk/Xyv1VqDW/Nh6QOR5Ww=;
+        b=AJfme48Got/irbsZCiTGcdqVHKYJMinBfZjv3T249YzYW8cSMmYkNGLR21MdYRZkCA
+         5XaJGRRAbMwsjuXCxLxXPWQP2apnsrnKoDfBwHeXkVreGGClpyN6NgSw/+5O9RU1w7pW
+         AUTGxoKAbKvoCi3seewDWJhqwX0Y+vu0veLEU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718305459; x=1718910259;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=O2ZdWTnf0OswqH9uPRG2b+YsWlbmVw6uMXMLvy1w5ZU=;
-        b=VJU2ogW6GvDby18jgAnbp2+y8sIulvDQZ3QhRl3QMapLJVz70F47NSKanOsrlLE/9w
-         tJJ5awqr2oPTs+bOtmENgt6ukc5NZnH/4B24eJLtmRdmp5gJLzWttqNMl1WMyxMfrO0e
-         X3sF0sFsBXnidJgCzs9+vtLCBOfjbEhMM13VXYQyZPtngnhKIY8o0IiBKoI8irbuDaZo
-         XEFW34mGb0k7ZjMohfGEVSe/A2GMOYdA8PRpnPIausBfLEv9AP/QvQqJs6E1Ae0Zb0aB
-         cvJFRN8BGPn/SLjkHWVYUZo43fcKyATHwKx0dGPM/fFUoeJT3j1+3KGM12EKEDTwI90t
-         vudw==
-X-Gm-Message-State: AOJu0YxG+14GT5mYlWMsRXXULBSM2SODdRhT4aX/C+0eK7OE7yf4gqIa
-	/+PrgukLKKtwK8RsM1OLfDD1v7ldIdKlWczr2uKGrvQLfOc2mNKXczCATKADhQ==
-X-Google-Smtp-Source: AGHT+IHEtoRzZlTPotc8Ejz7VmoMGdj/7mK/1Gz9ZsZzaJgYoV0YoXUP9PVjgXvla5HzTMq4GOR/yA==
-X-Received: by 2002:a17:902:da8b:b0:1f4:8e4a:b774 with SMTP id d9443c01a7336-1f8625d54dbmr5704145ad.1.1718305459425;
-        Thu, 13 Jun 2024 12:04:19 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1718305463; x=1718910263;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=US5A9me3mxLMt6n8DXgFGsYk/Xyv1VqDW/Nh6QOR5Ww=;
+        b=aEUzwMyHcjCYPkRXq12G0BNyWLhDpXY3S2CjcR0u8Ks5xMCCKlSTz6YZSID78FM6sn
+         v2YTSMPCb9KU1VrADsPBhdEeK/h054LtLD1+Vx7wqDbCdDpeUzVLwYUspCJYKlJ7R0W/
+         ZxNa7gjFLLIUFehabgUdZEghpRJBGo+fwJcBa2r9gkpHNUWzUCZBl1QENUXBhzQUD89N
+         H7vubo7Sk75x5HzAJW7UCLHENA4jRgBDDEDEQkQcmNbEa8DK90S4ovVjLqP7sr4aQbBo
+         WxZ9EZg4tSD5mFl0bwR6fxEudgBWMHUPYRCjPGngTs7OxYVXETAixQWXJmvYgB8dXo8v
+         M7xQ==
+X-Gm-Message-State: AOJu0Yxxym2ufe64FIB5/Etgr3y208UbEXjckwtWQbzPkZHvmhjv4oCg
+	qTZoUtKF1rkIWlg9Kwvb3zzH/TyEDyWR7VR98a5AD23CqSci8B4PLubWDlIT+Q==
+X-Google-Smtp-Source: AGHT+IHg2g6TysQQxQsRv88QKCRGZH+ClL/vPVq5MZqh9NXgC6ZuoHNSmUqUDyL0VpHVysasVJxmbg==
+X-Received: by 2002:a17:902:eccc:b0:1f7:5a6c:ae3e with SMTP id d9443c01a7336-1f8627e337dmr8346425ad.33.1718305463084;
+        Thu, 13 Jun 2024 12:04:23 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f855f16a3esm17366905ad.232.2024.06.13.12.04.15
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f855f16a3esm17366905ad.232.2024.06.13.12.04.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Jun 2024 12:04:17 -0700 (PDT)
+        Thu, 13 Jun 2024 12:04:22 -0700 (PDT)
 From: Sumit Saxena <sumit.saxena@broadcom.com>
 To: martin.petersen@oracle.com,
 	helgaas@kernel.org,
@@ -55,10 +56,12 @@ To: martin.petersen@oracle.com,
 Cc: linux-scsi@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH v3 0/3] mpi3mr: Support PCIe Error Recovery
-Date: Fri, 14 Jun 2024 00:30:19 +0530
-Message-Id: <20240613190022.4128-1-sumit.saxena@broadcom.com>
+Subject: [PATCH v3 1/3] mpi3mr: Support PCIe Error Recovery callback handlers
+Date: Fri, 14 Jun 2024 00:30:20 +0530
+Message-Id: <20240613190022.4128-2-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20240613190022.4128-1-sumit.saxena@broadcom.com>
+References: <20240613190022.4128-1-sumit.saxena@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -66,43 +69,313 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="0000000000008e525a061aca2a87"
+	boundary="000000000000c5a90e061aca2a64"
 
---0000000000008e525a061aca2a87
+--000000000000c5a90e061aca2a64
 Content-Transfer-Encoding: 8bit
 
-This patch series adds support for PCI error recovery for the controllers
-managed by mpi3mr driver. The patch series is rework of initial
-revisions submitted by Ranjan Kumar.
+This patch adds support for the PCIe error recovery callback handlers which is
+crucial for the recovery of the controllers. This feature is necessary for
+addressing the errors reported by the PCI Error Recovery mechanism.
 
-The series is based on the Host diagnostic buffer support series:
-https://lore.kernel.org/linux-scsi/20240605094840.14968-1-ranjan.kumar@broadcom.com/T/#t
+Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr.h    |   7 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 221 ++++++++++++++++++++++++++++++++
+ 2 files changed, 227 insertions(+), 1 deletion(-)
 
-v1->v2:
-- AER patch split as suggested by Bjorn Helgaas.
-- Updated driver version to a new value.
-
-v2->v3:
-- Accomodated the feedback from Bjorn Helgaas.
-- Simplified and dropped few patches.
-
-Sumit Saxena (3):
-  mpi3mr: Support PCIe Error Recovery callback handlers
-  mpi3mr: Prevent PCI writes from driver during PCI error recovery
-  mpi3mr: driver version update
-
- drivers/scsi/mpi3mr/mpi3mr.h           |  12 +-
- drivers/scsi/mpi3mr/mpi3mr_app.c       |  28 ++-
- drivers/scsi/mpi3mr/mpi3mr_fw.c        |  22 +-
- drivers/scsi/mpi3mr/mpi3mr_os.c        | 270 ++++++++++++++++++++++++-
- drivers/scsi/mpi3mr/mpi3mr_transport.c |  39 +++-
- 5 files changed, 343 insertions(+), 28 deletions(-)
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 8255ef1854ac..a2c236babb52 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -23,6 +23,7 @@
+ #include <linux/miscdevice.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
++#include <linux/aer.h>
+ #include <linux/poll.h>
+ #include <linux/sched.h>
+ #include <linux/slab.h>
+@@ -130,6 +131,7 @@ extern atomic64_t event_counter;
+ #define MPI3MR_PREPARE_FOR_RESET_TIMEOUT	180
+ #define MPI3MR_RESET_ACK_TIMEOUT		30
+ #define MPI3MR_MUR_TIMEOUT			120
++#define MPI3MR_RESET_TIMEOUT			510
+ 
+ #define MPI3MR_WATCHDOG_INTERVAL		1000 /* in milli seconds */
+ 
+@@ -1173,7 +1175,8 @@ struct scmd_priv {
+  * @trace_release_trigger_active: Trace trigger active flag
+  * @fw_release_trigger_active: Fw release trigger active flag
+  * @snapdump_trigger_active: Snapdump trigger active flag
+- *
++ * @pci_err_recovery: PCI error recovery in progress
++ * @block_on_pci_err: Block IO during PCI error recovery
+  */
+ struct mpi3mr_ioc {
+ 	struct list_head list;
+@@ -1377,6 +1380,8 @@ struct mpi3mr_ioc {
+ 	bool snapdump_trigger_active;
+ 	bool trace_release_trigger_active;
+ 	bool fw_release_trigger_active;
++	bool pci_err_recovery;
++	bool block_on_pci_err;
+ };
+ 
+ /**
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index eac179dc9370..9e532467faf1 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -5546,6 +5546,219 @@ mpi3mr_resume(struct device *dev)
+ 	return 0;
+ }
+ 
++/**
++ * mpi3mr_pcierr_detected - PCI error detected callback
++ * @pdev: PCI device instance
++ * @state: channel state
++ *
++ * This function is called by the PCI error recovery driver and
++ * based on the state passed the driver decides what actions to
++ * be recommended back to PCI driver.
++ *
++ * For all of the states if there is no valid mrioc or scsi host
++ * references in the PCI device then this function will return
++ * the result as disconnect.
++ *
++ * For normal state, this function will return the result as can
++ * recover.
++ *
++ * For frozen state, this function will block for any pending
++ * controller initialization or re-initialization to complete,
++ * stop any new interactions with the controller and return
++ * status as reset required.
++ *
++ * For permanent failure state, this function will mark the
++ * controller as unrecoverable and return status as disconnect.
++ *
++ * Returns: PCI_ERS_RESULT_NEED_RESET or CAN_RECOVER or
++ * DISCONNECT based on the controller state.
++ */
++static pci_ers_result_t
++mpi3mr_pcierr_detected(struct pci_dev *pdev, pci_channel_state_t state)
++{
++	struct Scsi_Host *shost;
++	struct mpi3mr_ioc *mrioc;
++	unsigned int timeout = MPI3MR_RESET_TIMEOUT;
++
++	dev_info(&pdev->dev, "%s: callback invoked state(%d)\n", __func__,
++	    state);
++
++	shost = pci_get_drvdata(pdev);
++	mrioc = shost_priv(shost);
++
++	if (!shost || !mrioc) {
++		dev_err(&pdev->dev, "device not available\n");
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++
++	switch (state) {
++	case pci_channel_io_normal:
++		return PCI_ERS_RESULT_CAN_RECOVER;
++	case pci_channel_io_frozen:
++		mrioc->pci_err_recovery = true;
++		mrioc->block_on_pci_err = true;
++		do {
++			if (mrioc->reset_in_progress || mrioc->is_driver_loading)
++				ssleep(1);
++			else
++				break;
++		} while (--timeout);
++
++		if (!timeout) {
++			mrioc->pci_err_recovery = true;
++			mrioc->block_on_pci_err = true;
++			mrioc->unrecoverable = 1;
++			mpi3mr_stop_watchdog(mrioc);
++			mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
++			return PCI_ERS_RESULT_DISCONNECT;
++		}
++
++		scsi_block_requests(mrioc->shost);
++		mpi3mr_stop_watchdog(mrioc);
++		mpi3mr_cleanup_resources(mrioc);
++		return PCI_ERS_RESULT_NEED_RESET;
++	case pci_channel_io_perm_failure:
++		mrioc->pci_err_recovery = true;
++		mrioc->block_on_pci_err = true;
++		mrioc->unrecoverable = 1;
++		mpi3mr_stop_watchdog(mrioc);
++		mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
++		return PCI_ERS_RESULT_DISCONNECT;
++	default:
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++}
++
++/**
++ * mpi3mr_pcierr_slot_reset - Post slot reset callback
++ * @pdev: PCI device instance
++ *
++ * This function is called by the PCI error recovery driver
++ * after a slot or link reset issued by it for the recovery, the
++ * driver is expected to bring back the controller and
++ * initialize it.
++ *
++ * This function restores PCI state and reinitializes controller
++ * resources and the controller, this blocks for any pending
++ * reset to complete.
++ *
++ * Returns: PCI_ERS_RESULT_DISCONNECT on failure or
++ * PCI_ERS_RESULT_RECOVERED
++ */
++static pci_ers_result_t mpi3mr_pcierr_slot_reset(struct pci_dev *pdev)
++{
++	struct Scsi_Host *shost;
++	struct mpi3mr_ioc *mrioc;
++	unsigned int timeout = MPI3MR_RESET_TIMEOUT;
++
++	dev_info(&pdev->dev, "%s: callback invoked\n", __func__);
++
++	shost = pci_get_drvdata(pdev);
++	mrioc = shost_priv(shost);
++
++	if (!shost || !mrioc) {
++		dev_err(&pdev->dev, "device not available\n");
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++
++	do {
++		if (mrioc->reset_in_progress)
++			ssleep(1);
++		else
++			break;
++	} while (--timeout);
++
++	if (!timeout)
++		goto out_failed;
++
++	pci_restore_state(pdev);
++
++	if (mpi3mr_setup_resources(mrioc)) {
++		ioc_err(mrioc, "setup resources failed\n");
++		goto out_failed;
++	}
++	mrioc->unrecoverable = 0;
++	mrioc->pci_err_recovery = false;
++
++	if (mpi3mr_soft_reset_handler(mrioc, MPI3MR_RESET_FROM_FIRMWARE, 0))
++		goto out_failed;
++
++	return PCI_ERS_RESULT_RECOVERED;
++
++out_failed:
++	mrioc->unrecoverable = 1;
++	mrioc->block_on_pci_err = false;
++	scsi_unblock_requests(shost);
++	mpi3mr_start_watchdog(mrioc);
++	return PCI_ERS_RESULT_DISCONNECT;
++}
++
++/**
++ * mpi3mr_pcierr_resume - PCI error recovery resume
++ * callback
++ * @pdev: PCI device instance
++ *
++ * This function enables all I/O and IOCTLs post reset issued as
++ * part of the PCI error recovery
++ *
++ * Return: Nothing.
++ */
++static void mpi3mr_pcierr_resume(struct pci_dev *pdev)
++{
++	struct Scsi_Host *shost;
++	struct mpi3mr_ioc *mrioc;
++
++	dev_info(&pdev->dev, "%s: callback invoked\n", __func__);
++
++	shost = pci_get_drvdata(pdev);
++	mrioc = shost_priv(shost);
++
++	if (!shost || !mrioc) {
++		dev_err(&pdev->dev, "device not available\n");
++		return;
++	}
++
++	pci_aer_clear_nonfatal_status(pdev);
++
++	if (mrioc->block_on_pci_err) {
++		mrioc->block_on_pci_err = false;
++		scsi_unblock_requests(shost);
++		mpi3mr_start_watchdog(mrioc);
++	}
++}
++
++/**
++ * mpi3mr_pcierr_mmio_enabled - PCI error recovery callback
++ * @pdev: PCI device instance
++ *
++ * This is called only if _pcierr_error_detected returns
++ * PCI_ERS_RESULT_CAN_RECOVER.
++ *
++ * Return: PCI_ERS_RESULT_DISCONNECT when the controller is
++ * unrecoverable or when the shost/mrioc reference cannot be
++ * found, else return PCI_ERS_RESULT_RECOVERED
++ */
++static pci_ers_result_t mpi3mr_pcierr_mmio_enabled(struct pci_dev *pdev)
++{
++	struct Scsi_Host *shost;
++	struct mpi3mr_ioc *mrioc;
++
++	dev_info(&pdev->dev, "%s: callback invoked\n", __func__);
++
++	shost = pci_get_drvdata(pdev);
++	mrioc = shost_priv(shost);
++
++	if (!shost || !mrioc) {
++		dev_err(&pdev->dev, "device not available\n");
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++
++	if (mrioc->unrecoverable)
++		return PCI_ERS_RESULT_DISCONNECT;
++
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
+ static const struct pci_device_id mpi3mr_pci_id_table[] = {
+ 	{
+ 		PCI_DEVICE_SUB(MPI3_MFGPAGE_VENDORID_BROADCOM,
+@@ -5563,6 +5776,13 @@ static const struct pci_device_id mpi3mr_pci_id_table[] = {
+ };
+ MODULE_DEVICE_TABLE(pci, mpi3mr_pci_id_table);
+ 
++static struct pci_error_handlers mpi3mr_err_handler = {
++	.error_detected = mpi3mr_pcierr_detected,
++	.mmio_enabled = mpi3mr_pcierr_mmio_enabled,
++	.slot_reset = mpi3mr_pcierr_slot_reset,
++	.resume = mpi3mr_pcierr_resume,
++};
++
+ static SIMPLE_DEV_PM_OPS(mpi3mr_pm_ops, mpi3mr_suspend, mpi3mr_resume);
+ 
+ static struct pci_driver mpi3mr_pci_driver = {
+@@ -5571,6 +5791,7 @@ static struct pci_driver mpi3mr_pci_driver = {
+ 	.probe = mpi3mr_probe,
+ 	.remove = mpi3mr_remove,
+ 	.shutdown = mpi3mr_shutdown,
++	.err_handler = &mpi3mr_err_handler,
+ 	.driver.pm = &mpi3mr_pm_ops,
+ };
+ 
 -- 
 2.31.1
 
 
---0000000000008e525a061aca2a87
+--000000000000c5a90e061aca2a64
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -173,13 +446,13 @@ nERsqENeyGfUTJLcDSURb49qpFqqWweJ7ifC64Iak8wCK2CxCe8lHfTyEgC9MuEa586NMQJDguvw
 jlC7kxrgwf4sZ/9Wj/GS2HLzZPkxWCcQIrgNJm2wceHQwPBpM0ZoqL1D2tsFgOA8BvYxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwdgevXLIdo6fbCNI8w
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJZHlE+rvwf7BQho2O3aaAwAwOn+q5nE
-YZL5M67EFpZtMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDYx
-MzE5MDQxOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKuJx3MFDx6Yz2sV8UIpPHobmloAl8hm
+LuZ7uvZvd/WaMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDYx
+MzE5MDQyM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBDFgMnemqkZxwhF1Q3ZwDGz5XktMpVVXX3Vys7P/YcW5LVXK4/
-qdnuqasBzW5A8XVn40QmuGxtV7qm3oF9dZGJ9WonDckrCJWPI/7NEB5lfteckeLNfdSnW558BJSH
-iyaiuttRk7vgPCkaQpGT7ke32XPeAb562nJygntgod9TMVDyN9A5OHX2VT6jSPb8ytaaeXANwRD8
-o1wiTKA1nGZb2LAhBpIMCF3MjnOR1EWzvFTF9hYJ1OQeejOJefV+DgOu9JKjVGci73q9Ug9BmWsN
-Lcbu/OFsZtd/9D191Ap7UIya77L7Du9fxAvMyBWzOgeQnBPrXu0bT+s9nBYvT1k2
---0000000000008e525a061aca2a87--
+ATANBgkqhkiG9w0BAQEFAASCAQAcXkH7NTOY+qQBH7flHnh3Rx/iqqRVHVJP+O58SGWG/GovE0lP
+/AWlMGuUhrEo47ElrFfi6FmJWNh4DlxOdgdZSGzhsousXu4MJ4LtaBpdwI+Nq12t72DaYP3wydBW
+N580KcKKxlRNgPTmFX9sdtLFDmlHEWpjlO1ce8olh/qCgFidqYyXWHHD44efO3j24XwLhxTClvo4
+6BqDcmrQ9c3Nf5rvdHOhlAy5wgEy+ObJBH8dzk7ICXv+Syn/ggYviX2Vsp9G6lUhCPs1K8sxGqxw
+jV1ITzCupcLkyZ197sb7OCN2wSNlMDcHtO20hPsRFrl4ynHDuQ5W2lGy0AYI8wAd
+--000000000000c5a90e061aca2a64--
