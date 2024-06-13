@@ -1,247 +1,239 @@
 Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83B99137911;
-	Thu, 13 Jun 2024 06:51:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 902C5130485;
+	Thu, 13 Jun 2024 06:54:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718261508; cv=none; b=ZUn3LZNHQbIQijFNuMctWeNIlqVMtQ6M1Uz321e55Fqgop6Kw2UdphpcxD9xV9DaJUavV0h89bjrCAZqySJ3lU+IhSXsxjq46+M/4OzzSxm8lkVoSEcqGMXdl9OBqZBt+2Ssq8jAkYZSoJJms6V8aHys/CqRSUSU0zF1wGm41JE=
+	t=1718261692; cv=none; b=qhjtXCuHrA77GiYXnl/15TCW/DaJ5NmO8sgCPnHVkUoj++bzmqzZd33iYK9rCDUWbUDT4G5hKpyGkaOXNnr6yMBYeByGuvbwYelMUAD8ZAs5HZFFWszOhf3S9bTlt/BEfb+YTftdxEM1R6COt2Ta2q15KC9EWZxCVuvHhZFTzRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718261508; c=relaxed/simple;
-	bh=LvAer61IVH3wkuY3o1V+TCBKGzSLg//rzxfuqvW7yD4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HtNXTyxOIMIPr+1XwaCWIhu1lRGmgdGuyXD1+heAi2O0ly3TWlJEoaOblchVqihVd1y9+ureZnKO7ZPfwU18GjN0idCTKKPOMIBasLE6DRuhXz417pf/6asdm7efN0Jh5cyXdTkMq7m38zMC18Fko4OehKP8d2yTnmo+c9qy5M8=
+	s=arc-20240116; t=1718261692; c=relaxed/simple;
+	bh=+wWCU9wxebj83eVjJ1vug75971p3yKW39gwkpdnUOwg=;
+	h=From:Subject:To:Cc:Date:Message-ID:References:MIME-Version:
+	 Content-Type; b=FCytK85HVchJhqC8lqChC1XITHT8K/i1UIMJ8v2ewMBRW5JEmHaIXvYrJEXd9DBoXhK4lfnT92rb7ACihx9nal7qCO0xQRz8DOXfE+RuHajgHRzXGnouYAKxEJ0W0GH6VRf/poWAxzv6yEe1G6SfwLTd+kOxecsitP5rsZC2OLA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: ee3d0b30294c11ef9305a59a3cc225df-20240613
+X-UUID: cfdbbd62295111ef9305a59a3cc225df-20240613
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.38,REQID:74a01a1e-22e2-4f46-b7a0-1fcbd41cdafc,IP:20,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:5
-X-CID-INFO: VERSION:1.1.38,REQID:74a01a1e-22e2-4f46-b7a0-1fcbd41cdafc,IP:20,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:5
-X-CID-META: VersionHash:82c5f88,CLOUDID:67dda018e55f71979f6b6a6fb68dcbf9,BulkI
-	D:240613141932DQLUDI5I,BulkQuantity:1,Recheck:0,SF:17|19|44|64|66|24|102,T
-	C:nil,Content:0,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:41,QS:nil,BEC:nil,
-	COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
+X-CID-O-INFO: VERSION:1.1.38,REQID:99bdfd23-e773-46f1-89d0-c59e2fe1a5d9,IP:20,
+	URL:0,TC:-9,Content:0,EDM:0,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACT
+	ION:release,TS:-4
+X-CID-INFO: VERSION:1.1.38,REQID:99bdfd23-e773-46f1-89d0-c59e2fe1a5d9,IP:20,UR
+	L:0,TC:-9,Content:0,EDM:0,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-4
+X-CID-META: VersionHash:82c5f88,CLOUDID:f344da92e50a7d72ac931ed3d94fa5fe,BulkI
+	D:24061314544474018DS1,BulkQuantity:0,Recheck:0,SF:24|17|19|44|66|38|102,T
+	C:1,Content:0,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,C
+	OL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
 X-CID-BVR: 0,NGT
 X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_FSI,TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
-X-UUID: ee3d0b30294c11ef9305a59a3cc225df-20240613
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
+X-UUID: cfdbbd62295111ef9305a59a3cc225df-20240613
 Received: from node2.com.cn [(39.156.73.10)] by mailgw.kylinos.cn
 	(envelope-from <mengfanhui@kylinos.cn>)
 	(Generic MTA)
-	with ESMTP id 586363061; Thu, 13 Jun 2024 14:19:46 +0800
+	with ESMTP id 1768197539; Thu, 13 Jun 2024 14:54:42 +0800
 Received: from node2.com.cn (localhost [127.0.0.1])
-	by node2.com.cn (NSMail) with SMTP id 018F6B80758A;
-	Thu, 13 Jun 2024 14:19:46 +0800 (CST)
-X-ns-mid: postfix-666A8F81-83225835
-Received: from [172.30.60.81] (unknown [172.30.60.81])
-	by node2.com.cn (NSMail) with ESMTPA id 4DC5AB80758A;
-	Thu, 13 Jun 2024 06:19:45 +0000 (UTC)
-Message-ID: <c0ed2c60-47b9-4853-a164-8e66016e49d3@kylinos.cn>
-Date: Thu, 13 Jun 2024 14:19:44 +0800
+	by node2.com.cn (NSMail) with SMTP id 85834B80758A;
+	Thu, 13 Jun 2024 14:54:42 +0800 (CST)
+Received: by node2.com.cn (NSMail, from userid 0)
+	id 77ADCB80758A; Thu, 13 Jun 2024 14:54:42 +0800 (CST)
+From: =?UTF-8?B?5a2f5Yeh6L6J?= <mengfanhui@kylinos.cn>
+Subject: =?UTF-8?B?5Zue5aSNOiBbUEFUQ0ggMS8yXSBzY3NpOiBtZWdhcmFpZF9zYXM6IEZpeCBEQ01EIGlzc3VlIGNvbW1hbmQgaGFuZGxpbmc=?=
+To: 	=?UTF-8?B?5a2f5Yeh6L6J?= <mengfanhui@kylinos.cn>,
+	=?UTF-8?B?a2FzaHlhcC5kZXNhaQ==?= <kashyap.desai@broadcom.com>,
+	=?UTF-8?B?c3VtaXQuc2F4ZW5h?= <sumit.saxena@broadcom.com>,
+	=?UTF-8?B?c2hpdmFzaGFyYW4uc3Jpa2FudGVzaHdhcmE=?= <shivasharan.srikanteshwara@broadcom.com>,
+	=?UTF-8?B?Y2hhbmRyYWthbnRoLnBhdGls?= <chandrakanth.patil@broadcom.com>,
+	=?UTF-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>,
+Cc: 	=?UTF-8?B?5YiY5LqR?= <liuyun01@kylinos.cn>,
+	=?UTF-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>,
+	=?UTF-8?B?bGludXgta2VybmVs?= <linux-kernel@vger.kernel.org>,
+	=?UTF-8?B?Z2VsaWFuZw==?= <geliang@kernel.org>,
+Date: Thu, 13 Jun 2024 14:54:41 +0800
+X-Mailer: NSMAIL 7.0.0
+Message-ID: <207rguynjl7-207u0qlhn8s@nsmail7.0.0--kylin--1>
+References: 20240530094514.2750723-1-mengfanhui@kylinos.cn
+X-Israising: 0
+X-Seclevel-1: 0
+X-Seclevel: 0
+X-Delaysendtime: Thu, 13 Jun 2024 14:54:41 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] scsi: megaraid_sas: Fix DCMD issue command handling
-To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
- shivasharan.srikanteshwara@broadcom.com, chandrakanth.patil@broadcom.com
-Cc: liuyun01@kylinos.cn, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, geliang@kernel.org
-References: <20240530094514.2750723-1-mengfanhui@kylinos.cn>
-Content-Language: en-US
-From: mengfanhui <mengfanhui@kylinos.cn>
-In-Reply-To: <20240530094514.2750723-1-mengfanhui@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary=nsmail-23fe32kf3se-23ffd0du5m7
+X-ns-mid: webmail-666a97b1-238nmlaz
+X-ope-from: <mengfanhui@kylinos.cn>
 
-Can someone help review it? Thank you!
+This message is in MIME format.
 
-=E5=9C=A8 2024/5/30 17:45, mengfanhui =E5=86=99=E9=81=93:
-> If DCMD timeout not handled, the next interaction between the driver an=
-d firmware will still
-> result in DCMD timeout, which may cause system crashes or hang up
->=20
-> This patch will do proper error handling for DCMD command
-> for Fusion adapters:
->=20
-> 1. What action needs to be taken in case of DCMD timeout is decided by
-> function dcmd_timeout_ocr_possible().  DCMD timeout causing OCR is
-> applicable to the following situation:
->     INITIATE_OCR
->     KILL_ADAPTER
->     IGNORE_TIMEOUT
->=20
-> 2. If those DCMDs fail, driver bails out.
->=20
-> Error log:
-> [ 201.689759] megaraid_sas 0001:05:00.0: megasas_sync_pd_seq_num DCMD t=
-imed out, continue without JBOD sequence map
-> [ 242.649061] [] megasas_init+0x114/0x4000 [megaraid_sas]
-> [ 363.481009] [] megasas_issue_blocked_cmd+0x1d8/0x268 [megaraid_sas]
-> [ 363.481159] [] megasas_get_pd_list+0x548/0x688 [megaraid_sas]
-> [ 363.481309] [] megasas_init_fw+0xb38/0x1104 [megaraid_sas]
-> [ 363.481459] [] megasas_probe_one+0x1f4/0x5c4 [megaraid_sas]
-> [ 363.482419] [] megasas_init+0x114/0x4000 [megaraid_sas]
-> [ 381.912298] megaraid_sas 0001:05:00.0: DCMD(opcode: 0x2010100) is tim=
-ed out, func:megasas_issue_blocked_cmd
-> [ 381.912979] megaraid_sas 0001:05:00.0: Ignore DCMD timeout: megasas_g=
-et_pd_list 4727
-> [ 484.313526] [] megasas_init+0x114/0x4000 [megaraid_sas]
-> [ 562.136294] megaraid_sas 0001:05:00.0: DCMD(opcode: 0x3010100) is tim=
-ed out, func:megasas_issue_blocked_cmd
-> [ 562.137074] megaraid_sas 0001:05:00.0: Ignore DCMD timeout: megasas_l=
-d_list_query 4973
-> [ 562.137081] megaraid_sas 0001:05:00.0: failed to get LD list
-> [ 562.137425] megaraid_sas 0001:05:00.0: megasas_init_fw: megasas_get_d=
-evice_list failed
-> [ 562.137767] megaraid_sas 0001:05:00.0: megasas_disable_intr_fusion is=
- called outbound_intr_mask:0x40000009
-> [ 562.139232] megaraid_sas 0001:05:00.0: Failed from megasas_init_fw 65=
-72
->=20
-> Co-developed-by: Jackie Liu <liuyun01@kylinos.cn>
-> Signed-off-by: Jackie Liu <liuyun01@kylinos.cn>
-> Signed-off-by: mengfanhui <mengfanhui@kylinos.cn>
-> Suggested-by: Geliang Tang <geliang@kernel.org>
-> ---
->  drivers/scsi/megaraid/megaraid_sas.h        |  1 +
->  drivers/scsi/megaraid/megaraid_sas_base.c   |  4 +-
->  drivers/scsi/megaraid/megaraid_sas_fusion.c | 71 +++++++++++++++++----
->  3 files changed, 62 insertions(+), 14 deletions(-)
->=20
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megara=
-id/megaraid_sas.h
-> index 5680c6cdb221..91570c5e8456 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -2760,5 +2760,6 @@ void megasas_exit_debugfs(void);
->  void megasas_setup_debugfs(struct megasas_instance *instance);
->  void megasas_destroy_debugfs(struct megasas_instance *instance);
->  int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_nu=
-m);
-> +int dcmd_timeout_ocr_possible(struct megasas_instance *instance);
-> =20
->  #endif				/*LSI_MEGARAID_SAS_H */
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/m=
-egaraid/megaraid_sas_base.c
-> index 170b38f04655..ba8061ea2078 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -4518,8 +4518,8 @@ int megasas_alloc_cmds(struct megasas_instance *i=
-nstance)
->   * Return 0 for only Fusion adapter, if driver load/unload is not in p=
-rogress
->   * or FW is not under OCR.
->   */
-> -inline int
-> -dcmd_timeout_ocr_possible(struct megasas_instance *instance) {
-> +int dcmd_timeout_ocr_possible(struct megasas_instance *instance)
-> +{
-> =20
->  	if (instance->adapter_type =3D=3D MFI_SERIES)
->  		return KILL_ADAPTER;
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi=
-/megaraid/megaraid_sas_fusion.c
-> index 6c1fb8149553..f0aeb1ee83a2 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -1363,17 +1363,42 @@ megasas_sync_pd_seq_num(struct megasas_instance=
- *instance, bool pend) {
->  			"driver supports max %d JBOD, but FW reports %d\n",
->  			MAX_PHYSICAL_DEVICES, le32_to_cpu(pd_sync->count));
->  		ret =3D -EINVAL;
-> +		goto out;
->  	}
-> =20
-> -	if (ret =3D=3D DCMD_TIMEOUT)
-> -		dev_warn(&instance->pdev->dev,
-> -			 "%s DCMD timed out, continue without JBOD sequence map\n",
-> -			 __func__);
-> -
-> -	if (ret =3D=3D DCMD_SUCCESS)
-> +	switch (ret) {
-> +	case DCMD_SUCCESS:
->  		instance->pd_seq_map_id++;
-> +		break;
-> +	case DCMD_TIMEOUT:
-> +		switch (dcmd_timeout_ocr_possible(instance)) {
-> +		case INITIATE_OCR:
-> +			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
-> +			mutex_unlock(&instance->reset_mutex);
-> +			megasas_reset_fusion(instance->host,
-> +					     MFI_IO_TIMEOUT_OCR);
-> +			mutex_lock(&instance->reset_mutex);
-> +			break;
-> +		case KILL_ADAPTER:
-> +			megaraid_sas_kill_hba(instance);
-> +			break;
-> +		case IGNORE_TIMEOUT:
-> +			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
-> +				 __func__, __LINE__);
-> +			break;
-> +		}
-> +		break;
-> +	case DCMD_FAILED:
-> +		dev_err(&instance->pdev->dev,
-> +			"%s: MR_DCMD_SYSTEM_PD_MAP_GET_INFO failed\n",
-> +			__func__);
-> +		break;
-> +	}
-> +
-> +out:
-> +	if (ret !=3D DCMD_TIMEOUT)
-> +		megasas_return_cmd(instance, cmd);
-> =20
-> -	megasas_return_cmd(instance, cmd);
->  	return ret;
->  }
-> =20
-> @@ -1449,12 +1474,34 @@ megasas_get_ld_map_info(struct megasas_instance=
- *instance)
->  	else
->  		ret =3D megasas_issue_polled(instance, cmd);
-> =20
-> -	if (ret =3D=3D DCMD_TIMEOUT)
-> -		dev_warn(&instance->pdev->dev,
-> -			 "%s DCMD timed out, RAID map is disabled\n",
-> -			 __func__);
-> +	switch (ret) {
-> +	case DCMD_TIMEOUT:
-> +		switch (dcmd_timeout_ocr_possible(instance)) {
-> +		case INITIATE_OCR:
-> +			cmd->flags |=3D DRV_DCMD_SKIP_REFIRE;
-> +			mutex_unlock(&instance->reset_mutex);
-> +			megasas_reset_fusion(instance->host,
-> +					     MFI_IO_TIMEOUT_OCR);
-> +			mutex_lock(&instance->reset_mutex);
-> +			break;
-> +		case KILL_ADAPTER:
-> +			megaraid_sas_kill_hba(instance);
-> +			break;
-> +		case IGNORE_TIMEOUT:
-> +			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
-> +				 __func__, __LINE__);
-> +			break;
-> +		}
-> +		break;
-> +	case DCMD_FAILED:
-> +		dev_err(&instance->pdev->dev,
-> +			"%s: MR_DCMD_LD_MAP_GET_INFO failed\n",
-> +			__func__);
-> +		break;
-> +	}
-> =20
-> -	megasas_return_cmd(instance, cmd);
-> +	if (ret !=3D DCMD_TIMEOUT)
-> +		megasas_return_cmd(instance, cmd);
-> =20
->  	return ret;
->  }
+--nsmail-23fe32kf3se-23ffd0du5m7
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+PHByZSBjbGFzcz0ibW96LXF1b3RlLXByZSI+Q2FuIHNvbWVvbmUgaGVscCBy
+ZXZpZXcgaXQ/IFRoYW5rIHlvdSE8YnI+PGJyPi0tLS08L3ByZT4KPGRpdiBp
+ZD0iY3MyY19tYWlsX3NpZ2F0dXJlIj48L2Rpdj4KPHA+Jm5ic3A7PC9wPgo8
+ZGl2IGlkPSJyZSIgc3R5bGU9Im1hcmdpbi1sZWZ0OiAwLjVlbTsgcGFkZGlu
+Zy1sZWZ0OiAwLjVlbTsgYm9yZGVyLWxlZnQ6IDFweCBzb2xpZCBncmVlbjsi
+Pjxicj48YnI+PGJyPgo8ZGl2IHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiAj
+ZjVmN2ZhOyI+PHN0cm9uZz7kuLvjgIDpopjvvJo8L3N0cm9uZz48c3BhbiBp
+ZD0ic3ViamVjdCI+W1BBVENIIDEvMl0gc2NzaTogbWVnYXJhaWRfc2FzOiBG
+aXggRENNRCBpc3N1ZSBjb21tYW5kIGhhbmRsaW5nPC9zcGFuPiA8YnI+PHN0
+cm9uZz7ml6XjgIDmnJ/vvJo8L3N0cm9uZz48c3BhbiBpZD0iZGF0ZSI+MjAy
+NC0wNS0zMCAxNzo0NTwvc3Bhbj4gPGJyPjxzdHJvbmc+5Y+R5Lu25Lq677ya
+PC9zdHJvbmc+PHNwYW4gaWQ9ImZyb20iPuWtn+WHoei+iTwvc3Bhbj4gPGJy
+PjxzdHJvbmc+5pS25Lu25Lq677yaPC9zdHJvbmc+PHNwYW4gaWQ9InRvIiBz
+dHlsZT0id29yZC1icmVhazogYnJlYWstYWxsOyI+a2FzaHlhcC5kZXNhaTtz
+dW1pdC5zYXhlbmE7c2hpdmFzaGFyYW4uc3Jpa2FudGVzaHdhcmE7Y2hhbmRy
+YWthbnRoLnBhdGlsO+Wtn+WHoei+iTs8L3NwYW4+PC9kaXY+Cjxicj4KPGRp
+diBpZD0iY29udGVudCI+CjxkaXYgY2xhc3M9InZpZXdlcl9wYXJ0IiBzdHls
+ZT0icG9zaXRpb246IHJlbGF0aXZlOyI+CjxkaXY+SWYgRENNRCB0aW1lb3V0
+IG5vdCBoYW5kbGVkLCB0aGUgbmV4dCBpbnRlcmFjdGlvbiBiZXR3ZWVuIHRo
+ZSBkcml2ZXIgYW5kIGZpcm13YXJlIHdpbGwgc3RpbGw8YnI+cmVzdWx0IGlu
+IERDTUQgdGltZW91dCwgd2hpY2ggbWF5IGNhdXNlIHN5c3RlbSBjcmFzaGVz
+IG9yIGhhbmcgdXA8YnI+PGJyPlRoaXMgcGF0Y2ggd2lsbCBkbyBwcm9wZXIg
+ZXJyb3IgaGFuZGxpbmcgZm9yIERDTUQgY29tbWFuZDxicj5mb3IgRnVzaW9u
+IGFkYXB0ZXJzOjxicj48YnI+MS4gV2hhdCBhY3Rpb24gbmVlZHMgdG8gYmUg
+dGFrZW4gaW4gY2FzZSBvZiBEQ01EIHRpbWVvdXQgaXMgZGVjaWRlZCBieTxi
+cj5mdW5jdGlvbiBkY21kX3RpbWVvdXRfb2NyX3Bvc3NpYmxlKCkuIERDTUQg
+dGltZW91dCBjYXVzaW5nIE9DUiBpczxicj5hcHBsaWNhYmxlIHRvIHRoZSBm
+b2xsb3dpbmcgc2l0dWF0aW9uOjxicj5JTklUSUFURV9PQ1I8YnI+S0lMTF9B
+REFQVEVSPGJyPklHTk9SRV9USU1FT1VUPGJyPjxicj4yLiBJZiB0aG9zZSBE
+Q01EcyBmYWlsLCBkcml2ZXIgYmFpbHMgb3V0Ljxicj48YnI+RXJyb3IgbG9n
+Ojxicj5bIDIwMS42ODk3NTldIG1lZ2FyYWlkX3NhcyAwMDAxOjA1OjAwLjA6
+IG1lZ2FzYXNfc3luY19wZF9zZXFfbnVtIERDTUQgdGltZWQgb3V0LCBjb250
+aW51ZSB3aXRob3V0IEpCT0Qgc2VxdWVuY2UgbWFwPGJyPlsgMjQyLjY0OTA2
+MV0gW10gbWVnYXNhc19pbml0KzB4MTE0LzB4NDAwMCBbbWVnYXJhaWRfc2Fz
+XTxicj5bIDM2My40ODEwMDldIFtdIG1lZ2FzYXNfaXNzdWVfYmxvY2tlZF9j
+bWQrMHgxZDgvMHgyNjggW21lZ2FyYWlkX3Nhc108YnI+WyAzNjMuNDgxMTU5
+XSBbXSBtZWdhc2FzX2dldF9wZF9saXN0KzB4NTQ4LzB4Njg4IFttZWdhcmFp
+ZF9zYXNdPGJyPlsgMzYzLjQ4MTMwOV0gW10gbWVnYXNhc19pbml0X2Z3KzB4
+YjM4LzB4MTEwNCBbbWVnYXJhaWRfc2FzXTxicj5bIDM2My40ODE0NTldIFtd
+IG1lZ2FzYXNfcHJvYmVfb25lKzB4MWY0LzB4NWM0IFttZWdhcmFpZF9zYXNd
+PGJyPlsgMzYzLjQ4MjQxOV0gW10gbWVnYXNhc19pbml0KzB4MTE0LzB4NDAw
+MCBbbWVnYXJhaWRfc2FzXTxicj5bIDM4MS45MTIyOThdIG1lZ2FyYWlkX3Nh
+cyAwMDAxOjA1OjAwLjA6IERDTUQob3Bjb2RlOiAweDIwMTAxMDApIGlzIHRp
+bWVkIG91dCwgZnVuYzptZWdhc2FzX2lzc3VlX2Jsb2NrZWRfY21kPGJyPlsg
+MzgxLjkxMjk3OV0gbWVnYXJhaWRfc2FzIDAwMDE6MDU6MDAuMDogSWdub3Jl
+IERDTUQgdGltZW91dDogbWVnYXNhc19nZXRfcGRfbGlzdCA0NzI3PGJyPlsg
+NDg0LjMxMzUyNl0gW10gbWVnYXNhc19pbml0KzB4MTE0LzB4NDAwMCBbbWVn
+YXJhaWRfc2FzXTxicj5bIDU2Mi4xMzYyOTRdIG1lZ2FyYWlkX3NhcyAwMDAx
+OjA1OjAwLjA6IERDTUQob3Bjb2RlOiAweDMwMTAxMDApIGlzIHRpbWVkIG91
+dCwgZnVuYzptZWdhc2FzX2lzc3VlX2Jsb2NrZWRfY21kPGJyPlsgNTYyLjEz
+NzA3NF0gbWVnYXJhaWRfc2FzIDAwMDE6MDU6MDAuMDogSWdub3JlIERDTUQg
+dGltZW91dDogbWVnYXNhc19sZF9saXN0X3F1ZXJ5IDQ5NzM8YnI+WyA1NjIu
+MTM3MDgxXSBtZWdhcmFpZF9zYXMgMDAwMTowNTowMC4wOiBmYWlsZWQgdG8g
+Z2V0IExEIGxpc3Q8YnI+WyA1NjIuMTM3NDI1XSBtZWdhcmFpZF9zYXMgMDAw
+MTowNTowMC4wOiBtZWdhc2FzX2luaXRfZnc6IG1lZ2FzYXNfZ2V0X2Rldmlj
+ZV9saXN0IGZhaWxlZDxicj5bIDU2Mi4xMzc3NjddIG1lZ2FyYWlkX3NhcyAw
+MDAxOjA1OjAwLjA6IG1lZ2FzYXNfZGlzYWJsZV9pbnRyX2Z1c2lvbiBpcyBj
+YWxsZWQgb3V0Ym91bmRfaW50cl9tYXNrOjB4NDAwMDAwMDk8YnI+WyA1NjIu
+MTM5MjMyXSBtZWdhcmFpZF9zYXMgMDAwMTowNTowMC4wOiBGYWlsZWQgZnJv
+bSBtZWdhc2FzX2luaXRfZncgNjU3Mjxicj48YnI+Q28tZGV2ZWxvcGVkLWJ5
+OiBKYWNraWUgTGl1IDxicj5TaWduZWQtb2ZmLWJ5OiBKYWNraWUgTGl1IDxi
+cj5TaWduZWQtb2ZmLWJ5OiBtZW5nZmFuaHVpIDxicj5TdWdnZXN0ZWQtYnk6
+IEdlbGlhbmcgVGFuZyA8YnI+LS0tPGJyPmRyaXZlcnMvc2NzaS9tZWdhcmFp
+ZC9tZWdhcmFpZF9zYXMuaCB8IDEgKzxicj5kcml2ZXJzL3Njc2kvbWVnYXJh
+aWQvbWVnYXJhaWRfc2FzX2Jhc2UuYyB8IDQgKy08YnI+ZHJpdmVycy9zY3Np
+L21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uYyB8IDcxICsrKysrKysr
+KysrKysrKysrLS0tLTxicj4zIGZpbGVzIGNoYW5nZWQsIDYyIGluc2VydGlv
+bnMoKyksIDE0IGRlbGV0aW9ucygtKTxicj48YnI+ZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaCBiL2RyaXZlcnMv
+c2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaDxicj5pbmRleCA1NjgwYzZj
+ZGIyMjEuLjkxNTcwYzVlODQ1NiAxMDA2NDQ8YnI+LS0tIGEvZHJpdmVycy9z
+Y3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oPGJyPisrKyBiL2RyaXZlcnMv
+c2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaDxicj5AQCAtMjc2MCw1ICsy
+NzYwLDYgQEAgdm9pZCBtZWdhc2FzX2V4aXRfZGVidWdmcyh2b2lkKTs8YnI+
+dm9pZCBtZWdhc2FzX3NldHVwX2RlYnVnZnMoc3RydWN0IG1lZ2FzYXNfaW5z
+dGFuY2UgKmluc3RhbmNlKTs8YnI+dm9pZCBtZWdhc2FzX2Rlc3Ryb3lfZGVi
+dWdmcyhzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpOzxicj5p
+bnQgbWVnYXNhc19ibGtfbXFfcG9sbChzdHJ1Y3QgU2NzaV9Ib3N0ICpzaG9z
+dCwgdW5zaWduZWQgaW50IHF1ZXVlX251bSk7PGJyPitpbnQgZGNtZF90aW1l
+b3V0X29jcl9wb3NzaWJsZShzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5z
+dGFuY2UpOzxicj48YnI+I2VuZGlmIC8qTFNJX01FR0FSQUlEX1NBU19IICov
+PGJyPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJh
+aWRfc2FzX2Jhc2UuYyBiL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
+ZF9zYXNfYmFzZS5jPGJyPmluZGV4IDE3MGIzOGYwNDY1NS4uYmE4MDYxZWEy
+MDc4IDEwMDY0NDxicj4tLS0gYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
+YXJhaWRfc2FzX2Jhc2UuYzxicj4rKysgYi9kcml2ZXJzL3Njc2kvbWVnYXJh
+aWQvbWVnYXJhaWRfc2FzX2Jhc2UuYzxicj5AQCAtNDUxOCw4ICs0NTE4LDgg
+QEAgaW50IG1lZ2FzYXNfYWxsb2NfY21kcyhzdHJ1Y3QgbWVnYXNhc19pbnN0
+YW5jZSAqaW5zdGFuY2UpPGJyPiogUmV0dXJuIDAgZm9yIG9ubHkgRnVzaW9u
+IGFkYXB0ZXIsIGlmIGRyaXZlciBsb2FkL3VubG9hZCBpcyBub3QgaW4gcHJv
+Z3Jlc3M8YnI+KiBvciBGVyBpcyBub3QgdW5kZXIgT0NSLjxicj4qLzxicj4t
+aW5saW5lIGludDxicj4tZGNtZF90aW1lb3V0X29jcl9wb3NzaWJsZShzdHJ1
+Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpIHs8YnI+K2ludCBkY21k
+X3RpbWVvdXRfb2NyX3Bvc3NpYmxlKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNl
+ICppbnN0YW5jZSk8YnI+K3s8YnI+PGJyPmlmIChpbnN0YW5jZS0mZ3Q7YWRh
+cHRlcl90eXBlID09IE1GSV9TRVJJRVMpPGJyPnJldHVybiBLSUxMX0FEQVBU
+RVI7PGJyPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
+YXJhaWRfc2FzX2Z1c2lvbi5jIGIvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21l
+Z2FyYWlkX3Nhc19mdXNpb24uYzxicj5pbmRleCA2YzFmYjgxNDk1NTMuLmYw
+YWViMWVlODNhMiAxMDA2NDQ8YnI+LS0tIGEvZHJpdmVycy9zY3NpL21lZ2Fy
+YWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uYzxicj4rKysgYi9kcml2ZXJzL3Nj
+c2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5jPGJyPkBAIC0xMzYz
+LDE3ICsxMzYzLDQyIEBAIG1lZ2FzYXNfc3luY19wZF9zZXFfbnVtKHN0cnVj
+dCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwgYm9vbCBwZW5kKSB7PGJy
+PiJkcml2ZXIgc3VwcG9ydHMgbWF4ICVkIEpCT0QsIGJ1dCBGVyByZXBvcnRz
+ICVkXG4iLDxicj5NQVhfUEhZU0lDQUxfREVWSUNFUywgbGUzMl90b19jcHUo
+cGRfc3luYy0mZ3Q7Y291bnQpKTs8YnI+cmV0ID0gLUVJTlZBTDs8YnI+KyBn
+b3RvIG91dDs8YnI+fTxicj48YnI+LSBpZiAocmV0ID09IERDTURfVElNRU9V
+VCk8YnI+LSBkZXZfd2FybigmYW1wO2luc3RhbmNlLSZndDtwZGV2LSZndDtk
+ZXYsPGJyPi0gIiVzIERDTUQgdGltZWQgb3V0LCBjb250aW51ZSB3aXRob3V0
+IEpCT0Qgc2VxdWVuY2UgbWFwXG4iLDxicj4tIF9fZnVuY19fKTs8YnI+LTxi
+cj4tIGlmIChyZXQgPT0gRENNRF9TVUNDRVNTKTxicj4rIHN3aXRjaCAocmV0
+KSB7PGJyPisgY2FzZSBEQ01EX1NVQ0NFU1M6PGJyPmluc3RhbmNlLSZndDtw
+ZF9zZXFfbWFwX2lkKys7PGJyPisgYnJlYWs7PGJyPisgY2FzZSBEQ01EX1RJ
+TUVPVVQ6PGJyPisgc3dpdGNoIChkY21kX3RpbWVvdXRfb2NyX3Bvc3NpYmxl
+KGluc3RhbmNlKSkgezxicj4rIGNhc2UgSU5JVElBVEVfT0NSOjxicj4rIGNt
+ZC0mZ3Q7ZmxhZ3MgfD0gRFJWX0RDTURfU0tJUF9SRUZJUkU7PGJyPisgbXV0
+ZXhfdW5sb2NrKCZhbXA7aW5zdGFuY2UtJmd0O3Jlc2V0X211dGV4KTs8YnI+
+KyBtZWdhc2FzX3Jlc2V0X2Z1c2lvbihpbnN0YW5jZS0mZ3Q7aG9zdCw8YnI+
+KyBNRklfSU9fVElNRU9VVF9PQ1IpOzxicj4rIG11dGV4X2xvY2soJmFtcDtp
+bnN0YW5jZS0mZ3Q7cmVzZXRfbXV0ZXgpOzxicj4rIGJyZWFrOzxicj4rIGNh
+c2UgS0lMTF9BREFQVEVSOjxicj4rIG1lZ2FyYWlkX3Nhc19raWxsX2hiYShp
+bnN0YW5jZSk7PGJyPisgYnJlYWs7PGJyPisgY2FzZSBJR05PUkVfVElNRU9V
+VDo8YnI+KyBkZXZfaW5mbygmYW1wO2luc3RhbmNlLSZndDtwZGV2LSZndDtk
+ZXYsICJJZ25vcmUgRENNRCB0aW1lb3V0OiAlcyAlZFxuIiw8YnI+KyBfX2Z1
+bmNfXywgX19MSU5FX18pOzxicj4rIGJyZWFrOzxicj4rIH08YnI+KyBicmVh
+azs8YnI+KyBjYXNlIERDTURfRkFJTEVEOjxicj4rIGRldl9lcnIoJmFtcDtp
+bnN0YW5jZS0mZ3Q7cGRldi0mZ3Q7ZGV2LDxicj4rICIlczogTVJfRENNRF9T
+WVNURU1fUERfTUFQX0dFVF9JTkZPIGZhaWxlZFxuIiw8YnI+KyBfX2Z1bmNf
+Xyk7PGJyPisgYnJlYWs7PGJyPisgfTxicj4rPGJyPitvdXQ6PGJyPisgaWYg
+KHJldCAhPSBEQ01EX1RJTUVPVVQpPGJyPisgbWVnYXNhc19yZXR1cm5fY21k
+KGluc3RhbmNlLCBjbWQpOzxicj48YnI+LSBtZWdhc2FzX3JldHVybl9jbWQo
+aW5zdGFuY2UsIGNtZCk7PGJyPnJldHVybiByZXQ7PGJyPn08YnI+PGJyPkBA
+IC0xNDQ5LDEyICsxNDc0LDM0IEBAIG1lZ2FzYXNfZ2V0X2xkX21hcF9pbmZv
+KHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSk8YnI+ZWxzZTxi
+cj5yZXQgPSBtZWdhc2FzX2lzc3VlX3BvbGxlZChpbnN0YW5jZSwgY21kKTs8
+YnI+PGJyPi0gaWYgKHJldCA9PSBEQ01EX1RJTUVPVVQpPGJyPi0gZGV2X3dh
+cm4oJmFtcDtpbnN0YW5jZS0mZ3Q7cGRldi0mZ3Q7ZGV2LDxicj4tICIlcyBE
+Q01EIHRpbWVkIG91dCwgUkFJRCBtYXAgaXMgZGlzYWJsZWRcbiIsPGJyPi0g
+X19mdW5jX18pOzxicj4rIHN3aXRjaCAocmV0KSB7PGJyPisgY2FzZSBEQ01E
+X1RJTUVPVVQ6PGJyPisgc3dpdGNoIChkY21kX3RpbWVvdXRfb2NyX3Bvc3Np
+YmxlKGluc3RhbmNlKSkgezxicj4rIGNhc2UgSU5JVElBVEVfT0NSOjxicj4r
+IGNtZC0mZ3Q7ZmxhZ3MgfD0gRFJWX0RDTURfU0tJUF9SRUZJUkU7PGJyPisg
+bXV0ZXhfdW5sb2NrKCZhbXA7aW5zdGFuY2UtJmd0O3Jlc2V0X211dGV4KTs8
+YnI+KyBtZWdhc2FzX3Jlc2V0X2Z1c2lvbihpbnN0YW5jZS0mZ3Q7aG9zdCw8
+YnI+KyBNRklfSU9fVElNRU9VVF9PQ1IpOzxicj4rIG11dGV4X2xvY2soJmFt
+cDtpbnN0YW5jZS0mZ3Q7cmVzZXRfbXV0ZXgpOzxicj4rIGJyZWFrOzxicj4r
+IGNhc2UgS0lMTF9BREFQVEVSOjxicj4rIG1lZ2FyYWlkX3Nhc19raWxsX2hi
+YShpbnN0YW5jZSk7PGJyPisgYnJlYWs7PGJyPisgY2FzZSBJR05PUkVfVElN
+RU9VVDo8YnI+KyBkZXZfaW5mbygmYW1wO2luc3RhbmNlLSZndDtwZGV2LSZn
+dDtkZXYsICJJZ25vcmUgRENNRCB0aW1lb3V0OiAlcyAlZFxuIiw8YnI+KyBf
+X2Z1bmNfXywgX19MSU5FX18pOzxicj4rIGJyZWFrOzxicj4rIH08YnI+KyBi
+cmVhazs8YnI+KyBjYXNlIERDTURfRkFJTEVEOjxicj4rIGRldl9lcnIoJmFt
+cDtpbnN0YW5jZS0mZ3Q7cGRldi0mZ3Q7ZGV2LDxicj4rICIlczogTVJfRENN
+RF9MRF9NQVBfR0VUX0lORk8gZmFpbGVkXG4iLDxicj4rIF9fZnVuY19fKTs8
+YnI+KyBicmVhazs8YnI+KyB9PGJyPjxicj4tIG1lZ2FzYXNfcmV0dXJuX2Nt
+ZChpbnN0YW5jZSwgY21kKTs8YnI+KyBpZiAocmV0ICE9IERDTURfVElNRU9V
+VCk8YnI+KyBtZWdhc2FzX3JldHVybl9jbWQoaW5zdGFuY2UsIGNtZCk7PGJy
+Pjxicj5yZXR1cm4gcmV0Ozxicj59PGJyPi0tIDxicj4yLjI1LjE8YnI+PGJy
+PjwvZGl2Pgo8L2Rpdj4KPC9kaXY+CjwvZGl2Pg==
+
+--nsmail-23fe32kf3se-23ffd0du5m7--
