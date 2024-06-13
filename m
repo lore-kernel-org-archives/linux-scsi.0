@@ -1,239 +1,236 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 902C5130485;
-	Thu, 13 Jun 2024 06:54:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DB8A138495;
+	Thu, 13 Jun 2024 07:10:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718261692; cv=none; b=qhjtXCuHrA77GiYXnl/15TCW/DaJ5NmO8sgCPnHVkUoj++bzmqzZd33iYK9rCDUWbUDT4G5hKpyGkaOXNnr6yMBYeByGuvbwYelMUAD8ZAs5HZFFWszOhf3S9bTlt/BEfb+YTftdxEM1R6COt2Ta2q15KC9EWZxCVuvHhZFTzRU=
+	t=1718262622; cv=none; b=JDbpZi99p4Tuyya//1ZQpiIsUTeK8H0SAVcBD2hqHbMMxqXOuuCSy7ago6nK5FSKTXqMJlGhO9L8AlIy1H9HuD9JDxFQePYzySA+Ww1xzHE9bPXLCYv1smKop/eTuF5HRdEA3TzoutxrAchzBFf1u6L3F57F+RdF4Ck1enhzOZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718261692; c=relaxed/simple;
-	bh=+wWCU9wxebj83eVjJ1vug75971p3yKW39gwkpdnUOwg=;
-	h=From:Subject:To:Cc:Date:Message-ID:References:MIME-Version:
-	 Content-Type; b=FCytK85HVchJhqC8lqChC1XITHT8K/i1UIMJ8v2ewMBRW5JEmHaIXvYrJEXd9DBoXhK4lfnT92rb7ACihx9nal7qCO0xQRz8DOXfE+RuHajgHRzXGnouYAKxEJ0W0GH6VRf/poWAxzv6yEe1G6SfwLTd+kOxecsitP5rsZC2OLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: cfdbbd62295111ef9305a59a3cc225df-20240613
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.38,REQID:99bdfd23-e773-46f1-89d0-c59e2fe1a5d9,IP:20,
-	URL:0,TC:-9,Content:0,EDM:0,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACT
-	ION:release,TS:-4
-X-CID-INFO: VERSION:1.1.38,REQID:99bdfd23-e773-46f1-89d0-c59e2fe1a5d9,IP:20,UR
-	L:0,TC:-9,Content:0,EDM:0,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:-4
-X-CID-META: VersionHash:82c5f88,CLOUDID:f344da92e50a7d72ac931ed3d94fa5fe,BulkI
-	D:24061314544474018DS1,BulkQuantity:0,Recheck:0,SF:24|17|19|44|66|38|102,T
-	C:1,Content:0,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,C
-	OL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
-X-UUID: cfdbbd62295111ef9305a59a3cc225df-20240613
-Received: from node2.com.cn [(39.156.73.10)] by mailgw.kylinos.cn
-	(envelope-from <mengfanhui@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 1768197539; Thu, 13 Jun 2024 14:54:42 +0800
-Received: from node2.com.cn (localhost [127.0.0.1])
-	by node2.com.cn (NSMail) with SMTP id 85834B80758A;
-	Thu, 13 Jun 2024 14:54:42 +0800 (CST)
-Received: by node2.com.cn (NSMail, from userid 0)
-	id 77ADCB80758A; Thu, 13 Jun 2024 14:54:42 +0800 (CST)
-From: =?UTF-8?B?5a2f5Yeh6L6J?= <mengfanhui@kylinos.cn>
-Subject: =?UTF-8?B?5Zue5aSNOiBbUEFUQ0ggMS8yXSBzY3NpOiBtZWdhcmFpZF9zYXM6IEZpeCBEQ01EIGlzc3VlIGNvbW1hbmQgaGFuZGxpbmc=?=
-To: 	=?UTF-8?B?5a2f5Yeh6L6J?= <mengfanhui@kylinos.cn>,
-	=?UTF-8?B?a2FzaHlhcC5kZXNhaQ==?= <kashyap.desai@broadcom.com>,
-	=?UTF-8?B?c3VtaXQuc2F4ZW5h?= <sumit.saxena@broadcom.com>,
-	=?UTF-8?B?c2hpdmFzaGFyYW4uc3Jpa2FudGVzaHdhcmE=?= <shivasharan.srikanteshwara@broadcom.com>,
-	=?UTF-8?B?Y2hhbmRyYWthbnRoLnBhdGls?= <chandrakanth.patil@broadcom.com>,
-	=?UTF-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>,
-Cc: 	=?UTF-8?B?5YiY5LqR?= <liuyun01@kylinos.cn>,
-	=?UTF-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>,
-	=?UTF-8?B?bGludXgta2VybmVs?= <linux-kernel@vger.kernel.org>,
-	=?UTF-8?B?Z2VsaWFuZw==?= <geliang@kernel.org>,
-Date: Thu, 13 Jun 2024 14:54:41 +0800
-X-Mailer: NSMAIL 7.0.0
-Message-ID: <207rguynjl7-207u0qlhn8s@nsmail7.0.0--kylin--1>
-References: 20240530094514.2750723-1-mengfanhui@kylinos.cn
-X-Israising: 0
-X-Seclevel-1: 0
-X-Seclevel: 0
-X-Delaysendtime: Thu, 13 Jun 2024 14:54:41 +0800
+	s=arc-20240116; t=1718262622; c=relaxed/simple;
+	bh=rI64L27Y3tt6nheA2eTSiYMpyZxmtyiSZSGbQT4gFms=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=MsWkuJB7R9W5vTOksAXxUER79A/IZlKI7fToB8W+nVxNmhNLFdYoKS+UmD3zWLITszxhqGDdKYLsrrkclLnxlTYxyfD6ZNIJncLB4e2Zt8n+mXvFhEwqYRy5z6lzGxdvtixUjBrIi2hhdziTufU40lJVAiLE0TxDuAbx00iJvBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZktmIvHM; arc=none smtp.client-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZktmIvHM"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6f4603237e0so506174b3a.0;
+        Thu, 13 Jun 2024 00:10:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1718262620; x=1718867420; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=B54RJv0cgqP2/sc/ro0r9cZHvykjV6un/kfq4GUh9QU=;
+        b=ZktmIvHMivnuzjArEFeRPCziJZYLO2Q+++XA0RSgCLOyhGvlxaaKr+NENe/e+LbZS1
+         6ynoqRIWNCwxv+oykW26aqh7wPvrjb3tURRPt4uwXm8IvLfGQoammdahR6QsM5KNSuNP
+         9svW4SAAj2KGVCD6/C5h1GSN1hLlmXUnwHnUHeCdD3mlDKYMn9fhWQ0EaCyXqZiccFCU
+         M6HaFKalycEtFWheLGmwVBISe2oU27kR8Bq6yyf1RBTdOwily0patulB58M9bzThyDvG
+         ukOb78cuAoTiTTcKSxyWp0Wg1sXBAEfMeCPEXS5fXd3tD5IHoRt1EuBmOVcUKeQNZzJP
+         qQ+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718262620; x=1718867420;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=B54RJv0cgqP2/sc/ro0r9cZHvykjV6un/kfq4GUh9QU=;
+        b=U4x5IklXmsTVE2LcTCZmd0JlP/dY2nVtAg+lufqRHe+00WewPewmBniu3CV37RV4ao
+         Qn7mItG9LKBsXsQbSohgBE9j2Z5JArYctZ7xIL5meDldTW9CBtrQD4wnZgr+Z/b7G4Q/
+         hIxlqKs7mS+tuPxlY9J7MIdmTuxGJ8DtxCBViDV5+G0sEeANODAllpYjPQxHvFFYOglc
+         mZSok4OaoQts0ff9t4h7WuBfvm4mCpQQEsEgwbFjKou7xKZHl1ZmyaCyrpCRWSAOlzhh
+         vA8vQoMz0g5M/j2R6NZG6pFoSEtgXatR5E6A5OkLf14L7J06JjZByuldKngaWZI5jHC/
+         pzrQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUft2VrrCiXjX3YhAO2AlHpMM36bhU7V5nbNdZBM20txLy3b/D+48rp8Kl0qaZEBoK1/yHpAOqA2n1Aedfg4anX6/TnW/FyXcaU0LnjH5RKurrmkmLjVK7kC0FnFDVQQQG9wju1A6U9QA==
+X-Gm-Message-State: AOJu0YzVlvwuyEHIrbBwGpCvbj/9UeaSzEgbBWTiEQqsAxjVC7ZH4vWS
+	cT/wIKeZgDomA0MD4xzbUpZXKcv+sSex/5Lt0g0rVClX+ZWRy1AX
+X-Google-Smtp-Source: AGHT+IHF16EZMKsNFZ4Z+Y7m3/eNgMs3V+TGo+PzKINWwcvq+yLbHtR6sJoX3Vy/BrdgYLDuzRQjEA==
+X-Received: by 2002:a05:6a00:2e0d:b0:705:aec4:605f with SMTP id d2e1a72fcca58-705c935948dmr2490765b3a.2.1718262620105;
+        Thu, 13 Jun 2024 00:10:20 -0700 (PDT)
+Received: from [0.0.0.0] (97.64.23.41.16clouds.com. [97.64.23.41])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-705ccb78581sm692108b3a.179.2024.06.13.00.10.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 13 Jun 2024 00:10:19 -0700 (PDT)
+Message-ID: <cb9b64a1-4c51-481a-ae5a-c20df70360ea@gmail.com>
+Date: Thu, 13 Jun 2024 15:10:14 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary=nsmail-23fe32kf3se-23ffd0du5m7
-X-ns-mid: webmail-666a97b1-238nmlaz
-X-ope-from: <mengfanhui@kylinos.cn>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 1/3] scsi: core: Add new helper to iterate all devices
+ of host
+To: Hannes Reinecke <hare@suse.de>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240605091731.3111195-1-haowenchao22@gmail.com>
+ <20240605091731.3111195-2-haowenchao22@gmail.com>
+ <3b24ef4a-996b-4a8b-89f3-385872573039@suse.de>
+ <c1ecd21b-7b97-4ef6-94a1-86b2cf520a67@gmail.com>
+ <698d4b22-719c-4e57-94ed-f507e425ee12@suse.de>
+Content-Language: en-US
+From: Wenchao Hao <haowenchao22@gmail.com>
+In-Reply-To: <698d4b22-719c-4e57-94ed-f507e425ee12@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-This message is in MIME format.
+On 2024/6/13 14:27, Hannes Reinecke wrote:
+> On 6/12/24 17:06, Wenchao Hao wrote:
+>> On 6/12/24 4:33 PM, Hannes Reinecke wrote:
+>>> On 6/5/24 11:17, Wenchao Hao wrote:
+>>>> shost_for_each_device() would skip devices which is in SDEV_CANCEL or
+>>>> SDEV_DEL state, for some scenarios, we donot want to skip these 
+>>>> devices,
+>>>> so add a new macro shost_for_each_device_include_deleted() to handle 
+>>>> it.
+>>>>
+>>>> Following changes are introduced:
+>>>>
+>>>> 1. Rework scsi_device_get(), add new helper __scsi_device_get() which
+>>>>      determine if skip deleted scsi_device by parameter "skip_deleted".
+>>>> 2. Add new parameter "skip_deleted" to __scsi_iterate_devices() which
+>>>>      is used when calling __scsi_device_get()
+>>>> 3. Update shost_for_each_device() to call __scsi_iterate_devices() with
+>>>>      "skip_deleted" true
+>>>> 4. Add new macro shost_for_each_device_include_deleted() which call
+>>>>      __scsi_iterate_devices() with "skip_deleted" false
+>>>>
+>>>> Signed-off-by: Wenchao Hao <haowenchao22@gmail.com>
+>>>> ---
+>>>>    drivers/scsi/scsi.c        | 46 
+>>>> ++++++++++++++++++++++++++------------
+>>>>    include/scsi/scsi_device.h | 25 ++++++++++++++++++---
+>>>>    2 files changed, 54 insertions(+), 17 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+>>>> index 3e0c0381277a..5913de543d93 100644
+>>>> --- a/drivers/scsi/scsi.c
+>>>> +++ b/drivers/scsi/scsi.c
+>>>> @@ -735,20 +735,18 @@ int scsi_cdl_enable(struct scsi_device *sdev, 
+>>>> bool enable)
+>>>>        return 0;
+>>>>    }
+>>>>    -/**
+>>>> - * scsi_device_get  -  get an additional reference to a scsi_device
+>>>> +/*
+>>>> + * __scsi_device_get  -  get an additional reference to a scsi_device
+>>>>     * @sdev:    device to get a reference to
+>>>> - *
+>>>> - * Description: Gets a reference to the scsi_device and increments 
+>>>> the use count
+>>>> - * of the underlying LLDD module.  You must hold host_lock of the
+>>>> - * parent Scsi_Host or already have a reference when calling this.
+>>>> - *
+>>>> - * This will fail if a device is deleted or cancelled, or when the 
+>>>> LLD module
+>>>> - * is in the process of being unloaded.
+>>>> + * @skip_deleted: when true, would return failed if device is deleted
+>>>>     */
+>>>> -int scsi_device_get(struct scsi_device *sdev)
+>>>> +static int __scsi_device_get(struct scsi_device *sdev, bool 
+>>>> skip_deleted)
+>>>>    {
+>>>> -    if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == 
+>>>> SDEV_CANCEL)
+>>>> +    /*
+>>>> +     * if skip_deleted is true and device is in removing, return 
+>>>> failed
+>>>> +     */
+>>>> +    if (skip_deleted &&
+>>>> +        (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == 
+>>>> SDEV_CANCEL))
+>>>>            goto fail;
+>>>
+>>> Nack.
+>>> SDEV_DEL means the device is about to be deleted, so we _must not_ 
+>>> access it at all.
+>>>
+>>
+>> Sorry I added SDEV_DEL here at hand without understanding what it means.
+>> Actually, just include scsi_device which is in SDEV_CANCEL would fix the
+>> issues I described.
+>>
+>> The issues are because device removing concurrent with error handle.
+>> Normally, error handle would not be triggered when scsi_device is in
+>> SDEV_DEL. Below is my analysis, if it is wrong, please correct me.
+>>
+>> If there are scsi_cmnd remain unfinished when removing scsi_device,
+>> the removing process would waiting for all commands to be finished.
+>> If commands error happened and trigger error handle, the removing
+>> process would be blocked until error handle finished, because
+>> __scsi_remove_device called  del_gendisk() which would wait all
+>> requests to be finished. So now scsi_device is in SDEV_CANCEL.
+>>
+>> If the scsi_device is already in SDEV_DEL, then no scsi_cmnd has been
+>> dispatched to this scsi_device, then error handle would never triggered.
+>>
+>> I want to change the new function __scsi_device_get() as following,
+>> please help to review.
+>>
+>> /*
+>>   * __scsi_device_get  -  get an additional reference to a scsi_device
+>>   * @sdev:    device to get a reference to
+>>   * @skip_canceled: when true, would return failed if device is deleted
+>>   */
+>> static int __scsi_device_get(struct scsi_device *sdev, bool 
+>> skip_canceled)
+>> {
+>>     /*
+>>      * if skip_canceled is true and device is in removing, return failed
+>>      */
+>>     if (sdev->sdev_state == SDEV_DEL ||
+>>         (sdev->sdev_state == SDEV_CANCEL && skip_canceled))
+>>         goto fail;
+>>     if (!try_module_get(sdev->host->hostt->module))
+>>         goto fail;
+>>     if (!get_device(&sdev->sdev_gendev))
+>>         goto fail_put_module;
+>>     return 0;
+>>
+>> fail_put_module:
+>>     module_put(sdev->host->hostt->module);
+>> fail:
+>>     return -ENXIO;
+>> }
+>>
+> I don't think that's required.
+> With your above analysis, wouldn't the problem be solved with:
+> 
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 775df00021e4..911fcfa80d69 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -1470,6 +1470,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
+>          if (sdev->sdev_state == SDEV_DEL)
+>                  return;
+> 
+> +       scsi_block_when_processing_errors(sdev);
+> +
+>          if (sdev->is_visible) {
+>                  /*
+>                   * If scsi_internal_target_block() is running 
+> concurrently,
+> 
+> Hmm?
+> 
 
---nsmail-23fe32kf3se-23ffd0du5m7
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: base64
+We can not make sure no scsi_cmnd remain unfinished after 
+scsi_block_when_processing_errors(). For example, there is a
+command has been dispatched but it's not timeouted when removing
+device, no error happened. After scsi_device is set to SDEV_CANCEL,
+the removing process would be blocked by del_gendisk() because there
+is still a request.
 
-PHByZSBjbGFzcz0ibW96LXF1b3RlLXByZSI+Q2FuIHNvbWVvbmUgaGVscCBy
-ZXZpZXcgaXQ/IFRoYW5rIHlvdSE8YnI+PGJyPi0tLS08L3ByZT4KPGRpdiBp
-ZD0iY3MyY19tYWlsX3NpZ2F0dXJlIj48L2Rpdj4KPHA+Jm5ic3A7PC9wPgo8
-ZGl2IGlkPSJyZSIgc3R5bGU9Im1hcmdpbi1sZWZ0OiAwLjVlbTsgcGFkZGlu
-Zy1sZWZ0OiAwLjVlbTsgYm9yZGVyLWxlZnQ6IDFweCBzb2xpZCBncmVlbjsi
-Pjxicj48YnI+PGJyPgo8ZGl2IHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiAj
-ZjVmN2ZhOyI+PHN0cm9uZz7kuLvjgIDpopjvvJo8L3N0cm9uZz48c3BhbiBp
-ZD0ic3ViamVjdCI+W1BBVENIIDEvMl0gc2NzaTogbWVnYXJhaWRfc2FzOiBG
-aXggRENNRCBpc3N1ZSBjb21tYW5kIGhhbmRsaW5nPC9zcGFuPiA8YnI+PHN0
-cm9uZz7ml6XjgIDmnJ/vvJo8L3N0cm9uZz48c3BhbiBpZD0iZGF0ZSI+MjAy
-NC0wNS0zMCAxNzo0NTwvc3Bhbj4gPGJyPjxzdHJvbmc+5Y+R5Lu25Lq677ya
-PC9zdHJvbmc+PHNwYW4gaWQ9ImZyb20iPuWtn+WHoei+iTwvc3Bhbj4gPGJy
-PjxzdHJvbmc+5pS25Lu25Lq677yaPC9zdHJvbmc+PHNwYW4gaWQ9InRvIiBz
-dHlsZT0id29yZC1icmVhazogYnJlYWstYWxsOyI+a2FzaHlhcC5kZXNhaTtz
-dW1pdC5zYXhlbmE7c2hpdmFzaGFyYW4uc3Jpa2FudGVzaHdhcmE7Y2hhbmRy
-YWthbnRoLnBhdGlsO+Wtn+WHoei+iTs8L3NwYW4+PC9kaXY+Cjxicj4KPGRp
-diBpZD0iY29udGVudCI+CjxkaXYgY2xhc3M9InZpZXdlcl9wYXJ0IiBzdHls
-ZT0icG9zaXRpb246IHJlbGF0aXZlOyI+CjxkaXY+SWYgRENNRCB0aW1lb3V0
-IG5vdCBoYW5kbGVkLCB0aGUgbmV4dCBpbnRlcmFjdGlvbiBiZXR3ZWVuIHRo
-ZSBkcml2ZXIgYW5kIGZpcm13YXJlIHdpbGwgc3RpbGw8YnI+cmVzdWx0IGlu
-IERDTUQgdGltZW91dCwgd2hpY2ggbWF5IGNhdXNlIHN5c3RlbSBjcmFzaGVz
-IG9yIGhhbmcgdXA8YnI+PGJyPlRoaXMgcGF0Y2ggd2lsbCBkbyBwcm9wZXIg
-ZXJyb3IgaGFuZGxpbmcgZm9yIERDTUQgY29tbWFuZDxicj5mb3IgRnVzaW9u
-IGFkYXB0ZXJzOjxicj48YnI+MS4gV2hhdCBhY3Rpb24gbmVlZHMgdG8gYmUg
-dGFrZW4gaW4gY2FzZSBvZiBEQ01EIHRpbWVvdXQgaXMgZGVjaWRlZCBieTxi
-cj5mdW5jdGlvbiBkY21kX3RpbWVvdXRfb2NyX3Bvc3NpYmxlKCkuIERDTUQg
-dGltZW91dCBjYXVzaW5nIE9DUiBpczxicj5hcHBsaWNhYmxlIHRvIHRoZSBm
-b2xsb3dpbmcgc2l0dWF0aW9uOjxicj5JTklUSUFURV9PQ1I8YnI+S0lMTF9B
-REFQVEVSPGJyPklHTk9SRV9USU1FT1VUPGJyPjxicj4yLiBJZiB0aG9zZSBE
-Q01EcyBmYWlsLCBkcml2ZXIgYmFpbHMgb3V0Ljxicj48YnI+RXJyb3IgbG9n
-Ojxicj5bIDIwMS42ODk3NTldIG1lZ2FyYWlkX3NhcyAwMDAxOjA1OjAwLjA6
-IG1lZ2FzYXNfc3luY19wZF9zZXFfbnVtIERDTUQgdGltZWQgb3V0LCBjb250
-aW51ZSB3aXRob3V0IEpCT0Qgc2VxdWVuY2UgbWFwPGJyPlsgMjQyLjY0OTA2
-MV0gW10gbWVnYXNhc19pbml0KzB4MTE0LzB4NDAwMCBbbWVnYXJhaWRfc2Fz
-XTxicj5bIDM2My40ODEwMDldIFtdIG1lZ2FzYXNfaXNzdWVfYmxvY2tlZF9j
-bWQrMHgxZDgvMHgyNjggW21lZ2FyYWlkX3Nhc108YnI+WyAzNjMuNDgxMTU5
-XSBbXSBtZWdhc2FzX2dldF9wZF9saXN0KzB4NTQ4LzB4Njg4IFttZWdhcmFp
-ZF9zYXNdPGJyPlsgMzYzLjQ4MTMwOV0gW10gbWVnYXNhc19pbml0X2Z3KzB4
-YjM4LzB4MTEwNCBbbWVnYXJhaWRfc2FzXTxicj5bIDM2My40ODE0NTldIFtd
-IG1lZ2FzYXNfcHJvYmVfb25lKzB4MWY0LzB4NWM0IFttZWdhcmFpZF9zYXNd
-PGJyPlsgMzYzLjQ4MjQxOV0gW10gbWVnYXNhc19pbml0KzB4MTE0LzB4NDAw
-MCBbbWVnYXJhaWRfc2FzXTxicj5bIDM4MS45MTIyOThdIG1lZ2FyYWlkX3Nh
-cyAwMDAxOjA1OjAwLjA6IERDTUQob3Bjb2RlOiAweDIwMTAxMDApIGlzIHRp
-bWVkIG91dCwgZnVuYzptZWdhc2FzX2lzc3VlX2Jsb2NrZWRfY21kPGJyPlsg
-MzgxLjkxMjk3OV0gbWVnYXJhaWRfc2FzIDAwMDE6MDU6MDAuMDogSWdub3Jl
-IERDTUQgdGltZW91dDogbWVnYXNhc19nZXRfcGRfbGlzdCA0NzI3PGJyPlsg
-NDg0LjMxMzUyNl0gW10gbWVnYXNhc19pbml0KzB4MTE0LzB4NDAwMCBbbWVn
-YXJhaWRfc2FzXTxicj5bIDU2Mi4xMzYyOTRdIG1lZ2FyYWlkX3NhcyAwMDAx
-OjA1OjAwLjA6IERDTUQob3Bjb2RlOiAweDMwMTAxMDApIGlzIHRpbWVkIG91
-dCwgZnVuYzptZWdhc2FzX2lzc3VlX2Jsb2NrZWRfY21kPGJyPlsgNTYyLjEz
-NzA3NF0gbWVnYXJhaWRfc2FzIDAwMDE6MDU6MDAuMDogSWdub3JlIERDTUQg
-dGltZW91dDogbWVnYXNhc19sZF9saXN0X3F1ZXJ5IDQ5NzM8YnI+WyA1NjIu
-MTM3MDgxXSBtZWdhcmFpZF9zYXMgMDAwMTowNTowMC4wOiBmYWlsZWQgdG8g
-Z2V0IExEIGxpc3Q8YnI+WyA1NjIuMTM3NDI1XSBtZWdhcmFpZF9zYXMgMDAw
-MTowNTowMC4wOiBtZWdhc2FzX2luaXRfZnc6IG1lZ2FzYXNfZ2V0X2Rldmlj
-ZV9saXN0IGZhaWxlZDxicj5bIDU2Mi4xMzc3NjddIG1lZ2FyYWlkX3NhcyAw
-MDAxOjA1OjAwLjA6IG1lZ2FzYXNfZGlzYWJsZV9pbnRyX2Z1c2lvbiBpcyBj
-YWxsZWQgb3V0Ym91bmRfaW50cl9tYXNrOjB4NDAwMDAwMDk8YnI+WyA1NjIu
-MTM5MjMyXSBtZWdhcmFpZF9zYXMgMDAwMTowNTowMC4wOiBGYWlsZWQgZnJv
-bSBtZWdhc2FzX2luaXRfZncgNjU3Mjxicj48YnI+Q28tZGV2ZWxvcGVkLWJ5
-OiBKYWNraWUgTGl1IDxicj5TaWduZWQtb2ZmLWJ5OiBKYWNraWUgTGl1IDxi
-cj5TaWduZWQtb2ZmLWJ5OiBtZW5nZmFuaHVpIDxicj5TdWdnZXN0ZWQtYnk6
-IEdlbGlhbmcgVGFuZyA8YnI+LS0tPGJyPmRyaXZlcnMvc2NzaS9tZWdhcmFp
-ZC9tZWdhcmFpZF9zYXMuaCB8IDEgKzxicj5kcml2ZXJzL3Njc2kvbWVnYXJh
-aWQvbWVnYXJhaWRfc2FzX2Jhc2UuYyB8IDQgKy08YnI+ZHJpdmVycy9zY3Np
-L21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uYyB8IDcxICsrKysrKysr
-KysrKysrKysrLS0tLTxicj4zIGZpbGVzIGNoYW5nZWQsIDYyIGluc2VydGlv
-bnMoKyksIDE0IGRlbGV0aW9ucygtKTxicj48YnI+ZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaCBiL2RyaXZlcnMv
-c2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaDxicj5pbmRleCA1NjgwYzZj
-ZGIyMjEuLjkxNTcwYzVlODQ1NiAxMDA2NDQ8YnI+LS0tIGEvZHJpdmVycy9z
-Y3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oPGJyPisrKyBiL2RyaXZlcnMv
-c2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaDxicj5AQCAtMjc2MCw1ICsy
-NzYwLDYgQEAgdm9pZCBtZWdhc2FzX2V4aXRfZGVidWdmcyh2b2lkKTs8YnI+
-dm9pZCBtZWdhc2FzX3NldHVwX2RlYnVnZnMoc3RydWN0IG1lZ2FzYXNfaW5z
-dGFuY2UgKmluc3RhbmNlKTs8YnI+dm9pZCBtZWdhc2FzX2Rlc3Ryb3lfZGVi
-dWdmcyhzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpOzxicj5p
-bnQgbWVnYXNhc19ibGtfbXFfcG9sbChzdHJ1Y3QgU2NzaV9Ib3N0ICpzaG9z
-dCwgdW5zaWduZWQgaW50IHF1ZXVlX251bSk7PGJyPitpbnQgZGNtZF90aW1l
-b3V0X29jcl9wb3NzaWJsZShzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5z
-dGFuY2UpOzxicj48YnI+I2VuZGlmIC8qTFNJX01FR0FSQUlEX1NBU19IICov
-PGJyPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJh
-aWRfc2FzX2Jhc2UuYyBiL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
-ZF9zYXNfYmFzZS5jPGJyPmluZGV4IDE3MGIzOGYwNDY1NS4uYmE4MDYxZWEy
-MDc4IDEwMDY0NDxicj4tLS0gYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
-YXJhaWRfc2FzX2Jhc2UuYzxicj4rKysgYi9kcml2ZXJzL3Njc2kvbWVnYXJh
-aWQvbWVnYXJhaWRfc2FzX2Jhc2UuYzxicj5AQCAtNDUxOCw4ICs0NTE4LDgg
-QEAgaW50IG1lZ2FzYXNfYWxsb2NfY21kcyhzdHJ1Y3QgbWVnYXNhc19pbnN0
-YW5jZSAqaW5zdGFuY2UpPGJyPiogUmV0dXJuIDAgZm9yIG9ubHkgRnVzaW9u
-IGFkYXB0ZXIsIGlmIGRyaXZlciBsb2FkL3VubG9hZCBpcyBub3QgaW4gcHJv
-Z3Jlc3M8YnI+KiBvciBGVyBpcyBub3QgdW5kZXIgT0NSLjxicj4qLzxicj4t
-aW5saW5lIGludDxicj4tZGNtZF90aW1lb3V0X29jcl9wb3NzaWJsZShzdHJ1
-Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpIHs8YnI+K2ludCBkY21k
-X3RpbWVvdXRfb2NyX3Bvc3NpYmxlKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNl
-ICppbnN0YW5jZSk8YnI+K3s8YnI+PGJyPmlmIChpbnN0YW5jZS0mZ3Q7YWRh
-cHRlcl90eXBlID09IE1GSV9TRVJJRVMpPGJyPnJldHVybiBLSUxMX0FEQVBU
-RVI7PGJyPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
-YXJhaWRfc2FzX2Z1c2lvbi5jIGIvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21l
-Z2FyYWlkX3Nhc19mdXNpb24uYzxicj5pbmRleCA2YzFmYjgxNDk1NTMuLmYw
-YWViMWVlODNhMiAxMDA2NDQ8YnI+LS0tIGEvZHJpdmVycy9zY3NpL21lZ2Fy
-YWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uYzxicj4rKysgYi9kcml2ZXJzL3Nj
-c2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5jPGJyPkBAIC0xMzYz
-LDE3ICsxMzYzLDQyIEBAIG1lZ2FzYXNfc3luY19wZF9zZXFfbnVtKHN0cnVj
-dCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwgYm9vbCBwZW5kKSB7PGJy
-PiJkcml2ZXIgc3VwcG9ydHMgbWF4ICVkIEpCT0QsIGJ1dCBGVyByZXBvcnRz
-ICVkXG4iLDxicj5NQVhfUEhZU0lDQUxfREVWSUNFUywgbGUzMl90b19jcHUo
-cGRfc3luYy0mZ3Q7Y291bnQpKTs8YnI+cmV0ID0gLUVJTlZBTDs8YnI+KyBn
-b3RvIG91dDs8YnI+fTxicj48YnI+LSBpZiAocmV0ID09IERDTURfVElNRU9V
-VCk8YnI+LSBkZXZfd2FybigmYW1wO2luc3RhbmNlLSZndDtwZGV2LSZndDtk
-ZXYsPGJyPi0gIiVzIERDTUQgdGltZWQgb3V0LCBjb250aW51ZSB3aXRob3V0
-IEpCT0Qgc2VxdWVuY2UgbWFwXG4iLDxicj4tIF9fZnVuY19fKTs8YnI+LTxi
-cj4tIGlmIChyZXQgPT0gRENNRF9TVUNDRVNTKTxicj4rIHN3aXRjaCAocmV0
-KSB7PGJyPisgY2FzZSBEQ01EX1NVQ0NFU1M6PGJyPmluc3RhbmNlLSZndDtw
-ZF9zZXFfbWFwX2lkKys7PGJyPisgYnJlYWs7PGJyPisgY2FzZSBEQ01EX1RJ
-TUVPVVQ6PGJyPisgc3dpdGNoIChkY21kX3RpbWVvdXRfb2NyX3Bvc3NpYmxl
-KGluc3RhbmNlKSkgezxicj4rIGNhc2UgSU5JVElBVEVfT0NSOjxicj4rIGNt
-ZC0mZ3Q7ZmxhZ3MgfD0gRFJWX0RDTURfU0tJUF9SRUZJUkU7PGJyPisgbXV0
-ZXhfdW5sb2NrKCZhbXA7aW5zdGFuY2UtJmd0O3Jlc2V0X211dGV4KTs8YnI+
-KyBtZWdhc2FzX3Jlc2V0X2Z1c2lvbihpbnN0YW5jZS0mZ3Q7aG9zdCw8YnI+
-KyBNRklfSU9fVElNRU9VVF9PQ1IpOzxicj4rIG11dGV4X2xvY2soJmFtcDtp
-bnN0YW5jZS0mZ3Q7cmVzZXRfbXV0ZXgpOzxicj4rIGJyZWFrOzxicj4rIGNh
-c2UgS0lMTF9BREFQVEVSOjxicj4rIG1lZ2FyYWlkX3Nhc19raWxsX2hiYShp
-bnN0YW5jZSk7PGJyPisgYnJlYWs7PGJyPisgY2FzZSBJR05PUkVfVElNRU9V
-VDo8YnI+KyBkZXZfaW5mbygmYW1wO2luc3RhbmNlLSZndDtwZGV2LSZndDtk
-ZXYsICJJZ25vcmUgRENNRCB0aW1lb3V0OiAlcyAlZFxuIiw8YnI+KyBfX2Z1
-bmNfXywgX19MSU5FX18pOzxicj4rIGJyZWFrOzxicj4rIH08YnI+KyBicmVh
-azs8YnI+KyBjYXNlIERDTURfRkFJTEVEOjxicj4rIGRldl9lcnIoJmFtcDtp
-bnN0YW5jZS0mZ3Q7cGRldi0mZ3Q7ZGV2LDxicj4rICIlczogTVJfRENNRF9T
-WVNURU1fUERfTUFQX0dFVF9JTkZPIGZhaWxlZFxuIiw8YnI+KyBfX2Z1bmNf
-Xyk7PGJyPisgYnJlYWs7PGJyPisgfTxicj4rPGJyPitvdXQ6PGJyPisgaWYg
-KHJldCAhPSBEQ01EX1RJTUVPVVQpPGJyPisgbWVnYXNhc19yZXR1cm5fY21k
-KGluc3RhbmNlLCBjbWQpOzxicj48YnI+LSBtZWdhc2FzX3JldHVybl9jbWQo
-aW5zdGFuY2UsIGNtZCk7PGJyPnJldHVybiByZXQ7PGJyPn08YnI+PGJyPkBA
-IC0xNDQ5LDEyICsxNDc0LDM0IEBAIG1lZ2FzYXNfZ2V0X2xkX21hcF9pbmZv
-KHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSk8YnI+ZWxzZTxi
-cj5yZXQgPSBtZWdhc2FzX2lzc3VlX3BvbGxlZChpbnN0YW5jZSwgY21kKTs8
-YnI+PGJyPi0gaWYgKHJldCA9PSBEQ01EX1RJTUVPVVQpPGJyPi0gZGV2X3dh
-cm4oJmFtcDtpbnN0YW5jZS0mZ3Q7cGRldi0mZ3Q7ZGV2LDxicj4tICIlcyBE
-Q01EIHRpbWVkIG91dCwgUkFJRCBtYXAgaXMgZGlzYWJsZWRcbiIsPGJyPi0g
-X19mdW5jX18pOzxicj4rIHN3aXRjaCAocmV0KSB7PGJyPisgY2FzZSBEQ01E
-X1RJTUVPVVQ6PGJyPisgc3dpdGNoIChkY21kX3RpbWVvdXRfb2NyX3Bvc3Np
-YmxlKGluc3RhbmNlKSkgezxicj4rIGNhc2UgSU5JVElBVEVfT0NSOjxicj4r
-IGNtZC0mZ3Q7ZmxhZ3MgfD0gRFJWX0RDTURfU0tJUF9SRUZJUkU7PGJyPisg
-bXV0ZXhfdW5sb2NrKCZhbXA7aW5zdGFuY2UtJmd0O3Jlc2V0X211dGV4KTs8
-YnI+KyBtZWdhc2FzX3Jlc2V0X2Z1c2lvbihpbnN0YW5jZS0mZ3Q7aG9zdCw8
-YnI+KyBNRklfSU9fVElNRU9VVF9PQ1IpOzxicj4rIG11dGV4X2xvY2soJmFt
-cDtpbnN0YW5jZS0mZ3Q7cmVzZXRfbXV0ZXgpOzxicj4rIGJyZWFrOzxicj4r
-IGNhc2UgS0lMTF9BREFQVEVSOjxicj4rIG1lZ2FyYWlkX3Nhc19raWxsX2hi
-YShpbnN0YW5jZSk7PGJyPisgYnJlYWs7PGJyPisgY2FzZSBJR05PUkVfVElN
-RU9VVDo8YnI+KyBkZXZfaW5mbygmYW1wO2luc3RhbmNlLSZndDtwZGV2LSZn
-dDtkZXYsICJJZ25vcmUgRENNRCB0aW1lb3V0OiAlcyAlZFxuIiw8YnI+KyBf
-X2Z1bmNfXywgX19MSU5FX18pOzxicj4rIGJyZWFrOzxicj4rIH08YnI+KyBi
-cmVhazs8YnI+KyBjYXNlIERDTURfRkFJTEVEOjxicj4rIGRldl9lcnIoJmFt
-cDtpbnN0YW5jZS0mZ3Q7cGRldi0mZ3Q7ZGV2LDxicj4rICIlczogTVJfRENN
-RF9MRF9NQVBfR0VUX0lORk8gZmFpbGVkXG4iLDxicj4rIF9fZnVuY19fKTs8
-YnI+KyBicmVhazs8YnI+KyB9PGJyPjxicj4tIG1lZ2FzYXNfcmV0dXJuX2Nt
-ZChpbnN0YW5jZSwgY21kKTs8YnI+KyBpZiAocmV0ICE9IERDTURfVElNRU9V
-VCk8YnI+KyBtZWdhc2FzX3JldHVybl9jbWQoaW5zdGFuY2UsIGNtZCk7PGJy
-Pjxicj5yZXR1cm4gcmV0Ozxicj59PGJyPi0tIDxicj4yLjI1LjE8YnI+PGJy
-PjwvZGl2Pgo8L2Rpdj4KPC9kaXY+CjwvZGl2Pg==
+Then the request timeout and abort failed, error handle would be 
+triggered, now scsi_device is SDEV_CANCEL.
 
---nsmail-23fe32kf3se-23ffd0du5m7--
+The error handle would skip this scsi_device when doing device reset.
+
+> Cheers,
+> 
+> Hannes
+
