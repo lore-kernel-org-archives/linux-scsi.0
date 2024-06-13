@@ -1,236 +1,364 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DB8A138495;
-	Thu, 13 Jun 2024 07:10:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718262622; cv=none; b=JDbpZi99p4Tuyya//1ZQpiIsUTeK8H0SAVcBD2hqHbMMxqXOuuCSy7ago6nK5FSKTXqMJlGhO9L8AlIy1H9HuD9JDxFQePYzySA+Ww1xzHE9bPXLCYv1smKop/eTuF5HRdEA3TzoutxrAchzBFf1u6L3F57F+RdF4Ck1enhzOZc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718262622; c=relaxed/simple;
-	bh=rI64L27Y3tt6nheA2eTSiYMpyZxmtyiSZSGbQT4gFms=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=MsWkuJB7R9W5vTOksAXxUER79A/IZlKI7fToB8W+nVxNmhNLFdYoKS+UmD3zWLITszxhqGDdKYLsrrkclLnxlTYxyfD6ZNIJncLB4e2Zt8n+mXvFhEwqYRy5z6lzGxdvtixUjBrIi2hhdziTufU40lJVAiLE0TxDuAbx00iJvBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZktmIvHM; arc=none smtp.client-ip=209.85.210.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96D3313C3EB;
+	Thu, 13 Jun 2024 07:32:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1718263964; cv=fail; b=YeR13CDG6+W6YqMPwI8M9363RDj9cwl+hyUHtyo+frq4mXXr/gmKxlTdD9kmGO64hgrSRokn8Tds+oj2maYj6h7NYKUkwqsR/Ix+TilwHGPqvcsD44nGFyv0HXHWdkZgLPLPrNSGkuKMZ0m6sHCICpkD5CST2jR2zknTqKFDPjw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1718263964; c=relaxed/simple;
+	bh=SVtAzsu3YuQSLA32KHDvGywoiTNToCCuXODHARNld5c=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=lfHwd3yBaLZAWF8fJsviqJ/p4bVcF6jHfDsA/8OBTEDOrrJQ/IOXfX+2qL3ZMp/lPitNmJeXH9VYsW7vmDLLMsr5aCFH5vKwjOsDduV/WcKYPBXQu6WA4YDT12nNjgHHIdjRkF5FcVnzx3xC9LWvvvrTSjzbfG/Xk5qdm04co+g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=eGc+oDjI; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=b4b42uJW; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZktmIvHM"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6f4603237e0so506174b3a.0;
-        Thu, 13 Jun 2024 00:10:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eGc+oDjI";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="b4b42uJW"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45D2WxZr019554;
+	Thu, 13 Jun 2024 07:25:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	message-id:date:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding:mime-version; s=
+	corp-2023-11-20; bh=znIGhPlAdIagKv0m7Olcz3MPgGbhryzKWS2pfJgFNuM=; b=
+	eGc+oDjIuKZ4FVK/M12u2/Mz33lz7T988e0YFqIuPpcD6SNY6lGj55+iYOAVPjNq
+	oL9Ic4Uz/QWxs28WTTTBcG+J7HJ7RQQE1V3yThF1qN0Hxgwf+TIDY7KbAFDuB26G
+	3LcILxPhWsVodoietAGOoW/ex3v8qBYmDJJMfB9EnNjhgNlqKDfK1QT9whrwoK8O
+	eXPZNMH60BE/eccKVSywEH6Om9RQDUAfDX+MhSzQ61PF50xSC1t2j711rOPU8EWR
+	L5cGdX0bKNi55+lOqqg33aw+VmQmssRtwXu+8knvxOoANzA8549c+oMPkBwKqKPk
+	vbCbOIAxK2o9YvX/iIQ1Eg==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ymh1mgxbe-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 13 Jun 2024 07:25:32 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 45D5tdee036756;
+	Thu, 13 Jun 2024 07:25:31 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2174.outbound.protection.outlook.com [104.47.55.174])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3yncdyv99r-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 13 Jun 2024 07:25:31 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=dHJD266DpeKcel3uufR2J+HEbPMipkjim9e7n0pgushSs4FoOj0MJlbHfopae5plOdyjoSmRLwCLPhJfwGKsTT/dvsACaitxf6OfnMaXDAY1z3FWQgltZDeQpfqvqAtt24FfWl+E2TjTRxDY4AYc5D5HVUIxk1WM0VkBXwQKopdMnJaYeEIbccoR3W7tT3V71ooC7HKz6y3alesTHAFXtN2wInFEptavXcyiSn6F3bSHpuI3mgcn6ntAny/X4usjNkXQTp6FQWshqEF27AoYwW1gBB8NK8zVz7X98bU3pefudNYydrqHT4O+G3PeQMLnhJkpKWNy0hhFwUJSSv6j+g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=znIGhPlAdIagKv0m7Olcz3MPgGbhryzKWS2pfJgFNuM=;
+ b=lyraEzb17u5R/T++UF/+gy6E5cbWQsFK/Dqx8hsKb+gFYdOMk2AkG6MI5l9dcDnHXVaMaO7pZlZC9lTUeuCpeqYbok2oHnKtFFRMg9DoGX3LM+w5XCrHPxCAFWNkDoxriENXU5JG9yObp4x3TINlpZyirNlCZLz4b5+CDvCihS9b8hlMlTBWOesL4WUDoH5daAKXrln1VNGsO0PkGvd1OBBw3JvTZnO/X0HvvQ8taifs4pgptB7wPDcd3BVeJIO4ONXOkmmqDuVH8hgjMAaWAWrKRL5JfbSQFRa15giKi/syzQIXzQ9tbSXISqzOW2bqk1ptBZHvdrM9/oUyuQmI+A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718262620; x=1718867420; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=B54RJv0cgqP2/sc/ro0r9cZHvykjV6un/kfq4GUh9QU=;
-        b=ZktmIvHMivnuzjArEFeRPCziJZYLO2Q+++XA0RSgCLOyhGvlxaaKr+NENe/e+LbZS1
-         6ynoqRIWNCwxv+oykW26aqh7wPvrjb3tURRPt4uwXm8IvLfGQoammdahR6QsM5KNSuNP
-         9svW4SAAj2KGVCD6/C5h1GSN1hLlmXUnwHnUHeCdD3mlDKYMn9fhWQ0EaCyXqZiccFCU
-         M6HaFKalycEtFWheLGmwVBISe2oU27kR8Bq6yyf1RBTdOwily0patulB58M9bzThyDvG
-         ukOb78cuAoTiTTcKSxyWp0Wg1sXBAEfMeCPEXS5fXd3tD5IHoRt1EuBmOVcUKeQNZzJP
-         qQ+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718262620; x=1718867420;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=B54RJv0cgqP2/sc/ro0r9cZHvykjV6un/kfq4GUh9QU=;
-        b=U4x5IklXmsTVE2LcTCZmd0JlP/dY2nVtAg+lufqRHe+00WewPewmBniu3CV37RV4ao
-         Qn7mItG9LKBsXsQbSohgBE9j2Z5JArYctZ7xIL5meDldTW9CBtrQD4wnZgr+Z/b7G4Q/
-         hIxlqKs7mS+tuPxlY9J7MIdmTuxGJ8DtxCBViDV5+G0sEeANODAllpYjPQxHvFFYOglc
-         mZSok4OaoQts0ff9t4h7WuBfvm4mCpQQEsEgwbFjKou7xKZHl1ZmyaCyrpCRWSAOlzhh
-         vA8vQoMz0g5M/j2R6NZG6pFoSEtgXatR5E6A5OkLf14L7J06JjZByuldKngaWZI5jHC/
-         pzrQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUft2VrrCiXjX3YhAO2AlHpMM36bhU7V5nbNdZBM20txLy3b/D+48rp8Kl0qaZEBoK1/yHpAOqA2n1Aedfg4anX6/TnW/FyXcaU0LnjH5RKurrmkmLjVK7kC0FnFDVQQQG9wju1A6U9QA==
-X-Gm-Message-State: AOJu0YzVlvwuyEHIrbBwGpCvbj/9UeaSzEgbBWTiEQqsAxjVC7ZH4vWS
-	cT/wIKeZgDomA0MD4xzbUpZXKcv+sSex/5Lt0g0rVClX+ZWRy1AX
-X-Google-Smtp-Source: AGHT+IHF16EZMKsNFZ4Z+Y7m3/eNgMs3V+TGo+PzKINWwcvq+yLbHtR6sJoX3Vy/BrdgYLDuzRQjEA==
-X-Received: by 2002:a05:6a00:2e0d:b0:705:aec4:605f with SMTP id d2e1a72fcca58-705c935948dmr2490765b3a.2.1718262620105;
-        Thu, 13 Jun 2024 00:10:20 -0700 (PDT)
-Received: from [0.0.0.0] (97.64.23.41.16clouds.com. [97.64.23.41])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-705ccb78581sm692108b3a.179.2024.06.13.00.10.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 13 Jun 2024 00:10:19 -0700 (PDT)
-Message-ID: <cb9b64a1-4c51-481a-ae5a-c20df70360ea@gmail.com>
-Date: Thu, 13 Jun 2024 15:10:14 +0800
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=znIGhPlAdIagKv0m7Olcz3MPgGbhryzKWS2pfJgFNuM=;
+ b=b4b42uJWrcM9ptA3QhZcaUoFtsi/nc26zSTOJBY1E52sVP9SXlJfjdupTbNd89AC/T04l5GVvhRJoJf0SIxFSkcrkWWQNIQIMa1+oZxgmIcmYgfGasIFEjSLIiOXH0IWYRvcYyiS+icx7R5x22c+n+816BOxjelzHBplGRmwEVo=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by BN0PR10MB5029.namprd10.prod.outlook.com (2603:10b6:408:115::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7677.23; Thu, 13 Jun
+ 2024 07:25:29 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.7633.036; Thu, 13 Jun 2024
+ 07:25:29 +0000
+Message-ID: <db998b4e-8bd8-4c8e-b165-069288588ed2@oracle.com>
+Date: Thu, 13 Jun 2024 08:25:21 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 04/10] fs: Add initial atomic write support info to
+ statx
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+        jack@suse.cz, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+        linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com, linux-aio@kvack.org,
+        linux-btrfs@vger.kernel.org, io-uring@vger.kernel.org,
+        nilay@linux.ibm.com, ritesh.list@gmail.com, willy@infradead.org,
+        agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
+        dm-devel@lists.linux.dev, hare@suse.de,
+        Prasad Singamsetty <prasad.singamsetty@oracle.com>
+References: <20240610104329.3555488-1-john.g.garry@oracle.com>
+ <20240610104329.3555488-5-john.g.garry@oracle.com>
+ <20240612205433.GC2764780@frogsfrogsfrogs>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20240612205433.GC2764780@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P265CA0183.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:311::6) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 1/3] scsi: core: Add new helper to iterate all devices
- of host
-To: Hannes Reinecke <hare@suse.de>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240605091731.3111195-1-haowenchao22@gmail.com>
- <20240605091731.3111195-2-haowenchao22@gmail.com>
- <3b24ef4a-996b-4a8b-89f3-385872573039@suse.de>
- <c1ecd21b-7b97-4ef6-94a1-86b2cf520a67@gmail.com>
- <698d4b22-719c-4e57-94ed-f507e425ee12@suse.de>
-Content-Language: en-US
-From: Wenchao Hao <haowenchao22@gmail.com>
-In-Reply-To: <698d4b22-719c-4e57-94ed-f507e425ee12@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|BN0PR10MB5029:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0cbc7f29-f9b6-45a0-7e6f-08dc8b7a00a7
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230034|7416008|1800799018|366010|376008;
+X-Microsoft-Antispam-Message-Info: 
+	=?utf-8?B?UzFqZG8wZjBWenZoSnprUzcrRHU3Q0VIemRHRDhNb0RNOS9JV2FJdjNTVFRk?=
+ =?utf-8?B?dFBGNW83cEZpZFhRdG5xemduQ3lNVlZNbStOUHArOFluemNYcXJGRFRaYnFv?=
+ =?utf-8?B?QW1WbUF2SSs4aXorckFZdFRzVXNSdnc1VHdBS0VzSHREOXFrRzBWaXdROFYv?=
+ =?utf-8?B?Q0tTNDhYTHQ5OEtLL05uak1NUURGY2JKZ0FzSm84RlZhd1RDQ2lkR1JidzI3?=
+ =?utf-8?B?ZkY1SVpCTjFtcjNDNnhpTlFxUC92MlQxaEltRlFtVlJPaUFNSFMzekVKUVRK?=
+ =?utf-8?B?elEvdEtrOFFpZnEvcExYVXRMa25PSWRnaHc2UHZReDJTZG9FUDdDdzZ3WXpY?=
+ =?utf-8?B?c3BZaXFudjBaRUJOOHVraXJkTWZpSUVGN213b0lwV3VRTlovazhCZ3VpY3lt?=
+ =?utf-8?B?ZHVFY0JYRFl1T082UU1aQ05MTVkrU0g2UURsclBPZlNaaXc0RWozTmFucDFM?=
+ =?utf-8?B?TEVGZ2NyQkIzRmYxVWRTZUVJc2tCWDVQVWMvbkYvanJPbWV0ck5JV1VJb1Y5?=
+ =?utf-8?B?bm5tenR0UEhoZFRyd1RoNFk2eG13Nlpwbm5nclErNEFCR3lyazhJV1RLTW1w?=
+ =?utf-8?B?S2JnL1JmeStFSzV0SWdqOCtHQy9zcnY5dHNNZjRwd2dvN1k5eDIwVmV4cXBU?=
+ =?utf-8?B?TnFxcENhV2ZnbzFncHF0bmNOK2pybEh1S24wQ3dXb0ZWSEIvMnJFRG5XS09k?=
+ =?utf-8?B?T0xaanNhWnRHL2hpVWpIUmpqeFovNURZaVZvaEc2bDRaajNWTGJaKzZONThj?=
+ =?utf-8?B?QWNlcllXd2tlOUtEQmlRYVRxb3A0NzVyVTk1NGJaUGtzVytRUW5KV0sxVVdt?=
+ =?utf-8?B?NE12bGtaTUM5Ym5qVEZ5dldqZ0pkdWtrYnhxaEc1Smx2MVJnV202ZWlRcGxO?=
+ =?utf-8?B?UnNNeURaQThhUzFQK1BqaXdRNVdiaWNqbGdXMVdEd2l6eW5sUmZLTng1ZnZz?=
+ =?utf-8?B?NkZIVTlCSEhhTmNlUldpb2lYZUVQS2lSRXFKK2VFb3BNWk9IaVEvVGlJR0s3?=
+ =?utf-8?B?WHNTZ2VER1RFSytnd3o5clE2NCtmcVVzcEp3cU9jMkU2cHZMNGFZb3NHOUtY?=
+ =?utf-8?B?M09yMHlxL2dWS3RTZ3ErYmhhKzZYTEtwSkVOQnNnN0lwUjIvSUhsS0tuUVdj?=
+ =?utf-8?B?djJtL2JkTGJwWlFVOWpYNTdQMU5WVmE0TWluTTFMdFhRVTR2Z09DOU44bG1w?=
+ =?utf-8?B?eEhXMW1qS1RnVzB6V2dhdFdkRjZmeitoeXE4L2pRWm9IVUZBSXVvNGxrWXVv?=
+ =?utf-8?B?bzNNVU45Y0xDWDR6MDJJeHZyZ3U0Q1pSQ3JrbTBnMHh2SS83bUdSWnBjcnF2?=
+ =?utf-8?B?UzRWNHYzK29NVngzTnVWM0pEaWxKL1FEdnVLaXg2WjJNc0orWXFjbmtneStH?=
+ =?utf-8?B?SGtqaHRRYlZEMFdRQnJCMWJIdDNGMnhLL3FkdXJYazdJelU1dmR1YUc1QVoz?=
+ =?utf-8?B?V0kxQWpYMnRTK0c2OFJ2bCtkbGFMdStQYnZ5dmJQbVpQQ2gwWFU3d3JPQXVL?=
+ =?utf-8?B?M1k3bGRld1h6cEhSSVIwSkFXdUF1a1J3RkpzUXQ4amt3QldqbCtkOVUvc2s3?=
+ =?utf-8?B?UHV6VjFUVjQ1cjVOYVNMOTlqZXl4QVJIWVFsRnRmaE5MeU9NU2Fva0FHRjdS?=
+ =?utf-8?B?Z0VOc1NSc29JODFKQUhHNlZXZDdVOXZhNUVjaUlwMXFvNUcxa2FvQWJnd3kr?=
+ =?utf-8?Q?4abx+qH2dHLkD6R+KMV5?=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230034)(7416008)(1800799018)(366010)(376008);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?NXJMYnB0ZzU4TzJMdkI1UWZvaTZpL2hScXNkdE5Sa2dEUlRkVnhNQzh3SS9v?=
+ =?utf-8?B?Umk2M2wyU3RnNVJDa3pKQUtxQUdpbExUL3h0cDBxM1pHTXFhVU1OblkyOXRL?=
+ =?utf-8?B?RjhHazNCSFZLaWtSMTNaQVF1OWs3ZmsvZTd2L1dqNldCNlhnbUZsYkV6MStY?=
+ =?utf-8?B?N0Q1cGdQNkExczlnMkFoV1U2TnhmdnVvQWY0dTNvNkRyWmxnMUk2UWs1RTlY?=
+ =?utf-8?B?aW5lVVJwVHNKRXEydVE4VmtOM2gzM1VoVnBtZkNTenZ3dDFVRENXdm1BVUI1?=
+ =?utf-8?B?a28rdVhlaEkvVjZvWE41TzJ3OTA5SXZVTVVOTWFpczk5aS9JTG5FdXVJU2FB?=
+ =?utf-8?B?VW8ybGRySG1hT29aZTAwc3I1aEszUWpEYXBwRDhtOE1SRHYrWUZ4R0JlenRE?=
+ =?utf-8?B?MTJaTUxuMlR3aFdITDRYdTJJNmZscS85cFEwbG16T25iSGtrZ0lxY1p3V2I4?=
+ =?utf-8?B?aUNPeGsxa2xZT2pQbEVOVVBPRjR6aW5rc29xMjljbC8xVkxYWi9LcjdDWHly?=
+ =?utf-8?B?VVltOGhEdTNlNjhBaEN6Z0FVVTFDZjE0UHJpZ3BlU3RhTTNnYytJaGlhb2My?=
+ =?utf-8?B?N3NlQUljVTVVSkNaVmJzbTdjb1RreXBvdENQZVVSK1dOYVlGdXZERHB6L0Ew?=
+ =?utf-8?B?L2sweitrcUs5N25qV2lvNlU0R2pQVExIeFFOcWk2c3JYaEYvdHlNaERGbEJa?=
+ =?utf-8?B?aTdLbm5IT2F5Y2NNUW9PREFmTnoyQ1VWSFhqbmUrcXZ3bnhwTklCRVMvZW1D?=
+ =?utf-8?B?dGZ6dVFQeURadkJVVGFBMzhEMGg1RVlaS1ViNzQ1QXpvSldQL2pXSEhUOHVu?=
+ =?utf-8?B?N3hjZmYvdVpGTkV2cGhZUWlic2dsQVZwNXc1R290OXJJVzRIWEIzRFgxRG9U?=
+ =?utf-8?B?S0ZaZzM5cE0vOXNIWEtKU1hNdlVtSlZzKzN2eGpMMmlGTmFHRWNOMWp0TlRl?=
+ =?utf-8?B?QlhkLzNUMHhJbDh3U25LeWptekE2UXh6LzdjSTFOMGNHZHpPSjk1ZHY1UC9G?=
+ =?utf-8?B?QlpmakdjNTRNYmJScG9mVFEzNitaTU9zVVRoOWVWTTF3dE42QUw3Y0NxV2FF?=
+ =?utf-8?B?dmxEbklDdFFqTjZ0SzlIMXdiVHk2bEtyZXhiSEZTTEZPOHIrNzlkQWdiL1Z0?=
+ =?utf-8?B?ejd2S1lpbUlTcDJROUxlKzZCSExDTXlXWW94Wm42TFU3ekpiM28vNjZqeTdi?=
+ =?utf-8?B?Q3pFempLSytLanZsT1gzODlwWkpPZzRhZzE4MVp6dzUrUlFHdHhKeUo1bW9V?=
+ =?utf-8?B?OFgzcms1VFlnckEyNzFUNmNTSXo5WFJod25DUGNaMi9OTkl1QlNtSTg0Wmhr?=
+ =?utf-8?B?dWI5VHpqSU1RWS9sM0k3ekNLMUphWHRxVXJnYmpwNmttTUVpc09jVTBDcWdD?=
+ =?utf-8?B?MnhlaFhRNUM0dHJnNTZsbFgvTzRvSmltL1Z4SkJCek9nREpZK2tUelIydjQw?=
+ =?utf-8?B?NlRZVUJzKzI4SkRCSW1samplUTRVSEI0SHlvd3RCN1JSK243dTRhVlhvdUZk?=
+ =?utf-8?B?ZWVCdWpOSEkyNnJBdStGSGNUcHlWMDFxZ1pPOGdoZDFkY09iTlA4ZG1ja1RU?=
+ =?utf-8?B?c3cxZmdiVDRSa05oSnh5WVA0QURIRnlnZ3VCZmxZa0hzOVZnL2VOZWJUZEpX?=
+ =?utf-8?B?WnVRcE4rSU9IU0RueXFrNlZaUmRob0Y1WG1aMTZrVU1jeEFaWnF2bFlSZEFl?=
+ =?utf-8?B?bGlEZHJEVitWRXZmaUd3YUg5UWNxWGpFREpVUytmUHZEQW1VLzRVZ1V4Sksw?=
+ =?utf-8?B?RnUvd202M3N6L1JGdjlodFNDZHdXaUZzQTgvZDdYbjJZaEFtczBNMkh6REpZ?=
+ =?utf-8?B?YVdpaXU1L1NNVGdKSEp5V0x5dHlZZmdHcjBnclRxWHd0QW9hYjI1MGpDN2NT?=
+ =?utf-8?B?REY1NmNORTNhei9BdFdScWdmL0djR2VFcG9TWHR3WDdLOUhVSU5tZ0RWSHIw?=
+ =?utf-8?B?RkU0aGJGT1lYVlpyRjVSdHJWNzFWdGN6OFljb1BEck91cnlpdXdFeDlPWkIr?=
+ =?utf-8?B?MnR6UU5aZ1lHaFpmTjJWNlN6eWZsdGNoUERyWU9RMXlmajgwOVNZS0duRFFT?=
+ =?utf-8?B?QzJFTnEzckN5dHNqbU9pUEZhOW9oWnB5WkhOMGt3ZTdNMGJ1UjhGVlR1Q2Z3?=
+ =?utf-8?Q?9/rxQndoIs8w6FiFvZMWIDd+D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	fq2ly7abU6DP3W8BJBABwjx2MKlhVs9dtHRzMUZZSfX0m/R+zzhtnmo72Nhlnm6KDGdE2yu00RMN2TTu2vZ4dv/yQdlQHB/MI7/3MpFNe1eijgV5yImFOtGedX/MaNAr/pzZK27aTtPFb/THAx6/kjVNskZZQjLHHNP3XuybjTjrsVCw8pZRqoZy7+BokLr7nSZXoLwPpDf9EECjFSnSNh7qDfjbv5b9WhE07iP9Tu4B98RogtOBPfctmQo3KUAIlLIF3XqiN1bNt3HJzgrpGUjOfOclHYO45IWYGuoGJNXzP/7/hgH+R4HO0DaezS9G6nMNjTzdEGTuMsF33SPZ/Jaa/i5o4nX6R0vzuWLY8hpsrZZZQY0kG4Uu+UklxeU5LL7xYcJ3viLSuY2WtTALUmw7+mz+K78TRApB8Mq5v9Pb/zbyJKR9OZKhvl0mkLrhqF1zhHqoccQsvI4bQdC79gbj5P3+wtBlSbB/NwMeMh/ZUJJ5shXnXb1E67SSB8o+u4ZR6EfCqbxPmvo/2X1Ymcpj+8g6urWsIuv7L42hUdhqyLEKHG3aJSyrGBjeNDtn18oM+qTVNSYh44/hR+O7gsbbieG75alZHg51N1RRCfk=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0cbc7f29-f9b6-45a0-7e6f-08dc8b7a00a7
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jun 2024 07:25:29.5198
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: AJcu3KnIaxHkL0iBF7g8oUzk8Q6COI32MboM3cbZ6Bo3FdxNfGEcBh4crODiDB4LAphD036IkFr2aI0gNpE0xQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB5029
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-12_12,2024-06-13_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 adultscore=0
+ mlxscore=0 bulkscore=0 malwarescore=0 mlxlogscore=999 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2405010000
+ definitions=main-2406130051
+X-Proofpoint-ORIG-GUID: qwz7SSgcCncKzMbKwZs8PwqqTidtz2IA
+X-Proofpoint-GUID: qwz7SSgcCncKzMbKwZs8PwqqTidtz2IA
 
-On 2024/6/13 14:27, Hannes Reinecke wrote:
-> On 6/12/24 17:06, Wenchao Hao wrote:
->> On 6/12/24 4:33 PM, Hannes Reinecke wrote:
->>> On 6/5/24 11:17, Wenchao Hao wrote:
->>>> shost_for_each_device() would skip devices which is in SDEV_CANCEL or
->>>> SDEV_DEL state, for some scenarios, we donot want to skip these 
->>>> devices,
->>>> so add a new macro shost_for_each_device_include_deleted() to handle 
->>>> it.
->>>>
->>>> Following changes are introduced:
->>>>
->>>> 1. Rework scsi_device_get(), add new helper __scsi_device_get() which
->>>>      determine if skip deleted scsi_device by parameter "skip_deleted".
->>>> 2. Add new parameter "skip_deleted" to __scsi_iterate_devices() which
->>>>      is used when calling __scsi_device_get()
->>>> 3. Update shost_for_each_device() to call __scsi_iterate_devices() with
->>>>      "skip_deleted" true
->>>> 4. Add new macro shost_for_each_device_include_deleted() which call
->>>>      __scsi_iterate_devices() with "skip_deleted" false
->>>>
->>>> Signed-off-by: Wenchao Hao <haowenchao22@gmail.com>
->>>> ---
->>>>    drivers/scsi/scsi.c        | 46 
->>>> ++++++++++++++++++++++++++------------
->>>>    include/scsi/scsi_device.h | 25 ++++++++++++++++++---
->>>>    2 files changed, 54 insertions(+), 17 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
->>>> index 3e0c0381277a..5913de543d93 100644
->>>> --- a/drivers/scsi/scsi.c
->>>> +++ b/drivers/scsi/scsi.c
->>>> @@ -735,20 +735,18 @@ int scsi_cdl_enable(struct scsi_device *sdev, 
->>>> bool enable)
->>>>        return 0;
->>>>    }
->>>>    -/**
->>>> - * scsi_device_get  -  get an additional reference to a scsi_device
->>>> +/*
->>>> + * __scsi_device_get  -  get an additional reference to a scsi_device
->>>>     * @sdev:    device to get a reference to
->>>> - *
->>>> - * Description: Gets a reference to the scsi_device and increments 
->>>> the use count
->>>> - * of the underlying LLDD module.  You must hold host_lock of the
->>>> - * parent Scsi_Host or already have a reference when calling this.
->>>> - *
->>>> - * This will fail if a device is deleted or cancelled, or when the 
->>>> LLD module
->>>> - * is in the process of being unloaded.
->>>> + * @skip_deleted: when true, would return failed if device is deleted
->>>>     */
->>>> -int scsi_device_get(struct scsi_device *sdev)
->>>> +static int __scsi_device_get(struct scsi_device *sdev, bool 
->>>> skip_deleted)
->>>>    {
->>>> -    if (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == 
->>>> SDEV_CANCEL)
->>>> +    /*
->>>> +     * if skip_deleted is true and device is in removing, return 
->>>> failed
->>>> +     */
->>>> +    if (skip_deleted &&
->>>> +        (sdev->sdev_state == SDEV_DEL || sdev->sdev_state == 
->>>> SDEV_CANCEL))
->>>>            goto fail;
->>>
->>> Nack.
->>> SDEV_DEL means the device is about to be deleted, so we _must not_ 
->>> access it at all.
->>>
+On 12/06/2024 21:54, Darrick J. Wong wrote:
+> On Mon, Jun 10, 2024 at 10:43:23AM +0000, John Garry wrote:
+>> From: Prasad Singamsetty <prasad.singamsetty@oracle.com>
 >>
->> Sorry I added SDEV_DEL here at hand without understanding what it means.
->> Actually, just include scsi_device which is in SDEV_CANCEL would fix the
->> issues I described.
+>> Extend statx system call to return additional info for atomic write support
+>> support for a file.
 >>
->> The issues are because device removing concurrent with error handle.
->> Normally, error handle would not be triggered when scsi_device is in
->> SDEV_DEL. Below is my analysis, if it is wrong, please correct me.
+>> Helper function generic_fill_statx_atomic_writes() can be used by FSes to
+>> fill in the relevant statx fields. For now atomic_write_segments_max will
+>> always be 1, otherwise some rules would need to be imposed on iovec length
+>> and alignment, which we don't want now.
 >>
->> If there are scsi_cmnd remain unfinished when removing scsi_device,
->> the removing process would waiting for all commands to be finished.
->> If commands error happened and trigger error handle, the removing
->> process would be blocked until error handle finished, because
->> __scsi_remove_device called  del_gendisk() which would wait all
->> requests to be finished. So now scsi_device is in SDEV_CANCEL.
->>
->> If the scsi_device is already in SDEV_DEL, then no scsi_cmnd has been
->> dispatched to this scsi_device, then error handle would never triggered.
->>
->> I want to change the new function __scsi_device_get() as following,
->> please help to review.
->>
->> /*
->>   * __scsi_device_get  -  get an additional reference to a scsi_device
->>   * @sdev:    device to get a reference to
->>   * @skip_canceled: when true, would return failed if device is deleted
->>   */
->> static int __scsi_device_get(struct scsi_device *sdev, bool 
->> skip_canceled)
->> {
->>     /*
->>      * if skip_canceled is true and device is in removing, return failed
->>      */
->>     if (sdev->sdev_state == SDEV_DEL ||
->>         (sdev->sdev_state == SDEV_CANCEL && skip_canceled))
->>         goto fail;
->>     if (!try_module_get(sdev->host->hostt->module))
->>         goto fail;
->>     if (!get_device(&sdev->sdev_gendev))
->>         goto fail_put_module;
->>     return 0;
->>
->> fail_put_module:
->>     module_put(sdev->host->hostt->module);
->> fail:
->>     return -ENXIO;
->> }
->>
-> I don't think that's required.
-> With your above analysis, wouldn't the problem be solved with:
+>> Signed-off-by: Prasad Singamsetty <prasad.singamsetty@oracle.com>
+>> jpg: relocate bdev support to another patch
+>> Signed-off-by: John Garry <john.g.garry@oracle.com>
 > 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 775df00021e4..911fcfa80d69 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1470,6 +1470,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
->          if (sdev->sdev_state == SDEV_DEL)
->                  return;
-> 
-> +       scsi_block_when_processing_errors(sdev);
-> +
->          if (sdev->is_visible) {
->                  /*
->                   * If scsi_internal_target_block() is running 
-> concurrently,
-> 
-> Hmm?
-> 
+> Looks fine to me, assuming there's a manpage update lurking somewhere?
 
-We can not make sure no scsi_cmnd remain unfinished after 
-scsi_block_when_processing_errors(). For example, there is a
-command has been dispatched but it's not timeouted when removing
-device, no error happened. After scsi_device is set to SDEV_CANCEL,
-the removing process would be blocked by del_gendisk() because there
-is still a request.
+Sure, see 
+https://lore.kernel.org/lkml/20240124112731.28579-1-john.g.garry@oracle.com/T/#m520dca97a9748de352b5a723d3155a4bb1e46456
 
-Then the request timeout and abort failed, error handle would be 
-triggered, now scsi_device is SDEV_CANCEL.
+I'll post a rebase, but the API is still the same.
 
-The error handle would skip this scsi_device when doing device reset.
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-> Cheers,
+Thanks,
+John
+
 > 
-> Hannes
+> --D
+> 
+>> ---
+>>   fs/stat.c                 | 34 ++++++++++++++++++++++++++++++++++
+>>   include/linux/fs.h        |  3 +++
+>>   include/linux/stat.h      |  3 +++
+>>   include/uapi/linux/stat.h | 12 ++++++++++--
+>>   4 files changed, 50 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/stat.c b/fs/stat.c
+>> index 70bd3e888cfa..72d0e6357b91 100644
+>> --- a/fs/stat.c
+>> +++ b/fs/stat.c
+>> @@ -89,6 +89,37 @@ void generic_fill_statx_attr(struct inode *inode, struct kstat *stat)
+>>   }
+>>   EXPORT_SYMBOL(generic_fill_statx_attr);
+>>   
+>> +/**
+>> + * generic_fill_statx_atomic_writes - Fill in atomic writes statx attributes
+>> + * @stat:	Where to fill in the attribute flags
+>> + * @unit_min:	Minimum supported atomic write length in bytes
+>> + * @unit_max:	Maximum supported atomic write length in bytes
+>> + *
+>> + * Fill in the STATX{_ATTR}_WRITE_ATOMIC flags in the kstat structure from
+>> + * atomic write unit_min and unit_max values.
+>> + */
+>> +void generic_fill_statx_atomic_writes(struct kstat *stat,
+>> +				      unsigned int unit_min,
+>> +				      unsigned int unit_max)
+>> +{
+>> +	/* Confirm that the request type is known */
+>> +	stat->result_mask |= STATX_WRITE_ATOMIC;
+>> +
+>> +	/* Confirm that the file attribute type is known */
+>> +	stat->attributes_mask |= STATX_ATTR_WRITE_ATOMIC;
+>> +
+>> +	if (unit_min) {
+>> +		stat->atomic_write_unit_min = unit_min;
+>> +		stat->atomic_write_unit_max = unit_max;
+>> +		/* Initially only allow 1x segment */
+>> +		stat->atomic_write_segments_max = 1;
+>> +
+>> +		/* Confirm atomic writes are actually supported */
+>> +		stat->attributes |= STATX_ATTR_WRITE_ATOMIC;
+>> +	}
+>> +}
+>> +EXPORT_SYMBOL_GPL(generic_fill_statx_atomic_writes);
+>> +
+>>   /**
+>>    * vfs_getattr_nosec - getattr without security checks
+>>    * @path: file to get attributes from
+>> @@ -659,6 +690,9 @@ cp_statx(const struct kstat *stat, struct statx __user *buffer)
+>>   	tmp.stx_dio_mem_align = stat->dio_mem_align;
+>>   	tmp.stx_dio_offset_align = stat->dio_offset_align;
+>>   	tmp.stx_subvol = stat->subvol;
+>> +	tmp.stx_atomic_write_unit_min = stat->atomic_write_unit_min;
+>> +	tmp.stx_atomic_write_unit_max = stat->atomic_write_unit_max;
+>> +	tmp.stx_atomic_write_segments_max = stat->atomic_write_segments_max;
+>>   
+>>   	return copy_to_user(buffer, &tmp, sizeof(tmp)) ? -EFAULT : 0;
+>>   }
+>> diff --git a/include/linux/fs.h b/include/linux/fs.h
+>> index e049414bef7d..db26b4a70c62 100644
+>> --- a/include/linux/fs.h
+>> +++ b/include/linux/fs.h
+>> @@ -3235,6 +3235,9 @@ extern const struct inode_operations page_symlink_inode_operations;
+>>   extern void kfree_link(void *);
+>>   void generic_fillattr(struct mnt_idmap *, u32, struct inode *, struct kstat *);
+>>   void generic_fill_statx_attr(struct inode *inode, struct kstat *stat);
+>> +void generic_fill_statx_atomic_writes(struct kstat *stat,
+>> +				      unsigned int unit_min,
+>> +				      unsigned int unit_max);
+>>   extern int vfs_getattr_nosec(const struct path *, struct kstat *, u32, unsigned int);
+>>   extern int vfs_getattr(const struct path *, struct kstat *, u32, unsigned int);
+>>   void __inode_add_bytes(struct inode *inode, loff_t bytes);
+>> diff --git a/include/linux/stat.h b/include/linux/stat.h
+>> index bf92441dbad2..3d900c86981c 100644
+>> --- a/include/linux/stat.h
+>> +++ b/include/linux/stat.h
+>> @@ -54,6 +54,9 @@ struct kstat {
+>>   	u32		dio_offset_align;
+>>   	u64		change_cookie;
+>>   	u64		subvol;
+>> +	u32		atomic_write_unit_min;
+>> +	u32		atomic_write_unit_max;
+>> +	u32		atomic_write_segments_max;
+>>   };
+>>   
+>>   /* These definitions are internal to the kernel for now. Mainly used by nfsd. */
+>> diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
+>> index 67626d535316..887a25286441 100644
+>> --- a/include/uapi/linux/stat.h
+>> +++ b/include/uapi/linux/stat.h
+>> @@ -126,9 +126,15 @@ struct statx {
+>>   	__u64	stx_mnt_id;
+>>   	__u32	stx_dio_mem_align;	/* Memory buffer alignment for direct I/O */
+>>   	__u32	stx_dio_offset_align;	/* File offset alignment for direct I/O */
+>> -	__u64	stx_subvol;	/* Subvolume identifier */
+>>   	/* 0xa0 */
+>> -	__u64	__spare3[11];	/* Spare space for future expansion */
+>> +	__u64	stx_subvol;	/* Subvolume identifier */
+>> +	__u32	stx_atomic_write_unit_min;	/* Min atomic write unit in bytes */
+>> +	__u32	stx_atomic_write_unit_max;	/* Max atomic write unit in bytes */
+>> +	/* 0xb0 */
+>> +	__u32   stx_atomic_write_segments_max;	/* Max atomic write segment count */
+>> +	__u32   __spare1[1];
+>> +	/* 0xb8 */
+>> +	__u64	__spare3[9];	/* Spare space for future expansion */
+>>   	/* 0x100 */
+>>   };
+>>   
+>> @@ -157,6 +163,7 @@ struct statx {
+>>   #define STATX_DIOALIGN		0x00002000U	/* Want/got direct I/O alignment info */
+>>   #define STATX_MNT_ID_UNIQUE	0x00004000U	/* Want/got extended stx_mount_id */
+>>   #define STATX_SUBVOL		0x00008000U	/* Want/got stx_subvol */
+>> +#define STATX_WRITE_ATOMIC	0x00010000U	/* Want/got atomic_write_* fields */
+>>   
+>>   #define STATX__RESERVED		0x80000000U	/* Reserved for future struct statx expansion */
+>>   
+>> @@ -192,6 +199,7 @@ struct statx {
+>>   #define STATX_ATTR_MOUNT_ROOT		0x00002000 /* Root of a mount */
+>>   #define STATX_ATTR_VERITY		0x00100000 /* [I] Verity protected file */
+>>   #define STATX_ATTR_DAX			0x00200000 /* File is currently in DAX state */
+>> +#define STATX_ATTR_WRITE_ATOMIC		0x00400000 /* File supports atomic write operations */
+>>   
+>>   
+>>   #endif /* _UAPI_LINUX_STAT_H */
+>> -- 
+>> 2.31.1
+>>
+>>
 
