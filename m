@@ -1,81 +1,102 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f47.google.com (mail-lf1-f47.google.com [209.85.167.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6282926AE4;
-	Thu, 13 Jun 2024 16:19:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF10D14A0BC;
+	Thu, 13 Jun 2024 17:45:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718295563; cv=none; b=GmWjfnjJX11saRIqUxb+UMIfr67hzlhG1uvfP9BjEQPqMwbMQT22EzR+0PoT3tktFE+xvgxrWAdVlUXtuY+qzSF0GJaoaTRrWijHM6iSTQJ7QaiFwwQDfcwhsXsevT7GzbrympPGSijBtXPM+LWbUi9NuucMlws7rqImbp2q6+o=
+	t=1718300707; cv=none; b=S2T4c2ufJbllhZrt22LzXljfCn2p3Wgj6l1YtX4V5oBtxp+uVD/kTWWwyGrTdOzjmFZFXTY80nhLB40bIqj4O8PcOABs9b63M3tdAN9v1CzoU3HuxZeJA5xr6HZTsPmWY1xT+nP0PBlVLhnumxcApRX5bOe41FYDEz46vdbtHxQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718295563; c=relaxed/simple;
-	bh=WpIiOcbHwANqWVqIm5ExegY6R8ZGDJCuGoZEPhc3ft4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ix/NO2cM8wlZCPKVYkJ8+8X0FAZR591MkFE+BGAOZyuZWf4J/sIZ2kYI6IDeSXoJmWMVAsDKrMZU7xvZZQv8xlDVM+3kmZyyQQ0aumGWfZ0jZXOXIRwUBXAk5r3OmvpUUrMRWyzAn3g6vtWGomY3Dc+3llKdR7uK6OE+Zm7PINQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2wCXN2VC; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1718300707; c=relaxed/simple;
+	bh=W1NN4FEaI545WsKG5QYNWSaOEHoanK1aCsXeN3ZFySY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=plCSveJ4fHbkhYJIVgjmj+8zI3YmAMeK/VCs9mvHbkcOX1wSk5nK3o91odRUDd7GibQgWGdkjDw5T8TRBaD2yKjNum7JCJ3fYnkwpb8k2lIacCj5FWHMSB5keHby/gCXKsDK1yM6fWLUst70KZvubXfixU6BM5/n4x2WGL0FTOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=O1NTnV0w; arc=none smtp.client-ip=209.85.167.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2wCXN2VC"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W0SKP5xgrz6Cnk9V;
-	Thu, 13 Jun 2024 16:19:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1718295559; x=1720887560; bh=EqUKSXP8U8eHmlIVt2N2fY/w
-	HbGNwccAvAZ1mcqBVuk=; b=2wCXN2VCrLeXob49GZxpU4hKceCTerxYyRVIGhxU
-	ZieUosDarLgSXfoyldgJ/5EH+1IC9OVlwfGNB1ZGjUglJDLj9m8TJpVxcd1aKNhi
-	VyQuh6SET0wRIE9VmNoSpQMEj9Ftl6mtl+XtUZ15DISzW1U8nTQxg/gMfuQO2u2N
-	J7g8ThqhX1B6ZafBPokbmmck4jd5rIZbpT35wxlZWc9vfGO1LR9L+wubE1K7kfgc
-	SPczzpJYsnIBM1UxhEHgbEf2t3gHmrDod40tsLuG0CiGgv22q0kO6Bl81EI39KST
-	U9asvy4lp2FYbQhv28/1LHHOcNBwb3PbCl7h8vlqO+mtMQ==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id RgN825rfIE8z; Thu, 13 Jun 2024 16:19:19 +0000 (UTC)
-Received: from [IPV6:2620:0:1000:5e10:c543:208b:8ce4:f55a] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W0SKK6mj8z6Cnk9Y;
-	Thu, 13 Jun 2024 16:19:17 +0000 (UTC)
-Message-ID: <132dedc1-ee11-44d8-b684-0ffbf994d164@acm.org>
-Date: Thu, 13 Jun 2024 09:19:16 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O1NTnV0w"
+Received: by mail-lf1-f47.google.com with SMTP id 2adb3069b0e04-52bbdc237f0so1627812e87.0;
+        Thu, 13 Jun 2024 10:45:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1718300704; x=1718905504; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=W1NN4FEaI545WsKG5QYNWSaOEHoanK1aCsXeN3ZFySY=;
+        b=O1NTnV0wnt1Ii5Xcam0p7pU44VL+a1r0kGMXID6kpX1jQCWdpgEN8EcEidmcSD3oEI
+         9fRS+v6P7MA8EnZNHCGiID3kjAJD9rJfp40KpLRMnp+WhMJm1YaHxqbeeeVMErqnwhZo
+         C7gNrRwXd3Trb3NEpfOEXfAEWUf39ErJBn0XqkOHAJ/ggoaKLQ4Pqc2yxR/fCJ/FrI81
+         dIf9WobPbIBxWqY/XEMkO94ZVHuDL9DMKarhlgp5DBcvN2tTA0PNywW3EFX5UIOnnREh
+         /dGa8rCfUE9aq9x+K1Frs+LN1uNaGfZTsSMRNfwiUSdyfibMbQ8LXlW8ACsZTe3sQClF
+         m9lQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718300704; x=1718905504;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=W1NN4FEaI545WsKG5QYNWSaOEHoanK1aCsXeN3ZFySY=;
+        b=IzI+JtTm1oWcdWPP1eJ4faNNljc0a+J52oFkupvYHTepCcnwBR+mBGCnf+b4b/CrpN
+         OEovrK70hpF57UqPq6R9l5sFPdc+I7kEdkL+g4wMZ6LXOhNwToqx1DrR6lCWsWrgnsMm
+         yj8nF8CLsgu1MrFtTnikuEL1qNsSwsVhI3xiAANy+8pZ9HwmHyoYIMbz4srTsRSPQdLu
+         8oY1sqvIwpIh3rlC2koHqUDWc7B0JXmJFZdtSaxC/DvMcW5IIBrrFKLTmsyBpoM95PZu
+         J//CwqChzk5hOBvukKE5Wr6objPv+btGk81qIq9pvs6AI7fv7MMNyzFZEsFPkLZJ5449
+         xmNQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXFQKlHmKcekuWWn4vwJWLuMtgMJQyoIl2Ok3d72mHkV9Ofi4Sw/xz6mN7t0oGapLF/Vh2mAkK7Giu049BxdC667mnpWe2eHobm0e/GiAGiH5+wbmCSvsAzqpQziinRNfUGgHNyr11sIu2kerpChOpRX3Gf5jWIWRITQyl8xg==
+X-Gm-Message-State: AOJu0YxtVRHV3zIDgihH1NvJK41P2enmMAd2zhCDxvQBGKde3Ow6vpIf
+	ZB5gmjmaZen9/SfHnfNcg9vvUH6U7VSivWiGZ/8fo+iELhb7AgCfXfpjH55yWyU+xOXdwvdo2w2
+	5YaJV1ksYK7cX3Ezih3VvAOC8ltL7oEDMJqqu3Q==
+X-Google-Smtp-Source: AGHT+IHYWeogOBzyL542s+6sxUjpi4sk9wNSwKBTh/Q8bkZg0I7HCQz3LHhUiZcmfmY+AC6RY80vUHIB7pAF/F8QP7I=
+X-Received: by 2002:a05:6512:5c9:b0:520:ed4e:2203 with SMTP id
+ 2adb3069b0e04-52ca6e562bfmr360632e87.8.1718300703669; Thu, 13 Jun 2024
+ 10:45:03 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: qcom: add missing MODULE_DESCRIPTION() macro
-To: Jeff Johnson <quic_jjohnson@quicinc.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Can Guo <quic_cang@quicinc.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <20240612-md-drivers-ufs-host-v1-1-df35924685b8@quicinc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240612-md-drivers-ufs-host-v1-1-df35924685b8@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20240612165249.2671204-1-bvanassche@acm.org> <20240612165249.2671204-3-bvanassche@acm.org>
+In-Reply-To: <20240612165249.2671204-3-bvanassche@acm.org>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 13 Jun 2024 19:44:26 +0200
+Message-ID: <CAHp75VdT8hp+aSN_ZyGebkUykaP=p9ipq4Guk6+e_HJ2apu18g@mail.gmail.com>
+Subject: Re: [PATCH 2/2] scsi: core: Do not query IO hints for USB devices
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Alan Stern <stern@rowland.harvard.edu>, 
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, 
+	Joao Machado <jocrismachado@gmail.com>, Christian Heusel <christian@heusel.eu>, stable@vger.kernel.org, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 6/12/24 9:46 PM, Jeff Johnson wrote:
-> +MODULE_DESCRIPTION("QCOM specific hooks to UFS controller platform driver");
->   MODULE_LICENSE("GPL v2");
+On Wed, Jun 12, 2024 at 6:53=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
+> wrote:
+>
+> Recently it was reported that the following USB storage devices are unusa=
+ble
+> with Linux kernel 6.9:
+> * Kingston DataTraveler G2
+> * Garmin FR35
+>
+> This is because attempting to read the IO hint VPD page causes these devi=
+ces
+> to reset. Hence do not read the IO hint VPD page from USB storage devices=
+.
 
-That sounds weird to me. I think we are better of with no module
-description than with the above description.
+> Cc: Alan Stern <stern@rowland.harvard.edu>
+> Cc: linux-usb@vger.kernel.org
+> Cc: Joao Machado <jocrismachado@gmail.com>
 
-How about the following description?
+> Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
+> Cc: Christian Heusel <christian@heusel.eu>
 
-"Qualcomm UFS host controller driver".
+Besides no need to repeat these Cc's in case there are other tags for
+the same emails, can you move the rest of Cc's after the --- line
+below? For you it will be the same effect, for many others the Git
+history won't be polluted with this noise.
 
-Thanks,
 
-Bart.
+--=20
+With Best Regards,
+Andy Shevchenko
