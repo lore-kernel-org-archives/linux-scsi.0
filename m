@@ -1,105 +1,111 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA0A814A4F0;
-	Thu, 13 Jun 2024 18:10:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4EC614A4F3
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Jun 2024 18:28:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718302222; cv=none; b=uQcto2FibOKMGYhdlMMN2R0nuJTvv2OTuQP2fAaoTjxNYlJW9Mqm3PejuUwWDam6zrbPSIsJ1fCMxMStjMTYJSPEHtSozS2OKauB2Fh9xzwgn//7M/wG0YPdkGXJlWcK/EODkMQtXMQtqn7qigGBWS1FUC6pzrry3AY9pzq2Xbc=
+	t=1718303288; cv=none; b=r0BzuVOJPL3bolPVaAHSWLKqFJ18y6vlV6mswS9eC1RRpsYPU80EiSL1rX+W0YKKEKGBQGfHpFHVs39/YTKuo0yQwvRFPwJ5mON0HG9Mhl+Xy8SZ0QNULEHQEK59YX2g4+seSN5UlmQzNXy9oVzLh2I7SQD+m/UaOG/RjQOonQI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718302222; c=relaxed/simple;
-	bh=Fp26F/H6Z6H9jVklu8g8opBQaBFSgieOIZUNLhoUgqk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WOIIuwX0tXHYw7GezwZOq0KoBofVDBFPL4EMCpgp0FatoARqlfL0nF4jrb4+WGrOuPHoONBJnP9funaKX91sDmwuQuzl7BC+IDR7dayIA/bj1Yi39J8Wo/ISDt1SaRwysbbG6Eban0E4TYA90NSKuFBBBAlPcgx7kyhTegWmxUg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=mhy4F+6H; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1718303288; c=relaxed/simple;
+	bh=4Pm7lRVeDxAxTTAE1RjwSM52yXCD4XEqdMVtN4NZ2wc=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lwA1+lmybO/nRBpIAR00lP23MebBgsUErI2BbCcXSAGuLJ7fSM3gxmtmuCXYtYJOqUFlIIeJdnA2OiJzUvIp4hpz5wp0hieiK6IVfiq2mvoUAh0/YzCon+k4LgoyRrOCgGiOzFXyFdzb4FrVW6dN3LIN22eCYWBMbV1gw1j+skk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FmqyRc3j; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="mhy4F+6H"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W0VnL0L5Pz6Cnk9X;
-	Thu, 13 Jun 2024 18:10:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1718302209; x=1720894210; bh=Fp26F/H6Z6H9jVklu8g8opBQ
-	aBFSgieOIZUNLhoUgqk=; b=mhy4F+6HFbmKhLrFIa22imw/XaTKMzQzHtno0wzw
-	55+tXb3SpnJjE/KL0SRD4aaeLpclaKJHkTP+WQwqBO+llLq8WD5aQpVt0mV+a2WT
-	4kepPh6Nfd9m53HI86uwGDE644TWRrh9EpDQZJhfi4W6eYpXEuWPnUAtV8OB0SnD
-	HL1b2+EY57cgPE/StNO3pgejw2QkIuAXtfu+6wclQb4O6bVsxKOdphUCH/uCjVLC
-	WRwlB6EdJV9w1zOmj5R5PhBAXXYZns1ILn6/VsiaYBJnW1o8ZNH8anrEMXFaS14v
-	/EGbKd7NOar+BknjluHoUcskcAGo4nGy+35ShPQrwDwfew==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 4EVbcNaD06ku; Thu, 13 Jun 2024 18:10:09 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FmqyRc3j"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1718303285;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=Pt7JMdv2zQuXXKN4eq/m/SVF3iNPHye0V9QpcQS+Yf0=;
+	b=FmqyRc3jAhwPyOocU2ME+lTz/iriV3Rx4j0k+uRO1smD+p0csy54cW2mYA2ga0V0cn+K/l
+	BHjahUz7cvnQacRdU8IpZ5bM9XF20KlN/QWdefFeU0rRd1GvxLkGBAlwqK4nVB7U5Glm3a
+	rsfhn3VjAu19ZXyBYR0Qhhvy1c/jYfw=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-317-a9ivuM1jPDeAsFZDy-CvfQ-1; Thu,
+ 13 Jun 2024 14:28:04 -0400
+X-MC-Unique: a9ivuM1jPDeAsFZDy-CvfQ-1
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W0VnF0xGmz6Cnk94;
-	Thu, 13 Jun 2024 18:10:08 +0000 (UTC)
-Message-ID: <f3a8f117-4534-4071-8084-4cc984f963e4@acm.org>
-Date: Thu, 13 Jun 2024 11:10:08 -0700
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1D69A1956095;
+	Thu, 13 Jun 2024 18:28:02 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.22.16.90])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A192B1956058;
+	Thu, 13 Jun 2024 18:27:58 +0000 (UTC)
+From: Joel Slebodnick <jslebodn@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	alim.akhtar@samsung.com,
+	avri.altman@wdc.com,
+	bvanassche@acm.org,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	peter.wang@mediatek.com,
+	manivannan.sadhasivam@linaro.org,
+	ahalaney@redhat.com,
+	beanhuo@micron.com,
+	Joel Slebodnick <jslebodn@redhat.com>
+Subject: [PATCH] scsi: ufs: core: Free memory allocated for model before reinit
+Date: Thu, 13 Jun 2024 14:27:28 -0400
+Message-Id: <20240613182728.2521951-1-jslebodn@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: core: Do not query IO hints for USB devices
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org,
- linux-usb@vger.kernel.org, Joao Machado <jocrismachado@gmail.com>,
- Christian Heusel <christian@heusel.eu>, stable@vger.kernel.org,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20240612165249.2671204-1-bvanassche@acm.org>
- <20240612165249.2671204-3-bvanassche@acm.org>
- <CAHp75VdT8hp+aSN_ZyGebkUykaP=p9ipq4Guk6+e_HJ2apu18g@mail.gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CAHp75VdT8hp+aSN_ZyGebkUykaP=p9ipq4Guk6+e_HJ2apu18g@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 6/13/24 10:44 AM, Andy Shevchenko wrote:
-> On Wed, Jun 12, 2024 at 6:53=E2=80=AFPM Bart Van Assche <bvanassche@acm=
-.org> wrote:
->>
->> Recently it was reported that the following USB storage devices are un=
-usable
->> with Linux kernel 6.9:
->> * Kingston DataTraveler G2
->> * Garmin FR35
->>
->> This is because attempting to read the IO hint VPD page causes these d=
-evices
->> to reset. Hence do not read the IO hint VPD page from USB storage devi=
-ces.
->=20
->> Cc: Alan Stern <stern@rowland.harvard.edu>
->> Cc: linux-usb@vger.kernel.org
->> Cc: Joao Machado <jocrismachado@gmail.com>
->=20
->> Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
->> Cc: Christian Heusel <christian@heusel.eu>
->=20
-> Besides no need to repeat these Cc's in case there are other tags for
-> the same emails, can you move the rest of Cc's after the --- line
-> below? For you it will be the same effect, for many others the Git
-> history won't be polluted with this noise.
+Under the conditions that a device is to be reinitialized within
+ufshcd_probe_hba, the device must first be fully reset.
 
-I will leave out the redundant Cc's but I'm surprised by the request to m=
-ove
-Cc tags after the --- line. There are many patches with Cc: tags in Linus=
-' tree.
-I have never before seen anyone requesting to move Cc tags after the --- =
-line.
+Resetting the device should include freeing U8 model (member of
+dev_info)  but does not, and this causes a memory leak.
+ufs_put_device_desc is responsible for freeing model.
 
-Thanks,
+unreferenced object 0xffff3f63008bee60 (size 32):
+  comm "kworker/u33:1", pid 60, jiffies 4294892642
+  hex dump (first 32 bytes):
+    54 48 47 4a 46 47 54 30 54 32 35 42 41 5a 5a 41  THGJFGT0T25BAZZA
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace (crc ed7ff1a9):
+    [<ffffb86705f1243c>] kmemleak_alloc+0x34/0x40
+    [<ffffb8670511cee4>] __kmalloc_noprof+0x1e4/0x2fc
+    [<ffffb86705c247fc>] ufshcd_read_string_desc+0x94/0x190
+    [<ffffb86705c26854>] ufshcd_device_init+0x480/0xdf8
+    [<ffffb86705c27b68>] ufshcd_probe_hba+0x3c/0x404
+    [<ffffb86705c29264>] ufshcd_async_scan+0x40/0x370
+    [<ffffb86704f43e9c>] async_run_entry_fn+0x34/0xe0
+    [<ffffb86704f34638>] process_one_work+0x154/0x298
+    [<ffffb86704f34a74>] worker_thread+0x2f8/0x408
+    [<ffffb86704f3cfa4>] kthread+0x114/0x118
+    [<ffffb86704e955a0>] ret_from_fork+0x10/0x20
 
-Bart.
+Signed-off-by: Joel Slebodnick <jslebodn@redhat.com>
+---
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0cf07194bbe8..a0407b9213ca 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8787,6 +8787,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+ 	    (hba->quirks & UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH)) {
+ 		/* Reset the device and controller before doing reinit */
+ 		ufshcd_device_reset(hba);
++		ufs_put_device_desc(hba);
+ 		ufshcd_hba_stop(hba);
+ 		ufshcd_vops_reinit_notify(hba);
+ 		ret = ufshcd_hba_enable(hba);
+-- 
+2.40.1
+
