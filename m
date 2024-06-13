@@ -1,106 +1,67 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 975DC3CF74;
-	Thu, 13 Jun 2024 04:47:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C507132123;
+	Thu, 13 Jun 2024 05:35:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718254037; cv=none; b=UYmtFw6y0wzgkuHwaHX+TFdBgLzB7wffDr0c5iosDd8i5+eAe1+ycNiE18tkFvcNnmeVvZ0k2t21V+SbI6l4QwabFtJPLGO5vZbF0dUsySYtweJ001DobzXRU8W3sn/tjTEhTa6HAQWTIDBOpIzdCtEVtUNJCDWmcYsGouXtpCU=
+	t=1718256936; cv=none; b=PO+x7ueGGKM1coEVsEh0gvEwgKSYcNRb5p0DdribK7MbMgrmRMYTxHOn/TU6DCbUFWvV+mCWQXq0yw6sJ19/pqK5YHi9HlKjzaOcDb5+1L9kxh9dveyPVCnGlKjB1rp5A3zjblxBnzbq4yxyym5L0lCDaaYwKS7D2RhJODvrWLw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718254037; c=relaxed/simple;
-	bh=+UMlre/jILmPi2MBsSzppHR9F2E+8mwySeNePP8et2o=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:To:CC; b=FefHyuJVRttY6ATNUS+Or3BP/R5e/36jHsBzHs/LZ5e8zzg6ed/QA0mhyyExrSXjSt3dDXOB+CyVZNjvtn/NpUwOVcSIdwa9GyKTUSgsNYKI0FeH0+kv91OS7aeMFBIMdLQtu2hEmrULZjdOW0CRdWPZPA9ALSQYSguN4l3cfcI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=baDAHnUV; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="baDAHnUV"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45CKn7Sj028125;
-	Thu, 13 Jun 2024 04:47:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=Ik54hdy3eBlrM2wrP1J9ym
-	szxZU4S3qs30TYbwtuuAs=; b=baDAHnUVHqB/FMtCn1ooRXVtGK6nno9e4o9Tvg
-	mtM9okKPByV9IHi8U0J2ixi7/yS0MHpPysVBJ0h31BXW54/NrglhlUBuSc1tyvTX
-	O5EOVnK8uIKvUIQpExqsWnBvJ4t246W//SCVg2wlsS09trS2nNmplEYhY0GgXP/U
-	olnE7ksWQJ7X3pS23/HlbbPbEWRXNct+BMFfhbASMFuLEFgsBkCw9RCboDzC80E9
-	qFlqRuCDjM/jNpCYVoOstbLBRGbaV91qKXh0T+qV0JFC4e+whWYTUUtWhgbymE4Z
-	NemAsofD92FVHjseWe4gKA9UoEDV7a7H8jGlcgwzX8hlL/Cw==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3yq83wj5ud-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 13 Jun 2024 04:47:10 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45D4l9iE019830
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 13 Jun 2024 04:47:09 GMT
-Received: from [169.254.0.1] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 12 Jun
- 2024 21:47:09 -0700
-From: Jeff Johnson <quic_jjohnson@quicinc.com>
-Date: Wed, 12 Jun 2024 21:46:59 -0700
-Subject: [PATCH] scsi: ufs: qcom: add missing MODULE_DESCRIPTION() macro
+	s=arc-20240116; t=1718256936; c=relaxed/simple;
+	bh=6jSueb1RkmSpnl+3j/inMFJ2kmtKQxgvOzmIxq5phIM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cXgdmeCwF2GwYAZTJid84rvVLgYDIsKm3Mymt6/d3M3KlJCWt/lZVAWGSbsVEXAiBbRFUgzyd++BI0THjvk8P9iyNOjqIvkzSxxk32Szufyy4C7RyNzFozzmYpBpuxp+mENfOZ03xaG4hnlNkAZUxoj7zWiQDPTzKI95lljvGZ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 680D568AFE; Thu, 13 Jun 2024 07:35:29 +0200 (CEST)
+Date: Thu, 13 Jun 2024 07:35:29 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+	Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>, Ira Weiny <ira.weiny@intel.com>,
+	Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>, linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
+	nvdimm@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+	Kanchan Joshi <joshi.k@samsung.com>
+Subject: Re: [PATCH 03/11] block: remove the BIP_IP_CHECKSUM flag
+Message-ID: <20240613053528.GA17839@lst.de>
+References: <20240607055912.3586772-1-hch@lst.de> <20240607055912.3586772-4-hch@lst.de> <yq1frtl3tmw.fsf@ca-mkp.ca.oracle.com> <20240610115732.GA19790@lst.de> <yq1bk492dv3.fsf@ca-mkp.ca.oracle.com> <20240610122423.GB21513@lst.de> <yq1zfrrz2hj.fsf@ca-mkp.ca.oracle.com> <20240612035122.GA25733@lst.de> <yq1tthyw1jr.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-ID: <20240612-md-drivers-ufs-host-v1-1-df35924685b8@quicinc.com>
-X-B4-Tracking: v=1; b=H4sIAMJ5amYC/x3MwQqDMAyA4VeRnBeo3RybrzJ2iDa1gVklURHEd
- 1+343f4/wOMVdigrQ5Q3sRkygX1pYI+UR4YJRSDd/7m7rXHMWBQ2VgN12iYJluQHuSIQnN9Rge
- lnJWj7P/r613ckTF2SrlPv9dH8rrjSLawwnl+Ab3yIYeEAAAA
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen"
-	<martin.petersen@oracle.com>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
-        "Jeff
- Johnson" <quic_jjohnson@quicinc.com>
-X-Mailer: b4 0.13.0
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: rTYAFI87eMfRd-5RPJNBNsxEYMhOsfCD
-X-Proofpoint-ORIG-GUID: rTYAFI87eMfRd-5RPJNBNsxEYMhOsfCD
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-06-12_12,2024-06-13_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 phishscore=0
- bulkscore=0 spamscore=0 mlxlogscore=999 suspectscore=0 clxscore=1015
- lowpriorityscore=0 malwarescore=0 priorityscore=1501 mlxscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2405170001 definitions=main-2406130031
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq1tthyw1jr.fsf@ca-mkp.ca.oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-With ARCH=arm64, make allmodconfig && make W=1 C=1 reports:
-WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/ufs/host/ufs-qcom.o
+On Wed, Jun 12, 2024 at 01:27:47PM -0400, Martin K. Petersen wrote:
+> >> > Note that unlike the NOCHECK flag which I just cleaned up because they
+> >> > were unused, this one actually does get in the way of the architecture
+> >> > of the whole series :( We could add a per-bip csum_type but it would
+> >> > feel really weird.
+> >> 
+> >> Why would it feel weird? That's how it currently works.
+> >
+> > Because there's no way to have it set to anything but the per-queue
+> > one.
+> 
+> That's what the io_uring passthrough changes enable.
 
-Add the missing invocation of the MODULE_DESCRIPTION() macro.
+The checksum type?  How is that compatible with nvme?
 
-Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
----
- drivers/ufs/host/ufs-qcom.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index cca190d1c577..72f95e2779ce 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1883,4 +1883,5 @@ static struct platform_driver ufs_qcom_pltform = {
- };
- module_platform_driver(ufs_qcom_pltform);
- 
-+MODULE_DESCRIPTION("QCOM specific hooks to UFS controller platform driver");
- MODULE_LICENSE("GPL v2");
-
----
-base-commit: 83a7eefedc9b56fe7bfeff13b6c7356688ffa670
-change-id: 20240612-md-drivers-ufs-host-a8a0aad539f0
+Anyway, I'll just leave this flag in for the resend, but if we can't
+come up with a coherent user for it in a merge cycle or two (which
+I very much doubt) I'll send another patch to remove it.
 
