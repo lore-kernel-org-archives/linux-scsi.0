@@ -1,429 +1,120 @@
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 893BE196C8B;
-	Fri, 14 Jun 2024 12:25:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE84414D29B
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Jun 2024 12:33:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718367947; cv=none; b=Ducb4JsNn6k13b0JV6c9bakW0PmWHJ4nbHYaJMFpvKWvqBgAh90aAJwU9cu178IYRTVzDB2yUH3WSSzk42HbLs8ZqyZI6MKOqmWqn/Sax0rI1EIcGLYRxAc1wBIa5L1gRDlx7sBYFzCxYHpzwe3zMjx0VTUoXtEx1QVinrc/ef4=
+	t=1718368426; cv=none; b=td99SmFbkCYFwbaadpEXAy1KCKlcPKDALM0qQIRoyt7hl3iF2TxUZv1h4z6pekBlwQjtmeq6a3nRKtK/b9ldLnp3+eD/e21Y64Q33PJt3YtgNEX6hqpdZM5Guxy2lco9Sz8q0QFn3FhulGR1bIkCLz1rK69AdYe7697HFjrKsrA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718367947; c=relaxed/simple;
-	bh=TCX96QRs5NwdKwKReUAFtWYxvlgFUefcImNfcca0Lqk=;
-	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=Go6gMIGfV4l4gfEuhnu111b2jcoefYnysUDv+ueEnvypo3PJgDqZCFl6vcbnvjXixhm/xCAMrR6/cy8lP+F94TWepCosZrmaYeFJw7b7DobDSy72+9VoBUzFCYU+9qPlf/yP2gEQqYqlv+0lKuyxbamEey3GmKqQEIrbOk3jv0Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=oY2vcw5i; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=oY2vcw5i; arc=none smtp.client-ip=96.44.175.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1718368426; c=relaxed/simple;
+	bh=ViOeFSLpzBTfbhkwvbIOhDLgIujUpX169FCRqiXsZHw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=goxGfTokzx522qhLAl6uH5u0TiSzDIgs1osJl1KGgQdfHGaFlai6w310PGGWyCP8Bj7WAzqZowi4AnWybqrCJ4K7HVoVa0de5g9huuSurQJf9Mg7crVK4pPKBrwc/3FtZEB7bVnPlGQc1qnl8+P4G9TsnWdGSXMVXwDyAdhSq/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=LuV9Yhz1; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="oY2vcw5i";
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="oY2vcw5i"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1718367944;
-	bh=TCX96QRs5NwdKwKReUAFtWYxvlgFUefcImNfcca0Lqk=;
-	h=Message-ID:Subject:From:To:Date:From;
-	b=oY2vcw5iERqvAEj1TnCVmIVAdvyEcPwBzYMqbgb24Uu5pCRzHvN9Z5eeFJgR1USGO
-	 uQ2z5s7iwGAC7Vhr6o/3/76IhE0toH0gzoaKFfzzA9Zl4ly6FjUbcQTpoElXBCmOG1
-	 bN7xFFeqJVyb3HbkhIBecvCXHeRJFMbhF96wO8N8=
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id CF4E31281015;
-	Fri, 14 Jun 2024 08:25:44 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id EhlF1_kZ8RjV; Fri, 14 Jun 2024 08:25:44 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1718367944;
-	bh=TCX96QRs5NwdKwKReUAFtWYxvlgFUefcImNfcca0Lqk=;
-	h=Message-ID:Subject:From:To:Date:From;
-	b=oY2vcw5iERqvAEj1TnCVmIVAdvyEcPwBzYMqbgb24Uu5pCRzHvN9Z5eeFJgR1USGO
-	 uQ2z5s7iwGAC7Vhr6o/3/76IhE0toH0gzoaKFfzzA9Zl4ly6FjUbcQTpoElXBCmOG1
-	 bN7xFFeqJVyb3HbkhIBecvCXHeRJFMbhF96wO8N8=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
-	(Client did not present a certificate)
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 3C2B81280A77;
-	Fri, 14 Jun 2024 08:25:44 -0400 (EDT)
-Message-ID: <a04853cd4be2533dc0fb724a788fb3cce0f535ba.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.10-rc3
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
-	 <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
-	 <linux-kernel@vger.kernel.org>
-Date: Fri, 14 Jun 2024 08:25:42 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="LuV9Yhz1"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1f715fd5e60so1948635ad.2
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Jun 2024 05:33:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1718368424; x=1718973224; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=IQUOxKnD6CsmHDQ8zwTblKdKo9rITBkMiMcIVKNHWq0=;
+        b=LuV9Yhz17Xocu9NAHd9mQYpjvIl00VlVdGe7bRqWYO80L7X9/cHFM4n3N+EbTbLGaU
+         cOOh+b0dIwTDYwTQ3u8NpufJ5hrX031r4f7Le4p+T5I5LS0N5chAfXGpWC3WJrygda3B
+         13x+3F9MNOrx153LZj9GWVI8nLwXQTV/wQBgQGaDdOPP1O7xXPj3YOxYN2AAfVTB15bo
+         mdMNQyztKNqum/GqOIyJYh0vOND9T1Yt7qyGml6YnhqnszSaaEO9eWrnzxmOxS+VW+Qc
+         t7enjwOUGTU/cToDlqMxAKZOlcHiB1nMcSPXgtWED2i6NvjqRb+zM2sZGxNXioN0OpWx
+         w+RA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718368424; x=1718973224;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=IQUOxKnD6CsmHDQ8zwTblKdKo9rITBkMiMcIVKNHWq0=;
+        b=ZMkwyDI0TK55ydi44hFKgmgmGLYbU93Y9ONqRzwZjD0gCfkwr8I8wojfSGTIHR2xrX
+         dB7FFX0dFO1cbuqGYUdH1KNeFt2X3xeM7OLv/fgsZBVpmqLljohN+fCY/rkRYx7KiQ78
+         iZHvuSHL58xuNSPgYMF6QMoyz1kxOhLMLTOD30mMoYkAb0LLGews5mdkawhCxYSzH8fs
+         zxRY7x1U3cIp0WPL9onA8vbj694OpZC7oI/VvFv8iUrgpGQltR6rwtTnC8WBI9rAt7kk
+         wIiav+nGeTyjZZUVuxkjK+H2XSbFAKSF5IJVogLjWYH7wyJNJHuZOsk101LOoMckeKBp
+         gzsA==
+X-Forwarded-Encrypted: i=1; AJvYcCU6EVVMRzt1OLbvzuuiSvcuigkWcHUNmJFV+ynVVR0HQHmNn+w0zH0c/I4mcPntcNCA6Dyq5YHOff+0mOpDKSsY2qDITEWOfym5ug==
+X-Gm-Message-State: AOJu0Yz1Q2QWs66HK8NHOGEz4plreQdLMtpekFp0Iv3pjphPICjPrQIa
+	MHhsrczrPEhwkcg4vjvt2UFDB4DLRCAIJxnG7xW0MGSVwYLLCtdj1Tn1e69lA+g=
+X-Google-Smtp-Source: AGHT+IFgr4iSfGSF5IPV3zZl5qFPlqcnaulUtE1TfAC51U6Q4NBcINjOTwVkZv2IxHULMCAp2GZWSA==
+X-Received: by 2002:a17:902:eccc:b0:1f7:1a37:d0b5 with SMTP id d9443c01a7336-1f862c30f6amr26779945ad.4.1718368424251;
+        Fri, 14 Jun 2024 05:33:44 -0700 (PDT)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f855e55c3bsm31084685ad.57.2024.06.14.05.33.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 14 Jun 2024 05:33:43 -0700 (PDT)
+Message-ID: <f134f09a-69df-4860-90a9-ec9ad97507b2@kernel.dk>
+Date: Fri, 14 Jun 2024 06:33:41 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: move integrity settings to queue_limits v3
+To: Christoph Hellwig <hch@lst.de>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
+ Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
+ Ira Weiny <ira.weiny@intel.com>, Keith Busch <kbusch@kernel.org>,
+ Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>,
+ linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+References: <20240613084839.1044015-1-hch@lst.de>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20240613084839.1044015-1-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Three obvious driver fixes.  The two core fixes are to disable Command
-Duration Limits by default to fix an inconsistency in SATA and some USB
-devices.  The other is to change the default read size for block zero
-to follow the device preference (some USB bridges preferring 16 byte
-commands don't have a translation for READ(10) and thus don't scan
-properly).
+On 6/13/24 2:48 AM, Christoph Hellwig wrote:
+> Hi Jens, hi Martin,
+> 
+> this series converts the blk-integrity settings to sit in the queue
+> limits and be updated through the atomic queue limits API.
+> 
+> I've mostly tested this with nvme, scsi is only covered by simple
+> scsi_debug based tests.
+> 
+> For MD I found an pre-existing error handling bug when combining PI
+> capable devices with not PI capable devices.  The fix was posted here
+> (and is included in the git branch below):
+> 
+>    https://lore.kernel.org/linux-raid/20240604172607.3185916-1-hch@lst.de/
+> 
+> For dm-integrity my testing showed that even the baseline fails to create
+> the luks-based dm-crypto with dm-integrity backing for the authentication
+> data.  As the failure is non-fatal I've not addressed it here.
+> 
+> Note that the support for native metadata in dm-crypt by Mikulas will
+> need a rebase on top of this, but as it already requires another
+> block layer patch and the changes in this series will simplify it a bit
+> I hope that is ok.
+> 
+> The series is based on top of my previously sent "convert the SCSI ULDs
+> to the atomic queue limits API v2" API.
 
-The patch is available here:
+I was going to queue this up, but:
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+drivers/scsi/sd.c: In function ‘sd_revalidate_disk’:
+drivers/scsi/sd.c:3658:45: error: ‘lim’ undeclared (first use in this function)
+ 3658 |                 sd_config_protection(sdkp, &lim);
+      |                                             ^~~
+drivers/scsi/sd.c:3658:45: note: each undeclared identifier is reported only once for each function it appears in
 
-The short changelog is:
-
-Breno Leitao (1):
-      scsi: mpt3sas: Avoid test/set_bit() operating in non-allocated memory
-
-Damien Le Moal (2):
-      scsi: mpi3mr: Fix ATA NCQ priority support
-      scsi: core: Disable CDL by default
-
-Martin K. Petersen (1):
-      scsi: sd: Use READ(16) when reading block zero on large capacity disks
-
-Ziqi Chen (1):
-      scsi: ufs: core: Quiesce request queues before checking pending cmds
-
-and the diffstat:
-
- drivers/scsi/mpi3mr/mpi3mr_app.c     | 62 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/mpt3sas/mpt3sas_base.c  | 19 +++++++++++
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  3 --
- drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  4 +--
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 23 -------------
- drivers/scsi/scsi.c                  |  7 ++++
- drivers/scsi/scsi_transport_sas.c    | 23 +++++++++++++
- drivers/scsi/sd.c                    | 17 +++++++---
- drivers/ufs/core/ufshcd.c            |  6 ++--
- include/scsi/scsi_transport_sas.h    |  2 ++
- 10 files changed, 130 insertions(+), 36 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 1638109a68a0..cd261b48eb46 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_app.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -2163,10 +2163,72 @@ persistent_id_show(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR_RO(persistent_id);
- 
-+/**
-+ * sas_ncq_prio_supported_show - Indicate if device supports NCQ priority
-+ * @dev: pointer to embedded device
-+ * @attr: sas_ncq_prio_supported attribute descriptor
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' sdev attribute, only works with SATA devices
-+ */
-+static ssize_t
-+sas_ncq_prio_supported_show(struct device *dev,
-+			    struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
-+	return sysfs_emit(buf, "%d\n", sas_ata_ncq_prio_supported(sdev));
-+}
-+static DEVICE_ATTR_RO(sas_ncq_prio_supported);
-+
-+/**
-+ * sas_ncq_prio_enable_show - send prioritized io commands to device
-+ * @dev: pointer to embedded device
-+ * @attr: sas_ncq_prio_enable attribute descriptor
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read/write' sdev attribute, only works with SATA devices
-+ */
-+static ssize_t
-+sas_ncq_prio_enable_show(struct device *dev,
-+				 struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct mpi3mr_sdev_priv_data *sdev_priv_data =  sdev->hostdata;
-+
-+	if (!sdev_priv_data)
-+		return 0;
-+
-+	return sysfs_emit(buf, "%d\n", sdev_priv_data->ncq_prio_enable);
-+}
-+
-+static ssize_t
-+sas_ncq_prio_enable_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct mpi3mr_sdev_priv_data *sdev_priv_data =  sdev->hostdata;
-+	bool ncq_prio_enable = 0;
-+
-+	if (kstrtobool(buf, &ncq_prio_enable))
-+		return -EINVAL;
-+
-+	if (!sas_ata_ncq_prio_supported(sdev))
-+		return -EINVAL;
-+
-+	sdev_priv_data->ncq_prio_enable = ncq_prio_enable;
-+
-+	return strlen(buf);
-+}
-+static DEVICE_ATTR_RW(sas_ncq_prio_enable);
-+
- static struct attribute *mpi3mr_dev_attrs[] = {
- 	&dev_attr_sas_address.attr,
- 	&dev_attr_device_handle.attr,
- 	&dev_attr_persistent_id.attr,
-+	&dev_attr_sas_ncq_prio_supported.attr,
-+	&dev_attr_sas_ncq_prio_enable.attr,
- 	NULL,
- };
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 258647fc6bdd..1092497563b2 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -8512,6 +8512,12 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	ioc->pd_handles_sz = (ioc->facts.MaxDevHandle / 8);
- 	if (ioc->facts.MaxDevHandle % 8)
- 		ioc->pd_handles_sz++;
-+	/*
-+	 * pd_handles_sz should have, at least, the minimal room for
-+	 * set_bit()/test_bit(), otherwise out-of-memory touch may occur.
-+	 */
-+	ioc->pd_handles_sz = ALIGN(ioc->pd_handles_sz, sizeof(unsigned long));
-+
- 	ioc->pd_handles = kzalloc(ioc->pd_handles_sz,
- 	    GFP_KERNEL);
- 	if (!ioc->pd_handles) {
-@@ -8529,6 +8535,13 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	ioc->pend_os_device_add_sz = (ioc->facts.MaxDevHandle / 8);
- 	if (ioc->facts.MaxDevHandle % 8)
- 		ioc->pend_os_device_add_sz++;
-+
-+	/*
-+	 * pend_os_device_add_sz should have, at least, the minimal room for
-+	 * set_bit()/test_bit(), otherwise out-of-memory may occur.
-+	 */
-+	ioc->pend_os_device_add_sz = ALIGN(ioc->pend_os_device_add_sz,
-+					   sizeof(unsigned long));
- 	ioc->pend_os_device_add = kzalloc(ioc->pend_os_device_add_sz,
- 	    GFP_KERNEL);
- 	if (!ioc->pend_os_device_add) {
-@@ -8820,6 +8833,12 @@ _base_check_ioc_facts_changes(struct MPT3SAS_ADAPTER *ioc)
- 		if (ioc->facts.MaxDevHandle % 8)
- 			pd_handles_sz++;
- 
-+		/*
-+		 * pd_handles should have, at least, the minimal room for
-+		 * set_bit()/test_bit(), otherwise out-of-memory touch may
-+		 * occur.
-+		 */
-+		pd_handles_sz = ALIGN(pd_handles_sz, sizeof(unsigned long));
- 		pd_handles = krealloc(ioc->pd_handles, pd_handles_sz,
- 		    GFP_KERNEL);
- 		if (!pd_handles) {
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index bf100a4ebfc3..fe1e96fda284 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -2048,9 +2048,6 @@ void
- mpt3sas_setup_direct_io(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 	struct _raid_device *raid_device, Mpi25SCSIIORequest_t *mpi_request);
- 
--/* NCQ Prio Handling Check */
--bool scsih_ncq_prio_supp(struct scsi_device *sdev);
--
- void mpt3sas_setup_debugfs(struct MPT3SAS_ADAPTER *ioc);
- void mpt3sas_destroy_debugfs(struct MPT3SAS_ADAPTER *ioc);
- void mpt3sas_init_debugfs(void);
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 1c9fd26195b8..87784c96249a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -4088,7 +4088,7 @@ sas_ncq_prio_supported_show(struct device *dev,
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 
--	return sysfs_emit(buf, "%d\n", scsih_ncq_prio_supp(sdev));
-+	return sysfs_emit(buf, "%d\n", sas_ata_ncq_prio_supported(sdev));
- }
- static DEVICE_ATTR_RO(sas_ncq_prio_supported);
- 
-@@ -4123,7 +4123,7 @@ sas_ncq_prio_enable_store(struct device *dev,
- 	if (kstrtobool(buf, &ncq_prio_enable))
- 		return -EINVAL;
- 
--	if (!scsih_ncq_prio_supp(sdev))
-+	if (!sas_ata_ncq_prio_supported(sdev))
- 		return -EINVAL;
- 
- 	sas_device_priv_data->ncq_prio_enable = ncq_prio_enable;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 12d08d8ba538..870ec2cb4af4 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -12571,29 +12571,6 @@ scsih_pci_mmio_enabled(struct pci_dev *pdev)
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
--/**
-- * scsih_ncq_prio_supp - Check for NCQ command priority support
-- * @sdev: scsi device struct
-- *
-- * This is called when a user indicates they would like to enable
-- * ncq command priorities. This works only on SATA devices.
-- */
--bool scsih_ncq_prio_supp(struct scsi_device *sdev)
--{
--	struct scsi_vpd *vpd;
--	bool ncq_prio_supp = false;
--
--	rcu_read_lock();
--	vpd = rcu_dereference(sdev->vpd_pg89);
--	if (!vpd || vpd->len < 214)
--		goto out;
--
--	ncq_prio_supp = (vpd->data[213] >> 4) & 1;
--out:
--	rcu_read_unlock();
--
--	return ncq_prio_supp;
--}
- /*
-  * The pci device ids are defined in mpi/mpi2_cnfg.h.
-  */
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index f0464db3f9de..ee69bd35889d 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -673,6 +673,13 @@ void scsi_cdl_check(struct scsi_device *sdev)
- 		sdev->use_10_for_rw = 0;
- 
- 		sdev->cdl_supported = 1;
-+
-+		/*
-+		 * If the device supports CDL, make sure that the current drive
-+		 * feature status is consistent with the user controlled
-+		 * cdl_enable state.
-+		 */
-+		scsi_cdl_enable(sdev, sdev->cdl_enable);
- 	} else {
- 		sdev->cdl_supported = 0;
- 	}
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 424a89513814..4e33f1661e4c 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -416,6 +416,29 @@ unsigned int sas_is_tlr_enabled(struct scsi_device *sdev)
- }
- EXPORT_SYMBOL_GPL(sas_is_tlr_enabled);
- 
-+/**
-+ * sas_ata_ncq_prio_supported - Check for ATA NCQ command priority support
-+ * @sdev: SCSI device
-+ *
-+ * Check if an ATA device supports NCQ priority using VPD page 89h (ATA
-+ * Information). Since this VPD page is implemented only for ATA devices,
-+ * this function always returns false for SCSI devices.
-+ */
-+bool sas_ata_ncq_prio_supported(struct scsi_device *sdev)
-+{
-+	struct scsi_vpd *vpd;
-+	bool ncq_prio_supported = false;
-+
-+	rcu_read_lock();
-+	vpd = rcu_dereference(sdev->vpd_pg89);
-+	if (vpd && vpd->len >= 214)
-+		ncq_prio_supported = (vpd->data[213] >> 4) & 1;
-+	rcu_read_unlock();
-+
-+	return ncq_prio_supported;
-+}
-+EXPORT_SYMBOL_GPL(sas_ata_ncq_prio_supported);
-+
- /*
-  * SAS Phy attributes
-  */
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 332eb9dac22d..fbc11046bbf6 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3565,16 +3565,23 @@ static bool sd_validate_opt_xfer_size(struct scsi_disk *sdkp,
- 
- static void sd_read_block_zero(struct scsi_disk *sdkp)
- {
--	unsigned int buf_len = sdkp->device->sector_size;
--	char *buffer, cmd[10] = { };
-+	struct scsi_device *sdev = sdkp->device;
-+	unsigned int buf_len = sdev->sector_size;
-+	u8 *buffer, cmd[16] = { };
- 
- 	buffer = kmalloc(buf_len, GFP_KERNEL);
- 	if (!buffer)
- 		return;
- 
--	cmd[0] = READ_10;
--	put_unaligned_be32(0, &cmd[2]); /* Logical block address 0 */
--	put_unaligned_be16(1, &cmd[7]);	/* Transfer 1 logical block */
-+	if (sdev->use_16_for_rw) {
-+		cmd[0] = READ_16;
-+		put_unaligned_be64(0, &cmd[2]); /* Logical block address 0 */
-+		put_unaligned_be32(1, &cmd[10]);/* Transfer 1 logical block */
-+	} else {
-+		cmd[0] = READ_10;
-+		put_unaligned_be32(0, &cmd[2]); /* Logical block address 0 */
-+		put_unaligned_be16(1, &cmd[7]);	/* Transfer 1 logical block */
-+	}
- 
- 	scsi_execute_cmd(sdkp->device, cmd, REQ_OP_DRV_IN, buffer, buf_len,
- 			 SD_TIMEOUT, sdkp->max_retries, NULL);
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 0cf07194bbe8..e5e9da61f15d 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1366,7 +1366,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
- 	 * make sure that there are no outstanding requests when
- 	 * clock scaling is in progress
- 	 */
--	ufshcd_scsi_block_requests(hba);
-+	blk_mq_quiesce_tagset(&hba->host->tag_set);
- 	mutex_lock(&hba->wb_mutex);
- 	down_write(&hba->clk_scaling_lock);
- 
-@@ -1375,7 +1375,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
- 		ret = -EBUSY;
- 		up_write(&hba->clk_scaling_lock);
- 		mutex_unlock(&hba->wb_mutex);
--		ufshcd_scsi_unblock_requests(hba);
-+		blk_mq_unquiesce_tagset(&hba->host->tag_set);
- 		goto out;
- 	}
- 
-@@ -1396,7 +1396,7 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool sc
- 
- 	mutex_unlock(&hba->wb_mutex);
- 
--	ufshcd_scsi_unblock_requests(hba);
-+	blk_mq_unquiesce_tagset(&hba->host->tag_set);
- 	ufshcd_release(hba);
- }
- 
-diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
-index 0e75b9277c8c..e3b6ce3cbf88 100644
---- a/include/scsi/scsi_transport_sas.h
-+++ b/include/scsi/scsi_transport_sas.h
-@@ -200,6 +200,8 @@ unsigned int sas_is_tlr_enabled(struct scsi_device *);
- void sas_disable_tlr(struct scsi_device *);
- void sas_enable_tlr(struct scsi_device *);
- 
-+bool sas_ata_ncq_prio_supported(struct scsi_device *sdev);
-+
- extern struct sas_rphy *sas_end_device_alloc(struct sas_port *);
- extern struct sas_rphy *sas_expander_alloc(struct sas_port *, enum sas_device_type);
- void sas_rphy_free(struct sas_rphy *);
+-- 
+Jens Axboe
 
