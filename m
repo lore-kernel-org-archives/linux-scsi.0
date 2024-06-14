@@ -1,89 +1,84 @@
-Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B35C8192B7B;
-	Fri, 14 Jun 2024 16:26:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A848197A8A;
+	Fri, 14 Jun 2024 17:08:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718382369; cv=none; b=dxG5xxkW1Alhyq9XZJdyEmZ1+Qn6K4xM2WICXZM3u0TzqWmR3RhNTZIQicpPODij0CBI+nPIi1Bef6qi2NJxErXddjv3QpNYFOJUllrSAJ8cZaDl+btTpdGCZI5InIcdMYaJ2a/dft2AHW0nrdbrdeHKmu9xlRbDOkdyFKh2A0Y=
+	t=1718384937; cv=none; b=D8UD3wvIYN5c+mPPpftrj3i6H/A0qBbdYPirthOpoQb2ca98pfdQ6iJm+/lyxB1CNlOUdxEhXzKiqw9/cNMHSVPsadQQVRx70c9vCnb+GUnspw5xBaLPmCMuJAHOaDjHbr/NVZ40MivoF+J/Pc+7hvGBmNDLjQhcgSk7p/LOQ5c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718382369; c=relaxed/simple;
-	bh=ayg07pF7euQv/CPhXKbrgipzCXGh1+VtDo0vciMqb4c=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=CpjjKeDAEQCJR3PRXSxW7URpujdfb181jfL8138MowLpyXqTP3aM7AW9VwZPZZb4gfc4mflgEtPedtjIN5SltzXfpYkgHVNZNz06BLHXrfzI8mEv9tAyP/bcoKb6aAMK7Gb1x4QcncbzIXjtGF12Xwsr+pclQy/fsq/Dln9370A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IF8ldubh; arc=none smtp.client-ip=209.85.128.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1718384937; c=relaxed/simple;
+	bh=zDgquWL9WTZHVxMSBM55tUA3TUtmDG9t57fELwdqvgs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jJqaCFVnnPZnHYztmavir2pf9uRX0nD0gu1FlZVHyKP69pLnM3bHG9dmvt4oworAwBXjj4AVVOrR0yHD+BTwgF3BhbD1vww9iX3aXUpHnFT+piGBKvDru6nw4FLjajS+GBcZ1QUvuYYOhT9DQNltjzD7tb1tGG69sND00Kubj38=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=t9DbYtCD; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IF8ldubh"
-Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-62a0809f96dso2335067b3.0;
-        Fri, 14 Jun 2024 09:26:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718382366; x=1718987166; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZLGKDZVOQ3iS6C5OGcazxokC/tYhNiWsWZ8pHrHihu0=;
-        b=IF8ldubhLRsL+WU05KIo0+qJ4h1YtQI8Iix20/BZMpWjCxV0kl35bc6/3ofyPYjP/z
-         Ex2BJrbja8qp1izsYk/eguxZGEotrymgB/vEOtOfeFyEed+9LsPqnAakkjN7PEJHBMXh
-         kolNEy90Y5/K9XXvPl0X+jAgC33AAEBsPt5j2HB+QVF2Pfq7s4UT6kptiWO5OqaqDVrh
-         yI5KxbaGcFNv2OFSsMLZqamZB5avaBuGFKVpoc0azefQpEn80P4rzcJlg4UYvYc+HWfC
-         9/cWp+0/CjwDO1QgFv2iv5gT5XsKTOaYEfID5a3MrJVxS9ICaX28UO4My/OkAPFif/+v
-         4LUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718382366; x=1718987166;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ZLGKDZVOQ3iS6C5OGcazxokC/tYhNiWsWZ8pHrHihu0=;
-        b=NVv33R4ER7GV2BqaENcUtFrrzEjrwoHgaj4wF0XMv19/Ds2rDCoU7Y8J6x+tQjU38b
-         ggNE0K9hHA9dQeIa1oiS4Ba0iLYCV7iwwJZFZxwVQaQn7FlJljSSchmD5sO6FgZZHXk1
-         OkoLUJN7cWxuuRf5mG1P8aEjSgbboschPcDbH+Q3/j3wMzI45eAuj99cVpRfkuw5PUI5
-         3CSca0o+bh3jouCKrcjyCWInMpRm1AlM8ywWDutfJcyqPuM/GcRbtEKK3qt2LKJaAN+G
-         Yzs91kDB/LYOMymczLI/IHwhty8rOJUv9GWPm13m+LFvZrZviCmCt88f23jprsKSMCdA
-         3hBA==
-X-Forwarded-Encrypted: i=1; AJvYcCUxqk9S8khgtMTRnXQN9uYjMrcPIbPsSGHa+lm3szf3PHE0XF5acZ4sMRs+alVjQVeSpFhziXOTR/O6FyWRHoI7nMNKbQ38dfqdanMdsR3tqiioZnzssZrw4AVwVNldx/Mz0hXwKUdzqQ==
-X-Gm-Message-State: AOJu0YxDkq9MRG6kpbOhvOPo/TEeDpL3x9vD1BqG92ps7Lc73z3SFJQB
-	6s1Id5YpjYrtsu3tREcBihewFgkjHsY9R+5scvH4fJSX6KbzMp8J98RrXfRxGnSptJaFNWX3xSa
-	xKEhbHXPIxhE/Z7LPfhHdDQ0BnyZZgA==
-X-Google-Smtp-Source: AGHT+IFpX3YXCHGs47WbQav3cjkOyVOtvBNL3pgoaCNtlNCAXWBCPtzUF39Uqme38dR1sz3eJd4rv7/aTHNWqC1IsvM=
-X-Received: by 2002:a25:d64d:0:b0:df7:a3c6:c849 with SMTP id
- 3f1490d57ef6-dff15526355mr2617298276.4.1718382366653; Fri, 14 Jun 2024
- 09:26:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="t9DbYtCD"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W15N6712Gz6Cnv3g;
+	Fri, 14 Jun 2024 17:08:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1718384931; x=1720976932; bh=KwEa/QCzQe9/zSgXOq1yzUeW
+	viOivvbVdURGowWehwk=; b=t9DbYtCDyoG+Tii0ZUizV6fCSWB/JEvzRbKsdOHs
+	utxBEeLwTfqk8H2CrukrfkwaN7d/sRRKk8sUprhJmzXDMpojZPDj4bIJshQ2lR+g
+	ziBQ15zptcITec0dOxL+k3G2IDBOo10KL0w4R6vRjUz1HEPHdIG9wh3LjDgMtKIL
+	eWTsDRhzS3ShLsRiBYk9x4IA+PimGPijaODDGbk6JsFxa77Lv/piTMJ05N11Y+N3
+	/HBKmNwhEIu/jTUVoWj7GwJGLABpP1cXUJrV28fV/o3pgMT3tdR2nreqasISDBxS
+	abZtt/9qdVXcAYYCtxs6Kg5JwxL981Fck9KjyRmTwomceQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id pJSbmmB6srOS; Fri, 14 Jun 2024 17:08:51 +0000 (UTC)
+Received: from [100.96.154.26] (unknown [104.132.0.90])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W15N30F7Pz6Cnk98;
+	Fri, 14 Jun 2024 17:08:50 +0000 (UTC)
+Message-ID: <4dfd06ba-7d95-435b-95e1-e864a33447b9@acm.org>
+Date: Fri, 14 Jun 2024 10:08:49 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240614124233.334806-1-qq810974084@gmail.com>
-In-Reply-To: <20240614124233.334806-1-qq810974084@gmail.com>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Fri, 14 Jun 2024 09:25:55 -0700
-Message-ID: <CABPRKS9s11TqdoYF3sxHsXAxSNwt0fK+=29amtK9XHAvb4xM_w@mail.gmail.com>
-Subject: Re: [PATCH V2 RESEND] scsi: lpfc: Fix a possible null pointer dereference
-To: Huai-Yuan Liu <qq810974084@gmail.com>
-Cc: Justin Tee <justin.tee@broadcom.com>, james.smart@broadcom.com, 
-	dick.kennedy@broadcom.com, James.Bottomley@hansenpartnership.com, 
-	martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 6/6] scsi: ufs: exynos: Add support for Flash Memory
+ Protector (FMP)
+To: Eric Biggers <ebiggers@kernel.org>, linux-scsi@vger.kernel.org
+Cc: linux-samsung-soc@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Peter Griffin <peter.griffin@linaro.org>,
+ =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>,
+ William McVicker <willmcvicker@google.com>
+References: <20240611223419.239466-1-ebiggers@kernel.org>
+ <20240611223419.239466-7-ebiggers@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240611223419.239466-7-ebiggers@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Huai-Yuan,
+On 6/11/24 3:34 PM, Eric Biggers wrote:
+> +#define FMP_DATA_UNIT_SIZE	SZ_4K
 
-> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-> index b1c9107d3408..94d968a255ff 100644
-> --- a/drivers/scsi/lpfc/lpfc_attr.c
-> +++ b/drivers/scsi/lpfc/lpfc_attr.c
-> @@ -1904,6 +1904,8 @@ lpfc_xcvr_data_show(struct device *dev, struct device_attribute *attr,
->
->         /* Get transceiver information */
->         rdp_context = kmalloc(sizeof(*rdp_context), GFP_KERNEL);
-> +       if (!rdp_context)
-> +               goto out_free_rdp;
+A Samsung employee told me that the Exynos encryption data unit size is configurable
+and also that it is set by the following code:
 
-Understood that kfree(NULL) essentially translates to no-op, but I'd
-prefer that we return len here instead of goto out_free_rdp because
-there really is nothing to free if kmalloc failed.
+	hci_writel(ufs, PRDT_SET_SIZE(12), HCI_TXPRDT_ENTRY_SIZE);
+	hci_writel(ufs, PRDT_SET_SIZE(12), HCI_RXPRDT_ENTRY_SIZE);
+
+How about introducing a new macro that represents the TX PRDT entry size, the RX PRDT
+entry size and the encryption data unit size?
 
 Thanks,
-Justin
+
+Bart.
