@@ -1,168 +1,424 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com [209.85.219.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0191178CE2
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Jun 2024 21:42:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 454E9282E1
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Jun 2024 23:01:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718401322; cv=none; b=uXB2OLc2PKL31hT5ep5Frlk7BrosjlDs8WZJgu5SUyH2ViQVhxm4qY0LMs8n2HnJmJA016TVhlkMP8Fotz72puEeNeTh685e2+K2mAAbKkZj7rpJExQZkzMiS9sh50ijS+DIqxDwtT5kqKdhpm5M0rR8kbdkNWvup3FG6W3cFIc=
+	t=1718406071; cv=none; b=G1aFH9xjGzMdkvUVsgbKNfbiI0F9QZ3vdABJPyLYlUznnWs/g8HC75ejE9/798ifLC0eoIn5HK4Ym6M9I/rJLX63q2swunlyrmlHISv3PCZMd1VAoM50FzMP0UXixwMPxbtzQZfhy4fxsuqnJSFc0wtEYJZHWljxuQppVZo4nBI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718401322; c=relaxed/simple;
-	bh=AzGIarMleTpdGZihUvHwAVhm55vxoLoAj283uw9kuqk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jQaxPTVfXndxzNqwgOppM0G7TmvYxNUQEkjiKCZ/tc6ncCj7Qd+5UPQV7eLJLw0SfPUJ6Uz4B2qdxKmJHJs6jZe69K8f+O24z4ON+0nlz8N9oMIHTlOyC8Yd+0XJJXKiCOuxLgnBJrgzRvMgTr97P/+9smDNAlaG02Ozg9TUfX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=Dsh9sCMW; arc=none smtp.client-ip=209.85.210.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1718406071; c=relaxed/simple;
+	bh=cUn2ro5t8hvJdnUiLMEBcEs/sY4KPWEv4rettZXbmUI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=rjvM485zV1ZIYS+0tzL1Dk+LyWVRMs+PDT7iiCY7zMlsUFyXmngMMRP2UJHHItVmyPdcAgD1D3eWpvyGTRCJQdcHi6mhlLU4gHKiFSysAKPVQ+0/imH/g5XD4Ef8QiU0rgBkb255gQj3YJd+mLaXSHcFjec8wWIGiHqUZoM/TYQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=p9QNOLLZ; arc=none smtp.client-ip=209.85.219.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Dsh9sCMW"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-70599522368so2007529b3a.2
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Jun 2024 14:42:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="p9QNOLLZ"
+Received: by mail-yb1-f171.google.com with SMTP id 3f1490d57ef6-dfefe1a9f01so3068299276.2
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Jun 2024 16:01:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1718401320; x=1719006120; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=V5i3hkPFht64X0kscOL28fDTdIk9eB2a/QctdKtDct0=;
-        b=Dsh9sCMW0qeh2amAOnlP24C5aMawHm0MrCnT/sIiGoRB5zpiy5/xGl4Phri1az544k
-         2L2pM8VKime18Znxw3kAVukg+haYLf/j8mu8MGNb7JsjB19cPvpKS1O+hvee+Q4paY/z
-         Ed4T1eZ0EZezxUXheQ80HwUALxk2U3ncCyweYh4q+npqjMGhL1J2owSC6uUIHFEM3TcO
-         N1mvC+WhdH7nEK6A6g4uSqrtIdgRpdquLyrkAYezJrHwcFJ9KCQAtShQ91mjt2hA8gXg
-         /1yVZw9+GabgERkAzFZFy8IVvWLLONZGcr03bxMQJxYVewTNb9UGMU2EixuRgQxK2BHm
-         V7Rw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718401320; x=1719006120;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=linaro.org; s=google; t=1718406068; x=1719010868; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=V5i3hkPFht64X0kscOL28fDTdIk9eB2a/QctdKtDct0=;
-        b=jV8rNEzUKs171j2Y8nryBwTcGA5LCFIgztb1tgNAv5Kw9ingw+4vsJj2gPdD9redxb
-         SqVFRADLIes8rYaIuHhwXBcp2wztSK1Jfp+pA7mFo5X51K0W2NPNWtVtW0kSmkHImSTz
-         rpoWPtrcdd30FjaGJPy/O8RtgftAdVEjoYjoMvhtIjO9T6hj2flLlHKfHTKoZm78Mxc+
-         6PPghg2RzGTF5bLbcfgqtAtRct8sspjcUR42zOTqBGGEfUpR7adXAmH5WycgFiB61hH8
-         edAi3Fqf43reRr5YeBFlGqMflAnoJ1Dvy/Odk34SlO/5t7u/MpRv1KmYESqXgBJVTg/z
-         N1FQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWog1du1IkqA9CdFiW845L/kfIM2nkOFJhLPfWMKee1uwDPxbInIQ+sTUiPvlJUnn35pGLwpYn/mk7kXg2lCw67YCUW3CedLMM73Q==
-X-Gm-Message-State: AOJu0YxoO1NTu2n6Ff2j6kehbCtX/C1j6wlbkToDytuUo4aljX8J7n8o
-	roRMWyjLudMgcj3+pEXbo56VaPB0Jd0aQ++L3pvPNAYexU0oPgstELxmXN2gIw==
-X-Google-Smtp-Source: AGHT+IFaxZtG5Ckd+erUa5z27h4gIx3Ud+kjcBQl8pojZr5zoiZr+mZXpQ0ckmtGLLPRywzuGJn9Ag==
-X-Received: by 2002:a05:6a00:21d1:b0:705:d730:1b8 with SMTP id d2e1a72fcca58-705d7300d48mr4186134b3a.19.1718401319849;
-        Fri, 14 Jun 2024 14:41:59 -0700 (PDT)
-Received: from google.com (148.98.83.34.bc.googleusercontent.com. [34.83.98.148])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-705cc925fe7sm3643989b3a.19.2024.06.14.14.41.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Jun 2024 14:41:59 -0700 (PDT)
-Date: Fri, 14 Jun 2024 21:41:55 +0000
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: TJ Adams <tadamsjr@google.com>, Jack Wang <jinpu.wang@cloud.ionos.com>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] scsi: pm80xx: Do not issue hard reset before NCQ EH
-Message-ID: <Zmy5I-XNK5bffSe3@google.com>
-References: <20240607175743.3986625-1-tadamsjr@google.com>
- <20240607175743.3986625-3-tadamsjr@google.com>
- <ZmgNkK8haUisJ5-b@ryzen.lan>
+        bh=lgHV6L3eFSZdc43txkr9tWnMlInmAtTjrQiLaQo6Imo=;
+        b=p9QNOLLZ0FgzaeEq12hMN3QIJSKVS8yvB7wmuIhrYsw09AIFjTxwBdfLhrOFCT6Kho
+         6BybRjC61XlC1LkWPBII5ReUCUHiA/SVXerEsvxVieQd1CDFp5Jz2NRpzuJjUCLNEPpV
+         o7kbY7hC/F/4rUyc0M7mc0mcV34qNn+yQwvJ4hbCZ+BDpRRU6OOPhybHuFmWO0qFpPUW
+         X6qOzRVefS2OnS0gHofIqJMOmIx1E4hDn6Pd4GHKc4jvyWKR0nA+Rq5zGo7hs2bC9pe+
+         9/Zgp2TRiZFz2wHWGN3bJlhIOWK16bBcjkVav0Ko9OOa8rphs4aD3793rKBYjCzjbHAz
+         /JEQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718406068; x=1719010868;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=lgHV6L3eFSZdc43txkr9tWnMlInmAtTjrQiLaQo6Imo=;
+        b=R1bdxiEwtXbCsFKzq9XDsnaOKMtAlS/yRte6cSagwrUmu9MBpEKqpzrktTkL+MA/kb
+         3ye31JF05dQ3xcBZtMSYTrszM60adgt6017idtnNoLM89puywoxZufPuzvgECWq83B3X
+         ICFeg2MwhQsDLgDJvY4nl/xQvYklzpUvS4WeCaCd2ZRpMTRHr9iTtpvwmHBSezIu3Cd2
+         BqAx6232X6aVkPhB/RRb7CzcDDxvxnT6JSbCX0bf2PSa6cNm9yHzmumr8w0MCExPMNEL
+         CABmNnQ3PqgNkg7d4Y2zErsOeCnoQR3q1GFZk2w2koxJ+mDwk2dey8QIP/aSWQyZlI1N
+         Bd2Q==
+X-Gm-Message-State: AOJu0YwbtlVuznThAVup9jaugAdolpqQyWd77ZiTxjIcHw/UVEoNHpSB
+	0I4Yx0VIT0CxChFj98/rPU5IjxfYk+ue8VOywyiBePV8Y9+wYgkCrgmutxwHvFQqygFP3Me8vf7
+	xiqPtfGHe8KBWBE5wY2bvElAzLdz6UUWKmrTXa6bYgb1Ka9rhnX33Tw==
+X-Google-Smtp-Source: AGHT+IHzlpm/VkF6w2lTOi1zI4/MusMO0PMLsXm+2gRujgsEeAH4uoTUkpth6NTMIWvVW4Wd1MYUzB+293S9EBj7Ni4=
+X-Received: by 2002:a05:6902:701:b0:dfb:312:61c9 with SMTP id
+ 3f1490d57ef6-dff1548fbd5mr4437169276.52.1718406068229; Fri, 14 Jun 2024
+ 16:01:08 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZmgNkK8haUisJ5-b@ryzen.lan>
+References: <20240611223419.239466-1-ebiggers@kernel.org> <20240611223419.239466-7-ebiggers@kernel.org>
+In-Reply-To: <20240611223419.239466-7-ebiggers@kernel.org>
+From: Sam Protsenko <semen.protsenko@linaro.org>
+Date: Fri, 14 Jun 2024 18:00:57 -0500
+Message-ID: <CAPLW+4kPAi+13C7t34XWW9ciAoYUebj5nz_EQY+RKhsT2ZpHnQ@mail.gmail.com>
+Subject: Re: [PATCH 6/6] scsi: ufs: exynos: Add support for Flash Memory
+ Protector (FMP)
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org, 
+	linux-fscrypt@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, Peter Griffin <peter.griffin@linaro.org>, 
+	=?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>, 
+	William McVicker <willmcvicker@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jun 11, 2024 at 10:40:48AM +0200, Niklas Cassel wrote:
-> Hello Igor, TJ,
-> 
-Hi Niklas,
-
-Thank you for the feedback!
-
-> On Fri, Jun 07, 2024 at 05:57:42PM +0000, TJ Adams wrote:
-> > From: Igor Pylypiv <ipylypiv@google.com>
-> > 
-> > v6.2 commit 811be570a9a8 ("scsi: pm8001: Use sas_ata_device_link_abort()
-> 
-> Do not specify kernel version (it is irrelevant), SHA1 is enough.
-> 
-Noted.
-
-> 
-> > to handle NCQ errors") removed duplicate NCQ EH from the pm80xx driver
-> > and started relying on libata to handle the NCQ errors. The PM8006
-> > controller has a special EH sequence that was added in v4.15 commit
-> > 869ddbdcae3b ("scsi: pm80xx: corrected SATA abort handling sequence.").
-> 
-> Do not specify kernel version (it is irrelevant), SHA1 is enough.
-> 
-> Since the code added in 869ddbdcae3b still exists in the pm80xx driver,
-> I think that you should mention the commits in chronological order.
-> (Right now you mention the oldest still existing code last, which seems
-> a bit backwards.)
+On Tue, Jun 11, 2024 at 5:36=E2=80=AFPM Eric Biggers <ebiggers@kernel.org> =
+wrote:
 >
-Noted. I wanted to emphasise that newer commit 811be570a9a8 broke the NCQ EH
-for pm8006 so I put it first. I should have added a Fixes tag to make it
-clear. 
-
-> 
-> > The special EH sequence issues a hard reset to a drive before libata EH
-> > has a chance to read the NCQ log page. Libata EH gets confused by empty
-> > NCQ log page which results in HSM violation. The failed command gets
-> > retried a few times and each time fails with the same HSM violation.
-> > Finally, libata decides to disable NCQ due to subsequent HSM vioaltions.
-> 
-> s/vioaltions/violations/
-> 
-> I'm not an expert in libsas EH, but I think that your commit message fails
-> to explain why this change actually fixes anything. You do not mention the
-> relationship between the code that you add pm8001_work_fn() and the
-> existing code in pm8001_abort_task(), and the order in which the functions
-> get executed.
-> 
-Noted, will update with more details.
-
-> Does calling sas_execute_internal_abort_dev() from pm8001_work_fn() ensure
-> that the libsas EH is never invoked? Or does it cancel the hard reset that
-> is part of the "special EH sequence" in pm8001_abort_task() ?
-> 
-It ensures that all I/Os are aborted before libsas EH kicks in. Since all
-I/Os are aborted by the controller the pm8001_abort_task() will not be called.
-Going to add that to commit message as well.
-
-> Wouldn't it be better if this was fixed in pm8001_abort_task() or similar
-> instead? It appears that the code you add to pm8001_work_fn() (that has a
-> very ugly if (pm8006)) is only there to undo or avoid the hard reset that
-> is done in pm8001_abort_task() (which also has a very ugly if (pm8006)).
+> From: Eric Biggers <ebiggers@google.com>
 >
+> Add support for Flash Memory Protector (FMP), which is the inline
+> encryption hardware on Exynos and Exynos-based SoCs.
+>
+> Specifically, add support for the "traditional FMP mode" that works on
+> many Exynos-based SoCs including gs101.  This is the mode that uses
+> "software keys" and is compatible with the upstream kernel's existing
+> inline encryption framework in the block and filesystem layers.  I plan
+> to add support for the wrapped key support on gs101 at a later time.
+>
+> Tested on gs101 (specifically Pixel 6) by running the 'encrypt' group of
+> xfstests on a filesystem mounted with the 'inlinecrypt' mount option.
+>
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> ---
+>  drivers/ufs/host/ufs-exynos.c | 219 +++++++++++++++++++++++++++++++++-
+>  1 file changed, 218 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.=
+c
+> index 88d125d1ee3c..969c4eedbe2d 100644
+> --- a/drivers/ufs/host/ufs-exynos.c
+> +++ b/drivers/ufs/host/ufs-exynos.c
+> @@ -6,10 +6,13 @@
+>   * Author: Seungwon Jeon  <essuuj@gmail.com>
+>   * Author: Alim Akhtar <alim.akhtar@samsung.com>
+>   *
+>   */
+>
+> +#include <asm/unaligned.h>
+> +#include <crypto/aes.h>
+> +#include <linux/arm-smccc.h>
+>  #include <linux/clk.h>
+>  #include <linux/delay.h>
+>  #include <linux/module.h>
+>  #include <linux/of.h>
+>  #include <linux/of_address.h>
+> @@ -1149,10 +1152,221 @@ static inline void exynos_ufs_priv_init(struct u=
+fs_hba *hba,
+>                 ufs->rx_sel_idx =3D 0;
+>         hba->priv =3D (void *)ufs;
+>         hba->quirks =3D ufs->drv_data->quirks;
+>  }
+>
+> +#ifdef CONFIG_SCSI_UFS_CRYPTO
+> +
+> +/*
+> + * Support for Flash Memory Protector (FMP), which is the inline encrypt=
+ion
+> + * hardware on Exynos and Exynos-based SoCs.  The interface to this hard=
+ware is
+> + * not compatible with the standard UFS crypto.  It requires that encryp=
+tion be
+> + * configured in the PRDT using a nonstandard extension.
+> + */
+> +
+> +enum fmp_crypto_algo_mode {
+> +       FMP_BYPASS_MODE =3D 0,
+> +       FMP_ALGO_MODE_AES_CBC =3D 1,
+> +       FMP_ALGO_MODE_AES_XTS =3D 2,
+> +};
+> +enum fmp_crypto_key_length {
+> +       FMP_KEYLEN_256BIT =3D 1,
+> +};
+> +#define FMP_DATA_UNIT_SIZE     SZ_4K
+> +
+> +/* This is the nonstandard format of PRDT entries when FMP is enabled. *=
+/
+> +struct fmp_sg_entry {
+> +
+> +       /*
+> +        * This is the standard PRDT entry, but with nonstandard bitfield=
+s in
+> +        * the high bits of the 'size' field, i.e. the last 32-bit word. =
+ When
+> +        * these nonstandard bitfields are zero, the data segment won't b=
+e
+> +        * encrypted or decrypted.  Otherwise they specify the algorithm =
+and key
+> +        * length with which the data segment will be encrypted or decryp=
+ted.
+> +        */
 
-It would definetely be better to fix this in pm8001_abort_task(), if possible.
-One way would be to add a flag that will be set when NCQ error happens (when
-IO_XFER_ERROR_ABORTED_NCQ_MODE event is received) and then check that flag
-in pm8001_abort_task() to skip hard reset. This approach adds another type
-of ugliness to the code and I'm not sure which of these ugly approaches is
-less ugly.
+Minor suggestion: create a kernel-doc comment for the structure and
+pull all fields documentation there.
 
-> Now we have this ugly if (pm8006) in two different functions... which
-> makes my "this could be solved in a nicer way" detector go off.
-> 
+> +       struct ufshcd_sg_entry base;
+> +
+> +       /* The initialization vector (IV) with all bytes reversed */
+> +       __be64 file_iv[2];
+> +
+> +       /*
+> +        * The key with all bytes reversed.  For XTS, the two halves of t=
+he key
+> +        * are given separately and are byte-reversed separately.
+> +        */
+> +       __be64 file_enckey[4];
+> +       __be64 file_twkey[4];
+> +
+> +       /* Unused */
+> +       __be64 disk_iv[2];
+> +       __be64 reserved[2];
+> +};
+> +
+> +#define SMC_CMD_FMP_SECURITY           0xC2001810
+> +#define SMC_CMD_SMU                    0xC2001850
+> +#define SMC_CMD_FMP_SMU_RESUME         0xC2001860
 
-I would be very happy if we can drop those ugly if (pm8006) checks and have
-a generic nice solution.
+Suggest to use ARM_SMCCC_CALL_VAL() macro to define above values.
 
-> If this patch (as is) is really the way to go, then I think there should
-> be a more detailed reasoning why this change is the most sensible one.
-> 
+> +#define SMU_EMBEDDED                   0
+> +#define SMU_INIT                       0
+> +#define CFG_DESCTYPE_3                 3
+> +
+> +static inline long exynos_smc(unsigned long cmd, unsigned long arg0,
+> +                             unsigned long arg1, unsigned long arg2)
+> +{
+> +       struct arm_smccc_res res;
+> +
+> +       arm_smccc_smc(cmd, arg0, arg1, arg2, 0, 0, 0, 0, &res);
+> +       return res.a0;
+> +}
 
-Let me investigate this issue more to see if there is a way to drop 
-the ugly pm8006 checks.
+This wrapper looks like it was borrowed from the downstream Samsung
+code. Not sure if it brings any value nowadays. Maybe it would be
+clearer to just use arm_smccc_smc() directly and remove this wrapper?
 
-Any ideas/suggestions on how to fix this nicely are very welcomed.
-
-> 
-> Kind regards,
-> Niklas
-
-Thank you,
-Igor
+> +
+> +static void exynos_ufs_fmp_init(struct ufs_hba *hba)
+> +{
+> +       struct blk_crypto_profile *profile =3D &hba->crypto_profile;
+> +       long ret;
+> +
+> +       /*
+> +        * Check for the standard crypto support bit, since it's availabl=
+e even
+> +        * though the rest of the interface to FMP is nonstandard.
+> +        *
+> +        * This check should have the effect of preventing the driver fro=
+m
+> +        * trying to use FMP on old Exynos SoCs that don't have FMP.
+> +        */
+> +       if (!(ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES) &
+> +             MASK_CRYPTO_SUPPORT))
+> +               return;
+> +
+> +       /*
+> +        * This call (which sets DESCTYPE to 0x3 in the FMPSECURITY0 regi=
+ster)
+> +        * is needed to make the hardware use the larger PRDT entry size.
+> +        */
+> +       BUILD_BUG_ON(sizeof(struct fmp_sg_entry) !=3D 128);
+> +       ret =3D exynos_smc(SMC_CMD_FMP_SECURITY, 0, SMU_EMBEDDED, CFG_DES=
+CTYPE_3);
+> +       if (ret) {
+> +               dev_warn(hba->dev,
+> +                        "SMC_CMD_FMP_SECURITY failed on init: %ld.  Disa=
+bling FMP support.\n",
+> +                        ret);
+> +               return;
+> +       }
+> +       ufshcd_set_sg_entry_size(hba, sizeof(struct fmp_sg_entry));
+> +
+> +       /*
+> +        * This is needed to initialize FMP.  Without it, errors occur wh=
+en
+> +        * inline encryption is used.
+> +        */
+> +       ret =3D exynos_smc(SMC_CMD_SMU, SMU_INIT, SMU_EMBEDDED, 0);
+> +       if (ret) {
+> +               dev_err(hba->dev,
+> +                       "SMC_CMD_SMU(SMU_INIT) failed: %ld.  Disabling FM=
+P support.\n",
+> +                       ret);
+> +               return;
+> +       }
+> +
+> +       /* Advertise crypto capabilities to the block layer. */
+> +       ret =3D devm_blk_crypto_profile_init(hba->dev, profile, 0);
+> +       if (ret) {
+> +               /* Only ENOMEM should be possible here. */
+> +               dev_err(hba->dev, "Failed to initialize crypto profile: %=
+ld\n",
+> +                       ret);
+> +               return;
+> +       }
+> +       profile->max_dun_bytes_supported =3D AES_BLOCK_SIZE;
+> +       profile->dev =3D hba->dev;
+> +       profile->modes_supported[BLK_ENCRYPTION_MODE_AES_256_XTS] =3D
+> +               FMP_DATA_UNIT_SIZE;
+> +
+> +       /* Advertise crypto support to ufshcd-core. */
+> +       hba->caps |=3D UFSHCD_CAP_CRYPTO;
+> +
+> +       /* Advertise crypto quirks to ufshcd-core. */
+> +       hba->quirks |=3D UFSHCD_QUIRK_CUSTOM_CRYPTO_PROFILE |
+> +                      UFSHCD_QUIRK_BROKEN_CRYPTO_ENABLE |
+> +                      UFSHCD_QUIRK_KEYS_IN_PRDT;
+> +
+> +}
+> +
+> +static void exynos_ufs_fmp_resume(struct ufs_hba *hba)
+> +{
+> +       long ret;
+> +
+> +       ret =3D exynos_smc(SMC_CMD_FMP_SECURITY, 0, SMU_EMBEDDED, CFG_DES=
+CTYPE_3);
+> +       if (ret)
+> +               dev_err(hba->dev,
+> +                       "SMC_CMD_FMP_SECURITY failed on resume: %ld\n", r=
+et);
+> +
+> +       ret =3D exynos_smc(SMC_CMD_FMP_SMU_RESUME, 0, SMU_EMBEDDED, 0);
+> +       if (ret)
+> +               dev_err(hba->dev, "SMC_CMD_FMP_SMU_RESUME failed: %ld\n",=
+ ret);
+> +}
+> +
+> +static inline __be64 fmp_key_word(const u8 *key, int j)
+> +{
+> +       return cpu_to_be64(get_unaligned_le64(
+> +                       key + AES_KEYSIZE_256 - (j + 1) * sizeof(u64)));
+> +}
+> +
+> +/* Fill the PRDT for a request according to the given encryption context=
+. */
+> +static int exynos_ufs_fmp_fill_prdt(struct ufs_hba *hba,
+> +                                   const struct bio_crypt_ctx *crypt_ctx=
+,
+> +                                   void *prdt, unsigned int num_segments=
+)
+> +{
+> +       struct fmp_sg_entry *fmp_prdt =3D prdt;
+> +       const u8 *enckey =3D crypt_ctx->bc_key->raw;
+> +       const u8 *twkey =3D enckey + AES_KEYSIZE_256;
+> +       u64 dun_lo =3D crypt_ctx->bc_dun[0];
+> +       u64 dun_hi =3D crypt_ctx->bc_dun[1];
+> +       unsigned int i;
+> +
+> +       /* If FMP wasn't enabled, we shouldn't get any encrypted requests=
+. */
+> +       if (WARN_ON_ONCE(!(hba->caps & UFSHCD_CAP_CRYPTO)))
+> +               return -EIO;
+> +
+> +       /* Configure FMP on each segment of the request. */
+> +       for (i =3D 0; i < num_segments; i++) {
+> +               struct fmp_sg_entry *prd =3D &fmp_prdt[i];
+> +               int j;
+> +
+> +               /* Each segment must be exactly one data unit. */
+> +               if (prd->base.size !=3D cpu_to_le32(FMP_DATA_UNIT_SIZE - =
+1)) {
+> +                       dev_err(hba->dev,
+> +                               "data segment is misaligned for FMP\n");
+> +                       return -EIO;
+> +               }
+> +
+> +               /* Set the algorithm and key length. */
+> +               prd->base.size |=3D cpu_to_le32((FMP_ALGO_MODE_AES_XTS <<=
+ 28) |
+> +                                             (FMP_KEYLEN_256BIT << 26));
+> +
+> +               /* Set the IV. */
+> +               prd->file_iv[0] =3D cpu_to_be64(dun_hi);
+> +               prd->file_iv[1] =3D cpu_to_be64(dun_lo);
+> +
+> +               /* Set the key. */
+> +               for (j =3D 0; j < AES_KEYSIZE_256 / sizeof(u64); j++) {
+> +                       prd->file_enckey[j] =3D fmp_key_word(enckey, j);
+> +                       prd->file_twkey[j] =3D fmp_key_word(twkey, j);
+> +               }
+> +
+> +               /* Increment the data unit number. */
+> +               dun_lo++;
+> +               if (dun_lo =3D=3D 0)
+> +                       dun_hi++;
+> +       }
+> +       return 0;
+> +}
+> +
+> +#else /* CONFIG_SCSI_UFS_CRYPTO */
+> +
+> +static void exynos_ufs_fmp_init(struct ufs_hba *hba)
+> +{
+> +}
+> +
+> +static void exynos_ufs_fmp_resume(struct ufs_hba *hba)
+> +{
+> +}
+> +
+> +#define exynos_ufs_fmp_fill_prdt NULL
+> +
+> +#endif /* !CONFIG_SCSI_UFS_CRYPTO */
+> +
+>  static int exynos_ufs_init(struct ufs_hba *hba)
+>  {
+>         struct device *dev =3D hba->dev;
+>         struct platform_device *pdev =3D to_platform_device(dev);
+>         struct exynos_ufs *ufs;
+> @@ -1196,10 +1410,12 @@ static int exynos_ufs_init(struct ufs_hba *hba)
+>                 goto out;
+>         }
+>
+>         exynos_ufs_priv_init(hba, ufs);
+>
+> +       exynos_ufs_fmp_init(hba);
+> +
+>         if (ufs->drv_data->drv_init) {
+>                 ret =3D ufs->drv_data->drv_init(dev, ufs);
+>                 if (ret) {
+>                         dev_err(dev, "failed to init drv-data\n");
+>                         goto out;
+> @@ -1430,11 +1646,11 @@ static int exynos_ufs_resume(struct ufs_hba *hba,=
+ enum ufs_pm_op pm_op)
+>
+>         if (!ufshcd_is_link_active(hba))
+>                 phy_power_on(ufs->phy);
+>
+>         exynos_ufs_config_smu(ufs);
+> -
+> +       exynos_ufs_fmp_resume(hba);
+>         return 0;
+>  }
+>
+>  static int exynosauto_ufs_vh_link_startup_notify(struct ufs_hba *hba,
+>                                                  enum ufs_notify_change_s=
+tatus status)
+> @@ -1696,10 +1912,11 @@ static const struct ufs_hba_variant_ops ufs_hba_e=
+xynos_ops =3D {
+>         .setup_xfer_req                 =3D exynos_ufs_specify_nexus_t_xf=
+er_req,
+>         .setup_task_mgmt                =3D exynos_ufs_specify_nexus_t_tm=
+_req,
+>         .hibern8_notify                 =3D exynos_ufs_hibern8_notify,
+>         .suspend                        =3D exynos_ufs_suspend,
+>         .resume                         =3D exynos_ufs_resume,
+> +       .fill_crypto_prdt               =3D exynos_ufs_fmp_fill_prdt,
+>  };
+>
+>  static struct ufs_hba_variant_ops ufs_hba_exynosauto_vh_ops =3D {
+>         .name                           =3D "exynosauto_ufs_vh",
+>         .init                           =3D exynosauto_ufs_vh_init,
+> --
+> 2.45.2
+>
+>
