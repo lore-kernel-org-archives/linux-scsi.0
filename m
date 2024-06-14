@@ -1,120 +1,106 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from mail-pf1-f193.google.com (mail-pf1-f193.google.com [209.85.210.193])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE84414D29B
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Jun 2024 12:33:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25E8A1990AC;
+	Fri, 14 Jun 2024 12:44:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718368426; cv=none; b=td99SmFbkCYFwbaadpEXAy1KCKlcPKDALM0qQIRoyt7hl3iF2TxUZv1h4z6pekBlwQjtmeq6a3nRKtK/b9ldLnp3+eD/e21Y64Q33PJt3YtgNEX6hqpdZM5Guxy2lco9Sz8q0QFn3FhulGR1bIkCLz1rK69AdYe7697HFjrKsrA=
+	t=1718369083; cv=none; b=UhL2/lpTsmQIWQvuQUAozjuxb3rnvgxv/J19MapxwDopcZUriSdm5g04SLgxuGE7LMOUPi0b6Afgeq88vlIow+4npQOiJBsbywXfNbBizXzo0AV5+PeWWfglQVhac54hMzOUFOvKLSipsezHDGeN8iHm2MsHPriaxNLmmJH5nzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718368426; c=relaxed/simple;
-	bh=ViOeFSLpzBTfbhkwvbIOhDLgIujUpX169FCRqiXsZHw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=goxGfTokzx522qhLAl6uH5u0TiSzDIgs1osJl1KGgQdfHGaFlai6w310PGGWyCP8Bj7WAzqZowi4AnWybqrCJ4K7HVoVa0de5g9huuSurQJf9Mg7crVK4pPKBrwc/3FtZEB7bVnPlGQc1qnl8+P4G9TsnWdGSXMVXwDyAdhSq/0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=LuV9Yhz1; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1718369083; c=relaxed/simple;
+	bh=6haZaBoCzYDbs6gYHymH85S6kUGBAmgTaEwCfRsPvpM=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TzbxPSNi62OlZUYgxxh/E1udYpXB4vB6BS8R9muyIMpYIN4QN8VkltxWRMAlpoYuRudBQjezoowoH5+EHn/fOKWM/ypgix0D58hjspooNLU6aQOzeCnJZZoo10PYDCf+RTsHMDWWbHbBNkMxyiFsIkHA66vshs1FZnQ1qVRvIjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Xl+olCv8; arc=none smtp.client-ip=209.85.210.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="LuV9Yhz1"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1f715fd5e60so1948635ad.2
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Jun 2024 05:33:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xl+olCv8"
+Received: by mail-pf1-f193.google.com with SMTP id d2e1a72fcca58-70423e8e6c9so1894975b3a.0;
+        Fri, 14 Jun 2024 05:44:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1718368424; x=1718973224; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=IQUOxKnD6CsmHDQ8zwTblKdKo9rITBkMiMcIVKNHWq0=;
-        b=LuV9Yhz17Xocu9NAHd9mQYpjvIl00VlVdGe7bRqWYO80L7X9/cHFM4n3N+EbTbLGaU
-         cOOh+b0dIwTDYwTQ3u8NpufJ5hrX031r4f7Le4p+T5I5LS0N5chAfXGpWC3WJrygda3B
-         13x+3F9MNOrx153LZj9GWVI8nLwXQTV/wQBgQGaDdOPP1O7xXPj3YOxYN2AAfVTB15bo
-         mdMNQyztKNqum/GqOIyJYh0vOND9T1Yt7qyGml6YnhqnszSaaEO9eWrnzxmOxS+VW+Qc
-         t7enjwOUGTU/cToDlqMxAKZOlcHiB1nMcSPXgtWED2i6NvjqRb+zM2sZGxNXioN0OpWx
-         w+RA==
+        d=gmail.com; s=20230601; t=1718369081; x=1718973881; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ID8vcKMAuhxPQfV9/bb6FKbXp3VjWvrumIK/fNKJqMQ=;
+        b=Xl+olCv8tK/IkH6rHXbSxyR7PiAC4B8yNRIjYIhr6mmKYersjhlxcR9K9qjX7EWaPD
+         llBVqLj3yDRbK82SgkVpeH1VIvxc8zBoKg3OAEgEnuWh/vyityPj0c22HHqnaGL15NeB
+         w0Tew/iOACI9IVpJW/2iBd2ME7FyJOpMw5zqEn8hyrlLRoncBvbgwYxj9jl14sc9Kt2Z
+         IW4OvjMc72kNryKKnbZ7NHOEBcMMKCN2i2q9ZCDQmfLQmsa59l7jkNfMTTAbyH2cxAIH
+         3Wv7HKtuCQ5uI6Dkt/WCWOIg2DmsL2hlp5fvzmpSxfAIcli9J22B5OumpRYzrMjZwpAC
+         tVTw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718368424; x=1718973224;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=IQUOxKnD6CsmHDQ8zwTblKdKo9rITBkMiMcIVKNHWq0=;
-        b=ZMkwyDI0TK55ydi44hFKgmgmGLYbU93Y9ONqRzwZjD0gCfkwr8I8wojfSGTIHR2xrX
-         dB7FFX0dFO1cbuqGYUdH1KNeFt2X3xeM7OLv/fgsZBVpmqLljohN+fCY/rkRYx7KiQ78
-         iZHvuSHL58xuNSPgYMF6QMoyz1kxOhLMLTOD30mMoYkAb0LLGews5mdkawhCxYSzH8fs
-         zxRY7x1U3cIp0WPL9onA8vbj694OpZC7oI/VvFv8iUrgpGQltR6rwtTnC8WBI9rAt7kk
-         wIiav+nGeTyjZZUVuxkjK+H2XSbFAKSF5IJVogLjWYH7wyJNJHuZOsk101LOoMckeKBp
-         gzsA==
-X-Forwarded-Encrypted: i=1; AJvYcCU6EVVMRzt1OLbvzuuiSvcuigkWcHUNmJFV+ynVVR0HQHmNn+w0zH0c/I4mcPntcNCA6Dyq5YHOff+0mOpDKSsY2qDITEWOfym5ug==
-X-Gm-Message-State: AOJu0Yz1Q2QWs66HK8NHOGEz4plreQdLMtpekFp0Iv3pjphPICjPrQIa
-	MHhsrczrPEhwkcg4vjvt2UFDB4DLRCAIJxnG7xW0MGSVwYLLCtdj1Tn1e69lA+g=
-X-Google-Smtp-Source: AGHT+IFgr4iSfGSF5IPV3zZl5qFPlqcnaulUtE1TfAC51U6Q4NBcINjOTwVkZv2IxHULMCAp2GZWSA==
-X-Received: by 2002:a17:902:eccc:b0:1f7:1a37:d0b5 with SMTP id d9443c01a7336-1f862c30f6amr26779945ad.4.1718368424251;
-        Fri, 14 Jun 2024 05:33:44 -0700 (PDT)
-Received: from [192.168.1.150] ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f855e55c3bsm31084685ad.57.2024.06.14.05.33.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 14 Jun 2024 05:33:43 -0700 (PDT)
-Message-ID: <f134f09a-69df-4860-90a9-ec9ad97507b2@kernel.dk>
-Date: Fri, 14 Jun 2024 06:33:41 -0600
+        d=1e100.net; s=20230601; t=1718369081; x=1718973881;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ID8vcKMAuhxPQfV9/bb6FKbXp3VjWvrumIK/fNKJqMQ=;
+        b=eQyZQKS6YcQB3A02qrQ8WcGKbLGT+8FsRJYOfVEJTlltecShbPnxNIOUuA71if4G0X
+         XkEbfqbRbNt7HTYgYId4zSXH6TTgf8ZL1M58wtNKfrcIIZlmYUBH/Z6leDSohr11GVoA
+         UNDT02wB9QKWskn671wGyLG1UjN9bVQJxWKqXOQSD8QQsgkPRO4SLA5VdC4FvfF1+AWI
+         Wggm27FlhReUtQYkVYIKhJa2AHTfkz2oaw8NmHBHUMSDjaRmcX+k9vgydv5IwdVJ4qza
+         BmV9bBDzFh+QDUXQP+IERd74ODZUdbhN9myHvBK46GmBz/kCc7QqWGoDFGJVDLM2/Sgk
+         g0VQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWa0js02t0HClUgsW0Ya1cG2FaK+ve6QG4mwQpbWAtAKCi6haxPTtmIPy+mpKx3x74vI/AYoPWSonGAHeh2neAXudghGaTbiyiRAAB4
+X-Gm-Message-State: AOJu0YymsMByU9l6m4cgJhb05Hbcdj1kTxRnuYoQNzFvXzLMSlAh5ipC
+	e2sLXugTIpWnH2nzxalfOormOssle8cDFEm4PLEM3ZknGDm4pN1/
+X-Google-Smtp-Source: AGHT+IF6i2yJXoSE/ZnaP0Xb7S1w+yKGOYcVl1SB7CAAinDBAPE/W9opYHXowo+oPJhVfB+WzVROmA==
+X-Received: by 2002:a05:6a00:3d55:b0:705:ddb0:5260 with SMTP id d2e1a72fcca58-705ddb05420mr1618893b3a.0.1718369081207;
+        Fri, 14 Jun 2024 05:44:41 -0700 (PDT)
+Received: from lhy-a01-ubuntu22.. ([106.39.42.164])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-705ce994dfasm2880362b3a.16.2024.06.14.05.44.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Jun 2024 05:44:40 -0700 (PDT)
+From: Huai-Yuan Liu <qq810974084@gmail.com>
+To: james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Huai-Yuan Liu <qq810974084@gmail.com>
+Subject: [PATCH V2 RESEND] scsi: lpfc: Fix a possible null pointer dereference
+Date: Fri, 14 Jun 2024 20:42:33 +0800
+Message-Id: <20240614124233.334806-1-qq810974084@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: move integrity settings to queue_limits v3
-To: Christoph Hellwig <hch@lst.de>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
- Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
- Dan Williams <dan.j.williams@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>,
- Ira Weiny <ira.weiny@intel.com>, Keith Busch <kbusch@kernel.org>,
- Sagi Grimberg <sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>,
- linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
-References: <20240613084839.1044015-1-hch@lst.de>
-Content-Language: en-US
-From: Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20240613084839.1044015-1-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 6/13/24 2:48 AM, Christoph Hellwig wrote:
-> Hi Jens, hi Martin,
-> 
-> this series converts the blk-integrity settings to sit in the queue
-> limits and be updated through the atomic queue limits API.
-> 
-> I've mostly tested this with nvme, scsi is only covered by simple
-> scsi_debug based tests.
-> 
-> For MD I found an pre-existing error handling bug when combining PI
-> capable devices with not PI capable devices.  The fix was posted here
-> (and is included in the git branch below):
-> 
->    https://lore.kernel.org/linux-raid/20240604172607.3185916-1-hch@lst.de/
-> 
-> For dm-integrity my testing showed that even the baseline fails to create
-> the luks-based dm-crypto with dm-integrity backing for the authentication
-> data.  As the failure is non-fatal I've not addressed it here.
-> 
-> Note that the support for native metadata in dm-crypt by Mikulas will
-> need a rebase on top of this, but as it already requires another
-> block layer patch and the changes in this series will simplify it a bit
-> I hope that is ok.
-> 
-> The series is based on top of my previously sent "convert the SCSI ULDs
-> to the atomic queue limits API v2" API.
+In function lpfc_xcvr_data_show, the memory allocation with kmalloc might
+fail, thereby making rdp_context a null pointer. In the following context 
+and functions that use this pointer, there are dereferencing operations,
+leading to null pointer dereference.
 
-I was going to queue this up, but:
+To fix this issue, a null pointer check should be added. If it is null, 
+just jump to 'out_free_rdp'.
 
-drivers/scsi/sd.c: In function ‘sd_revalidate_disk’:
-drivers/scsi/sd.c:3658:45: error: ‘lim’ undeclared (first use in this function)
- 3658 |                 sd_config_protection(sdkp, &lim);
-      |                                             ^~~
-drivers/scsi/sd.c:3658:45: note: each undeclared identifier is reported only once for each function it appears in
+Fixes: 479b0917e447 ("scsi: lpfc: Create a sysfs entry called lpfc_xcvr_data for transceiver info")
+Signed-off-by: Huai-Yuan Liu <qq810974084@gmail.com>
+---
+V2:
+* In patch V2, we have removed the unnecessary 'out of memory' message.
+  Thank Bart Van Assche for helpful advice.
+---
+ drivers/scsi/lpfc/lpfc_attr.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index b1c9107d3408..94d968a255ff 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -1904,6 +1904,8 @@ lpfc_xcvr_data_show(struct device *dev, struct device_attribute *attr,
+ 
+ 	/* Get transceiver information */
+ 	rdp_context = kmalloc(sizeof(*rdp_context), GFP_KERNEL);
++	if (!rdp_context)
++		goto out_free_rdp;
+ 
+ 	rc = lpfc_get_sfp_info_wait(phba, rdp_context);
+ 	if (rc) {
 -- 
-Jens Axboe
+2.34.1
 
