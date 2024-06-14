@@ -1,141 +1,82 @@
-Received: from www.kot-begemot.co.uk (ns1.kot-begemot.co.uk [217.160.28.25])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E0BE1474CB;
-	Fri, 14 Jun 2024 08:01:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.160.28.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B13218508A;
+	Fri, 14 Jun 2024 08:29:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718352102; cv=none; b=quJMngRge9PKEoIzzpPeN/InYzQQH4awdsHV78HJrANpQypCYU9PzBxE3TdK8t5NGPcigjtEdEwsa8NVlL3zBtJZKYdXLF6UlZHOdRg6qdBJK5mvCljDfNRi/h+XCCTE/K4IMeJRfqb54dQk9yUdWI9YczF6fbv1RZGfiipcNus=
+	t=1718353743; cv=none; b=B4nSPUQKej9AIGXGdqMRHxvsZBsaMo6/pHUUdZS9KDR8E9cp2engjivyfJb34vxEiMZwAB/T/aSzAa75bdVAgXEeiTRfhbj1YX6ms2gqTNAVmAwJgwsxFpEehQ2CE2xaEL9cPEenmS+5S2n+3ONkpb7BicAmiIPQRVhx9Jo0yls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718352102; c=relaxed/simple;
-	bh=o6mCE3xjAE4ne3tJGZ1/jXYFyYsP/lO4Ylyx4twrtvs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PZwLIfbQM8a2mcngJ0XjJGgm7PagVEP/mPWXDXovE5+UN9GRgfihgVzLnjAiE+KkrZRk5tZpW2gCidMF0nYJ2rSZheUhiW9OmPE30+LmCbvd4Qk2sjvans5k0Ikg4TAW2Ziv1PheKmiDI9DpQucmh+LQCONEAPjNRqsHB6Ysbms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cambridgegreys.com; spf=pass smtp.mailfrom=cambridgegreys.com; arc=none smtp.client-ip=217.160.28.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cambridgegreys.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cambridgegreys.com
-Received: from [192.168.17.6] (helo=jain.kot-begemot.co.uk)
-	by www.kot-begemot.co.uk with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <anton.ivanov@cambridgegreys.com>)
-	id 1sI1MY-004Axd-Js; Fri, 14 Jun 2024 07:28:42 +0000
-Received: from jain.kot-begemot.co.uk ([192.168.3.3])
-	by jain.kot-begemot.co.uk with esmtp (Exim 4.96)
-	(envelope-from <anton.ivanov@cambridgegreys.com>)
-	id 1sI1MU-000Wne-1M;
-	Fri, 14 Jun 2024 08:28:42 +0100
-Message-ID: <b15de345-838b-4cbb-a156-22b527ed03b6@cambridgegreys.com>
-Date: Fri, 14 Jun 2024 08:28:38 +0100
+	s=arc-20240116; t=1718353743; c=relaxed/simple;
+	bh=si66A7Bww7MdzXWYVuhn5dggZ9QjSpqjNge2lbjPC+U=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=ROrjHH3pYyTdJsBOxMicOGx0Ge2X5glXIQiQMtOlc4Kc3YL92tDYQ5+xaNKm6vB8RqbVWr396aj9tt2niY0RduNWya+4IZhw3/7Idzq3tGUU3XqXx9hHJGprHQ0lV9gYXx3B4M+qx7R8twG/OibQGZxaRD2LINbTs3X09F0a/Zo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VsY3Mmh+; arc=none smtp.client-ip=209.85.208.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VsY3Mmh+"
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-57c7681ccf3so2093852a12.2;
+        Fri, 14 Jun 2024 01:29:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1718353741; x=1718958541; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=si66A7Bww7MdzXWYVuhn5dggZ9QjSpqjNge2lbjPC+U=;
+        b=VsY3Mmh++P4SOYSkAQFUaw6ikBB0SAoIsvji9vc7Px123avUQYY+EcrDDBnNsi0QW3
+         7i/f+UpXDVrOnN/xnSATZj4l6ci/SzmMdAF6ee0QdyTB9Pf6fkzNAMV9WWvzn9PV9bKY
+         9YP9I+pL4pWlKLVftp4ofshvjAkKIPCP5DXZHD8sMyh90uLD6OoxC6VGK7L3TsTjmCqu
+         +GEziByf3zpf3tlw05j7FKK3oWby5dCPJ7z7YHgFtvKYfYlJndNgjMWui0a227OGdmg0
+         MG4iIFzf1Sbkh4wQDIQj/QMOv+JWhO7Jvaj+MeJ8gWIE4XzH95EbFof1kGrzOAntWWTC
+         a+5A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718353741; x=1718958541;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=si66A7Bww7MdzXWYVuhn5dggZ9QjSpqjNge2lbjPC+U=;
+        b=g6VSZVWAx3P23o903fggjhj3BrXH20/ZYqt5o9TZN6DUt5azTiA4CWYC+/xC80pciL
+         hR/FaqZcI2sQUnk47aAVZMZeAQkzzlPawneU0vir5XXIoJBXgr+as95z9ytmJnEF43pK
+         u9F0a3bFVXjgV/SUTf/UftOLEBgrqDeHKvH0oPVzzutOAomGeXMg3hx225uIYRtJq3P/
+         vc0o6Ah4aZgxVfBv5+OYaZHvaMkq5fIjrKa0HZAqT69M9cec5DZMZBkMKz6jwPBTpzD4
+         r1jx+n2B8+6VhD93enCXasehiugiz52SXmhD5Wl2z4IJcdbz0zo6Ji52SXmsvvB9MJtf
+         p4Ow==
+X-Forwarded-Encrypted: i=1; AJvYcCWvZ90w53jAOhsNu8HnWf97IYKf72bHZsDRGGTCcLMk5HOYww78SSDyXVmIYeB80pDBcf2aAIC1xmOKGWkBOFPIQdblD0RiBIGfIA==
+X-Gm-Message-State: AOJu0YyYahE2R4Sm3s4l2HdDmz6BRCdbFJaY0cS0sKRuE3PV4nWXdTM2
+	L1zegnZiFbQWN9vhNkrtQPviBv69jD0ossDvpO/qPuq7G7W2xqHb
+X-Google-Smtp-Source: AGHT+IGVwb2EkB9dWSTgBPUqPXbLYxIKnMpLWYR8kRJGNxRo5NbCsRevoKdqLxGS9mSPcY/fALjcRA==
+X-Received: by 2002:a50:d70d:0:b0:57c:7ce3:6cd9 with SMTP id 4fb4d7f45d1cf-57cbd67f5d3mr1197926a12.23.1718353740377;
+        Fri, 14 Jun 2024 01:29:00 -0700 (PDT)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-57cb743b026sm1931399a12.97.2024.06.14.01.28.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Jun 2024 01:28:59 -0700 (PDT)
+Message-ID: <81c85dd8bb770d4747a7f18a4607e02309ecb965.camel@gmail.com>
+Subject: Re: [PATCH] scsi: ufs: core: Free memory allocated for model before
+ reinit
+From: Bean Huo <huobean@gmail.com>
+To: Joel Slebodnick <jslebodn@redhat.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+ avri.altman@wdc.com,  bvanassche@acm.org,
+ James.Bottomley@HansenPartnership.com,  martin.petersen@oracle.com,
+ peter.wang@mediatek.com,  manivannan.sadhasivam@linaro.org,
+ ahalaney@redhat.com, beanhuo@micron.com
+Date: Fri, 14 Jun 2024 10:28:58 +0200
+In-Reply-To: <20240613182728.2521951-1-jslebodn@redhat.com>
+References: <20240613182728.2521951-1-jslebodn@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/14] ubd: refactor the interrupt handler
-Content-Language: en-US
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Richard Weinberger <richard@nod.at>,
- Johannes Berg <johannes@sipsolutions.net>, Josef Bacik
- <josef@toxicpanda.com>, Ilya Dryomov <idryomov@gmail.com>,
- Dongsheng Yang <dongsheng.yang@easystack.cn>,
- =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
- linux-um@lists.infradead.org, linux-block@vger.kernel.org,
- nbd@other.debian.org, ceph-devel@vger.kernel.org,
- xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org
-References: <20240531074837.1648501-1-hch@lst.de>
- <20240531074837.1648501-2-hch@lst.de>
-From: Anton Ivanov <anton.ivanov@cambridgegreys.com>
-In-Reply-To: <20240531074837.1648501-2-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Spam-Score: -1.0
-X-Spam-Score: -1.0
-X-Clacks-Overhead: GNU Terry Pratchett
 
+On Thu, 2024-06-13 at 14:27 -0400, Joel Slebodnick wrote:
+> Signed-off-by: Joel Slebodnick <jslebodn@redhat.com>
 
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
-On 31/05/2024 08:47, Christoph Hellwig wrote:
-> Instead of a separate handler function that leaves no work in the
-> interrupt hanler itself, split out a per-request end I/O helper and
-> clean up the coding style and variable naming while we're at it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->   arch/um/drivers/ubd_kern.c | 49 ++++++++++++++------------------------
->   1 file changed, 18 insertions(+), 31 deletions(-)
-> 
-> diff --git a/arch/um/drivers/ubd_kern.c b/arch/um/drivers/ubd_kern.c
-> index ef805eaa9e013d..0c9542d58c01b7 100644
-> --- a/arch/um/drivers/ubd_kern.c
-> +++ b/arch/um/drivers/ubd_kern.c
-> @@ -447,43 +447,30 @@ static int bulk_req_safe_read(
->   	return n;
->   }
->   
-> -/* Called without dev->lock held, and only in interrupt context. */
-> -static void ubd_handler(void)
-> +static void ubd_end_request(struct io_thread_req *io_req)
->   {
-> -	int n;
-> -	int count;
-> -
-> -	while(1){
-> -		n = bulk_req_safe_read(
-> -			thread_fd,
-> -			irq_req_buffer,
-> -			&irq_remainder,
-> -			&irq_remainder_size,
-> -			UBD_REQ_BUFFER_SIZE
-> -		);
-> -		if (n < 0) {
-> -			if(n == -EAGAIN)
-> -				break;
-> -			printk(KERN_ERR "spurious interrupt in ubd_handler, "
-> -			       "err = %d\n", -n);
-> -			return;
-> -		}
-> -		for (count = 0; count < n/sizeof(struct io_thread_req *); count++) {
-> -			struct io_thread_req *io_req = (*irq_req_buffer)[count];
-> -
-> -			if ((io_req->error == BLK_STS_NOTSUPP) && (req_op(io_req->req) == REQ_OP_DISCARD)) {
-> -				blk_queue_max_discard_sectors(io_req->req->q, 0);
-> -				blk_queue_max_write_zeroes_sectors(io_req->req->q, 0);
-> -			}
-> -			blk_mq_end_request(io_req->req, io_req->error);
-> -			kfree(io_req);
-> -		}
-> +	if (io_req->error == BLK_STS_NOTSUPP &&
-> +	    req_op(io_req->req) == REQ_OP_DISCARD) {
-> +		blk_queue_max_discard_sectors(io_req->req->q, 0);
-> +		blk_queue_max_write_zeroes_sectors(io_req->req->q, 0);
->   	}
-> +	blk_mq_end_request(io_req->req, io_req->error);
-> +	kfree(io_req);
->   }
->   
->   static irqreturn_t ubd_intr(int irq, void *dev)
->   {
-> -	ubd_handler();
-> +	int len, i;
-> +
-> +	while ((len = bulk_req_safe_read(thread_fd, irq_req_buffer,
-> +			&irq_remainder, &irq_remainder_size,
-> +			UBD_REQ_BUFFER_SIZE)) >= 0) {
-> +		for (i = 0; i < len / sizeof(struct io_thread_req *); i++)
-> +			ubd_end_request((*irq_req_buffer)[i]);
-> +	}
-> +
-> +	if (len < 0 && len != -EAGAIN)
-> +		pr_err("spurious interrupt in %s, err = %d\n", __func__, len);
->   	return IRQ_HANDLED;
->   }
->   
-Acked-By: Anton Ivanov <anton.ivanov@cambridgegreys.com>
--- 
-Anton R. Ivanov
-Cambridgegreys Limited. Registered in England. Company Number 10273661
-https://www.cambridgegreys.com/
