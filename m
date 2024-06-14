@@ -1,106 +1,127 @@
-Received: from mail-pf1-f193.google.com (mail-pf1-f193.google.com [209.85.210.193])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25E8A1990AC;
-	Fri, 14 Jun 2024 12:44:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.193
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8BA6195F1D
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Jun 2024 12:45:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718369083; cv=none; b=UhL2/lpTsmQIWQvuQUAozjuxb3rnvgxv/J19MapxwDopcZUriSdm5g04SLgxuGE7LMOUPi0b6Afgeq88vlIow+4npQOiJBsbywXfNbBizXzo0AV5+PeWWfglQVhac54hMzOUFOvKLSipsezHDGeN8iHm2MsHPriaxNLmmJH5nzM=
+	t=1718369161; cv=none; b=m0BsV296g0U2YitFtIraYjO313KWZ45VExfy0JjyNQoYI3LuXjXYGdTmSdcaFOURpHF22lc+08Kf0s528PnnH1pZboRiFdcPX2mGTq7lxL/8Cq9dzf+OXfjYNlM65iu3leG9PGqwyxScuspbvW5ZJQO7nv1Jt/whM91KZFgeXMc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718369083; c=relaxed/simple;
-	bh=6haZaBoCzYDbs6gYHymH85S6kUGBAmgTaEwCfRsPvpM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TzbxPSNi62OlZUYgxxh/E1udYpXB4vB6BS8R9muyIMpYIN4QN8VkltxWRMAlpoYuRudBQjezoowoH5+EHn/fOKWM/ypgix0D58hjspooNLU6aQOzeCnJZZoo10PYDCf+RTsHMDWWbHbBNkMxyiFsIkHA66vshs1FZnQ1qVRvIjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Xl+olCv8; arc=none smtp.client-ip=209.85.210.193
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1718369161; c=relaxed/simple;
+	bh=MPy2dmqKlCsrw5okIZFwkiGzwVi0bWXg1j0NfWvMFRQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=atyixpFqULopDJY5xbo9IdOUZz8hZ+D6QZzLGorubHFaZuS2NsaX0VIP1wp/MWDfqj8vtnItoBM9IrBGU7NNPRRlCIWzVt8ZSkNNdyHZP59lQLaCJyFt6VAz8UPiDS3DbES622jBgQo+/l0PN3zoWSBPqCg7jjB/3UIzwulW7nY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=NkD3QEl1; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xl+olCv8"
-Received: by mail-pf1-f193.google.com with SMTP id d2e1a72fcca58-70423e8e6c9so1894975b3a.0;
-        Fri, 14 Jun 2024 05:44:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718369081; x=1718973881; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ID8vcKMAuhxPQfV9/bb6FKbXp3VjWvrumIK/fNKJqMQ=;
-        b=Xl+olCv8tK/IkH6rHXbSxyR7PiAC4B8yNRIjYIhr6mmKYersjhlxcR9K9qjX7EWaPD
-         llBVqLj3yDRbK82SgkVpeH1VIvxc8zBoKg3OAEgEnuWh/vyityPj0c22HHqnaGL15NeB
-         w0Tew/iOACI9IVpJW/2iBd2ME7FyJOpMw5zqEn8hyrlLRoncBvbgwYxj9jl14sc9Kt2Z
-         IW4OvjMc72kNryKKnbZ7NHOEBcMMKCN2i2q9ZCDQmfLQmsa59l7jkNfMTTAbyH2cxAIH
-         3Wv7HKtuCQ5uI6Dkt/WCWOIg2DmsL2hlp5fvzmpSxfAIcli9J22B5OumpRYzrMjZwpAC
-         tVTw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718369081; x=1718973881;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ID8vcKMAuhxPQfV9/bb6FKbXp3VjWvrumIK/fNKJqMQ=;
-        b=eQyZQKS6YcQB3A02qrQ8WcGKbLGT+8FsRJYOfVEJTlltecShbPnxNIOUuA71if4G0X
-         XkEbfqbRbNt7HTYgYId4zSXH6TTgf8ZL1M58wtNKfrcIIZlmYUBH/Z6leDSohr11GVoA
-         UNDT02wB9QKWskn671wGyLG1UjN9bVQJxWKqXOQSD8QQsgkPRO4SLA5VdC4FvfF1+AWI
-         Wggm27FlhReUtQYkVYIKhJa2AHTfkz2oaw8NmHBHUMSDjaRmcX+k9vgydv5IwdVJ4qza
-         BmV9bBDzFh+QDUXQP+IERd74ODZUdbhN9myHvBK46GmBz/kCc7QqWGoDFGJVDLM2/Sgk
-         g0VQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWa0js02t0HClUgsW0Ya1cG2FaK+ve6QG4mwQpbWAtAKCi6haxPTtmIPy+mpKx3x74vI/AYoPWSonGAHeh2neAXudghGaTbiyiRAAB4
-X-Gm-Message-State: AOJu0YymsMByU9l6m4cgJhb05Hbcdj1kTxRnuYoQNzFvXzLMSlAh5ipC
-	e2sLXugTIpWnH2nzxalfOormOssle8cDFEm4PLEM3ZknGDm4pN1/
-X-Google-Smtp-Source: AGHT+IF6i2yJXoSE/ZnaP0Xb7S1w+yKGOYcVl1SB7CAAinDBAPE/W9opYHXowo+oPJhVfB+WzVROmA==
-X-Received: by 2002:a05:6a00:3d55:b0:705:ddb0:5260 with SMTP id d2e1a72fcca58-705ddb05420mr1618893b3a.0.1718369081207;
-        Fri, 14 Jun 2024 05:44:41 -0700 (PDT)
-Received: from lhy-a01-ubuntu22.. ([106.39.42.164])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-705ce994dfasm2880362b3a.16.2024.06.14.05.44.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Jun 2024 05:44:40 -0700 (PDT)
-From: Huai-Yuan Liu <qq810974084@gmail.com>
-To: james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Huai-Yuan Liu <qq810974084@gmail.com>
-Subject: [PATCH V2 RESEND] scsi: lpfc: Fix a possible null pointer dereference
-Date: Fri, 14 Jun 2024 20:42:33 +0800
-Message-Id: <20240614124233.334806-1-qq810974084@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="NkD3QEl1"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20240614124550epoutp039b73702de6ee456947360b1f3ade6d5d~Y36NJTg262830028300epoutp03N
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Jun 2024 12:45:50 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20240614124550epoutp039b73702de6ee456947360b1f3ade6d5d~Y36NJTg262830028300epoutp03N
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1718369150;
+	bh=MPy2dmqKlCsrw5okIZFwkiGzwVi0bWXg1j0NfWvMFRQ=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=NkD3QEl1TzCwuqv2akadRPE/FCdD+sZFAgjSD6UKO3FJbCM/YXWutLit995fX8LMP
+	 Pi6vbX8b4Kus5YqSKPgq4Lnc+6gCaZFboQgFaEH8+K0Kw4T1a90D9QJlLoDIuC9AX7
+	 DROcgjlsDcs73Km3m81X4ZyFcmCqUhwCI7kvM48Q=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+	20240614124549epcas5p2642f3c5838185873463e8d821ec38f52~Y36MTKQoL2365623656epcas5p2Z;
+	Fri, 14 Jun 2024 12:45:49 +0000 (GMT)
+Received: from epsmges5p1new.samsung.com (unknown [182.195.38.183]) by
+	epsnrtp2.localdomain (Postfix) with ESMTP id 4W0zXW6JmLz4x9Pt; Fri, 14 Jun
+	2024 12:45:47 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+	epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	83.4C.10047.B7B3C666; Fri, 14 Jun 2024 21:45:47 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20240614124547epcas5p2199de6f83d51ede53a4d2a220b4c92d3~Y36KY2TJY0304403044epcas5p2e;
+	Fri, 14 Jun 2024 12:45:47 +0000 (GMT)
+Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20240614124547epsmtrp2fc3900cd977caf58be546b84dd014a7a~Y36KXI58l3233132331epsmtrp2h;
+	Fri, 14 Jun 2024 12:45:47 +0000 (GMT)
+X-AuditID: b6c32a49-1d5fa7000000273f-91-666c3b7b9889
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	B8.AC.07412.B7B3C666; Fri, 14 Jun 2024 21:45:47 +0900 (KST)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20240614124544epsmtip16d65381439fb13d5c02e392a9c9b009f~Y36IFmV6i3174031740epsmtip1v;
+	Fri, 14 Jun 2024 12:45:44 +0000 (GMT)
+Message-ID: <34214fea-0e59-4293-bc14-d6078f518976@samsung.com>
+Date: Fri, 14 Jun 2024 18:15:44 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
+	Gecko/20100101 Thunderbird/91.13.1
+Subject: Re: [PATCH 01/12] block: initialize integrity buffer to zero before
+ writing it to media
+Content-Language: en-US
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, "Martin K.
+ Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka
+	<mpatocka@redhat.com>, Song Liu <song@kernel.org>, Yu Kuai
+	<yukuai3@huawei.com>, Keith Busch <kbusch@kernel.org>, Sagi Grimberg
+	<sagi@grimberg.me>, Chaitanya Kulkarni <kch@nvidia.com>,
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org, nvdimm@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <20240613084839.1044015-2-hch@lst.de>
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrHJsWRmVeSWpSXmKPExsWy7bCmpm61dU6awY1+A4vVd/vZLBYsmsti
+	sXL1USaLSYeuMVo8vTqLyWLvLW2L+cueslu0z9/FaNF9fQebxfLj/5gsJnZcZbJY+eMPq8W6
+	1+9ZLE7ckrY4vvwvm8WchWwOAh7n721k8Wg58pbV4/LZUo9NqzrZPDYvqfd4sXkmo8fumw1s
+	Hr3N79g8Pj69xeLxft9VNo/Pm+QCuKOybTJSE1NSixRS85LzUzLz0m2VvIPjneNNzQwMdQ0t
+	LcyVFPISc1NtlVx8AnTdMnOAnlFSKEvMKQUKBSQWFyvp29kU5ZeWpCpk5BeX2CqlFqTkFJgU
+	6BUn5haX5qXr5aWWWBkaGBiZAhUmZGec2rGUqcCo4trcPqYGRt0uRk4OCQETicM3fjN3MXJx
+	CAnsZpS43veQHcL5xCjxsKeTEcL5xihx4OZzJpiWe01dUC17GSX2H93EApIQEnjLKNH9LhvE
+	5hWwk9j1fD5bFyMHB4uAqsSdK3IQYUGJkzOfgJWLCiRL/Ow6wAZiCwskSbz7ugJsPrOAuMSt
+	J/PBbBGBUonfS54ygexiFljILNF/YwoTyEw2AU2JC5NLQWo4BYwkHl08yQrRKy+x/e0csNsk
+	BD5wSCzZ+YUZ4mgXiem/H0PZwhKvjm9hh7ClJD6/28sGYSdLXJp5DurJEonHew5C2fYSraf6
+	mUH2MgPtXb9LH2IXn0Tv7ydg50gI8Ep0tAlBVCtK3Jv0lBXCFpd4OGMJlO0hsX7DHzZIsK1l
+	lNj84xDbBEaFWUjBMgvJ+7OQvDMLYfMCRpZVjJKpBcW56anFpgWGeanl8NhOzs/dxAhO6Fqe
+	OxjvPvigd4iRiYPxEKMEB7OSCO+shVlpQrwpiZVVqUX58UWlOanFhxhNgdEzkVlKNDkfmFPy
+	SuINTSwNTMzMzEwsjc0MlcR5X7fOTRESSE8sSc1OTS1ILYLpY+LglGpg0jUS++cz9/iKGf+Y
+	jiq4qiudbGuTFftStOcz7/c9a1wfvs/KctHxKSheUen/4ceL4OaX84Ii3t2qyfzXdSc6wq5p
+	+/Zde4Smscs1PrwUtm21Mr/k6ar0D06H+FktF33WqP1lvLxp428ezv4Vn1/KzC1M7VnHWzzt
+	kEWPnZKKre6Pij93WANmzOL7UT7Lb5mYfurVitmS3xUEOK5YPlAv2ZQ18dUVqdVmkr/eyS3d
+	HaOd3xK7RdJwx9ZCl6dfXSYXb/8ksUU5I86o869rwNKHrLb6qudX7xLLaT3h+uaPzyXFwEnu
+	mop7Nqiet35jNCV4tqHwFqWncbxqz7xuvr9ysdThM8/KBoG4dK1mLZ4TSizFGYmGWsxFxYkA
+	SgkISHEEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrFIsWRmVeSWpSXmKPExsWy7bCSnG61dU6awfUDnBar7/azWSxYNJfF
+	YuXqo0wWkw5dY7R4enUWk8XeW9oW85c9Zbdon7+L0aL7+g42i+XH/zFZTOy4ymSx8scfVot1
+	r9+zWJy4JW1xfPlfNos5C9kcBDzO39vI4tFy5C2rx+WzpR6bVnWyeWxeUu/xYvNMRo/dNxvY
+	PHqb37F5fHx6i8Xj/b6rbB6fN8kFcEdx2aSk5mSWpRbp2yVwZZzasZSpwKji2tw+pgZG3S5G
+	Tg4JAROJe01dzCC2kMBuRokDfysh4uISzdd+sEPYwhIr/z0HsrmAal4zSmyZtIkFJMErYCex
+	6/l8ti5GDg4WAVWJO1fkIMKCEidnPgErERVIlnj5ZyLYHGGBJIl3X1cwgdjMQPNvPZkPZosI
+	lEr0/5vBBDKfWWAhs8Si06/ZIJatZZSYcXMdK8gCNgFNiQuTS0EaOAWMJB5dPMkKMchMomtr
+	FyOELS+x/e0c5gmMQrOQ3DELyb5ZSFpmIWlZwMiyilEytaA4Nz032bDAMC+1XK84Mbe4NC9d
+	Lzk/dxMjOHq1NHYw3pv/T+8QIxMH4yFGCQ5mJRHeWQuz0oR4UxIrq1KL8uOLSnNSiw8xSnOw
+	KInzGs6YnSIkkJ5YkpqdmlqQWgSTZeLglGpg0uR9+H7Silb/Fvavn6Z9ZwxIEkwQrlrOfs/+
+	6ya5I8rLryX8Lj8VHZsS3G14a2aSrTyv0Z7vbTJXfk9unHXv1+EvIXHOL1osLjZnbDkcbXZ3
+	Me+ebV1r2P3urZvM281vee7K45Ccyxyf/l+MlXu7vNhidabjj7V35Y3FTjQt9mVsuNl5hjPu
+	HKOoiBlHXeiP1NAtHY4KUVp+O9jtzmsJbane8X3G7BsX/6eE12/vup7KGf7nQ9/fle9yd0u7
+	zeR85LTkS4Ry7oEDvT6CNybb5USwvw12/1SrVmxRO8Hl1Lm426dEZivcsbjrvC67Ozn124Yv
+	rJL9f/MDot365r9bn+vkaLNY95PcoeInZRyzlViKMxINtZiLihMBTBTXmU0DAAA=
+X-CMS-MailID: 20240614124547epcas5p2199de6f83d51ede53a4d2a220b4c92d3
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240613085027epcas5p3aed19d209869dcff978cebcf18a521bb
+References: <20240613084839.1044015-1-hch@lst.de>
+	<CGME20240613085027epcas5p3aed19d209869dcff978cebcf18a521bb@epcas5p3.samsung.com>
+	<20240613084839.1044015-2-hch@lst.de>
 
-In function lpfc_xcvr_data_show, the memory allocation with kmalloc might
-fail, thereby making rdp_context a null pointer. In the following context 
-and functions that use this pointer, there are dereferencing operations,
-leading to null pointer dereference.
-
-To fix this issue, a null pointer check should be added. If it is null, 
-just jump to 'out_free_rdp'.
-
-Fixes: 479b0917e447 ("scsi: lpfc: Create a sysfs entry called lpfc_xcvr_data for transceiver info")
-Signed-off-by: Huai-Yuan Liu <qq810974084@gmail.com>
----
-V2:
-* In patch V2, we have removed the unnecessary 'out of memory' message.
-  Thank Bart Van Assche for helpful advice.
----
- drivers/scsi/lpfc/lpfc_attr.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index b1c9107d3408..94d968a255ff 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -1904,6 +1904,8 @@ lpfc_xcvr_data_show(struct device *dev, struct device_attribute *attr,
- 
- 	/* Get transceiver information */
- 	rdp_context = kmalloc(sizeof(*rdp_context), GFP_KERNEL);
-+	if (!rdp_context)
-+		goto out_free_rdp;
- 
- 	rc = lpfc_get_sfp_info_wait(phba, rdp_context);
- 	if (rc) {
--- 
-2.34.1
-
+Reviewed-by: Kanchan Joshi <joshi.k@samsung.com>
