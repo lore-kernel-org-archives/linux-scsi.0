@@ -1,165 +1,160 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9372194ADF;
-	Mon, 17 Jun 2024 10:45:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E95E31990C8;
+	Mon, 17 Jun 2024 13:20:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718621137; cv=none; b=DmRa6DYRphfOC1bPqMpHaCTw9jpA5a8ZjE37uEYTregB1LYwpcDPHV8cqPzcyhU+RaPAakiQxARC0VNa9+Qh7qRZbRLfYcp+RR/IyEU+FJBCcKnkr62+aQCePmeDdMA2fbs538Bh1y5C4SO0MeQsjFpjk3MvYbeWuhuspDhQcVo=
+	t=1718630450; cv=none; b=ddW/gvgIuqQAaZ4k5CAoHpMAtPIa0178atwDw9Uu0me74tUzJ7mdVNfb/hKanZGXi5FxySrQ6rSGJA76ysJCHNn/DU+5V/UFjkdJH2igFg/w4dMyjEeU2mAuCx4UBXP4VrQIMvF0NyvOn4Xl8NKYvyn9ybuXTiJIWr1gySOeITU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718621137; c=relaxed/simple;
-	bh=eRoBK5/4xu/plFLs53OdfVIJexRh8oeq7oJw1sSkyF0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QAWe4uvyxI3PJHrHYceLEi8bn6wd5xcDshcc/a3TMtdFizYVbrY7INIkfiosUfPEvE4inFp9N4cC6PHxlsMty4d+mP3DPd41eWFTBeIu/p1248x2ZuPXoTd9Mf6sgYTjRU/y9HLNr0QFKmtzvC2PW7B84shuXe4G2CKqvvlR0XM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=cHdgn9W4; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=j6x1ql3o; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=cHdgn9W4; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=j6x1ql3o; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1718630450; c=relaxed/simple;
+	bh=ElwEEKlltBx5dmTZseGkyQ9j+pnPgSlfITcDRLuO6OA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RH5B/V5rWrAyg/orHWnMQjLJUrgVxBYzxI0vXp8Yr6xGelvwluYcGSeq+kvBnqWZbxGYph9raMMckLvasoCa0H6frJNLztRSYZFqg+spRzxxIWwzCCpBLn5ol3TED1Za7yo4/naP3vnX4YrfUaVGBRhzJzhwW4cIgdI+429GJio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i4bD7rZo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="cHdgn9W4";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="j6x1ql3o";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="cHdgn9W4";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="j6x1ql3o"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id CCF9C3804B;
-	Mon, 17 Jun 2024 10:45:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718621133; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=slP8wzcVm+UAH6cgQCtZYK/eQ7AbIkDnYf3KLR9axr8=;
-	b=cHdgn9W4G9J0bE9J3jdrIA5h9r80guqMNBb5W5GdFASLapAtRmAO+S/TDk3J9mxlXYKQ3p
-	XeyPNYiHIsartGEh8VHnpDVPl9PlSbixXhfd1N8WS6mi9euOFHAttCLDL2I6PiAjR9dt4c
-	b8iVdUv2vEMMALrToXYEjc2bLtRNGCk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718621133;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=slP8wzcVm+UAH6cgQCtZYK/eQ7AbIkDnYf3KLR9axr8=;
-	b=j6x1ql3oipn4My7hzsZomUyOPKAHtZ3GuatVGjA1bA/HdSpLPFhhpg/i+I1E4ZCYoxxHNa
-	kb4ijVWkbYZKZPAA==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1718621133; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=slP8wzcVm+UAH6cgQCtZYK/eQ7AbIkDnYf3KLR9axr8=;
-	b=cHdgn9W4G9J0bE9J3jdrIA5h9r80guqMNBb5W5GdFASLapAtRmAO+S/TDk3J9mxlXYKQ3p
-	XeyPNYiHIsartGEh8VHnpDVPl9PlSbixXhfd1N8WS6mi9euOFHAttCLDL2I6PiAjR9dt4c
-	b8iVdUv2vEMMALrToXYEjc2bLtRNGCk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1718621133;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=slP8wzcVm+UAH6cgQCtZYK/eQ7AbIkDnYf3KLR9axr8=;
-	b=j6x1ql3oipn4My7hzsZomUyOPKAHtZ3GuatVGjA1bA/HdSpLPFhhpg/i+I1E4ZCYoxxHNa
-	kb4ijVWkbYZKZPAA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6C97B13AAA;
-	Mon, 17 Jun 2024 10:45:33 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id xJQVGs0TcGYTDwAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 17 Jun 2024 10:45:33 +0000
-Message-ID: <94db71a8-75ef-4490-a28a-aea26f6dd945@suse.de>
-Date: Mon, 17 Jun 2024 12:45:33 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i4bD7rZo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30953C4AF1D;
+	Mon, 17 Jun 2024 13:20:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718630449;
+	bh=ElwEEKlltBx5dmTZseGkyQ9j+pnPgSlfITcDRLuO6OA=;
+	h=From:To:Cc:Subject:Date:From;
+	b=i4bD7rZoDF1h0Yr7x0B5u5nnXJkiRjhn7NTpGVIvJl2Dr/LYSPZCFblbLATctBv5R
+	 iQD8YMBp8yJLmOdcj328HbQX7cF3hM43Ps4LMSRfhOie4PNEQd/zmK0iEiYRr5ibnr
+	 VsL6GmWmQwlXf9oe9T71fjiTXYYhFzHR+xFp9iF0I+RVlLgMo4dOakF/1tonG7OdBK
+	 o6o4d01l5LcRicSfuaGl5fHjLzd+41N523W/RYgmQHhRyoAoYMe43U4hDZiexqHMM1
+	 kXStIZ3coV/rXgHPQD1r1Ym3G/ZZ+oKsHg+WLnivCNrBk1uXvuCq1CF9OPsK6ATFUG
+	 8PGWIgPywvPsg==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Martin Wilck <martin.wilck@suse.com>,
+	Rajashekhar M A <rajs@netapp.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Mike Christie <michael.christie@oracle.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	James.Bottomley@HansenPartnership.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.9 01/44] scsi: core: alua: I/O errors for ALUA state transitions
+Date: Mon, 17 Jun 2024 09:19:14 -0400
+Message-ID: <20240617132046.2587008-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 26/26] block: move the bounce flag into the features field
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
- Richard Weinberger <richard@nod.at>,
- Philipp Reisner <philipp.reisner@linbit.com>,
- Lars Ellenberg <lars.ellenberg@linbit.com>,
- =?UTF-8?Q?Christoph_B=C3=B6hmwalder?= <christoph.boehmwalder@linbit.com>,
- Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
- "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
- =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
- Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai3@huawei.com>, Vineeth Vijayan <vneethv@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
- drbd-dev@lists.linbit.com, nbd@other.debian.org,
- linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
- virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
- linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
- linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- Damien Le Moal <dlemoal@kernel.org>
-References: <20240617060532.127975-1-hch@lst.de>
- <20240617060532.127975-27-hch@lst.de>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240617060532.127975-27-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.9.5
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-8.29 / 50.00];
-	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[38];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLex1noz7jcsrkfdtgx8bqesde)];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,lst.de:email,suse.de:email]
-X-Spam-Flag: NO
-X-Spam-Score: -8.29
-X-Spam-Level: 
 
-On 6/17/24 08:04, Christoph Hellwig wrote:
-> Move the bounce flag into the features field to reclaim a little bit of
-> space.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   block/blk-settings.c    | 1 -
->   block/blk.h             | 2 +-
->   drivers/scsi/scsi_lib.c | 2 +-
->   include/linux/blkdev.h  | 6 ++++--
->   4 files changed, 6 insertions(+), 5 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+From: Martin Wilck <martin.wilck@suse.com>
 
-Cheers,
+[ Upstream commit 10157b1fc1a762293381e9145041253420dfc6ad ]
 
-Hannes
+When a host is configured with a few LUNs and I/O is running, injecting FC
+faults repeatedly leads to path recovery problems.  The LUNs have 4 paths
+each and 3 of them come back active after say an FC fault which makes 2 of
+the paths go down, instead of all 4. This happens after several iterations
+of continuous FC faults.
+
+Reason here is that we're returning an I/O error whenever we're
+encountering sense code 06/04/0a (LOGICAL UNIT NOT ACCESSIBLE, ASYMMETRIC
+ACCESS STATE TRANSITION) instead of retrying.
+
+[mwilck: The original patch was developed by Rajashekhar M A and Hannes
+Reinecke. I moved the code to alua_check_sense() as suggested by Mike
+Christie [1]. Evan Milne had raised the question whether pg->state should
+be set to transitioning in the UA case [2]. I believe that doing this is
+correct. SCSI_ACCESS_STATE_TRANSITIONING by itself doesn't cause I/O
+errors. Our handler schedules an RTPG, which will only result in an I/O
+error condition if the transitioning timeout expires.]
+
+[1] https://lore.kernel.org/all/0bc96e82-fdda-4187-148d-5b34f81d4942@oracle.com/
+[2] https://lore.kernel.org/all/CAGtn9r=kicnTDE2o7Gt5Y=yoidHYD7tG8XdMHEBJTBraVEoOCw@mail.gmail.com/
+
+Co-developed-by: Rajashekhar M A <rajs@netapp.com>
+Co-developed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Martin Wilck <martin.wilck@suse.com>
+Link: https://lore.kernel.org/r/20240514140344.19538-1-mwilck@suse.com
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 31 +++++++++++++++-------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index a226dc1b65d71..4eb0837298d4d 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -414,28 +414,40 @@ static char print_alua_state(unsigned char state)
+ 	}
+ }
+ 
+-static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
+-					      struct scsi_sense_hdr *sense_hdr)
++static void alua_handle_state_transition(struct scsi_device *sdev)
+ {
+ 	struct alua_dh_data *h = sdev->handler_data;
+ 	struct alua_port_group *pg;
+ 
++	rcu_read_lock();
++	pg = rcu_dereference(h->pg);
++	if (pg)
++		pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
++	rcu_read_unlock();
++	alua_check(sdev, false);
++}
++
++static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
++					      struct scsi_sense_hdr *sense_hdr)
++{
+ 	switch (sense_hdr->sense_key) {
+ 	case NOT_READY:
+ 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
+ 			/*
+ 			 * LUN Not Accessible - ALUA state transition
+ 			 */
+-			rcu_read_lock();
+-			pg = rcu_dereference(h->pg);
+-			if (pg)
+-				pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
+-			rcu_read_unlock();
+-			alua_check(sdev, false);
++			alua_handle_state_transition(sdev);
+ 			return NEEDS_RETRY;
+ 		}
+ 		break;
+ 	case UNIT_ATTENTION:
++		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
++			/*
++			 * LUN Not Accessible - ALUA state transition
++			 */
++			alua_handle_state_transition(sdev);
++			return NEEDS_RETRY;
++		}
+ 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
+ 			/*
+ 			 * Power On, Reset, or Bus Device Reset.
+@@ -502,7 +514,8 @@ static int alua_tur(struct scsi_device *sdev)
+ 
+ 	retval = scsi_test_unit_ready(sdev, ALUA_FAILOVER_TIMEOUT * HZ,
+ 				      ALUA_FAILOVER_RETRIES, &sense_hdr);
+-	if (sense_hdr.sense_key == NOT_READY &&
++	if ((sense_hdr.sense_key == NOT_READY ||
++	     sense_hdr.sense_key == UNIT_ATTENTION) &&
+ 	    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
+ 		return SCSI_DH_RETRY;
+ 	else if (retval)
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.43.0
 
