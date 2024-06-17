@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 450F4199253;
-	Mon, 17 Jun 2024 13:20:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB1871993A2;
+	Mon, 17 Jun 2024 13:20:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718630455; cv=none; b=qc/GBfksf99MgrbgE4f3iJJvAN2M2qL79eI1mBJ4apu2aGTyrH1Yor0a5/7KengATNIPkltU6GHpdCXJ013I5RqZVMzKjEBE1kXL8LjUVoQP5itd0YdKHcnLb13g7b7N6t+AMOFe05k3+hQV+Jzoh/ykxcnfuP4EchtxWeabdps=
+	t=1718630456; cv=none; b=oLg+UvNoc76MUv5haM0G6KuUuzoaRfEQc4ptOHXHHvtmtTnun25kz4UDXrxyRa7MSYxFDJJkHROp5ywFV6Jwjskgg+oltq1sAmowbxesGf0u9SibYo1YSIyvXvcUqJK7Crstuep8fS3wJTjmWgv/SbBV8rKLL4jO46XjizplW3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718630455; c=relaxed/simple;
-	bh=hWLLaEhRJnWzb37F4aWfjVSvxfj6ozyjkNy2mGrIx8w=;
+	s=arc-20240116; t=1718630456; c=relaxed/simple;
+	bh=CeoHqsszhoN5QJ0ujEAwdVcjyLmO5mHjlcGtzmAlaZg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=qh84b9de/cT15bjvm6F+u4icfJAhaXeTE7HIZgdIMlLtmw95AzkeI/DLYRBdpEjepae4kGHWAyv6oGGhzPlY4GOUqrm9GzpOUIHQbSxSlWC3UKhOoB2TMf8NQgxjTjjttg5niOgHFbyljg/rLEkl+Hyuf+a8Ml/cze2treGEg3w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h18wig+I; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=H1+MJB1yn7PDzkuCxN4LGOyAml58aAnN6wwPcy1Bc50nRM6F3PrrUOoumEnQk+bDxeMRbZFcisXlgBvEeyAAVWMBf1w27P26tHzJcW6NraON2LbasLJzb7/mzaS+C9cPlWTrZGHieLCrb7HpteivvJdH4Ku4lufPmYH9uOpLav4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X0tAvhIS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h18wig+I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAA1FC2BD10;
-	Mon, 17 Jun 2024 13:20:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X0tAvhIS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A5CBC4AF1D;
+	Mon, 17 Jun 2024 13:20:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718630454;
-	bh=hWLLaEhRJnWzb37F4aWfjVSvxfj6ozyjkNy2mGrIx8w=;
+	s=k20201202; t=1718630456;
+	bh=CeoHqsszhoN5QJ0ujEAwdVcjyLmO5mHjlcGtzmAlaZg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=h18wig+IVu+P9DF7trkqslP+8Zz+9kmIudDByEPVYYGrvfr9lVffs4gPdTPVmPgwd
-	 sY9v1299R0HDbhMU3SZ62jhK5cvCokxtPcIHRC3gfWOrl90SAHlGgtB6hjqJ4S7MaT
-	 bsZqwSGbBezsTQkMXH9mFPomJ1cE1Jtp0TKwRIBWHqoxg4weW/wx/wpHZjGxihbpOs
-	 nT5sb6zeQFRoarW3gOTxHKnR9dm/lkbq+sTeB0/Xa27s8svojf/opeIyqRtjp9ZBN7
-	 6IPrfbTVrIWrnUbj5zK9nvqGQDP+SuLafguunWfIjpWUhAEyXXEP3zgiJGW9kKVPaV
-	 AuUiQxTy8hOZQ==
+	b=X0tAvhISrPC1Wdb3um2BE/SRILOR4ZPD9cVdvNzUtmv2fyKS4WwEBW+c55al/cA9J
+	 cLYVULqnTAX0HELYStEB3f9yLPjviUKYJAKV/gpNuUU6qPbU2XJKvCeZHNnrnSVwDd
+	 4IhHEhUz1pT9ugXcRV/qg3JSWJEiPyMX2q/Ka1Gl4PGJclekmk8Dq6662FFVuCFjKC
+	 4dKL83fGmIu9sPo2gSabSQBqYXzgws59ejuQVFHxL0+Gdey/nloA1GAX+tBQhYe2y4
+	 OqbKq7UUgDd1BK81TK7TDW5QF/b1zPnWOna9gsN8QsSXXm7S/vEoGFgEwj/mYzaK+z
+	 Tn2nZVzCZjEDw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -37,9 +37,9 @@ Cc: Saurav Kashyap <skashyap@marvell.com>,
 	GR-QLogic-Storage-Upstream@marvell.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.9 04/44] scsi: qedf: Wait for stag work during unload
-Date: Mon, 17 Jun 2024 09:19:17 -0400
-Message-ID: <20240617132046.2587008-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.9 05/44] scsi: qedf: Set qed_slowpath_params to zero before use
+Date: Mon, 17 Jun 2024 09:19:18 -0400
+Message-ID: <20240617132046.2587008-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240617132046.2587008-1-sashal@kernel.org>
 References: <20240617132046.2587008-1-sashal@kernel.org>
@@ -56,126 +56,31 @@ Content-Transfer-Encoding: 8bit
 
 From: Saurav Kashyap <skashyap@marvell.com>
 
-[ Upstream commit 78e88472b60936025b83eba57cffa59d3501dc07 ]
+[ Upstream commit 6c3bb589debd763dc4b94803ddf3c13b4fcca776 ]
 
-If stag work is already scheduled and unload is called, it can lead to
-issues as unload cleans up the work element. Wait for stag work to get
-completed before cleanup during unload.
+Zero qed_slowpath_params before use.
 
 Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Link: https://lore.kernel.org/r/20240515091101.18754-3-skashyap@marvell.com
+Link: https://lore.kernel.org/r/20240515091101.18754-4-skashyap@marvell.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedf/qedf.h      |  1 +
- drivers/scsi/qedf/qedf_main.c | 30 +++++++++++++++++++++++++++---
- 2 files changed, 28 insertions(+), 3 deletions(-)
+ drivers/scsi/qedf/qedf_main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qedf/qedf.h b/drivers/scsi/qedf/qedf.h
-index 5058e01b65a27..98afdfe636003 100644
---- a/drivers/scsi/qedf/qedf.h
-+++ b/drivers/scsi/qedf/qedf.h
-@@ -363,6 +363,7 @@ struct qedf_ctx {
- #define QEDF_IN_RECOVERY		5
- #define QEDF_DBG_STOP_IO		6
- #define QEDF_PROBING			8
-+#define QEDF_STAG_IN_PROGRESS		9
- 	unsigned long flags; /* Miscellaneous state flags */
- 	int fipvlan_retries;
- 	u8 num_queues;
 diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index e882aec867653..c98cc666e3e9c 100644
+index c98cc666e3e9c..b97a8712d3f66 100644
 --- a/drivers/scsi/qedf/qedf_main.c
 +++ b/drivers/scsi/qedf/qedf_main.c
-@@ -318,11 +318,18 @@ static struct fc_seq *qedf_elsct_send(struct fc_lport *lport, u32 did,
- 	 */
- 	if (resp == fc_lport_flogi_resp) {
- 		qedf->flogi_cnt++;
-+		qedf->flogi_pending++;
-+
-+		if (test_bit(QEDF_UNLOADING, &qedf->flags)) {
-+			QEDF_ERR(&qedf->dbg_ctx, "Driver unloading\n");
-+			qedf->flogi_pending = 0;
-+		}
-+
- 		if (qedf->flogi_pending >= QEDF_FLOGI_RETRY_CNT) {
- 			schedule_delayed_work(&qedf->stag_work, 2);
- 			return NULL;
- 		}
--		qedf->flogi_pending++;
-+
- 		return fc_elsct_send(lport, did, fp, op, qedf_flogi_resp,
- 		    arg, timeout);
- 	}
-@@ -912,13 +919,14 @@ void qedf_ctx_soft_reset(struct fc_lport *lport)
- 	struct qedf_ctx *qedf;
- 	struct qed_link_output if_link;
- 
-+	qedf = lport_priv(lport);
-+
- 	if (lport->vport) {
-+		clear_bit(QEDF_STAG_IN_PROGRESS, &qedf->flags);
- 		printk_ratelimited("Cannot issue host reset on NPIV port.\n");
- 		return;
+@@ -3473,6 +3473,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
  	}
  
--	qedf = lport_priv(lport);
--
- 	qedf->flogi_pending = 0;
- 	/* For host reset, essentially do a soft link up/down */
- 	atomic_set(&qedf->link_state, QEDF_LINK_DOWN);
-@@ -938,6 +946,7 @@ void qedf_ctx_soft_reset(struct fc_lport *lport)
- 	if (!if_link.link_up) {
- 		QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_DISC,
- 			  "Physical link is not up.\n");
-+		clear_bit(QEDF_STAG_IN_PROGRESS, &qedf->flags);
- 		return;
- 	}
- 	/* Flush and wait to make sure link down is processed */
-@@ -950,6 +959,7 @@ void qedf_ctx_soft_reset(struct fc_lport *lport)
- 		  "Queue link up work.\n");
- 	queue_delayed_work(qedf->link_update_wq, &qedf->link_update,
- 	    0);
-+	clear_bit(QEDF_STAG_IN_PROGRESS, &qedf->flags);
- }
- 
- /* Reset the host by gracefully logging out and then logging back in */
-@@ -3721,6 +3731,7 @@ static void __qedf_remove(struct pci_dev *pdev, int mode)
- {
- 	struct qedf_ctx *qedf;
- 	int rc;
-+	int cnt = 0;
- 
- 	if (!pdev) {
- 		QEDF_ERR(NULL, "pdev is NULL.\n");
-@@ -3738,6 +3749,17 @@ static void __qedf_remove(struct pci_dev *pdev, int mode)
- 		return;
- 	}
- 
-+stag_in_prog:
-+	if (test_bit(QEDF_STAG_IN_PROGRESS, &qedf->flags)) {
-+		QEDF_ERR(&qedf->dbg_ctx, "Stag in progress, cnt=%d.\n", cnt);
-+		cnt++;
-+
-+		if (cnt < 5) {
-+			msleep(500);
-+			goto stag_in_prog;
-+		}
-+	}
-+
- 	if (mode != QEDF_MODE_RECOVERY)
- 		set_bit(QEDF_UNLOADING, &qedf->flags);
- 
-@@ -4013,6 +4035,8 @@ void qedf_stag_change_work(struct work_struct *work)
- 		return;
- 	}
- 
-+	set_bit(QEDF_STAG_IN_PROGRESS, &qedf->flags);
-+
- 	printk_ratelimited("[%s]:[%s:%d]:%d: Performing software context reset.",
- 			dev_name(&qedf->pdev->dev), __func__, __LINE__,
- 			qedf->dbg_ctx.host_no);
+ 	/* Start the Slowpath-process */
++	memset(&slowpath_params, 0, sizeof(struct qed_slowpath_params));
+ 	slowpath_params.int_mode = QED_INT_MODE_MSIX;
+ 	slowpath_params.drv_major = QEDF_DRIVER_MAJOR_VER;
+ 	slowpath_params.drv_minor = QEDF_DRIVER_MINOR_VER;
 -- 
 2.43.0
 
