@@ -1,145 +1,177 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BEB0847A;
-	Mon, 17 Jun 2024 16:27:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D801A16DC23;
+	Mon, 17 Jun 2024 17:24:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718641629; cv=none; b=nhvLdTi08nG7xl3KlhRG9FV1nDU8fjaNHm96L9WO47eNz4QObq/Kh5LZsFcV8dKiFjDBvLBq0dEubIeX22ek3Q4aCtEyg8A/sHHjQiM0b+bw5zX86oUzWy7AqB4Vw5x/iS68Ys3HSSQLGMT+rfYLz1ghoRUL3T4FSJTBqYl1i0A=
+	t=1718645053; cv=none; b=kUmRgu/UG5qtz/oDTWNxDCRIYBqzHagPEfQLt33N3IWUi/EOHytIQDHJnHSInpQv97kKfPK3PC7mkeIzsw9VaDRJCwCnTPD7yWkGn6ScG5u5t71o2kcUNAyN+U2rZEFJkgAqWsrM4Gbxjf77hN/bMMHmKi8XrJWvSvTsgIvFFlQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718641629; c=relaxed/simple;
-	bh=0/6abZk5ZE85wavkIEAyzY4LlQExR0Y2+tLnbsqpdmU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=jAblHkeuJ4v/ARTf+ypPRc9LvK8E8ikLlidFGs4ifzWQBR6JslMRsb1lxt1dZ2tVFs+OQ8SkDsSxCAUjYyf8Cl2bV/xka3cmN5XJPOVWFt1zuKmkxmz5BGuw2NDQI4crdLCZlpDqsGxibu8n7HHTrnVfB6xnXaxk4qwS/SC6xFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=V0nx8uWD; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1718645053; c=relaxed/simple;
+	bh=vXa4/V3bEr1cUbdgbeqTNfZwEYyyf3Z8A4QKWK/9VcA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=AZfceLfnoBEO2SPoajUYi11Au1nau/SmQyWEqQgtbl8SFMfUPLqK0HNjRB4ZYgoTBseVw0VrYWWzkxOUeDT2BQKbq6Z8XdI/5XDZ7uI8R4+kGlx+h4CJlsHv7cWudr9DxkcuG4yfqJyH0+lPb0bzhtM4hHZ4nd+A+nMlgzzu5no=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=fIJn20/7; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="V0nx8uWD"
-Received: from pps.filterd (m0353723.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45HFBmBI017348;
-	Mon, 17 Jun 2024 16:27:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date
-	:from:to:cc:subject:message-id:references:content-type
-	:in-reply-to:sender:content-transfer-encoding:mime-version; s=
-	pp1; bh=VTc09ubFYqY6mCTK5Mk8Kez39VZQ2PV5LBLtFCzOVY4=; b=V0nx8uWD
-	kFGPsDNj7Rw3yBs4lvqLPXS2I0cDA7HUT0NcLagwXA3o1HOyQbZu8UD/Xd/FYPyt
-	KNBgnf9wvB0HZUy2ccuW6F0EYV3IKlPYTOyq3qlpZWMq/cCn7BPx2L+Rhoy/HOA+
-	4p6cjV2n3VW15woFe8FPymf4yjuxLQ7ZosMhirY5eyUApxjb94sPFaaD2NxuM+k/
-	d7DvcvtLdCTAUb8b8jFypb08fU/NjJ+LIBoyKplawzh6IY24QYUUbXOZc6TpEw0q
-	qUc6N0lFLqrgkEU4BjcJn6uzuFlBG0sqtmQZFIONBgXY2aQLifBqDo9oZSgVgQVR
-	IkmBT0+RohwPFA==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ytqjsg6bn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 17 Jun 2024 16:27:02 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 45HF59hL006189;
-	Mon, 17 Jun 2024 16:27:01 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 3ysn9uc077-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 17 Jun 2024 16:27:01 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 45HGQvv329360852
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 17 Jun 2024 16:26:59 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id B24382004D;
-	Mon, 17 Jun 2024 16:26:57 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9DFB520043;
-	Mon, 17 Jun 2024 16:26:57 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.171.0.249])
-	by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Mon, 17 Jun 2024 16:26:57 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.97.1)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1sJFC5-00000003rsM-0mY0;
-	Mon, 17 Jun 2024 18:26:57 +0200
-Date: Mon, 17 Jun 2024 18:26:57 +0200
-From: Benjamin Block <bblock@linux.ibm.com>
-To: Li Feng <fengli@smartx.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: sd: Keep the discard mode stable
-Message-ID: <20240617162657.GA843635@p1gen4-pw042f0m.fritz.box>
-References: <20240614160350.180490-1-fengli@smartx.com>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <20240614160350.180490-1-fengli@smartx.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: irVYAC7UR5bD72So1S2kM96demW93PoF
-X-Proofpoint-ORIG-GUID: irVYAC7UR5bD72So1S2kM96demW93PoF
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="fIJn20/7"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20240617172408epoutp01d5cfb621ee9332625028acae497565c9~Z2pDkcxZp2902629026epoutp01O;
+	Mon, 17 Jun 2024 17:24:08 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20240617172408epoutp01d5cfb621ee9332625028acae497565c9~Z2pDkcxZp2902629026epoutp01O
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1718645048;
+	bh=3GE3KET7bOf1zcmKKymQ2JPlkXHN91x41000eo5a7lA=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=fIJn20/7wP01siSaq+PLtS0oBmmYBxSsDSsFfL7DTgvB/Cyvr6AGPiMAmQDHX3NVq
+	 SiE6szv8tltuVtBjD6MzXNm3tkerE0tHehPd3pd9G2uFY1y2HnDPfalYF3cvn+hXxW
+	 UQxx6m06VH4gCCSdAtyw4XVjio8JSs334Wc9gkds=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+	20240617172408epcas5p14cd564ede4e3b176c07c37d1f9b80cc0~Z2pDN_D1I0954009540epcas5p1i;
+	Mon, 17 Jun 2024 17:24:08 +0000 (GMT)
+Received: from epsmges5p3new.samsung.com (unknown [182.195.38.179]) by
+	epsnrtp1.localdomain (Postfix) with ESMTP id 4W2xZG0RD8z4x9Pp; Mon, 17 Jun
+	2024 17:24:06 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+	epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	56.C0.06857.53170766; Tue, 18 Jun 2024 02:24:05 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20240617172405epcas5p304fc3cb06e74bae8ef44170bdf73feff~Z2pAjhLuV0869008690epcas5p3c;
+	Mon, 17 Jun 2024 17:24:05 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240617172405epsmtrp102e99dc9015645e38ebeee8e5344b312~Z2pAhH4JU0128601286epsmtrp1G;
+	Mon, 17 Jun 2024 17:24:05 +0000 (GMT)
+X-AuditID: b6c32a4b-88bff70000021ac9-91-66707135ee1d
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	E3.2B.18846.53170766; Tue, 18 Jun 2024 02:24:05 +0900 (KST)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20240617172400epsmtip15cdc36d9ff46a830e937444c42522c89~Z2o8ahfCc0277102771epsmtip1W;
+	Mon, 17 Jun 2024 17:24:00 +0000 (GMT)
+Message-ID: <faaa5c15-a80d-339a-d9dd-2dd05fb26621@samsung.com>
+Date: Mon, 17 Jun 2024 22:54:00 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-06-17_14,2024-06-17_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- mlxlogscore=999 spamscore=0 mlxscore=0 priorityscore=1501 adultscore=0
- suspectscore=0 malwarescore=0 phishscore=0 clxscore=1011 bulkscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2405170001 definitions=main-2406170127
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
+	Gecko/20100101 Thunderbird/91.13.1
+Subject: Re: [PATCH v8 10/10] nvme: Atomic write support
+Content-Language: en-US
+To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+	kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
+	dchinner@redhat.com, jack@suse.cz
+Cc: djwong@kernel.org, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com, linux-aio@kvack.org,
+	linux-btrfs@vger.kernel.org, io-uring@vger.kernel.org, nilay@linux.ibm.com,
+	ritesh.list@gmail.com, willy@infradead.org, agk@redhat.com,
+	snitzer@kernel.org, mpatocka@redhat.com, dm-devel@lists.linux.dev,
+	hare@suse.de, Alan Adamson <alan.adamson@oracle.com>
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <20240610104329.3555488-11-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA02TezDcVxTH5/72tw+b2XS7qBudKd1oWhKPZcmVIVExmd+MTkcnTTujD93a
+	H6vYXfvog6YRStiKx0rSUkKXprJRml31CBGhniGEIaJBvRLirTVFQrprN6n/Puec75nvPefM
+	ZVA4rXRbRoRYQcrEgigujYlXNjk6OnvGSMPcaje9UHlHCwXVZXRg6MpwBg3NNq0A1PUon476
+	JnejQk0+juo0agxdvtKMoYWk2zj68ftEDLXfWKQhzWAlhno2qgFSNw4AdO5CAkDXh/aj3okS
+	Oqq73o6jvmt5NFRwaYqOvrtbTUO/tG5hKCulH0MVWUsYKrp8At3sSKGjstlFHLUNvYyS0tbp
+	qHuzlYoer+XR/OyJmtxhOlGoUxLdI1dxQl/iRPR1KQmdNpVG6FbUdCJT0wAIffEpYlqfA4ja
+	e/E0IqGzmUIsTw3hxGJ9P43oLPyDTuhvxQVxgiN9RKRASMrsSXGoRBghDvflBh4PORri6eXG
+	c+Z5o4Nce7EgmvTlBrwV5HwsIsqwMq7954IopSEVJJDLua6HfWQSpYK0F0nkCl8uKRVGSflS
+	F7kgWq4Uh7uIScUhnpubu6dB+EmkqCg7AUi7dn25sdpEiQenLVTAggHZfDjeU041ModdC2Cy
+	1l8FmAZeAfDe/QbwPOg/PU591jHZp8ZMhRoAqxJqqKZgHsDiO5OYUcViH4b9czPAyDj7Ndgy
+	p8ZN+Rdhe87kNluzQ+G6qoFmZEs2gj/rzm3nKWwbODRZsO1gxV4CsDd9xlxIxWH+QrgKMBg0
+	tiPsyVYa0xZsPzjQm2aW2MGq+TyKsReyE5hwsKoMMz07AA4Xq3ATW8JHrRV0E9vCmYxkM4fC
+	3pzbZr0CTtTdNPMRmNSRQTH6Ugy+5ddcTV674dnHxnkZBgkLpiRzTOpX4Yh6yrwsGzj2Q7GZ
+	CajTNZp31QbgmeR1kAnsc3esJXfH+Lk7xsn937kQ4Fqwh5TKo8NJuafUQ0x+8fzgoZJoHdj+
+	UU6B1WD8ryWXRoAxQCOADArXiuV/QRzGYQkFX8WSMkmITBlFyhuBp+E+WRRb61CJ4UuKFSE8
+	vrcb38vLi+/t4cXj2rBmk/KFHHa4QEFGkqSUlD3rwxgWtvGYAzcraCxudT3Yg0j97dchQae6
+	/lPrwvsX97WOxul9XKZK872ZeIV+7aX1wY3pIlL4ysz8g4eaaJ275Rssb61deKe2ZfWS9L1/
+	V45w0otOXlw6+8BpoPlD7ZnXr7pvWf3ps7b36Te5dls/zYq+bjlh0fzmydhjTbYHSP7ykn/s
+	0XjPz/75QKtKYwavpRxini/Wl80dGFRnfjvN8x2q4sut2pYdRgpu7Cvd//fB2bDRJ4GtoofB
+	Y9k2kpg9512O7yL0kVVPtQ2F7y9UUp6AmHcCEjSuPol+JZruUepdlkPzx5tbsW+/W6p9ge7N
+	LOoMyaqPsmT8fsuXqD8VILZIl31EnVhPvBPHxeUiAc+JIpML/gPSz14u2gQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrIKsWRmVeSWpSXmKPExsWy7bCSnK5pYUGawcvnfBbrTx1jttjTf4rJ
+	YvXdfjaL14c/MVqcfTWX3eLyEz6LBYvmsljsWTSJyWLl6qNMFu9az7FYzJ7ezGRxcv97NotF
+	N7YxWVz4tYPRYtKha4wWU6Y1MVrsvaVtcenxCnaLPXtPslhc3jWHzWL+sqfsFt3Xd7BZLD/+
+	j8liYsdVJostEz8wWSxeGWpx8FQHu8W61+9ZLE7ckrZo7fnJbnH+73FWi98/5rA5KHjsnHWX
+	3WPBplKP8/c2snhsXqHlcflsqcemVZ1sHps+TWL3mLDoAKPH5iX1Hi82z2T02H2zgc2j6cxR
+	Zo+PT2+xeLzfd5XN48yCI+wem09XBwhFcdmkpOZklqUW6dslcGUsntzEWHCWu+LX18PMDYyN
+	nF2MnBwSAiYSTy5PYupi5OIQEtjOKPGt+zcrREJcovnaD3YIW1hi5b/n7BBFrxkl3t1uZwFJ
+	8ArYSVx985IRxGYRUJU49mYSVFxQ4uTMJ2C2qECyxMs/E8EGCQtYSCzdNAUszgy04NaT+WCb
+	RQQ+MEq82biGBcRhFuhkkTg/rZMNYt0JRokzP/cCreDgYBPQlLgwuRSkm1PAQeLapR6oSWYS
+	XVu7GCFseYntb+cwT2AUmoXkkFlIFs5C0jILScsCRpZVjKKpBcW56bnJBYZ6xYm5xaV56XrJ
+	+bmbGMGpSCtoB+Oy9X/1DjEycTAeYpTgYFYS4XWalpcmxJuSWFmVWpQfX1Sak1p8iFGag0VJ
+	nFc5pzNFSCA9sSQ1OzW1ILUIJsvEwSnVwNRlt0Zv8lLTCy4LfqXs1eTVClHb8Wm3WGLuFsk1
+	jbNY1B37Jzo7vDrVP/H21QLlN5H3PFuDORvOtdZVvBEyTd/pN6Fxq9imc4es1H3//zQ5ZOkp
+	dvq1kN6ulTxc8p4JWQz2hc7Gvuxdn68fFdAvW+NmlCaiHvXHtfdagVruy93n9ptmX7nBZZLO
+	vjlYfNau2m9920p7z/PmTC+RNf7K8XCpUVOAsHP2rXie5SbidTOMXVRqJznlVKu/dj2SX7yX
+	T1BrWqm4Zvv7251CvUtvZm5qdDym7Kcuxt/mnnJmwszzlxJSZ/2U2NOv7WM3wSc5iWdhs+ZZ
+	//e8qp054ndZJ9odPhMnnfZbYnLZ5xolluKMREMt5qLiRACuq6SitAMAAA==
+X-CMS-MailID: 20240617172405epcas5p304fc3cb06e74bae8ef44170bdf73feff
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240610162108epcas5p27ec7c4797da691f5874208bfcfa7c3e3
+References: <20240610104329.3555488-1-john.g.garry@oracle.com>
+	<CGME20240610162108epcas5p27ec7c4797da691f5874208bfcfa7c3e3@epcas5p2.samsung.com>
+	<20240610104329.3555488-11-john.g.garry@oracle.com>
 
-Hey,
+On 6/10/2024 4:13 PM, John Garry wrote:
+> +static bool nvme_valid_atomic_write(struct request *req)
+> +{
+> +	struct request_queue *q = req->q;
+> +	u32 boundary_bytes = queue_atomic_write_boundary_bytes(q);
+> +
+> +	if (blk_rq_bytes(req) > queue_atomic_write_unit_max_bytes(q))
+> +		return false;
+> +
+> +	if (boundary_bytes) {
+> +		u64 mask = boundary_bytes - 1, imask = ~mask;
+> +		u64 start = blk_rq_pos(req) << SECTOR_SHIFT;
+> +		u64 end = start + blk_rq_bytes(req) - 1;
+> +
+> +		/* If greater then must be crossing a boundary */
+> +		if (blk_rq_bytes(req) > boundary_bytes)
+> +			return false;
 
-On Sat, Jun 15, 2024 at 12:03:47AM +0800, Li Feng wrote:
-> There is a scenario where a large number of discard commands
-> are issued when the iscsi initiator connects to the target
-> and then performs a session rescan operation. 
+Nit: I'd cache blk_rq_bytes(req), since that is repeating and this 
+function is called for each atomic IO.
 
-Is this with just one specific target implementation? This sounds like a
-broken/buggy target, or is there a reason why this happens in general?
+> +
+> +		if ((start & imask) != (end & imask))
+> +			return false;
+> +	}
+> +
+> +	return true;
+> +}
+> +
+>   static inline blk_status_t nvme_setup_rw(struct nvme_ns *ns,
+>   		struct request *req, struct nvme_command *cmnd,
+>   		enum nvme_opcode op)
+> @@ -941,6 +965,12 @@ static inline blk_status_t nvme_setup_rw(struct nvme_ns *ns,
+>   
+>   	if (req->cmd_flags & REQ_RAHEAD)
+>   		dsmgmt |= NVME_RW_DSM_FREQ_PREFETCH;
+> +	/*
+> +	 * Ensure that nothing has been sent which cannot be executed
+> +	 * atomically.
+> +	 */
+> +	if (req->cmd_flags & REQ_ATOMIC && !nvme_valid_atomic_write(req))
+> +		return BLK_STS_INVAL;
+>   
 
-And broken target sounds like device quirk, rather than impacting every
-possible target.
-
-> There is a time
-> window, most of the commands are in UNMAP mode, and some
-> discard commands become WRITE SAME with UNMAP.
-> 
-> The discard mode has been negotiated during the SCSI probe. If
-> the mode is temporarily changed from UNMAP to WRITE SAME with
-> UNMAP, IO ERROR may occur because the target may not implement
-> WRITE SAME with UNMAP. Keep the discard mode stable to fix this
-> issue.
-> 
-> Signed-off-by: Li Feng <fengli@smartx.com>
-> ---
->  drivers/scsi/sd.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index f6c822c9cbd2..0165dc70a99b 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2598,7 +2598,12 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
->  		if (buffer[14] & 0x40) /* LBPRZ */
->  			sdkp->lbprz = 1;
->  
-> -		sd_config_discard(sdkp, SD_LBP_WS16);
-> +		/*
-> +		 * When the discard mode has been set to UNMAP, it should not be set to
-> +		 * WRITE SAME with UNMAP.
-> +		 */
-> +		if (!sdkp->max_unmap_blocks)
-> +			sd_config_discard(sdkp, SD_LBP_WS16);
->  	}
->  
->  	sdkp->capacity = lba + 1;
-
--- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Gesch?ftsf?hrung: David Faller
-Sitz der Ges.: B?blingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
+Is this validity check specific to NVMe or should this be moved up to 
+block layer as it also knows the limits?
