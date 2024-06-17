@@ -1,83 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 238431BD8E5;
-	Mon, 17 Jun 2024 13:28:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FFF0158A05;
+	Mon, 17 Jun 2024 14:35:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718630880; cv=none; b=rFHS9BxWY12SImQYjwitiBgA1HemLbkmFusfCotV9jUZwf6HCMWgjzPxsaGL6bIXmMFzM6RIFg4twEOjS37y5D2OT9UGTUsoIjVV33UjxrCtFyxV7YCZcbPC0gHnXae8wRkQgydWDAOwtsOMKyWi6AvHUg429VTHp09901RvMlY=
+	t=1718634907; cv=none; b=KiM+GgE2CCBVWpN14REjdiO72KjyYUmBKg67cledLbY/epVdRh6CJP+Vf0f9Uo4SErntKCp1kHdg+6oafnVXLfqlUJ6HvnhRrxu5ZIwGltQ4+RyGI82xdYmCDyMCmsPT031/CCSitVczlum9qoR1P2zh8dMEanXHjwTf65H3FjQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718630880; c=relaxed/simple;
-	bh=mrr1/gnGhxIFsA7Wmc+9BmFIO5sb64qepIbcGbCrJak=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Bx96pEkfm2PFplPKkdl9L41eOLAALBdbnS5YYgA4MpzcqQVizgaf1O0QumEkf/J7FVmJyTakKg28qDJbHtGF6Jfi9rSojJ8Uv5CbvgyXu4njGF4OVR2c+9g3+L8FTIxhDedNtu4G9tWtgWUaco5CYWTuXqFHwzagLtcXGx0FFcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=APAXreI/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718634907; c=relaxed/simple;
+	bh=zR4PmzG8eM11uEea9QT6dpcyWJEpQ/sobqtYRuY7p2o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eqxtyjYTm+h4cPOpB1NvrWKHldAZ4h173Lde+YoP6k2ni4/MzlbFBgoPS/eXrrTslI7YBsrMv7EbJzgVUcWcaxDA0Q/9e0VDr4hV3alIXfduWEOdvuCjvnEnwOm4OmK2R3gLQIJL9SWbQjN9sDXBVSCXExXRiR7GQyPxiiDyOgk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eD5n/nvW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="APAXreI/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E437FC2BD10;
-	Mon, 17 Jun 2024 13:27:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eD5n/nvW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7346C2BD10;
+	Mon, 17 Jun 2024 14:35:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718630880;
-	bh=mrr1/gnGhxIFsA7Wmc+9BmFIO5sb64qepIbcGbCrJak=;
-	h=From:To:Cc:Subject:Date:From;
-	b=APAXreI/DLlu6Diw2J4vUoPIGeco199lAoQQhqFOTZLcRHXLF+FfyPWMRkT2whfpo
-	 jw3RV0txevqq4quZSOOcYQsR6kRAUY52O1koS5v3oTnHNLV+DR+WlZaqHLYanoET8M
-	 RAKcD0ibK681AAZQsKNkB2EcccOOthHG2p7Wjysz98PLw2SSyYfxQDQ0EsalAzfTQt
-	 GI0eP1Az10ewoYVtT0dZAOB8XIozZXxGpzR5f8CrHHy4dPBbzxRoxJ3Fjh6JfBNVcV
-	 fS0W6VmYMuvy5WGd0Z+/2u36xbd4CsGLFUoIv6tMKLt44639SShczfyIX9NALpxFpk
-	 gE8BY22nQrL5g==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Saurav Kashyap <skashyap@marvell.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	jhasan@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 1/9] scsi: qedf: Set qed_slowpath_params to zero before use
-Date: Mon, 17 Jun 2024 09:27:46 -0400
-Message-ID: <20240617132757.2590643-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
+	s=k20201202; t=1718634907;
+	bh=zR4PmzG8eM11uEea9QT6dpcyWJEpQ/sobqtYRuY7p2o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=eD5n/nvWPH0mROLi1mYqjLG+6CkIkCxCEDr7KHYv5mCJ6cJ3axvL3iUR8FSfF/NAJ
+	 aWF+hMFp26+MYq12L40CvD0LxAzWJTFIpFvJFlT/13JJ1EJCWWsc/XXuMYInx3fYPk
+	 PVqFFZp9qinzyqQ1wbJp1uQUpFSEgZjA7/AJ/D87BnMG71EbVAfG4CFQOyKDe6kjS2
+	 0qjhzv59DCAwJqh60nhssiSotn3a1GiLXJljndQUFTrzdMkRj7pO46aG6KaDjyXOpw
+	 MXJnwDrZxtrM68cj9z93ToW3XbCMjuJFfQuHw/qbhAPx1AOR5+hjUoIbpzcdxhC3Vq
+	 UbiPTmWDLBjCA==
+Date: Mon, 17 Jun 2024 08:35:02 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
+	Richard Weinberger <richard@nod.at>,
+	Philipp Reisner <philipp.reisner@linbit.com>,
+	Lars Ellenberg <lars.ellenberg@linbit.com>,
+	Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
+	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
+	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Vineeth Vijayan <vneethv@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
+	drbd-dev@lists.linbit.com, nbd@other.debian.org,
+	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
+	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH 26/26] block: move the bounce flag into the features field
+Message-ID: <ZnBJlix63Fj_G1px@kbusch-mbp.dhcp.thefacebook.com>
+References: <20240617060532.127975-1-hch@lst.de>
+ <20240617060532.127975-27-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.316
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240617060532.127975-27-hch@lst.de>
 
-From: Saurav Kashyap <skashyap@marvell.com>
+On Mon, Jun 17, 2024 at 08:04:53AM +0200, Christoph Hellwig wrote:
+> @@ -352,7 +355,6 @@ enum blk_bounce {
 
-[ Upstream commit 6c3bb589debd763dc4b94803ddf3c13b4fcca776 ]
+No more users of "enum blk_bounce" after this, so you can delete that
+too.
 
-Zero qed_slowpath_params before use.
-
-Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Link: https://lore.kernel.org/r/20240515091101.18754-4-skashyap@marvell.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/qedf/qedf_main.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 01e27285b26ba..33fb0e1926831 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3101,6 +3101,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	}
- 
- 	/* Start the Slowpath-process */
-+	memset(&slowpath_params, 0, sizeof(struct qed_slowpath_params));
- 	slowpath_params.int_mode = QED_INT_MODE_MSIX;
- 	slowpath_params.drv_major = QEDF_DRIVER_MAJOR_VER;
- 	slowpath_params.drv_minor = QEDF_DRIVER_MINOR_VER;
--- 
-2.43.0
-
+>  struct queue_limits {
+>  	unsigned int		features;
+>  	unsigned int		flags;
+> -	enum blk_bounce		bounce;
