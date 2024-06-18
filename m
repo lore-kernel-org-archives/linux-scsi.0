@@ -1,86 +1,78 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D462545C16
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 16:24:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDEC92139DD;
+	Tue, 18 Jun 2024 17:25:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718727876; cv=none; b=XaKzv0ySH4ZKMyUzF+IWw6yoFjCB7heGPqZ3yK8guBMhaKa/UP88mwyqilVg+qjid9vChg5Hyv6wKyjhhiEp3BEEDJMTWdHg5ZLibwyar22y4Ny9VerZs3tmRsUdIjBvO2FOq66W1UQj/TjrNmXjtLn/REfKPhlMWVfSuxoBx0Y=
+	t=1718731534; cv=none; b=LFZLaEpcbdOynF2a4T2bY7xrgAwdXy/yQtXph5bWT2VwhlVeuAQn/5cOVcB2v/EE39RixHlav5lr/gDxi1CFUxu55kcnHbnh2Pqlcyekzxt3UaHAeRs8q0M9a6VyseLpEpz9L4AFuQZnq02H72IuO/MM1aaWHa4UO3F7zDC2vSk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718727876; c=relaxed/simple;
-	bh=QkFmj7m57sNbLUIVVTYAXpPgy7Nxs2gw7gUTwTuqPXg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pW0Oy85q6ZhVQJrTIrhTU2E5YWYY6eOY5cJMFblO/Ierzt6A0PEanM3CSLbG5t/PuFRMf1j0FB+JXReLoG9YoQQRxjOdnK6QuB2J9sniOyi3AYZsdvEvxdcYa9hJYOX3mrEl7vvAg7vmqJnmUTfNkA18ZM1bGNNh4JdLbhFxTZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=sbA6bl8I; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1718731534; c=relaxed/simple;
+	bh=9WtmB9Bn0bftxKxvR8395pd356hshFubR0WI4s7a7NQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dbTxXiAhiy1mt+13cWbSEofpHoU1BTJi4zMLCiPJWBS/SzDNAJPPjxUMCsRn45iFYacSKU2IE99ehUjfO3AeVTMrXA/hBEy7HAOVPX+uFj9HfGXaGqHbkccLVFVVPoiidh0lxGwkw2eJN911DfySQzd0oUOGxIkRBn/WC+q0Ylk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L/glrhDY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="sbA6bl8I"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4W3XC61YbXzlgMVS;
-	Tue, 18 Jun 2024 16:24:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1718727872; x=1721319873; bh=7tgDTkz5DYbnb7du4KZlpNR4
-	kEN+nkZnE+V3YvIyAN4=; b=sbA6bl8I8xufH+lFiuP3wsbeb3GbEGorJVhT4Xua
-	LH4Im4w1DU4D20U1mAWWsgBp4WWJBqKMQJjn0IraCVkGBVMJVxJ0s+pVP07o7gLX
-	CjAYmhnLGpTrT9V5OTqgyuOdQPME9k5ZQegsuHUNXVTP9z6wAukdjaWxq5xH7Wlk
-	HEWwOINvHiRHUn0PIzYUU6c4zD1q8f9MYg/2j2iK/RnXWDBA4fMZfNfYedOPHChx
-	pkr0ajT7IFlwepBLBiJJ1zBriMVbjIiNOHriFbLSOitnp3pJNUR1+eSwEK+CrS4M
-	P/6BRtO320nyQZ7PtAnpJXOA+h29i2M7DOUhCH/QCcRunQ==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id cuhH5axz6wAD; Tue, 18 Jun 2024 16:24:32 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4W3XC26yDyzlgMVR;
-	Tue, 18 Jun 2024 16:24:30 +0000 (UTC)
-Message-ID: <b8dde57a-c787-4ed0-a90d-7c4320864b04@acm.org>
-Date: Tue, 18 Jun 2024 09:24:28 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L/glrhDY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FC4AC3277B;
+	Tue, 18 Jun 2024 17:25:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718731533;
+	bh=9WtmB9Bn0bftxKxvR8395pd356hshFubR0WI4s7a7NQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=L/glrhDYm4sY+aW6Z7pWsticv8PewU9RhtaYYM2XXCXyQ7dJn+bapDjh1iVAIjRrm
+	 piW4D1gKTzDt5/l4zvkKQZd0ituyOTiYFBFUrZj3cl3kj9qCzTOuKdBYTrjdfDqvHf
+	 nw2tYUPmW/v+qurual1veLYcOf4R5ngMB1OFAzv5aGGzHXY83G9L75JQT5CeaVBtod
+	 2vadkoi5t1N78i5jAUnEDEN/yOnXJn4a4rZtBDP63+dfj4QXWar7NBEGVqaB3yJ/I/
+	 UbiWMjl6sosNLYMm1qGpqwcWgkWXMfAe7m8B6h7YzteDo5W9fG1kRjVrdUPgtl0jbw
+	 nYq5nfgtQA4zA==
+Date: Tue, 18 Jun 2024 11:25:29 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, djwong@kernel.org, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com,
+	linux-aio@kvack.org, linux-btrfs@vger.kernel.org,
+	io-uring@vger.kernel.org, nilay@linux.ibm.com,
+	ritesh.list@gmail.com, willy@infradead.org, agk@redhat.com,
+	snitzer@kernel.org, mpatocka@redhat.com, dm-devel@lists.linux.dev,
+	hare@suse.de, Himanshu Madhani <himanshu.madhani@oracle.com>
+Subject: Re: [PATCH v8 05/10] block: Add core atomic write support
+Message-ID: <ZnHDCYiRA9EvuLTc@kbusch-mbp.dhcp.thefacebook.com>
+References: <20240610104329.3555488-1-john.g.garry@oracle.com>
+ <20240610104329.3555488-6-john.g.garry@oracle.com>
+ <ZnCGwYomCC9kKIBY@kbusch-mbp.dhcp.thefacebook.com>
+ <20240618065112.GB29009@lst.de>
+ <91e9bbe3-75cf-4874-9d64-0785f7ea21d9@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: ufs-pci: Add support for Intel Panther Lake
-To: Adrian Hunter <adrian.hunter@intel.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "James E . J . Bottomley" <jejb@linux.ibm.com>,
- Avri Altman <avri.altman@wdc.com>, Bean Huo <beanhuo@micron.com>,
- linux-scsi@vger.kernel.org
-References: <20240618073158.38504-1-adrian.hunter@intel.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240618073158.38504-1-adrian.hunter@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <91e9bbe3-75cf-4874-9d64-0785f7ea21d9@oracle.com>
 
-On 6/18/24 12:31 AM, Adrian Hunter wrote:
-> Add PCI ID to support Intel Panther Lake, same as MTL.
+On Tue, Jun 18, 2024 at 08:46:31AM +0100, John Garry wrote:
 > 
-> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-> ---
->   drivers/ufs/host/ufshcd-pci.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-> index 0aca666d2199..ec675a13c73e 100644
-> --- a/drivers/ufs/host/ufshcd-pci.c
-> +++ b/drivers/ufs/host/ufshcd-pci.c
-> @@ -602,6 +602,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
->   	{ PCI_VDEVICE(INTEL, 0x7E47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
->   	{ PCI_VDEVICE(INTEL, 0xA847), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
->   	{ PCI_VDEVICE(INTEL, 0x7747), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
-> +	{ PCI_VDEVICE(INTEL, 0xE447), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
->   	{ }	/* terminate list */
->   };
+> About NVMe, the spec says that NABSN and NOIOB may not be related to one
+> another (command set spec 1.0d 5.8.2.1), but I am wondering if people really
+> build HW which would have different NABSN/NABSPF and NOIOB. I don't know.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+The history of NOIOB is from an nvme drive that had two back-end
+controllers with their own isolated storage, and then striped together
+on the front end for the host to see. A command crossing the stripe
+boundary takes a slow path to split it for each backend controller's
+portion and merge the results. Subsequent implementations may have
+different reasons for advertising this boundary, but that was the
+original.
+
+Anyway, there was an idea that the stripe size could be user
+configurable, though that never shipped as far as I know. If it had,
+then the optimal NOIOB could be made larger, but the atomic write size
+doesn't change.
