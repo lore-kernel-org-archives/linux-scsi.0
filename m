@@ -1,53 +1,53 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6783158213
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 12:00:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E14B73467
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 12:00:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718712015; cv=none; b=cw6PkA2l7iROwTqIPTN4OXZKOpKSS+lYUMvtbu/dY6KwKnwHPe8sLkabgeMmb3qJ1vGFAoxHDbWv8HAUrKNHBPsGIFxmqkwy2rjOcQU8v5XNG6yKRYpzmkeGoxWgOKea6xJFilL4/sLT+jn94gf6IcyhNdDzJKl7r7yX5NW2T5w=
+	t=1718712018; cv=none; b=nhzcAi7KRD4M2Ec87s2TY27mMEktvlS6PHmkh/Kig9aB4/AyAB+2PiMbNL3YmLgV+nMyeOEWaa8qb6i9p2hRGQP1CcwhmwXsEkjdoGMfnJ019yzHwzScly5wK7HwW4K7bq+anWDUyYmQIsh3Vx5/4e+JeQuUB5xVZehXCAEVQJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718712015; c=relaxed/simple;
-	bh=cb5SEZGyaqjim4YFD3VMDRLT6N3NbicbGGGKZv0rv8E=;
+	s=arc-20240116; t=1718712018; c=relaxed/simple;
+	bh=rxwp3UG8UkxqDee3LRW+MS6gnX6quVNtuwL2VBh+zTg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=QWVvEv1R+hzDe7eC0B6J3pgVr3wFp8h6ZoFzIjpDq8QonNHC2SDPzbdHire3XePCgRnu4LZyQ3jLxz0BKCu9PQPbH8sCyQDXaxmklGyL5EbQCDqiA9qBDc9K+MWz4zjqwzVlHjI/EiDHULshmR+n6wMqLQpGArdL1lW2hWH0NJA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=WubjlYwU; arc=none smtp.client-ip=209.85.216.54
+	 MIME-Version:Content-Type; b=ShD9VhdTv/oc2WyEv5gbtwarEciXGbsTDDs9Cx4XQPiULO/tEugFiGyusZD73nZLJmiXgA//4otNutuNZ/WhAascU6mGFxV7ZsA7T6CiTqmwZL+PK/PBWK8fk/5RCYi6GU9m49XGWhdFmBGQAqemJ89YDaLUEtY/c3j/0rmjc4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=WtrbBOU+; arc=none smtp.client-ip=209.85.216.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="WubjlYwU"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-2c70c37287fso497843a91.0
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 05:00:12 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="WtrbBOU+"
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-2c315b569c8so4367165a91.0
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 05:00:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1718712011; x=1719316811; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1718712015; x=1719316815; darn=vger.kernel.org;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=zPrpikAfjtwLO2gIyl6oh/kutYP5F9bXWA8dtmUYFZs=;
-        b=WubjlYwUB/DWzy+MmqxhWq4DFH0Y9+MPSG/Ts0q0gfarvQmEA+3GPtt6YhuWcZlybB
-         MDiOqttIrECKWNAWdXGw9A8uyJsA6fshOnRbzM/tUS7mOkYfaGg00xUP/dF0vz/TGktp
-         s4aKbTwhmgc+9L1QYKwc1v5F8ZNFDH25/Ux0Q=
+        bh=3DFSPP1pJPB464nme1zbQ3pCTNDsxvwvg4tS49vrYO8=;
+        b=WtrbBOU+s+utZFmk5n8SNdiUFT7gAnfLR7bdbMnyCIz2bPuS/61Av/w7gNCpbmMI/e
+         v2ZbI+a81LB/oMbi/RHK5EYX/1eTvgy/6Nfkjepra76v+yFK8Don/ItzYNg0ERwI369+
+         36WTzWhkjPMuMjfdNHKKkQD4Wl1QggGQH5s0Y=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718712011; x=1719316811;
+        d=1e100.net; s=20230601; t=1718712015; x=1719316815;
         h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
          :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zPrpikAfjtwLO2gIyl6oh/kutYP5F9bXWA8dtmUYFZs=;
-        b=DO0AfnfJ+aEAL4EaBCmiIoJylfR6Mi0kAEK/KZfkLRoQhL9xB42pDFHXW3o9FgbY4Y
-         uJo6x1qhFbMqo2WxAlqhnTDtmjjrB2jeQ7O0X0JS1X3dGobBBfb5eyWu+lksB3jIVruA
-         JOG4cFCo+rAayVI/N+3CtP6DoaoSbjm66es/a28vFaLr2DVXpfMSuriyADE2VWVmWVCJ
-         pPhLTPZHFMOgcFEVZbhIaU1qUU97r/aiFOOL/jRQk92q+eXlJbGgMHEDYNGLDTc4xMHT
-         W2yrVitk9uXcuUIT4GAgmHF93hla1GaaXiWFyhq5pps70NscZ6sv6UNdU2VVQzQFXfMQ
-         dq6w==
-X-Gm-Message-State: AOJu0Ywr4quIi4LBny0MbpIJyxD4Ukxs0zgbU6EWIGZyP8KYIc2tXpsc
-	3TgJuXt+2bvG5Gn0vObalBL7WglSTIcbQtdJuaTf/smo5CpZdwCX8zfdZOK0knMxfks4u0msa5e
-	H53b1Kgtk06kue89ZL2aRYtuaw2L7Sn4P04z1IWX4qn/uLqOD0foxmHw9URo+96mLiGWDh1Szm1
-	fDd4GtStrYJ8hCaVQERx8qHinoALcx7nE+Bn6MOMGbo3rh8Q==
-X-Google-Smtp-Source: AGHT+IEVNCgRNVY5QIy6uOVKe2ld9XJJUiyrZpHMn6Uhe0wwi3UQdk5JMuYuWT6bns+gqTzXkO7IAw==
-X-Received: by 2002:a17:90b:4f4b:b0:2c1:aa8e:d70 with SMTP id 98e67ed59e1d1-2c4da9c8de9mr12631778a91.0.1718712010603;
-        Tue, 18 Jun 2024 05:00:10 -0700 (PDT)
+        bh=3DFSPP1pJPB464nme1zbQ3pCTNDsxvwvg4tS49vrYO8=;
+        b=toDWQeqUzGlrVIVFTo0Nn9AuDAQ7eFNrvjFT5yYhBOEu0BtuzhLRQCWMSdOQJFSAtT
+         pb3BktM5V1wzz2Z9gi81GKtQ/c2dV5OkGfdJY7/BzI+Cm/MHL6mhSLeQ+8uGAKE8e/hP
+         zzvKZ8pd75rCxawRx8hH/S5W+W/Cgxj5Nun5xtsM96eJY679xjZT+hIgXsQXlQYb2qNp
+         p2HAWymrOeKVzscVzuwNGT8oYqQMcMYFqBUnpYuXgE8n0h3+wqklKqL3+ajOCpPrnxpV
+         OquKbpfB72BHab18cOURTw6lIKzpbAS7b10LJD+QMxTQC3QPN+D65+M3guZCElau/NBC
+         WuPw==
+X-Gm-Message-State: AOJu0YxlcprsH5OyObanprbKqaL8q9qcWbdG5QsWMmo+lMSyD0EV+gW4
+	kVgzoKuS9YagH4onFX5mecNazGbbri6OfudL22IhCqDVdBIvkw7dETc7S6aOY62bd5ScrqbcQsM
+	Bn0nTPADled0q1YhCE8oYdZeJ6yOtAMMsBpHUgKibeRTBjoLo5vZYRwEQZZAVdGUvW8p2WOI4gK
+	hFbPhNh6DUudgDDPIpLSdPLR5JRUW5roA/OKdc5mgl4edv9w==
+X-Google-Smtp-Source: AGHT+IFDM+35ueifiigoPZo44MghCRh1sUX+xMaB7c6uBQIuZPgza1CLKF1pKXsY/6NSE4jbYkBMlw==
+X-Received: by 2002:a17:90a:ce96:b0:2c3:1159:2cfe with SMTP id 98e67ed59e1d1-2c4db13571cmr10890796a91.4.1718712014442;
+        Tue, 18 Jun 2024 05:00:14 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c4a76037a4sm12925963a91.29.2024.06.18.05.00.07
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c4a76037a4sm12925963a91.29.2024.06.18.05.00.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Jun 2024 05:00:09 -0700 (PDT)
+        Tue, 18 Jun 2024 05:00:13 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -56,11 +56,10 @@ Cc: rajsekhar.chundru@broadcom.com,
 	sumit.saxena@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	kernel test robot <lkp@intel.com>
-Subject: [PATCH v5 2/4] mpi3mr: Trigger support
-Date: Tue, 18 Jun 2024 17:26:53 +0530
-Message-Id: <20240618115655.15066-3-ranjan.kumar@broadcom.com>
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v5 3/4] mpi3mr: Ioctl support for HDB
+Date: Tue, 18 Jun 2024 17:26:54 +0530
+Message-Id: <20240618115655.15066-4-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240618115655.15066-1-ranjan.kumar@broadcom.com>
 References: <20240618115655.15066-1-ranjan.kumar@broadcom.com>
@@ -71,897 +70,355 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000ead220061b28d2f9"
+	boundary="00000000000021d911061b28d3da"
 
---000000000000ead220061b28d2f9
+--00000000000021d911061b28d3da
 Content-Transfer-Encoding: 8bit
 
-This patch adds functions to process automatic diag triggers and
-if a condition defined in the triggers is met the driver will call
-appropriate controller functions to save the diagnostic information.
+This patch provides interfaces for applications
+to manage the host diagnostic buffers and update
+the automatic diag buffer capture triggers.
 
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202405151955.BiAWI1SY-lkp@intel.com/
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h     |  43 ++++
- drivers/scsi/mpi3mr/mpi3mr_app.c | 337 ++++++++++++++++++++++++++++++-
- drivers/scsi/mpi3mr/mpi3mr_fw.c  |  79 +++++++-
- drivers/scsi/mpi3mr/mpi3mr_os.c  | 113 +++++++++++
- 4 files changed, 564 insertions(+), 8 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h        |  12 ++
+ drivers/scsi/mpi3mr/mpi3mr_app.c    | 265 ++++++++++++++++++++++++++++
+ include/uapi/scsi/scsi_bsg_mpi3mr.h |   3 +-
+ 3 files changed, 279 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 9aae59646faa..e14982a785a6 100644
+index e14982a785a6..1c604ed24c6e 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr.h
 +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -193,7 +193,12 @@ extern atomic64_t event_counter;
- #define MPI3MR_DEFAULT_HDB_MIN_SZ       (2 * 1024 * 1024)
- #define MPI3MR_MAX_NUM_HDB      2
+@@ -200,6 +200,18 @@ extern atomic64_t event_counter;
+ #define MPI3MR_HDB_TRIGGER_TYPE_SOFT_RESET	4
+ #define MPI3MR_HDB_TRIGGER_TYPE_FW_RELEASED	5
  
-+#define MPI3MR_HDB_TRIGGER_TYPE_UNKNOWN		0
-+#define MPI3MR_HDB_TRIGGER_TYPE_FAULT		1
-+#define MPI3MR_HDB_TRIGGER_TYPE_ELEMENT		2
- #define MPI3MR_HDB_TRIGGER_TYPE_GLOBAL          3
-+#define MPI3MR_HDB_TRIGGER_TYPE_SOFT_RESET	4
-+#define MPI3MR_HDB_TRIGGER_TYPE_FW_RELEASED	5
- 
++#define MPI3MR_HDB_REFRESH_TYPE_RESERVED       0
++#define MPI3MR_HDB_REFRESH_TYPE_CURRENT                1
++#define MPI3MR_HDB_REFRESH_TYPE_DEFAULT                2
++#define MPI3MR_HDB_HDB_REFRESH_TYPE_PERSISTENT 3
++
++#define MPI3MR_DEFAULT_HDB_SZ  (4 * 1024 * 1024)
++#define MPI3MR_MAX_NUM_HDB     2
++
++#define MPI3MR_HDB_QUERY_ELEMENT_TRIGGER_FORMAT_INDEX   0
++#define MPI3MR_HDB_QUERY_ELEMENT_TRIGGER_FORMAT_DATA    1
++
++
  /* SGE Flag definition */
  #define MPI3MR_SGEFLAGS_SYSTEM_SIMPLE_END_OF_LIST \
-@@ -218,6 +223,7 @@ extern atomic64_t event_counter;
- #define MPI3MR_WRITE_SAME_MAX_LEN_256_BLKS 256
- #define MPI3MR_WRITE_SAME_MAX_LEN_2048_BLKS 2048
- 
-+#define MPI3MR_DRIVER_EVENT_PROCESS_TRIGGER    (0xFFFD)
- 
- /**
-  * struct mpi3mr_nvme_pt_sge -  Structure to store SGEs for NVMe
-@@ -303,6 +309,7 @@ enum mpi3mr_reset_reason {
- 	MPI3MR_RESET_FROM_FIRMWARE = 27,
- 	MPI3MR_RESET_FROM_CFG_REQ_TIMEOUT = 29,
- 	MPI3MR_RESET_FROM_SAS_TRANSPORT_TIMEOUT = 30,
-+	MPI3MR_RESET_FROM_TRIGGER = 31,
- };
- 
- #define MPI3MR_RESET_REASON_OSTYPE_LINUX	1
-@@ -878,6 +885,24 @@ union mpi3mr_trigger_data {
- 	union mpi3_driver2_trigger_element element;
- };
- 
-+/**
-+ * struct trigger_event_data - store trigger related
-+ * information.
-+ *
-+ * @trace_hdb: Trace diag buffer descriptor reference
-+ * @fw_hdb: FW diag buffer descriptor reference
-+ * @trigger_type: Trigger type
-+ * @trigger_specific_data: Trigger specific data
-+ * @snapdump: Snapdump enable or disable flag
-+ */
-+struct trigger_event_data {
-+	struct diag_buffer_desc *trace_hdb;
-+	struct diag_buffer_desc *fw_hdb;
-+	u8 trigger_type;
-+	union mpi3mr_trigger_data trigger_specific_data;
-+	bool snapdump;
-+};
-+
- /**
-  * struct diag_buffer_desc - memory descriptor structure to
-  * store virtual, dma addresses, size, buffer status for host
-@@ -1113,6 +1138,9 @@ struct scmd_priv {
-  * @ioctl_chain_sge: DMA buffer descriptor for IOCTL chain
-  * @ioctl_resp_sge: DMA buffer descriptor for Mgmt cmd response
-  * @ioctl_sges_allocated: Flag for IOCTL SGEs allocated or not
-+ * @trace_release_trigger_active: Trace trigger active flag
-+ * @fw_release_trigger_active: Fw release trigger active flag
-+ * @snapdump_trigger_active: Snapdump trigger active flag
-  */
- struct mpi3mr_ioc {
- 	struct list_head list;
-@@ -1310,6 +1338,9 @@ struct mpi3mr_ioc {
- 	struct diag_buffer_desc diag_buffers[MPI3MR_MAX_NUM_HDB];
- 	struct mpi3_driver_page2 *driver_pg2;
- 	spinlock_t trigger_lock;
-+	bool snapdump_trigger_active;
-+	bool trace_release_trigger_active;
-+	bool fw_release_trigger_active;
- };
- 
- /**
-@@ -1513,4 +1544,16 @@ struct diag_buffer_desc *mpi3mr_diag_buffer_for_type(struct mpi3mr_ioc *mrioc,
- 	u8 buf_type);
- int mpi3mr_issue_diag_buf_post(struct mpi3mr_ioc *mrioc,
- 	struct diag_buffer_desc *diag_buffer);
-+void mpi3mr_set_trigger_data_in_all_hdb(struct mpi3mr_ioc *mrioc,
-+	u8 type, union mpi3mr_trigger_data *trigger_data, bool force);
-+void mpi3mr_reply_trigger(struct mpi3mr_ioc *mrioc, u16 iocstatus,
-+	u32 iocloginfo);
-+void mpi3mr_hdb_trigger_data_event(struct mpi3mr_ioc *mrioc,
-+	struct trigger_event_data *event_data);
-+void mpi3mr_scsisense_trigger(struct mpi3mr_ioc *mrioc, u8 senseky, u8 asc,
-+	u8 ascq);
-+void mpi3mr_event_trigger(struct mpi3mr_ioc *mrioc, u8 event);
-+void mpi3mr_global_trigger(struct mpi3mr_ioc *mrioc, u64 trigger_data);
-+void mpi3mr_hdbstatuschg_evt_th(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_event_notification_reply *event_reply);
- #endif /*MPI3MR_H_INCLUDED*/
+ 	(MPI3_SGE_FLAGS_ELEMENT_TYPE_SIMPLE | MPI3_SGE_FLAGS_DLAS_SYSTEM | \
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
-index 6bb006b7ef7e..9d15c307374a 100644
+index 9d15c307374a..d236e2eaaefe 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
-@@ -316,6 +316,263 @@ int mpi3mr_issue_diag_buf_release(struct mpi3mr_ioc *mrioc,
- 	return retval;
+@@ -940,6 +940,259 @@ static struct mpi3mr_ioc *mpi3mr_bsg_verify_adapter(int ioc_number)
+ 	return NULL;
  }
  
 +/**
-+ * mpi3mr_process_trigger - Generic HDB Trigger handler
++ * mpi3mr_bsg_refresh_hdb_triggers - Refresh HDB trigger data
 + * @mrioc: Adapter instance reference
-+ * @trigger_type: Trigger type
-+ * @trigger_data: Trigger data
-+ * @trigger_flags: Trigger flags
++ * @job: BSG Job pointer
 + *
-+ * This function checks validity of HDB, triggers and based on
-+ * trigger information, creates an event to be processed in the
-+ * firmware event worker thread .
++ * This function reads the controller trigger config page as
++ * defined by the input page type and refreshes the driver's
++ * local trigger information structures with the controller's
++ * config page data.
 + *
-+ * This function should be called with trigger spinlock held
-+ *
-+ * Return: Nothing
++ * Return: 0 on success and proper error codes on failure
 + */
-+static void mpi3mr_process_trigger(struct mpi3mr_ioc *mrioc, u8 trigger_type,
-+	union mpi3mr_trigger_data *trigger_data, u8 trigger_flags)
++static long
++mpi3mr_bsg_refresh_hdb_triggers(struct mpi3mr_ioc *mrioc,
++				struct bsg_job *job)
 +{
-+	struct trigger_event_data event_data;
-+	struct diag_buffer_desc *trace_hdb = NULL;
-+	struct diag_buffer_desc *fw_hdb = NULL;
-+	u64 global_trigger;
++	struct mpi3mr_bsg_out_refresh_hdb_triggers refresh_triggers;
++	uint32_t data_out_sz;
++	u8 page_action;
++	long rval = -EINVAL;
 +
-+	trace_hdb = mpi3mr_diag_buffer_for_type(mrioc,
-+	    MPI3_DIAG_BUFFER_TYPE_TRACE);
-+	if (trace_hdb &&
-+	    (trace_hdb->status != MPI3MR_HDB_BUFSTATUS_POSTED_UNPAUSED) &&
-+	    (trace_hdb->status != MPI3MR_HDB_BUFSTATUS_POSTED_PAUSED))
-+		trace_hdb =  NULL;
++	data_out_sz = job->request_payload.payload_len;
 +
-+	fw_hdb = mpi3mr_diag_buffer_for_type(mrioc, MPI3_DIAG_BUFFER_TYPE_FW);
-+
-+	if (fw_hdb &&
-+	    (fw_hdb->status != MPI3MR_HDB_BUFSTATUS_POSTED_UNPAUSED) &&
-+	    (fw_hdb->status != MPI3MR_HDB_BUFSTATUS_POSTED_PAUSED))
-+		fw_hdb = NULL;
-+
-+	if (mrioc->snapdump_trigger_active || (mrioc->fw_release_trigger_active
-+	    && mrioc->trace_release_trigger_active) ||
-+	    (!trace_hdb && !fw_hdb) || (!mrioc->driver_pg2) ||
-+	    ((trigger_type == MPI3MR_HDB_TRIGGER_TYPE_ELEMENT)
-+	     && (!mrioc->driver_pg2->num_triggers)))
-+		return;
-+
-+	memset(&event_data, 0, sizeof(event_data));
-+	event_data.trigger_type = trigger_type;
-+	memcpy(&event_data.trigger_specific_data, trigger_data,
-+	    sizeof(*trigger_data));
-+	global_trigger = le64_to_cpu(mrioc->driver_pg2->global_trigger);
-+
-+	if (global_trigger & MPI3_DRIVER2_GLOBALTRIGGER_SNAPDUMP_ENABLED) {
-+		event_data.snapdump = true;
-+		event_data.trace_hdb = trace_hdb;
-+		event_data.fw_hdb = fw_hdb;
-+		mrioc->snapdump_trigger_active = true;
-+	} else if (trigger_type == MPI3MR_HDB_TRIGGER_TYPE_GLOBAL) {
-+		if ((trace_hdb) && (global_trigger &
-+		    MPI3_DRIVER2_GLOBALTRIGGER_DIAG_TRACE_RELEASE) &&
-+		    (!mrioc->trace_release_trigger_active)) {
-+			event_data.trace_hdb = trace_hdb;
-+			mrioc->trace_release_trigger_active = true;
-+		}
-+		if ((fw_hdb) && (global_trigger &
-+		    MPI3_DRIVER2_GLOBALTRIGGER_DIAG_FW_RELEASE) &&
-+		    (!mrioc->fw_release_trigger_active)) {
-+			event_data.fw_hdb = fw_hdb;
-+			mrioc->fw_release_trigger_active = true;
-+		}
-+	} else if (trigger_type == MPI3MR_HDB_TRIGGER_TYPE_ELEMENT) {
-+		if ((trace_hdb) && (trigger_flags &
-+		    MPI3_DRIVER2_TRIGGER_FLAGS_DIAG_TRACE_RELEASE) &&
-+		    (!mrioc->trace_release_trigger_active)) {
-+			event_data.trace_hdb = trace_hdb;
-+			mrioc->trace_release_trigger_active = true;
-+		}
-+		if ((fw_hdb) && (trigger_flags &
-+		    MPI3_DRIVER2_TRIGGER_FLAGS_DIAG_FW_RELEASE) &&
-+		    (!mrioc->fw_release_trigger_active)) {
-+			event_data.fw_hdb = fw_hdb;
-+			mrioc->fw_release_trigger_active = true;
-+		}
++	if (data_out_sz != sizeof(refresh_triggers)) {
++		dprint_bsg_err(mrioc, "%s: invalid size argument\n",
++		    __func__);
++		return rval;
 +	}
 +
-+	if (event_data.trace_hdb || event_data.fw_hdb)
-+		mpi3mr_hdb_trigger_data_event(mrioc, &event_data);
-+}
-+
-+/**
-+ * mpi3mr_global_trigger - Global HDB trigger handler
-+ * @mrioc: Adapter instance reference
-+ * @trigger_data: Trigger data
-+ *
-+ * This function checks whether the given global trigger is
-+ * enabled in the driver page 2 and if so calls generic trigger
-+ * handler to queue event for HDB release.
-+ *
-+ * Return: Nothing
-+ */
-+void mpi3mr_global_trigger(struct mpi3mr_ioc *mrioc, u64 trigger_data)
-+{
-+	unsigned long flags;
-+	union mpi3mr_trigger_data trigger_specific_data;
-+
-+	spin_lock_irqsave(&mrioc->trigger_lock, flags);
-+	if (le64_to_cpu(mrioc->driver_pg2->global_trigger) & trigger_data) {
-+		memset(&trigger_specific_data, 0,
-+		    sizeof(trigger_specific_data));
-+		trigger_specific_data.global = trigger_data;
-+		mpi3mr_process_trigger(mrioc, MPI3MR_HDB_TRIGGER_TYPE_GLOBAL,
-+		    &trigger_specific_data, 0);
++	if (mrioc->unrecoverable) {
++		dprint_bsg_err(mrioc, "%s: unrecoverable controller\n",
++		    __func__);
++		return -EFAULT;
 +	}
-+	spin_unlock_irqrestore(&mrioc->trigger_lock, flags);
-+}
-+
-+/**
-+ * mpi3mr_scsisense_trigger - SCSI sense HDB trigger handler
-+ * @mrioc: Adapter instance reference
-+ * @sensekey: Sense Key
-+ * @asc: Additional Sense Code
-+ * @ascq: Additional Sense Code Qualifier
-+ *
-+ * This function compares SCSI sense trigger values with driver
-+ * page 2 values and calls generic trigger handler to release
-+ * HDBs if match found
-+ *
-+ * Return: Nothing
-+ */
-+void mpi3mr_scsisense_trigger(struct mpi3mr_ioc *mrioc, u8 sensekey, u8 asc,
-+	u8 ascq)
-+{
-+	struct mpi3_driver2_trigger_scsi_sense *scsi_sense_trigger = NULL;
-+	u64 i = 0;
-+	unsigned long flags;
-+	u8 num_triggers, trigger_flags;
-+
-+	if (mrioc->scsisense_trigger_present) {
-+		spin_lock_irqsave(&mrioc->trigger_lock, flags);
-+		scsi_sense_trigger = (struct mpi3_driver2_trigger_scsi_sense *)
-+			mrioc->driver_pg2->trigger;
-+		num_triggers = mrioc->driver_pg2->num_triggers;
-+		for (i = 0; i < num_triggers; i++, scsi_sense_trigger++) {
-+			if (scsi_sense_trigger->type !=
-+			    MPI3_DRIVER2_TRIGGER_TYPE_SCSI_SENSE)
-+				continue;
-+			if (!(scsi_sense_trigger->sense_key ==
-+			    MPI3_DRIVER2_TRIGGER_SCSI_SENSE_SENSE_KEY_MATCH_ALL
-+			      || scsi_sense_trigger->sense_key == sensekey))
-+				continue;
-+			if (!(scsi_sense_trigger->asc ==
-+			    MPI3_DRIVER2_TRIGGER_SCSI_SENSE_ASC_MATCH_ALL ||
-+			    scsi_sense_trigger->asc == asc))
-+				continue;
-+			if (!(scsi_sense_trigger->ascq ==
-+			    MPI3_DRIVER2_TRIGGER_SCSI_SENSE_ASCQ_MATCH_ALL ||
-+			    scsi_sense_trigger->ascq == ascq))
-+				continue;
-+			trigger_flags = scsi_sense_trigger->flags;
-+			mpi3mr_process_trigger(mrioc,
-+			    MPI3MR_HDB_TRIGGER_TYPE_ELEMENT,
-+			    (union mpi3mr_trigger_data *)scsi_sense_trigger,
-+			    trigger_flags);
-+			break;
-+		}
-+		spin_unlock_irqrestore(&mrioc->trigger_lock, flags);
++	if (mrioc->reset_in_progress) {
++		dprint_bsg_err(mrioc, "%s: reset in progress\n", __func__);
++		return -EAGAIN;
 +	}
-+}
 +
-+/**
-+ * mpi3mr_event_trigger - MPI event HDB trigger handler
-+ * @mrioc: Adapter instance reference
-+ * @event: MPI Event
-+ *
-+ * This function compares event trigger values with driver page
-+ * 2 values and calls generic trigger handler to release
-+ * HDBs if match found.
-+ *
-+ * Return: Nothing
-+ */
-+void mpi3mr_event_trigger(struct mpi3mr_ioc *mrioc, u8 event)
-+{
-+	struct mpi3_driver2_trigger_event *event_trigger = NULL;
-+	u64 i = 0;
-+	unsigned long flags;
-+	u8 num_triggers, trigger_flags;
++	sg_copy_to_buffer(job->request_payload.sg_list,
++	    job->request_payload.sg_cnt,
++	    &refresh_triggers, sizeof(refresh_triggers));
 +
-+	if (mrioc->event_trigger_present) {
-+		spin_lock_irqsave(&mrioc->trigger_lock, flags);
-+		event_trigger = (struct mpi3_driver2_trigger_event *)
-+			mrioc->driver_pg2->trigger;
-+		num_triggers = mrioc->driver_pg2->num_triggers;
-+
-+		for (i = 0; i < num_triggers; i++, event_trigger++) {
-+			if (event_trigger->type !=
-+			    MPI3_DRIVER2_TRIGGER_TYPE_EVENT)
-+				continue;
-+			if (event_trigger->event != event)
-+				continue;
-+			trigger_flags = event_trigger->flags;
-+			mpi3mr_process_trigger(mrioc,
-+			    MPI3MR_HDB_TRIGGER_TYPE_ELEMENT,
-+			    (union mpi3mr_trigger_data *)event_trigger,
-+			    trigger_flags);
-+			break;
-+		}
-+		spin_unlock_irqrestore(&mrioc->trigger_lock, flags);
-+	}
-+}
-+
-+/**
-+ * mpi3mr_reply_trigger - MPI Reply HDB trigger handler
-+ * @mrioc: Adapter instance reference
-+ * @ioc_status: Masked value of IOC Status from MPI Reply
-+ * @ioc_loginfo: IOC Log Info from MPI Reply
-+ *
-+ * This function compares IOC status and IOC log info trigger
-+ * values with driver page 2 values and calls generic trigger
-+ * handler to release HDBs if match found.
-+ *
-+ * Return: Nothing
-+ */
-+void mpi3mr_reply_trigger(struct mpi3mr_ioc *mrioc, u16 ioc_status,
-+	u32 ioc_loginfo)
-+{
-+	struct mpi3_driver2_trigger_reply *reply_trigger = NULL;
-+	u64 i = 0;
-+	unsigned long flags;
-+	u8 num_triggers, trigger_flags;
-+
-+	if (mrioc->reply_trigger_present) {
-+		spin_lock_irqsave(&mrioc->trigger_lock, flags);
-+		reply_trigger = (struct mpi3_driver2_trigger_reply *)
-+			mrioc->driver_pg2->trigger;
-+		num_triggers = mrioc->driver_pg2->num_triggers;
-+		for (i = 0; i < num_triggers; i++, reply_trigger++) {
-+			if (reply_trigger->type !=
-+			    MPI3_DRIVER2_TRIGGER_TYPE_REPLY)
-+				continue;
-+			if ((le16_to_cpu(reply_trigger->ioc_status) !=
-+			     ioc_status)
-+			    && (le16_to_cpu(reply_trigger->ioc_status) !=
-+			    MPI3_DRIVER2_TRIGGER_REPLY_IOCSTATUS_MATCH_ALL))
-+				continue;
-+			if ((le32_to_cpu(reply_trigger->ioc_log_info) !=
-+			    (le32_to_cpu(reply_trigger->ioc_log_info_mask) &
-+			     ioc_loginfo)))
-+				continue;
-+			trigger_flags = reply_trigger->flags;
-+			mpi3mr_process_trigger(mrioc,
-+			    MPI3MR_HDB_TRIGGER_TYPE_ELEMENT,
-+			    (union mpi3mr_trigger_data *)reply_trigger,
-+			    trigger_flags);
-+			break;
-+		}
-+		spin_unlock_irqrestore(&mrioc->trigger_lock, flags);
-+	}
-+}
-+
- /**
-  * mpi3mr_get_num_trigger - Gets number of HDB triggers
-  * @mrioc: Adapter instance reference
-@@ -449,7 +706,7 @@ void mpi3mr_release_diag_bufs(struct mpi3mr_ioc *mrioc, u8 skip_rel_action)
-  * @type: Trigger type
-  * @data: Trigger data
-  * @force: Trigger overwrite flag
-- * @trigger_data: pointer to trigger data information
-+ * @trigger_data: Pointer to trigger data information
-  *
-  * Updates trigger type and trigger data based on parameter
-  * passed to this function
-@@ -468,6 +725,84 @@ void mpi3mr_set_trigger_data_in_hdb(struct diag_buffer_desc *hdb,
- 		memcpy(&hdb->trigger_data, trigger_data, sizeof(*trigger_data));
- }
- 
-+/**
-+ * mpi3mr_set_trigger_data_in_all_hdb - Updates HDB trigger type
-+ * and trigger data for all HDB
-+ *
-+ * @mrioc: Adapter instance reference
-+ * @type: Trigger type
-+ * @data: Trigger data
-+ * @force: Trigger overwrite flag
-+ * @trigger_data: Pointer to trigger data information
-+ *
-+ * Updates trigger type and trigger data based on parameter
-+ * passed to this function
-+ *
-+ * Return: Nothing
-+ */
-+void mpi3mr_set_trigger_data_in_all_hdb(struct mpi3mr_ioc *mrioc,
-+	u8 type, union mpi3mr_trigger_data *trigger_data, bool force)
-+{
-+	struct diag_buffer_desc *hdb = NULL;
-+
-+	hdb = mpi3mr_diag_buffer_for_type(mrioc, MPI3_DIAG_BUFFER_TYPE_TRACE);
-+	if (hdb)
-+		mpi3mr_set_trigger_data_in_hdb(hdb, type, trigger_data, force);
-+	hdb = mpi3mr_diag_buffer_for_type(mrioc, MPI3_DIAG_BUFFER_TYPE_FW);
-+	if (hdb)
-+		mpi3mr_set_trigger_data_in_hdb(hdb, type, trigger_data, force);
-+}
-+
-+/**
-+ * mpi3mr_hdbstatuschg_evt_th - HDB status change evt tophalf
-+ * @mrioc: Adapter instance reference
-+ * @event_reply: event data
-+ *
-+ * Modifies the status of the applicable diag buffer descriptors
-+ *
-+ * Return: Nothing
-+ */
-+void mpi3mr_hdbstatuschg_evt_th(struct mpi3mr_ioc *mrioc,
-+	struct mpi3_event_notification_reply *event_reply)
-+{
-+	struct mpi3_event_data_diag_buffer_status_change *evtdata;
-+	struct diag_buffer_desc *diag_buffer;
-+
-+	evtdata = (struct mpi3_event_data_diag_buffer_status_change *)
-+	    event_reply->event_data;
-+
-+	diag_buffer = mpi3mr_diag_buffer_for_type(mrioc, evtdata->type);
-+	if (!diag_buffer)
-+		return;
-+	if ((diag_buffer->status != MPI3MR_HDB_BUFSTATUS_POSTED_UNPAUSED) &&
-+	    (diag_buffer->status != MPI3MR_HDB_BUFSTATUS_POSTED_PAUSED))
-+		return;
-+	switch (evtdata->reason_code) {
-+	case MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RELEASED:
-+	{
-+		diag_buffer->status = MPI3MR_HDB_BUFSTATUS_RELEASED;
-+		mpi3mr_set_trigger_data_in_hdb(diag_buffer,
-+		    MPI3MR_HDB_TRIGGER_TYPE_FW_RELEASED, NULL, 0);
-+		atomic64_inc(&event_counter);
++	switch (refresh_triggers.page_type) {
++	case MPI3MR_HDB_REFRESH_TYPE_CURRENT:
++		page_action = MPI3_CONFIG_ACTION_READ_CURRENT;
 +		break;
-+	}
-+	case MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_RESUMED:
-+	{
-+		diag_buffer->status = MPI3MR_HDB_BUFSTATUS_POSTED_UNPAUSED;
++	case MPI3MR_HDB_REFRESH_TYPE_DEFAULT:
++		page_action = MPI3_CONFIG_ACTION_READ_DEFAULT;
 +		break;
-+	}
-+	case MPI3_EVENT_DIAG_BUFFER_STATUS_CHANGE_RC_PAUSED:
-+	{
-+		diag_buffer->status = MPI3MR_HDB_BUFSTATUS_POSTED_PAUSED;
++	case MPI3MR_HDB_HDB_REFRESH_TYPE_PERSISTENT:
++		page_action = MPI3_CONFIG_ACTION_READ_PERSISTENT;
 +		break;
-+	}
 +	default:
-+		dprint_event_th(mrioc, "%s: unknown reason_code(%d)\n",
-+		    __func__, evtdata->reason_code);
-+		break;
++		dprint_bsg_err(mrioc,
++		    "%s: unsupported refresh trigger, page_type %d\n",
++		    __func__, refresh_triggers.page_type);
++		return rval;
 +	}
++	rval = mpi3mr_refresh_trigger(mrioc, page_action);
++
++	return rval;
 +}
 +
- /**
-  * mpi3mr_diag_buffer_for_type - returns buffer desc for type
-  * @mrioc: Adapter instance reference
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index fbd6f32f79ce..458c856dda4b 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -274,6 +274,9 @@ static void mpi3mr_print_event_data(struct mpi3mr_ioc *mrioc,
- 	case MPI3_EVENT_PREPARE_FOR_RESET:
- 		desc = "Prepare For Reset";
- 		break;
-+	case MPI3_EVENT_DIAGNOSTIC_BUFFER_STATUS_CHANGE:
-+		desc = "Diagnostic Buffer Status Change";
-+		break;
- 	}
- 
- 	if (!desc)
-@@ -342,13 +345,14 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
- {
- 	u16 reply_desc_type, host_tag = 0;
- 	u16 ioc_status = MPI3_IOCSTATUS_SUCCESS;
--	u32 ioc_loginfo = 0;
-+	u32 ioc_loginfo = 0, sense_count = 0;
- 	struct mpi3_status_reply_descriptor *status_desc;
- 	struct mpi3_address_reply_descriptor *addr_desc;
- 	struct mpi3_success_reply_descriptor *success_desc;
- 	struct mpi3_default_reply *def_reply = NULL;
- 	struct mpi3mr_drv_cmd *cmdptr = NULL;
- 	struct mpi3_scsi_io_reply *scsi_reply;
-+	struct scsi_sense_hdr sshdr;
- 	u8 *sense_buf = NULL;
- 
- 	*reply_dma = 0;
-@@ -363,6 +367,7 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
- 		    MPI3_REPLY_DESCRIPT_STATUS_IOCSTATUS_LOGINFOAVAIL)
- 			ioc_loginfo = le32_to_cpu(status_desc->ioc_log_info);
- 		ioc_status &= MPI3_REPLY_DESCRIPT_STATUS_IOCSTATUS_STATUS_MASK;
-+		mpi3mr_reply_trigger(mrioc, ioc_status, ioc_loginfo);
- 		break;
- 	case MPI3_REPLY_DESCRIPT_FLAGS_TYPE_ADDRESS_REPLY:
- 		addr_desc = (struct mpi3_address_reply_descriptor *)reply_desc;
-@@ -380,7 +385,15 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
- 			scsi_reply = (struct mpi3_scsi_io_reply *)def_reply;
- 			sense_buf = mpi3mr_get_sensebuf_virt_addr(mrioc,
- 			    le64_to_cpu(scsi_reply->sense_data_buffer_address));
-+			sense_count = le32_to_cpu(scsi_reply->sense_count);
-+			if (sense_buf) {
-+				scsi_normalize_sense(sense_buf, sense_count,
-+				    &sshdr);
-+				mpi3mr_scsisense_trigger(mrioc, sshdr.sense_key,
-+				    sshdr.asc, sshdr.ascq);
-+			}
- 		}
-+		mpi3mr_reply_trigger(mrioc, ioc_status, ioc_loginfo);
- 		break;
- 	case MPI3_REPLY_DESCRIPT_FLAGS_TYPE_SUCCESS:
- 		success_desc = (struct mpi3_success_reply_descriptor *)reply_desc;
-@@ -938,6 +951,14 @@ static const struct {
- 	},
- 	{ MPI3MR_RESET_FROM_SYSFS, "sysfs invocation" },
- 	{ MPI3MR_RESET_FROM_SYSFS_TIMEOUT, "sysfs TM timeout" },
-+	{
-+		MPI3MR_RESET_FROM_DIAG_BUFFER_POST_TIMEOUT,
-+		"diagnostic buffer post timeout"
-+	},
-+	{
-+		MPI3MR_RESET_FROM_DIAG_BUFFER_RELEASE_TIMEOUT,
-+		"diagnostic buffer release timeout"
-+	},
- 	{ MPI3MR_RESET_FROM_FIRMWARE, "firmware asynchronous reset" },
- 	{ MPI3MR_RESET_FROM_CFG_REQ_TIMEOUT, "configuration request timeout"},
- 	{ MPI3MR_RESET_FROM_SAS_TRANSPORT_TIMEOUT, "timeout of a SAS transport layer request" },
-@@ -2387,6 +2408,7 @@ int mpi3mr_op_request_post(struct mpi3mr_ioc *mrioc,
- void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code)
- {
- 	u32 ioc_status, host_diagnostic, timeout;
-+	union mpi3mr_trigger_data trigger_data;
- 
- 	if (mrioc->unrecoverable) {
- 		ioc_err(mrioc, "controller is unrecoverable\n");
-@@ -2398,16 +2420,30 @@ void mpi3mr_check_rh_fault_ioc(struct mpi3mr_ioc *mrioc, u32 reason_code)
- 		ioc_err(mrioc, "controller is not present\n");
- 		return;
- 	}
--
-+	memset(&trigger_data, 0, sizeof(trigger_data));
- 	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
--	if ((ioc_status & MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) ||
--	    (ioc_status & MPI3_SYSIF_IOC_STATUS_FAULT)) {
-+
-+	if (ioc_status & MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) {
-+		mpi3mr_set_trigger_data_in_all_hdb(mrioc,
-+		    MPI3MR_HDB_TRIGGER_TYPE_FW_RELEASED, NULL, 0);
-+		return;
-+	} else if (ioc_status & MPI3_SYSIF_IOC_STATUS_FAULT) {
-+		trigger_data.fault = (readl(&mrioc->sysif_regs->fault) &
-+		      MPI3_SYSIF_FAULT_CODE_MASK);
-+
-+		mpi3mr_set_trigger_data_in_all_hdb(mrioc,
-+		    MPI3MR_HDB_TRIGGER_TYPE_FAULT, &trigger_data, 0);
- 		mpi3mr_print_fault_info(mrioc);
- 		return;
- 	}
-+
- 	mpi3mr_set_diagsave(mrioc);
- 	mpi3mr_issue_reset(mrioc, MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT,
- 	    reason_code);
-+	trigger_data.fault = (readl(&mrioc->sysif_regs->fault) &
-+		      MPI3_SYSIF_FAULT_CODE_MASK);
-+	mpi3mr_set_trigger_data_in_all_hdb(mrioc, MPI3MR_HDB_TRIGGER_TYPE_FAULT,
-+	    &trigger_data, 0);
- 	timeout = MPI3_SYSIF_DIAG_SAVE_TIMEOUT * 10;
- 	do {
- 		host_diagnostic = readl(&mrioc->sysif_regs->host_diagnostic);
-@@ -2587,7 +2623,8 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 	    container_of(work, struct mpi3mr_ioc, watchdog_work.work);
- 	unsigned long flags;
- 	enum mpi3mr_iocstate ioc_state;
--	u32 fault, host_diagnostic, ioc_status;
-+	u32 host_diagnostic, ioc_status;
-+	union mpi3mr_trigger_data trigger_data;
- 	u16 reset_reason = MPI3MR_RESET_FROM_FAULT_WATCH;
- 
- 	if (mrioc->reset_in_progress)
-@@ -2618,8 +2655,11 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 		return;
- 	}
- 
-+	memset(&trigger_data, 0, sizeof(trigger_data));
- 	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
- 	if (ioc_status & MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) {
-+		mpi3mr_set_trigger_data_in_all_hdb(mrioc,
-+		    MPI3MR_HDB_TRIGGER_TYPE_FW_RELEASED, NULL, 0);
- 		mpi3mr_soft_reset_handler(mrioc, MPI3MR_RESET_FROM_FIRMWARE, 0);
- 		return;
- 	}
-@@ -2629,7 +2669,9 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 	if (ioc_state != MRIOC_STATE_FAULT)
- 		goto schedule_work;
- 
--	fault = readl(&mrioc->sysif_regs->fault) & MPI3_SYSIF_FAULT_CODE_MASK;
-+	trigger_data.fault = readl(&mrioc->sysif_regs->fault) & MPI3_SYSIF_FAULT_CODE_MASK;
-+	mpi3mr_set_trigger_data_in_all_hdb(mrioc,
-+	    MPI3MR_HDB_TRIGGER_TYPE_FAULT, &trigger_data, 0);
- 	host_diagnostic = readl(&mrioc->sysif_regs->host_diagnostic);
- 	if (host_diagnostic & MPI3_SYSIF_HOST_DIAG_SAVE_IN_PROGRESS) {
- 		if (!mrioc->diagsave_timeout) {
-@@ -2643,7 +2685,7 @@ static void mpi3mr_watchdog_work(struct work_struct *work)
- 	mpi3mr_print_fault_info(mrioc);
- 	mrioc->diagsave_timeout = 0;
- 
--	switch (fault) {
-+	switch (trigger_data.fault) {
- 	case MPI3_SYSIF_FAULT_CODE_COMPLETE_RESET_NEEDED:
- 	case MPI3_SYSIF_FAULT_CODE_POWER_CYCLE_REQUIRED:
- 		ioc_warn(mrioc,
-@@ -3990,6 +4032,7 @@ static int mpi3mr_enable_events(struct mpi3mr_ioc *mrioc)
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_PREPARE_FOR_RESET);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_CABLE_MGMT);
- 	mpi3mr_unmask_events(mrioc, MPI3_EVENT_ENERGY_PACK_CHANGE);
-+	mpi3mr_unmask_events(mrioc, MPI3_EVENT_DIAGNOSTIC_BUFFER_STATUS_CHANGE);
- 
- 	retval = mpi3mr_issue_event_notification(mrioc);
- 	if (retval)
-@@ -4168,6 +4211,12 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
- 		goto out_failed;
- 	}
- 
-+	retval = mpi3mr_refresh_trigger(mrioc, MPI3_CONFIG_ACTION_READ_CURRENT);
-+	if (retval) {
-+		ioc_err(mrioc, "failed to refresh triggers\n");
-+		goto out_failed;
-+	}
-+
- 	ioc_info(mrioc, "controller initialization completed successfully\n");
- 	return retval;
- out_failed:
-@@ -5106,6 +5155,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	int retval = 0, i;
- 	unsigned long flags;
- 	u32 host_diagnostic, timeout = MPI3_SYSIF_DIAG_SAVE_TIMEOUT * 10;
-+	union mpi3mr_trigger_data trigger_data;
- 
- 	/* Block the reset handler until diag save in progress*/
- 	dprint_reset(mrioc,
-@@ -5138,10 +5188,13 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	mrioc->reset_in_progress = 1;
- 	mrioc->stop_bsgs = 1;
- 	mrioc->prev_reset_result = -1;
-+	memset(&trigger_data, 0, sizeof(trigger_data));
- 
- 	if ((!snapdump) && (reset_reason != MPI3MR_RESET_FROM_FAULT_WATCH) &&
- 	    (reset_reason != MPI3MR_RESET_FROM_FIRMWARE) &&
- 	    (reset_reason != MPI3MR_RESET_FROM_CIACTIV_FAULT)) {
-+		mpi3mr_set_trigger_data_in_all_hdb(mrioc,
-+		    MPI3MR_HDB_TRIGGER_TYPE_SOFT_RESET, NULL, 0);
- 		dprint_reset(mrioc,
- 		    "soft_reset_handler: releasing host diagnostic buffers\n");
- 		mpi3mr_release_diag_bufs(mrioc, 0);
-@@ -5161,6 +5214,8 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 		retval = mpi3mr_issue_reset(mrioc,
- 		    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT, reset_reason);
- 		if (!retval) {
-+			trigger_data.fault = (readl(&mrioc->sysif_regs->fault) &
-+				      MPI3_SYSIF_FAULT_CODE_MASK);
- 			do {
- 				host_diagnostic =
- 				    readl(&mrioc->sysif_regs->host_diagnostic);
-@@ -5169,6 +5224,8 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 					break;
- 				msleep(100);
- 			} while (--timeout);
-+			mpi3mr_set_trigger_data_in_all_hdb(mrioc,
-+			    MPI3MR_HDB_TRIGGER_TYPE_FAULT, &trigger_data, 0);
- 		}
- 	}
- 
-@@ -5205,6 +5262,14 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	}
- 	mpi3mr_memset_buffers(mrioc);
- 	mpi3mr_release_diag_bufs(mrioc, 1);
-+	mrioc->fw_release_trigger_active = false;
-+	mrioc->trace_release_trigger_active = false;
-+	mrioc->snapdump_trigger_active = false;
-+	mpi3mr_set_trigger_data_in_all_hdb(mrioc,
-+	    MPI3MR_HDB_TRIGGER_TYPE_SOFT_RESET, NULL, 0);
-+
-+	dprint_reset(mrioc,
-+	    "soft_reset_handler: reinitializing the controller\n");
- 	retval = mpi3mr_reinit_ioc(mrioc, 0);
- 	if (retval) {
- 		pr_err(IOCNAME "reinit after soft reset failed: reason %d\n",
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index bce639a6cca1..eac179dc9370 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -241,6 +241,40 @@ static void mpi3mr_fwevt_add_to_list(struct mpi3mr_ioc *mrioc,
- 	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
- }
- 
 +/**
-+ * mpi3mr_hdb_trigger_data_event - Add hdb trigger data event to
-+ * the list
++ * mpi3mr_bsg_upload_hdb - Upload a specific HDB to user space
 + * @mrioc: Adapter instance reference
-+ * @event_data: Event data
++ * @job: BSG Job pointer
 + *
-+ * Add the given hdb trigger data event to the firmware event
-+ * list.
-+ *
-+ * Return: Nothing.
++ * Return: 0 on success and proper error codes on failure
 + */
-+void mpi3mr_hdb_trigger_data_event(struct mpi3mr_ioc *mrioc,
-+	struct trigger_event_data *event_data)
++static long mpi3mr_bsg_upload_hdb(struct mpi3mr_ioc *mrioc,
++				  struct bsg_job *job)
 +{
-+	struct mpi3mr_fwevt *fwevt;
-+	u16 sz = sizeof(*event_data);
++	struct mpi3mr_bsg_out_upload_hdb upload_hdb;
++	struct diag_buffer_desc *diag_buffer;
++	uint32_t data_out_size;
++	uint32_t data_in_size;
 +
-+	fwevt = mpi3mr_alloc_fwevt(sz);
-+	if (!fwevt) {
-+		ioc_warn(mrioc, "failed to queue hdb trigger data event\n");
-+		return;
++	data_out_size = job->request_payload.payload_len;
++	data_in_size = job->reply_payload.payload_len;
++
++	if (data_out_size != sizeof(upload_hdb)) {
++		dprint_bsg_err(mrioc, "%s: invalid size argument\n",
++		    __func__);
++		return -EINVAL;
 +	}
 +
-+	fwevt->mrioc = mrioc;
-+	fwevt->event_id = MPI3MR_DRIVER_EVENT_PROCESS_TRIGGER;
-+	fwevt->send_ack = 0;
-+	fwevt->process_evt = 1;
-+	fwevt->evt_ctx = 0;
-+	fwevt->event_data_size = sz;
-+	memcpy(fwevt->event_data, event_data, sz);
++	sg_copy_to_buffer(job->request_payload.sg_list,
++			  job->request_payload.sg_cnt,
++			  &upload_hdb, sizeof(upload_hdb));
 +
-+	mpi3mr_fwevt_add_to_list(mrioc, fwevt);
++	if ((!upload_hdb.length) || (data_in_size != upload_hdb.length)) {
++		dprint_bsg_err(mrioc, "%s: invalid length argument\n",
++		    __func__);
++		return -EINVAL;
++	}
++	diag_buffer = mpi3mr_diag_buffer_for_type(mrioc, upload_hdb.buf_type);
++	if ((!diag_buffer) || (!diag_buffer->addr)) {
++		dprint_bsg_err(mrioc, "%s: invalid buffer type %d\n",
++		    __func__, upload_hdb.buf_type);
++		return -EINVAL;
++	}
++
++	if ((diag_buffer->status != MPI3MR_HDB_BUFSTATUS_RELEASED) &&
++	    (diag_buffer->status != MPI3MR_HDB_BUFSTATUS_POSTED_PAUSED)) {
++		dprint_bsg_err(mrioc,
++		    "%s: invalid buffer status %d for type %d\n",
++		    __func__, diag_buffer->status, upload_hdb.buf_type);
++		return -EINVAL;
++	}
++
++	if ((upload_hdb.start_offset + upload_hdb.length) > diag_buffer->size) {
++		dprint_bsg_err(mrioc,
++		    "%s: invalid start offset %d, length %d for type %d\n",
++		    __func__, upload_hdb.start_offset, upload_hdb.length,
++		    upload_hdb.buf_type);
++		return -EINVAL;
++	}
++	sg_copy_from_buffer(job->reply_payload.sg_list,
++			    job->reply_payload.sg_cnt,
++	    (diag_buffer->addr + upload_hdb.start_offset),
++	    data_in_size);
++	return 0;
 +}
 +
- /**
-  * mpi3mr_fwevt_del_from_list - Delete firmware event from list
-  * @mrioc: Adapter instance reference
-@@ -898,6 +932,8 @@ void mpi3mr_remove_tgtdev_from_host(struct mpi3mr_ioc *mrioc,
- 		}
- 	} else
- 		mpi3mr_remove_tgtdev_from_sas_transport(mrioc, tgtdev);
-+	mpi3mr_global_trigger(mrioc,
-+	    MPI3_DRIVER2_GLOBALTRIGGER_DEVICE_REMOVAL_ENABLED);
- 
- 	ioc_info(mrioc, "%s :Removed handle(0x%04x), wwid(0x%016llx)\n",
- 	    __func__, tgtdev->dev_handle, (unsigned long long)tgtdev->wwid);
-@@ -1433,6 +1469,62 @@ struct mpi3mr_enclosure_node *mpi3mr_enclosure_find_by_handle(
- 	return r;
- }
- 
 +/**
-+ * mpi3mr_process_trigger_data_event_bh - Process trigger event
-+ * data
++ * mpi3mr_bsg_repost_hdb - Re-post HDB
 + * @mrioc: Adapter instance reference
-+ * @event_data: Event data
++ * @job: BSG job pointer
 + *
-+ * This function releases diage buffers or issues diag fault
-+ * based on trigger conditions
++ * This function retrieves the HDB descriptor corresponding to a
++ * given buffer type and if the HDB is in released status then
++ * posts the HDB with the firmware.
 + *
-+ * Return: Nothing
++ * Return: 0 on success and proper error codes on failure
 + */
-+static void mpi3mr_process_trigger_data_event_bh(struct mpi3mr_ioc *mrioc,
-+	struct trigger_event_data *event_data)
++static long mpi3mr_bsg_repost_hdb(struct mpi3mr_ioc *mrioc,
++				  struct bsg_job *job)
 +{
-+	struct diag_buffer_desc *trace_hdb = event_data->trace_hdb;
-+	struct diag_buffer_desc *fw_hdb = event_data->fw_hdb;
-+	unsigned long flags;
-+	int retval = 0;
-+	u8 trigger_type = event_data->trigger_type;
-+	union mpi3mr_trigger_data *trigger_data =
-+		&event_data->trigger_specific_data;
++	struct mpi3mr_bsg_out_repost_hdb repost_hdb;
++	struct diag_buffer_desc *diag_buffer;
++	uint32_t data_out_sz;
 +
-+	if (event_data->snapdump)  {
-+		if (trace_hdb)
-+			mpi3mr_set_trigger_data_in_hdb(trace_hdb, trigger_type,
-+			    trigger_data, 1);
-+		if (fw_hdb)
-+			mpi3mr_set_trigger_data_in_hdb(fw_hdb, trigger_type,
-+			    trigger_data, 1);
-+		mpi3mr_soft_reset_handler(mrioc,
-+			    MPI3MR_RESET_FROM_TRIGGER, 1);
-+		return;
++	data_out_sz = job->request_payload.payload_len;
++
++	if (data_out_sz != sizeof(repost_hdb)) {
++		dprint_bsg_err(mrioc, "%s: invalid size argument\n",
++		    __func__);
++		return -EINVAL;
++	}
++	if (mrioc->unrecoverable) {
++		dprint_bsg_err(mrioc, "%s: unrecoverable controller\n",
++		    __func__);
++		return -EFAULT;
++	}
++	if (mrioc->reset_in_progress) {
++		dprint_bsg_err(mrioc, "%s: reset in progress\n", __func__);
++		return -EAGAIN;
 +	}
 +
-+	if (trace_hdb) {
-+		retval = mpi3mr_issue_diag_buf_release(mrioc, trace_hdb);
-+		if (!retval) {
-+			mpi3mr_set_trigger_data_in_hdb(trace_hdb, trigger_type,
-+			    trigger_data, 1);
-+		}
-+		spin_lock_irqsave(&mrioc->trigger_lock, flags);
-+		mrioc->trace_release_trigger_active = false;
-+		spin_unlock_irqrestore(&mrioc->trigger_lock, flags);
++	sg_copy_to_buffer(job->request_payload.sg_list,
++			  job->request_payload.sg_cnt,
++			  &repost_hdb, sizeof(repost_hdb));
++
++	diag_buffer = mpi3mr_diag_buffer_for_type(mrioc, repost_hdb.buf_type);
++	if ((!diag_buffer) || (!diag_buffer->addr)) {
++		dprint_bsg_err(mrioc, "%s: invalid buffer type %d\n",
++		    __func__, repost_hdb.buf_type);
++		return -EINVAL;
 +	}
-+	if (fw_hdb) {
-+		retval = mpi3mr_issue_diag_buf_release(mrioc, fw_hdb);
-+		if (!retval) {
-+			mpi3mr_set_trigger_data_in_hdb(fw_hdb, trigger_type,
-+		    trigger_data, 1);
-+		}
-+		spin_lock_irqsave(&mrioc->trigger_lock, flags);
-+		mrioc->fw_release_trigger_active = false;
-+		spin_unlock_irqrestore(&mrioc->trigger_lock, flags);
++
++	if (diag_buffer->status != MPI3MR_HDB_BUFSTATUS_RELEASED) {
++		dprint_bsg_err(mrioc,
++		    "%s: invalid buffer status %d for type %d\n",
++		    __func__, diag_buffer->status, repost_hdb.buf_type);
++		return -EINVAL;
 +	}
++
++	if (mpi3mr_issue_diag_buf_post(mrioc, diag_buffer)) {
++		dprint_bsg_err(mrioc, "%s: post failed for type %d\n",
++		    __func__, repost_hdb.buf_type);
++		return -EFAULT;
++	}
++	mpi3mr_set_trigger_data_in_hdb(diag_buffer,
++	    MPI3MR_HDB_TRIGGER_TYPE_UNKNOWN, NULL, 1);
++
++	return 0;
 +}
 +
++/**
++ * mpi3mr_bsg_query_hdb - Handler for query HDB command
++ * @mrioc: Adapter instance reference
++ * @job: BSG job pointer
++ *
++ * This function prepares and copies the host diagnostic buffer
++ * entries to the user buffer.
++ *
++ * Return: 0 on success and proper error codes on failure
++ */
++static long mpi3mr_bsg_query_hdb(struct mpi3mr_ioc *mrioc,
++				 struct bsg_job *job)
++{
++	long rval = 0;
++	struct mpi3mr_bsg_in_hdb_status *hbd_status;
++	struct mpi3mr_hdb_entry *hbd_status_entry;
++	u32 length, min_length;
++	u8 i;
++	struct diag_buffer_desc *diag_buffer;
++	uint32_t data_in_sz = 0;
++
++	data_in_sz = job->request_payload.payload_len;
++
++	length = (sizeof(*hbd_status) + ((MPI3MR_MAX_NUM_HDB - 1) *
++		    sizeof(*hbd_status_entry)));
++	hbd_status = kmalloc(length, GFP_KERNEL);
++	if (!hbd_status)
++		return -ENOMEM;
++	hbd_status_entry = &hbd_status->entry[0];
++
++	hbd_status->num_hdb_types = MPI3MR_MAX_NUM_HDB;
++	for (i = 0; i < MPI3MR_MAX_NUM_HDB; i++) {
++		diag_buffer = &mrioc->diag_buffers[i];
++		hbd_status_entry->buf_type = diag_buffer->type;
++		hbd_status_entry->status = diag_buffer->status;
++		hbd_status_entry->trigger_type = diag_buffer->trigger_type;
++		memcpy(&hbd_status_entry->trigger_data,
++		    &diag_buffer->trigger_data,
++		    sizeof(hbd_status_entry->trigger_data));
++		hbd_status_entry->size = (diag_buffer->size / 1024);
++		hbd_status_entry++;
++	}
++	hbd_status->element_trigger_format =
++		MPI3MR_HDB_QUERY_ELEMENT_TRIGGER_FORMAT_DATA;
++
++	if (data_in_sz < 4) {
++		dprint_bsg_err(mrioc, "%s: invalid size passed\n", __func__);
++		rval = -EINVAL;
++		goto out;
++	}
++	min_length = min(data_in_sz, length);
++	if (job->request_payload.payload_len >= min_length) {
++		sg_copy_from_buffer(job->request_payload.sg_list,
++				    job->request_payload.sg_cnt,
++				    hbd_status, min_length);
++		rval = 0;
++	}
++out:
++	kfree(hbd_status);
++	return rval;
++}
++
++
  /**
-  * mpi3mr_encldev_add_chg_evt_debug - debug for enclosure event
+  * mpi3mr_enable_logdata - Handler for log data enable
   * @mrioc: Adapter instance reference
-@@ -2019,6 +2111,12 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
- 		    "scan for non responding and newly added devices after soft reset completed\n");
+@@ -1368,6 +1621,18 @@ static long mpi3mr_bsg_process_drv_cmds(struct bsg_job *job)
+ 	case MPI3MR_DRVBSG_OPCODE_PELENABLE:
+ 		rval = mpi3mr_bsg_pel_enable(mrioc, job);
  		break;
- 	}
-+	case MPI3MR_DRIVER_EVENT_PROCESS_TRIGGER:
-+	{
-+		mpi3mr_process_trigger_data_event_bh(mrioc,
-+		    (struct trigger_event_data *)fwevt->event_data);
++	case MPI3MR_DRVBSG_OPCODE_QUERY_HDB:
++		rval = mpi3mr_bsg_query_hdb(mrioc, job);
 +		break;
-+	}
- 	default:
- 		break;
- 	}
-@@ -2857,6 +2955,7 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
- 		ack_req = 1;
- 
- 	evt_type = event_reply->event;
-+	mpi3mr_event_trigger(mrioc, event_reply->event);
- 
- 	switch (evt_type) {
- 	case MPI3_EVENT_DEVICE_ADDED:
-@@ -2895,6 +2994,11 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
- 		ack_req = 0;
- 		break;
- 	}
-+	case MPI3_EVENT_DIAGNOSTIC_BUFFER_STATUS_CHANGE:
-+	{
-+		mpi3mr_hdbstatuschg_evt_th(mrioc, event_reply);
++	case MPI3MR_DRVBSG_OPCODE_REPOST_HDB:
++		rval = mpi3mr_bsg_repost_hdb(mrioc, job);
 +		break;
-+	}
- 	case MPI3_EVENT_DEVICE_INFO_CHANGED:
- 	case MPI3_EVENT_LOG_DATA:
- 	case MPI3_EVENT_ENCL_DEVICE_STATUS_CHANGE:
-@@ -3158,6 +3262,7 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
- 		    MPI3_REPLY_DESCRIPT_STATUS_IOCSTATUS_LOGINFOAVAIL)
- 			ioc_loginfo = le32_to_cpu(status_desc->ioc_log_info);
- 		ioc_status &= MPI3_REPLY_DESCRIPT_STATUS_IOCSTATUS_STATUS_MASK;
-+		mpi3mr_reply_trigger(mrioc, ioc_status, ioc_loginfo);
- 		break;
- 	case MPI3_REPLY_DESCRIPT_FLAGS_TYPE_ADDRESS_REPLY:
- 		addr_desc = (struct mpi3_address_reply_descriptor *)reply_desc;
-@@ -3186,6 +3291,12 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
- 		ioc_status &= MPI3_REPLY_DESCRIPT_STATUS_IOCSTATUS_STATUS_MASK;
- 		if (sense_state == MPI3_SCSI_STATE_SENSE_BUFF_Q_EMPTY)
- 			panic("%s: Ran out of sense buffers\n", mrioc->name);
-+		if (sense_buf) {
-+			scsi_normalize_sense(sense_buf, sense_count, &sshdr);
-+			mpi3mr_scsisense_trigger(mrioc, sshdr.sense_key,
-+			    sshdr.asc, sshdr.ascq);
-+		}
-+		mpi3mr_reply_trigger(mrioc, ioc_status, ioc_loginfo);
- 		break;
- 	case MPI3_REPLY_DESCRIPT_FLAGS_TYPE_SUCCESS:
- 		success_desc = (struct mpi3_success_reply_descriptor *)reply_desc;
-@@ -3811,6 +3922,8 @@ int mpi3mr_issue_tm(struct mpi3mr_ioc *mrioc, u8 tm_type,
++	case MPI3MR_DRVBSG_OPCODE_UPLOAD_HDB:
++		rval = mpi3mr_bsg_upload_hdb(mrioc, job);
++		break;
++	case MPI3MR_DRVBSG_OPCODE_REFRESH_HDB_TRIGGERS:
++		rval = mpi3mr_bsg_refresh_hdb_triggers(mrioc, job);
++		break;
+ 	case MPI3MR_DRVBSG_OPCODE_UNKNOWN:
  	default:
- 		break;
- 	}
-+	mpi3mr_global_trigger(mrioc,
-+	    MPI3_DRIVER2_GLOBALTRIGGER_TASK_MANAGEMENT_ENABLED);
- 
- out_unlock:
- 	drv_cmd->state = MPI3MR_CMD_NOTUSED;
+ 		pr_err("%s: unsupported driver command opcode %d\n",
+diff --git a/include/uapi/scsi/scsi_bsg_mpi3mr.h b/include/uapi/scsi/scsi_bsg_mpi3mr.h
+index 22b2fe266293..8698c0fbb109 100644
+--- a/include/uapi/scsi/scsi_bsg_mpi3mr.h
++++ b/include/uapi/scsi/scsi_bsg_mpi3mr.h
+@@ -296,6 +296,7 @@ struct mpi3mr_hdb_entry {
+  * multiple hdb entries.
+  *
+  * @num_hdb_types: Number of host diag buffer types supported
++ * @element_trigger_format: Element trigger format
+  * @rsvd1: Reserved
+  * @rsvd2: Reserved
+  * @rsvd3: Reserved
+@@ -303,7 +304,7 @@ struct mpi3mr_hdb_entry {
+  */
+ struct mpi3mr_bsg_in_hdb_status {
+ 	__u8	num_hdb_types;
+-	__u8	rsvd1;
++	__u8    element_trigger_format;
+ 	__u16	rsvd2;
+ 	__u32	rsvd3;
+ 	struct mpi3mr_hdb_entry entry[1];
 -- 
 2.31.1
 
 
---000000000000ead220061b28d2f9
+--00000000000021d911061b28d3da
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -1032,13 +489,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPHB+m3mkVPNh7ce87KvY8Mtj0dNOhlo
-edsR7ilOZV29MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDYx
-ODEyMDAxMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIL8GbrVfc95n8uhZOYEoXrhFX4YjTULM
+1a7slGJFzoMcMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDYx
+ODEyMDAxNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQCUL5VbFLtIvcZ19B/9UvQpmkWsagECSAoYfavRm/DFwOhcta6h
-fvCZV2yVir0cv9w+WS2y39OQ6jrMP60eW9lFWe/i4qiPv/dx3D+o+BPv8ovRXnr+Y9osnTl6DTk/
-Nscb5l/5yHQD7dW06bfH2b66Xjqz+7stKlV2YFPIz05x6ipBqfwVVH/oZflY/7kM2l0hrzIL1hTt
-h2Xa3gwVrJO+A0OyhQu4T3nve8/M5iBCC4Dkq7HVY1vy03KhTYU0c7ySmGlsVNo3s7Bw0gEFkweu
-V8JHRMeubK3Db7JZH+kQPxodzYIxegxQVJyV1Nbhn3iegkn1e7D7X7GHUxmxFO5c
---000000000000ead220061b28d2f9--
+ATANBgkqhkiG9w0BAQEFAASCAQC4SeTClb0S8SkLHI90xMJODlL7JLkwvMVl1vqiywMycNbAaHA0
+nv+tgP5NqjP/QVBqjhRsg7NkMs8TN/asLyzM0sblCBJU4ilSGCuRWbDVGFoeH9wQ0lrTnao9/VQN
+BE9DmHPRxINgmzbJ7ioUflIWPOeFyhzP6HUufXitDpPwuD7aPCqfQgpD7JhVixS84NXW9g7S+x5S
+7bd6F0L2i9ePpRAwd61lRElsk5MGjIgL3Pc1QbYmpqFk3lrFYXF6lYoWmrbjrrnw60ccvsNP2uq8
+mKBmqOntT02sqPM5F/0qCcX9T55hX9++VNVtC9JGx6ilPRujnTwuaEdLzbwMCfcQ
+--00000000000021d911061b28d3da--
