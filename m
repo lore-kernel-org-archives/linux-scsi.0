@@ -1,324 +1,154 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f196.google.com (mail-pf1-f196.google.com [209.85.210.196])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC4DD17753
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 01:45:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB1F61D9503
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 03:06:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.196
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718675109; cv=none; b=H3w99IBqiglzlcPVueeOq3EJ2BIZ+pd2N0acslBDYzGnNV8DdUBins8zl/mbWC0OT6av6yTgIqf4AOjxrbzF70Hu1A/Nd+rJnsCJk5LR1DpxKMZ8zxQESrIUy47AsyYl4cXu2C9px3RDMDtJsgtdBWw/VdiOTY8PJuNFJooOgOg=
+	t=1718679992; cv=none; b=aUZ0IhbrvwxM7ZRVW9HxGdIUPAHBoD2zoUJDYudVavfqKApEelYOW+bgWXc8wzdhvzVGVCu6jxs2MnVfdGqB0CSN4LUaoGQmt+fgY+Iqk+G5t/HXrrlOtiQVfUfuuRRPAoKPd2x1mdiXBtiZUpYdaqE7MWiabUZ8d7a2IYA0Kr0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718675109; c=relaxed/simple;
-	bh=EIX5+Jkr4Ry0fVcVVX+HGR8uBxFKC+OGqVMq7SrIccc=;
-	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
-	 Content-Type:References; b=TZSI6g1UaPT8FS1pYCgGLCu9NRAPDEitT/dCq2xPC4SEToR5/yN5iDsBlu8aKi6I6xc+o9M4bimNd6ZlO5qy8vrW+VNUEycPfkYxn7aesz8o7M8YyP4zAYPy6EuPD6Xu5mAh0PLeL3BkiTQhT2D01nGBFj5MLWGMomWLKOmsPFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=PgH0fw2t; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1718679992; c=relaxed/simple;
+	bh=uInoEhGosu5GMD5vL2VB3gNQ4eTa+4J/kytQOt+uD6Y=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=kZMA4urNzXc0dNZlZr8fLIC7P3YoBsQsL+p/3agI1rQ+zTR59WA1BNt38t+ZPj4XBxe1XmyKLK6dOS6OH2Tst5ps2c5P0ImV7EIf25lRi6+zuwDZfmZpiHR5VIp73LJOlBGpoGPLrx6Llzw0nz21dYUnWEMNIIqiN5Zl/QZMw2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com; spf=none smtp.mailfrom=smartx.com; dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b=cnDFXdBe; arc=none smtp.client-ip=209.85.210.196
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=smartx.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="PgH0fw2t"
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20240618014503epoutp01a6c6d5ab1ab3248cf7804efd5af6f872~Z9eaYkjrb2578825788epoutp01Q
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 01:45:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20240618014503epoutp01a6c6d5ab1ab3248cf7804efd5af6f872~Z9eaYkjrb2578825788epoutp01Q
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1718675103;
-	bh=EIX5+Jkr4Ry0fVcVVX+HGR8uBxFKC+OGqVMq7SrIccc=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=PgH0fw2tGLrMALb0cgD7mIFpeV7b/KV5E7wKdrC9/jsY4KUuJxV+5cY2lOwhWFfEb
-	 f4nPe9FtT8peFp/5u2ewWIXWhheqDOlf92DZQJ9Q0q10pBHb61iZz9co26GJU7SF7r
-	 wo0oc0RdqdmxiNBuY1r9ZeQlJgq+jVg1vYnQ7AaM=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-	epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-	20240618014502epcas2p47288eaf86f0dd9860044b0f12345dfa6~Z9eZi18a00615806158epcas2p4U;
-	Tue, 18 Jun 2024 01:45:02 +0000 (GMT)
-Received: from epcpadp3 (unknown [182.195.40.17]) by epsnrtp4.localdomain
-	(Postfix) with ESMTP id 4W38hG4R3Wz4x9Pq; Tue, 18 Jun 2024 01:45:02 +0000
-	(GMT)
+	dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b="cnDFXdBe"
+Received: by mail-pf1-f196.google.com with SMTP id d2e1a72fcca58-7041053c0fdso3381614b3a.3
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2024 20:06:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=smartx-com.20230601.gappssmtp.com; s=20230601; t=1718679989; x=1719284789; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=e2VRhlSIRp2dQ6zjf1R4Z8ODRGkXxF2N2s5hDpq56dI=;
+        b=cnDFXdBeP13klVGcQf64IGc6WVjP2ldXMBl2/DKHLF6AiC+F+a3yMWFW2Py0DRLiH9
+         AszUO564A6P1BWevlu9D1fTSgAuvZ24FG2jB8RyCXX9NlTSR2fg1t1RCxp0+Kfl/2nth
+         GlYb1/mFYySPhwBedK0DMRu2ZHB+iaCVGC9oU73IhBWbRRj9OyVdBWJ8wYXSikntO38J
+         Y7GRc2BALCvKdvtux9I+D0LI/ivRO/W7WeAGJveHW4dStl2rHPvRl7R2rjLN6xxckV1m
+         13saloRwU6tNI29NllfW7D2cHjYyvppMk0OeG7+QjqE8DN9jyN3emA7zjsShXKDaSQUu
+         7NYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718679989; x=1719284789;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=e2VRhlSIRp2dQ6zjf1R4Z8ODRGkXxF2N2s5hDpq56dI=;
+        b=f5GxErEGa7iU/bZz8eREbbOA7pW/Nhz0DCAEssAuEdb/Av6Y5c4kX5ChH3YPUGXXZD
+         nTTCb5q0/dopwBPNb63OuRTGIl1YBxUP5gCmxfmA21NonXUCoMSA4VI+AYxBh+jmcO/3
+         m1dbkJ+iiYFcFOlkTXJDCpn4TGvcQvQfAlk0DEONS4cbWhz57NodevYQp+rswNJB4apD
+         FEHA3oZYtHR0vodqMyd8N89Ft+T/IiZMPNx9w3O1IYzQdz2WUA3DfNfSRe9MKGem9+TG
+         avAViX4OUXtTEK0QVGhJ9UiOA0Wb775FxnOrzm6NaHDMdceLS92wmT1ZQkCSLqaHFoZN
+         mEoQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVcIa+6PhBGHj+/Ds2qPxn75HkUq1djwrlFYMD9DGV6ciVCPMyGicTM2e8ea6s43xR4lUbCdwjohwkuKRB76ywrJ+pUdofRLxlSvw==
+X-Gm-Message-State: AOJu0YwoTNH2HOtRoXDL7y/l9AfUG4T3aO20ix24uk9O5T0WiLSXFmyI
+	cTtV3nqSvVRcElA7RCfKWkgJI8CkEhN0b45tbodgOuBpij6CZph1502r42yf4ak=
+X-Google-Smtp-Source: AGHT+IFlhKfP32ABgzSXCXa3SNgwMCy4g1+CgVpsyPa2+FxBprwtL0HxAYljCSvteqeO1VfvX+ofTQ==
+X-Received: by 2002:a05:6a21:6da3:b0:1b6:8b1e:c3f3 with SMTP id adf61e73a8af0-1bae7dedd57mr10665783637.14.1718679989008;
+        Mon, 17 Jun 2024 20:06:29 -0700 (PDT)
+Received: from smtpclient.apple ([103.172.41.198])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c4cab602e3sm9435362a91.8.2024.06.17.20.06.26
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 17 Jun 2024 20:06:28 -0700 (PDT)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: RE: [PATCH 1/8] scsi: ufs: Initialize struct uic_command once
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From: Daejun Park <daejun7.park@samsung.com>
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>, Avri Altman
-	<avri.altman@wdc.com>, Peter Wang <peter.wang@mediatek.com>, Manivannan
-	Sadhasivam <manivannan.sadhasivam@linaro.org>, Bean Huo
-	<beanhuo@micron.com>, Minwoo Im <minwoo.im@samsung.com>, Maramaina Naresh
-	<quic_mnaresh@quicinc.com>, Akinobu Mita <akinobu.mita@gmail.com>, Daejun
-	Park <daejun7.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20240617210844.337476-2-bvanassche@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1891546521.01718675102603.JavaMail.epsvc@epcpadp3>
-Date: Tue, 18 Jun 2024 10:25:10 +0900
-X-CMS-MailID: 20240618012510epcms2p8c047bad9c392685771a8da9b7f8a2249
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.300.101.1.3\))
+Subject: Re: [PATCH] scsi: sd: Keep the discard mode stable
+From: Li Feng <fengli@smartx.com>
+In-Reply-To: <20240617162657.GA843635@p1gen4-pw042f0m.fritz.box>
+Date: Tue, 18 Jun 2024 11:06:13 +0800
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ linux-kernel <linux-kernel@vger.kernel.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20240617210921epcas2p157b0455482794b03d35185bdbfeac6d3
-References: <20240617210844.337476-2-bvanassche@acm.org>
-	<20240617210844.337476-1-bvanassche@acm.org>
-	<CGME20240617210921epcas2p157b0455482794b03d35185bdbfeac6d3@epcms2p8>
+Message-Id: <DBAA6B83-E60A-437C-A8D8-B854E625F6CD@smartx.com>
+References: <20240614160350.180490-1-fengli@smartx.com>
+ <20240617162657.GA843635@p1gen4-pw042f0m.fritz.box>
+To: Benjamin Block <bblock@linux.ibm.com>
+X-Mailer: Apple Mail (2.3731.300.101.1.3)
 
-Hi Bart,
-=C2=A0
-> Instead of first zero-initializing struct uic_command and next initializi=
-ng
-> it memberwise, initialize all members at once.
->=20
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
-> drivers/ufs/core/ufshcd.c 62 ++++++++++++++++++++-------------------
-> include/ufs/ufshcd.h=C2=A0 =C2=A0 =C2=A0 =C2=A0 4 +--
-> 2 files changed, 34 insertions(+), 32 deletions(-)
->=20
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 41bf2e249c83..5d784876513e 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -3993,11 +3993,11 @@ static void ufshcd_host_memory_configure(struct u=
-fs_hba *hba)
-> =C2=A0 */
-> static int ufshcd_dme_link_startup(struct ufs_hba *hba)
-> {
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {0};
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.command =3D UIC=
-_CMD_DME_LINK_STARTUP,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0};
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0int ret;
->=20
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.command =3D UIC_CMD_DME_LINK_STARTUP=
-;
-> -
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ufshcd_send_uic_cmd(hba, &uic_c=
-md);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dev_dbg(hba=
-->dev,
-> @@ -4015,11 +4015,11 @@ static int ufshcd_dme_link_startup(struct ufs_hba=
- *hba)
-> =C2=A0 */
-> static int ufshcd_dme_reset(struct ufs_hba *hba)
-> {
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {0};
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.command =3D UIC=
-_CMD_DME_RESET,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0};
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0int ret;
->=20
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.command =3D UIC_CMD_DME_RESET;
-> -
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ufshcd_send_uic_cmd(hba, &uic_c=
-md);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dev_err(hba=
-->dev,
-> @@ -4054,11 +4054,11 @@ EXPORT_SYMBOL_GPL(ufshcd_dme_configure_adapt);
-> =C2=A0 */
-> static int ufshcd_dme_enable(struct ufs_hba *hba)
-> {
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {0};
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.command =3D UIC=
-_CMD_DME_ENABLE,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0};
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0int ret;
->=20
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.command =3D UIC_CMD_DME_ENABLE;
-> -
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ufshcd_send_uic_cmd(hba, &uic_c=
-md);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (ret)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dev_err(hba=
-->dev,
-> @@ -4111,7 +4111,12 @@ static inline void ufshcd_add_delay_before_dme_cmd=
-(struct ufs_hba *hba)
-> int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0u8 attr_set, u32 mib_val, u8 peer)
-> {
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {0};
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.command =3D pee=
-r ? UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.argument1 =3D a=
-ttr_sel,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.argument2 =3D U=
-IC_ARG_ATTR_TYPE(attr_set),
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.argument3 =3D m=
-ib_val,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0};
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0static const char *const action[] =3D {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0"dme-set",
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0"dme-peer-s=
-et"
-> @@ -4120,12 +4125,6 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 a=
-ttr_sel,
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0int ret;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0int retries =3D UFS_UIC_COMMAND_RETRIES=
-;
->=20
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.command =3D peer ?
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UIC_CMD_DME_PEER=
-_SET : UIC_CMD_DME_SET;
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.argument1 =3D attr_sel;
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.argument2 =3D UIC_ARG_ATTR_TYPE(attr=
-_set);
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.argument3 =3D mib_val;
-> -
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0do {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* for peer=
- attributes we retry upon failure */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ufs=
-hcd_send_uic_cmd(hba, &uic_cmd);
-> @@ -4155,7 +4154,11 @@ EXPORT_SYMBOL_GPL(ufshcd_dme_set_attr);
-> int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0u32 *mib_val, u8 peer)
-> {
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {0};
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.command =3D pee=
-r ? UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.argument1 =3D a=
-ttr_sel,
-> +
-Empty line.
 
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0};
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0static const char *const action[] =3D {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0"dme-get",
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0"dme-peer-g=
-et"
-> @@ -4189,10 +4192,6 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 a=
-ttr_sel,
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
->=20
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.command =3D peer ?
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0UIC_CMD_DME_PEER=
-_GET : UIC_CMD_DME_GET;
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.argument1 =3D attr_sel;
-> -
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0do {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0/* for peer=
- attributes we retry upon failure */
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ufs=
-hcd_send_uic_cmd(hba, &uic_cmd);
-> @@ -4325,7 +4324,11 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba=
-, struct uic_command *cmd)
-> =C2=A0 */
-> int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
-> {
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {0};
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.command =3D UIC=
-_CMD_DME_SET,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.argument1 =3D U=
-IC_ARG_MIB(PA_PWRMODE),
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.argument3 =3D m=
-ode,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0};
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0int ret;
->=20
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (hba->quirks & UFSHCD_QUIRK_BROKEN_P=
-A_RXHSUNTERMCAP) {
-> @@ -4338,9 +4341,6 @@ int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba,=
- u8 mode)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0}
->=20
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.command =3D UIC_CMD_DME_SET;
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.argument1 =3D UIC_ARG_MIB(PA_PWRMODE=
-);
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.argument3 =3D mode;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ufshcd_hold(hba);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ufshcd_uic_pwr_ctrl(hba, &uic_c=
-md);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ufshcd_release(hba);
-> @@ -4381,13 +4381,14 @@ EXPORT_SYMBOL_GPL(ufshcd_link_recovery);
->=20
-> int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
-> {
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0int ret;
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {0};
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.command =3D UIC=
-_CMD_DME_HIBER_ENTER,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0};
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ktime_t start =3D ktime_get();
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0int ret;
->=20
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ufshcd_vops_hibern8_notify(hba, UIC_CMD=
-_DME_HIBER_ENTER, PRE_CHANGE);
->=20
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.command =3D UIC_CMD_DME_HIBER_ENTER;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ufshcd_uic_pwr_ctrl(hba, &uic_c=
-md);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0trace_ufshcd_profile_hibern8(dev_name(h=
-ba->dev), "enter",
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0 ktime_to_us(ktime_sub(ktime_get(), start)), =
-ret);
-> @@ -4405,13 +4406,14 @@ EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_enter);
->=20
-> int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
-> {
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {0};
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0struct uic_command uic_cmd =3D {
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.command =3D UIC=
-_CMD_DME_HIBER_EXIT,
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0};
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0int ret;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ktime_t start =3D ktime_get();
->=20
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ufshcd_vops_hibern8_notify(hba, UIC_CMD=
-_DME_HIBER_EXIT, PRE_CHANGE);
->=20
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0uic_cmd.command =3D UIC_CMD_DME_HIBER_EXIT;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D ufshcd_uic_pwr_ctrl(hba, &uic_c=
-md);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0trace_ufshcd_profile_hibern8(dev_name(h=
-ba->dev), "exit",
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0 ktime_to_us(ktime_sub(ktime_get(), start)), =
-ret);
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 9e0581115b34..d4d63507d090 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -73,8 +73,8 @@ enum ufs_event_type {
-> =C2=A0 * @done: UIC command completion
-> =C2=A0 */
-> struct uic_command {
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0u32 command;
-> - =C2=A0 =C2=A0 =C2=A0 =C2=A0u32 argument1;
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0const u32 command;
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0const u32 argument1;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0u32 argument2;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0u32 argument3;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0int cmd_active;
 
-Reviewed-by: Daejun Park <daejun7.park@samsung.com>
+> 2024=E5=B9=B46=E6=9C=8818=E6=97=A5 00:26=EF=BC=8CBenjamin Block =
+<bblock@linux.ibm.com> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
+> Hey,
+>=20
+> On Sat, Jun 15, 2024 at 12:03:47AM +0800, Li Feng wrote:
+>> There is a scenario where a large number of discard commands
+>> are issued when the iscsi initiator connects to the target
+>> and then performs a session rescan operation.=20
+>=20
+> Is this with just one specific target implementation? This sounds like =
+a
+> broken/buggy target, or is there a reason why this happens in general?
+>=20
+> And broken target sounds like device quirk, rather than impacting =
+every
+> possible target.
 
-Thanks,
+(resend due to GMail HTML bounce)
 
-Daejun
+This is a common problem. Before sending a rescan, discard has been=20
+negotiated to UNMAP. After the rescan, there will be a short window for=20=
+
+it to become WS16, and then it will immediately become UNMAP.=20
+However, during this period, a small amount of discard commands=20
+may become WS16, resulting in a strange problem.
+
+>=20
+>> There is a time
+>> window, most of the commands are in UNMAP mode, and some
+>> discard commands become WRITE SAME with UNMAP.
+>>=20
+>> The discard mode has been negotiated during the SCSI probe. If
+>> the mode is temporarily changed from UNMAP to WRITE SAME with
+>> UNMAP, IO ERROR may occur because the target may not implement
+>> WRITE SAME with UNMAP. Keep the discard mode stable to fix this
+>> issue.
+>>=20
+>> Signed-off-by: Li Feng <fengli@smartx.com>
+>> ---
+>> drivers/scsi/sd.c | 7 ++++++-
+>> 1 file changed, 6 insertions(+), 1 deletion(-)
+>>=20
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index f6c822c9cbd2..0165dc70a99b 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -2598,7 +2598,12 @@ static int read_capacity_16(struct scsi_disk =
+*sdkp, struct scsi_device *sdp,
+>> if (buffer[14] & 0x40) /* LBPRZ */
+>> sdkp->lbprz =3D 1;
+>>=20
+>> - sd_config_discard(sdkp, SD_LBP_WS16);
+>> + /*
+>> +  * When the discard mode has been set to UNMAP, it should not be =
+set to
+>> +  * WRITE SAME with UNMAP.
+>> +  */
+>> + if (!sdkp->max_unmap_blocks)
+>> + sd_config_discard(sdkp, SD_LBP_WS16);
+>> }
+>>=20
+>> sdkp->capacity =3D lba + 1;
+>=20
+> --=20
+> Best Regards, Benjamin Block        /        Linux on IBM Z Kernel =
+Development
+> IBM Deutschland Research & Development GmbH    /   =
+https://www.ibm.com/privacy
+> Vors. Aufs.-R.: Wolfgang Wendt         /        Gesch?ftsf?hrung: =
+David Faller
+> Sitz der Ges.: B?blingen     /    Registergericht: AmtsG Stuttgart, =
+HRB 243294
+
+
