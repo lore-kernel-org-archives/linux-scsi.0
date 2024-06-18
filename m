@@ -1,373 +1,184 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3AE418C356
-	for <linux-scsi@vger.kernel.org>; Mon, 17 Jun 2024 21:10:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC7B54C7C;
+	Tue, 18 Jun 2024 00:26:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718658623; cv=none; b=UFeWFfPqxm8furkD3K5z20nL/NTQJscR8VradnchQSKA8SYbQoMY926mF5aGE0api8sgzbpUTMw4UQ32FWKWLwjKhV03zAYi9HZQVYScWn/kp96H2ljve3JM9USUWWbfloicb94av08TwsHgWCn7jFQMz+0sv7vPNaNV2E/Jglg=
+	t=1718670391; cv=none; b=LhKM5992Sf1g8yzYaGIGP080Iu/knIT6aEW7BuIOPey7WfW277gK147cuSYSPo282ykOsAuM3inLknUCp/Ug92zZHQveVn64p7zEF5BqoKh/BpCDnPBDE7rJ4gK3w/+3ppyp38+cCwTowsqmZv6gjsaajZOR9dG8OvH5a7CKESU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718658623; c=relaxed/simple;
-	bh=hPHjiDx82O4XZfWXcB77/9420Z7wOTk88urjKEgSZBg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ILsU/QxRWV7TB34e3yiBkLlY6Yd4PXG+ZpTW9Gmo1x+HdYRyhxAPOss5jE9Ng6d//pgnJl3BfgqSaxQawtF7BzFYpadc3wDLQ1p/kfnwSin7DgNF2XyXhjbA3jJr3wVQ0YFhcasJLh2XUz7YUPbQN6WjNZPKChWtWWHarsgM1Io=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Zcl/MpDH; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1718670391; c=relaxed/simple;
+	bh=reeVrLOqwgdIWsL9AdTMmQHj3mGW4vYjVQkg32JaCH0=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=PDCfg8Zgy7C9r0qJlOxcYQyi4mr6KM4Cq57fM+pVZfABpnE20eSAGekKVSAucZsh07jnal8NP53kHS3uNRPuXy5Xd1f94EL9oExws8UfqICg+kyXpsvX8IYGPoYt0wTwQQiuqfewEZaqKDbBJQYS5kwybEN+75Dig6o+j2uSo0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=eEqP0G36; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Zcl/MpDH"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W32bK4qGqz6Cnk98;
-	Mon, 17 Jun 2024 21:10:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1718658596; x=1721250597; bh=bCRLs
-	SD2qdYp34UMbcSPqJbZlGJqTdMGxVq3wDaKD5k=; b=Zcl/MpDHwjF4S3M/eytrr
-	vwILM8qDtEm5OeFIJlPqPYI9fcxSFaUUQsiciVy9UwklKswpFEQxuf65ynwI00so
-	72GTg37dnzv6d4TVQa1fSO5Vunlr88Je3Nb1NKIa3MFrPxxKDJeo4xOdNYGoEsgq
-	Aeh6xneNr9xv+7XXhONJ1WoIkP7IRVY2IyCLlRtDEthCwVAd9XO3OHUA1iMoRCiB
-	YxOrM2uOdytUWBo95Ff9dVPwing+6m+lKPRB+4tV3AYvr49pZC/eLV/lnQqdncy8
-	H9j6NBN4vfJhdO3M86J/Rw9GH7ORNiLZhxmzKilSw6ThMxFbAwMP2XbeahNxhwwy
-	A==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id PyYqoJ_fYUvH; Mon, 17 Jun 2024 21:09:56 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W32Zp5tvQz6Cnk95;
-	Mon, 17 Jun 2024 21:09:54 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Minwoo Im <minwoo.im@samsung.com>,
-	ChanWoo Lee <cw9316.lee@samsung.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Po-Wen Kao <powen.kao@mediatek.com>,
-	Yang Li <yang.lee@linux.alibaba.com>,
-	Keoseong Park <keosung.park@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>,
-	Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 7/8] scsi: ufs: Make the polling code report which command has been completed
-Date: Mon, 17 Jun 2024 14:07:46 -0700
-Message-ID: <20240617210844.337476-8-bvanassche@acm.org>
-X-Mailer: git-send-email 2.45.2.627.g7a2c4fd464-goog
-In-Reply-To: <20240617210844.337476-1-bvanassche@acm.org>
-References: <20240617210844.337476-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="eEqP0G36"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45HMbuoR021328;
+	Tue, 18 Jun 2024 00:26:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	reeVrLOqwgdIWsL9AdTMmQHj3mGW4vYjVQkg32JaCH0=; b=eEqP0G36ArvsCtp2
+	olLGOah7tqLU0bjqUYvS2hrhZBFquCRlAFUecdu6CX29T7/A8Ky7kFMjezRN77IG
+	I2tvXzR2X10Ay6gpnjUtAjztXDzAjPi1xaxGZYhGBI3yPkh098icvUBQ9cTWgOMI
+	fRzuJp5Vk7umoHe7ceR1jdLZvU17YE9sJ+AZSOZqDRkST0qG+KvGWOTp1nU5mjfx
+	HLuE0cfJzsec0mLaV0gyHSjIH5XWKa6b5NNy3qNLkDOnQGxuVQtQHiF418sP0O/M
+	sBbrIPFthOEfz4W8WbcI1nUlIdqcC5EZRYrTvAZsM6DwKVUVMeW4gqwq5z2KeH2U
+	VDMBsA==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ytx3wr4m3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 18 Jun 2024 00:26:19 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA03.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45I0QI70030167
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 18 Jun 2024 00:26:18 GMT
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Mon, 17 Jun 2024 17:26:14 -0700
+Received: from nalasex01a.na.qualcomm.com ([fe80::62ba:cee1:5495:c89]) by
+ nalasex01a.na.qualcomm.com ([fe80::62ba:cee1:5495:c89%4]) with mapi id
+ 15.02.1544.009; Mon, 17 Jun 2024 17:26:14 -0700
+From: "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>
+To: Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Krzysztof Kozlowski
+	<krzysztof.kozlowski@linaro.org>,
+        "Gaurav Kashyap (QUIC)"
+	<quic_gaurkash@quicinc.com>,
+        "linux-arm-msm@vger.kernel.org"
+	<linux-arm-msm@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>,
+        "andersson@kernel.org" <andersson@kernel.org>,
+        "ebiggers@google.com" <ebiggers@google.com>,
+        "neil.armstrong@linaro.org"
+	<neil.armstrong@linaro.org>,
+        srinivas.kandagatla
+	<srinivas.kandagatla@linaro.org>,
+        "krzysztof.kozlowski+dt@linaro.org"
+	<krzysztof.kozlowski+dt@linaro.org>,
+        "conor+dt@kernel.org"
+	<conor+dt@kernel.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        kernel
+	<kernel@quicinc.com>,
+        "linux-crypto@vger.kernel.org"
+	<linux-crypto@vger.kernel.org>,
+        "devicetree@vger.kernel.org"
+	<devicetree@vger.kernel.org>,
+        "Om Prakash Singh (QUIC)"
+	<quic_omprsing@quicinc.com>,
+        "Bao D. Nguyen (QUIC)"
+	<quic_nguyenb@quicinc.com>,
+        bartosz.golaszewski
+	<bartosz.golaszewski@linaro.org>,
+        "ulf.hansson@linaro.org"
+	<ulf.hansson@linaro.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "mani@kernel.org"
+	<mani@kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>
+Subject: RE: [PATCH v4 13/15] dt-bindings: crypto: ice: document the hwkm
+ property
+Thread-Topic: [PATCH v4 13/15] dt-bindings: crypto: ice: document the hwkm
+ property
+Thread-Index: AQHaUXhKMdiCdvq2U0iHJQ04R2/mK7Dw+oYAgAVuJICA15X98A==
+Date: Tue, 18 Jun 2024 00:26:14 +0000
+Message-ID: <9892c541ba4e4b5d975faaa4b49c92ba@quicinc.com>
+References: <20240127232436.2632187-1-quic_gaurkash@quicinc.com>
+ <20240127232436.2632187-14-quic_gaurkash@quicinc.com>
+ <301be6d8-b105-4bba-a154-9caebc8013e3@linaro.org>
+ <dd219c40-33d5-43ff-b0da-16ccf0198bb9@linaro.org>
+In-Reply-To: <dd219c40-33d5-43ff-b0da-16ccf0198bb9@linaro.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: u87o1qFjA_Ow3Pouiq8et6FWaBcKu1q_
+X-Proofpoint-ORIG-GUID: u87o1qFjA_Ow3Pouiq8et6FWaBcKu1q_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-17_14,2024-06-17_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ impostorscore=0 clxscore=1011 mlxlogscore=999 suspectscore=0 mlxscore=0
+ spamscore=0 bulkscore=0 priorityscore=1501 phishscore=0 malwarescore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2405170001 definitions=main-2406180002
 
-Prepare for introducing a new __ufshcd_poll() caller that will need to
-know whether or not a specific command has been completed.
-
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufs-mcq.c      | 25 +++++++++++++-------
- drivers/ufs/core/ufshcd-priv.h  |  4 ++--
- drivers/ufs/core/ufshcd.c       | 41 +++++++++++++++++++++++----------
- drivers/ufs/host/ufs-mediatek.c |  2 +-
- drivers/ufs/host/ufs-qcom.c     |  2 +-
- include/ufs/ufshcd.h            |  3 ++-
- 6 files changed, 52 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index d6f966f4abef..c9155759934c 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -294,17 +294,22 @@ static int ufshcd_mcq_get_tag(struct ufs_hba *hba, =
-struct cq_entry *cqe)
- 	return div_u64(addr, ufshcd_get_ucd_size(hba));
- }
-=20
--static void ufshcd_mcq_process_cqe(struct ufs_hba *hba,
--				   struct ufs_hw_queue *hwq)
-+/* Returns true if and only if @compl_cmd has been completed. */
-+static bool ufshcd_mcq_process_cqe(struct ufs_hba *hba,
-+				   struct ufs_hw_queue *hwq,
-+				   struct scsi_cmnd *compl_cmd)
- {
- 	struct cq_entry *cqe =3D ufshcd_mcq_cur_cqe(hwq);
--	int tag =3D ufshcd_mcq_get_tag(hba, cqe);
-=20
- 	if (cqe->command_desc_base_addr) {
--		ufshcd_compl_one_cqe(hba, tag, cqe);
--		/* After processed the cqe, mark it empty (invalid) entry */
-+		const int tag =3D ufshcd_mcq_get_tag(hba, cqe);
-+
-+		/* Mark the CQE as invalid. */
- 		cqe->command_desc_base_addr =3D 0;
-+
-+		return ufshcd_compl_one_cqe(hba, tag, cqe, compl_cmd);
- 	}
-+	return false;
- }
-=20
- void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
-@@ -315,7 +320,7 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *h=
-ba,
-=20
- 	spin_lock_irqsave(&hwq->cq_lock, flags);
- 	while (entries > 0) {
--		ufshcd_mcq_process_cqe(hba, hwq);
-+		ufshcd_mcq_process_cqe(hba, hwq, NULL);
- 		ufshcd_mcq_inc_cq_head_slot(hwq);
- 		entries--;
- 	}
-@@ -325,8 +330,10 @@ void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *=
-hba,
- 	spin_unlock_irqrestore(&hwq->cq_lock, flags);
- }
-=20
-+/* Clears *@compl_cmd if and only if *@compl_cmd has been completed. */
- unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
--				       struct ufs_hw_queue *hwq)
-+				       struct ufs_hw_queue *hwq,
-+				       struct scsi_cmnd **compl_cmd)
- {
- 	unsigned long completed_reqs =3D 0;
- 	unsigned long flags;
-@@ -334,7 +341,9 @@ unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba=
- *hba,
- 	spin_lock_irqsave(&hwq->cq_lock, flags);
- 	ufshcd_mcq_update_cq_tail_slot(hwq);
- 	while (!ufshcd_mcq_is_cq_empty(hwq)) {
--		ufshcd_mcq_process_cqe(hba, hwq);
-+		if (ufshcd_mcq_process_cqe(hba, hwq,
-+					   compl_cmd ? *compl_cmd : NULL))
-+			*compl_cmd =3D NULL;
- 		ufshcd_mcq_inc_cq_head_slot(hwq);
- 		completed_reqs++;
- 	}
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-index fb4457a84d11..42802fd689fb 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -61,8 +61,8 @@ int ufshcd_query_attr(struct ufs_hba *hba, enum query_o=
-pcode opcode,
- int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	enum flag_idn idn, u8 index, bool *flag_res);
- void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
--void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
--			  struct cq_entry *cqe);
-+bool ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
-+			  struct cq_entry *cqe, struct scsi_cmnd *compl_cmd);
- int ufshcd_mcq_init(struct ufs_hba *hba);
- int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
- int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index db374a788140..e3835e61e4b1 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5488,9 +5488,12 @@ void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
-  * @hba: per adapter instance
-  * @task_tag: the task tag of the request to be completed
-  * @cqe: pointer to the completion queue entry
-+ * @compl_cmd: if not NULL, check whether this command has been complete=
-d
-+ *
-+ * Returns: true if and only if @compl_cmd has been completed.
-  */
--void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
--			  struct cq_entry *cqe)
-+bool ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
-+			  struct cq_entry *cqe, struct scsi_cmnd *compl_cmd)
- {
- 	struct ufshcd_lrb *lrbp;
- 	struct scsi_cmnd *cmd;
-@@ -5507,6 +5510,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int =
-task_tag,
- 		ufshcd_release_scsi_cmd(hba, lrbp);
- 		/* Do not touch lrbp after scsi done */
- 		scsi_done(cmd);
-+		return cmd =3D=3D compl_cmd;
- 	} else if (hba->dev_cmd.complete) {
- 		if (cqe) {
- 			ocs =3D le32_to_cpu(cqe->status) & MASK_OCS;
-@@ -5514,20 +5518,26 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, in=
-t task_tag,
- 		}
- 		complete(hba->dev_cmd.complete);
- 	}
-+	return false;
- }
-=20
- /**
-  * __ufshcd_transfer_req_compl - handle SCSI and query command completio=
-n
-  * @hba: per adapter instance
-  * @completed_reqs: bitmask that indicates which requests to complete
-+ * @compl_cmd: if not NULL, check whether *@compl_cmd has been completed=
-.
-+ *	Clear *@compl_cmd if it has been completed.
-  */
- static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
--					unsigned long completed_reqs)
-+					unsigned long completed_reqs,
-+					struct scsi_cmnd **compl_cmd)
- {
- 	int tag;
-=20
- 	for_each_set_bit(tag, &completed_reqs, hba->nutrs)
--		ufshcd_compl_one_cqe(hba, tag, NULL);
-+		if (ufshcd_compl_one_cqe(hba, tag, NULL,
-+					 compl_cmd ? *compl_cmd : NULL))
-+			*compl_cmd =3D NULL;
- }
-=20
- /* Any value that is not an existing queue number is fine for this const=
-ant. */
-@@ -5554,7 +5564,8 @@ static void ufshcd_clear_polled(struct ufs_hba *hba=
-,
-  * Return: > 0 if one or more commands have been completed or 0 if no
-  * requests have been completed.
-  */
--static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
-+static int __ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num=
-,
-+			 struct scsi_cmnd **compl_cmd)
- {
- 	struct ufs_hba *hba =3D shost_priv(shost);
- 	unsigned long completed_reqs, flags;
-@@ -5565,7 +5576,7 @@ static int ufshcd_poll(struct Scsi_Host *shost, uns=
-igned int queue_num)
- 		WARN_ON_ONCE(queue_num =3D=3D UFSHCD_POLL_FROM_INTERRUPT_CONTEXT);
- 		hwq =3D &hba->uhq[queue_num];
-=20
--		return ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+		return ufshcd_mcq_poll_cqe_lock(hba, hwq, compl_cmd);
- 	}
-=20
- 	spin_lock_irqsave(&hba->outstanding_lock, flags);
-@@ -5582,11 +5593,16 @@ static int ufshcd_poll(struct Scsi_Host *shost, u=
-nsigned int queue_num)
- 	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-=20
- 	if (completed_reqs)
--		__ufshcd_transfer_req_compl(hba, completed_reqs);
-+		__ufshcd_transfer_req_compl(hba, completed_reqs, compl_cmd);
-=20
- 	return completed_reqs !=3D 0;
- }
-=20
-+static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
-+{
-+	return __ufshcd_poll(shost, queue_num, NULL);
-+}
-+
- /**
-  * ufshcd_mcq_compl_pending_transfer - MCQ mode function. It is
-  * invoked from the error handler context or ufshcd_host_reset_and_resto=
-re()
-@@ -5630,7 +5646,7 @@ static void ufshcd_mcq_compl_pending_transfer(struc=
-t ufs_hba *hba,
- 			}
- 			spin_unlock_irqrestore(&hwq->cq_lock, flags);
- 		} else {
--			ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+			ufshcd_mcq_poll_cqe_lock(hba, hwq, NULL);
- 		}
- 	}
- }
-@@ -6905,7 +6921,7 @@ static irqreturn_t ufshcd_handle_mcq_cq_events(stru=
-ct ufs_hba *hba)
- 			ufshcd_mcq_write_cqis(hba, events, i);
-=20
- 		if (events & UFSHCD_MCQ_CQIS_TAIL_ENT_PUSH_STS)
--			ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+			ufshcd_mcq_poll_cqe_lock(hba, hwq, NULL);
- 	}
-=20
- 	return IRQ_HANDLED;
-@@ -7398,7 +7414,7 @@ static int ufshcd_eh_device_reset_handler(struct sc=
-si_cmnd *cmd)
- 			    lrbp->lun =3D=3D lun) {
- 				ufshcd_clear_cmd(hba, pos);
- 				hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp->cmd));
--				ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+				ufshcd_mcq_poll_cqe_lock(hba, hwq, NULL);
- 			}
- 		}
- 		err =3D 0;
-@@ -7426,7 +7442,8 @@ static int ufshcd_eh_device_reset_handler(struct sc=
-si_cmnd *cmd)
- 				__func__, pos);
- 		}
- 	}
--	__ufshcd_transfer_req_compl(hba, pending_reqs & ~not_cleared_mask);
-+	__ufshcd_transfer_req_compl(hba, pending_reqs & ~not_cleared_mask,
-+				    NULL);
-=20
- out:
- 	hba->req_abort_count =3D 0;
-@@ -7603,7 +7620,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		dev_err(hba->dev,
- 		"%s: cmd was completed, but without a notifying intr, tag =3D %d",
- 		__func__, tag);
--		__ufshcd_transfer_req_compl(hba, 1UL << tag);
-+		__ufshcd_transfer_req_compl(hba, 1UL << tag, NULL);
- 		goto release;
- 	}
-=20
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
-tek.c
-index c7a0ab9b1f59..4dbe334b36bb 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1715,7 +1715,7 @@ static irqreturn_t ufs_mtk_mcq_intr(int irq, void *=
-__intr_info)
- 		ufshcd_mcq_write_cqis(hba, events, qid);
-=20
- 	if (events & UFSHCD_MCQ_CQIS_TAIL_ENT_PUSH_STS)
--		ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+		ufshcd_mcq_poll_cqe_lock(hba, hwq, NULL);
-=20
- 	return IRQ_HANDLED;
- }
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index cca190d1c577..cc1d9614fcd6 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1715,7 +1715,7 @@ static irqreturn_t ufs_qcom_mcq_esi_handler(int irq=
-, void *data)
- 	struct ufs_hw_queue *hwq =3D &hba->uhq[id];
-=20
- 	ufshcd_mcq_write_cqis(hba, 0x1, id);
--	ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+	ufshcd_mcq_poll_cqe_lock(hba, hwq, NULL);
-=20
- 	return IRQ_HANDLED;
- }
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index d32637d267f3..443afb97a637 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1284,7 +1284,8 @@ unsigned int ufshcd_mcq_queue_cfg_addr(struct ufs_h=
-ba *hba);
- u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i);
- void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i);
- unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
--					 struct ufs_hw_queue *hwq);
-+				       struct ufs_hw_queue *hwq,
-+				       struct scsi_cmnd **compl_cmd);
- void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
- void ufshcd_mcq_enable_esi(struct ufs_hba *hba);
- void ufshcd_mcq_enable(struct ufs_hba *hba);
+SGVsbG8gS29ucmFkIGFuZCBLcnp5c3p0b2YNCg0KT24gMDIvMDEvMjAyNCAxMToxNCwgS29ucmFk
+IER5YmNpbyB3cm90ZQ0KPiBPbiAyOS4wMS4yMDI0IDA5OjE4LCBLcnp5c3p0b2YgS296bG93c2tp
+IHdyb3RlOg0KPiA+IE9uIDI4LzAxLzIwMjQgMDA6MTQsIEdhdXJhdiBLYXNoeWFwIHdyb3RlOg0K
+PiA+PiBXaGVuIFF1YWxjb21tJ3MgSW5saW5lIENyeXB0byBFbmdpbmUgKElDRSkgY29udGFpbnMg
+SGFyZHdhcmUgS2V5DQo+ID4+IE1hbmFnZXIgKEhXS00pLCBhbmQgdGhlICdIV0tNJyBtb2RlIGlz
+IGVuYWJsZWQsIGl0IHN1cHBvcnRzIHdyYXBwZWQNCj4gPj4ga2V5cy4gSG93ZXZlciwgdGhpcyBh
+bHNvIHJlcXVpcmVzIGZpcm13YXJlIHN1cHBvcnQgaW4gVHJ1c3R6b25lIHRvDQo+ID4+IHdvcmsg
+Y29ycmVjdGx5LCB3aGljaCBtYXkgbm90IGJlIGF2YWlsYWJsZSBvbiBhbGwgY2hpcHNldHMuIElu
+IHRoZQ0KPiA+PiBhYm92ZSBzY2VuYXJpbywgSUNFIG5lZWRzIHRvIHN1cHBvcnQgc3RhbmRhcmQg
+a2V5cyBldmVuIHRob3VnaCBIV0tNDQo+ID4+IGlzIGludGVncmF0ZWQgZnJvbSBhIGhhcmR3YXJl
+IHBlcnNwZWN0aXZlLg0KPiA+Pg0KPiA+PiBJbnRyb2R1Y2luZyB0aGlzIHByb3BlcnR5IHNvIHRo
+YXQgSGFyZHdhcmUgd3JhcHBlZCBrZXkgc3VwcG9ydCBjYW4gYmUNCj4gPj4gZW5hYmxlZC9kaXNh
+YmxlZCBmcm9tIHNvZnR3YXJlIGJhc2VkIG9uIGNoaXBzZXQgZmlybXdhcmUsIGFuZCBub3QNCj4g
+Pj4ganVzdCBiYXNlZCBvbiBoYXJkd2FyZSB2ZXJzaW9uLg0KPiA+Pg0KPiA+PiBTaWduZWQtb2Zm
+LWJ5OiBHYXVyYXYgS2FzaHlhcCA8cXVpY19nYXVya2FzaEBxdWljaW5jLmNvbT4NCj4gPj4gVGVz
+dGVkLWJ5OiBOZWlsIEFybXN0cm9uZyA8bmVpbC5hcm1zdHJvbmdAbGluYXJvLm9yZz4NCj4gPj4g
+LS0tDQo+ID4+ICAuLi4vYmluZGluZ3MvY3J5cHRvL3Fjb20saW5saW5lLWNyeXB0by1lbmdpbmUu
+eWFtbCAgICAgfCAxMCArKysrKysrKysrDQo+ID4+ICAxIGZpbGUgY2hhbmdlZCwgMTAgaW5zZXJ0
+aW9ucygrKQ0KPiA+Pg0KPiA+PiBkaWZmIC0tZ2l0DQo+ID4+IGEvRG9jdW1lbnRhdGlvbi9kZXZp
+Y2V0cmVlL2JpbmRpbmdzL2NyeXB0by9xY29tLGlubGluZS1jcnlwdG8tDQo+IGVuZ2luZS4NCj4g
+Pj4geWFtbA0KPiA+PiBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9jcnlwdG8v
+cWNvbSxpbmxpbmUtY3J5cHRvLQ0KPiBlbmdpbmUuDQo+ID4+IHlhbWwgaW5kZXggMDllNDMxNTdj
+YzcxLi42NDE1ZDdiZTliNzMgMTAwNjQ0DQo+ID4+IC0tLQ0KPiA+PiBhL0RvY3VtZW50YXRpb24v
+ZGV2aWNldHJlZS9iaW5kaW5ncy9jcnlwdG8vcWNvbSxpbmxpbmUtY3J5cHRvLQ0KPiBlbmdpbmUu
+DQo+ID4+IHlhbWwNCj4gPj4gKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdz
+L2NyeXB0by9xY29tLGlubGluZS1jcnlwdG8tDQo+IGVuZw0KPiA+PiArKysgaW5lLnlhbWwNCj4g
+Pj4gQEAgLTI1LDYgKzI1LDE2IEBAIHByb3BlcnRpZXM6DQo+ID4+ICAgIGNsb2NrczoNCj4gPj4g
+ICAgICBtYXhJdGVtczogMQ0KPiA+Pg0KPiA+PiArICBxY29tLGljZS11c2UtaHdrbToNCj4gPj4g
+KyAgICB0eXBlOiBib29sZWFuDQo+ID4+ICsgICAgZGVzY3JpcHRpb246DQo+ID4+ICsgICAgICBV
+c2UgdGhlIHN1cHBvcnRlZCBIYXJkd2FyZSBLZXkgTWFuYWdlciAoSFdLTSkgaW4gUXVhbGNvbW0g
+SUNFDQo+ID4+ICsgICAgICB0byBzdXBwb3J0IHdyYXBwZWQga2V5cy4gSGF2aW5nIHRoaXMgZW50
+cnkgaGVscHMgc2NlbmFyaW9zIHdoZXJlDQo+ID4+ICsgICAgICB0aGUgSUNFIGhhcmR3YXJlIHN1
+cHBvcnRzIEhXS00sIGJ1dCB0aGUgVHJ1c3R6b25lIGZpcm13YXJlIGRvZXMNCj4gPj4gKyAgICAg
+IG5vdCBoYXZlIHRoZSBmdWxsIGNhcGFiaWxpdHkgdG8gdXNlIHRoaXMgSFdLTSBhbmQgc3VwcG9y
+dA0KPiA+PiArIHdyYXBwZWQNCj4gPg0KPiA+IEhvdyBkb2VzIGl0IGhlbHAgaW4gdGhpcyBzY2Vu
+YXJpbz8gWW91IGVuYWJsZSB0aGlzIHByb3BlcnR5LCBUcnVzdHpvbmUNCj4gPiBkb2VzIG5vdCBz
+dXBwb3J0IGl0LCBzbyB3aGF0IGhhcHBlbnM/DQo+ID4NCj4gPiBBbHNvLCB3aGljaCBTb0NzIGhh
+dmUgaW5jb21wbGV0ZSBUcnVzdHpvbmUgc3VwcG9ydD8gSSBleHBlY3QgdGhpcyB0bw0KPiA+IGJl
+IGEgcXVpcmssIHRodXMgbGltaXRlZCB0byBzcGVjaWZpYyBTb0NzIHdpdGggaXNzdWVzLg0KDQpB
+cG9sb2dpZXMgZm9yIG5vdCBhZGRyZXNzaW5nIHRoaXMgZWFybGllciwgd2UgY2FuIHBlcmhhcHMg
+Y29udGludWUgdGhpcyAgZGlzY3Vzc2lvbiANCmluIHRoZSBuZXcgcGF0Y2ggdGhyZWFkLiBJIHdp
+bGwgbGluayB0byB0aGlzIHRoZXJlLg0KDQpTTTg0NTAgYW5kIFNNODM1MCBRQ09NIElDRSBib3Ro
+IHN1cHBvcnQgSFdLTSBpbiB0aGVpciBJQ0UgaGFyZHdhcmUuDQpIb3dldmVyLCB3cmFwcGVkIGtl
+eXMgY2FuIG5vdCBiZSBlbmFibGVkIG9uIHRob3NlIHRhcmdldHMgZHVlIHRvIGNlcnRhaW4NCm1p
+c3NpbmcgdHJ1c3R6b25lIHN1cHBvcnQuIElmIHdlIHNvbGVseSByZWx5IG9uIGhhcmR3YXJlIHZl
+cnNpb24gdG8gZGVjaWRlDQppZiBJQ0UgaGFzIHRvIHVzZSB3cmFwcGVkIGtleXMgZm9yIGRhdGEg
+ZW5jcnlwdGlvbiwgdGhlbiBpdCBiZWNvbWVzIHVudGVzdGFibGUNCm9uIHRob3NlIGNoaXBzZXRz
+LiANCg0KU28sIHdlIHdhbnQgYW5vdGhlciB3YXkgdG8gZGlzdGluZ3Vpc2ggdGhpcyBzY2VuYXJp
+bywgYW5kIGhlbmNlIEkgY2hvc2UgYSBEVCB2ZW5kb3IgcHJvcGVydHkNCnRvIGV4cGxpY2l0bHkg
+bWVudGlvbiBpZiB3ZSBoYXZlIHRvIHVzZSB0aGUgc3VwcG9ydGVkIEhXS00uDQpJZiB0aGVyZSBp
+cyBhbm90aGVyIHdheSwgSSBhbSBvcGVuIHRvIGV4cGxvcmluZyB0aGF0IGFzIHdlbGwuDQoNCj4g
+DQo+IENhbiB3ZSBzaW1wbHkgZXZhbHVhdGUgdGhlIHJldHVybiB2YWx1ZSBvZiB0aGUgc2VjdXJl
+IGNhbGxzPw0KPiANCg0KVGhpcyBtaWdodCBub3Qgd29yayBhcyBVRlMgY3J5cHRvIG5lZWRzIHRo
+aXMgaW5mb3JtYXRpb24gbXVjaCBlYXJsaWVyLCBhbmQgYmFzZWQNCm9uIHRoYXQgLCBpdCB3b3Vs
+ZCBuZWVkIHRvIHJlZ2lzdGVyIHdpdGggdGhlIGtleXNsb3QgbWFuYWdlciAoYW5kIGJsb2NrIGNy
+eXB0byksIA0Kb24gd2hldGhlciB3cmFwcGVkIGtleXMgYXJlIHN1cHBvcnRlZC4NCmh0dHBzOi8v
+bG9yZS5rZXJuZWwub3JnL2FsbC8yMDIzMTEwNDIxMTI1OS4xNzQ0OC0yLWViaWdnZXJzQGtlcm5l
+bC5vcmcvDQogDQo+IEtvbnJhZA0K
