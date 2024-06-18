@@ -1,317 +1,112 @@
-Received: from mail-yb1-f181.google.com (mail-yb1-f181.google.com [209.85.219.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E64111E877
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 22:16:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14F4B14D44D;
+	Tue, 18 Jun 2024 23:11:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718749012; cv=none; b=W43GyhhR9H18xuyaFXWdP/NNh7KI74NpZCuhg1dWv7saoYfTUD3dYHoOeU0qtW+zqSthWRP/RBgB9oTQucSqqT6GciVvR5OhzEWdIK4ftFkbP60TZ1owBwKCWIr1iJAu+wV4M5b4PcLIxZWtknrASHPZllfZZmaYwDDrvP/RYNU=
+	t=1718752304; cv=none; b=VsfVWA7fFeILJUa23b4UJXM4k4amwYxc4R9gCCyFXwzj1QV5DVIQiLCfW2t/ByWf7tGr58JZ/GxSynWtgc+/QgMp05JgL5FDzHKgkfwlZF1wpW5VhTswJqHlTL4Ad7HUM2MBX0hNDdm4s8DWnfZ/1o/ken8sWBz9ZNkImyzeoD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718749012; c=relaxed/simple;
-	bh=B2nEN6xCzHzuw/h5tlG3vIg6ooWlpjdVVu2qTX9HvTs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=d7ocSYrTML2HHkkE25JQ5nVgGndCB+Hnw0x0N3FkYlPVZ8esZQiusD2u8YeB+BJUdyIvXyH916ucjn1SVBZKtu9BICImU3ugd008MOgC/uYd5XE08eR+7jG5VDvCzDs8HB+eYG2ve8NX4eFp0Lw9H/wpQue9XPiJ90YnaItZh64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xLRZGYc1; arc=none smtp.client-ip=209.85.219.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1718752304; c=relaxed/simple;
+	bh=Q2Hbs/k0g975Ne1cPa3si3d9lZ42BlIgAMnhy8zapvU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Kt/SWIgey7uBBeyf8WuTb4tXKWGz8j7z1wNsPIkltWhBLga2RGlDl6n3hwQANQWbxoimLPu2bhZ+juonBGyf6muCbKs3kG6c0qLuSDv1jDNlpKI6Lp1TOZAN0a9jin0eihxBPrP6MaTbnbeUnAkZWA2wklSUAQcIWikn+KIgRF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tsk+HNck; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xLRZGYc1"
-Received: by mail-yb1-f181.google.com with SMTP id 3f1490d57ef6-dfb05bcc50dso5713161276.0
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 15:16:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1718749010; x=1719353810; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=tjyjO9ibWwmpUMBeTig0DOR47Ix9ZSlNLMNYQGCsgYY=;
-        b=xLRZGYc1yBkVRFk3FxR44LhNkCHfzT/JxA7dlQGymXqVNied4BYWTCtTZvP6ZR2wW+
-         vKlGBLRpbq7hkhIkHpEl8STBVqfEieksEWDCtiEo8Vi9m4cafigi5tBdt8qq1hNjCnzU
-         CVLv8qO2WF+iDPch1TeN4+lIboBe/55WgkpaYNk7LyAGBKseG3zvpu+PTiG3JBgDAX7N
-         oVpaNs/VdQ1SENr7uIf/Yryrta2f2JCQOAbwnP10wk6sZPXSACwsxStV7Vq8igEYYzHy
-         cjbb3xDSN3jqX57kCid30kQcCppK5OGEo1LyPmhHY4tKe0o3DSxP23PJZ3c8G5x9G6m6
-         AVNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718749010; x=1719353810;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=tjyjO9ibWwmpUMBeTig0DOR47Ix9ZSlNLMNYQGCsgYY=;
-        b=AzgAiNWodj1E8BnwXmbKGlnPtBFPporHV8TWRRc8S72KjaL+voT5cNvSxiqYRn6Gns
-         zBDeujwsKxDRTPhCEIvM3Tpw406wpmyiJdU7ESwzbz72ItLCZWdcfGloCcHI2OfcajHO
-         ekRPwuJj2VNeiq9ZxPEqjmZlOEeL62rfLLK5YRbxSnJI6WNIQOQGawVLi5RAT7qSpnay
-         V9Wj5InMmvhpJs/7Zd/QA8h6Yfn+sR2pZXF80LzKtr7L4EORS6DMbjAvvXANjADoJNz1
-         sTMOzeGToznNs8nASr/dcBcAuSxOxETIPA+BlTxwLRdJGwQunSs95oF4jCejRbXWxKmq
-         6NIg==
-X-Forwarded-Encrypted: i=1; AJvYcCVlFVr+B8U+UvaRZm04AboUeHZZnaZYs9RkAZVGu+UunzBujVds9uj7wnRZLI+WWqQb4cb3xtU28YCTSHLKcflESB23qKHuLY+6oA==
-X-Gm-Message-State: AOJu0Ywf70wa0IkgfdVeuz7lO83Ksk7pCD9S6gMAWAkiobs2mqUgeF1I
-	Fesgsx4WW8QNNAxd8bDv5x14an1qKsPVQFpx8ge35XNNa48IS5g2kpEZJWMTY4zqAlkxAPNYkB6
-	rV9y0ehFDsFctTfo7Dcyzrp0ERNqZr5FTDsof5w==
-X-Google-Smtp-Source: AGHT+IH5TYmerYRrw/tHz5G2/ja74cvoBF4cQp6mqZFDkHBoFu42NpbCHgLQonpPakj+oxEeWCYQLF3ekzZnxyR0BK4=
-X-Received: by 2002:a5b:c48:0:b0:dd1:491e:bf0 with SMTP id 3f1490d57ef6-e02be22cff2mr1173003276.60.1718749009790;
- Tue, 18 Jun 2024 15:16:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tsk+HNck"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1342C32786;
+	Tue, 18 Jun 2024 23:11:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718752303;
+	bh=Q2Hbs/k0g975Ne1cPa3si3d9lZ42BlIgAMnhy8zapvU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=tsk+HNckcWa25izyTgU+XIedwyOiApTAO9DD1dEmFD0YNj9Kf45cXyfQgj2qutELw
+	 gCb5bMfcFmDTIGnoc72UrMxXin0h0wNFKPPTk/NrC/vGQFJkPKn+bFK4400GeE3gO8
+	 46Gw0gOMm/xe7CYudVDxF5N1De6zSfky4C1XJ0OpAnD8d7kiB8+NOKyKJllMDJEq/Y
+	 Gmjt5sKLcArObYIW9LdDrXNPH1VQ42femmjblaLnQK6835vzu+BHocZbVT1rS66iow
+	 fXmSXTtJ/fN5u3vHFSzciBhRQXz2Tcub+5Eko5j6yDY0fEFUQUe1LONGG/3iH+CnJo
+	 0Ci1teYgFErgQ==
+Message-ID: <0c5e14eb-5560-48cb-9086-6ad9c3970427@kernel.org>
+Date: Wed, 19 Jun 2024 08:11:40 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240617005825.1443206-1-quic_gaurkash@quicinc.com>
- <20240617005825.1443206-5-quic_gaurkash@quicinc.com> <3eehkn3cdhhjfqtzpahxhjxtu5uqwhntpgu22k3hknctrop3g5@f7dhwvdvhr3k>
- <96e2ce4b154a4f918be0bc2a45011e6d@quicinc.com>
-In-Reply-To: <96e2ce4b154a4f918be0bc2a45011e6d@quicinc.com>
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date: Wed, 19 Jun 2024 01:16:38 +0300
-Message-ID: <CAA8EJppGpv7N_JQQNJZrbngBBdEKZfuqutR9MPnS1R_WqYNTQw@mail.gmail.com>
-Subject: Re: [PATCH v5 04/15] soc: qcom: ice: add hwkm support in ice
-To: "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>
-Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, 
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "andersson@kernel.org" <andersson@kernel.org>, 
-	"ebiggers@google.com" <ebiggers@google.com>, 
-	"neil.armstrong@linaro.org" <neil.armstrong@linaro.org>, 
-	"srinivas.kandagatla" <srinivas.kandagatla@linaro.org>, 
-	"krzysztof.kozlowski+dt@linaro.org" <krzysztof.kozlowski+dt@linaro.org>, 
-	"conor+dt@kernel.org" <conor+dt@kernel.org>, "robh+dt@kernel.org" <robh+dt@kernel.org>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, kernel <kernel@quicinc.com>, 
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, 
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
-	"Om Prakash Singh (QUIC)" <quic_omprsing@quicinc.com>, 
-	"Bao D. Nguyen (QUIC)" <quic_nguyenb@quicinc.com>, 
-	"bartosz.golaszewski" <bartosz.golaszewski@linaro.org>, 
-	"konrad.dybcio@linaro.org" <konrad.dybcio@linaro.org>, 
-	"ulf.hansson@linaro.org" <ulf.hansson@linaro.org>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, 
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>, "mani@kernel.org" <mani@kernel.org>, 
-	"davem@davemloft.net" <davem@davemloft.net>, 
-	"herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, Prasad Sodagudi <psodagud@quicinc.com>, 
-	Sonal Gupta <sonalg@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [bug report] scsi: SATA devices missing after FLR is triggered
+ during HBA suspended
+To: Yihang Li <liyihang9@huawei.com>
+Cc: cassel@kernel.org, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, john.g.garry@oracle.com, yanaijie@huawei.com,
+ linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linuxarm@huawei.com, chenxiang66@hisilicon.com, prime.zeng@huawei.com
+References: <20240618132900.2731301-1-liyihang9@huawei.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20240618132900.2731301-1-liyihang9@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, 19 Jun 2024 at 01:07, Gaurav Kashyap (QUIC)
-<quic_gaurkash@quicinc.com> wrote:
->
-> Hello Dmitry,
->
-> On 06/17/2024 12:55 AM PDT, Dmitry Baryshkov wrote:
-> > On Sun, Jun 16, 2024 at 05:50:59PM GMT, Gaurav Kashyap wrote:
-> > > Qualcomm's ICE (Inline Crypto Engine) contains a proprietary key
-> > > management hardware called Hardware Key Manager (HWKM).
-> > > This patch integrates HWKM support in ICE when it is available. HWKM
-> > > primarily provides hardware wrapped key support where the ICE
-> > > (storage) keys are not available in software and protected in
-> > > hardware.
-> > >
-> > > When HWKM software support is not fully available (from Trustzone),
-> > > there can be a scenario where the ICE hardware supports HWKM, but it
-> > > cannot be used for wrapped keys. In this case, standard keys have to
-> > > be used without using HWKM. Hence, providing a toggle controlled by a
-> > > devicetree entry to use HWKM or not.
-> > >
-> > > Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
-> > > Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> > > ---
-> > >  drivers/soc/qcom/ice.c | 153
-> > +++++++++++++++++++++++++++++++++++++++--
-> > >  include/soc/qcom/ice.h |   1 +
-> > >  2 files changed, 150 insertions(+), 4 deletions(-)
-> > >
-> > > diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c index
-> > > 6f941d32fffb..d5e74cf2946b 100644
-> > > --- a/drivers/soc/qcom/ice.c
-> > > +++ b/drivers/soc/qcom/ice.c
-> > > @@ -26,6 +26,40 @@
-> > >  #define QCOM_ICE_REG_FUSE_SETTING            0x0010
-> > >  #define QCOM_ICE_REG_BIST_STATUS             0x0070
-> > >  #define QCOM_ICE_REG_ADVANCED_CONTROL                0x1000
-> > > +#define QCOM_ICE_REG_CONTROL                 0x0
-> > > +/* QCOM ICE HWKM registers */
-> > > +#define QCOM_ICE_REG_HWKM_TZ_KM_CTL                  0x1000
-> > > +#define QCOM_ICE_REG_HWKM_TZ_KM_STATUS                       0x1004
-> > > +#define QCOM_ICE_REG_HWKM_BANK0_BANKN_IRQ_STATUS     0x2008
-> > > +#define QCOM_ICE_REG_HWKM_BANK0_BBAC_0                       0x5000
-> > > +#define QCOM_ICE_REG_HWKM_BANK0_BBAC_1                       0x5004
-> > > +#define QCOM_ICE_REG_HWKM_BANK0_BBAC_2                       0x5008
-> > > +#define QCOM_ICE_REG_HWKM_BANK0_BBAC_3                       0x500C
-> > > +#define QCOM_ICE_REG_HWKM_BANK0_BBAC_4                       0x5010
-> > > +
-> > > +/* QCOM ICE HWKM reg vals */
-> > > +#define QCOM_ICE_HWKM_BIST_DONE_V1           BIT(16)
-> > > +#define QCOM_ICE_HWKM_BIST_DONE_V2           BIT(9)
-> > > +#define QCOM_ICE_HWKM_BIST_DONE(ver)
-> > QCOM_ICE_HWKM_BIST_DONE_V##ver
-> > > +
-> > > +#define QCOM_ICE_HWKM_CRYPTO_BIST_DONE_V1            BIT(14)
-> > > +#define QCOM_ICE_HWKM_CRYPTO_BIST_DONE_V2            BIT(7)
-> > > +#define QCOM_ICE_HWKM_CRYPTO_BIST_DONE(v)
-> > QCOM_ICE_HWKM_CRYPTO_BIST_DONE_V##v
-> > > +
-> > > +#define QCOM_ICE_HWKM_BOOT_CMD_LIST1_DONE            BIT(2)
-> > > +#define QCOM_ICE_HWKM_BOOT_CMD_LIST0_DONE            BIT(1)
-> > > +#define QCOM_ICE_HWKM_KT_CLEAR_DONE                  BIT(0)
-> > > +
-> > > +#define QCOM_ICE_HWKM_BIST_VAL(v)
-> > (QCOM_ICE_HWKM_BIST_DONE(v) |           \
-> > > +                                     QCOM_ICE_HWKM_CRYPTO_BIST_DONE(v) |     \
-> > > +                                     QCOM_ICE_HWKM_BOOT_CMD_LIST1_DONE |     \
-> > > +                                     QCOM_ICE_HWKM_BOOT_CMD_LIST0_DONE |     \
-> > > +                                     QCOM_ICE_HWKM_KT_CLEAR_DONE)
-> > > +
-> > > +#define QCOM_ICE_HWKM_V1_STANDARD_MODE_VAL   (BIT(0) | BIT(1)
-> > | BIT(2))
-> > > +#define QCOM_ICE_HWKM_V2_STANDARD_MODE_MASK
-> > GENMASK(31, 1) #define
-> > > +QCOM_ICE_HWKM_DISABLE_CRC_CHECKS_VAL (BIT(1) | BIT(2))
-> > > +#define QCOM_ICE_HWKM_RSP_FIFO_CLEAR_VAL     BIT(3)
-> > >
-> > >  /* BIST ("built-in self-test") status flags */
-> > >  #define QCOM_ICE_BIST_STATUS_MASK            GENMASK(31, 28)
-> > > @@ -34,6 +68,9 @@
-> > >  #define QCOM_ICE_FORCE_HW_KEY0_SETTING_MASK  0x2  #define
-> > > QCOM_ICE_FORCE_HW_KEY1_SETTING_MASK  0x4
-> > >
-> > > +#define QCOM_ICE_HWKM_REG_OFFSET     0x8000
-> > > +#define HWKM_OFFSET(reg)             ((reg) +
-> > QCOM_ICE_HWKM_REG_OFFSET)
-> > > +
-> > >  #define qcom_ice_writel(engine, val, reg)    \
-> > >       writel((val), (engine)->base + (reg))
-> > >
-> > > @@ -46,6 +83,9 @@ struct qcom_ice {
-> > >       struct device_link *link;
-> > >
-> > >       struct clk *core_clk;
-> > > +     u8 hwkm_version;
-> > > +     bool use_hwkm;
-> > > +     bool hwkm_init_complete;
-> > >  };
-> > >
-> > >  static bool qcom_ice_check_supported(struct qcom_ice *ice) @@ -63,8
-> > > +103,21 @@ static bool qcom_ice_check_supported(struct qcom_ice *ice)
-> > >               return false;
-> > >       }
-> > >
-> > > -     dev_info(dev, "Found QC Inline Crypto Engine (ICE) v%d.%d.%d\n",
-> > > -              major, minor, step);
-> > > +     if (major >= 4 || (major == 3 && minor == 2 && step >= 1))
-> > > +             ice->hwkm_version = 2;
-> > > +     else if (major == 3 && minor == 2)
-> > > +             ice->hwkm_version = 1;
-> > > +     else
-> > > +             ice->hwkm_version = 0;
-> > > +
-> > > +     if (ice->hwkm_version == 0)
-> > > +             ice->use_hwkm = false;
-> > > +
-> > > +     dev_info(dev, "Found QC Inline Crypto Engine (ICE) v%d.%d.%d,
-> > HWKM v%d\n",
-> > > +              major, minor, step, ice->hwkm_version);
-> > > +
-> > > +     if (!ice->use_hwkm)
-> > > +             dev_info(dev, "QC ICE HWKM (Hardware Key Manager) not
-> > > + used/supported");
-> > >
-> > >       /* If fuses are blown, ICE might not work in the standard way. */
-> > >       regval = qcom_ice_readl(ice, QCOM_ICE_REG_FUSE_SETTING); @@
-> > > -113,27 +166,106 @@ static void qcom_ice_optimization_enable(struct
-> > qcom_ice *ice)
-> > >   * fails, so we needn't do it in software too, and (c) properly testing
-> > >   * storage encryption requires testing the full storage stack anyway,
-> > >   * and not relying on hardware-level self-tests.
-> > > + *
-> > > + * However, we still care about if HWKM BIST failed (when supported)
-> > > + as
-> > > + * important functionality would fail later, so disable hwkm on failure.
-> > >   */
-> > >  static int qcom_ice_wait_bist_status(struct qcom_ice *ice)  {
-> > >       u32 regval;
-> > > +     u32 bist_done_val;
-> > >       int err;
-> > >
-> > >       err = readl_poll_timeout(ice->base + QCOM_ICE_REG_BIST_STATUS,
-> > >                                regval, !(regval & QCOM_ICE_BIST_STATUS_MASK),
-> > >                                50, 5000);
-> > > -     if (err)
-> > > +     if (err) {
-> > >               dev_err(ice->dev, "Timed out waiting for ICE self-test
-> > > to complete\n");
-> > > +             return err;
-> > > +     }
-> > >
-> > > +     if (ice->use_hwkm) {
-> > > +             bist_done_val = ice->hwkm_version == 1 ?
-> > > +                             QCOM_ICE_HWKM_BIST_VAL(1) :
-> > > +                             QCOM_ICE_HWKM_BIST_VAL(2);
-> > > +             if (qcom_ice_readl(ice,
-> > > +
-> > HWKM_OFFSET(QCOM_ICE_REG_HWKM_TZ_KM_STATUS)) !=
-> > > +                                bist_done_val) {
-> > > +                     dev_err(ice->dev, "HWKM BIST error\n");
-> > > +                     ice->use_hwkm = false;
-> > > +                     err = -ENODEV;
-> > > +             }
-> > > +     }
-> > >       return err;
-> > >  }
-> > >
-> > > +static void qcom_ice_enable_standard_mode(struct qcom_ice *ice) {
-> > > +     u32 val = 0;
-> > > +
-> > > +     /*
-> > > +      * When ICE is in standard (hwkm) mode, it supports HW wrapped
-> > > +      * keys, and when it is in legacy mode, it only supports standard
-> > > +      * (non HW wrapped) keys.
-> >
-> > I can't say this is very logical.
-> >
-> > standard mode => HW wrapped keys
-> > legacy mode => standard keys
-> >
-> > Consider changing the terms.
-> >
->
-> Ack, will make this clearer
->
-> > > +      *
-> > > +      * Put ICE in standard mode, ICE defaults to legacy mode.
-> > > +      * Legacy mode - ICE HWKM slave not supported.
-> > > +      * Standard mode - ICE HWKM slave supported.
-> >
-> > s/slave/some other term/
-> >
-> Ack - will address this.
->
-> > Is it possible to use both kind of keys when working on standard mode?
-> > If not, it should be the user who selects what type of keys to be used.
-> > Enforcing this via DT is not a way to go.
-> >
->
-> Unfortunately, that support is not there yet. When you say user, do you mean to have it as a filesystem
-> mount option?
+On 6/18/24 22:29, Yihang Li wrote:
+> Hi Damien,
+> 
+> I found out that two issues is caused by commit 0c76106cb975 ("scsi: sd:
+> Fix TCG OPAL unlock on system resume") and 626b13f015e0 ("scsi: Do not
+> rescan devices with a suspended queue").
+> 
+> The two issues as follows for the situation that there are ATA disks
+> connected with SAS controller:
 
-During cryptsetup time. When running e.g. cryptsetup I, as a user,
-would like to be able to use either a hardware-wrapped key or a
-standard key.
+Which controller ? What is the driver ?
 
-> The way the UFS/EMMC crypto layer is designed currently is that, this information
-> is needed when the modules are loaded.
->
-> https://lore.kernel.org/all/20231104211259.17448-2-ebiggers@kernel.org/#Z31drivers:ufs:core:ufshcd-crypto.c
+> (1) FLR is triggered after all disks and controller are suspended. As a
+> result, the number of disks is abnormal.
 
-I see that the driver lists capabilities here. E.g. that it supports
-HW-wrapped keys. But the line doesn't specify that standard keys are
-not supported.
+I am assuming here that FLR means PCI "Function Level Reset" ?
+FLR and disk/controller suspend execution timing are unrelated. FLR can be
+triggered at any time through sysfs. So please give details here. Why is FLR
+done when the system is being suspended ?
 
-Also, I'd have expected that hw-wrapped keys are handled using trusted
-keys mechanism (see security/keys/trusted-keys/). Could you please
-point out why that's not the case?
+> (2) After all disks and controller are suspended, and resuming all disks
+> again, the driver reference counting is not 0 (The value of "Used" in the
+> lsmod command output is not 0).
 
-> I am thinking of a way now to do this with DT, but without having a new vendor property.
-> Is it acceptable to use the addressable range as the deciding factor? Say use legacy mode of ICE
-> when the addressable size is 0x8000 and use HWKM mode of ICE when the addressable size is
-> 0x10000.
+Resuming all disks again ? So you mean system resume ?
+Are we talking about system suspend to ram ? Hybernation ? or something else ?
+(e.g. a controller reset through PCI FLR ?)
 
-Definitely, this is a NAK. It's a very unobvious hack. You have been
-asked to use compatible strings to detect whether HW keys are
-supported or not.
+Please clarify exactly what your adapter is and the full procedure you do to
+trigger the issue so that we can try to recreate it.
+
+> For the issue 1, After all disks and controller are suspended, FLR command
+> will resuming the controller and all sas ports. libsas layer will call
+> ata_sas_port_resume() to resume ata port and schedule EH to recover it.
+> In libata standard error handler ata_std_error_handler(), it will call ata
+> reset function, revalidate ATA devices and issue ATA device command
+> ATA_CMD_READ_NATIVE_MAX_EXT to read native max address. This command will
+> failed due to the controller enter suspend state again and libata disable
+> the device finally. The controller enter suspend state again because FLR
+> command completes and the runtime PM usage counter is 0.
+> 
+> In commit 0c76106cb975 ("scsi: sd: Fix TCG OPAL unlock on system resume")
+> and 626b13f015e0 ("scsi: Do not rescan devices with a suspended queue"),
+> use blk_queue_pm_only() to check the device request queue state, if the
+> device request queue is not running, the device will not be rescanned.
+> Therefore, the runtime PM usage counter of the controller will not
+> increase so that the controller enters the suspended state again.
+> 
+> For the issue 2, the cause is unknown.
+> 
+> How to solve these two issues?
+> 
+> regards,
+> Yihang
+> 
 
 -- 
-With best wishes
-Dmitry
+Damien Le Moal
+Western Digital Research
+
