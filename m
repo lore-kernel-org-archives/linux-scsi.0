@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8AF615A84E;
-	Tue, 18 Jun 2024 12:43:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C52115AAD9;
+	Tue, 18 Jun 2024 12:43:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718714582; cv=none; b=sJhu5+2c4s93gVfGxdCWrUqpbA4t8BuR/7Caypr0wi0CWQZ+h8FFctvEsTjVLx7tAM3u3JTnqT/7/V5ZTTVkz3Dldp3YO3Rbf/e9ACHNlBk40XD8RkfD8sRdENoXYtM2kVeZaIFRbQxkeAB/XfjhPuv2Do2lHksuPWCnuT6Fe4k=
+	t=1718714601; cv=none; b=s8LfLqRhO/Y0JSmG9jJzGYvJuIOjXfw3GA5kz5PSkwo0OEZPjtIUYdjMG9esaXAo+fids1a2+gd/EXvuG2z+IhQQYSV7muaxqPBtko0a3HQzQE0i6UlAQg+BpFalnsOwOa35NuxmiGsd0/NAvfjOugqQ05POnVPvVf6eDb7QRqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718714582; c=relaxed/simple;
-	bh=KPgDhhvy/qWYoIhkC4CmnQ47Y6o7/P+1R/JjJF63TEg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t/hqjVILahaEPtpVkC8PjOS1yZWXhsE2qg7U9ZG2mcbLv+yrZeyPoCeYTt0tKgmaAig1hPsIvYUbP3a7o2Pnf6ijkPT+qR77KKxjb77QNNAkoyPet1gn1SJ74LddMps+HgsOI8MSACD7L1SGF+u2+I4v17gJZB+ddiNWbgVN5G4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TWVPhsk7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718714601; c=relaxed/simple;
+	bh=mrr1/gnGhxIFsA7Wmc+9BmFIO5sb64qepIbcGbCrJak=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=i7ESgVbxQjMJC9Y/GAFDGm8We/YhMsRHk7YMupJHenDfXlWhhVlbHsSb7M7nsjT/1aG5m6KC7puqp1SWWHHQwkrSfDdYnDq4vwG7rgnn2rR3XypkrhsTCJszEu0l0beinFdkWb/2ToYLPocmjFk1WbzaV5yM1s8akINu8e1AZg8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JVRxQWjT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TWVPhsk7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D539C4AF52;
-	Tue, 18 Jun 2024 12:43:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JVRxQWjT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B4A1C32786;
+	Tue, 18 Jun 2024 12:43:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718714582;
-	bh=KPgDhhvy/qWYoIhkC4CmnQ47Y6o7/P+1R/JjJF63TEg=;
+	s=k20201202; t=1718714601;
+	bh=mrr1/gnGhxIFsA7Wmc+9BmFIO5sb64qepIbcGbCrJak=;
 	h=From:To:Cc:Subject:Date:From;
-	b=TWVPhsk7cDeKEwynjbFZwbyHXZDW2wF/fPfdctdWv+QWY/+p5A7M+Aa88QFsr2cro
-	 xuT9KMNP3RgbvrriZVL4hbixLn6FV+L55tdZIg3DyIa060Q1DOeN2xCCJKOShitrTY
-	 IclPKfORvvqWbSIXiH1aktnHWJ7PdvkGZYt69la2N+m2zNaxkUAvutMrpI8oN4Kgdm
-	 KmyvLApVB97cPf+CohrK7n7Lae2r4BvZU1GcqBoGum8OzdtXA15B2ySxVR+vtU/IWu
-	 /8r8C4d4dUFzcXVardrHfJOAvPexjOmYRMINZV7Rh6EQFvNltQ8VyKvmizCZWzU6fA
-	 wRaXaOYKdmZhQ==
+	b=JVRxQWjTPl3UBl27L1b40yuaIsgdB1MfVq1zGuqxMXJty2iBuLnpTW7zGyA3I+6Vy
+	 bzFH7Hk0mECslNjj0OLmx3Oc5PlK4FzY6WFzuc1k33AhgzjCVGJOw2rWwCgV8Pxpsb
+	 3c9zAnRbGLIcuSL58VXIZWJXAHG426j9x8oSKr6GzxS/fRHJJNnWVigjIQMt5DTPsW
+	 jx9e5pzf3emkQDE+/8EgJa2sq8gDkd04GvntXrYYXVNkB13saUazEV0Rj9sU9lAxv3
+	 RSmtiIUto0AdQnweF2UAJTmVbnqPWdWnJepwFvXlXhSdA37wwrt4Xz7Y53Tu+/ORjg
+	 xS3oRF58btJHA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -36,9 +36,9 @@ Cc: Saurav Kashyap <skashyap@marvell.com>,
 	GR-QLogic-Storage-Upstream@marvell.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 1/9] scsi: qedf: Set qed_slowpath_params to zero before use
-Date: Tue, 18 Jun 2024 08:42:49 -0400
-Message-ID: <20240618124300.3304600-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 1/9] scsi: qedf: Set qed_slowpath_params to zero before use
+Date: Tue, 18 Jun 2024 08:43:07 -0400
+Message-ID: <20240618124318.3304798-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -48,7 +48,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.278
+X-stable-base: Linux 4.19.316
 Content-Transfer-Encoding: 8bit
 
 From: Saurav Kashyap <skashyap@marvell.com>
@@ -67,10 +67,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 858058f228191..e0601b5520b78 100644
+index 01e27285b26ba..33fb0e1926831 100644
 --- a/drivers/scsi/qedf/qedf_main.c
 +++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3299,6 +3299,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+@@ -3101,6 +3101,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
  	}
  
  	/* Start the Slowpath-process */
