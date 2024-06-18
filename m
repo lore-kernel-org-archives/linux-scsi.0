@@ -1,47 +1,52 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF91C2139A4;
-	Tue, 18 Jun 2024 12:40:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3391155C92;
+	Tue, 18 Jun 2024 12:40:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718714421; cv=none; b=Ya+sDAKuzFwSPEf3jF9hYO+oxgU0EzspA5gtXYgFxClV7YUPoZJ3o4J1VcP1yLx4BsQUwy92FjjmysrYYpedGp8NonuAPGhj4JpRHSG30g4Ug8qP99MsoAtD7CQrsFARojWcCmSNDIYwZNZFL1D8cQnlmKK7FEfmR/iK9cjzU1w=
+	t=1718714423; cv=none; b=pH/wDxmnGjxEsyXK7iXWFqwzVs6EpyfpKKn0evOd0X78/0GjaV2CefTMoxA1acZ4wSu4jArSuXO7jny8VZ+vmZKPk3g9N5BE3b170FdO0V6GsLHHBUekkCl++lRv4LsMHJBCETDiNgWtsV5EWWW20cWVsZijTiB7KdlJcs7oMRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718714421; c=relaxed/simple;
-	bh=MUpmA9MZ4i76S7YO4RwWYwYhCpJTtuZDBDgbMrW0AAk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Tr1J7od/Z6dcquej8RovxYcVnJ+a4ka0cWxFgfEXn5XYkdipJKsyoVDYCS6Y1Xbxcskgq2lDolvZ4APWsJ/drju68+W7FJ/OP7pOFZF9pUjcG7Fym9H0FAZMWXAdNKoxdi6omfl5lc/GKDmeYWe6r73YF1VsQKBaBXW99zJi8EQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f6nwjaSa; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718714423; c=relaxed/simple;
+	bh=mZS4iEgWmq4UTYPGUb12ZROIU354esBXCi9U25ad9Kw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=P0pYQXREhaUNrYLQnZAENh/r/KMuQPpCL8EmLgahy1iegcyxL7+e8mNLhdNg1zbdqStE3XM4kDwxsjJ9VzsaKHzF7tADLPV1j2qnEJn6wtYaFVgGqM7Do9aIMqQllu6V0BalZNikrj2V/6cl/razvpsxNbGvQSgz3gidBhEgikA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mm9Z1EpI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f6nwjaSa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BDEBC3277B;
-	Tue, 18 Jun 2024 12:40:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mm9Z1EpI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67062C32786;
+	Tue, 18 Jun 2024 12:40:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718714420;
-	bh=MUpmA9MZ4i76S7YO4RwWYwYhCpJTtuZDBDgbMrW0AAk=;
-	h=From:To:Cc:Subject:Date:From;
-	b=f6nwjaSa+7IYC+iDRxbJkfme21lTe/BE++FRgwgcJKEWBLy3tVv+L9AA1OeyjlEMM
-	 xn0W8dSJ+zHtevzCSwqkv/51sE3027GBVGaKYJKBgze6dI+JKrw2xXvcHo71XOvrta
-	 ek/X4jXjl4C0TNBf4T9x9JKe6yb6Eg9kDYEhcOORIUBW8jXNO+pQDl9Z3JVamEQmzP
-	 4CZshPJOx4/Iu721cngJGx6Nd5cL8ddgvZ4VXgmKg4bt7xAQrawPWzUoBnIsbnQERC
-	 UuhBI2WTdroag9ZZluhTRZerxZl/slgSmMkrQoD83vMQyuBMXooFimZ0m3V116yRjv
-	 Ea9KHZEBIAdCA==
+	s=k20201202; t=1718714422;
+	bh=mZS4iEgWmq4UTYPGUb12ZROIU354esBXCi9U25ad9Kw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Mm9Z1EpI4NsGKpuELLabO7UahbqC30TCT4Q1euAcBlqTdQl5K5JLC7oe6qe7SZSml
+	 3PgCJYfcF6P4bUxP1NjqECtnDVljpj12162hCzx2xWvZWtDc+RW1srQV+3fsXdsuT5
+	 fB2viMDvi42Jk1KyVCGj5zUb2bzvenxSMDZ2pxMMM2zzI6MenmetoRJ8tRc+uMPi+1
+	 SqLSKVn9A+WxgUjJwacirDda8FBlJKT023BLoVb7trghdUwu0wZknNMSgvPmO9dNK6
+	 pOLwU1uRmofGWq82KMGmmRp+aBCxdpX7neTJj4VGMQbiI8siIL6mSQDc4/aCwTRPPG
+	 oUz0PlO+zTvNQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Martin Wilck <martin.wilck@suse.com>,
-	Rajashekhar M A <rajs@netapp.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Mike Christie <michael.christie@oracle.com>,
+Cc: Justin Stitt <justinstitt@google.com>,
+	linux-hardening@vger.kernel.org,
+	Kees Cook <keescook@chromium.org>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	phil@philpotter.co.uk,
+	corbet@lwn.net,
 	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 01/29] scsi: core: alua: I/O errors for ALUA state transitions
-Date: Tue, 18 Jun 2024 08:39:27 -0400
-Message-ID: <20240618124018.3303162-1-sashal@kernel.org>
+	nathan@kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	llvm@lists.linux.dev
+Subject: [PATCH AUTOSEL 6.1 02/29] scsi: sr: Fix unintentional arithmetic wraparound
+Date: Tue, 18 Jun 2024 08:39:28 -0400
+Message-ID: <20240618124018.3303162-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20240618124018.3303162-1-sashal@kernel.org>
+References: <20240618124018.3303162-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -53,108 +58,134 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.1.94
 Content-Transfer-Encoding: 8bit
 
-From: Martin Wilck <martin.wilck@suse.com>
+From: Justin Stitt <justinstitt@google.com>
 
-[ Upstream commit 10157b1fc1a762293381e9145041253420dfc6ad ]
+[ Upstream commit 9fad9d560af5c654bb38e0b07ee54a4e9acdc5cd ]
 
-When a host is configured with a few LUNs and I/O is running, injecting FC
-faults repeatedly leads to path recovery problems.  The LUNs have 4 paths
-each and 3 of them come back active after say an FC fault which makes 2 of
-the paths go down, instead of all 4. This happens after several iterations
-of continuous FC faults.
+Running syzkaller with the newly reintroduced signed integer overflow
+sanitizer produces this report:
 
-Reason here is that we're returning an I/O error whenever we're
-encountering sense code 06/04/0a (LOGICAL UNIT NOT ACCESSIBLE, ASYMMETRIC
-ACCESS STATE TRANSITION) instead of retrying.
+[   65.194362] ------------[ cut here ]------------
+[   65.197752] UBSAN: signed-integer-overflow in ../drivers/scsi/sr_ioctl.c:436:9
+[   65.203607] -2147483648 * 177 cannot be represented in type 'int'
+[   65.207911] CPU: 2 PID: 10416 Comm: syz-executor.1 Not tainted 6.8.0-rc2-00035-gb3ef86b5a957 #1
+[   65.213585] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[   65.219923] Call Trace:
+[   65.221556]  <TASK>
+[   65.223029]  dump_stack_lvl+0x93/0xd0
+[   65.225573]  handle_overflow+0x171/0x1b0
+[   65.228219]  sr_select_speed+0xeb/0xf0
+[   65.230786]  ? __pm_runtime_resume+0xe6/0x130
+[   65.233606]  sr_block_ioctl+0x15d/0x1d0
+...
 
-[mwilck: The original patch was developed by Rajashekhar M A and Hannes
-Reinecke. I moved the code to alua_check_sense() as suggested by Mike
-Christie [1]. Evan Milne had raised the question whether pg->state should
-be set to transitioning in the UA case [2]. I believe that doing this is
-correct. SCSI_ACCESS_STATE_TRANSITIONING by itself doesn't cause I/O
-errors. Our handler schedules an RTPG, which will only result in an I/O
-error condition if the transitioning timeout expires.]
+Historically, the signed integer overflow sanitizer did not work in the
+kernel due to its interaction with `-fwrapv` but this has since been
+changed [1] in the newest version of Clang. It was re-enabled in the kernel
+with Commit 557f8c582a9b ("ubsan: Reintroduce signed overflow sanitizer").
 
-[1] https://lore.kernel.org/all/0bc96e82-fdda-4187-148d-5b34f81d4942@oracle.com/
-[2] https://lore.kernel.org/all/CAGtn9r=kicnTDE2o7Gt5Y=yoidHYD7tG8XdMHEBJTBraVEoOCw@mail.gmail.com/
+Firstly, let's change the type of "speed" to unsigned long as
+sr_select_speed()'s only caller passes in an unsigned long anyways.
 
-Co-developed-by: Rajashekhar M A <rajs@netapp.com>
-Co-developed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Martin Wilck <martin.wilck@suse.com>
-Link: https://lore.kernel.org/r/20240514140344.19538-1-mwilck@suse.com
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+$ git grep '\.select_speed'
+|	drivers/scsi/sr.c:      .select_speed           = sr_select_speed,
+...
+|	static int cdrom_ioctl_select_speed(struct cdrom_device_info *cdi,
+|	                unsigned long arg)
+|	{
+|	        ...
+|	        return cdi->ops->select_speed(cdi, arg);
+|	}
+
+Next, let's add an extra check to make sure we don't exceed 0xffff/177
+(350) since 0xffff is the max speed. This has two benefits: 1) we deal
+with integer overflow before it happens and 2) we properly respect the
+max speed of 0xffff. There are some "magic" numbers here but I did not
+want to change more than what was necessary.
+
+Link: https://github.com/llvm/llvm-project/pull/82432 [1]
+Closes: https://github.com/KSPP/linux/issues/357
+Cc: linux-hardening@vger.kernel.org
+Signed-off-by: Justin Stitt <justinstitt@google.com>
+Link: https://lore.kernel.org/r/20240508-b4-b4-sio-sr_select_speed-v2-1-00b68f724290@google.com
+Reviewed-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 31 +++++++++++++++-------
- 1 file changed, 22 insertions(+), 9 deletions(-)
+ Documentation/cdrom/cdrom-standard.rst | 4 ++--
+ drivers/scsi/sr.h                      | 2 +-
+ drivers/scsi/sr_ioctl.c                | 5 ++++-
+ include/linux/cdrom.h                  | 2 +-
+ 4 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 0781f991e7845..f5fc8631883d5 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -406,28 +406,40 @@ static char print_alua_state(unsigned char state)
- 	}
+diff --git a/Documentation/cdrom/cdrom-standard.rst b/Documentation/cdrom/cdrom-standard.rst
+index 7964fe134277b..6c1303cff159e 100644
+--- a/Documentation/cdrom/cdrom-standard.rst
++++ b/Documentation/cdrom/cdrom-standard.rst
+@@ -217,7 +217,7 @@ current *struct* is::
+ 		int (*media_changed)(struct cdrom_device_info *, int);
+ 		int (*tray_move)(struct cdrom_device_info *, int);
+ 		int (*lock_door)(struct cdrom_device_info *, int);
+-		int (*select_speed)(struct cdrom_device_info *, int);
++		int (*select_speed)(struct cdrom_device_info *, unsigned long);
+ 		int (*get_last_session) (struct cdrom_device_info *,
+ 					 struct cdrom_multisession *);
+ 		int (*get_mcn)(struct cdrom_device_info *, struct cdrom_mcn *);
+@@ -396,7 +396,7 @@ action need be taken, and the return value should be 0.
+ 
+ ::
+ 
+-	int select_speed(struct cdrom_device_info *cdi, int speed)
++	int select_speed(struct cdrom_device_info *cdi, unsigned long speed)
+ 
+ Some CD-ROM drives are capable of changing their head-speed. There
+ are several reasons for changing the speed of a CD-ROM drive. Badly
+diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
+index 1175f2e213b56..dc899277b3a44 100644
+--- a/drivers/scsi/sr.h
++++ b/drivers/scsi/sr.h
+@@ -65,7 +65,7 @@ int sr_disk_status(struct cdrom_device_info *);
+ int sr_get_last_session(struct cdrom_device_info *, struct cdrom_multisession *);
+ int sr_get_mcn(struct cdrom_device_info *, struct cdrom_mcn *);
+ int sr_reset(struct cdrom_device_info *);
+-int sr_select_speed(struct cdrom_device_info *cdi, int speed);
++int sr_select_speed(struct cdrom_device_info *cdi, unsigned long speed);
+ int sr_audio_ioctl(struct cdrom_device_info *, unsigned int, void *);
+ 
+ int sr_is_xa(Scsi_CD *);
+diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+index fbdb5124d7f7d..7034b4126d421 100644
+--- a/drivers/scsi/sr_ioctl.c
++++ b/drivers/scsi/sr_ioctl.c
+@@ -422,11 +422,14 @@ int sr_reset(struct cdrom_device_info *cdi)
+ 	return 0;
  }
  
--static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
--					      struct scsi_sense_hdr *sense_hdr)
-+static void alua_handle_state_transition(struct scsi_device *sdev)
+-int sr_select_speed(struct cdrom_device_info *cdi, int speed)
++int sr_select_speed(struct cdrom_device_info *cdi, unsigned long speed)
  {
- 	struct alua_dh_data *h = sdev->handler_data;
- 	struct alua_port_group *pg;
+ 	Scsi_CD *cd = cdi->handle;
+ 	struct packet_command cgc;
  
-+	rcu_read_lock();
-+	pg = rcu_dereference(h->pg);
-+	if (pg)
-+		pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
-+	rcu_read_unlock();
-+	alua_check(sdev, false);
-+}
++	/* avoid exceeding the max speed or overflowing integer bounds */
++	speed = clamp(0, speed, 0xffff / 177);
 +
-+static enum scsi_disposition alua_check_sense(struct scsi_device *sdev,
-+					      struct scsi_sense_hdr *sense_hdr)
-+{
- 	switch (sense_hdr->sense_key) {
- 	case NOT_READY:
- 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
- 			/*
- 			 * LUN Not Accessible - ALUA state transition
- 			 */
--			rcu_read_lock();
--			pg = rcu_dereference(h->pg);
--			if (pg)
--				pg->state = SCSI_ACCESS_STATE_TRANSITIONING;
--			rcu_read_unlock();
--			alua_check(sdev, false);
-+			alua_handle_state_transition(sdev);
- 			return NEEDS_RETRY;
- 		}
- 		break;
- 	case UNIT_ATTENTION:
-+		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0a) {
-+			/*
-+			 * LUN Not Accessible - ALUA state transition
-+			 */
-+			alua_handle_state_transition(sdev);
-+			return NEEDS_RETRY;
-+		}
- 		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00) {
- 			/*
- 			 * Power On, Reset, or Bus Device Reset.
-@@ -494,7 +506,8 @@ static int alua_tur(struct scsi_device *sdev)
- 
- 	retval = scsi_test_unit_ready(sdev, ALUA_FAILOVER_TIMEOUT * HZ,
- 				      ALUA_FAILOVER_RETRIES, &sense_hdr);
--	if (sense_hdr.sense_key == NOT_READY &&
-+	if ((sense_hdr.sense_key == NOT_READY ||
-+	     sense_hdr.sense_key == UNIT_ATTENTION) &&
- 	    sense_hdr.asc == 0x04 && sense_hdr.ascq == 0x0a)
- 		return SCSI_DH_RETRY;
- 	else if (retval)
+ 	if (speed == 0)
+ 		speed = 0xffff;	/* set to max */
+ 	else
+diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
+index 67caa909e3e61..24fe410492006 100644
+--- a/include/linux/cdrom.h
++++ b/include/linux/cdrom.h
+@@ -76,7 +76,7 @@ struct cdrom_device_ops {
+ 				      unsigned int clearing, int slot);
+ 	int (*tray_move) (struct cdrom_device_info *, int);
+ 	int (*lock_door) (struct cdrom_device_info *, int);
+-	int (*select_speed) (struct cdrom_device_info *, int);
++	int (*select_speed) (struct cdrom_device_info *, unsigned long);
+ 	int (*get_last_session) (struct cdrom_device_info *,
+ 				 struct cdrom_multisession *);
+ 	int (*get_mcn) (struct cdrom_device_info *,
 -- 
 2.43.0
 
