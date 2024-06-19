@@ -1,198 +1,163 @@
-Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com [209.85.208.178])
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C67E174C14
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2024 07:12:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D8E66139
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2024 07:13:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718781149; cv=none; b=i1rGltawvINbJeWrdByDDSB3we41JttWenvUXSPMETET2wBJEb33kXjwo3su+tE2dRad/4xU2brazJaI8f9EXqlypf/y90fVl1W03w4yTQ+lUBbbHWVTTuMvpTxB4n8UMWNYzIKyAXB2gb3+b007F2GG0U7ACIcgXj/Imp/y0gw=
+	t=1718781219; cv=none; b=K/Ar+Y6Oa7k2+YPEckckdYO1IEw+l+8GbwMToz0yQPGKwtgUcAhXllPS5K98xJpah+9CmYDCJ3geJAQlDarEJwWgwURB0cC7IBbs6Ooi3NspDWaCmcAFDL8XfCUcmZ/s4PrRW2/MnUykRvflR031Zy2L7STX1crekA7p/7xu4BE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718781149; c=relaxed/simple;
-	bh=8W4LbrWm1kYw0GsZppHHivzVKYF4UoUJF3V4pnFaxRU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kB3whk3q3J9ppPO5trEoCTVq2Kag75nRP27ncU9i1VNs2yFSWlDryYQgZLTJ5f/6J5s6fWPZIkgEVo7ZPoxFNDyhNHw6o/gNiXepY0V22985PiFGWs5KVlPPo71mECZEwaXDcckFdO8+bYDn+oRFj9VhVWfwOaAqNpeqPrANQpQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=A2n5ZnzA; arc=none smtp.client-ip=209.85.208.178
+	s=arc-20240116; t=1718781219; c=relaxed/simple;
+	bh=wCaLzYiDRwC89FpYOaWIdMm1AlTkSdiVxGKuachdLH4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=M23Cg+zgGOYUYJ6MnAykFmk+KW5iX+iFZ++jR6+1sv4YIhHCuur80C4Kpn/AM0p+DCXnMatlb62Fc95EmVCXqJ6Tuce9quSsumVIDAMFyRpC2Z0PF5QeWKv0wZV9NKIgAMcf985+MZBxxc5OSZRmqvcGFqFffKcLGe5YWVduNXE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hztnmBwY; arc=none smtp.client-ip=209.85.214.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="A2n5ZnzA"
-Received: by mail-lj1-f178.google.com with SMTP id 38308e7fff4ca-2ebf961e504so67887011fa.2
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2024 00:12:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hztnmBwY"
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1f6fada63a6so50919715ad.3
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2024 00:13:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1718781145; x=1719385945; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=rNkt80zZ5bRZ67g3R3x+4enPR3S8kwJm33iEuDlFGnk=;
-        b=A2n5ZnzARZlvW3uQmbTxuwOUg9R0C0RirylD22Hs3E3xYZ4u3ikwbQFexZBwqfHpHH
-         X4QLBA4kDok5/hzmmA9joMgQMp1VMkF6QwHMIJtWdrjy38JQvFC+PDwdeUMV6mcCacKz
-         LEa156GkvRRtnUA+eVurd/wgiSY2M627TZinJxIovYj/d1rU67pkarHEC1nUJYQ8IndW
-         SuNmkaM/JX/1Or1FihQ5XQ+H+8Z8w3d4NFsnoHbkn3Uf4mzg9Q1zmIrP1jwI3+mJ1wPP
-         hbOdKgDzRH9KmNg7PBTs5MpL1HvAfoJFggZmaXMOAlm87FMIMqCJb5KbTT2qZGBuMamx
-         h3Jg==
+        d=linaro.org; s=google; t=1718781217; x=1719386017; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=QK7OBYtWo4eVoWKX5VN9To9vV086DlpOPkOB5TfhV0M=;
+        b=hztnmBwYhPym8G1g57I3P68rG6qw5lHMbh3NZKGSu4YzeamPU24g86TLjVZtf8JE/H
+         2Ftf0No8fTmbNmezAI1j9cQl6Kmat5ytbwmAlWrxEH9Dzr7cIqzdVwaNYN2jWk3a5IPd
+         aia74VMdUXesSb/in14aoHrwacOF/lXHzrOsVA9c0egNZB1nNsM1dvHb3xKlgjHaX0Ql
+         OhDr8O6b7t8X4CBrJ/lOjHuUI5Nxa6bkTI/aFQ6sPi7+Qbdfvt4SHnMpL+lFQrVZEt+e
+         7r6/JFdRApg10pi5POYTU33i4AKT0yDiRFn/pK/eV8oNTyxXFRQh7q+ru23k5R+JBZIk
+         nEcg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718781145; x=1719385945;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+        d=1e100.net; s=20230601; t=1718781217; x=1719386017;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rNkt80zZ5bRZ67g3R3x+4enPR3S8kwJm33iEuDlFGnk=;
-        b=CT3VgR+HhHzeMOUUiF2ftDj+o9o9ASbZW5FI6pupDP2wQw/WYsDFWH0Yt3IvVakv83
-         FrktOGTOVz9DO/NkE7fTgi0nrsB8e3I7jZTjyQnuvOXTo7tWL/kaIm5wFiP//Lks4qKL
-         8lj2WarJJ+Su/txeexh34pNV27rhoBk3VRQek0zzWeRcmjWLMUGbYl9wcqZuTWeE5Ugk
-         lUCm0AqTVIsMkY6N096iNhHaFQWj+xYNsZkpz0YWIHAwrtWp7htW+lZoQ0G9DaXVbL6Y
-         Uhihnvt+NTsN60kRJctUroHl7q8K4MJ/MrU+2GnY1W2qMa+JTSvDhW8TWoofjfEzmiKj
-         7OPQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUNcRldqp/ooka9n6RYamoLVbved/wtG6pWxGiG3rXlAFsXPQ54qCD8Vr7O3pEKv/S44bu6ujPsJ4SiLuPQGeD07oofWumv2MwHTQ==
-X-Gm-Message-State: AOJu0Yy3Wk1dORNYkXwBxYcmLlWKg7ZJG0pj51XezDXo/705EvqjV0ow
-	0DvFTjFwBI2piJWgo4yLIPrHBXlQAgKUW9iMs5ITWwkAlxTGpvd+OSa1pQEVDwM=
-X-Google-Smtp-Source: AGHT+IGldqIFYgyHuslG1CMTYyN0h1G1iCdYZZcpRlsRiqTgyMA+KWZnaXAKWv96mTUsoZGXaQFBlg==
-X-Received: by 2002:a2e:9153:0:b0:2ec:17a9:ce95 with SMTP id 38308e7fff4ca-2ec3ce9a91cmr13378821fa.5.1718781144791;
-        Wed, 19 Jun 2024 00:12:24 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:982:cbb0:cd29:2431:ff2f:880b? ([2a01:e0a:982:cbb0:cd29:2431:ff2f:880b])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3607509c9absm16285621f8f.46.2024.06.19.00.12.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Jun 2024 00:12:24 -0700 (PDT)
-Message-ID: <22121526-c6c7-4667-af82-76725ad72888@linaro.org>
-Date: Wed, 19 Jun 2024 09:12:21 +0200
+        bh=QK7OBYtWo4eVoWKX5VN9To9vV086DlpOPkOB5TfhV0M=;
+        b=VZH9QEq4NoSO9ekxs9ulnYqWL0IudL/v4/Y7dvFIIb9sHiRpjtTKfx9EDt4NNSxD5x
+         HOuGhbA/9Rqg7PwVbya+1TEMX2eweCBDm1TEOUZkc9TFvzFtAH529UuS9n/mQ/tfmZh3
+         CnL3mSOrrxL9j47NDzvrMUbuvvKIg1GqfkO9zvmkgzrEiKXac81BJkxeKv7DSuTYe2Sw
+         EB0TQ7ADCVNCh5THOdrTwq16h/TYLBhgXBrfCK+Ij+cmdQxML54Aak40cW+P46iRWvdB
+         YyOJ4S9lGnTK7U9hrR3S6voe9Ysh3X/KoHYasohN3AI5XWoqUfTxoRaJwcwZB55rpVaY
+         GJxA==
+X-Forwarded-Encrypted: i=1; AJvYcCVjk6jO73Kilm+S/f4mvuoTp0f2jsV/ZzQqo9wJ2W0WnnImqTuVfIX1igQNVwQvVsv78HD3XpWm+sOQrX6YfgnNlAQyJkRsskSZjQ==
+X-Gm-Message-State: AOJu0YyF9fA9Z9EPVg2DPgVaXcAFP6Qttycm3k5YW3rYS9/Jzx4ImFJQ
+	lI96ZcW2COTD0LVPnswxXlONGTHQUym5eBzIEdkwc0RVtPqulJH4mo2enBRpJ3WOxEck/N04miE
+	=
+X-Google-Smtp-Source: AGHT+IE0V+6PzaXjEizkG0oM7zBxBtuUe0khMH3vIi/hWBr6MxKPg1ilIGQ/JzqqVDOD0awb+sAa2w==
+X-Received: by 2002:a17:902:da84:b0:1f7:2293:1886 with SMTP id d9443c01a7336-1f9aa3a7f37mr19693735ad.12.1718781217325;
+        Wed, 19 Jun 2024 00:13:37 -0700 (PDT)
+Received: from thinkpad ([120.60.70.62])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f855e7bf76sm108894545ad.105.2024.06.19.00.13.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Jun 2024 00:13:36 -0700 (PDT)
+Date: Wed, 19 Jun 2024 12:43:29 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Minwoo Im <minwoo.im@samsung.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	ChanWoo Lee <cw9316.lee@samsung.com>,
+	Yang Li <yang.lee@linux.alibaba.com>,
+	Po-Wen Kao <powen.kao@mediatek.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Maramaina Naresh <quic_mnaresh@quicinc.com>,
+	Akinobu Mita <akinobu.mita@gmail.com>,
+	Bean Huo <beanhuo@micron.com>
+Subject: Re: [PATCH 4/8] scsi: ufs: Make .get_hba_mac() optional
+Message-ID: <20240619071329.GD6056@thinkpad>
+References: <20240617210844.337476-1-bvanassche@acm.org>
+ <20240617210844.337476-5-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 04/15] soc: qcom: ice: add hwkm support in ice
-To: "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "andersson@kernel.org" <andersson@kernel.org>,
- "ebiggers@google.com" <ebiggers@google.com>,
- "srinivas.kandagatla" <srinivas.kandagatla@linaro.org>,
- "krzysztof.kozlowski+dt@linaro.org" <krzysztof.kozlowski+dt@linaro.org>,
- "conor+dt@kernel.org" <conor+dt@kernel.org>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
- kernel <kernel@quicinc.com>,
- "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "Om Prakash Singh (QUIC)" <quic_omprsing@quicinc.com>,
- "Bao D. Nguyen (QUIC)" <quic_nguyenb@quicinc.com>,
- "bartosz.golaszewski" <bartosz.golaszewski@linaro.org>,
- "konrad.dybcio@linaro.org" <konrad.dybcio@linaro.org>,
- "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>,
- "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "mani@kernel.org" <mani@kernel.org>,
- "davem@davemloft.net" <davem@davemloft.net>,
- "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>,
- Prasad Sodagudi <psodagud@quicinc.com>, Sonal Gupta <sonalg@quicinc.com>
-References: <20240617005825.1443206-1-quic_gaurkash@quicinc.com>
- <20240617005825.1443206-5-quic_gaurkash@quicinc.com>
- <ad7f22f5-21e4-4411-88f3-7daa448d2c83@linaro.org>
- <51a930fdf83146cb8a3e420a11f1252b@quicinc.com>
-Content-Language: en-GB
-From: Neil Armstrong <neil.armstrong@linaro.org>
-In-Reply-To: <51a930fdf83146cb8a3e420a11f1252b@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240617210844.337476-5-bvanassche@acm.org>
 
-Le 19/06/2024 à 00:08, Gaurav Kashyap (QUIC) a écrit :
-> Hello Neil,
+On Mon, Jun 17, 2024 at 02:07:43PM -0700, Bart Van Assche wrote:
+> UFSHCI controllers that are compliant with the UFSHCI 4.0 standard report
+> the maximum number of supported commands in the controller capabilities
+> register. Use that value if .get_hba_mac == NULL.
 > 
-> On 06/18/2024 12:14 AM PDT, Neil Armstrong wrote:
->> On 17/06/2024 02:50, Gaurav Kashyap wrote:
->>> Qualcomm's ICE (Inline Crypto Engine) contains a proprietary key
->>> management hardware called Hardware Key Manager (HWKM).
->>> This patch integrates HWKM support in ICE when it is available. HWKM
->>> primarily provides hardware wrapped key support where the ICE
->>> (storage) keys are not available in software and protected in
->>> hardware.
->>>
->>> When HWKM software support is not fully available (from Trustzone),
->>> there can be a scenario where the ICE hardware supports HWKM, but it
->>> cannot be used for wrapped keys. In this case, standard keys have to
->>> be used without using HWKM. Hence, providing a toggle controlled by a
->>> devicetree entry to use HWKM or not.
->>>
->>> Tested-by: Neil Armstrong <neil.armstrong@linaro.org>
->>> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
->>> ---
->>>    drivers/soc/qcom/ice.c | 153
->> +++++++++++++++++++++++++++++++++++++++--
->>>    include/soc/qcom/ice.h |   1 +
->>>    2 files changed, 150 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c index
->>> 6f941d32fffb..d5e74cf2946b 100644
->>> --- a/drivers/soc/qcom/ice.c
->>> +++ b/drivers/soc/qcom/ice.c
->>> @@ -26,6 +26,40 @@
->>
->> <snip>
->>
->>> +
->>>    static struct qcom_ice *qcom_ice_create(struct device *dev,
->>>                                        void __iomem *base)
->>>    {
->>> @@ -239,6 +382,8 @@ static struct qcom_ice *qcom_ice_create(struct
->> device *dev,
->>>                engine->core_clk = devm_clk_get_enabled(dev, NULL);
->>>        if (IS_ERR(engine->core_clk))
->>>                return ERR_CAST(engine->core_clk);
->>> +     engine->use_hwkm = of_property_read_bool(dev->of_node,
->>> +                                              "qcom,ice-use-hwkm");
->>
->> Please drop this property and instead add an scm function calling:
->>
->> __qcom_scm_is_call_available(QCOM_SCM_SVC_ES,
->> QCOM_SCM_ES_DERIVE_SW_SECRET)
->>
->> like
->>
->> bool qcom_scm_derive_sw_secret_available(void)
->> {
->>          if (!__qcom_scm_is_call_available(__scm->dev, QCOM_SCM_SVC_ES,
->>                                            QCOM_SCM_ES_DERIVE_SW_SECRET))
->>                  return false;
->>
->>          return true;
->> }
->>
->> You may perhaps only call qcom_scm_derive_sw_secret_available() for
->> some ICE versions.
->>
->> Neil
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/ufs/core/ufs-mcq.c | 12 +++++++-----
+>  include/ufs/ufshcd.h       |  4 +++-
+>  include/ufs/ufshci.h       |  2 +-
+>  3 files changed, 11 insertions(+), 7 deletions(-)
 > 
-> The issue here is that for the same ICE version, based on the chipset,
-> there might be different configurations.
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 0482c7a1e419..d6f966f4abef 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -138,7 +138,6 @@ EXPORT_SYMBOL_GPL(ufshcd_mcq_queue_cfg_addr);
+>   *
+>   * MAC - Max. Active Command of the Host Controller (HC)
+>   * HC wouldn't send more than this commands to the device.
+> - * It is mandatory to implement get_hba_mac() to enable MCQ mode.
+>   * Calculates and adjusts the queue depth based on the depth
+>   * supported by the HC and ufs device.
+>   */
+> @@ -146,10 +145,13 @@ int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba)
+>  {
+>  	int mac = -EOPNOTSUPP;
+>  
+> -	if (!hba->vops || !hba->vops->get_hba_mac)
+> -		goto err;
+> -
+> -	mac = hba->vops->get_hba_mac(hba);
+> +	if (!hba->vops || !hba->vops->get_hba_mac) {
+> +		hba->capabilities =
+> +			ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES);
+> +		mac = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS) + 1;
+> +	} else {
+> +		mac = hba->vops->get_hba_mac(hba);
+> +	}
+>  	if (mac < 0)
+>  		goto err;
+>  
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index d4d63507d090..d32637d267f3 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -325,7 +325,9 @@ struct ufs_pwr_mode_info {
+>   * @event_notify: called to notify important events
+>   * @reinit_notify: called to notify reinit of UFSHCD during max gear switch
+>   * @mcq_config_resource: called to configure MCQ platform resources
+> - * @get_hba_mac: called to get vendor specific mac value, mandatory for mcq mode
+> + * @get_hba_mac: reports maximum number of outstanding commands supported by
+> + *	the controller. Should be implemented for UFSHCI 4.0 or later
+> + *	controllers that are not compliant with the UFSHCI 4.0 specification.
+>   * @op_runtime_config: called to config Operation and runtime regs Pointers
+>   * @get_outstanding_cqs: called to get outstanding completion queues
+>   * @config_esi: called to config Event Specific Interrupt
+> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+> index c50f92bf2e1d..899077bba2d2 100644
+> --- a/include/ufs/ufshci.h
+> +++ b/include/ufs/ufshci.h
+> @@ -67,7 +67,7 @@ enum {
+>  
+>  /* Controller capability masks */
+>  enum {
+> -	MASK_TRANSFER_REQUESTS_SLOTS		= 0x0000001F,
+> +	MASK_TRANSFER_REQUESTS_SLOTS		= 0x000000FF,
 
-So use a combination of a list of compatible strings + qcom_scm_derive_sw_secret_available()
-to enable hwkm.
+This should be a separate fix that comes before this patch. But I believe this
+came up during MCQ review as well and I don't remember what was the reply from
+Can. 0x1F is the mask for SDB mode and 0xFF is the mask for MCQ mode.
 
-Neil
+Can, can you comment more?
 
-> 
-> Is it acceptable to use the addressable size from DTSI instead?
-> Meaning, if it 0x8000, it would take the legacy route, and only when it has been
-> updated to 0x10000, we would use HWKM and wrapped keys.
-> 
->>
->>>
->>>        if (!qcom_ice_check_supported(engine))
->>>                return ERR_PTR(-EOPNOTSUPP); diff --git
->>> a/include/soc/qcom/ice.h b/include/soc/qcom/ice.h index
->>> 9dd835dba2a7..1f52e82e3e1c 100644
->>> --- a/include/soc/qcom/ice.h
->>> +++ b/include/soc/qcom/ice.h
->>> @@ -34,5 +34,6 @@ int qcom_ice_program_key(struct qcom_ice *ice,
->>>                         const struct blk_crypto_key *bkey,
->>>                         u8 data_unit_size, int slot);
->>>    int qcom_ice_evict_key(struct qcom_ice *ice, int slot);
->>> +bool qcom_ice_hwkm_supported(struct qcom_ice *ice);
->>>    struct qcom_ice *of_qcom_ice_get(struct device *dev);
->>>    #endif /* __QCOM_ICE_H__ */
-> 
-> Regards,
-> Gaurav
+- Mani
 
+-- 
+மணிவண்ணன் சதாசிவம்
