@@ -1,172 +1,272 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C00E182DF
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2024 06:16:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B616558BA
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2024 06:55:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718777790; cv=none; b=Tu3a3t/VHrNa5c4ROxO31sx6YTjWeREoS5Gu57jJga5fq5IIRzuBZUEccbX5jelktBil00hSpZSUfwdIAES2FjL/WsekNd/LKEE0hOMvl0kc/WJdB+zYdQUxhm3WNFZXnbVNs9xeWeoG2aJgvRkuOFLiBxhXyd7axYpAr0p6emM=
+	t=1718780129; cv=none; b=iq7v+HTtoFUqxIrrYdZ32CRr+WdQzB7y7Eta0Y28dBJvzDhSHrjU75wf20DKLsj0PKbl2MBinPbftTkA9VtiGMoOvyHQLIizOXupgX/zVNGkaDCSLCA9ziUnbSb1z7AV2vMeD31dsStsOMelvo1E04+il3zeILsZ5ldilo1f0n4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718777790; c=relaxed/simple;
-	bh=HmALoiOZXD8RmuBlLWFa9XW7kpD9+YUbF6c3+pBJ1NA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=H4zUwhcV7AqTjFfzGBpDjoQIVUO3MqFiK9EdcDDYqa07WoPcMZD97lixg7x0qsuwa0FWAxqa+B2/pPbMbQvL0SPag8nkisNskI/FVishZBng8UStH5p10Ojx0/AFoGzKDMU8r58w+h815Okcv7bK8WQgwXbo3sTy6ZxAdLx0lPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=oWsXm6zx; arc=none smtp.client-ip=209.85.167.52
+	s=arc-20240116; t=1718780129; c=relaxed/simple;
+	bh=jvRjRihByPl2TWv43KZdm7WgtpljFaN5sKuonvsHJ50=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PYQmyNoJvJ3OP08gsg1IKfYpYf+0JUG1xVzQalvCiKUhYmhMSsINKZLFLsGmNuqlWe/G8uLLJ4NwZNEWD4Eh6IMsP1W/YP5kFbNI34INfPmEoDiUs6GY4hqzOQCo4CHFG9pWid7TP2jpbeRrEzFSHkOwRP4wjFJCnJECKLXrQ8Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hE0/EZyu; arc=none smtp.client-ip=209.85.210.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="oWsXm6zx"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-52bc274f438so6648078e87.0
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 23:16:29 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hE0/EZyu"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-704313fa830so4900838b3a.3
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 23:55:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1718777787; x=1719382587; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=Kw7mI8ZZ9ryljDx1iXt4/P0lnrwZ2kbFwklwwXXoBL0=;
-        b=oWsXm6zxJu6RvbDXoxbz5sRa/Kz6YmKjItFFfgkqKstZ0KA/fog22dG9mIu9OlS6wG
-         t2ZhbB75QnPBxxSL16gIhB77Jkckbgc6HAPexfDDGPSWgWiPIwd+l14kCW2LDl2WerNS
-         Up5+CcDnyfUqbJsOk+yqmjfNerSAy021PUVj9gKeYVBu+Z4eCCXbJW4f1D0pTFSeBy10
-         djyNma6Of2oUphOlEvsw+xf0zXbzUE9HhsxSIVlhQKHXok8oOpYk/NZ5/X+rgKcNp44H
-         W/ke7TsgXZpsXXSzlJj63/9jt9tnaiVhSuSr5T9Y7mPApvz6mRQAZbaVy81CVCLe6Ek5
-         pEAw==
+        d=linaro.org; s=google; t=1718780127; x=1719384927; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=elO43JEybfpwfnJw57iJ4pRuJ39vRm2tVpdUN/i49IE=;
+        b=hE0/EZyuIWz4BSChVPVqFlGZ0ETEOMMmGm9+KUCT1Bn+vANpnzR94RqPBjybeSvovv
+         CqLk1uhnrBv6cMxoKb3TzgUWGMpQJ26LlXOxdq7OV3uq3NMR+zJ8HXHU9csiNSTTih1e
+         NfST2X30FY5QH7YT3nyC8yY/8FaBQVL6l4TKSDF5xhzHfxzGyMlJFM05l9W0rPeouByA
+         myo+PsblJbxtCq+4foc9ZWO/JGARa70pQZYzJm1kln96cNmzhrH3T7jKFzrYYLsiwsls
+         eE3qHCHZR48V1vxmS2amiR9V6ygpZlcK5EB8jsFLrvrgsyV51uQtqiojC3a39xi9wYQP
+         1JOw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718777787; x=1719382587;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Kw7mI8ZZ9ryljDx1iXt4/P0lnrwZ2kbFwklwwXXoBL0=;
-        b=K+III/hdu/7ojTiMpOh8OZVkTzJa9NTh32+pJq7RUkWbEBdM1gyzJTmgJQlGlIYE6U
-         cUaLtwDbKWJooOtMQ+5M1et+I5nRY2DJ5eIqhmLMswxiN1xBFB8+x0IbYzwFhEVdiRM8
-         RThgcqc3sVAJhoWIP40gOGJiygsb8d2UzBkE0crx3oASXj+0Vdp4syE1b0mmWjnyBNki
-         2XtODNbPBGWkAtkFksilZ4ShMYrS4HmB4AZIEJsgamUdvLhBn0GUHCu3FfENdtdhdMOU
-         lm3q5hyUBaA2meNQJUrxwINb0FUEbMoMad75glEhpxBXO8FJfscbfo4GwmdZKUucgCTO
-         36LA==
-X-Forwarded-Encrypted: i=1; AJvYcCVrn4M1WgCRTgwPGTaz2suNVY3nKceNj83rbGlvSPHiLySokh/G2QIN/U26SX139UPhF/oH3kdEc4hZmxv9kmr9cEpIX/E2buFH/Q==
-X-Gm-Message-State: AOJu0YxG/IVR7PSUlurx9yGWrKzgJypqGYWyAidCDfj1bTUxKbdUqmLn
-	U29/AbvSQg/plmr6IMSDEI9CK8lbztz+yzoce9466i1r5qyocf/XjXz/r0M5wHQ=
-X-Google-Smtp-Source: AGHT+IHGQclRSNRutPS/KbJ3xsp7bZH4jdxQ4yXIF4VyoP/1csyD85UXN5aradU513i57pv87BSV4g==
-X-Received: by 2002:a05:6512:208c:b0:52c:af5d:75be with SMTP id 2adb3069b0e04-52ccaa627f5mr963042e87.30.1718777786395;
-        Tue, 18 Jun 2024 23:16:26 -0700 (PDT)
-Received: from [192.168.1.20] ([178.197.219.137])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-423034f4129sm208470515e9.14.2024.06.18.23.16.24
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 Jun 2024 23:16:25 -0700 (PDT)
-Message-ID: <24276cd6-df21-4592-85df-2779c6c30d51@linaro.org>
-Date: Wed, 19 Jun 2024 08:16:23 +0200
+        d=1e100.net; s=20230601; t=1718780127; x=1719384927;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=elO43JEybfpwfnJw57iJ4pRuJ39vRm2tVpdUN/i49IE=;
+        b=OUy/ABIfea1HRuMkcXA2USIL+dEfVFDWfkEc2HUBqjdsMXON6DYXgXRH65grVaEkIO
+         YhhYvSFKwB1XU/HgJYMzoOVERM9TazFa0NSGxFoWW6vKv6/yMP8zttM8AANi8Tv11567
+         IAau/sVZu5n9hDyxJIhLkXdeb0IXg0sHgQVD9XbF61Pr6lqBnoHncMf801XLUo609HDo
+         SaDq1mwkPLspxPDWIxx4VDRdoB0VZn767ByG+xdpLpeN9aUNnSovLdlBNDirf0g3ZqQY
+         p/ikhTa5J4Ey0lBfZNNb6trYTt0p2w1VOtQZV+q7WUznBlsJAWvffia406mdla6i96GP
+         CAuA==
+X-Forwarded-Encrypted: i=1; AJvYcCXh9EMVusWn77Z5VuTrD39r3suOlzc1Nbd6OI5jSgyKufPkRGGhUKgQDuy0UmdCUuwueSaLRRaVQCLitkWOIgMc5i4fArOdBNDL1g==
+X-Gm-Message-State: AOJu0YyZywKXkicHgVpNhitxdV31clvR0lzAT4yeMT6H3FeCoRxo+D8r
+	8lXV2Y6bFahJLzpEMjK0CJYLv/aJsJvt9MGQ92Nd+WkW6aND3TcUMaLkD25a0+W3VXNdFEJztwc
+	=
+X-Google-Smtp-Source: AGHT+IHrHR96iTo9mfynCoEH0akfh+7cgvC5FwmqVhmPH4BvvxL0kRMICVMpAITThZm2otN9uQ3VPQ==
+X-Received: by 2002:a05:6a00:218e:b0:705:e5da:8290 with SMTP id d2e1a72fcca58-70629ccb7fdmr2073803b3a.24.1718780126550;
+        Tue, 18 Jun 2024 23:55:26 -0700 (PDT)
+Received: from thinkpad ([120.60.70.62])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-705ccb718easm10354206b3a.177.2024.06.18.23.55.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Jun 2024 23:55:26 -0700 (PDT)
+Date: Wed, 19 Jun 2024 12:25:16 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Peter Wang <peter.wang@mediatek.com>, Bean Huo <beanhuo@micron.com>,
+	Minwoo Im <minwoo.im@samsung.com>,
+	Maramaina Naresh <quic_mnaresh@quicinc.com>,
+	Akinobu Mita <akinobu.mita@gmail.com>
+Subject: Re: [PATCH 1/8] scsi: ufs: Initialize struct uic_command once
+Message-ID: <20240619065516.GB6056@thinkpad>
+References: <20240617210844.337476-1-bvanassche@acm.org>
+ <20240617210844.337476-2-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 04/15] soc: qcom: ice: add hwkm support in ice
-To: "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>,
- "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "andersson@kernel.org" <andersson@kernel.org>,
- "ebiggers@google.com" <ebiggers@google.com>,
- "srinivas.kandagatla" <srinivas.kandagatla@linaro.org>,
- "krzysztof.kozlowski+dt@linaro.org" <krzysztof.kozlowski+dt@linaro.org>,
- "conor+dt@kernel.org" <conor+dt@kernel.org>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
- kernel <kernel@quicinc.com>,
- "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "Om Prakash Singh (QUIC)" <quic_omprsing@quicinc.com>,
- "Bao D. Nguyen (QUIC)" <quic_nguyenb@quicinc.com>,
- "bartosz.golaszewski" <bartosz.golaszewski@linaro.org>,
- "konrad.dybcio@linaro.org" <konrad.dybcio@linaro.org>,
- "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>,
- "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "mani@kernel.org" <mani@kernel.org>,
- "davem@davemloft.net" <davem@davemloft.net>,
- "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>,
- Prasad Sodagudi <psodagud@quicinc.com>, Sonal Gupta <sonalg@quicinc.com>
-References: <20240617005825.1443206-1-quic_gaurkash@quicinc.com>
- <20240617005825.1443206-5-quic_gaurkash@quicinc.com>
- <ad7f22f5-21e4-4411-88f3-7daa448d2c83@linaro.org>
- <51a930fdf83146cb8a3e420a11f1252b@quicinc.com>
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Content-Language: en-US
-Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
- 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
- D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <51a930fdf83146cb8a3e420a11f1252b@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240617210844.337476-2-bvanassche@acm.org>
 
-On 19/06/2024 00:08, Gaurav Kashyap (QUIC) wrote:
->>
->> You may perhaps only call qcom_scm_derive_sw_secret_available() for
->> some ICE versions.
->>
->> Neil
+On Mon, Jun 17, 2024 at 02:07:40PM -0700, Bart Van Assche wrote:
+> Instead of first zero-initializing struct uic_command and next initializing
+> it memberwise, initialize all members at once.
 > 
-> The issue here is that for the same ICE version, based on the chipset,
-> there might be different configurations.
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-That's not what your DTS said. To remind: your DTS said that all SM8550
-and all SM8650 have it. Choice is obvious then: it's deducible from
-compatible.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-I still do not understand why your call cannot return you correct
-"configuration".
+- Mani
 
+> ---
+>  drivers/ufs/core/ufshcd.c | 62 ++++++++++++++++++++-------------------
+>  include/ufs/ufshcd.h      |  4 +--
+>  2 files changed, 34 insertions(+), 32 deletions(-)
 > 
-> Is it acceptable to use the addressable size from DTSI instead?
-> Meaning, if it 0x8000, it would take the legacy route, and only when it has been
-> updated to 0x10000, we would use HWKM and wrapped keys.
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 41bf2e249c83..5d784876513e 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -3993,11 +3993,11 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+>   */
+>  static int ufshcd_dme_link_startup(struct ufs_hba *hba)
+>  {
+> -	struct uic_command uic_cmd = {0};
+> +	struct uic_command uic_cmd = {
+> +		.command = UIC_CMD_DME_LINK_STARTUP,
+> +	};
+>  	int ret;
+>  
+> -	uic_cmd.command = UIC_CMD_DME_LINK_STARTUP;
+> -
+>  	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+>  	if (ret)
+>  		dev_dbg(hba->dev,
+> @@ -4015,11 +4015,11 @@ static int ufshcd_dme_link_startup(struct ufs_hba *hba)
+>   */
+>  static int ufshcd_dme_reset(struct ufs_hba *hba)
+>  {
+> -	struct uic_command uic_cmd = {0};
+> +	struct uic_command uic_cmd = {
+> +		.command = UIC_CMD_DME_RESET,
+> +	};
+>  	int ret;
+>  
+> -	uic_cmd.command = UIC_CMD_DME_RESET;
+> -
+>  	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+>  	if (ret)
+>  		dev_err(hba->dev,
+> @@ -4054,11 +4054,11 @@ EXPORT_SYMBOL_GPL(ufshcd_dme_configure_adapt);
+>   */
+>  static int ufshcd_dme_enable(struct ufs_hba *hba)
+>  {
+> -	struct uic_command uic_cmd = {0};
+> +	struct uic_command uic_cmd = {
+> +		.command = UIC_CMD_DME_ENABLE,
+> +	};
+>  	int ret;
+>  
+> -	uic_cmd.command = UIC_CMD_DME_ENABLE;
+> -
+>  	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+>  	if (ret)
+>  		dev_err(hba->dev,
+> @@ -4111,7 +4111,12 @@ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba)
+>  int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+>  			u8 attr_set, u32 mib_val, u8 peer)
+>  {
+> -	struct uic_command uic_cmd = {0};
+> +	struct uic_command uic_cmd = {
+> +		.command = peer ? UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET,
+> +		.argument1 = attr_sel,
+> +		.argument2 = UIC_ARG_ATTR_TYPE(attr_set),
+> +		.argument3 = mib_val,
+> +	};
+>  	static const char *const action[] = {
+>  		"dme-set",
+>  		"dme-peer-set"
+> @@ -4120,12 +4125,6 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
+>  	int ret;
+>  	int retries = UFS_UIC_COMMAND_RETRIES;
+>  
+> -	uic_cmd.command = peer ?
+> -		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
+> -	uic_cmd.argument1 = attr_sel;
+> -	uic_cmd.argument2 = UIC_ARG_ATTR_TYPE(attr_set);
+> -	uic_cmd.argument3 = mib_val;
+> -
+>  	do {
+>  		/* for peer attributes we retry upon failure */
+>  		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+> @@ -4155,7 +4154,11 @@ EXPORT_SYMBOL_GPL(ufshcd_dme_set_attr);
+>  int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+>  			u32 *mib_val, u8 peer)
+>  {
+> -	struct uic_command uic_cmd = {0};
+> +	struct uic_command uic_cmd = {
+> +		.command = peer ? UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET,
+> +		.argument1 = attr_sel,
+> +
+> +	};
+>  	static const char *const action[] = {
+>  		"dme-get",
+>  		"dme-peer-get"
+> @@ -4189,10 +4192,6 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+>  		}
+>  	}
+>  
+> -	uic_cmd.command = peer ?
+> -		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
+> -	uic_cmd.argument1 = attr_sel;
+> -
+>  	do {
+>  		/* for peer attributes we retry upon failure */
+>  		ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+> @@ -4325,7 +4324,11 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+>   */
+>  int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
+>  {
+> -	struct uic_command uic_cmd = {0};
+> +	struct uic_command uic_cmd = {
+> +		.command = UIC_CMD_DME_SET,
+> +		.argument1 = UIC_ARG_MIB(PA_PWRMODE),
+> +		.argument3 = mode,
+> +	};
+>  	int ret;
+>  
+>  	if (hba->quirks & UFSHCD_QUIRK_BROKEN_PA_RXHSUNTERMCAP) {
+> @@ -4338,9 +4341,6 @@ int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
+>  		}
+>  	}
+>  
+> -	uic_cmd.command = UIC_CMD_DME_SET;
+> -	uic_cmd.argument1 = UIC_ARG_MIB(PA_PWRMODE);
+> -	uic_cmd.argument3 = mode;
+>  	ufshcd_hold(hba);
+>  	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+>  	ufshcd_release(hba);
+> @@ -4381,13 +4381,14 @@ EXPORT_SYMBOL_GPL(ufshcd_link_recovery);
+>  
+>  int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+>  {
+> -	int ret;
+> -	struct uic_command uic_cmd = {0};
+> +	struct uic_command uic_cmd = {
+> +		.command = UIC_CMD_DME_HIBER_ENTER,
+> +	};
+>  	ktime_t start = ktime_get();
+> +	int ret;
+>  
+>  	ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_ENTER, PRE_CHANGE);
+>  
+> -	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
+>  	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+>  	trace_ufshcd_profile_hibern8(dev_name(hba->dev), "enter",
+>  			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+> @@ -4405,13 +4406,14 @@ EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_enter);
+>  
+>  int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+>  {
+> -	struct uic_command uic_cmd = {0};
+> +	struct uic_command uic_cmd = {
+> +		.command = UIC_CMD_DME_HIBER_EXIT,
+> +	};
+>  	int ret;
+>  	ktime_t start = ktime_get();
+>  
+>  	ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_EXIT, PRE_CHANGE);
+>  
+> -	uic_cmd.command = UIC_CMD_DME_HIBER_EXIT;
+>  	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+>  	trace_ufshcd_profile_hibern8(dev_name(hba->dev), "exit",
+>  			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 9e0581115b34..d4d63507d090 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -73,8 +73,8 @@ enum ufs_event_type {
+>   * @done: UIC command completion
+>   */
+>  struct uic_command {
+> -	u32 command;
+> -	u32 argument1;
+> +	const u32 command;
+> +	const u32 argument1;
+>  	u32 argument2;
+>  	u32 argument3;
+>  	int cmd_active;
 
-No.
-
-Best regards,
-Krzysztof
-
+-- 
+மணிவண்ணன் சதாசிவம்
