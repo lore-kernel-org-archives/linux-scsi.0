@@ -1,106 +1,120 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 164BE6FA8
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2024 01:38:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F3E42139C7;
+	Wed, 19 Jun 2024 03:31:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718761113; cv=none; b=kwuxx5cvBLsqSNjqmAkHnZw1mQfY9JPb3y/DnCsnbifygdsqgp4VqQAsAGoDIxgWYGMqwb8N/yIX0cfK8VzLh4+de0SxrJeyEqvert1+iGCTBpoKglKlFmDvdBf/U8lUC0r5s7qVVqEdhzObsR/dEMqjM0/GcUEcse60OAvRtxE=
+	t=1718767893; cv=none; b=BPuDgbAtTafgXrsEHWI4xadoTyYzqIo7IAabqDAwt6uBXLRoi6xaLY3i2r7OWiO/Ifgyl2I10thUKIATpdoSPKrIMiQfATByc9BW7hxPimAzVrJdN3lo3iVUDwaf/sbDza5uDU8Ux7uVlOcEClKIiCrzF1e0ufXj5wP4l3FmkLM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718761113; c=relaxed/simple;
-	bh=MGbeFEftmf6H/2+43Wr7TfH6kARyGKxTpQTeFGPXXB8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ju/JIcFljAraqtZtiDV9+69/78G6lBktBMGyHU8NJZM2/WgQIGVSVGEQPEUak4SXpP48GB6TAvKZwBfrCaLLYRtk6XRs8+g7D991TPv3nlmGToYGMJOhEfbOoAprZU6+dWwYJbcV7CfgR5cHXoxEyJ4o/9ehdCbtlVUkGpQPBL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CK1R9Pjp; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CK1R9Pjp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1718761106;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=kdE5jEBdboTnse5xQrt8G73Vz9nzuTru8pllLjTZ3xc=;
-	b=CK1R9PjpxS98lkvWS1mcMysvwnT7etYkHmvyheQpHQRu2t2cuTwetrddA3YkxCnVmwZl47
-	Ak6sH8xuxL+SBxVJ0olQz/mU/45RCzJvj2DK6VOyX7NZGK12Cui3A8J9Zz+R3aS8LgzMau
-	MgS6ftNIRlL7vq5UA+8TGbVrwlkgu1o=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-339-9M2p4VoPMhGDkjFK9Q10gQ-1; Tue,
- 18 Jun 2024 21:38:18 -0400
-X-MC-Unique: 9M2p4VoPMhGDkjFK9Q10gQ-1
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F0FBB19560B2;
-	Wed, 19 Jun 2024 01:38:12 +0000 (UTC)
-Received: from localhost (unknown [10.72.112.109])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9675E1956055;
-	Wed, 19 Jun 2024 01:38:11 +0000 (UTC)
-From: Ming Lei <ming.lei@redhat.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Cc: Ming Lei <ming.lei@redhat.com>,
-	Wenchao Hao <haowenchao2@huawei.com>
-Subject: [PATCH] scsi: scsi_debug: fix create target debugfs failure
-Date: Wed, 19 Jun 2024 09:38:03 +0800
-Message-ID: <20240619013803.3008857-1-ming.lei@redhat.com>
+	s=arc-20240116; t=1718767893; c=relaxed/simple;
+	bh=tMJg4asKHKYFGclwrMVAtz3gVUmKy5LfHY+cWqgpan4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JKbT3JRTYBHzWbNvO/TOjV8JA+d6hHlpCqf28t7/qGhFIXlDmkqVnlZKSYrbqHhKq6dTV0KHnXQkynG4fmNhvhLlEzmklAHYNOxWeU+eRjzmAyMk/1yrwi2DmKqNak2VG/toshHzl9EXiI7NP8A2xDJ46vYfpJpVlfK4OSIRSUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4W3pvb0GYyz1SCbl;
+	Wed, 19 Jun 2024 11:27:07 +0800 (CST)
+Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8453814041B;
+	Wed, 19 Jun 2024 11:31:21 +0800 (CST)
+Received: from localhost.localdomain (10.50.165.33) by
+ dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.34; Wed, 19 Jun 2024 11:31:21 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
+	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
+Subject: [PATCH v4] scsi: libsas: Fix exp-attached end device cannot be scanned in again after probe failed
+Date: Wed, 19 Jun 2024 03:28:15 +0000
+Message-ID: <20240619032815.3499-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Content-Type: text/plain
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemd100001.china.huawei.com (7.185.36.94)
 
-Target debugfs entry is removed via async_schedule() which isn't drained
-when adding same name target, so failure of "Directory 'target11:0:0' with
-parent 'scsi_debug' already present!" can be triggered easily.
+The expander phy will be treated as broadcast flutter in the next
+revalidation after the exp-attached end device probe failed, as follows:
 
-Fix it by switching to domain async schedule, and draining it before
-adding new target debugfs entry.
+[78779.654026] sas: broadcast received: 0
+[78779.654037] sas: REVALIDATING DOMAIN on port 0, pid:10
+[78779.654680] sas: ex 500e004aaaaaaa1f phy05 change count has changed
+[78779.662977] sas: ex 500e004aaaaaaa1f phy05 originated BROADCAST(CHANGE)
+[78779.662986] sas: ex 500e004aaaaaaa1f phy05 new device attached
+[78779.663079] sas: ex 500e004aaaaaaa1f phy05:U:8 attached: 500e004aaaaaaa05 (stp)
+[78779.693542] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] found
+[78779.701155] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
+[78779.707864] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+...
+[78835.161307] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
+[78835.171344] sas: sas_probe_sata: for exp-attached device 500e004aaaaaaa05 returned -19
+[78835.180879] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] is gone
+[78835.187487] sas: broadcast received: 0
+[78835.187504] sas: REVALIDATING DOMAIN on port 0, pid:10
+[78835.188263] sas: ex 500e004aaaaaaa1f phy05 change count has changed
+[78835.195870] sas: ex 500e004aaaaaaa1f phy05 originated BROADCAST(CHANGE)
+[78835.195875] sas: ex 500e004aaaaaaa1f rediscovering phy05
+[78835.196022] sas: ex 500e004aaaaaaa1f phy05:U:A attached: 500e004aaaaaaa05 (stp)
+[78835.196026] sas: ex 500e004aaaaaaa1f phy05 broadcast flutter
+[78835.197615] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
 
-Cc: Wenchao Hao <haowenchao2@huawei.com>
-Fixes: f084fe52c640 ("scsi: scsi_debug: Add debugfs interface to fail target reset")
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+The cause of the problem is that the related ex_phy's attached_sas_addr was
+not cleared after the end device probe failed, so reset it.
+
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
 ---
- drivers/scsi/scsi_debug.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Changes since v3:
+- Just manually clear the ex_phy's attached_sas_addr instead of calling
+  sas_unregister_devs_sas_addr() and deleting the port.
+- Update commit information.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index acf0592d63da..91f022fb8d0c 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -926,6 +926,7 @@ static const int device_qfull_result =
- static const int condition_met_result = SAM_STAT_CONDITION_MET;
- 
- static struct dentry *sdebug_debugfs_root;
-+static ASYNC_DOMAIN_EXCLUSIVE(sdebug_async_domain);
- 
- static void sdebug_err_free(struct rcu_head *head)
- {
-@@ -1148,6 +1149,8 @@ static int sdebug_target_alloc(struct scsi_target *starget)
- 	if (!targetip)
- 		return -ENOMEM;
- 
-+	async_synchronize_full_domain(&sdebug_async_domain);
+Changes since v2:
+- Add a helper for calling sas_destruct_devices() and sas_destruct_ports(),
+  and put the new call at the end of sas_probe_devices() based on John's
+  suggestion.
+
+Changes since v1:
+- Simplify the process of getting ex_phy id based on Jason's suggestion.
+- Update commit information.
+---
+ drivers/scsi/libsas/sas_internal.h | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 85948963fb97..7c0931ccea23 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -145,6 +145,20 @@ static inline void sas_fail_probe(struct domain_device *dev, const char *func, i
+ 		func, dev->parent ? "exp-attached" :
+ 		"direct-attached",
+ 		SAS_ADDR(dev->sas_addr), err);
 +
- 	targetip->debugfs_entry = debugfs_create_dir(dev_name(&starget->dev),
- 				sdebug_debugfs_root);
- 
-@@ -1174,7 +1177,8 @@ static void sdebug_target_destroy(struct scsi_target *starget)
- 	targetip = (struct sdebug_target_info *)starget->hostdata;
- 	if (targetip) {
- 		starget->hostdata = NULL;
--		async_schedule(sdebug_tartget_cleanup_async, targetip);
-+		async_schedule_domain(sdebug_tartget_cleanup_async, targetip,
-+				&sdebug_async_domain);
- 	}
++	/* if the device probe failed, the expander phy attached address
++	 * need to be reset so that the phy will not be treated as flutter
++	 * in the next revalidation
++	 */
++	if (dev->parent && !dev_is_expander(dev->dev_type)) {
++		struct domain_device *parent = dev->parent;
++		struct expander_device *ex_dev = &parent->ex_dev;
++		struct sas_phy *phy = dev->phy;
++		struct ex_phy *ex_phy = &ex_dev->ex_phy[phy->number];
++
++		memset(ex_phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
++	}
++
+ 	sas_unregister_dev(dev->port, dev);
  }
  
 -- 
-2.44.0
+2.17.1
 
