@@ -1,120 +1,172 @@
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F3E42139C7;
-	Wed, 19 Jun 2024 03:31:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C00E182DF
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2024 06:16:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718767893; cv=none; b=BPuDgbAtTafgXrsEHWI4xadoTyYzqIo7IAabqDAwt6uBXLRoi6xaLY3i2r7OWiO/Ifgyl2I10thUKIATpdoSPKrIMiQfATByc9BW7hxPimAzVrJdN3lo3iVUDwaf/sbDza5uDU8Ux7uVlOcEClKIiCrzF1e0ufXj5wP4l3FmkLM=
+	t=1718777790; cv=none; b=Tu3a3t/VHrNa5c4ROxO31sx6YTjWeREoS5Gu57jJga5fq5IIRzuBZUEccbX5jelktBil00hSpZSUfwdIAES2FjL/WsekNd/LKEE0hOMvl0kc/WJdB+zYdQUxhm3WNFZXnbVNs9xeWeoG2aJgvRkuOFLiBxhXyd7axYpAr0p6emM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718767893; c=relaxed/simple;
-	bh=tMJg4asKHKYFGclwrMVAtz3gVUmKy5LfHY+cWqgpan4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JKbT3JRTYBHzWbNvO/TOjV8JA+d6hHlpCqf28t7/qGhFIXlDmkqVnlZKSYrbqHhKq6dTV0KHnXQkynG4fmNhvhLlEzmklAHYNOxWeU+eRjzmAyMk/1yrwi2DmKqNak2VG/toshHzl9EXiI7NP8A2xDJ46vYfpJpVlfK4OSIRSUM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4W3pvb0GYyz1SCbl;
-	Wed, 19 Jun 2024 11:27:07 +0800 (CST)
-Received: from dggpemd100001.china.huawei.com (unknown [7.185.36.94])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8453814041B;
-	Wed, 19 Jun 2024 11:31:21 +0800 (CST)
-Received: from localhost.localdomain (10.50.165.33) by
- dggpemd100001.china.huawei.com (7.185.36.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.34; Wed, 19 Jun 2024 11:31:21 +0800
-From: Xingui Yang <yangxingui@huawei.com>
-To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>, <damien.lemoal@opensource.wdc.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <prime.zeng@hisilicon.com>,
-	<chenxiang66@hisilicon.com>, <kangfenglong@huawei.com>
-Subject: [PATCH v4] scsi: libsas: Fix exp-attached end device cannot be scanned in again after probe failed
-Date: Wed, 19 Jun 2024 03:28:15 +0000
-Message-ID: <20240619032815.3499-1-yangxingui@huawei.com>
-X-Mailer: git-send-email 2.17.1
+	s=arc-20240116; t=1718777790; c=relaxed/simple;
+	bh=HmALoiOZXD8RmuBlLWFa9XW7kpD9+YUbF6c3+pBJ1NA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=H4zUwhcV7AqTjFfzGBpDjoQIVUO3MqFiK9EdcDDYqa07WoPcMZD97lixg7x0qsuwa0FWAxqa+B2/pPbMbQvL0SPag8nkisNskI/FVishZBng8UStH5p10Ojx0/AFoGzKDMU8r58w+h815Okcv7bK8WQgwXbo3sTy6ZxAdLx0lPI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=oWsXm6zx; arc=none smtp.client-ip=209.85.167.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="oWsXm6zx"
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-52bc274f438so6648078e87.0
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 23:16:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1718777787; x=1719382587; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=Kw7mI8ZZ9ryljDx1iXt4/P0lnrwZ2kbFwklwwXXoBL0=;
+        b=oWsXm6zxJu6RvbDXoxbz5sRa/Kz6YmKjItFFfgkqKstZ0KA/fog22dG9mIu9OlS6wG
+         t2ZhbB75QnPBxxSL16gIhB77Jkckbgc6HAPexfDDGPSWgWiPIwd+l14kCW2LDl2WerNS
+         Up5+CcDnyfUqbJsOk+yqmjfNerSAy021PUVj9gKeYVBu+Z4eCCXbJW4f1D0pTFSeBy10
+         djyNma6Of2oUphOlEvsw+xf0zXbzUE9HhsxSIVlhQKHXok8oOpYk/NZ5/X+rgKcNp44H
+         W/ke7TsgXZpsXXSzlJj63/9jt9tnaiVhSuSr5T9Y7mPApvz6mRQAZbaVy81CVCLe6Ek5
+         pEAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718777787; x=1719382587;
+        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Kw7mI8ZZ9ryljDx1iXt4/P0lnrwZ2kbFwklwwXXoBL0=;
+        b=K+III/hdu/7ojTiMpOh8OZVkTzJa9NTh32+pJq7RUkWbEBdM1gyzJTmgJQlGlIYE6U
+         cUaLtwDbKWJooOtMQ+5M1et+I5nRY2DJ5eIqhmLMswxiN1xBFB8+x0IbYzwFhEVdiRM8
+         RThgcqc3sVAJhoWIP40gOGJiygsb8d2UzBkE0crx3oASXj+0Vdp4syE1b0mmWjnyBNki
+         2XtODNbPBGWkAtkFksilZ4ShMYrS4HmB4AZIEJsgamUdvLhBn0GUHCu3FfENdtdhdMOU
+         lm3q5hyUBaA2meNQJUrxwINb0FUEbMoMad75glEhpxBXO8FJfscbfo4GwmdZKUucgCTO
+         36LA==
+X-Forwarded-Encrypted: i=1; AJvYcCVrn4M1WgCRTgwPGTaz2suNVY3nKceNj83rbGlvSPHiLySokh/G2QIN/U26SX139UPhF/oH3kdEc4hZmxv9kmr9cEpIX/E2buFH/Q==
+X-Gm-Message-State: AOJu0YxG/IVR7PSUlurx9yGWrKzgJypqGYWyAidCDfj1bTUxKbdUqmLn
+	U29/AbvSQg/plmr6IMSDEI9CK8lbztz+yzoce9466i1r5qyocf/XjXz/r0M5wHQ=
+X-Google-Smtp-Source: AGHT+IHGQclRSNRutPS/KbJ3xsp7bZH4jdxQ4yXIF4VyoP/1csyD85UXN5aradU513i57pv87BSV4g==
+X-Received: by 2002:a05:6512:208c:b0:52c:af5d:75be with SMTP id 2adb3069b0e04-52ccaa627f5mr963042e87.30.1718777786395;
+        Tue, 18 Jun 2024 23:16:26 -0700 (PDT)
+Received: from [192.168.1.20] ([178.197.219.137])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-423034f4129sm208470515e9.14.2024.06.18.23.16.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 18 Jun 2024 23:16:25 -0700 (PDT)
+Message-ID: <24276cd6-df21-4592-85df-2779c6c30d51@linaro.org>
+Date: Wed, 19 Jun 2024 08:16:23 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemd100001.china.huawei.com (7.185.36.94)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 04/15] soc: qcom: ice: add hwkm support in ice
+To: "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>,
+ "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "andersson@kernel.org" <andersson@kernel.org>,
+ "ebiggers@google.com" <ebiggers@google.com>,
+ "srinivas.kandagatla" <srinivas.kandagatla@linaro.org>,
+ "krzysztof.kozlowski+dt@linaro.org" <krzysztof.kozlowski+dt@linaro.org>,
+ "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+ kernel <kernel@quicinc.com>,
+ "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "Om Prakash Singh (QUIC)" <quic_omprsing@quicinc.com>,
+ "Bao D. Nguyen (QUIC)" <quic_nguyenb@quicinc.com>,
+ "bartosz.golaszewski" <bartosz.golaszewski@linaro.org>,
+ "konrad.dybcio@linaro.org" <konrad.dybcio@linaro.org>,
+ "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>,
+ "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+ "mani@kernel.org" <mani@kernel.org>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>,
+ Prasad Sodagudi <psodagud@quicinc.com>, Sonal Gupta <sonalg@quicinc.com>
+References: <20240617005825.1443206-1-quic_gaurkash@quicinc.com>
+ <20240617005825.1443206-5-quic_gaurkash@quicinc.com>
+ <ad7f22f5-21e4-4411-88f3-7daa448d2c83@linaro.org>
+ <51a930fdf83146cb8a3e420a11f1252b@quicinc.com>
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Content-Language: en-US
+Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
+ 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
+ D2GYIS41Kv4Isx2dEFh+/Q==
+In-Reply-To: <51a930fdf83146cb8a3e420a11f1252b@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The expander phy will be treated as broadcast flutter in the next
-revalidation after the exp-attached end device probe failed, as follows:
+On 19/06/2024 00:08, Gaurav Kashyap (QUIC) wrote:
+>>
+>> You may perhaps only call qcom_scm_derive_sw_secret_available() for
+>> some ICE versions.
+>>
+>> Neil
+> 
+> The issue here is that for the same ICE version, based on the chipset,
+> there might be different configurations.
 
-[78779.654026] sas: broadcast received: 0
-[78779.654037] sas: REVALIDATING DOMAIN on port 0, pid:10
-[78779.654680] sas: ex 500e004aaaaaaa1f phy05 change count has changed
-[78779.662977] sas: ex 500e004aaaaaaa1f phy05 originated BROADCAST(CHANGE)
-[78779.662986] sas: ex 500e004aaaaaaa1f phy05 new device attached
-[78779.663079] sas: ex 500e004aaaaaaa1f phy05:U:8 attached: 500e004aaaaaaa05 (stp)
-[78779.693542] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] found
-[78779.701155] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
-[78779.707864] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
-...
-[78835.161307] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
-[78835.171344] sas: sas_probe_sata: for exp-attached device 500e004aaaaaaa05 returned -19
-[78835.180879] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] is gone
-[78835.187487] sas: broadcast received: 0
-[78835.187504] sas: REVALIDATING DOMAIN on port 0, pid:10
-[78835.188263] sas: ex 500e004aaaaaaa1f phy05 change count has changed
-[78835.195870] sas: ex 500e004aaaaaaa1f phy05 originated BROADCAST(CHANGE)
-[78835.195875] sas: ex 500e004aaaaaaa1f rediscovering phy05
-[78835.196022] sas: ex 500e004aaaaaaa1f phy05:U:A attached: 500e004aaaaaaa05 (stp)
-[78835.196026] sas: ex 500e004aaaaaaa1f phy05 broadcast flutter
-[78835.197615] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
+That's not what your DTS said. To remind: your DTS said that all SM8550
+and all SM8650 have it. Choice is obvious then: it's deducible from
+compatible.
 
-The cause of the problem is that the related ex_phy's attached_sas_addr was
-not cleared after the end device probe failed, so reset it.
+I still do not understand why your call cannot return you correct
+"configuration".
 
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
----
-Changes since v3:
-- Just manually clear the ex_phy's attached_sas_addr instead of calling
-  sas_unregister_devs_sas_addr() and deleting the port.
-- Update commit information.
+> 
+> Is it acceptable to use the addressable size from DTSI instead?
+> Meaning, if it 0x8000, it would take the legacy route, and only when it has been
+> updated to 0x10000, we would use HWKM and wrapped keys.
 
-Changes since v2:
-- Add a helper for calling sas_destruct_devices() and sas_destruct_ports(),
-  and put the new call at the end of sas_probe_devices() based on John's
-  suggestion.
+No.
 
-Changes since v1:
-- Simplify the process of getting ex_phy id based on Jason's suggestion.
-- Update commit information.
----
- drivers/scsi/libsas/sas_internal.h | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 85948963fb97..7c0931ccea23 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -145,6 +145,20 @@ static inline void sas_fail_probe(struct domain_device *dev, const char *func, i
- 		func, dev->parent ? "exp-attached" :
- 		"direct-attached",
- 		SAS_ADDR(dev->sas_addr), err);
-+
-+	/* if the device probe failed, the expander phy attached address
-+	 * need to be reset so that the phy will not be treated as flutter
-+	 * in the next revalidation
-+	 */
-+	if (dev->parent && !dev_is_expander(dev->dev_type)) {
-+		struct domain_device *parent = dev->parent;
-+		struct expander_device *ex_dev = &parent->ex_dev;
-+		struct sas_phy *phy = dev->phy;
-+		struct ex_phy *ex_phy = &ex_dev->ex_phy[phy->number];
-+
-+		memset(ex_phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
-+	}
-+
- 	sas_unregister_dev(dev->port, dev);
- }
- 
--- 
-2.17.1
+Best regards,
+Krzysztof
 
