@@ -1,118 +1,141 @@
-Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+Received: from mail-pl1-f196.google.com (mail-pl1-f196.google.com [209.85.214.196])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E733371743
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2024 06:58:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17D0D6F306
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Jun 2024 06:59:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.196
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718780315; cv=none; b=LZk8+PcfssfobmRFx0qGKmPWBEM9cNGDuTLr9/ZiM9tuQadyxP/mK7jyNzoAB13ZS7qU9ZMpUwtIzadCMO5YmraZqvq4tib1siLp7dw7861nxyiDsqw+Z7BtDwBHhnLgz4Lb298TgLe8CXrcX/Aj+AIYgL/VwQbTEpHoP2YNUbE=
+	t=1718780359; cv=none; b=XrCJa0oDfyGrj8qD1AeIK8BIHQfuoRo6zoYQkzeVYEVjqWdwl0BhDCqNCGAO8YnIVtaLe2ecb0Pl3VfyEwSMWQjmjGj41pnPyzDq/wvvu9KWJ2Yc1IYJUTm/q/3h5zPQ6lW9ClwTf5i0SZpuwdzngkH8Kr6NyMWK62v2clxsdMs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718780315; c=relaxed/simple;
-	bh=8yvCfwBsuwDJ0rhpwGRR+qQimLpv5t7ZkmXBPLD4UII=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RAy4elnpgYAKDUZ6cR7f14Qbjj+CixBBhrjHvEP3TZx+X04IBe2zPWSIPMiivv15ewbSS59ch3fxLgGjeUejIGfDgtn/Bv/UaezMqaX0EfYbUhobx7WGSyzrElicv8kVasQS3YcONlRCZykDrE7DmbGtz0lafXPxlXu+G1mzEGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=RthAXAf6; arc=none smtp.client-ip=209.85.210.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1718780359; c=relaxed/simple;
+	bh=Ex8XoHz2m30DmPv+kgvdAZKlewAU12uHOkN9ftTBENU=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=PDPdnjOYJOnPypZh0l64DD8wUysz7qCh6dTxdV11IxJPB8F0zn45LJbaVc8F0g97Oo4NiHF2/Ql1aYHeqPKLgCUoE5Q+yOBcP0DgfrwH03Is3K1f43qAP6BLbgweXovFrFek3mX7h7q9o+h03gnK/frOw9MMMJth8duCp6T3vhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com; spf=none smtp.mailfrom=smartx.com; dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b=elpDwQWs; arc=none smtp.client-ip=209.85.214.196
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=smartx.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RthAXAf6"
-Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-7062bf6d9a1so448714b3a.1
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 23:58:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b="elpDwQWs"
+Received: by mail-pl1-f196.google.com with SMTP id d9443c01a7336-1f700e4cb92so54453165ad.2
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Jun 2024 23:59:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1718780313; x=1719385113; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=6zs1ABy/umnJR1EF9b+bZYKjRXsNkBF4CyBK54gWpLI=;
-        b=RthAXAf6nXuw5O3MOPTyd5KuvVHoC7St2ew2cEAmEBfCEi7aC64qMOeSNAC61ZT037
-         0id/S3Pho44agwZNFua4PORk+4/Vq7qSDC23N2OQG9DNp8U/YaZMfWSznPEZ2rQn1tSl
-         rtgklViEKQWQsmpMxx87cKkmtw+1QM9wok0ytpvfShFfOQA4jqFN6jKMN3meCXEwAM37
-         VMA6jugi/WxtIMO6qfAceJjMBEdYo4ohz8RBiVFf2beTL9SEo/plzB55TsagHkpQGRU4
-         0q0CCLScjAJMja5U9iVeaaEUHiZ8jtkZcl88Ey53I1EBM3uHHOxmG3GeZoUwWEzOvdII
-         96Aw==
+        d=smartx-com.20230601.gappssmtp.com; s=20230601; t=1718780357; x=1719385157; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=jzjGU5wIa+JU8cPwc97EJTnBpHZIpaLeV58Ad7PrW+0=;
+        b=elpDwQWsb7PjGQPlB9td6H3/T/5ZuTyu8wEmyKzMS8S5xc0CSeIlIPGLt5RJZJTWur
+         PWH50a4YBiPXNaBhxFO4t3gys/UyHxDPpSmeIE5N7X7q4tpE9jsUynziavYtiKCoK3Zb
+         UD8SB66wB39H5cnpRttoQfa8B0RzLAOJtSRH8AifI1xMk1qAejpUo6sWf/Qi61SEf5Z0
+         1cic+xqt5ibEWdkjuqQ23cWHBCv4boI3cRAUF6N0W8KpBKk0TX5lKUg4LrLNbNzgS9pX
+         acWBb4OBv6GSEOjugjORNWhdIiRTxQuzCKj71lVvtpXLuxYBmCR9xTdYzhj2vzDDfbMo
+         r6VA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718780313; x=1719385113;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6zs1ABy/umnJR1EF9b+bZYKjRXsNkBF4CyBK54gWpLI=;
-        b=dWApUqgReq/DmkfbMIsFR3OpFOwKfWqe7zhuv+xA49wgC2almHqc+f32Q3dyuzYQq6
-         7sY5IV0gWZ6EMoqq1tl6q6ctJSm+TOzrpt8TKTn+8mzGXdSsCFXktJywzXRcoBDc9X9Q
-         g+eZEqWq98fmXF8q60PuHedz+DYxxBHB/dS2k3WyqT7oBh8BIFTc7x1kkKlHGsDab+x2
-         uCyYQSm94RerwhZrWiumSQ/VwkuPiYRUnqpc86cJVVo+vHc1VCMoj/8Eeph3H1mHumqG
-         5TF5t6SU8U1FexWLNe5m1aDDbtWY7f7WRIO3/aGpixy02a0lbXB/YbcRa5XT/cwDiC8Y
-         qRug==
-X-Forwarded-Encrypted: i=1; AJvYcCVLwRKUiyg4KSgnOgKnPfzc1QvfESeU8jO6cspKrxv2awIl+tk1+xcLnZJ2p2BBfXckyvG2XRfObdj2bo8ISIpjCl6CwQelvrrZzA==
-X-Gm-Message-State: AOJu0YyfUMXAQTG8oxyLJ/CUKIOJ7fGfIkBrwJbynxsTfpd4AW0Hh6Zt
-	1b0lrp+2S7Ja9gDbY3pIeMon6hRvIKmcrmQwukT4M7MgoqnfGqmcYeI/1Z7Duw==
-X-Google-Smtp-Source: AGHT+IEXVIPcjMsC5Pwm5OohaheA+a/iHOoPBvMCJwBpHoFzpSI1YaJwtEPIplVI37X9grYOtnrrhQ==
-X-Received: by 2002:aa7:80ce:0:b0:705:d901:4e39 with SMTP id d2e1a72fcca58-70629cd0970mr1636771b3a.24.1718780313019;
-        Tue, 18 Jun 2024 23:58:33 -0700 (PDT)
-Received: from thinkpad ([120.60.70.62])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-705ccb6a6d2sm10305372b3a.142.2024.06.18.23.58.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Jun 2024 23:58:32 -0700 (PDT)
-Date: Wed, 19 Jun 2024 12:28:22 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Peter Wang <peter.wang@mediatek.com>, Bean Huo <beanhuo@micron.com>
-Subject: Re: [PATCH 2/8] scsi: ufs: Remove two constants
-Message-ID: <20240619065822.GC6056@thinkpad>
-References: <20240617210844.337476-1-bvanassche@acm.org>
- <20240617210844.337476-3-bvanassche@acm.org>
+        d=1e100.net; s=20230601; t=1718780357; x=1719385157;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=jzjGU5wIa+JU8cPwc97EJTnBpHZIpaLeV58Ad7PrW+0=;
+        b=jwtv9htbnqwijeuhr7ZXdtRbqpoIA2S2AXclXcdPDeAjJQPtHVHXO4F3Decy0gcxNo
+         BXhuetzMqQDjvYtC8qYIn8ZZ8uK3540soHsStYzsyRhfv0fcUNfNcQTVazHGcfTOTN57
+         ayqRfj6gtd3PpO3qQd1xLhRUt/K3DXZcTXnqJGQISbfReR1Dv3BsM/LOZFqc0ueNQOYI
+         +cKCGTnAu3FL+UNUkKIEo7BXF4g5FIeQQsNnXrytO/VxEP+6xQs4LlhjXpgTZf47AS5u
+         3szaeJS1ssWZ+9f5fgYmm7jKMsnQSGFweW5MtXfmDcg154WN4U1HD9wY6rMtiIhaOuwA
+         jSww==
+X-Forwarded-Encrypted: i=1; AJvYcCXHTSEHmvKVuGM6ukyJI5ljYNkI1DRsmNNlBWVvJdrXJMC+q08lqz40GkNh0DX+VRAH/oeP/KbtqmfihTGaWRQxxIuYq4MOBxTy/w==
+X-Gm-Message-State: AOJu0Yx3aEyjRxDWInw+AdHRChlNs1w/wHFd4p13SEbrEsQ3zJqnaGaz
+	xe4YRXrmOMPoVhlSr7EHEwQy/B6MWrN2nh+yOfMSMQUHxjghq7O5gT3zkm3gYgO83/PS0vTIPU/
+	nh4CY57BjUlM=
+X-Google-Smtp-Source: AGHT+IF0QuYNMormgx3auX8/Izc4u+XSl3cTe8yCrtE7iOzIASVVYL+Eeg/BX/XzR5adzYxi97hmXA==
+X-Received: by 2002:a17:903:32d2:b0:1f4:b9d3:adce with SMTP id d9443c01a7336-1f9aa3ec015mr20708695ad.27.1718780356839;
+        Tue, 18 Jun 2024 23:59:16 -0700 (PDT)
+Received: from smtpclient.apple ([103.172.41.206])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f9b97ab2d6sm2332845ad.56.2024.06.18.23.59.14
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 18 Jun 2024 23:59:16 -0700 (PDT)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240617210844.337476-3-bvanassche@acm.org>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.300.101.1.3\))
+Subject: Re: [PATCH] scsi: sd: Keep the discard mode stable
+From: Li Feng <fengli@smartx.com>
+In-Reply-To: <20240618084706.GB843635@p1gen4-pw042f0m.fritz.box>
+Date: Wed, 19 Jun 2024 14:58:59 +0800
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ linux-kernel <linux-kernel@vger.kernel.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <3F36E434-F2D4-457C-860C-4CA31EAE99DC@smartx.com>
+References: <20240614160350.180490-1-fengli@smartx.com>
+ <20240617162657.GA843635@p1gen4-pw042f0m.fritz.box>
+ <DBAA6B83-E60A-437C-A8D8-B854E625F6CD@smartx.com>
+ <20240618084706.GB843635@p1gen4-pw042f0m.fritz.box>
+To: Benjamin Block <bblock@linux.ibm.com>
+X-Mailer: Apple Mail (2.3731.300.101.1.3)
 
-On Mon, Jun 17, 2024 at 02:07:41PM -0700, Bart Van Assche wrote:
-> The SCSI host template members .cmd_per_lun and .can_queue are copied
-> into the SCSI host data structure. Before these are used, these are
-> overwritten by ufshcd_init(). Hence, this patch does not change any
-> functionality.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-- Mani
+> 2024=E5=B9=B46=E6=9C=8818=E6=97=A5 16:47=EF=BC=8CBenjamin Block =
+<bblock@linux.ibm.com> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
+> On Tue, Jun 18, 2024 at 11:06:13AM +0800, Li Feng wrote:
+>>> 2024=E5=B9=B46=E6=9C=8818=E6=97=A5 00:26=EF=BC=8CBenjamin Block =
+<bblock@linux.ibm.com> =E5=86=99=E9=81=93=EF=BC=9A
+>>> On Sat, Jun 15, 2024 at 12:03:47AM +0800, Li Feng wrote:
+>>>> There is a scenario where a large number of discard commands
+>>>> are issued when the iscsi initiator connects to the target
+>>>> and then performs a session rescan operation.=20
+>>>=20
+>>> Is this with just one specific target implementation? This sounds =
+like a
+>>> broken/buggy target, or is there a reason why this happens in =
+general?
+>>>=20
+>>> And broken target sounds like device quirk, rather than impacting =
+every
+>>> possible target.
+>>=20
+>> This is a common problem. Before sending a rescan, discard has been=20=
 
-> ---
->  drivers/ufs/core/ufshcd.c | 4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 5d784876513e..7761ccca2115 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -164,8 +164,6 @@ EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
->  enum {
->  	UFSHCD_MAX_CHANNEL	= 0,
->  	UFSHCD_MAX_ID		= 1,
-> -	UFSHCD_CMD_PER_LUN	= 32 - UFSHCD_NUM_RESERVED,
-> -	UFSHCD_CAN_QUEUE	= 32 - UFSHCD_NUM_RESERVED,
->  };
->  
->  static const char *const ufshcd_state_name[] = {
-> @@ -8959,8 +8957,6 @@ static const struct scsi_host_template ufshcd_driver_template = {
->  	.eh_timed_out		= ufshcd_eh_timed_out,
->  	.this_id		= -1,
->  	.sg_tablesize		= SG_ALL,
-> -	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
-> -	.can_queue		= UFSHCD_CAN_QUEUE,
->  	.max_segment_size	= PRDT_DATA_BYTE_COUNT_MAX,
->  	.max_sectors		= SZ_1M / SECTOR_SIZE,
->  	.max_host_blocked	= 1,
+>> negotiated to UNMAP. After the rescan, there will be a short window =
+for=20
+>> it to become WS16, and then it will immediately become UNMAP.=20
+>> However, during this period, a small amount of discard commands=20
+>> may become WS16, resulting in a strange problem.
+>=20
+> Ok, interesting. Do you know why this short window happens?=20
 
--- 
-மணிவண்ணன் சதாசிவம்
+I have explained it in other emails, you can read them.
+
+Thanks,
+Li
+
+>=20
+>>>> There is a time
+>>>> window, most of the commands are in UNMAP mode, and some
+>>>> discard commands become WRITE SAME with UNMAP.
+>>>>=20
+>>>> The discard mode has been negotiated during the SCSI probe. If
+>>>> the mode is temporarily changed from UNMAP to WRITE SAME with
+>>>> UNMAP, IO ERROR may occur because the target may not implement
+>>>> WRITE SAME with UNMAP. Keep the discard mode stable to fix this
+>>>> issue.
+>>>>=20
+>>>> Signed-off-by: Li Feng <fengli@smartx.com>
+>>>> ---
+>=20
+> --=20
+> Best Regards, Benjamin Block        /        Linux on IBM Z Kernel =
+Development
+> IBM Deutschland Research & Development GmbH    /   =
+https://www.ibm.com/privacy
+> Vors. Aufs.-R.: Wolfgang Wendt         /        Gesch=C3=A4ftsf=C3=BChru=
+ng: David Faller
+> Sitz der Ges.: B=C3=B6blingen     /    Registergericht: AmtsG =
+Stuttgart, HRB 243294
+
