@@ -1,140 +1,137 @@
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 548A056B79
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Jun 2024 20:40:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B816BB58;
+	Thu, 20 Jun 2024 20:58:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718916012; cv=none; b=bRabF3Gwwvy5VVQqzJZpq5WZJUu9RUTY6/QgyuWRccXcYWX+s+EddmnOAkq5h+BRZxMNSTs1CP1W5hSekDo3Se9XpqecmP1fFgdR0/6b0g71pE5JcFeOVyXiO7cVqb1CGgfK/Pok0w/YKD9QAHBMJYLBNytEimzd9MznasYrw/k=
+	t=1718917084; cv=none; b=tcJlkAtaJd1BqdHEg/gYoV14Eo4whVf46d1Lpt/tQEpwsAfocncvEM6PMMw10E1qg/xWWxG737eNLZ75ca3MYcjdfg0fIDDKxSRPCq9lRVt0EPgXYnT1quOs8shpmkbpnL6w1Am9lW7XAPN6edrqazKvhYdsN9e+FfvSbqp0eA4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718916012; c=relaxed/simple;
-	bh=xe0CLiytQL+w07wMVqUc1rJS0v+e/Ti6ErqFWmVCp7I=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=mcajvDBxuQkkUCvHKMbpr/m8aC+b5V9TJ5SrM86+gAj5D7pMZwd+kYLgaEiTEoDrItnt7mglFdRw9BDRsi4cRGmeIakZwUtI8vvHZ8CiRCTGMFvr2eqpWa6jp1uH1F7AIerAB38Onx9pD2YyAoKip770/JcCbVj/+TQFjAhF9yw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=ICq6jBhK; arc=none smtp.client-ip=209.85.167.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1718917084; c=relaxed/simple;
+	bh=CiMBSZOyuLHrUqec/82xEYZGcql4vMHVk8hqY07tcUk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=YqJ7mAPiM6o4CQkraHdFvrQJGerCdoE5Na7oVKi3CMoFzOwteZxkGIovQDEmShNbLTUitOlq7kDBQjSeqH7k3fLt+po3QuqfDqrnC5jARClDsE2Q6QkBr14Xoauj1Ps4kzueVrrsQ1V+BzZ9EzUjW3MWCSe72CZhpKMUj/y1vb0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Jz/V6NB4; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="ICq6jBhK"
-Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-52c8c0d73d3so1397756e87.1
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jun 2024 13:40:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1718916008; x=1719520808; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=w6VZWpwlG7GhpGptpxtkhZuBw3s+vrw3bJ0KsbwAf6c=;
-        b=ICq6jBhKf7Gl7+e8hDb+pQjnae81EeRaUKmadufPPV0qpYdwMoBN7d4p44Q1joepui
-         Ef6y6rGBM5gLlFQexDrvNl6r7LK848OeCk1ntEq1f5dh84eFqj95256lIol4XIlnT/wa
-         1WIftbE+1fY2DoCj34Q4pdlSTImee90cLqLEo=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718916008; x=1719520808;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=w6VZWpwlG7GhpGptpxtkhZuBw3s+vrw3bJ0KsbwAf6c=;
-        b=n0yCsaSMmr3NAxdVmrlhZKbLq0Vv6KNyRhdvqHTZOseRV/eM80lQr6vjZCDnfAaKnH
-         n0LS7QrJHB6plv6O4qxgSDW2ud6zMVzKcz9ANvsSw1+VDLkT8zoh+wBmdbY4Ppjuu2Wm
-         CvoAJEzo5xpyQ/rMtT/SiwjRPZhX752y3TKNvTG/qdQTKi5qbYtRkqpqHE4Q2pM2SL03
-         ymX/qWHUvKPYwK3ABTy8Ez1LmDm5MJI5vSiLy6fl+ioQH1G/V6kwBT4sTi56AfEGt+NZ
-         Co2Wf76Bn6d/0oJpmbUig48mnUmMisF4VcjNcR2HdAok7mHbSn7jpXKorM7MmFO9vK9A
-         rNig==
-X-Forwarded-Encrypted: i=1; AJvYcCVZk+DO/v7oqFsVV1XJjzdnQ/rVhGABIF+YVmAXeLxrQmcI2kZ5AQPHA7QxgsucLKA+eFraDvESn6wccm3IngvEohXRHpLVvkz3jQ==
-X-Gm-Message-State: AOJu0YxBqeUJizh/dUtjRUIfLcCM/NixRU+tN1p7aBff/ub3YzW7HDnc
-	Y5gAbecXO+eXUZglxWixUOLPiSUv42eUbppIxkL6RveujGSTeF6x7fWr67O1B9vAW27groHAWfy
-	63ygqPP2Z
-X-Google-Smtp-Source: AGHT+IFZGXhZ9F7IAkrGxIm8RWTPL9xbOoGiteeP5dvihtP5/qg3XKOmoO/VbjaRfVsi3Pgl2Rb/dw==
-X-Received: by 2002:a05:6512:3c9e:b0:52b:82d5:8fd2 with SMTP id 2adb3069b0e04-52ccaa97444mr4835136e87.47.1718916008211;
-        Thu, 20 Jun 2024 13:40:08 -0700 (PDT)
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com. [209.85.128.50])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a6fcf560b8fsm7807766b.174.2024.06.20.13.40.07
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 20 Jun 2024 13:40:07 -0700 (PDT)
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-424720e73e0so13328705e9.0
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Jun 2024 13:40:07 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCVoJRVF+xwUA3yRJdWhq1PbfnGCSpsHa2GqJ1xN0jAyxYo6KTOtzSu2wKGyRefSV8KOGPSbLQtJpw+2CDlsPygFTjJ52G2FKGHxKQ==
-X-Received: by 2002:a17:906:1348:b0:a6e:2a67:7899 with SMTP id
- a640c23a62f3a-a6fab63aaabmr312193466b.35.1718915542284; Thu, 20 Jun 2024
- 13:32:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Jz/V6NB4"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4W4t9c2jSYzlgMW9;
+	Thu, 20 Jun 2024 20:57:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1718917068; x=1721509069; bh=goE+6pf4oOgxwPVA4XIt9Lhz
+	UgDEl294xqk2zr+ORlo=; b=Jz/V6NB4IGhdt60PadlfJcv6R+YAQ/JuWfp1PMIC
+	RgDpFDVk8IAuQaoqOCIRLCrgE+j6eI9fRDQGthTXD2ZkdhmgJ9KVeft6wjITPNql
+	knzRJOtnMCwlhvVnlYPjMv3yXR1bo6I5ApIab35iGm36r+UNPv+bdCAlp5dwu+N0
+	9si8tGykn3ymp6tC1owiMQdWRZ6ccbDhi0pDaYxCIqYb8OeIT+d5SprnEA3de38D
+	z3EB/IEIdsn4gIFFJMLqBtv+5TcGLEpFEUwGpahZsCwijsOt5B8vDtO7yu/x6R6s
+	jM1inZO11Iuyu+Y6IcYy3wgaoLXp6RwvYgXdSDtFBVg8Cg==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 0FV-odNXuSQN; Thu, 20 Jun 2024 20:57:48 +0000 (UTC)
+Received: from [100.96.154.26] (unknown [104.132.0.90])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4W4t9N4ljKzlgMW8;
+	Thu, 20 Jun 2024 20:57:44 +0000 (UTC)
+Message-ID: <d3fc4d2b-81b0-4ab2-9606-5f4a5fb8b867@acm.org>
+Date: Thu, 20 Jun 2024 13:57:42 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240620175703.605111-1-yury.norov@gmail.com> <CAHk-=wiUTXC452qbypG3jW6XCZGfc8d-iehSavxn5JkQ=sv0zA@mail.gmail.com>
- <ZnR1tQN01kN97G_F@yury-ThinkPad> <CAHk-=wjv-DkukaKb7f04WezyPjRERp=xfxv34j5fA8cDQ_JudA@mail.gmail.com>
- <ZnSPBFW5wL0D0b86@yury-ThinkPad>
-In-Reply-To: <ZnSPBFW5wL0D0b86@yury-ThinkPad>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 20 Jun 2024 13:32:05 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wi2R7-jyoOw27Svf1PmfDFQgBWVAH3DP5CXO+JF-BeFZA@mail.gmail.com>
-Message-ID: <CAHk-=wi2R7-jyoOw27Svf1PmfDFQgBWVAH3DP5CXO+JF-BeFZA@mail.gmail.com>
-Subject: Re: [PATCH v4 00/40] lib/find: add atomic find_bit() primitives
-To: Yury Norov <yury.norov@gmail.com>
-Cc: linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, 
-	"H. Peter Anvin" <hpa@zytor.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
-	"K. Y. Srinivasan" <kys@microsoft.com>, "Md. Haris Iqbal" <haris.iqbal@ionos.com>, 
-	Akinobu Mita <akinobu.mita@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, 
-	Bjorn Andersson <andersson@kernel.org>, Borislav Petkov <bp@alien8.de>, Chaitanya Kulkarni <kch@nvidia.com>, 
-	Christian Brauner <brauner@kernel.org>, Damien Le Moal <damien.lemoal@opensource.wdc.com>, 
-	Dave Hansen <dave.hansen@linux.intel.com>, David Disseldorp <ddiss@suse.de>, 
-	Edward Cree <ecree.xilinx@gmail.com>, Eric Dumazet <edumazet@google.com>, 
-	Fenghua Yu <fenghua.yu@intel.com>, Geert Uytterhoeven <geert@linux-m68k.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gregory Greenman <gregory.greenman@intel.com>, 
-	Hans Verkuil <hverkuil@xs4all.nl>, Hans de Goede <hdegoede@redhat.com>, 
-	Hugh Dickins <hughd@google.com>, Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>, 
-	Jaroslav Kysela <perex@perex.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>, 
-	Jiri Pirko <jiri@resnulli.us>, Jiri Slaby <jirislaby@kernel.org>, Kalle Valo <kvalo@kernel.org>, 
-	Karsten Graul <kgraul@linux.ibm.com>, Karsten Keil <isdn@linux-pingi.de>, 
-	Kees Cook <keescook@chromium.org>, Leon Romanovsky <leon@kernel.org>, 
-	Mark Rutland <mark.rutland@arm.com>, Martin Habets <habetsm.xilinx@gmail.com>, 
-	Mauro Carvalho Chehab <mchehab@kernel.org>, Michael Ellerman <mpe@ellerman.id.au>, Michal Simek <monstr@monstr.eu>, 
-	Nicholas Piggin <npiggin@gmail.com>, Oliver Neukum <oneukum@suse.com>, Paolo Abeni <pabeni@redhat.com>, 
-	Paolo Bonzini <pbonzini@redhat.com>, Peter Zijlstra <peterz@infradead.org>, 
-	Ping-Ke Shih <pkshih@realtek.com>, Rich Felker <dalias@libc.org>, Rob Herring <robh@kernel.org>, 
-	Robin Murphy <robin.murphy@arm.com>, Sean Christopherson <seanjc@google.com>, 
-	Shuai Xue <xueshuai@linux.alibaba.com>, Stanislaw Gruszka <stf_xl@wp.pl>, 
-	Steven Rostedt <rostedt@goodmis.org>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
-	Thomas Gleixner <tglx@linutronix.de>, Valentin Schneider <vschneid@redhat.com>, 
-	Vitaly Kuznetsov <vkuznets@redhat.com>, Wenjia Zhang <wenjia@linux.ibm.com>, 
-	Will Deacon <will@kernel.org>, Yoshinori Sato <ysato@users.sourceforge.jp>, 
-	GR-QLogic-Storage-Upstream@marvell.com, alsa-devel@alsa-project.org, 
-	ath10k@lists.infradead.org, dmaengine@vger.kernel.org, iommu@lists.linux.dev, 
-	kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
-	linux-arm-msm@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-bluetooth@vger.kernel.org, linux-hyperv@vger.kernel.org, 
-	linux-m68k@lists.linux-m68k.org, linux-media@vger.kernel.org, 
-	linux-mips@vger.kernel.org, linux-net-drivers@amd.com, 
-	linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, 
-	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-sh@vger.kernel.org, 
-	linux-sound@vger.kernel.org, linux-usb@vger.kernel.org, 
-	linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	mpi3mr-linuxdrv.pdl@broadcom.com, netdev@vger.kernel.org, 
-	sparclinux@vger.kernel.org, x86@kernel.org, 
-	Alexey Klimov <alexey.klimov@linaro.org>, Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, 
-	Matthew Wilcox <willy@infradead.org>, Mirsad Todorovac <mirsad.todorovac@alu.unizg.hr>, 
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>, Sergey Shtylyov <s.shtylyov@omp.ru>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: core: quiesce request queues before check
+ pending cmds
+To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
+ mani@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
+ junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+ quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+ quic_rampraka@quicinc.com
+Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ Peter Wang <peter.wang@mediatek.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Maramaina Naresh <quic_mnaresh@quicinc.com>,
+ Asutosh Das <quic_asutoshd@quicinc.com>,
+ open list <linux-kernel@vger.kernel.org>
+References: <1717754818-39863-1-git-send-email-quic_ziqichen@quicinc.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <1717754818-39863-1-git-send-email-quic_ziqichen@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, 20 Jun 2024 at 13:20, Yury Norov <yury.norov@gmail.com> wrote:
->
-> FORCE_NR_CPUS helped to generate a better code for me back then. I'll
-> check again against the current kernel.
+On 6/7/24 3:06 AM, Ziqi Chen wrote:
+> Fix this race condition by quiescing the request queues before calling
+> ufshcd_pending_cmds() so that block layer won't touch the budget map
+> when ufshcd_pending_cmds() is working on it. In addition, remove the
+> scsi layer blocking/unblocking to reduce redundancies and latencies.
 
-Of _course_ it generates better code.
+Can you please help with testing whether the patch below would be a good
+alternative to your patch (compile-tested only)?
 
-But when "better code" is a source of bugs, and isn't actually useful
-in general, it's not better, is it.
+Thanks,
 
-> The 5d272dd1b343 is wrong. Limiting FORCE_NR_CPUS to UP case makes no
-> sense because in UP case nr_cpu_ids is already a compile-time macro:
+Bart.
 
-Yury, I'm very aware. That was obviously intentional. the whole point
-of the commit is to just disable the the whole thing as useless and
-problematic.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index aa00978c6c0e..1d981283b03c 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -332,14 +332,12 @@ static void ufshcd_configure_wb(struct ufs_hba *hba)
 
-I could have just ripped it out entirely. I ended up doing a one-liner instead.
+  static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
+  {
+-	if (atomic_dec_and_test(&hba->scsi_block_reqs_cnt))
+-		scsi_unblock_requests(hba->host);
++	blk_mq_quiesce_tagset(&hba->host->tag_set);
+  }
 
-                Linus
+  static void ufshcd_scsi_block_requests(struct ufs_hba *hba)
+  {
+-	if (atomic_inc_return(&hba->scsi_block_reqs_cnt) == 1)
+-		scsi_block_requests(hba->host);
++	blk_mq_unquiesce_tagset(&hba->host->tag_set);
+  }
+
+  static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
+@@ -10590,7 +10588,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+
+  	/* Hold auto suspend until async scan completes */
+  	pm_runtime_get_sync(dev);
+-	atomic_set(&hba->scsi_block_reqs_cnt, 0);
++
+  	/*
+  	 * We are assuming that device wasn't put in sleep/power-down
+  	 * state exclusively during the boot stage before kernel.
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 443afb97a637..58705994fc46 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -889,7 +889,6 @@ enum ufshcd_mcq_opr {
+   * @wb_mutex: used to serialize devfreq and sysfs write booster toggling
+   * @clk_scaling_lock: used to serialize device commands and clock scaling
+   * @desc_size: descriptor sizes reported by device
+- * @scsi_block_reqs_cnt: reference counting for scsi block requests
+   * @bsg_dev: struct device associated with the BSG queue
+   * @bsg_queue: BSG queue associated with the UFS controller
+   * @rpm_dev_flush_recheck_work: used to suspend from RPM (runtime power
+@@ -1050,7 +1049,6 @@ struct ufs_hba {
+
+  	struct mutex wb_mutex;
+  	struct rw_semaphore clk_scaling_lock;
+-	atomic_t scsi_block_reqs_cnt;
+
+  	struct device		bsg_dev;
+  	struct request_queue	*bsg_queue;
+
