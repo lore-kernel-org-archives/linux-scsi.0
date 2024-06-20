@@ -1,137 +1,107 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B816BB58;
-	Thu, 20 Jun 2024 20:58:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A8B442AA0
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Jun 2024 21:20:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718917084; cv=none; b=tcJlkAtaJd1BqdHEg/gYoV14Eo4whVf46d1Lpt/tQEpwsAfocncvEM6PMMw10E1qg/xWWxG737eNLZ75ca3MYcjdfg0fIDDKxSRPCq9lRVt0EPgXYnT1quOs8shpmkbpnL6w1Am9lW7XAPN6edrqazKvhYdsN9e+FfvSbqp0eA4=
+	t=1718918431; cv=none; b=i40ZGgkyRg4U6sWJn9gKvMdZxWd4sbnhb6uC4r0yNZCkVwHhZWekfRLrUzVyRfIbF5rbxHo41FlSPAmaDGAS7N7QkDuL9MVR6oUoEOmlRlv3ZQsQuxTHcyAEYnl9R1eX4wmiPhGo/W/YHoJxIpGiVfc1RuVDcvL0HUoUWuDe80A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718917084; c=relaxed/simple;
-	bh=CiMBSZOyuLHrUqec/82xEYZGcql4vMHVk8hqY07tcUk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YqJ7mAPiM6o4CQkraHdFvrQJGerCdoE5Na7oVKi3CMoFzOwteZxkGIovQDEmShNbLTUitOlq7kDBQjSeqH7k3fLt+po3QuqfDqrnC5jARClDsE2Q6QkBr14Xoauj1Ps4kzueVrrsQ1V+BzZ9EzUjW3MWCSe72CZhpKMUj/y1vb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Jz/V6NB4; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1718918431; c=relaxed/simple;
+	bh=ztojyfQJf83puOWKP3fQ+YZnBh38UCHoolQsObXN/Sc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sW3Xu27C3mGSJB8qZ3vBGEQDkAPoe96oe65aWdWGAWKmGwiGW4Tcq9F5amTyMZ5mxltKX0kKzbOzMnx2PYGOfr+3PwQTM3dBXDX9JB2TJRk3YoEFgWUmxKBHvTU8ojqa4MjaPLleMKNnU6Jd7WuEwQzF5vbsceRf8cUjozn6LoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jRJGxpTR; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Jz/V6NB4"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4W4t9c2jSYzlgMW9;
-	Thu, 20 Jun 2024 20:57:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1718917068; x=1721509069; bh=goE+6pf4oOgxwPVA4XIt9Lhz
-	UgDEl294xqk2zr+ORlo=; b=Jz/V6NB4IGhdt60PadlfJcv6R+YAQ/JuWfp1PMIC
-	RgDpFDVk8IAuQaoqOCIRLCrgE+j6eI9fRDQGthTXD2ZkdhmgJ9KVeft6wjITPNql
-	knzRJOtnMCwlhvVnlYPjMv3yXR1bo6I5ApIab35iGm36r+UNPv+bdCAlp5dwu+N0
-	9si8tGykn3ymp6tC1owiMQdWRZ6ccbDhi0pDaYxCIqYb8OeIT+d5SprnEA3de38D
-	z3EB/IEIdsn4gIFFJMLqBtv+5TcGLEpFEUwGpahZsCwijsOt5B8vDtO7yu/x6R6s
-	jM1inZO11Iuyu+Y6IcYy3wgaoLXp6RwvYgXdSDtFBVg8Cg==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 0FV-odNXuSQN; Thu, 20 Jun 2024 20:57:48 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4W4t9N4ljKzlgMW8;
-	Thu, 20 Jun 2024 20:57:44 +0000 (UTC)
-Message-ID: <d3fc4d2b-81b0-4ab2-9606-5f4a5fb8b867@acm.org>
-Date: Thu, 20 Jun 2024 13:57:42 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jRJGxpTR"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1718918431; x=1750454431;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ztojyfQJf83puOWKP3fQ+YZnBh38UCHoolQsObXN/Sc=;
+  b=jRJGxpTRu/0if7t5VAQFOtjd7DTrstz9ScYLVfMGor0TvBZf6rCpyiao
+   KJh3ezzsSju9idDU+DUZYqTMKcEUgkohxJNDmZy0oxzIR2/IoanzRzAdQ
+   lz4Tz7qO3mg/k3tGguL0coqt6mjd2Zkc/ZkK8IoqNKz1P13N4YkvYdxBx
+   myFeg0HfmO3A3iwXZMO93esuJBgjcOvF+qBJxAzQAQg8xetUkyodr0Vvc
+   XzoUJtNc1ZWutmntbi//OgXgt6TUgsyGuj5mSsKbptCKQAwn8CYRKrWmT
+   JXVxj0a63XSbjvXO7a0qAjCeizZk7S9fuC1L0nllHiDvNVL9lUhTvNonm
+   Q==;
+X-CSE-ConnectionGUID: IzvCZPJ4TLC/XdmnMU4M+g==
+X-CSE-MsgGUID: v4ehuxzJQz2EXB+CDkbeJQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11109"; a="27351349"
+X-IronPort-AV: E=Sophos;i="6.08,252,1712646000"; 
+   d="scan'208";a="27351349"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2024 14:20:30 -0700
+X-CSE-ConnectionGUID: JqC5AgHPQNGUOj+X7G2E+g==
+X-CSE-MsgGUID: 2nT3CQ5cSi614fiX3UadQA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,252,1712646000"; 
+   d="scan'208";a="42278997"
+Received: from lkp-server01.sh.intel.com (HELO 68891e0c336b) ([10.239.97.150])
+  by orviesa010.jf.intel.com with ESMTP; 20 Jun 2024 14:20:27 -0700
+Received: from kbuild by 68891e0c336b with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sKPCi-0007xq-2H;
+	Thu, 20 Jun 2024 21:20:24 +0000
+Date: Fri, 21 Jun 2024 05:20:20 +0800
+From: kernel test robot <lkp@intel.com>
+To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
+Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+	GR-QLogic-Storage-Upstream@marvell.com, agurumurthy@marvell.com,
+	sdeodhar@marvell.com, emilne@redhat.com, jmeneghi@redhat.com
+Subject: Re: [PATCH 01/11] qla2xxx: unable to act on RSCN for port online
+Message-ID: <202406210538.w875N70K-lkp@intel.com>
+References: <20240618133739.35456-2-njavali@marvell.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: quiesce request queues before check
- pending cmds
-To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
- mani@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
- junwoo80.lee@samsung.com, martin.petersen@oracle.com,
- quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
- quic_rampraka@quicinc.com
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- Peter Wang <peter.wang@mediatek.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Maramaina Naresh <quic_mnaresh@quicinc.com>,
- Asutosh Das <quic_asutoshd@quicinc.com>,
- open list <linux-kernel@vger.kernel.org>
-References: <1717754818-39863-1-git-send-email-quic_ziqichen@quicinc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1717754818-39863-1-git-send-email-quic_ziqichen@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240618133739.35456-2-njavali@marvell.com>
 
-On 6/7/24 3:06 AM, Ziqi Chen wrote:
-> Fix this race condition by quiescing the request queues before calling
-> ufshcd_pending_cmds() so that block layer won't touch the budget map
-> when ufshcd_pending_cmds() is working on it. In addition, remove the
-> scsi layer blocking/unblocking to reduce redundancies and latencies.
+Hi Nilesh,
 
-Can you please help with testing whether the patch below would be a good
-alternative to your patch (compile-tested only)?
+kernel test robot noticed the following build warnings:
 
-Thanks,
+[auto build test WARNING on e8a1d87b7983b461d1d625e2973cdaadc0bd8ff5]
 
-Bart.
+url:    https://github.com/intel-lab-lkp/linux/commits/Nilesh-Javali/qla2xxx-unable-to-act-on-RSCN-for-port-online/20240618-223303
+base:   e8a1d87b7983b461d1d625e2973cdaadc0bd8ff5
+patch link:    https://lore.kernel.org/r/20240618133739.35456-2-njavali%40marvell.com
+patch subject: [PATCH 01/11] qla2xxx: unable to act on RSCN for port online
+config: x86_64-randconfig-161-20240620 (https://download.01.org/0day-ci/archive/20240621/202406210538.w875N70K-lkp@intel.com/config)
+compiler: gcc-13 (Ubuntu 13.2.0-4ubuntu3) 13.2.0
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index aa00978c6c0e..1d981283b03c 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -332,14 +332,12 @@ static void ufshcd_configure_wb(struct ufs_hba *hba)
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202406210538.w875N70K-lkp@intel.com/
 
-  static void ufshcd_scsi_unblock_requests(struct ufs_hba *hba)
-  {
--	if (atomic_dec_and_test(&hba->scsi_block_reqs_cnt))
--		scsi_unblock_requests(hba->host);
-+	blk_mq_quiesce_tagset(&hba->host->tag_set);
-  }
+smatch warnings:
+drivers/scsi/qla2xxx/qla_inline.h:645 val_is_in_range() warn: always true condition '(val <= 4294967295) => (0-u32max <= u32max)'
 
-  static void ufshcd_scsi_block_requests(struct ufs_hba *hba)
-  {
--	if (atomic_inc_return(&hba->scsi_block_reqs_cnt) == 1)
--		scsi_block_requests(hba->host);
-+	blk_mq_unquiesce_tagset(&hba->host->tag_set);
-  }
+vim +645 drivers/scsi/qla2xxx/qla_inline.h
 
-  static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
-@@ -10590,7 +10588,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+   634	
+   635	static inline bool val_is_in_range(u32 val, u32 start, u32 end)
+   636	{
+   637		if (start < end) {
+   638			if (val >= start && val <= end)
+   639				return true;
+   640			else
+   641				return false;
+   642		}
+   643	
+   644		/* @end has wrapped */
+ > 645		if (val >= start  && val <= 0xffffffffu)
 
-  	/* Hold auto suspend until async scan completes */
-  	pm_runtime_get_sync(dev);
--	atomic_set(&hba->scsi_block_reqs_cnt, 0);
-+
-  	/*
-  	 * We are assuming that device wasn't put in sleep/power-down
-  	 * state exclusively during the boot stage before kernel.
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 443afb97a637..58705994fc46 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -889,7 +889,6 @@ enum ufshcd_mcq_opr {
-   * @wb_mutex: used to serialize devfreq and sysfs write booster toggling
-   * @clk_scaling_lock: used to serialize device commands and clock scaling
-   * @desc_size: descriptor sizes reported by device
-- * @scsi_block_reqs_cnt: reference counting for scsi block requests
-   * @bsg_dev: struct device associated with the BSG queue
-   * @bsg_queue: BSG queue associated with the UFS controller
-   * @rpm_dev_flush_recheck_work: used to suspend from RPM (runtime power
-@@ -1050,7 +1049,6 @@ struct ufs_hba {
-
-  	struct mutex wb_mutex;
-  	struct rw_semaphore clk_scaling_lock;
--	atomic_t scsi_block_reqs_cnt;
-
-  	struct device		bsg_dev;
-  	struct request_queue	*bsg_queue;
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
