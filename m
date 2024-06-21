@@ -1,222 +1,212 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 672B928DD1;
-	Fri, 21 Jun 2024 14:42:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718980962; cv=fail; b=u4dK88lP+tlu3vTu7i2TuxTlnuVWayuEeMU932hz/D7FYEUm82BEfk4KBGiXUvbhVht1sKULUA0Z4rSJri8MlhLZAu/AaBMzmyweX3CBOtOLXbvqSDmceRQEbj9bhTBZLsSJBxPG91YTdrrhT7WYgy2qd+L11Cbd4o2c32lAyls=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718980962; c=relaxed/simple;
-	bh=+J4SqbO1h3HVl1Pd3I39b25kMH+mm13+sgUOwB6w6W0=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=Ce3MakZBYPWQvDnmTEo+1AnTGtIQlVrwlj/iXBnoJw8rTa5MoO3cdpXFyWL9hPJYpGcC8cpv215mYCEHOs7WVGEFLUF5hSO8Ha1aUqm/wROOCk7yRDbRllxw0eVFB3quTIT8ACviu75osuX/lJrlEE+K0JT73pSJoToRAK7Ji6w=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=jh+o1wGc; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=LLuqG0uj; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 466F66F2F0
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Jun 2024 15:16:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.179
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1718983011; cv=none; b=rzah9or4LeJ91J91AZRYFK71OH6Rfap4ob5YNfEyyJ+453xf/cKLGZv0oCx9iUnxVN5hAafgcOminb5cFZUY0tDAYK/5ifp/eSiAJ9fCPBHV+szJqLldPnsOfYGkC1HoE19wSgKLCUH7/1vYJmFNVBK1yX5fFU517M+VW9hJTd0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1718983011; c=relaxed/simple;
+	bh=zFuk48cbhB5z7snlfIaQJo8NiN5IXQRvgXqdLrDRlUU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=ivPUQ9lGqbdktBCmYsaUes210rwMxcHn+4Jif2FevWensExRqLPMHNGLojTBcLSVSdusvZK+91AQ119g9qqmCe+5gyzGJr5glKo14beqadjAZLwFKre5L3Fv9k1lLwVnTGRhcOqxHjkmBz66LMiD7Kk20THbAWVAkgK69PUefFo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=DvMZ1yde; arc=none smtp.client-ip=209.85.128.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jh+o1wGc";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="LLuqG0uj"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45LEXPaq026149;
-	Fri, 21 Jun 2024 14:42:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	message-id:date:subject:to:cc:references:from:in-reply-to
-	:content-type:content-transfer-encoding:mime-version; s=
-	corp-2023-11-20; bh=+J4SqbO1h3HVl1Pd3I39b25kMH+mm13+sgUOwB6w6W0=; b=
-	jh+o1wGc4G93Sf3B8sgLtFZxJ0ExFSN7VImu+cIt6Yz/58ukVosIuJBCQveQ3uOt
-	oMsSoIBuIIOjPWNnPlOAcGU6hECPmAspljsqGCaZ6nciHE+uvJ97EqhXpJXb67C1
-	muePBglfGLCxJMCKHliP/vpH5UgifBnmY93A5h1qQV285dhWZA16FXsMCc8SygE1
-	jbbbFAgQFoUub8EBU4CN10Rlu0dXYZp6TH/Tzj7eQHJCiBkzJBvw7eQOkSuJWQJW
-	y9S324h9snzEdtmdGX3tl2HLYNNonm6ShjTDHuY5DsmB0bE71UgE08jtgxSTfLGv
-	6ObUIzXYySbDtfL8BDe47w==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3yvrkfsw2n-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 21 Jun 2024 14:42:00 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 45LDNaFl023654;
-	Fri, 21 Jun 2024 14:42:00 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3yvrn8pj04-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 21 Jun 2024 14:42:00 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=hrstjfB3ZWTnxgyLiPXPPs7PE3o7qDti+1DuW8MeI/PJNYiVvZtN9yESdjQ5laUXfvBAfa0ZH616au56Gh5Za07KOhl//5R7XnirXspjw30agp/lpDaFbdSRAO4wBFKsRKE4YdCaBmAOzi/EEww2+69XxXNz97VDXPDj4TMxDbNi9U2SyXjI4o9Ohk1MiqfJT3H8zAigi5btgB6Rbx3n6T/Z+PClsM02SyeoXGIeYuiMp1YyoxR2VabzjqMWFFPxfkYYK8/4LgKOyz1lWDywgncc9c7yAFtCAcoiXBQezlfIEn+717SABHpe1G0w/f3TIqKNIjGfcCfvtMHaYzla5w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+J4SqbO1h3HVl1Pd3I39b25kMH+mm13+sgUOwB6w6W0=;
- b=hgTiZ92Yp/bEZrJ9Ctd+jmm+6iCIyf8WJljyErMYrae3RD39G66fa6TCq/SUuP/Oa/0eGSwINBtIbEgZX9PDC+lP3fwiYa+Lr/8KR5ykOQCvKa/i+kmIixQpKtMgCjScCpWe97Sj5LMC101RPdcdV4ljbjewasatQBBJBcQrkFFDDG4DdcWm5qCk+GknfGkn1c6wQqz0E8PT2QYRfh4KjVLAM3CFjJ+mo12eIWM060VjU/xujDhwyYzLzumF3ztmfQSZUwVZTHbHRWR1BGJdg13aKeI/mv0PjWFWo3SPeF3uENdluJ/DJAmfV9KVSVjDp9D/Mx9Ajici1D9b9YZAAQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DvMZ1yde"
+Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-632bcf111ffso21170977b3.3
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Jun 2024 08:16:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+J4SqbO1h3HVl1Pd3I39b25kMH+mm13+sgUOwB6w6W0=;
- b=LLuqG0ujtId51IRrQ6mRllTbffzPyQMZcC7RxUsLPV1khHL1thvINw2N1ZpItbdsCD/h/A3KhGYslG4GN3vok1PGlkfB8rDEiQFomfsPft6s7zqnXlPR8QOZ+o17YpOWspdN+KEuaEDCgAfHtgzhk/G1DkNMI/0ZTUkbBrkpikM=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by DM4PR10MB6791.namprd10.prod.outlook.com (2603:10b6:8:109::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7698.21; Fri, 21 Jun
- 2024 14:41:57 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.7698.020; Fri, 21 Jun 2024
- 14:41:57 +0000
-Message-ID: <351e602c-6af3-4d86-9c07-4a715f34cea4@oracle.com>
-Date: Fri, 21 Jun 2024 15:41:49 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [Patch v9 00/10] block atomic writes
-To: Jens Axboe <axboe@kernel.dk>, kbusch@kernel.org, hch@lst.de,
-        sagi@grimberg.me, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-        jack@suse.cz
-Cc: djwong@kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-        linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com, linux-aio@kvack.org,
-        linux-btrfs@vger.kernel.org, io-uring@vger.kernel.org,
-        nilay@linux.ibm.com, ritesh.list@gmail.com, willy@infradead.org,
-        agk@redhat.com, snitzer@kernel.org, mpatocka@redhat.com,
-        dm-devel@lists.linux.dev, hare@suse.de
-References: <20240620125359.2684798-1-john.g.garry@oracle.com>
- <171891858790.154563.14863944476258774433.b4-ty@kernel.dk>
- <674559cc-4ecf-43f0-9b76-94fa24a2cf72@oracle.com>
- <2159f1ad-98c0-4a71-acb9-5e0360e28bfc@kernel.dk>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <2159f1ad-98c0-4a71-acb9-5e0360e28bfc@kernel.dk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AM0PR02CA0158.eurprd02.prod.outlook.com
- (2603:10a6:20b:28d::25) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        d=linaro.org; s=google; t=1718983008; x=1719587808; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=INvmFR+mG8MdGOooEtB857cvAaTXvZhVkdY0DiHUQtU=;
+        b=DvMZ1ydejbqS2cT5pBUfd4o7FeQaofVq0edEItDyz2IjfrqGkSNngtjxyiGiwyi4Yq
+         9CcXbcbiwp+60LEUUiGoU6tEHIeXmuLImaenYvOrT4jKPlScxXXfxlyVyGdy3wHXW67x
+         s/c+7pKKBBJ/l/o2XwUJkIZfTT9aLVo4/p2B4aBRWNsQyM8qj/nK+ls1ElIRfZXFsUHz
+         4HERoCbSvDjL/XsVbovWJEjdPzdNgFOVgAQC1BzdsHG4qYyyYeYGuIipjDXmAeY7UQVK
+         RWqHudZUaL6X4oV7xyL5yoC/tD58werLUIYW+x3kCuNfPa/Lf2vYrmqpN34g83yViQK8
+         4g+g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718983008; x=1719587808;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=INvmFR+mG8MdGOooEtB857cvAaTXvZhVkdY0DiHUQtU=;
+        b=L9ZBEYOW5gi2xyEOYlupN4RlA9S8yMn9taolS6oJ1W3B1lRRaldkDEsenniEq4rS1B
+         CBovWfF7932COSSwHrdftfnHfzrlKpr0UrMrTXmt4AZsAHN+n5yC+d39g76jpcNnFFNB
+         CmGRpwQRB5PyHIjZP4EwMBbIXUFN3l2sdVjteD9N/ragIPzX+4UlNGmVLLx0fXz5yUsX
+         WcWkNju54uC8J/K2c3u+K7mvQGjkmKe+wNjD0gXSxxJURZA9QmH4xYz16Ojcz1RGsjEW
+         GsrqQy0is8JzfNubrVONBOlrcEk4BF5MCF8cR/y4UryMlmQBAGjmFhd7xdazG/CwbX+U
+         v+WA==
+X-Forwarded-Encrypted: i=1; AJvYcCWfQz4ewBHhhIXLdrXNraHFg4f6bnfqGkVTkiOZUgc/rjuVyiD+VfkYR+w//eETxYYpJTISbXvqx0zpupivMSVkY6fi4iUs0rpSzQ==
+X-Gm-Message-State: AOJu0Ywb1deRhNvIw0vL1wNpmw3BkMSQUzwMvzE02fERliEGjUEyvgp2
+	U1pJ2O77+55/wQ9vm5CQ1Z8Q+5iS5WToHPCzaHu5Lizlb7eKNlzOrn48mqNGtdJk/WrvVW/U0Jg
+	cpQ7FTXu7LvXt6PipHZzppf3fGsUezrUCxrzA5g==
+X-Google-Smtp-Source: AGHT+IG9fIZtqKAlVbm475u7hjzHmZxu5O5csfSpdA3s/BA65IHQtgPjc9HdU685v/rRzRccM4YLnKwk8VBa0Bz9ESQ=
+X-Received: by 2002:a81:8742:0:b0:630:fe1d:99cc with SMTP id
+ 00721157ae682-63a8faf37b2mr77928047b3.52.1718983008204; Fri, 21 Jun 2024
+ 08:16:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DM4PR10MB6791:EE_
-X-MS-Office365-Filtering-Correlation-Id: 71178e87-cd49-46be-93fe-08dc92004d52
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: 
-	BCL:0;ARA:13230037|7416011|376011|1800799021|366013|921017;
-X-Microsoft-Antispam-Message-Info: 
-	=?utf-8?B?V2c5aHJOcXZpNHlibkRQQ0hHMm5Sd2h6cm55cGhFYzM1Sk9lUTFKM0pJK05U?=
- =?utf-8?B?S093WloxYTBLdXloUUk3OFVxZGh6YWhqaTZPcnVaeVA5VGQ5UG5SOVAvdXUy?=
- =?utf-8?B?S0w1NytDbStKaUR5aWRMK3pqWWRVN05JVVlmSGMxVzNtSDhNSUMzelVoSlo0?=
- =?utf-8?B?d2VlblNVK3ovQmN0WHVRMUpIUTZyellibnBDV3laUnRrWVBjSEFYNy9VN1VS?=
- =?utf-8?B?YVhNZzZEaFJ1MjZWcGF6bmJkZ2ZZYWcvUEhKbWNsektpVlBBQ1pNaWJzcUc2?=
- =?utf-8?B?dTl6a3JCNm5SSnpYaDFBKzZwdDJyWkQ2YThYMEd0dVNHY1FodkhRaUV6c0Y0?=
- =?utf-8?B?M1ZnTStGS3cwYjJFcnJmVUQ3cFE1N015Z0RWektxZlFXTlRKS1U4K3d5a2hT?=
- =?utf-8?B?Sm52MWsyajd2dnFZdTlaK2ZGSUhTYjQ1QWoyem1ZZVVadFFvYXd5Zk9hQ1c4?=
- =?utf-8?B?aU5vOVpIK0ZORktUcTJ3a2EvMDZSclJoeUorNXBPRjhxaTd2VEJZcHRnYlQz?=
- =?utf-8?B?ZC9zaU5jZU9ld1R6WHB2QXVXZHZVWk5UZ21JRXdFcGlYMDUxdzJBTUNqZW9n?=
- =?utf-8?B?Vy9RWFpKUXZnVk5PMWh3RWtYMU5JRU4vN2xxUFdmUlBnNTg1U3c4SWMxWFBP?=
- =?utf-8?B?Kzc5OFpxUDFwRnFJQ2FMcjYweEpHbFR3blVxci9UdnhLUDR6UW50a2ZxUTZS?=
- =?utf-8?B?WWVyTGFaQXlOb3FKSzNaeUVNN3NaR1FqTjNkVG9HYVllWXA2dkpDMGF0V1ox?=
- =?utf-8?B?N1kvZlQrQVRwZ1ZneEdVbHIrL21HWTd0UzVZbk94TlN0SmxmSy81cENONFlF?=
- =?utf-8?B?aGxvbUNmbGpocHVMRkdib1VGaTF4NXJZWUM1aXdLRGU5VTFqOFBrODVTQkc4?=
- =?utf-8?B?aWZXak5DMzNzeTQ1dC9VaEU4SUNqT29nbXdPdkpoRTlJOGdycy84T0NCRTk1?=
- =?utf-8?B?TFAySm96d1F6SVBQY2RpSnlxRmtCM3ozWnhVQXFtb0JvajdMVmdtVWJLcUFy?=
- =?utf-8?B?Q2NQVkt1eUN0cWVpb1F6ZmUxV2lQRHM4K25LTEpNS0pFTTF0UkVhaFdVNEh3?=
- =?utf-8?B?NHlzWXkvb0xHajZHN1ZvY1gzWXM5T085R1dCSHFkNUdrUEttd0Y5WlRXb2w2?=
- =?utf-8?B?MG1mbk5IczQ5aUtiM0w5QXRxckJyWm9qclYzOHIwdTdSdy9SL3BydThUbTBm?=
- =?utf-8?B?MWp0RlpRdUhMZEo0MzVzYS92NzZ0TkI0dWcvQkJJalBqdVowSGtxZkRzMjI3?=
- =?utf-8?B?WUR2WFNMaW44M2Y5aW05M2RZeE56Mi9KS1psdHJ6aHluVSs3U0xFK1FuYkpv?=
- =?utf-8?B?SGd2a3N3YVc0dkZRL2RuQXJrdnVXaFFabmVabGJEdExXM1hSdVl1YTBhbENO?=
- =?utf-8?B?bjdjdlJ6RjNOUThrNFFQTWc4VzFxYld3U3RGdmE0MC9uYU9sL1VPK2diZHpM?=
- =?utf-8?B?TDhJMlZST2pNU0F1Njgwak9IY0pPSUc3b2h3SFBsd1VEdzYwYTRNSXdjc215?=
- =?utf-8?B?T0RlR25ZVmhab045OWMyRVI5NWxsaWlhRE9KTkxqQ2pzN0NMNlg1N3VQNEdC?=
- =?utf-8?B?WnVBdDVVUmlncG5FUnM2b1Ftc1prTlQrMEE5a3cyaXE0SnBBakhuUTZpUTdC?=
- =?utf-8?B?elhhU2cza3pQWTRteTlkTW1RSG1VbU9FTmJFZjlLdWRzaUY0aVorV2piQTgv?=
- =?utf-8?B?NWI1MUZJYnVUVnRFWUl6T3labDlCSGovTTE3akk5WHhaSEY1NE42bk85RkIz?=
- =?utf-8?B?OERmdEp1WjZhMS9tVFYzQ015NVBZSFRqckRJZXFuSndXbXV5Z2ZoaU1LMUJF?=
- =?utf-8?Q?laaCUkJETAeGQmOVraU7w/oyDLRpHIAYGcDd4=3D?=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230037)(7416011)(376011)(1800799021)(366013)(921017);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?blFZeGl6dERZbkVHSGZMTmdZblRMOERReWhZbTFlOEcxRVhSZDYyU2w5WUFw?=
- =?utf-8?B?ZytpQTN4c01QYzJhSWVQakxwU2MrampNKzk1c1Y2YmZhSmRMa0RIVEJXZHRJ?=
- =?utf-8?B?SldXN01KbEE3VU9HSHpxTURvM0NFZm1OYjhTWkNnMkhyZHoxd1ZTbXJLWTJG?=
- =?utf-8?B?TkRPU09yTitWSjhEMjFGWjE0eFZXajYyQmNtbEJWVk93NWJETGg4ZXBNWEtL?=
- =?utf-8?B?akJIclgramRZemptcmF2UmM5OTd5aGtweXIyWk12YVF4MlM3TTdqSXhRUzcw?=
- =?utf-8?B?SGRQdUlBTklPc0RhWldQeWFqWVZjNFpnV3VsYWxNVzN5UFYvUWYxZFFVUEVF?=
- =?utf-8?B?c3Rla1JZTFRkbUh6cVowQlJUWEJGcXYyNEd2NFZXc2x3aXkzTVpSanNXR21l?=
- =?utf-8?B?eURBYlNlTHlHNG1oRldVdlNQai9PZDlwWG9PQmZGdXd0ZkpmdE50NHlyQzlz?=
- =?utf-8?B?cmY1MEZIeFoxdUFva0V0TW1YL2VkVEpFU3pYc28xRDY4RTBlZzJIOUlWR2Rr?=
- =?utf-8?B?OUdVdWJCK29SVGVVeDVMUW1Na0cyVzlFZzFDSzNhYWQyc1NXM1dwWWRoZjh0?=
- =?utf-8?B?NEdsK0ZUZVAxTHhwVTJ2UVpWVzl5WnZFaWhYNTJCbzhPTi9YSTVzMkNpM1JT?=
- =?utf-8?B?ZldXL1RZSi9yQlNkYlhaS3lobmdDUysvU3k2aVB1blpDekJML2J5elIzS2FV?=
- =?utf-8?B?WGhJSUVJRG5aTEdNTW9KQnN2MlZzbmYyeFIzNkptV1hiK3lKdktsZzJGbzNB?=
- =?utf-8?B?eHY0aTB4MDJGUEdWdHljOG82QWdvbkxQa1dMNVZZcEl4Uk1IWUxjOXhteFdl?=
- =?utf-8?B?MmlYeUtMT0NUV1BLZTB6dC83d3pGc25FK1hBczBGb0R6VGpCMHppa2Y4aTVi?=
- =?utf-8?B?Q2FPZ29WZjBLNEt4TzFPRGdGU2JqQ0NETUVaNUdZRGtIOTIySnRzRkgySjhr?=
- =?utf-8?B?VlJpYXdzNWVQbFZUWDZOVUE4UFplSEpPVlZUSlQ1QXl3aFdqanFFVWE4Zjkr?=
- =?utf-8?B?aCtVVXFwZVByQzJVNVJEU0lpazhYQzNobTBHaTQ2WGFqUW1zV0k0VkUvU2xY?=
- =?utf-8?B?M2dPdml5MHk4a01mQ1FSU1NGUEgxb3V5ZkpNL015c2R4MG1iQ2ozeWx0Y2xG?=
- =?utf-8?B?T0RESjZlUS9SVEhiUGloSDg3RjVCbjQ0YW54TVc5NnkxbGZjNHNranlUb1VV?=
- =?utf-8?B?VWxQNXdCREExLzZRYndiNWlseFByQm9MZFRyOVcvSlRXNjJMVTIvc0dzRWZI?=
- =?utf-8?B?Q2dIU1l4QnBzcHkrRWJoMEVyd0VtVnZlN0RneXlzUXBqQnpsVXFJODhNQWl1?=
- =?utf-8?B?RWh4NGVNVGt4bHY3KzEyU3ZOck5qSFI0b241cEVQZytjMjhITVlCOWh5RVNr?=
- =?utf-8?B?NlQ2ZElJVFNXS3lHMUlXaFlUU2NDa3JBOHkyek9PMEpvbW9JYTRaSDdrb2p4?=
- =?utf-8?B?dGpsU2h6WERxYkoxS0dnNnl4NWIxNW5CVDNZWHVUcUJHZ3duTWpGekEyM2FY?=
- =?utf-8?B?S3luc3BoOEJIZmpkRC9NWlZkWmkrdzBQQWdsbnUrOHpVTFZFclkvcEFSWFVo?=
- =?utf-8?B?UDlPbkJxeWUxZEZsZVZuY2plZmsxQnMyTWxacnRBOVhkdVdSc0E0dGxreTN2?=
- =?utf-8?B?SExCSFd6MG9KaTF6OXdabTdPay9nYmh1VXVHalVXZENkTy96dUlDN3lMVm9k?=
- =?utf-8?B?OS9qa0NaZTFHLzdmcnFuM3FKRlgzU2ZETkZLRFNKaHo3MXkxR3FxRVZ0bS9v?=
- =?utf-8?B?cUFmaWFTbGx2RHcyYnJPeDN5UGMvRXFaaHZMN25peW5qVU93eXRSRkdFdk1E?=
- =?utf-8?B?Rkh4bEdHZUR6NC85VmJZMG90UjBXMXkxRFVhUFlyKzRSSTlrQUNjQSt3Q211?=
- =?utf-8?B?RFFzRE5hQndDOTRaRUxraGxkaDdKWDRUbmFZU2Z2S29nVG41UDZJQUYwbXpk?=
- =?utf-8?B?dithRklSZDBocmJUMitXdnFVVHcvZ2hJZlJDSHgydGR2YmkzUzNsNkVLSC95?=
- =?utf-8?B?cFMzYlZDVldtTyticU41T3B0ZW9FTmNoalVYbFhiZjJGZWZCbkNGZ1ZKMGhj?=
- =?utf-8?B?RjJUS3ZVZTJ3d3pwdUVDUFdRR0xFN21YMjFFa251QWt0TEJXcXlyK3htOXEz?=
- =?utf-8?B?bkFWSG02dFppR1VzbDNwRHdOeHlTY2Q3WmhNNjBia3JNRS9Nb3RyaWt3K0dz?=
- =?utf-8?B?Vnc9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	EERYT36ryfIyLcS84zJI4pVL/y5AlQ52cEHVgXzjhuf4HDSV/gRNRsBpcBjatbsmrwdl8uDAonugUKwKR3ROdjUcfji/D9uUXDTUgdQhMI2cybM0RHSwXSw9HvsvyBm3dOrkvW1PiS5nbC0K2fLdVMdm1NHYEOKY2FuZ+oeB8KX0IdEATko8sAZDc42y+F1sOgDvdgZiqkB+liw+/EjgTyM15t/8F+7FAPx02JklNWi4CmGnr1pqkPjgdNJiiGLUYtJ65d9slX7ICV/ww0X7WNKJyheImyZUcmy6Ng7kOeD9v/px/b45sQ9gQLW4brn50cPJeR2t6qVWB9C/9jPXqFRJpaCfwbrjKraofyk9WQkH5c9tpjMOWcTPyK11sHCGOkNXS8gxkou1NqxEyn6+5ypSGhTsoDivC5k6RTbRDDFbnPi+eoI2FH8ka/WgO2lmpM3ZRnOHhAkwe6X1/I99WtxU04IGKQq9bhb1tDepc94zt8nJKp6+3m/+53L1kt4G/XAig4DuIgUb9yC0MM7gLXwCNt0kZuTpXbF7ya2bj1Afi7nP1rDLi5wmRYgDuJV/gOpvzbV6JM9u29ui4FwG5kwbQdymi58CgZWVA1Yd4Zg=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 71178e87-cd49-46be-93fe-08dc92004d52
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jun 2024 14:41:57.6949
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: X+DH1ugDypdCOWNSeOseOBaYIJvQdiQlyEBnS/IKzlQXPM1pY4moNa+KsOLWeV1gG1ATJxAlu7y7T4P1QPlEyw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB6791
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-06-21_06,2024-06-21_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 bulkscore=0
- suspectscore=0 spamscore=0 mlxlogscore=999 malwarescore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2406180000
- definitions=main-2406210107
-X-Proofpoint-GUID: 4x1RdYhdJdj3lGWXTu-la4sgBhzp2Whe
-X-Proofpoint-ORIG-GUID: 4x1RdYhdJdj3lGWXTu-la4sgBhzp2Whe
+References: <20240617005825.1443206-1-quic_gaurkash@quicinc.com>
+ <20240617005825.1443206-5-quic_gaurkash@quicinc.com> <3eehkn3cdhhjfqtzpahxhjxtu5uqwhntpgu22k3hknctrop3g5@f7dhwvdvhr3k>
+ <96e2ce4b154a4f918be0bc2a45011e6d@quicinc.com> <CAA8EJppGpv7N_JQQNJZrbngBBdEKZfuqutR9MPnS1R_WqYNTQw@mail.gmail.com>
+ <3a15df00a2714b40aba4ebc43011a7b6@quicinc.com> <CAA8EJpoZ0RR035QwzMLguJZvdYb-C6aqudp1BgHgn_DH2ffsoQ@mail.gmail.com>
+ <20240621044747.GC4362@sol.localdomain>
+In-Reply-To: <20240621044747.GC4362@sol.localdomain>
+From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date: Fri, 21 Jun 2024 18:16:37 +0300
+Message-ID: <CAA8EJppXsbpFCeGJOMGKOQddy0fF4uW3rt4RUuDTQq6mPunBkg@mail.gmail.com>
+Subject: Re: [PATCH v5 04/15] soc: qcom: ice: add hwkm support in ice
+To: Eric Biggers <ebiggers@kernel.org>
+Cc: "Gaurav Kashyap (QUIC)" <quic_gaurkash@quicinc.com>, 
+	"linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, 
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "andersson@kernel.org" <andersson@kernel.org>, 
+	"neil.armstrong@linaro.org" <neil.armstrong@linaro.org>, 
+	"srinivas.kandagatla" <srinivas.kandagatla@linaro.org>, 
+	"krzysztof.kozlowski+dt@linaro.org" <krzysztof.kozlowski+dt@linaro.org>, 
+	"conor+dt@kernel.org" <conor+dt@kernel.org>, "robh+dt@kernel.org" <robh+dt@kernel.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, kernel <kernel@quicinc.com>, 
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, 
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, 
+	"Om Prakash Singh (QUIC)" <quic_omprsing@quicinc.com>, 
+	"Bao D. Nguyen (QUIC)" <quic_nguyenb@quicinc.com>, 
+	"bartosz.golaszewski" <bartosz.golaszewski@linaro.org>, 
+	"konrad.dybcio@linaro.org" <konrad.dybcio@linaro.org>, 
+	"ulf.hansson@linaro.org" <ulf.hansson@linaro.org>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>, 
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>, "mani@kernel.org" <mani@kernel.org>, 
+	"davem@davemloft.net" <davem@davemloft.net>, 
+	"herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>, Prasad Sodagudi <psodagud@quicinc.com>, 
+	Sonal Gupta <sonalg@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 21/06/2024 15:28, Jens Axboe wrote:
->> JFYI, we will probably notice a trivial conflict in
->> include/uapi/linux/stat.h when merging, as I fixed a comment there
->> which went into v6.10-rc4 . To resolve, the version in this series can
->> be used, as it also fixes that comment.
-> I did notice and resolved it when I merged it into my for-next branch.
-> And then was kind of annoyed when I noticed it was caused by a patch
-> from yourself as well, surely that should either have been part of the
-> series, just ignored for -git, or done after the fact. Kind of pointless
-> to cause conflicts with your own series right when it needs ready to go
-> into the for-next tree.
+On Fri, 21 Jun 2024 at 07:47, Eric Biggers <ebiggers@kernel.org> wrote:
+>
+> On Thu, Jun 20, 2024 at 02:57:40PM +0300, Dmitry Baryshkov wrote:
+> > > > >
+> > > > > > Is it possible to use both kind of keys when working on standard mode?
+> > > > > > If not, it should be the user who selects what type of keys to be used.
+> > > > > > Enforcing this via DT is not a way to go.
+> > > > > >
+> > > > >
+> > > > > Unfortunately, that support is not there yet. When you say user, do
+> > > > > you mean to have it as a filesystem mount option?
+> > > >
+> > > > During cryptsetup time. When running e.g. cryptsetup I, as a user, would like
+> > > > to be able to use either a hardware-wrapped key or a standard key.
+> > > >
+> > >
+> > > What we are looking for with these patches is for per-file/folder encryption using fscrypt policies.
+> > > Cryptsetup to my understanding supports only full-disk , and does not support FBE (File-Based)
+> >
+> > I must admit, I mostly used dm-crypt beforehand, so I had to look at
+> > fscrypt now. Some of my previous comments might not be fully
+> > applicable.
+> >
+> > > Hence the idea here is that we mount an unencrypted device (with the inlinecrypt option that indicates inline encryption is supported)
+> > > And specify policies (links to keys) for different folders.
+> > >
+> > > > > The way the UFS/EMMC crypto layer is designed currently is that, this
+> > > > > information is needed when the modules are loaded.
+> > > > >
+> > > > > https://lore.kernel.org/all/20231104211259.17448-2-ebiggers@kernel.org
+> > > > > /#Z31drivers:ufs:core:ufshcd-crypto.c
+> > > >
+> > > > I see that the driver lists capabilities here. E.g. that it supports HW-wrapped
+> > > > keys. But the line doesn't specify that standard keys are not supported.
+> > > >
+> > >
+> > > Those are capabilities that are read from the storage controller. However, wrapped keys
+> > > Are not a standard in the ICE JEDEC specification, and in most cases, is a value add coming
+> > > from the SoC.
+> > >
+> > > QCOM SOC and firmware currently does not support both kinds of keys in the HWKM mode.
+> > > That is something we are internally working on, but not available yet.
+> >
+> > I'd say this is a significant obstacle, at least from my point of
+> > view. I understand that the default might be to use hw-wrapped keys,
+> > but it should be possible for the user to select non-HW keys if the
+> > ability to recover the data is considered to be important. Note, I'm
+> > really pointing to the user here, not to the system integrator. So
+> > using DT property or specifying kernel arguments to switch between
+> > these modes is not really an option.
+> >
+> > But I'd really love to hear some feedback from linux-security and/or
+> > linux-fscrypt here.
+> >
+> > In my humble opinion the user should be able to specify that the key
+> > is wrapped using the hardware KMK. Then if the hardware has already
+> > started using the other kind of keys, it should be able to respond
+> > with -EINVAL / whatever else. Then the user can evict previously
+> > programmed key and program a desired one.
+> >
+> > > > Also, I'd have expected that hw-wrapped keys are handled using trusted
+> > > > keys mechanism (see security/keys/trusted-keys/). Could you please point
+> > > > out why that's not the case?
+> > > >
+> > >
+> > > I will evaluate this.
+> > > But my initial response is that we currently cannot communicate to our TPM directly from HLOS, but
+> > > goes through QTEE, and I don't think our qtee currently interfaces with the open source tee
+> > > driver. The interface is through QCOM SCM driver.
+> >
+> > Note, this is just an API interface, see how it is implemented for the
+> > CAAM hardware.
+> >
+>
+> The problem is that this patchset was sent out without the patches that add the
+> block and filesystem-level framework for hardware-wrapped inline encryption
+> keys, which it depends on.  So it's lacking context.  The proposed framework can
+> be found at
+> https://lore.kernel.org/linux-block/20231104211259.17448-1-ebiggers@kernel.org/T/#u
 
-ok, I will co-ordinate things better in future.
+Thank you. I have quickly skimmed through the patches, but I didn't
+review them thoroughly. Maybe the patchset already implements the
+interfaces that I'm thinking about. In such a case please excuse me. I
+will give it a more thorough look later today.
 
-Thanks again,
-John
+> As for why "trusted keys" aren't used, they just aren't helpful here.  "Trusted
+> keys" are based around a model where the kernel can request that keys be sealed
+> and unsealed using a trust source, and the kernel gets access to the raw
+> unsealed keys.  Hardware-wrapped inline encryption keys use a different model
+> where the kernel never gets access to the raw keys.  They also have the concept
+> of ephemeral wrapping which does not exist in "trusted keys".  And they need to
+> be properly integrated with the inline encryption framework in the block layer.
+
+Then what exactly does qcom_scm_derive_sw_secret() do? Does it rewrap
+the key under some other key?
+I had the feeling that there are two separate pieces of functionality
+being stuffed into a single patchset and into a single solution.
+
+First one is handling the keys. I keep on thinking that there should
+be a separate software interface to unseal the key and rewrap it under
+an ephemeral key. Some hardware might permit importing raw keys. Other
+hardware might insist on generating the keys on-chip so that raw keys
+can never be used. Anyway, the net result is the binary blob + cookie
+for the ephemeral key.
+
+Second part is the actual block interface. Gaurav wrote about
+targeting fscrypt, but there should be no actual difference between
+crypto targets. FDE or having a single partition encrypted should
+probably work in the same way. Convert the key into blk_crypto_key
+(including the cookie for the ephemeral key), program the key into the
+slot, use the slot to en/decrypt hardware blocks.
+
+My main point is that the decision on the key type should be coming
+from the user. I can easily imagine a user, which wants to use
+password / raw key for documents storage so that it is possible to
+recover the data, hw-wrapped long-term key for app & data storage and
+generated one-time random key for the swap, so that memory contents
+can never be recovered after reboot / device capture.
+
+-- 
+With best wishes
+Dmitry
