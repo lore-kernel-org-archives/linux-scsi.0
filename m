@@ -1,230 +1,132 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C85C14E2E4;
-	Fri, 21 Jun 2024 08:26:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ED2716E887;
+	Fri, 21 Jun 2024 09:40:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718958412; cv=none; b=ebVD8ON38uBxUX6GxG1BdxA2g8p83z/klVn7ueDoMXUuy1w7gFychRv2IdwYy9rzIujQAZYZJRqkrEXVTKtPZjSRyENJyqGdPwajP2/s/tnW07ar714TBycZlCitcFYUm/0iCJI7+6mv6DxMVJuYIhAfEzL+i8+tooLLSAMlDEE=
+	t=1718962828; cv=none; b=g3o4UwuA7hsUX1cIvGBpng3mpPbwxs9tq8FeueHYJ+/COt3kqyMW5LqCxhvZcA5yA9O6U9Gq/iUUdjC1X8a6+hbYHjIiWp93RwgGqcLyzMdAyl5IFD60P9c4HJpmq/tscRQxARza6l0va60Zdr5+9sCYG3HInp38dTSVDs+TN6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718958412; c=relaxed/simple;
-	bh=JarBKBsaFTCGXmbsuxBZ6Nv5//lNkJCf51N1+0HetDY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=P8/g/7tZG+CbNw/OPU+JznGef/U8VgKKM82r9cr5uR3D/nKvQ1ZHmKURqklkr+a4I4RGbyy6PthGYw7EtI5W9UxZ5g3qZiMN7nqBljAGDZbRHUWkKFUf22hg0BZfbuHD/QqfqyzfeNyToJXNRWU1tF5tjfYKm8VZgXxvVfPlVWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: fbba066c2fa711ef9305a59a3cc225df-20240621
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.38,REQID:c5c62c4b-4398-4200-9b61-0ec0b40a61d5,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:-5
-X-CID-INFO: VERSION:1.1.38,REQID:c5c62c4b-4398-4200-9b61-0ec0b40a61d5,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:-15,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:82c5f88,CLOUDID:ae2de29ddb49c58889e76c9c6df65354,BulkI
-	D:240621162642I8UXEJG5,BulkQuantity:0,Recheck:0,SF:64|66|24|17|19|44|102,T
-	C:nil,Content:0,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil
-	,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
-X-UUID: fbba066c2fa711ef9305a59a3cc225df-20240621
-Received: from node2.com.cn [(39.156.73.10)] by mailgw.kylinos.cn
-	(envelope-from <mengfanhui@kylinos.cn>)
-	(Generic MTA)
-	with ESMTP id 486322860; Fri, 21 Jun 2024 16:26:40 +0800
-Received: from node2.com.cn (localhost [127.0.0.1])
-	by node2.com.cn (NSMail) with SMTP id D1579B803C9E;
-	Fri, 21 Jun 2024 16:26:39 +0800 (CST)
-X-ns-mid: postfix-6675393F-71261973
-Received: from [172.30.60.81] (unknown [172.30.60.81])
-	by node2.com.cn (NSMail) with ESMTPA id 546A1B803C9E;
-	Fri, 21 Jun 2024 08:26:39 +0000 (UTC)
-Message-ID: <7b27a776-176d-4885-94cc-a3fea56b385f@kylinos.cn>
-Date: Fri, 21 Jun 2024 16:26:38 +0800
+	s=arc-20240116; t=1718962828; c=relaxed/simple;
+	bh=MPy2dmqKlCsrw5okIZFwkiGzwVi0bWXg1j0NfWvMFRQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
+	 Content-Type:References; b=jmbzOuL8z012A6rnlFJ6LpMtMKf+idHxw0M/EdH39KATLXzGaMz5WPXMdMep087l06TxUWqmXi/3oEjvU6Mc2cmJXMlR2IKZK+AT30ltUpzQ5kBv7AXvklK1b3dGw/pjKmNCUYbMarxi5oBz2ExldP1Q3WYPk3PIKDc/YoG775k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=gF5Mn5Cs; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="gF5Mn5Cs"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20240621094017epoutp01e5024adbb5c4943331c36ea7f2622f4c~a_5MmQoD_1107311073epoutp01S;
+	Fri, 21 Jun 2024 09:40:17 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20240621094017epoutp01e5024adbb5c4943331c36ea7f2622f4c~a_5MmQoD_1107311073epoutp01S
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1718962817;
+	bh=MPy2dmqKlCsrw5okIZFwkiGzwVi0bWXg1j0NfWvMFRQ=;
+	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
+	b=gF5Mn5Cs05hIZubDGl6N8HjV7/n3HUJ2xybSyGKT8ltlPNHWt40g89LHuiHboeYo3
+	 XwwIlyOtVYv4eQy/w96F2WssGZrLB6cS47xlEk8bpi6jUhLf+D/k7SxRrO5OClpPRQ
+	 +ZEj6Rf5xkruuha3als/5FIWVgJem2u6/+Xx+WqY=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+	20240621094016epcas5p37e30c7a723101b07dad0e3c3fea25975~a_5MMdLDU0813208132epcas5p31;
+	Fri, 21 Jun 2024 09:40:16 +0000 (GMT)
+Received: from epsmgec5p1-new.samsung.com (unknown [182.195.38.177]) by
+	epsnrtp2.localdomain (Postfix) with ESMTP id 4W5C5C4m5dz4x9Pt; Fri, 21 Jun
+	2024 09:40:15 +0000 (GMT)
+Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
+	epsmgec5p1-new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	E2.1E.19174.F7A45766; Fri, 21 Jun 2024 18:40:15 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20240621094015epcas5p4ffcbc601f9a3ebe9ceb13a5fdac237bd~a_5KnhYrl2058420584epcas5p4c;
+	Fri, 21 Jun 2024 09:40:15 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20240621094015epsmtrp2a861ecb2d60954e0a50a639e09564028~a_5KmUyur3234432344epsmtrp20;
+	Fri, 21 Jun 2024 09:40:15 +0000 (GMT)
+X-AuditID: b6c32a50-87fff70000004ae6-94-66754a7f85b5
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	27.A5.18846.E7A45766; Fri, 21 Jun 2024 18:40:14 +0900 (KST)
+Received: from [107.122.11.51] (unknown [107.122.11.51]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20240621094009epsmtip1b013110a146e68d8e804e1eeeb926ab7~a_5FqZwgd2003020030epsmtip1e;
+	Fri, 21 Jun 2024 09:40:09 +0000 (GMT)
+Message-ID: <c890111a-08a0-4afe-dd3e-5ce41d64f54b@samsung.com>
+Date: Fri, 21 Jun 2024 15:10:08 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] scsi: megaraid_sas: Fix DCMD issue command handling
-To: kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
- shivasharan.srikanteshwara@broadcom.com, chandrakanth.patil@broadcom.com
-Cc: liuyun01@kylinos.cn, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, geliang@kernel.org
-References: <20240530094514.2750723-1-mengfanhui@kylinos.cn>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
+	Gecko/20100101 Thunderbird/91.13.1
+Subject: Re: [Patch v9 10/10] nvme: Atomic write support
 Content-Language: en-US
-From: mengfanhui <mengfanhui@kylinos.cn>
-In-Reply-To: <20240530094514.2750723-1-mengfanhui@kylinos.cn>
-Content-Type: text/plain; charset=UTF-8
+To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+	kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, viro@zeniv.linux.org.uk, brauner@kernel.org,
+	dchinner@redhat.com, jack@suse.cz
+Cc: djwong@kernel.org, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+	linux-scsi@vger.kernel.org, ojaswin@linux.ibm.com, linux-aio@kvack.org,
+	linux-btrfs@vger.kernel.org, io-uring@vger.kernel.org, nilay@linux.ibm.com,
+	ritesh.list@gmail.com, willy@infradead.org, agk@redhat.com,
+	snitzer@kernel.org, mpatocka@redhat.com, dm-devel@lists.linux.dev,
+	hare@suse.de, Alan Adamson <alan.adamson@oracle.com>
+From: Kanchan Joshi <joshi.k@samsung.com>
+In-Reply-To: <20240620125359.2684798-11-john.g.garry@oracle.com>
 Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Te1BUZRT3u3u5u1CrtxXiGypZt8iRhsfSQh+MICXpHWpGymkqnQbusJeF
+	WC47+8gsZ2AIdAXiKSSvFlYskDGUJVyeIkQrDwVZQSNhgJYSUCAYS0GzXXYz/vudc37n+53z
+	O/PxOIIergcvgVUzSpaWiwgXvKl7p7dPSqQmzn9Utx3V9/3MQW25fRiqG88l0Hz3MkBX5yq4
+	yGzZjCr1FThq0xdgqLauB0MLGddwVPbNVxjqvbRIIP2tJgwNrRoBKugaBehkcRpA7WOvoeHf
+	ariorb0XR+aWcgLpvpvhoqybRgJ9b/oHQ/naEQw15i9h6HTtB+hyn5aLfphfxNGVsRdQRvZD
+	Lhp8bHJCaw/KiXAh1Vw6zqUqGzTU4MQFnDLUeFPmqxqq4ewJgmpYLuBSefpOQBmqU6g7hhJA
+	tf6SSlBpAz0c6s+ZMZxa7BghqIHKn7iUof/LKMHBxF3xDC1llEKGjU2WJrCyUNE7B6L3RAcG
+	+Yt9xMHoDZGQpZOYUFHEu1E+exPkVstEws9oucaaiqJVKpFf2C5lskbNCOOTVepQEaOQyhUS
+	ha+KTlJpWJkvy6hDxP7+AYFWYkxifJ/xDKYI+Hy0IgdLBT6ZgMeDpATm1FihC09AtgGY2X8G
+	twfLAHa0joCngXbW5JQJnNc7hv8qc7IXmgF8cvG6I7gH4MV754GNxSfDYHnJFG7DOOkFaycG
+	OPb8c7C3xLKedyNj4cPMTsKGt5IIZg7Nrec5pDscs+gw26Ou5BKAwzmzjsIJHFYsyGyDE+RO
+	OFSosUFnMhxmX9piZ3haRyjn2FohecwFakdvEPapI2DjtTzHBlvhnKmRa8cecGWh3cFJhJPT
+	k7gdH4VGQ46DvxumPrrlZNPiWGXrW/zsWpvh12sWzG4jH2qPCezs7XCiYMbR6Q6nTlU7MAV1
+	VUUcu1VXADx+cwbPA8LSDa6Ubti+dMM6pf8rVwL8LPBgFKokGRMbqBD7sMzhp+eOTU5qAOv/
+	yTvKCOrOP/btAhgPdAHI44hc+X9kKuMEfCl95AtGmRyt1MgZVRcItN4nn+PhFpts/ZCsOlos
+	CfaXBAUFSYJfDxKL3PnzGRVSASmj1UwiwygY5X99GM/ZIxXbv1+ofHFLnvZk1Hs1z9QTAcWH
+	/J5VzQ6NZJhD467HxNxOg4+Ga9NbDv5440h3moYNia+MNMd/+3KuXpdwZ4fkbc99xYlD52Se
+	ZEi1CQtH+sKelN2LNeLTnU0FFCOxSNnf2xOchaq28qLbvzZ3RMqXYpwf+D0xpm86F9L3t3BV
+	2n/gsltHcNWq7vkpk2BTWSTqYF85tCDaMzIiyxodPHV/bPKljyan3yxP/zC2acUjomj28I4s
+	stN1lbvNq10XtjfJws5/vMzPCvLeF76GvD4lh2m2qG5F09rdlA3i3lJM8wprL1TRVcb3B7R3
+	zTN3PzHef3WparOBHhccjQstK9x2XISr4mmxN0epov8Fognji9gEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprHKsWRmVeSWpSXmKPExsWy7bCSnG6dV2mawZmdNhbrTx1jttjTf4rJ
+	YvXdfjaL14c/MVqcfTWX3eLyEz6LBYvmsljsWTSJyWLl6qNMFu9az7FYzJ7ezGRxcv97NotF
+	N7YxWVz4tYPRYtKha4wWU6Y1MVrsvaVtcenxCnaLPXtPslhc3jWHzWL+sqfsFt3Xd7BZLD/+
+	j8liYsdVJostEz8wWSxeGWpx8FQHu8W61+9ZLE7ckrZo7fnJbnH+73FWi98/5rA5KHjsnHWX
+	3WPBplKP8/c2snhsXqHlcflsqcemVZ1sHps+TWL3mLDoAKPH5iX1Hi82z2T02H2zgc2j6cxR
+	Zo+PT2+xeLzfd5XN48yCI+wem09XBwhFcdmkpOZklqUW6dslcGWc2rGUqcCo4trcPqYGRt0u
+	Rk4OCQETiUvfZrN2MXJxCAlsZ5T4PeMKI0RCXKL52g92CFtYYuW/5+wQRa8ZJeZfuc8GkuAV
+	sJOYM/MhC4jNIqAqsfLeGWaIuKDEyZlPwOKiAskSL/9MBBskLGAh0XXhFVicGWjBrSfzmUCG
+	igh8YJR4s3ENC4jDLNDJInF+WicbxLoTjBJz3j4FuomDg01AU+LC5FIQk1PAQaJnPz/EIDOJ
+	rq1djBC2vMT2t3OYJzAKzUJyxywk+2YhaZmFpGUBI8sqRtHUguLc9NzkAkO94sTc4tK8dL3k
+	/NxNjOAkpBW0g3HZ+r96hxiZOBgPMUpwMCuJ8D7vKkoT4k1JrKxKLcqPLyrNSS0+xCjNwaIk
+	zquc05kiJJCeWJKanZpakFoEk2Xi4JRqYGLn73xfPdNvWjyjYlpgq4t67Oc9q/4ElmUuDHzf
+	EFawMKIjzb7J9vFS4RvvJ9j/sBSRbtT7XlJl9Psoo31UYdqFMwfP1BSw/bLebRSmXCam/KB9
+	1tsci68HFeIPdlhEV9Se5dDrnH1J2XjRs+RjyZafVcPb6iYtK/6VGrXswtM6XnMnL4fzs6Ys
+	U3tz5cGxOboV3FXK9tEdc3e/bM0J1M3ZfEB674rTwlPjTttseSkV983+U8msBQcTvY982uK0
+	x3XboXdVud4HP17XPfw9r3ezjfWLGcdXXcu8kv/7+u/sz8JMj/5lPo38887v5u25b5cwPRRt
+	e1Zy79zNXXsP/Ah/+P0y274P+3Xnr/7BF2+sxFKckWioxVxUnAgAflXwpbEDAAA=
+X-CMS-MailID: 20240621094015epcas5p4ffcbc601f9a3ebe9ceb13a5fdac237bd
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240620130128epcas5p4fcf2266e390bc02fec23c89c9a3cf460
+References: <20240620125359.2684798-1-john.g.garry@oracle.com>
+	<CGME20240620130128epcas5p4fcf2266e390bc02fec23c89c9a3cf460@epcas5p4.samsung.com>
+	<20240620125359.2684798-11-john.g.garry@oracle.com>
 
-Kindly PING.
-
-On 2024/5/30 17:45, mengfanhui wrote:
-> If DCMD timeout not handled, the next interaction between the driver and firmware will still
-> result in DCMD timeout, which may cause system crashes or hang up
-> 
-> This patch will do proper error handling for DCMD command
-> for Fusion adapters:
-> 
-> 1. What action needs to be taken in case of DCMD timeout is decided by
-> function dcmd_timeout_ocr_possible().  DCMD timeout causing OCR is
-> applicable to the following situation:
->     INITIATE_OCR
->     KILL_ADAPTER
->     IGNORE_TIMEOUT
-> 
-> 2. If those DCMDs fail, driver bails out.
-> 
-> Error log:
-> [ 201.689759] megaraid_sas 0001:05:00.0: megasas_sync_pd_seq_num DCMD timed out, continue without JBOD sequence map
-> [ 242.649061] [] megasas_init+0x114/0x4000 [megaraid_sas]
-> [ 363.481009] [] megasas_issue_blocked_cmd+0x1d8/0x268 [megaraid_sas]
-> [ 363.481159] [] megasas_get_pd_list+0x548/0x688 [megaraid_sas]
-> [ 363.481309] [] megasas_init_fw+0xb38/0x1104 [megaraid_sas]
-> [ 363.481459] [] megasas_probe_one+0x1f4/0x5c4 [megaraid_sas]
-> [ 363.482419] [] megasas_init+0x114/0x4000 [megaraid_sas]
-> [ 381.912298] megaraid_sas 0001:05:00.0: DCMD(opcode: 0x2010100) is timed out, func:megasas_issue_blocked_cmd
-> [ 381.912979] megaraid_sas 0001:05:00.0: Ignore DCMD timeout: megasas_get_pd_list 4727
-> [ 484.313526] [] megasas_init+0x114/0x4000 [megaraid_sas]
-> [ 562.136294] megaraid_sas 0001:05:00.0: DCMD(opcode: 0x3010100) is timed out, func:megasas_issue_blocked_cmd
-> [ 562.137074] megaraid_sas 0001:05:00.0: Ignore DCMD timeout: megasas_ld_list_query 4973
-> [ 562.137081] megaraid_sas 0001:05:00.0: failed to get LD list
-> [ 562.137425] megaraid_sas 0001:05:00.0: megasas_init_fw: megasas_get_device_list failed
-> [ 562.137767] megaraid_sas 0001:05:00.0: megasas_disable_intr_fusion is called outbound_intr_mask:0x40000009
-> [ 562.139232] megaraid_sas 0001:05:00.0: Failed from megasas_init_fw 6572
-> 
-> Co-developed-by: Jackie Liu <liuyun01@kylinos.cn>
-> Signed-off-by: Jackie Liu <liuyun01@kylinos.cn>
-> Signed-off-by: mengfanhui <mengfanhui@kylinos.cn>
-> Suggested-by: Geliang Tang <geliang@kernel.org>
-> ---
->  drivers/scsi/megaraid/megaraid_sas.h        |  1 +
->  drivers/scsi/megaraid/megaraid_sas_base.c   |  4 +-
->  drivers/scsi/megaraid/megaraid_sas_fusion.c | 71 +++++++++++++++++----
->  3 files changed, 62 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-> index 5680c6cdb221..91570c5e8456 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -2760,5 +2760,6 @@ void megasas_exit_debugfs(void);
->  void megasas_setup_debugfs(struct megasas_instance *instance);
->  void megasas_destroy_debugfs(struct megasas_instance *instance);
->  int megasas_blk_mq_poll(struct Scsi_Host *shost, unsigned int queue_num);
-> +int dcmd_timeout_ocr_possible(struct megasas_instance *instance);
->  
->  #endif				/*LSI_MEGARAID_SAS_H */
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 170b38f04655..ba8061ea2078 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -4518,8 +4518,8 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
->   * Return 0 for only Fusion adapter, if driver load/unload is not in progress
->   * or FW is not under OCR.
->   */
-> -inline int
-> -dcmd_timeout_ocr_possible(struct megasas_instance *instance) {
-> +int dcmd_timeout_ocr_possible(struct megasas_instance *instance)
-> +{
->  
->  	if (instance->adapter_type == MFI_SERIES)
->  		return KILL_ADAPTER;
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> index 6c1fb8149553..f0aeb1ee83a2 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> @@ -1363,17 +1363,42 @@ megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
->  			"driver supports max %d JBOD, but FW reports %d\n",
->  			MAX_PHYSICAL_DEVICES, le32_to_cpu(pd_sync->count));
->  		ret = -EINVAL;
-> +		goto out;
->  	}
->  
-> -	if (ret == DCMD_TIMEOUT)
-> -		dev_warn(&instance->pdev->dev,
-> -			 "%s DCMD timed out, continue without JBOD sequence map\n",
-> -			 __func__);
-> -
-> -	if (ret == DCMD_SUCCESS)
-> +	switch (ret) {
-> +	case DCMD_SUCCESS:
->  		instance->pd_seq_map_id++;
-> +		break;
-> +	case DCMD_TIMEOUT:
-> +		switch (dcmd_timeout_ocr_possible(instance)) {
-> +		case INITIATE_OCR:
-> +			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
-> +			mutex_unlock(&instance->reset_mutex);
-> +			megasas_reset_fusion(instance->host,
-> +					     MFI_IO_TIMEOUT_OCR);
-> +			mutex_lock(&instance->reset_mutex);
-> +			break;
-> +		case KILL_ADAPTER:
-> +			megaraid_sas_kill_hba(instance);
-> +			break;
-> +		case IGNORE_TIMEOUT:
-> +			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
-> +				 __func__, __LINE__);
-> +			break;
-> +		}
-> +		break;
-> +	case DCMD_FAILED:
-> +		dev_err(&instance->pdev->dev,
-> +			"%s: MR_DCMD_SYSTEM_PD_MAP_GET_INFO failed\n",
-> +			__func__);
-> +		break;
-> +	}
-> +
-> +out:
-> +	if (ret != DCMD_TIMEOUT)
-> +		megasas_return_cmd(instance, cmd);
->  
-> -	megasas_return_cmd(instance, cmd);
->  	return ret;
->  }
->  
-> @@ -1449,12 +1474,34 @@ megasas_get_ld_map_info(struct megasas_instance *instance)
->  	else
->  		ret = megasas_issue_polled(instance, cmd);
->  
-> -	if (ret == DCMD_TIMEOUT)
-> -		dev_warn(&instance->pdev->dev,
-> -			 "%s DCMD timed out, RAID map is disabled\n",
-> -			 __func__);
-> +	switch (ret) {
-> +	case DCMD_TIMEOUT:
-> +		switch (dcmd_timeout_ocr_possible(instance)) {
-> +		case INITIATE_OCR:
-> +			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
-> +			mutex_unlock(&instance->reset_mutex);
-> +			megasas_reset_fusion(instance->host,
-> +					     MFI_IO_TIMEOUT_OCR);
-> +			mutex_lock(&instance->reset_mutex);
-> +			break;
-> +		case KILL_ADAPTER:
-> +			megaraid_sas_kill_hba(instance);
-> +			break;
-> +		case IGNORE_TIMEOUT:
-> +			dev_info(&instance->pdev->dev, "Ignore DCMD timeout: %s %d\n",
-> +				 __func__, __LINE__);
-> +			break;
-> +		}
-> +		break;
-> +	case DCMD_FAILED:
-> +		dev_err(&instance->pdev->dev,
-> +			"%s: MR_DCMD_LD_MAP_GET_INFO failed\n",
-> +			__func__);
-> +		break;
-> +	}
->  
-> -	megasas_return_cmd(instance, cmd);
-> +	if (ret != DCMD_TIMEOUT)
-> +		megasas_return_cmd(instance, cmd);
->  
->  	return ret;
->  }
+Reviewed-by: Kanchan Joshi <joshi.k@samsung.com>
