@@ -1,104 +1,70 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F40A04436
-	for <linux-scsi@vger.kernel.org>; Sat, 22 Jun 2024 07:52:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5590D14A0AD;
+	Sat, 22 Jun 2024 11:25:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719042740; cv=none; b=iEciIfJBQBB2kBiaoFP1e+EX9UgI/ucybBeqjd9zpmhlDkPzgY2WwGcF1tfZ1lO+Lodtc4vzId/G2wxF1J0X87p/AwDNB+DTePP+CotAN9jeM2Rv/Qw5sqEcp5nEYj6wDdqOtZBI3xgsiUW+StUrO74sUSMR+a4cmed1D/6VlZU=
+	t=1719055536; cv=none; b=IctOnz6h7jjir9Ooes2JjXxrwya7vzyxhjM7RXNqIPrIM9B/BF03rOZ2plJHSJn/VPUcfBnRQ5QfaHja/6pm/ovx6DNc1etIw8tqDPnf7S0yQcXD2JCmAsRNvy1zQWfYBdJtVVUzprImmWQGFvWiTL6JXoOGOfphfGKsnkJOoZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719042740; c=relaxed/simple;
-	bh=NaFpvWTQkCjQdSmAfN3/y9rlnhHfWVRSPDwD0NKsXTY=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Ctb19Ws5Zdtp4XVm2XSulrv10WBl9e/dMG5nNdl00j2gs3OqW+US+BbrdbYjws40S4EWFDwsUuFodY006DwP52qp3xrUkpva7PK2Wq+tHcwE8rkbbJQthQKQ31+cqz6Z0+Pj8SYNU2L/3vWi/iarh1VK3upK+4TtoqKqLoNEjX0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MKGNYOIs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719055536; c=relaxed/simple;
+	bh=GPT/1XPLpKB4VBYT5uBKjq0mIBQxVbyimoECNzXCIoU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MnMJ3or0+m2U0rK+Bf1TJEQvAt/Bm4N4/0LqXxHeNNOyQwnX5fExY/R/FY7lFCpYWhjBQ7BcNtuH+xUf0xGHHj/RGG0n5EIk+cBeWX3ZzXepQDa7hbyrU2jcVgdVC83AyjE7JCDl/ny8brict+nnWC0qFnfyyrhHHZKFyhkhLEM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lD5dOve+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MKGNYOIs"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id BB9B8C32789
-	for <linux-scsi@vger.kernel.org>; Sat, 22 Jun 2024 07:52:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lD5dOve+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68CD9C3277B;
+	Sat, 22 Jun 2024 11:25:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719042739;
-	bh=NaFpvWTQkCjQdSmAfN3/y9rlnhHfWVRSPDwD0NKsXTY=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=MKGNYOIsRapIUBQQe1c3MRPEeek1LkwW0Co4faM2cNF1EMUehyqT66fD1jrA8gn54
-	 KP24g5Sanql/p4MNH1qommgO06rv+nzCFyfRlJw3dNl7uPfzGyay8LmUx3Nlm/m70N
-	 pdgIgOEEUIYuCEgRITXFv54qDPj6o3sNNb6UzHX+2N0jQ3iFZPMp91gaWJyQ6mgtZL
-	 YRrbo/j0qSD1u1WsAA6DScoCIUZfSJq03U/nRslidDZ8C5hnL5849Mgt/EPdVeqmkX
-	 5QBUuVvG3pLdGT58FWXbdk8LAkRwwAao6UnrP8dmbWerEg8VQMBHc9ectud1uNLx3o
-	 +48sFPHG6I9Lg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id ABC6FC53BA7; Sat, 22 Jun 2024 07:52:19 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 218866] Extra /dev/sd.. entries for a fake raid when more than
- 15 partitions
-Date: Sat, 22 Jun 2024 07:52:19 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: MD
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: marc_debruyne@telenet.be
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-218866-11613-4ARXwhvWK4@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-218866-11613@https.bugzilla.kernel.org/>
-References: <bug-218866-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=k20201202; t=1719055535;
+	bh=GPT/1XPLpKB4VBYT5uBKjq0mIBQxVbyimoECNzXCIoU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=lD5dOve+oE0ytmDKM58eSpn8ka1uH3p36wgKghcYko9h5ZEI4YIo2rIzd8QQtvZ9L
+	 HDEl83z2Id8E8QFGFIdJ/FrW1lt8E0OKdSBucTASK64ilhET/UXDmsmbWdNv/nAHL8
+	 wO9rH/7b6EFB9wKRrM51oKmM8bOR7xfNj8+fFVuCn48zNtvdT9cUhsdbSZEd7QR9qC
+	 QsQBu7ikt2yV0tfGLNH9gMEF5OmktyznFK09BRbBI0Ucb/px75F+Am4AEi+zFetDaA
+	 kYK1i4APg3yU+UmCiVr1EtzV0m868Y/GVEt3dmVAKBtgr1xoxmCe0Tk8zwBZvW8RWr
+	 erw+wDg2pvNDw==
+Date: Sat, 22 Jun 2024 13:25:29 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Yihang Li <liyihang9@huawei.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	john.g.garry@oracle.com, yanaijie@huawei.com,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linuxarm@huawei.com, chenxiang66@hisilicon.com,
+	prime.zeng@huawei.com
+Subject: Re: [bug report] scsi: SATA devices missing after FLR is triggered
+ during HBA suspended
+Message-ID: <Zna0qRpV3V6aVLZD@ryzen.lan>
+References: <20240618132900.2731301-1-liyihang9@huawei.com>
+ <0c5e14eb-5560-48cb-9086-6ad9c3970427@kernel.org>
+ <f27d6fa7-3088-0e60-043e-e71232066b12@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f27d6fa7-3088-0e60-043e-e71232066b12@huawei.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D218866
+Hello Yihang,
 
---- Comment #11 from Marc Debruyne (marc_debruyne@telenet.be) ---
-(In reply to Phillip Susi from comment #9)
-> This is no bug.  Fake raids are, well, fake.  The kernel sees both
-> individual disks and since they are mirror images of each other, both have
-> the same partitions on them.
->=20
-> The dmraid utility can be used to recognize the fake raid metadata and
-> configure the kernel device mapper to access the raid, and with the -Z
-> switch, it will remove the partitions from the underlying individual disks
-> from the kernel's view.
+On Sat, Jun 22, 2024 at 11:31:29AM +0800, Yihang Li wrote:
+> 
+> The issue 1:
+> a. Suspend all disks on controller B.
+> b. Suspend controller B.
+> c. Trigger the PCI FLR on controller B through sysfs.
+> d. The SATA disks connected to controller B is disabled by libata layer.
 
-dmraid is not used; mdadm is used
+While I'm currently not planning on debugging this myself,
+I'm quite sure that you would facilitate debugging by actually
+providing the exact commands used in steps a-d.
 
-********************
 
-cat /proc/mdstat
-
---------
-
-Personalities : [raid1] [raid6] [raid5] [raid4]=20
-md125 : active raid5 sdh1[4] sdb1[2] sdi1[6] sda1[0] sdc1[1] sdf1[3]
-      87890972160 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/6]
-[UUUUUU]
-      bitmap: 5/131 pages [20KB], 65536KB chunk
-
-md126 : active raid1 sde[1] sdd[0]
-      975585280 blocks super external:/md127/0 [2/2] [UU]
-
-md127 : inactive sde[1](S) sdd[0](S)
-      2354608 blocks super external:ddf
-
-unused devices: <none>
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are the assignee for the bug.=
+Kind regards,
+Niklas
