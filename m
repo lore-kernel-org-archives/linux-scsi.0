@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC3C14436
-	for <linux-scsi@vger.kernel.org>; Sat, 22 Jun 2024 07:49:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F40A04436
+	for <linux-scsi@vger.kernel.org>; Sat, 22 Jun 2024 07:52:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719042545; cv=none; b=eMCAZ2j8ZUR+J0cncGUbZandiIbKfPzu0Jpv7fksiZQj0OHxpDZ+2txnSfl5EARa8p5lQgDb34vYXpP766TJENRyvDQCtgvKJno9HUffYpJRq2ERr0pbDqckzWIeX9uTAZ8gnu/w5dt0dQLyIWmMdOpr4WWiuRCv6uJw7e1ssws=
+	t=1719042740; cv=none; b=iEciIfJBQBB2kBiaoFP1e+EX9UgI/ucybBeqjd9zpmhlDkPzgY2WwGcF1tfZ1lO+Lodtc4vzId/G2wxF1J0X87p/AwDNB+DTePP+CotAN9jeM2Rv/Qw5sqEcp5nEYj6wDdqOtZBI3xgsiUW+StUrO74sUSMR+a4cmed1D/6VlZU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719042545; c=relaxed/simple;
-	bh=6VCT9Q5SnjJe/m6bSSeHE+94bTQMpQ4JkeHjMvPdo34=;
+	s=arc-20240116; t=1719042740; c=relaxed/simple;
+	bh=NaFpvWTQkCjQdSmAfN3/y9rlnhHfWVRSPDwD0NKsXTY=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=Xv/er2tj68OC/ya5e1MW4j8XnKCcM8YDgqPHr39qLsp2oZ3GQVTdtp9Mz/Yug365EKx57YJzZnIh0ZhCv3SekVKxb2LZeya5YmXiw08aGT0dBMCotCVwmm8+rLpwIklnvT18PyU8f89/hLPigogupBxj/ma8aoYqqJ4TaqovEEM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FueiqecT; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:MIME-Version; b=Ctb19Ws5Zdtp4XVm2XSulrv10WBl9e/dMG5nNdl00j2gs3OqW+US+BbrdbYjws40S4EWFDwsUuFodY006DwP52qp3xrUkpva7PK2Wq+tHcwE8rkbbJQthQKQ31+cqz6Z0+Pj8SYNU2L/3vWi/iarh1VK3upK+4TtoqKqLoNEjX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MKGNYOIs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FueiqecT"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 33486C32781
-	for <linux-scsi@vger.kernel.org>; Sat, 22 Jun 2024 07:49:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MKGNYOIs"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BB9B8C32789
+	for <linux-scsi@vger.kernel.org>; Sat, 22 Jun 2024 07:52:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719042545;
-	bh=6VCT9Q5SnjJe/m6bSSeHE+94bTQMpQ4JkeHjMvPdo34=;
+	s=k20201202; t=1719042739;
+	bh=NaFpvWTQkCjQdSmAfN3/y9rlnhHfWVRSPDwD0NKsXTY=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=FueiqecTduBncIgsYabDU5weSRXaRRpnMOTutll8Kjx6h2tw9kbKs1ckQKHHq51ku
-	 m0asJnFs+3NXOeVBdzclB8EAi530pzH5dVU7TxC/UknrYPWl3Nb5vK2SjiO+xJlL82
-	 JDx6UgINPU5fLa0WRlj0sj1G9wf4u2kkzMtQzVd3/5gdnnlIQ+Lo6ChRs8AsvjGD8o
-	 AfFuwkOGU0wBtfA0O9njSoYvepP3qKuLArnp6tP4W4abF4zPvN9xkAtLIGZL8i94Op
-	 g1+JtRvS/rbj+a367+I4lIk29UxzT0PhVAgqzw73KeqGG0rWbS1XOsUekr2T3AMyVS
-	 YvifRvfpAOaHw==
+	b=MKGNYOIsRapIUBQQe1c3MRPEeek1LkwW0Co4faM2cNF1EMUehyqT66fD1jrA8gn54
+	 KP24g5Sanql/p4MNH1qommgO06rv+nzCFyfRlJw3dNl7uPfzGyay8LmUx3Nlm/m70N
+	 pdgIgOEEUIYuCEgRITXFv54qDPj6o3sNNb6UzHX+2N0jQ3iFZPMp91gaWJyQ6mgtZL
+	 YRrbo/j0qSD1u1WsAA6DScoCIUZfSJq03U/nRslidDZ8C5hnL5849Mgt/EPdVeqmkX
+	 5QBUuVvG3pLdGT58FWXbdk8LAkRwwAao6UnrP8dmbWerEg8VQMBHc9ectud1uNLx3o
+	 +48sFPHG6I9Lg==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 28642C53BA7; Sat, 22 Jun 2024 07:49:05 +0000 (UTC)
+	id ABC6FC53BA7; Sat, 22 Jun 2024 07:52:19 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-scsi@vger.kernel.org
 Subject: [Bug 218866] Extra /dev/sd.. entries for a fake raid when more than
  15 partitions
-Date: Sat, 22 Jun 2024 07:49:04 +0000
+Date: Sat, 22 Jun 2024 07:52:19 +0000
 X-Bugzilla-Reason: AssignedTo
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: None
@@ -47,8 +47,8 @@ X-Bugzilla-Resolution:
 X-Bugzilla-Priority: P3
 X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: short_desc
-Message-ID: <bug-218866-11613-pdjU4tGsWN@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-218866-11613-4ARXwhvWK4@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-218866-11613@https.bugzilla.kernel.org/>
 References: <bug-218866-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -64,13 +64,38 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D218866
 
-Marc Debruyne (marc_debruyne@telenet.be) changed:
+--- Comment #11 from Marc Debruyne (marc_debruyne@telenet.be) ---
+(In reply to Phillip Susi from comment #9)
+> This is no bug.  Fake raids are, well, fake.  The kernel sees both
+> individual disks and since they are mirror images of each other, both have
+> the same partitions on them.
+>=20
+> The dmraid utility can be used to recognize the fake raid metadata and
+> configure the kernel device mapper to access the raid, and with the -Z
+> switch, it will remove the partitions from the underlying individual disks
+> from the kernel's view.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-            Summary|Extra /dev/sd.. entries for |Extra /dev/sd.. entries for
-                   |a fake raid on Z10PE-D16 WS |a fake raid when more than
-                   |motherboard.                |15 partitions
+dmraid is not used; mdadm is used
+
+********************
+
+cat /proc/mdstat
+
+--------
+
+Personalities : [raid1] [raid6] [raid5] [raid4]=20
+md125 : active raid5 sdh1[4] sdb1[2] sdi1[6] sda1[0] sdc1[1] sdf1[3]
+      87890972160 blocks super 1.2 level 5, 512k chunk, algorithm 2 [6/6]
+[UUUUUU]
+      bitmap: 5/131 pages [20KB], 65536KB chunk
+
+md126 : active raid1 sde[1] sdd[0]
+      975585280 blocks super external:/md127/0 [2/2] [UU]
+
+md127 : inactive sde[1](S) sdd[0](S)
+      2354608 blocks super external:ddf
+
+unused devices: <none>
 
 --=20
 You may reply to this email to add a comment.
