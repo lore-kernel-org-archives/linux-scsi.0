@@ -1,135 +1,233 @@
-Received: from mail-lj1-f170.google.com (mail-lj1-f170.google.com [209.85.208.170])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7F254A0F
-	for <linux-scsi@vger.kernel.org>; Sat, 22 Jun 2024 01:57:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A1916FD3;
+	Sat, 22 Jun 2024 03:31:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719021427; cv=none; b=oXsIuhIRULJRDrjMh3HirCyWvUmkC0Aspof6s45OD0RWjSCieSRTRTJI1FaT6hcwpJO4qSw2oMy+N6aVzb6MfgadVsD+TvrBekUsklYf0FoEnQbskAAeTwM8Z5AttIkeKTukc9mmFB9ztW83kilNGh8xJgpHtxkVJRESs/unAuk=
+	t=1719027118; cv=none; b=n2xL3Z+PxbaUMPLwW6jDCEkNA69XqxiWuE0n4X+lTxY9mwZvRK0t4wHdxblEoWzvgN24LH0PWPXaoz+avEp1MPIL0rW0+EIbZQJpjZfoy5dUhZU/dHLrqJZriQnc9V74z9AFg7SySsFwmXpkn0WussjpScgWAi5RYRt6IpTo8Pg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719021427; c=relaxed/simple;
-	bh=8zqEXze3fEHr+zCqxux/Dy6aUVh/dIgDy21TaXzMbTI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Jc2jw2THzNPsvwQc88ZYlZ81zq0CUv7MjLyL6bhswcaIjsxwOP4Fhcfu1CPDulI+SlO41Nl5r6wUs6gRmAvTS1EiNKy1zVo2T11Qzxnw2k0GH39ReRWLAt0LD+K+kY31pHU0I0k9wNidEtQQRqnLivw52N+uFY020V++YFBd9VA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=TKyxwey8; arc=none smtp.client-ip=209.85.208.170
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="TKyxwey8"
-Received: by mail-lj1-f170.google.com with SMTP id 38308e7fff4ca-2ebe6495aedso25955441fa.0
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Jun 2024 18:57:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1719021423; x=1719626223; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=wKHMfbyDfNXzhbJefDVMkuCyrSXAHynzAEUW3BjE6BE=;
-        b=TKyxwey8zwvJey3oinz8ysJoZLoPEWiXH+mZ2gIXmHGtPcEb7PQns/q5NKt9Br+Fxn
-         1Z6sEonepPK0b3tJIUdOXHREMv6iDtqE8CtalOVyDw2yb5ylIqIYd33JZozH0xda4qan
-         xzWJSyN0DxJvZdnrxxAmAyfGH5EytLKKrn2g8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719021424; x=1719626224;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=wKHMfbyDfNXzhbJefDVMkuCyrSXAHynzAEUW3BjE6BE=;
-        b=wpDebV7coYnbsacXcnwCDuTkM7En04lb7X4GNDdOsFI+pjgydTnC4GoHVnlRcqlIgx
-         f1U5fWKdmIGctB6luwvy5neS/YI9JmaMwXuGsSWYWjYBfb0IOE5YC3uvDBCwCWAjoEOP
-         4UbauQ2b2nVDgyeNt5XEXTeBURk0xIMDBAsQEb2RjQLosuKHWxjzxnWEYs6iS+s+aU6N
-         zKFVJw+0EMLjPUn5X/ZpdZHI/spzNkG56FXTl2XIyge2PQ+I+Y+KzC26lAnCIENmNP5I
-         DW+YcESXxF7ygEUjZCsjpdFj03a5m6byhVK0QvBJQxNQhlN1x7dsvFoaTxzU5mDmRcTK
-         mEmA==
-X-Forwarded-Encrypted: i=1; AJvYcCVY/+csGlOGDk6R/yuh9KCHO146ChVJmrZd7VF+5/g45dcI6ZCzZ14+t4ZOEiiDq7Hw5bIggp6eRYDup1tSUBb2Tpudcx3XTCvPxg==
-X-Gm-Message-State: AOJu0YyX6oJfJ3g6XXCxWOpHG69G7hu6uv74VjHDqDuexw1DuT7QCHN+
-	R2dBGuWUP3F27QNZU+tMKqKM4YNMfal3LXyIyBkG8A6JVAtIHUWCdoEZvJ5XzMjWfh7letHkPOH
-	r7EnhlA==
-X-Google-Smtp-Source: AGHT+IHAi2wo2S4LbxDTxXoiGtkKafB2l7z0qfloWKH+JhVImYCnHkyTm44hBCKC+opVOr/B3ZbC9g==
-X-Received: by 2002:a05:6512:3457:b0:52c:deb8:e57c with SMTP id 2adb3069b0e04-52cdeb8e5c0mr131427e87.49.1719021423396;
-        Fri, 21 Jun 2024 18:57:03 -0700 (PDT)
-Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com. [209.85.208.181])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-52cd63b4966sm363098e87.9.2024.06.21.18.57.02
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 21 Jun 2024 18:57:02 -0700 (PDT)
-Received: by mail-lj1-f181.google.com with SMTP id 38308e7fff4ca-2eabd22d3f4so31900701fa.1
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Jun 2024 18:57:02 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCXabo6HuWpzMJnGYNMYnoL/BF/I4c4tE4WPFF+Mtl3oS71tTqFQ3QgDJqJLyuHuW1E4YQIKrmICpyKEBrIAUtX9ntgn1ebRDQ8tSg==
-X-Received: by 2002:a2e:a409:0:b0:2ec:4d98:c9d6 with SMTP id
- 38308e7fff4ca-2ec4d98caa9mr19638211fa.29.1719021422276; Fri, 21 Jun 2024
- 18:57:02 -0700 (PDT)
+	s=arc-20240116; t=1719027118; c=relaxed/simple;
+	bh=eqSmgBdjym/texxZAOY+UoNLqHcwSliczZDExTuyZMY=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=U9+63+s4oiCprmKomTfeW2Yl4M1b3KdWzNK74BUHUTJKyj5eLZuDxIV51EylDowdAAqu5RSr90g8hD1WEwm/tEuTd147EJmvhU5do31pVx0XNcV0vESg5PnF7Xjk5S5z5SSejCGjRShd56c6xlh8fB6Lomf3hiqEKOlRoK2GhMk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4W5fmh6Z9Pz1SD9G;
+	Sat, 22 Jun 2024 11:27:32 +0800 (CST)
+Received: from kwepemi500008.china.huawei.com (unknown [7.221.188.139])
+	by mail.maildlp.com (Postfix) with ESMTPS id 586CA140443;
+	Sat, 22 Jun 2024 11:31:51 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ kwepemi500008.china.huawei.com (7.221.188.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Sat, 22 Jun 2024 11:31:50 +0800
+Subject: Re: [bug report] scsi: SATA devices missing after FLR is triggered
+ during HBA suspended
+To: Damien Le Moal <dlemoal@kernel.org>
+References: <20240618132900.2731301-1-liyihang9@huawei.com>
+ <0c5e14eb-5560-48cb-9086-6ad9c3970427@kernel.org>
+CC: <cassel@kernel.org>, <James.Bottomley@HansenPartnership.com>,
+	<martin.petersen@oracle.com>, <john.g.garry@oracle.com>,
+	<yanaijie@huawei.com>, <linux-kernel@vger.kernel.org>,
+	<linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
+	<chenxiang66@hisilicon.com>, <prime.zeng@huawei.com>, <liyihang9@huawei.com>
+From: Yihang Li <liyihang9@huawei.com>
+Message-ID: <f27d6fa7-3088-0e60-043e-e71232066b12@huawei.com>
+Date: Sat, 22 Jun 2024 11:31:29 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <317d2de5fdb5e27f8f493e0e0ad23640a41b6acf.camel@HansenPartnership.com>
- <CAHk-=whEQRH6eS=_JwanytAKERuWO1JQdzRb4YiLK4omzL2J-Q@mail.gmail.com> <yq15xu1oo3e.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq15xu1oo3e.fsf@ca-mkp.ca.oracle.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 21 Jun 2024 18:56:45 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wgLGuYSgbS90MMudryOOjuWYeXaXGeGJRg9SVy1GmLKcQ@mail.gmail.com>
-Message-ID: <CAHk-=wgLGuYSgbS90MMudryOOjuWYeXaXGeGJRg9SVy1GmLKcQ@mail.gmail.com>
-Subject: Re: [GIT PULL] SCSI fixes for 6.10-rc4
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, 
-	linux-kernel <linux-kernel@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <0c5e14eb-5560-48cb-9086-6ad9c3970427@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500008.china.huawei.com (7.221.188.139)
 
-On Fri, 21 Jun 2024 at 18:48, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
-> The specific problem with mode pages is that there is no way to know
-> whether a given page is supported without asking for it. Whereas for
-> most of the other things we query at discovery time, the device provides
-> a list of supported pages we can consult before we attempt to query the
-> page itself.
+Hi Damien,
 
-Yes. I know.
+Thanks for your reply.
 
-But I also know that pretty much *EVERY* time the SCSI layer has
-decided to start looking at some new piece of data, it turns out that
-"Oh, look, all those devices have only ever been tested with operating
-systems that did *NOT* look at that mode page or other thing, and
-surprise surprise - not being tested means that it's buggy".
+On 2024/6/19 7:11, Damien Le Moal wrote:
+> On 6/18/24 22:29, Yihang Li wrote:
+>> Hi Damien,
+>>
+>> I found out that two issues is caused by commit 0c76106cb975 ("scsi: sd:
+>> Fix TCG OPAL unlock on system resume") and 626b13f015e0 ("scsi: Do not
+>> rescan devices with a suspended queue").
+>>
+>> The two issues as follows for the situation that there are ATA disks
+>> connected with SAS controller:
+> 
+> Which controller ? What is the driver ?
 
-> It is a new feature in SCSI spearheaded by the Android folks. That's why
-> there isn't a lot of information available about it elsewhere.
+I'm using the hisi_sas_v3_hw driver and it supports HiSilicon's SAS controller.
 
-So no wonder random devices are buggy.
+> 
+>> (1) FLR is triggered after all disks and controller are suspended. As a
+>> result, the number of disks is abnormal.
+> 
+> I am assuming here that FLR means PCI "Function Level Reset" ?
 
-And I'm not putting down random devices. Quite the opposite. I'm
-stating a well-known fact: untested things are buggy.
+Yes, I am talking about the PCI "Function Level Reset"
 
-And no amount of "but but but it worked for me" is at all an argument.
-If it hasn't been tested, it's almost certainly broken somewhere.
+> FLR and disk/controller suspend execution timing are unrelated. FLR can be
+> triggered at any time through sysfs. So please give details here. Why is FLR
+> done when the system is being suspended ?
 
-We've seen this over and over again.
+Yes, it is because FLR can be triggered at any time that we are testing the
+reliability of executing FLR commands after disk/controller suspended.
 
-> I am super picky about having good heuristics for when we should attempt
-> to query a device for new protocol capabilities. In this case we lacked
-> a reliable indicator that the feature was supported.
+Also, the system does not suspended because we have multiple controllers and
+we only suspend one of them and the attached disk devices while the system is
+running in the other controller.
 
-My argument is that things should be opt-in.
+> 
+>> (2) After all disks and controller are suspended, and resuming all disks
+>> again, the driver reference counting is not 0 (The value of "Used" in the
+>> lsmod command output is not 0).
+> 
+> Resuming all disks again ? So you mean system resume ?
+> Are we talking about system suspend to ram ? Hybernation ? or something else ?
+> (e.g. a controller reset through PCI FLR ?)
 
-If it wasn't needed for the previous 30 years go SCSI history, it sure
-as heck didn't suddenly become necessary today.
+As mentioned earlier, we have multiple controllers, only suspend one of them and
+the attached data disks, and then resuming the disks again.
 
-So you literally NEVER DO THIS unless the system admin has explicitly
-enabled it.
+> 
+> Please clarify exactly what your adapter is and the full procedure you do to
+> trigger the issue so that we can try to recreate it.
 
-That's what opt-in means.
+The system has two HiSilicon's SAS controllers. Controller A is connected to the
+system disk, and controller B is connected to multiple SATA disks.
 
-And honestly, then the Android people can decide to opt in. Not random
-other victims.
+The issue 1:
+a. Suspend all disks on controller B.
+b. Suspend controller B.
+c. Trigger the PCI FLR on controller B through sysfs.
+d. The SATA disks connected to controller B is disabled by libata layer.
 
-What's the advantage of just enabling random new features that have no
-real use case today?
+kernel message is as follows:
+[root@localhost]# echo 1 > /sys/bus/pci/devices/0000:b4:02.0/reset		------> trigger PCI FLR
+[  270.479991] hisi_sas_v3_hw 0000:b4:02.0: resuming from operating state [D0]	------> resuming SAS controller
+[  271.819775] hisi_sas_v3_hw 0000:b4:02.0: waiting up to 25 seconds for 7 phys to resume
+[  271.820324] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy7 link_rate=10(sata)
+[  271.835183] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy0 link_rate=10(sata)
+[  271.835199] hisi_sas_v3_hw 0000:b4:02.0: dev[8:5] found
+[  271.835786] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy5 link_rate=10(sata)
+[  271.835791] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy6 link_rate=10(sata)
+[  271.846911] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy4 link_rate=10(sata)
+[  271.851676] hisi_sas_v3_hw 0000:b4:02.0: dev[9:5] found
+[  271.851688] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+[  271.851702] sas: ata5: end_device-6:0: dev error handler
+[  271.851708] sas: ata6: end_device-6:1: dev error handler
+[  271.851710] sas: ata7: end_device-6:2: dev error handler
+[  271.851716] sas: ata8: end_device-6:3: dev error handler
+[  271.851717] sas: ata9: end_device-6:4: dev error handler
+[  271.851718] sas: ata10: end_device-6:5: dev error handler
+[  271.855161] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy1 link_rate=10(sata)
+[  271.855547] hisi_sas_v3_hw 0000:b4:02.0: dev[10:5] found
+[  271.855760] hisi_sas_v3_hw 0000:b4:02.0: phydown: phy7 phy_state=0x73
+[  271.855763] hisi_sas_v3_hw 0000:b4:02.0: ignore flutter phy7 down
+[  271.899322] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy3 link_rate=11
+[  271.902737] hisi_sas_v3_hw 0000:b4:02.0: dev[11:5] found
+[  271.950079] hisi_sas_v3_hw 0000:b4:02.0: dev[12:5] found
+[  271.955569] hisi_sas_v3_hw 0000:b4:02.0: dev[13:5] found
+[  271.961037] hisi_sas_v3_hw 0000:b4:02.0: dev[14:1] found
+[  271.961052] hisi_sas_v3_hw 0000:b4:02.0: end of resuming controller	------> end of resuming controller
+[  271.973073] hisi_sas_v3_hw 0000:b4:02.0: FLR prepare			------> PCI FLR start
+[  272.032623] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy7 link_rate=10(sata)
+[  272.039656] sas: sas_form_port: phy7 belongs to port0 already(1)!
+[  272.201518] ata5.00: configured for UDMA/133
+[  272.207713] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
+[  272.217777] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
+[  272.227672] sas: ata5: end_device-6:0: dev error handler
+[  272.227676] sas: ata6: end_device-6:1: dev error handler
+[  272.227682] sas: ata7: end_device-6:2: dev error handler
+[  272.227688] sas: ata8: end_device-6:3: dev error handler
+[  272.227695] sas: ata10: end_device-6:5: dev error handler
+[  272.227694] sas: ata9: end_device-6:4: dev error handler
+[  274.888594] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy7 link_rate=10(sata)
+[  274.895614] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy5 link_rate=10(sata)
+[  274.895616] sas: sas_form_port: phy7 belongs to port0 already(1)!
+[  274.900251] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy0 link_rate=10(sata)
+[  274.902647] sas: sas_form_port: phy5 belongs to port1 already(1)!
+[  274.902833] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy6 link_rate=10(sata)
+[  274.903023] sas: sas_form_port: phy0 belongs to port2 already(1)!
+[  274.914529] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy1 link_rate=10(sata)
+[  274.916099] sas: sas_form_port: phy6 belongs to port3 already(1)!
+[  274.916259] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy4 link_rate=10(sata)
+[  274.916439] sas: sas_form_port: phy1 belongs to port5 already(1)!
+[  274.961013] sas: sas_form_port: phy4 belongs to port4 already(1)!
+[  274.967338] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy3 link_rate=11
+[  274.983663] sas: sas_form_port: phy3 belongs to port6 already(1)!
+[  275.037230] hisi_sas_v3_hw 0000:b4:02.0: FLR done			------> PCI FLR done
+[  275.037232] hisi_sas_v3_hw 0000:b4:02.0: phydown: phy0 phy_state=0xfa
+[  275.049223] hisi_sas_v3_hw 0000:b4:02.0: ignore flutter phy0 down
+[  275.204142] hisi_sas_v3_hw 0000:b4:02.0: phyup: phy0 link_rate=10(sata)
+[  275.211001] sas: sas_form_port: phy0 belongs to port2 already(1)!
+[  278.223079] hisi_sas_v3_hw 0000:b4:02.0: entering suspend state	------> the controller suspend again
+[  280.527655] ata7.00: qc timeout after 5000 msecs (cmd 0x27)		------> revalidate ATA devices
+[  280.535667] sas: sas_ata_internal_abort: Task 00000000682de2e7 already finished.
+[  280.543483] ata7.00: failed to read native max address (err_mask=0x4)
+[  280.551671] ata7.00: HPA support seems broken, skipping HPA handling
+[  280.558317] ata7.00: revalidation failed (errno=-5)
+[  280.563437] sas: Executing internal abort failed 5000000000000600 (-22)
+[  280.571670] hisi_sas_v3_hw 0000:b4:02.0: I_T nexus reset: internal abort (-22)
+[  280.579338] sas: ata7: end_device-6:2: Unable to reset ata device?
+[  280.751675] sas: lldd_execute_task returned: -22
+[  280.759664] ata7.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+[  280.766063] ata7.00: revalidation failed (errno=-5)
+[  285.911663] sas: Executing internal abort failed 5000000000000600 (-22)
+[  285.919667] hisi_sas_v3_hw 0000:b4:02.0: I_T nexus reset: internal abort (-22)
+[  285.927353] sas: ata7: end_device-6:2: Unable to reset ata device?
+[  286.095677] sas: lldd_execute_task returned: -22
+[  286.103666] ata7.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+[  286.110078] ata7.00: revalidation failed (errno=-5)			------> revalidation failed due to the controller is suspend state
+[  286.119424] ata7.00: disable device					------> disable device due to revalidation failed
+[  286.123185] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
+[  286.133236] sas: sas_resume_sata: for direct-attached device 5000000000000600 returned -19
+...
 
-Put another way: why wasn't this an explicit opt-in from the get-go?
-And why can't we make that be the rule going forward for the *NEXT*
-time somebody introduces some random new mode page?
+The issue 2:
+a. Suspend all disks on controller B.
+b. Suspend controller B.
+c. Resuming all disks on controller B.
+d. Run the "lsmod" command to check the driver reference counting.
 
-That was my ask.
+Thanks,
+Yihang
 
-           Linus
+> 
+>> For the issue 1, After all disks and controller are suspended, FLR command
+>> will resuming the controller and all sas ports. libsas layer will call
+>> ata_sas_port_resume() to resume ata port and schedule EH to recover it.
+>> In libata standard error handler ata_std_error_handler(), it will call ata
+>> reset function, revalidate ATA devices and issue ATA device command
+>> ATA_CMD_READ_NATIVE_MAX_EXT to read native max address. This command will
+>> failed due to the controller enter suspend state again and libata disable
+>> the device finally. The controller enter suspend state again because FLR
+>> command completes and the runtime PM usage counter is 0.
+>>
+>> In commit 0c76106cb975 ("scsi: sd: Fix TCG OPAL unlock on system resume")
+>> and 626b13f015e0 ("scsi: Do not rescan devices with a suspended queue"),
+>> use blk_queue_pm_only() to check the device request queue state, if the
+>> device request queue is not running, the device will not be rescanned.
+>> Therefore, the runtime PM usage counter of the controller will not
+>> increase so that the controller enters the suspended state again.
+>>
+>> For the issue 2, the cause is unknown.
+>>
+>> How to solve these two issues?
+>>
+>> regards,
+>> Yihang
+>>
+> 
