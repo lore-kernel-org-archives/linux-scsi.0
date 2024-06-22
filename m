@@ -1,113 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C08C14B947
-	for <linux-scsi@vger.kernel.org>; Sat, 22 Jun 2024 11:49:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0528825632;
+	Sat, 22 Jun 2024 16:24:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719056948; cv=none; b=FFyVmyyHYrnUxmw9/PIDE39/l7/2JxYO4v/FDSdbT5LPEi8h+CMWN7n6t5ItJeGB6CMv9wRt1RDrlWD1+CrceVeu7TZQevU7xwJVjVOYcWAbiMBBPdtyEbuzg+DYDm70i0CubILvLIG3n/BJWVsPRK72K/SZhvj65y50hVPiN6Y=
+	t=1719073454; cv=none; b=lR8DLhM0sLaZZ7JcZfR1GG4GMoVG9Vf8Gk4fQY8Kjv9IlBOkLo/OqIhjSVGDBg6bQr+D1334L18CTjCcKrfvZ+uCEJ9bW06Xm6QgzjmjdnLWJ9xM4pVG+eCoiyUUKC9EWSRJk/fr9DrCHhDPbFkpLL6+Ky6IUPjoq5KPhBan+Sg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719056948; c=relaxed/simple;
-	bh=ZXJ9wcbvuGokiAoBRmYbUQYCBCpJkPVURK2ODLnwOkc=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=o/ka9RPKifNRreFEyHGiQmP5zJiQ9dRsiw8WYdIvd/o6fRTHl6QeRv1tegWy+5coTbO1QRoUrzm//utbDpJUT0uXYjOcll9VMmpJ0VGEMkjMlDubrAf9431Fu3j84UmNn5C++VX5h1YbQakaA+Z9PE66R2btt/fpLThxzOa5oDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T3t8I+XH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719073454; c=relaxed/simple;
+	bh=Z8i8kg5ruIzaQvF9ui/N+qkFWHcVNLwOjp79GXf966Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=pvJq0JOqP3y2uL6UwTkqYCZcd25rXo5pCZDc1Kzt1LGmYBBl1W64dnJ5oyca/OUyjyUv/fJ8GfVAwo7/39IpZ/sdrVbj9o3HEUbbhdAlPyzi0roqqzpbRmie5Csl+GPX3H5DtoqBEI+oSdecE3GiJ7NXerypu0Z0vTYUDowESrU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FH1ddIgZ; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T3t8I+XH"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D0238C4AF0F
-	for <linux-scsi@vger.kernel.org>; Sat, 22 Jun 2024 11:49:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719056947;
-	bh=ZXJ9wcbvuGokiAoBRmYbUQYCBCpJkPVURK2ODLnwOkc=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=T3t8I+XHUozTA3hzz8P4vPYmgap+gtt4NlDAPfljZ10/FfecOYSAZv0TgGZ6FBq7P
-	 HQYtPhskm15yMxPug3f4GTFpvuMMOzluo5nX5t77+jOvCbOyJunp80kLyawa8tEC78
-	 vz8OmF6hrgKJPDCxrAHPyC2BiCYc45THG6JIE/2Q9Z/3zHRlVu0gIDxYgjVYAyEpug
-	 GcGj3pZcZyDJDzMOKiMmZdgP0Hwj6c//gIc0S7EtDUTfJtD/UGbCWhkXm95l9iuAuI
-	 Q+YfevvjrRk9CAsLcJ/hR0l8TzCwpb0/GrGDaVsVOofk6U/prjk0RYOR8gCARBxPW9
-	 DMNCpu9G1ZEdA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id C94E3C53B73; Sat, 22 Jun 2024 11:49:07 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 209177] mpt2sas_cm0: failure at
- drivers/scsi/mpt3sas/mpt3sas_scsih.c:10791/_scsih_probe()!
-Date: Sat, 22 Jun 2024 11:49:07 +0000
-X-Bugzilla-Reason: CC
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: zeph@fsfe.org
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: drivers_other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-209177-11613-zrh6o2oM1j@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-209177-11613@https.bugzilla.kernel.org/>
-References: <bug-209177-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FH1ddIgZ"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W600r2Qzwz6CmR07;
+	Sat, 22 Jun 2024 16:24:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1719073448; x=1721665449; bh=UJYdrMEBRW4r/lhwmdGKzFlw
+	KbiqAIgd3f13bjcWoaQ=; b=FH1ddIgZJpwB1bvqKj8JS8eSHNwwf8OSbKi7+1Zh
+	9jcGV/HC3zNlqLy4vaEW3ooGNDUz6hmIrHklq9B+p0msaVXGcXuE/DnUlbnKvmEL
+	wUIGRIq9j8Wt5fWn615LG3ToZBzJ3K4lrrNPq2ZuKT3bTmpWv7MWfUjvJSonkune
+	cpFx5GJbDgvv+/spVRB/3RIqkroSvoF32eBhhpr50N1Am2GLY2MIjvK9RyVPCzPz
+	FrB3kLIKyBUQevUX45TbVIMMutYcoB0F8PripCd1L/rrdSgbh3Ii3VgY6mZjDndv
+	deB44Nc15+UJ5/M8SrOqZsH4BZEwbIq6NP/gtzQ495nGEA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 9xpbyM_n4SVR; Sat, 22 Jun 2024 16:24:08 +0000 (UTC)
+Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W600k1Pvxz6CmQyM;
+	Sat, 22 Jun 2024 16:24:05 +0000 (UTC)
+Message-ID: <8778d191-436d-46cd-a17e-a7d264c32793@acm.org>
+Date: Sat, 22 Jun 2024 09:24:03 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [GIT PULL] SCSI fixes for 6.10-rc4
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ linux-scsi <linux-scsi@vger.kernel.org>,
+ linux-kernel <linux-kernel@vger.kernel.org>
+References: <317d2de5fdb5e27f8f493e0e0ad23640a41b6acf.camel@HansenPartnership.com>
+ <CAHk-=whEQRH6eS=_JwanytAKERuWO1JQdzRb4YiLK4omzL2J-Q@mail.gmail.com>
+ <yq15xu1oo3e.fsf@ca-mkp.ca.oracle.com>
+ <CAHk-=wgLGuYSgbS90MMudryOOjuWYeXaXGeGJRg9SVy1GmLKcQ@mail.gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAHk-=wgLGuYSgbS90MMudryOOjuWYeXaXGeGJRg9SVy1GmLKcQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D209177
+On 6/21/24 6:56 PM, Linus Torvalds wrote:
+> But I also know that pretty much *EVERY* time the SCSI layer has
+> decided to start looking at some new piece of data, it turns out that
+> "Oh, look, all those devices have only ever been tested with operating
+> systems that did *NOT* look at that mode page or other thing, and
+> surprise surprise - not being tested means that it's buggy".
 
---- Comment #9 from Guido Serra (zeph@fsfe.org) ---
-maybe worth adding the whole dmesg entries for such:
+We got the message and we will do what we can to prevent future
+regressions for USB devices.
 
-mpt3sas version 43.100.00.00 loaded
-mpt2sas_cm0: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (32779040 k=
-B)
-mpt2sas_cm0: CurrentHostPageSize is 0: Setting default host page size to 4k
-mpt2sas_cm0: MSI-X vectors supported: 1
-mpt2sas_cm0:  0 1 1
-mpt2sas_cm0: High IOPs queues : disabled
-mpt2sas0-msix0: PCI-MSI-X enabled: IRQ 100
-mpt2sas_cm0: iomem(0x00000000e2540000), mapped(0x00000000dddd21ca), size(16=
-384)
-mpt2sas_cm0: ioport(0x000000000000e000), size(256)
-mpt2sas_cm0: CurrentHostPageSize is 0: Setting default host page size to 4k
-mpt2sas_cm0: scatter gather: sge_in_main_msg(1), sge_per_chain(9),
-sge_per_io(128), chains_per_io(15)
-mpt2sas_cm0: request pool(0x000000004246b71a) - dma(0xfed80000): depth(3492=
-),
-frame_size(128), pool_size(436 kB)
-mpt2sas_cm0: sense pool(0x00000000333696a2) - dma(0xcfa80000): depth(3367),
-element_size(96), pool_size (315 kB)
-mpt2sas_cm0: reply pool(0x00000000eef15715) - dma(0xcfa00000): depth(3556),
-frame_size(128), pool_size(444 kB)
-mpt2sas_cm0: config page(0x000000009bf3e151) - dma(0xcf9fb000): size(512)
-mpt2sas_cm0: Allocated physical memory: size(7579 kB)
-mpt2sas_cm0: Current Controller Queue Depth(3364),Max Controller Queue
-Depth(3432)
-mpt2sas_cm0: Scatter Gather Elements per IO(128)
-mpt2sas_cm0: overriding NVDATA EEDPTagMode setting
-mpt2sas_cm0: LSISAS2008: FWVersion(20.00.07.00), ChipRevision(0x03),
-BiosVersion(00.00.00.00)
-mpt2sas_cm0: Protocol=3D(Initiator,Target), Capabilities=3D(TLR,EEDP,Snapsh=
-ot
-Buffer,Diag Trace Buffer,Task Set Full,NCQ)
-mpt2sas_cm0: sending port enable !!
-mpt2sas_cm0: hba_port entry: 00000000319a47bc, port: 255 is added to hba_po=
-rt
-list
-mpt2sas_cm0: host_add: handle(0x0001), sas_addr(0x500605b002c8f75a), phys(8)
-mpt2sas_cm0: port enable: SUCCESS
+As has been mentioned earlier, there is evidence in
+sd_read_write_protect_flag() that SCSI devices may misbehave when
+querying a mode page. However, I was not familiar with that code and
+hence was not aware of the comments in that code. According to the git
+history, these comments were added before 2005, that is before I started
+reading the linux-scsi mailing list.
 
---=20
-You may reply to this email to add a comment.
+> My argument is that things should be opt-in.
+> 
+> If it wasn't needed for the previous 30 years go SCSI history, it sure
+> as heck didn't suddenly become necessary today.
+> 
+> So you literally NEVER DO THIS unless the system admin has explicitly
+> enabled it.
+> 
+> That's what opt-in means.
+> 
+> And honestly, then the Android people can decide to opt in. Not random
+> other victims.
+ >> What's the advantage of just enabling random new features that have no
+> real use case today?
+> 
+> Put another way: why wasn't this an explicit opt-in from the get-go?
+> And why can't we make that be the rule going forward for the *NEXT*
+> time somebody introduces some random new mode page?
 
-You are receiving this mail because:
-You are on the CC list for the bug.=
+The new mode page has been introduced last year in SBC-5. UFS devices 
+have a mix of SLC and TLC NAND internally and the new mode page allows
+device vendors to reduce write amplification. This is important to UFS
+device vendors.
+
+I think that the new mode page is useful for all storage devices that
+have a mix of slow and fast storage internally and hence that it is also
+useful for some enterprise storage devices. This is why the new mode
+page is read by default. But as has been mentioned above, we have
+learned our lesson and will be much more careful in the future when
+adding code that modifies the access pattern of the sd driver for USB
+storage devices.
+
+Thanks,
+
+Bart.
