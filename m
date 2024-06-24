@@ -1,93 +1,76 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C3D913C3DD;
-	Mon, 24 Jun 2024 16:29:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BC301EA87;
+	Mon, 24 Jun 2024 17:08:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719246564; cv=none; b=Sq5JlT9xerAHHXkOOwGPrmugHjfK+MJ/WW3+yJGG1rFGywnVhCfu6vKUVJ/DBTq6Qi31kAKQi6BVcLFj07GQGEqKNH0mlLKfFJTZKu3umieQxEtVYQYsWPVzSk25MkteYRP7MUx5OjfWJI79NJ9wHoihlHc5tzEn7ddapxMYgd8=
+	t=1719248903; cv=none; b=Ak3u/B+r6+h3FmaclxeeDgT0Prv8sodSjcnPYVj9RxtAkpgHrU5J/SlQqORE8vbwZidDO1L0VGFhvqV4yadQhSpSOt9BnUp+KMNh+3tInSB45ELPupdIhhgzAc1DefO3hipvX/cGJlDDTURyvR9kVaTQRvfbvg2/dH4GjZPImUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719246564; c=relaxed/simple;
-	bh=y0XI1/zWy/ZAVLOadjpPIu2VmYpe0M8bW12T4D1J86I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=U57OTf0rbpoaOfmuwBuLMv8ZUpjoN99nMft9Jc3Iax/wGqujHA0CcghFssGXom6WhBRUBfJXEDnwwR/glPsCiUKE6FSf6chQgHs820qBu/qthUV6r3Z7HPeLnHc0kXgkMRblLdiwHxq6NR31dxRRSyYqJFkPfnnU9bXf5Rc6hTs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=GQSNA8rX; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1719248903; c=relaxed/simple;
+	bh=c5IMwi2AkSm61J7nCdd2EBXV6o3vo+7AANeGa2JN45A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aBJ8TZyaH8WIj2Ts6Q4p6lV2Ty+f6miWRlG1702oDfCCd8MuzgjAxCrcD9E/BqqIYkgMTUjwrncYv+xjFEFBJL/4Q13pgvZRQ3FgyGsc/2HrdI81eMRNZuHojM/0NHXCmYLqGuZq7DE0D7kPuMlWWFTG6l3N7g2zwrg8gEasji0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d8C/s3Ng; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="GQSNA8rX"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4W7D1t3zL4zll9by;
-	Mon, 24 Jun 2024 16:29:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1719246557; x=1721838558; bh=XzBxWYiHnenCqjx10h/fb7Ug
-	T2+m8FdPyZracq6MfuY=; b=GQSNA8rXtyINheNGuFl4l9zKrSYImTDgHttLOADY
-	PRVJTWm0V2+XBTcRW2wsFnxqzB2tHkJWRWOFuMpHAplIn/Wie9sK8PIgv+G9YOOd
-	kX06mVgHmyoiGmoO8yUymVUILTd54YOFDLjNGt+7kJqnn42RQ5XZCn/wiky1Js2v
-	R6zPfpYRhcltpEdfVyB3JIyRyqCBkL+JkKaViTphd3IjwfqWW2vMveR9zVczt4s5
-	JO1qkvCueBhkizswEOg3YaMb7E7HnTMfcdt4mJOZCQ2kK0GRuVv9/1k3+ViBcISS
-	V2TZvGXvx/uRbhSdA8v0cppxGZgtjcb+ulQ2nNvwSoNzJg==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id usmbtpjiE8Fr; Mon, 24 Jun 2024 16:29:17 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4W7D1j6PhJzll9Zx;
-	Mon, 24 Jun 2024 16:29:13 +0000 (UTC)
-Message-ID: <b1173b6f-445c-4d6d-9c78-b0351da2893a@acm.org>
-Date: Mon, 24 Jun 2024 09:29:12 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d8C/s3Ng"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 682D2C2BBFC;
+	Mon, 24 Jun 2024 17:08:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719248903;
+	bh=c5IMwi2AkSm61J7nCdd2EBXV6o3vo+7AANeGa2JN45A=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=d8C/s3NgDhBmDzX7X6Z3a8NgLG1XRNWm3AVon41eJewAqY4XNmD50+AdQpjukysaA
+	 0+c9peZEcs8AURzleAxgVmV3zaxrAP0+WMQxnkR3oNoVdRegLrw7QTozLmVentUZPE
+	 P0BMSL1dkoExQoFoaBFFudfcpEmdYCHeKJ0irUoLxUFwgxCKTvfHLKHNHL2RN4iLoh
+	 ki4NFa+liGK52kKToNiMhO53pIJVSGFwHndW7Uw+1UTH4eb3kjlEU/UFxvZz4PM4y3
+	 BbdO/dVn76ts+09ZmrGp9NorxeNYJ2cNYzLcTNejNMPSMmam7/bl5ZZAKhBMTTCFIl
+	 W6hH1Idyq3vZQ==
+Date: Mon, 24 Jun 2024 11:08:16 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
+	Richard Weinberger <richard@nod.at>,
+	Philipp Reisner <philipp.reisner@linbit.com>,
+	Lars Ellenberg <lars.ellenberg@linbit.com>,
+	Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
+	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
+	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Vineeth Vijayan <vneethv@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
+	drbd-dev@lists.linbit.com, nbd@other.debian.org,
+	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
+	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH 14/26] block: move the nonrot flag to queue_limits
+Message-ID: <ZnmoANp0TgpxWuF-@kbusch-mbp.dhcp.thefacebook.com>
+References: <20240617060532.127975-1-hch@lst.de>
+ <20240617060532.127975-15-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: quiesce request queues before check
- pending cmds
-To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
- mani@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
- junwoo80.lee@samsung.com, martin.petersen@oracle.com,
- quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
- quic_rampraka@quicinc.com
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- Peter Wang <peter.wang@mediatek.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Maramaina Naresh <quic_mnaresh@quicinc.com>,
- Asutosh Das <quic_asutoshd@quicinc.com>,
- open list <linux-kernel@vger.kernel.org>
-References: <1717754818-39863-1-git-send-email-quic_ziqichen@quicinc.com>
- <d3fc4d2b-81b0-4ab2-9606-5f4a5fb8b867@acm.org>
- <efc80348-46c0-4307-a363-a242a7b44d94@quicinc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <efc80348-46c0-4307-a363-a242a7b44d94@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240617060532.127975-15-hch@lst.de>
 
-On 6/24/24 2:56 AM, Ziqi Chen wrote:
-> 1. Why do we need to call blk_mq_quiesce_tagset() into 
-> ufshcd_scsi_block_requests() instead directly replace all 
-> ufshcd_scsi_block_requests() with blk_mq_quiesce_tagset()?
+On Mon, Jun 17, 2024 at 08:04:41AM +0200, Christoph Hellwig wrote:
+> -#define blk_queue_nonrot(q)	test_bit(QUEUE_FLAG_NONROT, &(q)->queue_flags)
+> +#define blk_queue_nonrot(q)	((q)->limits.features & BLK_FEAT_ROTATIONAL)
 
-Because ufshcd_scsi_block_requests() has more callers than the clock
-scaling code and because all callers of ufshcd_scsi_block_requests()
-should be fixed.
+This is inverted. Should be:
 
-> 2. This patch need to to do long-term stress test, I think many OEMs 
-> can't wait as it is a blocker issue for them.
-Patch "scsi: ufs: core: Quiesce request queues before checking pending
-cmds" is already in Linus' master branch. I will rebase my patch on top
-of linux-next.
-
-Best regards,
-
-Bart.
+ #define blk_queue_nonrot(q)	(!((q)->limits.features & BLK_FEAT_ROTATIONAL))
