@@ -1,90 +1,111 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D45F2FC08
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Jun 2024 17:30:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB03B19EEC7;
+	Mon, 24 Jun 2024 17:32:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719250233; cv=none; b=IgvevWZiTgfF5D3EKjBftdCl6NZ1xGYSwpluKbYXudYwZfMZXHwkkY/bSgwGv+XaeYJkMUINfYq7sHAX7M4S9I/nt5aNibjE1+e1rObREH5YqGzGFTGGiWCVynNqR4wUvSMYnLILpPjt6/ZSTrLcfajkAyTiYSjzxNydTO3bVUM=
+	t=1719250348; cv=none; b=SVFHpThHga6OGr6c+uBi3PidXdaqNhqaOSzM+kmxqTFvxZEONLNXZupmEJBvg7E6N8+MPhtTYR9tvap2KTOpIXasyuQq4GJR76EV/HR2lPJwX6/2Yd5OAbRSU1jrFn+z2MRcB20mbTYPqLzOgu8z/bkLlvg5cki+0fpaeZlcf3g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719250233; c=relaxed/simple;
-	bh=ZNO4WPpt28LjS6z9k0CQ9Ui94qV9hFEpSY2iJuhuEwg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MFptzTkSLi7arkNop4hERui31dZFi2NNu8pEw8AH7Dxw0xg6lfZbY6RKsGIDaJc/VH888hUww02iDkYpqYjgwcHt2J7XoqvilbVC5QGoWWAFdyO2q52sEaF6vLU5N7MVYU2AveS9TT/ecYt6y6T6BMTNusspAsnTrI+3wfHZfdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=gft12Ysw; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1719250348; c=relaxed/simple;
+	bh=iX6goktvzhT6WdoBaNOIXv4P9HAOaQqywclZHILktE4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=arEoTBLZxDpyVfw8S+WogzT2DnS68qenOULJdw6bzmrJd1N0juN6OAxkAbLxKqT+8OolDSrAyfIS67TE6WmQc9pyFa1F0vzTBZPPwsEgo2ilgN8Gy27HV72NvH9F161wJTusvzwDk/alM19dMT6r67SN8aQdIuFRo51i3lcSxwc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=W4Cd2kx2; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="gft12Ysw"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W7FNK40c5z6Cnk8y;
-	Mon, 24 Jun 2024 17:30:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1719250221; x=1721842222; bh=ZNO4WPpt28LjS6z9k0CQ9Ui9
-	4qV9hFEpSY2iJuhuEwg=; b=gft12YswqbPwNaeADYud5mP6hNhtkGUNly8Tmgvr
-	bw0jA1/Qh+eNQdzPFqD4cs0ncjYhDOpOsYx7l7BATgBx6E69txG3cT5388CTzZ1O
-	aBIe558U5tVvM6IWjTIUV8Y5qCfR6fjXyVYN8Q9laTixI47CyM5c9ZDWq8A2Usvx
-	9oUtBhkp60/n2uI09k4ao0f5gGPHUPS+vqHcK4yq23dHnmmqxNUhop+W8DK3PY4E
-	QWwhAoKrhmk5ALPa58Yf6KM0to2HlJ/uSAlvhaPPXvSf0iAYTmY6049cxdbR5V2T
-	G41WITckIPJaL4oNfjFhfbb/3LLwMkiPxwlylxrnFx2nFw==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id C0Ol1RXTe2NP; Mon, 24 Jun 2024 17:30:21 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W7FN83Y8Dz6Cnk8t;
-	Mon, 24 Jun 2024 17:30:16 +0000 (UTC)
-Message-ID: <1378b9c7-bbaf-4ee7-9c13-2ebf5d710d93@acm.org>
-Date: Mon, 24 Jun 2024 10:30:13 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W4Cd2kx2"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1f9aeb96b93so32952455ad.3;
+        Mon, 24 Jun 2024 10:32:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1719250346; x=1719855146; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=oVqJqicmnRX8AxcmWbCX9tVc3ExkfG/CAJGav43R6Fs=;
+        b=W4Cd2kx2rZTez1JnCInHcoXNaabw3j1PaeLq0MOMFEfRElfXQEmq9Efnn4jWZVMLsC
+         OKHxRC9zl4+5a7YQNg+1B/u5Iiob6bLsLH8kAwRjdEoMtFBpcCSYb4oOK1SfYlpjUNuJ
+         9Uh+0mpDdj4Meq3bzMZmbV48B2X2TroibXdwjedv+jNoBaA1rqpDhbdXmoONTN+upo2K
+         aRGs1Hx/vCSiuvQAg/jkyaig2Q6bJU18LbA9xwpEQtOdSTyVcAlgD8lLtXhh9PUuQKq8
+         co/EShfooh2t/bKa9eAhXFqSa9RaKZyNCsqko9uoatS8ItcWkrVD9j7UAV0IXXbxzsx4
+         uhFQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719250346; x=1719855146;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=oVqJqicmnRX8AxcmWbCX9tVc3ExkfG/CAJGav43R6Fs=;
+        b=fkVKKoLgAqBQAx0ftCd5FRvv2c6eudrndlqWMtZyO+z7i6GGn9uP9h0XaD9kJ4PH9u
+         Hl4YpOTD3X9zm32134Ll35cg1K3SSpd6RoIgIz+7EamOx/H+4rWSWsKnttDf0YanDXve
+         Id6xxVKAiLQFaicRSuCbfmgt54l/a79bC5KVqWZ7Bdt/Q/kqnoSMUwsk7Lk7Z6bcInCm
+         1UElgORZ0OdFI4O828zS5Kdzvdihcy7lDLXE3uhm1GJ42eUGZWFXqfFpFPZhbZ3ZhC/5
+         LMGY6JbTD++sHfOxNqZCp7GvaVOoSIhwASz6TxC0lhiNSDrDu4b2NJ647HF21ZpTETjm
+         SrWQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWzGigLxU0Jc2zrvGZVrALFyXmtWk/oU/QgP11wR8GUwH2YxAJ6bejQuK2ZEXSP3Ns8XLDO19u6FmkT8JGXXKqbx5sykPWlq8JEDiW5
+X-Gm-Message-State: AOJu0YyekciDeVOnEDwIJXs3L0S/zcHW4/lV/rzAtPz32MPUzuRcJbq9
+	PkaBDldX5evlUjgmESrBC56ukMXLJRFmmpcClYy4jGyVnppkS0o/cpanAH9a
+X-Google-Smtp-Source: AGHT+IHvkgQK4JMUUiNz6TVhuk05X7MKpmzxgHlYVQ7JLiUPt3X8lWAmLQyx9a/07ICRC4kEJrRznw==
+X-Received: by 2002:a17:902:da84:b0:1f9:d6bf:a67e with SMTP id d9443c01a7336-1fa23f149b7mr61693755ad.69.1719250345887;
+        Mon, 24 Jun 2024 10:32:25 -0700 (PDT)
+Received: from localhost.localdomain.oslab.amer.dell.com ([139.167.223.130])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f9eb3c6027sm65244305ad.133.2024.06.24.10.32.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Jun 2024 10:32:25 -0700 (PDT)
+From: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
+To: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: prabhakar.pujeri@gmail.com
+Subject: [PATCH] scsi:Replace printk and WARN_ON with WARN macro
+Date: Mon, 24 Jun 2024 13:32:05 -0400
+Message-ID: <20240624173205.1227297-1-prabhakar.pujeri@gmail.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/8] scsi: ufs: Make .get_hba_mac() optional
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>
-Cc: "quic_mnaresh@quicinc.com" <quic_mnaresh@quicinc.com>,
- "akinobu.mita@gmail.com" <akinobu.mita@gmail.com>,
- "beanhuo@micron.com" <beanhuo@micron.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "cw9316.lee@samsung.com" <cw9316.lee@samsung.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?= <Powen.Kao@mediatek.com>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "minwoo.im@samsung.com" <minwoo.im@samsung.com>,
- "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
- "yang.lee@linux.alibaba.com" <yang.lee@linux.alibaba.com>
-References: <20240617210844.337476-1-bvanassche@acm.org>
- <20240617210844.337476-5-bvanassche@acm.org> <20240619071329.GD6056@thinkpad>
- <20240619075731.GB8089@thinkpad>
- <93539579c4eb5bacc9dc9afb726294f44cec7dc9.camel@mediatek.com>
- <20240623133324.GB58184@thinkpad>
- <016a1877dcd96b5a81a52d253cc6c9132e8d113f.camel@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <016a1877dcd96b5a81a52d253cc6c9132e8d113f.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On 6/24/24 1:39 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> On Sun, 2024-06-23 at 19:03 +0530, manivannan.sadhasivam@linaro.org
->> Perhaps we should use different masks?
->=20
-> Yes, it is better use different mask with different mode.
-I will introduce different masks for the SDB and MCQ modes.
+This patch modifies the error handling in the SCSI library and Initio SCSI driver by replacing the combination of printk and WARN_ON macros with the WARN macro for better consistency and readability.
 
-Thanks,
+Signed-off-by: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
+---
+ drivers/scsi/initio.c   | 3 +--
+ drivers/scsi/scsi_lib.c | 5 +++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Bart.
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index 625fd547ee60..39273457f5bd 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -2737,8 +2737,7 @@ static void i91uSCBPost(u8 * host_mem, u8 * cblk_mem)
+ 	host = (struct initio_host *) host_mem;
+ 	cblk = (struct scsi_ctrl_blk *) cblk_mem;
+ 	if ((cmnd = cblk->srb) == NULL) {
+-		printk(KERN_ERR "i91uSCBPost: SRB pointer is empty\n");
+-		WARN_ON(1);
++		WARN(1,KERN_ERR "i91uSCBPost: SRB pointer is empty\n");
+ 		initio_release_scb(host, cblk);	/* Release SCB for current channel */
+ 		return;
+ 	}
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ec39acc986d6..54a4122c93f0 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -3117,10 +3117,11 @@ void *scsi_kmap_atomic_sg(struct scatterlist *sgl, int sg_count,
+ 	}
+ 
+ 	if (unlikely(i == sg_count)) {
+-		printk(KERN_ERR "%s: Bytes in sg: %zu, requested offset %zu, "
++		WARN(1,
++
++			KERN_ERR "%s: Bytes in sg: %zu, requested offset %zu, "
+ 			"elements %d\n",
+ 		       __func__, sg_len, *offset, sg_count);
+-		WARN_ON(1);
+ 		return NULL;
+ 	}
+ 
+-- 
+2.45.2
+
