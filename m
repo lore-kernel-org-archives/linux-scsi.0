@@ -1,281 +1,212 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B39C1155CAD;
-	Tue, 25 Jun 2024 11:06:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719313596; cv=none; b=AODQfMkm7kf6s4hCXvpyf4xT3gm41wuY3kAbJKRly7PcujJDN6FiJzd4PnSer9VlgE8i0OhgC68FDSB9+Yf3a1TLKvo1IuhV/4dnOK4h5RvSSYFOTWH13uCuGFwSBY1Cqgao+ENG8thGrM21Dywxeu76m7XDu4UaQ77HKgNOi94=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719313596; c=relaxed/simple;
-	bh=ijKwqMzGZviwRGNhfns260xPlaXBtIocEdrBlr7PJbY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZtREDup/VbGPMCg65cboDrjwCQgNbzHhKhEiHRk+wNfG8pat694KudHgB9S+TQd1+nRc6jLczcDiNynM20ZJ9NW5mG90Uk4XQAY0Xsbc587z4PNquAaYReeQlfYFKOUePMLx/SaZkCpOkRB5k1thu7JU3tG+x3VffGKM1U8asA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=kj8ObaLP; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 764A4149C4C;
+	Tue, 25 Jun 2024 11:26:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1719314813; cv=fail; b=L7qtH58xcx00JlPM2t8eJDY9PNrG7xVqdtaYCQ2jivljq5BWyUvedECQFtsuqONgLaFEInGT6NxvPDFtO4m4Wq16DhPy7Gw46o3pfiBDwMywlENHW9KFzCL1pN/XyVEmfMcIYwTiWMx7G/UPlCnT60Lr/t8CUdFS60JZn890Z0k=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1719314813; c=relaxed/simple;
+	bh=l6bxWZLstHZ1QeupeTKfAG1KEDx8aRWddTt4s6KO4/I=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=PGRlu2umSeFmm+D2S/H9X5ktHLK1TYF313vqIkxcn9Wnxe5cDQWBw10pUzBOSCkK8piv3+wzJwRrj9cOLmDxz2gN/H83dfqLyF1ZmNPv9rdgTBvAeLuzi6drNrZqKdBJxkmtvnH9Z/Eh7kPJki5tSDkxBkB9IzNj4y0d2VLjrNc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=QFvWJMxA; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=iv5iEyre; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kj8ObaLP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=mvUXeu5CYt3hbxRB750WiyVlAWreIQoFwP2cZiCKvT4=; b=kj8ObaLPZpyy6UdXp29L+SmrrE
-	CUH5P2SGWjKZXl6+Wp1tnXEVZWQczCSceggnNlR8Q+/QNwmhATjZRPMBlZZgUuGPwTTT15AFtV5aj
-	2TbpYCdW8ChhINOkILCy0RTXuO3wT9SwxUaRpdcrL+xkD/l0o8yt2Bx7wy6RnGlkn4bSXg4pBky1I
-	BOq8w+u88fydF5vyRlyGpI25Hz+lhVTs0+L/tIIbjrvCjgHAtD1aEsmiZudBYfmyRr70BoIzj1PNY
-	Ig/IuXHG3yPzMuWwNdR2ZPCUvDLlpJRTytOZGp5WPdczAZ4OjPMfchNu3Z8ZxgCbV+aODtFdgZmju
-	O1C6XdAA==;
-Received: from [2001:4bb8:2dc:2ee2:6df6:d2e9:d402:6e6b] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sM40M-00000002UMC-3hrx;
-	Tue, 25 Jun 2024 11:06:31 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Song Liu <song@kernel.org>,
-	Yu Kuai <yukuai3@huawei.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH 7/7] block: move dma_pad_mask into queue_limits
-Date: Tue, 25 Jun 2024 13:05:47 +0200
-Message-ID: <20240625110603.50885-8-hch@lst.de>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240625110603.50885-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QFvWJMxA";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="iv5iEyre"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45P7tW3g024962;
+	Tue, 25 Jun 2024 11:24:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	message-id:date:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding:mime-version; s=
+	corp-2023-11-20; bh=tRQEMjbXfvVK4mTSFpVAVh2qIV3JQiaahTJIwMQdFUQ=; b=
+	QFvWJMxAxXfz//OHp6Z15kXx+6KBvh3QolBWaiq885X/FdzZxaFfo84YwUaFIWA/
+	HMAxRCC9mhRYa21WKayqbX8CyVFdh1d32UPgh2vgJYX48mNFuFK2URbvfsaV1Ibr
+	5nWTQFQJQyweuS/Vcc+AGRpGuTJQPvmK8ZgpufMoXy6u6x6GmCxcSS6nW/zmCF2P
+	eVomOQk5hOmCS0LZojREJS0N2MxE3h4Mckot+xVxeh5L2YPjG4fffaEw8sMCQ1G5
+	w44rUet4+wUSv/5rTGPg1L5LyHTkSu4WO64gdcyY4hqaIFlpTY4FjJpB3iHb5AtF
+	X6qPo+CO34P98gkl4c7Teg==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3ywn708dpf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 25 Jun 2024 11:24:16 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 45PBNSKX017844;
+	Tue, 25 Jun 2024 11:24:15 GMT
+Received: from nam04-dm6-obe.outbound.protection.outlook.com (mail-dm6nam04lp2041.outbound.protection.outlook.com [104.47.73.41])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3ywn27c0xs-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 25 Jun 2024 11:24:15 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=C5bvoA+UIPssM2Mlm1UFvy4oA/rPrpnUGmSoAnaREVL4BA8A7iLheZ90NsOwRQ+IYMTZjHW3QDpbil38svGVUenkg3tOZPf1T6+1g7VXDAVDuhO8xMXRWFemu3RQ1weiuspuyzg3CyWJbM40j4tAcNcmPCQM79VqsGg/efqpFzPMRHFl7Jln/aCs6reWUWS2IaIh8aycDegB3PiT5b2jKbS9yfDqYSOZmrotHLCNycw9s7Zu57c4f5BsBTqQ36Y05O2w/9OKNWdZfdSQXQ1LoowGOT3zVpOvv//3+A5fh/9eQESMPLcEv9VvP3NBB7WhicPdtxMMeLOo9U6lc6AtGg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=tRQEMjbXfvVK4mTSFpVAVh2qIV3JQiaahTJIwMQdFUQ=;
+ b=boRhSnPvu3Th7nblj079EVOj3rIxmBl2MYSvEajOeG/fZQ9Xvxptq9IWEoJJ4u/BymM6i9G0PaKc3YngGRFgc6PN7MvrYIH9wNAQ0yK/2jyLv+LXnlPrw5zhkGd2bLFv8vIwdEDYYowa6sinuFYET8AfwCqUtEkxC+RPiVnVyAjDryrb9RFBYYyPULQIKcTGK5G5dqi8iPmtODSf3D6HAC1/K32veyd+cLzfJoAzJQK+seDuwky0dVkGT009y6xwn/dpK0puGw4LIhbLPNER7qvKKwxcq813OhaEkhK4RSD3BnXpSzvOdLlht1DB0Swv1aaqcfRWbsfQG4BeauV8Dg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tRQEMjbXfvVK4mTSFpVAVh2qIV3JQiaahTJIwMQdFUQ=;
+ b=iv5iEyreKTcpaRWII0+viskR3LyRIgZF1SHtgCYwVqyaGkQP0Ff7j+SK/RoH4/tc6YT5OtL9wjAGzcw3bqL+a6g+GbOhjb2DFD0kmLt0vCk4Ww8ZUduZA6gCqeUtuLguNENqbV38/MYQ1GhuWjpQ0aMekO7PZws6nYFwJOZT1NY=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by DM4PR10MB6158.namprd10.prod.outlook.com (2603:10b6:8:b8::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7698.30; Tue, 25 Jun
+ 2024 11:24:13 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%6]) with mapi id 15.20.7698.025; Tue, 25 Jun 2024
+ 11:24:13 +0000
+Message-ID: <c7184755-3e82-44d1-bedf-d1c6f0211f59@oracle.com>
+Date: Tue, 25 Jun 2024 12:24:07 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/7] block: rename BLK_FLAG_MISALIGNED
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+        Song Liu <song@kernel.org>, Yu Kuai <yukuai3@huawei.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-scsi@vger.kernel.org
 References: <20240625110603.50885-1-hch@lst.de>
+ <20240625110603.50885-4-hch@lst.de>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20240625110603.50885-4-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P123CA0072.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:153::23) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DM4PR10MB6158:EE_
+X-MS-Office365-Filtering-Correlation-Id: 50d59c19-1818-4815-5a62-08dc95095742
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230037|366013|1800799021|376011|7416011;
+X-Microsoft-Antispam-Message-Info: 
+	=?utf-8?B?UDRuTDJHcHRYUEhsV3BGUVQxTEF6UUhZRFVLeFo0ZzhMOS9FcmFjVUxjMXpQ?=
+ =?utf-8?B?ODN5YUp6eTNndkkrZWxteGY0NksyU3FTYzdIbEJRazhGcmFzQ2xVTnBrcDRO?=
+ =?utf-8?B?VzVLc2JHbFBWT2s4VTVEeTljcHp4a2l0UFZNNjdjUytHTUJHS1l6VFBWek5L?=
+ =?utf-8?B?cTIvMnlIcS9Tdmtpdk80WXlFTmlsNSt0djFCb3NLSTdLOHFObVhEMm1ob2U1?=
+ =?utf-8?B?V3NvQUJxSTNaalRMZzZaQjlBVnlUci9YVFdqSllOOGx6K1Z0Y0xGNFc3Ukc0?=
+ =?utf-8?B?RVpnZHl4bWVRYjVCTXA2ZXBWQU81WjVJMDR2dVlKekRtYnQxNjVmTG9LaCtO?=
+ =?utf-8?B?ZVNsUkRIRldkaE1OZ0tTSnJxQmRxNityZTJWbHJxVzRXS05JNTVKQ2ZtTlV5?=
+ =?utf-8?B?THpONnBtYi85N0tPR3NrdStwbmIybGlhNGRIUUNIcllMaTFJVTltTGRWYmJL?=
+ =?utf-8?B?dDdiTjdxUmZWVTRQU1NQV29OdXlqYmpNbjBNdTRJQTNGYTg1dnc0Uk02enZQ?=
+ =?utf-8?B?c25oYmtaR3JFTHpFanEzU1c2a3hvbmFNRERyLytXQ1lUenYvR2NRZkIyZDNp?=
+ =?utf-8?B?dXZXS25Hd2l3TVVUZmhhd2dHeVFiNkF3TVAycjVzQWZXTGNVV094ZjViSjJj?=
+ =?utf-8?B?TVBSYjBmRzFMaXhzTzRIa1pTT3dRaitEV1lRL1ZCZXNDTitPL3RPcWhJb3VO?=
+ =?utf-8?B?UTR1aUE0Q0ExVFR6OWtaeUlOdXZiZE9aTmUxWUxaY1lDNzZxVlZ3UnNBNklj?=
+ =?utf-8?B?T1h6UW83YVFtd1dHNnBoTWFnbU9EbUJCbFJHaFFRbWFhdWN1M1lydmZDRjBu?=
+ =?utf-8?B?R21OVzhORnpQY0k5RjJrVUhidWIzSXpNT2kxRGdqSlhVU2tQV01ram9tMDYw?=
+ =?utf-8?B?QjVTVXNsM1B1cXJHRHh6Sm5sRmx4UXRXSHVIc1dpQ0MrVlBRSzZBZmZiSU1H?=
+ =?utf-8?B?eFRKdCtyY2M3WDJRMmlaWWJyUlBRTFRqVUE3eGVPU1hxaW1xVnM2dnArMjVG?=
+ =?utf-8?B?dU5OSU5NTnNudDFOU2tCam9ZaHlVZkRoRndHNUh5WC9LaWxCUUhVN2NaRFJT?=
+ =?utf-8?B?N2pwTDQwUmZzMlVvN21rOEU2OG9saHBwd2JubldMbGp0L0R4dzM2b25acjdT?=
+ =?utf-8?B?Y1lxRnFwWTlYN1NUSW1oM3B3THZzQnQ3eUFUcG04MzRsZ0UwZDlZdWdVTkIv?=
+ =?utf-8?B?V2ZqbkVSdVA5SWRYNEx0eWZhcmp2NlI1VDd3QnA3M0dsOGxGR056OFh0cCtl?=
+ =?utf-8?B?VWxLaklUMWlkMnF3N29aS1J4bHBZYlBSV2NRWVZTanhycFVqU0l4N0FKTWs0?=
+ =?utf-8?B?ei9NUVFGUURGNTlDcy9BZ3dWalA2ekpSVENucFc3a2REUi9oV0RYajhmdW85?=
+ =?utf-8?B?a2xEOE0wa3RxK2lKOGczTEFQSHo5dEZiTiszUWE2NEhiRGZXTTQ0TE5LVGJ4?=
+ =?utf-8?B?eHZnYUl2c3A3NHladmpGR0loS0xHTVRxVTFMblQyb09mSzYydGRCbHo5eFBn?=
+ =?utf-8?B?YzBLdEZrZXZGb2IrSzgzVWVXdnNCWjhCSTl3bUlXRi9MM3pkK0lVUGNuSEVZ?=
+ =?utf-8?B?dEtLbGJRZW1vdC82K3ZGcllBeG95SHZ3dUI1K3dwL1liZzJ6SXQyTndpM1RL?=
+ =?utf-8?B?VFdMNEd1RkNwaUZTeG9Iank4aUdDU2x6OWl5cmlad2NoY0llR0pzZWUyRGhC?=
+ =?utf-8?B?Tm9ZbmNhSmJSM2o1dElUc05RZE5YTUtpVjFaUDdxQm9xZFVla0wrMVZIWmhi?=
+ =?utf-8?Q?bSEPvIDvkuPwOUT2C3skral7EFxWhHhric2+Ns0?=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230037)(366013)(1800799021)(376011)(7416011);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?bUlyUk55cHZWL2FnNEVTellSUVVmb0hxN2E0Nk1jamVBZ3o2ei91QndOKzJp?=
+ =?utf-8?B?Y25Zd2xaUFFaZUI5YU5PNnNiN3pGTVF6Rlg3ZllWWlo1OFpNb2pzcVlyZFRD?=
+ =?utf-8?B?QmE4Q3NWc1NXVWpwelhMb3pXc084TW1ncDJBOWRmek8vM2hxS3Q0aCtpb0g2?=
+ =?utf-8?B?Wkc5TVZyQ2JSOWdCQkQzOHVDQkFjMkROYkkrMGpqVFpzcjF2ZXRyaHkzc1JD?=
+ =?utf-8?B?Yi9OR2hEU3RabldoQmdFY25YSmhPTnlrS1R4WTdtR1NTR3FkaGlnK05Ca3dC?=
+ =?utf-8?B?a2hySTBQMzFlcTdDUzF1Rjc4clBMeHM5UW9IYjV0OWthRnVtTnM4ZmgwUGlX?=
+ =?utf-8?B?VUt4SmhkOUxHdXhhQ3cvUlFXWDdCWHFZZmpVY3J2OG5lWTVxbXp5RW9LNW91?=
+ =?utf-8?B?Y3Ivd3BLMXFrVUdHV3RqZTcxVzBrRFpWZUJMQVZQY3hRRVZZMWQrd2VLTFNj?=
+ =?utf-8?B?c1JpRkUwbU9iNUxwSFBQY3dYQ3VEOFdLdUtsWnRKSEc5NkxGZG80MWIvbkFm?=
+ =?utf-8?B?cEg2Z0V6NXhrVzBDVGUxREltOXhuU0JMRXZhbXFLRFU4ZUJ1eVIySG1lYWxL?=
+ =?utf-8?B?b3lQalpsRThicnhpZVllSUNhWngzRGttRy9UVjhoZUhUSWV0NHRMamJBTzhY?=
+ =?utf-8?B?Uk1CNGxzQk80U0tpVWpQVWgxN2liSHdHOFlJS3d0UnpaN3hyVkJ4YjlQTHRG?=
+ =?utf-8?B?MTc2NCtGbE1TVnNkMkFjUElXL1V0YmhuWnpOWVpBaDlDQWxoNTMydHArb09Q?=
+ =?utf-8?B?cEdYVEhYWmRGdXpiVVhWQ3NhSlI3YnFDVEZveVZTZG1ETldnak5hbG16THhB?=
+ =?utf-8?B?Wk9XK29WenFJMko3MjNsZTdMT1NPdTZpR2dDVGUvSi9QY1lFTjNRaG1QYW9L?=
+ =?utf-8?B?Nmh5MFRYZndEOGIrSVk1VzVKV1FCQmlpTHExTURnbGtNQmtwRG44aWJGdkJI?=
+ =?utf-8?B?aEZHUXVLS2g4WVNZUHZYZXVyb3AvQytFRjZiZVg4SVB3RU9qemdiZnh5c24w?=
+ =?utf-8?B?UVljMytVQktoZ0RNN2M1RXdqNDQ5ZEQ0cFdoOGlxYjhQb3dDTkxRTjJwdEt2?=
+ =?utf-8?B?WmtBOHpoVU9NR09OTHNwSk9OcHNNRXFRWW9OQ2pTRWFKd3JMc2YzMzFDVFVu?=
+ =?utf-8?B?WTFDLzFHUWptWkFKanJMSFJxNVdDaHFyQnFWV2hZb1QySlRmN09mMGFNanhq?=
+ =?utf-8?B?U25WOWtUWUVUK24vMjVPOXhXYysxMTB1QURYc2tGc0huVmM4aW9raFBuTE8v?=
+ =?utf-8?B?TzFhVmRXaVlrcDBQQnJlM3VnSnVPeGF2R05EYjJRQURWY2RLUXh6SEZHM280?=
+ =?utf-8?B?Wkdndk4yZ1k1ZTV4TGpWRGFDUE5sVnU5U0xzV2c5LzJJbktiN0t5MzBaQjRj?=
+ =?utf-8?B?N0xqSXgxUHNTN1ByblFBbDNoM0RIbXhmOVlHeUg3N0N5bzk4ZkIyaGFpR004?=
+ =?utf-8?B?ZVBlUVZDb0k0MGx6bTB4eFozWEQ4WXFONEZVWnNXVTZDZDQxNXhmS3dBZDVi?=
+ =?utf-8?B?ZmZ1eFNkdjZVR0crTm5CcWdxQzFzSnkrUEVzSk5FWk5VQm9saEN6Rml5YS9a?=
+ =?utf-8?B?alhmRGs0NGIweGJsbHQvRkZ6OWp2SHRLeWFHdEtDOThBbTlEdldJVThGNUJu?=
+ =?utf-8?B?QjBMbnpXMVk3SG9YMGNTdzNMQ1lTOGJYczRsTTZ6TDlWNEFsMXB4aWJhcGND?=
+ =?utf-8?B?ZXNRVkNhYmF4N3RoWnZaMnJ2VXBEWDE5ZDdUYUJabkE5VXkyNVFqQmFtSXpF?=
+ =?utf-8?B?cGNMejl4aklNalhBeTZpaDRVYithWmVydFlBcjRJQTVZeHdNSk1BakVLaGc4?=
+ =?utf-8?B?Q3NZZStaZytoLzN6UWZncGtRUEw1T1FBMnVzTXUwdGdMdWdLQ29oNFprR0Zv?=
+ =?utf-8?B?YXF2ZVl3SGNJZDhHbWlDcUJuZTAwbFlsRDc4N25wV0FXTGtuQlBOdlI2OHpD?=
+ =?utf-8?B?N1ZvRkt4SU15anhyekw1MDFjUk52NlpSZm5OWW42T3czekJBNUVKd2g0VmZH?=
+ =?utf-8?B?NzZsZDZKcnNXdUtodjFUb2dDMEZqSGZTMHhOQ2VXd3drTGJsYzFGYnB3SzFI?=
+ =?utf-8?B?NzltVkhJeGI4N3ppMWNBVGZHZmpRVDFxNVJnY3N2ZlJLN3RWUGRxUmgzbjgy?=
+ =?utf-8?Q?BZ9H+osSkH92K1L9ukFOv7SGt?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	zr1wR5aoL99mXB8N0DZdKsbVOr2GjfwYo3k1HE8DOex6e/Z+XVVrdeE5pRinqS2dH6/fFOf83Ky8maum/O5UyZTnUqtGGmtR9WXGTv8FbQFpfE1D7gT2STz1Y+AsvxuaPMRHSEcc3+gnvCKaNY7wCU449dA5RG2MpuqVgSD1ZssvxDvHQj6KYpjVzIs3S1Gct/oM7JiI/wRMckTxZEz6bm1RtG65OFA2mrvUKvBzF67SVKoxbZUZsr4B8+CsiwGTHlk1G8E52eR5ri/8xu1wMy4NRyf907QU0afZSFMu+89FYIPufOtYIsOca9ZmpkTIVmmi1X6X+41x/uJW1ri3p5QwV5VBm2lQRH+MCqto4IRfWYvbaV5zJ51XX3vWoGnE3bJkPwoFFJwOAMDf0SqLP185QutHdYgLPOQN5tAIKvASyjaAv3h/ZvfWmRFx8LjsJ9s0xWNNCiIIHsEFbwLSpFncXf3UuwbbOz8HhyToXCvVANIP9d0zCR2A0dqBVIb5t8J+Lg6DrDaemENTWup1/SOWjOZy1WcTnfZjZ4tyjSbblEj7MCzX34VxkwHKa49TI5Ts5ycsbCCxcYkSZQUj0oghzaxL4S79G1lu2tphsxI=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 50d59c19-1818-4815-5a62-08dc95095742
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Jun 2024 11:24:13.3514
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: T+JgyGYOkvAwA9IG7uFA6oBJfuV70mszxDLDO6fC/ZmQDXh8jJ/ippDGaZ/FKBoqV2+zcq4zMdGRDxA76XB8MA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR10MB6158
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-25_06,2024-06-25_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 adultscore=0
+ phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2406180000
+ definitions=main-2406250084
+X-Proofpoint-ORIG-GUID: WutfipeOZSNphLkB79rTsvi7beItdiwQ
+X-Proofpoint-GUID: WutfipeOZSNphLkB79rTsvi7beItdiwQ
 
-dma_pad_mask is a queue_limits by all ways of looking at it, so move it
-there and set it through the atomic queue limits APIs.
+On 25/06/2024 12:05, Christoph Hellwig wrote:
+> @@ -351,7 +351,7 @@ static int blk_validate_limits(struct queue_limits *lim)
+>   
+>   	if (lim->alignment_offset) {
+>   		lim->alignment_offset &= (lim->physical_block_size - 1);
+> -		lim->features &= ~BLK_FEAT_MISALIGNED;
+> +		lim->features &= ~BLK_FLAG_MISALIGNED;
 
-Add a little helper that takes the alignment and pad into account to
-simply the code that is touched a bit.
+The comment for enum which BLK_FLAG_MISALIGNED is a member of reads 
+"internal flags for queue_limits.flags", so it might help to comment why 
+we clear in lim->features (if correct to do so).
 
-Note that there never was any need for the > check in
-blk_queue_update_dma_pad, this probably was just copy and paste from
-dma_update_dma_alignment.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/bio-integrity.c     |  2 +-
- block/blk-map.c           |  2 +-
- block/blk-settings.c      | 17 -----------------
- drivers/ata/libata-scsi.c |  3 +--
- drivers/ata/pata_macio.c  |  4 ++--
- drivers/scsi/scsi_lib.c   |  4 ++--
- drivers/ufs/core/ufshcd.c |  9 +++++----
- include/linux/blkdev.h    | 12 ++++++++----
- 8 files changed, 20 insertions(+), 33 deletions(-)
-
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index 173ffd4d623788..356ca0d3d62f5a 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -312,7 +312,7 @@ int bio_integrity_map_user(struct bio *bio, void __user *ubuf, ssize_t bytes,
- 			   u32 seed)
- {
- 	struct request_queue *q = bdev_get_queue(bio->bi_bdev);
--	unsigned int align = q->dma_pad_mask | queue_dma_alignment(q);
-+	unsigned int align = blk_lim_dma_alignment_and_pad(&q->limits);
- 	struct page *stack_pages[UIO_FASTIOV], **pages = stack_pages;
- 	struct bio_vec stack_vec[UIO_FASTIOV], *bvec = stack_vec;
- 	unsigned int direction, nr_bvecs;
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 71210cdb34426d..bce144091128f6 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -634,7 +634,7 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
- 			const struct iov_iter *iter, gfp_t gfp_mask)
- {
- 	bool copy = false, map_bvec = false;
--	unsigned long align = q->dma_pad_mask | queue_dma_alignment(q);
-+	unsigned long align = blk_lim_dma_alignment_and_pad(&q->limits);
- 	struct bio *bio = NULL;
- 	struct iov_iter i;
- 	int ret = -EINVAL;
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 5f1c22881cb9d8..256b1ff3ad432a 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -768,23 +768,6 @@ bool queue_limits_stack_integrity(struct queue_limits *t,
- }
- EXPORT_SYMBOL_GPL(queue_limits_stack_integrity);
- 
--/**
-- * blk_queue_update_dma_pad - update pad mask
-- * @q:     the request queue for the device
-- * @mask:  pad mask
-- *
-- * Update dma pad mask.
-- *
-- * Appending pad buffer to a request modifies the last entry of a
-- * scatter list such that it includes the pad buffer.
-- **/
--void blk_queue_update_dma_pad(struct request_queue *q, unsigned int mask)
--{
--	if (mask > q->dma_pad_mask)
--		q->dma_pad_mask = mask;
--}
--EXPORT_SYMBOL(blk_queue_update_dma_pad);
--
- /**
-  * blk_set_queue_depth - tell the block layer about the device queue depth
-  * @q:		the request queue for the device
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index cdf29b178ddc1e..682971c4cbe418 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1024,7 +1024,6 @@ EXPORT_SYMBOL_GPL(ata_scsi_dma_need_drain);
- int ata_scsi_dev_config(struct scsi_device *sdev, struct queue_limits *lim,
- 		struct ata_device *dev)
- {
--	struct request_queue *q = sdev->request_queue;
- 	int depth = 1;
- 
- 	if (!ata_id_has_unload(dev->id))
-@@ -1038,7 +1037,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct queue_limits *lim,
- 		sdev->sector_size = ATA_SECT_SIZE;
- 
- 		/* set DMA padding */
--		blk_queue_update_dma_pad(q, ATA_DMA_PAD_SZ - 1);
-+		lim->dma_pad_mask = ATA_DMA_PAD_SZ - 1;
- 
- 		/* make room for appending the drain */
- 		lim->max_segments--;
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 3cb455a32d9266..1b85e8bf4ef91b 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -816,7 +816,7 @@ static int pata_macio_device_configure(struct scsi_device *sdev,
- 	/* OHare has issues with non cache aligned DMA on some chipsets */
- 	if (priv->kind == controller_ohare) {
- 		lim->dma_alignment = 31;
--		blk_queue_update_dma_pad(sdev->request_queue, 31);
-+		lim->dma_pad_mask = 31;
- 
- 		/* Tell the world about it */
- 		ata_dev_info(dev, "OHare alignment limits applied\n");
-@@ -831,7 +831,7 @@ static int pata_macio_device_configure(struct scsi_device *sdev,
- 	if (priv->kind == controller_sh_ata6 || priv->kind == controller_k2_ata6) {
- 		/* Allright these are bad, apply restrictions */
- 		lim->dma_alignment = 15;
--		blk_queue_update_dma_pad(sdev->request_queue, 15);
-+		lim->dma_pad_mask = 15;
- 
- 		/* We enable MWI and hack cache line size directly here, this
- 		 * is specific to this chipset and not normal values, we happen
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e2f7bfb2b9e450..3958a6d14bf457 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1139,9 +1139,9 @@ blk_status_t scsi_alloc_sgtables(struct scsi_cmnd *cmd)
- 	 */
- 	count = __blk_rq_map_sg(rq->q, rq, cmd->sdb.table.sgl, &last_sg);
- 
--	if (blk_rq_bytes(rq) & rq->q->dma_pad_mask) {
-+	if (blk_rq_bytes(rq) & rq->q->limits.dma_pad_mask) {
- 		unsigned int pad_len =
--			(rq->q->dma_pad_mask & ~blk_rq_bytes(rq)) + 1;
-+			(rq->q->limits.dma_pad_mask & ~blk_rq_bytes(rq)) + 1;
- 
- 		last_sg->length += pad_len;
- 		cmd->extra_len += pad_len;
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 0cf07194bbe89d..62d20eef13537d 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5193,17 +5193,18 @@ static int ufshcd_change_queue_depth(struct scsi_device *sdev, int depth)
- }
- 
- /**
-- * ufshcd_slave_configure - adjust SCSI device configurations
-+ * ufshcd_device_configure - adjust SCSI device configurations
-  * @sdev: pointer to SCSI device
-  *
-  * Return: 0 (success).
-  */
--static int ufshcd_slave_configure(struct scsi_device *sdev)
-+static int ufshcd_device_configure(struct scsi_device *sdev,
-+		struct queue_limits *lim)
- {
- 	struct ufs_hba *hba = shost_priv(sdev->host);
- 	struct request_queue *q = sdev->request_queue;
- 
--	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
-+	lim->dma_pad_mask = PRDT_DATA_BYTE_COUNT_PAD - 1;
- 
- 	/*
- 	 * Block runtime-pm until all consumers are added.
-@@ -8907,7 +8908,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
- 	.queuecommand		= ufshcd_queuecommand,
- 	.mq_poll		= ufshcd_poll,
- 	.slave_alloc		= ufshcd_slave_alloc,
--	.slave_configure	= ufshcd_slave_configure,
-+	.device_configure	= ufshcd_device_configure,
- 	.slave_destroy		= ufshcd_slave_destroy,
- 	.change_queue_depth	= ufshcd_change_queue_depth,
- 	.eh_abort_handler	= ufshcd_abort,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d93fba7a1f3162..4be5b9d9773190 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -400,6 +400,7 @@ struct queue_limits {
- 	 * due to possible offsets.
- 	 */
- 	unsigned int		dma_alignment;
-+	unsigned int		dma_pad_mask;
- 
- 	struct blk_integrity	integrity;
- };
-@@ -508,8 +509,6 @@ struct request_queue {
- 	 */
- 	int			id;
- 
--	unsigned int		dma_pad_mask;
--
- 	/*
- 	 * queue settings
- 	 */
-@@ -980,7 +979,6 @@ extern int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 			    sector_t offset);
- void queue_limits_stack_bdev(struct queue_limits *t, struct block_device *bdev,
- 		sector_t offset, const char *pfx);
--extern void blk_queue_update_dma_pad(struct request_queue *, unsigned int);
- extern void blk_queue_rq_timeout(struct request_queue *, unsigned int);
- 
- struct blk_independent_access_ranges *
-@@ -1432,10 +1430,16 @@ static inline bool bdev_iter_is_aligned(struct block_device *bdev,
- 				   bdev_logical_block_size(bdev) - 1);
- }
- 
-+static inline int blk_lim_dma_alignment_and_pad(struct queue_limits *lim)
-+{
-+	return lim->dma_alignment | lim->dma_pad_mask;
-+}
-+
- static inline int blk_rq_aligned(struct request_queue *q, unsigned long addr,
- 				 unsigned int len)
- {
--	unsigned int alignment = queue_dma_alignment(q) | q->dma_pad_mask;
-+	unsigned int alignment = blk_lim_dma_alignment_and_pad(&q->limits);
-+
- 	return !(addr & alignment) && !(len & alignment);
- }
- 
--- 
-2.43.0
+>   	}
 
