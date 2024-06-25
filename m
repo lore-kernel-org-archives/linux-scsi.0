@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACEFB1684AC;
-	Tue, 25 Jun 2024 15:00:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C71BB14AD23;
+	Tue, 25 Jun 2024 15:00:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719327617; cv=none; b=aE3keieCMMNSqBJAFvS4MCLAPD57qZbgzOsQb/ZUr6VFWfSLIKnkT4enZj/3DlVnIVfsF9nOiVn7x4YLZh5hgn7FUueujIAyr4KA5nPz12PhubaxbYunDKzBdDGpRggIZ+4VTM0L1zSEaQgMjSqeGA9GoGK3TF3MJbT77BTpnuk=
+	t=1719327621; cv=none; b=Fd3+rD5iYrtir8NHIFu+lOr64rZCsNUqddM3A41waxcT1Vp3AqJPQjUethw4i8MMnC4u6bBiqj6aadYKblzZciUsOiZ6S82xB3E2MYyOj5Hg8cOO0J1Npq+GzZkevG7equ1Pb11Im2QXbXXuJbbvQcOGW9RjuCQAZe3Qd9U53yk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719327617; c=relaxed/simple;
-	bh=/KFitF1lfx4MOfqotw6pXiGxlkUeA43Vos8fn9us1Dg=;
+	s=arc-20240116; t=1719327621; c=relaxed/simple;
+	bh=dBi9gC3DrQHkZ29StN7zA/gzYsF/K3gNg9PHu8xoYU0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XOXe0TC4yNyylIBpD+cL7WS9GDbi+YXZt6Vj3eLOzs78SUC7KSzh4ryGKyBCsrz/ObNLXnt8whDWkQXH7Rfid+UUgTyXckFAko0EsZQ9//Qm4eiAg2aiHzlXtOK3xnOVfW7r0FvgOnGGIjU5BGvS4nU4/7bDoVE3t3Jfi6AEpZk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=xNdKO93D; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=ukBrp9dPZ7EIxNoFRw0aTbUDWa3Up2/cukqhm9lOuo8WP/9EPnp6+oWcv90/aTE6uiix9763hnYbYl4X7MbD+R5y0hn+LEZQIJPk2VbEddGjTL/4ryI4ydSs7nOoAbj2+roeI6I0KK/sGA8yz1t87nOCynoGyqPiZUj2x1xSoAY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pm+h0Wtb; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="xNdKO93D"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pm+h0Wtb"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=9HqEHDNcuzUmI5HVsYMUGNJQtwYKktWqkfOUkZi9+7s=; b=xNdKO93D22WOiEw+I81t9FNbX2
-	Wi1XHFiLmJehkgxbrZTDoPorvUVcntbN6Q/NvAz523mQSCWsuf2x3Ut7W/S/14YmGxBmZAqj3dvWc
-	lxTEHXLtpc7xqqkJLAMaqBCqu4TeZmm6VMZV1Cfx/HpKBvWyMgK/CEn6RA04/bkfJI90yl+TWEtyU
-	eEcT6CN4Elyaub3kuO0e0UyTFYpuqVk+vp28oQPNCLuLMPB2Jw1NZdgjrZCzMNteUY1IpL/cHKzbC
-	DjOjrWOdycog6f8/ybYwOl3ScwIOsQsZArG0COsaltCfkIKfiJ5nnBtWzTyk0IwvbQ171ukThV1Xr
-	24bmlnhw==;
+	bh=R8mxb9YYIDG0XWhEgqFPtDzU2nRAEucTBtP/B7l4Maw=; b=pm+h0WtbB4ly2YChn7OSsWs4he
+	ZMX3wFbYXHNVXwoRYkTgfj3J4CiBDrWWeWhawZflipuIwrXjfpW3y/Q/RxI9PLdu2IVHEFnQzUZO8
+	gah6TtTI0foa80pdEji/4oofVd7yB4hogvUvd0yL5HFHuAnFtmF/YtijCaUH4aS3WZd53LdWbkWCs
+	Zh+XG7Cocy5xnJsDLsuNfskYp3ABHcEpMgBHJvK6cE9VTR8jeX0SvyuHQC6MNQ8IXUfJzfkiwXFZ+
+	cFORB/Kfv7XgtA5JU63DaCkJPVIqEZYRu2cmlRoygW7rostKxRAhkyEQ6peFmxGgX/cl3Yq4THOa8
+	WxFzWtLw==;
 Received: from [2001:4bb8:2c2:e897:e635:808f:2aad:e9c8] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sM7eV-00000003Ikb-0Twq;
-	Tue, 25 Jun 2024 15:00:12 +0000
+	id 1sM7eZ-00000003Imh-2ZID;
+	Tue, 25 Jun 2024 15:00:16 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -44,9 +44,9 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-ide@vger.kernel.org,
 	linux-raid@vger.kernel.org,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH 3/8] block: rename BLK_FLAG_MISALIGNED
-Date: Tue, 25 Jun 2024 16:59:48 +0200
-Message-ID: <20240625145955.115252-4-hch@lst.de>
+Subject: [PATCH 4/8] block: convert features and flags to __bitwise types
+Date: Tue, 25 Jun 2024 16:59:49 +0200
+Message-ID: <20240625145955.115252-5-hch@lst.de>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240625145955.115252-1-hch@lst.de>
 References: <20240625145955.115252-1-hch@lst.de>
@@ -59,110 +59,166 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This is a flag for ->flags and not a feature for ->features.  And fix the
-one place that actually incorrectly cleared it from ->features.
+... and let sparse help us catch mismatches or abuses.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-settings.c   | 18 +++++++++---------
- include/linux/blkdev.h |  2 +-
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ block/blk-sysfs.c      |  6 +--
+ include/linux/blkdev.h | 85 +++++++++++++++++++++---------------------
+ 2 files changed, 46 insertions(+), 45 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index ec7dbe93d5c324..ed39a55c5bae7c 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -351,7 +351,7 @@ static int blk_validate_limits(struct queue_limits *lim)
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 6db65886e7ed5a..2d033275da6ea4 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -288,7 +288,7 @@ static ssize_t queue_dma_alignment_show(struct request_queue *q, char *page)
+ }
  
- 	if (lim->alignment_offset) {
- 		lim->alignment_offset &= (lim->physical_block_size - 1);
--		lim->features &= ~BLK_FEAT_MISALIGNED;
-+		lim->flags &= ~BLK_FLAG_MISALIGNED;
- 	}
- 
- 	if (!(lim->features & BLK_FEAT_WRITE_CACHE))
-@@ -564,7 +564,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 	if (!(b->features & BLK_FEAT_POLL))
- 		t->features &= ~BLK_FEAT_POLL;
- 
--	t->flags |= (b->flags & BLK_FEAT_MISALIGNED);
-+	t->flags |= (b->flags & BLK_FLAG_MISALIGNED);
- 
- 	t->max_sectors = min_not_zero(t->max_sectors, b->max_sectors);
- 	t->max_user_sectors = min_not_zero(t->max_user_sectors,
-@@ -603,7 +603,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 
- 		/* Verify that top and bottom intervals line up */
- 		if (max(top, bottom) % min(top, bottom)) {
--			t->flags |= BLK_FEAT_MISALIGNED;
-+			t->flags |= BLK_FLAG_MISALIGNED;
- 			ret = -1;
- 		}
- 	}
-@@ -625,28 +625,28 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 	/* Physical block size a multiple of the logical block size? */
- 	if (t->physical_block_size & (t->logical_block_size - 1)) {
- 		t->physical_block_size = t->logical_block_size;
--		t->flags |= BLK_FEAT_MISALIGNED;
-+		t->flags |= BLK_FLAG_MISALIGNED;
- 		ret = -1;
- 	}
- 
- 	/* Minimum I/O a multiple of the physical block size? */
- 	if (t->io_min & (t->physical_block_size - 1)) {
- 		t->io_min = t->physical_block_size;
--		t->flags |= BLK_FEAT_MISALIGNED;
-+		t->flags |= BLK_FLAG_MISALIGNED;
- 		ret = -1;
- 	}
- 
- 	/* Optimal I/O a multiple of the physical block size? */
- 	if (t->io_opt & (t->physical_block_size - 1)) {
- 		t->io_opt = 0;
--		t->flags |= BLK_FEAT_MISALIGNED;
-+		t->flags |= BLK_FLAG_MISALIGNED;
- 		ret = -1;
- 	}
- 
- 	/* chunk_sectors a multiple of the physical block size? */
- 	if ((t->chunk_sectors << 9) & (t->physical_block_size - 1)) {
- 		t->chunk_sectors = 0;
--		t->flags |= BLK_FEAT_MISALIGNED;
-+		t->flags |= BLK_FLAG_MISALIGNED;
- 		ret = -1;
- 	}
- 
-@@ -656,7 +656,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 
- 	/* Verify that new alignment_offset is on a logical block boundary */
- 	if (t->alignment_offset & (t->logical_block_size - 1)) {
--		t->flags |= BLK_FEAT_MISALIGNED;
-+		t->flags |= BLK_FLAG_MISALIGNED;
- 		ret = -1;
- 	}
- 
-@@ -809,7 +809,7 @@ int bdev_alignment_offset(struct block_device *bdev)
+ static ssize_t queue_feature_store(struct request_queue *q, const char *page,
+-		size_t count, unsigned int feature)
++		size_t count, blk_features_t feature)
  {
- 	struct request_queue *q = bdev_get_queue(bdev);
+ 	struct queue_limits lim;
+ 	unsigned long val;
+@@ -418,7 +418,7 @@ static ssize_t queue_poll_delay_store(struct request_queue *q, const char *page,
  
--	if (q->limits.flags & BLK_FEAT_MISALIGNED)
-+	if (q->limits.flags & BLK_FLAG_MISALIGNED)
- 		return -1;
- 	if (bdev_is_partition(bdev))
- 		return queue_limit_alignment_offset(&q->limits,
+ static ssize_t queue_poll_show(struct request_queue *q, char *page)
+ {
+-	return queue_var_show(q->limits.features & BLK_FEAT_POLL, page);
++	return queue_var_show(!!(q->limits.features & BLK_FEAT_POLL), page);
+ }
+ 
+ static ssize_t queue_poll_store(struct request_queue *q, const char *page,
+@@ -493,7 +493,7 @@ static ssize_t queue_fua_show(struct request_queue *q, char *page)
+ 
+ static ssize_t queue_dax_show(struct request_queue *q, char *page)
+ {
+-	return queue_var_show(blk_queue_dax(q), page);
++	return queue_var_show(!!blk_queue_dax(q), page);
+ }
+ 
+ #define QUEUE_RO_ENTRY(_prefix, _name)			\
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index b2f1362c46814f..1a7e9d9c16d78b 100644
+index 1a7e9d9c16d78b..b37826b350a2e3 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -347,7 +347,7 @@ enum {
- 	BLK_FLAG_WRITE_CACHE_DISABLED		= (1u << 0),
+@@ -283,55 +283,56 @@ static inline bool blk_op_is_passthrough(blk_opf_t op)
+ }
  
- 	/* I/O topology is misaligned */
--	BLK_FEAT_MISALIGNED			= (1u << 1),
-+	BLK_FLAG_MISALIGNED			= (1u << 1),
- };
+ /* flags set by the driver in queue_limits.features */
+-enum {
+-	/* supports a volatile write cache */
+-	BLK_FEAT_WRITE_CACHE			= (1u << 0),
++typedef unsigned int __bitwise blk_features_t;
+ 
+-	/* supports passing on the FUA bit */
+-	BLK_FEAT_FUA				= (1u << 1),
++/* supports a volatile write cache */
++#define BLK_FEAT_WRITE_CACHE		((__force blk_features_t)(1u << 0))
+ 
+-	/* rotational device (hard drive or floppy) */
+-	BLK_FEAT_ROTATIONAL			= (1u << 2),
++/* supports passing on the FUA bit */
++#define BLK_FEAT_FUA			((__force blk_features_t)(1u << 1))
+ 
+-	/* contributes to the random number pool */
+-	BLK_FEAT_ADD_RANDOM			= (1u << 3),
++/* rotational device (hard drive or floppy) */
++#define BLK_FEAT_ROTATIONAL		((__force blk_features_t)(1u << 2))
+ 
+-	/* do disk/partitions IO accounting */
+-	BLK_FEAT_IO_STAT			= (1u << 4),
++/* contributes to the random number pool */
++#define BLK_FEAT_ADD_RANDOM		((__force blk_features_t)(1u << 3))
+ 
+-	/* don't modify data until writeback is done */
+-	BLK_FEAT_STABLE_WRITES			= (1u << 5),
++/* do disk/partitions IO accounting */
++#define BLK_FEAT_IO_STAT		((__force blk_features_t)(1u << 4))
+ 
+-	/* always completes in submit context */
+-	BLK_FEAT_SYNCHRONOUS			= (1u << 6),
++/* don't modify data until writeback is done */
++#define BLK_FEAT_STABLE_WRITES		((__force blk_features_t)(1u << 5))
+ 
+-	/* supports REQ_NOWAIT */
+-	BLK_FEAT_NOWAIT				= (1u << 7),
++/* always completes in submit context */
++#define BLK_FEAT_SYNCHRONOUS		((__force blk_features_t)(1u << 6))
+ 
+-	/* supports DAX */
+-	BLK_FEAT_DAX				= (1u << 8),
++/* supports REQ_NOWAIT */
++#define BLK_FEAT_NOWAIT			((__force blk_features_t)(1u << 7))
+ 
+-	/* supports I/O polling */
+-	BLK_FEAT_POLL				= (1u << 9),
++/* supports DAX */
++#define BLK_FEAT_DAX			((__force blk_features_t)(1u << 8))
+ 
+-	/* is a zoned device */
+-	BLK_FEAT_ZONED				= (1u << 10),
++/* supports I/O polling */
++#define BLK_FEAT_POLL			((__force blk_features_t)(1u << 9))
+ 
+-	/* supports Zone Reset All */
+-	BLK_FEAT_ZONE_RESETALL			= (1u << 11),
++/* is a zoned device */
++#define BLK_FEAT_ZONED			((__force blk_features_t)(1u << 10))
+ 
+-	/* supports PCI(e) p2p requests */
+-	BLK_FEAT_PCI_P2PDMA			= (1u << 12),
++/* supports Zone Reset All */
++#define BLK_FEAT_ZONE_RESETALL		((__force blk_features_t)(1u << 11))
+ 
+-	/* skip this queue in blk_mq_(un)quiesce_tagset */
+-	BLK_FEAT_SKIP_TAGSET_QUIESCE		= (1u << 13),
++/* supports PCI(e) p2p requests */
++#define BLK_FEAT_PCI_P2PDMA		((__force blk_features_t)(1u << 12))
+ 
+-	/* bounce all highmem pages */
+-	BLK_FEAT_BOUNCE_HIGH			= (1u << 14),
++/* skip this queue in blk_mq_(un)quiesce_tagset */
++#define BLK_FEAT_SKIP_TAGSET_QUIESCE	((__force blk_features_t)(1u << 13))
+ 
+-	/* undocumented magic for bcache */
+-	BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE	= (1u << 15),
+-};
++/* bounce all highmem pages */
++#define BLK_FEAT_BOUNCE_HIGH		((__force blk_features_t)(1u << 14))
++
++/* undocumented magic for bcache */
++#define BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE \
++	((__force blk_features_t)(1u << 15))
+ 
+ /*
+  * Flags automatically inherited when stacking limits.
+@@ -342,17 +343,17 @@ enum {
+ 	 BLK_FEAT_RAID_PARTIAL_STRIPES_EXPENSIVE)
+ 
+ /* internal flags in queue_limits.flags */
+-enum {
+-	/* do not send FLUSH/FUA commands despite advertising a write cache */
+-	BLK_FLAG_WRITE_CACHE_DISABLED		= (1u << 0),
++typedef unsigned int __bitwise blk_flags_t;
+ 
+-	/* I/O topology is misaligned */
+-	BLK_FLAG_MISALIGNED			= (1u << 1),
+-};
++/* do not send FLUSH/FUA commands despite advertising a write cache */
++#define BLK_FLAG_WRITE_CACHE_DISABLED	((__force blk_flags_t)(1u << 0))
++
++/* I/O topology is misaligned */
++#define BLK_FLAG_MISALIGNED		((__force blk_flags_t)(1u << 1))
  
  struct queue_limits {
+-	unsigned int		features;
+-	unsigned int		flags;
++	blk_features_t		features;
++	blk_flags_t		flags;
+ 	unsigned long		seg_boundary_mask;
+ 	unsigned long		virt_boundary_mask;
+ 
 -- 
 2.43.0
 
