@@ -1,75 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com [209.85.219.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A80341459F1;
-	Tue, 25 Jun 2024 21:31:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 176C4146A64
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Jun 2024 23:20:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719351111; cv=none; b=LJPAiWSxjHVmqrsXHfpKjvdtm+ywxp5MA+PhyODG4cBERnR8DXw96Z5+KGwbTfcai0n83pMM9cPx/87QZ0XMW00eM6XOJBd5qABnQg/Gipo6ArqPxOVX9aLWwtOfX3PJK/x5y1G3munCdxJYQdtP6UQo3oyJxB8frwcAqFGP24E=
+	t=1719357639; cv=none; b=pXXvMjTUC7apFZrPF5602zwEv6bl8QLKm1bzmuo6C9yO9mlMLnovOwEFDdhNB8GVHMac+LE6LQrt9RC4i78+vRnk2RkKJhWaCdagXNG5/Y+sjZdz5/fQVycx9aONhTh7o4Jnjr/px2zbVDrSVkk9B/0VD53FFBzqq1FrqmGHMx8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719351111; c=relaxed/simple;
-	bh=V+8dRTvXBJ34c2z8FjdL/uXrT9FNEw1631Px6P8zDSs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=A/loaojNVErufBdqfQ0LOJ/uYPyMB5N4EuTXnHHBM7snrlYTDqaPWodjJhTb4HBhdBC8RzdYae8zcCZgS3rqo19F1Sj9bfR5UYscHfjyHdpjCoftxnNVwtD/coQXo9678t8a0ui0kaGX3zMKpcboinqBlPhBomfESbv09tSnMdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XDcqOIrn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719357639; c=relaxed/simple;
+	bh=lUVra71rm8HFPLESRaUJVGWnwteFoPTukygmHz9N474=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=GLnfam5g3fUJl2+JzsWaJ0i3HyqmuNU+kjYXFFpH81zpXacDcrxWTlXk6Hw67R8RrC0/X73A+2IPdD3dwwLkwva/qDzwcJf96nrA3OcAGIjLDzP46KWRV54KEeND+w05/qMpYOOA1+V3LlRFVbmIgAmCiC2fAydnGaGmSYtFMhY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Eagt5iuW; arc=none smtp.client-ip=209.85.219.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XDcqOIrn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8361AC32781;
-	Tue, 25 Jun 2024 21:31:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719351111;
-	bh=V+8dRTvXBJ34c2z8FjdL/uXrT9FNEw1631Px6P8zDSs=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=XDcqOIrnmQDfjaMjmHrlg9INPds2wSqyBwtKvW1UBEOYTl/A5fYfNq+bfx1cTK3I+
-	 /F2fwa1IMTFIFw94R+mGAW3+CtRGL2zGhbkEOM0oZFjtfc8YBUimqucUJkk1smWGyD
-	 ILjfWozPYwY/8m6IfE4P7EoBB7UlbCwDfUrRPW1CZczizg7gRKi3PkcTva8fQ/tKQR
-	 JEJ8vcw6DSMjMnU1J9UCUcEESbXdfCUKbIRExE60M+Zco+WFiSbb1VOxHeyHNMBNvH
-	 tOP9irpzYMs62T4LZpy1qJqgJFoSVuWMhHAn+pW/wINfdvMLsD/0uT+Bl5PV2C4y8A
-	 Qj7nPGw0uuZ5A==
-Message-ID: <2a2d1ada-801d-44c5-ace4-f653599eda67@kernel.org>
-Date: Wed, 26 Jun 2024 06:31:48 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Eagt5iuW"
+Received: by mail-yb1-f171.google.com with SMTP id 3f1490d57ef6-dff38087349so743765276.3
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Jun 2024 16:20:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1719357637; x=1719962437; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=lUVra71rm8HFPLESRaUJVGWnwteFoPTukygmHz9N474=;
+        b=Eagt5iuWvJqgwgL5DUFJF0Qvy3iT8jPA8hUNI49d+FihkMnnYy2+U0UMvLefZsTrIb
+         TN0SQSOqeg75zBdLof1puf4JjOV7D4vI0iQmflUNrT5H+FhV5WZnQUwrJ1YSIhcesUXr
+         3EUo10JY/ZNFXzvKsoncvJ/DsNDbpyZzs0FIWr7rVGpaqZfdnVmV0xMvMR6asHmz4j0+
+         HeMeoDtFbOZY6mhpEREhmJW4xherwkYTn5rqXzwgmh80zXiZljhfJTmrXV3obhYhyDcE
+         glIUtSa58sxm3wK+cZ16NkkUpXL1lLNOrFv0i+RcX0UzJixn2KwLzOP0ijh/b6VFNYqB
+         kmTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719357637; x=1719962437;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=lUVra71rm8HFPLESRaUJVGWnwteFoPTukygmHz9N474=;
+        b=QEU7ct9ivkkxhPMfFExhLahnHPs9LUEgynpzQ40Vq77znQBJjwiAzFWyDc0sUihhG+
+         A+XphcUZcYqkFx6v19PtaF9CYpKEwYdunTOZXehdgORaPS24ugoD/Sq8uPWSA5vNduMh
+         gNJ88xd0BoeNP8h/nS/aWuXuD3LRlidfNRhtVTB+Lw5w7MZYztLvs+uTJ5VXd243pEUP
+         qKBavlNMHS/gfPJXrAuiAFx9hOXMRZ2tTrSjYnDPhaEzLDYpM5vCTohq79bbR+offqGk
+         v6Z8oK9R0Am4PBbDrQ19VEaQsCrGh0vgTQnML2iDI4PRrh/Y5wf8cay6NHYYtD4/I2e3
+         /uGg==
+X-Forwarded-Encrypted: i=1; AJvYcCXWq0s2025SIDkfjhw+J5h2eCedMvc3aeK1+GrteHZCM7e6h3xcFj5esYjswCvDaAVXnx3/vOtcaF9kT+e+XQDpZ1yJf6uKP8BzxQ==
+X-Gm-Message-State: AOJu0Yw1Xg9bGTOCqfYrPpefwC0M/QapEysfv3tMQ7Aa+BhRk3s+Dn45
+	W4lWig4Mu07W/vAvy2ogmIHcJ9S1FZbjRwHSGiD+zEBSk3u49i2AYf2axcSBYFDxIUkcwXeAo/K
+	mSrcWjTva/X8WHT/I7UuGAEyaymJf4Ds9
+X-Google-Smtp-Source: AGHT+IHbIXWcGD0kwc7/s+/U4f+DnvV7CzoWgSUTxHo3m+uoJDygo0kgkIrutA3VG3oGRh+I8nk0g5h7yoqjKnOOL7E=
+X-Received: by 2002:a25:7403:0:b0:dfb:54b:fbc1 with SMTP id
+ 3f1490d57ef6-e02f7219b0fmr7480339276.0.1719357637007; Tue, 25 Jun 2024
+ 16:20:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 8/8] block: move dma_pad_mask into queue_limits
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: Niklas Cassel <cassel@kernel.org>, Song Liu <song@kernel.org>,
- Yu Kuai <yukuai3@huawei.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
- linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20240625145955.115252-1-hch@lst.de>
- <20240625145955.115252-9-hch@lst.de>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20240625145955.115252-9-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20240625165643.1310399-1-prabhakar.pujeri@gmail.com>
+In-Reply-To: <20240625165643.1310399-1-prabhakar.pujeri@gmail.com>
+From: Justin Tee <justintee8345@gmail.com>
+Date: Tue, 25 Jun 2024 16:20:25 -0700
+Message-ID: <CABPRKS-rKO4kVTDJ9Te0RExK6i=6JAu0x+7xCq1dToS3G7EpmA@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: Simplify minimum value calculations in
+ lpfc_init and lpfc_nvme
+To: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
+Cc: Justin Tee <justin.tee@broadcom.com>, James Smart <james.smart@broadcom.com>, 
+	Dick Kennedy <dick.kennedy@broadcom.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 6/25/24 23:59, Christoph Hellwig wrote:
-> dma_pad_mask is a queue_limits by all ways of looking at it, so move it
-> there and set it through the atomic queue limits APIs.
-> 
-> Add a little helper that takes the alignment and pad into account to
-> simply the code that is touched a bit.
+Hi Prabhakar,
 
-s/simply/simplify
+I=E2=80=99m afraid I=E2=80=99m going to have to echo similar comments made =
+in the
+initio email thread here as well.
 
-> Note that there never was any need for the > check in
-> blk_queue_update_dma_pad, this probably was just copy and paste from
-> dma_update_dma_alignment.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+How is this a critical fix in code paths that have been in place for
+years with no complaints from users of Emulex HBAs?
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+I am reluctant to stamp a Reviewed-by on this patch, which alters code
+that has already withstood the test of time.
 
--- 
-Damien Le Moal
-Western Digital Research
-
+Regards,
+Justin Tee
