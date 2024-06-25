@@ -1,71 +1,88 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A02E3219F;
-	Tue, 25 Jun 2024 14:34:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FCDE159209;
+	Tue, 25 Jun 2024 15:00:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719326098; cv=none; b=KgQ8a0LSVvRcCpmh3HgMvqq5oTKKNbdxeZDefQvGAOIPqYwugpl2DQQfQgncokhe3SsffW8BJ7pIdaqPiJEQNwxcsT1CkRb3unelAu3CA3xKgioPk4O6A85eJkqZez6AxxX11rtRrWSymrpz2CbI1AjplLFrSifMkDVkDsFcd8o=
+	t=1719327607; cv=none; b=aL3ajOS+cRyLwePq/ZLkfZXOsoPDifOagj9J6Cx4nZZ5ZbvWhpmfpmSOaUduvTXxB+PxVVSIGfwzENpRPxJB6hnQ9Ws2dWKQj3myaJSXE59F7nH5dzykQi41lEht03dQBH9jqrloTwPCqnZnrmpGlv+lh2LGwfpipd7UDouyKds=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719326098; c=relaxed/simple;
-	bh=sjcg5oheb96XbyNA3n+2Eu59CvtKaUIZM3e0v1a3VwA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FA1vTbWPCDSeXk/FjJ5DmwjVKDPTylY0SXb8czNXhc/bNEeViHWC3CfS9ZkOJHnJO59FvS7gkMqvCdIET0g9C/iTpkE7Qx2PRmyRkv+Mlf1vOyNobXqj60d1/gvikB460NDxTp1Zo98zMVtZA9ldSgbT3NUzp12OPsQVuOJo/KQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=sfTRFWRN; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+	s=arc-20240116; t=1719327607; c=relaxed/simple;
+	bh=Ycm9baoHmA0xsmdObsAGpMAx7EmYMVmA4RloSxKYjyk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VRlbWpMT5bWJuIdNfh710yCdoae95gdfwdDzZSAXWsBqvHnF0zpJMDYiAZF9Z373pc6n4/8mRRx5lqV6JBZiWDrsGL86HCCA5ZT5/AKjnGAr5WbHvn0+Hatwe1RQHi0LYdAyIStktmjTbYqb7JhL05pHqYUMmQj7DgyNDnyP9Og=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=a1Nmn9Gi; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sfTRFWRN"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="a1Nmn9Gi"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=rTOMkVR0lzd1GL0VA8NMM+4rqSDYk+4Clj5YedNUa0s=; b=sfTRFWRNifLp8Kd2STLN+nJPsJ
-	sb2Tza1SrXoItNdh+tCtqaSRfZrAN6GrJdXEUct18DC7NylNPA9FY/Q2r1ZRfz8oQnmcW7UMfSi8i
-	tyhqjtSeRq19NueJcM1tB+jDz498PIIjLT3GgWRP1NUhFq4eEWIODmt2wA0HrAgUSJdsGqIuYC0KZ
-	+vAGzLaINzJP4kN+ihoJPp23xNqRC1SgVkJts7BXTgQjiBhGPXE2CtcxX3oDx0KemeeAOYSMGLWJA
-	8bpHIqFbn0YRRKGvvl2pKTyrYQSUzujpc7SPYl+Kua9MymvoYvV9GYe09eZ/xw1QJdvG6oXPJiZcQ
-	G46l+f7A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sM7Fy-00000003CZs-0Ys7;
-	Tue, 25 Jun 2024 14:34:50 +0000
-Date: Tue, 25 Jun 2024 07:34:50 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, Song Liu <song@kernel.org>,
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=yGEqwI5TbhutvtLFlJMwfW7TWIGthjl30tV6Piiwd1w=; b=a1Nmn9Gi4lQI1JcMuYTnxzgTLo
+	lnIQerqXSVtGrG6Vw97Z3xp2zl9EiSycTuOWCj13ZOVDVW2TIbT4DQWZLeLc8IUljbv+8RVzLx+ri
+	bfiAYg50sEcOF0sdPNwKZf8azHMzhhrYnUnXk/e/H/tgOqzVs3tMsTs94w1R0AuB9RYmDOjHJwCq9
+	EHiKPlc68muqBFHln432qTbUs9WsmYxSwN2DVio5vrIx3/uvEzFwFyTxeXoLDGQEYfn2F6HfyHOGY
+	aeJTIR3tZC/e6q4OASgZbjTFpSGrCBGVKYohzbon7W1xCUlwb8C+Wz7rqYbuG9eni3aXoKvU4rR7o
+	JKPKBxzg==;
+Received: from [2001:4bb8:2c2:e897:e635:808f:2aad:e9c8] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sM7eJ-00000003Ie9-0pN3;
+	Tue, 25 Jun 2024 15:00:00 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Song Liu <song@kernel.org>,
 	Yu Kuai <yukuai3@huawei.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Alim Akhtar <alim.akhtar@samsung.com>,
 	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org,
-	linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-raid@vger.kernel.org,
 	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 6/7] block: remove the fallback case in
- queue_dma_alignment
-Message-ID: <ZnrVio4kVd1NpHsF@infradead.org>
-References: <20240625110603.50885-1-hch@lst.de>
- <20240625110603.50885-7-hch@lst.de>
- <7b800a42-e3cb-4c1c-9a29-74907fcb2c8b@oracle.com>
+Subject: queue_limits fixups and tidyups v2
+Date: Tue, 25 Jun 2024 16:59:45 +0200
+Message-ID: <20240625145955.115252-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7b800a42-e3cb-4c1c-9a29-74907fcb2c8b@oracle.com>
+Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Jun 25, 2024 at 01:03:19PM +0100, John Garry wrote:
-> On 25/06/2024 12:05, Christoph Hellwig wrote:
-> > Now that all updates go through blk_validate_limits the default of 511
-> > is set at initialization time.
-> 
-> The code handles q == NULL case, so is q == NULL now impossible?
+Hi Jens,
 
-No caller ever passed a NULL q in. But yes, this could use a sentence
-in the commit log.
+this series has a few fixes for the queue_limits conversion in the first
+few patches and then has a bunch more cleanups and improvements in that
+area.
 
+Changes since v1:
+ - remove an incorrect use of a flag on the features field
+ - add a patch to switch to __bitwise annotations for features and flags
+ - update a commit log
+
+Diffstat:
+ block/bio-integrity.c     |    2 
+ block/blk-map.c           |    2 
+ block/blk-settings.c      |   46 +++++----------------
+ block/blk-sysfs.c         |    9 ++--
+ block/blk.h               |    2 
+ block/genhd.c             |    2 
+ drivers/ata/libata-scsi.c |    3 -
+ drivers/ata/pata_macio.c  |    4 -
+ drivers/md/md.c           |   13 +++--
+ drivers/md/md.h           |    1 
+ drivers/md/raid0.c        |    2 
+ drivers/md/raid1.c        |    2 
+ drivers/md/raid10.c       |    2 
+ drivers/md/raid5.c        |    2 
+ drivers/scsi/scsi_lib.c   |    4 -
+ drivers/ufs/core/ufshcd.c |    9 ++--
+ include/linux/blkdev.h    |  100 +++++++++++++++++++++++-----------------------
+ 17 files changed, 96 insertions(+), 109 deletions(-)
