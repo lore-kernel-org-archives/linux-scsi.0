@@ -1,157 +1,112 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4A36174EC6;
-	Tue, 25 Jun 2024 16:42:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 922B416C696;
+	Tue, 25 Jun 2024 16:53:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719333774; cv=none; b=MT+ZqqAYhAGGxqU1n1t4BFoc3Ct6cxPKbbc0X6iOGgLTQ5zSczwL75umf5Wr2C7ui8Lewl6qmfGMTWittc0/v1MGfk8OetGjvE8s6101PHnwzWKraQGCUCAz5UNLBCoer6AhnDQuwfJp5znGhQD2hZSyRGa1xba5d6+aEuberqE=
+	t=1719334437; cv=none; b=M0FgmcvDDdb3D5WH+esgaDg/4qu0B0EI9+C+JQdIh3a1XaGbsdEWPntbwvNcNbtV3F4kJs1qy2Ms9HZ4gPVRyFEQdnoyT4U2nWJejU3h1qF4wKS/rmilOeZ4TyMmcBCE/faXu+1C56RPzjzW37eIMJCMkpar/xXWOfhqXk6VQYE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719333774; c=relaxed/simple;
-	bh=AiVRnM36SZePV7DiOFeYsrWEs3Bvv9LCMdrNJReGEkg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PTFqW+KHMCOqvp24yWJW4650/9YDz72ajJXQvkqBcIrTOthmSfhiQ38YkeL/ioXkZs5SxE52ZdGYyAksYbQA37pOueD167pyiYuffTAcFLHKTZ33rc7jHa0vYr5llL4R9wN9SOVsHHHplo4rs9U/DjcbMElYJQaZMLQE9jbRM3g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=LIYF5uJd; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1719334437; c=relaxed/simple;
+	bh=DwpWLBHt1XJLYjaG/1fFg0b5XgL2jy/41pZOj0cmR+Q=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:To:CC; b=UrDCaeANMryMRFzShGjHGtgwUc18RZtPz+b6ux8UKHI+hQootNoG8kUYv7KNTO4K8blfeQAJBg8A/5SJyI+D4FSwDMdAgBHIjPk1ZWvkR2RMvVS2rnuP+bzPq42U5Dksb1g+jTQyP1j6O+uRMGDxmDMAAj4IHN0RWxlxVNcL++I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Kq8sKJQ0; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="LIYF5uJd"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W7rH022Xrz6Cnk9F;
-	Tue, 25 Jun 2024 16:42:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1719333757; x=1721925758; bh=sAjpvwr1/jgh6UyW1p1dhJNm
-	AbUi5v13hU7EV0lbSHI=; b=LIYF5uJdWitfHtvZuWidNmtesPBlfGPnKrcAMTKH
-	cvb90tnfF1Lu3kL0zfyXYckr8hNXHP1QTCNaMf9QezjQlOdTI7E0QRaYvsnjAIcC
-	PIVfKY6V13l5DgtJ4KJJHZ3ELLy2nv1xJwyWPfKqHt3EA/CEf3RhJoquvPdlnIre
-	SBHdLwxjEbUdpvZxinxYjvGU+rRjx2Ui2+oors3hwKMVQsFY8QEKBkqt5A8XLS1q
-	JkbkkC0gxMFKZ/jDh+S2J3f5WV6GJp6Ig32ymcJvlI6NWSl7iV7asIWi/wyzwvbB
-	FmILgtNFpDBbru4wBrF6lHX0QR0mtP6s6vL+pHE5muRc+w==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id nKsHhbovsQ9L; Tue, 25 Jun 2024 16:42:37 +0000 (UTC)
-Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W7rGd6x2cz6Cnk97;
-	Tue, 25 Jun 2024 16:42:33 +0000 (UTC)
-Message-ID: <795a89bb-12eb-4ac8-93df-6ec5173fb679@acm.org>
-Date: Tue, 25 Jun 2024 09:42:33 -0700
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Kq8sKJQ0"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45P8P6jg008959;
+	Tue, 25 Jun 2024 16:53:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=++wbgQplAJePZM1ke3wMP8
+	45KHLDRhZef8Xj8nHEiTg=; b=Kq8sKJQ0D/dNYtnnpmCm+NZNk5BzzxYqysqpRS
+	jCy1kKV128PNSXoZsRFxCsKBSEPNFdovwnqpnisdyz99fRxaXUw3Xp0YqDPeQgdO
+	bNgDvZAeZXESWt2kVAjeBwwAyTuNejKctw/FPKvEyIX0uMhmdPRUlxjU9jsmTOKm
+	5ZRjTCeeVxuYK5t1AAZGZeks2dp39EDUf6t5ACd4C4amtsM5DkpEqb7qmDArxOp6
+	5N6gowT2LdkZf5hL0BjZj4D9m9h+TmZGdoNQe+viT45W0Z1ATw0kQt/yg3i+OiFG
+	NDr15zFAmem9su14jTfQDVVyu0vHpJcZbgmkZLDxiHoY7AXw==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ywqcef8fd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 25 Jun 2024 16:53:48 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45PGrkLT007460
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 25 Jun 2024 16:53:46 GMT
+Received: from [169.254.0.1] (10.49.16.6) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 25 Jun
+ 2024 09:53:45 -0700
+From: Jeff Johnson <quic_jjohnson@quicinc.com>
+Date: Tue, 25 Jun 2024 09:53:45 -0700
+Subject: [PATCH v2] scsi: ufs: qcom: add missing MODULE_DESCRIPTION() macro
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ufs: core: fix ufshcd_abort_all racing issue
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "jejb@linux.ibm.com" <jejb@linux.ibm.com>
-Cc: "linux-mediatek@lists.infradead.org"
- <linux-mediatek@lists.infradead.org>,
- =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= <jiajie.hao@mediatek.com>,
- =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
- =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= <eddie.huang@mediatek.com>,
- =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= <Alice.Chao@mediatek.com>,
- wsd_upstream <wsd_upstream@mediatek.com>,
- "stable@vger.kernel.org" <stable@vger.kernel.org>,
- =?UTF-8?B?TGluIEd1aSAo5qGC5p6XKQ==?= <Lin.Gui@mediatek.com>,
- =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <Chun-hung.Wu@mediatek.com>,
- =?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>,
- "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
- =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
- <Chaotian.Jing@mediatek.com>, =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?=
- <Powen.Kao@mediatek.com>, =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?=
- <Naomi.Chu@mediatek.com>, =?UTF-8?B?UWlsaW4gVGFuICjosK3pupLpup8p?=
- <Qilin.Tan@mediatek.com>
-References: <20240624121158.21354-1-peter.wang@mediatek.com>
- <eec48c95-aa1c-4f07-a1f3-fdc3e124f30e@acm.org>
- <4c4d10aae216e0b6925445b0317e55a3dd0ce629.camel@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <4c4d10aae216e0b6925445b0317e55a3dd0ce629.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-ID: <20240625-md-drivers-ufs-host-v2-1-59a56974b05a@quicinc.com>
+X-B4-Tracking: v=1; b=H4sIABj2emYC/32OSw6CMBRFt0I69plSPgFH7sMwKP3Yl0irfdBgC
+ Hu3sACHJ7n33LsxMhENsVuxsWgSEgafQVwKppz0TwOoMzPBRc3bUsCkQUdMJhIslsAFmkF2kku
+ pm6q3nOXmOxqL62l9DJlHSQbGKL1yh+uFfllhkjSbeMQd0hzi9/yQyqP0fy6VUIK2VdOLuu2as
+ bt/FlTo1VWFiQ37vv8AurvH4tcAAAA=
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen"
+	<martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
+        "Jeff
+ Johnson" <quic_jjohnson@quicinc.com>
+X-Mailer: b4 0.14.0
+X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: --qJxBrSpJ1iy7VdyhUHWRYogLSiiCFb
+X-Proofpoint-ORIG-GUID: --qJxBrSpJ1iy7VdyhUHWRYogLSiiCFb
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-25_12,2024-06-25_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 clxscore=1015
+ mlxscore=0 lowpriorityscore=0 bulkscore=0 phishscore=0 spamscore=0
+ suspectscore=0 priorityscore=1501 malwarescore=0 mlxlogscore=962
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2406140001 definitions=main-2406250124
 
-On 6/25/24 1:29 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> On Mon, 2024-06-24 at 11:01 -0700, Bart Van Assche wrote:
->>   On 6/24/24 5:11 AM, peter.wang@mediatek.com wrote:
->>> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-
->> mcq.c
->>> index 8944548c30fa..3b2e5bcb08a7 100644
->>> --- a/drivers/ufs/core/ufs-mcq.c
->>> +++ b/drivers/ufs/core/ufs-mcq.c
->>> @@ -512,8 +512,9 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba,
->> int task_tag)
->>>    return -ETIMEDOUT;
->>>   =20
->>>    if (task_tag !=3D hba->nutrs - UFSHCD_NUM_RESERVED) {
->>> -if (!cmd)
->>> -return -EINVAL;
->>> +/* Should return 0 if cmd is already complete by irq */
->>> +if (!cmd || !ufshcd_cmd_inflight(cmd))
->>> +return 0;
->>>    hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
->>>    } else {
->>>    hwq =3D hba->dev_cmd_queue;
->>
->> Does the call trace show that blk_mq_unique_tag() tries to
->> dereference
->> address 0x194? If so, how is this possible? There are
->> only two lrbp->cmd assignments in the UFS driver. These assignments
->> either assign a valid SCSI command pointer or NULL. Even after a SCSI
->> command has been completed, the SCSI command pointer remains valid.
->> So
->> how can an invalid pointer be passed to blk_mq_unique_tag()? Please
->> root-cause this issue instead of posting a code change that reduces a
->> race window without closing the race window completely.
->=20
-> blk_mq_unique_tag() tries to dereference address 0x194, and it is null.
-> Beacuse ISR end this IO by scsi_done, free request will be called and
-> set mq_hctx null.
-> The call path is
-> scsi_done -> scsi_done_internal -> blk_mq_complete_request ->
-> scsi_complete ->
-> scsi_finish_command -> scsi_io_completion -> scsi_end_request ->
-> __blk_mq_end_request ->
-> blk_mq_free_request -> __blk_mq_free_request
->=20
-> And blk_mq_unique_tag will access mq_hctx then get null pointer error.
-> Please reference
-> https://elixir.bootlin.com/linux/latest/source/block/blk-mq.c#L713
-> https://elixir.bootlin.com/linux/latest/source/block/blk-mq-tag.c#L680
->=20
-> So, the root-casue is very simple, free request then get hwq.
-> This patch only check if reqesut not free(inflight) then get hwq.
-> Thought it still have racing winodw, but it is better then do nothing,
-> right?
-> Or, maybe we get all cq_lock before get hwq to close the racing window.
-> But the code may ugly, how do you think?
+With ARCH=arm64, make allmodconfig && make W=1 C=1 reports:
+WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/ufs/host/ufs-qcom.o
 
-Please include a full root cause analysis when reposting fixes for the
-reported crashes. It is not clear to me how it is possible that an
-invalid pointer is passed to blk_mq_unique_tag() (0x194). As I mentioned
-in my previous email, freeing a request does not modify the request
-pointer and does not modify the SCSI command pointer either. As one can
-derive from the blk_mq_alloc_rqs() call stack, memory for struct request
-and struct scsi_cmnd is allocated at request queue allocation time and
-is not freed until the request queue is freed. Hence, for a given tag,
-neither the request pointer nor the SCSI command pointer changes as long
-as a request queue exists. Hence my request for an explanation how it is
-possible that an invalid pointer was passed to blk_mq_unique_tag().
+Add the missing invocation of the MODULE_DESCRIPTION() macro.
 
-Thanks,
+Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+---
+Changes in v2:
+- Updated the description per Bart Van Assche
+- Link to v1: https://lore.kernel.org/r/20240612-md-drivers-ufs-host-v1-1-df35924685b8@quicinc.com
+---
+ drivers/ufs/host/ufs-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Bart.
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index cca190d1c577..c12004030b50 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1883,4 +1883,5 @@ static struct platform_driver ufs_qcom_pltform = {
+ };
+ module_platform_driver(ufs_qcom_pltform);
+ 
++MODULE_DESCRIPTION("Qualcomm UFS host controller driver");
+ MODULE_LICENSE("GPL v2");
+
+---
+base-commit: 83a7eefedc9b56fe7bfeff13b6c7356688ffa670
+change-id: 20240612-md-drivers-ufs-host-a8a0aad539f0
 
