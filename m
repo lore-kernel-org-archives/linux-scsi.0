@@ -1,142 +1,94 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4CA37181CEF;
-	Wed, 26 Jun 2024 13:18:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D47F245C07;
+	Wed, 26 Jun 2024 14:26:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719407910; cv=none; b=JvtBG5x4eZZzaS/HzI0kReK6bEIBk2ZNOL2IpUrXiqSJZFztpMDcps6BtBbX2oBCXxlhjA9/A7NNF3ed/jHNl1sRvcLRfBnWp+1VnLcbkrqp3M0Cwc7Jvqp26HCekGNZ8G/dsRl8kXiUUeHdmRszJqLZ9pEe7ZX206sCTSi48ik=
+	t=1719412010; cv=none; b=XdU7glbWbqT+8c6f6hc7Kwt3zIJqsD/nUKEAnDVQI35Lu2fNZXM0Dicsf4rbeL1tEyx1TyaI3VOK2RJRi2lo/grMXKMKnd03CM7t8IwrgIy1JHOSHT/kFhPbcKmA1VE5/nymJJe3meGpbULbrR7f0ONgAsqfcPlJORoubf4XudA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719407910; c=relaxed/simple;
-	bh=LnJ4BdBatnaKJIt8DTZVCb92CAvzC0dTStPyroTM/vc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=NH4hSczJPyb0bUzLWPr636VsRyBsdod4d1pvO48muo7oaWPtnln711pmUigowdKXW08M407FxcN+8Ed94+tkPHN4Z5f58h+jePPZhxxBjxFoVNkD+52ffQfxvSy51900Eedv8v8tmrjSUeBwkMJfvxea1KMmMHEwAm/dtP1c1wU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=duf1TmKr; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1719412010; c=relaxed/simple;
+	bh=gpKXemNbYHWOqH2GHVu6mRpMdKo90maFTmdXXV0nR5c=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=VqBNkCbeFFRIcCj6x63UeMSchByusMJ+zVG+mYBEU30BBJG/vZwaz4OIEP5Vs0DRprukeTId5cWb5W0wANgsCyYs/wLyzW0D9cRylU+y3fUuMA6KfXcd6srrTm4WBvI2tS2Y2kRc2FjwlK3Vnt+Xny5cEIsS3r2Vutx49q+dbhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=HVQz5QHo; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="duf1TmKr"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 45QAfUmK015158;
-	Wed, 26 Jun 2024 13:18:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	DK9j4PGjY2UmCnvRToOqo/sLZ+R/jph7j04TEirCL6s=; b=duf1TmKrLXk3ZFis
-	BMCwHZsGpJ70zHd6N45JcK2fPq0JDD5GuAcdWNxH3yoifvR4OTMMUPlF0R5SudZ3
-	d3zr2vxdPaddhFMoj9MxhBD2mL+GtWatuPwc47uvfEu1EX+XHbfjga1u9GivxRIw
-	HYFoUZUHIGNGfvFMUEfrA3BWZmmH3ntdj9YInca8sB80ppSfhosR2ln8K0wJkSrT
-	35SKUbYtypx6UAwOP0XZfW800opwJ5Oo88aRVzaMEIr+2Mdmc+Tcr6Yqy6NSSAsU
-	uI250nr8iIZofrlSdKYCQz+aqwua/lA0qWYfTnESOgrVWYlHY15i1nxdmoj95J4B
-	KJvioQ==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ywqshsra7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 26 Jun 2024 13:18:13 +0000 (GMT)
-Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
-	by NASANPPMTA05.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 45QDICdf002339
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 26 Jun 2024 13:18:12 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
- (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 26 Jun
- 2024 06:18:08 -0700
-Message-ID: <272184ed-2fd8-413a-816c-9470bf9332da@quicinc.com>
-Date: Wed, 26 Jun 2024 21:18:04 +0800
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HVQz5QHo"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=lFf8qNmjo6Nj33hDTbujEk2BDEk3+cT37RSj9EYUc6E=; b=HVQz5QHoUBHle3oNOh86oc/Gdc
+	0L7GbPiDEHY3ykjKzgIAE82lnPKYlCfYHhVdr0H504mRBLElPU7c6m8lovpOJMWfh0YwQ5UsbXg5j
+	3uoCzisuR5W7Nh63ySI8Wduy6wpBy18BeqkHBEpEas8rJwSmwZLlwIvS7C/qqqMcQS4yTSUnYCjh+
+	uYs1Neg7UKh7umxbevBRwVQnlnORd2v85qcOQxH3/Hvo7OZ5CI8t0cWI0s8CJXmKR6SRb8KPBnhv7
+	Hdio5BdzgCD/a3xXae1S2eUtbYT24/QSe5vjJp/woIShTRnMKlMELRtnEVrhTLnL5Rc4NWfGTzyPZ
+	bzsJMzEQ==;
+Received: from [2001:4bb8:2cd:5bfc:fac4:f2e7:8d6c:958e] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sMTbc-000000079bk-3nxT;
+	Wed, 26 Jun 2024 14:26:41 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	linux-block@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: queue_limits fixups and tidyups v3
+Date: Wed, 26 Jun 2024 16:26:21 +0200
+Message-ID: <20240626142637.300624-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: quiesce request queues before check
- pending cmds
-To: Bart Van Assche <bvanassche@acm.org>,
-        =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
-        "quic_rampraka@quicinc.com" <quic_rampraka@quicinc.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
-        "beanhuo@micron.com"
-	<beanhuo@micron.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "junwoo80.lee@samsung.com" <junwoo80.lee@samsung.com>,
-        "mani@kernel.org"
-	<mani@kernel.org>,
-        "quic_cang@quicinc.com" <quic_cang@quicinc.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "jejb@linux.ibm.com"
-	<jejb@linux.ibm.com>,
-        "quic_asutoshd@quicinc.com"
-	<quic_asutoshd@quicinc.com>,
-        "quic_mnaresh@quicinc.com"
-	<quic_mnaresh@quicinc.com>,
-        "manivannan.sadhasivam@linaro.org"
-	<manivannan.sadhasivam@linaro.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-References: <1717754818-39863-1-git-send-email-quic_ziqichen@quicinc.com>
- <d3fc4d2b-81b0-4ab2-9606-5f4a5fb8b867@acm.org>
- <efc80348-46c0-4307-a363-a242a7b44d94@quicinc.com>
- <b1173b6f-445c-4d6d-9c78-b0351da2893a@acm.org>
- <ee45ce9429b1f69147c1a01e07b050275b4009bf.camel@mediatek.com>
- <3c7e776e-df2e-4718-995f-5e5dfa3cc916@acm.org>
-Content-Language: en-US
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
-In-Reply-To: <3c7e776e-df2e-4718-995f-5e5dfa3cc916@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01b.na.qualcomm.com (10.46.141.250)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: t0o3G9yz7_cq_Ga1aXwpg19sBXPty3gt
-X-Proofpoint-GUID: t0o3G9yz7_cq_Ga1aXwpg19sBXPty3gt
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-06-26_07,2024-06-25_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 clxscore=1015
- bulkscore=0 phishscore=0 suspectscore=0 lowpriorityscore=0 malwarescore=0
- mlxscore=0 impostorscore=0 mlxlogscore=999 priorityscore=1501 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2406140001
- definitions=main-2406260099
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
+Hi Jens,
 
+this series has a few fixes for the queue_limits conversion in the first
+few patches and then has a bunch more cleanups and improvements in that
+area.
 
-On 6/26/2024 12:13 AM, Bart Van Assche wrote:
-> On 6/24/24 8:38 PM, Peter Wang (王信友) wrote:
->> But ufshcd_scsi_block_requests usage is correct in SDR mode.
-> 
-> ufshcd_scsi_block_requests() uses scsi_block_requests(). It is almost
-> never correct to use scsi_block_requests() in a blk-mq driver because
-> scsi_block_requests() does not wait for ongoing request submission
-> calls to complete. scsi_block_requests() is a legacy from the time when
-> all request dispatching and queueing was protected by the SCSI host
-> lock, a change that was made in 2010 or about 14 years ago. See also
-> https://lore.kernel.org/linux-scsi/20101105002409.GA21714@havoc.gtf.org/
-> 
->> So, I think ufshcd_wait_for_doorbell_clr should be revise.
->> Check tr_doorbell in SDR mode. (before 8d077ede48c1 do)
->> Check each HWQ's are all empty in MCQ mode. (need think how to do)
->> Make sure all requests is complete, and finish this function' job
->> correctly.
->> Or there still have a gap in ufshcd_wait_for_doorbell_clr.
-> 
-> ufshcd_wait_for_doorbell_clr() should be removed and 
-> ufshcd_clock_scaling_prepare() should use blk_mq_freeze_*().
-> See also my patch "ufs: Simplify the clock scaling mechanism
-> implementation" from 5 years ago 
-> (https://lore.kernel.org/linux-scsi/20191112173743.141503-5-bvanassche@acm.org/).
-> 
-The defect of blk_mq_freeze_*() is that it would bring in significant 
-latency and performance regression. I don't think it is what many people 
-want to see.
+Changes since v2:
+ - export md_init_stacking_limits
+ - use blk_queue_write_cache instead of open coding it
+ - various spelling fixes
+ - document a new paramter in ufshcd
 
-BRs,
-Ziqi
+Changes since v1:
+ - remove an incorrect use of a flag on the features field
+ - add a patch to switch to __bitwise annotations for features and flags
+ - update a commit log
 
-> Best regards,
-> 
-> Bart.
+Diffstat:
+ block/bio-integrity.c     |    2 
+ block/blk-map.c           |    2 
+ block/blk-settings.c      |   46 +++++----------------
+ block/blk-sysfs.c         |   12 ++---
+ block/blk.h               |    2 
+ block/genhd.c             |    2 
+ drivers/ata/libata-scsi.c |    3 -
+ drivers/ata/pata_macio.c  |    4 -
+ drivers/md/md.c           |   14 ++++--
+ drivers/md/md.h           |    1 
+ drivers/md/raid0.c        |    2 
+ drivers/md/raid1.c        |    2 
+ drivers/md/raid10.c       |    2 
+ drivers/md/raid5.c        |    2 
+ drivers/scsi/scsi_lib.c   |    4 -
+ drivers/ufs/core/ufshcd.c |   10 ++--
+ include/linux/blkdev.h    |  100 +++++++++++++++++++++++-----------------------
+ 17 files changed, 99 insertions(+), 111 deletions(-)
