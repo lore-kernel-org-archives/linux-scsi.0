@@ -1,62 +1,62 @@
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 113BA176AD5
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 10:14:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49B36176AAA
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 10:14:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719396869; cv=none; b=qGgK0ibRjSg5/dLvlgCckji/pSbidHF5lJc1HnnaZmNl64eyKgQJ/ASSHfmOrm78sHjTvwm6iYvR65IimlGX/4VuyjjVEQKoUmQ8TLiWXGSTJgAhysEQKDLl4DoSazmJDfNMe6Zee4qHD8a39P3D72rhJKICcWTjV92aBCAROH4=
+	t=1719396873; cv=none; b=Zvj3QLIli87LW1Sm/ODMJlSN8CFK0lO95XojcAMQuok3klIBa+UJR4Y1IMJ+fDsREyJGxoqo3FP8h6CXgfj7q2+eGz8b9pMiMXwwJkK1wpS86jal1UVJnDfmVhZ5rQa/0X7w12qalHn93WNTSN+eO4p+NNGGQEKJCutQxDMokuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719396869; c=relaxed/simple;
-	bh=ZUu3pQzVsqGNAAF+6RBWn1Vcx/FxQ0DS3kuPtIAajrU=;
+	s=arc-20240116; t=1719396873; c=relaxed/simple;
+	bh=KI6MRILk+I7eGs5ssGt5mtAFHr1fGkJ+Q3wb2xPdyDc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=T1ARmfkl/civ2WKaRfRXEhF7OzuvsK00t+RgfoaiIunw337hF5QZoO7kf2Ez1liRLrsCQsl6LHNITw0A/O5Qb3xiMDzy9ITWzftR6poatYQO1wrabiksc611ih0JXFbh+mpeIB4ONQTtAkhfy7iDx5EMyiSdF5SBRngMLDDp32Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y7h9oIyI; arc=none smtp.client-ip=209.85.210.175
+	 MIME-Version; b=H+00oL3RmdfyZk3SAgFeBlh+FvFmm74VjWRLOjPazDSfR93vyRd33o0dtvi6ys3zugujVpjbr4oll1Y+/oTe86SyhRhSXAE52XXUbP5OZwextENoWkIX37mh+PIgtslA6mrcBO4SFOy+VzCLLzI7CkLX3uxMMw7HWbkD8I/+878=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IPsYDqlH; arc=none smtp.client-ip=209.85.214.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y7h9oIyI"
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-70671ecd334so2991922b3a.0
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 03:14:27 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IPsYDqlH"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1fa9f540f45so605675ad.1
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 03:14:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1719396867; x=1720001667; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1719396870; x=1720001670; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=U8sYvE7NIBRGPL3jKH06ljE0MlVAbByZlEmhsz0GRWU=;
-        b=Y7h9oIyI4Y5klS3MoJN8HqqfoUSkRynFNzE9h2KHhsH6cCWmTmrtyo8/hq70BoXOdw
-         2rRx5E/Uv0mMujsGJbrvy3Qile+jX8Y+zn+eAGCfwps4uwEwm76UtihMnnl3a9vL1a3Q
-         hCMCVrIuy41Hr6wrxG/bex0rWC0y9OxUsTme+TyUFIw/N/CV1p8/wRO0Rzwxu1wXY6WN
-         pi3ZGAbxPBEb6i34NrQ/mztPu6Z85O3EFsPtzC62Zz6Yr0Iq3HvOMZJKxzcFGrIZtICd
-         ZJZeZsyzYPtXgPr0klPg0/MBy7ywtMlYdT7ILJmhw8TQXiW9wTMnTY29uMiRVNV5qqB6
-         neZQ==
+        bh=6ZfnA1/5c0xPDj+zkBN3P6lqp+PcgAYfDPW8P3d/jrk=;
+        b=IPsYDqlH2Uf3/oM7cOmL2nifoufIonD7Rfj8vX3JsWiDj083RLU05aOCJT5BpePyjW
+         WT9aEqFP+gLSGiT9smKt1m+Qyf2UQu+qmRY9Y2dTZKliHqiVsq1p0bl5TtP2i422zBTm
+         XD+jv0BJ5WJfwWRnYy4g4oUPNwvpcfL/C2b68jgCTYeNFdiqCKZb/sHWR3dUIob7jW5A
+         K+/7/ED+Y8RR/KERoyBSyDHJJGbxj0gb6BAYisFgdFsMI6YfHvMLg0CHc4uAzSOJum9Q
+         iE/2cEBajNrgF0QWe+XWjjvDE2S1HeCiskhAKSP+n16kf7tmyBE39UJl2hA3PBo4kzOK
+         lm4Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719396867; x=1720001667;
+        d=1e100.net; s=20230601; t=1719396870; x=1720001670;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=U8sYvE7NIBRGPL3jKH06ljE0MlVAbByZlEmhsz0GRWU=;
-        b=vn39Fz6ZrIPBWpVvCO1w7LqJwAnUXqfd0u6j65wAXG4Q2DMwXt0LbKx7i+S+JiKxhO
-         ECMFQasnjJ4Qsnk/rRz3us3E1kpHnJlSUxJ8iOlYhZ6d+r/dYEwDDrAY4fTt3V+DygVH
-         iR6YaIn0Kw9Rvnsnv+GMX8THC4Qld64UZv2Mz1PESvyHyYcvispdy4/mq9BnqnMhwrdA
-         +pvavhI44Y7pIwbHHpJ7V7FELs5yRM5jDrU+OaR6hn0RHFBCzQDUg6HiO3Mv4JyzWjnu
-         Wv+TGEruM8D7IS7mOJsAb9/70kVfZKLHqNttf9DkfsW3RI3wOYawr0ktxSgNzXCiDiM/
-         3IVw==
-X-Gm-Message-State: AOJu0YzQCBBqy1hJb+r74/CWuyOdTFeAPTIo2QrvnkZOIcx80cvuq9aR
-	JYycoAtz+Fx0UMP9cd9V1pseWItpxbDZ3vp5HtilzMpLFWR5jckUgVpq0Q==
-X-Google-Smtp-Source: AGHT+IH7SiY9QD8pXdo62uO0X1Ovuy0u8nxi8+LJEdz+x0qVeTJSfOr+53Fe8OjYqqaZzBbwG+WBXg==
-X-Received: by 2002:a05:6a20:50d1:b0:1be:cfb:cdd1 with SMTP id adf61e73a8af0-1be0cfbe724mr1216219637.39.1719396867168;
-        Wed, 26 Jun 2024 03:14:27 -0700 (PDT)
+        bh=6ZfnA1/5c0xPDj+zkBN3P6lqp+PcgAYfDPW8P3d/jrk=;
+        b=vgIIrC55DFmfKar5Uoh6zexMa0llySiC3PjEZBtc6iB1B1iy5dC9TdLbKRWkXd2qd+
+         gOPQ4/Ob+YYTPqRAisHPUVTGVShXszECExPEP4NF0DAbkPiO+CyFk2KYd1y7zxnYHJ0n
+         lqv1SPiFmU6L7xVhvbz858Be3ADO/WskumkEuU8sksF9HdcEgIKIXCzG+1At4pPYoolA
+         wnCY58EkYqEDyD1c8vgc2Bb3w9FXy4yJbsbqnfGhbkhzSrT/z+qcK7bQx73g51pd91/L
+         YooAqdCMeLoNpR+fMoCXU4qtrM0J0PF6R1mYZ1rlmHdZTJ6iV5h4XmciKVIEO2H2ERBi
+         Ekog==
+X-Gm-Message-State: AOJu0Yzx3TPvIa1NE58clJVwpdpzbvFgbrgarpMYbwAU5/AzdjUyqjl2
+	zK1fuT4rTZXUeP9eQglXiWlBFYDZJjtBH6coWOvfk4towSyzO8o2cERPoA==
+X-Google-Smtp-Source: AGHT+IGycASPIds8KV1SpcIMO6C6WXe0GA7/L1BM71+17h14MNsMkAnPJABL8uYKFPJO2Oa/mV92IA==
+X-Received: by 2002:a17:902:ec83:b0:1f9:8e2b:cf33 with SMTP id d9443c01a7336-1fa158df190mr124934085ad.26.1719396870460;
+        Wed, 26 Jun 2024 03:14:30 -0700 (PDT)
 Received: from localhost.localdomain.oslab.amer.dell.com ([139.167.223.130])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fa360317ccsm57063865ad.279.2024.06.26.03.14.26
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fa360317ccsm57063865ad.279.2024.06.26.03.14.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jun 2024 03:14:26 -0700 (PDT)
+        Wed, 26 Jun 2024 03:14:30 -0700 (PDT)
 From: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
-Subject: [PATCH 09/14] scsi: ncr53c8xx: Simplified tag number calculation with max() in ncr_sir_to_redo
-Date: Wed, 26 Jun 2024 06:13:37 -0400
-Message-ID: <20240626101342.1440049-10-prabhakar.pujeri@gmail.com>
+Subject: [PATCH 10/14] scsi: qla2xxx: Used max() for queue count in qla25xx_copy_mq
+Date: Wed, 26 Jun 2024 06:13:38 -0400
+Message-ID: <20240626101342.1440049-11-prabhakar.pujeri@gmail.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240626101342.1440049-1-prabhakar.pujeri@gmail.com>
 References: <20240626101342.1440049-1-prabhakar.pujeri@gmail.com>
@@ -70,22 +70,23 @@ Content-Transfer-Encoding: 8bit
 
 Signed-off-by: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
 ---
- drivers/scsi/ncr53c8xx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_dbg.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
-index 35869b4f9329..863139c98cce 100644
---- a/drivers/scsi/ncr53c8xx.c
-+++ b/drivers/scsi/ncr53c8xx.c
-@@ -6410,7 +6410,7 @@ static void ncr_sir_to_redo(struct ncb *np, int num, struct ccb *cp)
- 					"CCBs\n", busy_cnt, disc_cnt);
- 		}
- 		if (disc_cnt < lp->numtags) {
--			lp->numtags	= disc_cnt > 2 ? disc_cnt : 2;
-+			lp->numtags	= max(disc_cnt, 2);
- 			lp->num_good	= 0;
- 			ncr_setup_tags (np, cmd->device);
- 		}
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 691ef827a5ab..5e3afd7ffa76 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -685,8 +685,7 @@ qla25xx_copy_mq(struct qla_hw_data *ha, void *ptr, __be32 **last_chain)
+ 	mq->type = htonl(DUMP_CHAIN_MQ);
+ 	mq->chain_size = htonl(sizeof(struct qla2xxx_mq_chain));
+ 
+-	que_cnt = ha->max_req_queues > ha->max_rsp_queues ?
+-		ha->max_req_queues : ha->max_rsp_queues;
++	que_cnt = max(ha->max_req_queues, ha->max_rsp_queues);
+ 	mq->count = htonl(que_cnt);
+ 	for (cnt = 0; cnt < que_cnt; cnt++) {
+ 		reg = ISP_QUE_REG(ha, cnt);
 -- 
 2.45.1
 
