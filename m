@@ -1,52 +1,53 @@
-Received: from mail-pl1-f176.google.com (mail-pl1-f176.google.com [209.85.214.176])
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 048F717C7B5
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 10:29:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2793117CA06
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 10:30:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719397800; cv=none; b=tq8Cqgfmgd9sQp9H6MLLFryvi76KignEeI0EjUFIsTAi2kPCNRnoNhMkdq7HA25tnnJfFfy+oK/eUIh82uhZlQcDixsBRbvRasQqeLRQd4LQ6KWOAjC/CvfB3+SaiKyATe45w8rfxtxPoE3moIqsvzCKgpryB1sHbBPcNXPPc2o=
+	t=1719397805; cv=none; b=WtgGBawZ/VIISNAEAc1NNE7tUIdhnBFjDqQH6J8Oe1HQtIVS1+O9DVY37gxNQ5N1JvUMkfelrWQF7YTcGLMzs3HwI0tSWbnKV6iY4a6JsJ5FGh36fhjrCNSABKwT4RWonQRXJq7aa/GtUDdUnuG41e27iIxZLteU8a1JHk/f7Vs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719397800; c=relaxed/simple;
-	bh=mgsm7kXRqjRIguRMoCNYZNYpBZLRZAOPFZ7XwFjCElU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=LIZ4g0ztw/Iq25RUWiAKm8uLiENJwlTys0lYKkrkV3d2kB187vjPwI1u28fYD0W6A4dl5Ht4Kmrcp3d+xsLfXSyHvbLH5Le2jDfh6JAoyqZNtkJhlHNEK+ZFxfMxoerudTtI8nMPdwT+XDYFiLQSRV1bIT41OXV+sD9n1PcOjic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=IGhnkPzY; arc=none smtp.client-ip=209.85.214.176
+	s=arc-20240116; t=1719397805; c=relaxed/simple;
+	bh=OT0f3ljhDEY0XOJ8CUS36eeEKTuZ+7KkIkcofez8faY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Oo+uDOmftNK8zKjhOb381y8g7IFtYLfLougtvUhBWkBvhVAoQeXRcKcx9h9FFPDiDUPN25Q1alVTUhrJZlqKBgS+aTMqvdUZ3jpx0KOJDQj0RYzphS/7ccx6Fq0R/UWMI7dojs+onjkziiBFPpM/EKm+yvKVYzP76G9ADFf/9Fg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=fVP1ld/9; arc=none smtp.client-ip=209.85.210.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="IGhnkPzY"
-Received: by mail-pl1-f176.google.com with SMTP id d9443c01a7336-1fa55dbf2e7so22256915ad.2
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 03:29:58 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fVP1ld/9"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-7024d571d8eso5088926b3a.0
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 03:30:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1719397797; x=1720002597; darn=vger.kernel.org;
-        h=mime-version:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=bf0ybjL5v1jrq+gt5llK4hSogqhZSWKr6CL6luZ8US4=;
-        b=IGhnkPzYQT+kATgkIjXNXwgT1dNhgIm2Fa9FETUYv6/3gvni9OhTOZRqH7OA0F294E
-         KrzvQP0KuOuftZeicp/GQtXx5Ke/PeRtEZXaj09XZw3CLOjKhbkk+SnWmPsxYOaLsRL0
-         IrrCze4xlzbtw5wmsn3dH3r3ptsyLigy3xO9E=
+        d=broadcom.com; s=google; t=1719397801; x=1720002601; darn=vger.kernel.org;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=pi7VE/FLaPAAe/LQIrwCkUOSL3qEk4q6TJeQpN/SymA=;
+        b=fVP1ld/9iSuPCegoAn2vM3kkmFNsBTlUZCPsi/z2cI6kgZYkheNzur9G0vdqfajfWQ
+         a85czdy0hMFbvd+x39hLs4dCmfy3R8yQldLTBCRSv9r/gMkmMXrPzVfrWsGlMvNzAOWh
+         DU6s/aanKQ1PHyAFVsbUhy2LEXAiJR0QuB7mE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719397797; x=1720002597;
-        h=mime-version:message-id:date:subject:cc:to:from:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=bf0ybjL5v1jrq+gt5llK4hSogqhZSWKr6CL6luZ8US4=;
-        b=pAuuC2GK4q8FcOPdknDzmBncT7mnsPDekD6C2q7FkBGhusbUDWu7S4jb2ifyH3lqsp
-         0n2SUzSIsuHb43N5npKSksaKWtisvYF4J0g88Oqvh5x5bvToFFHLHUw2U3WWypVVsQ9R
-         +hpR5zwEoaESO8KM8f3PIy7l+n6rsGm526D+VUaKAbGUgD64zcbu9xXWHrxBCcnReUZs
-         DaXDDslpi6mV5syt02md4gT/ZI1Ns3xbW6w4AJiU/aIKtGD5qBhMUviDFa7zHACVPIKP
-         6hpY9myOUW63YixHktMxKiuw345SwFuGDBefiWg7G7aTW5DmDjM+ESncKbd/3junU7sX
-         9KVQ==
-X-Gm-Message-State: AOJu0Yw3kEJcKf9j6mr1klExdRFgWsSJIL7fEoFpBySfiauSu6pLWJTV
-	gWBjOBvugu7pkYW3qoClePHHDsdmaUwB6FaFj6k6sE59+rCBeyY1TFZss32jIN4tMA3RJuegDL4
-	GUCJZQhr8fh+7NYrSxtGDyzl3DIorbq07Bzcr4nqXe/ybZVCg7mhaivxglFraql1JkoVVOCxWHU
-	YV8esZ0+HVz5xgEke17nkVZw4qM6JugEvLQaSt66SHROW2GA==
-X-Google-Smtp-Source: AGHT+IHIL5I8z3zcHAKNuuTqJ1ZBkzLNJic+OVmQMQRB3pO+jCbMyr51UbnYBYtmrUD5XejFaPTpPQ==
-X-Received: by 2002:a17:902:ea08:b0:1f9:c52f:d9b5 with SMTP id d9443c01a7336-1fa15944ecbmr127315845ad.66.1719397797128;
-        Wed, 26 Jun 2024 03:29:57 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1719397801; x=1720002601;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=pi7VE/FLaPAAe/LQIrwCkUOSL3qEk4q6TJeQpN/SymA=;
+        b=FtPTKLqLpq0y3iXmF39oWvci8gAdU6n3vEYDJ/EhCgrSdKA7xd8SxfZKuohYxvhwzt
+         Iu1eQdbpDB18InrXnoSDvgKwMfYNIaZRdQ3zDPhPOqY+nR8Ws1O8f6AW9PPpODw+p6Ej
+         Uqky70lRyHOvZAxaUVL8BT8rFmZPLnICTgILMgrmDktb69XM1BlGfGzJ78e2sdm60yc9
+         eDDNTEo+syK7MbZqlIDVuXpCQTYUipmhEBf/LBc+ylfCdLcm4BiqCkS4X9rSJxb1EMex
+         XWvHy/zQ/WZCB698Kr5oUsHLeiUYREZSz6O2/9Hq6n3o+LlhjVWCTfnXRZ7ND1BVLJ9+
+         Gfig==
+X-Gm-Message-State: AOJu0Yy5tN3W68VYVfDdXo3S8HCW9CVvb51u1s6Vm4gdYuU9Hhv0TNfF
+	taSOCw56rMQuYBKffkJOehQGbc/HXGIwxHLkaPXYE/2uMwZ9dFTxGFN1mdU+/K24P0O6yDM3Nci
+	IS5GcZOkcYhAqpZ2hfTJRrma91Chh510NVDGkSUCmi7uSupNq0UDyGUySWzYOHYvpf6kPFsRmBB
+	axrccwlzXV82LYWPf3Zjj7op7Or97lpH1gR0WaVl3LGAVOKQ==
+X-Google-Smtp-Source: AGHT+IHk1sBQqBFsmeWpZEfPSA9ouI1iVJevzT4o5AHx6IRkQ1VohDda+bAzwsadjXMpFdkqVzicvA==
+X-Received: by 2002:a05:6a20:3112:b0:1bd:feed:c031 with SMTP id adf61e73a8af0-1bdfeedc083mr1277339637.28.1719397801137;
+        Wed, 26 Jun 2024 03:30:01 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f9ebbc7ccasm96051055ad.299.2024.06.26.03.29.53
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1f9ebbc7ccasm96051055ad.299.2024.06.26.03.29.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jun 2024 03:29:55 -0700 (PDT)
+        Wed, 26 Jun 2024 03:29:59 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -55,11 +56,14 @@ Cc: rajsekhar.chundru@broadcom.com,
 	sumit.saxena@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v6 0/4] mpi3mr: Host diag buffer support
-Date: Wed, 26 Jun 2024 15:56:42 +0530
-Message-Id: <20240626102646.14298-1-ranjan.kumar@broadcom.com>
+	Ranjan Kumar <ranjan.kumar@broadcom.com>,
+	kernel test robot <lkp@intel.com>
+Subject: [PATCH v6 1/4] mpi3mr: HDB allocation and posting for hardware and Firmware buffers
+Date: Wed, 26 Jun 2024 15:56:43 +0530
+Message-Id: <20240626102646.14298-2-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20240626102646.14298-1-ranjan.kumar@broadcom.com>
+References: <20240626102646.14298-1-ranjan.kumar@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,63 +71,988 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000f5f63e061bc87e41"
+	boundary="000000000000360db6061bc87f83"
 
---000000000000f5f63e061bc87e41
+--000000000000360db6061bc87f83
 Content-Transfer-Encoding: 8bit
 
-The controllers managed by mpi3mr driver requires system memory to
-save hardware and firmware diagnostic information, this patch set
-enhances the drivers to provide host memory to the controller for
-diagnostic information.  This patch set also provides driver changes
-to push kernel messages into the diagnostic buffers reserved for the
-driver, so that the information will be available as part of debug
-data fetched from the controller.  In addition, support for
-configuring automatic diagnostic information is added in the driver.
+To be able to debug controller problems it is beneficial to
+allocate and configure system/host memory buffers which can be used
+to capture hardware and firmware diagnostic information.
 
-Change since v1:
-- Fixed test robot build warnings
+Add functions required to allocate and post firmware and
+hardware diagnostic buffers to the controller and to set up
+automatic diagnostic capture triggers.
 
-Change since v2:
-- Fixed test robot build warnings
+Captures will be triggered under the following circumstances:
+1. Firmware is in FAULT state.
+2. Admin commands timeout.
+3. Controller reset caused due to IO timeout
 
-Change since v3:
-- Dropped mpi3mr-Dump-driver-and-dmesg-logs-into-driver-dia.patch based
-  on Martin Petersen comment
-
-Change since v4:
-- Dropped mpi3mr-Driver-buffer-allocation-and-posting.patch
-
-Change since v5:
-- Updated Patch description 
-
-Ranjan Kumar (4):
-  mpi3mr: HDB allocation and posting for hardware and Firmware buffers
-  mpi3mr: Trigger support
-  mpi3mr: Ioctl support for HDB
-  mpi3mr: Update driver version to 8.9.1.0.50
-
-
-Ranjan Kumar (4):
-  mpi3mr: HDB allocation and posting for hardware and Firmware buffers
-  mpi3mr: Trigger support
-  mpi3mr: ioctl support for HDB
-  mpi3mr: Update driver version to 8.9.1.0.50
-
- drivers/scsi/mpi3mr/mpi/mpi30_tool.h |   44 ++
- drivers/scsi/mpi3mr/mpi3mr.h         |  133 +++-
- drivers/scsi/mpi3mr/mpi3mr_app.c     | 1080 ++++++++++++++++++++++++++
- drivers/scsi/mpi3mr/mpi3mr_fw.c      |  272 ++++++-
- drivers/scsi/mpi3mr/mpi3mr_os.c      |  113 +++
- include/uapi/scsi/scsi_bsg_mpi3mr.h  |    3 +-
- 6 files changed, 1634 insertions(+), 11 deletions(-)
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202405151758.7xrJz6rp-lkp@intel.com/
+Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+---
+ drivers/scsi/mpi3mr/mpi/mpi30_tool.h |  44 +++
+ drivers/scsi/mpi3mr/mpi3mr.h         |  74 +++++
+ drivers/scsi/mpi3mr/mpi3mr_app.c     | 480 +++++++++++++++++++++++++++
+ drivers/scsi/mpi3mr/mpi3mr_fw.c      | 193 ++++++++++-
+ 4 files changed, 790 insertions(+), 1 deletion(-)
  create mode 100644 drivers/scsi/mpi3mr/mpi/mpi30_tool.h
 
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_tool.h b/drivers/scsi/mpi3mr/mpi/mpi30_tool.h
+new file mode 100644
+index 000000000000..3b960893870f
+--- /dev/null
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_tool.h
+@@ -0,0 +1,44 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ *  Copyright 2016-2024 Broadcom Inc. All rights reserved.
++ */
++#ifndef MPI30_TOOL_H
++#define MPI30_TOOL_H     1
++
++#define MPI3_DIAG_BUFFER_TYPE_TRACE	(0x01)
++#define MPI3_DIAG_BUFFER_TYPE_FW	(0x02)
++#define MPI3_DIAG_BUFFER_ACTION_RELEASE	(0x01)
++
++struct mpi3_diag_buffer_post_request {
++	__le16                     host_tag;
++	u8                         ioc_use_only02;
++	u8                         function;
++	__le16                     ioc_use_only04;
++	u8                         ioc_use_only06;
++	u8                         msg_flags;
++	__le16                     change_count;
++	__le16                     reserved0a;
++	u8                         type;
++	u8                         reserved0d;
++	__le16                     reserved0e;
++	__le64                     address;
++	__le32                     length;
++	__le32                     reserved1c;
++};
++
++struct mpi3_diag_buffer_manage_request {
++	__le16                     host_tag;
++	u8                         ioc_use_only02;
++	u8                         function;
++	__le16                     ioc_use_only04;
++	u8                         ioc_use_only06;
++	u8                         msg_flags;
++	__le16                     change_count;
++	__le16                     reserved0a;
++	u8                         type;
++	u8                         action;
++	__le16                     reserved0e;
++};
++
++
++#endif
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index f5a1529fa537..9aae59646faa 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -47,6 +47,7 @@
+ #include "mpi/mpi30_ioc.h"
+ #include "mpi/mpi30_sas.h"
+ #include "mpi/mpi30_pci.h"
++#include "mpi/mpi30_tool.h"
+ #include "mpi3mr_debug.h"
+ 
+ /* Global list and lock for storing multiple adapters managed by the driver */
+@@ -187,6 +188,13 @@ extern atomic64_t event_counter;
+ #define MPI3MR_HARD_SECURE_DEVICE		0x08
+ #define MPI3MR_TAMPERED_DEVICE			0x0C
+ 
++#define MPI3MR_DEFAULT_HDB_MAX_SZ       (4 * 1024 * 1024)
++#define MPI3MR_DEFAULT_HDB_DEC_SZ       (1 * 1024 * 1024)
++#define MPI3MR_DEFAULT_HDB_MIN_SZ       (2 * 1024 * 1024)
++#define MPI3MR_MAX_NUM_HDB      2
++
++#define MPI3MR_HDB_TRIGGER_TYPE_GLOBAL          3
++
+ /* SGE Flag definition */
+ #define MPI3MR_SGEFLAGS_SYSTEM_SIMPLE_END_OF_LIST \
+ 	(MPI3_SGE_FLAGS_ELEMENT_TYPE_SIMPLE | MPI3_SGE_FLAGS_DLAS_SYSTEM | \
+@@ -210,6 +218,7 @@ extern atomic64_t event_counter;
+ #define MPI3MR_WRITE_SAME_MAX_LEN_256_BLKS 256
+ #define MPI3MR_WRITE_SAME_MAX_LEN_2048_BLKS 2048
+ 
++
+ /**
+  * struct mpi3mr_nvme_pt_sge -  Structure to store SGEs for NVMe
+  * Encapsulated commands.
+@@ -289,6 +298,8 @@ enum mpi3mr_reset_reason {
+ 	MPI3MR_RESET_FROM_PELABORT_TIMEOUT = 22,
+ 	MPI3MR_RESET_FROM_SYSFS = 23,
+ 	MPI3MR_RESET_FROM_SYSFS_TIMEOUT = 24,
++	MPI3MR_RESET_FROM_DIAG_BUFFER_POST_TIMEOUT = 25,
++	MPI3MR_RESET_FROM_DIAG_BUFFER_RELEASE_TIMEOUT = 26,
+ 	MPI3MR_RESET_FROM_FIRMWARE = 27,
+ 	MPI3MR_RESET_FROM_CFG_REQ_TIMEOUT = 29,
+ 	MPI3MR_RESET_FROM_SAS_TRANSPORT_TIMEOUT = 30,
+@@ -327,6 +338,9 @@ struct mpi3mr_ioc_facts {
+ 	u32 ioc_capabilities;
+ 	struct mpi3mr_compimg_ver fw_ver;
+ 	u32 mpi_version;
++	u32 diag_trace_sz;
++	u32 diag_fw_sz;
++	u32 diag_drvr_sz;
+ 	u16 max_reqs;
+ 	u16 product_id;
+ 	u16 op_req_sz;
+@@ -852,6 +866,41 @@ struct mpi3mr_drv_cmd {
+ 	    struct mpi3mr_drv_cmd *drv_cmd);
+ };
+ 
++/**
++ * union mpi3mr_trigger_data - Trigger data information
++ * @fault: Fault code
++ * @global: Global trigger data
++ * @element: element trigger data
++ */
++union mpi3mr_trigger_data {
++	u16 fault;
++	u64 global;
++	union mpi3_driver2_trigger_element element;
++};
++
++/**
++ * struct diag_buffer_desc - memory descriptor structure to
++ * store virtual, dma addresses, size, buffer status for host
++ * diagnostic buffers.
++ *
++ * @type: Buffer type
++ * @trigger_data: Trigger data
++ * @trigger_type: Trigger type
++ * @status: Buffer status
++ * @size: Buffer size
++ * @addr: Virtual address
++ * @dma_addr: Buffer DMA address
++ */
++struct diag_buffer_desc {
++	u8 type;
++	union mpi3mr_trigger_data trigger_data;
++	u8 trigger_type;
++	u8 status;
++	u32 size;
++	void *addr;
++	dma_addr_t dma_addr;
++};
++
+ /**
+  * struct dma_memory_desc - memory descriptor structure to store
+  * virtual address, dma address and size for any generic dma
+@@ -1054,6 +1103,11 @@ struct scmd_priv {
+  * @sas_node_lock: Lock to protect SAS node list
+  * @hba_port_table_list: List of HBA Ports
+  * @enclosure_list: List of Enclosure objects
++ * @diag_buffers: Host diagnostic buffers
++ * @driver_pg2:  Driver page 2 pointer
++ * @reply_trigger_present: Reply trigger present flag
++ * @event_trigger_present: Event trigger present flag
++ * @scsisense_trigger_present: Scsi sense trigger present flag
+  * @ioctl_dma_pool: DMA pool for IOCTL data buffers
+  * @ioctl_sge: DMA buffer descriptors for IOCTL data
+  * @ioctl_chain_sge: DMA buffer descriptor for IOCTL chain
+@@ -1250,6 +1304,12 @@ struct mpi3mr_ioc {
+ 	struct dma_memory_desc ioctl_chain_sge;
+ 	struct dma_memory_desc ioctl_resp_sge;
+ 	bool ioctl_sges_allocated;
++	bool reply_trigger_present;
++	bool event_trigger_present;
++	bool scsisense_trigger_present;
++	struct diag_buffer_desc diag_buffers[MPI3MR_MAX_NUM_HDB];
++	struct mpi3_driver_page2 *driver_pg2;
++	spinlock_t trigger_lock;
+ };
+ 
+ /**
+@@ -1406,6 +1466,8 @@ int mpi3mr_cfg_set_sas_io_unit_pg1(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3_sas_io_unit_page1 *sas_io_unit_pg1, u16 pg_sz);
+ int mpi3mr_cfg_get_driver_pg1(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3_driver_page1 *driver_pg1, u16 pg_sz);
++int mpi3mr_cfg_get_driver_pg2(struct mpi3mr_ioc *mrioc,
++	struct mpi3_driver_page2 *driver_pg2, u16 pg_sz, u8 page_type);
+ 
+ u8 mpi3mr_is_expander_device(u16 device_info);
+ int mpi3mr_expander_add(struct mpi3mr_ioc *mrioc, u16 handle);
+@@ -1439,4 +1501,16 @@ void mpi3mr_free_enclosure_list(struct mpi3mr_ioc *mrioc);
+ int mpi3mr_process_admin_reply_q(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_expander_node_remove(struct mpi3mr_ioc *mrioc,
+ 	struct mpi3mr_sas_node *sas_expander);
++void mpi3mr_alloc_diag_bufs(struct mpi3mr_ioc *mrioc);
++int mpi3mr_post_diag_bufs(struct mpi3mr_ioc *mrioc);
++int mpi3mr_issue_diag_buf_release(struct mpi3mr_ioc *mrioc,
++	struct diag_buffer_desc *diag_buffer);
++void mpi3mr_release_diag_bufs(struct mpi3mr_ioc *mrioc, u8 skip_rel_action);
++void mpi3mr_set_trigger_data_in_hdb(struct diag_buffer_desc *hdb,
++	u8 type, union mpi3mr_trigger_data *trigger_data, bool force);
++int mpi3mr_refresh_trigger(struct mpi3mr_ioc *mrioc, u8 page_type);
++struct diag_buffer_desc *mpi3mr_diag_buffer_for_type(struct mpi3mr_ioc *mrioc,
++	u8 buf_type);
++int mpi3mr_issue_diag_buf_post(struct mpi3mr_ioc *mrioc,
++	struct diag_buffer_desc *diag_buffer);
+ #endif /*MPI3MR_H_INCLUDED*/
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 1638109a68a0..3da7c46f3b79 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -11,6 +11,486 @@
+ #include <linux/bsg-lib.h>
+ #include <uapi/scsi/scsi_bsg_mpi3mr.h>
+ 
++/**
++ * mpi3mr_alloc_trace_buffer:	Allocate trace buffer
++ * @mrioc: Adapter instance reference
++ * @trace_size: Trace buffer size
++ *
++ * Allocate trace buffer
++ * Return: 0 on success, non-zero on failure.
++ */
++static int mpi3mr_alloc_trace_buffer(struct mpi3mr_ioc *mrioc, u32 trace_size)
++{
++	struct diag_buffer_desc *diag_buffer = &mrioc->diag_buffers[0];
++
++	diag_buffer->addr = dma_alloc_coherent(&mrioc->pdev->dev,
++	    trace_size, &diag_buffer->dma_addr, GFP_KERNEL);
++	if (diag_buffer->addr) {
++		dprint_init(mrioc, "trace diag buffer is allocated successfully\n");
++		return 0;
++	}
++	return -1;
++}
++
++/**
++ * mpi3mr_alloc_diag_bufs - Allocate memory for diag buffers
++ * @mrioc: Adapter instance reference
++ *
++ * This functions checks whether the driver defined buffer sizes
++ * are greater than IOCFacts provided controller local buffer
++ * sizes and if the driver defined sizes are more then the
++ * driver allocates the specific buffer by reading driver page1
++ *
++ * Return: Nothing.
++ */
++void mpi3mr_alloc_diag_bufs(struct mpi3mr_ioc *mrioc)
++{
++	struct diag_buffer_desc *diag_buffer;
++	struct mpi3_driver_page1 driver_pg1;
++	u32 trace_dec_size, trace_min_size, fw_dec_size, fw_min_size,
++		trace_size, fw_size;
++	u16 pg_sz = sizeof(driver_pg1);
++	int retval = 0;
++	bool retry = false;
++
++	if (mrioc->diag_buffers[0].addr || mrioc->diag_buffers[1].addr)
++		return;
++
++	retval = mpi3mr_cfg_get_driver_pg1(mrioc, &driver_pg1, pg_sz);
++	if (retval) {
++		ioc_warn(mrioc,
++		    "%s: driver page 1 read failed, allocating trace\n"
++		    "and firmware diag buffers of default size\n", __func__);
++		trace_size = fw_size = MPI3MR_DEFAULT_HDB_MAX_SZ;
++		trace_dec_size = fw_dec_size = MPI3MR_DEFAULT_HDB_DEC_SZ;
++		trace_min_size = fw_min_size = MPI3MR_DEFAULT_HDB_MIN_SZ;
++
++	} else {
++		trace_size = driver_pg1.host_diag_trace_max_size * 1024;
++		trace_dec_size = driver_pg1.host_diag_trace_decrement_size
++			 * 1024;
++		trace_min_size = driver_pg1.host_diag_trace_min_size * 1024;
++		fw_size = driver_pg1.host_diag_fw_max_size * 1024;
++		fw_dec_size = driver_pg1.host_diag_fw_decrement_size * 1024;
++		fw_min_size = driver_pg1.host_diag_fw_min_size * 1024;
++		dprint_init(mrioc,
++		    "%s:trace diag buffer sizes read from driver\n"
++		    "page1: maximum size = %dKB, decrement size = %dKB\n"
++		    ", minimum size = %dKB\n", __func__, driver_pg1.host_diag_trace_max_size,
++		    driver_pg1.host_diag_trace_decrement_size,
++		    driver_pg1.host_diag_trace_min_size);
++		dprint_init(mrioc,
++		    "%s:firmware diag buffer sizes read from driver\n"
++		    "page1: maximum size = %dKB, decrement size = %dKB\n"
++		    ", minimum size = %dKB\n", __func__, driver_pg1.host_diag_fw_max_size,
++		    driver_pg1.host_diag_fw_decrement_size,
++		    driver_pg1.host_diag_fw_min_size);
++		if ((trace_size == 0) && (fw_size == 0))
++			return;
++	}
++
++
++retry_trace:
++	diag_buffer = &mrioc->diag_buffers[0];
++	diag_buffer->type = MPI3_DIAG_BUFFER_TYPE_TRACE;
++	diag_buffer->status = MPI3MR_HDB_BUFSTATUS_NOT_ALLOCATED;
++	if ((mrioc->facts.diag_trace_sz < trace_size) && (trace_size >=
++		trace_min_size)) {
++		if (!retry)
++			dprint_init(mrioc,
++			    "trying to allocate trace diag buffer of size = %dKB\n",
++			    trace_size / 1024);
++		if (mpi3mr_alloc_trace_buffer(mrioc, trace_size)) {
++			retry = true;
++			trace_size -= trace_dec_size;
++			dprint_init(mrioc, "trace diag buffer allocation failed\n"
++			"retrying smaller size %dKB\n", trace_size / 1024);
++			goto retry_trace;
++		} else
++			diag_buffer->size = trace_size;
++	}
++
++	retry = false;
++retry_fw:
++
++	diag_buffer = &mrioc->diag_buffers[1];
++
++	diag_buffer->type = MPI3_DIAG_BUFFER_TYPE_FW;
++	diag_buffer->status = MPI3MR_HDB_BUFSTATUS_NOT_ALLOCATED;
++	if ((mrioc->facts.diag_fw_sz < fw_size) && (fw_size >= fw_min_size)) {
++		diag_buffer->addr = dma_alloc_coherent(&mrioc->pdev->dev,
++		    fw_size, &diag_buffer->dma_addr, GFP_KERNEL);
++		if (!retry)
++			dprint_init(mrioc,
++			    "%s:trying to allocate firmware diag buffer of size = %dKB\n",
++			    __func__, fw_size / 1024);
++		if (diag_buffer->addr) {
++			dprint_init(mrioc, "%s:firmware diag buffer allocated successfully\n",
++			    __func__);
++			diag_buffer->size = fw_size;
++		} else {
++			retry = true;
++			fw_size -= fw_dec_size;
++			dprint_init(mrioc, "%s:trace diag buffer allocation failed,\n"
++					"retrying smaller size %dKB\n",
++					__func__, fw_size / 1024);
++			goto retry_fw;
++		}
++	}
++}
++
++/**
++ * mpi3mr_issue_diag_buf_post - Send diag buffer post req
++ * @mrioc: Adapter instance reference
++ * @diag_buffer: Diagnostic buffer descriptor
++ *
++ * Issue diagnostic buffer post MPI request through admin queue
++ * and wait for the completion of it or time out.
++ *
++ * Return: 0 on success, non-zero on failures.
++ */
++int mpi3mr_issue_diag_buf_post(struct mpi3mr_ioc *mrioc,
++	struct diag_buffer_desc *diag_buffer)
++{
++	struct mpi3_diag_buffer_post_request diag_buf_post_req;
++	u8 prev_status;
++	int retval = 0;
++
++	memset(&diag_buf_post_req, 0, sizeof(diag_buf_post_req));
++	mutex_lock(&mrioc->init_cmds.mutex);
++	if (mrioc->init_cmds.state & MPI3MR_CMD_PENDING) {
++		dprint_bsg_err(mrioc, "%s: command is in use\n", __func__);
++		mutex_unlock(&mrioc->init_cmds.mutex);
++		return -1;
++	}
++	mrioc->init_cmds.state = MPI3MR_CMD_PENDING;
++	mrioc->init_cmds.is_waiting = 1;
++	mrioc->init_cmds.callback = NULL;
++	diag_buf_post_req.host_tag = cpu_to_le16(MPI3MR_HOSTTAG_INITCMDS);
++	diag_buf_post_req.function = MPI3_FUNCTION_DIAG_BUFFER_POST;
++	diag_buf_post_req.type = diag_buffer->type;
++	diag_buf_post_req.address = le64_to_cpu(diag_buffer->dma_addr);
++	diag_buf_post_req.length = le32_to_cpu(diag_buffer->size);
++
++	dprint_bsg_info(mrioc, "%s: posting diag buffer type %d\n", __func__,
++	    diag_buffer->type);
++	prev_status = diag_buffer->status;
++	diag_buffer->status = MPI3MR_HDB_BUFSTATUS_POSTED_UNPAUSED;
++	init_completion(&mrioc->init_cmds.done);
++	retval = mpi3mr_admin_request_post(mrioc, &diag_buf_post_req,
++	    sizeof(diag_buf_post_req), 1);
++	if (retval) {
++		dprint_bsg_err(mrioc, "%s: admin request post failed\n",
++		    __func__);
++		goto out_unlock;
++	}
++	wait_for_completion_timeout(&mrioc->init_cmds.done,
++	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
++	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
++		mrioc->init_cmds.is_waiting = 0;
++		dprint_bsg_err(mrioc, "%s: command timedout\n", __func__);
++		mpi3mr_check_rh_fault_ioc(mrioc,
++		    MPI3MR_RESET_FROM_DIAG_BUFFER_POST_TIMEOUT);
++		retval = -1;
++		goto out_unlock;
++	}
++	if ((mrioc->init_cmds.ioc_status & MPI3_IOCSTATUS_STATUS_MASK)
++	    != MPI3_IOCSTATUS_SUCCESS) {
++		dprint_bsg_err(mrioc,
++		    "%s: command failed, buffer_type (%d) ioc_status(0x%04x) log_info(0x%08x)\n",
++		    __func__, diag_buffer->type,
++		    (mrioc->init_cmds.ioc_status & MPI3_IOCSTATUS_STATUS_MASK),
++		    mrioc->init_cmds.ioc_loginfo);
++		retval = -1;
++		goto out_unlock;
++	}
++	dprint_bsg_info(mrioc, "%s: diag buffer type %d posted successfully\n",
++	    __func__, diag_buffer->type);
++
++out_unlock:
++	if (retval)
++		diag_buffer->status = prev_status;
++	mrioc->init_cmds.state = MPI3MR_CMD_NOTUSED;
++	mutex_unlock(&mrioc->init_cmds.mutex);
++	return retval;
++}
++
++/**
++ * mpi3mr_post_diag_bufs - Post diag buffers to the controller
++ * @mrioc: Adapter instance reference
++ *
++ * This function calls helper function to post both trace and
++ * firmware buffers to the controller.
++ *
++ * Return: None
++ */
++int mpi3mr_post_diag_bufs(struct mpi3mr_ioc *mrioc)
++{
++	u8 i;
++	struct diag_buffer_desc *diag_buffer;
++
++	for (i = 0; i < MPI3MR_MAX_NUM_HDB; i++) {
++		diag_buffer = &mrioc->diag_buffers[i];
++		if (!(diag_buffer->addr))
++			continue;
++		if (mpi3mr_issue_diag_buf_post(mrioc, diag_buffer))
++			return -1;
++	}
++	return 0;
++}
++
++/**
++ * mpi3mr_issue_diag_buf_release - Send diag buffer release req
++ * @mrioc: Adapter instance reference
++ * @diag_buffer: Diagnostic buffer descriptor
++ *
++ * Issue diagnostic buffer manage MPI request with release
++ * action request through admin queue and wait for the
++ * completion of it or time out.
++ *
++ * Return: 0 on success, non-zero on failures.
++ */
++int mpi3mr_issue_diag_buf_release(struct mpi3mr_ioc *mrioc,
++	struct diag_buffer_desc *diag_buffer)
++{
++	struct mpi3_diag_buffer_manage_request diag_buf_manage_req;
++	int retval = 0;
++
++	if ((diag_buffer->status != MPI3MR_HDB_BUFSTATUS_POSTED_UNPAUSED) &&
++	    (diag_buffer->status != MPI3MR_HDB_BUFSTATUS_POSTED_PAUSED))
++		return retval;
++
++	memset(&diag_buf_manage_req, 0, sizeof(diag_buf_manage_req));
++	mutex_lock(&mrioc->init_cmds.mutex);
++	if (mrioc->init_cmds.state & MPI3MR_CMD_PENDING) {
++		dprint_reset(mrioc, "%s: command is in use\n", __func__);
++		mutex_unlock(&mrioc->init_cmds.mutex);
++		return -1;
++	}
++	mrioc->init_cmds.state = MPI3MR_CMD_PENDING;
++	mrioc->init_cmds.is_waiting = 1;
++	mrioc->init_cmds.callback = NULL;
++	diag_buf_manage_req.host_tag = cpu_to_le16(MPI3MR_HOSTTAG_INITCMDS);
++	diag_buf_manage_req.function = MPI3_FUNCTION_DIAG_BUFFER_MANAGE;
++	diag_buf_manage_req.type = diag_buffer->type;
++	diag_buf_manage_req.action = MPI3_DIAG_BUFFER_ACTION_RELEASE;
++
++
++	dprint_reset(mrioc, "%s: releasing diag buffer type %d\n", __func__,
++	    diag_buffer->type);
++	init_completion(&mrioc->init_cmds.done);
++	retval = mpi3mr_admin_request_post(mrioc, &diag_buf_manage_req,
++	    sizeof(diag_buf_manage_req), 1);
++	if (retval) {
++		dprint_reset(mrioc, "%s: admin request post failed\n", __func__);
++		mpi3mr_set_trigger_data_in_hdb(diag_buffer,
++		    MPI3MR_HDB_TRIGGER_TYPE_UNKNOWN, NULL, 1);
++		goto out_unlock;
++	}
++	wait_for_completion_timeout(&mrioc->init_cmds.done,
++	    (MPI3MR_INTADMCMD_TIMEOUT * HZ));
++	if (!(mrioc->init_cmds.state & MPI3MR_CMD_COMPLETE)) {
++		mrioc->init_cmds.is_waiting = 0;
++		dprint_reset(mrioc, "%s: command timedout\n", __func__);
++		mpi3mr_check_rh_fault_ioc(mrioc,
++		    MPI3MR_RESET_FROM_DIAG_BUFFER_RELEASE_TIMEOUT);
++		retval = -1;
++		goto out_unlock;
++	}
++	if ((mrioc->init_cmds.ioc_status & MPI3_IOCSTATUS_STATUS_MASK)
++	    != MPI3_IOCSTATUS_SUCCESS) {
++		dprint_reset(mrioc,
++		    "%s: command failed, buffer_type (%d) ioc_status(0x%04x) log_info(0x%08x)\n",
++		    __func__, diag_buffer->type,
++		    (mrioc->init_cmds.ioc_status & MPI3_IOCSTATUS_STATUS_MASK),
++		    mrioc->init_cmds.ioc_loginfo);
++		retval = -1;
++		goto out_unlock;
++	}
++	dprint_reset(mrioc, "%s: diag buffer type %d released successfully\n",
++	    __func__, diag_buffer->type);
++
++out_unlock:
++	mrioc->init_cmds.state = MPI3MR_CMD_NOTUSED;
++	mutex_unlock(&mrioc->init_cmds.mutex);
++	return retval;
++}
++
++/**
++ * mpi3mr_get_num_trigger - Gets number of HDB triggers
++ * @mrioc: Adapter instance reference
++ * @num_triggers: Number of triggers
++ * @page_action: Page action
++ *
++ * This function reads number of triggers by reading driver page
++ * 2
++ *
++ * Return: 0 on success and proper error codes on failure
++ */
++static int mpi3mr_get_num_trigger(struct mpi3mr_ioc *mrioc, u8 *num_triggers,
++	u8 page_action)
++{
++	struct mpi3_driver_page2 drvr_page2;
++	int retval = 0;
++
++	*num_triggers = 0;
++
++	retval = mpi3mr_cfg_get_driver_pg2(mrioc, &drvr_page2,
++	    sizeof(struct mpi3_driver_page2), page_action);
++
++	if (retval) {
++		dprint_init(mrioc, "%s: driver page 2 read failed\n", __func__);
++		return retval;
++	}
++	*num_triggers = drvr_page2.num_triggers;
++	return retval;
++}
++
++/**
++ * mpi3mr_refresh_trigger - Handler for Refresh trigger BSG
++ * @mrioc: Adapter instance reference
++ * @page_action: Page action
++ *
++ * This function caches the driver page 2 in the driver's memory
++ * by reading driver page 2 from the controller for a given page
++ * type and updates the HDB trigger values
++ *
++ * Return: 0 on success and proper error codes on failure
++ */
++int mpi3mr_refresh_trigger(struct mpi3mr_ioc *mrioc, u8 page_action)
++{
++	u16 pg_sz = sizeof(struct mpi3_driver_page2);
++	struct mpi3_driver_page2 *drvr_page2 = NULL;
++	u8 trigger_type, num_triggers;
++	int retval;
++	int i = 0;
++	unsigned long flags;
++
++	retval = mpi3mr_get_num_trigger(mrioc, &num_triggers, page_action);
++
++	if (retval)
++		goto out;
++
++	pg_sz = offsetof(struct mpi3_driver_page2, trigger) +
++		(num_triggers * sizeof(union mpi3_driver2_trigger_element));
++	drvr_page2 = kzalloc(pg_sz, GFP_KERNEL);
++	if (!drvr_page2) {
++		retval = -ENOMEM;
++		goto out;
++	}
++
++	retval = mpi3mr_cfg_get_driver_pg2(mrioc, drvr_page2, pg_sz, page_action);
++	if (retval) {
++		dprint_init(mrioc, "%s: driver page 2 read failed\n", __func__);
++		kfree(drvr_page2);
++		goto out;
++	}
++	spin_lock_irqsave(&mrioc->trigger_lock, flags);
++	kfree(mrioc->driver_pg2);
++	mrioc->driver_pg2 = drvr_page2;
++	mrioc->reply_trigger_present = false;
++	mrioc->event_trigger_present = false;
++	mrioc->scsisense_trigger_present = false;
++
++	for (i = 0; (i < mrioc->driver_pg2->num_triggers); i++) {
++		trigger_type = mrioc->driver_pg2->trigger[i].event.type;
++		switch (trigger_type) {
++		case MPI3_DRIVER2_TRIGGER_TYPE_REPLY:
++			mrioc->reply_trigger_present = true;
++			break;
++		case MPI3_DRIVER2_TRIGGER_TYPE_EVENT:
++			mrioc->event_trigger_present = true;
++			break;
++		case MPI3_DRIVER2_TRIGGER_TYPE_SCSI_SENSE:
++			mrioc->scsisense_trigger_present = true;
++			break;
++		default:
++			break;
++		}
++	}
++	spin_unlock_irqrestore(&mrioc->trigger_lock, flags);
++out:
++	return retval;
++}
++
++/**
++ * mpi3mr_release_diag_bufs - Release diag buffers
++ * @mrioc: Adapter instance reference
++ * @skip_rel_action: Skip release action and set buffer state
++ *
++ * This function calls helper function to release both trace and
++ * firmware buffers from the controller.
++ *
++ * Return: None
++ */
++void mpi3mr_release_diag_bufs(struct mpi3mr_ioc *mrioc, u8 skip_rel_action)
++{
++	u8 i;
++	struct diag_buffer_desc *diag_buffer;
++
++	for (i = 0; i < MPI3MR_MAX_NUM_HDB; i++) {
++		diag_buffer = &mrioc->diag_buffers[i];
++		if (!(diag_buffer->addr))
++			continue;
++		if (diag_buffer->status == MPI3MR_HDB_BUFSTATUS_RELEASED)
++			continue;
++		if (!skip_rel_action)
++			mpi3mr_issue_diag_buf_release(mrioc, diag_buffer);
++		diag_buffer->status = MPI3MR_HDB_BUFSTATUS_RELEASED;
++		atomic64_inc(&event_counter);
++	}
++}
++
++/**
++ * mpi3mr_set_trigger_data_in_hdb - Updates HDB trigger type and
++ * trigger data
++ *
++ * @hdb: HDB pointer
++ * @type: Trigger type
++ * @data: Trigger data
++ * @force: Trigger overwrite flag
++ * @trigger_data: pointer to trigger data information
++ *
++ * Updates trigger type and trigger data based on parameter
++ * passed to this function
++ *
++ * Return: Nothing
++ */
++void mpi3mr_set_trigger_data_in_hdb(struct diag_buffer_desc *hdb,
++	u8 type, union mpi3mr_trigger_data *trigger_data, bool force)
++{
++	if ((!force) && (hdb->trigger_type != MPI3MR_HDB_TRIGGER_TYPE_UNKNOWN))
++		return;
++	hdb->trigger_type = type;
++	if (!trigger_data)
++		memset(&hdb->trigger_data, 0, sizeof(*trigger_data));
++	else
++		memcpy(&hdb->trigger_data, trigger_data, sizeof(*trigger_data));
++}
++
++/**
++ * mpi3mr_diag_buffer_for_type - returns buffer desc for type
++ * @mrioc: Adapter instance reference
++ * @buf_type: Diagnostic buffer type
++ *
++ * Identifies matching diag descriptor from mrioc for given diag
++ * buffer type.
++ *
++ * Return: diag buffer descriptor on success, NULL on failures.
++ */
++
++struct diag_buffer_desc *
++mpi3mr_diag_buffer_for_type(struct mpi3mr_ioc *mrioc, u8 buf_type)
++{
++	u8 i;
++
++	for (i = 0; i < MPI3MR_MAX_NUM_HDB; i++) {
++		if (mrioc->diag_buffers[i].type == buf_type)
++			return &mrioc->diag_buffers[i];
++	}
++	return NULL;
++}
++
+ /**
+  * mpi3mr_bsg_pel_abort - sends PEL abort request
+  * @mrioc: Adapter instance reference
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index c2a22e96f7b7..fbd6f32f79ce 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -3003,7 +3003,11 @@ static void mpi3mr_process_factsdata(struct mpi3mr_ioc *mrioc,
+ 	mrioc->facts.sge_mod_shift = facts_data->sge_modifier_shift;
+ 	mrioc->facts.shutdown_timeout =
+ 	    le16_to_cpu(facts_data->shutdown_timeout);
+-
++	mrioc->facts.diag_trace_sz =
++	    le32_to_cpu(facts_data->diag_trace_size);
++	mrioc->facts.diag_fw_sz =
++	    le32_to_cpu(facts_data->diag_fw_size);
++	mrioc->facts.diag_drvr_sz = le32_to_cpu(facts_data->diag_driver_size);
+ 	mrioc->facts.max_dev_per_tg =
+ 	    facts_data->max_devices_per_throttle_group;
+ 	mrioc->facts.io_throttle_data_length =
+@@ -3681,6 +3685,94 @@ static const struct {
+ 	{ MPI3_IOCFACTS_CAPABILITY_MULTIPATH_SUPPORTED, "MultiPath" },
+ };
+ 
++/**
++ * mpi3mr_repost_diag_bufs - repost host diag buffers
++ * @mrioc: Adapter instance reference
++ *
++ * repost firmware and trace diag buffers based on global
++ * trigger flag from driver page 2
++ *
++ * Return: 0 on success, non-zero on failures.
++ */
++static int mpi3mr_repost_diag_bufs(struct mpi3mr_ioc *mrioc)
++{
++	u64 global_trigger;
++	union mpi3mr_trigger_data prev_trigger_data;
++	struct diag_buffer_desc *trace_hdb = NULL;
++	struct diag_buffer_desc *fw_hdb = NULL;
++	int retval = 0;
++	bool trace_repost_needed = false;
++	bool fw_repost_needed = false;
++	u8 prev_trigger_type;
++
++	retval = mpi3mr_refresh_trigger(mrioc, MPI3_CONFIG_ACTION_READ_CURRENT);
++	if (retval)
++		return -1;
++
++	trace_hdb = mpi3mr_diag_buffer_for_type(mrioc,
++	    MPI3_DIAG_BUFFER_TYPE_TRACE);
++
++	if (trace_hdb &&
++	    trace_hdb->status != MPI3MR_HDB_BUFSTATUS_NOT_ALLOCATED &&
++	    trace_hdb->trigger_type != MPI3MR_HDB_TRIGGER_TYPE_GLOBAL &&
++	    trace_hdb->trigger_type != MPI3MR_HDB_TRIGGER_TYPE_ELEMENT)
++		trace_repost_needed = true;
++
++	fw_hdb = mpi3mr_diag_buffer_for_type(mrioc, MPI3_DIAG_BUFFER_TYPE_FW);
++
++	if (fw_hdb && fw_hdb->status != MPI3MR_HDB_BUFSTATUS_NOT_ALLOCATED &&
++	    fw_hdb->trigger_type != MPI3MR_HDB_TRIGGER_TYPE_GLOBAL &&
++	    fw_hdb->trigger_type != MPI3MR_HDB_TRIGGER_TYPE_ELEMENT)
++		fw_repost_needed = true;
++
++	if (trace_repost_needed || fw_repost_needed) {
++		global_trigger = le64_to_cpu(mrioc->driver_pg2->global_trigger);
++		if (global_trigger &
++		      MPI3_DRIVER2_GLOBALTRIGGER_POST_DIAG_TRACE_DISABLED)
++			trace_repost_needed = false;
++		if (global_trigger &
++		     MPI3_DRIVER2_GLOBALTRIGGER_POST_DIAG_FW_DISABLED)
++			fw_repost_needed = false;
++	}
++
++	if (trace_repost_needed) {
++		prev_trigger_type = trace_hdb->trigger_type;
++		memcpy(&prev_trigger_data, &trace_hdb->trigger_data,
++		    sizeof(trace_hdb->trigger_data));
++		retval = mpi3mr_issue_diag_buf_post(mrioc, trace_hdb);
++		if (!retval) {
++			dprint_init(mrioc, "trace diag buffer reposted");
++			mpi3mr_set_trigger_data_in_hdb(trace_hdb,
++				    MPI3MR_HDB_TRIGGER_TYPE_UNKNOWN, NULL, 1);
++		} else {
++			trace_hdb->trigger_type = prev_trigger_type;
++			memcpy(&trace_hdb->trigger_data, &prev_trigger_data,
++			    sizeof(prev_trigger_data));
++			ioc_err(mrioc, "trace diag buffer repost failed");
++			return -1;
++		}
++	}
++
++	if (fw_repost_needed) {
++		prev_trigger_type = fw_hdb->trigger_type;
++		memcpy(&prev_trigger_data, &fw_hdb->trigger_data,
++		    sizeof(fw_hdb->trigger_data));
++		retval = mpi3mr_issue_diag_buf_post(mrioc, fw_hdb);
++		if (!retval) {
++			dprint_init(mrioc, "firmware diag buffer reposted");
++			mpi3mr_set_trigger_data_in_hdb(fw_hdb,
++				    MPI3MR_HDB_TRIGGER_TYPE_UNKNOWN, NULL, 1);
++		} else {
++			fw_hdb->trigger_type = prev_trigger_type;
++			memcpy(&fw_hdb->trigger_data, &prev_trigger_data,
++			    sizeof(prev_trigger_data));
++			ioc_err(mrioc, "firmware diag buffer repost failed");
++			return -1;
++		}
++	}
++	return retval;
++}
++
+ /**
+  * mpi3mr_print_ioc_info - Display controller information
+  * @mrioc: Adapter instance reference
+@@ -3989,9 +4081,18 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		}
+ 	}
+ 
++	dprint_init(mrioc, "allocating host diag buffers\n");
++	mpi3mr_alloc_diag_bufs(mrioc);
++
+ 	dprint_init(mrioc, "allocating ioctl dma buffers\n");
+ 	mpi3mr_alloc_ioctl_dma_memory(mrioc);
+ 
++	dprint_init(mrioc, "posting host diag buffers\n");
++	retval = mpi3mr_post_diag_bufs(mrioc);
++
++	if (retval)
++		ioc_warn(mrioc, "failed to post host diag buffers\n");
++
+ 	if (!mrioc->init_cmds.reply) {
+ 		retval = mpi3mr_alloc_reply_sense_bufs(mrioc);
+ 		if (retval) {
+@@ -4144,6 +4245,17 @@ int mpi3mr_reinit_ioc(struct mpi3mr_ioc *mrioc, u8 is_resume)
+ 
+ 	mpi3mr_print_ioc_info(mrioc);
+ 
++	if (is_resume) {
++		dprint_reset(mrioc, "posting host diag buffers\n");
++		retval = mpi3mr_post_diag_bufs(mrioc);
++		if (retval)
++			ioc_warn(mrioc, "failed to post host diag buffers\n");
++	} else {
++		retval = mpi3mr_repost_diag_bufs(mrioc);
++		if (retval)
++			ioc_warn(mrioc, "failed to re post host diag buffers\n");
++	}
++
+ 	dprint_reset(mrioc, "sending ioc_init\n");
+ 	retval = mpi3mr_issue_iocinit(mrioc);
+ 	if (retval) {
+@@ -4409,6 +4521,7 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
+ {
+ 	u16 i;
+ 	struct mpi3mr_intr_info *intr_info;
++	struct diag_buffer_desc *diag_buffer;
+ 
+ 	mpi3mr_free_enclosure_list(mrioc);
+ 	mpi3mr_free_ioctl_dma_memory(mrioc);
+@@ -4543,6 +4656,19 @@ void mpi3mr_free_mem(struct mpi3mr_ioc *mrioc)
+ 		mrioc->pel_seqnum_virt = NULL;
+ 	}
+ 
++	for (i = 0; i < MPI3MR_MAX_NUM_HDB; i++) {
++		diag_buffer = &mrioc->diag_buffers[i];
++		if (diag_buffer->addr) {
++			dma_free_coherent(&mrioc->pdev->dev,
++			    diag_buffer->size, diag_buffer->addr,
++			    diag_buffer->dma_addr);
++			diag_buffer->addr = NULL;
++			diag_buffer->size = 0;
++			diag_buffer->type = 0;
++			diag_buffer->status = 0;
++		}
++	}
++
+ 	kfree(mrioc->throttle_groups);
+ 	mrioc->throttle_groups = NULL;
+ 
+@@ -5016,6 +5142,9 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 	if ((!snapdump) && (reset_reason != MPI3MR_RESET_FROM_FAULT_WATCH) &&
+ 	    (reset_reason != MPI3MR_RESET_FROM_FIRMWARE) &&
+ 	    (reset_reason != MPI3MR_RESET_FROM_CIACTIV_FAULT)) {
++		dprint_reset(mrioc,
++		    "soft_reset_handler: releasing host diagnostic buffers\n");
++		mpi3mr_release_diag_bufs(mrioc, 0);
+ 		for (i = 0; i < MPI3_EVENT_NOTIFY_EVENTMASK_WORDS; i++)
+ 			mrioc->event_masks[i] = -1;
+ 
+@@ -5075,6 +5204,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 		mrioc->prepare_for_reset_timeout_counter = 0;
+ 	}
+ 	mpi3mr_memset_buffers(mrioc);
++	mpi3mr_release_diag_bufs(mrioc, 1);
+ 	retval = mpi3mr_reinit_ioc(mrioc, 0);
+ 	if (retval) {
+ 		pr_err(IOCNAME "reinit after soft reset failed: reason %d\n",
+@@ -5954,3 +6084,64 @@ int mpi3mr_cfg_get_driver_pg1(struct mpi3mr_ioc *mrioc,
+ out_failed:
+ 	return -1;
+ }
++
++/**
++ * mpi3mr_cfg_get_driver_pg2 - Read current driver page2
++ * @mrioc: Adapter instance reference
++ * @driver_pg2: Pointer to return driver page 2
++ * @pg_sz: Size of the memory allocated to the page pointer
++ * @page_action: Page action
++ *
++ * This is handler for config page read for the driver page2.
++ * This routine checks ioc_status to decide whether the page
++ * read is success or not.
++ *
++ * Return: 0 on success, non-zero on failure.
++ */
++int mpi3mr_cfg_get_driver_pg2(struct mpi3mr_ioc *mrioc,
++	struct mpi3_driver_page2 *driver_pg2, u16 pg_sz, u8 page_action)
++{
++	struct mpi3_config_page_header cfg_hdr;
++	struct mpi3_config_request cfg_req;
++	u16 ioc_status = 0;
++
++	memset(driver_pg2, 0, pg_sz);
++	memset(&cfg_hdr, 0, sizeof(cfg_hdr));
++	memset(&cfg_req, 0, sizeof(cfg_req));
++
++	cfg_req.function = MPI3_FUNCTION_CONFIG;
++	cfg_req.action = MPI3_CONFIG_ACTION_PAGE_HEADER;
++	cfg_req.page_type = MPI3_CONFIG_PAGETYPE_DRIVER;
++	cfg_req.page_number = 2;
++	cfg_req.page_address = 0;
++	cfg_req.page_version = MPI3_DRIVER2_PAGEVERSION;
++
++	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, NULL,
++	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, &cfg_hdr, sizeof(cfg_hdr))) {
++		ioc_err(mrioc, "driver page2 header read failed\n");
++		goto out_failed;
++	}
++	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
++		ioc_err(mrioc, "driver page2 header read failed with\n"
++			       "ioc_status(0x%04x)\n",
++		    ioc_status);
++		goto out_failed;
++	}
++	cfg_req.action = page_action;
++
++	if (mpi3mr_process_cfg_req(mrioc, &cfg_req, &cfg_hdr,
++	    MPI3MR_INTADMCMD_TIMEOUT, &ioc_status, driver_pg2, pg_sz)) {
++		ioc_err(mrioc, "driver page2 read failed\n");
++		goto out_failed;
++	}
++	if (ioc_status != MPI3_IOCSTATUS_SUCCESS) {
++		ioc_err(mrioc, "driver page2 read failed with\n"
++			       "ioc_status(0x%04x)\n",
++		    ioc_status);
++		goto out_failed;
++	}
++	return 0;
++out_failed:
++	return -1;
++}
++
 -- 
 2.31.1
 
 
---000000000000f5f63e061bc87e41
+--000000000000360db6061bc87f83
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -194,13 +1123,13 @@ nWsVitGa1sKS9usFXoW1bQXgJ9TtRdy8gka8b9SaKnh4TaiEKpdl8ztXhugWp7RpFGVu/ZZ8narx
 0H1L9W/UIr3J/uYokdFr+hIrXOfOwJLB18bWOTCVWxTEo4zYC8qZ/h7UcS5aispm/rkxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxMV+PqteWF5WGw7jsw
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEILTf2+KafXP9JFJiEnh9OQJ3C4NWUcAX
-YeYWVyuqLjFZMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDYy
-NjEwMjk1N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIM/XYwjQ9QvCurtvPzSv3pztZD7aKrot
+2Avza76Vb/v7MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MDYy
+NjEwMzAwMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBi2iPqbYg+aq7q9ADk344bKYNkb0rw6xQWiAkeolCA0t75OGOW
-aA+0tNm9N9kdM81HoX4CKiA9NLmNR68llWRF6WCejU0g3keS6893ZKK9wxg8usciPu3cbsJz0TL9
-aGCGuj4KNNJlBGjvsp/BWzIFk9OwWS8rHjnYE+cOT6aN2iHoqOhIDWlfwJylIL4BNXe9sgS/upd8
-Lov1A8jif6s0cc+QUJXhDBuV4UpK40+PTv/qMdv+uFHvcZt+0JoMtmQeCFy7FxV8BHTvf9HIDmR9
-GQnxodG8uC6AxsjngRplCZjMsmY11lQL1SoM6+0nWSzOXDnv9VJWLQrLrzbOUpss
---000000000000f5f63e061bc87e41--
+ATANBgkqhkiG9w0BAQEFAASCAQDdTsRJFRWQANybp9OSLcSaqgKxRD0w3HCkkFyqCXwClFbo+ie0
+53Rh8v0T/tmKdGUamC4pf40JAJN9tV86457/ibgRSxMBmXWEDLK/VqbuIAtRmfF6NhzSI+9x7CuQ
+m2QdYFFQiTgtXxnlWcUxFwxqdZiuXkl69FliifMDd6EkdhSD7rQ+aNFhN2VNHhq6kMnIj8ZYcw0K
+BD3+NqqsZjchJlQhtjQq9F5JNayjO5ij/btk5YA7qGheREBnWx6jpyZHphibTNopN/mzAKzvIs7D
+y5bjaWjsZlDtE+lUZ3nGyKnB6WhT2DSBvjI5En76mXCsg1bkPGWxlkFi/6Ivvw8X
+--000000000000360db6061bc87f83--
