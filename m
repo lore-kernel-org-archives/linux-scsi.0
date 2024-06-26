@@ -1,62 +1,62 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FA0E176AAA
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 10:14:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF42F1779B1
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 10:14:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719396875; cv=none; b=W7EFtgJQb0oD5FkxcrCGvqPrfb8ZmCh00lzdcgTvt6ClEkV4uJqXSlo+/WBQEUFi+5cBIMXHxsx+mCR4DG3SLYDpHFTsbnaZ8Uc1kXVkkJSHH6Qb2bASJQZ8v9de1YvPZu/iVp9P39PwHcNhmZDnAlhvpX6LxqlwycvTke73ZCg=
+	t=1719396877; cv=none; b=FG0DfQPxvU3/5XO5IMnOTjRSh3DcRVFk5o8BI+MFS/Ojt407KWJL2Bn6Xcr2gboJteP/pRNgHyGs4xt/iImlD1iK0bukkiK03cyJ0vu8JFYPJT1XUROFJYi4p0/GkVC+qISw2oHX18yMegyskNMKN3MO1wS+Vi9E6rMK1Zl2pBc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719396875; c=relaxed/simple;
-	bh=2wYgW3ZpZSEs5F7pUdRwCkgpyS6Vs4XB9SF5ViilxC8=;
+	s=arc-20240116; t=1719396877; c=relaxed/simple;
+	bh=6KOTeQA08u7PIa6fqyJIO8S2pm+zFpyukKbzTb8OlqA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZIz289lszfQLFIwcfUJTmfADvXgLYtLCQLjpobIZEEn3hIWnNxGqbef2xdlp/1vMzkMCBo41L+CdfHH4rwcKFfjdnDlvbUZH0aO9R4I56/FlSvBd+UJMah2x8DVrd3NO8fKxTiG0npt4xu7SCTWAFrnyKgH/DiPWR/6QS/bakh0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=N1vZCvfx; arc=none smtp.client-ip=209.85.214.180
+	 MIME-Version; b=h91B3fiZ5vbdmSy8LBaWTYMlwXywb9XoEHAg6iQ5b9YI6KZ1WdZoI31xqH8ml3TsfwVwQY6j4LoTxU8cE7mJPTQEWcEpiOun64ICOtq57SWzi/fGcoUeBhoX2k0YMTyxsZhpXiQphYQcml9beEXbpiuzolGAgtoAlzWTOtr0mqk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=H8Af7dc8; arc=none smtp.client-ip=209.85.215.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N1vZCvfx"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-1f9b523a15cso3095435ad.0
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 03:14:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H8Af7dc8"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-70df2135426so4203362a12.2
+        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 03:14:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1719396874; x=1720001674; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1719396876; x=1720001676; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=a0KzABPdBcuNpebTqLJrv15Sl0P8Ui5ihmud7hRVD60=;
-        b=N1vZCvfxfdGKNhKKBq1cJVQ4nRENAOh+TJq7F7tOzCf4QO/rYdg/NZHVbYD5qsDHUi
-         6zWvTJYvQmcUlh5C2WdL1ZhrPijN9Uu2i2tV2wakr7EyswuSh8ryaJ1xBBBX4Gva9iWT
-         7JpJPeztArjTnczO3Y544KPcsZkcxUe/0KKPGHeSJJpfHq4IOsOwAVrwcUCLeeMuoND/
-         1/cxKkk4ReVwZBcmGcDNnhHpqj25GkfHsxi9VIOywl8Uw7gu+OoUcSrtiuJxx/+Y0CXP
-         /o3Hhttjsx8qARsOc5jaVuwXIIiukwvyN4LVDXZNbHPJo+CuAMbTleldHvNjho5dI5IK
-         ZQ8g==
+        bh=ZlWBI7UdHor2P77JXIMXQDCL5Fy7mR8wocYDlTCkBII=;
+        b=H8Af7dc8mnPqw+31lNb0NkvGwjbiF3EeE3CPRafpqs7JF4BZU+a2skBFzST9WMf0Cc
+         RPRQApR6nfvPrOxLv+ejdKRgKMWX9sT/8TXKLxFjfFSXyXHCGSRSHU2pT1nEqCZxvNhF
+         PJAQ+UMWnLLiTfpOjSIHBwWcHFdZfPAOhvHsZrXxHym/8G+dd1085HxJTT0kBnyk8K3n
+         P20AlG7V15PlylZFdKvgEoxkfusouPu4WKAjY1YXT4pU4EGTZFubK0xn2G190oCvcorY
+         yVn8DdA6OCkdQQ48US31vT4K8SX1HGNXrT7fSIGgSBaIyxABIDe7uVj4J0+Ost98IEeD
+         P0NQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719396874; x=1720001674;
+        d=1e100.net; s=20230601; t=1719396876; x=1720001676;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=a0KzABPdBcuNpebTqLJrv15Sl0P8Ui5ihmud7hRVD60=;
-        b=A1+pUYn5UOY4gJfziPZwlVETbjqz2mudYJui6iq1fna5nMGEUCMAGyFvXaNmQRlW7g
-         QrWhZZh0f7rBzZAdInoqL/Z5Y2diJEmoboTYNntGFgaSCLzGnEqE1Ru39TsSwiqZSKqP
-         71rFMLrwaUpj5q+QJuUOdbrxRwNDftjZDB/Y0gh4DwNF5JIwrc9SFTYZIRveNfU6wNfd
-         UKAvV5hUYdNonYCkD4twA+Nl7nYhktBSrVHwSslqEe9otoNpaLcKEUEwB7jJMN+p9iYQ
-         bVXJNEWzG3SAtewBQqrU6T7HPGYJquL8HEuUqhZu1MnDg7rhK7KKYO99G/KYnc89jdOt
-         R+xA==
-X-Gm-Message-State: AOJu0YydgJrzl9ZBfYxWCmAXCWikAUb2rrhjgRi5/rRAbMW6nYAZhUpI
-	tmUko81MtXIq2IsK+freQZJNmeKFLPG3VY5nvfB3oqe3I5zbQ5/+xivPKg==
-X-Google-Smtp-Source: AGHT+IHfrxIwD8Oy8HZhZ3gFn8L9kABYacTHOLqRSowI/xCq/FKZixm8FnKKl7K54/OsJaaAP8A7iA==
-X-Received: by 2002:a17:903:1110:b0:1fa:918e:ec2 with SMTP id d9443c01a7336-1fa918e10f4mr15006905ad.57.1719396873213;
-        Wed, 26 Jun 2024 03:14:33 -0700 (PDT)
+        bh=ZlWBI7UdHor2P77JXIMXQDCL5Fy7mR8wocYDlTCkBII=;
+        b=qi+UEsByohoHy+0rwF2G08kV5+CFeBwKHJSSTqga+fpvp9sWvcOsDqONBfhnZLTKDp
+         0wvgVb0EMrJzyu7Lm6r7VFpgZrRFm7MFIbmL+qepWjNn2JciIxqcuHm4cQBItCqumz4t
+         r4qgkqs/BEvl76eRBDDmeTPOYuMcjzP6gegs9ESihB1wdnGgYYTL4ze7s+hicraNHCfJ
+         g69G6afmhJFIfbtBq8GIjneJGWUYfqKXHrhl4iK6j7EvDFow6+k/Ts6+g0f1LfE6jwVw
+         0oMj2AdbIj6CAfoHLB8pOQNecAjaR/XPKXEU3LS4E/ixXFV0Z98YfkEfM3Sl0RCJiyyy
+         lvLg==
+X-Gm-Message-State: AOJu0Yy7PBrt6ClYIw3gDP3ywiYGNCZdRuyRDy8X4zLuol+UsGpmbFnf
+	0iYb3t+EcSaS7r7edYFp268qfb7CzMGE/XUVAJBazk9mn3kLEAumYg0rxQ==
+X-Google-Smtp-Source: AGHT+IGyGV1BFkNkIom8Lj0SMYeud/JAJfbxy+01YC0+M7AKGXSZxyuzx+frcdaPxDCqUbw1lpvIFw==
+X-Received: by 2002:a05:6a20:b829:b0:1bd:1d6b:a917 with SMTP id adf61e73a8af0-1bd1d6ba94emr4109741637.50.1719396875777;
+        Wed, 26 Jun 2024 03:14:35 -0700 (PDT)
 Received: from localhost.localdomain.oslab.amer.dell.com ([139.167.223.130])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fa360317ccsm57063865ad.279.2024.06.26.03.14.31
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fa360317ccsm57063865ad.279.2024.06.26.03.14.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jun 2024 03:14:32 -0700 (PDT)
+        Wed, 26 Jun 2024 03:14:35 -0700 (PDT)
 From: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
-Subject: [PATCH 11/14] scsi: qla2xxx: Simplified outstanding commands calculation in qla2x00_alloc_outstanding_cmds and qla24xx_read_fcp_prio_cfg
-Date: Wed, 26 Jun 2024 06:13:39 -0400
-Message-ID: <20240626101342.1440049-12-prabhakar.pujeri@gmail.com>
+Subject: [PATCH 12/14] scsi: scsi_debug: Replaced ternary operation with min() in resp_get_lba_status
+Date: Wed, 26 Jun 2024 06:13:40 -0400
+Message-ID: <20240626101342.1440049-13-prabhakar.pujeri@gmail.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240626101342.1440049-1-prabhakar.pujeri@gmail.com>
 References: <20240626101342.1440049-1-prabhakar.pujeri@gmail.com>
@@ -70,40 +70,25 @@ Content-Transfer-Encoding: 8bit
 
 Signed-off-by: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c | 6 ++----
- drivers/scsi/qla2xxx/qla_sup.c  | 2 +-
- 2 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_debug.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 8377624d76c9..9caaaf25de64 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3999,10 +3999,8 @@ qla2x00_alloc_outstanding_cmds(struct qla_hw_data *ha, struct req_que *req)
- 	if (!IS_FWI2_CAPABLE(ha))
- 		req->num_outstanding_cmds = DEFAULT_OUTSTANDING_COMMANDS;
- 	else {
--		if (ha->cur_fw_xcb_count <= ha->cur_fw_iocb_count)
--			req->num_outstanding_cmds = ha->cur_fw_xcb_count;
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index acf0592d63da..ae64c0df95f7 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -4579,10 +4579,7 @@ static int resp_get_lba_status(struct scsi_cmnd *scp,
+ 		mapped = 1;
+ 		/* following just in case virtual_gb changed */
+ 		sdebug_capacity = get_sdebug_capacity();
+-		if (sdebug_capacity - lba <= 0xffffffff)
+-			num = sdebug_capacity - lba;
 -		else
--			req->num_outstanding_cmds = ha->cur_fw_iocb_count;
-+		req->num_outstanding_cmds = min(ha->cur_fw_xcb_count,
-+						ha->cur_fw_iocb_count);
+-			num = 0xffffffff;
++		num = min(sdebug_capacity - lba, 0xffffffff);
  	}
  
- 	req->outstanding_cmds = kcalloc(req->num_outstanding_cmds,
-diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
-index c092a6b1ced4..2703408c60e7 100644
---- a/drivers/scsi/qla2xxx/qla_sup.c
-+++ b/drivers/scsi/qla2xxx/qla_sup.c
-@@ -3625,7 +3625,7 @@ qla24xx_read_fcp_prio_cfg(scsi_qla_host_t *vha)
- 	max_len = FCP_PRIO_CFG_SIZE - FCP_PRIO_CFG_HDR_SIZE;
- 
- 	ha->isp_ops->read_optrom(vha, &ha->fcp_prio_cfg->entry[0],
--			fcp_prio_addr << 2, (len < max_len ? len : max_len));
-+			fcp_prio_addr << 2, min(len, max_len));
- 
- 	/* revalidate the entire FCP priority config data, including entries */
- 	if (!qla24xx_fcp_prio_cfg_valid(vha, ha->fcp_prio_cfg, 1))
+ 	memset(arr, 0, SDEBUG_GET_LBA_STATUS_LEN);
 -- 
 2.45.1
 
