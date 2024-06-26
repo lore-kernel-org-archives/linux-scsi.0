@@ -1,135 +1,133 @@
-Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21C6413AA4C
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 17:44:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E0C5190079;
+	Wed, 26 Jun 2024 18:00:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719423855; cv=none; b=rWy6KMN74ZQpkB5xkaOIvO0B0bn6rdgsQdM+QMSTy7DHv5mjM5HYRVb6nLObU+CWMKckO+/DezndSNVihKpUDVgYS2gtMTYVgt75axI0g2n+RHTPkv/U4O/4Yi7qHpnCmcRS1YajihZnHg5+JOE2AJe09KPI22yiUU1pfTZFHyU=
+	t=1719424854; cv=none; b=tc6gWi3iUt2EfF6HkoikJfcqBgrQsrycOOhfM+bFxtam08cTk0h3W7zNiW/Hq8Cf6at7hAJ4p7QoFDL24SBvbkjdsbuSC+8D6fKuVCJVZxD1kdBhl99Y4QhQRmv2ehhWvZomkBznBCTgyworTNwdD+9YT76E19VgngQHAR0SXTo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719423855; c=relaxed/simple;
-	bh=/io84hCwNbZcZKn9HhK0O8w0sd+tGoi/1ISDC9vOJx8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Oz48uJj5iPMbSMW9PjeKSEHM+QNMsO4AnzLAcXvKRrATU2vfKnsweM9RBMIHRYVGY2SfsaMBshvWb+UWHR9YINkpHg5o71K5n76/Lju4CWPgLjs5pMLQiw9mmzR1Gy6I1RJdBUdRXQxAw1gUpxnic7BjzQmwLaEG/5dHNw1PRAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xfMHYoCj; arc=none smtp.client-ip=209.85.167.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1719424854; c=relaxed/simple;
+	bh=q1CZG9hxYfrvOGAzm7i9i2PwdocdoYIv+geXRGkL1Qg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dGy9q7gloxgo0BKR4hqq8SI3Grfn/N7X+aI2uWSq4ZCXyX4r2ESgpTn1yNunCmCN2moJYcbrNqqahJ58FH4gJWTj/oc9Bjr7SV88L7rw8+9aDHQoUyRRRM1LxP+Oks8/AgnO+SrJRHyy/UHVVch+bWPuY3+VxbGoChrnHPkk+Pc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZXSoQX9x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xfMHYoCj"
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-52cdb9526e2so848311e87.0
-        for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 10:44:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1719423851; x=1720028651; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=/+RSCVFLz9dWkUiNsQKrMfnEz/6x83/Tw3aZ3JSUbSg=;
-        b=xfMHYoCjoWZorBkeORDx2hka6n5QDUpkeVOvAHEXpIWT0hOBHicTjFvaZqflPFbxbr
-         mfuZyWs6E7wxFt8HBXMbyEgV0N6NDgKNwqhZOtnZKndgvRhIjFritQnanzIu2KZQ/K8c
-         R7TqqkHE8hSxL+XgxV1hUFDuQODE+OhJMvFr9Bf+13jgnLcUCXEa+XtzChAbdCMxDBV6
-         ZVGAqcDXkI80Ih7CluRtuf1rnEPHxkMQKezCN5KjFgj/LIYpRuxZDhjTLlAzuJZTwlnW
-         ArYSPyfNkHaT9cgVRHKbbQkp2cKs55MiXDYStPq0rm86qKEVKdkkYR6dNV/ogVExvwKZ
-         oOWA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719423851; x=1720028651;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/+RSCVFLz9dWkUiNsQKrMfnEz/6x83/Tw3aZ3JSUbSg=;
-        b=WxlDY7xdOKndQdglsuXJ/eDHgMdo9db1mL3m/3blRx+8OC07OCHOsdUT2jobFN5Hg3
-         XhPD+w2xVe37uLtZY6T/G2EOa+Vwjq07TdI3I+JsRQwi2yvDNNzCH/ZuVYI6wez0SnzX
-         tcReiZTcAhbB1kFSB3xbDHg+a9WcF23KBa9tDl6sHF9PN738sZvnp8pdS/Q2HOqgZWzu
-         sMmDv7rVI42sezTpuFiUOkyI2z3YH9tXG2zssOjuRVTZXywAbdep3jwys9xgN+C3MvBs
-         /8eCxoyd7Tu/i2jktgputjiexasmDTNPUMgR/D4K/xG5Q2zPg9ROD5kxQ+dpUrozD3tr
-         DMnQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWP8llnNHiG/Xur7LMWmif+xUK/GVRI9qaIRNC3Q65/NzeF6wq2g8+ScYkF9ttfmdAbk6YL9yHfrjHDz4IlopOe/5uwW/4IqCbzkg==
-X-Gm-Message-State: AOJu0YzHICxYr8p0T2zoGsCByZumZ2mNkOZE8lcCEa/w03KYBRTFslUf
-	LOwJQJE/VxvABy+S5/B0TKA5lipBxKmoAxEOPX88gbM0uY8yCe5IyRMSQqYz9d8=
-X-Google-Smtp-Source: AGHT+IGnUAROwlJn+4uQP1wT4fjtCJ2sVWNGvlK5tM6g25KfhEOOoihtvJG60M8WXMyNj0tndQxo8Q==
-X-Received: by 2002:a05:6512:b91:b0:52c:a070:944 with SMTP id 2adb3069b0e04-52e6ecf7b82mr69374e87.23.1719423849374;
-        Wed, 26 Jun 2024 10:44:09 -0700 (PDT)
-Received: from eriador.lumag.spb.ru (dzdbxzyyyyyyyyyyybrhy-3.rev.dnainternet.fi. [2001:14ba:a0c3:3a00::b8c])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-52cde8b5658sm1339462e87.256.2024.06.26.10.44.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jun 2024 10:44:08 -0700 (PDT)
-Date: Wed, 26 Jun 2024 20:44:07 +0300
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To: Ram Prakash Gupta <quic_rampraka@quicinc.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, quic_cang@quicinc.com, quic_nguyenb@quicinc.com, 
-	quic_pragalla@quicinc.com, quic_nitirawa@quicinc.com
-Subject: Re: [PATCH 1/2] scsi: ufs: Suspend clk scaling on no request
-Message-ID: <62m4bfyhgzidseda2mduetaq4b2onlpjkxzsc3skc3fx7iw3xh@eyt2nwn2cuoi>
-References: <20240626103033.2332-1-quic_rampraka@quicinc.com>
- <20240626103033.2332-2-quic_rampraka@quicinc.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZXSoQX9x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 514F6C116B1;
+	Wed, 26 Jun 2024 18:00:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719424853;
+	bh=q1CZG9hxYfrvOGAzm7i9i2PwdocdoYIv+geXRGkL1Qg=;
+	h=From:To:Cc:Subject:Date:From;
+	b=ZXSoQX9xGtJ74o4hdOMSaGUskMmGHJ+iwKn5/QXiZ1fNAHcXr5zc3Dt3mAcwA14gr
+	 4BV7hbNAbSs0AdDnQD32u1sNorjht9qPVlgz7qLi029H25rPdEo3qvcVexa8+aK5HS
+	 nQCESKhvPhm1Xhcvmrh6EP2MpNfE0NGsAvPsX1EudC+dPVZsr6My9RXm7uQV88lpw5
+	 G/dHbKrHOo1hvkXtCq/pQJ8I2qI8NziIwbSDEeCEMUhEusJYnHR5KQQTEdhP5EsKd5
+	 P2nP1OMUAXUJhghc7F9dPVBCDAlfd6umTiePMI897oN0UdZrWdSGr2uioQy2WoRTxL
+	 EabMQoYZM6/RA==
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Tejun Heo <htejun@gmail.com>,
+	Jeff Garzik <jeff@garzik.org>,
+	Colin Ian King <colin.i.king@gmail.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-ide@vger.kernel.org
+Subject: [PATCH v2 00/13] ata,libsas: Assign the unique id used for printing earlier
+Date: Wed, 26 Jun 2024 20:00:30 +0200
+Message-ID: <20240626180031.4050226-15-cassel@kernel.org>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240626103033.2332-2-quic_rampraka@quicinc.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3445; i=cassel@kernel.org; h=from:subject; bh=q1CZG9hxYfrvOGAzm7i9i2PwdocdoYIv+geXRGkL1Qg=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJqwu1XHIp51LGP73DKTIuF1rtF4rqCau8uLJrgsORy+ naVmgDnjlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAEwkcz7DX0GdF3V5TUmXGcM6 xNVK2k56dFzd2qakfHbmFbvqmxMunmNkuP38pQjzgdbHsbUd9fdOPov9URsaw1woa3vDcfPj9/1 xjAA=
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jun 26, 2024 at 04:00:32PM GMT, Ram Prakash Gupta wrote:
-> Currently ufs clk scaling is getting suspended only when the
-> clks are scaled down, but next when high load is generated its
-> adding a huge amount of latency in scaling up the clk and complete
-> the request post that.
-> 
-> Now if the scaling is suspended in its existing state, and when high
-> load is generated it is helping improve the random performance KPI by
-> 28%. So suspending the scaling when there is no request. And the clk
-> would be put in low scaled state when the actual request load is low.
-> 
-> Making this change as optional for other vendor by having the check
-> enabled using vops as for some vendor suspending without bringing the
-> clk in low scaled state might have impact on power consumption on the
-> SoC.
-> 
-> Signed-off-by: Ram Prakash Gupta <quic_rampraka@quicinc.com>
-> ---
->  drivers/ufs/core/ufshcd.c | 3 ++-
->  include/ufs/ufshcd.h      | 1 +
->  2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 1b65e6ae4137..0dc9928ae18d 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -1560,7 +1560,8 @@ static int ufshcd_devfreq_target(struct device *dev,
->  		ktime_to_us(ktime_sub(ktime_get(), start)), ret);
->  
->  out:
-> -	if (sched_clk_scaling_suspend_work && !scale_up)
-> +	if (sched_clk_scaling_suspend_work && (!scale_up ||
-> +				hba->clk_scaling.suspend_on_no_request))
+Hello all,
 
-Really a nit: moving !scale_up to the next line would make easier to
-read.
+This patch series was orginally meant to simply assign a unique id used
+for printing earlier (ap->print_id), but has since grown to also include
+cleanups related to ata_port_alloc() (since ap->print_id is now assigned
+in ata_port_alloc()).
 
->  		queue_work(hba->clk_scaling.workq,
->  			   &hba->clk_scaling.suspend_work);
->  
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index bad88bd91995..c14607f2890b 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -457,6 +457,7 @@ struct ufs_clk_scaling {
->  	bool is_initialized;
->  	bool is_busy_started;
->  	bool is_suspended;
-> +	bool suspend_on_no_request;
->  };
->  
->  #define UFS_EVENT_HIST_LENGTH 8
-> -- 
-> 2.17.1
-> 
+Patch 1-3 fixes incorrect cleanups in the error paths.
+Patch 4,12 removes a useless libata wrappers only used for libsas.
+Patch 5 introduces a ata_port_free(), in order to avoid duplicated code.
+Patch 6 removes a unused function declaration in include/linux/libata.h.
+Patch 7 remove support for decreasing the number of ports, as it is never
+        used by any libata driver (including libsas and ipr).
+Patch 8 removes a superfluous assignment in ata_sas_port_alloc().
+Patch 9 removes the unnecessary local_port_no struct member in ata_port.
+Patch 10 performs the ata_port print_id assignment earlier, so that the
+         ata_port_* print functions can be used even before the ata_host
+	 has been registered.
+Patch 11 changes the print_id assignment to use an ida_alloc(), such that
+         we will reuse IDs that are no longer in use, rather than keep
+	 increasing the print_id forever.
+Patch 13 adds a debug print in case the port is marked as external, this
+         code runs before the ata_host has been registered, so it depends
+	 on patch 10.
+
+
+Martin, how do you want us to coordinate libsas changes?
+
+You don't seem to have any libsas changes staged for 6.11 so far,
+and the libsas changes in this series are quite isolated (and small),
+so perhaps we can simply queue them via the libata tree?
+
+Kind regards,
+Niklas
+
+
+Changes since v1:
+-Added patches that fixes incorrect cleanups in the error paths.
+-Added patches to remove useless libata wrappers only used for libsas.
+-Added patch that introduces ata_port_free().
+-Added patch that removes a unused function declaration in libata.h.
+-Added patch that removes local_port_no (Damien).
+-Added patch that assigns the print_id using ida_alloc() (Damien).
+-Picked up tags.
+
+Link to v1:
+https://lore.kernel.org/linux-ide/20240618153537.2687621-7-cassel@kernel.org/
+
+Niklas Cassel (13):
+  ata: libata-core: Fix null pointer dereference on error
+  ata: libata-core: Fix double free on error
+  ata: ahci: Clean up sysfs file on error
+  ata,scsi: Remove useless wrappers ata_sas_tport_{add,delete}()
+  ata,scsi: libata-core: Add ata_port_free()
+  ata: libata: Remove unused function declaration for ata_scsi_detect()
+  ata: libata-core: Remove support for decreasing the number of ports
+  ata: libata-sata: Remove superfluous assignment in
+    ata_sas_port_alloc()
+  ata: libata-core: Remove local_port_no struct member
+  ata: libata: Assign print_id at port allocation time
+  ata: libata-core: Reuse available ata_port print_ids
+  ata,scsi: Remove useless ata_sas_port_alloc() wrapper
+  ata: ahci: Add debug print for external port
+
+ drivers/ata/ahci.c                 | 21 +++++++---
+ drivers/ata/libata-core.c          | 66 ++++++++++++++++--------------
+ drivers/ata/libata-sata.c          | 49 ----------------------
+ drivers/ata/libata-transport.c     |  5 ++-
+ drivers/ata/libata-transport.h     |  3 --
+ drivers/ata/libata.h               |  1 -
+ drivers/scsi/libsas/sas_ata.c      | 14 +++++--
+ drivers/scsi/libsas/sas_discover.c |  4 +-
+ include/linux/libata.h             | 12 +++---
+ 9 files changed, 71 insertions(+), 104 deletions(-)
 
 -- 
-With best wishes
-Dmitry
+2.45.2
+
