@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADD7D185E79;
-	Wed, 26 Jun 2024 14:27:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F3BA185E79;
+	Wed, 26 Jun 2024 14:27:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719412026; cv=none; b=eaFBZcyYxNzWIEK2GUQ6lzt/V7uliulErw3RoCRdvAeu2Ii7zXUckdpRCW6CWpultrfvO1ZPuuxP6J7IrKT/KVMIjrGbNANxgfNgbsKTT+G4bSAK+oLtYY75NKf9VSXdED13cHw3EgVoKiqiuzSFAXRMTBI1kHIhOm4xKr+r0XM=
+	t=1719412030; cv=none; b=peVL2zgHCx9ELgro0Ylalb0hTHxVfNNhCI1znEbR/fDz44z05x/ZmydlORSmfjtlLptly8p6va77I3/JtzjhX5iFcMdeGGU3OcDSz6CH54R0tyddd7g7XFIAMRvq3tvbCeAp5+Zt+pApGmTcuaIynYgkGCz1ntqluEFz4iowph0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719412026; c=relaxed/simple;
-	bh=S4ICT4PeWjGNFL3UO/rPR47lF4p8rBIZv7Mqc2/wq1c=;
+	s=arc-20240116; t=1719412030; c=relaxed/simple;
+	bh=/YnDBnNDsFzTqwwN8r1JTP97sVf7rdYp7DBVS0xfxNs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nb6YE3tecbyFmekpSGlCjzeKlwKD0PcbgrXyGVUpWbdT9SLQApdlDwjH8bQDQIfF7bIjSub1yzhPkAqH4Ptt3uGSl2YQMrVAIIheMTRHVxddk1oNPwz0oUSXacvOMhHAdlfPX7Ecg2IFQuEkRuubsPd3at93nH5upYJ/mmfbfoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nu8bJkeq; arc=none smtp.client-ip=198.137.202.133
+	 MIME-Version; b=ZourjNIfV642Xvbr4SIzCFfqm430EvypJydR6m3lyNn6wUOzdLWsnC05s/TZ8HRzUfFgrFZWS0cyT98wdV2tTtDdyN4jVn/aOVbeCvkn0ogmEMbTTWvGvjAlK6uwvSthSXZs6CYWdolSp6f36qiCKT2Z5tF71Ir8n+Gjkzbv5jU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=lkkWJXL7; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nu8bJkeq"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lkkWJXL7"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=+kFaY3VhBYpRFCR8WaCVMLyC3DvHeqIA57msUWsiyLk=; b=nu8bJkeqi9O+Bu+9DwmHxK8u9o
-	ZfVomOSAN7Vqrg0SHOQWKy9WzQeynPCJ1iWRq22qxzVCtIpRoEEZfj1VfEYzVRPPNglp5k0YJOX2g
-	0HApnIJEjRFGqK8qCaa6LohTZ1Pi84f3ODzpd4HHOyyyndWXtrqpWDoUMC2xRbGI19JerXt7ZxoXX
-	mbD8lSFSqTbcHpF83fH0vYRXjF+Sv+Axh+Xf31vKnMOp4+Wi7VDa5Z4mz1ws69yO5zx2vCqxR4kHm
-	vo3IR14i+SwaX87PBpxM0luJrqn0qAKS8m17LB1EW6Ed28DlaaFt4VWgVKVGUbJ9cI97yI7neTRoz
-	DzjpCVFA==;
+	bh=OsiVQjjagKPX+E+jBCOu2LbKBRYJI4cy3HLotlU+qq4=; b=lkkWJXL7b16baBhu37jV0OCi4V
+	Zj31aWQCG/A6BjiPSLcqkkuwZ6Libl6g6zmafPl6xjFd3rJS4cDGGg2nRS0gLvLqCvzILJOYy1g68
+	KYia5xl8XLAJ/Mi4pk3F6Gfj/nVrd43P314ojd/+2qJ0TQbFobDVDIcIDdVW2Wda8/ro4vw5EsmoK
+	8BWcmnk+t2H01S70oiOdC7aDKN+wD38kpx9KmJUtfp0WFDmirKdG7/jqYvsJdIPLvfl+EBnYHJIdi
+	MSaC4mCb8QDER9nNUsqCu5Mlprzcr43ySNm6Y8ojDRqFpJb0KGVbwc2wHhcYgbqtWFvgDxB+hIrc/
+	PZ750NPg==;
 Received: from [2001:4bb8:2cd:5bfc:fac4:f2e7:8d6c:958e] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sMTby-000000079gl-20NP;
-	Wed, 26 Jun 2024 14:27:03 +0000
+	id 1sMTc2-000000079iO-2qJa;
+	Wed, 26 Jun 2024 14:27:07 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -43,11 +43,10 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-block@vger.kernel.org,
 	linux-ide@vger.kernel.org,
 	linux-raid@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	John Garry <john.g.garry@oracle.com>
-Subject: [PATCH 5/8] block: conding style fixup for blk_queue_max_guaranteed_bio
-Date: Wed, 26 Jun 2024 16:26:26 +0200
-Message-ID: <20240626142637.300624-6-hch@lst.de>
+	linux-scsi@vger.kernel.org
+Subject: [PATCH 6/8] block: remove disk_update_readahead
+Date: Wed, 26 Jun 2024 16:26:27 +0200
+Message-ID: <20240626142637.300624-7-hch@lst.de>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240626142637.300624-1-hch@lst.de>
 References: <20240626142637.300624-1-hch@lst.de>
@@ -60,29 +59,82 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-"static" never goes on a line of its own.
+Mark blk_apply_bdi_limits non-static and open code disk_update_readahead
+in the only caller.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- block/blk-settings.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ block/blk-settings.c   | 8 +-------
+ block/blk.h            | 2 ++
+ block/genhd.c          | 2 +-
+ include/linux/blkdev.h | 1 -
+ 4 files changed, 4 insertions(+), 9 deletions(-)
 
 diff --git a/block/blk-settings.c b/block/blk-settings.c
-index ed39a55c5bae7c..c2221b7406d46a 100644
+index c2221b7406d46a..c692e80bb4f890 100644
 --- a/block/blk-settings.c
 +++ b/block/blk-settings.c
-@@ -142,8 +142,7 @@ static int blk_validate_integrity_limits(struct queue_limits *lim)
-  * so we assume that we can fit in at least PAGE_SIZE in a segment, apart from
-  * the first and last segments.
-  */
--static
--unsigned int blk_queue_max_guaranteed_bio(struct queue_limits *lim)
-+static unsigned int blk_queue_max_guaranteed_bio(struct queue_limits *lim)
+@@ -55,7 +55,7 @@ void blk_set_stacking_limits(struct queue_limits *lim)
+ }
+ EXPORT_SYMBOL(blk_set_stacking_limits);
+ 
+-static void blk_apply_bdi_limits(struct backing_dev_info *bdi,
++void blk_apply_bdi_limits(struct backing_dev_info *bdi,
+ 		struct queue_limits *lim)
  {
- 	unsigned int max_segments = min(BIO_MAX_VECS, lim->max_segments);
- 	unsigned int length;
+ 	/*
+@@ -434,12 +434,6 @@ int queue_limits_set(struct request_queue *q, struct queue_limits *lim)
+ }
+ EXPORT_SYMBOL_GPL(queue_limits_set);
+ 
+-void disk_update_readahead(struct gendisk *disk)
+-{
+-	blk_apply_bdi_limits(disk->bdi, &disk->queue->limits);
+-}
+-EXPORT_SYMBOL_GPL(disk_update_readahead);
+-
+ /**
+  * blk_limits_io_min - set minimum request size for a device
+  * @limits: the queue limits
+diff --git a/block/blk.h b/block/blk.h
+index d0a986d8ee507e..95e5a4f81693c4 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -358,6 +358,8 @@ bool blk_rq_merge_ok(struct request *rq, struct bio *bio);
+ enum elv_merge blk_try_merge(struct request *rq, struct bio *bio);
+ 
+ int blk_set_default_limits(struct queue_limits *lim);
++void blk_apply_bdi_limits(struct backing_dev_info *bdi,
++		struct queue_limits *lim);
+ int blk_dev_init(void);
+ 
+ /*
+diff --git a/block/genhd.c b/block/genhd.c
+index 8f1f3c6b4d6729..4dc95a46350532 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -524,7 +524,7 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
+ 		disk->part0->bd_dev = MKDEV(disk->major, disk->first_minor);
+ 	}
+ 
+-	disk_update_readahead(disk);
++	blk_apply_bdi_limits(disk->bdi, &disk->queue->limits);
+ 	disk_add_events(disk);
+ 	set_bit(GD_ADDED, &disk->state);
+ 	return 0;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index b37826b350a2e3..6b88382012e958 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -973,7 +973,6 @@ static inline void blk_queue_disable_write_zeroes(struct request_queue *q)
+ /*
+  * Access functions for manipulating queue properties
+  */
+-void disk_update_readahead(struct gendisk *disk);
+ extern void blk_limits_io_min(struct queue_limits *limits, unsigned int min);
+ extern void blk_limits_io_opt(struct queue_limits *limits, unsigned int opt);
+ extern void blk_set_queue_depth(struct request_queue *q, unsigned int depth);
 -- 
 2.43.0
 
