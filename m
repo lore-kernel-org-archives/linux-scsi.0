@@ -1,72 +1,85 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC4C217CA0E
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Jun 2024 23:27:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 234C7C2E9
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 01:39:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719358035; cv=none; b=TjB+9G/50GhIoJGb5XT4LmmsXEX/ZH4vqRHq9ThhqJTbqFmyIEh4HKFvmt4iZeSQRS78209cZsYkaaIIQiQtcZ2yk4zBYjN0jfQSIGv8SxZNVeNd54IthvT+Dgizm/99fAs1AOqM4mLtwY+jt7xITk17IooUIkE5fl3UiNWUpjE=
+	t=1719365982; cv=none; b=i+PFgkCgAt59scYm7lhermeS7mxZYPHFxYy+hm34x4JciHojm8+LKRcaaOP35CCEqIa7cWNoZskJpISanAMMIVfWe2qsVI6PaoGbPoGW6KURngOiU6FxWUj1nLX0sF0oFl1s3JojzsaL98VqgWCqxQxmtVrbtewvK3C2VpzJ3v4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719358035; c=relaxed/simple;
-	bh=MZiZsle9fXRDGVCUOjJ7Ze1U/N6GrHIKKuOpUBETtSE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=Mm+cw1V9CZH7JP8XMtCK1DyE9Oy2U1Gn4Q7zgEVK62wGYrOpOcwVOYya9Ml9sjuNKp4wldL0sORPVwAbpdzpUjgJ/Q40IYdbGLooKR7KEJXqP1bYDnLD8H/03GhDlbrpf995qcnoJzlq1N/XoaSGqN/ljLLxGR5WOGVMn7ZlR4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=tXGOKVOa; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1719365982; c=relaxed/simple;
+	bh=FdNfVHadqwtRDM9CQwNFGEaKTy6lPpVpiQe4T6vU98Q=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 Cc:Content-Type; b=nOWMyzzG5bv5h2tetfjyrzcn4bqX/sV/0knicSBHn+WXn/TVLWideJeV3q2woAV0AFm2SE7o8TrQuJr7mxnSes24gIJd88yqtFTjT8EBt/CBR8VbeugY3RHrHgRhlsTWN/cu64ci/zp08nHrrDiTBNNjOiw1Wkbf/3s25TEnO4I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CTIxRUWa; arc=none smtp.client-ip=209.85.128.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="tXGOKVOa"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W81FY0H5Qz6CmQyM;
-	Tue, 25 Jun 2024 23:27:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1719358032; x=1721950033; bh=MZiZsle9fXRDGVCUOjJ7Ze1U
-	/N6GrHIKKuOpUBETtSE=; b=tXGOKVOaXXIjcZ9Qvb0QshsQH9eAYYQecgGPiN1v
-	TVaQaCXvcY325K6bXgvv6mYjV4g/VWxrZAO71ERoAiqmOMCEhg1ptdCHHEW/L/yk
-	eRUZ/cCWFSk7+3xK5dkpYdTjpF8AT7pfx/z59ER84GT+S9GX3+AwDUHhntDlNBxI
-	P6BgS5iOSs+gaOod1c6VaBmK+4gmUge7ehdizs79s91/CsPdYI/r9PMnxQloz1V4
-	zz7OwoTSH5XWI/Qo39NRoPAjZosgQU6epsmF/e+0VNRJm3jzeW/ZeT3BJqAwrKjR
-	FLzDs/QvcL7o9B6ez1XsmbISC1RXCWYtBDBuTvQi3OOivw==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id EEqh1aBnpIrh; Tue, 25 Jun 2024 23:27:12 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W81FW62gMz6CmR43;
-	Tue, 25 Jun 2024 23:27:11 +0000 (UTC)
-Message-ID: <1ac9f910-c361-44eb-9fa8-d587a8796980@acm.org>
-Date: Tue, 25 Jun 2024 16:27:10 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CTIxRUWa"
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-645808a3294so24558977b3.3
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Jun 2024 18:39:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1719365980; x=1719970780; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FdNfVHadqwtRDM9CQwNFGEaKTy6lPpVpiQe4T6vU98Q=;
+        b=CTIxRUWa1BIsrYu6n5Q6KKgZvdZ0dcPXcUPNMwGNX3tEuEGXFbS5DvLqnokd0Q8FbV
+         PM43LTYInV9/4ZtzF9HYmD3pjLgAxOUjrRKTSsDWcBES6rEaWxTTOlpqhLKnbccHFved
+         C1qcCliOugs7lYadki90UbVVGJfwQyrHBYKd2wWKf/GmVMWyV6UDc+cNlG1RL8tz8y/x
+         sTAQ5CE90PYIXzA7rknhYaYLFTAaCQ1mwCq4faIGJGxHqMRMVGT12YEe1l4f1LuuyzFY
+         9ju4g0LU53fvifjozqQVhg/iuAXwrAVK/k7cWPeaYIDRM6A47tESIdzDYYNHu3jsW5d8
+         ZJDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719365980; x=1719970780;
+        h=content-transfer-encoding:cc:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=FdNfVHadqwtRDM9CQwNFGEaKTy6lPpVpiQe4T6vU98Q=;
+        b=a5y27HSpvlj+QJzHHF1guQkWbvfx1nPVl2uOi8akMxH+7rTUnb1Zd4hz27YRFZj6/7
+         DTo+vSuSFrF8puAD/LsW5M555M/oyh7KZ1bQrf12im0YJIISoEfKePCKVVUSd6droGLT
+         SvH2nQIcKerYVeqcwTH9tTtLvHD0jxaJplfdtLg2zD4u+loSiL8w/Yj3+pvvlyRIOT9i
+         HmjWJ+D/3VgUmsrkx6m66hFkpvsFddaTNgnYvReIBdi2WkPNLWDg+bcpp/xlaWN4bSzP
+         3v+LqvB1/PuO+ZpXMOSCGeJZi4X7XnpNzkgTsRU2yZzbV8IJZDvcoVdl/val5G1BST1q
+         rkIg==
+X-Gm-Message-State: AOJu0YzefTlTiPXPInI5A8HbChZS3c4lggjIlOH28B4s7+pRJ0V1TreK
+	aSt8Gv6bkp8xyb06dazjksC/YVmns5+luqAGWvbYhCKm/LIh6IZm3zuqMm+Q6gm4eNynfphjCLv
+	dZjbt38LtGncov8h7qmp9COGraytkxQ==
+X-Google-Smtp-Source: AGHT+IFizDViR1ncMaZrWaL0heqd8cvPQAmCJ46qehP3jLRAhvRvV+yic0jQY8lYHr2gr1JEDcSNcMhsStZj2rlYySs=
+X-Received: by 2002:a81:8a42:0:b0:625:1090:b54f with SMTP id
+ 00721157ae682-64340ea9a6cmr83060727b3.39.1719365979897; Tue, 25 Jun 2024
+ 18:39:39 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+References: <20240625165643.1310399-1-prabhakar.pujeri@gmail.com>
+ <1ac9f910-c361-44eb-9fa8-d587a8796980@acm.org> <CAB=RiWAJyrywUhYo9yQ_qbaiokf_HnJkRmLHCQw5f61Fn4m5Bg@mail.gmail.com>
+In-Reply-To: <CAB=RiWAJyrywUhYo9yQ_qbaiokf_HnJkRmLHCQw5f61Fn4m5Bg@mail.gmail.com>
+From: prabhakar pujeri <prabhakar.pujeri@gmail.com>
+Date: Wed, 26 Jun 2024 07:09:04 +0530
+Message-ID: <CAB=RiWBsDbcpQooWFOqRXSNNfinRxAgkeLncTu8AH0HJ86X3JQ@mail.gmail.com>
 Subject: Re: [PATCH] scsi: lpfc: Simplify minimum value calculations in
  lpfc_init and lpfc_nvme
-To: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>, linux-scsi@vger.kernel.org
-References: <20240625165643.1310399-1-prabhakar.pujeri@gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240625165643.1310399-1-prabhakar.pujeri@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 6/25/24 9:56 AM, Prabhakar Pujeri wrote:
-> This patch simplifies the calculation of minimum values in the
-> lpfc_sli4_driver_resource_setup and lpfc_nvme_prep_io_cmd functions
-> by using the min macro. This change improves code readability and
-> maintainability.
+> On Wed, Jun 26, 2024 at 4:57=E2=80=AFAM Bart Van Assche <bvanassche@acm.o=
+rg> wrote:
+>
+> On 6/25/24 9:56 AM, Prabhakar Pujeri wrote:
+> > This patch simplifies the calculation of minimum values in the
+> > lpfc_sli4_driver_resource_setup and lpfc_nvme_prep_io_cmd functions
+> > by using the min macro. This change improves code readability and
+> > maintainability.
+>
+> How has this patch been generated? If it has been generated with a
+> Coccinelle script, please include that script in the patch description.
+>
+> Bart.
 
-How has this patch been generated? If it has been generated with a
-Coccinelle script, please include that script in the patch description.
-
-Bart.
+ Yes, I am using Coccinelle for these patches. I will include the
+Coccinelle scripts in my upcoming patches.
