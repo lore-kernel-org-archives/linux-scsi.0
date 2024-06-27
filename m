@@ -1,48 +1,48 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40D7519754D
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Jun 2024 16:33:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1AD519754D;
+	Thu, 27 Jun 2024 16:35:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719506040; cv=none; b=uT54UOcnrHokFJoV1iRWya+b75wy0kV1aUXul4tdPgeKGNa9H7SIMzRZn0JH8xsuYHsXn6haRxQvnOt6zmtF2hW0AizybxiT/qPzgzLm37ZvJ0r2uB0Y1XQ4ozB/L6xzJUMeOLlp7ZQ3/jgWjbPzu465eExsFR6a5qXQvtb3iYQ=
+	t=1719506156; cv=none; b=tTPGPuM6Qm1CU9aUaCxl1SMs+D+0OYqTn1ehBVN/FSH9/3b6Bv3lVNkL+yrWoRwySeQYynIGAFFYpY58gXDjycY+TkSm2IaVFemivt0vR5DCFNyt/DTSx7BX1vzYAnEoLYPATxqaZl+sLh6svxFaDfo9NPv+BN+jidJxkaBsGU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719506040; c=relaxed/simple;
-	bh=GyHFowmgGlhc7QWcvXK+NGV27EOMLlX50iBAG1bpQgk=;
+	s=arc-20240116; t=1719506156; c=relaxed/simple;
+	bh=i5uSuHzDAA3dG29s0ri3FEEJ620FhxvUQqdNQbTmYOs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iGyb7S9qFRRMUyhZqVst/InyBbAEZxWlOuO2NvnAOeL9lSsIBdvmQZXGrxQFP6YdFfrvMFtS9IBxlT66HQiNHvsPwkcrjiOgbPfOoEb2W23o79S98T7iU1a4e4mqdpvL0beAYTSrvPw5loO6TTQgSgn99PMimNS141yJiqcmDFY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=n9XaBqBd; arc=none smtp.client-ip=199.89.1.12
+	 In-Reply-To:Content-Type; b=G5/uPZjEq3hZWxrYm7gOLPAjksa0eFDYDsl0ueZivJHQ1/3xF1MwZy1ILOAhqxspV2jZtDxXLS8GaQ7P8S0nDqiMPO9E1FLIEDR65FZbw1mRCIQMFpzEgFOUV6DrsCcgxtG7lmJkhahudQX1sqZ5d8k33g9+zDMBYnAuKfpTaLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=MC0v4hPX; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="n9XaBqBd"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="MC0v4hPX"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4W93zh5cmFzlgMVf;
-	Thu, 27 Jun 2024 16:33:52 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4W94222JYzzlgMVh;
+	Thu, 27 Jun 2024 16:35:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1719506030; x=1722098031; bh=GyHFowmgGlhc7QWcvXK+NGV2
-	7EOMLlX50iBAG1bpQgk=; b=n9XaBqBdL6RZtyiMRT4R+qlrg4wATD6leCY9/T+A
-	GTm9XUIzWqyuSPChDSSbGUin8GFEYn2kVScahUATsxfd/UOFrf1O0/FWejhnzbi/
-	1lmQ0+9y/azBHQqN9zo4GYWAD3c+kypRjM68cUoaFoAyg5EcRgpF0E9Dn5/YE02a
-	BVwzgSMoHACCgB3OEXPvx51JQQ35daWuc8veHzFdIbvzuXkIH7O/rHuKnjcwgnt1
-	qWdMv5Dahdfv94kn3a8mAo9ww/fHXTpUvm4797YZpUNBOPquAbr+3ikPnd3N/jQq
-	B5pLwv8jaq6hXgdep7uFaO6rv9AXA3ZwOeOiaGm5cAZXXA==
+	 s=mr01; t=1719506149; x=1722098150; bh=hVDMUsVF+/V1YGWN2LOQHR7A
+	/yvxeORdTPizOwfWMu0=; b=MC0v4hPXm7TTQYbXcerNglbhdxtZn8QxQDDBRpwm
+	VEjAd9Nc+tndQdQwl0/svcZEHM8LzUQBAR7txGKX5nHK/4Z/rAxGBmtBtoI8DyBl
+	rZEKdKSShHyEyePTCkHh2Uj8fy2PMpVmXZtDZvwakj/XYb4W6aTkFOU8oe49l/6q
+	DRf2XcT3TWQwYIr8BsvlP0SW3GMfhUjTmOJOrHFQK530uHyVp67Q2/mCEAzZKtpE
+	GkFywRpgYAsfWpFUDY1ILiKmfa3cjWpxqiAj/XX3t3pDUnYEwGZoF5BoTxNTFpb/
+	RHR75jJZarbPD5AVXscOINaUdx0ZS+SQz3pA5Rp3A2VZXA==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 334YhmbxV_qx; Thu, 27 Jun 2024 16:33:50 +0000 (UTC)
+ id Q64WVv8m8ORN; Thu, 27 Jun 2024 16:35:49 +0000 (UTC)
 Received: from [100.125.79.228] (unknown [104.132.1.68])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4W93zd5JsszlgMW9;
-	Thu, 27 Jun 2024 16:33:49 +0000 (UTC)
-Message-ID: <6564ce4b-4340-4287-9358-662cfc698aeb@acm.org>
-Date: Thu, 27 Jun 2024 09:33:48 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4W941w3b2mzlgMVf;
+	Thu, 27 Jun 2024 16:35:48 +0000 (UTC)
+Message-ID: <97bb4c5a-46f3-4a81-96bf-a3147d9ec78b@acm.org>
+Date: Thu, 27 Jun 2024 09:35:47 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,44 +50,56 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 8/8] scsi: ufs: Check for completion from the timeout
- handler
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "beanhuo@micron.com" <beanhuo@micron.com>,
- "ahalaney@redhat.com" <ahalaney@redhat.com>,
- "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>
-References: <20240617210844.337476-1-bvanassche@acm.org>
- <20240617210844.337476-9-bvanassche@acm.org>
- <054eef8dec43e51aec02997ad3573250b357bee2.camel@mediatek.com>
- <1f7dc4e4-2e8f-4a2e-afbb-8dad52a19a41@acm.org>
- <d6d329a3d822cb34c8a5bee36403c59ceab015a0.camel@mediatek.com>
- <671bb45f-22a1-4f81-ae93-65bd5a86f374@acm.org>
- <167b737c45ff3c9b9422933d45b807929d0b83de.camel@mediatek.com>
- <b302c1ae-2cbb-4906-81f2-285c2b913109@acm.org>
- <5bcf25bb6f0d3338febf350716df8590a41af852.camel@mediatek.com>
- <edd84a4b-839f-44a6-b7fb-9e875a2598f9@acm.org>
- <c8d6926ce0db4889238b18c573fb967574956361.camel@mediatek.com>
+Subject: Re: [PATCH v2 1/2] scsi: ufs: Suspend clk scaling on no request
+To: Ram Prakash Gupta <quic_rampraka@quicinc.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, quic_cang@quicinc.com,
+ quic_nguyenb@quicinc.com, quic_pragalla@quicinc.com,
+ quic_nitirawa@quicinc.com
+References: <20240627083756.25340-1-quic_rampraka@quicinc.com>
+ <20240627083756.25340-2-quic_rampraka@quicinc.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <c8d6926ce0db4889238b18c573fb967574956361.camel@mediatek.com>
+In-Reply-To: <20240627083756.25340-2-quic_rampraka@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 
-On 6/27/24 3:56 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> This is really weird.
-> Perphas it is dram corrupt issue?
-> And is unrelated to the ufshcd_abort racing I think.
+On 6/27/24 1:37 AM, Ram Prakash Gupta wrote:
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 1b65e6ae4137..9f935e5c60e8 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -1560,7 +1560,8 @@ static int ufshcd_devfreq_target(struct device *dev,
+>   		ktime_to_us(ktime_sub(ktime_get(), start)), ret);
+>   
+>   out:
+> -	if (sched_clk_scaling_suspend_work && !scale_up)
+> +	if (sched_clk_scaling_suspend_work &&
+> +			(!scale_up || hba->clk_scaling.suspend_on_no_request))
+>   		queue_work(hba->clk_scaling.workq,
+>   			   &hba->clk_scaling.suspend_work);
+>   
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index bad88bd91995..c14607f2890b 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -457,6 +457,7 @@ struct ufs_clk_scaling {
+>   	bool is_initialized;
+>   	bool is_busy_started;
+>   	bool is_suspended;
+> +	bool suspend_on_no_request;
+>   };
+>   
+>   #define UFS_EVENT_HIST_LENGTH 8
 
-We have seen this crash five times with kernel 5.15. I think that
-the number of occurrences is too high to be caused by DRAM corruption.
-Anyway, I will leave out patches 7/8 and 8/8 from this patch series.
-We can revisit these patches if the issue would be observed again with
-a later kernel.
+Who are the other vendors that support clock scaling? I'm asking because
+I don't think that the behavior change introduced by this patch should
+depend on the SoC vendor.
+
+Thanks,
 
 Bart.
-
