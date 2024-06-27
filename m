@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26EEF6AB9;
-	Thu, 27 Jun 2024 01:31:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CE94A2D;
+	Thu, 27 Jun 2024 01:33:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719451911; cv=none; b=L6oOyU4ZF1FoCY9dFf7fJsOweR2cgDO7pxGFXcEHsyEk57659su06v2EauM9qu7Oh12srrbLfUWnaB2/R9oeYpHV2JznI03u/m4QGcRfqmbdPVv21JKBc3I9hyL4ZMCmG2dqfbvWJ3359VcT1L5/sQMw/Qi7iw8wPc/JIopOxf4=
+	t=1719451995; cv=none; b=MWZs+x79y/xtTdR2mGB8jCvMZd9eZqEhZVPgAsP64bAUbslFmjASmhFnt7KndsPKql0BPuqhi35vgpTGJaQnklpxYsHEe/HbiZAD6JMd/XBYJWEnSD+WOyyZ9QzLFGH4CTeVAWwjx7IcFehEpi5h1mNZntFjeFDD0J5NXI9FUTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719451911; c=relaxed/simple;
-	bh=jy1htihZZx2t+mHXKrZHZ5fn0bhyk73W8j+79tfMoX8=;
+	s=arc-20240116; t=1719451995; c=relaxed/simple;
+	bh=Ci87NY8U4vUA2WE4DBYx0YcBlQ8b797elbkMXpsRJ7A=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B2sILGo+ScAW7x0fz0PnS1qRFK/vrg4pnifpVwsq1XG2octG8newOfAIDhsg3yMmc4Qc9v/Z1pBzwFg1w6qZ+xaXBepN4+pHYSrdP4pMt1MzFCOeaGb718Hfxv5F4JUt7zv7m0J8uNpjzEbzBluDAD5I/Sv1vZd2Qbfqtgd9luM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=etDhIMqg; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=QO5EBh8MDAFNrdd5a8OwcHDy/VmKQJjEz1lIi6bI9yP6GsZF0F0nnDjL3BYhMk/txUDNK42SlYNM254VGK0EF71GxdwY0G+fteGgc7mf1fXB4CTn5iOkPmAfPQRatqNfBxGBLVj8mJO8vqTvbqhtdPrPFeE1JV//Dl4218cYNO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PPHgMFxn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="etDhIMqg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F1F3C116B1;
-	Thu, 27 Jun 2024 01:31:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PPHgMFxn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AE81C116B1;
+	Thu, 27 Jun 2024 01:33:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719451910;
-	bh=jy1htihZZx2t+mHXKrZHZ5fn0bhyk73W8j+79tfMoX8=;
+	s=k20201202; t=1719451995;
+	bh=Ci87NY8U4vUA2WE4DBYx0YcBlQ8b797elbkMXpsRJ7A=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=etDhIMqgwbz1XUIu5dPVagm5GshOZAXg6sWMjjoNUPOSQhvDoZHg46jmfE29tQCmy
-	 bKsYO2BzKgKkqPLSuVB++HuxfQCd9H/HPPeLB78YaNMae1UwMOdNuBuIFJ9TUM2Ut7
-	 WGnXESAuxxp6qcQErkUorgCNFfaFx6TKqyy/m4N9Ruv6hfk4v4K8O9aEvtGV1H3RdC
-	 dbivVdrv2cNlfVI58eZZtWLCNZg+huuq2gDx41wBDBWKZEUjRM27p2n85aDzUHLd+6
-	 pLlwwjho9XlTee1ZQzA3ypes/1vs85RmaoxqFmvzV0bTRpM1kw9+QSOp78JTvl5LEx
-	 vtbJpmtCcMxKQ==
-Message-ID: <1e88506f-eb3d-45e8-8c11-97325497d23d@kernel.org>
-Date: Thu, 27 Jun 2024 10:31:48 +0900
+	b=PPHgMFxnFpgwLamOQEEiclVGDM69+fJ26jAl2rSDt6cMKIms9ZJrmlpOZVmN5Ybb2
+	 +60aSgRIsWXiaypiLMEfbj2MGpPbZi1LxqJbSEi0eRMp0MhLT657Fg843q01ypOPUb
+	 TxAEbIEUfZ92smHrK3tFrIDZIXZyV+mP+djRCUGfHl1JIZM4JLlS/jKUJCgGalfwCq
+	 9IrBVdPUkIluGIjs6VxO80AYhgpzZGuTPp4VF6cpN6iFcvXCo3EfQ88vPKMLV7osxL
+	 UcXxJWQ1JzIQrptWCK9ewcI/C50wNMSZyz3ABpSRUlBbrGKvR6eP3N9gsXp78iqJwB
+	 cfhlytHlv70EQ==
+Message-ID: <57a720b0-a48d-4b0a-a5cd-aa79d73ac121@kernel.org>
+Date: Thu, 27 Jun 2024 10:33:13 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 08/13] ata: libata-sata: Remove superfluous assignment
- in ata_sas_port_alloc()
+Subject: Re: [PATCH v2 09/13] ata: libata-core: Remove local_port_no struct
+ member
 To: Niklas Cassel <cassel@kernel.org>
 Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
  Jason Yan <yanaijie@huawei.com>,
@@ -44,39 +44,24 @@ Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
  linux-ide@vger.kernel.org
 References: <20240626180031.4050226-15-cassel@kernel.org>
- <20240626180031.4050226-23-cassel@kernel.org>
+ <20240626180031.4050226-24-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20240626180031.4050226-23-cassel@kernel.org>
+In-Reply-To: <20240626180031.4050226-24-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 6/27/24 03:00, Niklas Cassel wrote:
-> ata_sas_port_alloc() calls ata_port_alloc() which already assigns ap->lock
-> so there is no need to ata_sas_port_alloc() to assign it again.
-
-Nit: s/need to/need for
-
+> ap->local_port_no is simply ap->port_no + 1.
+> Since ap->local_port_no can be derived from ap->port_no, there is no need
+> for the ap->local_port_no struct member, so remove ap->local_port_no.
 > 
-> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/ata/libata-sata.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> index e7991595bfe5..1a36a5d1d7bc 100644
-> --- a/drivers/ata/libata-sata.c
-> +++ b/drivers/ata/libata-sata.c
-> @@ -1228,7 +1228,6 @@ struct ata_port *ata_sas_port_alloc(struct ata_host *host,
->  		return NULL;
->  
->  	ap->port_no = 0;
-> -	ap->lock = &host->lock;
->  	ap->pio_mask = port_info->pio_mask;
->  	ap->mwdma_mask = port_info->mwdma_mask;
->  	ap->udma_mask = port_info->udma_mask;
+
+Looks good.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
 -- 
 Damien Le Moal
