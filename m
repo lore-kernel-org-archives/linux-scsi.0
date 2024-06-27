@@ -1,84 +1,73 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 987841E480;
-	Thu, 27 Jun 2024 12:32:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B191817838D;
+	Thu, 27 Jun 2024 12:49:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719491531; cv=none; b=Iu8XEHZtDjJOid2zDr6cWAwUBkwjHE9Hd9gO9IZfmRVAdk9lkEjBJ1kLA90JWOyZnRc5iZk0KwLEPuSxuAx79XBw41OLMZO+67A6Kr3AbNnmgx7b1m9wo3S232I1C12DtpxmEEXvjvZ9kC8CV6fFMRjAGhOWu9HOcVdSTdwZAsA=
+	t=1719492575; cv=none; b=uLpsk883NxaUPxZ5dxnzk+ArDUWYwbji4ubS4RHCfLT+G8TI8TRTxYOKa2lKbsVaOKG4/PcRRqagHJ5LuLEkn6Jva0DKxREn35Z2EHfDsw9UIKcyuKhzaIe62YzM20gDkxYD1WEg9ZnpWJOsU9oQ3GIr8ETv7qCc9ykn89Y1s7g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719491531; c=relaxed/simple;
-	bh=EL7HVlB7zXAW8gTbENW09D8qFmZ3iorNW6nPJC62H7E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dIjUGxOItIZTmweQI1WXL0dRTi/glPuxsshvzMXyD+fLS0Xhsup1oHoq56ylNSFj6J/MeQX3+RQt3o+OJ7n6diMBTIwCE+j1h9KEGHxQ0ZJBiK8UYm8xOkk/nNd0K/aRF2xnMCrtmPXfstYWnMMGirKZnXuNVRmSvdP5ebaPt/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dIb3CL8G; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719492575; c=relaxed/simple;
+	bh=9b7Y51jGr8jyffHwtkrbTojeby5RB2BEjgyDlXK3hyo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=uASWpDrXSI6S6r1+ET0ju14ZwjTJzit8AFD8Qo1voOrmodCkIUUXn6g0/sJzgOPrVbnNFZ3EMdgVEL1iWsXtdy6xo1lKxWaSGQvyQktX1PvOgI+Js1TScGfN9ebApyRimhhIq0Bb99mPBs3z0ZdkQbzOHo+cyby6gTd0Mzhmrm8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=vlzyZTi/; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dIb3CL8G"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 687B6C32786;
-	Thu, 27 Jun 2024 12:32:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719491531;
-	bh=EL7HVlB7zXAW8gTbENW09D8qFmZ3iorNW6nPJC62H7E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dIb3CL8GTE/BQzVCTKyTLur2fpnImVc0Ujp3ejSdtRP+KFUN4vAnePda3RI8ia0iY
-	 qLB23aBnDYKD5NBiPb2JPOfSypmrdW0rbZStrY/sIIzOICg/nsL1plWhAKokhIkCXk
-	 WVJWUxeVyaiRZh/wsfBy61X2cS6+taRi9nzN5cEj2yNmJQcJUy63xbRfvBYSg6mY53
-	 hMQ6Vliau4k3p5odqVJJeY6eAWKdzKS3ubtXQHQ+l66b3mjk13oQyFLI8ns33CAHIX
-	 wmQlyAOgcxiCaqtRedUakdJCzCDMkyBZ77wgY7+XDedj/GFhmAMwPtv+/KvpdfLJVz
-	 VtMsmiwhAVfgg==
-Date: Thu, 27 Jun 2024 14:32:05 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Jason Yan <yanaijie@huawei.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vlzyZTi/"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=MIunlz/6mUa4L4NCCNBT8Z+Zk/UqwGgoWkSvOIM/iyE=; b=vlzyZTi/+wBP5YsQ8aGr42AjHr
+	QmF0tEmaEZZTKHGhB1RLndXY5UgUmKzoqljAtHlhdS0TCsry3+lDlEV072hhOBhOQR/C3fYElgSJ/
+	Em/axaXEVcdGegS8oaWuyvmNtMMCHZBRdVOodnljQ0dHmNk9uweSc0jcCmAE8YdZ2rMn8lkQH9jW3
+	JhZmcaCXLsl1Cv5lLfcflHE5noM0KK5YBATpjS8SlQ1ngZdXsqX1ZUpYuva12Pjhre17KpkokkE4l
+	mIH/bP3XVZnl9EsymFAL/zST/fnkb4URmz1dkmRMHBACZoOCLl/GR8aeaWS4XQiFAXadtsG1n9NnT
+	Re4C0THg==;
+Received: from [2001:4bb8:2dc:6d4c:6789:3c0c:a17:a2fe] (helo=localhost)
+	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sMoZ7-0000000AMzV-4ACg;
+	Thu, 27 Jun 2024 12:49:30 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Ming Lei <ming.lei@redhat.com>,
+	"Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+	Jack Wang <jinpu.wang@ionos.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>,
-	Colin Ian King <colin.i.king@gmail.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Kai-Heng Feng <kai.heng.feng@canonical.com>,
-	linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2 00/13] ata,libsas: Assign the unique id used for
- printing earlier
-Message-ID: <Zn1bxRbAml-HjWKb@ryzen.lan>
-References: <20240626180031.4050226-15-cassel@kernel.org>
- <14397cfc-c73a-4046-aca8-527b065f65d9@oracle.com>
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	linux-block@vger.kernel.org,
+	megaraidlinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	MPT-FusionLinux.pdl@broadcom.com
+Subject: get drivers out of setting queue flags
+Date: Thu, 27 Jun 2024 14:49:10 +0200
+Message-ID: <20240627124926.512662-1-hch@lst.de>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <14397cfc-c73a-4046-aca8-527b065f65d9@oracle.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jun 27, 2024 at 01:26:04PM +0100, John Garry wrote:
-> On 26/06/2024 19:00, Niklas Cassel wrote:
-> > Hello all,
-> > 
-> > This patch series was orginally meant to simply assign a unique id used
-> > for printing earlier (ap->print_id), but has since grown to also include
-> > cleanups related to ata_port_alloc() (since ap->print_id is now assigned
-> > in ata_port_alloc()).
-> > 
-> 
-> There's no real problem statement wrt print_id, telling how and why things
-> are like they are, how it is a problem, and how it is improved in this
-> series.
+Hi all,
 
-You are right, it is missing from the cover-letter.
+now that driver features have been moved out of the queue flags,
+the abuses where drivers set random internal queue flags stand out
+even more.  This series fixes them up.
 
-It was there in v1:
-https://lore.kernel.org/linux-ide/20240618153537.2687621-7-cassel@kernel.org/
-
-"""
-This series moves the assignment of ap->print_id, which is used as a
-unique id for each port, earlier, such that we can use the ata_port_*
-print functions even before the ata_host has been registered.
-"""
-
-Will re-add it in v3.
-
-
-Kind regards,
-Niklas
+Diffstat:
+ block/loop.c                      |   15 ++-------------
+ block/rnbd/rnbd-clt.c             |    2 --
+ scsi/megaraid/megaraid_sas_base.c |    2 --
+ scsi/mpt3sas/mpt3sas_scsih.c      |    6 ------
+ 4 files changed, 2 insertions(+), 23 deletions(-)
