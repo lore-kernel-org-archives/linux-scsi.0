@@ -1,147 +1,140 @@
-Received: from mail-oi1-f180.google.com (mail-oi1-f180.google.com [209.85.167.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0F704D5BD;
-	Thu, 27 Jun 2024 09:20:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E83466D1C1;
+	Thu, 27 Jun 2024 09:48:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719480009; cv=none; b=DJv+ZFgExWEuG5DEKzoCfVlHFABRSSsqzMbkpeovtYmeShIPy3S7eNphf6uJNjbZHstL+EX/w8S6gu2S+YIUvkoaYb8RP0bb2hgjCo4Gv5FiJLQ7noN67Bo0Ig9H8FRSleRehhkh/gZUw8zsWsCPoybpJl10o4nkUsJTURXPUN4=
+	t=1719481701; cv=none; b=AoKQKFSNk/g/IlwF/fV3jJVQV0w7GpV53qZSpi9hUXCQ8lGCZE6kfY292zqPlnKWwc2w+StLeqN3ss3NLsfj3OtNQ07XswP76ugDgBmIvp7sEIt0xKXGrPeWIL3tQenSlj7Z8SKMhBk4851HH73uLInDqirCMT42LlDeCs8QqVY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719480009; c=relaxed/simple;
-	bh=MQLSZlmH3qjJ6RpohjgJZOR7RPGiFHW+m36Q4B31n2E=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jNl8Zg1rz4Vc1Asnn4Y27eOX94CZX2bVVRP/CAyjuweRk7B2U6gg7rsV7BI8Mc83Pj4/9LvEFjHV+jnufFBUaXfk4QjToc40BsqTtu193jKHc8iVKrsWMeKFU2/LOQ+S0PCuwxgnkx/fFulRBPl0gOXfSxFj1EmTqEWXRcyW1Ig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=enwhNREi; arc=none smtp.client-ip=209.85.167.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1719481701; c=relaxed/simple;
+	bh=bsV+8CFhTqU6lJ9Mn2nop7dlaesXLAMgRe/XWIxlbN4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uzkvz39QVeTjQVWeb8ENWn3v9dJ2gTYv/QIAiE29GwcT01+OPD6Pvl0fK8V+ilL5/3vSh0qbw1WbQqy77hNM6otPaH+mxAni+krUrhbUZxCGn+582OH4EpMcA4PeC6wC2ApSPsTwK+knB+6K9lnLABAjutp017Nk5FgxMTjzrZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DcLrFg2i; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="enwhNREi"
-Received: by mail-oi1-f180.google.com with SMTP id 5614622812f47-3d5d7fa3485so243029b6e.1;
-        Thu, 27 Jun 2024 02:20:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1719480006; x=1720084806; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=0ETjSuiBGz/j4BOauY9/duKhstSMiIxQ7/voA5iz9AU=;
-        b=enwhNREiaTiTDqeFHuSwzJjBX0FQQtT9yUcn7hGIuzkkZBJq/xUStK1V6xT6+Z25gf
-         iBb0QojsozeXzLhKQN4HS+3OUqQKZlS6HJVXwp0JJ2JhQ813850dyi3yickRk+wDr/t7
-         Cc+hhiPhYqPWoZhEiz5o4qVs6KD7MTuY+Cj74vgyQOhxQQbJYnt8G8jt+HTLJYjFi8sR
-         Gw9rM9Ds3GO+8cDrpoCQdb23wV+tw3zjtgncbtHU6q1329YMtBXhneWG3AfHpxbaRFMx
-         i0pi7T9KkEP5bs77sH2MxDFwi5JKgblraMYJofSuhxPn0kNS78WFb/3JD8UYEL18w4YO
-         3sgQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719480006; x=1720084806;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=0ETjSuiBGz/j4BOauY9/duKhstSMiIxQ7/voA5iz9AU=;
-        b=NtIoU5Vu5X7rxk0o756+HaTMJTyi1o1RAfioFew1G4VHkio8C9nXQmBM6eBFZl4P2i
-         1bLevg5Ww9ao/UW29srz2A+Tn81+wbDZhKVGM7wNLf27JpZx0YHEEBEtnsho1UnDgZlA
-         sFRVJepCxRIDJ3QZ0mEcmsJpJqp8hJVOfz/Rwh0+fyk9+7TXlZgmRh9CjvdE+UqkcMoH
-         Et6fBMHbZMyjU/ovM+WHS5IIlOsl9DEgOcvpKUAbsKkegTjb6BLKvqJbCQ120XBQ+Ach
-         Ei7Cg+LwqW3uAP00jjyzGkqkAhuWi13VZRPRlwVt5FnBEqBZjxGo0kPdmqbqmJZVNdM+
-         o+Eg==
-X-Forwarded-Encrypted: i=1; AJvYcCV4u+Q07RxPVQknGhucQpOyPEabDISM0476jMTfKz6PXSqNTmXwvWevEHqgu06u9CBsEgOiVNp3hY+nsGDx1ktvjpegtYj3Tditu7BVcqk/xCphuPj4Jmok6jsBm3dlwHQi3A==
-X-Gm-Message-State: AOJu0YzHL2vKsFj8h77E6FEQE8UsB889ExWQxy4t91owsd+588T63Yrl
-	Rev+FczipreFjit9ns3UcTFzU23MPBJx8bkmEbjPYmbjhX2bunMm
-X-Google-Smtp-Source: AGHT+IHjdpOyBFenniHMqFqVjKBOxZ6X632fUyQ+pzaAHZpGbnal/OLNuPUb9R3gz3dfs+8P38opOA==
-X-Received: by 2002:a05:6808:13c4:b0:3d5:5e88:d125 with SMTP id 5614622812f47-3d55e88d5edmr6027659b6e.21.1719480006568;
-        Thu, 27 Jun 2024 02:20:06 -0700 (PDT)
-Received: from [0.0.0.0] (97.64.23.41.16clouds.com. [97.64.23.41])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-72745d074adsm617213a12.36.2024.06.27.02.20.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 27 Jun 2024 02:20:06 -0700 (PDT)
-Message-ID: <54f5df88-ca0a-40dd-92ef-3f64c170ba55@gmail.com>
-Date: Thu, 27 Jun 2024 17:19:57 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DcLrFg2i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1525C2BBFC;
+	Thu, 27 Jun 2024 09:48:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719481700;
+	bh=bsV+8CFhTqU6lJ9Mn2nop7dlaesXLAMgRe/XWIxlbN4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=DcLrFg2iS0bxFCFe2J8h+yGXC+7t0BrGnN/3PPh9bFihen/BoDLAuqQAgQJL2smby
+	 Kkruy2v4r571+8bA7C5ik2HlSpkvwQvXFfw5WWit/8bWRUu7ZNKFIkQd8VttTLn4jY
+	 YBjjWSb7rkh/BDSZO/fCBpK4xdmb7sJmzb0H3fKDBLdBDKzPRBpCZhOHERKHyrf8ti
+	 uw/DiNFvAzR4y56SnW8hiBA+gogIN8KaC8rXlY87yeLurPRKcMg3N2OpvgDZCG1YGi
+	 evwiB1vYgXW3n/6Ok25xjpoWqHUPp4hiSsrojp4ho7KEme7RNNkd3aWalDrXPECgNF
+	 6L4HBuZQnsgow==
+Date: Thu, 27 Jun 2024 11:48:14 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 12/13] ata,scsi: Remove useless ata_sas_port_alloc()
+ wrapper
+Message-ID: <Zn01XqPMga6aG1nL@ryzen.lan>
+References: <20240626180031.4050226-15-cassel@kernel.org>
+ <20240626180031.4050226-27-cassel@kernel.org>
+ <83125236-7d07-4b62-b86a-5a70f3ca578e@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ufs: core: fix ufshcd_abort_all racing issue
-Content-Language: en-US
-To: Bart Van Assche <bvanassche@acm.org>,
- =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "jejb@linux.ibm.com" <jejb@linux.ibm.com>
-Cc: "linux-mediatek@lists.infradead.org"
- <linux-mediatek@lists.infradead.org>,
- =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= <jiajie.hao@mediatek.com>,
- =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
- =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= <eddie.huang@mediatek.com>,
- =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= <Alice.Chao@mediatek.com>,
- wsd_upstream <wsd_upstream@mediatek.com>,
- "stable@vger.kernel.org" <stable@vger.kernel.org>,
- =?UTF-8?B?TGluIEd1aSAo5qGC5p6XKQ==?= <Lin.Gui@mediatek.com>,
- =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <Chun-hung.Wu@mediatek.com>,
- =?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>,
- "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
- =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
- <Chaotian.Jing@mediatek.com>, =?UTF-8?B?UG93ZW4gS2FvICjpq5jkvK/mlocp?=
- <Powen.Kao@mediatek.com>, =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?=
- <Naomi.Chu@mediatek.com>, =?UTF-8?B?UWlsaW4gVGFuICjosK3pupLpup8p?=
- <Qilin.Tan@mediatek.com>
-References: <20240624121158.21354-1-peter.wang@mediatek.com>
- <eec48c95-aa1c-4f07-a1f3-fdc3e124f30e@acm.org>
- <4c4d10aae216e0b6925445b0317e55a3dd0ce629.camel@mediatek.com>
- <795a89bb-12eb-4ac8-93df-6ec5173fb679@acm.org>
- <0e1e0c0a4303f53a50a95aa0672311015ddeaee2.camel@mediatek.com>
- <b5ee63bb-4db9-47fc-9b09-1fde0447f6f8@acm.org>
-From: Wenchao Hao <haowenchao22@gmail.com>
-In-Reply-To: <b5ee63bb-4db9-47fc-9b09-1fde0447f6f8@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <83125236-7d07-4b62-b86a-5a70f3ca578e@kernel.org>
 
-On 2024/6/27 1:13, Bart Van Assche wrote:
-> On 6/25/24 8:56 PM, Peter Wang (王信友) wrote:
->> Sorry I have not explain root-cause clearly.
->> I will add more clear root-cause analyze next version.
->>
->> And it is not an invalid pointer is passed to blk_mq_unique_tag(),
->> I means blk_mq_unique_tag function try access null pointer.
->> It is differnt and cause misunderstanding.
->>
->> The null pinter blk_mq_unique_tag try access is:
->> rq->mq_hctx(NULL)->queue_num.
->>
->> The racing flow is:
->>
->> Thread A
->> ufshcd_err_handler                    step 1
->>     ufshcd_cmd_inflight(true)            step 3
->>     ufshcd_mcq_req_to_hwq
->>         blk_mq_unique_tag
->>             rq->mq_hctx->queue_num        step 5
->>
->> Thread B               
->> ufs_mtk_mcq_intr(cq complete ISR)            step 2
->>     scsi_done                       
->>         ...
->>         __blk_mq_free_request
->>             rq->mq_hctx = NULL;        step 4
+On Thu, Jun 27, 2024 at 10:46:11AM +0900, Damien Le Moal wrote:
+> On 6/27/24 03:00, Niklas Cassel wrote:
+> > Now when the ap->print_id assignment has moved to ata_port_alloc(),
+> > we can remove the useless ata_sas_port_alloc() wrapper.
 > 
-> How about surrounding the blk_mq_unique_tag() call with
-> atomic_inc_not_zero(&req->ref) / atomic_dec(&req->ref)?
+> Same comment as for patch 4: not a fan.
 > 
-
-Hi Bart,
-
-A small wonder, then should we append __blk_mq_free_request() if
-req->ref decreased to 0 like following?
-
-        if (req_ref_put_and_test(rq))
-                __blk_mq_free_request(rq);
- 
-
-> Thanks,
+> But I do like the fact that the port additional initialization is moved to
+> libsas, as that code is completely dependent on libsas.
 > 
-> Bart.
+> What about this cleanup, which would make more sense:
 > 
+> 1) Keep the ata_sas_xxx() exported symbols, even if they are trivial.
+> 2) Move all these wrappers to a new file (libata-sas.c) and make this file
+> compilation dependend on CONFIG_SATA_HOST and CONFIG_SCSI_SAS_LIBSAS.
+> 
+> That has the benefit of keeping all the libsas wrappers together and to reduce
+> the binary size for configs that do not enable libsas.
+> 
+> Thoughts ?
 
+I think that:
+
+1) These wrappers are like a virus... they are completely useless and
+   having them will force us to keep adding new wrappers, e.g. we would
+   need to add a new wrapper for ata_port_free().
+
+2) Having a wrapper that simply does an EXPORT_SYMBOL is not only useless,
+it also makes it harder to know that the function (called by the wrapper)
+is actually non-internal, since the function will be defined in the libata
+internal header in drivers/ata/libata.h, so you might think that it is an
+internal function... but it isn't, since there is a wrapper exporting it :)
+
+3) The naming prefix argument does not hold up.
+   If you do a:
+
+$ git grep -E "\s+ata_\S+\(" v6.10-rc5 drivers/scsi/libsas/
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_qc_complete(qc);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, (u8 *)&task->ata_task.fis);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        task->ata_task.use_ncq = ata_is_ncq(qc->tf.protocol);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        task->ata_task.dma_xfer = ata_is_dma(qc->tf.protocol);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_tf_from_fis(dev->sata_dev.fis, &qc->result_tf);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_tf_from_fis(dev->frame_rcvd, &tf);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        return ata_dev_classify(&tf);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ret = ata_wait_after_reset(link, deadline, check_ready);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_std_sched_eh(ap);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_host_init(ata_host, ha->dev, &sas_sata_ops);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ap = ata_sas_port_alloc(ata_host, &sata_port_info, shost);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        rc = ata_sas_tport_add(ata_host->dev, ap);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_host_put(ata_host);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:                ata_port_probe(dev->sata_dev.ap);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:                ata_sas_port_suspend(sata->ap);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:                ata_sas_port_resume(sata->ap);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_scsi_port_error_handler(ha->shost, ap);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:                        ata_scsi_cmd_error_handler(shost, ap, &sata_q);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:                         * action will be ata_port_error_handler()
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_port_schedule_eh(ap);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_port_wait_eh(ap);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        ata_link_abort(link);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        rc = ata_ncq_prio_supported(ddev->sata_dev.ap, sdev, &supported);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        rc = ata_ncq_prio_enabled(ddev->sata_dev.ap, sdev, &enabled);
+v6.10-rc5:drivers/scsi/libsas/sas_ata.c:        rc = ata_ncq_prio_enable(ddev->sata_dev.ap, sdev, enable);
+v6.10-rc5:drivers/scsi/libsas/sas_discover.c:           ata_sas_tport_delete(dev->sata_dev.ap);
+v6.10-rc5:drivers/scsi/libsas/sas_discover.c:           ata_host_put(dev->sata_dev.ata_host);
+v6.10-rc5:drivers/scsi/libsas/sas_scsi_host.c:          res = ata_sas_queuecmd(cmd, dev->sata_dev.ap);
+v6.10-rc5:drivers/scsi/libsas/sas_scsi_host.c:          return ata_sas_scsi_ioctl(dev->sata_dev.ap, sdev, cmd, arg);
+v6.10-rc5:drivers/scsi/libsas/sas_scsi_host.c:          ata_sas_device_configure(scsi_dev, lim, dev->sata_dev.ap);
+v6.10-rc5:drivers/scsi/libsas/sas_scsi_host.c:          return ata_change_queue_depth(dev->sata_dev.ap, sdev, depth);
+
+You will see that far from all libata functions have ata_sas_*() wrapper,
+so all the ata_* functions that do not not have ata_sas_*() wrapper are
+already exported using EXPORT_SYMBOL_GPL(), i.e.:
+
+ata_qc_complete(), ata_tf_to_fis(), ata_tf_from_fis(), ata_dev_classify(),
+ata_wait_after_reset(), ata_std_sched_eh(), ata_host_init(), ata_host_put(),
+ata_port_probe(), ata_scsi_port_error_handler(), ata_scsi_cmd_error_handler(),
+ata_port_schedule_eh(), ata_link_abort(), ata_ncq_prio_supported(),
+ata_ncq_prio_enabled(), ata_ncq_prio_enable(), ata_change_queue_depth()
+are already exported using EXPORT_SYMBOL_GPL().
+
+(And yes, some of these exported functions not used by any libata SATA driver
+(compiled as a separate .ko) other than libsas.)
+
+
+TL;DR: I really think that we should kill these wrappers.
+
+
+Kind regards,
+Niklas
