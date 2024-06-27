@@ -1,85 +1,127 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF554195FEF;
-	Thu, 27 Jun 2024 14:40:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 430F113C821;
+	Thu, 27 Jun 2024 15:07:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719499248; cv=none; b=gwIQmji75GANb+QWl+rqQ51960JPLAvjKYwzfFQSd6EmJifv27WyEMbGqIHNxcfOEzZZ5yauhJeOAfadjJi7JK1fHqtkyYpHN7oWnJ+bK9r8VOSiVsB/bfCor0hHBaXnyKs0IOb6NBXzdDLjxLa3LwFkoczXHguhgJVYu24htUw=
+	t=1719500869; cv=none; b=FyUHVrVQJ7JAA68C5AXkHfYFpDmV/T707i2mNDpKk/jhIUHvpjfD77/tH3k9jYM7pfA7/1DGQVqJmEZRRxyVMzy1tQWpzS7MIfOm0PEKnLkIC2ySf24y+GKbTnOhZEiuV6dlGCox/cZE3Ux1yeALUc3zN7dP0XC2zNKiOTl2zTI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719499248; c=relaxed/simple;
-	bh=NINHKb8FIlfx0+6iUSTr7gqb1HKbB0I//0MT6wTMqC4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aSLQsfpE6IC7wMT6FEQ7egQmOYdYQhqNfhrqQHCm+Ea6amZOPeFxHg5CnAMzY/y1mEuHtMDv/XN67aymiMHzBLdvM15kJIZllrVdTH22OZCaMSsCXTUnTSM7OUYBWC/aHb5uzrieiqF6RHU74ctmElWAnrN/2K8OqoGd6CF7LsQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=RaqP7sub; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1719500869; c=relaxed/simple;
+	bh=iPGyYVEYCxQbDpNFvt8LbPKKMxJ1ovyU3eqvdr40Mz0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pZIew6Kmnz0c0dm6ASschZ/DJWDpuFxBF3hA4wYJGmY3cbPo1B9gsLLMy0QFIjpl3BPuwcninHxXnK8ZlTHU2nolJJso3qRZgYZRu+e8IXB3MAe8ZNEKonTQ8rULdRwHR1V3TbwL6jq/JkTnzCSqKCBLk89jsiRJ5xRx1MMPSDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZavGyM6g; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="RaqP7sub"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W91T96QtBz6Cnv3g;
-	Thu, 27 Jun 2024 14:40:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1719499241; x=1722091242; bh=EtC9symTgPYYUVBekMSlXR6p
-	wPouqgrhp8HSMzezDo0=; b=RaqP7subSlMFc+IkU0X1XvD9cfLdfswMVeAPEjzC
-	YkjNyS2P1/JvQrhpaGuTFaMato2kPl7g+t/EE/2EX2Ece8rp/VWQ9+1qWbYkqUpH
-	8n/Mfw0+YZOtJYD2lqoaAKMu7Q7+1WIKwCycNujOLspp2tpztoHoBfvHgWSYhZtM
-	sfd8IMwxoQTOclUfLex6vJwugFOsO2aZXttghjgoa3jw9senLZmn0S0rS81WQ6hZ
-	K/XGF5StqK1BwaNPYch3waSlw1VNPrhTgHeeX7FzuZDwOePzlbKMBBQCjmzJjWGS
-	7WBh8JuSZTr+zFzgXBFxitbSsLSkgy/yckTRRd5NW9iFJQ==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 5oERRB6kd5Jj; Thu, 27 Jun 2024 14:40:41 +0000 (UTC)
-Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W91T23Ww1z6Cnv3Q;
-	Thu, 27 Jun 2024 14:40:38 +0000 (UTC)
-Message-ID: <fcec8bfa-8e9b-41e8-a3df-99b3bf72a060@acm.org>
-Date: Thu, 27 Jun 2024 07:40:35 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZavGyM6g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D816C2BBFC;
+	Thu, 27 Jun 2024 15:07:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719500869;
+	bh=iPGyYVEYCxQbDpNFvt8LbPKKMxJ1ovyU3eqvdr40Mz0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZavGyM6gY2bhbA3p6HzDF3dKcHOjlhSXPNyO7g9/h+AtPvP6bFin4CzkFq5AFpcyO
+	 aqZ3iWS3FDsuw+cLTWvo3LEHN4qXzwY39+Wgaj0gFcf/XlvYpd8pK59Uo0B9wdfGeA
+	 z6YI20wSzxsr+I8T8JQMynAPDwEYjfAJ9Xmqycp2z633m3KYr8qTtHivob2zkDKy1i
+	 SQdOOIgacXlcJ9sr/nLbmNOk859ABj5JRo0WPygOq1QXMCoW0m6pduNOYnHMS8DXnz
+	 NXj1pprVy5hQAN/yi0pJUdc4M+BDCLNoTEWDBN+P5GwHHrYJM0yzna9DRlKzcDoKBP
+	 nfegGQmzGbnKA==
+Date: Thu, 27 Jun 2024 17:07:43 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>,
+	Colin Ian King <colin.i.king@gmail.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>,
+	linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 00/13] ata,libsas: Assign the unique id used for
+ printing earlier
+Message-ID: <Zn2AP6J_RGlYExw9@ryzen.lan>
+References: <20240626180031.4050226-15-cassel@kernel.org>
+ <14397cfc-c73a-4046-aca8-527b065f65d9@oracle.com>
+ <Zn1bxRbAml-HjWKb@ryzen.lan>
+ <cd7ff1a0-c73b-4638-be51-2a6d9de4b324@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: get drivers out of setting queue flags
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: Ming Lei <ming.lei@redhat.com>, "Md. Haris Iqbal"
- <haris.iqbal@ionos.com>, Jack Wang <jinpu.wang@ionos.com>,
- Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Sathya Prakash <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
- linux-block@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
- linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
-References: <20240627124926.512662-1-hch@lst.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240627124926.512662-1-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cd7ff1a0-c73b-4638-be51-2a6d9de4b324@oracle.com>
 
-On 6/27/24 5:49 AM, Christoph Hellwig wrote:
-> now that driver features have been moved out of the queue flags,
-> the abuses where drivers set random internal queue flags stand out
-> even more.  This series fixes them up.
+On Thu, Jun 27, 2024 at 01:54:34PM +0100, John Garry wrote:
+> On 27/06/2024 13:32, Niklas Cassel wrote:
+> > On Thu, Jun 27, 2024 at 01:26:04PM +0100, John Garry wrote:
+> > > On 26/06/2024 19:00, Niklas Cassel wrote:
+> > > > Hello all,
+> > > > 
+> > > > This patch series was orginally meant to simply assign a unique id used
+> > > > for printing earlier (ap->print_id), but has since grown to also include
+> > > > cleanups related to ata_port_alloc() (since ap->print_id is now assigned
+> > > > in ata_port_alloc()).
+> > > > 
+> > > 
+> > > There's no real problem statement wrt print_id, telling how and why things
+> > > are like they are, how it is a problem, and how it is improved in this
+> > > series.
+> > 
+> > You are right, it is missing from the cover-letter.
+> > 
+> > It was there in v1:
+> > https://lore.kernel.org/linux-ide/20240618153537.2687621-7-cassel@kernel.org/
+> > 
+> > """
+> > This series moves the assignment of ap->print_id, which is used as a
+> > unique id for each port, earlier, such that we can use the ata_port_*
+> > print functions even before the ata_host has been registered.
+> > """
+> 
+> OK, fine.
+> 
+> I see code which checks vs ap->print_id, like:
+> 
+> static void ata_force_link_limits(struct ata_link *link)
+> {
+> ...
+> 		if (fe->port != -1 && fe->port != link->ap->print_id)
+> 			continue;
+> 
+> 
+> Is this all ok to deal with this print_id assignment change?
+> 
+> To me, it seems natural to assign a valid print_id from the alloc time, so I
+> can't help but wonder it was done the current way.
 
-For the entire series:
+ap->print_id was assigned after calling ata_host_register(), because libata
+allowed a driver that did not know how many ports it had, to initially call
+ata_alloc_host() with a big number of ports, and then reduce the host->n_ports
+variable once it knew the actually number of ports, before calling
+ata_host_register(), which would then free the "excess" ports.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+This feature has actually never been used by and driver, and I remove support
+for this in this series:
+https://lore.kernel.org/linux-ide/20240626180031.4050226-22-cassel@kernel.org/
 
-Thanks!
 
-Bart.
+However, you do raise a good point...
+ap->print_id is just supposed to be used for printing, but it appears that
+ata_force_link_limits() and some other ata_force_*() functions make use of
+it for other things... sigh...
+
+Hopefully I can just change them from:
+	if (fe->port != -1 && fe->port != link->ap->print_id)
+to
+	if (fe->port != -1)
+
+but I will need to look in to this further...
+
+Thank you for noticing this (ab)use of print_id!
+
+
+Kind regards,
+Niklas
