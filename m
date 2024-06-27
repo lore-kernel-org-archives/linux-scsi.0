@@ -1,63 +1,58 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41832171B6
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Jun 2024 04:21:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFF751804F;
+	Thu, 27 Jun 2024 04:54:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719462112; cv=none; b=G2NJp/W+/Tj6YJhIYPdLF3eBmLKLfpphavLFg+1ym+yGtEH3IiO9vZzocSdt0WFsjbHxfjQAE25Ajdh8x4K4vZupAehJw3FJUIvqrmp6bftaxJqdsUYYi/A+6Thv71H2xk+tDyU055cIBFBLgrG6O8ZWh4AKLfI7F6M+MMZO4Uw=
+	t=1719464050; cv=none; b=nSUO7vVMCtp3HWrJmzGt0/KEvtPktLA8aPn3g5TG5LbnzAhchdYiYkj0IzfjNF0TPTuoJNcsdbWLzCJQuHxPNQ35Qd0GXhryLaCsStQo+z9SP2KoqPcSVZ8kNDWFG2g3aIkzbTK+ViI4/P3rJeO48vyCFvKSlU73xglzEuW9K4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719462112; c=relaxed/simple;
-	bh=5UegQqWQsCrlAFZT2NeTlWfU49EK6/ZeYOTRJo3viL0=;
+	s=arc-20240116; t=1719464050; c=relaxed/simple;
+	bh=LlK0F5tTrVM/p36ygp+Mt3SiuwhdpQbrsHRgx3HnkSg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VDcAP/eb4JQfbY4wBWj+1yvgcZvfF0Q+RFi4dORcSRx/fRSquRpTj78KYl/+bhU1zR1H40CKczrs7jKHD4Z+mfeOJR9Afnp6Zwmr9RcZoMEkGJw2aHB1mJNxGBrGg70dkOA3u78djeug7IptDTu70dvib/JyxTKdxhg1nkNEedk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EPwY/0nF; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=jp9aRjc6bvVU7htso8INg4pjbpHLdL+us9mGkJjZnw4skL10P4+a7h8xuWf8D3+egiHhjtmZDEwKATxHoTHBnOJXa/j6T3Skly6CKJcEuRectplFZ07Zg3O821ZqomuBBnnnesTEGGW79CYhAGlrLjlERjnoPM5pVPB9OoMRNqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=uzcGPgco; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EPwY/0nF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1719462111; x=1750998111;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=5UegQqWQsCrlAFZT2NeTlWfU49EK6/ZeYOTRJo3viL0=;
-  b=EPwY/0nF28UEDuhNFNrldzPCzW4U6iE1+HJ1WJOLh5wJhGtMq+mXCEjU
-   qBbsvC7z8TqevVJyD/Svc5mfiFHHtZS8oiR2mp9JlZUnm7O2KQsTYjA0k
-   ACA/6i/nadcgCstu5OT9mZhhrK5/CtV4nkQtsewiYO7b+2U+ePqBHX6yy
-   72MV7I3D8cUKSRk6l76Lnm4/rWftrcNDjcSsAR7ruXBHXHbd9MTQs54N0
-   0hG6VWiLYMCSjXVPONWtrakcaRJK3XMnSvRaIMX2kr3idNqewiqd8Wim1
-   +gBYOO3tXTR6wPgJv5Ltkcd8FOTnRdfScX2Bbd24ECfyAp+d45xn2lhpk
-   w==;
-X-CSE-ConnectionGUID: s9+61gcWSnq9tCan4WPo6w==
-X-CSE-MsgGUID: Gk04pi1+R+6Rj7NO2LGZfQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11115"; a="19456522"
-X-IronPort-AV: E=Sophos;i="6.08,269,1712646000"; 
-   d="scan'208";a="19456522"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jun 2024 21:21:50 -0700
-X-CSE-ConnectionGUID: 3f6O4e0xRcqxP/Fdxfs1Ww==
-X-CSE-MsgGUID: CbtD1KXbS0mjvkCjDEReyw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,269,1712646000"; 
-   d="scan'208";a="49406920"
-Received: from lkp-server01.sh.intel.com (HELO 68891e0c336b) ([10.239.97.150])
-  by orviesa004.jf.intel.com with ESMTP; 26 Jun 2024 21:21:49 -0700
-Received: from kbuild by 68891e0c336b with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sMgdm-000Fsc-28;
-	Thu, 27 Jun 2024 04:21:46 +0000
-Date: Thu, 27 Jun 2024 12:21:03 +0800
-From: kernel test robot <lkp@intel.com>
-To: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>,
-	linux-scsi@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev,
-	Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
-Subject: Re: [PATCH 14/14] scsi: st: Used max() for buffer size in
- setup_buffering and Simplified transfer calculations in st_read,
- append_to_buffer, and from_buffer
-Message-ID: <202406271136.iI4L3oPV-lkp@intel.com>
-References: <20240626101342.1440049-15-prabhakar.pujeri@gmail.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uzcGPgco"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=/fzE2yWElnzU7XRficmyE9tfka6WnF3hLS24PJakxl4=; b=uzcGPgconVlUhJahqA4o0y4rP2
+	YDkQfdW0m0w2u8N8BRaxbwBTF1twTy53aPn4xBPj/AfBrb0WxTzWJH8wD6oR43WzK3V70db4qXtWY
+	0IIZI+2mDcUbXHX9Anl5SaO8PZqQtBzUCFGUjAdJ7ExnkxJgGk1kclJpDyt1NPlhJH6k1SD2KJv1r
+	Y/aWT38dOOUqqw6WO2aC6zoYnYWj+859j2ETzBrnZoTEbtU0f3blIKoRcb5DyUh8Hm74KMCv5zkZg
+	gzrN7RVyue7JLzZcBns6ISX0k4yPom7ZauQBJlbkxj+mZ51Z3qG2KMut3g2uFWJoxlvZFyPWvc2cp
+	37dKQmlg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sMh93-00000009D8d-4Br2;
+	Thu, 27 Jun 2024 04:54:06 +0000
+Date: Wed, 26 Jun 2024 21:54:05 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Oliver Sang <oliver.sang@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>, oe-lkp@lists.linux.dev,
+	lkp@intel.com, Jens Axboe <axboe@kernel.dk>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
+	linux-block@vger.kernel.org, linux-um@lists.infradead.org,
+	drbd-dev@lists.linbit.com, nbd@other.debian.org,
+	linuxppc-dev@lists.ozlabs.org, virtualization@lists.linux.dev,
+	xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
+	nvdimm@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, ying.huang@intel.com,
+	feng.tang@intel.com, fengwei.yin@intel.com
+Subject: Re: [axboe-block:for-next] [block]  1122c0c1cc:  aim7.jobs-per-min
+ 22.6% improvement
+Message-ID: <ZnzwbYSaIlT0SIEy@infradead.org>
+References: <202406250948.e0044f1d-oliver.sang@intel.com>
+ <ZnqGf49cvy6W-xWf@infradead.org>
+ <Znt4qTr/NdeIPyNp@xsang-OptiPlex-9020>
+ <ZnuNhkH26nZi8fz6@infradead.org>
+ <ZnzP+nUrk8+9bANK@xsang-OptiPlex-9020>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -66,82 +61,27 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240626101342.1440049-15-prabhakar.pujeri@gmail.com>
+In-Reply-To: <ZnzP+nUrk8+9bANK@xsang-OptiPlex-9020>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi Prabhakar,
+On Thu, Jun 27, 2024 at 10:35:38AM +0800, Oliver Sang wrote:
+> 
+> I failed to apply patch in your previous reply to 1122c0c1cc or current tip
+> of axboe-block/for-next:
+> c1440ed442a58 (axboe-block/for-next) Merge branch 'for-6.11/block' into for-next
 
-kernel test robot noticed the following build errors:
+That already includes it.
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.10-rc5 next-20240626]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> 
+> but it's ok to apply upon next:
+> * 0fc4bfab2cd45 (tag: next-20240625) Add linux-next specific files for 20240625
+> 
+> I've already started the test based on this applyment.
+> is the expectation that patch should not introduce performance change comparing
+> to 0fc4bfab2cd45?
+> 
+> or if this applyment is not ok, please just give me guidance. Thanks!
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Prabhakar-Pujeri/scsi-advansys-Simplified-memcpy-length-calculation-in-adv_build_req/20240626-231800
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20240626101342.1440049-15-prabhakar.pujeri%40gmail.com
-patch subject: [PATCH 14/14] scsi: st: Used max() for buffer size in setup_buffering and Simplified transfer calculations in st_read, append_to_buffer, and from_buffer
-config: arm-randconfig-001-20240627 (https://download.01.org/0day-ci/archive/20240627/202406271136.iI4L3oPV-lkp@intel.com/config)
-compiler: arm-linux-gnueabi-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240627/202406271136.iI4L3oPV-lkp@intel.com/reproduce)
+The expectation is that the latest block branch (and thus linux-next)
+doesn't see this performance change.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202406271136.iI4L3oPV-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from include/linux/container_of.h:5,
-                    from include/linux/list.h:5,
-                    from include/linux/module.h:12,
-                    from drivers/scsi/st.c:23:
-   drivers/scsi/st.c: In function 'st_read':
->> include/linux/build_bug.h:78:41: error: static assertion failed: "min(STbp->buffer_bytes, count - total) signedness error, fix types or consider umin() before min_t()"
-      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
-         |                                         ^~~~~~~~~~~~~~
-   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
-      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
-         |                                  ^~~~~~~~~~~~~~~
-   include/linux/minmax.h:51:9: note: in expansion of macro 'static_assert'
-      51 |         static_assert(__types_ok(x, y),                 \
-         |         ^~~~~~~~~~~~~
-   include/linux/minmax.h:58:17: note: in expansion of macro '__cmp_once'
-      58 |                 __cmp_once(op, x, y, __UNIQUE_ID(__x), __UNIQUE_ID(__y)))
-         |                 ^~~~~~~~~~
-   include/linux/minmax.h:85:25: note: in expansion of macro '__careful_cmp'
-      85 | #define min(x, y)       __careful_cmp(min, x, y)
-         |                         ^~~~~~~~~~~~~
-   drivers/scsi/st.c:2189:36: note: in expansion of macro 'min'
-    2189 |                         transfer = min(STbp->buffer_bytes, count - total);
-         |                                    ^~~
-
-
-vim +78 include/linux/build_bug.h
-
-bc6245e5efd70c Ian Abbott       2017-07-10  60  
-6bab69c65013be Rasmus Villemoes 2019-03-07  61  /**
-6bab69c65013be Rasmus Villemoes 2019-03-07  62   * static_assert - check integer constant expression at build time
-6bab69c65013be Rasmus Villemoes 2019-03-07  63   *
-6bab69c65013be Rasmus Villemoes 2019-03-07  64   * static_assert() is a wrapper for the C11 _Static_assert, with a
-6bab69c65013be Rasmus Villemoes 2019-03-07  65   * little macro magic to make the message optional (defaulting to the
-6bab69c65013be Rasmus Villemoes 2019-03-07  66   * stringification of the tested expression).
-6bab69c65013be Rasmus Villemoes 2019-03-07  67   *
-6bab69c65013be Rasmus Villemoes 2019-03-07  68   * Contrary to BUILD_BUG_ON(), static_assert() can be used at global
-6bab69c65013be Rasmus Villemoes 2019-03-07  69   * scope, but requires the expression to be an integer constant
-6bab69c65013be Rasmus Villemoes 2019-03-07  70   * expression (i.e., it is not enough that __builtin_constant_p() is
-6bab69c65013be Rasmus Villemoes 2019-03-07  71   * true for expr).
-6bab69c65013be Rasmus Villemoes 2019-03-07  72   *
-6bab69c65013be Rasmus Villemoes 2019-03-07  73   * Also note that BUILD_BUG_ON() fails the build if the condition is
-6bab69c65013be Rasmus Villemoes 2019-03-07  74   * true, while static_assert() fails the build if the expression is
-6bab69c65013be Rasmus Villemoes 2019-03-07  75   * false.
-6bab69c65013be Rasmus Villemoes 2019-03-07  76   */
-6bab69c65013be Rasmus Villemoes 2019-03-07  77  #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
-6bab69c65013be Rasmus Villemoes 2019-03-07 @78  #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
-6bab69c65013be Rasmus Villemoes 2019-03-07  79  
-07a368b3f55a79 Maxim Levitsky   2022-10-25  80  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
