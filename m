@@ -1,146 +1,205 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D134218C3B
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Jun 2024 05:06:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43F3029CA;
+	Thu, 27 Jun 2024 06:24:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719464782; cv=none; b=OlfFc8+LFZJgkvOUdBurIyVgQytnYqjf5WBTqAnRuumL3ayIMR8rOwgj+8o8A0oOW1E3t2/pG3YRDy/l+G7DXdeMgNUg14g+T5cac/zMHi4/24LryNc1m5sPqZuwxIA8vud5/6f5TpaXfT8A3IlFLW/V0rC+tAgtU9uULj44xPI=
+	t=1719469490; cv=none; b=SfM/RxYSmDe0qQ0ga2QVp5+AbNL+ZGL/Kw14h+xyokJ1HobHFdFTXFc1Wfp+w6ZM/YwLuGtCpho+WQJUIjaxxvQYKor0S4m/yOrvUEky5u2CGlACbTI9rh4MHRZqaWbBeeor4r+rCtAokzafCjirmiHAZN/EBD1bCTr1ERqKLGc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719464782; c=relaxed/simple;
-	bh=BPsrokCsoYTuLFksoFsNmomVcZpRoUD7LdyKbtsEufU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z3dy4OiZdETuI2AmWwXnnlZmVxK9O7P5bH5+Ss2C6tpxkAdEZVVyj4/rqwcleKV30LfxotTD4CDcNI81L9LoObEQTjDRu3dUGoDk9x7b64rZl9vqTzUjaea1JF8HQZeF519Z8wC0B8x7PkAFEhnTJdSDpERn5fl8ptlXayIDOwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OAPhe1KH; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1719469490; c=relaxed/simple;
+	bh=/ofAYEMxGwYvf5eduXOa6r5AeVczbP3mJGCc+wBYp+M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MQ4eCnO02p+6rDisbT1zPmn3SJVJUYS3N+Zz1nF5LhHj60j7MLhTgpCiH3CtUy5/l3+gUQBmn30MOMtUlpebGKEqd29qA132g/uV6aIG8aLqb97znCm4Cf0m76ERjCH10Rp9F4bkJx9n+b1AttnoGz0ZzXyhYJEPrYxczJ/nm2k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=fo0eZyxT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=S4qRE43L; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=fo0eZyxT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=S4qRE43L; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OAPhe1KH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1719464780; x=1751000780;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=BPsrokCsoYTuLFksoFsNmomVcZpRoUD7LdyKbtsEufU=;
-  b=OAPhe1KHuX1DQbx/LdqUwxdOsYBhToSGFGJB+Jg2UIwukliSPsIpO679
-   avziMf0iptwSnuFsBrAuxjyPO2Zmf26Cio6+tWelZntt/z3HFTOkeodqj
-   uhjMKTbCBI8f0mPTQGH47rHUdpG672d8NdNfTJbyQnC1w7czLpu7jhE0L
-   TNBidPk9Ch+0RYmoyKj/JeZNueMA02BlYZ58gqUJofNFBYRk2hfYuw0DX
-   g24yKHXwzuCt1bTXVCI+bDqbulR+o/i6pBHmPn2YkbaT/xkqJZLUDZT17
-   Gbp9MH1qYN5kwWtqKC6vAnvt+w2tzJZCtoNFn7WZFBXEvq+xSMufTa5Ak
-   A==;
-X-CSE-ConnectionGUID: gS1KMlu8SOuYwla1c1mBsQ==
-X-CSE-MsgGUID: I5rAcIdzThupVYUUN2vDUA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11115"; a="20391194"
-X-IronPort-AV: E=Sophos;i="6.08,269,1712646000"; 
-   d="scan'208";a="20391194"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Jun 2024 22:06:20 -0700
-X-CSE-ConnectionGUID: U9MxD4AHQ/KjvfsKnFBiFA==
-X-CSE-MsgGUID: MqLVHRnTQl+JqjirHjGFAQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,269,1712646000"; 
-   d="scan'208";a="44085927"
-Received: from lkp-server01.sh.intel.com (HELO 68891e0c336b) ([10.239.97.150])
-  by fmviesa006.fm.intel.com with ESMTP; 26 Jun 2024 22:06:19 -0700
-Received: from kbuild by 68891e0c336b with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sMhKr-000Fua-0L;
-	Thu, 27 Jun 2024 05:06:17 +0000
-Date: Thu, 27 Jun 2024 13:05:48 +0800
-From: kernel test robot <lkp@intel.com>
-To: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>,
-	linux-scsi@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev,
-	Prabhakar Pujeri <prabhakar.pujeri@gmail.com>
-Subject: Re: [PATCH 04/14] scsi: cxlflash: Replaced ternary operation in
- write_same16 with min()
-Message-ID: <202406271203.uuqA8eNf-lkp@intel.com>
-References: <20240626101342.1440049-5-prabhakar.pujeri@gmail.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="fo0eZyxT";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="S4qRE43L";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="fo0eZyxT";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="S4qRE43L"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 6C27A21B6B;
+	Thu, 27 Jun 2024 06:24:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1719469486; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/hyAF5FlhW0/dqXdH1OMQysWsgAlPzbiMhnj+y9abqc=;
+	b=fo0eZyxTQAGbFNYsZGuhg37oUWd1SBEvJQ/7jISGTY6hlOXiB1eVv2nmhXlWj6p3R1Ir8O
+	dITQYsRGliUdUgtlEDQT9L0VBHA5P+lZlGb6q6glu2KDhbk4U67xxxTXMPqTN4RYn8VXSI
+	6exX/UXEaW1hBalYVTq3l4KaI9GU9KY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1719469486;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/hyAF5FlhW0/dqXdH1OMQysWsgAlPzbiMhnj+y9abqc=;
+	b=S4qRE43LnfUGaS5VWdZduqmgSqX4WDCaJlSVnRmzKYbxEE5plgEn4t7NWHFRTiqIs5nNit
+	5LaVTLWx1Ikq3VCg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1719469486; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/hyAF5FlhW0/dqXdH1OMQysWsgAlPzbiMhnj+y9abqc=;
+	b=fo0eZyxTQAGbFNYsZGuhg37oUWd1SBEvJQ/7jISGTY6hlOXiB1eVv2nmhXlWj6p3R1Ir8O
+	dITQYsRGliUdUgtlEDQT9L0VBHA5P+lZlGb6q6glu2KDhbk4U67xxxTXMPqTN4RYn8VXSI
+	6exX/UXEaW1hBalYVTq3l4KaI9GU9KY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1719469486;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/hyAF5FlhW0/dqXdH1OMQysWsgAlPzbiMhnj+y9abqc=;
+	b=S4qRE43LnfUGaS5VWdZduqmgSqX4WDCaJlSVnRmzKYbxEE5plgEn4t7NWHFRTiqIs5nNit
+	5LaVTLWx1Ikq3VCg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 126E6137DF;
+	Thu, 27 Jun 2024 06:24:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id hIG/Aq4FfWbJZwAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 27 Jun 2024 06:24:46 +0000
+Message-ID: <34beb975-575d-4890-801c-6b4a931c3e88@suse.de>
+Date: Thu, 27 Jun 2024 08:24:41 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240626101342.1440049-5-prabhakar.pujeri@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 01/13] ata: libata-core: Fix null pointer dereference
+ on error
+Content-Language: en-US
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+ Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
+ Jason Yan <yanaijie@huawei.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ stable@vger.kernel.org, linux-ide@vger.kernel.org
+References: <20240626180031.4050226-15-cassel@kernel.org>
+ <20240626180031.4050226-16-cassel@kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240626180031.4050226-16-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.29 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	FREEMAIL_TO(0.00)[kernel.org,gmail.com,garzik.org];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email]
+X-Spam-Flag: NO
+X-Spam-Score: -4.29
+X-Spam-Level: 
 
-Hi Prabhakar,
+On 6/26/24 20:00, Niklas Cassel wrote:
+> If the ata_port_alloc() call in ata_host_alloc() fails,
+> ata_host_release() will get called.
+> 
+> However, the code in ata_host_release() tries to free ata_port struct
+> members unconditionally, which can lead to the following:
+> 
+> BUG: unable to handle page fault for address: 0000000000003990
+> PGD 0 P4D 0
+> Oops: Oops: 0000 [#1] PREEMPT SMP NOPTI
+> CPU: 10 PID: 594 Comm: (udev-worker) Not tainted 6.10.0-rc5 #44
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-2.fc40 04/01/2014
+> RIP: 0010:ata_host_release.cold+0x2f/0x6e [libata]
+> Code: e4 4d 63 f4 44 89 e2 48 c7 c6 90 ad 32 c0 48 c7 c7 d0 70 33 c0 49 83 c6 0e 41
+> RSP: 0018:ffffc90000ebb968 EFLAGS: 00010246
+> RAX: 0000000000000041 RBX: ffff88810fb52e78 RCX: 0000000000000000
+> RDX: 0000000000000000 RSI: ffff88813b3218c0 RDI: ffff88813b3218c0
+> RBP: ffff88810fb52e40 R08: 0000000000000000 R09: 6c65725f74736f68
+> R10: ffffc90000ebb738 R11: 73692033203a746e R12: 0000000000000004
+> R13: 0000000000000000 R14: 0000000000000011 R15: 0000000000000006
+> FS:  00007f6cc55b9980(0000) GS:ffff88813b300000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000000003990 CR3: 00000001122a2000 CR4: 0000000000750ef0
+> PKRU: 55555554
+> Call Trace:
+>   <TASK>
+>   ? __die_body.cold+0x19/0x27
+>   ? page_fault_oops+0x15a/0x2f0
+>   ? exc_page_fault+0x7e/0x180
+>   ? asm_exc_page_fault+0x26/0x30
+>   ? ata_host_release.cold+0x2f/0x6e [libata]
+>   ? ata_host_release.cold+0x2f/0x6e [libata]
+>   release_nodes+0x35/0xb0
+>   devres_release_group+0x113/0x140
+>   ata_host_alloc+0xed/0x120 [libata]
+>   ata_host_alloc_pinfo+0x14/0xa0 [libata]
+>   ahci_init_one+0x6c9/0xd20 [ahci]
+> 
+> Do not access ata_port struct members unconditionally.
+> 
+> Fixes: 633273a3ed1c ("libata-pmp: hook PMP support and enable it")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>   drivers/ata/libata-core.c | 10 ++++++----
+>   1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index e1bf8a19b3c8..88e32f638f33 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5518,10 +5518,12 @@ static void ata_host_release(struct kref *kref)
+>   	for (i = 0; i < host->n_ports; i++) {
+>   		struct ata_port *ap = host->ports[i];
+>   
+> -		kfree(ap->pmp_link);
+> -		kfree(ap->slave_link);
+> -		kfree(ap->ncq_sense_buf);
+> -		kfree(ap);
+> +		if (ap) {
+> +			kfree(ap->pmp_link);
+> +			kfree(ap->slave_link);
+> +			kfree(ap->ncq_sense_buf);
+> +			kfree(ap);
+> +		}
+>   		host->ports[i] = NULL;
+>   	}
+>   	kfree(host);
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-kernel test robot noticed the following build errors:
+Cheers,
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.10-rc5 next-20240626]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Prabhakar-Pujeri/scsi-advansys-Simplified-memcpy-length-calculation-in-adv_build_req/20240626-231800
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20240626101342.1440049-5-prabhakar.pujeri%40gmail.com
-patch subject: [PATCH 04/14] scsi: cxlflash: Replaced ternary operation in write_same16 with min()
-config: powerpc-powernv_defconfig (https://download.01.org/0day-ci/archive/20240627/202406271203.uuqA8eNf-lkp@intel.com/config)
-compiler: powerpc64le-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240627/202406271203.uuqA8eNf-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202406271203.uuqA8eNf-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from include/linux/container_of.h:5,
-                    from include/linux/kernel.h:22,
-                    from include/linux/interrupt.h:6,
-                    from drivers/scsi/cxlflash/vlun.c:11:
-   drivers/scsi/cxlflash/vlun.c: In function 'write_same16':
->> include/linux/build_bug.h:78:41: error: static assertion failed: "min(ws_limit, left) signedness error, fix types or consider umin() before min_t()"
-      78 | #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
-         |                                         ^~~~~~~~~~~~~~
-   include/linux/build_bug.h:77:34: note: in expansion of macro '__static_assert'
-      77 | #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
-         |                                  ^~~~~~~~~~~~~~~
-   include/linux/minmax.h:51:9: note: in expansion of macro 'static_assert'
-      51 |         static_assert(__types_ok(x, y),                 \
-         |         ^~~~~~~~~~~~~
-   include/linux/minmax.h:58:17: note: in expansion of macro '__cmp_once'
-      58 |                 __cmp_once(op, x, y, __UNIQUE_ID(__x), __UNIQUE_ID(__y)))
-         |                 ^~~~~~~~~~
-   include/linux/minmax.h:85:25: note: in expansion of macro '__careful_cmp'
-      85 | #define min(x, y)       __careful_cmp(min, x, y)
-         |                         ^~~~~~~~~~~~~
-   drivers/scsi/cxlflash/vlun.c:448:36: note: in expansion of macro 'min'
-     448 |                 put_unaligned_be32(min(ws_limit, left),
-         |                                    ^~~
-
-
-vim +78 include/linux/build_bug.h
-
-bc6245e5efd70c Ian Abbott       2017-07-10  60  
-6bab69c65013be Rasmus Villemoes 2019-03-07  61  /**
-6bab69c65013be Rasmus Villemoes 2019-03-07  62   * static_assert - check integer constant expression at build time
-6bab69c65013be Rasmus Villemoes 2019-03-07  63   *
-6bab69c65013be Rasmus Villemoes 2019-03-07  64   * static_assert() is a wrapper for the C11 _Static_assert, with a
-6bab69c65013be Rasmus Villemoes 2019-03-07  65   * little macro magic to make the message optional (defaulting to the
-6bab69c65013be Rasmus Villemoes 2019-03-07  66   * stringification of the tested expression).
-6bab69c65013be Rasmus Villemoes 2019-03-07  67   *
-6bab69c65013be Rasmus Villemoes 2019-03-07  68   * Contrary to BUILD_BUG_ON(), static_assert() can be used at global
-6bab69c65013be Rasmus Villemoes 2019-03-07  69   * scope, but requires the expression to be an integer constant
-6bab69c65013be Rasmus Villemoes 2019-03-07  70   * expression (i.e., it is not enough that __builtin_constant_p() is
-6bab69c65013be Rasmus Villemoes 2019-03-07  71   * true for expr).
-6bab69c65013be Rasmus Villemoes 2019-03-07  72   *
-6bab69c65013be Rasmus Villemoes 2019-03-07  73   * Also note that BUILD_BUG_ON() fails the build if the condition is
-6bab69c65013be Rasmus Villemoes 2019-03-07  74   * true, while static_assert() fails the build if the expression is
-6bab69c65013be Rasmus Villemoes 2019-03-07  75   * false.
-6bab69c65013be Rasmus Villemoes 2019-03-07  76   */
-6bab69c65013be Rasmus Villemoes 2019-03-07  77  #define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
-6bab69c65013be Rasmus Villemoes 2019-03-07 @78  #define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
-6bab69c65013be Rasmus Villemoes 2019-03-07  79  
-07a368b3f55a79 Maxim Levitsky   2022-10-25  80  
-
+Hannes
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+
