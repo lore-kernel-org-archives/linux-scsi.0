@@ -1,48 +1,33 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B98E180A7C
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Jun 2024 21:54:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19B811B285;
+	Thu, 27 Jun 2024 00:56:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719438888; cv=none; b=pj9DDCL7hOi6+BTUXGn2Sdxrf8AjdWDYwGfyVBUzqynoXzhCpFB19t7w4xQPrm0WqMfBMF4u1oGERXUWvufrJ9WTcSmfjWBF+Urs2u4UW2BP/9AShVCF32ciOIcrGZW10jvAkLqkR8I0Ze/ler3jlrHvISu/7todnuDgAkkPopg=
+	t=1719449766; cv=none; b=mtWHYxqtA2PeawfhSVWrARmYS7FuaFCuusuNkw8ZHLjMz+833xX1aDXY8qEvgZMWV6vT34I0PKgIfMrYq4efccVwYfjQbDP8og+n2q8QKuffjhYXTpOAesd5zTZT1uJGp2y7sq16AZWeG8ThJLHpRM7tu+k4ju87lhSPdnf7xsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719438888; c=relaxed/simple;
-	bh=7x9svGEV/+fJmxBqhLW1s1wGHZ7R34jG/b0YdBWZJ4E=;
+	s=arc-20240116; t=1719449766; c=relaxed/simple;
+	bh=UICLH5sFImH9tQWSBxG/F2lJcuSf9UKpImB+14UEmmM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NRwXUE669wI21Ld164EXLEo+IE2vsZFHzzPFNFkQVoW+0GQQstatgZLjszvwyUr20sQ7jubcdULrNjahGW6UJpAsUgC/2xol3zL3cg3c41awg9mE9yih/W1Dcgi9iVgUjMLtXUBCwntXC6C9/UBsnb3IPFJByCxQkJVaNAiIdws=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=oYpfr3TZ; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=hBAfgM+9043NPlcmXyulkqZV0Kpo3onaLnuDRgs33RcohQAtuhdN89l17WPs6oCjbDZkb6OArWWYKHE7aay4ldap8pk9Z2PgSSO6WjoJDr7tRvIt61GqaI04R+1SJkK/muGUGoV5KiEQxKfOh/htYVwjS2LL2x0LKLBRnDwT688=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UGkpfnYb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="oYpfr3TZ"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W8b8H64XNz6Cnk9W;
-	Wed, 26 Jun 2024 21:54:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1719438876; x=1722030877; bh=/qGCeRm42cC1+PCPalKdoJC7
-	cGQ77xKvlvoYAua0cqo=; b=oYpfr3TZeKtbrk9JSIwQRNv5+H5qTRD3AelxiJpv
-	Jne3mnv2P+bX8SsC8SG8SyalqDQB0u1hrb+FyxWUUsfVUfaU7PAVJWKUrGkC/Dzh
-	RWE+/oBQtepdSTt6hLp5nfQBizkhGgOv3ih2aujxUltxASoPu6AeuMJzsVMNFpEH
-	n5OXSs0E6pKKnbS0bPD4ZdnhbeudnuBChc6gxfgJyQ+kCxI5xrRXP6hoKQLu0Zbn
-	ohayYnOrlCkX/KrRthPTOMUekIrWK1RAjDQL2UCn9+9Negq+ienb//NCUs0bZFTf
-	Li0QeMkEjKXz42eXbB7F0rZy8EvJvyRdDeD942uWZn5TJA==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id od1eaqEjwj0z; Wed, 26 Jun 2024 21:54:36 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W8b8C6ZdCz6Cnk9V;
-	Wed, 26 Jun 2024 21:54:35 +0000 (UTC)
-Message-ID: <edd84a4b-839f-44a6-b7fb-9e875a2598f9@acm.org>
-Date: Wed, 26 Jun 2024 14:54:34 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UGkpfnYb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1953C32789;
+	Thu, 27 Jun 2024 00:56:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719449765;
+	bh=UICLH5sFImH9tQWSBxG/F2lJcuSf9UKpImB+14UEmmM=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=UGkpfnYb4m8b1F2BuycZ2ME4nffdEqQZ5k2uZ7jefztUKUYLrJ40QDJ2WM8rctQCX
+	 teSmfprKPS/EqpvqB2MYF63GLWb72O/IrpNeFlUx+qygdDybyX/DlwJfgnW/M3BiJl
+	 QpECoDwvpy1V1gVmcWZJ2zGGdMV/i87YDoYugtBsemVPw7hdfTCH/TSTUVt01nu8Tg
+	 jY7w6xssV2ZIzcBMLOA5qip9NOuFrEzcdLDWb4FG2M8ZpzrD04lZKvLARXJMriVoFy
+	 jaHvxh+LoV1Ns194aNkz+VEBKNg9Vrt9lOVduTMJLhDU6EEZV314C7sCP/Al3xCwDi
+	 FFm6Yhn7/YHmQ==
+Message-ID: <a6e86954-4ab7-4bb0-b78d-56f44556318e@kernel.org>
+Date: Thu, 27 Jun 2024 09:56:02 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,61 +35,99 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 8/8] scsi: ufs: Check for completion from the timeout
- handler
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "beanhuo@micron.com" <beanhuo@micron.com>,
- "ahalaney@redhat.com" <ahalaney@redhat.com>,
- "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>
-References: <20240617210844.337476-1-bvanassche@acm.org>
- <20240617210844.337476-9-bvanassche@acm.org>
- <054eef8dec43e51aec02997ad3573250b357bee2.camel@mediatek.com>
- <1f7dc4e4-2e8f-4a2e-afbb-8dad52a19a41@acm.org>
- <d6d329a3d822cb34c8a5bee36403c59ceab015a0.camel@mediatek.com>
- <671bb45f-22a1-4f81-ae93-65bd5a86f374@acm.org>
- <167b737c45ff3c9b9422933d45b807929d0b83de.camel@mediatek.com>
- <b302c1ae-2cbb-4906-81f2-285c2b913109@acm.org>
- <5bcf25bb6f0d3338febf350716df8590a41af852.camel@mediatek.com>
+Subject: Re: [bug report] scsi: SATA devices missing after FLR is triggered
+ during HBA suspended
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Yihang Li <liyihang9@huawei.com>, cassel@kernel.org,
+ James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+ john.g.garry@oracle.com, yanaijie@huawei.com, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linuxarm@huawei.com, chenxiang66@hisilicon.com,
+ prime.zeng@huawei.com, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+References: <20240626151546.GA1466906@bhelgaas>
+From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <5bcf25bb6f0d3338febf350716df8590a41af852.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Organization: Western Digital Research
+In-Reply-To: <20240626151546.GA1466906@bhelgaas>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On 6/25/24 8:54 PM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> And why ufshcd_queuecommand got null pointer? which pointer is null?
+On 6/27/24 00:15, Bjorn Helgaas wrote:
+>>> Yes, I am talking about the PCI "Function Level Reset"
+>>>
+>>>> FLR and disk/controller suspend execution timing are unrelated. FLR can be
+>>>> triggered at any time through sysfs. So please give details here. Why is FLR
+>>>> done when the system is being suspended ?
+>>>
+>>> Yes, it is because FLR can be triggered at any time that we are testing the
+>>> reliability of executing FLR commands after disk/controller suspended.
+>>
+>> "can be triggered" ? FLR is not a random asynchronous event. It is an action
+>> that is *issued* by a user with sys admin rights. And such users can do a lot
+>> of things that can break a machine...
+>>
+>> I fail to see the point of doing a function reset while the device is
+>> suspended. But granted, I guess the device should comeback up in such case,
+>> though I would like to hear what the PCI guys have to say about this.
+>>
+>> Bjorn,
+>>
+>> Is reseting a suspended PCI device something that should be/is supported ?
+> 
+> I doubt it.  The PCI core should be preserving all the generic PCI
+> state across suspend/resume.  The driver should only need to
+> save/restore device-specific things the PCI core doesn't know about.
+> 
+> A reset will clear out most state, and the driver doesn't know the
+> reset happened, so it will expect most device state to have been
+> preserved.
 
-I'm not sure. faddr2line reports that the crash happens in the source
-code line with the following assignment: "sg_dma_len(sg) =3D sg->length".
-That seems weird to me. If the sg pointer would be invalid then an
-earlier dereference of the 'sg' pointer should already have triggered a
-crash. The entire function is as follows:
+That is what I suspected. However, checking the code, reset_store() in
+pci-sysfs.c does:
 
-int dma_direct_map_sg(struct device *dev, struct scatterlist *sgl, int=20
-nents,
-		enum dma_data_direction dir, unsigned long attrs)
-{
-	int i;
-	struct scatterlist *sg;
+	pm_runtime_get_sync(dev);
+	result = pci_reset_function(pdev);
+	pm_runtime_put(dev);
 
-	for_each_sg(sgl, sg, nents, i) {
-		sg->dma_address =3D dma_direct_map_page(dev, sg_page(sg),
-				sg->offset, sg->length, dir, attrs);
-		if (sg->dma_address =3D=3D DMA_MAPPING_ERROR)
-			goto out_unmap;
-		sg_dma_len(sg) =3D sg->length;
-	}
+and pm_runtime_get_sync() calls __pm_runtime_resume() which will resume a
+suspended device.
 
-	return nents;
+So while I still think it is not a good idea to reset a suspended device, things
+should still work as execpected and not cause any problem with the device state,
+right ?
 
-out_unmap:
-	dma_direct_unmap_sg(dev, sgl, i, dir, attrs | DMA_ATTR_SKIP_CPU_SYNC);
-	return -EIO;
-}
+Yihang,
 
-Bart.
+I think that the issue at hand here is that once the reset finishes, the
+controller goes back to suspended state, and I suspect that is because of the
+"auto" setting for its power/control. That triggers because the FLR is done
+after the controller resumed but *before* the revalidation of the drives
+connected to it completes. So FLR makes the revalidation fail (scsi
+scan/revalidation is asynchronous...).
+
+This seems to me to be the expected behavior for what you are doing and I fail
+to see how that ever worked correctly, even before 0c76106cb975 and 626b13f015e0.
+
+Could you try this: add a call to msleep(30000) at the end of _resume_v3_hw(). I.e.:
+
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index feda9b54b443..54224568d749 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -5104,6 +5104,8 @@ static int _resume_v3_hw(struct device *device)
+
+        dev_warn(dev, "end of resuming controller\n");
+
++       msleep(30000);
++
+        return 0;
+ }
+
+To see if it makes any difference to actually wait for the connected disks to
+resume correctly before doing the FLR.	
+
+-- 
+Damien Le Moal
+Western Digital Research
+
