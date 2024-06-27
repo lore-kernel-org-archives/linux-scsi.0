@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19B811B285;
-	Thu, 27 Jun 2024 00:56:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13A9D28F7;
+	Thu, 27 Jun 2024 01:00:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719449766; cv=none; b=mtWHYxqtA2PeawfhSVWrARmYS7FuaFCuusuNkw8ZHLjMz+833xX1aDXY8qEvgZMWV6vT34I0PKgIfMrYq4efccVwYfjQbDP8og+n2q8QKuffjhYXTpOAesd5zTZT1uJGp2y7sq16AZWeG8ThJLHpRM7tu+k4ju87lhSPdnf7xsg=
+	t=1719450023; cv=none; b=aIXwuzrM3J9Hhm8AmERns2Gd1370cs1kEJcMk/hF92C/yt3dd/QyrlMLQVwMtFm4PVDRYu904awr/Z5ARlnndgqy8Ckl93daYv7TuXKpZdTzSW4PCT0/57vOHEeyo/bSEHEnNcbnrLB3yRuTtzvkmJvdM8L0lQMJOSaSCDSTi4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719449766; c=relaxed/simple;
-	bh=UICLH5sFImH9tQWSBxG/F2lJcuSf9UKpImB+14UEmmM=;
+	s=arc-20240116; t=1719450023; c=relaxed/simple;
+	bh=ibtuksqqHRbw6xYn2I+QgP7GZTfnwLjkGVNyxPhsDBE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hBAfgM+9043NPlcmXyulkqZV0Kpo3onaLnuDRgs33RcohQAtuhdN89l17WPs6oCjbDZkb6OArWWYKHE7aay4ldap8pk9Z2PgSSO6WjoJDr7tRvIt61GqaI04R+1SJkK/muGUGoV5KiEQxKfOh/htYVwjS2LL2x0LKLBRnDwT688=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UGkpfnYb; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=E5WdX/nq12P8DoYlSY7hHDaAhv4Ye2ETE+RqnjmZalJ9Y/yvbn7Lr41biQ5i2KioqEL6u6ga99Rig2wXshSBVpiGbKyNvblQ86A+G7oYvmOMZ+L95oZiNjCBVj4wf5Czs7ahGQvOqCynFP3GdXEADmeccxFg4KHtpbGg1ckN780=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XquNmEqR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UGkpfnYb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1953C32789;
-	Thu, 27 Jun 2024 00:56:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XquNmEqR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 584C0C116B1;
+	Thu, 27 Jun 2024 01:00:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719449765;
-	bh=UICLH5sFImH9tQWSBxG/F2lJcuSf9UKpImB+14UEmmM=;
+	s=k20201202; t=1719450022;
+	bh=ibtuksqqHRbw6xYn2I+QgP7GZTfnwLjkGVNyxPhsDBE=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=UGkpfnYb4m8b1F2BuycZ2ME4nffdEqQZ5k2uZ7jefztUKUYLrJ40QDJ2WM8rctQCX
-	 teSmfprKPS/EqpvqB2MYF63GLWb72O/IrpNeFlUx+qygdDybyX/DlwJfgnW/M3BiJl
-	 QpECoDwvpy1V1gVmcWZJ2zGGdMV/i87YDoYugtBsemVPw7hdfTCH/TSTUVt01nu8Tg
-	 jY7w6xssV2ZIzcBMLOA5qip9NOuFrEzcdLDWb4FG2M8ZpzrD04lZKvLARXJMriVoFy
-	 jaHvxh+LoV1Ns194aNkz+VEBKNg9Vrt9lOVduTMJLhDU6EEZV314C7sCP/Al3xCwDi
-	 FFm6Yhn7/YHmQ==
-Message-ID: <a6e86954-4ab7-4bb0-b78d-56f44556318e@kernel.org>
-Date: Thu, 27 Jun 2024 09:56:02 +0900
+	b=XquNmEqRetw+AivJGWZ0WN6xjRna28dOyjIIa+8OCOwxiyMQ7Ul3IAnsU9wE5Vu60
+	 hA/8fkTmZi3sSf7QOJ6hPEcl6ZT0SfEjqlb2sOr1M77LRJGaUEWb8re3pBoju+crd0
+	 YCcnP4MIOgWVK8Yam/r6yLwXzLU4AkzWxjPTb7T5Zm6vH9iGnF0IFpFcGfjPeJj1ul
+	 2JJnWPIc4tAFrHwkHEcPBxsa3eB3ZMkWEyxpNN1k3+EtBFDpShHMn0gAYx5ws2Loa5
+	 UXWcMLHCs6xRGcxqau16AHNWE6zBTGVSddlvev/XKQTaqJgPaTchwD5wTK3bHjWAli
+	 QODR63Rlolw+Q==
+Message-ID: <650615d5-031e-4a60-a452-3e541dc5f771@kernel.org>
+Date: Thu, 27 Jun 2024 10:00:20 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,97 +35,112 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [bug report] scsi: SATA devices missing after FLR is triggered
- during HBA suspended
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Yihang Li <liyihang9@huawei.com>, cassel@kernel.org,
- James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
- john.g.garry@oracle.com, yanaijie@huawei.com, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, linuxarm@huawei.com, chenxiang66@hisilicon.com,
- prime.zeng@huawei.com, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-References: <20240626151546.GA1466906@bhelgaas>
+Subject: Re: [PATCH v2 01/13] ata: libata-core: Fix null pointer dereference
+ on error
+To: Niklas Cassel <cassel@kernel.org>, Tejun Heo <htejun@gmail.com>,
+ Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
+ Jason Yan <yanaijie@huawei.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ stable@vger.kernel.org, linux-ide@vger.kernel.org
+References: <20240626180031.4050226-15-cassel@kernel.org>
+ <20240626180031.4050226-16-cassel@kernel.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20240626151546.GA1466906@bhelgaas>
+In-Reply-To: <20240626180031.4050226-16-cassel@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 6/27/24 00:15, Bjorn Helgaas wrote:
->>> Yes, I am talking about the PCI "Function Level Reset"
->>>
->>>> FLR and disk/controller suspend execution timing are unrelated. FLR can be
->>>> triggered at any time through sysfs. So please give details here. Why is FLR
->>>> done when the system is being suspended ?
->>>
->>> Yes, it is because FLR can be triggered at any time that we are testing the
->>> reliability of executing FLR commands after disk/controller suspended.
->>
->> "can be triggered" ? FLR is not a random asynchronous event. It is an action
->> that is *issued* by a user with sys admin rights. And such users can do a lot
->> of things that can break a machine...
->>
->> I fail to see the point of doing a function reset while the device is
->> suspended. But granted, I guess the device should comeback up in such case,
->> though I would like to hear what the PCI guys have to say about this.
->>
->> Bjorn,
->>
->> Is reseting a suspended PCI device something that should be/is supported ?
+On 6/27/24 03:00, Niklas Cassel wrote:
+> If the ata_port_alloc() call in ata_host_alloc() fails,
+> ata_host_release() will get called.
 > 
-> I doubt it.  The PCI core should be preserving all the generic PCI
-> state across suspend/resume.  The driver should only need to
-> save/restore device-specific things the PCI core doesn't know about.
+> However, the code in ata_host_release() tries to free ata_port struct
+> members unconditionally, which can lead to the following:
 > 
-> A reset will clear out most state, and the driver doesn't know the
-> reset happened, so it will expect most device state to have been
-> preserved.
+> BUG: unable to handle page fault for address: 0000000000003990
+> PGD 0 P4D 0
+> Oops: Oops: 0000 [#1] PREEMPT SMP NOPTI
+> CPU: 10 PID: 594 Comm: (udev-worker) Not tainted 6.10.0-rc5 #44
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-2.fc40 04/01/2014
+> RIP: 0010:ata_host_release.cold+0x2f/0x6e [libata]
+> Code: e4 4d 63 f4 44 89 e2 48 c7 c6 90 ad 32 c0 48 c7 c7 d0 70 33 c0 49 83 c6 0e 41
+> RSP: 0018:ffffc90000ebb968 EFLAGS: 00010246
+> RAX: 0000000000000041 RBX: ffff88810fb52e78 RCX: 0000000000000000
+> RDX: 0000000000000000 RSI: ffff88813b3218c0 RDI: ffff88813b3218c0
+> RBP: ffff88810fb52e40 R08: 0000000000000000 R09: 6c65725f74736f68
+> R10: ffffc90000ebb738 R11: 73692033203a746e R12: 0000000000000004
+> R13: 0000000000000000 R14: 0000000000000011 R15: 0000000000000006
+> FS:  00007f6cc55b9980(0000) GS:ffff88813b300000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000000003990 CR3: 00000001122a2000 CR4: 0000000000750ef0
+> PKRU: 55555554
+> Call Trace:
+>  <TASK>
+>  ? __die_body.cold+0x19/0x27
+>  ? page_fault_oops+0x15a/0x2f0
+>  ? exc_page_fault+0x7e/0x180
+>  ? asm_exc_page_fault+0x26/0x30
+>  ? ata_host_release.cold+0x2f/0x6e [libata]
+>  ? ata_host_release.cold+0x2f/0x6e [libata]
+>  release_nodes+0x35/0xb0
+>  devres_release_group+0x113/0x140
+>  ata_host_alloc+0xed/0x120 [libata]
+>  ata_host_alloc_pinfo+0x14/0xa0 [libata]
+>  ahci_init_one+0x6c9/0xd20 [ahci]
+> 
+> Do not access ata_port struct members unconditionally.
+> 
+> Fixes: 633273a3ed1c ("libata-pmp: hook PMP support and enable it")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-That is what I suspected. However, checking the code, reset_store() in
-pci-sysfs.c does:
+Looks good, with a nit below. This should be queued as soon as possible as a
+6.10 fix patch.
 
-	pm_runtime_get_sync(dev);
-	result = pci_reset_function(pdev);
-	pm_runtime_put(dev);
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
-and pm_runtime_get_sync() calls __pm_runtime_resume() which will resume a
-suspended device.
+> ---
+>  drivers/ata/libata-core.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index e1bf8a19b3c8..88e32f638f33 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5518,10 +5518,12 @@ static void ata_host_release(struct kref *kref)
+>  	for (i = 0; i < host->n_ports; i++) {
+>  		struct ata_port *ap = host->ports[i];
+>  
+> -		kfree(ap->pmp_link);
+> -		kfree(ap->slave_link);
+> -		kfree(ap->ncq_sense_buf);
+> -		kfree(ap);
+> +		if (ap) {
+> +			kfree(ap->pmp_link);
+> +			kfree(ap->slave_link);
+> +			kfree(ap->ncq_sense_buf);
+> +			kfree(ap);
+> +		}
+>  		host->ports[i] = NULL;
 
-So while I still think it is not a good idea to reset a suspended device, things
-should still work as execpected and not cause any problem with the device state,
-right ?
+Nit: this line can go inside the if as well. Or even better: reverse the if
+condition and continue to ignore NULL ports.
 
-Yihang,
+	for (i = 0; i < host->n_ports; i++) {
+  		struct ata_port *ap = host->ports[i];
 
-I think that the issue at hand here is that once the reset finishes, the
-controller goes back to suspended state, and I suspect that is because of the
-"auto" setting for its power/control. That triggers because the FLR is done
-after the controller resumed but *before* the revalidation of the drives
-connected to it completes. So FLR makes the revalidation fail (scsi
-scan/revalidation is asynchronous...).
+		if (!ap)
+			continue;
 
-This seems to me to be the expected behavior for what you are doing and I fail
-to see how that ever worked correctly, even before 0c76106cb975 and 626b13f015e0.
-
-Could you try this: add a call to msleep(30000) at the end of _resume_v3_hw(). I.e.:
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index feda9b54b443..54224568d749 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -5104,6 +5104,8 @@ static int _resume_v3_hw(struct device *device)
-
-        dev_warn(dev, "end of resuming controller\n");
-
-+       msleep(30000);
-+
-        return 0;
- }
-
-To see if it makes any difference to actually wait for the connected disks to
-resume correctly before doing the FLR.	
+		kfree(ap->pmp_link);
+		kfree(ap->slave_link);
+		kfree(ap->ncq_sense_buf);
+		kfree(ap);
+		host->ports[i] = NULL;
+	}
 
 -- 
 Damien Le Moal
