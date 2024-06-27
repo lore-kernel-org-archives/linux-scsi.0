@@ -1,115 +1,74 @@
-Received: from mail-yw1-f201.google.com (mail-yw1-f201.google.com [209.85.128.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B167196D9A
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Jun 2024 16:00:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB71B15278F
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Jun 2024 16:20:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719504048; cv=none; b=ppBaY1pYUhOCM1W5nuu3zPw3/CNpa24344aEXYpDXHXFOvAQ+Uz3R9WoPoWpgIZwvom6nm3UHKbyOPFboMURbbQKf/EyVgeKydloAigwO4rP2hJUVGYX8k4YyQopI5xwxdfMZMxB0pvyY7Qu0eFHwn+2nyONh+0r0MJb0Cyo67Q=
+	t=1719505230; cv=none; b=L9p1kHQZqNRhbZ/hGanrSLib+6aEWxyNOLeSU3pTVte79WfqQzoVDhU0rpNzSfkWYMuIxnjVokE2fkAlGZ2gRbSFXhnv6ZSqmmU5ql1P1yo3HYW8nzopv89NvpDMxEEFroPKngbIJcqwBK2SjQrhVFHJyJ0kP390bvx2DhykViw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719504048; c=relaxed/simple;
-	bh=PjFxXhZBQ3YOoiLUbSULnSeyZ0B4n/ydFPCYsgkc8zo=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=KeR3+4os1KumCYkMhUKIibK4dWYW0J8ebCneH1fycJAL6mYFiSWXusFuH+OtW4q97QhN2Rycpw9g6oqDy48cN4mI9MWy5enicKh00Ohe0uVdwRfxrR8tPw+wzlpGLjUuWldWBc1QqD0c9y+nnARRh/+NRnXDYnQFi3VLKAmNzrU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MOlWlj+v; arc=none smtp.client-ip=209.85.128.201
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com
+	s=arc-20240116; t=1719505230; c=relaxed/simple;
+	bh=KX6X90NMHTC9jQPKt0zNqn71YESGkl7FfiQewvyPBb4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=i8Rxx2fMHMfkExbGF94ikxGfzrwLbcBmDK1PQzkfrFD3g6w6lFlIdqAY0WjcgpX4BA+wsjqvVdch9E50qCqnbqmAJg4fza6rrYQw59iIc5NStyjBovOHyEM4pgz1b8DpJNchy/0hPVBUUhz51Wkl325HyvEfmMa4n+lzLOrHb70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=MT8F25Xb; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MOlWlj+v"
-Received: by mail-yw1-f201.google.com with SMTP id 00721157ae682-64530966cd7so90879047b3.3
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Jun 2024 09:00:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1719504045; x=1720108845; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wBmflmuG6b3QD/JJZqnH7ANZPZOxKvJMgQxIVX2Hods=;
-        b=MOlWlj+vuZM/yO66VsaRHz2NPjKhDUxYl7A1MQ/udGGBEbI4DE1bpXg+H5snQ9ooHm
-         +N+TtrWoA92Mdy3mNU48pQy28K+sF5fndaC+CVN9IygFKdq+HoixuMhH44iX5/+bxfWR
-         9usaHmbTJIVawf3Zr/NhEMm0JDyKNSBIHxrmvYf3mtf/R0i0KaeH9MJBTFxA2SdMZMc8
-         klvKJ+bsZprVi/uT//X8qOrsQjeCSlH5rqByVEQKJZ3NNUz1DjDII7LbM/k3Blf8IlD1
-         nMhSMIJK/lRWJ+hYg6ov8ME0U3afFrlS5qjnGvmnIx+6jGIz+5iA5ZmyTGjo3ELhbrT6
-         O33Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719504045; x=1720108845;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wBmflmuG6b3QD/JJZqnH7ANZPZOxKvJMgQxIVX2Hods=;
-        b=ofin0db96t6iNfF7yYwkcUQ4tI3QaMDC/W9d3jBkEDALmH37tMbCYcFChr4jea9Ggk
-         lh7Io5qUZWdThlSUXY2w24cR6iig21TzC5CBViKMEcxBbuHmaSnUDq2Hc6w+rfWRpn8e
-         0+SUbAUZj29YvnIte5Q9RcD6s/GSCUYoD9r00IZCL4kCo7vnPBVVJu7crBEabhVkxHiV
-         Ln2Og8sNKwfNKTFDwqC66GPq/e+0q/ayuhDFlNIlkmrY0K0PB0l5TY+GbWTQfY24A/a+
-         UkTcG68WAqTUu9RQ2fnvL6DF7rkZmXCdG9FY1cR+dPAq+mkiZybnaJq+v4hyzn8nyi0D
-         YaPg==
-X-Gm-Message-State: AOJu0Yz1QSV8dHI+RMwVLbgZI5LM/TbyZCVk8N+/T4iQqytkwJTzC0DG
-	lLeEp+WEyHYj4TLH7abalTcR8yNx1hZvbDxzYmSNA17op564fe03LFkYvHbLBsyKcqYI3wxa//m
-	EVTECqZU/cw==
-X-Google-Smtp-Source: AGHT+IHDjNCDNw6QyaA7/gjrlgQDqX4gJ2i7YlTKjmmref9WPz1DVGy8xHki9sjtZsutgW1R4w16b0ZCQJGUng==
-X-Received: from tadamsjr.c.googlers.com ([fda3:e722:ac3:cc00:20:ed76:c0a8:177c])
- (user=tadamsjr job=sendgmr) by 2002:a05:690c:6208:b0:630:28e3:2568 with SMTP
- id 00721157ae682-643aba464a1mr951317b3.3.1719504045006; Thu, 27 Jun 2024
- 09:00:45 -0700 (PDT)
-Date: Thu, 27 Jun 2024 15:59:24 +0000
-In-Reply-To: <20240627155924.2361370-1-tadamsjr@google.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="MT8F25Xb"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4W93h95wCYz6Cnv3g;
+	Thu, 27 Jun 2024 16:20:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1719505224; x=1722097225; bh=KX6X90NMHTC9jQPKt0zNqn71
+	YESGkl7FfiQewvyPBb4=; b=MT8F25XbzSwJ+hzvKhBPmoTJhw13l2y4K/YSMya0
+	D+WzVC9p2WhibgSkOvEvZOaLY/1XQE3i/f3kJnn07GSqCGZhX+y56Mwq/J/2oir+
+	PZ4iviKFNdpAWArl45gpo7hQwqi/KcLfD12F7LJXMZMD/YccAsVzCVCzSbDPyp29
+	m8zXyR42FAs4iivKRKMQlQJRahFdta6ba6gIZNBFfIXVxiJPmOwyrjaa31h/XPBD
+	zaUdcB+gcyoW+7kbiOdl81jG7ZdGH6mhaqn/4oySj71ec6vDg0I2ET6WPt3gqXT4
+	Y7sgml0BjaaQNuun6RUfFF8csUGsnZxjjxi3HZbE+VSDgQ==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id migoWgTNk7jB; Thu, 27 Jun 2024 16:20:24 +0000 (UTC)
+Received: from [100.125.79.228] (unknown [104.132.1.68])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4W93h85Xvzz6Cnv3Q;
+	Thu, 27 Jun 2024 16:20:24 +0000 (UTC)
+Message-ID: <43071cbc-da9b-4fc6-82f0-6ab4aa41bf5b@acm.org>
+Date: Thu, 27 Jun 2024 09:20:23 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20240627155924.2361370-1-tadamsjr@google.com>
-X-Mailer: git-send-email 2.45.2.741.gdbec12cfda-goog
-Message-ID: <20240627155924.2361370-3-tadamsjr@google.com>
-Subject: [PATCH v2 2/2] scsi: pm8001: Update log level when reading config table
-From: TJ Adams <tadamsjr@google.com>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Igor Pylypiv <ipylypiv@google.com>, Terrence Adams <tadamsjr@google.com>, 
-	Jack Wang <jinpu.wang@ionos.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/14] [PATCH] SCSI: Replace ternary operations with
+ min()/max() macros
+To: Prabhakar Pujeri <prabhakar.pujeri@gmail.com>, linux-scsi@vger.kernel.org
+References: <20240626101342.1440049-1-prabhakar.pujeri@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240626101342.1440049-1-prabhakar.pujeri@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Terrence Adams <tadamsjr@google.com>
+On 6/26/24 3:13 AM, Prabhakar Pujeri wrote:
+> The patches have been compiled and tested on an x86_64 system.
+> Physical device testing was conducted for the megaraid_sas and mpi3mr
+> drivers.
 
-Reading the main config table occurs as a part of initialization in
-pm80xx_chip_init(). Because of this it makes more sense to have it be a
-part of the INIT logging.
+Compiled? Really? So why is the kernel test robot complaining?
 
-Signed-off-by: Terrence Adams <tadamsjr@google.com>
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
----
- drivers/scsi/pm8001/pm80xx_hwi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+A script that builds all SCSI drivers is available here:
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index a52ae6841939..8fe886dc5e47 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -568,13 +568,13 @@ static void read_main_config_table(struct pm8001_hba_info *pm8001_ha)
- 	pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version =
- 		pm8001_mr32(address, MAIN_MPI_INACTIVE_FW_VERSION);
- 
--	pm8001_dbg(pm8001_ha, DEV,
-+	pm8001_dbg(pm8001_ha, INIT,
- 		   "Main cfg table: sign:%x interface rev:%x fw_rev:%x\n",
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.signature,
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.interface_rev,
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.firmware_rev);
- 
--	pm8001_dbg(pm8001_ha, DEV,
-+	pm8001_dbg(pm8001_ha, INIT,
- 		   "table offset: gst:%x iq:%x oq:%x int vec:%x phy attr:%x\n",
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.gst_offset,
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.inbound_queue_offset,
-@@ -582,7 +582,7 @@ static void read_main_config_table(struct pm8001_hba_info *pm8001_ha)
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.int_vec_table_offset,
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.phy_attr_table_offset);
- 
--	pm8001_dbg(pm8001_ha, DEV,
-+	pm8001_dbg(pm8001_ha, INIT,
- 		   "Main cfg table; ila rev:%x Inactive fw rev:%x\n",
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.ila_version,
- 		   pm8001_ha->main_cfg_tbl.pm80xx_tbl.inc_fw_version);
--- 
-2.45.2.741.gdbec12cfda-goog
+https://github.com/bvanassche/build-scsi-drivers
 
+Bart.
