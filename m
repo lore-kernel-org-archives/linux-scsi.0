@@ -1,64 +1,66 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 825471CD15
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Jun 2024 17:06:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E199A1CD15;
+	Fri, 28 Jun 2024 17:06:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719594366; cv=none; b=KOYw+aaWycWuMvjSh4ZCAmZnCec3XDreS7D+rLcftJIGLSVmDbc3EJRvnpFuRp5f95VbYBud470KvNRbB0UBA+NVGjE+axsXNuGOWK8/aplKFtH41DAnyuJHcBqvv0Wv6ZR7MntlOQYzl/YEw+otLFCwr1J2rPE9oWJX/RBpy5Y=
+	t=1719594374; cv=none; b=bkBgLuituBg3Wu3GXgs26a8w+BPhTdnWgzahmfZlt6XFKhVGvQtsZsUbmXIWacZeRKD4Aqn7IaQcYxp/pwI9B1zoBPNmiEGn6RDk4zFGw03bye3nEEJ6svcOPOga0FhYyc/Lil8+JRpfwTlK+5GUrtEkZur5w9VPdNkhe7LipUU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719594366; c=relaxed/simple;
-	bh=5lq12J1JAYDsWtjhQDsizdKH3WTVHcLRzHZ73XrM1Xw=;
+	s=arc-20240116; t=1719594374; c=relaxed/simple;
+	bh=Cljtgd/Isf+l3B0F4sdoVRtTN7f2sCDFmMMfEfMfYJE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=NzZS+LYC5UO+P9L/3iH7/AQm8Dh1V+rL7imF2nFQuJ2Dx76uGABbB8u9gJQjji+Ne6QgRKSzDi1M5pntYV1y6k/oiNsoGy3lzJtP1Vu3JEb1xx8URw2ct+bOgQCXLrlOWampMHYNx4sghlVsj4F7skdvGeqotRsrEbTo4/8qtZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FnueQUT5; arc=none smtp.client-ip=209.85.210.179
+	 MIME-Version; b=A+/fJqsGXUqYjeKF2UPZ01uwqfjUKxNfYe1oRg65Jaa/0JBoc4YZuCFBO+mBIiRyjY/OfsVukkAP1oRLJqe0TL2c6Hg5ArZoQIHV0QiVvdac3HBHQAWtYJPEKj9YdPub8O+nIOh196P9p0yfNtdA33BO5vKFpsa5jp8tkt4SIY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RcH/SngH; arc=none smtp.client-ip=209.85.215.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FnueQUT5"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-7068ca5a807so52525b3a.3
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jun 2024 10:06:05 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RcH/SngH"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-6c386a3ac43so131282a12.0;
+        Fri, 28 Jun 2024 10:06:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1719594365; x=1720199165; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1719594372; x=1720199172; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=pBmm7sUowrfiMJzmU75UiXhzErerzQHyId7DyLqnbdo=;
-        b=FnueQUT5yjRxsgsa//nX0Mi9MwQBJ3I4uG4696d/gagVA+CSGdTuLPXrm9s58jWEet
-         e8VORzubHlTHeP5U1sHdT6pEhWRTXYT5MxIeEyXyGMRaz37d4ILR0QpZ31vkpjMTt4ye
-         0UYzble+rBgoj6MxQz2oxNZzSsudm/PNXh4lxNDkw5poJzMnR1o4JIDElweuIb1j8DUP
-         tXXaOU0GoPaya8FQUsKfntuTYvWk2w/MAc4bAog1BtM57LlOEQj78JGL7GNQBEuFqaeO
-         P4FwAUpefy7K48bHa8FrA+yNIf/rvGN208wZcodL8mv1RKh+kQalVE/qjz77ukqhorXq
-         ZL3w==
+        bh=1gIvSZMXVhoGcZvS7xN6Z8l1Ej0EBODeUmgZswcD1Zo=;
+        b=RcH/SngHr4bwCNz9ZLOJPgQ05hc5DXqBHSi/BxLur4QqOlYn1QOwcFymRmJOg+xJ9u
+         o3bqKzs8Q2dQetfO4svKN65cQ56B/+2WIjma+Gm7PZJTI6nXy0w2sHM+DWozFT2NJtR3
+         S5VM00m522xxwfoU2Agn8+QcuQlwsRyvBZmKcGpnxSTOar3hnDUojEc4khZuHhzcNHhT
+         7fgWB/J0b7Xs3dSxgeSbM1CUVsICvG2llJbHDydJXxyjwLxRG6qFSBZsDdM6ahSeASE3
+         Vif4wp4li7SzrOWnmV8uVcLSnT0i6dUOIenGO0gCQ3dxwJqHdY9deQxSjKaKuU7p3CTL
+         cgxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719594365; x=1720199165;
+        d=1e100.net; s=20230601; t=1719594372; x=1720199172;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=pBmm7sUowrfiMJzmU75UiXhzErerzQHyId7DyLqnbdo=;
-        b=kfM8fTVIwsekLwG1e6WJqXTjUGFXRV0sWzH4rkWmG2aJJ4lDF4f6qWSoAjTh7cadrk
-         egKG3wZKtRg08Dbho5rgkb+VF5yXTZoEOUGPAJwy1hqrFP+UyWOLElPWA5GegcSRYCyo
-         9NHbWuq67fLN2bOZWdcWLpUJaJ2owpVoaNpqBhNgltajkJHr6E2jkPUhyH8pp49DWJzn
-         MRn7PxrykXulbxEIy8i5oO36HR7zVyneVS/+eUtKAU7EYBuDxOU50fT65r1YdfjSoTDn
-         tCpEGfh4tPKIYmoIjFwp6tTxIXIeHRe0i/xZXoMXOvLqunrHMqJtD5zjQlicP5EFr+CT
-         c5cQ==
-X-Gm-Message-State: AOJu0Yy3FNqfwVBueA3+/X9e+8CQHnPCFTIuIWxFJ1lxKRmtmESaBNVK
-	VwZgsuz3wqeg91Cd3BzrZVrxjpmo3ETPyGv4eOPTljTBtORlhuOA2gE45g==
-X-Google-Smtp-Source: AGHT+IEpLd3T9Mm6jrVpuhmvlQ+C4oSIgucGtIgldoaVps2lkiEJVmWFfvP3rxzUsxlT8P1AtrvmVQ==
-X-Received: by 2002:a05:6a20:3c94:b0:1bd:289f:2ccb with SMTP id adf61e73a8af0-1bd289f63ecmr11015012637.6.1719594364485;
-        Fri, 28 Jun 2024 10:06:04 -0700 (PDT)
+        bh=1gIvSZMXVhoGcZvS7xN6Z8l1Ej0EBODeUmgZswcD1Zo=;
+        b=l8lAcQxzVRS/+W239MUNEGnp7wOcPUgXxcHO8vPoWRQ9NVjfJZ4sNkj6GUKhzJhp84
+         Wfwza+vOVxsrTZU7Q9WvIUNsCqAsbPHSJVPFvpa/y4E+8N628HiFggJ2P1QR1wThCnAI
+         odjRL7620562tWyjKietkICBz440jt4Li5BA9uxG3dwMDV1hawEbw+6z5mw3QmGv4JBu
+         MPoWiBkR9qvzv4CvWko/Yis6GYYerm81R4D28/DqqfhnQ6RUCP0VuIPdd91oJK6dDA/a
+         nuQxI2PS6GA4vGVlTZtH/rgkjykEDNkx/c95LEQlmmEsQFk7MLg626dC/d1fz1KgqxMW
+         ePBA==
+X-Forwarded-Encrypted: i=1; AJvYcCVpnciFhJ72QVAzxhzx6h1BKzP/WGCDSdrH8lLazyBneJTlksRm2Cc4JtAOaLAtAe72vvCrFw0shnG5+6QdJGKjVRZfGKRB
+X-Gm-Message-State: AOJu0YzGXRcXPZvoHL+QjVT8N59tNCXGrqgFx0JGnZUK3H7g5/E69H2L
+	JRGqpTD2GRYxiXUKoFjlnU5dgS5yugK1B6Lzj7b/VgJWs8LuQPkMLgB6wA==
+X-Google-Smtp-Source: AGHT+IGHw5BYsgW0Inrz0ttKbYVGPKT9eE46X1A1MfpGT80g/5Fhiz8+hURvFuC0dSof0ndxOA9HiQ==
+X-Received: by 2002:a05:6a21:33aa:b0:1be:c3fc:1ccf with SMTP id adf61e73a8af0-1bec3fc1f10mr8465436637.2.1719594371967;
+        Fri, 28 Jun 2024 10:06:11 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-72c6afb8ef1sm1524623a12.40.2024.06.28.10.06.03
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-72c6afb8ef1sm1524623a12.40.2024.06.28.10.06.11
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 28 Jun 2024 10:06:04 -0700 (PDT)
+        Fri, 28 Jun 2024 10:06:11 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
-	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 1/8] lpfc: Cancel ELS WQE instead of issuing abort when SLI port is inactive
-Date: Fri, 28 Jun 2024 10:20:04 -0700
-Message-Id: <20240628172011.25921-2-justintee8345@gmail.com>
+	Justin Tee <justintee8345@gmail.com>,
+	stable@vger.kernel.org
+Subject: [PATCH 2/8] lpfc: Allow DEVICE_RECOVERY mode after RSCN receipt if in PRLI_ISSUE state
+Date: Fri, 28 Jun 2024 10:20:05 -0700
+Message-Id: <20240628172011.25921-3-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20240628172011.25921-1-justintee8345@gmail.com>
 References: <20240628172011.25921-1-justintee8345@gmail.com>
@@ -70,83 +72,40 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-During SLI port errata events, there should be no expectation that
-submitted outstanding WQEs will return back CQEs.  In these situations, the
-driver should not rely on receiving CQEs from the SLI port to signal WQE
-resource clean up.
+Certain vendor specific targets initially register with the fabric as an
+initiator function first and then re-register as a target function
+afterwards.
 
-Put an sli_flag LPFC_SLI_ACTIVE check in lpfc_els_flush_cmd when walking
-the txcmplq.  The sli_flag check helps determine whether to issue an abort
-or driver based cancel on outstanding WQEs.  If !LPFC_SLI_ACTIVE, then
-there's no point to issue anything to the SLI port.  Instead, let the
-driver based cancel logic clean up the submitted WQE resources.
+The timing of the target function re-registration can cause a race
+condition such that the driver is stuck assuming the remote port as an
+initiator function and never discovers the target's hosted LUNs.
 
-Also, enhance some abort log messages that help with future debugging.
+Expand the nlp_state qualifier to also include NLP_STE_PRLI_ISSUE because
+the state means that PRLI was issued but we have not quite reached
+MAPPED_NODE state yet.  If we received an RSCN in the PRLI_ISSUE state,
+then we should restart discovery again by going into DEVICE_RECOVERY.
+
+Fixes: dded1dc31aa4 ("scsi: lpfc: Modify when a node should be put in device recovery mode during RSCN")
+Cc: <stable@vger.kernel.org> # v6.6+
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c |  2 +-
- drivers/scsi/lpfc/lpfc_sli.c | 24 +++++++++++-------------
- 2 files changed, 12 insertions(+), 14 deletions(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index c32bc773ab29..b27ebb574bfb 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -9665,7 +9665,7 @@ lpfc_els_flush_cmd(struct lpfc_vport *vport)
- 	list_for_each_entry_safe(piocb, tmp_iocb, &abort_list, dlist) {
- 		spin_lock_irqsave(&phba->hbalock, iflags);
- 		list_del_init(&piocb->dlist);
--		if (mbx_tmo_err)
-+		if (mbx_tmo_err || !(phba->sli.sli_flag & LPFC_SLI_ACTIVE))
- 			list_move_tail(&piocb->list, &cancel_list);
- 		else
- 			lpfc_sli_issue_abort_iotag(phba, pring, piocb, NULL);
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index f475e7ece41a..8bfac9143314 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -12301,18 +12301,16 @@ lpfc_sli_abort_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				goto release_iocb;
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 153770bdc56a..13b08c85440f 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -5725,7 +5725,7 @@ lpfc_setup_disc_node(struct lpfc_vport *vport, uint32_t did)
+ 				return ndlp;
+ 
+ 			if (ndlp->nlp_state > NLP_STE_UNUSED_NODE &&
+-			    ndlp->nlp_state < NLP_STE_PRLI_ISSUE) {
++			    ndlp->nlp_state <= NLP_STE_PRLI_ISSUE) {
+ 				lpfc_disc_state_machine(vport, ndlp, NULL,
+ 							NLP_EVT_DEVICE_RECOVERY);
  			}
- 		}
--
--		lpfc_printf_log(phba, KERN_WARNING, LOG_ELS | LOG_SLI,
--				"0327 Cannot abort els iocb x%px "
--				"with io cmd xri %x abort tag : x%x, "
--				"abort status %x abort code %x\n",
--				cmdiocb, get_job_abtsiotag(phba, cmdiocb),
--				(phba->sli_rev == LPFC_SLI_REV4) ?
--				get_wqe_reqtag(cmdiocb) :
--				cmdiocb->iocb.un.acxri.abortContextTag,
--				ulp_status, ulp_word4);
--
- 	}
-+
-+	lpfc_printf_log(phba, KERN_INFO, LOG_ELS | LOG_SLI,
-+			"0327 Abort els iocb complete x%px with io cmd xri %x "
-+			"abort tag x%x abort status %x abort code %x\n",
-+			cmdiocb, get_job_abtsiotag(phba, cmdiocb),
-+			(phba->sli_rev == LPFC_SLI_REV4) ?
-+			get_wqe_reqtag(cmdiocb) :
-+			cmdiocb->iocb.ulpIoTag,
-+			ulp_status, ulp_word4);
- release_iocb:
- 	lpfc_sli_release_iocbq(phba, cmdiocb);
- 	return;
-@@ -12509,10 +12507,10 @@ lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_SLI,
- 			 "0339 Abort IO XRI x%x, Original iotag x%x, "
- 			 "abort tag x%x Cmdjob : x%px Abortjob : x%px "
--			 "retval x%x : IA %d\n",
-+			 "retval x%x : IA %d cmd_cmpl %ps\n",
- 			 ulp_context, (phba->sli_rev == LPFC_SLI_REV4) ?
- 			 cmdiocb->iotag : iotag, iotag, cmdiocb, abtsiocbp,
--			 retval, ia);
-+			 retval, ia, abtsiocbp->cmd_cmpl);
- 	if (retval) {
- 		cmdiocb->cmd_flag &= ~LPFC_DRIVER_ABORTED;
- 		__lpfc_sli_release_iocbq(phba, abtsiocbp);
 -- 
 2.38.0
 
