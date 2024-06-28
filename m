@@ -1,64 +1,64 @@
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+Received: from mail-il1-f180.google.com (mail-il1-f180.google.com [209.85.166.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A2571C8FAC
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Jun 2024 17:06:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB1071C8FAC
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Jun 2024 17:06:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719594380; cv=none; b=SX9d7kn7lgjbS5l0ngImv9IvT/4aHU93tXndB20d8++FiVR6DyjdE8f33JMEBNI4HhQZp28E1kY3LP02QVYP80MJcGKMoBNEbgGbaWIiN0milYo0W3u3Wj6otyc9WIA9QEWHTy1r0BVTyGSRl3qXzump9T4WsvvRTTBbVY2TFYY=
+	t=1719594384; cv=none; b=CUWb3YTIS+gK/6jAtdKwtc2fV1SPH1gfm+aSDjjudXgxk4U7xegy15jHEjrL6uG5D6xynawBHpckw2pGMTud9pQitt2hXmuTYRa2lYN2Z9dp5x0s6Qw5e84KbNEiwXH63EkGzxLdyaTpdYcXjsjUh86O/YBVmbbgQW3Qe8PJtww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719594380; c=relaxed/simple;
-	bh=7ykx966S4jtDZk/c2VAM0ZDPTRt9EE2FmtqmAWAnXV8=;
+	s=arc-20240116; t=1719594384; c=relaxed/simple;
+	bh=3DxkUpuv/j+Sfk3qXa7C9XWSyljvkIE1MhjgYWto29A=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tVHEIIHuVaklWODWl0vrkv27QxBp2bBKMZ0Ug5Zfk4cXOUyWnKPpUKzWAtIjMMxxc+QsdaKKfMr/1N1fmhiDzUkcRmCHsaOTpOPp/tDaWq1CTU5FZ4yaA9tZ6uyfddzd7leGXiPecbDQuTrAaKA+bANzswia5Ejm0iwIxo0XZ/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KpvVanFT; arc=none smtp.client-ip=209.85.210.170
+	 MIME-Version; b=tcSXOskJ5CO2b6MqbGq3MEyc+jLWs+hQZB5Xla2VnbF62DwrdrMBDiWu1MotXmvB/NYBU5vUytQt/8WhZ211xcGAtVaOykPjTPNFIGqfpQb1hJaJ7dRwzpQrodu0Us6SQDcvhoD8lmZQHmFgK9ZVmLtGuDW3v/ZSox8KsBcWt04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ib0a8Rnr; arc=none smtp.client-ip=209.85.166.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KpvVanFT"
-Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-7065f3de571so85957b3a.0
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jun 2024 10:06:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ib0a8Rnr"
+Received: by mail-il1-f180.google.com with SMTP id e9e14a558f8ab-3762c172d94so488025ab.0
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jun 2024 10:06:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1719594379; x=1720199179; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1719594382; x=1720199182; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=eNPSik58fOB62TXAs3PojLIEX6s0Cwz2LrR2CaqfJY0=;
-        b=KpvVanFTFgz+G1EbXxnvcU5NJRszuNIS2XEdhMP8GJOUj4U1gRGmtApW6scIZpvIaa
-         5vjez33YgmzVbk+IIukLsQdVDzlzbQHYGvCiIbLfEab/okOytvGW5LNC8znTcUu0842j
-         Vbp95uB2aEO2zJ2DhGw9VzvhW1xNEm9ePS1XYMT5sknlu2mR96t9Pu9xrYo0qzO8Wsn9
-         X9cqB/vPlWkm2wTRqJjU3eft62DJ8vuwd1/eUxC87slmkuOJB2FP4u0m9J0TMi041YlT
-         qj+rryGUsoEqXhwSGNq9Ja5aHz8VTltbivoSgO8FU16ChotUG4ZwZqdmagqPxWnx+mUS
-         DUrA==
+        bh=sKRsAY0jHyrEEfswJbETTj8mOq9QvVjI6YaRHp8y3XU=;
+        b=Ib0a8Rnrw7DG/j+jtVc2f/5iFLXmzzObqlThUYnH3UugwnBa6OdpyCAkfFJb6UFnb/
+         mW5TYOD8uOx+d8n8sQJ7d2kVZ6CqkboVa98JIraK3dHl28VvEAkFyTn0LXrFlvOpyMb3
+         cqgT3KFsWsfZeizMmBD7l3Uftz10BhnakFnDQTSq+ooL498Rvd7pxoLAt4Xqor/TTByA
+         C9buwZd0xp0WEiTUgYQGgcMlu4wIF/Zd/Hd8KWI4mCQ0wGU/Nut7uMHKe8mAJkkHaeni
+         BzKIiziA4kTQ9ykDKGgSLR14Kk60odggULFWu2iH3Hvq944Ptwl4liJvMSZQG1UHD5ko
+         hj9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719594379; x=1720199179;
+        d=1e100.net; s=20230601; t=1719594382; x=1720199182;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=eNPSik58fOB62TXAs3PojLIEX6s0Cwz2LrR2CaqfJY0=;
-        b=AwlYrNzs3hZiB2EjIAvkFhkw1D57JihYLxNLu2HzSZxK7F74vXi9NC+4bTBPcAMTS9
-         HzoKv0a6Pgn6yv6VkETCRt7Nzn6h7PR0qit4CHRL8vzpioAs42dEgLCoWmOPckU6jFzQ
-         roovNmmOzXqo+fNZ7Mh7ZqcGIO06zI67FW95ds6+K4nN2Ok3sn9Xz5aD/pHe15sCpCtl
-         rNhKMjEbUn6vvVPzEsTnQZ99+FgtOl6EzJhGXbZXGXOo8tiIek/ooRlOxnPzCsXqRSgo
-         snpTyAT8hURI/z1WBC7UIRQydcW3JcpFs3qnPQcAo5Nxjt8y7wH8dblz1d6watmHBQ8b
-         SaQA==
-X-Gm-Message-State: AOJu0YwRDrRtx608L8Y3ym1YHkhF1k7tdIVcUBN+ue3dVE09jKu4A6PU
-	EnjED5Skw1Un8m97xItha9DO9/02ZcIYx3Oh5M6uUSZKXmbbYYRF4zOZYg==
-X-Google-Smtp-Source: AGHT+IH44dsOA2FU0iRdIJE0V8pJKhqibcYZ7utiKjT+t+kswjJny1LyKOURwydGcgTb6+OJueBXmA==
-X-Received: by 2002:a05:6a00:3119:b0:705:c0da:bdc1 with SMTP id d2e1a72fcca58-70667e29347mr18823247b3a.2.1719594378749;
-        Fri, 28 Jun 2024 10:06:18 -0700 (PDT)
+        bh=sKRsAY0jHyrEEfswJbETTj8mOq9QvVjI6YaRHp8y3XU=;
+        b=svms1fJwJN5PTosLe5ZIRKV7DFWlIJWClVomKNV55BX0GIrbUN1LWQ75fQkhU7ujtM
+         FxXPm3esfP9YQqw8tpfSeqVOJdiOFKfPBB4r8aKEv+gf2sIV+OF5k5DGFbqo2EhSxxi9
+         Qcw0/m3J1z5mhEMQb1K4farPnjaXy8LIWBbXwqTYFkhRgiQiC2aGU024etM02c5+hZwO
+         ef44HmCHqL+5TPRqy0XyANmZrv+wN1Q+JWVIYZuI4lAQLgPRtmZpwuheNzJjGH1bvmWQ
+         QeFvWW+yKS8Dmr9x9jZ5I2MBjPWWF8TFy+Z3wncl+wZT0I03KfaTbFRMxJTAmh3VEvdZ
+         wh4A==
+X-Gm-Message-State: AOJu0YzXS62RW1/stb/0lBTlZyphXT2z9ovuyiSWii1cCHa4FLMgbBZ2
+	co/Ga1/NEkR4wDIiwBL0fxaZRIX4XhY+0zrwbc5gcHTXH87VcOWafxD6Mw==
+X-Google-Smtp-Source: AGHT+IHBErmEPl6Yx0Zwkg7OSU0SK3Yl0j8Oylau1Zprj7GBu3I7z47htPch3xmt2/NSgG4/kSikGA==
+X-Received: by 2002:a92:d28c:0:b0:376:2361:d2ac with SMTP id e9e14a558f8ab-37638b5136dmr149638975ab.2.1719594381782;
+        Fri, 28 Jun 2024 10:06:21 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-72c6afb8ef1sm1524623a12.40.2024.06.28.10.06.17
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-72c6afb8ef1sm1524623a12.40.2024.06.28.10.06.20
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 28 Jun 2024 10:06:18 -0700 (PDT)
+        Fri, 28 Jun 2024 10:06:21 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 4/8] lpfc: Fix handling of fully recovered fabric node in dev_loss callbk
-Date: Fri, 28 Jun 2024 10:20:07 -0700
-Message-Id: <20240628172011.25921-5-justintee8345@gmail.com>
+Subject: [PATCH 5/8] lpfc: Handle mailbox timeouts in lpfc_get_sfp_info
+Date: Fri, 28 Jun 2024 10:20:08 -0700
+Message-Id: <20240628172011.25921-6-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20240628172011.25921-1-justintee8345@gmail.com>
 References: <20240628172011.25921-1-justintee8345@gmail.com>
@@ -70,45 +70,71 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In rare cases when a fabric node is recovered after a link bounce and
-before dev_loss_tmo callbk is reached, the driver may leave the fabric node
-in an inconsistent state with the NLP_IN_DEV_LOSS flag perpetually set.
+The MBX_TIMEOUT return code is not handled in lpfc_get_sfp_info and
+the routine unconditionally frees submitted mailbox commands regardless of
+return status.  The issue is that for MBX_TIMEOUT cases, when firmware
+returns SFP information at a later time, that same mailbox memory region
+references previously freed memory in its cmpl routine.
 
-In lpfc_dev_loss_tmo_callbk, a check is added for a recovered fabric node.
-If the node is recovered, then don't queue the lpfc_dev_loss_tmo_handler
-work. In lpfc_dev_loss_tmo_handler, the path taken for the recovered fabric
-nodes is updated to clear the NLP_IN_DEV_LOSS flag.
+Fix by adding checks for the MBX_TIMEOUT return code.  During mailbox
+resource cleanup, check the mbox flag to make sure that the wait did not
+timeout.  If the MBOX_WAKE flag is not set, then do not free the resources
+because it will be freed when firmware completes the mailbox at a later
+time in its cmpl routine.
+
+Also, increase the timeout from 30 to 60 seconds to accommodate boot
+scripts requiring longer timeouts.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/scsi/lpfc/lpfc_els.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 13b08c85440f..6943f6c6395c 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -214,6 +214,11 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
- 	if (ndlp->nlp_state == NLP_STE_MAPPED_NODE)
- 		return;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index b27ebb574bfb..929cbfc95163 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -7302,13 +7302,13 @@ int lpfc_get_sfp_info_wait(struct lpfc_hba *phba,
+ 		mbox->u.mqe.un.mem_dump_type3.addr_hi = putPaddrHigh(mp->phys);
+ 	}
+ 	mbox->vport = phba->pport;
+-
+-	rc = lpfc_sli_issue_mbox_wait(phba, mbox, 30);
++	rc = lpfc_sli_issue_mbox_wait(phba, mbox, LPFC_MBOX_SLI4_CONFIG_TMO);
+ 	if (rc == MBX_NOT_FINISHED) {
+ 		rc = 1;
+ 		goto error;
+ 	}
+-
++	if (rc == MBX_TIMEOUT)
++		goto error;
+ 	if (phba->sli_rev == LPFC_SLI_REV4)
+ 		mp = mbox->ctx_buf;
+ 	else
+@@ -7361,7 +7361,10 @@ int lpfc_get_sfp_info_wait(struct lpfc_hba *phba,
+ 		mbox->u.mqe.un.mem_dump_type3.addr_hi = putPaddrHigh(mp->phys);
+ 	}
  
-+	/* check for recovered fabric node */
-+	if (ndlp->nlp_state == NLP_STE_UNMAPPED_NODE &&
-+	    ndlp->nlp_DID == Fabric_DID)
-+		return;
+-	rc = lpfc_sli_issue_mbox_wait(phba, mbox, 30);
++	rc = lpfc_sli_issue_mbox_wait(phba, mbox, LPFC_MBOX_SLI4_CONFIG_TMO);
 +
- 	if (rport->port_name != wwn_to_u64(ndlp->nlp_portname.u.wwn))
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
- 				 "6789 rport name %llx != node port name %llx",
-@@ -546,6 +551,9 @@ lpfc_dev_loss_tmo_handler(struct lpfc_nodelist *ndlp)
- 					 ndlp->nlp_DID, kref_read(&ndlp->kref),
- 					 ndlp, ndlp->nlp_flag,
- 					 vport->port_state);
-+			spin_lock_irqsave(&ndlp->lock, iflags);
-+			ndlp->nlp_flag &= ~NLP_IN_DEV_LOSS;
-+			spin_unlock_irqrestore(&ndlp->lock, iflags);
- 			return fcf_inuse;
- 		}
++	if (rc == MBX_TIMEOUT)
++		goto error;
+ 	if (bf_get(lpfc_mqe_status, &mbox->u.mqe)) {
+ 		rc = 1;
+ 		goto error;
+@@ -7372,8 +7375,10 @@ int lpfc_get_sfp_info_wait(struct lpfc_hba *phba,
+ 			     DMP_SFF_PAGE_A2_SIZE);
+ 
+ error:
+-	mbox->ctx_buf = mpsave;
+-	lpfc_mbox_rsrc_cleanup(phba, mbox, MBOX_THD_UNLOCKED);
++	if (mbox->mbox_flag & LPFC_MBX_WAKE) {
++		mbox->ctx_buf = mpsave;
++		lpfc_mbox_rsrc_cleanup(phba, mbox, MBOX_THD_UNLOCKED);
++	}
+ 
+ 	return rc;
  
 -- 
 2.38.0
