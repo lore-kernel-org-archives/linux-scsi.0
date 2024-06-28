@@ -1,48 +1,59 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBF9145BE4;
-	Thu, 27 Jun 2024 20:13:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAD671097B;
+	Fri, 28 Jun 2024 01:44:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719519220; cv=none; b=Lc8PpXLwEsEZ2hALBFV6h4Ckvd1DC+5VJ4ielDOc8EGdKshXNygvf4IDrvtc7Yy2U3fPtRs0qUD0M7/U8WudPXKtsBdHJqQq39vMYBrngVQ7lVtEO+EMoZkGq7RrpQ1vAoyjYzuTI4qlu6gYoW5H3aSsdPbLa1Ss1Jl0sy3B42w=
+	t=1719539075; cv=none; b=N+bhNM69w3dX+IwLsqjk8KkaPCw9jfx5EBauiqwSZw++gnbEv3a/SAso1UB0TX8hx9ccf4ZmyFNl+2e35mrJMkrnHHCJWauWf5Nn31p0SKz2h5/UITuPIh7yVORFiX+E36XgVn9iVZlg2E59Ll5nSWLP85xk1SibdWKe8NWPEEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719519220; c=relaxed/simple;
-	bh=Ng97Q+I0pBXI53ofakv3q76+W7USXRIAadE2uWbklVA=;
+	s=arc-20240116; t=1719539075; c=relaxed/simple;
+	bh=2PfHdETu/HKLoYvqYe0CcjoLSuBc+PIHnlujDvorBO0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bsjELE8UdGSbKCg0QP6T6MEN5RFf+LCQ6ONSfFxSyEGy/fV9VqEv10tNiGJhLNJn4p29cVqsKjcDwawE5UNy6kGMFKZKLLUbP75p2xXyEFG4+QO0UAiU5+es6pFBieG0LwZJ+AEDPnokzv7UH2SwB8RzuQahJUfnhY0si2a/2QY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=KVcWNFoV; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=b9Ibx9s5CXfcVv9xtuzPT2OSUuu1x+wAUhnOa24Rzk/Od/UtO88eNdghuWVmS2qljpd7tKpdt8AlcnSGbACxSFHw9ShXoBxHxH0KeFRq/aFmj5uym+SjkVAXYjxkcoz2C0hIduB1QPmwtQ+IMNUMNBm5agJEeuMQq0yB+ubY4oU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=O/Sdalh6; arc=none smtp.client-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="KVcWNFoV"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4W98sG10gQzll9bp;
-	Thu, 27 Jun 2024 20:13:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1719519210; x=1722111211; bh=mqZoJqzWOVqvKJTvVoqplSMR
-	xZgZJeY21a7owxjLVCQ=; b=KVcWNFoVDLJpmL/62VRSuBGg380beoeeuBPkTGNH
-	MAXXNIjk/et8UWPS3rgK+XuvrslNyXfy6ZuW3ReuMo4ZGVJTPtEwS8xb+nTVYvca
-	bnIRmPTKcRiWVPtOKbqvV+eBsWsup6xZ72sEv2nBEUMORzNnPIokS4KWgG1MNsjL
-	J2Qhp6pRTgIvnHri5vTjkSKNtr7Y1uKmS7Gwj4lJdGNu8iXfA9ZVFzgIRimqA8ZB
-	QsTU0tTIPrX5uuhVuQd/7rMu2XjPZqehPKC67LLb5JJSGBf/+/fG38dUYc3a8u0/
-	DTmhDCEaH0XUW0xeQQ2HkiPZF2+m94R2LWgt5vcTkFAocQ==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id nPRA6YbUERSR; Thu, 27 Jun 2024 20:13:30 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4W98s0515XzllBch;
-	Thu, 27 Jun 2024 20:13:24 +0000 (UTC)
-Message-ID: <a34bcb63-6cad-4b77-bd07-afcc2c75b2f2@acm.org>
-Date: Thu, 27 Jun 2024 13:13:22 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O/Sdalh6"
+Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2c81ce83715so98156a91.3;
+        Thu, 27 Jun 2024 18:44:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1719539073; x=1720143873; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=O2PlL+cNrtgBEK7e1pegCFhmRbl6FhS1f6s/BBzg990=;
+        b=O/Sdalh6oaJtIsurgEA/n2GdDF4DAd6wOEPs+SZQMpuQYAgJlVts4vcE7zW052HLWE
+         XDqu4S5JXMr6XRDf/CAHHeix3WC5ZiDJEdZe2jFJJWQDPRkeZNzGgn0Z5zBzITXg14Ii
+         /pe2Pe3YgHlp76Gw8rZkwyu0nfRw/TWuHGGfdZISLbSHobC2VBRY/b6GD0s2CfZMYhcM
+         jzMyeNsRNKVp+bWlgT21JGapgwK4RYMya0brhsrNMFij1KayRUj9VtiCCWORF5gj1k7c
+         QHvnhm0Oohvb62yqtleskUe7tyeg0ySeYk/zU8fc2HxEBwvW+0WbiH7vUVwgKbpKTWQy
+         Mrlw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719539073; x=1720143873;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=O2PlL+cNrtgBEK7e1pegCFhmRbl6FhS1f6s/BBzg990=;
+        b=PzAQECwWsMmNfamSvc/QKSkS3Ev1jlgQbhhXCD5HRgfIubdcBqDnOZjhhIKBi3d6if
+         JofyE6KyBrektCHc/L59FN4N04SAXvbMsmWwe8AcWiMgsK9UMeTxO0u2wM3Oaf9a0e2O
+         orqvdajhIkNSXzv+2m2KRRfiPsaNXlIsDCavwlmf/7a6388ZdAMf1MZ1QdW34PxlRgmO
+         0oYq3MnF/c41WyBYfh1dkGtRc4RDoMzK5R695DRDr/5Kj8nuH8Q4MHFjlXjTBxvjhLEH
+         n+9evcU8KfIAse/mLAH4tCNCGVgnyf5RR3GerudRMCMeSEaabaPyKZotyAsxu1oLdMyQ
+         f4dA==
+X-Forwarded-Encrypted: i=1; AJvYcCXSxLqN9lUgSPCTjoVrPDZsF9QtZcqdv2AW1A6VxqlWmai9IorZHW+ZIEwafONl5Nn6rYFrBjTPDh3La8yr3UnWZ8nbDcEAfPHXBXGfUzgeSC5T4kU+EKxSnNu8k4u8TTvEGg==
+X-Gm-Message-State: AOJu0YxEnlh2a/15h2o6ykFxZIIJQm+5SNWHcl8jNgNVjIOEgFXjYl7L
+	VIhch5smDSPXVI688lhHHDfLP3xf74vgBHqqiAlOC/bs6M1bfeDN
+X-Google-Smtp-Source: AGHT+IEtx/CFFSk+X0N5AWryCVBCAja3mFgba28EnBMHXYQs3DSPEosR+Gq2rOqRmv7IPhiaCA1Wcg==
+X-Received: by 2002:a17:90b:4b92:b0:2c7:c788:d34d with SMTP id 98e67ed59e1d1-2c858275b3emr14169645a91.38.1719539072797;
+        Thu, 27 Jun 2024 18:44:32 -0700 (PDT)
+Received: from [0.0.0.0] (97.64.23.41.16clouds.com. [97.64.23.41])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c91d3bc5e7sm451019a91.36.2024.06.27.18.44.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 27 Jun 2024 18:44:32 -0700 (PDT)
+Message-ID: <f4a0879d-0df7-44b0-8fa0-e2917532c1d4@gmail.com>
+Date: Fri, 28 Jun 2024 09:44:25 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,10 +66,10 @@ To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
  "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
  "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
  "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "bvanassche@acm.org" <bvanassche@acm.org>,
  "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
  "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "haowenchao22@gmail.com" <haowenchao22@gmail.com>
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>
 Cc: "linux-mediatek@lists.infradead.org"
  <linux-mediatek@lists.infradead.org>,
  =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= <jiajie.hao@mediatek.com>,
@@ -81,60 +92,58 @@ References: <20240624121158.21354-1-peter.wang@mediatek.com>
  <4c4d10aae216e0b6925445b0317e55a3dd0ce629.camel@mediatek.com>
  <795a89bb-12eb-4ac8-93df-6ec5173fb679@acm.org>
  <0e1e0c0a4303f53a50a95aa0672311015ddeaee2.camel@mediatek.com>
- <b5ee63bb-4db9-47fc-9b09-1fde0447f6f8@acm.org>
- <54f5df88-ca0a-40dd-92ef-3f64c170ba55@gmail.com>
- <9284fe608d6a2c35e1db50b0f7dc69d8951be5fe.camel@mediatek.com>
+ <58505ca5-5822-47f5-a77d-a517eda0c508@gmail.com>
+ <147f56027997fc37c93d4a6c438da93898fd50f6.camel@mediatek.com>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <9284fe608d6a2c35e1db50b0f7dc69d8951be5fe.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+From: Wenchao Hao <haowenchao22@gmail.com>
+In-Reply-To: <147f56027997fc37c93d4a6c438da93898fd50f6.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On 6/27/24 3:59 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> This is a chicken-and-egg problem. We need to acquire a lock to know=20
-> which hwq it is, but we need to know which hwq it is to acquire the
-> lock. Therefore, to resolve this dilemma, perhaps we should just take
-> all the hwq locks indiscriminately?
-How about the (untested) patch below?
+On 2024/6/27 18:58, Peter Wang (王信友) wrote:
+> On Thu, 2024-06-27 at 15:59 +0800, Wenchao Hao wrote:
+>>
+>> Hi Peter, 
+>>
+>> What is queue_num's offset of blk_mq_hw_ctx in your machine?
+>>
+>> gdb vmlinux
+>>
+>> (gdb) print /x (int)&((struct blk_mq_hw_ctx *)0)->queue_num
+>> $5 = 0x164
+>>
+>> I read your descriptions and wondered a same race flow as you
+>> described
+>> following. But I found the offset mismatch, if the racing flow is
+>> correct,
+>> then the address accessed in blk_mq_unique_tag() should be 0x164, not
+>> 0x194.
+>> Maybe the offset is different between our machine?
+>>
+>> What's more, if the racing flow is correct, I did not get how your
+>> changes
+>> can address this racing flow.
+>>
+>>
+> 
+> Hi Wenchao Hao,
+> 
+> Yes, our queue_num's offset of blk_mq_hw_ctx is 0x194.
+> Our kernel version is: Linux version 6.1.68
+> I think the offset is different by kernel version.
+> 
+> (gdb) print /x (int)&((struct blk_mq_hw_ctx *)0)->queue_num
+> $1 = 0x194
+> 
+> And yes, it only shorten the race window of step3 and step5.
+> Reduce the probability of step 4 appearing between step 3 and step 5.
+> 
+> 
 
-Thanks,
+Hi Peter,
 
-Bart.
+Thanks for your reply, I understand the issue now.
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index aa119746ee92..c5d327ba253f 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -105,16 +105,15 @@ EXPORT_SYMBOL_GPL(ufshcd_mcq_config_mac);
-   * @hba: per adapter instance
-   * @req: pointer to the request to be issued
-   *
-- * Return: the hardware queue instance on which the request would
-- * be queued.
-+ * Return: the hardware queue instance on which the request will be or=20
-has been
-+ * queued. %NULL if the request has already been freed.
-   */
-  struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
-  					 struct request *req)
-  {
--	u32 utag =3D blk_mq_unique_tag(req);
--	u32 hwq =3D blk_mq_unique_tag_to_hwq(utag);
-+	struct blk_mq_hw_ctx *hctx =3D READ_ONCE(rq->mq_hctx);
-
--	return &hba->uhq[hwq];
-+	return hctx ? &hba->uhq[hctx->queue_num] : NULL;
-  }
-
-  /**
-@@ -547,6 +546,8 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int=20
-task_tag)
-  		if (!cmd)
-  			return -EINVAL;
-  		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
-+		if (!hwq)
-+			return -EINVAL;
-  	} else {
-  		hwq =3D hba->dev_cmd_queue;
-  	}
+> Thanks.
+> Peter
 
