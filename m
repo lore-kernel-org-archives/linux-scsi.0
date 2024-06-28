@@ -1,95 +1,135 @@
-Received: from mail-il1-f171.google.com (mail-il1-f171.google.com [209.85.166.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2140F1CCCBD
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Jun 2024 17:06:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF1A44315F;
+	Fri, 28 Jun 2024 18:15:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719594390; cv=none; b=pO+2gTPj3QGVuItPClGmONAPDTxwCG1BY9LRhWXG1/3IpA4HpN1c0bnKFoRGsXNy8K3VrjJx4esmQQWr1rDrFjCSzapWqLCg7B3ga68Fv8IZ8bLYS3IUksazvAPV8rKUeG/P4pt0LuNtHanRRgzLAaOO5vxJy9LZr/1lW256zJs=
+	t=1719598532; cv=none; b=DzgUeKBkF2zx6+ssJJcgqY191HCRTFzyx9Eje78eWrqxuNUG/BiJqW865JZXAqqPW5uZV9tSIfOdjWO11uyGn90DadKZJyXotzlYJ75KC8SQuYq5JnQyY4BQHqrbYOIziQ8Uwgc1hDRxoiAJj/c6THqCMSOtD3e5qEwHXayzHBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719594390; c=relaxed/simple;
-	bh=PvrlveKPqs+0HJxR+rli0Vbc2GJR7hvNoa09VKw+cv8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=d9PCo1GHV8DLo0p0FK3a9ZLyIdHO4LTMyPvK60piMxjneAxOHEpdl9eF+HxcZvsiauvNsJl3d+aQtDnapqxeqBOPDV9t2eSibEU4bcpJLb1HSKyk0yrRGriFTED5yv1+gwdEF7EhmLV0jZrlbq3ADIYHT+n7ESLuMRaxKSf+9Mg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=L24hWGUm; arc=none smtp.client-ip=209.85.166.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1719598532; c=relaxed/simple;
+	bh=G6ogdb37vMBiTBHKzuRXgv5nWGa+A1TGusHactB8uGU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=C4yXovxyjgCYAwt/MdcRMp+Pa8/Pb7O64pd7roqFwPN61miGsyOjU+MIz1Cuw7y4ATGJBDlJ9Mwc+gf+c5DC/Azu4Se2sbyjFyOXpMMJxHbsgd9czps0IWaryE+pF6kjPKWBfbGfuHv+vtosscTS7GVaTYUJ5C67BYpuFXtXjqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aQOzASL2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L24hWGUm"
-Received: by mail-il1-f171.google.com with SMTP id e9e14a558f8ab-3762c172d94so488095ab.0
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Jun 2024 10:06:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1719594388; x=1720199188; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Iy7iomoDBwwUT5KvVF8VDfkmXA3JUEiZ7ec1EpJHMSg=;
-        b=L24hWGUmrROPAX0rdxA7OA4OJS6Xn1x41VSPIBnxSi3xqypZQkZNSUtQtjEe4O/Zhk
-         rsui8bFebBaBVRmHLUVkA4vH+BPA4uWsycqVC3TKq1qJ5TukMJ1kBF2JpFN/ZPNz1BhX
-         lyxPGThkCkdUodn+3tXhOEcgRVlSSwJKjBOgN6EMBz4t6K8OvfmDJg3oJL4fFJY3f9IF
-         WNYShxSd2UesLj6IYQz92OfKf/NoX0aWmHd+Jh+gp9jyRAc0gcsv2+6VtFbRtuI+oX/t
-         6htp9Ct0IrG5ZKW2tAUCY4RtNel2XzYssDw0Fd0Ng1xhXwuofgOLsTZOW3OD7ymlNibE
-         L7GQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719594388; x=1720199188;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Iy7iomoDBwwUT5KvVF8VDfkmXA3JUEiZ7ec1EpJHMSg=;
-        b=noC6B3Qt9Rb4vwUSqdWKcgzJyshOB7Z0Wm3vWF3fMTppC28oKJ2txkCeXkW9QX09xc
-         3f938fEDyvU8ukdKqvE+uHJWmrx8KPiAMCeoDtwbgZt4JvsVaOSHNGOtexsV4N6wvqAE
-         zXfgjz/EU26m7fmZwX3fNUYUaJffAKA+o7dUyGTAE3HtB6Lh3EQLHLh9plcE9hmFkGsW
-         IFvNHgugoGGtI2BU46EL8l3ujFShcdC/6q0DHSzseQjXXnHYb1twY7a/DEK6Xq05fYy6
-         w9e/8VH6w0gGZFzSMYQJgyDWqlsMLjPmzwY7vxqXCSg4Sc1COZqCnBKfNkOKcxzJYDKJ
-         WfCA==
-X-Gm-Message-State: AOJu0YzE31RdX+Om4f+zVaoj1DiOCvLsWb3g6x2ydqLx6bY3cdSy0cFn
-	wYW5UkJM+pNZxweH2UFUIPh/pUKYO9PtZDNAjHBKIfYIolYwBQBsVlFbmA==
-X-Google-Smtp-Source: AGHT+IE0/Jhxedpq3h15I2UTPtjSXPnRB7d21sct0sEgEgE+5+pacELilaBpgcYkh7vw1eQIj1mp8w==
-X-Received: by 2002:a05:6602:3148:b0:7f3:9ef8:30a4 with SMTP id ca18e2360f4ac-7f39ef8334dmr1849525139f.1.1719594388098;
-        Fri, 28 Jun 2024 10:06:28 -0700 (PDT)
-Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-72c6afb8ef1sm1524623a12.40.2024.06.28.10.06.27
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 28 Jun 2024 10:06:27 -0700 (PDT)
-From: Justin Tee <justintee8345@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: jsmart2021@gmail.com,
-	justin.tee@broadcom.com,
-	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 8/8] lpfc: Update lpfc version to 14.4.0.3
-Date: Fri, 28 Jun 2024 10:20:11 -0700
-Message-Id: <20240628172011.25921-9-justintee8345@gmail.com>
-X-Mailer: git-send-email 2.38.0
-In-Reply-To: <20240628172011.25921-1-justintee8345@gmail.com>
-References: <20240628172011.25921-1-justintee8345@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aQOzASL2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CAD85C116B1;
+	Fri, 28 Jun 2024 18:15:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719598530;
+	bh=G6ogdb37vMBiTBHKzuRXgv5nWGa+A1TGusHactB8uGU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aQOzASL2TQPWjqByWeCbvIZD6ttnaO4CefmI9uFXiG56QvH+Ux579VffYduabDZIJ
+	 0OTy7v1EpSahQG4KiYfHEpGYVaOyolfoFArTWEfwdIVFIl4VBfMxL7A3iHh9QO8UIW
+	 vUZbtsWT9pXpAF9P37G0Rv6hE1lcyCF3tYvqXzaC64jbwYqVDoaN2fjfO4xCaF4aFL
+	 71w4QqrvCl0ONOjzeao9LNlwzrVLr4NAqChgexYGxbvKzEiQ5Eo6OwvhUbwmLIqX4Z
+	 Nj21uftup+t3bsmN7R0Qm0anEYquuejEv2OO+am5eMDiIetAt5aGWu38h8M8TTARir
+	 RaUdcM0NUd85A==
+Date: Fri, 28 Jun 2024 20:15:25 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: kernel test robot <lkp@intel.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, oe-kbuild-all@lists.linux.dev,
+	linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 11/13] ata: libata-core: Reuse available ata_port
+ print_ids
+Message-ID: <Zn79vbjYDhhXwy_T@ryzen.lan>
+References: <20240626180031.4050226-26-cassel@kernel.org>
+ <202406290027.cdgsPQAF-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <202406290027.cdgsPQAF-lkp@intel.com>
 
-Update lpfc version to 14.4.0.3
+On Sat, Jun 29, 2024 at 12:31:57AM +0800, kernel test robot wrote:
+> Hi Niklas,
+> 
+> kernel test robot noticed the following build warnings:
+> 
+> [auto build test WARNING on linus/master]
+> [also build test WARNING on v6.10-rc5 next-20240627]
+> [cannot apply to mkp-scsi/for-next jejb-scsi/for-next]
+> [If your patch is applied to the wrong git tree, kindly drop us a note.
+> And when submitting patch, we suggest to use '--base' as documented in
+> https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> 
+> url:    https://github.com/intel-lab-lkp/linux/commits/Niklas-Cassel/ata-libata-core-Fix-null-pointer-dereference-on-error/20240627-123023
+> base:   linus/master
+> patch link:    https://lore.kernel.org/r/20240626180031.4050226-26-cassel%40kernel.org
+> patch subject: [PATCH v2 11/13] ata: libata-core: Reuse available ata_port print_ids
+> config: i386-randconfig-141-20240628 (https://download.01.org/0day-ci/archive/20240629/202406290027.cdgsPQAF-lkp@intel.com/config)
+> compiler: gcc-8 (Ubuntu 8.4.0-3ubuntu2) 8.4.0
+> 
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202406290027.cdgsPQAF-lkp@intel.com/
+> 
+> smatch warnings:
+> drivers/ata/libata-core.c:5467 ata_port_alloc() warn: unsigned 'ap->print_id' is never less than zero.
+> 
+> vim +5467 drivers/ata/libata-core.c
+> 
+>   5443	
+>   5444	/**
+>   5445	 *	ata_port_alloc - allocate and initialize basic ATA port resources
+>   5446	 *	@host: ATA host this allocated port belongs to
+>   5447	 *
+>   5448	 *	Allocate and initialize basic ATA port resources.
+>   5449	 *
+>   5450	 *	RETURNS:
+>   5451	 *	Allocate ATA port on success, NULL on failure.
+>   5452	 *
+>   5453	 *	LOCKING:
+>   5454	 *	Inherited from calling layer (may sleep).
+>   5455	 */
+>   5456	struct ata_port *ata_port_alloc(struct ata_host *host)
+>   5457	{
+>   5458		struct ata_port *ap;
+>   5459	
+>   5460		ap = kzalloc(sizeof(*ap), GFP_KERNEL);
+>   5461		if (!ap)
+>   5462			return NULL;
+>   5463	
+>   5464		ap->pflags |= ATA_PFLAG_INITIALIZING | ATA_PFLAG_FROZEN;
+>   5465		ap->lock = &host->lock;
+>   5466		ap->print_id = ida_alloc_min(&ata_ida, 1, GFP_KERNEL);
+> > 5467		if (ap->print_id < 0) {
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Well, the check is correct, but since ap->print_id is unsigned int,
+we will need to use a temporary (signed) variable to check for errors
+from ida_alloc_min(). Will fix in next revision.
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index f06087e47859..7ac9ef281881 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "14.4.0.2"
-+#define LPFC_DRIVER_VERSION "14.4.0.3"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
--- 
-2.38.0
 
+>   5468			kfree(ap);
+>   5469			return NULL;
+>   5470		}
+>   5471		ap->host = host;
+>   5472		ap->dev = host->dev;
+>   5473	
+>   5474		mutex_init(&ap->scsi_scan_mutex);
+>   5475		INIT_DELAYED_WORK(&ap->hotplug_task, ata_scsi_hotplug);
+>   5476		INIT_DELAYED_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan);
+>   5477		INIT_LIST_HEAD(&ap->eh_done_q);
+>   5478		init_waitqueue_head(&ap->eh_wait_q);
+>   5479		init_completion(&ap->park_req_pending);
+>   5480		timer_setup(&ap->fastdrain_timer, ata_eh_fastdrain_timerfn,
+>   5481			    TIMER_DEFERRABLE);
+>   5482	
+>   5483		ap->cbl = ATA_CBL_NONE;
+>   5484	
+>   5485		ata_link_init(ap, &ap->link, 0);
+>   5486	
+> 
+> -- 
+> 0-DAY CI Kernel Test Service
+> https://github.com/intel/lkp-tests/wiki
