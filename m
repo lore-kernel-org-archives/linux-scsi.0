@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C7102574B;
-	Sat, 29 Jun 2024 12:42:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F33552574B;
+	Sat, 29 Jun 2024 12:42:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719664959; cv=none; b=SeQlNyWJfsalCyuxDMJSR502fYx8H97n7RNFX2joyJMgdTxHJEdWtQ12+xAcK35aDTUQ0fpJUUnj1aZYNXKjpVJa0STUE880mKfwG3z1OvOvoYwM1TQheqieV2NLul5Kuw3AIH4SiThkf6AYd1d22GTSilxR9HJAIHBJeuzz/h0=
+	t=1719664963; cv=none; b=YmrVjhshtDMBEwAPN29yvWJjc+flLHRStivM+vb5te5seFtaLEXXK1CWL3rGud+WtXgbyjB+7oevAuGNhWrK0GBRS4jskgqs2fRz9uBdjdmTUp3mBb0W0eMpaCoHaQWHDL8gAO+ppczUQNYOEUZ4O5MkH6/jadkhCpORxkLatxU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719664959; c=relaxed/simple;
-	bh=f4Qe+uisdyi95QeN2VZXvu3hEOAuQmhtk4sPU4vbjOM=;
+	s=arc-20240116; t=1719664963; c=relaxed/simple;
+	bh=YE2wYJ2kCjz6uRVo49Ho3nZ45FD637M/W1oPclhVsow=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Wn9PlmE1W/6SN5X5ZO8h0ay08DeiDeJAdyRXFQkoUfU8tRUdiQ9cJagxUjz+4Lcy0pcARPharkBUVRooUbctHZ1k1fTl6JvdI57gHSYpMMmPmCyza1qN2BDq88b2t9hBJ3MY9x0CZmsqKWWW2dqDypT+yaX7C1zhSU98YXbit+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rBroWHsp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=VbxRLc6cf21JAlvaQ3aSe0QXzsVXAZ75bLjBaexxVlBr7xzZ8FoVDKk5Sve8e+lurGxCp/YZ3yyzytAWbC3kDaaJJ22qqjUbRkHg0lML4ngcrs3kArW39gXDCfAd1jqQ0gr13MbOaZpqhPyN374iGMcZTu6Qr/3Q+pHIfDtGg44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T8w3vZIh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rBroWHsp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 983FFC32789;
-	Sat, 29 Jun 2024 12:42:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T8w3vZIh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD8B8C4AF09;
+	Sat, 29 Jun 2024 12:42:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719664959;
-	bh=f4Qe+uisdyi95QeN2VZXvu3hEOAuQmhtk4sPU4vbjOM=;
+	s=k20201202; t=1719664962;
+	bh=YE2wYJ2kCjz6uRVo49Ho3nZ45FD637M/W1oPclhVsow=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=rBroWHsp9iWHnv0yrZAlAhYYQ9z9TqkRWZVh8x7uppXVYdeAdf31S+yP5xpz5nzYY
-	 bOJDOA7n6cDiU6DsnlKcmVJd1bh2ayQQyC7G2SnZshYwD3yqI0aObuRZCeOaT+QvBX
-	 vemJfiAfmV3uDhn2g76snSeQsfZA23+cSARXyYFeiXiuE3IZrgUtOQ1dJSGVB+KN9W
-	 6YvaKgJODXvOM6pwYjqiAVd2jv1lq4h6WjRGgRxFxWlVmTsWbELy4tBSmZ7MXe/S0X
-	 ROOhEbmOVaTiGAM4Y4isipWdQyJNb4goHRcL/jCw42Sh8c0wOWBig7Sy/9k5FS0yOi
-	 8oVvT2VGLVdBw==
+	b=T8w3vZIhVu84/AEdu/0R2YPl32MebtlulpnoUTsf1nKLxns3JUWjUkxaHWs1uQobJ
+	 N89mEY7Mm06y7NsJIxhA0RMikpI4/+CBAhLi9Xnl1AUZE6OFQrOIoJOiwtui3YTRCB
+	 VhKyRC4JynbB2azhAJpslgYQixJPJ6PzTihhHzuWjLS+f2u33kMnW33bRYkeKij9oh
+	 ZTjR01/kzWMK0Evr6oW8pK+t+d6/MTaGE3az/InsRB3LhI2UQTkZZHd1uePgitSGfV
+	 Arijomt4jRcwujVnk/Y9r4hC/dgXXvLpmkK+FQiz/cm0KanxZCFTxD3hR79FFr5GbC
+	 sSo1qDiuVUJdQ==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Colin Ian King <colin.i.king@gmail.com>
+	Jens Axboe <axboe@kernel.dk>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>
 Cc: linux-scsi@vger.kernel.org,
 	John Garry <john.g.garry@oracle.com>,
 	Jason Yan <yanaijie@huawei.com>,
@@ -39,9 +39,9 @@ Cc: linux-scsi@vger.kernel.org,
 	stable@vger.kernel.org,
 	Hannes Reinecke <hare@suse.de>,
 	linux-ide@vger.kernel.org
-Subject: [PATCH 3/4] ata: libata-core: Fix double free on error
-Date: Sat, 29 Jun 2024 14:42:13 +0200
-Message-ID: <20240629124210.181537-9-cassel@kernel.org>
+Subject: [PATCH 4/4] ata: ahci: Clean up sysfs file on error
+Date: Sat, 29 Jun 2024 14:42:14 +0200
+Message-ID: <20240629124210.181537-10-cassel@kernel.org>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240629124210.181537-6-cassel@kernel.org>
 References: <20240629124210.181537-6-cassel@kernel.org>
@@ -51,87 +51,88 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2946; i=cassel@kernel.org; h=from:subject; bh=f4Qe+uisdyi95QeN2VZXvu3hEOAuQmhtk4sPU4vbjOM=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNIaGDUCp52+Z9jquec0Zxa//YSQ8McSO3YYPl2VIHJVg e+wUurUjlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAExEtZeRYfqFmjMPZuzKaDa3 E5x4WHlHs8CF0qqYfW5fvvZr1drfmMfI0NScOqN0leKF3f8OPA9NL+Yt+BAUf/rFLLMnMtW/rmx X5wEA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2648; i=cassel@kernel.org; h=from:subject; bh=YE2wYJ2kCjz6uRVo49Ho3nZ45FD637M/W1oPclhVsow=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNIaGDUiIxckPH6ezttj94BvWV/kp9Cdb48lvc5PlO+Lm v3vZLdxRykLgxgXg6yYIovvD5f9xd3uU44r3rGBmcPKBDKEgYtTACbStJ/hn8UBW1l/0Yf3JnJ5 /lvLUDFxwbLTud/PamQfZrhdfddE9wUjwya772YeLnuaL8czB2w++sY5bXnJyg+3dn2717FHSOb gB14A
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-If e.g. the ata_port_alloc() call in ata_host_alloc() fails, we will jump
-to the err_out label, which will call devres_release_group().
-devres_release_group() will trigger a call to ata_host_release().
-ata_host_release() calls kfree(host), so executing the kfree(host) in
-ata_host_alloc() will lead to a double free:
+.probe() (ahci_init_one()) calls sysfs_add_file_to_group(), however,
+if probe() fails after this call, we currently never call
+sysfs_remove_file_from_group().
 
-kernel BUG at mm/slub.c:553!
-Oops: invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
-CPU: 11 PID: 599 Comm: (udev-worker) Not tainted 6.10.0-rc5 #47
+(The sysfs_remove_file_from_group() call in .remove() (ahci_remove_one())
+does not help, as .remove() is not called on .probe() error.)
+
+Thus, if probe() fails after the sysfs_add_file_to_group() call, the next
+time we insmod the module we will get:
+
+sysfs: cannot create duplicate filename '/devices/pci0000:00/0000:00:04.0/remapped_nvme'
+CPU: 11 PID: 954 Comm: modprobe Not tainted 6.10.0-rc5 #43
 Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-2.fc40 04/01/2014
-RIP: 0010:kfree+0x2cf/0x2f0
-Code: 5d 41 5e 41 5f 5d e9 80 d6 ff ff 4d 89 f1 41 b8 01 00 00 00 48 89 d9 48 89 da
-RSP: 0018:ffffc90000f377f0 EFLAGS: 00010246
-RAX: ffff888112b1f2c0 RBX: ffff888112b1f2c0 RCX: ffff888112b1f320
-RDX: 000000000000400b RSI: ffffffffc02c9de5 RDI: ffff888112b1f2c0
-RBP: ffffc90000f37830 R08: 0000000000000000 R09: 0000000000000000
-R10: ffffc90000f37610 R11: 617461203a736b6e R12: ffffea00044ac780
-R13: ffff888100046400 R14: ffffffffc02c9de5 R15: 0000000000000006
-FS:  00007f2f1cabe980(0000) GS:ffff88813b380000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f2f1c3acf75 CR3: 0000000111724000 CR4: 0000000000750ef0
-PKRU: 55555554
 Call Trace:
  <TASK>
- ? __die_body.cold+0x19/0x27
- ? die+0x2e/0x50
- ? do_trap+0xca/0x110
- ? do_error_trap+0x6a/0x90
- ? kfree+0x2cf/0x2f0
- ? exc_invalid_op+0x50/0x70
- ? kfree+0x2cf/0x2f0
- ? asm_exc_invalid_op+0x1a/0x20
- ? ata_host_alloc+0xf5/0x120 [libata]
- ? ata_host_alloc+0xf5/0x120 [libata]
- ? kfree+0x2cf/0x2f0
- ata_host_alloc+0xf5/0x120 [libata]
- ata_host_alloc_pinfo+0x14/0xa0 [libata]
- ahci_init_one+0x6c9/0xd20 [ahci]
+ dump_stack_lvl+0x5d/0x80
+ sysfs_warn_dup.cold+0x17/0x23
+ sysfs_add_file_mode_ns+0x11a/0x130
+ sysfs_add_file_to_group+0x7e/0xc0
+ ahci_init_one+0x31f/0xd40 [ahci]
 
-Ensure that we will not call kfree(host) twice, by performing the kfree()
-only if the devres_open_group() call failed.
-
-Fixes: dafd6c496381 ("libata: ensure host is free'd on error exit paths")
+Fixes: 894fba7f434a ("ata: ahci: Add sysfs attribute to show remapped NVMe device count")
 Cc: stable@vger.kernel.org
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/ata/libata-core.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/ata/ahci.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 481baa55ebfc..e0455a182af7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5578,8 +5578,10 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
- 	if (!host)
- 		return NULL;
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5eb38fbbbecd..fc6fd583faf8 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1975,8 +1975,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
  
--	if (!devres_open_group(dev, NULL, GFP_KERNEL))
--		goto err_free;
-+	if (!devres_open_group(dev, NULL, GFP_KERNEL)) {
-+		kfree(host);
-+		return NULL;
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+-	if (!host)
+-		return -ENOMEM;
++	if (!host) {
++		rc = -ENOMEM;
++		goto err_rm_sysfs_file;
 +	}
+ 	host->private_data = hpriv;
  
- 	dr = devres_alloc(ata_devres_release, 0, GFP_KERNEL);
- 	if (!dr)
-@@ -5611,8 +5613,6 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
+ 	if (ahci_init_msi(pdev, n_ports, hpriv) < 0) {
+@@ -2031,11 +2033,11 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* initialize adapter */
+ 	rc = ahci_configure_dma_masks(pdev, hpriv);
+ 	if (rc)
+-		return rc;
++		goto err_rm_sysfs_file;
  
-  err_out:
- 	devres_release_group(dev, NULL);
-- err_free:
--	kfree(host);
- 	return NULL;
+ 	rc = ahci_pci_reset_controller(host);
+ 	if (rc)
+-		return rc;
++		goto err_rm_sysfs_file;
+ 
+ 	ahci_pci_init_controller(host);
+ 	ahci_pci_print_info(host);
+@@ -2044,10 +2046,15 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	rc = ahci_host_activate(host, &ahci_sht);
+ 	if (rc)
+-		return rc;
++		goto err_rm_sysfs_file;
+ 
+ 	pm_runtime_put_noidle(&pdev->dev);
+ 	return 0;
++
++err_rm_sysfs_file:
++	sysfs_remove_file_from_group(&pdev->dev.kobj,
++				     &dev_attr_remapped_nvme.attr, NULL);
++	return rc;
  }
- EXPORT_SYMBOL_GPL(ata_host_alloc);
+ 
+ static void ahci_shutdown_one(struct pci_dev *pdev)
 -- 
 2.45.2
 
