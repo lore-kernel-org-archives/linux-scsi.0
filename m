@@ -1,111 +1,138 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81D5A1DA53
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Jun 2024 04:39:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 147993F9F9;
+	Sat, 29 Jun 2024 12:09:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719635985; cv=none; b=Wt2pMvcJiz81bndooJ16SgAhoY8cFeIv/E62lIj889iL/sLOaRj//xOdhhsvfyClzQF3LRHDE5IV+Y4NK8L5MaEzFYkxK4kkarD/swagXdzmaDcvZLHT+BbWRX/2rvL249ygod8LuCWcPdtOoToUgNy/AsNGlAMOuzKUhrXOdKc=
+	t=1719662991; cv=none; b=CDy81nmfFJpTmx2SOhK5MIH9tG8ZXuRrpRKQWtlPJKRpRU1/JsXIkLiQOV3lv+tkLxHR2RuFHA/5KQZkoX8cC3qcOtahifm70iYsMQF5ztko9qUMI0e1lLu3NfRlZZ6q4IhNwaEGF4DK+4/S+z49iNC4zsZOeasI0/Iej7h5I0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719635985; c=relaxed/simple;
-	bh=OfYLpRXPLbKOeQIUFWViG64plp4T+dyD8EAwon2/mN4=;
-	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
-	 Content-Type:References; b=TvRG03kAEP6z1S0B+wOsp3+AVZIiv3mu8xgn3xbWqXOGncsQOB1GoLigWPSkrIJfc9CiOUH0tRY47HfQRehlCLOZ+WZu2TlI4h3g02ykatbeYRhfZUxJ1oFGAk4UHxWPWYmdnPXwZA+DRsoWE8fy24wttecB+rwdiAXnm5hqQxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=YVK+t68+; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1719662991; c=relaxed/simple;
+	bh=ts+Uxe4L0bZIoIgpiJ9xP8rIlcc8SP6g7dVg9bhl8gA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ds7SeomkBcUfkywwYTiUzVNapQyqXZcPFdIgz/iwBNry30Sx72w4UEpqjjYM+HM2WOuyb/cgWU+6lb+4vO3JfLuM2gmgj8RDAM30F3DnEJtQ02SKOmYxCPBzY0+EhHncLeThvw9WX4O8FRJvInJxGSwuKgUdXNqqa7TM96A4YoM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VANeUdnc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="YVK+t68+"
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20240629043938epoutp04ede47d47f79b5a08b04f0bfe13fa40b0~dX8_2Bo3z0869908699epoutp044
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Jun 2024 04:39:38 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20240629043938epoutp04ede47d47f79b5a08b04f0bfe13fa40b0~dX8_2Bo3z0869908699epoutp044
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1719635978;
-	bh=OfYLpRXPLbKOeQIUFWViG64plp4T+dyD8EAwon2/mN4=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=YVK+t68+XO3Tb1MKjM1JTBoX+2HyUQcgbUXfXeNk+Gun0O1yzhnxryf76BDs5Wh+p
-	 PwhMzoGn4mXo31YE5qYY1wIIzBGhyOGESM4JBK1rw2Brd1fiS7sm+CsjR8HDWNPGtC
-	 dWZYJe5i+g5seE1vrX6vgPhk5ly58vljsfV3uB7I=
-Received: from epsmges2p1.samsung.com (unknown [182.195.42.69]) by
-	epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-	20240629043937epcas2p14cc287f55a1ffd24af0f724a6160c04d~dX897tJlI1213312133epcas2p1G;
-	Sat, 29 Jun 2024 04:39:37 +0000 (GMT)
-X-AuditID: b6c32a45-447fe70000002678-93-667f90096525
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-	epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	87.F2.09848.9009F766; Sat, 29 Jun 2024 13:39:37 +0900 (KST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VANeUdnc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21830C2BBFC;
+	Sat, 29 Jun 2024 12:09:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719662990;
+	bh=ts+Uxe4L0bZIoIgpiJ9xP8rIlcc8SP6g7dVg9bhl8gA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VANeUdncAiSm00tYmxbJlFaqAvWC7q293Kwsq8sjZJ+WU5jnJ+5QRojUdn7GWuAoq
+	 J8/JojN7Y7nIZyqryy8oWlbKat7CfqWqhWe+P92cRL4e+lcpnNuE7RI5rzQfrUOWM/
+	 Or5ZpCx7ZtYTaswRjqmDUNNIwfXceaElhRr7T5vntahO+rUa8IS5M6UhaDmumMzzNN
+	 S7JCsvf94QksVgWhzfmgHYPNcAVoiwIorQtXwbqLao9YwL4mZr+iFCC7x34C1NoUJX
+	 FrKbLsIHyiFLrxKYorPt0OjcpY/59bomG+YmiurWg8V6fFjtPFabgsawTVIqkDK5dz
+	 iXWy7J3qtuNrg==
+Date: Sat, 29 Jun 2024 14:09:45 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 05/13] ata,scsi: libata-core: Add ata_port_free()
+Message-ID: <Zn_5ifLxcF9JCGH6@ryzen.lan>
+References: <20240626180031.4050226-15-cassel@kernel.org>
+ <20240626180031.4050226-20-cassel@kernel.org>
+ <ec3be157-4096-4817-885b-1cb90ca032b2@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: RE: Re: [PATCH] ufs: core: Remove scsi host only if added
-Reply-To: k831.kim@samsung.com
-Sender: Kyoungrul Kim <k831.kim@samsung.com>
-From: Kyoungrul Kim <k831.kim@samsung.com>
-To: Bart Van Assche <bvanassche@acm.org>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Minwoo Im
-	<minwoo.im@samsung.com>, Kyoungrul Kim <k831.kim@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <adbf2b00-541c-4ab8-9b13-7ad70a6353c9@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20240629043936epcms2p69efb803ff47ecb61c625fdf14217ae18@epcms2p6>
-Date: Sat, 29 Jun 2024 13:39:36 +0900
-X-CMS-MailID: 20240629043936epcms2p69efb803ff47ecb61c625fdf14217ae18
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmphleLIzCtJLcpLzFFi42LZdljTTJdzQn2awdOzIhbTPvxkttjYz2Ex
-	ZdNXRovu6zvYLJYf/8dk8ez0AWYHNo/LV7w9pk06xebx8ektFo++LasYPT5vkgtgjeKySUnN
-	ySxLLdK3S+DKWPn+DVvBBq6K0896GRsYP3J2MXJySAiYSFyZsJS5i5GLQ0hgB6PE7VdXWLsY
-	OTh4BQQl/u4QBjGFBZwkDkyJAykXEpCTuD6/mxXEFhbQkehu/sAMYrMJaElsPL6RDWSMiMAu
-	Rolta88zgTjMAh2MEls6pzJDLOOVmNH+lAXClpbYvnwrI4jNKWAtMeviJKi4hsSPZb1Q9aIS
-	N1e/ZYex3x+bzwhhi0i03jsLVSMo8eDnbqi4lETb7N9MEHa1xOQFi6B6ayTWvp0KZZtL/L6/
-	G+wDXgFfifvL74PNYRFQlbg/eRcbRI2LxIdts8FqmAW0JZYtfM0MCghmAU2J9bv0QUwJAWWJ
-	I7dYICr4JDoO/2WH+XDHvCdQFyhJtG+7ygphS0g8m3gB6mIPiUtrVrJMYFSchQjoWUh2zULY
-	tYCReRWjWGpBcW56arFRgaFecWJucWleul5yfu4mRnBC0XLdwTj57Qe9Q4xMHIyHGCU4mJVE
-	ePkz69KEeFMSK6tSi/Lji0pzUosPMUpzsCiJ895rnZsiJJCeWJKanZpakFoEk2Xi4JRqYIoU
-	Vns+weC/jmU9F3ujamLakm+Ombev7TjV9sgum5H3JOengrmvoosLf1yer3X7qbe9Yd8CiR7t
-	pprFZo+7Mz24f+ydNm2jWeEUhrA7PU5ne1n0F//OqDYPT1De1LvO6UKcdHpQok9h2yu3JjEe
-	k0L5ghthSnMO1Nvy6rkuPN62mrFJ/pWcYdTpaw+SP4tNSVl74N/PW66brrydsetbrIvmdeOs
-	D3rLThxfNnH31JrTEhGpKctcP9n3+P3Jv+pr8Oikzi2HWYsWHl0w6YDrYfNHVSEpS8PEBBe3
-	HEpkCHjJ8vxrt4Rn1m4O9sgXMwXW96/8lWFxODVke3rAHe3a3PqVP3dcP7VqJd8s0aRl65RY
-	ijMSDbWYi4oTAfCULfeXAwAA
-X-CMS-RootMailID: 20240627085104epcms2p5897a3870ea5c6416aa44f94df6c543d7
-References: <adbf2b00-541c-4ab8-9b13-7ad70a6353c9@acm.org>
-	<2004249a-7130-42ab-8264-78f9c418bef3@acm.org>
-	<20240627085104epcms2p5897a3870ea5c6416aa44f94df6c543d7@epcms2p5>
-	<20240628021836epcms2p71dd5b348d5a386635d99fb342fe9cb04@epcms2p7>
-	<CGME20240627085104epcms2p5897a3870ea5c6416aa44f94df6c543d7@epcms2p6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ec3be157-4096-4817-885b-1cb90ca032b2@kernel.org>
 
-Yes, you are right. The ufshcd_init() and ufshcd_device_init() call scsi_ad=
-d_host().
-However, the ufs_device_init() already has the =22hba->scsi_host_added =3D =
-true=22 assignment.
-So, I added only one assignment.
-=C2=A0=0D=0A=C2=A0=0D=0A---------=20Original=20Message=20---------=0D=0ASen=
-der=20:=20Bart=20Van=20Assche=20<bvanassche=40acm.org>=0D=0ADate=20:=202024=
--06-29=2004:30=20(GMT+9)=0D=0ATitle=20:=20Re:=20=5BPATCH=5D=20ufs:=20core:=
-=20Remove=20scsi=20host=20only=20if=20added=0D=0A=C2=A0=0D=0AOn=206/27/24=
-=207:18=20PM,=20Kyoungrul=20Kim=20wrote:=0D=0A>=20Yes,=20scsi_add_host=20ha=
-s=20been=20moved=20the=20async=20function=20(ufshcd_device_init)as=20MCQ=20=
-patch=20applied.=0D=0A>=20So=20the=20ufshcd=20driver=20attaches=20the=20dev=
-ice=20without=20knowing=20whether=20the=20probe=20fails=20or=20not.=0D=0A>=
-=20and=20if=20host=20tries=20to=20remove=20ufshcd=20driver,=20it=20makes=20=
-kernel=20panic.=0D=0A>=20So=20it=20became=20necessary=20to=20check=20whethe=
-r=20to=20add=20a=20host=20or=20not.=0D=0A=0D=0AThere=20are=20two=20scsi_add=
-_host()=20calls=20in=20the=20UFS=20driver=20and=20this=20patch=0D=0Aonly=20=
-adds=20one=20=22hba->scsi_host_added=20=3D=20true=22=20assignment.=20Should=
-n't=20this=0D=0Apatch=20add=20two=20such=20assignments?=0D=0A=0D=0AThanks,=
-=0D=0A=0D=0ABart.
+On Thu, Jun 27, 2024 at 10:15:37AM +0900, Damien Le Moal wrote:
+> On 6/27/24 03:00, Niklas Cassel wrote:
+> > Add a function, ata_port_free(), that is used to free a ata_port.
+> > It makes sense to keep the code related to freeing a ata_port in its own
+> > function, which will also free all the struct members of struct ata_port.
+> > 
+> > libsas is currently not freeing all the struct ata_port struct members,
+> > e.g. ncq_sense_buf for a driver supporting Command Duration Limits (CDL).
+> 
+> This part should be a separate fix patch and sent out this cycle.
+> 
+> > 
+> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> 
+> > @@ -5518,12 +5530,7 @@ static void ata_host_release(struct kref *kref)
+> >  	for (i = 0; i < host->n_ports; i++) {
+> >  		struct ata_port *ap = host->ports[i];
+> >  
+> > -		if (ap) {
+> > -			kfree(ap->pmp_link);
+> > -			kfree(ap->slave_link);
+> > -			kfree(ap->ncq_sense_buf);
+> > -			kfree(ap);
+> > -		}
+> > +		ata_port_free(ap);
+> 
+> The variable "ap" can be removed too.
+> 
+> >  		host->ports[i] = NULL;
+> >  	}
+> >  	kfree(host);
+> 
+> > diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+> > index 6e01ddec10c9..951bdc554a10 100644
+> > --- a/drivers/scsi/libsas/sas_discover.c
+> > +++ b/drivers/scsi/libsas/sas_discover.c
+> > @@ -301,7 +301,7 @@ void sas_free_device(struct kref *kref)
+> >  
+> >  	if (dev_is_sata(dev) && dev->sata_dev.ap) {
+> >  		ata_tport_delete(dev->sata_dev.ap);
+> > -		kfree(dev->sata_dev.ap);
+> > +		ata_port_free(dev->sata_dev.ap);
+> 
+> Why not have this inside ata_tport_delete() ?
+
+In the current code, the allocating and freeing of the ports
+are done separately from adding and deleting a transport.
+
+The tport_del will be called by:
+ahci_remove_one()
+
+drivers/base/dd.c:__device_release_driver() will call
+device_remove() which will call ahci_remove_one().
+
+ahci_remove_one() (.remove()), will call ata_host_detach(), which calls
+ata_port_detach(), which calls ata_tport_delete().
+
+This will not free the port however. That is instead done even later, by:
+ata_host_release() will be called even later:
+drivers/base/dd.c:__device_release_driver() will call
+device_unbind_cleanup(), which will call ata_host_release().
+
+We could evaluate if we want to change this, since ALL libata driver do
+call tport_add()/tport_delete(), but since this is a fix patch, I would
+rather not do fundamental changes like that in this patch.
+
+
+> 
+> >  		ata_host_put(dev->sata_dev.ata_host);
+> >  		dev->sata_dev.ata_host = NULL;
+> >  		dev->sata_dev.ap = NULL;
+> > diff --git a/include/linux/libata.h b/include/linux/libata.h
+> > index 581e166615fa..586f0116d1d7 100644
+> > --- a/include/linux/libata.h
+> > +++ b/include/linux/libata.h
+> > @@ -1249,6 +1249,7 @@ extern int ata_slave_link_init(struct ata_port *ap);
+> >  extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+> >  					   struct ata_port_info *, struct Scsi_Host *);
+> >  extern void ata_port_probe(struct ata_port *ap);
+> > +extern void ata_port_free(struct ata_port *ap);
+> >  extern int ata_tport_add(struct device *parent, struct ata_port *ap);
+> >  extern void ata_tport_delete(struct ata_port *ap);
+> >  int ata_sas_device_configure(struct scsi_device *sdev, struct queue_limits *lim,
+> 
+> -- 
+> Damien Le Moal
+> Western Digital Research
+> 
