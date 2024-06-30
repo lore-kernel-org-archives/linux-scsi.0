@@ -1,45 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0296F38F83;
-	Sun, 30 Jun 2024 20:28:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93C6639855;
+	Sun, 30 Jun 2024 21:02:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719779306; cv=none; b=DBhCRD3/bg01ethteYbNvNl7XKgvFi30szn1JokhTGQFD6QP9xFVp+h492HJaoW+bvcr/t/Jj/cGY+4xOCRYRjFVHkI43fXEgWXoLhQGpIRGksocjbjkA+Q3KfX65TADIZTWgxcnrOUScydlwLeYPucLX0h7MiBIc2ltc7Ndg7w=
+	t=1719781353; cv=none; b=oYDAHOTP1ZZIfNlEVc1xsMLK4v4Q2AQef8eC5oexGZdRcyAxRYsRBvlLUvqMda8+hceyGz9S6TinwCU3vf+Cb7DR9jYUUcRTDzm9z+YSyxYVj2CojGKaYZzWU4p6VX0C6/AcYagVar4h701HjwQrrXQk2H4M0p8pBgKPt/v8Io0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719779306; c=relaxed/simple;
-	bh=U/sA5MvJUBq8h5fhwadRVxY167JDsQ8uDvBteyNAt7U=;
+	s=arc-20240116; t=1719781353; c=relaxed/simple;
+	bh=089eDc9zyjGT3Wa6FdBkDwVbU/8kdk+qXH2Zva7N2HI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u+gs1AiOIL+XQ6r/8d6hUQTiZUUQrmpSw/n/s2E1oiYMtLmov3CqvhYt5B8BtvXS1X+5O1vcrCUX7mXJKVDkv8SC9dlKlAoP2AV2b+Um0xQTbO1pgAYpjmTyYZlDNL3hDPs6UcMmzbrwaX8Y8dXRfQ15wX1mhc8GpEJb4qqV3Xs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qhTHesS+; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=S/eItvdLxJHOo639FVJu0l5NWoAY0PeWxTN/1UKoaVAjd1N8Y/HqNR7R5WtQ9PeJerUAbAEpIkml1ztQsMsdxkPBYiCi8+hdCs4zLt1O2Twc2I7nQATdqmluZQKNROFb8Uq7KVz2cwZWuq/AYDyc7s9sB5EzU1VYjkeGu0n8QEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I4BYuO3t; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qhTHesS+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5512EC2BD10;
-	Sun, 30 Jun 2024 20:28:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I4BYuO3t"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DDFBC2BD10;
+	Sun, 30 Jun 2024 21:02:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719779305;
-	bh=U/sA5MvJUBq8h5fhwadRVxY167JDsQ8uDvBteyNAt7U=;
+	s=k20201202; t=1719781353;
+	bh=089eDc9zyjGT3Wa6FdBkDwVbU/8kdk+qXH2Zva7N2HI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qhTHesS+BsEr3wWdMtUtimKHbszm3etVLugwxjd8r+Kl3hIupHkfsZFoQ65L4UpHB
-	 SsLLcqmZWGN8OPV+Wqtdi0cOTr8NJ+tdp0ewEDRTpRhSn1vUEacRRTZsbI70A2xhve
-	 ThU4VzC+BmZOFMJjQ4gKQJjjjTA535K5vZr/I0NqQK6woOgjKZJd+UB0gjfsU78aXj
-	 cux7UmY9Zhxzy83FrkP8HrRvhw0hPHAEZ2xCTBMR73kjgjnCVOYIHooLuAGxxKQlIx
-	 TDv83SUbHsk/PfasOnBjYQN2yWI23LmlIvKGNFcVZodxHwMXo/UT+9PXIq7uTQqkxI
-	 K2C8YAaRNw2dA==
-Date: Sun, 30 Jun 2024 22:28:20 +0200
+	b=I4BYuO3tYwuYfrJAyGGixOsXMOpTlnoWuFR73BILUOtN5pDiuF3tfgnOm2Z+4lBpG
+	 hdD4m4NtWYJb8DHhnYbxcddW11TJuhz/HgspMLYa4RHIAt0g+pDB79wyfgCskOeCV+
+	 47pJHjCkJh4aAjulbh9T8Ptgcf1R7Xz50oAhzEB1w+N106Cd72+3Dv3cQ+51M5yCQM
+	 aGvJzIt0Usk1Ib6oXj2o0txunp5HV7+L2bUfgQMLGHINsnAhYhmMRSUZD4rb13v0R2
+	 3jnqbjbdEyPJDatBeYJJfz1q9xajiNt6svHqNNXoVJv8yq6FY4q0WvlhEy5yjSs5Jl
+	 AdDt0srEE2i1g==
+Date: Sun, 30 Jun 2024 23:02:27 +0200
 From: Niklas Cassel <cassel@kernel.org>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, Jason Yan <yanaijie@huawei.com>,
+To: Damien Le Moal <dlemoal@kernel.org>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>,
 	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-	Niklas Cassel <niklas.cassel@wdc.com>, linux-ide@vger.kernel.org
-Subject: Re: [PATCH 2/4] ata,scsi: libata-core: Do not leak memory for
- ata_port struct members
-Message-ID: <ZoG_5Jvo8_fEt_8I@ryzen.lan>
+	Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Colin Ian King <colin.i.king@gmail.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc: linux-scsi@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH 0/4] libata/libsas cleanup fixes
+Message-ID: <ZoHH47jc5E-a8iV6@ryzen.lan>
 References: <20240629124210.181537-6-cassel@kernel.org>
- <20240629124210.181537-8-cassel@kernel.org>
- <18252752-d3ed-4924-ae5c-4d3e0120d973@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,129 +51,46 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <18252752-d3ed-4924-ae5c-4d3e0120d973@oracle.com>
+In-Reply-To: <20240629124210.181537-6-cassel@kernel.org>
 
-On Sun, Jun 30, 2024 at 10:42:45AM +0100, John Garry wrote:
-> On 29/06/2024 13:42, Niklas Cassel wrote:
-> > libsas is currently not freeing all the struct ata_port struct members,
-> > e.g. ncq_sense_buf for a driver supporting Command Duration Limits (CDL).
-> > 
-> > Add a function, ata_port_free(), that is used to free a ata_port,
-> > including its struct members. It makes sense to keep the code related to
-> > freeing a ata_port in its own function, which will also free all the
-> > struct members of struct ata_port.
-> > 
-> > Fixes: 18bd7718b5c4 ("scsi: ata: libata: Handle completion of CDL commands using policy 0xD")
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+On Sat, Jun 29, 2024 at 02:42:10PM +0200, Niklas Cassel wrote:
+> Hello there,
 > 
-> Apart from a couple of nitpicks:
+> This series takes the patches that are -stable material from this series:
+> https://lore.kernel.org/linux-ide/20240626180031.4050226-15-cassel@kernel.org/
 > 
-> Reviewed-by: John Garry <john.g.garry@oracle.com>
+> Changes since series above:
+> -Fixed minor review comments for the four patches included in the series.
+> -Picked up tags.
 > 
-> > ---
-> >   drivers/ata/libata-core.c          | 24 ++++++++++++++----------
-> >   drivers/scsi/libsas/sas_ata.c      |  2 +-
-> >   drivers/scsi/libsas/sas_discover.c |  2 +-
-> >   include/linux/libata.h             |  1 +
-> >   4 files changed, 17 insertions(+), 12 deletions(-)
-> > 
-> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> > index f47838da75d7..481baa55ebfc 100644
-> > --- a/drivers/ata/libata-core.c
-> > +++ b/drivers/ata/libata-core.c
-> > @@ -5490,6 +5490,18 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
-> >   	return ap;
-> >   }
-> > +void ata_port_free(struct ata_port *ap)
-> > +{
-> > +	if (!ap)
-> > +		return;
 > 
-> nit: personally I'd have the caller check this. The main reason for that is
-> that often it seems an unnecessary check.
+> Kind regards,
+> Niklas
+> 
+> 
+> Niklas Cassel (4):
+>   ata: libata-core: Fix null pointer dereference on error
+>   ata,scsi: libata-core: Do not leak memory for ata_port struct members
+>   ata: libata-core: Fix double free on error
+>   ata: ahci: Clean up sysfs file on error
+> 
+>  drivers/ata/ahci.c                 | 17 ++++++++++++-----
+>  drivers/ata/libata-core.c          | 29 ++++++++++++++++++-----------
+>  drivers/scsi/libsas/sas_ata.c      |  2 +-
+>  drivers/scsi/libsas/sas_discover.c |  2 +-
+>  include/linux/libata.h             |  1 +
+>  5 files changed, 33 insertions(+), 18 deletions(-)
 
-People are used to free() family of functions handling NULL,
-so I think it is wise to keep it as is.
+Martin, James,
+
+considering that the libsas change is extremely trivial,
+and that the libsas maintainer (John) has added his R-b tag,
+I will simply take this via the libata tree.
+
+Please tell me if you have a problem with this, and it will
+never happen again. (I would never do this for something that
+wasn't extremely trivial.)
 
 
-> 
-> > +
-> > +	kfree(ap->pmp_link);
-> > +	kfree(ap->slave_link);
-> > +	kfree(ap->ncq_sense_buf);
-> > +	kfree(ap);
-> > +}
-> > +EXPORT_SYMBOL_GPL(ata_port_free);
-> > +
-> >   static void ata_devres_release(struct device *gendev, void *res)
-> >   {
-> >   	struct ata_host *host = dev_get_drvdata(gendev);
-> > @@ -5516,15 +5528,7 @@ static void ata_host_release(struct kref *kref)
-> >   	int i;
-> >   	for (i = 0; i < host->n_ports; i++) {
-> > -		struct ata_port *ap = host->ports[i];
-> > -
-> > -		if (!ap)
-> > -			continue;
-> > -
-> > -		kfree(ap->pmp_link);
-> > -		kfree(ap->slave_link);
-> > -		kfree(ap->ncq_sense_buf);
-> > -		kfree(ap);
-> > +		ata_port_free(host->ports[i]);
-> >   		host->ports[i] = NULL;
-> >   	}
-> >   	kfree(host);
-> > @@ -5907,7 +5911,7 @@ int ata_host_register(struct ata_host *host, const struct scsi_host_template *sh
-> >   	 * allocation time.
-> >   	 */
-> >   	for (i = host->n_ports; host->ports[i]; i++)
-> > -		kfree(host->ports[i]);
-> > +		ata_port_free(host->ports[i]);
-> >   	/* give ports names and add SCSI hosts */
-> >   	for (i = 0; i < host->n_ports; i++) {
-> > diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> > index 4c69fc63c119..1f247a8cd185 100644
-> > --- a/drivers/scsi/libsas/sas_ata.c
-> > +++ b/drivers/scsi/libsas/sas_ata.c
-> > @@ -618,7 +618,7 @@ int sas_ata_init(struct domain_device *found_dev)
-> >   	return 0;
-> >   destroy_port:
-> > -	kfree(ap);
-> > +	ata_port_free(ap);
-> 
-> nit: If not a nuisance, could we change the label name to free_port, like
-> free_host, below. No big deal.
-
-Sure, will fixup when applying.
-
-
-> 
-> >   free_host:
-> >   	ata_host_put(ata_host);
-> >   	return rc;
-> > diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> > index 8fb7c41c0962..48d975c6dbf2 100644
-> > --- a/drivers/scsi/libsas/sas_discover.c
-> > +++ b/drivers/scsi/libsas/sas_discover.c
-> > @@ -301,7 +301,7 @@ void sas_free_device(struct kref *kref)
-> >   	if (dev_is_sata(dev) && dev->sata_dev.ap) {
-> >   		ata_sas_tport_delete(dev->sata_dev.ap);
-> > -		kfree(dev->sata_dev.ap);
-> > +		ata_port_free(dev->sata_dev.ap);
-> >   		ata_host_put(dev->sata_dev.ata_host);
-> >   		dev->sata_dev.ata_host = NULL;
-> >   		dev->sata_dev.ap = NULL;
-> > diff --git a/include/linux/libata.h b/include/linux/libata.h
-> > index 13fb41d25da6..7d3bd7c9664a 100644
-> > --- a/include/linux/libata.h
-> > +++ b/include/linux/libata.h
-> > @@ -1249,6 +1249,7 @@ extern int ata_slave_link_init(struct ata_port *ap);
-> >   extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
-> >   					   struct ata_port_info *, struct Scsi_Host *);
-> >   extern void ata_port_probe(struct ata_port *ap);
-> > +extern void ata_port_free(struct ata_port *ap);
-> >   extern int ata_sas_tport_add(struct device *parent, struct ata_port *ap);
-> >   extern void ata_sas_tport_delete(struct ata_port *ap);
-> >   int ata_sas_device_configure(struct scsi_device *sdev, struct queue_limits *lim,
-> 
+Kind regards,
+Niklas
