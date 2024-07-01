@@ -1,54 +1,59 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64C5FF9DF
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Jul 2024 18:04:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 694EBF9DF
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Jul 2024 18:04:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719857074; cv=none; b=fYhvEnjnG1bbUZdA+5WN+KCQqbZrYlllYXImq6FJr4/2gvh87pGDiJpdEkWoATnyPF7yF3oCbBB+ozTpSv5dVoRbytOyF6F7H66R3zyUw/FUiB/UcWeViTt8KOiNOusLqkX4YS7Hdc7HLYE3ZFpIptQtes8WeFRk24GE6N4I3ew=
+	t=1719857089; cv=none; b=SiiZnZ8976DekIu4vlhBZkZhBwJXDk0PvrFBtyIjSvuY6skQuI/1zIiBDROrW4RjR7FBZn/AeDT4rpspqcOc7/2WH+2DFcuTxkEDvAWVBfPqH2Wj+wYuPtYzLmCcYKAYdz+Mgi45KzxpJeBhrNNMeiN6sahpR99JUcZHYjn17bE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719857074; c=relaxed/simple;
-	bh=ABBzUPQoIe+SNzSLVsfAQ1NZp0ZsZbUjDwBef9LHq04=;
+	s=arc-20240116; t=1719857089; c=relaxed/simple;
+	bh=iGzL16xIEcwP+YYTuYEXwvKikkkzv/kcvictY/r+GEo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kr57mVYe9TrgbL+5E7e+Aui1mkGtqA9dGTkJpCDlaEsLYq4lvXkGHML9EnTegvqUlmuZU7tGfFbPEHEvnP8TNSml4t0ey67Y/+e4AsiyvrQh6XjhLOpxNwa27maz50yIhNFyalTQJQ/SOuV/8QPdcvdCPM1JqXL5VD3Xz5KrgMw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=F+C9xg47; arc=none smtp.client-ip=199.89.1.12
+	 MIME-Version; b=OOqMIS7zZEhk0gow7qP0uJBLl69nq+laOUirqa7MtHVDrk7E0CFRNgDg4iOGBy1PwsFMNGgprW1m+/Yz/TH/FQ71uhe0/Po30Ow4Kp7Y9lzsfh4NpSizfTea3o2exp/RBNnm5xvJkaNRXvbR+yeHgUh9vd98b+2ubDsPb2o3Cqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=iyCZ4Ehv; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="F+C9xg47"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="iyCZ4Ehv"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WCYpS5gLGzlffm0;
-	Mon,  1 Jul 2024 18:04:32 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WCYpl5BNczllCSD;
+	Mon,  1 Jul 2024 18:04:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1719857071; x=1722449072; bh=NxEFU
-	pD+XWhsdqy770HiHBD2+8wMulA8pEM6qMbDMKo=; b=F+C9xg47Ds02YeOQLZIly
-	/jgZSauwUo4jDyVoP39t+HI7Jn1G5WXe+n9V3S1cTg3Bk2KNjW7/YhJ19Br5LydJ
-	Eol2iEhMpAezEEC2QPspQ9KpLWuWz95+g0YV5ynwBcpQomXA5ExinQCr8Vj6RKNt
-	UFfpb98d4or1t1Ln2dwwKuKqp7dmrGRn7zQU6cK6IasFesuoQGIx2XCj1Q8+k/mT
-	D8yHYWr4RZTzd5vfImrar3fOlrD5xL235lXW1KExLgzDaT0aCfDk9Gswf6QSXIHx
-	UFWI8pyMMgeYV2PEQxE0yq6EP2aBafl7HlzEk5um15gl/swki7kFDyypidh8t9UW
-	Q==
+	:received:received; s=mr01; t=1719857084; x=1722449085; bh=UL8Qv
+	xzTY8S2zZMzG5+APzFWlOzjb5YYpFFmLeHSW3w=; b=iyCZ4EhvWKPHuH1heQBqV
+	tHauHmdqRVU1E8nVsI1yCPQZC0z9OVIx2Zgza/8L/zlC0R1hooJPgYpKQuHoONUJ
+	fIUP0jTAMrt8gcp4Fh1oUagyxUFM2NLr0wx7NScoqCdD0l+jxxz4CLOcSfR72O/Y
+	4Q9WYmhce3fbFNxRiYORj1gZ0shjP+hZWhYQkcJH6yYHLVCW4bpwIW9QYod7XyVN
+	XRtCKcnhAL+92tbV/6JnvnY6Vv2e2VcdyM4NwViM3kVyngGY52zGgGXl/szFLrBA
+	Tp0DX1buz5YbNWo6nPHAirgSJjfdOHEYxknOUOWHKixvYWtGUhIr6UXmW57GSatr
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id hyjs5ZAnnhcI; Mon,  1 Jul 2024 18:04:31 +0000 (UTC)
+ id Z9iQvKnoCkL9; Mon,  1 Jul 2024 18:04:44 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.132.0.90])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WCYpQ6y4DzllCRq;
-	Mon,  1 Jul 2024 18:04:30 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WCYpg6k18zllCSC;
+	Mon,  1 Jul 2024 18:04:43 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v3 1/7] scsi: ufs: Declare functions once
-Date: Mon,  1 Jul 2024 11:03:29 -0700
-Message-ID: <20240701180419.1028844-2-bvanassche@acm.org>
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Keoseong Park <keosung.park@samsung.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Bean Huo <beanhuo@micron.com>
+Subject: [PATCH v3 3/7] scsi: ufs: Remove two constants
+Date: Mon,  1 Jul 2024 11:03:31 -0700
+Message-ID: <20240701180419.1028844-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.45.2.803.g4e1b14247a-goog
 In-Reply-To: <20240701180419.1028844-1-bvanassche@acm.org>
 References: <20240701180419.1028844-1-bvanassche@acm.org>
@@ -60,32 +65,38 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Several functions are declared in include/ufs/ufshcd.h and also in
-drivers/ufs/core/ufshcd-priv.h. Remove the duplicate declarations.
+The SCSI host template members .cmd_per_lun and .can_queue are copied
+into the SCSI host data structure. Before these are used, these are
+overwritten by ufshcd_init(). Hence, this patch does not change any
+functionality.
 
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Keoseong Park <keosung.park@samsung.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd-priv.h | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/ufs/core/ufshcd.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-index f42d99ce5bf1..668748477e6e 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -66,14 +66,8 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int tas=
-k_tag,
- int ufshcd_mcq_init(struct ufs_hba *hba);
- int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
- int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
--void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba);
--void ufshcd_mcq_config_mac(struct ufs_hba *hba, u32 max_active_cmds);
--u32 ufshcd_mcq_read_cqis(struct ufs_hba *hba, int i);
--void ufshcd_mcq_write_cqis(struct ufs_hba *hba, u32 val, int i);
- struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
- 					   struct request *req);
--unsigned long ufshcd_mcq_poll_cqe_lock(struct ufs_hba *hba,
--				       struct ufs_hw_queue *hwq);
- void ufshcd_mcq_compl_all_cqes_lock(struct ufs_hba *hba,
- 				    struct ufs_hw_queue *hwq);
- bool ufshcd_cmd_inflight(struct scsi_cmnd *cmd);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index b7ceedba4f93..9a0697556953 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -164,8 +164,6 @@ EXPORT_SYMBOL_GPL(ufshcd_dump_regs);
+ enum {
+ 	UFSHCD_MAX_CHANNEL	=3D 0,
+ 	UFSHCD_MAX_ID		=3D 1,
+-	UFSHCD_CMD_PER_LUN	=3D 32 - UFSHCD_NUM_RESERVED,
+-	UFSHCD_CAN_QUEUE	=3D 32 - UFSHCD_NUM_RESERVED,
+ };
+=20
+ static const char *const ufshcd_state_name[] =3D {
+@@ -8958,8 +8956,6 @@ static const struct scsi_host_template ufshcd_drive=
+r_template =3D {
+ 	.eh_timed_out		=3D ufshcd_eh_timed_out,
+ 	.this_id		=3D -1,
+ 	.sg_tablesize		=3D SG_ALL,
+-	.cmd_per_lun		=3D UFSHCD_CMD_PER_LUN,
+-	.can_queue		=3D UFSHCD_CAN_QUEUE,
+ 	.max_segment_size	=3D PRDT_DATA_BYTE_COUNT_MAX,
+ 	.max_sectors		=3D SZ_1M / SECTOR_SIZE,
+ 	.max_host_blocked	=3D 1,
