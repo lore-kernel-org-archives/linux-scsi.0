@@ -1,76 +1,163 @@
-Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BFD32F29;
-	Mon,  1 Jul 2024 03:56:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 927AD381AA;
+	Mon,  1 Jul 2024 06:21:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719806166; cv=none; b=jpdfsv4KuQn3TFQ3YUjKLhdAw1k40pwo4puUQTAEx+tQucoA/x4mWAgSz0zO3uQ+0ibRL/i42lVI7Gxr1dI7M4xBODeqSQiyh/DzleVzzuh82YKQfu5jNU/hwmFCRB+sknzgCu55L6CGp/TXSU6Jrw/0EfWY79vjeTSNPc5/7h4=
+	t=1719814871; cv=none; b=PulTbFHG2/fd0qWfqJeE6dXrb5dVzqS+FEqX5VqXmZqnI1MX03kVr0yL8cbN5ccUYaeLN/Go8NqsUhYfgA7Gn3Qfb+QoQliAb+g6+ZF40TH/38YAeg3Fie3gbTTVaUCkSz1+3KONTJW/dfbdVCDiztEuZWohqnP2Rjkw8oYT8eg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719806166; c=relaxed/simple;
-	bh=5nRwKclQHo74eFKgSr+muDmaAz+AnTAM242LUVGmivI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WcgmbHVB+9H5t82zrpiUd2TPMvt828I7U4ec7Qvfdhm4g4/scNHCp81eQYTgk9FCLf7lZPA/Nb/85HVKsekfj5kTWEUw7MFX8kCQGB4EALx+OIZJtLGLVVJtRvlpSQ41V6stgpqj9Q3KfuuwE+JtS0sY/SSYnByJ4wPI660Q5Mk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost (unknown [124.16.138.129])
-	by APP-01 (Coremail) with SMTP id qwCowAD32E3PKIJmuELxAA--.4159S2;
-	Mon, 01 Jul 2024 11:55:59 +0800 (CST)
-From: Chen Ni <nichen@iscas.ac.cn>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chen Ni <nichen@iscas.ac.cn>
-Subject: [PATCH] scsi: qlogicpti: Remove unneeded semicolon
-Date: Mon,  1 Jul 2024 11:55:44 +0800
-Message-Id: <20240701035544.562689-1-nichen@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1719814871; c=relaxed/simple;
+	bh=2VN4I0AJWQlWLR4v0NS2ag8pEtJ2ocgozJoUwXrX36g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=I/ZHC8MjYPJYjBGl7XsWbdjCNbtX/ViHJdMs8fcDa823mNC5zOsaHi6vjnvldL48MMlbaJC/7tgqWuv0ck895siq/lh44qrfxFpWhraSFpcYPyv2c053nEGmGbANiLKB9B3MaZolIkrbc/U5JLvZBgDSl/J/NpGUtr4PphtHc5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=cVbxqJKw; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rEgSUlCz; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=cVbxqJKw; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=rEgSUlCz; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="cVbxqJKw";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rEgSUlCz";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="cVbxqJKw";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="rEgSUlCz"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id AC8F41F80E;
+	Mon,  1 Jul 2024 06:21:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1719814867; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ct52pDp4NXTLyq7RvaV9ECCmHt21J0SHg1fWo876k4k=;
+	b=cVbxqJKwkbNh2clgWmUJrV87QB5XG6zY6FGPX+s6VSHcdIiKxUn7cCBNNO4R7BkohX4giu
+	Yq6Ik0xhwYQh6rmagQzIg3Vwf1HZ8yLOTZZLXBHZDpzINSotCPTLhMgdBcUiM4ogdv71SK
+	kriLTHK+WwagvHTBv5mkdR11LDdeE9c=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1719814867;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ct52pDp4NXTLyq7RvaV9ECCmHt21J0SHg1fWo876k4k=;
+	b=rEgSUlCzATcy/H8COTSXsitJVybsaYxItRw8eq8qjFqIFdk0IvZxGHOFw6/YhbWmLC7zGt
+	ewe7+hybNqqUiFDw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=cVbxqJKw;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=rEgSUlCz
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1719814867; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ct52pDp4NXTLyq7RvaV9ECCmHt21J0SHg1fWo876k4k=;
+	b=cVbxqJKwkbNh2clgWmUJrV87QB5XG6zY6FGPX+s6VSHcdIiKxUn7cCBNNO4R7BkohX4giu
+	Yq6Ik0xhwYQh6rmagQzIg3Vwf1HZ8yLOTZZLXBHZDpzINSotCPTLhMgdBcUiM4ogdv71SK
+	kriLTHK+WwagvHTBv5mkdR11LDdeE9c=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1719814867;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ct52pDp4NXTLyq7RvaV9ECCmHt21J0SHg1fWo876k4k=;
+	b=rEgSUlCzATcy/H8COTSXsitJVybsaYxItRw8eq8qjFqIFdk0IvZxGHOFw6/YhbWmLC7zGt
+	ewe7+hybNqqUiFDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2267F13800;
+	Mon,  1 Jul 2024 06:21:07 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id OCAjBdNKgmaQXQAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 01 Jul 2024 06:21:07 +0000
+Message-ID: <591213f2-792b-4b5e-a344-fa410a1df7e4@suse.de>
+Date: Mon, 1 Jul 2024 08:21:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/4] ata,scsi: libata-core: Do not leak memory for
+ ata_port struct members
+Content-Language: en-US
+To: Niklas Cassel <cassel@kernel.org>, Damien Le Moal <dlemoal@kernel.org>,
+ John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>,
+ linux-ide@vger.kernel.org
+References: <20240629124210.181537-6-cassel@kernel.org>
+ <20240629124210.181537-8-cassel@kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20240629124210.181537-8-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowAD32E3PKIJmuELxAA--.4159S2
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYY7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E
-	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8I
-	cVCY1x0267AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87
-	Iv6xkF7I0E14v26F4UJVW0owAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAK
-	zVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx
-	8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIF
-	xwCY02Avz4vE14v_Gr4l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2
-	IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v2
-	6r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2
-	IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv
-	67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyT
-	uYvjfU0UDGUUUUU
-X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
+X-Spamd-Result: default: False [-5.50 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	DWL_DNSWL_LOW(-1.00)[suse.de:dkim];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	XM_UA_NO_VERSION(0.01)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_TRACE(0.00)[suse.de:+];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:dkim]
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: AC8F41F80E
+X-Spam-Flag: NO
+X-Spam-Score: -5.50
+X-Spam-Level: 
 
-Remove unneeded semicolon.
-This is detected by coccinelle.
+On 6/29/24 14:42, Niklas Cassel wrote:
+> libsas is currently not freeing all the struct ata_port struct members,
+> e.g. ncq_sense_buf for a driver supporting Command Duration Limits (CDL).
+> 
+> Add a function, ata_port_free(), that is used to free a ata_port,
+> including its struct members. It makes sense to keep the code related to
+> freeing a ata_port in its own function, which will also free all the
+> struct members of struct ata_port.
+> 
+> Fixes: 18bd7718b5c4 ("scsi: ata: libata: Handle completion of CDL commands using policy 0xD")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>   drivers/ata/libata-core.c          | 24 ++++++++++++++----------
+>   drivers/scsi/libsas/sas_ata.c      |  2 +-
+>   drivers/scsi/libsas/sas_discover.c |  2 +-
+>   include/linux/libata.h             |  1 +
+>   4 files changed, 17 insertions(+), 12 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
----
- drivers/scsi/qlogicpti.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cheers,
 
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index 6177f4798f3a..7680fc11ee28 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -1150,7 +1150,7 @@ static struct scsi_cmnd *qlogicpti_intr_handler(struct qlogicpti *qpti)
- 		case COMMAND_ERROR:
- 		case COMMAND_PARAM_ERROR:
- 			break;
--		};
-+		}
- 		sbus_writew(0, qpti->qregs + SBUS_SEMAPHORE);
- 	}
- 
+Hannes
 -- 
-2.25.1
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
 
