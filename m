@@ -1,78 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A322316C860
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Jul 2024 15:05:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CB1916D9BB
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Jul 2024 16:40:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719846313; cv=none; b=lDDB2WUAaQiE9pBKR/r7GUMMiykam9cbSGo8Sgzzn5R+4K9ZDm1y1qZy3KHgXVXONjA8/VMhDvmTBVAv2wAB8Q2iMbsn60SOMdW+TbJb+XS04NdhvMBxEHqbr5UMrqFMdjOi1lyUNY23rEZ531dyStcPR08MSaXPsNRrurobeUE=
+	t=1719852044; cv=none; b=jQ0gzpUW6o29xUudEh0/5FulcxsO/xgEOvtQkDzqU2g3bhwH7aOsWf9O51htOsub6ZJ2eAi1PhUSiOEEqi9LZgrK/ybDaIZT6boBKfbYw/n2zC23PMovWn2UFJxBYo0SkF1ZKT6lw2aKIhq+V00ng1JA1k4zclcCHeJxtMJnQkk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719846313; c=relaxed/simple;
-	bh=T/2PX6zx4WXK7bfrPr84E+Y91nWxjftkFKsz6Zw4qUs=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=OBeFVn6Pm2+XmosvM+rFntDXCiQrMh5In02fp9B5yXFOH/2qnYAE5ABe08yzGg+9oso7Die6QE3zjaCFdftBc5KuqYXZgXJEdEjqjVD3vo3iryACVh5SC5GUkJrkphHl+abL8SG4GO5APCyxxJtGnmLqPU3reqZLy0MZfuSsH6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q7JUluVF; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719852044; c=relaxed/simple;
+	bh=Zkn/XxBcUnmdd5okNx5anp0D9ApBYFHa1YYGaY2wIGo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=KZ5UQhdFE5mzoLe1TENmvcuMgUFl4CD/eOMsVfJlODSUpCKMXj4T3O5fw52D/CEP/gj6fFm93fv49QzmKxXHX96UcUymJ4bVd4BaZ/7i6BdLyuANEK1GsMUyGcngtlKj/UuZVTmEOi1FciZJJal6n1VLkI2qqW1hlbD3orZgFsg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1spOv5oG; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q7JUluVF"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 3C7D4C2BD10
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Jul 2024 15:05:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719846313;
-	bh=T/2PX6zx4WXK7bfrPr84E+Y91nWxjftkFKsz6Zw4qUs=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=Q7JUluVFXYT68IeSRzJRNlfrdsZ86MY1bNvsTHrutBHi+5JG8Crzk+nU8EONK7q5s
-	 NRNzqTCwV6l8BsFLgg5CGNkQesZaflZqJcxgBesz1QIKNj+HZOBfQRCvobiOvg+kW7
-	 Wo49BENrFIu7qXLp1VMM4nvK+K/QvnDwCEHerHPl9MUdHw5bklCGVW1wb6Vz/xnhEh
-	 sHExDzUjIfMeTSkPbnaawQyuwvOMngE4FE2xzW1cfjXWz9QGQcc27L3a6KlffECy82
-	 5eGN73kZ5A8wUBHBd2u1P3TWZDAvCHVq7tlEc6Z04+exfNz1hpnk+UlqJ6czCP82vD
-	 feRlzIDQRx8xg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 33A8DC53BB7; Mon,  1 Jul 2024 15:05:13 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 218866] Extra /dev/sd.. entries for a fake raid when more than
- 15 partitions
-Date: Mon, 01 Jul 2024 15:05:12 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: MD
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: aros@gmx.com
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: INVALID
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_status resolution
-Message-ID: <bug-218866-11613-MdpCN7ADqN@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-218866-11613@https.bugzilla.kernel.org/>
-References: <bug-218866-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1spOv5oG"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WCWxk3TYczlnNFG;
+	Mon,  1 Jul 2024 16:40:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1719852041; x=1722444042; bh=Zkn/XxBcUnmdd5okNx5anp0D
+	9ApBYFHa1YYGaY2wIGo=; b=1spOv5oG1BzpLPjrtjhVHXhFdG2nR4UnlP8YZWjz
+	8OqxAvf45DQ+f8AZ8/fjzjCvwv4fWlNp6wwiTdn1bDF07+tfXKcAj31YJv9c3msb
+	Kr2Gnk3nREauEyUdlz6RcNO2ALROK32fEOiXFe7tOPoKpeEJ6tfSgAxK64Jzbhk6
+	5eYJu5nroOt4RnJa736cTHmWfFPQD06MQWcrU6OCuTi/9i3LNk0fZi1ElTU/PTdM
+	Q9fy/YJ2Xu8RsV9XmvCrD+LvqN0+l1k3FiQ2fywJFpDfioAaxrxpIqzJ1c4ppRDF
+	esdF9R6/mtpkXbv+ec7glVkR0OYr9UTTNVS1MpPUaQWEiw==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id DhNSKBaIh9q5; Mon,  1 Jul 2024 16:40:41 +0000 (UTC)
+Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WCWxh74dxzllCSJ;
+	Mon,  1 Jul 2024 16:40:40 +0000 (UTC)
+Message-ID: <d75d9642-0e68-4001-bbc0-f5da2593fd55@acm.org>
+Date: Mon, 1 Jul 2024 09:40:40 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: sd: Do not repeat the starting disk message
+To: Damien Le Moal <dlemoal@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org
+References: <20240701092451.122800-1-dlemoal@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240701092451.122800-1-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D218866
+On 7/1/24 2:24 AM, Damien Le Moal wrote:
+> The scsi disk message "Starting disk" to signal resuming of a suspended
+> disk is printed in both sd_resume() and sd_resume_common(), which result
 
-Artem S. Tashkinov (aros@gmx.com) changed:
+result -> results ?
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|REOPENED                    |RESOLVED
-         Resolution|---                         |INVALID
+> in this message being printed twice when resuming from e.g. autosuspend:
 
---=20
-You may reply to this email to add a comment.
+Anyway:
 
-You are receiving this mail because:
-You are the assignee for the bug.=
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
