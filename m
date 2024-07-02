@@ -1,54 +1,54 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C33F3205E0E
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 21:53:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD4771BD512
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 21:53:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719957224; cv=none; b=EFGePZTCzi3J95YT/5H4wykENzxk3UKazCccdxxMJ/OTbfsEDRE98ZLbP0C9b5PIamz1Kr5fTFpUfUgNeASJYNc2OkW8jwoiriBLM56fwWUDuWz5XoM8E80jwYNjrXCwYZ+Ej2ap1EOYayDDrzOLxqMHZfO38d6K9oZ/IPcfekI=
+	t=1719957232; cv=none; b=d/cDxN9Fr4Jo16Qp8/IVgHWbg7SW8/O3YGT6lPgxITuzq2SPVVxa0o72YL2Z3klMj43r373CwRyDRLb+iQ64BRNLhsylKTrzlvw/IVf31Veijc91F36o6ZfIu5TaZEZKyFSXiBe0bz204j8mDwV/xuXPQkDW52txbd2uiX0SfrY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719957224; c=relaxed/simple;
-	bh=R8HumJBM8ZU/AKzLjESjdXJq5h4uLvaVuxrkBFXonYo=;
+	s=arc-20240116; t=1719957232; c=relaxed/simple;
+	bh=O2OrLXJz8NlgzXoaHx3h+T2weOez+12wHqJLQT6eTug=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YZvjU/jzpXOmENB9k/SAsnjEfmLId9GAv1/yfI54r5jdmjGD9XgHBeYmdDD4//JlTJPFavEtFDVrqxEjoh+svY2Hbv0ECW1y6SW/+i1ZSJm7fVVpYlfWaMuxVJcv5b1ybMIfD03TDsE6NLAjjGRATsCiox6QpFoYE5wWZ+vR3WY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=qs1m+rMD; arc=none smtp.client-ip=199.89.1.12
+	 MIME-Version; b=qfZjy4u7zpLrp0ktUdL4C6uJGHUo4gvNU8HWnjF6K6pyX3OTG7DENVF5iFps61gxuxuw6VECwRSx8DdywH+9uHbbvEESvQ7tR48y0DsRyf20MpwJa86hrXpZ2XkO43yvXaFqVF8eAds4FvLHvVJBgyWJdC8sLkUUSX4a3DKVtu0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=kHlLSoAx; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="qs1m+rMD"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="kHlLSoAx"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WDGrQ2DH4zlnQkm;
-	Tue,  2 Jul 2024 21:53:42 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WDGrZ43cfzlnRR8;
+	Tue,  2 Jul 2024 21:53:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1719957220; x=1722549221; bh=NUMwq
-	9m0NGA/JPJnvjiSkyJiugCR5QZ35pSWfTHWtKw=; b=qs1m+rMDxdWE0O1l0bSOv
-	Ss2OSJ6Alt2cA+UVShHGpMPHDmqimns9y3m+HJTusf8UI4BVNMQNFDihUEjlgavz
-	AP/m/72RymnDUEzK+Lz9Us2ryg99+L98AeFFot8H0NtDLlzWCqWyWG/3wzOBT0AM
-	ZCFUQYRx6TF2gpajCRD9AQF/7nIVrTYS1SHgoIrxhuBpogqGoJiZDeUmv54GdHO3
-	WUg8brcl0mlZ/9P2p1QguNgapdKyGEDP9zkCJjjSoRQ0tYzVmJ1H5LYqDoVl29b+
-	Ik2OvYZl7Nr6ZbQMTWyow68ZDrodyZec/bphw2Ewl6BWuRl6p4iiNS+BC2da3v6b
-	w==
+	:received:received; s=mr01; t=1719957229; x=1722549230; bh=mQrK3
+	KKyRGgIt9lcPNd0uRl3KXZA98cf9AH6yNIdU6s=; b=kHlLSoAxVR6o6f2Rh2Bu1
+	Paop604DF1teERwYBYeQB8OcEQ2QflHsCkk8yjdGMztmf6NMD1tymgRavBp7Py76
+	WGyCZjztLX8GLZEEgrsBFhD2moecq7+xpNve6YzfUY7D8fdy9ryQlh55j1k8tcWV
+	9AhGGUxujHlEV+bzKXEtt3AQWzS/nvuvk0pKpr4uekJ58T4Hpr1QbWEej70z8FGF
+	KJSqFA1pqv+kN5OhF/89wpUStLMDLaS4FB+MihNJsre4y1e1QdTE/HDKWRw7OzDR
+	LItw6Cst9muMIXd7KUGUg+k9r8yG25FI1a8ogYMSOpJclSi1AC4EZ5ZpXtON2hb2
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 3f4N-LEZfOB5; Tue,  2 Jul 2024 21:53:40 +0000 (UTC)
+ id priFveoiEDQn; Tue,  2 Jul 2024 21:53:49 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.132.0.90])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WDGrM5S3MzlnQkq;
-	Tue,  2 Jul 2024 21:53:39 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WDGrW5ybRzlnQkq;
+	Tue,  2 Jul 2024 21:53:47 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 16/18] scsi: stex: Simplify an alloc_ordered_workqueue() invocation
-Date: Tue,  2 Jul 2024 14:52:03 -0700
-Message-ID: <20240702215228.2743420-17-bvanassche@acm.org>
+Subject: [PATCH 18/18] scsi: core: Simplify an alloc_workqueue() invocation
+Date: Tue,  2 Jul 2024 14:52:05 -0700
+Message-ID: <20240702215228.2743420-19-bvanassche@acm.org>
 X-Mailer: git-send-email 2.45.2.803.g4e1b14247a-goog
 In-Reply-To: <20240702215228.2743420-1-bvanassche@acm.org>
 References: <20240702215228.2743420-1-bvanassche@acm.org>
@@ -60,38 +60,44 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Let alloc_ordered_workqueue() format the workqueue name instead of callin=
-g
-snprintf() explicitly.
+Let alloc_workqueue() format the workqueue name.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/stex.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/scsi/hosts.c     | 9 ++++-----
+ include/scsi/scsi_host.h | 1 -
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index fbee7db4a835..0e81125df8c7 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -334,7 +334,6 @@ struct st_hba {
- 	struct st_ccb *wait_ccb;
- 	__le32 *scratch;
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 7f987335b44c..e021f1106bea 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -292,11 +292,10 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost,=
+ struct device *dev,
+ 	}
 =20
+ 	if (shost->transportt->create_work_queue) {
+-		snprintf(shost->work_q_name, sizeof(shost->work_q_name),
+-			 "scsi_wq_%d", shost->host_no);
+-		shost->work_q =3D alloc_workqueue("%s",
+-			WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | WQ_UNBOUND,
+-			1, shost->work_q_name);
++		shost->work_q =3D alloc_workqueue(
++			"scsi_wq_%d",
++			WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | WQ_UNBOUND, 1,
++			shost->host_no);
+=20
+ 		if (!shost->work_q) {
+ 			error =3D -EINVAL;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 19a1c5c48935..2b4ab0369ffb 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -677,7 +677,6 @@ struct Scsi_Host {
+ 	/*
+ 	 * Optional work queue to be utilized by the transport
+ 	 */
 -	char work_q_name[20];
  	struct workqueue_struct *work_q;
- 	struct work_struct reset_work;
- 	wait_queue_head_t reset_waitq;
-@@ -1795,10 +1794,8 @@ static int stex_probe(struct pci_dev *pdev, const =
-struct pci_device_id *id)
- 	hba->pdev =3D pdev;
- 	init_waitqueue_head(&hba->reset_waitq);
 =20
--	snprintf(hba->work_q_name, sizeof(hba->work_q_name),
--		 "stex_wq_%d", host->host_no);
--	hba->work_q =3D
--		alloc_ordered_workqueue("%s", WQ_MEM_RECLAIM, hba->work_q_name);
-+	hba->work_q =3D alloc_ordered_workqueue("stex_wq_%d", WQ_MEM_RECLAIM,
-+					      host->host_no);
- 	if (!hba->work_q) {
- 		printk(KERN_ERR DRV_NAME "(%s): create workqueue failed\n",
- 			pci_name(pdev));
+ 	/*
