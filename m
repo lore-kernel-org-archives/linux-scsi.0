@@ -1,55 +1,58 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DE36201276
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 21:53:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6730F201276
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 21:53:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719957206; cv=none; b=BD+RKS1K1NUIngxvJ50RF4K4SuT2C6B/QgOFb+6JzZsi7dSf4mW/fR2A+Kbyze6nZPbN2N1RXC3pVgtre16n5a+UZGQS03fBfmYf2Akc0fKi99OU7XXmwABreL08l6FVzstojOdCqUluMk1BsPYSG8dW8+dqfEKXZZZgULTW5DI=
+	t=1719957209; cv=none; b=Gd1maE0OFCz54rdJwm9LJQW72zhE/3OCok2yf3axKukf5t+rI6A5CP3frY7gLpi2uOECgqjF9NDjtVA6rxNCwVjnlBo4melJqmn1Z+QXeD3olEtm4mGiE2nYClmsNsa+sk/3hStFlLs0+WiHaN/42NBBn462wtIsZEAptw8MqIw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719957206; c=relaxed/simple;
-	bh=F/o4ugwDQ+Cer1dUZzNqWOt3XV7Hk3Oy4tmTpQ6lwak=;
+	s=arc-20240116; t=1719957209; c=relaxed/simple;
+	bh=65bbT3KX9ZdYfUGDnbfm3nMExXAL1mP8DcRUqth1eO4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JLtLOFsLR+bAzV4uId/JYqYfHvozfkLGi5jNx+rT9QdNPEh4Y6KArlUnHT4WWVKz3621d4+BMsrgeaS7o5TYfwOlg0T8OMBOhARS9OoBiHR1AoipQ3VR8Ky88RenUa4ufnahm9zTGCSj4RDYPxVFDfpqYNfIqaQRwncHsg0NNk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=PdA1rrGl; arc=none smtp.client-ip=199.89.1.12
+	 MIME-Version; b=LVRVxj0fG89xruzd3jtclWbOvDuJ4tHSkpQ16nIv7ecZEWHGvWJoBNvNVbguH8ZiNvSO2KZ44Mr7HnJU3jy3W1Va0xzNLmSmJYd9rcKzVA+JnLVJKzfwMHCjBmkojf9OaU3C39j0BT8ac6ORuitQwX4AScK3/+5Oa+f4XX+yfvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=z2QGplcm; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="PdA1rrGl"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="z2QGplcm"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WDGr42h92zlnQkm;
-	Tue,  2 Jul 2024 21:53:24 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WDGr76dmXzlnRR8;
+	Tue,  2 Jul 2024 21:53:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1719957202; x=1722549203; bh=gLAZz
-	CvNS8cSEoayz/WP3bAN8I8eNNHv5zZs8/BM224=; b=PdA1rrGlMqWPlxLKqJl7m
-	Hjjf+/AnHauKyOORsvZ0R2uV/4tRKrDBthevoO0OkWqTIcBptqThGX9F3WH4dxha
-	4OYO7ZIesMqOYlXLcBPnTs9lE1UJBO3Wwz7KHM19BG8PrZ5jegdIjHIJB8Vf/rS+
-	DLZxGjY4sZ1NNfHwjNsiZfCPONKxrddpqOYtIHB74QDv/LeHK64KIZ7gJgpBa4Ni
-	4+xDUHVhjwm7ZD0XcQLqje/MxhwMVF1ws7PcOQhHlj+FjlYT9HmVvlK40bMIoOpk
-	zoPqQTL36TjMozuKp4K3MprvD5eFhEnwzZKegDm4+XRJH9+0KNm59kLHfPcaOhXG
-	Q==
+	:received:received; s=mr01; t=1719957205; x=1722549206; bh=4STJh
+	QAsVbdaems4rAow2E0Af4XjcdUBl6bEtl8xU+I=; b=z2QGplcmqSjsSXiBWoz2a
+	IB75hzSo2TO0Bh2zB2He0hCWi6escKACE1fKIzhswYEH+/GEr2PZhqfAIYURViCF
+	Y2blcwmzicHYOlaw43NIcGpuD2tB1wP4iholuCeJN9cx7RhSr7ym8egS8U5r/4YN
+	E5/ICKMIGcizQo4NuPm779omcgnPlM6BRkgzmWZPdwrxQsLV7aV775PYCapGbBVo
+	X5noqZ89v707J0Sx/zMG1B53WH3W5pFeDya+VNBVHAJCafIVj+raW9yF0A+s7mt5
+	vcqV4YlSbDFAUiiYzj4h5bFDgG3zGXzN+boDy3Z0YsaXUuXulVA108Q1YLBFZTei
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id HCgGdXd4HC0H; Tue,  2 Jul 2024 21:53:22 +0000 (UTC)
+ id bZK6uXThrPgE; Tue,  2 Jul 2024 21:53:25 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.132.0.90])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WDGr13Nn9zlnRKl;
-	Tue,  2 Jul 2024 21:53:21 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WDGr32H5WzlnQkr;
+	Tue,  2 Jul 2024 21:53:23 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Tyrel Datwyler <tyreld@linux.ibm.com>,
+	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 07/18] scsi: ibmvscsi_tgt: Simplify an alloc_workqueue() invocation
-Date: Tue,  2 Jul 2024 14:51:54 -0700
-Message-ID: <20240702215228.2743420-8-bvanassche@acm.org>
+Subject: [PATCH 08/18] scsi: mpi3mr: Simplify an alloc_ordered_workqueue() invocation
+Date: Tue,  2 Jul 2024 14:51:55 -0700
+Message-ID: <20240702215228.2743420-9-bvanassche@acm.org>
 X-Mailer: git-send-email 2.45.2.803.g4e1b14247a-goog
 In-Reply-To: <20240702215228.2743420-1-bvanassche@acm.org>
 References: <20240702215228.2743420-1-bvanassche@acm.org>
@@ -61,37 +64,51 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Let alloc_workqueue() format the workqueue name instead of calling
+Let alloc_ordered_workqueue() format the workqueue name instead of callin=
+g
 snprintf() explicitly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-
-ibmvscsi
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    | 2 --
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 4 +---
+ 2 files changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmv=
-scsi_tgt/ibmvscsi_tgt.c
-index 639f72f28911..16d085d56e9d 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3425,7 +3425,6 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
- 	struct scsi_info *vscsi;
- 	int rc =3D 0;
- 	long hrc =3D 0;
--	char wq_name[24];
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index c8968f12b9e6..8428d42f4bb1 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -1056,7 +1056,6 @@ struct scmd_priv {
+  * @sbq_lock: Sense buffer queue lock
+  * @sbq_host_index: Sense buffer queuehost index
+  * @event_masks: Event mask bitmap
+- * @fwevt_worker_name: Firmware event worker thread name
+  * @fwevt_worker_thread: Firmware event worker thread
+  * @fwevt_lock: Firmware event lock
+  * @fwevt_list: Firmware event list
+@@ -1235,7 +1234,6 @@ struct mpi3mr_ioc {
+ 	u32 sbq_host_index;
+ 	u32 event_masks[MPI3_EVENT_NOTIFY_EVENTMASK_WORDS];
 =20
- 	vscsi =3D kzalloc(sizeof(*vscsi), GFP_KERNEL);
- 	if (!vscsi) {
-@@ -3536,8 +3535,8 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
- 	init_completion(&vscsi->wait_idle);
- 	init_completion(&vscsi->unconfig);
+-	char fwevt_worker_name[MPI3MR_NAME_LENGTH];
+ 	struct workqueue_struct	*fwevt_worker_thread;
+ 	spinlock_t fwevt_lock;
+ 	struct list_head fwevt_list;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
+_os.c
+index eac179dc9370..2298d23e9c09 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -5273,10 +5273,8 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pc=
+i_device_id *id)
+ 	else
+ 		scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
 =20
--	snprintf(wq_name, 24, "ibmvscsis%s", dev_name(&vdev->dev));
--	vscsi->work_q =3D alloc_workqueue("%s", WQ_MEM_RECLAIM, 1, wq_name);
-+	vscsi->work_q =3D alloc_workqueue("ibmvscsis%s", WQ_MEM_RECLAIM, 1,
-+					dev_name(&vdev->dev));
- 	if (!vscsi->work_q) {
- 		rc =3D -ENOMEM;
- 		dev_err(&vscsi->dev, "create_workqueue failed\n");
+-	snprintf(mrioc->fwevt_worker_name, sizeof(mrioc->fwevt_worker_name),
+-	    "%s%d_fwevt_wrkr", mrioc->driver_name, mrioc->id);
+ 	mrioc->fwevt_worker_thread =3D alloc_ordered_workqueue(
+-	    mrioc->fwevt_worker_name, 0);
++		"%s%d_fwevt_wrkr", 0, mrioc->driver_name, mrioc->id);
+ 	if (!mrioc->fwevt_worker_thread) {
+ 		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+ 		    __FILE__, __LINE__, __func__);
