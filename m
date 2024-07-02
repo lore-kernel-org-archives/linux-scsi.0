@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADA484963F
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 08:09:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF9DD148303
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 08:56:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719907773; cv=none; b=ro7riYalPkLFqCu9jVFbPpCQurHNk1Nw6cTqE5ySdlvBa6nhOmYj6u0lZ3VS3wF/zjprF6ib49BihQ4ZU7oWDCnxDojNCPdOVUtOpD+vDNHwwZMak6fAvgcDC+afuITuimts0yaQe145l8vZ+a1pxEbKsEjcnnpXC3fLWyDayxA=
+	t=1719910560; cv=none; b=GKLoWZSdKN/ZtmbgINq3+VRsCO23vyD2153CdM9RtI+PPaERrAnl7osEeh2UXSJFGUT4TQvVCacOUWb0Q3UoFjD8CX0z6iGHZ4JvDQHdQ650rF5qoHcHI1DQq4aN1g3ff6ihiSBz+OxfKE3F9jVmrBIWzCMDMFUWXwPuRvhgLmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719907773; c=relaxed/simple;
-	bh=Skroyq3aTBY7hfPL4JdaHRuWffkLk23EobqK283C6Rg=;
+	s=arc-20240116; t=1719910560; c=relaxed/simple;
+	bh=jSJ6oSTXq35bt1Q2BjPs7wUe6lOqxSVcQO7nafPJMv8=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=NLYj0IXM+CbGj+/vGXwtZ1vQd9406xGvmtaetBdRcytoRHXsk8eI9vU1RXSSulwfYl8OndY1m0jSZDzYJMVDRIAbRurwtrKjlex4mqFehQ23rcIw7Qr6FJoR9Eces1BkspvRAU7bphhyNO8i4do89yt59gG+Bk4ZdnzIxim/oto=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=azTS0+Zu; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:MIME-Version; b=QuJpLs8oNgTFg7VQZqzU5NZJmtYG2BcVtfkQ9ZqUeDgbqDL/cgIVrEbVw759eE4nW+1EC7EVCy3p/jZ/oqX0gt72qQmbSuESOgPMH4j6zX5h4WeVBGS+LT54HMXLBrymNolAtGCzN6vN5GBoIUjP3eXG3sbc+x/aoPJqJoUuOj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L07+vrQk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="azTS0+Zu"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2D483C4AF0F
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 08:09:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L07+vrQk"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2DDFAC4AF13
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 08:56:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719907773;
-	bh=Skroyq3aTBY7hfPL4JdaHRuWffkLk23EobqK283C6Rg=;
+	s=k20201202; t=1719910560;
+	bh=jSJ6oSTXq35bt1Q2BjPs7wUe6lOqxSVcQO7nafPJMv8=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=azTS0+ZuhM/y4xsGGhSQ1RFke4XjBHUjeJ7APTaIOC7RIaDHvH5uFmkgka1BCUCd+
-	 isnjKlDvup/XB709l8Auo+3ZJk/kFTdUQ8BshHm9NowWYuTV2fG6HJXqQnAezo3LRD
-	 MgaEjQ3GnI5VqcWx3SwN64OofEgizj/FQtOa8D6MqzP/rHaxH0MtuCCsvpXOQh/1QY
-	 I9rLg2n3GkGauT4KBLSl7V/RhXzce3eJGtEOffUiKnyX9eJ++rW0MIAyJxsStTkP++
-	 5WxSJmGU1g9aQ65lfLCxVuxiVP69MMjlCF7y+9G89vSe+l9Qe/rLLO7Wy/CbIU7msu
-	 dA7QWaDeuKg6w==
+	b=L07+vrQklc18ZgdqLxtszC77codejfyesHiLz2aHjIlUE0QTuxHy4SFtrvT6laf7j
+	 /biUYOXZhynh9Fcc0DiOYhAZRL9oCGZHlc8G0H3cNoCEtcDCZjs4t4M7J9rdb7vNh9
+	 jI6ruKv2EeXHjapHh2gtUFPQLEBBd7dtDp0t5/Q4QJ03aEqKxv7js5f6Vlp/oS8T8k
+	 Kz6JxX53PnEexTAQQbOcpgCeJ3Sb9VwGZ2SwFzWejnGecr6oWr/7aiknmoOljT65dZ
+	 eh6GqLh1Xv4C9YAT56w56v6TQt0O8vbr7YTo7MExnvdNh4OZuNxKUAi8mIFqVghLrI
+	 a0uqe0sqLn4ug==
 Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 23DEBC433E5; Tue,  2 Jul 2024 08:09:33 +0000 (UTC)
+	id 24E07C53BB7; Tue,  2 Jul 2024 08:56:00 +0000 (UTC)
 From: bugzilla-daemon@kernel.org
 To: linux-scsi@vger.kernel.org
 Subject: [Bug 209177] mpt2sas_cm0: failure at
  drivers/scsi/mpt3sas/mpt3sas_scsih.c:10791/_scsih_probe()!
-Date: Tue, 02 Jul 2024 08:09:32 +0000
+Date: Tue, 02 Jul 2024 08:55:59 +0000
 X-Bugzilla-Reason: CC
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: None
@@ -41,14 +41,14 @@ X-Bugzilla-Component: Other
 X-Bugzilla-Version: 2.5
 X-Bugzilla-Keywords: 
 X-Bugzilla-Severity: high
-X-Bugzilla-Who: ranjan.kumar@broadcom.com
+X-Bugzilla-Who: zeph@fsfe.org
 X-Bugzilla-Status: NEW
 X-Bugzilla-Resolution: 
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: drivers_other@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-209177-11613-hg3m4ZHa32@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-209177-11613-Eq9rUdmrfH@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-209177-11613@https.bugzilla.kernel.org/>
 References: <bug-209177-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -64,17 +64,13 @@ MIME-Version: 1.0
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D209177
 
-Ranjan Kumar (ranjan.kumar@broadcom.com) changed:
+--- Comment #11 from Guido Serra (zeph@fsfe.org) ---
+@Ranjan is it?
+https://www.amazon.com/LSI-9210-8i-8-port-PCIe-Controller/dp/B01D9V14F6
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |ranjan.kumar@broadcom.com
-
---- Comment #10 from Ranjan Kumar (ranjan.kumar@broadcom.com) ---
-Hi,
-LSI SAS2008 PCI-Express Fusion-MPT is a pretty old card that has reached EO=
-L.
-If any support is needed please contact Broadcom support channel.
+the card is the LSI 9210-8i, the fact that the drive supporting it identifi=
+es
+such as "LSI SAS2008 PCI-Express Fusion-MPT" is another topic I believe, no?
 
 --=20
 You may reply to this email to add a comment.
