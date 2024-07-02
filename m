@@ -1,77 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C24015D5B3;
-	Tue,  2 Jul 2024 15:43:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1627148825;
+	Tue,  2 Jul 2024 16:08:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719935008; cv=none; b=eOTKZzyNSdKIb07iN4b9Avou6+eswzxOtx9xS92PDdeheczoEEETtZ36339JvqnWPVfYXWjCuTLCvjbGu4lGtAhe7RsHazVr99nmhb+bW9RiEzMF1rzoUPA1CTKMsDx7kSesSlfGEOS6wYceqhR/dV3bVlnzs7iHT9eWwGrxZ04=
+	t=1719936519; cv=none; b=ahnS9Bn/Pk60YX9tFUH+SB9iPAv3RnXIZ/L3Qc2xmfq9nAxPGwrOlp7gI7lOwILa3ogq8BxCuEJv6iothR0bxFrHUaOn6HC6ukmAci3S4sMzxcyAW0tzaAbH2AKSi7QpZd7w7UQKAqBEZiLwfDVziBnHcMBjSxiujC8rMnpikE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719935008; c=relaxed/simple;
-	bh=ztoyBVx1RliditdEcK8GDR2wus22s80Sv/3hM8P8l9U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AlZ13jxBp90ubSbhDH8G/csu7RgW52d0IgpkJc4BS+gyhZeqK5S5MHimSNpMVTZVB9XybAtN40tHdCGHk7x/xT7G1hdZgk3qYRqBqr2zL8HZrtNtME1eVqpXGoRL/JXFXYETt0CZ6NoXXLUdS84vcV5fcTIaqmWJkbQ9s8cPPiw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gEt62yeZ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719936519; c=relaxed/simple;
+	bh=lchi3y0ajozoK/j9DWHedifHZG3QRwJ4IlmhCIeecO0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PIDMyMp8vCwx43FzsDid23APInCJP3gMgxmL5pTDky42mJf/kh6ES7FAP1V7E6/QWPCD5xgK2myDZQUXfplU81EFfZuT5EL9LZYvfbiw5Efcatlx2Xtdx061rXLHH/zuwfZeJ56quyspY5Z3dLxoPhYCTTBsHVR3M9HzMzNBMFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PEk6IECF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gEt62yeZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CA67C116B1;
-	Tue,  2 Jul 2024 15:43:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PEk6IECF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 688A7C116B1;
+	Tue,  2 Jul 2024 16:08:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719935008;
-	bh=ztoyBVx1RliditdEcK8GDR2wus22s80Sv/3hM8P8l9U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gEt62yeZS+nczfgLUve/oiLEAW7QDccc4dwVfUxJuLH+lhSXBKCbDJxZibP+iaZms
-	 p2+h11MMywbDiUKtbE4+sSkjhv4BjlJGeM6UhYCaunamwbJlvQ8wutMwu4xZSwWdMj
-	 +hQu7CgRPT6V6yDBOrll+IdBM5+jz/JJvA3uPd8d0+QjFCp1qpRYnH2ts3hqkwekFt
-	 r9cAcG53qtO+YLvp+7dwhpAdjZ/+vc5ZfAusF4wBcShsgL5q0Rqkg4O2YIyLkblRnO
-	 iOENR3vwqHTixiotjlP0zLNhhvCNGrEeUKRyCLBYw6GjV54w/OOjM7L8mTOKh1s5FO
-	 VAGR4fPqIKzCA==
-Date: Tue, 2 Jul 2024 17:43:23 +0200
+	s=k20201202; t=1719936519;
+	bh=lchi3y0ajozoK/j9DWHedifHZG3QRwJ4IlmhCIeecO0=;
+	h=From:To:Cc:Subject:Date:From;
+	b=PEk6IECFqwq8E9QQq2+rHmhfz4CGG6fWePIUeuylePDK1XR7m66t9npfChMD5kTPB
+	 nCUj32YTe03yntJ3wsQPPT6vdHnm0OktAvoQB+GHJYDqP2+hhIxSKMVn9Fux1OZZC5
+	 rw7CdqU9v6UzEBEfqVGip+FWRX2sMKvep3IwWG1exLtt2LGADT5znZNEoEdU3FZmkV
+	 99q5rCjhWGcQeNUzSfUHkIAgbrZ/a1AKstOs2ULBZq3ryxIexuLaD4vxHA2i9DZxK7
+	 +LaWsnkQIQClxmNtelV+w2K4nINcD8wgiJoSZ6YMdDHziKkIecoxInC6NTIiLN6Kx6
+	 K50sCAuWWXiHg==
 From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	John Garry <john.g.garry@oracle.com>,
 	Jason Yan <yanaijie@huawei.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
 	linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2 11/13] ata: libata-core: Reuse available ata_port
- print_ids
-Message-ID: <ZoQgG98TBYx3Q4FL@ryzen.lan>
-References: <20240626180031.4050226-15-cassel@kernel.org>
- <20240626180031.4050226-26-cassel@kernel.org>
- <3672b5e6-4842-4ffc-b55b-352359aa39a9@kernel.org>
+Subject: [PATCH v3 0/9] ata,libsas: Assign the unique id used for printing earlier
+Date: Tue,  2 Jul 2024 18:07:56 +0200
+Message-ID: <20240702160756.596955-11-cassel@kernel.org>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3672b5e6-4842-4ffc-b55b-352359aa39a9@kernel.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2517; i=cassel@kernel.org; h=from:subject; bh=lchi3y0ajozoK/j9DWHedifHZG3QRwJ4IlmhCIeecO0=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJaVO+2X1y2LIDJzaFZI/O4RuI1VumFDYfWiJ1g4t+nW njte9y/jlIWBjEuBlkxRRbfHy77i7vdpxxXvGMDM4eVCWQIAxenAEyEbRPD/zTTnfmb+UPdU14+ 7HqUFXB6Jt+Vh7rK1Z5vld7xh13cIMrw37U57UB6ttCDe5wp0qc1tA3nR+2sf3j5m5rnrEvH/rD O5wQA
+X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
+Content-Transfer-Encoding: 8bit
 
-On Thu, Jun 27, 2024 at 10:37:40AM +0900, Damien Le Moal wrote:
-> On 6/27/24 03:00, Niklas Cassel wrote:
-> > Currently, the ata_port print_ids are increased indefinitely, even when
-> > there are lower ids available.
-> > 
-> > E.g. on first boot you will have ata1-ata6 assigned.
-> > After a rmmod + modprobe, you will instead have ata7-ata12 assigned.
-> > 
-> > Move to use the ida_alloc() API, such that print_ids will get reused.
-> > This means that even after a rmmod + modprobe, the ports will be assigned
-> > print_ids ata1-ata6.
-> > 
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> 
-> Looks good. But maybe it would make sense to squash this together with patch 10 ?
+Hello all,
 
-Patch 10 initializes the print_ids earlier (which is a perfectly
-fine change on its own, even with the old way to assign print_ids),
-while this patch changes for the print_ids to be reusable.
-I think that logically, it is two different logical changes
-so I will keep them as separate patches in v3.
+This series moves the assignment of ap->print_id, which is used as a
+unique id for each port, earlier, such that we can use the ata_port_*
+print functions even before the ata_host has been registered.
+
+While the patch series was orginally meant to simply assign a unique
+id used for printing earlier (ap->print_id), it has since grown to
+also include cleanups related to ata_port_alloc() (since ap->print_id
+is now assigned in ata_port_alloc()).
 
 
 Kind regards,
 Niklas
+
+
+Changes since v2:
+-Sent out patches that were strict bug fixes as a separate series.
+-Rebased patch series.
+-Picked up tags.
+-Fixed minor typos.
+-Fixed problem reported by kernel test robot, by using a local variable to
+ check for errors.
+-Removed existing super ugly code that iterates past host->n_ports (which
+ relied on the ata_host_alloc() allocating n_ports+1 rather than n_ports),
+ as suggested by Hannes.
+-Now when we don't have the ugly code that iterates past host->n_ports,
+ change ata_host_alloc(() to only allocate n_ports, as the ugly workaround
+ of allocating an n_ports+1 ports is no longer needed (as it was only
+ needed for the feature that this patch series removes).
+
+
+Link to v2:
+https://lore.kernel.org/linux-ide/20240626180031.4050226-15-cassel@kernel.org/
+
+Link to v1:
+https://lore.kernel.org/linux-ide/20240618153537.2687621-7-cassel@kernel.org/
+
+
+Niklas Cassel (9):
+  ata,scsi: Remove useless wrappers ata_sas_tport_{add,delete}()
+  ata: libata: Remove unused function declaration for ata_scsi_detect()
+  ata: libata-core: Remove support for decreasing the number of ports
+  ata: libata-sata: Remove superfluous assignment in
+    ata_sas_port_alloc()
+  ata: libata-core: Remove local_port_no struct member
+  ata: libata: Assign print_id at port allocation time
+  ata: libata-core: Reuse available ata_port print_ids
+  ata,scsi: Remove useless ata_sas_port_alloc() wrapper
+  ata: ahci: Add debug print for external port
+
+ drivers/ata/ahci.c                 |  4 ++-
+ drivers/ata/libata-core.c          | 41 +++++++++----------------
+ drivers/ata/libata-sata.c          | 49 ------------------------------
+ drivers/ata/libata-transport.c     |  5 ++-
+ drivers/ata/libata-transport.h     |  3 --
+ drivers/ata/libata.h               |  2 --
+ drivers/scsi/libsas/sas_ata.c      | 12 ++++++--
+ drivers/scsi/libsas/sas_discover.c |  2 +-
+ include/linux/libata.h             | 11 +++----
+ 9 files changed, 36 insertions(+), 93 deletions(-)
+
+-- 
+2.45.2
+
