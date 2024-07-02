@@ -1,159 +1,157 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E228276F17;
-	Tue,  2 Jul 2024 11:20:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14C5214D42C;
+	Tue,  2 Jul 2024 15:43:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719919216; cv=none; b=ehCIsXtIyMSxddkhRbFGCCxo8qwLBWDQOcaUdRFNw2QjX5z5H7NzHQoybcNHY6Hg06XR2sGiP9K6m1nAu19lKRSmeLLC7WOcqnTXY0olmTuJ4xDnc5wpjYltqO58AV2A4S0SuDQm8wN3/d9gLz7I9uXJNcTaI1T8WKZB/S+w5U8=
+	t=1719934992; cv=none; b=ePgBZ+fSfxECEP22MelbA5OKbFUEzHtbo3vWnuDMNAjVcSwIzr82ZPuVHmhpWUyhfRrQZzdJ4lG9G8LP6kr0wRJOWa77kbak1c5OZvHFRi1sgrD6Hd1i24Z+HytucdKJc+xhTWA49r7uaUZQcud/tjdMxccoLXK1czOAKJMdMrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719919216; c=relaxed/simple;
-	bh=up5dMVI+CcLW1poGQSUzbtN2tghPfjyvdIb1LegsMJA=;
-	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=r0yZ8AaLSrjjgfL8graclV7Dr4fS0mw3qO+5eLHAown3g9lpOjfQSrx+Am/gvKtIKrdABlGjJEF4Yws1Xiz3BNcYjewl7hcWCyQvjzDDuHf9hN/Ri0iPEtF4wFg4nwyOkMo08qjetZ93C7uf+xfS1WTst6OceGs0SwHwEn4h1r8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.194])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WD0lV21WFzdflq;
-	Tue,  2 Jul 2024 19:18:30 +0800 (CST)
-Received: from kwepemi500008.china.huawei.com (unknown [7.221.188.139])
-	by mail.maildlp.com (Postfix) with ESMTPS id F04D014041B;
-	Tue,  2 Jul 2024 19:20:06 +0800 (CST)
-Received: from [10.67.120.126] (10.67.120.126) by
- kwepemi500008.china.huawei.com (7.221.188.139) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.39; Tue, 2 Jul 2024 19:20:06 +0800
-Subject: Re: [bug report] scsi: SATA devices missing after FLR is triggered
- during HBA suspended
-To: Damien Le Moal <dlemoal@kernel.org>, <cassel@kernel.org>
-References: <20240618132900.2731301-1-liyihang9@huawei.com>
- <0c5e14eb-5560-48cb-9086-6ad9c3970427@kernel.org>
- <f27d6fa7-3088-0e60-043e-e71232066b12@huawei.com>
- <b39b4a5b-07b7-483b-9c42-3ac80503120d@kernel.org>
- <0d9bce26-c45b-5ce1-93c0-ca8af50547ae@huawei.com>
- <85cebcb9-ce97-43f2-8da5-01c3a745fe2c@kernel.org>
-CC: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<john.g.garry@oracle.com>, <yanaijie@huawei.com>,
-	<linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-	<linuxarm@huawei.com>, <chenxiang66@hisilicon.com>, <prime.zeng@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, <alex.williamson@redhat.com>
-From: Yihang Li <liyihang9@huawei.com>
-Message-ID: <5f8598e8-b371-f6c3-7497-6226d17238f5@huawei.com>
-Date: Tue, 2 Jul 2024 19:20:05 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+	s=arc-20240116; t=1719934992; c=relaxed/simple;
+	bh=HLjNTwA5AGcDBz3W47x5Ip7RjCeGD9o3Yb5T6CcTeoc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OAVssTikZU01ZFfrcENj53hwTf8SB4xjXmLJ3RlIhCEtP/4seGDw9w5636eoHpj2dPMt/13BdGHUGhfjarUVy0Isi6PuWwH6dPbEvdQCu8Yfav7sO78hWs2wb1S5nZt7EGNSz3ATCay4bwq2nQzJ0Dijhqpq7fExIr0iswX1wKo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GAyju344; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GAyju344"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE6F2C116B1;
+	Tue,  2 Jul 2024 15:43:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719934991;
+	bh=HLjNTwA5AGcDBz3W47x5Ip7RjCeGD9o3Yb5T6CcTeoc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GAyju344UvASfv2CnkS8dGTogNw5pdE1hbleGcEpU0vSSHK9wc7dcSS0kvtodE6eA
+	 0xBMExhKxpyQ6UWptTJIYKFhhr2UGz2kRmpb32JwQroGYSikYPIitUjePCVrCfn8Vq
+	 +Owm2JpVXXuPoaQpTtZtRT03RXHb+itp6eHIBu7xAb5BlD+gLU5NSpVDCSRQg7iWpA
+	 txuuXAZWCiAxEiJ2Y7Zs0CpK+vxiT+0asC0XNDJUGiT509jHdQvRFXltMWG4qTnagC
+	 lxonxbbvY8/gRgSi/aoUjs2rEf9syrwHT/4DzA/QV9fWYw4ZswpyGjj39EzuxIt15G
+	 TIUGgkLwGPOUQ==
+Date: Tue, 2 Jul 2024 17:43:05 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>,
+	Colin Ian King <colin.i.king@gmail.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>,
+	linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 00/13] ata,libsas: Assign the unique id used for
+ printing earlier
+Message-ID: <ZoQgCUL0H4Qzhvow@ryzen.lan>
+References: <20240626180031.4050226-15-cassel@kernel.org>
+ <14397cfc-c73a-4046-aca8-527b065f65d9@oracle.com>
+ <Zn1bxRbAml-HjWKb@ryzen.lan>
+ <cd7ff1a0-c73b-4638-be51-2a6d9de4b324@oracle.com>
+ <Zn2AP6J_RGlYExw9@ryzen.lan>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <85cebcb9-ce97-43f2-8da5-01c3a745fe2c@kernel.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- kwepemi500008.china.huawei.com (7.221.188.139)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Zn2AP6J_RGlYExw9@ryzen.lan>
+
+On Thu, Jun 27, 2024 at 05:07:43PM +0200, Niklas Cassel wrote:
+> On Thu, Jun 27, 2024 at 01:54:34PM +0100, John Garry wrote:
+> > On 27/06/2024 13:32, Niklas Cassel wrote:
+> > > On Thu, Jun 27, 2024 at 01:26:04PM +0100, John Garry wrote:
+> > > > On 26/06/2024 19:00, Niklas Cassel wrote:
+> > > > > Hello all,
+> > > > > 
+> > > > > This patch series was orginally meant to simply assign a unique id used
+> > > > > for printing earlier (ap->print_id), but has since grown to also include
+> > > > > cleanups related to ata_port_alloc() (since ap->print_id is now assigned
+> > > > > in ata_port_alloc()).
+> > > > > 
+> > > > 
+> > > > There's no real problem statement wrt print_id, telling how and why things
+> > > > are like they are, how it is a problem, and how it is improved in this
+> > > > series.
+> > > 
+> > > You are right, it is missing from the cover-letter.
+> > > 
+> > > It was there in v1:
+> > > https://lore.kernel.org/linux-ide/20240618153537.2687621-7-cassel@kernel.org/
+> > > 
+> > > """
+> > > This series moves the assignment of ap->print_id, which is used as a
+> > > unique id for each port, earlier, such that we can use the ata_port_*
+> > > print functions even before the ata_host has been registered.
+> > > """
+> > 
+> > OK, fine.
+> > 
+> > I see code which checks vs ap->print_id, like:
+> > 
+> > static void ata_force_link_limits(struct ata_link *link)
+> > {
+> > ...
+> > 		if (fe->port != -1 && fe->port != link->ap->print_id)
+> > 			continue;
+> > 
+> > 
+> > Is this all ok to deal with this print_id assignment change?
+> > 
+> > To me, it seems natural to assign a valid print_id from the alloc time, so I
+> > can't help but wonder it was done the current way.
+> 
+> ap->print_id was assigned after calling ata_host_register(), because libata
+> allowed a driver that did not know how many ports it had, to initially call
+> ata_alloc_host() with a big number of ports, and then reduce the host->n_ports
+> variable once it knew the actually number of ports, before calling
+> ata_host_register(), which would then free the "excess" ports.
+> 
+> This feature has actually never been used by and driver, and I remove support
+> for this in this series:
+> https://lore.kernel.org/linux-ide/20240626180031.4050226-22-cassel@kernel.org/
+> 
+> 
+> However, you do raise a good point...
+> ap->print_id is just supposed to be used for printing, but it appears that
+> ata_force_link_limits() and some other ata_force_*() functions make use of
+> it for other things... sigh...
+> 
+> Hopefully I can just change them from:
+> 	if (fe->port != -1 && fe->port != link->ap->print_id)
+> to
+> 	if (fe->port != -1)
+> 
+> but I will need to look in to this further...
+
+So, looking more closely at this, the code is actually not abusing print_id.
+
+Looking at libata.force in Documentation/admin-guide/kernel-parameters.txt:
+
+[LIBATA] Force configurations.  The format is a comma-
+                        separated list of "[ID:]VAL" where ID is PORT[.DEVICE].
+                        PORT and DEVICE are decimal numbers matching port, link
+                        or device.  Basically, it matches the ATA ID string
+                        printed on console by libata.
 
 
+While this seems a bit fragile, since it relies on the probe ordering
+of the SATA controller drivers, which could change, it does still work
+as designed after this series:
 
-On 2024/7/1 11:03, Damien Le Moal wrote:
-> On 6/24/24 21:10, Yihang Li wrote:
->>> Thank you for the explanation, but as Niklas said, it would be a lot easier for
->>> me to recreate the issue if you send the exact commands you execute to trigger
->>> the issue. E.g. "suspend all disks" in step a can have a lot of different
->>> meaning depending on which type os suspend you are using... So please send the
->>> exact commands you use.
->>> is what exactly ? autosuspend ? or something else ?
-> 
-> I am failing to recreate the exact same issue. I do see a lot of bad things
-> happening though, but that is not looking like what you sent. I do endup with
-> the 4 drives connected on my HBA being disabled by libata as revalidate/IDENTIFY
-> fails. And even worse: I hit a deadlock on dev->mutex when I try to do "rmmod
-> pm80xx" after running your test.
-> 
-> I am using a pm80xx adapter as that is the only libsas adapter I have.
-> 
-> I think your test just kicked a big can of worms... There seem to be a lot of
-> wrong things going on, but I now need to sort out if the problems are with the
-> pm80xx driver, libsas, libata or sd. Probably a combination of all.
-> 
-> ATA device suspend/resume has been a constant source of issues since scsi layer
-> switched to doing PM operations asynchronouly. Your issue is latest one.
-> This will take a while to debug.
-> 
->> In step a, I suspend all disks by issuing the following command to all disks
->> attached to the SAS controller 0000:b4:02.0:
->> [root@localhost ~]# echo auto > /sys/devices/pci0000:b4/0000:b4:02.0/host6/port-6:0/end_device-6:0/target6:0:0/6:0:0:0/power/control
->> [root@localhost ~]# echo 5000 > /sys/devices/pci0000:b4/0000:b4:02.0/host6/port-6:0/end_device-6:0/target6:0:0/6:0:0:0/power/autosuspend_delay_ms
->> ...
->> [root@localhost ~]# echo auto > /sys/devices/pci0000:b4/0000:b4:02.0/host6/port-6:6/end_device-6:6/target6:0:6/6:0:6:0/power/control
->> [root@localhost ~]# echo 5000 > /sys/devices/pci0000:b4/0000:b4:02.0/host6/port-6:6/end_device-6:6/target6:0:6/6:0:6:0/power/autosuspend_delay_ms
-> 
-> This works as expected on my system and I see my drives going to sleep after 5s.
-> 
->> Step b, Suspend the SAS controller:
->> [root@localhost ~]# echo auto > /sys/devices/pci0000:b4/0000:b4:02.0/power/control
-> 
-> This has no effect for me. Can you confirm that your controller is actually
-> sleeping ? I.e., what do the following show ?
-> 
-> cat /sys/devices/pci0000:b4/0000:b4:02.0/power/runtime_active_kids
-> cat /sys/devices/pci0000:b4/0000:b4:02.0/power/runtime_status
+I added the following to my kernel command line:
+"libata.force=5:nolpm"
 
-I don't have a sysfs node for runtime_active_kids in my system.
-My controller runtime_status has changed to "suspended" after step b.
+which yielded:
+[    1.811464] ata3.00: FORCE: horkage modified (nolpm)
+[    1.811466] ata3.00: LPM support broken, forcing max_power
+[    1.811468] ata3.00: ATA-7: QEMU HARDDISK, 2.5+, max UDMA/100
+[    1.811470] ata3.00: 2097152 sectors, multi 16: LBA48 NCQ (depth 32)
+[    1.811474] ata3.00: applying bridge limits
+[    1.811535] ata3.00: LPM support broken, forcing max_power
+[    1.811537] ata3.00: configured for UDMA/100
 
-[root@localhost ~]# cat /sys/devices/pci0000:b4/0000:b4:02.0/power/runtime_status
-suspended
+And considering that all checks against ap->print_id is for libata.force
+related parameters, I think that we are all good.
 
 
-> 
-> ?
-> 
->> At this point, the SAS controller is suspended. Next step c is trigger PCI FLR.
->> [root@localhost ~]# echo 1 > /sys/bus/pci/devices/0000:b4:02.0/reset
-> 
-> What does
-> 
-> cat /sys/bus/pci/devices/0000:b4:02.0/reset_method
-> 
-> is on your system ?
-> 
-> Mine is "bus" only.
-
-The results in my system are as follows:
-
-[root@localhost ~]# cat /sys/devices/pci0000:b4/0000:b4:02.0/reset_method
-acpi flr pm
-
-
-> 
->>>> The issue 2:
->>>> a. Suspend all disks on controller B.
->>>> b. Suspend controller B.
->>>> c. Resuming all disks on controller B.
->>>> d. Run the "lsmod" command to check the driver reference counting.
-> 
-> What is the reference count before you do step (a), after you run step (b) and
-> at step (d) ?
-
-Before step a, the hisi_sas driver reference count is 0.
-After step b, the driver reference count is 0.
-At step d, the reference count is 2405 (this value is not the same every time).
-
-hisi_sas_v3_hw         77824  2405
-hisi_sas_main          45056  1 hisi_sas_v3_hw
-libsas                 98304  2 hisi_sas_v3_hw,hisi_sas_main
-
-
-> 
-> For my system using the pm80xx driver, I get:
-> 
-> pm80xx                352256  0
-> libsas                155648  1 pm80xx
-> 
-> before and after, and that is all normal. But there is the difference that
-> suspending the pm80xx controller does not seem to be supported and does nothing.
-> 
+Kind regards,
+Niklas
