@@ -1,180 +1,76 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0CDD133987;
-	Tue,  2 Jul 2024 07:28:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06BC074047;
+	Tue,  2 Jul 2024 07:32:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719905333; cv=none; b=bewXNPBcowgUTQkRJ9E/EUA1J9qMoDUeWUth+NIlfGV50NoiPG5TqrQtbIlgbhsFwXEhBQkNlU40KcedzoH493sXTsY6JVLNedEO4gl2xxHTFtsY1bjcUJO6Yg4321DQAGlcRLefzv4lkyVq7a7HOBG+1nFV2146QWJWjLkZWUw=
+	t=1719905532; cv=none; b=OvO62cmax8M2GKtAhZTpx9uYAp1LE5T0i5QOMKQKt82Eu7XVrUikK8vPHYl4XLzfTAx6yZ0ZA6X9b6iNH7QdXsAC4p0NtgpGCGOxfX3+tImdOSMlk5o28pxMgDoUxd6ZEJwaVEY/B3KabdPI4RkpGgRGUQoEjFfgSNoRiMbEx0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719905333; c=relaxed/simple;
-	bh=fe1WusoWTQnTd1P5u/jAG7TOsY/59WcKkHZBjncyvbQ=;
+	s=arc-20240116; t=1719905532; c=relaxed/simple;
+	bh=+sMR8Y+fELBV98VkEZAmEYgkVwqnEdYtSXSzNoB2jX0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OJV5mjx/vj5F2/SeCM/+FwyUXLPwbZHSp8oqj7G+VsPNz54gfN7EIY8qMY02hCS+g/u7uVhMb8QiY1yRKxzhTiQeJWl2TosCMl0u7W++DwFkAOm2KnJV7O0MlUm8p15PaZFNmySppoN6tbmTfVTGH2QcHZfXqjKFfoHUHYnaC/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NrFXqIFB; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=lEgNYpEfVRJpi3fpemItYdBPZC818qgDpHPv++lA20MSyP3ZtHMJxN7DJLhv41LQOGinttCvLdRvuQls6x06GeWz5hPzqtcO96aPbabEizIAQMVGY3qJdn7dGDh7E7qygiHavAq8eeyRPdOJLjcn9a4pPGFFvm1/ysaGMTzY3DQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nxBkkv55; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NrFXqIFB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33004C32781;
-	Tue,  2 Jul 2024 07:28:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719905333;
-	bh=fe1WusoWTQnTd1P5u/jAG7TOsY/59WcKkHZBjncyvbQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NrFXqIFBLL042fXbIeBQbLphGByU3q3r7cg8DM7DBTCsK62x+zDDRNvB96UN8REsc
-	 57BVckTTKnGVT1AvbeXENdEYh+cORKtDO/jV+70yXZui+EF/4CLipPxoG3Spgeq2V2
-	 miTVE1zz1Wb8vjOVvRsOlKu/H3KHcBH2VY8JmFYCtbcrzp/NHqAXboFaaA2g8wVjCC
-	 eZmCGRrXkWN60bflkdVybFEHyqHmidfrRIKjIOh64c3ngfYKdopdgCqQPKNBKiTYQU
-	 v7ECx9ORbQTWyD5rtzDTksj8Rt2xHRaTyMTKESsZ/DqJzFiUzfDjGY2mtXS+0EBpzG
-	 CI40mA+eaM3zQ==
-Date: Tue, 2 Jul 2024 00:28:51 -0700
-From: Eric Biggers <ebiggers@kernel.org>
-To: Sam Protsenko <semen.protsenko@linaro.org>
-Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	linux-fscrypt@vger.kernel.org,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Peter Griffin <peter.griffin@linaro.org>,
-	=?iso-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>,
-	William McVicker <willmcvicker@google.com>
-Subject: Re: [PATCH 6/6] scsi: ufs: exynos: Add support for Flash Memory
- Protector (FMP)
-Message-ID: <20240702072851.GB121190@sol.localdomain>
-References: <20240611223419.239466-1-ebiggers@kernel.org>
- <20240611223419.239466-7-ebiggers@kernel.org>
- <CAPLW+4kPAi+13C7t34XWW9ciAoYUebj5nz_EQY+RKhsT2ZpHnQ@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nxBkkv55"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=yRJduJ4b13YGEVnBaImf8MBMoj+rPcyZfPfJ5uybrn0=; b=nxBkkv5533e0ibSUtWu/FWqca9
+	T02UNeMXerA742jTnmxcJDpprQYJhN+AB5mjSyF1tkFtaC9NWv/DI0JPbLwQgi37wPeed5cA37c0e
+	+2f4q+qCCkqKwjebfWNgYqdh3KcmHS4SeimB2eXIojre3wqBiKfJ74iCTIY0nzAi/62xdvvQQ9QVV
+	ggumCBVJg78P9RdScYdX17RSGD42SxwMGXnk/F0Te2sI20BEGRBsqQOtoGA/KEqDDyMxAk9wtOs1O
+	z/1WMLlWsZ6latPxKW85ISPYOrT1dPDdYNH/mzAspCJntQyhFPayqTd56frrg1OjYGXYjfO03yN/a
+	E+Zh4hIw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
+	id 1sOXzk-00000005s56-0D5a;
+	Tue, 02 Jul 2024 07:32:08 +0000
+Date: Tue, 2 Jul 2024 00:32:07 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Oliver Sang <oliver.sang@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>, oe-lkp@lists.linux.dev,
+	lkp@intel.com, Jens Axboe <axboe@kernel.dk>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
+	linux-block@vger.kernel.org, linux-um@lists.infradead.org,
+	drbd-dev@lists.linbit.com, nbd@other.debian.org,
+	linuxppc-dev@lists.ozlabs.org, virtualization@lists.linux.dev,
+	xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
+	nvdimm@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, ying.huang@intel.com,
+	feng.tang@intel.com, fengwei.yin@intel.com
+Subject: Re: [axboe-block:for-next] [block]  1122c0c1cc:  aim7.jobs-per-min
+ 22.6% improvement
+Message-ID: <ZoOs9wdR1yBPB-7J@infradead.org>
+References: <202406250948.e0044f1d-oliver.sang@intel.com>
+ <ZnqGf49cvy6W-xWf@infradead.org>
+ <Znt4qTr/NdeIPyNp@xsang-OptiPlex-9020>
+ <ZnuNhkH26nZi8fz6@infradead.org>
+ <ZnzP+nUrk8+9bANK@xsang-OptiPlex-9020>
+ <ZnzwbYSaIlT0SIEy@infradead.org>
+ <ZoJnO09LBj6kApY7@xsang-OptiPlex-9020>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAPLW+4kPAi+13C7t34XWW9ciAoYUebj5nz_EQY+RKhsT2ZpHnQ@mail.gmail.com>
+In-Reply-To: <ZoJnO09LBj6kApY7@xsang-OptiPlex-9020>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Fri, Jun 14, 2024 at 06:00:57PM -0500, Sam Protsenko wrote:
-> On Tue, Jun 11, 2024 at 5:36 PM Eric Biggers <ebiggers@kernel.org> wrote:
-> >
-> > From: Eric Biggers <ebiggers@google.com>
-> >
-> > Add support for Flash Memory Protector (FMP), which is the inline
-> > encryption hardware on Exynos and Exynos-based SoCs.
-> >
-> > Specifically, add support for the "traditional FMP mode" that works on
-> > many Exynos-based SoCs including gs101.  This is the mode that uses
-> > "software keys" and is compatible with the upstream kernel's existing
-> > inline encryption framework in the block and filesystem layers.  I plan
-> > to add support for the wrapped key support on gs101 at a later time.
-> >
-> > Tested on gs101 (specifically Pixel 6) by running the 'encrypt' group of
-> > xfstests on a filesystem mounted with the 'inlinecrypt' mount option.
-> >
-> > Signed-off-by: Eric Biggers <ebiggers@google.com>
-> > ---
-> >  drivers/ufs/host/ufs-exynos.c | 219 +++++++++++++++++++++++++++++++++-
-> >  1 file changed, 218 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-> > index 88d125d1ee3c..969c4eedbe2d 100644
-> > --- a/drivers/ufs/host/ufs-exynos.c
-> > +++ b/drivers/ufs/host/ufs-exynos.c
-> > @@ -6,10 +6,13 @@
-> >   * Author: Seungwon Jeon  <essuuj@gmail.com>
-> >   * Author: Alim Akhtar <alim.akhtar@samsung.com>
-> >   *
-> >   */
-> >
-> > +#include <asm/unaligned.h>
-> > +#include <crypto/aes.h>
-> > +#include <linux/arm-smccc.h>
-> >  #include <linux/clk.h>
-> >  #include <linux/delay.h>
-> >  #include <linux/module.h>
-> >  #include <linux/of.h>
-> >  #include <linux/of_address.h>
-> > @@ -1149,10 +1152,221 @@ static inline void exynos_ufs_priv_init(struct ufs_hba *hba,
-> >                 ufs->rx_sel_idx = 0;
-> >         hba->priv = (void *)ufs;
-> >         hba->quirks = ufs->drv_data->quirks;
-> >  }
-> >
-> > +#ifdef CONFIG_SCSI_UFS_CRYPTO
-> > +
-> > +/*
-> > + * Support for Flash Memory Protector (FMP), which is the inline encryption
-> > + * hardware on Exynos and Exynos-based SoCs.  The interface to this hardware is
-> > + * not compatible with the standard UFS crypto.  It requires that encryption be
-> > + * configured in the PRDT using a nonstandard extension.
-> > + */
-> > +
-> > +enum fmp_crypto_algo_mode {
-> > +       FMP_BYPASS_MODE = 0,
-> > +       FMP_ALGO_MODE_AES_CBC = 1,
-> > +       FMP_ALGO_MODE_AES_XTS = 2,
-> > +};
-> > +enum fmp_crypto_key_length {
-> > +       FMP_KEYLEN_256BIT = 1,
-> > +};
-> > +#define FMP_DATA_UNIT_SIZE     SZ_4K
-> > +
-> > +/* This is the nonstandard format of PRDT entries when FMP is enabled. */
-> > +struct fmp_sg_entry {
-> > +
-> > +       /*
-> > +        * This is the standard PRDT entry, but with nonstandard bitfields in
-> > +        * the high bits of the 'size' field, i.e. the last 32-bit word.  When
-> > +        * these nonstandard bitfields are zero, the data segment won't be
-> > +        * encrypted or decrypted.  Otherwise they specify the algorithm and key
-> > +        * length with which the data segment will be encrypted or decrypted.
-> > +        */
-> 
-> Minor suggestion: create a kernel-doc comment for the structure and
-> pull all fields documentation there.
-> 
-> > +       struct ufshcd_sg_entry base;
-> > +
-> > +       /* The initialization vector (IV) with all bytes reversed */
-> > +       __be64 file_iv[2];
-> > +
-> > +       /*
-> > +        * The key with all bytes reversed.  For XTS, the two halves of the key
-> > +        * are given separately and are byte-reversed separately.
-> > +        */
-> > +       __be64 file_enckey[4];
-> > +       __be64 file_twkey[4];
-> > +
-> > +       /* Unused */
-> > +       __be64 disk_iv[2];
-> > +       __be64 reserved[2];
-> > +};
-> > +
-> > +#define SMC_CMD_FMP_SECURITY           0xC2001810
-> > +#define SMC_CMD_SMU                    0xC2001850
-> > +#define SMC_CMD_FMP_SMU_RESUME         0xC2001860
-> 
-> Suggest to use ARM_SMCCC_CALL_VAL() macro to define above values.
-> 
-> > +#define SMU_EMBEDDED                   0
-> > +#define SMU_INIT                       0
-> > +#define CFG_DESCTYPE_3                 3
-> > +
-> > +static inline long exynos_smc(unsigned long cmd, unsigned long arg0,
-> > +                             unsigned long arg1, unsigned long arg2)
-> > +{
-> > +       struct arm_smccc_res res;
-> > +
-> > +       arm_smccc_smc(cmd, arg0, arg1, arg2, 0, 0, 0, 0, &res);
-> > +       return res.a0;
-> > +}
-> 
-> This wrapper looks like it was borrowed from the downstream Samsung
-> code. Not sure if it brings any value nowadays. Maybe it would be
-> clearer to just use arm_smccc_smc() directly and remove this wrapper?
-> 
+On Mon, Jul 01, 2024 at 04:22:19PM +0800, Oliver Sang wrote:
+> from below, it seems the patchset doesn't introduce any performance improvement
+> but a regression now. is this expected?
 
-All done in v2.  Thanks.
+Not having the improvement at least alleviate my concerns about data
+integrity.  I'm still curious where it comes from as it isn't exactly
+expected.
 
-- Eric
