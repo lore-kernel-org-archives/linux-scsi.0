@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDC7A148825;
-	Tue,  2 Jul 2024 16:08:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0F8E148825;
+	Tue,  2 Jul 2024 16:08:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719936533; cv=none; b=Ff1e0xywq27GeQMgeDgBZbUYJ6c/0DwK1hRTr6Ak4oCMbbPQB/isVgIh/r4hnceYAJpL6fwE6q0wDQkRfU+3ZDlTkZlqUefXcK6L83OtT92TjMyTkv6ek+5e2u8dU9K1UgxB3D76x7GeY+rfn/ifEFOhNzNCQkXADGBNRJTJVzw=
+	t=1719936536; cv=none; b=ohoWFjgPGqrqLfsGbiPqKcUUfDNVJCObVU4IO25yDBIMudlnMJFsi3BrRAZhK2Vt6BmZo1KFEQa5S45UuAb3yGoWQ09IERUrHeQLPtkFUcqksV7qK+fqhHgQ5iZqMKHiVbSdLM8A+CcsIPhzjUDvG5N43dWJQukINKwRdj4K5Hw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719936533; c=relaxed/simple;
-	bh=rGLhGA4U0nWfnf9gDicbn5UReSpLOrwyOSqv92NlJnE=;
+	s=arc-20240116; t=1719936536; c=relaxed/simple;
+	bh=tbDAh0q0cfWpxkoy8wWkLTXEdVgFDHunVlxbO8TdVRc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=M63pJlLmtSj3yhumWTN4Sz2y2+hxZwEjt5xRsucjwF/jXSPaD3Ju2/asBrupetUBXuHv+dT+1aP6hU5dbqXctxZUpTfzlHactMvMGT3bE2LbEexU8tOBe+l9CTu2vLfq3TMfhUcj9r6nAQJyBg36wTErW4sLerTMaRuPGlv4rhA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pLqvpNmE; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=lH6wTeugOxXcZnEC3bh0awhBOS1HSdCfhgLNLQSJ+Qwohb6kgwKhwC0XvtQ95OSOdmvltCCgHslLye3SXlhWjCj3pNX8KA8IoUxTc140lFPas7qwcdN6fkl+89gDX1RdtCd93mJOMR/tdQ8IF2Pkhu20bKpwQLvQdiXA3aZudh4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q7QcYq6x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pLqvpNmE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94354C116B1;
-	Tue,  2 Jul 2024 16:08:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q7QcYq6x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81DF5C4AF0A;
+	Tue,  2 Jul 2024 16:08:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719936533;
-	bh=rGLhGA4U0nWfnf9gDicbn5UReSpLOrwyOSqv92NlJnE=;
+	s=k20201202; t=1719936536;
+	bh=tbDAh0q0cfWpxkoy8wWkLTXEdVgFDHunVlxbO8TdVRc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=pLqvpNmEwgGzV/QpyKiwD0J/ZXtzd+E9sknDZ6hzl7BpcRGmLVLAGRx1Eut4rd3e6
-	 gLvaet5Bg7trCOi/uxxDnma2xJsP8vu+KeHgYdAHpHPUvTgbaqpP8owXPUsCAWeBeZ
-	 6k4m9wcs0cGPqQVKxf9tXleX5+fTS5VRKz7Tg64ObAMI/XIVG+Tf2/JZUvkoOxHoFN
-	 8a9sK4spBqz6bNkkrB1Us12ecEI2U5DHTQffFZ9kHxSccrY9LNAARCovez+qovpd/V
-	 q2O9PcsH+uUL6PXrhFwOccwzuP+VnM52tkqSOpZYPRNfPtyWpWWdeWOka2vmbpqsFI
-	 Y3ZCFPL2954DA==
+	b=Q7QcYq6xp0ybX1VqpqrZ33gfFT3q/9QmziJhjTJPRX1VjotL4hg7d8XZk9IDMkcF3
+	 VfRQDAzoJKjB4zOiS2CfHh9UKzcGZyNZ0y86JT3AtsDedV4YFQ0SRSajK8MW2XJ44y
+	 5GXbcVXqUtEUChGaNxg8AaucQrvI3aFhPQvW1lZj0yHrV7HW7zML0hJPbQD9OZGB28
+	 MyBD3N8C89cb5nvVdPAK8VVQ0PvdRxmpV0958f6kfy/V8ytRMCpl22uG9DSnN7jP7x
+	 ggzitLOszkG0GYDnmjJId5Zvg6fxLBUyeKM9nZq/vgOjkflYU2QbkHYhvbkCyiFD/P
+	 x5gwMBTp9Y1YA==
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>
@@ -36,9 +36,9 @@ Cc: linux-scsi@vger.kernel.org,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Hannes Reinecke <hare@suse.de>,
 	linux-ide@vger.kernel.org
-Subject: [PATCH v3 5/9] ata: libata-core: Remove local_port_no struct member
-Date: Tue,  2 Jul 2024 18:08:01 +0200
-Message-ID: <20240702160756.596955-16-cassel@kernel.org>
+Subject: [PATCH v3 6/9] ata: libata: Assign print_id at port allocation time
+Date: Tue,  2 Jul 2024 18:08:02 +0200
+Message-ID: <20240702160756.596955-17-cassel@kernel.org>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240702160756.596955-11-cassel@kernel.org>
 References: <20240702160756.596955-11-cassel@kernel.org>
@@ -48,73 +48,79 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2682; i=cassel@kernel.org; h=from:subject; bh=rGLhGA4U0nWfnf9gDicbn5UReSpLOrwyOSqv92NlJnE=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJaVJ94K4YIMp75ps23qeykqlxF8cR1zyJD+IxFWJXbJ qTWnM7oKGVhEONikBVTZPH94bK/uNt9ynHFOzYwc1iZQIYwcHEKwERWnmL4K3l45STGtBkOot4y Z0VfVccyc7w13M35/c2UdpvGTbFbtBgZTnO80fO3K9G1i1/50Tv9QbOS4QrvVxWtXNf1qr+vPLC PEwA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2459; i=cassel@kernel.org; h=from:subject; bh=tbDAh0q0cfWpxkoy8wWkLTXEdVgFDHunVlxbO8TdVRc=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJaVJ9qVff5f5S4a+zoXMXqvy/G2JX1s2h3f8yb0nn8p me7Tot3lLIwiHExyIopsvj+cNlf3O0+5bjiHRuYOaxMIEMYuDgFYCL9UxgZ+qWX3J7waMNnz9AH B39bT17xL5T7hs6eiIMdSocL+BpllzH84TG/89lDhedtgF7NhxOW06esmv+x58HbphNLXzz5uOK +BisA
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-ap->local_port_no is simply ap->port_no + 1.
-Since ap->local_port_no can be derived from ap->port_no, there is no need
-for the ap->local_port_no struct member, so remove ap->local_port_no.
+While the assignment of ap->print_id could have been moved to
+ata_host_alloc(), let's simply move it to ata_port_alloc().
+
+If you allocate a port, you want to give it a unique name that can be used
+for printing.
+
+By moving the ap->print_id assignment to ata_port_alloc(), means that we
+can also remove the ap->print_id assignment from ata_sas_port_alloc().
+
+This will allow a LLD to use the ata_port_*() print functions before
+ata_host_register() has been called.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/ata/libata-core.c      | 5 +----
- drivers/ata/libata-transport.c | 3 ++-
- include/linux/libata.h         | 1 -
- 3 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/ata/libata-core.c | 6 +-----
+ drivers/ata/libata-sata.c | 1 -
+ drivers/ata/libata.h      | 1 -
+ 3 files changed, 1 insertion(+), 7 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f0cce3fec902..aff54651da65 100644
+index aff54651da65..f02c023ba89e 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -5463,7 +5463,6 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+@@ -5462,7 +5462,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ 
  	ap->pflags |= ATA_PFLAG_INITIALIZING | ATA_PFLAG_FROZEN;
  	ap->lock = &host->lock;
- 	ap->print_id = -1;
--	ap->local_port_no = -1;
+-	ap->print_id = -1;
++	ap->print_id = atomic_inc_return(&ata_print_id);
  	ap->host = host;
  	ap->dev = host->dev;
  
-@@ -5901,10 +5900,8 @@ int ata_host_register(struct ata_host *host, const struct scsi_host_template *sh
+@@ -5899,10 +5899,6 @@ int ata_host_register(struct ata_host *host, const struct scsi_host_template *sh
+ 		return -EINVAL;
  	}
  
- 	/* give ports names and add SCSI hosts */
--	for (i = 0; i < host->n_ports; i++) {
-+	for (i = 0; i < host->n_ports; i++)
- 		host->ports[i]->print_id = atomic_inc_return(&ata_print_id);
--		host->ports[i]->local_port_no = i + 1;
--	}
- 
+-	/* give ports names and add SCSI hosts */
+-	for (i = 0; i < host->n_ports; i++)
+-		host->ports[i]->print_id = atomic_inc_return(&ata_print_id);
+-
  	/* Create associated sysfs transport objects  */
  	for (i = 0; i < host->n_ports; i++) {
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index d24f201c0ab2..9e24c33388f9 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -217,7 +217,8 @@ static DEVICE_ATTR(name, S_IRUGO, show_ata_port_##name, NULL)
+ 		rc = ata_tport_add(host->dev,host->ports[i]);
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index 1a36a5d1d7bc..b602247604dc 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -1234,7 +1234,6 @@ struct ata_port *ata_sas_port_alloc(struct ata_host *host,
+ 	ap->flags |= port_info->flags;
+ 	ap->ops = port_info->port_ops;
+ 	ap->cbl = ATA_CBL_SATA;
+-	ap->print_id = atomic_inc_return(&ata_print_id);
  
- ata_port_simple_attr(nr_pmp_links, nr_pmp_links, "%d\n", int);
- ata_port_simple_attr(stats.idle_irq, idle_irq, "%ld\n", unsigned long);
--ata_port_simple_attr(local_port_no, port_no, "%u\n", unsigned int);
-+/* We want the port_no sysfs attibute to start at 1 (ap->port_no starts at 0) */
-+ata_port_simple_attr(port_no + 1, port_no, "%u\n", unsigned int);
+ 	return ap;
+ }
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 38ce13b55474..5ea194ae8a8b 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -32,7 +32,6 @@ enum {
  
- static DECLARE_TRANSPORT_CLASS(ata_port_class,
- 			       "ata_port", NULL, NULL, NULL);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b7c5d3f33368..84a7bfbac9fa 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -814,7 +814,6 @@ struct ata_port {
- 	/* Flags that change dynamically, protected by ap->lock */
- 	unsigned int		pflags; /* ATA_PFLAG_xxx */
- 	unsigned int		print_id; /* user visible unique port ID */
--	unsigned int            local_port_no; /* host local port num */
- 	unsigned int		port_no; /* 0 based port no. inside the host */
+ #define ATA_PORT_TYPE_NAME	"ata_port"
  
- #ifdef CONFIG_ATA_SFF
+-extern atomic_t ata_print_id;
+ extern int atapi_passthru16;
+ extern int libata_fua;
+ extern int libata_noacpi;
 -- 
 2.45.2
 
