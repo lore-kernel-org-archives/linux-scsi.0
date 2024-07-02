@@ -1,76 +1,83 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06BC074047;
-	Tue,  2 Jul 2024 07:32:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADA484963F
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 08:09:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719905532; cv=none; b=OvO62cmax8M2GKtAhZTpx9uYAp1LE5T0i5QOMKQKt82Eu7XVrUikK8vPHYl4XLzfTAx6yZ0ZA6X9b6iNH7QdXsAC4p0NtgpGCGOxfX3+tImdOSMlk5o28pxMgDoUxd6ZEJwaVEY/B3KabdPI4RkpGgRGUQoEjFfgSNoRiMbEx0Q=
+	t=1719907773; cv=none; b=ro7riYalPkLFqCu9jVFbPpCQurHNk1Nw6cTqE5ySdlvBa6nhOmYj6u0lZ3VS3wF/zjprF6ib49BihQ4ZU7oWDCnxDojNCPdOVUtOpD+vDNHwwZMak6fAvgcDC+afuITuimts0yaQe145l8vZ+a1pxEbKsEjcnnpXC3fLWyDayxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719905532; c=relaxed/simple;
-	bh=+sMR8Y+fELBV98VkEZAmEYgkVwqnEdYtSXSzNoB2jX0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lEgNYpEfVRJpi3fpemItYdBPZC818qgDpHPv++lA20MSyP3ZtHMJxN7DJLhv41LQOGinttCvLdRvuQls6x06GeWz5hPzqtcO96aPbabEizIAQMVGY3qJdn7dGDh7E7qygiHavAq8eeyRPdOJLjcn9a4pPGFFvm1/ysaGMTzY3DQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=nxBkkv55; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1719907773; c=relaxed/simple;
+	bh=Skroyq3aTBY7hfPL4JdaHRuWffkLk23EobqK283C6Rg=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=NLYj0IXM+CbGj+/vGXwtZ1vQd9406xGvmtaetBdRcytoRHXsk8eI9vU1RXSSulwfYl8OndY1m0jSZDzYJMVDRIAbRurwtrKjlex4mqFehQ23rcIw7Qr6FJoR9Eces1BkspvRAU7bphhyNO8i4do89yt59gG+Bk4ZdnzIxim/oto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=azTS0+Zu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nxBkkv55"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=yRJduJ4b13YGEVnBaImf8MBMoj+rPcyZfPfJ5uybrn0=; b=nxBkkv5533e0ibSUtWu/FWqca9
-	T02UNeMXerA742jTnmxcJDpprQYJhN+AB5mjSyF1tkFtaC9NWv/DI0JPbLwQgi37wPeed5cA37c0e
-	+2f4q+qCCkqKwjebfWNgYqdh3KcmHS4SeimB2eXIojre3wqBiKfJ74iCTIY0nzAi/62xdvvQQ9QVV
-	ggumCBVJg78P9RdScYdX17RSGD42SxwMGXnk/F0Te2sI20BEGRBsqQOtoGA/KEqDDyMxAk9wtOs1O
-	z/1WMLlWsZ6latPxKW85ISPYOrT1dPDdYNH/mzAspCJntQyhFPayqTd56frrg1OjYGXYjfO03yN/a
-	E+Zh4hIw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sOXzk-00000005s56-0D5a;
-	Tue, 02 Jul 2024 07:32:08 +0000
-Date: Tue, 2 Jul 2024 00:32:07 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Oliver Sang <oliver.sang@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>, oe-lkp@lists.linux.dev,
-	lkp@intel.com, Jens Axboe <axboe@kernel.dk>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
-	linux-block@vger.kernel.org, linux-um@lists.infradead.org,
-	drbd-dev@lists.linbit.com, nbd@other.debian.org,
-	linuxppc-dev@lists.ozlabs.org, virtualization@lists.linux.dev,
-	xen-devel@lists.xenproject.org, linux-bcache@vger.kernel.org,
-	dm-devel@lists.linux.dev, linux-raid@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
-	nvdimm@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, ying.huang@intel.com,
-	feng.tang@intel.com, fengwei.yin@intel.com
-Subject: Re: [axboe-block:for-next] [block]  1122c0c1cc:  aim7.jobs-per-min
- 22.6% improvement
-Message-ID: <ZoOs9wdR1yBPB-7J@infradead.org>
-References: <202406250948.e0044f1d-oliver.sang@intel.com>
- <ZnqGf49cvy6W-xWf@infradead.org>
- <Znt4qTr/NdeIPyNp@xsang-OptiPlex-9020>
- <ZnuNhkH26nZi8fz6@infradead.org>
- <ZnzP+nUrk8+9bANK@xsang-OptiPlex-9020>
- <ZnzwbYSaIlT0SIEy@infradead.org>
- <ZoJnO09LBj6kApY7@xsang-OptiPlex-9020>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="azTS0+Zu"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2D483C4AF0F
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 08:09:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1719907773;
+	bh=Skroyq3aTBY7hfPL4JdaHRuWffkLk23EobqK283C6Rg=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=azTS0+ZuhM/y4xsGGhSQ1RFke4XjBHUjeJ7APTaIOC7RIaDHvH5uFmkgka1BCUCd+
+	 isnjKlDvup/XB709l8Auo+3ZJk/kFTdUQ8BshHm9NowWYuTV2fG6HJXqQnAezo3LRD
+	 MgaEjQ3GnI5VqcWx3SwN64OofEgizj/FQtOa8D6MqzP/rHaxH0MtuCCsvpXOQh/1QY
+	 I9rLg2n3GkGauT4KBLSl7V/RhXzce3eJGtEOffUiKnyX9eJ++rW0MIAyJxsStTkP++
+	 5WxSJmGU1g9aQ65lfLCxVuxiVP69MMjlCF7y+9G89vSe+l9Qe/rLLO7Wy/CbIU7msu
+	 dA7QWaDeuKg6w==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 23DEBC433E5; Tue,  2 Jul 2024 08:09:33 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 209177] mpt2sas_cm0: failure at
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c:10791/_scsih_probe()!
+Date: Tue, 02 Jul 2024 08:09:32 +0000
+X-Bugzilla-Reason: CC
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: ranjan.kumar@broadcom.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: drivers_other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-209177-11613-hg3m4ZHa32@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-209177-11613@https.bugzilla.kernel.org/>
+References: <bug-209177-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZoJnO09LBj6kApY7@xsang-OptiPlex-9020>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Jul 01, 2024 at 04:22:19PM +0800, Oliver Sang wrote:
-> from below, it seems the patchset doesn't introduce any performance improvement
-> but a regression now. is this expected?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D209177
 
-Not having the improvement at least alleviate my concerns about data
-integrity.  I'm still curious where it comes from as it isn't exactly
-expected.
+Ranjan Kumar (ranjan.kumar@broadcom.com) changed:
 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |ranjan.kumar@broadcom.com
+
+--- Comment #10 from Ranjan Kumar (ranjan.kumar@broadcom.com) ---
+Hi,
+LSI SAS2008 PCI-Express Fusion-MPT is a pretty old card that has reached EO=
+L.
+If any support is needed please contact Broadcom support channel.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are on the CC list for the bug.=
