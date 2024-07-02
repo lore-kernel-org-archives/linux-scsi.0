@@ -1,78 +1,146 @@
-Received: from mail-oo1-f42.google.com (mail-oo1-f42.google.com [209.85.161.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 788128479
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Jul 2024 01:44:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E85AE14293;
+	Tue,  2 Jul 2024 02:26:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719884676; cv=none; b=Zh33pGF4bQy42qq8+9qNBj+aPU8KuZSK0TLnZM4LsXwruIGHfnebG/234auIlwUbtgz7Yrkxe6GxEWl64B1mivfRrMHP3iANmB9mSRHYiit8ztggaVjDTOUZmsSIusde2i8Y9MeDAUr3ZJxETncbU1qB/Q41eC4kKFV3XQ5CnWk=
+	t=1719887210; cv=none; b=Z4K6w3ikHCEFsFf2iGWDWPOK+7RLTZ3PXlR/dqbOgwVvxVTuoaox61qQkO+HzlwGrhalYI7DXUePV7QQp2s9aExjRYnjHti2ebfzjJkcUlnHkZMc624hSkOVJdzPwtyqL4paDf8jYh/gw94KfFZ0rAdj/iwypTxdOYDsKFrmSy4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719884676; c=relaxed/simple;
-	bh=6OChGbeYQud/3ufNY8dVAz4Cwcbp2c1p5q9LXz7tcNE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=B1m2/f00vhMCQi/vlwyZAAMIXl2qjzZU5hsWoxvpwa5lMXsgGYDcNE/ArfWlwcgea2nAkUmESFpbSerLV3SbI6xcQEEmrQC/v9DUdKVcZ2kn5eqA0XQNWsmFqdCQUbVEirc7yt1GmASZnoXaZ+X9jw9KCRFiLx4Qlz5pz63muX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zettlmeissl.de; spf=pass smtp.mailfrom=zettlmeissl.de; dkim=pass (2048-bit key) header.d=zettlmeissl.de header.i=@zettlmeissl.de header.b=KAGd55tI; arc=none smtp.client-ip=209.85.161.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zettlmeissl.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zettlmeissl.de
+	s=arc-20240116; t=1719887210; c=relaxed/simple;
+	bh=7VWvMsjMHz5vpZgJgChD4sJ+XNDMoIvDIOsXcuM/Oys=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=pmc7NSikzit0LxTqbyKa94p3tMuJMvflErbJNOknao9PQcjyNl5Nd69NDaDFzyMVg5LY27zVdebj3kofceCIOaNaFfA6dnYWyld9uMw8bD8DRT3Id8ZxyyCfnCbxJ1wW5gKPiBOVhxYGmdK4tn3zjL6EoOCG+wInmUYo4x5+JEg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=PrAjDdOr; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=PrAjDdOr; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zettlmeissl.de header.i=@zettlmeissl.de header.b="KAGd55tI"
-Received: by mail-oo1-f42.google.com with SMTP id 006d021491bc7-5c21a17760fso1682682eaf.1
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Jul 2024 18:44:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=zettlmeissl.de; s=2024-02-28; t=1719884673; x=1720489473; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=6OChGbeYQud/3ufNY8dVAz4Cwcbp2c1p5q9LXz7tcNE=;
-        b=KAGd55tIDtE/Ba27nq9HhhvGDy2B8LaHl3+WTvu2MHIjxt9cAz56eqWqIkim1MI3Cw
-         5m7K0WQWIBqvlntZNk169jyQ/2oGrEvhq3nudbPPr+dCPCBPHAVZyK1u3XCJxQuN5YYa
-         RwBtcPBKne6eng8E9jlsOaxMlWfseUR1CkIKTHqqBOCM0P/vJ3SlyQBIvvixd9HJRpfc
-         ZUiDwE7v/o35NeLmFZnY3KbObR4GF+8jKU8zAQ1oe9CIpE3g4i8ARwCK7wKJHPYXz9sK
-         /hRxMxEENfuVGzQc1DKzYCWom30pJxfH+UWMFM7t2WwSLN0r5KG2x3vxubrVhYz9lhsX
-         AM9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719884673; x=1720489473;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=6OChGbeYQud/3ufNY8dVAz4Cwcbp2c1p5q9LXz7tcNE=;
-        b=awX/A0XszdclSohJmKu6iVaq9OIHBtwHCsAuVOAdUdbvXnKpwZarEQjBvNKQg1Mgpl
-         IbWaakwV/6DvIhcBms6gIsB6Sk4y1QAaeJCMZw5lJrcocwdOfNOcwXhOb8hAFClKHdzr
-         yy0qzrW53kpcsjfqdoCknhYrKpTGRyeabUKBcOEICp3gNA4pKM55BvVvVh0h+kDrH9xm
-         7mdt0/lUEACvr0N9PNr4WTyNyAxwEsdQht8w6F6Z+T0iusYPZJDZRS+FYQj6lUr5b08U
-         QyXdXdGtfR5FjQ6prVw6z52fG1h3ix36Wrm3FUtXhlrNXGM5+60eblbIKpvBSCI6Yje9
-         AfbA==
-X-Gm-Message-State: AOJu0Yx6nK5OEaVM7vYYaH0WDUz+Kl9PTU2fE0mo0XlUsJ5OAeGqPVcc
-	UNrI2iwAB/EVMntHAoHcDSwFC/VZeYQmpeVJuf1P3KNY7mPWweAfdmfqqSh6A9K00urRx2CJf31
-	I0+1NEw==
-X-Google-Smtp-Source: AGHT+IHbG+KnrRW2clWAr3dZqZfZ/+VBo6bgdDdrk01peWmvo1L4yPe+eo1ZPjQaLenftLIUPQ2bjQ==
-X-Received: by 2002:a4a:b246:0:b0:5c4:4787:1d4 with SMTP id 006d021491bc7-5c447870301mr5865921eaf.5.1719884673539;
-        Mon, 01 Jul 2024 18:44:33 -0700 (PDT)
-Received: from mail-ot1-f48.google.com (mail-ot1-f48.google.com. [209.85.210.48])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-5c45bdf7589sm213354eaf.41.2024.07.01.18.44.32
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 Jul 2024 18:44:33 -0700 (PDT)
-Received: by mail-ot1-f48.google.com with SMTP id 46e09a7af769-700cb05c118so1800610a34.2
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Jul 2024 18:44:32 -0700 (PDT)
-X-Received: by 2002:a05:6871:522a:b0:250:7465:d221 with SMTP id
- 586e51a60fabf-25db3447b45mr7218655fac.28.1719884672615; Mon, 01 Jul 2024
- 18:44:32 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="PrAjDdOr";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="PrAjDdOr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1719887206;
+	bh=7VWvMsjMHz5vpZgJgChD4sJ+XNDMoIvDIOsXcuM/Oys=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=PrAjDdOrVp6EaySNPYIjD211GQ/whiuYjXiW1YkFWRKHvb8lWwZ2JA75qMRj5/0zo
+	 uYWqTcgaLqcPKTkK3LNKcBZhIDOw1MYwiYtgEzCXzszgfSF+uOAznDDPgMB5pePWq6
+	 HUzO3cAZ/4wcvfg3IXk8irbeEmmt3HIMPbEZe0WU=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 9030B1286A68;
+	Mon, 01 Jul 2024 22:26:46 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id 1pbM5qQSN7xt; Mon,  1 Jul 2024 22:26:46 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1719887206;
+	bh=7VWvMsjMHz5vpZgJgChD4sJ+XNDMoIvDIOsXcuM/Oys=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=PrAjDdOrVp6EaySNPYIjD211GQ/whiuYjXiW1YkFWRKHvb8lWwZ2JA75qMRj5/0zo
+	 uYWqTcgaLqcPKTkK3LNKcBZhIDOw1MYwiYtgEzCXzszgfSF+uOAznDDPgMB5pePWq6
+	 HUzO3cAZ/4wcvfg3IXk8irbeEmmt3HIMPbEZe0WU=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 976DF1286ABD;
+	Mon, 01 Jul 2024 22:26:45 -0400 (EDT)
+Message-ID: <912f0f5fe2c02157edb47b1e9c730d1dbc563c55.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.10-rc6
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Mon, 01 Jul 2024 22:26:43 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <Zi5YTR98mKEsPqQQ@zettlmeissl.de>
-In-Reply-To: <Zi5YTR98mKEsPqQQ@zettlmeissl.de>
-From: =?UTF-8?Q?Max_Zettlmei=C3=9Fl?= <max@zettlmeissl.de>
-Date: Tue, 2 Jul 2024 03:44:21 +0200
-X-Gmail-Original-Message-ID: <CACjvM=dA7MqfAC6_fiWv4LvmN8mNPnNG_YXoKnEz6t0vzyRkSw@mail.gmail.com>
-Message-ID: <CACjvM=dA7MqfAC6_fiWv4LvmN8mNPnNG_YXoKnEz6t0vzyRkSw@mail.gmail.com>
-Subject: Re: Oops (nullpointer dereference) in SCSI subsystem
-To: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-So is there no interest in this issue?
+A couple of error leg problems, one affecting scsi_debug and the other
+affecting pure SAS (i.e. not SATA) SCSI expanders.
+
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Ming Lei (1):
+      scsi: scsi_debug: Fix create target debugfs failure
+
+Xingui Yang (1):
+      scsi: libsas: Fix exp-attached device scan after probe failure scanned in again after probe failed
+
+And the diffstat
+
+ drivers/scsi/libsas/sas_internal.h | 14 ++++++++++++++
+ drivers/scsi/scsi_debug.c          |  6 +++++-
+ 2 files changed, 19 insertions(+), 1 deletion(-)
+
+With full diff below
+
+James
+
+---
+
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 85948963fb97..03d6ec1eb970 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -145,6 +145,20 @@ static inline void sas_fail_probe(struct domain_device *dev, const char *func, i
+ 		func, dev->parent ? "exp-attached" :
+ 		"direct-attached",
+ 		SAS_ADDR(dev->sas_addr), err);
++
++	/*
++	 * If the device probe failed, the expander phy attached address
++	 * needs to be reset so that the phy will not be treated as flutter
++	 * in the next revalidation
++	 */
++	if (dev->parent && !dev_is_expander(dev->dev_type)) {
++		struct sas_phy *phy = dev->phy;
++		struct domain_device *parent = dev->parent;
++		struct ex_phy *ex_phy = &parent->ex_dev.ex_phy[phy->number];
++
++		memset(ex_phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
++	}
++
+ 	sas_unregister_dev(dev->port, dev);
+ }
+ 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index acf0592d63da..91f022fb8d0c 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -926,6 +926,7 @@ static const int device_qfull_result =
+ static const int condition_met_result = SAM_STAT_CONDITION_MET;
+ 
+ static struct dentry *sdebug_debugfs_root;
++static ASYNC_DOMAIN_EXCLUSIVE(sdebug_async_domain);
+ 
+ static void sdebug_err_free(struct rcu_head *head)
+ {
+@@ -1148,6 +1149,8 @@ static int sdebug_target_alloc(struct scsi_target *starget)
+ 	if (!targetip)
+ 		return -ENOMEM;
+ 
++	async_synchronize_full_domain(&sdebug_async_domain);
++
+ 	targetip->debugfs_entry = debugfs_create_dir(dev_name(&starget->dev),
+ 				sdebug_debugfs_root);
+ 
+@@ -1174,7 +1177,8 @@ static void sdebug_target_destroy(struct scsi_target *starget)
+ 	targetip = (struct sdebug_target_info *)starget->hostdata;
+ 	if (targetip) {
+ 		starget->hostdata = NULL;
+-		async_schedule(sdebug_tartget_cleanup_async, targetip);
++		async_schedule_domain(sdebug_tartget_cleanup_async, targetip,
++				&sdebug_async_domain);
+ 	}
+ }
+ 
+
