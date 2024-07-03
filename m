@@ -1,74 +1,72 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 802C216DEAC
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jul 2024 12:59:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D2B7178CEC
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Jul 2024 13:01:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720011591; cv=none; b=P/sDRwA4zq9KfvvhIsHN/4sK5rINvNoTPa8LvaOvxykMMwzpqhPSCLmRZbjOUEekeoAVfQ0MgfTtlTR3AqsUlF3z5jx/IVWGcUK7NhuEx1vAcx+PLx1NT8k1Wz9Bsct3kavdO/SACfBI1iqY4WF5HsMYeuEVmZ8rKzfYtZWZBbM=
+	t=1720011679; cv=none; b=snpeSgALZfG7hAUmqG47WNf2UrKkpJ8N9goeURMxM4waU5HfZRPpY9BusNU2tcthpGxq+ek+nXg/+EEIy05hDehLbJlWfIMKxCRBiRGiVle2wop8iTRUpQlcaTZi5kLqVZ9uiqthKxIQGjRyX44mbD4oP1NRdFQq/ohXEe5O3n0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720011591; c=relaxed/simple;
-	bh=3qVjwe8JSoBeQ62ic5/5AKhZAZV/LsICslUKQRvBIPM=;
+	s=arc-20240116; t=1720011679; c=relaxed/simple;
+	bh=zRnFh7zDQBzsf+JHx8cuctXddM/KsYy1KEQAPoOZS24=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jK2XuoyrP2fdmNuwVqsMbRL7s02P7RcHEeWD42it7bK9ugMK7WBZ59+8/awqLz5ugO7+p3aUKO57Fmruf0zspliA+j6t00Mrmundu2gx3O3jAwyWqLiWU8qYE2YVOpDayS6KddRB1d43ynIZECMoE3AUc2jeJbmHR4Re6DSZgKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=tMzS8c67; arc=none smtp.client-ip=209.85.214.172
+	 Content-Type:Content-Disposition:In-Reply-To; b=OqffWe9UtvdTbFosrYeUzqha+BlaUwHWtyEGiIUw8ZT++ATpTKKh5dAThVgVykTYiVtjkOzMhCskC0awBkiYJ5a876O/Ks/5aLYt4YHy3RM0cP5geEaRwRWIzLpHP2c2KG3PQPZza8Eg25J3xrnKRcRG4fhtB5T5UTpotSTvCmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=FrWDj5ae; arc=none smtp.client-ip=209.85.210.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="tMzS8c67"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1fa07e4f44eso35320595ad.2
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jul 2024 05:59:49 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="FrWDj5ae"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-70af4868d3dso200151b3a.3
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Jul 2024 06:01:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1720011589; x=1720616389; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1720011677; x=1720616477; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=M/HUx2z68wHC+7+MGltuv0hwTRcQymV4Of6HlMwnIoA=;
-        b=tMzS8c675lsErTlQFDI1aXm2/pgmxo1HBs0I92eR6IMUj2N7C4BMlGCgU/SJp7iltN
-         sI9PWrkYJ4g8jtu0w66KzbLasKZF4giT1dqf5pMvmuu50/w94uUhrBidzYfPGij5Bqgt
-         J//OOlF2UCIzBdtOcqaddR2E5MiNKFG0OaIJCcEGqKtoDCLqoz9eMo5O6lBIgvUN6c/1
-         a40/Z1+8cwCKz4xYRkIcYozjtZfo9dmjOUDkgX/jzI9gNzVS/l6cwMqqdT9c3O+H0Irv
-         eZQyBfmAVme//UkcFLdtlugSgWoa4P4WIbgpeurZsTtVXeTCh7yKF5JOu4p+ycjTs67y
-         gqdw==
+        bh=OrXjYKNM+d0cFb2ptCNNs7gUOI6OZIvBqEFb/usySrg=;
+        b=FrWDj5aesAcWqWqQ71GMGZnqFqBSTv1MERrrGL8kDnTkz6zuWbIaf5dH/1DDaSWbx8
+         mdkyt2q3BNaX6fRTMQlPtY5LX6OMyo6bR0ni1ejlExdGp+USAYJxhaJu6Ps2Qki8dRWl
+         wmY1Y/1go1ajz/CAoMuQnAVZeBP5nNnI5IOWatymoab3jm+BC4ELlUp3zQQuF6e4vZVF
+         z0RV/S0RZMxJQEcZnqcfLY+UB62syPEX1g7PP3CTaS9BN2HeUV/tGKAHFXvZWRpvlfRH
+         Ze9oA8S1mlRtgLaiYBcRkI5/MneN4ZpZH36jOhe92EHInBtEDjtBPHyQNKLTjAAY9Spb
+         WzsA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720011589; x=1720616389;
+        d=1e100.net; s=20230601; t=1720011677; x=1720616477;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=M/HUx2z68wHC+7+MGltuv0hwTRcQymV4Of6HlMwnIoA=;
-        b=GPu7mnm1co2iAdhjjCNeJBt5RJMFga9s4OuP68YwR6VUYazXtklsD/g537dBW2Ioko
-         fChJ1Ns63+b/ehhKkZ7hkf+sKuK+aXUZ6a8zEzLcjtYaVxCJZ/hOyP1l70AuQR1lBTA0
-         3BogyazlikvAOqxVCaH1QsNXblcknHLNE6yjQLS4AmvewPZrj4OSvoWpHS2m5t9tQv7j
-         SX+S1uSLHLkOCwuk1WTsULaird/ANjPnPEidWtc9mRGFShg/+lkpxyPyFt44TUutddjW
-         34inKgQLLcKx3+LJ5WkQSQ3zjMhU1QQD6JmDw08L+RUdZJmE1B2yIKUs5djq86z7NWFx
-         CnlA==
-X-Forwarded-Encrypted: i=1; AJvYcCXScvMqo0PYEWPl7AiQAJQg8msVNmstHmkfnLLsWLmR4lGGBJKQBdeYLwP5LAJ7sTf4MwSeSdL4dfDq9Y/DHnSLruV8HnHSTQn+zQ==
-X-Gm-Message-State: AOJu0YzDfVdLXViG9AYbyU9EK264MteklzSs7oybeMjAbtAa8uywKfYZ
-	B7SmvSRlg/7zvCvrIm/QH3J0+a0gx5/XEB27OCNCkP17op6pjCKisjxp1ghp1t8RaIaixRDhjqY
-	=
-X-Google-Smtp-Source: AGHT+IEi359puHY1EWphwUsnc2L0OZ1He8voWNeKGDxJSXllvm8HRgnPFSwoIXC3MkIO/dhD4BvZLw==
-X-Received: by 2002:a17:902:b192:b0:1f6:fbde:9b96 with SMTP id d9443c01a7336-1fadbcfce9fmr79519715ad.59.1720011588811;
-        Wed, 03 Jul 2024 05:59:48 -0700 (PDT)
+        bh=OrXjYKNM+d0cFb2ptCNNs7gUOI6OZIvBqEFb/usySrg=;
+        b=W6CZdCfJtgmQrJNGtgbpp7NE2LxTDKENSgvDEjq6/M9SXvm6PGjYYBjBmdVapnpdhJ
+         RDbSMlaEC7qFc/QKAkFDC8VeRiXgDREg7w0qsL8IGp9hRHYDp+UASd+f8qy5uk52RTBd
+         RFjjRV1xgUEnBR83s+XFmBz45RRKsnNPGHH/wK/f9lLT6nPpgytoOqFgxl3bjo8Ad196
+         KPHNPTJutuI5r2RJUOHNxBJoHvPXa51ihTUsFGYYIcnuxNQov9wCrsqqjDDPUFhzU4vc
+         lO6pAo61FZgJc6vl9JJjRhG9aysGx/XuMgvGseUxpLTK8Go+HAegsrIX7NNSWphEIpNh
+         q11w==
+X-Forwarded-Encrypted: i=1; AJvYcCXRvgb0LlV9zNuGtQGu3gaYj6uhQIdN9A9r+IaNjfdH5a8qBIurFPhoMbpq+A4ICnVGqumAsoAW/t6FxPHFtD7geN4cH3Z1IslxHQ==
+X-Gm-Message-State: AOJu0Yw0j60Z2/Ni+JjNb1/D/taOuwphk+4B+hE1PDfGz37iN03Y9+5i
+	u7k1iQANt/ySEaO9iYBmMxMQ4K23LYk2FjvIFfK+qdJ60rziu12BMBDWXAa2bQ==
+X-Google-Smtp-Source: AGHT+IENRgCcNP9UAaJYZpejbKVDGk3Wd7ip+dc+Rfd1OOLAKPSo9CPiUHYr9wB1KXucG+izcK0aLQ==
+X-Received: by 2002:a05:6a20:1595:b0:1bd:8581:2f61 with SMTP id adf61e73a8af0-1bef61ff391mr11581449637.39.1720011675348;
+        Wed, 03 Jul 2024 06:01:15 -0700 (PDT)
 Received: from thinkpad ([220.158.156.98])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fb01e36dbdsm29042275ad.203.2024.07.03.05.59.45
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-708044ad3besm10319612b3a.169.2024.07.03.06.01.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Jul 2024 05:59:48 -0700 (PDT)
-Date: Wed, 3 Jul 2024 18:29:43 +0530
+        Wed, 03 Jul 2024 06:01:14 -0700 (PDT)
+Date: Wed, 3 Jul 2024 18:31:09 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, Peter Wang <peter.wang@mediatek.com>,
+	linux-scsi@vger.kernel.org, Can Guo <quic_cang@quicinc.com>,
+	Peter Wang <peter.wang@mediatek.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
 	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>,
-	ChanWoo Lee <cw9316.lee@samsung.com>
-Subject: Re: [PATCH v4 4/9] scsi: ufs: Rename the
- MASK_TRANSFER_REQUESTS_SLOTS constant
-Message-ID: <20240703125943.GA3498@thinkpad>
+	Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>
+Subject: Re: [PATCH v4 5/9] scsi: ufs: Initialize hba->reserved_slot earlier
+Message-ID: <20240703130109.GB3498@thinkpad>
 References: <20240702204020.2489324-1-bvanassche@acm.org>
- <20240702204020.2489324-5-bvanassche@acm.org>
+ <20240702204020.2489324-6-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -78,13 +76,19 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240702204020.2489324-5-bvanassche@acm.org>
+In-Reply-To: <20240702204020.2489324-6-bvanassche@acm.org>
 
-On Tue, Jul 02, 2024 at 01:39:12PM -0700, Bart Van Assche wrote:
-> Rename this constant to prepare for the introduction of the
-> MASK_TRANSFER_REQUESTS_SLOTS_MCQ constant. The acronym "SDB" stands for
-> "single doorbell" (mode).
+On Tue, Jul 02, 2024 at 01:39:13PM -0700, Bart Van Assche wrote:
+> Move the hba->reserved_slot and the host->can_queue assignments from
+> ufshcd_config_mcq() into ufshcd_alloc_mcq(). The advantages of this
+> change are as follows:
+> - It becomes easier to verify that these two parameters are updated
+>   if hba->nutrs is updated.
+> - It prevents unnecessary assignments to these two parameters. While
+>   ufshcd_config_mcq() is called during host reset, ufshcd_alloc_mcq()
+>   is not.
 > 
+> Cc: Can Guo <quic_cang@quicinc.com>
 > Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
@@ -93,36 +97,33 @@ Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 - Mani
 
 > ---
->  drivers/ufs/core/ufshcd.c | 2 +-
->  include/ufs/ufshci.h      | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+>  drivers/ufs/core/ufshcd.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
 > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 9a0697556953..2cbd0f91953b 100644
+> index 2cbd0f91953b..178b0abaeb30 100644
 > --- a/drivers/ufs/core/ufshcd.c
 > +++ b/drivers/ufs/core/ufshcd.c
-> @@ -2401,7 +2401,7 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
->  		hba->capabilities &= ~MASK_64_ADDRESSING_SUPPORT;
+> @@ -8678,6 +8678,9 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+>  	if (ret)
+>  		goto err;
 >  
->  	/* nutrs and nutmrs are 0 based values */
-> -	hba->nutrs = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS) + 1;
-> +	hba->nutrs = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_SDB) + 1;
->  	hba->nutmrs =
->  	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
->  	hba->reserved_slot = hba->nutrs - 1;
-> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-> index c50f92bf2e1d..8d0cc73537c6 100644
-> --- a/include/ufs/ufshci.h
-> +++ b/include/ufs/ufshci.h
-> @@ -67,7 +67,7 @@ enum {
+> +	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
+> +	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
+> +
+>  	return 0;
+>  err:
+>  	hba->nutrs = old_nutrs;
+> @@ -8699,9 +8702,6 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
+>  	ufshcd_mcq_make_queues_operational(hba);
+>  	ufshcd_mcq_config_mac(hba, hba->nutrs);
 >  
->  /* Controller capability masks */
->  enum {
-> -	MASK_TRANSFER_REQUESTS_SLOTS		= 0x0000001F,
-> +	MASK_TRANSFER_REQUESTS_SLOTS_SDB	= 0x0000001F,
->  	MASK_NUMBER_OUTSTANDING_RTT		= 0x0000FF00,
->  	MASK_TASK_MANAGEMENT_REQUEST_SLOTS	= 0x00070000,
->  	MASK_EHSLUTRD_SUPPORTED			= 0x00400000,
+> -	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
+> -	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
+> -
+>  	ufshcd_mcq_enable(hba);
+>  	hba->mcq_enabled = true;
+>  
 
 -- 
 மணிவண்ணன் சதாசிவம்
