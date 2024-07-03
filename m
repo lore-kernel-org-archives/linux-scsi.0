@@ -1,142 +1,111 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx1.t-argos.ru (mx1.t-argos.ru [109.73.34.58])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F30B9143879
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jul 2024 11:13:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92371849EE;
+	Wed,  3 Jul 2024 11:20:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.73.34.58
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720005206; cv=none; b=sdJV5HHv4ojg89cLeyxSK0pRSLDU77NNokTmJljHny7UD8zdUBk1nAL8j2frNcLNL5e72AzrTcH6FPBUZYGWjtCBM+ri6ImI2rLbLEOdh+gTybG8SFLT8217WDJOFcfYohmpZ8spw/3Rp6mNq75//RZCqo7GoOvtMOgv3OU2neU=
+	t=1720005636; cv=none; b=Eos317FleKe83ehjtSIArWnUF3+nFTHrtRoopnzvjOPP9Kov4lGww2nIYIv/Hout1xhECQEnjmjilmEED897nCwVetjGkW1ugUnEbvwX24ULjUfUta0obJ7n5sn8Kd9sO68GwsUtm4c3Bwd3/bthXRA79TMNwc898snuXGW8kJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720005206; c=relaxed/simple;
-	bh=kz+FFGYQA1uMyZjM/HDLifDynfXPhXGzq/HYUKS9jA4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=enonVWATvaELPZtHI9QZ/vWSUfqlpsb1O7m24XrJYv9DKggs/OWNUzNUlE/pgM98WRyDfavkTKtLkgadgvVDsKegT8m36heXzEVePyn53mSKjy1sKjx8lpX9SxVMF8mswHtNdVsrp53vv5YESb3CeYzyYQBliFs8wtkVpv5xD3g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=R8EuXd0t; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=wwDb8D4F; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=R8EuXd0t; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=wwDb8D4F; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1720005636; c=relaxed/simple;
+	bh=1Y3oThU8WEMtPQE4Icgyd7HJ0E3q3OIkiapFylm/uxQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Gony8sFAEbtTsvN3iqrVsyO54QSbIejZzGtoN4z92uJEk6AVs9SlnZXci8JnlDNdb1sEgIHKKi98Uv19Oz4x/97WfO7UEr0wiN+2QUiYeqEDb/AQlkcVmGVTv10KgR8CIT6RocryUDub0K1ojJ8X5mqB6kvIm94bqU/HfTeV/DI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=t-argos.ru; spf=pass smtp.mailfrom=t-argos.ru; dkim=pass (2048-bit key) header.d=t-argos.ru header.i=@t-argos.ru header.b=eF/9XAEK; arc=none smtp.client-ip=109.73.34.58
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=t-argos.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=t-argos.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="R8EuXd0t";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="wwDb8D4F";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="R8EuXd0t";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="wwDb8D4F"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 1D1681FCDA;
-	Wed,  3 Jul 2024 11:13:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1720005203; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/tt1TfQUdUDUFfwkPg4spPyyIgY89+4QX8VztXYjD34=;
-	b=R8EuXd0t0t/ZBXb26CGB+JXGufEHncR+pxLIliykYvaDgUOKQYK+iyBXcg0JCxTLCjVfsP
-	cHA20Oh6zckSiY4zos1gGrEfQMcnlj8ex1NeT3+YiOMI99KxUBbJ424SlQOYG28FoiG3c3
-	8L1OutKnWXKnHzCu4Klo32dx2W5/oYs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1720005203;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/tt1TfQUdUDUFfwkPg4spPyyIgY89+4QX8VztXYjD34=;
-	b=wwDb8D4Fyb2KFXFwLfQbDmkXYXLRseHkBwgh2NQcNRxtWjtLkL+WQCX/4OGU79XbwfiFV6
-	OWXQF8jraUBIDMBg==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1720005203; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/tt1TfQUdUDUFfwkPg4spPyyIgY89+4QX8VztXYjD34=;
-	b=R8EuXd0t0t/ZBXb26CGB+JXGufEHncR+pxLIliykYvaDgUOKQYK+iyBXcg0JCxTLCjVfsP
-	cHA20Oh6zckSiY4zos1gGrEfQMcnlj8ex1NeT3+YiOMI99KxUBbJ424SlQOYG28FoiG3c3
-	8L1OutKnWXKnHzCu4Klo32dx2W5/oYs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1720005203;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=/tt1TfQUdUDUFfwkPg4spPyyIgY89+4QX8VztXYjD34=;
-	b=wwDb8D4Fyb2KFXFwLfQbDmkXYXLRseHkBwgh2NQcNRxtWjtLkL+WQCX/4OGU79XbwfiFV6
-	OWXQF8jraUBIDMBg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E9D5A13974;
-	Wed,  3 Jul 2024 11:13:22 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id KDjKN1IyhWawdAAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 03 Jul 2024 11:13:22 +0000
-Message-ID: <f32e1411-6acb-43a7-886e-20d0dae95cc7@suse.de>
-Date: Wed, 3 Jul 2024 13:13:22 +0200
+	dkim=pass (2048-bit key) header.d=t-argos.ru header.i=@t-argos.ru header.b="eF/9XAEK"
+Received: from mx1.t-argos.ru (localhost [127.0.0.1])
+	by mx1.t-argos.ru (Postfix) with ESMTP id 06999100005;
+	Wed,  3 Jul 2024 14:20:14 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=t-argos.ru; s=mail;
+	t=1720005614; bh=K75l601GXn6E9TrKu7conNPQF0Wy//xLGLL2PiLxfyI=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	b=eF/9XAEKbupoEYJ5IUipM8yaJz0qzvL6IJXbrlZ6J8ItCp4TmqFbg1YZbltNX8Cdk
+	 7WMVbOuSC2WCan4ab3rWFPc9psWxmHxdI4Fe2vKVYQbqRNUjengeilGkdqMYgtBRN4
+	 sTrUG8ziNg1Kc43ZSjCpqYqGxtulswnI21EGBd2inukJD8NPk0doN+qw+iJc2xOXN5
+	 yMbuynbg6YRV6DOTjV/29m056ErvRTJNa2tAcTQufbK9PiOHsH7dgi0JWEXwjmamT1
+	 REoRYbgkXlmTc6hUAtGEnt9kftartUTUMo6lGcERJ4h1y+NiAtN+QonrEnG3l0emzo
+	 OJSreh3XO73Xg==
+Received: from mx1.t-argos.ru.ru (ta-mail-02.ta.t-argos.ru [172.17.13.212])
+	by mx1.t-argos.ru (Postfix) with ESMTP;
+	Wed,  3 Jul 2024 14:18:46 +0300 (MSK)
+Received: from localhost.localdomain (172.17.215.5) by ta-mail-02
+ (172.17.13.212) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 3 Jul 2024
+ 14:18:26 +0300
+From: Aleksandr Mishin <amishin@t-argos.ru>
+To: Daejun Park <daejun7.park@samsung.com>, <stable@vger.kernel.org>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: Aleksandr Mishin <amishin@t-argos.ru>, Alim Akhtar
+	<alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Bart Van Assche
+	<bvanassche@acm.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K.
+ Petersen" <martin.petersen@oracle.com>, Can Guo <cang@codeaurora.org>, Bean
+ Huo <beanhuo@micron.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <lvc-project@linuxtesting.org>
+Subject: [PATCH 6.1] scsi: ufs: ufshpb: Fix NULL deallocation in ufshpb_pre_req_mempool_destroy()
+Date: Wed, 3 Jul 2024 14:17:51 +0300
+Message-ID: <20240703111751.23377-1-amishin@t-argos.ru>
+X-Mailer: git-send-email 2.30.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 11/18] scsi: myrs: Simplify an alloc_ordered_workqueue()
- invocation
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20240702215228.2743420-1-bvanassche@acm.org>
- <20240702215228.2743420-12-bvanassche@acm.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20240702215228.2743420-12-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -4.29
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.29 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	XM_UA_NO_VERSION(0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[5];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
+Content-Type: text/plain
+X-ClientProxiedBy: ta-mail-02.ta.t-argos.ru (172.17.13.212) To ta-mail-02
+ (172.17.13.212)
+X-KSMG-Rule-ID: 1
+X-KSMG-Message-Action: clean
+X-KSMG-AntiSpam-Lua-Profiles: 186303 [Jul 03 2024]
+X-KSMG-AntiSpam-Version: 6.1.0.4
+X-KSMG-AntiSpam-Envelope-From: amishin@t-argos.ru
+X-KSMG-AntiSpam-Rate: 0
+X-KSMG-AntiSpam-Status: not_detected
+X-KSMG-AntiSpam-Method: none
+X-KSMG-AntiSpam-Auth: dkim=none
+X-KSMG-AntiSpam-Info: LuaCore: 21 0.3.21 ebee5449fc125b2da45f1a6a6bc2c5c0c3ad0e05, {Tracking_from_domain_doesnt_match_to}, mx1.t-argos.ru.ru:7.1.1;t-argos.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1, FromAlignment: s
+X-MS-Exchange-Organization-SCL: -1
+X-KSMG-AntiSpam-Interceptor-Info: scan successful
+X-KSMG-AntiPhishing: Clean, bases: 2024/07/03 07:47:00
+X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 1.1.2.30, bases: 2024/07/03 06:16:00 #25818842
+X-KSMG-AntiVirus-Status: Clean, skipped
 
-On 7/2/24 23:51, Bart Van Assche wrote:
-> Let alloc_ordered_workqueue() format the workqueue name instead of calling
-> snprintf() explicitly.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/myrs.c | 6 ++----
->   drivers/scsi/myrs.h | 1 -
->   2 files changed, 2 insertions(+), 5 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+No upstream commit exists for this commit.
 
-Cheers,
+The issue was introduced with commit 41d8a9333cc9 ("scsi: ufs: ufshpb:
+Add HPB 2.0 support").
 
-Hannes
+In ufshpb_pre_req_mempool_destroy() __free_page() is called only if pointer
+contains NULL value.
+Fix this bug by modifying check condition.
+
+Upstream branch code has been significantly refactored and can't be
+backported directly.
+
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+
+Fixes: 41d8a9333cc9 ("scsi: ufs: ufshpb: Add HPB 2.0 support")
+Signed-off-by: Aleksandr Mishin <amishin@t-argos.ru>
+---
+ drivers/ufs/core/ufshpb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
+index b7f412d0f301..c649e8a10a23 100644
+--- a/drivers/ufs/core/ufshpb.c
++++ b/drivers/ufs/core/ufshpb.c
+@@ -2120,7 +2120,7 @@ static void ufshpb_pre_req_mempool_destroy(struct ufshpb_lu *hpb)
+ 	for (i = 0; i < hpb->throttle_pre_req; i++) {
+ 		pre_req = hpb->pre_req + i;
+ 		bio_put(hpb->pre_req[i].bio);
+-		if (!pre_req->wb.m_page)
++		if (pre_req->wb.m_page)
+ 			__free_page(hpb->pre_req[i].wb.m_page);
+ 		list_del_init(&pre_req->list_req);
+ 	}
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.30.2
 
