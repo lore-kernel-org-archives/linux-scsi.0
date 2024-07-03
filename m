@@ -1,83 +1,99 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89AFD18C329;
-	Wed,  3 Jul 2024 18:45:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F04217A5B0;
+	Wed,  3 Jul 2024 18:49:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720032314; cv=none; b=l83p5htXgFCkE011MiU9hddouE2gn0P77P1k6QscJHwDgNaBOG1/x0cSdtP90rt7rpSjsf+N/m7jc6o/gnQUGQO0jIrgFKRNnnJN59TpUc+RELkixOk2h8PD5fxLRYOZLuA1vox92k2JJ992QDkRSLayrhBtHgY5a8Bs/5Ma+4w=
+	t=1720032597; cv=none; b=WE22ywmJmHRtS6u/MFaxb+9nO+2vFc7NhL8o/LpFMpzUKOKrWOJD9w0uM0GjMwZMS7Y8kQaPlF7AdFRcZHJ0xTMAg1HmG1jTH21c98pMFBgn18EDfNCEBm1ck8Hdrn0H0s8rk2NgKsC1fsVpt9PLOZHFrlDoCwF3PshI5WHxgd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720032314; c=relaxed/simple;
-	bh=LScu3KTtT8V2oLuw3+Jj58e5EN80mEeIxP4eOrJOtBg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KMfkoEreK90V0ohUP762CqoDlK4wn0GYbaDibqaScOWR5mgN7Ky6DAyEsugOHwdhTojsAZRsxLUFoe6ID6W9bzNHjoWQjAEriMUUhl/IKoKfQnqCJtVRpoaU+oFFkNdzf2g159qe5OstexmZ+WSfyf746yXCflQoEJHDH1/UGc8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mjVdJx+F; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1720032597; c=relaxed/simple;
+	bh=tL3e/ur6/KMkg7mh3t7r3ZIFeZQ4xi5Q34S/7FlZ2qA=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=SLq2w25GpHpJBUellizhaTjqXXk76DXYVeBiRdvDL7I8h7/vRs3pjJ1J40oIPwxA/uls4pJOVx7u1tzsLEceO+TuGQgjyA1/QA+yKbeX5uuaueX724HZHO5boF25b4Bkxs49NUb2f8Y7/MrgRLdac44sLslW72RIbiIdV51tqBk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SQ7eo1Ak; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mjVdJx+F"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A525C2BD10;
-	Wed,  3 Jul 2024 18:45:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SQ7eo1Ak"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82B6EC2BD10;
+	Wed,  3 Jul 2024 18:49:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720032314;
-	bh=LScu3KTtT8V2oLuw3+Jj58e5EN80mEeIxP4eOrJOtBg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=mjVdJx+FJ5UErZo24v5Nx8NOtpkjQwZqA3YGLmprj85eQa4xALk1Gs0xmMAR8SR9m
-	 PAceL4MLVq1U3Ks5mnhAAGVhl9PvHcUaI+jlDmxeVix7m1EYlSfvhr+rcCKrn+KT2a
-	 SRv++DA/tX6DmkveOETXW0Hqf1y4dtVmnBJH0JZCuabx55QKHlLQ+ZoaIq+IFExwhv
-	 5MI8K0py6f61dbOAdptMrtFmj7TCpNPL+crbhvUc4/PAd/wbWAj2BUl1d6djZquxAo
-	 UcXY6pIp28B893W+TpS/YhQq9s/HdoFRaecXsZow7ZGXcq1MaI0asjxTsuHzpxAvjc
-	 lZ5sxs5OkC0zA==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>
-Cc: linux-scsi@vger.kernel.org,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Hannes Reinecke <hare@suse.de>,
-	linux-ide@vger.kernel.org
-Subject: [PATCH v4 9/9] ata: ahci: Add debug print for external port
-Date: Wed,  3 Jul 2024 20:44:26 +0200
-Message-ID: <20240703184418.723066-20-cassel@kernel.org>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240703184418.723066-11-cassel@kernel.org>
-References: <20240703184418.723066-11-cassel@kernel.org>
+	s=k20201202; t=1720032596;
+	bh=tL3e/ur6/KMkg7mh3t7r3ZIFeZQ4xi5Q34S/7FlZ2qA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=SQ7eo1AkC8LjRWberzbfTrXdEmn8AVAPTH1nI5h830+ubxo1C5MaKmEtPRy9gsG1o
+	 M8aW67LDGZEnsrCM4Q/GRKRYn+r39JIjjMUn4+wwhQ4mb+Nyw7/6h4NQGIjateXcmW
+	 XAfTSrhx2kUyLwJweon5gGjsH9sMGD6YpKO/TIf9EwzO/u3UL14SYAuIKAMoMlbYkK
+	 bxKEJlfNCtFdikjht8PVx57e+Ez2TZA0kY1xDB4xr5o96jrOLhYPq5oX8riaz0aLMe
+	 pQxRIT/WAYj12CgJvmnxQibErDTaKj3syhCujN4MjJ27ACtbE6kpJopp6TU3GIN89Q
+	 vkEmm7DBvS+3g==
+Date: Wed, 3 Jul 2024 11:49:52 -0700
+From: Jakub Kicinski <kuba@kernel.org>
+To: patchwork-bot+netdevbpf@kernel.org
+Cc: Tengfei Fan <quic_tengfan@quicinc.com>, andersson@kernel.org,
+ konrad.dybcio@linaro.org, robh@kernel.org, krzk+dt@kernel.org,
+ conor+dt@kernel.org, djakov@kernel.org, mturquette@baylibre.com,
+ sboyd@kernel.org, jassisinghbrar@gmail.com, herbert@gondor.apana.org.au,
+ davem@davemloft.net, manivannan.sadhasivam@linaro.org, will@kernel.org,
+ joro@8bytes.org, conor@kernel.org, tglx@linutronix.de, amitk@kernel.org,
+ thara.gopinath@gmail.com, linus.walleij@linaro.org, wim@linux-watchdog.org,
+ linux@roeck-us.net, rafael@kernel.org, viresh.kumar@linaro.org,
+ vkoul@kernel.org, edumazet@google.com, pabeni@redhat.com,
+ mcoquelin.stm32@gmail.com, robimarko@gmail.com, quic_gurus@quicinc.com,
+ bartosz.golaszewski@linaro.org, kishon@kernel.org, quic_wcheng@quicinc.com,
+ alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+ agross@kernel.org, gregkh@linuxfoundation.org, quic_tdas@quicinc.com,
+ robin.murphy@arm.com, daniel.lezcano@linaro.org, rui.zhang@intel.com,
+ lukasz.luba@arm.com, quic_rjendra@quicinc.com, ulf.hansson@linaro.org,
+ quic_sibis@quicinc.com, otto.pflueger@abscue.de, quic_rohiagar@quicinc.com,
+ luca@z3ntu.xyz, neil.armstrong@linaro.org, abel.vesa@linaro.org,
+ bhupesh.sharma@linaro.org, alexandre.torgue@foss.st.com,
+ peppe.cavallaro@st.com, joabreu@synopsys.com, netdev@vger.kernel.org,
+ lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com,
+ ahalaney@redhat.com, krzysztof.kozlowski@linaro.org,
+ u.kleine-koenig@pengutronix.de, dmitry.baryshkov@linaro.org,
+ quic_cang@quicinc.com, danila@jiaxyga.com, quic_nitirawa@quicinc.com,
+ mantas@8devices.com, athierry@redhat.com, quic_kbajaj@quicinc.com,
+ quic_bjorande@quicinc.com, quic_msarkar@quicinc.com,
+ quic_devipriy@quicinc.com, quic_tsoni@quicinc.com,
+ quic_rgottimu@quicinc.com, quic_shashim@quicinc.com,
+ quic_kaushalk@quicinc.com, quic_tingweiz@quicinc.com,
+ quic_aiquny@quicinc.com, srinivas.kandagatla@linaro.org,
+ linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
+ linux-clk@vger.kernel.org, linux-phy@lists.infradead.org,
+ linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ iommu@lists.linux.dev, linux-riscv@lists.infradead.org,
+ linux-gpio@vger.kernel.org, linux-watchdog@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
+ kernel@quicinc.com
+Subject: Re: [PATCH 00/47] arm64: qcom: dts: add QCS9100 support
+Message-ID: <20240703114952.6013f05e@kernel.org>
+In-Reply-To: <171998042970.21654.12559535993133117436.git-patchwork-notify@kernel.org>
+References: <20240703025850.2172008-1-quic_tengfan@quicinc.com>
+	<171998042970.21654.12559535993133117436.git-patchwork-notify@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=995; i=cassel@kernel.org; h=from:subject; bh=LScu3KTtT8V2oLuw3+Jj58e5EN80mEeIxP4eOrJOtBg=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGNJa5/Dtu7iyUVvxjvKcYG+9CaEpQd8vnf3jb6z3iJGtZ PbG2X6KHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZhIThDD//zaLVKpZjMXXnh5 TL2u4MUL7rmvC9ben/pGh43nYvKcawyMDBu+2X5Zy5U+yc5z5lfPY6mvvhpGHxMTVp67lWV/XvF eHXYA
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Add a debug print that tells us if LPM is not getting enabled because the
-port is external.
+On Wed, 03 Jul 2024 04:20:29 +0000 patchwork-bot+netdevbpf@kernel.org
+wrote:
+> This series was applied to netdev/net-next.git (main)
+> by Jakub Kicinski <kuba@kernel.org>:
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
- drivers/ata/ahci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+> Here is the summary with links:
+>   - [01/47] dt-bindings: arm: qcom: Document QCS9100 SoC and RIDE board
+>     (no matching commit)
+>   - [02/47] arm64: dts: qcom: qcs9100: Introduce QCS9100 SoC dtsi
+>     (no matching commit)
+>   - [03/47] arm64: dts: qcom: qcs9100: Introduce QCS9100 PMIC dtsi
+>     https://git.kernel.org/netdev/net-next/c/df18948d331e
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index fc6fd583faf8..a05c17249448 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1732,8 +1732,10 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap)
- 	 * Management Interaction in AHCI 1.3.1. Therefore, do not enable
- 	 * LPM if the port advertises itself as an external port.
- 	 */
--	if (ap->pflags & ATA_PFLAG_EXTERNAL)
-+	if (ap->pflags & ATA_PFLAG_EXTERNAL) {
-+		ata_port_dbg(ap, "external port, not enabling LPM\n");
- 		return;
-+	}
- 
- 	/* If no LPM states are supported by the HBA, do not bother with LPM */
- 	if ((ap->host->flags & ATA_HOST_NO_PART) &&
--- 
-2.45.2
-
+This is some bug / false positive in the bot, to be clear.
+Commit df18948d331e is ("Merge branch 'device-memory-tcp'").
+No idea how it got from that to DTS.
