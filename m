@@ -1,216 +1,170 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5509E13A25B
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jul 2024 13:22:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ACF617E46A
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Jul 2024 15:09:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720012930; cv=none; b=acOzkhSPkWTRaK1OW450Ffwh9+GR0ylWcQFEVG7Cf68mJeP9fu7izxgfIJtWScFbCpnaQEiOF8VLclWmLq4IBL3IcD7cGQJruZApXMUMdoV79fh3401KMZBg5XZFsk6ixssYZuS9QoXJuJbAEhxR6hDmL/jtF52ualgDuassj8s=
+	t=1720019389; cv=none; b=PQGtiCxgcYYw1Xfz5qSr93l2AS37hsNf0WTj5Q9V742X8qTE4uIkTQr/mvUNZNQXM5voGFLZLsjjTpXHqw4yDOShIlqn8ZlB0WOAvxKYZbQmQelkBgXrsAKNqUkpV+8cDB/tFSrlBQBT8dpWqjprbipiOLXZSmXNR8b2SQRCtq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720012930; c=relaxed/simple;
-	bh=6uqKrAO52A/ZT1nOpbJHYysngxDMgJIpFdtq0v5B5yY=;
+	s=arc-20240116; t=1720019389; c=relaxed/simple;
+	bh=fhpejWcF/vfLe6nwrakqQTsElpgre49BCBgEinb2+BE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ljhgho3qs/qgNA7IBvimsVOu9Ypi4MXtwSsFmwHI9up1fh37Q6WuBIV5owtH1DK0yWKrUAi9ITxjf1MrIFHhvvogT/MERob9Cd1NOJptF6qIwICgeUYEtzvHkS+ft7v5/K5/L6SWU4IvcTeqHc0LygSwkQsl+J4rGcP2HRB6cAc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=YiE7JUTp; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=hvR1qBhKJemHEJtMhB/hEOAMZ9jaLOxT2CzeRUl5NvQQShUWGdj6+hiWZBASfsXIPNZq97xCG8ugvna9r3w7v5RArIrEyOuagsx/RvXxk+aCaNliuusV+b0xylgsXwjMbZ5xyq18e16VpIIKsk/8vb7zLDthUPQCTfaciUw3+pQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=G2bL6tD9; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="YiE7JUTp"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1fab50496f0so32840905ad.2
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jul 2024 06:22:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1720012927; x=1720617727; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=OvcW77TWKg3DR5fpa/Ko9c9C/wfXdmr7hQSGYh2yjEc=;
-        b=YiE7JUTppFU6BVbE2JbIJ+EWS29gNfihJ4lOZpDXi+dNnFelITXy6RrKj+tF0IYhgy
-         7WtKAgZdBXpHwu48kY/f+gJIv9As1gzHg+x4HgbQ+AuVz2uL9ZMPQlfUnP1TbRnOlIvQ
-         jdOfb0GeSHOXoEfdxlTyvTTkxwte3yN5Y9U0X5Qk8iJUuXGFhav25By7T0TeO3KNAxug
-         eMWr8OpOApgiIv7ZBdmo5hchJiTGP+6l7D7XqFkS4vAsXE0OtuuzN3B6jHPVdaX79gF0
-         JpSnkUV5FjzrAJ0V6UE4NA+7YRlUVLg161j8uRGYWlFjOr/lPzJcs31XrZYQBascWCsy
-         4vlQ==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="G2bL6tD9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1720019387;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OwJT/oF0rqnt+S31sg05vpTbadEupYIHlD2ocZCHgDI=;
+	b=G2bL6tD9MH3jW9g1eYfLj+TmhYW774/+7RBogi/iGXJGeNf04YRIn16S1nZF53UOJ4ah/Z
+	/07VuJdaORsDwljSJnciaZed3PspqvVIm3GmOt8IJZBylXXOGtFGiMxrDhqFt/toAQXORp
+	ygiDRj2h3eSH2Hd5vRj77B8klEzhTvo=
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
+ [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-546-OD7hnaweOuOt0py6K8jlEQ-1; Wed, 03 Jul 2024 11:09:46 -0400
+X-MC-Unique: OD7hnaweOuOt0py6K8jlEQ-1
+Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-446102c711bso65941601cf.2
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Jul 2024 08:09:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720012927; x=1720617727;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=OvcW77TWKg3DR5fpa/Ko9c9C/wfXdmr7hQSGYh2yjEc=;
-        b=rsx5ovVDotOqTD7QgEolfTVk3YqP4I1T4TGe7TPUviBTR4fa4qpIhdkpMzHn1NF4Up
-         umFB9bEf2T661VSNrAQTTBaeN3U7dsn4uKXuiwCzfENrOkFd58JItjxEmEsD3aTdmdJw
-         2mg9DlFVpKmm3s6NoJxc/4nNz++pOHHi6421NA2LWtWGcl9QH8HvVnFkyupSMXrpJhIg
-         4z0/6Fz3NPQXmMKwvyci0naq6SKW0dVshyPZOOSyVG5x2xL0SGfH4imGK+s3iGOf+uKd
-         T6lEhyrRhMGwByv7MgnzW1WPyrJhQP3YhMoGauDMIyJiZpCKC3DSNxd19qTN/4sdIr0Y
-         36Nw==
-X-Forwarded-Encrypted: i=1; AJvYcCU0WzA0yrs1xmeaWHV/K4pMocwryisdQOpDfqelLETPe0CAzgBbtkcbjVp2vTpzMHW9jkUJcbkK0iAnTZt/01qPXPZnvJAM5wAfYQ==
-X-Gm-Message-State: AOJu0YypcYf8QVnq78eGVUIkIWil7DocakymAiW8IAU5u5MfyId/Z+TG
-	nZeapZZkjEsMqT6N87a9wpEKiDd4AzobNgjX29edmNDI9ewfyLtZPn/GUHZIfg==
-X-Google-Smtp-Source: AGHT+IGn7hc/Fj/DhWZXq+aVgKy3hLNj/2k43r0m3e5veGXKZ00As92eCF55OwLH6Dv+SQygrcMSkw==
-X-Received: by 2002:a17:902:c40a:b0:1fa:2277:f56c with SMTP id d9443c01a7336-1fadbcb2163mr86558315ad.41.1720012927467;
-        Wed, 03 Jul 2024 06:22:07 -0700 (PDT)
-Received: from thinkpad ([220.158.156.98])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fafb173f05sm32736195ad.104.2024.07.03.06.22.03
+        d=1e100.net; s=20230601; t=1720019382; x=1720624182;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OwJT/oF0rqnt+S31sg05vpTbadEupYIHlD2ocZCHgDI=;
+        b=FP1Xjyj7K+HQ0iWOThDSLJFh6N9hU6EZSpoV7hqcPkUzhnow68JBTD10BJZ5dp3STd
+         G1N3lr/54U1Ev9K9ye0X3OZj3WCV8XGTJmJTHXbyR2WFrlBF/5sts15AC0BEZhfH4TEF
+         xbY0+uUZek4mv8lfTgVegeF3nixbDbYBd+gLMT2xdAger/IzuFVea8wZb2fM/zU8PuTN
+         akM/HLcVgJxXsDR5uk8P37OvwpSmKiRFi8kX/cl8AcvzJwUq5hJPBfw08GJPK++wz8ll
+         7+8Eqf6UPyy+Nd5/4znWyA95OAsMw7TXclNt4USUTxoUe4mC+HCD1S3RPpvv7sOcYUWv
+         Rx4g==
+X-Forwarded-Encrypted: i=1; AJvYcCXMacP5bp6TjHosm8twaKCDgoptPBZvD4WhspiaeJkNbAfH6o+clbi1Uk7IWkc/8TQUf9dpIi97MY2kTZj36eyYOhR4BPY2V5S84A==
+X-Gm-Message-State: AOJu0Yx5imVNgXG87YMf+irFbT1vnP8K6vYG0Kim7mItM+3rZE7W1ZP3
+	ij/TAdWCyMpoAon6FKmVuhnbWGHMOnNa9XdiZo0KIKut9Z93kXNA+4IDXep2FQOw0tOXBUgNtl4
+	LXUZXW065TPNXo3Ey72Xb5/Iq0Kz/Uo8TT2orT/U75ahC1E3TSfs4/7yDVwg=
+X-Received: by 2002:ac8:7d84:0:b0:444:b495:e94d with SMTP id d75a77b69052e-44662c99f4bmr119752961cf.3.1720019381972;
+        Wed, 03 Jul 2024 08:09:41 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE8jWmpy5/3+Y1qV1pkAlEofbtK+RF6spB2E3wXQKII8gdILaaxSAxoLFic14g5Q4iTwcc7CA==
+X-Received: by 2002:ac8:7d84:0:b0:444:b495:e94d with SMTP id d75a77b69052e-44662c99f4bmr119751991cf.3.1720019381501;
+        Wed, 03 Jul 2024 08:09:41 -0700 (PDT)
+Received: from x1gen2nano ([2600:1700:1ff0:d0e0::40])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4465c4bf7ecsm43222571cf.80.2024.07.03.08.09.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Jul 2024 06:22:06 -0700 (PDT)
-Date: Wed, 3 Jul 2024 18:52:02 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Minwoo Im <minwoo.im@samsung.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	ChanWoo Lee <cw9316.lee@samsung.com>,
-	Yang Li <yang.lee@linux.alibaba.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>,
-	Akinobu Mita <akinobu.mita@gmail.com>
-Subject: Re: [PATCH v4 9/9] scsi: ufs: Make .get_hba_mac() optional
-Message-ID: <20240703132202.GE3498@thinkpad>
-References: <20240702204020.2489324-1-bvanassche@acm.org>
- <20240702204020.2489324-10-bvanassche@acm.org>
+        Wed, 03 Jul 2024 08:09:41 -0700 (PDT)
+Date: Wed, 3 Jul 2024 10:09:36 -0500
+From: Andrew Halaney <ahalaney@redhat.com>
+To: Tengfei Fan <quic_tengfan@quicinc.com>
+Cc: andersson@kernel.org, konrad.dybcio@linaro.org, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, djakov@kernel.org, mturquette@baylibre.com, 
+	sboyd@kernel.org, jassisinghbrar@gmail.com, herbert@gondor.apana.org.au, 
+	davem@davemloft.net, manivannan.sadhasivam@linaro.org, will@kernel.org, 
+	joro@8bytes.org, conor@kernel.org, tglx@linutronix.de, amitk@kernel.org, 
+	thara.gopinath@gmail.com, linus.walleij@linaro.org, wim@linux-watchdog.org, 
+	linux@roeck-us.net, rafael@kernel.org, viresh.kumar@linaro.org, vkoul@kernel.org, 
+	edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, mcoquelin.stm32@gmail.com, 
+	robimarko@gmail.com, quic_gurus@quicinc.com, bartosz.golaszewski@linaro.org, 
+	kishon@kernel.org, quic_wcheng@quicinc.com, alim.akhtar@samsung.com, 
+	avri.altman@wdc.com, bvanassche@acm.org, agross@kernel.org, 
+	gregkh@linuxfoundation.org, quic_tdas@quicinc.com, robin.murphy@arm.com, 
+	daniel.lezcano@linaro.org, rui.zhang@intel.com, lukasz.luba@arm.com, 
+	quic_rjendra@quicinc.com, ulf.hansson@linaro.org, quic_sibis@quicinc.com, 
+	otto.pflueger@abscue.de, quic_rohiagar@quicinc.com, luca@z3ntu.xyz, 
+	neil.armstrong@linaro.org, abel.vesa@linaro.org, bhupesh.sharma@linaro.org, 
+	alexandre.torgue@foss.st.com, peppe.cavallaro@st.com, joabreu@synopsys.com, 
+	netdev@vger.kernel.org, lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com, 
+	krzysztof.kozlowski@linaro.org, u.kleine-koenig@pengutronix.de, dmitry.baryshkov@linaro.org, 
+	quic_cang@quicinc.com, danila@jiaxyga.com, quic_nitirawa@quicinc.com, 
+	mantas@8devices.com, athierry@redhat.com, quic_kbajaj@quicinc.com, 
+	quic_bjorande@quicinc.com, quic_msarkar@quicinc.com, quic_devipriy@quicinc.com, 
+	quic_tsoni@quicinc.com, quic_rgottimu@quicinc.com, quic_shashim@quicinc.com, 
+	quic_kaushalk@quicinc.com, quic_tingweiz@quicinc.com, quic_aiquny@quicinc.com, 
+	srinivas.kandagatla@linaro.org, linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-clk@vger.kernel.org, 
+	linux-phy@lists.infradead.org, linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev, 
+	linux-riscv@lists.infradead.org, linux-gpio@vger.kernel.org, linux-watchdog@vger.kernel.org, 
+	linux-pci@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, kernel@quicinc.com
+Subject: Re: [PATCH 29/47] dt-bindings: net: qcom,ethqos: add description for
+ qcs9100
+Message-ID: <u5ekupjqvgoehkl76pv7ljyqqzbnnyh6ci2dilfxfkcdvdy3dp@ehdujhkul7ow>
+References: <20240703025850.2172008-1-quic_tengfan@quicinc.com>
+ <20240703025850.2172008-30-quic_tengfan@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240702204020.2489324-10-bvanassche@acm.org>
+In-Reply-To: <20240703025850.2172008-30-quic_tengfan@quicinc.com>
 
-On Tue, Jul 02, 2024 at 01:39:17PM -0700, Bart Van Assche wrote:
-> UFSHCI controllers that are compliant with the UFSHCI 4.0 standard report
-> the maximum number of supported commands in the controller capabilities
-> register. Use that value if .get_hba_mac == NULL.
+On Wed, Jul 03, 2024 at 10:58:32AM GMT, Tengfei Fan wrote:
+> Add the compatible for the MAC controller on qcs9100 platforms. This MAC
+> works with a single interrupt so add minItems to the interrupts property.
+> The fourth clock's name is different here so change it. Enable relevant
+> PHY properties. Add the relevant compatibles to the binding document for
+> snps,dwmac as well.
+
+This description doesn't match what was done in this patch, its what
+Bart did when he made changes to add the sa8775 changes. Please consider
+using a blurb indicating that this is the same SoC as sa8775p, just with
+different firmware strategies or something along those lines?
+
 > 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Signed-off-by: Tengfei Fan <quic_tengfan@quicinc.com>
 > ---
->  drivers/ufs/core/ufs-mcq.c     | 20 ++++++++++++++------
->  drivers/ufs/core/ufshcd-priv.h |  1 +
->  drivers/ufs/core/ufshcd.c      |  6 ++++--
->  include/ufs/ufshcd.h           |  4 +++-
->  include/ufs/ufshci.h           |  1 +
->  5 files changed, 23 insertions(+), 9 deletions(-)
+>  Documentation/devicetree/bindings/net/qcom,ethqos.yaml | 1 +
+>  Documentation/devicetree/bindings/net/snps,dwmac.yaml  | 3 +++
+>  2 files changed, 4 insertions(+)
 > 
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-> index 0482c7a1e419..b2cf34a1fe48 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -138,18 +138,21 @@ EXPORT_SYMBOL_GPL(ufshcd_mcq_queue_cfg_addr);
->   *
->   * MAC - Max. Active Command of the Host Controller (HC)
->   * HC wouldn't send more than this commands to the device.
-> - * It is mandatory to implement get_hba_mac() to enable MCQ mode.
->   * Calculates and adjusts the queue depth based on the depth
->   * supported by the HC and ufs device.
->   */
->  int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba)
->  {
-> -	int mac = -EOPNOTSUPP;
-> +	int mac;
->  
-> -	if (!hba->vops || !hba->vops->get_hba_mac)
-> -		goto err;
-> -
-> -	mac = hba->vops->get_hba_mac(hba);
-> +	if (!hba->vops || !hba->vops->get_hba_mac) {
-> +		hba->capabilities =
-> +			ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES);
-> +		mac = hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_MCQ;
-> +		mac++;
+> diff --git a/Documentation/devicetree/bindings/net/qcom,ethqos.yaml b/Documentation/devicetree/bindings/net/qcom,ethqos.yaml
+> index 6672327358bc..8ab11e00668c 100644
+> --- a/Documentation/devicetree/bindings/net/qcom,ethqos.yaml
+> +++ b/Documentation/devicetree/bindings/net/qcom,ethqos.yaml
+> @@ -20,6 +20,7 @@ properties:
+>    compatible:
+>      enum:
+>        - qcom,qcs404-ethqos
+> +      - qcom,qcs9100-ethqos
+>        - qcom,sa8775p-ethqos
+>        - qcom,sc8280xp-ethqos
+>        - qcom,sm8150-ethqos
+> diff --git a/Documentation/devicetree/bindings/net/snps,dwmac.yaml b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+> index 3bab4e1f3fbf..269c21779396 100644
+> --- a/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+> +++ b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
+> @@ -67,6 +67,7 @@ properties:
+>          - loongson,ls2k-dwmac
+>          - loongson,ls7a-dwmac
+>          - qcom,qcs404-ethqos
+> +        - qcom,qcs9100-ethqos
+>          - qcom,sa8775p-ethqos
+>          - qcom,sc8280xp-ethqos
+>          - qcom,sm8150-ethqos
+> @@ -582,6 +583,7 @@ allOf:
+>                - ingenic,x1600-mac
+>                - ingenic,x1830-mac
+>                - ingenic,x2000-mac
+> +              - qcom,qcs9100-ethqos
+>                - qcom,sa8775p-ethqos
+>                - qcom,sc8280xp-ethqos
+>                - snps,dwmac-3.50a
+> @@ -639,6 +641,7 @@ allOf:
+>                - ingenic,x1830-mac
+>                - ingenic,x2000-mac
+>                - qcom,qcs404-ethqos
+> +              - qcom,qcs9100-ethqos
+>                - qcom,sa8775p-ethqos
+>                - qcom,sc8280xp-ethqos
+>                - qcom,sm8150-ethqos
+> -- 
+> 2.25.1
+> 
 
-Can you add a comment to state that the MAC value is 0 based?
-
-> +	} else {
-> +		mac = hba->vops->get_hba_mac(hba);
-> +	}
->  	if (mac < 0)
->  		goto err;
->  
-> @@ -423,6 +426,11 @@ void ufshcd_mcq_enable(struct ufs_hba *hba)
->  }
->  EXPORT_SYMBOL_GPL(ufshcd_mcq_enable);
->  
-> +void ufshcd_mcq_disable(struct ufs_hba *hba)
-> +{
-> +	ufshcd_rmwl(hba, MCQ_MODE_SELECT, 0, REG_UFS_MEM_CFG);
-> +}
-> +
->  void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg)
->  {
->  	ufshcd_writel(hba, msg->address_lo, REG_UFS_ESILBA);
-> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-> index 88ce93748305..ce36154ce963 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -64,6 +64,7 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
->  void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
->  			  struct cq_entry *cqe);
->  int ufshcd_mcq_init(struct ufs_hba *hba);
-> +void ufshcd_mcq_disable(struct ufs_hba *hba);
->  int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
->  int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
->  struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index b3444f9ce130..9e0290c6c2d3 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -8753,13 +8753,15 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
->  		if (ret)
->  			return ret;
->  		if (is_mcq_supported(hba) && !hba->scsi_host_added) {
-> +			ufshcd_mcq_enable(hba);
-> +			hba->mcq_enabled = true;
-
-If the 'mcq_enabled' assignment goes hand in hand with
-ufshcd_mcq_{enable/disable}, why shouldn't it be moved inside?
-
-- Mani
-
->  			ret = ufshcd_alloc_mcq(hba);
->  			if (!ret) {
->  				ufshcd_config_mcq(hba);
-> -				ufshcd_mcq_enable(hba);
-> -				hba->mcq_enabled = true;
->  			} else {
->  				/* Continue with SDB mode */
-> +				ufshcd_mcq_disable(hba);
-> +				hba->mcq_enabled = false;
->  				use_mcq_mode = false;
->  				dev_err(hba->dev, "MCQ mode is disabled, err=%d\n",
->  					 ret);
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index c0e28a512b3c..6518997930f3 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -325,7 +325,9 @@ struct ufs_pwr_mode_info {
->   * @event_notify: called to notify important events
->   * @reinit_notify: called to notify reinit of UFSHCD during max gear switch
->   * @mcq_config_resource: called to configure MCQ platform resources
-> - * @get_hba_mac: called to get vendor specific mac value, mandatory for mcq mode
-> + * @get_hba_mac: reports maximum number of outstanding commands supported by
-> + *	the controller. Should be implemented for UFSHCI 4.0 or later
-> + *	controllers that are not compliant with the UFSHCI 4.0 specification.
->   * @op_runtime_config: called to config Operation and runtime regs Pointers
->   * @get_outstanding_cqs: called to get outstanding completion queues
->   * @config_esi: called to config Event Specific Interrupt
-> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-> index 8d0cc73537c6..38fe97971a65 100644
-> --- a/include/ufs/ufshci.h
-> +++ b/include/ufs/ufshci.h
-> @@ -68,6 +68,7 @@ enum {
->  /* Controller capability masks */
->  enum {
->  	MASK_TRANSFER_REQUESTS_SLOTS_SDB	= 0x0000001F,
-> +	MASK_TRANSFER_REQUESTS_SLOTS_MCQ	= 0x000000FF,
->  	MASK_NUMBER_OUTSTANDING_RTT		= 0x0000FF00,
->  	MASK_TASK_MANAGEMENT_REQUEST_SLOTS	= 0x00070000,
->  	MASK_EHSLUTRD_SUPPORTED			= 0x00400000,
-
--- 
-மணிவண்ணன் சதாசிவம்
