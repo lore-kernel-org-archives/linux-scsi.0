@@ -1,100 +1,45 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ACF617E46A
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Jul 2024 15:09:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE5111DA313;
+	Wed,  3 Jul 2024 18:42:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720019389; cv=none; b=PQGtiCxgcYYw1Xfz5qSr93l2AS37hsNf0WTj5Q9V742X8qTE4uIkTQr/mvUNZNQXM5voGFLZLsjjTpXHqw4yDOShIlqn8ZlB0WOAvxKYZbQmQelkBgXrsAKNqUkpV+8cDB/tFSrlBQBT8dpWqjprbipiOLXZSmXNR8b2SQRCtq4=
+	t=1720032143; cv=none; b=mAxetj4Crvt5KO2RmJBz+URdKfWnDx6HNEBC0qs38Bdo3Vpe+wk7LnzB4z68yTIQhrlkA5oz25GoRtWNdeG65xSzj4ko1+GgWY41ixlRCtnyIbCbQUqWlTIpQZDaHnu/GU4N/KAmpSk/kF8CxcY+gvwZfB9AfRg0D7lj8gJ+NSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720019389; c=relaxed/simple;
-	bh=fhpejWcF/vfLe6nwrakqQTsElpgre49BCBgEinb2+BE=;
+	s=arc-20240116; t=1720032143; c=relaxed/simple;
+	bh=cNSS+Cez9IH/7B7gafdyMnyWXsNccVw8bJBAVv+UVyA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hvR1qBhKJemHEJtMhB/hEOAMZ9jaLOxT2CzeRUl5NvQQShUWGdj6+hiWZBASfsXIPNZq97xCG8ugvna9r3w7v5RArIrEyOuagsx/RvXxk+aCaNliuusV+b0xylgsXwjMbZ5xyq18e16VpIIKsk/8vb7zLDthUPQCTfaciUw3+pQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=G2bL6tD9; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=E8HoqmIbabPbPD6DbOt4/VMkCStQa9Z/gXBuwQKxGvAoZLx3JyzLDmG+p2fauTNzb4CsS5E82EdObvR/TKCrt3kIifsbk9gmrdjdHW1WfIgsOjYubwgUmzcIvDfblN+a5u6407zoBLPR/QwZL5DWRHakwTLe7NYwYMLZp0dcO1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bzFJOHYY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="G2bL6tD9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1720019387;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OwJT/oF0rqnt+S31sg05vpTbadEupYIHlD2ocZCHgDI=;
-	b=G2bL6tD9MH3jW9g1eYfLj+TmhYW774/+7RBogi/iGXJGeNf04YRIn16S1nZF53UOJ4ah/Z
-	/07VuJdaORsDwljSJnciaZed3PspqvVIm3GmOt8IJZBylXXOGtFGiMxrDhqFt/toAQXORp
-	ygiDRj2h3eSH2Hd5vRj77B8klEzhTvo=
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
- [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-546-OD7hnaweOuOt0py6K8jlEQ-1; Wed, 03 Jul 2024 11:09:46 -0400
-X-MC-Unique: OD7hnaweOuOt0py6K8jlEQ-1
-Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-446102c711bso65941601cf.2
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Jul 2024 08:09:46 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720019382; x=1720624182;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OwJT/oF0rqnt+S31sg05vpTbadEupYIHlD2ocZCHgDI=;
-        b=FP1Xjyj7K+HQ0iWOThDSLJFh6N9hU6EZSpoV7hqcPkUzhnow68JBTD10BJZ5dp3STd
-         G1N3lr/54U1Ev9K9ye0X3OZj3WCV8XGTJmJTHXbyR2WFrlBF/5sts15AC0BEZhfH4TEF
-         xbY0+uUZek4mv8lfTgVegeF3nixbDbYBd+gLMT2xdAger/IzuFVea8wZb2fM/zU8PuTN
-         akM/HLcVgJxXsDR5uk8P37OvwpSmKiRFi8kX/cl8AcvzJwUq5hJPBfw08GJPK++wz8ll
-         7+8Eqf6UPyy+Nd5/4znWyA95OAsMw7TXclNt4USUTxoUe4mC+HCD1S3RPpvv7sOcYUWv
-         Rx4g==
-X-Forwarded-Encrypted: i=1; AJvYcCXMacP5bp6TjHosm8twaKCDgoptPBZvD4WhspiaeJkNbAfH6o+clbi1Uk7IWkc/8TQUf9dpIi97MY2kTZj36eyYOhR4BPY2V5S84A==
-X-Gm-Message-State: AOJu0Yx5imVNgXG87YMf+irFbT1vnP8K6vYG0Kim7mItM+3rZE7W1ZP3
-	ij/TAdWCyMpoAon6FKmVuhnbWGHMOnNa9XdiZo0KIKut9Z93kXNA+4IDXep2FQOw0tOXBUgNtl4
-	LXUZXW065TPNXo3Ey72Xb5/Iq0Kz/Uo8TT2orT/U75ahC1E3TSfs4/7yDVwg=
-X-Received: by 2002:ac8:7d84:0:b0:444:b495:e94d with SMTP id d75a77b69052e-44662c99f4bmr119752961cf.3.1720019381972;
-        Wed, 03 Jul 2024 08:09:41 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IE8jWmpy5/3+Y1qV1pkAlEofbtK+RF6spB2E3wXQKII8gdILaaxSAxoLFic14g5Q4iTwcc7CA==
-X-Received: by 2002:ac8:7d84:0:b0:444:b495:e94d with SMTP id d75a77b69052e-44662c99f4bmr119751991cf.3.1720019381501;
-        Wed, 03 Jul 2024 08:09:41 -0700 (PDT)
-Received: from x1gen2nano ([2600:1700:1ff0:d0e0::40])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4465c4bf7ecsm43222571cf.80.2024.07.03.08.09.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Jul 2024 08:09:41 -0700 (PDT)
-Date: Wed, 3 Jul 2024 10:09:36 -0500
-From: Andrew Halaney <ahalaney@redhat.com>
-To: Tengfei Fan <quic_tengfan@quicinc.com>
-Cc: andersson@kernel.org, konrad.dybcio@linaro.org, robh@kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, djakov@kernel.org, mturquette@baylibre.com, 
-	sboyd@kernel.org, jassisinghbrar@gmail.com, herbert@gondor.apana.org.au, 
-	davem@davemloft.net, manivannan.sadhasivam@linaro.org, will@kernel.org, 
-	joro@8bytes.org, conor@kernel.org, tglx@linutronix.de, amitk@kernel.org, 
-	thara.gopinath@gmail.com, linus.walleij@linaro.org, wim@linux-watchdog.org, 
-	linux@roeck-us.net, rafael@kernel.org, viresh.kumar@linaro.org, vkoul@kernel.org, 
-	edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, mcoquelin.stm32@gmail.com, 
-	robimarko@gmail.com, quic_gurus@quicinc.com, bartosz.golaszewski@linaro.org, 
-	kishon@kernel.org, quic_wcheng@quicinc.com, alim.akhtar@samsung.com, 
-	avri.altman@wdc.com, bvanassche@acm.org, agross@kernel.org, 
-	gregkh@linuxfoundation.org, quic_tdas@quicinc.com, robin.murphy@arm.com, 
-	daniel.lezcano@linaro.org, rui.zhang@intel.com, lukasz.luba@arm.com, 
-	quic_rjendra@quicinc.com, ulf.hansson@linaro.org, quic_sibis@quicinc.com, 
-	otto.pflueger@abscue.de, quic_rohiagar@quicinc.com, luca@z3ntu.xyz, 
-	neil.armstrong@linaro.org, abel.vesa@linaro.org, bhupesh.sharma@linaro.org, 
-	alexandre.torgue@foss.st.com, peppe.cavallaro@st.com, joabreu@synopsys.com, 
-	netdev@vger.kernel.org, lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com, 
-	krzysztof.kozlowski@linaro.org, u.kleine-koenig@pengutronix.de, dmitry.baryshkov@linaro.org, 
-	quic_cang@quicinc.com, danila@jiaxyga.com, quic_nitirawa@quicinc.com, 
-	mantas@8devices.com, athierry@redhat.com, quic_kbajaj@quicinc.com, 
-	quic_bjorande@quicinc.com, quic_msarkar@quicinc.com, quic_devipriy@quicinc.com, 
-	quic_tsoni@quicinc.com, quic_rgottimu@quicinc.com, quic_shashim@quicinc.com, 
-	quic_kaushalk@quicinc.com, quic_tingweiz@quicinc.com, quic_aiquny@quicinc.com, 
-	srinivas.kandagatla@linaro.org, linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-clk@vger.kernel.org, 
-	linux-phy@lists.infradead.org, linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev, 
-	linux-riscv@lists.infradead.org, linux-gpio@vger.kernel.org, linux-watchdog@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, kernel@quicinc.com
-Subject: Re: [PATCH 29/47] dt-bindings: net: qcom,ethqos: add description for
- qcs9100
-Message-ID: <u5ekupjqvgoehkl76pv7ljyqqzbnnyh6ci2dilfxfkcdvdy3dp@ehdujhkul7ow>
-References: <20240703025850.2172008-1-quic_tengfan@quicinc.com>
- <20240703025850.2172008-30-quic_tengfan@quicinc.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bzFJOHYY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0F3DC2BD10;
+	Wed,  3 Jul 2024 18:42:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720032142;
+	bh=cNSS+Cez9IH/7B7gafdyMnyWXsNccVw8bJBAVv+UVyA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bzFJOHYYa05Vrhpd2W0x8LhrRuFI+94qBTWqBsEi2mxyNM8wi1kMWjWV2/0pQhhdU
+	 /cazu3/R9NYeF4E5W8gz64YwDsV70DP/MZUxaVDwPSrzNe8tqvW8ZS9ESM7PhN/Fmm
+	 FZXsrWUrMki2kNTDuQn4vYELtBdQSjx92gohYBzIoKHQz3StvunSwjABACL7cHk244
+	 poE1ezV5zVHFJesIX02PrFaDxuQMsvkZvGlO7EBXqJjMkIJ9Qc5NyypbVGuo1ZhVcf
+	 LFbFiTFDvxNZVI9tplg7utMGsJRt9F1boDa3qKSSFD5RcE3agKrq2NeO+KTz+moe3q
+	 uDladU4SvTXCg==
+Date: Wed, 3 Jul 2024 20:42:17 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Jason Yan <yanaijie@huawei.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+	linux-ide@vger.kernel.org
+Subject: Re: [PATCH v3 8/9] ata,scsi: Remove useless ata_sas_port_alloc()
+ wrapper
+Message-ID: <ZoWbiWZ6v7h9v8XH@ryzen.lan>
+References: <20240702160756.596955-11-cassel@kernel.org>
+ <20240702160756.596955-19-cassel@kernel.org>
+ <665021a5-b17b-41ac-9d45-792ad403f1dc@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -103,68 +48,160 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240703025850.2172008-30-quic_tengfan@quicinc.com>
+In-Reply-To: <665021a5-b17b-41ac-9d45-792ad403f1dc@oracle.com>
 
-On Wed, Jul 03, 2024 at 10:58:32AM GMT, Tengfei Fan wrote:
-> Add the compatible for the MAC controller on qcs9100 platforms. This MAC
-> works with a single interrupt so add minItems to the interrupts property.
-> The fourth clock's name is different here so change it. Enable relevant
-> PHY properties. Add the relevant compatibles to the binding document for
-> snps,dwmac as well.
+On Wed, Jul 03, 2024 at 11:20:51AM +0100, John Garry wrote:
+> On 02/07/2024 17:08, Niklas Cassel wrote:
+> > Now when the ap->print_id assignment has moved to ata_port_alloc(),
+> > we can remove the useless ata_sas_port_alloc() wrapper.
+> 
+> nit: I don't know why you say it is useless. It is used today, so has some
+> use, right?
+> 
+> I'd be more inclined to say that it is only used in one location, so can be
+> inlined there.
 
-This description doesn't match what was done in this patch, its what
-Bart did when he made changes to add the sa8775 changes. Please consider
-using a blurb indicating that this is the same SoC as sa8775p, just with
-different firmware strategies or something along those lines?
+Sure, I will clarify the commit message.
+(I will also clarify the commit message for the other commit that also
+says 'remove useless wrappers'.)
+
 
 > 
-> Signed-off-by: Tengfei Fan <quic_tengfan@quicinc.com>
-> ---
->  Documentation/devicetree/bindings/net/qcom,ethqos.yaml | 1 +
->  Documentation/devicetree/bindings/net/snps,dwmac.yaml  | 3 +++
->  2 files changed, 4 insertions(+)
+> > 
+> > Reviewed-by: Hannes Reinecke <hare@suse.de>
+> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> > ---
+> >   drivers/ata/libata-core.c     |  1 +
+> >   drivers/ata/libata-sata.c     | 35 -----------------------------------
+> >   drivers/ata/libata.h          |  1 -
+> >   drivers/scsi/libsas/sas_ata.c | 10 ++++++++--
+> >   include/linux/libata.h        |  3 +--
+> >   5 files changed, 10 insertions(+), 40 deletions(-)
+> > 
+> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> > index 5031064834be..22e7b09c93b1 100644
+> > --- a/drivers/ata/libata-core.c
+> > +++ b/drivers/ata/libata-core.c
+> > @@ -5493,6 +5493,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+> >   	return ap;
+> >   }
+> > +EXPORT_SYMBOL_GPL(ata_port_alloc);
+> >   void ata_port_free(struct ata_port *ap)
+> >   {
+> > diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> > index b602247604dc..48660d445602 100644
+> > --- a/drivers/ata/libata-sata.c
+> > +++ b/drivers/ata/libata-sata.c
+> > @@ -1204,41 +1204,6 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
+> >   }
+> >   EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+> > -/**
+> > - *	ata_sas_port_alloc - Allocate port for a SAS attached SATA device
+> > - *	@host: ATA host container for all SAS ports
+> > - *	@port_info: Information from low-level host driver
+> > - *	@shost: SCSI host that the scsi device is attached to
+> > - *
+> > - *	LOCKING:
+> > - *	PCI/etc. bus probe sem.
+> > - *
+> > - *	RETURNS:
+> > - *	ata_port pointer on success / NULL on failure.
+> > - */
+> > -
+> > -struct ata_port *ata_sas_port_alloc(struct ata_host *host,
+> > -				    struct ata_port_info *port_info,
+> > -				    struct Scsi_Host *shost)
+> > -{
+> > -	struct ata_port *ap;
+> > -
+> > -	ap = ata_port_alloc(host);
+> > -	if (!ap)
+> > -		return NULL;
+> > -
+> > -	ap->port_no = 0;
+> > -	ap->pio_mask = port_info->pio_mask;
+> > -	ap->mwdma_mask = port_info->mwdma_mask;
+> > -	ap->udma_mask = port_info->udma_mask;
+> > -	ap->flags |= port_info->flags;
+> > -	ap->ops = port_info->port_ops;
+> > -	ap->cbl = ATA_CBL_SATA;
+> > -
+> > -	return ap;
+> > -}
+> > -EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
+> > -
+> >   /**
+> >    *	ata_sas_device_configure - Default device_configure routine for libata
+> >    *				   devices
+> > diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> > index 5ea194ae8a8b..6abf265f626e 100644
+> > --- a/drivers/ata/libata.h
+> > +++ b/drivers/ata/libata.h
+> > @@ -81,7 +81,6 @@ extern void ata_link_init(struct ata_port *ap, struct ata_link *link, int pmp);
+> >   extern int sata_link_init_spd(struct ata_link *link);
+> >   extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
+> >   extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
+> > -extern struct ata_port *ata_port_alloc(struct ata_host *host);
+> >   extern const char *sata_spd_string(unsigned int spd);
+> >   extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+> >   				      u8 page, void *buf, unsigned int sectors);
+> > diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> > index ab4ddeea4909..80299f517081 100644
+> > --- a/drivers/scsi/libsas/sas_ata.c
+> > +++ b/drivers/scsi/libsas/sas_ata.c
+> > @@ -597,13 +597,19 @@ int sas_ata_init(struct domain_device *found_dev)
+> >   	ata_host_init(ata_host, ha->dev, &sas_sata_ops);
+> > -	ap = ata_sas_port_alloc(ata_host, &sata_port_info, shost);
+> > +	ap = ata_port_alloc(ata_host);
+> >   	if (!ap) {
+> > -		pr_err("ata_sas_port_alloc failed.\n");
+> > +		pr_err("ata_port_alloc failed.\n");
 > 
-> diff --git a/Documentation/devicetree/bindings/net/qcom,ethqos.yaml b/Documentation/devicetree/bindings/net/qcom,ethqos.yaml
-> index 6672327358bc..8ab11e00668c 100644
-> --- a/Documentation/devicetree/bindings/net/qcom,ethqos.yaml
-> +++ b/Documentation/devicetree/bindings/net/qcom,ethqos.yaml
-> @@ -20,6 +20,7 @@ properties:
->    compatible:
->      enum:
->        - qcom,qcs404-ethqos
-> +      - qcom,qcs9100-ethqos
->        - qcom,sa8775p-ethqos
->        - qcom,sc8280xp-ethqos
->        - qcom,sm8150-ethqos
-> diff --git a/Documentation/devicetree/bindings/net/snps,dwmac.yaml b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
-> index 3bab4e1f3fbf..269c21779396 100644
-> --- a/Documentation/devicetree/bindings/net/snps,dwmac.yaml
-> +++ b/Documentation/devicetree/bindings/net/snps,dwmac.yaml
-> @@ -67,6 +67,7 @@ properties:
->          - loongson,ls2k-dwmac
->          - loongson,ls7a-dwmac
->          - qcom,qcs404-ethqos
-> +        - qcom,qcs9100-ethqos
->          - qcom,sa8775p-ethqos
->          - qcom,sc8280xp-ethqos
->          - qcom,sm8150-ethqos
-> @@ -582,6 +583,7 @@ allOf:
->                - ingenic,x1600-mac
->                - ingenic,x1830-mac
->                - ingenic,x2000-mac
-> +              - qcom,qcs9100-ethqos
->                - qcom,sa8775p-ethqos
->                - qcom,sc8280xp-ethqos
->                - snps,dwmac-3.50a
-> @@ -639,6 +641,7 @@ allOf:
->                - ingenic,x1830-mac
->                - ingenic,x2000-mac
->                - qcom,qcs404-ethqos
-> +              - qcom,qcs9100-ethqos
->                - qcom,sa8775p-ethqos
->                - qcom,sc8280xp-ethqos
->                - qcom,sm8150-ethqos
-> -- 
-> 2.25.1
-> 
+> nit: Are these really useful prints? AFAICS, ata_port_alloc() can only fail
+> due to ENOMEM and we generally don't print ENOMEM errors in drivers. I know
+> that we change the error code, below, but still I doubt its value.
 
+ata_port_alloc() can also fail if there are no free IDs (ida_alloc_min()
+returns -ENOSPC), so I will leave the print for now.
+
+
+> 
+> >   		rc = -ENODEV;
+> >   		goto free_host;
+> >   	}
+> > +	ap->port_no = 0;
+> > +	ap->pio_mask = sata_port_info.pio_mask;
+> 
+> Why do we even have sata_port_info now, if we are not passing a complete
+> structure? I mean, why not:
+> 
+> 	ap->pio_mask = ATA_PI04;
+
+Good point, I will remove the structure and perform the initialization
+directly, like you are suggesting. This will remove even more lines :)
+
+
+> 
+> > +	ap->mwdma_mask = sata_port_info.mwdma_mask;
+> > +	ap->udma_mask = sata_port_info.udma_mask;
+> > +	ap->flags |= sata_port_info.flags;
+> > +	ap->ops = sata_port_info.port_ops;
+> >   	ap->private_data = found_dev;
+> >   	ap->cbl = ATA_CBL_SATA;
+> >   	ap->scsi_host = shost;
+> > diff --git a/include/linux/libata.h b/include/linux/libata.h
+> > index 84a7bfbac9fa..17394098bee9 100644
+> > --- a/include/linux/libata.h
+> > +++ b/include/linux/libata.h
+> > @@ -1244,9 +1244,8 @@ extern int sata_link_debounce(struct ata_link *link,
+> >   extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+> >   			     bool spm_wakeup);
+> >   extern int ata_slave_link_init(struct ata_port *ap);
+> > -extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+> > -					   struct ata_port_info *, struct Scsi_Host *);
+> >   extern void ata_port_probe(struct ata_port *ap);
+> > +extern struct ata_port *ata_port_alloc(struct ata_host *host);
+> >   extern void ata_port_free(struct ata_port *ap);
+> >   extern int ata_tport_add(struct device *parent, struct ata_port *ap);
+> >   extern void ata_tport_delete(struct ata_port *ap);
+> 
