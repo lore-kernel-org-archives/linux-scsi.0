@@ -1,99 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F04217A5B0;
-	Wed,  3 Jul 2024 18:49:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B602187570;
+	Wed,  3 Jul 2024 19:11:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720032597; cv=none; b=WE22ywmJmHRtS6u/MFaxb+9nO+2vFc7NhL8o/LpFMpzUKOKrWOJD9w0uM0GjMwZMS7Y8kQaPlF7AdFRcZHJ0xTMAg1HmG1jTH21c98pMFBgn18EDfNCEBm1ck8Hdrn0H0s8rk2NgKsC1fsVpt9PLOZHFrlDoCwF3PshI5WHxgd0=
+	t=1720033906; cv=none; b=IFKfX/XbMebltPfkBGd3Y8y+GnnCkO2UEnD2CASeor85mw3g2G6HWOd9ezgKHNhskfZIfkDgBSz+YBPa6nbaxMcwTdt795Tzg3ntNqqO6cjnvPu778+0eiZ5VrFomrI7tUFI9nqmWSYYpai/FFq6TSVFxUwGRpOptI5tbBRKRSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720032597; c=relaxed/simple;
-	bh=tL3e/ur6/KMkg7mh3t7r3ZIFeZQ4xi5Q34S/7FlZ2qA=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SLq2w25GpHpJBUellizhaTjqXXk76DXYVeBiRdvDL7I8h7/vRs3pjJ1J40oIPwxA/uls4pJOVx7u1tzsLEceO+TuGQgjyA1/QA+yKbeX5uuaueX724HZHO5boF25b4Bkxs49NUb2f8Y7/MrgRLdac44sLslW72RIbiIdV51tqBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SQ7eo1Ak; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1720033906; c=relaxed/simple;
+	bh=3E3xPWB6kiGiSy2QWa5qKXmQoyeUU4QTQ749wteyoL8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=B00P7OrrqV0CFeBOvuR8YSUKMqPjcpQZ4c9zAIUuYcuCvt0geTepA2YVCboBBGxrIA1RNhQA17DOi2IVjBAnFgeYG3A0zkna4fupflKTmjIFL3wYq9F/SzQZCG4oPmk4pEGA3JfK32ExLAe1iZVi/P4cR4Wznt7IocY30Og99P8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=u8sAIh0k; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SQ7eo1Ak"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82B6EC2BD10;
-	Wed,  3 Jul 2024 18:49:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720032596;
-	bh=tL3e/ur6/KMkg7mh3t7r3ZIFeZQ4xi5Q34S/7FlZ2qA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=SQ7eo1AkC8LjRWberzbfTrXdEmn8AVAPTH1nI5h830+ubxo1C5MaKmEtPRy9gsG1o
-	 M8aW67LDGZEnsrCM4Q/GRKRYn+r39JIjjMUn4+wwhQ4mb+Nyw7/6h4NQGIjateXcmW
-	 XAfTSrhx2kUyLwJweon5gGjsH9sMGD6YpKO/TIf9EwzO/u3UL14SYAuIKAMoMlbYkK
-	 bxKEJlfNCtFdikjht8PVx57e+Ez2TZA0kY1xDB4xr5o96jrOLhYPq5oX8riaz0aLMe
-	 pQxRIT/WAYj12CgJvmnxQibErDTaKj3syhCujN4MjJ27ACtbE6kpJopp6TU3GIN89Q
-	 vkEmm7DBvS+3g==
-Date: Wed, 3 Jul 2024 11:49:52 -0700
-From: Jakub Kicinski <kuba@kernel.org>
-To: patchwork-bot+netdevbpf@kernel.org
-Cc: Tengfei Fan <quic_tengfan@quicinc.com>, andersson@kernel.org,
- konrad.dybcio@linaro.org, robh@kernel.org, krzk+dt@kernel.org,
- conor+dt@kernel.org, djakov@kernel.org, mturquette@baylibre.com,
- sboyd@kernel.org, jassisinghbrar@gmail.com, herbert@gondor.apana.org.au,
- davem@davemloft.net, manivannan.sadhasivam@linaro.org, will@kernel.org,
- joro@8bytes.org, conor@kernel.org, tglx@linutronix.de, amitk@kernel.org,
- thara.gopinath@gmail.com, linus.walleij@linaro.org, wim@linux-watchdog.org,
- linux@roeck-us.net, rafael@kernel.org, viresh.kumar@linaro.org,
- vkoul@kernel.org, edumazet@google.com, pabeni@redhat.com,
- mcoquelin.stm32@gmail.com, robimarko@gmail.com, quic_gurus@quicinc.com,
- bartosz.golaszewski@linaro.org, kishon@kernel.org, quic_wcheng@quicinc.com,
- alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
- agross@kernel.org, gregkh@linuxfoundation.org, quic_tdas@quicinc.com,
- robin.murphy@arm.com, daniel.lezcano@linaro.org, rui.zhang@intel.com,
- lukasz.luba@arm.com, quic_rjendra@quicinc.com, ulf.hansson@linaro.org,
- quic_sibis@quicinc.com, otto.pflueger@abscue.de, quic_rohiagar@quicinc.com,
- luca@z3ntu.xyz, neil.armstrong@linaro.org, abel.vesa@linaro.org,
- bhupesh.sharma@linaro.org, alexandre.torgue@foss.st.com,
- peppe.cavallaro@st.com, joabreu@synopsys.com, netdev@vger.kernel.org,
- lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com,
- ahalaney@redhat.com, krzysztof.kozlowski@linaro.org,
- u.kleine-koenig@pengutronix.de, dmitry.baryshkov@linaro.org,
- quic_cang@quicinc.com, danila@jiaxyga.com, quic_nitirawa@quicinc.com,
- mantas@8devices.com, athierry@redhat.com, quic_kbajaj@quicinc.com,
- quic_bjorande@quicinc.com, quic_msarkar@quicinc.com,
- quic_devipriy@quicinc.com, quic_tsoni@quicinc.com,
- quic_rgottimu@quicinc.com, quic_shashim@quicinc.com,
- quic_kaushalk@quicinc.com, quic_tingweiz@quicinc.com,
- quic_aiquny@quicinc.com, srinivas.kandagatla@linaro.org,
- linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
- linux-clk@vger.kernel.org, linux-phy@lists.infradead.org,
- linux-crypto@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- iommu@lists.linux.dev, linux-riscv@lists.infradead.org,
- linux-gpio@vger.kernel.org, linux-watchdog@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
- kernel@quicinc.com
-Subject: Re: [PATCH 00/47] arm64: qcom: dts: add QCS9100 support
-Message-ID: <20240703114952.6013f05e@kernel.org>
-In-Reply-To: <171998042970.21654.12559535993133117436.git-patchwork-notify@kernel.org>
-References: <20240703025850.2172008-1-quic_tengfan@quicinc.com>
-	<171998042970.21654.12559535993133117436.git-patchwork-notify@kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="u8sAIh0k"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WDqC3677jz6CmQyM;
+	Wed,  3 Jul 2024 19:11:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1720033898; x=1722625899; bh=6m7fScHfvSHfw4I4vLfsawbF
+	PucKc6EUzaqYNkps4vk=; b=u8sAIh0kNsdEUfY3MOrGoAaI0TvCnPmXQIvsm6OL
+	9lo1D2nPKU78UC38EZODq5CQOs72rsYWTiZ34GJHD/NZSo5kHfAoxLqvUd1FxkQf
+	pzlLd7q2g8l0EhAnZU5ZEdoNbWcnoGNL9abkOrBFNyVJI2n0dHvX4bogQ3U/ZYL1
+	lbpMsdd1GFrcet6GTtD1RTelariLEJ5bY5Pg24GFooW7dQEwEFYFe/Ya0qVnecC3
+	5WwGEzGbhNfUGfiAqEM2NqMWJJhjyxNWxhQrWCD8evKYrm11Zi6/rHgre+AsG/dk
+	rZ6Z4v4Ovq4TYoRvnaGAkqsRstdtEFlj6ajkzgNN3xt4aw==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id Ot4i4DB33GKA; Wed,  3 Jul 2024 19:11:38 +0000 (UTC)
+Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WDqBw15YRz6Cnv3Q;
+	Wed,  3 Jul 2024 19:11:35 +0000 (UTC)
+Message-ID: <64d7746e-4751-4f46-a603-ce07f586b2d2@acm.org>
+Date: Wed, 3 Jul 2024 12:11:36 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 6.1] scsi: ufs: ufshpb: Fix NULL deallocation in
+ ufshpb_pre_req_mempool_destroy()
+To: Aleksandr Mishin <amishin@t-argos.ru>,
+ Daejun Park <daejun7.park@samsung.com>, stable@vger.kernel.org,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Can Guo <cang@codeaurora.org>, Bean Huo <beanhuo@micron.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ lvc-project@linuxtesting.org
+References: <20240703111751.23377-1-amishin@t-argos.ru>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240703111751.23377-1-amishin@t-argos.ru>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Wed, 03 Jul 2024 04:20:29 +0000 patchwork-bot+netdevbpf@kernel.org
-wrote:
-> This series was applied to netdev/net-next.git (main)
-> by Jakub Kicinski <kuba@kernel.org>:
+On 7/3/24 4:17 AM, Aleksandr Mishin wrote:
+> No upstream commit exists for this commit.
+> 
+> The issue was introduced with commit 41d8a9333cc9 ("scsi: ufs: ufshpb:
+> Add HPB 2.0 support").
+> 
+> In ufshpb_pre_req_mempool_destroy() __free_page() is called only if pointer
+> contains NULL value.
+> Fix this bug by modifying check condition.
+> 
+> Upstream branch code has been significantly refactored and can't be
+> backported directly.
+> 
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
+> 
+> Fixes: 41d8a9333cc9 ("scsi: ufs: ufshpb: Add HPB 2.0 support")
+> Signed-off-by: Aleksandr Mishin <amishin@t-argos.ru>
+> ---
+>   drivers/ufs/core/ufshpb.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufshpb.c b/drivers/ufs/core/ufshpb.c
+> index b7f412d0f301..c649e8a10a23 100644
+> --- a/drivers/ufs/core/ufshpb.c
+> +++ b/drivers/ufs/core/ufshpb.c
+> @@ -2120,7 +2120,7 @@ static void ufshpb_pre_req_mempool_destroy(struct ufshpb_lu *hpb)
+>   	for (i = 0; i < hpb->throttle_pre_req; i++) {
+>   		pre_req = hpb->pre_req + i;
+>   		bio_put(hpb->pre_req[i].bio);
+> -		if (!pre_req->wb.m_page)
+> +		if (pre_req->wb.m_page)
+>   			__free_page(hpb->pre_req[i].wb.m_page);
+>   		list_del_init(&pre_req->list_req);
+>   	}
 
-> Here is the summary with links:
->   - [01/47] dt-bindings: arm: qcom: Document QCS9100 SoC and RIDE board
->     (no matching commit)
->   - [02/47] arm64: dts: qcom: qcs9100: Introduce QCS9100 SoC dtsi
->     (no matching commit)
->   - [03/47] arm64: dts: qcom: qcs9100: Introduce QCS9100 PMIC dtsi
->     https://git.kernel.org/netdev/net-next/c/df18948d331e
+Are any users of the 6.1 kernel using UFS HPB support? If not, another
+possibility is to backport commit 7e9609d2daea ("scsi: ufs: core: Remove
+HPB support").
 
-This is some bug / false positive in the bot, to be clear.
-Commit df18948d331e is ("Merge branch 'device-memory-tcp'").
-No idea how it got from that to DTS.
+Thanks,
+
+Bart.
