@@ -1,46 +1,46 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADEAA1119A;
-	Wed,  3 Jul 2024 03:06:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD59B1119A;
+	Wed,  3 Jul 2024 03:06:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719976009; cv=none; b=vAx7i6jGEh6jPl/HZcRIcqIQR68EEklQlytgJeXx1fiPePEy33aA2+Z+w8pUvZUmRRHAq0VoMFZSO2eNzWUoVzZfc9r0KtE/90Tz0xjA6qqbBOAmONRCyUOwpxwl4klb3hvas+EJdh8ZHk2axLcIS1vY6Leabpqc7/xQIHBNOVc=
+	t=1719976016; cv=none; b=qJbk+Swzaf10eoiICik7eCv7ezx4/YsJRXXnkDEbLuE9qyua6fIKJRG7+KQf6GjlLUSSdqyCYYHAbYrtu9T0p0kjuCv5+/HiQDMNt99Zb5xJS9f2I+cMkWxj14Yy4iuvJMWBLUaBpPaRDm9iY4l5PqXUu4f9S0NGnr5hM7VrGSM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719976009; c=relaxed/simple;
-	bh=mLHjZaTBj3yPgZhKLchmz8LHdNCc/SpYCbPopdc4HiU=;
+	s=arc-20240116; t=1719976016; c=relaxed/simple;
+	bh=5zC7Ky9vZSC3Wz7Xdwp9c0lCltO7xFnejk9ltczBWlw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hcS+CxLR8yMxAHcoMUceNbV+jFDf/RS9sc9CMTHUiZ5I/dTCuZhxjkSQuYkT/4sVwrgMRdQYELXyaICE3DSTjsyrjtaUitmqIzx/ubHCSLSMEA47ZFV0g2MqmhWuEVx8cHcdGL+Hgl93A3R/edoRp2KgVlZtpFf2ZKXeb2gf2uk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=dPrzVDhQ; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=UHB+it+j1f7kmAADRLtKcSnpO7On8vMl7/LBSEoE7gdjL4VWps5l8wDH+V4aY+VUS1bf2IH3FIdyjQVgULjsef8PCRIEVlNtPh3oyxg4MpySx1DKItl37c+asphA9DDFeBJjj3W2d14j0qAHkyXuj+wxSBzsbgfOGwg3CEH0auA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=DUnMeLs1; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="dPrzVDhQ"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 462JjXhS006162;
-	Wed, 3 Jul 2024 03:06:13 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="DUnMeLs1"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 462HED8F008418;
+	Wed, 3 Jul 2024 03:05:13 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Yuq0mloTqG9ENx1x4rHOIMUPA522Hema6Bl2djjkxlY=; b=dPrzVDhQBCNuVk58
-	CqZ1g9KYSEYo745A6A21DaPJu4dgtqlQuz0F3mSkGRmMGyJpE2cQNnj2SC78FG9+
-	Im/gN83Q6kKanznkFeHOKqRxHR4HIOQDl+SKV8t/JmeKLfrpQMTw12e0uEjSi1rF
-	5al+5MLVTSpSIdzS2z7iHpB41qwf6ZiUz1ykaIhC8KaMLFQ4Crz26zLVVpeV2hNI
-	eS3xGs5fLwy1ZQhL2sK3QQgsdeucoV8ue0u+3uIXZVQ9Unyjhg/jWnmBPK1vVgMx
-	nKb+IjRYQE/S9DZTZN5O3AYbxQGgcaNOTKJXuZ3x26vPXcy07xF2j+fdbMvn/pEb
-	/yGiSA==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 402bj8a2pg-1
+	oax5FVpyl2PYH3FnHapHlBUa2ipBr6ug3jbTV2BlBRI=; b=DUnMeLs1q/z2CgdJ
+	rsBISXCdCnA1c0qxkvpI9YxiUOGlKPyVDfw9U5kys5e2LhnPe9UkbtfYCk3Sh8Rq
+	1msBupO1opMm2/VpQJOUKYopJc2f6UzJsCwJn6f9QrYa+Ee/ZYQH31+Vgl8gxQdu
+	DO710KesglkXTssiSAs5ae5bNqIpmMmeqPRT7BKNQeg1CY4RkoQpTCn+GNLQqE0B
+	MfpDM/pt26wYC2XsO106pT2SqjHgbB08UsaudvEQanskuKkhrf7QieEgs6xIasdS
+	UYlNmxJZhfLlY/rT+ts1U5lXnc1iBqG3Oit8+2zMXBGXpWVw+CjpR8H0dXt6hnLd
+	IpKPAg==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4029kh7gmk-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 03 Jul 2024 03:06:12 +0000 (GMT)
+	Wed, 03 Jul 2024 03:05:13 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 46336BQb014649
+	by NALASPPMTA01.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 46335BDF005875
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 3 Jul 2024 03:06:11 GMT
+	Wed, 3 Jul 2024 03:05:11 GMT
 Received: from tengfan-gv.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 2 Jul 2024 20:05:49 -0700
+ 15.2.1544.9; Tue, 2 Jul 2024 20:04:49 -0700
 From: Tengfei Fan <quic_tengfan@quicinc.com>
 To: <andersson@kernel.org>, <konrad.dybcio@linaro.org>, <robh@kernel.org>,
         <krzk+dt@kernel.org>, <conor+dt@kernel.org>, <djakov@kernel.org>,
@@ -87,9 +87,9 @@ CC: <robimarko@gmail.com>, <quic_gurus@quicinc.com>,
         <linux-watchdog@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linux-stm32@st-md-mailman.stormreply.com>, <kernel@quicinc.com>,
         Tengfei Fan <quic_tengfan@quicinc.com>
-Subject: [PATCH 20/47] dt-bindings: interrupt-controller: qcom,pdc: document pdc on QCS9100
-Date: Wed, 3 Jul 2024 10:58:23 +0800
-Message-ID: <20240703025850.2172008-21-quic_tengfan@quicinc.com>
+Subject: [PATCH 17/47] dt-bindings: arm-smmu: Document QCS9100 GPU SMMU
+Date: Wed, 3 Jul 2024 10:58:20 +0800
+Message-ID: <20240703025850.2172008-18-quic_tengfan@quicinc.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240703025850.2172008-1-quic_tengfan@quicinc.com>
 References: <20240703025850.2172008-1-quic_tengfan@quicinc.com>
@@ -105,36 +105,52 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: FaW_YjV9zrEOFHECMSAWI0KAFKWhBIBL
-X-Proofpoint-GUID: FaW_YjV9zrEOFHECMSAWI0KAFKWhBIBL
+X-Proofpoint-GUID: FdzLW7RjoUlrCudd72CbKY6UZ7S3vcoB
+X-Proofpoint-ORIG-GUID: FdzLW7RjoUlrCudd72CbKY6UZ7S3vcoB
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-07-02_18,2024-07-02_02,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 impostorscore=0
- spamscore=0 suspectscore=0 mlxlogscore=955 mlxscore=0 priorityscore=1501
- malwarescore=0 adultscore=0 bulkscore=0 phishscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2406140001
- definitions=main-2407030022
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=988
+ priorityscore=1501 suspectscore=0 adultscore=0 mlxscore=0 clxscore=1015
+ malwarescore=0 bulkscore=0 spamscore=0 impostorscore=0 lowpriorityscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2406140001 definitions=main-2407030022
 
-The QCS9100 SoC includes a PDC, document it.
+Document the GPU SMMU found on the QCS9100 platform.
 
 Signed-off-by: Tengfei Fan <quic_tengfan@quicinc.com>
 ---
- .../devicetree/bindings/interrupt-controller/qcom,pdc.yaml       | 1 +
- 1 file changed, 1 insertion(+)
+ Documentation/devicetree/bindings/iommu/arm,smmu.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/interrupt-controller/qcom,pdc.yaml b/Documentation/devicetree/bindings/interrupt-controller/qcom,pdc.yaml
-index 985fa10abb99..41fbfce838fa 100644
---- a/Documentation/devicetree/bindings/interrupt-controller/qcom,pdc.yaml
-+++ b/Documentation/devicetree/bindings/interrupt-controller/qcom,pdc.yaml
-@@ -26,6 +26,7 @@ properties:
-   compatible:
-     items:
-       - enum:
-+          - qcom,qcs9100-pdc
-           - qcom,qdu1000-pdc
-           - qcom,sa8775p-pdc
-           - qcom,sc7180-pdc
+diff --git a/Documentation/devicetree/bindings/iommu/arm,smmu.yaml b/Documentation/devicetree/bindings/iommu/arm,smmu.yaml
+index 5c130cf06a21..82b7e1d40ce0 100644
+--- a/Documentation/devicetree/bindings/iommu/arm,smmu.yaml
++++ b/Documentation/devicetree/bindings/iommu/arm,smmu.yaml
+@@ -36,6 +36,7 @@ properties:
+         items:
+           - enum:
+               - qcom,qcm2290-smmu-500
++              - qcom,qcs9100-smmu-500
+               - qcom,qdu1000-smmu-500
+               - qcom,sa8775p-smmu-500
+               - qcom,sc7180-smmu-500
+@@ -84,6 +85,7 @@ properties:
+         items:
+           - enum:
+               - qcom,qcm2290-smmu-500
++              - qcom,qcs9100-smmu-500
+               - qcom,sa8775p-smmu-500
+               - qcom,sc7280-smmu-500
+               - qcom,sc8280xp-smmu-500
+@@ -385,6 +387,7 @@ allOf:
+         compatible:
+           contains:
+             enum:
++              - qcom,qcs9100-smmu-500
+               - qcom,sa8775p-smmu-500
+               - qcom,sc7280-smmu-500
+               - qcom,sc8280xp-smmu-500
 -- 
 2.25.1
 
