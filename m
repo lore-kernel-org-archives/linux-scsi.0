@@ -1,269 +1,113 @@
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DFF8846F
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Jul 2024 13:26:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 459E11B29CD;
+	Thu,  4 Jul 2024 16:04:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.67.10.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720099579; cv=none; b=sWdOGQk+FvBUQaLHqTMiz91aYBax/Af6VLmOEMNAP0hmhROgo7jICN/5e4hE/sBMvKB5VxNT5XVCZxCyqtKY77parJjaFZKmPm98bNFb97C7Ut08QHt6LUbWdi7+dgjTEw2y6TuNecK9tbYzFfzLkucYEUBANkKmN/dMYzYd7xI=
+	t=1720109064; cv=none; b=dtotdWw6xNKVeLbu9nkBsgl+d+Ed+1vwQeHAagnj/e11FE65YnwU6qlhWO9BGGh57KKu/4TV+ENUh768lDIG/SqPxv9e66cSOD/382TzdLqDlrU56elUvJWfSxf3PVKVoS21PCxC75KusaT0wmia6/RCBJfaLdayoKyefWf4LC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720099579; c=relaxed/simple;
-	bh=6KE36sYsIPrhU1snmLsl5853/tRFRTAQdUtKyGHqJ3Y=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qH4pfL3s8lZPxnkBG8XQK6iST8iAtpcSQeUPEQ1oUhGQu/Zjn9juHru+gAM81Y381bIa5Nnr+CBArUUfZccuLm0R3IpDEARQsYAOdpZA93DGKONj5DLNSMnRDKJwxx1su5FF4WbzO2tj01Zno2BDGtgmMk1odyn4fDyNzBG7UVI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xPK6/BPS; arc=none smtp.client-ip=209.85.161.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1720109064; c=relaxed/simple;
+	bh=1+toRJY35/129MSR44qFWaryqVoiascuVBFB3NmaZ/M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Tvy2tcntNmsqvvyfx7GRr4698K+UJKCPlS582UAIpLc0LbyuwfhuvStqlafx/vfeO2vBDPvFSJpXbYjJKO0E8g7YPCjOsPQRamI2/vrn/+eLnpWPL2KDaxbDaOIOwKwvCJwFuYZm/Oj01MidtxcDaio519FI6guNC5V/3e7Swkk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch; spf=pass smtp.mailfrom=lunn.ch; dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b=uctUXtst; arc=none smtp.client-ip=156.67.10.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xPK6/BPS"
-Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-5b97a9a9b4bso276196eaf.0
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jul 2024 06:26:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1720099576; x=1720704376; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=4+4WShCgGhWUJoyoAZy3V3wltgHAWP7TeUYDDY3MbU4=;
-        b=xPK6/BPS0Gt+NL3I33NwVpsC12xWntG+8aBgIExevVtHmPx8baHlVuBtibv8Xxz5eB
-         vi0CwTN72A17R65ejDBBM68aaoVHOdwfJZ0jQfkr+5U3EAYb7Rb4wE/RnIVwrzizfhiK
-         5gIEtK3170gsKRIeArqf2DJKaGW0tee2PrNHrsRd+gKnrKtUfSaIgpF2hPPalq7y/2Q/
-         QWYcuVbwaN1pQCxzwMZWvGLhcqVFHP7SWflD0HQ13e9NC3aSYgYw2TfzA/avxXES06u+
-         Gtzn8R+c6DQepUFrDT2XPHidE8EVPaBY8rn0so7N6ix9+RAYK9016agjrTdgF4C2UScb
-         Acuw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720099576; x=1720704376;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=4+4WShCgGhWUJoyoAZy3V3wltgHAWP7TeUYDDY3MbU4=;
-        b=Q1Md5eUbVo8xYoIilpHF+Y/CajZjlWQp+TN7RD6iOvan7F9E6Dy+YoKOOQz1s6ECtY
-         ZEQUQwqcEiYbPjd7unpp9HgC1Lw8F1cm/SjOMBR14R56XLbesPycfO8F8Hvpp+w/42TC
-         OdXEwnVVSkqaV8bflFf8cE425odBiPanJTmhYZ2blGF2ixac/4q6WZlfHbNQwbafXVYP
-         IEe99GcfSO9HSgX7F32n+krGn6knJ1LNE/p0NWQcyVYerZ1od3ktpdv81K+98BJ8y+Ud
-         S2XQSeT8yHn/+UfTZfPPCmWK+NVh0GbXP/7BPSU0Vi5QAegr3yIOecolhrlyD93YA7UA
-         kavA==
-X-Gm-Message-State: AOJu0Yx6/sgBcRj433C3441B1R68djTOYea0aQW0KETz/UqvvrSyPy7b
-	lf913z5b7gYsvd1YQV85OnXmrdlnlgAzJcnafNzIflrYCaf3UttKyeXWgf2yYGvRHAQ5Cbqd7e3
-	8lP8Gylvxc/dOlCFC2szHbGFMA4QUS0mFNd62ZedJ8iUkL35Nv7A=
-X-Google-Smtp-Source: AGHT+IHNOzppQBMIFNBfAhjmhqm5j30FIyzr+PKbgP+CO8B6eDJXi+MpFuJ9ilhBNnPP/bTnrmBOj8I4qCtkXH7n5Vs=
-X-Received: by 2002:a4a:54c4:0:b0:5ba:f20c:3629 with SMTP id
- 006d021491bc7-5c646f35f57mr1595882eaf.4.1720099576204; Thu, 04 Jul 2024
- 06:26:16 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="uctUXtst"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
+	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
+	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
+	bh=NUvYT0Apw8SqjInlbdvt2ov0pZsd3AGE3tETszdRDzg=; b=uctUXtstqOdYStp1RAdEevee8A
+	og2m1rbeRGyNCyWKUOMtyM5AqIVxQFyxOPDwVFm9FnkbszNQ36vazTBa9yXYKCDMQBhsJURhhsCMA
+	j1mTGX2YuuLQQvVFM9F5PJp4GaLgK5ASkZXssZl/rnBc5yDOus60fNPX7zh7xaHLB3Ec=;
+Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
+	(envelope-from <andrew@lunn.ch>)
+	id 1sPOvS-001pKc-Qp; Thu, 04 Jul 2024 18:03:14 +0200
+Date: Thu, 4 Jul 2024 18:03:14 +0200
+From: Andrew Lunn <andrew@lunn.ch>
+To: Tengfei Fan <quic_tengfan@quicinc.com>
+Cc: Andrew Halaney <ahalaney@redhat.com>, andersson@kernel.org,
+	konrad.dybcio@linaro.org, robh@kernel.org, krzk+dt@kernel.org,
+	conor+dt@kernel.org, djakov@kernel.org, mturquette@baylibre.com,
+	sboyd@kernel.org, jassisinghbrar@gmail.com,
+	herbert@gondor.apana.org.au, davem@davemloft.net,
+	manivannan.sadhasivam@linaro.org, will@kernel.org, joro@8bytes.org,
+	conor@kernel.org, tglx@linutronix.de, amitk@kernel.org,
+	thara.gopinath@gmail.com, linus.walleij@linaro.org,
+	wim@linux-watchdog.org, linux@roeck-us.net, rafael@kernel.org,
+	viresh.kumar@linaro.org, vkoul@kernel.org, edumazet@google.com,
+	kuba@kernel.org, pabeni@redhat.com, mcoquelin.stm32@gmail.com,
+	robimarko@gmail.com, bartosz.golaszewski@linaro.org,
+	kishon@kernel.org, quic_wcheng@quicinc.com, alim.akhtar@samsung.com,
+	avri.altman@wdc.com, bvanassche@acm.org, agross@kernel.org,
+	gregkh@linuxfoundation.org, quic_tdas@quicinc.com,
+	robin.murphy@arm.com, daniel.lezcano@linaro.org,
+	rui.zhang@intel.com, lukasz.luba@arm.com, quic_rjendra@quicinc.com,
+	ulf.hansson@linaro.org, quic_sibis@quicinc.com,
+	otto.pflueger@abscue.de, luca@z3ntu.xyz, neil.armstrong@linaro.org,
+	abel.vesa@linaro.org, bhupesh.sharma@linaro.org,
+	alexandre.torgue@foss.st.com, peppe.cavallaro@st.com,
+	joabreu@synopsys.com, netdev@vger.kernel.org, lpieralisi@kernel.org,
+	kw@linux.com, bhelgaas@google.com, krzysztof.kozlowski@linaro.org,
+	u.kleine-koenig@pengutronix.de, dmitry.baryshkov@linaro.org,
+	quic_cang@quicinc.com, danila@jiaxyga.com,
+	quic_nitirawa@quicinc.com, mantas@8devices.com, athierry@redhat.com,
+	quic_kbajaj@quicinc.com, quic_bjorande@quicinc.com,
+	quic_msarkar@quicinc.com, quic_devipriy@quicinc.com,
+	quic_tsoni@quicinc.com, quic_rgottimu@quicinc.com,
+	quic_shashim@quicinc.com, quic_kaushalk@quicinc.com,
+	quic_tingweiz@quicinc.com, quic_aiquny@quicinc.com,
+	srinivas.kandagatla@linaro.org, linux-arm-msm@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pm@vger.kernel.org, linux-clk@vger.kernel.org,
+	linux-phy@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-gpio@vger.kernel.org, linux-watchdog@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
+	kernel@quicinc.com
+Subject: Re: [PATCH 29/47] dt-bindings: net: qcom,ethqos: add description for
+ qcs9100
+Message-ID: <add1bdda-2321-4c47-91ef-299f99385bc8@lunn.ch>
+References: <20240703025850.2172008-1-quic_tengfan@quicinc.com>
+ <20240703025850.2172008-30-quic_tengfan@quicinc.com>
+ <u5ekupjqvgoehkl76pv7ljyqqzbnnyh6ci2dilfxfkcdvdy3dp@ehdujhkul7ow>
+ <f4162b7f-d957-4dd6-90a0-f65c1cbc213a@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240702072510.248272-1-ebiggers@kernel.org> <20240702072510.248272-7-ebiggers@kernel.org>
-In-Reply-To: <20240702072510.248272-7-ebiggers@kernel.org>
-From: Peter Griffin <peter.griffin@linaro.org>
-Date: Thu, 4 Jul 2024 14:26:05 +0100
-Message-ID: <CADrjBPoWVq-eu4Wa6_hrkk067tnZGC82UCJDyjSRGoG254w6vg@mail.gmail.com>
-Subject: Re: [PATCH v2 6/6] scsi: ufs: exynos: Add support for Flash Memory
- Protector (FMP)
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org, 
-	linux-fscrypt@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>, 
-	William McVicker <willmcvicker@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f4162b7f-d957-4dd6-90a0-f65c1cbc213a@quicinc.com>
 
-Hi Eric,
+On Thu, Jul 04, 2024 at 09:13:59AM +0800, Tengfei Fan wrote:
+> 
+> 
+> On 7/3/2024 11:09 PM, Andrew Halaney wrote:
+> > On Wed, Jul 03, 2024 at 10:58:32AM GMT, Tengfei Fan wrote:
+> > > Add the compatible for the MAC controller on qcs9100 platforms. This MAC
+> > > works with a single interrupt so add minItems to the interrupts property.
+> > > The fourth clock's name is different here so change it. Enable relevant
+> > > PHY properties. Add the relevant compatibles to the binding document for
+> > > snps,dwmac as well.
+> > 
+> > This description doesn't match what was done in this patch, its what
+> > Bart did when he made changes to add the sa8775 changes. Please consider
+> > using a blurb indicating that this is the same SoC as sa8775p, just with
+> > different firmware strategies or something along those lines?
+> 
+> I will update this commit message as you suggested.
 
-Thanks for your contribution, it's great to see new features like this
-being posted upstream for gs101 :)
+Hi Andrew, Tengfei
 
-On Tue, 2 Jul 2024 at 08:28, Eric Biggers <ebiggers@kernel.org> wrote:
->
-> From: Eric Biggers <ebiggers@google.com>
->
-> Add support for Flash Memory Protector (FMP), which is the inline
-> encryption hardware on Exynos and Exynos-based SoCs.
->
-> Specifically, add support for the "traditional FMP mode" that works on
-> many Exynos-based SoCs including gs101.  This is the mode that uses
-> "software keys" and is compatible with the upstream kernel's existing
-> inline encryption framework in the block and filesystem layers.  I plan
-> to add support for the wrapped key support on gs101 at a later time.
->
-> Tested on gs101 (specifically Pixel 6) by running the 'encrypt' group of
-> xfstests on a filesystem mounted with the 'inlinecrypt' mount option.
->
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
-> ---
->  drivers/ufs/host/ufs-exynos.c | 228 +++++++++++++++++++++++++++++++++-
->  1 file changed, 222 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-> index 88d125d1ee3c..dd545ef7c361 100644
-> --- a/drivers/ufs/host/ufs-exynos.c
-> +++ b/drivers/ufs/host/ufs-exynos.c
-> @@ -6,10 +6,13 @@
->   * Author: Seungwon Jeon  <essuuj@gmail.com>
->   * Author: Alim Akhtar <alim.akhtar@samsung.com>
->   *
->   */
->
-> +#include <asm/unaligned.h>
-> +#include <crypto/aes.h>
-> +#include <linux/arm-smccc.h>
->  #include <linux/clk.h>
->  #include <linux/delay.h>
->  #include <linux/module.h>
->  #include <linux/of.h>
->  #include <linux/of_address.h>
-> @@ -23,16 +26,18 @@
->  #include <ufs/ufshci.h>
->  #include <ufs/unipro.h>
->
->  #include "ufs-exynos.h"
->
-> +#define DATA_UNIT_SIZE         4096
-> +#define LOG2_DATA_UNIT_SIZE    12
-> +
->  /*
->   * Exynos's Vendor specific registers for UFSHCI
->   */
->  #define HCI_TXPRDT_ENTRY_SIZE  0x00
->  #define PRDT_PREFECT_EN                BIT(31)
-> -#define PRDT_SET_SIZE(x)       ((x) & 0x1F)
->  #define HCI_RXPRDT_ENTRY_SIZE  0x04
->  #define HCI_1US_TO_CNT_VAL     0x0C
->  #define CNT_VAL_1US_MASK       0x3FF
->  #define HCI_UTRL_NEXUS_TYPE    0x40
->  #define HCI_UTMRL_NEXUS_TYPE   0x44
-> @@ -1041,12 +1046,12 @@ static int exynos_ufs_post_link(struct ufs_hba *hba)
->
->         exynos_ufs_establish_connt(ufs);
->         exynos_ufs_fit_aggr_timeout(ufs);
->
->         hci_writel(ufs, 0xa, HCI_DATA_REORDER);
-> -       hci_writel(ufs, PRDT_SET_SIZE(12), HCI_TXPRDT_ENTRY_SIZE);
-> -       hci_writel(ufs, PRDT_SET_SIZE(12), HCI_RXPRDT_ENTRY_SIZE);
-> +       hci_writel(ufs, LOG2_DATA_UNIT_SIZE, HCI_TXPRDT_ENTRY_SIZE);
-> +       hci_writel(ufs, LOG2_DATA_UNIT_SIZE, HCI_RXPRDT_ENTRY_SIZE);
->         hci_writel(ufs, (1 << hba->nutrs) - 1, HCI_UTRL_NEXUS_TYPE);
->         hci_writel(ufs, (1 << hba->nutmrs) - 1, HCI_UTMRL_NEXUS_TYPE);
->         hci_writel(ufs, 0xf, HCI_AXIDMA_RWDATA_BURST_LEN);
->
->         if (ufs->opts & EXYNOS_UFS_OPT_SKIP_CONNECTION_ESTAB)
-> @@ -1149,10 +1154,218 @@ static inline void exynos_ufs_priv_init(struct ufs_hba *hba,
->                 ufs->rx_sel_idx = 0;
->         hba->priv = (void *)ufs;
->         hba->quirks = ufs->drv_data->quirks;
->  }
->
-> +#ifdef CONFIG_SCSI_UFS_CRYPTO
-> +
-> +/*
-> + * Support for Flash Memory Protector (FMP), which is the inline encryption
-> + * hardware on Exynos and Exynos-based SoCs.  The interface to this hardware is
-> + * not compatible with the standard UFS crypto.  It requires that encryption be
-> + * configured in the PRDT using a nonstandard extension.
-> + */
-> +
-> +enum fmp_crypto_algo_mode {
-> +       FMP_BYPASS_MODE = 0,
-> +       FMP_ALGO_MODE_AES_CBC = 1,
-> +       FMP_ALGO_MODE_AES_XTS = 2,
-> +};
-> +enum fmp_crypto_key_length {
-> +       FMP_KEYLEN_256BIT = 1,
-> +};
-> +
-> +/**
-> + * struct fmp_sg_entry - nonstandard format of PRDT entries when FMP is enabled
-> + *
-> + * @base: The standard PRDT entry, but with nonstandard bitfields in the high
-> + *     bits of the 'size' field, i.e. the last 32-bit word.  When these
-> + *     nonstandard bitfields are zero, the data segment won't be encrypted or
-> + *     decrypted.  Otherwise they specify the algorithm and key length with
-> + *     which the data segment will be encrypted or decrypted.
-> + * @file_iv: The initialization vector (IV) with all bytes reversed
-> + * @file_enckey: The first half of the AES-XTS key with all bytes reserved
-> + * @file_twkey: The second half of the AES-XTS key with all bytes reserved
-> + * @disk_iv: Unused
-> + * @reserved: Unused
-> + */
-> +struct fmp_sg_entry {
-> +       struct ufshcd_sg_entry base;
-> +       __be64 file_iv[2];
-> +       __be64 file_enckey[4];
-> +       __be64 file_twkey[4];
-> +       __be64 disk_iv[2];
-> +       __be64 reserved[2];
-> +};
-> +
-> +#define SMC_CMD_FMP_SECURITY   \
-> +       ARM_SMCCC_CALL_VAL(ARM_SMCCC_FAST_CALL, ARM_SMCCC_SMC_64, \
-> +                          ARM_SMCCC_OWNER_SIP, 0x1810)
-> +#define SMC_CMD_SMU            \
-> +       ARM_SMCCC_CALL_VAL(ARM_SMCCC_FAST_CALL, ARM_SMCCC_SMC_64, \
-> +                          ARM_SMCCC_OWNER_SIP, 0x1850)
-> +#define SMC_CMD_FMP_SMU_RESUME \
-> +       ARM_SMCCC_CALL_VAL(ARM_SMCCC_FAST_CALL, ARM_SMCCC_SMC_64, \
-> +                          ARM_SMCCC_OWNER_SIP, 0x1860)
-> +#define SMU_EMBEDDED                   0
-> +#define SMU_INIT                       0
-> +#define CFG_DESCTYPE_3                 3
-> +
-> +static void exynos_ufs_fmp_init(struct ufs_hba *hba)
-> +{
-> +       struct blk_crypto_profile *profile = &hba->crypto_profile;
-> +       struct arm_smccc_res res;
-> +       int err;
-> +
-> +       /*
-> +        * Check for the standard crypto support bit, since it's available even
-> +        * though the rest of the interface to FMP is nonstandard.
-> +        *
-> +        * This check should have the effect of preventing the driver from
-> +        * trying to use FMP on old Exynos SoCs that don't have FMP.
-> +        */
-> +       if (!(ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES) &
-> +             MASK_CRYPTO_SUPPORT))
-> +               return;
-> +
+Please trim emails when replying to just the needed context.
 
-Do you know how these FMP registers (FMPSECURITY0 etc) relate to the
-UFSPR* registers set in the existing exynos_ufs_config_smu()? The
-UFS_LINK spec talks about UFSPR(FMP), so I had assumed the FMP support
-would be writing these same registers but via SMC call.
-
-I think by the looks of things
-
-#define UFSPRSECURITY 0x010
-#define UFSPSBEGIN0 0x200
-#define UFSPSEND0 0x204
-#define UFSPSLUN0 0x208
-#define UFSPSCTRL0 0x20C
-
-relates to the following registers in gs101 spec
-
-FMPSECURITY0 0x0010
-FMPSBEGIN0 0x2000
-FMPSEND0 0x2004
-FMPSLUN0 0x2008
-FMPSCTRL0 0x200C
-
-And the SMC calls your calling set those same registers as
-exynos_ufs_config_smu() function. Although it is hard to be certain as
-I don't have access to the firmware code. Certainly the comment below
-about FMPSECURITY0 implies that :)
-
-With that in mind I think exynos_ufs_fmp_init() function in this patch
-needs to be better integrated with the EXYNOS_UFS_OPT_UFSPR_SECURE
-flag and the existing exynos_ufs_config_smu() function that is
-currently just disabling decryption on platforms where it can access
-the UFSPR(FMP) regs via mmio.
-
-Thanks,
-
-Peter
-
-p.s. Also whilst reviewing this I noticed a bug where I don't check
-EXYNOS_UFS_OPT_UFSPR_SECURE flag in exynos_ufs_resume() before calling
-exynos_ufs_config_smu(). I'll send a patch to fix that.
-
-[..]
+Thanks
+	Andrew
