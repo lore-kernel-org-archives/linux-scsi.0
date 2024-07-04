@@ -1,103 +1,118 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DADD748D;
-	Thu,  4 Jul 2024 01:42:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59FF71C2A5
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Jul 2024 03:01:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720057333; cv=none; b=kBlX2V9aQ4UZ4ifWtgMHXMqgZQwZmVlr1qrVv+AkKsJMyKLS/5/e4xmcnVwCJlXkK1DclVddLasZzPL/Z0lYn1PlnNBF278ymBC0L+PoJONrc8WCfpXOUUw+ElL5tYM/BeG2K2Ja8NWptOwP2HIha+I7z9DnEgMtGtVX0Ii00+w=
+	t=1720062116; cv=none; b=t15/gy0t0UGZnwVbhGNPp/CfijZNNATILz5vwpkiYb9LS9ypB4sZUIm+tkrqlhrpQHQZri+sBNn5dGufItEto1GgFlC41A2SmaOrjzcV7mi2O50HD4yOBq00C4aItdwNWEYtu5t+4L5m1lMgFUKgIHEaY3bxvhzeD2OsiMUeoAw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720057333; c=relaxed/simple;
-	bh=b426e6oGVVh+vaTeePmL2JbGmIogG4PydvIJ3ZMsQII=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tFM+VL/3xQjzdrSuvvSMpNn5hF7mR6KUKQ0JyIPwtidS/Dp9kTBx57dO7ZjhU0zbARIY++ODetNYL8lFpIPw4CBAK2bMp59R6XnX+EkMVaSIUxon5jz5w4R0eJqoeUEZGLcWrm5FVDIrUZ8Q29514hncPUQP8obAVchIJu6Cgp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 9d3c280039a611ef93f4611109254879-20240704
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, DN_TRUSTED, SA_TRUSTED
-	SA_EXISTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS
-	CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_T1, AMN_GOOD, AMN_C_TI, AMN_C_BU
-	ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.38,REQID:dd17342a-16fc-44ae-a306-6f8cdb8c6657,IP:20,
-	URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:-11,FILE:0,BULK:0,RULE:Release_Ham,ACT
-	ION:release,TS:4
-X-CID-INFO: VERSION:1.1.38,REQID:dd17342a-16fc-44ae-a306-6f8cdb8c6657,IP:20,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:-11,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:4
-X-CID-META: VersionHash:82c5f88,CLOUDID:4a31ea16592e290cf674e5909c9da95b,BulkI
-	D:2407040858227AE2U9YK,BulkQuantity:1,Recheck:0,SF:38|25|17|19|44|66|102,T
-	C:nil,Content:0,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:40,QS:nil,BEC:nil,
-	COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_FSI
-X-UUID: 9d3c280039a611ef93f4611109254879-20240704
-X-User: mengfanhui@kylinos.cn
-Received: from localhost.localdomain [(223.70.160.255)] by mailgw.kylinos.cn
-	(envelope-from <mengfanhui@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 776967633; Thu, 04 Jul 2024 09:42:03 +0800
-From: Fanhui Meng <mengfanhui@kylinos.cn>
-To: kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com,
-	shivasharan.srikanteshwara@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Geliang Tang <geliang@kernel.org>,
-	Jackie Liu <liuyun01@kylinos.cn>
-Subject: [scsi-next v2 2/2] scsi: megaraid_sas: make dcmd_timeout_ocr_possible static
-Date: Thu,  4 Jul 2024 09:40:49 +0800
-Message-Id: <87bee5805ca11e64045e05210f8afdcf895a89c8.1720056514.git.mengfanhui@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <cover.1720056514.git.mengfanhui@kylinos.cn>
-References: <cover.1720056514.git.mengfanhui@kylinos.cn>
+	s=arc-20240116; t=1720062116; c=relaxed/simple;
+	bh=aiJrCreF6nhZTc0vL6R5K+tzKKSERjB67Jy9IJ7xSVQ=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=l6++exLlUxrSt1TExV9c/ZarkSPhYZ72iyu2b6LpA7G+WPt4Rg2VK7kecswWnl1mvfTMOiZ+tn08CtGPbmfRKn18O3zAx7xgcH0CzBTpCsU9sztY+sQFBfhCt5n5pHrBwHzWouCtkcJur8M4i31HUk090yaxka8efjLpJUdhV/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com; spf=pass smtp.mailfrom=smartx.com; dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b=QG7jwYcA; arc=none smtp.client-ip=209.85.215.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=smartx.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b="QG7jwYcA"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-6e7e23b42c3so82724a12.1
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Jul 2024 20:01:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=smartx-com.20230601.gappssmtp.com; s=20230601; t=1720062113; x=1720666913; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aiJrCreF6nhZTc0vL6R5K+tzKKSERjB67Jy9IJ7xSVQ=;
+        b=QG7jwYcAdUfcQFG8mwIjkNK626wrMEKB2mbcwT6EHR76ywJgBgYD65iMbopVTILN86
+         hDZFu14l8qfFXyEqdc1HUgY5T6YQCpLZ5x57khW9TnghcY0IIBgKt2ixBpEofPqV/mQx
+         fU+N4lisiN7lmoR2wQjIxdAg1eiumLVbP57p/QlVgVnzU1XUhhLM0kLBN53UAWhvuJt2
+         735rVSdGLgl0Vs127PanoFLYvnYQJiwjTgU36zmZsbrmFfbBFfj9O7QKjrTJrjrZylgO
+         7eLwe24X4lfn3Cl/I/rJAFeeLz2YoKIf/sTGMhCfqYeY7YyUha/wD1gMLzA4aKMR97Lf
+         hEMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720062113; x=1720666913;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=aiJrCreF6nhZTc0vL6R5K+tzKKSERjB67Jy9IJ7xSVQ=;
+        b=Ee5DDViqurYCXcqPtFs/MdnCP7T/ct2vPqMrTWQ10wTedRyeFGtO5UnYNgVPjEioy4
+         0pxGDyJJ5ZAbcKDpvMR+GBmNxg4NHsKldcYHbr1iiA21Dq9NxmVIFkAtu+1axDqrVWHN
+         lYJlgTBX9AqGqlKSmdSOqu237WkI4er7A86zCNy7KarjbPGeZ7xmPJI/gYvLo7mr9eN4
+         WLi3JIFbaYlX7C0/Vw3Ej0xbyJ99A/K2gUFMFeQT02daq6+G+diiP1l0FViop82i0Kte
+         7zsjZRejYxV4PPyn5HNOn/+BFbuLcRqZ8S+hfcHI5ou+YQHSFLf6FPigyz7Vr4LXrD+s
+         dR0A==
+X-Forwarded-Encrypted: i=1; AJvYcCV/eotYkyNjb2TiivfBHFznmvyj5e2j18B4vv/CNAQ7EpHmF9c4BCBspiO5gMfrXkOYXACQ85tBbrRhv4OtPty9CMcuNfLRrGhGgw==
+X-Gm-Message-State: AOJu0YyAfJlMkEvD3/Ob+LrHuqOxxYC7lb5Jv4y8hjlXB7T66QD2xvPy
+	r4xSR8OzA/o1taRw31lY3Rh7RKIxkkvdIOvnPArVdgbtZTm8OJfG/CY8k+kqaAg=
+X-Google-Smtp-Source: AGHT+IGppthVj50QduluUwT2ETsJWZWd3n0XLzpYAWEiDTwHoT9p8vH4s5oPIB4f2k/6kzyeQIv3cw==
+X-Received: by 2002:a05:6a20:1594:b0:1bd:2aa5:f177 with SMTP id adf61e73a8af0-1c0cc72bd10mr285893637.11.1720062113323;
+        Wed, 03 Jul 2024 20:01:53 -0700 (PDT)
+Received: from smtpclient.apple (vps-bd302c4a.vps.ovh.ca. [15.235.142.94])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c99a97c196sm295825a91.26.2024.07.03.20.01.50
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 03 Jul 2024 20:01:53 -0700 (PDT)
+Content-Type: text/plain;
+	charset=utf-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.500.231\))
+Subject: Re: [PATCH 3/3] scsi: sd: remove some redundant initialization code
+From: Haoqian He <haoqian.he@smartx.com>
+In-Reply-To: <cde0a2da-fae1-4f9f-b67f-f3906fc5cce6@kernel.org>
+Date: Thu, 4 Jul 2024 11:01:38 +0800
+Cc: Christoph Hellwig <hch@infradead.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Li Feng <fengli@smartx.com>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <344C3711-EE11-41F8-975A-EEA312CCD833@smartx.com>
+References: <20240702030118.2198570-1-haoqian.he@smartx.com>
+ <20240702030118.2198570-4-haoqian.he@smartx.com>
+ <cde0a2da-fae1-4f9f-b67f-f3906fc5cce6@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+X-Mailer: Apple Mail (2.3731.500.231)
 
-dcmd_timeout_ocr_possible is only used in megaraid_sas_base.c, this
-patch makes it static. Furthermore, drop the useless "inline" label
-too.
 
-Suggested-by: Geliang Tang <geliang@kernel.org>
-Co-developed-by: Jackie Liu <liuyun01@kylinos.cn>
-Signed-off-by: Jackie Liu <liuyun01@kylinos.cn>
-Signed-off-by: Fanhui Meng <mengfanhui@kylinos.cn>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> 2024=E5=B9=B47=E6=9C=882=E6=97=A5 11:33=EF=BC=8CDamien Le Moal =
+<dlemoal@kernel.org> =E5=86=99=E9=81=93=EF=BC=9A
+>=20
+> On 7/2/24 12:01, Haoqian He wrote:
+>> Since the memory allocated by kzalloc for sdkp has been
+>> initialized to 0, the code that initializes some sdkp
+>> fields to 0 is no longer needed.
+>>=20
+>> Signed-off-by: Haoqian He <haoqian.he@smartx.com>
+>> Signed-off-by: Li Feng <fengli@smartx.com>
+>=20
+> Looks OK to me.
+>=20
+> Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+>=20
+> --=20
+> Damien Le Moal
+> Western Digital Research
+>=20
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index e6a9cef027c0..c9f6e691128e 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4516,8 +4516,9 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
-  * Return 0 for only Fusion adapter, if driver load/unload is not in progress
-  * or FW is not under OCR.
-  */
--inline int
--dcmd_timeout_ocr_possible(struct megasas_instance *instance) {
-+static int
-+dcmd_timeout_ocr_possible(struct megasas_instance *instance)
-+{
- 
- 	if (instance->adapter_type == MFI_SERIES)
- 		return KILL_ADAPTER;
--- 
-2.25.1
+Hi Martin,
 
+According to the SBC-3 SPEC:
+"The device server in a logical unit that supports logical block =
+provisioning
+management shall set the LBPME bit to one in the parameter data returned =
+for
+a READ CAPACITY (16) command."
+
+So we can use lbpme bit instead of lbpvpd to indicate if the device is =
+thin
+provisioned, which was implemented in patch 2 ("scsi: sd: remove =
+scsi_disk
+field lbpvpd").
+
+Thanks,
+Haoqian=
