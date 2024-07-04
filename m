@@ -1,87 +1,130 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8094518637;
-	Thu,  4 Jul 2024 10:02:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D6EB1ABCC0;
+	Thu,  4 Jul 2024 11:11:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720087363; cv=none; b=m5kiGRMVG4Dob1XoL5oQUBSxMHYRQ0+s9IFqSBYoyYqOHKETwFUKoUpjb4Ukn/Hfi+i37A+Yi/HnnlT80aEzaQKxaGXZkRyQ3Z8fysbejqZn4Na3wLthvZs9d1iZ5aec/yvbg5rZ2lvQyl/tLnD8gNH86ksfEm/umM18U9yawB4=
+	t=1720091482; cv=none; b=eylKD1niaP1W3FMc0uwiCrQneWoM+/d5rG2JM51pyIzNF0gnU3cM7adUeH2X7Q+E47+ofDkfJwr7sQLmuNh8PVBc1GSdHSKsmJ9IBtnndrY1fWZU9gZWwflSc0vAESmvNsZg/7cC2cWEOF0PFFbPSLW4KPoii6SSSEuNfIy7tIQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720087363; c=relaxed/simple;
-	bh=zp+09GYfSGBnAdWrCJ8xdF8ztB0EzczqTKtEHYTDfJg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=knei8J6uXHdojF8bNQZnImmH7pJWnflayNSENFKxKnA6eMhakjVUMGY286ZimOVCg3bZaLigwmNAhlp5KJ0cdNLQKSWtnoVnFKaygektbgV628uZvrzr4gs6zydeRuW0xeNYTs5dr/myqrNLHvK4ruIG0a+iJGRSZPKEkuaPTTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f73nBPE4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1720091482; c=relaxed/simple;
+	bh=TwoVc/A5cvcKyYqBk85IeSoXm8WueZBsy4xxLnttTxM=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=tmwlqUlopYjHTOcnxa3V9+3j8EqLLbnYgx82qagPMZLyfpFxuBeT4b/djFcZQayRN9XbAO3OIG9al09zvhY24BWYjfvlsbnk/BATtaNP8UBqgVk4wONiv1uu7h3Ylgvui80xSvJ7coyAtAs0Y1bIDclyRnYsnEG/h0YvJ6WcyxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=DVwMuNkq; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f73nBPE4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40430C3277B;
-	Thu,  4 Jul 2024 10:02:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720087363;
-	bh=zp+09GYfSGBnAdWrCJ8xdF8ztB0EzczqTKtEHYTDfJg=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=f73nBPE46ZS874nUtNgj2BE24XMOk9BUODo/U1JAX/vKd7r4/xso4gBhmNswZcejq
-	 jasTNJgsgmf4dJkrASKI+Gpd7WQpa6er/GnY/+qfi/da1gJqPV/nolf6hkR4PPywCP
-	 cxKu+dMQfYv/PQ9BNEVDJ6261X4+6Jo/Rae1Tan3ysey0AWOei0Ajdy9xaL8s0H8G+
-	 0qykS/bDiHQTaxN8cMQXoRnOFr2pGmiWSaqSiHcFyTn80tXVGO7x6xzPIo26/KXyo1
-	 rXvLltPHUAHa1i386V+4OPg2K4wCTWjQHIf9uyP0sQsWPxcMWcLqnbOS7WW3jsxDAK
-	 mI6u99Zq0kQrA==
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>, 
- John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Niklas Cassel <cassel@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-In-Reply-To: <20240703184418.723066-11-cassel@kernel.org>
-References: <20240703184418.723066-11-cassel@kernel.org>
-Subject: Re: [PATCH v4 0/9] ata,libsas: Assign the unique id used for
- printing earlier
-Message-Id: <172008736094.754155.9837088933275782567.b4-ty@kernel.org>
-Date: Thu, 04 Jul 2024 12:02:40 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DVwMuNkq"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-36786081ac8so349222f8f.0;
+        Thu, 04 Jul 2024 04:11:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1720091479; x=1720696279; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qwBmB9TZGFjcG5R2+2N2tz93DvezoEGxh6PsIk8IO/w=;
+        b=DVwMuNkqn+2XTBypJEguND4yU8ZLt/XCn2Rvvwjwn91IWH1oe1bp5nF7YelyIo6Aof
+         PGzrkUJnD/afC5RbxYs0jxQOCW15tG8pCg5zJ+ojuyIOTmkn3P8zdLKbWKqPYYnFNmtJ
+         3ZCTjLm1HcilZKiDwLpk2UPxvNY66g6DH5nYYf8GITmrmNiesvpDlUJVIkG8NEyVVom8
+         kAPftQeFsPA1tCPbALMUCe5WurN0VVxrJVxSSVOvTyPD65adG8ML73VRBjk0VlY6G8Ez
+         tX70faa2b6tdI/78pXvVP8ub7qRieBucgNTvNZ38S4R9NoLgoHTvD+O70rxLUJGHKE6z
+         hAlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720091479; x=1720696279;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=qwBmB9TZGFjcG5R2+2N2tz93DvezoEGxh6PsIk8IO/w=;
+        b=GOgGX4KiCmxV4F2434WjNsNGyyz3RKdNgB1Pf3Bv6uyGfgGOkM8Pb+yVWffU8IWLSi
+         8E2NSwHBV+1GDQ17f7ukqMI2a7nOJU35e9n6lEqV8eAGdTA3BJ6skutgZIrhmg8HIgKa
+         dQ5bMCO3oqQMaR3lZxHMcQUwbwP9qzYSow5H/jeiCqcBHwR7IGtxz+b5WNTz6WCqE6pK
+         KdxwkyPI3bPwTpAV201Q9UHx7lpf5FSeYavrQabkEOHnEaVZcE1LAWFrLhLR+UfiT8zj
+         SaektvU9KQa5J7yXuEt0SQO5TM0GAakpU9gFAbbMvc8wv49SdRLcQrmhz8KwNRelqBHT
+         67aA==
+X-Forwarded-Encrypted: i=1; AJvYcCUq+56FaN0zIJqcWsJmItbCW58aH2Jh97TYBkd5ZYdzi0qAkwg7X69KwUe/hcwmKhVtsPpob/ttD5MxA2+xKuGXBlsZdbcx3mDZbpV8ihWUaaMhYnI696CL+OUFoRdzMlyLc49PgQs/tVeneEiKYn2B/8oqHlpboQXgB2764v1/DdydYE1F2UvrY+ruLkYXcghX7QmHlbbBH9HSHCRN3ETZ4vY/t+hpK0VUF5GuRym/Vr54VzSwowORbKFpLKLIaYmX+nVm0EG9X5U4iTtRKESQHVHoAPXxn7ApXZaZVQr+Jvlj2lE6/axS2DZma1VlSO8BrF6U
+X-Gm-Message-State: AOJu0YwW4QvKglXPMHCvZZYtBkq0dlKbQXsnkYd9AavBo4Er98F+EmXF
+	2rXxBQI73GGXs85q0pSbBLqf9Wvyzdm87kXqQ9A/4bMWtdskHK7p
+X-Google-Smtp-Source: AGHT+IFEzvL2jC2faLe/uaMvaq/UCJ26KrH1XFm9Ol6h8w0Rebt6hjx4X+gdY7pIVUfbtqQYexMuPw==
+X-Received: by 2002:a5d:5712:0:b0:367:94e7:958a with SMTP id ffacd0b85a97d-3679dd17ec1mr1153338f8f.6.1720091479417;
+        Thu, 04 Jul 2024 04:11:19 -0700 (PDT)
+Received: from [10.14.0.2] ([139.28.176.164])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-36787db4d12sm6821051f8f.110.2024.07.04.04.11.17
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 04 Jul 2024 04:11:18 -0700 (PDT)
+Content-Type: text/plain;
+	charset=us-ascii
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.13.0
+Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.120.23.2.7\))
+Subject: Re: [PATCH 14/26] block: move the nonrot flag to queue_limits
+From: Simon Fernandez <fernandez.simon@gmail.com>
+In-Reply-To: <ZnmoANp0TgpxWuF-@kbusch-mbp.dhcp.thefacebook.com>
+Date: Thu, 4 Jul 2024 12:11:16 +0100
+Cc: Christoph Hellwig <hch@lst.de>,
+ Jens Axboe <axboe@kernel.dk>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ Richard Weinberger <richard@nod.at>,
+ Philipp Reisner <philipp.reisner@linbit.com>,
+ Lars Ellenberg <lars.ellenberg@linbit.com>,
+ =?utf-8?Q?Christoph_B=C3=B6hmwalder?= <christoph.boehmwalder@linbit.com>,
+ Josef Bacik <josef@toxicpanda.com>,
+ Ming Lei <ming.lei@redhat.com>,
+ "Michael S. Tsirkin" <mst@redhat.com>,
+ Jason Wang <jasowang@redhat.com>,
+ =?utf-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
+ Alasdair Kergon <agk@redhat.com>,
+ Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ Song Liu <song@kernel.org>,
+ Yu Kuai <yukuai3@huawei.com>,
+ Vineeth Vijayan <vneethv@linux.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-m68k@lists.linux-m68k.org,
+ linux-um@lists.infradead.org,
+ drbd-dev@lists.linbit.com,
+ nbd@other.debian.org,
+ linuxppc-dev@lists.ozlabs.org,
+ ceph-devel@vger.kernel.org,
+ virtualization@lists.linux.dev,
+ xen-devel@lists.xenproject.org,
+ linux-bcache@vger.kernel.org,
+ dm-devel@lists.linux.dev,
+ linux-raid@vger.kernel.org,
+ linux-mmc@vger.kernel.org,
+ linux-mtd@lists.infradead.org,
+ nvdimm@lists.linux.dev,
+ linux-nvme@lists.infradead.org,
+ linux-s390@vger.kernel.org,
+ linux-scsi@vger.kernel.org,
+ linux-block@vger.kernel.org,
+ Damien Le Moal <dlemoal@kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <78BDDF6A-1FC7-4DD7-AABF-E0B055772CBF@gmail.com>
+References: <20240617060532.127975-1-hch@lst.de>
+ <20240617060532.127975-15-hch@lst.de>
+ <ZnmoANp0TgpxWuF-@kbusch-mbp.dhcp.thefacebook.com>
+To: Keith Busch <kbusch@kernel.org>
+X-Mailer: Apple Mail (2.3608.120.23.2.7)
 
-On Wed, 03 Jul 2024 20:44:17 +0200, Niklas Cassel wrote:
-> This series moves the assignment of ap->print_id, which is used as a
-> unique id for each port, earlier, such that we can use the ata_port_*
-> print functions even before the ata_host has been registered.
-> 
-> While the patch series was orginally meant to simply assign a unique
-> id used for printing earlier (ap->print_id), it has since grown to
-> also include cleanups related to ata_port_alloc() (since ap->print_id
-> is now assigned in ata_port_alloc()).
-> 
-> [...]
+Hi folks, how can I unsubscribe from this group.?
+Thanks in advance.
+S
 
-Applied to libata/linux.git (for-6.11), thanks!
-
-[1/9] ata,scsi: Remove wrappers ata_sas_tport_{add,delete}()
-      https://git.kernel.org/libata/linux/c/c10bc561
-[2/9] ata: libata: Remove unused function declaration for ata_scsi_detect()
-      https://git.kernel.org/libata/linux/c/2199d6ff
-[3/9] ata: libata-core: Remove support for decreasing the number of ports
-      https://git.kernel.org/libata/linux/c/23262cce
-[4/9] ata: libata-sata: Remove superfluous assignment in ata_sas_port_alloc()
-      https://git.kernel.org/libata/linux/c/6933eb8e
-[5/9] ata: libata-core: Remove local_port_no struct member
-      https://git.kernel.org/libata/linux/c/1dd63a6b
-[6/9] ata: libata: Assign print_id at port allocation time
-      https://git.kernel.org/libata/linux/c/1c1fbb86
-[7/9] ata: libata-core: Reuse available ata_port print_ids
-      https://git.kernel.org/libata/linux/c/1228713c
-[8/9] ata,scsi: Remove wrapper ata_sas_port_alloc()
-      https://git.kernel.org/libata/linux/c/0d3603ac
-[9/9] ata: ahci: Add debug print for external port
-      https://git.kernel.org/libata/linux/c/f97106b1
-
-Kind regards,
-Niklas
+> On 24 Jun 2024, at 18:08, Keith Busch <kbusch@kernel.org> wrote:
+>=20
+> On Mon, Jun 17, 2024 at 08:04:41AM +0200, Christoph Hellwig wrote:
+>> -#define blk_queue_nonrot(q)	test_bit(QUEUE_FLAG_NONROT, =
+&(q)->queue_flags)
+>> +#define blk_queue_nonrot(q)	((q)->limits.features & =
+BLK_FEAT_ROTATIONAL)
+>=20
+> This is inverted. Should be:
+>=20
+> #define blk_queue_nonrot(q)	(!((q)->limits.features & =
+BLK_FEAT_ROTATIONAL))
+>=20
 
