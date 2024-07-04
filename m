@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55847747F;
-	Thu,  4 Jul 2024 05:28:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D48DF1A0710;
+	Thu,  4 Jul 2024 05:28:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720070907; cv=none; b=Wn2XrskZ4uwWUpNT6eR7uhls/2QVNWbV+1QJI2iC7ocH2dwITwChIwKn/gELUtrNY+KS2fPYLKqbeb2Q3wOAsPjzEFAHIYmlGBcHOVTWiUZZbpbk/59c+tWtH5WUacBgnqixKlLU4HMP26bJihfkvjdiWu2PMScQIdKKN/Hdg6s=
+	t=1720070909; cv=none; b=qRbMFIBFj5Y9AXWD5+Dq8bQGx6hZeDAX44+AS0guB+0Npr8STDGm0hl7Wna2+nAv6PrzdZWPbna6XZbsm6EWRbIqzdcn+SLyELWrgjUD31NuaSb8C/BhXkFApDYjm2Uw0ObszwQuGEHfTeYXru+18N9imhizghVkrT4KfGfBcu0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720070907; c=relaxed/simple;
-	bh=wvimUlM9DvCAcFk8vWNHnviL8oNBsaBEPS4cA8ggJ6U=;
+	s=arc-20240116; t=1720070909; c=relaxed/simple;
+	bh=JQnqPX9pFhd8YSuHIyec/ZAosOIjfu7eVyN6FMeyK5w=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LEj8WV2n4Zo99UWNzOY/m1KjTWopCb20xsL434O/UEb2Wfo2xUclwOX4qb3/5HRQAsbOOtDojgIF8oqrY1aFg5uLCDrHYdfrK6HdmCwGpaXs0ed1BbRVY0IlXPptfYw2RMNiTwsr5ELJvqExU44BjToLNo4MjXcab0Td0BBGEqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qR8GrG6O; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=lfKkewqkY/TsywwgpIRWeXdJ7+qA2U7SOcf4pQmbT4olpewkGcS/hlO52io7DoRnXLxa+x8kpR0lMkcbt8Y5No1bcHVEUPnqrHG+cWSsuYbUKXuuSHVIvYIiONlwq1aQktgOovk5iPH2b1LZgny8m6VE09Obub/laANQ2cUwKK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rNCYftQo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qR8GrG6O"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E00D1C32781;
-	Thu,  4 Jul 2024 05:28:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rNCYftQo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92652C4AF07;
+	Thu,  4 Jul 2024 05:28:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720070907;
-	bh=wvimUlM9DvCAcFk8vWNHnviL8oNBsaBEPS4cA8ggJ6U=;
+	s=k20201202; t=1720070909;
+	bh=JQnqPX9pFhd8YSuHIyec/ZAosOIjfu7eVyN6FMeyK5w=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=qR8GrG6OGxSHD3KgzX8ELcPo2Ua4lDDn8yKTVAZ0qxr0Y2evH1bOQjgeHOdRtFe2X
-	 bx8cc+ejtogcljVKA+4rG/vv2OCWZCg2aMyZBWgN3JRANP7ix6e9uuSx+pogIhwX8X
-	 tvSVR9VtDuU5ZG8QMYoRoCbZ1WWFwxO9R9BzL6Ddt/XzombwoMfdrmtdwg4vVqkTOH
-	 HDs6kUdF+bSldlntgDfQd62IwZl6781EdRa+FiSgK5Ut0j8hunBwDz7pcloU/PMW4K
-	 Ywy2Kj0VgmamA3uJlTm4k0XjSHgzz6xlbxCwKEoxuI+tdVdEc2EBLK6HCx8/t3Bk6A
-	 ZHL6dG4ObfIfw==
+	b=rNCYftQoI7KREGOoE27WNEb1tch4uJwMnEyXSo4xQmCycRA8qCLB7k/oDIpfJyYCx
+	 i8MOVJqzD1XR6x/ngnnTtOljx+/fJtxMBUplAKJqKQ3bx1nikTks/zuTbuU8GPKEpY
+	 blZgv2IaHNB/AmOr2HsyzlUHyjFCe2S/+KvIUhS9NfovcJ5Tl4JxAhWCWhhOh/RPqk
+	 ghRuRQYPEowvA2ziNxefvA4CJsWPswvwOmsacNshfp1iwYwYKXbWlj/bSpFm3TeC3i
+	 XsV97jbNwgJ0ZCKQ9mnlXYm1sV10H96v+OAbP8bkBVJGktZeVFT+x7Vnmalwv/ll3Y
+	 Gu5bPmG16IbyQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>,
 	linux-block@vger.kernel.org,
@@ -38,9 +38,9 @@ To: Jens Axboe <axboe@kernel.dk>,
 	"Michael S . Tsirkin" <mst@redhat.com>,
 	Jason Wang <jasowang@redhat.com>,
 	Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v2 3/5] dm: handle REQ_OP_ZONE_RESET_ALL
-Date: Thu,  4 Jul 2024 14:28:14 +0900
-Message-ID: <20240704052816.623865-4-dlemoal@kernel.org>
+Subject: [PATCH v2 4/5] block: Remove REQ_OP_ZONE_RESET_ALL emulation
+Date: Thu,  4 Jul 2024 14:28:15 +0900
+Message-ID: <20240704052816.623865-5-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20240704052816.623865-1-dlemoal@kernel.org>
 References: <20240704052816.623865-1-dlemoal@kernel.org>
@@ -52,343 +52,233 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This commit implements processing of the REQ_OP_ZONE_RESET_ALL operation
-for zoned mapped devices. Given that this operation always has a BIO
-sector of 0 and a 0 size, processing through the regular BIO
-__split_and_process_bio() function does not work because this function
-would always select the first target. Instead, handling of this
-operation is implemented using the function __send_zone_reset_all().
-
-Similarly to the __send_empty_flush() function, the new
-__send_zone_reset_all() function manually goes through all targets of a
-mapped device table doing the following:
-1) If the target can natively support REQ_OP_ZONE_RESET_ALL,
-   __send_duplicate_bios() is used to forward the reset all operation to
-   the target. This case is handled with the
-   __send_zone_reset_all_native() function.
-2) For other targets, the function __send_zone_reset_all_emulated() is
-   executed to emulate the execution of REQ_OP_ZONE_RESET_ALL using
-   regular REQ_OP_ZONE_RESET operations.
-
-Targets that can natively support REQ_OP_ZONE_RESET_ALL are identified
-using the new target field zone_reset_all_supported. This boolean is set
-to true in for targets that have reliable zone limits, that is, targets
-that map all sequential write required zones of their zoned device(s).
-Setting this field is handled in dm_set_zones_restrictions() and
-device_get_zone_resource_limits().
-
-For targets with unreliable zone limits, REQ_OP_ZONE_RESET_ALL must be
-emulated (case 2 above). This is implemented with
-__send_zone_reset_all_emulated() and is similar to the block layer
-function blkdev_zone_reset_all_emulated(): first a report zones is done
-for the zones of the target to identify zones that need reset, that is,
-any sequential write required zone that is not already empty. This is
-done using a bitmap and the function dm_zone_get_reset_bitmap() which
-sets to 1 the bit corresponding to a zone that needs reset. Next, this
-zone bitmap is inspected and a clone BIO modified to use the
-REQ_OP_ZONE_RESET operation issued for any zone with its bit set in the
-zone bitmap.
-
-This implementation is more efficient than what the block layer does
-with blkdev_zone_reset_all_emulated(), which is always used for DM zoned
-devices currently: as we can natively use REQ_OP_ZONE_RESET_ALL on
-targets mapping all sequential write required zones, resetting all zones
-of a zoned mapped device can be much faster compared to always emulating
-this operation using regular per-zone reset. In the worst case, this
-implementation is as-efficient as the block layer emulation. This
-reduction in the time it takes to reset all zones of a zoned mapped
-device depends directly on the mapped device targets mapping (reliable
-zone limits or not).
+Now that device mapper can handle resetting all zones of a mapped zoned
+device using REQ_OP_ZONE_RESET_ALL, all zoned block device drivers
+support this operation. With this, the request queue feature
+BLK_FEAT_ZONE_RESETALL is not necessary and the emulation code in
+blk-zone.c can be removed.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/dm-zone.c          |  50 ++++++++++++-
- drivers/md/dm.c               | 135 +++++++++++++++++++++++++++++++++-
- drivers/md/dm.h               |   3 +
- include/linux/device-mapper.h |   7 ++
- 4 files changed, 190 insertions(+), 5 deletions(-)
+ block/blk-core.c               |  5 +--
+ block/blk-zoned.c              | 76 ++--------------------------------
+ drivers/block/null_blk/zoned.c |  2 +-
+ drivers/block/ublk_drv.c       |  2 +-
+ drivers/block/virtio_blk.c     |  2 +-
+ drivers/nvme/host/zns.c        |  2 +-
+ drivers/scsi/sd_zbc.c          |  2 +-
+ include/linux/blkdev.h         |  5 ---
+ 8 files changed, 9 insertions(+), 87 deletions(-)
 
-diff --git a/drivers/md/dm-zone.c b/drivers/md/dm-zone.c
-index 4d37e53b50ee..c0d41c36e06e 100644
---- a/drivers/md/dm-zone.c
-+++ b/drivers/md/dm-zone.c
-@@ -292,10 +292,12 @@ static int device_get_zone_resource_limits(struct dm_target *ti,
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 71b7622c523a..02bceeb36f2c 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -830,11 +830,8 @@ void submit_bio_noacct(struct bio *bio)
+ 	case REQ_OP_ZONE_OPEN:
+ 	case REQ_OP_ZONE_CLOSE:
+ 	case REQ_OP_ZONE_FINISH:
+-		if (!bdev_is_zoned(bio->bi_bdev))
+-			goto not_supported;
+-		break;
+ 	case REQ_OP_ZONE_RESET_ALL:
+-		if (!bdev_is_zoned(bio->bi_bdev) || !blk_queue_zone_resetall(q))
++		if (!bdev_is_zoned(bio->bi_bdev))
+ 			goto not_supported;
+ 		break;
+ 	case REQ_OP_DRV_IN:
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index 07831fb67201..b104f5175783 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -157,70 +157,6 @@ static inline unsigned long *blk_alloc_zone_bitmap(int node,
+ 			    GFP_NOIO, node);
+ }
+ 
+-static int blk_zone_need_reset_cb(struct blk_zone *zone, unsigned int idx,
+-				  void *data)
+-{
+-	/*
+-	 * For an all-zones reset, ignore conventional, empty, read-only
+-	 * and offline zones.
+-	 */
+-	switch (zone->cond) {
+-	case BLK_ZONE_COND_NOT_WP:
+-	case BLK_ZONE_COND_EMPTY:
+-	case BLK_ZONE_COND_READONLY:
+-	case BLK_ZONE_COND_OFFLINE:
+-		return 0;
+-	default:
+-		set_bit(idx, (unsigned long *)data);
+-		return 0;
+-	}
+-}
+-
+-static int blkdev_zone_reset_all_emulated(struct block_device *bdev)
+-{
+-	struct gendisk *disk = bdev->bd_disk;
+-	sector_t capacity = bdev_nr_sectors(bdev);
+-	sector_t zone_sectors = bdev_zone_sectors(bdev);
+-	unsigned long *need_reset;
+-	struct bio *bio = NULL;
+-	sector_t sector = 0;
+-	int ret;
+-
+-	need_reset = blk_alloc_zone_bitmap(disk->queue->node, disk->nr_zones);
+-	if (!need_reset)
+-		return -ENOMEM;
+-
+-	ret = disk->fops->report_zones(disk, 0, disk->nr_zones,
+-				       blk_zone_need_reset_cb, need_reset);
+-	if (ret < 0)
+-		goto out_free_need_reset;
+-
+-	ret = 0;
+-	while (sector < capacity) {
+-		if (!test_bit(disk_zone_no(disk, sector), need_reset)) {
+-			sector += zone_sectors;
+-			continue;
+-		}
+-
+-		bio = blk_next_bio(bio, bdev, 0, REQ_OP_ZONE_RESET | REQ_SYNC,
+-				   GFP_KERNEL);
+-		bio->bi_iter.bi_sector = sector;
+-		sector += zone_sectors;
+-
+-		/* This may take a while, so be nice to others */
+-		cond_resched();
+-	}
+-
+-	if (bio) {
+-		ret = submit_bio_wait(bio);
+-		bio_put(bio);
+-	}
+-
+-out_free_need_reset:
+-	kfree(need_reset);
+-	return ret;
+-}
+-
+ static int blkdev_zone_reset_all(struct block_device *bdev)
+ {
+ 	struct bio bio;
+@@ -247,7 +183,6 @@ static int blkdev_zone_reset_all(struct block_device *bdev)
+ int blkdev_zone_mgmt(struct block_device *bdev, enum req_op op,
+ 		     sector_t sector, sector_t nr_sectors)
+ {
+-	struct request_queue *q = bdev_get_queue(bdev);
+ 	sector_t zone_sectors = bdev_zone_sectors(bdev);
+ 	sector_t capacity = bdev_nr_sectors(bdev);
+ 	sector_t end_sector = sector + nr_sectors;
+@@ -275,16 +210,11 @@ int blkdev_zone_mgmt(struct block_device *bdev, enum req_op op,
+ 		return -EINVAL;
  
  	/*
- 	 * If the target does not map all sequential zones, the limits
--	 * will not be reliable.
-+	 * will not be reliable and we cannot use REQ_OP_ZONE_RESET_ALL.
+-	 * In the case of a zone reset operation over all zones,
+-	 * REQ_OP_ZONE_RESET_ALL can be used with devices supporting this
+-	 * command. For other devices, we emulate this command behavior by
+-	 * identifying the zones needing a reset.
++	 * In the case of a zone reset operation over all zones, use
++	 * REQ_OP_ZONE_RESET_ALL.
  	 */
--	if (zc.target_nr_seq_zones < zc.total_nr_seq_zones)
-+	if (zc.target_nr_seq_zones < zc.total_nr_seq_zones) {
- 		zlim->reliable_limits = false;
-+		ti->zone_reset_all_supported = false;
-+	}
+-	if (op == REQ_OP_ZONE_RESET && sector == 0 && nr_sectors == capacity) {
+-		if (!blk_queue_zone_resetall(q))
+-			return blkdev_zone_reset_all_emulated(bdev);
++	if (op == REQ_OP_ZONE_RESET && sector == 0 && nr_sectors == capacity)
+ 		return blkdev_zone_reset_all(bdev);
+-	}
  
- 	/*
- 	 * If the target maps less sequential zones than the limit values, then
-@@ -353,6 +355,14 @@ int dm_set_zones_restrictions(struct dm_table *t, struct request_queue *q,
- 	for (unsigned int i = 0; i < t->num_targets; i++) {
- 		struct dm_target *ti = dm_table_get_target(t, i);
- 
-+		/*
-+		 * Assume that the target can accept REQ_OP_ZONE_RESET_ALL.
-+		 * device_get_zone_resource_limits() may adjust this if one of
-+		 * the device used by the target does not have all its
-+		 * sequential write required zones mapped.
-+		 */
-+		ti->zone_reset_all_supported = true;
-+
- 		if (!ti->type->iterate_devices ||
- 		    ti->type->iterate_devices(ti,
- 				device_get_zone_resource_limits, &zlim)) {
-@@ -420,3 +430,39 @@ void dm_zone_endio(struct dm_io *io, struct bio *clone)
- 
- 	return;
- }
-+
-+static int dm_zone_need_reset_cb(struct blk_zone *zone, unsigned int idx,
-+				 void *data)
-+{
-+	/*
-+	 * For an all-zones reset, ignore conventional, empty, read-only
-+	 * and offline zones.
-+	 */
-+	switch (zone->cond) {
-+	case BLK_ZONE_COND_NOT_WP:
-+	case BLK_ZONE_COND_EMPTY:
-+	case BLK_ZONE_COND_READONLY:
-+	case BLK_ZONE_COND_OFFLINE:
-+		return 0;
-+	default:
-+		set_bit(idx, (unsigned long *)data);
-+		return 0;
-+	}
-+}
-+
-+int dm_zone_get_reset_bitmap(struct mapped_device *md, struct dm_table *t,
-+			     sector_t sector, unsigned int nr_zones,
-+			     unsigned long *need_reset)
-+{
-+	int ret;
-+
-+	ret = dm_blk_do_report_zones(md, t, sector, nr_zones,
-+				     dm_zone_need_reset_cb, need_reset);
-+	if (ret != nr_zones) {
-+		DMERR("Get %s zone reset bitmap failed\n",
-+		      md->disk->disk_name);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 0d80caccbd9e..4b1b69e576a5 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1606,6 +1606,7 @@ static bool is_abnormal_io(struct bio *bio)
- 	case REQ_OP_DISCARD:
- 	case REQ_OP_SECURE_ERASE:
- 	case REQ_OP_WRITE_ZEROES:
-+	case REQ_OP_ZONE_RESET_ALL:
- 		return true;
- 	default:
- 		return false;
-@@ -1774,6 +1775,119 @@ static inline bool dm_zone_plug_bio(struct mapped_device *md, struct bio *bio)
- {
- 	return dm_emulate_zone_append(md) && blk_zone_plug_bio(bio, 0);
- }
-+
-+static blk_status_t __send_zone_reset_all_emulated(struct clone_info *ci,
-+						   struct dm_target *ti)
-+{
-+	struct bio_list blist = BIO_EMPTY_LIST;
-+	struct mapped_device *md = ci->io->md;
-+	unsigned int zone_sectors = md->disk->queue->limits.chunk_sectors;
-+	unsigned long *need_reset;
-+	unsigned int i, nr_zones, nr_reset;
-+	unsigned int num_bios = 0;
-+	blk_status_t sts = BLK_STS_OK;
-+	sector_t sector = ti->begin;
-+	struct bio *clone;
-+	int ret;
-+
-+	nr_zones = ti->len >> ilog2(zone_sectors);
-+	need_reset = bitmap_zalloc(nr_zones, GFP_NOIO);
-+	if (!need_reset)
-+		return BLK_STS_RESOURCE;
-+
-+	ret = dm_zone_get_reset_bitmap(md, ci->map, ti->begin,
-+				       nr_zones, need_reset);
-+	if (ret) {
-+		sts = BLK_STS_IOERR;
-+		goto free_bitmap;
-+	}
-+
-+	/* If we have no zone to reset, we are done. */
-+	nr_reset = bitmap_weight(need_reset, nr_zones);
-+	if (!nr_reset)
-+		goto free_bitmap;
-+
-+	atomic_add(nr_zones, &ci->io->io_count);
-+
-+	for (i = 0; i < nr_zones; i++) {
-+
-+		if (!test_bit(i, need_reset)) {
-+			sector += zone_sectors;
-+			continue;
-+		}
-+
-+		if (bio_list_empty(&blist)) {
-+			/* This may take a while, so be nice to others */
-+			if (num_bios)
-+				cond_resched();
-+
-+			/*
-+			 * We may need to reset thousands of zones, so let's
-+			 * not go crazy with the clone allocation.
-+			 */
-+			alloc_multiple_bios(&blist, ci, ti, min(nr_reset, 32),
-+					    NULL, GFP_NOIO);
-+		}
-+
-+		/* Get a clone and change it to a regular reset operation. */
-+		clone = bio_list_pop(&blist);
-+		clone->bi_opf &= ~REQ_OP_MASK;
-+		clone->bi_opf |= REQ_OP_ZONE_RESET | REQ_SYNC;
-+		clone->bi_iter.bi_sector = sector;
-+		clone->bi_iter.bi_size = 0;
-+		__map_bio(clone);
-+
-+		sector += zone_sectors;
-+		num_bios++;
-+		nr_reset--;
-+	}
-+
-+	WARN_ON_ONCE(!bio_list_empty(&blist));
-+	atomic_sub(nr_zones - num_bios, &ci->io->io_count);
-+	ci->sector_count = 0;
-+
-+free_bitmap:
-+	bitmap_free(need_reset);
-+
-+	return sts;
-+}
-+
-+static void __send_zone_reset_all_native(struct clone_info *ci,
-+					 struct dm_target *ti)
-+{
-+	unsigned int bios;
-+
-+	atomic_add(1, &ci->io->io_count);
-+	bios = __send_duplicate_bios(ci, ti, 1, NULL, GFP_NOIO);
-+	atomic_sub(1 - bios, &ci->io->io_count);
-+
-+	ci->sector_count = 0;
-+}
-+
-+static blk_status_t __send_zone_reset_all(struct clone_info *ci)
-+{
-+	struct dm_table *t = ci->map;
-+	blk_status_t sts = BLK_STS_OK;
-+
-+	for (unsigned int i = 0; i < t->num_targets; i++) {
-+		struct dm_target *ti = dm_table_get_target(t, i);
-+
-+		if (ti->zone_reset_all_supported) {
-+			__send_zone_reset_all_native(ci, ti);
-+			continue;
-+		}
-+
-+		sts = __send_zone_reset_all_emulated(ci, ti);
-+		if (sts != BLK_STS_OK)
-+			break;
-+	}
-+
-+	/* Release the reference that alloc_io() took for submission. */
-+	atomic_sub(1, &ci->io->io_count);
-+
-+	return sts;
-+}
-+
- #else
- static inline bool dm_zone_bio_needs_split(struct mapped_device *md,
- 					   struct bio *bio)
-@@ -1784,6 +1898,10 @@ static inline bool dm_zone_plug_bio(struct mapped_device *md, struct bio *bio)
- {
- 	return false;
- }
-+static blk_status_t __send_zone_reset_all(struct clone_info *ci)
-+{
-+	return BLK_STS_NOTSUPP;
-+}
- #endif
- 
- /*
-@@ -1797,9 +1915,14 @@ static void dm_split_and_process_bio(struct mapped_device *md,
- 	blk_status_t error = BLK_STS_OK;
- 	bool is_abnormal, need_split;
- 
--	need_split = is_abnormal = is_abnormal_io(bio);
--	if (static_branch_unlikely(&zoned_enabled))
--		need_split = is_abnormal || dm_zone_bio_needs_split(md, bio);
-+	is_abnormal = is_abnormal_io(bio);
-+	if (static_branch_unlikely(&zoned_enabled)) {
-+		/* Special case REQ_OP_ZONE_RESET_ALL as it cannot be split. */
-+		need_split = (bio_op(bio) != REQ_OP_ZONE_RESET_ALL) &&
-+			(is_abnormal || dm_zone_bio_needs_split(md, bio));
-+	} else {
-+		need_split = is_abnormal;
-+	}
- 
- 	if (unlikely(need_split)) {
- 		/*
-@@ -1840,6 +1963,12 @@ static void dm_split_and_process_bio(struct mapped_device *md,
- 		goto out;
+ 	while (sector < end_sector) {
+ 		bio = blk_next_bio(bio, bdev, 0, op | REQ_SYNC, GFP_KERNEL);
+diff --git a/drivers/block/null_blk/zoned.c b/drivers/block/null_blk/zoned.c
+index 7996e2e7dce2..9bc768b2ca56 100644
+--- a/drivers/block/null_blk/zoned.c
++++ b/drivers/block/null_blk/zoned.c
+@@ -164,7 +164,7 @@ int null_init_zoned_dev(struct nullb_device *dev,
+ 		sector += dev->zone_size_sects;
  	}
  
-+	if (static_branch_unlikely(&zoned_enabled) &&
-+	    (bio_op(bio) == REQ_OP_ZONE_RESET_ALL)) {
-+		error = __send_zone_reset_all(&ci);
-+		goto out;
-+	}
-+
- 	error = __split_and_process_bio(&ci);
- 	if (error || !ci.sector_count)
- 		goto out;
-diff --git a/drivers/md/dm.h b/drivers/md/dm.h
-index c984ecb64b1e..cc466ad5cb1d 100644
---- a/drivers/md/dm.h
-+++ b/drivers/md/dm.h
-@@ -110,6 +110,9 @@ int dm_blk_report_zones(struct gendisk *disk, sector_t sector,
- 			unsigned int nr_zones, report_zones_cb cb, void *data);
- bool dm_is_zone_write(struct mapped_device *md, struct bio *bio);
- int dm_zone_map_bio(struct dm_target_io *io);
-+int dm_zone_get_reset_bitmap(struct mapped_device *md, struct dm_table *t,
-+			     sector_t sector, unsigned int nr_zones,
-+			     unsigned long *need_reset);
- #else
- #define dm_blk_report_zones	NULL
- static inline bool dm_is_zone_write(struct mapped_device *md, struct bio *bio)
-diff --git a/include/linux/device-mapper.h b/include/linux/device-mapper.h
-index 82b2195efaca..15d28164bbbd 100644
---- a/include/linux/device-mapper.h
-+++ b/include/linux/device-mapper.h
-@@ -357,6 +357,13 @@ struct dm_target {
- 	 */
- 	bool discards_supported:1;
+-	lim->features |= BLK_FEAT_ZONED | BLK_FEAT_ZONE_RESETALL;
++	lim->features |= BLK_FEAT_ZONED;
+ 	lim->chunk_sectors = dev->zone_size_sects;
+ 	lim->max_zone_append_sectors = dev->zone_append_max_sectors;
+ 	lim->max_open_zones = dev->zone_max_open;
+diff --git a/drivers/block/ublk_drv.c b/drivers/block/ublk_drv.c
+index 4fdff13fc23b..d10a2ea07292 100644
+--- a/drivers/block/ublk_drv.c
++++ b/drivers/block/ublk_drv.c
+@@ -2194,7 +2194,7 @@ static int ublk_ctrl_start_dev(struct ublk_device *ub, struct io_uring_cmd *cmd)
+ 		if (!IS_ENABLED(CONFIG_BLK_DEV_ZONED))
+ 			return -EOPNOTSUPP;
  
-+	/*
-+	 * Automatically set by dm-core if this target supports
-+	 * REQ_OP_ZONE_RESET_ALL. Otherwise, this operation will be emulated
-+	 * using REQ_OP_ZONE_RESET. Target drivers must not set this manually.
-+	 */
-+	bool zone_reset_all_supported:1;
-+
+-		lim.features |= BLK_FEAT_ZONED | BLK_FEAT_ZONE_RESETALL;
++		lim.features |= BLK_FEAT_ZONED;
+ 		lim.max_active_zones = p->max_active_zones;
+ 		lim.max_open_zones =  p->max_open_zones;
+ 		lim.max_zone_append_sectors = p->max_zone_append_sectors;
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index 6c64a67ab9c9..84c3efd0c611 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -728,7 +728,7 @@ static int virtblk_read_zoned_limits(struct virtio_blk *vblk,
+ 
+ 	dev_dbg(&vdev->dev, "probing host-managed zoned device\n");
+ 
+-	lim->features |= BLK_FEAT_ZONED | BLK_FEAT_ZONE_RESETALL;
++	lim->features |= BLK_FEAT_ZONED;
+ 
+ 	virtio_cread(vdev, struct virtio_blk_config,
+ 		     zoned.max_open_zones, &v);
+diff --git a/drivers/nvme/host/zns.c b/drivers/nvme/host/zns.c
+index 99bb89c2495a..9a06f9d98cd6 100644
+--- a/drivers/nvme/host/zns.c
++++ b/drivers/nvme/host/zns.c
+@@ -108,7 +108,7 @@ int nvme_query_zone_info(struct nvme_ns *ns, unsigned lbaf,
+ void nvme_update_zone_info(struct nvme_ns *ns, struct queue_limits *lim,
+ 		struct nvme_zone_info *zi)
+ {
+-	lim->features |= BLK_FEAT_ZONED | BLK_FEAT_ZONE_RESETALL;
++	lim->features |= BLK_FEAT_ZONED;
+ 	lim->max_open_zones = zi->max_open_zones;
+ 	lim->max_active_zones = zi->max_active_zones;
+ 	lim->max_zone_append_sectors = ns->ctrl->max_zone_append;
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index f7067afac79c..c8b9654d30f0 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -599,7 +599,7 @@ int sd_zbc_read_zones(struct scsi_disk *sdkp, struct queue_limits *lim,
+ 	if (sdkp->device->type != TYPE_ZBC)
+ 		return 0;
+ 
+-	lim->features |= BLK_FEAT_ZONED | BLK_FEAT_ZONE_RESETALL;
++	lim->features |= BLK_FEAT_ZONED;
+ 
  	/*
- 	 * Set if this target requires that discards be split on
- 	 * 'max_discard_sectors' boundaries.
+ 	 * Per ZBC and ZAC specifications, writes in sequential write required
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 4d0d4b83bc74..dc250d8070d2 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -318,9 +318,6 @@ typedef unsigned int __bitwise blk_features_t;
+ /* is a zoned device */
+ #define BLK_FEAT_ZONED			((__force blk_features_t)(1u << 10))
+ 
+-/* supports Zone Reset All */
+-#define BLK_FEAT_ZONE_RESETALL		((__force blk_features_t)(1u << 11))
+-
+ /* supports PCI(e) p2p requests */
+ #define BLK_FEAT_PCI_P2PDMA		((__force blk_features_t)(1u << 12))
+ 
+@@ -618,8 +615,6 @@ void blk_queue_flag_clear(unsigned int flag, struct request_queue *q);
+ 	test_bit(QUEUE_FLAG_NOXMERGES, &(q)->queue_flags)
+ #define blk_queue_nonrot(q)	(!((q)->limits.features & BLK_FEAT_ROTATIONAL))
+ #define blk_queue_io_stat(q)	((q)->limits.features & BLK_FEAT_IO_STAT)
+-#define blk_queue_zone_resetall(q)	\
+-	((q)->limits.features & BLK_FEAT_ZONE_RESETALL)
+ #define blk_queue_dax(q)	((q)->limits.features & BLK_FEAT_DAX)
+ #define blk_queue_pci_p2pdma(q)	((q)->limits.features & BLK_FEAT_PCI_P2PDMA)
+ #ifdef CONFIG_BLK_RQ_ALLOC_TIME
 -- 
 2.45.2
 
