@@ -1,45 +1,53 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27D7BA48;
-	Fri,  5 Jul 2024 08:32:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 617C11474A8;
+	Fri,  5 Jul 2024 10:36:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720168330; cv=none; b=GCd8+xdVmAn4rVg/j8oLiYfIfF/11ESXuJG8Ica3SF35rFHBaj1egh/fIl2jjmRI8Xi82TkamGANDF/qkf3LoWJB++IOzq6PafEPDsjwjyaQn78QAHPbWTDF46L1bjGxqinyG2BG99C1rJ/ZGP+vcvXu2gNH6VbiiaeSetyDWe8=
+	t=1720175797; cv=none; b=Cu+tDM00ggJ2JI+18JG0vemSut6r0Gw0XskQAn3FeIEQE5qBRG7nmFfGiH4cNImRyQkezVoMrpPvRpzgJFv4ygKxvZTPDkm4BiN3hXWCU/wfW8px6R12FXuF+hrhxNcgcqYPvA2Fg5U5FwoqVf5VVyGU5Iq/BEOqMwt0undfWxo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720168330; c=relaxed/simple;
-	bh=a6UXqQ0PashLa/Gd5TVsr8YP/9RWVulgubUaVgbBIfI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tfm/4aoWzCHDLAXIauapDs30PhFcppyvFlvmcaodTVhoORIXmsoriq3cQUsd/EP0fQQK1EGOA5AZvG1EX1DYsOsPMX03wJIbmVAB4BT36hpztYDc5A6HvsKBVxaA8EZuyvLA8fIK85dTjmMXRhixLLkIx98uhkb3OyswkqPOmwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hzsHEVRY; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1720175797; c=relaxed/simple;
+	bh=DHviwjkNI1htjdV3APH/04Lz8TysiyjroN2qMaRZxKo=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EbHkhLg60Z/Hm5SfwmwAy0OUUuukU4HGv4V8ULrqVzjSdsjW9u38MV1TgSCt9XrfKhCpzsCCgvIPzOfeFaZLsqdh8gukMh//ZLWPso75LukOsBstgYHvabxgONddkcmK/s1HjDC1YAkZ6XeRgW7QnFRLOctxLbUXhz8ySHvUMJs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Zn5rUSGZ; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hzsHEVRY"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=VMFWiI7e+j+R5r7N/1miL++JtqstPr0aKimqvCuzBHA=; b=hzsHEVRYGUHKZe3ELJuegzx3Gk
-	n6ax7vbuSmJc9h4TwO1aHpewcgo598doiQGVv6nEt+xAQcbz8fO9z6wPGmI9LtCOYzwoboLuSLrew
-	hLPPDP80utXrxjQAVrtvMipFfbZXjsT6iMg3HL7AsNl1l0nqSDD37yOsp11e39G3bbddMG0gngCNo
-	qPfHesUMu3c/+xHie/1ABAh/lbQG5mxp2YUqb9/JmnrteDE+tkWvKf/xmgkew9entrsgFfJAF7US4
-	UD3GuxIo+D/zsuL1hx+m7CwWg5mkZvEmKyJV+W5+BIzlV/7mQGNRRrCez3fnR32DmnGwkv6HBxq3I
-	6p49tm/w==;
-Received: from 2a02-8389-2341-5b80-7f6c-d254-a41c-2a9c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:7f6c:d254:a41c:2a9c] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.97.1 #2 (Red Hat Linux))
-	id 1sPeMR-0000000FHg9-108N;
-	Fri, 05 Jul 2024 08:32:07 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Kanchan Joshi <joshi.k@samsung.com>,
-	Anuj Gupta <anuj20.g@samsung.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: fine-grained PI control
-Date: Fri,  5 Jul 2024 10:32:04 +0200
-Message-ID: <20240705083205.2111277-1-hch@lst.de>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Zn5rUSGZ"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4659NgZV030151;
+	Fri, 5 Jul 2024 10:36:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=JVotc43PE+am8z0nQzOfHC
+	iVEq+Z6VW0+W5/si22vig=; b=Zn5rUSGZpP3HCxae3QbzKlWIQJU+Rendx8FzHV
+	p3w5nXLkxm90wyq/B+FhpI4o5f/LQMsaJajajd9nBPWTt8APqG1WB8fUctnQPxv0
+	7aBNVWMIpHhjHa7OvfMekWpk4Fa/42Qq1P9B0R2oZlIvFUrd4Q/NSRu7BMzK0Wz9
+	SeC8GMiA7exW1zoSM5JH16V0gCx20ua7VF2clPcKCY7rMArH++YFL3HKz0jXihBV
+	pEd/xrvc0FjU4+fEJrmSeXeHqopY3e4WDbijcJit9wtMjSeQ9UkWnFnKMX2F6rdB
+	bW3/QM3kN2KDkbyF7F09tkTmqaIF/6iGuJWcSWWhiyEN1bUA==
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4054ndw9r6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 05 Jul 2024 10:36:29 +0000 (GMT)
+Received: from nasanex01c.na.qualcomm.com (nasanex01c.na.qualcomm.com [10.45.79.139])
+	by NASANPPMTA02.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 465AaTBH026851
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 5 Jul 2024 10:36:29 GMT
+Received: from zhonhan-gv.qualcomm.com (10.80.80.8) by
+ nasanex01c.na.qualcomm.com (10.45.79.139) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Fri, 5 Jul 2024 03:36:27 -0700
+From: Zhongqiu Han <quic_zhonhan@quicinc.com>
+To: <fischer@norbit.de>, <James.Bottomley@HansenPartnership.com>,
+        <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <quic_zhonhan@quicinc.com>
+Subject: [PATCH] scsi: aha152x: use DECLARE_COMPLETION_ONSTACK for non-constant completion
+Date: Fri, 5 Jul 2024 18:36:14 +0800
+Message-ID: <20240705103614.3650637-1-quic_zhonhan@quicinc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,42 +55,44 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01c.na.qualcomm.com (10.45.79.139)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 41ikWyF8w7Cp-gKezN_DTdmHujAm4HxJ
+X-Proofpoint-ORIG-GUID: 41ikWyF8w7Cp-gKezN_DTdmHujAm4HxJ
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-07-05_06,2024-07-03_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 malwarescore=0
+ phishscore=0 impostorscore=0 priorityscore=1501 mlxscore=0 suspectscore=0
+ bulkscore=0 adultscore=0 lowpriorityscore=0 clxscore=1011 mlxlogscore=973
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2406140001
+ definitions=main-2407050078
 
-Hi all,
+The _ONSTACK variant should be used for on-stack completion, otherwise it
+will break lockdep. See also commit 6e9a4738c9fa ("[PATCH] completions:
+lockdep annotate on stack completions").
 
-I'm trying to kick of a discussion on fine grained control of T10 PI
-flags.  This concerns the new io_uring metadata interface including
-comments made by Martin in response to earlier series, and observations
-on how block devices with PI enabled don't work quite right right now
-for a few uses cases.
+Signed-off-by: Zhongqiu Han <quic_zhonhan@quicinc.com>
+---
+ drivers/scsi/aha152x.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The SCSI and NVMe PI interfaces allow fine-grained checking of the guard,
-reference and app tags.  The io_uring interface exposes them to
-userspace, which is useful.  The in-kernel implementation in the posted
-patch set only uses these flags when detecting user passthrough and
-currently only in the nvme driver.  I think we'll need to change the
-in-kernel interface matches the user one, and the submitter of the PI
-data chooses which of the tags to generate and check.
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index 83f16fc14d96..a0fb330b8df5 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -1072,7 +1072,7 @@ static int aha152x_abort(struct scsi_cmnd *SCpnt)
+ static int aha152x_device_reset(struct scsi_cmnd * SCpnt)
+ {
+ 	struct Scsi_Host *shpnt = SCpnt->device->host;
+-	DECLARE_COMPLETION(done);
++	DECLARE_COMPLETION_ONSTACK(done);
+ 	int ret, issued, disconnected;
+ 	unsigned char old_cmd_len = SCpnt->cmd_len;
+ 	unsigned long flags;
+-- 
+2.25.1
 
-Martin also mentioned he wanted to see the BIP_CTRL_NOCHECK,
-BIP_DISK_NOCHECK and BIP_IP_CHECKSUM checksum flags exposed.  Can you
-explain how you want them to fit into the API?  Especially as AFAIK
-they can't work generically, e.g. NVMe never has an IP checksum and
-SCSI controllers might not offer them either.  NVMe doesn't have a way
-to distinguish between disk and controller.
-
-Last but not least the fact that all reads and writes on PI enabled
-devices by default check the guard (and reference if available for the
-PI type) tags leads to a lot of annoying warnings when the kernel or
-userspace does speculative reads.  Most of this is to read signatures
-of file systems or partitions, and that previously always succeeded,
-but now returns an error and warns in the block layer.  I've been
-wondering a few things here:
-
- - is there much of a point in having block layer and driver warnings
-   (for NVMe we'll currently get both) by default, or should we leave
-   that to the submitter that needs to check errors anyway?
- - should we have an opt-out or even opt-in for guard tag verification
-   to avoid the higher level code tripping up on returned errors where
-   they just want to check if a signature matches?
