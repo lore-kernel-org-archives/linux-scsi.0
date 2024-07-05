@@ -1,115 +1,165 @@
-Received: from mail-lf1-f43.google.com (mail-lf1-f43.google.com [209.85.167.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FEDA143C67
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Jul 2024 06:42:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E2392BCF6
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jul 2024 08:30:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720161757; cv=none; b=rlNcle4e9Mxo0yZFcZ5xLrFM2LZBm9A0jb5MBqezdmx++qtSt97oAXyHAR8F0e2SwyW0AdgJXvhayU/LF+dV1ZqWm7YAdnFABN32JpxoB+feId6rFfQuC8nDRYiDMZqj3E6/A6CTfOdDMBKKjUo/y3NFRLmRALBgiJPsmistmpc=
+	t=1720168256; cv=none; b=aw1riG2N+tVONXU01+1PDga4JyAiP0snXqSDaujvBKCfIlS8lyNPHvaR5x9R0S60d/Gs/WTauBKw9BLWaQpvqNHPxGTxTVE2gyZP+/2doS9JQTyllWO1Rnu8aagbI+OB3hc0MiHFDYIgBwBVAAJ+A4n1z4Iay0ari0aoAb7wQF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720161757; c=relaxed/simple;
-	bh=CWl72ReHjXCYWhKlNG9N2O+IUodhLDJfcgQMkeLW04c=;
-	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=n9jxkwYr85+f0RJdQLWuo7Ao/U+LmhTRsGIqjy3UloRPGJQYUcoE3iOjfTXhZ85YAhbhPYYbV3tz/Gfc4z2HGUTgHqcelq0Gwj0P/WhpP9LVxGhg9/p5N4n+ZlB/rJLWnhxuni4mlEtueMa1b28zE2SNvbcnLLnz35K6e/r5RT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=1zLchmjJ; arc=none smtp.client-ip=209.85.167.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1720168256; c=relaxed/simple;
+	bh=MGe/XQUtsS/7JvaTicgGLOI5fBOycUgNAaUpoxRDJOM=;
+	h=Mime-Version:Subject:From:To:CC:Message-ID:Date:Content-Type:
+	 References; b=eElttCxUtaAsLpedmJVzKwrR5T5F0mDiMHXWv0dqUVAPK6TrGiwbhqXvLAU9+Jb6As1XtpJwFeM2q+kIA9wakc324KZF8XFT7lx2nnslb4h1ipDZ1bjcDnuPgyPodwyosgUbgcvaJgv4yxddLWBAbavg/jtg3+KRoI2GrXr93FU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=B3cMa9be; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="1zLchmjJ"
-Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-52e98c72d2bso70375e87.0
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jul 2024 23:42:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1720161753; x=1720766553; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=waQspLv/Jp+UpTZ4iMwnmeyNv2/eDMBAOGCEYrIWEFg=;
-        b=1zLchmjJBf4rhrrqUKAnuyIUjKpAy2torOuk1d9YY4v0EdgKMld4st8H0Hs0lAu1Ot
-         5/MZImK54Z2Ig5l8funRpdV5NFWkk0QVpI6qWhI0h/SDZYRyDUx9+eIOqzfOrW4qZUel
-         VNFZ6n5clWcrcZ2/J5iun91plfiHc4CG8KchoyiIJRLVH0jNJwsXN6ra/7M6EJPZcvc+
-         Km1soitL1+S4pc1X11kG/uMrXKF7qHlkVU4d7C1Vs7aSn6Qu4H0gykmz7wPjX4o6Fi8c
-         MlgCWpkmEpoDgX1C3oiLlj0HfaU6geBEJDc7wnUpPYty0gNkU+9JVUx5uOgWZT1nUvIo
-         SJIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720161753; x=1720766553;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=waQspLv/Jp+UpTZ4iMwnmeyNv2/eDMBAOGCEYrIWEFg=;
-        b=cxTb1ihbjsVJUNQAezLatEjlcg0VFK883XPOe2fJx4tIwc53XhlFvf97pQEIkvPdST
-         E1NGlF0VCEgtWxET/A5MKOAMWbEspUFZ0sqy7Niqeje12INod99QaWmPzYqzSe0Ue+Bu
-         pTN0ibJRXrhYzTXWsg8L6FkZyPUDB2/kN2FFAjoF+q1oX6XZXkJMitJmucaL5vhTdqWW
-         TurdxtIEEVpzYpa5Cbt960krjAbgsf9vtSwx56jth6MB8P7rlGhlBzipMqYMZCByABWr
-         XG1Gx6aUMXOi+ExrbE4xrJxAIXBSs7hG61zQKZQzg2k+hqYSZfRfoAHmpxDjOWTYVx04
-         vgEQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVvlJ950/nR2GzfL8+Ht2UCB1f31Ii2cDEc1Is/SUJDC0QFx/C6dhqad3N3Sxv41OnD9vNaPUTFOuwXnb5NTebqnbaEAqosIpdShA==
-X-Gm-Message-State: AOJu0YyDOj2OAeJ+VCdv/CmZIjznFweK140h4rou0le2uCgAqlcyDvJZ
-	4UHL7kWUlW6x8qFPLqwpv/dBhDM7OTtQ+tTjPMzIJiuGNktAKP/TKxmjw7617s7KHYdblrZAX06
-	3Hm5vlJT1
-X-Google-Smtp-Source: AGHT+IHQVZfmP8Kf7Vg7+YOar8W+pG2xnl2rTo85ayKWXNSneGGBg+vqVXwSHucIKC0g6Fn0qMkveA==
-X-Received: by 2002:ac2:5a50:0:b0:52c:a7b6:bb11 with SMTP id 2adb3069b0e04-52ea0619e47mr2245356e87.1.1720161752595;
-        Thu, 04 Jul 2024 23:42:32 -0700 (PDT)
-Received: from [127.0.0.1] (87-52-80-167-dynamic.dk.customer.tdc.net. [87.52.80.167])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-52ea69513e4sm88226e87.289.2024.07.04.23.42.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jul 2024 23:42:30 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
- Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, 
- linux-scsi@vger.kernel.org, 
- "Martin K . Petersen" <martin.petersen@oracle.com>, 
- Ming Lei <ming.lei@redhat.com>, "Michael S . Tsirkin" <mst@redhat.com>, 
- Jason Wang <jasowang@redhat.com>, Christoph Hellwig <hch@lst.de>, 
- Damien Le Moal <dlemoal@kernel.org>
-In-Reply-To: <20240704052816.623865-1-dlemoal@kernel.org>
-References: <20240704052816.623865-1-dlemoal@kernel.org>
-Subject: Re: [PATCH v2 0/5] Remove zone reset all emulation
-Message-Id: <172016175015.242380.5721463092175148141.b4-ty@kernel.dk>
-Date: Fri, 05 Jul 2024 00:42:30 -0600
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="B3cMa9be"
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240705083051epoutp0253b87aaa9cc9575cdcf64b3802d4a3e7~fQ_k8iAbz0160101601epoutp02V
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Jul 2024 08:30:51 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240705083051epoutp0253b87aaa9cc9575cdcf64b3802d4a3e7~fQ_k8iAbz0160101601epoutp02V
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1720168251;
+	bh=p50gMO5LN79M+W2fkmVIdOs2ul/IDq/74DvL8xoOcv4=;
+	h=Subject:Reply-To:From:To:CC:Date:References:From;
+	b=B3cMa9beCVz1KFoeAmSRML98MDox3bZopVu4HXj97Y1cajklc2dM6Deqrba9Wy10Y
+	 kUQKOteXq3fg8Ned22JyB4LMfA0njr1kXL0ynzl2B/4G0dE4tARXg/InZNPZuuw3oq
+	 J/WFuXTV4mVLzcIauhRuqTaLGUGFdQ7L5GCwtL8U=
+Received: from epsmges2p2.samsung.com (unknown [182.195.42.70]) by
+	epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+	20240705083051epcas2p15b53ba6df354e9001d497d8500d2d704~fQ_kifNjQ2946029460epcas2p1i;
+	Fri,  5 Jul 2024 08:30:51 +0000 (GMT)
+X-AuditID: b6c32a46-19bfa7000000250d-50-6687af3b74c2
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+	epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+	86.05.09485.B3FA7866; Fri,  5 Jul 2024 17:30:51 +0900 (KST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Mime-Version: 1.0
+Subject: [PATCH V2] scsi: ufs: core: Check LSDBS cap when !mcq
+Reply-To: k831.kim@samsung.com
+Sender: Kyoungrul Kim <k831.kim@samsung.com>
+From: Kyoungrul Kim <k831.kim@samsung.com>
+To: "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"bvanassche@acm.org" <bvanassche@acm.org>, Minwoo Im
+	<minwoo.im@samsung.com>, Kyoungrul Kim <k831.kim@samsung.com>, SSDR Gost Dev
+	<gost.dev@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20240705083050epcms2p85f6e53e075a0d8f6d7980cdad7e62b80@epcms2p8>
+Date: Fri, 05 Jul 2024 17:30:50 +0900
+X-CMS-MailID: 20240705083050epcms2p85f6e53e075a0d8f6d7980cdad7e62b80
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.0
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupkleLIzCtJLcpLzFFi42LZdljTVNd6fXuawZuTrBbTPvxktrh5YCeT
+	xcZ+Dospm74yWnRf38Fmsfz4PyaLZ6cPMDuwe1y+4u0xbdIpNo+PT2+xePRtWcXo8XmTXABr
+	FJdNSmpOZllqkb5dAlfGo5kn2Ao+CFfMv3qbvYGxU6CLkZNDQsBE4se2N6xdjFwcQgI7GCUe
+	duxg7GLk4OAVEJT4u0MYpEZYwE6i/845NhBbSEBO4vr8blaIuI5Ed/MHZhCbTUBLYuPxjWwg
+	c0QEJjFK/P/+kgUkwSxwl1Hi8TlDiGW8EjPan7JA2NIS25dvZYSwNSR+LOtlhrBFJW6ufssO
+	Y78/Nh+qRkSi9d5ZqBpBiQc/d0PFpSTaZv9mgrCrJa427mYBOUJCoINRoqX1IStEwlxi5epL
+	YA28Ar4Sa060gdksAqoShx8vghrkIvGtdR3U0fIS29/OYQYFBLOApsT6XfogpoSAssSRW1AV
+	fBIdh/+yw7y1Y94TqBOUJNq3XYXaKiHxbOIFqJM9JC6fnc0CMkZIIFBi6+20CYwKsxABPQvJ
+	2lkIaxcwMq9iFEstKM5NTy02KjDSK07MLS7NS9dLzs/dxAhOLVpuOxinvP2gd4iRiYPxEKME
+	B7OSCK/U++Y0Id6UxMqq1KL8+KLSnNTiQ4zSHCxK4rz3WuemCAmkJ5akZqemFqQWwWSZODil
+	Gpikz7J2fl58xSv+68Zetud7OpbzvysIMJzVdG2b4d6c5//nh7NZ330ZcbmbZ9WmSam9mw5K
+	RfzluVuUePuRt8Tl/fbM95t0ii6ra+x++6NtQwhXkiibi+/pmTyfP66cvVf8x1f59CNmYow2
+	gUdsl51RLfHR+OG0z/PZ2mknDZmM7ZymHZ/1s7icZfoHuR277vxIrDmsZnuI3/NMvKpJpcOD
+	mVu0RHfuSJ5eU6XDv94i/OUz4QfTLq86cj0qQO7u0QkbzQ65vqxjeNOs1t/x6FDJ396bfYxn
+	U1ntjpRHaV0uvV9vnPBKwX7z/AXXF8+v/Ki1tHOxalTUNSdDxx9rNrG7/XjZm6elXi71YrJ/
+	1+OzSizFGYmGWsxFxYkArIMNVZwDAAA=
+X-CMS-RootMailID: 20240705083050epcms2p85f6e53e075a0d8f6d7980cdad7e62b80
+References: <CGME20240705083050epcms2p85f6e53e075a0d8f6d7980cdad7e62b80@epcms2p8>
 
+if the user set use_mcq_mode to 0, the host will activate the lsdb mode
+unconditionally even when the lsdbs of device hci cap is 0. so it makes
+timeout cmds and fail to device probing.
 
-On Thu, 04 Jul 2024 14:28:11 +0900, Damien Le Moal wrote:
-> Jens, Mike,
-> 
-> Here is a set of patches based on block/for-next to remove the emulation
-> for zone reset all from the block layer and move it to device mapper.
-> This is done because device mapper is the only zoned device driver that
-> does not natively support REQ_OP_ZONE_RESET_ALL. With this change, the
-> emulation that may be required depending on a mapped device zone mapping
-> is moved to device mapper and the reset all feature
-> (BLK_FEAT_ZONE_RESETALL) can be deleted, as well as all the code
-> handling this feature in blk-zoned.c. The DM-based handling of
-> REQ_OP_ZONE_RESET_ALL can also be much faster than the block layer
-> emulation as that operation can be forwarded as is to targets mapping
-> all sequential write required zones.
-> 
-> [...]
+To prevent that problem. check the lsdbs cap when mcq is not supported
+case.
 
-Applied, thanks!
+Signed-off-by: k831.kim <k831.kim@samsung.com>
 
-[1/5] null_blk: Introduce the zone_full parameter
-      commit: f4d5dc33c823ef1d7ccbbd2d1e40b871fad0012b
-[2/5] dm: Refactor is_abnormal_io()
-      commit: ae7e965b36e3132238d16b4ccd223f65162397b5
-[3/5] dm: handle REQ_OP_ZONE_RESET_ALL
-      commit: 81e7706345f06e1e97a092f59697b7e20a0ee868
-[4/5] block: Remove REQ_OP_ZONE_RESET_ALL emulation
-      commit: f2a7bea23710fceb99dac6da4ef82c3cc8932f7f
-[5/5] block: Remove blk_alloc_zone_bitmap()
-      commit: 2f20872ed43185780a5f30581472599342c86d4a
+---
+Changes to v1: Fix wrong bit of lsdb support.
+---
+ drivers/ufs/core/ufshcd.c | 16 ++++++++++++++++
+ include/ufs/ufshcd.h      |  1 +
+ include/ufs/ufshci.h      |  1 +
+ 3 files changed, 18 insertions(+)
 
-Best regards,
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 1b65e6ae4137..b5a05f8492c4 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2412,7 +2412,17 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+ 		return err;
+ 	}
+ 
++	/*
++	 *  UFS 3.0 has no MCQ_SUPPORT and LSDB_SUPPORT, but [31:29] as reserved
++	 *  bits with reset value 0s, which means we can simply read values
++	 *  regardless to version
++	 */
+ 	hba->mcq_sup = FIELD_GET(MASK_MCQ_SUPPORT, hba->capabilities);
++	/*
++	 *  0h: legacy single doorbell support is available
++	 *  1h: indicate that legacy single doorbell support have been remove
++	 */
++	hba->lsdb_sup = !FIELD_GET(MASK_LSDB_SUPPORT, hba->capabilities);
+ 	if (!hba->mcq_sup)
+ 		return 0;
+ 
+@@ -10449,6 +10459,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	}
+ 
+ 	if (!is_mcq_supported(hba)) {
++		if (!hba->lsdb_sup) {
++			dev_err(hba->dev, "%s: failed to initialize (legacy doorbell mode not supported\n",
++				__func__);
++			err = -EINVAL;
++			goto out_disable;
++		}
+ 		err = scsi_add_host(host, hba->dev);
+ 		if (err) {
+ 			dev_err(hba->dev, "scsi_add_host failed\n");
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index bad88bd91995..fd391f6eee73 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1074,6 +1074,7 @@ struct ufs_hba {
+ 	bool ext_iid_sup;
+ 	bool scsi_host_added;
+ 	bool mcq_sup;
++	bool lsdb_sup;
+ 	bool mcq_enabled;
+ 	struct ufshcd_res_info res[RES_MAX];
+ 	void __iomem *mcq_base;
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index 385e1c6b8d60..22ba85e81d8c 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -75,6 +75,7 @@ enum {
+ 	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
+ 	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
+ 	MASK_CRYPTO_SUPPORT			= 0x10000000,
++	MASK_LSDB_SUPPORT			= 0x20000000,
+ 	MASK_MCQ_SUPPORT			= 0x40000000,
+ };
+ 
 -- 
-Jens Axboe
-
-
-
+2.34.1
