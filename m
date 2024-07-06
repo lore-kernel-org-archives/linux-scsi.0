@@ -1,110 +1,99 @@
-Received: from IND01-BMX-obe.outbound.protection.outlook.com (mail-bmxind01olkn2088.outbound.protection.outlook.com [40.92.103.88])
+Received: from IND01-MAX-obe.outbound.protection.outlook.com (mail-maxind01olkn2022.outbound.protection.outlook.com [40.92.102.22])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE67F17722;
-	Sat,  6 Jul 2024 09:04:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.103.88
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA5F442A85;
+	Sat,  6 Jul 2024 09:59:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.102.22
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720256654; cv=fail; b=ah4nYzJFDgT77DGZB6nlp749umNfJCcfG0QPeedcAKMqvAdxS9rOPxEik/eVroSsHlC+XzmqJLLQkak8QgCAYBE/JfnrqTudd5Er+eO6hrCqJjzemty9pxx97o24MlH5XVFKRZtL0kmynjQHnWsGqCBkf4jB2jfmVYWub4ooh4Q=
+	t=1720259944; cv=fail; b=d/Ws7IniTppI5/E/yT4oOme4qc6NQtJohKRGtFEhs80WHYIH1QMihMOrK82/8nai7xyS7jsM+t0oz2GA2Z4K29g3jUcV8zMema0O50HfRfIGhOgd0usg7xJLNxqLnY1LjU4qA9yv/lr14wEACK9EbqWIsMgRXY0sfKNgsLtGKBg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720256654; c=relaxed/simple;
-	bh=jS4jJw01VxTX8HyFXREdngZosP8RrXwT4QPELFimGLg=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=iPqsVCkdm4S+Yv114ggmznEve+fJ9uFKUCZJqn8anNYm3jf3tWRfLbfiIS2fR3vMq6UHpqMpaSZgOATQi/6Z3msv+dgSSRcGuwJiCiMqxHDJLkvUshO3zvcdJdY3HVwY/QYZ9o87PQBinbHun4fdnjVOovjldA2YJov3LYSDn/0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.com; spf=pass smtp.mailfrom=live.com; dkim=pass (2048-bit key) header.d=live.com header.i=@live.com header.b=QtLwKBV/; arc=fail smtp.client-ip=40.92.103.88
+	s=arc-20240116; t=1720259944; c=relaxed/simple;
+	bh=YZwR/859sw+WXkTr18l8gD69JdcuIbDYYsThtlzS/xs=;
+	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=Q/Nu/0XEVNU+QAPr0UJMYZyTn3bWjxW5oHOTsOCUliQjG1Os2XwlKbf+7BTEWbr6bra/CTYdwiIXs6DdOV0HNuYTL56iDIOVuIInW4YRaNyn0w9T/WTavVP/aQ8L5TEBmwl4pZqiClhxCqSQDCnPlRfTSkZcNgQDhPiCyO4srak=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.com; spf=pass smtp.mailfrom=live.com; dkim=pass (2048-bit key) header.d=live.com header.i=@live.com header.b=m6UvwPZC; arc=fail smtp.client-ip=40.92.102.22
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=live.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=live.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=live.com header.i=@live.com header.b="QtLwKBV/"
+	dkim=pass (2048-bit key) header.d=live.com header.i=@live.com header.b="m6UvwPZC"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Tj62jUT+TrETcw6U1F1yAC986Kn4KkaqZPDbtgiCXU6m0XTYl3+ujLtxR32nfyqJ3CZTKZY2rDPPa2Y4PIJ0B+lDBJYfEKlaPB15Ewnyp4BnaX5U7kZREasTcuG6NI0C0FrhZvMdbhoVZGKppHXZSPqGAWy84k/CofgolxyGSWNg18eUb+AugOOwCdmtlbkxmhwtu7UJAdWpW6lpJiN9em7wRGhYj1clqwnivpqw9bKmSP4JK7jRIQal+Q+t7BpVj1hO8dG9ro9Z5yU6rU3FXimgEENXQw8Y+kis3d4ueDRFKnvourulfKpcinE2gAOjIqzkeESKgEZkZp2P3A9AsA==
+ b=hmQJP6fZZrH4zRGhToEDSvTIuc0T//O4LN4RZrZFqEEktGjATwyumCW79qbSw9vhs/8B2g65/kxvKIXL6ZqWg8DUDuUsZ6I/JyTp/vxn638V0m0LzZWPKLwIy6f3cWtLcQ2Eel1BBVDBwY4GCo44QqobOgR3k4I7Vk5ezbPs+e3YyYp/qgw1BroWHH5CZ9fLJlAzEe2Y+CK7MN0couAEcUqneAY2SjCIk1YKQslbpNuFDNX0GBWZ4Y5J9djFtZ+xwrG2s7d9TVCetQUerKSdWbSuCqI7IJMs5bASNMqCt2Eu15Jscu52Hr3rpTBtmmdWGUUN760M/wTxr9VhBraYlA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jS4jJw01VxTX8HyFXREdngZosP8RrXwT4QPELFimGLg=;
- b=ZgmWqWRxaOm5uPCFYLZP9TEkEFtuVlxm/vfRNnNKD4qzLFC27sYX1sxdlhg/RX0IBlxm5pSSWZsiLXj3WRmA6unsB3PetENjpyo2KZl3pFvdC30liGDUtQdcq48TIRLfanDk0eu4VTW7B3w2qATWpTEqrUDIw9CN1QwFQJpLT2RupYGpc+Y42pjBtHO5KGSeraXiW78wA4qb0wrbtvDfCqIcTDwgoKida2ByWTOS2WJYGqHWU/fuQd27/v5sy6zoop6hKpLh+8me8AQNp9JEN9GU5IflaRfzqF9Te+SRSRnIYgY5wk281I0ZvUHGwKm87wBl9FPJPc48hhF0HKVWEA==
+ bh=Wh2zNs3cKcVyJAC/F4M1zOnme3wwGIfjwwpyRNRM2d4=;
+ b=R6h2Esoh0BhbSpCDgWsTZhFqCFD/pepNtnelc3NhWNkngaeSHayOgs2nfU3w9IleeAsRLCRU77JpXx9GMsozcw6WLqXJxJC+wLlB0teMNbstuuV24F0RYe4knv2CPFrh/dMRQS/BcYGseTAXt2Gbms7evc5bfJlv5t+LujqY9lPB+IDkahmp+CFzxHCZGB1abfqBiPcABqWIH9hIjEl3bfkuwDG0JZZ28rZBaqjLsGEgyi67gT+mGlG/OvZ9R9+6KWntdp07juteAhfHrV7K0hbXFikeV58Gx/ocZFY8LFa5RFeFPus5SP+atNcuH/lLySwex1Wus8PgHwJFJ3kdGA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=live.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jS4jJw01VxTX8HyFXREdngZosP8RrXwT4QPELFimGLg=;
- b=QtLwKBV/hIDLDLQwnpQ7YzhYuk0MfiKWLDAQ3ZlihE//TPpPD09V193C4yxIX0tY5eMOJUaH5tXtMXgeU05bAhnaq5s1tsd0I3cLO5Q7TY+UT21kWZieJl6gbcZMR1dGXB/pozjlugkTGqIKqSIRC1xN3jEpBTKFKdGxquogRWWjOBl/3IGQ/HHd128EJkfFuk7kvPWeVHaLZUYMc4YyC4j+kcYOH6icIFAULf36sUxT9NyM2H2ghhi6cErV2huXQBwvUNNG8YO7lrxlN/3BO5V0/LvdpJbvbGW8vKBVf/KzFmcgV16xCxu+5Kj5NMD8kSw8wWlk1GRKd/U6pWpWXg==
+ bh=Wh2zNs3cKcVyJAC/F4M1zOnme3wwGIfjwwpyRNRM2d4=;
+ b=m6UvwPZCqSilU90kAL+4HrA7avxfqtGfoxG+RZEtsamaTjL6EycZ2jL0j+074Fw3HDgYXVgTEFTfX3OIK1feLbXb+93n0twDkoALPw2FaKAWNqJHdomz2rJWX2aVj2CcIynzZm8IiHT4DM48tU4VSjguyWETs/EDZnCN3fDgUdZ3LUZq0b80DdBOih2YcS5r+z5sksPMjUT0B3JdN87F8doZIn0VDqNhBua5g+uciuVXBDYPAg7AUU83w8MeQv6HO4anZx6A6IwLI448K8AK2SQ5xi81dfQmSywMac2X3pFTOQJiH/NAf7niAyvhuuLaBOcHfXCrkPqbN4EdSGDP1A==
 Received: from MA0P287MB0217.INDP287.PROD.OUTLOOK.COM (2603:1096:a01:b3::9) by
- PN2P287MB0303.INDP287.PROD.OUTLOOK.COM (2603:1096:c01:dc::5) with Microsoft
+ PN2P287MB1372.INDP287.PROD.OUTLOOK.COM (2603:1096:c01:1a5::8) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.7741.31; Sat, 6 Jul 2024 09:04:07 +0000
+ 15.20.7741.33; Sat, 6 Jul 2024 09:58:56 +0000
 Received: from MA0P287MB0217.INDP287.PROD.OUTLOOK.COM
  ([fe80::98d2:3610:b33c:435a]) by MA0P287MB0217.INDP287.PROD.OUTLOOK.COM
  ([fe80::98d2:3610:b33c:435a%4]) with mapi id 15.20.7741.031; Sat, 6 Jul 2024
- 09:04:07 +0000
+ 09:58:56 +0000
 From: Aditya Garg <gargaditya08@live.com>
-To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "oneukum@suse.com" <oneukum@suse.com>, "stern@rowland.harvard.edu"
-	<stern@rowland.harvard.edu>, "linux-usb@vger.kernel.org"
-	<linux-usb@vger.kernel.org>, Linux Kernel Mailing List
-	<linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org"
+To: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"oneukum@suse.com" <oneukum@suse.com>, "stern@rowland.harvard.edu"
+	<stern@rowland.harvard.edu>
+CC: Kerem Karabay <kekrby@gmail.com>, Orlando Chamberlain
+	<orlandoch.dev@gmail.com>, Linux Kernel Mailing List
+	<linux-kernel@vger.kernel.org>, "linux-usb@vger.kernel.org"
+	<linux-usb@vger.kernel.org>, "linux-scsi@vger.kernel.org"
 	<linux-scsi@vger.kernel.org>, "usb-storage@lists.one-eyed-alien.net"
-	<usb-storage@lists.one-eyed-alien.net>, Kerem Karabay <kekrby@gmail.com>,
-	Orlando Chamberlain <orlandoch.dev@gmail.com>
-Subject: Re: [PATCH] USB: core: add 'shutdown' callback to usb_driver
-Thread-Topic: [PATCH] USB: core: add 'shutdown' callback to usb_driver
-Thread-Index: AQHazs1tjVgoALhhKk+BKEcu0nmxn7HpWxaAgAAL54CAAAHQAIAAAIIv
-Date: Sat, 6 Jul 2024 09:04:07 +0000
-Message-ID:
- <MA0P287MB0217E5151DBF1D0813FAFE00B8D82@MA0P287MB0217.INDP287.PROD.OUTLOOK.COM>
-References: <7332D45F-9BD3-4D0E-A5AF-9845353415A9@live.com>
- <2024070649-nuzzle-movable-f383@gregkh>
- <C5231A8D-C529-4BAC-9E2D-32F00321A294@live.com>
- <2024070622-alarm-kissable-f446@gregkh>
-In-Reply-To: <2024070622-alarm-kissable-f446@gregkh>
+	<usb-storage@lists.one-eyed-alien.net>
+Subject: [PATCH v2 0/2] USB: Simplify running code on shutdown for USB devices
+Thread-Topic: [PATCH v2 0/2] USB: Simplify running code on shutdown for USB
+ devices
+Thread-Index: AQHaz4sdXbd38Jb4D02b+7GJAoiXFg==
+Date: Sat, 6 Jul 2024 09:58:56 +0000
+Message-ID: <A6C4519F-852E-4B5C-B791-7396B515B8A6@live.com>
 Accept-Language: en-IN, en-US
-Content-Language: en-IN
+Content-Language: en-US
 X-MS-Has-Attach:
 X-MS-TNEF-Correlator:
 x-ms-exchange-messagesentrepresentingtype: 1
 x-tmn:
- [lqkRjXrEypxsS9oRNv+53JSku8/R9Tehff/wunDh91xJ/8tZRng5tmtM/F0mgfcDEyhoZGnXtZ0=]
+ [k2F9qNdhN5r8SyyZCaaH90iIm4EJerhg6WV0wmQ4c+KlzuS2156GVHvEKpBI0uhT/8IeXutWSwQ=]
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: MA0P287MB0217:EE_|PN2P287MB0303:EE_
-x-ms-office365-filtering-correlation-id: a0f0f820-18a8-4dfd-8e6a-08dc9d9a9795
+x-ms-traffictypediagnostic: MA0P287MB0217:EE_|PN2P287MB1372:EE_
+x-ms-office365-filtering-correlation-id: a77fdb62-ab88-4c4f-56f7-08dc9da23ffb
 x-microsoft-antispam:
- BCL:0;ARA:14566002|19110799003|8060799006|461199028|3412199025|440099028|102099032;
+ BCL:0;ARA:14566002|461199028|8060799006|19110799003|440099028|3412199025|102099032;
 x-microsoft-antispam-message-info:
- gIXQC5QFHAK/Mp2hBSKJwQMWSRpO+7c33rdq8bpz8Ey14W0KaPJlDamaodQi8q8BGw9R/IbGFTamwzy11yCuf6HdxOgB4jSU8kHA5BS+WFLQ4+1+EwFqGYkKmzShTFwD+lm5I7ajX3KnubZimNfOH1M4wlNVeJYocMxm/+lmsRnSuTTrgybQPlrHZW+oC3bWkloiOoZXkz0t8x5ktiNJiwwalXyMZZaUocqrn51d4RPp8PVizvo7Q11Miw+5BLe98kRsNcFA2F7vEH8Tf+UzaXZFC/bVnSBywvLA2NGdY4l3yQA3gawG2cs7WixQEdWtpsAxZy4HkZG/qBQtqYc8eXQrtKczFW5XzhHZarSgrhCQ7WahGTnovIjhYCfhcgdpA+PrRuso41foh3p7t0PQetpPlFRxrpGBMw+921WpatwKFl5qhXbWdIe/7v1K0y/ogLdMJQ5OO3cXNqIXMvae/IEAoDL3FoFpnyUICK1IP93Rj6PWWza7Af816FnLdWlCvXlNGey6oN8xNFYg7JcEgCTOQFtdWsB3CvJ7VyiWdlriJcGNjfUbnhgkmypQAn8jXztDRcr150BvUCNarieSPQIfy5gw35VFfCPI/fYnOMY3kqi4JsdScDZNDYFRNGhBHPxFpDnW71cShWpfGSPd4w==
+ 94XNpBLdmbUU0pXUhN50qLnOGYHPm6m/HF3VjOndUbOrcKUZ1QtDVINVcA7UAK0ERRXPsipjU4QKu0wXsLCwuJX9ZFJah9Kg4oNksTrze0GmasgkS/uu/xIU2V/RsXCpIP4rcyjEA75BHgX4bjKwq42Bn1h+0O32VAWyPXOnqB4RlC4ZzI6C1o+/nHGKyMWfp9ErnQQjaqUt9Cz021dvsIjAU7WD/DYpu8Zkz0j0nGImwkre7NOB61kbxwEVHLJNf6aiqgXvkByDx6Y8ipSUbI2dqZv0rEsJ4gHq3A1ob51xaCKa86wz8Umg60plVWP178+wpQCxHa2ydOE38VOATGeNC0d+wpVDDyS3sK0Nz/1sRRo2p4rM20J4UP4zXC/7zWNWyqYd81s5dsRzuCR4HU5DHr06cxMnYfmQ2iDJ9iuweDDu4ABAAhg8UlGPVFrwgIcr+FoV0H82Mo6AsM8MH7R35+Ohqrmdi74xZRDkmG0o/P8PIt9tjDpTQhE0M1bFqxwT4R6P2COVBAjWnDm/UpESM+7NLYWY88qGKFLO0Qs+yObRmhAiucDbGkCTOiRjvxdJpEByjo2+YW3oKiNOeHu9v7qW2hrY3viU48N9Ngn1YF/JPHBoOrSlmjVcKYhv/5fjoJjYDqsUmo2fkB0AAA==
 x-ms-exchange-antispam-messagedata-chunkcount: 1
 x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?WWx0SWtKcU9OanhpZCt5eW8xTGxVTCtHT0YxbnBORHZKcWFtMVkrTCs0Ynd5?=
- =?utf-8?B?c2Q5bHZJSlMrWXpzZTcrVlE2RHJPU1EzZUhNNXA3Wk55ekltZHM2cHRidWZZ?=
- =?utf-8?B?amtINXJKRE8xV29tYUpOOFkzdWNQdkNTK3JmT3IxYkpReHUwcVI2V2R5WXFU?=
- =?utf-8?B?d2JWVk0wRC8vUy9LSktYdUk1WG91bTZ5VzhPczMvNHpZdENMOWk2OGc4d1Ur?=
- =?utf-8?B?YXUwZzJzR3JOamJ1VlpPc0EvVmtRVkt0OUN3alBtWjk2cXlDTW5laUt6Umg1?=
- =?utf-8?B?djF5d3BYdW95V1ZQOTRoZlRpYW9GNWNHakM0Ym5GVjJpNjlLbCswK0tzaVR5?=
- =?utf-8?B?c0psQ2N5UlZYVWpzMFYvRU4vK28rUEMrRGJ6a0FCaVhGWWoyQzhCcGN1YUs1?=
- =?utf-8?B?Rit2OHRzZ3l3TDMyZ0U4WEk2RWVsN2NrQ091d21zMk5HZkRhWk40OERZcEwx?=
- =?utf-8?B?WTBNQk8yMHZTYTZ2ZzFISG8zMFBNQjgxZ0ppeXVqb0RzZGdvekJjdHVCK1I3?=
- =?utf-8?B?Wng3dm5FUmh1TEpXVXlhbUFrQ0o0Qml5dk1qZGIzQkNEcFMxemJhV2R4L1dz?=
- =?utf-8?B?Zm0vbjNJbWpsUnpPKy8vWWd6R1JlbVd1QXZhaXVNVEhxYThxOVp1a3RBOXhi?=
- =?utf-8?B?UVlPYm1Ja2RTRFZuaUFYcjJlajRjTWxFZ25TSENURllNSnNFMlczRkxMTUMx?=
- =?utf-8?B?Lzdpb3hTSjVlMzQxWWNTV2hYZHRiR1BFSTVTZjE1NWIxRU1ZSzRRMlozR2c4?=
- =?utf-8?B?L1NEN2ltaHIwNFkrOFpFa1kzVjhqTmF3LzdYOGUwLzdTNHNDemR0UW0wc1FK?=
- =?utf-8?B?UUVyUDNRTFQ0dVUyOG1GcS9KcEwzSnhOTjgzOURHNnNHTkpSUjJHdllNY1dV?=
- =?utf-8?B?aHhZd2E4SnhJN1pYZ2VUcmRyZlBEV0wvVDZxbVFvTWgwbHN4U0RVMlJrNGNz?=
- =?utf-8?B?alVHQ28vVFpwaDVKUUtJdkovQkhMUG9YcU1yTU15Q1lpbGY3N0NMaDhYRklI?=
- =?utf-8?B?dDNVMjNjQmhwRFVYa3JmbFkreG9ST0cvQTZmMUdVZEVYdnEwbzZtKy9nVW5n?=
- =?utf-8?B?VHpOVDJmTGlGeEVEWmdHY3lDdEhqZnZMMWljaW9pR25ZdGZ1R0FwVFlwTEhu?=
- =?utf-8?B?Y08rODR0L2xQc2UycW81VElUd1J6Q3EwVkhxenZHZ2R3K1RHcU9NU0lkNGov?=
- =?utf-8?B?TDRaQzRUNGVlVG80SEpOdHVYUlJvUjJVdkhHS0RsdCtrRnYwazZMcVpEdjBq?=
- =?utf-8?B?OFFqUy80eng5OUsyQ2dFOHc3TGVLZ1FobFMxZGYzcHNOMGJuWDZYOUdjSm9i?=
- =?utf-8?B?TDVqZ2hIOHVkajgyK3k1TXhlcEl5dXNERFo3TDMzUkRMQTNXNWxmcUJOdzRv?=
- =?utf-8?B?L3daVFNpSkEvUXJZWHEyekxpblN1Z28xVWRPWnhqMmg2ZXlIcTRSNHBITnlU?=
- =?utf-8?B?UERjOHlIVVhDczdrT0M5VitqcHNFQVNYZlBURG9OY3dhU2FvcW5lN1YwRW5x?=
- =?utf-8?B?akt3cnUvRGkyWWNvQm9lRUYvbVpHVFM5N0o5TUdaYmdUUFdkL2hyT3NyN2t1?=
- =?utf-8?B?azE1RlJpN1RSTFkvRDhVdUgvNmRkdmRuMW9tbUUzMk0vMWFETEFvNTJwQWhr?=
- =?utf-8?B?T0hvTGZlZWs1aVd6Rnk2SGllYmFyeTVqM29WZlo5VTdHMDRORkZxdXo0c1Ew?=
- =?utf-8?B?UTduLzFEaENqZVZyYXBwRzlxRUJjYkZHS21PT0FVTWFzVWtQR2JhRkZOek93?=
- =?utf-8?Q?A5VZ4QGqKSnw2zVUGw=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+ =?us-ascii?Q?cMOEM2nOnJPgamS4Y71u81IwwSrPRFumML2kJYsAjB7HkxFIIotttVAzw8G6?=
+ =?us-ascii?Q?qC0TXlu/ts+QwVtDsjIK27KUE3QLMDneDMmBmSSO05E5ggE4qXl9ZXObSnU3?=
+ =?us-ascii?Q?wn++pGwn/IOpsZQLfwBrV+XV51OSj+9DXCEfwGlXlnPHrCR8hnWLmmt4udMm?=
+ =?us-ascii?Q?ye956U1dpulPzIhXkc9R4bpL/MEmwuHj8Z/hh2RzFiSS2Pyka/gxiwUBNScm?=
+ =?us-ascii?Q?4D0gXcKxvZzigzPg/fZCHnA7Pwf6hRItxfjMrmtKAeYOU9qmVp8e23LpHEaW?=
+ =?us-ascii?Q?ooVGzEjJF4+6RgubYr/XabH4NKmLbme+y+HoD6rMr9yQyVBIMOCE1B/Wt2ix?=
+ =?us-ascii?Q?XQOzo7xVgZbJXnjoSSDkpr0K37ZB1BWINIHPc1UnVLAj5RY6VaSkvKaWXQNC?=
+ =?us-ascii?Q?WpQRAJpBnAOL54e3j+CVyfPxkBa/Jv6wdacQX5WRooXee2O0lt4HCov1fD/9?=
+ =?us-ascii?Q?YKBbxdArhcbwPOwIUUZ3daEOP8Df8bJnS5MM8MoIJy5HlR3gWH4KxpfKw9FD?=
+ =?us-ascii?Q?0qKhkEZzib+gImS9JroOYxAtTxvylEK/Fc1moCAlLItOUfPh1wQfoISsOkT7?=
+ =?us-ascii?Q?3KvWWwjlTE0lSz/BWWGAnpmvEt5+1gARmEM2l4d4ju0aO0iRDzmxdGI3JPMW?=
+ =?us-ascii?Q?Un9/51/IgZq9sbDKl8mo9wC/+Aied1A2sdnnPa/gEjgH/v1pA9vZxKzJhMPI?=
+ =?us-ascii?Q?VmGkQBsxbQRabp602UzItyiu7ZHNSDk3d04XhVPg8rl5geTx/xxQHwyPOERC?=
+ =?us-ascii?Q?DF4C9xa74E2BpXjXZYccmy2jJIaJioVfvGWNgiJ+4D0CEb7iheguwnCfX+ml?=
+ =?us-ascii?Q?LJPGP64rcMvgIqwo0IgMukCF/8+YNNibEMG6uL1GfBC2OJfEjuQSTU4q28Yi?=
+ =?us-ascii?Q?RIC1LNZ5TUc7kpw6ij1SeL+/eZPSHQZQwu6xpkxzVO3DFGoqjgkGtS9VVdS4?=
+ =?us-ascii?Q?dlZetyAwX7dJ/mm0JVQ1bLxEy81yvT0PdijTG6rFS9keZXZFfwDkmckZNfC2?=
+ =?us-ascii?Q?/f9+Q9pGn8szmJCC8GhxWKfafc4H/G/0Q/Jf3XSyeq7fSk/XstQR0fW2eiHh?=
+ =?us-ascii?Q?215QiFf28Wt/RAe50M5OLZuidkVqN0w758aJT51yrgtovRM+ZG/WVweRl/El?=
+ =?us-ascii?Q?3fHdcswDmGGNs2z7tlxfOPsOVKq3j+iAKCFSCVR0cWzSgglKrNuT9S5++RMA?=
+ =?us-ascii?Q?456BldywGBpmP7hDZBJK2Jzf1gTc1iwAjsxFFs6YVdvDAUmIKncCXhFaw0X0?=
+ =?us-ascii?Q?FbSUAsrWjNDnu57697xOBE58c80sJ9l9IwTVBuusb83J2xn9xt1AI6rqWDr8?=
+ =?us-ascii?Q?X0XrOVW8F6vvN+v0Iw+YQYBY?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <A4CFE333EEA19A4C873E79AF9E7AB990@INDP287.PROD.OUTLOOK.COM>
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -115,39 +104,31 @@ X-OriginatorOrg: sct-15-20-7719-20-msonline-outlook-24072.templateTenant
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: MA0P287MB0217.INDP287.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: a0f0f820-18a8-4dfd-8e6a-08dc9d9a9795
+X-MS-Exchange-CrossTenant-Network-Message-Id: a77fdb62-ab88-4c4f-56f7-08dc9da23ffb
 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Jul 2024 09:04:07.3159
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Jul 2024 09:58:56.3281
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PN2P287MB0303
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PN2P287MB1372
 
-DQoNCj4gT24gNiBKdWwgMjAyNCwgYXQgMjozMuKAr1BNLCBncmVna2hAbGludXhmb3VuZGF0aW9u
-Lm9yZyB3cm90ZToNCj4gDQo+IO+7v09uIFNhdCwgSnVsIDA2LCAyMDI0IGF0IDA4OjU2OjA1QU0g
-KzAwMDAsIEFkaXR5YSBHYXJnIHdyb3RlOg0KPj4gDQo+PiBIaSBHcmVnDQo+PiANCj4+Pj4gT24g
-NiBKdWwgMjAyNCwgYXQgMTo0M+KAr1BNLCBncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZyB3cm90
-ZToNCj4+PiANCj4+PiBPbiBGcmksIEp1bCAwNSwgMjAyNCBhdCAxMToyMTowNkFNICswMDAwLCBB
-ZGl0eWEgR2FyZyB3cm90ZToNCj4+Pj4gRnJvbTogS2VyZW0gS2FyYWJheSA8a2VrcmJ5QGdtYWls
-LmNvbT4NCj4+Pj4gDQo+Pj4+IFRoaXMgc2ltcGxpZmllcyBydW5uaW5nIGNvZGUgb24gc2h1dGRv
-d24gZm9yIFVTQiBkcml2ZXJzLg0KPj4+PiANCj4+PiANCj4+PiBTb3JyeSwgYnV0IHRoaXMgZG9l
-cyBub3QgZXhwbGFpbiB3aHkgdGhpcyBpcyBuZWVkZWQgYXQgYWxsIDooDQo+Pj4gDQo+Pj4gV2hl
-cmUgZGlkIHRoaXMgY2hhbmdlIGNvbWUgZnJvbT8gIFdoYXQgcHJvYmxlbSBkb2VzIGl0IHNvbHZl
-PyAgV2h5DQo+Pj4gc2hvdWxkIHdlIHRha2UgaXQ/DQo+Pj4gDQo+PiANCj4+IEN1cnJlbnRseSB0
-aGVyZSBpcyBubyBzdGFuZGFyZGl6ZWQgbWV0aG9kIGZvciBVU0IgZHJpdmVycyB0byBoYW5kbGUN
-Cj4+IHNodXRkb3duIGV2ZW50cy4gVGhpcyBwYXRjaCBzaW1wbGlmaWVzIHJ1bm5pbmcgY29kZSBv
-biBzaHV0ZG93biBmb3IgVVNCDQo+PiBkZXZpY2VzIGJ5IGFkZGluZyBhIHNodXRkb3duIGNhbGxi
-YWNrIHRvIHVzYl9kcml2ZXIuIEl0IGFsc28gaW1wbGVtZW50cyB0aGUNCj4+IG5ldyBtZXRob2Qg
-dG8gZXhpc3RpbmcgIlVTQiBBdHRhY2hlZCBTQ1NJ4oCdIGRyaXZlciB0aGF0IHJlcXVpcmVkIHNo
-dXRkb3duDQo+PiANCj4+IElzIHRoaXMgZ29vZCBlbm91Z2g/DQo+IA0KPiBJdCdzIGEgZ29vZCBz
-dGFydCwgeWVzLg0KPiANCj4gQnV0IGFzIHlvdSBzYXkgImFsc28iIHRoYXQgbWVhbnMgeW91IHNo
-b3VsZCBzcGxpdCB0aGlzIHVwIGludG8gYXQgbGVhc3QNCj4gMiBjaGFuZ2VzLCByaWdodD8NCg0K
-UGF0Y2ggMSB3aXRoIGNoYW5nZXMgdG8gaGlkIGNvcmUNClBhdGNoIDIgaW1wbGVtZW50aW5nIHRo
-ZSBjaGFuZ2UgdG8gdWFzIA0KDQpSaWdodD8NCj4gDQo+Pj4gSSB0aGluayBJIGtub3cgdGhlIGFu
-c3dlcnMgdG8gdGhlc2UgcXVlc3Rpb25zLCBidXQgeW91IG5lZWQgdG8gZG9jdW1lbnQNCj4+PiBp
-dCBoZXJlIGFzIHRvIHdoeSBpdCBpcyBuZWVkZWQgKHBsZWFzZSByZWFkIHRoZSBrZXJuZWwgZG9j
-dW1lbnRhdGlvbiBmb3INCj4+PiBob3cgdG8gd3JpdGUgYSBnb29kIGNoYW5nZWxvZyB0ZXh0IGFu
-ZCBzdWJqZWN0IGxpbmUuKQ0KPj4gDQo+PiBUaGUgc3ViamVjdCBsb29rcyBmaW5lIHRvIG1lLiBJ
-ZiB5b3UgdGhpbmsgaXQgY2FuIGJlIGltcHJvdmVkLCBzdWdnZXN0aW9ucyBzaGFsbCBiZSBhcHBy
-ZWNpYXRlZC4NCj4gDQo+IFdoZW4geW91IHNwbGl0IHRoZSBwYXRjaCB1cCwgdGhlIHN1YmplY3Qg
-bGluZXMgd2lsbCBnZXQgYmV0dGVyLg0KPiANCj4gdGhhbmtzLA0KPiANCj4gZ3JlZyBrLWgNCg==
+Currently there is no standardized method for USB drivers to handle
+shutdown events.
+
+The first patch in this series fixes this by simplifying running code
+on shutdown for USB devices by adding a shutdown callback to usb_driver.
+
+The second patch implements this new callback to the UAS driver.
+
+Kerem Karabay (2):
+  USB: core: add 'shutdown' callback to usb_driver
+  scsi: usb: uas: Implement the new shutdown callback
+
+ drivers/usb/core/driver.c | 14 ++++++++++++++
+ drivers/usb/storage/uas.c |  5 ++---
+ include/linux/usb.h       |  3 +++
+ 3 files changed, 19 insertions(+), 3 deletions(-)
+
+--=20
+2.43.0
+
