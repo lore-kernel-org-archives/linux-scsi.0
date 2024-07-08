@@ -1,165 +1,196 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f53.google.com (mail-lf1-f53.google.com [209.85.167.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC5ACBA42
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jul 2024 05:25:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4579179A3
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Jul 2024 06:08:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720416350; cv=none; b=puL0yWHVyIDjWm0dAiKewqAfWRIbMSNjai6dm+st7OtdGnHhhX4KlzcB9W8Prs4qVV+b6d0nZ7fnclC8zzl0exrOL9aJSAVmmrP/p6kTsdrYcZoLmTUEfpl2BBoXKWHimdgSXmNULAdQcXJ5VIrLubYV6V1UDzlC2mp9oyGDezQ=
+	t=1720418885; cv=none; b=J1UmRtTIspyrqLULXryFnDuo6EI3ZVkFrV0nGt8yj+vi6qElHPoNin4mui1BBWRwVEVXcbSQprMkNwtOYvkygLtrVOBAOJtpZtLBf0eMbK1Pix6zGZCzdaT3qLIwar7SKUwyjBCjKm2QOAXZAHjpPbYgII0U85xMMR3SbFiUaCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720416350; c=relaxed/simple;
-	bh=6vjUqy0D75X/JgEE/L41ndV3MLqfffvp6wFALR8HmtI=;
-	h=Mime-Version:Subject:From:To:CC:Message-ID:Date:Content-Type:
-	 References; b=mUQsxFtUFlrVXtBReQJMDWjaFNH5kU9AXE59jNcdf6RXj6N/sGNVCPHQB623rzzF0/Xo7rJNNfsPBIzxharCDXH9exElnKzJiyE/O5MBkhGZ7/WLWjXUN+OrkaESxAy+Gc70dvOtAEaJeGEcH/pCn3ESJupshHHbWGWBfi0QSC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=NOjLIJDs; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1720418885; c=relaxed/simple;
+	bh=CSWLEHrCoIzNa13zYakpql7wRRQ6acxJhWNxuzk3UeY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DYiomGHz9FfmdXImuqL8IsKYYEvxiswBDD1nfvXk/5d+D4UbBdZmCJ53k1eMp7MViIDFebd65oDgjbV7m0nQnPVpY2dWh0l5eDH3WR5LvwAoDIpYHGytFdaERNjLNnby2Z53Izhx2x2DiVBB6NtAnu3Lhl7QQgPVMzXnGLH3XWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=MuhUO2jW; arc=none smtp.client-ip=209.85.167.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="NOjLIJDs"
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20240708052542epoutp031be9983deb12a43a07ab95d24273008d~gJYx7qOUn0362303623epoutp033
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jul 2024 05:25:42 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20240708052542epoutp031be9983deb12a43a07ab95d24273008d~gJYx7qOUn0362303623epoutp033
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1720416342;
-	bh=Gbi+MBc6CGzGAupZYXo4Iit+yJfDAtrJpzlTdPmXXoI=;
-	h=Subject:Reply-To:From:To:CC:Date:References:From;
-	b=NOjLIJDs2kNvsLgAvr6dbbSV/RJSG3yH9trrqCwlP6+gP0o5NtlZ9UdsjaF6bf2s8
-	 poWtQC/l5iiNqi4yVS2xM5gSnKXzvqkAnLuChl1f8xaFTKFmU2x7Wu7J8iByEpUH5r
-	 oxmebv/7/iSUG7AkbX+G9zcyfO6YZBB8ztvxVYPQ=
-Received: from epsmges2p4.samsung.com (unknown [182.195.42.72]) by
-	epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-	20240708052542epcas2p4d48414db49645923973ab98b17a85886~gJYxsAdBR1573815738epcas2p4m;
-	Mon,  8 Jul 2024 05:25:42 +0000 (GMT)
-X-AuditID: b6c32a48-e67eda8000018d5f-4b-668b7856f5e8
-Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
-	epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-	19.1B.36191.6587B866; Mon,  8 Jul 2024 14:25:42 +0900 (KST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="MuhUO2jW"
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-52eafec1e84so1274767e87.0
+        for <linux-scsi@vger.kernel.org>; Sun, 07 Jul 2024 23:08:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1720418881; x=1721023681; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:from:to:cc:subject:date:message-id:reply-to;
+        bh=yF9h3aMnBs4w0EwI4NF6ZofLp2oNZvbzRR5gRprUOtg=;
+        b=MuhUO2jWIjCgRT64zxEPpoj6MtpvXQjtdu705DskMqxT0WUChKF/uFS85VjpF1Gj79
+         3O4nvAwzlU/BRNrV0DLAR1yHaI16KS0EX4s8fEeAYLjxgWFCsv3OR8qtxx7UcgqmZdyE
+         2zreernmm3HDiUMbFy8hODvpfroE8/+5tu3Xk8/K+0xCbk13Czf08RNR5Q9Rc9/imx8r
+         IES6HvTqMiJHDktqknlIn1JThjrLwB7vEZupS5l3z7VJadAF/ZvI633bmWaPMVj4W1Ts
+         qd6xlVHyGZ0l4tVAWWdG/g6JZaZz8DaEeoSj+2AGxazbGHx4hpbEwNz6OOBzSnSJG9/B
+         /rFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720418881; x=1721023681;
+        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=yF9h3aMnBs4w0EwI4NF6ZofLp2oNZvbzRR5gRprUOtg=;
+        b=TD/b3huXeTzagzSmN1Wt7CZdxqgfJwY3L4XvyjUSqnrIxKss+scqxNwabz/vYBh09G
+         lJycz64QTQbBHrfsngJjE45/trp7rVrOzwMsEzU8nBavUWjx060fIgL9r99aQZ5IymJl
+         CMSw/7v3sdsaMHxHfe/VEixYZinsL5Bi2EezlvSciwh9sNOh+f4YyF/jzOXqDo3kHuwd
+         F0+6apAKBRz1Lwic23n7ltnm7UvEBW9Dgdcs8f1flPDWGieO+lIay8x4yvgWh7z3zHg9
+         8mF9Px1F8LqAs4b3rW2R86AnCzxuGZnZb+6f4Kj2VkxufB7VEV1fZNo7aToZKNpJZgQJ
+         e/Fg==
+X-Forwarded-Encrypted: i=1; AJvYcCVe+F/pkV24eezDDiKlpv5I0raQYAfgb/mV96DjWcP/Hk9riLs5M4PkYqJIcfPa2Fh01zP5nFMrf6Unfo8cGa/t9RYwTemY7EG66A==
+X-Gm-Message-State: AOJu0YwtKBKg2/bZIsruCP2DyzGtc9DkWJtGojrzyv1fU2PEuBvZGdzN
+	wieN5bjleJSnnlpGt2iZe17/E76Gj/N392b708csXhGXP+TMh/jMXcFTcREvlN8=
+X-Google-Smtp-Source: AGHT+IFoN/cWlR6BXWuja0//SDZxE8pDDT582ybc9/L5NsyVsJgSeB4EHViANbhzaOEbDfbWarVRfQ==
+X-Received: by 2002:a19:6b0e:0:b0:52e:7f16:96be with SMTP id 2adb3069b0e04-52ea06ddde5mr6820176e87.65.1720418880803;
+        Sun, 07 Jul 2024 23:08:00 -0700 (PDT)
+Received: from [192.168.1.20] ([178.197.219.137])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4265fe7130csm74789435e9.8.2024.07.07.23.07.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 07 Jul 2024 23:08:00 -0700 (PDT)
+Message-ID: <f8f3c4d4-bf24-4195-a7b0-eec95cd64b57@linaro.org>
+Date: Mon, 8 Jul 2024 08:07:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: [PATCH V3] scsi: ufs: core: Check LSDBS cap when !mcq
-Reply-To: k831.kim@samsung.com
-Sender: Kyoungrul Kim <k831.kim@samsung.com>
-From: Kyoungrul Kim <k831.kim@samsung.com>
-To: "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "bvanassche@acm.org" <bvanassche@acm.org>, "Ed.Tsai@mediatek.com"
-	<Ed.Tsai@mediatek.com>, Minwoo Im <minwoo.im@samsung.com>, Kyoungrul Kim
-	<k831.kim@samsung.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20240708052542epcms2p5358e41c0116c936d2a43ad99f7c1e4a8@epcms2p5>
-Date: Mon, 08 Jul 2024 14:25:42 +0900
-X-CMS-MailID: 20240708052542epcms2p5358e41c0116c936d2a43ad99f7c1e4a8
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/47] dt-bindings: arm: qcom: Document QCS9100 SoC and
+ RIDE board
+To: "Aiqun Yu (Maria)" <quic_aiquny@quicinc.com>,
+ Krzysztof Kozlowski <krzk@kernel.org>, Tengfei Fan
+ <quic_tengfan@quicinc.com>, andersson@kernel.org, konrad.dybcio@linaro.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, djakov@kernel.org,
+ mturquette@baylibre.com, sboyd@kernel.org, jassisinghbrar@gmail.com,
+ herbert@gondor.apana.org.au, davem@davemloft.net,
+ manivannan.sadhasivam@linaro.org, will@kernel.org, joro@8bytes.org,
+ conor@kernel.org, tglx@linutronix.de, amitk@kernel.org,
+ thara.gopinath@gmail.com, linus.walleij@linaro.org, wim@linux-watchdog.org,
+ linux@roeck-us.net, rafael@kernel.org, viresh.kumar@linaro.org,
+ vkoul@kernel.org, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+ mcoquelin.stm32@gmail.com
+Cc: robimarko@gmail.com, bartosz.golaszewski@linaro.org, kishon@kernel.org,
+ quic_wcheng@quicinc.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ bvanassche@acm.org, agross@kernel.org, gregkh@linuxfoundation.org,
+ quic_tdas@quicinc.com, robin.murphy@arm.com, daniel.lezcano@linaro.org,
+ rui.zhang@intel.com, lukasz.luba@arm.com, quic_rjendra@quicinc.com,
+ ulf.hansson@linaro.org, quic_sibis@quicinc.com, otto.pflueger@abscue.de,
+ luca@z3ntu.xyz, neil.armstrong@linaro.org, abel.vesa@linaro.org,
+ bhupesh.sharma@linaro.org, alexandre.torgue@foss.st.com,
+ peppe.cavallaro@st.com, joabreu@synopsys.com, netdev@vger.kernel.org,
+ lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com,
+ ahalaney@redhat.com, u.kleine-koenig@pengutronix.de,
+ dmitry.baryshkov@linaro.org, quic_cang@quicinc.com, danila@jiaxyga.com,
+ quic_nitirawa@quicinc.com, mantas@8devices.com, athierry@redhat.com,
+ quic_kbajaj@quicinc.com, quic_bjorande@quicinc.com,
+ quic_msarkar@quicinc.com, quic_devipriy@quicinc.com, quic_tsoni@quicinc.com,
+ quic_rgottimu@quicinc.com, quic_shashim@quicinc.com,
+ quic_kaushalk@quicinc.com, quic_tingweiz@quicinc.com,
+ srinivas.kandagatla@linaro.org, linux-arm-msm@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-phy@lists.infradead.org, linux-crypto@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+ linux-riscv@lists.infradead.org, linux-gpio@vger.kernel.org,
+ linux-watchdog@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-stm32@st-md-mailman.stormreply.com, kernel@quicinc.com
+References: <20240703025850.2172008-1-quic_tengfan@quicinc.com>
+ <20240703025850.2172008-2-quic_tengfan@quicinc.com>
+ <665f6c8c-4f43-4d20-90e9-9e037a942066@kernel.org>
+ <fbeb5969-0b3a-455e-88eb-b83734bf2c50@quicinc.com>
+ <97c9484b-e257-4163-a104-3457d59bc69b@kernel.org>
+ <63eb3f58-d4a4-4a27-b78c-f4cb83e62c63@quicinc.com>
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Content-Language: en-US
+Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
+ 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
+ D2GYIS41Kv4Isx2dEFh+/Q==
+In-Reply-To: <63eb3f58-d4a4-4a27-b78c-f4cb83e62c63@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFuplleLIzCtJLcpLzFFi42LZdljTXDesojvNYM9fZYtpH34yW+xZb2ex
-	sZ/DYsqmr4wW3dd3sFksP/6PyeLZ6QPMDuwel694e0ybdIrNo+XkfhaPj09vsXj0bVnF6PF5
-	k1wAWxSXTUpqTmZZapG+XQJXxqvdUxgL1ohULJm7ja2Bcb9AFyMnh4SAicSln9cZQWwhgR2M
-	Eju/2HUxcnDwCghK/N0hDBIWFrCTWPzpLzNEiZzE9fndrBBxHYnu5g9gcTYBLYmNxzeydTFy
-	cYgITGKU+P/9JQuIwyzwjFHi0ZRHbBDLeCVmtD9lgbClJbYv38oIYWtI/FjWywxhi0rcXP2W
-	HcZ+f2w+VI2IROu9s1A1ghIPfu6GiktJtM3+zQRhV0tcbdwNtlhCoINRoqX1IStEwlxi5epL
-	YA28Ar4Spx8dB4uzCKhKHJu9hx3kYwkBF4lvByVBwswC8hLb385hBgkzC2hKrN+lD1GhLHHk
-	FgtEBZ9Ex+G/7DBf7Zj3BOoCJYn2bVehlkpIPJt4AepiD4mDv86xQsIwUKK9dRfzBEaFWYiQ
-	noVk7yyEvQsYmVcxiqUWFOempxYbFZjoFSfmFpfmpesl5+duYgSnGC2PHYyz337QO8TIxMF4
-	iFGCg1lJhPf04/Y0Id6UxMqq1KL8+KLSnNTiQ4zSHCxK4rz3WuemCAmkJ5akZqemFqQWwWSZ
-	ODilGphmBC0QfnRR6FwBy/MjrKcnNS12f3a1zTrc6qeW991Qq9CZ+2oe3ZRZp7V2epiLX2ST
-	I1/S1xPT0j8IPXK0WlEx+Ze150zu1JP6b9bM48xdurlyO3+hkLNh64faTA2FzR7RK9YfMmnK
-	f758tvHrVyx9moGnRVg78tOn3hAoiksM//31VlyRoJ2K4bNqjlinRYrXvI0lnmilMZ5SiTfb
-	x3pnhviVK9xuGQyTHT7ZVt+OL7nCqLGlmcM/brbDqk+O/yIOWkjuXaMjxbYv9dOsK1vbvjza
-	7Bq8/0lxexT3j+ofC+sMBGUKBZ4cmvT54eZHRTc6n2ssMz0bOXXBwm1fV3vtPxl4Rd313f78
-	Y0d3rn+hxFKckWioxVxUnAgAw4TlvqADAAA=
-X-CMS-RootMailID: 20240708052542epcms2p5358e41c0116c936d2a43ad99f7c1e4a8
-References: <CGME20240708052542epcms2p5358e41c0116c936d2a43ad99f7c1e4a8@epcms2p5>
 
-if the user set use_mcq_mode to 0, the host will try to activate the
-lsdb mode unconditionally even when the lsdbs of device hci cap is 1. so
-it makes timeout cmds and fail to device probing.
+On 08/07/2024 06:45, Aiqun Yu (Maria) wrote:
+> 
+> 
+> On 7/3/2024 5:33 PM, Krzysztof Kozlowski wrote:
+>> On 03/07/2024 11:21, Tengfei Fan wrote:
+>>>>>         - items:
+>>>>>             - enum:
+>>>>> +              - qcom,qcs9100-ride
+>>>>>                 - qcom,sa8775p-ride
+>>>>> +          - const: qcom,qcs9100
+>>>>
+>>>> This changes existing compatible for sa8775p without any explanation in
+>>>> commit msg.
+>>>>
+>>>> Best regards,
+>>>> Krzysztof
+>>>>
+>>>
+>>> In the next verion patch series, I will provide relevant explanatory 
+>>> information in this patch commit message.
+>>
+>> TBH, I cannot think of any reasonable explanation for this, especially
+>> considering rest of the patchset which does not fix resulting dtbs_check
+>> warning.
+> 
+> The existing compatible "sa8775p" warning can only be addressed When
+> @Nikunj's "sa8775p" changes merged.
+> 
+> Let me know if you have other suggestions for this.
 
-To prevent that problem. check the lsdbs cap when mcq is not supported
-case.
+I don't have, because I don't understand why do you want/need to change
+existing board compatible.
 
-Signed-off-by: k831.kim <k831.kim@samsung.com>
----
-Changes to v1: Fix wrong bit of lsdb support.
-Changes to v2: Fix extra space and wrong commit messeage.
----
- drivers/ufs/core/ufshcd.c | 16 ++++++++++++++++
- include/ufs/ufshcd.h      |  1 +
- include/ufs/ufshci.h      |  1 +
- 3 files changed, 18 insertions(+)
+Best regards,
+Krzysztof
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1b65e6ae4137..9bea6dc38d64 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2412,7 +2412,17 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
- 		return err;
- 	}
- 
-+	/*
-+	 * UFS 3.0 has no MCQ_SUPPORT and LSDB_SUPPORT, but [31:29] as reserved
-+	 * bits with reset value 0s, which means we can simply read values
-+	 * regardless to version
-+	 */
- 	hba->mcq_sup = FIELD_GET(MASK_MCQ_SUPPORT, hba->capabilities);
-+	/*
-+	 * 0h: legacy single doorbell support is available
-+	 * 1h: indicate that legacy single doorbell support have been removed
-+	 */
-+	hba->lsdb_sup = !FIELD_GET(MASK_LSDB_SUPPORT, hba->capabilities);
- 	if (!hba->mcq_sup)
- 		return 0;
- 
-@@ -10449,6 +10459,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	}
- 
- 	if (!is_mcq_supported(hba)) {
-+		if (!hba->lsdb_sup) {
-+			dev_err(hba->dev, "%s: failed to initialize (legacy doorbell mode not supported\n",
-+				__func__);
-+			err = -EINVAL;
-+			goto out_disable;
-+		}
- 		err = scsi_add_host(host, hba->dev);
- 		if (err) {
- 			dev_err(hba->dev, "scsi_add_host failed\n");
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index bad88bd91995..fd391f6eee73 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1074,6 +1074,7 @@ struct ufs_hba {
- 	bool ext_iid_sup;
- 	bool scsi_host_added;
- 	bool mcq_sup;
-+	bool lsdb_sup;
- 	bool mcq_enabled;
- 	struct ufshcd_res_info res[RES_MAX];
- 	void __iomem *mcq_base;
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 385e1c6b8d60..22ba85e81d8c 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -75,6 +75,7 @@ enum {
- 	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
- 	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
- 	MASK_CRYPTO_SUPPORT			= 0x10000000,
-+	MASK_LSDB_SUPPORT			= 0x20000000,
- 	MASK_MCQ_SUPPORT			= 0x40000000,
- };
- 
--- 
-2.34.1
