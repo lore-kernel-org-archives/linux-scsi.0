@@ -1,156 +1,98 @@
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8242313E03F;
-	Mon,  8 Jul 2024 12:10:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
+Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCF8025745;
+	Mon,  8 Jul 2024 14:18:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720440602; cv=none; b=jJfX8/9OX/NhIdeFEvuncY12k2imA4W3tSMOY3fZfAnsvngHqqrDOpLwyRbDKHJIBPvt8vdjn4H337WzSFviOYZ0z/F7DKG4BqD50roKiRdax7eh5dAb39V7eCRpXz7L9v+e0zZ+ZVk0klCROwHkvWu1Gbe4SmJdWemnLypvdLg=
+	t=1720448318; cv=none; b=sg89ityHvfEK9hcBTpu7cJcrFZsv7DuQ0rECfR5hkJ8wL4pvzn7MkzXMoW34zwwabDSKwkezp/2LenMjqtdJfnYkojr3ZnzlMa0fF1OzOaMy/cd18y/igVCW+hTWsdUPVnR6pWChh6TPFPc3wLf3mzHnfjtTYfom9tAZ7NziFs8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720440602; c=relaxed/simple;
-	bh=o3mMkOtHrDokpgnyNGp9GdXMUM1ai2VATgquhbKri2E=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BcywkC2J0SG0DgmpR0+j1rrIas5FYscSw3eALdb/5I5SHp1BZ+6VfCMFArNzMv6nWF/Zh2RAP2P4uTI083PKDyztL2COonwD3Er3iIPIuMILvxMcAcazO5vP0TqRaZnZfHpg4bROp75YoyBrf8HzRAEVbjmeSqm0lx8zhMS2lsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
-X-IronPort-AV: E=Sophos;i="6.09,191,1716217200"; 
-   d="scan'208";a="210673233"
-Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 08 Jul 2024 21:09:53 +0900
-Received: from localhost.localdomain (unknown [10.166.13.99])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id EBE4D40029BE;
-	Mon,  8 Jul 2024 21:09:53 +0900 (JST)
-From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH 5/5] scsi: ufs: renesas: Add reusable functions
-Date: Mon,  8 Jul 2024 21:09:31 +0900
-Message-Id: <20240708120931.1703956-6-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240708120931.1703956-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20240708120931.1703956-1-yoshihiro.shimoda.uh@renesas.com>
+	s=arc-20240116; t=1720448318; c=relaxed/simple;
+	bh=GmM0j3P51qYNYcB9FB5GbSrbtyWecjbiPcPIsW4vHQc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=GmvWZ9j6CFqAv3wUlpqvB630CyxAldJMomGFiaXokMxZpjwf0DdP/rmj7qFfJHz4/nANQ31BQ9fCnObpsj57IJTSrzARFtBvQu4W/f+HIYZOHlEAxcG3aytkvJrEekleDyxIu5jE9Df85ShTkU7guJ5N+HfdZPoOZQ1uLM19s0s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SuD/cDXB; arc=none smtp.client-ip=209.85.217.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SuD/cDXB"
+Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-48ff8aa6081so1032274137.1;
+        Mon, 08 Jul 2024 07:18:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1720448315; x=1721053115; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vzZ0t+6EA44YYeZ1nSKnkOHgB4WgwxxqFBIuc3oST+w=;
+        b=SuD/cDXBzSAqnuSZNQLSbGCQcMQzMboMEJNUAzwYTgTOTuH647gBXxzuJv8n0jw4LM
+         W+1UjBVVOa4grTFgn0EtJ6d+dVhdYoJYP1NsPt1qdrAuyciCdZ35+lSQ9012wkL+A/sq
+         SqzVGkJpQHdpMXNflUWHi0P7LlFJ+vEgs/JZnhcype3NxPX8hkcisdwQwSyZHW+fQF7C
+         X3WSs1tuEooShKh4PCJLt2mmvQCBKthmwYHRJag7yIMr0BaRdb4BLcHeJWcDFU8gU+i7
+         2W+KMDZqi+WWIBV7B5PtK2HO+xG5OAMcooPS42wTZFLcYEuuFLPa8dIE8RAX+ICCadp9
+         OGOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720448315; x=1721053115;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=vzZ0t+6EA44YYeZ1nSKnkOHgB4WgwxxqFBIuc3oST+w=;
+        b=NYGmwRr8te/qNXv8oowdfQQCEK6AcOqupzI2kNlAtmWuZSNuW5rfoxCfFERF88LY7D
+         X8WYj9nS7AqrvOk10mN8QFVsrPeHUcbgCJbyh3odKTmhuc6WfyDoFRA31NEnYr40cJ5L
+         9FHNybqW9mzsQY4SBUmYnANvNveRWSGzwL+UpvR8l3EWGHjxeGe8NkAiNQ+mFdWE8SjE
+         ANKsvHQxEqbQSfhG/oDTARfOz1fvMCQ1q1QEmfZ6kyfmEkGmPMPoVk1pnTktMKAmypzS
+         KKEbfkor/P4S1jlJu87z35HfPRYgpLMzxCQZftXcoeF9+Fuq0pqtSj8df4xskY7dp1KC
+         FBRA==
+X-Forwarded-Encrypted: i=1; AJvYcCUQqyFa/1mYZI86/NxEwTE6Jn15d30EQb7uZJTGhZ9B4zjd0E3uvJpabXRgNDJlZ7aWEczSaaQY6wO8tgVsEW2t0QPs1TWubfwK2IN4abCwzfJLRyO8q/TX5ejmTNwyw+/UvCOrO4fM
+X-Gm-Message-State: AOJu0YzTRmXS7JU7tKXC5XiKKf0bbjgDMk9UFtTrhuap8TVrPsv8m12d
+	VBXOw0xMFyFChaFJ8+iE9alzQbuHGtGf6pSaBYLNOvZpDVlwGLPN6ttbpdQNI6gDuoIMpLet0nG
+	bdeFCUbp3pgPEOF6I+8JMirMyqQ==
+X-Google-Smtp-Source: AGHT+IGBZ+nfOhagN9EruogOZmg7A5VWL+nHpS7DVh+j85DRP1XireqJnFUSTtEzQm9VwJ5uppvB8QfKb3CsC3X5BvU=
+X-Received: by 2002:a05:6122:d1a:b0:4ec:f9ad:d21a with SMTP id
+ 71dfb90a1353d-4f2f3fd1102mr14678174e0c.10.1720448315692; Mon, 08 Jul 2024
+ 07:18:35 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20240705083205.2111277-1-hch@lst.de>
+In-Reply-To: <20240705083205.2111277-1-hch@lst.de>
+From: Anuj gupta <anuj1072538@gmail.com>
+Date: Mon, 8 Jul 2024 19:47:59 +0530
+Message-ID: <CACzX3AvXAhcjE0PEB_PO7B2e0pRB7mj2QMdw5Gj_sNH-acTfYg@mail.gmail.com>
+Subject: Re: fine-grained PI control
+To: Christoph Hellwig <hch@lst.de>
+Cc: Kanchan Joshi <joshi.k@samsung.com>, Anuj Gupta <anuj20.g@samsung.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Since some settings can be reused on other UFS controller (R-Car S4-8
-ES 1.2), add reusable functions.
+On Fri, Jul 5, 2024 at 2:02=E2=80=AFPM Christoph Hellwig <hch@lst.de> wrote=
+:
+>
+> Hi all,
+>
+> Martin also mentioned he wanted to see the BIP_CTRL_NOCHECK,
+> BIP_DISK_NOCHECK and BIP_IP_CHECKSUM checksum flags exposed.  Can you
+> explain how you want them to fit into the API?  Especially as AFAIK
+> they can't work generically, e.g. NVMe never has an IP checksum and
+> SCSI controllers might not offer them either.  NVMe doesn't have a way
+> to distinguish between disk and controller.
+Yes, these flags are only valid in the context of SCSI. One possible
+scheme can be that the API still has the ability to pass these flags
+and the NVMe driver fails if the user specifies these flags.
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
----
- drivers/ufs/host/ufs-renesas.c | 64 +++++++++++++++++++++++-----------
- 1 file changed, 44 insertions(+), 20 deletions(-)
+>
+> Last but not least the fact that all reads and writes on PI enabled
+> devices by default check the guard (and reference if available for the
+> PI type) tags leads to a lot of annoying warnings when the kernel or
+> userspace does speculative reads.
+In the current series the application can choose not to specify the
+GUARD check flag, which would disable the guard checking even for PI
+enabled devices. Did you still encounter errors or am I missing
+something here?
 
-diff --git a/drivers/ufs/host/ufs-renesas.c b/drivers/ufs/host/ufs-renesas.c
-index abe33b0c64db..48b3ccad99c1 100644
---- a/drivers/ufs/host/ufs-renesas.c
-+++ b/drivers/ufs/host/ufs-renesas.c
-@@ -201,11 +201,8 @@ static void ufs_renesas_param_write_phy_10ad_10af(struct ufs_hba *hba,
- 	ufs_renesas_param_write_phy(hba, 0x10ae, 0x0000);
- }
- 
--static void ufs_renesas_pre_init(struct ufs_hba *hba)
-+static void ufs_renesas_init_ufshc(struct ufs_hba *hba)
- {
--	u32 timer_val;
--
--	/* This setting is for SERIES B */
- 	ufs_renesas_param_write(hba, 0xc0, 0x49425308);
- 	ufs_renesas_param_write_d0_d4(hba, 0x00000104, 0x00000002);
- 	udelay(1);
-@@ -219,6 +216,46 @@ static void ufs_renesas_pre_init(struct ufs_hba *hba)
- 
- 	ufs_renesas_param_write(hba, 0xc0, 0x49425308);
- 	ufs_renesas_param_write(hba, 0xc0, 0x41584901);
-+}
-+
-+static u32 ufs_renesas_init_disable_timer(struct ufs_hba *hba)
-+{
-+	u32 timer_val;
-+
-+	ufs_renesas_param_write(hba, 0xd0, 0x00000d00);
-+	timer_val = ufs_renesas_param_read(hba, 0xd4) & 0x0000ffff;
-+	ufs_renesas_param_write(hba, 0xd4, 0x00000000);
-+	ufs_renesas_param_write_d0_d4(hba, 0x0000082c, 0x0f000000);
-+	ufs_renesas_param_write_d0_d4(hba, 0x00000828, 0x08000000);
-+	ufs_renesas_param_write(hba, 0xd0, 0x0000082c);
-+	ufs_renesas_param_poll(hba, 0xd4, BIT(27), BIT(27));
-+	ufs_renesas_param_write(hba, 0xd0, 0x00000d2c);
-+	ufs_renesas_param_poll(hba, 0xd4, BIT(0), BIT(0));
-+
-+	return timer_val;
-+}
-+
-+static void ufs_renesas_init_enable_timer(struct ufs_hba *hba, u32 timer_val)
-+{
-+	ufs_renesas_param_write(hba, 0xf0, 0);
-+	ufs_renesas_param_write(hba, 0xd0, 0x00000d00);
-+	ufs_renesas_param_write(hba, 0xd4, timer_val);
-+}
-+
-+static void ufs_renesas_init_compensation_and_slicers(struct ufs_hba *hba)
-+{
-+	ufs_renesas_param_write_phy_10ad_10af(hba, 0x0000, 0x0001);
-+	ufs_renesas_param_write_phy_10ad_10af(hba, 0x0000, 0x0002);
-+	ufs_renesas_param_write_phy_10ad_10af(hba, 0x0080, 0x0000);
-+	ufs_renesas_param_write_phy_10ad_10af(hba, 0x0080, 0x001a);
-+}
-+
-+static void ufs_renesas_pre_init(struct ufs_hba *hba)
-+{
-+	u32 timer_val;
-+
-+	/* This setting is for SERIES B */
-+	ufs_renesas_init_ufshc(hba);
- 
- 	ufs_renesas_param_write_d0_d4(hba, 0x0000080c, 0x00000100);
- 	ufs_renesas_param_write_d0_d4(hba, 0x00000804, 0x00000000);
-@@ -231,15 +268,7 @@ static void ufs_renesas_pre_init(struct ufs_hba *hba)
- 	ufs_renesas_param_poll(hba, 0xd4, BIT(8) | BIT(6) | BIT(0),
- 			       BIT(8) | BIT(6) | BIT(0));
- 
--	ufs_renesas_param_write(hba, 0xd0, 0x00000d00);
--	timer_val = ufs_renesas_param_read(hba, 0xd4) & 0x0000ffff;
--	ufs_renesas_param_write(hba, 0xd4, 0x00000000);
--	ufs_renesas_param_write_d0_d4(hba, 0x0000082c, 0x0f000000);
--	ufs_renesas_param_write_d0_d4(hba, 0x00000828, 0x08000000);
--	ufs_renesas_param_write(hba, 0xd0, 0x0000082c);
--	ufs_renesas_param_poll(hba, 0xd4, BIT(27), BIT(27));
--	ufs_renesas_param_write(hba, 0xd0, 0x00000d2c);
--	ufs_renesas_param_poll(hba, 0xd4, BIT(0), BIT(0));
-+	timer_val = ufs_renesas_init_disable_timer(hba);
- 
- 	/* phy setup */
- 	ufs_renesas_param_indirect_write(hba, 1, 0x01, 0x001f);
-@@ -276,10 +305,7 @@ static void ufs_renesas_pre_init(struct ufs_hba *hba)
- 	ufs_renesas_param_write_phy(hba, 0x4000, 0x0000);
- 	ufs_renesas_param_write_phy(hba, 0x4001, 0x0000);
- 
--	ufs_renesas_param_write_phy_10ad_10af(hba, 0x0000, 0x0001);
--	ufs_renesas_param_write_phy_10ad_10af(hba, 0x0000, 0x0002);
--	ufs_renesas_param_write_phy_10ad_10af(hba, 0x0080, 0x0000);
--	ufs_renesas_param_write_phy_10ad_10af(hba, 0x0080, 0x001a);
-+	ufs_renesas_init_compensation_and_slicers(hba);
- 
- 	ufs_renesas_param_indirect_write(hba, 7, 0x70, 0x0016);
- 	ufs_renesas_param_indirect_write(hba, 7, 0x71, 0x0016);
-@@ -306,9 +332,7 @@ static void ufs_renesas_pre_init(struct ufs_hba *hba)
- 	ufs_renesas_param_indirect_poll(hba, 7, 0x41, 0, BIT(7));
- 	/* end of phy setup */
- 
--	ufs_renesas_param_write(hba, 0xf0, 0);
--	ufs_renesas_param_write(hba, 0xd0, 0x00000d00);
--	ufs_renesas_param_write(hba, 0xd4, timer_val);
-+	ufs_renesas_init_enable_timer(hba, timer_val);
- }
- 
- static int ufs_renesas_hce_enable_notify(struct ufs_hba *hba,
--- 
-2.25.1
-
+--
+Anuj Gupta
