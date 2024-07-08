@@ -1,64 +1,61 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87AF181211
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jul 2024 21:17:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 701E14503B
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Jul 2024 21:18:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720473479; cv=none; b=p+NODtsnOvX2FatXCPNbZxK1yxALUevHIMTJdtXxw106ELrD69Txqbxn0d70W44e+yPqnuKKY709GJwdxY5jLiZcQH7XKTKGvffXfvqzEJrHazwJlx8gIhpIfgochxgFGS5WQtatR8tFdnqUPyYfbpp4pXGK146WVkTPAZSXHkc=
+	t=1720473488; cv=none; b=AmLdpM1tc69KoboNTFSLDIMQ1P7UF02cBLyZMhhl9iU9zErFe4KRDzqSw40fp7KoBBDAVMTL+IEmFrwoALs2qGYEWiKyfA0V+zwwrnC1JERJDCTZj2cwQmt66yeURrq3xynLZ3uJIDDBwAZG7CtPYof0EMgtYul0Y3lS7Nod56M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720473479; c=relaxed/simple;
-	bh=bYp8sPxCFd14jkxscCELBpvHXUwhIP1DAxR+UhOCfaU=;
+	s=arc-20240116; t=1720473488; c=relaxed/simple;
+	bh=wgFC41ALw28xbVLTqP+3Kg96PRcWR4GWO7lu3O1t9TE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=M5peYbiQq6sJjW79K7C4e9SvhPNJ58uBKEoY6KUPfVR5q9g606uYMEAjgeHzu+Koh9fE8mc9YaxPHCv4Y7GuWeqzA0NQj3MRX6i2mf9T7sa0uichlYbW7AZbDVWr8l16xyvE9Iu48I8YrjqvwJ8w7ygeGUfy/7TC/sV0VPLbQoo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=LCzSFtRo; arc=none smtp.client-ip=199.89.1.11
+	 MIME-Version; b=iGFHu4hEdeYEcAuwvcx9BdTAjtYLs7vNxm04JTNuZRCYY+jFAkRK3VsSHXUH7/T24nBcFTo0LAmjs2SJ5JWHcP7NTADtA9cokVGU6ys3GuXlmXleFQLYxDIb4G8C9lJF8ToFZ63ib3CtRN4vQNKY1f34q9suOKon2rTYfEqWAXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=bHnozcGY; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="LCzSFtRo"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="bHnozcGY"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WHxmN6mJLz6Cnk9T;
-	Mon,  8 Jul 2024 21:17:56 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WHxmZ6hGxz6CmM6L;
+	Mon,  8 Jul 2024 21:18:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1720473465; x=1723065466; bh=CRauL
-	cviic4LNBpxkj7sAq2RFYHk2EAtTt/3r17BCy4=; b=LCzSFtRoj8zAK2ahoik/S
-	Qkz+k3IoC19vq8oTCLhA4Ej807Abv8LqC0neHqrajBm9ZHuPxUs8yV/TBFxKqjPV
-	cMx498PHKjwL7ipI/Ju5fjIIeMbO/XVk0GWd7+anoYSTL4bLq84rxAKSbOj+u4Oh
-	ljNhlhqFBMTQzLStSwpnMA0vq/3GmKs0DMe+pEo3p1kQ2A3xSVivVHPM9Ws/maPt
-	tEQdSL/CxyZK3eY3BfxzSruYusyT99yQKGh9UcvvvBPk3sesDhsmVinvTfkVfXt8
-	DO71prugft7g3AooG8euB7TlEt7ewbFIa2QroCYBtp3IY/HguZgLPM6uK8+At6Yl
-	A==
+	:received:received; s=mr01; t=1720473482; x=1723065483; bh=RoWIf
+	25Y+Ayp3le60uhgK98EibE0ad3TzuWPjx1Up8U=; b=bHnozcGYSR2tTXFIkJH/Q
+	eC7La8qSd/CWQlpmdtqonKB5h/p2adlQlPK6cSO/yDXS4gswSxZHJF5DGvLcHJya
+	P2ge3Rr5k3LQrRBxPk1CEueINZbuCKvi5znCQOhSxHMEUjfTtlOOW85gkeSbUkQT
+	Qvnnule7LhNUeOHEyXwsEDSmZ0M1bLs6QSmJyqpJU07yI7y3Ort1yslchnCQ7NBM
+	t1noT3wOp6vhjCGQSUKtH0JQ3XOLFjjX3UBcc85aAphwniLz24Jl3ZuMx9m4SyRn
+	eAxSkdjykQMMpzLL68ZVFkfFJDQTGHZAN7RC+7sV6pnUZBK0/pNMQhZGbMig78uu
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 9NdCxG9m5Ofa; Mon,  8 Jul 2024 21:17:45 +0000 (UTC)
+ id U0Fy_TPs1eDl; Mon,  8 Jul 2024 21:18:02 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.132.0.90])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WHxm55MD7z6Cnk9N;
-	Mon,  8 Jul 2024 21:17:41 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WHxmR4sBYz6Cnk9N;
+	Mon,  8 Jul 2024 21:17:59 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	peter.wang@mediatek.com,
 	manivannan.sadhasivam@linaro.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Daejun Park <daejun7.park@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Avri Altman <avri.altman@wdc.com>,
 	Bean Huo <beanhuo@micron.com>,
-	Minwoo Im <minwoo.im@samsung.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>,
-	Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v5 02/10] scsi: ufs: Initialize struct uic_command once
-Date: Mon,  8 Jul 2024 14:15:57 -0700
-Message-ID: <20240708211716.2827751-3-bvanassche@acm.org>
+	ChanWoo Lee <cw9316.lee@samsung.com>
+Subject: [PATCH v5 04/10] scsi: ufs: Rename the MASK_TRANSFER_REQUESTS_SLOTS constant
+Date: Mon,  8 Jul 2024 14:15:59 -0700
+Message-ID: <20240708211716.2827751-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.45.2.803.g4e1b14247a-goog
 In-Reply-To: <20240708211716.2827751-1-bvanassche@acm.org>
 References: <20240708211716.2827751-1-bvanassche@acm.org>
@@ -70,196 +67,43 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Instead of first zero-initializing struct uic_command and next initializi=
-ng
-it memberwise, initialize all members at once.
+Rename this constant to prepare for the introduction of the
+MASK_TRANSFER_REQUESTS_SLOTS_MCQ constant. The acronym "SDB" stands for
+"single doorbell" (mode).
 
-Reviewed-by: Daejun Park <daejun7.park@samsung.com>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 61 ++++++++++++++++++++-------------------
- include/ufs/ufshcd.h      |  4 +--
- 2 files changed, 33 insertions(+), 32 deletions(-)
+ drivers/ufs/core/ufshcd.c | 2 +-
+ include/ufs/ufshci.h      | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 98cc245b5576..13c57bbcdad7 100644
+index 1b0445bb5b7a..a7b049deb943 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -3994,11 +3994,11 @@ static void ufshcd_host_memory_configure(struct u=
-fs_hba *hba)
-  */
- static int ufshcd_dme_link_startup(struct ufs_hba *hba)
- {
--	struct uic_command uic_cmd =3D {0};
-+	struct uic_command uic_cmd =3D {
-+		.command =3D UIC_CMD_DME_LINK_STARTUP,
-+	};
- 	int ret;
+@@ -2402,7 +2402,7 @@ static inline int ufshcd_hba_capabilities(struct uf=
+s_hba *hba)
+ 		hba->capabilities &=3D ~MASK_64_ADDRESSING_SUPPORT;
 =20
--	uic_cmd.command =3D UIC_CMD_DME_LINK_STARTUP;
--
- 	ret =3D ufshcd_send_uic_cmd(hba, &uic_cmd);
- 	if (ret)
- 		dev_dbg(hba->dev,
-@@ -4016,11 +4016,11 @@ static int ufshcd_dme_link_startup(struct ufs_hba=
- *hba)
-  */
- static int ufshcd_dme_reset(struct ufs_hba *hba)
- {
--	struct uic_command uic_cmd =3D {0};
-+	struct uic_command uic_cmd =3D {
-+		.command =3D UIC_CMD_DME_RESET,
-+	};
- 	int ret;
+ 	/* nutrs and nutmrs are 0 based values */
+-	hba->nutrs =3D (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS) + 1;
++	hba->nutrs =3D (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_SDB) +=
+ 1;
+ 	hba->nutmrs =3D
+ 	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
+ 	hba->reserved_slot =3D hba->nutrs - 1;
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index c50f92bf2e1d..8d0cc73537c6 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -67,7 +67,7 @@ enum {
 =20
--	uic_cmd.command =3D UIC_CMD_DME_RESET;
--
- 	ret =3D ufshcd_send_uic_cmd(hba, &uic_cmd);
- 	if (ret)
- 		dev_err(hba->dev,
-@@ -4055,11 +4055,11 @@ EXPORT_SYMBOL_GPL(ufshcd_dme_configure_adapt);
-  */
- static int ufshcd_dme_enable(struct ufs_hba *hba)
- {
--	struct uic_command uic_cmd =3D {0};
-+	struct uic_command uic_cmd =3D {
-+		.command =3D UIC_CMD_DME_ENABLE,
-+	};
- 	int ret;
-=20
--	uic_cmd.command =3D UIC_CMD_DME_ENABLE;
--
- 	ret =3D ufshcd_send_uic_cmd(hba, &uic_cmd);
- 	if (ret)
- 		dev_err(hba->dev,
-@@ -4112,7 +4112,12 @@ static inline void ufshcd_add_delay_before_dme_cmd=
-(struct ufs_hba *hba)
- int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 attr_sel,
- 			u8 attr_set, u32 mib_val, u8 peer)
- {
--	struct uic_command uic_cmd =3D {0};
-+	struct uic_command uic_cmd =3D {
-+		.command =3D peer ? UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET,
-+		.argument1 =3D attr_sel,
-+		.argument2 =3D UIC_ARG_ATTR_TYPE(attr_set),
-+		.argument3 =3D mib_val,
-+	};
- 	static const char *const action[] =3D {
- 		"dme-set",
- 		"dme-peer-set"
-@@ -4121,12 +4126,6 @@ int ufshcd_dme_set_attr(struct ufs_hba *hba, u32 a=
-ttr_sel,
- 	int ret;
- 	int retries =3D UFS_UIC_COMMAND_RETRIES;
-=20
--	uic_cmd.command =3D peer ?
--		UIC_CMD_DME_PEER_SET : UIC_CMD_DME_SET;
--	uic_cmd.argument1 =3D attr_sel;
--	uic_cmd.argument2 =3D UIC_ARG_ATTR_TYPE(attr_set);
--	uic_cmd.argument3 =3D mib_val;
--
- 	do {
- 		/* for peer attributes we retry upon failure */
- 		ret =3D ufshcd_send_uic_cmd(hba, &uic_cmd);
-@@ -4156,7 +4155,10 @@ EXPORT_SYMBOL_GPL(ufshcd_dme_set_attr);
- int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- 			u32 *mib_val, u8 peer)
- {
--	struct uic_command uic_cmd =3D {0};
-+	struct uic_command uic_cmd =3D {
-+		.command =3D peer ? UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET,
-+		.argument1 =3D attr_sel,
-+	};
- 	static const char *const action[] =3D {
- 		"dme-get",
- 		"dme-peer-get"
-@@ -4190,10 +4192,6 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 a=
-ttr_sel,
- 		}
- 	}
-=20
--	uic_cmd.command =3D peer ?
--		UIC_CMD_DME_PEER_GET : UIC_CMD_DME_GET;
--	uic_cmd.argument1 =3D attr_sel;
--
- 	do {
- 		/* for peer attributes we retry upon failure */
- 		ret =3D ufshcd_send_uic_cmd(hba, &uic_cmd);
-@@ -4326,7 +4324,11 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba=
-, struct uic_command *cmd)
-  */
- int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba, u8 mode)
- {
--	struct uic_command uic_cmd =3D {0};
-+	struct uic_command uic_cmd =3D {
-+		.command =3D UIC_CMD_DME_SET,
-+		.argument1 =3D UIC_ARG_MIB(PA_PWRMODE),
-+		.argument3 =3D mode,
-+	};
- 	int ret;
-=20
- 	if (hba->quirks & UFSHCD_QUIRK_BROKEN_PA_RXHSUNTERMCAP) {
-@@ -4339,9 +4341,6 @@ int ufshcd_uic_change_pwr_mode(struct ufs_hba *hba,=
- u8 mode)
- 		}
- 	}
-=20
--	uic_cmd.command =3D UIC_CMD_DME_SET;
--	uic_cmd.argument1 =3D UIC_ARG_MIB(PA_PWRMODE);
--	uic_cmd.argument3 =3D mode;
- 	ufshcd_hold(hba);
- 	ret =3D ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
- 	ufshcd_release(hba);
-@@ -4382,13 +4381,14 @@ EXPORT_SYMBOL_GPL(ufshcd_link_recovery);
-=20
- int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- {
--	int ret;
--	struct uic_command uic_cmd =3D {0};
-+	struct uic_command uic_cmd =3D {
-+		.command =3D UIC_CMD_DME_HIBER_ENTER,
-+	};
- 	ktime_t start =3D ktime_get();
-+	int ret;
-=20
- 	ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_ENTER, PRE_CHANGE);
-=20
--	uic_cmd.command =3D UIC_CMD_DME_HIBER_ENTER;
- 	ret =3D ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
- 	trace_ufshcd_profile_hibern8(dev_name(hba->dev), "enter",
- 			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
-@@ -4406,13 +4406,14 @@ EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_enter);
-=20
- int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- {
--	struct uic_command uic_cmd =3D {0};
-+	struct uic_command uic_cmd =3D {
-+		.command =3D UIC_CMD_DME_HIBER_EXIT,
-+	};
- 	int ret;
- 	ktime_t start =3D ktime_get();
-=20
- 	ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_EXIT, PRE_CHANGE);
-=20
--	uic_cmd.command =3D UIC_CMD_DME_HIBER_EXIT;
- 	ret =3D ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
- 	trace_ufshcd_profile_hibern8(dev_name(hba->dev), "exit",
- 			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 049520bcc6c0..42d1bd2120ea 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -73,8 +73,8 @@ enum ufs_event_type {
-  * @done: UIC command completion
-  */
- struct uic_command {
--	u32 command;
--	u32 argument1;
-+	const u32 command;
-+	const u32 argument1;
- 	u32 argument2;
- 	u32 argument3;
- 	int cmd_active;
+ /* Controller capability masks */
+ enum {
+-	MASK_TRANSFER_REQUESTS_SLOTS		=3D 0x0000001F,
++	MASK_TRANSFER_REQUESTS_SLOTS_SDB	=3D 0x0000001F,
+ 	MASK_NUMBER_OUTSTANDING_RTT		=3D 0x0000FF00,
+ 	MASK_TASK_MANAGEMENT_REQUEST_SLOTS	=3D 0x00070000,
+ 	MASK_EHSLUTRD_SUPPORTED			=3D 0x00400000,
