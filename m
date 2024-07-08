@@ -1,62 +1,63 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F4BD4503B
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jul 2024 21:18:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EC4A81211
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Jul 2024 21:18:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720473496; cv=none; b=EIbORQO51Jc0PXoukKbUrfzen/cGf7OG9Gu2Z84UmOVSHYKrKRJe+nA8ExHrkAVWFt479n3N+xB5jYdEb9yTz3/LFuILctltoVs7k58bRHr4US73DMuQvPKIhFBmYH6uXDPEKLbb7P76YpalM3tbniwjUFvJRw0S5LD/5jjLYT4=
+	t=1720473515; cv=none; b=jOwcHiIiCZK1opJiGry8FHXYMjTGLrN2QyN6eu5n9nRvsBrZDAECyojdcPZTDVVfGqJMdurNh8zw5cvKANNfW9kb+4twxsfLgjAcEiV3tTdKboJLYSXtnM8HehsxHYC8QVdsmOOnW7EfRHU0usQYrn3wfFmVbDEV+eyF2kZ6tAA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720473496; c=relaxed/simple;
-	bh=gtmE3v4LVy2tHbV7shbnCLMD1Mhd/9BW6tDikGCf2nM=;
+	s=arc-20240116; t=1720473515; c=relaxed/simple;
+	bh=0LuI8WurHhvuYxkRi4pG8BCetfbuz27YPnjyZP14CdY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tenDyE3Nml+p9g9cmzRmAeZq/sdZXe77I8rUfMdC21yliNaCgR2FCdnIqwJcLqxkbzRdr4z3Q+LICY4EcY/MdDWnzo9P9ZxEyeJLdKClHojr77zg3QxDG0yUh1DIlefacSVw+xuRfEyHbdMzoT4vBUUNPEMYgFsqOEDvAPg8jLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QfyucIGl; arc=none smtp.client-ip=199.89.1.11
+	 MIME-Version; b=UD/HtGqLgAkH9KvN3ixYO75uq+zC2dM6N7Fu8CkgLfRx7Y/lURjr9tIISzJ5JvtCFcrBm4VqsF2MGvUd96oMQK1Hd0JatKdTR6DGV5ilZYqCTyDfisGOpDYiNKgXONqBP1XH2R/+gZk3WPNo+Br/kVEUXe4xilxhnJ/r5ZSbCls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=LAxMeXcE; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QfyucIGl"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="LAxMeXcE"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WHxmk68yTz6Cnk9F;
-	Mon,  8 Jul 2024 21:18:14 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WHxn46TCnz6CmR43;
+	Mon,  8 Jul 2024 21:18:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1720473489; x=1723065490; bh=SSR+E
-	nRThIzEVjXzicOgiaGD8AlNTBsrjQKjmKQkk9M=; b=QfyucIGlr/MxLDVaus3L0
-	yfvy8cftCwleQx5FjqW5tt5sz8hu/4TZDCgP1wO4wNQtmd3TfdEmHoKhE1snkvc8
-	YGTdhIi+1HW0mDWvAoBlf/Hp/o6hWXkjT186M/9pi0rra37swxh30hbmI+VKBCRr
-	sGIQLhdng9xLWFQAyHX7zTiNEywqKmSoLc/iZg3k+WVX/3IDJphIbysyGAJTRooS
-	+9JMTO58cA1KFWeP4uMyVZZGJYz92+fLzwAHQ4JQ5CTOeZaIKw+iMbjF2loYWm7t
-	XNAik8C32rTz7IxRedtNWrz+JqEs0znfHf7ORM+29LdQuSbamMXwqvy4sWRF0Lwh
+	:received:received; s=mr01; t=1720473500; x=1723065501; bh=RIkkv
+	v10Amm/+cM8OJCBkci6GHjFHsVwAn+832ErxtY=; b=LAxMeXcEC08jJdw+ZUJDb
+	Op1HM+pNXUtAJWj6zQpmsD/UPzMOi7GzCvfEJZBvvdOp7pNtBy289bOLl3AubQfm
+	ZWjPst8oQjIkamp2Z37tESBmPwaE1IpUdslHYuL2dDdycWy33De5savVXptfXdap
+	wbsSrnt9cFXJnclMMBCQ2HODjKt6vuDwvi8a9uYQfy5GWkdGbvMCvdse+uV52IZa
+	YG6SZNaW7XCg6Ck38/HhLTi2fT7+PrOhjDm8UeAewKJiI+i/Bl4oUysso4lRHvE+
+	geuLUzIj9gXBh0Ps6mWdb/Q53mQtTDOlIxvZeeBB+DzFmYvBaQYhWsi7LBktk8rK
 	g==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id NzaXH_lct6nL; Mon,  8 Jul 2024 21:18:09 +0000 (UTC)
+ id 8hbpVd64T0HG; Mon,  8 Jul 2024 21:18:20 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.132.0.90])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WHxmZ5FvVz6Cnk9T;
-	Mon,  8 Jul 2024 21:18:06 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WHxmn2Hb0z6Cnk9N;
+	Mon,  8 Jul 2024 21:18:17 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	peter.wang@mediatek.com,
 	manivannan.sadhasivam@linaro.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Can Guo <quic_cang@quicinc.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
 	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>,
-	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v5 05/10] scsi: ufs: Initialize hba->reserved_slot earlier
-Date: Mon,  8 Jul 2024 14:16:00 -0700
-Message-ID: <20240708211716.2827751-6-bvanassche@acm.org>
+	Bean Huo <beanhuo@micron.com>,
+	Minwoo Im <minwoo.im@samsung.com>,
+	Maramaina Naresh <quic_mnaresh@quicinc.com>,
+	Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH v5 06/10] scsi: ufs: Inline is_mcq_enabled()
+Date: Mon,  8 Jul 2024 14:16:01 -0700
+Message-ID: <20240708211716.2827751-7-bvanassche@acm.org>
 X-Mailer: git-send-email 2.45.2.803.g4e1b14247a-goog
 In-Reply-To: <20240708211716.2827751-1-bvanassche@acm.org>
 References: <20240708211716.2827751-1-bvanassche@acm.org>
@@ -68,44 +69,207 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Move the hba->reserved_slot and the host->can_queue assignments from
-ufshcd_config_mcq() into ufshcd_alloc_mcq(). The advantages of this
-change are as follows:
-- It becomes easier to verify that these two parameters are updated
-  if hba->nutrs is updated.
-- It prevents unnecessary assignments to these two parameters. While
-  ufshcd_config_mcq() is called during host reset, ufshcd_alloc_mcq()
-  is not.
+Improve code readability by inlining is_mcq_enabled().
 
-Cc: Can Guo <quic_cang@quicinc.com>
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Peter Wang <peter.wang@mediatek.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ufs/core/ufshcd.c       | 28 ++++++++++++++--------------
+ drivers/ufs/host/ufs-mediatek.c |  6 +++---
+ include/ufs/ufshcd.h            |  5 -----
+ 3 files changed, 17 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index a7b049deb943..3d452aa923dc 100644
+index 3d452aa923dc..255d55e15b73 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -8679,6 +8679,9 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
- 	if (ret)
- 		goto err;
+@@ -453,7 +453,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *=
+hba, unsigned int tag,
 =20
-+	hba->host->can_queue =3D hba->nutrs - UFSHCD_NUM_RESERVED;
-+	hba->reserved_slot =3D hba->nutrs - UFSHCD_NUM_RESERVED;
-+
- 	return 0;
- err:
- 	hba->nutrs =3D old_nutrs;
-@@ -8700,9 +8703,6 @@ static void ufshcd_config_mcq(struct ufs_hba *hba)
- 	ufshcd_mcq_make_queues_operational(hba);
- 	ufshcd_mcq_config_mac(hba, hba->nutrs);
+ 	intr =3D ufshcd_readl(hba, REG_INTERRUPT_STATUS);
 =20
--	hba->host->can_queue =3D hba->nutrs - UFSHCD_NUM_RESERVED;
--	hba->reserved_slot =3D hba->nutrs - UFSHCD_NUM_RESERVED;
+-	if (is_mcq_enabled(hba)) {
++	if (hba->mcq_enabled) {
+ 		struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
+=20
+ 		hwq_id =3D hwq->id;
+@@ -2302,7 +2302,7 @@ void ufshcd_send_command(struct ufs_hba *hba, unsig=
+ned int task_tag,
+ 	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+ 		ufshcd_start_monitor(hba, lrbp);
+=20
+-	if (is_mcq_enabled(hba)) {
++	if (hba->mcq_enabled) {
+ 		int utrd_size =3D sizeof(struct utp_transfer_req_desc);
+ 		struct utp_transfer_req_desc *src =3D lrbp->utr_descriptor_ptr;
+ 		struct utp_transfer_req_desc *dest;
+@@ -3001,7 +3001,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *ho=
+st, struct scsi_cmnd *cmd)
+ 		goto out;
+ 	}
+=20
+-	if (is_mcq_enabled(hba))
++	if (hba->mcq_enabled)
+ 		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
+=20
+ 	ufshcd_send_command(hba, tag, hwq);
+@@ -3060,7 +3060,7 @@ static int ufshcd_clear_cmd(struct ufs_hba *hba, u3=
+2 task_tag)
+ 	unsigned long flags;
+ 	int err;
+=20
+-	if (is_mcq_enabled(hba)) {
++	if (hba->mcq_enabled) {
+ 		/*
+ 		 * MCQ mode. Clean up the MCQ resources similar to
+ 		 * what the ufshcd_utrl_clear() does for SDB mode.
+@@ -3170,7 +3170,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *=
+hba,
+ 			__func__, lrbp->task_tag);
+=20
+ 		/* MCQ mode */
+-		if (is_mcq_enabled(hba)) {
++		if (hba->mcq_enabled) {
+ 			/* successfully cleared the command, retry if needed */
+ 			if (ufshcd_clear_cmd(hba, lrbp->task_tag) =3D=3D 0)
+ 				err =3D -EAGAIN;
+@@ -5561,7 +5561,7 @@ static int ufshcd_poll(struct Scsi_Host *shost, uns=
+igned int queue_num)
+ 	u32 tr_doorbell;
+ 	struct ufs_hw_queue *hwq;
+=20
+-	if (is_mcq_enabled(hba)) {
++	if (hba->mcq_enabled) {
+ 		hwq =3D &hba->uhq[queue_num];
+=20
+ 		return ufshcd_mcq_poll_cqe_lock(hba, hwq);
+@@ -6202,7 +6202,7 @@ static void ufshcd_exception_event_handler(struct w=
+ork_struct *work)
+ /* Complete requests that have door-bell cleared */
+ static void ufshcd_complete_requests(struct ufs_hba *hba, bool force_com=
+pl)
+ {
+-	if (is_mcq_enabled(hba))
++	if (hba->mcq_enabled)
+ 		ufshcd_mcq_compl_pending_transfer(hba, force_compl);
+ 	else
+ 		ufshcd_transfer_req_compl(hba);
+@@ -6459,7 +6459,7 @@ static bool ufshcd_abort_one(struct request *rq, vo=
+id *priv)
+ 		*ret ? "failed" : "succeeded");
+=20
+ 	/* Release cmd in MCQ mode if abort succeeds */
+-	if (is_mcq_enabled(hba) && (*ret =3D=3D 0)) {
++	if (hba->mcq_enabled && (*ret =3D=3D 0)) {
+ 		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp->cmd));
+ 		spin_lock_irqsave(&hwq->cq_lock, flags);
+ 		if (ufshcd_cmd_inflight(lrbp->cmd))
+@@ -7390,7 +7390,7 @@ static int ufshcd_eh_device_reset_handler(struct sc=
+si_cmnd *cmd)
+ 		goto out;
+ 	}
+=20
+-	if (is_mcq_enabled(hba)) {
++	if (hba->mcq_enabled) {
+ 		for (pos =3D 0; pos < hba->nutrs; pos++) {
+ 			lrbp =3D &hba->lrb[pos];
+ 			if (ufshcd_cmd_inflight(lrbp->cmd) &&
+@@ -7486,7 +7486,7 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, i=
+nt tag)
+ 			 */
+ 			dev_err(hba->dev, "%s: cmd at tag %d not pending in the device.\n",
+ 				__func__, tag);
+-			if (is_mcq_enabled(hba)) {
++			if (hba->mcq_enabled) {
+ 				/* MCQ mode */
+ 				if (ufshcd_cmd_inflight(lrbp->cmd)) {
+ 					/* sleep for max. 200us same delay as in SDB mode */
+@@ -7564,7 +7564,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+=20
+ 	ufshcd_hold(hba);
+=20
+-	if (!is_mcq_enabled(hba)) {
++	if (!hba->mcq_enabled) {
+ 		reg =3D ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 		if (!test_bit(tag, &hba->outstanding_reqs)) {
+ 			/* If command is already aborted/completed, return FAILED. */
+@@ -7597,7 +7597,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	}
+ 	hba->req_abort_count++;
+=20
+-	if (!is_mcq_enabled(hba) && !(reg & (1 << tag))) {
++	if (!hba->mcq_enabled && !(reg & (1 << tag))) {
+ 		/* only execute this code in single doorbell mode */
+ 		dev_err(hba->dev,
+ 		"%s: cmd was completed, but without a notifying intr, tag =3D %d",
+@@ -7624,7 +7624,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 		goto release;
+ 	}
+=20
+-	if (is_mcq_enabled(hba)) {
++	if (hba->mcq_enabled) {
+ 		/* MCQ mode. Branch off to handle abort for mcq mode */
+ 		err =3D ufshcd_mcq_abort(cmd);
+ 		goto release;
+@@ -8733,7 +8733,7 @@ static int ufshcd_device_init(struct ufs_hba *hba, =
+bool init_dev_params)
+ 	ufshcd_set_link_active(hba);
+=20
+ 	/* Reconfigure MCQ upon reset */
+-	if (is_mcq_enabled(hba) && !init_dev_params)
++	if (hba->mcq_enabled && !init_dev_params)
+ 		ufshcd_config_mcq(hba);
+=20
+ 	/* Verify device initialization by sending NOP OUT UPIU */
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-media=
+tek.c
+index c7a0ab9b1f59..02c9064284e1 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -693,7 +693,7 @@ static void ufs_mtk_mcq_disable_irq(struct ufs_hba *h=
+ba)
+ 	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
+ 	u32 irq, i;
+=20
+-	if (!is_mcq_enabled(hba))
++	if (!hba->mcq_enabled)
+ 		return;
+=20
+ 	if (host->mcq_nr_intr =3D=3D 0)
+@@ -711,7 +711,7 @@ static void ufs_mtk_mcq_enable_irq(struct ufs_hba *hb=
+a)
+ 	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
+ 	u32 irq, i;
+=20
+-	if (!is_mcq_enabled(hba))
++	if (!hba->mcq_enabled)
+ 		return;
+=20
+ 	if (host->mcq_nr_intr =3D=3D 0)
+@@ -1308,7 +1308,7 @@ static int ufs_mtk_link_set_hpm(struct ufs_hba *hba=
+)
+ 	if (err)
+ 		return err;
+=20
+-	if (is_mcq_enabled(hba)) {
++	if (hba->mcq_enabled) {
+ 		ufs_mtk_config_mcq(hba, false);
+ 		ufshcd_mcq_make_queues_operational(hba);
+ 		ufshcd_mcq_config_mac(hba, hba->nutrs);
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 42d1bd2120ea..3eaa8bc7eaea 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1133,11 +1133,6 @@ struct ufs_hw_queue {
+=20
+ #define MCQ_QCFG_SIZE		0x40
+=20
+-static inline bool is_mcq_enabled(struct ufs_hba *hba)
+-{
+-	return hba->mcq_enabled;
+-}
 -
- 	ufshcd_mcq_enable(hba);
- 	hba->mcq_enabled =3D true;
-=20
+ static inline unsigned int ufshcd_mcq_opr_offset(struct ufs_hba *hba,
+ 		enum ufshcd_mcq_opr opr, int idx)
+ {
