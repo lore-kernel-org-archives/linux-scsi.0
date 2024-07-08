@@ -1,182 +1,183 @@
-Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 673CF19470
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jul 2024 07:27:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FFCB1946F;
+	Mon,  8 Jul 2024 07:31:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720423647; cv=none; b=NUjmQpTOMwrKqsX17SF4DFgCg+lSge8h+XKk35lbSoUitJIn1aK3gQbZhb3v6g+hWINfy6JH28N22oXletfIOxrnu5/Ojd4ZToqlcwpAfQX5CA+2DxNTBIfse/TmJlT4ZYc44UIDmmjbuKCbtptSlNotW0wvzDAMpNI6HAFMtxg=
+	t=1720423902; cv=none; b=L4lvWAw5sqTc/S9ODSgfysCd738Egw+czvME2sfF7cK7vBGiGYPO0bvA4KmBkevvFTKRoVdwpCD0Iw40nfurmGU3DLI3TG8bguxfwYzcxI3R9FwpUjckKLoMSc4QgpFg+DP47ppYvLh8Lwc4bPRcJGT4/DJn9X3uhavTfIWgmCY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720423647; c=relaxed/simple;
-	bh=GoP44aPdKfoTyB+JMv9xxdLEs/eSwFghgNBApYFCAIw=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=dxwxy3/E78Y/58ShLrt9inhDCiRTOehRdVLKM3RbH7VBtZvmxkm8zaG5UmtKwddri3Y4dIsS/uRlqYLvf7foLEQYKpRozYFgYfV2T1nJnGehoNfw+OOvMwlo+VXQ4vPpEJcUYtmXSFztm5mzDEDroBzj7V63U/j44asQBCN0nNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RVBvvPZm; arc=none smtp.client-ip=209.85.128.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1720423902; c=relaxed/simple;
+	bh=b686QiTKvy8ZMExM84K9kzUt3iG3OHu8RvGNrJ3LUPU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gVlq2AqxV9YhN/gjIr8zpsE2coYr7ahNKSzBiFQM8nKD2elY2DwOL+wRvmucqfd0AUjcBlU7XW33M4LInnuv0GihRKzCo9jFsQ9yqBMDkvo2/u0Ihtc9Il+r4BP/cKDZwOieZ8eN5qNdKeuNKNYDL52rESSLHcfdQgwtV/dbNDs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W2NDqntp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RVBvvPZm"
-Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-64b05fab14eso34543867b3.2
-        for <linux-scsi@vger.kernel.org>; Mon, 08 Jul 2024 00:27:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1720423644; x=1721028444; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=yeX0L0LRBQKiRHorHHT2/gyOJkBPuY45BcfUPAMMZEA=;
-        b=RVBvvPZmLOFceiLTIfo7jy916v7j7YigHqWu8CzaHyih13Ky/2lmL/ze1iatXjgtpn
-         3PxJ0CN5q39eeIxWM1OO2poJRDPsDjVmwTZxepAdRA15JKHmwFILcfMnIc7N4vRwH4yg
-         zbCZcyFFzcCgSd7XHh2MPZGVUGJvJyn+m72y8Uibe5zFMJI+cqFEx/X0bs8I4Vqr7YQj
-         EWPpcxi/RktYrs81jUYgT8BDhQJHg/GCCwwS+LG+pHuaOUGB2Fo52JYbZLNl21shzAJQ
-         +nEGyJ3JrxvQMzhIhu4EnK2wrmza0ZLu86IKBthhTjhm6iBE8U++DRH2gvMKBAkRte92
-         mIOg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720423644; x=1721028444;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=yeX0L0LRBQKiRHorHHT2/gyOJkBPuY45BcfUPAMMZEA=;
-        b=mUDf+qevf1l6K3j/nqW8MXpZTwp/DscVPPjxrHp+Y8upYnPGJqazxrz2bLGZoufgVG
-         kANUjVb4SfYYFOP8YY2TKaWImFFHWIKOGHcmkBIH1iDeSxxILsahF5tBRvj+Ayh+gZjg
-         ZhC/yBSslwmsZ4Q6hw+qq9QO7HIvtOLjDK7NcG6bOVii61EdDwJHK6SmhkX9z2sHomXZ
-         54DALFlhCf28UdmaQ6fEMm7nLzt4QScGHseEkNl4Qtlp+GRY71QsgxQmQNs0a2odF468
-         eKtorTuzNjNARVFVWEo7nW3HLDbyW5583deZhRnneRNLBuUQChrvaCJi5VH2MUZ1oRN1
-         ju7A==
-X-Gm-Message-State: AOJu0YxFvGm6j3r8tyL60SYj1GE97sdWeTeVTJsEDrcpaE5g8yYHgaV9
-	K7OFplYo4o6gCBGLJsk74V/nw5vclEJwPX5ersZ5f3ygDQzwmzfiMxkjkJaz4khGZQa5970IZ9y
-	5cLVe0p7FwrOTA/tezhQ34FTcfVv+7IVW400Vfw==
-X-Google-Smtp-Source: AGHT+IE17RB1S83B67Zbvv521rO/chSeoSZBY8lZp02IBu5+WbAQirdLWQ+boSvx80vxbjfVCxUK6IFpx7rYIT8PgXQ=
-X-Received: by 2002:a05:690c:7090:b0:64b:7bf3:cf93 with SMTP id
- 00721157ae682-652d7d528bbmr130709097b3.35.1720423644288; Mon, 08 Jul 2024
- 00:27:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W2NDqntp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E3BBC116B1;
+	Mon,  8 Jul 2024 07:31:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720423901;
+	bh=b686QiTKvy8ZMExM84K9kzUt3iG3OHu8RvGNrJ3LUPU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=W2NDqntp1Ulgp8VAPtW9t6MUVRBg2m24WUTXj6PfM3FSPT6WnvnROZIOHULWUqOgT
+	 aWqsNEhpd+JKiouZTJGp7zJZg+KEggH+2wFwNf9Jvcbyr/tjpShaShqhdXl2lVlj49
+	 qjscpyLwq1KwbCmSwqT+Jqat5Y2n7bIV8a/ZPwwr4+gFyY0o1Cs3AUeHCYUskKypQI
+	 Jis8m+kGIeU9LqBdsmcbTFufx5GqCPgZXGDZPzEh5McNcju/zyfQSj/Xf2sKw+pDti
+	 hHmWLNmFSVBozoY7HjZbCxHNC2jlqlgeXUMur4A392g6iSujvhXKe4jHoSKmcPYE0x
+	 RD+heg8f8EMGQ==
+Message-ID: <f8d17f99-cb76-427a-a23c-6777ab8f4370@kernel.org>
+Date: Mon, 8 Jul 2024 09:31:11 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: Jiatong Shen <yshxxsjt715@gmail.com>
-Date: Mon, 8 Jul 2024 15:27:13 +0800
-Message-ID: <CALqm=dfuV5038UezFUHZGXh9Dx9xj24_aucxnqXf6J9jGaPNCg@mail.gmail.com>
-Subject: Asking for help to debug a lpfc driver panic
-To: linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/47] dt-bindings: arm: qcom: Document QCS9100 SoC and
+ RIDE board
+To: "Aiqun Yu (Maria)" <quic_aiquny@quicinc.com>,
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+ Tengfei Fan <quic_tengfan@quicinc.com>, andersson@kernel.org,
+ konrad.dybcio@linaro.org, robh@kernel.org, krzk+dt@kernel.org,
+ conor+dt@kernel.org, djakov@kernel.org, mturquette@baylibre.com,
+ sboyd@kernel.org, jassisinghbrar@gmail.com, herbert@gondor.apana.org.au,
+ davem@davemloft.net, manivannan.sadhasivam@linaro.org, will@kernel.org,
+ joro@8bytes.org, conor@kernel.org, tglx@linutronix.de, amitk@kernel.org,
+ thara.gopinath@gmail.com, linus.walleij@linaro.org, wim@linux-watchdog.org,
+ linux@roeck-us.net, rafael@kernel.org, viresh.kumar@linaro.org,
+ vkoul@kernel.org, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
+ mcoquelin.stm32@gmail.com
+Cc: robimarko@gmail.com, bartosz.golaszewski@linaro.org, kishon@kernel.org,
+ quic_wcheng@quicinc.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ bvanassche@acm.org, agross@kernel.org, gregkh@linuxfoundation.org,
+ quic_tdas@quicinc.com, robin.murphy@arm.com, daniel.lezcano@linaro.org,
+ rui.zhang@intel.com, lukasz.luba@arm.com, quic_rjendra@quicinc.com,
+ ulf.hansson@linaro.org, quic_sibis@quicinc.com, otto.pflueger@abscue.de,
+ luca@z3ntu.xyz, neil.armstrong@linaro.org, abel.vesa@linaro.org,
+ bhupesh.sharma@linaro.org, alexandre.torgue@foss.st.com,
+ peppe.cavallaro@st.com, joabreu@synopsys.com, netdev@vger.kernel.org,
+ lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com,
+ ahalaney@redhat.com, u.kleine-koenig@pengutronix.de,
+ dmitry.baryshkov@linaro.org, quic_cang@quicinc.com, danila@jiaxyga.com,
+ quic_nitirawa@quicinc.com, mantas@8devices.com, athierry@redhat.com,
+ quic_kbajaj@quicinc.com, quic_bjorande@quicinc.com,
+ quic_msarkar@quicinc.com, quic_devipriy@quicinc.com, quic_tsoni@quicinc.com,
+ quic_rgottimu@quicinc.com, quic_shashim@quicinc.com,
+ quic_kaushalk@quicinc.com, quic_tingweiz@quicinc.com,
+ srinivas.kandagatla@linaro.org, linux-arm-msm@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-pm@vger.kernel.org, linux-clk@vger.kernel.org,
+ linux-phy@lists.infradead.org, linux-crypto@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+ linux-riscv@lists.infradead.org, linux-gpio@vger.kernel.org,
+ linux-watchdog@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-stm32@st-md-mailman.stormreply.com, kernel@quicinc.com
+References: <20240703025850.2172008-1-quic_tengfan@quicinc.com>
+ <20240703025850.2172008-2-quic_tengfan@quicinc.com>
+ <665f6c8c-4f43-4d20-90e9-9e037a942066@kernel.org>
+ <fbeb5969-0b3a-455e-88eb-b83734bf2c50@quicinc.com>
+ <97c9484b-e257-4163-a104-3457d59bc69b@kernel.org>
+ <63eb3f58-d4a4-4a27-b78c-f4cb83e62c63@quicinc.com>
+ <f8f3c4d4-bf24-4195-a7b0-eec95cd64b57@linaro.org>
+ <c9822569-896c-4d5f-b917-2826bf414e67@quicinc.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <c9822569-896c-4d5f-b917-2826bf414e67@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hello community,
+On 08/07/2024 09:13, Aiqun Yu (Maria) wrote:
+> 
+> 
+> On 7/8/2024 2:07 PM, Krzysztof Kozlowski wrote:
+>> On 08/07/2024 06:45, Aiqun Yu (Maria) wrote:
+>>>
+>>>
+>>> On 7/3/2024 5:33 PM, Krzysztof Kozlowski wrote:
+>>>> On 03/07/2024 11:21, Tengfei Fan wrote:
+>>>>>>>         - items:
+>>>>>>>             - enum:
+>>>>>>> +              - qcom,qcs9100-ride
+>>>>>>>                 - qcom,sa8775p-ride
+>>>>>>> +          - const: qcom,qcs9100
+>>>>>>
+>>>>>> This changes existing compatible for sa8775p without any explanation in
+>>>>>> commit msg.
+>>>>>>
+>>>>>> Best regards,
+>>>>>> Krzysztof
+>>>>>>
+>>>>>
+>>>>> In the next verion patch series, I will provide relevant explanatory 
+>>>>> information in this patch commit message.
+>>>>
+>>>> TBH, I cannot think of any reasonable explanation for this, especially
+>>>> considering rest of the patchset which does not fix resulting dtbs_check
+>>>> warning.
+>>>
+>>> The existing compatible "sa8775p" warning can only be addressed When
+>>> @Nikunj's "sa8775p" changes merged.
+>>>
+>>> Let me know if you have other suggestions for this.
+>>
+>> I don't have, because I don't understand why do you want/need to change
+>> existing board compatible.
+> 
+> We can left the current existing sa8775p board compatible as it is. And
+> have a brand new qcs9100 and qcs9100-board item for current non-scmi
+> resources compatible.
+> 
+> Will that be more reasonable from your end?
 
-    I am sorry in advance if this is not the right place to ask for help.
+Yes, this is what I would expect. If you choose any other way - just
+like I wrote - you need to explain why you are doing this.
 
-    We are using Ubuntu 18.04.3 with kernel 4.15.0-72. We saw there
-are occasional kernel panics with the following message
+Best regards,
+Krzysztof
 
-[871224.377774] BUG: unable to handle kernel NULL pointer dereference
-at 000000000000000c
-[871224.386333] IP: lpfc_sli4_cq_get+0x23/0x80 [lpfc]
-[871224.391703] PGD 0 P4D 0
-[871224.394898] Oops: 0000 [#1] SMP PTI
-[871224.398843] Modules linked in: act_police cls_u32 cls_fw sch_sfq
-sch_htb xt_CT xt_mac xt_state devlink ebtable_filter ebtables
-ip6table_raw ip6table_mangle dummy vhost_net vhost tap xt_set
-ipt_rpfilter x
-t_multiport iptable_raw ip_set_hash_net ip_set_hash_ip ip_set ipip
-tunnel4 ip_tunnel veth ip6table_nat xt_statistic xt_nat xt_recent
-ipt_REJECT nf_reject_ipv4 xt_tcpudp xt_addrtype ip_vs_sh ip_vs_wrr
-ip_vs_r
-r ip_vs iptable_mangle xt_physdev xt_conntrack xt_comment xt_mark
-nf_conntrack_netlink xfrm_user xfrm_algo nf_conntrack_ftp udp_diag
-tcp_diag inet_diag ip6table_filter ip6_tables iptable_filter aufs
-ipt_MASQ
-UERADE nf_nat_masquerade_ipv4 iptable_nat rbd libceph overlay
-sch_ingress vxlan ip6_udp_tunnel udp_tunnel nfnetlink_cttimeout
-nfnetlink openvswitch nsh nf_conntrack_ipv6 nf_nat_ipv6
-nf_conntrack_ipv4
-[871224.472519]  nf_defrag_ipv4 nf_nat_ipv4 nf_defrag_ipv6 nf_nat
-nf_conntrack bonding nls_iso8859_1 dm_round_robin kvm_intel kvm
-irqbypass ipmi_ssif joydev input_leds ipmi_si ipmi_devintf
-ipmi_msghandler sc
-h_fq_codel ib_iser rdma_cm iw_cm ib_cm ib_core iscsi_tcp libiscsi_tcp
-libiscsi scsi_transport_iscsi br_netfilter bridge stp llc ip_tables
-x_tables autofs4 btrfs zstd_compress raid10 raid456 async_raid6_recov
- async_memcpy async_pq async_xor async_tx xor raid6_pq libcrc32c raid1
-raid0 multipath linear dm_service_time lpfc ast drm_kms_helper
-syscopyarea sysfillrect nvmet_fc sysimgblt igb fb_sys_fops nvmet
-crct10di
-f_pclmul nvme_fc crc32_pclmul ghash_clmulni_intel ttm pcbc dca
-hid_generic i40e nvme_fabrics aesni_intel nvme_core aes_x86_64
-crypto_simd ptp glue_helper usbhid pps_core i2c_algo_bit drm
-megaraid_sas
-[871224.547334]  scsi_transport_fc cryptd hid ahci libahci scsi_dh_emc
-scsi_dh_rdac scsi_dh_alua dm_multipath
-[871224.557960] CPU: 29 PID: 1445795 Comm: kworker/29:1 Not tainted
-4.15.0-72-generic #81-Ubuntu
-[871224.567145] Hardware name: Inspur NF5280M5/YZMB-00882-104, BIOS
-4.0.9 01/05/2019
-[871224.575431] Workqueue: lpfc_wq lpfc_sli4_hba_process_cq [lpfc]
-[871224.581992] RIP: 0010:lpfc_sli4_cq_get+0x23/0x80 [lpfc]
-[871224.587935] RSP: 0018:ffffa3d251493e40 EFLAGS: 00010286
-[871224.593878] RAX: 0000000000000d7d RBX: 0000000000000001 RCX:
-0000000000000000
-[871224.601740] RDX: 0000000000000d7d RSI: 0000000000000282 RDI:
-ffff90d7b19e0000
-[871224.609612] RBP: ffffa3d251493e78 R08: 0000000000000001 R09:
-0000000000000000
-[871224.617488] R10: ffffa3d251493de8 R11: 0000000000000394 R12:
-0000000000000000
-[871224.625364] R13: ffff90d7b19e00e0 R14: ffff90d7b2900000 R15:
-ffff90d7b19e0000
-[871224.633241] FS:  0000000000000000(0000) GS:ffff90d7c2040000(0000)
-knlGS:0000000000000000
-[871224.642073] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[871224.648556] CR2: 000000000000000c CR3: 000000388000a001 CR4:
-00000000007626e0
-[871224.656439] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-0000000000000000
-[871224.664333] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
-0000000000000400
-[871224.672228] PKRU: 55555554
-[871224.675706] Call Trace:
-[871224.678932]  ? lpfc_sli4_hba_process_cq+0x63/0x120 [lpfc]
-[871224.685116]  process_one_work+0x1de/0x420
-[871224.689918]  worker_thread+0x32/0x410
-[871224.694378]  kthread+0x121/0x140
-[871224.698401]  ? process_one_work+0x420/0x420
-[871224.703391]  ? kthread_create_worker_on_cpu+0x70/0x70
-[871224.709252]  ret_from_fork+0x35/0x40
-
-We are able to save the vmcore file, and the bt yields,
-
-crash> bt
-PID: 1445795  TASK: ffff90d4e8303b80  CPU: 29  COMMAND: "kworker/29:1"
- #0 [ffffa3d251493ac0] machine_kexec at ffffffffa50653e3
- #1 [ffffa3d251493b20] __crash_kexec at ffffffffa512fcc9
- #2 [ffffa3d251493be8] crash_kexec at ffffffffa5130a31
- #3 [ffffa3d251493c08] oops_end at ffffffffa50317c8
- #4 [ffffa3d251493c30] no_context at ffffffffa507641c
- #5 [ffffa3d251493c98] __bad_area_nosemaphore at ffffffffa50767d3
- #6 [ffffa3d251493cd8] bad_area_nosemaphore at ffffffffa50768a4
- #7 [ffffa3d251493ce8] __do_page_fault at ffffffffa507717b
- #8 [ffffa3d251493d60] do_page_fault at ffffffffa507757e
- #9 [ffffa3d251493d90] page_fault at ffffffffa5a01605
-    [exception RIP: lpfc_sli4_cq_get+35]
-    RIP: ffffffffc068d3f3  RSP: ffffa3d251493e40  RFLAGS: 00010286
-    RAX: 0000000000000d7d  RBX: 0000000000000001  RCX:
-0000000000000000
-    RDX: 0000000000000d7d  RSI: 0000000000000282  RDI:
-ffff90d7b19e0000
-    RBP: ffffa3d251493e78   R8: 0000000000000001   R9:
-0000000000000000
-    R10: ffffa3d251493de8  R11: 0000000000000394  R12:
-0000000000000000
-    R13: ffff90d7b19e00e0  R14: ffff90d7b2900000  R15:
-ffff90d7b19e0000
-    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-#10 [ffffa3d251493e40] lpfc_sli4_hba_process_cq at ffffffffc06910d3
-[lpfc]
-#11 [ffffa3d251493e80] process_one_work at ffffffffa50ab9ae
-#12 [ffffa3d251493ec8] worker_thread at ffffffffa50abc22
-#13 [ffffa3d251493f08] kthread at ffffffffa50b2621
-#14 [ffffa3d251493f50] ret_from_fork at ffffffffa5a00205
-
-Is this a known issue? Thank you.
---
-
-Best Regards,
-
-Norman
