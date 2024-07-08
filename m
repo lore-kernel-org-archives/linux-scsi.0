@@ -1,206 +1,184 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11010014.outbound.protection.outlook.com [52.101.229.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A3B14D2A3
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Jul 2024 21:19:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720473568; cv=none; b=j47QotLMjjYxzH2pTo57/gjjPwbbGiqJDVm1QJxFgEINtsP/R6q4poOblt3w5rHPfJcIYRYbGR19yQkgLoAnLE22o49ds7teSRSVkby15WniOd5BgHcSHv2xQP5wgmCpqCsZQq3AWD8nyo19CSTVdblwf18KF252s82iYdlFt9U=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720473568; c=relaxed/simple;
-	bh=jjx+GqcSDnE663D3PJ1XAhhSANs3UMkWrQiOwxGVVxE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=i9UA+cwKe/DeyaAAQijSvWRMikP0l7WBs+P7tCLmtF8ddJ5hIRKa9gd8f14g+xIXW2JK3pA5xaFpmdbHG3Jc4/3E2iFKIvOlbnH2k9EGv9yKcAxdeA7QEIC1w5gUsU6Pvk0Dehq8D57EO4ATjglD1vum8whjxvS85RjRzowNb/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Y8g8ctcX; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1D46F305;
+	Mon,  8 Jul 2024 23:44:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.14
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1720482285; cv=fail; b=EBFEMHNn0gGL8fkW2/ShmTOdqKJaFYDZYCUJYrUldbhI8SQ/7kqWaIqqg+ihCWOxSXN2d8Q/gy7bn5XYSwGecIas5sUXUMFea1bjdJ4CmUseNOHio5DGNzSgl4xDAQ3sdeWu3h01Qi9MloFn45km3oA53fck1064tonwndMLyto=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1720482285; c=relaxed/simple;
+	bh=BOeQYKYgboNdmJpNO/aZX+8xEaAOoHmMa4gYrv1MvBw=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=X97V+TE4NLXa06NhV1jKMoP18EhsEQEyzPdY2bj7wP3+0xVITYO3urHdK0jVL+gvQn9gGRGkVgjKLLzy9bw5k2vnvnf35HZHZJK4sLKItdID6h5KL4smu4C2aaYy9f4bKUzbHjEHxOTAg0uxXoKGfTlyJJU7zNoFQJTMyLjHqQk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; dkim=pass (1024-bit key) header.d=renesas.com header.i=@renesas.com header.b=oQftOY0N; arc=fail smtp.client-ip=52.101.229.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Y8g8ctcX"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WHxp622cFz6CmM6L;
-	Mon,  8 Jul 2024 21:19:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1720473552; x=1723065553; bh=/f13e
-	zMkTqOft6w0SXyVP9yXp/obffaFESgQ7DPdowU=; b=Y8g8ctcXx5KFvJmQ8D0TC
-	ZqexEkxMcKMDocVuYOVx69z39Y3t/ZFFcXBJQt+AJ1A0XU8jmOMDAgzWvvm2IhcC
-	WCfGhrpk578CO28Xvu7dMCjzXUgM9SjNumfExKNJ0yXLht1M3wblmI8S6FpnedjL
-	ATSkkMffFXUkMvTW5h0VaWrAuo5elWwbOO0akzU9x8wf5gEPtB3hlqFUvJOy6K3I
-	ZIt4Ekgph/slV7mroS9haUlNakoyxzKX5IZoRf+Yn/zg88x5LIGL+nl/vRs/lBGr
-	J+Mu7WwHeQ8DnWkUaa8VrAs4Iy6NxaKQhgKxfKR8Kos+c5LYxPaiftBP3k1iecPI
-	g==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id qit4WRcD33xV; Mon,  8 Jul 2024 21:19:12 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WHxnl4rC0z6Cnk9V;
-	Mon,  8 Jul 2024 21:19:07 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	peter.wang@mediatek.com,
-	manivannan.sadhasivam@linaro.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Minwoo Im <minwoo.im@samsung.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	ChanWoo Lee <cw9316.lee@samsung.com>,
-	Naomi Chu <naomi.chu@mediatek.com>,
-	Rohit Ner <rohitner@google.com>,
-	Yang Li <yang.lee@linux.alibaba.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>,
-	Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v5 10/10] scsi: ufs: Make .get_hba_mac() optional
-Date: Mon,  8 Jul 2024 14:16:05 -0700
-Message-ID: <20240708211716.2827751-11-bvanassche@acm.org>
-X-Mailer: git-send-email 2.45.2.803.g4e1b14247a-goog
-In-Reply-To: <20240708211716.2827751-1-bvanassche@acm.org>
-References: <20240708211716.2827751-1-bvanassche@acm.org>
+	dkim=pass (1024-bit key) header.d=renesas.com header.i=@renesas.com header.b="oQftOY0N"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=iEdq7enHAHybR7Ihtg5qwJ31HJ8yf2++fQwvDOQ89Usp5zuJPMr8/pI70r3zUUbW3lPHCmg0bHniimlJuSyZ+m2EU5KDQYVCMP+9jsGEaEncUpby2mIoesotK/Z330hrXiCILeX51XOU7cbTSxRqZKyNl3MOgslNhA7hmAw/QCyZ7Xom63DIZBRYNzneuwY0VSFawwL7ijMS6i49sj/FMJVlwnn4mkCv0fo2wMwB8jOpV0GyNdc/eWHZwYeFKgbUSrlBsVYKXoukiCPro46gTno5gKp0dslVwWqzPKFgnvvMb8CH/TYxheANLQxOAw1R7BxaRv2BMo0dGljmBXZcuA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=BOeQYKYgboNdmJpNO/aZX+8xEaAOoHmMa4gYrv1MvBw=;
+ b=m3pvBf3JgxpdeB0bDr5pB3o28LbG+tqx0dgsOoo2FkMSASpgvLG7GKS0Rq0NBOv8ai0x+7H27TrX46eod8e22d6NM7EzxwVq0V+aGf19OSsrywG4Zr9BvG0yaTY4UxJDm96wQnlOIMbdoBLEk9E22jPtgncBHFMvauawe8LNI87xb3ASAFMNoqqm62KV4zVolmrLlUf4UXEkJE7tVKfxpLClaB2msrQiqEJ6S9fKHWfDvv9wbCi8mDoD1ITvifT2SvFRF8WidPqGspPRpQTrUPLH0gHIfMe0JhKljNE67GNvarf+5vCwEl1eu0fgFRqw8WIIhWRJO1zav8WH/jbwJQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=renesas.com; dmarc=pass action=none header.from=renesas.com;
+ dkim=pass header.d=renesas.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=renesas.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BOeQYKYgboNdmJpNO/aZX+8xEaAOoHmMa4gYrv1MvBw=;
+ b=oQftOY0N44JyTjgogE8b7CEi0UZNzNnCNL5FCOyQUtiC1aUk10LOIVmAJeMUlvVLUYIDw914iZXBNJygLchPdkzbJiLmlODdZ+PJoI/QhwO4boEP6aZ0AVqcDItO7ET5l5Yx4cRx8dFeSd9XzO38kcrLqCjjF3rsQ+ulgPAvQ3o=
+Received: from TYCPR01MB11040.jpnprd01.prod.outlook.com (2603:1096:400:3a7::6)
+ by OS3PR01MB7357.jpnprd01.prod.outlook.com (2603:1096:604:11f::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7741.36; Mon, 8 Jul
+ 2024 23:44:39 +0000
+Received: from TYCPR01MB11040.jpnprd01.prod.outlook.com
+ ([fe80::b183:a30f:c95f:a155]) by TYCPR01MB11040.jpnprd01.prod.outlook.com
+ ([fe80::b183:a30f:c95f:a155%7]) with mapi id 15.20.7741.033; Mon, 8 Jul 2024
+ 23:44:38 +0000
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To: Bart Van Assche <bvanassche@acm.org>,
+	"James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-renesas-soc@vger.kernel.org" <linux-renesas-soc@vger.kernel.org>
+Subject: RE: [PATCH 1/5] scsi: ufs: renesas: Refactor init code for other UFS
+ controller
+Thread-Topic: [PATCH 1/5] scsi: ufs: renesas: Refactor init code for other UFS
+ controller
+Thread-Index: AQHa0S+/duDDkq1DA02B0a4Krv9VxrHtD4UAgABvaSA=
+Date: Mon, 8 Jul 2024 23:44:38 +0000
+Message-ID:
+ <TYCPR01MB11040DE4D5F6908F5FF9AF3CED8DA2@TYCPR01MB11040.jpnprd01.prod.outlook.com>
+References: <20240708120931.1703956-1-yoshihiro.shimoda.uh@renesas.com>
+ <20240708120931.1703956-2-yoshihiro.shimoda.uh@renesas.com>
+ <434cb981-b0fe-4dd2-bac1-e80de2e68099@acm.org>
+In-Reply-To: <434cb981-b0fe-4dd2-bac1-e80de2e68099@acm.org>
+Accept-Language: ja-JP, en-US
+Content-Language: ja-JP
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=renesas.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: TYCPR01MB11040:EE_|OS3PR01MB7357:EE_
+x-ms-office365-filtering-correlation-id: a57ed289-1c44-4bb7-99ba-08dc9fa7ee09
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|376014|366016|1800799024|38070700018;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?dC9BdWdvU0tsNmZTYUFmRVpDVzJMdVNTcDVQZ1V3OVVUd3loSCtqTmxNc2dJ?=
+ =?utf-8?B?SGVqZHBYRFJubVh6L3Zla29pcnYzeXNzNXhBVStpdXRHeUFVbkk4ZkF0RHdL?=
+ =?utf-8?B?Y3FZL3JadCtBNXNFdjh0RlBnYlFMMkxVZDZROXVqT0g5RmRBdEswVGJBcVNC?=
+ =?utf-8?B?NWlGWS9lZzczWlRwOFVrbjcxUDJzT2NtWk44NDZTRGk0dmhvRGwzTXN0ellu?=
+ =?utf-8?B?NkZEL1d1VUNOQUh3QUhKSll5cTlZNVRWS1c2T0g1Y2JieVczcE11RU5zTktw?=
+ =?utf-8?B?RlNLRUFpUHVJMDV0cGs3RDNMMEpScFI4SWtqK0V4NG5ORDBNQjdEQXBWS0pq?=
+ =?utf-8?B?N3ZVVXpSUWpsbU1vY25xb2ZVVUpOLzJuMFpqV09VZC91b1NpRWFaVXZVVlpY?=
+ =?utf-8?B?RHJkVVVtUElrZ0FySGxXV1V3dkcxY2dWdFY3RzJPc3RjeVZCOWZZTjhVYk94?=
+ =?utf-8?B?TmV5RVMwZFU3eWFTQWZSazc2VDlSOTZianh4WVpYVmp5bkNHWFFRRVdyVzJZ?=
+ =?utf-8?B?alVXNHNJNm96aHc5ZmJUb0xuc0RiZ3dTVDdlTW9RSTNZdzRsQVhCczIvVSs4?=
+ =?utf-8?B?VGJ5QUUwaThURFZiRkY3ZmlTRGNmY3NyOGZwYmh3WmlQLzVMM0RTSzROQUhk?=
+ =?utf-8?B?SmkvN2syb1JyU0J1a05nR2RkMTlJblNTWWFZTmdibGlmNmlYbHZDY2hwdVdU?=
+ =?utf-8?B?YlB4SHJoQmM2czRWeHhZMjk3QkNEVzdIajk1ZDJYLzY4UFdJekNVRFdnZ002?=
+ =?utf-8?B?ajYvR09aU2VLWGYwMjFYREROc0FRaDkxeFh2M2tZcTd0ZEM2Rk5qZXJZbHJM?=
+ =?utf-8?B?elk4UjMrWmM4aXR5Y3NRYnBaeDRpSGoyV0Y2d3pHT0FnNDFoNkpYVUFZU2s4?=
+ =?utf-8?B?RUl2eWQxVGVQZ2xUUGZFYzZFR1F6VThsOUJhTGhoZVRWS1cxTzlWS1FFSG82?=
+ =?utf-8?B?c3J4RDdkcDVKanBNVTFudXFabEhFNlFGSVlaSlhQdlZQZjgwekFRNjRQVzdl?=
+ =?utf-8?B?eWc3b0dlaGxnbmY5U29takFjdzc2R3VsQWRRTEV0NjV2TU1WaDZIK3B5NExy?=
+ =?utf-8?B?YUtrcG81YlQwL0Y3VWI4ZWtpUkEvQmlFZ2hOTXp2QWJOYnFWS0RaOVRDZytm?=
+ =?utf-8?B?cVhxZExUcUVxeHVoL1Q5a05vcnJGMWk2VjRITWRaVVg1S28vZXBRVWp0N1li?=
+ =?utf-8?B?NEZ0RlJYNFE2RFIwN1NJdXMrYkxyeUE5Zk1OMGtaWkVDMHM3RnlaVklCK3FX?=
+ =?utf-8?B?d055czBuVklWSVFWS0s2c1ZaaFBXdGdsZVRrakNoYmNlRHcxb3d0YlhzQ1hV?=
+ =?utf-8?B?RGZyMU9UT1pFZDBsdUxIM2FwSjhMMWUwaGpOeTZwYk1DbGVZZitBZHUxRytN?=
+ =?utf-8?B?bzBpTVZ2MlE5L1RqUnpONGFDaW53RWwyWlc4dkErdTd5bkk2bXNUZ2xyeXdi?=
+ =?utf-8?B?b2JaVnFlL0grc1YwUVRZRzU2SmcrbjU1R0t5VWFJc29WWkk2Q3A5Zzl1ZHdm?=
+ =?utf-8?B?TGpuVFl3Z25vUzFhQ0Jpakp4TUpDZkxISkp4RThwRWFZaFRMMjM4S3pVTU9j?=
+ =?utf-8?B?NkFXOGtrakhMcGxNUjdhSnVBRGdGc2MyTUJob2IyTHdlb2pYK2paMlBwOGlG?=
+ =?utf-8?B?RkQrNmI0bE5MZTBwRDRPZm9vQ3d5WWJBUUxwMVVLb082S2JONUIxbkdvS2VH?=
+ =?utf-8?B?c0kyRnZCbkJJZG04NkVBK1NyWGs1aThTak9UUkR1bVROMzNiY3NrQnVaakhr?=
+ =?utf-8?B?VXNrc011c2w3VTY4WVdMUmFJVlMyTlAzalZTb0g2MHZ5RlpHL3RWeC91QmQ0?=
+ =?utf-8?B?Y1JsMVNRdzF0V3BPQjFjQnMrSm1YNS8yK2lBTHVyS0VmbHpjVHZzY25SbnNQ?=
+ =?utf-8?B?YmFqMGtNcHpCVUh3c1NBNFU1Rm5QV0V1Y2M0YklxWGdSaVE9PQ==?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:ja;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYCPR01MB11040.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?cXFhKzV2MjNhMlhNdGc5LzRYUnYyMmxmWi9VZkNQcHZPK3NLUWJnRnRJVk4y?=
+ =?utf-8?B?TE82MGVhdUl1ajJ2TzZ3eDdjcjRFam4yMGJpSi83Y3ExUVBFcnZWVGxpMHI2?=
+ =?utf-8?B?Y1h6OEErdE9LTENlUkdFN1dtTE44bE1YSytKMnlJS1ZSaDF4cDNocU01MkJO?=
+ =?utf-8?B?aEVyc05OOVVmdklzbTlXNTd2U1REbzVvV2pvdGt4WUdPSlhjUkJuWXFHak9H?=
+ =?utf-8?B?VjBIMFV0RXhvMXM3L0l6Rkp5K3MvV3R6RzlVK08zTHZTSTBxeFU3WHpvSHBo?=
+ =?utf-8?B?dS92WnQwaGtEc2V0MVFLbm5HeFdTS0tkdERZeW82WTRRM21wQS9tQ0RzeURZ?=
+ =?utf-8?B?QnFha1ptYVFCRXlQSkNmQlhYT0VqZ2tiaHBCbFdzRW9wK1hENGc2VGs3OHVy?=
+ =?utf-8?B?TEhQQy9WY1Z0TTk3akZuWHNTd2NCeDdnU3BJaTlvUFoxOVVyNklCbkhnbHp1?=
+ =?utf-8?B?VkEweVBMVXFXVFJhNDJGUkcrekljRlZVQXBYeWFQblpMVThlV3JyMFBteG1Z?=
+ =?utf-8?B?Zm80eWMzQUdHNXJFQ3Y1dmlvT1c5SVpuVjlJVEVIOE4zc0FUSVRnQWdFR003?=
+ =?utf-8?B?K3VRM25zNVE0Z1ZiRk04QXdoYTN4OHVaT2s0OTk0akhLVW5MSm1Obk9QWFJW?=
+ =?utf-8?B?aWtETnV4ejFsejAzZWFjRVl6TVNhWXV2TmRsMGc5ZDZuYkwyTFNUdENUemV6?=
+ =?utf-8?B?WFU0akVvNzlWOTRObGVLbDY3dk9UQkxqbWNjSVFlcmZPVHNpNmIzUjRDWHd2?=
+ =?utf-8?B?b3h2VUt5Ui9XQTBoU3VmU2QydXY0L01rU3pMaW0rTFVIa1R2UUFHcDBDOEdC?=
+ =?utf-8?B?VTV1RVdybXNGNDN3Qk95dG9yZDFEL2FiZzVFL09HOU5JdmNOZGZtMUQ4bnFz?=
+ =?utf-8?B?U2Z0Q0FNWFdOWE9DQTcvT1c0b0ZYY1BCZUE3V2lXeG9NVjRmS3hBYzJRTGlY?=
+ =?utf-8?B?b1NaRkFmdjJZa0UrWEJIMDluN050K1pISXRScjdpRmRKR0lmaTkwVG1MVDB5?=
+ =?utf-8?B?eUhEbmI1citJRi82QVBRMjBuUnIyUi8wb2ErN3B2TjJVTUl0S1NkR1BsSzdk?=
+ =?utf-8?B?RmtaTVhIajljWFVEeUxWdmtiMERtaGQ2QXFzbHlwbWVuTFZaTVp6UzE2M2VS?=
+ =?utf-8?B?dURUMCtqV3J0blJ1SUd2Nlh3UHFmNHRleXZQTTBwaFMxaW9rcGVnV3htdzZB?=
+ =?utf-8?B?Nmc4MzdPYXZBYjVNMksvY3NpNVpZTlQxWjFLdHFDNC9DNlh0N3Z0Tk9UM3VM?=
+ =?utf-8?B?WG1pTnVWdFVuVkE4U0NpN1VLSGozUU81Z3hJOUFuaHVvUFE0em9WL3l6bm13?=
+ =?utf-8?B?Kzg5eE4vMjY2d2JBU2hNTmVSQ1Q3dTZqUEk3eXYvRkhQUVFwYmlkakxTM3Q1?=
+ =?utf-8?B?K3dYQi9Nb0Z0WHozMjdXU095YzVQR3NvcnNKL3FsQnlMQXcvZ3dkYVZOT3Z3?=
+ =?utf-8?B?NHVLMjdHRCtOVlp0alNNTTlQSXJxWnB3cFRSL1JReFliNjVkZkRZNXhBSE8r?=
+ =?utf-8?B?cFhrcDh3My9yUVBDZHI4NnpucEw1Z0dlZDBWcVltMkRhcnNoRlU2UTE4ZlFJ?=
+ =?utf-8?B?TFVCK0x0RGpGZFgvTm83Q3F0N0gxTUJCOEhhYnFCelJrN1pUUWVMcG1wa3Fs?=
+ =?utf-8?B?Y1I1UDJpNk9UQlMrSzllT3VVSVpIcmZmMmJEdTVXNE5iTGdoclNHSnh0bXlt?=
+ =?utf-8?B?WkIrajhuZWVZN1ZQRy9nWWZYUWxGZnp3Rm1FTWFoZ1hLQW5uNFdpbFhER3Jo?=
+ =?utf-8?B?QTZwREwyeGgwZk1GalZzb2RCMUFnVE95RnB3UUJvbXVzamkxTUdnWEJDWDd5?=
+ =?utf-8?B?M3dRU1dlcW05d2ZpK3ZJNncwWUZlcjdoNUI2OWlZeDdacktxSlRaMlNnQW5K?=
+ =?utf-8?B?cTJ1d2NQcFRjNFQ1VWI1ekxneS9PZ3MydTE3TE8wQWxyZ01iU1MxelBtcVZP?=
+ =?utf-8?B?VFhSem9TMXFqT3pybllUWXJUd2d6N283WlY0M25XZHE0Zjd4RERTZUJoeVBJ?=
+ =?utf-8?B?UlpSMng3Njl2MDQzYWNndW9qcXd3M3JFOUdYYWNZcjhzY2dqOFh1bHo3VVdp?=
+ =?utf-8?B?NkpMTTkxNjRNYUd3dXhJM2ZXMHRUVm5xTXFkRXBCQ2IrQ09EVXRLeE94VUN2?=
+ =?utf-8?B?ODFtRjkwbFRRSi9HZFpaQkhzUTNERVNTbTZuRmx1NTcwQVB0a2ZybmhUNndB?=
+ =?utf-8?B?a3ErU2Urd0txK3BOVWNUMVRVbFd6THE0OVdCTjVKWEYrdHlERWVTbEpaUGRM?=
+ =?utf-8?B?MUdjVGhHcElQbVJEaXIrelhHc2NnPT0=?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+X-OriginatorOrg: renesas.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: TYCPR01MB11040.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a57ed289-1c44-4bb7-99ba-08dc9fa7ee09
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jul 2024 23:44:38.1597
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Y01aC9AYQYwV5e4KCGc8Gj1ePx+OtxljfVeu7foXuQclZo9RL6AdMxzAIQRzXUQY0btPnZbQLBuavbH8yFfLrWwjdlzaLNfjtEmcPUnlt5K3VBjKNnxnbZFivjgHltUN
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS3PR01MB7357
 
-UFSHCI controllers that are compliant with the UFSHCI 4.0 standard report
-the maximum number of supported commands in the controller capabilities
-register. Use that value if .get_hba_mac =3D=3D NULL.
-
-Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufs-mcq.c     | 26 ++++++++++++++++++++------
- drivers/ufs/core/ufshcd-priv.h |  1 +
- drivers/ufs/core/ufshcd.c      |  3 ++-
- include/ufs/ufshcd.h           |  4 +++-
- include/ufs/ufshci.h           |  1 +
- 5 files changed, 27 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index ef98c9797d07..70951829192f 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -138,18 +138,26 @@ EXPORT_SYMBOL_GPL(ufshcd_mcq_queue_cfg_addr);
-  *
-  * MAC - Max. Active Command of the Host Controller (HC)
-  * HC wouldn't send more than this commands to the device.
-- * It is mandatory to implement get_hba_mac() to enable MCQ mode.
-  * Calculates and adjusts the queue depth based on the depth
-  * supported by the HC and ufs device.
-  */
- int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba)
- {
--	int mac =3D -EOPNOTSUPP;
-+	int mac;
-=20
--	if (!hba->vops || !hba->vops->get_hba_mac)
--		goto err;
--
--	mac =3D hba->vops->get_hba_mac(hba);
-+	if (!hba->vops || !hba->vops->get_hba_mac) {
-+		/*
-+		 * Extract the maximum number of active transfer tasks value
-+		 * from the host controller capabilities register. This value is
-+		 * 0-based.
-+		 */
-+		hba->capabilities =3D
-+			ufshcd_readl(hba, REG_CONTROLLER_CAPABILITIES);
-+		mac =3D hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_MCQ;
-+		mac++;
-+	} else {
-+		mac =3D hba->vops->get_hba_mac(hba);
-+	}
- 	if (mac < 0)
- 		goto err;
-=20
-@@ -424,6 +432,12 @@ void ufshcd_mcq_enable(struct ufs_hba *hba)
- }
- EXPORT_SYMBOL_GPL(ufshcd_mcq_enable);
-=20
-+void ufshcd_mcq_disable(struct ufs_hba *hba)
-+{
-+	ufshcd_rmwl(hba, MCQ_MODE_SELECT, 0, REG_UFS_MEM_CFG);
-+	hba->mcq_enabled =3D false;
-+}
-+
- void ufshcd_mcq_config_esi(struct ufs_hba *hba, struct msi_msg *msg)
- {
- 	ufshcd_writel(hba, msg->address_lo, REG_UFS_ESILBA);
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-index 88ce93748305..ce36154ce963 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -64,6 +64,7 @@ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u3=
-2 ahit);
- void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
- 			  struct cq_entry *cqe);
- int ufshcd_mcq_init(struct ufs_hba *hba);
-+void ufshcd_mcq_disable(struct ufs_hba *hba);
- int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
- int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
- struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 4c2b60dec43f..1ba5668b0700 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8754,12 +8754,13 @@ static int ufshcd_device_init(struct ufs_hba *hba=
-, bool init_dev_params)
- 		if (ret)
- 			return ret;
- 		if (is_mcq_supported(hba) && !hba->scsi_host_added) {
-+			ufshcd_mcq_enable(hba);
- 			ret =3D ufshcd_alloc_mcq(hba);
- 			if (!ret) {
- 				ufshcd_config_mcq(hba);
--				ufshcd_mcq_enable(hba);
- 			} else {
- 				/* Continue with SDB mode */
-+				ufshcd_mcq_disable(hba);
- 				use_mcq_mode =3D false;
- 				dev_err(hba->dev, "MCQ mode is disabled, err=3D%d\n",
- 					 ret);
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 3eaa8bc7eaea..52b0b10cca50 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -325,7 +325,9 @@ struct ufs_pwr_mode_info {
-  * @event_notify: called to notify important events
-  * @reinit_notify: called to notify reinit of UFSHCD during max gear swi=
-tch
-  * @mcq_config_resource: called to configure MCQ platform resources
-- * @get_hba_mac: called to get vendor specific mac value, mandatory for =
-mcq mode
-+ * @get_hba_mac: reports maximum number of outstanding commands supporte=
-d by
-+ *	the controller. Should be implemented for UFSHCI 4.0 or later
-+ *	controllers that are not compliant with the UFSHCI 4.0 specification.
-  * @op_runtime_config: called to config Operation and runtime regs Point=
-ers
-  * @get_outstanding_cqs: called to get outstanding completion queues
-  * @config_esi: called to config Event Specific Interrupt
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 8d0cc73537c6..38fe97971a65 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -68,6 +68,7 @@ enum {
- /* Controller capability masks */
- enum {
- 	MASK_TRANSFER_REQUESTS_SLOTS_SDB	=3D 0x0000001F,
-+	MASK_TRANSFER_REQUESTS_SLOTS_MCQ	=3D 0x000000FF,
- 	MASK_NUMBER_OUTSTANDING_RTT		=3D 0x0000FF00,
- 	MASK_TASK_MANAGEMENT_REQUEST_SLOTS	=3D 0x00070000,
- 	MASK_EHSLUTRD_SUPPORTED			=3D 0x00400000,
+SGVsbG8gQmFydCwNCg0KPiBGcm9tOiBCYXJ0IFZhbiBBc3NjaGUsIFNlbnQ6IFR1ZXNkYXksIEp1
+bHkgOSwgMjAyNCAyOjA1IEFNDQo+IA0KPiBPbiA3LzgvMjQgNTowOSBBTSwgWW9zaGloaXJvIFNo
+aW1vZGEgd3JvdGU6DQo+ID4gK3N0YXRpYyB2b2lkIHVmc19yZW5lc2FzX3BhcmFtX3BvbGwoc3Ry
+dWN0IHVmc19oYmEgKmhiYSwgdTMyIHJlZywgdTMyIGV4cGVjdGVkLA0KPiA+ICsJCQkJICAgdTMy
+IG1hc2spDQo+ID4gK3sNCj4gPiArCXN0cnVjdCB1ZnNfcmVuZXNhc19pbml0X3BhcmFtIHBhcmFt
+ID0geyAwIH07DQo+ID4gKw0KPiA+ICsJcGFyYW0ubW9kZSA9IE1PREVfUE9MTDsNCj4gPiArCXBh
+cmFtLnJlZyA9IHJlZzsNCj4gPiArCXBhcmFtLnUuZXhwZWN0ZWQgPSBleHBlY3RlZDsNCj4gPiAr
+CXBhcmFtLm1hc2sgPSBtYXNrOw0KPiANCj4gUGxlYXNlIGNvbWJpbmUgdGhlIGFib3ZlIGRlY2xh
+cmF0aW9uIGFuZCBhc3NpZ25tZW50cyBpbnRvIGEgc2luZ2xlDQo+IHN0YXRlbWVudDoNCj4gDQo+
+IHN0cnVjdCB1ZnNfcmVuZXNhc19pbml0X3BhcmFtIHBhcmFtID0gew0KPiAgICAgICAgICAubW9k
+ZSA9IE1PREVfUE9MTCwNCj4gICAgICAgICAgLnJlZyA9IHJlZywNCj4gICAgICAgICAgLnUuZXhw
+ZWN0ZWQgPSBleHBlY3RlZCwNCj4gICAgICAgICAgLm1hc2sgPSBtYXNrLA0KPiB9Ow0KPiANCj4g
+U2FtZSBjb21tZW50IGZvciB0aGUgb3RoZXIgZnVuY3Rpb25zIGJlbG93IHRoaXMgZnVuY3Rpb24u
+DQoNClRoYW5rIHlvdSBmb3IgeW91ciByZXZpZXchIEkgZ290IGl0LiBJJ2xsIGZpeCB0aGVtLg0K
+DQpCZXN0IHJlZ2FyZHMsDQpZb3NoaWhpcm8gU2hpbW9kYQ0KDQo+IFRoYW5rcywNCj4gDQo+IEJh
+cnQuDQo=
