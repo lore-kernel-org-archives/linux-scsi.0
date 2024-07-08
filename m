@@ -1,98 +1,91 @@
-Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCF8025745;
-	Mon,  8 Jul 2024 14:18:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD57A14386F;
+	Mon,  8 Jul 2024 17:05:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720448318; cv=none; b=sg89ityHvfEK9hcBTpu7cJcrFZsv7DuQ0rECfR5hkJ8wL4pvzn7MkzXMoW34zwwabDSKwkezp/2LenMjqtdJfnYkojr3ZnzlMa0fF1OzOaMy/cd18y/igVCW+hTWsdUPVnR6pWChh6TPFPc3wLf3mzHnfjtTYfom9tAZ7NziFs8=
+	t=1720458305; cv=none; b=tEECPoxQ89B+YAW7DGW7ACV9h0VNrF4vWG3Rc3neYkmQ5igNDEmVK9+dQh12jir0djnbQHfAbx7odKbjNY1yoxGdCdzfTSlfIVkSswstMglvBNHddlYrzqVEX86/wjHm0XfLXcOGRHC10DmgYKSABlrrBtRI5BD6STcMbbuQewM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720448318; c=relaxed/simple;
-	bh=GmM0j3P51qYNYcB9FB5GbSrbtyWecjbiPcPIsW4vHQc=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GmvWZ9j6CFqAv3wUlpqvB630CyxAldJMomGFiaXokMxZpjwf0DdP/rmj7qFfJHz4/nANQ31BQ9fCnObpsj57IJTSrzARFtBvQu4W/f+HIYZOHlEAxcG3aytkvJrEekleDyxIu5jE9Df85ShTkU7guJ5N+HfdZPoOZQ1uLM19s0s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SuD/cDXB; arc=none smtp.client-ip=209.85.217.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1720458305; c=relaxed/simple;
+	bh=qAaHfzoMz22v8vuwkp2AqgWndXU56qIjre0k9Q/gfuY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=I270cFBQfadW+mNE843D4zSicOy2BMm3H4iJkV9Ph4ii4d6xa6N8THeBmRsBVA99S4IH//gOzi5YejFDQjrD1mhFV8acb6Vjs/qRXyDBCTNlUbdg9pnt4mB0m1TYpG5fp3rk0yiVJjOQMV04E90yrPMfRh6Hx5YvEDFX0IGKiCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=I0lcGot6; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SuD/cDXB"
-Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-48ff8aa6081so1032274137.1;
-        Mon, 08 Jul 2024 07:18:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1720448315; x=1721053115; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vzZ0t+6EA44YYeZ1nSKnkOHgB4WgwxxqFBIuc3oST+w=;
-        b=SuD/cDXBzSAqnuSZNQLSbGCQcMQzMboMEJNUAzwYTgTOTuH647gBXxzuJv8n0jw4LM
-         W+1UjBVVOa4grTFgn0EtJ6d+dVhdYoJYP1NsPt1qdrAuyciCdZ35+lSQ9012wkL+A/sq
-         SqzVGkJpQHdpMXNflUWHi0P7LlFJ+vEgs/JZnhcype3NxPX8hkcisdwQwSyZHW+fQF7C
-         X3WSs1tuEooShKh4PCJLt2mmvQCBKthmwYHRJag7yIMr0BaRdb4BLcHeJWcDFU8gU+i7
-         2W+KMDZqi+WWIBV7B5PtK2HO+xG5OAMcooPS42wTZFLcYEuuFLPa8dIE8RAX+ICCadp9
-         OGOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720448315; x=1721053115;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=vzZ0t+6EA44YYeZ1nSKnkOHgB4WgwxxqFBIuc3oST+w=;
-        b=NYGmwRr8te/qNXv8oowdfQQCEK6AcOqupzI2kNlAtmWuZSNuW5rfoxCfFERF88LY7D
-         X8WYj9nS7AqrvOk10mN8QFVsrPeHUcbgCJbyh3odKTmhuc6WfyDoFRA31NEnYr40cJ5L
-         9FHNybqW9mzsQY4SBUmYnANvNveRWSGzwL+UpvR8l3EWGHjxeGe8NkAiNQ+mFdWE8SjE
-         ANKsvHQxEqbQSfhG/oDTARfOz1fvMCQ1q1QEmfZ6kyfmEkGmPMPoVk1pnTktMKAmypzS
-         KKEbfkor/P4S1jlJu87z35HfPRYgpLMzxCQZftXcoeF9+Fuq0pqtSj8df4xskY7dp1KC
-         FBRA==
-X-Forwarded-Encrypted: i=1; AJvYcCUQqyFa/1mYZI86/NxEwTE6Jn15d30EQb7uZJTGhZ9B4zjd0E3uvJpabXRgNDJlZ7aWEczSaaQY6wO8tgVsEW2t0QPs1TWubfwK2IN4abCwzfJLRyO8q/TX5ejmTNwyw+/UvCOrO4fM
-X-Gm-Message-State: AOJu0YzTRmXS7JU7tKXC5XiKKf0bbjgDMk9UFtTrhuap8TVrPsv8m12d
-	VBXOw0xMFyFChaFJ8+iE9alzQbuHGtGf6pSaBYLNOvZpDVlwGLPN6ttbpdQNI6gDuoIMpLet0nG
-	bdeFCUbp3pgPEOF6I+8JMirMyqQ==
-X-Google-Smtp-Source: AGHT+IGBZ+nfOhagN9EruogOZmg7A5VWL+nHpS7DVh+j85DRP1XireqJnFUSTtEzQm9VwJ5uppvB8QfKb3CsC3X5BvU=
-X-Received: by 2002:a05:6122:d1a:b0:4ec:f9ad:d21a with SMTP id
- 71dfb90a1353d-4f2f3fd1102mr14678174e0c.10.1720448315692; Mon, 08 Jul 2024
- 07:18:35 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="I0lcGot6"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WHr8T4fWYz6CmQwN;
+	Mon,  8 Jul 2024 17:04:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1720458295; x=1723050296; bh=zuyi/B7gq4uyWUQDBVD2sZtx
+	o+eha2O/tA5K7wBSFn8=; b=I0lcGot6LZ9WvWvZczs6js3gXRn/liMYu7ljTaPS
+	gkHMIFSyeXsYtwrD8jg2RYtB84LoAjCQVSA48z3AEHuGe7rh7FLz/gXZ/7p7wnW+
+	4A/HuFSzPCsCeJKsNqPUZpNoqAPhAlYNcjI17ZouJ3ZdQfTUHStPHj20e6Mv3bk2
+	GVKnOl3U9jZTt6uBTT+pnj0wwK2DSXdvU6ABcqilwHO1wjxugDZc6xdjSbxXn9i8
+	JY21Eyh+NDjUUQhmhRojAK4ZreftzsZjis+T4afmxs6Q7MKQAAOQG+LiPZhzOOtU
+	XXQIke79sC9QUAkL7JaAVtp2MX0QO3a1RVv+CS3P5+OoXA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id Bb4kiBD0BM-R; Mon,  8 Jul 2024 17:04:55 +0000 (UTC)
+Received: from [100.96.154.26] (unknown [104.132.0.90])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WHr8Q4sTtz6CmR09;
+	Mon,  8 Jul 2024 17:04:54 +0000 (UTC)
+Message-ID: <434cb981-b0fe-4dd2-bac1-e80de2e68099@acm.org>
+Date: Mon, 8 Jul 2024 10:04:52 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240705083205.2111277-1-hch@lst.de>
-In-Reply-To: <20240705083205.2111277-1-hch@lst.de>
-From: Anuj gupta <anuj1072538@gmail.com>
-Date: Mon, 8 Jul 2024 19:47:59 +0530
-Message-ID: <CACzX3AvXAhcjE0PEB_PO7B2e0pRB7mj2QMdw5Gj_sNH-acTfYg@mail.gmail.com>
-Subject: Re: fine-grained PI control
-To: Christoph Hellwig <hch@lst.de>
-Cc: Kanchan Joshi <joshi.k@samsung.com>, Anuj Gupta <anuj20.g@samsung.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/5] scsi: ufs: renesas: Refactor init code for other UFS
+ controller
+To: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+References: <20240708120931.1703956-1-yoshihiro.shimoda.uh@renesas.com>
+ <20240708120931.1703956-2-yoshihiro.shimoda.uh@renesas.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240708120931.1703956-2-yoshihiro.shimoda.uh@renesas.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jul 5, 2024 at 2:02=E2=80=AFPM Christoph Hellwig <hch@lst.de> wrote=
-:
->
-> Hi all,
->
-> Martin also mentioned he wanted to see the BIP_CTRL_NOCHECK,
-> BIP_DISK_NOCHECK and BIP_IP_CHECKSUM checksum flags exposed.  Can you
-> explain how you want them to fit into the API?  Especially as AFAIK
-> they can't work generically, e.g. NVMe never has an IP checksum and
-> SCSI controllers might not offer them either.  NVMe doesn't have a way
-> to distinguish between disk and controller.
-Yes, these flags are only valid in the context of SCSI. One possible
-scheme can be that the API still has the ability to pass these flags
-and the NVMe driver fails if the user specifies these flags.
+On 7/8/24 5:09 AM, Yoshihiro Shimoda wrote:
+> +static void ufs_renesas_param_poll(struct ufs_hba *hba, u32 reg, u32 expected,
+> +				   u32 mask)
+> +{
+> +	struct ufs_renesas_init_param param = { 0 };
+> +
+> +	param.mode = MODE_POLL;
+> +	param.reg = reg;
+> +	param.u.expected = expected;
+> +	param.mask = mask;
 
->
-> Last but not least the fact that all reads and writes on PI enabled
-> devices by default check the guard (and reference if available for the
-> PI type) tags leads to a lot of annoying warnings when the kernel or
-> userspace does speculative reads.
-In the current series the application can choose not to specify the
-GUARD check flag, which would disable the guard checking even for PI
-enabled devices. Did you still encounter errors or am I missing
-something here?
+Please combine the above declaration and assignments into a single
+statement:
 
---
-Anuj Gupta
+struct ufs_renesas_init_param param = {
+         .mode = MODE_POLL,
+         .reg = reg,
+         .u.expected = expected,
+         .mask = mask,
+};
+
+Same comment for the other functions below this function.
+
+Thanks,
+
+Bart.
