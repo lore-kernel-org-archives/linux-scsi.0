@@ -1,184 +1,116 @@
-Received: from TY3P286CU002.outbound.protection.outlook.com (mail-japaneastazon11010014.outbound.protection.outlook.com [52.101.229.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1D46F305;
-	Mon,  8 Jul 2024 23:44:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.229.14
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720482285; cv=fail; b=EBFEMHNn0gGL8fkW2/ShmTOdqKJaFYDZYCUJYrUldbhI8SQ/7kqWaIqqg+ihCWOxSXN2d8Q/gy7bn5XYSwGecIas5sUXUMFea1bjdJ4CmUseNOHio5DGNzSgl4xDAQ3sdeWu3h01Qi9MloFn45km3oA53fck1064tonwndMLyto=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720482285; c=relaxed/simple;
-	bh=BOeQYKYgboNdmJpNO/aZX+8xEaAOoHmMa4gYrv1MvBw=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=X97V+TE4NLXa06NhV1jKMoP18EhsEQEyzPdY2bj7wP3+0xVITYO3urHdK0jVL+gvQn9gGRGkVgjKLLzy9bw5k2vnvnf35HZHZJK4sLKItdID6h5KL4smu4C2aaYy9f4bKUzbHjEHxOTAg0uxXoKGfTlyJJU7zNoFQJTMyLjHqQk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; dkim=pass (1024-bit key) header.d=renesas.com header.i=@renesas.com header.b=oQftOY0N; arc=fail smtp.client-ip=52.101.229.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A379914F9D9;
+	Mon,  8 Jul 2024 23:49:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1720482553; cv=none; b=KojONpPzWzHPvGDz5LUH/c36TaIErj5Q8ko5u1D+/YgACFxtwwWKinUHMyJmN+E7TQjdQQW1p9IO9cHGaDdY/v0/lW3JNhunSublKJ7v4podPpROPhkw26LcCgNHIdhpDX37chyp8wO34S2aG8IapKtoEvq3EgUdQwsSqctdSw8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1720482553; c=relaxed/simple;
+	bh=ZdDfcMsQPc2BEgw8D2wuQ0A8t+bcrirSmWoZGGiWYrU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=I83DSlB/wzHBgPtQbOFpK5dyio1Pl8SuUge9JQXdd0/5D+ibb/roS38dXOnXenpQ3OGVxcBG72QrVVCj0WuOqOadNleAIX0Rct0gIHqm4/bcBnlE1BUYFqIobL7XvD1ww1oRvKxFYhVZF59ENBCjP6BU/Sw9W07VKSX25thGWlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=se1Fj11r; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=renesas.com header.i=@renesas.com header.b="oQftOY0N"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iEdq7enHAHybR7Ihtg5qwJ31HJ8yf2++fQwvDOQ89Usp5zuJPMr8/pI70r3zUUbW3lPHCmg0bHniimlJuSyZ+m2EU5KDQYVCMP+9jsGEaEncUpby2mIoesotK/Z330hrXiCILeX51XOU7cbTSxRqZKyNl3MOgslNhA7hmAw/QCyZ7Xom63DIZBRYNzneuwY0VSFawwL7ijMS6i49sj/FMJVlwnn4mkCv0fo2wMwB8jOpV0GyNdc/eWHZwYeFKgbUSrlBsVYKXoukiCPro46gTno5gKp0dslVwWqzPKFgnvvMb8CH/TYxheANLQxOAw1R7BxaRv2BMo0dGljmBXZcuA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=BOeQYKYgboNdmJpNO/aZX+8xEaAOoHmMa4gYrv1MvBw=;
- b=m3pvBf3JgxpdeB0bDr5pB3o28LbG+tqx0dgsOoo2FkMSASpgvLG7GKS0Rq0NBOv8ai0x+7H27TrX46eod8e22d6NM7EzxwVq0V+aGf19OSsrywG4Zr9BvG0yaTY4UxJDm96wQnlOIMbdoBLEk9E22jPtgncBHFMvauawe8LNI87xb3ASAFMNoqqm62KV4zVolmrLlUf4UXEkJE7tVKfxpLClaB2msrQiqEJ6S9fKHWfDvv9wbCi8mDoD1ITvifT2SvFRF8WidPqGspPRpQTrUPLH0gHIfMe0JhKljNE67GNvarf+5vCwEl1eu0fgFRqw8WIIhWRJO1zav8WH/jbwJQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=renesas.com; dmarc=pass action=none header.from=renesas.com;
- dkim=pass header.d=renesas.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=renesas.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BOeQYKYgboNdmJpNO/aZX+8xEaAOoHmMa4gYrv1MvBw=;
- b=oQftOY0N44JyTjgogE8b7CEi0UZNzNnCNL5FCOyQUtiC1aUk10LOIVmAJeMUlvVLUYIDw914iZXBNJygLchPdkzbJiLmlODdZ+PJoI/QhwO4boEP6aZ0AVqcDItO7ET5l5Yx4cRx8dFeSd9XzO38kcrLqCjjF3rsQ+ulgPAvQ3o=
-Received: from TYCPR01MB11040.jpnprd01.prod.outlook.com (2603:1096:400:3a7::6)
- by OS3PR01MB7357.jpnprd01.prod.outlook.com (2603:1096:604:11f::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7741.36; Mon, 8 Jul
- 2024 23:44:39 +0000
-Received: from TYCPR01MB11040.jpnprd01.prod.outlook.com
- ([fe80::b183:a30f:c95f:a155]) by TYCPR01MB11040.jpnprd01.prod.outlook.com
- ([fe80::b183:a30f:c95f:a155%7]) with mapi id 15.20.7741.033; Mon, 8 Jul 2024
- 23:44:38 +0000
-From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To: Bart Van Assche <bvanassche@acm.org>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-renesas-soc@vger.kernel.org" <linux-renesas-soc@vger.kernel.org>
-Subject: RE: [PATCH 1/5] scsi: ufs: renesas: Refactor init code for other UFS
- controller
-Thread-Topic: [PATCH 1/5] scsi: ufs: renesas: Refactor init code for other UFS
- controller
-Thread-Index: AQHa0S+/duDDkq1DA02B0a4Krv9VxrHtD4UAgABvaSA=
-Date: Mon, 8 Jul 2024 23:44:38 +0000
-Message-ID:
- <TYCPR01MB11040DE4D5F6908F5FF9AF3CED8DA2@TYCPR01MB11040.jpnprd01.prod.outlook.com>
-References: <20240708120931.1703956-1-yoshihiro.shimoda.uh@renesas.com>
- <20240708120931.1703956-2-yoshihiro.shimoda.uh@renesas.com>
- <434cb981-b0fe-4dd2-bac1-e80de2e68099@acm.org>
-In-Reply-To: <434cb981-b0fe-4dd2-bac1-e80de2e68099@acm.org>
-Accept-Language: ja-JP, en-US
-Content-Language: ja-JP
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=renesas.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TYCPR01MB11040:EE_|OS3PR01MB7357:EE_
-x-ms-office365-filtering-correlation-id: a57ed289-1c44-4bb7-99ba-08dc9fa7ee09
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|376014|366016|1800799024|38070700018;
-x-microsoft-antispam-message-info:
- =?utf-8?B?dC9BdWdvU0tsNmZTYUFmRVpDVzJMdVNTcDVQZ1V3OVVUd3loSCtqTmxNc2dJ?=
- =?utf-8?B?SGVqZHBYRFJubVh6L3Zla29pcnYzeXNzNXhBVStpdXRHeUFVbkk4ZkF0RHdL?=
- =?utf-8?B?Y3FZL3JadCtBNXNFdjh0RlBnYlFMMkxVZDZROXVqT0g5RmRBdEswVGJBcVNC?=
- =?utf-8?B?NWlGWS9lZzczWlRwOFVrbjcxUDJzT2NtWk44NDZTRGk0dmhvRGwzTXN0ellu?=
- =?utf-8?B?NkZEL1d1VUNOQUh3QUhKSll5cTlZNVRWS1c2T0g1Y2JieVczcE11RU5zTktw?=
- =?utf-8?B?RlNLRUFpUHVJMDV0cGs3RDNMMEpScFI4SWtqK0V4NG5ORDBNQjdEQXBWS0pq?=
- =?utf-8?B?N3ZVVXpSUWpsbU1vY25xb2ZVVUpOLzJuMFpqV09VZC91b1NpRWFaVXZVVlpY?=
- =?utf-8?B?RHJkVVVtUElrZ0FySGxXV1V3dkcxY2dWdFY3RzJPc3RjeVZCOWZZTjhVYk94?=
- =?utf-8?B?TmV5RVMwZFU3eWFTQWZSazc2VDlSOTZianh4WVpYVmp5bkNHWFFRRVdyVzJZ?=
- =?utf-8?B?alVXNHNJNm96aHc5ZmJUb0xuc0RiZ3dTVDdlTW9RSTNZdzRsQVhCczIvVSs4?=
- =?utf-8?B?VGJ5QUUwaThURFZiRkY3ZmlTRGNmY3NyOGZwYmh3WmlQLzVMM0RTSzROQUhk?=
- =?utf-8?B?SmkvN2syb1JyU0J1a05nR2RkMTlJblNTWWFZTmdibGlmNmlYbHZDY2hwdVdU?=
- =?utf-8?B?YlB4SHJoQmM2czRWeHhZMjk3QkNEVzdIajk1ZDJYLzY4UFdJekNVRFdnZ002?=
- =?utf-8?B?ajYvR09aU2VLWGYwMjFYREROc0FRaDkxeFh2M2tZcTd0ZEM2Rk5qZXJZbHJM?=
- =?utf-8?B?elk4UjMrWmM4aXR5Y3NRYnBaeDRpSGoyV0Y2d3pHT0FnNDFoNkpYVUFZU2s4?=
- =?utf-8?B?RUl2eWQxVGVQZ2xUUGZFYzZFR1F6VThsOUJhTGhoZVRWS1cxTzlWS1FFSG82?=
- =?utf-8?B?c3J4RDdkcDVKanBNVTFudXFabEhFNlFGSVlaSlhQdlZQZjgwekFRNjRQVzdl?=
- =?utf-8?B?eWc3b0dlaGxnbmY5U29takFjdzc2R3VsQWRRTEV0NjV2TU1WaDZIK3B5NExy?=
- =?utf-8?B?YUtrcG81YlQwL0Y3VWI4ZWtpUkEvQmlFZ2hOTXp2QWJOYnFWS0RaOVRDZytm?=
- =?utf-8?B?cVhxZExUcUVxeHVoL1Q5a05vcnJGMWk2VjRITWRaVVg1S28vZXBRVWp0N1li?=
- =?utf-8?B?NEZ0RlJYNFE2RFIwN1NJdXMrYkxyeUE5Zk1OMGtaWkVDMHM3RnlaVklCK3FX?=
- =?utf-8?B?d055czBuVklWSVFWS0s2c1ZaaFBXdGdsZVRrakNoYmNlRHcxb3d0YlhzQ1hV?=
- =?utf-8?B?RGZyMU9UT1pFZDBsdUxIM2FwSjhMMWUwaGpOeTZwYk1DbGVZZitBZHUxRytN?=
- =?utf-8?B?bzBpTVZ2MlE5L1RqUnpONGFDaW53RWwyWlc4dkErdTd5bkk2bXNUZ2xyeXdi?=
- =?utf-8?B?b2JaVnFlL0grc1YwUVRZRzU2SmcrbjU1R0t5VWFJc29WWkk2Q3A5Zzl1ZHdm?=
- =?utf-8?B?TGpuVFl3Z25vUzFhQ0Jpakp4TUpDZkxISkp4RThwRWFZaFRMMjM4S3pVTU9j?=
- =?utf-8?B?NkFXOGtrakhMcGxNUjdhSnVBRGdGc2MyTUJob2IyTHdlb2pYK2paMlBwOGlG?=
- =?utf-8?B?RkQrNmI0bE5MZTBwRDRPZm9vQ3d5WWJBUUxwMVVLb082S2JONUIxbkdvS2VH?=
- =?utf-8?B?c0kyRnZCbkJJZG04NkVBK1NyWGs1aThTak9UUkR1bVROMzNiY3NrQnVaakhr?=
- =?utf-8?B?VXNrc011c2w3VTY4WVdMUmFJVlMyTlAzalZTb0g2MHZ5RlpHL3RWeC91QmQ0?=
- =?utf-8?B?Y1JsMVNRdzF0V3BPQjFjQnMrSm1YNS8yK2lBTHVyS0VmbHpjVHZzY25SbnNQ?=
- =?utf-8?B?YmFqMGtNcHpCVUh3c1NBNFU1Rm5QV0V1Y2M0YklxWGdSaVE9PQ==?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:ja;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYCPR01MB11040.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?cXFhKzV2MjNhMlhNdGc5LzRYUnYyMmxmWi9VZkNQcHZPK3NLUWJnRnRJVk4y?=
- =?utf-8?B?TE82MGVhdUl1ajJ2TzZ3eDdjcjRFam4yMGJpSi83Y3ExUVBFcnZWVGxpMHI2?=
- =?utf-8?B?Y1h6OEErdE9LTENlUkdFN1dtTE44bE1YSytKMnlJS1ZSaDF4cDNocU01MkJO?=
- =?utf-8?B?aEVyc05OOVVmdklzbTlXNTd2U1REbzVvV2pvdGt4WUdPSlhjUkJuWXFHak9H?=
- =?utf-8?B?VjBIMFV0RXhvMXM3L0l6Rkp5K3MvV3R6RzlVK08zTHZTSTBxeFU3WHpvSHBo?=
- =?utf-8?B?dS92WnQwaGtEc2V0MVFLbm5HeFdTS0tkdERZeW82WTRRM21wQS9tQ0RzeURZ?=
- =?utf-8?B?QnFha1ptYVFCRXlQSkNmQlhYT0VqZ2tiaHBCbFdzRW9wK1hENGc2VGs3OHVy?=
- =?utf-8?B?TEhQQy9WY1Z0TTk3akZuWHNTd2NCeDdnU3BJaTlvUFoxOVVyNklCbkhnbHp1?=
- =?utf-8?B?VkEweVBMVXFXVFJhNDJGUkcrekljRlZVQXBYeWFQblpMVThlV3JyMFBteG1Z?=
- =?utf-8?B?Zm80eWMzQUdHNXJFQ3Y1dmlvT1c5SVpuVjlJVEVIOE4zc0FUSVRnQWdFR003?=
- =?utf-8?B?K3VRM25zNVE0Z1ZiRk04QXdoYTN4OHVaT2s0OTk0akhLVW5MSm1Obk9QWFJW?=
- =?utf-8?B?aWtETnV4ejFsejAzZWFjRVl6TVNhWXV2TmRsMGc5ZDZuYkwyTFNUdENUemV6?=
- =?utf-8?B?WFU0akVvNzlWOTRObGVLbDY3dk9UQkxqbWNjSVFlcmZPVHNpNmIzUjRDWHd2?=
- =?utf-8?B?b3h2VUt5Ui9XQTBoU3VmU2QydXY0L01rU3pMaW0rTFVIa1R2UUFHcDBDOEdC?=
- =?utf-8?B?VTV1RVdybXNGNDN3Qk95dG9yZDFEL2FiZzVFL09HOU5JdmNOZGZtMUQ4bnFz?=
- =?utf-8?B?U2Z0Q0FNWFdOWE9DQTcvT1c0b0ZYY1BCZUE3V2lXeG9NVjRmS3hBYzJRTGlY?=
- =?utf-8?B?b1NaRkFmdjJZa0UrWEJIMDluN050K1pISXRScjdpRmRKR0lmaTkwVG1MVDB5?=
- =?utf-8?B?eUhEbmI1citJRi82QVBRMjBuUnIyUi8wb2ErN3B2TjJVTUl0S1NkR1BsSzdk?=
- =?utf-8?B?RmtaTVhIajljWFVEeUxWdmtiMERtaGQ2QXFzbHlwbWVuTFZaTVp6UzE2M2VS?=
- =?utf-8?B?dURUMCtqV3J0blJ1SUd2Nlh3UHFmNHRleXZQTTBwaFMxaW9rcGVnV3htdzZB?=
- =?utf-8?B?Nmc4MzdPYXZBYjVNMksvY3NpNVpZTlQxWjFLdHFDNC9DNlh0N3Z0Tk9UM3VM?=
- =?utf-8?B?WG1pTnVWdFVuVkE4U0NpN1VLSGozUU81Z3hJOUFuaHVvUFE0em9WL3l6bm13?=
- =?utf-8?B?Kzg5eE4vMjY2d2JBU2hNTmVSQ1Q3dTZqUEk3eXYvRkhQUVFwYmlkakxTM3Q1?=
- =?utf-8?B?K3dYQi9Nb0Z0WHozMjdXU095YzVQR3NvcnNKL3FsQnlMQXcvZ3dkYVZOT3Z3?=
- =?utf-8?B?NHVLMjdHRCtOVlp0alNNTTlQSXJxWnB3cFRSL1JReFliNjVkZkRZNXhBSE8r?=
- =?utf-8?B?cFhrcDh3My9yUVBDZHI4NnpucEw1Z0dlZDBWcVltMkRhcnNoRlU2UTE4ZlFJ?=
- =?utf-8?B?TFVCK0x0RGpGZFgvTm83Q3F0N0gxTUJCOEhhYnFCelJrN1pUUWVMcG1wa3Fs?=
- =?utf-8?B?Y1I1UDJpNk9UQlMrSzllT3VVSVpIcmZmMmJEdTVXNE5iTGdoclNHSnh0bXlt?=
- =?utf-8?B?WkIrajhuZWVZN1ZQRy9nWWZYUWxGZnp3Rm1FTWFoZ1hLQW5uNFdpbFhER3Jo?=
- =?utf-8?B?QTZwREwyeGgwZk1GalZzb2RCMUFnVE95RnB3UUJvbXVzamkxTUdnWEJDWDd5?=
- =?utf-8?B?M3dRU1dlcW05d2ZpK3ZJNncwWUZlcjdoNUI2OWlZeDdacktxSlRaMlNnQW5K?=
- =?utf-8?B?cTJ1d2NQcFRjNFQ1VWI1ekxneS9PZ3MydTE3TE8wQWxyZ01iU1MxelBtcVZP?=
- =?utf-8?B?VFhSem9TMXFqT3pybllUWXJUd2d6N283WlY0M25XZHE0Zjd4RERTZUJoeVBJ?=
- =?utf-8?B?UlpSMng3Njl2MDQzYWNndW9qcXd3M3JFOUdYYWNZcjhzY2dqOFh1bHo3VVdp?=
- =?utf-8?B?NkpMTTkxNjRNYUd3dXhJM2ZXMHRUVm5xTXFkRXBCQ2IrQ09EVXRLeE94VUN2?=
- =?utf-8?B?ODFtRjkwbFRRSi9HZFpaQkhzUTNERVNTbTZuRmx1NTcwQVB0a2ZybmhUNndB?=
- =?utf-8?B?a3ErU2Urd0txK3BOVWNUMVRVbFd6THE0OVdCTjVKWEYrdHlERWVTbEpaUGRM?=
- =?utf-8?B?MUdjVGhHcElQbVJEaXIrelhHc2NnPT0=?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="se1Fj11r"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4335C116B1;
+	Mon,  8 Jul 2024 23:49:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720482553;
+	bh=ZdDfcMsQPc2BEgw8D2wuQ0A8t+bcrirSmWoZGGiWYrU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=se1Fj11rVRIdCuB+gFzBTILUucn5NAxWdBzGnfETrdipSuxgQTEcDwH7MvPQnixBP
+	 zfJQ/Gx3gdNJJefZgQyhYSiDHlre+R38yZVzjo0WmzUCZQ8BE/huqZtebCO/gtXcGa
+	 Lua1xXbM/ZCOvdtB0Bd3H/KlkWvwjN3kTlkD7uLHjwXK6i53rl3OEqfdoSV05XI+KL
+	 rTJBtt8SAzDFMyOhjw+EQOiZZsZgWV5LiIFbPgOFtS0tfn378/CCksDqSeEztJjnnR
+	 VP3LTi8t4HTJxGQmqDy47rm2LX9MxdNhqOolL0hr+4bCyjRU7rsEqX2V64DfFttpNt
+	 t+eaSFrGprlmA==
+Date: Mon, 8 Jul 2024 16:49:11 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Peter Griffin <peter.griffin@linaro.org>
+Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	linux-fscrypt@vger.kernel.org,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	=?iso-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>,
+	William McVicker <willmcvicker@google.com>
+Subject: Re: [PATCH v2 6/6] scsi: ufs: exynos: Add support for Flash Memory
+ Protector (FMP)
+Message-ID: <20240708234911.GA1730@sol.localdomain>
+References: <20240702072510.248272-1-ebiggers@kernel.org>
+ <20240702072510.248272-7-ebiggers@kernel.org>
+ <CADrjBPoWVq-eu4Wa6_hrkk067tnZGC82UCJDyjSRGoG254w6vg@mail.gmail.com>
+ <20240708202630.GA47857@sol.localdomain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: renesas.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TYCPR01MB11040.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a57ed289-1c44-4bb7-99ba-08dc9fa7ee09
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jul 2024 23:44:38.1597
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Y01aC9AYQYwV5e4KCGc8Gj1ePx+OtxljfVeu7foXuQclZo9RL6AdMxzAIQRzXUQY0btPnZbQLBuavbH8yFfLrWwjdlzaLNfjtEmcPUnlt5K3VBjKNnxnbZFivjgHltUN
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS3PR01MB7357
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240708202630.GA47857@sol.localdomain>
 
-SGVsbG8gQmFydCwNCg0KPiBGcm9tOiBCYXJ0IFZhbiBBc3NjaGUsIFNlbnQ6IFR1ZXNkYXksIEp1
-bHkgOSwgMjAyNCAyOjA1IEFNDQo+IA0KPiBPbiA3LzgvMjQgNTowOSBBTSwgWW9zaGloaXJvIFNo
-aW1vZGEgd3JvdGU6DQo+ID4gK3N0YXRpYyB2b2lkIHVmc19yZW5lc2FzX3BhcmFtX3BvbGwoc3Ry
-dWN0IHVmc19oYmEgKmhiYSwgdTMyIHJlZywgdTMyIGV4cGVjdGVkLA0KPiA+ICsJCQkJICAgdTMy
-IG1hc2spDQo+ID4gK3sNCj4gPiArCXN0cnVjdCB1ZnNfcmVuZXNhc19pbml0X3BhcmFtIHBhcmFt
-ID0geyAwIH07DQo+ID4gKw0KPiA+ICsJcGFyYW0ubW9kZSA9IE1PREVfUE9MTDsNCj4gPiArCXBh
-cmFtLnJlZyA9IHJlZzsNCj4gPiArCXBhcmFtLnUuZXhwZWN0ZWQgPSBleHBlY3RlZDsNCj4gPiAr
-CXBhcmFtLm1hc2sgPSBtYXNrOw0KPiANCj4gUGxlYXNlIGNvbWJpbmUgdGhlIGFib3ZlIGRlY2xh
-cmF0aW9uIGFuZCBhc3NpZ25tZW50cyBpbnRvIGEgc2luZ2xlDQo+IHN0YXRlbWVudDoNCj4gDQo+
-IHN0cnVjdCB1ZnNfcmVuZXNhc19pbml0X3BhcmFtIHBhcmFtID0gew0KPiAgICAgICAgICAubW9k
-ZSA9IE1PREVfUE9MTCwNCj4gICAgICAgICAgLnJlZyA9IHJlZywNCj4gICAgICAgICAgLnUuZXhw
-ZWN0ZWQgPSBleHBlY3RlZCwNCj4gICAgICAgICAgLm1hc2sgPSBtYXNrLA0KPiB9Ow0KPiANCj4g
-U2FtZSBjb21tZW50IGZvciB0aGUgb3RoZXIgZnVuY3Rpb25zIGJlbG93IHRoaXMgZnVuY3Rpb24u
-DQoNClRoYW5rIHlvdSBmb3IgeW91ciByZXZpZXchIEkgZ290IGl0LiBJJ2xsIGZpeCB0aGVtLg0K
-DQpCZXN0IHJlZ2FyZHMsDQpZb3NoaWhpcm8gU2hpbW9kYQ0KDQo+IFRoYW5rcywNCj4gDQo+IEJh
-cnQuDQo=
+On Mon, Jul 08, 2024 at 01:26:30PM -0700, Eric Biggers wrote:
+> Hi Peter,
+> 
+> On Thu, Jul 04, 2024 at 02:26:05PM +0100, Peter Griffin wrote:
+> > Do you know how these FMP registers (FMPSECURITY0 etc) relate to the
+> > UFSPR* registers set in the existing exynos_ufs_config_smu()? The
+> > UFS_LINK spec talks about UFSPR(FMP), so I had assumed the FMP support
+> > would be writing these same registers but via SMC call.
+> > 
+> > I think by the looks of things
+> > 
+> > #define UFSPRSECURITY 0x010
+> > #define UFSPSBEGIN0 0x200
+> > #define UFSPSEND0 0x204
+> > #define UFSPSLUN0 0x208
+> > #define UFSPSCTRL0 0x20C
+> > 
+> > relates to the following registers in gs101 spec
+> > 
+> > FMPSECURITY0 0x0010
+> > FMPSBEGIN0 0x2000
+> > FMPSEND0 0x2004
+> > FMPSLUN0 0x2008
+> > FMPSCTRL0 0x200C
+> > 
+> > And the SMC calls your calling set those same registers as
+> > exynos_ufs_config_smu() function. Although it is hard to be certain as
+> > I don't have access to the firmware code. Certainly the comment below
+> > about FMPSECURITY0 implies that :)
+> > 
+> > With that in mind I think exynos_ufs_fmp_init() function in this patch
+> > needs to be better integrated with the EXYNOS_UFS_OPT_UFSPR_SECURE
+> > flag and the existing exynos_ufs_config_smu() function that is
+> > currently just disabling decryption on platforms where it can access
+> > the UFSPR(FMP) regs via mmio.
+> 
+> I think that is all correct.  For some reason, on gs101 the FMP registers are
+> not accessible by the "normal world", and SMC calls need to be used instead.
+> The sequences of SMC calls originated from Samsung's Linux driver code for FMP.
+> So I know they are the magic incantations that are needed, but I don't have
+> access to the source code or documentation for them.  It does seem clear that
+> one of the things they must do is write the needed values to the FMP registers.
+> 
+> I'd hope that these same SMC calls also work on Exynos-based SoCs that do make
+> the FMP registers accessible to the "normal world", and therefore they can just
+> be used on all Exynos-based SoCs and ufs-exynos won't need two different code
+> paths.  But I don't have a way to confirm this myself.  Until someone is able to
+> confirm this, I think we need to make the FMP support depend on
+> EXYNOS_UFS_OPT_UFSPR_SECURE so that it doesn't conflict with
+> exynos_ufs_config_smu() which runs when !EXYNOS_UFS_OPT_UFSPR_SECURE.
+> 
+
+These same SMC calls can be found in the downstream source for other
+Exynos-based SoCs.  I suspect that exynos_ufs_config_smu() should be removed,
+and exynos_ufs_fmp_init() should run regardless of EXYNOS_UFS_OPT_UFSPR_SECURE.
+It still would need to be tested, though, which I'm not able to do.  (And
+especially as a cryptography feature, this *must* be tested...)  So for now I'm
+going to make the FMP support conditional on EXYNOS_UFS_OPT_UFSPR_SECURE.
+
+- Eric
