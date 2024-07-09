@@ -1,161 +1,103 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f202.google.com (mail-yw1-f202.google.com [209.85.128.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D7AC158875;
-	Tue,  9 Jul 2024 13:22:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 304F74A02
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Jul 2024 16:00:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720531346; cv=none; b=ctA9TDqy0WnkLrp/z8ewzIU5FdnoqSCv4KB9igr4BDap/A3po/mQC8OdGHh+1A/yarLcJfx7mlfPwu3ggkyOqCptKqqX+0DXuzlKlvbIT7qgzLIKdcNQavDRziPWSRKd4Qn4J9z9JmBqBgjnanYWQxjeLv25MfA11oSjoR2m91s=
+	t=1720540844; cv=none; b=lVPMCMjIEtSn3nh4UvDDyld2e3Fl2FxoGtz9OX3AfFxUE7VrCQ7yiKHqCM/y0JsRpzDcZ5tOwRClaWDcrhRUSNmIc/U0n7tDo4HputKnoD/3GEiGWPchfnnLRoQeIeG5xPzCMDzUDSkDNARhmK0nfW5WvJ/d5TPGtesKMNd9tgg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720531346; c=relaxed/simple;
-	bh=HEASiKPSPtg13I9P5dYAi8cuOPmYVj/NPlTdIjHwVR8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:To:CC; b=JK2yUZTZe3sGB1cKtrshO7b/BFH7S0OO+wmLepbU1tOhMCrMw3lFRajeSVBosulsDBfkJXRCMxRr5AF7N7qkIw9F7Rp6y1j5u1HilObQNszPBCxPqE5L8jNukTuL63dih/8kD1Wo1jN8tzRcEn/YA9QA2XjlpBqmI6iGvfne2Nc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Qb7GNLqz; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1720540844; c=relaxed/simple;
+	bh=EADrzDGkE5255NQqwAYoJHuh2ZZ74HUptIuyct3xezw=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=k4UWn9plttRwMc6j9xZYcmdRLMR97gLH1K9a/LMAljZHS45kTM1CcHdKFXP8Yomfcmd1X9SsD5pz/28tzR3aLWyL+NJK5IWdLNylH0MiFSrS19cYIULf9jwT+YoiS53m1l86VwDOgdVFtPpCE2JcYBjkhb5jwo8ZmUbgoVEEyX0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=0n4jxK6z; arc=none smtp.client-ip=209.85.128.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tadamsjr.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Qb7GNLqz"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 469AuxDW003975;
-	Tue, 9 Jul 2024 13:22:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=mpHNdLs5eaYP3RcZR0Xin6
-	ZXRPo5V3fv6faRwsn8Keg=; b=Qb7GNLqzITH4ArEGuCDAuXXGWQz5XSbijdIdVe
-	5GKEVK24H+sylTRQ6VsjbzKUTvnKW11sH2d0twBbLMm7hQUP8c/k0coOt/pcvXkk
-	jbSYydbVMJM2B1yP7xNhkOL2IXjQ0ST3kUV0UyMYppnbG+v+4+4HUO7VHUN/KoRF
-	Z/8prE6DQsV43nY/DjlX9vtEES12jB8KPYFgCFCDmWZ/X9Oqfvi5ydNK50zhAviD
-	XkBHxS3Blb8qIjjvnrGmrXgMeSuTIQI9ZAKODNjrYTnK7oW5/YrFgBM3FGDNmiGU
-	IQth5SHlxF7AePMoGcOWmauMuREr6u1ija3Q/cXJEl1gjNtA==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 406wmmpp24-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 09 Jul 2024 13:22:06 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 469DM5gH000512
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 9 Jul 2024 13:22:05 GMT
-Received: from tengfan-gv.ap.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 9 Jul 2024 06:21:59 -0700
-From: Tengfei Fan <quic_tengfan@quicinc.com>
-Date: Tue, 9 Jul 2024 21:21:44 +0800
-Subject: [PATCH v2] dt-bindings: ufs: qcom: document QCS9100 UFS
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="0n4jxK6z"
+Received: by mail-yw1-f202.google.com with SMTP id 00721157ae682-64b49f4232eso81600897b3.2
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Jul 2024 09:00:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1720540842; x=1721145642; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=ngDjlVaF8v7sv5bAjkzKl4Op2nALhKGKwrU4Pph8/BQ=;
+        b=0n4jxK6zKihGW9VotsO8MW1S90BDsBVqCj737893wbkHaf19EESuiD5vRlePlsJa1S
+         wW66exZiCS5qY1Tygk70l4M8/ckNWrHTuRDy/BQ/EmJl2Eo3bgxS7CWo8CCRbu2RBb0C
+         yB2F0iEaD2ZFRQ/n6W9jkPedpb9NtNeuPZQ+N5y3zTzG3DO/BSAN+BxGr7J6Tu1FvdQ4
+         Z6bhcPGGmQcF8UAucG38yAvMfrb8qP9stFakIelsgjmxAVrBI7OJuTfnsBXmIXVD8cri
+         kAggcR1s2AJ3vmtZuxCDkn7cBY/DrxW94y4MyAP/Op/C3nsGDvOhzxFCgvuweWyznxF5
+         Od8A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720540842; x=1721145642;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ngDjlVaF8v7sv5bAjkzKl4Op2nALhKGKwrU4Pph8/BQ=;
+        b=iQDUhNhwJ+saZrN53Zz2uFouZgTy1OLj1IAclsL/JeSmwSk4q4QNdbqJBhR8lRRgdP
+         h6yiRsnEz7vCU3SKd+YXDrGSLIIontAzRZ8l1ZNtJ3v1/vBKovWhYfZGNo9ozxyOcg6M
+         liC/tWXoGRN8J4E1iZbOHOCktg/k/7YeApAQ7C4ZfVsoijAT/Yv0Sw7XFmzG2lAoci/u
+         I+Wge9bc7byYf9KsFGFPPN7vaxAv6SyZ7XVy6brFxJqb9uS9ahMB3P/i/fx71T4vs84U
+         5oJ1LAaJs+cqgP0LvEGyss1bN8UAtVALxI8ItVPjAsqGcS9qRKkDSHUxryFOEuzlS0Fh
+         1+jA==
+X-Gm-Message-State: AOJu0Yxj6lfOQ1WzKF/Y9ZG/Bw36FJfOjab9Y1NjMlNVDsVRWPY7PQRq
+	uL6vkqeDGSiAOvMlQDsMGKhu8DVcXjXglIoo2kuPOBm9zwm+0MPJR4zCpatm60P6ChIaMA7DYjs
+	JR2OI4oOC4A==
+X-Google-Smtp-Source: AGHT+IGZ1NCoisbeTLsLpo/X5VPW/CXhcfiq+eOQ0Xf/LzqyQD0jzaYrPITCYcro3gnXPMfrn/QMGHExioj8Hg==
+X-Received: from tadamsjr.c.googlers.com ([fda3:e722:ac3:cc00:20:ed76:c0a8:177c])
+ (user=tadamsjr job=sendgmr) by 2002:a05:690c:60c8:b0:630:28e3:2568 with SMTP
+ id 00721157ae682-658eeb6df10mr151767b3.3.1720540842268; Tue, 09 Jul 2024
+ 09:00:42 -0700 (PDT)
+Date: Tue,  9 Jul 2024 09:00:13 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-ID: <20240709-document_qcs9100_ufshc_compatible-v2-1-c6e6bcd0c494@quicinc.com>
-X-B4-Tracking: v=1; b=H4sIAGc5jWYC/zXNQQqDMBCF4atI1o2MUYl21XsUCXaMOlATTaK0i
- HdvFLr83uL9O/PakfbsnuzM6Y08WRMhbgnDsTWD5tRFMwGiAAk17yyukzZBLejrDECtvR9RoZ3
- mNtDrrXmHhazrEqtcViz+zE739LkazyZ6JB+s+17JLTvX/3sOoqxKSEUmBUDFM76shCpoM/Ste
- Zwgg2lsseY4jh9SaGp/vQAAAA==
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Alim Akhtar
-	<alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche
-	<bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski
-	<krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Bjorn Andersson
-	<andersson@kernel.org>,
-        Andy Gross <agross@kernel.org>
-CC: <kernel@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Tengfei Fan <quic_tengfan@quicinc.com>
-X-Mailer: b4 0.15-dev-a66ce
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1720531318; l=2624;
- i=quic_tengfan@quicinc.com; s=20240709; h=from:subject:message-id;
- bh=HEASiKPSPtg13I9P5dYAi8cuOPmYVj/NPlTdIjHwVR8=;
- b=pwpj3ZKwTM2Vr5kFle/xVRFaVW4rE6bye/7r46kD9Naqa0Zwg4ZIHxA5RUrX645L3LQji/JME
- N6Gedg297WSAlmum+syp2Jrzq8etR0nxv8GktLRnFqsQlXsyapDaE6o
-X-Developer-Key: i=quic_tengfan@quicinc.com; a=ed25519;
- pk=4VjoTogHXJhZUM9XlxbCAcZ4zmrLeuep4dfOeKqQD0c=
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 6rxM2h7tKac86sGIC_ph5Wq7YDAsZ_Ez
-X-Proofpoint-ORIG-GUID: 6rxM2h7tKac86sGIC_ph5Wq7YDAsZ_Ez
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-07-09_03,2024-07-09_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- priorityscore=1501 lowpriorityscore=0 spamscore=0 bulkscore=0 adultscore=0
- impostorscore=0 suspectscore=0 malwarescore=0 mlxscore=0 mlxlogscore=974
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2406140001 definitions=main-2407090085
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.45.2.803.g4e1b14247a-goog
+Message-ID: <20240709160013.634308-1-tadamsjr@google.com>
+Subject: [PATCH] scsi: pm80xx: Remove msleep() loop from pm8001_dev_gone_notify()
+From: TJ Adams <tadamsjr@google.com>
+To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Igor Pylypiv <ipylypiv@google.com>, TJ Adams <tadamsjr@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Document the compatible string for the UFS found on QCS9100.
-QCS9100 is drived from SA8775p. Currently, both the QCS9100 and SA8775p
-platform use non-SCMI resource. In the future, the SA8775p platform will
-move to use SCMI resources and it will have new sa8775p-related device
-tree. Consequently, introduce "qcom,qcs9100-ufshc" to describe non-SCMI
-based UFS.
+From: Igor Pylypiv <ipylypiv@google.com>
 
-Signed-off-by: Tengfei Fan <quic_tengfan@quicinc.com>
+It's possible to end up in a state where pm8001_dev->running_req never
+reaches zero. In that state we will be sleeping forever.
+
+sas_execute_internal_abort_dev() can wait for a response for
+up to 60 seconds (3 retries x 20 seconds). 60 seconds should be enough
+for pm8001_dev->running_req to get to zero.
+
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+Signed-off-by: TJ Adams <tadamsjr@google.com>
 ---
-Introduce support for the QCS9100 SoC device tree (DTSI) and the
-QCS9100 RIDE board DTS. The QCS9100 is a variant of the SA8775p.
-While the QCS9100 platform is still in the early design stage, the
-QCS9100 RIDE board is identical to the SA8775p RIDE board, except it
-mounts the QCS9100 SoC instead of the SA8775p SoC.
+ drivers/scsi/pm8001/pm8001_sas.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-The QCS9100 SoC DTSI is directly renamed from the SA8775p SoC DTSI, and
-all the compatible strings will be updated from "SA8775p" to "QCS9100".
-The QCS9100 device tree patches will be pushed after all the device tree
-bindings and device driver patches are reviewed.
-
-The final dtsi will like:
-https://lore.kernel.org/linux-arm-msm/20240703025850.2172008-3-quic_tengfan@quicinc.com/
-
-The detailed cover letter reference:
-https://lore.kernel.org/linux-arm-msm/20240703025850.2172008-1-quic_tengfan@quicinc.com/
----
-Changes in v2:
-  - Split huge patch series into different patch series according to
-    subsytems
-  - Update patch commit message
-
-prevous disscussion here:
-[1] v1: https://lore.kernel.org/linux-arm-msm/20240703025850.2172008-1-quic_tengfan@quicinc.com/
----
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index 25a5edeea164..baee567fbcd6 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -26,6 +26,7 @@ properties:
-           - qcom,msm8994-ufshc
-           - qcom,msm8996-ufshc
-           - qcom,msm8998-ufshc
-+          - qcom,qcs9100-ufshc
-           - qcom,sa8775p-ufshc
-           - qcom,sc7180-ufshc
-           - qcom,sc7280-ufshc
-@@ -146,6 +147,7 @@ allOf:
-           contains:
-             enum:
-               - qcom,msm8998-ufshc
-+              - qcom,qcs9100-ufshc
-               - qcom,sa8775p-ufshc
-               - qcom,sc7280-ufshc
-               - qcom,sc8180x-ufshc
-
----
-base-commit: 0b58e108042b0ed28a71cd7edf5175999955b233
-change-id: 20240709-document_qcs9100_ufshc_compatible-dc47995c8378
-
-Best regards,
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index a5a31dfa4512..513e9a49838c 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -712,8 +712,11 @@ static void pm8001_dev_gone_notify(struct domain_device *dev)
+ 		if (atomic_read(&pm8001_dev->running_req)) {
+ 			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 			sas_execute_internal_abort_dev(dev, 0, NULL);
+-			while (atomic_read(&pm8001_dev->running_req))
+-				msleep(20);
++			if (atomic_read(&pm8001_dev->running_req)) {
++				pm8001_dbg(pm8001_ha, FAIL,
++					   "device_id: %u: Failed to abort %d requests!\n",
++					   device_id, atomic_read(&pm8001_dev->running_req));
++			}
+ 			spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 		}
+ 		PM8001_CHIP_DISP->dereg_dev_req(pm8001_ha, device_id);
 -- 
-Tengfei Fan <quic_tengfan@quicinc.com>
+2.45.2.803.g4e1b14247a-goog
 
