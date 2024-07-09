@@ -1,152 +1,161 @@
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D4D81586C3
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Jul 2024 11:18:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D7AC158875;
+	Tue,  9 Jul 2024 13:22:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720523886; cv=none; b=ZSgSPlZBFiexI0ssItZDNK2ri5k3vwJctboEQaxSsS1JpRScGrAiALlx1bVD397vOoF2Z/gz70ccVjRDSeowsOifYMTatTlNGJ0siGDqJG/ZcHGrpC6nChDmoT/aLK95LcirpCXPWlQhZzQv8MFMgxnKxPWPrRMB/7dtcdFNVB8=
+	t=1720531346; cv=none; b=ctA9TDqy0WnkLrp/z8ewzIU5FdnoqSCv4KB9igr4BDap/A3po/mQC8OdGHh+1A/yarLcJfx7mlfPwu3ggkyOqCptKqqX+0DXuzlKlvbIT7qgzLIKdcNQavDRziPWSRKd4Qn4J9z9JmBqBgjnanYWQxjeLv25MfA11oSjoR2m91s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720523886; c=relaxed/simple;
-	bh=q4IZnwro1hysVr+IKysyM+k1ocYPSAwKdXkEuBCYQgw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Pw+up/EkBVvx6o0up7HplnL/FLeySrCKkeYGQAaGZkiIYdN8xxqxyBU2rfoyMbAgrmdGslAk0AY/maSnFVDLVWtOrBAJ1U1hJoP9tuotYgz6SFzbXQyYxPHv+ZNRM9JlJ1Mn5XGxila0jET+2Vwz9uULM4xGdPHi5o/jrS2Bapk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=wgpqyzm5; arc=none smtp.client-ip=209.85.161.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1720531346; c=relaxed/simple;
+	bh=HEASiKPSPtg13I9P5dYAi8cuOPmYVj/NPlTdIjHwVR8=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:To:CC; b=JK2yUZTZe3sGB1cKtrshO7b/BFH7S0OO+wmLepbU1tOhMCrMw3lFRajeSVBosulsDBfkJXRCMxRr5AF7N7qkIw9F7Rp6y1j5u1HilObQNszPBCxPqE5L8jNukTuL63dih/8kD1Wo1jN8tzRcEn/YA9QA2XjlpBqmI6iGvfne2Nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Qb7GNLqz; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="wgpqyzm5"
-Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-5c66909738fso1219090eaf.1
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Jul 2024 04:18:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1720523884; x=1721128684; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=/kYqs1Q+xI1eSls+p+PjTZV9wRnUsY1aUqXWiCZsXW4=;
-        b=wgpqyzm5uc0nEdrlRqzzE/1SKmc7N6Aij23eWD7uOQCP//TKxO4jkzQa3qtdjjHyKc
-         8DMgdCLt55McWVev+PmlXfcBszHBacVzuQbKHFkh2FikIJF+iAQBaiMffDr8ywXs9I8s
-         zvKow8P7hHF9ijep8anf2ouI2QdEYEER1r6hu0TpKchjfDykkon37Kyw1F3nvwyaSRwp
-         oghe2xrlr/GiSN3HebbeHtyPTeh43D0d6aL9a5KWRW5J5Z3AmTcVObAqV/YJ6YrDgaHF
-         SwvhxP7fI5kZbGWmwtKXOcWTdJdCjwrmpmjb6FK0V00ZzZ4yNWx+UVqv5lx+mDAKObdb
-         lqtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720523884; x=1721128684;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=/kYqs1Q+xI1eSls+p+PjTZV9wRnUsY1aUqXWiCZsXW4=;
-        b=q/ziHpPodUDmorrrP58pydGwJyBn0MW9939xyW95EH1EUmY54IfEB4nQB3lt6ZAxY9
-         Ky6yiwc/F+xo8bS4pWw4o6XfCMTMe7SGBq04T1sEaGdBGrS9mkJRs4yO8EWIQ1u8WagO
-         Tycif4Mm3LzdCfTntd1BQLByaigQrg5BcwNHBGDyfxEh/HUZaEic2jipoFARgGrUmw/V
-         n1PxH9D9Tn8vQAM6tPJQc/vxRyjzEEDc+II+dScenTALSMBf6hGxaXgnuDNbuepGfA2U
-         tN2EBYrebO0hRs4Rmcz/q9hxTKpqzxgq+xzm9apfcX3M0bpBtyxXkA0hWC86BMJhLUeG
-         AjUw==
-X-Gm-Message-State: AOJu0Yyk9e/8InppZ78vKbJd60/xEVQblIkNyj1tcQ3cKf+2Mo4JAxvc
-	SVA3Ks4PaDLY7mCf1UMUX40L5AP5gGbGrBNxfvJAVKfdh0VzXPFuvR+aNuHYauGYG+WMlZz4AQH
-	KAMzuxLLjK7dRNrGFyuIwfyPsuEkVKhoF9F/sbA==
-X-Google-Smtp-Source: AGHT+IEQ9kzUHbR1gBbXXP7izJdEFiG4U52pBXGa8KT7QcUkwLTd1MGDwwCyxR5oZ7xdLEiq7TCBKMzfOJTI2/fJdRA=
-X-Received: by 2002:a05:6870:3288:b0:25e:fca:e689 with SMTP id
- 586e51a60fabf-25eaf94c51emr846195fac.10.1720523884328; Tue, 09 Jul 2024
- 04:18:04 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Qb7GNLqz"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 469AuxDW003975;
+	Tue, 9 Jul 2024 13:22:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=mpHNdLs5eaYP3RcZR0Xin6
+	ZXRPo5V3fv6faRwsn8Keg=; b=Qb7GNLqzITH4ArEGuCDAuXXGWQz5XSbijdIdVe
+	5GKEVK24H+sylTRQ6VsjbzKUTvnKW11sH2d0twBbLMm7hQUP8c/k0coOt/pcvXkk
+	jbSYydbVMJM2B1yP7xNhkOL2IXjQ0ST3kUV0UyMYppnbG+v+4+4HUO7VHUN/KoRF
+	Z/8prE6DQsV43nY/DjlX9vtEES12jB8KPYFgCFCDmWZ/X9Oqfvi5ydNK50zhAviD
+	XkBHxS3Blb8qIjjvnrGmrXgMeSuTIQI9ZAKODNjrYTnK7oW5/YrFgBM3FGDNmiGU
+	IQth5SHlxF7AePMoGcOWmauMuREr6u1ija3Q/cXJEl1gjNtA==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 406wmmpp24-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 09 Jul 2024 13:22:06 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 469DM5gH000512
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 9 Jul 2024 13:22:05 GMT
+Received: from tengfan-gv.ap.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Tue, 9 Jul 2024 06:21:59 -0700
+From: Tengfei Fan <quic_tengfan@quicinc.com>
+Date: Tue, 9 Jul 2024 21:21:44 +0800
+Subject: [PATCH v2] dt-bindings: ufs: qcom: document QCS9100 UFS
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240708235330.103590-1-ebiggers@kernel.org> <20240708235330.103590-7-ebiggers@kernel.org>
-In-Reply-To: <20240708235330.103590-7-ebiggers@kernel.org>
-From: Peter Griffin <peter.griffin@linaro.org>
-Date: Tue, 9 Jul 2024 12:17:53 +0100
-Message-ID: <CADrjBPq4sEamwD3+wT2p481en-J2Ee7G0f+UbXG3g3RqUMiv3w@mail.gmail.com>
-Subject: Re: [PATCH v3 6/6] scsi: ufs: exynos: Add support for Flash Memory
- Protector (FMP)
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org, 
-	linux-fscrypt@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>, 
-	William McVicker <willmcvicker@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-ID: <20240709-document_qcs9100_ufshc_compatible-v2-1-c6e6bcd0c494@quicinc.com>
+X-B4-Tracking: v=1; b=H4sIAGc5jWYC/zXNQQqDMBCF4atI1o2MUYl21XsUCXaMOlATTaK0i
+ HdvFLr83uL9O/PakfbsnuzM6Y08WRMhbgnDsTWD5tRFMwGiAAk17yyukzZBLejrDECtvR9RoZ3
+ mNtDrrXmHhazrEqtcViz+zE739LkazyZ6JB+s+17JLTvX/3sOoqxKSEUmBUDFM76shCpoM/Ste
+ Zwgg2lsseY4jh9SaGp/vQAAAA==
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Alim Akhtar
+	<alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche
+	<bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski
+	<krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Andersson
+	<andersson@kernel.org>,
+        Andy Gross <agross@kernel.org>
+CC: <kernel@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Tengfei Fan <quic_tengfan@quicinc.com>
+X-Mailer: b4 0.15-dev-a66ce
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1720531318; l=2624;
+ i=quic_tengfan@quicinc.com; s=20240709; h=from:subject:message-id;
+ bh=HEASiKPSPtg13I9P5dYAi8cuOPmYVj/NPlTdIjHwVR8=;
+ b=pwpj3ZKwTM2Vr5kFle/xVRFaVW4rE6bye/7r46kD9Naqa0Zwg4ZIHxA5RUrX645L3LQji/JME
+ N6Gedg297WSAlmum+syp2Jrzq8etR0nxv8GktLRnFqsQlXsyapDaE6o
+X-Developer-Key: i=quic_tengfan@quicinc.com; a=ed25519;
+ pk=4VjoTogHXJhZUM9XlxbCAcZ4zmrLeuep4dfOeKqQD0c=
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 6rxM2h7tKac86sGIC_ph5Wq7YDAsZ_Ez
+X-Proofpoint-ORIG-GUID: 6rxM2h7tKac86sGIC_ph5Wq7YDAsZ_Ez
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-07-09_03,2024-07-09_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ priorityscore=1501 lowpriorityscore=0 spamscore=0 bulkscore=0 adultscore=0
+ impostorscore=0 suspectscore=0 malwarescore=0 mlxscore=0 mlxlogscore=974
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2406140001 definitions=main-2407090085
 
-Hi Eric,
+Document the compatible string for the UFS found on QCS9100.
+QCS9100 is drived from SA8775p. Currently, both the QCS9100 and SA8775p
+platform use non-SCMI resource. In the future, the SA8775p platform will
+move to use SCMI resources and it will have new sa8775p-related device
+tree. Consequently, introduce "qcom,qcs9100-ufshc" to describe non-SCMI
+based UFS.
 
-On Tue, 9 Jul 2024 at 00:55, Eric Biggers <ebiggers@kernel.org> wrote:
->
-> From: Eric Biggers <ebiggers@google.com>
->
-> Add support for Flash Memory Protector (FMP), which is the inline
-> encryption hardware on Exynos and Exynos-based SoCs.
->
-> Specifically, add support for the "traditional FMP mode" that works on
-> many Exynos-based SoCs including gs101.  This is the mode that uses
-> "software keys" and is compatible with the upstream kernel's existing
-> inline encryption framework in the block and filesystem layers.  I plan
-> to add support for the wrapped key support on gs101 at a later time.
->
-> Tested on gs101 (specifically Pixel 6) by running the 'encrypt' group of
-> xfstests on a filesystem mounted with the 'inlinecrypt' mount option.
->
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
-> ---
+Signed-off-by: Tengfei Fan <quic_tengfan@quicinc.com>
+---
+Introduce support for the QCS9100 SoC device tree (DTSI) and the
+QCS9100 RIDE board DTS. The QCS9100 is a variant of the SA8775p.
+While the QCS9100 platform is still in the early design stage, the
+QCS9100 RIDE board is identical to the SA8775p RIDE board, except it
+mounts the QCS9100 SoC instead of the SA8775p SoC.
 
-Reviewed-by: Peter Griffin <peter.griffin@linaro.org>
+The QCS9100 SoC DTSI is directly renamed from the SA8775p SoC DTSI, and
+all the compatible strings will be updated from "SA8775p" to "QCS9100".
+The QCS9100 device tree patches will be pushed after all the device tree
+bindings and device driver patches are reviewed.
 
-and
+The final dtsi will like:
+https://lore.kernel.org/linux-arm-msm/20240703025850.2172008-3-quic_tengfan@quicinc.com/
 
-Tested-by: Peter Griffin <peter.griffin@linaro.org>
+The detailed cover letter reference:
+https://lore.kernel.org/linux-arm-msm/20240703025850.2172008-1-quic_tengfan@quicinc.com/
+---
+Changes in v2:
+  - Split huge patch series into different patch series according to
+    subsytems
+  - Update patch commit message
 
-Tested by running the encrypt group of xfstests on my Pixel 6, using
-the Yocto development env described here
-https://git.codelinaro.org/linaro/googlelt/pixelscripts
+prevous disscussion here:
+[1] v1: https://lore.kernel.org/linux-arm-msm/20240703025850.2172008-1-quic_tengfan@quicinc.com/
+---
+ Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Notes on testing, in addition to above README.
+diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+index 25a5edeea164..baee567fbcd6 100644
+--- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
++++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+@@ -26,6 +26,7 @@ properties:
+           - qcom,msm8994-ufshc
+           - qcom,msm8996-ufshc
+           - qcom,msm8998-ufshc
++          - qcom,qcs9100-ufshc
+           - qcom,sa8775p-ufshc
+           - qcom,sc7180-ufshc
+           - qcom,sc7280-ufshc
+@@ -146,6 +147,7 @@ allOf:
+           contains:
+             enum:
+               - qcom,msm8998-ufshc
++              - qcom,qcs9100-ufshc
+               - qcom,sa8775p-ufshc
+               - qcom,sc7280-ufshc
+               - qcom,sc8180x-ufshc
 
-1. Enabled following additional kernel configs gs101_config.fragment
-CONFIG_FS_ENCRYPTION=y
-CONFIG_FS_ENCRYPTION_INLINE_CRYPT=y
-CONFIG_SCSI_UFS_CRYPTO=y
-CONFIG_BLK_INLINE_ENCRYPTION=y
-CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK=y
-CONFIG_CRYPTO_HCTR2=y
+---
+base-commit: 0b58e108042b0ed28a71cd7edf5175999955b233
+change-id: 20240709-document_qcs9100_ufshc_compatible-dc47995c8378
 
-2. Add meta-security layer to bblayers.conf and relevant packages to local.conf
-BBLAYERS += "/yocto-builds/yocto/meta-security"
-IMAGE_INSTALL:append = " xfstests ecryptfs-utils fscryptctl keyutils
-cryptmount "
+Best regards,
+-- 
+Tengfei Fan <quic_tengfan@quicinc.com>
 
-3. Rebuild/reflash Yocto rootfs
-
-bitbake virtual/kernel core-image-full-cmdline
-fastboot flash userdata core-image-full-cmdline-google-gs.rootfs.ext4
-
-4. On the device ran the following
-
-mkfs.ext4 -O encrypt /dev/sda26
-mkfs.ext4 -O encrypt /dev/sda20
-mkdir -p /mnt/scratchdev
-mkdir -p /mnt/testdev
-mount /dev/sda20 -o inlinecrypt /mnt/testdev
-mount /dev/sda26 -o inlinecrypt /mnt/scratchdev
-export TEST_DEV=/dev/sda20
-export TEST_DIR=/mnt/testdev
-export SCRATCH_DEV=/dev/sda26
-export SCRATCH_MNT=/mnt/scratchdev
-cd /usr/xfstests
-check -g encrypt
-
-All 28 tests passed
-
-<snip>
-Ran: ext4/024 generic/395 generic/396 generic/397 generic/398
-generic/399 generic/419 generic/421 generic/429 generic/435
-generic/440 generic/548 generic/549 generic/550 generic/576
-generic/580 gener9
-Not run: generic/399 generic/550 generic/576 generic/584 generic/613
-Passed all 28 tests
-
-kind regards,
-
-Peter
-
-[..]
