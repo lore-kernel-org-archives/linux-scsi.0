@@ -1,145 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2404A1B86ED;
-	Tue,  9 Jul 2024 18:14:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F974365
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Jul 2024 18:19:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720548847; cv=none; b=mQ7g+MppP3xQHxQNsAWplaIybgscaMZk1v1kBMMxA8m3oC2fOUkrQwNdIrP10TFpvL5FK0OOrDatCZ5M3ZHNnlmZhrYJSI4tMdxrOJ8tqHw8l0mvPNFDFbCEEh/x472aQayny6EAuJnel7X0CPjE4Giy19PMdhWvTFAc9w7ET7o=
+	t=1720549145; cv=none; b=DCJYgpJhp9sKpLD8lnGbBgm1oPzoTATZrGp7scdDMSN3uOT4MOKi2jsQ7FiXwCQq0eOLwyEsHBBSTGB5FVi8H7RUhZGUFq7UxHX93xdBeZ6fUtR0NR2hh+pwtCQUgw3IdF82NgltqSTRBPjxoOAjr64hSjMepVLwxfSdR19egjM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720548847; c=relaxed/simple;
-	bh=OkowgpgSGdOlOcmFTSzXiX4gK6EF938iLA84IR85IRw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GtYnlp/5yJnsUaf7dxGBfVwbBuIp2MD9CH89rAB4nGWfXAtsGUH4EaOJNZOLCuLody1LIzP6KBHW7cpc4jMXC1paYhYvTtVFczw3xGKePDS+LYWOMVkD4AMuW7wHjP54hdDhN2UESYtTmdJ5u3TpmD6ss0AU2z89kt6wDTeOv9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AYb+UqUe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1720549145; c=relaxed/simple;
+	bh=cXhI4k+hHbltLzWX2p6h8toimq13tMSUNHnILCdaCIA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nzQN8/etYeG5JeN6f5TgAIvqF1s8RosMhA4rD+suyOF7N45EZs0AbaOmiw82UoZ9nq2uuniT4Pac0jvZ0KtafZNws3O4WiRePj0wFE6qXCrzXLPsD9dPJ/1+LqCSz81jTQamzOZRdiThrcm8aNEk4uNMor610k///Ww0YWi8sKQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=TJSvuR7p; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AYb+UqUe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81FC8C3277B;
-	Tue,  9 Jul 2024 18:14:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720548846;
-	bh=OkowgpgSGdOlOcmFTSzXiX4gK6EF938iLA84IR85IRw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AYb+UqUep5QeY5siW5Vh3TDhn5Yg8/TNan1enSZl6MkWY5Cjdy41as7syj6TqwBop
-	 Z2n/onK6O2I/uIPtNER3t8GP1aVzUcekAOKgDv00U3uqcbK+8R4GZesAzXDWvDqXPx
-	 x82SgABlWWVIJx04k81RvMtzLDWDXGoQYeZCVQ9wUEJ90jr9S3yk/7v3aRi9UuFF1G
-	 ph9g0t6nle6jEx815WZ3pjstrUToNvbaBx76Nb1lKusy+17/gqLJbPsm4BcWjVdanf
-	 aB4Tw9kzzi6jpUUbf2tFXeq5vG5+7DVOQIBcF0PSzR7q3gi3uN0PAQf7I7Ui66I1uJ
-	 aXA0qigTpZ7Mw==
-Date: Tue, 9 Jul 2024 11:14:04 -0700
-From: Eric Biggers <ebiggers@kernel.org>
-To: Peter Griffin <peter.griffin@linaro.org>
-Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
-	linux-fscrypt@vger.kernel.org,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	=?iso-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>,
-	William McVicker <willmcvicker@google.com>
-Subject: Re: [PATCH v3 6/6] scsi: ufs: exynos: Add support for Flash Memory
- Protector (FMP)
-Message-ID: <20240709181404.GA1945@sol.localdomain>
-References: <20240708235330.103590-1-ebiggers@kernel.org>
- <20240708235330.103590-7-ebiggers@kernel.org>
- <CADrjBPq4sEamwD3+wT2p481en-J2Ee7G0f+UbXG3g3RqUMiv3w@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="TJSvuR7p"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WJTlV6kYBz6CmM6L;
+	Tue,  9 Jul 2024 18:19:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1720549140; x=1723141141; bh=oH5Oz9GI0N6/WQgJdLXpGQsz
+	rt2cdW0kDUTK/yCezL0=; b=TJSvuR7pfs/+ADsOkMzrOR72XJHew/gQh6D571fF
+	bp3AhrLimPo7oKVomLRpxRhOuGjuYNwdjeP/M/NUop3oWe62Z1bylXcgjs8P2j8S
+	e8Ylx1Gkrz9fR1cTbw7vLdPHCx13g65cd29lwrNyM6XBlUtOhYJEhQGlHyaa7SR1
+	rJUyg8ktK9df/vG2GIf2p+IJOTsThLJr9cirS2MWYSkPVQNBFRpIsd/ePGulA0Sc
+	hKK9pnFW91IyJekDdbrHYcl5ZsU2nOc0q8B3b38V54T2oF93i2z72/ERggoK2HsX
+	9a6rWJh40tMyJ9eMFKqgdyM+rTY6PrSleFavawhQJgIB2Q==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id f_xultHrw4CG; Tue,  9 Jul 2024 18:19:00 +0000 (UTC)
+Received: from [100.96.154.26] (unknown [104.132.0.90])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WJTlR3CFhz6CmM6D;
+	Tue,  9 Jul 2024 18:18:59 +0000 (UTC)
+Message-ID: <cb2ad7aa-baa0-4228-9d37-43e4562a9118@acm.org>
+Date: Tue, 9 Jul 2024 11:18:58 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CADrjBPq4sEamwD3+wT2p481en-J2Ee7G0f+UbXG3g3RqUMiv3w@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V3] scsi: ufs: core: Check LSDBS cap when !mcq
+To: k831.kim@samsung.com,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "Ed.Tsai@mediatek.com" <Ed.Tsai@mediatek.com>,
+ Minwoo Im <minwoo.im@samsung.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <CGME20240708052542epcms2p5358e41c0116c936d2a43ad99f7c1e4a8@epcms2p5>
+ <20240708052542epcms2p5358e41c0116c936d2a43ad99f7c1e4a8@epcms2p5>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240708052542epcms2p5358e41c0116c936d2a43ad99f7c1e4a8@epcms2p5>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jul 09, 2024 at 12:17:53PM +0100, Peter Griffin wrote:
-> Hi Eric,
-> 
-> On Tue, 9 Jul 2024 at 00:55, Eric Biggers <ebiggers@kernel.org> wrote:
-> >
-> > From: Eric Biggers <ebiggers@google.com>
-> >
-> > Add support for Flash Memory Protector (FMP), which is the inline
-> > encryption hardware on Exynos and Exynos-based SoCs.
-> >
-> > Specifically, add support for the "traditional FMP mode" that works on
-> > many Exynos-based SoCs including gs101.  This is the mode that uses
-> > "software keys" and is compatible with the upstream kernel's existing
-> > inline encryption framework in the block and filesystem layers.  I plan
-> > to add support for the wrapped key support on gs101 at a later time.
-> >
-> > Tested on gs101 (specifically Pixel 6) by running the 'encrypt' group of
-> > xfstests on a filesystem mounted with the 'inlinecrypt' mount option.
-> >
-> > Signed-off-by: Eric Biggers <ebiggers@google.com>
-> > ---
-> 
-> Reviewed-by: Peter Griffin <peter.griffin@linaro.org>
-> 
-> and
-> 
-> Tested-by: Peter Griffin <peter.griffin@linaro.org>
-> 
-> Tested by running the encrypt group of xfstests on my Pixel 6, using
-> the Yocto development env described here
-> https://git.codelinaro.org/linaro/googlelt/pixelscripts
-> 
-> Notes on testing, in addition to above README.
-> 
-> 1. Enabled following additional kernel configs gs101_config.fragment
-> CONFIG_FS_ENCRYPTION=y
-> CONFIG_FS_ENCRYPTION_INLINE_CRYPT=y
-> CONFIG_SCSI_UFS_CRYPTO=y
-> CONFIG_BLK_INLINE_ENCRYPTION=y
-> CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK=y
-> CONFIG_CRYPTO_HCTR2=y
-> 
-> 2. Add meta-security layer to bblayers.conf and relevant packages to local.conf
-> BBLAYERS += "/yocto-builds/yocto/meta-security"
-> IMAGE_INSTALL:append = " xfstests ecryptfs-utils fscryptctl keyutils
-> cryptmount "
-> 
-> 3. Rebuild/reflash Yocto rootfs
-> 
-> bitbake virtual/kernel core-image-full-cmdline
-> fastboot flash userdata core-image-full-cmdline-google-gs.rootfs.ext4
-> 
-> 4. On the device ran the following
-> 
-> mkfs.ext4 -O encrypt /dev/sda26
-> mkfs.ext4 -O encrypt /dev/sda20
-> mkdir -p /mnt/scratchdev
-> mkdir -p /mnt/testdev
-> mount /dev/sda20 -o inlinecrypt /mnt/testdev
-> mount /dev/sda26 -o inlinecrypt /mnt/scratchdev
-> export TEST_DEV=/dev/sda20
-> export TEST_DIR=/mnt/testdev
-> export SCRATCH_DEV=/dev/sda26
-> export SCRATCH_MNT=/mnt/scratchdev
-> cd /usr/xfstests
-> check -g encrypt
-> 
-> All 28 tests passed
-> 
-> <snip>
-> Ran: ext4/024 generic/395 generic/396 generic/397 generic/398
-> generic/399 generic/419 generic/421 generic/429 generic/435
-> generic/440 generic/548 generic/549 generic/550 generic/576
-> generic/580 gener9
-> Not run: generic/399 generic/550 generic/576 generic/584 generic/613
-> Passed all 28 tests
-> 
-> kind regards,
-> 
+On 7/7/24 10:25 PM, Kyoungrul Kim wrote:
+> if the user set use_mcq_mode to 0, the host will try to activate the
 
-Thanks!  This is similar to what I did.  But, to get the inlinecrypt mount
-option to be used during the tests it's necessary to do the following:
+set -> sets
 
-    export EXT_MOUNT_OPTIONS="-o inlinecrypt"
+> lsdb mode unconditionally even when the lsdbs of device hci cap is 1. so
+> it makes timeout cmds and fail to device probing.
 
-The following message will appear in the kernel log:
+> +	/*
+> +	 * UFS 3.0 has no MCQ_SUPPORT and LSDB_SUPPORT, but [31:29] as reserved
+> +	 * bits with reset value 0s, which means we can simply read values
+> +	 * regardless to version
+> +	 */
 
-    fscrypt: AES-256-XTS using blk-crypto (native)
+Please change "UFS 3.0 has no" into "The UFSHCI 3.0 specification does
+not define"
 
-- Eric
+>   	hba->mcq_sup = FIELD_GET(MASK_MCQ_SUPPORT, hba->capabilities);
+> +	/*
+> +	 * 0h: legacy single doorbell support is available
+> +	 * 1h: indicate that legacy single doorbell support have been removed
+> +	 */
+
+have -> has
+
+> +	hba->lsdb_sup = !FIELD_GET(MASK_LSDB_SUPPORT, hba->capabilities);
+>   	if (!hba->mcq_sup)
+>   		return 0;
+>   
+> @@ -10449,6 +10459,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>   	}
+>   
+>   	if (!is_mcq_supported(hba)) {
+> +		if (!hba->lsdb_sup) {
+> +			dev_err(hba->dev, "%s: failed to initialize (legacy doorbell mode not supported\n",
+> +				__func__);
+
+A closing parenthesis is missing (")").
+
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index bad88bd91995..fd391f6eee73 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -1074,6 +1074,7 @@ struct ufs_hba {
+>   	bool ext_iid_sup;
+>   	bool scsi_host_added;
+>   	bool mcq_sup;
+> +	bool lsdb_sup;
+>   	bool mcq_enabled;
+>   	struct ufshcd_res_info res[RES_MAX];
+>   	void __iomem *mcq_base;
+
+Please update the kernel-doc comment above struct ufs_hba for the new
+lsdb_sup member and please move the new member above mcq_sup such that
+the mcq_sup and mcq_enabled definitions remain adjacent.
+
+Thanks,
+
+Bart.
