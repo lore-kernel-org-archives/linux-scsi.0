@@ -1,92 +1,145 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5B2F17B036;
-	Tue,  9 Jul 2024 18:10:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2404A1B86ED;
+	Tue,  9 Jul 2024 18:14:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720548640; cv=none; b=T2k7YQIHlhz5zhn8mU89DvcKbqIykr7X92xpdx59bNndvaxeMejUIuZqo8KpXHV5ZYiwgo9olmHWYTeNp0b1AFlZojgmV1NYUkYlEDymrIzKG2Hhf1F5fKvu16eUPirhUAON23hFCG3Vvvu06ifis15A2LNOMkcxMEvH4VIu0+4=
+	t=1720548847; cv=none; b=mQ7g+MppP3xQHxQNsAWplaIybgscaMZk1v1kBMMxA8m3oC2fOUkrQwNdIrP10TFpvL5FK0OOrDatCZ5M3ZHNnlmZhrYJSI4tMdxrOJ8tqHw8l0mvPNFDFbCEEh/x472aQayny6EAuJnel7X0CPjE4Giy19PMdhWvTFAc9w7ET7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720548640; c=relaxed/simple;
-	bh=SGq/ssHoslmFRarDDEhZmqPBLmYTYCxhmjr52bo8hj4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p3mx9APPPKST9L8xiCKbfwjJNXZELCJGsVfyrvg4mht46Hc5istiAjX48lay38nl0FT4hyMuRRLvpRd8g0myc5JnD7DHuPsqIGseoAsrlXCvyF1D1sj0gvF8eLAZeSqX1+yXtcHb9cyMWQRGdf/1mZKYzcoiVnaodne8iR9keAM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=GgxuQPcS; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1720548847; c=relaxed/simple;
+	bh=OkowgpgSGdOlOcmFTSzXiX4gK6EF938iLA84IR85IRw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GtYnlp/5yJnsUaf7dxGBfVwbBuIp2MD9CH89rAB4nGWfXAtsGUH4EaOJNZOLCuLody1LIzP6KBHW7cpc4jMXC1paYhYvTtVFczw3xGKePDS+LYWOMVkD4AMuW7wHjP54hdDhN2UESYtTmdJ5u3TpmD6ss0AU2z89kt6wDTeOv9c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AYb+UqUe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="GgxuQPcS"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WJTYh1vfnz6CmM6L;
-	Tue,  9 Jul 2024 18:10:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1720548626; x=1723140627; bh=r6xt0/4Qdrzv5f5FS/Gooqnt
-	U2esThFOhUITG41SVE4=; b=GgxuQPcSCPpW1gpGm7/YlroBISYAj4bjVpKnaR3a
-	xDGtIjvl8oErMmfR7Tvxf/NgXL3ULulcposNUI6vcPhe75elGM3h1eEUW7lS3he3
-	F5PtlMRxZMYJ4CZfw4TFxDH37AXzVx9CvdxaoHEMB3syXQUqpqASEEQCRV4B3CkU
-	hfdz403Y2+c+SYw8nstHsx/Ca2tsJw95qSS7Yu/aIlN3eqgRanqAcU6qi4GnQ532
-	2dP3IY+qMDgxzXPcsfyga0vm47UxRpqrc2aWexu9zjaAkkDDaVsi20CBTy0PVw5g
-	LrdvBqKDaYqw8nJusGbQ7n+jF6uymuPzWZZwxM4Rq8Tmmg==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 9yCWi2MEivee; Tue,  9 Jul 2024 18:10:26 +0000 (UTC)
-Received: from [100.96.154.26] (unknown [104.132.0.90])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WJTYY4WL6z6CmR07;
-	Tue,  9 Jul 2024 18:10:25 +0000 (UTC)
-Message-ID: <a89910ad-da5b-42c2-8a0f-9f4908fa2c1a@acm.org>
-Date: Tue, 9 Jul 2024 11:10:24 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AYb+UqUe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81FC8C3277B;
+	Tue,  9 Jul 2024 18:14:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720548846;
+	bh=OkowgpgSGdOlOcmFTSzXiX4gK6EF938iLA84IR85IRw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AYb+UqUep5QeY5siW5Vh3TDhn5Yg8/TNan1enSZl6MkWY5Cjdy41as7syj6TqwBop
+	 Z2n/onK6O2I/uIPtNER3t8GP1aVzUcekAOKgDv00U3uqcbK+8R4GZesAzXDWvDqXPx
+	 x82SgABlWWVIJx04k81RvMtzLDWDXGoQYeZCVQ9wUEJ90jr9S3yk/7v3aRi9UuFF1G
+	 ph9g0t6nle6jEx815WZ3pjstrUToNvbaBx76Nb1lKusy+17/gqLJbPsm4BcWjVdanf
+	 aB4Tw9kzzi6jpUUbf2tFXeq5vG5+7DVOQIBcF0PSzR7q3gi3uN0PAQf7I7Ui66I1uJ
+	 aXA0qigTpZ7Mw==
+Date: Tue, 9 Jul 2024 11:14:04 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Peter Griffin <peter.griffin@linaro.org>
+Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+	linux-fscrypt@vger.kernel.org,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	=?iso-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>,
+	William McVicker <willmcvicker@google.com>
+Subject: Re: [PATCH v3 6/6] scsi: ufs: exynos: Add support for Flash Memory
+ Protector (FMP)
+Message-ID: <20240709181404.GA1945@sol.localdomain>
+References: <20240708235330.103590-1-ebiggers@kernel.org>
+ <20240708235330.103590-7-ebiggers@kernel.org>
+ <CADrjBPq4sEamwD3+wT2p481en-J2Ee7G0f+UbXG3g3RqUMiv3w@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/1] scsi: ufs: core: Support Updating UIC Command
- Timeout
-To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, quic_cang@quicinc.com,
- quic_nitirawa@quicinc.com, avri.altman@wdc.com, peter.wang@mediatek.com,
- manivannan.sadhasivam@linaro.org, minwoo.im@samsung.com,
- adrian.hunter@intel.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>, Bean Huo <beanhuo@micron.com>,
- Maramaina Naresh <quic_mnaresh@quicinc.com>,
- open list <linux-kernel@vger.kernel.org>
-References: <cover.1720503791.git.quic_nguyenb@quicinc.com>
- <6513429b6d3b10829263bf33ace5c5128f106e59.1720503791.git.quic_nguyenb@quicinc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <6513429b6d3b10829263bf33ace5c5128f106e59.1720503791.git.quic_nguyenb@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CADrjBPq4sEamwD3+wT2p481en-J2Ee7G0f+UbXG3g3RqUMiv3w@mail.gmail.com>
 
-On 7/8/24 11:06 PM, Bao D. Nguyen wrote:
-> +static int uic_cmd_timeout_set(const char *val, const struct kernel_param *kp)
-> +{
-> +	unsigned int n;
-> +	int ret;
-> +
-> +	ret = kstrtou32(val, 0, &n);
-> +	if (ret != 0 || n < UIC_CMD_TIMEOUT_DEFAULT || n > UIC_CMD_TIMEOUT_MAX)
-> +		return -EINVAL;
-> +
-> +	return param_set_int(val, kp);
-> +}
+On Tue, Jul 09, 2024 at 12:17:53PM +0100, Peter Griffin wrote:
+> Hi Eric,
+> 
+> On Tue, 9 Jul 2024 at 00:55, Eric Biggers <ebiggers@kernel.org> wrote:
+> >
+> > From: Eric Biggers <ebiggers@google.com>
+> >
+> > Add support for Flash Memory Protector (FMP), which is the inline
+> > encryption hardware on Exynos and Exynos-based SoCs.
+> >
+> > Specifically, add support for the "traditional FMP mode" that works on
+> > many Exynos-based SoCs including gs101.  This is the mode that uses
+> > "software keys" and is compatible with the upstream kernel's existing
+> > inline encryption framework in the block and filesystem layers.  I plan
+> > to add support for the wrapped key support on gs101 at a later time.
+> >
+> > Tested on gs101 (specifically Pixel 6) by running the 'encrypt' group of
+> > xfstests on a filesystem mounted with the 'inlinecrypt' mount option.
+> >
+> > Signed-off-by: Eric Biggers <ebiggers@google.com>
+> > ---
+> 
+> Reviewed-by: Peter Griffin <peter.griffin@linaro.org>
+> 
+> and
+> 
+> Tested-by: Peter Griffin <peter.griffin@linaro.org>
+> 
+> Tested by running the encrypt group of xfstests on my Pixel 6, using
+> the Yocto development env described here
+> https://git.codelinaro.org/linaro/googlelt/pixelscripts
+> 
+> Notes on testing, in addition to above README.
+> 
+> 1. Enabled following additional kernel configs gs101_config.fragment
+> CONFIG_FS_ENCRYPTION=y
+> CONFIG_FS_ENCRYPTION_INLINE_CRYPT=y
+> CONFIG_SCSI_UFS_CRYPTO=y
+> CONFIG_BLK_INLINE_ENCRYPTION=y
+> CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK=y
+> CONFIG_CRYPTO_HCTR2=y
+> 
+> 2. Add meta-security layer to bblayers.conf and relevant packages to local.conf
+> BBLAYERS += "/yocto-builds/yocto/meta-security"
+> IMAGE_INSTALL:append = " xfstests ecryptfs-utils fscryptctl keyutils
+> cryptmount "
+> 
+> 3. Rebuild/reflash Yocto rootfs
+> 
+> bitbake virtual/kernel core-image-full-cmdline
+> fastboot flash userdata core-image-full-cmdline-google-gs.rootfs.ext4
+> 
+> 4. On the device ran the following
+> 
+> mkfs.ext4 -O encrypt /dev/sda26
+> mkfs.ext4 -O encrypt /dev/sda20
+> mkdir -p /mnt/scratchdev
+> mkdir -p /mnt/testdev
+> mount /dev/sda20 -o inlinecrypt /mnt/testdev
+> mount /dev/sda26 -o inlinecrypt /mnt/scratchdev
+> export TEST_DEV=/dev/sda20
+> export TEST_DIR=/mnt/testdev
+> export SCRATCH_DEV=/dev/sda26
+> export SCRATCH_MNT=/mnt/scratchdev
+> cd /usr/xfstests
+> check -g encrypt
+> 
+> All 28 tests passed
+> 
+> <snip>
+> Ran: ext4/024 generic/395 generic/396 generic/397 generic/398
+> generic/399 generic/419 generic/421 generic/429 generic/435
+> generic/440 generic/548 generic/549 generic/550 generic/576
+> generic/580 gener9
+> Not run: generic/399 generic/550 generic/576 generic/584 generic/613
+> Passed all 28 tests
+> 
+> kind regards,
+> 
 
-The above code converts 'val' twice to an integer: a first time by
-calling kstrtou32() and a second time by calling param_set_int().
-Please remove one of the two string-to-integer conversions, e.g. by
-changing "param_set_int(val, kp)" into "uic_cmd_timeout = n" or
-*(unsigned int *)kp->arg = n".
+Thanks!  This is similar to what I did.  But, to get the inlinecrypt mount
+option to be used during the tests it's necessary to do the following:
 
-Thanks,
+    export EXT_MOUNT_OPTIONS="-o inlinecrypt"
 
-Bart.
+The following message will appear in the kernel log:
+
+    fscrypt: AES-256-XTS using blk-crypto (native)
+
+- Eric
