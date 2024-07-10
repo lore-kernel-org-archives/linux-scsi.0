@@ -1,181 +1,117 @@
-Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0016f401.pphosted.com (mx0a-0016f401.pphosted.com [67.231.148.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8339B19346A
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jul 2024 14:40:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 050C51922E3
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jul 2024 17:11:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.148.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720622422; cv=none; b=eOwk8yIxx+BK0gKhQi6GRrwb853t9YC+/4jQHDE9KSqicrF5LVphdGX/J+QZz+0KSzWNupgIx7IUWArlMjPXTmKfgqqVVM4Lsl0X+/XslkWcJOHDFQKLoExw1X6g+rc5wT1bcFjanACz3KvxR4BRam1d3uJvX082ok8/k3Atbpw=
+	t=1720631478; cv=none; b=FO6oZVbuVYEetrZPSyF5bUvKcUJKw3G2jhNkLmmgyk5K0JJ8KPGiQb7Vrv5CUhol9W663Nu+YzWuT9G2FFGKwXUfw9QEd7o6jcg2O7t+gjebmUQp9HQ9PyIieMk/QnGHjyJv3ZKN+E4PRmQOeMWPhzFd5kvJtjS1cGs/Gh9yCS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720622422; c=relaxed/simple;
-	bh=DRVcwf7YUoO1RXe82JhfMETgwcBrO4qMd2b8uknKS/U=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ey3PT9DyIfQvhCmPEMgUNz7Yn9S3/vgZvXZBS7FNWQn50w8kxKftn9H1YFnt3vvmL4Ny64ed7eZYO+eKdtE+feAw4IBflrYV1lIKFU+uNPxnG0H+32kz3Ls7M/B23/rFauPniQJVz9YfJv+JU6xLslTechSj3/2Cr2vTlTcQTQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ZpSjZ7hi; arc=none smtp.client-ip=209.85.161.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1720631478; c=relaxed/simple;
+	bh=QkzcLhdamFsoXkVkFtyRdIk9yEJpIwWg9UeU8eC5w3A=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=UgmgDTr7QPpEqJImmmtNLftnrX42nCcb0SEZO0MFyK9I3OlsiS4VnJGzQvwqmZZkIpNr6l4nrId+GcmmP14RWj6ZyRURjaZaFdQet0wfgFDgN2lNhdBhpIehaGa8YZoIL42RwpQzUu4Sa7ptOpNHzAUZEeLcXXgR670ss0XduPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=NmEzCTlQ; arc=none smtp.client-ip=67.231.148.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ZpSjZ7hi"
-Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-5c669a0b5d1so2325540eaf.3
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Jul 2024 07:40:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1720622418; x=1721227218; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Q5MBKPXiqwYRjqjz2+BCt5W9uLgVhHA565KHdY/VvTM=;
-        b=ZpSjZ7hieDLP5PVm5E7cDcAjCySP3NWW5JxtgdIkbNKzQvi644tRU3EcJ4LoQ3Qs0h
-         pV7HXc8tYhOxb+Usxc7NEgsTTgWVexlkqzhOimQUW/7/+0ky6r/voWt5tp7tDGCJGajB
-         Td/bCzO0+Lck8GnYxfrbNapTnYa/g0+CmZXOYxTAyIHu1G7FL2rOmloswAHuTcY2G39Q
-         uUlGHLCmE0eG70OPP4Ge5A013zi8LBVNsmI+bMf8CgV3CDVk5JB9eT5Z2NQbiOBb6Dho
-         kOucbBkcZoefm47LoQoTRVuMLvFmqjBqbSyqy30rW6en6GRZAowczhY925Zw7tUCmM/5
-         OYjw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720622418; x=1721227218;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Q5MBKPXiqwYRjqjz2+BCt5W9uLgVhHA565KHdY/VvTM=;
-        b=SckypfEhkqODlMYGRL/1yg9NU85pvbE06Fd8CU8kE8hqQcfDAH9dsqIPufl/KfPWbl
-         j3jhzkIkfDED10tH53eIHpQN1Zf94uW/lOViTxQwzWoB2QhouTp+6UFkNgtBrC0tnBxL
-         hRfPCKj4onxG2LlDPEuH0O2yN/dzkKtfjGc6waB6wG/p+OwNx/n8daHGmt78kslRv13w
-         vaFE4bNxwDt+VrI5Gm8j6BXL00l+q7pEHRkCU0AYCV7kix2vKN1+x8Y9IjyveckK2K4f
-         4tjvnrssdiqa/2i7+10epiA4zAwDD3PXRF3tMS7J8IZeht+ExkhIIquth1xKQWfb6EtV
-         GiZA==
-X-Gm-Message-State: AOJu0YzN5hleSSHRI/YlhqCV7JAtF85Gj74pUTx3L1WrA9IJeUEKB6nA
-	xIKsYcau8zA2ClQe883gYvEAbZSD70YoHD0k2hjBJ7N33RE3J4Ea4ne1Tzu+8q6bWsHFq35ndJF
-	rx7p+qF64hhaEoQxNq0LHdm7k6s+6jDoiuqaE9Q==
-X-Google-Smtp-Source: AGHT+IGPbA+7U0GVSWHLJgAcEq7ch7u4XfLCU5CQ1jMlzvqMmVL+V7Jj4ZiAiKi9goWHX+sUxcTZNyMRh0XmCjCA6ME=
-X-Received: by 2002:a05:6820:c92:b0:5c4:796a:2c93 with SMTP id
- 006d021491bc7-5c7b7c1c2e3mr1845799eaf.1.1720622418551; Wed, 10 Jul 2024
- 07:40:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="NmEzCTlQ"
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46A9lB4f023801;
+	Wed, 10 Jul 2024 10:11:14 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pfpt0220; bh=qh4jl9O1U34YHg8zORDlWoq
+	YIByiD9/NSo1r6CK8d18=; b=NmEzCTlQ95SgfSsolpdiW7e3LjLzVZ8jYxNzlxy
+	49OvAgLNoyccevr10Yi0B6+JQXgDQobofinTU/TqFruq4uxxLtOylUabU+04n/tF
+	186D6kK1dDRIOtOJEDRCLlTpaoh8p4M+RRsojPgJmeSU02WKIa2b5WbsgNRZBLbp
+	sHXzereHek7c5dZFC7uJ+PDwjMMqPm9+vfO/5bRUqFUbtfaf0/CTjKE2elfIhRVF
+	F3StESULkJ3Y/YCyZZoyfMGoRzYx87PAMvgsCPMbIfq4NcM9ngf6mZkqLtEg3+XX
+	pgC7QnJiNv5cK5bKMSE4RSy2ONtBhqvSG6aDnehh0L9D9Kg==
+Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
+	by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 409qyf21kp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 10 Jul 2024 10:11:13 -0700 (PDT)
+Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
+ DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.4; Wed, 10 Jul 2024 10:11:12 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
+ (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.4 via Frontend
+ Transport; Wed, 10 Jul 2024 10:11:12 -0700
+Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.187])
+	by maili.marvell.com (Postfix) with ESMTP id B855B3F7093;
+	Wed, 10 Jul 2024 10:11:09 -0700 (PDT)
+From: Nilesh Javali <njavali@marvell.com>
+To: <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
+        <agurumurthy@marvell.com>, <sdeodhar@marvell.com>, <emilne@redhat.com>,
+        <jmeneghi@redhat.com>
+Subject: [PATCH v2 00/11] qla2xxx misc. bug fixes
+Date: Wed, 10 Jul 2024 22:40:46 +0530
+Message-ID: <20240710171057.35066-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.23.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240708235330.103590-1-ebiggers@kernel.org> <20240708235330.103590-7-ebiggers@kernel.org>
- <CADrjBPq4sEamwD3+wT2p481en-J2Ee7G0f+UbXG3g3RqUMiv3w@mail.gmail.com> <20240709181404.GA1945@sol.localdomain>
-In-Reply-To: <20240709181404.GA1945@sol.localdomain>
-From: Peter Griffin <peter.griffin@linaro.org>
-Date: Wed, 10 Jul 2024 15:40:07 +0100
-Message-ID: <CADrjBPpHcXvX-eEbWzCFBNhf9N0hYssPiESKiyNRrzbb6uibdg@mail.gmail.com>
-Subject: Re: [PATCH v3 6/6] scsi: ufs: exynos: Add support for Flash Memory
- Protector (FMP)
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org, 
-	linux-fscrypt@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>, 
-	William McVicker <willmcvicker@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: p8LC8edJzyD5C8qd1BesKb5YbV6u65Dt
+X-Proofpoint-GUID: p8LC8edJzyD5C8qd1BesKb5YbV6u65Dt
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-07-10_12,2024-07-10_01,2024-05-17_01
 
-Hi Eric,
+Martin,
 
-On Tue, 9 Jul 2024 at 19:14, Eric Biggers <ebiggers@kernel.org> wrote:
->
-> On Tue, Jul 09, 2024 at 12:17:53PM +0100, Peter Griffin wrote:
-> > Hi Eric,
-> >
-> > On Tue, 9 Jul 2024 at 00:55, Eric Biggers <ebiggers@kernel.org> wrote:
-> > >
-> > > From: Eric Biggers <ebiggers@google.com>
-> > >
-> > > Add support for Flash Memory Protector (FMP), which is the inline
-> > > encryption hardware on Exynos and Exynos-based SoCs.
-> > >
-> > > Specifically, add support for the "traditional FMP mode" that works on
-> > > many Exynos-based SoCs including gs101.  This is the mode that uses
-> > > "software keys" and is compatible with the upstream kernel's existing
-> > > inline encryption framework in the block and filesystem layers.  I plan
-> > > to add support for the wrapped key support on gs101 at a later time.
-> > >
-> > > Tested on gs101 (specifically Pixel 6) by running the 'encrypt' group of
-> > > xfstests on a filesystem mounted with the 'inlinecrypt' mount option.
-> > >
-> > > Signed-off-by: Eric Biggers <ebiggers@google.com>
-> > > ---
-> >
-> > Reviewed-by: Peter Griffin <peter.griffin@linaro.org>
-> >
-> > and
-> >
-> > Tested-by: Peter Griffin <peter.griffin@linaro.org>
-> >
-> > Tested by running the encrypt group of xfstests on my Pixel 6, using
-> > the Yocto development env described here
-> > https://git.codelinaro.org/linaro/googlelt/pixelscripts
-> >
-> > Notes on testing, in addition to above README.
-> >
-> > 1. Enabled following additional kernel configs gs101_config.fragment
-> > CONFIG_FS_ENCRYPTION=y
-> > CONFIG_FS_ENCRYPTION_INLINE_CRYPT=y
-> > CONFIG_SCSI_UFS_CRYPTO=y
-> > CONFIG_BLK_INLINE_ENCRYPTION=y
-> > CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK=y
-> > CONFIG_CRYPTO_HCTR2=y
-> >
-> > 2. Add meta-security layer to bblayers.conf and relevant packages to local.conf
-> > BBLAYERS += "/yocto-builds/yocto/meta-security"
-> > IMAGE_INSTALL:append = " xfstests ecryptfs-utils fscryptctl keyutils
-> > cryptmount "
-> >
-> > 3. Rebuild/reflash Yocto rootfs
-> >
-> > bitbake virtual/kernel core-image-full-cmdline
-> > fastboot flash userdata core-image-full-cmdline-google-gs.rootfs.ext4
-> >
-> > 4. On the device ran the following
-> >
-> > mkfs.ext4 -O encrypt /dev/sda26
-> > mkfs.ext4 -O encrypt /dev/sda20
-> > mkdir -p /mnt/scratchdev
-> > mkdir -p /mnt/testdev
-> > mount /dev/sda20 -o inlinecrypt /mnt/testdev
-> > mount /dev/sda26 -o inlinecrypt /mnt/scratchdev
-> > export TEST_DEV=/dev/sda20
-> > export TEST_DIR=/mnt/testdev
-> > export SCRATCH_DEV=/dev/sda26
-> > export SCRATCH_MNT=/mnt/scratchdev
-> > cd /usr/xfstests
-> > check -g encrypt
-> >
-> > All 28 tests passed
-> >
-> > <snip>
-> > Ran: ext4/024 generic/395 generic/396 generic/397 generic/398
-> > generic/399 generic/419 generic/421 generic/429 generic/435
-> > generic/440 generic/548 generic/549 generic/550 generic/576
-> > generic/580 gener9
-> > Not run: generic/399 generic/550 generic/576 generic/584 generic/613
-> > Passed all 28 tests
-> >
-> > kind regards,
-> >
->
-> Thanks!  This is similar to what I did.  But, to get the inlinecrypt mount
-> option to be used during the tests it's necessary to do the following:
->
->     export EXT_MOUNT_OPTIONS="-o inlinecrypt"
->
+Please apply the qla2xxx driver miscellaneous bug fixes
+to the scsi tree at your earliest convenience.
 
-OK great, thanks Eric! I will update my notes to include that. That
-was actually one reason to include all the test instructions in the
-email to check I was running this correctly :)
-
-> The following message will appear in the kernel log:
->
->     fscrypt: AES-256-XTS using blk-crypto (native)
-
-I just ran the tests again setting EXT_MOUNT_OPTIONS and I see
-
-root@google-gs:/usr/xfstests# dmesg | grep "fscrypt: AES-256-XTS"
-[ 1319.539742] fscrypt: AES-256-XTS using blk-crypto (native)
-
-I also added in fsverity-utils and xz which are required by a couple
-of the skipped tests.
+v2:
+- Fix smatch warn, val_is_in_range() warn: always true condition '(val <= 4294967295) => (0-u32max <= u32max)'
+- Fix smatch warn, qla24xx_get_flash_version() warn: missing error code? 'ret'
 
 Thanks,
+Nilesh
 
-Peter
+Manish Rangankar (1):
+  qla2xxx: During vport delete send async logout explicitly
+
+Nilesh Javali (2):
+  qla2xxx: validate nvme_local_port correctly
+  qla2xxx: Update version to 10.02.09.300-k
+
+Quinn Tran (4):
+  qla2xxx: unable to act on RSCN for port online
+  qla2xxx: Fix flash read failure
+  qla2xxx: Reduce fabric scan duplicate code
+  qla2xxx: Use QP lock to search for bsg
+
+Saurav Kashyap (1):
+  qla2xxx: Return ENOBUFS if sg_cnt is more than one for ELS cmds
+
+Shreyas Deodhar (3):
+  qla2xxx: Fix for possible memory corruption
+  qla2xxx: complete command early within lock
+  qla2xxx: Fix optrom version displayed in FDMI
+
+ drivers/scsi/qla2xxx/qla_bsg.c     |  98 +++---
+ drivers/scsi/qla2xxx/qla_def.h     |  17 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   6 +-
+ drivers/scsi/qla2xxx/qla_gs.c      | 467 +++++++++++++----------------
+ drivers/scsi/qla2xxx/qla_init.c    |  92 ++++--
+ drivers/scsi/qla2xxx/qla_inline.h  |   8 +
+ drivers/scsi/qla2xxx/qla_mid.c     |   2 +-
+ drivers/scsi/qla2xxx/qla_nvme.c    |   5 +-
+ drivers/scsi/qla2xxx/qla_os.c      |  19 +-
+ drivers/scsi/qla2xxx/qla_sup.c     | 108 +++++--
+ drivers/scsi/qla2xxx/qla_version.h |   4 +-
+ 11 files changed, 452 insertions(+), 374 deletions(-)
+
+
+base-commit: e8a1d87b7983b461d1d625e2973cdaadc0bd8ff5
+-- 
+2.23.1
+
