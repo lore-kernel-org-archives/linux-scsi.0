@@ -1,166 +1,147 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1AF115351B
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Jul 2024 23:25:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6F8979C0;
+	Wed, 10 Jul 2024 01:49:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720567526; cv=none; b=JHdW9hZg3HD3hv3X7WchS3vVmfqe9mIqiQGiAJfLzsjwzUkDyTrFJuDvpy4RULqt3jbulRpQZS9kytXTa84h2bg78lYusKQ2IB7gF3IjBou7T8QsrMZkWlQbMELH8Hrg6UH8/IW4eLMoZ7rlI/wFk3EMXSBIgaxyXMrcglmLCkI=
+	t=1720576183; cv=none; b=ltVb5zuKfjPaU/MgNm3BcyUYUqe8yyDA0njWQkex2KWymHcS/8gpprxaN0hONEGSa8b+LocUxbtrpjQoxz2VEgF6hMOqoixMiQaK76ABYywrowyg+00eHE54SNUdcFf/aiwc2vWJYf6qUzWXMSOPmBg9UKLvMjVWLZT60UYAvEQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720567526; c=relaxed/simple;
-	bh=U2SLuE6qHqdjCWbegx+bnEMN73I/j4PA4uCPGyTZKWo=;
-	h=Mime-Version:Subject:From:To:CC:Message-ID:Date:Content-Type:
-	 References; b=ftjI+Edln20YCrIAZbLdZ0XNVBtNr5FVRE8RGcJGPitYZZ7oWbhWZOZsYmLKsJ+Sm9mzKZPtwRaYprTPuaNelvCUuoS8LW8g/r0/vxzOaB6Z9zhNejbjUxlRr7UtmE+YGBQcpKHzktsocaYoILGrrsbq6KzoQn3o4zISNxbpsdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=q83dLOh1; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1720576183; c=relaxed/simple;
+	bh=hD4LrztM6N9+rwV/yVX+lKNIMz5a4kUkTDbd+sFYw3g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qg6eNHbIbmfqufFPd/zV+SHq+M/NTrifkSnIBIhPMna0pA43VbKwnTr2bwkMLOcMNyfCyJsiCKcooNXt5eBMan1G/pX+yRN3f6fozfzdbOm8MiyBAv32/H0LQORh7XMFpnMDHF9AJgjX7VSQ6cVkxsk/L7FwMtMX1YdULa1ojOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NE207wwx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="q83dLOh1"
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20240709232521epoutp03723cb8417fa8292b93c3da530cdb6b28~grwuFeqJa2298322983epoutp03n
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Jul 2024 23:25:21 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20240709232521epoutp03723cb8417fa8292b93c3da530cdb6b28~grwuFeqJa2298322983epoutp03n
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1720567521;
-	bh=ssb+IrsLv/SbnE+OAhPqs3L+hCzyjbN97NyqK+4980I=;
-	h=Subject:Reply-To:From:To:CC:Date:References:From;
-	b=q83dLOh1ziuGB3rpk8ulRAHMFsifagp3K6HIfM/CyFbnvZWGlEUH7QOnHozCWmAR0
-	 PNR59r7VQzQcyYUtsVOV+K1iCwOI5gQQCsSvkDB1iqoRR7IoNOVSsvbMzrxmEKjZ0c
-	 T4g9xs49+9gxHLSd+RKT4u8Y4jRIpb3ISG7X7000=
-Received: from epsmges2p3.samsung.com (unknown [182.195.42.71]) by
-	epcas2p2.samsung.com (KnoxPortal) with ESMTP id
-	20240709232521epcas2p2db17271d27a679022ec93abb6a1fa5cf~grwt3LMzm0839008390epcas2p2t;
-	Tue,  9 Jul 2024 23:25:21 +0000 (GMT)
-X-AuditID: b6c32a47-c6bff7000000264e-b6-668dc6e11e12
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-	epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-	DE.EC.09806.1E6CD866; Wed, 10 Jul 2024 08:25:21 +0900 (KST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NE207wwx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7534C3277B;
+	Wed, 10 Jul 2024 01:49:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720576182;
+	bh=hD4LrztM6N9+rwV/yVX+lKNIMz5a4kUkTDbd+sFYw3g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=NE207wwxzpMle/bQPfHJVKud6rOkVPB4B99dxMeAxuothw/TWo6bebO3D1fjk1NqE
+	 2FDmsUkmdrpVIVMIS7mpEf9JDfZ5fxGJjlxnumxWGD425CrZv4LBj/VNyebzaXWwZK
+	 3fq2SQuf5rGOJKW+JsOwWzEEYVVwAVNefl6ekA+YQ7qP27k16YUrGw3OkK790sKsQj
+	 vcv8Y3ASG7gR6+AmphqRUqQ8G1NRtEFk5V9y3FjOJBWRSWYxmXxeIQFvuz+CNj4SVh
+	 SiU7+/sIb0scil/g5UHME8ErzegKyJ3MpQ8VI2UhpGkx5SC5QE3oRnol91tkVzAJ1z
+	 I9odHWU8vzPpQ==
+Date: Wed, 10 Jul 2024 09:49:34 +0800
+From: Peter Chen <peter.chen@kernel.org>
+To: Jeff Johnson <quic_jjohnson@quicinc.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Oliver Neukum <oneukum@suse.com>,
+	Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	usb-storage@lists.one-eyed-alien.net,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH v2] usb: add missing MODULE_DESCRIPTION() macros
+Message-ID: <20240710014934.GA2914204@nchen-desktop>
+References: <20240618-md-drivers-usb-v2-1-e9b20a5eb7f9@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Subject: [PATCH V4] scsi: ufs: core: Check LSDBS cap when !mcq
-Reply-To: k831.kim@samsung.com
-Sender: Kyoungrul Kim <k831.kim@samsung.com>
-From: Kyoungrul Kim <k831.kim@samsung.com>
-To: "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "bvanassche@acm.org" <bvanassche@acm.org>, "Ed.Tsai@mediatek.com"
-	<Ed.Tsai@mediatek.com>, Minwoo Im <minwoo.im@samsung.com>, Kyoungrul Kim
-	<k831.kim@samsung.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122@epcms2p8>
-Date: Wed, 10 Jul 2024 08:25:20 +0900
-X-CMS-MailID: 20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupnleLIzCtJLcpLzFFi42LZdljTQvfhsd40g4PbhCymffjJbLFnvZ3F
-	xn4OiymbvjJadF/fwWax/Pg/Jotnpw8wO7B7XL7i7TFt0ik2j5aT+1k8Pj69xeLRt2UVo8fn
-	TXIBbFFcNimpOZllqUX6dglcGU8332MvmCBa8f7AN7YGxqmCXYycHBICJhIbr71h7WLk4hAS
-	2MEo8e3JBPYuRg4OXgFBib87hEFqhAXsJFZ8fs0GYgsJyElcn9/NChHXkehu/sAMYrMJaEls
-	PL6RDWSOiMAkRon/31+ygDjMAs8YJR5NecQGsY1XYkb7UxYIW1pi+/KtjBC2hsSPZb3MELao
-	xM3Vb9lh7PfH5kPViEi03jsLVSMo8eDnbqi4lETb7N9MEHa1xNXG3WCLJQQ6GCVaWh+yQiTM
-	JVauvgTWwCvgK/G4awZYA4uAqsS/z81QNS4S09/8BDuUWUBeYvvbOcygkGAW0JRYv0sfxJQQ
-	UJY4cosFooJPouPwX3aYt3bMewJ1gpJE+7arUBMlJJ5NvAB1sofE6/6H7JBADJR4v34z4wRG
-	hVmIoJ6FZO8shL0LGJlXMYqlFhTnpqcWGxUY6xUn5haX5qXrJefnbmIEpxkt9x2MM95+0DvE
-	yMTBeIhRgoNZSYR3/o3uNCHelMTKqtSi/Pii0pzU4kOM0hwsSuK891rnpggJpCeWpGanphak
-	FsFkmTg4pRqYgqa9ulax/dXDlScKcpOXJXw2MBMIddmunSQVd2CGfPfMmZcrxJgf9DSoNcSF
-	f/K8vVz6bOeLLdGnBbUsvSJ/S6bUR+YqGpmUeB+UMbDcry/Ykjt1lWUYW/C7wrZLntfPNz+d
-	AEy/iruK15/b8DdZeWnR4SlBf7irztenSBw3/lVf5ODu1j/vzbppe2JmT9b8fnxlZA9f7HqT
-	wODdL+yyBTWzY+cv/Tr3+c33Xtt/m/fVXtrfw6v/RSLzibpJR5jCR8NiKRHmtOQp/ydb1Ltr
-	ckvYtWc/YP5y44pXwfn5V513vVx36cqGI5Y9rf8DyqeutEnYt1AsW0BgOcuza/U3S6/9sX4g
-	5HerY1XBxGwlluKMREMt5qLiRAAv1ZN+ogMAAA==
-X-CMS-RootMailID: 20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122
-References: <CGME20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122@epcms2p8>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240618-md-drivers-usb-v2-1-e9b20a5eb7f9@quicinc.com>
 
-if the user sets use_mcq_mode to 0, the host will try to activate the
-lsdb mode unconditionally even when the lsdbs of device hci cap is 1. so
-it makes timeout cmds and fail to device probing.
+On 24-06-18 08:18:26, Jeff Johnson wrote:
+> With ARCH=x86, make allmodconfig && make W=1 C=1 reports:
+> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/usb/core/usbcore.o
+> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/usb/mon/usbmon.o
+> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/usb/class/usbtmc.o
+> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/usb/storage/uas.o
+> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/usb/chipidea/ci_hdrc_msm.o
+> 
+> Add the missing invocations of the MODULE_DESCRIPTION() macro.
+> 
+> Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+> ---
+> This is the remaining one-off fixes in usb.
+> 
+> Corrections to these descriptions are welcomed. I'm not an expert in
+> this code so in most cases I've taken these descriptions directly from
+> code comments, Kconfig descriptions, or git logs.  History has shown
+> that in some cases these are originally wrong due to cut-n-paste
+> errors, and in other cases the drivers have evolved such that the
+> original information is no longer accurate.
+> 
+> Let me know if any of these changes need to be segregated into
+> separate patches to go through different maintainer trees.
+> ---
+> Changes in v2:
+> - Updated drivers/usb/core/usb.c description per Alan
+> - Link to v1: https://lore.kernel.org/r/20240611-md-drivers-usb-v1-1-8b8d669e8e73@quicinc.com
+> ---
+>  drivers/usb/chipidea/ci_hdrc_msm.c | 1 +
+>  drivers/usb/class/usbtmc.c         | 1 +
+>  drivers/usb/core/usb.c             | 1 +
+>  drivers/usb/mon/mon_main.c         | 1 +
+>  drivers/usb/storage/uas.c          | 1 +
+>  5 files changed, 5 insertions(+)
+> 
+> diff --git a/drivers/usb/chipidea/ci_hdrc_msm.c b/drivers/usb/chipidea/ci_hdrc_msm.c
+> index 7b5b47ce8a02..1661639cd2eb 100644
+> --- a/drivers/usb/chipidea/ci_hdrc_msm.c
+> +++ b/drivers/usb/chipidea/ci_hdrc_msm.c
+> @@ -303,4 +303,5 @@ module_platform_driver(ci_hdrc_msm_driver);
+>  
+>  MODULE_ALIAS("platform:msm_hsusb");
+>  MODULE_ALIAS("platform:ci13xxx_msm");
+> +MODULE_DESCRIPTION("ChipIdea Highspeed Dual Role Controller");
 
-To prevent that problem. check the lsdbs cap when mcq is not supported
-case.
+MODULE_DESCRIPTION("MSM ChipIdea Glue Layer Driver");
 
-Signed-off-by: k831.kim <k831.kim@samsung.com>
----
-Changes to v1: Fix wrong bit of lsdb support.
-Changes to v2: Fix extra space and wrong commit messeage.
-Changes to v3: Close missing parenthesis and fix grammatical error.
----
- drivers/ufs/core/ufshcd.c | 16 ++++++++++++++++
- include/ufs/ufshcd.h      |  1 +
- include/ufs/ufshci.h      |  1 +
- 3 files changed, 18 insertions(+)
+Peter
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1b65e6ae4137..8587aa592d51 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2412,7 +2412,17 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
- 		return err;
- 	}
- 
-+	/*
-+	 * The UFSHCI 3.0 specification does not define MCQ_SUPPORT and
-+	 * LSDB_SUPPORT, but [31:29] as reserved bits with reset value 0s, which
-+	 * means we can simply read values regardless to version
-+	 */
- 	hba->mcq_sup = FIELD_GET(MASK_MCQ_SUPPORT, hba->capabilities);
-+	/*
-+	 * 0h: legacy single doorbell support is available
-+	 * 1h: indicate that legacy single doorbell support has been removed
-+	 */
-+	hba->lsdb_sup = !FIELD_GET(MASK_LSDB_SUPPORT, hba->capabilities);
- 	if (!hba->mcq_sup)
- 		return 0;
- 
-@@ -10449,6 +10459,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	}
- 
- 	if (!is_mcq_supported(hba)) {
-+		if (!hba->lsdb_sup) {
-+			dev_err(hba->dev, "%s: failed to initialize (legacy doorbell mode not supported)\n",
-+				__func__);
-+			err = -EINVAL;
-+			goto out_disable;
-+		}
- 		err = scsi_add_host(host, hba->dev);
- 		if (err) {
- 			dev_err(hba->dev, "scsi_add_host failed\n");
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index bad88bd91995..fd391f6eee73 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1074,6 +1074,7 @@ struct ufs_hba {
- 	bool ext_iid_sup;
- 	bool scsi_host_added;
- 	bool mcq_sup;
-+	bool lsdb_sup;
- 	bool mcq_enabled;
- 	struct ufshcd_res_info res[RES_MAX];
- 	void __iomem *mcq_base;
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 385e1c6b8d60..22ba85e81d8c 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -75,6 +75,7 @@ enum {
- 	MASK_OUT_OF_ORDER_DATA_DELIVERY_SUPPORT	= 0x02000000,
- 	MASK_UIC_DME_TEST_MODE_SUPPORT		= 0x04000000,
- 	MASK_CRYPTO_SUPPORT			= 0x10000000,
-+	MASK_LSDB_SUPPORT			= 0x20000000,
- 	MASK_MCQ_SUPPORT			= 0x40000000,
- };
- 
--- 
-2.34.1
+>  MODULE_LICENSE("GPL v2");
+> diff --git a/drivers/usb/class/usbtmc.c b/drivers/usb/class/usbtmc.c
+> index 311007b1d904..6bd9fe565385 100644
+> --- a/drivers/usb/class/usbtmc.c
+> +++ b/drivers/usb/class/usbtmc.c
+> @@ -2592,4 +2592,5 @@ static struct usb_driver usbtmc_driver = {
+>  
+>  module_usb_driver(usbtmc_driver);
+>  
+> +MODULE_DESCRIPTION("USB Test & Measurement class driver");
+>  MODULE_LICENSE("GPL");
+> diff --git a/drivers/usb/core/usb.c b/drivers/usb/core/usb.c
+> index a0c432b14b20..0b4685aad2d5 100644
+> --- a/drivers/usb/core/usb.c
+> +++ b/drivers/usb/core/usb.c
+> @@ -1150,4 +1150,5 @@ static void __exit usb_exit(void)
+>  
+>  subsys_initcall(usb_init);
+>  module_exit(usb_exit);
+> +MODULE_DESCRIPTION("USB core host-side support");
+>  MODULE_LICENSE("GPL");
+> diff --git a/drivers/usb/mon/mon_main.c b/drivers/usb/mon/mon_main.c
+> index 824904abe76f..af852d53aac6 100644
+> --- a/drivers/usb/mon/mon_main.c
+> +++ b/drivers/usb/mon/mon_main.c
+> @@ -419,4 +419,5 @@ static void __exit mon_exit(void)
+>  module_init(mon_init);
+>  module_exit(mon_exit);
+>  
+> +MODULE_DESCRIPTION("USB Monitor");
+>  MODULE_LICENSE("GPL");
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index a48870a87a29..9b8f578eef53 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -1280,6 +1280,7 @@ static void __exit uas_exit(void)
+>  module_init(uas_init);
+>  module_exit(uas_exit);
+>  
+> +MODULE_DESCRIPTION("USB Attached SCSI driver");
+>  MODULE_LICENSE("GPL");
+>  MODULE_IMPORT_NS(USB_STORAGE);
+>  MODULE_AUTHOR(
+> 
+> ---
+> base-commit: 83a7eefedc9b56fe7bfeff13b6c7356688ffa670
+> change-id: 20240611-md-drivers-usb-86999d57ed16
+> 
