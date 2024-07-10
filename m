@@ -1,147 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6F8979C0;
-	Wed, 10 Jul 2024 01:49:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6F91381AA;
+	Wed, 10 Jul 2024 03:24:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720576183; cv=none; b=ltVb5zuKfjPaU/MgNm3BcyUYUqe8yyDA0njWQkex2KWymHcS/8gpprxaN0hONEGSa8b+LocUxbtrpjQoxz2VEgF6hMOqoixMiQaK76ABYywrowyg+00eHE54SNUdcFf/aiwc2vWJYf6qUzWXMSOPmBg9UKLvMjVWLZT60UYAvEQ=
+	t=1720581901; cv=none; b=QmsSUVmTJkDhQaWgaVIYMfu2x/NeeGBHUfKmTNXRaX9Uo6kdQPf8kj2IwflxPxCVctR28kQduJ2S1hYtxCR+FXDXaUtQS8gzD3C9od2gtl9EkMPCfj7Or1M75uai3NcqnnCBVOX1R38xwLW7YevOv2AfC6hSZJEPDqcXIBWYtok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720576183; c=relaxed/simple;
-	bh=hD4LrztM6N9+rwV/yVX+lKNIMz5a4kUkTDbd+sFYw3g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qg6eNHbIbmfqufFPd/zV+SHq+M/NTrifkSnIBIhPMna0pA43VbKwnTr2bwkMLOcMNyfCyJsiCKcooNXt5eBMan1G/pX+yRN3f6fozfzdbOm8MiyBAv32/H0LQORh7XMFpnMDHF9AJgjX7VSQ6cVkxsk/L7FwMtMX1YdULa1ojOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NE207wwx; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NE207wwx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7534C3277B;
-	Wed, 10 Jul 2024 01:49:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720576182;
-	bh=hD4LrztM6N9+rwV/yVX+lKNIMz5a4kUkTDbd+sFYw3g=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NE207wwxzpMle/bQPfHJVKud6rOkVPB4B99dxMeAxuothw/TWo6bebO3D1fjk1NqE
-	 2FDmsUkmdrpVIVMIS7mpEf9JDfZ5fxGJjlxnumxWGD425CrZv4LBj/VNyebzaXWwZK
-	 3fq2SQuf5rGOJKW+JsOwWzEEYVVwAVNefl6ekA+YQ7qP27k16YUrGw3OkK790sKsQj
-	 vcv8Y3ASG7gR6+AmphqRUqQ8G1NRtEFk5V9y3FjOJBWRSWYxmXxeIQFvuz+CNj4SVh
-	 SiU7+/sIb0scil/g5UHME8ErzegKyJ3MpQ8VI2UhpGkx5SC5QE3oRnol91tkVzAJ1z
-	 I9odHWU8vzPpQ==
-Date: Wed, 10 Jul 2024 09:49:34 +0800
-From: Peter Chen <peter.chen@kernel.org>
-To: Jeff Johnson <quic_jjohnson@quicinc.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Oliver Neukum <oneukum@suse.com>,
-	Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	usb-storage@lists.one-eyed-alien.net,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH v2] usb: add missing MODULE_DESCRIPTION() macros
-Message-ID: <20240710014934.GA2914204@nchen-desktop>
-References: <20240618-md-drivers-usb-v2-1-e9b20a5eb7f9@quicinc.com>
+	s=arc-20240116; t=1720581901; c=relaxed/simple;
+	bh=QHegp8DOcSh8eZnGx+hO408fB/5GYkziaSmH3ahHvh8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=JaM8es26FChfjvdR5dqvKHMt7DX75bGIB3A8nzdErHk+AJVpbzeja1HB3PF8eYuBxbqh1svjjCtbluJNP3F8+2qTtwEYYXZ8RfZTjBdCwFLkjQhrsHR6zqI3yI/4/mZ/q2/AICABGJJIhZZwSdDpB6IS8rK7UEd52ZZN8ZUTJF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost (unknown [124.16.138.129])
+	by APP-03 (Coremail) with SMTP id rQCowAAXHNQB_41mtPL3FA--.46778S2;
+	Wed, 10 Jul 2024 11:24:49 +0800 (CST)
+From: Chen Ni <nichen@iscas.ac.cn>
+To: njavali@marvell.com,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chen Ni <nichen@iscas.ac.cn>
+Subject: [PATCH] scsi: qla2xxx: Convert comma to semicolon
+Date: Wed, 10 Jul 2024 11:24:23 +0800
+Message-Id: <20240710032423.2003805-1-nichen@iscas.ac.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240618-md-drivers-usb-v2-1-e9b20a5eb7f9@quicinc.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowAAXHNQB_41mtPL3FA--.46778S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7Jw4UZF15Zr47GrWUXw4ruFg_yoWfJrc_uF
+	s0qrWIqrn0krnruw1xXrW3Zay2vFWvqr1ku3WYvry5uayUX347XF1YqFW3Xa13trWIyFW5
+	Cw4UXrWjyF1rujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbckFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
+	Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVWxJr
+	0_GcWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE14v26F4j6r4UJwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkIecxEwVAFwVW8
+	GwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r
+	1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij
+	64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr
+	0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF
+	0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUBMKZUUUUU=
+X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
 
-On 24-06-18 08:18:26, Jeff Johnson wrote:
-> With ARCH=x86, make allmodconfig && make W=1 C=1 reports:
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/usb/core/usbcore.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/usb/mon/usbmon.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/usb/class/usbtmc.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/usb/storage/uas.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/usb/chipidea/ci_hdrc_msm.o
-> 
-> Add the missing invocations of the MODULE_DESCRIPTION() macro.
-> 
-> Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
-> ---
-> This is the remaining one-off fixes in usb.
-> 
-> Corrections to these descriptions are welcomed. I'm not an expert in
-> this code so in most cases I've taken these descriptions directly from
-> code comments, Kconfig descriptions, or git logs.  History has shown
-> that in some cases these are originally wrong due to cut-n-paste
-> errors, and in other cases the drivers have evolved such that the
-> original information is no longer accurate.
-> 
-> Let me know if any of these changes need to be segregated into
-> separate patches to go through different maintainer trees.
-> ---
-> Changes in v2:
-> - Updated drivers/usb/core/usb.c description per Alan
-> - Link to v1: https://lore.kernel.org/r/20240611-md-drivers-usb-v1-1-8b8d669e8e73@quicinc.com
-> ---
->  drivers/usb/chipidea/ci_hdrc_msm.c | 1 +
->  drivers/usb/class/usbtmc.c         | 1 +
->  drivers/usb/core/usb.c             | 1 +
->  drivers/usb/mon/mon_main.c         | 1 +
->  drivers/usb/storage/uas.c          | 1 +
->  5 files changed, 5 insertions(+)
-> 
-> diff --git a/drivers/usb/chipidea/ci_hdrc_msm.c b/drivers/usb/chipidea/ci_hdrc_msm.c
-> index 7b5b47ce8a02..1661639cd2eb 100644
-> --- a/drivers/usb/chipidea/ci_hdrc_msm.c
-> +++ b/drivers/usb/chipidea/ci_hdrc_msm.c
-> @@ -303,4 +303,5 @@ module_platform_driver(ci_hdrc_msm_driver);
->  
->  MODULE_ALIAS("platform:msm_hsusb");
->  MODULE_ALIAS("platform:ci13xxx_msm");
-> +MODULE_DESCRIPTION("ChipIdea Highspeed Dual Role Controller");
+Replace a comma between expression statements by a semicolon.
 
-MODULE_DESCRIPTION("MSM ChipIdea Glue Layer Driver");
+Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
+---
+ drivers/scsi/qla2xxx/qla_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Peter
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 8377624d76c9..e2ca9a14b643 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -423,7 +423,7 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 	sp->type = SRB_LOGOUT_CMD;
+ 	sp->name = "logout";
+ 	qla2x00_init_async_sp(sp, qla2x00_get_async_timeout(vha) + 2,
+-			      qla2x00_async_logout_sp_done),
++			      qla2x00_async_logout_sp_done);
+ 
+ 	ql_dbg(ql_dbg_disc, vha, 0x2070,
+ 	    "Async-logout - hdl=%x loop-id=%x portid=%02x%02x%02x %8phC explicit %d.\n",
+-- 
+2.25.1
 
->  MODULE_LICENSE("GPL v2");
-> diff --git a/drivers/usb/class/usbtmc.c b/drivers/usb/class/usbtmc.c
-> index 311007b1d904..6bd9fe565385 100644
-> --- a/drivers/usb/class/usbtmc.c
-> +++ b/drivers/usb/class/usbtmc.c
-> @@ -2592,4 +2592,5 @@ static struct usb_driver usbtmc_driver = {
->  
->  module_usb_driver(usbtmc_driver);
->  
-> +MODULE_DESCRIPTION("USB Test & Measurement class driver");
->  MODULE_LICENSE("GPL");
-> diff --git a/drivers/usb/core/usb.c b/drivers/usb/core/usb.c
-> index a0c432b14b20..0b4685aad2d5 100644
-> --- a/drivers/usb/core/usb.c
-> +++ b/drivers/usb/core/usb.c
-> @@ -1150,4 +1150,5 @@ static void __exit usb_exit(void)
->  
->  subsys_initcall(usb_init);
->  module_exit(usb_exit);
-> +MODULE_DESCRIPTION("USB core host-side support");
->  MODULE_LICENSE("GPL");
-> diff --git a/drivers/usb/mon/mon_main.c b/drivers/usb/mon/mon_main.c
-> index 824904abe76f..af852d53aac6 100644
-> --- a/drivers/usb/mon/mon_main.c
-> +++ b/drivers/usb/mon/mon_main.c
-> @@ -419,4 +419,5 @@ static void __exit mon_exit(void)
->  module_init(mon_init);
->  module_exit(mon_exit);
->  
-> +MODULE_DESCRIPTION("USB Monitor");
->  MODULE_LICENSE("GPL");
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index a48870a87a29..9b8f578eef53 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -1280,6 +1280,7 @@ static void __exit uas_exit(void)
->  module_init(uas_init);
->  module_exit(uas_exit);
->  
-> +MODULE_DESCRIPTION("USB Attached SCSI driver");
->  MODULE_LICENSE("GPL");
->  MODULE_IMPORT_NS(USB_STORAGE);
->  MODULE_AUTHOR(
-> 
-> ---
-> base-commit: 83a7eefedc9b56fe7bfeff13b6c7356688ffa670
-> change-id: 20240611-md-drivers-usb-86999d57ed16
-> 
