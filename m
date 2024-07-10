@@ -1,95 +1,168 @@
-Received: from mail-ot1-f41.google.com (mail-ot1-f41.google.com [209.85.210.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0433B195809
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jul 2024 17:41:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 768291369A8;
+	Wed, 10 Jul 2024 17:48:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720633266; cv=none; b=uqbdMsfFtxa4MGKh9w6Q/AasjPDp7dOryQ9bKEUnN25PjUALj5JPNOCUzk+Iey7GZ1YhEdy1nl693Br0cjbF3ZzvDctdryWpkVBkT5wenNFlCj46VMjGCyfx4NHM+R6sjqTcYb/9NI/L70CfvxTLnx59admzRwuUIsSbTQfTMB0=
+	t=1720633740; cv=none; b=l+eVyYKwfpUgnRbKtUBoLpLaj40JEGSUUdTg4j3tlauVKH6Fanckx9F51u90mWaPlXtuyF2ZbD4daZpYiNdvwEHpoF3gD/wzNc+bykgzWB7yBg7Uxzk2rje7ea8DrtdeHa0I9mRW+8dU/b3P4OVkLl5grrC5cOpQ2qyN5GYZSKs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720633266; c=relaxed/simple;
-	bh=kieP6xzFL7Gg5G/N8KEDy5p1BBDPzDxX9idQeOXBBCk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=BnA8JQ7lOCJsu0qOzVhTEuxsSJ083JJWl67mO8zudRoxtEl+y9vXON8CuZtz9hEJdfU79Fp/p9NOwMX+bhOn71mUcmELKKLZ1EMmfz/Bpj3Hx+9UD9M/J4pPRwKT+1Qd1Z7tuBO16BLp+KMes2PBkN7o6TwouYlAfYYCcgbIf/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zettlmeissl.de; spf=pass smtp.mailfrom=zettlmeissl.de; dkim=pass (2048-bit key) header.d=zettlmeissl.de header.i=@zettlmeissl.de header.b=S77dJL15; arc=none smtp.client-ip=209.85.210.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zettlmeissl.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zettlmeissl.de
+	s=arc-20240116; t=1720633740; c=relaxed/simple;
+	bh=CnP+d+fWQpiP9tgiGxYKpgdz2IM3KLGz288TsVNUudM=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=JEUAeC3eaGAyryeh39hg2ysSAKRqFfvwu2x5WZuhvNSY9MvSGtG079//FlcENALqF02gDvk6l55u506VgD6/8lJPxA8DvscHd82LD/ci6uUHRpS18lTxCZE7bXRtQ3JitFIsOyaTMRvLP8JUBYVz05W1HRFvAKfizo+kAYkxnlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=wGCWgoLm; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=wGCWgoLm; arc=none smtp.client-ip=96.44.175.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=zettlmeissl.de header.i=@zettlmeissl.de header.b="S77dJL15"
-Received: by mail-ot1-f41.google.com with SMTP id 46e09a7af769-703ba2477bdso834860a34.2
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Jul 2024 10:41:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=zettlmeissl.de; s=2024-02-28; t=1720633262; x=1721238062; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=kieP6xzFL7Gg5G/N8KEDy5p1BBDPzDxX9idQeOXBBCk=;
-        b=S77dJL15mFMJcobFQvLNw1RypIiPSlvkU7UkjOWtIltencAZJgZjG97UoQfMgeMTCb
-         UCW0WKFV/HTPlu/P0U0Xk8EgfAtGDI5sgTLGmFwzhONnJWHBJlU+Awe3Oeqd1j81mj+K
-         yfRG7kWk0XARp86jy2VQl0mjQXOYJRZrHOCXTxVXUxAAg5+rPisrjDlce/a1J5yZqNEU
-         IkqTkr7w3/a3iTnaNJM6vnjxlhDFSKigfvm5rJoUIHCMrEPpfuL6lTdxJ/RxbAQ/ihj2
-         fRg+FaPREJd7IDu3AfB1+6jv6bu9d7fCucBQqdokFatfbzmVJy8wEyQHcpAZWvUKGl6T
-         U/dw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720633262; x=1721238062;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=kieP6xzFL7Gg5G/N8KEDy5p1BBDPzDxX9idQeOXBBCk=;
-        b=PLcUFA376OOmCmhPKjizM0U3d59+z/cr0mSSDNBGlwBkko31IVMzm5puMg8wHpOM2t
-         lk1ug09utuI+5533bsgAv9X3fmpjoiwQ3gAnp8jYCBgqXzIhU/LVF6h7dq+p3ZFTC+LH
-         jx9Ry6OIZyjgwjt7CA01HfmbBq6rad6n2S7Ad/qLxJj+7sbgwcRV8yHsJUCO4M2rnslR
-         hLJPKIb7eRQE+5Mzdx5HRFCMdBDb9F3fAjEdojdVMeJrc5otqpWgNwsfZs3Kh59b6JsK
-         lFDM17h0t9vzgZYmrLvgY4y443C3tXsCq1n1jO21YGYw1A3DD71UEXrFuj7uNkPPUv4c
-         ZP5A==
-X-Forwarded-Encrypted: i=1; AJvYcCX7GkhWVI4v2sS5NSF8n5h9wNYp1GhP+SdPLi+wPyPJJB2LPIkJOznx+rzXrYkIZMgYeMxaPq0MImdOlvyhwXNOMLp+/eAQXEgMCg==
-X-Gm-Message-State: AOJu0Yy20VTKcO4gE+DSo9xjLZrg/QTbVDMq4VuzP+59RBOK+EuAs3nB
-	+XWIKpxRvAxAnUaQqcXYSewW0YXpTv6Udpybl7PUbwWpgpdwyUm7U3YfQfrChYBJxU14t5lDMGf
-	JvAA=
-X-Google-Smtp-Source: AGHT+IG8lfaQ/jsPlekVDYhm7czKut1ujqKQj5GNd2lx3zUqw9+0vWgY952/9YaA16upuX2RtwBs/w==
-X-Received: by 2002:a05:6870:310e:b0:25d:f8fa:b53a with SMTP id 586e51a60fabf-25eae7ce03emr5410196fac.9.1720633261944;
-        Wed, 10 Jul 2024 10:41:01 -0700 (PDT)
-Received: from mail-oi1-f179.google.com (mail-oi1-f179.google.com. [209.85.167.179])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-25eaa2a2195sm1291681fac.52.2024.07.10.10.41.01
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 Jul 2024 10:41:01 -0700 (PDT)
-Received: by mail-oi1-f179.google.com with SMTP id 5614622812f47-3d9400a1ad9so44280b6e.1
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Jul 2024 10:41:01 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUu26LlndycsD5iiE2z9Lg8MZfge46V4NGd0+1VnU3Yx2ibIyDfRD6uPmbYUANrhpFEV/uRMG5sUC73YXps/HSE9br613bWebht3g==
-X-Received: by 2002:a05:6871:798f:b0:25e:1c9d:f180 with SMTP id
- 586e51a60fabf-25eaec877abmr5272925fac.50.1720633260911; Wed, 10 Jul 2024
- 10:41:00 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="wGCWgoLm";
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="wGCWgoLm"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1720633737;
+	bh=CnP+d+fWQpiP9tgiGxYKpgdz2IM3KLGz288TsVNUudM=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=wGCWgoLm9z0ZulKLN9OHjDAWgweeexpyHyz22u6Hzj/F6aGByd81cfroLcMONbn0U
+	 /0snLH7F98H9B5JDbwk9d/oBXsAtW6b/wTh0PCMnZTl1nN//ZrMh/Ftw+cP1knJr4X
+	 j/X9IB+LZ69G4QA+KmLYzxRUH4tzlLZ6KKUtN/ws=
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 8B38A1286F76;
+	Wed, 10 Jul 2024 13:48:57 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+ by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
+ with ESMTP id UJEUysR6rIVl; Wed, 10 Jul 2024 13:48:57 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1720633737;
+	bh=CnP+d+fWQpiP9tgiGxYKpgdz2IM3KLGz288TsVNUudM=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=wGCWgoLm9z0ZulKLN9OHjDAWgweeexpyHyz22u6Hzj/F6aGByd81cfroLcMONbn0U
+	 /0snLH7F98H9B5JDbwk9d/oBXsAtW6b/wTh0PCMnZTl1nN//ZrMh/Ftw+cP1knJr4X
+	 j/X9IB+LZ69G4QA+KmLYzxRUH4tzlLZ6KKUtN/ws=
+Received: from [10.106.168.35] (unknown [167.220.57.35])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits))
+	(Client did not present a certificate)
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 38DDD1286E22;
+	Wed, 10 Jul 2024 13:48:57 -0400 (EDT)
+Message-ID: <ce3dd4dc5924fa3fbc1468a5dca262aed50bb4d7.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.10-rc7
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Wed, 10 Jul 2024 10:48:56 -0700
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.42.4 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <Zi5YTR98mKEsPqQQ@zettlmeissl.de> <CACjvM=dA7MqfAC6_fiWv4LvmN8mNPnNG_YXoKnEz6t0vzyRkSw@mail.gmail.com>
- <yq1r0c8a65c.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1r0c8a65c.fsf@ca-mkp.ca.oracle.com>
-From: =?UTF-8?Q?Max_Zettlmei=C3=9Fl?= <max@zettlmeissl.de>
-Date: Wed, 10 Jul 2024 19:40:49 +0200
-X-Gmail-Original-Message-ID: <CACjvM=dE3c=s+x8ei7W2-PjCwUGrXpSJEMGF2pWj7VaUcMEM6w@mail.gmail.com>
-Message-ID: <CACjvM=dE3c=s+x8ei7W2-PjCwUGrXpSJEMGF2pWj7VaUcMEM6w@mail.gmail.com>
-Subject: Re: Oops (nullpointer dereference) in SCSI subsystem
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-On Fri, 5 Jul 2024 at 05:19, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
-> I appreciate your thorough bug report, it is still tagged in my inbox.
-> However, I haven't found the time to investigate yet. I'm afraid the
-> CD-ROM side of things isn't getting much use/attention these days.
->
+One core change that moves a disk start message to a location where it
+will only be printed once instead of twice plus a couple of error
+handling race fixes in the ufs driver.
 
-Thank you for the reply, Martin.
+The patch is available here:
 
-Take your time and shoot me a message when you need any further
-information or logs on a later Kernel version.
-The shorter reply times described in the Kernel Bug reporting
-documentation had me a bit worried that something was wrong with my
-report. I thought that someone would at least acknowledge it in some
-way after validating that it was reported correctly.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Damien Le Moal (1):
+      scsi: sd: Do not repeat the starting disk message
+
+Peter Wang (2):
+      scsi: ufs: core: Fix ufshcd_abort_one racing issue
+      scsi: ufs: core: Fix ufshcd_clear_cmd racing issue
+
+And the diffstat:
+
+ drivers/scsi/sd.c          |  5 ++---
+ drivers/ufs/core/ufs-mcq.c | 11 ++++++-----
+ drivers/ufs/core/ufshcd.c  |  2 ++
+ 3 files changed, 10 insertions(+), 8 deletions(-)
+
+With full diff below
+
+James
+
+---
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fe82baa924f8..6203915945a4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -4117,8 +4117,6 @@ static int sd_resume(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+ 
+-	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+-
+ 	if (opal_unlock_from_suspend(sdkp->opal_dev)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "OPAL unlock failed\n");
+ 		return -EIO;
+@@ -4135,12 +4133,13 @@ static int sd_resume_common(struct device *dev, bool runtime)
+ 	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
+ 		return 0;
+ 
++	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
++
+ 	if (!sd_do_start_stop(sdkp->device, runtime)) {
+ 		sdkp->suspended = false;
+ 		return 0;
+ 	}
+ 
+-	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+ 	ret = sd_start_stop_device(sdkp, 1);
+ 	if (!ret) {
+ 		sd_resume(dev);
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 8944548c30fa..c532416aec22 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -105,16 +105,15 @@ EXPORT_SYMBOL_GPL(ufshcd_mcq_config_mac);
+  * @hba: per adapter instance
+  * @req: pointer to the request to be issued
+  *
+- * Return: the hardware queue instance on which the request would
+- * be queued.
++ * Return: the hardware queue instance on which the request will be or has
++ * been queued. %NULL if the request has already been freed.
+  */
+ struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
+ 					 struct request *req)
+ {
+-	u32 utag = blk_mq_unique_tag(req);
+-	u32 hwq = blk_mq_unique_tag_to_hwq(utag);
++	struct blk_mq_hw_ctx *hctx = READ_ONCE(req->mq_hctx);
+ 
+-	return &hba->uhq[hwq];
++	return hctx ? &hba->uhq[hctx->queue_num] : NULL;
+ }
+ 
+ /**
+@@ -515,6 +514,8 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int task_tag)
+ 		if (!cmd)
+ 			return -EINVAL;
+ 		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
++		if (!hwq)
++			return 0;
+ 	} else {
+ 		hwq = hba->dev_cmd_queue;
+ 	}
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 1b65e6ae4137..46433ecf0c4d 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -6456,6 +6456,8 @@ static bool ufshcd_abort_one(struct request *rq, void *priv)
+ 	/* Release cmd in MCQ mode if abort succeeds */
+ 	if (is_mcq_enabled(hba) && (*ret == 0)) {
+ 		hwq = ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp->cmd));
++		if (!hwq)
++			return 0;
+ 		spin_lock_irqsave(&hwq->cq_lock, flags);
+ 		if (ufshcd_cmd_inflight(lrbp->cmd))
+ 			ufshcd_release_scsi_cmd(hba, lrbp);
+
