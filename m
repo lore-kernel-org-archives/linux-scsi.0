@@ -1,254 +1,207 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 343281799B;
-	Wed, 10 Jul 2024 03:48:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720583300; cv=fail; b=tss8Djw+v+dpChOySVS8DLEJI0qU2mGDo/PGU88HLbRx5c1e3d0MBFJ7WUSzO94XxD4kY1ihAxP3HjZMKSv71f+t8NTNWVzqd+TNYKTV7GjNenyj5W7nfueYSIEjQwyv10f7jMVfppWS/eYVvlh5QiQA1srw0KhANgSWxGmgZ4U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720583300; c=relaxed/simple;
-	bh=qAEcEmwzf5XfWgObBFhHmNe7eSV4RHMWYAuTYrMvAic=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=qKd76qoNCWKo6uAbw3b9t1bsqkALJNxUACnCwHUbr19lg1ELQjEdISupjNMVQf5QGRk3iG00XiNv9h/TGqRIxJEyArzwR4msAUZdOJe1b4+xE2U2jzg8ncp9CbWZTsT9giR8fOwjPDwrP0NLDE4FcGOjWvutUSqwCmnCs35eRrA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=D55zwPW9; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=HPZo7/0W; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C44C41A84
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jul 2024 05:53:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1720590789; cv=none; b=pzWUx0elk5+QP1Pvd3a0s1eZA8tEHAcAXrUbFMl/wMrNQhBqnTFgXeL1hEtbjHVJpTqqsftk5Y6l1sxvmFVMyONFH2N/wa528dEaqFfnnMv+T19umzZXUuSl8vboDp20JLVaLct+dlw3Iu6pf2lwq+lb5zxOHD7ya5yi3/DxcM4=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1720590789; c=relaxed/simple;
+	bh=8hfhVXtmivDk9qhAnKVzg4Bk9X/W2xf78uaXkISjgQ0=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=qHQrqW/t64zBosiWeShO1OzzdkSvOWgm9uE2NRy0H0l9ATtXHKES57SRFHnH84buW1szfID3EVPdqX3WQk5iIoibLqE0TK/15sfdTim218hrjedDog4Udgi+2+hS+DZjerC6kwdyosk0LHNccyrK1uh6bbpXif3g+zNw3qwMT0w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=UC+1GgwV; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="D55zwPW9";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="HPZo7/0W"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 469KtVQb000805;
-	Wed, 10 Jul 2024 03:48:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to
-	:cc:subject:from:in-reply-to:message-id:references:date
-	:content-type:mime-version; s=corp-2023-11-20; bh=Ln/GOybUujR0v+
-	ljRqpXUcwdTHg8BUimnsRQMkhVDJc=; b=D55zwPW9CJjXUqlYZWJIGPREiD7j3y
-	4RRgNKL+0AoL83aIJ4O4TkmPxjYJgw/w/HIXddJhHZUN4ndtpujCqKNUTRwKBGE8
-	XiQwVjK7SgS8/L1mhYBkHJhCvdJS76+Sb8tEb/n+FszSg39FTf52lyYxO7UTeJTX
-	k8v1xp6tH0MhXzKzrVJZraPUffwXIY+iXSu+84e8ouuTIWgvqT9Nk+PGAykYaJWX
-	1IpD4yMVyZcQORUxpSoZUCvlzcRJwmbb5ff7m7D2gsDXn5Y7kq5yiSbG58Cugsz7
-	px48ZJQRxURThlzm/TnUCQQHL+9xRKF14RoY7nqddX5U/pDl4C1d6H0w==
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 406xfspcc0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 10 Jul 2024 03:48:05 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 46A0lnn5005952;
-	Wed, 10 Jul 2024 03:48:04 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2168.outbound.protection.outlook.com [104.47.56.168])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 407tx3ng60-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 10 Jul 2024 03:48:03 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GlzQ48n7yoBYelKSntv3IAR8cdOJxgorEXJxPiKA+VIT3arHOZOotjVt7SjtDndfyeLUqc/jKkjno3qMeo5I5vcFaBlAduWU0g/INHmcqhurebgqabLDnE84TEyMNpfI+ElKLeJ74PdopWngMmiGq6WcQZJLtf5spjcusmJSKYcaiX14SVsEbXEjjYF/6Bj32rPF84FT2nYHf5PjCr5+xOTp/pGMZb5UqdAmX+DpP3JufGdEvB5tI1liEwjOnjGENzD8uwPaZNQczDc4CLdxymrmPrg8hfsU4eOGq0NxhqBturKGFWLie6DckcowehWaPiwsbs4QNpLzjpp6fuTd8Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Ln/GOybUujR0v+ljRqpXUcwdTHg8BUimnsRQMkhVDJc=;
- b=c1LFY5B3WCDQBYwf5H9iJhiSlewfCaLaMW4a6ZcHyVQAoVXw4an52ubKk7aduXmzlKGI4Co01CWSNOjK2nQMcA0gJ4EQQZ0dDhzWqOh4WAXpfOQRJNCquQbAxK3LOjBNGO6OV4w08lYdSnkzMIurA7Yp32BQ2wlYMI0SDgkn9NomYMKvy1hTSbyOSrGRKDfDxTZx3rGsQQEET6PEFg9pCuHfbe2qrFmBssC0pvniVKQ49CszEYA39TM8R26gr+FR0fYRqRUpt55GjZJfS7OfEti0U3IASN1vjLMBjm1wATotI96h6B+4f9+JuPcluVBpNQ887J7IF9DY0BolPC2WhA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ln/GOybUujR0v+ljRqpXUcwdTHg8BUimnsRQMkhVDJc=;
- b=HPZo7/0WuFIaBNFvpTQV6p7vRnUTnJSdD7tNP36g9HlYuU5cocUtgpq4n1L7/K+uRstrsIOW+Cmi5aJv2xMYfs4ExbZXJTdpqH6IiLQr5hgabuohM9HbTNZOPZ2q4iY3IzmwkheF2MnOtDJpU5JgH+Otw4CDmXqoSENLc9GXYMI=
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by IA3PR10MB8185.namprd10.prod.outlook.com (2603:10b6:208:509::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7741.35; Wed, 10 Jul
- 2024 03:48:01 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::5c74:6a24:843e:e8f7]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::5c74:6a24:843e:e8f7%4]) with mapi id 15.20.7741.033; Wed, 10 Jul 2024
- 03:48:01 +0000
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kanchan Joshi
- <joshi.k@samsung.com>,
-        Anuj Gupta <anuj20.g@samsung.com>, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: Re: fine-grained PI control
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <20240709071604.GB18993@lst.de> (Christoph Hellwig's message of
-	"Tue, 9 Jul 2024 09:16:04 +0200")
-Organization: Oracle Corporation
-Message-ID: <yq1h6cy3r3f.fsf@ca-mkp.ca.oracle.com>
-References: <20240705083205.2111277-1-hch@lst.de>
-	<yq1ttgz5l6d.fsf@ca-mkp.ca.oracle.com> <20240709071604.GB18993@lst.de>
-Date: Tue, 09 Jul 2024 23:47:58 -0400
-Content-Type: text/plain
-X-ClientProxiedBy: BYAPR05CA0003.namprd05.prod.outlook.com
- (2603:10b6:a03:c0::16) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="UC+1GgwV"
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240710055257epoutp02e2d84f346f108164bcf8a0136c60af22~gxDJHn-rt1160411604epoutp02k
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Jul 2024 05:52:57 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240710055257epoutp02e2d84f346f108164bcf8a0136c60af22~gxDJHn-rt1160411604epoutp02k
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1720590777;
+	bh=8hfhVXtmivDk9qhAnKVzg4Bk9X/W2xf78uaXkISjgQ0=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=UC+1GgwVGLxZheF9vcjw6dsPq+pK2UMRXTs4xRYodB89r+THeLjKeTyhglCiGi3QR
+	 zsSoH09Np51RgNGU7QWOyzOOCacTPRLgbtM+eh0Sz1ZJ1NvAnxhXWP0gE2iRa39Jg3
+	 FLetdch0NuY20kxlqfEjgHH1fDc4WM8OUYO6NRG8=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+	20240710055257epcas5p2ca2020f2b498e6ba02fe1b503a2ab908~gxDImwzzW0341403414epcas5p2e;
+	Wed, 10 Jul 2024 05:52:57 +0000 (GMT)
+Received: from epsmges5p3new.samsung.com (unknown [182.195.38.177]) by
+	epsnrtp3.localdomain (Postfix) with ESMTP id 4WJn8749Cnz4x9Q1; Wed, 10 Jul
+	2024 05:52:55 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+	epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	9F.C2.06857.7B12E866; Wed, 10 Jul 2024 14:52:55 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20240710055255epcas5p4f29d8f70ff4b75534f55fc770ae9bc96~gxDGlp3s21066510665epcas5p4C;
+	Wed, 10 Jul 2024 05:52:55 +0000 (GMT)
+Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20240710055255epsmtrp1a6bdfae554fb911d36dcb443eac7ca5b~gxDGk7bAA2502825028epsmtrp19;
+	Wed, 10 Jul 2024 05:52:55 +0000 (GMT)
+X-AuditID: b6c32a4b-88bff70000021ac9-70-668e21b7eeba
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	03.8F.19057.7B12E866; Wed, 10 Jul 2024 14:52:55 +0900 (KST)
+Received: from INBRO002756 (unknown [107.122.12.5]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20240710055253epsmtip142a87c7b3d2c929dea3534b36e90fbc3~gxDFJRx_w1587315873epsmtip1T;
+	Wed, 10 Jul 2024 05:52:53 +0000 (GMT)
+From: "Alim Akhtar" <alim.akhtar@samsung.com>
+To: "'Eric Biggers'" <ebiggers@kernel.org>, "'Peter Griffin'"
+	<peter.griffin@linaro.org>
+Cc: <linux-scsi@vger.kernel.org>, <linux-samsung-soc@vger.kernel.org>,
+	<linux-fscrypt@vger.kernel.org>, "'Avri	Altman'" <avri.altman@wdc.com>,
+	"'Bart Van Assche'" <bvanassche@acm.org>, "'Martin K . Petersen'"
+	<martin.petersen@oracle.com>, =?iso-8859-1?Q?'Andr=E9_Draszik'?=
+	<andre.draszik@linaro.org>, "'William McVicker'" <willmcvicker@google.com>
+In-Reply-To: <20240708234911.GA1730@sol.localdomain>
+Subject: RE: [PATCH v2 6/6] scsi: ufs: exynos: Add support for Flash Memory
+ Protector (FMP)
+Date: Wed, 10 Jul 2024 11:22:52 +0530
+Message-ID: <017e01dad28d$68911050$39b330f0$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|IA3PR10MB8185:EE_
-X-MS-Office365-Filtering-Correlation-Id: 51007908-d1a8-43df-3911-08dca093187d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
-X-Microsoft-Antispam-Message-Info: 
-	=?us-ascii?Q?2G+RVV5s72OL5Bfq/BmeSE7o/T4Kmtqon2evgGaKvNzw1HzY2Bbuu8BFPbea?=
- =?us-ascii?Q?mP/4Hggertqtnaq0kX7U/9xkbhZUVvzDXwWOTbPhQ1WfhA6SOGHc9dYaBTHC?=
- =?us-ascii?Q?IqIDNhPYQ6afQ9w+kL0k4mNyZasK9O0VrNqODPAsWVBUMt12X+8s8yTzjrWa?=
- =?us-ascii?Q?Dvtie8KKkH5ZAQK40e1klMFjuZqrgPThgsqXrki5ord7EEV8j38XaavXQJn2?=
- =?us-ascii?Q?8kunY8gf2vneDwd263GQe2dz7dVYqoqsDzgOTc/sg3HPKjzcwnuVXIyx4RQK?=
- =?us-ascii?Q?SpYGYljA1U89uISivkRPOsS2DxlXNfp2fvAAIi0q/OAjPSXhgRlz5n+iWqVy?=
- =?us-ascii?Q?TcJWmCtAg+EmSztnMc3KXxcRFrkZCJvFCotFHEwPtPmWeC1gHqY6pOOKOUi4?=
- =?us-ascii?Q?s6c4yl34sATELsjb+PyYo7nBNQAQOoG+dFjv8ICSXwkFv7bB46fZPMN2OT4w?=
- =?us-ascii?Q?CD24bIKHwyzNeYlnZt7ySSzP20dHuCQqU4Jp5kdYHAza9HpeIFR8ReOTe/hO?=
- =?us-ascii?Q?3zetsyJx+7SnxO+ZOLEwe4k1Sx0wpCN7x63gCCqu0jelfK5QTSHmlyH4nCct?=
- =?us-ascii?Q?+wvdtwezFTapHLRJPLwElqreFy10DIDAYaigOTojoLzw5uWBcpxAwcsHVvIb?=
- =?us-ascii?Q?dGvWOrg/eeHoXBpbkgY3NsGGYbrfawZg1dbpu8ISRZkmQknyNa2aYqVHAPhV?=
- =?us-ascii?Q?+qU9kkZ3KaJ3dhnKi0intWz02kTFynzAighzgJwpLE/JAz9Uzyb84/sqPrL5?=
- =?us-ascii?Q?AVy9jmHY3L7vnkL+gHRHA5+1ffcTFhCq5kitI3ZJZhfpEL5v1hE8PDERHq9M?=
- =?us-ascii?Q?qE3B+rZ6lKcZRJKx2aGMdKwEncmUo1Xh5Tom3pWKsYP+aisK4E6m/NFd2w7a?=
- =?us-ascii?Q?tejMjhaF5x3KcBdtFquCXX4jMTPe0PlaeKzNIjDW9mUSobXq3NTEmfpyT+qX?=
- =?us-ascii?Q?y607ph747xO4smglyw5Ghd/Y7LrK3aSaYZl6yqUwkmOtnr8Fg0519157DZFM?=
- =?us-ascii?Q?xAqZd1xrBDzexA9b4LJxmLdCwFOeeF5rsyIs6SOEyL9ZhhThN2Xj9XQfj/Ci?=
- =?us-ascii?Q?/zmtygWmUA5RDdT0yjbQXZagrPI7+lQF+zsdvHu1GOkMh9bWDcj1b848X73p?=
- =?us-ascii?Q?OxL6VcgxDPmMXfnbtffRve6Gy7M0vgUo4zs/6/vLEyuYJxPd/PG8glff+oVZ?=
- =?us-ascii?Q?we2KN6HslyMoEmLnKdM6xTwtYLyAJvoqSN0n4QA+8vpK/J/f3AxCGI6W2DQv?=
- =?us-ascii?Q?0TGDcL6X2C6DmqMcKiyAIxFEWtXsw9ASEF0kkAzHCIxlE2tPZB6WEKt6/B0F?=
- =?us-ascii?Q?XU3Fp+UL6QQHd54/U5wmM6N3rLw2ws1y9/0OIyizWHnG3w=3D=3D?=
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?us-ascii?Q?VbzcGTVlMR2e5QSy88hNGYzrvOxliciGeP7OgN5+gBPiaRJ2LYwluP/SJ5GU?=
- =?us-ascii?Q?G2VOiiaXlSXAjzQYW2DaBd1fEogg/pPihVa0cyaNpjzImDkQn28jYvSqn8kO?=
- =?us-ascii?Q?ngIqLa4G9L2b1AwJe/ckZjNc/hZUBUSWXhTCRbn8arb2/rvyTtvnIViW6TNK?=
- =?us-ascii?Q?j5qdB2abZilng8o/hNujrJ90etV3BTYSWg2J5g/Au6KNVApdvwkCd76Zs1ZN?=
- =?us-ascii?Q?TZUIG2zu526wwq7j2nyIar4JeduHtsLN2hm5AJXAa9YnPg+JH54uyMgJr4Su?=
- =?us-ascii?Q?O6syouEBUNX+I7NbgTwevDk3aJUtT/oxxJ/yPne3mGi1bFrQD+kHg6hsBYep?=
- =?us-ascii?Q?fE3qs+Im78eeYvHBLRZFJQPVxrTgLwQhu8lInM8q60U9jxabODNzPnlhdK2j?=
- =?us-ascii?Q?Gm2BgRmx3DKNBMqorP0VSArKQfmBA6Y7+Cv+e7XQrrgjLw6gCSZNVMwnwSFr?=
- =?us-ascii?Q?hEbAsJVx/lcEeh30vaPj06WuLg0tjm/NxC8NfN9X0ctdWPlv5xGqv4e3hkl1?=
- =?us-ascii?Q?21uWllZKvZT2WtKjvGAVI4Gr5eOL7aX08+nMlcrLJbqXj4o5rhSjM0RGyZn4?=
- =?us-ascii?Q?TxlgawSFcrRnbnL5fjaAq/MxbIVzzGdGzjLikOyBlwxCQzRu3A0cVbzTAk74?=
- =?us-ascii?Q?XhykWTmyEtGKi/ZfDz/MirdLXu1/rOBYDH6d1knksSywIUDgfs01vevzDWes?=
- =?us-ascii?Q?HW1cFv8IXe5URwvxJ5QTG8aUmfkHE8Zb4hPEjtyPKg03cNZqkyfoLv6UakNO?=
- =?us-ascii?Q?nVQqqmA2ChseoCR1yKFLR0rVP0CwjwkcM/qydt6riEdqMpWUJHGRdWB7ZHsN?=
- =?us-ascii?Q?GKnDqeQ4u/hxi0CWA1z7WmCt6t6hi+YYaXRqsvA9AqHRtFsCLEGO/4L9UxU0?=
- =?us-ascii?Q?5Aqzb4TnGKHXSWarRYOvV9jkn1y2IRaI/N4pAG6Jmfa0N1MbTniSiPJ6A7C4?=
- =?us-ascii?Q?euMtLLKk+tvTHvjcWlcNH97Ou/1TcvpUGvqsrgYJsxubH5H4U0K9/NAa48fG?=
- =?us-ascii?Q?5xZLIPOKEyGRTnoR6sT+mMkkzH/BpRfoX7ZuC3M7NNf9LbfKlRL+qGKHyE/6?=
- =?us-ascii?Q?eQDUxRvXnH4W6ZyCRA7lxQbnekcm7Lm0Tbd4ii+ZsUElCRefhw8O/KRy7zuk?=
- =?us-ascii?Q?op+6de9WvHLa66opcZuuvxbYxEAmmKj7ve1MWO9DNkPbG04DIOVVC8fpK6qD?=
- =?us-ascii?Q?P50C8ErNWzu6lACVmsq5ybOlHgQZltq7YSZEMH0GyKQOTVJ8BEOc6hKJXkhJ?=
- =?us-ascii?Q?RB6lNQIUoVUEFeL7b0o5pmRhWpdT+TswRg3M+YtURPP5uxSYx1BYxrDkH4Bv?=
- =?us-ascii?Q?ae1Vqr2bViAtJSWAgjVfDvWKsb4D0vbAmDER+KQuLb2x6U0VVnM0tZh4MhjO?=
- =?us-ascii?Q?8JoigkxvWF7YWHj1zQosXTr+5Y6Ug4PWQXNyMw+XxH4Czrftr7goZQUXPfbm?=
- =?us-ascii?Q?ad6e1MX4vdFN7UxdsZdb4bRqKVRLCfhV17QbPwhdZasxXs5IJ/HH9/+jrvSh?=
- =?us-ascii?Q?Z3Tspa0RnoqbjExVtMDAdHQuyvxCXl76kfbolpTnfj6uAy8O6aQ+e17B5r9o?=
- =?us-ascii?Q?YIGsvevmTnL0lVBJTEzqiOnYTwEd+JSS5PXREOofIFktCTQYYpQEoy3u/ZHv?=
- =?us-ascii?Q?xQ=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	QRkD+h5zZUmLglAjkw2tZovUQh+MUYqEZtaE9X5DcQHCySNWXfsxVup9RN8A2O1+to5JFQq+uLE3sF0HuHr03KG4FzFLC1ofdqHfetCYpUjpT0XVFvY7NqN4GSMBKeCXj/o23upXDTakugRtodoUuM0e3byGvZIpCDCxtRs7PG7UL0cGUSUNRLIjkMSscKd09t6cEDR7nAZgP2FwxeOqrGzAFYBtRSxrU+ua4DhgwshYFv/hbGv4se2IcBSTIaWiJVgo3hRFUsH/ISrtUK8TCH/rDv8ubzcT3Xs2DxuQTxLiHzbK32IjfWsws7RBO6a9YDLtuJsE6+gBNpzwk2id8n6YpD5e6T+VaqhC/v5kuXnSy1hmG4OaQKPUiR4gR102BhGtc3+Xl75+oPWJjv8txjN0NmzAE4RFbbzZgNUllToUAp8mo6gXsLtB1v7BF5LTSd2YyboiKrRLoWnfXAEVR39liLlIbdX2NBn6tqH7V6/QchGASkCdIVhFZFWRopTipdwIPGRykjfHoZDvcXXpy09+ZPawNlQw7FNDEV92FSR1XyLpWbG9xsWgf3r9Qcv/5kt1jsDGsQTezGHb19GR4lqKtTuh0P108mMKU/fd4Cw=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 51007908-d1a8-43df-3911-08dca093187d
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Jul 2024 03:48:01.2284
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Me4I8WT7b28OlpFNuLuejpwi57xWd3VxXuVVf2xbeljPnB5SJ7+Bd2dl+sdGoJNDudtrnANqNx0cL+x2EZXnUk0XC6mIPx9xy1mAf1u3/Yc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA3PR10MB8185
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-07-09_12,2024-07-09_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 malwarescore=0
- mlxlogscore=999 mlxscore=0 adultscore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2406180000
- definitions=main-2407100028
-X-Proofpoint-ORIG-GUID: p6qLDCb56xeCTsqVsRDMJnauRgqzqA52
-X-Proofpoint-GUID: p6qLDCb56xeCTsqVsRDMJnauRgqzqA52
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQE4iBClICFx+yLUSaJn1yRJb6SfhQJ5B3Y7AVtVE0cC5CRYggHlXsdaAlc50ciy3GCRkA==
+Content-Language: en-us
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrEJsWRmVeSWpSXmKPExsWy7bCmpu52xb40g+O7JCy2vNrMYvHy51U2
+	i2kffjJbrN3zh9ni1bxvLBYzzu9jsui+voPNYvnxf0wWG2b8Y7FY9ek/owOXx+Ur3h4LNpV6
+	bFrVyeZx59oeNo+PT2+xeHzeJOfRfqCbKYA9KtsmIzUxJbVIITUvOT8lMy/dVsk7ON453tTM
+	wFDX0NLCXEkhLzE31VbJxSdA1y0zB+g6JYWyxJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpB
+	Sk6BSYFecWJucWleul5eaomVoYGBkSlQYUJ2xsX2CawFbXoVH1qaWBoY9+p0MXJySAiYSDz8
+	dpkZxBYS2M0osbSJpYuRC8j+xCix8/o3KOcbo8SZS2sZYTqeTnjCDtGxl1Fi3YNqiKIXjBIb
+	135jAkmwCehK7FjcxgZiiwhEScw4f4QZpIhZ4AmTxLql21hAEpxAk15fvswKYgsLxEq8W7YI
+	bAOLgKrE6qVzgQZxcPAKWEosbPUFCfMKCEqcnPkErJVZQE/ixtQpbBC2tsSyha+ZIY5TkPj5
+	dBkrxN4wifYbu6DqxSVeHj3CDnKDhMAeDomN908yQTS4SKxu3s0GYQtLvDq+hR3ClpJ42d8G
+	ZWdLHL84C6qmQqK79SNU3F5i56ObUAv4JHp/PwG7WUKAV6KjTQiiRFWi+d1VFghbWmJidzcr
+	hO0hMf//JbYJjIqzkLw2C8lrs5C8NgvJCwsYWVYxSqYWFOempxabFhjnpZbDIzw5P3cTIzjx
+	annvYHz04IPeIUYmDsZDjBIczEoivPNvdKcJ8aYkVlalFuXHF5XmpBYfYjQFhvdEZinR5Hxg
+	6s8riTc0sTQwMTMzM7E0NjNUEud93To3RUggPbEkNTs1tSC1CKaPiYNTqoHJd1qEubv9GoPz
+	P/747e64vD9xokahFPft9RqB+dr1z86ZvOg0OL9Cbel1/59sl3W+WJ5R/nzojOntaYGzRUI9
+	k7Jl+VatLYgXuxdUMDnha8HsNbMCta3LXBdo/Q5aZ7rCcUF4gee+G9Fzivqqr8+9u67r8Nz5
+	z9yMbuufKhdax376oxmXS4/bd2U+hgXTFt4QlHv4fWHoJFcfjwz7uxO2X3tvqLevLf9KZSeL
+	BvvBSa/WLMi0Xp2dq5Uan1Fx6El3A+f5sLV5NjXNZ/8J7jpdV2HAe/6N4QOdn8Xsp9O26WSf
+	Vj94f2Vl/UMXX9uaH7k2PqeMtE1eP5z84VHNc/boayrskxTWiMjIux7LPdusxFKckWioxVxU
+	nAgAfOChGEUEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprJIsWRmVeSWpSXmKPExsWy7bCSnO52xb40g6lHWSy2vNrMYvHy51U2
+	i2kffjJbrN3zh9ni1bxvLBYzzu9jsui+voPNYvnxf0wWG2b8Y7FY9ek/owOXx+Ur3h4LNpV6
+	bFrVyeZx59oeNo+PT2+xeHzeJOfRfqCbKYA9issmJTUnsyy1SN8ugSvj+nuWgt0KFbO2xjQw
+	vpPsYuTkkBAwkXg64Ql7FyMXh5DAbkaJC3OmMUIkpCWub5zADmELS6z89xyq6BmjxO5fy5hA
+	EmwCuhI7FrexgdgiAlESu79tACtiFnjFJNHzew1Ux3kmif47D5hBqjiB9r2+fJkVxBYWiJb4
+	dHECWDeLgKrE6qVzgaZycPAKWEosbPUFCfMKCEqcnPmEBcRmFjCQuH+ogxXC1pZYtvA1M8R1
+	ChI/ny5jhTgiTKL9xi6oenGJl0ePsE9gFJ6FZNQsJKNmIRk1C0nLAkaWVYySqQXFuem5xYYF
+	Rnmp5XrFibnFpXnpesn5uZsYwbGnpbWDcc+qD3qHGJk4GA8xSnAwK4nwzr/RnSbEm5JYWZVa
+	lB9fVJqTWnyIUZqDRUmc99vr3hQhgfTEktTs1NSC1CKYLBMHp1QDU+zMs/+v37n4oypyw+zP
+	nNnv1+YvyH0le69Ilmfj1MSJ/p/EC/5Ienm7Rq70cO7WWbxh0VKxTLkLyY+uPfSoD9K9t3Ny
+	zGLfSxMuz9jr7TAhrPtq15pQgXCe89vZbyXViaxJ4zr8o/v7zunRtyPfZslLyaZ9DDvVVpK+
+	S8FUa6HGygoR+4VMZ3WsTOyOdz958/Fw18GX168qtF6v2NY/s/+pkeSxX01TxMtjnMX9a7v3
+	vC9+IddwdMHfWwcOuXAfkpysYf5yWu7rDZcMbrC51/bwWHJwrj28mzvrcOGH/6+s5i7ZazNd
+	bPdefq+mJknzFBGmztm3fjIcXvDaeuWaijWLaoyMz60MFGiK3uMgVazEUpyRaKjFXFScCADD
+	+ZJFLAMAAA==
+X-CMS-MailID: 20240710055255epcas5p4f29d8f70ff4b75534f55fc770ae9bc96
+X-Msg-Generator: CA
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240708234916epcas5p1c94255e4c8c77e2929d62144e2277fc8
+References: <20240702072510.248272-1-ebiggers@kernel.org>
+	<20240702072510.248272-7-ebiggers@kernel.org>
+	<CADrjBPoWVq-eu4Wa6_hrkk067tnZGC82UCJDyjSRGoG254w6vg@mail.gmail.com>
+	<20240708202630.GA47857@sol.localdomain>
+	<CGME20240708234916epcas5p1c94255e4c8c77e2929d62144e2277fc8@epcas5p1.samsung.com>
+	<20240708234911.GA1730@sol.localdomain>
 
+Hello Eric,
 
-Christoph,
-
-> So what are useful APIs we can/should expose?.
->
-> If we want full portability we can't support all the individual
-> checks, because the disk will check it for SCSI even if we don't do
-> the extra checks in the controller. We could still expose the invidual
-> flags, but reuse the combinations SCSI doesn't support on SCSI,
-> although that would lead to surprises if people write their software
-> and test on NVMe and then move to SCSI. Could we just expose the valid
-> SCSI combinations if people are find with that for now?
-
-I didn't have any actual use for check-this-but-not-that. The rationale
-behind having explicit checking flags was my dislike for the fact that
-the policy decision about what to check was residing inside the disk
-drive and depended on how it was formatted, which flags were wired up in
-the EI VPD, etc. I preferred an approach where the OS tells the hardware
-exactly what to do.
-
-There are a couple of free bits in *PROTECT so we could conceivably work
-with T10 to add the missing pieces. But it would have a pretty long
-turnaround, of course, and wouldn't address existing devices.
-
-Also, things are not entirely symmetric wrt. *PROTECT for reads and
-writes either. I'll try to wrap my head around it tomorrow.
-
-For the user API I think it would be most sensible to have CHECK_GUARD,
-CHECK_APP, CHECK_REF to cover the common DIX/NVMe case.
-
-And then we could have NO_CHECK_DISK and IP_CHECKSUM_CONVERSION to
-handle the peculiar SCSI corner cases and document that these are
-experimental flags to be used for test purposes only. Not particularly
-elegant but I don't have a better idea. Especially since things are
-inherently asymmetric with controller-to-target communication being
-protected even if you don't attach PI to the bio.
-
-I.e. I think the CHECK_{GUARD,APP,REF} flags should describe how a
-DIX or NVMe controller should check the attached bip payload. And
-nothing else.
-
-The controller-to-target PI handling is orthogonal and refers to what
-happens in the second protection envelope, i.e. the communication
-between a DIX controller and a target. This may or may not be the same
-PI as in the bip payload. Therefore I think these flags should be
-separate.
-
-I'll mull over it a bit more and revisit all the SCSI wrinkles.
-
-> I'm not currently seeing warnings on SCSI, but that's because my only
-> PI testing is scsi_debug which starts out with deallocated blocks.
-
-SCSI says that deallocated blocks have 0xFFFF in the app tag and thus
-checking should be disabled on read. And if you subsequently write a
-block without providing PI, the drive generates a valid guard and ref
-tag (for Type 1). So there should never be a situation where reading a
-block returns a PI error unless the block is corrupted. Either the app
-tag escape is present or the PI is valid.
-
-SCSI subsequently added some blurriness to permit deviations from this
-principle. But the original PI design explicitly ensured that PI was
-never accidentally invalid and reads would never fail. Even if you wrote
-the drive on a system that didn't know about PI things would be OK. This
-was deliberately done so reading partition tables, etc. wouldn't fail.
-In Linux we currently treat Type 2 as Type 1 for pretty much the same
-reason: To ensure that the ref tag is always well-defined. I.e. it
-contains the lower 32 bits of the LBA.
-
-The intent when we defined E2EDP in NVMe was to match this never-fail
-SCSI behavior. So I'm puzzled as to why you see errors.
-
-I'll try to connect my NVMe test box tomorrow. It's been offline after a
-rack move. Would like to understand what's going on. Are we not setting
-ILBRT/EILBRT appropriately?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+> -----Original Message-----
+> From: Eric Biggers <ebiggers=40kernel.org>
+> Sent: Tuesday, July 9, 2024 5:19 AM
+> To: Peter Griffin <peter.griffin=40linaro.org>
+> Cc: linux-scsi=40vger.kernel.org; linux-samsung-soc=40vger.kernel.org; li=
+nux-
+> fscrypt=40vger.kernel.org; Alim Akhtar <alim.akhtar=40samsung.com>; Avri
+> Altman <avri.altman=40wdc.com>; Bart Van Assche <bvanassche=40acm.org>;
+> Martin K . Petersen <martin.petersen=40oracle.com>; Andr=E9=20Draszik=0D=
+=0A>=20<andre.draszik=40linaro.org>;=20William=20McVicker=20<willmcvicker=
+=40google.com>=0D=0A>=20Subject:=20Re:=20=5BPATCH=20v2=206/6=5D=20scsi:=20u=
+fs:=20exynos:=20Add=20support=20for=20Flash=0D=0AMemory=0D=0A>=20Protector=
+=20(FMP)=0D=0A>=20=0D=0A>=20On=20Mon,=20Jul=2008,=202024=20at=2001:26:30PM=
+=20-0700,=20Eric=20Biggers=20wrote:=0D=0A>=20>=20Hi=20Peter,=0D=0A>=20>=0D=
+=0A>=20>=20On=20Thu,=20Jul=2004,=202024=20at=2002:26:05PM=20+0100,=20Peter=
+=20Griffin=20wrote:=0D=0A>=20>=20>=20Do=20you=20know=20how=20these=20FMP=20=
+registers=20(FMPSECURITY0=20etc)=20relate=20to=20the=0D=0A>=20>=20>=20UFSPR=
+*=20registers=20set=20in=20the=20existing=20exynos_ufs_config_smu()?=20The=
+=0D=0A>=20>=20>=20UFS_LINK=20spec=20talks=20about=20UFSPR(FMP),=20so=20I=20=
+had=20assumed=20the=20FMP=0D=0A>=20>=20>=20support=20would=20be=20writing=
+=20these=20same=20registers=20but=20via=20SMC=20call.=0D=0A>=20>=20>=0D=0A>=
+=20>=20>=20I=20think=20by=20the=20looks=20of=20things=0D=0A>=20>=20>=0D=0A>=
+=20>=20>=20=23define=20UFSPRSECURITY=200x010=0D=0A>=20>=20>=20=23define=20U=
+FSPSBEGIN0=200x200=0D=0A>=20>=20>=20=23define=20UFSPSEND0=200x204=0D=0A>=20=
+>=20>=20=23define=20UFSPSLUN0=200x208=0D=0A>=20>=20>=20=23define=20UFSPSCTR=
+L0=200x20C=0D=0A>=20>=20>=0D=0A>=20>=20>=20relates=20to=20the=20following=
+=20registers=20in=20gs101=20spec=0D=0A>=20>=20>=0D=0A>=20>=20>=20FMPSECURIT=
+Y0=200x0010=0D=0A>=20>=20>=20FMPSBEGIN0=200x2000=0D=0A>=20>=20>=20FMPSEND0=
+=200x2004=0D=0A>=20>=20>=20FMPSLUN0=200x2008=0D=0A>=20>=20>=20FMPSCTRL0=200=
+x200C=0D=0A>=20>=20>=0D=0A>=20>=20>=20And=20the=20SMC=20calls=20your=20call=
+ing=20set=20those=20same=20registers=20as=0D=0A>=20>=20>=20exynos_ufs_confi=
+g_smu()=20function.=20Although=20it=20is=20hard=20to=20be=20certain=0D=0A>=
+=20>=20>=20as=20I=20don't=20have=20access=20to=20the=20firmware=20code.=20C=
+ertainly=20the=20comment=0D=0A>=20>=20>=20below=20about=20FMPSECURITY0=20im=
+plies=20that=20:)=0D=0A>=20>=20>=0D=0A>=20>=20>=20With=20that=20in=20mind=
+=20I=20think=20exynos_ufs_fmp_init()=20function=20in=20this=0D=0A>=20>=20>=
+=20patch=20needs=20to=20be=20better=20integrated=20with=20the=0D=0A>=20>=20=
+>=20EXYNOS_UFS_OPT_UFSPR_SECURE=20flag=20and=20the=20existing=0D=0A>=20>=20=
+>=20exynos_ufs_config_smu()=20function=20that=20is=20currently=20just=20dis=
+abling=0D=0A>=20>=20>=20decryption=20on=20platforms=20where=20it=20can=20ac=
+cess=20the=20UFSPR(FMP)=20regs=20via=0D=0A>=20mmio.=0D=0A>=20>=0D=0A>=20>=
+=20I=20think=20that=20is=20all=20correct.=20=20For=20some=20reason,=20on=20=
+gs101=20the=20FMP=0D=0A>=20>=20registers=20are=20not=20accessible=20by=20th=
+e=20=22normal=20world=22,=20and=20SMC=20calls=20need=0D=0Ato=0D=0A>=20be=20=
+used=20instead.=0D=0A>=20>=20The=20sequences=20of=20SMC=20calls=20originate=
+d=20from=20Samsung's=20Linux=20driver=20code=0D=0A>=20for=20FMP.=0D=0A>=20>=
+=20So=20I=20know=20they=20are=20the=20magic=20incantations=20that=20are=20n=
+eeded,=20but=20I=20don't=0D=0A>=20>=20have=20access=20to=20the=20source=20c=
+ode=20or=20documentation=20for=20them.=20=20It=20does=0D=0A>=20>=20seem=20c=
+lear=20that=20one=20of=20the=20things=20they=20must=20do=20is=20write=20the=
+=20needed=0D=0Avalues=0D=0A>=20to=20the=20FMP=20registers.=0D=0A>=20>=0D=0A=
+>=20>=20I'd=20hope=20that=20these=20same=20SMC=20calls=20also=20work=20on=
+=20Exynos-based=20SoCs=20that=0D=0A>=20>=20do=20make=20the=20FMP=20register=
+s=20accessible=20to=20the=20=22normal=20world=22,=20and=0D=0A>=20>=20theref=
+ore=20they=20can=20just=20be=20used=20on=20all=20Exynos-based=20SoCs=20and=
+=0D=0A>=20>=20ufs-exynos=20won't=20need=20two=20different=20code=20paths.=
+=20=20But=20I=20don't=20have=20a=0D=0A>=20>=20way=20to=20confirm=20this=20m=
+yself.=20=20Until=20someone=20is=20able=20to=20confirm=20this,=20I=0D=0A>=
+=20>=20think=20we=20need=20to=20make=20the=20FMP=20support=20depend=20on=0D=
+=0A>=20>=20EXYNOS_UFS_OPT_UFSPR_SECURE=20so=20that=20it=20doesn't=20conflic=
+t=20with=0D=0A>=20>=20exynos_ufs_config_smu()=20which=20runs=20when=0D=0A>=
+=20=21EXYNOS_UFS_OPT_UFSPR_SECURE.=0D=0A>=20>=0D=0A>=20=0D=0A>=20These=20sa=
+me=20SMC=20calls=20can=20be=20found=20in=20the=20downstream=20source=20for=
+=20other=0D=0A>=20Exynos-based=20SoCs.=20=20I=20suspect=20that=20exynos_ufs=
+_config_smu()=20should=20be=0D=0A>=20removed,=20and=20exynos_ufs_fmp_init()=
+=20should=20run=20regardless=20of=0D=0A>=20EXYNOS_UFS_OPT_UFSPR_SECURE.=0D=
+=0A>=20It=20still=20would=20need=20to=20be=20tested,=20though,=20which=20I'=
+m=20not=20able=20to=20do.=20=20(And=0D=0A>=20especially=20as=20a=20cryptogr=
+aphy=20feature,=20this=20*must*=20be=20tested...)=20=20So=20for=0D=0Anow=20=
+I'm=0D=0A>=20going=20to=20make=20the=20FMP=20support=20conditional=20on=0D=
+=0A>=20EXYNOS_UFS_OPT_UFSPR_SECURE.=0D=0A>=20=0D=0ASMU=20controls=20the=20s=
+ecurity=20access=20aspect=20of=20the=20FMP,=20one=20can=20have=20a=20usecas=
+e=0D=0Awhere=20one=20wants=20to=20enable=20inline=20encryption=20using=20FM=
+P=20in=20a=20non-secure=0D=0Amode/world=20after=20a=20secure=20boot=20of=20=
+the=20system=0D=0Aand=20in=20another=20case,=20configure=20FMP=20in=20secur=
+e=20mode/world=20during=20secure=20boot.=0D=0AI=20am=20not=20sure=20how=20i=
+t=20is=20designed=20in=20gs101=20though.=0D=0ACurrently,=20exynos_ufs_confi=
+g_smu()=20just=20allows=20SMU=20registers=20modification=20by=0D=0Anon-secu=
+re=20world.=0D=0A=0D=0A>=20-=20Eric=0D=0A=0D=0A
