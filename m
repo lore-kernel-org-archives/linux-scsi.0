@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABC7B16C867;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABCBE16C868;
 	Thu, 11 Jul 2024 15:56:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720713398; cv=none; b=ZIx+nMuFksmpvn5DtcuQgu0dPl2Z88o/OFj6jcU+B38zVwv27LqZQHdRXsBqTn1OakO9bNKNIVrZ34oVMUUCzN5IRvZ0y+pf0eKXj+sfzuist+Oz/V7eUdHW1yYOSqOFOW1kAtXxpS3zksYibYdex30BZYxVJypHoHjRWoblbXo=
+	t=1720713398; cv=none; b=Tt9svEWJIJt8DvRH50iEO2Rxau3qQpEGyYb8YRqjr92x3Lq1Fma0+P+Se5aAakrCB5lDzAsZlztmASxBumg4S7SmGsdUzwY074G0PafOViwsMPdDDjer4jMMOS0qAHm/E9drtNZ1slpjwp06azLVf7B5rHN+MbOOCeTKALxLV9w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1720713398; c=relaxed/simple;
-	bh=SdBmAK4WejGwirzKCX1X04soOQzEtI+n5BTeCUSwg9s=;
+	bh=M0TaAX87c4MCbUoSFs6dg73+j59MTcKzey8Rq+WiyvA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Vxk5mYjKvSYdHvgqg8En0/l73teotLNAU5Yqj9ND+MxXb82e3MhAvJ3Y4sXCbGYCMFE43PIj+Pol1YzvaU6V+z7eE+8K9O+0ucVVUgVwat93OSNmHfWP5HXOwA+5IVP/Ke5Vhk/fRdiMZ4bQ2bUwoEORHXd+7H3yePvph4VGYeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WJCSzFNV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=KcrgHiK5Z7xiXlnVt0CjOZagRgt7J/jmbKO/B/FCllISxMpkezm1dfMdqKeqcvu9CZ7sE/P41lHTq8uYqrHKD/EBr92DPWqW78NNkqQWjD1WIjvaK4TzOZRlTOEtWhAVb3+W7rcPoCVWrnx0KQ3R8aySCWGYqnYeKMg7Fs3zk7M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=onY5Rxkc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WJCSzFNV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D7F2C4AF09;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="onY5Rxkc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51F13C4AF0A;
 	Thu, 11 Jul 2024 15:56:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1720713398;
-	bh=SdBmAK4WejGwirzKCX1X04soOQzEtI+n5BTeCUSwg9s=;
+	bh=M0TaAX87c4MCbUoSFs6dg73+j59MTcKzey8Rq+WiyvA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=WJCSzFNVhJ55+5nSyLmrtDjY+oVk/UlmeVmHMhf2W0FKD/HgQIQ8gdSL1Xn31i4De
-	 JPpw8uIbKsYuEeYDOSm2FMcSNOROX+0BrTvQ1/nqKvFi4L9AK9pI06GiHOElHrWSIX
-	 tftu9Wit07B0Kd5/dA3vKjp+TrjnQrhhCB9jYR8xOL4NJsS6MvHYPG895vKL62Gtem
-	 AGy69YdBsPEGws4EhVkAnreWhvPJ13E+d1Ptc/GMQ5XGuNQpARFmb7Q0kENsehFrEq
-	 Q4GXEqq/WsTFm9FPf6TQwn+KWKlGngtXYKqqneXUgDqcwX9N8QioNI01gq5w1/1+Ju
-	 yvIHlJyCj+trw==
+	b=onY5RxkciUWaPQ1zlEcEk2UYj/7PQOo2VWIVVuA616HGjjoEd2NV1g7v9WQjHSai0
+	 Z21OD947A7p3Kv0mBK8PuGbFcAy0uTC/nrZO+lSljWeWWLLlnEXgPFTDstmO/oQp1d
+	 ws8dr7NIy56yNdcAwJ1B8pI3gzcj7OzRNwOJlQy/G1J5BmLI2i/laFk2uEpqh012mw
+	 uKCxlv/cGV5zHTi0fPa56zKr0CBAs2SiMPaI9ci5cVp3j/ogcW4JcDaUH54vUtLdkc
+	 DX45Dk/txdzbXi8f0u/RLCmMcWlU/R0nWIGBK5LEwFhGl8Q5BXW/sEDt8HoRZN1M3q
+	 HTfPSYShxw5pA==
 From: Kees Cook <kees@kernel.org>
 To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
 Cc: Kees Cook <kees@kernel.org>,
@@ -41,9 +41,9 @@ Cc: Kees Cook <kees@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	linux-hardening@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/4] scsi: mpi3mr: struct mpi3_event_data_pcie_topology_change_list: Replace 1-element array with flexible array
-Date: Thu, 11 Jul 2024 08:56:34 -0700
-Message-Id: <20240711155637.3757036-2-kees@kernel.org>
+Subject: [PATCH 1/4] scsi: mpi3mr: struct mpi3_event_data_sas_topology_change_list: Replace 1-element array with flexible array
+Date: Thu, 11 Jul 2024 08:56:33 -0700
+Message-Id: <20240711155637.3757036-1-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240711155446.work.681-kees@kernel.org>
 References: <20240711155446.work.681-kees@kernel.org>
@@ -53,20 +53,20 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2512; i=kees@kernel.org; h=from:subject; bh=SdBmAK4WejGwirzKCX1X04soOQzEtI+n5BTeCUSwg9s=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBmkAC0GRmeTbFMiK4EnJ9ReQW+qUVn5p7EksGrX 9fFFpP2sEiJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZpAAtAAKCRCJcvTf3G3A Jr3ZD/9MS5VLvjrDTySiDG5PdGfa/Gu2iKahWUywl+qTltE785eeOnrWtOm0fKhqPgIxxhAgGXF llihInuUlVhH5l8d4UMVsrNabk7iSc3CCNrkgm4u4eW0m2xtrSRsJvfRoZvh7gpmyM+SGpeaAuu +PGymGgLtxEqRgOHFme+7ZNCFUkDvc4F0CcjOuPaS1yL+5QRahyzpPxbHe4P0anZmFvRCItZDO4 +h32JGXkwDA2ikqgjAMYT8u6WePlEIxFnMwQO8Rvsgu9nli9RuJVdosT79kTZr6i9t2auxSRP7h DE4DuSRY+T5V3NN30yO3JCSq5MsunFWAsgZaM1zURHgAcqQTPmBccdEnOwxvcpIzmcQSarzHkWm /plxqCU4SiRxRUX75ud4Z5DjlebFn+3YjxHVtxEkag76MHzOdObooigdTr+1kci3/gU47kcMKBH 8glhEi3LvnuvDAhV/yH52Ub14rigG8E7VqntZ51ElP01/+tTJSQTKj4+F4+a6ok5qtBIKFb1HgV OXa84h1AiBgUrkhgipQJhiNnpyYmlcso+0tmVnrZ6ne5E12qz6i0F5JlzKk6yfPp1c1vlfh5tMw CJ8P9uNkMtiOGDs9EzYqUAsoeEB8sRLfeQSPhsnQQ3Xgas6FFFyVO6d/78jGWQAWYWejjLg2LX9 F+nI//VyUrN/ajw==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2444; i=kees@kernel.org; h=from:subject; bh=M0TaAX87c4MCbUoSFs6dg73+j59MTcKzey8Rq+WiyvA=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBmkAC0gC9ATYg2hO2qEr19M3FsQgc+86AojP18P mAV5wRdhcqJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZpAAtAAKCRCJcvTf3G3A JloZD/9GJ8L0SXq31DHkhsrmpqYcNmSB2lbfugqa7XniwodAjc+qMcyEOuXSGVSTgpPyvxSNhnU tkYUeWR3RTcj9VLEyTfW3YklwkLAYbJmHkjxLSysBZI4bboOlkOo6LcKW2GNSbvqaC9i77vmjJD 6x3hgZTwytK4zvaLdIR/oxmElgBurkn1+tN0IfRCEaUhKLCrgC2MOPv8+i7MfgFIzTEr2ZIXFzw dql4OoulganUccyLpD0nDCOxsGk3jvOaWSaX+ddKcEZBiZwQcMBZUL3yFy1NmK2CerO0UypCDC1 xRxtw1jrwJao2MW1rJnWskrTenJiIuXXKz6kj7grJBWBNTH3yYn1uSVET9FkTk5CNBuYc+KOO9X YHXhBn930vYVv9Jx2of6yNuhwIORL20wlHQElw/63AEAbpEjAa3FVgkV9nCAluwUGXW7Q0JWY+c 2YnJPBpAPpPeXHVihCR0ziX1yQposA4gciNs0Ffs2S6PXHLKnY4oGtAhrRzAfhoSRAhvEHudVss ilkPfg6U0o2Q+XG9l0Wop+gjwaOcA043H6dDNAlOXeFAh9Xafx8PZdpHSUYIsPlm9sUFDuVk8aY IoO10IImrIYXHUASFYmCw7QJKF/f/oJ1SmYNmcCm+/yWjNIUiU2r7J5s01hcKgw/8RbfOOIamKe 9IpYccz++Io21sg==
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
 Replace the deprecated[1] use of a 1-element array in
-struct mpi3_event_data_pcie_topology_change_list with a modern
+struct mpi3_event_data_sas_topology_change_list with a modern
 flexible array.
 
-Additionally add __counted_by annotation since port_entry is only ever
+Additionally add __counted_by annotation since phy_entry is only ever
 accessed in loops controlled by num_entries. For example:
 
         for (i = 0; i < event_data->num_entries; i++) {
-                handle =
-                    le16_to_cpu(event_data->port_entry[i].attached_dev_handle);
+		...
+                handle = le16_to_cpu(event_data->phy_entry[i].attached_dev_handle);
 
 No binary differences are present after this conversion.
 
@@ -90,28 +90,28 @@ Cc: linux-hardening@vger.kernel.org
  1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-index ae74fccc65b8..c9fa0d69b75f 100644
+index 028784949873..ae74fccc65b8 100644
 --- a/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
 +++ b/drivers/scsi/mpi3mr/mpi/mpi30_ioc.h
-@@ -542,9 +542,6 @@ struct mpi3_event_data_pcie_enumeration {
- #define MPI3_EVENT_PCIE_ENUM_ES_MAX_SWITCHES_EXCEED         (0x40000000)
- #define MPI3_EVENT_PCIE_ENUM_ES_MAX_DEVICES_EXCEED          (0x20000000)
- #define MPI3_EVENT_PCIE_ENUM_ES_RESOURCES_EXHAUSTED         (0x10000000)
--#ifndef MPI3_EVENT_PCIE_TOPO_PORT_COUNT
--#define MPI3_EVENT_PCIE_TOPO_PORT_COUNT         (1)
+@@ -453,9 +453,6 @@ struct mpi3_event_data_sas_notify_primitive {
+ #define MPI3_EVENT_NOTIFY_PRIMITIVE_POWER_LOSS_EXPECTED   (0x02)
+ #define MPI3_EVENT_NOTIFY_PRIMITIVE_RESERVED1             (0x03)
+ #define MPI3_EVENT_NOTIFY_PRIMITIVE_RESERVED2             (0x04)
+-#ifndef MPI3_EVENT_SAS_TOPO_PHY_COUNT
+-#define MPI3_EVENT_SAS_TOPO_PHY_COUNT           (1)
 -#endif
- struct mpi3_event_pcie_topo_port_entry {
+ struct mpi3_event_sas_topo_phy_entry {
  	__le16             attached_dev_handle;
- 	u8                 port_status;
-@@ -585,7 +582,7 @@ struct mpi3_event_data_pcie_topology_change_list {
- 	u8                                     switch_status;
- 	u8                                     io_unit_port;
- 	__le32                                 reserved0c;
--	struct mpi3_event_pcie_topo_port_entry     port_entry[MPI3_EVENT_PCIE_TOPO_PORT_COUNT];
-+	struct mpi3_event_pcie_topo_port_entry     port_entry[] __counted_by(num_entries);
+ 	u8                 link_rate;
+@@ -496,7 +493,7 @@ struct mpi3_event_data_sas_topology_change_list {
+ 	u8                                 start_phy_num;
+ 	u8                                 exp_status;
+ 	u8                                 io_unit_port;
+-	struct mpi3_event_sas_topo_phy_entry   phy_entry[MPI3_EVENT_SAS_TOPO_PHY_COUNT];
++	struct mpi3_event_sas_topo_phy_entry   phy_entry[] __counted_by(num_entries);
  };
  
- #define MPI3_EVENT_PCIE_TOPO_SS_NO_PCIE_SWITCH          (0x00)
+ #define MPI3_EVENT_SAS_TOPO_ES_NO_EXPANDER              (0x00)
 -- 
 2.34.1
 
