@@ -1,48 +1,48 @@
 Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E42BC19E7F3
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jul 2024 19:47:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D59B19E807
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jul 2024 19:47:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.154.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720727256; cv=none; b=UsCPAmRUQGomWWcPdBOycSNryG5yba94WRFuHEPBDK08sK+huFxVOsm4Gx4BnXaP7UB0a/w8SD1RYCW0nBEGVErV9N+zQY6GkQ/zFyB6uoMR6O+NtNZ9+P08HuXNfTJM5GIWkJ+TNMFxJcQwuI2B6eIlmbIoogL6l62s8/MLR4Q=
+	t=1720727256; cv=none; b=iBalX+/ktScrfVKy7+BjMuNhYfsOB13Yd+V72eu/39/HN+lJgw754WUFDaBqD+JU98P1Z7L/M9xoEvol4oJWrF5TLJepD8vIbZ8TI21qidPpOlKuHsa9D1TRoq1v/eo92O579jNIOS83aUl7tYZYZZS4EyHbFMjiUfsWbE0d4oc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1720727256; c=relaxed/simple;
-	bh=hVNqxAR8I2y+Q2opg/Mi4CyC86GcRp8uzkOEikAOozo=;
+	bh=T8opBRnQWtky6d94FwuVLCh+2RQZaga0U1YCkD0MuQw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Pz+M1NJcMTBhMb/21nlMGraxe4vwwcZrpsj0kWNMuVS9m/jfiuCp7vMp7NaNow3yTVVoGPb1/ntHrcESAiE7jTEA1NomFfyGQZKb7vctyI8SYpT0O2DJuxkkJJq/HUjq7AiQX1f2q+ypFclOIKHcitSHD+4DVr5IJpO6Uu9Pd3c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=HwDpDySr; arc=none smtp.client-ip=68.232.154.123
+	 MIME-Version:Content-Type; b=pdxzSGfDbIFzERJAwp/eIgH/Agz1oOye7q3p5eks1ZfhiscC628Ab+9h5dpRv4Fgk4ayFKG3ZMah8ucDxe6MloMb673h2zMONXKq0tUc6LEjWl0spfjy9b0M40vr2DPBpJBrK2GlEku7fawSxu2jv0/2OUZbzeB4jdjKYeteu9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=MUwjxtgo; arc=none smtp.client-ip=68.232.154.123
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="HwDpDySr"
+	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="MUwjxtgo"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1720727253; x=1752263253;
+  t=1720727254; x=1752263254;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=hVNqxAR8I2y+Q2opg/Mi4CyC86GcRp8uzkOEikAOozo=;
-  b=HwDpDySrqgk8hBVuX8JmDLYdccuZipHKLkEX0zWXgbJLRVJlPOKT9B0L
-   sSvtXsg5EqorViaf3Y+uNpxu9pwtvje3o/gxzSjCGRtoJF7swmXw4snpo
-   eHfF7NVRRn/qIi8G07FCxH/esyTPIffLL8xeOp/AYJHK/YrO6SoxgCsZx
-   RxwMWvluLv2SoCT3wkvH1/vt+nQjetmXoeFRZDXhGECUPN5S3UMTL7x8G
-   DrUjyE0d9pHz8naQinIgkE/rXeB9qGyQALvAPC0mq2n1HTgWNcoTIKs0a
-   M0WG7Hy5h/2qQaei1pRf4fY2G8SmJrZ1qbP8VH3dBNphJ4shZoEYgQtw8
-   A==;
+  bh=T8opBRnQWtky6d94FwuVLCh+2RQZaga0U1YCkD0MuQw=;
+  b=MUwjxtgoVdgZ0NtPDbVVoraONdpaOk6gXAbAF3tgt1jflC2VReMaYdhd
+   o89RpHit2qKEvrijWmY6YrBkxPlbdjS5asLzv9lsz0plN2KgLd6t7hkaQ
+   Wk7W7y/qsv6wOxC9slyWITqUVmwDEzTj4S8iGGHS/8BcOxUozhSGOouHi
+   /JipFJiq8dX9FF3Gh4GgaLXyHULhfgb/ys9GemjqHpH4c7/WEgje+rfoN
+   nB+4sBkJKjbU8mrXLx9QfEM+aVgYwnbwFc8v2APfng0CKBDZQOXOHPV+d
+   GKdOF4xyA+Y4WmXDnnJidow1Nz7NKWF9BXXP5ljWqRYYoiAxDPHSEM+s/
+   w==;
 X-CSE-ConnectionGUID: lpLBJxwkSjifens90ReNAw==
-X-CSE-MsgGUID: 561ybA73TDqg5ml6O3tMMw==
+X-CSE-MsgGUID: m35oC3sXT5CZ6AN98jqtWA==
 X-IronPort-AV: E=Sophos;i="6.09,201,1716274800"; 
-   d="scan'208";a="29106953"
+   d="scan'208";a="29106954"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
   by esa4.microchip.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Jul 2024 12:47:29 -0700
 Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
  chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Thu, 11 Jul 2024 12:47:06 -0700
+ 15.1.2507.35; Thu, 11 Jul 2024 12:47:07 -0700
 Received: from brunhilda.pdev.net (10.10.85.11) by chn-vm-ex02.mchp-main.com
  (10.10.85.144) with Microsoft SMTP Server id 15.1.2507.35 via Frontend
- Transport; Thu, 11 Jul 2024 12:47:05 -0700
+ Transport; Thu, 11 Jul 2024 12:47:06 -0700
 From: Don Brace <don.brace@microchip.com>
 To: <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
 	<scott.teel@microchip.com>, <Justin.Lindley@microchip.com>,
@@ -54,9 +54,9 @@ To: <don.brace@microchip.com>, <Kevin.Barnett@microchip.com>,
 	Martin Petersen <martin.petersen@oracle.com>, <joseph.szczypek@hpe.com>,
 	<POSWALD@suse.com>
 CC: <linux-scsi@vger.kernel.org>
-Subject: [PATCH 1/5] smartpqi: add new controller PCI IDs
-Date: Thu, 11 Jul 2024 14:47:00 -0500
-Message-ID: <20240711194704.982400-2-don.brace@microchip.com>
+Subject: [PATCH 2/5] smartpqi: improve accuracy/performance of raid-bypass-counter.
+Date: Thu, 11 Jul 2024 14:47:01 -0500
+Message-ID: <20240711194704.982400-3-don.brace@microchip.com>
 X-Mailer: git-send-email 2.45.2.827.g557ae147e6
 In-Reply-To: <20240711194704.982400-1-don.brace@microchip.com>
 References: <20240711194704.982400-1-don.brace@microchip.com>
@@ -70,188 +70,125 @@ Organization: Microchip Technology Inc.
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 
-From: David Strahan <David.Strahan@microchip.com>
+From: Kevin Barnett <kevin.barnett@microchip.com>
 
-All PCI ID entries in Hex.
+The original implementation of this counter used an atomic variable.
+However, this implementation negatively impacted performance in some
+configurations.
 
-Add new inagile pci ids:
-                                             VID  / DID  / SVID / SDID
-                                             ----   ----   ----   ----
-            SMART-HBA 8242-24i               9005 / 028f / 1ff9 / 0045
-            RAID 8236-16i                    9005 / 028f / 1ff9 / 0046
-            RAID 8240-24i                    9005 / 028f / 1ff9 / 0047
-            SMART-HBA 8238-16i               9005 / 028f / 1ff9 / 0048
-            PM8222-SHBA                      9005 / 028f / 1ff9 / 004a
-            RAID PM8204-2GB                  9005 / 028f / 1ff9 / 004b
-            RAID PM8204-4GB                  9005 / 028f / 1ff9 / 004c
-            PM8222-HBA                       9005 / 028f / 1ff9 / 004f
-            MT0804M6R                        9005 / 028f / 1ff9 / 0051
-            MT0801M6E                        9005 / 028f / 1ff9 / 0052
-            MT0808M6R                        9005 / 028f / 1ff9 / 0053
-            MT0800M6H                        9005 / 028f / 1ff9 / 0054
-            RS0800M5H24i                     9005 / 028f / 1ff9 / 006b
-            RS0800M5E8i                      9005 / 028f / 1ff9 / 006c
-            RS0800M5H8i                      9005 / 028f / 1ff9 / 006d
-            RS0804M5R16i                     9005 / 028f / 1ff9 / 006f
-            RS0800M5E24i                     9005 / 028f / 1ff9 / 0070
-            RS0800M5H16i                     9005 / 028f / 1ff9 / 0071
-            RS0800M5E16i                     9005 / 028f / 1ff9 / 0072
-            RT0800M7E                        9005 / 028f / 1ff9 / 0086
-            RT0800M7H                        9005 / 028f / 1ff9 / 0087
-            RT0804M7R                        9005 / 028f / 1ff9 / 0088
-            RT0808M7R                        9005 / 028f / 1ff9 / 0089
-            RT1608M6R16i                     9005 / 028f / 1ff9 / 00a1
-
-Add new h3c pci_id:
-                                             VID  / DID  / SVID / SDID
-                                             ----   ----   ----   ----
-            UN RAID P4408-Mr-2               9005 / 028f / 193d / 1110
-
-Add new powerleader pci ids:
-                                             VID  / DID  / SVID / SDID
-                                             ----   ----   ----   ----
-            PL SmartROC PM8204               9005 / 028f / 1f3a / 0104
-
----
+Switch to using per_cpu variables.
 
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
 Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
-Signed-off-by: David Strahan <David.Strahan@microchip.com>
+Co-developed-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 104 ++++++++++++++++++++++++++
- 1 file changed, 104 insertions(+)
+ drivers/scsi/smartpqi/smartpqi.h      |  2 +-
+ drivers/scsi/smartpqi/smartpqi_init.c | 30 +++++++++++++++++++++++----
+ 2 files changed, 27 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index cdedc271857a..023fbce04e7a 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -1158,7 +1158,7 @@ struct pqi_scsi_dev {
+ 
+ 	struct pqi_stream_data stream_data[NUM_STREAMS_PER_LUN];
+ 	atomic_t scsi_cmds_outstanding[PQI_MAX_LUNS_PER_DEVICE];
+-	unsigned int raid_bypass_cnt;
++	u64 __percpu *raid_bypass_cnt;
+ 
+ 	struct pqi_tmf_work tmf_work[PQI_MAX_LUNS_PER_DEVICE];
+ };
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 24c7cb285dca..9166dfa1fedc 100644
+index 9166dfa1fedc..eaebe3cc00aa 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -9472,6 +9472,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x193d, 0x110b)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x193d, 0x1110)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x193d, 0x8460)
-@@ -9588,6 +9592,14 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1bd4, 0x0089)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x00a1)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1f3a, 0x0104)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x19e5, 0xd227)
-@@ -10180,6 +10192,98 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1137, 0x02fa)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0045)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0046)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0047)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0048)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x004a)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x004b)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x004c)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x004f)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0051)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0052)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0053)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0054)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x006b)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x006c)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x006d)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x006f)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0070)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0071)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0072)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0086)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0087)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0088)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1ff9, 0x0089)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 				0x1e93, 0x1000)
+@@ -1508,6 +1508,12 @@ static int pqi_get_raid_map(struct pqi_ctrl_info *ctrl_info,
+ 	if (rc)
+ 		goto error;
+ 
++	device->raid_bypass_cnt = alloc_percpu(u64);
++	if (!device->raid_bypass_cnt) {
++		rc = -ENOMEM;
++		goto error;
++	}
++
+ 	device->raid_map = raid_map;
+ 
+ 	return 0;
+@@ -2099,6 +2105,10 @@ static void pqi_scsi_update_device(struct pqi_ctrl_info *ctrl_info,
+ 				/* To prevent this from being freed later. */
+ 				new_device->raid_map = NULL;
+ 			}
++			if (new_device->raid_bypass_enabled && existing_device->raid_bypass_cnt == NULL) {
++				existing_device->raid_bypass_cnt = new_device->raid_bypass_cnt;
++				new_device->raid_bypass_cnt = NULL;
++			}
+ 			existing_device->raid_bypass_configured = new_device->raid_bypass_configured;
+ 			existing_device->raid_bypass_enabled = new_device->raid_bypass_enabled;
+ 		}
+@@ -2121,6 +2131,7 @@ static void pqi_scsi_update_device(struct pqi_ctrl_info *ctrl_info,
+ static inline void pqi_free_device(struct pqi_scsi_dev *device)
+ {
+ 	if (device) {
++		free_percpu(device->raid_bypass_cnt);
+ 		kfree(device->raid_map);
+ 		kfree(device);
+ 	}
+@@ -6007,6 +6018,7 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scm
+ 	u16 hw_queue;
+ 	struct pqi_queue_group *queue_group;
+ 	bool raid_bypassed;
++	u64 *raid_bypass_cnt;
+ 	u8 lun;
+ 
+ 	scmd->host_scribble = PQI_NO_COMPLETION;
+@@ -6053,7 +6065,8 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scm
+ 			rc = pqi_raid_bypass_submit_scsi_cmd(ctrl_info, device, scmd, queue_group);
+ 			if (rc == 0 || rc == SCSI_MLQUEUE_HOST_BUSY) {
+ 				raid_bypassed = true;
+-				device->raid_bypass_cnt++;
++				raid_bypass_cnt = per_cpu_ptr(device->raid_bypass_cnt, smp_processor_id());
++				(*raid_bypass_cnt)++;
+ 			}
+ 		}
+ 		if (!raid_bypassed)
+@@ -7350,7 +7363,9 @@ static ssize_t pqi_raid_bypass_cnt_show(struct device *dev,
+ 	struct scsi_device *sdev;
+ 	struct pqi_scsi_dev *device;
+ 	unsigned long flags;
+-	unsigned int raid_bypass_cnt;
++	u64 raid_bypass_cnt;
++	int cpu;
++	u64 *per_cpu_bypass_cnt_ptr;
+ 
+ 	sdev = to_scsi_device(dev);
+ 	ctrl_info = shost_to_hba(sdev->host);
+@@ -7366,11 +7381,18 @@ static ssize_t pqi_raid_bypass_cnt_show(struct device *dev,
+ 		return -ENODEV;
+ 	}
+ 
+-	raid_bypass_cnt = device->raid_bypass_cnt;
++	raid_bypass_cnt = 0;
++
++	if (device->raid_bypass_cnt) {
++		for_each_online_cpu(cpu) {
++			per_cpu_bypass_cnt_ptr = per_cpu_ptr(device->raid_bypass_cnt, cpu);
++			raid_bypass_cnt += *per_cpu_bypass_cnt_ptr;
++		}
++	}
+ 
+ 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+ 
+-	return scnprintf(buffer, PAGE_SIZE, "0x%x\n", raid_bypass_cnt);
++	return scnprintf(buffer, PAGE_SIZE, "0x%llx\n", raid_bypass_cnt);
+ }
+ 
+ static ssize_t pqi_sas_ncq_prio_enable_show(struct device *dev,
 -- 
 2.45.2.827.g557ae147e6
 
