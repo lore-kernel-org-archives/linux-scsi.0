@@ -1,176 +1,227 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3147A219F9;
-	Wed, 10 Jul 2024 22:27:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720650476; cv=none; b=OsBWt+vYHce9bYQWnzGyBnvRsa/i/C++/Vz7M83LCJlc92byYZjzBCRESfbOJ0SU0jQ8vJSaXlEE4HBKx9/RqqT8Md6Ywtty2yrmsjmlxLuGOCKpdwsNn2StwqZgw8fadR7chOKYwEtgPdQgQd3eINtOO7azUlx/3K5cq6WBu3A=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720650476; c=relaxed/simple;
-	bh=sDjrlm87jTQ5dHlmWNVG/Mqu/ru5Bck/do57WLsHjMs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DjqrksQd+75rxtbypRaa3z3+dji476XZPJLwnMOzZNFGhC37VdwCfy3Gg+6zU5GTRYSAE0sri7Bp+yAfJ6m9OV3iYR38+l78NgHCjXnEOZclfdk9ZGtl5ea20ZreVTpDfT98w1XZgKkhu9kxMI7mey7dAWe2+VZXVJLz/+UNWaY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VhgIZlj+; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3227C383;
+	Thu, 11 Jul 2024 00:42:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1720658560; cv=fail; b=HxaEBvcFPuRy3TO8fP716IVn+e98ods1IAwvQFaLy4sFiG015XSO/Z4ITY+5BXdADec/VNBRk12IodGK4Szn2pOaE7QWRi8kbf6+IZaEkjEWGgThJQgyi+3m457MIpprGNozBqdfMOKa35dqdEM6n9buv2K4CZ6j5A5xlesbHuI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1720658560; c=relaxed/simple;
+	bh=rhtt82WX3UOzDTBq0GG7sHPqgZu1ZFZKaBksZ5dWAb0=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=qkZq/rlafMQGbzpi/u+iG5qGXIPuhaY9nKX3IDyo2wSxZ1xEEesO6UjBYQcnQ3o5X4JeHq6PZPnMTNA8RgAZ0Ft8iSZa2p/P+OKqK2vhKdoM73efKjOFrWp0H1bgd2BOq9mMJnpUoyw3rqbn2zqSBH8JCgTFBaXF6jcXejm8icI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Q0cpsnGr; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=cM73MFjZ; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VhgIZlj+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87466C32781;
-	Wed, 10 Jul 2024 22:27:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1720650475;
-	bh=sDjrlm87jTQ5dHlmWNVG/Mqu/ru5Bck/do57WLsHjMs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VhgIZlj+fJixHRwMyCaZtoc8pVnNdnaV0xOZESQzYGSqbDKkNMbzTD3WBcuSLg24E
-	 dsM0eIZa2UYVk9/ko7dp5TcU0EzK77rKToYtRjGquN4N81HVCF/fkA2Aq77Yu1sJrQ
-	 rtodP3t3IiLKkEk8OUP9dM7vvO0LkJRiUdgCajXnvE7ti+mLGu0IPr1y4zoMMQJF6m
-	 AjivBMOemlk5KtmeHSweMc5eQ36GxvlRencOFiPPpdx5wAxaYrrvP3hdP+Wrdd3E8e
-	 2lkMvm37gbQVjH2jnge57o+DKAFjKUl/EPNgH9iJpJ2dfggX+bYNKARpj3h76jvIzv
-	 3WCoMRZ1q7yNg==
-Date: Wed, 10 Jul 2024 22:27:54 +0000
-From: Eric Biggers <ebiggers@kernel.org>
-To: Alim Akhtar <alim.akhtar@samsung.com>
-Cc: 'Peter Griffin' <peter.griffin@linaro.org>, linux-scsi@vger.kernel.org,
-	linux-samsung-soc@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-	'Avri Altman' <avri.altman@wdc.com>,
-	'Bart Van Assche' <bvanassche@acm.org>,
-	"'Martin K . Petersen'" <martin.petersen@oracle.com>,
-	=?iso-8859-1?Q?'Andr=E9?= Draszik' <andre.draszik@linaro.org>,
-	'William McVicker' <willmcvicker@google.com>
-Subject: Re: [PATCH v2 6/6] scsi: ufs: exynos: Add support for Flash Memory
- Protector (FMP)
-Message-ID: <20240710222754.GA1120171@google.com>
-References: <20240702072510.248272-1-ebiggers@kernel.org>
- <20240702072510.248272-7-ebiggers@kernel.org>
- <CADrjBPoWVq-eu4Wa6_hrkk067tnZGC82UCJDyjSRGoG254w6vg@mail.gmail.com>
- <20240708202630.GA47857@sol.localdomain>
- <CGME20240708234916epcas5p1c94255e4c8c77e2929d62144e2277fc8@epcas5p1.samsung.com>
- <20240708234911.GA1730@sol.localdomain>
- <017e01dad28d$68911050$39b330f0$@samsung.com>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Q0cpsnGr";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="cM73MFjZ"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46AFxXaH017491;
+	Thu, 11 Jul 2024 00:42:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	message-id:date:subject:to:cc:references:from:in-reply-to
+	:content-type:content-transfer-encoding:mime-version; s=
+	corp-2023-11-20; bh=X0nQpgn3BiC/84VpsDxWx8rv2HYOnjKy13bOunWMNgY=; b=
+	Q0cpsnGr+f72XQ7ikD2LlFNU0oeJf65R1sslhVwne6aEfSE9+kogquag76YKcduG
+	V0Z2y/QuSfQoRxbe7Cu1suIym6SKl/SIFXuIdqjFNx8xR3KFuWg5X5Juon0tG6xe
+	uRrGZ7WuRTRYctZEG+XXOpYeb6pxrDmOCRziMKIxNXkoYXMG8autqqoI/+QvGW0g
+	4icYhHNN+qwkyK++zaOPCGREDlTr2hmSXIAasDpvz+0om0ht9muLEMDy0bCCJU2n
+	ITkB0kBAqf+eaPFmP+G8dY5K4VHBvRzRqUwv71IsdxTuq+DZDFhmjXYsazv3vmbq
+	ZBHrlkhF5/Uz0qD3F50V8A==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 406wybrka6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 11 Jul 2024 00:42:29 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 46AMFord010924;
+	Thu, 11 Jul 2024 00:42:29 GMT
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2169.outbound.protection.outlook.com [104.47.57.169])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 409vv52yjq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 11 Jul 2024 00:42:29 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Td1pjnKis35ZSUVPHqMvfO5g255OOxJE24rM1Jd+i5ylv/GYmbkpNSSVV7Fu0ZZkRO2YxDMMSlsMYwbH7RmOce0Z1YV6EMBYDKyqyV2w3CimtxhAGYfLNwt+RZB+I/HUDaKFAf2WyrHIJ0mk7SvaOJesmM+r93T4G8Ug+HAy5kqQYjC1b4a9CTrigs3N7d/Gg1N8deaqaRoytnz/a1dnmYPTmHLzeI9+qDYRl5XGIE8cAWVL4cv4AHliOgDPQz9lKxbBlrzEoOGRNut8wNDcBBi83OSJlJP7g+ee5TDW1hFwkt42rwAIFlOWFeicI+ytKSmxQX4Em7W9H9kJ5M0eJQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=X0nQpgn3BiC/84VpsDxWx8rv2HYOnjKy13bOunWMNgY=;
+ b=cYv13brZxHceDAs3mIq7xBe/ExZj08gOslIBSy625T/vKUlc5dCcVye99CcZIhnE/qrWGAr8tq9hPqGUD2CFAiqFIhmqie7idBDmgyatMkKyBA9knqfefW5r3DScWVl1W4cvMpCoK1jeY/Vikc/iLm9DjHNxlJ7CLhmxzb4fi26WHTp6w56IoTw9hTntkN6Agu6n5MlhjfRpyUO0B38P9GOD56y1zKkltwnQnGD/NeSH4m0YwWD+Hwy/PdW78LvfAapuEw1WThRYbloY3iQOMuZnp0t+FFiShstDD7+7IOPquaMi3Y4Mi6dtpGtcPhfFyp7vGVLjPPkbMtHLou5YbA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=X0nQpgn3BiC/84VpsDxWx8rv2HYOnjKy13bOunWMNgY=;
+ b=cM73MFjZeBU4q920CV+Hu485n2QV0+sw1aXP9koKFe8XnMkqN51lXd1cfjBYmFjgxq/OM9fKT5OwbfnzPV/bKCv/QxHs8MhcaOyF/ncc2h14d460c3kx2LPqC/gZ7/RBKHH+1vh6sMRlFlOyCXTJGlZw7HERSzMNmJCkLQ/dtu0=
+Received: from CH3PR10MB7959.namprd10.prod.outlook.com (2603:10b6:610:1c1::12)
+ by SJ0PR10MB5664.namprd10.prod.outlook.com (2603:10b6:a03:3e2::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7741.23; Thu, 11 Jul
+ 2024 00:42:27 +0000
+Received: from CH3PR10MB7959.namprd10.prod.outlook.com
+ ([fe80::2c43:cb5d:a02c:dbc2]) by CH3PR10MB7959.namprd10.prod.outlook.com
+ ([fe80::2c43:cb5d:a02c:dbc2%3]) with mapi id 15.20.7741.033; Thu, 11 Jul 2024
+ 00:42:27 +0000
+Message-ID: <72a37e4f-29fc-4859-9f4f-d40adf2e67a9@oracle.com>
+Date: Wed, 10 Jul 2024 17:42:24 -0700
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: qla2xxx: Convert comma to semicolon
+To: Chen Ni <nichen@iscas.ac.cn>, njavali@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240710032423.2003805-1-nichen@iscas.ac.cn>
+Content-Language: en-US
+From: Himanshu Madhani <himanshu.madhani@oracle.com>
+Organization: Oracle America Inc
+In-Reply-To: <20240710032423.2003805-1-nichen@iscas.ac.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: BY5PR04CA0004.namprd04.prod.outlook.com
+ (2603:10b6:a03:1d0::14) To CH3PR10MB7959.namprd10.prod.outlook.com
+ (2603:10b6:610:1c1::12)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <017e01dad28d$68911050$39b330f0$@samsung.com>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH3PR10MB7959:EE_|SJ0PR10MB5664:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9ec7eec2-d1f9-4aa2-dd78-08dca1425647
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
+X-Microsoft-Antispam-Message-Info: 
+	=?utf-8?B?czBNVGFGZUZFek1hZHNhR2laeEEwWmFLaTlsNlB0ZVdDN3lRTHNnbmdHdnJp?=
+ =?utf-8?B?VVNoYXFUZm1LOW9Xano0SDA3czFUWDNTOEhkcU0wcEtEVDg0V1FpNXkwaDBr?=
+ =?utf-8?B?M2taNVJaNnZmYjBQcWFkT2JKNUY4Nkx6WjBXR2VndCtJRnBCaFhET2Z6akQ4?=
+ =?utf-8?B?dEJXeUo3cUNSbUZZbnlwNzljWkNBMmdSRkxyRUV0QXBIM3dhdWlPMkNXSDhr?=
+ =?utf-8?B?QVF6TGZadHdDOW8yRStmK255alFJYkI0ZjhjclhqdnlMUFlhQ2hWaUl4T1Zw?=
+ =?utf-8?B?TFlVWThTYlE1cTBPcWJMTE1EQlVEdnpZb0o1WjNIa1lkb0txR0MxRGp4ZTdC?=
+ =?utf-8?B?Tm44WGU5TjJ4OG5mcExaL0ZIc1Nlc29ISVNtdjhGNTdlMVFrYi82VVZZaU5t?=
+ =?utf-8?B?OWs1Z0lnMUNubVdlRmNkL1AvclNnSGFNbFI2WWp0dFVYNy9zOTFMdUdrOGRu?=
+ =?utf-8?B?UmxFTjM1QUFtT1J2STFSU2VtbUNXQktoYVFad0g5bnh3cFR1WnRYVzIreGls?=
+ =?utf-8?B?THRzcE8rZ1hhc0NxSkFobGhQSjNYOTNuT0VXeG5INGxmRmVSSzBCbEgrLzZK?=
+ =?utf-8?B?SnhJanhjUEVkazh0UEhzZ1FHQ0o5YVV0UFZ5bHRESVZIYmhFTEkxYW55dFgx?=
+ =?utf-8?B?ODhHbEdNT1FDOXU2QjJBTXdxYTc2ZHVMMGpDc2RocmtCemtuWmRTaFlhVHFl?=
+ =?utf-8?B?TE5KV1FCSTdEUWhycEhTdVR3UXgrM20xT1Vib201eEtaNjlOUm9iVnp6STdD?=
+ =?utf-8?B?UmtOTUtUY3huTXU0c0xqUmRJWG94Sm84THhXY25JR3dxS0ZyVHZrVHFLcWZs?=
+ =?utf-8?B?QUlRZHZJcWx1ckFzOElCMndoOWxkb1VURk9ORkxGRHhHVlphRGlRend4MHFU?=
+ =?utf-8?B?UUF5R1J1bGVvdUYwS0JlQlZBVVdzODlDdXpjZUlzbUVFM0dQYWFuRHB3aXY2?=
+ =?utf-8?B?UnVxVEdFQWRHRlg4SkVyVGZUeFo5Rm9oRS81dW5lNkkzYUZNZ2hzQ1hjTDNZ?=
+ =?utf-8?B?WEt3RUJ0Z2Z5M2l3Y2Rib0szanRRV2FRbjJBUzZRaEk4M1pkUEwzbE95QVJU?=
+ =?utf-8?B?UG43NXEzeE9hWjdRS2RFZWs1SU5Jb1VmUWQxT0d4cTY1SlhtY0NpaGlaSzhT?=
+ =?utf-8?B?bjhOQnRzZDFhVGhTL2VoMnRxQVA0ejRxQVBpR2wzZzd2cEdmeUlIOWU0NmJW?=
+ =?utf-8?B?dDBNcWVETTkvLzlkRmtZd1UvYkRjMVcxL0lUOHhiT1pRUVFKbWQ4RmhTbHB2?=
+ =?utf-8?B?Sm5LVDVweVR2ZmdLSDR5QStpaVdTUzNFdUd5Y0E5SUR1SWpyeUlUd05UbWlw?=
+ =?utf-8?B?UEhnR1FqeUNlZ2dtbTJkSXV3aUwxV2E0a2JTMVVwMm40c2x0NmZIaTVzNFlH?=
+ =?utf-8?B?RlFpbVlBZmJ0N2pHNldxd25UbXpwcWg1M0txM3dMZzM2b2tnc1llSDBHM0pk?=
+ =?utf-8?B?Tm9QRWFUcjg5Y2FYLzNOQVZWRmViOGZzZFgvWDRTQVlXUmFXVFBUa0MrWFVr?=
+ =?utf-8?B?RjBWRGV2YlFjMjNyWjdsRGlldzdiZFcxa3d6Zm9ScEN3RTF6WnVtbGFwclgr?=
+ =?utf-8?B?N3gxMUlPd2wrMitjQUZIVllzdTBnNWpTREd2akZxZkJWeERnM2xaZnlsNVlv?=
+ =?utf-8?B?SHRoTTR2MlVXZ3VyUktUVkZjVExkb0RiM3QraWt3Z1pyeEc2VW9za2l6M09r?=
+ =?utf-8?B?UWtjaXl2cXRGME9nMStWTkxHZk5VWUM3SmdLV3ZXV2JXaVI0d1lpd0xwZUht?=
+ =?utf-8?B?d21VWkkvQTJSRDhET0FudVVVeFArTHRNQ0xES1QrcXR5ZXlWeTJSREJZbjB4?=
+ =?utf-8?B?KzBxVml6a3VRb3ZlSzZGZz09?=
+X-Forefront-Antispam-Report: 
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR10MB7959.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: 
+	=?utf-8?B?OUQwbldnY1M1Z29vUlEyQkNwdGFkc3lYd3JjcU5ZMVJCTkxuakRkUnk3L0d6?=
+ =?utf-8?B?eUF2V0UvdEdwdzBDdG5xVnV3bHdqT2xzV2ZkQmJTWnE0NENHd2o1YVh2YlJR?=
+ =?utf-8?B?TkpOdnBBUFdWdnUxZXlSWllIRWV3SmZ3b3hVU2ZYd3J2VU5wYmZSdXdnbUlt?=
+ =?utf-8?B?ak5XRk9xcEcyNURQVlZtU2NhYmFjdzN1YkZTOGtLZ2ppVDdWZENVY1VNNWdW?=
+ =?utf-8?B?TEx1V0ZBOThDNW9iYlNWbWhiRmNjeVNOR3pmNkxOeS9BT0ZnaTI5aDJRMjRF?=
+ =?utf-8?B?ZnpwMEVZbHhmTkZ5TFBHUjdhYmVsMnZ4c3RHaHY4R2xpSTcveWlXRTVPZDZs?=
+ =?utf-8?B?ZWxVMCtIMERMd0ZMRmk0VDkzdXhwM05pTXdrZ0s5cGhBZ1ZqQ29BZHMwYVVk?=
+ =?utf-8?B?anJneitVQ2IzZjYyQ1l6TzNuQVBjNjU5bmZYYlB4emVLd3I1cEp0cnhFcjZ3?=
+ =?utf-8?B?K2Q4ODN3NThsU2R4ak1PWlRDOWRpcmVLTXE4SmFveVRLUXB1enlFQy9mZUpS?=
+ =?utf-8?B?WGVlSXYxcW1scUQ3N1p2ZTg2RFFoa0d6QjlDd0gvTlpDdWdLN0h4Wk5XUmZE?=
+ =?utf-8?B?cFMzM0JVbnFCU1IxZ3lVZDNaNWxnWE1qZ2NYandIYVd4OEdnZUtEeDFjU2h6?=
+ =?utf-8?B?ZmxVVjJmVjN3OGkrQ1QwY01FL2JqTVBhZXVldlVJbXNSc1Zsc3A1dkpZMTk2?=
+ =?utf-8?B?dzNnejZ4aStna0JHZEw2RTRqdzBsM2wrZ21zL3FwM1ZvRm5iYllJWXJqS0xJ?=
+ =?utf-8?B?NVRkeE1ickt4ZCt2OGRHUXRmTnpTaDhUcXdHdE9JdFB6RXVkT0xhd0xDMlA3?=
+ =?utf-8?B?QU1hSitRZDJtTTBHQW02a2ROa1JLaEJudkQzZ1VTbHhpTjUwSUhMV1lWNEVj?=
+ =?utf-8?B?SVQ2dS80eC8zTFVxaEpxbjhpcWZreEh2Z2NhMXZUU0FsQ1Z2eEhJV290TEhx?=
+ =?utf-8?B?amxUM3lrUjl5eHhrU3JzUWZST0NaWERSTXltVjhOZnREWFB5QVNCei9jSlRY?=
+ =?utf-8?B?T1FjSTV4NFJBK0tnT0ZGNUxjZUMzbENlZm9najB4TWxiMlFwQk9ka0dqY1dj?=
+ =?utf-8?B?VlJjalhIb1FuV2JVYWppZHRJdUVTYVZET0xUYVlrNTZpc1ZJWER6OUVrSEZO?=
+ =?utf-8?B?WEp5dWpJeEhXaHZyVGFSbHB2UURDeUlsL3AvSzFSbW9vWk1PNm9tRWg1Slp2?=
+ =?utf-8?B?SlVWeTJLRWpZbmdDTnNQT0JBMFE0b2NNTEhEV01hUUJhSHVXSVV0VzlWbHh5?=
+ =?utf-8?B?cFoxWE1xdDM1blovM3V2RncrNXRJeWowSDdqd3IzazJzaWo0eitSMkpDak5X?=
+ =?utf-8?B?VytnUFFwWDkyYmZwQ2N3RU1zWHgzYmYxNXRzd3hSQXpJQmI1TVlUQnVPRlEr?=
+ =?utf-8?B?Q0g3YjFWMmNpSTVHeHkvejF0UXgrbytsbHowK0sxWHhlWVVzeU85bDhlMHJl?=
+ =?utf-8?B?QktJbVhoWWFKdDNkOWJoRXNrTHdvQ1U5QkVueUdJWk9VZjZrZUxoUGhiTHBM?=
+ =?utf-8?B?VGNDRCtrd3FjdTRhVndXdTVXYVF2elJlUEdBdjlxTGJrdlVkSU9wcHJaZnlP?=
+ =?utf-8?B?dE1wRkpnWHpLOGMxUTlhMytUbWR2ZTN3U0tPNWw0RlpZNUZRbnJSR20rSmx6?=
+ =?utf-8?B?ODVxNi8zOEorN2ZRTk5zU1pEWUVua3NaWWF3S2E2a2dSeDJXTWRadzVPSmZl?=
+ =?utf-8?B?cEdXYjVMb2xDaTRpTG5iQ0RDaEREK1JlQTk5MWdWRVBGRnRVS09LQzFzSlVR?=
+ =?utf-8?B?WFl1Y1F1MTlwN0U0TDhLL2dnSVd2d2wraFhGcGIxSDkxaFoyNDNFY0ljMFFQ?=
+ =?utf-8?B?MWphcWVnT0ZQa0hiUVpLSFlyZCtNeHF0T1U5UkpBYTdOcjV6MmV2YUg3ZFFD?=
+ =?utf-8?B?WithakozOE1iSW5vNWRNY3pEYkx2YlZ5TW4wbU5KRFhGSGxzRzZoVEpDaEhV?=
+ =?utf-8?B?U0tJcFBVNVlSR0plMDYxSXpXSjk4dFZ6QjlVSU9SYlEzZElNVmUwTFZVNXBp?=
+ =?utf-8?B?UEhrQlovcHBGSStxZGpTTUxQN0ZkZi82WVhKVHBVK0lWVkJjVlBKMUg0ZThW?=
+ =?utf-8?B?azcwd3pTSExCYXpCbXJXZ3RoaWs3c1d0UDBVMWdSNFhDMzUwaE9yeUlXUDJr?=
+ =?utf-8?B?alZIa2gwT1dUY2QrVmk0aUlsenBudHJhSjBLQ1I5L1JhOWovci9vN3NCRHhR?=
+ =?utf-8?B?dkE9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
+	rKBlf22kcwrkkODY9+whAVll2joImItYVuqFVptBpu4qIp2D/Jy6T99EkR7GXmJYhw8M4OPXY3HRIKqP6K5N0TBs4CxvwRwcLBxNFclnppzcSRHrsOsuffIN/HGqUbqXu8Dqk0UqCm1d5AKMchwoWcVtvq2VEQdxJ/koKJ/ueXU37ySB3sIt/Fic3mTI+5Z2n8E13M2w0d4c7DFkJfPW8rW7gbeHIulxFq9WoKnoxOQIEagfQXaHwDWnnmlXDOhm1MPC9UgNgaQIxJftTG0O1n//+vJLJaqsDVtoCWV6lVQUhypJSGA+ccPmPg0etlU5Rc1ecFpMlMzizlp1VmseCo6tgnLQ8zRLT4ZkB1tIjKNLBMF6pbVG3G4myTmdeZvYJpaKRoY28ihjNFloyXf0OkIkCjajhpqn+Qbk90XjrYDjUkt6RRDctBVidmyoRLMkEp6K07bp/rPv86kV+bmgwa2PMNDSMCfGr+zx2CibMvb158n0ZmCnyrZ+l5x0pO5JrbLxn+dgeD4rZPRxE3qb4NLR/oYuh4G8CBq/t1TGsaH+mgzUxzK1o5PAIMPxZ6zrM/pILbDLxJkSW/79112PPlncZN3TbBEKSfvNmvwaG0Y=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9ec7eec2-d1f9-4aa2-dd78-08dca1425647
+X-MS-Exchange-CrossTenant-AuthSource: CH3PR10MB7959.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jul 2024 00:42:26.9390
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: RA4bW6vtsk3a/kQH+0O1wBAUb+6m/QJSySLSTN/CVdl1BBCVf1w4KQrADBRSTogH+6lD72WFsKY1fcnbara/7MTUmQhm53sw93+RO/c/2C4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB5664
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-07-10_19,2024-07-10_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 phishscore=0
+ spamscore=0 mlxscore=0 suspectscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2406180000
+ definitions=main-2407110002
+X-Proofpoint-GUID: lzzCQMUo0LDiAfNnCtcNCYopOYqywYtW
+X-Proofpoint-ORIG-GUID: lzzCQMUo0LDiAfNnCtcNCYopOYqywYtW
 
-On Wed, Jul 10, 2024 at 11:22:52AM +0530, Alim Akhtar wrote:
-> Hello Eric,
+
+
+On 7/9/24 20:24, Chen Ni wrote:
+> Replace a comma between expression statements by a semicolon.
 > 
-> > -----Original Message-----
-> > From: Eric Biggers <ebiggers@kernel.org>
-> > Sent: Tuesday, July 9, 2024 5:19 AM
-> > To: Peter Griffin <peter.griffin@linaro.org>
-> > Cc: linux-scsi@vger.kernel.org; linux-samsung-soc@vger.kernel.org; linux-
-> > fscrypt@vger.kernel.org; Alim Akhtar <alim.akhtar@samsung.com>; Avri
-> > Altman <avri.altman@wdc.com>; Bart Van Assche <bvanassche@acm.org>;
-> > Martin K . Petersen <martin.petersen@oracle.com>; André Draszik
-> > <andre.draszik@linaro.org>; William McVicker <willmcvicker@google.com>
-> > Subject: Re: [PATCH v2 6/6] scsi: ufs: exynos: Add support for Flash
-> Memory
-> > Protector (FMP)
-> > 
-> > On Mon, Jul 08, 2024 at 01:26:30PM -0700, Eric Biggers wrote:
-> > > Hi Peter,
-> > >
-> > > On Thu, Jul 04, 2024 at 02:26:05PM +0100, Peter Griffin wrote:
-> > > > Do you know how these FMP registers (FMPSECURITY0 etc) relate to the
-> > > > UFSPR* registers set in the existing exynos_ufs_config_smu()? The
-> > > > UFS_LINK spec talks about UFSPR(FMP), so I had assumed the FMP
-> > > > support would be writing these same registers but via SMC call.
-> > > >
-> > > > I think by the looks of things
-> > > >
-> > > > #define UFSPRSECURITY 0x010
-> > > > #define UFSPSBEGIN0 0x200
-> > > > #define UFSPSEND0 0x204
-> > > > #define UFSPSLUN0 0x208
-> > > > #define UFSPSCTRL0 0x20C
-> > > >
-> > > > relates to the following registers in gs101 spec
-> > > >
-> > > > FMPSECURITY0 0x0010
-> > > > FMPSBEGIN0 0x2000
-> > > > FMPSEND0 0x2004
-> > > > FMPSLUN0 0x2008
-> > > > FMPSCTRL0 0x200C
-> > > >
-> > > > And the SMC calls your calling set those same registers as
-> > > > exynos_ufs_config_smu() function. Although it is hard to be certain
-> > > > as I don't have access to the firmware code. Certainly the comment
-> > > > below about FMPSECURITY0 implies that :)
-> > > >
-> > > > With that in mind I think exynos_ufs_fmp_init() function in this
-> > > > patch needs to be better integrated with the
-> > > > EXYNOS_UFS_OPT_UFSPR_SECURE flag and the existing
-> > > > exynos_ufs_config_smu() function that is currently just disabling
-> > > > decryption on platforms where it can access the UFSPR(FMP) regs via
-> > mmio.
-> > >
-> > > I think that is all correct.  For some reason, on gs101 the FMP
-> > > registers are not accessible by the "normal world", and SMC calls need
-> to
-> > be used instead.
-> > > The sequences of SMC calls originated from Samsung's Linux driver code
-> > for FMP.
-> > > So I know they are the magic incantations that are needed, but I don't
-> > > have access to the source code or documentation for them.  It does
-> > > seem clear that one of the things they must do is write the needed
-> values
-> > to the FMP registers.
-> > >
-> > > I'd hope that these same SMC calls also work on Exynos-based SoCs that
-> > > do make the FMP registers accessible to the "normal world", and
-> > > therefore they can just be used on all Exynos-based SoCs and
-> > > ufs-exynos won't need two different code paths.  But I don't have a
-> > > way to confirm this myself.  Until someone is able to confirm this, I
-> > > think we need to make the FMP support depend on
-> > > EXYNOS_UFS_OPT_UFSPR_SECURE so that it doesn't conflict with
-> > > exynos_ufs_config_smu() which runs when
-> > !EXYNOS_UFS_OPT_UFSPR_SECURE.
-> > >
-> > 
-> > These same SMC calls can be found in the downstream source for other
-> > Exynos-based SoCs.  I suspect that exynos_ufs_config_smu() should be
-> > removed, and exynos_ufs_fmp_init() should run regardless of
-> > EXYNOS_UFS_OPT_UFSPR_SECURE.
-> > It still would need to be tested, though, which I'm not able to do.  (And
-> > especially as a cryptography feature, this *must* be tested...)  So for
-> now I'm
-> > going to make the FMP support conditional on
-> > EXYNOS_UFS_OPT_UFSPR_SECURE.
-> > 
-> SMU controls the security access aspect of the FMP, one can have a usecase
-> where one wants to enable inline encryption using FMP in a non-secure
-> mode/world after a secure boot of the system
-> and in another case, configure FMP in secure mode/world during secure boot.
-> I am not sure how it is designed in gs101 though.
-> Currently, exynos_ufs_config_smu() just allows SMU registers modification by
-> non-secure world.
+> Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
+> ---
+>   drivers/scsi/qla2xxx/qla_init.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+> index 8377624d76c9..e2ca9a14b643 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -423,7 +423,7 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
+>   	sp->type = SRB_LOGOUT_CMD;
+>   	sp->name = "logout";
+>   	qla2x00_init_async_sp(sp, qla2x00_get_async_timeout(vha) + 2,
+> -			      qla2x00_async_logout_sp_done),
+> +			      qla2x00_async_logout_sp_done);
+>   
+>   	ql_dbg(ql_dbg_disc, vha, 0x2070,
+>   	    "Async-logout - hdl=%x loop-id=%x portid=%02x%02x%02x %8phC explicit %d.\n",
 
-Apparently, gs101 has two levels of access control for FMP.  Access to the range
-configuration registers like FMPSBEGIN0 (UFSPSBEGIN0 in the upstream source) is
-controlled by FMPSECURITY0.NSSMU (UFSPRSECURITY.NSSMU in the upstream source).
-But access to FMPSECURITY0 itself is controlled by TZPC.NSFMP, which is writable
-only by the "secure world".  In the current upstream source,
-exynos_ufs_config_smu() writes to FMPSECURITY0, and this crashes on gs101 if
-actually executed (it's currently disabled on gs101 for that reason).  So the
-secure world software on gs101 must be setting TZPC.NSFMP = 0.
+Needs following fixes tag
 
-I expect that this isn't specific to gs101, and some other Exynos-based SoCs use
-this same design.  This would explain the presence of the SMC calls in the
-downstream source used on other Exynos-based SoCs.
+Fixes: d4523bd6fd5d3 ("scsi: qla2xxx: Refactor asynchronous command 
+initialization")
 
-So it seems that for now ufs-exynos has to use the SMC calls, as this patch
-does.  This is similar to how ufs-qcom and ufs-mediatek similarly use their
-SoC's respective set of SMC calls to configure inline encryption, in order to
-work around similar designs where the inline encryption hardware can only be
-configured by secure world software.  (I don't know why so many SoC vendors are
-choosing this design, given that in practice only the normal world wants to
-configure inline encryption.  The detour to the secure world seems unnecessary.)
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
-- Eric
+-- 
+Himanshu Madhani                                Oracle Linux Engineering
