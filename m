@@ -1,64 +1,68 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8CF710A36;
-	Thu, 11 Jul 2024 03:09:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BC9C653;
+	Thu, 11 Jul 2024 03:09:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720667367; cv=none; b=ezqywsGjF1Wygzp1XTxte41Dl22ZnWuCa39BzJhz+jCNPo1BG8cJN6vSohazO4bxQwrbmH4MCd3LagU9rTsjf1bZVAnVtDrJ5cf1okIaitNyJ+A6ua3C6KFI0mEi8PO/0WYsZTQylycWXlF+zmgIrdJEevRzR2P+rCAYF9MAoyk=
+	t=1720667367; cv=none; b=fsQ0KEuVEUoWK1xLouxJfSoY9c/9hqjUmOd8Z0tREzfaRw+1RzjMxqTksxrSRy7Utzi+kLlAHIQqhRqltH2nS3ExiKZcr/go8sFr5GIwfSPzD9/XhpAjYw2BhlScUusx9m6FI8doVkzINJ3Qvr9ahTu4BiCLBLGQ2x1inOM1a5w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1720667367; c=relaxed/simple;
-	bh=XUstL11BeDWvPWznWt06Pq5fKndnRoflKrUeNNgbCnQ=;
+	bh=nnGWHQdOE6A7vWDzQDyuDhaSsU8Um0cpmGvSiXGvIng=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XDiXXEc0jCQdm1X2hXSOSgo5gnSXPnoRjM1U9gxoO94EB9lUYVeRqvZBchpxP9te0qTfOultjvOaYbEvnmTcOCp3bi0LN04uMTq3TqztTUkKYFM7OJLUtgmTUoqllUrKhm+byjh2zYgt3r8y2IHCcwpWWh8BuJilCTWEyABGNTw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=RfdlBg9u; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=bMLLoYY5oQ1xhj7vrZxAaPZjJ5ot+80qWbkb987JjDQHatEHCBKxcg7QYpa6UjbxeiC4OM6YXo6GrXcuKYWZ7B0PWzgjHoy2zWmytNYtxGgWoauFpg+skgoQtQXSJTatUX5TvjczzInxUHHsnuWJR0kIWLdG51KaYX0n87QtE1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=j0bpZVfU; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RfdlBg9u"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="j0bpZVfU"
 Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46B0W2N6029600;
-	Thu, 11 Jul 2024 03:09:19 GMT
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46B1SeE7029616;
+	Thu, 11 Jul 2024 03:09:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-type:content-transfer-encoding; s=
-	corp-2023-11-20; bh=QZt32ryLc+2mLGCiP6px8XlN2AI/SprGl4vbMVzIvzo=; b=
-	RfdlBg9udxMW2W3CN9Te8lB86fEcErkxuvfX8sqqOzY//HCiDT9QK3j5Qx+g8thc
-	cmzHQSjbzDWdZutBrNjs52BYjkXHTtUsQqkbSMRwDnPTmes4Mg4wayjBGnLS0JdR
-	1yf+aTBTvsVzIBKLLAOUGJcDksD3vJYl2H7Fs/cXz54rCHYvDfsov3ZWKcNDKfFw
-	sbjO21xDiu4WZB5Qz6HiUagtqGOMUK3NFKiR16pG0p6lLrrPr9wvtA4rvuLA8cFc
-	e9uyRf0yGHwIv3My4Bz+4Qkpcl7IdPlrecBqJeR9RmNJXzAWgxEGlRzC1BE/hJNI
-	YBelx6WcG+TaLsGU6TU2fg==
+	corp-2023-11-20; bh=mVZGnVfJuUUVJ48rZlL7JFo1gTtm/7sW1vQWinmG8zQ=; b=
+	j0bpZVfUZnJww+6XhsoVlmNMxlpX5Rixeyt1ap1AcqkrFm/zR57vKicJqsnULgeB
+	XMp0psHHBU1kiMUlGhtjnprK7aYWjk/d6bcJrq+FFr3TH2Lq6ZSLKQcYtuZFCDN8
+	Da8GCBjBeSsstcjqZR1lzq17kc7Z3sit4iUmRsN5cxr81mlcIoOmvJ95GzGgETmJ
+	WmAYZ4g+lOXGjxzTZZ7gT5frnlD9oGjSwnnIEGkKpii/P51s4DeR93a2if+3egD0
+	dnbrpLriu6GntLBzalmoo3o5VlLbhjKeGW2bCYpdz9hVlUCC+3PQOO6AHyPFQBwA
+	ZZO7hXHu9Ug3a9oZOAdJ3w==
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 406wgq0p89-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 406wgq0p88-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 11 Jul 2024 03:09:19 +0000 (GMT)
+	Thu, 11 Jul 2024 03:09:17 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 46B1MjXO008691;
-	Thu, 11 Jul 2024 03:09:18 GMT
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 46B1Zsg2008796;
+	Thu, 11 Jul 2024 03:09:16 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 409vv3x4dd-1
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 409vv3x4c9-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 11 Jul 2024 03:09:18 +0000
+	Thu, 11 Jul 2024 03:09:16 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 46B39D9n006490;
-	Thu, 11 Jul 2024 03:09:18 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 46B39D9j006490;
+	Thu, 11 Jul 2024 03:09:15 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 409vv3x4ar-4;
-	Thu, 11 Jul 2024 03:09:18 +0000
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 409vv3x4ar-2;
+	Thu, 11 Jul 2024 03:09:15 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-        TJ Adams <tadamsjr@google.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Ram Prakash Gupta <quic_rampraka@quicinc.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Igor Pylypiv <ipylypiv@google.com>
-Subject: Re: [PATCH v2 0/2] small pm80xx driver fixes
-Date: Wed, 10 Jul 2024 23:08:35 -0400
-Message-ID: <172066369904.698281.13143387624330894977.b4-ty@oracle.com>
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        quic_cang@quicinc.com, quic_nguyenb@quicinc.com,
+        quic_pragalla@quicinc.com, quic_nitirawa@quicinc.com
+Subject: Re: [PATCH V2 0/2] Suspend clk scaling when there is no request
+Date: Wed, 10 Jul 2024 23:08:33 -0400
+Message-ID: <172066369902.698281.9935677312111229941.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240627155924.2361370-1-tadamsjr@google.com>
-References: <20240627155924.2361370-1-tadamsjr@google.com>
+In-Reply-To: <20240627083756.25340-1-quic_rampraka@quicinc.com>
+References: <20240627083756.25340-1-quic_rampraka@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,30 +74,33 @@ Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-07-10_20,2024-07-10_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=748 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=767 bulkscore=0
  suspectscore=0 malwarescore=0 phishscore=0 adultscore=0 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2406180000
  definitions=main-2407110020
-X-Proofpoint-ORIG-GUID: pPaP-5VGD87VHVjliNFyiv4pr4cPxjfl
-X-Proofpoint-GUID: pPaP-5VGD87VHVjliNFyiv4pr4cPxjfl
+X-Proofpoint-ORIG-GUID: DEGif5EgnZnE2v25jtB5d3eUC5M8W9ga
+X-Proofpoint-GUID: DEGif5EgnZnE2v25jtB5d3eUC5M8W9ga
 
-On Thu, 27 Jun 2024 15:59:22 +0000, TJ Adams wrote:
+On Thu, 27 Jun 2024 14:07:54 +0530, Ram Prakash Gupta wrote:
 
-> These are 2 small patches to prevent a kernel crash and change some
-> logs' levels. V1 consisted of 3 patches. One patch is being dropped so
-> it can be reworked and sent separately.
+> Currently ufs clk scaling is getting suspended only when the
+> clks are scaled down, but next when high load is generated its
+> adding a huge amount of latency in scaling up the clk and complete
+> the request post that.
 > 
-> Igor Pylypiv (1):
->   scsi: pm80xx: Set phy->enable_completion only when we wait for it
+> Now if the scaling is suspended in its existing state, and when high
+> load is generated it is helping improve the random performance KPI by
+> 28%. So suspending the scaling when there is no request. And the clk
+> would be put in low scaled state when the actual request load is low.
 > 
 > [...]
 
 Applied to 6.11/scsi-queue, thanks!
 
-[1/2] scsi: pm80xx: Set phy->enable_completion only when we wait for it
-      https://git.kernel.org/mkp/scsi/c/e4f949ef1516
-[2/2] scsi: pm8001: Update log level when reading config table
-      https://git.kernel.org/mkp/scsi/c/76a20140ef76
+[1/2] scsi: ufs: Suspend clk scaling on no request
+      https://git.kernel.org/mkp/scsi/c/50183ac2cfb5
+[2/2] scsi: ufs: qcom: Enable suspending clk scaling on no request
+      https://git.kernel.org/mkp/scsi/c/ed7dac86f140
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
