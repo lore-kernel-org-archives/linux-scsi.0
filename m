@@ -1,32 +1,32 @@
-Received: from omta040.useast.a.cloudfilter.net (omta040.useast.a.cloudfilter.net [44.202.169.39])
+Received: from omta038.useast.a.cloudfilter.net (omta038.useast.a.cloudfilter.net [44.202.169.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4CAB8BFD
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jul 2024 16:18:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.202.169.39
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF6D88F72
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jul 2024 16:25:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.202.169.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720714701; cv=none; b=mzvkMJNJkkc1Pfxyhxf6Y1Caidit2FP4NtOhtMvAMlljvt6+bmL1VxqPOnK9QJfjB8+nAO0svjsTlaELl6iGeUr8VIaci63d8OcC/TlyxgmRrOK+TCrq1+/kYkDPV7Pv24lDkxxEjPZxxOBBWqxHaIPKAsyMKeiBr5cX890COrA=
+	t=1720715115; cv=none; b=cb/nkFnitTPQVwikezUqhk+wNldK9f5CxrX18oNGpWhwCsB20Yuei1T2FVAZrCRxCIYkTsPUJ3p1tp1SrVuQSEwkcXte8bAyX6Penuu0k/GbPUCc/TBelu5O685o2PKRNinmpMFUXBKUTUJIoJ++XigdAgaBgVUdj3bPYOmIsCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720714701; c=relaxed/simple;
-	bh=N3rDyLx52pO2BwM167/qhJZ+hV8rtvMa1SuTipsLRA4=;
+	s=arc-20240116; t=1720715115; c=relaxed/simple;
+	bh=by8drg7BkwyPqnnrBo9joy/euqUdnROj+pyxhwVy4W4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bUx51Sw8cMQE4hKj+ulClqtfcEZZYFAqrhurvAsFfuQBVbFzGN6O/L8Vq2GdpO23sjpDWsvsvco0j8+MQmI2lMnX2KaMK2HhN3oZEy5ecchJvtkLto+PwGtNUEqf3goCSHP5m7NA3QobE6HvSA8Yd/MOjf2jSmseHOXUkU27V0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=uMKW2xnU; arc=none smtp.client-ip=44.202.169.39
+	 In-Reply-To:Content-Type; b=TXkSEPU8Cuw8CTxMWPwVIBu96ONxBNXvpi79F4kTWaeOs4qhHX1YrZCLBn3FpaORDReXDs82YabXejGFjjiJRTFARuUfr28ramyWVNCOZzV16NU+eX0qn55W3nyVtmtGUnbNbNAv5o/+SxmnwH30MNEJG68yTWXA3yMnU9cWkPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=VQUsvQdw; arc=none smtp.client-ip=44.202.169.37
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="uMKW2xnU"
-Received: from eig-obgw-6007a.ext.cloudfilter.net ([10.0.30.247])
+	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="VQUsvQdw"
+Received: from eig-obgw-5009a.ext.cloudfilter.net ([10.0.29.176])
 	by cmsmtp with ESMTPS
-	id RuWns95WenNFGRwUnsGowK; Thu, 11 Jul 2024 16:18:13 +0000
+	id RcXGsjTr5g2lzRwbYsKAm3; Thu, 11 Jul 2024 16:25:13 +0000
 Received: from gator4166.hostgator.com ([108.167.133.22])
 	by cmsmtp with ESMTPS
-	id RwUmsjuLXyUEQRwUnsbluF; Thu, 11 Jul 2024 16:18:13 +0000
-X-Authority-Analysis: v=2.4 cv=Tc6QtwQh c=1 sm=1 tr=0 ts=669005c5
+	id RwbXszBdaJYlLRwbYsHx1w; Thu, 11 Jul 2024 16:25:12 +0000
+X-Authority-Analysis: v=2.4 cv=CKIsXwrD c=1 sm=1 tr=0 ts=66900768
  a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=frY+GlAHrI6frpeK1MvySw==:17
  a=IkcTkHD0fZMA:10 a=4kmOji7k6h8A:10 a=wYkD_t78qR0A:10 a=NEAV23lmAAAA:8
  a=VwQbUJbxAAAA:8 a=Q-fNiiVtAAAA:8 a=bLk-5xynAAAA:8 a=yPCof4ZbAAAA:8
- a=ieX9XyvoytEcL3Xr2ukA:9 a=QEXdDO2ut3YA:10 a=AjGcO6oz07-iQ99wixmX:22
+ a=4U04rXiFe3vrU3-RqrIA:9 a=QEXdDO2ut3YA:10 a=AjGcO6oz07-iQ99wixmX:22
  a=Fp8MccfUoT0GBdDC_Lng:22 a=zSyb8xVVt2t83sZkrLMb:22
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
@@ -34,20 +34,20 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
 	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
 	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=I2NUgmT42oAokrukvToywtMJ4UZZ7x+Khfv2d+jZ0j4=; b=uMKW2xnUjWsLRpU7vB9fRKVvlz
-	Ekz0mXvpOAVZN/aZcVWXOv/weU77Dh6vYK2wk13zNyvS/SbNtaDlwQt+W3t8L1TN5mTKMF/KP1UFM
-	oBQ6L5ca8e/2jnwBbJE/Hw/SLFVi5J44w92Bmoy9jgK+u5CXUFQJoGhOkLfrjL26kDg4bhPcKQ8k8
-	DuO3kJSRieGnxAtL8dVBY6VbONJ/pvawhsiJu1MJFUpf+6TlnzJxSUoyNWCg0ixZdmEc/WoMFS7v3
-	3iqj5RGpWHlTezo8rXgh+JfU+stIp/EM9U0fuHkJnDzeIyhH5C2tfv3zTmDNLHRo54ASOe1IwopsT
-	INEW+76Q==;
-Received: from [201.172.173.139] (port=51936 helo=[192.168.15.4])
+	bh=l7dJmZsHDRRtYA6jqLTJ+nJTV8ksdPp6ErT4krrc1nI=; b=VQUsvQdwHQbARSRkuj05QVoX1J
+	uJiaTp1lX5LbB6yQ+4o/kEOEpJxWlsa5XN+nLLs+ulsGCK3w2HcJ4bHcj3vsHQ/FZZIrhv3OewiwY
+	tmj/Vzx80+thZO5Sr6krZP0XI6n27La08d1CuyLn+1f8wjrO7xbFw6VeLFLqK5qruCll7jrVPGccJ
+	7j5v0YLDW66bIwlCjIAvTyIi6zT5KBNm33z2EnblaJP5ja6i2wt+yMSH0aX4sJ7i7Q355q/2Hxetr
+	SnDcHtPDF00Ndt30X5OUH4Yb5Pnc3uAoniz1PiajjUnpPQYaIPBV3cI4mwx4zm8WN3qz1rGJfkY1O
+	paLQh4uQ==;
+Received: from [201.172.173.139] (port=55644 helo=[192.168.15.4])
 	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
 	(Exim 4.96.2)
 	(envelope-from <gustavo@embeddedor.com>)
-	id 1sRwUm-004JcF-04;
-	Thu, 11 Jul 2024 11:18:12 -0500
-Message-ID: <67e48181-611d-498c-abba-634b8f63ef25@embeddedor.com>
-Date: Thu, 11 Jul 2024 10:18:10 -0600
+	id 1sRwbX-0002St-0G;
+	Thu, 11 Jul 2024 11:25:11 -0500
+Message-ID: <8381a68e-5dcd-454a-bca3-d00bb0420a28@embeddedor.com>
+Date: Thu, 11 Jul 2024 10:25:09 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,7 +55,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/4] scsi: mpi3mr: struct mpi3_sas_io_unit_page0: Replace
+Subject: Re: [PATCH 4/4] scsi: mpi3mr: struct mpi3_sas_io_unit_page1: Replace
  1-element array with flexible array
 To: Kees Cook <kees@kernel.org>,
  Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
@@ -69,10 +69,10 @@ Cc: Kashyap Desai <kashyap.desai@broadcom.com>,
  Stephen Rothwell <sfr@canb.auug.org.au>, linux-kernel@vger.kernel.org,
  linux-hardening@vger.kernel.org
 References: <20240711155446.work.681-kees@kernel.org>
- <20240711155637.3757036-3-kees@kernel.org>
+ <20240711155637.3757036-4-kees@kernel.org>
 Content-Language: en-US
 From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <20240711155637.3757036-3-kees@kernel.org>
+In-Reply-To: <20240711155637.3757036-4-kees@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
@@ -83,24 +83,24 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 201.172.173.139
 X-Source-L: No
-X-Exim-ID: 1sRwUm-004JcF-04
+X-Exim-ID: 1sRwbX-0002St-0G
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: ([192.168.15.4]) [201.172.173.139]:51936
+X-Source-Sender: ([192.168.15.4]) [201.172.173.139]:55644
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 33
+X-Email-Count: 47
 X-Org: HG=hgshared;ORG=hostgator;
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfAPPAivwsJJCLm0S85egb3s1VN/bbp9/8VdDJ3WLIhxgFTxH/LeOPga64smALWyIXdwX7FmvDt70ptlfS25tdac4qjUzytBc/iChUUzC4eRszK9vUQYt
- r8J5dZKKFa4dUHk7XedzVZO8UsN1VkqYhBUpvTi0rzaXxLegDhehEKwo1Udq1OWTeqZ0cJa2maHx4ixyoyo2Qb+8/cI+V5fYSew9Jy1sYWGinz3vU57uM8Oa
+X-CMAE-Envelope: MS4xfFOPG3LVOLfqcqcCkFhJxahU+cb2lSKXcjo6DEHqqyRRxyfghkXKzFOrchPYXKm0tHm+ENuIvcUL1UTH/uA1e/8Jp/8He+FWko7YMmRHzeFwkCFBF2GN
+ msGKxk6hIizcUT4a8llBCZs4hsMThI1Rj1ASyL0Sl57THRmSWeMKa1Oc6N9CbD+SzI/woWD3kQ1VHiYX1SKoNLJY7XmgvqljQnrgfJ5ltQEuFO3Eq6g7DBmp
 
 
 
 On 11/07/24 09:56, Kees Cook wrote:
 > Replace the deprecated[1] use of a 1-element array in
-> struct mpi3_sas_io_unit_page0 with a modern flexible array.
+> struct mpi3_sas_io_unit_page1 with a modern flexible array.
 > 
 > No binary differences are present after this conversion.
 > 
@@ -128,24 +128,25 @@ Gustavo
 >   1 file changed, 1 insertion(+), 4 deletions(-)
 > 
 > diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-> index 6a19e17eb1a7..66cca35d8e52 100644
+> index 66cca35d8e52..4b7a8f6314a3 100644
 > --- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
 > +++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
-> @@ -1565,16 +1565,13 @@ struct mpi3_sas_io_unit0_phy_data {
->   	__le32             reserved10;
+> @@ -1603,9 +1603,6 @@ struct mpi3_sas_io_unit1_phy_data {
+>   	__le32             reserved08;
 >   };
 >   
-> -#ifndef MPI3_SAS_IO_UNIT0_PHY_MAX
-> -#define MPI3_SAS_IO_UNIT0_PHY_MAX           (1)
+> -#ifndef MPI3_SAS_IO_UNIT1_PHY_MAX
+> -#define MPI3_SAS_IO_UNIT1_PHY_MAX           (1)
 > -#endif
->   struct mpi3_sas_io_unit_page0 {
+>   struct mpi3_sas_io_unit_page1 {
 >   	struct mpi3_config_page_header         header;
->   	__le32                             reserved08;
+>   	__le16                             control_flags;
+> @@ -1615,7 +1612,7 @@ struct mpi3_sas_io_unit_page1 {
 >   	u8                                 num_phys;
->   	u8                                 init_status;
->   	__le16                             reserved0e;
-> -	struct mpi3_sas_io_unit0_phy_data      phy_data[MPI3_SAS_IO_UNIT0_PHY_MAX];
-> +	struct mpi3_sas_io_unit0_phy_data      phy_data[];
+>   	u8                                 sata_max_q_depth;
+>   	__le16                             reserved12;
+> -	struct mpi3_sas_io_unit1_phy_data      phy_data[MPI3_SAS_IO_UNIT1_PHY_MAX];
+> +	struct mpi3_sas_io_unit1_phy_data      phy_data[];
 >   };
 >   
->   #define MPI3_SASIOUNIT0_PAGEVERSION                          (0x00)
+>   #define MPI3_SASIOUNIT1_PAGEVERSION                                 (0x00)
