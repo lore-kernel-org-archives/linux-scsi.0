@@ -1,158 +1,113 @@
-Received: from omta040.useast.a.cloudfilter.net (omta040.useast.a.cloudfilter.net [44.202.169.39])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE53816CD39
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jul 2024 16:56:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.202.169.39
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6849416DC16;
+	Thu, 11 Jul 2024 17:28:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720716964; cv=none; b=LbuZeITb+TjJrKn4zdAxx18J7g9BbSTJXKXaCO9nODg/IDcy5Efuu2csufmS4k1XIOC00sGcUBkxHKJarpcmDUliGdzBWiAmhlAVXZQyU2No01bOi4SrNYJxPMs4rsV13nG13yH1UBns6gvdohsRWF12OcIO+4U0GeGOkfUTPMI=
+	t=1720718902; cv=none; b=u1x/C+CorNn9dWOOlCAr+M2MfG25d9OUWp5mFqGPZQGAS+ZFlmd9TP0ZcdPF8GphNQV8eGP8l+hm6aE4chGxyZam8pshnL93dNCjXH3BdKUBs27KLNAIilMGMmrla6kbiMWx7kmz3S1b7Qh+22Z85rcUJmuW4mxdYp+5ZLXI9RI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720716964; c=relaxed/simple;
-	bh=2iYVbONDaBq6JV/7qJFLtv3UBiUya7pvZXvPB51GSE4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LVKOAc5z9CFa6ysWvagx0+K1DtjsaFnMJgyybnduADK2E18+wv9Hqbk6dz8IAZJ9JwGxdPjtXpHhCn1OCzyrO7dmW0VEiywzGMODJhNO6ButV7TNrfEWCGqywTfLJpB/4nEdHuemzQiwUwbeRx1YQjkcg5JR8EWLPvwkGEkeA14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=eG2O+ml2; arc=none smtp.client-ip=44.202.169.39
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
+	s=arc-20240116; t=1720718902; c=relaxed/simple;
+	bh=KJRtzRSoC+YD4ifccvdvij8WY1nz8g+drmk27AlHQwc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=teL8j0zca30pKvDkaUPaeY+lpPU+MGzGuYtSHpXZNlHLL9XlqRQ3N6DjpEtU+hyvaQeCm+Zf+Pv0ai4pYgenYpsHAz46gi8MgPge2X8lqA5fmedBrKG6URkmdk+DVBQXAKq58sr2Z8KxJP374mOKMQY2JgGDE3MtLlnR088Lfxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RY+OuZ2T; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="eG2O+ml2"
-Received: from eig-obgw-5007a.ext.cloudfilter.net ([10.0.29.141])
-	by cmsmtp with ESMTPS
-	id Rvras9XNnnNFGRx5NsHAzD; Thu, 11 Jul 2024 16:56:01 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-	by cmsmtp with ESMTPS
-	id Rx5Lsuq5lTnvcRx5Msr3Mu; Thu, 11 Jul 2024 16:56:00 +0000
-X-Authority-Analysis: v=2.4 cv=c9StQw9l c=1 sm=1 tr=0 ts=66900ea0
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=frY+GlAHrI6frpeK1MvySw==:17
- a=IkcTkHD0fZMA:10 a=4kmOji7k6h8A:10 a=wYkD_t78qR0A:10 a=NEAV23lmAAAA:8
- a=VwQbUJbxAAAA:8 a=Q-fNiiVtAAAA:8 a=bLk-5xynAAAA:8 a=yPCof4ZbAAAA:8
- a=BgCAbCOdkOygMcBay5MA:9 a=QEXdDO2ut3YA:10 a=AjGcO6oz07-iQ99wixmX:22
- a=Fp8MccfUoT0GBdDC_Lng:22 a=zSyb8xVVt2t83sZkrLMb:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=olFfmXh0pIyFs0WXsAhOmo1AA3OqVFBo3TyzIH79O9Y=; b=eG2O+ml2DqwWw7JzxJY+7gGZ4h
-	AjfNziXEI5gLZAqEkFp2iWJ76A8GJPxlfuHlhYpYFQtR+E6MOlPhYIqvdvoaEo8v5h/LfND7yNaCC
-	QFamol47XUYDjlCeP+FSzXYt/hxAF0HoFKA0TvoTRSJhZ4fJDOKE2N4EdED+A7Z+GKoj7kKcW8161
-	MCT0YtBEblKFOKi54OXKh/bAA24+f4vW0ApQxwmdzcefYRuSvOIi3vPfvghUbpMk3F+FQPr+/LigX
-	gBSOeDJBe1wXfMDgubgC3Xs8C9tu8l+0NxFu08AIi2H3ymJoZb7PWVwQCsjKys0QBS3jKILBt/8ud
-	tqIxptSQ==;
-Received: from [201.172.173.139] (port=55332 helo=[192.168.15.4])
-	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96.2)
-	(envelope-from <gustavo@embeddedor.com>)
-	id 1sRx5L-000eHk-10;
-	Thu, 11 Jul 2024 11:55:59 -0500
-Message-ID: <58418596-5d8f-4bec-9d4c-64ed8ef0ff9e@embeddedor.com>
-Date: Thu, 11 Jul 2024 10:55:57 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RY+OuZ2T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 226AAC4AF09;
+	Thu, 11 Jul 2024 17:28:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720718902;
+	bh=KJRtzRSoC+YD4ifccvdvij8WY1nz8g+drmk27AlHQwc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=RY+OuZ2TKBefmdXQSIg/eGd1L+8tbd7PPhOzuDJkWRKe7BrSbAnbSM9zhwtFMdEIg
+	 LzbSh+rwuV49EMQ5fp/aN/EE/T57RMV/cPsJuGLCmU1CfWYfEYw72KjH5eP37wqgfN
+	 DWJATSiLDw470Gt7zhnLgARARNd/hAds2fN8aMwTUu6mKrlI/h1So9IHTGVavhLeOE
+	 Z0zMIRSo3ShcBOjoG1hEAIPL8nKKsGjVcvQYV7KptkymwjHCbbmPMsRdpMusQWTgPt
+	 /rDK3c5EmznMrCxskPAAecpZbbLDXSe8jan0kVBTXimQYfOMXs31vX6HKhHpOegumt
+	 I/4wO1YE4MovA==
+From: Kees Cook <kees@kernel.org>
+To: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Kees Cook <kees@kernel.org>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-hardening@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/6] scsi: message: fusion: struct _CONFIG_PAGE_RAID_PHYS_DISK_1: Replace 1-element array with flexible array
+Date: Thu, 11 Jul 2024 10:28:17 -0700
+Message-Id: <20240711172821.123936-3-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240711172432.work.523-kees@kernel.org>
+References: <20240711172432.work.523-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: megaraid_sas: struct MR_HOST_DEVICE_LIST: Replace
- 1-element array with flexible array
-To: Kees Cook <kees@kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-References: <20240711155841.work.839-kees@kernel.org>
-Content-Language: en-US
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <20240711155841.work.839-kees@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 201.172.173.139
-X-Source-L: No
-X-Exim-ID: 1sRx5L-000eHk-10
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([192.168.15.4]) [201.172.173.139]:55332
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 70
-X-Org: HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfJBfVDvNASWw8fGgIOYUxT03V/5aPgetThMryLT6PTA7elgmpQC/9GadNEud4ILsrCR4MRfx9b99bITk6lK8Kz+1E4aVt8QEY16AFpb0SHa4ytpeD4Ar
- IYcd5wZo274pNc1KiPpwEzf2rHd3KK5rh0AmQOByUvghOTqWOQm+Mg5kPXfLz86HFkr568H15Ay5ePXGcGDhnbDcw6vH/8kMrE+s0YHvLlnXORcZAX5M0xWG
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2583; i=kees@kernel.org; h=from:subject; bh=KJRtzRSoC+YD4ifccvdvij8WY1nz8g+drmk27AlHQwc=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBmkBYzSnVQ68wF5ei0rKWx29joncaaILeM/2BQk 8+FkSUomRaJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZpAWMwAKCRCJcvTf3G3A Jom1D/9g/Ps1VLnG6OKWs8PoOZsmCXRCMBwLmXRoKXoa0Ov5J0/ObTivalAgKfehlP7WTtvsHLS rF/aX+elOIOAaeqHZTX232IdcXI3RsOfBArJ3DpbvyeQ+t59gTM/qksgfP0reTEhB3wbJIEmNWI TXvSlzWVgGyDJiXd2Ry60gESEXdmvJDxDfze7eqs8TpJO5U/d1NNoi0Y7osx96SinJgN2s/ZCO2 QuP3w/9skAG6kz1AIUW71aSWPkBiZ713sPHpXfF8hGPZvIv4w24NdQwfnjyuNYFK3FJ4/3iGRoD yhOEXSUFfRPMcI+bF4VWDYLArkv2jhsxvPh3/sB+OoKY426fTXCjhhAR4J1gzxhioj83OJIiI77 sldYu0ybXollOPNEwiRCsciuAZLTGNG3x84qdRAi6yf5V9JjQYQh8dxbaEJtpJSVaxq3d/gFBsM 3S4hkNIYg/wHBChLR56BJJ5jl2Fciaa9znLw1bNExRUBGOiHmnW+LBl/PBKFvg0EEQlsKjlKWF5 3Tkh4ADbUGf2B+5H0cvZoDCVWc2W1brUi5G9PRW0EOHLRkrh/ROCItOqKcNA7owOr69NebsRk5v pnqKf0uehDP/TY9QzhJWbdmwhpH9cu9mOHsD6ESTLnxuf+I95An3mxmjzVFBJ8yDPObbDxKAoYK FpCOLWn451la7Rg==
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
+Replace the deprecated[1] use of a 1-element array in
+struct _CONFIG_PAGE_RAID_PHYS_DISK_1 with a modern flexible array.
 
+Additionally add __counted_by annotation since Path is only ever
+accessed via a loops bounded by NumPhysDiskPaths:
 
-On 11/07/24 09:58, Kees Cook wrote:
-> Replace the deprecated[1] use of a 1-element array in
-> struct MR_HOST_DEVICE_LIST with a modern flexible array.
-> 
-> One binary difference appears in megasas_host_device_list_query():
-> 
->          struct MR_HOST_DEVICE_LIST *ci;
-> 	...
->          ci = instance->host_device_list_buf;
-> 	...
->          memset(ci, 0, sizeof(*ci));
-> 
-> The memset() clears only the non-flexible array fields. Looking at the
-> rest of the function, this appears to be fine: firmware is using this
-> region to communicate with the kernel, so it likely never made sense to
-> clear the first MR_HOST_DEVICE_LIST_ENTRY.
+lsi/mpi_cnfg.h:    RAID_PHYS_DISK1_PATH            Path[] __counted_by(NumPhysDiskPaths);/* 0Ch */
+mptbase.c:      phys_disk->NumPhysDiskPaths = buffer->NumPhysDiskPaths;
+mptbase.c:      for (i = 0; i < phys_disk->NumPhysDiskPaths; i++) {
+mptbase.c:              phys_disk->Path[i].PhysDiskID = buffer->Path[i].PhysDiskID;
+mptbase.c:              phys_disk->Path[i].PhysDiskBus = buffer->Path[i].PhysDiskBus;
 
-Yeah, clearing that fist entry seems odd/buggy. So, this patch is probably
-even fixing a bug. :)
+No binary differences are present after this conversion.
 
-> 
-> Link: https://github.com/KSPP/linux/issues/79 [1]
-> Signed-off-by: Kees Cook <kees@kernel.org>
+Link: https://github.com/KSPP/linux/issues/79 [1]
+Signed-off-by: Kees Cook <kees@kernel.org>
+---
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: MPT-FusionLinux.pdl@broadcom.com
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-hardening@vger.kernel.org
+---
+ drivers/message/fusion/lsi/mpi_cnfg.h | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
 
-Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-
-Thanks
+diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
+index c7997e32e82e..e30132b57ae7 100644
+--- a/drivers/message/fusion/lsi/mpi_cnfg.h
++++ b/drivers/message/fusion/lsi/mpi_cnfg.h
+@@ -2447,14 +2447,6 @@ typedef struct _RAID_PHYS_DISK1_PATH
+ #define MPI_RAID_PHYSDISK1_FLAG_INVALID         (0x0001)
+ 
+ 
+-/*
+- * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
+- * one and check Header.PageLength or NumPhysDiskPaths at runtime.
+- */
+-#ifndef MPI_RAID_PHYS_DISK1_PATH_MAX
+-#define MPI_RAID_PHYS_DISK1_PATH_MAX    (1)
+-#endif
+-
+ typedef struct _CONFIG_PAGE_RAID_PHYS_DISK_1
+ {
+     CONFIG_PAGE_HEADER              Header;             /* 00h */
+@@ -2462,7 +2454,7 @@ typedef struct _CONFIG_PAGE_RAID_PHYS_DISK_1
+     U8                              PhysDiskNum;        /* 05h */
+     U16                             Reserved2;          /* 06h */
+     U32                             Reserved1;          /* 08h */
+-    RAID_PHYS_DISK1_PATH            Path[MPI_RAID_PHYS_DISK1_PATH_MAX];/* 0Ch */
++    RAID_PHYS_DISK1_PATH            Path[] __counted_by(NumPhysDiskPaths);/* 0Ch */
+ } CONFIG_PAGE_RAID_PHYS_DISK_1, MPI_POINTER PTR_CONFIG_PAGE_RAID_PHYS_DISK_1,
+   RaidPhysDiskPage1_t, MPI_POINTER pRaidPhysDiskPage1_t;
+ 
 -- 
-Gustavo
+2.34.1
 
-> ---
-> Cc: Kashyap Desai <kashyap.desai@broadcom.com>
-> Cc: Sumit Saxena <sumit.saxena@broadcom.com>
-> Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-> Cc: Chandrakanth patil <chandrakanth.patil@broadcom.com>
-> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: megaraidlinux.pdl@broadcom.com
-> Cc: linux-scsi@vger.kernel.org
-> ---
->   drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-> index 84cf77c48c0d..088cc40ae866 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -814,12 +814,12 @@ struct MR_HOST_DEVICE_LIST {
->   	__le32			size;
->   	__le32			count;
->   	__le32			reserved[2];
-> -	struct MR_HOST_DEVICE_LIST_ENTRY	host_device_list[1];
-> +	struct MR_HOST_DEVICE_LIST_ENTRY	host_device_list[] __counted_by_le(count);
->   } __packed;
->   
->   #define HOST_DEVICE_LIST_SZ (sizeof(struct MR_HOST_DEVICE_LIST) +	       \
->   			      (sizeof(struct MR_HOST_DEVICE_LIST_ENTRY) *      \
-> -			      (MEGASAS_MAX_PD + MAX_LOGICAL_DRIVES_EXT - 1)))
-> +			      (MEGASAS_MAX_PD + MAX_LOGICAL_DRIVES_EXT)))
->   
->   
->   /*
