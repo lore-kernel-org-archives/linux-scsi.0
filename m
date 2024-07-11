@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A22D16DC1C;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC04D16DEC2;
 	Thu, 11 Jul 2024 17:28:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720718902; cv=none; b=b9bUgs/SNWLcPMCWi4CZS3GrIwSSsqBWGfgEa/zTtO+f0QV8rnCpkuj0+8M/kOW+yuNi3MzCR+hnEJbT2meg3nYY6XrfRScJo3OMTUBIFe0ys2SrzVN/o/f4w+O9chzqx4UnE4F/Si0cV2GAs5e7bWV6+uuiRNrewyFQ7hKNUbw=
+	t=1720718902; cv=none; b=DMzR/zEoe+liTgOh9tQQ2Zso5GWfqoLtQk4kTHImg8Lds9cZtcqXLLS3szBCzMX4j/aXDJSF2GEt2UoTVfRyQESmSoIGSdP9KdF4k00SE44GcLczp/IZ4i8uo/c/6V69vSzbn+BZ7UdHfKMNsfVLOijtkOk8XK/Yg60DX/dl0jE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1720718902; c=relaxed/simple;
-	bh=TFdd55gm7tedjfyA0tSLEzREVFMSxyPLwq5f8b56lIU=;
+	bh=MnZHveL4bhw7QKqCedPp+xc07Hey0fundjFehsgmf5w=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=C2Mz8hyPXMEqrFOQJpiN2w74qaI8dS2MIx7R5xRUm5sOvDndSpvoSTOWEzwv+KLaeTo+vxF9ocCtd9SMkL4DggMzrLuz4ar9dN3MnbhV0gXyUTpVKaaSYnETxGy8IeEsCHn3640JF9SaB36GTMWZ09cCAssa/cXPIX1wGQcAPZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oNTz3k1R; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=GpFvMvqF7Eb85K1XCwI6FO4p7sG8H3pEGIe5DU19l24tc63ghpXleOHdJtnmRmS2927F4LQp1lv0XXfI2G5pYI31Yve0xQypBGLx6S10rXv+Y4KI2xTWwSiCH2Ya/e50rBwKXP2cXKyhA960Pb/pUZ1Z2fDzD/a3l5BDuu23cwM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LY9g7/TR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oNTz3k1R"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F79BC4AF0E;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LY9g7/TR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74D08C4AF18;
 	Thu, 11 Jul 2024 17:28:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1720718902;
-	bh=TFdd55gm7tedjfyA0tSLEzREVFMSxyPLwq5f8b56lIU=;
+	bh=MnZHveL4bhw7QKqCedPp+xc07Hey0fundjFehsgmf5w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=oNTz3k1RXtoJrTD9geq4YJ0PrHvAeG2XxRtC9sf46503DGwhjZmQaqDW9kJOcNTSq
-	 Qsj/hvU6mzG8ZtMeIUEV197iGw+y8AfJZ7/WH0mQjU6yYuB9ndL4hB3iFWbf6R8+BU
-	 Z8UQopMovKLTBt6MiPpYj1ZLqy4IItYhoKX3ViSlK8jquNLVkS9bvxazVQu3z9fDpt
-	 Gc2quSK38zGhYI56+s5PeLy2VJgh+ff6wmD26qan2pyaxULvlkkIRywLixZrFIliMC
-	 x6LsA4wn2lk8KEDvYdof5tlssYkhD7v4iurSHMb7Xm0TZkuvQCA5B4QPKWWStzV0tb
-	 Y18sudmcjoNZQ==
+	b=LY9g7/TRYb/UetyNO/Ca4jI5BkPaGisNF3rTpxrp/rYmc43/OSVVGBUGtV4RUVKea
+	 DvEnEYhRFasDp+9l0/6exkd6gIqsDT7O7+zSeRN8M+HUI8AThYGX4Ol9crN/HCe7lB
+	 y/uarBwBr5PJYavJZLJblTJ+qMt/lxUFDF/EeDm5A+8hN+iFOd6kIW8/Zj3xtGcHgE
+	 k5p8LLf4PPsv2I411WZXuvS2qs1D71AbyOVud2zmheZBeO0zRtDaclOedw7eigXbjE
+	 9icMa9snQibwOVkPlhcoGXDpvFo4rC9GBrOjr5095UbaKEbek4JQmxk/eERLVPL0vO
+	 BGNd8cc3zNVsg==
 From: Kees Cook <kees@kernel.org>
 To: Sathya Prakash <sathya.prakash@broadcom.com>
 Cc: Kees Cook <kees@kernel.org>,
@@ -36,9 +36,9 @@ Cc: Kees Cook <kees@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	linux-hardening@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/6] scsi: message: fusion: struct _CONFIG_PAGE_IOC_2: Replace 1-element array with flexible array
-Date: Thu, 11 Jul 2024 10:28:18 -0700
-Message-Id: <20240711172821.123936-4-kees@kernel.org>
+Subject: [PATCH 5/6] scsi: message: fusion: struct _CONFIG_PAGE_IOC_3: Replace 1-element array with flexible array
+Date: Thu, 11 Jul 2024 10:28:19 -0700
+Message-Id: <20240711172821.123936-5-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240711172432.work.523-kees@kernel.org>
 References: <20240711172432.work.523-kees@kernel.org>
@@ -48,33 +48,30 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3512; i=kees@kernel.org; h=from:subject; bh=TFdd55gm7tedjfyA0tSLEzREVFMSxyPLwq5f8b56lIU=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBmkBYznU8jZsF6x0BPmD/cpzsBuAcKzr5zPGH8d 6njqRjZCS+JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZpAWMwAKCRCJcvTf3G3A Jh3gEACcdiLzOrjIsH9nE0Jmj2soc1aVdJlCGWpvkTRhtXFB4qYoXSUz0FamS8xcMmgSZpPhJHX g7xPhTslDwQJCbQwu25emCMpaHKERUR7WSXYtLagPOH3ux2+3B8qfaE+nXq5JvysvIgYS2a3dx9 BCdSkg5/CiLpRAXWBr99yKCvkaaAI4lJ8vEuKHxtAOVkr+lUkfH8nLyqXv5vagDTyGkfYWUPMcJ WkqCBQmStYBBJ8NvrQJjKZ+civiqKv2PR2UQwUoRX3cKo5KGubB9cyPcaWQmSvR7wWqApi19izC mUl+AWCiZkFouXX95ai+6UInmWHjtJ/rl86CL+eeKwQlN+UnjsAMeex26IlUKE41IdEptGxU956 jE2MSPA4641M9o9ozAxRfYjmWuHksUVuNl9jUeRZHRWCWvwRLWC34mzoJtxDm1RdDvMVDUExmQ0 BGbul+ZtVDXMt60e/7mTMB1CYzjJbb4g0m89MFrznJJWAGVItnuD32aVoFd2oM5i3IhrpS63oqx b04bNWR1k4uyVEYKbLMNsscCi58iNlUeGK46VC9F0qXPHlsGWoFx6ACDJCnaDBMDSRNy30MxG+u X8/0gxgZrVNQK1qUFLocaZk8aSrD/Uidh2+cpVGg7OjN1xBQRTbFR4w+VhbbvkjR9oTRpb1e4kt Cuvm5c0PHMDbINQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3164; i=kees@kernel.org; h=from:subject; bh=MnZHveL4bhw7QKqCedPp+xc07Hey0fundjFehsgmf5w=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBmkBY0+IfDHmTrR7F+4Nw6sg6RTWu4dYQ8PC94w LD5eUgElKaJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZpAWNAAKCRCJcvTf3G3A JgzlD/9CQ9zmCPlZEsJz+MYcZ3brkTlXQxnE/MRIbQRddbmNlIGZqoltkazt7zYCuJtzE2mUfo9 EgjWZxbXflOmH/r0TZUFYfrhDiYIqrA1n2MOGpdjdFfFTtz3bR/9dL2qkPISojtexAEEkXQnjMF /QlwARa6sNlpqVovfsjPFEJHOGpaHI2JBzf3NpTogg85e8hDSvuQx5dSkVUXmR/1YhljWmMSp3w RmYS3o3/mkDBDLQafWFKs7l/9WxZNIwfjq8KeD6diisq9viZEpUN+BFbn0kqS7+xd6zkWa9xlPX XBUTxMoYQm00LRnRo/US3XsItNIZJELxGuBTD/iBM8uSPoV8gYsAUy9BjTEjwB7ezrBJHy/mFzw CHOjg8UrVPIU/GLcZMhrxjPHl82o4hyixCOvQzvguiRvmcmS5raWAqYQUVF3LLwKVIJqg4f23uI ZiQe/jTPpElylJUBckRZidI4aOW6CNiPbnPd+v0ZlcHLBrnwS1bFwZAVu4K9Y3WddgqcCaCR81J c+h4y7gxX98zlGB0yYec/o/w3ZF0m/nRzRl3zYIfgNtU4uTbX4FZY2cdldLydj8UmX0YwPMAcpo gl/csUMfpUi8LkbwUH4dtYpY8tDrY/Xm9BAjz1zBL51NRT2iP5uFvLMBJ7oCQdfMzvbiEXM9MME idSgdPVwgpNgjbQ==
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
 Replace the deprecated[1] use of a 1-element array in
-struct _CONFIG_PAGE_IOC_2 with a modern flexible array.
+struct _CONFIG_PAGE_IOC_3 with a modern flexible array.
 
-Additionally add __counted_by annotation since RaidVolume is only ever
-accessed from loops controlled by NumActiveVolumes:
+Additionally add __counted_by annotation since PhysDisk is only ever
+accessed via a loops bounded by NumPhysDisks:
 
-lsi/mpi_cnfg.h:    CONFIG_PAGE_IOC_2_RAID_VOL  RaidVolume[] __counted_by(NumActiveVolumes); /* 0Ch */
-mptbase.c:      for (i = 0; i < pIoc2->NumActiveVolumes ; i++)
-mptbase.c:                  pIoc2->RaidVolume[i].VolumeBus,
-mptbase.c:                  pIoc2->RaidVolume[i].VolumeID);
-mptsas.c:               for (i = 0; i < ioc->raid_data.pIocPg2->NumActiveVolumes; i++) {
-mptsas.c:                                       RaidVolume[i].VolumeID) {
-mptsas.c:                                       RaidVolume[i].VolumeBus;
-mptsas.c:       for (i = 0; i < ioc->raid_data.pIocPg2->NumActiveVolumes; i++) {
-mptsas.c:                   ioc->raid_data.pIocPg2->RaidVolume[i].VolumeID, 0);
-mptsas.c:                   ioc->raid_data.pIocPg2->RaidVolume[i].VolumeID);
-mptsas.c:                   ioc->raid_data.pIocPg2->RaidVolume[i].VolumeID, 0);
-mptsas.c:               for (i = 0; i < ioc->raid_data.pIocPg2->NumActiveVolumes; i++) {
-mptsas.c:                       if (ioc->raid_data.pIocPg2->RaidVolume[i].VolumeID ==
-mptsas.c:       for (i = 0; i < ioc->raid_data.pIocPg2->NumActiveVolumes; i++)
-mptsas.c:               if (ioc->raid_data.pIocPg2->RaidVolume[i].VolumeID == id)
-mptspi.c:       for (i=0; i < ioc->raid_data.pIocPg2->NumActiveVolumes; i++) {
-mptspi.c:               if (ioc->raid_data.pIocPg2->RaidVolume[i].VolumeID == id) {
+lsi/mpi_cnfg.h:    IOC_3_PHYS_DISK             PhysDisk[] __counted_by(NumPhysDisks); /* 08h */
+mptscsih.c:	for (i = 0; i < ioc->raid_data.pIocPg3->NumPhysDisks; i++) {
+mptscsih.c:		if ((id == ioc->raid_data.pIocPg3->PhysDisk[i].PhysDiskID) &&
+mptscsih.c:		    (channel == ioc->raid_data.pIocPg3->PhysDisk[i].PhysDiskBus)) {
+mptscsih.c:	for (i = 0; i < ioc->raid_data.pIocPg3->NumPhysDisks; i++) {
+mptscsih.c:		    ioc->raid_data.pIocPg3->PhysDisk[i].PhysDiskNum);
+mptscsih.c:		    ioc->raid_data.pIocPg3->PhysDisk[i].PhysDiskNum,
+mptscsih.c:	for (i = 0; i < ioc->raid_data.pIocPg3->NumPhysDisks; i++) {
+mptscsih.c:		if ((id == ioc->raid_data.pIocPg3->PhysDisk[i].PhysDiskID) &&
+mptscsih.c:		    (channel == ioc->raid_data.pIocPg3->PhysDisk[i].PhysDiskBus)) {
+mptscsih.c:			rc = ioc->raid_data.pIocPg3->PhysDisk[i].PhysDiskNum;
+mptscsih.c:	for (i = 0; i < ioc->raid_data.pIocPg3->NumPhysDisks; i++) {
+mptscsih.c:		    ioc->raid_data.pIocPg3->PhysDisk[i].PhysDiskNum);
+mptscsih.c:		    ioc->raid_data.pIocPg3->PhysDisk[i].PhysDiskNum,
 
 No binary differences are present after this conversion.
 
@@ -93,32 +90,31 @@ Cc: linux-hardening@vger.kernel.org
  1 file changed, 1 insertion(+), 9 deletions(-)
 
 diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
-index e30132b57ae7..7713c74e515b 100644
+index 7713c74e515b..bac49c162165 100644
 --- a/drivers/message/fusion/lsi/mpi_cnfg.h
 +++ b/drivers/message/fusion/lsi/mpi_cnfg.h
-@@ -1018,14 +1018,6 @@ typedef struct _CONFIG_PAGE_IOC_2_RAID_VOL
- 
- #define MPI_IOCPAGE2_FLAG_VOLUME_INACTIVE           (0x08)
+@@ -1056,21 +1056,13 @@ typedef struct _IOC_3_PHYS_DISK
+ } IOC_3_PHYS_DISK, MPI_POINTER PTR_IOC_3_PHYS_DISK,
+   Ioc3PhysDisk_t, MPI_POINTER pIoc3PhysDisk_t;
  
 -/*
 - * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
 - * one and check Header.PageLength at runtime.
 - */
--#ifndef MPI_IOC_PAGE_2_RAID_VOLUME_MAX
--#define MPI_IOC_PAGE_2_RAID_VOLUME_MAX      (1)
+-#ifndef MPI_IOC_PAGE_3_PHYSDISK_MAX
+-#define MPI_IOC_PAGE_3_PHYSDISK_MAX         (1)
 -#endif
 -
- typedef struct _CONFIG_PAGE_IOC_2
+ typedef struct _CONFIG_PAGE_IOC_3
  {
-     CONFIG_PAGE_HEADER          Header;                              /* 00h */
-@@ -1034,7 +1026,7 @@ typedef struct _CONFIG_PAGE_IOC_2
-     U8                          MaxVolumes;                          /* 09h */
-     U8                          NumActivePhysDisks;                  /* 0Ah */
-     U8                          MaxPhysDisks;                        /* 0Bh */
--    CONFIG_PAGE_IOC_2_RAID_VOL  RaidVolume[MPI_IOC_PAGE_2_RAID_VOLUME_MAX];/* 0Ch */
-+    CONFIG_PAGE_IOC_2_RAID_VOL  RaidVolume[] __counted_by(NumActiveVolumes); /* 0Ch */
- } CONFIG_PAGE_IOC_2, MPI_POINTER PTR_CONFIG_PAGE_IOC_2,
-   IOCPage2_t, MPI_POINTER pIOCPage2_t;
+     CONFIG_PAGE_HEADER          Header;                                /* 00h */
+     U8                          NumPhysDisks;                          /* 04h */
+     U8                          Reserved1;                             /* 05h */
+     U16                         Reserved2;                             /* 06h */
+-    IOC_3_PHYS_DISK             PhysDisk[MPI_IOC_PAGE_3_PHYSDISK_MAX]; /* 08h */
++    IOC_3_PHYS_DISK             PhysDisk[] __counted_by(NumPhysDisks); /* 08h */
+ } CONFIG_PAGE_IOC_3, MPI_POINTER PTR_CONFIG_PAGE_IOC_3,
+   IOCPage3_t, MPI_POINTER pIOCPage3_t;
  
 -- 
 2.34.1
