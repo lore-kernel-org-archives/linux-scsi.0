@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6849416DC16;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A07D161B43;
 	Thu, 11 Jul 2024 17:28:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720718902; cv=none; b=u1x/C+CorNn9dWOOlCAr+M2MfG25d9OUWp5mFqGPZQGAS+ZFlmd9TP0ZcdPF8GphNQV8eGP8l+hm6aE4chGxyZam8pshnL93dNCjXH3BdKUBs27KLNAIilMGMmrla6kbiMWx7kmz3S1b7Qh+22Z85rcUJmuW4mxdYp+5ZLXI9RI=
+	t=1720718902; cv=none; b=dSLGgWUdkHHJMUBjoCgoqovdQiHI09H3FabbpKVk3kPmWyQyzEdZb7q/yh8DRQCrLsVS6PrqTJxrWkiSCGvqBqjeDP831Q+L5d05KQSjW6207JzIOVEDrJaESeuxUDlNIqQnfZ/bdOZrJ/pKJ1WnF3tr/VR2fAy2SxP97c81Jpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1720718902; c=relaxed/simple;
-	bh=KJRtzRSoC+YD4ifccvdvij8WY1nz8g+drmk27AlHQwc=;
+	bh=S/t7jEfsjpSOFiX2lqIU3Uboq5XyFS6FeOQZndPIGIE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=teL8j0zca30pKvDkaUPaeY+lpPU+MGzGuYtSHpXZNlHLL9XlqRQ3N6DjpEtU+hyvaQeCm+Zf+Pv0ai4pYgenYpsHAz46gi8MgPge2X8lqA5fmedBrKG6URkmdk+DVBQXAKq58sr2Z8KxJP374mOKMQY2JgGDE3MtLlnR088Lfxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RY+OuZ2T; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=ZlSZ2G4h6BHiUD4PUtKyYGBBEuHF0ghXpF91sUZZjJknzgvLvjQYZv6iy4veOOA1324JvdWgthqYsnlS7k3ZkRV/V213koHIuiRqkQ7S1Zdok1CIT6kT8w6xg034dqAsRBg+4y4PIhnb7SZD5W//nfEtws8C/AQ+COnjnDw48UQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ocbYwkZI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RY+OuZ2T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 226AAC4AF09;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ocbYwkZI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B95EC116B1;
 	Thu, 11 Jul 2024 17:28:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1720718902;
-	bh=KJRtzRSoC+YD4ifccvdvij8WY1nz8g+drmk27AlHQwc=;
+	bh=S/t7jEfsjpSOFiX2lqIU3Uboq5XyFS6FeOQZndPIGIE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=RY+OuZ2TKBefmdXQSIg/eGd1L+8tbd7PPhOzuDJkWRKe7BrSbAnbSM9zhwtFMdEIg
-	 LzbSh+rwuV49EMQ5fp/aN/EE/T57RMV/cPsJuGLCmU1CfWYfEYw72KjH5eP37wqgfN
-	 DWJATSiLDw470Gt7zhnLgARARNd/hAds2fN8aMwTUu6mKrlI/h1So9IHTGVavhLeOE
-	 Z0zMIRSo3ShcBOjoG1hEAIPL8nKKsGjVcvQYV7KptkymwjHCbbmPMsRdpMusQWTgPt
-	 /rDK3c5EmznMrCxskPAAecpZbbLDXSe8jan0kVBTXimQYfOMXs31vX6HKhHpOegumt
-	 I/4wO1YE4MovA==
+	b=ocbYwkZIbRZThQpOqDQiRvszH6StHF5tuWI+zDdk3c4P6f/0Ko+nxo84R4HRLhTT7
+	 8xmQVMsRpNfMzXqsXPRb3o3oxNYuPw16e8lt5iDd35BBcPSxiaxy18eLB0mEXVm8p2
+	 5zucKlHQDvJA5duk3yQ90QNBmTXBLsOuT+PAuBKePLJpR0/+pjVj7T5nviF8IsmgZZ
+	 sM4ymqj0cTDMFrIzj34nLa9j5riV6VvTwL5t/R1WR+Mu/ljfSZdsWNEtUuFLEv5hTT
+	 0ektS5tRdYxFgrL6QLW4goR2Y+eAhE3aHwvLotzhbFFoi/9pjWJniJDY0SCJCstw/M
+	 dUNZEH4ikJ/kQ==
 From: Kees Cook <kees@kernel.org>
 To: Sathya Prakash <sathya.prakash@broadcom.com>
 Cc: Kees Cook <kees@kernel.org>,
@@ -36,9 +36,9 @@ Cc: Kees Cook <kees@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	linux-hardening@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/6] scsi: message: fusion: struct _CONFIG_PAGE_RAID_PHYS_DISK_1: Replace 1-element array with flexible array
-Date: Thu, 11 Jul 2024 10:28:17 -0700
-Message-Id: <20240711172821.123936-3-kees@kernel.org>
+Subject: [PATCH 1/6] scsi: message: fusion: struct _RAID_VOL0_SETTINGS: Replace 1-element array with flexible array
+Date: Thu, 11 Jul 2024 10:28:15 -0700
+Message-Id: <20240711172821.123936-1-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240711172432.work.523-kees@kernel.org>
 References: <20240711172432.work.523-kees@kernel.org>
@@ -48,21 +48,23 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2583; i=kees@kernel.org; h=from:subject; bh=KJRtzRSoC+YD4ifccvdvij8WY1nz8g+drmk27AlHQwc=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBmkBYzSnVQ68wF5ei0rKWx29joncaaILeM/2BQk 8+FkSUomRaJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZpAWMwAKCRCJcvTf3G3A Jom1D/9g/Ps1VLnG6OKWs8PoOZsmCXRCMBwLmXRoKXoa0Ov5J0/ObTivalAgKfehlP7WTtvsHLS rF/aX+elOIOAaeqHZTX232IdcXI3RsOfBArJ3DpbvyeQ+t59gTM/qksgfP0reTEhB3wbJIEmNWI TXvSlzWVgGyDJiXd2Ry60gESEXdmvJDxDfze7eqs8TpJO5U/d1NNoi0Y7osx96SinJgN2s/ZCO2 QuP3w/9skAG6kz1AIUW71aSWPkBiZ713sPHpXfF8hGPZvIv4w24NdQwfnjyuNYFK3FJ4/3iGRoD yhOEXSUFfRPMcI+bF4VWDYLArkv2jhsxvPh3/sB+OoKY426fTXCjhhAR4J1gzxhioj83OJIiI77 sldYu0ybXollOPNEwiRCsciuAZLTGNG3x84qdRAi6yf5V9JjQYQh8dxbaEJtpJSVaxq3d/gFBsM 3S4hkNIYg/wHBChLR56BJJ5jl2Fciaa9znLw1bNExRUBGOiHmnW+LBl/PBKFvg0EEQlsKjlKWF5 3Tkh4ADbUGf2B+5H0cvZoDCVWc2W1brUi5G9PRW0EOHLRkrh/ROCItOqKcNA7owOr69NebsRk5v pnqKf0uehDP/TY9QzhJWbdmwhpH9cu9mOHsD6ESTLnxuf+I95An3mxmjzVFBJ8yDPObbDxKAoYK FpCOLWn451la7Rg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2598; i=kees@kernel.org; h=from:subject; bh=S/t7jEfsjpSOFiX2lqIU3Uboq5XyFS6FeOQZndPIGIE=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBmkBYz9kgTTMGIAtlV30HywJoIqN5yG0+IKrxfM Rxmxp5my4+JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZpAWMwAKCRCJcvTf3G3A JrRjEACn7ztVfg6iizze+imGktoQFIv0ZdxFCxj80w/UO9p+bTxQ9zjpMqjcD1XB9FKsuktLWDq Oq3B3APJ7DwCuEtMDNF331HnIyNg0Ud0gcGvQ4bLkHwU9QbfTrO22DQSmdzO4feTjAG09/ALjgm EuHTDFe+vB7V0f1DukEjThNBdRly13mXQIXQUs+KrfaEfXHrGXLRMs7HXDqe8AKe8jaKleUo7N0 3uusN4oBBhXuLcTIKP0HttFChDcsdwBpPCZ15WvFRTBKKo7flcM6roE6WT3O+ZnD/FxDqY6vD+9 eP0BIAodeRKfmsKJI/Yda0kfwM40TnECm69LVhKAlZKAVlJCpzabolINZH0F81LKDS4j/vrxpZR 4afZ85C7DZ9dd/m1tj3VnSTUlbrxuduggCKxnTNSod1uMMqDdz9VMiuMOcMukaqs+A63XG0EeOa znm/Eh9zPm/wY5OsIcZfVIWHXuIiULsXviDrtomWkuskoGm6lIh/Q1+GavPO6DlLnEvXLh1njkr ME0SHw8M5k+IQMJ91tSum5cNM3rZmqxqwbMDWKK7iGIhNlLfDq5uKQXShXFrFPamjsMrx/LzBEi WEQq4nCoYmP2LYqJSBUFz/tU5Vs0p27fJQpK2Cr21Li/rYSUjxKyVp7fSaHTwGb7u75ajdMIgY4 yrjXX3H+H4lHpBQ==
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
 Replace the deprecated[1] use of a 1-element array in
-struct _CONFIG_PAGE_RAID_PHYS_DISK_1 with a modern flexible array.
+struct _RAID_VOL0_SETTINGS with a modern flexible array.
 
-Additionally add __counted_by annotation since Path is only ever
-accessed via a loops bounded by NumPhysDiskPaths:
+Additionally add __counted_by annotation since PhysDisk is only ever
+accessed via a loops bounded by NumPhysDisks:
 
-lsi/mpi_cnfg.h:    RAID_PHYS_DISK1_PATH            Path[] __counted_by(NumPhysDiskPaths);/* 0Ch */
-mptbase.c:      phys_disk->NumPhysDiskPaths = buffer->NumPhysDiskPaths;
-mptbase.c:      for (i = 0; i < phys_disk->NumPhysDiskPaths; i++) {
-mptbase.c:              phys_disk->Path[i].PhysDiskID = buffer->Path[i].PhysDiskID;
-mptbase.c:              phys_disk->Path[i].PhysDiskBus = buffer->Path[i].PhysDiskBus;
+lsi/mpi_cnfg.h:    RAID_VOL0_PHYS_DISK     PhysDisk[] __counted_by(NumPhysDisks); /* 28h */
+mptbase.c:	for (i = 0; i < buffer->NumPhysDisks; i++) {
+mptbase.c:		    buffer->PhysDisk[i].PhysDiskNum, &phys_disk) != 0)
+mptsas.c:	for (i = 0; i < buffer->NumPhysDisks; i++) {
+mptsas.c:		    buffer->PhysDisk[i].PhysDiskNum, &phys_disk) != 0)
+mptsas.c:	for (i = 0; i < buffer->NumPhysDisks; i++) {
+mptsas.c:		    buffer->PhysDisk[i].PhysDiskNum, &phys_disk) != 0)
 
 No binary differences are present after this conversion.
 
@@ -81,32 +83,32 @@ Cc: linux-hardening@vger.kernel.org
  1 file changed, 1 insertion(+), 9 deletions(-)
 
 diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
-index c7997e32e82e..e30132b57ae7 100644
+index 3770cb1cff7d..f59a741ef21c 100644
 --- a/drivers/message/fusion/lsi/mpi_cnfg.h
 +++ b/drivers/message/fusion/lsi/mpi_cnfg.h
-@@ -2447,14 +2447,6 @@ typedef struct _RAID_PHYS_DISK1_PATH
- #define MPI_RAID_PHYSDISK1_FLAG_INVALID         (0x0001)
- 
+@@ -2295,14 +2295,6 @@ typedef struct _RAID_VOL0_SETTINGS
+ #define MPI_RAID_HOT_SPARE_POOL_6                       (0x40)
+ #define MPI_RAID_HOT_SPARE_POOL_7                       (0x80)
  
 -/*
 - * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.PageLength or NumPhysDiskPaths at runtime.
+- * one and check Header.PageLength at runtime.
 - */
--#ifndef MPI_RAID_PHYS_DISK1_PATH_MAX
--#define MPI_RAID_PHYS_DISK1_PATH_MAX    (1)
+-#ifndef MPI_RAID_VOL_PAGE_0_PHYSDISK_MAX
+-#define MPI_RAID_VOL_PAGE_0_PHYSDISK_MAX        (1)
 -#endif
 -
- typedef struct _CONFIG_PAGE_RAID_PHYS_DISK_1
+ typedef struct _CONFIG_PAGE_RAID_VOL_0
  {
-     CONFIG_PAGE_HEADER              Header;             /* 00h */
-@@ -2462,7 +2454,7 @@ typedef struct _CONFIG_PAGE_RAID_PHYS_DISK_1
-     U8                              PhysDiskNum;        /* 05h */
-     U16                             Reserved2;          /* 06h */
-     U32                             Reserved1;          /* 08h */
--    RAID_PHYS_DISK1_PATH            Path[MPI_RAID_PHYS_DISK1_PATH_MAX];/* 0Ch */
-+    RAID_PHYS_DISK1_PATH            Path[] __counted_by(NumPhysDiskPaths);/* 0Ch */
- } CONFIG_PAGE_RAID_PHYS_DISK_1, MPI_POINTER PTR_CONFIG_PAGE_RAID_PHYS_DISK_1,
-   RaidPhysDiskPage1_t, MPI_POINTER pRaidPhysDiskPage1_t;
+     CONFIG_PAGE_HEADER      Header;         /* 00h */
+@@ -2321,7 +2313,7 @@ typedef struct _CONFIG_PAGE_RAID_VOL_0
+     U8                      DataScrubRate;  /* 25h */
+     U8                      ResyncRate;     /* 26h */
+     U8                      InactiveStatus; /* 27h */
+-    RAID_VOL0_PHYS_DISK     PhysDisk[MPI_RAID_VOL_PAGE_0_PHYSDISK_MAX];/* 28h */
++    RAID_VOL0_PHYS_DISK     PhysDisk[] __counted_by(NumPhysDisks); /* 28h */
+ } CONFIG_PAGE_RAID_VOL_0, MPI_POINTER PTR_CONFIG_PAGE_RAID_VOL_0,
+   RaidVolumePage0_t, MPI_POINTER pRaidVolumePage0_t;
  
 -- 
 2.34.1
