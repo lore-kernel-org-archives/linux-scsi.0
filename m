@@ -1,161 +1,92 @@
-Received: from omta38.uswest2.a.cloudfilter.net (omta38.uswest2.a.cloudfilter.net [35.89.44.37])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39ABE16DED6
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jul 2024 18:04:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.89.44.37
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22D0316DEC0;
+	Thu, 11 Jul 2024 18:07:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720721082; cv=none; b=TfJo9wT0/r029hHW/CrUmaH1NrUb0o0fEd7YelMV2lvrC91gwGztlPsi2bXCjvp4jjVSIiqMcsHSb7yfSxziGvJtykpOoED4H4NwvBYbxlLUcOWU2xXbwkIdw9TBlQOnDt3aoTo3CLLznQktwOYMWBcxFiOgZKvuWRYiKKHa3No=
+	t=1720721228; cv=none; b=pqpL5wMUpD9vpHlrARFlgMLNSy5mZOPPaIaaiqLm73Zp3inxMv7NIpnVZmfz3Y/rdglYetBIj/vFs5ii2oC9pN/xZkfJYtt/bYCPDDMtyVAEfiZSzrPVmOFRRn7UNG3OeMWfGRDwiJ+Lw+zvNMof/pJbxCEWETj6jumRrosiH6c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720721082; c=relaxed/simple;
-	bh=hvNPEB+rEKLF5Ml8Lj5DXvHU2eGQGia2o0wsQkix/jg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ta1CXsUyVS6Uukt/78G8N7fwLmuT2noDXyNoAUW5xZvqPPevqKQj6dtd1Q2rfTwgaYYZLN7dv14O/zlExp6GcnaediSjXqsuJtye6Rn47m7lEbYUZm1K1E5hXxYkWcucDK1qCVIEcFpehxFLeflymbO78+NcfKxu6u734aKacmo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=cvmNE2uF; arc=none smtp.client-ip=35.89.44.37
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
+	s=arc-20240116; t=1720721228; c=relaxed/simple;
+	bh=EtcF8uQ/QN2Cq9DSFB4M4YAovjV0kOImqb2khua9nY4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=OnjIdefIjpj8H9d4soPjbw8eQcdOTpNQ+MvVgygsgpOV4ta5r5oATswJ9ru4tId4e5BR2V7H6oeQFAxoqDELFglEXws+4IG8v6ycZLFTP2qLDGR0cdaLlXHObfkPlFAQJS1malyYzCpDGM3jYUPAwg/CPgV07C53ssGA3ARn0qk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rHBayMaC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="cvmNE2uF"
-Received: from eig-obgw-5006a.ext.cloudfilter.net ([10.0.29.179])
-	by cmsmtp with ESMTPS
-	id RcW4sVI70umtXRy9os4wRH; Thu, 11 Jul 2024 18:04:40 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-	by cmsmtp with ESMTPS
-	id Ry9ns8uYErcQSRy9oscEqX; Thu, 11 Jul 2024 18:04:40 +0000
-X-Authority-Analysis: v=2.4 cv=T92KTeKQ c=1 sm=1 tr=0 ts=66901eb8
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=frY+GlAHrI6frpeK1MvySw==:17
- a=IkcTkHD0fZMA:10 a=4kmOji7k6h8A:10 a=wYkD_t78qR0A:10 a=NEAV23lmAAAA:8
- a=VwQbUJbxAAAA:8 a=uBuKx8GwAAAA:8 a=bLk-5xynAAAA:8 a=yPCof4ZbAAAA:8
- a=Tt-LMVSYixBJkh_1nL0A:9 a=QEXdDO2ut3YA:10 a=AjGcO6oz07-iQ99wixmX:22
- a=wZgZ3yaTFkxMEWn-yT5t:22 a=zSyb8xVVt2t83sZkrLMb:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=aTh8KIYPXZBPgzwwAjibUfCQIN6ZaSc1iXtBYCJLcu0=; b=cvmNE2uFMRGLY4oxQYa/5b9svX
-	BoAWyXAV+ma1+fjyIDcSMVuljfhTykUqU6e6xF2TkT5FLy2ko2louSkAzstA0herJtCU0Ix/8BFXW
-	2szxqF4Rr0c1cSPg8NJLvadN2HK0u78kuzUAMAKwHI4NqFLwUbis2VobTTHFcRVyJNQKI0yYm3wvk
-	PTH9IWdZcBj0Lsn1w/p32gqH9usLeb+ZWYyDHlChzLS9kD3EmN2q8w2bjomLE7hlh7sKW5si3m5an
-	BHNS6YyhbeGy246z0olbOV5f05IlOsUybA4ks+Wdl/P7ZS3YwSV74Kmvap+7Ky3jlY8Xly1RhUYMD
-	fbkmr/BA==;
-Received: from [201.172.173.139] (port=59958 helo=[192.168.15.4])
-	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96.2)
-	(envelope-from <gustavo@embeddedor.com>)
-	id 1sRy9m-0025CJ-2Z;
-	Thu, 11 Jul 2024 13:04:39 -0500
-Message-ID: <bfcb72d7-bc3b-4398-be45-dabd60b73cf4@embeddedor.com>
-Date: Thu, 11 Jul 2024 12:04:32 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rHBayMaC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1E1FC116B1;
+	Thu, 11 Jul 2024 18:07:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720721227;
+	bh=EtcF8uQ/QN2Cq9DSFB4M4YAovjV0kOImqb2khua9nY4=;
+	h=From:To:Cc:Subject:Date:From;
+	b=rHBayMaCSHsy+Wr+So3vygZW06zHR7UI78oVM2Pa2R2deXD0DzU4IrAD4DUoHbyLA
+	 hQTT2Ty+sd0vPzht+x+ha/iNXibyQXxFVxro//KHMNDUsZFnxRMIMoG34Q3z7pbTTr
+	 BsFB+gAeLA1HFegqJ/ZGq8CbDsNiGMNxmg+sLK6FTnM86++Xv2aboyUmLwFgv7B3aB
+	 8SsuGKV0KDSLQ/TzhaeqMUTpDwufanAkmdBwqUrMHAQmTKxhH1WthxLl+g9JMOG97K
+	 K6VAyBTBxyYpUtJ2xFyV1Rwb7FSnAUbOWNAu9gPp5xMpyeSpOwJHQneqBbDOt7cO39
+	 eGTe1oi/Xx1eQ==
+From: Kees Cook <kees@kernel.org>
+To: Brian King <brking@us.ibm.com>
+Cc: Kees Cook <kees@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH] scsi: ipr: Replace 1-element arrays with flexible arrays
+Date: Thu, 11 Jul 2024 11:07:06 -0700
+Message-Id: <20240711180702.work.536-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: aacraid: union aac_init: Replace 1-element array
- with flexible array
-To: Kees Cook <kees@kernel.org>,
- Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, "Gustavo A. R. Silva" <gustavoars@kernel.org>,
- linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-References: <20240711174815.work.689-kees@kernel.org>
-Content-Language: en-US
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <20240711174815.work.689-kees@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 201.172.173.139
-X-Source-L: No
-X-Exim-ID: 1sRy9m-0025CJ-2Z
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([192.168.15.4]) [201.172.173.139]:59958
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 11
-X-Org: HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfDl2jE1z0p6Pl5BONEkSvw5ZMwGH6zpPObxhaqGnPF9VjqP9WKltB0yndSbYZmnkNKuMi8wYRnXI3FlOnlwzpa5ulGkZ4s3E5v59gkThKXAszb5I7vKA
- PuqeABwMumTNk7QOL3FWNtXNqXOCFbHoBEVefyjzoHv1X+qB1julpvNYIaHXvPmki6FtpCMuaBxELMa3J7m1C/09jPWvzSisZ9C2YMn4eomvYsSujxZaeUAr
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1342; i=kees@kernel.org; h=from:subject:message-id; bh=EtcF8uQ/QN2Cq9DSFB4M4YAovjV0kOImqb2khua9nY4=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBmkB9Ku+0pr13dRVlUtFt3Apb/2DhkDDEcP0RgL jYNeyWluyGJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZpAfSgAKCRCJcvTf3G3A Jp0SD/9g6Tj9uJv43ZjKk1rY+13SV7PIdShwt69nFU7TwR+0rkGMp/q7ADBthak2+929V323CbR ZeX0glEgrBW7qbUN3tqaI6TWuQv5ApUUWfTKumtxLlApdtBd/U92YqNbRLNKP/FDUrVE/D8FXYZ N0DOGEwNkpUS6FJOlkb86YfXgF0Y/rEJnKFhgP2kjsA+5bdPy9vq7RwA53hsaQLrsXIX16vMmeI sr5Uxx7rJgbRAsxnTTHSvOCo/XnswcvwpJCprD9VSsAnXprHJx9Im4I5Uqv+0jEEVAGhplXt0NB jp+ZDvv4V6uM0c4ODXlRLPRBg4ME2XWzYToFUJDMRmXhncspc6XenkKTalCh1HTuC/25Hlb9ywT p4IFyUNsWWIZu6pWQvn5ZfiLXud1Sf0eONYWPmUy//3mkDa3tQnUk/XLE3SiWOY7G2e5bdujpXF YM8r0KTvdvq9Q/aLgtxy/o+GMComizdA191zQY7nh7Gyu9bGwW3ulIm9LlUCqTWvm2C+J9x/5vZ iIOn3HKH69W2Z6srHUlPJy5N9r6G50J/pZfg+kIp5yA/CP0dDwbxfsFY5NUWcLXYUOBcpcn4ncW S5XqMba21LgtouG+muyNf4YOU5Rbf5VbsyczKtBukK2qk+OsIJdeZcFxWrC9UtNKvJsyt+cX1x6 fa5IG2fejI0Bq
+ hw==
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
+Replace the deprecated[1] use of a 1-element arrays in
+struct ipr_hostrcb_fabric_desc and struct ipr_hostrcb64_fabric_desc
+with modern flexible arrays.
 
+No binary differences are present after this conversion.
 
-On 11/07/24 11:48, Kees Cook wrote:
-> Replace the deprecated[1] use of a 1-element array in
-> union aac_init with a modern flexible array.
-> 
-> Additionally add __counted_by annotation since rrq is only ever accessed
-> after rr_queue_count has been set (with the same value used to control
-> the loop):
-> 
->                  init->r8.rr_queue_count = cpu_to_le32(dev->max_msix);
-> 		...
->                  for (i = 0; i < dev->max_msix; i++) {
->                          addr = (u64)dev->host_rrq_pa + dev->vector_cap * i *
->                                          sizeof(u32);
->                          init->r8.rrq[i].host_addr_high = cpu_to_le32(
->                                                  upper_32_bits(addr));
-> 
-> No binary differences are present after this conversion.
-> 
-> Link: https://github.com/KSPP/linux/issues/79 [1]
-> Signed-off-by: Kees Cook <kees@kernel.org>
-> ---
-> Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-> Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> ---
->   drivers/scsi/aacraid/aacraid.h | 2 +-
->   drivers/scsi/aacraid/src.c     | 2 +-
->   2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-> index 7d5a155073c6..659e393c1033 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -873,7 +873,7 @@ union aac_init
->   			__le16	element_count;
->   			__le16	comp_thresh;
->   			__le16	unused;
-> -		} rrq[1];		/* up to 64 RRQ addresses */
-> +		} rrq[] __counted_by_le(rr_queue_count); /* up to 64 RRQ addresses */
->   	} r8;
->   };
->   
-> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-> index 11ef58204e96..28115ed637e8 100644
-> --- a/drivers/scsi/aacraid/src.c
-> +++ b/drivers/scsi/aacraid/src.c
-> @@ -410,7 +410,7 @@ static void aac_src_start_adapter(struct aac_dev *dev)
->   			lower_32_bits(dev->init_pa),
->   			upper_32_bits(dev->init_pa),
->   			sizeof(struct _r8) +
-> -			(AAC_MAX_HRRQ - 1) * sizeof(struct _rrq),
-> +			AAC_MAX_HRRQ * sizeof(struct _rrq),
+Link: https://github.com/KSPP/linux/issues/79 [1]
+Signed-off-by: Kees Cook <kees@kernel.org>
+---
+Cc: Brian King <brking@us.ibm.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/ipr.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-struct_size_t() can be used here?
-
-In any case:
-
-Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-
-Thanks
+diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
+index c77d6ca1a210..b2b643c6dbbe 100644
+--- a/drivers/scsi/ipr.h
++++ b/drivers/scsi/ipr.h
+@@ -1030,7 +1030,7 @@ struct ipr_hostrcb_fabric_desc {
+ #define IPR_PATH_FAILED			0x03
+ 
+ 	__be16 num_entries;
+-	struct ipr_hostrcb_config_element elem[1];
++	struct ipr_hostrcb_config_element elem[];
+ }__attribute__((packed, aligned (4)));
+ 
+ struct ipr_hostrcb64_fabric_desc {
+@@ -1044,7 +1044,7 @@ struct ipr_hostrcb64_fabric_desc {
+ 	u8 res_path[8];
+ 	u8 reserved3[6];
+ 	__be16 num_entries;
+-	struct ipr_hostrcb64_config_element elem[1];
++	struct ipr_hostrcb64_config_element elem[];
+ }__attribute__((packed, aligned (8)));
+ 
+ #define for_each_hrrq(hrrq, ioa_cfg) \
 -- 
-Gustavo
+2.34.1
 
->   			0, 0, 0, NULL, NULL, NULL, NULL, NULL);
->   	} else {
->   		init->r7.host_elapsed_seconds =
