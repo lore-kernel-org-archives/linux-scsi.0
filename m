@@ -1,89 +1,121 @@
-Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D2896FC3;
-	Thu, 11 Jul 2024 01:12:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81C3F29A2
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jul 2024 02:21:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720660363; cv=none; b=UrK09f1jsRsSKbVJKHruKxTCXGiPTRC+++9uTNPdHImMi3oV5WR4o1Cqrv1qarC+8D/of9NZCrXWr7oLZT0k4fc6XkUBcBKWgeVVa4ThDGlq0PVD9Zjy3FxoYwpgS2y1bMdZH/wqMuuzukoNnO1ICFds5UwsGP75MqbBEJJHO7s=
+	t=1720664512; cv=none; b=H1vDdjVNYMYkRJCLIhhvqlIuGpWZn8pqntEm6uE8hiz9+3tWzBaRMzqcBlsHFRuZ6FDgLh+qkcA/hYV8X/AZzKCwsCGvionU5kGSLYbJCaQ04EJs+d2GtLmXw+zNcTkK7JBy8Pha+/z9BbND1KinycjKNqaLOoU4EoErZ4N8fjc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720660363; c=relaxed/simple;
-	bh=O7UHm5mGZ4SXp7fR7bG+DpEoKu3hZUJvpz1WHuoRNrU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Vqx/48J7lKnH4M5Yv6VLJNH6L977h3bmP2KmTvBXkgh8B5u4Gi2779Cf8C9c+pH32Cl/9icW3vlaRjOaadgo376cvDS65aOIbw/HxU7evPjGwS7khQDO+gQHDBh+LVr5lBzvTUdjtDe/MJRqRwA1lFFKAlayh0E1qO5bguGmx3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost (unknown [124.16.138.129])
-	by APP-01 (Coremail) with SMTP id qwCowADHqE10MY9mlj+8Ag--.2888S2;
-	Thu, 11 Jul 2024 09:12:21 +0800 (CST)
-From: Chen Ni <nichen@iscas.ac.cn>
-To: njavali@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	skashyap@marvell.com,
-	himanshu.madhani@oracle.com,
-	dwagner@suse.de
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chen Ni <nichen@iscas.ac.cn>
-Subject: [PATCH v2] scsi: qla2xxx: Convert comma to semicolon
-Date: Thu, 11 Jul 2024 08:57:24 +0800
-Message-Id: <20240711005724.2358446-1-nichen@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1720664512; c=relaxed/simple;
+	bh=Z4eYIhAIpPzR7KvVH7SvdRBxljKgXD4yxtIo7verzGM=;
+	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=QCvUIlQg3uIINJzCj+QOtXUZRdsyu3GPmhy9oWqrMgieKLoxQyX9wZTyymovpY3WANzgREUHR11kxERiudJhX5Tv62RTmRE8BPcUKLkTPvSqmjIg9sMI0LBst1fGxNzKqCITib3+9dt0p8S+sF72AWUvADaywdeFgDGgo0jDPmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WBCTgAgG; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WBCTgAgG"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 058F7C4AF07
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jul 2024 02:21:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720664512;
+	bh=Z4eYIhAIpPzR7KvVH7SvdRBxljKgXD4yxtIo7verzGM=;
+	h=From:To:Subject:Date:From;
+	b=WBCTgAgG/IUug6uPqnFP8LLUOE9Gr2Uz9+tdu+GPq6D9kg1RBBgzb4W79Lp37GItl
+	 oE1SAuAMYByX2Znm192M4BK9jzc/f8IgGoThGDqHuw7hMfPjrfdxvVzVfCiKp89f40
+	 7gL2iLmTLklYS6abH8L/fescNcfEHCDnr/ZsXAwXERA82biqP+Fl+bEe0r7NPQ6uUU
+	 FV4t9DoWxgeiSLlm2s8INglFKcnHDsEulia8W/vcGG2mjsf7QCh5Ags20oQT2gP+va
+	 dkyIssR+YsccUk2TxIpNi0mz778r5PShpCA8EIgcP/dPamkyEZejFzT7+qIDwCt73a
+	 EJ+d+9U87dFDQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id ECA48C53BB8; Thu, 11 Jul 2024 02:21:51 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 219027] New: The SCSI can't adjust Max xfer length (blocks)
+ with different storage device
+Date: Thu, 11 Jul 2024 02:21:51 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: 983292588@qq.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version rep_platform
+ op_sys bug_status bug_severity priority component assigned_to reporter
+ cf_regression
+Message-ID: <bug-219027-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:qwCowADHqE10MY9mlj+8Ag--.2888S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7Jw4UZrWxtrWUCF1UXry8AFb_yoWDGrc_uF
-	s0qrW2qrn0kr129w18Xr43A3yIvFWvqr1kC3WYyry5u3y8X347XF1Yqr43X3W3trWIyFW5
-	Aw4UXryjvF1rujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbVxFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1l84ACjcxK6I8E87Iv67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4UJV
-	WxJr1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1lc2xSY4AK67AK6w4l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr
-	0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY
-	17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcV
-	C0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY
-	6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa
-	73UjIFyTuYvjfU5eOJUUUUU
-X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
 
-Replace a comma between expression statements by a semicolon.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D219027
 
-Fixes: d4523bd6fd5d ("scsi: qla2xxx: Refactor asynchronous command initialization")
-Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
----
-Changelog:
+            Bug ID: 219027
+           Summary: The SCSI can't adjust Max xfer length (blocks) with
+                    different storage device
+           Product: SCSI Drivers
+           Version: 2.5
+          Hardware: All
+                OS: Linux
+            Status: NEW
+          Severity: high
+          Priority: P3
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: 983292588@qq.com
+        Regression: No
 
-v1 -> v2:
+My storage device CPU has a 64kB (limited by hardware) buffer used to cache
+reads/writes which means it can only cache up to 128 blocks(512Byte) of mem=
+ory.
 
-1. Add Fixes tag.
----
- drivers/scsi/qla2xxx/qla_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+But the Linux source code says that for USB2.0, the default max_sectors=3D2=
+40
+blocks. So the SCSI Write-10 and Read-10 command has a total-blocks field t=
+hat
+can be up to 240 blocks (120KB) for USB2.0.=20
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 8377624d76c9..e2ca9a14b643 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -423,7 +423,7 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
- 	sp->type = SRB_LOGOUT_CMD;
- 	sp->name = "logout";
- 	qla2x00_init_async_sp(sp, qla2x00_get_async_timeout(vha) + 2,
--			      qla2x00_async_logout_sp_done),
-+			      qla2x00_async_logout_sp_done);
- 
- 	ql_dbg(ql_dbg_disc, vha, 0x2070,
- 	    "Async-logout - hdl=%x loop-id=%x portid=%02x%02x%02x %8phC explicit %d.\n",
--- 
-2.25.1
+When originally testing the product on Windows 11 it never writes more than=
+ 128
+blocks at a time. However, when tested on Linux it sometimes writes more th=
+an
+128 blocks(240 blocks as setting above), which causes the usb storage devic=
+e to
+crash.=20
 
+
+Is there a way to tell the Linux host OS not to request more than 128 block=
+s?
+
+My storage device's firmware has implemented block limit VPD page (page =3D
+0xB0), and it works well on Windows 10/11. I even set the block limit to be=
+ 64
+blocks, it's OK too. Because before the data transfer, the windows host iss=
+ue
+an SCSI inquiry order with the VPD PAGE CODE =3D 0xB0, so the device could
+transmit the block limits information to the host. And then the windows host
+could adjust the amount of data transferred.
+
+However, on Linux or MacOS, the host does not appear to be running the block
+limits command. So maybe the host doesn't know what is the block limits. Th=
+en
+the write/read blocks number beyond the buffer size.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
