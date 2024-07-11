@@ -1,96 +1,161 @@
-Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [96.44.175.130])
+Received: from omta040.useast.a.cloudfilter.net (omta040.useast.a.cloudfilter.net [44.202.169.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C07A15FA66;
-	Thu, 11 Jul 2024 18:11:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.44.175.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46F3E16DC14
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jul 2024 18:12:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.202.169.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720721495; cv=none; b=iEGYzeb0OE0Hf2ASU7+EOP4GQDhtHh4mROPkRJDviJyGuldRyEYP3kUabyAAEOJ0RafLuiW+Ml5alKc+m6mzOge/BKsxuBX8q7fdO9CMlCtwdXEx66Nni9VPNEDsbD1j1ff20wi9Pb0d9j4HgqOeWGPkIRa56Q7xOj9HRhkQvkY=
+	t=1720721536; cv=none; b=nonoRmXRaB83AqpYY1lNSUjEpYGbLxpKAy8mqpBi1dRP2v1sSJ564Im5ahAQRDSm8p5a3SubUCBGURM57hOYQEA1xN9X2YqzETvvR21n72XnyR9lV2XsTd8pR0TaSbbmVVw7/wKUwiFeSw2xdibhM34IUmQMxU0b498DAIipPrI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720721495; c=relaxed/simple;
-	bh=D8KXz0KQ+pzJQS4KY5WsXaRKj8NOEBdzjNRJQhwI3B0=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=m9W0iUjTivzpd1Z65Tt6ELoBTdvhKHcWQW4wbohKrkd/nlU7auAlSlma2tqlexreDBMGmeKNh5d2zZF+rZ3wmukXTYkvRHoxBy9avVADjrl3EmLqg0PxGQJ46Yhf8jf9qpCQEaxbAg09XshWACapSu63Woidv9rrXK/QP4XHHOg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=XKTLokDu; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=XKTLokDu; arc=none smtp.client-ip=96.44.175.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1720721536; c=relaxed/simple;
+	bh=qjZ95FdfR8fibhKaYFGQ8xUQGhsqJZDQmhdEuQus4R0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IyGLJYH94bWeJiPX2YxQVNOJlnbuyK7QoXMuEH8FPa6LFtKTgpa8TKlBWw6kkiCrCiYXI5ZPY9/ztOxe5iN3uhoVFuQt1IHVC20viMTqsh6sEsXpuo0YnL2Z56vGbYr4SUXLJ7MJyrJnDzpH8tgfNGGDWq6kr3ksOVMe9obNPzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=T9oIzlQu; arc=none smtp.client-ip=44.202.169.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="XKTLokDu";
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="XKTLokDu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1720721493;
-	bh=D8KXz0KQ+pzJQS4KY5WsXaRKj8NOEBdzjNRJQhwI3B0=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=XKTLokDutR8hbmQT5uAtnbZbNH1A6gbZX8Uo62VWIr9kumwsV7vFDZP8D5IcuQk60
-	 igmVk9woierzQbxIRGNeeKxoeIbjUlMQrOjPDNx4P0yvBPiqgcb1CP2AGR6cc/sVKL
-	 +YLjBxwT0znDdmW3w/za5xyIuaxbMD+obR+IAsrA=
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 8AF9612860F0;
-	Thu, 11 Jul 2024 14:11:33 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
- by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavis, port 10024)
- with ESMTP id L-3pakZQG7d3; Thu, 11 Jul 2024 14:11:33 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1720721493;
-	bh=D8KXz0KQ+pzJQS4KY5WsXaRKj8NOEBdzjNRJQhwI3B0=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=XKTLokDutR8hbmQT5uAtnbZbNH1A6gbZX8Uo62VWIr9kumwsV7vFDZP8D5IcuQk60
-	 igmVk9woierzQbxIRGNeeKxoeIbjUlMQrOjPDNx4P0yvBPiqgcb1CP2AGR6cc/sVKL
-	 +YLjBxwT0znDdmW3w/za5xyIuaxbMD+obR+IAsrA=
-Received: from [10.106.168.49] (unknown [167.220.104.49])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(Client did not present a certificate)
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id F213812860AA;
-	Thu, 11 Jul 2024 14:11:32 -0400 (EDT)
-Message-ID: <a9632309e6b5df95c7359ec9623bb1b95f764eb4.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: megaraid_sas: struct MR_HOST_DEVICE_LIST: Replace
- 1-element array with flexible array
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Kees Cook <kees@kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S
-	 <shivasharan.srikanteshwara@broadcom.com>, Chandrakanth patil
-	 <chandrakanth.patil@broadcom.com>, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-hardening@vger.kernel.org
-Date: Thu, 11 Jul 2024 11:11:31 -0700
-In-Reply-To: <20240711155841.work.839-kees@kernel.org>
-References: <20240711155841.work.839-kees@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.42.4 
+	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="T9oIzlQu"
+Received: from eig-obgw-6003a.ext.cloudfilter.net ([10.0.30.151])
+	by cmsmtp with ESMTPS
+	id Re6Bs54yknNFGRyH8sHyOv; Thu, 11 Jul 2024 18:12:14 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+	by cmsmtp with ESMTPS
+	id RyH7srZLmV2ivRyH7scVqv; Thu, 11 Jul 2024 18:12:13 +0000
+X-Authority-Analysis: v=2.4 cv=OLns3jaB c=1 sm=1 tr=0 ts=6690207e
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=frY+GlAHrI6frpeK1MvySw==:17
+ a=IkcTkHD0fZMA:10 a=4kmOji7k6h8A:10 a=wYkD_t78qR0A:10 a=NEAV23lmAAAA:8
+ a=VwQbUJbxAAAA:8 a=Q-fNiiVtAAAA:8 a=TAdm9UboAgj19sWw0poA:9
+ a=+jEqtf1s3R9VXZ0wqowq2kgwd+I=:19 a=QEXdDO2ut3YA:10 a=AjGcO6oz07-iQ99wixmX:22
+ a=Fp8MccfUoT0GBdDC_Lng:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=KoZkARx5lnZczAYRCAa+zb47+ShE8UYwk3OAblehdv8=; b=T9oIzlQuDG6LFtao7OafX47RD/
+	rku3zaOU+3dgu/SjQIERBdkH3G5kJ6xIRWvKymghT5xghbxmpFZMcx9NOnHiaVNhYOQMK32Ppxc6s
+	i3Z/MIUohxb+9IyP3HOQ2BubMR+yzOhDiakYAViNh+v/MVu9h/sDQYxJ2RkXbcjwuK41WgdO9MJNv
+	3slaPdPTilSQY2xYgbSmu84whFUb1aJ0AuBQGOzDOZuBjQXCmiy8a3Ex8j7GuqiuNJGqRYOkWomkH
+	mcXd3s0uHxQsW3SGfRNLp6JylwibXXJ8vJ1TTwkcrbZD3VlfPYrr10wFKpxWtiSKOEEwMgbCd/1Ir
+	vyCNs0pg==;
+Received: from [201.172.173.139] (port=53488 helo=[192.168.15.4])
+	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96.2)
+	(envelope-from <gustavo@embeddedor.com>)
+	id 1sRyH6-002DoA-1p;
+	Thu, 11 Jul 2024 13:12:12 -0500
+Message-ID: <f1d60f01-5059-4c1a-a00e-c7d523f28784@embeddedor.com>
+Date: Thu, 11 Jul 2024 12:12:11 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/6] scsi: message: fusion: struct _RAID_VOL0_SETTINGS:
+ Replace 1-element array with flexible array
+To: Kees Cook <kees@kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+ MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+ linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240711172432.work.523-kees@kernel.org>
+ <20240711172821.123936-1-kees@kernel.org>
+Content-Language: en-US
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <20240711172821.123936-1-kees@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 201.172.173.139
+X-Source-L: No
+X-Exim-ID: 1sRyH6-002DoA-1p
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.15.4]) [201.172.173.139]:53488
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 18
+X-Org: HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfFP21NRlQQR27Xosk+97oVLV8rfd3SmNx+gtjsN0geggRlz+pJmPazVofIPClbqXZj9n7vYuTwy4+HWiZeD4Yv3cXyRoVmT/UHkia5QSLh7nVhx+4iG0
+ rKDVj2oDTwHuGn8LJ570vPAlFyKooBmglVeVW8mzP6oB76swguxXXRdLrLh1X1kLFhFcZZOuGKvREOk3htMaXTjDhFpMH1tVtYr0+H00693pjnVQEvQa/vGZ
 
-On Thu, 2024-07-11 at 08:58 -0700, Kees Cook wrote:
+
+
+On 11/07/24 11:28, Kees Cook wrote:
 > Replace the deprecated[1] use of a 1-element array in
-> struct MR_HOST_DEVICE_LIST with a modern flexible array.
+> struct _RAID_VOL0_SETTINGS with a modern flexible array.
 > 
-> One binary difference appears in megasas_host_device_list_query():
+> Additionally add __counted_by annotation since PhysDisk is only ever
+> accessed via a loops bounded by NumPhysDisks:
 > 
->         struct MR_HOST_DEVICE_LIST *ci;
->         ...
->         ci = instance->host_device_list_buf;
->         ...
->         memset(ci, 0, sizeof(*ci));
+> lsi/mpi_cnfg.h:    RAID_VOL0_PHYS_DISK     PhysDisk[] __counted_by(NumPhysDisks); /* 28h */
+> mptbase.c:	for (i = 0; i < buffer->NumPhysDisks; i++) {
+> mptbase.c:		    buffer->PhysDisk[i].PhysDiskNum, &phys_disk) != 0)
+> mptsas.c:	for (i = 0; i < buffer->NumPhysDisks; i++) {
+> mptsas.c:		    buffer->PhysDisk[i].PhysDiskNum, &phys_disk) != 0)
+> mptsas.c:	for (i = 0; i < buffer->NumPhysDisks; i++) {
+> mptsas.c:		    buffer->PhysDisk[i].PhysDiskNum, &phys_disk) != 0)
 > 
-> The memset() clears only the non-flexible array fields. Looking at
-> the rest of the function, this appears to be fine: firmware is using
-> this region to communicate with the kernel, so it likely never made
-> sense to clear the first MR_HOST_DEVICE_LIST_ENTRY.
+> No binary differences are present after this conversion.
+> 
+> Link: https://github.com/KSPP/linux/issues/79 [1]
+> Signed-off-by: Kees Cook <kees@kernel.org>
 
-That's not necessarily a safe assumption: older qlogic for instance
-uses zeroing an entry to stop the card mailbox processing.  Looking at
-the driver, I think you're right: it's only used for card to host
-communication, so clearing it is irrelevant, but it could be relevant
-if it were also used for host to card communication.
+Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
-Regards,
+Thanks!
+-- 
+Gustavo
 
-James
-
+> ---
+> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+> Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+> Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+> Cc: MPT-FusionLinux.pdl@broadcom.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-hardening@vger.kernel.org
+> ---
+>   drivers/message/fusion/lsi/mpi_cnfg.h | 10 +---------
+>   1 file changed, 1 insertion(+), 9 deletions(-)
+> 
+> diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
+> index 3770cb1cff7d..f59a741ef21c 100644
+> --- a/drivers/message/fusion/lsi/mpi_cnfg.h
+> +++ b/drivers/message/fusion/lsi/mpi_cnfg.h
+> @@ -2295,14 +2295,6 @@ typedef struct _RAID_VOL0_SETTINGS
+>   #define MPI_RAID_HOT_SPARE_POOL_6                       (0x40)
+>   #define MPI_RAID_HOT_SPARE_POOL_7                       (0x80)
+>   
+> -/*
+> - * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
+> - * one and check Header.PageLength at runtime.
+> - */
+> -#ifndef MPI_RAID_VOL_PAGE_0_PHYSDISK_MAX
+> -#define MPI_RAID_VOL_PAGE_0_PHYSDISK_MAX        (1)
+> -#endif
+> -
+>   typedef struct _CONFIG_PAGE_RAID_VOL_0
+>   {
+>       CONFIG_PAGE_HEADER      Header;         /* 00h */
+> @@ -2321,7 +2313,7 @@ typedef struct _CONFIG_PAGE_RAID_VOL_0
+>       U8                      DataScrubRate;  /* 25h */
+>       U8                      ResyncRate;     /* 26h */
+>       U8                      InactiveStatus; /* 27h */
+> -    RAID_VOL0_PHYS_DISK     PhysDisk[MPI_RAID_VOL_PAGE_0_PHYSDISK_MAX];/* 28h */
+> +    RAID_VOL0_PHYS_DISK     PhysDisk[] __counted_by(NumPhysDisks); /* 28h */
+>   } CONFIG_PAGE_RAID_VOL_0, MPI_POINTER PTR_CONFIG_PAGE_RAID_VOL_0,
+>     RaidVolumePage0_t, MPI_POINTER pRaidVolumePage0_t;
+>   
