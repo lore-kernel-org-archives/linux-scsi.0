@@ -1,94 +1,85 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16B2B82D93
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jul 2024 09:45:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDEE217BB6;
+	Fri, 12 Jul 2024 09:51:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720777519; cv=none; b=KHHNz/A1/rolBJJ9uaus90AgEKI3zvZosObDTVzzNNQcozh6EprAZoNrYohwvdJkJNPe2mzbaoRRRuE+cUcoE2ryms+k8SAnwAiZxlz/JIMIClfP3txmm3DIJmR68LL3lH/p/8UtSGSiuMAOBlZIjhER8oMeG24xYRkCI26FEuk=
+	t=1720777876; cv=none; b=UDo2IblYqhAkFaPPvhBME2J9bKpRXO8GsJL9SJXQgEX7b9F3Qn1ibZGxo7NzEbx0F1QHF7gIKSV53cAdUmOetCUaVuBocp6NAtdC5EZUjxO+y/gvvl5X3l2TSY88/NbKyCDofXM2WrZP++66Yhw08sov5NADG3qhJhQRYI60iWY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720777519; c=relaxed/simple;
-	bh=OXiSP0vVNOHn1hJ86DEwJmS3Jiy72EDbBPDtinCc0rY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MxZMPn8RYksKWnPw07/ybkpTaVAJh/+ErYuS5Px7u1+ZZ5Q1MXdJn27Xt+vZMs0mFEB/akwwJbslRHw0OHZ+tHVt5381rxwc3Tnk1Zxi07BhT2NV7gRAn3sKRQSCWXJ7HEWcUz1majUnz/5pKyfyCtj7d0oyeEpGYIqeQ2sTX8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=DVn3TVNW; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1720777876; c=relaxed/simple;
+	bh=mcbo1O40NYoYZdrWPya8nyvr022z8GlP9Ixplradfzw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=eSU3+IFWhBbnPWXrqfHx0kQ5U77xJWawk4gF5ID8H1ATq/Qqo+XE8aEKWImwWWnYl1MoNB6oN7Ni6AUxPCs0dVm9pW61IcO0y16MrD3h+7jLIKXnGQ0juSDQW8aIcL9ShWagW9j2HCTYnSvSOFYX7LUa/12VG4+n7qU/4jjs7Fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=M1GUTuj5; arc=none smtp.client-ip=209.85.208.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="DVn3TVNW"
-X-UUID: 6dcaba9e403311efb5b96b43b535fdb4-20240712
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=rTcWd7Y+2uU+htlZ+Zs0y/k1MjeuEU+D5s5qrsCnvug=;
-	b=DVn3TVNWgxFWZRxW+NZ19Gxv8ru2SoaMa8UvOuI/f7DgWye70LgJ1s1xcQpG3IA7IxJZZMrXJjQiJqF1DxQaNkHW5BffIn8oPBQTvY2UzSu+C3RbMgxp6nFumZoS2jdynBWIyC1iPvsZXWE7gQd5vUAFXSm4YpBJ2F2rhVNJoFw=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.40,REQID:0485f113-7599-452b-b34c-75865c1fb2d0,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:ba885a6,CLOUDID:269967d1-436f-4604-ad9d-558fa44a3bbe,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:11|1,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-UUID: 6dcaba9e403311efb5b96b43b535fdb4-20240712
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 33132149; Fri, 12 Jul 2024 17:45:10 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Fri, 12 Jul 2024 17:45:09 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Fri, 12 Jul 2024 17:45:09 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<powen.kao@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <chu.stanley@gmail.com>
-Subject: [PATCH v1] ufs: core: bypass quick recovery if need force reset
-Date: Fri, 12 Jul 2024 17:45:06 +0800
-Message-ID: <20240712094506.11284-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M1GUTuj5"
+Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-58e76294858so5154033a12.0;
+        Fri, 12 Jul 2024 02:51:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1720777873; x=1721382673; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=mcbo1O40NYoYZdrWPya8nyvr022z8GlP9Ixplradfzw=;
+        b=M1GUTuj5exHPyH7gkhAT8yM1inJVeIBPZamA0zowy9IoYwALwIOeZA0yGDb0Nfg7Cs
+         SQ/c2vE06n44r6TIfet6GiriM7jILDOGpTs5NdChlGrF2dbC7TwVQPh/xPKPC93yeRDj
+         hXaT1xOvVGVtWR3rY6AuHs4Ystb3X8RSVH8Cnf42NUfeps7c9nc+NWkXUwv8b2H3u1GM
+         eu4/AQst3EZJKW6XXmCOxVAtAyma24PB47JIhbkeYXdUOGZqxofOIfqPuLUEovRNZ+WZ
+         922kbznQDiciji/dZHvrN+XOW1K0NpX9VJs3RLFiUEpb2KJgA4zqccMcaJiGN5u2n/rt
+         g29w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720777873; x=1721382673;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=mcbo1O40NYoYZdrWPya8nyvr022z8GlP9Ixplradfzw=;
+        b=Ybedk/9lhQSMUfojkwKyaPkiGLDU5lJo8ek8nI9fn+Lfakf0Y3Yp1Odlj8I9yXxQRl
+         zW74wtlK1dtvP7yY4TDue5+gVm6u6xwt5PLzKdM9G3+dn07Q/rHhMQWOdg9hlp8o4PyU
+         gkClQ1RGdURGoXT4CVVzRytkDQ7iQZm00VvhQvqKtUvrNWjA5Q9GWSyAT8M7VedJ9jjq
+         3t+9AT2XDKQqA3qLTrFwBW/P3aF1l5o2EWGKBSFInCnLxpkLTsd6Mqta3Mw0jLgUdvAF
+         7ojnIviX8A9qGjUOIGt5ML0NAqoqS1xS8sc4QNaCv3XZ8tqsF/FJxYbqxjGnfw89k5RR
+         ZwGw==
+X-Forwarded-Encrypted: i=1; AJvYcCXApmyIbpoqGnLcWwGEhkELvh7gZbmxEsSFPdH3YBu0TeHZ3bexoF0z1KsHCBjsPSSTRx2idUP+CB/NABfKFEgIijRTm6mWsDNBDKeWjUOSDGb7GoDDJiGuvZaApw5Z66bYNw==
+X-Gm-Message-State: AOJu0YwqpLBp+wXlBrURUryPT/NDvHimV7Szs5k8TVR2giGDBfXPutJO
+	mUB4Oex1UMFiYpCM1UMCPAonqP4N4PD8Ubf1H5OAqo+vRIWF1Si5
+X-Google-Smtp-Source: AGHT+IFanRBXAqJNBbDeVq14+irw0WN8X0FhrLWxA/HrfYnU4ajfi98RHQ9BMdUCyn7WZEvJyjUfCA==
+X-Received: by 2002:a17:906:528f:b0:a77:ce4c:8c9c with SMTP id a640c23a62f3a-a799cc4ed03mr152434066b.8.1720777873034;
+        Fri, 12 Jul 2024 02:51:13 -0700 (PDT)
+Received: from [10.176.235.56] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a780a6e157bsm330649866b.80.2024.07.12.02.51.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Jul 2024 02:51:12 -0700 (PDT)
+Message-ID: <cf08dd694b3478e53bf07a4d916424de10f7e1ab.camel@gmail.com>
+Subject: Re: [PATCH v1] ufs: core: fix deadlock when rtc update
+From: Bean Huo <huobean@gmail.com>
+To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org, 
+	martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com, 
+	jejb@linux.ibm.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org, 
+ chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com, 
+ chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
+ powen.kao@mediatek.com,  qilin.tan@mediatek.com, lin.gui@mediatek.com,
+ tun-yu.yu@mediatek.com,  eddie.huang@mediatek.com, naomi.chu@mediatek.com,
+ chu.stanley@gmail.com,  beanhuo@micron.com, stable@vger.kernel.org
+Date: Fri, 12 Jul 2024 11:51:10 +0200
+In-Reply-To: <20240712094355.21572-1-peter.wang@mediatek.com>
+References: <20240712094355.21572-1-peter.wang@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
 
-From: Peter Wang <peter.wang@mediatek.com>
-
-If force_reset is true, bypass quick recovery.
-This will shorten error recovery time.
-
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 46433ecf0c4d..357379ddd79a 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6545,7 +6545,8 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	if (ufshcd_err_handling_should_stop(hba))
- 		goto skip_err_handling;
- 
--	if (hba->dev_quirks & UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) {
-+	if ((hba->dev_quirks & UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS) &&
-+	    !hba->force_reset) {
- 		bool ret;
- 
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
--- 
-2.18.0
-
+On Fri, 2024-07-12 at 17:43 +0800, peter.wang@mediatek.com wrote:
+> From: Peter Wang <peter.wang@mediatek.com>
+>=20
+> Three have deadlock when runtime suspend wait flush rtc work,
+> and rtc work call ufshcd_rpm_put_sync to wait runtime resume.
+Reviewed-by: Bean Huo <beanhuo@micron.com>
