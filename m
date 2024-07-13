@@ -1,77 +1,113 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F14BC18C08
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jul 2024 19:32:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EA6F125B9;
+	Sat, 13 Jul 2024 20:17:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720812768; cv=none; b=k170VIpsbIG0vFi5FxNp6DU0y/PWQfU/RtFJITkdH/BRBGNbE9ah3J9E2Rua1OA4i06z/IMJYNLwXcRkgWEjFKoHaD2659o7E8MZxp2ckh7MO7ypcikysuGLNqpu1OV5dgK5Maf3lBMmWfgQDxf11oBJC0vZ5DNDHNr6Dg5Os6Y=
+	t=1720901839; cv=none; b=Iih4LsVnt6XRpqi3wPuGS2BwoPofMeseMmr8EdjrEMg+1YdpxMcmnk9GRyummQf7LtacrdNjlVeRWq0l4B8ZTBSh6+O7vfzg7S5nh9KQjenTZK6gfrZHxXmgnrpz/GNBVb/TSOeQjsckcPm10e0ce4zE+0sZJpcAZq81hW8VmGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720812768; c=relaxed/simple;
-	bh=LO1e5wPPVJkpLZsVpgn+QglDPnkvY2ZH6VpRbKG0aSg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OO6Sj2PHGh7OVTDJelLFDuUFZTmq4FY88h2uqaLxAakoEorUJVt4P4t6ijjCiiKDV7rC0x4LL4FWEjG+GO/X0FXmKDnMInawqFTRHkOGKiXRc1cfwovbD7Y1r/wyeeCBWeBubgJBzrroD5byI2W8emAEkzwQwn1i9G3mp2M7UFc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=0V4r5uZG; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1720901839; c=relaxed/simple;
+	bh=lwxWyzAfdcoGBJ/UCy39/QZeuk7RCQ2GdHaRtr1hZgw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=jRUZuuwuzMRZ54DtmJfmywqXIY0wexXQ6lKa5tevEYqbDlINjHE3SEgq04pBcGqGb0xZGecCRXe3GNqgdCHM1tHNZjylN5buAH7qViLFDT8kbF5w5UBPpl9+LnOnPbgzK5+N7Z5IzE5PA1LNvcN0Ex9SYvSmXB8Q8yz+EXQ0jSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A/CWpfCE; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="0V4r5uZG"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WLMFB2K5Pz6CmQvG;
-	Fri, 12 Jul 2024 19:32:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1720812764; x=1723404765; bh=jnJmh3O1wPApLNqXRFzJKFvJ
-	UtvK5fpgAM+N+38vf2g=; b=0V4r5uZGoLvKengV+2CruTpLKbpo9rTsbeUu4HgR
-	qNEEak1h2CGMrR+x1N0c1ZUEvehkkSOw6M6ICnH4yLRGa1LIe977fCYk43LPSV8J
-	IgiaDvRifQ+90OuP0A23qMkJmaPngSf4uEdTI0Yj6LzQDo2DGEob9uZoU+wc8Xlj
-	4zhGdzCsHoqLIwL/cX8SRbQS9oljbzFpgVv6Dv7914g4/cz0uluctiNYyA9P2W3w
-	77iU14ceFQcZaLMDCrjvFwWGhkG5+KAdRS/gAzs2YRPHQHMCXYIydUDraByVRyRB
-	7kimoN6SfS0BlIYWJaT/cb18Divdh16fd5lOLNxnk/9ukQ==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id u5HCurNVdrX9; Fri, 12 Jul 2024 19:32:44 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WLMF73Yv1z6CmR09;
-	Fri, 12 Jul 2024 19:32:43 +0000 (UTC)
-Message-ID: <d1b72809-f72a-4513-a7e7-750a9647c953@acm.org>
-Date: Fri, 12 Jul 2024 12:32:42 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A/CWpfCE"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-42793fc0a6dso21182745e9.0;
+        Sat, 13 Jul 2024 13:17:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1720901836; x=1721506636; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=lwxWyzAfdcoGBJ/UCy39/QZeuk7RCQ2GdHaRtr1hZgw=;
+        b=A/CWpfCENIxPAr286O+Ke6ivQByy5I5qfqqkGiWKJXhrix8lkJ999qUslp4k21hsyl
+         5NKGV2jIfzAkoQJ7TrFR8gUX+7Rv4OZlT68uxoIiAllFNkCZGzcgpYy4lEUmtkzrEHrX
+         ieE2/H+pc1UHxCSUD/9wqpXT5667SHZGoxSmKk995sH74uVkglzYClB+JDtmR1GwuFxX
+         Xwm0IQMm14pgKeMBkW5AFyE7jj+hzTMtlvhBCZhhNrcXzcEQSelYEA+dwW/dvdk7bKJ0
+         96WonUWkknKZGvfJ/R+jFKo834MHRPXq0/zA38Auw5E83+G7EI/9xM1shhZlN3FOhNi3
+         gM9g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720901836; x=1721506636;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=lwxWyzAfdcoGBJ/UCy39/QZeuk7RCQ2GdHaRtr1hZgw=;
+        b=O0Oj6SqfB/Do35OBffpApCpGpqm0I2ieKY5ZE07tpG9vdnmYkTa7+L8EO+4hPtmPjz
+         QNko8xwfK0p/+1tWZJqkb6vYj0+8CKHLgXpAjarL3kIII8AAZt3quZFUdOrTMUqRNicW
+         tJOTu8ZxTATFjShrPWSyqb3qZsbP/vqpOuXTb5kq9dq8fidm/8EyTI1QE0eOJcuyDBwB
+         6TsZqTz4u8lpTA+RbqW7UarRQIVz2beOT739QW2LnjrlOSrCrsnfrqmnT6mOWUfCvqIU
+         dWhHCs1/g9bP0jkR0Wc+nUJkud0+xjgepUElND1orasNzPcsvPuLK1D/ZLKcosEOxTg7
+         xIeg==
+X-Forwarded-Encrypted: i=1; AJvYcCXcWCBVmE9Qj81qu3fj1bCKTcGTCQrTJ89BExpJah8WCMiI3N9IcOOZzvFcp6aIje2nDNnSr0IW7Vtljk+apW+1OeKQ5BLdzzzsZq+Vam7ombEC4Nj2Z01fk+sVuVIWjZf+Fw==
+X-Gm-Message-State: AOJu0Yy9aHSQUY17iYeRc1e7paE+LoFlPJwbaD1c6N3h8WIVlqYpZ37X
+	/MRq8Xzig3sZJkLY17ue17nsJcLR7Z0QtO9vnqtrlRKJC9MM1ePG
+X-Google-Smtp-Source: AGHT+IFLBhP1h22J99UGV67Li6bdAzuvqEcIujjr6lLKXMQgpX5ElANP8+exxtSUOtHMXwi3gvGQaw==
+X-Received: by 2002:adf:f990:0:b0:367:89fd:1e06 with SMTP id ffacd0b85a97d-367cea966f2mr9794804f8f.36.1720901836204;
+        Sat, 13 Jul 2024 13:17:16 -0700 (PDT)
+Received: from p200300c58740f79d67fdfc896b2e8c6c.dip0.t-ipconnect.de (p200300c58740f79d67fdfc896b2e8c6c.dip0.t-ipconnect.de. [2003:c5:8740:f79d:67fd:fc89:6b2e:8c6c])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-368111d3e7dsm1783521f8f.87.2024.07.13.13.17.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 13 Jul 2024 13:17:15 -0700 (PDT)
+Message-ID: <2f9038932ec77ce37b18667a3bace06e88a547f4.camel@gmail.com>
+Subject: Re: [PATCH v1] ufs: core: fix deadlock when rtc update
+From: Bean Huo <huobean@gmail.com>
+To: Avri Altman <Avri.Altman@wdc.com>, "peter.wang@mediatek.com"
+	 <peter.wang@mediatek.com>, "linux-scsi@vger.kernel.org"
+	 <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com"
+	 <martin.petersen@oracle.com>, "alim.akhtar@samsung.com"
+	 <alim.akhtar@samsung.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>
+Cc: "wsd_upstream@mediatek.com" <wsd_upstream@mediatek.com>, 
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
+ "alice.chao@mediatek.com" <alice.chao@mediatek.com>, 
+ "cc.chou@mediatek.com" <cc.chou@mediatek.com>, "chaotian.jing@mediatek.com"
+ <chaotian.jing@mediatek.com>, "jiajie.hao@mediatek.com"
+ <jiajie.hao@mediatek.com>, "powen.kao@mediatek.com"
+ <powen.kao@mediatek.com>,  "qilin.tan@mediatek.com"
+ <qilin.tan@mediatek.com>, "lin.gui@mediatek.com" <lin.gui@mediatek.com>, 
+ "tun-yu.yu@mediatek.com" <tun-yu.yu@mediatek.com>,
+ "eddie.huang@mediatek.com" <eddie.huang@mediatek.com>, 
+ "naomi.chu@mediatek.com" <naomi.chu@mediatek.com>, "chu.stanley@gmail.com"
+ <chu.stanley@gmail.com>,  "beanhuo@micron.com" <beanhuo@micron.com>,
+ "stable@vger.kernel.org" <stable@vger.kernel.org>
+Date: Sat, 13 Jul 2024 22:17:14 +0200
+In-Reply-To: <DM6PR04MB6575CF59300D4AB5E1BE1377FCA62@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20240712094355.21572-1-peter.wang@mediatek.com>
+	 <DM6PR04MB6575B81B788F260A8C640684FCA62@DM6PR04MB6575.namprd04.prod.outlook.com>
+	 <edbedd4e992dd0adb93adbd45a74614c4c0f626d.camel@gmail.com>
+	 <DM6PR04MB6575CF59300D4AB5E1BE1377FCA62@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V4] scsi: ufs: core: Check LSDBS cap when !mcq
-To: k831.kim@samsung.com,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "Ed.Tsai@mediatek.com" <Ed.Tsai@mediatek.com>,
- Minwoo Im <minwoo.im@samsung.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <CGME20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122@epcms2p8>
- <20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122@epcms2p8>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122@epcms2p8>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 7/9/24 4:25 PM, Kyoungrul Kim wrote:
-> if the user sets use_mcq_mode to 0, the host will try to activate the
-> lsdb mode unconditionally even when the lsdbs of device hci cap is 1. so
-> it makes timeout cmds and fail to device probing.
-> 
-> To prevent that problem. check the lsdbs cap when mcq is not supported
-> case.
+On Fri, 2024-07-12 at 12:31 +0000, Avri Altman wrote:
+> > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 hba =3D cont=
+ainer_of(to_delayed_work(work), struct
+> > > > ufs_hba,
+> > > > ufs_rtc_update_work);
+> > > Will returning here If (!ufshcd_is_ufs_dev_active(hba)) works?
+> > > And remove it in the 2nd if clause?
+> >=20
+> > Avri,
+> >=20
+> > we need to reschedule next time work in the below code.=C2=A0 if return=
+,
+> > cannot.
+> >=20
+> > whatelse I missed?
+> a) If (!ufshcd_is_ufs_dev_active(hba)) - will not schedule ?
+> b) schedule on next __ufshcd_wl_resume?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+hba->pm_op_in_progress is true during __ufshcd_wl_resume(), will not
+schedule update work.
+
