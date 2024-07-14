@@ -1,85 +1,73 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EA6F125B9;
-	Sat, 13 Jul 2024 20:17:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEDF6C15B;
+	Sun, 14 Jul 2024 22:37:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720901839; cv=none; b=Iih4LsVnt6XRpqi3wPuGS2BwoPofMeseMmr8EdjrEMg+1YdpxMcmnk9GRyummQf7LtacrdNjlVeRWq0l4B8ZTBSh6+O7vfzg7S5nh9KQjenTZK6gfrZHxXmgnrpz/GNBVb/TSOeQjsckcPm10e0ce4zE+0sZJpcAZq81hW8VmGU=
+	t=1720996671; cv=none; b=AWnjZp7OfX4hXDQiWc//4LbSRH4KO6Hy8B1jxVqFngJaFywSZMqBQaZyBEzQyT/FI4ZuYKKDe3EgpBBWhZyyNn8f98r7WenG1PCWX6nNJ6eQMNNWKcZuA+YZ4WjdtlMCoypMNtM9v5NP7sIEWVkE5g1j6kKky7rm0zsUgtnO7Yk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720901839; c=relaxed/simple;
-	bh=lwxWyzAfdcoGBJ/UCy39/QZeuk7RCQ2GdHaRtr1hZgw=;
+	s=arc-20240116; t=1720996671; c=relaxed/simple;
+	bh=9D2oqpvHhIV2K6yX2k+mrEoV3xbBP10wpTitvoSkVM0=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=jRUZuuwuzMRZ54DtmJfmywqXIY0wexXQ6lKa5tevEYqbDlINjHE3SEgq04pBcGqGb0xZGecCRXe3GNqgdCHM1tHNZjylN5buAH7qViLFDT8kbF5w5UBPpl9+LnOnPbgzK5+N7Z5IzE5PA1LNvcN0Ex9SYvSmXB8Q8yz+EXQ0jSE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A/CWpfCE; arc=none smtp.client-ip=209.85.128.47
+	 Content-Type:MIME-Version; b=kfGLkdQMv72YqN21Ht54m+sY2ItduPd2zxLj2/hbgaIYqQlyNAn4qGhcjMv5xtoUuzubmSkl5iZ5G/tGYB/QTvEW1zI59lcdPuopTJlRUoN9jHgfwuRO/m8gIPoI1dyeX7vBFaGGbqC8RmOGR5ACnXi6nnrStttShfnkxLwCRjQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gTI8Smkc; arc=none smtp.client-ip=209.85.208.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A/CWpfCE"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-42793fc0a6dso21182745e9.0;
-        Sat, 13 Jul 2024 13:17:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gTI8Smkc"
+Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-595856e2336so6125487a12.1;
+        Sun, 14 Jul 2024 15:37:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1720901836; x=1721506636; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1720996668; x=1721601468; darn=vger.kernel.org;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=lwxWyzAfdcoGBJ/UCy39/QZeuk7RCQ2GdHaRtr1hZgw=;
-        b=A/CWpfCENIxPAr286O+Ke6ivQByy5I5qfqqkGiWKJXhrix8lkJ999qUslp4k21hsyl
-         5NKGV2jIfzAkoQJ7TrFR8gUX+7Rv4OZlT68uxoIiAllFNkCZGzcgpYy4lEUmtkzrEHrX
-         ieE2/H+pc1UHxCSUD/9wqpXT5667SHZGoxSmKk995sH74uVkglzYClB+JDtmR1GwuFxX
-         Xwm0IQMm14pgKeMBkW5AFyE7jj+hzTMtlvhBCZhhNrcXzcEQSelYEA+dwW/dvdk7bKJ0
-         96WonUWkknKZGvfJ/R+jFKo834MHRPXq0/zA38Auw5E83+G7EI/9xM1shhZlN3FOhNi3
-         gM9g==
+        bh=c5oPaK50hH0OUi4IcBBa3W6X5fDJjIs1X5F+HgvqEM0=;
+        b=gTI8SmkcBZJncpL6fl91D99cxo76e3C8ISD/MgiDTmk1+KZjvD831sRQb9V3EEJ3T1
+         CatOpwIzVojPGTl4loNQf8PeOJXY5RRhOgcRy6veFeJ1wLj9QZ+iiXDQi0xhJB2cxHhn
+         iq+6t5gSFuftu4C3yYlxeBxTwhMD+3OjsLzutEOysnKQKhGQZxFfhIr02WQo8YWQKM0O
+         kvZtShSywoUcpOuoZ9Uuoz8fXsj5daIh8zEcVxIV/xW2C9EO6dEMVguqXBfknXuTr+GS
+         bWspdoG1wW292uLYFWYhA8VcgKPHSc8r5+mBkHosp0C18HojRDrtPpwhFz1O4FsR3jl1
+         vlkw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1720901836; x=1721506636;
+        d=1e100.net; s=20230601; t=1720996668; x=1721601468;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=lwxWyzAfdcoGBJ/UCy39/QZeuk7RCQ2GdHaRtr1hZgw=;
-        b=O0Oj6SqfB/Do35OBffpApCpGpqm0I2ieKY5ZE07tpG9vdnmYkTa7+L8EO+4hPtmPjz
-         QNko8xwfK0p/+1tWZJqkb6vYj0+8CKHLgXpAjarL3kIII8AAZt3quZFUdOrTMUqRNicW
-         tJOTu8ZxTATFjShrPWSyqb3qZsbP/vqpOuXTb5kq9dq8fidm/8EyTI1QE0eOJcuyDBwB
-         6TsZqTz4u8lpTA+RbqW7UarRQIVz2beOT739QW2LnjrlOSrCrsnfrqmnT6mOWUfCvqIU
-         dWhHCs1/g9bP0jkR0Wc+nUJkud0+xjgepUElND1orasNzPcsvPuLK1D/ZLKcosEOxTg7
-         xIeg==
-X-Forwarded-Encrypted: i=1; AJvYcCXcWCBVmE9Qj81qu3fj1bCKTcGTCQrTJ89BExpJah8WCMiI3N9IcOOZzvFcp6aIje2nDNnSr0IW7Vtljk+apW+1OeKQ5BLdzzzsZq+Vam7ombEC4Nj2Z01fk+sVuVIWjZf+Fw==
-X-Gm-Message-State: AOJu0Yy9aHSQUY17iYeRc1e7paE+LoFlPJwbaD1c6N3h8WIVlqYpZ37X
-	/MRq8Xzig3sZJkLY17ue17nsJcLR7Z0QtO9vnqtrlRKJC9MM1ePG
-X-Google-Smtp-Source: AGHT+IFLBhP1h22J99UGV67Li6bdAzuvqEcIujjr6lLKXMQgpX5ElANP8+exxtSUOtHMXwi3gvGQaw==
-X-Received: by 2002:adf:f990:0:b0:367:89fd:1e06 with SMTP id ffacd0b85a97d-367cea966f2mr9794804f8f.36.1720901836204;
-        Sat, 13 Jul 2024 13:17:16 -0700 (PDT)
-Received: from p200300c58740f79d67fdfc896b2e8c6c.dip0.t-ipconnect.de (p200300c58740f79d67fdfc896b2e8c6c.dip0.t-ipconnect.de. [2003:c5:8740:f79d:67fd:fc89:6b2e:8c6c])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-368111d3e7dsm1783521f8f.87.2024.07.13.13.17.14
+        bh=c5oPaK50hH0OUi4IcBBa3W6X5fDJjIs1X5F+HgvqEM0=;
+        b=FDGKcdXH1DfVTlSZQdXGyT50y+EMMrf/cPOLaaWumqA+JOSskJMFv4qI/TTfY7MGLh
+         exVy0psGTkv4MKcHLdfY7HE7sDnFKyHc0db/2B0Dgc5a7Rp1iCfkmVfxA6xITyCxtTiW
+         RziMWp22a7nf5PU6JA45eNAopunXHLAop+vYbH9lmEq5ynwUyxjogVWzFElsJTpsX3FB
+         pIuS0PyCwWsxp9WXZZftV8CQ3dA5oWHO1rZN1wisHL2+ZkcWUKYoK41BIwsJuc/uPlsI
+         fq7Or/4IrQhUshNUz0DgXflryi4mACOJFZAx+Agfxrqk7Cj9P/oxfmClwUHfpzs8SkEa
+         YsIQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWqFblCXjIBt/qcx1qxgvWnzIS0Xv5K8DDJBBPV+ya55GX+p/QpqrID5LRTIBWUYNxkLJD3O1mElm3sNxB6fvV+ftmhQaUxm2cJ75nQ9cuIRb3Czv038ZWXFesq7QB9JMauYg==
+X-Gm-Message-State: AOJu0YwLP+bIXr2586OxxbkbIbNbc2oVQZq5E2ywvviLZN8qXFggCgUX
+	Vnbcl1v4g9IvDe0RhfH3pnKLlGzgzmRpxAbPrhpQo9R7I7GBF7Wr
+X-Google-Smtp-Source: AGHT+IGfikxf3uYkA3ihL3m7OpjEXdkWnQeJ4rO+cfMqWgLctfm9bTFfdcI/nWgq5Yost4jV8ZqGnA==
+X-Received: by 2002:a50:9996:0:b0:57d:6bb:d264 with SMTP id 4fb4d7f45d1cf-59a2427ef62mr6041760a12.1.1720996667868;
+        Sun, 14 Jul 2024 15:37:47 -0700 (PDT)
+Received: from p200300c58740f7b922c5ae1bb80e710f.dip0.t-ipconnect.de (p200300c58740f7b922c5ae1bb80e710f.dip0.t-ipconnect.de. [2003:c5:8740:f7b9:22c5:ae1b:b80e:710f])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-59b255261c5sm2646635a12.43.2024.07.14.15.37.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 13 Jul 2024 13:17:15 -0700 (PDT)
-Message-ID: <2f9038932ec77ce37b18667a3bace06e88a547f4.camel@gmail.com>
+        Sun, 14 Jul 2024 15:37:47 -0700 (PDT)
+Message-ID: <de8b34e3a4055a545de4f6ee4321f968ccbfa0aa.camel@gmail.com>
 Subject: Re: [PATCH v1] ufs: core: fix deadlock when rtc update
 From: Bean Huo <huobean@gmail.com>
-To: Avri Altman <Avri.Altman@wdc.com>, "peter.wang@mediatek.com"
-	 <peter.wang@mediatek.com>, "linux-scsi@vger.kernel.org"
-	 <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com"
-	 <martin.petersen@oracle.com>, "alim.akhtar@samsung.com"
-	 <alim.akhtar@samsung.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>
-Cc: "wsd_upstream@mediatek.com" <wsd_upstream@mediatek.com>, 
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- "chun-hung.wu@mediatek.com" <chun-hung.wu@mediatek.com>,
- "alice.chao@mediatek.com" <alice.chao@mediatek.com>, 
- "cc.chou@mediatek.com" <cc.chou@mediatek.com>, "chaotian.jing@mediatek.com"
- <chaotian.jing@mediatek.com>, "jiajie.hao@mediatek.com"
- <jiajie.hao@mediatek.com>, "powen.kao@mediatek.com"
- <powen.kao@mediatek.com>,  "qilin.tan@mediatek.com"
- <qilin.tan@mediatek.com>, "lin.gui@mediatek.com" <lin.gui@mediatek.com>, 
- "tun-yu.yu@mediatek.com" <tun-yu.yu@mediatek.com>,
- "eddie.huang@mediatek.com" <eddie.huang@mediatek.com>, 
- "naomi.chu@mediatek.com" <naomi.chu@mediatek.com>, "chu.stanley@gmail.com"
- <chu.stanley@gmail.com>,  "beanhuo@micron.com" <beanhuo@micron.com>,
- "stable@vger.kernel.org" <stable@vger.kernel.org>
-Date: Sat, 13 Jul 2024 22:17:14 +0200
-In-Reply-To: <DM6PR04MB6575CF59300D4AB5E1BE1377FCA62@DM6PR04MB6575.namprd04.prod.outlook.com>
+To: Bart Van Assche <bvanassche@acm.org>, peter.wang@mediatek.com, 
+ linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+ avri.altman@wdc.com,  alim.akhtar@samsung.com, jejb@linux.ibm.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org, 
+ chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com, 
+ chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
+ powen.kao@mediatek.com,  qilin.tan@mediatek.com, lin.gui@mediatek.com,
+ tun-yu.yu@mediatek.com,  eddie.huang@mediatek.com, naomi.chu@mediatek.com,
+ chu.stanley@gmail.com,  beanhuo@micron.com, stable@vger.kernel.org
+Date: Mon, 15 Jul 2024 00:37:45 +0200
+In-Reply-To: <d1d20f65-faa9-414f-b7fb-4b53794c0acb@acm.org>
 References: <20240712094355.21572-1-peter.wang@mediatek.com>
-	 <DM6PR04MB6575B81B788F260A8C640684FCA62@DM6PR04MB6575.namprd04.prod.outlook.com>
-	 <edbedd4e992dd0adb93adbd45a74614c4c0f626d.camel@gmail.com>
-	 <DM6PR04MB6575CF59300D4AB5E1BE1377FCA62@DM6PR04MB6575.namprd04.prod.outlook.com>
+	 <d1d20f65-faa9-414f-b7fb-4b53794c0acb@acm.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.4-0ubuntu2 
@@ -90,24 +78,134 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Fri, 2024-07-12 at 12:31 +0000, Avri Altman wrote:
-> > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 hba =3D cont=
-ainer_of(to_delayed_work(work), struct
-> > > > ufs_hba,
-> > > > ufs_rtc_update_work);
-> > > Will returning here If (!ufshcd_is_ufs_dev_active(hba)) works?
-> > > And remove it in the 2nd if clause?
-> >=20
-> > Avri,
-> >=20
-> > we need to reschedule next time work in the below code.=C2=A0 if return=
-,
-> > cannot.
-> >=20
-> > whatelse I missed?
-> a) If (!ufshcd_is_ufs_dev_active(hba)) - will not schedule ?
-> b) schedule on next __ufshcd_wl_resume?
+On Fri, 2024-07-12 at 10:34 -0700, Bart Van Assche wrote:
+> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* Update RTC only when the=
+re are no requests in progress
+> > and UFSHCI is operational */
+> > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!ufshcd_is_ufs_dev_busy(=
+hba) && hba->ufshcd_state =3D=3D
+> > UFSHCD_STATE_OPERATIONAL)
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * Update RTC only whe=
+n
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * 1. there are no req=
+uests in progress
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * 2. UFSHCI is operat=
+ional
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * 3. pm operation is =
+not in progress
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (!ufshcd_is_ufs_dev_busy(=
+hba) &&
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 hba->ufsh=
+cd_state =3D=3D UFSHCD_STATE_OPERATIONAL &&
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 !hba->pm_=
+op_in_progress)
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0ufshcd_update_rtc(hba);
+> > =C2=A0=C2=A0=20
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0if (ufshcd_is_ufs_dev_a=
+ctive(hba) && hba-
+> > >dev_info.rtc_update_period)
+>=20
+> The above seems racy to me. I don't think there is any mechanism that
+> prevents that hba->pm_op_in_progress is set after it has been checked
+> and before ufshcd_update_rtc() is called. Has it been considered to
+> add
+> an ufshcd_rpm_get_sync_nowait() call before the hba-
+> >pm_op_in_progress
+> check and a ufshcd_rpm_put_sync() call after the ufshcd_update_rtc()
+> call?
+>=20
+> Thanks,
+>=20
+> Bart.
 
-hba->pm_op_in_progress is true during __ufshcd_wl_resume(), will not
-schedule update work.
+Bart,
 
+do you want this:
+
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-
+priv.h
+index ce36154ce963..2b74d6329b9d 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -311,6 +311,25 @@ static inline int ufshcd_update_ee_usr_mask(struct
+ufs_hba *hba,
+                                        &hba->ee_drv_mask, set, clr);
+ }
+=20
++static inline int ufshcd_rpm_get_sync_nowait(struct ufs_hba *hba)
++{
++       int ret =3D 0;
++       struct device *dev =3D &hba->ufs_device_wlun->sdev_gendev;
++
++       pm_runtime_get_noresume(dev);
++
++       /* Check if the device is already active */
++       if (pm_runtime_active(dev))
++               return 0;
++
++       /* Attempt to resume the device without blocking */
++       ret =3D pm_request_resume(dev);
++       if (ret < 0)
++               pm_runtime_put_noidle(dev);
++
++       return ret;
++}
++
+ static inline int ufshcd_rpm_get_sync(struct ufs_hba *hba)
+ {
+        return pm_runtime_get_sync(&hba->ufs_device_wlun->sdev_gendev);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index bea00e069e9a..1b7fc4ce9e5c 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8209,10 +8209,8 @@ static void ufshcd_update_rtc(struct ufs_hba
+*hba)
+         */
+        val =3D ts64.tv_sec - hba->dev_info.rtc_time_baseline;
+=20
+-       ufshcd_rpm_get_sync(hba);
+        err =3D ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
+QUERY_ATTR_IDN_SECONDS_PASSED,
+                                0, 0, &val);
+-       ufshcd_rpm_put_sync(hba);
+=20
+        if (err)
+                dev_err(hba->dev, "%s: Failed to update rtc %d\n",
+__func__, err);
+@@ -8226,10 +8224,14 @@ static void ufshcd_rtc_work(struct work_struct
+*work)
+=20
+        hba =3D container_of(to_delayed_work(work), struct ufs_hba,
+ufs_rtc_update_work);
+=20
++       if (ufshcd_rpm_get_sync_nowait(hba))
++               goto out;
++
+         /* Update RTC only when there are no requests in progress and
+UFSHCI is operational */
+        if (!ufshcd_is_ufs_dev_busy(hba) && hba->ufshcd_state =3D=3D
+UFSHCD_STATE_OPERATIONAL)
+                ufshcd_update_rtc(hba);
+-
++       ufshcd_rpm_put_sync(hba);
++out:
+        if (ufshcd_is_ufs_dev_active(hba) && hba-
+>dev_info.rtc_update_period)
+                schedule_delayed_work(&hba->ufs_rtc_update_work,
+                                      msecs_to_jiffies(hba-
+>dev_info.rtc_update_period));
+(END)
+
+
+
+
+or can we change cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
+to cancel_delayed_work(&hba->ufs_rtc_update_work);  ??
+
+
+
+kind regards,
+Bean
