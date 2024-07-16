@@ -1,116 +1,70 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEF4C25779
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Jul 2024 19:55:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7842F13E3EA;
+	Tue, 16 Jul 2024 21:44:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721159750; cv=none; b=AZcPyB/cJoeqxIViPlbH8LPreZMcibKHyYjkGrd6/lbmF9Z9jGAMDpz0Wer+mSMSoTtU492QrP02w4h/WTNJv5Q5dMf9//Tn3lUmFvxdkH2GoC33XdNWvL1VQNWPmDNV04q7IKpHaMkVgOKxpOTJ8Uz+9qDLfDBfD+J2BEn8v+k=
+	t=1721166261; cv=none; b=B/KuDSss+F5fHXcmDJjSuzBfhlxnEEX2dLPb/xZ+RIEeiDQi/ypHeKdErRcFQVeRozk/iY4l8ZalRCpBv6ZrR/L4nzvIGn25Zy9bL97zYxrXdxxAlXsO6XUKiVx5L1h9A0JK9TGv7tIdri2QBNTWAu4yXWTAadzJ1CVkvzfZ23s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721159750; c=relaxed/simple;
-	bh=+dukO4vRhP7V8+O73+Tq9iNX+T8h5LATyVDgubUjWIk=;
-	h=From:To:cc:Subject:MIME-Version:Content-Type:Date:Message-ID; b=KQfBjR45GvumlZLO30BCuOlHG3oFgJtBi0OYKcOnmCRjmSGOLWF++uFP/Lt3OwbzADqdgaiYfQTH3bowNLqOsQCFU/NBUwWJHBeIygWw7zluCmseK0KGhSY68izQLA4r6EJ5QOmd3WXG9qOV1/B8gNFWHmLF4m+kSF4zZBQ50F8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=K5+viH+O; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1721166261; c=relaxed/simple;
+	bh=qwihffuM8/DrrQ9zeFgfLv/otk8t9ehBE7KDdulwOxw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VRBt5mk78y3bGjbAyKpU/OJ5BHCukKcau4abEaxbqrIT4lnRwVn8tWc9U7zdqbHbO8g/QnmIcogI1c691m7sNwb0hLTxmNWHcx1/uz5nMFoAjJTIFD4C/cHY2XtxZCN3Gc8AhWMGmAf6I8uiQmEzdfma/fgSU8aCOeRrzaQCdOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=s//2ibG3; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="K5+viH+O"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1721159747;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=OzLC0yzCu7tQh9KqVhFprkcDVVw3RS5/BHX2qPZCoqQ=;
-	b=K5+viH+Op/lm34bq9w7SvMyrktUWll7CKFRGDPKPrtL2wTpLdCTdLAwxynSra0rSTeJxbI
-	zJByPmdxeo+/62fNw42TgyEnIvp7Kuug0Jj3vF+xgIzDPUmnIYb0mmngNbnV4w55QGSvtY
-	B4idf30NXuXhh3mT7CYqAJ/2ZmCS0lE=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-313-ouPr8ZYhMDmoy9991xW9Uw-1; Tue,
- 16 Jul 2024 15:55:44 -0400
-X-MC-Unique: ouPr8ZYhMDmoy9991xW9Uw-1
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="s//2ibG3"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WNsz65xChz6CmM6V;
+	Tue, 16 Jul 2024 21:44:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1721166256; x=1723758257; bh=qwihffuM8/DrrQ9zeFgfLv/o
+	tk8t9ehBE7KDdulwOxw=; b=s//2ibG3Px+7SDNsL0V3hOECRUEv9SnWMqi6k9yt
+	Bwf968YbhEteUCvyIJkNZ2eer0kPms81pqfZus46lXfNI4n/BKKPOODjsAoR5uMm
+	d72T3eoLyu/SgEErPkaIhv2+BArkLrLQLOGhSKdN0LQ4phFW5esPzkdwA5Pe5kJl
+	ipoMpD00+m5V6A+iydveZteMBQ+wY+RivAV3JuMrCoin3gdztvD2Jouj4kqo5/PY
+	GpPX8mq3G2aNPI/w65UeSHKOVWosDqAUwZ0ZkEcevOqYIt6y+FHm3T7ft9hygwmf
+	naLQITb5soQ9HtNi5erPo4IeLwqurIBQOaJMSItYrMEd1Q==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id E0RecbNBRlSp; Tue, 16 Jul 2024 21:44:16 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7637B1955BFC;
-	Tue, 16 Jul 2024 19:55:43 +0000 (UTC)
-Received: from warthog.procyon.org.uk (unknown [10.42.28.216])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3FD6A1955D42;
-	Tue, 16 Jul 2024 19:55:42 +0000 (UTC)
-Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
-	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
-	Kingdom.
-	Registered in England and Wales under Company Registration No. 3798903
-From: David Howells <dhowells@redhat.com>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-cc: dhowells@redhat.com, linux-scsi@vger.kernel.org,
-    linux-block@vger.kernel.org
-Subject: SCSI error indicating misalignment on part of Linux scsi or block layer?
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WNsz30Kg2z6CmM6T;
+	Tue, 16 Jul 2024 21:44:14 +0000 (UTC)
+Message-ID: <fcdc2791-1fca-4ff6-8684-f4522ef6eddc@acm.org>
+Date: Tue, 16 Jul 2024 14:44:12 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <483246.1721159741.1@warthog.procyon.org.uk>
-Content-Transfer-Encoding: quoted-printable
-Date: Tue, 16 Jul 2024 20:55:41 +0100
-Message-ID: <483247.1721159741@warthog.procyon.org.uk>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] Revert "scsi: sd: Do not repeat the starting disk
+ message"
+To: Johan Hovold <johan+linaro@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20240716161101.30692-1-johan+linaro@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240716161101.30692-1-johan+linaro@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi James,
+On 7/16/24 9:11 AM, Johan Hovold wrote:
+> This reverts commit 7a6bbc2829d4ab592c7e440a6f6f5deb3cd95db4.
 
-I'm wondering if I'm seeing a problem with DIO writes through Ext4 or XFS
-manifesting as SCSI misalignment errors.  This has occurred with two diffe=
-rent
-drives.  I saw it first with v6.10-rc6, I think, but I haven't tried
-cachefiles for a while.  It does happen with v6.10.
-
-ata1.00: exception Emask 0x60 SAct 0x1 SErr 0x800 action 0x6 frozen
-ata1.00: irq_stat 0x20000000, host bus error
-ata1: SError: { HostInt }
-ata1.00: failed command: WRITE FPDMA QUEUED
-ata1.00: cmd 61/68:00:b0:93:34/00:00:02:00:00/40 tag 0 ncq dma 53248 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x60 (host bus erro=
-r)
-ata1.00: status: { DRDY }
-ata1: hard resetting link
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: configured for UDMA/133
-sd 0:0:0:0: [sda] tag#0 FAILED Result: hostbyte=3DDID_OK driverbyte=3DDRIV=
-ER_OK cmd_age=3D3s
-sd 0:0:0:0: [sda] tag#0 Sense Key : Illegal Request [current] =
-
-sd 0:0:0:0: [sda] tag#0 Add. Sense: Unaligned write command
-sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 02 34 93 b0 00 00 68 00
-I/O error, dev sda, sector 37000112 op 0x1:(WRITE) flags 0x8800 phys_seg 1=
- prio class 0
-ata1: EH complete
-
-For reference, I made it dump the result of the READ CAPACITY 16 command:
-
-sd 0:0:0:0: [sda] RC16 000000003a38602f00000200000000000000000000000000000=
-0000000000000
-
-The drive says it has 512-byte logical and physical block sizes.
-
-The DIO writes are being generated by cachefiles and are all
-PAGE_SIZED-aligned in terms of file offset and request length.
-
-I also saw this:
-
-	CacheFiles: I/O Error: Trunc-to-dio-size failed -95 [o=3D000001cb]
-
-which indicates that ext4/xfs returned EOPNOTSUPP to vfs_truncate() and th=
-ence
-to cachefiles.  I'm not sure why it would do that.
-
-Any idea what might cause this or how to investigate it further?  Is it
-possible it's some sort of hardware error in the I/O bridge or IOMMU?
-
-Thanks,
-David
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
