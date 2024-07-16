@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED7CD1ABCBA;
-	Tue, 16 Jul 2024 14:29:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6739F1AD3E4;
+	Tue, 16 Jul 2024 14:30:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721140172; cv=none; b=fuphb9OwGEUQh0wtcrONkn6Y335sUZrbTeUKQjxoWX3KFB0yeRdCx5OUAo/EXV2fm0xTrXD9yZLWVORR0vuWldUZYw7X+hkkI8HYEvHWggLGF1QC8TPlXKtSZlKLRsLLjBDclzSBNR67VwZjMfn/nj/ws9WCfQ3UxlBlSAt+db4=
+	t=1721140205; cv=none; b=BGAnKZ8TMx44sXw3e85ZBewq7Rx4TEFKp069i47qUgVAsDrbNtl4Dr/77BEAp4kO+vBglhdubIO3SIFrQuCcvPvAhwflMI31RFg2bjsKVQSSgHObTvmlwBOxg+54IpvTSj+8E/sURbETqzVOdO1XYqrvrS2i5S6DFO5KTTLolsk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721140172; c=relaxed/simple;
-	bh=HGsIvKxoa3nGyI//SNDXN26eIVDb3Z3NLTPZdg8FGLs=;
+	s=arc-20240116; t=1721140205; c=relaxed/simple;
+	bh=AmpszJIZR8vkkieOvXFO51BgFwt1YOElAtnDfJdR83o=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AywD5l5j4kub9X6YzXLPlCOYZR+UjQK1JCM1wC3+tErepiwQ8Fdc+5qKlbhCXkV9YBD4cljC3GIPd1wFNRAGjOAAGKwsi9stxk+u9HLxLxqFlelTi9+GnfPMNMFcyU5iklR0hA1BIsw8XjembqdO4S4rMKdfehYtirJ0tLMkrTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BmMIr53N; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=NRVLLSet4d1JkTOYdGI6rqarqWU+hd+tfSFtpH6TBCLJBc9dhl5wa49WO3tIbQXfJBmjOIZAODh0pXY/WmW1ANQOfbFZBmojySQS1gnxqg2WFSYjr270jV2he9suqkTllcrkCrESb+14TpZCXr5Tki7628UyhyTW9SIkRk6LeKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i8f0A7YT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BmMIr53N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54656C116B1;
-	Tue, 16 Jul 2024 14:29:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i8f0A7YT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E35B2C4AF09;
+	Tue, 16 Jul 2024 14:30:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721140171;
-	bh=HGsIvKxoa3nGyI//SNDXN26eIVDb3Z3NLTPZdg8FGLs=;
+	s=k20201202; t=1721140205;
+	bh=AmpszJIZR8vkkieOvXFO51BgFwt1YOElAtnDfJdR83o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=BmMIr53N0liMantSXaQcr0gKveAsHszpK+IQT2n1/kbyl8vLT7ivVrUAGCWMLjzHF
-	 DpsmHLLS6YwbGUNEWlvEjTyE38jhXSNq5eZynR+gRm1cM41bYVq1pdF+yNb87k627v
-	 ZC4F+xNgy0ex1sQWybOmd6bNXIz2oxaFcqlYrvPlmj8ti/phDRduo6PY5skM8P/2Ec
-	 geV0gDjniJbJm3/rYJbISeAIe/FqkSjJbW5YBiiRPW3VoLU+Bmm3TY7Nvg1SALgBXF
-	 Oqa+iN0zMZEwgfYtfKecf2q/sRZAjjxHNK/q1SFfpX/6P+QvmZDG7dWDmFY1W2fqY7
-	 /N25jp+jUETRw==
+	b=i8f0A7YTPy92WEANLA3pa0Zz9VXhwf5g61Q+zNlQ9APhQg1Tm+SFVm983pt6f6ZyD
+	 wrAjpApXqlr6sVLfaKDpTSdE7pEeRFxDoP45x1L2OkGwv/Cb+g8NT1GupSSVygGkSH
+	 OL9YIMTkNVdvH1yXTdeRWfaZEXUsnkX/nrDVUL2gAS9yyysIMUUpjPSZsyAf/d/dxb
+	 gvOeJZ0zBvWEDYCRwnWCy3bo7FCUEjBF/nkIwlu8ehjRzJsFW3nD0oQyJQ0Q0cAJR+
+	 t68OVvwLvnOCycVFBSu2W9nJUUWhAA0JkyxsYjtp3Ipg0MTTML+1qmcCQK8OV8bwfq
+	 xT/L2fWCuTutQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -34,16 +34,16 @@ Cc: Xingui Yang <yangxingui@huawei.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
 	James.Bottomley@HansenPartnership.com,
-	yanaijie@huawei.com,
 	dlemoal@kernel.org,
+	yanaijie@huawei.com,
 	yuehaibing@huawei.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 4/9] scsi: libsas: Fix exp-attached device scan after probe failure scanned in again after probe failed
-Date: Tue, 16 Jul 2024 10:29:06 -0400
-Message-ID: <20240716142920.2713829-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 4/7] scsi: libsas: Fix exp-attached device scan after probe failure scanned in again after probe failed
+Date: Tue, 16 Jul 2024 10:29:44 -0400
+Message-ID: <20240716142953.2714154-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240716142920.2713829-1-sashal@kernel.org>
-References: <20240716142920.2713829-1-sashal@kernel.org>
+In-Reply-To: <20240716142953.2714154-1-sashal@kernel.org>
+References: <20240716142953.2714154-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,7 +52,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.162
+X-stable-base: Linux 5.10.221
 Content-Transfer-Encoding: 8bit
 
 From: Xingui Yang <yangxingui@huawei.com>
@@ -97,10 +97,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 14 insertions(+)
 
 diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index d7a1fb5c10c6e..5028bc394c4f9 100644
+index 52e09c3e2b50d..3ef2fde28b8ed 100644
 --- a/drivers/scsi/libsas/sas_internal.h
 +++ b/drivers/scsi/libsas/sas_internal.h
-@@ -111,6 +111,20 @@ static inline void sas_fail_probe(struct domain_device *dev, const char *func, i
+@@ -114,6 +114,20 @@ static inline void sas_fail_probe(struct domain_device *dev, const char *func, i
  		func, dev->parent ? "exp-attached" :
  		"direct-attached",
  		SAS_ADDR(dev->sas_addr), err);
