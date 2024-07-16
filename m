@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D93EA6D1B4;
-	Tue, 16 Jul 2024 22:48:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5516713C693;
+	Tue, 16 Jul 2024 23:07:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721170109; cv=none; b=SZ6lAHQsEbP4A4QSHmYZok/+ryIiQcnG4FItwHN7eQxOCt1Bg2SyJMyi8Qy0tqHeMO99dGzDjuu2TXb5j61n4dZfC1Z0PRY9tkmEHizp2GlLAAJHVXUx0veds+tIieNXXIA0s4xHngBZnVZv1DOh6DfKIaADYrILDaRf8f3zptk=
+	t=1721171240; cv=none; b=BuRW5uY7J5EDPWabaO/mGeVzGP6yD/zUbUxi0IAigdJOVoiVLsL8CV7nuiypXRSOYS61wmbL/psJT2MWCqPhlIIzAAN+AS0kdUZaX+bCTX0aIwq0df2Xh+sgN1X3M7LpRjjESS8UXmGn52+7pzmzkegZLkmUmmE8QYTmZl5XIPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721170109; c=relaxed/simple;
-	bh=Bc4xTGNKVk7Hlv8gcknsmkXuaNvkoVNmZN1zbJzDlWY=;
+	s=arc-20240116; t=1721171240; c=relaxed/simple;
+	bh=kZuZ0X0RPT/O4DsNTfXIg6bB6btR6kfVX63MOeO57YQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gC2M4cggomntCFQNCTP8tFBmeEWl1eQ/J/nV8edmid47lIExNQ9i2/tHKDWgmbCHttSZkBPnyK19IDtGHRfwESmd4qh4itxI/T0uMUbxH/p/87gC855OvWx7Dm8oS6Ke/ve7afqhOiON8BidsYBemdaWfOx68LiEtPATvtoYR/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dBs/jGkF; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=fjqDoVmCeybtWMvOrffpc1/Zf5cThZKQt/Bwv7XmdGnAfo+UA14ei94LzsT+HUX/Yqo/weZjW9LaClJxUiWSve4Dr8MOYkABhLCJdYJ7eGP47KhHj1QxKRwfQ3V603gBCi0EXhFyDHfbWsOchUp4uI3moESmdbUQ0EPig+tPHmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qx1sskeI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dBs/jGkF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76310C4AF09;
-	Tue, 16 Jul 2024 22:48:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qx1sskeI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BF62C116B1;
+	Tue, 16 Jul 2024 23:07:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721170108;
-	bh=Bc4xTGNKVk7Hlv8gcknsmkXuaNvkoVNmZN1zbJzDlWY=;
+	s=k20201202; t=1721171239;
+	bh=kZuZ0X0RPT/O4DsNTfXIg6bB6btR6kfVX63MOeO57YQ=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=dBs/jGkF1za9BWqtguN1YGZERXq3FgP+0R9AlKLNiB4mkptN81MYpE7g5nDvw1Que
-	 MFz0/UrmcFfTgAOJJppe7YhY5aq9EgsMegUd775my7c6a35gNURCh1NSXRu7FFMiNe
-	 pLD6vs2P4VeoZOFmLUCUbaL0JsGHyQz3bqy6n7Nmf52mu4Uv4Ngyw88mHesf9fCq7f
-	 WKHU83sAhZ3v9zElDIK3Xd1O+ah6B8gLNORw+oSTv++8zYJczbnMabU2aV7JpkQCoJ
-	 9k4f23DKT1Ulc/y43pi+MF696K1nFgtVJ2XFhRDNawpLJrp+C26sZ6ws0cfr1KwwGd
-	 i5mjlpmpSRNiQ==
-Message-ID: <39143ca8-68e4-44eb-8619-0b935aa81603@kernel.org>
-Date: Wed, 17 Jul 2024 07:48:26 +0900
+	b=qx1sskeIOvDqIJtZBHF32At0++OfaTeGlW3ut/AWOyiRfE/8odxFnYKKx4W37cYIT
+	 MeN7MMx2rD+XPsAInafDPXhDjaJTi2QTU/5+SA0GqpYbzUnRWP1Usp5SxXDfOJ1uNx
+	 1GScStNSgYePQjgEd10YO9mVYMuPmo+it8QhIKBSCrR1TravNiLrOH4guCHTWlYZfc
+	 CMxW8ze6zXW0ur52m1lQA6OwCvRpBaQi583lRSGQ8FFQb+UhY+ktlemt6u3W+zY2h+
+	 qOiHr2kYEmUaM8OOqh/AWqhN1bVjCSCp5pBU2Y/RWruluTRBoF/k/1xdPpxPiaozm2
+	 ZaADh6BdsG2ug==
+Message-ID: <b69d54af-2ac2-406a-ab32-9bad9d8a3000@kernel.org>
+Date: Wed, 17 Jul 2024 08:07:18 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,123 +35,83 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] Revert "scsi: sd: Do not repeat the starting disk
- message"
-To: Johan Hovold <johan+linaro@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20240716161101.30692-1-johan+linaro@kernel.org>
+Subject: Re: SCSI error indicating misalignment on part of Linux scsi or block
+ layer?
+To: David Howells <dhowells@redhat.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+References: <483247.1721159741@warthog.procyon.org.uk>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20240716161101.30692-1-johan+linaro@kernel.org>
+In-Reply-To: <483247.1721159741@warthog.procyon.org.uk>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/17/24 01:11, Johan Hovold wrote:
-> This reverts commit 7a6bbc2829d4ab592c7e440a6f6f5deb3cd95db4.
+On 7/17/24 04:55, David Howells wrote:
+> Hi James,
 > 
-> The offending commit tried to suppress a double "Starting disk" message
-> for some drivers, but instead started spamming the log with bogus
-> messages every five seconds:
+> I'm wondering if I'm seeing a problem with DIO writes through Ext4 or XFS
+> manifesting as SCSI misalignment errors.  This has occurred with two different
+> drives.  I saw it first with v6.10-rc6, I think, but I haven't tried
+> cachefiles for a while.  It does happen with v6.10.
 > 
-> 	[  311.798956] sd 0:0:0:0: [sda] Starting disk
-> 	[  316.919103] sd 0:0:0:0: [sda] Starting disk
-> 	[  322.040775] sd 0:0:0:0: [sda] Starting disk
-> 	[  327.161140] sd 0:0:0:0: [sda] Starting disk
-> 	[  332.281352] sd 0:0:0:0: [sda] Starting disk
-> 	[  337.401878] sd 0:0:0:0: [sda] Starting disk
-> 	[  342.521527] sd 0:0:0:0: [sda] Starting disk
-> 	[  345.850401] sd 0:0:0:0: [sda] Starting disk
-> 	[  350.967132] sd 0:0:0:0: [sda] Starting disk
-> 	[  356.090454] sd 0:0:0:0: [sda] Starting disk
-> 	...
-> 
-> on machines that do not actually stop the disk on runtime suspend (e.g.
-> the Qualcomm sc8280xp CRD with UFS).
+> ata1.00: exception Emask 0x60 SAct 0x1 SErr 0x800 action 0x6 frozen
+> ata1.00: irq_stat 0x20000000, host bus error
 
-This is odd. If the disk is not being being suspended, why does the platform
-even enable runtime PM for it ? Are you sure about this ? Or is it simply that
-the runtime pm timer is set to a very low interval ?
+Bus error is a serious error...
 
-It almost sound like what we need to do here is suppress this message for the
-runtime resume case, so something like:
+> ata1: SError: { HostInt }
+> ata1.00: failed command: WRITE FPDMA QUEUED
+> ata1.00: cmd 61/68:00:b0:93:34/00:00:02:00:00/40 tag 0 ncq dma 53248 out
+>          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x60 (host bus error)
+> ata1.00: status: { DRDY }
+> ata1: hard resetting link
+> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 2e933fd1de70..4261128bf1f3 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -4220,7 +4220,8 @@ static int sd_resume_common(struct device *dev, bool runtime)
-        if (!sdkp)      /* E.g.: runtime resume at the start of sd_probe() */
-                return 0;
+That is very low... Old hardware ?
 
--       sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-+       if (!runtime)
-+               sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+> ata1.00: configured for UDMA/133
+> sd 0:0:0:0: [sda] tag#0 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=3s
+> sd 0:0:0:0: [sda] tag#0 Sense Key : Illegal Request [current] 
+> sd 0:0:0:0: [sda] tag#0 Add. Sense: Unaligned write command
 
-        if (!sd_do_start_stop(sdkp->device, runtime)) {
-                sdkp->suspended = false;
+That is likely the result of the automatice generation of sense data for failed
+commands based on ata status and error fields for a failed command, which
+defaults to this when nothing else matches (yeah, I know, that is not pretty.
+But the SAT specs in that area are a nightmare and following them actually ends
+up with this asc/ascq. Will try to do something about it).
 
-However, I would like to make sure that this platform is not calling
-sd_resume_runtime() for nothing every 5s. If that is the case, then there is a
-more fundamental problem here and reverting this patch is only hiding that.
+The host bus error is the issue. Not sure what triggers it though.
+What is the adapter model you are using ?
 
+> sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 02 34 93 b0 00 00 68 00
+> I/O error, dev sda, sector 37000112 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 0
+> ata1: EH complete
 > 
-> Let's just revert for now to address the regression.
+> For reference, I made it dump the result of the READ CAPACITY 16 command:
 > 
-> Fixes: 7a6bbc2829d4 ("scsi: sd: Do not repeat the starting disk message")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
-> ---
->  drivers/scsi/sd.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+> sd 0:0:0:0: [sda] RC16 000000003a38602f000002000000000000000000000000000000000000000000
 > 
+> The drive says it has 512-byte logical and physical block sizes.
 > 
-> Hi,
+> The DIO writes are being generated by cachefiles and are all
+> PAGE_SIZED-aligned in terms of file offset and request length.
 > 
-> I just noticed this regression that snuck into 6.10-final and tracked it
-> down to 7a6bbc2829d4 ("scsi: sd: Do not repeat the starting disk
-> message").
+> I also saw this:
 > 
-> I wanted to get this out ASAP to address the immediate regression while
-> someone who cares enough can work out a proper fix for the double start
-> message (which seems less annoying).
+> 	CacheFiles: I/O Error: Trunc-to-dio-size failed -95 [o=000001cb]
 > 
-> Note that the offending commit is marked for stable.
+> which indicates that ext4/xfs returned EOPNOTSUPP to vfs_truncate() and thence
+> to cachefiles.  I'm not sure why it would do that.
 > 
-> Johan
+> Any idea what might cause this or how to investigate it further?  Is it
+> possible it's some sort of hardware error in the I/O bridge or IOMMU?
+> 
+> Thanks,
+> David
 > 
 > 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 1b7561abe05d..6b64af7d4927 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -4119,6 +4119,8 @@ static int sd_resume(struct device *dev)
->  {
->  	struct scsi_disk *sdkp = dev_get_drvdata(dev);
->  
-> +	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-> +
->  	if (opal_unlock_from_suspend(sdkp->opal_dev)) {
->  		sd_printk(KERN_NOTICE, sdkp, "OPAL unlock failed\n");
->  		return -EIO;
-> @@ -4135,13 +4137,12 @@ static int sd_resume_common(struct device *dev, bool runtime)
->  	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
->  		return 0;
->  
-> -	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-> -
->  	if (!sd_do_start_stop(sdkp->device, runtime)) {
->  		sdkp->suspended = false;
->  		return 0;
->  	}
->  
-> +	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
->  	ret = sd_start_stop_device(sdkp, 1);
->  	if (!ret) {
->  		sd_resume(dev);
 
 -- 
 Damien Le Moal
