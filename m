@@ -1,126 +1,129 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64AB11A2C37;
-	Tue, 16 Jul 2024 14:30:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 875B41DDCE;
+	Tue, 16 Jul 2024 16:12:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721140233; cv=none; b=XPNu8j9cmz2woPlmWwCwmhS3sb5C/qfdzKUxunFK5yBCx8+pk2g/fJwhEjIadGYhPGIoPXMSEva8VsSmhh8ThK8q6Ohm84FeS/jW4tOEwWZ7ERfBECcF36IYwSWJlIHXV4MzmdUEis8PDC869t9/QZ4Ts9THieU1rUmQdDEjPyM=
+	t=1721146322; cv=none; b=IWJV72gSSlDrI2UyyBljHySVUaHmXHzSarAh1DmKcrU7/JR54MO9M/LtgMkegVIelVr7Zn46IsXnUKNGSO7nNeCbOhMzrUvnWbsptBPwSE6JdouqVOM3SR9Zyhkh8lsGXUWTdBEenCentMnKDSnbq9e8p4Idl65hESz8QNUhQbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721140233; c=relaxed/simple;
-	bh=keUASYIy/pdzv4Mlgj5syXZIelt5GwXfj2iMNIRJybs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Von52lbYQK2zw+IhMWtTtbcSkovZezkp5Bd1svhSPRpgxbgBC0jjt72iISdEu+tE7umu53gkuiORALT5LLHXlpG+VnSxqvYgiiWiSXsGwiQKWNUEpY9Laqo/MehqQubXjcJGca3vFjOX0qBW4vSVgjXjJb+1/3j5GglrIhu1fHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=APLrOBIo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721146322; c=relaxed/simple;
+	bh=223TOiKAn8QnCVka2DNtxw3AZnBBCexiX1pgPf1xvxA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=idctbNFNdaalQPbcYQAnZ9/+OX/f2Vef2YzKQImXa8cLZNTWud6bJCOomkk7Zyihrv48L6kJQ0V5jIfJaEiLiXS86pH0mO2zBlM6pHj/yFVerFWxd13JrTNB7AWEgCXIkRalFgDCoIYp8PsjmswcTw8Oi4TDm09Haam6MfWtVx0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gWOrx56i; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="APLrOBIo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC63FC4AF09;
-	Tue, 16 Jul 2024 14:30:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gWOrx56i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 429ECC116B1;
+	Tue, 16 Jul 2024 16:12:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721140233;
-	bh=keUASYIy/pdzv4Mlgj5syXZIelt5GwXfj2iMNIRJybs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=APLrOBIob0nHtx/wQrLIrMsGfBlL187ZsYcM3Uisk9/FCZRB8q13f8mc4z/pjPwXj
-	 Zu0Anl8tnIVUcpmQsY7bPO/k5bUpBV3e6/vEbY3k9SmJU4o3nqYwENABmGB0ta5hkP
-	 2iOwW1yZNVZg23XDy2sklX3KIda+qR6bR4fJKdGm3i9tnyVLrbj1egwG7cvrktnaGM
-	 G9DjmdoIpCcGMjXSYA2tmBIBCgTSUE1KoMTA+xHki5kRiNtf5WnJRJ+H9HCJMLN6G8
-	 Nt5PqFIElfIvaYp7tyL88x0aqdjFWct/s16TYV5w+I/WveTf/RTs1Tlg26DfD9pyNH
-	 f4fR0ZhZXu+cg==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
+	s=k20201202; t=1721146322;
+	bh=223TOiKAn8QnCVka2DNtxw3AZnBBCexiX1pgPf1xvxA=;
+	h=From:To:Cc:Subject:Date:From;
+	b=gWOrx56ilTw0HLduJfVEGyZuoTT+SMCI8lqDcP88CcrSc4vZ1vK063vdpC2kgFCvM
+	 NccTUrTQH7HGoxX51nef5kM+enb7lcResJWb4nnln0xbGf2NdnbrcE8FOGVT4Ikqb+
+	 tZEOlZmzl36f36PNp9CxKJi57+jmlKalLyPvgOS7FKxVCpwS0i1MgJCKFO1gr3bgfg
+	 7DGE1phsnjhuDX+O8M0gL+ob7bUKmMK/RUTFPHN7GRBGaX17XuZmn5pfGyC+xFvHYJ
+	 hF4l9vHRHGS/8FuehRrDZpRg1cu8+gAM3+sk6x3PJqAte3bNFqfbUG77PmrYEBFRqi
+	 Xlc9eFL3LpwFw==
+Received: from johan by xi.lan with local (Exim 4.97.1)
+	(envelope-from <johan+linaro@kernel.org>)
+	id 1sTkmZ-00000000804-1kS8;
+	Tue, 16 Jul 2024 18:12:03 +0200
+From: Johan Hovold <johan+linaro@kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Bart Van Assche <bvanassche@acm.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Johan Hovold <johan+linaro@kernel.org>,
 	stable@vger.kernel.org
-Cc: Xingui Yang <yangxingui@huawei.com>,
-	John Garry <john.g.garry@oracle.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	James.Bottomley@HansenPartnership.com,
-	dlemoal@kernel.org,
-	yanaijie@huawei.com,
-	yuehaibing@huawei.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 4/7] scsi: libsas: Fix exp-attached device scan after probe failure scanned in again after probe failed
-Date: Tue, 16 Jul 2024 10:30:12 -0400
-Message-ID: <20240716143021.2714348-4-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240716143021.2714348-1-sashal@kernel.org>
-References: <20240716143021.2714348-1-sashal@kernel.org>
+Subject: [PATCH] Revert "scsi: sd: Do not repeat the starting disk message"
+Date: Tue, 16 Jul 2024 18:11:01 +0200
+Message-ID: <20240716161101.30692-1-johan+linaro@kernel.org>
+X-Mailer: git-send-email 2.44.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.279
 Content-Transfer-Encoding: 8bit
 
-From: Xingui Yang <yangxingui@huawei.com>
+This reverts commit 7a6bbc2829d4ab592c7e440a6f6f5deb3cd95db4.
 
-[ Upstream commit ab2068a6fb84751836a84c26ca72b3beb349619d ]
+The offending commit tried to suppress a double "Starting disk" message
+for some drivers, but instead started spamming the log with bogus
+messages every five seconds:
 
-The expander phy will be treated as broadcast flutter in the next
-revalidation after the exp-attached end device probe failed, as follows:
+	[  311.798956] sd 0:0:0:0: [sda] Starting disk
+	[  316.919103] sd 0:0:0:0: [sda] Starting disk
+	[  322.040775] sd 0:0:0:0: [sda] Starting disk
+	[  327.161140] sd 0:0:0:0: [sda] Starting disk
+	[  332.281352] sd 0:0:0:0: [sda] Starting disk
+	[  337.401878] sd 0:0:0:0: [sda] Starting disk
+	[  342.521527] sd 0:0:0:0: [sda] Starting disk
+	[  345.850401] sd 0:0:0:0: [sda] Starting disk
+	[  350.967132] sd 0:0:0:0: [sda] Starting disk
+	[  356.090454] sd 0:0:0:0: [sda] Starting disk
+	...
 
-[78779.654026] sas: broadcast received: 0
-[78779.654037] sas: REVALIDATING DOMAIN on port 0, pid:10
-[78779.654680] sas: ex 500e004aaaaaaa1f phy05 change count has changed
-[78779.662977] sas: ex 500e004aaaaaaa1f phy05 originated BROADCAST(CHANGE)
-[78779.662986] sas: ex 500e004aaaaaaa1f phy05 new device attached
-[78779.663079] sas: ex 500e004aaaaaaa1f phy05:U:8 attached: 500e004aaaaaaa05 (stp)
-[78779.693542] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] found
-[78779.701155] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
-[78779.707864] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
-...
-[78835.161307] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
-[78835.171344] sas: sas_probe_sata: for exp-attached device 500e004aaaaaaa05 returned -19
-[78835.180879] hisi_sas_v3_hw 0000:b4:02.0: dev[16:5] is gone
-[78835.187487] sas: broadcast received: 0
-[78835.187504] sas: REVALIDATING DOMAIN on port 0, pid:10
-[78835.188263] sas: ex 500e004aaaaaaa1f phy05 change count has changed
-[78835.195870] sas: ex 500e004aaaaaaa1f phy05 originated BROADCAST(CHANGE)
-[78835.195875] sas: ex 500e004aaaaaaa1f rediscovering phy05
-[78835.196022] sas: ex 500e004aaaaaaa1f phy05:U:A attached: 500e004aaaaaaa05 (stp)
-[78835.196026] sas: ex 500e004aaaaaaa1f phy05 broadcast flutter
-[78835.197615] sas: done REVALIDATING DOMAIN on port 0, pid:10, res 0x0
+on machines that do not actually stop the disk on runtime suspend (e.g.
+the Qualcomm sc8280xp CRD with UFS).
 
-The cause of the problem is that the related ex_phy's attached_sas_addr was
-not cleared after the end device probe failed, so reset it.
+Let's just revert for now to address the regression.
 
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
-Link: https://lore.kernel.org/r/20240619091742.25465-1-yangxingui@huawei.com
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Fixes: 7a6bbc2829d4 ("scsi: sd: Do not repeat the starting disk message")
+Cc: stable@vger.kernel.org
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- drivers/scsi/libsas/sas_internal.h | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/scsi/sd.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 01f1738ce6dff..3fb8a64f571d5 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -111,6 +111,20 @@ static inline void sas_fail_probe(struct domain_device *dev, const char *func, i
- 		func, dev->parent ? "exp-attached" :
- 		"direct-attached",
- 		SAS_ADDR(dev->sas_addr), err);
-+
-+	/*
-+	 * If the device probe failed, the expander phy attached address
-+	 * needs to be reset so that the phy will not be treated as flutter
-+	 * in the next revalidation
-+	 */
-+	if (dev->parent && !dev_is_expander(dev->dev_type)) {
-+		struct sas_phy *phy = dev->phy;
-+		struct domain_device *parent = dev->parent;
-+		struct ex_phy *ex_phy = &parent->ex_dev.ex_phy[phy->number];
-+
-+		memset(ex_phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
-+	}
-+
- 	sas_unregister_dev(dev->port, dev);
- }
+
+Hi,
+
+I just noticed this regression that snuck into 6.10-final and tracked it
+down to 7a6bbc2829d4 ("scsi: sd: Do not repeat the starting disk
+message").
+
+I wanted to get this out ASAP to address the immediate regression while
+someone who cares enough can work out a proper fix for the double start
+message (which seems less annoying).
+
+Note that the offending commit is marked for stable.
+
+Johan
+
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 1b7561abe05d..6b64af7d4927 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -4119,6 +4119,8 @@ static int sd_resume(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
  
++	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
++
+ 	if (opal_unlock_from_suspend(sdkp->opal_dev)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "OPAL unlock failed\n");
+ 		return -EIO;
+@@ -4135,13 +4137,12 @@ static int sd_resume_common(struct device *dev, bool runtime)
+ 	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
+ 		return 0;
+ 
+-	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+-
+ 	if (!sd_do_start_stop(sdkp->device, runtime)) {
+ 		sdkp->suspended = false;
+ 		return 0;
+ 	}
+ 
++	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+ 	ret = sd_start_stop_device(sdkp, 1);
+ 	if (!ret) {
+ 		sd_resume(dev);
 -- 
-2.43.0
+2.44.2
 
