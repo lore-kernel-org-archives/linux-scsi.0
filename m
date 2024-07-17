@@ -1,119 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5516713C693;
-	Tue, 16 Jul 2024 23:07:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C37F1859
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jul 2024 00:01:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721171240; cv=none; b=BuRW5uY7J5EDPWabaO/mGeVzGP6yD/zUbUxi0IAigdJOVoiVLsL8CV7nuiypXRSOYS61wmbL/psJT2MWCqPhlIIzAAN+AS0kdUZaX+bCTX0aIwq0df2Xh+sgN1X3M7LpRjjESS8UXmGn52+7pzmzkegZLkmUmmE8QYTmZl5XIPI=
+	t=1721174476; cv=none; b=exZs9meaCOUoTArRbfUq3orCO4rHxdNI3Bf0TMmE4Sxoc3GayXcG5c0LPdWsoCih9XVLnflJl/VzN0yRM9FXDPgB7BDvydAqcaJQrXf1smEYFnJpUbYKKSpuCdiYM65xbzCbOP6lYKtCQHfpFYxf9LNSj1WpNRW2tO6MIbi6W1s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721171240; c=relaxed/simple;
-	bh=kZuZ0X0RPT/O4DsNTfXIg6bB6btR6kfVX63MOeO57YQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fjqDoVmCeybtWMvOrffpc1/Zf5cThZKQt/Bwv7XmdGnAfo+UA14ei94LzsT+HUX/Yqo/weZjW9LaClJxUiWSve4Dr8MOYkABhLCJdYJ7eGP47KhHj1QxKRwfQ3V603gBCi0EXhFyDHfbWsOchUp4uI3moESmdbUQ0EPig+tPHmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qx1sskeI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721174476; c=relaxed/simple;
+	bh=SNnEsZWmZlGkSfqaytZBr3Hwi61qUEPt1WQznWmepU0=;
+	h=From:In-Reply-To:References:To:Cc:Subject:MIME-Version:
+	 Content-Type:Date:Message-ID; b=usRuim0FFOVgTVcpC9ZX1p9ozOurOuC2RR4CHjBqJcaGH7N0CJoTEm8gorFHkqo/UuraJU6m6tO5Bn6SzS7w3ZwoCUN7IA6bLnL4q6kY37lkl3bvumjQFOBtIPhyzyREMl6C6bSe3Q1hct61973UQM6KcdlZps9a5wxoTP6Y4hU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=E456eNoi; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qx1sskeI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4BF62C116B1;
-	Tue, 16 Jul 2024 23:07:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721171239;
-	bh=kZuZ0X0RPT/O4DsNTfXIg6bB6btR6kfVX63MOeO57YQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=qx1sskeIOvDqIJtZBHF32At0++OfaTeGlW3ut/AWOyiRfE/8odxFnYKKx4W37cYIT
-	 MeN7MMx2rD+XPsAInafDPXhDjaJTi2QTU/5+SA0GqpYbzUnRWP1Usp5SxXDfOJ1uNx
-	 1GScStNSgYePQjgEd10YO9mVYMuPmo+it8QhIKBSCrR1TravNiLrOH4guCHTWlYZfc
-	 CMxW8ze6zXW0ur52m1lQA6OwCvRpBaQi583lRSGQ8FFQb+UhY+ktlemt6u3W+zY2h+
-	 qOiHr2kYEmUaM8OOqh/AWqhN1bVjCSCp5pBU2Y/RWruluTRBoF/k/1xdPpxPiaozm2
-	 ZaADh6BdsG2ug==
-Message-ID: <b69d54af-2ac2-406a-ab32-9bad9d8a3000@kernel.org>
-Date: Wed, 17 Jul 2024 08:07:18 +0900
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E456eNoi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1721174474;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=e2HxlCztm27D4/QuFouF/qrX2OtpM4NidtaypUlcz4A=;
+	b=E456eNoindWfI3vlOTWRTnE3AtwJ7ADfochE5fCTyiazhUr1W1tjenFpUvSXyKaUz2a2qL
+	4ZzxdfJ/1BdP1+nGs/WVDDEBbCPVywhpFmD0tBa9VGQSML4tpuc59gf7QL0jfAEG2xfPkF
+	zCTSaC5dsBVMUr/i+di3QN3uBgtURrM=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-49-Uc4sPFjKOGSPMdx3ixphjQ-1; Tue,
+ 16 Jul 2024 20:01:12 -0400
+X-MC-Unique: Uc4sPFjKOGSPMdx3ixphjQ-1
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6DE1A19560A2;
+	Wed, 17 Jul 2024 00:01:11 +0000 (UTC)
+Received: from warthog.procyon.org.uk (unknown [10.42.28.216])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B7AC41955F40;
+	Wed, 17 Jul 2024 00:01:09 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <b69d54af-2ac2-406a-ab32-9bad9d8a3000@kernel.org>
+References: <b69d54af-2ac2-406a-ab32-9bad9d8a3000@kernel.org> <483247.1721159741@warthog.procyon.org.uk>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: dhowells@redhat.com,
+    "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+    linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: SCSI error indicating misalignment on part of Linux scsi or block layer?
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: SCSI error indicating misalignment on part of Linux scsi or block
- layer?
-To: David Howells <dhowells@redhat.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-References: <483247.1721159741@warthog.procyon.org.uk>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <483247.1721159741@warthog.procyon.org.uk>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <981263.1721174468.1@warthog.procyon.org.uk>
+Content-Transfer-Encoding: quoted-printable
+Date: Wed, 17 Jul 2024 01:01:08 +0100
+Message-ID: <981264.1721174468@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 7/17/24 04:55, David Howells wrote:
-> Hi James,
-> 
-> I'm wondering if I'm seeing a problem with DIO writes through Ext4 or XFS
-> manifesting as SCSI misalignment errors.  This has occurred with two different
-> drives.  I saw it first with v6.10-rc6, I think, but I haven't tried
-> cachefiles for a while.  It does happen with v6.10.
-> 
-> ata1.00: exception Emask 0x60 SAct 0x1 SErr 0x800 action 0x6 frozen
-> ata1.00: irq_stat 0x20000000, host bus error
+Damien Le Moal <dlemoal@kernel.org> wrote:
 
-Bus error is a serious error...
+> That is very low... Old hardware ?
 
-> ata1: SError: { HostInt }
-> ata1.00: failed command: WRITE FPDMA QUEUED
-> ata1.00: cmd 61/68:00:b0:93:34/00:00:02:00:00/40 tag 0 ncq dma 53248 out
->          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x60 (host bus error)
-> ata1.00: status: { DRDY }
-> ata1: hard resetting link
-> ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+I got the cpu and motherboard in 2016, I think:
 
-That is very low... Old hardware ?
+	model name      : Intel(R) Core(TM) i3-4170 CPU @ 3.70GHz
 
-> ata1.00: configured for UDMA/133
-> sd 0:0:0:0: [sda] tag#0 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=3s
-> sd 0:0:0:0: [sda] tag#0 Sense Key : Illegal Request [current] 
-> sd 0:0:0:0: [sda] tag#0 Add. Sense: Unaligned write command
+	Base Board Information
+		Manufacturer: ASUSTeK COMPUTER INC.
+		Product Name: H97-PLUS
 
-That is likely the result of the automatice generation of sense data for failed
-commands based on ata status and error fields for a failed command, which
-defaults to this when nothing else matches (yeah, I know, that is not pretty.
-But the SAT specs in that area are a nightmare and following them actually ends
-up with this asc/ascq. Will try to do something about it).
+> What is the adapter model you are using ?
 
-The host bus error is the issue. Not sure what triggers it though.
-What is the adapter model you are using ?
+This:
 
-> sd 0:0:0:0: [sda] tag#0 CDB: Write(10) 2a 00 02 34 93 b0 00 00 68 00
-> I/O error, dev sda, sector 37000112 op 0x1:(WRITE) flags 0x8800 phys_seg 1 prio class 0
-> ata1: EH complete
-> 
-> For reference, I made it dump the result of the READ CAPACITY 16 command:
-> 
-> sd 0:0:0:0: [sda] RC16 000000003a38602f000002000000000000000000000000000000000000000000
-> 
-> The drive says it has 512-byte logical and physical block sizes.
-> 
-> The DIO writes are being generated by cachefiles and are all
-> PAGE_SIZED-aligned in terms of file offset and request length.
-> 
-> I also saw this:
-> 
-> 	CacheFiles: I/O Error: Trunc-to-dio-size failed -95 [o=000001cb]
-> 
-> which indicates that ext4/xfs returned EOPNOTSUPP to vfs_truncate() and thence
-> to cachefiles.  I'm not sure why it would do that.
-> 
-> Any idea what might cause this or how to investigate it further?  Is it
-> possible it's some sort of hardware error in the I/O bridge or IOMMU?
-> 
-> Thanks,
-> David
-> 
-> 
+00:1f.2 SATA controller: Intel Corporation 9 Series Chipset Family SATA Co=
+ntroller [AHCI Mode] (prog-if 01 [AHCI 1.0])
+        Subsystem: ASUSTeK Computer Inc. Device 8534
+        Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 30
+        I/O ports at f0b0 [size=3D8]
+        I/O ports at f0a0 [size=3D4]
+        I/O ports at f090 [size=3D8]
+        I/O ports at f080 [size=3D4]
+        I/O ports at f060 [size=3D32]
+        Memory at f7d19000 (32-bit, non-prefetchable) [size=3D2K]
+        Capabilities: [80] MSI: Enable+ Count=3D1/1 Maskable- 64bit-
+        Capabilities: [70] Power Management version 3
+        Capabilities: [a8] SATA HBA v1.0
+        Kernel driver in use: ahci
 
--- 
-Damien Le Moal
-Western Digital Research
+It's whatever is on the motherboard.
+
+David
 
