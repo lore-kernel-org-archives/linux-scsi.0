@@ -1,72 +1,70 @@
-Received: from mail-io1-f44.google.com (mail-io1-f44.google.com [209.85.166.44])
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CE2578C7A
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Jul 2024 08:08:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2402F143C46
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Jul 2024 17:07:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721290118; cv=none; b=q9lALYPf3916GNHs7Y9sqrc5HxtQWMrR7tD4UJD5T3jCs176a+ZHCs0/uFhuU6fiIKmZg5BZGqF0hlGw/81v2yD2d9FhgHHAoqoveoVmjJgJjO8bO7DAgcXUr+B+IKVb6NnkTYo2mFshK3KKde1AajqzXIb0pbQDv54DXwR/EC8=
+	t=1721322432; cv=none; b=lwjRayDEwNnqKS5brbPQN9JSPQyDrqQ/dfBa7vXhueYRexlTCw4FM10NLax/pkwow698PuINDATyN1S29e6x9oEGoslM6/p4btUs99QfBvr5JQLEJADY2G6RB133+7wTHuYYRVt09yYxFqWcRHpxFds5RbqdbQJsdp67P14/Szo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721290118; c=relaxed/simple;
-	bh=H4w4bWRvrB8E66jmulgnfGAybN14N6YfNxdxG+lAPUw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=N7Z1ryL57iE2kBdC+5JC/8VgSftJKzGg3EtbY7Ir0aoaOD5hj8xjLR2J6LgC6HZiB1yF4Qa2L4tQVhCdgWDdgIURHWrmkEHi2BVR2ZOoOyS7F8So28D1h2Vc1bnEUN6NnxeuxAmt/wg/w1HC4kA4nMT4vDZFxh16+ZF3COIA8Mc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com; spf=none smtp.mailfrom=smartx.com; dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b=mOwTuxfH; arc=none smtp.client-ip=209.85.166.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=smartx.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=smartx.com
+	s=arc-20240116; t=1721322432; c=relaxed/simple;
+	bh=cjeX1aFyWdBgsxfxbKfPnG9h/qsmn1yS9giF+UQOvt4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KPXJvVyNU7DLezixJnHloKMzH+aBdtTr0m1mvxJwkemRMRRzwl7OySSqUPpVU8PCuDxGDrFe56yO3RZhgafS3iKEEpiDSlzU3WE9Xp74R0pjLw6gf4I68IzQCT4DSzTmu4cR6WH0fl2SuZEO9SLUL92kdUnRwubDVLzRGFh1zw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=m7k+sYjb; arc=none smtp.client-ip=209.85.216.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=smartx-com.20230601.gappssmtp.com header.i=@smartx-com.20230601.gappssmtp.com header.b="mOwTuxfH"
-Received: by mail-io1-f44.google.com with SMTP id ca18e2360f4ac-810f75a632dso17383139f.2
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Jul 2024 01:08:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="m7k+sYjb"
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2caaae31799so436788a91.0
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Jul 2024 10:07:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=smartx-com.20230601.gappssmtp.com; s=20230601; t=1721290116; x=1721894916; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0zvKcJeZW/5nlFPVZg7CuEvKzbd3IdJrobgY1LSpsC0=;
-        b=mOwTuxfHHIKADmb10i1U0f3ttUyT2kANWxCx4emcJIEKCuUQdjiMjs2s2uRZ1zOQZc
-         1YdgqrNEU+jMT1xu5vt4JWtSTzM2MUxqbvkoCwM+s3c5FTRRJnsxNfuzLGr8Egtou2Fx
-         m1o9eAoqiuVDx/yxiS/DRHSpxHG3IvP+jnad4lq3Z3SOQDMxAD20bSM/yNnvf+CGX9Es
-         Bi2DIEuxriAZx7X6E9ei+Yucz3/GJgQeL9uuuM5S79eBcXpd2kDGrAKv2ppLE/yoVkbt
-         c189/3baiPCN63d5+zVnfiDgVM/h4bCPSQJHr9k2jaifCtaQUzzfff0CG7B/fYsPlTkK
-         1F6g==
+        d=linaro.org; s=google; t=1721322430; x=1721927230; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wbWG4pqQqIat0xDS0ZVANXGmuhcJIaLuF1t7QxTUgZc=;
+        b=m7k+sYjb1rMVAGo464+87Ykc1YRWqFoXtSxbQC1kX59ymqXr0mfiCrAJbMmEVs9jgn
+         20SxRBL7mn/iv5AtXEIidk6upCLzOAwt4RJx3aEFT0rFVwtzsgqCz/47fkkQr0M0jFSv
+         dnwKaS0XiyXEl9hTK8uDhIdnXtTFfpzhH162HCGykZl0fqoyX5qPlWKFuxXwqnDha0TR
+         ECBMwWuzWVoFsq0F9shtBzuyD8F5UBdt96b6BsEmuNpMJDgNSiN+X3TA0Zey2+oeJUn6
+         93b521i75fn1S7sHT9eU2C6MQ00Xd29h8vi/7YFz64ffY6lLdGmz094iYZP0SfOLl2Tq
+         sSkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721290116; x=1721894916;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0zvKcJeZW/5nlFPVZg7CuEvKzbd3IdJrobgY1LSpsC0=;
-        b=dl7FC9gGS4zTrYdZ9kreXZzI0Oo7ALDpEstOgtKZnjCm8bE1Ws0L6nR3+s0pT4+Gia
-         G72nXspb7i3Ap8URUR1xSYarY1NDlitxpa4y/sMaxFQu2xN2ncVeznX8s7WmNpFqXqJh
-         lbZDbVrF+a2DDKn5cjnvWsFsqNhchAL0Czl5d3dhnC+gLszwNrx5ldkl8Td6AoAAVnoI
-         wzPQRhInRLoQEXNfwSGcejBuYMIx1qPU2dT1TpoAO3lDOtWy/WYgUjuRcZIx37gR8Icf
-         AioBNbk4VepU9f5kyyBpo189qkp7n1CAWeDmmsSU0qFXZQUpQ1TDnytD6ZkUTpnrervk
-         W2Bg==
-X-Forwarded-Encrypted: i=1; AJvYcCWzljXIcUobl6xFkblgt+b8T8suT7/KG/BebYcQTPtenSi2J55HhrG5Nz0EGA1apIHWyE4z3KAK78DRSIv9SkuRwdYc4eNukkqEWg==
-X-Gm-Message-State: AOJu0YyKI0DhVPSPJlcraIoG3JLhWltsbR13dWuOznLO9Xm3mj+p4H3C
-	HeVFaoDPusncARA8DJOUDAOEQzvwQHy392h4B1zkRKrooQ0Tt6pG+0r1xuvw4bI=
-X-Google-Smtp-Source: AGHT+IG+282LO3MdKEtecYTgxT/0LeZXejY4bHurHDfBCc4XmaLwlg8D0qa19SjkP31nyxE0heR9UA==
-X-Received: by 2002:a05:6e02:168d:b0:376:1264:d82d with SMTP id e9e14a558f8ab-3955760e43fmr49523385ab.30.1721290115841;
-        Thu, 18 Jul 2024 01:08:35 -0700 (PDT)
-Received: from localhost.localdomain.gitgo.cc (vps-bd302c4a.vps.ovh.ca. [15.235.142.94])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-78e34d2c4d3sm7385958a12.48.2024.07.18.01.08.29
+        d=1e100.net; s=20230601; t=1721322430; x=1721927230;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=wbWG4pqQqIat0xDS0ZVANXGmuhcJIaLuF1t7QxTUgZc=;
+        b=ZKDmBN28Oh/AnXCNDuYpwtZeKulw+cVuuCeO9FWITUFBeCx1EJPITmpWRCFopiX5nA
+         lqJ2VLlw4jcS1Mry74YfYtRBRCFMA8yKt1RT2rY9LUTADaSOYPthDOY8g92MPXaeyNOX
+         nZ6diksD0129LJ3e2yUGurk7RFgCXXPXJT0daRgrNqy+QubxisoSzZEDGWbe6PFWlMtp
+         AYPv6v4MT5p6vGr1xwSKsPt73R8iYSMljVqHq1tsMInnu+fvySMz2Dg8viwwm3Yh/4Oc
+         FfxZQ1atVz2A5O2bc6R6cs3kALfYYSjpYoH5/0yFV3nQSvQPoS/CQ/rj0mtGD8EBj6T/
+         UTbA==
+X-Forwarded-Encrypted: i=1; AJvYcCVWkbcXRsPFTqgYfnuxnsFjyzQPOWMKXQJ6o6Gm6bq6tz07sOQ7iqYkeUrkk63SQpS6EH/A5H7fhlmVWPRFBht6iUXS3+OxTrquoQ==
+X-Gm-Message-State: AOJu0YyDd6TImSU8Ze32H1Gt+68C72YEYX1jegwCqMUYoGWwWjjX7ZPv
+	1fQUegXthAKg+cuGjjbvyE3eqqSP6fMPaBo5klsaVrHyfY3UrV6wHGs7MFRTFg==
+X-Google-Smtp-Source: AGHT+IHzfGYavO6Fs7TNZbgx1Lr2vRkcXC3MMHfexuW7iiUp4F5HrO19UwuxKuf2xwzNcnSQfjNJvg==
+X-Received: by 2002:a17:90a:b885:b0:2c9:93a3:1db6 with SMTP id 98e67ed59e1d1-2cb5269443amr4146865a91.11.1721322430332;
+        Thu, 18 Jul 2024 10:07:10 -0700 (PDT)
+Received: from localhost.localdomain ([120.56.207.21])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2cb77342dcdsm969962a91.25.2024.07.18.10.07.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Jul 2024 01:08:35 -0700 (PDT)
-From: Li Feng <fengli@smartx.com>
-To: Jens Axboe <axboe@kernel.dk>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	linux-kernel@vger.kernel.org (open list),
-	linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM),
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Haoqian He <haoqian.he@smartx.com>
-Subject: [PATCH v3 2/2] scsi: sd: remove some redundant initialization code
-Date: Thu, 18 Jul 2024 16:07:23 +0800
-Message-ID: <20240718080751.313102-3-fengli@smartx.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240718080751.313102-1-fengli@smartx.com>
-References: <20240718080751.313102-1-fengli@smartx.com>
+        Thu, 18 Jul 2024 10:07:09 -0700 (PDT)
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: alim.akhtar@samsung.com,
+	avri.altman@wdc.com,
+	bvanassche@acm.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Anjana Hari <quic_ahari@quicinc.com>,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: ufs: core: Do not set link to OFF state while waking up from hibernation
+Date: Thu, 18 Jul 2024 22:36:59 +0530
+Message-Id: <20240718170659.201647-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,45 +73,47 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Haoqian He <haoqian.he@smartx.com>
+UFS link is just put into hibern8 state during the 'freeze' process of the
+hibernation. Afterwards, the system may get powered down. But that doesn't
+matter during wakeup. Because during wakeup from hibernation, UFS link is
+again put into hibern8 state by the restore kernel and then the control is
+handed over to the to image kernel.
 
-Since the memory allocated by kzalloc for sdkp has been
-initialized to 0, the code that initializes some sdkp
-fields to 0 is no longer needed.
+So in both the places, UFS link is never turned OFF. But
+ufshcd_system_restore() just assumes that the link will be in OFF state and
+sets the link state accordingly. And this breaks hibernation wakeup:
 
-Signed-off-by: Haoqian He <haoqian.he@smartx.com>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Signed-off-by: Li Feng <fengli@smartx.com>
+[ 2445.371335] phy phy-1d87000.phy.3: phy_power_on was called before phy_init
+[ 2445.427883] ufshcd-qcom 1d84000.ufshc: Controller enable failed
+[ 2445.427890] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore: Host init failed -5
+[ 2445.427906] ufs_device_wlun 0:0:0:49488: ufshcd_wl_resume failed: -5
+[ 2445.427918] ufs_device_wlun 0:0:0:49488: PM: dpm_run_callback(): scsi_bus_restore returns -5
+[ 2445.427973] ufs_device_wlun 0:0:0:49488: PM: failed to restore async: error -5
+
+So fix the issue by removing the code that sets the link to OFF state.
+
+Cc: Anjana Hari <quic_ahari@quicinc.com>
+Cc: stable@vger.kernel.org # 6.3
+Fixes: 88441a8d355d ("scsi: ufs: core: Add hibernation callbacks")
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/scsi/sd.c | 7 -------
- 1 file changed, 7 deletions(-)
+ drivers/ufs/core/ufshcd.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index c180427e2c98..3921b8fd71d1 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3953,7 +3953,6 @@ static int sd_probe(struct device *dev)
- 	sdkp->disk = gd;
- 	sdkp->index = index;
- 	sdkp->max_retries = SD_MAX_RETRIES;
--	atomic_set(&sdkp->openers, 0);
- 	atomic_set(&sdkp->device->ioerr_cnt, 0);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9f037a40316a..a9dfa82adac9 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10261,9 +10261,6 @@ int ufshcd_system_restore(struct device *dev)
+ 	 */
+ 	ufshcd_readl(hba, REG_UTP_TASK_REQ_LIST_BASE_H);
  
- 	if (!sdp->request_queue->rq_timeout) {
-@@ -3986,13 +3985,7 @@ static int sd_probe(struct device *dev)
+-	/* Resuming from hibernate, assume that link was OFF */
+-	ufshcd_set_link_off(hba);
+-
+ 	return 0;
  
- 	/* defaults, until the device tells us otherwise */
- 	sdp->sector_size = 512;
--	sdkp->capacity = 0;
- 	sdkp->media_present = 1;
--	sdkp->write_prot = 0;
--	sdkp->cache_override = 0;
--	sdkp->WCE = 0;
--	sdkp->RCD = 0;
--	sdkp->ATO = 0;
- 	sdkp->first_scan = 1;
- 	sdkp->max_medium_access_timeouts = SD_MAX_MEDIUM_TIMEOUTS;
- 
+ }
 -- 
-2.45.2
+2.25.1
 
