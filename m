@@ -1,63 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05FA4148FF7;
-	Fri, 19 Jul 2024 18:09:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01D96946C
+	for <linux-scsi@vger.kernel.org>; Sat, 20 Jul 2024 15:00:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721412554; cv=none; b=oFtCrLeGxkcQWtUdnM/CuFgCKBangylXq/dyfXBTbrRc0NtbXdVkx9sh8Xyw5kNKD0eWzZyLXYtR46t0GMzCLtFIdivHES3JjgMsyG+ue+dLP/AISLbgkcLk84pNXSTYzU4IoTGxQN6Yw+gxsstjfDBBH9n3uH1Y6VLksQdt5mY=
+	t=1721487654; cv=none; b=RR+JKGl4o3/ow1xwQvJDCSpO1kYC2rWA8PkLPSj1BgTQA9mBnX2qSYsavl2zGP4HOLsRd3ROd1smQeqOpE1V8cVhTXJ1JTlp4Yh40TkTzY6hwdx+vFe0DpxspIO4EulJF7wM5NYsg5hQ+p21z7ZY/+x4j+f25ysQ/dzgkC+rjUs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721412554; c=relaxed/simple;
-	bh=HfV8leutjs7C2tb/xVldLSub0FkfTg6WR9psEpNXW9Q=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=cJEXmnSpcXbK+Y2h4fd8Nlq3rPvMWhw/Mb/6KWzuZPyM6THtGUqqqap1xSIKrXqKEQM3vCm6v064F8amEOOfQGlvRkzu2oeZrPOqcWlrWi2HnjKqn/+xnhFtXO4DYZtRQEMV/flh/A0zCOs8Y1fGMtM49PueWf+GAzdlOKphtFA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VjJNpu51; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721487654; c=relaxed/simple;
+	bh=1CnA9uDJPSm34qFC4nKUXRRJlh17sdDfAbGV/pzqwqo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hdg/x+It98yQoRocjIEEd4DHzXfQSMrLl+66y7tlKWyH+nTUQjzZqdP52hPjYICWhpdvJDtMCW04dMSvpeXHELM8pq8s0UEXddEwOafDY6Vwkto1NqV831L1rQIzZ58nIu4ywIw2xPVdFhKA4ABW2LCucedSSzkbFeMZp7FcmXE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QijMk3Qn; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VjJNpu51"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DB731C32782;
-	Fri, 19 Jul 2024 18:09:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721412553;
-	bh=HfV8leutjs7C2tb/xVldLSub0FkfTg6WR9psEpNXW9Q=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=VjJNpu51x8tbKYKHCw9OXUHrNgiZd4eXk1zXetymbpLTHw3d4hQjdD87fXWJCY+b8
-	 FJ4jbRGshUIZ+85xFR8vpb0hN3LbZCLiN2YCtbp4KOZmD04uZV2Me5gLXATyiEeGpk
-	 JhGK838vIqJGBVvAVmG4JVe9ACx3ToLfZh2YyVoZWDo9LiwTJGjZ10Rk/2ztISPwMa
-	 vuW9fxLfUQSCu8r8mFOm4csEqixpjgcQj+j+mOC84IgKD+50JwtHK05ct2I/qJvL0V
-	 n5ihENa2xIGHuN9WHCjXVqpk8mXnRDL4YZFaAF5WdaHTj03UHdLTwRlKXdHgie6mRb
-	 x2Nqe8KlMn8tw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id D2A62C43335;
-	Fri, 19 Jul 2024 18:09:13 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI updates for the 6.10+ merge window
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <553d4e0924cc47e41ca799c19c666761c5de6023.camel@HansenPartnership.com>
-References: <553d4e0924cc47e41ca799c19c666761c5de6023.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <553d4e0924cc47e41ca799c19c666761c5de6023.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: 23cef42d17413d099f44ea42b622fbf23b04646f
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 4305ca0087dd99c3c3e0e2ac8a228b7e53a21c78
-Message-Id: <172141255385.2862.12765122382132071952.pr-tracker-bot@kernel.org>
-Date: Fri, 19 Jul 2024 18:09:13 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QijMk3Qn"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-70af8128081so1320471b3a.1
+        for <linux-scsi@vger.kernel.org>; Sat, 20 Jul 2024 08:00:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1721487652; x=1722092452; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Bw2AJOf38nrdkWRGo+4GSQisL6yU/GhZFbkNB/h1Wr4=;
+        b=QijMk3QnNF5V1yJUDG+Y4ywLYCCc38uYdHelhGVc0vjXVzW3+zxk0fHj0FSH8pDqRO
+         yqckVDCPh+HtjA66cSNCqjKpZpmeWeoEbC7AZHJrH1hcPytxXkjUivwze7p/dtPKVBNp
+         yueimLRTNZ3Bqg5XumGj4LmwTz6p9w6U5S37rKYUVeKQIah+23H66qht9qi1FKluIOJa
+         fr8W3sM1ITkzV8slsFEtVz3iV60EALLFQ+JzppKoQf+9FbQ8hZTonxhYtruFEsW4OHqQ
+         yquAV7rJkQ16Av6fIhUa/XCsPyVlrRnzomHmgWbO2FDImsF3eYgsPxyuCsFpEGHDhCZb
+         lWJQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1721487652; x=1722092452;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Bw2AJOf38nrdkWRGo+4GSQisL6yU/GhZFbkNB/h1Wr4=;
+        b=S1RH60HPoaOFeIGm1slxUHWnjKcdrB5qQP5XXjXS18Nb7170Keyab/bQI6jLfG9sqj
+         9bWkHstFqjj/QoGVRp6Tloc3jV+16qxTNUOtUxIKRc9xktJ2U8tT1N2ZzY32RgUUCE5j
+         jln2JGBrwsDFO/r6/L/+l2tDRDBhk16AdWq8TcNhKqWEtHg4Xk7uXHpp9Pf68IsEWolQ
+         t3X9FlxmY62EEFxzRmeJsXarjDuUWIz8dq3xj4+85qU6X+KbP/tCTVfzQXfTWEFAWE2m
+         MFIoo+7i06FLH146kXJAg3EJGohxvAvvPxJIFnNCZNMwsw791KdiCdQEEpPvX/3xs3/e
+         0JeA==
+X-Gm-Message-State: AOJu0Yx3eQyg652/uHeh5NZwzHk9oNHFJNc9E0y7fpbQhEGQzQx1HStz
+	pxMmgODxIWamKuDHo1d65GwvVFI4u/iGU2PnwK9FovcvdEL1zLnU
+X-Google-Smtp-Source: AGHT+IHcdlNFqEQcTU5VC3c3drEntRHt3cUK7b1aqGz+rTmJ2YqbVZ+ZeoDzKoyn5rDQ9S8aY1Zqug==
+X-Received: by 2002:a05:6a20:6a23:b0:1c4:214e:93fa with SMTP id adf61e73a8af0-1c428643ae1mr1519102637.46.1721487652023;
+        Sat, 20 Jul 2024 08:00:52 -0700 (PDT)
+Received: from DESKTOP-B5TBVBT.localdomain ([175.117.51.71])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ccf80a8275sm3615178a91.47.2024.07.20.08.00.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 20 Jul 2024 08:00:51 -0700 (PDT)
+From: Yohan Joung <jyh429@gmail.com>
+X-Google-Original-From: Yohan Joung <yohan.joung@sk.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	Yohan Joung <yohan.joung@sk.com>
+Subject: [PATCH v1] scsi: Check the SPC version in sd_read_cpr
+Date: Sun, 21 Jul 2024 00:00:39 +0900
+Message-Id: <20240720150039.843-1-yohan.joung@sk.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-The pull request you sent on Thu, 18 Jul 2024 17:00:47 -0400:
+Add SPC version verification to avoid unnecessary inquiry command
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+Signed-off-by: Yohan Joung <yohan.joung@sk.com>
+---
+ drivers/scsi/sd.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/4305ca0087dd99c3c3e0e2ac8a228b7e53a21c78
-
-Thank you!
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 6203915945a4..9d71ad24d8e3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3413,11 +3413,16 @@ static inline sector_t sd64_to_sectors(struct scsi_disk *sdkp, u8 *buf)
+ static void sd_read_cpr(struct scsi_disk *sdkp)
+ {
+ 	struct blk_independent_access_ranges *iars = NULL;
++	struct scsi_device *sdev = sdkp->device;
+ 	unsigned char *buffer = NULL;
+ 	unsigned int nr_cpr = 0;
+ 	int i, vpd_len, buf_len = SD_BUF_SIZE;
+ 	u8 *desc;
+ 
++	/* Support for CPR was defined in SPC-5. */
++	if (sdev->scsi_level < SCSI_SPC_5)
++		return;
++
+ 	/*
+ 	 * We need to have the capacity set first for the block layer to be
+ 	 * able to check the ranges.
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.25.1
+
