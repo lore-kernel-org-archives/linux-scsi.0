@@ -1,100 +1,196 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01D96946C
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Jul 2024 15:00:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D842028EB
+	for <linux-scsi@vger.kernel.org>; Sun, 21 Jul 2024 08:30:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721487654; cv=none; b=RR+JKGl4o3/ow1xwQvJDCSpO1kYC2rWA8PkLPSj1BgTQA9mBnX2qSYsavl2zGP4HOLsRd3ROd1smQeqOpE1V8cVhTXJ1JTlp4Yh40TkTzY6hwdx+vFe0DpxspIO4EulJF7wM5NYsg5hQ+p21z7ZY/+x4j+f25ysQ/dzgkC+rjUs=
+	t=1721550654; cv=none; b=KN1mX5nUbHInEE6Xu4DDoKh2U8L2NZrk7abhGpZZshqAel13kgen8z3+J5z0BSGNCIdASrQm+N4q/qAByEDfTou/IrHksoM/nT/tFnITXcUSvb30dItUIjcLQ1xTYR0yJQZBdIKsWth+KavoMy99ot/PZplzyztdPyya72jHtnY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721487654; c=relaxed/simple;
-	bh=1CnA9uDJPSm34qFC4nKUXRRJlh17sdDfAbGV/pzqwqo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=hdg/x+It98yQoRocjIEEd4DHzXfQSMrLl+66y7tlKWyH+nTUQjzZqdP52hPjYICWhpdvJDtMCW04dMSvpeXHELM8pq8s0UEXddEwOafDY6Vwkto1NqV831L1rQIzZ58nIu4ywIw2xPVdFhKA4ABW2LCucedSSzkbFeMZp7FcmXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QijMk3Qn; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1721550654; c=relaxed/simple;
+	bh=gZiLr53g7emxIq+w6dEC+wbTz7w9qZNQom4zVWb3NeE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uaeQmcGRV9O5hqyBmYLR3/oK1XC9TzXxSLApRDIrvnLYoazXdrOxAhUlo5o489IyOZ5VAmyxKIBvb2JKDTpO9PlSBx/+hKlBGqrt/bM0Yd8Od84bG9sTD2fudiQUcM8wXIXyLHVBfdlA4mdzt91g8/vRI0qz/vHqU0LnfYaGfEA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=PAEhPjRS; arc=none smtp.client-ip=209.85.167.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QijMk3Qn"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-70af8128081so1320471b3a.1
-        for <linux-scsi@vger.kernel.org>; Sat, 20 Jul 2024 08:00:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PAEhPjRS"
+Received: by mail-oi1-f178.google.com with SMTP id 5614622812f47-3d9e13ef8edso2096296b6e.2
+        for <linux-scsi@vger.kernel.org>; Sun, 21 Jul 2024 01:30:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1721487652; x=1722092452; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Bw2AJOf38nrdkWRGo+4GSQisL6yU/GhZFbkNB/h1Wr4=;
-        b=QijMk3QnNF5V1yJUDG+Y4ywLYCCc38uYdHelhGVc0vjXVzW3+zxk0fHj0FSH8pDqRO
-         yqckVDCPh+HtjA66cSNCqjKpZpmeWeoEbC7AZHJrH1hcPytxXkjUivwze7p/dtPKVBNp
-         yueimLRTNZ3Bqg5XumGj4LmwTz6p9w6U5S37rKYUVeKQIah+23H66qht9qi1FKluIOJa
-         fr8W3sM1ITkzV8slsFEtVz3iV60EALLFQ+JzppKoQf+9FbQ8hZTonxhYtruFEsW4OHqQ
-         yquAV7rJkQ16Av6fIhUa/XCsPyVlrRnzomHmgWbO2FDImsF3eYgsPxyuCsFpEGHDhCZb
-         lWJQ==
+        d=linaro.org; s=google; t=1721550652; x=1722155452; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=z6SxzaLFMa/0kSdsQV9DLEd0mH2Xc1Dr3ABGtN1DCM4=;
+        b=PAEhPjRSEtEo6kL7vW7PYOQ/KEDAVRlblg4P5kuTY40GVKXxHz+rUaGTYZOY8cbhBl
+         SyuxcTv71GYySoJ/gJT0IoXNUqD0bQDw5hTCMKRPrEY765Rx+1EbzPbmU8eVfp77weEM
+         TP05g6lewgf0dL1aDTa0/MNVWjNGdpy/B/8k9aHhLf/aVGvti9xF8hsdLMSP5AEpCW+y
+         UHtqcr5HOI4mAJ9GqPCvlLfMHZiLh4TyUxvTbKmonU91Yx1XRxUfSKTEzqiGcK/kNkos
+         zaTfiOC4vtlH1ULR22/9LGq+z2prZsv4JLtpbQAJXGeFhmn/hJPagpDf3REvSwgb1AzE
+         3krg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721487652; x=1722092452;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Bw2AJOf38nrdkWRGo+4GSQisL6yU/GhZFbkNB/h1Wr4=;
-        b=S1RH60HPoaOFeIGm1slxUHWnjKcdrB5qQP5XXjXS18Nb7170Keyab/bQI6jLfG9sqj
-         9bWkHstFqjj/QoGVRp6Tloc3jV+16qxTNUOtUxIKRc9xktJ2U8tT1N2ZzY32RgUUCE5j
-         jln2JGBrwsDFO/r6/L/+l2tDRDBhk16AdWq8TcNhKqWEtHg4Xk7uXHpp9Pf68IsEWolQ
-         t3X9FlxmY62EEFxzRmeJsXarjDuUWIz8dq3xj4+85qU6X+KbP/tCTVfzQXfTWEFAWE2m
-         MFIoo+7i06FLH146kXJAg3EJGohxvAvvPxJIFnNCZNMwsw791KdiCdQEEpPvX/3xs3/e
-         0JeA==
-X-Gm-Message-State: AOJu0Yx3eQyg652/uHeh5NZwzHk9oNHFJNc9E0y7fpbQhEGQzQx1HStz
-	pxMmgODxIWamKuDHo1d65GwvVFI4u/iGU2PnwK9FovcvdEL1zLnU
-X-Google-Smtp-Source: AGHT+IHcdlNFqEQcTU5VC3c3drEntRHt3cUK7b1aqGz+rTmJ2YqbVZ+ZeoDzKoyn5rDQ9S8aY1Zqug==
-X-Received: by 2002:a05:6a20:6a23:b0:1c4:214e:93fa with SMTP id adf61e73a8af0-1c428643ae1mr1519102637.46.1721487652023;
-        Sat, 20 Jul 2024 08:00:52 -0700 (PDT)
-Received: from DESKTOP-B5TBVBT.localdomain ([175.117.51.71])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2ccf80a8275sm3615178a91.47.2024.07.20.08.00.50
+        d=1e100.net; s=20230601; t=1721550652; x=1722155452;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=z6SxzaLFMa/0kSdsQV9DLEd0mH2Xc1Dr3ABGtN1DCM4=;
+        b=FMicfC0Nnl+7AwR2/HzxB8kZK4uG/kIuZDl7Vb6WubvDS59dRmY/RaNQYVCbHoPioR
+         Vkt7up3ZSgOYJkxpiUGUqej9XvysgQhIU43iqNErG8oEKyYXSGN5XT7yt3Y+/gPzbWaK
+         E3WmJXQkg/DuPSyNYmmESCHGRHXpryCC3qni+XhsQXUX91/6+fXPw50kgBGcr0TS+K9K
+         OGnwaFHlDzqBuALjWa4J9jZt6BMfF6gKX1lIY5sI65nQRUCaj/QyBXD6jcLh8FoV3XeZ
+         /MIgHV5PeoLZkFxrzkgaLhZwAW0DbTCto46if6e+b4ktF5Ed4ox9DRKjuwsIp6A6uTi/
+         cGPQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUIKljqN+Y0hzOKtzELV/CrvZhYldGIGE12w744GVUbkI/tsvQVN+54X4GaS2I4jin0TLSVZVgBc+mbs5/wbb+VvYLZ0eVDKcg0eg==
+X-Gm-Message-State: AOJu0YxUQMg2yYLxBzEtogV/ULumVyZ7GTz/vHLCRFoyHHENGs1794gw
+	EjVm7dTdQdjrXEfqe9v+oqb9oNSEfYhSiJfKbrvvbeoTMud91r17cP06sL/SOg==
+X-Google-Smtp-Source: AGHT+IFBw5J3+c4AIw9uGdqz5e1NYbaC8oSvh0D3lTfLHD3VRJeTOwwFxU5gvncwQAXr9qZGONLDkQ==
+X-Received: by 2002:a05:6808:1528:b0:3d9:2986:5a3b with SMTP id 5614622812f47-3dae63746e6mr5533085b6e.37.1721550651850;
+        Sun, 21 Jul 2024 01:30:51 -0700 (PDT)
+Received: from thinkpad ([120.56.206.118])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fd6f2591c1sm33199045ad.47.2024.07.21.01.30.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 20 Jul 2024 08:00:51 -0700 (PDT)
-From: Yohan Joung <jyh429@gmail.com>
-X-Google-Original-From: Yohan Joung <yohan.joung@sk.com>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	Yohan Joung <yohan.joung@sk.com>
-Subject: [PATCH v1] scsi: Check the SPC version in sd_read_cpr
-Date: Sun, 21 Jul 2024 00:00:39 +0900
-Message-Id: <20240720150039.843-1-yohan.joung@sk.com>
-X-Mailer: git-send-email 2.25.1
+        Sun, 21 Jul 2024 01:30:51 -0700 (PDT)
+Date: Sun, 21 Jul 2024 14:00:46 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Cc: quic_cang@quicinc.com, quic_nitirawa@quicinc.com, bvanassche@acm.org,
+	avri.altman@wdc.com, peter.wang@mediatek.com, minwoo.im@samsung.com,
+	adrian.hunter@intel.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, Alim Akhtar <alim.akhtar@samsung.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	Bean Huo <beanhuo@micron.com>,
+	Maramaina Naresh <quic_mnaresh@quicinc.com>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 1/1] scsi: ufs: core: Support Updating UIC Command
+ Timeout
+Message-ID: <20240721083046.GI1908@thinkpad>
+References: <cover.1721261491.git.quic_nguyenb@quicinc.com>
+ <44dc4790b53e2f8aa92568a9e13785e3bedd617d.1721261491.git.quic_nguyenb@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <44dc4790b53e2f8aa92568a9e13785e3bedd617d.1721261491.git.quic_nguyenb@quicinc.com>
 
-Add SPC version verification to avoid unnecessary inquiry command
+On Wed, Jul 17, 2024 at 05:17:34PM -0700, Bao D. Nguyen wrote:
+> The default UIC command timeout still remains 500ms.
+> Allow platform drivers to override the UIC command
+> timeout if desired.
+> 
+> In a real product, the 500ms timeout value is probably good enough.
+> However, during the product development where there are a lot of
+> logging and debug messages being printed to the uart console,
+> interrupt starvations happen occasionally because the uart may
+> print long debug messages from different modules in the system.
+> While printing, the uart may have interrupts disabled for more
+> than 500ms, causing UIC command timeout.
+> The UIC command timeout would trigger more printing from
+> the UFS driver, and eventually a watchdog timeout may
+> occur unnecessarily.
+> 
+> Add support for overriding the UIC command timeout value
+> with the newly created uic_cmd_timeout kernel module parameter.
+> Default value is 500ms. Supported values range from 500ms
+> to 2 seconds.
+> 
+> Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 
-Signed-off-by: Yohan Joung <yohan.joung@sk.com>
----
- drivers/scsi/sd.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 6203915945a4..9d71ad24d8e3 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3413,11 +3413,16 @@ static inline sector_t sd64_to_sectors(struct scsi_disk *sdkp, u8 *buf)
- static void sd_read_cpr(struct scsi_disk *sdkp)
- {
- 	struct blk_independent_access_ranges *iars = NULL;
-+	struct scsi_device *sdev = sdkp->device;
- 	unsigned char *buffer = NULL;
- 	unsigned int nr_cpr = 0;
- 	int i, vpd_len, buf_len = SD_BUF_SIZE;
- 	u8 *desc;
- 
-+	/* Support for CPR was defined in SPC-5. */
-+	if (sdev->scsi_level < SCSI_SPC_5)
-+		return;
-+
- 	/*
- 	 * We need to have the capacity set first for the block layer to be
- 	 * able to check the ranges.
+- Mani
+
+> Suggested-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/ufs/core/ufshcd.c | 37 ++++++++++++++++++++++++++++++++-----
+>  1 file changed, 32 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 21429ee..d66da13 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -51,8 +51,10 @@
+>  
+>  
+>  /* UIC command timeout, unit: ms */
+> -#define UIC_CMD_TIMEOUT	500
+> -
+> +enum {
+> +	UIC_CMD_TIMEOUT_DEFAULT	= 500,
+> +	UIC_CMD_TIMEOUT_MAX	= 2000,
+> +};
+>  /* NOP OUT retries waiting for NOP IN response */
+>  #define NOP_OUT_RETRIES    10
+>  /* Timeout after 50 msecs if NOP OUT hangs without response */
+> @@ -113,6 +115,31 @@ static bool is_mcq_supported(struct ufs_hba *hba)
+>  module_param(use_mcq_mode, bool, 0644);
+>  MODULE_PARM_DESC(use_mcq_mode, "Control MCQ mode for controllers starting from UFSHCI 4.0. 1 - enable MCQ, 0 - disable MCQ. MCQ is enabled by default");
+>  
+> +static unsigned int uic_cmd_timeout = UIC_CMD_TIMEOUT_DEFAULT;
+> +
+> +static int uic_cmd_timeout_set(const char *val, const struct kernel_param *kp)
+> +{
+> +	unsigned int n;
+> +	int ret;
+> +
+> +	ret = kstrtou32(val, 0, &n);
+> +	if (ret != 0 || n < UIC_CMD_TIMEOUT_DEFAULT || n > UIC_CMD_TIMEOUT_MAX)
+> +		return -EINVAL;
+> +
+> +	uic_cmd_timeout = n;
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct kernel_param_ops uic_cmd_timeout_ops = {
+> +	.set = uic_cmd_timeout_set,
+> +	.get = param_get_uint,
+> +};
+> +
+> +module_param_cb(uic_cmd_timeout, &uic_cmd_timeout_ops, &uic_cmd_timeout, 0644);
+> +MODULE_PARM_DESC(uic_cmd_timeout,
+> +		"UFS UIC command timeout in milliseconds. Defaults to 500ms. Supported values range from 500ms to 2 seconds inclusively");
+> +
+>  #define ufshcd_toggle_vreg(_dev, _vreg, _on)				\
+>  	({                                                              \
+>  		int _ret;                                               \
+> @@ -2460,7 +2487,7 @@ static inline bool ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
+>  {
+>  	u32 val;
+>  	int ret = read_poll_timeout(ufshcd_readl, val, val & UIC_COMMAND_READY,
+> -				    500, UIC_CMD_TIMEOUT * 1000, false, hba,
+> +				    500, uic_cmd_timeout * 1000, false, hba,
+>  				    REG_CONTROLLER_STATUS);
+>  	return ret == 0;
+>  }
+> @@ -2520,7 +2547,7 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+>  	lockdep_assert_held(&hba->uic_cmd_mutex);
+>  
+>  	if (wait_for_completion_timeout(&uic_cmd->done,
+> -					msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
+> +					msecs_to_jiffies(uic_cmd_timeout))) {
+>  		ret = uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT;
+>  	} else {
+>  		ret = -ETIMEDOUT;
+> @@ -4298,7 +4325,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+>  	}
+>  
+>  	if (!wait_for_completion_timeout(hba->uic_async_done,
+> -					 msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
+> +					 msecs_to_jiffies(uic_cmd_timeout))) {
+>  		dev_err(hba->dev,
+>  			"pwr ctrl cmd 0x%x with mode 0x%x completion timeout\n",
+>  			cmd->command, cmd->argument3);
+> -- 
+> 2.7.4
+> 
+
 -- 
-2.25.1
-
+மணிவண்ணன் சதாசிவம்
