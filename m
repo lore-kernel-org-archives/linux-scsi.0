@@ -1,48 +1,60 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f49.google.com (mail-io1-f49.google.com [209.85.166.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE0BA16EBE2;
-	Mon, 22 Jul 2024 17:57:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D04C228689
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Jul 2024 22:22:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721671065; cv=none; b=j/fHbm+lBOmpWrRsoD2P6KERtVzwdBnc3kmGayDz1N350UP9/muGjWV3nL5VAiEI+lGyrVvLK2RBS0e3yUIe73guFx0dH1ifH8+hL0c9Li6R8j/DbcgGtC5MH1g79AuYJMu2vUv9wRFVlbgLjUDVo6sY64G/TsynJHtQNOMmXXA=
+	t=1721686950; cv=none; b=NpwCt2P0HBOMXLQkZE5YLjxH55v7PnhFp/lQyoeJulJVdtTVF7cmfe8iN7e6MNpSWbmYvtHVfK20TB1Yu2GPDS2T66sWsx+vveBhFLU2VYac7PUy1gSjH1FDE/yfTUwBpK3m0z9PzuxoXTN1ukAP+vQarm+eHI7MMLuaeL2wTTA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721671065; c=relaxed/simple;
-	bh=DqiL8Zutkh0p7AU8coJxeF0866xwrUrObs4iZYz2/NQ=;
+	s=arc-20240116; t=1721686950; c=relaxed/simple;
+	bh=NBa7JVKjwoFi4L04QvHkRHOK1hCkVZoIydEAQJ8zEFU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UnnifttGvdTeQxVSJaxAmYCrsRIShy9Hl+wuDcDzslpfyCOtYYcxgyu10gYI4arpAw4btSzC8eSAh0i+c1duRVN/2wopSkOgNl6h4GxoapvitejlAQhaaB6R5SSSBSV6vwQNZmxKC7P7zMj0b3FvgUdjICxHi0TI/PzDHKkLFiM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=LAMa6fgA; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=rEcs/SYQTCaiZ2PYpOdKiZsPmLUgk3wbiinu4tUC5p7i5gcvXJSXwdQvCm6m54GA0fE1+nBUfbr2/4BiuQQAhSeMAHjrFru19uvPRz44YpNPSI7tLsptjru28p4e0Dqxkv3ZCkQG91NWOgnYirpYyIj2PIwdhIs1X44vZ9qo+hI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=s0JtGKL6; arc=none smtp.client-ip=209.85.166.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="LAMa6fgA"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WSSfn69F1z6CmM6V;
-	Mon, 22 Jul 2024 17:57:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1721671054; x=1724263055; bh=hVqNIFOIvHQiFHB/q5ZBJ2N2
-	RU0nj1/rFF4DiHBHLVs=; b=LAMa6fgA0LxhIcwdDMWzLfgVPLp84TGA9edgkfjv
-	VERaRkWgFkLdIZL8prPZKIzJGwTaDiscwj2CnG59TEb8uu6hxiV4Vk4VSy7I0cVT
-	DgOdxXCL4sYC35q5KFiuD9Cxu43bY13Kf5DOiXKH4sKqaVqE9APua6+YhOi9bmbr
-	pz7JCig+Kk8sKFxT3cawfbSc9xIKJehjOE9MxqmL8MTx3nAP4vSudfp0b/yx6uSs
-	72ZMU5ke4aezUG1uR8QJn56x0aLFSCnsR/0h2N6/qlImgVRj6wsWH6luWC0nu+I5
-	/hso2fqTvPrmIfr3wu6rUuWUh89oMm3gZKZ0hV6WhYge4A==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id x_FUwR2hlpu2; Mon, 22 Jul 2024 17:57:34 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WSSfh45nHz6CmM6Q;
-	Mon, 22 Jul 2024 17:57:32 +0000 (UTC)
-Message-ID: <54704229-221f-4724-b386-48c39ee1290c@acm.org>
-Date: Mon, 22 Jul 2024 10:57:30 -0700
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="s0JtGKL6"
+Received: by mail-io1-f49.google.com with SMTP id ca18e2360f4ac-812796ac793so20136439f.3
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Jul 2024 15:22:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1721686948; x=1722291748; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=MnRlInGC8vN1+rV19INQEkwGpgPNaUbausotg6BATNY=;
+        b=s0JtGKL6IA1nZBi0d+vZIFFOtEBw68ylf5xA2XaGhvBce/WB0Gd7lEpMvHBBjQXVyh
+         YUNzdv+wjdD4eUXbN1JH/ZeDUJMfIotZbQmIPLtAX801dPPJW9Nyc1u+h7QpttvH40oh
+         wjH5us74GSsXlFzp4rGAgGTNjOljXoausBIwlGYwebVjBrVFza/GRQvNiBk+ZFl4Wpne
+         U3Gmh+zqTJ89eMML6VlImvrsjA4E2V3OKfoY2gZKW5rx4GmHXbPfE+GQJFmUk3cx85TI
+         97EHefIFxJ74EX41/aXfXe1Uja+GWsulpKOfZo68VEEZWuy4wxcmzDy1QhAyWfSux38o
+         bd2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1721686948; x=1722291748;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=MnRlInGC8vN1+rV19INQEkwGpgPNaUbausotg6BATNY=;
+        b=WBVxblyNRuvAwi9Q67WmDQYKuOa1rSh/3H6pY7rvnMRcaapu/RDxWP1/t2q6z8VI0e
+         wL4yw7m56qAbgStBLDLdB76KNLgzEdcLwBb3WcpVHp6PY2sAEQSyIkFXO0K/HBBMu95T
+         UzOWZYP9TxbUww8TMplNz2XcmqFZp3XuEGk7lQICWkaFMUITTON6u6XejiXmSHIiueGh
+         nsd6Jq7rbD9RtOiDliwmPDSrYSW5aRZgGn+KfgIpvno6Noo/HdDnIeyi874nkHc3de3A
+         Qlxx9Jm+letR+zSq0EwDT1UUcmr27pb38cQf5C8GexdjuuttOw3wVxIJhlfp/lRijae4
+         xZbg==
+X-Forwarded-Encrypted: i=1; AJvYcCWQ3KbrRPPS9Kjyrd7AdHiNnHRdBrLs66U/uB4OibkSAIVVGvphzpj+U6fn7ADTmAyFrFVT6uj9uO51Q2MfCDobwTYg6Jmg0TxK7Q==
+X-Gm-Message-State: AOJu0Yzb2vOYk5liG1/P3jU0i43tYTjVjqjhrpeKDlkMVS1YAyeudDtR
+	iMGd51yow2kuq1T9FRq9HcGmuiPRBqCoGPjiEJiYNMJFJayY5o2rsSQV9VnduCzxPONE50RsbjJ
+	tALU=
+X-Google-Smtp-Source: AGHT+IGErpgwGnbRUj/d1zgp5yaU/AfHzH/lzmXBBD0hSLIdu6yCr2Kv+i26Aj/Fex49lV/gUXpopQ==
+X-Received: by 2002:a05:6e02:1d9b:b0:38e:cde9:cc86 with SMTP id e9e14a558f8ab-398e725c529mr48241285ab.4.1721686947826;
+        Mon, 22 Jul 2024 15:22:27 -0700 (PDT)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70d35de3274sm981370b3a.83.2024.07.22.15.22.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 22 Jul 2024 15:22:27 -0700 (PDT)
+Message-ID: <c1b47037-4754-459f-9e8f-ae4debd3fcf2@kernel.dk>
+Date: Mon, 22 Jul 2024 16:22:25 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,29 +62,31 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: Do not set link to OFF state while
- waking up from hibernation
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, Anjana Hari <quic_ahari@quicinc.com>,
- stable@vger.kernel.org
-References: <20240718170659.201647-1-manivannan.sadhasivam@linaro.org>
+Subject: Re: [PATCH v3 0/2] scsi discard fix
+To: Li Feng <fengli@smartx.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ open list <linux-kernel@vger.kernel.org>,
+ "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Damien Le Moal <dlemoal@kernel.org>
+References: <20240718080751.313102-1-fengli@smartx.com>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240718170659.201647-1-manivannan.sadhasivam@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20240718080751.313102-1-fengli@smartx.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 7/18/24 10:06 AM, Manivannan Sadhasivam wrote:
-> UFS link is just put into hibern8 state during the 'freeze' process of the
-> hibernation. Afterwards, the system may get powered down. But that doesn't
-> matter during wakeup. Because during wakeup from hibernation, UFS link is
-> again put into hibern8 state by the restore kernel and then the control is
-> handed over to the to image kernel.
+On 7/18/24 2:07 AM, Li Feng wrote:
+> Hi Jens,
 > 
-> So in both the places, UFS link is never turned OFF. But
-> ufshcd_system_restore() just assumes that the link will be in OFF state and
-> sets the link state accordingly. And this breaks hibernation wakeup:
+> These two patches have been reviewed but have not been merged into
+> linux-next. Can they be merged into 6.11?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+They can, but is there some dependency that means they should go
+through the block tree? Would seem more logical that Martin picked
+them up.
+
+-- 
+Jens Axboe
+
+
