@@ -1,97 +1,96 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9584E132114
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jul 2024 01:24:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0D25EC2
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jul 2024 01:56:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721697863; cv=none; b=oU5FO0B/5CH2QS2+ZPkmC7m5xVjyPJ3jHfA0bwz6UIHt8RCSdGwANixvwkbUiCr62r5gvkvFGdNwyozWhNSc4jZE0fZKGxM8lpEk0b1K+lOSYT1gSeHKAHKsKI7yKzjlImacCzjZzxdhcGeWkC9Hrx1rCq6YcBT+ixdNr1u+3TE=
+	t=1721699773; cv=none; b=C6UHbq6/F/5fYCkIaYG2g4MaM/MW/Mkk7ztcJ/8rU/yaoDyfIryUxVfRHVb37cy+Pvxp1dTEjcXTSrVyIMawAAKQpWDGkFFU+m2FivOvy4qEY3PgefdiWrB8zsX0BKS5r4EVr+1adnNCpWvkKxxalvVcau3PLIuVWNFVixKsLK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721697863; c=relaxed/simple;
-	bh=jOyuhlqYTZADZ7GHGWkAeSDxB6R9qEQP9GfAatxIzlA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bqi7TPZe26bTmjjewbe+vtd7gr+sbxDGSIPbsLA2Z2tKvRiKKonxmt8DFGx8drZB0UBpJ2aerjsyFa8tindHqfF1q9kXI89KuPm4iU7eR+E9xumuE0MQ41Jfn6ujuxrH3nb38U1yT2S0syRQL+W4mWFBi8i4yUx+LmqziLjK3Pg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=H+icMT1N; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1721699773; c=relaxed/simple;
+	bh=k1ntAoi50lOyaKn1/ARw7CujZpCpKkg8ZmNkjxr04Bo=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=V1dMlkhSXLW/d0HByKuw3BwtDgzWkiLV63mEUzlKAqNOKzimMftR9/qOfeOiZ8w5lycWLPM3iIDkGcCzH0hid4FLq9kIdkJWDKo3xsHZhgKC8ogBrdEZoLtM8T8lQerSBcIeMX1rqkK9zrXd6sB4Dx/XreYfT/PH+HDbP1I4Mgc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bpxp9LAx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="H+icMT1N"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46MKtWTP018334;
-	Tue, 23 Jul 2024 01:24:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-type:content-transfer-encoding; s=
-	corp-2023-11-20; bh=3LAwEMcZJkSTIaC24bJC8J76h4QJhnUANf3s/HLb6zo=; b=
-	H+icMT1NsPA/DcWx3mBB6b4accEvzxWv6TP4gaHKjEow9bZ9eK54ZD5I8hQMc1G3
-	UYNKWzvvYfDr0JcWHafg1d7e6kCvGE5a9ckoMgSjqXc54Ab6E2zydB7biP8hTWOj
-	DGE9fgH/O1LwgP5nLBPU36sjFjwRANHxDp/+8B9q1yAPAf0mweHzakXd9xwPgnpR
-	mUnAtKrZQ8Tg0HPVBPwWtL1C7Ao8IoyWGIcHyopWqz2NQ72CEey3mHDcqIKaphVh
-	iUSDLjx3zMu5Ko7zKFkYAB3CIkR4FpaOUb+t3Cvh0efh/IsryxkrTKSNbbt+aqur
-	xL3w6Nfe9fJM5u40vKGVbw==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 40hft0ccm1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 23 Jul 2024 01:24:10 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 46MMvS3F018835;
-	Tue, 23 Jul 2024 01:24:09 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 40h27xysqn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 23 Jul 2024 01:24:09 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 46N1O683005270;
-	Tue, 23 Jul 2024 01:24:08 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 40h27xysph-2;
-	Tue, 23 Jul 2024 01:24:08 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, avri.altman@wdc.com, alim.akhtar@samsung.com,
-        jejb@linux.ibm.com, peter.wang@mediatek.com
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com, tun-yu.yu@mediatek.com,
-        eddie.huang@mediatek.com, naomi.chu@mediatek.com,
-        chu.stanley@gmail.com
-Subject: Re: [PATCH v1] ufs: core: bypass quick recovery if need force reset
-Date: Mon, 22 Jul 2024 21:23:21 -0400
-Message-ID: <172168235253.1161648.8454083361308890112.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240712094506.11284-1-peter.wang@mediatek.com>
-References: <20240712094506.11284-1-peter.wang@mediatek.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bpxp9LAx"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 45C3DC4AF0E
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jul 2024 01:56:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1721699773;
+	bh=k1ntAoi50lOyaKn1/ARw7CujZpCpKkg8ZmNkjxr04Bo=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=bpxp9LAxNq3gs8SIzU3czBaWrDUoq3+11o7u6gJ3gZQ+waAIJZuh57uSoC88Qnmco
+	 UM5brqm+FnZ/8ct1/v//UO1j6JzBlMz+uWeTXDnVbj+EtuZ/BmMYjQOHIE3fcp+8gJ
+	 oTfp9avdC1UeLZfJR+oxkKtk8HFD8I/uOipnMFh91DKnZZM5UU5eRHwq2+nd8/SgBj
+	 VoJWCdNBDIX6Q18RozEfjoEQ/m0Rp8QZwyZQczJSLLgQAG1ipAG36JcEHhMYs/jixh
+	 goJlLrpDTtGafn78yhv5QKjs3oXqF/Nkcdlcdj2jUqCLgv8bxo43Xam2d0+6K7AXQ2
+	 kJ06viH+seuOg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 365CEC53BBF; Tue, 23 Jul 2024 01:56:13 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 219027] The SCSI can't adjust Max xfer length (blocks) with
+ different storage device
+Date: Tue, 23 Jul 2024 01:56:13 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: 983292588@qq.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-219027-11613-EK7nk4sqnZ@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-219027-11613@https.bugzilla.kernel.org/>
+References: <bug-219027-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-07-22_18,2024-07-22_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
- mlxlogscore=999 adultscore=0 phishscore=0 spamscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2407110000 definitions=main-2407230008
-X-Proofpoint-GUID: A3DPHEDrOlJye2nXTwnDGsw_dPbV0wfl
-X-Proofpoint-ORIG-GUID: A3DPHEDrOlJye2nXTwnDGsw_dPbV0wfl
 
-On Fri, 12 Jul 2024 17:45:06 +0800, peter.wang@mediatek.com wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D219027
 
-> If force_reset is true, bypass quick recovery.
-> This will shorten error recovery time.
-> 
-> 
+--- Comment #2 from LXY (983292588@qq.com) ---
+Thanks for your reply.
 
-Applied to 6.11/scsi-queue, thanks!
 
-[1/1] ufs: core: bypass quick recovery if need force reset
-      https://git.kernel.org/mkp/scsi/c/022587d8aec3
+I've tried creating udev rules and it works. But whenever I use my USB stor=
+age
+device on a new PC, I find it a little inconvenient to create rules.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+
+So I'm trying to find a way to get Linux PC consulting the Block Limits VPD=
+. Do
+you mean that for all Linux USB storage drivers, Linux hosts will not consu=
+lt
+the Block Limits VPD?
+
+
+I actually have the firmware source code for my USB storage device, and I c=
+an
+make some changes I want. For example, change the VPD page it supports. Do =
+you
+think it will work?
+
+
+Best wishes.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
