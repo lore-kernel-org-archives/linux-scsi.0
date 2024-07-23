@@ -1,103 +1,80 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43A11EC2
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jul 2024 01:57:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F28FEEC2
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jul 2024 02:08:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721699826; cv=none; b=T9kHamsNs0ozkRqUzyofIZjmnOLqPhd3RCPGRhd9kfInLDDqAgQ+JuFowcJoVniat28pVuOwbOhOanFP6kmcbzMPlEzagHETMgI/2OEHDS08M9aJx738BewJp+6aMqgy3FlY2HW4N0f04S2yRQqKjwfT+VFik4Cyuiq7R8bPa4Q=
+	t=1721700538; cv=none; b=mk8YktnxRjY7K2MMWQKxDAtrqsAgvmX0Pbb12UIsoaPTRwcBoWDXhiBy0+nBzlBfpAaaGyh3VJRMtbRW2JDQWUr8bBppKj+BqzlJ/8QB4sL+2whphb4xfj5jHzkEskJmSmLAOuGwGgie1T+UTdth4ucLt6TwuN3g5sp+rehJUdA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721699826; c=relaxed/simple;
-	bh=BwQmvcshaG7PJ7zswmLAVuFza8sMG1S4gMHgFzA1gZY=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=GLApwp+NFaUMDDHsnl8NnzFeFgWrotPOcqJimTs4LTfcqgXNKkc93sZEjUKUVGVBfTplx9BM+bDXbttZc9tJ2mP142SQCZziRyCM5eSGwVDR7J+NBPnWDtwiy2gql4EuwFi72Fu21l+YdXVo07NH+KhTgXJf81dPQBhGftEyuzY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W6XNiUvS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721700538; c=relaxed/simple;
+	bh=v+RzrPEOPibGHZuVYPTkp62QYS5GwJbx2umk8z20/gk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KFIBStITd56EhgsLxXSf1tTDWlerWxlKCFSFUJb0WsTbJs+ZRrPOp2eNcMVHF1EIS1OycqN8mOjiJw5kCy5AEH6UDUA11DLJOcIOTL3AKUx+wflD9EfDjZXbbJIanz4IGdizIJuDezwaJrm855iL0FW7ASRlLB6xyf8+UzdJjGI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XpVyuXK0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W6XNiUvS"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id D5045C4AF0E
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jul 2024 01:57:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XpVyuXK0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5F8FC116B1;
+	Tue, 23 Jul 2024 02:08:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721699825;
-	bh=BwQmvcshaG7PJ7zswmLAVuFza8sMG1S4gMHgFzA1gZY=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=W6XNiUvSoi6Mx3fGrKolwy3grqwNi8oCFRAEsT2mM7Aewt8D08S0UYleZUTSUH+iH
-	 BPC2tY+/dhIjXMjePxoi8jwz8N1ABldifRkyg1N5qKuhkgwch3Z9mXTF2B4cCkDH30
-	 fvR4QNh+x0zdnPgjmujoBhNrRNHvAU6OKidaZPqkdFlzcigRJ0brOQakuVc8g85cNe
-	 VqGAb/O1Bhu/dMe5ZVrUOXpC0Nc7HiDbBn9wrC2IvjVPzJnXYN2HP0YmOhPiapmQW8
-	 zM1lncZWJSdv2NBo7A8d6cSv6EKvpDc2AVD79eTRRCW+qJjFPuHD3aYEMy39e2u1yP
-	 a01OV4Fqq78xg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id CAFF3C433E5; Tue, 23 Jul 2024 01:57:05 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 219027] The SCSI can't adjust Max xfer length (blocks) with
- different storage device
-Date: Tue, 23 Jul 2024 01:57:05 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: 983292588@qq.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-219027-11613-LLWhFYpd9s@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-219027-11613@https.bugzilla.kernel.org/>
-References: <bug-219027-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	s=k20201202; t=1721700537;
+	bh=v+RzrPEOPibGHZuVYPTkp62QYS5GwJbx2umk8z20/gk=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=XpVyuXK00JmguVa7K4PEEBBwgserz/qYrzHWz/UYTOAIKeyU0qnpXjfjMDlXNiXx0
+	 YErxWjyYuP2DCue6q59rbc/mnI/Sl+86yBgVAy7JmAhFjjLspnlYHFFlzupGEB8rjE
+	 fKB9Z7BHRc4NzCl00/waXHWIRLYQKt7Uq85BMMSOhKyBYY2vLrlLLTj5WW6JtQtz22
+	 kGYimMbEvO5M3mhJKpx+vA3FqSjZuYsVBKPi6gp3cZCv2tN4HAyPqCIJ/iIanfdThg
+	 8tGL7tZ4BQaMEDAnh1F/yCrKVYESKEAOY0Jh7s9uX/mWxszjbEZvaOr1mW9AP0/Zyc
+	 KZ71ZaO/Dn+tA==
+Message-ID: <fba33a47-807c-44ce-b433-82444bc1b115@kernel.org>
+Date: Tue, 23 Jul 2024 11:08:55 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] scsi: Check the SPC version in sd_read_cpr
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Yohan Joung <jyh429@gmail.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org,
+ Yohan Joung <yohan.joung@sk.com>
+References: <20240720150039.843-1-yohan.joung@sk.com>
+ <yq1v80xc57l.fsf@ca-mkp.ca.oracle.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <yq1v80xc57l.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D219027
+On 7/23/24 09:49, Martin K. Petersen wrote:
+> 
+> Yohan,
+> 
+>> Add SPC version verification to avoid unnecessary inquiry command
+> 
+> Are you experiencing an actual error condition as a result of this
+> INQUIRY operation?
+> 
+> Devices often adopt new protocol features prior to the spec being
+> finalized. Therefore we generally use INQUIRY to discover capabilities
+> rather than relying on the reported spec compliance.
+> 
+>> +	/* Support for CPR was defined in SPC-5. */
+>> +	if (sdev->scsi_level < SCSI_SPC_5)
+>> +		return;
+>> +
+> 
+> I'm OK with the change but I'll defer to Damien as to whether this is an
+> acceptable heuristic.
 
---- Comment #3 from LXY (983292588@qq.com) ---
-(In reply to Martin K. Petersen from comment #1)
-> Due to some legacy devices hanging when probing for non-existent pages the
-> Linux USB storage driver opts out of consulting the Block Limits VPD.
->=20
-> I suggest you create a udev rule to override
-> /sys/block/sdN/queue/max_sectors_kb.
+By the way, that may not be adequate as ATA devices that implement CPR may
+advertise an ACS version that does not translate to SPC-5, which is exactly the
+point you said.
 
-Thanks for your reply.
+-- 
+Damien Le Moal
+Western Digital Research
 
-
-I've tried creating udev rules and it works. But whenever I use my USB stor=
-age
-device on a new PC, I find it a little inconvenient to create rules.
-
-
-So I'm trying to find a way to get Linux PC consulting the Block Limits VPD=
-. Do
-you mean that for all Linux USB storage drivers, Linux hosts will not consu=
-lt
-the Block Limits VPD?
-
-
-I actually have the firmware source code for my USB storage device, and I c=
-an
-make some changes I want. For example, change the VPD page it supports. Do =
-you
-think it will work?
-
-
-Best wishes.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
