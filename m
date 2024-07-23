@@ -1,84 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E5AE1304BA
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jul 2024 01:10:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2CCF433A0
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jul 2024 01:24:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721697023; cv=none; b=iox0FIFNp5bBG4icOLQcUYLB5pVhTK0MZKmTiVGtP0Ih/Dgo6ZpNlXCxK4iHv7VvyyUqvp/Jxq7L/pfDvdj2ZR33r0RPMDbsCnswSAQNQ9rtcNSrNIRf3fTLcKyKk1riQpcW5hVS+5WGrXiNek7BAmtlQrtM6CaJYxuCCiPw6eA=
+	t=1721697858; cv=none; b=WMQ5APYOfUItv+ufyjbUx//vK+TRzjRYzXlO1Oh+LB8y2XPzWyxvQvHnTI3WazJemdV1JcoC+uBBTundfT5pd0dv6wY9ijtBqF56F4AjzmQk3bJOwFNByca1u3xPavflPrm4VS7JdlEgLKo/t2OPylXGdrcusyTAN1TPX0KPs5g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721697023; c=relaxed/simple;
-	bh=0gtaeiJqWMb9AykJ8dVASySbI4Y6v2O3rX7TthHBRFY=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=oHt4QRdyrOLZxCXwfEk3xI2icW8qv3lK0HoUjsdfwx4kUOH6r0B6155z4NkwzHGeNOQ+9bWNQ8CQTTpEGCBzTWC6gFAx4S6OYU/RyGLqCvIPxWmeYSYTKjRV6nI8SwPN2YSFm6QAyqTpP4r7IzADC/Z3uJntxrq/WXsz3TbXvzI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EeUqTFcp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721697858; c=relaxed/simple;
+	bh=AfFeSeBAsCYh0iUdPzzhqaCbPItXT0+5LpD23En7UUs=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=TUF1JjzjUh6EUhrtqofQ2Q9JDyBRA7nTg//nvoUX0rWlAPPryznWOsVjPzh0l7En0+e0xXJ9/l8/NvOUgJr/EzcWz0DhFAEDLeMDniqc0VPvbx5Fu93KMokmdJ01D5+w6k11ennvYueL9bn4wl0zCVBdCqvmDjgnkkBHxeEnWD0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=BIDLx7Ix; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EeUqTFcp"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id B6A7FC4AF0E
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jul 2024 01:10:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721697022;
-	bh=0gtaeiJqWMb9AykJ8dVASySbI4Y6v2O3rX7TthHBRFY=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=EeUqTFcpE+JNjV7J221wVIEERlCLHkkjt1XZI4ueynWO69+MBzLkKNjLUwaDzIjXa
-	 zwMUk+UmrqDAjvBWfSU4UvWifEHuN+O6VD2+lWJFgQTkwK4EzUugFT4lRfzC2wHPY3
-	 LEjhscgd5t0hbBoJRmR/mnU3BNo5KXCLmbXkQHJQCDPtSaZl4ned1BNH1prrVAyKlU
-	 p09u4m62UxZUQ9tFZf4NhViY5F9I62JZpDaMq0w2pgepBvT0sy+FjG0eQkYpLJJJN/
-	 ZDDe0sPZppgusMokQ8RQPfh/DRcvimtutlEHJxIENYanZUYi6N2yYhjD6/LPw+ajpp
-	 PDBe9P74WM2Xg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id A64E8C53B73; Tue, 23 Jul 2024 01:10:22 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 219027] The SCSI can't adjust Max xfer length (blocks) with
- different storage device
-Date: Tue, 23 Jul 2024 01:10:22 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: mkp@mkp.net
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-219027-11613-TwGVKOElw4@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-219027-11613@https.bugzilla.kernel.org/>
-References: <bug-219027-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BIDLx7Ix"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46MKtW8u018341;
+	Tue, 23 Jul 2024 01:24:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-type:content-transfer-encoding; s=
+	corp-2023-11-20; bh=yt1UlTOn6IQTjb8jSrqQ3/NGKgujgJlWg/mq852LJhY=; b=
+	BIDLx7Ix8IVXk2V08c9o8XbcWjvA3wGBjdKhgofrJdQRPQveMO6fYtohGd/4Kwcl
+	lBJzXndDR3dgMeDianTg+uf+dLc20TEsNqbxl178oORFsfMnTjm8vyjEltR5GLhN
+	J5ndlHcBKUzNzMjZTfWgRezOOs0c+/3zx/U2glHVbbU2oIop9LgsVE0Hmb5pv4OK
+	LqUUuUvyzAoolssq7GhEVunNZJvmeHQTI/CCpW+XA7BtxIJY9mNswo2vSUPaF6mY
+	b9NcLnj5rNePc1d3Yat1W93lw8DQ3hFzYte5tzb2QHIBI4lLO5dPQaemSxVzIyo2
+	eebi3POzW6cyV57hwhhgUg==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 40hft0ccm0-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 23 Jul 2024 01:24:07 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 46N1EilM018838;
+	Tue, 23 Jul 2024 01:24:06 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 40h27xysq1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 23 Jul 2024 01:24:06 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 46N1O681005270;
+	Tue, 23 Jul 2024 01:24:06 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 40h27xysph-1;
+	Tue, 23 Jul 2024 01:24:06 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: James.Bottomley@HansenPartnership.com,
+        Kyoungrul Kim <k831.kim@samsung.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, bvanassche@acm.org,
+        Ed.Tsai@mediatek.com, Minwoo Im <minwoo.im@samsung.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH V4] scsi: ufs: core: Check LSDBS cap when !mcq
+Date: Mon, 22 Jul 2024 21:23:20 -0400
+Message-ID: <172168235244.1161648.4461798222095474087.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122@epcms2p8>
+References: <CGME20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122@epcms2p8> <20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122@epcms2p8>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-07-22_18,2024-07-22_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
+ mlxlogscore=705 adultscore=0 phishscore=0 spamscore=0 mlxscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2407110000 definitions=main-2407230008
+X-Proofpoint-GUID: 4VbEHkdWvIl3YW0WJV9Pf43bIf3bylM_
+X-Proofpoint-ORIG-GUID: 4VbEHkdWvIl3YW0WJV9Pf43bIf3bylM_
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D219027
+On Wed, 10 Jul 2024 08:25:20 +0900, Kyoungrul Kim wrote:
 
-Martin K. Petersen (mkp@mkp.net) changed:
+> if the user sets use_mcq_mode to 0, the host will try to activate the
+> lsdb mode unconditionally even when the lsdbs of device hci cap is 1. so
+> it makes timeout cmds and fail to device probing.
+> 
+> To prevent that problem. check the lsdbs cap when mcq is not supported
+> case.
+> 
+> [...]
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |mkp@mkp.net
+Applied to 6.11/scsi-queue, thanks!
 
---- Comment #1 from Martin K. Petersen (mkp@mkp.net) ---
-Due to some legacy devices hanging when probing for non-existent pages the
-Linux USB storage driver opts out of consulting the Block Limits VPD.
+[1/1] scsi: ufs: core: Check LSDBS cap when !mcq
+      https://git.kernel.org/mkp/scsi/c/0c60eb0cc320
 
-I suggest you create a udev rule to override
-/sys/block/sdN/queue/max_sectors_kb.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+-- 
+Martin K. Petersen	Oracle Linux Engineering
