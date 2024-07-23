@@ -1,126 +1,109 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F421208A0;
-	Tue, 23 Jul 2024 13:33:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBC7B13D504;
+	Tue, 23 Jul 2024 19:28:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721741592; cv=none; b=IBASSslf9H33WFxkG0tDpDXOD81O7LVQ4I0SHhDWsT/RC3V/8goxkhj0pG87yWkMMjGdNppDEbCjGZNB/Bqr/85OVFXZmD6mYk4YPuAFQmXMD2wCTQRicwEAp84I81hYnJmS0wXuVbhYcFlB4M384Ut0KxQsEUldC/p6rkOwa5I=
+	t=1721762889; cv=none; b=VSCc/Y0x5HagAc2gg1avPMZR3qCNwkCAycrELTN3x/F9ZPG0sL5VIxgJ4VooS5ARu/6Lhd+sm7s2HzvmTD8KpEsg8ObP+pIPKr9Gd+7cLxs/pEW0KiRrVB7I/Z9Iira6o5ox4xDmu0Br85kkiP068XthNrSzuj0HY9Z9edFyys8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721741592; c=relaxed/simple;
-	bh=BHxbtpXYINWUUlpOGlyc6yectBbC1j0hOWiHMJY2K2o=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Dlf2jErl4TTFG3yK6ZYk3rsrNsK+KRol1sMXBBYY1AabQNOHd8OQZ3/RGDE+zoX3hQnxS3mi/OEAS+xykFdrIuokA0HXxKEAwM4GSBFsJrkMdlvifxdVdzRK3PBjRFAOIQMZ1Yk0V7Dt98vKOzLWT6ydpgFw7XalSpDG9TJXZXo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=LTHxvJf7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721762889; c=relaxed/simple;
+	bh=5+w+AZysCTrZdlIqx8wfi/ZXl62h8xJye72WKXHrhCk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=fJJPOQl/RryD3DA1d7h+QeCds4CqcGMgnxGCpk1AOcvwAOkzbTg64Y+ftGZu74zP2ULGRWTH7B6yuKCYZ2oHUb8LlhC6qu4Uqe32ijQ3h6bJsHSXZ/jwHRiSg993wOpkyZrM9Z3GaE+izlF33yCO0l1FP/5T4tMSECkk1UecvIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=QhAVCj9p; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="LTHxvJf7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60CACC4AF09;
-	Tue, 23 Jul 2024 13:33:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1721741591;
-	bh=BHxbtpXYINWUUlpOGlyc6yectBbC1j0hOWiHMJY2K2o=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LTHxvJf7L6IOFN0icPzKHuq/LCXLGvxnpWIaHt+1I4ARdsb+ghxBQn/HLcInGoLxq
-	 X3o7THfPt/K0CprYzh45rpuW7IOGa3xz1HI/PaFv8vDcqKWnXP8LwGZW4r6c6PZl9F
-	 9MdWa+oY8aQb4jaRTPLuyjn9pofl8Nhs9DgWUXjQ=
-Date: Tue, 23 Jul 2024 15:33:09 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Maximilian Heyne <mheyne@amazon.de>
-Cc: Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Mike Christie <michael.christie@oracle.com>,
-	Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>,
-	Li Zhijian <lizhijian@fujitsu.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	stable@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.ibm.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5.10] scsi: core: Fix a use-after-free
-Message-ID: <2024072358-eleven-etching-1988@gregkh>
-References: <20240723115047.13092-1-mheyne@amazon.de>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="QhAVCj9p"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46NHljtH028604;
+	Tue, 23 Jul 2024 19:27:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	itMZ07g6+yYdInryZ6zDSaHasQO4XVp3UEUSFcvpIcs=; b=QhAVCj9pcj9C1/P4
+	+ylqVtue3bU2DYTLANpkK2rsTmJ2Hz/3bAwMuqKWZcIWIMj3ZIwyDIEkZUCbeyhJ
+	bun2H6vRK3ZePlcw9cW6MF3ebj2wY7CZ+mCnBgnSEsiwYV5fL+YxpyHN1xZNNswI
+	ukmsep/HS3IRYuDXRlqNcJ00nKqDSVkiaUU7ZkUqileOv5+ud8m6IQTLE79keVrp
+	6JDBWk6glw81tGEN+c0fu2G5d4mt9Mee8GpC2nAYS/uVO1+GB5e1vwUaHgVCyaOn
+	P1I92YK4paLYmGs9b/Q9rrbjsaQyh13TzQKt0WjqnNdusoeI5wyXAVWqUDmGhER4
+	KVtmtA==
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 40g5m7048q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 23 Jul 2024 19:27:52 +0000 (GMT)
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+	by NASANPPMTA05.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 46NJRpNR002333
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 23 Jul 2024 19:27:51 GMT
+Received: from [192.168.143.77] (10.80.80.8) by nasanex01a.na.qualcomm.com
+ (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 23 Jul
+ 2024 12:27:51 -0700
+Message-ID: <00630839-6212-314f-f031-0b2b76c37150@quicinc.com>
+Date: Tue, 23 Jul 2024 12:27:50 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240723115047.13092-1-mheyne@amazon.de>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v4 1/1] scsi: ufs: core: Support Updating UIC Command
+ Timeout
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+        "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "bvanassche@acm.org"
+	<bvanassche@acm.org>,
+        "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>,
+        "manivannan.sadhasivam@linaro.org"
+	<manivannan.sadhasivam@linaro.org>,
+        "minwoo.im@samsung.com"
+	<minwoo.im@samsung.com>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "jejb@linux.ibm.com"
+	<jejb@linux.ibm.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "quic_mnaresh@quicinc.com" <quic_mnaresh@quicinc.com>
+References: <cover.1721261491.git.quic_nguyenb@quicinc.com>
+ <44dc4790b53e2f8aa92568a9e13785e3bedd617d.1721261491.git.quic_nguyenb@quicinc.com>
+ <5370a13d48d42d952442040f71301acf30f9a5ff.camel@mediatek.com>
+Content-Language: en-US
+From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+In-Reply-To: <5370a13d48d42d952442040f71301acf30f9a5ff.camel@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: jDKtVnCVt0h8rrLmVHXHU_37pLktm03B
+X-Proofpoint-ORIG-GUID: jDKtVnCVt0h8rrLmVHXHU_37pLktm03B
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-07-23_10,2024-07-23_02,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 suspectscore=0
+ mlxlogscore=999 adultscore=0 bulkscore=0 mlxscore=0 spamscore=0
+ priorityscore=1501 lowpriorityscore=0 clxscore=1011 malwarescore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2407110000 definitions=main-2407230135
 
-On Tue, Jul 23, 2024 at 11:50:46AM +0000, Maximilian Heyne wrote:
-> From: Bart Van Assche <bvanassche@acm.org>
 > 
-> [ Upstream commit 8fe4ce5836e932f5766317cb651c1ff2a4cd0506 ]
+> Could be just use this line instead?
+> 	return
+> param_set_uint_minmax(val, kp, UIC_CMD_TIMEOUT_DEFAULT,
+> 		
+> 		     UIC_CMD_TIMEOUT_MAX);
 > 
-> There are two .exit_cmd_priv implementations. Both implementations use
-> resources associated with the SCSI host. Make sure that these resources are
-> still available when .exit_cmd_priv is called by waiting inside
-> scsi_remove_host() until the tag set has been freed.
-> 
-> This commit fixes the following use-after-free:
-> 
-> ==================================================================
-> BUG: KASAN: use-after-free in srp_exit_cmd_priv+0x27/0xd0 [ib_srp]
-> Read of size 8 at addr ffff888100337000 by task multipathd/16727
-> Call Trace:
->  <TASK>
->  dump_stack_lvl+0x34/0x44
->  print_report.cold+0x5e/0x5db
->  kasan_report+0xab/0x120
->  srp_exit_cmd_priv+0x27/0xd0 [ib_srp]
->  scsi_mq_exit_request+0x4d/0x70
->  blk_mq_free_rqs+0x143/0x410
->  __blk_mq_free_map_and_rqs+0x6e/0x100
->  blk_mq_free_tag_set+0x2b/0x160
->  scsi_host_dev_release+0xf3/0x1a0
->  device_release+0x54/0xe0
->  kobject_put+0xa5/0x120
->  device_release+0x54/0xe0
->  kobject_put+0xa5/0x120
->  scsi_device_dev_release_usercontext+0x4c1/0x4e0
->  execute_in_process_context+0x23/0x90
->  device_release+0x54/0xe0
->  kobject_put+0xa5/0x120
->  scsi_disk_release+0x3f/0x50
->  device_release+0x54/0xe0
->  kobject_put+0xa5/0x120
->  disk_release+0x17f/0x1b0
->  device_release+0x54/0xe0
->  kobject_put+0xa5/0x120
->  dm_put_table_device+0xa3/0x160 [dm_mod]
->  dm_put_device+0xd0/0x140 [dm_mod]
->  free_priority_group+0xd8/0x110 [dm_multipath]
->  free_multipath+0x94/0xe0 [dm_multipath]
->  dm_table_destroy+0xa2/0x1e0 [dm_mod]
->  __dm_destroy+0x196/0x350 [dm_mod]
->  dev_remove+0x10c/0x160 [dm_mod]
->  ctl_ioctl+0x2c2/0x590 [dm_mod]
->  dm_ctl_ioctl+0x5/0x10 [dm_mod]
->  __x64_sys_ioctl+0xb4/0xf0
->  dm_ctl_ioctl+0x5/0x10 [dm_mod]
->  __x64_sys_ioctl+0xb4/0xf0
->  do_syscall_64+0x3b/0x90
->  entry_SYSCALL_64_after_hwframe+0x46/0xb0
-> 
-> Link: https://lore.kernel.org/r/20220826002635.919423-1-bvanassche@acm.org
-> Fixes: 65ca846a5314 ("scsi: core: Introduce {init,exit}_cmd_priv()")
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Mike Christie <michael.christie@oracle.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: John Garry <john.garry@huawei.com>
-> Cc: Li Zhijian <lizhijian@fujitsu.com>
-> Reported-by: Li Zhijian <lizhijian@fujitsu.com>
-> Tested-by: Li Zhijian <lizhijian@fujitsu.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> [mheyne: fixed contextual conflicts:
->   - drivers/scsi/hosts.c: due to missing commit 973dac8a8a14 ("scsi: core: Refine how we set tag_set NUMA node")
->   - drivers/scsi/scsi_sysfs.c: due to missing commit 6f8191fdf41d ("block: simplify disk shutdown")
->   - drivers/scsi/scsi_scan.c: due to missing commit 59506abe5e34 ("scsi: core: Inline scsi_mq_alloc_queue()")]
-> Signed-off-by: Maximilian Heyne <mheyne@amazon.de>
-> Cc: stable@vger.kernel.org # v5.10
+> It should be more simple.
+Thank you Peter. Yes it would be cleaner. I will update the patch.
 
-Both now backported, thanks.
-
-greg k-h
+Thanks, Bao
