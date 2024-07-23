@@ -1,51 +1,51 @@
-Received: from smtp-fw-52005.amazon.com (smtp-fw-52005.amazon.com [52.119.213.156])
+Received: from smtp-fw-80009.amazon.com (smtp-fw-80009.amazon.com [99.78.197.220])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2CD314B09C;
-	Tue, 23 Jul 2024 11:33:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=52.119.213.156
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD0BA13D609;
+	Tue, 23 Jul 2024 11:50:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=99.78.197.220
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721734415; cv=none; b=q2IIswdfKmOwVm7S6fKtK0Tv9K/2NKDaancn779S4TN/YDhD1iBuoRyxnZ5YeEdO0qz+m2FBFeWoka0KecYoyQyre0NCVBQtzxr7W/+1nxTNxMNJAZ4q8lQcxI0wMyWiQAVjToOIjCzydIcRC0iQAgk0JoRyJa9AEpOmfVXeM5s=
+	t=1721735458; cv=none; b=fPaRtN9Dd956DKKgNHmPvsfGrZ7ZHB7mopqhfIktqgWN6wSkaasiX41BFLIN1LsaP5odr+GUad8mk5llGjnp6AMkudNq2M7Vh+ERtaEpfdeL5Sfk8AEoPRDeBe8Pj2Fk9mwbZ2D4KzhTcJ/ds/YgKkN6/d25oQmSrJ4ibnqo2kg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721734415; c=relaxed/simple;
-	bh=B324Mavde/MWETm7k5fGhfNE4infyE63v4qqGCca8ww=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=GP4Pq32m7bGbG2f6LJQVnKXg0+LdMQrOR61JvD0uLoQM+wg6Haf0gbJ5Zppi2JKMWWlL9wePG0KHzRAVvq9NCcfHJdVJjw9bKAQlZ2r0qLDPasIYzg2yEXO3HnuL+4D99xmzb4F9gD0m0714WmRl7bdRLX0EhieIMQjNbSgflgU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (1024-bit key) header.d=amazon.de header.i=@amazon.de header.b=Xli3FUeZ; arc=none smtp.client-ip=52.119.213.156
+	s=arc-20240116; t=1721735458; c=relaxed/simple;
+	bh=MiuUfu30D4V7hz7HIqNdzEoPRiTZjI9UyG1h3YAYwn8=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JRZpKLyC4mVucIQ++0zB2S5DQgUC0CNF8aPU9AJyQPP0BE7DxfEs5Kt10lOk2nH+aqEbjYel8hWjAo5fzpxSXzszfzXkjJQ+eiIwL580J4X0CGtIXuza2Qrktkb6WRjXtPy/RF6uLm912z3wvyNSjQ9pY1eXguocFZuvCPW6+sc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de; spf=pass smtp.mailfrom=amazon.de; dkim=pass (1024-bit key) header.d=amazon.de header.i=@amazon.de header.b=L8P/RTOd; arc=none smtp.client-ip=99.78.197.220
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.de header.i=@amazon.de header.b="Xli3FUeZ"
+	dkim=pass (1024-bit key) header.d=amazon.de header.i=@amazon.de header.b="L8P/RTOd"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.de; i=@amazon.de; q=dns/txt; s=amazon201209;
-  t=1721734413; x=1753270413;
+  t=1721735456; x=1753271456;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=QYhEeIrrKUY0Mzt0+ocqIcydssRTDPW7HoluJgqubps=;
-  b=Xli3FUeZQx6vVxh3gKEhrQ0PJhoxVdAut9ln6wdRvmGUnogOT50uyB07
-   iYwKmPG08Iao3Hk77fInGJZHPllxAEjDCXKXgdbzrBC4epcd2URm9s3Vt
-   sTtFoUC1MY2al66p/5B9e/YKhqLd2GVLhHudEv7cCOTDk6BP0d/OPBANg
-   o=;
+  bh=+mFNa3ipV4KfxcSWpsav5l/v6/yRB18l+5OmunVTmo0=;
+  b=L8P/RTOde/7S9X1Jx5sgMZ9zFneSTAmN3HaRLRjEEtjnbwUWCQ6dtiod
+   XyE7SlvT7fGsFMMtSXNzAZT+V3r95LDM3n5gUi4+m2xqxMLJC2F4Gf/3V
+   CHTmERujO3FIra8ZJxlX+e7ldWzKRRImq9gUewW56kApX+SIfPJHEdB1Z
+   Q=;
 X-IronPort-AV: E=Sophos;i="6.09,230,1716249600"; 
-   d="scan'208";a="669553889"
-Received: from iad12-co-svc-p1-lb1-vlan3.amazon.com (HELO smtpout.prod.us-west-2.prod.farcaster.email.amazon.dev) ([10.43.8.6])
-  by smtp-border-fw-52005.iad7.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2024 11:33:30 +0000
-Received: from EX19MTAEUC002.ant.amazon.com [10.0.17.79:10113]
- by smtpin.naws.eu-west-1.prod.farcaster.email.amazon.dev [10.0.5.11:2525] with esmtp (Farcaster)
- id a00486dc-29f4-4c2c-be67-a995faecfec5; Tue, 23 Jul 2024 11:33:28 +0000 (UTC)
-X-Farcaster-Flow-ID: a00486dc-29f4-4c2c-be67-a995faecfec5
-Received: from EX19D008EUA001.ant.amazon.com (10.252.50.34) by
- EX19MTAEUC002.ant.amazon.com (10.252.51.181) with Microsoft SMTP Server
+   d="scan'208";a="108744959"
+Received: from pdx4-co-svc-p1-lb2-vlan2.amazon.com (HELO smtpout.prod.us-east-1.prod.farcaster.email.amazon.dev) ([10.25.36.210])
+  by smtp-border-fw-80009.pdx80.corp.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2024 11:50:54 +0000
+Received: from EX19MTAEUC002.ant.amazon.com [10.0.43.254:64600]
+ by smtpin.naws.eu-west-1.prod.farcaster.email.amazon.dev [10.0.20.30:2525] with esmtp (Farcaster)
+ id 6d4bf0e3-cf7e-4c6b-b635-6b6053495062; Tue, 23 Jul 2024 11:50:53 +0000 (UTC)
+X-Farcaster-Flow-ID: 6d4bf0e3-cf7e-4c6b-b635-6b6053495062
+Received: from EX19D008EUA003.ant.amazon.com (10.252.50.155) by
+ EX19MTAEUC002.ant.amazon.com (10.252.51.245) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.1258.34;
- Tue, 23 Jul 2024 11:33:28 +0000
-Received: from EX19MTAUEC001.ant.amazon.com (10.252.135.222) by
- EX19D008EUA001.ant.amazon.com (10.252.50.34) with Microsoft SMTP Server
+ Tue, 23 Jul 2024 11:50:53 +0000
+Received: from EX19MTAUEA001.ant.amazon.com (10.252.134.203) by
+ EX19D008EUA003.ant.amazon.com (10.252.50.155) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.1258.34;
- Tue, 23 Jul 2024 11:33:27 +0000
+ Tue, 23 Jul 2024 11:50:52 +0000
 Received: from dev-dsk-mheyne-1b-c1362c4d.eu-west-1.amazon.com (10.15.57.183)
- by mail-relay.amazon.com (10.252.135.200) with Microsoft SMTP Server id
- 15.2.1258.34 via Frontend Transport; Tue, 23 Jul 2024 11:33:27 +0000
+ by mail-relay.amazon.com (10.252.134.102) with Microsoft SMTP Server id
+ 15.2.1258.34 via Frontend Transport; Tue, 23 Jul 2024 11:50:52 +0000
 Received: by dev-dsk-mheyne-1b-c1362c4d.eu-west-1.amazon.com (Postfix, from userid 5466572)
-	id 5E6AD2FE7; Tue, 23 Jul 2024 11:33:27 +0000 (UTC)
+	id 4955A309A; Tue, 23 Jul 2024 11:50:52 +0000 (UTC)
 From: Maximilian Heyne <mheyne@amazon.de>
 To: 
 CC: Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>,
@@ -55,9 +55,9 @@ CC: Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>,
 	<martin.petersen@oracle.com>, Maximilian Heyne <mheyne@amazon.de>,
 	<stable@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
 	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH 5.15] scsi: core: Fix a use-after-free
-Date: Tue, 23 Jul 2024 11:33:14 +0000
-Message-ID: <20240723113314.121754-1-mheyne@amazon.de>
+Subject: [PATCH 5.10] scsi: core: Fix a use-after-free
+Date: Tue, 23 Jul 2024 11:50:46 +0000
+Message-ID: <20240723115047.13092-1-mheyne@amazon.de>
 X-Mailer: git-send-email 2.40.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -136,9 +136,10 @@ Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 [mheyne: fixed contextual conflicts:
   - drivers/scsi/hosts.c: due to missing commit 973dac8a8a14 ("scsi: core: Refine how we set tag_set NUMA node")
-  - drivers/scsi/scsi_sysfs.c: due to missing commit 6f8191fdf41d ("block: simplify disk shutdown")]
+  - drivers/scsi/scsi_sysfs.c: due to missing commit 6f8191fdf41d ("block: simplify disk shutdown")
+  - drivers/scsi/scsi_scan.c: due to missing commit 59506abe5e34 ("scsi: core: Inline scsi_mq_alloc_queue()")]
 Signed-off-by: Maximilian Heyne <mheyne@amazon.de>
-Cc: stable@vger.kernel.org # v5.15
+Cc: stable@vger.kernel.org # v5.10
 ---
  drivers/scsi/hosts.c      | 16 +++++++++++++---
  drivers/scsi/scsi_lib.c   |  6 +++++-
@@ -149,7 +150,7 @@ Cc: stable@vger.kernel.org # v5.15
  6 files changed, 23 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 4caee4e32461..eb3e8b41adb1 100644
+index 297f2b412d07..17fa1cd91da6 100644
 --- a/drivers/scsi/hosts.c
 +++ b/drivers/scsi/hosts.c
 @@ -182,6 +182,15 @@ void scsi_remove_host(struct Scsi_Host *shost)
@@ -197,10 +198,10 @@ index 4caee4e32461..eb3e8b41adb1 100644
  
  	ida_simple_remove(&host_index_ida, shost->host_no);
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0389bf281f4b..2d3779032163 100644
+index 14dec86ff749..64ae7bc2de60 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1949,9 +1949,13 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+@@ -1923,9 +1923,13 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
  	return blk_mq_alloc_tag_set(tag_set);
  }
  
@@ -216,35 +217,35 @@ index 0389bf281f4b..2d3779032163 100644
  
  /**
 diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index b650407690a8..b531dec3d420 100644
+index 1183dbed687c..3fee9af05925 100644
 --- a/drivers/scsi/scsi_priv.h
 +++ b/drivers/scsi/scsi_priv.h
-@@ -95,7 +95,7 @@ extern void scsi_run_host_queues(struct Scsi_Host *shost);
- extern void scsi_requeue_run_queue(struct work_struct *work);
+@@ -93,7 +93,7 @@ extern void scsi_requeue_run_queue(struct work_struct *work);
+ extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
  extern void scsi_start_queue(struct scsi_device *sdev);
  extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
 -extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
 +extern void scsi_mq_free_tags(struct kref *kref);
  extern void scsi_exit_queue(void);
  extern void scsi_evt_thread(struct work_struct *work);
- 
+ struct request_queue;
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 86c10edbb5f1..9c155d576814 100644
+index 6f7c4d41c51d..e8703b043805 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -324,6 +324,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+@@ -273,6 +273,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
  		kfree(sdev);
  		goto out;
  	}
 +	kref_get(&sdev->host->tagset_refcnt);
- 	sdev->request_queue = q;
- 	q->queuedata = sdev;
- 	__scsi_init_queue(sdev->host, q);
+ 	WARN_ON_ONCE(!blk_get_queue(sdev->request_queue));
+ 	sdev->request_queue->queuedata = sdev;
+ 
 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 774864b54b97..4c72116c8693 100644
+index 6cc4d0792e3d..bb37d698da1a 100644
 --- a/drivers/scsi/scsi_sysfs.c
 +++ b/drivers/scsi/scsi_sysfs.c
-@@ -1490,6 +1490,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
+@@ -1481,6 +1481,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
  	mutex_unlock(&sdev->state_mutex);
  
  	blk_cleanup_queue(sdev->request_queue);
@@ -253,10 +254,10 @@ index 774864b54b97..4c72116c8693 100644
  
  	if (sdev->host->hostt->slave_destroy)
 diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index f50861e4e88a..3ed93982dbf0 100644
+index 4a9f1e6e3aac..3979e946c3fd 100644
 --- a/include/scsi/scsi_host.h
 +++ b/include/scsi/scsi_host.h
-@@ -565,6 +565,8 @@ struct Scsi_Host {
+@@ -548,6 +548,8 @@ struct Scsi_Host {
  	struct scsi_host_template *hostt;
  	struct scsi_transport_template *transportt;
  
