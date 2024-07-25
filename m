@@ -1,115 +1,121 @@
-Received: from mail-yw1-f202.google.com (mail-yw1-f202.google.com [209.85.128.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lounge.grep.be (lounge.grep.be [144.76.219.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0C58158A27
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Jul 2024 13:51:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A24523C3C;
+	Thu, 25 Jul 2024 11:57:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=144.76.219.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721829095; cv=none; b=VqjZhICKY1F0RPFek12a6Uggr1osfFgV52COuOo9MkWuzGEd9m5VbsUfVnIPUg1LgaW85HZTDi8oloqYhqKQKroKozTi74AuH9oGGY4X3cTNRCaaDbgYvcVONWwOd/v91zIusdX/psKLF3506dIFnpxg2Q8KW9XDkvkJCXtx7Qg=
+	t=1721908683; cv=none; b=T6O4KC99b08b+g+WWGqY8FZEe1qOcoUmJTNxAJ/eFLguczN5rReawo91ht6N+gMpbapMr3Z/1oLF3T4TSaKk8a0NLq581AgTnMLn34hQQYHI5GRs+Mq4bm6DNlYnzn8ykfKaYWmnGZlrA82BESQZV0eRdR80xtcXCF/sp6Y6EYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721829095; c=relaxed/simple;
-	bh=SsSkhNGn7QJejrmFIGvtXvlDi/a721Ld8Pj4EOwWE9Y=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=oNWFL27U6U6aXcm7kkk//LRpbIAyrzyqYzma2vJXa1EmfQFAzTQnul20+fpJecctb/zNMNblf6Dz75WkOUSzCzZOyc3ErIVlIe8Ntrjs0F1EMu6VKaMTcz3jS7jcYeLdD25PYObneZfGiX5AnEfdNpRIo+LWDnGwds4lnEY3Wsk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--vamshigajjela.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=AW5wLz9R; arc=none smtp.client-ip=209.85.128.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--vamshigajjela.bounces.google.com
+	s=arc-20240116; t=1721908683; c=relaxed/simple;
+	bh=SUGuNHYDGosNycUsgB3AByvAAi9UaKUxeW+YSC9jcyw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KzvJeReR8fKFPiAdwy7sdOG8OAge3ZGHb2wvDKg/Mn/0ZT2/9jLKDKf+Et4HXwrocgFXzVI+z1wKxI3qApuSwv7OMqmBQFUG3aqzhkybfMhIfgaZIUNc4JsFM6N0smbKlZJ87az7v80bQYCL71QMyB7cGTto17V914xdsLGAHaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uter.be; spf=pass smtp.mailfrom=uter.be; dkim=pass (2048-bit key) header.d=uter.be header.i=@uter.be header.b=HRSnzfY+; arc=none smtp.client-ip=144.76.219.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=uter.be
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=uter.be
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="AW5wLz9R"
-Received: by mail-yw1-f202.google.com with SMTP id 00721157ae682-672bea19dd3so20103957b3.1
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Jul 2024 06:51:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1721829093; x=1722433893; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=RrSVcz2VewJByKdMTTCyLdkt0Sk8iz5c/M167BcRneY=;
-        b=AW5wLz9RIirxjwNsnGeKKn57OpR1l5gRSpRbrzXsw11ssdXqmVzLSxxTFPNV+TFfxA
-         0IJjzjiowdKl5dOclPWRCVjarJP6E2fqs9O5N0IJ/j+np4F4g3zqd1sFRQTTnuDfxK32
-         tqOKp8nEOKDdxcdfb9MYUMXmskYdB1rOFX0jXPnugZ+CbdvSqcNNIpR774xRD9zHnlTR
-         4ihIqT2dTkZrtwOQQUAnTYRmviUOHxGSAsm1RAukB1OT8uYe+nOkw2oBsug4t71dxtSz
-         UFWE9JXv5VV1ZOIH++wj+x0/+oIQrdU9Te35ifqnoirh0X284eCL03JjqXLNnoD+xdF1
-         w1aQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721829093; x=1722433893;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=RrSVcz2VewJByKdMTTCyLdkt0Sk8iz5c/M167BcRneY=;
-        b=JRrCou7ZG23PaioI4fraI8+g2fy3CAi4y71OznSLIOqubi0FfXndk/4Hvv5wY3zSUN
-         BUWBR7B3UP8MsLQY3RlsOd4m/MBXD18XDI+jHiTiV73QO6H0dkRVLs1F93sZH9Gyx2c7
-         8CGQQ978ClpaMPJrcOD2E82slhRS9DWQf8+mQWx/hadwkYdBZ/+k3tiqGuQoUMsDGgGm
-         aL+74PYiQX2dHUeneVDDKWOnJIUFBQDCTpStBHWMd9UBT+Hm8Z/58MFz2nLyTYH9nTHd
-         +hRunLfDHr2i4vh0zpwElDadJQloRMiL23CqILDFWYHsd99mQDYEHAVfSod54ZC1Po8M
-         TxUA==
-X-Forwarded-Encrypted: i=1; AJvYcCVihFcUAXWGWGIbo/Hs3954vnCabjpDmw9h4G8RzBiaQK52W9EDukey0MLAR0u7/2UtQHxsiYVWRYWD7ZZ6gJ0NazAGXHCsJYvchg==
-X-Gm-Message-State: AOJu0YwJcwVbUZpQQc/n+cTks6kUOdqB6EpAdntO1p5bE2Q9hIXOZe2j
-	rvGWPkTo/S4IRwqJ81IusGsaJyVODXSMRFBhiwLIvS6re2Xj7x0J/XnIRbwKpRUa5sf2YUbRhc+
-	9mJw6HXHgo76ezQfOR+OxLnnLfxDK3g==
-X-Google-Smtp-Source: AGHT+IHbNtAEuIYXFpzA3YyBaOuWG4DbFIf/VUQVlqhnq9b7xo1ygHVyCorff/HREiUTR/35hKqZj6/k+Rc0jmFFM1pJ
-X-Received: from vamshig51.c.googlers.com ([fda3:e722:ac3:cc00:3:22c1:c0a8:70c])
- (user=vamshigajjela job=sendgmr) by 2002:a05:690c:810:b0:673:b39a:92ce with
- SMTP id 00721157ae682-673b39aa039mr103587b3.3.1721829092669; Wed, 24 Jul 2024
- 06:51:32 -0700 (PDT)
-Date: Wed, 24 Jul 2024 19:21:26 +0530
+	dkim=pass (2048-bit key) header.d=uter.be header.i=@uter.be header.b="HRSnzfY+"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=uter.be;
+	s=2021.lounge; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
+	Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+	List-Post:List-Owner:List-Archive;
+	bh=A2VuDAKeSGGGRwdNEgASvdRePK2jE6LTgdknFzfGiVg=; b=HRSnzfY+SxqUo9lzjJBHswdyNO
+	izEqhcP/7tFCFgJJGzzhTZHV+hkIJ95lvet5keDsrZB2SVJh4LM2TT0rY+nfGtvBDiOATcCiQ/ZZp
+	NX14nRCfBdImELKCJsEds0YwtB87PNneYsFwhe69klvX8hKaVd3bPAdUOO5oKLpwqsdI1TpEV3xHA
+	zPeruYumASMydrGBh8+RD0p+DiFqZyJ0vUaImcbHlwd7Aik2LDO+RgK3xJUkwPiJj9pwJIeGrrPKF
+	y3yZwQEUsA40VBWzlQvQ+rZPVwPFNOT65DR9yRxPQziuObFSyUbJuGiw7PBH1R7FTtIfgagxi0sHi
+	wC/6XZ8A==;
+Received: from [102.39.153.168] (helo=pc220518)
+	by lounge.grep.be with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <w@uter.be>)
+	id 1sWwlF-001dJr-31;
+	Thu, 25 Jul 2024 13:35:53 +0200
+Received: from wouter by pc220518 with local (Exim 4.98)
+	(envelope-from <w@uter.be>)
+	id 1sWwl8-00000002sGZ-0mps;
+	Thu, 25 Jul 2024 13:35:46 +0200
+Date: Thu, 25 Jul 2024 13:35:46 +0200
+From: Wouter Verhelst <w@uter.be>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Geert Uytterhoeven <geert@linux-m68k.org>,
+	Richard Weinberger <richard@nod.at>,
+	Philipp Reisner <philipp.reisner@linbit.com>,
+	Lars Ellenberg <lars.ellenberg@linbit.com>,
+	Christoph =?iso-8859-1?Q?B=F6hmwalder?= <christoph.boehmwalder@linbit.com>,
+	Josef Bacik <josef@toxicpanda.com>, Ming Lei <ming.lei@redhat.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
+	Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>, Song Liu <song@kernel.org>,
+	Yu Kuai <yukuai3@huawei.com>,
+	Vineeth Vijayan <vneethv@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
+	drbd-dev@lists.linbit.com, nbd@other.debian.org,
+	linuxppc-dev@lists.ozlabs.org, ceph-devel@vger.kernel.org,
+	virtualization@lists.linux.dev, xen-devel@lists.xenproject.org,
+	linux-bcache@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-mtd@lists.infradead.org, nvdimm@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+	Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH 14/26] block: move the nonrot flag to queue_limits
+Message-ID: <ZqI4kosy20WkLC2P@pc220518.home.grep.be>
+References: <20240617060532.127975-1-hch@lst.de>
+ <20240617060532.127975-15-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.45.2.1089.g2a221341d9-goog
-Message-ID: <20240724135126.1786126-1-vamshigajjela@google.com>
-Subject: [PATCH] scsi: ufs: core: Fix hba->last_dme_cmd_tstamp timestamp
- updating logic
-From: Vamshi Gajjela <vamshigajjela@google.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org, 
-	Vamshi Gajjela <vamshigajjela@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240617060532.127975-15-hch@lst.de>
+X-Speed: Gates' Law: Every 18 months, the speed of software halves.
+Organization: none
 
-The ufshcd_add_delay_before_dme_cmd() always introduces a delay of
-MIN_DELAY_BEFORE_DME_CMDS_US between DME commands even when it's not
-required. The delay is added when the UFS host controller supplies the
-quirk UFSHCD_QUIRK_DELAY_BEFORE_DME_CMDS.
+On Mon, Jun 17, 2024 at 08:04:41AM +0200, Christoph Hellwig wrote:
+> Use the chance to switch to defaulting to non-rotational and require
+> the driver to opt into rotational, which matches the polarity of the
+> sysfs interface.
+[...]
+> diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+> index cb1c86a6a3fb9d..6cddf5baffe02a 100644
+> --- a/drivers/block/nbd.c
+> +++ b/drivers/block/nbd.c
+> @@ -1867,11 +1867,6 @@ static struct nbd_device *nbd_dev_add(int index, unsigned int refs)
+>  		goto out_err_disk;
+>  	}
+>  
+> -	/*
+> -	 * Tell the block layer that we are not a rotational device
+> -	 */
+> -	blk_queue_flag_set(QUEUE_FLAG_NONROT, disk->queue);
+> -
+>  	mutex_init(&nbd->config_lock);
+>  	refcount_set(&nbd->config_refs, 0);
+>  	/*
 
-Fix the logic to update hba->last_dme_cmd_tstamp to ensure subsequent
-DME commands have the correct delay in the range of 0 to
-MIN_DELAY_BEFORE_DME_CMDS_US.
+NBD actually exports a flag for rotational devices; it's defined in
+nbd.h in the NBD userland source as
 
-Update the timestamp at the end of the function to ensure it captures
-the latest time after any necessary delay has been applied.
+#define NBD_FLAG_ROTATIONAL     (1 << 4)        /* Use elevator algorithm - rotational media */
 
-Signed-off-by: Vamshi Gajjela <vamshigajjela@google.com>
-Fixes: cad2e03d8607 ("ufs: add support to allow non standard behaviours (quirks)")
-Cc: stable@vger.kernel.org
----
- drivers/ufs/core/ufshcd.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+which is passed in the same flags field which also contains the
+NBD_FLAG_SEND_FLUSH and NBD_FLAG_SEND_FUA flags.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index dc757ba47522..406bda1585f6 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4090,11 +4090,16 @@ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba)
- 			min_sleep_time_us =
- 				MIN_DELAY_BEFORE_DME_CMDS_US - delta;
- 		else
--			return; /* no more delay required */
-+			min_sleep_time_us = 0; /* no more delay required */
- 	}
- 
--	/* allow sleep for extra 50us if needed */
--	usleep_range(min_sleep_time_us, min_sleep_time_us + 50);
-+	if (min_sleep_time_us > 0) {
-+		/* allow sleep for extra 50us if needed */
-+		usleep_range(min_sleep_time_us, min_sleep_time_us + 50);
-+	}
-+
-+	/* update the last_dme_cmd_tstamp */
-+	hba->last_dme_cmd_tstamp = ktime_get();
- }
- 
- /**
+Perhaps we might want to look at that flag and set the device to
+rotational if it is specified?
+
 -- 
-2.45.2.1089.g2a221341d9-goog
+     w@uter.{be,co.za}
+wouter@{grep.be,fosdem.org,debian.org}
 
+I will have a Tin-Actinium-Potassium mixture, thanks.
