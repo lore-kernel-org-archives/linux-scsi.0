@@ -1,96 +1,87 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+Received: from smtp.smtpout.orange.fr (smtp-28.smtpout.orange.fr [80.12.242.28])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 720F314A4DB
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jul 2024 23:00:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8576618643;
+	Sat, 27 Jul 2024 20:37:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.28
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722034812; cv=none; b=cJVyCkPnoz7OscWDr1FCETSNmM/PZ40tjfM86/LBjWtTuTIHXJKbcDd1Ee3HSpIA17tUZ79VSL21YWL6NoxZiogOD2R+CUWKnWho4K676aARqR/eAsnapsBfg1R16xr9roml/sUuqazMMAdo1NAP6rPLKmJhzorl6NM5SzUL3Rw=
+	t=1722112660; cv=none; b=P0bjI3DuLMT5XSoHU+b/bCA1Lpc8zG0YI/xcJ6Vp9i33siQzWqUgfZH1h76vSRzoHGRk42k1m3OPmHwhFMZJE4p0uXuM2+0QrJVJFwFUgYq+11FRt9quXFZTjtyojxy8DRgDsR3qaTyNwJVNWvcgYR3KIXVoqYvehVa/F4H6tFQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722034812; c=relaxed/simple;
-	bh=0UaRDiv2hfbk2XcjYfDPp24lTkJ/tVj0wDLqKlLVGLA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=e32hXEm2T9SAt/mT8fXokL1v1JHWSA3DJA/DZEmcjhYWext+YwSeiZlxS4hbYiL3Cj/XO6Gm3EdUKgRDBJ0cIYhBOv8o3t1/EeLeXEMUADE3dGUguc3VkUsmcE6lWN5iaGP/cEHON7U7CM1KfUDiEbT6dVospEiMmjAhNvvOvQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=axc3wQIp; arc=none smtp.client-ip=209.85.216.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1722112660; c=relaxed/simple;
+	bh=0wv8LplG2WHF4iagJpseBcJkythLO5m0vQLh2flInxs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FIv41it9GmdjdR18cWsHrLxI8zro9J8CfmO3mzCAOcwOA4YZNHvkcvLR4/ayWloDwxggpTN5cALsIJtDfj4avWZKKfnbiRcZDLvaEtFbwZBUulZpbmaDbYDmCyrzEOUBdC4TAjjbOiYi68yGIZAMJ4efl1aaej5kDJRHEO2D0q0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=U6ej5lWi; arc=none smtp.client-ip=80.12.242.28
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="axc3wQIp"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-2cdae2bc04dso241223a91.0
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Jul 2024 16:00:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1722034810; x=1722639610; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Rdc70V33+T1cbKKu300daghyfQbyMg5bNzX/qsatImA=;
-        b=axc3wQIp4bW9LNAGsU4wuVrunyQtMb2UtLyzPMvgBZ5Uej/w+Jzv96nSfhvtHsfbjr
-         +ZPww253Jhp8d1kS+prdQDZ0akdBUP1KZ5l/hZ9oyuqA3KckkaKbiCN4lsd7MgzGgkG7
-         ZOW3dQj58poUJBEO9tvGcrheJH70oU1vbL3KHWKl7n+c+RmkWp27eohfFNIriwd0zkbg
-         E+Ih4rJXI5yFWsATPEvIZ4w8MpWKYqfJGenmmYvEJP8tZXPlhDdeZicdoloEhm0eS8Ic
-         PxZR4vt25kbRGCpcry5Z43cLdAtFzwhrB2zGiBYrIHhB8QZU16EqhbgxtW8B0DaBsJsd
-         RcNg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1722034810; x=1722639610;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Rdc70V33+T1cbKKu300daghyfQbyMg5bNzX/qsatImA=;
-        b=f3/rDCK24BA5netshMtcEXSPBBhSL/LH6VZHianBo2zOShupYITBokgqID/z04PLIg
-         OEPwra6WRtNvnub/FUu8KJTd5VojjsFUsW0I4ftrbPTyRfqi7b9dzAlTvOLm2mERXNN8
-         B8QR9rN86MULufOEVEGaCLAlPU5IOoIfrEEcDSFiYaT4JAD2a6MPNP8uqaOxAWca6K8+
-         PjMAoVUOQo7BG6ml5jVIn9IUvRdzE/G0Zuo/U00/KjT7iJYpcyW9i/4QZrQjhJs1R5Hx
-         SIq7kZVtSCZsZhNr09desSfZw1O/wVFO0NEn1Lc05GTbFRDLqd7xi1Awj8865ASC2423
-         Hdlg==
-X-Gm-Message-State: AOJu0YzPkju0Iutla8/Ne4niqy6aw868jt2GHi4NXJaOwVrt4RJSWePc
-	YpxtuxLi5dilgfLoGA9Uj/YcpKG7Guvyim+57iVTv7NWG4RRFm/5VaSeIw==
-X-Google-Smtp-Source: AGHT+IFpEVJIXCsv4KEHBnrnquaNQ7AG1fzK9vbUKxnVBiVaClTa6A6Md8M3oX2EK/UDeVgzMQelvg==
-X-Received: by 2002:a05:6a00:6f4f:b0:70a:f156:fda with SMTP id d2e1a72fcca58-70eac95e22cmr5107316b3a.1.1722034810443;
-        Fri, 26 Jul 2024 16:00:10 -0700 (PDT)
-Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70ead8834b1sm3308540b3a.178.2024.07.26.16.00.09
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 26 Jul 2024 16:00:10 -0700 (PDT)
-From: Justin Tee <justintee8345@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: jsmart2021@gmail.com,
-	justin.tee@broadcom.com,
-	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 8/8] lpfc: Copyright updates for 14.4.0.4 patches
-Date: Fri, 26 Jul 2024 16:15:12 -0700
-Message-Id: <20240726231512.92867-9-justintee8345@gmail.com>
-X-Mailer: git-send-email 2.38.0
-In-Reply-To: <20240726231512.92867-1-justintee8345@gmail.com>
-References: <20240726231512.92867-1-justintee8345@gmail.com>
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="U6ej5lWi"
+Received: from fedora.home ([90.11.132.44])
+	by smtp.orange.fr with ESMTPA
+	id XoAXsrPVIkc2vXoAXsClW4; Sat, 27 Jul 2024 22:37:35 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1722112655;
+	bh=vIvNRlhJ8J1UYs1bJ4mqG+wbUkdAzoI8r7PqTBxe4YQ=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=U6ej5lWiSSomDCFhDS+xWGLTsUPjvg/qAq1Eep/eoo04w1fx995girCnmq28SM+P7
+	 dMzuPiR3EqUDihnl0ATX+ggOrYxFMT2/EOsOMEwAJwGFoymrYmgFd2b5ugs6vuYPyO
+	 YcbH5XJVCpBVl0BeAUVCUtlONz7Dk0dRtYfRCAoXCZcxlvsV0nMFmBNtDqa1ANCT67
+	 +YfWj2P87GiTF+5OZApYqSPqgeFv1vhbtwz+CvH2dcpiTjBatRRX2ylQaAmuKmRCWR
+	 6DHiBYYg9CVRy95zoabkxm5To9W6wznVEKwXIUYaR0Zi19IawuQ+TWFvlO4GjDfCVm
+	 aPo7NQcNSEdUA==
+X-ME-Helo: fedora.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Sat, 27 Jul 2024 22:37:35 +0200
+X-ME-IP: 90.11.132.44
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: lpfc: Use bitmap_size()
+Date: Sat, 27 Jul 2024 22:37:27 +0200
+Message-ID: <704d0aade3c8ed4ff64f6ddf81edfb409514be92.1722112623.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Update copyrights to 2024 for files modified in the 14.4.0.4 patch set.
+Use bitmap_size() instead of hand-writing it.
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- drivers/scsi/lpfc/lpfc_vmid.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_mem.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_vmid.c b/drivers/scsi/lpfc/lpfc_vmid.c
-index cf8ba840d0ea..cc3e4736f2fe 100644
---- a/drivers/scsi/lpfc/lpfc_vmid.c
-+++ b/drivers/scsi/lpfc/lpfc_vmid.c
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017-2023 Broadcom. All Rights Reserved. The term *
-+ * Copyright (C) 2017-2024 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
-  * Copyright (C) 2004-2016 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
+diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
+index 2697da3248b3..8dfceb0938b0 100644
+--- a/drivers/scsi/lpfc/lpfc_mem.c
++++ b/drivers/scsi/lpfc/lpfc_mem.c
+@@ -21,6 +21,7 @@
+  * included with this package.                                     *
+  *******************************************************************/
+ 
++#include <linux/bitmap.h>
+ #include <linux/mempool.h>
+ #include <linux/slab.h>
+ #include <linux/pci.h>
+@@ -78,8 +79,7 @@ lpfc_mem_alloc_active_rrq_pool_s4(struct lpfc_hba *phba) {
+ 
+ 	if (max_xri <= 0)
+ 		return -ENOMEM;
+-	bytes = ((BITS_PER_LONG - 1 + max_xri) / BITS_PER_LONG) *
+-		  sizeof(unsigned long);
++	bytes = bitmap_size(max_xri);
+ 	phba->cfg_rrq_xri_bitmap_sz = bytes;
+ 	phba->active_rrq_pool = mempool_create_kmalloc_pool(LPFC_MEM_POOL_SIZE,
+ 							    bytes);
 -- 
-2.38.0
+2.45.2
 
