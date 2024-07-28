@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E3D13D262;
-	Sun, 28 Jul 2024 16:06:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E45F1487E3;
+	Sun, 28 Jul 2024 16:07:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722182802; cv=none; b=Au1NeJh7g6DrKaqcsJ7CVoW6tZOJ63H+Yey+C476obTEu8qqiXnK83XI/kCFGRSfj3FIeQYFviMB8BS+cYeFUaz1m+9gqhqTrEt8CoV3Gw8mPdmjg3H3xK8Pb9A3Gpi9ER4I/IGurNpvJwiGcpfupxKmxyA9NsOXp7F3+lUdAxM=
+	t=1722182871; cv=none; b=GxsfOg6cv3Xb+/WEnQeLLSDhdcfFp3qWDBGModGdG4jghZJ0iMzNQgR0q9HWXfJz9u2c3k51R82K7RC4xM4aAalNx/DSvbkFBzCYoflxJHZanWI1X+dYhA1GGTx7QJPnt6JDSUpTkuqUY7EZy1KyZ7tjPc7gQdn/J9VMIQg6vMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722182802; c=relaxed/simple;
-	bh=Z6jMe1juRTMCqezG0PeD7rbTkneFJqKVSq2c6rpgzRg=;
+	s=arc-20240116; t=1722182871; c=relaxed/simple;
+	bh=9vciI1GeMRDi0SPmD3oN9I8PJ4t02RNV7SGmTCZ/VIg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gKv6oS+2YuuyPCCB6mdBUm3gYRHph/MwCHx/ju4dMYRBlFaniIB6xZoW7brUmp6svg2Zz7oO+Y61oGUHG5rzf48iPjvC5ThXmaoo6ShTmyzCKIkz7PiGbWU2h4GD4/X5zc5IhWY0Zy1OWi7OPIHvAnRaE9Wm+WaH9mu/TinZ7YU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KeA0hpsx; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=iXaBpE2GM+oFdHyUG3IRxaDCH+DLVFfh6veJoIc77mO2DY7RA1YoXLwYNl0dh9DsMRhJkpY0GEzuyKdUDYlW76OYBTN9cEaq9DFewmeKKyavFRXnfXCHJBPVI58VXCb5/7GMqme5kUugGnBJZGCVPz7RqCnOkhhqNUKGJXTQLRM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lXcGtptk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KeA0hpsx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70AF3C116B1;
-	Sun, 28 Jul 2024 16:06:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lXcGtptk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 469A2C4AF0F;
+	Sun, 28 Jul 2024 16:07:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722182802;
-	bh=Z6jMe1juRTMCqezG0PeD7rbTkneFJqKVSq2c6rpgzRg=;
+	s=k20201202; t=1722182870;
+	bh=9vciI1GeMRDi0SPmD3oN9I8PJ4t02RNV7SGmTCZ/VIg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=KeA0hpsxEPWqgsCIJN/o+U8wIW5cQPYWGJeViFls6dNBoBwuJiliZU3Vgez061hwR
-	 gn4OqKo0Ea7OTz7acvBangTXq44w1FVm+ff1lWbk/eAPQU22n4CS2rysKVFi3i3wm8
-	 q+vuF0gUkJRidQDapgx7e7P15lD+2xzJBVDe/NuKRrN8pbthmXTXaTojjRjc5WAgjU
-	 UsWNxL83Kgq4qhou3zwEeun1dswYmC4yMMJ/2XufFPsBp8tJE7lK8v6t9tChTWZaNx
-	 Bl5bvvQ5sdgkBU8IjhvbMsVaiigjgeL1GGc9FnJ+EdDKmnr/gX3HVC6xdb0yB/9EAX
-	 xVP/qC3AWn77A==
+	b=lXcGtptkK7qXnH6TshnXv5nsL7QW5pT/YzR+gb1NSlYP1Ts6bkpTKfIS02QsC6qMd
+	 smCCD8yQCXRkQy9nXN6Rhsj7sPROgO2VGuaW/WHmHAygyuF7VrcsO3i7in/h22Jt+K
+	 un+bkscKeyi/EdEp2Z8/VQLFmaCKoADwbWknOtne8ggMw2PqMduFkGmKiqsTtKo8CF
+	 ydf8bUZzqZfPfw+aQtHjO+BW7cfQchKjHUwJkKW2KRVDbt+Fmmbax7VzkF0K1hy8Cj
+	 2TsRjES9/FlJ6AfT+t1gD955gvgBo9VfmRtLeT2QAEbeZIH8WVdIxxO3moHkk1koU0
+	 HKIevj9PhRA/A==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -36,17 +36,17 @@ Cc: Kyoungrul Kim <k831.kim@samsung.com>,
 	Sasha Levin <sashal@kernel.org>,
 	James.Bottomley@HansenPartnership.com,
 	peter.wang@mediatek.com,
-	avri.altman@wdc.com,
 	manivannan.sadhasivam@linaro.org,
-	ahalaney@redhat.com,
+	avri.altman@wdc.com,
 	beanhuo@micron.com,
+	ahalaney@redhat.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.10 19/23] scsi: ufs: core: Remove SCSI host only if added
-Date: Sun, 28 Jul 2024 12:05:00 -0400
-Message-ID: <20240728160538.2051879-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 14/17] scsi: ufs: core: Remove SCSI host only if added
+Date: Sun, 28 Jul 2024 12:06:50 -0400
+Message-ID: <20240728160709.2052627-14-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240728160538.2051879-1-sashal@kernel.org>
-References: <20240728160538.2051879-1-sashal@kernel.org>
+In-Reply-To: <20240728160709.2052627-1-sashal@kernel.org>
+References: <20240728160709.2052627-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,7 +55,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.10.2
+X-stable-base: Linux 6.6.43
 Content-Transfer-Encoding: 8bit
 
 From: Kyoungrul Kim <k831.kim@samsung.com>
@@ -83,10 +83,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 46433ecf0c4dc..b68a440bc6b9e 100644
+index 808979a093505..df36b141d4431 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -10177,7 +10177,8 @@ void ufshcd_remove(struct ufs_hba *hba)
+@@ -10114,7 +10114,8 @@ void ufshcd_remove(struct ufs_hba *hba)
  	blk_mq_destroy_queue(hba->tmf_queue);
  	blk_put_queue(hba->tmf_queue);
  	blk_mq_free_tag_set(&hba->tmf_tag_set);
@@ -96,7 +96,7 @@ index 46433ecf0c4dc..b68a440bc6b9e 100644
  	/* disable interrupts */
  	ufshcd_disable_intr(hba, hba->intr_mask);
  	ufshcd_hba_stop(hba);
-@@ -10456,6 +10457,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+@@ -10389,6 +10390,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  			dev_err(hba->dev, "scsi_add_host failed\n");
  			goto out_disable;
  		}
@@ -104,7 +104,7 @@ index 46433ecf0c4dc..b68a440bc6b9e 100644
  	}
  
  	hba->tmf_tag_set = (struct blk_mq_tag_set) {
-@@ -10538,7 +10540,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+@@ -10470,7 +10472,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
  free_tmf_tag_set:
  	blk_mq_free_tag_set(&hba->tmf_tag_set);
  out_remove_scsi_host:
