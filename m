@@ -1,71 +1,58 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 913B6158D63
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2024 16:45:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D876715DBA3;
+	Mon, 29 Jul 2024 17:03:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722271537; cv=none; b=hys8rqv20RG93nKHj0bT4LH1tKNy38woKtUBvDl/m37sPXkZ16CQrCN+SFHpG0B1T/ZKJdjZ8eBzzf/EZ7c0CzFC0Vw/S2aoqSFFtV5f2+VT/IMc/RlBNlL5TqnNrf8F53uPWdA+vYTAitLdXtsxGdPUoDl9zWhGFnU1fMFtdV0=
+	t=1722272596; cv=none; b=ampGBIJtiIwM0T0zHalzv9Ny5u4HBewvQV1j6kO0LMtqveDQg5OZ4TyGSrr0dtj7KBiN2Pb3pfTN5AQmr2d/ckxdO0rHPmlulkY152GGv+jj0H6PytYoKpXdMIvVLAc0nsZfjheKU3GrJQ3/WA3ZEyKuGFauw/P25K1n6foX3dk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722271537; c=relaxed/simple;
-	bh=3T+UomoGL4R7GUTlPjkQTVWMKL7ioTgyWlnbNPlif/o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bEqsDj1Tep7HiSPe+KNcKe60udIfw00k86tm0ZsmeMFGuplJba3MRRRWTblEsnRj7ivRlVBrMte6m5lKuT+8dca0Uqg2qPXZF4z+vBA7t9UB+RTK7F+BxHa0JjyUaI8+Uw1WY+jG+Xf5rEUuXW6xgFNrmrir28FADp7WqbPztRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=X0vxK3q8; arc=none smtp.client-ip=199.89.1.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="X0vxK3q8"
-Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WXkkJ6m7BzlgVnW;
-	Mon, 29 Jul 2024 16:45:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1722271527; x=1724863528; bh=3T+UomoGL4R7GUTlPjkQTVWM
-	KL7ioTgyWlnbNPlif/o=; b=X0vxK3q8LGoAhL6rDx/z6jZMqwDxW4a8EO5qRyC4
-	ilOHU6mci6JT1HITpYyFVWEmfNSH6alQFVCX4+DLWn99K/eb3q+0x2qMD62H95dN
-	cUE02FV10AwzVWcgr3B6Fp+zVL0tuKtiUCXlUxKmgYraEb1LWG5OgvSj+DRTXrXk
-	kZ1/KNU57fW0VFgO74UyxoCvwhClXECXnDoUM8fnRkEqLKxvEEC/esYuMmx8aeZ8
-	maM7ZmBl4hEu08/5B01NSxRxkvMLajF+emg4ExMbs8cgxPNIZ8F0eGQm7e0ldJnD
-	Eb2kYCRUNjBktaLmdhjJihVyqIFeI+JgBHvUYxIoVNvJTw==
-X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id IimXsb8xRY8Z; Mon, 29 Jul 2024 16:45:27 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WXkkH0McBzlgVnK;
-	Mon, 29 Jul 2024 16:45:26 +0000 (UTC)
-Message-ID: <47ddc280-f262-455c-bfa5-252e8eb2b654@acm.org>
-Date: Mon, 29 Jul 2024 09:45:26 -0700
+	s=arc-20240116; t=1722272596; c=relaxed/simple;
+	bh=vTdmm85VXx0fxyq4pl51cOePcRd+npUcY+OXXqyjETM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IzTzPBJUXPGObOEA1HRFzkI6VM8Pb+oUBFJJj23MsqKRnw/RiCVetBHySFUfoEofmap1doPbRjEZ3cC/m2hdqpAP9OGgmAQ7fkjALQv93DdJx1Ulrp1F7gTL8YhU1wDIg/4+bsKDTq/AE+KmPJDgX6ohxeJYMCxgrT/BxiNeA1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id DCA0968B05; Mon, 29 Jul 2024 19:03:08 +0200 (CEST)
+Date: Mon, 29 Jul 2024 19:03:08 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Anuj Gupta <anuj20.g@samsung.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Kanchan Joshi <joshi.k@samsung.com>, linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: Re: fine-grained PI control
+Message-ID: <20240729170308.GA31298@lst.de>
+References: <20240705083205.2111277-1-hch@lst.de> <yq1ttgz5l6d.fsf@ca-mkp.ca.oracle.com> <CGME20240709071611epcas5p1c5f2b59325d562658522842f89a31861@epcas5p1.samsung.com> <20240709071604.GB18993@lst.de> <20240726102156.GA17572@green245>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: scsi_debug:Use min_t to replace min
-To: xiaopeitux@foxmail.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, xiaopei01@kylinos.cn
-References: <cbece1b3-08ff-4fcf-8ed3-71dab06aafaf@acm.org>
- <tencent_8B6286FB808A0A72D3ABF0E4796ECB152505@qq.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <tencent_8B6286FB808A0A72D3ABF0E4796ECB152505@qq.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240726102156.GA17572@green245>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On 7/28/24 7:56 PM, xiaopeitux@foxmail.com wrote:
-> I am referring to this commit for my modifications: eb3b214c37ed.
+On Fri, Jul 26, 2024 at 03:51:56PM +0530, Anuj Gupta wrote:
+> 
+> I was thinking something like below patch[*] could help us get rid of the
+> BIP_USER_CHECK_FOO flags, and also driver can now check flags passed by block
+> layer instead of checking if it's user passthrough data. Haven't plumbed the
+> scsi side of things, but do you think it can work with scsi? 
+> 
+> Subject: [PATCH] block: introduce BIP_CHECK_GUARD/REFTAG/APPTAG bip_flags
+> 
+> This patch introduces BIP_CHECK_GUARD/REFTAG/APPTAG bip_flags which
+> indicate how the hardware should check the payload. The driver can now
+> just rely on block layer flags, and doesn't need to know the integrity
+> source. Submitter of PI chooses which tags to check. This would also
+> give us a unified interface for user and kernel generated integrity.
 
-All min_t() / max_t() introduced by that commit remove a cast. Your
-patch does not remove any casts.
+This looks reasonably to me for the in-kernel interface.  We'll still
+need to deal with the fact that SCSI is a bit selective in what
+combination of these flags it actually allows.
 
-Bart.
