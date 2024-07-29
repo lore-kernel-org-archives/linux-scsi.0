@@ -1,119 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out162-62-57-210.mail.qq.com (out162-62-57-210.mail.qq.com [162.62.57.210])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E45F1487E3;
-	Sun, 28 Jul 2024 16:07:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EB3578274
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jul 2024 03:10:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.210
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722182871; cv=none; b=GxsfOg6cv3Xb+/WEnQeLLSDhdcfFp3qWDBGModGdG4jghZJ0iMzNQgR0q9HWXfJz9u2c3k51R82K7RC4xM4aAalNx/DSvbkFBzCYoflxJHZanWI1X+dYhA1GGTx7QJPnt6JDSUpTkuqUY7EZy1KyZ7tjPc7gQdn/J9VMIQg6vMA=
+	t=1722222621; cv=none; b=nX5Hl/L3GsNHHtkl3wveatIFK2lhig6s+e3FfHn+jnVGOoxsnn9SeZZ1j+0Niqwv8Ttbztx5ChVHoOmQxptk+iwqPIQAVixOfjDjtfVfDp0Wg7Q33FWMOz9L1Tyw41lU2olK96jWp8Xuzxy+F1+J7HaqHHtrIpJ/nR6olVUzhLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722182871; c=relaxed/simple;
-	bh=9vciI1GeMRDi0SPmD3oN9I8PJ4t02RNV7SGmTCZ/VIg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iXaBpE2GM+oFdHyUG3IRxaDCH+DLVFfh6veJoIc77mO2DY7RA1YoXLwYNl0dh9DsMRhJkpY0GEzuyKdUDYlW76OYBTN9cEaq9DFewmeKKyavFRXnfXCHJBPVI58VXCb5/7GMqme5kUugGnBJZGCVPz7RqCnOkhhqNUKGJXTQLRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lXcGtptk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1722222621; c=relaxed/simple;
+	bh=X3YvbGPnHmqXyyOIY9rCiM8z7Uo7y72bsX1HdMSJpL8=;
+	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
+	 MIME-Version; b=f2FiTcCgQ0QDLL/VW+NG7JUerF5up54E3erZFg7yAyfo/3TKfB58D4lTK2JJGmw2uQBf74r3QZ6iCaRSGIkyHkZqBPbdAQAtGJ+qZGZYOE5py5kTfiDMR6TtljGaWS5pp5pNCDFgxkopAL2UYY+s6Trx/3Nnnnfpe6xCxOVSrKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com; spf=pass smtp.mailfrom=foxmail.com; dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b=h0PhiXvU; arc=none smtp.client-ip=162.62.57.210
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foxmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foxmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lXcGtptk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 469A2C4AF0F;
-	Sun, 28 Jul 2024 16:07:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722182870;
-	bh=9vciI1GeMRDi0SPmD3oN9I8PJ4t02RNV7SGmTCZ/VIg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=lXcGtptkK7qXnH6TshnXv5nsL7QW5pT/YzR+gb1NSlYP1Ts6bkpTKfIS02QsC6qMd
-	 smCCD8yQCXRkQy9nXN6Rhsj7sPROgO2VGuaW/WHmHAygyuF7VrcsO3i7in/h22Jt+K
-	 un+bkscKeyi/EdEp2Z8/VQLFmaCKoADwbWknOtne8ggMw2PqMduFkGmKiqsTtKo8CF
-	 ydf8bUZzqZfPfw+aQtHjO+BW7cfQchKjHUwJkKW2KRVDbt+Fmmbax7VzkF0K1hy8Cj
-	 2TsRjES9/FlJ6AfT+t1gD955gvgBo9VfmRtLeT2QAEbeZIH8WVdIxxO3moHkk1koU0
-	 HKIevj9PhRA/A==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Kyoungrul Kim <k831.kim@samsung.com>,
-	Minwoo Im <minwoo.im@samsung.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	James.Bottomley@HansenPartnership.com,
-	peter.wang@mediatek.com,
-	manivannan.sadhasivam@linaro.org,
-	avri.altman@wdc.com,
-	beanhuo@micron.com,
-	ahalaney@redhat.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 14/17] scsi: ufs: core: Remove SCSI host only if added
-Date: Sun, 28 Jul 2024 12:06:50 -0400
-Message-ID: <20240728160709.2052627-14-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240728160709.2052627-1-sashal@kernel.org>
-References: <20240728160709.2052627-1-sashal@kernel.org>
+	dkim=pass (1024-bit key) header.d=foxmail.com header.i=@foxmail.com header.b="h0PhiXvU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foxmail.com;
+	s=s201512; t=1722222614;
+	bh=naoDqaH5msGJgfAa3hIh/5ZvCgnlCMWfaGHi+flv0rU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=h0PhiXvUBstcqTzX2X4MjIryFEI6GmkqIlS6S0csOtJiYrxni1OnU7nH9MvAIEe4D
+	 +1+gUPCojqhfvgkcZTJX0pp2NX15WusV26nmzOhs7FoYIvSO3m84FLcKU9z7B5EzO/
+	 1cLNniZr9VpUT3GZsBdDI6MFz5PPOFnTl7Rx9Wfs=
+Received: from xp-virtual-machine.. ([111.48.58.13])
+	by newxmesmtplogicsvrsza29-0.qq.com (NewEsmtp) with SMTP
+	id E35B7037; Mon, 29 Jul 2024 10:56:53 +0800
+X-QQ-mid: xmsmtpt1722221813tyvowzq7m
+Message-ID: <tencent_8B6286FB808A0A72D3ABF0E4796ECB152505@qq.com>
+X-QQ-XMAILINFO: N3wmAMAZ1e8MpZ0J1FOpUWkaVRlnNRg8xAWsxyAoJlxWgE9NlTwgaPGHh+WGKu
+	 RzuSmTyMWoGbN4FVP7im5aUTWDmvlW1C+ND/Fce5l3vCLoWg7RyndsLuvLysBqANTmol95TwJ3+M
+	 qS4IHlJCQQlOZtoD0oTrtvUTvEetgEwC6bu+4gmJRNtHFcpuJII5nfu0mIPrk7LxQkktYUymMveX
+	 5wXz5SRmt2dv/pj2nenoPyfktx4YTSvURe9s4EHneuUm1AqkiU19/N+6hXiXO9rPFkjOEtJmc3qg
+	 Gn+ZPqtCZ0CI98rybRVvwFfaW/HVPfiMggZFdJYNEJENOyG4hfyze8QDxZ3YVTlWbykKYNdkqf06
+	 Um6OYR60xK2U9Rt0E+TRLmbHQ2HLwiKr+T2oCPMISRuHlOoqv/LNsPnO/V6oDFhXocT2kFRAxCRk
+	 Wi9vHz1KVmvCBSq3YMXDoYV5+tZt3sQy6hPplnl/4d9AnAxaRsybo5MvaFJcc45qW2JCl+8X6TKh
+	 wb9Sue2qnIclC+N/SDoJZbX3Qbcvkly12mdbSfdRgl0Ln6uUUZKc2XHHtHHWI/MYi5M/g3HY5zeE
+	 /HGUx0AHvKVeoJ1VCiwEp4f/RA9bbM4e6qLr/sXjVzUwibeMfF4KVzfNru1+b+0uw+UkVehbTiTB
+	 nKsn4+sX3jeRbVAuUOQK0iwkA5PKp8KP9/Ri8sulE1B/fk8Y6DmBB4XoK3YDQa3bJhEwAJaDbCT/
+	 kN2SSnkYtyDgeWgS4b6IxlxMmntUly5rl6UaelEKNNLuiSGL8IhNRtk6AP5ZaJbbvVUP1yuyXMyx
+	 tt8EfMbw03SEOA6kCui8lxZcMpI277R9XFgjfYx/jfuujd3V86yu/TxqzmmQcubXM4/RwRt7HmLQ
+	 vHS4vwjGZaBj+UQUyn+1DuoDDf11PpUSX5yLauM35qRDjFlSa4egcXi/i6Y1wfjm0mAsW25Op8he
+	 zODncJBsd+rf2GqOMCDoQ9V55j+iCN3CJKxxqrUPCjcgBveq2HjtrK7ncDHSnFJidNL82Q0ovELP
+	 fwBm3F7YtZe9xAq45K3NiHA1SOgTnatqrzxNxprg==
+X-QQ-XMRINFO: OWPUhxQsoeAVDbp3OJHYyFg=
+From: xiaopeitux@foxmail.com
+To: bvanassche@acm.org
+Cc: James.Bottomley@HansenPartnership.com,
+	linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com,
+	xiaopei01@kylinos.cn,
+	xiaopeitux@foxmail.com
+Subject: Re: [PATCH] scsi: scsi_debug:Use min_t to replace min
+Date: Mon, 29 Jul 2024 10:56:53 +0800
+X-OQ-MSGID: <20240729025653.5974-1-xiaopeitux@foxmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <cbece1b3-08ff-4fcf-8ed3-71dab06aafaf@acm.org>
+References: <cbece1b3-08ff-4fcf-8ed3-71dab06aafaf@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.43
 Content-Transfer-Encoding: 8bit
 
-From: Kyoungrul Kim <k831.kim@samsung.com>
+I am referring to this commit for my modifications: eb3b214c37ed.
+Meanwhile,in the same function (resp_get_stream_status) where I made the modifications, 
+have already used min_t(u32, alloc_len, sizeof(arr)),
+but it's not used in another place, which looks awkward.
+--
+Thanks.
 
-[ Upstream commit 7cbff570dbe8907e23bba06f6414899a0fbb2fcc ]
+Pei Xiao
 
-If host tries to remove ufshcd driver from a UFS device it would cause a
-kernel panic if ufshcd_async_scan fails during ufshcd_probe_hba before
-adding a SCSI host with scsi_add_host and MCQ is enabled since SCSI host
-has been defered after MCQ configuration introduced by commit 0cab4023ec7b
-("scsi: ufs: core: Defer adding host to SCSI if MCQ is supported").
 
-To guarantee that SCSI host is removed only if it has been added, set the
-scsi_host_added flag to true after adding a SCSI host and check whether it
-is set or not before removing it.
-
-Signed-off-by: Kyoungrul Kim <k831.kim@samsung.com>
-Signed-off-by: Minwoo Im <minwoo.im@samsung.com>
-Link: https://lore.kernel.org/r/20240627085104epcms2p5897a3870ea5c6416aa44f94df6c543d7@epcms2p5
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ufs/core/ufshcd.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 808979a093505..df36b141d4431 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -10114,7 +10114,8 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	blk_mq_destroy_queue(hba->tmf_queue);
- 	blk_put_queue(hba->tmf_queue);
- 	blk_mq_free_tag_set(&hba->tmf_tag_set);
--	scsi_remove_host(hba->host);
-+	if (hba->scsi_host_added)
-+		scsi_remove_host(hba->host);
- 	/* disable interrupts */
- 	ufshcd_disable_intr(hba, hba->intr_mask);
- 	ufshcd_hba_stop(hba);
-@@ -10389,6 +10390,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 			dev_err(hba->dev, "scsi_add_host failed\n");
- 			goto out_disable;
- 		}
-+		hba->scsi_host_added = true;
- 	}
- 
- 	hba->tmf_tag_set = (struct blk_mq_tag_set) {
-@@ -10470,7 +10472,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- free_tmf_tag_set:
- 	blk_mq_free_tag_set(&hba->tmf_tag_set);
- out_remove_scsi_host:
--	scsi_remove_host(hba->host);
-+	if (hba->scsi_host_added)
-+		scsi_remove_host(hba->host);
- out_disable:
- 	hba->is_irq_enabled = false;
- 	ufshcd_hba_exit(hba);
--- 
-2.43.0
+No virus found
+		Checked by Hillstone Network AntiVirus
 
