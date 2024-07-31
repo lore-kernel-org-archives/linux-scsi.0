@@ -1,90 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FEC516D9AD;
-	Wed, 31 Jul 2024 20:14:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EB9817579
+	for <linux-scsi@vger.kernel.org>; Wed, 31 Jul 2024 20:26:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722456889; cv=none; b=CFSMkcDEmFtOHscZkpCeFdHUJ7C6NeFEA7e3PqA4jN9lFTBBe8swhba87c9NxzwR2ebqj8/kUw8fuDQgo52UL0TfXhZNrIYvbGeqh7W4Azla++Vd+DH14CJ827iFavKuutrQ5hhnn1ntUZenDHFIxgJMpSftAXIPddQia3lCi4k=
+	t=1722457605; cv=none; b=mzJpLUYtxLbFua4p0GXMa+y0PQ+nqHQ871yVoat6uKjBKcVJiUnCzml4tzUhWoffHDvqLNEmzpAR7Frsao5xOZI90qzeSFnUf06QIVaElozx14GWOn+ci3tB8/pQm4G6GYaCNdJc7CF6ym2ZGnWhl6viM9PSSQ0YW0DnvkHRWhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722456889; c=relaxed/simple;
-	bh=t2kc0K9l76IswGytJY3ieedKBdixh8jI9A2JOmFIaZY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JxVhsCoWwxtm6ARpwbpDiPcoFWNEnlt4jDz4TlSzPtUmwlsqjRcC/RG/wSaMrMkWtcqosteWibT2EdQdprKyleMRWJ+lF3/G+aqX17sv3xLPFZ1SjCzg5JmsRpUqwlSmXpUWgOnfFqZzlomF1dWNPOwdHnEzwzpIRNCicJLOcJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cJGPZkGk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1722457605; c=relaxed/simple;
+	bh=H5ArDd+hq2jHQBtCRY2DdmowPeY5Q8QpQXJuMJrgP/c=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=M383CVhJEvNBOhNJcRbDT7xrkXnUhzuEvoXZMExOYsJ7W0zGQwuqAUTGU7min4k+ROpBQlSKsFWLUpG5BWnI+1bOENhJC4l50t1VvDmTNR5PeYJkOBQ+YIYU1LG+lRv/3JOxfSbPDhaDYA/QNDn4xMgerxd1qfnjd8d7F0PmALM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=b98uFmXR; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cJGPZkGk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5768C4AF0F;
-	Wed, 31 Jul 2024 20:14:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722456889;
-	bh=t2kc0K9l76IswGytJY3ieedKBdixh8jI9A2JOmFIaZY=;
-	h=From:To:Cc:Subject:Date:From;
-	b=cJGPZkGkEOYC6YLYEDGdlNOqTy6HcIVA8grNWYVHOI79b7606HAFCXUVDrIDdzzbh
-	 QzCdQz+EtMuW1vfLcfe/Ct9trEkhizmmpxC0BLVbaJMKJ21z808pO3MsReloSZSNbX
-	 vP5TxvqB9IXEFISbAJ1rzK+ZuXHfQj8Lh4ACkUzkOLfxqFbJMumsbayeoEBj2iQV+j
-	 VzzhhVs/iJ3LjCHRiBfGBkupj+6ZgYz5W1TvXzVd3IxN1qodiKR0j8Vv9Is8/jBqU/
-	 N/1k6zKyrJ5cZ+nt5A7Gbblzy5/SSofsz6Qa7ByO9VyJepvOZ1YC490XzfbfdbuRLG
-	 YakehlzoL8Iog==
-From: "Rob Herring (Arm)" <robh@kernel.org>
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] ufs: ufshcd: Use of_property_count_u32_elems() to get property length
-Date: Wed, 31 Jul 2024 14:14:04 -0600
-Message-ID: <20240731201407.1838385-9-robh@kernel.org>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="b98uFmXR"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WZ3ST1mx2z6CmLxY;
+	Wed, 31 Jul 2024 20:23:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type
+	:content-language:subject:subject:from:from:user-agent
+	:mime-version:date:date:message-id:received:received; s=mr01; t=
+	1722457381; x=1725049382; bh=Uuok3gItVhet6LmTYx4sbEjwn+unjYRnwLs
+	mBGqO25g=; b=b98uFmXR7DgMPdjxczABqrr80xVsZGlFqsGnuDUfrcB3XLbL1AK
+	SeMGlNoHUoxjjlkwB16a7hJ+dTjCw8A5JFAfZMzioSgIZA2RkyfbPQwq0sZ0xMdd
+	tPe2z0CGyvJ3oN46i2Xc+0k+2jQjCESh8eKEQyvWo8LrgF9db9dhOR0tNdd/EGJB
+	33n6Z+1HEGEQM2iSWAI3mVitu1ljpr2fkqQl8//XmJzCdvga9CA5TAzQzyrHtslZ
+	AtLx9W1pQ27FViF6CorDpvGOIHHh8amWSi5n+tFdSJOke9bZl3cprP6rwJ531xfk
+	fPYcC/37PnbH6psSVFfKgqPLRkSaxG2TBfA==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id Lp-8nHiRaPfG; Wed, 31 Jul 2024 20:23:01 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WZ3SM3jNyz6CmM6f;
+	Wed, 31 Jul 2024 20:22:59 +0000 (UTC)
+Message-ID: <b0f92045-d10f-4038-a746-e3d87e5830e8@acm.org>
+Date: Wed, 31 Jul 2024 13:22:57 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: RFC: Retrying SCSI pass-through commands
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Damien Le Moal <dlemoal@kernel.org>, Hannes Reinecke <hare@suse.de>,
+ Mike Christie <michael.christie@oracle.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Jaegeuk Kim <jaegeuk@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Replace of_get_property() with the type specific
-of_property_count_u32_elems() to get the property length.
+Hi,
 
-This is part of a larger effort to remove callers of of_get_property()
-and similar functions. of_get_property() leaks the DT property data
-pointer which is a problem for dynamically allocated nodes which may
-be freed.
+Recently I noticed that a particular UFS-based device does not resume
+correctly. The logs of the device show that sd_start_stop_device() does
+not retry the START STOP UNIT command if the device reports a unit
+attention. I think that's a bug in the SCSI core. The following hack
+makes resume work again. I think this confirms my understanding of this
+issue (sd_start_stop_device() sets RQF_PM):
 
-Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
----
- drivers/ufs/host/ufshcd-pltfrm.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index da7dac77f8cd..e21becc5bcf9 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1816,6 +1816,8 @@ bool scsi_noretry_cmd(struct scsi_cmnd *scmd)
+          * assume caller has checked sense and determined
+          * the check condition was retryable.
+          */
++       if (req->rq_flags & RQF_PM)
++               return false;
+         if (req->cmd_flags & REQ_FAILFAST_DEV || blk_rq_is_passthrough(req))
+                 return true;
 
-diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-index 2e1eb898a27c..0c9b303ccfa0 100644
---- a/drivers/ufs/host/ufshcd-pltfrm.c
-+++ b/drivers/ufs/host/ufshcd-pltfrm.c
-@@ -31,7 +31,6 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	const char *name;
- 	u32 *clkfreq = NULL;
- 	struct ufs_clk_info *clki;
--	int len = 0;
- 	size_t sz = 0;
- 
- 	if (!np)
-@@ -50,15 +49,12 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
- 	if (cnt <= 0)
- 		goto out;
- 
--	if (!of_get_property(np, "freq-table-hz", &len)) {
-+	sz = of_property_count_u32_elems(np, "freq-table-hz");
-+	if (sz <= 0) {
- 		dev_info(dev, "freq-table-hz property not specified\n");
- 		goto out;
- 	}
- 
--	if (len <= 0)
--		goto out;
--
--	sz = len / sizeof(*clkfreq);
- 	if (sz != 2 * cnt) {
- 		dev_err(dev, "%s len mismatch\n", "freq-table-hz");
- 		ret = -EINVAL;
--- 
-2.43.0
+My understanding is that SCSI pass-through commands submitted from
+user space must not be retried. Are there any objections against
+modifying the behavior of the SCSI core such that it retries
+REQ_OP_DRV_* operations submitted by the SCSI core, as illustrated
+by the pseudo-code below?
 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index da7dac77f8cd..e21becc5bcf9 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1816,6 +1816,12 @@ bool scsi_noretry_cmd(struct scsi_cmnd *scmd)
+          * assume caller has checked sense and determined
+          * the check condition was retryable.
+          */
+-       if (req->cmd_flags & REQ_FAILFAST_DEV || blk_rq_is_passthrough(req))
+-               return true;
++       if (req->cmd_flags & REQ_FAILFAST_DEV)
++               return true;
++       if (/* submitted by the SCSI core */)
++               return false;
++       if (blk_rq_is_passthrough(req))
++               return true;
+
+Thanks,
+
+Bart.
