@@ -1,48 +1,48 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 917A116938C;
-	Wed, 31 Jul 2024 21:07:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06A58148FF3;
+	Wed, 31 Jul 2024 21:13:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722460032; cv=none; b=FPVhY6gKvzIDK8VqWqwWXmIDISGQ1Qs7UErDFuArElP7sNCf+kWDK8soxBhjGjsEUdRr+bcw881jnle34srPo4CnxJuNIGuyxDa47rEXXsqagLHnUHtQoyS8lHBaiDg4LtzqQSB1uianhwgIpte3kH7Kg/7rKPIK6enauPS92KE=
+	t=1722460394; cv=none; b=I77eIXQZPSbgStRU1LfU/IPbcG1hgdDoGDxQpPoSsi534L9yqwxLK8Y9RLZPawc3djZAL3Wn01WIo3fKM8ZCPLL/aC3Zx1rzlGzmFtkYzW8hZ1bDLAVUHr9qAWh4fam05MoH14/+ESeAEQEVNOeNoQF4Xbvwe2sfXTMAkKy2iwY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722460032; c=relaxed/simple;
-	bh=Nuv4sBOX8QX/kuf/UOMjHUkwtkNsXqv7VRApoE5TCAk=;
+	s=arc-20240116; t=1722460394; c=relaxed/simple;
+	bh=wc4+dDNaQK65hClr0lWuXsz/o88UIt9Tk9fgYeEmSy0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FB07evo54kXUrFMLuTzJWmKnp8SLce2ugS/jLxr8CKdArOFD45H4jO2Nnum1iS9NWjCfMII+nJ8MvhhZZ3kAf0SUjh+RvUJ4P0Y93qY6Z2jAdkJt6RmKAkAIOcnITQa6q1KXR41uEzjHBqdNuZz2YYVdU+MCiS+5XAjwUnrWyio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JiiBhr8K; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=N+15KfaAVNgOLPKLedbbrN4wT+E61XqppOqy1HeKj5UP9uW9WVzxePEh/6TML5Y9paRTi3xKy5kwmjUzu1wPWUSn/1D3QUT7Ikq7vLUE3wJN+rdU7H6U4l9evitc1fYn7/CHeKXTtaQq8jd++5sv2/RqbTqbWU/EFa/217KePOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=0QFdNZE9; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JiiBhr8K"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="0QFdNZE9"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WZ4RD3htCz6CmLxY;
-	Wed, 31 Jul 2024 21:07:04 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WZ4ZJ3QrbzlgVnY;
+	Wed, 31 Jul 2024 21:13:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1722460022; x=1725052023; bh=q5mHEl9jVG35BDg0jyUuqFoE
-	Q1mIYQkC2zHgq41ZW1U=; b=JiiBhr8KWIED+2CPKEsns3eiT71I0wLd4LZyqVKz
-	1UxrLbN3x4mKI0O8HIchXfGcOa94XI71X5BetaL6GXmDDkmFd8AwZaAiFix9+z1W
-	o4fLqRIp9trfH00Cynn5uYnXu01cWT25C5xlea9jGflvMXT1huh489cHI63e6wt2
-	uGQwcR+syO/z2bY2GJYWviNOBz0gm16wa+ImwymenGOVZrh85nzmrQo+aSHu7eRs
-	MUvGr8abDpwC4LqTffYl0VaN3s/u61KyOQAAIDEij4VgR1GkCW2Ni+fqVWkryRuA
-	hwbmFPHKEm7CcvRrjYPe0AQ65xZlIl/LCD8xIk9+YecQdQ==
+	 s=mr01; t=1722460390; x=1725052391; bh=f2AwTeYITTrradPl/H+sVuiY
+	Bmqp1ESPrs/YhR4DEZ0=; b=0QFdNZE9Jp3zwgILJDQiEbVZjscxUmDbzgd6YOnw
+	aq1tfIiIhcamWy7YCu5uxCRatmj/MCJCJqPCwNeOcWI8LnqAXUZ4U44T9Pwesh1B
+	Vx1ggfAQLYDUDcn9BWAH6IHOynt7AqhpezzjGKpMPo88X4XH7398ZtR9fjTtVc2Y
+	QX2S6jClpRGpSr3L7wxGHCKYPhkRjh156CF1KVCOvXOigXhJgQ4KQi2SDiHp/jzm
+	YXDTZO9Pa+cqy64IdL9LnuGpTyYwBL3WeADCAA5/EShaNz5RSKosJGsCg5msDpNT
+	1EOqNpQuHhETyPRbQBDTp1Nv04sBZWWeEgNCG8LSUA6OWA==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 5cl9QFdfbwUI; Wed, 31 Jul 2024 21:07:02 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id a_ZRGJco0lJv; Wed, 31 Jul 2024 21:13:10 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WZ4R91pDvz6CmLxT;
-	Wed, 31 Jul 2024 21:07:00 +0000 (UTC)
-Message-ID: <c27e1eb8-e5e5-4b3c-a792-c447023709bf@acm.org>
-Date: Wed, 31 Jul 2024 14:06:59 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WZ4ZF6c16zlgVnN;
+	Wed, 31 Jul 2024 21:13:09 +0000 (UTC)
+Message-ID: <0b3c0120-a680-455a-abfd-b3b6b0ddbed4@acm.org>
+Date: Wed, 31 Jul 2024 14:13:08 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,32 +50,50 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] ufs: ufshcd: Use of_property_count_u32_elems() to get
- property length
-To: "Rob Herring (Arm)" <robh@kernel.org>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 2/2] scsi: ufs: Add HCI capabilities sysfs group
+To: Avri Altman <avri.altman@wdc.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240731201407.1838385-9-robh@kernel.org>
+References: <20240731122051.2058406-1-avri.altman@wdc.com>
+ <20240731122051.2058406-3-avri.altman@wdc.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240731201407.1838385-9-robh@kernel.org>
+In-Reply-To: <20240731122051.2058406-3-avri.altman@wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 7/31/24 1:14 PM, Rob Herring (Arm) wrote:
-> Replace of_get_property() with the type specific
-> of_property_count_u32_elems() to get the property length.
-> 
-> This is part of a larger effort to remove callers of of_get_property()
-> and similar functions. of_get_property() leaks the DT property data
-> pointer which is a problem for dynamically allocated nodes which may
-> be freed.
+On 7/31/24 5:20 AM, Avri Altman wrote:
+> +static ssize_t capabilities_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "0x%x\n", hba->capabilities);
+> +}
 
-The "ufshcd:" qualifier in the patch subject is confusing. Please change
-this into something that unambiguously refers to the platform driver.
+For every new sysfs entry that is added, documentation must be added
+in Documentation/ABI/testing/sysfs-driver-ufs.
+
+> +static ssize_t ext_capabilities_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	int ret;
+> +	u32 val;
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	if (hba->ufs_version < ufshci_version(4, 0))
+> +		return -EOPNOTSUPP;
+> +
+> +	ret = ufshcd_read_hci_reg(hba, &val, REG_EXT_CONTROLLER_CAPABILITIES);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return sysfs_emit(buf, "0x%x\n", val);
+> +}
+
+Host controller register reads must be protected by ufshcd_rpm_get_sync(hba) /
+ufshcd_rpm_put_sync(hba).
 
 Thanks,
 
 Bart.
-
