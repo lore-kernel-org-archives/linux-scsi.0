@@ -1,102 +1,114 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F876182D8;
-	Thu,  1 Aug 2024 18:11:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C3661EB48A
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Aug 2024 20:12:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722535870; cv=none; b=m4OFJ+rQYOareWWs6gm9Srm83mS8/wtS5eZtIhhxnCPDWN/MRFQPLpJ7KzzMcmb8dGMXtWy2mvFtZ7Ics/AbG4XfRLK/U9ev6/rPX0olXlbSlYsPlzI2sq8rlic2A2KQDUE9QxbEEmjuI2FLVsmq2UFjAIrg83551DTJIzWgiMM=
+	t=1722543134; cv=none; b=bK22+UkUmWcysQHF3ZYdthHa9xU5bekHcW8K0lgxL3O2dKOGJ5RFwjDZTPajXGGRP/vchQD+uLV1A9D7MsPJ0BcZ6bkGX/XfLcnZKFoMm+5ZLC/q0FgO85bFWkYLwDNTTdB73C1eiLtnw9lnX/Pa9/YoXrDz5p2c58In6fFxZXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722535870; c=relaxed/simple;
-	bh=71kV20FqY4Ai8IF+fb62AaJM3opVatT4U0WLYn/1oPQ=;
-	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=KmzsP2joqdEcATaVZbAEw740u5l3O5dDtQTzTuYVLRj2TkvkNOEKrdP2+9YtS+wNkI5vhhNtCL2f3+Suku85mmIoqMMtzN/WvIc4nluQPQdYfis+YznwDXLGtnpL1ks38NqK2MjXODaD8GnlbgoeLTCh8LnUY9waKn4G0gMeFJ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.1.105] (31.173.80.208) by msexch01.omp.ru
- (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Thu, 1 Aug
- 2024 21:10:52 +0300
-Subject: Re: [PATCH] ata: libata: Remove ata_noop_qc_prep()
-To: Damien Le Moal <dlemoal@kernel.org>, <linux-ide@vger.kernel.org>, Niklas
- Cassel <cassel@kernel.org>, <linux-scsi@vger.kernel.org>, "Martin K .
- Petersen" <martin.petersen@oracle.com>, John Garry <john.g.garry@oracle.com>
-References: <20240801090151.1249985-1-dlemoal@kernel.org>
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <7186ee2c-e1de-1b59-41b2-e2ca45e21b0e@omp.ru>
-Date: Thu, 1 Aug 2024 21:10:51 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+	s=arc-20240116; t=1722543134; c=relaxed/simple;
+	bh=AUvbl9R8EtqljpKr6srbsnObdEmh4tDnMpVW727WLA8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=l802FuiOOGSINS69pio3UW5yTyuCxt0rN+nhNCqVbsPIwqJOOPgh0bh1bp0J6AiqFkYidyhF3d5Gb5XUK/Zj/5ARCRIYJddprvswxUFavGTz0bk0sf0bzegef/K0k+tn77v2gBqqugiASTYnp5bF3kmm4oaySaTj+w0JkkfO8/w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xholxFPn; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xholxFPn"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WZg9R6HjRzlgT1H;
+	Thu,  1 Aug 2024 20:12:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1722543127; x=1725135128; bh=CU50YuToYTNmOSb7gp2txiWe
+	CzprP0veJqFyBNYPv+k=; b=xholxFPnPj10n2QfM7ypsUS//IOEV5gZ/TyONPFl
+	QX8WAMFO+E0jsW9DQBpqQ7dbx5xUJaoWBVPGfGJtrUvmyXFctUE8iq5xrlz5/SzO
+	72cMzvwabdNHQtVothhgfKVYQ88FPx7+/Y02QM/RyMu3BGPhw2s97fb9y33RR5vK
+	qdUX0I5nUkhYbt6KfzT+udjTbO55gUq28d5uZT2MAuWF/SpNlPllh9vwvGxAIdC8
+	XmZZf3Lwf3T1dEKAA7NTAhLaXXQSc9F+CjG2wOcmAwVUhHK5Yc6+Q007dXFuERAr
+	Jl2zo0kvtdYT3QkpcsNLlOwWpmv3j5+QkNwg+KYE+fvsDQ==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id zwz9mJ9d3GxH; Thu,  1 Aug 2024 20:12:07 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WZg9M21ykzlgVnN;
+	Thu,  1 Aug 2024 20:12:07 +0000 (UTC)
+Message-ID: <1e79816d-02eb-4997-81d2-4b6ec0201dd5@acm.org>
+Date: Thu, 1 Aug 2024 13:12:06 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20240801090151.1249985-1-dlemoal@kernel.org>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: RFC: Retrying SCSI pass-through commands
+To: Damien Le Moal <dlemoal@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Hannes Reinecke <hare@suse.de>, Mike Christie <michael.christie@oracle.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Jaegeuk Kim <jaegeuk@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <b0f92045-d10f-4038-a746-e3d87e5830e8@acm.org>
+ <a23d7a8c-4a4a-4687-ae18-87b2b2fb9fcb@kernel.org>
 Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <a23d7a8c-4a4a-4687-ae18-87b2b2fb9fcb@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.0, Database issued on: 08/01/2024 17:54:18
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 59
-X-KSE-AntiSpam-Info: Lua profiles 186842 [Aug 01 2024]
-X-KSE-AntiSpam-Info: Version: 6.1.0.4
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 24 0.3.24
- 186c4d603b899ccfd4883d230c53f273b80e467f
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {relay has no DNS name}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.80.208 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 31.173.80.208 in (user)
- dbl.spamhaus.org}
-X-KSE-AntiSpam-Info:
-	omp.ru:7.1.1;127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1
-X-KSE-AntiSpam-Info: ApMailHostAddress: 31.173.80.208
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 59
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 08/01/2024 17:57:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 8/1/2024 4:48:00 PM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-Hello!
-
-   Not sure why you keep leaving me out of CC on the patches that touch
-the PATA drivers... :-/
-
-On 8/1/24 12:01 PM, Damien Le Moal wrote:
-
-> The function ata_noop_qc_prep(), as its name implies, does nothing and
-> simply returns AC_ERR_OK. For drivers that do not need any special
-> preparations of queued commands, we can avoid having to define struct
-> ata_port qc_prep operation by simply testing if that operation is
-> defined or not in ata_qc_issue(). Make this change and remove
-> ata_noop_qc_prep().
+On 7/31/24 8:33 PM, Damien Le Moal wrote:
+> Looking at the code, e.g. sd_start_stop_device():
 > 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> 	res = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, NULL, 0, SD_TIMEOUT,
+>                                 sdkp->max_retries, &exec_args);
+> 
+> It seems that it is expected that the retry count will be honored. But that
+> indeed is not the case as scsi_noretry_cmd() will always return false for
+> REQ_OP_DRV_* commands.
+> 
+> So may be we should have a RQF_USER_OP_DRV flag to differentiate user
+> REQ_OP_DRV_* passthrough commands from internally issued REQ_OP_DRV_* commands.
+> Or the reverse flag, e.g. RQF_INTERNAL_OP_DRV, that we can set in e.g.
+> scsi_execute_cmnd().
 
-Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Hmm ... how about using the simplest possible patch? The patch below seems
+to work fine.
 
-[...]
+Thanks,
 
-MBR, Sergey
+Bart.
+
+[PATCH] scsi: core: Retry commands submitted by the SCSI core
+
+Pass-through commands either come from user space (SG_IO ioctl,
+SCSI_IOCTL_*, BSG), from the SCSI core or from a SCSI driver (ch,
+cxlflash, pktcdvd, scsi_scan, scsi_dh_*, scsi_transport_spi, sd,
+sg, st, virtio_scsi). All this code sets scsi_cmnd.allowed to the
+maximum number of allowed retries. Hence, removing the
+blk_rq_is_passthrough() check from scsi_noretry_cmd() has the
+effect that scsi_cmnd.allowed is respected for pass-through
+commands.
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 612489afe8d2..c09f65cfa898 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1855,7 +1855,7 @@ bool scsi_noretry_cmd(struct scsi_cmnd *scmd)
+  	 * assume caller has checked sense and determined
+  	 * the check condition was retryable.
+  	 */
+-	if (req->cmd_flags & REQ_FAILFAST_DEV || blk_rq_is_passthrough(req))
++	if (req->cmd_flags & REQ_FAILFAST_DEV)
+  		return true;
+
+  	return false;
+
