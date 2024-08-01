@@ -1,82 +1,97 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f53.google.com (mail-lf1-f53.google.com [209.85.167.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AB8B13C8E1
-	for <linux-scsi@vger.kernel.org>; Thu,  1 Aug 2024 18:00:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D39A0182D8;
+	Thu,  1 Aug 2024 18:10:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722535239; cv=none; b=EwFjkp8Cz6KlN4QqpT92NdMLgthlPwAHzs3o7qN06CTKz1N67W6blgnzjQfgUnsy9SesxkJK/l8ap5JrlYPxeYKbLBVCtZcbbAMtuDCKGkDipwInFhONTRj0B8mQf4xIcQ3n6+v4rw7WU9A4sIeb007k5IQQK3AcZ6GQarFHXPo=
+	t=1722535850; cv=none; b=pwZkYqzC1eB2NCt47Uu3yD7hAAMmW86WgoO4QjS3PB6/51e2PEcXbQLYuICLP3V5mMcDkxS55EClbNLOTg4lQQmhiL6Z7LyEUxOUYapOH+Z8+WTW/2Flu69fltucJvl2Es6e0k2SRUfEpmN6UOseS8qqdMLNG9hPIs7Gjetd9OA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722535239; c=relaxed/simple;
-	bh=uTj32CvJ+Y0avd3Z7RStpdoxJAuCXarjDkDqVozncZY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZjVDAmb0obApDgykqc4eAowLqdcRLaSmnbmCzO3GVO5AHE/B0DoJESLsSDcND38DAMxOAFwTZX9/iKTytFTjwneIBwOG3tz3Pa0ZnKxoDYLKULO8mY/jdAFcltw9bx6nYz0jZDniiz5bXCGzZp9b/fIFTNL4qWkJnu3VZtTr8vs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=LxcYaJ3A; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1722535850; c=relaxed/simple;
+	bh=71kV20FqY4Ai8IF+fb62AaJM3opVatT4U0WLYn/1oPQ=;
+	h=Subject:To:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=YEH+GAv0wiAyfu1yBloEZAp7dIdJrHpDnghaoz+ClI58b6ju5s/uwgtlJLFrnB26Jcz+tUUkq0Xxkrod3qRhuEhhv+LD118tjIFBUdD8/wvPxttSWTz8AALRzAFHqYwAm9SjMGpDHUwBNpcQt/jYIAwTJmqgDTGbBp3cScoxiY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YIIUAFJB; arc=none smtp.client-ip=209.85.167.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="LxcYaJ3A"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WZcFc6G9Hz6ClY9F;
-	Thu,  1 Aug 2024 18:00:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1722535234; x=1725127235; bh=uTj32CvJ+Y0avd3Z7RStpdox
-	JAuCXarjDkDqVozncZY=; b=LxcYaJ3AxGAV4cJCrOr8RMzV29MV+Z+5439GLGUS
-	+mWoBNoPW7SniIvxGHuyEFbRHYZjCazhWoaPWMQHqS5gG09X6fskHyJ/qT8CsgU9
-	cowS5xhig1+FW+S142UghObY0KM+Sv9JMoiHmUP5amMZVIxNummQwwWR0XIyb8Rg
-	mlutuSQ5Fg0bYMuo+NEAfpyS81N0sriPhJvfdUzFMBbOkz5BsJainVgkMc7usYuo
-	CDhzlWw93++wE13jkYcbov+h/hfRfB36xqNEr924KgDfL433v8zyQaDp1lQW8WPD
-	vCbZzCrZIM8YwfungKCwiUkgJUITOm30HuBWkjKW8714pw==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id utgs7AOLoFK8; Thu,  1 Aug 2024 18:00:34 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WZcFX2VNQz6ClY9C;
-	Thu,  1 Aug 2024 18:00:31 +0000 (UTC)
-Message-ID: <3c638f00-63aa-45c1-b07e-34252956960c@acm.org>
-Date: Thu, 1 Aug 2024 11:00:30 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YIIUAFJB"
+Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-530ad969360so3691357e87.0;
+        Thu, 01 Aug 2024 11:10:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1722535846; x=1723140646; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:to:subject:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=HwbAy6SukR8Gi4GPcCemCfW3YkpTN/hdOKxzKRofd5w=;
+        b=YIIUAFJBmbxtKUM9FNcL0gCmvbFNVdo3P6ydSB+X0Bzt3OLOY68eeEQ7MxbvRoNd2f
+         NewAqbo4tjzrlxvIGo46i97w2UYnGfJJUeyumL4Nf6+xboXeWaqwXsSxDMVUkBJxof5j
+         MCu5Ik/Dt8DRJnHRAqqCVVFtFDqiLEmcSmeRXhACPnv2A8Z6iZy6/bHhIr6rL511tmg3
+         6W/ljAimdjrXiporBoxVP3V8F0Je+chw2GFXHRmb1QYeayZpT3uA0Pm6qLa0TYaDAnMi
+         3LgkwDbBSCAiwHSa3LnvXY8flU30PSFzYXac6rIXpxmamY/ejLBhPC6mfPqZmkQI3QOs
+         TkzA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1722535846; x=1723140646;
+        h=content-transfer-encoding:content-language:in-reply-to:mime-version
+         :user-agent:date:message-id:from:references:to:subject
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=HwbAy6SukR8Gi4GPcCemCfW3YkpTN/hdOKxzKRofd5w=;
+        b=SN5b1lVqhb/Y+QbXCqC9KU+70xz/J3XRq8uu+K5L6su4Zq6hP2+I8r2+68GqSsR+bU
+         ZxZHQyVSxQ/NwLOamFoLgj2ljGGC896X45Lpqy27hNy1hrGRyuZOXgMO03GxQErhOp0n
+         VsyPpPkhzHyqLh/d6sR7Nk9VzgLM6PPKSlZwzfdpuLRDLScT9THEVnKeXu7ETQ9P17hk
+         m2nSPHjOF9CQbDG+neFn04WsZYPGeE6RdHMollcl/f2mqGtD5vHe4o9PiAe4MNd3d/eH
+         9Bwx6n7hQOzsJMjVplAn9f5bDheSQXxv3r+2/tmzr5dRxU7N0UeDWC+i+IvZ9kX1ZUfs
+         Jq1g==
+X-Forwarded-Encrypted: i=1; AJvYcCWNdCSQoDlsmsMh/5IgTRcSdJpBPwYET6kMWZHuD/UAO44BDBqdSIn0AQQLQ5tTe7kztUIoqsZnEziv+hftVHyzR5T9twZvXUxvH+qKsVbl7Y8zLTidLMIXnIny8udtnH6zPp+Okg==
+X-Gm-Message-State: AOJu0YxWeFd5PkUTLAqxxHWH6+Hjh7+ngMFa46lBYdrQQQ9rTVVWC9gf
+	5D35u7apBLr/A2v+IEYkwM0Y0uE1iw4s6rVRlyFTX3rpyH7M1b3+/dRh1Q==
+X-Google-Smtp-Source: AGHT+IHLBNMi5F2Jr9+52ewWl5q2smIRUEnmmHxHuu2qkiTTt4qlfWqMQ2xOsUKGHk0QJ74250gnGQ==
+X-Received: by 2002:a05:6512:3b06:b0:52c:8aa6:4e9d with SMTP id 2adb3069b0e04-530bb3a220cmr647860e87.29.1722535845483;
+        Thu, 01 Aug 2024 11:10:45 -0700 (PDT)
+Received: from [192.168.1.105] ([31.173.80.208])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-530bb9b19ecsm28620e87.0.2024.08.01.11.10.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 01 Aug 2024 11:10:45 -0700 (PDT)
+Subject: Re: [PATCH] ata: libata: Remove ata_noop_qc_prep()
+To: Damien Le Moal <dlemoal@kernel.org>, linux-ide@vger.kernel.org,
+ Niklas Cassel <cassel@kernel.org>, linux-scsi@vger.kernel.org,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ John Garry <john.g.garry@oracle.com>
+References: <20240801090151.1249985-1-dlemoal@kernel.org>
+From: Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <2f092091-a2af-d7e3-3634-68536bbe87a9@gmail.com>
+Date: Thu, 1 Aug 2024 21:10:43 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: RFC: Retrying SCSI pass-through commands
-To: Damien Le Moal <dlemoal@kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Hannes Reinecke <hare@suse.de>, Mike Christie <michael.christie@oracle.com>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- Jaegeuk Kim <jaegeuk@kernel.org>, Christoph Hellwig <hch@lst.de>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <b0f92045-d10f-4038-a746-e3d87e5830e8@acm.org>
- <5090f92c-096d-4cbf-95f4-af25b50243bc@kernel.org>
+In-Reply-To: <20240801090151.1249985-1-dlemoal@kernel.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <5090f92c-096d-4cbf-95f4-af25b50243bc@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 8/1/24 12:04 AM, Damien Le Moal wrote:
-> Another thing: may be check scsi_check_passthrough(). See the call to that in
-> scsi_execute_cmd() and how it is used to drive retry of the command. Tweaking
-> that may be what you need for your UFS device problem ?
+Hello!
 
-My understanding is that making scsi_check_passthrough() retry commands would
-require modifying all scsi_execute_cmd() callers. If the scsi_exec_args.
-failures pointer is NULL, the scsi_check_passthrough() function does not
-trigger a retry. If scsi_noretry_cmd() is modified, none of the
-scsi_execute_cmd() callers have to be modified.
+   Not sure why you keep leaving me out of CC on the patches that touch
+the PATA drivers... :-/
 
-Thanks,
+On 8/1/24 12:01 PM, Damien Le Moal wrote:
 
-Bart.
+> The function ata_noop_qc_prep(), as its name implies, does nothing and
+> simply returns AC_ERR_OK. For drivers that do not need any special
+> preparations of queued commands, we can avoid having to define struct
+> ata_port qc_prep operation by simply testing if that operation is
+> defined or not in ata_qc_issue(). Make this change and remove
+> ata_noop_qc_prep().
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+
+[...]
+
+MBR, Sergey
