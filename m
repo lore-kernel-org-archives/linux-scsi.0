@@ -1,145 +1,116 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC47C16BE3D;
-	Fri,  2 Aug 2024 16:49:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B540D16BE0E
+	for <linux-scsi@vger.kernel.org>; Fri,  2 Aug 2024 16:52:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722617391; cv=none; b=EBUE7atETARbOPXX7EHV5uUFvu1oiA8uHfL7eqFn9zledKn3cFOMKegqLgmlsGlYu+7ZEThLAV7hfYVTwIbXvV0hb3ubOrE40LnGUPtRKOBdLEACiqicCrDst85W1epZFhBgHZL2HM+k1EIxYWaU1/bGPtcY5Fxqrhzdgyzsqsg=
+	t=1722617541; cv=none; b=vCWX90zeinB20CeACS1VEt2A3YcWpujHlsWGTpDuWu+jL8C7ZiMlez2+z0+mSotl2wtnU6somQwR4ESEb+FVMGS1QCKIPDLIIGMk5g3QXXEhF3Dp6lE4+V1cZJsz5nN/dv4jJRvzp85dow1YwLLFU44jhrHQsEpw2uqu2iPKN7Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722617391; c=relaxed/simple;
-	bh=cSNgKJAuE43cxsIbzCafaUQZQjln2GGWeW9rtMq+TCQ=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=IPpC/bhqRZNAmTEP76MEZR7RIirrJpwZgZD4rRxPVpGaYfLnGugwxYQGLBwtTr2chfulkjPZfLklCD1vy7pqEohSYsTgEfAQnTXIKuc1o/W2llfgwrk5KV9wUs25KKT/wRIK0hvj1rvq3BvXUhZqKeZRvkPqzw6CrGKii64PzLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=nbwlj3xP; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1722617541; c=relaxed/simple;
+	bh=dIGJvOjX3XzidEMXQgJqREOcC6BM3HfYTpbsD5GkgKo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lQ31N2jAspu7Azwvv6rc8D/aCx6h+aMxz2GP3LYwOJ4X/dXRxAJzfqpvJARv6f3Bqg4Sa5EhwmyDVMzqBQaC/yqffxmoXNfEFrQUbt/7bjXWbiBvMWY0Ef5ODXkTbfXq+/8+Owl8ry9EGTq+LMFz6JWqM2GpYg75NWPDCbn0mRg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=f0q9nV5u; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="nbwlj3xP"
-Received: from pps.filterd (m0353724.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 472FTBA7011799;
-	Fri, 2 Aug 2024 16:49:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=
-	message-id:date:subject:to:cc:references:from:in-reply-to
-	:content-type:content-transfer-encoding:mime-version; s=pp1; bh=
-	cg/bndupk50rnRSsxm4uXdUIHZrNSZ5AzvafipUGmz8=; b=nbwlj3xPgqLjq4hn
-	BiMRfwpOq2AnIqP8YUvW+A7E9apEy/G92t3teOEmJ7tok9sCwLwRLaEY8mxlknSA
-	PeWIEjCoKgyx8L2LizMomvysWqlDZbIyz2Cb7nXIYIdeoCJLJJfT/3lqnMQmu1fh
-	4KGUTtA71ymfWwgSFLExdrDtrQJbxcpBLptN/JIkHUt4Mft0NqwGZkDZfVTQCJJS
-	nWbR1nuBIGYB27uucrrRlap9wiHjgs/pP66WoJYUBuZOg/eanxLxijXrUpItt7nK
-	/dtdR1GBDuUx4zXimMChvduXm42l5AyGY3rTrd/Auaqtjq19uDIxOK2fl6t+kxEo
-	8gZN/g==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 40s1pf07d3-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 02 Aug 2024 16:49:37 +0000 (GMT)
-Received: from m0353724.ppops.net (m0353724.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 472Gnbuk018859;
-	Fri, 2 Aug 2024 16:49:37 GMT
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 40s1pf07d2-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 02 Aug 2024 16:49:37 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 472DmSUY029103;
-	Fri, 2 Aug 2024 16:49:36 GMT
-Received: from smtprelay05.wdc07v.mail.ibm.com ([172.16.1.72])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 40nbm18a24-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 02 Aug 2024 16:49:36 +0000
-Received: from smtpav05.wdc07v.mail.ibm.com (smtpav05.wdc07v.mail.ibm.com [10.39.53.232])
-	by smtprelay05.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 472GnYmA16974424
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 2 Aug 2024 16:49:36 GMT
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 255C758043;
-	Fri,  2 Aug 2024 16:49:34 +0000 (GMT)
-Received: from smtpav05.wdc07v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 8D97758053;
-	Fri,  2 Aug 2024 16:49:31 +0000 (GMT)
-Received: from [9.171.33.192] (unknown [9.171.33.192])
-	by smtpav05.wdc07v.mail.ibm.com (Postfix) with ESMTP;
-	Fri,  2 Aug 2024 16:49:31 +0000 (GMT)
-Message-ID: <79a7ec0d-c22d-44cf-a832-13da05a1fcbd@linux.ibm.com>
-Date: Fri, 2 Aug 2024 22:19:29 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: blktests failures with v6.11-rc1 kernel
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "nbd@other.debian.org" <nbd@other.debian.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        Yi Zhang <yi.zhang@redhat.com>
-References: <5yal5unzvisrvfhhvsqrsqgu4tfbjp2fsrnbuyxioaxjgbojsi@o2arvhebzes3>
- <ab363932-ab3d-49b1-853d-7313f02cce9e@linux.ibm.com>
- <ljqlgkvhkojsmehqddmeo4dng6l3yaav6le2uslsumfxivluwu@m7lkx3j4mkkw>
-Content-Language: en-US
-From: Nilay Shroff <nilay@linux.ibm.com>
-In-Reply-To: <ljqlgkvhkojsmehqddmeo4dng6l3yaav6le2uslsumfxivluwu@m7lkx3j4mkkw>
-Content-Type: text/plain; charset=UTF-8
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: tkuW1usVc4_L-ZsXnVMafpq53k4_2E6j
-X-Proofpoint-GUID: a115jAe8d2xS4aK9ey4Ffkuh_ApZccBy
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="f0q9nV5u"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WbBhF1TzHzlgMVQ;
+	Fri,  2 Aug 2024 16:52:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1722617530; x=1725209531; bh=uYNscFeAs7euOOaaAwulbKix
+	LwPrxztSKLkrzRJs6Ck=; b=f0q9nV5udWw1NxzRB+Bp294gNx28eEkss5ySkskD
+	NcwmqjngfuR1+EDNRNiiLFsBV/zhEdQFRBiLM+xNQpQt+aJLjjNFTRtX2GTUSHRE
+	YOcaY5s//1G3byFH72Wlzk5NInr9uxKTN1BbeUbVVZXj9/IUvE7H6oZ77iZOGiEC
+	a62CwkwAbSJqHMTCGgbtitqJjIDS7pAN2H7S7arq0h8zxoMyPhfJDXUqX1mJZlXE
+	JyMq8Chap+fqQtUje7rFkF8ahA2qceqye06Yl3ASFabPuqroKG1fxW7pJFrMeqYe
+	ZX34e09L9S3AVQ657AYJ6A0o3FhiiafnWnI56qkIDJSq7w==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ZghlWoO0E_6c; Fri,  2 Aug 2024 16:52:10 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WbBh742bRzlgVnN;
+	Fri,  2 Aug 2024 16:52:07 +0000 (UTC)
+Message-ID: <cd825c7b-0e29-4120-bc0d-2b89bbe8e401@acm.org>
+Date: Fri, 2 Aug 2024 09:52:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-08-02_12,2024-08-02_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 phishscore=0 suspectscore=0 impostorscore=0 spamscore=0
- adultscore=0 clxscore=1015 mlxscore=0 lowpriorityscore=0 mlxlogscore=999
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2407110000 definitions=main-2408020114
+User-Agent: Mozilla Thunderbird
+Subject: Re: RFC: Retrying SCSI pass-through commands
+To: Damien Le Moal <dlemoal@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Hannes Reinecke <hare@suse.de>, Mike Christie <michael.christie@oracle.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Jaegeuk Kim <jaegeuk@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <b0f92045-d10f-4038-a746-e3d87e5830e8@acm.org>
+ <a23d7a8c-4a4a-4687-ae18-87b2b2fb9fcb@kernel.org>
+ <1e79816d-02eb-4997-81d2-4b6ec0201dd5@acm.org>
+ <30b1d857-8172-497c-b482-d49af8463029@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <30b1d857-8172-497c-b482-d49af8463029@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+On 8/1/24 5:47 PM, Damien Le Moal wrote:
+> On 8/2/24 05:12, Bart Van Assche wrote:
+>> [PATCH] scsi: core: Retry commands submitted by the SCSI core
+>>
+>> Pass-through commands either come from user space (SG_IO ioctl,
+>> SCSI_IOCTL_*, BSG), from the SCSI core or from a SCSI driver (ch,
+>> cxlflash, pktcdvd, scsi_scan, scsi_dh_*, scsi_transport_spi, sd,
+>> sg, st, virtio_scsi). All this code sets scsi_cmnd.allowed to the
+>> maximum number of allowed retries. Hence, removing the
+>> blk_rq_is_passthrough() check from scsi_noretry_cmd() has the
+>> effect that scsi_cmnd.allowed is respected for pass-through
+>> commands.
+>>
+>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+>> index 612489afe8d2..c09f65cfa898 100644
+>> --- a/drivers/scsi/scsi_error.c
+>> +++ b/drivers/scsi/scsi_error.c
+>> @@ -1855,7 +1855,7 @@ bool scsi_noretry_cmd(struct scsi_cmnd *scmd)
+>>    	 * assume caller has checked sense and determined
+>>    	 * the check condition was retryable.
+>>    	 */
+>> -	if (req->cmd_flags & REQ_FAILFAST_DEV || blk_rq_is_passthrough(req))
+>> +	if (req->cmd_flags & REQ_FAILFAST_DEV)
+>>    		return true;
+> 
+> But that will cause *all* passthrough requests to be retried, including those
+> issued from userspace, no ? I do not think that such change would be acceptable
+> as that can break userspace using passthrough and expecting to deal with errors
+> and handling them however they see fit, which may not be retrying commands.
 
+In the SG_IO ioctl implementation I found the following assignment:
 
-On 8/2/24 18:04, Shinichiro Kawasaki wrote:
-> CC+: Yi Zhang,
-> 
-> On Aug 02, 2024 / 17:46, Nilay Shroff wrote:
->>
->>
->> On 8/2/24 14:39, Shinichiro Kawasaki wrote:
->>>
->>> #3: nvme/052 (CKI failure)
->>>
->>>    The CKI project reported that nvme/052 fails occasionally [4].
->>>    This needs further debug effort.
->>>
->>>   nvme/052 (tr=loop) (Test file-ns creation/deletion under one subsystem) [failed]
->>>       runtime    ...  22.209s
->>>       --- tests/nvme/052.out	2024-07-30 18:38:29.041716566 -0400
->>>       +++ /mnt/tests/gitlab.com/redhat/centos-stream/tests/kernel/kernel-tests/-/archive/production/kernel-tests-production.zip/storage/blktests/nvme/nvme-loop/blktests/results/nodev_tr_loop/nvme/052.out.bad	2024-07-30 18:45:35.438067452 -0400
->>>       @@ -1,2 +1,4 @@
->>>        Running nvme/052
->>>       +cat: /sys/block/nvme1n2/uuid: No such file or directory
->>>       +cat: /sys/block/nvme1n2/uuid: No such file or directory
->>>        Test complete
->>>
->>>    [4] https://datawarehouse.cki-project.org/kcidb/tests/13669275
->>
->> I just checked the console logs of the nvme/052 and from the logs it's 
->> apparent that all namespaces were created successfully and so it's strange
->> to see that the test couldn't access "/sys/block/nvme1n2/uuid".
-> 
-> I agree that it's strange. I think the "No such file or directory" error
-> happened in _find_nvme_ns(), and it checks existence of the uuid file before
-> the cat command. I have no idea why the error happens.
-> 
-Yes exactly, and these two operations (checking the existence of uuid
-and cat command) are not atomic. So the only plausible theory I have at this 
-time is "if namespace is deleted after checking the existence of uuid but 
-before cat command is executed" then this issue may potentially manifests. 
-Furthermore, as you mentioned, this issue is seen on the test machine 
-occasionally, so I asked if there's a possibility of simultaneous blktest 
-or some other tests running on this system.
+	scmd->allowed = 0;
+
+In drivers/scsi/sg.c I found the following (SG_DEFAULT_RETRIES == 0):
+
+	scmd->allowed = SG_DEFAULT_RETRIES;
+
+Isn't that sufficient to prevent retries in the scsi_noretry_cmd() callers that
+check scmd->allowed? The only scsi_noretry_cmd() that does not check
+scmd->allowed is scsi_io_completion(). I propose to add an explicit
+blk_rq_is_passthrough() check in that function next to the scsi_noretry_cmd()
+call.
 
 Thanks,
---Nilay
+
+Bart.
