@@ -1,101 +1,102 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 868F15227;
-	Sat,  3 Aug 2024 02:15:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CE7415381C
+	for <linux-scsi@vger.kernel.org>; Sat,  3 Aug 2024 15:04:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722651328; cv=none; b=Q6GY24LSm+Kebl1rSUsR/iG6sRHmINz1DWnYeuciqBmAX5D0GjaLlsxLIg6ZA7AwIt+jg/VYO8Ms2Hefu1ktUhOMhLhI83oSAZHEhG2Zc8xI9wG/7lsg4JMkCxDYgFadd/xHSMUvedY1WD7tOfihnF9MW9L5CROY/7Kcbg5xSlI=
+	t=1722697487; cv=none; b=rvzHr9YwqzB8yy07AzIdoox8iIHjbAlEupcYZweCnoakj2tnh/LeSGl20z/b9zTYKkk56XJdOyDYdkitkPMbcBObNupXkgzhNJCWJzk2+5biJ0fjRS4V1VFkPjYQISh0d1xRAWNSX5qAkUO/Lq+4wFQenszkiepyZllRCt42Mzo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722651328; c=relaxed/simple;
-	bh=tNimnsiAMmRVdakKd4ahST0jFVcd0Epz8Jwvt88N4g8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=a+TwREXAJZzL8i4UWQyN1BU2Sw6ob9pVqLnwaZMKKpEj1K2eHYbAYJuxMadCOmpE4exumB+zLVfzmZYOFrMuWpq3/TuJa2jkbAUVQQX9Q1LixbzYe8jT0il4KW6pwhb7u3VyLRmcnDh20LIL1a26zTDAxo0F3WeTyKHw3lGYCp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=IDRdvAEc; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1722697487; c=relaxed/simple;
+	bh=H5ETfG7BCCrL1MyB67CWziOXWzNneBorzJKzilKmkQU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=odgVSSUFElgEX/pBxoNi6vua5zW1hyoHQB2+KTMk/tbXf6giGNTCXDHiBbnFmxivkIoxabuT4qUC4d/dlt7Mqd8FZ6WEeM23DMLBr3O5vk6C6r/RqydYViA02AoPKy9qmg/+rnRQ1GPVEgIlZeFDlLmHYC5ihwhMHr8tIeVBTa0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aPiV7IiM; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IDRdvAEc"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 472GtV7l010173;
-	Sat, 3 Aug 2024 02:15:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references
-	:mime-version:content-type:content-transfer-encoding; s=
-	corp-2023-11-20; bh=Zu1GHe3N2sT3hH2OSbrYWoCLnqUCg189gddrdjfP1qI=; b=
-	IDRdvAEco+PdRHviYzAmbgCTXFWR4YDzvg3G3cYmWamcV5EDl0byyd7gwv06e0Nl
-	nJUWQD/wr2g81kPx+iJ/tekN98O0hCU6PoaSGkMdSgXuuPSDhDludzkc/LSNiVku
-	WLzu4qK0zHkcO14CV5m0LDudxSlfRwdXSff2jkRNT2RgEo5ILPCH1uUr7iHAnSbr
-	RaQrfJDwXL1ImUiCECT5FyPGfD8h43Lpn7Q7EcXJSr7OLDY8zLH7pDQRm/BYBrBL
-	+SHLF3Ou4oTCUEEVxgDm3ws4JKThRRZiuIrtKRtaaUVDwmfv7h0lcsN4CWej7YFe
-	sKrBpKuxBcINkMpzB6BuAw==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 40rjdsag2v-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 03 Aug 2024 02:15:19 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4731XetV017008;
-	Sat, 3 Aug 2024 02:15:18 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 40sb06rmjn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 03 Aug 2024 02:15:17 +0000
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4732FHjG012583;
-	Sat, 3 Aug 2024 02:15:17 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 40sb06rmj0-1;
-	Sat, 03 Aug 2024 02:15:17 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Jens Axboe <axboe@kernel.dk>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Li Feng <fengli@smartx.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: [PATCH v3 0/2] scsi discard fix
-Date: Fri,  2 Aug 2024 22:14:45 -0400
-Message-ID: <172265125626.1953059.2949355133355915568.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240718080751.313102-1-fengli@smartx.com>
-References: <20240718080751.313102-1-fengli@smartx.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aPiV7IiM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1722697484;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=oRvFBpmyOh9b9w2NS2Jjtbj/fbLCej5bv8aclvEAq3w=;
+	b=aPiV7IiMhQOyZZ8Cl0OBYKx5hPFlozDkWv8YKHoYzLzD3veapAgULXXtHHgKlKZgHNTyhq
+	vNqRZo1cNCWumD4Z22pRoeMqyUH+K1hplii9WpZedrbUlyyeZuXlB63lPX7M5tkKXk/IUU
+	X7s0tcVuF/QF4LMpu7ZVSbcblYTT60g=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-549-MjeyHkY9MHulNwT9Lv7Qlw-1; Sat,
+ 03 Aug 2024 11:04:38 -0400
+X-MC-Unique: MjeyHkY9MHulNwT9Lv7Qlw-1
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5B07D19560AA;
+	Sat,  3 Aug 2024 15:04:37 +0000 (UTC)
+Received: from localhost.redhat.com (unknown [10.45.224.31])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 18DBB300018D;
+	Sat,  3 Aug 2024 15:04:34 +0000 (UTC)
+From: Tomas Henzl <thenzl@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: chandrakanth.patil@broadcom.com,
+	sathya.prakash@broadcom.com,
+	jjurca@redhat.com,
+	sumit.saxena@broadcom.com,
+	ranjan.kumar@broadcom.com
+Subject: [PATCH] mpi3mr: a perfomance fix
+Date: Sat,  3 Aug 2024 17:04:33 +0200
+Message-ID: <20240803150433.17733-1-thenzl@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-08-02_20,2024-08-02_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0
- adultscore=0 bulkscore=0 malwarescore=0 mlxlogscore=516 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2407110000 definitions=main-2408030013
-X-Proofpoint-ORIG-GUID: 8RxsGp45wAyJitc2xhKF73VH9MntqQAu
-X-Proofpoint-GUID: 8RxsGp45wAyJitc2xhKF73VH9MntqQAu
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Thu, 18 Jul 2024 16:07:21 +0800, Li Feng wrote:
+Patch 0c52310f2600 ("hrtimer: Ignore slack time for RT tasks in schedule_hrtimeout_range()")
+effectivelly shortens a sleep in a polling function in the driver.
+That is causing a perfomance regression as the new value
+of just 2us is too low. In certain test the perf drop is ~30%.
+Fix this by adjusting the sleep to 20us (close to the previous value).
 
-> These two patches have been reviewed but have not been merged into
-> linux-next. Can they be merged into 6.11?
-> 
-> Thanks,
-> 
-> v3:
-> - rebased to the latest linux-next branch;
-> - put the separate patch2 in this patchset;
-> - add reviewed-by tag.
-> 
-> [...]
+Reported-by: Jan Jurca <jjurca@redhat.com>
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr.h    | 2 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Applied to 6.11/scsi-fixes, thanks!
-
-[1/2] scsi: sd: Keep the discard mode stable
-      https://git.kernel.org/mkp/scsi/c/f874d7210d88
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index dc2cdd5f0311..249c1a7285d6 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -178,7 +178,7 @@ extern atomic64_t event_counter;
+ #define MPI3MR_DEFAULT_SDEV_QD	32
+ 
+ /* Definitions for Threaded IRQ poll*/
+-#define MPI3MR_IRQ_POLL_SLEEP			2
++#define MPI3MR_IRQ_POLL_SLEEP			20
+ #define MPI3MR_IRQ_POLL_TRIGGER_IOCOUNT		8
+ 
+ /* Definitions for the controller security status*/
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index c196dc14ad20..5695c95fca15 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -710,7 +710,7 @@ static irqreturn_t mpi3mr_isr_poll(int irq, void *privdata)
+ 			    mpi3mr_process_op_reply_q(mrioc,
+ 				intr_info->op_reply_q);
+ 
+-		usleep_range(MPI3MR_IRQ_POLL_SLEEP, 10 * MPI3MR_IRQ_POLL_SLEEP);
++		usleep_range(MPI3MR_IRQ_POLL_SLEEP, MPI3MR_IRQ_POLL_SLEEP);
+ 
+ 	} while (atomic_read(&intr_info->op_reply_q->pend_ios) &&
+ 	    (num_op_reply < mrioc->max_host_ios));
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.45.2
+
