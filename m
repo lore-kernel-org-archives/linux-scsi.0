@@ -1,247 +1,193 @@
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0BFB156E4;
-	Sun,  4 Aug 2024 07:22:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722756169; cv=none; b=ren7CYCny6bJJw0W6GD39yP/I4LZbI9eLTEWNW7D8cu+kQIlzd7i00N95LJ3fXws6uJysifngDKCXWufdyJt7sIY5JaOlkQ5abWTPbqrU6+FLriviuigR4b89vy33Fzbk6CnD3KsRbH9RdFXxpTWoMTcwUPwHZRYA6AQmdyfIa8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722756169; c=relaxed/simple;
-	bh=wtCYCVL7Tbpaue8Pa3D9laRV3mCidQ14oMghxtZzCro=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gCyruyZsc5CJQfAsyACRisxCDTn2oK/RP5xqp26+m1HtPj5A7gtjwkvas+dDINCXNh9f61lilorfyJyhqGPa/3AxASyHkGJQMh4Qg7d9DEG93bmNPCk40e0Y6Ejc1l7wazW0SN3wg1X1wTkukVzD1pr0yPS3NQKB0T/02NnmRuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=a7cCJDDs; arc=none smtp.client-ip=216.71.153.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2B648174E;
+	Mon,  5 Aug 2024 11:33:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1722857622; cv=fail; b=UR/X92QSWe/BYd5E4Z30oLejFz+b2DZhYZPUgNa7t/4AgC1uPEFilamQjCfWnjQEi/0vPCCwEfCMQ9BXIOJY+dnlQ09BsCR/xv5PYEZLRqhtyTk9VWmLBTZGXuF4bZ+YhbvVpNFCTKmefGL5fqFndTVijEXcAbLzG1eip1nZRdY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1722857622; c=relaxed/simple;
+	bh=O3lt6qHLOqebzwCPBUAJGsc9kDcd8iW64RtTNueBdl0=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=o1N8Kf+nBtJu0zfKdhd1/GtNCazZdREP7FkLh+/9+TpAPvK11XnmHB6ic9zcOAm/X1035DxTDyOlD8Uvd4boyohi9gFYC88Kd2Wpxv9sij1EpsLcGYf0d4JYPMlVC8lL54BJdzWLKSJHMK5va/KV14Gx4D1e5AQM2v3UVMTQhjo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=PIZ9wG36; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=bxrYH+XU; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="a7cCJDDs"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1722756168; x=1754292168;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=wtCYCVL7Tbpaue8Pa3D9laRV3mCidQ14oMghxtZzCro=;
-  b=a7cCJDDs8x8Wyqhjm/j/oEBmmPrV2iN3//ONqUyxvratkSYXvoekjE0G
-   PYVTWlyU6p5mCAxgGr7B9uUQpXFAXXaLacty1DpLyxwnwdCGxkfFMHwgr
-   e+or5SKmFIy+8yxPUs7mklK2nKlCPVAYFkXFYN2BjY4wqOoSEY13n7i1J
-   qifkpHbXqtiUOBbtcc3RjfMt7ofXEw4s4+SOxOxW6AS2NzFfaeOZIj0v0
-   th9G1AmMO63E4rreN0UcbzpCCWXY3y5Q7+Y7cVBbe0oTtk8i5c08+lt7A
-   oBubGsLPs8GJeaYT3vATwpeNNmTFOyLH6Dw+N1XB1wT+CAY+iEZyWtqB/
-   Q==;
-X-CSE-ConnectionGUID: Be9fHSXfR3yfv3/b36ycnQ==
-X-CSE-MsgGUID: GF9AIsEwS/ifRim3PA1kwA==
-X-IronPort-AV: E=Sophos;i="6.09,262,1716220800"; 
-   d="scan'208";a="23384662"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 04 Aug 2024 15:22:43 +0800
-IronPort-SDR: 66af1fa0_BNf2az/xaAtHIFi/JsUmAAGMd8XCUAWs+/MgHsCgsqwSSUQ
- MEbLacyFpbSjpYOh/TSk4DeNLMX44WLvC9aRI2w==
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 03 Aug 2024 23:28:49 -0700
-WDCIronportException: Internal
-Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 04 Aug 2024 00:22:41 -0700
-From: Avri Altman <avri.altman@wdc.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v2 2/2] scsi: ufs: Add HCI capabilities sysfs group
-Date: Sun,  4 Aug 2024 10:21:09 +0300
-Message-Id: <20240804072109.2330880-3-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240804072109.2330880-1-avri.altman@wdc.com>
-References: <20240804072109.2330880-1-avri.altman@wdc.com>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PIZ9wG36";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="bxrYH+XU"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4758fblO027498;
+	Mon, 5 Aug 2024 11:33:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	from:to:cc:subject:date:message-id:content-transfer-encoding
+	:content-type:mime-version; s=corp-2023-11-20; bh=fU/ctZlLxFw4P8
+	xY+d033HmL774aUpLbSV9GKYK/wlU=; b=PIZ9wG36TqT/ykb7j0HnSBafN/87nU
+	ZitKdBHhZeapPOI+q0yAPJWpQZTO8SitQQoA/zpt6OxUb9oHN0IVlzk5+LY33RKW
+	s5YV2EOxdQJ7jlzT/d4cWo274lfk3uj7YbRFRMMNMHhkzXtbEa1ksLyXsEOdOPY9
+	Wg6m7OEEDLLb7UexmQUL3K+w8CNfLXTshxgu0Ffrd3NK8s1IEr8k3MjU9b9lKVq9
+	ig2voL4E54jcEJuqwpRxDrdnX+Tqc0iCnkWQgAfBSq9WKxR54yWlwLFjaQksmN81
+	PW4lX+Mzd/wjePaQGL36hEZF9NGQUT85WWOXz+j5JAj8HniIRwJkNXPw==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 40sbfajen7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 05 Aug 2024 11:33:35 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 4759Qt7u018352;
+	Mon, 5 Aug 2024 11:33:35 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2169.outbound.protection.outlook.com [104.47.59.169])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 40sb075e5x-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 05 Aug 2024 11:33:35 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=eS16DtVLTaaVhSdSBRRRjEaxmITkgAzZ5DZaZBbR7Ov1e1V3nKLa/sRVpLaXP2TgO/Fz0DgLmTqNKxCC7foigF9MRClvcwKJ6abFWZuqa3NhWXqNeVckJa3Cly0aE41j4paqe8sx8UmQL0BQeIw3zMjZslXyBUSyqBHe3Sy6lBu7s3IaYTGgyFQjfjsJWnfXbK75MlzDqsAJyG00fNnm88ui+ZhXMKzCRlkyjw/CX7DHt9RRdPXJy8yOZGQHy4+vIjqdvNRAZC9duAbHPjTfDwjh0TTVovUosI8ZJA4fp96iDBQ5BygGhSqGD8V7Tbb8Tw3KdcAcJoWyhfVDMZa/ng==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=fU/ctZlLxFw4P8xY+d033HmL774aUpLbSV9GKYK/wlU=;
+ b=JeEF5l+5X71XWvxSfS3smAxulGqFEWAoQV6JGfZLR1G5eTAdMTKKF7rn2TmwGrlw6FO1ltYs0Wvn60ZizpAtrvXWrzyOkcamJfIQCdhBjlfWzHZcNGDROOv2dh4jw77eAu8SHzA5cw5m9Ptszjz3VXQZbLOSl+bNLSYrF1wJp0tgKKERpcmmSheDrt6yPVWORK+NwG4JudvQLIdqkue0hnloB/uYF58RCzNZQcN77oRRta68/o086tY+AWWe3ENQ2YYMeREqyw5T0chvO77KHHnGfWqlE0vFuyeNOHseEH8DTtx3kBEwsxU2+CsNaT8CCgj0nd9MAErMpz/UUIu9jg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=fU/ctZlLxFw4P8xY+d033HmL774aUpLbSV9GKYK/wlU=;
+ b=bxrYH+XU6+P4RYSkibmysPsjuwcGXcUl9cYLsM4IAP+8W6AIVDsSZgMflP/3f+H/5NZEayulJzLZqPwb4sSu/dtcGp4HwQZcaJ3PT0Td9/tv1Vvw5Q/ydRrsr+EB5eCts+rRHZViJHvgVrOoKWg1+w1j+tDl05jSFLfLUJvbEXk=
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
+ by CH2PR10MB4263.namprd10.prod.outlook.com (2603:10b6:610:a6::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7828.27; Mon, 5 Aug
+ 2024 11:33:31 +0000
+Received: from DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088]) by DM6PR10MB4313.namprd10.prod.outlook.com
+ ([fe80::4f45:f4ab:121:e088%7]) with mapi id 15.20.7828.023; Mon, 5 Aug 2024
+ 11:33:31 +0000
+From: John Garry <john.g.garry@oracle.com>
+To: axboe@kernel.dk, James.Bottomley@HansenPartnership.com,
+        martin.petersen@oracle.com
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>
+Subject: [PATCH 0/2] block atomic writes tidy-ups/fix
+Date: Mon,  5 Aug 2024 11:33:13 +0000
+Message-Id: <20240805113315.1048591-1-john.g.garry@oracle.com>
+X-Mailer: git-send-email 2.31.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: LO4P123CA0254.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:194::7) To DM6PR10MB4313.namprd10.prod.outlook.com
+ (2603:10b6:5:212::20)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|CH2PR10MB4263:EE_
+X-MS-Office365-Filtering-Correlation-Id: e12d5d35-4146-4504-6140-08dcb5426eff
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?Hs8l1c4AqIE3/4gPfFwt4eCMmys9ZoWYs1EVQJvepzdsA76NGDQl4cfiQIqV?=
+ =?us-ascii?Q?Bqkb5tpwgaKiFdzA7wPTF9ptcBjXATJqvoLhHvCsUrhZ+KmoqM8BcJAtrRug?=
+ =?us-ascii?Q?oYf7dr8Ic6mWA3dUkcjAfcj1bqRUqt0LqCWWjtmHUUE5MTTEeVJDjAoEr+Ck?=
+ =?us-ascii?Q?AyErZkkZ6gfwU8zJxZOjeqhtukc0AKMbdI9a+IkaxorKUwDkg3qRjWcs81If?=
+ =?us-ascii?Q?2uIgk23OoId+8Ik5+XscqghHO6DZyCO4diYQ7nN0sAFX8YEmHTT+Rp+4yEBo?=
+ =?us-ascii?Q?unh/EFyj9j+FoQR1E4LbXuwY96rNz0GCN9A7kODZ32udDTm2e1K3x5sa4AYp?=
+ =?us-ascii?Q?m58WdpbibcNW/EY4Ym0TvG2FKdOdHv3S8CiCtlgBQ0NbS+g6WlNBNZjvqjdb?=
+ =?us-ascii?Q?Xws8/KgMVriLUKnE4NlaFhKez37CwWB59UKOFtKHRra85RKOhMJs2qpksuNx?=
+ =?us-ascii?Q?+j2pA9LHAa6Wy4/LMtbpwChQj5RHMcgmlqIRnk7fAiBJfAcCRuHoLMWbURdv?=
+ =?us-ascii?Q?2Jlk4RzXiuOrK4D3C2w/h5c1xyAgPjZMsIBw8iU/iddWS1lZBOvEl6iS+L+w?=
+ =?us-ascii?Q?3cEImMK9fEujWCo5iRNU+XXvUzQOYbWTGC9IK+vec2oGXL6FqPql+iNkYIcS?=
+ =?us-ascii?Q?W6B9AeGAaxc0K1sS7Yf9cASYEdKSV6wlyGcmzOWjUtxlkqv/BWnQhVFv34vI?=
+ =?us-ascii?Q?bWp1pLSGFjlVkCEdNgGdhZUeMvmWkS8OItKe3T543GZ94jnHV6qfB2MEb6Yf?=
+ =?us-ascii?Q?PFxaimC+2+Y7qj5WFNzSx4l2ycqjfhY2k9J+J5HHEDEyDwUYIQDJShH7bm3E?=
+ =?us-ascii?Q?45Xl1u018MugB3/OmA6U7+Fd3kUchx8usZ4O0+Xb6mNFfxbQ4CtfYw4ywROj?=
+ =?us-ascii?Q?ojlyk3FvCPFncwEU/HneveM7kWFXVWgRurkowZXJr0EfEMmY+XsX6nqNlyhV?=
+ =?us-ascii?Q?PYKPqN1w8LWyAmGmlBeGkckQ0/zlNJZy2exl3ImMyXCtsnoYwz6LvhR9Ba0v?=
+ =?us-ascii?Q?tF8L00PQT/mBbuONwDRoHeLGCj2uMfitJOq5xkHxyJot8yzRZV0NBmkxAdkM?=
+ =?us-ascii?Q?eUI0FetxmDo5Z2Fvr5ef7p7WDT0O7O5zDSXUPNcSw0AIRdBCXw1G27hUeU5C?=
+ =?us-ascii?Q?rNb5OOwYwAIRXh0HZX+NH/IwFIENdum/llQ+CGhoSDTXJ4bx+xXGSlp6EV3b?=
+ =?us-ascii?Q?1EvxtMdeW6Z0/5UytYt345GeNx+9GaV+I44eH+fMNkKjeVqeJ/AEFDRkrLN8?=
+ =?us-ascii?Q?nwFM5pgYZOW/pXFzVSwj4bl4Herau1lkcB+zASA+MelVrB1qDbb9wyD7mvMB?=
+ =?us-ascii?Q?YqSxbS7a6xpIWS5SvDw0ud6nbLMexs8XE30xJ/o4f9lkXQ=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?mAhDiLuSywo0/kSJWlqnfcab0jnA4rchdim5rxxc3zW0hwE1ntgO/jLC4nhM?=
+ =?us-ascii?Q?YBLPLOomCkXVYzWSOUa7PZmE/nbTuG40iegaYefaFckqxlDS4qpeEL7Kl8Yb?=
+ =?us-ascii?Q?BiSERfhpQa1wGruKd8OxULSJYHB4VKSqxd4pN0V3E5wuvbTtffXhPxSTth1X?=
+ =?us-ascii?Q?fSf+dXculJZz7F3MEhv3ikACQWegCjBWkq9/XyLGeOimjL1+nRKXBntG4ij8?=
+ =?us-ascii?Q?w2kOgoi9WhaaTntYi1H3jLsRUAt6F6rOdgYAIdZEoeOE0O2TrtkZK/lBkQwM?=
+ =?us-ascii?Q?uSD67EhGo08T5SXLCUzdC6XT4VB5ORI4yuZqB05WETIe3M31a6+TZQ1WEZFd?=
+ =?us-ascii?Q?bY2SYtqZ56Tozkel22qXKbNRjq0IbK49UAhLuRQGgGkm9k98OEpYlJcfO5hV?=
+ =?us-ascii?Q?W32Sj0YnhZsuxKdIxUEnBMoVzxYU538RxIf0qMUPQD4NPil14DH8MEdct6g5?=
+ =?us-ascii?Q?vsxImC8Yc9hB1IaR7zzcj9w+ZEvXUiPXNvOhmxI+oJAZ2b5EPeY7Xi66UF2z?=
+ =?us-ascii?Q?tt4tJcToOUvv7VFoFrv8tuihA/mvTXWC8GaATxweXrQIa+9uXGO6ntWDyPU4?=
+ =?us-ascii?Q?3W0Ko8wfNew9xOevJNbQApJB2zFUuibkZI3XkSqb12qhw2Q4sbpGUt2NER9N?=
+ =?us-ascii?Q?Qa62oaB4tqNUt0DP//eedeZ7CT9j9tFOLeHZzgzI1Q8cc/3fVT3oEH5zKvkA?=
+ =?us-ascii?Q?aAki242zrhpF3oBEl912+lpzbOfuikwganvx4FE0wID5sXfoyjmeGFsIdl51?=
+ =?us-ascii?Q?rFQ1oSrSWziTl/s2tpCbKCzGf/veohfpUdglfqrvEf42JBufVGWaeYWoyVbl?=
+ =?us-ascii?Q?3M4TeHQRC/3wWOjoQ7/0V+EQEyyDvP1Zj6eAm4FUe+YJ+VW7dhy8SoBQvGWw?=
+ =?us-ascii?Q?53hgj8EBqQywj+V9FMThbzjrJKvLar4DKK44ECss17ytr9MxT0y75Vm/bTj2?=
+ =?us-ascii?Q?Be+7YQIiG3PVsZD7zde77ry2PLnhNXlZGN6WuOyKYkQTUbdhCBUZSEj+2yN2?=
+ =?us-ascii?Q?1BQsTd+T4p0d1GDUhZxmpsH7QWETOWmkndc0i7hSgN6ugjzO94bEKmhTT/kt?=
+ =?us-ascii?Q?yjVywJ4upS5kIXxmy345Ecr5+NWC/3RsGhjf877ulAVm4GTG6PvbbesTRtGH?=
+ =?us-ascii?Q?zoY1tVLbavUXfnTm8wNS1kWWRH8hHZFnjVNE2/xV1D0+uCPzlLXoCxAuKGCr?=
+ =?us-ascii?Q?z70t5ydRzV0Rk6lQGUO1EgSQk3Wd8Gsg76/DF0pRmKS6RgSoPq3BPz6eRmb4?=
+ =?us-ascii?Q?7PpXVnG0MP0qyZQShQ9c/azsdsZWvikCliIuD7Xz/25d9yilItvV8hUNEHLS?=
+ =?us-ascii?Q?mmyVtGIDahJ8aRV0PZHoHq7K9jIlky/wLSldeZWXYpDU7Bu7xs9stPIA1E7q?=
+ =?us-ascii?Q?wJnENO03VsXz8QhSl8kLOXR7n/U1eWFmeNo3O5MOMECV8MkeSxVc/0WGKfvg?=
+ =?us-ascii?Q?RxZOJ32ZaC02vp9uiDfVwoguEdC4ZZzCizKANPJTRqqlk1vyId2teScayllI?=
+ =?us-ascii?Q?p2yiZoyPA7ENQMY3vTSD48ajXg/YTAT+VmtEcPeA+blC5VnseWJkJj9d7V5p?=
+ =?us-ascii?Q?kX8GwGvdgSRyhFNSyr8cBWIzOqrrdueztNHv6OQJkYcvylB0JZJPDVl97EQW?=
+ =?us-ascii?Q?GA=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	ewaoVwNE0QBqeoF+9tCvJ0W4GgQJaMIVINX4kk6ZmfIfmFAHoUzVJ6ObkGnX9G5eAUPOeGDuLITJho7Ba0N3247LfG27/tMCmYb8PPodqvZAJ/xCPA50LdmSioDofhsNRIrMFXOQamhAqZNhlWLncaine3Yat2MjVIl5HLLyqOgCjKn0UsuwNkfWSNjYTbzhQSsKNIRYTNPOr1Z6dYMaveOJB4pDzyQTUe9iNmxxIeDdO9TLzkWtAgKQyPfJURPZVoHxnzMzEvnH4gWhhTQMTLOGqqnusyG9VR8zknZ6tgGLuEc774UmiujfX/zlkmZkpBZrTK5Rq0T0QppbLwS1WOhdisGLkNnaED7IrP+rd6N2zRVO+7RBTVv7MsxjaC/dvnMUsft1mrW7N1zEZIbcJu/pGLZy7WpUUsAjt94eKpGFKbhZ6LUZXZKIqmJplgl5/nh1pAZ6n36K/n64/K71rpg83eL2WPZrzluorynhS8WomV8NZ83rwwCwVs07McoXNyUF7Viyau0l7rRZPwfpQhJhbrJhB8SUlOXmfvF3fTejPbgHhj6irUq8U6zceb+S0TqArtBW7TzMvEiANeUrzuWbpLi1GP6edDoZod8+6sI=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e12d5d35-4146-4504-6140-08dcb5426eff
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Aug 2024 11:33:31.6952
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: lqxoIvlLbQ1SRETqJss1DXY7BsVVD0A7xDK4MNnVLxX9W0l/vlN0QPD2DIyWmBUneIw5X2US68jV1wbeipwYhA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4263
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-04_14,2024-08-02_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 adultscore=0
+ mlxscore=0 phishscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2407110000
+ definitions=main-2408050083
+X-Proofpoint-GUID: ZVIRDTvgLctKo3dNE5BH_1dABb1GTwk2
+X-Proofpoint-ORIG-GUID: ZVIRDTvgLctKo3dNE5BH_1dABb1GTwk2
 
-The standard register map of UFSHCI is comprised of several groups.  The
-first group (starting from offset 0x00), is the host capabilities group.
-It contains some interesting information, that otherwise is not
-available, e.g. the UFS version of the platform etc.
+These two minor patches are tidy-ups for atomic write support.
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- Documentation/ABI/testing/sysfs-driver-ufs | 48 +++++++++++
- drivers/ufs/core/ufs-sysfs.c               | 95 ++++++++++++++++++++++
- 2 files changed, 143 insertions(+)
+Both are related to ignoring that REQ_ATOMIC can only be set for writes.
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index fe943ce76c60..6c6cf12d25ca 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1532,3 +1532,51 @@ Contact:	Bean Huo <beanhuo@micron.com>
- Description:
- 		rtc_update_ms indicates how often the host should synchronize or update the
- 		UFS RTC. If set to 0, this will disable UFS RTC periodic update.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/capabilities
-+What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/capabilities
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: host controller capabiities register.
-+		Symbol - CAP.  Offset: 0x00 - 0x03.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/mcq_cap
-+What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/mcq_cap
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: multi-circular queue capability register.
-+		Symbol - MCQCAP.  Offset: 0x04 - 0x07.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/version
-+What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/version
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: UFS version register.
-+		Symbol - VER.  Offset: 0x08 - 0x0B.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/ext_capabilities
-+What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/ext_capabilities
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: extended controller capabilities register.
-+		Symbol - EXT_CAP.  Offset: 0x0C - 0x0F.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/product_id
-+What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/product_id
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: product ID register.
-+		Symbol - HCPID.  Offset: 0x10 - 0x13.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/man_id
-+What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/man_id
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: manufacturer ID register.
-+		Symbol - HCMID.  Offset: 0x14 - 0x17.
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index dec7746c98e0..751d5ff406da 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -525,6 +525,100 @@ static const struct attribute_group ufs_sysfs_capabilities_group = {
- 	.attrs = ufs_sysfs_capabilities_attrs,
- };
- 
-+static ssize_t capabilities_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "0x%x\n", hba->capabilities);
-+}
-+
-+static ssize_t mcq_cap_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	if (hba->ufs_version < ufshci_version(4, 0))
-+		return -EOPNOTSUPP;
-+
-+	return sysfs_emit(buf, "0x%x\n", hba->mcq_capabilities);
-+}
-+
-+static ssize_t version_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "0x%x\n", hba->ufs_version);
-+}
-+
-+static ssize_t ext_capabilities_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	int ret;
-+	u32 val;
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	if (hba->ufs_version < ufshci_version(4, 0))
-+		return -EOPNOTSUPP;
-+
-+	ret = ufshcd_read_hci_reg(hba, &val, REG_EXT_CONTROLLER_CAPABILITIES);
-+	if (ret)
-+		return ret;
-+
-+	return sysfs_emit(buf, "0x%x\n", val);
-+}
-+
-+static ssize_t product_id_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	int ret;
-+	u32 val;
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	ret = ufshcd_read_hci_reg(hba, &val, REG_CONTROLLER_PID);
-+	if (ret)
-+		return ret;
-+
-+	return sysfs_emit(buf, "0x%x\n", val);
-+}
-+
-+static ssize_t man_id_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	int ret;
-+	u32 val;
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	ret = ufshcd_read_hci_reg(hba, &val, REG_CONTROLLER_MID);
-+	if (ret)
-+		return ret;
-+
-+	return sysfs_emit(buf, "0x%x\n", val);
-+}
-+
-+static DEVICE_ATTR_RO(capabilities);
-+static DEVICE_ATTR_RO(mcq_cap);
-+static DEVICE_ATTR_RO(version);
-+static DEVICE_ATTR_RO(ext_capabilities);
-+static DEVICE_ATTR_RO(product_id);
-+static DEVICE_ATTR_RO(man_id);
-+
-+static struct attribute *ufs_sysfs_ufshci_cap_attrs[] = {
-+	&dev_attr_capabilities.attr,
-+	&dev_attr_mcq_cap.attr,
-+	&dev_attr_version.attr,
-+	&dev_attr_ext_capabilities.attr,
-+	&dev_attr_product_id.attr,
-+	&dev_attr_man_id.attr,
-+	NULL
-+};
-+
-+static const struct attribute_group ufs_sysfs_ufshci_group = {
-+	.name = "ufshci_capabilities",
-+	.attrs = ufs_sysfs_ufshci_cap_attrs,
-+};
-+
- static ssize_t monitor_enable_show(struct device *dev,
- 				   struct device_attribute *attr, char *buf)
- {
-@@ -1508,6 +1602,7 @@ static const struct attribute_group ufs_sysfs_attributes_group = {
- static const struct attribute_group *ufs_sysfs_groups[] = {
- 	&ufs_sysfs_default_group,
- 	&ufs_sysfs_capabilities_group,
-+	&ufs_sysfs_ufshci_group,
- 	&ufs_sysfs_monitor_group,
- 	&ufs_sysfs_power_info_group,
- 	&ufs_sysfs_device_descriptor_group,
+The block change could be considered a fix, as we are needlessly
+checking for REQ_ATOMIC in fastpath.
+
+Both changes can be picked up independently.
+
+Thanks!
+
+John Garry (2):
+  scsi: sd: Don't check if a write for REQ_ATOMIC
+  block: Don't check REQ_ATOMIC for reads
+
+ block/blk-core.c  | 1 +
+ drivers/scsi/sd.c | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
 -- 
-2.25.1
+2.31.1
 
