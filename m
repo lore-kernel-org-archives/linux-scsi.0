@@ -1,48 +1,48 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C87EB15573A;
-	Tue,  6 Aug 2024 20:52:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B812315573A
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2024 20:57:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722977525; cv=none; b=POdlYszz2f8vmRmo16EFV+0EDpRWZVTs4ELjHX3jW7Vcd36GCrBTRJ7jgodZnmh5BQk0XX7oh0KTKflMZv8VLLDJxvAfIrGv538U4F/0kCH9/W0SWRAcY+G8byQ5VRbPfBNAGzxh8k+bXN3pQVrQFDP/tKcuB4/DEWOHAiexKfE=
+	t=1722977828; cv=none; b=hUE/al74tDh2XJJnqYIjtrJlzYHE4WtfLjAkrlRX/201w+TQ8+pOSrfI4GKk6AC+hXB+7EUR2Vf/bbBBlwm57Nc6q9FdPq+DMLi5A520WRpuBQM/MZ7/RRTgiHdonhfPkMoqDkJq64vLVmIhgQEbquQkQ3zxUi5QXRHreoFhwus=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722977525; c=relaxed/simple;
-	bh=054adm5On1TcrOnzuiAosPaG16jV+lTzmrxWFBHnL1I=;
+	s=arc-20240116; t=1722977828; c=relaxed/simple;
+	bh=lK6wWEaKk4SUrMA1v/UtBu+tAC3l78V1jqrTi2deEsc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=f9ggAbWN1LKze+mb7tJbSxtwUAqFGyDu5wBQwuRosyRV8AQKNbqiUXPeJSuDFp3w6yy+aYbVboXaWsUpuH4j1SvwyGDHaHnfkM3I6K5bHbFACeaebahdWf+XOP7iy1Ujvhvqp/8pQto43wcQzWGFcAUyxk0/iSfAnKdHiUJgv8s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=V+T3X5uX; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=K+AFrITlXNDxe1/CXs6S+2uyXU9nnklgwxZIfb6yYlBMGNLKkPKq6+LxPuszkCh33HJlIeKBoLqi+J5CWxKMhEw2Xq5ep40pJA/pqrO+hhAxhktOBQLGNgONKcCAmuVy2ZIAv9XPpJ84gEofDm/VRGTITuimyJ1urpedjWJMogs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1CyhSlrg; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="V+T3X5uX"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1CyhSlrg"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Wdlq11Y8Qz6CmLxY;
-	Tue,  6 Aug 2024 20:51:57 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Wdlwq6PV3zlgTGW;
+	Tue,  6 Aug 2024 20:56:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1722977513; x=1725569514; bh=m7C0xSF3jS1w6upvBOrj0wW2
-	HoCfsEi5eEfNVL4N+8Y=; b=V+T3X5uXuLfP9RSSRcaky3DmPV2YDHoNimWHyhwp
-	hB2bi7766lEvHmgtwnTsrsvYY3WO+UMfjQfGM51ZLiNZZgU1+vnsT6vQ3/7P/ewz
-	JK3acz3Ym1VKWln2IrkgvXGYlJy3SVNh7D8ipZ1NYCuf0zC6hosGJvFffrJLxrVc
-	RU8FbK46hKw+vYMI0lcRbF7oERjVJ0krayfxhRCUx1v/GrCt7HLO3sofVsNDjGUn
-	Q0BrRkRhlQ4Q5ieWYb2BCxDjCZ2AVJrtB+1hOOnb8IGkDPPA/j22xIButarwcJsd
-	a8u09g9NQCzdaSVuykarvC8TPXkUr/S7Sak7+c1xL+Vfrw==
+	 s=mr01; t=1722977817; x=1725569818; bh=jQFm3k6wyyFoO667b9XN/SWC
+	ggtYckDlWpJUkZJ1JvY=; b=1CyhSlrgTNlTq90Gp97PCpStouNQ2ajhYcyhxoWw
+	tH6Nbszvj34/PQw74yWjmXkd/YeSTKBCIEqpx0Xf+2Zu6IZLxAAO+64ozNxLFc2C
+	dE7wJqyPgQ0svXKVyooIEUky7DZ6KpA3bGRw72WYcrJNcksGcbkcozbODOxjKjaB
+	DJh6l54GStVPM1Xu0krRFAgurAFZDvHFcjLWCT8R+ep3dYz3nROrjFOFqxxCDPDZ
+	dnS2ne2G2qhFx5hJ1EY7qILT2+zaxklAZ968II+WSnkjFo4uqT194UOV9ZqBKiOP
+	xVOBUn3zKZMmsXUz7igHspjkucEu2mL9oKQwI520qZFDfg==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ytJDuSmLeJFh; Tue,  6 Aug 2024 20:51:53 +0000 (UTC)
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id F3v-dRHxBRRH; Tue,  6 Aug 2024 20:56:57 +0000 (UTC)
 Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Wdlpt35cVz6CmM6X;
-	Tue,  6 Aug 2024 20:51:49 +0000 (UTC)
-Message-ID: <126b79d8-6451-4e86-9df5-189f19eb121e@acm.org>
-Date: Tue, 6 Aug 2024 13:51:48 -0700
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Wdlwk4B3JzlgVnF;
+	Tue,  6 Aug 2024 20:56:54 +0000 (UTC)
+Message-ID: <c41f73c2-be91-450d-ae8c-d0f500d0bbef@acm.org>
+Date: Tue, 6 Aug 2024 13:56:51 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,50 +50,46 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: fix the return value of scsi_logical_block_count
-To: Chaotian Jing <chaotian.jing@mediatek.com>,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org,
- srv_heupstream@mediatek.com
-References: <20240806072714.29756-1-chaotian.jing@mediatek.com>
+Subject: Re: [PATCH 2/2] mips: sgi-ip22: Fix the build
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+ Genjian Zhang <zhanggenjian@kylinos.cn>,
+ "Ricardo B. Marliere" <ricardo@marliere.net>,
+ Sumit Garg <sumit.garg@linaro.org>, Alex Elder <elder@kernel.org>
+References: <20240805232026.65087-1-bvanassche@acm.org>
+ <20240805232026.65087-3-bvanassche@acm.org>
+ <2024080603-buffed-choosy-a04b@gregkh>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240806072714.29756-1-chaotian.jing@mediatek.com>
+In-Reply-To: <2024080603-buffed-choosy-a04b@gregkh>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 8/6/24 12:26 AM, Chaotian Jing wrote:
-> scsi_logical_block_count() should return the block count of scsi device,
-> but the original code has a wrong implement.
+On 8/5/24 11:57 PM, Greg Kroah-Hartman wrote:
+> On Mon, Aug 05, 2024 at 04:20:21PM -0700, Bart Van Assche wrote:
+>> Fix a recently introduced build failure.
+>>
+>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> Fixes: d69d80484598 ("driver core: have match() callback in struct bus_type take a const *")
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> ---
+>>   arch/mips/sgi-ip22/ip22-gio.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
 > 
-> Signed-off-by: Chaotian Jing <chaotian.jing@mediatek.com>
-> ---
->   include/scsi/scsi_cmnd.h | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index 45c40d200154..f0be0caa295a 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -236,7 +236,7 @@ static inline unsigned int scsi_logical_block_count(struct scsi_cmnd *scmd)
->   {
->   	unsigned int shift = ilog2(scmd->device->sector_size) - SECTOR_SHIFT;
->   
-> -	return blk_rq_bytes(scsi_cmd_to_rq(scmd)) >> shift;
-> +	return blk_rq_sectors(scsi_cmd_to_rq(scmd)) >> shift;
->   }
->   
->   /*
+> Thanks for this, and the other, fix, I'll queue them up to my local
+> trees soon.  Odd that these two targets do not seem to get any testing
+> in that I never was able to see them in the 0-day or other testing bots
+> out there.  How did you find them?
 
-Please add the following to this patch:
+Some time ago, while making changes in the SCSI core, I noticed that it
+is very hard to build all SCSI drivers manually. That is why I wrote a
+shell script to cross-compile all SCSI drivers. That script is available
+here: 
+https://github.com/bvanassche/build-scsi-drivers/blob/main/build-scsi-drivers
 
-Cc: stable@vger.kernel.org
-Fixes: 6a20e21ae1e2 ("scsi: core: Add helper to return number of logical 
-blocks in a request")
+Thanks,
 
-Anyway:
+Bart.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
