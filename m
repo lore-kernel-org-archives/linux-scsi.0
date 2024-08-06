@@ -1,34 +1,36 @@
 Received: from mail.nearlyone.de (mail.nearlyone.de [49.12.199.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D27961BDA83;
-	Tue,  6 Aug 2024 12:07:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F8C51C3F02;
+	Tue,  6 Aug 2024 12:07:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=49.12.199.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722946044; cv=none; b=qoE/32tgpPsU7wdaMfJWdyqPmmaADcQGfvjzVRS460gS4ZSAjPw3eLyUyag+bCwvIPGONo+ULD002pDro11qgiC4yU63lYEbOgum1DNBUANXYHxE90NtioewKyb7krk4zExc1GVfMfBdjDb/puO7s5bqrEzTOrXY9le0bl8ULm0=
+	t=1722946044; cv=none; b=dGQ5me7bXwSU7rPGfB/mdu1TD5MEv+OAm9tMJ4iKIFYg8gZUY96gBu1fOz5uGNh/zj0x/lize1xW6+zkXw5ZxJEqmF/ImgrBG3coLdXd3Eu8naeERke9yiNq2cjJEdv/L+5GBF2Y2rC+v/GCZvdfhTKBVezhSbiZaOh1vJge188=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1722946044; c=relaxed/simple;
-	bh=93AYVZpRrj6lm4O7Qb7k2/uVL0vc/J6wJkb9Us1qvZo=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=FD6WaIeWYo8zbD9wiUw4HDb0ysWX6xmsqRd0ODi+HkicGcT5Gv1bms+r6ue6QCOQmtqOl8RSmfXNSmwPpWMQy3bdV6rdKWXPBkG37Q2gYl2d05nEx2v9pURhRUbO34B55yyG3JBn8K0lDn1XWWzZW7AgodSQe2/LJu+mF8ljQWw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=monom.org; dkim=pass (2048-bit key) header.d=monom.org header.i=@monom.org header.b=bdE6rmyt; arc=none smtp.client-ip=49.12.199.46
+	bh=Sb6bzMXTN9gzSmH8l5ggSklEi2h8qinH0nrwbECkGVE=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=f5E6tATf60pRbkkAc4qDbApQSQwZD1G/sFbwQi4mfHPbq9O5gKBX1G5a1jU8++iX6PFk2yhBpcsvMv6AlouFEPCi7znsEaZ5gXoCOkKtIXRbp1gS7JX8S31BqnRVkqMnfwAiFBMiLDAvH+K/3za3H974UFokoqT5sUIdzfI7wi4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=monom.org; dkim=pass (2048-bit key) header.d=monom.org header.i=@monom.org header.b=V8+61d1k; arc=none smtp.client-ip=49.12.199.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=monom.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=monom.org header.i=@monom.org header.b="bdE6rmyt"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id B66AFDAD81;
-	Tue,  6 Aug 2024 14:07:05 +0200 (CEST)
+	dkim=pass (2048-bit key) header.d=monom.org header.i=@monom.org header.b="V8+61d1k"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id B2C88DACD6;
+	Tue,  6 Aug 2024 14:07:18 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=monom.org; s=dkim;
-	t=1722946031; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding; bh=teO0kk0BCxxiBkmDiwCmJ6i1Z0/9DUe1bmDDcgLGwiU=;
-	b=bdE6rmytiVbaYY4E76O8mJLxsXFV1Ev4yJ6M7m2N0Ac8Owil3m6K+uUoIdHA6Z4s6dS3Sk
-	8cddqtTV16qosWiJckbw2sb8I7GcgKi87aJrinzDStTD3ixJtOREaodC6B/EFbJ33krdsV
-	yRovL3HFU886TlkbjDsUgSq25Ym17nTRF2IkWkFK2EwB0dvIDEl4KoJVY/erzuEgSZCXWW
-	z+u7nDKvfY+F+hCFyUA+XGYjXuL/7355ANe9pQqXN+PvEXQmMbS+dk83Z8VA3Anb7nhpyt
-	zyWHh3cSoNdO3rB6XBWFE9Io45Zhpx8g+r8HVRwzC3GYTt+naEHBZBDaMUoCPw==
+	t=1722946040; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding:in-reply-to:references;
+	bh=ws2j8Pwzi0HlI6vG7QCORuVLqH5G6khwoSILRnp90GQ=;
+	b=V8+61d1k+ejXI4NezfFniN4E1SPWkLSRVxSTw5SK8nTBFn8M8hHE+y9X21LOv1Jz7oahbR
+	nO29yduMOHd9bBqGqZQlotgF61drlCMJDRrC6YJWK+npVlX2/2vuEG0lezUtMtoQaOZo1Y
+	+HZgVQJAXSMM6bxbWQ7spWaVo5NLLOJAiW/5ixPQqPyX6wLeQRrKZfG78C1AhHsmZsmV+F
+	dNZBuOJjEKfr6+PminGWTjT1NvwgsFl80RIFtFmJaDohGiaav8oLvzgX+qDneNvqIeo/xO
+	hKcqPIkMQZcbAmmjynx7mc7mgsxs143R6RQkMQTxawvFBXesUBQmLgs44edVsw==
 From: Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH v3 00/15] honor isolcpus configuration
-Date: Tue, 06 Aug 2024 14:06:32 +0200
-Message-Id: <20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de>
+Date: Tue, 06 Aug 2024 14:06:36 +0200
+Subject: [PATCH v3 04/15] scsi: replace blk_mq_pci_map_queues with
+ blk_mq_dev_map_queues
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -37,10 +39,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAMkRsmYC/23NTQ6CMBCG4auQrq3pn1BdeQ/jgsJUJjGAHdtoC
- He3kBhdsHy/ZJ6ZGEFAIHYqJhYgIeHQ59C7gjVd3d+AY5ubKaGMKJXgSMO9GSNxHPgjQgTisrY
- WnKm8t47lwzGAx9eKXq65O6TnEN7rjySX9cvJLS5JLrh1sjw6b6Sw+kyRYN8CW7Ck/oFqE1AZU
- GWtFejG+OrwA+Z5/gD/MmGI8wAAAA==
+Message-Id: <20240806-isolcpus-io-queues-v3-4-da0eecfeaf8b@suse.de>
+References: <20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de>
+In-Reply-To: <20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de>
 To: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, 
  Sagi Grimberg <sagi@grimberg.me>, Thomas Gleixner <tglx@linutronix.de>, 
  Christoph Hellwig <hch@lst.de>, 
@@ -68,246 +69,207 @@ Cc: Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>,
 X-Mailer: b4 0.14.0
 X-Last-TLS-Session-Version: TLSv1.3
 
-After the discussion with Ming on managed_irq, I decided to bring back
-the io_queue option because managed_irq is clearly targetting a different
-use case and Ming ask not to drop support for his use case.
-
-In an offline discussion with Frederic, I learned what the plans are with
-isolcpus. The future is in cpusets but reconfiguration happens only on
-offline CPUs. I think this approach will go into this direction.
-
-I've digged up Ming's attempt to replace the
-blk_mq_[pci|virtio]_map_queues a more generic blk_mq_dev_map_queues
-function which takes callback to ask the driver for an affinity mask for
-a hardware queue. With this central function in place, it's also simple
-to overwrite affinities in the core and the drivers don't have to be made
-aware of isolcpus configurations.
-
-The original attempt was to update the nvme-pci driver only. Hannes asked
-me to look into the other multiqueue drivers/devices. Unfortunatly, I
-don't have all the hardware to test against. So this is only tested with
-nvme-pci, smartpqi, qla2xxx and megaraid. The testing also involved CPU
-hotplug events and I was not able to observe any stalls, e.g. with hctx
-which have online and offline CPUs. The only stall I was able to trigger
-reliable was with qemu's PCI emulation. It looks like when a CPU is
-offlined, the PCI affinity is reprogrammed but qemu still routes IRQs to
-an offline CPU instead to newly programmed destination CPU. All worked
-fine on real hardware.
-
-Finally, I also added a new CPU-hctx mapping function for the isolcpus
-case. Initially the blk_mq_map_queues function was used but it turns out
-this will map all isol CPUs to the first CPU. The new function first maps
-the housekeeping CPUs to the right htcx using the existing mapping logic.
-The isol CPUs are then assigned evenly to the hctxs. I suppose this could
-be done a bit smarter and also considering NUMA aspects when we agree on
-this approach.
-
-This series is based on linux-block/for-6.12/block. If this is the wrong
-branch please let me know which one is better suited. Thanks.
-
-Initial cover letter:
-
-The nvme-pci driver is ignoring the isolcpus configuration. There were
-several attempts to fix this in the past [1][2]. This is another attempt
-but this time trying to address the feedback and solve it in the core
-code.
-
-The first patch introduces a new option for isolcpus 'io_queue', but I'm
-not really sure if this is needed and we could just use the managed_irq
-option instead. I guess depends if there is an use case which depens on
-queues on the isolated CPUs.
-
-The second patch introduces a new block layer helper which returns the
-number of possible queues. I suspect it would makes sense also to make
-this helper a bit smarter and also consider the number of queues the
-hardware supports.
-
-And the last patch updates the group_cpus_evenly function so that it uses
-only the housekeeping CPUs when they are defined
-
-Note this series is not addressing the affinity setting of the admin
-queue (queue 0). I'd like to address this after we agreed on how to solve
-this. Currently, the admin queue affinity can be controlled by the
-irq_afffinity command line option, so there is at least a workaround for
-it.
-
-Baseline:
-
-available: 2 nodes (0-1)
-node 0 cpus: 0 1 2 3
-node 0 size: 1536 MB
-node 0 free: 1227 MB
-node 1 cpus: 4 5 6 7
-node 1 size: 1729 MB
-node 1 free: 1422 MB
-node distances:
-node   0   1
-  0:  10  20
-  1:  20  10
-
-options nvme write_queues=4 poll_queues=4
-
-55: 0 41 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 0-edge nvme0q0 affinity: 0-3
-63: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 1-edge nvme0q1 affinity: 4-5
-64: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 2-edge nvme0q2 affinity: 6-7
-65: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 3-edge nvme0q3 affinity: 0-1
-66: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 4-edge nvme0q4 affinity: 2-3
-67: 0 0 0 0 24 0 0 0 PCI-MSIX-0000:00:05.0 5-edge nvme0q5 affinity: 4
-68: 0 0 0 0 0 1 0 0 PCI-MSIX-0000:00:05.0 6-edge nvme0q6 affinity: 5
-69: 0 0 0 0 0 0 41 0 PCI-MSIX-0000:00:05.0 7-edge nvme0q7 affinity: 6
-70: 0 0 0 0 0 0 0 3 PCI-MSIX-0000:00:05.0 8-edge nvme0q8 affinity: 7
-71: 1 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 9-edge nvme0q9 affinity: 0
-72: 0 18 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 10-edge nvme0q10 affinity: 1
-73: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 11-edge nvme0q11 affinity: 2
-74: 0 0 0 3 0 0 0 0 PCI-MSIX-0000:00:05.0 12-edge nvme0q12 affinity: 3
-
-queue mapping for /dev/nvme0n1
-        hctx0: default 4 5
-        hctx1: default 6 7
-        hctx2: default 0 1
-        hctx3: default 2 3
-        hctx4: read 4
-        hctx5: read 5
-        hctx6: read 6
-        hctx7: read 7
-        hctx8: read 0
-        hctx9: read 1
-        hctx10: read 2
-        hctx11: read 3
-        hctx12: poll 4 5
-        hctx13: poll 6 7
-        hctx14: poll 0 1
-        hctx15: poll 2 3
-
-PCI name is 00:05.0: nvme0n1
-        irq 55, cpu list 0-3, effective list 1
-        irq 63, cpu list 4-5, effective list 5
-        irq 64, cpu list 6-7, effective list 7
-        irq 65, cpu list 0-1, effective list 1
-        irq 66, cpu list 2-3, effective list 3
-        irq 67, cpu list 4, effective list 4
-        irq 68, cpu list 5, effective list 5
-        irq 69, cpu list 6, effective list 6
-        irq 70, cpu list 7, effective list 7
-        irq 71, cpu list 0, effective list 0
-        irq 72, cpu list 1, effective list 1
-        irq 73, cpu list 2, effective list 2
-        irq 74, cpu list 3, effective list 3
-
-* patched:
-
-48: 0 0 33 0 0 0 0 0 PCI-MSIX-0000:00:05.0 0-edge nvme0q0 affinity: 0-3
-58: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 1-edge nvme0q1 affinity: 4
-59: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 2-edge nvme0q2 affinity: 5
-60: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 3-edge nvme0q3 affinity: 0
-61: 0 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 4-edge nvme0q4 affinity: 1
-62: 0 0 0 0 45 0 0 0 PCI-MSIX-0000:00:05.0 5-edge nvme0q5 affinity: 4
-63: 0 0 0 0 0 12 0 0 PCI-MSIX-0000:00:05.0 6-edge nvme0q6 affinity: 5
-64: 2 0 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 7-edge nvme0q7 affinity: 0
-65: 0 35 0 0 0 0 0 0 PCI-MSIX-0000:00:05.0 8-edge nvme0q8 affinity: 1
-
-queue mapping for /dev/nvme0n1
-        hctx0: default 2 3 4 6 7
-        hctx1: default 5
-        hctx2: default 0
-        hctx3: default 1
-        hctx4: read 4
-        hctx5: read 5
-        hctx6: read 0
-        hctx7: read 1
-        hctx8: poll 4
-        hctx9: poll 5
-        hctx10: poll 0
-        hctx11: poll 1
-
-PCI name is 00:05.0: nvme0n1
-        irq 48, cpu list 0-3, effective list 2
-        irq 58, cpu list 4, effective list 4
-        irq 59, cpu list 5, effective list 5
-        irq 60, cpu list 0, effective list 0
-        irq 61, cpu list 1, effective list 1
-        irq 62, cpu list 4, effective list 4
-        irq 63, cpu list 5, effective list 5
-        irq 64, cpu list 0, effective list 0
-        irq 65, cpu list 1, effective list 1
-
-[1] https://lore.kernel.org/lkml/20220423054331.GA17823@lst.de/T/#m9939195a465accbf83187caf346167c4242e798d
-[2] https://lore.kernel.org/linux-nvme/87fruci5nj.ffs@tglx/
+Replace all users of blk_mq_pci_map_queues with the more generic
+blk_mq_dev_map_queues. This in preparation to retire
+blk_mq_pci_map_queues.
 
 Signed-off-by: Daniel Wagner <dwagner@suse.de>
 ---
-Changes in v3:
-- lifted a couple of patches from
-  https://lore.kernel.org/all/20210709081005.421340-1-ming.lei@redhat.com/
-  "virito: add APIs for retrieving vq affinity"
-  "blk-mq: introduce blk_mq_dev_map_queues"
-- replaces all users of blk_mq_[pci|virtio]_map_queues with
-  blk_mq_dev_map_queues
-- updated/extended number of queue calc helpers
-- add isolcpus=io_queue CPU-hctx mapping function
-- documented enum hk_type and isolcpus=io_queue
-- added "scsi: pm8001: do not overwrite PCI queue mapping"
-- Link to v2: https://lore.kernel.org/r/20240627-isolcpus-io-queues-v2-0-26a32e3c4f75@suse.de
+ drivers/scsi/fnic/fnic_main.c             |  3 ++-
+ drivers/scsi/hisi_sas/hisi_sas.h          |  1 -
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c    | 20 ++++++++++----------
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    |  5 +++--
+ drivers/scsi/megaraid/megaraid_sas_base.c |  3 ++-
+ drivers/scsi/mpi3mr/mpi3mr_os.c           |  3 ++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  3 ++-
+ drivers/scsi/pm8001/pm8001_init.c         |  3 ++-
+ drivers/scsi/qla2xxx/qla_nvme.c           |  3 ++-
+ drivers/scsi/qla2xxx/qla_os.c             |  3 ++-
+ drivers/scsi/smartpqi/smartpqi_init.c     |  7 ++++---
+ 11 files changed, 31 insertions(+), 23 deletions(-)
 
-Changes in v2:
-- updated documentation
-- splitted blk/nvme-pci patch
-- dropped HK_TYPE_IO_QUEUE, use HK_TYPE_MANAGED_IRQ
-- Link to v1: https://lore.kernel.org/r/20240621-isolcpus-io-queues-v1-0-8b169bf41083@suse.de
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 29eead383eb9..dee7f241c38a 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -601,7 +601,8 @@ void fnic_mq_map_queues_cpus(struct Scsi_Host *host)
+ 		return;
+ 	}
+ 
+-	blk_mq_pci_map_queues(qmap, l_pdev, FNIC_PCI_OFFSET);
++	blk_mq_dev_map_queues(qmap, l_pdev, FNIC_PCI_OFFSET,
++			      blk_mq_pci_get_queue_affinity);
+ }
+ 
+ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index d223f482488f..010479a354ee 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -9,7 +9,6 @@
+ 
+ #include <linux/acpi.h>
+ #include <linux/blk-mq.h>
+-#include <linux/blk-mq-pci.h>
+ #include <linux/clk.h>
+ #include <linux/debugfs.h>
+ #include <linux/dmapool.h>
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 342d75f12051..91daf57f328c 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -3549,21 +3549,21 @@ static const struct attribute_group *sdev_groups_v2_hw[] = {
+ 	NULL
+ };
+ 
++static const struct cpumask *hisi_hba_get_queue_affinity(void *dev_data,
++							 int offset, int idx)
++{
++	struct hisi_hba *hba = dev_data;
++
++	return irq_get_affinity_mask(hba->irq_map[offset + idx]);
++}
++
+ static void map_queues_v2_hw(struct Scsi_Host *shost)
+ {
+ 	struct hisi_hba *hisi_hba = shost_priv(shost);
+ 	struct blk_mq_queue_map *qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
+-	const struct cpumask *mask;
+-	unsigned int queue, cpu;
+ 
+-	for (queue = 0; queue < qmap->nr_queues; queue++) {
+-		mask = irq_get_affinity_mask(hisi_hba->irq_map[96 + queue]);
+-		if (!mask)
+-			continue;
+-
+-		for_each_cpu(cpu, mask)
+-			qmap->mq_map[cpu] = qmap->queue_offset + queue;
+-	}
++	return blk_mq_dev_map_queues(qmap, hisi_hba, 96,
++				     hisi_hba_get_queue_affinity);
+ }
+ 
+ static const struct scsi_host_template sht_v2_hw = {
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index feda9b54b443..0b3c7b49813a 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3322,8 +3322,9 @@ static void hisi_sas_map_queues(struct Scsi_Host *shost)
+ 		if (i == HCTX_TYPE_POLL)
+ 			blk_mq_map_queues(qmap);
+ 		else
+-			blk_mq_pci_map_queues(qmap, hisi_hba->pci_dev,
+-					      BASE_VECTORS_V3_HW);
++			blk_mq_dev_map_queues(qmap, hisi_hba->pci_dev,
++					      BASE_VECTORS_V3_HW,
++					      blk_mq_pci_get_queue_affinity);
+ 		qoff += qmap->nr_queues;
+ 	}
+ }
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 6c79c350a4d5..d026b7513c8d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -3193,7 +3193,8 @@ static void megasas_map_queues(struct Scsi_Host *shost)
+ 	map = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
+ 	map->nr_queues = instance->msix_vectors - offset;
+ 	map->queue_offset = 0;
+-	blk_mq_pci_map_queues(map, instance->pdev, offset);
++	blk_mq_dev_map_queues(map, instance->pdev, offset,
++			      blk_mq_pci_get_queue_affinity);
+ 	qoff += map->nr_queues;
+ 	offset += map->nr_queues;
+ 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 69b14918de59..3256a71390a4 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -4031,7 +4031,8 @@ static void mpi3mr_map_queues(struct Scsi_Host *shost)
+ 		 */
+ 		map->queue_offset = qoff;
+ 		if (i != HCTX_TYPE_POLL)
+-			blk_mq_pci_map_queues(map, mrioc->pdev, offset);
++			blk_mq_dev_map_queues(map, mrioc->pdev, offset,
++					      blk_mq_pci_get_queue_affinity);
+ 		else
+ 			blk_mq_map_queues(map);
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 97c2472cd434..8f7667d8bfdc 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -11890,7 +11890,8 @@ static void scsih_map_queues(struct Scsi_Host *shost)
+ 		 */
+ 		map->queue_offset = qoff;
+ 		if (i != HCTX_TYPE_POLL)
+-			blk_mq_pci_map_queues(map, ioc->pdev, offset);
++			blk_mq_dev_map_queues(map, ioc->pdev, offset,
++					      blk_mq_pci_get_queue_affinity);
+ 		else
+ 			blk_mq_map_queues(map);
+ 
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 33e1eba62ca1..b70d17905d02 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -101,7 +101,8 @@ static void pm8001_map_queues(struct Scsi_Host *shost)
+ 	struct blk_mq_queue_map *qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
+ 
+ 	if (pm8001_ha->number_of_intr > 1) {
+-		blk_mq_pci_map_queues(qmap, pm8001_ha->pdev, 1);
++		blk_mq_dev_map_queues(qmap, pm8001_ha->pdev, 1,
++				      blk_mq_pci_get_queue_affinity);
+ 		return;
+ 	}
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 8f4cc136a9c9..30c4581e782b 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -841,7 +841,8 @@ static void qla_nvme_map_queues(struct nvme_fc_local_port *lport,
+ {
+ 	struct scsi_qla_host *vha = lport->private;
+ 
+-	blk_mq_pci_map_queues(map, vha->hw->pdev, vha->irq_offset);
++	blk_mq_dev_map_queues(map, vha->hw->pdev, vha->irq_offset,
++			      blk_mq_pci_get_queue_affinity);
+ }
+ 
+ static void qla_nvme_localport_delete(struct nvme_fc_local_port *lport)
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index bc3b2aea3f8b..5a6ceeb3ad2a 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -8068,7 +8068,8 @@ static void qla2xxx_map_queues(struct Scsi_Host *shost)
+ 	if (USER_CTRL_IRQ(vha->hw) || !vha->hw->mqiobase)
+ 		blk_mq_map_queues(qmap);
+ 	else
+-		blk_mq_pci_map_queues(qmap, vha->hw->pdev, vha->irq_offset);
++		blk_mq_dev_map_queues(qmap, vha->hw->pdev, vha->irq_offset,
++				      blk_mq_pci_get_queue_affinity);
+ }
+ 
+ struct scsi_host_template qla2xxx_driver_template = {
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 24c7cb285dca..1fb13d4e0448 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6533,10 +6533,11 @@ static void pqi_map_queues(struct Scsi_Host *shost)
+ 	struct pqi_ctrl_info *ctrl_info = shost_to_hba(shost);
+ 
+ 	if (!ctrl_info->disable_managed_interrupts)
+-		return blk_mq_pci_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
+-			      ctrl_info->pci_dev, 0);
++		blk_mq_dev_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT],
++				      ctrl_info->pci_dev, 0,
++				      blk_mq_pci_get_queue_affinity);
+ 	else
+-		return blk_mq_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT]);
++		blk_mq_map_queues(&shost->tag_set.map[HCTX_TYPE_DEFAULT]);
+ }
+ 
+ static inline bool pqi_is_tape_changer_device(struct pqi_scsi_dev *device)
 
----
-Daniel Wagner (13):
-      scsi: pm8001: do not overwrite PCI queue mapping
-      scsi: replace blk_mq_pci_map_queues with blk_mq_dev_map_queues
-      nvme: replace blk_mq_pci_map_queues with blk_mq_dev_map_queues
-      virtio: blk/scs: replace blk_mq_virtio_map_queues with blk_mq_dev_map_queues
-      blk-mq: remove unused queue mapping helpers
-      sched/isolation: Add io_queue housekeeping option
-      docs: add io_queue as isolcpus options
-      blk-mq: add number of queue calc helper
-      nvme-pci: use block layer helpers to calculate num of queues
-      scsi: use block layer helpers to calculate num of queues
-      virtio: blk/scsi: use block layer helpers to calculate num of queues
-      lib/group_cpus.c: honor housekeeping config when grouping CPUs
-      blk-mq: use hk cpus only when isolcpus=io_queue is enabled
-
-Ming Lei (2):
-      virito: add APIs for retrieving vq affinity
-      blk-mq: introduce blk_mq_dev_map_queues
-
- Documentation/admin-guide/kernel-parameters.txt |   9 ++
- block/blk-mq-cpumap.c                           | 136 ++++++++++++++++++++++++
- block/blk-mq-pci.c                              |  41 ++-----
- block/blk-mq-virtio.c                           |  46 +++-----
- drivers/block/virtio_blk.c                      |   8 +-
- drivers/nvme/host/pci.c                         |   8 +-
- drivers/scsi/fnic/fnic_main.c                   |   3 +-
- drivers/scsi/hisi_sas/hisi_sas.h                |   1 -
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c          |  20 ++--
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c          |   5 +-
- drivers/scsi/megaraid/megaraid_sas_base.c       |  18 ++--
- drivers/scsi/mpi3mr/mpi3mr_os.c                 |   3 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c            |   3 +-
- drivers/scsi/pm8001/pm8001_init.c               |   9 +-
- drivers/scsi/qla2xxx/qla_isr.c                  |  10 +-
- drivers/scsi/qla2xxx/qla_nvme.c                 |   3 +-
- drivers/scsi/qla2xxx/qla_os.c                   |   3 +-
- drivers/scsi/smartpqi/smartpqi_init.c           |  12 +--
- drivers/scsi/virtio_scsi.c                      |   4 +-
- drivers/virtio/virtio.c                         |  10 ++
- include/linux/blk-mq-pci.h                      |   7 +-
- include/linux/blk-mq-virtio.h                   |   8 +-
- include/linux/blk-mq.h                          |   7 ++
- include/linux/sched/isolation.h                 |  15 +++
- include/linux/virtio.h                          |   2 +
- kernel/sched/isolation.c                        |   7 ++
- lib/group_cpus.c                                |  75 ++++++++++++-
- 27 files changed, 350 insertions(+), 123 deletions(-)
----
-base-commit: f48ada402d2f1e46fa241bcc6725bdde70725e15
-change-id: 20240620-isolcpus-io-queues-1a88eb47ff8b
-
-Best regards,
 -- 
-Daniel Wagner <dwagner@suse.de>
+2.46.0
 
