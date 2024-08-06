@@ -1,35 +1,36 @@
 Received: from mail.nearlyone.de (mail.nearlyone.de [49.12.199.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1615B1C5790;
-	Tue,  6 Aug 2024 12:07:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 435B61C579A;
+	Tue,  6 Aug 2024 12:07:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=49.12.199.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722946046; cv=none; b=NZb+F3mU/3JXDQDUQw0nMw596Bp/5jQ86F2ZRx19IEHx2YL6irvP2uycHOePE1LEYep+5EXhREUAQbNXiiWp+6F6TbYLf4s68uYOa630bjrCx7b0EcHorOSbI+fo+cfZ8esSnUxq4fC7Rj2C2Tfz04S21YZQgxdhvWz2mESwbN4=
+	t=1722946046; cv=none; b=MZf4oHDjgLv+Tbm+eBVeJMCEt/3T/Q1KbTHv0v96L6mmMYiWPYJ0EJrsSRoZE4L6wapvGG8Q7aJ7UCeqpvXeaIAKaYAoIWMFsLJxHDNcKIX3aPxMZnSWTE5MG6OSlKkLD6nNn2pznH6Fzu+Yxo4KCXGL/VWxfe0vvyrKO0yboyg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1722946046; c=relaxed/simple;
-	bh=Qbn4POfkyJH85PtXNpe8eyfwv2m9KrCVvu5kPymGneU=;
+	bh=KFJy4SZl4HXY2r33ps/m1hynIPJQGpefWVTwcsC3HC4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=oAVldIW9MUyXjB4hWmyBs5iMGq7E1V9RgxNUXPzSfcKu1zhBISJhkKHJKQ+1w4ATRithRMf2I1pm6KjTgp4qOQDqqqqm4oxmfKZhF7HWVZSwdQeDbRTu4R1h5M3BvicrtgYcp9t6ECCGtqzMLYOqp9CkNctVeTXBBBAFBN426LM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=monom.org; dkim=pass (2048-bit key) header.d=monom.org header.i=@monom.org header.b=c/vpvIkD; arc=none smtp.client-ip=49.12.199.46
+	 In-Reply-To:To:Cc; b=NKZTQ33hcYehWtcTTqEhXEScZqwiVs5J50FoO/2qEALss2LRu/RoPHEXw46sC6w5L2QnbA5sQJAE1z9jKtew5T/V0QjXQGPPgXzLvCOqsKkL6XeTynpozT6jQhUGmJXYzFqvQAeGtuk7iYJnmkRkD2wwSCt2qxeB0qDZ37WxU3g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=monom.org; dkim=pass (2048-bit key) header.d=monom.org header.i=@monom.org header.b=cjEtMMZn; arc=none smtp.client-ip=49.12.199.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=monom.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=monom.org header.i=@monom.org header.b="c/vpvIkD"
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id 63821DAE16;
-	Tue,  6 Aug 2024 14:07:14 +0200 (CEST)
+	dkim=pass (2048-bit key) header.d=monom.org header.i=@monom.org header.b="cjEtMMZn"
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id B7202DAE1A;
+	Tue,  6 Aug 2024 14:07:20 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=monom.org; s=dkim;
-	t=1722946035; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	t=1722946042; h=from:subject:date:message-id:to:cc:mime-version:content-type:
 	 content-transfer-encoding:in-reply-to:references;
-	bh=osYY5nzy55CkrfzWmRIr1SR3q3EysjB9xRdYV7yd3hw=;
-	b=c/vpvIkD6/xBTfCquyVI2tBGWfswjhFVVPKPVZEsAuzHu8fym6GW9S+IOVn8unfFHAA7Gl
-	RNPd2WKjJFP5ONX9yTyJLnRD8LydEoWL8nSu2UbzQI+EwMUQrt0WZfM9WKQgVbV7v8mhDG
-	brA6MvXTuH46yp2fFeC21vSXpBdJ/Ea7+EwynyNcMppx9Z51RDj7jcAfSGfLXi0yFM/GPl
-	2HLkVbkt4hjHMgjQBOCjc2ZrVp4Fx1EjeOCBp1/6XKWNwoaqoqs3xERgIzccjXT/qQ0VxI
-	PPEiGMbdC/a/nhzCffNDgwtmiBf2FEGgO0VvJJB2YNb0ZK03QWNT4kHsn6W9sw==
+	bh=cVDCNY6LvJbeDAGt09DL8tGpto0NtX7ZOAOrA4JJUms=;
+	b=cjEtMMZnl3ZSNyx2WwYX4zi03MZlzjO79YyidzppW2+d/0SpDLB9RGMn6GuB6aRpzh4Dfe
+	65LGkPRM2YIp4ksmttHHY5U9cG2chZ2E5Y8wP4P0ZmxPuVNQ9Pm+sf0zPtOvG0JSMZwtP7
+	EH/jVVbKnaJG8bfEOnyN6kJs2ZCal00vZknbJw7Eg/IePQ8/JtVeMNW/ym5GJa04JZ4NQZ
+	ljLOrAcnGZchxyM5oXBDzC4GuabNbeMuc+ENQKbWjelUPngnAyg5BqUNZzqqff5j7JUMF4
+	2kicGhMFDQlTxBAucNCHHpDKm0wSFqp4iNRgBv4VUlFJfO9E5eIdNHn1qPPedA==
 From: Daniel Wagner <dwagner@suse.de>
-Date: Tue, 06 Aug 2024 14:06:34 +0200
-Subject: [PATCH v3 02/15] virito: add APIs for retrieving vq affinity
+Date: Tue, 06 Aug 2024 14:06:37 +0200
+Subject: [PATCH v3 05/15] nvme: replace blk_mq_pci_map_queues with
+ blk_mq_dev_map_queues
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +39,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240806-isolcpus-io-queues-v3-2-da0eecfeaf8b@suse.de>
+Message-Id: <20240806-isolcpus-io-queues-v3-5-da0eecfeaf8b@suse.de>
 References: <20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de>
 In-Reply-To: <20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de>
 To: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, 
@@ -68,51 +69,29 @@ Cc: Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>,
 X-Mailer: b4 0.14.0
 X-Last-TLS-Session-Version: TLSv1.3
 
-From: Ming Lei <ming.lei@redhat.com>
+Replace all users of blk_mq_pci_map_queues with the more generic
+blk_mq_dev_map_queues. This in preparation to retire
+blk_mq_pci_map_queues.
 
-virtio-blk/virtio-scsi needs this API for retrieving vq's affinity.
-
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Daniel Wagner <dwagner@suse.de>
 ---
- drivers/virtio/virtio.c | 10 ++++++++++
- include/linux/virtio.h  |  2 ++
- 2 files changed, 12 insertions(+)
+ drivers/nvme/host/pci.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/virtio/virtio.c b/drivers/virtio/virtio.c
-index a9b93e99c23a..c59a193ef337 100644
---- a/drivers/virtio/virtio.c
-+++ b/drivers/virtio/virtio.c
-@@ -592,6 +592,16 @@ int virtio_device_restore(struct virtio_device *dev)
- EXPORT_SYMBOL_GPL(virtio_device_restore);
- #endif
- 
-+const struct cpumask *virtio_get_vq_affinity(struct virtio_device *dev,
-+		int index)
-+{
-+	if (!dev->config->get_vq_affinity)
-+		return NULL;
-+
-+	return dev->config->get_vq_affinity(dev, index);
-+}
-+EXPORT_SYMBOL_GPL(virtio_get_vq_affinity);
-+
- static int virtio_init(void)
- {
- 	if (bus_register(&virtio_bus) != 0)
-diff --git a/include/linux/virtio.h b/include/linux/virtio.h
-index ecc5cb7b8c91..bab3858a4c8a 100644
---- a/include/linux/virtio.h
-+++ b/include/linux/virtio.h
-@@ -170,6 +170,8 @@ int virtio_device_restore(struct virtio_device *dev);
- void virtio_reset_device(struct virtio_device *dev);
- 
- size_t virtio_max_dma_size(const struct virtio_device *vdev);
-+const struct cpumask *virtio_get_vq_affinity(struct virtio_device *dev,
-+					     int index);
- 
- #define virtio_device_for_each_vq(vdev, vq) \
- 	list_for_each_entry(vq, &vdev->vqs, list)
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 6cd9395ba9ec..5d509405a3e4 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -457,7 +457,8 @@ static void nvme_pci_map_queues(struct blk_mq_tag_set *set)
+ 		 */
+ 		map->queue_offset = qoff;
+ 		if (i != HCTX_TYPE_POLL && offset)
+-			blk_mq_pci_map_queues(map, to_pci_dev(dev->dev), offset);
++			blk_mq_dev_map_queues(map, to_pci_dev(dev->dev), offset,
++					      blk_mq_pci_get_queue_affinity);
+ 		else
+ 			blk_mq_map_queues(map);
+ 		qoff += map->nr_queues;
 
 -- 
 2.46.0
