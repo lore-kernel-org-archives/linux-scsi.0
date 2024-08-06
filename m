@@ -1,253 +1,193 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 761A516CD12
-	for <linux-scsi@vger.kernel.org>; Mon,  5 Aug 2024 23:43:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DB568F6D
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2024 02:04:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722901414; cv=none; b=fYhoBtYMTA/8k6o/PGf/P0AdSiknkGM32qNdXMXrj9yufdyuL5wpxWDi26mB4CELwF5brS9cLoiQT5OkeGt2TpcmHTOMjGCr3Qa+/PHFRKOi4J6nWybYu9ZsnxksTG/iqtZINgJrLfs+Nzbw7oEw5m31QDbhv+8WMzgqlBT4cSQ=
+	t=1722909889; cv=none; b=NgVZP38DNGSRx8UVmZhu+tqyRefAjoftny32sw1i5oBLYYwqeMikCXfwD9o6Vgdvww3CPiNDGC5ONeT0NDTZ1MtK1KziYMkvhtuncFPfr8BhjNeIedY5lRgXZMJn0MFVfoh6E/5tR2QcPTtnrKwvjJ8paxqWYCHBPWOmZOoUsZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722901414; c=relaxed/simple;
-	bh=big2EkYbsP9b4uHaTcnm2ab6//7xuPAIbmapeclvQkE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GMzBNRoQ1i6kfrevfJzlgda4kyg+LUo8Eur2hoXmkpDBUh6DtvQra8itPhfd2TOdVbLNv2BnziW7f8BFrIyteMl1TN8u3BETQbfkH5LecVh5g8yER5uFaAtrXIg57CCcLntd6c7sEW/raYu+bAuFqwiqCUsjSjUSI+4juSzcw1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JnKI0lof; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1722909889; c=relaxed/simple;
+	bh=iPlTmklNFO8quaKBrw9Ux98RUrKz2LJF8gWS8xbcp68=;
+	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
+	 Content-Type:References; b=FnLUz10VDW/fecvUpc/B2sbEmJm3NUKwkeKqusV3UnoRuDlWg/9c0cCy0i3pKMmlBIE3uuE375NNytygSMo5OKFcYHjJaqs9CFpGoNtiCHrIKKiXe1PXMkXoxfMB0047j0aCD5h1Jhg752f1QX9KovIGo5KbrhmGAeu58m0JZY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=oPd53QJP; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JnKI0lof"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WdCgS1SgWz6CmLxj;
-	Mon,  5 Aug 2024 23:43:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1722901406; x=1725493407; bh=2z32L
-	TDBuwvtL1ms0FeOXmh9kAqrtpH9+meB23gQLP0=; b=JnKI0lof1TuwETLJ8ZE98
-	/Spn8rngY98aML+9bQ8QaDyWvm1bJgXtIFhUdbhCtKETk4eg6yZBelv2RS7FqYUl
-	Qn5nS6nBonMqs0tWSoxiXowZeK2ZqMQTFZHve4walqitgU1ftKJKuXMZumWjkJaj
-	3liVAFDZ93YFitiH/ArHWpgfKgDpR8muXBRodLLsz5fn/V8Bw13EyrWi74qZFE3H
-	dGrp9vsODnP7cL0q13m2wnGOwE6CMn07vPJnEi2Mv7Tq5AZOfGVuHUT53HaHxk17
-	uEoDQsBECXCZ7A+UDw55fajyFVdjJAXa/RD/iUbaqzRjH2mKJrKaZtfvCUUyoe1N
-	Q==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 4okLHSno1NbD; Mon,  5 Aug 2024 23:43:26 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WdCgK0dRHz6ClY9C;
-	Mon,  5 Aug 2024 23:43:24 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Himanshu Madhani <himanshu.madhani@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v2 6/6] scsi: sd: Do not split error messages
-Date: Mon,  5 Aug 2024 16:42:49 -0700
-Message-ID: <20240805234250.271828-7-bvanassche@acm.org>
-X-Mailer: git-send-email 2.46.0.rc2.264.g509ed76dc8-goog
-In-Reply-To: <20240805234250.271828-1-bvanassche@acm.org>
-References: <20240805234250.271828-1-bvanassche@acm.org>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="oPd53QJP"
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240806020443epoutp026109f01c7a6e0fbf0cd37dbd9d94b5c5~pAWkaIVlE0132201322epoutp02Y
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2024 02:04:43 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240806020443epoutp026109f01c7a6e0fbf0cd37dbd9d94b5c5~pAWkaIVlE0132201322epoutp02Y
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1722909883;
+	bh=mjOFdIZ4+oy6JbxVkZV/Ap2mouHD6+CoUeSjtJBrFiw=;
+	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+	b=oPd53QJPZMT6buzq16AmFNfu2o2M8LDQXDwhOzgL9QciIiGZhY9HgULgPTW47LMQ2
+	 yetO+VhZRO8a+pDA8NVC7HaFOTxyMnhX+M93tfsaVY73Ih8aws2IEtWe/h/OPUh+f+
+	 Js5hZrrroAIHArkZkpAKelED8UxxnC9kwHdu+2+k=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+	20240806020443epcas2p3239ab413790b8da21fef2d8eca095d18~pAWkL2EiF1427714277epcas2p3Q;
+	Tue,  6 Aug 2024 02:04:43 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.70]) by
+	epsnrtp4.localdomain (Postfix) with ESMTP id 4WdGpL23C1z4x9QD; Tue,  6 Aug
+	2024 02:04:42 +0000 (GMT)
+X-AuditID: b6c32a45-ffffa700000028bf-fa-66b184b97311
+Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
+	epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	AC.87.10431.9B481B66; Tue,  6 Aug 2024 11:04:41 +0900 (KST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0
+Subject: RE: [PATCH v2 1/2] scsi: ufs: Prepare to add HCI capabilities sysfs
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From: Keoseong Park <keosung.park@samsung.com>
+To: Avri Altman <avri.altman@wdc.com>, "Martin K . Petersen"
+	<martin.petersen@oracle.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bart Van
+	Assche <bvanassche@acm.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <20240804072109.2330880-2-avri.altman@wdc.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20240806020441epcms2p177c881111c1a427c33dcddcc9942d790@epcms2p1>
+Date: Tue, 06 Aug 2024 11:04:41 +0900
+X-CMS-MailID: 20240806020441epcms2p177c881111c1a427c33dcddcc9942d790
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpmk+LIzCtJLcpLzFFi42LZdljTVHdny8Y0g5kbFCxe/rzKZjHtw09m
+	i5eHNC0e3X7GaHF51xw2i+7rO9gslh//x+TA7nH5irfHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBr
+	VLZNRmpiSmqRQmpecn5KZl66rZJ3cLxzvKmZgaGuoaWFuZJCXmJuqq2Si0+ArltmDtARSgpl
+	iTmlQKGAxOJiJX07m6L80pJUhYz84hJbpdSClJwC8wK94sTc4tK8dL281BIrQwMDI1OgwoTs
+	jA2X9jIXrBKvuDOpmamB8atQFyMnh4SAicTP3zPYQWwhgR2MEssOeXcxcnDwCghK/N0hDBIW
+	FvCRuLtmHzNEiZJE18KtzBBxA4l10/eA2WwCehJTft9hBLFFBKIljs7bDWRzcTALLGOU+Nh/
+	ngViF6/EjPanULa0xPblWxlBdnEKWEusm8UNEdaQ+LGslxnCFpW4ufotO4z9/th8RghbRKL1
+	3lmoGkGJBz93Q8UlJM59WAg1vl6i9f0pdpAbJAQmMEo0HvsDNUhf4lrHRrAiXgFfiedP3rOC
+	2CwCqhJHpnyCqnGRmDF7C9gCZgF5ie1v5zCD3MksoCmxfpc+iCkhoCxx5BYLRAWfRMfhv+ww
+	HzZs/I2VvWPeEyYIW03i0YItrBMYlWchAnoWkl2zEHYtYGRexSiWWlCcm55abFRgCI/a5Pzc
+	TYzg1KjluoNx8tsPeocYmTgYDzFKcDArifB2lW5IE+JNSaysSi3Kjy8qzUktPsRoCvTlRGYp
+	0eR8YHLOK4k3NLE0MDEzMzQ3MjUwVxLnvdc6N0VIID2xJDU7NbUgtQimj4mDU6qBqdExbXmt
+	tK2nesjp1PUhFnx1q5lDHT89/PyG1e14uSbr61fSPma+pQre51j+NOSprGgwqz12teK+0X7m
+	6ucH6r79NKq4GJ9bmKC0PUvodGQSW+alh24cS88snKkXZrO5sH5r3Sbjv5P6V1TZPjE+8E/D
+	dtbF02VW+m+EUw6s6uDYdO/rtdUBz38esJw3uyl2ww2tMAGdqXLW1zVj7HdqmLYu/vD4o6pm
+	kXnlGpc3X4K3Oe5l/S0eezPxv3rZBddLirUW52fZzVx7hP9IqUrC46ffi84dW6iZuyLec4HQ
+	mRDdzwUOO+49L2bdNU8ySHyCwiNxwfxrek3tv88smPBmjY5074b3D2x2Lg+ZxGL0X4mlOCPR
+	UIu5qDgRAFOeeWgWBAAA
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20240804072309epcas2p2309ebc15f20ca598a91fe30a3245200f
+References: <20240804072109.2330880-2-avri.altman@wdc.com>
+	<20240804072109.2330880-1-avri.altman@wdc.com>
+	<CGME20240804072309epcas2p2309ebc15f20ca598a91fe30a3245200f@epcms2p1>
 
-Make it easier to find these error messages with grep. This patch has bee=
-n
-created as follows:
-* Delete all occurrences of the following regular expression:
-  "[[:blank:]]*\\*\n[[:blank:]]*"
-* Split long lines manually where necessary.
+Hi Avri,
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/sd.c | 56 ++++++++++++++++++++---------------------------
- 1 file changed, 24 insertions(+), 32 deletions(-)
+> Prepare so we'll be able to read various other HCI registers.
+> While at it, fix the HCPID & HCMID register names to stand for what they
+> really are. Also replace the pm_runtime_{get/put}_sync() calls in
+> auto_hibern8_show to ufshcd_rpm_{get/put}_sync() as any host controller
+> register reads should.
+> 
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+> ---
+>  drivers/ufs/core/ufs-sysfs.c | 38 +++++++++++++++++++++---------------
+>  include/ufs/ufshci.h         |  5 +++--
+>  2 files changed, 25 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+> index e80a32421a8c..dec7746c98e0 100644
+> --- a/drivers/ufs/core/ufs-sysfs.c
+> +++ b/drivers/ufs/core/ufs-sysfs.c
+> @@ -198,6 +198,24 @@ static u32 ufshcd_us_to_ahit(unsigned int timer)
+>  	       FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, scale);
+>  }
+>  
+> +static int ufshcd_read_hci_reg(struct ufs_hba *hba, u32 *val, unsigned int reg)
+> +{
+> +	down(&hba->host_sem);
+> +	if (!ufshcd_is_user_access_allowed(hba)) {
+> +		up(&hba->host_sem);
+> +		return -EBUSY;
+> +	}
+> +
+> +	ufshcd_rpm_get_sync(hba);
+> +	ufshcd_hold(hba);
+> +	*val = ufshcd_readl(hba, reg);
+> +	ufshcd_release(hba);
+> +	ufshcd_rpm_put_sync(hba);
+> +
+> +	up(&hba->host_sem);
+> +	return 0;
+> +}
+> +
+>  static ssize_t auto_hibern8_show(struct device *dev,
+>  				 struct device_attribute *attr, char *buf)
+>  {
+> @@ -208,23 +226,11 @@ static ssize_t auto_hibern8_show(struct device *dev,
+>  	if (!ufshcd_is_auto_hibern8_supported(hba))
+>  		return -EOPNOTSUPP;
+>  
+> -	down(&hba->host_sem);
+> -	if (!ufshcd_is_user_access_allowed(hba)) {
+> -		ret = -EBUSY;
+> -		goto out;
+> -	}
+> -
+> -	pm_runtime_get_sync(hba->dev);
+> -	ufshcd_hold(hba);
+> -	ahit = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> -	ufshcd_release(hba);
+> -	pm_runtime_put_sync(hba->dev);
+> -
+> -	ret = sysfs_emit(buf, "%d\n", ufshcd_ahit_to_us(ahit));
+> +	ret = ufshcd_read_hci_reg(hba, &ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
+> +	if (ret)
+> +		return ret;
+>  
+> -out:
+> -	up(&hba->host_sem);
+> -	return ret;
+> +	return sysfs_emit(buf, "%d\n", ufshcd_ahit_to_us(ahit));
+>  }
+>  
+>  static ssize_t auto_hibern8_store(struct device *dev,
+> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+> index 38fe97971a65..194e3655902e 100644
+> --- a/include/ufs/ufshci.h
+> +++ b/include/ufs/ufshci.h
+> @@ -25,8 +25,9 @@ enum {
+>  	REG_CONTROLLER_CAPABILITIES		= 0x00,
+>  	REG_MCQCAP				= 0x04,
+>  	REG_UFS_VERSION				= 0x08,
+> -	REG_CONTROLLER_DEV_ID			= 0x10,
+> -	REG_CONTROLLER_PROD_ID			= 0x14,
+> +	REG_EXT_CONTROLLER_CAPABILITIES		= 0x0C,
+> +	REG_CONTROLLER_PID			= 0x10,
+> +	REG_CONTROLLER_MID			= 0x14,
+>  	REG_AUTO_HIBERNATE_IDLE_TIMER		= 0x18,
+>  	REG_INTERRUPT_STATUS			= 0x20,
+>  	REG_INTERRUPT_ENABLE			= 0x24,
+> -- 
+> 2.25.1
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index afd53ef2afcb..e40492792a5d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1651,8 +1651,9 @@ static int sd_ioctl(struct block_device *bdev, blk_=
-mode_t mode,
- 	void __user *p =3D (void __user *)arg;
- 	int error;
-    =20
--	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp, "sd_ioctl: disk=3D%s, "
--				    "cmd=3D0x%x\n", disk->disk_name, cmd));
-+	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp,
-+				    "sd_ioctl: disk=3D%s, cmd=3D0x%x\n",
-+				    disk->disk_name, cmd));
-=20
- 	if (bdev_is_partition(bdev) && !capable(CAP_SYS_RAWIO))
- 		return -ENOIOCTLCMD;
-@@ -2549,8 +2550,8 @@ static int sd_read_protection_type(struct scsi_disk=
- *sdkp, unsigned char *buffer
- 	type =3D ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 =3D Type 1 */
-=20
- 	if (type > T10_PI_TYPE3_PROTECTION) {
--		sd_printk(KERN_ERR, sdkp, "formatted with unsupported"	\
--			  " protection type %u. Disabling disk!\n",
-+		sd_printk(KERN_ERR, sdkp,
-+			  "formatted with unsupported protection type %u. Disabling disk!\n",
- 			  type);
- 		sdkp->protection_type =3D 0;
- 		return -ENODEV;
-@@ -2829,8 +2830,8 @@ sd_read_capacity(struct scsi_disk *sdkp, struct que=
-ue_limits *lim,
- 		if ((sizeof(sdkp->capacity) > 4) &&
- 		    (sdkp->capacity > 0xffffffffULL)) {
- 			int old_sector_size =3D sector_size;
--			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
--					"Trying to use READ CAPACITY(16).\n");
-+			sd_printk(KERN_NOTICE, sdkp,
-+				  "Very big device. Trying to use READ CAPACITY(16).\n");
- 			sector_size =3D read_capacity_16(sdkp, sdp, lim, buffer);
- 			if (sector_size < 0) {
- 				sd_printk(KERN_NOTICE, sdkp,
-@@ -2856,17 +2857,16 @@ sd_read_capacity(struct scsi_disk *sdkp, struct q=
-ueue_limits *lim,
- 	 */
- 	if (sdp->fix_capacity ||
- 	    (sdp->guess_capacity && (sdkp->capacity & 0x01))) {
--		sd_printk(KERN_INFO, sdkp, "Adjusting the sector count "
--				"from its reported value: %llu\n",
--				(unsigned long long) sdkp->capacity);
-+		sd_printk(KERN_INFO, sdkp,
-+			  "Adjusting the sector count from its reported value: %llu\n",
-+			  (unsigned long long) sdkp->capacity);
- 		--sdkp->capacity;
- 	}
-=20
- got_data:
- 	if (sector_size =3D=3D 0) {
- 		sector_size =3D 512;
--		sd_printk(KERN_NOTICE, sdkp, "Sector size 0 reported, "
--			  "assuming 512.\n");
-+		sd_printk(KERN_NOTICE, sdkp, "Sector size 0 reported, assuming 512.\n"=
-);
- 	}
-=20
- 	if (sector_size !=3D 512 &&
-@@ -3071,8 +3071,9 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned=
- char *buffer)
- 	if (len < 3)
- 		goto bad_sense;
- 	else if (len > SD_BUF_SIZE) {
--		sd_first_printk(KERN_NOTICE, sdkp, "Truncating mode parameter "
--			  "data from %d to %d bytes\n", len, SD_BUF_SIZE);
-+		sd_first_printk(KERN_NOTICE, sdkp,
-+				"Truncating mode parameter data from %d to %d bytes\n",
-+				len, SD_BUF_SIZE);
- 		len =3D SD_BUF_SIZE;
- 	}
- 	if (modepage =3D=3D 0x3F && sdp->use_192_bytes_for_3f)
-@@ -3095,8 +3096,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned=
- char *buffer)
- 				 */
- 				if (len - offset <=3D 2) {
- 					sd_first_printk(KERN_ERR, sdkp,
--						"Incomplete mode parameter "
--							"data\n");
-+						"Incomplete mode parameter data\n");
- 					goto defaults;
- 				} else {
- 					modepage =3D page_code;
-@@ -3111,8 +3111,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned=
- char *buffer)
- 					offset +=3D 2 + buffer[offset+1];
- 				else {
- 					sd_first_printk(KERN_ERR, sdkp,
--							"Incomplete mode "
--							"parameter data\n");
-+							"Incomplete mode parameter data\n");
- 					goto defaults;
- 				}
- 			}
-@@ -3579,8 +3578,7 @@ static bool sd_validate_min_xfer_size(struct scsi_d=
-isk *sdkp)
-=20
- 	if (min_xfer_bytes & (sdkp->physical_block_size - 1)) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Preferred minimum I/O size %u bytes not a " \
--				"multiple of physical block size (%u bytes)\n",
-+				"Preferred minimum I/O size %u bytes not a multiple of physical bloc=
-k size (%u bytes)\n",
- 				min_xfer_bytes, sdkp->physical_block_size);
- 		sdkp->min_xfer_blocks =3D 0;
- 		return false;
-@@ -3610,41 +3608,35 @@ static bool sd_validate_opt_xfer_size(struct scsi=
-_disk *sdkp,
-=20
- 	if (sdkp->opt_xfer_blocks > dev_max) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Optimal transfer size %u logical blocks " \
--				"> dev_max (%u logical blocks)\n",
-+				"Optimal transfer size %u logical blocks > dev_max (%u logical block=
-s)\n",
- 				sdkp->opt_xfer_blocks, dev_max);
- 		return false;
- 	}
-=20
- 	if (sdkp->opt_xfer_blocks > SD_DEF_XFER_BLOCKS) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Optimal transfer size %u logical blocks " \
--				"> sd driver limit (%u logical blocks)\n",
-+				"Optimal transfer size %u logical blocks > sd driver limit (%u logic=
-al blocks)\n",
- 				sdkp->opt_xfer_blocks, SD_DEF_XFER_BLOCKS);
- 		return false;
- 	}
-=20
- 	if (opt_xfer_bytes < PAGE_SIZE) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Optimal transfer size %u bytes < " \
--				"PAGE_SIZE (%u bytes)\n",
-+				"Optimal transfer size %u bytes < PAGE_SIZE (%u bytes)\n",
- 				opt_xfer_bytes, (unsigned int)PAGE_SIZE);
- 		return false;
- 	}
-=20
- 	if (min_xfer_bytes && opt_xfer_bytes % min_xfer_bytes) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Optimal transfer size %u bytes not a " \
--				"multiple of preferred minimum block " \
--				"size (%u bytes)\n",
-+				"Optimal transfer size %u bytes not a multiple of preferred minimum =
-block size (%u bytes)\n",
- 				opt_xfer_bytes, min_xfer_bytes);
- 		return false;
- 	}
-=20
- 	if (opt_xfer_bytes & (sdkp->physical_block_size - 1)) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Optimal transfer size %u bytes not a " \
--				"multiple of physical block size (%u bytes)\n",
-+				"Optimal transfer size %u bytes not a multiple of physical block siz=
-e (%u bytes)\n",
- 				opt_xfer_bytes, sdkp->physical_block_size);
- 		return false;
- 	}
-@@ -3706,8 +3698,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
-=20
- 	buffer =3D kmalloc(SD_BUF_SIZE, GFP_KERNEL);
- 	if (!buffer) {
--		sd_printk(KERN_WARNING, sdkp, "sd_revalidate_disk: Memory "
--			  "allocation failure.\n");
-+		sd_printk(KERN_WARNING, sdkp,
-+			  "sd_revalidate_disk: Memory allocation failure.\n");
- 		goto out;
- 	}
-=20
+Looks good to me.
+
+Reviewed-by: Keoseong Park <keosung.park@samsung.com>
+
+Best Regards,
+Keoseong
