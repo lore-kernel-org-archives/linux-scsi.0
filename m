@@ -1,50 +1,50 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DB568F6D
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2024 02:04:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6B4115E8B
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2024 02:06:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722909889; cv=none; b=NgVZP38DNGSRx8UVmZhu+tqyRefAjoftny32sw1i5oBLYYwqeMikCXfwD9o6Vgdvww3CPiNDGC5ONeT0NDTZ1MtK1KziYMkvhtuncFPfr8BhjNeIedY5lRgXZMJn0MFVfoh6E/5tR2QcPTtnrKwvjJ8paxqWYCHBPWOmZOoUsZQ=
+	t=1722909970; cv=none; b=VilT9s0l+IxmgEVjlJ2ZKCzdDOMhWLe9WmuwZl16TDaUHT0kU3cjy0U7nNTSZzBML9x02v0Bl6hKyFs4I0u7+FqqAfqrvcnnAvr4UQ/UVm3WY0X3WmFzy6UJuyO/13MSfSWbxtFHLEOO3aO9URSJWR0GAs2XKIo4ADDggAYNwOA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722909889; c=relaxed/simple;
-	bh=iPlTmklNFO8quaKBrw9Ux98RUrKz2LJF8gWS8xbcp68=;
+	s=arc-20240116; t=1722909970; c=relaxed/simple;
+	bh=Ee0QM6Iac7kLd+h7JVmmERG0VuReSQIOXKhNXlBuItY=;
 	h=Mime-Version:Subject:From:To:CC:In-Reply-To:Message-ID:Date:
-	 Content-Type:References; b=FnLUz10VDW/fecvUpc/B2sbEmJm3NUKwkeKqusV3UnoRuDlWg/9c0cCy0i3pKMmlBIE3uuE375NNytygSMo5OKFcYHjJaqs9CFpGoNtiCHrIKKiXe1PXMkXoxfMB0047j0aCD5h1Jhg752f1QX9KovIGo5KbrhmGAeu58m0JZY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=oPd53QJP; arc=none smtp.client-ip=203.254.224.25
+	 Content-Type:References; b=oid1meaC8swNEZDaNpWrxACxnMxBtXz7WKxYwlNjP9hs1W0IeBtuz9uNOSbNHEtGVq4lnFORvliUsirM8Z2kb96ScmKh8axagMDSYJJtnC+0KucqszmIhBDKdmd6Gzn0UZJNA6gkyi6DqQ9W4mWh+r8y3NbUEOC9ZEPELbBk26w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=rsgJdEFP; arc=none smtp.client-ip=203.254.224.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="oPd53QJP"
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240806020443epoutp026109f01c7a6e0fbf0cd37dbd9d94b5c5~pAWkaIVlE0132201322epoutp02Y
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2024 02:04:43 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240806020443epoutp026109f01c7a6e0fbf0cd37dbd9d94b5c5~pAWkaIVlE0132201322epoutp02Y
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rsgJdEFP"
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20240806020605epoutp038342cc3b46746807b59b5a7aa164b196~pAXxEffck0643506435epoutp03j
+	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2024 02:06:05 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20240806020605epoutp038342cc3b46746807b59b5a7aa164b196~pAXxEffck0643506435epoutp03j
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1722909883;
-	bh=mjOFdIZ4+oy6JbxVkZV/Ap2mouHD6+CoUeSjtJBrFiw=;
+	s=mail20170921; t=1722909965;
+	bh=Wjd9XclQm98fGNHa1n403/XjT0pQYvGrYOFwOWSetSs=;
 	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=oPd53QJPZMT6buzq16AmFNfu2o2M8LDQXDwhOzgL9QciIiGZhY9HgULgPTW47LMQ2
-	 yetO+VhZRO8a+pDA8NVC7HaFOTxyMnhX+M93tfsaVY73Ih8aws2IEtWe/h/OPUh+f+
-	 Js5hZrrroAIHArkZkpAKelED8UxxnC9kwHdu+2+k=
+	b=rsgJdEFPYBKOiF5wc2Oma82v1HcfwRdyNhebbButDhNCDhN0hoPBYfSw+ENn8Hm6w
+	 xyzVG13fer4dPZJv7Bl4PHYFIiiYWky/SsxAuC3+8RamrXL33MRhkAXR9Z7XPdddyo
+	 U2xjKcL9V2HtA7OucHYY62Tx8ZKF1/6Fqfq2olIM=
 Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-	epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-	20240806020443epcas2p3239ab413790b8da21fef2d8eca095d18~pAWkL2EiF1427714277epcas2p3Q;
-	Tue,  6 Aug 2024 02:04:43 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.36.70]) by
-	epsnrtp4.localdomain (Postfix) with ESMTP id 4WdGpL23C1z4x9QD; Tue,  6 Aug
-	2024 02:04:42 +0000 (GMT)
-X-AuditID: b6c32a45-ffffa700000028bf-fa-66b184b97311
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-	epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	AC.87.10431.9B481B66; Tue,  6 Aug 2024 11:04:41 +0900 (KST)
+	epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+	20240806020605epcas2p12eb902f7945f67259dcc1cd88cbadfe0~pAXw3SHkN2742427424epcas2p1q;
+	Tue,  6 Aug 2024 02:06:05 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.89]) by
+	epsnrtp4.localdomain (Postfix) with ESMTP id 4WdGqw4cjbz4x9QB; Tue,  6 Aug
+	2024 02:06:04 +0000 (GMT)
+X-AuditID: b6c32a47-ea1fa7000000271c-6b-66b1850c2bcb
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+	epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+	CA.F1.10012.C0581B66; Tue,  6 Aug 2024 11:06:04 +0900 (KST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
-Subject: RE: [PATCH v2 1/2] scsi: ufs: Prepare to add HCI capabilities sysfs
+Subject: RE: [PATCH v2 2/2] scsi: ufs: Add HCI capabilities sysfs group
 Reply-To: keosung.park@samsung.com
 Sender: Keoseong Park <keosung.park@samsung.com>
 From: Keoseong Park <keosung.park@samsung.com>
@@ -55,139 +55,237 @@ CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
 	Assche <bvanassche@acm.org>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <20240804072109.2330880-2-avri.altman@wdc.com>
+In-Reply-To: <20240804072109.2330880-3-avri.altman@wdc.com>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20240806020441epcms2p177c881111c1a427c33dcddcc9942d790@epcms2p1>
-Date: Tue, 06 Aug 2024 11:04:41 +0900
-X-CMS-MailID: 20240806020441epcms2p177c881111c1a427c33dcddcc9942d790
+Message-ID: <20240806020604epcms2p3c9b035a6ef19e3b8b241d1ecadc03043@epcms2p3>
+Date: Tue, 06 Aug 2024 11:06:04 +0900
+X-CMS-MailID: 20240806020604epcms2p3c9b035a6ef19e3b8b241d1ecadc03043
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 CMS-TYPE: 102P
 X-CPGSPASS: Y
 X-CPGSPASS: Y
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpmk+LIzCtJLcpLzFFi42LZdljTVHdny8Y0g5kbFCxe/rzKZjHtw09m
-	i5eHNC0e3X7GaHF51xw2i+7rO9gslh//x+TA7nH5irfHx6e3WDz6tqxi9Pi8Sc6j/UA3UwBr
-	VLZNRmpiSmqRQmpecn5KZl66rZJ3cLxzvKmZgaGuoaWFuZJCXmJuqq2Si0+ArltmDtARSgpl
-	iTmlQKGAxOJiJX07m6L80pJUhYz84hJbpdSClJwC8wK94sTc4tK8dL281BIrQwMDI1OgwoTs
-	jA2X9jIXrBKvuDOpmamB8atQFyMnh4SAicTP3zPYQWwhgR2MEssOeXcxcnDwCghK/N0hDBIW
-	FvCRuLtmHzNEiZJE18KtzBBxA4l10/eA2WwCehJTft9hBLFFBKIljs7bDWRzcTALLGOU+Nh/
-	ngViF6/EjPanULa0xPblWxlBdnEKWEusm8UNEdaQ+LGslxnCFpW4ufotO4z9/th8RghbRKL1
-	3lmoGkGJBz93Q8UlJM59WAg1vl6i9f0pdpAbJAQmMEo0HvsDNUhf4lrHRrAiXgFfiedP3rOC
-	2CwCqhJHpnyCqnGRmDF7C9gCZgF5ie1v5zCD3MksoCmxfpc+iCkhoCxx5BYLRAWfRMfhv+ww
-	HzZs/I2VvWPeEyYIW03i0YItrBMYlWchAnoWkl2zEHYtYGRexSiWWlCcm55abFRgCI/a5Pzc
-	TYzg1KjluoNx8tsPeocYmTgYDzFKcDArifB2lW5IE+JNSaysSi3Kjy8qzUktPsRoCvTlRGYp
-	0eR8YHLOK4k3NLE0MDEzMzQ3MjUwVxLnvdc6N0VIID2xJDU7NbUgtQimj4mDU6qBqdExbXmt
-	tK2nesjp1PUhFnx1q5lDHT89/PyG1e14uSbr61fSPma+pQre51j+NOSprGgwqz12teK+0X7m
-	6ucH6r79NKq4GJ9bmKC0PUvodGQSW+alh24cS88snKkXZrO5sH5r3Sbjv5P6V1TZPjE+8E/D
-	dtbF02VW+m+EUw6s6uDYdO/rtdUBz38esJw3uyl2ww2tMAGdqXLW1zVj7HdqmLYu/vD4o6pm
-	kXnlGpc3X4K3Oe5l/S0eezPxv3rZBddLirUW52fZzVx7hP9IqUrC46ffi84dW6iZuyLec4HQ
-	mRDdzwUOO+49L2bdNU8ySHyCwiNxwfxrek3tv88smPBmjY5074b3D2x2Lg+ZxGL0X4mlOCPR
-	UIu5qDgRAFOeeWgWBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmplk+LIzCtJLcpLzFFi42LZdljTQpendWOawZJDshYvf15ls5j24Sez
+	xctDmhaPbj9jtLi8aw6bRff1HWwWy4//Y3Jg97h8xdvj49NbLB59W1YxenzeJOfRfqCbKYA1
+	KtsmIzUxJbVIITUvOT8lMy/dVsk7ON453tTMwFDX0NLCXEkhLzE31VbJxSdA1y0zB+gIJYWy
+	xJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpBSk6BeYFecWJucWleul5eaomVoYGBkSlQYUJ2
+	xtQZ95gKDphUzF+9gaWB8aZ2FyMnh4SAicSTBctYuxi5OIQEdjBK7L28kKWLkYODV0BQ4u8O
+	YZAaYQF3iaObjrKD2EICShJdC7cyQ8QNJNZN3wNmswnoSUz5fYcRxBYRiJY4Om83I8hMZoFl
+	jBIf+8+zQCzjlZjR/hTKlpbYvnwrWAOngLXEnbmnmSDiGhI/lvUyQ9iiEjdXv2WHsd8fm88I
+	YYtItN47C1UjKPHg526ouITEuQ8LoebXS7S+P8UOcoSEwARGicZjf6AG6Utc69gIVsQr4Csx
+	cSbEESwCqhKvz65hg6hxkfj08BFYnFlAXmL72znMoEBhFtCUWL9LH8SUEFCWOHKLBaKCT6Lj
+	8F92mBcbNv7Gyt4x7wnUi2oSjxZsYZ3AqDwLEdKzkOyahbBrASPzKkax1ILi3PTUYqMCY3jk
+	JufnbmIEp0ct9x2MM95+0DvEyMTBeIhRgoNZSYS3q3RDmhBvSmJlVWpRfnxRaU5q8SFGU6Av
+	JzJLiSbnAxN0Xkm8oYmlgYmZmaG5kamBuZI4773WuSlCAumJJanZqakFqUUwfUwcnFINTIt8
+	t5op3K45cFzb7I+hQOrr6U3LPzO6nrim9+VftNrjSd9KfDT1nboVHr1eIF944Fdo2Kd9wc+O
+	sam7s93RvuOjNM9Y2uOCfl23b9dc/hrx2VrCVW3TN5pWbZ74reDDtONLvDKuOnBVZYYce2fp
+	9V049OSvDzcMJ61Lnhkr6uW34be4l5rVXKaYG2nVR1/yhM63Xf7UcyLnpjOiIdfZN7t9ZuP/
+	KB4hfV5zAptowSx1S9XotB/5fokf2WoObspbw7zt9j/m/5Naz3N9vBGuK6SYprEg+emLyqIf
+	GjxVt58xT1wSIyxuEPQqSDTnUjbfyaTkBerX6hIyVym2xQsbKzGl3+6RebhIV+gVRwmbEktx
+	RqKhFnNRcSIActgpkhgEAAA=
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240804072309epcas2p2309ebc15f20ca598a91fe30a3245200f
-References: <20240804072109.2330880-2-avri.altman@wdc.com>
+X-CMS-RootMailID: 20240804072321epcas2p3fbbda7858fe25be16ef6acb64b7a524e
+References: <20240804072109.2330880-3-avri.altman@wdc.com>
 	<20240804072109.2330880-1-avri.altman@wdc.com>
-	<CGME20240804072309epcas2p2309ebc15f20ca598a91fe30a3245200f@epcms2p1>
+	<CGME20240804072321epcas2p3fbbda7858fe25be16ef6acb64b7a524e@epcms2p3>
 
 Hi Avri,
 
-> Prepare so we'll be able to read various other HCI registers.
-> While at it, fix the HCPID & HCMID register names to stand for what they
-> really are. Also replace the pm_runtime_{get/put}_sync() calls in
-> auto_hibern8_show to ufshcd_rpm_{get/put}_sync() as any host controller
-> register reads should.
+> The standard register map of UFSHCI is comprised of several groups.  The
+> first group (starting from offset 0x00), is the host capabilities group.
+> It contains some interesting information, that otherwise is not
+> available, e.g. the UFS version of the platform etc.
 > 
 > Signed-off-by: Avri Altman <avri.altman@wdc.com>
 > ---
->  drivers/ufs/core/ufs-sysfs.c | 38 +++++++++++++++++++++---------------
->  include/ufs/ufshci.h         |  5 +++--
->  2 files changed, 25 insertions(+), 18 deletions(-)
+>  Documentation/ABI/testing/sysfs-driver-ufs | 48 +++++++++++
+>  drivers/ufs/core/ufs-sysfs.c               | 95 ++++++++++++++++++++++
+>  2 files changed, 143 insertions(+)
 > 
-> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-> index e80a32421a8c..dec7746c98e0 100644
-> --- a/drivers/ufs/core/ufs-sysfs.c
-> +++ b/drivers/ufs/core/ufs-sysfs.c
-> @@ -198,6 +198,24 @@ static u32 ufshcd_us_to_ahit(unsigned int timer)
->  	       FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, scale);
->  }
->  
-> +static int ufshcd_read_hci_reg(struct ufs_hba *hba, u32 *val, unsigned int reg)
-> +{
-> +	down(&hba->host_sem);
-> +	if (!ufshcd_is_user_access_allowed(hba)) {
-> +		up(&hba->host_sem);
-> +		return -EBUSY;
-> +	}
+> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+> index fe943ce76c60..6c6cf12d25ca 100644
+> --- a/Documentation/ABI/testing/sysfs-driver-ufs
+> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
+> @@ -1532,3 +1532,51 @@ Contact:	Bean Huo <beanhuo@micron.com>
+>  Description:
+>  		rtc_update_ms indicates how often the host should synchronize or update the
+>  		UFS RTC. If set to 0, this will disable UFS RTC periodic update.
 > +
-> +	ufshcd_rpm_get_sync(hba);
-> +	ufshcd_hold(hba);
-> +	*val = ufshcd_readl(hba, reg);
-> +	ufshcd_release(hba);
-> +	ufshcd_rpm_put_sync(hba);
-> +
-> +	up(&hba->host_sem);
-> +	return 0;
-> +}
-> +
->  static ssize_t auto_hibern8_show(struct device *dev,
->  				 struct device_attribute *attr, char *buf)
->  {
-> @@ -208,23 +226,11 @@ static ssize_t auto_hibern8_show(struct device *dev,
->  	if (!ufshcd_is_auto_hibern8_supported(hba))
->  		return -EOPNOTSUPP;
->  
-> -	down(&hba->host_sem);
-> -	if (!ufshcd_is_user_access_allowed(hba)) {
-> -		ret = -EBUSY;
-> -		goto out;
-> -	}
-> -
-> -	pm_runtime_get_sync(hba->dev);
-> -	ufshcd_hold(hba);
-> -	ahit = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
-> -	ufshcd_release(hba);
-> -	pm_runtime_put_sync(hba->dev);
-> -
-> -	ret = sysfs_emit(buf, "%d\n", ufshcd_ahit_to_us(ahit));
-> +	ret = ufshcd_read_hci_reg(hba, &ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
-> +	if (ret)
-> +		return ret;
->  
-> -out:
-> -	up(&hba->host_sem);
-> -	return ret;
-> +	return sysfs_emit(buf, "%d\n", ufshcd_ahit_to_us(ahit));
->  }
->  
->  static ssize_t auto_hibern8_store(struct device *dev,
-> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-> index 38fe97971a65..194e3655902e 100644
-> --- a/include/ufs/ufshci.h
-> +++ b/include/ufs/ufshci.h
-> @@ -25,8 +25,9 @@ enum {
->  	REG_CONTROLLER_CAPABILITIES		= 0x00,
->  	REG_MCQCAP				= 0x04,
->  	REG_UFS_VERSION				= 0x08,
-> -	REG_CONTROLLER_DEV_ID			= 0x10,
-> -	REG_CONTROLLER_PROD_ID			= 0x14,
-> +	REG_EXT_CONTROLLER_CAPABILITIES		= 0x0C,
-> +	REG_CONTROLLER_PID			= 0x10,
-> +	REG_CONTROLLER_MID			= 0x14,
->  	REG_AUTO_HIBERNATE_IDLE_TIMER		= 0x18,
->  	REG_INTERRUPT_STATUS			= 0x20,
->  	REG_INTERRUPT_ENABLE			= 0x24,
-> -- 
-> 2.25.1
+> +What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/capabilities
+> +What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/capabilities
+> +Date:		August 2024
+> +Contact:	Avri Altman <avri.altman@wdc.com>
+> +Description:
+> +		Host Capabilities register group: host controller capabiities register.
 
-Looks good to me.
+A nit: s/capabiities/capabilities
+
+With above addressed,
 
 Reviewed-by: Keoseong Park <keosung.park@samsung.com>
 
 Best Regards,
 Keoseong
+
+> +		Symbol - CAP.  Offset: 0x00 - 0x03.
+> +
+> +What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/mcq_cap
+> +What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/mcq_cap
+> +Date:		August 2024
+> +Contact:	Avri Altman <avri.altman@wdc.com>
+> +Description:
+> +		Host Capabilities register group: multi-circular queue capability register.
+> +		Symbol - MCQCAP.  Offset: 0x04 - 0x07.
+> +
+> +What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/version
+> +What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/version
+> +Date:		August 2024
+> +Contact:	Avri Altman <avri.altman@wdc.com>
+> +Description:
+> +		Host Capabilities register group: UFS version register.
+> +		Symbol - VER.  Offset: 0x08 - 0x0B.
+> +
+> +What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/ext_capabilities
+> +What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/ext_capabilities
+> +Date:		August 2024
+> +Contact:	Avri Altman <avri.altman@wdc.com>
+> +Description:
+> +		Host Capabilities register group: extended controller capabilities register.
+> +		Symbol - EXT_CAP.  Offset: 0x0C - 0x0F.
+> +
+> +What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/product_id
+> +What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/product_id
+> +Date:		August 2024
+> +Contact:	Avri Altman <avri.altman@wdc.com>
+> +Description:
+> +		Host Capabilities register group: product ID register.
+> +		Symbol - HCPID.  Offset: 0x10 - 0x13.
+> +
+> +What:		/sys/bus/platform/drivers/ufshcd/ufshci_capabilities/man_id
+> +What:		/sys/bus/platform/devices/*.ufs/ufshci_capabilities/man_id
+> +Date:		August 2024
+> +Contact:	Avri Altman <avri.altman@wdc.com>
+> +Description:
+> +		Host Capabilities register group: manufacturer ID register.
+> +		Symbol - HCMID.  Offset: 0x14 - 0x17.
+> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+> index dec7746c98e0..751d5ff406da 100644
+> --- a/drivers/ufs/core/ufs-sysfs.c
+> +++ b/drivers/ufs/core/ufs-sysfs.c
+> @@ -525,6 +525,100 @@ static const struct attribute_group ufs_sysfs_capabilities_group = {
+>  	.attrs = ufs_sysfs_capabilities_attrs,
+>  };
+>  
+> +static ssize_t capabilities_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "0x%x\n", hba->capabilities);
+> +}
+> +
+> +static ssize_t mcq_cap_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	if (hba->ufs_version < ufshci_version(4, 0))
+> +		return -EOPNOTSUPP;
+> +
+> +	return sysfs_emit(buf, "0x%x\n", hba->mcq_capabilities);
+> +}
+> +
+> +static ssize_t version_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	return sysfs_emit(buf, "0x%x\n", hba->ufs_version);
+> +}
+> +
+> +static ssize_t ext_capabilities_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	int ret;
+> +	u32 val;
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	if (hba->ufs_version < ufshci_version(4, 0))
+> +		return -EOPNOTSUPP;
+> +
+> +	ret = ufshcd_read_hci_reg(hba, &val, REG_EXT_CONTROLLER_CAPABILITIES);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return sysfs_emit(buf, "0x%x\n", val);
+> +}
+> +
+> +static ssize_t product_id_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	int ret;
+> +	u32 val;
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	ret = ufshcd_read_hci_reg(hba, &val, REG_CONTROLLER_PID);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return sysfs_emit(buf, "0x%x\n", val);
+> +}
+> +
+> +static ssize_t man_id_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	int ret;
+> +	u32 val;
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+> +
+> +	ret = ufshcd_read_hci_reg(hba, &val, REG_CONTROLLER_MID);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return sysfs_emit(buf, "0x%x\n", val);
+> +}
+> +
+> +static DEVICE_ATTR_RO(capabilities);
+> +static DEVICE_ATTR_RO(mcq_cap);
+> +static DEVICE_ATTR_RO(version);
+> +static DEVICE_ATTR_RO(ext_capabilities);
+> +static DEVICE_ATTR_RO(product_id);
+> +static DEVICE_ATTR_RO(man_id);
+> +
+> +static struct attribute *ufs_sysfs_ufshci_cap_attrs[] = {
+> +	&dev_attr_capabilities.attr,
+> +	&dev_attr_mcq_cap.attr,
+> +	&dev_attr_version.attr,
+> +	&dev_attr_ext_capabilities.attr,
+> +	&dev_attr_product_id.attr,
+> +	&dev_attr_man_id.attr,
+> +	NULL
+> +};
+> +
+> +static const struct attribute_group ufs_sysfs_ufshci_group = {
+> +	.name = "ufshci_capabilities",
+> +	.attrs = ufs_sysfs_ufshci_cap_attrs,
+> +};
+> +
+>  static ssize_t monitor_enable_show(struct device *dev,
+>  				   struct device_attribute *attr, char *buf)
+>  {
+> @@ -1508,6 +1602,7 @@ static const struct attribute_group ufs_sysfs_attributes_group = {
+>  static const struct attribute_group *ufs_sysfs_groups[] = {
+>  	&ufs_sysfs_default_group,
+>  	&ufs_sysfs_capabilities_group,
+> +	&ufs_sysfs_ufshci_group,
+>  	&ufs_sysfs_monitor_group,
+>  	&ufs_sysfs_power_info_group,
+>  	&ufs_sysfs_device_descriptor_group,
+> -- 
+> 2.25.1
