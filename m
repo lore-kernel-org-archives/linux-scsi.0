@@ -1,118 +1,103 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0B951C37B6
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2024 12:12:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83B0D1C5788;
+	Tue,  6 Aug 2024 13:10:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722946368; cv=none; b=HlDJgYxYAJjAWuAsMax/FhwodaWn7mrEMmJt7R5/kRmbqA8qY1UpjJO17ztHR1sW7xEookqRnbtsZ+AkMi4CME6X4f68Otw8hOZiSfI/Ha81z3XShlnXlbzksMOX9VCZa5Rv8xhlnXdxrzvelLDsbWhMzZV5ARUSyDgRkD9chbg=
+	t=1722949806; cv=none; b=LiASfrbWIfHic1rWPkSxWlZGJdM/7TnJGzH1W2hXsipijJybkrwqXq0Fn74G4fX/y/DKNGJmwZoRV1sF3GLwwwAQoA/eAEmN7BTR7lvZgIZ9S18DtX8UjtNsF79isLhyVdoyKNxBOPjr9UfiRcl2R+36JKPgHbl4od6CwQB6KEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722946368; c=relaxed/simple;
-	bh=MPy2dmqKlCsrw5okIZFwkiGzwVi0bWXg1j0NfWvMFRQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=H1wnB5WnPC7MsDbihQQKuBvLBvFhcKN2Ba1H3dSaM0agDE/tVgXTxdldvCQq9r5E8jPYdJ4ZAKQUSwz1Vi54n6T7vuLm0DV9phCNeDAOENj9q2orl/QMxo560kPHRGPJBejvKG+rTpiSYFFibM9mLUgs66/zQnJjhKg2SQWBqu0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=evYCil9U; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1722949806; c=relaxed/simple;
+	bh=KREccnRV9/lcz1AxarrngZjnkiUg2IvSSWsvWfX4xFM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=T8VCvEc3LZC865rKHwvFIDguwAuodx7SYGAW70kyQj7NNAExZbeqhUdWV7GSX/zWLkHke0OoQMaoUWQkTWMkShFo6cKjgCM0X74Pae7PVvfk5XMpOCRVGVq80lFRMVKeyUZnr3wNkJvvhgraHU6n8RSIvQ0yIxlIduGUGNwsySk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c0bNVl+6; arc=none smtp.client-ip=209.85.167.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="evYCil9U"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20240806121239epoutp02e2176920dcba3a8fe5f6fdb4db92f069~pIpXCqFgh2058920589epoutp02P
-	for <linux-scsi@vger.kernel.org>; Tue,  6 Aug 2024 12:12:39 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20240806121239epoutp02e2176920dcba3a8fe5f6fdb4db92f069~pIpXCqFgh2058920589epoutp02P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1722946359;
-	bh=MPy2dmqKlCsrw5okIZFwkiGzwVi0bWXg1j0NfWvMFRQ=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=evYCil9U/26jC5DAGr3HQ5NYpl6SrRpiYd/YoS+2vCCz1PrBhcB9cI4dsDnoCTRgs
-	 /ZfAC4jcC7p+/sDcT07oaVTPLHDuzFIQGEcE2fjJ2FdoYVN9cSsgzcYT/S0NGqtUpp
-	 1wMmXEylFep3PD1AH4hcaPLAAid5RxKr48db2Y10=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-	20240806121238epcas5p101c691ad6ae30057620a8ca02c109713~pIpWu1cgP2663726637epcas5p1j;
-	Tue,  6 Aug 2024 12:12:38 +0000 (GMT)
-Received: from epsmgec5p1new.samsung.com (unknown [182.195.38.180]) by
-	epsnrtp1.localdomain (Postfix) with ESMTP id 4WdXHn4nbtz4x9Pp; Tue,  6 Aug
-	2024 12:12:37 +0000 (GMT)
-Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
-	epsmgec5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	31.E5.08855.53312B66; Tue,  6 Aug 2024 21:12:37 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20240806121237epcas5p197db97c5df4b111a3a1a2ee1e2d0b200~pIpVZ7fQP1546115461epcas5p1x;
-	Tue,  6 Aug 2024 12:12:37 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240806121237epsmtrp12820d862db5b77ca247cd462861b84c7~pIpVZTZ1U0258802588epsmtrp1n;
-	Tue,  6 Aug 2024 12:12:37 +0000 (GMT)
-X-AuditID: b6c32a44-15fb870000002297-c9-66b213350bc4
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	45.EA.07567.53312B66; Tue,  6 Aug 2024 21:12:37 +0900 (KST)
-Received: from [107.122.11.51] (unknown [107.122.11.51]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20240806121235epsmtip2e97b04a07d5f0df954c15df3e8e1ed6e~pIpUHaOnL1208512085epsmtip2z;
-	Tue,  6 Aug 2024 12:12:35 +0000 (GMT)
-Message-ID: <d6b35805-dbae-1b14-f295-4f99204592a2@samsung.com>
-Date: Tue, 6 Aug 2024 17:42:34 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c0bNVl+6"
+Received: by mail-oi1-f178.google.com with SMTP id 5614622812f47-3db14339fb0so348454b6e.2;
+        Tue, 06 Aug 2024 06:10:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1722949803; x=1723554603; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=KREccnRV9/lcz1AxarrngZjnkiUg2IvSSWsvWfX4xFM=;
+        b=c0bNVl+6VAZVmRcyP+mKR7cSyojFuaAPFgxXJeEy2yZAWDQQka8hbxzCqm6V7Lo1lN
+         SSUQ1yrQNokWNMSxBKBPZ5qdHGMd85bB/r1C88jq3P/M+eHE38eWhH1XHRG25PaRpEue
+         YM2f1uFYl1qJUnhUWL8CWuU8amNC2pCTBiYvVe9MtoQ41mHa07yDSCFA8M+m+x8/AWH3
+         IAQvcR1am/yESF4D+fGliAgmoRKP7X0EPY36PefBSTJoHXJERL3uNx14Im4hH4tosTkU
+         Mrjp46GLO0Pd1KKzATs/RHC5WWLmIp8IprNMmJebX677uJJbnoKEZRTISrO+9zeXOvrm
+         zV1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1722949803; x=1723554603;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=KREccnRV9/lcz1AxarrngZjnkiUg2IvSSWsvWfX4xFM=;
+        b=Y3ZAE/v8Hh359BlxcP17ukNuA0sQd/Zi7oOzo63od4P4NFLGTYdMdzbWEcQffpxStl
+         wl0X1Eldbu/HA3oMIlyPOE3PqTD3wQjoFMs0HHygojnZVCtSZF08tbj0kMJQI/0IgfRZ
+         GsYwmogrc+83tomZYEpJr0j5/6yoL9rf1SjPzHQhHkrIxG2YwGPYJRlfK84l67Q3e/ZR
+         0h64SOYDjg45QI6ljJTgLBNI3D1/xJnNl/duEJEuvKg9T4b0dvzmN505xHWNCxDgyQDo
+         2iyKkZnGUvxT3jIh1piUK3N8UVj/WZIBEFlYekVgOJzl4qdlMm4HEbN7tnuH18e8P9EG
+         mEBg==
+X-Forwarded-Encrypted: i=1; AJvYcCVvE/Oe0fAPZp3MZoY+WFGleSLOmBnGI2p/PSTN01NmkJ0vCsJOFZnTky+E8000Jtxds2N7Dnk0cArZ4jde4LBKSuTdYeY4vOnF2C5fiBdew4DwfUFXwvwM/iAdwVYAfx/DCwQFWf7LcI+vGXFMtyXVC+crcQ+m2bFwQNencEF7GooATDe65IEZNWbVNFKqYs0PJbC5xZ664juiVWmb1nWT
+X-Gm-Message-State: AOJu0Ywwi+NeZLD33NxNq/K1HmQl3AnFQZKWV1YRqgT9lacVQxyPXuxs
+	k4zy8VsNHLX0x8OWEUaw1ELNkNMcHolJxn1O3jgFaiu3lz/1GOqxno6TfjFymJbI4H9BkUcl/3Z
+	5nGCJMpmHl1yCbEJZtukos1EZAvo=
+X-Google-Smtp-Source: AGHT+IGVJxX/HbV5Wr6MzBf+fuxb+mIBQRp2TWTznpKDIx+yrOgDwhY5P4ZF8kRUebG9zXa+VAy7m3G1u1r+X9IB2Rg=
+X-Received: by 2002:a05:6870:50d:b0:259:8b4e:e71a with SMTP id
+ 586e51a60fabf-26891ee1b6dmr17272867fac.46.1722949803427; Tue, 06 Aug 2024
+ 06:10:03 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0)
-	Gecko/20100101 Thunderbird/91.13.1
-Subject: Re: [PATCH 1/2] scsi: sd: Don't check if a write for REQ_ATOMIC
-Content-Language: en-US
-To: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
-	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-From: Kanchan Joshi <joshi.k@samsung.com>
-In-Reply-To: <20240805113315.1048591-2-john.g.garry@oracle.com>
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupnk+LIzCtJLcpLzFFi42LZdlhTQ9dUeFOawa7VKhar7/azWWzs57C4
-	8GsHo8XeW9oWl3fNYbPovr6DzWL58X9MDuwe0yadYvO4fLbU4+PTWywenzfJBbBEZdtkpCam
-	pBYppOYl56dk5qXbKnkHxzvHm5oZGOoaWlqYKynkJeam2iq5+AToumXmAK1XUihLzCkFCgUk
-	Fhcr6dvZFOWXlqQqZOQXl9gqpRak5BSYFOgVJ+YWl+al6+WlllgZGhgYmQIVJmRnnNqxlKnA
-	qOLa3D6mBkbdLkZODgkBE4nfB1ayg9hCArsZJW6cMO1i5AKyPzFK7J31mQ3C+cYo8f7yZXaY
-	ju7VbxkhEnsZJa6uO8wO4bxllPix9wwTSBWvgJ3Ey61/mEFsFgEViUubzjNCxAUlTs58wgJi
-	iwokS/zsOsAGYgsLeEj0L2gAq2EWEJe49WQ+2BwRgTqJE6u7oOLREs82LAaKc3CwCWhKXJhc
-	ChLmFLCX6Po8hQmiRF5i+9s5zCD3SAj8ZJeYOuMtG0i9hICLxJM+HYgHhCVeHd8C9YyUxMv+
-	Nig7W+LBowcsEHaNxI7NfawQtr1Ew58brCBjmIHWrt+lD7GKT6L39xMmiOm8Eh1tQhDVihL3
-	Jj2F6hSXeDhjCZTtIfH30ScWSEgdZ5T4teQ10wRGhVlIgTILyfOzkHwzC2HzAkaWVYySqQXF
-	uempyaYFhnmp5fDITs7P3cQITplaLjsYb8z/p3eIkYmD8RCjBAezkghvV+mGNCHelMTKqtSi
-	/Pii0pzU4kOMpsDYmcgsJZqcD0zaeSXxhiaWBiZmZmYmlsZmhkrivK9b56YICaQnlqRmp6YW
-	pBbB9DFxcEo1MPlKV2S/1/jmuCfj+cxnapaF9zpmXPsf6xL3fPGd3RLVLOGJR+a6VYi8vPJO
-	fK/YP5M+k4v7H/0Oatgnt/T6t0ptrbmpfU84NuzWsd7RYGvt2Zu4cNWSl1fTv83YGFn0eOKR
-	K3PULK9sPLBy3alQ7ZdvVpXtv7VzdwQ/b/7k2kTfh0JTtYRmLeDkWd+auJft5xvn5+b2IiX9
-	9284FqZuOLmAuU/s6bN9zYdnrTa7yO6s8e5t+uWLudNKuo1PpPvWb7z1ou/kj8U/zG8v55Gu
-	TTDwvs8mwrk1bO/2KGkuqWcbT81cdu6gR1LnxZ1xPYIRV/lNk5J6SrbOlL6hls30R/rQro2v
-	jBKskrVfPq/yvDRZiaU4I9FQi7moOBEAhRK2KyIEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrDLMWRmVeSWpSXmKPExsWy7bCSvK6p8KY0gyNvuSxW3+1ns9jYz2Fx
-	4dcORou9t7QtLu+aw2bRfX0Hm8Xy4/+YHNg9pk06xeZx+Wypx8ent1g8Pm+SC2CJ4rJJSc3J
-	LEst0rdL4Mo4tWMpU4FRxbW5fUwNjLpdjJwcEgImEt2r3zJ2MXJxCAnsZpTY/2sWM0RCXKL5
-	2g92CFtYYuW/5+wQRa8ZJf5sawIr4hWwk3i59Q+YzSKgInFp03lGiLigxMmZT1hAbFGBZImX
-	fyaCDRIW8JDoX9AAVsMMtODWk/lMILaIQJ3E3wlLgeZwAMWjJT5tiIfYdZxRYurb4ywgcTYB
-	TYkLk0tByjkF7CW6Pk9hghhjJtG1tQtqpLzE9rdzmCcwCs1CcsUsJNtmIWmZhaRlASPLKkbJ
-	1ILi3PTcZMMCw7zUcr3ixNzi0rx0veT83E2M4AjR0tjBeG/+P71DjEwcjIcYJTiYlUR4u0o3
-	pAnxpiRWVqUW5ccXleakFh9ilOZgURLnNZwxO0VIID2xJDU7NbUgtQgmy8TBKdXApHeq7c/D
-	1Z3B2Rk7tl7ZPmUnp90f0S+vefZFs/jE8zbvOc4WyLgxR/eGp36m7qGgyEMBnLu+l/24s+z8
-	qyke+6LFUqZ8MT20esPxQHUOLzk5fV9OVYfmg8+8szKzbnivfPBoTeNfnaoZP1J/XeW353nh
-	V3X7wz0tRo/V09dvD5rd+mSLYxuDfkPG/x2OTxbEMFu+nKEoEcJ45Ouae55lgTrNHx7/Fwpr
-	THrMEvZh7WX+jJcfnnWVr0zKWbVGYlG5l8LFnQt/WFalX5OZU3vncr33vs2y+WyB71WFpkX9
-	1tNlN7ol47REQ3H9F2X5mnNHVO7kP/97f3GPT4RdQA+fzTGxmadMjKc/dtdt3qnzUomlOCPR
-	UIu5qDgRALpkES//AgAA
-X-CMS-MailID: 20240806121237epcas5p197db97c5df4b111a3a1a2ee1e2d0b200
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240805113402epcas5p39206892b600bfa2dbd927b0a5b0f6b7e
-References: <20240805113315.1048591-1-john.g.garry@oracle.com>
-	<CGME20240805113402epcas5p39206892b600bfa2dbd927b0a5b0f6b7e@epcas5p3.samsung.com>
-	<20240805113315.1048591-2-john.g.garry@oracle.com>
+References: <20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de>
+In-Reply-To: <20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de>
+From: Stefan Hajnoczi <stefanha@gmail.com>
+Date: Tue, 6 Aug 2024 09:09:50 -0400
+Message-ID: <CAJSP0QVod5DA2hdNFrpN+HZcfm6Bg11teRmt5d+MBTB1wH4vZg@mail.gmail.com>
+Subject: Re: [PATCH v3 00/15] honor isolcpus configuration
+To: Daniel Wagner <dwagner@suse.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>, 
+	Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@lst.de>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, John Garry <john.g.garry@oracle.com>, 
+	"Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
+	Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, 
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, 
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>, 
+	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, 
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Nilesh Javali <njavali@marvell.com>, 
+	GR-QLogic-Storage-Upstream@marvell.com, Jonathan Corbet <corbet@lwn.net>, 
+	Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>, 
+	Sridhar Balaraman <sbalaraman@parallelwireless.com>, "brookxu.cn" <brookxu.cn@gmail.com>, 
+	Ming Lei <ming.lei@redhat.com>, linux-kernel@vger.kernel.org, 
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	linux-scsi@vger.kernel.org, virtualization@lists.linux.dev, 
+	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com, 
+	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com, 
+	linux-doc@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Reviewed-by: Kanchan Joshi <joshi.k@samsung.com>
+On Tue, 6 Aug 2024 at 08:10, Daniel Wagner <dwagner@suse.de> wrote:
+> The only stall I was able to trigger
+> reliable was with qemu's PCI emulation. It looks like when a CPU is
+> offlined, the PCI affinity is reprogrammed but qemu still routes IRQs to
+> an offline CPU instead to newly programmed destination CPU. All worked
+> fine on real hardware.
+
+Hi Daniel,
+Please file a QEMU bug report here (or just reply to this emails with
+details on how to reproduce the issue and I'll file the issue on your
+behalf):
+https://gitlab.com/qemu-project/qemu/-/issues
+
+We can also wait until your Linux patches have landed if that makes it
+easier to reproduce the bug.
+
+Thanks!
+
+Stefan
