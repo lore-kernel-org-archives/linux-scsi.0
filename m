@@ -1,71 +1,70 @@
-Received: from fhigh7-smtp.messagingengine.com (fhigh7-smtp.messagingengine.com [103.168.172.158])
+Received: from fout2-smtp.messagingengine.com (fout2-smtp.messagingengine.com [103.168.172.145])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CF42433BB;
-	Wed,  7 Aug 2024 03:40:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.158
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18194191F78;
+	Wed,  7 Aug 2024 03:40:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.145
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723002009; cv=none; b=LRL4oBreRL9r9FhuCw/iEQPpLysUm5ue19HEbnnKm9hEBgY5vMpn6fqazqcTq2akCCHzh1eP63pBZd07KzBR08JL31q0WPPzoyfQ9QyS1Mk81RlaPwXhDLQP5P5X1o78oW64CfuMHgbRSt7xnRBgrHr2nHm7MZ9sy3K6SKx2JkQ=
+	t=1723002018; cv=none; b=VYrljX98iaThs2fU/tuxeKKHR1G0vwHQ4D5v3wPQdrTv598AuTJYUIbvhZX0FcoEEOtjLlPDN7uhC+j6vm5xTSbCACbajxOlz8iNHoIbylcTPYE1rz1JQsbLTzki9dNvAhU5X7VzRWEnMFzDPjLQ3ZbIEd9eKKhak4Z1/b81NOI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723002009; c=relaxed/simple;
-	bh=AXUWhKyvnpGSl3g2EVmbeoop8XEjCIpvMlkLO6xEdqY=;
-	h=To:Cc:Message-Id:In-Reply-To:References:From:Subject:Date; b=ASCYlQNKBbnGdgKCd9MFSCsfsoicl1RBE0wegO9lLAYWAfS7OF+p5aaUH9Rt79/IKJzmKWjNAXdOXiguxyY0HVN0g/jniipRyJFW8qa/WMy92/lY9SlNDQRxA9+tVBBe/U6gaREZuFdspZxcRznqXwqiFbNeVE3UxrtQGOk41fc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=lSaRHh7B; arc=none smtp.client-ip=103.168.172.158
+	s=arc-20240116; t=1723002018; c=relaxed/simple;
+	bh=WHQKju5TB0Z+Ao/hCxLffpzCct+Fv2WmGoeZEBqS5OU=;
+	h=To:Cc:Message-Id:In-Reply-To:References:From:Subject:Date; b=Lzy3iQ9xNUJUE1Gbwu6mGOPkzOFUi5TG/eTzZ7X95iuDRDzMhH9P++rsPe70NSP5yRwVx59oewNC1iUbLgv6JEX5yPCHctwJW12x1v42tyOfNrKE2ZGiy4eLJtmTVBUKVaTI79kq78qZXw2PcRHlhYrUk0n2XN7OrLpTGeP+xtE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=jv+ShLZA; arc=none smtp.client-ip=103.168.172.145
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="lSaRHh7B"
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="jv+ShLZA"
 Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-	by mailfhigh.nyi.internal (Postfix) with ESMTP id 259121151AFA;
-	Tue,  6 Aug 2024 23:40:06 -0400 (EDT)
+	by mailfout.nyi.internal (Postfix) with ESMTP id 24B33138FD02;
+	Tue,  6 Aug 2024 23:40:15 -0400 (EDT)
 Received: from mailfrontend2 ([10.202.2.163])
-  by compute5.internal (MEProxy); Tue, 06 Aug 2024 23:40:06 -0400
+  by compute5.internal (MEProxy); Tue, 06 Aug 2024 23:40:15 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
 	:feedback-id:from:from:in-reply-to:in-reply-to:message-id
 	:references:reply-to:subject:subject:to:to:x-me-proxy:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1723002006; x=
-	1723088406; bh=HQaI5PS6HseqDLWuvlRrlpLlgcbdPON3VBx4p6bEVds=; b=l
-	SaRHh7BE+5o/OzMot9MBCtbNXRELunYkXbZuBVTEd56lo4Hqq3qr9v34ECopcyVL
-	srDq45stX1nknwr7czQAx1EohTW23vHeFCkfUgsyY/kEhXOOrIltbZz+P7MdZ0TS
-	v6HslN1hu0sodhz2dxLe3G6cfCJn9ok5zIWxzCbiOy1FLnyrejnc6Aj5l94pW+NM
-	lixo6Zz8fUtAELAR7mhxBPY9MVjea5txjmRi54ip5AqhsbtYHYmcB5McbKEnj/Hj
-	s57FEV6W29kGs2HGrv+YqICr6qQTs/hcB3XB3A/x2k9F0Yt1rH2C/AyD1W/lwTzZ
-	9gQdTalKjPvnNgmdMNqrQ==
-X-ME-Sender: <xms:luyyZoqxb4yU2BgMKPKlaPdAf39OZGIyI6ymM_y6ugQjSIK3K2_OGQ>
-    <xme:luyyZuqvPsStPx96D-xMXBTGXcoKXTYCaRmBtUQqMkmQB5mx-752-9r9On0EaFW4Q
-    5byNMCqlBDzThkc4Ww>
-X-ME-Received: <xmr:luyyZtN61e_8J353a9uycmpwxNVtggaLqwPr_qdo58AvR0cXO4_mOtiqoADEP9YX-TH7Ll10qqCLzcrJTD6To2Nj3m4U7Z__nYU>
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1723002015; x=
+	1723088415; bh=nLSp3vSDZw5Ig7kj8JHbE+ZnAS/f759svuZnaVcejT0=; b=j
+	v+ShLZAGmsA6wubSOIcmLJYnNt7yic8/uDrQ6b+DClCHQKPDhuQguJlpi5CirOvk
+	32I6rPHkP9Pgwa5Jn0Hlam0/QkdlKn8d4y4R2Gav8LWxdlJ5ZhIF0Z4tI8G0Z0S3
+	VTxWl1nKvR1vHvD9TCHgGxhvzSpJ8gJ1PDZdzztn9SSs4pXx9I97rld1xWyCTuze
+	WLO74iCrz/+vroJcgE3rD7Hu49lNBLJOvjR84v9/3Rs/qiLvggYbGD9jabdOg+Me
+	/xHQKCSVk1ITEV6UqueXdt0vpV8cZhxV1v/pZwZr1b/yF2AQpGHZXnRsENApmtm5
+	v28CruvZKEJzEahQFsS4w==
+X-ME-Sender: <xms:n-yyZh5VyckGMsMXspRzjROumqFD7G_ZCAcnuz7W4kPXCyC0xvl1tw>
+    <xme:n-yyZu5N0JDfWLUOpz388dyxFP704HqSj5eXckWZHWkxnr1GPRb0Ji4S9eMp-3f0L
+    QisUYj09FkPhaSDS70>
+X-ME-Received: <xmr:n-yyZodafQEvWD-1T-yoinP3z29bveh208Mo9_qk-CzeZ0Sqr-VSaqDFmqJmceUWZgJMvYVk4mLN0LzZp9yZGQs1HTAziU9Bwrs>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeftddrkeelgdejiecutefuodetggdotefrodftvf
     curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
     uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
     fjughrpefvvefkjghfhffuffestddtredttddttdenucfhrhhomhephfhinhhnucfvhhgr
     ihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrthhtvg
     hrnhepvefggfdthffhfeevuedugfdtuefgfeettdevkeeigefgudelteeggeeuheegffff
-    necuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfhhthh
+    necuvehluhhsthgvrhfuihiivgepudenucfrrghrrghmpehmrghilhhfrhhomhepfhhthh
     grihhnsehlihhnuhigqdhmieekkhdrohhrghdpnhgspghrtghpthhtoheptd
-X-ME-Proxy: <xmx:luyyZv5JpmPZ2kzHnJl9Nm4fli-NXyYbPQoJ5rU-hRglyBYDGTBLuQ>
-    <xmx:luyyZn55s4pS7BAB7KHJgXuepmSuP5-3X_dnRGdD9n_ofKpIYVmUKw>
-    <xmx:luyyZviKoBIc9TMl1S0XbPBDeGDOVH_0sMyh9eHTofV349Fx0ADvEA>
-    <xmx:luyyZh6Nc8qhVWHr6xdET_DAJ-L25tXOtxnasCHS5z0BFyip4N2C3A>
-    <xmx:luyyZhu-dI-_HmEVcsskWiHZta6xRGoJTT8buCnj0KCUR93OdPRGjAJz>
+X-ME-Proxy: <xmx:n-yyZqJBDA2G4Gk7AV_YjpEpJzy3Eo7TeeG3l-YkF7ecwBYrRUcsVA>
+    <xmx:n-yyZlJCy8qgBphTLwzUE46dLOeogH1ZzS1ZMbYwT3PWocDjFAge1w>
+    <xmx:n-yyZjyFn7bKxDmnWiW5kU4qQV13zqqqxB0DeItyx3YOGXs4r_Qg0g>
+    <xmx:n-yyZhI0jWFcWXCG0874hKsiysq31_ypIjxcqJOdXxH1iaJELbIL9Q>
+    <xmx:n-yyZqovwedCNBFVUZwyFVsl6dSl8ZuI_PnRs9jgmUcwrJzPtIc1ZwL3>
 Feedback-ID: i58a146ae:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 6 Aug 2024 23:40:03 -0400 (EDT)
+ 6 Aug 2024 23:40:12 -0400 (EDT)
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Hannes Reinecke <hare@suse.com>,
     Michael Schmitz <schmitzmic@gmail.com>,
     Ondrej Zary <linux@zary.sk>,
     Stan Johnson <userm57@yahoo.com>,
-    stable@vger.kernel.org,
     linux-scsi@vger.kernel.org,
     linux-kernel@vger.kernel.org
-Message-Id: <cc38df687ace2c4ffc375a683b2502fc476b600d.1723001788.git.fthain@linux-m68k.org>
+Message-Id: <99dc7d1f4c825621b5b120963a69f6cd3e9ca659.1723001788.git.fthain@linux-m68k.org>
 In-Reply-To: <cover.1723001788.git.fthain@linux-m68k.org>
 References: <cover.1723001788.git.fthain@linux-m68k.org>
 From: Finn Thain <fthain@linux-m68k.org>
-Subject: [PATCH 03/11] scsi: mac_scsi: Disallow bus errors during PDMA send
+Subject: [PATCH 04/11] scsi: NCR5380: Check for phase match during PDMA fixup
 Date: Wed, 07 Aug 2024 13:36:28 +1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -73,141 +72,127 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-SD cards can produce write latency spikes on the order of a hundred
-milliseconds. If the target firmware does not hide that latency during
-DATA IN and OUT phases it can cause the PDMA circuitry to raise a
-processor bus fault which in turn leads to an unreliable byte count
-and a DMA overrun.
+It's not an error for a target to change the bus phase during a transfer.
+Unfortunately, the FLAG_DMA_FIXUP workaround does not allow for that --
+a phase change produces a DRQ timeout error and the device borken flag
+will be set.
 
-The Last Byte Sent flag is used to detect the overrun but this mechanism
-is unreliable on some systems. Instead, set a DID_ERROR result whenever
-there is a bus fault during a PDMA send, unless the cause was a phase
-mismatch.
+Check the phase match bit during FLAG_DMA_FIXUP processing. Don't forget
+to decrement the command residual. While we are here, change
+shost_printk() into scmd_printk() for better consistency with other DMA
+error messages.
 
-Cc: stable@vger.kernel.org # 5.15+
-Reported-and-tested-by: Stan Johnson <userm57@yahoo.com>
-Fixes: 7c1f3e3447a1 ("scsi: mac_scsi: Treat Last Byte Sent time-out as failure")
+Tested-by: Stan Johnson <userm57@yahoo.com>
+Fixes: 55181be8ced1 ("ncr5380: Replace redundant flags with FLAG_NO_DMA_FIXUP")
 Signed-off-by: Finn Thain <fthain@linux-m68k.org>
 ---
- drivers/scsi/mac_scsi.c | 44 ++++++++++++++++++-----------------------
- 1 file changed, 19 insertions(+), 25 deletions(-)
+ drivers/scsi/NCR5380.c | 78 +++++++++++++++++++++---------------------
+ 1 file changed, 39 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index 39814c841113..2e9fad1e3069 100644
---- a/drivers/scsi/mac_scsi.c
-+++ b/drivers/scsi/mac_scsi.c
-@@ -102,11 +102,15 @@ __setup("mac5380=", mac_scsi_setup);
-  * Linux SCSI drivers lack knowledge of the timing behaviour of SCSI targets
-  * so bus errors are unavoidable.
-  *
-- * If a MOVE.B instruction faults, we assume that zero bytes were transferred
-- * and simply retry. That assumption probably depends on target behaviour but
-- * seems to hold up okay. The NOP provides synchronization: without it the
-- * fault can sometimes occur after the program counter has moved past the
-- * offending instruction. Post-increment addressing can't be used.
-+ * If a MOVE.B instruction faults during a receive operation, we assume the
-+ * target sent nothing and try again. That assumption probably depends on
-+ * target firmware but it seems to hold up okay. If a fault happens during a
-+ * send operation, the target may or may not have seen /ACK and got the byte.
-+ * It's uncertain so the whole SCSI command gets retried.
-+ *
-+ * The NOP is needed for synchronization because the fault address in the
-+ * exception stack frame may or may not be the instruction that actually
-+ * caused the bus error. Post-increment addressing can't be used.
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index cea3a79d538e..00e245173320 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -1485,6 +1485,7 @@ static int NCR5380_transfer_dma(struct Scsi_Host *instance,
+ 				unsigned char **data)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++	struct NCR5380_cmd *ncmd = NCR5380_to_ncmd(hostdata->connected);
+ 	int c = *count;
+ 	unsigned char p = *phase;
+ 	unsigned char *d = *data;
+@@ -1496,7 +1497,7 @@ static int NCR5380_transfer_dma(struct Scsi_Host *instance,
+ 		return -1;
+ 	}
+ 
+-	NCR5380_to_ncmd(hostdata->connected)->phase = p;
++	ncmd->phase = p;
+ 
+ 	if (p & SR_IO) {
+ 		if (hostdata->read_overruns)
+@@ -1608,45 +1609,44 @@ static int NCR5380_transfer_dma(struct Scsi_Host *instance,
+  * request.
   */
  
- #define MOVE_BYTE(operands) \
-@@ -243,22 +247,21 @@ static inline int mac_pdma_send(unsigned char *start, void __iomem *io, int n)
- 	if (n >= 1) {
- 		MOVE_BYTE("%0@,%3@");
- 		if (result)
--			goto out;
-+			return -1;
- 	}
- 	if (n >= 1 && ((unsigned long)addr & 1)) {
- 		MOVE_BYTE("%0@,%3@");
- 		if (result)
--			goto out;
-+			return -2;
- 	}
- 	while (n >= 32)
- 		MOVE_16_WORDS("%0@+,%3@");
- 	while (n >= 2)
- 		MOVE_WORD("%0@+,%3@");
- 	if (result)
--		return start - addr; /* Negated to indicate uncertain length */
-+		return start - addr - 1; /* Negated to indicate uncertain length */
- 	if (n == 1)
- 		MOVE_BYTE("%0@,%3@");
--out:
- 	return addr - start;
- }
- 
-@@ -307,7 +310,6 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
- {
- 	u8 __iomem *s = hostdata->pdma_io + (INPUT_DATA_REG << 4);
- 	unsigned char *d = dst;
--	int result = 0;
- 
- 	hostdata->pdma_residual = len;
- 
-@@ -343,11 +345,12 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
- 		if (bytes == 0)
- 			continue;
- 
--		result = -1;
-+		if (macscsi_wait_for_drq(hostdata) <= 0)
-+			set_host_byte(hostdata->connected, DID_ERROR);
- 		break;
- 	}
- 
--	return result;
-+	return 0;
- }
- 
- static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
-@@ -355,7 +358,6 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- {
- 	unsigned char *s = src;
- 	u8 __iomem *d = hostdata->pdma_io + (OUTPUT_DATA_REG << 4);
--	int result = 0;
- 
- 	hostdata->pdma_residual = len;
- 
-@@ -377,17 +379,8 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- 			hostdata->pdma_residual -= bytes;
- 		}
- 
--		if (hostdata->pdma_residual == 0) {
--			if (NCR5380_poll_politely(hostdata, TARGET_COMMAND_REG,
--			                          TCR_LAST_BYTE_SENT,
--			                          TCR_LAST_BYTE_SENT,
--			                          0) < 0) {
--				scmd_printk(KERN_ERR, hostdata->connected,
--				            "%s: Last Byte Sent timeout\n", __func__);
+-	if (hostdata->flags & FLAG_DMA_FIXUP) {
+-		if (p & SR_IO) {
+-			/*
+-			 * The workaround was to transfer fewer bytes than we
+-			 * intended to with the pseudo-DMA read function, wait for
+-			 * the chip to latch the last byte, read it, and then disable
+-			 * pseudo-DMA mode.
+-			 *
+-			 * After REQ is asserted, the NCR5380 asserts DRQ and ACK.
+-			 * REQ is deasserted when ACK is asserted, and not reasserted
+-			 * until ACK goes false.  Since the NCR5380 won't lower ACK
+-			 * until DACK is asserted, which won't happen unless we twiddle
+-			 * the DMA port or we take the NCR5380 out of DMA mode, we
+-			 * can guarantee that we won't handshake another extra
+-			 * byte.
+-			 */
+-
+-			if (NCR5380_poll_politely(hostdata, BUS_AND_STATUS_REG,
+-			                          BASR_DRQ, BASR_DRQ, 0) < 0) {
 -				result = -1;
+-				shost_printk(KERN_ERR, instance, "PDMA read: DRQ timeout\n");
 -			}
-+		if (hostdata->pdma_residual == 0)
- 			break;
--		}
- 
- 		if (bytes > 0)
- 			continue;
-@@ -400,11 +393,12 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- 		if (bytes == 0)
- 			continue;
- 
--		result = -1;
-+		if (macscsi_wait_for_drq(hostdata) <= 0)
-+			set_host_byte(hostdata->connected, DID_ERROR);
- 		break;
+-			if (NCR5380_poll_politely(hostdata, STATUS_REG,
+-			                          SR_REQ, 0, 0) < 0) {
+-				result = -1;
+-				shost_printk(KERN_ERR, instance, "PDMA read: !REQ timeout\n");
+-			}
+-			d[*count - 1] = NCR5380_read(INPUT_DATA_REG);
+-		} else {
+-			/*
+-			 * Wait for the last byte to be sent.  If REQ is being asserted for
+-			 * the byte we're interested, we'll ACK it and it will go false.
+-			 */
+-			if (NCR5380_poll_politely2(hostdata,
+-			     BUS_AND_STATUS_REG, BASR_DRQ, BASR_DRQ,
+-			     BUS_AND_STATUS_REG, BASR_PHASE_MATCH, 0, 0) < 0) {
+-				result = -1;
+-				shost_printk(KERN_ERR, instance, "PDMA write: DRQ and phase timeout\n");
++	if ((hostdata->flags & FLAG_DMA_FIXUP) &&
++	    (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH)) {
++		/*
++		 * The workaround was to transfer fewer bytes than we
++		 * intended to with the pseudo-DMA receive function, wait for
++		 * the chip to latch the last byte, read it, and then disable
++		 * DMA mode.
++		 *
++		 * After REQ is asserted, the NCR5380 asserts DRQ and ACK.
++		 * REQ is deasserted when ACK is asserted, and not reasserted
++		 * until ACK goes false. Since the NCR5380 won't lower ACK
++		 * until DACK is asserted, which won't happen unless we twiddle
++		 * the DMA port or we take the NCR5380 out of DMA mode, we
++		 * can guarantee that we won't handshake another extra
++		 * byte.
++		 *
++		 * If sending, wait for the last byte to be sent. If REQ is
++		 * being asserted for the byte we're interested, we'll ACK it
++		 * and it will go false.
++		 */
++		if (!NCR5380_poll_politely(hostdata, BUS_AND_STATUS_REG,
++					   BASR_DRQ, BASR_DRQ, 0)) {
++			if ((p & SR_IO) &&
++			    (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH)) {
++				if (!NCR5380_poll_politely(hostdata, STATUS_REG,
++							   SR_REQ, 0, 0)) {
++					d[c] = NCR5380_read(INPUT_DATA_REG);
++					--ncmd->this_residual;
++				} else {
++					result = -1;
++					scmd_printk(KERN_ERR, hostdata->connected,
++						    "PDMA fixup: !REQ timeout\n");
++				}
+ 			}
++		} else if (NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH) {
++			result = -1;
++			scmd_printk(KERN_ERR, hostdata->connected,
++				    "PDMA fixup: DRQ timeout\n");
+ 		}
  	}
  
--	return result;
-+	return 0;
- }
- 
- static int macscsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
 -- 
 2.39.5
 
