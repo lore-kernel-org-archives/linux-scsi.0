@@ -1,94 +1,79 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C9E9BA33;
-	Wed,  7 Aug 2024 00:59:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1AA83207
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Aug 2024 02:06:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722992358; cv=none; b=K1WQCGi/qHu120a2a3gIcyIfLW/4qzSdeZOIbc3FMTSApKE3ShZ6QlS0dvdFdbyb3cUQTP+O766eeW4nmFDr09CeN7i3kQecIuhlW1ltceBYhleju1f+dKAqqnsjcVNA4DOV+zlO0aH4Fn3QjHbZqHfIJQcAGcct8TEUvDZThh4=
+	t=1722996372; cv=none; b=FXxndpVDDnK9abfu4/UZ4vk5VJNr3AZUsw9+Q0el+568Euv/osHnHLWD90VK9azUqZ/IeMIpGwd14Aoc9YDhXdkz9lsB9LbCtKj0qy99gcoGfvODnj1JM+JRUtrxSXwsLw87evSrcvkWoGA2nYqVcMFpr/zT5RcizHHCFizisMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722992358; c=relaxed/simple;
-	bh=yBHEj7vHz6leVh1KJIZdxTMqYZMh5PHqcWKJ3wFMn4o=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qIPXSv0TnhPM01XC3Z2LgaEUYINCfEgLenA9HiXMdlkh0xebkdiPVUtIrkydlcggW+KvH97ibbsdnQXCFS3YWtKXWpR/PYE4fLkupYBI6I33Br9nfOVJQh1t4pizs2VBK2A/8HcGZuLJc10oKfIpGtkDnO8m5XMh6hDUrb/lWPM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=TLXvPhoK; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1722996372; c=relaxed/simple;
+	bh=n4dw5O/1WKMpuhJZo5ttH7VlTFXxdEe1t+ea61MSy18=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=H8pCobDVj++VRaYpbPNKgZgLZPYAGkv0JrytrW5fqCQmJG5GEgwW3pZIVbCs3nNiuRpP5QVdOxKlf4x/RGy48pxUz9y1Et00gGCtWSZH0xbT9rDHvmKsuSPJQ1mW/q+HCxW2N+KAhcXkjEKn2L/Bv1jxqb0oMrknt1VlUV79F9Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dx0DvrGU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="TLXvPhoK"
-X-UUID: 41d497b4545811ef87684b57767b52b1-20240807
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=tqvFLsU38AQ4ZsYa+GqPZqwxYkXOtirMZ+Qc0V7lbbI=;
-	b=TLXvPhoKbi6Iusbo3Urm069p1bmhTk210O663SwdHjbZVRuBjn8xMHg4vpb+m2xU0LSBJrbhX02TEfMwuiW6A+TPyjSJhVw3U5FGuKK7+msugFwmsFY+uFKaUzqq6Xk+c5/4UImrff/cYz0ShVZ6+id11tKj5aVLZM50K4yXhNE=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.41,REQID:13db8756-d176-41fd-b485-8c4566e8d10c,IP:0,U
-	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:0
-X-CID-META: VersionHash:6dc6a47,CLOUDID:838146c1-acff-4a0f-9582-14bcdf4ed7e0,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
-	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 41d497b4545811ef87684b57767b52b1-20240807
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
-	(envelope-from <chaotian.jing@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1543075415; Wed, 07 Aug 2024 08:59:11 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.26; Wed, 7 Aug 2024 08:59:10 +0800
-Received: from mhfsdcap04.gcn.mediatek.inc (10.17.3.154) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1118.26 via Frontend Transport; Wed, 7 Aug 2024 08:59:09 +0800
-From: Chaotian Jing <chaotian.jing@mediatek.com>
-To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
-CC: Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
-	<angelogioacchino.delregno@collabora.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-mediatek@lists.infradead.org>, <srv_heupstream@mediatek.com>, Chaotian
- Jing <chaotian.jing@mediatek.com>, <stable@vger.kernel.org>, Bart Van Assche
-	<bvanassche@acm.org>
-Subject: [PATCH] scsi: fix the return value of scsi_logical_block_count
-Date: Wed, 7 Aug 2024 08:57:59 +0800
-Message-ID: <20240807005907.12380-1-chaotian.jing@mediatek.com>
-X-Mailer: git-send-email 2.46.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dx0DvrGU"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 7E811C4AF0F
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Aug 2024 02:06:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1722996371;
+	bh=n4dw5O/1WKMpuhJZo5ttH7VlTFXxdEe1t+ea61MSy18=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=dx0DvrGUGtE3pa5ZubzoDtszI6y7Upmfxq3nyFsjvfbIFth/SURwtYDz0N6FMXbIH
+	 WE6zAdw3HgllghxSlyAGUwsPbJWH85WR7W8o/NFiwXU88hYObXxa9XPOBnaEGmB4+7
+	 r/w+i71NgbqowPhfV38DswtXTYLPYdWm5ek2mRjggbtzVhEVSWzn9Ehu7n74ktfRDU
+	 ur2xWE+z9tL19rxTFflYaHfE2gW4Np2F0RTVQN0UC4Ska724rwefKLwL4eVxrEEgcI
+	 RUukKWBewP4v0/uPnKj5NYDfeasW21OfUiZD9nKErQ8jPMkffM7wRO12Xl01uDTn7G
+	 JylzpgEuQ5NcQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 75546C53BBF; Wed,  7 Aug 2024 02:06:11 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 219128] lpfc driver reports failed messages
+Date: Wed, 07 Aug 2024 02:06:11 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: lixc17@lenovo.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-219128-11613-DH1LqZMpJ8@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-219128-11613@https.bugzilla.kernel.org/>
+References: <bug-219128-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
 
-scsi_logical_block_count() should return the block count of scsi device,
-but the original code has a wrong implement.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D219128
 
-Cc: stable@vger.kernel.org
-Fixes: 6a20e21ae1e2 ("scsi: core: Add helper to return number of logical
-blocks in a request")
-Signed-off-by: Chaotian Jing <chaotian.jing@mediatek.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
----
- include/scsi/scsi_cmnd.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--- Comment #4 from Xavier (lixc17@lenovo.com) ---
+Hi, Justin
+Thanks for your quick reply.
+I found I don't have permission to change the bug assignee even I am the
+reporter.
 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 45c40d200154..f0be0caa295a 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -236,7 +236,7 @@ static inline unsigned int scsi_logical_block_count(struct scsi_cmnd *scmd)
- {
- 	unsigned int shift = ilog2(scmd->device->sector_size) - SECTOR_SHIFT;
- 
--	return blk_rq_bytes(scsi_cmd_to_rq(scmd)) >> shift;
-+	return blk_rq_sectors(scsi_cmd_to_rq(scmd)) >> shift;
- }
- 
- /*
--- 
-2.46.0
+Regards,
+--Xavier
 
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
