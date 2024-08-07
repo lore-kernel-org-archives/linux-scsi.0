@@ -1,57 +1,57 @@
 Received: from fout2-smtp.messagingengine.com (fout2-smtp.messagingengine.com [103.168.172.145])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2EE4190464;
-	Wed,  7 Aug 2024 03:40:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FF5E16D33A;
+	Wed,  7 Aug 2024 03:40:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.145
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723002026; cv=none; b=h1W4orI8u3VIp2XItSLEL086lNDnFdPpgWKn1t8MVwbmW/O2hYA9ycoHD6yhRBcV5mlcLQswdb7UnxBVVhdBv8AUFosxtnAlsGrs6XzSQSxOPqfgNk0S1lyTwUN9fnNTeXo8UYnAVkVyy4dW9p7OJG/JNtl/KRGdt1DBw8W3pUU=
+	t=1723002034; cv=none; b=P4/paYlGcsoutt5vWztpQ7wlIlkmpVIxNfJgKFlS98wOgRDYZVY6JSeBIQMsFQiLMv1UMRgrZsvxPMH07t8n+CNcCuHFYaIo/7GlcbV96soyo50T1ain7SnIfwzCLqs719t14c7Y9bIdKR2Z50B5/u+HM36LHySVsaZlqI8vp4U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723002026; c=relaxed/simple;
-	bh=6qLLfjhX0tZiP2H4jz2shkgck70CQ7aC1/wNyf6TcPw=;
-	h=To:Cc:Message-Id:In-Reply-To:References:From:Subject:Date; b=PwkrmmTb0ums2H2jD+ReDgytfMXNaMpWyI53tPJzx+PEzzbVX9TmfW9aIRymqZqbj2FxPvDCRAvNL1VVaXbYASZKai9OwFyXHK3cM8UNAO8hBbt5qAq/e5eN9zUF6wMBjvVFv2Bu+7b7lrswSbHtqfUfz1sZLBa63HYv9BOJChM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=nUpMPUwv; arc=none smtp.client-ip=103.168.172.145
+	s=arc-20240116; t=1723002034; c=relaxed/simple;
+	bh=kMhox047Tp/K8qC0/o44RL4wbc/V4x4pI9dtcTHlDuA=;
+	h=To:Cc:Message-Id:In-Reply-To:References:From:Subject:Date; b=Vn0bwMopS8W3gnD+WDRZuHYW6Pptby5rXkNeItjDbvNqKCBT1cjqYSD+EsIV+E0NvwwxEUZZk5QkiV4gZ8IJr3iiA/NgDJ7wVyc5fslV1EzNBiRzUjalb/Hq/nslTBv+cinr2ORhKmBBv6SqcWWrxiOomScMDadKsrELkJK9naY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=JNx7JjrX; arc=none smtp.client-ip=103.168.172.145
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="nUpMPUwv"
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-	by mailfout.nyi.internal (Postfix) with ESMTP id D76A3138FD03;
-	Tue,  6 Aug 2024 23:40:23 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="JNx7JjrX"
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
+	by mailfout.nyi.internal (Postfix) with ESMTP id 8A1CD138FD05;
+	Tue,  6 Aug 2024 23:40:32 -0400 (EDT)
 Received: from mailfrontend2 ([10.202.2.163])
-  by compute5.internal (MEProxy); Tue, 06 Aug 2024 23:40:23 -0400
+  by compute2.internal (MEProxy); Tue, 06 Aug 2024 23:40:32 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
 	:feedback-id:from:from:in-reply-to:in-reply-to:message-id
 	:references:reply-to:subject:subject:to:to:x-me-proxy:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1723002023; x=
-	1723088423; bh=vLn0goGDX4sqfQLpdSkswCxsEwLWmBY95Y+aKANfndA=; b=n
-	UpMPUwvHxSDx4WeqwxB4GZbZqvb6q0j4lhjMycmLlsqA9ygngNAf1VVrwDWAZxEG
-	LLo0uATazNurr3KjNqZzEdMUaKjtgPH48ER5oy0JGp4DsuonDC1IqFMakgtvP7+v
-	zN12bBnd9FXm5/9KnIya5BuwShCMGuOgwv5v5cJpp6nOKh5vyIzaoRBVwaZO3z1a
-	Pa8qV+jiZzOpjUBzYvP1amWY0sF5LUqea8xtfr/ruOPGqj0P8xcGl4cmcy8w6voa
-	ICSF24s6C0jYcprYKxNq5ODDytI5jvLKr/aKT3IrUewU2w+U2XXGsZABbklBq+g4
-	h+ZZzYg4fuQcGk346YHEA==
-X-ME-Sender: <xms:p-yyZu1zd5OgH_am8_BoBJF58DIQFMqce-4ixrxA3lfJxZW9TNqnUQ>
-    <xme:p-yyZhFmdchCsfKiMJg_UPhMiDfVyj1KLxDf8IP3pdVUj4bnyJL3aGskOXPuVd9B-
-    dKp5OZa0D8QZ56_qJw>
-X-ME-Received: <xmr:p-yyZm4TvKCTmSrrfyEy_Olg_dcBiQHrYamDidlJRDQJU9bupoUldLlNjWc_3IP01lnWc4cE00PepGLivcK95645k0gX3XuvSwA>
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1723002032; x=
+	1723088432; bh=jmQ2zlmZiZC69dubowebACwe5xiaU3F+36b99mtz3HU=; b=J
+	Nx7JjrXtf9dDfe9M+cFd+pa76/ZXT9SreW8c+9gILC6mFwc5Np3oWd7XDC747jc8
+	bftwUGJaJBZsLHiBg9XUcvwXj/DgeDkolB93Y+2Oi5vyNFT61954x3lnmAK34PRa
+	WmLQYMaHg0B0oZgIJcgNfYvkLAhPsN+/Eo6yZg4K+DJt+xB2sFZpWLH7FPrxok6O
+	gjxuDzduFgRDRpL1RrbF4olQgF/xRuLzmlDKUdMK+nBU508PbcQ0ZFEHqq5aTlNd
+	WuX2CV9/atxSdNnMVY1oS5212uJjPauyX0V4a6NBC8Isp14ROfGEtDPh5I0MRlea
+	szwuzyCPI+JwnXNNGUzHQ==
+X-ME-Sender: <xms:sOyyZhq_qU5r4Bxbqovz3lkvEXyG4uNI9JyCl7lZH7YM5tD9oHlNSg>
+    <xme:sOyyZjrW5f_FEYUOyjnzoGES8e-rEQE9sC0bmRQg8IYw5yf--I9GB25pxCJA_gJ3Y
+    hn274Ww9gSG28qXTzc>
+X-ME-Received: <xmr:sOyyZuOqLDS69zq0kYRHmXP8OyGHiD7T17RN2g-F4hk4Y0ExGIrineJbEkRU4Yji91G6gZ2ZsscNH0dZfB0cEIrAmjFqubM44JM>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeftddrkeelgdejiecutefuodetggdotefrodftvf
     curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
     uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
     fjughrpefvvefkjghfhffuffestddtredttddttdenucfhrhhomhephfhinhhnucfvhhgr
     ihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrthhtvg
     hrnhepvefggfdthffhfeevuedugfdtuefgfeettdevkeeigefgudelteeggeeuheegffff
-    necuvehluhhsthgvrhfuihiivgepvdenucfrrghrrghmpehmrghilhhfrhhomhepfhhthh
+    necuvehluhhsthgvrhfuihiivgepudenucfrrghrrghmpehmrghilhhfrhhomhepfhhthh
     grihhnsehlihhnuhigqdhmieekkhdrohhrghdpnhgspghrtghpthhtoheptd
-X-ME-Proxy: <xmx:p-yyZv2F1PtE8T7TCpYRl6sJzc_eMvAiRVU9tTBWL8S49YBEcjJ06A>
-    <xmx:p-yyZhEfXlG0kUh3EdN7p5nBdtZjYggluX62rcR8RJT7gDeI3pUyBA>
-    <xmx:p-yyZo8cjxdkmtu8rOrP1OY4tnFBS30tzE5aX2OVO80jGSpvnKqtrw>
-    <xmx:p-yyZmk0CWQdqH7nX1g-7-8WNpzdL9ao7CIxd5-fjX34jgntfuyRFA>
-    <xmx:p-yyZo2WuGIKea_yxRoGiD23vDNHLk_WST7OtdNXWXImfFuvif_ZP4S9>
+X-ME-Proxy: <xmx:sOyyZs4gtABfdhxXegOhvRxSkFS_boJPBCV5jdB7nBE7JRIePUW1_Q>
+    <xmx:sOyyZg7QVkARMXgZgWKhUDn7cjYazIWPmalZo6lUGlX9z5aJ5ukWTA>
+    <xmx:sOyyZkjGsdX_6nb0rds-37b1EUUDRbdkOn96-8IafmxtLP8pKb6LJQ>
+    <xmx:sOyyZi6u02EkQuPhLLGmpaEyhMy-r8wG6lKVLrMSsFuz-xe-DSJZ0Q>
+    <xmx:sOyyZvZiuYnNIsHI25wN18bbnPScPntP8B2BH0pGinLiULCrnd8YOt5X>
 Feedback-ID: i58a146ae:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 6 Aug 2024 23:40:21 -0400 (EDT)
+ 6 Aug 2024 23:40:30 -0400 (EDT)
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Hannes Reinecke <hare@suse.com>,
@@ -60,11 +60,12 @@ Cc: Hannes Reinecke <hare@suse.com>,
     Stan Johnson <userm57@yahoo.com>,
     linux-scsi@vger.kernel.org,
     linux-kernel@vger.kernel.org
-Message-Id: <f155ba5ce93055cbc6ac6d4026673f40f826edb8.1723001788.git.fthain@linux-m68k.org>
+Message-Id: <52e02a8812ae1a2d810d7f9f7fd800c3ccc320c4.1723001788.git.fthain@linux-m68k.org>
 In-Reply-To: <cover.1723001788.git.fthain@linux-m68k.org>
 References: <cover.1723001788.git.fthain@linux-m68k.org>
 From: Finn Thain <fthain@linux-m68k.org>
-Subject: [PATCH 05/11] scsi: mac_scsi: Enable scatter/gather by default
+Subject: [PATCH 06/11] scsi: NCR5380: Initialize buffer for MSG IN and STATUS
+ transfers
 Date: Wed, 07 Aug 2024 13:36:28 +1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -72,49 +73,41 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Now that FLAG_DMA_FIXUP has itself been fixed up, it can be used to enable
-scatter/gather. Increase the default value for sg_tablesize to SG_ALL
-for those systems which are compatible with FLAG_DMA_FIXUP.
+Following an incomplete transfer in MSG IN phase, the driver would not
+notice the problem and would make use of invalid data. Initialize 'tmp'
+appropriately and bail out if no message was received. For STATUS phase,
+preserve the existing status code unless a new value was transferred.
 
 Tested-by: Stan Johnson <userm57@yahoo.com>
 Signed-off-by: Finn Thain <fthain@linux-m68k.org>
 ---
- drivers/scsi/mac_scsi.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/NCR5380.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index 2e9fad1e3069..6ab7d82c9a99 100644
---- a/drivers/scsi/mac_scsi.c
-+++ b/drivers/scsi/mac_scsi.c
-@@ -432,7 +432,7 @@ static struct scsi_host_template mac_scsi_template = {
- 	.eh_host_reset_handler	= macscsi_host_reset,
- 	.can_queue		= 16,
- 	.this_id		= 7,
--	.sg_tablesize		= 1,
-+	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= 2,
- 	.dma_boundary		= PAGE_SIZE - 1,
- 	.cmd_size		= sizeof(struct NCR5380_cmd),
-@@ -470,6 +470,9 @@ static int __init mac_scsi_probe(struct platform_device *pdev)
- 	if (setup_hostid >= 0)
- 		mac_scsi_template.this_id = setup_hostid & 7;
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 00e245173320..4fcb73b727aa 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -1807,8 +1807,11 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 				return;
+ 			case PHASE_MSGIN:
+ 				len = 1;
++				tmp = 0xff;
+ 				data = &tmp;
+ 				NCR5380_transfer_pio(instance, &phase, &len, &data, 0);
++				if (tmp == 0xff)
++					break;
+ 				ncmd->message = tmp;
  
-+	if (macintosh_config->ident == MAC_MODEL_IIFX)
-+		mac_scsi_template.sg_tablesize = 1;
-+
- 	instance = scsi_host_alloc(&mac_scsi_template,
- 	                           sizeof(struct NCR5380_hostdata));
- 	if (!instance)
-@@ -491,6 +494,9 @@ static int __init mac_scsi_probe(struct platform_device *pdev)
- 
- 	host_flags |= setup_toshiba_delay > 0 ? FLAG_TOSHIBA_DELAY : 0;
- 
-+	if (instance->sg_tablesize > 1)
-+		host_flags |= FLAG_DMA_FIXUP;
-+
- 	error = NCR5380_init(instance, host_flags | FLAG_LATE_DMA_SETUP);
- 	if (error)
- 		goto fail_init;
+ 				switch (tmp) {
+@@ -1996,6 +1999,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 				break;
+ 			case PHASE_STATIN:
+ 				len = 1;
++				tmp = ncmd->status;
+ 				data = &tmp;
+ 				NCR5380_transfer_pio(instance, &phase, &len, &data, 0);
+ 				ncmd->status = tmp;
 -- 
 2.39.5
 
