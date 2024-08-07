@@ -1,41 +1,41 @@
 Received: from fhigh7-smtp.messagingengine.com (fhigh7-smtp.messagingengine.com [103.168.172.158])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65273190694;
-	Wed,  7 Aug 2024 03:39:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CF42433BB;
+	Wed,  7 Aug 2024 03:40:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.158
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723002000; cv=none; b=lrdFbB/be6LyiJ9fdV8Csi3eEM1fJvWEKRX7xCFjwF6AcqaTUbOA+bVKp9b4v413lYgBtd+rdsWFcqxKjpvYZLlIbpB6/ldUT531MZfxTlZjWPy6qUuvpZgcFpJL9IyuZZzfrzbKMDpf52gE18LqQv08GbMCttHRD7JK9QOV7HM=
+	t=1723002009; cv=none; b=LRL4oBreRL9r9FhuCw/iEQPpLysUm5ue19HEbnnKm9hEBgY5vMpn6fqazqcTq2akCCHzh1eP63pBZd07KzBR08JL31q0WPPzoyfQ9QyS1Mk81RlaPwXhDLQP5P5X1o78oW64CfuMHgbRSt7xnRBgrHr2nHm7MZ9sy3K6SKx2JkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723002000; c=relaxed/simple;
-	bh=zmQ7FLn937aqNLXWbETQcKd+1lShqmdyDK+Kj437yz4=;
-	h=To:Cc:Message-Id:In-Reply-To:References:From:Subject:Date; b=EZYp/UNtfoDjwTYJ5pIJ0Cyfn1JL+qkmAriATHMZe0zcmzrCtK3ive3vM39tEeVb9VsFctp3i/9g4MKEXEr9kvBo3JoeT/dGYZam1daX2VJIDICelD0mXFGxnhc9A0w0BJNE+j8YqFn7TCJPSqC/oty9suYcFZl9H/y8zvqjSGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=PyHWaTgZ; arc=none smtp.client-ip=103.168.172.158
+	s=arc-20240116; t=1723002009; c=relaxed/simple;
+	bh=AXUWhKyvnpGSl3g2EVmbeoop8XEjCIpvMlkLO6xEdqY=;
+	h=To:Cc:Message-Id:In-Reply-To:References:From:Subject:Date; b=ASCYlQNKBbnGdgKCd9MFSCsfsoicl1RBE0wegO9lLAYWAfS7OF+p5aaUH9Rt79/IKJzmKWjNAXdOXiguxyY0HVN0g/jniipRyJFW8qa/WMy92/lY9SlNDQRxA9+tVBBe/U6gaREZuFdspZxcRznqXwqiFbNeVE3UxrtQGOk41fc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=lSaRHh7B; arc=none smtp.client-ip=103.168.172.158
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="PyHWaTgZ"
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.46])
-	by mailfhigh.nyi.internal (Postfix) with ESMTP id 60C781151AEF;
-	Tue,  6 Aug 2024 23:39:57 -0400 (EDT)
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="lSaRHh7B"
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+	by mailfhigh.nyi.internal (Postfix) with ESMTP id 259121151AFA;
+	Tue,  6 Aug 2024 23:40:06 -0400 (EDT)
 Received: from mailfrontend2 ([10.202.2.163])
-  by compute2.internal (MEProxy); Tue, 06 Aug 2024 23:39:57 -0400
+  by compute5.internal (MEProxy); Tue, 06 Aug 2024 23:40:06 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
 	messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
 	:feedback-id:from:from:in-reply-to:in-reply-to:message-id
 	:references:reply-to:subject:subject:to:to:x-me-proxy:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1723001997; x=
-	1723088397; bh=HiFYafSvcnXA44ixp6a1R6FngnT8UiO0RXK9ZEi00Nc=; b=P
-	yHWaTgZf2mtVP8j2uuH7qIgMNJFOwo21SEo6Q7Qha5+mw7tkfEKQewdK9GFhW8r4
-	8GUwhIryMkfmKsJlPOrguDBmDtyGNtE1FW48KQLQtEB5WmHUn3s++HCUsS9EHWWE
-	kOZ/AlJpng5NBl7NMS1f4sbn2L4ayr+3irdkHR5Dz6aJRM8wAm4vid3gQGHnKPx/
-	msfMF4PCQGhxCaaT3HBgGhSnS6+eECss+ILgubxLLEWSxbbbeoP0/TZFHm5ONSVK
-	vCJZ3y63sGfA/lSD/a6v4vHTD/Qt7mxjWYWphDQCVM4zW12TG/eYycjkQsfEtoA3
-	V+TI8m9TeTOz9bEny/q4w==
-X-ME-Sender: <xms:jeyyZrP2XnKKvqlfCLsXj6YPYZl0wIVWYTHxkvZyrxy10-gh5Cqi4A>
-    <xme:jeyyZl_4DfNEG6pJ0yfqfU0JZ1JPn-0V_jYUj33dbbf0YmLcsPb4J90sqyqaQBlRx
-    JYbMeumtYTf-gKxcaY>
-X-ME-Received: <xmr:jeyyZqRyDFvj8-kUCQTX8GkuSJQ2ztgUIBSOnoWN2DM8Z-TcI6MI1LlWgrp0qVCsk5EoE0sJLJ9tT0YMFgGlf5PEngCJxM810z8>
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=1723002006; x=
+	1723088406; bh=HQaI5PS6HseqDLWuvlRrlpLlgcbdPON3VBx4p6bEVds=; b=l
+	SaRHh7BE+5o/OzMot9MBCtbNXRELunYkXbZuBVTEd56lo4Hqq3qr9v34ECopcyVL
+	srDq45stX1nknwr7czQAx1EohTW23vHeFCkfUgsyY/kEhXOOrIltbZz+P7MdZ0TS
+	v6HslN1hu0sodhz2dxLe3G6cfCJn9ok5zIWxzCbiOy1FLnyrejnc6Aj5l94pW+NM
+	lixo6Zz8fUtAELAR7mhxBPY9MVjea5txjmRi54ip5AqhsbtYHYmcB5McbKEnj/Hj
+	s57FEV6W29kGs2HGrv+YqICr6qQTs/hcB3XB3A/x2k9F0Yt1rH2C/AyD1W/lwTzZ
+	9gQdTalKjPvnNgmdMNqrQ==
+X-ME-Sender: <xms:luyyZoqxb4yU2BgMKPKlaPdAf39OZGIyI6ymM_y6ugQjSIK3K2_OGQ>
+    <xme:luyyZuqvPsStPx96D-xMXBTGXcoKXTYCaRmBtUQqMkmQB5mx-752-9r9On0EaFW4Q
+    5byNMCqlBDzThkc4Ww>
+X-ME-Received: <xmr:luyyZtN61e_8J353a9uycmpwxNVtggaLqwPr_qdo58AvR0cXO4_mOtiqoADEP9YX-TH7Ll10qqCLzcrJTD6To2Nj3m4U7Z__nYU>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeftddrkeelgdejiecutefuodetggdotefrodftvf
     curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
     uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
@@ -44,14 +44,14 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeftddrkeelgdejiecutefuodetggdote
     hrnhepvefggfdthffhfeevuedugfdtuefgfeettdevkeeigefgudelteeggeeuheegffff
     necuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfhhthh
     grihhnsehlihhnuhigqdhmieekkhdrohhrghdpnhgspghrtghpthhtoheptd
-X-ME-Proxy: <xmx:jeyyZvuTXx-rCeq4kzFR90zoWuqt27LBH45xnR7ioRjZI9RGhQu7dA>
-    <xmx:jeyyZjdITYynYnX9IujcF89wyomncuw67u_2IS1DSNfeNTKWOi_V2w>
-    <xmx:jeyyZr3FY_HwXNlp3ncmySUy15rZaoZ9IPJOnpW6isQDk0JyBRlcRQ>
-    <xmx:jeyyZv-Q_A1OWtz6xTObUrwv3RoFVX3qQDU8bGJaTUYDzNUIx5FBmg>
-    <xmx:jeyyZixMDeHq9Z0hCYsgHPL6W68J5m8ph8GGOWzmk0sNgqWSfdToVely>
+X-ME-Proxy: <xmx:luyyZv5JpmPZ2kzHnJl9Nm4fli-NXyYbPQoJ5rU-hRglyBYDGTBLuQ>
+    <xmx:luyyZn55s4pS7BAB7KHJgXuepmSuP5-3X_dnRGdD9n_ofKpIYVmUKw>
+    <xmx:luyyZviKoBIc9TMl1S0XbPBDeGDOVH_0sMyh9eHTofV349Fx0ADvEA>
+    <xmx:luyyZh6Nc8qhVWHr6xdET_DAJ-L25tXOtxnasCHS5z0BFyip4N2C3A>
+    <xmx:luyyZhu-dI-_HmEVcsskWiHZta6xRGoJTT8buCnj0KCUR93OdPRGjAJz>
 Feedback-ID: i58a146ae:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 6 Aug 2024 23:39:54 -0400 (EDT)
+ 6 Aug 2024 23:40:03 -0400 (EDT)
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Hannes Reinecke <hare@suse.com>,
@@ -61,11 +61,11 @@ Cc: Hannes Reinecke <hare@suse.com>,
     stable@vger.kernel.org,
     linux-scsi@vger.kernel.org,
     linux-kernel@vger.kernel.org
-Message-Id: <6a5ffabb4290c0d138c6d285fda8fa3902e926f0.1723001788.git.fthain@linux-m68k.org>
+Message-Id: <cc38df687ace2c4ffc375a683b2502fc476b600d.1723001788.git.fthain@linux-m68k.org>
 In-Reply-To: <cover.1723001788.git.fthain@linux-m68k.org>
 References: <cover.1723001788.git.fthain@linux-m68k.org>
 From: Finn Thain <fthain@linux-m68k.org>
-Subject: [PATCH 02/11] scsi: mac_scsi: Refactor polling loop
+Subject: [PATCH 03/11] scsi: mac_scsi: Disallow bus errors during PDMA send
 Date: Wed, 07 Aug 2024 13:36:28 +1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -73,179 +73,141 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Before the error handling can be revised, some preparation is needed.
-Refactor the polling loop with a new function, macscsi_wait_for_drq().
-This function will gain more call sites in the next patch.
+SD cards can produce write latency spikes on the order of a hundred
+milliseconds. If the target firmware does not hide that latency during
+DATA IN and OUT phases it can cause the PDMA circuitry to raise a
+processor bus fault which in turn leads to an unreliable byte count
+and a DMA overrun.
+
+The Last Byte Sent flag is used to detect the overrun but this mechanism
+is unreliable on some systems. Instead, set a DID_ERROR result whenever
+there is a bus fault during a PDMA send, unless the cause was a phase
+mismatch.
 
 Cc: stable@vger.kernel.org # 5.15+
-Tested-by: Stan Johnson <userm57@yahoo.com>
+Reported-and-tested-by: Stan Johnson <userm57@yahoo.com>
+Fixes: 7c1f3e3447a1 ("scsi: mac_scsi: Treat Last Byte Sent time-out as failure")
 Signed-off-by: Finn Thain <fthain@linux-m68k.org>
 ---
-This is not really a bug fix, but has been sent to @stable because it is a
-prerequisite for the bug fixes which follow.
----
- drivers/scsi/mac_scsi.c | 80 +++++++++++++++++++++--------------------
- 1 file changed, 42 insertions(+), 38 deletions(-)
+ drivers/scsi/mac_scsi.c | 44 ++++++++++++++++++-----------------------
+ 1 file changed, 19 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index 5ae8f4a1e9ca..39814c841113 100644
+index 39814c841113..2e9fad1e3069 100644
 --- a/drivers/scsi/mac_scsi.c
 +++ b/drivers/scsi/mac_scsi.c
-@@ -208,8 +208,6 @@ __setup("mac5380=", mac_scsi_setup);
- 		".previous                     \n" \
- 		: "+a" (addr), "+r" (n), "+r" (result) : "a" (io))
+@@ -102,11 +102,15 @@ __setup("mac5380=", mac_scsi_setup);
+  * Linux SCSI drivers lack knowledge of the timing behaviour of SCSI targets
+  * so bus errors are unavoidable.
+  *
+- * If a MOVE.B instruction faults, we assume that zero bytes were transferred
+- * and simply retry. That assumption probably depends on target behaviour but
+- * seems to hold up okay. The NOP provides synchronization: without it the
+- * fault can sometimes occur after the program counter has moved past the
+- * offending instruction. Post-increment addressing can't be used.
++ * If a MOVE.B instruction faults during a receive operation, we assume the
++ * target sent nothing and try again. That assumption probably depends on
++ * target firmware but it seems to hold up okay. If a fault happens during a
++ * send operation, the target may or may not have seen /ACK and got the byte.
++ * It's uncertain so the whole SCSI command gets retried.
++ *
++ * The NOP is needed for synchronization because the fault address in the
++ * exception stack frame may or may not be the instruction that actually
++ * caused the bus error. Post-increment addressing can't be used.
+  */
  
--#define MAC_PDMA_DELAY		32
--
- static inline int mac_pdma_recv(void __iomem *io, unsigned char *start, int n)
- {
- 	unsigned char *addr = start;
-@@ -274,6 +272,36 @@ static inline void write_ctrl_reg(struct NCR5380_hostdata *hostdata, u32 value)
- 	out_be32(hostdata->io + (CTRL_REG << 4), value);
+ #define MOVE_BYTE(operands) \
+@@ -243,22 +247,21 @@ static inline int mac_pdma_send(unsigned char *start, void __iomem *io, int n)
+ 	if (n >= 1) {
+ 		MOVE_BYTE("%0@,%3@");
+ 		if (result)
+-			goto out;
++			return -1;
+ 	}
+ 	if (n >= 1 && ((unsigned long)addr & 1)) {
+ 		MOVE_BYTE("%0@,%3@");
+ 		if (result)
+-			goto out;
++			return -2;
+ 	}
+ 	while (n >= 32)
+ 		MOVE_16_WORDS("%0@+,%3@");
+ 	while (n >= 2)
+ 		MOVE_WORD("%0@+,%3@");
+ 	if (result)
+-		return start - addr; /* Negated to indicate uncertain length */
++		return start - addr - 1; /* Negated to indicate uncertain length */
+ 	if (n == 1)
+ 		MOVE_BYTE("%0@,%3@");
+-out:
+ 	return addr - start;
  }
  
-+static inline int macscsi_wait_for_drq(struct NCR5380_hostdata *hostdata)
-+{
-+	unsigned int n = 1; /* effectively multiplies NCR5380_REG_POLL_TIME */
-+	unsigned char basr;
-+
-+again:
-+	basr = NCR5380_read(BUS_AND_STATUS_REG);
-+
-+	if (!(basr & BASR_PHASE_MATCH))
-+		return 1;
-+
-+	if (basr & BASR_IRQ)
-+		return -1;
-+
-+	if (basr & BASR_DRQ)
-+		return 0;
-+
-+	if (n-- == 0) {
-+		NCR5380_dprint(NDEBUG_PSEUDO_DMA, hostdata->host);
-+		dsprintk(NDEBUG_PSEUDO_DMA, hostdata->host,
-+			 "%s: DRQ timeout\n", __func__);
-+		return -1;
-+	}
-+
-+	NCR5380_poll_politely2(hostdata,
-+			       BUS_AND_STATUS_REG, BASR_DRQ, BASR_DRQ,
-+			       BUS_AND_STATUS_REG, BASR_PHASE_MATCH, 0, 0);
-+	goto again;
-+}
-+
- static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
-                                 unsigned char *dst, int len)
+@@ -307,7 +310,6 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
  {
-@@ -283,9 +311,7 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
+ 	u8 __iomem *s = hostdata->pdma_io + (INPUT_DATA_REG << 4);
+ 	unsigned char *d = dst;
+-	int result = 0;
  
  	hostdata->pdma_residual = len;
  
--	while (!NCR5380_poll_politely(hostdata, BUS_AND_STATUS_REG,
--	                              BASR_DRQ | BASR_PHASE_MATCH,
--	                              BASR_DRQ | BASR_PHASE_MATCH, 0)) {
-+	while (macscsi_wait_for_drq(hostdata) == 0) {
- 		int bytes, chunk_bytes;
- 
- 		if (macintosh_config->ident == MAC_MODEL_IIFX)
-@@ -295,19 +321,16 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
- 		chunk_bytes = min(hostdata->pdma_residual, 512);
- 		bytes = mac_pdma_recv(s, d, chunk_bytes);
- 
-+		if (macintosh_config->ident == MAC_MODEL_IIFX)
-+			write_ctrl_reg(hostdata, CTRL_INTERRUPTS_ENABLE);
-+
- 		if (bytes > 0) {
- 			d += bytes;
- 			hostdata->pdma_residual -= bytes;
- 		}
- 
- 		if (hostdata->pdma_residual == 0)
--			goto out;
--
--		if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH))
--			goto out;
--
--		if (bytes == 0)
--			udelay(MAC_PDMA_DELAY);
-+			break;
- 
- 		if (bytes > 0)
- 			continue;
-@@ -321,16 +344,9 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
+@@ -343,11 +345,12 @@ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
+ 		if (bytes == 0)
  			continue;
  
- 		result = -1;
--		goto out;
-+		break;
+-		result = -1;
++		if (macscsi_wait_for_drq(hostdata) <= 0)
++			set_host_byte(hostdata->connected, DID_ERROR);
+ 		break;
  	}
  
--	scmd_printk(KERN_ERR, hostdata->connected,
--	            "%s: phase mismatch or !DRQ\n", __func__);
--	NCR5380_dprint(NDEBUG_PSEUDO_DMA, hostdata->host);
--	result = -1;
--out:
--	if (macintosh_config->ident == MAC_MODEL_IIFX)
--		write_ctrl_reg(hostdata, CTRL_INTERRUPTS_ENABLE);
- 	return result;
+-	return result;
++	return 0;
  }
  
-@@ -343,9 +359,7 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
+ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
+@@ -355,7 +358,6 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
+ {
+ 	unsigned char *s = src;
+ 	u8 __iomem *d = hostdata->pdma_io + (OUTPUT_DATA_REG << 4);
+-	int result = 0;
  
  	hostdata->pdma_residual = len;
  
--	while (!NCR5380_poll_politely(hostdata, BUS_AND_STATUS_REG,
--	                              BASR_DRQ | BASR_PHASE_MATCH,
--	                              BASR_DRQ | BASR_PHASE_MATCH, 0)) {
-+	while (macscsi_wait_for_drq(hostdata) == 0) {
- 		int bytes, chunk_bytes;
- 
- 		if (macintosh_config->ident == MAC_MODEL_IIFX)
-@@ -355,6 +369,9 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- 		chunk_bytes = min(hostdata->pdma_residual, 512);
- 		bytes = mac_pdma_send(s, d, chunk_bytes);
- 
-+		if (macintosh_config->ident == MAC_MODEL_IIFX)
-+			write_ctrl_reg(hostdata, CTRL_INTERRUPTS_ENABLE);
-+
- 		if (bytes > 0) {
- 			s += bytes;
+@@ -377,17 +379,8 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
  			hostdata->pdma_residual -= bytes;
-@@ -369,15 +386,9 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
- 				            "%s: Last Byte Sent timeout\n", __func__);
- 				result = -1;
- 			}
--			goto out;
-+			break;
  		}
  
--		if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_PHASE_MATCH))
--			goto out;
--
--		if (bytes == 0)
--			udelay(MAC_PDMA_DELAY);
--
+-		if (hostdata->pdma_residual == 0) {
+-			if (NCR5380_poll_politely(hostdata, TARGET_COMMAND_REG,
+-			                          TCR_LAST_BYTE_SENT,
+-			                          TCR_LAST_BYTE_SENT,
+-			                          0) < 0) {
+-				scmd_printk(KERN_ERR, hostdata->connected,
+-				            "%s: Last Byte Sent timeout\n", __func__);
+-				result = -1;
+-			}
++		if (hostdata->pdma_residual == 0)
+ 			break;
+-		}
+ 
  		if (bytes > 0)
  			continue;
- 
-@@ -390,16 +401,9 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
+@@ -400,11 +393,12 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
+ 		if (bytes == 0)
  			continue;
  
- 		result = -1;
--		goto out;
-+		break;
+-		result = -1;
++		if (macscsi_wait_for_drq(hostdata) <= 0)
++			set_host_byte(hostdata->connected, DID_ERROR);
+ 		break;
  	}
  
--	scmd_printk(KERN_ERR, hostdata->connected,
--	            "%s: phase mismatch or !DRQ\n", __func__);
--	NCR5380_dprint(NDEBUG_PSEUDO_DMA, hostdata->host);
--	result = -1;
--out:
--	if (macintosh_config->ident == MAC_MODEL_IIFX)
--		write_ctrl_reg(hostdata, CTRL_INTERRUPTS_ENABLE);
- 	return result;
+-	return result;
++	return 0;
  }
  
+ static int macscsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
 -- 
 2.39.5
 
