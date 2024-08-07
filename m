@@ -1,78 +1,94 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9F461EB2A;
-	Tue,  6 Aug 2024 22:01:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C9E9BA33;
+	Wed,  7 Aug 2024 00:59:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722981674; cv=none; b=kbCgT8aRUzsjo6hc0FPYKwK+tTh/lLxzUvlvPZKbBYYPKIJDz77So0GEz99QlFhfOaeHrHU3+1wJbhTvM4fYemPRfW6B+CdQ2bTyIDyzCQjae/C3Ufn/O7pAp57EKph396SUFGJDtmy09BRNQzlvXeeaH6gEHPgQKN6Sw0T6XiM=
+	t=1722992358; cv=none; b=K1WQCGi/qHu120a2a3gIcyIfLW/4qzSdeZOIbc3FMTSApKE3ShZ6QlS0dvdFdbyb3cUQTP+O766eeW4nmFDr09CeN7i3kQecIuhlW1ltceBYhleju1f+dKAqqnsjcVNA4DOV+zlO0aH4Fn3QjHbZqHfIJQcAGcct8TEUvDZThh4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722981674; c=relaxed/simple;
-	bh=YzGHFLSczEZof+ZrHCV6tpPAOXfsyKh+aK37V2+LBnI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Wq45Pk1debAp+pwuVgfEbqpZIjsc27VPdF63r0S7vS9TUgof0dQgs5n5YFMl68AsNr1cTYmUkGRHY7/jPPqwDBhO1qPOguFReSdUAbYvih+dp3sD3nKko/x7iuZHE0Dde8GK4LzatpvA+f+jVAVL9gemXUT6vuGHvMH7rVdDy6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=iSlVBouB; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1722992358; c=relaxed/simple;
+	bh=yBHEj7vHz6leVh1KJIZdxTMqYZMh5PHqcWKJ3wFMn4o=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=qIPXSv0TnhPM01XC3Z2LgaEUYINCfEgLenA9HiXMdlkh0xebkdiPVUtIrkydlcggW+KvH97ibbsdnQXCFS3YWtKXWpR/PYE4fLkupYBI6I33Br9nfOVJQh1t4pizs2VBK2A/8HcGZuLJc10oKfIpGtkDnO8m5XMh6hDUrb/lWPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=TLXvPhoK; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="iSlVBouB"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WdnLw0M1Kz6CmM6f;
-	Tue,  6 Aug 2024 22:01:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1722981670; x=1725573671; bh=TsqYDRgOLG1l9c2F+PH7EiGq
-	6L+Bpl6dpeJ91CkPK8o=; b=iSlVBouBS63a+24K+kX12Z5kaMOC1ZNUd3kEpXyS
-	IzGpgtXgQoUsqXgeLXjZqn65WhzgiqXMpiKCf4gFYgxzkBMMH0v81nW3zT62epIh
-	Z/dWD2nKAh3yF+qeXQotLi7cLVS9sUOQX6p3q56H1ChPhWhTTm6D9EcqIhlUg0xQ
-	2QvrMSJJyrUPuDrQ6Fv5wqpj/1Ad/AR1eWV9O1IxNaOfHejuR4wBaWHkyxb0cf2a
-	Pu+uUHA2r/GJqQ3+b+H0xNJ45KwxUhaGDKFTbRg5EOBf3GU5Whvku6Sy87WI90Pt
-	eFn8XFrsDixx5zBmkHs+g4+zCg5wtnCIegy9LC+9VMom5w==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id xDlo4fF5BZYc; Tue,  6 Aug 2024 22:01:10 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WdnLs52jfz6CmM6V;
-	Tue,  6 Aug 2024 22:01:09 +0000 (UTC)
-Message-ID: <8a8b93b8-45df-4aaa-95f3-fc2deadf65f1@acm.org>
-Date: Tue, 6 Aug 2024 15:01:08 -0700
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="TLXvPhoK"
+X-UUID: 41d497b4545811ef87684b57767b52b1-20240807
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=tqvFLsU38AQ4ZsYa+GqPZqwxYkXOtirMZ+Qc0V7lbbI=;
+	b=TLXvPhoKbi6Iusbo3Urm069p1bmhTk210O663SwdHjbZVRuBjn8xMHg4vpb+m2xU0LSBJrbhX02TEfMwuiW6A+TPyjSJhVw3U5FGuKK7+msugFwmsFY+uFKaUzqq6Xk+c5/4UImrff/cYz0ShVZ6+id11tKj5aVLZM50K4yXhNE=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.41,REQID:13db8756-d176-41fd-b485-8c4566e8d10c,IP:0,U
+	RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:0
+X-CID-META: VersionHash:6dc6a47,CLOUDID:838146c1-acff-4a0f-9582-14bcdf4ed7e0,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+	RL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,
+	SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 41d497b4545811ef87684b57767b52b1-20240807
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
+	(envelope-from <chaotian.jing@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1543075415; Wed, 07 Aug 2024 08:59:11 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Wed, 7 Aug 2024 08:59:10 +0800
+Received: from mhfsdcap04.gcn.mediatek.inc (10.17.3.154) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Wed, 7 Aug 2024 08:59:09 +0800
+From: Chaotian Jing <chaotian.jing@mediatek.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+CC: Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-mediatek@lists.infradead.org>, <srv_heupstream@mediatek.com>, Chaotian
+ Jing <chaotian.jing@mediatek.com>, <stable@vger.kernel.org>, Bart Van Assche
+	<bvanassche@acm.org>
+Subject: [PATCH] scsi: fix the return value of scsi_logical_block_count
+Date: Wed, 7 Aug 2024 08:57:59 +0800
+Message-ID: <20240807005907.12380-1-chaotian.jing@mediatek.com>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/2] scsi: ufs: Prepare to add HCI capabilities sysfs
-To: Avri Altman <avri.altman@wdc.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240804072109.2330880-1-avri.altman@wdc.com>
- <20240804072109.2330880-2-avri.altman@wdc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20240804072109.2330880-2-avri.altman@wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On 8/4/24 12:21 AM, Avri Altman wrote:
-> -	up(&hba->host_sem);
-> -	return ret;
-> +	return sysfs_emit(buf, "%d\n", ufshcd_ahit_to_us(ahit));
->   }
+scsi_logical_block_count() should return the block count of scsi device,
+but the original code has a wrong implement.
 
-All ufshcd_read_hci_reg() callers call sysfs_emit(). How about renaming
-ufshcd_read_hci_reg() into ufshcd_show_hci_reg(), adding an argument
-that indicates how the result should be formatted and moving the
-sysfs_emit() call into ufshcd_show_hci_reg()?
+Cc: stable@vger.kernel.org
+Fixes: 6a20e21ae1e2 ("scsi: core: Add helper to return number of logical
+blocks in a request")
+Signed-off-by: Chaotian Jing <chaotian.jing@mediatek.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+---
+ include/scsi/scsi_cmnd.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 45c40d200154..f0be0caa295a 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -236,7 +236,7 @@ static inline unsigned int scsi_logical_block_count(struct scsi_cmnd *scmd)
+ {
+ 	unsigned int shift = ilog2(scmd->device->sector_size) - SECTOR_SHIFT;
+ 
+-	return blk_rq_bytes(scsi_cmd_to_rq(scmd)) >> shift;
++	return blk_rq_sectors(scsi_cmd_to_rq(scmd)) >> shift;
+ }
+ 
+ /*
+-- 
+2.46.0
 
-Bart.
