@@ -1,55 +1,67 @@
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65CED1CB32D;
-	Wed,  7 Aug 2024 09:40:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 456601C7B77;
+	Wed,  7 Aug 2024 09:57:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723023617; cv=none; b=DbTi7IiLvFsmaRn39Ty5X2H6Qccp0hfWGR1G+lGcH072gV7vmPz72XkE1PicY0BLW3MneXxsAstDbIAo3jIOZx+g3x5H+8YDlO3pu+BwZK4Pl/hftNE+v/VxrxpJ0RYlPGT2KhOhtES55ogVxzuE+lF+7iKzYexZXeHKtootyJs=
+	t=1723024636; cv=none; b=MJU9ls3oBNCBeWdd7To3toN5/XeZPdH4xLosCMqzfUQgxYVSo1/7ZmEUiP2t8W9PFJceL785CbXZsfH6iblmJ2ch1G9VaGlPBDxdwuroG7x8zic39JTAkzUnu6pzHJSc8fpd2qyqxK3Aeud5cP7wTvHkuyEYiw8wffpnJXROVDM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723023617; c=relaxed/simple;
-	bh=tsLd12Q21S0XxO69H0s5LApGcYUZEie2HvPNE2IhMuQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=T4byC2Q4orhxPH7ILSzCxgYh6pgWWKd+PuyFTNMzVi+Es1L+HaJQ05H3X7cOAzTkrDP3lI77uXt6xnLlcavBb2TEd8fgBTRR9iLJd8JpK0fC4nkGBk4zOwZ0U4v/MTf2d001ZgQKU4tIA4TpMo00+oTLQmwpEeMEp3ik/I+Wvds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.208.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+	s=arc-20240116; t=1723024636; c=relaxed/simple;
+	bh=96WuyfzzyLD+R027jH2PJhXFxJivRH/jcY8hc9P8ND0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rzdjrS8vcdR0fzNSTyEv78U54yp3aRnQcs1X2XWqa/24PPtkLgBR2ZjTpdF/6na1kMO/6mmRy7qYCdDKJJPj2IJBqo8f4LLuEuhzDTO2x+Mzm2fPYVh4P15TISOYFM7inzD2leDLN+l0yxxOPBafKExatd5otmWnn37hSogVJws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MGbIt/ul; arc=none smtp.client-ip=209.85.128.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-5ba43b433beso1804962a12.1;
-        Wed, 07 Aug 2024 02:40:15 -0700 (PDT)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MGbIt/ul"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-428141be2ddso10893095e9.2;
+        Wed, 07 Aug 2024 02:57:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1723024633; x=1723629433; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=q4g/+zEZpt7QyDQzWWd/2UMhzLGf1On5rXbf1/dsqPs=;
+        b=MGbIt/ulXa66zGOhy2AHetHZxwG8WbRvEzfldzeerDHm+UjRI1TT4rrI6gM12HoFjo
+         5cNvde5LS38gynS8v9FpL51LsUuNxTfVi1ocem5SplT73GkuPdODzZYROqsnsT0dd3L5
+         ik7fpzoWtCIlb68CFyy9SDXLoR7RNTQKIHRg94VV4H6OxgXSZZ/NdfmC5L2YmMv6BSH3
+         Q5ioahcbjoEEig/IKwonITScsqEE/Qf85OiTu7Bt3rm+KKiwT8QX3HUUbIfv52nkK42k
+         hrtJk6q+YyihYKVLyxUvlMA0jvoxZa25VuKGmDI5adDOOG/ptKGSkht/G0nNYKALv5Jc
+         M78A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723023614; x=1723628414;
+        d=1e100.net; s=20230601; t=1723024633; x=1723629433;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=XIJe01rMNUiVH87w2wFawTwUkJYekoCY1EChG0NNQhM=;
-        b=UshJQSp6Cxt05nHiu5RHH/H72iSiVf/VcpTFb5XpKgfSX7JK9tU5V7hKTFlczGyf2p
-         EDket7INpvhKKS3prg3iWFtMu0J/aKghd+UOjJZsWquJe8mBwSTCNnBLijpsNS5uY8p+
-         Z+9qEZqms1VBARfUDlsisGM4YSPhAG0TZF3EC4hM26XfSXuwjDW1WGP6SbC+IaiwSmOd
-         Pb1FGwnoly6qU7HqV3U0TIvKC1uw7+XMt7AdrCOCqAJKGYT3wKx71/uSgu7gHQF//TP2
-         6jlA6CJmvG27AvQwymjgisuk+oAyhNpdcJAKU51PIB+EYYIz4HGGT9MHp7qKJosDokdn
-         4ybQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXFOQrQLRcCpE7z6XuTn72k8lWepgwqvBvhpLwdxkt6Nq99OmyExF1spJ/PJhmg7vo/u3GKE5geqn1IMbgxTq/aSMmCbEFm4u+Ry6ctdV/Nta9DhvMN3EnS5lBc1H7VykbjCZ0cHvArIw==
-X-Gm-Message-State: AOJu0YwuFcHlvb38f04O9+EjzeBtxLr6OrUSXt9YrY4a9ATEHUqGkVTy
-	xGXH0bAiY7QAkRpoIPiWkH+3RgdVRxzbMaJfYlQcv8TdBhYzQ4nL
-X-Google-Smtp-Source: AGHT+IFGFXyzPJyU+3ZO6aR/vJvOsoR7CD4nWairtbEuBiPfLL88RNN6LQscDwHMcXSf7Gb4A8ObyA==
-X-Received: by 2002:a17:907:724b:b0:a7a:c083:8575 with SMTP id a640c23a62f3a-a7dc4ae31afmr1377036266b.0.1723023613413;
-        Wed, 07 Aug 2024 02:40:13 -0700 (PDT)
-Received: from localhost (fwdproxy-lla-004.fbsv.net. [2a03:2880:30ff:4::face:b00c])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a7dc9c0cb9esm622404366b.78.2024.08.07.02.40.12
+        bh=q4g/+zEZpt7QyDQzWWd/2UMhzLGf1On5rXbf1/dsqPs=;
+        b=s8ngqfXHnEYK4Goh/0/E1LH3MIzCySNCE+Ipqn8ihzNaC4Cwyc/TE7U5P6/uqvr9/M
+         0QrrZAY6HWnW0pU1+QHBnFP/M+oDS0c/gXjEmTbI5WDA+DqGVsl8y0BiXoLLCYdMUezd
+         nmgysBr8Fzuy042rnAjcfLz21fcPt5T84KHVg9tdZOtsyA0Uslx1r2hLMAF9sou6SI4H
+         nQANFgfd8aQbk7k0yx8ZAcRWxgZycz3IgeZFC8eLVGXHLcEB4MDTnrUullsQMyDFfyiB
+         4PLYPTlfVUH2nRxFTI/WdmTvNutoiLzpAN7WAEZ3Jctk3LFMyx+uekzoTjLaFI7c3O6W
+         L4tA==
+X-Forwarded-Encrypted: i=1; AJvYcCWg82H/NHyyklddVdMWDUT7ejuYB7iBi3S/IjvUnI+mLJ9hEasTDZmM6mH+hsmt9fkZl+Fq91zeL5VJ9tIqvrUnXzl1iU+Py3Q+h2jT
+X-Gm-Message-State: AOJu0YwTAenoVI9D2MxnX+wNRPIogbl9ePEzGbYFxiKRh4I56CP/z3tC
+	0LUfc6bSM6svqY65jRJDpxTFHOWeqxurxT5cGcMKfoH36Fy7AG0g
+X-Google-Smtp-Source: AGHT+IHLRLMclhaInxpNmrjMjn+7xXrnbU+y0mmiFJnfIL/5eydpaHzeawANYEQCmI1N9RGZ4vCuMg==
+X-Received: by 2002:adf:eb12:0:b0:368:31c7:19d3 with SMTP id ffacd0b85a97d-36bbc0c2750mr11130906f8f.9.1723024633371;
+        Wed, 07 Aug 2024 02:57:13 -0700 (PDT)
+Received: from PC-PEDRO-ARCH.lan ([2001:818:e92f:6400:96b:aa92:afc0:2d3d])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-36bbd06fbfdsm15265557f8f.106.2024.08.07.02.57.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Aug 2024 02:40:13 -0700 (PDT)
-From: Breno Leitao <leitao@debian.org>
-To: martin.petersen@oracle.com,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: leit@meta.com,
-	MPT-FusionLinux.pdl@broadcom.com (open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)),
-	linux-scsi@vger.kernel.org (open list:LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] scsi: message: fusion: Remove unused variable
-Date: Wed,  7 Aug 2024 02:39:59 -0700
-Message-ID: <20240807094000.398857-1-leitao@debian.org>
-X-Mailer: git-send-email 2.43.5
+        Wed, 07 Aug 2024 02:57:12 -0700 (PDT)
+From: Pedro Falcato <pedro.falcato@gmail.com>
+To: Karan Tilak Kumar <kartilak@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Pedro Falcato <pedro.falcato@gmail.com>
+Subject: [PATCH] scsi: snic: Avoid creating two slab caches with the same name
+Date: Wed,  7 Aug 2024 10:57:09 +0100
+Message-ID: <20240807095709.2200728-1-pedro.falcato@gmail.com>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -58,53 +70,28 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There are two unused variable in mptsas, and the compiler complains
-about it. Let's get them removed.
+In the spirit of [1], fix the copy-paste typo and use unique names for
+both caches.
 
-	drivers/message/fusion/mptsas.c:4234:6: warning: variable 'rc' set but not used [-Wunused-but-set-variable]
-	 4234 |         int rc;
-	drivers/message/fusion/mptsas.c:4793:17: warning: variable 'timeleft' set but not used [-Wunused-but-set-variable]
-	 4793 |         unsigned long    timeleft;
-
-Signed-off-by: Breno Leitao <leitao@debian.org>
+[1]: https://lore.kernel.org/all/20240807090746.2146479-1-pedro.falcato@gmail.com/
+Signed-off-by: Pedro Falcato <pedro.falcato@gmail.com>
 ---
- drivers/message/fusion/mptsas.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+ drivers/scsi/snic/snic_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index a0bcb0864ecd..cd920faff16a 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -4231,10 +4231,8 @@ mptsas_find_phyinfo_by_phys_disk_num(MPT_ADAPTER *ioc, u8 phys_disk_num,
- static void
- mptsas_reprobe_lun(struct scsi_device *sdev, void *data)
- {
--	int rc;
--
- 	sdev->no_uld_attach = data ? 1 : 0;
--	rc = scsi_device_reprobe(sdev);
-+	scsi_device_reprobe(sdev);
- }
+diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
+index cc824dcfe7d..abc78320c66 100644
+--- a/drivers/scsi/snic/snic_main.c
++++ b/drivers/scsi/snic/snic_main.c
+@@ -873,7 +873,7 @@ snic_global_data_init(void)
+ 	snic_glob->req_cache[SNIC_REQ_CACHE_MAX_SGL] = cachep;
  
- static void
-@@ -4790,7 +4788,6 @@ mptsas_issue_tm(MPT_ADAPTER *ioc, u8 type, u8 channel, u8 id, u64 lun,
- 	MPT_FRAME_HDR	*mf;
- 	SCSITaskMgmt_t	*pScsiTm;
- 	int		 retval;
--	unsigned long	 timeleft;
- 
- 	*issue_reset = 0;
- 	mf = mpt_get_msg_frame(mptsasDeviceResetCtx, ioc);
-@@ -4826,8 +4823,7 @@ mptsas_issue_tm(MPT_ADAPTER *ioc, u8 type, u8 channel, u8 id, u64 lun,
- 	mpt_put_msg_frame_hi_pri(mptsasDeviceResetCtx, ioc, mf);
- 
- 	/* Now wait for the command to complete */
--	timeleft = wait_for_completion_timeout(&ioc->taskmgmt_cmds.done,
--	    timeout*HZ);
-+	wait_for_completion_timeout(&ioc->taskmgmt_cmds.done, timeout * HZ);
- 	if (!(ioc->taskmgmt_cmds.status & MPT_MGMT_STATUS_COMMAND_GOOD)) {
- 		retval = -1; /* return failure */
- 		dtmprintk(ioc, printk(MYIOC_s_ERR_FMT
+ 	len = sizeof(struct snic_host_req);
+-	cachep = kmem_cache_create("snic_req_maxsgl", len, SNIC_SG_DESC_ALIGN,
++	cachep = kmem_cache_create("snic_req_tm", len, SNIC_SG_DESC_ALIGN,
+ 				   SLAB_HWCACHE_ALIGN, NULL);
+ 	if (!cachep) {
+ 		SNIC_ERR("Failed to create snic tm req slab\n");
 -- 
-2.43.5
+2.46.0
 
