@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D390918A6DF;
-	Thu,  8 Aug 2024 10:37:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E95118A6D2;
+	Thu,  8 Aug 2024 10:39:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723113426; cv=none; b=gChbQz7b0zn/iit71MHH51ztdea2QVyLNmQ3Mm3TzuI0bYQ/GC03hzSJGOqJqSfTl+Anj3uWaWkaue9wWfb6l9+k3Jn0rnhSHLx6CNso5hBhcLkZQYvzmUIAs+b1AA8x/TJ/koLKFA/prEEOlby9ojsg+pUtvxsvPffT08SdOGg=
+	t=1723113594; cv=none; b=hXdGXPg9z1WL3rBty0nUFEmLQ0XmKsFwJLbWEMrub19S16UX2Hstbq1tB3lMWJzql6Vz+cwXDWTq59LB838OL33QHn7Gtdj384+mZ0iZVcKZ/zZrNv2dT/W46MogRkUjkMUpsoHF/bPirkWsUjn0uhXp65BB6QJzGEvD6H/unjk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723113426; c=relaxed/simple;
-	bh=0kNLFQPI5nfXCEqRnoX8UgfOmT9hxy59dY7HbhkRp7I=;
+	s=arc-20240116; t=1723113594; c=relaxed/simple;
+	bh=WLaBgQp2ctD38pTuetz+HKLmo85VwsC2+lHbCeA41cA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AXMfmH0njfFJZhv8GV1maErgn6ncY8qLdW1wcaF671xAltfNMeeO1WltTt06/bK25CwTQRcWEgKnaUTrZnHhlgqeJogRHnHnzZDsipzA509HObz22XxTzbQf77Q2ujyV2lEeqb+IPkRS8wcBDfBfzDoGOyi3BK+R2vea7Qw17Ms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eTkGBqIF; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=kvhgBQhqjN7ndtgYscfUP6VRVc9qWFEWp4l5ABhtxh4+/uU+GiHjih8xBoCsDLtOpH6/sQUTQ39cL4J3dLQZz9pCKXuFuSoyn3qvCkGULWRFuBWGnDUl5ngYxbVRv1/SftEsj/dHInoNlEXsWZozKhvvDjxUAaXQNRK14ZICKAI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RiRTViNa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eTkGBqIF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95EC9C4AF0D;
-	Thu,  8 Aug 2024 10:37:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RiRTViNa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1165C32782;
+	Thu,  8 Aug 2024 10:39:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723113426;
-	bh=0kNLFQPI5nfXCEqRnoX8UgfOmT9hxy59dY7HbhkRp7I=;
+	s=k20201202; t=1723113593;
+	bh=WLaBgQp2ctD38pTuetz+HKLmo85VwsC2+lHbCeA41cA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=eTkGBqIFyRANWpKh6JZIReu9cY+c3+hfyPyxBnw8mRmp9Cnpw26lCDmsod1S7KTrc
-	 hLbMgIS8cBa7qOI916XTjvNgB48UaO9Y1OLZmIcInah2rB4KxfgYVIydadqfCEDS67
-	 iVnjUlujmHWLVK5/4/ZeZvxAmYUfYaI/FN9/CvtDYfUJfZ4wRqLkvuENPDHtsn8Zgw
-	 DPg1Ucg6tapZoEulJoaXeiFYGgMU2CY93+lLrSCbX7bYlvsAGA5crsCo9RcQ8/rn86
-	 yKto3cpk1wzhP8zhK27BSm16zYBRB07sm/dOs+28mM7DsRtZ714A01cm7C3d6yizVd
-	 xcqakncI1ZjPw==
-Message-ID: <93a16a4a-6a12-446f-bfc9-e8aa907e0598@kernel.org>
-Date: Thu, 8 Aug 2024 12:36:59 +0200
+	b=RiRTViNa+pdEvVYuFzLPV8qekqRh0PQ0I1I9uMsd7PxgV8lRnh9eTRmIglSXhuwLu
+	 22Dn35RVpDy8vO8HV6TSFjgZRYcdx4cVtLQiwauRsQQbvdGZCxGbHd3qb4wdfs7Y+l
+	 7SHSOEbyFR60DlTxlenKNIQdJm49K11FvSt7NLq/6t8x/DE6MI2Dj14bDXji7QB9zv
+	 vk3k8BSnCmd3uKZTV58Pwtu0wGYvGyQhwcNKxk19DY50FPB7znWNIf+/M8mMFuPAk8
+	 STgxpLpHJfHckv2DictVzBBQxWDxqSgJ8pXMKB+I/W8yTT5gNDP3EeHd0PUhgtC+aB
+	 C+++2XdEMhfew==
+Message-ID: <5edd79ec-4ab6-4df4-a3cb-811730b15c75@kernel.org>
+Date: Thu, 8 Aug 2024 12:39:46 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -103,8 +103,15 @@ On 08/08/2024 05:52, Shawn Lin wrote:
 > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 > 
 
-...
 
+> +	reset_control_assert(host->rst);
+> +	udelay(1);
+> +	reset_control_deassert(host->rst);
+> +
+> +	host->ref_out_clk = devm_clk_get(dev, "ref_out");
+> +	if (IS_ERR(host->ref_out_clk))
+> +		return dev_err_probe(dev, PTR_ERR(host->ref_out_clk), "ciu-drive not available\n");
+> +
 > +	err = clk_prepare_enable(host->ref_out_clk);
 > +	if (err)
 > +		return dev_err_probe(dev, err, "failed to enable ref out clock\n");
@@ -114,15 +121,16 @@ On 08/08/2024 05:52, Shawn Lin wrote:
 > +		dev_err_probe(&pdev->dev, PTR_ERR(host->rst_gpio),
 > +				"invalid reset-gpios property in node\n");
 > +		err = PTR_ERR(host->rst_gpio);
+> +		goto out;
+> +	}
+> +	udelay(20);
+> +	gpiod_set_value_cansleep(host->rst_gpio, 1);
 
-No. Look at your code above - you have return dev_err_probe, so logical
-is that the syntax is err = dev_err_probe. Don't over-complicate the code.
+Also, why do you leave the device in the reset state? Logical one means
+- reset is asserted. This applies to ufs_rockchip_device_reset() as well
+- that's just wrong code.
 
-Anyway, this is suspicious. You already have resets with four resets
-(!!!) and you claim you have fifth reset - GPIO? This looks just wrong,
-like you represent some properties which do not belong here.
 
-Where is your DTS so we can validate it?
 
 Best regards,
 Krzysztof
