@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8866143723;
-	Thu,  8 Aug 2024 10:34:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D390918A6DF;
+	Thu,  8 Aug 2024 10:37:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723113267; cv=none; b=JQQdPy9NKmh2dTr8mWYRmbIbtb/2EDFFEpa0n9UhwGs2ZhToMplsQgAtHcnVt+w3Rq/pTmnNRAoUJnZE2fjAOKqKEtz/ipHrriK3encshQk1I/E+SejTOMdDVWcm9/BVuSRemYUEjrJDaklnTMaXEzYVl7I0GmQQtCoqncG5mTM=
+	t=1723113426; cv=none; b=gChbQz7b0zn/iit71MHH51ztdea2QVyLNmQ3Mm3TzuI0bYQ/GC03hzSJGOqJqSfTl+Anj3uWaWkaue9wWfb6l9+k3Jn0rnhSHLx6CNso5hBhcLkZQYvzmUIAs+b1AA8x/TJ/koLKFA/prEEOlby9ojsg+pUtvxsvPffT08SdOGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723113267; c=relaxed/simple;
-	bh=HLT8k04Hl029XQQEj0TM4a3dTQdPE/rMulXZ7DPKX7U=;
+	s=arc-20240116; t=1723113426; c=relaxed/simple;
+	bh=0kNLFQPI5nfXCEqRnoX8UgfOmT9hxy59dY7HbhkRp7I=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XB40IZFSoMt+N+RSY8klZ/RE1X5eu2D30T45HB5Ag3r1dWLYDkMBDR2m7UFQH2+oVf6CigJgEtx7hO8AlJjrvHCxKXf6PV/agYTqC8qEQLEU1GMFtulGyhoWNMohVdbt8LF+fSj7L9D3TVJsI244GbO1gcQ6+5u5HU2/DLyQeyA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Udz6ct0Z; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=AXMfmH0njfFJZhv8GV1maErgn6ncY8qLdW1wcaF671xAltfNMeeO1WltTt06/bK25CwTQRcWEgKnaUTrZnHhlgqeJogRHnHnzZDsipzA509HObz22XxTzbQf77Q2ujyV2lEeqb+IPkRS8wcBDfBfzDoGOyi3BK+R2vea7Qw17Ms=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eTkGBqIF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Udz6ct0Z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C75F7C32782;
-	Thu,  8 Aug 2024 10:34:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eTkGBqIF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95EC9C4AF0D;
+	Thu,  8 Aug 2024 10:37:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723113266;
-	bh=HLT8k04Hl029XQQEj0TM4a3dTQdPE/rMulXZ7DPKX7U=;
+	s=k20201202; t=1723113426;
+	bh=0kNLFQPI5nfXCEqRnoX8UgfOmT9hxy59dY7HbhkRp7I=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Udz6ct0Z0TnSMbNfkiryw7aephX+yb8PSmUJlF1T74C84oeaROdHA4sQITLxWCFkz
-	 s/Z3tWV6zSJhnjrq5Inj8teypd3vA20myAJbAgpdUM6Md9rWfozWbrrV/vIc2WDG/u
-	 ZtGaiUlJlE+z2J9VXGdzp/QRFkPIbMRSv9yOxPVbsGb2GNsNPYdbAcr8fsE5NLyWGv
-	 4QyYtdXZ2mlMrtGSb5mBJjWhgAaxRJYIOp85TkKeZ/Fecj60g2iHJ9e03X1gLk+QFz
-	 ONjQZ4jZbW92Thv0AttycML40I1GCEdQ2SKTorq8cnj1UKim1A8nTj/sI8zq1t15YT
-	 ejEc5/di/Z3rw==
-Message-ID: <a4f8059f-efe0-4874-8746-24e4cf9b9e89@kernel.org>
-Date: Thu, 8 Aug 2024 12:34:19 +0200
+	b=eTkGBqIFyRANWpKh6JZIReu9cY+c3+hfyPyxBnw8mRmp9Cnpw26lCDmsod1S7KTrc
+	 hLbMgIS8cBa7qOI916XTjvNgB48UaO9Y1OLZmIcInah2rB4KxfgYVIydadqfCEDS67
+	 iVnjUlujmHWLVK5/4/ZeZvxAmYUfYaI/FN9/CvtDYfUJfZ4wRqLkvuENPDHtsn8Zgw
+	 DPg1Ucg6tapZoEulJoaXeiFYGgMU2CY93+lLrSCbX7bYlvsAGA5crsCo9RcQ8/rn86
+	 yKto3cpk1wzhP8zhK27BSm16zYBRB07sm/dOs+28mM7DsRtZ714A01cm7C3d6yizVd
+	 xcqakncI1ZjPw==
+Message-ID: <93a16a4a-6a12-446f-bfc9-e8aa907e0598@kernel.org>
+Date: Thu, 8 Aug 2024 12:36:59 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,8 +35,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/3] dt-bindings: ufs: Document Rockchip UFS host
- controller
+Subject: Re: [PATCH v2 3/3] scsi: ufs: rockchip: init support for UFS
 To: Shawn Lin <shawn.lin@rock-chips.com>, Rob Herring <robh+dt@kernel.org>,
  "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -48,7 +47,7 @@ Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
  linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
  linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 References: <1723089163-28983-1-git-send-email-shawn.lin@rock-chips.com>
- <1723089163-28983-3-git-send-email-shawn.lin@rock-chips.com>
+ <1723089163-28983-4-git-send-email-shawn.lin@rock-chips.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -94,53 +93,36 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <1723089163-28983-3-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1723089163-28983-4-git-send-email-shawn.lin@rock-chips.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 08/08/2024 05:52, Shawn Lin wrote:
-> Document Rockchip UFS host controller for RK3576 SoC.
+> RK3576 contains a UFS controller, add init support fot it.
 > 
 > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 > 
-> ---
-> 
-> Changes in v2:
-> - renmae file name
-> - fix all errors and pass the dt_binding_check:
->   make dt_binding_check DT_SCHEMA_FILES=rockchip,rk3576-ufs.yaml
 
+...
 
-You did much more. Some properties appeared which were here not
-before... The way you send patches makes it difficult to review. Look:
+> +	err = clk_prepare_enable(host->ref_out_clk);
+> +	if (err)
+> +		return dev_err_probe(dev, err, "failed to enable ref out clock\n");
+> +
+> +	host->rst_gpio = devm_gpiod_get(&pdev->dev, "reset", GPIOD_OUT_LOW);
+> +	if (IS_ERR(host->rst_gpio)) {
+> +		dev_err_probe(&pdev->dev, PTR_ERR(host->rst_gpio),
+> +				"invalid reset-gpios property in node\n");
+> +		err = PTR_ERR(host->rst_gpio);
 
-b4 diff '<1723089163-28983-3-git-send-email-shawn.lin@rock-chips.com>'
-Grabbing thread from
-lore.kernel.org/all/1723089163-28983-3-git-send-email-shawn.lin@rock-chips.com/t.mbox.gz
-Checking for older revisions
-Grabbing search results from lore.kernel.org
-  Added from v1: 4 patches
----
-Analyzing 18 messages in the thread
-WARNING: duplicate messages found at index 2
-   Subject 1: dt-bindings: ufs: Document Rockchip UFS host controller
-   Subject 2: dt-bindings: ufs: Document Rockchip UFS host controller
-  2 is not a reply... assume additional patch
-Looking for additional code-review trailers on lore.kernel.org
-Analyzing 0 code-review messages
-Preparing fake-am for v1: Init support for RK3576 UFS controller
-  range: e86f0d80765d..3ae8e722f6ab
-Preparing fake-am for v2: scsi: ufs: core: Export
-ufshcd_dme_link_startup() helper
-ERROR: v2 series incomplete; unable to create a fake-am range
----
-Could not create fake-am range for upper series v2
+No. Look at your code above - you have return dev_err_probe, so logical
+is that the syntax is err = dev_err_probe. Don't over-complicate the code.
 
+Anyway, this is suspicious. You already have resets with four resets
+(!!!) and you claim you have fifth reset - GPIO? This looks just wrong,
+like you represent some properties which do not belong here.
 
-So how can we handle it? Your job is to use standard process so life of
-reviewers is not more difficult than it should be.
-
-Provide FULL CHANGELOG with explanation what happened here.
+Where is your DTS so we can validate it?
 
 Best regards,
 Krzysztof
