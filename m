@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FD0C17FD;
-	Thu,  8 Aug 2024 10:30:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8866143723;
+	Thu,  8 Aug 2024 10:34:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723113019; cv=none; b=CQjggEDlbnLrc2NZShZ1CqlQ0ONPLvsc+Cyxbg3kljgs/8t+ApfaOR/BLJduIgcXpIF3VtWVEKVZ5lwLFfrrFmGnPcOgC/IUvMDSHdutzkAb0IkJZ/uGkv+1PtcNLFJeu66870KSmgkTY3lMxNCvWWMroOMvJLIrC599tLLs8bw=
+	t=1723113267; cv=none; b=JQQdPy9NKmh2dTr8mWYRmbIbtb/2EDFFEpa0n9UhwGs2ZhToMplsQgAtHcnVt+w3Rq/pTmnNRAoUJnZE2fjAOKqKEtz/ipHrriK3encshQk1I/E+SejTOMdDVWcm9/BVuSRemYUEjrJDaklnTMaXEzYVl7I0GmQQtCoqncG5mTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723113019; c=relaxed/simple;
-	bh=/56fxGSSQJLGnsfiWBBFCbnhTda1JtL0tMRpLS0QqgY=;
+	s=arc-20240116; t=1723113267; c=relaxed/simple;
+	bh=HLT8k04Hl029XQQEj0TM4a3dTQdPE/rMulXZ7DPKX7U=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a0gztYLAewyuwAyOd4NlWI2fXjlaDyhf4xhRjD4kCcYZbw207DwcupvweFMK/rVD3YuT1fcK+wrqxjkfc93Fc56Abdw+AxW1/2JvW2eoInOZqQEFUHduTfV+3YZ20IGxiJ1HNr0mzEoMFUvE/f+AyrEBFKZQaPAApgc7pmUqFBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PQfUZ4DD; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=XB40IZFSoMt+N+RSY8klZ/RE1X5eu2D30T45HB5Ag3r1dWLYDkMBDR2m7UFQH2+oVf6CigJgEtx7hO8AlJjrvHCxKXf6PV/agYTqC8qEQLEU1GMFtulGyhoWNMohVdbt8LF+fSj7L9D3TVJsI244GbO1gcQ6+5u5HU2/DLyQeyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Udz6ct0Z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PQfUZ4DD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F766C32782;
-	Thu,  8 Aug 2024 10:30:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Udz6ct0Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C75F7C32782;
+	Thu,  8 Aug 2024 10:34:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723113018;
-	bh=/56fxGSSQJLGnsfiWBBFCbnhTda1JtL0tMRpLS0QqgY=;
+	s=k20201202; t=1723113266;
+	bh=HLT8k04Hl029XQQEj0TM4a3dTQdPE/rMulXZ7DPKX7U=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=PQfUZ4DD/XPrLPC1vpexKGzQtpLH7Uc0dbfKiT0sTGewcyMIO9hxlQbMsXuB5/X6w
-	 ACcUeDuHQPlpafhi2I/VR7Rd505/CLs50q7TxIdE/bd/6orMYbh5PX9oMw6YsJnOHY
-	 Opltqe1uSJlFdoxwxzVWt212Ds5a0JwjPRAnbdYizF1LMj5EtAaZsJiO5UG8nCtjtl
-	 VpjmDg/G4ahzzjFAp66kx6EcJg3xK6DkzKSjGGSOezH6R5UjFAWex+JULLUv/czO0K
-	 K+OZDChm96mAYTKGMf3TKinuvr6HDh4F2xbzeZy0Uard43rphRXXH2vxM7A3X7KmuJ
-	 RjtQ/JzSHPldg==
-Message-ID: <be40aed4-38f9-4db7-a3df-e1da61295b18@kernel.org>
-Date: Thu, 8 Aug 2024 12:30:12 +0200
+	b=Udz6ct0Z0TnSMbNfkiryw7aephX+yb8PSmUJlF1T74C84oeaROdHA4sQITLxWCFkz
+	 s/Z3tWV6zSJhnjrq5Inj8teypd3vA20myAJbAgpdUM6Md9rWfozWbrrV/vIc2WDG/u
+	 ZtGaiUlJlE+z2J9VXGdzp/QRFkPIbMRSv9yOxPVbsGb2GNsNPYdbAcr8fsE5NLyWGv
+	 4QyYtdXZ2mlMrtGSb5mBJjWhgAaxRJYIOp85TkKeZ/Fecj60g2iHJ9e03X1gLk+QFz
+	 ONjQZ4jZbW92Thv0AttycML40I1GCEdQ2SKTorq8cnj1UKim1A8nTj/sI8zq1t15YT
+	 ejEc5/di/Z3rw==
+Message-ID: <a4f8059f-efe0-4874-8746-24e4cf9b9e89@kernel.org>
+Date: Thu, 8 Aug 2024 12:34:19 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,23 +35,20 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [RESEND PATCH v2 2/3] dt-bindings: ufs: Document Rockchip UFS
- host controller
-To: "Rob Herring (Arm)" <robh@kernel.org>,
- Shawn Lin <shawn.lin@rock-chips.com>
-Cc: linux-rockchip@lists.infradead.org, linux-scsi@vger.kernel.org,
- YiFeng Zhao <zyf@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
- devicetree@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
+Subject: Re: [PATCH v2 2/3] dt-bindings: ufs: Document Rockchip UFS host
+ controller
+To: Shawn Lin <shawn.lin@rock-chips.com>, Rob Herring <robh+dt@kernel.org>,
  "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- Bart Van Assche <bvanassche@acm.org>, Liang Chen <cl@rock-chips.com>,
- linux-kernel@vger.kernel.org, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>,
  "Martin K . Petersen" <martin.petersen@oracle.com>,
- Alim Akhtar <alim.akhtar@samsung.com>, Rob Herring <robh+dt@kernel.org>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Heiko Stuebner <heiko@sntech.de>, Alim Akhtar <alim.akhtar@samsung.com>,
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
+ YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
+ linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 References: <1723089163-28983-1-git-send-email-shawn.lin@rock-chips.com>
- <1723091220-29291-1-git-send-email-shawn.lin@rock-chips.com>
- <172310944186.384374.16402625285044950364.robh@kernel.org>
+ <1723089163-28983-3-git-send-email-shawn.lin@rock-chips.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -97,41 +94,53 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <172310944186.384374.16402625285044950364.robh@kernel.org>
+In-Reply-To: <1723089163-28983-3-git-send-email-shawn.lin@rock-chips.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 08/08/2024 11:30, Rob Herring (Arm) wrote:
+On 08/08/2024 05:52, Shawn Lin wrote:
+> Document Rockchip UFS host controller for RK3576 SoC.
 > 
-> On Thu, 08 Aug 2024 12:27:00 +0800, Shawn Lin wrote:
->> Document Rockchip UFS host controller for RK3576 SoC.
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>
->> ---
->>
->> Changes in v2:
->> - renmae file name
->> - fix all errors and pass the dt_binding_check:
->>   make dt_binding_check DT_SCHEMA_FILES=rockchip,rk3576-ufs.yaml
->>
->>  .../bindings/ufs/rockchip,rk3576-ufs.yaml          | 96 ++++++++++++++++++++++
->>  1 file changed, 96 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufs.yaml
->>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 > 
-> My bot found errors running 'make dt_binding_check' on your patch:
+> ---
 > 
-> yamllint warnings/errors:
-> 
-> dtschema/dtc warnings/errors:
-> Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufs.example.dts:24:18: fatal error: dt-bindings/clock/rockchip,rk3576-cru.h: No such file or directory
->    24 |         #include <dt-bindings/clock/rockchip,rk3576-cru.h>
->       |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> compilation terminated.
+> Changes in v2:
+> - renmae file name
+> - fix all errors and pass the dt_binding_check:
+>   make dt_binding_check DT_SCHEMA_FILES=rockchip,rk3576-ufs.yaml
 
-Nothing improved... stop sending new versions so fast but allow people
-to respond to your patches and then implement the feedback.
+
+You did much more. Some properties appeared which were here not
+before... The way you send patches makes it difficult to review. Look:
+
+b4 diff '<1723089163-28983-3-git-send-email-shawn.lin@rock-chips.com>'
+Grabbing thread from
+lore.kernel.org/all/1723089163-28983-3-git-send-email-shawn.lin@rock-chips.com/t.mbox.gz
+Checking for older revisions
+Grabbing search results from lore.kernel.org
+  Added from v1: 4 patches
+---
+Analyzing 18 messages in the thread
+WARNING: duplicate messages found at index 2
+   Subject 1: dt-bindings: ufs: Document Rockchip UFS host controller
+   Subject 2: dt-bindings: ufs: Document Rockchip UFS host controller
+  2 is not a reply... assume additional patch
+Looking for additional code-review trailers on lore.kernel.org
+Analyzing 0 code-review messages
+Preparing fake-am for v1: Init support for RK3576 UFS controller
+  range: e86f0d80765d..3ae8e722f6ab
+Preparing fake-am for v2: scsi: ufs: core: Export
+ufshcd_dme_link_startup() helper
+ERROR: v2 series incomplete; unable to create a fake-am range
+---
+Could not create fake-am range for upper series v2
+
+
+So how can we handle it? Your job is to use standard process so life of
+reviewers is not more difficult than it should be.
+
+Provide FULL CHANGELOG with explanation what happened here.
 
 Best regards,
 Krzysztof
