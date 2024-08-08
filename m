@@ -1,95 +1,79 @@
-Received: from mail-m19731103.qiye.163.com (mail-m19731103.qiye.163.com [220.197.31.103])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B8744A33;
-	Thu,  8 Aug 2024 13:20:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.103
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3671F19A;
+	Thu,  8 Aug 2024 17:06:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723123213; cv=none; b=j8kB/CmRoHsmt4/gmIrgcYpVVgXZo4QivPwTzX96y5mXC5rOl6GxLueYpbTWvDhubUoYPH/1dp1NzWc7In1JnZiClA63DOtQ0pOK5/dEVkceXU1WEV7lU8pYV8j8oFudpCFOSgm3xOWMO0OC7j1DyG8DxCQXfPx/fFzYYzuQjv4=
+	t=1723136817; cv=none; b=tVIOgCxlq8FByVEHtLJmatzfV9lsd54pgw33Iv+F3aY9ezfVHpMsMj/x/e+RuDOYbeguvAFs7FExZn9hcVfHp8XqfPpAOo5Jk08Vxu4cNCf/TuGy4SQ+pfD1/jks2sOULA/7UhSHn3FtRkSxd9ZtzDc3XcPyI0njxdmTM7Kuhsk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723123213; c=relaxed/simple;
-	bh=7/yCxFPro8RakUQFD/0TlBtf7y1AC/HaUbdkmyuJfXk=;
-	h=From:To:Cc:Subject:Date:Message-Id; b=lYDDzLbIoXhAQl5yQSl9AmWfcj0JyEH/ovC0quDp9hF8m8Epx/d2VFE3fcgrEoZLJ2eBQvKX7jECUZma48OcttyNeYVWrwSlkFGGZVLps4V5qcxmjaBvIjxkVE4aCEe/j1kyGBDq3EskxLqaMWjBey+DKclLxB1QEPlBgK2d1mM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=IRmC65bj; arc=none smtp.client-ip=220.197.31.103
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1723136817; c=relaxed/simple;
+	bh=pNlH+7HI3TR9dpc9zTA0Qmu4ReupDI0h17l5PY7YrcA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IKuKxGntTzZKc/xG8ZT9YzGhFarWyt6BRxDRoP4+SfNv74CsFJ1NKxl8SgUnC0+7nyxMX1BjzEuasIQr+152KHJdIu0VEqTMyNbeQ1m7rXol/mK1bkrnflrZ7KiQvFYkBBGvi8KBmqX0KdSx4rTe6OLUNTglAageaOuW/FZVyw0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cOP4Ak1P; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="IRmC65bj"
-DKIM-Signature: a=rsa-sha256;
-	b=IRmC65bjg0O2MQCEcTZKZ91mzw4TUasMD1V0i5q4J2Q8HdiiQcD+iXrRNAYyfcbLSrTUuMlijmsZzbaugXLo8xRjn94ZwLfZu4KeCo695onKZ3q7Go0mUZu/3UZrhFvV3XaTdt3cK/lBy7tifWw2oCuv075TCpG2NS9ez/gW1OI=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=RrX9VkXf3lokm0hBqCnf6pgq8Xxrgk1T4urj3G50BrQ=;
-	h=date:mime-version:subject:message-id:from;
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTPA id 353F0460378;
-	Thu,  8 Aug 2024 11:53:05 +0800 (CST)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Rob Herring <robh+dt@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	YiFeng Zhao <zyf@rock-chips.com>,
-	Liang Chen <cl@rock-chips.com>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cOP4Ak1P"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6047AC32782;
+	Thu,  8 Aug 2024 17:06:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723136817;
+	bh=pNlH+7HI3TR9dpc9zTA0Qmu4ReupDI0h17l5PY7YrcA=;
+	h=From:To:Cc:Subject:Date:From;
+	b=cOP4Ak1PmXnIBxIUilWoLghQw2l+MIg4wXxQ1NWA7gXpKJxmLiyva7B5V0SHVNdBa
+	 SyESSO9umE7hLqVJp+Ss6SZijnizXWG7cXrya0dP4O554NjD/dX9UDhw0u55V6psnv
+	 4EmSuGIOMhzTwuyiU/080qx1ytUzRU7tTYoE3DSegaByCxoZpEi5UH1uIWj3bcEnA8
+	 P8KaQP+/Ef2vMPt9TqbE2bMcNE28UVYexwsMxZx8vvUmdUjnEFmyYeGhpFVGjcBQqM
+	 nUdx5y0Tn3iPMUHvz5BaawGzpY+zdc3DThH5d/52J2KIUZl5gUZ+t9r70TgKqx235b
+	 +oJ6t6+MirHFA==
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Bart Van Assche <bvanassche@acm.org>,
 	linux-scsi@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v2 0/3] Init support for RK3576 UFS controller
-Date: Thu,  8 Aug 2024 11:52:40 +0800
-Message-Id: <1723089163-28983-1-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkkZSlYdSEkYS05DTBlLHxhWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
-	NVSktLVUpCS0tZBg++
-X-HM-Tid: 0a91301e6d0503aekunm353f0460378
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Mjo6Ngw5TjI1IQsPAQodKDof
-	NAEKCjlVSlVKTElIS0NCSkNNTklKVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhKSU03Bg++
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] scsi: ufs: ufshcd-pltfrm: Use of_property_present()
+Date: Thu,  8 Aug 2024 11:06:44 -0600
+Message-ID: <20240808170644.1436991-1-robh@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
+Use of_property_present() to test for property presence rather than
+of_find_property(). This is part of a larger effort to remove callers
+of of_find_property() and similar functions. of_find_property() leaks
+the DT struct property and data pointers which is a problem for
+dynamically allocated nodes which may be freed.
 
-This patchset add initial support UFS controller for RK3576 SoC.
-Patch 1 export ufshcd_dme_link_startup function for host drivers, and
-patch 2&3 add ufs-rockchip driver.
+Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+---
+v2:
+ - Update subject to include 'ufshcd-pltfrm'
+---
+ drivers/ufs/host/ufshcd-pltfrm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-
-Changes in v2:
-- renmae file name
-- fix all errors and pass the dt_binding_check:
-  make dt_binding_check DT_SCHEMA_FILES=rockchip,rk3576-ufs.yaml
-- use dev_probe_err
-- remove ufs-phy-config-mode as it's not used
-- drop of_match_ptr
-
-Shawn Lin (3):
-  scsi: ufs: core: Export ufshcd_dme_link_startup() helper
-  dt-bindings: ufs: Document Rockchip UFS host controller
-  scsi: ufs: rockchip: init support for UFS
-
- .../bindings/ufs/rockchip,rk3576-ufs.yaml          |  96 +++++
- drivers/ufs/core/ufshcd.c                          |   4 +-
- drivers/ufs/host/Kconfig                           |  12 +
- drivers/ufs/host/Makefile                          |   1 +
- drivers/ufs/host/ufs-rockchip.c                    | 438 +++++++++++++++++++++
- drivers/ufs/host/ufs-rockchip.h                    |  51 +++
- include/ufs/ufshcd.h                               |   1 +
- 7 files changed, 602 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufs.yaml
- create mode 100644 drivers/ufs/host/ufs-rockchip.c
- create mode 100644 drivers/ufs/host/ufs-rockchip.h
-
+diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
+index a3e69ecafd27..2e1eb898a27c 100644
+--- a/drivers/ufs/host/ufshcd-pltfrm.c
++++ b/drivers/ufs/host/ufshcd-pltfrm.c
+@@ -272,10 +272,10 @@ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
+ 	const char **clk_names;
+ 	int cnt, i, ret;
+ 
+-	if (!of_find_property(np, "operating-points-v2", NULL))
++	if (!of_property_present(np, "operating-points-v2"))
+ 		return 0;
+ 
+-	if (of_find_property(np, "freq-table-hz", NULL)) {
++	if (of_property_present(np, "freq-table-hz")) {
+ 		dev_err(dev, "%s: operating-points and freq-table-hz are incompatible\n",
+ 			 __func__);
+ 		return -EINVAL;
 -- 
-2.7.4
+2.43.0
 
