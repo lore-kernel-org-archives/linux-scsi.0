@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BC5618A6C2;
-	Thu,  8 Aug 2024 10:28:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E9F418C32E;
+	Thu,  8 Aug 2024 10:29:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723112900; cv=none; b=Gcl2pi/FrlxcXmxJpDxUUc3en8wPfiZ32nPY6662XRZxBSFbv1QQ13PLgbKJarNqMuS6Gq7sjBA9pTwxb+0k4Bqdi4Cd+lBx2PVaR8S0MX593MDe5SeZ/RwCM1EFUwhyw7B/Qum+GgF6B6IPNraSB9jekUEW4zBVmT6PRJWsVDU=
+	t=1723112981; cv=none; b=OPIaNki1ky8Pj2HGCq0bh9GEgt2DThctcSGIfP8ik+FtNOyXDMZE0NW5vk2wrgKPcYPZEq0gbyfbmNsYA1x4E4dIm1kVnY8IQop5f4o9z+KGIihiZF/QU/P/j+P2DugmRUBQ+TI3gTvthrDiReprfKIlFYMq+yI68o+Bh8mvEjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723112900; c=relaxed/simple;
-	bh=intYcQDbZsn2duAHXMXmHdLSGdw1MRwxV58NXdIotYQ=;
+	s=arc-20240116; t=1723112981; c=relaxed/simple;
+	bh=xFEtRXSAkiZfD4gmNu7FXYx4Shcuk2S7F29sdId7pXA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JffDRVJwZDpY6od+epbfGd5w/if0qViGI85wjhdztMPiDCSEO25yJApNeY7Fy/u8eg4A/0vtQWHPoG19tIiX+6PltA5JQo+uth1fDYuyYpT1OfVrV9NxKWlY8Medf6qwsDxF18bJdqncM+dRcob8FxBaPvwS7GPkGSzlvJY01ro=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PjNgDEl4; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=L+/z8rRLus7M0KY+JCruI/mIxvkUY78znyTm/EH4KwqWUvYnKhNKn7pz+rpBJbRFQx55U2OMv3OWDYeeqNVV3fU+cWRIhK1uxy7wEPG+defvRz1fHT+4iuPaEdeDe5kGtfe1uayK+IM/qbxBC6NCaQnGyy6C47+rVRkOkJ1fSIk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TaCidAC9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PjNgDEl4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33E4BC32782;
-	Thu,  8 Aug 2024 10:28:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TaCidAC9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB2A9C32782;
+	Thu,  8 Aug 2024 10:29:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723112899;
-	bh=intYcQDbZsn2duAHXMXmHdLSGdw1MRwxV58NXdIotYQ=;
+	s=k20201202; t=1723112980;
+	bh=xFEtRXSAkiZfD4gmNu7FXYx4Shcuk2S7F29sdId7pXA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=PjNgDEl4VsgNp09L6gVKrUAccTmXQpKIs3m6TAgrqoQTxj+2iqlQdf6AuxfJsEiPC
-	 hPE5nkoHs8iOvRk02r+AAu91mz80+2arhy5ca76muzSwF6hs70XJcfuSLM56TgTTW+
-	 kdKs8HsYfqNXdfq0EhAs2vGzYCMoWw5pO77FhWYiWc6Sx4z4OsoqYqWSpe7+SimLVZ
-	 lPKvNGdpX1sDzs6UOAjZdSzgu8UDl2fnBo6GrIdPDQH4PfgwYa8mR/Wk5AjbXrKp/n
-	 NM8iFftJrzM70Z1PaR1qf2qXgg5OpvTbeDkf9oCu7tOsiGZJVsSzLOVYPG6BMlbZHH
-	 pbhoObXLFrRMQ==
-Message-ID: <2975fb46-6145-4da3-8d8a-41f5d35db90c@kernel.org>
-Date: Thu, 8 Aug 2024 12:28:13 +0200
+	b=TaCidAC9aYfl0cwC26ZisNDRn9Wn3Aq8djc9/d5Khk7ZeQw4O6/rnQXYc+jXLYdLU
+	 kPPc1502DMsliLcvWbwybz/0iAR1QIQpuKy8D8oX5vs8boJ9Hh14wSkBgNTKaxxdEA
+	 LWHlPW9WqIsBcNIHvD7TZPVrKnk8SdV6FvW8YmjCRdZXNuXxPhHYGfJuVSlTUR0RyB
+	 rtDw5DuRM5DxLtakjofrW/8q/RmjCcGdt26AfZnTdpLEkLvMf+6Vr5PxHG9ITr2NAo
+	 LKGYevLSNqlRtfWK5F8kzD6yLln/S9Zl3T4L6y8i/EwU8M98NovR1+fJkwK0gOglRa
+	 jglBoRKk/6/UA==
+Message-ID: <402a5cb2-a502-4833-89a6-6daf5336b0b8@kernel.org>
+Date: Thu, 8 Aug 2024 12:29:33 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,25 +35,20 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/3] dt-bindings: ufs: Document Rockchip UFS host
- controller
-To: Shawn Lin <shawn.lin@rock-chips.com>, "Rob Herring (Arm)"
- <robh@kernel.org>
-Cc: linux-rockchip@lists.infradead.org, Liang Chen <cl@rock-chips.com>,
- Rob Herring <robh+dt@kernel.org>, linux-kernel@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Conor Dooley <conor+dt@kernel.org>, Bart Van Assche <bvanassche@acm.org>,
- Alim Akhtar <alim.akhtar@samsung.com>,
+Subject: Re: [RESEND PATCH v2 2/3] dt-bindings: ufs: Document Rockchip UFS
+ host controller
+To: Shawn Lin <shawn.lin@rock-chips.com>, Rob Herring <robh+dt@kernel.org>,
  "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- YiFeng Zhao <zyf@rock-chips.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- devicetree@vger.kernel.org,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Heiko Stuebner <heiko@sntech.de>, Avri Altman <avri.altman@wdc.com>,
- linux-scsi@vger.kernel.org
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Heiko Stuebner <heiko@sntech.de>, Alim Akhtar <alim.akhtar@samsung.com>,
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
+ YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
+ linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 References: <1723089163-28983-1-git-send-email-shawn.lin@rock-chips.com>
- <1723089163-28983-3-git-send-email-shawn.lin@rock-chips.com>
- <172309498853.3975217.8775988957925335272.robh@kernel.org>
- <659b9e09-b98d-48e0-ad0f-bfb2fe2148bc@rock-chips.com>
+ <1723091220-29291-1-git-send-email-shawn.lin@rock-chips.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -99,58 +94,33 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  uZwJCLykjad45hsWcOGk3OcaAGQS6NDlfhM6O9aYNwGL6tGt/6BkRikNOs7VDEa4/HlbaSJo
  7FgndGw1kWmkeL6oQh7wBvYll2buKod4qYntmNKEicoHGU+x91Gcan8mCoqhJkbqrL7+nXG2
  5Q/GS5M9RFWS+nYyJh+c3OcfKqVcZQNANItt7+ULzdNJuhvTRRdC3g9hmCEuNSr+CLMdnRBY fv0=
-In-Reply-To: <659b9e09-b98d-48e0-ad0f-bfb2fe2148bc@rock-chips.com>
+In-Reply-To: <1723091220-29291-1-git-send-email-shawn.lin@rock-chips.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
-On 08/08/2024 08:10, Shawn Lin wrote:
-> Hi Rob
+On 08/08/2024 06:27, Shawn Lin wrote:
+> Document Rockchip UFS host controller for RK3576 SoC.
 > 
-> 在 2024/8/8 13:29, Rob Herring (Arm) 写道:
->>
->> On Thu, 08 Aug 2024 11:52:42 +0800, Shawn Lin wrote:
->>> Document Rockchip UFS host controller for RK3576 SoC.
->>>
->>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>>
->>> ---
->>>
->>> Changes in v2:
->>> - renmae file name
->>> - fix all errors and pass the dt_binding_check:
->>>    make dt_binding_check DT_SCHEMA_FILES=rockchip,rk3576-ufs.yaml
->>>
->>>   .../bindings/ufs/rockchip,rk3576-ufs.yaml          | 96 ++++++++++++++++++++++
->>>   1 file changed, 96 insertions(+)
->>>   create mode 100644 Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufs.yaml
->>>
->>
->> My bot found errors running 'make dt_binding_check' on your patch:
->>
->> yamllint warnings/errors:
->>
->> dtschema/dtc warnings/errors:
->> /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufs.yaml: $id: Cannot determine base path from $id, relative path/filename doesn't match actual path or filename
->>   	 $id: http://devicetree.org/schemas/ufs/rockchip,ufs.yaml
->>   	file: /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufs.yaml
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 > 
-> This is already fixed by a resend v2 2/3 patch, a moment ago. Sorry for 
-> that.
+> ---
+> 
+> Changes in v2:
+> - renmae file name
+> - fix all errors and pass the dt_binding_check:
+>   make dt_binding_check DT_SCHEMA_FILES=rockchip,rk3576-ufs.yaml
 
-If you change patches, it is not a resend. Send a proper new version
-with proper changelog.
+That's not a correct way of sending patches. You already sent a v2, so
+how tools should process this?
 
-> 
->> Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufs.example.dts:24:18: fatal error: dt-bindings/clock/rockchip,rk3576-cru.h: No such file or directory
->>     24 |         #include <dt-bindings/clock/rockchip,rk3576-cru.h>
->>        |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> compilation terminated.
-> 
-> There are still pending patches from Rockchip in queue for review. This
-> patchset is based on them. I will wait for more comments and update them
-> after all under-review patches got merged.
+Do not attach (thread) your patchsets to some other threads (unrelated
+or older versions). This buries them deep in the mailbox and might
+interfere with applying entire sets.
 
-You need to document dependencies in changelog (---).
+Also, still dependency is not explained.
+
+Because of that dependency, it is not possible to apply it, so no. Drop
+the dependency first.
 
 Best regards,
 Krzysztof
