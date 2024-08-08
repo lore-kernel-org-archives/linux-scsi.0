@@ -1,97 +1,95 @@
-Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m19731103.qiye.163.com (mail-m19731103.qiye.163.com [220.197.31.103])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3999218C925
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Aug 2024 12:58:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B8744A33;
+	Thu,  8 Aug 2024 13:20:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.103
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723121884; cv=none; b=TiSM6kLBbuwC/Zqspuzj5+c1WHJ7cdXGybrHZXeTiZm7admuAqFF9/TrmKkAOjFw+a8cT8kVypXBhtmv2VvK4mUsDTik7LDcm3QlSdAYs0RZReatUS9Qlx7K53SzHIyCooDuIBitRhn7Ns3Bv6jftVbLsFafQpoSgKhzKWjNpIk=
+	t=1723123213; cv=none; b=j8kB/CmRoHsmt4/gmIrgcYpVVgXZo4QivPwTzX96y5mXC5rOl6GxLueYpbTWvDhubUoYPH/1dp1NzWc7In1JnZiClA63DOtQ0pOK5/dEVkceXU1WEV7lU8pYV8j8oFudpCFOSgm3xOWMO0OC7j1DyG8DxCQXfPx/fFzYYzuQjv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723121884; c=relaxed/simple;
-	bh=8Fx02ZeVvlacdTyi+Vsr7I38+MSCpSvrhtXjm1L7UYI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=NeMHS2yWdOFdq60AGYYHPt3YpIfsTO1KekjHMZS2EDZTM/ckkQb26WghrwzZe5jh/XlQZJ8EpVYmPAtpGQ2IcsY6ZTozt0djh9d/XvqwhtTItflo4hKjf+oP3gRDkke3KL/lJbJd7uu8spT29vO9iXf9surhsO/WGrSRZZTahkI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=LHPVB0wG; arc=none smtp.client-ip=209.85.214.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1723123213; c=relaxed/simple;
+	bh=7/yCxFPro8RakUQFD/0TlBtf7y1AC/HaUbdkmyuJfXk=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=lYDDzLbIoXhAQl5yQSl9AmWfcj0JyEH/ovC0quDp9hF8m8Epx/d2VFE3fcgrEoZLJ2eBQvKX7jECUZma48OcttyNeYVWrwSlkFGGZVLps4V5qcxmjaBvIjxkVE4aCEe/j1kyGBDq3EskxLqaMWjBey+DKclLxB1QEPlBgK2d1mM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=IRmC65bj; arc=none smtp.client-ip=220.197.31.103
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="LHPVB0wG"
-Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-1fc49c0aaffso8624075ad.3
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Aug 2024 05:58:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1723121882; x=1723726682; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XPbGhFYXBq9HfDXscnGRou+mE1HRUEoxNIwtJnyaTaE=;
-        b=LHPVB0wGs5qqOimrnkzsje/vh48rjO6RzmnvQH+Iu5rhaP0EtE2uGWagmlJpqWBuVe
-         vrZ3c0vsSdjfbE2/vBngcBT7u7thmJqQAB83td7biOOvAG6xNh3nRKNW5avju5zaxohE
-         0R8xcVVzj0XGz39D3MiOHf0jRK2zMdXhs1AXA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723121882; x=1723726682;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=XPbGhFYXBq9HfDXscnGRou+mE1HRUEoxNIwtJnyaTaE=;
-        b=kEPL2vpJ0zHnndkn+eEh0lF5aJ4VvxZC4t+Mwd10RbsQdUVNQyGXLbIGtzACWGsJCv
-         FqOr8WfbcoP74e8agDvGaP1e9Qn/gl8yA2NtvrfnvWr0HZCVIDUAVR2gbhH87hiiqfLn
-         wHiZCgujTZFpzowsX4/6baCsSsEnnmpNSyHHa4XDmMQoKpmBs8gvN2YeVQ61ItRBTCap
-         bwgpsl9IIT0Btgnxd1hwS5IZ2ZKy8nlyhfweaxf7hWq3LtSl8G4N6SERGPT0qU334szK
-         TRfLRvT1pjH7+BhZFNlNSdd2/yjZp/QgXFwzcmqBHkabT505xgYMVwjxIlJtEyAgPdY+
-         htUg==
-X-Gm-Message-State: AOJu0YxnesfpkjIRlo+W03lgLTyTCxodkSoGFIcHdZgxwrp03+L9R3Qq
-	looZFtOwF6eaFvXzQfQHUCAdAtwi2+Oz82abtFTswgniFsQOUSlCSmaDM3aZVtmBpluJ6C7Eh0l
-	HGMKcy3XForMD/i+IYvPNMTE55DkwCc19Z9USZeKmBIwKW+IPdcYREzjVSFC/LHMX1wRnHPL+eb
-	qmjtO+0+xA+NHxJ2A1Wi3T7a2WBITUvcZix9vz1CATKE1SEg==
-X-Google-Smtp-Source: AGHT+IHiILTfLegTklq1jebkDqQD8xJublKrr+ZGw0+Sr3jY7DoaPME7MjVRld7edkwcz4UQOBWbjQ==
-X-Received: by 2002:a17:902:f683:b0:1fd:8677:6160 with SMTP id d9443c01a7336-200952487eemr20970285ad.15.1723121881937;
-        Thu, 08 Aug 2024 05:58:01 -0700 (PDT)
-Received: from localhost.localdomain ([115.110.236.218])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ff590608b2sm123283325ad.152.2024.08.08.05.57.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Aug 2024 05:58:01 -0700 (PDT)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com,
-	sumit.saxena@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1 3/3] mpi3mr: Driver version update to 8.10.0.5.50
-Date: Thu,  8 Aug 2024 18:24:18 +0530
-Message-Id: <20240808125418.8832-4-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20240808125418.8832-1-ranjan.kumar@broadcom.com>
-References: <20240808125418.8832-1-ranjan.kumar@broadcom.com>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="IRmC65bj"
+DKIM-Signature: a=rsa-sha256;
+	b=IRmC65bjg0O2MQCEcTZKZ91mzw4TUasMD1V0i5q4J2Q8HdiiQcD+iXrRNAYyfcbLSrTUuMlijmsZzbaugXLo8xRjn94ZwLfZu4KeCo695onKZ3q7Go0mUZu/3UZrhFvV3XaTdt3cK/lBy7tifWw2oCuv075TCpG2NS9ez/gW1OI=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=RrX9VkXf3lokm0hBqCnf6pgq8Xxrgk1T4urj3G50BrQ=;
+	h=date:mime-version:subject:message-id:from;
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTPA id 353F0460378;
+	Thu,  8 Aug 2024 11:53:05 +0800 (CST)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>,
+	Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v2 0/3] Init support for RK3576 UFS controller
+Date: Thu,  8 Aug 2024 11:52:40 +0800
+Message-Id: <1723089163-28983-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGkkZSlYdSEkYS05DTBlLHxhWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
+	NVSktLVUpCS0tZBg++
+X-HM-Tid: 0a91301e6d0503aekunm353f0460378
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Mjo6Ngw5TjI1IQsPAQodKDof
+	NAEKCjlVSlVKTElIS0NCSkNNTklKVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhKSU03Bg++
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-Update driver version to 8.10.0.5.50
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+This patchset add initial support UFS controller for RK3576 SoC.
+Patch 1 export ufshcd_dme_link_startup function for host drivers, and
+patch 2&3 add ufs-rockchip driver.
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index cbb6e4b2d447..875bad7538f2 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -57,8 +57,8 @@ extern struct list_head mrioc_list;
- extern int prot_mask;
- extern atomic64_t event_counter;
- 
--#define MPI3MR_DRIVER_VERSION	"8.9.1.0.51"
--#define MPI3MR_DRIVER_RELDATE	"29-May-2024"
-+#define MPI3MR_DRIVER_VERSION	"8.10.0.5.50"
-+#define MPI3MR_DRIVER_RELDATE	"08-Aug-2024"
- 
- #define MPI3MR_DRIVER_NAME	"mpi3mr"
- #define MPI3MR_DRIVER_LICENSE	"GPL"
+
+Changes in v2:
+- renmae file name
+- fix all errors and pass the dt_binding_check:
+  make dt_binding_check DT_SCHEMA_FILES=rockchip,rk3576-ufs.yaml
+- use dev_probe_err
+- remove ufs-phy-config-mode as it's not used
+- drop of_match_ptr
+
+Shawn Lin (3):
+  scsi: ufs: core: Export ufshcd_dme_link_startup() helper
+  dt-bindings: ufs: Document Rockchip UFS host controller
+  scsi: ufs: rockchip: init support for UFS
+
+ .../bindings/ufs/rockchip,rk3576-ufs.yaml          |  96 +++++
+ drivers/ufs/core/ufshcd.c                          |   4 +-
+ drivers/ufs/host/Kconfig                           |  12 +
+ drivers/ufs/host/Makefile                          |   1 +
+ drivers/ufs/host/ufs-rockchip.c                    | 438 +++++++++++++++++++++
+ drivers/ufs/host/ufs-rockchip.h                    |  51 +++
+ include/ufs/ufshcd.h                               |   1 +
+ 7 files changed, 602 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/rockchip,rk3576-ufs.yaml
+ create mode 100644 drivers/ufs/host/ufs-rockchip.c
+ create mode 100644 drivers/ufs/host/ufs-rockchip.h
+
 -- 
-2.31.1
+2.7.4
 
