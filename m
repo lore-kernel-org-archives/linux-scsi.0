@@ -1,39 +1,39 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3671F19A;
-	Thu,  8 Aug 2024 17:06:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE20B1F19A;
+	Thu,  8 Aug 2024 17:07:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723136817; cv=none; b=tVIOgCxlq8FByVEHtLJmatzfV9lsd54pgw33Iv+F3aY9ezfVHpMsMj/x/e+RuDOYbeguvAFs7FExZn9hcVfHp8XqfPpAOo5Jk08Vxu4cNCf/TuGy4SQ+pfD1/jks2sOULA/7UhSHn3FtRkSxd9ZtzDc3XcPyI0njxdmTM7Kuhsk=
+	t=1723136859; cv=none; b=PvifBCKx9089wRNiWEtpi8JFy7JdoPmi8a+iJNrLb/EzZk/8QGXXPLtZXGr1t0+WA2sm6NPOtfA0p5s/6woM0VkegOTJ2IxuH8T4f5Q89H6bDrucANjVyzYxSJKj+G9zGkxNzwZBFyG40c0iOcace2g0ls0vMjiXXo2F6bvK2MU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723136817; c=relaxed/simple;
-	bh=pNlH+7HI3TR9dpc9zTA0Qmu4ReupDI0h17l5PY7YrcA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IKuKxGntTzZKc/xG8ZT9YzGhFarWyt6BRxDRoP4+SfNv74CsFJ1NKxl8SgUnC0+7nyxMX1BjzEuasIQr+152KHJdIu0VEqTMyNbeQ1m7rXol/mK1bkrnflrZ7KiQvFYkBBGvi8KBmqX0KdSx4rTe6OLUNTglAageaOuW/FZVyw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cOP4Ak1P; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723136859; c=relaxed/simple;
+	bh=Rzb89voYZneQbKj+/f0ulrexRm3ovFyYt+v+0qoef/Y=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=A0e4Bm1mkn2d70DnET7op+eyaobRiOk2AAiRnWIK/YHCZ2aQbtZZta+YUyOFMr9TSp5y4XrfP82zEndbCOqRkGMeYg7S+CxPi4YgScpqCMFtNU9AT/D/uyZoDM+NDzgo8D4L6oDM9u1T6bzE6NLKRPVpnQze7l8nN6iI2ToFadI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PG4s4DFn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cOP4Ak1P"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6047AC32782;
-	Thu,  8 Aug 2024 17:06:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PG4s4DFn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 387F9C32782;
+	Thu,  8 Aug 2024 17:07:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723136817;
-	bh=pNlH+7HI3TR9dpc9zTA0Qmu4ReupDI0h17l5PY7YrcA=;
+	s=k20201202; t=1723136859;
+	bh=Rzb89voYZneQbKj+/f0ulrexRm3ovFyYt+v+0qoef/Y=;
 	h=From:To:Cc:Subject:Date:From;
-	b=cOP4Ak1PmXnIBxIUilWoLghQw2l+MIg4wXxQ1NWA7gXpKJxmLiyva7B5V0SHVNdBa
-	 SyESSO9umE7hLqVJp+Ss6SZijnizXWG7cXrya0dP4O554NjD/dX9UDhw0u55V6psnv
-	 4EmSuGIOMhzTwuyiU/080qx1ytUzRU7tTYoE3DSegaByCxoZpEi5UH1uIWj3bcEnA8
-	 P8KaQP+/Ef2vMPt9TqbE2bMcNE28UVYexwsMxZx8vvUmdUjnEFmyYeGhpFVGjcBQqM
-	 nUdx5y0Tn3iPMUHvz5BaawGzpY+zdc3DThH5d/52J2KIUZl5gUZ+t9r70TgKqx235b
-	 +oJ6t6+MirHFA==
+	b=PG4s4DFnzGXjKx4aHAhfKQYSD74T2NqVQXgdLo9daTYt/zrZ+FJUAmI0AJZRIoQhL
+	 40qjBwL8utd3dqA8WCSBSDO1oKpHJmX6p8kemr9NYaq9jraUHj8X8ulFDgapxpo+0r
+	 /RPXebbNsy9EihbqyGdygZq2r4pofFEW2J75BNAqqWRwGdW4GBBt8yEW+49L6nvn8S
+	 1yZJFFkqHmtF8viLrmbNAyJ/+j48ZOcEoWyLPOhYMPfDTZRdUGPoa3346hmPqarK5b
+	 bVlojbXehChFLMRbGaPN9O0hOQdsAEWAtetOVz9eR5BoD6r1g4hW/IGWFbjUNNIfB4
+	 wxlG2udqPwabA==
 From: "Rob Herring (Arm)" <robh@kernel.org>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Bart Van Assche <bvanassche@acm.org>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi: ufs: ufshcd-pltfrm: Use of_property_present()
-Date: Thu,  8 Aug 2024 11:06:44 -0600
-Message-ID: <20240808170644.1436991-1-robh@kernel.org>
+Subject: [PATCH v2] scsi: ufs: ufshcd-pltfrm: Use of_property_count_u32_elems() to get property length
+Date: Thu,  8 Aug 2024 11:07:03 -0600
+Message-ID: <20240808170704.1438658-1-robh@kernel.org>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -43,37 +43,52 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Use of_property_present() to test for property presence rather than
-of_find_property(). This is part of a larger effort to remove callers
-of of_find_property() and similar functions. of_find_property() leaks
-the DT struct property and data pointers which is a problem for
-dynamically allocated nodes which may be freed.
+Replace of_get_property() with the type specific
+of_property_count_u32_elems() to get the property length.
+
+This is part of a larger effort to remove callers of of_get_property()
+and similar functions. of_get_property() leaks the DT property data
+pointer which is a problem for dynamically allocated nodes which may
+be freed.
 
 Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
 ---
 v2:
  - Update subject to include 'ufshcd-pltfrm'
 ---
- drivers/ufs/host/ufshcd-pltfrm.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ufs/host/ufshcd-pltfrm.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-pltfrm.c
-index a3e69ecafd27..2e1eb898a27c 100644
+index 2e1eb898a27c..0c9b303ccfa0 100644
 --- a/drivers/ufs/host/ufshcd-pltfrm.c
 +++ b/drivers/ufs/host/ufshcd-pltfrm.c
-@@ -272,10 +272,10 @@ static int ufshcd_parse_operating_points(struct ufs_hba *hba)
- 	const char **clk_names;
- 	int cnt, i, ret;
+@@ -31,7 +31,6 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ 	const char *name;
+ 	u32 *clkfreq = NULL;
+ 	struct ufs_clk_info *clki;
+-	int len = 0;
+ 	size_t sz = 0;
  
--	if (!of_find_property(np, "operating-points-v2", NULL))
-+	if (!of_property_present(np, "operating-points-v2"))
- 		return 0;
+ 	if (!np)
+@@ -50,15 +49,12 @@ static int ufshcd_parse_clock_info(struct ufs_hba *hba)
+ 	if (cnt <= 0)
+ 		goto out;
  
--	if (of_find_property(np, "freq-table-hz", NULL)) {
-+	if (of_property_present(np, "freq-table-hz")) {
- 		dev_err(dev, "%s: operating-points and freq-table-hz are incompatible\n",
- 			 __func__);
- 		return -EINVAL;
+-	if (!of_get_property(np, "freq-table-hz", &len)) {
++	sz = of_property_count_u32_elems(np, "freq-table-hz");
++	if (sz <= 0) {
+ 		dev_info(dev, "freq-table-hz property not specified\n");
+ 		goto out;
+ 	}
+ 
+-	if (len <= 0)
+-		goto out;
+-
+-	sz = len / sizeof(*clkfreq);
+ 	if (sz != 2 * cnt) {
+ 		dev_err(dev, "%s len mismatch\n", "freq-table-hz");
+ 		ret = -EINVAL;
 -- 
 2.43.0
 
