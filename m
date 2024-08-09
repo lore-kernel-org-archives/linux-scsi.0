@@ -1,51 +1,51 @@
 Received: from alln-iport-1.cisco.com (alln-iport-1.cisco.com [173.37.142.88])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3791721A1C;
-	Fri,  9 Aug 2024 16:46:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E1B3200A9;
+	Fri,  9 Aug 2024 16:46:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.142.88
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723221964; cv=none; b=HNQCYcAkez1IM9m2YE4ODrCsG2ctDWCLdwmlYEL4rdT4PAzlUTpnBE2ZMwJZj1Ixkb0L2dl8Xbcd6ZCI427u8YtFi80iOA6rSRFw0Wba+Xy5pjR4wpjEiWRlxal4z4M/RJUX9WzW5Ae9htg6hLuiy5QdSP78P8NlVO1zlca2VV0=
+	t=1723222020; cv=none; b=QB2Ao4qqKfy43iFkGkP+0Qi0yZEby08nS3lkUTX1PGTeNR2Gm3WuHs40UKhNCDDy3u4qF89Bkk8MD4kVAcvmn+CVpIRvrxv/9qn47+sROAWdUpL61OO80Cd4OqBB3/P2frVrzWb9ML70bkVMxVHYTumwEQLfBYnEmv4kHii7xH4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723221964; c=relaxed/simple;
-	bh=KIvjtAv4d6S9WDI/fsy/BxgQJlHvOna8i2D5IIGlyfg=;
+	s=arc-20240116; t=1723222020; c=relaxed/simple;
+	bh=3fEDc3DCm/x20hsnoHQ/LvwyxkeUb6HKDFX/H3af660=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=A3bh+Ye7iBs8UIYOHfwWXVlf445MSFUYPH6sIMgS2008Smw3IgL1F7EhFIgmqnUrOKi1YbgZcETR4oqMr7mFwv9azLJZSu73VwtMFJ+D4s9jSQLNxinvDW7C1K7Z/yH2uw+gabwl8u66Vt7FZTbM+SnmTBU+lUKcMhVmjsx890Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=mMJWNVRX; arc=none smtp.client-ip=173.37.142.88
+	 MIME-Version; b=t8hhf1I+CrZot2Bl5xhijH7vwWa5wfIqpBWyfVkyYh4ERNqD3ngPFtcHHzKXR6Kto4Cm6SioAvIy1nLsHOHgj2dV/NU87fdJKHgvjpKVNVHXoOCOJxGQlsEeM5vnkWgzm2M6kgQasKOoMI1VKhTWWi+hAxaEoo0m3TReQGiMTuw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b=m5iJRm9X; arc=none smtp.client-ip=173.37.142.88
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="mMJWNVRX"
+	dkim=pass (1024-bit key) header.d=cisco.com header.i=@cisco.com header.b="m5iJRm9X"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=60627; q=dns/txt;
-  s=iport; t=1723221961; x=1724431561;
+  d=cisco.com; i=@cisco.com; l=71714; q=dns/txt;
+  s=iport; t=1723222016; x=1724431616;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=F1rsL1qkUIGjwq7X4OMCyhCC7FmjdRfYalK10q7SRLs=;
-  b=mMJWNVRX08M0CLliJu/04vHWMICEo2XFj3UyW2Rjy2l0tFSVzJ0KTgNU
-   +X3QPmo5AmYNZJHYolyRfrTRCx55EiTDjUvGP4Gd8IghIpsB3pv4+YWJN
-   0RzTnKk+yqr7rGRmv47QCtMq1F9A8MfhC8uV0fFJmNirlnb3FRdoorxYQ
-   w=;
-X-CSE-ConnectionGUID: zmZ5+fAVR2Kz0y6aMBzLgQ==
-X-CSE-MsgGUID: 8PezdBv+TAa+Up02CGPBeg==
+  bh=kwUoJTbnFZRlf+gxYt9LNdRw21igItKQ2qOhpSn9SXs=;
+  b=m5iJRm9XFAFzsACJ/imOO92tZPjOmmMYhYF+4tJcGZGh29MjnH+cJOMB
+   BJJE53PobstiOG2Iry1hqucmyoyxkBzC5BwB6RdJ8FQtK4n09eYyG9j8R
+   4PpyavdxT2seke8aTwR/jjyQ29UMmodmE8W+DhPQkxmKjHTSE+SgEer+8
+   8=;
+X-CSE-ConnectionGUID: N9e0Z0M9Qn+ZWE7J5oQqEA==
+X-CSE-MsgGUID: yBJpGWnfSUu2B1yLH14Lvg==
 X-IronPort-AV: E=Sophos;i="6.09,276,1716249600"; 
-   d="scan'208";a="335628476"
+   d="scan'208";a="335629537"
 Received: from rcdn-core-5.cisco.com ([173.37.93.156])
-  by alln-iport-1.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Aug 2024 16:44:52 +0000
+  by alln-iport-1.cisco.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Aug 2024 16:46:55 +0000
 Received: from localhost.cisco.com ([10.193.101.253])
 	(authenticated bits=0)
-	by rcdn-core-5.cisco.com (8.15.2/8.15.2) with ESMTPSA id 479Ggo2Z031305
+	by rcdn-core-5.cisco.com (8.15.2/8.15.2) with ESMTPSA id 479Ggo2c031305
 	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Fri, 9 Aug 2024 16:44:51 GMT
+	Fri, 9 Aug 2024 16:46:54 GMT
 From: Karan Tilak Kumar <kartilak@cisco.com>
 To: sebaddel@cisco.com
 Cc: arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com, mkai2@cisco.com,
         satishkh@cisco.com, aeasi@cisco.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH v2 04/14] scsi: fnic: Add support for target based solicited requests and responses
-Date: Fri,  9 Aug 2024 09:42:30 -0700
-Message-Id: <20240809164240.47561-5-kartilak@cisco.com>
+Subject: [PATCH v2 07/14] scsi: fnic: Add and integrate support for FIP
+Date: Fri,  9 Aug 2024 09:42:33 -0700
+Message-Id: <20240809164240.47561-8-kartilak@cisco.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20240809164240.47561-1-kartilak@cisco.com>
 References: <20240809164240.47561-1-kartilak@cisco.com>
@@ -60,1819 +60,2419 @@ X-Authenticated-User: kartilak@cisco.com
 X-Outbound-SMTP-Client: 10.193.101.253, [10.193.101.253]
 X-Outbound-Node: rcdn-core-5.cisco.com
 
-Add support for target based solicited requests and responses.
-Add support for tport definitions and processing.
-Add support for restarting the IT nexus.
+Add and integrate support for FCoE Initialization
+(protocol) FIP. This protocol will be exercised on
+Cisco UCS rack servers.
+Add support to specifically print FIP related
+debug messages.
+Replace existing definitions to handle new
+data structures.
+Clean up old and obsolete definitions.
 
 Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
 Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
 Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
+Reviewed-by: Arun Easi <aeasi@cisco.com>
 Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 ---
 Changes between v1 and v2:
-    Incorporate review comments from Hannes:
+    Incorporate review comments from Hannes from other patches:
 	Use the correct kernel-doc format.
 	Replace htonll() with get_unaligned_be64().
-	Replace fnic_del_fabric_timer_sync macro calls to function
-	calls.
-	Replace fnic_del_tport_timer_sync macro calls to function
-	calls.
-	Rename fc_abts_s to fc_tport_abts_s.
-	Modify fc_tport_abts_s to be a global frame.
-	Rename variable pfc_abts to tport_abts.
 	Replace definitions with standard definitions from
 	fc_els.h.
-	Modify functions with returns in the middle to if else
-	clauses.
-    Replace simultaneous use of fc_tport_abts_s and tport_abts with
-    just tport_abts.
+    Incorporate review comments from John:
+	Remove unreferenced variable.
+	Use standard definitions of true and false.
+	Replace if else clauses with switch statement.
+	Use kzalloc instead of kmalloc.
 ---
- drivers/scsi/fnic/fdls_disc.c | 1580 ++++++++++++++++++++++++++++++---
- drivers/scsi/fnic/fnic.h      |    6 +
- drivers/scsi/fnic/fnic_fdls.h |    4 +
- 3 files changed, 1473 insertions(+), 117 deletions(-)
+ drivers/scsi/fnic/Makefile    |   1 +
+ drivers/scsi/fnic/fip.c       | 816 +++++++++++++++++++++++++++++++
+ drivers/scsi/fnic/fip.h       | 341 +++++++++++++
+ drivers/scsi/fnic/fnic.h      |  23 +-
+ drivers/scsi/fnic/fnic_fcs.c  | 885 ++++++----------------------------
+ drivers/scsi/fnic/fnic_main.c |  47 +-
+ 6 files changed, 1339 insertions(+), 774 deletions(-)
+ create mode 100644 drivers/scsi/fnic/fip.c
+ create mode 100644 drivers/scsi/fnic/fip.h
 
-diff --git a/drivers/scsi/fnic/fdls_disc.c b/drivers/scsi/fnic/fdls_disc.c
-index 2dda1ce9a55f..696f8d926865 100644
---- a/drivers/scsi/fnic/fdls_disc.c
-+++ b/drivers/scsi/fnic/fdls_disc.c
-@@ -11,6 +11,8 @@
- #include <scsi/fc/fc_fcp.h>
- #include <linux/utsname.h>
+diff --git a/drivers/scsi/fnic/Makefile b/drivers/scsi/fnic/Makefile
+index af156c69da0c..c025e875009e 100644
+--- a/drivers/scsi/fnic/Makefile
++++ b/drivers/scsi/fnic/Makefile
+@@ -2,6 +2,7 @@
+ obj-$(CONFIG_FCOE_FNIC) += fnic.o
  
-+#define FC_FC4_TYPE_SCSI 0x08
-+
- static void fdls_send_rpn_id(struct fnic_iport_s *iport);
- 
- /* Frame initialization */
-@@ -59,6 +61,19 @@ struct fc_rpn_id_s fnic_rpn_id_req = {
- 				  .command = FC_CT_RPN_CMD}
- };
- 
+ fnic-y	:= \
++	fip.o\
+ 	fnic_attrs.o \
+ 	fnic_isr.o \
+ 	fnic_main.o \
+diff --git a/drivers/scsi/fnic/fip.c b/drivers/scsi/fnic/fip.c
+new file mode 100644
+index 000000000000..650761c830e5
+--- /dev/null
++++ b/drivers/scsi/fnic/fip.c
+@@ -0,0 +1,816 @@
++// SPDX-License-Identifier: GPL-2.0-only
 +/*
-+ * Variables:
-+ * did, sid, oxid
++ * Copyright 2008 Cisco Systems, Inc.  All rights reserved.
++ * Copyright 2007 Nuova Systems, Inc.  All rights reserved.
 + */
-+struct fc_els_prli_s fnic_prli_req = {
-+	.fchdr = {.r_ctl = 0x22, .type = 0x01,
-+			  .f_ctl = FNIC_ELS_REQ_FCTL, .rx_id = 0xFFFF},
-+	.command = ELS_PRLI,
-+	.page_len = 16,
-+	.payload_len = 0x1400,
-+	.sp = {.type = 0x08, .flags = 0x0020, .csp = 0xA2000000}
-+};
++#include "fnic.h"
++#include "fip.h"
++#include <linux/etherdevice.h>
 +
- /*
-  * Variables:
-  * fh_s_id, port_id, port_name
-@@ -128,14 +143,61 @@ struct fc_hdr_s fc_fabric_abts_s = {
- 	.param = 0x00000000,	/* bit:0 = 0 Abort a exchange */
- };
- 
-+struct fc_hdr_s fc_tport_abts_s = {
-+	.r_ctl = 0x81,			/* ABTS */
-+	.cs_ctl = 0x00, .type = 0x00, .f_ctl = FNIC_REQ_ABTS_FCTL, .seq_id =
-+			0x00, .df_ctl = 0x00, .seq_cnt = 0x0000, .rx_id = 0xFFFF,
-+	.param = 0x00000000,	/* bit:0 = 0 Abort a exchange */
-+};
++extern struct workqueue_struct *fnic_fip_queue;
 +
- #define RETRIES_EXHAUSTED(iport)      \
- 	(iport->fabric.retry_counter == FABRIC_LOGO_MAX_RETRY)
- 
-+#define FNIC_TPORT_MAX_NEXUS_RESTART (8)
++#define FIP_FNIC_RESET_WAIT_COUNT 15
 +
-+/* Private Functions */
- static void fdls_process_flogi_rsp(struct fnic_iport_s *iport,
- 		   struct fc_hdr_s *fchdr, void *rx_frame);
- static void fnic_fdls_start_plogi(struct fnic_iport_s *iport);
-+static struct fnic_tport_s *fdls_create_tport(struct fnic_iport_s *iport,
-+									  uint32_t fcid,
-+									  uint64_t wwpn);
-+static void fdls_target_restart_nexus(struct fnic_tport_s *tport);
-+static void fdls_start_tport_timer(struct fnic_iport_s *iport,
-+					struct fnic_tport_s *tport, int timeout);
-+
- static void fdls_start_fabric_timer(struct fnic_iport_s *iport,
- 			int timeout);
-+static void fdls_tport_timer_callback(struct timer_list *t);
-+
-+static uint16_t fdls_alloc_tgt_oxid(struct fnic_iport_s *iport,
-+									uint16_t base)
-+{
-+	int i;
-+	int start, end;
-+
-+	start = base - FDLS_PLOGI_OXID_BASE;
-+	end = start + FDLS_TGT_OXID_BLOCK_SZ;
-+
-+	for (i = start; i < end; i++) {
-+		if (iport->tgt_oxid_pool[i] == 0) {
-+			iport->tgt_oxid_pool[i] = 1;
-+			return (i + FDLS_PLOGI_OXID_BASE);
-+		}
-+	}
-+	return 0xFFFF;
-+}
-+
-+static void fdls_free_tgt_oxid(struct fnic_iport_s *iport, uint16_t oxid)
-+{
-+	struct fnic *fnic = iport->fnic;
-+
-+	if (iport->tgt_oxid_pool[oxid - FDLS_PLOGI_OXID_BASE] != 1) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Freeing unused OXID: 0x%x", oxid);
-+	}
-+	iport->tgt_oxid_pool[oxid - FDLS_PLOGI_OXID_BASE] = 0;
-+}
- 
- inline void fnic_del_fabric_timer_sync(struct fnic *fnic)
- {
-@@ -180,6 +242,55 @@ fdls_start_fabric_timer(struct fnic_iport_s *iport, int timeout)
- 				 "fabric timer is %d ", timeout);
- }
- 
-+static void
-+fdls_start_tport_timer(struct fnic_iport_s *iport,
-+					   struct fnic_tport_s *tport, int timeout)
-+{
-+	u64 fabric_tov;
-+	struct fnic *fnic = iport->fnic;
-+
-+	if (tport->timer_pending) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport fcid 0x%x: Canceling disc timer\n",
-+					 tport->fcid);
-+		fnic_del_tport_timer_sync(fnic, tport);
-+		tport->timer_pending = 0;
-+	}
-+
-+	if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED))
-+		tport->retry_counter++;
-+
-+	fabric_tov = jiffies + msecs_to_jiffies(timeout);
-+	mod_timer(&tport->retry_timer, round_jiffies(fabric_tov));
-+	tport->timer_pending = 1;
-+}
-+
-+void
-+fdls_send_tport_abts(struct fnic_iport_s *iport,
-+					 struct fnic_tport_s *tport)
-+{
-+	uint8_t s_id[3];
-+	uint8_t d_id[3];
-+	struct fnic *fnic = iport->fnic;
-+	struct fc_hdr_s *tport_abts = &fc_tport_abts_s;
-+
-+	hton24(s_id, iport->fcid);
-+	hton24(d_id, tport->fcid);
-+	FNIC_SET_S_ID(tport_abts, s_id);
-+	FNIC_SET_D_ID(tport_abts, d_id);
-+	tport->flags |= FNIC_FDLS_TGT_ABORT_ISSUED;
-+
-+	tport_abts->ox_id = tport->oxid_used;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "FDLS sending tport abts: tport->state: %d ",
-+				 tport->state);
-+
-+	fnic_send_fcoe_frame(iport, &fc_tport_abts_s, sizeof(struct fc_hdr_s));
-+	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
-+	fdls_start_tport_timer(iport, tport, 2 * iport->r_a_tov);
-+}
-+
- static void fdls_send_fabric_abts(struct fnic_iport_s *iport)
- {
- 	uint8_t fcid[3];
-@@ -357,6 +468,169 @@ static void fdls_send_gpn_ft(struct fnic_iport_s *iport, int fdls_state)
- 	fdls_set_state((&iport->fabric), fdls_state);
- }
- 
-+static void
-+fdls_send_tgt_adisc(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
-+{
-+	struct fc_els_adisc_s adisc;
-+	uint8_t s_id[3];
-+	uint8_t d_id[3];
-+	uint16_t oxid;
-+	struct fnic *fnic = iport->fnic;
-+
-+	memset(&adisc, 0, sizeof(struct fc_els_adisc_s));
-+	adisc.fchdr.r_ctl = 0x22;
-+	adisc.fchdr.type = 0x01;
-+	adisc.fchdr.f_ctl = FNIC_ELS_REQ_FCTL;
-+	adisc.fchdr.rx_id = 0xFFFF;
-+
-+	hton24(s_id, iport->fcid);
-+	hton24(d_id, tport->fcid);
-+	FNIC_SET_S_ID((&adisc.fchdr), s_id);
-+	FNIC_SET_D_ID((&adisc.fchdr), d_id);
-+
-+	oxid = htons(fdls_alloc_tgt_oxid(iport, FDLS_ADISC_OXID_BASE));
-+	if (oxid == 0xFFFF) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Failed to allocate OXID to send ADISC %p", iport);
-+		return;
-+	}
-+
-+	tport->oxid_used = oxid;
-+	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
-+
-+	FNIC_SET_OX_ID((&adisc.fchdr), oxid);
-+	FNIC_SET_NPORT_NAME(adisc, iport->wwpn);
-+	FNIC_SET_NODE_NAME(adisc, iport->wwnn);
-+
-+	memcpy(adisc.fcid, s_id, 3);
-+	adisc.command = ELS_ADISC;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "sending ADISC to tgt fcid: 0x%x", tport->fcid);
-+
-+	fnic_send_fcoe_frame(iport, &adisc, sizeof(struct fc_els_adisc_s));
-+	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
-+	fdls_start_tport_timer(iport, tport, 2 * iport->e_d_tov);
-+}
-+
-+void fdls_delete_tport(struct fnic_iport_s *iport,
-+					   struct fnic_tport_s *tport)
-+{
-+	struct fnic_tport_event_s *tport_del_evt;
-+	struct fnic *fnic = iport->fnic;
-+
-+	if ((tport->state == FDLS_TGT_STATE_OFFLINING)
-+		|| (tport->state == FDLS_TGT_STATE_OFFLINE))
-+		return;
-+
-+	fdls_set_tport_state(tport, FDLS_TGT_STATE_OFFLINING);
-+	/*
-+	 * By setting this flag, the tport will not be seen in a look-up
-+	 * in an RSCN. Even if we move to multithreaded model, this tport
-+	 * will be destroyed and a new RSCN will have to create a new one
-+	 */
-+	tport->flags |= FNIC_FDLS_TPORT_TERMINATING;
-+
-+	if (tport->timer_pending) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport fcid 0x%x: Canceling disc timer\n",
-+					 tport->fcid);
-+		fnic_del_tport_timer_sync(fnic, tport);
-+		tport->timer_pending = 0;
-+	}
-+
-+	if (IS_FNIC_FCP_INITIATOR(fnic)) {
-+		spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
-+		fnic_rport_exch_reset(iport->fnic, tport->fcid);
-+		spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
-+
-+		if (tport->flags & FNIC_FDLS_SCSI_REGISTERED) {
-+			tport_del_evt =
-+				kzalloc(sizeof(struct fnic_tport_event_s), GFP_ATOMIC);
-+			if (!tport_del_evt) {
-+				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Failed to allocate memory for tport fcid: 0x%0x\n",
-+					 tport->fcid);
-+				return;
-+			}
-+			tport_del_evt->event = TGT_EV_RPORT_DEL;
-+			tport_del_evt->arg1 = (void *) tport;
-+			list_add_tail(&tport_del_evt->links, &fnic->tport_event_list);
-+			queue_work(fnic_event_queue, &fnic->tport_work);
-+		} else {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "tport 0x%x not reg with scsi_transport. Freeing locally",
-+				 tport->fcid);
-+			list_del(&tport->links);
-+			kfree(tport);
-+		}
-+	}
-+}
-+
-+static void
-+fdls_send_tgt_plogi(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
-+{
-+	struct fc_els_s plogi;
-+	uint8_t s_id[3];
-+	uint8_t d_id[3];
-+	uint16_t oxid;
-+	struct fnic *fnic = iport->fnic;
-+	uint32_t timeout;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Send tgt PLOGI to fcid: 0x%x", tport->fcid);
-+
-+	memcpy(&plogi, &fnic_plogi_req, sizeof(struct fc_els_s));
-+
-+	hton24(s_id, iport->fcid);
-+	hton24(d_id, tport->fcid);
-+
-+	FNIC_SET_S_ID((&plogi.fchdr), s_id);
-+	FNIC_SET_D_ID((&plogi.fchdr), d_id);
-+	FNIC_SET_RDF_SIZE(plogi.u.csp_plogi, iport->max_payload_size);
-+
-+	oxid = htons(fdls_alloc_tgt_oxid(iport, FDLS_PLOGI_OXID_BASE));
-+	if (oxid == 0xFFFF) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "0x%x: Failed to allocate oxid to send PLOGI to fcid: 0x%x",
-+				 iport->fcid, tport->fcid);
-+		return;
-+	}
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "send tgt PLOGI: tgt fcid: 0x%x oxid: 0x%x", tport->fcid,
-+				 ntohs(oxid));
-+	tport->oxid_used = oxid;
-+	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
-+
-+	FNIC_SET_OX_ID((&plogi.fchdr), oxid);
-+	FNIC_SET_NPORT_NAME(plogi, iport->wwpn);
-+	FNIC_SET_NODE_NAME(plogi, iport->wwnn);
-+
-+	timeout = max(2 * iport->e_d_tov, iport->plogi_timeout);
-+
-+	fnic_send_fcoe_frame(iport, &plogi, sizeof(struct fc_els_s));
-+	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
-+	fdls_start_tport_timer(iport, tport, timeout);
-+}
-+
-+static uint16_t
-+fnic_fc_plogi_rsp_rdf(struct fnic_iport_s *iport,
-+					  struct fc_els_s *plogi_rsp)
-+{
-+	uint16_t b2b_rdf_size = ntohs(plogi_rsp->u.csp_plogi.b2b_rdf_size);
-+	uint16_t spc3_rdf_size =
-+		((uint16_t) (plogi_rsp->spc3[6] << 8 | plogi_rsp->spc3[7]) &
-+		 FNIC_FC_C3_RDF);
-+	struct fnic *fnic = iport->fnic;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "MFS: b2b_rdf_size: 0x%x spc3_rdf_size: 0x%x",
-+			 b2b_rdf_size, spc3_rdf_size);
-+
-+	return MIN(b2b_rdf_size, spc3_rdf_size);
-+}
-+
- static void fdls_send_register_fc4_types(struct fnic_iport_s *iport)
- {
- 	struct fc_rft_id rft_id;
-@@ -406,6 +680,47 @@ static void fdls_send_register_fc4_features(struct fnic_iport_s *iport)
- 	fdls_start_fabric_timer(iport, 2 * iport->e_d_tov);
- }
- 
-+static void
-+fdls_send_tgt_prli(struct fnic_iport_s *iport, struct fnic_tport_s *tport)
-+{
-+	struct fc_els_prli_s prli;
-+	uint8_t s_id[3];
-+	uint8_t d_id[3];
-+	uint16_t oxid;
-+	struct fnic *fnic = iport->fnic;
-+	uint32_t timeout;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "FDLS sending PRLI to tgt: 0x%x", tport->fcid);
-+
-+	oxid = htons(fdls_alloc_tgt_oxid(iport, FDLS_PRLI_OXID_BASE));
-+	if (oxid == 0xFFFF) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Failed to allocate OXID to send PRLI %p", iport);
-+		return;
-+	}
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "FDLS sending PRLI to tgt: 0x%x OXID: 0x%x", tport->fcid,
-+				 ntohs(oxid));
-+
-+	tport->oxid_used = oxid;
-+	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
-+	memcpy(&prli, &fnic_prli_req, sizeof(struct fc_els_prli_s));
-+
-+	hton24(s_id, iport->fcid);
-+	hton24(d_id, tport->fcid);
-+
-+	FNIC_SET_S_ID((&prli.fchdr), s_id);
-+	FNIC_SET_D_ID((&prli.fchdr), d_id);
-+	FNIC_SET_OX_ID((&prli.fchdr), oxid);
-+
-+	timeout = max(2 * iport->e_d_tov, iport->plogi_timeout);
-+
-+	fnic_send_fcoe_frame(iport, &prli, sizeof(struct fc_els_prli_s));
-+	/* Even if fnic_send_fcoe_frame() fails we want to retry after timeout */
-+	fdls_start_tport_timer(iport, tport, timeout);
-+}
-+
- /**
-  * fdls_send_fabric_logo - Send flogo to the fcf
-  * @iport: Handle to fnic iport
-@@ -442,6 +757,201 @@ void fdls_send_fabric_logo(struct fnic_iport_s *iport)
- 	fnic_send_fcoe_frame(iport, &logo, sizeof(struct fc_logo_req_s));
- }
- 
 +/**
-+ * fdls_tgt_logout - Send plogo to the remote port
-+ * @iport: Handle to fnic iport
-+ * @tport: Handle to remote port
++ * fnic_fcoe_reset_vlans - Free up the list of discovered vlans
++ * @fnic: Handle to fnic driver instance
++ */
++void fnic_fcoe_reset_vlans(struct fnic *fnic)
++{
++	unsigned long flags;
++	struct fcoe_vlan *vlan, *next;
++
++	spin_lock_irqsave(&fnic->vlans_lock, flags);
++	if (!list_empty(&fnic->vlan_list)) {
++		list_for_each_entry_safe(vlan, next, &fnic->vlan_list, list) {
++			list_del(&vlan->list);
++			kfree(vlan);
++		}
++	}
++
++	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "Reset vlan complete\n");
++}
++
++/**
++ * fnic_fcoe_send_vlan_req - Send FIP vlan request to all FCFs MAC
++ * @fnic: Handle to fnic driver instance
++ */
++void fnic_fcoe_send_vlan_req(struct fnic *fnic)
++{
++	struct fnic_iport_s *iport = &fnic->iport;
++	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
++	u64 vlan_tov;
++
++	int fr_len;
++	struct fip_vlan_req_s vlan_req;
++
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "Enter send vlan req\n");
++	fnic_fcoe_reset_vlans(fnic);
++
++	fnic->set_vlan(fnic, 0);
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "set vlan done\n");
++
++	fr_len = sizeof(struct fip_vlan_req_s);
++
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "got MAC 0x%x:%x:%x:%x:%x:%x\n", iport->hwmac[0],
++				 iport->hwmac[1], iport->hwmac[2], iport->hwmac[3],
++				 iport->hwmac[4], iport->hwmac[5]);
++
++	memcpy(&vlan_req, &fip_vlan_req_tmpl, fr_len);
++	memcpy(vlan_req.eth.smac, iport->hwmac, ETH_ALEN);
++	memcpy(vlan_req.mac_desc.mac, iport->hwmac, ETH_ALEN);
++
++	atomic64_inc(&fnic_stats->vlan_stats.vlan_disc_reqs);
++
++	iport->fip.state = FDLS_FIP_VLAN_DISCOVERY_STARTED;
++
++	fnic_send_fip_frame(iport, &vlan_req, fr_len);
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "vlan req sent\n");
++
++	vlan_tov = jiffies + msecs_to_jiffies(FCOE_CTLR_FIPVLAN_TOV);
++	mod_timer(&fnic->retry_fip_timer, round_jiffies(vlan_tov));
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "fip timer set\n");
++}
++
++/**
++ * fnic_fcoe_process_vlan_resp - Processes the vlan response from one FCF and
++ * populates VLAN list.
++ * @fnic: Handle to fnic driver instance
++ * @fiph: Received FIP frame
 + *
-+ * This function does not change or check the fabric/tport state.
-+ * It the caller's responsibility to set the appropriate tport/fabric
-+ * state when this is called. Normally that is fdls_tgt_state_plogo.
-+ * This could be used to send plogo to nameserver process
-+ * also not just target processes
++ * Will wait for responses from multiple FCFs until timeout.
 + */
-+void fdls_tgt_logout(struct fnic_iport_s *iport,
-+					 struct fnic_tport_s *tport)
++void fnic_fcoe_process_vlan_resp(struct fnic *fnic,
++								 struct fip_header_s *fiph)
 +{
-+	struct fc_logo_req_s logo;
-+	uint8_t s_id[3];
-+	uint8_t d_id[3];
-+	struct fnic *fnic = iport->fnic;
++	struct fip_vlan_notif_s *vlan_notif = (struct fip_vlan_notif_s *) fiph;
 +
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Sending logo to tport fcid: 0x%x", tport->fcid);
-+	memcpy(&logo, &fnic_logo_req, sizeof(struct fc_logo_req_s));
++	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
++	u16 vid;
++	int num_vlan = 0;
++	int cur_desc, desc_len;
++	struct fcoe_vlan *vlan;
++	struct fip_vlan_desc_s *vlan_desc;
++	unsigned long flags;
 +
-+	hton24(s_id, iport->fcid);
-+	hton24(d_id, tport->fcid);
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "fnic 0x%p got vlan resp\n", fnic);
 +
-+	FNIC_SET_S_ID((&logo.fchdr), s_id);
-+	FNIC_SET_D_ID((&logo.fchdr), d_id);
-+	FNIC_SET_OX_ID((&logo.fchdr), FNIC_TLOGO_REQ_OXID);
++	desc_len = ntohs(vlan_notif->fip.desc_len);
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "desc_len %d\n", desc_len);
 +
-+	memcpy(&logo.fcid, s_id, 3);
-+	logo.wwpn = get_unaligned_be64(&iport->wwpn);
++	spin_lock_irqsave(&fnic->vlans_lock, flags);
 +
-+	fnic_send_fcoe_frame(iport, &logo, sizeof(struct fc_logo_req_s));
-+}
++	cur_desc = 0;
++	while (desc_len > 0) {
++		vlan_desc =
++			(struct fip_vlan_desc_s *) (((char *) vlan_notif->vlans_desc)
++										+ cur_desc * 4);
 +
-+static void fdls_tgt_discovery_start(struct fnic_iport_s *iport)
-+{
-+	struct fnic_tport_s *tport, *next;
-+	u32 old_link_down_cnt = iport->fnic->link_down_cnt;
-+	struct fnic *fnic = iport->fnic;
++		if (vlan_desc->type == FIP_TYPE_VLAN) {
++			if (vlan_desc->len != 1) {
++				FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "Invalid descriptor length(%x) in VLan response\n",
++					 vlan_desc->len);
 +
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "0x%x: Starting FDLS target discovery", iport->fcid);
++			}
++			num_vlan++;
++			vid = ntohs(vlan_desc->vlan);
++			FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++						 "process_vlan_resp: FIP VLAN %d\n", vid);
++			vlan = kzalloc(sizeof(*vlan), GFP_ATOMIC);
 +
-+	list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
-+		if ((old_link_down_cnt != iport->fnic->link_down_cnt)
-+			|| (iport->state != FNIC_IPORT_STATE_READY)) {
++			if (!vlan) {
++				/* retry from timer */
++				FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++							 "Mem Alloc failure\n");
++				spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++				goto out;
++			}
++			vlan->vid = vid & 0x0fff;
++			vlan->state = FIP_VLAN_AVAIL;
++			list_add_tail(&vlan->list, &fnic->vlan_list);
 +			break;
-+		}
-+		/* if we marked the tport as deleted due to GPN_FT
-+		 * We should not send ADISC anymore
-+		 */
-+		if ((tport->state == FDLS_TGT_STATE_OFFLINING) ||
-+			(tport->state == FDLS_TGT_STATE_OFFLINE))
-+			continue;
-+
-+		/* For tports which have received RSCN */
-+		if (tport->flags & FNIC_FDLS_TPORT_SEND_ADISC) {
-+			tport->retry_counter = 0;
-+			fdls_set_tport_state(tport, FDLS_TGT_STATE_ADISC);
-+			tport->flags &= ~FNIC_FDLS_TPORT_SEND_ADISC;
-+			fdls_send_tgt_adisc(iport, tport);
-+			continue;
-+		}
-+		if (fdls_get_tport_state(tport) != FDLS_TGT_STATE_INIT) {
-+			/* Not a new port, skip  */
-+			continue;
-+		}
-+		tport->retry_counter = 0;
-+		fdls_set_tport_state(tport, FDLS_TGT_STATE_PLOGI);
-+		fdls_send_tgt_plogi(iport, tport);
-+	}
-+	fdls_set_state((&iport->fabric), FDLS_STATE_TGT_DISCOVERY);
-+}
-+
-+/*
-+ * Function to restart the IT nexus if we received any out of
-+ * sequence PLOGI/PRLI  response from the target.
-+ * The memory for the new tport structure is allocated
-+ * inside fdls_create_tport and added to the iport's tport list.
-+ * This will get freed later during tport_offline/linkdown
-+ * or module unload. The new_tport pointer will go out of scope
-+ * safely since the memory it is
-+ * pointing to it will be freed later
-+ */
-+static void fdls_target_restart_nexus(struct fnic_tport_s *tport)
-+{
-+	struct fnic_iport_s *iport = tport->iport;
-+	struct fnic_tport_s *new_tport = NULL;
-+	uint32_t fcid;
-+	uint64_t wwpn;
-+	int nexus_restart_count;
-+	struct fnic *fnic = iport->fnic;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "tport fcid: 0x%x state: %d restart_count: %d",
-+				 tport->fcid, tport->state, tport->nexus_restart_count);
-+
-+	fcid = tport->fcid;
-+	wwpn = tport->wwpn;
-+	nexus_restart_count = tport->nexus_restart_count;
-+
-+	fdls_delete_tport(iport, tport);
-+
-+	if (nexus_restart_count >= FNIC_TPORT_MAX_NEXUS_RESTART) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Exceeded nexus restart retries tport: 0x%x", fcid);
-+		return;
-+	}
-+
-+	/*
-+	 * Allocate memory for the new tport and add it to
-+	 * iport's tport list.
-+	 * This memory will be freed during tport_offline/linkdown
-+	 * or module unload. The pointer new_tport is safe to go
-+	 * out of scope when this function returns, since the memory
-+	 * it is pointing to is guaranteed to be freed later
-+	 * as mentioned above.
-+	 */
-+	new_tport = fdls_create_tport(iport, fcid, wwpn);
-+	if (!new_tport) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Error creating new tport: 0x%x", fcid);
-+		return;
-+	}
-+
-+	new_tport->nexus_restart_count = nexus_restart_count + 1;
-+	fdls_send_tgt_plogi(iport, new_tport);
-+	fdls_set_tport_state(new_tport, FDLS_TGT_STATE_PLOGI);
-+}
-+
-+struct fnic_tport_s *fnic_find_tport_by_fcid(struct fnic_iport_s *iport,
-+									 uint32_t fcid)
-+{
-+	struct fnic_tport_s *tport, *next;
-+
-+	list_for_each_entry_safe(tport, next, &(iport->tport_list), links) {
-+		if ((tport->fcid == fcid)
-+			&& !(tport->flags & FNIC_FDLS_TPORT_TERMINATING))
-+			return tport;
-+	}
-+	return NULL;
-+}
-+
-+static struct fnic_tport_s *fdls_create_tport(struct fnic_iport_s *iport,
-+								  uint32_t fcid, uint64_t wwpn)
-+{
-+	struct fnic_tport_s *tport;
-+	struct fnic *fnic = iport->fnic;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "FDLS create tport: fcid: 0x%x wwpn: 0x%llx", fcid, wwpn);
-+
-+	tport = kzalloc(sizeof(struct fnic_tport_s), GFP_ATOMIC);
-+	if (!tport) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Memory allocation failure while creating tport: 0x%x\n",
-+			 fcid);
-+		return NULL;
-+	}
-+
-+	tport->max_payload_size = FNIC_FCOE_MAX_FRAME_SZ;
-+	tport->r_a_tov = FNIC_R_A_TOV_DEF;
-+	tport->e_d_tov = FNIC_E_D_TOV_DEF;
-+	tport->fcid = fcid;
-+	tport->wwpn = wwpn;
-+	tport->iport = iport;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Need to setup tport timer callback");
-+
-+	timer_setup(&tport->retry_timer, fdls_tport_timer_callback, 0);
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Added tport 0x%x", tport->fcid);
-+	fdls_set_tport_state(tport, FDLS_TGT_STATE_INIT);
-+	list_add_tail(&tport->links, &iport->tport_list);
-+	atomic_set(&tport->in_flight, 0);
-+	return tport;
-+}
-+
-+struct fnic_tport_s *fnic_find_tport_by_wwpn(struct fnic_iport_s *iport,
-+									 uint64_t wwpn)
-+{
-+	struct fnic_tport_s *tport, *next;
-+
-+	list_for_each_entry_safe(tport, next, &(iport->tport_list), links) {
-+		if ((tport->wwpn == wwpn)
-+			&& !(tport->flags & FNIC_FDLS_TPORT_TERMINATING))
-+			return tport;
-+	}
-+	return NULL;
-+}
-+
- void fdls_fabric_timer_callback(struct timer_list *t)
- {
- 	struct fnic_fdls_fabric_s *fabric = from_timer(fabric, t, retry_timer);
-@@ -481,11 +991,8 @@ void fdls_fabric_timer_callback(struct timer_list *t)
- 			&& (iport->fabric.retry_counter < iport->max_flogi_retries)) {
- 			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
- 			fdls_send_fabric_flogi(iport);
--			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
--			return;
--		}
--		/* Flogi has time out 2*ed_tov send abts */
--		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
-+		} else if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
-+			/* Flogi has time out 2*ed_tov send abts */
- 			fdls_send_fabric_abts(iport);
- 		} else {
- 			/* Flogi ABTS has timed out and we have waited
-@@ -506,11 +1013,8 @@ void fdls_fabric_timer_callback(struct timer_list *t)
- 			&& (iport->fabric.retry_counter < iport->max_plogi_retries)) {
- 			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
- 			fdls_send_fabric_plogi(iport);
--			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
--			return;
--		}
-+		} else if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
- 		/* Plogi has timed out 2*ed_tov send abts */
--		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
- 			fdls_send_fabric_abts(iport);
- 		} else {
- 			/* plogi ABTS has timed out and we have waited
-@@ -524,130 +1028,620 @@ void fdls_fabric_timer_callback(struct timer_list *t)
- 				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
- 							 "Exceeded max PLOGI retries");
- 		}
--		break;
--	case FDLS_STATE_RPN_ID:
--		/* Rpn_id received a LS_RJT with busy we retry from here */
--		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
--			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
--			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
--			fdls_send_rpn_id(iport);
--			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+		break;
-+	case FDLS_STATE_RPN_ID:
-+		/* Rpn_id received a LS_RJT with busy we retry from here */
-+		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
-+			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_rpn_id(iport);
-+		} else if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED))
-+			/* RPN has timed out. Send abts */
-+			fdls_send_fabric_abts(iport);
-+		else
-+			/* ABTS has timed out (2*ra_tov) */
-+			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
-+		break;
-+	case FDLS_STATE_SCR:
-+		/* scr received a LS_RJT with busy we retry from here */
-+		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
-+			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_scr(iport);
-+		} else if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED))
-+			/* scr has timed out. Send abts */
-+			fdls_send_fabric_abts(iport);
-+		else {
-+			/* ABTS has timed out (2*ra_tov), we give up */
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "ABTS timed out. Starting PLOGI: %p", iport);
-+			fnic_fdls_start_plogi(iport);
-+		}
-+		break;
-+	case FDLS_STATE_REGISTER_FC4_TYPES:
-+		/* scr received a LS_RJT with busy we retry from here */
-+		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
-+			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_register_fc4_types(iport);
-+		} else if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
-+			/* RFT_ID timed out send abts */
-+			fdls_send_fabric_abts(iport);
 +		} else {
-+			/* ABTS has timed out (2*ra_tov), we give up */
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "ABTS timed out. Starting PLOGI: %p", iport);
-+			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
-+		}
-+		break;
-+	case FDLS_STATE_REGISTER_FC4_FEATURES:
-+		/* scr received a LS_RJT with busy we retry from here */
-+		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
-+			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_register_fc4_features(iport);
-+		} else if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED))
-+			/* SCR has timed out. Send abts */
-+			fdls_send_fabric_abts(iport);
-+		else {
-+			/* ABTS has timed out (2*ra_tov), we give up */
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "ABTS timed out. Starting PLOGI %p", iport);
-+			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
-+		}
-+		break;
-+	case FDLS_STATE_RSCN_GPN_FT:
-+	case FDLS_STATE_SEND_GPNFT:
-+	case FDLS_STATE_GPN_FT:
-+		/* GPN_FT received a LS_RJT with busy we retry from here */
-+		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
-+			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_gpn_ft(iport, iport->fabric.state);
-+		} else if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
-+			/* gpn_ft has timed out. Send abts */
-+			fdls_send_fabric_abts(iport);
-+		} else {
++			FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "Invalid descriptor type(%x) in VLan response\n",
++				 vlan_desc->type);
 +			/*
-+			 * ABTS has timed out have waited (2*ra_tov) can
-+			 * retry safely with same exchange id
++			 * Note : received a type=2 descriptor here i.e. FIP
++			 * MAC Address Descriptor
 +			 */
-+			if (iport->fabric.retry_counter < FDLS_RETRY_COUNT) {
-+				fdls_send_gpn_ft(iport, iport->fabric.state);
-+			} else {
-+				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "ABTS timeout for fabric GPN_FT. Check name server: %p",
-+					 iport);
++		}
++		cur_desc += vlan_desc->len;
++		desc_len -= vlan_desc->len;
++	}
++
++	/* any VLAN descriptors present ? */
++	if (num_vlan == 0) {
++		atomic64_inc(&fnic_stats->vlan_stats.resp_withno_vlanID);
++		FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "fnic 0x%p No VLAN descriptors in FIP VLAN response\n",
++					 fnic);
++	}
++
++	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++
++out:
++	return;
++}
++
++/**
++ * fnic_fcoe_start_fcf_discovery - Start FIP FCF discovery in a selected vlan
++ * @fnic: Handle to fnic driver instance
++ */
++void fnic_fcoe_start_fcf_discovery(struct fnic *fnic)
++{
++	struct fnic_iport_s *iport = &fnic->iport;
++	u64 fcs_tov;
++
++	int fr_len;
++	struct fip_discovery_s disc_sol;
++
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "fnic 0x%p start fcf discovery\n", fnic);
++	fr_len = sizeof(struct fip_discovery_s);
++	memset(iport->selected_fcf.fcf_mac, 0, ETH_ALEN);
++
++	memcpy(&disc_sol, &fip_discovery_tmpl, fr_len);
++	memcpy(disc_sol.eth.smac, iport->hwmac, ETH_ALEN);
++	memcpy(disc_sol.mac_desc.mac, iport->hwmac, ETH_ALEN);
++	iport->selected_fcf.fcf_priority = 0xFF;
++
++	disc_sol.name_desc.name = get_unaligned_be64(&iport->wwnn);
++	fnic_send_fip_frame(iport, &disc_sol, fr_len);
++
++	iport->fip.state = FDLS_FIP_FCF_DISCOVERY_STARTED;
++
++	fcs_tov = jiffies + msecs_to_jiffies(FCOE_CTLR_FCS_TOV);
++	mod_timer(&fnic->retry_fip_timer, round_jiffies(fcs_tov));
++
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "fnic 0x%p Started FCF discovery", fnic);
++
++}
++
++/**
++ * fnic_fcoe_fip_discovery_resp - Processes FCF advertisements.
++ * @fnic: Handle to fnic driver instance
++ * @fiph: Received frame
++ *
++ * FCF advertisements can be:
++ * solicited - Sent in response of a discover FCF FIP request
++ * Store the information of the FCF with highest priority.
++ * Wait until timeout in case of multiple FCFs.
++ *
++ * unsolicited - Sent periodically by the FCF for keep alive.
++ * If FLOGI is in progress or completed and the advertisement is
++ * received by our selected FCF, refresh the keep alive timer.
++ */
++void fnic_fcoe_fip_discovery_resp(struct fnic *fnic,
++								  struct fip_header_s *fiph)
++{
++	struct fnic_iport_s *iport = &fnic->iport;
++	struct fip_disc_adv_s *disc_adv = (struct fip_disc_adv_s *) fiph;
++	u64 fcs_ka_tov;
++	u64 tov;
++	int fka_has_changed;
++
++	switch (iport->fip.state) {
++	case FDLS_FIP_FCF_DISCOVERY_STARTED:
++		if (ntohs(disc_adv->fip.flags) & FIP_FLAG_S) {
++			FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++						 "fnic 0x%p Solicited adv\n", fnic);
++
++			if ((disc_adv->prio_desc.priority <
++				 iport->selected_fcf.fcf_priority)
++				&& (ntohs(disc_adv->fip.flags) & FIP_FLAG_A)) {
++
++				FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++							 "fnic 0x%p FCF Available\n", fnic);
++				memcpy(iport->selected_fcf.fcf_mac, disc_adv->mac_desc.mac,
++					   ETH_ALEN);
++				iport->selected_fcf.fcf_priority =
++					disc_adv->prio_desc.priority;
++				iport->selected_fcf.fka_adv_period =
++					ntohl(disc_adv->fka_adv_desc.fka_adv);
++				FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++							 "adv time %d",
++							 iport->selected_fcf.fka_adv_period);
++				iport->selected_fcf.ka_disabled =
++					(disc_adv->fka_adv_desc.rsvd_D & 1);
++			}
++		}
++		break;
++	case FDLS_FIP_FLOGI_STARTED:
++	case FDLS_FIP_FLOGI_COMPLETE:
++		if (!(ntohs(disc_adv->fip.flags) & FIP_FLAG_S)) {
++			/* same fcf */
++			if (memcmp(iport->selected_fcf.fcf_mac, disc_adv->mac_desc.mac,
++					   ETH_ALEN) == 0) {
++				if (iport->selected_fcf.fka_adv_period
++					!= ntohl(disc_adv->fka_adv_desc.fka_adv)) {
++					iport->selected_fcf.fka_adv_period =
++						ntohl(disc_adv->fka_adv_desc.fka_adv);
++					FNIC_FIP_DBG(KERN_INFO, fnic->lport->host,
++						 fnic->fnic_num, "change fka to %d",
++						 iport->selected_fcf.fka_adv_period);
++				}
++
++				fka_has_changed = (iport->selected_fcf.ka_disabled == 1)
++					&& ((disc_adv->fka_adv_desc.rsvd_D & 1) == 0);
++
++				iport->selected_fcf.ka_disabled =
++					(disc_adv->fka_adv_desc.rsvd_D & 1);
++				if (!((iport->selected_fcf.ka_disabled)
++					  || (iport->selected_fcf.fka_adv_period == 0))) {
++
++					fcs_ka_tov = jiffies
++						+ 3
++						*
++						msecs_to_jiffies(
++								iport->selected_fcf.fka_adv_period);
++					mod_timer(&fnic->fcs_ka_timer,
++							  round_jiffies(fcs_ka_tov));
++				} else {
++					if (timer_pending(&fnic->fcs_ka_timer))
++						del_timer_sync(&fnic->fcs_ka_timer);
++				}
++
++				if (fka_has_changed) {
++					if (iport->selected_fcf.fka_adv_period != 0) {
++						tov = jiffies +
++							msecs_to_jiffies(
++						iport->selected_fcf.fka_adv_period);
++						mod_timer(&fnic->enode_ka_timer,
++								  round_jiffies(tov));
++
++						tov =
++							jiffies +
++							msecs_to_jiffies(FCOE_CTLR_VN_KA_TOV);
++						mod_timer(&fnic->vn_ka_timer, round_jiffies(tov));
++					}
++				}
 +			}
 +		}
 +		break;
 +	default:
 +		break;
-+	}
-+	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++	} /* end switch */
 +}
 +
-+static void fdls_send_delete_tport_msg(struct fnic_tport_s *tport)
++/**
++ * fnic_fcoe_start_flogi - Send FIP FLOGI to the selected FCF
++ * @fnic: Handle to fnic driver instance
++ */
++void fnic_fcoe_start_flogi(struct fnic *fnic)
 +{
-+	struct fnic_iport_s *iport = (struct fnic_iport_s *) tport->iport;
-+	struct fnic *fnic = iport->fnic;
-+	struct fnic_tport_event_s *tport_del_evt;
++	struct fnic_iport_s *iport = &fnic->iport;
 +
-+	if (!IS_FNIC_FCP_INITIATOR(fnic))
-+		return;
++	int fr_len;
++	struct fip_flogi_s flogi_req;
++	u64 flogi_tov;
 +
-+	tport_del_evt = kzalloc(sizeof(struct fnic_tport_event_s), GFP_ATOMIC);
-+	if (!tport_del_evt) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Failed to allocate memory for tport event fcid: 0x%x",
-+			 tport->fcid);
-+		return;
-+	}
-+	tport_del_evt->event = TGT_EV_TPORT_DELETE;
-+	tport_del_evt->arg1 = (void *) tport;
-+	list_add_tail(&tport_del_evt->links, &fnic->tport_event_list);
-+	queue_work(fnic_event_queue, &fnic->tport_work);
++	fr_len = sizeof(struct fip_flogi_s);
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "fnic 0x%p Start fip FLOGI\n", fnic);
++
++	memcpy(&flogi_req, &fip_flogi_tmpl, fr_len);
++	memcpy(flogi_req.eth.smac, iport->hwmac, ETH_ALEN);
++	if (iport->usefip)
++		memcpy(flogi_req.eth.dmac, iport->selected_fcf.fcf_mac, ETH_ALEN);
++
++	flogi_req.flogi_desc.flogi.nport_name = get_unaligned_be64(&iport->wwpn);
++	flogi_req.flogi_desc.flogi.node_name = get_unaligned_be64(&iport->wwnn);
++
++	fnic_send_fip_frame(iport, &flogi_req, fr_len);
++	iport->fip.flogi_retry++;
++
++	iport->fip.state = FDLS_FIP_FLOGI_STARTED;
++	flogi_tov = jiffies + msecs_to_jiffies(fnic->config.flogi_timeout);
++	mod_timer(&fnic->retry_fip_timer, round_jiffies(flogi_tov));
 +}
 +
-+static void fdls_tport_timer_callback(struct timer_list *t)
++/**
++ * fnic_fcoe_process_flogi_resp - Processes FLOGI response from FCF.
++ * @fnic: Handle to fnic driver instance
++ * @fiph: Received frame
++ *
++ * If successful save assigned fc_id and MAC, program firmware
++ * and start fdls discovery, else restart vlan discovery.
++ */
++void fnic_fcoe_process_flogi_resp(struct fnic *fnic,
++								  struct fip_header_s *fiph)
 +{
-+	struct fnic_tport_s *tport = from_timer(tport, t, retry_timer);
-+	struct fnic_iport_s *iport = (struct fnic_iport_s *) tport->iport;
-+	struct fnic *fnic = iport->fnic;
-+	uint16_t oxid;
++	struct fnic_iport_s *iport = &fnic->iport;
++	struct fip_flogi_rsp_s *flogi_rsp = (struct fip_flogi_rsp_s *) fiph;
++	int desc_len;
++	uint32_t s_id;
++
++	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
++
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "fnic 0x%p FIP FLOGI rsp\n", fnic);
++	desc_len = ntohs(flogi_rsp->fip.desc_len);
++	if (desc_len != 38) {
++		FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "Invalid Descriptor List len (%x). Dropping frame\n",
++					 desc_len);
++		return;
++	}
++
++	if (!
++		((flogi_rsp->rsp_desc.type == 7)
++		 && (flogi_rsp->rsp_desc.len == 36))
++		|| !((flogi_rsp->mac_desc.type == 2)
++			 && (flogi_rsp->mac_desc.len == 2))) {
++		FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++			 "Dropping frame invalid type and len mix\n");
++		return;
++	}
++
++	s_id = ntoh24(flogi_rsp->rsp_desc.els.fchdr.sid);
++	if ((flogi_rsp->rsp_desc.els.fchdr.f_ctl != 0x98)
++		|| (flogi_rsp->rsp_desc.els.fchdr.r_ctl != 0x23)
++		|| (s_id != 0xFFFFFE)
++		|| (flogi_rsp->rsp_desc.els.fchdr.ox_id != FNIC_FLOGI_OXID)
++		|| (flogi_rsp->rsp_desc.els.fchdr.type != 0x01)) {
++		FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++			 "Dropping invalid frame: s_id %x F %x R %x t %x OX_ID %x\n",
++			 s_id,
++			 flogi_rsp->rsp_desc.els.fchdr.f_ctl,
++			 flogi_rsp->rsp_desc.els.fchdr.r_ctl,
++			 flogi_rsp->rsp_desc.els.fchdr.type,
++			 flogi_rsp->rsp_desc.els.fchdr.ox_id);
++		return;
++	}
++
++	if (iport->fip.state == FDLS_FIP_FLOGI_STARTED) {
++		FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "fnic 0x%p rsp for pending FLOGI\n", fnic);
++
++		del_timer_sync(&fnic->retry_fip_timer);
++
++		if ((ntohs(flogi_rsp->fip.desc_len) == 38)
++			&& (flogi_rsp->rsp_desc.els.command == ELS_LS_ACC)) {
++
++			FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++						 "fnic 0x%p FLOGI success\n", fnic);
++			memcpy(iport->fpma, flogi_rsp->mac_desc.mac, ETH_ALEN);
++			iport->fcid = ntoh24(flogi_rsp->rsp_desc.els.fchdr.did);
++
++			iport->r_a_tov =
++				ntohl(flogi_rsp->rsp_desc.els.u.csp_flogi.r_a_tov);
++			iport->e_d_tov =
++				ntohl(flogi_rsp->rsp_desc.els.u.csp_flogi.e_d_tov);
++			memcpy(fnic->iport.fcfmac, iport->selected_fcf.fcf_mac,
++				   ETH_ALEN);
++			vnic_dev_add_addr(fnic->vdev, flogi_rsp->mac_desc.mac);
++
++			if (fnic_fdls_register_portid(iport, iport->fcid, NULL) != 0) {
++				FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++							 "fnic 0x%p flogi registration failed\n",
++							 fnic);
++				return;
++			}
++
++			iport->fip.state = FDLS_FIP_FLOGI_COMPLETE;
++			iport->state = FNIC_IPORT_STATE_FABRIC_DISC;
++			FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++						 "iport->state:%d\n", iport->state);
++			if (!((iport->selected_fcf.ka_disabled)
++				  || (iport->selected_fcf.fka_adv_period == 0))) {
++				u64 tov;
++
++				tov = jiffies
++					+ msecs_to_jiffies(iport->selected_fcf.fka_adv_period);
++				mod_timer(&fnic->enode_ka_timer, round_jiffies(tov));
++
++				tov = jiffies + msecs_to_jiffies(FCOE_CTLR_VN_KA_TOV);
++				mod_timer(&fnic->vn_ka_timer, round_jiffies(tov));
++
++			}
++		} else {
++			/*
++			 * If there's FLOGI rejects - clear all
++			 * fcf's & restart from scratch
++			 */
++			atomic64_inc(&fnic_stats->vlan_stats.flogi_rejects);
++			/* start FCoE VLAN discovery */
++			fnic_fcoe_send_vlan_req(fnic);
++
++			iport->fip.state = FDLS_FIP_VLAN_DISCOVERY_STARTED;
++		}
++	}
++}
++
++/**
++ * fnic_common_fip_cleanup - Clean up FCF info and timers in case of
++ * link down/CVL
++ * @fnic: Handle to fnic driver instance
++ */
++void fnic_common_fip_cleanup(struct fnic *fnic)
++{
++
++	struct fnic_iport_s *iport = &fnic->iport;
++
++	if (!iport->usefip)
++		return;
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "fnic 0x%p fip cleanup\n", fnic);
++
++	iport->fip.state = FDLS_FIP_INIT;
++
++	del_timer_sync(&fnic->retry_fip_timer);
++	del_timer_sync(&fnic->fcs_ka_timer);
++	del_timer_sync(&fnic->enode_ka_timer);
++	del_timer_sync(&fnic->vn_ka_timer);
++
++	if (!is_zero_ether_addr(iport->fpma))
++		vnic_dev_del_addr(fnic->vdev, iport->fpma);
++
++	memset(iport->fpma, 0, ETH_ALEN);
++	iport->fcid = 0;
++	iport->r_a_tov = 0;
++	iport->e_d_tov = 0;
++	memset(fnic->iport.fcfmac, 0, ETH_ALEN);
++	memset(iport->selected_fcf.fcf_mac, 0, ETH_ALEN);
++	iport->selected_fcf.fcf_priority = 0;
++	iport->selected_fcf.fka_adv_period = 0;
++	iport->selected_fcf.ka_disabled = 0;
++
++	fnic_fcoe_reset_vlans(fnic);
++}
++
++/**
++ * fnic_fcoe_process_cvl - Processes Clear Virtual Link from FCF.
++ * @fnic: Handle to fnic driver instance
++ * @fiph: Received frame
++ *
++ * Verify that cvl is received from our current FCF for our assigned MAC
++ * and clean up and restart the vlan discovery.
++ */
++void fnic_fcoe_process_cvl(struct fnic *fnic, struct fip_header_s *fiph)
++{
++	struct fnic_iport_s *iport = &fnic->iport;
++	struct fip_cvl_s *cvl_msg = (struct fip_cvl_s *) fiph;
++	int i;
++	int found = false;
++
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "fnic 0x%p clear virtual link handler\n", fnic);
++
++	if (!
++		((cvl_msg->fcf_mac_desc.type == 2)
++		 && (cvl_msg->fcf_mac_desc.len == 2))
++|| !((cvl_msg->name_desc.type == 4) && (cvl_msg->name_desc.len == 3))) {
++
++		FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++			 "invalid mix: ft %x fl %x ndt %x ndl %x",
++			 cvl_msg->fcf_mac_desc.type, cvl_msg->fcf_mac_desc.len,
++			 cvl_msg->name_desc.type, cvl_msg->name_desc.len);
++	}
++
++	if (memcmp
++		(iport->selected_fcf.fcf_mac, cvl_msg->fcf_mac_desc.mac, ETH_ALEN)
++		== 0) {
++		for (i = 0; i < ((ntohs(fiph->desc_len) / 5) - 1); i++) {
++			if (!((cvl_msg->vn_ports_desc[i].type == 11)
++				  && (cvl_msg->vn_ports_desc[i].len == 5))) {
++
++				FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "Invalid type and len mix type: %d len: %d\n",
++					 cvl_msg->vn_ports_desc[i].type,
++					 cvl_msg->vn_ports_desc[i].len);
++			}
++			if (memcmp(iport->fpma, cvl_msg->vn_ports_desc[i].vn_port_mac,
++					   ETH_ALEN) == 0) {
++				found = true;
++				break;
++			}
++		}
++		if (!found)
++			return;
++		fnic_common_fip_cleanup(fnic);
++
++		fnic_fcoe_send_vlan_req(fnic);
++	}
++}
++
++/**
++ * fdls_fip_recv_frame - Demultiplexer for FIP frames
++ * @fnic: Handle to fnic driver instance
++ * @frame: Received ethernet frame
++ */
++int fdls_fip_recv_frame(struct fnic *fnic, void *frame)
++{
++	struct eth_hdr_s *eth = (struct eth_hdr_s *) frame;
++	struct fip_header_s *fiph;
++	u16 protocol;
++	u8 sub;
++
++	if (eth->eth_type == ntohs(FIP_ETH_TYPE)) {
++		fiph = (struct fip_header_s *) (eth + 1);
++		protocol = ntohs(fiph->protocol);
++		sub = ntohs(fiph->subcode);
++
++		if (protocol == FIP_DISCOVERY && sub == FIP_SUBCODE_RESP)
++			fnic_fcoe_fip_discovery_resp(fnic, fiph);
++		else if (protocol == FIP_VLAN_DISC && sub == FIP_SUBCODE_RESP)
++			fnic_fcoe_process_vlan_resp(fnic, fiph);
++		else if (protocol == FIP_KA_CVL && sub == FIP_SUBCODE_RESP)
++			fnic_fcoe_process_cvl(fnic, fiph);
++		else if (protocol == FIP_FLOGI && sub == FIP_SUBCODE_RESP)
++			fnic_fcoe_process_flogi_resp(fnic, fiph);
++
++		/* Return true if the frame was a FIP frame */
++		return true;
++	}
++	return false;
++}
++
++void fnic_work_on_fip_timer(struct work_struct *work)
++{
++	struct fnic *fnic = container_of(work, struct fnic, fip_timer_work);
++	struct fnic_iport_s *iport = &fnic->iport;
++
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "FIP timeout\n");
++
++	if (iport->fip.state == FDLS_FIP_VLAN_DISCOVERY_STARTED) {
++		fnic_vlan_discovery_timeout(fnic);
++	} else if (iport->fip.state == FDLS_FIP_FCF_DISCOVERY_STARTED) {
++		u8 zmac[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
++
++		FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "FCF Discovery timeout\n");
++		if (memcmp(iport->selected_fcf.fcf_mac, zmac, ETH_ALEN) != 0) {
++
++			if (iport->flags & FNIC_FIRST_LINK_UP)
++				iport->flags &= ~FNIC_FIRST_LINK_UP;
++
++			fnic_fcoe_start_flogi(fnic);
++			if (!((iport->selected_fcf.ka_disabled)
++				  || (iport->selected_fcf.fka_adv_period == 0))) {
++				u64 fcf_tov;
++
++				fcf_tov = jiffies
++					+ 3
++					* msecs_to_jiffies(iport->selected_fcf.fka_adv_period);
++				mod_timer(&fnic->fcs_ka_timer, round_jiffies(fcf_tov));
++			}
++		} else {
++			FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++						 "FCF Discovery timeout\n");
++			fnic_vlan_discovery_timeout(fnic);
++		}
++	} else if (iport->fip.state == FDLS_FIP_FLOGI_STARTED) {
++		FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "FLOGI timeout\n");
++		if (iport->fip.flogi_retry < fnic->config.flogi_retries)
++			fnic_fcoe_start_flogi(fnic);
++		else
++			fnic_vlan_discovery_timeout(fnic);
++	}
++}
++
++/**
++ * fnic_handle_fip_timer - Timeout handler for FIP discover phase.
++ * @t: Handle to the timer list
++ *
++ * Based on the current state, start next phase or restart discovery.
++ */
++void fnic_handle_fip_timer(struct timer_list *t)
++{
++	struct fnic *fnic = from_timer(fnic, t, retry_fip_timer);
++
++	INIT_WORK(&fnic->fip_timer_work, fnic_work_on_fip_timer);
++	queue_work(fnic_fip_queue, &fnic->fip_timer_work);
++}
++
++/**
++ * fnic_handle_enode_ka_timer - FIP node keep alive.
++ * @t: Handle to the timer list
++ */
++void fnic_handle_enode_ka_timer(struct timer_list *t)
++{
++	struct fnic *fnic = from_timer(fnic, t, enode_ka_timer);
++
++	struct fnic_iport_s *iport = &fnic->iport;
++	int fr_len;
++	struct fip_enode_ka_s enode_ka;
++	u64 enode_ka_tov;
++
++	if (iport->fip.state != FDLS_FIP_FLOGI_COMPLETE)
++		return;
++
++	if ((iport->selected_fcf.ka_disabled)
++		|| (iport->selected_fcf.fka_adv_period == 0)) {
++		return;
++	}
++
++	fr_len = sizeof(struct fip_enode_ka_s);
++
++	memcpy(&enode_ka, &fip_enode_ka_tmpl, fr_len);
++	memcpy(enode_ka.eth.smac, iport->hwmac, ETH_ALEN);
++	memcpy(enode_ka.eth.dmac, iport->selected_fcf.fcf_mac, ETH_ALEN);
++	memcpy(enode_ka.mac_desc.mac, iport->hwmac, ETH_ALEN);
++
++	fnic_send_fip_frame(iport, &enode_ka, fr_len);
++	enode_ka_tov = jiffies
++		+ msecs_to_jiffies(iport->selected_fcf.fka_adv_period);
++	mod_timer(&fnic->enode_ka_timer, round_jiffies(enode_ka_tov));
++}
++
++/**
++ * fnic_handle_vn_ka_timer - FIP virtual port keep alive.
++ * @t: Handle to the timer list
++ */
++void fnic_handle_vn_ka_timer(struct timer_list *t)
++{
++	struct fnic *fnic = from_timer(fnic, t, vn_ka_timer);
++
++	struct fnic_iport_s *iport = &fnic->iport;
++	int fr_len;
++	struct fip_vn_port_ka_s vn_port_ka;
++	u64 vn_ka_tov;
++	uint8_t fcid[3];
++
++	if (iport->fip.state != FDLS_FIP_FLOGI_COMPLETE)
++		return;
++
++	if ((iport->selected_fcf.ka_disabled)
++		|| (iport->selected_fcf.fka_adv_period == 0)) {
++		return;
++	}
++
++	fr_len = sizeof(struct fip_vn_port_ka_s);
++
++	memcpy(&vn_port_ka, &fip_vn_port_ka_tmpl, fr_len);
++	memcpy(vn_port_ka.eth.smac, iport->fpma, ETH_ALEN);
++	memcpy(vn_port_ka.eth.dmac, iport->selected_fcf.fcf_mac, ETH_ALEN);
++	memcpy(vn_port_ka.mac_desc.mac, iport->hwmac, ETH_ALEN);
++	memcpy(vn_port_ka.vn_port_desc.vn_port_mac, iport->fpma, ETH_ALEN);
++	hton24(fcid, iport->fcid);
++	memcpy(vn_port_ka.vn_port_desc.vn_port_id, fcid, 3);
++	vn_port_ka.vn_port_desc.vn_port_name = get_unaligned_be64(&iport->wwpn);
++
++	fnic_send_fip_frame(iport, &vn_port_ka, fr_len);
++	vn_ka_tov = jiffies + msecs_to_jiffies(FCOE_CTLR_VN_KA_TOV);
++	mod_timer(&fnic->vn_ka_timer, round_jiffies(vn_ka_tov));
++}
++
++/**
++ * fnic_vlan_discovery_timeout - Handle vlan discovery timeout
++ * @fnic: Handle to fnic driver instance
++ *
++ * End of VLAN discovery or FCF discovery time window.
++ * Start the FCF discovery if VLAN was never used.
++ */
++void fnic_vlan_discovery_timeout(struct fnic *fnic)
++{
++	struct fcoe_vlan *vlan;
++	struct fnic_iport_s *iport = &fnic->iport;
++	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
 +	unsigned long flags;
 +
 +	spin_lock_irqsave(&fnic->fnic_lock, flags);
-+	if (!tport->timer_pending) {
++	if (fnic->stop_rx_link_events) {
 +		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
 +		return;
-+	}
-+
-+	if (iport->state != FNIC_IPORT_STATE_READY) {
-+		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+		return;
-+	}
-+
-+	if (tport->del_timer_inprogress) {
-+		tport->del_timer_inprogress = 0;
-+		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "tport_del_timer inprogress. Skip timer cb tport fcid: 0x%x\n",
-+			 tport->fcid);
-+		return;
-+	}
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+		 "tport fcid: 0x%x timer pending: %d state: %d retry counter: %d",
-+		 tport->fcid, tport->timer_pending, tport->state,
-+		 tport->retry_counter);
-+
-+	tport->timer_pending = 0;
-+	oxid = ntohs(tport->oxid_used);
-+
-+	/* We retry plogi/prli/adisc frames depending on the tport state */
-+	switch (tport->state) {
-+	case FDLS_TGT_STATE_PLOGI:
-+		/* PLOGI frame received a LS_RJT with busy, we retry from here */
-+		if ((tport->flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (tport->retry_counter < iport->max_plogi_retries)) {
-+			fdls_free_tgt_oxid(iport, oxid);
-+			tport->flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_tgt_plogi(iport, tport);
-+		} else if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+			/* Plogi frame has timed out 2*ed_tov send abts */
-+			fdls_send_tport_abts(iport, tport);
-+		} else if (tport->retry_counter < iport->max_plogi_retries) {
-+			/*
-+			 * ABTS has timed out have waited (2*ra_tov)
-+			 * can retry safely
-+			 * even if with same exchange id
-+			 */
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_plogi(iport, tport);
-+		} else {
-+			/* exceeded plogi retry count */
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_delete_tport_msg(tport);
-+		}
-+		break;
-+	case FDLS_TGT_STATE_PRLI:
-+		/* PRLI received a LS_RJT with busy , hence we retry from here */
-+		if ((tport->flags & FNIC_FDLS_RETRY_FRAME)
-+			&& (tport->retry_counter < FDLS_RETRY_COUNT)) {
-+			fdls_free_tgt_oxid(iport, oxid);
-+			tport->flags &= ~FNIC_FDLS_RETRY_FRAME;
-+			fdls_send_tgt_prli(iport, tport);
-+		} else if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+			/* PRLI has time out 2*ed_tov send abts */
-+			fdls_send_tport_abts(iport, tport);
-+		} else {
-+			/* ABTS has timed out for prli, we go back to PLOGI */
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_plogi(iport, tport);
-+			fdls_set_tport_state(tport, FDLS_TGT_STATE_PLOGI);
-+		}
-+		break;
-+	case FDLS_TGT_STATE_ADISC:
-+		/* ADISC timed out send a ABTS */
-+		if (!(tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+			fdls_send_tport_abts(iport, tport);
-+		} else if ((tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)
-+				   && (tport->retry_counter < FDLS_RETRY_COUNT)) {
-+			/*
-+			 * ABTS has timed out have waited (2*ra_tov) can
-+			 * retry safely even if with same exchange id
-+			 */
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_adisc(iport, tport);
-+		} else {
-+			/* exceeded retry count */
-+			fdls_free_tgt_oxid(iport, oxid);
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "ADISC not responding. Deleting target port: 0x%x",
-+					 tport->fcid);
-+			fdls_send_delete_tport_msg(tport);
-+		}
-+		break;
-+	default:
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Unknown tport state: 0x%x", tport->state);
-+		break;
 +	}
 +	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+}
 +
-+static void fnic_fdls_start_flogi(struct fnic_iport_s *iport)
-+{
-+	iport->fabric.retry_counter = 0;
-+	fdls_send_fabric_flogi(iport);
-+	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_FLOGI);
-+	iport->fabric.flags = 0;
-+}
-+
-+static void fnic_fdls_start_plogi(struct fnic_iport_s *iport)
-+{
-+	iport->fabric.retry_counter = 0;
-+	fdls_send_fabric_plogi(iport);
-+	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_PLOGI);
-+	iport->fabric.flags &= ~FNIC_FDLS_FABRIC_ABORT_ISSUED;
-+}
-+
-+static void
-+fdls_process_tgt_adisc_rsp(struct fnic_iport_s *iport,
-+						   struct fc_hdr_s *fchdr)
-+{
-+	uint32_t tgt_fcid;
-+	struct fnic_tport_s *tport;
-+	uint8_t *fcid;
-+	uint64_t frame_wwnn;
-+	uint64_t frame_wwpn;
-+	uint16_t oxid;
-+	struct fc_els_adisc_ls_acc_s *adisc_rsp =
-+		(struct fc_els_adisc_ls_acc_s *) fchdr;
-+	struct fc_els_reject_s *els_rjt = (struct fc_els_reject_s *) fchdr;
-+	struct fnic *fnic = iport->fnic;
-+
-+	fcid = FNIC_GET_S_ID(fchdr);
-+	tgt_fcid = ntoh24(fcid);
-+	tport = fnic_find_tport_by_fcid(iport, tgt_fcid);
-+
-+	if (!tport) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Tgt ADISC response tport not found: 0x%x", tgt_fcid);
++	if (!iport->usefip)
 +		return;
-+	}
-+	if ((iport->state != FNIC_IPORT_STATE_READY)
-+		|| (tport->state != FDLS_TGT_STATE_ADISC)
-+		|| (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Dropping this ADISC response");
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "iport state: %d tport state: %d Is abort issued on PRLI? %d",
-+			 iport->state, tport->state,
-+			 (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED));
-+		return;
-+	}
-+	if (ntohs(fchdr->ox_id) != ntohs(tport->oxid_used)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Dropping frame from target: 0x%x",
-+			 tgt_fcid);
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Reason: Stale ADISC/Aborted ADISC/OOO frame delivery");
++
++	spin_lock_irqsave(&fnic->vlans_lock, flags);
++	if (list_empty(&fnic->vlan_list)) {
++		/* no vlans available, try again */
++		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++		fnic_fcoe_send_vlan_req(fnic);
 +		return;
 +	}
 +
-+	switch (adisc_rsp->command) {
-+	case ELS_LS_ACC:
-+		if (tport->timer_pending) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "tport 0x%p Canceling fabric disc timer\n",
-+						 tport);
-+			fnic_del_tport_timer_sync(fnic, tport);
-+		}
-+		tport->timer_pending = 0;
-+		tport->retry_counter = 0;
-+		oxid = ntohs(fchdr->ox_id);
-+		fdls_free_tgt_oxid(iport, oxid);
-+		frame_wwnn = get_unaligned_be64(&adisc_rsp->node_name);
-+		frame_wwpn = get_unaligned_be64(&adisc_rsp->nport_name);
-+		if ((frame_wwnn == tport->wwnn) && (frame_wwpn == tport->wwpn)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "ADISC accepted from target: 0x%x. Target logged in",
-+				 tgt_fcid);
-+			fdls_set_tport_state(tport, FDLS_TGT_STATE_READY);
-+		} else {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "Error mismatch frame: ADISC");
-+		}
-+		break;
++	vlan = list_first_entry(&fnic->vlan_list, struct fcoe_vlan, list);
 +
-+	case ELS_LS_RJT:
-+		if (((els_rjt->reason_code == FC_ELS_RJT_LOGICAL_BUSY)
-+			 || (els_rjt->reason_code == FC_ELS_RJT_BUSY))
-+			&& (tport->retry_counter < FDLS_RETRY_COUNT)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "ADISC ret ELS_LS_RJT BUSY. Retry from timer routine: 0x%x",
-+				 tgt_fcid);
-+
-+			/* Retry ADISC again from the timer routine. */
-+			tport->flags |= FNIC_FDLS_RETRY_FRAME;
-+		} else {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "ADISC returned ELS_LS_RJT from target: 0x%x",
-+						 tgt_fcid);
-+			oxid = ntohs(fchdr->ox_id);
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_delete_tport(iport, tport);
-+		}
-+		break;
-+	}
-+}
-+
-+
-+static void
-+fdls_process_tgt_plogi_rsp(struct fnic_iport_s *iport,
-+						   struct fc_hdr_s *fchdr)
-+{
-+	uint32_t tgt_fcid;
-+	struct fnic_tport_s *tport;
-+	uint8_t *fcid;
-+	uint16_t oxid;
-+	struct fc_els_s *plogi_rsp = (struct fc_els_s *) fchdr;
-+	struct fc_els_reject_s *els_rjt = (struct fc_els_reject_s *) fchdr;
-+	int max_payload_size;
-+	struct fnic *fnic = iport->fnic;
-+
-+	fcid = FNIC_GET_S_ID(fchdr);
-+	tgt_fcid = ntoh24(fcid);
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "FDLS processing target PLOGI response: tgt_fcid: 0x%x",
-+				 tgt_fcid);
-+
-+	tport = fnic_find_tport_by_fcid(iport, tgt_fcid);
-+	if (!tport) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport not found: 0x%x", tgt_fcid);
-+		return;
-+	}
-+	if ((iport->state != FNIC_IPORT_STATE_READY)
-+		|| (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Dropping frame! iport state: %d tport state: %d",
-+					 iport->state, tport->state);
-+		return;
-+	}
-+
-+	if (tport->state != FDLS_TGT_STATE_PLOGI) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "PLOGI rsp recvd in wrong state. Restarting nexus");
-+		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
-+		fdls_free_tgt_oxid(iport, oxid);
-+		fdls_target_restart_nexus(tport);
-+		return;
-+	}
-+
-+	if (ntohs(fchdr->ox_id) != ntohs(tport->oxid_used)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "PLOGI response from target: 0x%x. Dropping frame",
-+			 tgt_fcid);
-+		return;
-+	}
-+
-+	switch (plogi_rsp->command) {
-+	case ELS_LS_ACC:
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PLOGI accepted by target: 0x%x", tgt_fcid);
-+		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
-+		fdls_free_tgt_oxid(iport, oxid);
-+		break;
-+
-+	case ELS_LS_RJT:
-+		if (((els_rjt->reason_code == FC_ELS_RJT_LOGICAL_BUSY)
-+			 || (els_rjt->reason_code == FC_ELS_RJT_BUSY))
-+			&& (tport->retry_counter < iport->max_plogi_retries)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "PLOGI ret ELS_LS_RJT BUSY. Retry from timer routine: 0x%x",
-+				 tgt_fcid);
-+			/* Retry plogi again from the timer routine. */
-+			tport->flags |= FNIC_FDLS_RETRY_FRAME;
-+			return;
-+		}
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PLOGI returned ELS_LS_RJT from target: 0x%x",
-+					 tgt_fcid);
-+		oxid = ntohs(fchdr->ox_id);
-+		fdls_free_tgt_oxid(iport, oxid);
-+		fdls_delete_tport(iport, tport);
-+		return;
-+
-+	default:
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PLOGI not accepted from target fcid: 0x%x",
-+					 tgt_fcid);
-+		return;
-+	}
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Found the PLOGI target: 0x%x and state: %d",
-+				 (unsigned int) tgt_fcid, tport->state);
-+
-+	if (tport->timer_pending) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport fcid 0x%x: Canceling disc timer\n",
-+					 tport->fcid);
-+		fnic_del_tport_timer_sync(fnic, tport);
-+	}
-+
-+	tport->timer_pending = 0;
-+	tport->wwpn = get_unaligned_be64(&plogi_rsp->nport_name);
-+	tport->wwnn = get_unaligned_be64(&plogi_rsp->node_name);
-+
-+	/* Learn the Service Params */
-+
-+	/* Max frame size - choose the lowest */
-+	max_payload_size = fnic_fc_plogi_rsp_rdf(iport, plogi_rsp);
-+	tport->max_payload_size =
-+		MIN(max_payload_size, iport->max_payload_size);
-+
-+	if (tport->max_payload_size < FNIC_MIN_DATA_FIELD_SIZE) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "MFS: tport max frame size below spec bounds: %d",
-+			 tport->max_payload_size);
-+		tport->max_payload_size = FNIC_MIN_DATA_FIELD_SIZE;
-+	}
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+		 "MAX frame size: %d iport max_payload_size: %d tport mfs: %d",
-+		 max_payload_size, iport->max_payload_size,
-+		 tport->max_payload_size);
-+
-+	tport->max_concur_seqs = FNIC_FC_PLOGI_RSP_CONCUR_SEQ(plogi_rsp);
-+
-+	tport->retry_counter = 0;
-+	fdls_set_tport_state(tport, FDLS_TGT_STATE_PRLI);
-+	fdls_send_tgt_prli(iport, tport);
-+}
-+
-+static void
-+fdls_process_tgt_prli_rsp(struct fnic_iport_s *iport,
-+						  struct fc_hdr_s *fchdr)
-+{
-+	uint32_t tgt_fcid;
-+	struct fnic_tport_s *tport;
-+	uint8_t *fcid;
-+	uint16_t oxid;
-+	struct fc_els_prli_s *prli_rsp = (struct fc_els_prli_s *) fchdr;
-+	struct fc_els_reject_s *els_rjt = (struct fc_els_reject_s *) fchdr;
-+	struct fnic_tport_event_s *tport_add_evt;
-+	struct fnic *fnic = iport->fnic;
-+	bool mismatched_tgt = false;
-+
-+	fcid = FNIC_GET_S_ID(fchdr);
-+	tgt_fcid = ntoh24(fcid);
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "FDLS process tgt PRLI response: 0x%x", tgt_fcid);
-+
-+	tport = fnic_find_tport_by_fcid(iport, tgt_fcid);
-+	if (!tport) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport not found: 0x%x", tgt_fcid);
-+		/* Handle or just drop? */
-+		return;
-+	}
-+
-+	if ((iport->state != FNIC_IPORT_STATE_READY)
-+		|| (tport->flags & FNIC_FDLS_TGT_ABORT_ISSUED)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Dropping frame! iport st: %d tport st: %d tport fcid: 0x%x",
-+			 iport->state, tport->state, tport->fcid);
-+		return;
-+	}
-+
-+	if (tport->state != FDLS_TGT_STATE_PRLI) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PRLI rsp recvd in wrong state. Restarting nexus");
-+		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
-+		fdls_free_tgt_oxid(iport, oxid);
-+		fdls_target_restart_nexus(tport);
-+		return;
-+	}
-+
-+	if (ntohs(fchdr->ox_id) != ntohs(tport->oxid_used)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Dropping PRLI response from target: 0x%x ",
-+			 tgt_fcid);
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Reason: Stale PRLI response/Aborted PDISC/OOO frame delivery");
-+		return;
-+	}
-+
-+	switch (prli_rsp->command) {
-+	case ELS_LS_ACC:
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PRLI accepted from target: 0x%x", tgt_fcid);
-+		oxid = ntohs(FNIC_GET_OX_ID(fchdr));
-+		fdls_free_tgt_oxid(iport, oxid);
-+
-+		if (prli_rsp->sp.type != FC_FC4_TYPE_SCSI) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "mismatched target zoned with FC SCSI initiator: 0x%x",
-+				 tgt_fcid);
-+			mismatched_tgt = true;
-+		}
-+		if (mismatched_tgt) {
-+			fdls_tgt_logout(iport, tport);
-+			fdls_delete_tport(iport, tport);
- 			return;
- 		}
--		/* RPN have timed out send abts */
--		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED))
--			fdls_send_fabric_abts(iport);
--		else
--			/* ABTS has timed out (2*ra_tov) */
--			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
- 		break;
--	case FDLS_STATE_SCR:
--		/* scr received a LS_RJT with busy we retry from here */
--		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
--			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
--			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
--			fdls_send_scr(iport);
--			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
--			return;
--		}
--		/* scr have timed out send abts */
--		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED))
--			fdls_send_fabric_abts(iport);
--		else {
--			/* ABTS has timed out (2*ra_tov), we give up */
-+
-+	case ELS_LS_RJT:
-+		if (((els_rjt->reason_code == FC_ELS_RJT_LOGICAL_BUSY)
-+			 || (els_rjt->reason_code == FC_ELS_RJT_BUSY))
-+			&& (tport->retry_counter < FDLS_RETRY_COUNT)) {
-+
- 			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
--						 "ABTS timed out. Starting PLOGI: %p", iport);
--			fnic_fdls_start_plogi(iport);
--		}
--		break;
--	case FDLS_STATE_REGISTER_FC4_TYPES:
--		/* scr received a LS_RJT with busy we retry from here */
--		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
--			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
--			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
--			fdls_send_register_fc4_types(iport);
--			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+				 "PRLI ret ELS_LS_RJT BUSY. Retry from timer routine: 0x%x",
-+				 tgt_fcid);
-+
-+			/*Retry Plogi again from the timer routine. */
-+			tport->flags |= FNIC_FDLS_RETRY_FRAME;
- 			return;
--		}
--		/* RFT_ID timed out send abts */
--		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
--			fdls_send_fabric_abts(iport);
- 		} else {
--			/* ABTS has timed out (2*ra_tov), we give up */
--			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
--						 "ABTS timed out. Starting PLOGI: %p", iport);
--			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
--		}
--		break;
--	case FDLS_STATE_REGISTER_FC4_FEATURES:
--		/* scr received a LS_RJT with busy we retry from here */
--		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
--			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
--			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
--			fdls_send_register_fc4_features(iport);
--			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
--			return;
--		}
--		/* scr have timed out send abts */
--		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED))
--			fdls_send_fabric_abts(iport);
--		else {
--			/* ABTS has timed out (2*ra_tov), we give up */
- 			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
--						 "ABTS timed out. Starting PLOGI %p", iport);
--			fnic_fdls_start_plogi(iport);	/* go back to fabric Plogi */
--		}
--		break;
--	case FDLS_STATE_RSCN_GPN_FT:
--	case FDLS_STATE_SEND_GPNFT:
--	case FDLS_STATE_GPN_FT:
--		/* GPN_FT received a LS_RJT with busy we retry from here */
--		if ((iport->fabric.flags & FNIC_FDLS_RETRY_FRAME)
--			&& (iport->fabric.retry_counter < FDLS_RETRY_COUNT)) {
--			iport->fabric.flags &= ~FNIC_FDLS_RETRY_FRAME;
--			fdls_send_gpn_ft(iport, iport->fabric.state);
--			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
-+						 "PRLI returned ELS_LS_RJT from target: 0x%x",
-+						 tgt_fcid);
-+
-+			oxid = ntohs(fchdr->ox_id);
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_tgt_logout(iport, tport);
-+			fdls_delete_tport(iport, tport);
- 			return;
- 		}
--		/* gpn_gt have timed out send abts */
--		if (!(iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)) {
--			fdls_send_fabric_abts(iport);
--		} else {
--			/*
--			 * ABTS has timed out have waited (2*ra_tov) can
--			 * retry safely with same exchange id
--			 */
--			if (iport->fabric.retry_counter < FDLS_RETRY_COUNT) {
--				fdls_send_gpn_ft(iport, iport->fabric.state);
--			} else {
--				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
--					 "ABTS timeout for fabric GPN_FT. Check name server: %p",
--					 iport);
--			}
--		}
- 		break;
-+
- 	default:
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "PRLI not accepted from target: 0x%x", tgt_fcid);
-+		return;
- 		break;
- 	}
--	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
--}
- 
--static void fnic_fdls_start_flogi(struct fnic_iport_s *iport)
--{
--	iport->fabric.retry_counter = 0;
--	fdls_send_fabric_flogi(iport);
--	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_FLOGI);
--	iport->fabric.flags = 0;
--}
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Found the PRLI target: 0x%x and state: %d",
-+				 (unsigned int) tgt_fcid, tport->state);
- 
--static void fnic_fdls_start_plogi(struct fnic_iport_s *iport)
--{
--	iport->fabric.retry_counter = 0;
--	fdls_send_fabric_plogi(iport);
--	fdls_set_state((&iport->fabric), FDLS_STATE_FABRIC_PLOGI);
--	iport->fabric.flags &= ~FNIC_FDLS_FABRIC_ABORT_ISSUED;
-+	if (tport->timer_pending) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "tport fcid 0x%x: Canceling disc timer\n",
-+					 tport->fcid);
-+		fnic_del_tport_timer_sync(fnic, tport);
-+	}
-+	tport->timer_pending = 0;
-+
-+	oxid = ntohs(FNIC_GET_OX_ID(fchdr));
-+	fdls_free_tgt_oxid(iport, oxid);
-+
-+	/* Learn Service Params */
-+	tport->fcp_csp = ntohl(prli_rsp->sp.csp);
-+	tport->retry_counter = 0;
-+
-+	if (prli_rsp->sp.csp & FCP_SPPF_RETRY)
-+		tport->tgt_flags |= FNIC_FC_RP_FLAGS_RETRY;
-+
-+	/* Check if the device plays Target Mode Function */
-+	if (!(tport->fcp_csp & FCP_PRLI_FUNC_TARGET)) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "Remote port(0x%x): no target support. Deleting it\n",
-+			 tgt_fcid);
-+		fdls_tgt_logout(iport, tport);
-+		fdls_delete_tport(iport, tport);
-+		return;
-+	}
-+
-+	fdls_set_tport_state(tport, FDLS_TGT_STATE_READY);
-+
-+	/* Inform the driver about new target added */
-+	tport_add_evt = kzalloc(sizeof(struct fnic_tport_event_s), GFP_ATOMIC);
-+	if (!tport_add_evt) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "tport event memory allocation failure: 0x%0x\n",
-+				 tport->fcid);
-+		return;
-+	}
-+	tport_add_evt->event = TGT_EV_RPORT_ADD;
-+	tport_add_evt->arg1 = (void *) tport;
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "iport fcid: 0x%x add tport event fcid: 0x%x\n",
-+			 tport->fcid, iport->fcid);
-+	list_add_tail(&tport_add_evt->links, &fnic->tport_event_list);
-+	queue_work(fnic_event_queue, &fnic->tport_work);
- }
- 
-+
- static void
- fdls_process_rff_id_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr)
- {
-@@ -892,6 +1886,106 @@ fdls_process_scr_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr)
- 	}
- }
- 
-+static void
-+fdls_process_gpn_ft_tgt_list(struct fnic_iport_s *iport,
-+							 struct fc_hdr_s *fchdr, int len)
-+{
-+	struct fc_gpn_ft_rsp_iu_s *gpn_ft_tgt;
-+	struct fc_gpn_ft_rsp_iu_s *gpn_ft_tgt_rem;
-+	struct fnic_tport_s *tport, *next;
-+	uint32_t fcid;
-+	uint64_t wwpn;
-+	int rem_len = len;
-+	u32 old_link_down_cnt = iport->fnic->link_down_cnt;
-+	struct fnic *fnic = iport->fnic;
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "0x%x: FDLS process GPN_FT tgt list", iport->fcid);
-+
-+	gpn_ft_tgt =
-+		(struct fc_gpn_ft_rsp_iu_s *) ((uint8_t *) fchdr +
-+								   sizeof(struct fc_hdr_s)
-+								   + sizeof(struct fc_ct_hdr_s));
-+	gpn_ft_tgt_rem = gpn_ft_tgt;
-+	len -= sizeof(struct fc_hdr_s) + sizeof(struct fc_ct_hdr_s);
-+
-+	while (rem_len > 0) {
-+
-+		fcid = ntoh24(gpn_ft_tgt->fcid);
-+		wwpn = ntohll(gpn_ft_tgt->wwpn);
-+
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "tport: 0x%x: ctrl:0x%x", fcid, gpn_ft_tgt->ctrl);
-+
-+		if (fcid == iport->fcid) {
-+			if (gpn_ft_tgt->ctrl & FNIC_FC_GPN_LAST_ENTRY)
-+				break;
-+			gpn_ft_tgt++;
-+			rem_len -= sizeof(struct fc_gpn_ft_rsp_iu_s);
-+			continue;
-+		}
-+
-+		tport = fnic_find_tport_by_wwpn(iport, wwpn);
-+		if (!tport) {
++	if (vlan->state == FIP_VLAN_SENT) {
++		if (vlan->sol_count >= FCOE_CTLR_MAX_SOL) {
 +			/*
-+			 * New port registered with the switch or first time query
++			 * no response on this vlan, remove  from the list.
++			 * Try the next vlan
 +			 */
-+			tport = fdls_create_tport(iport, fcid, wwpn);
-+			if (!tport)
-+				return;
-+		}
-+		/*
-+		 * check if this was an existing tport with same fcid
-+		 * but whose wwpn has changed now ,then remove it and
-+		 * create a new one
-+		 */
-+		if (tport->fcid != fcid) {
-+			fdls_delete_tport(iport, tport);
-+			tport = fdls_create_tport(iport, fcid, wwpn);
-+			if (!tport)
-+				return;
-+		}
-+
-+		/*
-+		 * If this GPN_FT rsp is after RSCN then mark the tports which
-+		 * matches with the new GPN_FT list, if some tport is not
-+		 * found in GPN_FT we went to delete that tport later.
-+		 */
-+		if (fdls_get_state((&iport->fabric)) == FDLS_STATE_RSCN_GPN_FT)
-+			tport->flags |= FNIC_FDLS_TPORT_IN_GPN_FT_LIST;
-+
-+		if (gpn_ft_tgt->ctrl & FNIC_FC_GPN_LAST_ENTRY)
-+			break;
-+
-+		gpn_ft_tgt++;
-+		rem_len -= sizeof(struct fc_gpn_ft_rsp_iu_s);
-+	}
-+	if (rem_len <= 0) {
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+			 "GPN_FT response: malformed/corrupt frame rxlen: %d remlen: %d",
-+			 len, rem_len);
-+	}
-+
-+	/*remove those ports which was not listed in GPN_FT */
-+	if (fdls_get_state((&iport->fabric)) == FDLS_STATE_RSCN_GPN_FT) {
-+		list_for_each_entry_safe(tport, next, &iport->tport_list, links) {
-+
-+			if (!(tport->flags & FNIC_FDLS_TPORT_IN_GPN_FT_LIST)) {
-+				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Remove port: 0x%x not found in GPN_FT list",
-+					 tport->fcid);
-+				fdls_delete_tport(iport, tport);
-+			} else {
-+				tport->flags &= ~FNIC_FDLS_TPORT_IN_GPN_FT_LIST;
-+			}
-+			if ((old_link_down_cnt != iport->fnic->link_down_cnt)
-+				|| (iport->state != FNIC_IPORT_STATE_READY)) {
++			list_del(&vlan->list);
++			kfree(vlan);
++			vlan = NULL;
++			if (list_empty(&fnic->vlan_list)) {
++				/* we exhausted all vlans, restart vlan disc */
++				spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++				fnic_fcoe_send_vlan_req(fnic);
 +				return;
 +			}
++			/* check the next vlan */
++			vlan =
++				list_first_entry(&fnic->vlan_list, struct fcoe_vlan, list);
++
++			fnic->set_vlan(fnic, vlan->vid);
++			vlan->state = FIP_VLAN_SENT;	/* sent now */
++
 +		}
++		atomic64_inc(&fnic_stats->vlan_stats.sol_expiry_count);
++
++	} else {
++		fnic->set_vlan(fnic, vlan->vid);
++		vlan->state = FIP_VLAN_SENT;	/* sent now */
 +	}
++	vlan->sol_count++;
++	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
++	fnic_fcoe_start_fcf_discovery(fnic);
 +}
 +
- static void
- fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr,
- 						int len)
-@@ -900,6 +1994,9 @@ fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr,
- 	struct fc_gpn_ft_s *gpn_ft_rsp = (struct fc_gpn_ft_s *) fchdr;
- 	uint16_t rsp;
- 	uint8_t reason_code;
-+	int count = 0;
-+	struct fnic_tport_s *tport, *next;
-+	u32 old_link_down_cnt = iport->fnic->link_down_cnt;
- 	struct fnic *fnic = iport->fnic;
- 
- 	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-@@ -936,12 +2033,74 @@ fdls_process_gpn_ft_rsp(struct fnic_iport_s *iport, struct fc_hdr_s *fchdr,
- 	case FC_CT_ACC:
- 		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
- 					 "0x%x: GPNFT_RSP accept", iport->fcid);
-+		if (iport->fabric.timer_pending) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "0x%x: Canceling fabric disc timer\n",
-+						 iport->fcid);
-+			fnic_del_fabric_timer_sync(fnic);
-+		}
-+		iport->fabric.timer_pending = 0;
-+		iport->fabric.retry_counter = 0;
-+		fdls_process_gpn_ft_tgt_list(iport, fchdr, len);
-+
-+		/*
-+		 * iport state can change only if link down event happened
-+		 * We don't need to undo fdls_process_gpn_ft_tgt_list,
-+		 * that will be taken care in next link up event
-+		 */
-+		if (iport->state != FNIC_IPORT_STATE_READY) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Halting target discovery: fab st: %d iport st: %d ",
-+				 fdls_get_state(fdls), iport->state);
-+			break;
-+		}
-+		fdls_tgt_discovery_start(iport);
- 		break;
- 
- 	case FC_CT_REJ:
- 		reason_code = gpn_ft_rsp->fc_ct_hdr.reason_code;
- 		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
- 					 "0x%x: GPNFT_RSP Reject", iport->fcid);
-+
-+		if (((reason_code == FC_CT_RJT_LOGICAL_BUSY)
-+			 || (reason_code == FC_CT_RJT_BUSY))
-+			&& (fdls->retry_counter < FDLS_RETRY_COUNT)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "0x%x: GPNFT_RSP ret REJ/BSY. Retry from timer routine",
-+				 iport->fcid);
-+			/* Retry again from the timer routine */
-+			fdls->flags |= FNIC_FDLS_RETRY_FRAME;
-+		} else {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "0x%x: GPNFT_RSP reject", iport->fcid);
-+			if (iport->fabric.timer_pending) {
-+				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+							 "0x%x: Canceling fabric disc timer\n",
-+							 iport->fcid);
-+				fnic_del_fabric_timer_sync(fnic);
-+			}
-+			iport->fabric.timer_pending = 0;
-+			iport->fabric.retry_counter = 0;
-+			/*
-+			 * If GPN_FT ls_rjt then we should delete
-+			 * all existing tports
-+			 */
-+			count = 0;
-+			list_for_each_entry_safe(tport, next, &iport->tport_list,
-+									 links) {
-+				FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+							 "GPN_FT_REJECT: Remove port: 0x%x",
-+							 tport->fcid);
-+				fdls_delete_tport(iport, tport);
-+				if ((old_link_down_cnt != iport->fnic->link_down_cnt)
-+					|| (iport->state != FNIC_IPORT_STATE_READY)) {
-+					return;
-+				}
-+				count++;
-+			}
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+						 "GPN_FT_REJECT: Removed (0x%x) ports", count);
-+		}
- 		break;
- 
- 	default:
-@@ -1342,6 +2501,141 @@ fdls_process_fabric_abts_rsp(struct fnic_iport_s *iport,
- 	}
- }
- 
-+static void
-+fdls_process_tgt_abts_rsp(struct fnic_iport_s *iport,
-+						  struct fc_hdr_s *fchdr)
++/**
++ * fnic_work_on_fcs_ka_timer - Handle work on FCS keep alive timer.
++ * @work: the work queue to be serviced
++ *
++ * Finish handling fcs_ka_timer in process context.
++ * Clean up, bring the link down, and restart all FIP discovery.
++ */
++void fnic_work_on_fcs_ka_timer(struct work_struct *work)
 +{
-+	uint32_t s_id;
-+	struct fnic_tport_s *tport;
-+	uint32_t tport_state;
-+	struct fc_abts_ba_acc_s *ba_acc;
-+	struct fc_abts_ba_rjt_s *ba_rjt;
-+	uint16_t oxid;
-+	struct fnic *fnic = iport->fnic;
++	struct fnic
++	*fnic = container_of(work, struct fnic, fip_timer_work);
++	struct fnic_iport_s *iport = &fnic->iport;
 +
-+	s_id = ntoh24(fchdr->sid);
-+	ba_acc = (struct fc_abts_ba_acc_s *) fchdr;
-+	ba_rjt = (struct fc_abts_ba_rjt_s *) fchdr;
++	FNIC_FIP_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "fnic 0x%p fcs ka timeout\n", fnic);
 +
-+	tport = fnic_find_tport_by_fcid(iport, s_id);
-+	if (!tport) {
-+		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+					 "Received tgt abts rsp with invalid SID: 0x%x", s_id);
-+		return;
-+	}
++	fnic_common_fip_cleanup(fnic);
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++	iport->state = FNIC_IPORT_STATE_FIP;
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
 +
-+	if (tport->timer_pending) {
-+		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+					 "tport 0x%p Canceling fabric disc timer\n", tport);
-+		fnic_del_tport_timer_sync(fnic, tport);
-+	}
-+	if (iport->state != FNIC_IPORT_STATE_READY) {
-+		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+					 "Received tgt abts rsp in iport state(%d). Dropping.",
-+					 iport->state);
-+		return;
-+	}
-+	tport->timer_pending = 0;
-+	tport->flags &= ~FNIC_FDLS_TGT_ABORT_ISSUED;
-+	tport_state = tport->state;
-+	oxid = ntohs(fchdr->ox_id);
-+
-+	/*This abort rsp is for ADISC */
-+	if ((oxid >= FDLS_ADISC_OXID_BASE) && (oxid < FDLS_TGT_OXID_POOL_END)) {
-+		if (fchdr->r_ctl == FNIC_BA_ACC_RCTL) {
-+			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+						 "Received tgt ADISC abts response BA_ACC for OX_ID: 0x%x tgt_fcid: 0x%x",
-+						 ba_acc->ox_id, tport->fcid);
-+		} else if (fchdr->r_ctl == FNIC_BA_RJT_RCTL) {
-+			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+				 "ADISC BA_RJT rcvd tport_fcid: 0x%x tport_state: %d ",
-+				 tport->fcid, tport_state);
-+			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+				 "reason code: 0x%x reason code explanation:0x%x ",
-+				 ba_rjt->reason_code, ba_rjt->reason_explanation);
-+		}
-+		if ((tport->retry_counter < FDLS_RETRY_COUNT)
-+			&& (fchdr->r_ctl == FNIC_BA_ACC_RCTL)) {
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_adisc(iport, tport);
-+			return;
-+		}
-+		fdls_free_tgt_oxid(iport, oxid);
-+		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+					 "ADISC not responding. Deleting target port: 0x%x",
-+					 tport->fcid);
-+		fdls_delete_tport(iport, tport);
-+		if ((iport->state == FNIC_IPORT_STATE_READY)
-+			&& (iport->fabric.state != FDLS_STATE_SEND_GPNFT)
-+			&& (iport->fabric.state != FDLS_STATE_RSCN_GPN_FT)) {
-+			fdls_send_gpn_ft(iport, FDLS_STATE_SEND_GPNFT);
-+		}
-+		/*Restart a discovery of targets */
-+		return;
-+	}
-+
-+	/*This abort rsp is for PLOGI */
-+	if ((oxid >= FDLS_PLOGI_OXID_BASE) && (oxid < FDLS_PRLI_OXID_BASE)) {
-+		if (fchdr->r_ctl == FNIC_BA_ACC_RCTL) {
-+			FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
-+				 "Received tgt PLOGI abts response BA_ACC tgt_fcid: 0x%x",
-+				 tport->fcid);
-+		} else if (fchdr->r_ctl == FNIC_BA_RJT_RCTL) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "PLOGI BA_RJT received for tport_fcid: 0x%x OX_ID: 0x%x",
-+				 tport->fcid, fchdr->ox_id);
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "reason code: 0x%x reason code explanation: 0x%x",
-+				  ba_rjt->reason_code, ba_rjt->reason_explanation);
-+		}
-+		if ((tport->retry_counter < iport->max_plogi_retries)
-+			&& (fchdr->r_ctl == FNIC_BA_ACC_RCTL)) {
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_plogi(iport, tport);
-+			return;
-+		}
-+		fdls_free_tgt_oxid(iport, oxid);
-+		fdls_delete_tport(iport, tport);
-+		/*Restart a discovery of targets */
-+		if ((iport->state == FNIC_IPORT_STATE_READY)
-+			&& (iport->fabric.state != FDLS_STATE_SEND_GPNFT)
-+			&& (iport->fabric.state != FDLS_STATE_RSCN_GPN_FT)) {
-+			fdls_send_gpn_ft(iport, FDLS_STATE_SEND_GPNFT);
-+		}
-+		return;
-+	}
-+
-+	/*This abort rsp is for PRLI */
-+	if ((oxid >= FDLS_PRLI_OXID_BASE) && (oxid < FDLS_ADISC_OXID_BASE)) {
-+		if (fchdr->r_ctl == FNIC_BA_ACC_RCTL) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "0x%x: Received tgt PRLI abts response BA_ACC",
-+				 tport->fcid);
-+		} else if (fchdr->r_ctl == FNIC_BA_RJT_RCTL) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "PRLI BA_RJT received for tport_fcid: 0x%x OX_ID: 0x%x ",
-+				 tport->fcid, fchdr->ox_id);
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "reason code: 0x%x reason code explanation: 0x%x",
-+				 ba_rjt->reason_code,
-+				 ba_rjt->reason_explanation);
-+		}
-+		if ((tport->retry_counter < FDLS_RETRY_COUNT)
-+			&& (fchdr->r_ctl == FNIC_BA_ACC_RCTL)) {
-+			fdls_free_tgt_oxid(iport, oxid);
-+			fdls_send_tgt_prli(iport, tport);
-+			return;
-+		}
-+		fdls_free_tgt_oxid(iport, oxid);
-+		fdls_send_tgt_plogi(iport, tport);	/* go back to plogi */
-+		fdls_set_tport_state(tport, FDLS_TGT_STATE_PLOGI);
-+		return;
-+	}
-+
-+	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				 "Received ABTS response for unknown frame %p", iport);
++	fnic_fcoe_send_vlan_req(fnic);
 +}
 +
- /*
-  * Performs a validation for all FCOE frames and return the frame type
-  */
-@@ -1434,6 +2728,42 @@ fnic_fdls_validate_and_get_frame_type(struct fnic_iport_s *iport,
- 		}
- 	}
- 
-+	/* ELS response from a target */
-+	if ((ntohs(oxid) >= FDLS_PLOGI_OXID_BASE)
-+		&& (ntohs(oxid) < FDLS_PRLI_OXID_BASE)) {
-+		if (!FNIC_FC_FRAME_TYPE_ELS(fchdr)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				"Dropping Unknown frame in PLOGI exchange range type: 0x%x.",
-+				fchdr->type);
-+			return -1;
-+		}
-+		return FNIC_TPORT_PLOGI_RSP;
-+	}
-+	if ((ntohs(oxid) >= FDLS_PRLI_OXID_BASE)
-+		&& (ntohs(oxid) < FDLS_ADISC_OXID_BASE)) {
-+		if (!FNIC_FC_FRAME_TYPE_ELS(fchdr)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				"Dropping Unknown frame in PRLI exchange range type: 0x%x.",
-+				fchdr->type);
-+			return -1;
-+		}
-+		return FNIC_TPORT_PRLI_RSP;
-+	}
++/**
++ * fnic_handle_fcs_ka_timer - Handle FCS keep alive timer.
++ * @t: Handle to the timer list
++ *
++ * No keep alives received from FCF. Clean up, bring the link down
++ * and restart all the FIP discovery.
++ */
++void fnic_handle_fcs_ka_timer(struct timer_list *t)
++{
++	struct fnic *fnic = from_timer(fnic, t, fcs_ka_timer);
 +
-+	if ((ntohs(oxid) >= FDLS_ADISC_OXID_BASE)
-+		&& (ntohs(oxid) < FDLS_TGT_OXID_POOL_END)) {
-+		if (!FNIC_FC_FRAME_TYPE_ELS(fchdr)) {
-+			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+				"Dropping Unknown frame in ADISC exchange range type: 0x%x.",
-+				fchdr->type);
-+			return -1;
-+		}
-+		return FNIC_TPORT_ADISC_RSP;
-+	}
-+	if (ntohs(oxid) == FNIC_TLOGO_REQ_OXID) {
-+		return FNIC_TPORT_LOGO_RSP;
-+	}
++	INIT_WORK(&fnic->fip_timer_work, fnic_work_on_fcs_ka_timer);
++	queue_work(fnic_fip_queue, &fnic->fip_timer_work);
++}
+diff --git a/drivers/scsi/fnic/fip.h b/drivers/scsi/fnic/fip.h
+new file mode 100644
+index 000000000000..b99d5ea57e43
+--- /dev/null
++++ b/drivers/scsi/fnic/fip.h
+@@ -0,0 +1,341 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Copyright 2008 Cisco Systems, Inc.  All rights reserved.
++ * Copyright 2007 Nuova Systems, Inc.  All rights reserved.
++ */
++#ifndef _FIP_H_
++#define _FIP_H_
 +
- 	/*response from fabric */
- 	switch (oxid) {
- 
-@@ -1557,6 +2887,21 @@ void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
- 	case FNIC_FABRIC_GPN_FT_RSP:
- 		fdls_process_gpn_ft_rsp(iport, fchdr, len);
- 		break;
-+	case FNIC_TPORT_PLOGI_RSP:
-+		fdls_process_tgt_plogi_rsp(iport, fchdr);
-+		break;
-+	case FNIC_TPORT_PRLI_RSP:
-+		fdls_process_tgt_prli_rsp(iport, fchdr);
-+		break;
-+	case FNIC_TPORT_ADISC_RSP:
-+		fdls_process_tgt_adisc_rsp(iport, fchdr);
-+		break;
-+	case FNIC_TPORT_LOGO_RSP:
-+		/* Logo response from tgt which we have deleted */
-+		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
-+					 "Logo response from tgt: 0x%x",
-+					 ntoh24(fchdr->sid));
-+		break;
- 	case FNIC_FABRIC_LOGO_RSP:
- 		fdls_process_fabric_logo_rsp(iport, fchdr);
- 		break;
-@@ -1566,7 +2911,8 @@ void fnic_fdls_recv_frame(struct fnic_iport_s *iport, void *rx_frame,
- 		if ((iport->fabric.flags & FNIC_FDLS_FABRIC_ABORT_ISSUED)
- 			&& (oxid >= FNIC_FLOGI_OXID && oxid <= FNIC_RFF_REQ_OXID)) {
- 			fdls_process_fabric_abts_rsp(iport, fchdr);
--		}
-+		} else
-+			fdls_process_tgt_abts_rsp(iport, fchdr);
- 		break;
- 	default:
- 		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++#include "fdls_fc.h"
++
++#define FCOE_ALL_FCFS_MAC {0x01, 0x10, 0x18, 0x01, 0x00, 0x02}
++#define FIP_ETH_TYPE 0x8914
++
++#define FIP_ETH_TYPE_LE 0x1489
++#define FCOE_MAX_SIZE_LE 0x2E08
++
++#define WWNN_LEN 8
++
++#define FCOE_CTLR_FIPVLAN_TOV (3*1000)
++#define FCOE_CTLR_FCS_TOV     (3*1000)
++#define FCOE_CTLR_VN_KA_TOV    (90*1000)
++#define FCOE_CTLR_MAX_SOL      (5*1000)
++
++#define FIP_SUBCODE_REQ  1
++#define FIP_SUBCODE_RESP 2
++
++#define FIP_FLAG_S 0x2
++#define FIP_FLAG_A 0x4
++
++/*
++ * VLAN entry.
++ */
++struct fcoe_vlan {
++	struct list_head list;
++	uint16_t vid;				/* vlan ID */
++	uint16_t sol_count;			/* no. of sols sent */
++	uint16_t state;				/* state */
++};
++
++enum fdls_vlan_state_e {
++	FIP_VLAN_AVAIL,
++	FIP_VLAN_SENT
++};
++
++enum fdls_fip_state_e {
++	FDLS_FIP_INIT,
++	FDLS_FIP_VLAN_DISCOVERY_STARTED,
++	FDLS_FIP_FCF_DISCOVERY_STARTED,
++	FDLS_FIP_FLOGI_STARTED,
++	FDLS_FIP_FLOGI_COMPLETE,
++};
++
++enum fip_protocol_code_e {
++	FIP_DISCOVERY = 1,
++	FIP_FLOGI,
++	FIP_KA_CVL,
++	FIP_VLAN_DISC
++};
++
++struct eth_hdr_s {
++	uint8_t dmac[6];
++	uint8_t smac[6];
++	uint16_t eth_type;
++};
++
++struct fip_header_s {
++	uint32_t ver:16;
++
++	uint32_t protocol:16;
++	uint32_t subcode:16;
++
++	uint32_t desc_len:16;
++	uint32_t flags:16;
++} __packed;
++
++enum fip_desc_type_e {
++	FIP_TYPE_PRIORITY = 1,
++	FIP_TYPE_MAC,
++	FIP_TYPE_FCMAP,
++	FIP_TYPE_NAME_ID,
++	FIP_TYPE_FABRIC,
++	FIP_TYPE_MAX_FCOE,
++	FIP_TYPE_FLOGI,
++	FIP_TYPE_FDISC,
++	FIP_TYPE_LOGO,
++	FIP_TYPE_ELP,
++	FIP_TYPE_VX_PORT,
++	FIP_TYPE_FKA_ADV,
++	FIP_TYPE_VENDOR_ID,
++	FIP_TYPE_VLAN
++};
++
++struct fip_mac_desc_s {
++	uint8_t type;
++	uint8_t len;
++	uint8_t mac[6];
++} __packed;
++
++struct fip_vlan_desc_s {
++	uint8_t type;
++	uint8_t len;
++	uint16_t vlan;
++} __packed;
++
++struct fip_vlan_req_s {
++	struct eth_hdr_s eth;
++	struct fip_header_s fip;
++	struct fip_mac_desc_s mac_desc;
++} __packed;
++
++ /*
++  * Variables:
++  * eth.smac, mac_desc.mac
++  */
++struct fip_vlan_req_s fip_vlan_req_tmpl = {
++	.eth = {.dmac = FCOE_ALL_FCFS_MAC,
++			.eth_type = FIP_ETH_TYPE_LE},
++	.fip = {.ver = 0x10,
++			.protocol = FIP_VLAN_DISC << 8,
++			.subcode = FIP_SUBCODE_REQ << 8,
++			.desc_len = 2 << 8},
++	.mac_desc = {.type = FIP_TYPE_MAC, .len = 2}
++};
++
++struct fip_vlan_notif_s {
++	struct fip_header_s fip;
++	struct fip_vlan_desc_s vlans_desc[];
++} __packed;
++
++struct fip_vn_port_desc_s {
++	uint8_t type;
++	uint8_t len;
++	uint8_t vn_port_mac[6];
++	uint8_t rsvd[1];
++	uint8_t vn_port_id[3];
++	uint64_t vn_port_name;
++} __packed;
++
++struct fip_vn_port_ka_s {
++	struct eth_hdr_s eth;
++	struct fip_header_s fip;
++	struct fip_mac_desc_s mac_desc;
++	struct fip_vn_port_desc_s vn_port_desc;
++} __packed;
++
++/*
++ * Variables:
++ * fcf_mac, eth.smac, mac_desc.enode_mac
++ * vn_port_desc:mac, id, port_name
++ */
++struct fip_vn_port_ka_s fip_vn_port_ka_tmpl = {
++	.eth = {
++			.eth_type = FIP_ETH_TYPE_LE},
++	.fip = {
++			.ver = 0x10,
++			.protocol = FIP_KA_CVL << 8,
++			.subcode = FIP_SUBCODE_REQ << 8,
++			.desc_len = 7 << 8},
++	.mac_desc = {.type = FIP_TYPE_MAC, .len = 2},
++	.vn_port_desc = {.type = FIP_TYPE_VX_PORT, .len = 5}
++};
++
++struct fip_enode_ka_s {
++	struct eth_hdr_s eth;
++	struct fip_header_s fip;
++	struct fip_mac_desc_s mac_desc;
++} __packed;
++
++/*
++ * Variables:
++ * fcf_mac, eth.smac, mac_desc.enode_mac
++ */
++struct fip_enode_ka_s fip_enode_ka_tmpl = {
++	.eth = {
++			.eth_type = FIP_ETH_TYPE_LE},
++	.fip = {
++			.ver = 0x10,
++			.protocol = FIP_KA_CVL << 8,
++			.subcode = FIP_SUBCODE_REQ << 8,
++			.desc_len = 2 << 8},
++	.mac_desc = {.type = FIP_TYPE_MAC, .len = 2}
++};
++
++struct fip_name_desc_s {
++	uint8_t type;
++	uint8_t len;
++	uint8_t rsvd[2];
++	uint64_t name;
++} __packed;
++
++struct fip_cvl_s {
++	struct fip_header_s fip;
++	struct fip_mac_desc_s fcf_mac_desc;
++	struct fip_name_desc_s name_desc;
++	struct fip_vn_port_desc_s vn_ports_desc[];
++} __packed;
++
++struct fip_flogi_desc_s {
++	uint8_t type;
++	uint8_t len;
++	uint16_t rsvd;
++	struct fc_els_s flogi;
++} __packed;
++
++struct fip_flogi_rsp_desc_s {
++	uint8_t type;
++	uint8_t len;
++	uint16_t rsvd;
++	struct fc_els_s els;
++} __packed;
++
++struct fip_flogi_s {
++	struct eth_hdr_s eth;
++	struct fip_header_s fip;
++	struct fip_flogi_desc_s flogi_desc;
++	struct fip_mac_desc_s mac_desc;
++} __packed;
++
++struct fip_flogi_rsp_s {
++	struct fip_header_s fip;
++	struct fip_flogi_rsp_desc_s rsp_desc;
++	struct fip_mac_desc_s mac_desc;
++} __packed;
++
++/*
++ * Variables:
++ * fcf_mac, eth.smac, mac_desc.enode_mac
++ */
++struct fip_flogi_s fip_flogi_tmpl = {
++	.eth = {
++			.eth_type = FIP_ETH_TYPE_LE},
++	.fip = {
++			.ver = 0x10,
++			.protocol = FIP_FLOGI << 8,
++			.subcode = FIP_SUBCODE_REQ << 8,
++			.desc_len = 38 << 8,
++			.flags = 0x80},
++	.flogi_desc = {
++				   .type = FIP_TYPE_FLOGI, .len = 36,
++				   .flogi = {
++							 .fchdr = {
++							   .r_ctl = 0x22,
++							   .did = {0xFF, 0xFF, 0xFE},
++							   .type = 0x01,
++							   .f_ctl = FNIC_ELS_REQ_FCTL,
++							   .ox_id = FNIC_FLOGI_OXID,
++							   .rx_id = 0xFFFF},
++							 .command = ELS_FLOGI,
++							 .u.csp_flogi = {
++								 .fc_ph_ver = FNIC_FC_PH_VER,
++								 .b2b_credits =
++								 FNIC_FC_B2B_CREDIT,
++								 .b2b_rdf_size =
++								 FNIC_FC_B2B_RDF_SZ},
++							 .spc3 = {0x88, 0x00}
++							}
++				   },
++	.mac_desc = {.type = FIP_TYPE_MAC, .len = 2}
++};
++
++struct fip_fcoe_desc_s {
++	uint8_t type;
++	uint8_t len;
++	uint16_t max_fcoe_size;
++} __packed;
++
++struct fip_discovery_s {
++	struct eth_hdr_s eth;
++	struct fip_header_s fip;
++	struct fip_mac_desc_s mac_desc;
++	struct fip_name_desc_s name_desc;
++	struct fip_fcoe_desc_s fcoe_desc;
++} __packed;
++
++/*
++ * Variables:
++ * eth.smac, mac_desc.enode_mac, node_name
++ */
++struct fip_discovery_s fip_discovery_tmpl = {
++	.eth = {.dmac = FCOE_ALL_FCFS_MAC,
++			.eth_type = FIP_ETH_TYPE_LE},
++	.fip = {
++			.ver = 0x10, .protocol = FIP_DISCOVERY << 8,
++			.subcode = FIP_SUBCODE_REQ << 8, .desc_len = 6 << 8,
++			.flags = 0x80},
++	.mac_desc = {.type = FIP_TYPE_MAC, .len = 2},
++	.name_desc = {.type = FIP_TYPE_NAME_ID, .len = 3},
++	.fcoe_desc = {
++				  .type = FIP_TYPE_MAX_FCOE, .len = 1,
++				  .max_fcoe_size = FCOE_MAX_SIZE_LE}
++};
++
++struct fip_prio_desc_s {
++	uint8_t type;
++	uint8_t len;
++	uint8_t rsvd;
++	uint8_t priority;
++} __packed;
++
++struct fip_fabric_desc_s {
++	uint8_t type;
++	uint8_t len;
++	uint16_t vf_id;
++	uint8_t rsvd;
++	uint8_t fc_map[3];
++	uint64_t fabric_name;
++} __packed;
++
++struct fip_fka_adv_desc_s {
++	uint8_t type;
++	uint8_t len;
++	uint8_t rsvd;
++	uint8_t rsvd_D;
++	uint32_t fka_adv;
++} __packed;
++
++struct fip_disc_adv_s {
++	struct fip_header_s fip;
++	struct fip_prio_desc_s prio_desc;
++	struct fip_mac_desc_s mac_desc;
++	struct fip_name_desc_s name_desc;
++	struct fip_fabric_desc_s fabric_desc;
++	struct fip_fka_adv_desc_s fka_adv_desc;
++} __packed;
++
++void fnic_fcoe_process_vlan_resp(struct fnic *fnic,
++								 struct fip_header_s *fiph);
++void fnic_fcoe_fip_discovery_resp(struct fnic *fnic,
++								  struct fip_header_s *fiph);
++void fnic_fcoe_process_flogi_resp(struct fnic *fnic,
++								  struct fip_header_s *fiph);
++void fnic_work_on_fip_timer(struct work_struct *work);
++void fnic_work_on_fcs_ka_timer(struct work_struct *work);
++void fnic_fcoe_send_vlan_req(struct fnic *fnic);
++void fnic_fcoe_start_fcf_discovery(struct fnic *fnic);
++void fnic_fcoe_start_flogi(struct fnic *fnic);
++void fnic_fcoe_process_cvl(struct fnic *fnic,
++							struct fip_header_s *fiph);
++void fnic_vlan_discovery_timeout(struct fnic *fnic);
++
++#endif							/* _FIP_H_ */
 diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 2d5f438f2cc4..92cd17efa40f 100644
+index 5d8315b24085..45bee896153e 100644
 --- a/drivers/scsi/fnic/fnic.h
 +++ b/drivers/scsi/fnic/fnic.h
-@@ -79,6 +79,9 @@
+@@ -230,6 +230,12 @@ do {								\
+ 				"fnic<%d>: %s: %d: " fmt, fnic_num,\
+ 				__func__, __LINE__, ##args);)
  
- #define IS_FNIC_FCP_INITIATOR(fnic) (fnic->role == FNIC_ROLE_FCP_INITIATOR)
- 
-+/* Retry supported by rport (returned by PRLI service parameters) */
-+#define FNIC_FC_RP_FLAGS_RETRY            0x1
++#define FNIC_FIP_DBG(kern_level, host, fnic_num, fmt, args...)		\
++	FNIC_CHECK_LOGGING(FNIC_FCS_LOGGING,			\
++			 shost_printk(kern_level, host,			\
++				"fnic<%d>: %s: %d: " fmt, fnic_num,\
++				__func__, __LINE__, ##args);)
 +
- /*
-  * fnic private data per SCSI command.
-  * These fields are locked by the hashed io_req_lock.
-@@ -133,6 +136,7 @@ static inline u64 fnic_flags_and_state(struct scsi_cmnd *cmd)
- 
- extern unsigned int fnic_log_level;
- extern unsigned int io_completions;
-+extern struct workqueue_struct *fnic_event_queue;
- 
- #define FNIC_MAIN_LOGGING 0x01
- #define FNIC_FCS_LOGGING 0x02
-@@ -329,6 +333,8 @@ struct fnic {
- 	struct work_struct flush_work;
- 	struct sk_buff_head frame_queue;
- 	struct list_head tx_queue;
-+	struct work_struct tport_work;
-+	struct list_head tport_event_list;
- 
+ #define FNIC_SCSI_DBG(kern_level, host, fnic_num, fmt, args...)		\
+ 	FNIC_CHECK_LOGGING(FNIC_SCSI_LOGGING,			\
+ 			 shost_printk(kern_level, host,			\
+@@ -409,13 +415,15 @@ struct fnic {
  	/*** FIP related data members  -- start ***/
  	void (*set_vlan)(struct fnic *, u16 vlan);
-diff --git a/drivers/scsi/fnic/fnic_fdls.h b/drivers/scsi/fnic/fnic_fdls.h
-index f64a2ba2e10d..bb3e9d26c18a 100644
---- a/drivers/scsi/fnic/fnic_fdls.h
-+++ b/drivers/scsi/fnic/fnic_fdls.h
-@@ -312,6 +312,10 @@ void fdls_send_fabric_logo(struct fnic_iport_s *iport);
- int fnic_fdls_validate_and_get_frame_type(struct fnic_iport_s *iport,
- 								  void *rx_frame, int len,
- 								  int fchdr_offset);
-+void fdls_send_tport_abts(struct fnic_iport_s *iport,
-+						  struct fnic_tport_s *tport);
-+void fdls_delete_tport(struct fnic_iport_s *iport,
-+					   struct fnic_tport_s *tport);
- void fdls_fdmi_timer_callback(struct timer_list *t);
+ 	struct work_struct      fip_frame_work;
+-	struct sk_buff_head     fip_frame_queue;
++	struct work_struct		fip_timer_work;
++	struct list_head		fip_frame_queue;
+ 	struct timer_list       fip_timer;
+-	struct list_head        vlans;
+ 	spinlock_t              vlans_lock;
+-
+-	struct work_struct      event_work;
+-	struct list_head        evlist;
++	struct timer_list retry_fip_timer;
++	struct timer_list fcs_ka_timer;
++	struct timer_list enode_ka_timer;
++	struct timer_list vn_ka_timer;
++	struct list_head vlan_list;
+ 	/*** FIP related data members  -- end ***/
  
- /* fnic_fcs.c */
+ 	/* copy work queue cache line section */
+@@ -462,9 +470,6 @@ int fnic_rq_cmpl_handler(struct fnic *fnic, int);
+ int fnic_alloc_rq_frame(struct vnic_rq *rq);
+ void fnic_free_rq_buf(struct vnic_rq *rq, struct vnic_rq_buf *buf);
+ void fnic_flush_tx(struct work_struct *work);
+-void fnic_eth_send(struct fcoe_ctlr *, struct sk_buff *skb);
+-void fnic_set_port_id(struct fc_lport *, u32, struct fc_frame *);
+-void fnic_update_mac(struct fc_lport *, u8 *new);
+ void fnic_update_mac_locked(struct fnic *, u8 *new);
+ 
+ int fnic_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
+@@ -493,7 +498,7 @@ int fnic_is_abts_pending(struct fnic *, struct scsi_cmnd *);
+ void fnic_handle_fip_frame(struct work_struct *work);
+ void fnic_handle_fip_event(struct fnic *fnic);
+ void fnic_fcoe_reset_vlans(struct fnic *fnic);
+-void fnic_fcoe_evlist_free(struct fnic *fnic);
++extern void fnic_handle_fip_timer(struct timer_list *t);
+ 
+ static inline int
+ fnic_chk_state_flags_locked(struct fnic *fnic, unsigned long st_flags)
+diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+index e5d5a63e0281..af63a43e1c51 100644
+--- a/drivers/scsi/fnic/fnic_fcs.c
++++ b/drivers/scsi/fnic/fnic_fcs.c
+@@ -25,16 +25,9 @@
+ #include "cq_enet_desc.h"
+ #include "cq_exch_desc.h"
+ 
+-static u8 fcoe_all_fcfs[ETH_ALEN] = FIP_ALL_FCF_MACS;
+-struct workqueue_struct *fnic_fip_queue;
++extern struct workqueue_struct *fnic_fip_queue;
+ struct workqueue_struct *fnic_event_queue;
+ 
+-static void fnic_set_eth_mode(struct fnic *);
+-static void fnic_fcoe_start_fcf_disc(struct fnic *fnic);
+-static void fnic_fcoe_process_vlan_resp(struct fnic *fnic, struct sk_buff *);
+-static int fnic_fcoe_vlan_check(struct fnic *fnic, u16 flag);
+-static int fnic_fcoe_handle_fip_frame(struct fnic *fnic, struct sk_buff *skb);
+-
+ /* Frame initialization */
+ /*
+  * Variables:
+@@ -252,11 +245,6 @@ void fnic_handle_link(struct work_struct *work)
+ 			fnic->lport->host->host_no, FNIC_FC_LE,
+ 			"Link Status: UP_DOWN",
+ 			strlen("Link Status: UP_DOWN"));
+-		if (fnic->config.flags & VFCF_FIP_CAPABLE) {
+-			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, fnic->fnic_num,
+-				"deleting fip-timer during link-down\n");
+-			del_timer_sync(&fnic->fip_timer);
+-		}
+ 		fcoe_ctlr_link_down(&fnic->ctlr);
+ 	}
+ 
+@@ -299,496 +287,72 @@ void fnic_handle_frame(struct work_struct *work)
+ 	}
+ }
+ 
+-void fnic_fcoe_evlist_free(struct fnic *fnic)
+-{
+-	struct fnic_event *fevt = NULL;
+-	struct fnic_event *next = NULL;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&fnic->fnic_lock, flags);
+-	if (list_empty(&fnic->evlist)) {
+-		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-		return;
+-	}
+-
+-	list_for_each_entry_safe(fevt, next, &fnic->evlist, list) {
+-		list_del(&fevt->list);
+-		kfree(fevt);
+-	}
+-	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-}
+-
+-void fnic_handle_event(struct work_struct *work)
++void fnic_handle_fip_frame(struct work_struct *work)
+ {
+-	struct fnic *fnic = container_of(work, struct fnic, event_work);
+-	struct fnic_event *fevt = NULL;
+-	struct fnic_event *next = NULL;
+-	unsigned long flags;
++	struct fnic_stats *fnic_stats;
++	struct fnic_frame_list *cur_frame, *next;
++	struct fnic *fnic = container_of(work, struct fnic, fip_frame_work);
+ 
+-	spin_lock_irqsave(&fnic->fnic_lock, flags);
+-	if (list_empty(&fnic->evlist)) {
+-		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-		return;
+-	}
++	fnic_stats = &fnic->fnic_stats;
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "Processing FIP frame\n");
+ 
+-	list_for_each_entry_safe(fevt, next, &fnic->evlist, list) {
++	spin_lock_irqsave(&fnic->fnic_lock, fnic->lock_flags);
++	list_for_each_entry_safe(cur_frame, next, &fnic->fip_frame_queue,
++							 links) {
+ 		if (fnic->stop_rx_link_events) {
+-			list_del(&fevt->list);
+-			kfree(fevt);
+-			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++			list_del(&cur_frame->links);
++			spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
++			kfree(cur_frame->fp);
++			kfree(cur_frame);
+ 			return;
+ 		}
++
+ 		/*
+ 		 * If we're in a transitional state, just re-queue and return.
+ 		 * The queue will be serviced when we get to a stable state.
+ 		 */
+ 		if (fnic->state != FNIC_IN_FC_MODE &&
+-		    fnic->state != FNIC_IN_ETH_MODE) {
+-			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++			fnic->state != FNIC_IN_ETH_MODE) {
++			spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+ 			return;
+ 		}
+ 
+-		list_del(&fevt->list);
+-		switch (fevt->event) {
+-		case FNIC_EVT_START_VLAN_DISC:
+-			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-			fnic_fcoe_send_vlan_req(fnic);
+-			spin_lock_irqsave(&fnic->fnic_lock, flags);
+-			break;
+-		case FNIC_EVT_START_FCF_DISC:
+-			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, fnic->fnic_num,
+-				  "Start FCF Discovery\n");
+-			fnic_fcoe_start_fcf_disc(fnic);
+-			break;
+-		default:
+-			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, fnic->fnic_num,
+-				  "Unknown event 0x%x\n", fevt->event);
+-			break;
+-		}
+-		kfree(fevt);
+-	}
+-	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-}
+-
+-/**
+- * is_fnic_fip_flogi_reject() - Check if the Received FIP FLOGI frame is rejected
+- * @fip: The FCoE controller that received the frame
+- * @skb: The received FIP frame
+- *
+- * Returns non-zero if the frame is rejected with unsupported cmd with
+- * insufficient resource els explanation.
+- */
+-static inline int is_fnic_fip_flogi_reject(struct fcoe_ctlr *fip,
+-					 struct sk_buff *skb)
+-{
+-	struct fc_lport *lport = fip->lp;
+-	struct fip_header *fiph;
+-	struct fc_frame_header *fh = NULL;
+-	struct fip_desc *desc;
+-	struct fip_encaps *els;
+-	u16 op;
+-	u8 els_op;
+-	u8 sub;
+-
+-	size_t rlen;
+-	size_t dlen = 0;
+-
+-	if (skb_linearize(skb))
+-		return 0;
+-
+-	if (skb->len < sizeof(*fiph))
+-		return 0;
+-
+-	fiph = (struct fip_header *)skb->data;
+-	op = ntohs(fiph->fip_op);
+-	sub = fiph->fip_subcode;
+-
+-	if (op != FIP_OP_LS)
+-		return 0;
+-
+-	if (sub != FIP_SC_REP)
+-		return 0;
+-
+-	rlen = ntohs(fiph->fip_dl_len) * 4;
+-	if (rlen + sizeof(*fiph) > skb->len)
+-		return 0;
+-
+-	desc = (struct fip_desc *)(fiph + 1);
+-	dlen = desc->fip_dlen * FIP_BPW;
+-
+-	if (desc->fip_dtype == FIP_DT_FLOGI) {
+-
+-		if (dlen < sizeof(*els) + sizeof(*fh) + 1)
+-			return 0;
+-
+-		els = (struct fip_encaps *)desc;
+-		fh = (struct fc_frame_header *)(els + 1);
+-
+-		if (!fh)
+-			return 0;
+-
+-		/*
+-		 * ELS command code, reason and explanation should be = Reject,
+-		 * unsupported command and insufficient resource
+-		 */
+-		els_op = *(u8 *)(fh + 1);
+-		if (els_op == ELS_LS_RJT) {
+-			shost_printk(KERN_INFO, lport->host,
+-				  "Flogi Request Rejected by Switch\n");
+-			return 1;
+-		}
+-		shost_printk(KERN_INFO, lport->host,
+-				"Flogi Request Accepted by Switch\n");
+-	}
+-	return 0;
+-}
+-
+-void fnic_fcoe_send_vlan_req(struct fnic *fnic)
+-{
+-	struct fcoe_ctlr *fip = &fnic->ctlr;
+-	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+-	struct sk_buff *skb;
+-	char *eth_fr;
+-	struct fip_vlan *vlan;
+-	u64 vlan_tov;
+-
+-	fnic_fcoe_reset_vlans(fnic);
+-	fnic->set_vlan(fnic, 0);
+-
+-	if (printk_ratelimit())
+-		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+-			  "Sending VLAN request...\n");
+-
+-	skb = dev_alloc_skb(sizeof(struct fip_vlan));
+-	if (!skb)
+-		return;
+-
+-	eth_fr = (char *)skb->data;
+-	vlan = (struct fip_vlan *)eth_fr;
+-
+-	memset(vlan, 0, sizeof(*vlan));
+-	memcpy(vlan->eth.h_source, fip->ctl_src_addr, ETH_ALEN);
+-	memcpy(vlan->eth.h_dest, fcoe_all_fcfs, ETH_ALEN);
+-	vlan->eth.h_proto = htons(ETH_P_FIP);
+-
+-	vlan->fip.fip_ver = FIP_VER_ENCAPS(FIP_VER);
+-	vlan->fip.fip_op = htons(FIP_OP_VLAN);
+-	vlan->fip.fip_subcode = FIP_SC_VL_REQ;
+-	vlan->fip.fip_dl_len = htons(sizeof(vlan->desc) / FIP_BPW);
+-
+-	vlan->desc.mac.fd_desc.fip_dtype = FIP_DT_MAC;
+-	vlan->desc.mac.fd_desc.fip_dlen = sizeof(vlan->desc.mac) / FIP_BPW;
+-	memcpy(&vlan->desc.mac.fd_mac, fip->ctl_src_addr, ETH_ALEN);
+-
+-	vlan->desc.wwnn.fd_desc.fip_dtype = FIP_DT_NAME;
+-	vlan->desc.wwnn.fd_desc.fip_dlen = sizeof(vlan->desc.wwnn) / FIP_BPW;
+-	put_unaligned_be64(fip->lp->wwnn, &vlan->desc.wwnn.fd_wwn);
+-	atomic64_inc(&fnic_stats->vlan_stats.vlan_disc_reqs);
+-
+-	skb_put(skb, sizeof(*vlan));
+-	skb->protocol = htons(ETH_P_FIP);
+-	skb_reset_mac_header(skb);
+-	skb_reset_network_header(skb);
+-	fip->send(fip, skb);
+-
+-	/* set a timer so that we can retry if there no response */
+-	vlan_tov = jiffies + msecs_to_jiffies(FCOE_CTLR_FIPVLAN_TOV);
+-	mod_timer(&fnic->fip_timer, round_jiffies(vlan_tov));
+-}
+-
+-static void fnic_fcoe_process_vlan_resp(struct fnic *fnic, struct sk_buff *skb)
+-{
+-	struct fcoe_ctlr *fip = &fnic->ctlr;
+-	struct fip_header *fiph;
+-	struct fip_desc *desc;
+-	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+-	u16 vid;
+-	size_t rlen;
+-	size_t dlen;
+-	struct fcoe_vlan *vlan;
+-	u64 sol_time;
+-	unsigned long flags;
+-
+-	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+-		  "Received VLAN response...\n");
+-
+-	fiph = (struct fip_header *) skb->data;
++		list_del(&cur_frame->links);
+ 
+-	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+-		  "Received VLAN response... OP 0x%x SUB_OP 0x%x\n",
+-		  ntohs(fiph->fip_op), fiph->fip_subcode);
+-
+-	rlen = ntohs(fiph->fip_dl_len) * 4;
+-	fnic_fcoe_reset_vlans(fnic);
+-	spin_lock_irqsave(&fnic->vlans_lock, flags);
+-	desc = (struct fip_desc *)(fiph + 1);
+-	while (rlen > 0) {
+-		dlen = desc->fip_dlen * FIP_BPW;
+-		switch (desc->fip_dtype) {
+-		case FIP_DT_VLAN:
+-			vid = ntohs(((struct fip_vlan_desc *)desc)->fd_vlan);
+-			shost_printk(KERN_INFO, fnic->lport->host,
+-				  "process_vlan_resp: FIP VLAN %d\n", vid);
+-			vlan = kzalloc(sizeof(*vlan), GFP_ATOMIC);
+-			if (!vlan) {
+-				/* retry from timer */
+-				spin_unlock_irqrestore(&fnic->vlans_lock,
+-							flags);
+-				goto out;
+-			}
+-			vlan->vid = vid & 0x0fff;
+-			vlan->state = FIP_VLAN_AVAIL;
+-			list_add_tail(&vlan->list, &fnic->vlans);
+-			break;
+-		}
+-		desc = (struct fip_desc *)((char *)desc + dlen);
+-		rlen -= dlen;
+-	}
+-
+-	/* any VLAN descriptors present ? */
+-	if (list_empty(&fnic->vlans)) {
+-		/* retry from timer */
+-		atomic64_inc(&fnic_stats->vlan_stats.resp_withno_vlanID);
+-		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
+-			  "No VLAN descriptors in FIP VLAN response\n");
+-		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
+-		goto out;
+-	}
+-
+-	vlan = list_first_entry(&fnic->vlans, struct fcoe_vlan, list);
+-	fnic->set_vlan(fnic, vlan->vid);
+-	vlan->state = FIP_VLAN_SENT; /* sent now */
+-	vlan->sol_count++;
+-	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
+-
+-	/* start the solicitation */
+-	fcoe_ctlr_link_up(fip);
+-
+-	sol_time = jiffies + msecs_to_jiffies(FCOE_CTLR_START_DELAY);
+-	mod_timer(&fnic->fip_timer, round_jiffies(sol_time));
+-out:
+-	return;
+-}
+-
+-static void fnic_fcoe_start_fcf_disc(struct fnic *fnic)
+-{
+-	unsigned long flags;
+-	struct fcoe_vlan *vlan;
+-	u64 sol_time;
+-
+-	spin_lock_irqsave(&fnic->vlans_lock, flags);
+-	vlan = list_first_entry(&fnic->vlans, struct fcoe_vlan, list);
+-	fnic->set_vlan(fnic, vlan->vid);
+-	vlan->state = FIP_VLAN_SENT; /* sent now */
+-	vlan->sol_count = 1;
+-	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
+-
+-	/* start the solicitation */
+-	fcoe_ctlr_link_up(&fnic->ctlr);
+-
+-	sol_time = jiffies + msecs_to_jiffies(FCOE_CTLR_START_DELAY);
+-	mod_timer(&fnic->fip_timer, round_jiffies(sol_time));
+-}
+-
+-static int fnic_fcoe_vlan_check(struct fnic *fnic, u16 flag)
+-{
+-	unsigned long flags;
+-	struct fcoe_vlan *fvlan;
+-
+-	spin_lock_irqsave(&fnic->vlans_lock, flags);
+-	if (list_empty(&fnic->vlans)) {
+-		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
+-		return -EINVAL;
+-	}
+-
+-	fvlan = list_first_entry(&fnic->vlans, struct fcoe_vlan, list);
+-	if (fvlan->state == FIP_VLAN_USED) {
+-		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
+-		return 0;
+-	}
+-
+-	if (fvlan->state == FIP_VLAN_SENT) {
+-		fvlan->state = FIP_VLAN_USED;
+-		spin_unlock_irqrestore(&fnic->vlans_lock, flags);
+-		return 0;
+-	}
+-	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
+-	return -EINVAL;
+-}
+-
+-static void fnic_event_enq(struct fnic *fnic, enum fnic_evt ev)
+-{
+-	struct fnic_event *fevt;
+-	unsigned long flags;
+-
+-	fevt = kmalloc(sizeof(*fevt), GFP_ATOMIC);
+-	if (!fevt)
+-		return;
+-
+-	fevt->fnic = fnic;
+-	fevt->event = ev;
+-
+-	spin_lock_irqsave(&fnic->fnic_lock, flags);
+-	list_add_tail(&fevt->list, &fnic->evlist);
+-	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-
+-	schedule_work(&fnic->event_work);
+-}
+-
+-static int fnic_fcoe_handle_fip_frame(struct fnic *fnic, struct sk_buff *skb)
+-{
+-	struct fip_header *fiph;
+-	int ret = 1;
+-	u16 op;
+-	u8 sub;
+-
+-	if (!skb || !(skb->data))
+-		return -1;
+-
+-	if (skb_linearize(skb))
+-		goto drop;
+-
+-	fiph = (struct fip_header *)skb->data;
+-	op = ntohs(fiph->fip_op);
+-	sub = fiph->fip_subcode;
+-
+-	if (FIP_VER_DECAPS(fiph->fip_ver) != FIP_VER)
+-		goto drop;
+-
+-	if (ntohs(fiph->fip_dl_len) * FIP_BPW + sizeof(*fiph) > skb->len)
+-		goto drop;
+-
+-	if (op == FIP_OP_DISC && sub == FIP_SC_ADV) {
+-		if (fnic_fcoe_vlan_check(fnic, ntohs(fiph->fip_flags)))
+-			goto drop;
+-		/* pass it on to fcoe */
+-		ret = 1;
+-	} else if (op == FIP_OP_VLAN && sub == FIP_SC_VL_NOTE) {
+-		/* set the vlan as used */
+-		fnic_fcoe_process_vlan_resp(fnic, skb);
+-		ret = 0;
+-	} else if (op == FIP_OP_CTRL && sub == FIP_SC_CLR_VLINK) {
+-		/* received CVL request, restart vlan disc */
+-		fnic_event_enq(fnic, FNIC_EVT_START_VLAN_DISC);
+-		/* pass it on to fcoe */
+-		ret = 1;
+-	}
+-drop:
+-	return ret;
+-}
+-
+-void fnic_handle_fip_frame(struct work_struct *work)
+-{
+-	struct fnic *fnic = container_of(work, struct fnic, fip_frame_work);
+-	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
+-	unsigned long flags;
+-	struct sk_buff *skb;
+-	struct ethhdr *eh;
+-
+-	while ((skb = skb_dequeue(&fnic->fip_frame_queue))) {
+-		spin_lock_irqsave(&fnic->fnic_lock, flags);
+-		if (fnic->stop_rx_link_events) {
+-			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-			dev_kfree_skb(skb);
+-			return;
+-		}
+-		/*
+-		 * If we're in a transitional state, just re-queue and return.
+-		 * The queue will be serviced when we get to a stable state.
+-		 */
+-		if (fnic->state != FNIC_IN_FC_MODE &&
+-		    fnic->state != FNIC_IN_ETH_MODE) {
+-			skb_queue_head(&fnic->fip_frame_queue, skb);
+-			spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-			return;
+-		}
+-		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-		eh = (struct ethhdr *)skb->data;
+-		if (eh->h_proto == htons(ETH_P_FIP)) {
+-			skb_pull(skb, sizeof(*eh));
+-			if (fnic_fcoe_handle_fip_frame(fnic, skb) <= 0) {
+-				dev_kfree_skb(skb);
+-				continue;
+-			}
+-			/*
+-			 * If there's FLOGI rejects - clear all
+-			 * fcf's & restart from scratch
+-			 */
+-			if (is_fnic_fip_flogi_reject(&fnic->ctlr, skb)) {
+-				atomic64_inc(
+-					&fnic_stats->vlan_stats.flogi_rejects);
+-				shost_printk(KERN_INFO, fnic->lport->host,
+-					  "Trigger a Link down - VLAN Disc\n");
+-				fcoe_ctlr_link_down(&fnic->ctlr);
+-				/* start FCoE VLAN discovery */
+-				fnic_fcoe_send_vlan_req(fnic);
+-				dev_kfree_skb(skb);
+-				continue;
+-			}
+-			fcoe_ctlr_recv(&fnic->ctlr, skb);
+-			continue;
++		if (fdls_fip_recv_frame(fnic, cur_frame->fp)) {
++			kfree(cur_frame->fp);
++			kfree(cur_frame);
+ 		}
+ 	}
++	spin_unlock_irqrestore(&fnic->fnic_lock, fnic->lock_flags);
+ }
+ 
+ /**
+  * fnic_import_rq_eth_pkt() - handle received FCoE or FIP frame.
+  * @fnic:	fnic instance.
+- * @skb:	Ethernet Frame.
++ * @fp:		Ethernet Frame.
+  */
+-static inline int fnic_import_rq_eth_pkt(struct fnic *fnic, struct sk_buff *skb)
++static inline int fnic_import_rq_eth_pkt(struct fnic *fnic, void *fp)
+ {
+-	struct fc_frame *fp;
+-	struct ethhdr *eh;
+-	struct fcoe_hdr *fcoe_hdr;
+-	struct fcoe_crc_eof *ft;
++	struct fnic_eth_hdr_s *eh;
++	struct fnic_frame_list *fip_fr_elem;
++	unsigned long flags;
+ 
+-	/*
+-	 * Undo VLAN encapsulation if present.
+-	 */
+-	eh = (struct ethhdr *)skb->data;
+-	if (eh->h_proto == htons(ETH_P_8021Q)) {
+-		memmove((u8 *)eh + VLAN_HLEN, eh, ETH_ALEN * 2);
+-		eh = skb_pull(skb, VLAN_HLEN);
+-		skb_reset_mac_header(skb);
+-	}
+-	if (eh->h_proto == htons(ETH_P_FIP)) {
+-		if (!(fnic->config.flags & VFCF_FIP_CAPABLE)) {
+-			printk(KERN_ERR "Dropped FIP frame, as firmware "
+-					"uses non-FIP mode, Enable FIP "
+-					"using UCSM\n");
+-			goto drop;
+-		}
+-		if ((fnic_fc_trace_set_data(fnic->lport->host->host_no,
+-			FNIC_FC_RECV|0x80, (char *)skb->data, skb->len)) != 0) {
+-			printk(KERN_ERR "fnic ctlr frame trace error!!!");
+-		}
+-		skb_queue_tail(&fnic->fip_frame_queue, skb);
++	eh = (struct fnic_eth_hdr_s *) fp;
++	if ((eh->ether_type == htons(ETH_TYPE_FIP)) && (fnic->iport.usefip)) {
++		fip_fr_elem = (struct fnic_frame_list *)
++			kzalloc(sizeof(struct fnic_frame_list), GFP_ATOMIC);
++		if (!fip_fr_elem)
++			return 0;
++		fip_fr_elem->fp = fp;
++		spin_lock_irqsave(&fnic->fnic_lock, flags);
++		list_add_tail(&fip_fr_elem->links, &fnic->fip_frame_queue);
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+ 		queue_work(fnic_fip_queue, &fnic->fip_frame_work);
+-		return 1;		/* let caller know packet was used */
+-	}
+-	if (eh->h_proto != htons(ETH_P_FCOE))
+-		goto drop;
+-	skb_set_network_header(skb, sizeof(*eh));
+-	skb_pull(skb, sizeof(*eh));
+-
+-	fcoe_hdr = (struct fcoe_hdr *)skb->data;
+-	if (FC_FCOE_DECAPS_VER(fcoe_hdr) != FC_FCOE_VER)
+-		goto drop;
+-
+-	fp = (struct fc_frame *)skb;
+-	fc_frame_init(fp);
+-	fr_sof(fp) = fcoe_hdr->fcoe_sof;
+-	skb_pull(skb, sizeof(struct fcoe_hdr));
+-	skb_reset_transport_header(skb);
+-
+-	ft = (struct fcoe_crc_eof *)(skb->data + skb->len - sizeof(*ft));
+-	fr_eof(fp) = ft->fcoe_eof;
+-	skb_trim(skb, skb->len - sizeof(*ft));
+-	return 0;
+-drop:
+-	dev_kfree_skb_irq(skb);
+-	return -1;
++		return 1;				/* let caller know packet was used */
++	} else
++		return 0;
+ }
+ 
+ /**
+@@ -800,206 +364,145 @@ static inline int fnic_import_rq_eth_pkt(struct fnic *fnic, struct sk_buff *skb)
+  */
+ void fnic_update_mac_locked(struct fnic *fnic, u8 *new)
+ {
+-	u8 *ctl = fnic->ctlr.ctl_src_addr;
++	struct fnic_iport_s *iport = &fnic->iport;
++	u8 *ctl = iport->hwmac;
+ 	u8 *data = fnic->data_src_addr;
+ 
+ 	if (is_zero_ether_addr(new))
+ 		new = ctl;
+ 	if (ether_addr_equal(data, new))
+ 		return;
+-	FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, fnic->fnic_num,
+-			"update_mac %pM\n", new);
++
++	FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++				 "Update MAC: %u\n", *new);
++
+ 	if (!is_zero_ether_addr(data) && !ether_addr_equal(data, ctl))
+ 		vnic_dev_del_addr(fnic->vdev, data);
++
+ 	memcpy(data, new, ETH_ALEN);
+ 	if (!ether_addr_equal(new, ctl))
+ 		vnic_dev_add_addr(fnic->vdev, new);
+ }
+ 
+-/**
+- * fnic_update_mac() - set data MAC address and filters.
+- * @lport:	local port.
+- * @new:	newly-assigned FCoE MAC address.
+- */
+-void fnic_update_mac(struct fc_lport *lport, u8 *new)
+-{
+-	struct fnic *fnic = lport_priv(lport);
+-
+-	spin_lock_irq(&fnic->fnic_lock);
+-	fnic_update_mac_locked(fnic, new);
+-	spin_unlock_irq(&fnic->fnic_lock);
+-}
+-
+-/**
+- * fnic_set_port_id() - set the port_ID after successful FLOGI.
+- * @lport:	local port.
+- * @port_id:	assigned FC_ID.
+- * @fp:		received frame containing the FLOGI accept or NULL.
+- *
+- * This is called from libfc when a new FC_ID has been assigned.
+- * This causes us to reset the firmware to FC_MODE and setup the new MAC
+- * address and FC_ID.
+- *
+- * It is also called with FC_ID 0 when we're logged off.
+- *
+- * If the FC_ID is due to point-to-point, fp may be NULL.
+- */
+-void fnic_set_port_id(struct fc_lport *lport, u32 port_id, struct fc_frame *fp)
+-{
+-	struct fnic *fnic = lport_priv(lport);
+-	u8 *mac;
+-	int ret;
+-
+-	FNIC_FCS_DBG(KERN_DEBUG, lport->host, fnic->fnic_num,
+-			"set port_id 0x%x fp 0x%p\n",
+-			port_id, fp);
+-
+-	/*
+-	 * If we're clearing the FC_ID, change to use the ctl_src_addr.
+-	 * Set ethernet mode to send FLOGI.
+-	 */
+-	if (!port_id) {
+-		fnic_update_mac(lport, fnic->ctlr.ctl_src_addr);
+-		fnic_set_eth_mode(fnic);
+-		return;
+-	}
+-
+-	if (fp) {
+-		mac = fr_cb(fp)->granted_mac;
+-		if (is_zero_ether_addr(mac)) {
+-			/* non-FIP - FLOGI already accepted - ignore return */
+-			fcoe_ctlr_recv_flogi(&fnic->ctlr, lport, fp);
+-		}
+-		fnic_update_mac(lport, mac);
+-	}
+-
+-	/* Change state to reflect transition to FC mode */
+-	spin_lock_irq(&fnic->fnic_lock);
+-	if (fnic->state == FNIC_IN_ETH_MODE || fnic->state == FNIC_IN_FC_MODE)
+-		fnic->state = FNIC_IN_ETH_TRANS_FC_MODE;
+-	else {
+-		FNIC_FCS_DBG(KERN_ERR, fnic->lport->host, fnic->fnic_num,
+-			     "Unexpected fnic state: %s processing FLOGI response",
+-				 fnic_state_to_str(fnic->state));
+-		spin_unlock_irq(&fnic->fnic_lock);
+-		return;
+-	}
+-	spin_unlock_irq(&fnic->fnic_lock);
+-
+-	/*
+-	 * Send FLOGI registration to firmware to set up FC mode.
+-	 * The new address will be set up when registration completes.
+-	 */
+-	ret = fnic_flogi_reg_handler(fnic, port_id);
+-
+-	if (ret < 0) {
+-		spin_lock_irq(&fnic->fnic_lock);
+-		if (fnic->state == FNIC_IN_ETH_TRANS_FC_MODE)
+-			fnic->state = FNIC_IN_ETH_MODE;
+-		spin_unlock_irq(&fnic->fnic_lock);
+-	}
+-}
+-
+ static void fnic_rq_cmpl_frame_recv(struct vnic_rq *rq, struct cq_desc
+ 				    *cq_desc, struct vnic_rq_buf *buf,
+ 				    int skipped __attribute__((unused)),
+ 				    void *opaque)
+ {
+ 	struct fnic *fnic = vnic_dev_priv(rq->vdev);
+-	struct sk_buff *skb;
+-	struct fc_frame *fp;
++	uint8_t *fp;
+ 	struct fnic_stats *fnic_stats = &fnic->fnic_stats;
++	unsigned int ethhdr_stripped;
+ 	u8 type, color, eop, sop, ingress_port, vlan_stripped;
+-	u8 fcoe = 0, fcoe_sof, fcoe_eof;
+-	u8 fcoe_fc_crc_ok = 1, fcoe_enc_error = 0;
+-	u8 tcp_udp_csum_ok, udp, tcp, ipv4_csum_ok;
+-	u8 ipv6, ipv4, ipv4_fragment, rss_type, csum_not_calc;
++	u8 fcoe_fnic_crc_ok = 1, fcoe_enc_error = 0;
+ 	u8 fcs_ok = 1, packet_error = 0;
+-	u16 q_number, completed_index, bytes_written = 0, vlan, checksum;
++	u16 q_number, completed_index, vlan;
+ 	u32 rss_hash;
++	u16 checksum;
++	u8 csum_not_calc, rss_type, ipv4, ipv6, ipv4_fragment;
++	u8 tcp_udp_csum_ok, udp, tcp, ipv4_csum_ok;
++	u8 fcoe = 0, fcoe_sof, fcoe_eof;
+ 	u16 exchange_id, tmpl;
+ 	u8 sof = 0;
+ 	u8 eof = 0;
+ 	u32 fcp_bytes_written = 0;
++	u16 enet_bytes_written = 0;
++	u32 bytes_written = 0;
+ 	unsigned long flags;
++	struct fnic_frame_list *frame_elem = NULL;
++	struct fnic_eth_hdr_s *eh;
+ 
+ 	dma_unmap_single(&fnic->pdev->dev, buf->dma_addr, buf->len,
+-			 DMA_FROM_DEVICE);
+-	skb = buf->os_buf;
+-	fp = (struct fc_frame *)skb;
++					 DMA_FROM_DEVICE);
++	fp = (uint8_t *) buf->os_buf;
+ 	buf->os_buf = NULL;
+ 
+ 	cq_desc_dec(cq_desc, &type, &color, &q_number, &completed_index);
+ 	if (type == CQ_DESC_TYPE_RQ_FCP) {
+-		cq_fcp_rq_desc_dec((struct cq_fcp_rq_desc *)cq_desc,
+-				   &type, &color, &q_number, &completed_index,
+-				   &eop, &sop, &fcoe_fc_crc_ok, &exchange_id,
+-				   &tmpl, &fcp_bytes_written, &sof, &eof,
+-				   &ingress_port, &packet_error,
+-				   &fcoe_enc_error, &fcs_ok, &vlan_stripped,
+-				   &vlan);
+-		skb_trim(skb, fcp_bytes_written);
+-		fr_sof(fp) = sof;
+-		fr_eof(fp) = eof;
+-
++		cq_fcp_rq_desc_dec((struct cq_fcp_rq_desc *) cq_desc, &type,
++						   &color, &q_number, &completed_index, &eop, &sop,
++						   &fcoe_fnic_crc_ok, &exchange_id, &tmpl,
++						   &fcp_bytes_written, &sof, &eof, &ingress_port,
++						   &packet_error, &fcoe_enc_error, &fcs_ok,
++						   &vlan_stripped, &vlan);
++		ethhdr_stripped = 1;
++		bytes_written = fcp_bytes_written;
+ 	} else if (type == CQ_DESC_TYPE_RQ_ENET) {
+-		cq_enet_rq_desc_dec((struct cq_enet_rq_desc *)cq_desc,
+-				    &type, &color, &q_number, &completed_index,
+-				    &ingress_port, &fcoe, &eop, &sop,
+-				    &rss_type, &csum_not_calc, &rss_hash,
+-				    &bytes_written, &packet_error,
+-				    &vlan_stripped, &vlan, &checksum,
+-				    &fcoe_sof, &fcoe_fc_crc_ok,
+-				    &fcoe_enc_error, &fcoe_eof,
+-				    &tcp_udp_csum_ok, &udp, &tcp,
+-				    &ipv4_csum_ok, &ipv6, &ipv4,
+-				    &ipv4_fragment, &fcs_ok);
+-		skb_trim(skb, bytes_written);
++		cq_enet_rq_desc_dec((struct cq_enet_rq_desc *) cq_desc, &type,
++					&color, &q_number, &completed_index,
++					&ingress_port, &fcoe, &eop, &sop, &rss_type,
++					&csum_not_calc, &rss_hash, &enet_bytes_written,
++					&packet_error, &vlan_stripped, &vlan,
++					&checksum, &fcoe_sof, &fcoe_fnic_crc_ok,
++					&fcoe_enc_error, &fcoe_eof, &tcp_udp_csum_ok,
++					&udp, &tcp, &ipv4_csum_ok, &ipv6, &ipv4,
++					&ipv4_fragment, &fcs_ok);
++
++		ethhdr_stripped = 0;
++		bytes_written = enet_bytes_written;
++
+ 		if (!fcs_ok) {
+ 			atomic64_inc(&fnic_stats->misc_stats.frame_errors);
+-			FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, fnic->fnic_num,
+-				     "fcs error.  dropping packet.\n");
++			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++						 "fnic 0x%p fcs error.  Dropping packet.\n", fnic);
+ 			goto drop;
+ 		}
+-		if (fnic_import_rq_eth_pkt(fnic, skb))
+-			return;
++		eh = (struct fnic_eth_hdr_s *) fp;
++		if (eh->ether_type != htons(ETH_TYPE_FCOE)) {
++
++			if (fnic_import_rq_eth_pkt(fnic, fp))
++				return;
+ 
++			FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++							 "Dropping ether_type 0x%x",
++							 ntohs(eh->ether_type));
++			goto drop;
++		}
+ 	} else {
+-		/* wrong CQ type*/
+-		shost_printk(KERN_ERR, fnic->lport->host,
+-			     "fnic rq_cmpl wrong cq type x%x\n", type);
++		/* wrong CQ type */
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "fnic rq_cmpl wrong cq type x%x\n", type);
+ 		goto drop;
+ 	}
+ 
+-	if (!fcs_ok || packet_error || !fcoe_fc_crc_ok || fcoe_enc_error) {
++	if (!fcs_ok || packet_error || !fcoe_fnic_crc_ok || fcoe_enc_error) {
+ 		atomic64_inc(&fnic_stats->misc_stats.frame_errors);
+-		FNIC_FCS_DBG(KERN_DEBUG, fnic->lport->host, fnic->fnic_num,
+-			     "fnic rq_cmpl fcoe x%x fcsok x%x"
+-			     " pkterr x%x fcoe_fc_crc_ok x%x, fcoe_enc_err"
+-			     " x%x\n",
+-			     fcoe, fcs_ok, packet_error,
+-			     fcoe_fc_crc_ok, fcoe_enc_error);
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++			 "fcoe %x fcsok %x pkterr %x ffco %x fee %x\n",
++			 fcoe, fcs_ok, packet_error,
++			 fcoe_fnic_crc_ok, fcoe_enc_error);
+ 		goto drop;
+ 	}
+ 
+ 	spin_lock_irqsave(&fnic->fnic_lock, flags);
+ 	if (fnic->stop_rx_link_events) {
+ 		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "fnic->stop_rx_link_events: %d\n",
++					 fnic->stop_rx_link_events);
+ 		goto drop;
+ 	}
+-	fr_dev(fp) = fnic->lport;
++
+ 	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-	if ((fnic_fc_trace_set_data(fnic->lport->host->host_no, FNIC_FC_RECV,
+-					(char *)skb->data, skb->len)) != 0) {
+-		printk(KERN_ERR "fnic ctlr frame trace error!!!");
++
++	frame_elem =
++		kzalloc(sizeof(struct fnic_frame_list),
++						   GFP_ATOMIC);
++	if (!frame_elem) {
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "Unable to alloc frame element of size: %ld\n",
++					 sizeof(struct fnic_frame_list));
++		goto drop;
+ 	}
++	frame_elem->fp = fp;
++	frame_elem->rx_ethhdr_stripped = ethhdr_stripped;
++	frame_elem->frame_len = bytes_written;
+ 
+-	skb_queue_tail(&fnic->frame_queue, skb);
+ 	queue_work(fnic_event_queue, &fnic->frame_work);
+-
+ 	return;
++
+ drop:
+-	dev_kfree_skb_irq(skb);
++	kfree(fp);
+ }
+ 
+ static int fnic_rq_cmpl_handler_cont(struct vnic_dev *vdev,
+@@ -1089,62 +592,6 @@ void fnic_free_rq_buf(struct vnic_rq *rq, struct vnic_rq_buf *buf)
+ 	buf->os_buf = NULL;
+ }
+ 
+-/**
+- * fnic_eth_send() - Send Ethernet frame.
+- * @fip:	fcoe_ctlr instance.
+- * @skb:	Ethernet Frame, FIP, without VLAN encapsulation.
+- */
+-void fnic_eth_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
+-{
+-	struct fnic *fnic = fnic_from_ctlr(fip);
+-	struct vnic_wq *wq = &fnic->wq[0];
+-	dma_addr_t pa;
+-	struct ethhdr *eth_hdr;
+-	struct vlan_ethhdr *vlan_hdr;
+-	unsigned long flags;
+-
+-	if (!fnic->vlan_hw_insert) {
+-		eth_hdr = (struct ethhdr *)skb_mac_header(skb);
+-		vlan_hdr = skb_push(skb, sizeof(*vlan_hdr) - sizeof(*eth_hdr));
+-		memcpy(vlan_hdr, eth_hdr, 2 * ETH_ALEN);
+-		vlan_hdr->h_vlan_proto = htons(ETH_P_8021Q);
+-		vlan_hdr->h_vlan_encapsulated_proto = eth_hdr->h_proto;
+-		vlan_hdr->h_vlan_TCI = htons(fnic->vlan_id);
+-		if ((fnic_fc_trace_set_data(fnic->lport->host->host_no,
+-			FNIC_FC_SEND|0x80, (char *)eth_hdr, skb->len)) != 0) {
+-			printk(KERN_ERR "fnic ctlr frame trace error!!!");
+-		}
+-	} else {
+-		if ((fnic_fc_trace_set_data(fnic->lport->host->host_no,
+-			FNIC_FC_SEND|0x80, (char *)skb->data, skb->len)) != 0) {
+-			printk(KERN_ERR "fnic ctlr frame trace error!!!");
+-		}
+-	}
+-
+-	pa = dma_map_single(&fnic->pdev->dev, skb->data, skb->len,
+-			DMA_TO_DEVICE);
+-	if (dma_mapping_error(&fnic->pdev->dev, pa)) {
+-		printk(KERN_ERR "DMA mapping failed\n");
+-		goto free_skb;
+-	}
+-
+-	spin_lock_irqsave(&fnic->wq_lock[0], flags);
+-	if (!vnic_wq_desc_avail(wq))
+-		goto irq_restore;
+-
+-	fnic_queue_wq_eth_desc(wq, skb, pa, skb->len,
+-			       0 /* hw inserts cos value */,
+-			       fnic->vlan_id, 1);
+-	spin_unlock_irqrestore(&fnic->wq_lock[0], flags);
+-	return;
+-
+-irq_restore:
+-	spin_unlock_irqrestore(&fnic->wq_lock[0], flags);
+-	dma_unmap_single(&fnic->pdev->dev, pa, skb->len, DMA_TO_DEVICE);
+-free_skb:
+-	kfree_skb(skb);
+-}
+-
+ /*
+  * Send FC frame.
+  */
+@@ -1242,6 +689,25 @@ fdls_send_fcoe_frame(struct fnic *fnic, void *payload, int payload_sz,
+ 	return ret;
+ }
+ 
++static int
++fdls_send_fip_frame(struct fnic *fnic, void *payload, int payload_sz)
++{
++	uint8_t *frame;
++	int max_framesz = FNIC_FCOE_FRAME_MAXSZ;
++	int ret;
++
++	frame = kzalloc(max_framesz, GFP_ATOMIC);
++	if (!frame) {
++		FNIC_FCS_DBG(KERN_INFO, fnic->lport->host, fnic->fnic_num,
++					 "fnic 0x%p Failed to allocate fip frame\n", fnic);
++		return -1;
++	}
++	memcpy(frame, (uint8_t *) payload, payload_sz);
++	ret = fnic_send_frame(fnic, frame, payload_sz);
++
++	return ret;
++}
++
+ void fnic_send_fcoe_frame(struct fnic_iport_s *iport, void *payload,
+ 						 int payload_sz)
+ {
+@@ -1263,6 +729,18 @@ void fnic_send_fcoe_frame(struct fnic_iport_s *iport, void *payload,
+ 	fdls_send_fcoe_frame(fnic, payload, payload_sz, srcmac, dstmac);
+ }
+ 
++int
++fnic_send_fip_frame(struct fnic_iport_s *iport, void *payload,
++					int payload_sz)
++{
++	struct fnic *fnic = iport->fnic;
++
++	if (fnic->in_remove)
++		return -1;
++
++	return fdls_send_fip_frame(fnic, payload, payload_sz);
++}
++
+ /**
+  * fnic_flush_tx() - send queued frames.
+  * @work: pointer to work element
+@@ -1336,44 +814,6 @@ fnic_fdls_register_portid(struct fnic_iport_s *iport, u32 port_id,
+ 	return 0;
+ }
+ 
+-/**
+- * fnic_set_eth_mode() - put fnic into ethernet mode.
+- * @fnic: fnic device
+- *
+- * Called without fnic lock held.
+- */
+-static void fnic_set_eth_mode(struct fnic *fnic)
+-{
+-	unsigned long flags;
+-	enum fnic_state old_state;
+-	int ret;
+-
+-	spin_lock_irqsave(&fnic->fnic_lock, flags);
+-again:
+-	old_state = fnic->state;
+-	switch (old_state) {
+-	case FNIC_IN_FC_MODE:
+-	case FNIC_IN_ETH_TRANS_FC_MODE:
+-	default:
+-		fnic->state = FNIC_IN_FC_TRANS_ETH_MODE;
+-		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-
+-		ret = fnic_fw_reset_handler(fnic);
+-
+-		spin_lock_irqsave(&fnic->fnic_lock, flags);
+-		if (fnic->state != FNIC_IN_FC_TRANS_ETH_MODE)
+-			goto again;
+-		if (ret)
+-			fnic->state = old_state;
+-		break;
+-
+-	case FNIC_IN_FC_TRANS_ETH_MODE:
+-	case FNIC_IN_ETH_MODE:
+-		break;
+-	}
+-	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+-}
+-
+ void fnic_free_txq(struct list_head *head)
+ {
+ 	struct fnic_frame_list *cur_frame, *next;
+@@ -1443,24 +883,3 @@ void fnic_free_wq_buf(struct vnic_wq *wq, struct vnic_wq_buf *buf)
+ 	buf->os_buf = NULL;
+ }
+ 
+-void fnic_fcoe_reset_vlans(struct fnic *fnic)
+-{
+-	unsigned long flags;
+-	struct fcoe_vlan *vlan;
+-	struct fcoe_vlan *next;
+-
+-	/*
+-	 * indicate a link down to fcoe so that all fcf's are free'd
+-	 * might not be required since we did this before sending vlan
+-	 * discovery request
+-	 */
+-	spin_lock_irqsave(&fnic->vlans_lock, flags);
+-	if (!list_empty(&fnic->vlans)) {
+-		list_for_each_entry_safe(vlan, next, &fnic->vlans, list) {
+-			list_del(&vlan->list);
+-			kfree(vlan);
+-		}
+-	}
+-	spin_unlock_irqrestore(&fnic->vlans_lock, flags);
+-}
+-
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index b0ddb7a816f8..1e3cdc2758fd 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -85,12 +85,13 @@ module_param(fnic_max_qdepth, uint, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(fnic_max_qdepth, "Queue depth to report for each LUN");
+ 
+ static struct libfc_function_template fnic_transport_template = {
+-	.lport_set_port_id = fnic_set_port_id,
+ 	.fcp_abort_io = fnic_empty_scsi_cleanup,
+ 	.fcp_cleanup = fnic_empty_scsi_cleanup,
+ 	.exch_mgr_reset = fnic_exch_mgr_reset
+ };
+ 
++struct workqueue_struct *fnic_fip_queue;
++
+ static int fnic_slave_alloc(struct scsi_device *sdev)
+ {
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+@@ -413,13 +414,6 @@ static void fnic_notify_timer(struct timer_list *t)
+ 		  round_jiffies(jiffies + FNIC_NOTIFY_TIMER_PERIOD));
+ }
+ 
+-static void fnic_fip_notify_timer(struct timer_list *t)
+-{
+-	struct fnic *fnic = from_timer(fnic, t, fip_timer);
+-
+-	/* Placeholder function */
+-}
+-
+ static void fnic_notify_timer_start(struct fnic *fnic)
+ {
+ 	switch (vnic_dev_get_intr_mode(fnic->vdev)) {
+@@ -531,17 +525,6 @@ static void fnic_iounmap(struct fnic *fnic)
+ 		iounmap(fnic->bar0.vaddr);
+ }
+ 
+-/**
+- * fnic_get_mac() - get assigned data MAC address for FIP code.
+- * @lport: 	local port.
+- */
+-static u8 *fnic_get_mac(struct fc_lport *lport)
+-{
+-	struct fnic *fnic = lport_priv(lport);
+-
+-	return fnic->data_src_addr;
+-}
+-
+ static void fnic_set_vlan(struct fnic *fnic, u16 vlan_id)
+ {
+ 	vnic_dev_set_default_vlan(fnic->vdev, vlan_id);
+@@ -814,26 +797,23 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	fnic->vlan_hw_insert = 1;
+ 	fnic->vlan_id = 0;
+ 
+-	/* Initialize the FIP fcoe_ctrl struct */
+-	fnic->ctlr.send = fnic_eth_send;
+-	fnic->ctlr.update_mac = fnic_update_mac;
+-	fnic->ctlr.get_src_addr = fnic_get_mac;
+ 	if (fnic->config.flags & VFCF_FIP_CAPABLE) {
+ 		dev_info(&fnic->pdev->dev, "firmware supports FIP\n");
+ 		/* enable directed and multicast */
+ 		vnic_dev_packet_filter(fnic->vdev, 1, 1, 0, 0, 0);
+ 		vnic_dev_add_addr(fnic->vdev, FIP_ALL_ENODE_MACS);
+ 		vnic_dev_add_addr(fnic->vdev, fnic->ctlr.ctl_src_addr);
+-		fnic->set_vlan = fnic_set_vlan;
+ 		fcoe_ctlr_init(&fnic->ctlr, FIP_MODE_AUTO);
+-		timer_setup(&fnic->fip_timer, fnic_fip_notify_timer, 0);
+ 		spin_lock_init(&fnic->vlans_lock);
+ 		INIT_WORK(&fnic->fip_frame_work, fnic_handle_fip_frame);
+-		INIT_WORK(&fnic->event_work, fnic_handle_event);
+ 		INIT_WORK(&fnic->flush_work, fnic_flush_tx);
+-		skb_queue_head_init(&fnic->fip_frame_queue);
+-		INIT_LIST_HEAD(&fnic->evlist);
+-		INIT_LIST_HEAD(&fnic->vlans);
++		INIT_LIST_HEAD(&fnic->fip_frame_queue);
++		INIT_LIST_HEAD(&fnic->vlan_list);
++		timer_setup(&fnic->retry_fip_timer, fnic_handle_fip_timer, 0);
++		timer_setup(&fnic->fcs_ka_timer, fnic_handle_fcs_ka_timer, 0);
++		timer_setup(&fnic->enode_ka_timer, fnic_handle_enode_ka_timer, 0);
++		timer_setup(&fnic->vn_ka_timer, fnic_handle_vn_ka_timer, 0);
++		fnic->set_vlan = fnic_set_vlan;
+ 	} else {
+ 		dev_info(&fnic->pdev->dev, "firmware uses non-FIP mode\n");
+ 		fcoe_ctlr_init(&fnic->ctlr, FIP_MODE_NON_FIP);
+@@ -1030,10 +1010,13 @@ static void fnic_remove(struct pci_dev *pdev)
+ 	fnic_free_txq(&fnic->tx_queue);
+ 
+ 	if (fnic->config.flags & VFCF_FIP_CAPABLE) {
+-		del_timer_sync(&fnic->fip_timer);
+-		skb_queue_purge(&fnic->fip_frame_queue);
++		del_timer_sync(&fnic->retry_fip_timer);
++		del_timer_sync(&fnic->fcs_ka_timer);
++		del_timer_sync(&fnic->enode_ka_timer);
++		del_timer_sync(&fnic->vn_ka_timer);
++
++		fnic_free_txq(&fnic->fip_frame_queue);
+ 		fnic_fcoe_reset_vlans(fnic);
+-		fnic_fcoe_evlist_free(fnic);
+ 	}
+ 
+ 	if ((fnic_fdmi_support == 1) && (fnic->iport.fabric.fdmi_pending > 0))
 -- 
 2.31.1
 
