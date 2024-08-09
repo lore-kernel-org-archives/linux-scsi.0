@@ -1,76 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C901D51C
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Aug 2024 02:30:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D5A2179BF
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Aug 2024 02:56:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723170639; cv=none; b=KJ7F26n2WXQbGxKkJv2+FryjrLoDMzl6MGoJ99aHqVoR2zbPK/6rwRhWd+I7IiEHMhaGtU0Qx//7UJh4+m9cVlJ3lii/2mVG8LadSL7I6KVEhSfrF+lSS2JR+gNvSdBAmrL6hNo95EbXNo7hTZ0D6VdGNFONCCD0OeGtvExI9gw=
+	t=1723172177; cv=none; b=KEYUhOckRKtHLjKePDPlWbE/L1iPjglPVpmFetWT8xvL4F1n4P/f13g2xd2J0B3C9LUwf3hW6ovFxGf8wSdgAQtzax4pEz+g+NgIb3DuRE96oz0i0k4nLu8JO+WsqjeIYoPFU75XvAqLZQONiYHEBlE/gTx677QU/ropeEWi6j4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723170639; c=relaxed/simple;
-	bh=wAxGCAObi0D73h7OnAnFJXquOuhL+hU0PZ4g6kmWJPg=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=gbQsSYsEVkw/l6qopJEyWzOD1+ms5sKvQNhOedwVtwMjv2fzpNYSSH+vDJBT2rAncRozG2kWZmrMlaQs4oq/tk+o6wms99MGfxPj3bKueb7dXXGK73a4rBdVB+7T/LrpP0QOFE3mu9BGAvmle6UMROlCp0fP2DuO4WLEhYGDBhs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fNtfvHwg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723172177; c=relaxed/simple;
+	bh=/qRRkUiqj1//hUa3ya9ituzSi3EsSA8P8ryhC+cHpFU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NPxzTMy6T7Nw4gDca+m9WOJ5Oh1XbQRG/g+JV/eDKGxdMcTnIWkGXN+dqvF3SIzLAUnf0B8fFXLiwF221lDpnXHYUjyU16LLlzZxAdhSVC2YabPRfK/NFLGnGKGlYZjfeON4ssxJHVCeJ9ThFvI/aoDvNLQ83kGsE40Jn3nc1/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jqYsE2uH; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fNtfvHwg"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 1F568C4AF0C
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Aug 2024 02:30:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723170639;
-	bh=wAxGCAObi0D73h7OnAnFJXquOuhL+hU0PZ4g6kmWJPg=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=fNtfvHwg4Gn+vvV1QK666dRhegEygVhrav/GvMxOhfJhBsiqzF5vPK3hxowLH6gOC
-	 78v3nOCvNZ5FUaY5z/xGNDVFuYwrTFayBMKVcpSCxjXf/8sSdrVyLNyQdo6u38Vuly
-	 ACyWgTHLddsvAhl6FXY0DTeswODmR1RxhsalNk666B1NXifS4E2NmY+eGbXAitLDsv
-	 TgiZH8rO61NdWKodQSRMUPfEhiHB6nWIwFfGJ1SUtMnHAki3oj2M2PyF4/YJsDru5t
-	 yBZJwfs/PaWD+r5QeZq9Kfm0TJquYv6dpGcy50YtIFJ7yew+JwmHcNloniL+A32/I/
-	 35sgswIaNWOvg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 0DC59C53BBF; Fri,  9 Aug 2024 02:30:39 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 219128] lpfc driver reports failed messages
-Date: Fri, 09 Aug 2024 02:30:38 +0000
-X-Bugzilla-Reason: AssignedTo
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: None
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: SCSI
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: lixc17@lenovo.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: justin.tee@broadcom.com
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: assigned_to
-Message-ID: <bug-219128-11613-pbQwiVjFPs@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-219128-11613@https.bugzilla.kernel.org/>
-References: <bug-219128-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jqYsE2uH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1723172176; x=1754708176;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=/qRRkUiqj1//hUa3ya9ituzSi3EsSA8P8ryhC+cHpFU=;
+  b=jqYsE2uHvwpwNmxyst5dgdgi9A6LsRNlhifzv4gVFE/egEHErt9I5Dqh
+   lWcu6UkQ3cArZpQeY9+Lm9bf8JQ1kcJDJX1GPSYLmlxPAsrCTet7MqVYg
+   bEP8SEs8V1cVinDRiUWHUXLYBkP3ZIL8beSgJWTtYk3G494FC4B5JNHzq
+   bNZ1iJvhpkBuVavSpxdNoP61Kmy7XgTx2wP+bYEqir3pIImWFpnxbeMPx
+   Ar9h8NzBa753Zo+NEb+i1LFCSmQIUP4f+MVz5+ERDwtIofHeBSSqw4u53
+   XLcBJqQADq98gzNqOYRHxjRSJx5gh0rEMMgS0atFhhL5Jlb8SMitQgzL5
+   Q==;
+X-CSE-ConnectionGUID: roH2S93RQ4yRTLBbaAC3Cw==
+X-CSE-MsgGUID: LXxv6GoETwmiX3vY+0qt1A==
+X-IronPort-AV: E=McAfee;i="6700,10204,11158"; a="21505097"
+X-IronPort-AV: E=Sophos;i="6.09,274,1716274800"; 
+   d="scan'208";a="21505097"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Aug 2024 19:56:15 -0700
+X-CSE-ConnectionGUID: 7oe86GqCSsSngVK2rTv33Q==
+X-CSE-MsgGUID: FBL2AvFtTPe0c2tcTliZEw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,274,1716274800"; 
+   d="scan'208";a="57990338"
+Received: from sni1-test3.itwn.intel.com ([10.225.75.78])
+  by orviesa007.jf.intel.com with ESMTP; 08 Aug 2024 19:56:13 -0700
+From: Super Ni <super.ni@intel.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	bvanassche@acm.org,
+	manivannan.sadhasivam@linaro.org,
+	beanhuo@micron.com,
+	peter.wang@mediatek.com,
+	avri.altman@wdc.com,
+	cw9316.lee@samsung.com,
+	super.ni@intel.com
+Subject: [PATCH] scsi: ufs: add missing macro for the UFSHCI register map
+Date: Fri,  9 Aug 2024 10:56:10 +0800
+Message-Id: <20240809025610.1000310-1-super.ni@intel.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D219128
+Add macro for register bit listed in JESD223C (v2.1).
 
-Xavier (lixc17@lenovo.com) changed:
+For completeness all registers specified in the JEDEC doc should be
+included here.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-           Assignee|linux-scsi@vger.kernel.org  |justin.tee@broadcom.com
+Signed-off-by: Super Ni <super.ni@intel.com>
+---
+ include/ufs/ufshci.h | 1 +
+ 1 file changed, 1 insertion(+)
 
---=20
-You may reply to this email to add a comment.
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index 38fe97971a65..534fbb8988e2 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -43,6 +43,7 @@ enum {
+ 	REG_UTP_TRANSFER_REQ_DOOR_BELL		= 0x58,
+ 	REG_UTP_TRANSFER_REQ_LIST_CLEAR		= 0x5C,
+ 	REG_UTP_TRANSFER_REQ_LIST_RUN_STOP	= 0x60,
++	REG_UTP_TRANSFER_REQ_LIST_COMPLETION	= 0x64,
+ 	REG_UTP_TASK_REQ_LIST_BASE_L		= 0x70,
+ 	REG_UTP_TASK_REQ_LIST_BASE_H		= 0x74,
+ 	REG_UTP_TASK_REQ_DOOR_BELL		= 0x78,
+-- 
+2.34.1
 
-You are receiving this mail because:
-You are the assignee for the bug.=
