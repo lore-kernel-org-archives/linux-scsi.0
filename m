@@ -1,48 +1,48 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B34FC13AA38;
-	Fri,  9 Aug 2024 19:06:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EBB215ECC3;
+	Fri,  9 Aug 2024 19:15:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723230396; cv=none; b=smwZa0Hbmsbg9QR1jJZBrxPafMRx2zq9yTHKGGNCu3zG+K9FHDqHyUz81fow9yQgLDaiU08FcRxmo0tPLbb/x/PM2+HFto+A4JwgQTZYvOqoU/XJvUKW74nzL2C5LcoCf6IJnvQrps42y+bwqCtpxb7gvSJ0OxfViMqoyJ8bXEA=
+	t=1723230903; cv=none; b=sbw/of+xseElN1dNrymgkBrqf1c/yZZKVfwHk5xdJbUiCkpJkWdAGQ6XlCGm2Khep6w9CyjBXwoElC3bPOlmoEYubr6JgAMQ5osrh54KV3WXvt0ZVqnTtNx7SlySPeMn6SmonbEficIeURD7Ges5n6eBq30Ac31QrmHJyjUocuA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723230396; c=relaxed/simple;
-	bh=GDeSvflfgNP53Bnn6NwxyLup2T5xICejTY4xxMRsW7w=;
+	s=arc-20240116; t=1723230903; c=relaxed/simple;
+	bh=DibLUEnTsdSBZPfJSqD2frndtrOkbATuQ+3Wb8lPRZk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aElxyq5AHAPT8Y1/pX9fIjkpy9FbVFeTNfS9Z++XWwec+x4yceTJc9gqpmw6AP901aCCqzo/OdiwVZxK/qMt4iaIsSbPubiUJmf2ThSZFfdo1skW2O8yVaEBFJTsHc9AivBH/cRIpWsuxwnr+y/3mNbJzvIDQDH/nN4v57Q53CA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3wXsC+yv; arc=none smtp.client-ip=199.89.1.12
+	 In-Reply-To:Content-Type; b=ftLOdoq8FPXyqZltwmINcRgRggYoBWA5zoQW9HxFuLGlbkAEJMi8yTs/5ZX5FqiMqybJGHNdsg7l21X0uGPuS+jDXaNN+uZvbicIv42bCURXGQzIo1IivPewKiswuvK2W0voot4S55O1dOef1bAVO/szB0ZQmBwsRhlsr0pTm1A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=KLQjzp7A; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3wXsC+yv"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="KLQjzp7A"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WgYKw2KlczlgTGW;
-	Fri,  9 Aug 2024 19:06:28 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WgYWn44Lxz6ClY8x;
+	Fri,  9 Aug 2024 19:15:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1723230383; x=1725822384; bh=DW9duP/WSzGKgw6N8JbyhvDM
-	ENJtltoq9LzdIzH07QI=; b=3wXsC+yvI86+JvuSDvFMn01MUZMGzMz2kM9Uk5Eh
-	RCKjdsUJIDoh75MzaP+PnO72nSGuFBR/O2RaYlKMy9ZFQmPqH+GDQliUKFyLSCCq
-	7xK11ehoXOSd4+d1T/hUaBGrAMYbbem0X55iR40Gd5MIryd6ux678DoaWO0PCd6D
-	848CscKTSWYB+QINptqqSnN8T7mph67+mQRJu+Y4ww0FppF9IX3CgiMgZouLlmZe
-	pVa13dekFI6+puujw35+mayzi01rk7V4pwQoOHhO+5CGevKkxOBNG5UUyVQYNtE8
-	x4k7rjwOYh9/Zc7ff2AwnXPd3GB0aSYmcS9DkasBob2uXw==
+	 s=mr01; t=1723230898; x=1725822899; bh=C3Y7RyE6Umt352oYn9af7CF/
+	QQU4tkrbbVojV42x/og=; b=KLQjzp7A+axw0CZAm/PhGhXC1O+NKGGnC4r8R5D2
+	SspmMv2NjmHKq3fGUcl+PaTA4ncys2YJnhI7mEXKc04wUqY4tL7AP0fISY6zeGyq
+	3wpi/jo+QnyCe28wzQrgfYzgQ3pXad1mkyJGw0A+q3L5WuZIbV7zSL9jug6zg+CY
+	7Rv9mPCg/YkSzga7yU0VAagBYo7lOkibtEtShKP1KmsH1dJryW354ee6YP2vkAPD
+	C9jnQf1qfIv9bLI+c+9V8gXB7g529SnG0fgUqb7p4NGV+Huv8UBpSErzyMi3w5j9
+	xHs3VzOSmKLADWaY0aXqs1ITmp4FD/uun6tvHG3DLz7bjw==
 X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id aW_A8ey1jKET; Fri,  9 Aug 2024 19:06:23 +0000 (UTC)
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 5e5aGB_-gQWs; Fri,  9 Aug 2024 19:14:58 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WgYKl5vvLzlgVnF;
-	Fri,  9 Aug 2024 19:06:19 +0000 (UTC)
-Message-ID: <203bf2c3-e55d-4b1e-9ef1-a7d73401ce52@acm.org>
-Date: Fri, 9 Aug 2024 12:06:18 -0700
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WgYWh1VqSz6ClY8s;
+	Fri,  9 Aug 2024 19:14:55 +0000 (UTC)
+Message-ID: <7e6669da-d723-4eb4-8849-77e4deed5ffa@acm.org>
+Date: Fri, 9 Aug 2024 12:14:54 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,65 +50,64 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] scsi: ufs: rockchip: init support for UFS
-To: Shawn Lin <shawn.lin@rock-chips.com>, Rob Herring <robh+dt@kernel.org>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Heiko Stuebner <heiko@sntech.de>, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@wdc.com>, YiFeng Zhao <zyf@rock-chips.com>,
- Liang Chen <cl@rock-chips.com>, linux-scsi@vger.kernel.org,
- linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
- devicetree@vger.kernel.org
-References: <1723089163-28983-1-git-send-email-shawn.lin@rock-chips.com>
- <1723089163-28983-4-git-send-email-shawn.lin@rock-chips.com>
+Subject: Re: [PATCH] scsi: sd: retry command SYNC CACHE if format in progress
+To: Yihang Li <liyihang9@huawei.com>, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ prime.zeng@huawei.com, linuxarm@huawei.com
+References: <20240808021719.4167352-1-liyihang9@huawei.com>
+ <1cd0b145-431a-4d9f-979f-04d4063eeda8@acm.org>
+ <e6b05d46-7acd-8364-2826-c14e342f8e2d@huawei.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <1723089163-28983-4-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <e6b05d46-7acd-8364-2826-c14e342f8e2d@huawei.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 8/7/24 8:52 PM, Shawn Lin wrote:
-> RK3576 contains a UFS controller, add init support fot it.
-					^^^^	     ^^^
-                                         initial      for
+On 8/8/24 8:44 PM, Yihang Li wrote:
+> On 2024/8/9 3:09, Bart Van Assche wrote:
+>> On 8/7/24 7:17 PM, Yihang Li wrote:
+>>> If formatting a suspended disk (such as formatting with different DIF
+>>> type), the SYNC CACHE command will fail because the disk is in the
+>>> formatting process, which will cause the runtime_status of the disk to
+>>> error and it is difficult for user to recover it.
+>>>
+>>> To solve the issue, retry the command until format command is finished.
+>>
+>> How is the format command submitted to the SCSI disk? Is that command
+>> perhaps submitted as a SCSI pass-through command (SG_IO ioctl)?
+>>
+> 
+> When formatting a suspended disk, the disk will be resuming first,
+> and then the format command will submit to the disk through SG_IO ioctl.
+> 
+> When the disk is processing the formatting command, the system does not
+> submit other commands to the disk. Therefore, the system attempts to suspend
+> the disk again and sends the SYNC CACHE command. However, the SYNC CACHE
+> command fails because the disk is being formatted.
+> 
+> Error info like:
+> 
+> [  669.925325] sd 6:0:6:0: [sdg] Synchronizing SCSI cache
+> [  670.202371] sd 6:0:6:0: [sdg] Synchronize Cache(10) failed: Result: hostbyte=0x00 driverbyte=DRIVER_OK
+> [  670.216300] sd 6:0:6:0: [sdg] Sense Key : 0x2 [current]
+> [  670.221860] sd 6:0:6:0: [sdg] ASC=0x4 ASCQ=0x4
 
-Again a very short patch description. What is "RK3576"? Please explain.
+Please consider integrating this information in the patch description.
 
-> +config SCSI_UFS_ROCKCHIP
-> +	tristate "Rockchip specific hooks to UFS controller platform driver"
+>> Should the sd driver perhaps be unbound while the format command is in
+>> progress?
+>>
+> 
+> I do not have any suggestions for this yet. I don't know how to unbound driver
+> when executing the format command and bound driver after the command is executed.
+> 
+> If you have any suggestions, please let me know.
 
-A better description would be: "Rockchip UFS host controller driver"
-
-> +#include "ufshcd-dwc.h"
-
-No, you should not include the ufshcd-dwc.h header file. That is a 
-header file for the Designware UFS host controller.
-
-> +	reset_control_assert(host->rst);
-> +	udelay(1);
-> +	reset_control_deassert(host->rst);
-
-Why udelay() instead of usleep_range()?
-
-> +static int ufs_rockchip_device_reset(struct ufs_hba *hba)
-> +{
-> +	struct ufs_rockchip_host *host = ufshcd_get_variant(hba);
-> +
-> +	if (!host->rst_gpio)
-> +		return -EOPNOTSUPP;
-> +
-> +	gpiod_set_value_cansleep(host->rst_gpio, 0);
-> +	udelay(20);
-> +
-> +	gpiod_set_value_cansleep(host->rst_gpio, 1);
-> +	udelay(20);
-> +
-> +	return 0;
-> +}
-
-Same question here: why udelay() instead of usleep_range()?
+It seems like the PCI core supports binding and unbinding through sysfs
+but the SCSI core not. So it's probably easier to add support for
+ASC/ASCQ 04h / 04h rather than to add bind/unbind support to the SCSI
+core.
 
 Thanks,
 
