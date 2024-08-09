@@ -1,100 +1,84 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4A1B15A876
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Aug 2024 19:31:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED8BC101E6
+	for <linux-scsi@vger.kernel.org>; Fri,  9 Aug 2024 19:36:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723231906; cv=none; b=sLvTBdRpGln2INkTOFtemYUq2H9AFfNaUE0DZv89gjG6W1+pCrDmEm1efU11u6bsBqHMBNbT6H3TdXnyzqJFObOyUXnAAUrlqSaJCWDDwDfS46DVTYuqcB2exvSQyIFsSwTJj3wBML4w9/c9eXxzrgiitH5jfhFH0Kc+FyAmd58=
+	t=1723232166; cv=none; b=Ah4RlryAsuRsmnEzG0Pf7v7R4211p7XmhKS1fv/KRr8J/xzSe4VMZ2cb7NkbZZng0vASJHvy/RnTihdoN/6HJikIQT5EhZcx07QWY5TS7k635RUTwxrTBV2b0ENfWkWTLQu5l7G0okmHTa3LjUCtwtx7lXPHyyXHvBV7Nv6dU/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723231906; c=relaxed/simple;
-	bh=VF6JHaISikOJQOm5dviStZ8StCNHIRdZoEIPaslCmHk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pzlar1Q2Mregoezpwcdo4MRVu8wciYK0b8E+EYFbloecPDu8qAoSDab0/coPQ2sXy0yZUph9KDzYCPslIGylkHAWLzCMJ2YuRaSP7zto4jne6BHkXhweP7PXqQp2U74+ibPJamG+Y7P8TQ0oWOhbXrNdfVyIMSXKuSMrw6gCO5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=zLb0gE40; arc=none smtp.client-ip=199.89.1.11
+	s=arc-20240116; t=1723232166; c=relaxed/simple;
+	bh=kkJXrKFt5oxZLzNCyrcakygxeAu6055jh9xbdi/Wmq8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QWkWkihb1Wb07+wyN61WVeVAnJ0SGrmag1OQ8jtxlu6XG69RUmhRX+eo/zMLwja28y2NYs60gmdGBADPkMq78cImfiCgSVm6pMPu+RfMrrByDRIANdxjOu6MJXoHz6/uuxhruG4Vnw7IvJiG2zma8wsM1FNUM+Bu4mYFoQs1XhY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3G+pnOK6; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="zLb0gE40"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3G+pnOK6"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WgYv40hQFz6CmQwQ;
-	Fri,  9 Aug 2024 19:31:44 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WgZ002nfpzlgVnF;
+	Fri,  9 Aug 2024 19:36:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1723231901; x=1725823902; bh=hN3FJ
-	50mm/TM0z4Gt5stbMxpIQIfCIF1xU0v3PhNFm8=; b=zLb0gE40F2yH9Oa6PPD/w
-	240ketC+TUkugIBa2P+ram9k12JQyNP7kgXELqUePuRpY+I3RfCUXSBLBOjzOXOa
-	D6zgxJYPOiteEc/6HbPhx8zs7Y7FGjqp3hGjrOzHAJ8dqNsK7PedD+nJc/P32qbT
-	7Y+GtOHTBkfegQSlNskXxFqCi6zqUffz4qdAu/zhyynMdKi+dhHQYYCBvWRM0d4I
-	kb2jz+32jAewPxCo/7lBsBHo8cf85ZurUN+tkXDqnPzVh0uSfd8Net8iGMpVRg9h
-	QdqlqNkawgiWIdskesAz9jwaYREIppLrvUKXp/bAi4xmaonwsRnE5mlUgI29SxKC
-	g==
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1723232158; x=1725824159; bh=E0giEuEpe7i8zK9IU7LLZaxJ
+	Y4PfX6aR1R+zaYxONmA=; b=3G+pnOK6s+9LxokER83JXDYO+lIpvnQKvkyopHmV
+	fBTB5jidSF6zXA1fbPzpREyJjUMB5vX+0psiXSnFhqo+f5cTrYYOXP1D8rrQSOri
+	3d4SRwzmbp6ECaXg3I7u4sfnd2dtQjChx1Hld8zd7Rn/N2yb/exCYUCNgarSDPGo
+	0hFTwQnvR30Wuo0yLytvGi0Q0HuFE3bpQ1nuwX5cIGcIIIExB51Hs4uL0PjtNm0V
+	GvhysLA4cCdyv8eLLBPyul943geklXhh2dH5pBdbETdsQy1AGN3mVyBBfIz2Xxi4
+	pFyBcxPqNOJRGa+vn/Cz+2GM9WHMKW6D2oWwtmRjOBPsmw==
 X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id vfX6CDxzuns1; Fri,  9 Aug 2024 19:31:41 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id OW2X9pWjAXId; Fri,  9 Aug 2024 19:35:58 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WgYv06j1lz6ClY8y;
-	Fri,  9 Aug 2024 19:31:40 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Mike Christie <michael.christie@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v2 2/2] sd: Retry START STOP UNIT commands
-Date: Fri,  9 Aug 2024 12:31:14 -0700
-Message-ID: <20240809193115.1222737-3-bvanassche@acm.org>
-X-Mailer: git-send-email 2.46.0.76.ge559c4bf1a-goog
-In-Reply-To: <20240809193115.1222737-1-bvanassche@acm.org>
-References: <20240809193115.1222737-1-bvanassche@acm.org>
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WgYzy1X0FzlgTGW;
+	Fri,  9 Aug 2024 19:35:57 +0000 (UTC)
+Message-ID: <358d8cd4-20bd-4f99-954e-ce3afd626b94@acm.org>
+Date: Fri, 9 Aug 2024 12:35:57 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] scsi: core: Retry passthrough commands if
+ SCMD_RETRY_PASST_ON_UA is set
+To: Damien Le Moal <dlemoal@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Mike Christie <michael.christie@oracle.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20240807203215.2439244-1-bvanassche@acm.org>
+ <20240807203215.2439244-2-bvanassche@acm.org>
+ <cd94a0d4-6e6d-495c-aa17-d2d2c875604a@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <cd94a0d4-6e6d-495c-aa17-d2d2c875604a@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-During system resume, sd_start_stop_device() submits a START STOP UNIT
-command to the SCSI device that is being resumed. That command is not
-retried in case of a unit attention and hence may fail. An example:
+On 8/9/24 8:40 AM, Damien Le Moal wrote:
+> On 2024/08/07 13:32, Bart Van Assche wrote:
+>> The SCSI core does not retry passthrough commands even if the SCSI device
+>> reports a retryable unit attention condition. Support retrying in this case
+>> by introducing the SCMD_RETRY_PASST_ON_UA flag.
+> 
+> This flag is badly named since nowhere it is checked that the retry happens on
+> UNIT ATTENTION. The retry may happen with other sense key as well, no ?
+> 
+> So what about simply calling this: SCMD_RETRY_PASSTHROUGH ?
 
-[16575.983359] sd 0:0:0:3: [sdd] Starting disk
-[16575.983693] sd 0:0:0:3: [sdd] Start/Stop Unit failed: Result: hostbyte=
-=3D0x00 driverbyte=3DDRIVER_OK
-[16575.983712] sd 0:0:0:3: [sdd] Sense Key : 0x6
-[16575.983730] sd 0:0:0:3: [sdd] ASC=3D0x29 ASCQ=3D0x0
-[16575.983738] sd 0:0:0:3: PM: dpm_run_callback(): scsi_bus_resume+0x0/0x=
-a0 returns -5
-[16575.983783] sd 0:0:0:3: PM: failed to resume async: error -5
+That sounds good to me. See also v2 of this patch series.
 
-Make the SCSI core retry the START STOP UNIT command if a retryable
-error is encountered.
+Thanks,
 
-Cc: Damien Le Moal <dlemoal@kernel.org>
-Cc: Mike Christie <michael.christie@oracle.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/sd.c | 1 +
- 1 file changed, 1 insertion(+)
+Bart.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 718eb91ba9a5..4cbf3e5740e1 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -4093,6 +4093,7 @@ static int sd_start_stop_device(struct scsi_disk *s=
-dkp, int start)
- 	const struct scsi_exec_args exec_args =3D {
- 		.sshdr =3D &sshdr,
- 		.req_flags =3D BLK_MQ_REQ_PM,
-+		.scmd_flags =3D SCMD_RETRY_PASSTHROUGH,
- 	};
- 	struct scsi_device *sdp =3D sdkp->device;
- 	int res;
