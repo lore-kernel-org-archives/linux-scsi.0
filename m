@@ -1,91 +1,93 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D5A2179BF
-	for <linux-scsi@vger.kernel.org>; Fri,  9 Aug 2024 02:56:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 348E418B04;
+	Fri,  9 Aug 2024 03:44:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723172177; cv=none; b=KEYUhOckRKtHLjKePDPlWbE/L1iPjglPVpmFetWT8xvL4F1n4P/f13g2xd2J0B3C9LUwf3hW6ovFxGf8wSdgAQtzax4pEz+g+NgIb3DuRE96oz0i0k4nLu8JO+WsqjeIYoPFU75XvAqLZQONiYHEBlE/gTx677QU/ropeEWi6j4=
+	t=1723175096; cv=none; b=PMjehfYMRKM8EQvkd2rwPc/5WoyeO0YGpNjs5dlSZutB5N9hhYf4aU5G9F+jnY9FWE/hSiM7/mHBl/wmbBYRhVdpQgb7RhNzVxxI1ZN7F82NjPlPc0WByg1QTCsvoiG56EpfOyCA9yfzRwQiIrGHJiFG1vycxHgHSZtGqDOII1I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723172177; c=relaxed/simple;
-	bh=/qRRkUiqj1//hUa3ya9ituzSi3EsSA8P8ryhC+cHpFU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NPxzTMy6T7Nw4gDca+m9WOJ5Oh1XbQRG/g+JV/eDKGxdMcTnIWkGXN+dqvF3SIzLAUnf0B8fFXLiwF221lDpnXHYUjyU16LLlzZxAdhSVC2YabPRfK/NFLGnGKGlYZjfeON4ssxJHVCeJ9ThFvI/aoDvNLQ83kGsE40Jn3nc1/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jqYsE2uH; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jqYsE2uH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1723172176; x=1754708176;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=/qRRkUiqj1//hUa3ya9ituzSi3EsSA8P8ryhC+cHpFU=;
-  b=jqYsE2uHvwpwNmxyst5dgdgi9A6LsRNlhifzv4gVFE/egEHErt9I5Dqh
-   lWcu6UkQ3cArZpQeY9+Lm9bf8JQ1kcJDJX1GPSYLmlxPAsrCTet7MqVYg
-   bEP8SEs8V1cVinDRiUWHUXLYBkP3ZIL8beSgJWTtYk3G494FC4B5JNHzq
-   bNZ1iJvhpkBuVavSpxdNoP61Kmy7XgTx2wP+bYEqir3pIImWFpnxbeMPx
-   Ar9h8NzBa753Zo+NEb+i1LFCSmQIUP4f+MVz5+ERDwtIofHeBSSqw4u53
-   XLcBJqQADq98gzNqOYRHxjRSJx5gh0rEMMgS0atFhhL5Jlb8SMitQgzL5
-   Q==;
-X-CSE-ConnectionGUID: roH2S93RQ4yRTLBbaAC3Cw==
-X-CSE-MsgGUID: LXxv6GoETwmiX3vY+0qt1A==
-X-IronPort-AV: E=McAfee;i="6700,10204,11158"; a="21505097"
-X-IronPort-AV: E=Sophos;i="6.09,274,1716274800"; 
-   d="scan'208";a="21505097"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Aug 2024 19:56:15 -0700
-X-CSE-ConnectionGUID: 7oe86GqCSsSngVK2rTv33Q==
-X-CSE-MsgGUID: FBL2AvFtTPe0c2tcTliZEw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.09,274,1716274800"; 
-   d="scan'208";a="57990338"
-Received: from sni1-test3.itwn.intel.com ([10.225.75.78])
-  by orviesa007.jf.intel.com with ESMTP; 08 Aug 2024 19:56:13 -0700
-From: Super Ni <super.ni@intel.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	bvanassche@acm.org,
-	manivannan.sadhasivam@linaro.org,
-	beanhuo@micron.com,
-	peter.wang@mediatek.com,
-	avri.altman@wdc.com,
-	cw9316.lee@samsung.com,
-	super.ni@intel.com
-Subject: [PATCH] scsi: ufs: add missing macro for the UFSHCI register map
-Date: Fri,  9 Aug 2024 10:56:10 +0800
-Message-Id: <20240809025610.1000310-1-super.ni@intel.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1723175096; c=relaxed/simple;
+	bh=OhET1XZSG40Mo/skFzSUw3iQfX3vkRLXE0SBE9EiGto=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=NQlQaO0E04OvDSjv1PfFkAgcILOqbCUJDv82yIzpUwVdzf3TnAHEU7FjokEgHRaEbzcHtJtDIAdj310iZgdATpAPPsBZxXlP2dGGCUnb7xIivtRcIWHcxkuft78qKmWWG5d8ddIkyOJaoOcZ38pNU0j1OFpCkMGFDM9cUuI04cA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.105])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Wg8t31rQbzyP5D;
+	Fri,  9 Aug 2024 11:44:27 +0800 (CST)
+Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id 53B2714011A;
+	Fri,  9 Aug 2024 11:44:50 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 9 Aug 2024 11:44:50 +0800
+Subject: Re: [PATCH] scsi: sd: retry command SYNC CACHE if format in progress
+To: Bart Van Assche <bvanassche@acm.org>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+References: <20240808021719.4167352-1-liyihang9@huawei.com>
+ <1cd0b145-431a-4d9f-979f-04d4063eeda8@acm.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<prime.zeng@huawei.com>, <linuxarm@huawei.com>, <liyihang9@huawei.com>
+From: Yihang Li <liyihang9@huawei.com>
+Message-ID: <e6b05d46-7acd-8364-2826-c14e342f8e2d@huawei.com>
+Date: Fri, 9 Aug 2024 11:44:38 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1cd0b145-431a-4d9f-979f-04d4063eeda8@acm.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggpemf100013.china.huawei.com (7.185.36.179)
 
-Add macro for register bit listed in JESD223C (v2.1).
 
-For completeness all registers specified in the JEDEC doc should be
-included here.
 
-Signed-off-by: Super Ni <super.ni@intel.com>
----
- include/ufs/ufshci.h | 1 +
- 1 file changed, 1 insertion(+)
+On 2024/8/9 3:09, Bart Van Assche wrote:
+> On 8/7/24 7:17 PM, Yihang Li wrote:
+>> If formatting a suspended disk (such as formatting with different DIF
+>> type), the SYNC CACHE command will fail because the disk is in the
+>> formatting process, which will cause the runtime_status of the disk to
+>> error and it is difficult for user to recover it.
+>>
+>> To solve the issue, retry the command until format command is finished.
+> 
+> How is the format command submitted to the SCSI disk? Is that command
+> perhaps submitted as a SCSI pass-through command (SG_IO ioctl)?
+> 
 
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 38fe97971a65..534fbb8988e2 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -43,6 +43,7 @@ enum {
- 	REG_UTP_TRANSFER_REQ_DOOR_BELL		= 0x58,
- 	REG_UTP_TRANSFER_REQ_LIST_CLEAR		= 0x5C,
- 	REG_UTP_TRANSFER_REQ_LIST_RUN_STOP	= 0x60,
-+	REG_UTP_TRANSFER_REQ_LIST_COMPLETION	= 0x64,
- 	REG_UTP_TASK_REQ_LIST_BASE_L		= 0x70,
- 	REG_UTP_TASK_REQ_LIST_BASE_H		= 0x74,
- 	REG_UTP_TASK_REQ_DOOR_BELL		= 0x78,
--- 
-2.34.1
+When formatting a suspended disk, the disk will be resuming first,
+and then the format command will submit to the disk through SG_IO ioctl.
 
+When the disk is processing the formatting command, the system does not
+submit other commands to the disk. Therefore, the system attempts to suspend
+the disk again and sends the SYNC CACHE command. However, the SYNC CACHE
+command fails because the disk is being formatted.
+
+Error info like:
+
+[  669.925325] sd 6:0:6:0: [sdg] Synchronizing SCSI cache
+[  670.202371] sd 6:0:6:0: [sdg] Synchronize Cache(10) failed: Result: hostbyte=0x00 driverbyte=DRIVER_OK
+[  670.216300] sd 6:0:6:0: [sdg] Sense Key : 0x2 [current]
+[  670.221860] sd 6:0:6:0: [sdg] ASC=0x4 ASCQ=0x4
+
+
+> Should the sd driver perhaps be unbound while the format command is in
+> progress?
+> 
+
+I do not have any suggestions for this yet. I don't know how to unbound driver
+when executing the format command and bound driver after the command is executed.
+
+If you have any suggestions, please let me know.
+
+Thanks,
+
+Yihang.
