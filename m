@@ -1,244 +1,89 @@
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D2CB175D49;
-	Fri,  9 Aug 2024 07:25:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.154.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8710018C908;
+	Fri,  9 Aug 2024 07:50:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.207.88.248
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723188315; cv=none; b=Zlxj9+OhR8nDV/q9o1cEeIOiIfbLUc+J407q8bdrPSRZpnjR9lvsar1Fgw7LXSEXvi05+C3WgbyNz75+0wlAdkc1BfE/44/mDgAM+ChRTGE0dp5zI5mbUdGbTpHfRf7RoHwBW6yar+ipYAK/CBVZaDY/edFaTQy5Bk+5KQ2EXi8=
+	t=1723189816; cv=none; b=l0ZfWJo09k88uP3Q6QSU3tOpKNkaRvWIJdMc1Z77TrJKaTZZoffTH29FCPDfZTwkDY/5UKVTSROQcOt8cDjcZW0C7BShE4A7SDuJnu4L+EsJ2w7Nm1jA+5S4QBg1JQM4b4MrgWsjsEMEuWdJ1TbAQt407XWTCOgRa2K49iJCRw8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723188315; c=relaxed/simple;
-	bh=zl47+hi/UIsopJhxNLXCNbZlqnIVXOLdsaQX+KMH7YE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=kTtGzcIePTCTIUkSw8pVAnDOBksK1NtTGXy/YWGLlXu/6Q6rtJAnyOcotVegohbl9EzWd7NMvD4cCPIpcqMcE4c7MroqU3FXIa4XVYnThYrAEbpW3Pk7uuvvdD1p3rluVt7crWC6oa1aGAg2SgGa31xCiGuDERQGIPyuXdTjPjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=oY55u68f; arc=none smtp.client-ip=216.71.154.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	s=arc-20240116; t=1723189816; c=relaxed/simple;
+	bh=TaQpOVkVL1egKNnraaxTcWlMHhpJtOeA23li9+lwPqw=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NVXJT2x5hu6K4JNvFiefX8rAwsM5tPyjg7b1Ox2DMm3Dhsep24pu0Yib/1pLyWffGtEBxVPA8tf8jnye2Cwtt4p/YHMxIZYmtKC0HxIzV2ThMp48IiOeh5qcqZAS+eqDmoStwlzl2s4RN6GkdY5rX87B0Ct+Vy2NmkSHb16Vo4I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=NIJPmys3; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=eRD2VAL+; arc=none smtp.client-ip=89.207.88.248
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="oY55u68f"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1723188313; x=1754724313;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=zl47+hi/UIsopJhxNLXCNbZlqnIVXOLdsaQX+KMH7YE=;
-  b=oY55u68fV2jkuX0UvoN+5Ruu2IVGeU5RJfBM1RYUBNYx48T8VT26Ethn
-   DTNRC4CETQrBrIL3pVYgonGNvNQcqD2fz674D+LtK/QZj3y9XUjBxJXrd
-   /UbjRrsrp8niY9YDGhS/Kuap+ieFFMbnBYhic2ZDbhXeDjlPtLPfHlK+s
-   Xpfwfd7EhwuioA3AmpI2yopuCvBclXKiJDMEIVZiA9Ybw2P4n3GIfeZta
-   23mYB7ukTga/tPuhGj7pitfj1zH4NlgPkvKh98g1t+GBI8lvl4KJz07U2
-   +wD5otDQzedfUB3Ok75uXbw0bfg0xHf5vdnTQRh9Ppa6QFwg66FeyGrcb
-   g==;
-X-CSE-ConnectionGUID: d89WVwrSQ7aC9Fh6iNNOLQ==
-X-CSE-MsgGUID: G1cEAQ0kQyeLQa5NcXKjJg==
-X-IronPort-AV: E=Sophos;i="6.09,275,1716220800"; 
-   d="scan'208";a="23232732"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Aug 2024 15:25:12 +0800
-IronPort-SDR: 66b5b7af_TczDYPgTo8IqrM291NS+t2kAP8eqq/4xMragbceKIqsUfwK
- GVVHQOqFKjcGRwtD9PR1AdPetgmfbZTRPaTkTkw==
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 08 Aug 2024 23:31:12 -0700
-WDCIronportException: Internal
-Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 09 Aug 2024 00:25:10 -0700
-From: Avri Altman <avri.altman@wdc.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Keoseong Park <keosung.park@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v3 2/2] scsi: ufs: Add HCI capabilities sysfs group
-Date: Fri,  9 Aug 2024 10:23:31 +0300
-Message-Id: <20240809072331.2483196-3-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240809072331.2483196-1-avri.altman@wdc.com>
-References: <20240809072331.2483196-1-avri.altman@wdc.com>
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="NIJPmys3";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="eRD2VAL+"
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 0E90CC0003
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
+	t=1723189203; bh=wAcF8uyZxnAW141A3dKIhLYt7b1xk+sbsvmRKPKz5YM=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
+	b=NIJPmys3ojGCudaoPbf9y0rR74MOUDqPqWjac1vF8gw73YR71GKLKcK1TdCYOs0Wn
+	 jiBBVCfBP59aTEnQq2Djnb03B1Fl0JzoVsnJST4CH9RPa8zxjPTiIvDm0OL8DjRiYP
+	 qaoSLgi3tmbeboZ2wKS4qmpS92c125GaLMo2smrKyHmUzbTM723vXNKVEuMOJcxAJB
+	 BRgCv/VQ+EW8O48Zgyc8HOwOtMCXXBXxvYVTlmVcgj2GfuHQX4JLOSJ0Ucdh4f8xT6
+	 5I8pgA7e6CIKM5nc4MWLYLY9ymuY+KGWmvk3w+WcTOKMc/jjSCWMpb9joc8ZBG0Tlv
+	 pYkYZeIWnqe6w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
+	t=1723189203; bh=wAcF8uyZxnAW141A3dKIhLYt7b1xk+sbsvmRKPKz5YM=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
+	b=eRD2VAL+IC8FyQXlS9h0+pS4IxeEYSiyYfqcW9+0iTFkYGNHSMjFcjho8+tj7/ik6
+	 noJHP/l5hSTZ8fwKMNyQ4lPRLi5IcBghk+zZyegvyzAHO0e0y5MfM7D+tJqXRq83dQ
+	 dVOJLn9gtu6V5o+NjYKhX1wteQsUCX+lT8yK+lz1aDf/J464PuTNxP795H/WWgFqUY
+	 bqOaDftRmT0loagEEOY1SjejBMNxoylhMqkNvn4sP2pZVeUJaGYreGH8Nfk+oyZMzp
+	 PqwTLEkKhNjX8tl7kooXyJU0Amvqhq1YOT2jICAkDoPbOReyV0Thjh4Tqxu4IUNxq7
+	 bGZKWf59qBwTQ==
+Date: Fri, 9 Aug 2024 10:39:58 +0300
+From: Dmitry Bogdanov <d.bogdanov@yadro.com>
+To: Paul Dagnelie <paul.dagnelie@perforce.com>
+CC: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"mlombard@redhat.com" <mlombard@redhat.com>, David Mendez
+	<david.mendez@perforce.com>
+Subject: Re: Leak of tpg->np_login_sem, possibly due to connection
+ interruptions
+Message-ID: <20240809073958.GA30598@yadro.com>
+References: <SJ0PR20MB5136CD6B38D86FD141070F7E80B82@SJ0PR20MB5136.namprd20.prod.outlook.com>
+ <SJ0PR20MB5136C6C85B1B82FF78ADECE680B82@SJ0PR20MB5136.namprd20.prod.outlook.com>
+ <SJ0PR20MB5136A763BB1792A1FDECABD780BA2@SJ0PR20MB5136.namprd20.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <SJ0PR20MB5136A763BB1792A1FDECABD780BA2@SJ0PR20MB5136.namprd20.prod.outlook.com>
+X-ClientProxiedBy: T-EXCH-09.corp.yadro.com (172.17.11.59) To
+ T-EXCH-09.corp.yadro.com (172.17.11.59)
 
-The standard register map of UFSHCI is comprised of several groups.  The
-first group (starting from offset 0x00), is the host capabilities group.
-It contains some interesting information, that otherwise is not
-available, e.g. the UFS version of the platform etc.
+Hi Paul,
+> 
+> I've done some more digging into this. I still would really appreciate any advice that folks have on how to root cause and fix this bug.
+> 
+> I have access to a core file from a system that was taken while the system was suffering from this issue. In that core dump, we can see that the thread in __transport_wait_for_tasks is waiting for the LUN_RESET command to complete. This lead me to realize that in the syslog output, the LUN_RESET message that occured when the issue first happened is different from the other LUN_RESET commands I see: We never get the "LUN_RESET: TMR for [iblock] Complete" message. That lead me to look for the thread that is blocked in processing the LUN_RESET command. That thread's stack trace looks like this:
+> 
+> 0xffff9416b0fa2080 UNINTERRUPTIBLE       4
+>                   __schedule+0x2bd
+>                   ...
+>                   target_put_cmd_and_wait+0x5a
+>                   core_tmr_drain_state_list
+>                   core_tmr_lun_reset+0x4e3
+>                   target_tmr_work+0xd1
+>                   ...
+> 
+> The command *that* thread is waiting for has a t_state of TRANSPORT_WRITE_PENDING, and it's transport_state is CMD_T_ABORTED. However, it still has a cmd_kref value of 2, which is why the LUN_RESET command can't proceed. It looks like it's a write command (execute_cmd is sbc_execute_rw and data_direction is DMA_TO_DEVICE). I'm still investigating further to try to understand how this state of offairs could occur. Any insight or information anyone could provide would be greatly appreciated.
 
-Reviewed-by: Keoseong Park <keosung.park@samsung.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- Documentation/ABI/testing/sysfs-driver-ufs | 42 ++++++++++
- drivers/ufs/core/ufs-sysfs.c               | 95 ++++++++++++++++++++++
- 2 files changed, 137 insertions(+)
+5.15 is too old kernel for iSCSI, there were plenty of patches that fix
+commands hanging there.
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index fe943ce76c60..b6e0c3b806fd 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1532,3 +1532,45 @@ Contact:	Bean Huo <beanhuo@micron.com>
- Description:
- 		rtc_update_ms indicates how often the host should synchronize or update the
- 		UFS RTC. If set to 0, this will disable UFS RTC periodic update.
-+
-+What:		/sys/devices/platform/.../ufshci_capabilities/capabilities
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: host controller capabilities register.
-+		Symbol - CAP.  Offset: 0x00 - 0x03.
-+
-+What:		/sys/devices/platform/.../ufshci_capabilities/mcq_cap
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: multi-circular queue capability register.
-+		Symbol - MCQCAP.  Offset: 0x04 - 0x07.
-+
-+What:		/sys/devices/platform/.../ufshci_capabilities/version
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: UFS version register.
-+		Symbol - VER.  Offset: 0x08 - 0x0B.
-+
-+What:		/sys/devices/platform/.../ufshci_capabilities/ext_capabilities
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: extended controller capabilities register.
-+		Symbol - EXT_CAP.  Offset: 0x0C - 0x0F.
-+
-+What:		/sys/devices/platform/.../ufshci_capabilities/product_id
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: product ID register.
-+		Symbol - HCPID.  Offset: 0x10 - 0x13.
-+
-+What:		/sys/devices/platform/.../ufshci_capabilities/man_id
-+Date:		August 2024
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:
-+		Host Capabilities register group: manufacturer ID register.
-+		Symbol - HCMID.  Offset: 0x14 - 0x17.
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index dec7746c98e0..751d5ff406da 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -525,6 +525,100 @@ static const struct attribute_group ufs_sysfs_capabilities_group = {
- 	.attrs = ufs_sysfs_capabilities_attrs,
- };
- 
-+static ssize_t capabilities_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "0x%x\n", hba->capabilities);
-+}
-+
-+static ssize_t mcq_cap_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	if (hba->ufs_version < ufshci_version(4, 0))
-+		return -EOPNOTSUPP;
-+
-+	return sysfs_emit(buf, "0x%x\n", hba->mcq_capabilities);
-+}
-+
-+static ssize_t version_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return sysfs_emit(buf, "0x%x\n", hba->ufs_version);
-+}
-+
-+static ssize_t ext_capabilities_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	int ret;
-+	u32 val;
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	if (hba->ufs_version < ufshci_version(4, 0))
-+		return -EOPNOTSUPP;
-+
-+	ret = ufshcd_read_hci_reg(hba, &val, REG_EXT_CONTROLLER_CAPABILITIES);
-+	if (ret)
-+		return ret;
-+
-+	return sysfs_emit(buf, "0x%x\n", val);
-+}
-+
-+static ssize_t product_id_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	int ret;
-+	u32 val;
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	ret = ufshcd_read_hci_reg(hba, &val, REG_CONTROLLER_PID);
-+	if (ret)
-+		return ret;
-+
-+	return sysfs_emit(buf, "0x%x\n", val);
-+}
-+
-+static ssize_t man_id_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	int ret;
-+	u32 val;
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	ret = ufshcd_read_hci_reg(hba, &val, REG_CONTROLLER_MID);
-+	if (ret)
-+		return ret;
-+
-+	return sysfs_emit(buf, "0x%x\n", val);
-+}
-+
-+static DEVICE_ATTR_RO(capabilities);
-+static DEVICE_ATTR_RO(mcq_cap);
-+static DEVICE_ATTR_RO(version);
-+static DEVICE_ATTR_RO(ext_capabilities);
-+static DEVICE_ATTR_RO(product_id);
-+static DEVICE_ATTR_RO(man_id);
-+
-+static struct attribute *ufs_sysfs_ufshci_cap_attrs[] = {
-+	&dev_attr_capabilities.attr,
-+	&dev_attr_mcq_cap.attr,
-+	&dev_attr_version.attr,
-+	&dev_attr_ext_capabilities.attr,
-+	&dev_attr_product_id.attr,
-+	&dev_attr_man_id.attr,
-+	NULL
-+};
-+
-+static const struct attribute_group ufs_sysfs_ufshci_group = {
-+	.name = "ufshci_capabilities",
-+	.attrs = ufs_sysfs_ufshci_cap_attrs,
-+};
-+
- static ssize_t monitor_enable_show(struct device *dev,
- 				   struct device_attribute *attr, char *buf)
- {
-@@ -1508,6 +1602,7 @@ static const struct attribute_group ufs_sysfs_attributes_group = {
- static const struct attribute_group *ufs_sysfs_groups[] = {
- 	&ufs_sysfs_default_group,
- 	&ufs_sysfs_capabilities_group,
-+	&ufs_sysfs_ufshci_group,
- 	&ufs_sysfs_monitor_group,
- 	&ufs_sysfs_power_info_group,
- 	&ufs_sysfs_device_descriptor_group,
--- 
-2.25.1
+Definitely you need this patchset for the beginning:
+https://lore.kernel.org/all/20230319015620.96006-1-michael.christie@oracle.com/
 
+
+BR,
+ Dmitry
