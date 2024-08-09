@@ -1,284 +1,115 @@
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E9081552EB;
-	Fri,  9 Aug 2024 07:55:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09CE718E043;
+	Fri,  9 Aug 2024 08:28:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723190133; cv=none; b=CawMhbP6gqrLhHIcNwsPm2lhaVu1D/cLBUZEK0IB1ZKAH4WwOROG3jj/PUDOhjnGVR8ObVwnBY3261xlR2JHZ65dK4mKoN+e0aePTwpygTCxGxjPHczC3bBiHnb0NJtlouPyhRhFu3oplWHBNcEqFe8YyHcpyJHMQ5ZNsujyRFM=
+	t=1723192121; cv=none; b=smCIfozxjyvDUUtKVToBE4H7pzdmYuka8wr7YnCyKYb6uwRsjPGU/O8h5M8PzlEA2ogntbQnZYCc+g0GMCYS2dWYNtvSNrFGniv/aMGJwCnY4925E830cB3Faaj/C9vY/eVubZOEyfJwX2JhA9J6tBpMf9V6amnM+CVyrFkb9Kc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723190133; c=relaxed/simple;
-	bh=a3NDtrOFkr6eWhw4xLJ1GOK2gjy06ICYCwEMqdwLNjg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eBBEGLdkcJUvVF5EfRyPfoY/1qwxv7c1VYsYCBWiyZyvHfCiemEY1ZIVWdII4Ns+X4Bz1KUxGRVfTUtjk76AJXFzTBu4F5iIFc6smaafitg8dKbTBWVTLTf+lOYmNSrwsPx3NprLiFfPNe5Pjar9/sqlZMOdu9r8n+7w+05Hl8Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=at8Qs08S; arc=none smtp.client-ip=209.85.215.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="at8Qs08S"
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-7a1be7b5d70so1424014a12.0;
-        Fri, 09 Aug 2024 00:55:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1723190131; x=1723794931; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=2mIwtqqNsntLjxTEf9qy3KmpCcVtl80DMioT7BD07WQ=;
-        b=at8Qs08SYeQZStEQD8z/gl3fMiy9rTHLCpLPbgWCFdqwZvXAXELLy+7ahNuSm2s6t+
-         /qobGViq6PN/IfwcGvpgjZ/ESvlWp7cngsU8w6r+jsAabMtYDEWyY49WGDty3q18Yp/9
-         IxBRe0N0whtSYtydBhbGCb8WJ9uQse4FwU1ZiOKaxdsv0VA9r6WSB1s4hxhhdy/JOyqN
-         d2HGvEIltCHhwjOSOrXJf1+dDEE3SqhedMKjmHMWVQzyGteiMgItYZM6BHj2uwgBCy8+
-         AEsaVmcBr2ogFm5B5paR0Wdv2jwG8W03R+YNeDxJLFJiHljsAvs0/HHKzKFyDU295Vfg
-         +ZQg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723190131; x=1723794931;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2mIwtqqNsntLjxTEf9qy3KmpCcVtl80DMioT7BD07WQ=;
-        b=pedkufFJXwOo54HQF9uopykIods9D9x7Btw8hQfzyFYeiS/0HuRt0yeeiPZLRutjw3
-         lX5U4YbCF6Hpvhr6Kx8qW5txNiODnYNvkE8pZ/euhWi2HLMAZAm4nWw1Nyn+PR1c/uD1
-         54iOhGWHbJe6sqWrJGBkmGHOVGpqYObeMFzc/KFNhJj3aJohgNHOEKdu7ZJoVx7KoQJL
-         QHFpHxKsLp6S268qFRjWqQrCwzC1LS40wV9NQJ/FcHg0XHeWK74yGQK6762wcsn/+OD2
-         CEMqmNQ+UmPRktxSMFCgEGRZynvQceL+rhPnaqcuaXkQtt15YqMefSSe8FIWWBCDo+AQ
-         lDEA==
-X-Forwarded-Encrypted: i=1; AJvYcCUamUvc1WEx0mT+qVk16oltVjmav92bJksni+CaOGyFvuyFf30e6j1WlO4EOCZcqvHaHoZKR+aQmSXsFqdpT4K6+/Td/66apxvjaQpkddatC3HidfxPFlNUM6rP8kDiL39JYnu0BkXzTg==
-X-Gm-Message-State: AOJu0YzdvajeXQbPafkYHFW8G4mNYVtvWSNoKNJiGkeUnztY6wqnpo7D
-	pt7hdnnk6rWUlogHeypKdIhS/FSQ8BSjaD/15IbkNgJVVKjTu8Fx
-X-Google-Smtp-Source: AGHT+IHA8hn+5Z32hUDFcN9u6j/5XUYfOpOTNglgvb90esXK+j9diout9kueU7OAZbDusLaAvNaxCg==
-X-Received: by 2002:a17:903:22c1:b0:1f4:a04e:8713 with SMTP id d9443c01a7336-200ae608246mr14391345ad.28.1723190131155;
-        Fri, 09 Aug 2024 00:55:31 -0700 (PDT)
-Received: from thinkpad ([117.213.100.70])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ff58f219easm136368005ad.58.2024.08.09.00.55.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Aug 2024 00:55:30 -0700 (PDT)
-Date: Fri, 9 Aug 2024 13:25:22 +0530
-From: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>
-To: Avri Altman <avri.altman@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Keoseong Park <keosung.park@samsung.com>
-Subject: Re: [PATCH v3 2/2] scsi: ufs: Add HCI capabilities sysfs group
-Message-ID: <20240809075522.GA9360@thinkpad>
-References: <20240809072331.2483196-1-avri.altman@wdc.com>
- <20240809072331.2483196-3-avri.altman@wdc.com>
+	s=arc-20240116; t=1723192121; c=relaxed/simple;
+	bh=/l0yUZUpC/nMUugQZnOrV9FPr+m9pokntN5G6vFoWtU=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=Yfo5koqlRJvutMqSBn7h4LD1KT6F6p1kI3cy4cL2ASu0rNQMvU8aCjJbx+PP3FEXJA9gtqgWyA4LWSMKbY9D3OOK7IPa+xJArt4FX7LBfRU0rl7d5eS/nuSqhjvYYP/oul07iUJElNKixIX/PG2G2googAsQdMrM6RqIOEMDUdQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WgH7Z6LhTzfb7b;
+	Fri,  9 Aug 2024 16:26:34 +0800 (CST)
+Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id A8650140121;
+	Fri,  9 Aug 2024 16:28:29 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 9 Aug 2024 16:28:29 +0800
+Subject: Re: [PATCH] scsi: sd: Have scsi-ml retry START_STOP errors
+To: Bart Van Assche <bvanassche@acm.org>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+References: <20240808034619.768289-1-liyihang9@huawei.com>
+ <17c0a914-9bd7-43ef-b739-d2105ec46567@acm.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<prime.zeng@huawei.com>, <linuxarm@huawei.com>, <liyihang9@huawei.com>
+From: Yihang Li <liyihang9@huawei.com>
+Message-ID: <35f5f7d3-3cbf-b45a-8a3b-eb1a3f34ddec@huawei.com>
+Date: Fri, 9 Aug 2024 16:28:29 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240809072331.2483196-3-avri.altman@wdc.com>
+In-Reply-To: <17c0a914-9bd7-43ef-b739-d2105ec46567@acm.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpemf100013.china.huawei.com (7.185.36.179)
 
-On Fri, Aug 09, 2024 at 10:23:31AM +0300, Avri Altman wrote:
-> The standard register map of UFSHCI is comprised of several groups.  The
-> first group (starting from offset 0x00), is the host capabilities group.
-> It contains some interesting information, that otherwise is not
-> available, e.g. the UFS version of the platform etc.
+
+
+On 2024/8/9 1:20, Bart Van Assche wrote:
+> On 8/7/24 8:46 PM, Yihang Li wrote:
+>> When sending START_STOP commands to resume scsi_device, it may be
+>> interrupted by exception operations such as host reset or PCI FLR. Once
+>> the command of START_STOP is failed, the runtime_status of scsi device
+>> will be error and it is difficult for user to recover it.
 > 
-> Reviewed-by: Keoseong Park <keosung.park@samsung.com>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
-> ---
->  Documentation/ABI/testing/sysfs-driver-ufs | 42 ++++++++++
->  drivers/ufs/core/ufs-sysfs.c               | 95 ++++++++++++++++++++++
->  2 files changed, 137 insertions(+)
+> How is the PCI FLR sent to the device? Shouldn't PCI FLRs only be
+> triggered by the SCSI LLD from inside an error handler callback? How can
+> a PCI FLR be triggered while a START STOP UNIT command is being
+> processed? Why can PCI FLRs only be triggered while a START STOP UNIT
+> command is being processed and not while any other command is being
+> processed?
+
+The PCI FLR mentioned in my description is not sent to the SCSI device,
+but to the SCSI host.
+
+When the START STOP UNIT command is submitted to the SCSI device,
+the command is sent to the SCSI device through the SCSI host.
+If the user triggers the PCI FLR through the sysfs interface or
+the host is reset due to an error, the START STOP UNIT command
+(other commands are the same) is interrupted. So I think the command
+needs to be retried.
+
 > 
-> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-> index fe943ce76c60..b6e0c3b806fd 100644
-> --- a/Documentation/ABI/testing/sysfs-driver-ufs
-> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
-> @@ -1532,3 +1532,45 @@ Contact:	Bean Huo <beanhuo@micron.com>
->  Description:
->  		rtc_update_ms indicates how often the host should synchronize or update the
->  		UFS RTC. If set to 0, this will disable UFS RTC periodic update.
-> +
-> +What:		/sys/devices/platform/.../ufshci_capabilities/capabilities
-> +Date:		August 2024
-> +Contact:	Avri Altman <avri.altman@wdc.com>
-> +Description:
-> +		Host Capabilities register group: host controller capabilities register.
-> +		Symbol - CAP.  Offset: 0x00 - 0x03.
-
-This doesn't look like an ABI description. You are merely specifying the
-register name and offset that gets accessed while reading this attribute.
-
-Also, I'm not sure if we really want to expose HCI/MCQ capabilities as sysfs
-ABI. This just prints the hex value without even telling users how to interpret
-it. 
-
-> +
-> +What:		/sys/devices/platform/.../ufshci_capabilities/mcq_cap
-> +Date:		August 2024
-> +Contact:	Avri Altman <avri.altman@wdc.com>
-> +Description:
-> +		Host Capabilities register group: multi-circular queue capability register.
-> +		Symbol - MCQCAP.  Offset: 0x04 - 0x07.
-> +
-> +What:		/sys/devices/platform/.../ufshci_capabilities/version
-> +Date:		August 2024
-> +Contact:	Avri Altman <avri.altman@wdc.com>
-> +Description:
-> +		Host Capabilities register group: UFS version register.
-> +		Symbol - VER.  Offset: 0x08 - 0x0B.
-
-This and below attributes are fine. But the description should be changed. No
-need to put register name and offset here, that is not relevant to the ABI.
-Description should clearly state what is the purpose of the attribute, how to
-interpret (if necessary) and read/write capability. Like,
-
-```
-	This file shows the UFSHCD version.
-
-	The file is read only.
-```
-
-Applies to other attributes below.
-
-- Mani
-
-> +
-> +What:		/sys/devices/platform/.../ufshci_capabilities/ext_capabilities
-> +Date:		August 2024
-> +Contact:	Avri Altman <avri.altman@wdc.com>
-> +Description:
-> +		Host Capabilities register group: extended controller capabilities register.
-> +		Symbol - EXT_CAP.  Offset: 0x0C - 0x0F.
-> +
-> +What:		/sys/devices/platform/.../ufshci_capabilities/product_id
-> +Date:		August 2024
-> +Contact:	Avri Altman <avri.altman@wdc.com>
-> +Description:
-> +		Host Capabilities register group: product ID register.
-> +		Symbol - HCPID.  Offset: 0x10 - 0x13.
-> +
-> +What:		/sys/devices/platform/.../ufshci_capabilities/man_id
-> +Date:		August 2024
-> +Contact:	Avri Altman <avri.altman@wdc.com>
-> +Description:
-> +		Host Capabilities register group: manufacturer ID register.
-> +		Symbol - HCMID.  Offset: 0x14 - 0x17.
-> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-> index dec7746c98e0..751d5ff406da 100644
-> --- a/drivers/ufs/core/ufs-sysfs.c
-> +++ b/drivers/ufs/core/ufs-sysfs.c
-> @@ -525,6 +525,100 @@ static const struct attribute_group ufs_sysfs_capabilities_group = {
->  	.attrs = ufs_sysfs_capabilities_attrs,
->  };
->  
-> +static ssize_t capabilities_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	return sysfs_emit(buf, "0x%x\n", hba->capabilities);
-> +}
-> +
-> +static ssize_t mcq_cap_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	if (hba->ufs_version < ufshci_version(4, 0))
-> +		return -EOPNOTSUPP;
-> +
-> +	return sysfs_emit(buf, "0x%x\n", hba->mcq_capabilities);
-> +}
-> +
-> +static ssize_t version_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	return sysfs_emit(buf, "0x%x\n", hba->ufs_version);
-> +}
-> +
-> +static ssize_t ext_capabilities_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	int ret;
-> +	u32 val;
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	if (hba->ufs_version < ufshci_version(4, 0))
-> +		return -EOPNOTSUPP;
-> +
-> +	ret = ufshcd_read_hci_reg(hba, &val, REG_EXT_CONTROLLER_CAPABILITIES);
-> +	if (ret)
-> +		return ret;
-> +
-> +	return sysfs_emit(buf, "0x%x\n", val);
-> +}
-> +
-> +static ssize_t product_id_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	int ret;
-> +	u32 val;
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	ret = ufshcd_read_hci_reg(hba, &val, REG_CONTROLLER_PID);
-> +	if (ret)
-> +		return ret;
-> +
-> +	return sysfs_emit(buf, "0x%x\n", val);
-> +}
-> +
-> +static ssize_t man_id_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	int ret;
-> +	u32 val;
-> +	struct ufs_hba *hba = dev_get_drvdata(dev);
-> +
-> +	ret = ufshcd_read_hci_reg(hba, &val, REG_CONTROLLER_MID);
-> +	if (ret)
-> +		return ret;
-> +
-> +	return sysfs_emit(buf, "0x%x\n", val);
-> +}
-> +
-> +static DEVICE_ATTR_RO(capabilities);
-> +static DEVICE_ATTR_RO(mcq_cap);
-> +static DEVICE_ATTR_RO(version);
-> +static DEVICE_ATTR_RO(ext_capabilities);
-> +static DEVICE_ATTR_RO(product_id);
-> +static DEVICE_ATTR_RO(man_id);
-> +
-> +static struct attribute *ufs_sysfs_ufshci_cap_attrs[] = {
-> +	&dev_attr_capabilities.attr,
-> +	&dev_attr_mcq_cap.attr,
-> +	&dev_attr_version.attr,
-> +	&dev_attr_ext_capabilities.attr,
-> +	&dev_attr_product_id.attr,
-> +	&dev_attr_man_id.attr,
-> +	NULL
-> +};
-> +
-> +static const struct attribute_group ufs_sysfs_ufshci_group = {
-> +	.name = "ufshci_capabilities",
-> +	.attrs = ufs_sysfs_ufshci_cap_attrs,
-> +};
-> +
->  static ssize_t monitor_enable_show(struct device *dev,
->  				   struct device_attribute *attr, char *buf)
->  {
-> @@ -1508,6 +1602,7 @@ static const struct attribute_group ufs_sysfs_attributes_group = {
->  static const struct attribute_group *ufs_sysfs_groups[] = {
->  	&ufs_sysfs_default_group,
->  	&ufs_sysfs_capabilities_group,
-> +	&ufs_sysfs_ufshci_group,
->  	&ufs_sysfs_monitor_group,
->  	&ufs_sysfs_power_info_group,
->  	&ufs_sysfs_device_descriptor_group,
-> -- 
-> 2.25.1
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index 5cd88a8eea73..29f30407d713 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -4088,9 +4088,20 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+>>   {
+>>       unsigned char cmd[6] = { START_STOP };    /* START_VALID */
+>>       struct scsi_sense_hdr sshdr;
+>> +    struct scsi_failure failure_defs[] = {
+>> +        {
+>> +            .allowed = 3,
+>> +            .result = SCMD_FAILURE_RESULT_ANY,
+>> +        },
+>> +        {}
+>> +    };
+>> +    struct scsi_failures failures = {
+>> +        .failure_definitions = failure_defs,
+>> +    };
+>>       const struct scsi_exec_args exec_args = {
+>>           .sshdr = &sshdr,
+>>           .req_flags = BLK_MQ_REQ_PM,
+>> +        .failures = &failures,
+>>       };
+>>       struct scsi_device *sdp = sdkp->device;
+>>       int res;
 > 
+> The above change makes the START STOP UNIT command to be retried
+> unconditionally. A START STOP UNIT command should not be retried
+> unconditionally.
 > 
+> Please take a look at the following patch series (posted yesterday):
+> https://lore.kernel.org/linux-scsi/20240807203215.2439244-1-bvanassche@acm.org/
 
--- 
-மணிவண்ணன் சதாசிவம்
+I will reconsider the retry of the START STOP UNIT command, and try this patch series as well.
+
+Thanks,
+
+Yihang.
