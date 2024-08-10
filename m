@@ -1,36 +1,66 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com [209.85.210.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFBAC43ACB;
-	Sat, 10 Aug 2024 09:37:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0997150996;
+	Sat, 10 Aug 2024 11:23:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723282629; cv=none; b=AhW08oPskajU4BHL4emS4ySe7MxMNqMzA6s2kwugx8a0Be6RiHu17t6GFl+vvOQgYXUN9iM+zNdeAbnnLrELlRUn45ZmGpd1HnYHBLrbTyIj9dfzvmGwhZlAlgwqwQx3cFAxvJyexeTxu2IB8GxbUrDYoK4T55I9WJeSLMBYJS0=
+	t=1723288998; cv=none; b=aLvTrT3F04bXOmo6JsSMWWtgJCBWQaUgBlbBV/XnqVibABlBh5o2gxzXvSmn1N/kDw6Zfo63YGGRN+9+lgRfxY8Fkr2nz8MIGJSSBTpG0FumFB3Wkz1j4jHDgVIjb7gcPpegBLWdHp7VSomCmyyTh5/IIU6rsrqT9zMMpMo+nlw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723282629; c=relaxed/simple;
-	bh=kB56kD/5z+M6WwPivevM45BfFeGz0ZSsLfLVcZSs9Z8=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NqdhR4qw2nql3d4FLzb2wzqo9gnfp6mUvItPuaUYUsbqSzO+bXXi0cI47j7JuxiTX6c2zD9Ekq6s+AXCuVwvpaeWrEM8poWsQ0XagYDzCeqmtxNcIVrK8krVgk0IyJF9tl5BrTNzEQnS7GciCZJsqDa/fsr9QD4d8Ojd4jKA8gw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Wgwf738Rrzcd6S;
-	Sat, 10 Aug 2024 17:36:47 +0800 (CST)
-Received: from dggpemf500002.china.huawei.com (unknown [7.185.36.57])
-	by mail.maildlp.com (Postfix) with ESMTPS id E8AB2180087;
-	Sat, 10 Aug 2024 17:36:57 +0800 (CST)
-Received: from huawei.com (10.175.101.6) by dggpemf500002.china.huawei.com
- (7.185.36.57) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Sat, 10 Aug
- 2024 17:36:57 +0800
-From: Yue Haibing <yuehaibing@huawei.com>
-To: <martin.petersen@oracle.com>, <yuehaibing@huawei.com>
-CC: <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: [PATCH -next] scsi: target: Remove unused declarations
-Date: Sat, 10 Aug 2024 17:34:37 +0800
-Message-ID: <20240810093437.2586476-1-yuehaibing@huawei.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1723288998; c=relaxed/simple;
+	bh=utmyr/+lpN586NozsQ5axHslb8Qcps/cRgR3CtcF5AU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=i42l+ckZD5GDgXD00EJtDeIrvkYbQn9gCywMiR3HPCnv5FDMa0ZkXUada9J5t4H91CzEIGQkT1A+yn0oi+YBqdXHT2xy8K8ZrHjuyoLRflZrDbPeA3Lyt+ErfK37sFfTf55Nap/L4dn6cDN5Hyu6Fbp+bucVlwEvS99ZUPHEl6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=LOZluEWQ; arc=none smtp.client-ip=209.85.210.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LOZluEWQ"
+Received: by mail-ot1-f51.google.com with SMTP id 46e09a7af769-7093f3a1af9so1727738a34.1;
+        Sat, 10 Aug 2024 04:23:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1723288996; x=1723893796; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=IuPM+OrkvNy7G5yohgcG7IwK+z3l6+EOtGuqEIgk3kU=;
+        b=LOZluEWQn5N24AW1e2pXKJuk+NX5WyyGQ3bz928vMVjhy9XUJKtUG75Xw6N76gUHva
+         cUdDQu1JeuVsLfdS/PhwDW8pdZfsrYPfKeJWk3z4uSpcDZ4mRFvUjfpUphOr+mf/Rtgp
+         hpKnGmwVAPS5x/glbeTLKHjm+khZ6qfpy9vMaBZMXLe5RwlUsdLrwIK5Pwp2ZdR7KIFu
+         cpTS9Fwvq/BuiPWFn+VhDKaHPykeOkuIatpOV2zNm5yJFcykfbJmuPlpAKSd456TK2gy
+         rmvsG1eVMCk8Ke4mq3Q72zXhZ2ia06ex83rj5nfY2fAmryL/gigs9U4OB+1ckV2tgKZ3
+         SPNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1723288996; x=1723893796;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=IuPM+OrkvNy7G5yohgcG7IwK+z3l6+EOtGuqEIgk3kU=;
+        b=iO43rp0mGeAS45IStKNVIweFzcgwm0u8jp8C0PTQY8kAtH9nyCPqd6IyeoiejsEPXB
+         kNM5rPBpulJ7sSkgfGRdMIDLD9QYr7c9F3CaEGkYiNyLNMm6bWYJYcmgpAuwu6PgSEy/
+         3C+o5ycek/sgyHklkzyV+KUe1bX6MIBzQi4wAde1xMWjs7P+bXpanaQnpLvn7yfeqC54
+         oHTOVSBgNfTPALOiQvYJA7SzrHo+uzHTtuPTqppfHHLfUZaK4N4Qp86Q+vVZWUCawiUv
+         Un+UgNVyK0VxjxPlieLfVmAP6fgPJn22hp/A0Kyf0AnVwwgDsJCL5cAl3XFg/3yRGFpF
+         o+Ng==
+X-Forwarded-Encrypted: i=1; AJvYcCVNnG0lg2Hdup8fmBJAYpwDJpt70kMpXKiXWuj7NoUCzqgkVCO8TTp0WPc2DHEXhqiyDveUSjPv9FoCdemxG5mcgcbX+seQud9VU8tm7J/xRUMK9oQaOEce2F6lJMnU5nyplN0OHZItUA==
+X-Gm-Message-State: AOJu0YwM5DEiOmvjYDv00WtH9rDcr4SRawPItleqio/V3sASPQSUTajt
+	D1QQpUVKDvYk4npLhlrCy49y3PVvw3tZ/IyuuA+iGbETNudj61b5
+X-Google-Smtp-Source: AGHT+IFh392Licwbxfwuo0524rd0uQ0mP1kwO5VDQ0sRcjur1pe6s2bGAhlzY16+V/rBqGNBlSN/ww==
+X-Received: by 2002:a05:6830:2b25:b0:709:449c:61d8 with SMTP id 46e09a7af769-70b6b2fcf88mr5286784a34.6.1723288995969;
+        Sat, 10 Aug 2024 04:23:15 -0700 (PDT)
+Received: from ubuntu.worldlink.com.np ([27.34.65.255])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-710e5ab56fbsm1086964b3a.200.2024.08.10.04.23.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 10 Aug 2024 04:23:15 -0700 (PDT)
+From: Dipendra Khadka <kdipendra88@gmail.com>
+To: james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
+	martin.petersen@oracle.com
+Cc: Dipendra Khadka <kdipendra88@gmail.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: drivers: scsi: lpfc: Fix warning: Using plain integer as NULL pointer in lpfc_init.c
+Date: Sat, 10 Aug 2024 11:23:05 +0000
+Message-ID: <20240810112307.175333-1-kdipendra88@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,120 +68,42 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemf500002.china.huawei.com (7.185.36.57)
 
-Commit 13247018d68f ("scsi: target: iscsi: Fix hang in the iSCSI login code")
-removed iscsi_handle_login_thread_timeout() but leave declaration.
-Commit 3e1c81a95f0d ("iscsi-target: Refactor RX PDU logic + export request PDU handling")
-leave iscsi_target_get_initial_payload() declaration.
-Commit d703ce2f7f4d ("iscsi/iser-target: Convert to command priv_size usage")
-remove iscsit_alloc_cmd() but leave declaration.
+sparse reported following warnings:
 
-And other declarations is never implenmented since introduction in commit
-e48354ce078c ("iscsi-target: Add iSCSI fabric support for target v4.1").
+'''
+drivers/scsi/lpfc/lpfc_init.c:5517:32: warning: Using plain integer as NULL pointer
+drivers/scsi/lpfc/lpfc_init.c:5526:32: warning: Using plain integer as NULL pointer
+'''
+This patch chanes integer 0 to NULL.
 
-Signed-off-by: Yue Haibing <yuehaibing@huawei.com>
+Signed-off-by: Dipendra Khadka <kdipendra88@gmail.com>
 ---
- drivers/target/iscsi/iscsi_target.h       | 2 --
- drivers/target/iscsi/iscsi_target_login.h | 1 -
- drivers/target/iscsi/iscsi_target_nego.h  | 2 --
- drivers/target/iscsi/iscsi_target_tpg.h   | 5 -----
- drivers/target/iscsi/iscsi_target_util.h  | 5 -----
- 5 files changed, 15 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.h b/drivers/target/iscsi/iscsi_target.h
-index 0c997a08adec..873411e95ed2 100644
---- a/drivers/target/iscsi/iscsi_target.h
-+++ b/drivers/target/iscsi/iscsi_target.h
-@@ -15,7 +15,6 @@ struct kref;
- struct sockaddr_storage;
- 
- extern struct iscsi_tiqn *iscsit_get_tiqn_for_login(unsigned char *);
--extern struct iscsi_tiqn *iscsit_get_tiqn(unsigned char *, int);
- extern void iscsit_put_tiqn_for_login(struct iscsi_tiqn *);
- extern struct iscsi_tiqn *iscsit_add_tiqn(unsigned char *);
- extern void iscsit_del_tiqn(struct iscsi_tiqn *);
-@@ -35,7 +34,6 @@ extern void iscsit_set_unsolicited_dataout(struct iscsit_cmd *);
- extern int iscsit_logout_closesession(struct iscsit_cmd *, struct iscsit_conn *);
- extern int iscsit_logout_closeconnection(struct iscsit_cmd *, struct iscsit_conn *);
- extern int iscsit_logout_removeconnforrecovery(struct iscsit_cmd *, struct iscsit_conn *);
--extern int iscsit_send_async_msg(struct iscsit_conn *, u16, u8, u8);
- extern int iscsit_build_r2ts_for_cmd(struct iscsit_conn *, struct iscsit_cmd *, bool recovery);
- extern void iscsit_thread_get_cpumask(struct iscsit_conn *);
- extern int iscsi_target_tx_thread(void *);
-diff --git a/drivers/target/iscsi/iscsi_target_login.h b/drivers/target/iscsi/iscsi_target_login.h
-index 3ca2f232b387..e8760735486b 100644
---- a/drivers/target/iscsi/iscsi_target_login.h
-+++ b/drivers/target/iscsi/iscsi_target_login.h
-@@ -24,6 +24,5 @@ extern int iscsit_start_kthreads(struct iscsit_conn *);
- extern void iscsi_post_login_handler(struct iscsi_np *, struct iscsit_conn *, u8);
- extern void iscsi_target_login_sess_out(struct iscsit_conn *, bool, bool);
- extern int iscsi_target_login_thread(void *);
--extern void iscsi_handle_login_thread_timeout(struct timer_list *t);
- 
- #endif   /*** ISCSI_TARGET_LOGIN_H ***/
-diff --git a/drivers/target/iscsi/iscsi_target_nego.h b/drivers/target/iscsi/iscsi_target_nego.h
-index 41c3db3ddeaa..e60a46d34835 100644
---- a/drivers/target/iscsi/iscsi_target_nego.h
-+++ b/drivers/target/iscsi/iscsi_target_nego.h
-@@ -15,8 +15,6 @@ extern int extract_param(const char *, const char *, unsigned int, char *,
- 		unsigned char *);
- extern int iscsi_target_check_login_request(struct iscsit_conn *,
- 		struct iscsi_login *);
--extern int iscsi_target_get_initial_payload(struct iscsit_conn *,
--		struct iscsi_login *);
- extern int iscsi_target_locate_portal(struct iscsi_np *, struct iscsit_conn *,
- 		struct iscsi_login *);
- extern int iscsi_target_start_negotiation(
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.h b/drivers/target/iscsi/iscsi_target_tpg.h
-index 71d067f62177..d44d09f2dde9 100644
---- a/drivers/target/iscsi/iscsi_target_tpg.h
-+++ b/drivers/target/iscsi/iscsi_target_tpg.h
-@@ -24,12 +24,7 @@ extern int iscsit_tpg_del_portal_group(struct iscsi_tiqn *, struct iscsi_portal_
- 			int);
- extern int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *);
- extern int iscsit_tpg_disable_portal_group(struct iscsi_portal_group *, int);
--extern struct iscsi_node_acl *iscsit_tpg_add_initiator_node_acl(
--			struct iscsi_portal_group *, const char *, u32);
--extern void iscsit_tpg_del_initiator_node_acl(struct iscsi_portal_group *,
--			struct se_node_acl *);
- extern struct iscsi_node_attrib *iscsit_tpg_get_node_attrib(struct iscsit_session *);
--extern void iscsit_tpg_del_external_nps(struct iscsi_tpg_np *);
- extern struct iscsi_tpg_np *iscsit_tpg_locate_child_np(struct iscsi_tpg_np *, int);
- extern struct iscsi_tpg_np *iscsit_tpg_add_network_portal(struct iscsi_portal_group *,
- 			struct sockaddr_storage *, struct iscsi_tpg_np *,
-diff --git a/drivers/target/iscsi/iscsi_target_util.h b/drivers/target/iscsi/iscsi_target_util.h
-index 24b8e577575a..336da4fb0a77 100644
---- a/drivers/target/iscsi/iscsi_target_util.h
-+++ b/drivers/target/iscsi/iscsi_target_util.h
-@@ -17,7 +17,6 @@ extern struct iscsi_r2t *iscsit_get_r2t_for_eos(struct iscsit_cmd *, u32, u32);
- extern struct iscsi_r2t *iscsit_get_r2t_from_list(struct iscsit_cmd *);
- extern void iscsit_free_r2t(struct iscsi_r2t *, struct iscsit_cmd *);
- extern void iscsit_free_r2ts_from_list(struct iscsit_cmd *);
--extern struct iscsit_cmd *iscsit_alloc_cmd(struct iscsit_conn *, gfp_t);
- extern struct iscsit_cmd *iscsit_allocate_cmd(struct iscsit_conn *, int);
- extern struct iscsi_seq *iscsit_get_seq_holder_for_datain(struct iscsit_cmd *, u32);
- extern struct iscsi_seq *iscsit_get_seq_holder_for_r2t(struct iscsit_cmd *);
-@@ -34,7 +33,6 @@ extern void iscsit_add_cmd_to_immediate_queue(struct iscsit_cmd *, struct iscsit
- extern struct iscsi_queue_req *iscsit_get_cmd_from_immediate_queue(struct iscsit_conn *);
- extern int iscsit_add_cmd_to_response_queue(struct iscsit_cmd *, struct iscsit_conn *, u8);
- extern struct iscsi_queue_req *iscsit_get_cmd_from_response_queue(struct iscsit_conn *);
--extern void iscsit_remove_cmd_from_tx_queues(struct iscsit_cmd *, struct iscsit_conn *);
- extern bool iscsit_conn_all_queues_empty(struct iscsit_conn *);
- extern void iscsit_free_queue_reqs_for_conn(struct iscsit_conn *);
- extern void iscsit_release_cmd(struct iscsit_cmd *);
-@@ -64,9 +62,6 @@ extern int iscsit_send_tx_data(struct iscsit_cmd *, struct iscsit_conn *, int);
- extern int iscsit_fe_sendpage_sg(struct iscsit_cmd *, struct iscsit_conn *);
- extern int iscsit_tx_login_rsp(struct iscsit_conn *, u8, u8);
- extern void iscsit_print_session_params(struct iscsit_session *);
--extern int iscsit_print_dev_to_proc(char *, char **, off_t, int);
--extern int iscsit_print_sessions_to_proc(char *, char **, off_t, int);
--extern int iscsit_print_tpg_to_proc(char *, char **, off_t, int);
- extern int rx_data(struct iscsit_conn *, struct kvec *, int, int);
- extern int tx_data(struct iscsit_conn *, struct kvec *, int, int);
- extern void iscsit_collect_login_stats(struct iscsit_conn *, u8, u8);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 69a5249e007a..7f012ba3edb2 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -5514,7 +5514,7 @@ lpfc_sli4_perform_vport_cvl(struct lpfc_vport *vport)
+ 		/* Cannot find existing Fabric ndlp, so allocate a new one */
+ 		ndlp = lpfc_nlp_init(vport, Fabric_DID);
+ 		if (!ndlp)
+-			return 0;
++			return NULL;
+ 		/* Set the node type */
+ 		ndlp->nlp_type |= NLP_FABRIC;
+ 		/* Put ndlp onto node list */
+@@ -5523,7 +5523,7 @@ lpfc_sli4_perform_vport_cvl(struct lpfc_vport *vport)
+ 		/* re-setup ndlp without removing from node list */
+ 		ndlp = lpfc_enable_node(vport, ndlp, NLP_STE_UNUSED_NODE);
+ 		if (!ndlp)
+-			return 0;
++			return NULL;
+ 	}
+ 	if ((phba->pport->port_state < LPFC_FLOGI) &&
+ 		(phba->pport->port_state != LPFC_VPORT_FAILED))
 -- 
-2.34.1
+2.43.0
 
