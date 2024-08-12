@@ -1,99 +1,259 @@
-Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C16C134AC;
-	Mon, 12 Aug 2024 16:24:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61F74189904;
+	Mon, 12 Aug 2024 16:55:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723479866; cv=none; b=Jri1iz6nuukdfKvQ6viXt6fjwyLEWc6PRW1Swt32qzY/ff2x+aE79KwmWhgCxk4Um5FxTmnwVP2P8cm4csd4apRHl1nc8ZoYSuvlKlftREFPCg2wOFn3e4kIKnDRA7Gn6qXD6JDxTqEHECyF7rL6zKWy1Eg34yj/KHhC281prKA=
+	t=1723481715; cv=none; b=KAM1rTRaetRVgcK5v0FcybsG6h/EmuzdS4nAPRdJNFGxxfrl+yFyvk7Aba/YbAil7y0erXm9mFZh1KFA/vOU1jrBWgCTE5cn6V8F2Q3C/Rqk2uz6POCn8eU9DGz2Msi1CZkfAjMucq+ePoHffsrAsCmijQx5zs30DvZmI2U4fH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723479866; c=relaxed/simple;
-	bh=Xb8NKU5ZkzC22+LAMYn3KWK3B7FtrDPWAeLxD550pFI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=oC81hDcVRMa00udK781+8ydmZIyKbYJ18I1kk1UEgfa1LOvIcdBuuWUMAM0wHCiTVNWK/D6CP+wCrM7egp2G3RGDdMgFH80oDPDxIw9oDnT0ExcUZpNz5H9pSum0B3NAktspvtF8OTP33vhZi+JbU+I7wkRUD1xyioJx/eX020g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GUzD7k2T; arc=none smtp.client-ip=209.85.219.169
+	s=arc-20240116; t=1723481715; c=relaxed/simple;
+	bh=w6aiyfWz0YQTyt1Os9A5lro04Smi7PWk9HMlVKZKVOE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hDoigjGz+bilXVGok90rASMpdXxcGC0jFoQl2DkURSs23Ku9w+oYWIXwgJLPAaoniY3n54SW3uOyfeY7ywgpuQkzMaDqZC3yyKuXdlXsXSHzd9396PkAgwQQ60O/Ory7n4GUE5o4+x765ATnuUSF2sO201HivXcXjmORyFTEw4s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XVKMrOPt; arc=none smtp.client-ip=209.85.210.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GUzD7k2T"
-Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-e01a6e5da1fso760299276.0;
-        Mon, 12 Aug 2024 09:24:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XVKMrOPt"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-70cec4aa1e4so3325167b3a.1;
+        Mon, 12 Aug 2024 09:55:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1723479864; x=1724084664; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=m2ut7bEWUwzYOwruzGQ3u23dJf0ifAFUWb+wcbI3n14=;
-        b=GUzD7k2TUOF67BS55RzlOmO1OKbWU+RyfxH/+QjrUn48CN86kQnqGMwj2eaQRolo58
-         cVCRpI/YEI0TokI1/JxcBQw6y3ZIyzYlnuK8+XsdhPyP9tyY+espgwNtgZXkCE/aVvBa
-         6RZPl2Or9K2oO7sCCJ8EUF/rtpDxmo56Qy8ikh2c1mZo7lxYE4ne+or0Ci08ZVe/cYUV
-         aJvSSDFCkfTg7IoPptS3/oiFfTNZ713buUG7+klEwjYlgLD7QsMjDJdpaXRKM0OiPc9B
-         VYSdEJf815iDpQaEs7wK6v0HYbddKZDPQlMQUal+is1mZMUEfPsnqA+1pUKK8YmiX1MG
-         W79A==
+        d=gmail.com; s=20230601; t=1723481712; x=1724086512; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=zG66/eBVG/x3gWkt3ExQFG0ZymJq67sA2nBIpQo8ZVQ=;
+        b=XVKMrOPtR39aiZ5EV+qq48Mt1qiSaqODB03ElTV2OrdIpbKuzYgXoj8hYHX2vaI+Dn
+         +424rQPtbFXY4f13c7iEYs3xTUtpeqe5aX6j8nhxu9L94BfX2OazjRlJr/DS3kUu8UTS
+         kPGbCnB9axx79+lB82yq5019JlX4zcrp8z3jmvkxFh2oJ1eiAGdVzvaYUghAFWYkGu2/
+         X3lwKUaurJe6A41NYOSluQCrSHMJsaQxnF9vr/M6GVki/dMaVYtjg7rNH7WlK+AN4xGa
+         xQ7p3pkFjWlpHwjDEJ+oigyqBXm/H0Y12i0F0k6emMYixNer1XMOzxLh38OuvmhY+LsB
+         lflQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723479864; x=1724084664;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=m2ut7bEWUwzYOwruzGQ3u23dJf0ifAFUWb+wcbI3n14=;
-        b=RlsHI8DYcH9kF93B2piMLAZYhsvMzC9RO8+gOCcPDPy6Ka4xjdzbQ7PDuYnOe6xrTR
-         VKP86rc4/a7AXoROoBinotDxW8uQ2qtRPdraMHuznEkdXmO8qMXZfDophMR4HZ7laPQ1
-         1+Gw+gHaYaWkE/Nter13Dh6Ijlo63VP5pTBOqRbn6/W5F0tAXfeSnV6lPbfojcUpKabb
-         kM2o/nNZyDRGbZ1r7e4x24K2JCtmt6kl+wbcQetaSHOTuNSQZt8F6sdQWlz+LQGYv+8P
-         SaJDYMb1cAZ+PWYsMOX/uIyNthJFEXdefreT17h23LYF2NggGRLcx0S+TQxrcTAAssQi
-         QHaQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUOAfR/a73kE8KudLHPqloeo/uOtQmYMyxf92qfz1uJePG9C/f1B/vAQKhRJ52GgjQVHF1LWYsTpqgv/fo=@vger.kernel.org, AJvYcCVw8SyalQi0RRzXvZ4m6RzJziFEBsUj8D0tHkRjd1NTsnCxizIxQmmLvcgRNNdPiw8geWvQCuhNBJmdXw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwLFu2ZsFeiYMfWKIDlLfTZ+H4K0YErvko5f1eLGDmQhtSqGaZH
-	iQ9NpH3C6NkX2rKuspuOxUjsKCN7UiTa19RiGuuug68IfEfJQSieBErLDP5dn7zCvMM5BzzFTDC
-	G87+qS1U4EpHogfL3rAZTEpPoR6gHJWAA
-X-Google-Smtp-Source: AGHT+IGlUO6df2magGL4Skd5fMDLo8MTD0PlHJ+eAK/NLhxpw9cvZS3pSySJ9AS8IIQitOb1hy3wQFerEAymGHhDfPA=
-X-Received: by 2002:a05:6902:1b0f:b0:e0b:3a7d:928d with SMTP id
- 3f1490d57ef6-e113ce79b87mr546665276.1.1723479864290; Mon, 12 Aug 2024
- 09:24:24 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1723481712; x=1724086512;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zG66/eBVG/x3gWkt3ExQFG0ZymJq67sA2nBIpQo8ZVQ=;
+        b=EhymbQodpNOnZr4m0kV+D/vkK9NHkLgZ/09dlVDYl6dKot7l3Kuw8kVYYhbiKjZorE
+         /fs4zsnLT2gVBFXQUuxadNHn4/xvC9QOt9T4OQwXsqPqeUs/lVpuncQLhLBG/mxqRcIr
+         opoeGsrWnOTpTrzAmpGpdB0If5gXvwTv465xfDMCF7AzQ7cqVY9JmlDwZKCXwKlRsdMx
+         5wTsCXjQoOyP8zZ5QrBE+eZgYOkjneAuFgkv2sMudIH40jzSvYsespkDG/BtWiZ6ruHz
+         /SgoYsxg4ftrCWc+Gm2oeJu4cfkbU7yxeW7I5o0PrqVAd9+3pzd1XaDTAGykFjkALPXj
+         NTtw==
+X-Forwarded-Encrypted: i=1; AJvYcCVytd3re+kA0WevdoQbSf8qZ9lqX2G4DuoZt13Qq8Dmnw6esgeogAaBShlQJWAsBR6cmugRAAY4U0vBH1UhWk5T0PXT9s2R/ylggUnBPKLW9i+4LFpSIjGozP5YA8LUjEcm6tvrqvubpgvQlTdBjDtFQR/mg8WnUXHr/sa4NQsGUw1nULk=
+X-Gm-Message-State: AOJu0YziJq9uEReubolWTmjqnA6UuU7fst4mtJQerX/ZEdXcpKsVgx4B
+	0gwIRIFs1/SBMlr1sDsxIbyDZ50BStP+aF+S2z6gfSUHkqS71J/a
+X-Google-Smtp-Source: AGHT+IEBwSf+fodbYhL2oVkAkNVKhy4cVzJR9k8klIravuzNtcXA9eYBt6xvCZZaew69xrl8bF2y6A==
+X-Received: by 2002:a05:6a21:168c:b0:1c6:fbc8:670d with SMTP id adf61e73a8af0-1c8d75a27f5mr1413528637.43.1723481712433;
+        Mon, 12 Aug 2024 09:55:12 -0700 (PDT)
+Received: from thinkpad ([220.158.156.101])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-200bbb5e290sm40096655ad.303.2024.08.12.09.55.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Aug 2024 09:55:12 -0700 (PDT)
+Date: Mon, 12 Aug 2024 22:25:04 +0530
+From: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	YiFeng Zhao <zyf@rock-chips.com>, Liang Chen <cl@rock-chips.com>,
+	linux-scsi@vger.kernel.org, linux-rockchip@lists.infradead.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 3/3] scsi: ufs: rockchip: init support for UFS
+Message-ID: <20240812165504.GB6003@thinkpad>
+References: <1723089163-28983-1-git-send-email-shawn.lin@rock-chips.com>
+ <1723089163-28983-4-git-send-email-shawn.lin@rock-chips.com>
+ <20240809062813.GC2826@thinkpad>
+ <421d48b7-4aa7-4202-8b5f-9c60916f6ef6@rock-chips.com>
+ <20240810092817.GA147655@thinkpad>
+ <3b2617f5-acb1-45c6-993c-33249fd19888@rock-chips.com>
+ <20240812041051.GA2861@thinkpad>
+ <49659932-5caf-433b-a140-664b61617c43@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240810112307.175333-1-kdipendra88@gmail.com>
-In-Reply-To: <20240810112307.175333-1-kdipendra88@gmail.com>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Mon, 12 Aug 2024 09:24:12 -0700
-Message-ID: <CABPRKS9qUmWgTcg3vXEb7JxFCx1n5O7MeeU73LJZAZ0DhGRTaw@mail.gmail.com>
-Subject: Re: [PATCH] staging: drivers: scsi: lpfc: Fix warning: Using plain
- integer as NULL pointer in lpfc_init.c
-To: Dipendra Khadka <kdipendra88@gmail.com>
-Cc: Justin Tee <justin.tee@broadcom.com>, james.smart@broadcom.com, 
-	dick.kennedy@broadcom.com, martin.petersen@oracle.com, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <49659932-5caf-433b-a140-664b61617c43@rock-chips.com>
 
-Hi Dipendra,
+On Mon, Aug 12, 2024 at 02:24:31PM +0800, Shawn Lin wrote:
+> 在 2024/8/12 12:10, Manivannan Sadhasivam 写道:
+> > On Mon, Aug 12, 2024 at 09:28:26AM +0800, Shawn Lin wrote:
+> > > JHi Mani,
+> > > 
+> > > 在 2024/8/10 17:28, Manivannan Sadhasivam 写道:
+> > > > On Fri, Aug 09, 2024 at 04:16:41PM +0800, Shawn Lin wrote:
+> > > > 
+> > > > [...]
+> > > > 
+> > > > > > > +static int ufs_rockchip_hce_enable_notify(struct ufs_hba *hba,
+> > > > > > > +					 enum ufs_notify_change_status status)
+> > > > > > > +{
+> > > > > > > +	int err = 0;
+> > > > > > > +
+> > > > > > > +	if (status == PRE_CHANGE) {
+> > > > > > > +		int retry_outer = 3;
+> > > > > > > +		int retry_inner;
+> > > > > > > +start:
+> > > > > > > +		if (ufshcd_is_hba_active(hba))
+> > > > > > > +			/* change controller state to "reset state" */
+> > > > > > > +			ufshcd_hba_stop(hba);
+> > > > > > > +
+> > > > > > > +		/* UniPro link is disabled at this point */
+> > > > > > > +		ufshcd_set_link_off(hba);
+> > > > > > > +
+> > > > > > > +		/* start controller initialization sequence */
+> > > > > > > +		ufshcd_writel(hba, CONTROLLER_ENABLE, REG_CONTROLLER_ENABLE);
+> > > > > > > +
+> > > > > > > +		usleep_range(100, 200);
+> > > > > > > +
+> > > > > > > +		/* wait for the host controller to complete initialization */
+> > > > > > > +		retry_inner = 50;
+> > > > > > > +		while (!ufshcd_is_hba_active(hba)) {
+> > > > > > > +			if (retry_inner) {
+> > > > > > > +				retry_inner--;
+> > > > > > > +			} else {
+> > > > > > > +				dev_err(hba->dev,
+> > > > > > > +					"Controller enable failed\n");
+> > > > > > > +				if (retry_outer) {
+> > > > > > > +					retry_outer--;
+> > > > > > > +					goto start;
+> > > > > > > +				}
+> > > > > > > +				return -EIO;
+> > > > > > > +			}
+> > > > > > > +			usleep_range(1000, 1100);
+> > > > > > > +		}
+> > > > > > 
+> > > > > > You just duplicated ufshcd_hba_execute_hce() here. Why? This doesn't make sense.
+> > > > > 
+> > > > > Since we set UFSHCI_QUIRK_BROKEN_HCE, and we also need to do someting
+> > > > > which is very similar to ufshcd_hba_execute_hce(), before calling
+> > > > > ufshcd_dme_reset(). Similar but not totally the same. I'll try to see if
+> > > > > we can export ufshcd_hba_execute_hce() to make full use of it.
+> > > > > 
+> > > > 
+> > > > But you are starting the controller using REG_CONTROLLER_ENABLE. Isn't that
+> > > > supposed to be broken if you set UFSHCI_QUIRK_BROKEN_HCE? Or I am
+> > > > misunderstanding the quirk?
+> > > > 
+> > > 
+> > > Our controller doesn't work with exiting code, whether setting
+> > > UFSHCI_QUIRK_BROKEN_HCE or not.
+> > > 
+> > 
+> > Okay. Then this means you do not need this quirk at all.
+> > 
+> > > 
+> > > For UFSHCI_QUIRK_BROKEN_HCE case, it calls ufshcd_dme_reset（）first,
+> > > but we need to set REG_CONTROLLER_ENABLE first.
+> > > 
+> > > For !UFSHCI_QUIRK_BROKEN_HCE case, namly ufshcd_hba_execute_hce, it
+> > > sets REG_CONTROLLER_ENABLE  first but never send DMA_RESET and calls
+> > > ufshcd_dme_enable.
+> > > 
+> > 
+> > I don't see where ufshcd_dme_enable() is getting called for
+> > !UFSHCI_QUIRK_BROKEN_HCE case.
+> > 
+> > > So the closet code path is to go through UFSHCI_QUIRK_BROKEN_HCE case,
+> > > and set REG_CONTROLLER_ENABLE by adding hce_enable_notify hook.
+> > > 
+> > 
+> > No, that is abusing the quirk. But I'm confused about why your controller wants
+> > resetting the unipro stack _after_ enabling the controller? Why can't it be
+> > reset before?
+> > 
+> 
+> It can't be. The DME_RESET to reset the unipro stack will be failed
+> without enabling REG_CONTROLLER_ENABLE. And the controller does want us
+> to reset the unipro stack before other coming UICs.
+> 
+> So I considered it's a kind of broken HCE case as well. Should I add a
+> new quirk or add a new hba_enable hook in ufs_hba_variant_ops? Or just
+> use UFSHCI_QUIRK_BROKEN_HCE ?
+> 
 
-Perhaps the branch being referred to is out of date?
+IMO, you should add a new quirk and use it directly in ufshcd_hba_execute_hce().
+But you need to pick the quirk name as per the actual quirky behavior of the
+controller.
 
-This has already been addressed in the following commit.
+> > > > > > 
+> > > > > > > +	} else { /* POST_CHANGE */
+> > > > > > > +		err = ufshcd_vops_phy_initialization(hba);
+> > > > > > > +	}
+> > > > > > > +
+> > > > > > > +	return err;
+> > > > > > > +}
+> > > > > > > +
+> > 
+> > [...]
+> > 
+> > > > > > > +static const struct dev_pm_ops ufs_rockchip_pm_ops = {
+> > > > > > > +	SET_SYSTEM_SLEEP_PM_OPS(ufs_rockchip_suspend, ufs_rockchip_resume)
+> > > > > > > +	SET_RUNTIME_PM_OPS(ufs_rockchip_runtime_suspend, ufs_rockchip_runtime_resume, NULL)
+> > > > > > 
+> > > > > > Why can't you use ufshcd PM ops as like other vendor drivers?
+> > > > > 
+> > > > > It doesn't work from the test. We have many use case to power down the
+> > > > > controller and device, so there is no flow to recovery the link. Only
+> > > > > when the first accessing to UFS fails, the ufshcd error handle recovery the
+> > > > > link. This is not what we expect.
+> > > > > 
+> > > > 
+> > > > What tests? The existing UFS controller drivers are used in production devices
+> > > > and they never had a usecase to invent their own PM callbacks. So if your
+> > > > controller is special, then you need to justify it more elaborately. If
+> > > > something is missing in ufshcd callbacks, then we can add them.
+> > > > 
+> > > 
+> > > All the register got lost each time as we power down both controller & PHY
+> > > and devices in suspend.
+> > 
+> > Which suspend? runtime or system suspend? I believe system suspend.
+> 
+> Both.
+> 
 
-commit 5860d9fb5622ecd79913ac981403c612f6c8a2d8
-Author: Colin Ian King <colin.i.king@gmail.com>
-Date:   Sat Sep 25 23:41:13 2021 +0100
+With {rpm/spm}_lvl = 3, you should not power down the controller.
 
-    scsi: lpfc: Return NULL rather than a plain 0 integer
+> > 
+> > > So we have to restore the necessary
+> > > registers and link. I didn't see where the code recovery the controller
+> > > settings in ufshcd_resume, except ufshcd_err_handler（）triggers that.
+> > > Am I missing any thing?
+> > 
+> > Can you explain what is causing the powerdown of the controller and PHY?
+> > Because, ufshcd_suspend() just turns off the clocks and regulators (if
+> > UFSHCD_CAP_AGGR_POWER_COLLAPSE is set) and spm_lvl 3 set by this driver only
+> > puts the device in sleep mode and link in hibern8 state.
+> > 
+> 
+> For runtime PM case, it's the power-domain driver will power down the
+> controller and PHY if UFS stack is not active any more（autosuspend）.
+> 
+> For system PM case, it's the SoC's firmware to cutting of all the power
+> for controller/PHY and device.
+> 
 
-    Function lpfc_sli4_perform_vport_cvl() returns a pointer to struct
-    lpfc_nodelist so returning a plain 0 integer isn't good practice.  Fix =
-this
-    by returning a NULL instead.
+Both cases are not matching the expectations of {rpm/spm}_lvl. So the platform
+(power domain or the firmware) should be fixed. What if the user sets the
+{rpm/spm}_lvl to 1? Will the platform power down the controller even then? If
+so, then I'd say that the platform is broken and should be fixed.
 
-    Link: https://lore.kernel.org/r/20210925224113.183040-1-colin.king@cano=
-nical.com
-    Signed-off-by: Colin Ian King <colin.king@canonical.com>
-    Signed-off-by: Martin K. Petersen martin.petersen@oracle.com
+- Mani
 
-
-And, the routine called lpfc_enable_node doesn=E2=80=99t exist anymore.
-
-Regards,
-Justin Tee
+-- 
+மணிவண்ணன் சதாசிவம்
