@@ -1,71 +1,71 @@
-Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
+Received: from mail-lj1-f180.google.com (mail-lj1-f180.google.com [209.85.208.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5803218455D
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2024 15:27:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1533F9E8
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2024 15:31:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723476468; cv=none; b=RrBmeugYO3wc5ZVsoGLLWCaT6O8PanXhT05gNOfW4t9HIsVRa9WOcFUj2lmF3Xh9uihLv8nHvMn9YPxNMXYNJZpuiBRo7VeVqszjpetNfKvr17djFc+Cgv16sFfzLt0VogfwGRaN3IIblQVdnsMpihiFLJOlxhIRxeVa55z6lQY=
+	t=1723476673; cv=none; b=B2aOGXDLpmOfqnmYgAqUokuglNDkfwyd6SmKXjWQRnanXSWf1tzkszeHwlukNky56EG/xuomCuYGGjWGqP5b4Vwo9Vh6qM8YM5ZgLxPVB9ThTjnZ1PDxxm1sOAivYiNvy+d1mgde3AERfDaDx5aYB8tQI5hrCjgal5bB4zhTSOs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723476468; c=relaxed/simple;
-	bh=/A2UzdJC8JsDPevewwNM8MUwjTBKOymCpl6hHgAJElE=;
+	s=arc-20240116; t=1723476673; c=relaxed/simple;
+	bh=PJ87ZpMSdZPez8j5qM101mJvIEWnLh2m8xHAf5it33E=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=seCPfb8iwUHGVmMuraj0PaQK5X/I0YKFyAdOAWCYeEfvfP8Wx0yDKHueuYOFM6pYc7bsPKbaqx22qh981hAT+bCJSF3923ChJotwh/oZbv5s4Wq7MnxYvvQwfWPW8a9jziMYR60EjGM6kGqV9LGXomW9OMVTNN61hQVHzLMHTrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=NLwhDuZy; arc=none smtp.client-ip=209.85.208.175
+	 To:Cc:Content-Type; b=Hf/oYl8fCACprE6Arhzlma1zV58v/CR7G4jq0QgoypGkVv8FhykBzc01rXW2OmdIFw+hvch+XDkxzqkUSTouGl92B6YxoOYYzDH5YM6XCBo3oaZtr7uIwVKAoPqe82dAfsGVOgRu3lllClnqeKfePJ6e/MUy+I/2yTgCgGUtaVw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=CQBPegWv; arc=none smtp.client-ip=209.85.208.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="NLwhDuZy"
-Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2ef23d04541so49603401fa.2
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2024 08:27:46 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="CQBPegWv"
+Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-2ef2cce8be8so48503861fa.1
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2024 08:31:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1723476464; x=1724081264; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1723476670; x=1724081470; darn=vger.kernel.org;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=t5d29h8+OIRiR/YAP1lLcdkKauLQ1UymccCuzJRHyGE=;
-        b=NLwhDuZyBYKh1fBvOU6eonVF4cYVU0ZoUomh1HSnuTVLoUoAMhaeOQgOjqYQJ1QaGb
-         5gGoKMuf1WzktVR9ZUx5kLW5JhwFaIp0Wh4ldh+P3rUnryEewWpAbJjYUNY6PnJm0tiO
-         yhnOOZSvRW67LnzSe7uEjMIIp/lhnOTkrR7nk=
+        bh=zUO+rsDbVAAq3OUOWZzI2Wf8rpoSPqve0lBI1WU0B5w=;
+        b=CQBPegWvinwyp7cPfRBMQg09nOIWIiMT41E6z9NCPezuL8jf/bjOaVuU7SGoabGEMB
+         p4eYRIetOatCOeGdM9Si3lNUkSWUT5kkzCBfadZTPm3K7EcdbK/RAPLYQA+YJ5O+CoHt
+         DyiGab40qz0tgPd+CQHod2tbbyA7g46cfkcwY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723476464; x=1724081264;
+        d=1e100.net; s=20230601; t=1723476670; x=1724081470;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=t5d29h8+OIRiR/YAP1lLcdkKauLQ1UymccCuzJRHyGE=;
-        b=o3OGmnfbg0QA1wIwYYHyDsgmRNVWQuPeAM5mf0ifxlhdNEUipLuNtT4I21h0p07EHE
-         HZgT7/SE3Jr1Yw3azmODVtbpkDG6geQRzs6nuupbXWI2PJhLp67kq+b0IC4egmC+IRfT
-         IYQPMG8VFk767cF7IBCkJV2Thqh90ABb4ta7OF716PZf2h+3/7ERu0HIOch0QD/AkcuK
-         LTJwLTy9RwDE2WufdzF+IbX+A9UMhNTv7h/FAj56Dj2psQoj2LmrhZAbRgeeUiRCmkam
-         g7i1jXnv/CQ/no6Xcd2VA8VAo7A3+oRgksk9oyWS1jcrJaAOB41+cbJ1bzKuhRUdRza/
-         uC8Q==
-X-Gm-Message-State: AOJu0YznXThjKOaO/D4rXx2Wb99Q9zcXvj1Tvzwke/ClsHdZBB+hX4fV
-	KQAs7pRtPkaeK3EHIzrxeyd/BFG6DrjPgnY4zcNCHtgn3msLuWbJro9mL8jNeZtfwwI/Q8YSNAj
-	8mmo+6dffgg2h7qYSIfGZ+0tauoKV+GJvsOI2kxGGcUeME2rLOXw=
-X-Google-Smtp-Source: AGHT+IGJYi+mel8KO+VzX4pA/LXNJfNRWCrEHqJXzCBBk/dDq77WMIWLaBFT+0IKAaHKZlAj2+7DuuxUnBy2Z99k70k=
-X-Received: by 2002:a05:651c:516:b0:2ef:2e3f:35d2 with SMTP id
- 38308e7fff4ca-2f2b712fa3fmr5145741fa.5.1723476463697; Mon, 12 Aug 2024
- 08:27:43 -0700 (PDT)
+        bh=zUO+rsDbVAAq3OUOWZzI2Wf8rpoSPqve0lBI1WU0B5w=;
+        b=gmWt1hOrbwDqcF/vX2m8cEmiiDPBtopO5j42i28vBXXsn+IMPLqle2un2xmviRfnbP
+         bhY2UlLH/19RUhGiAIVAwIbO3jYV+MmDsHyEdIXMuA6MeoNvdQxtC7SFVKoXkmV+Idoy
+         YZApmvwaDPRFzAb8bdmuCoqvNPAjDiQBKIFgmfRIpLcbLuAmjpYwj/8Aec0qE0DvJj7+
+         RCBKkia4u4Tz+ueX+R2whq3iav1+Bfas1zDat4ouyaYIyLDEEHFrvMAubPusfbrXrGiT
+         4NUUWAlWh25HTz1DyRb13uvUjNppY6rgrAAEB0FQdt16B+kmLo/rnCBYEfNGg1/162Tj
+         0Ocg==
+X-Gm-Message-State: AOJu0YzJyIf+K/tHsKzcqlBk6CWlkIY3X50HRxTbSnBGTU43kj+mpUM/
+	b5GD0nQyApU53zsYJtEUuzqevfTgRpfnhWyEdkXRYdjMRJg+fIbHjFLNOYxmi9vzDYMgAiNoIIA
+	hjjVtxHTu5kPJwfrnykID5FA58b1k+epZ/kA=
+X-Google-Smtp-Source: AGHT+IHC048r2FFZ2/hYHkWeOOn3elNgSJwhvezEX2uQ0bOu9WD9d+sU9lYgX806eBbqQ7hd5+Kfujg53yieBi3XD9o=
+X-Received: by 2002:a05:651c:1509:b0:2ef:1d8d:21fd with SMTP id
+ 38308e7fff4ca-2f2b71463f8mr4896481fa.2.1723476669188; Mon, 12 Aug 2024
+ 08:31:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240810042701.661841-1-shinichiro.kawasaki@wdc.com> <20240810042701.661841-2-shinichiro.kawasaki@wdc.com>
-In-Reply-To: <20240810042701.661841-2-shinichiro.kawasaki@wdc.com>
+References: <20240810042701.661841-1-shinichiro.kawasaki@wdc.com> <20240810042701.661841-3-shinichiro.kawasaki@wdc.com>
+In-Reply-To: <20240810042701.661841-3-shinichiro.kawasaki@wdc.com>
 From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Date: Mon, 12 Aug 2024 09:27:25 -0600
-Message-ID: <CAFdVvOxFR9YZB79mC24+5EkhzNaEfSR=KgfGfe=cGv+ZLygGwg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] scsi: mpi3mr: Add missing spin_lock_init() for mrioc->trigger_lock
+Date: Mon, 12 Aug 2024 09:30:52 -0600
+Message-ID: <CAFdVvOy61KkOmcU0mQqfOh3BOxAt1cb-wPO8GpLukWFopo=iaQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] scsi: mpi3mr: Avoid MAX_PARE_ORDER WARNING for buffer allocations
 To: "Shin'ichiro Kawasaki" <shinichiro.kawasaki@wdc.com>
 Cc: linux-scsi@vger.kernel.org, mpi3mr-linuxdrv.pdl@broadcom.com, 
 	Ranjan Kumar <ranjan.kumar@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, 
 	Sumit Saxena <sumit.saxena@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
 	"Martin K . Petersen" <martin.petersen@oracle.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000765890061f7e22e5"
+	boundary="000000000000b57cf1061f7e2e8d"
 
---000000000000765890061f7e22e5
+--000000000000b57cf1061f7e2e8d
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
@@ -73,17 +73,25 @@ On Fri, Aug 9, 2024 at 10:27=E2=80=AFPM Shin'ichiro Kawasaki
 <shinichiro.kawasaki@wdc.com> wrote:
 >
 > Commit fc4444941140 ("scsi: mpi3mr: HDB allocation and posting for
-> hardware and firmware buffers") added the spinlock trigger_lock to the
-> struct mpi3mr_ioc. However, spin_lock_init() call was not added for it,
-> then the lock does not work as expected. Also, the kernel reports the
-> message below when lockdep is enabled.
+> hardware and firmware buffers") added mpi3mr_alloc_diag_bufs() which
+> calls dma_alloc_coherent() to allocate the trace buffer and the firmware
+> buffer. mpi3mr_alloc_diag_bufs() decides the buffer sizes from the
+> driver configuration. In my environment, the sizes are 8MB. With the
+> sizes, dma_alloc_coherent() fails and report this WARNING:
 >
->     INFO: trying to register non-static key.
->     The code is fine but needs lockdep annotation, or maybe
->     you didn't initialize this object before use?
+>     WARNING: CPU: 4 PID: 438 at mm/page_alloc.c:4676 __alloc_pages_noprof=
++0x52f/0x640
 >
-> To fix the issue and to avoid the INFO message, add the missing
-> spin_lock_init() call.
+> The WARNING indicates that the order of the allocation size is larger
+> than MAX_PAGE_ORDER. After this failure, mpi3mr_alloc_diag_bufs()
+> reduces the buffer sizes and retries dma_alloc_coherent(). In the end,
+> the buffer allocations succeed with 4MB size in my environment, which
+> corresponds to MAX_PAGE_ORDER=3D10. Though the allocations succeed, the
+> WARNING message is misleading and should be avoided.
+>
+> To avoid the WARNING, check the orders of the buffer allocation sizes
+> before calling dma_alloc_coherent(). If the orders are larger than
+> MAX_PAGE_ORDER, fall back to the retry path.
 >
 > Fixes: fc4444941140 ("scsi: mpi3mr: HDB allocation and posting for hardwa=
 re and firmware buffers")
@@ -92,28 +100,52 @@ re and firmware buffers")
 
 Acked-by: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
 
->  drivers/scsi/mpi3mr/mpi3mr_os.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/scsi/mpi3mr/mpi3mr_app.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
 >
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
-_os.c
-> index ca8f132e03ae..616894571c6a 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -5234,6 +5234,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci=
-_device_id *id)
->         spin_lock_init(&mrioc->watchdog_lock);
->         spin_lock_init(&mrioc->chain_buf_lock);
->         spin_lock_init(&mrioc->sas_node_lock);
-> +       spin_lock_init(&mrioc->trigger_lock);
->
->         INIT_LIST_HEAD(&mrioc->fwevt_list);
->         INIT_LIST_HEAD(&mrioc->tgtdev_list);
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3m=
+r_app.c
+> index 8b0eded6ef36..01f035f9330e 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_app.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+> @@ -100,7 +100,8 @@ void mpi3mr_alloc_diag_bufs(struct mpi3mr_ioc *mrioc)
+>                         dprint_init(mrioc,
+>                             "trying to allocate trace diag buffer of size=
+ =3D %dKB\n",
+>                             trace_size / 1024);
+> -               if (mpi3mr_alloc_trace_buffer(mrioc, trace_size)) {
+> +               if (get_order(trace_size) > MAX_PAGE_ORDER ||
+> +                   mpi3mr_alloc_trace_buffer(mrioc, trace_size)) {
+>                         retry =3D true;
+>                         trace_size -=3D trace_dec_size;
+>                         dprint_init(mrioc, "trace diag buffer allocation =
+failed\n"
+> @@ -118,8 +119,12 @@ void mpi3mr_alloc_diag_bufs(struct mpi3mr_ioc *mrioc=
+)
+>         diag_buffer->type =3D MPI3_DIAG_BUFFER_TYPE_FW;
+>         diag_buffer->status =3D MPI3MR_HDB_BUFSTATUS_NOT_ALLOCATED;
+>         if ((mrioc->facts.diag_fw_sz < fw_size) && (fw_size >=3D fw_min_s=
+ize)) {
+> -               diag_buffer->addr =3D dma_alloc_coherent(&mrioc->pdev->de=
+v,
+> -                   fw_size, &diag_buffer->dma_addr, GFP_KERNEL);
+> +               if (get_order(fw_size) <=3D MAX_PAGE_ORDER) {
+> +                       diag_buffer->addr
+> +                               =3D dma_alloc_coherent(&mrioc->pdev->dev,=
+ fw_size,
+> +                                                    &diag_buffer->dma_ad=
+dr,
+> +                                                    GFP_KERNEL);
+> +               }
+>                 if (!retry)
+>                         dprint_init(mrioc,
+>                             "%s:trying to allocate firmware diag buffer o=
+f size =3D %dKB\n",
 > --
 > 2.45.2
 >
 
---000000000000765890061f7e22e5
+--000000000000b57cf1061f7e2e8d
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -184,14 +216,14 @@ kYd5quZssxYPJ3nl37Moy/U9ZM2F0Ivv4U3wyP5y5cdmBUBAGOd94rH60fVDVogEo5F9gXrZhT/4
 jKzCG3LclOOzLinCkK2J5GYngIUHSmnqk909QPG6jkx5RJWwkpTzm+AAVbJ9a+1F/8iR3FiDddEK
 8wQJuWG84jqd/9wxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEKHpdkP
-Ad27Dy1fYK2qCWd5L1NYo2k5EiInP8S97jZzMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTI0MDgxMjE1Mjc0NFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHaiq6RK
+TOSF17CNexrZb8uyQODWaVEBKEmv0CSz+gCrMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTI0MDgxMjE1MzExMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBi0ofGiL16q8F+DJQ2LmtgpvAh
-NsDRwzlt6qYZPp9gsRXkvvibkiL8SBFXJQa/8thDKcSubBNXe0u6OpowP4c6hE/unhIP6iH8TWZ0
-Y5utU3sdSwTfwdBiz7wxBLAoVUuVuFhtwCdgfqWQF9ae184G8mkaXeZvQnvf1r4eAdbZmTDQfuYB
-iTcabiSqGs0tm/AZifmyAaa9SRKyGUknvosU1N3sKrp9MXZhK3e4N1Z8q36GQItuSGCmhNgFLsbj
-FlJAZSnWpyys4XHDdwLjH4FXl1XmuwNTpX5ZHGO0A4w0fg+9BVHwgiEY/x4sCZJ/BY0kWQQZLw8h
-1HOkE5T8/TSu
---000000000000765890061f7e22e5--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCEzUdMAbt7FfY65XbFQFCCVVdQ
+9azziVw/mV4SW07AxoAqEDGFWp3g4dtjOla496PgIRkC0cWiXYyYdTXdN399bQ0sHDo1IAq29pwj
+wMh5vKqgqp08MClR28L/7isR13bPADENapU8Q4CiOOqx4i8jkF11N7NpiPE3vl0p9FdkqfIxMoKR
+Z56DPX5UnJ+IMU9c4f/zY9QhzbM34j0pdC5e7r1hcVQ8xeOCk6tR/lAoHK1Xj8A5l/RP3i9p0xfO
+Kvd8B5v94jiyv11okUBBWRBdDG2JYUIhKnLrLQ4m/8vAimfdrVGzdlp30DRY22aLUualcKOxHdSe
+4FTNrw/9IjQI
+--000000000000b57cf1061f7e2e8d--
