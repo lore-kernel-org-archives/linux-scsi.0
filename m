@@ -1,184 +1,131 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B0D5193063
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2024 20:22:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E2FB16C854
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2024 20:29:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723494170; cv=none; b=dBGEVKo6u4v7KbY9RaYw4NBhetr8/jcyZX16+RPchOW5pQAFC1vo51cJ4S7k0CkKyDEhBUWKJEwL0Se0P/6oaIm1yPkvf0zUSX2dGoaU+bgCtjT9ci9ZPWYJen6RwCRJJWB6KK3WGIYKnwp2mGb5HuaDHXxK7epJwmTGGOrFV4k=
+	t=1723494601; cv=none; b=lPOw0KZYUmJ5FqZlMTkh/n/QIhYE7iClqbnzYPMixG1Ip5SwkcMqwI3pBHOAjZm5oB4d8PKsfIW6jsmNSbffw6YS0FvpmlsJRinrtYiTLjhUS9MQ928/J/OeDbEVEGn2cymD8QODfN/GISRd+rTVkKDdDEdUGhN6/NnVg4fzw/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723494170; c=relaxed/simple;
-	bh=fP8NH7ivEuUGPRcg7NBfMmNywDi5Vn6hcO6X4yBaTWM=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=N5D4EamUth4x64GF/KqtWMcZ0XjfByZBVMheRgBtfuuLOVLXiv6Zeh2nPAVt5Mz4j8LA1FBj2ADWfLMhvjtPo33mNb3bvqxbvD6S+1CDfDYLbAWIil0DMQiJx2Hx0Du2oVi2zIi5k80RXTwIrPe0NKHDq5k3/X/s/X61zwTuDyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=CJy4JU+i; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=CJy4JU+i; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1723494601; c=relaxed/simple;
+	bh=tyq6t1VZnnJjLtHizymBoNN1tee0CdvsTxPK4a2sBSE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fC338jXdQzhABePBJsRRg0hMGW63N6mPOWqkgZSZUOoNtvi5M2/kYe2pShLSTDgNA48Gh8W+R1fcei8ugdcXnfytZl4VsV28P8U27S+fk+IUo5S1FQAXf2wQSltxrgiznRG0l16tkV3CdWCaUqeZgED9/GpQIlWzp10eyDPcSiQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=TbyM/DIJ; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="CJy4JU+i";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="CJy4JU+i"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="TbyM/DIJ"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WjR2t5wxrzlgVnF;
+	Mon, 12 Aug 2024 20:29:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1723494595; x=1726086596; bh=DM0L1aEr5RMFeUJxuwJtPXX5
+	RssdqhZRar4x/nVJKIY=; b=TbyM/DIJrfI6QKp8k9G4/ycas6aTAUWhPMFV55zk
+	ItFygj+IxLJxZHHpazQ4xUFkMKpfWauwSVJhnOs76M9/YhGj0PAEZg2kydoxfl/f
+	Fn27sNCixyjjolKT2V2g5vT8QsqKUb4kZ8nsnhaNn1Mo8LqHq7Rvbzwa1qbjfsfE
+	+rjVZx5xINSNlp5p0IDxicGZ8e7T8bbcIoW3QwiA6zHKevx+8sKV6i6LobtML7ku
+	MIU6jsftb+U4XsE2j3uFncpdoE0d5UqDYKLQXaoR+BBtGCnzQBwSxXM2SMZt7GPS
+	dyRmsLnHAl1Hzf2iLtSLS5OMyoCnkE/JP8QkAPX1Yxgkcg==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id S2vSQ1O0YHTV; Mon, 12 Aug 2024 20:29:55 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 50B4622606;
-	Mon, 12 Aug 2024 20:22:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1723494166; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Ophy/5q9P3Ro5fYL+EsQnzcBS6f8tGW8+ImUYYbUjoI=;
-	b=CJy4JU+ibZNnZWavQTd8ant7cJyjW8+UBf6dV9UrzgVOSEmRFE8WqISG90vrJg+V7tLt0d
-	UOAPot+ptb7oILqFSl5m/XisTH8Oi2AtlP0TKyq+JGJOqP76duDWKDzLO+egLBqrzaiDjQ
-	6w0jOsYXcaJPIVqqI+1F18UX193wMAw=
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1723494166; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Ophy/5q9P3Ro5fYL+EsQnzcBS6f8tGW8+ImUYYbUjoI=;
-	b=CJy4JU+ibZNnZWavQTd8ant7cJyjW8+UBf6dV9UrzgVOSEmRFE8WqISG90vrJg+V7tLt0d
-	UOAPot+ptb7oILqFSl5m/XisTH8Oi2AtlP0TKyq+JGJOqP76duDWKDzLO+egLBqrzaiDjQ
-	6w0jOsYXcaJPIVqqI+1F18UX193wMAw=
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 14E2113983;
-	Mon, 12 Aug 2024 20:22:46 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id g+R5AxZvumbQdwAAD6G6ig
-	(envelope-from <mwilck@suse.com>); Mon, 12 Aug 2024 20:22:46 +0000
-Message-ID: <646b3701a9a3d8131eb7f0bf16c0fa6b1a0d49b4.camel@suse.com>
-Subject: Re: [PATCH] ibmvfc: Add max_sectors module parameter
-From: Martin Wilck <mwilck@suse.com>
-To: Brian King <brking@linux.ibm.com>, martin.petersen@oracle.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, 
-	tyreld@linux.ibm.com, brking@pobox.com
-Date: Mon, 12 Aug 2024 22:22:45 +0200
-In-Reply-To: <20240730175118.27105-1-brking@linux.ibm.com>
-References: <20240730175118.27105-1-brking@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.3 
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WjR2q2YvBzlgTGW;
+	Mon, 12 Aug 2024 20:29:55 +0000 (UTC)
+Message-ID: <43d83d78-9ae3-4dbe-98f5-9e9736442782@acm.org>
+Date: Mon, 12 Aug 2024 13:29:54 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Spam-Score: -4.30
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
-	MIME_GOOD(-0.10)[text/plain];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:mid]
-X-Spam-Flag: NO
-X-Spam-Level: 
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 4/5] Driver core: platform: Add
+ devm_platform_get_irqs_affinity()
+To: John Garry <john.g.garry@oracle.com>, lenb@kernel.org, rjw@rjwysocki.net,
+ gregkh@linuxfoundation.org, tglx@linutronix.de, maz@kernel.org
+Cc: linux-scsi@vger.kernel.org
+References: <1606905417-183214-1-git-send-email-john.garry@huawei.com>
+ <1606905417-183214-5-git-send-email-john.garry@huawei.com>
+ <1d8d8bcc-e70e-45d1-b722-4931d2a65ae0@acm.org>
+ <2839fb1b-0547-42e2-9f85-8acf43a2545d@oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <2839fb1b-0547-42e2-9f85-8acf43a2545d@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2024-07-30 at 12:51 -0500, Brian King wrote:
-> There are some scenarios that can occur, such as performing an
-> upgrade of the virtual I/O server, where the supported max transfer
-> of the backing device for an ibmvfc HBA can change. If the max
-> transfer of the backing device decreases, this can cause issues with
-> previously discovered LUNs. This patch accomplishes two things.
-> First, it changes the default ibmvfc max transfer value to 1MB.
-> This is generally supported by all backing devices, which should
-> mitigate this issue out of the box. Secondly, it adds a module
-> parameter, enabling a user to increase the max transfer value to
-> values that are larger than 1MB, as long as they have configured
-> these larger values on the virtual I/O server as well.
+On 8/12/24 3:46 AM, John Garry wrote:
+> On 09/08/2024 19:11, Bart Van Assche wrote:
+>> On 12/2/20 2:36 AM, John Garry wrote:
+>>> +=C2=A0=C2=A0=C2=A0 for (i =3D 0; i < nvec; i++) {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int irq =3D platform_get_=
+irq(dev, i);
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (irq < 0) {
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 r=
+et =3D irq;
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 g=
+oto err_free_devres;
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 }
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ptr->irq[i] =3D irq;
+>>> +=C2=A0=C2=A0=C2=A0 }
+>>
+>> (replying to an email from four years ago)
+>>
+>> Why does this function call platform_get_irq(dev, i) instead of
+>> platform_get_irq(dev, affd->pre_vectors + i)? Is there perhaps somethi=
+ng
+>> about the hisi_sas driver that I'm missing? I'm asking this because th=
+is
+>> function would be useful for UFS controller drivers if the
+>> affd->pre_vectors offset would be added when calling platform_get_irq(=
+).
+>>
+> int devm_platform_get_irqs_affinity(struct platform_device *dev,
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct irq_affinity *affd,
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned int minvec,
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned int maxvec,
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int **irqs)
 >=20
-> Signed-off-by: Brian King <brking@linux.ibm.com>
-> ---
-> =C2=A0drivers/scsi/ibmvscsi/ibmvfc.c | 10 +++++++---
-> =C2=A0drivers/scsi/ibmvscsi/ibmvfc.h |=C2=A0 2 +-
-> =C2=A02 files changed, 8 insertions(+), 4 deletions(-)
 >=20
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c
-> b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index a3d1013c8307..611901562e06 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -37,6 +37,7 @@ static unsigned int default_timeout =3D
-> IBMVFC_DEFAULT_TIMEOUT;
-> =C2=A0static u64 max_lun =3D IBMVFC_MAX_LUN;
-> =C2=A0static unsigned int max_targets =3D IBMVFC_MAX_TARGETS;
-> =C2=A0static unsigned int max_requests =3D IBMVFC_MAX_REQUESTS_DEFAULT;
-> +static unsigned int max_sectors =3D IBMVFC_MAX_SECTORS;
-> =C2=A0static u16 scsi_qdepth =3D IBMVFC_SCSI_QDEPTH;
-> =C2=A0static unsigned int disc_threads =3D IBMVFC_MAX_DISC_THREADS;
-> =C2=A0static unsigned int ibmvfc_debug =3D IBMVFC_DEBUG;
-> @@ -83,6 +84,9 @@ MODULE_PARM_DESC(default_timeout,
-> =C2=A0module_param_named(max_requests, max_requests, uint, S_IRUGO);
-> =C2=A0MODULE_PARM_DESC(max_requests, "Maximum requests for this adapter. =
-"
-> =C2=A0		 "[Default=3D"
-> __stringify(IBMVFC_MAX_REQUESTS_DEFAULT) "]");
-> +module_param_named(max_sectors, max_sectors, uint, S_IRUGO);
-> +MODULE_PARM_DESC(max_sectors, "Maximum sectors for this adapter. "
-> +		 "[Default=3D" __stringify(IBMVFC_MAX_SECTORS) "]");
-> =C2=A0module_param_named(scsi_qdepth, scsi_qdepth, ushort, S_IRUGO);
-> =C2=A0MODULE_PARM_DESC(scsi_qdepth, "Maximum scsi command depth per
-> adapter queue. "
-> =C2=A0		 "[Default=3D" __stringify(IBMVFC_SCSI_QDEPTH) "]");
-> @@ -1494,7 +1498,7 @@ static void ibmvfc_set_login_info(struct
-> ibmvfc_host *vhost)
-> =C2=A0	memset(login_info, 0, sizeof(*login_info));
-> =C2=A0
-> =C2=A0	login_info->ostype =3D cpu_to_be32(IBMVFC_OS_LINUX);
-> -	login_info->max_dma_len =3D cpu_to_be64(IBMVFC_MAX_SECTORS <<
-> 9);
-> +	login_info->max_dma_len =3D cpu_to_be64(max_sectors << 9);
-> =C2=A0	login_info->max_payload =3D cpu_to_be32(sizeof(struct
-> ibmvfc_fcp_cmd_iu));
-> =C2=A0	login_info->max_response =3D cpu_to_be32(sizeof(struct
-> ibmvfc_fcp_rsp));
-> =C2=A0	login_info->partition_num =3D cpu_to_be32(vhost-
-> >partition_number);
-> @@ -5230,7 +5234,7 @@ static void ibmvfc_npiv_login_done(struct
-> ibmvfc_event *evt)
-> =C2=A0	}
-> =C2=A0
-> =C2=A0	vhost->logged_in =3D 1;
-> -	npiv_max_sectors =3D min((uint)(be64_to_cpu(rsp->max_dma_len)
-> >> 9), IBMVFC_MAX_SECTORS);
-> +	npiv_max_sectors =3D min((uint)(be64_to_cpu(rsp->max_dma_len)
-> >> 9), max_sectors);
-> =C2=A0	dev_info(vhost->dev, "Host partition: %s, device: %s %s %s
-> max sectors %u\n",
-> =C2=A0		 rsp->partition_name, rsp->device_name, rsp-
-> >port_loc_code,
-> =C2=A0		 rsp->drc_name, npiv_max_sectors);
-> @@ -6329,7 +6333,7 @@ static int ibmvfc_probe(struct vio_dev *vdev,
-> const struct vio_device_id *id)
-> =C2=A0	shost->can_queue =3D scsi_qdepth;
-> =C2=A0	shost->max_lun =3D max_lun;
-> =C2=A0	shost->max_id =3D max_targets;
-> -	shost->max_sectors =3D IBMVFC_MAX_SECTORS;
-> +	shost->max_sectors =3D max_sectors;
+> Function devm_platform_get_irqs_affinity() gets the irq number for a=20
+> total between @minvec and @maxvec interrupts, and fills them into @irqs=
+=20
+> arg. It does not just get the interrupts for index @minvec to @maxvec o=
+nly.
+>=20
+> For context, as I remember, hisi_sas v2 hw has 128 interrupts lines.=20
+> Interrupts index [96, 112) are completion queue interrupts, which we=20
+> want to spread over all CPUs. See interrupt_init_v2_hw() in that driver=
+=20
+> for how the control interrupts, like phy up/down, are used.
 
-Would it make sense to check whether the user-provided max_sectors
-value is within some reasonable limits?
+Hi John,
 
-Thanks
-Martin
+In interrupt_init_v2_hw() and also elsewhere in the hisi_sas_v2_hw.c
+source file I see that the CQ interrupts start at offset 96. However,
+devm_platform_get_irqs_affinity() passes the arguments 0..(num_cqs-1) to
+platform_get_irq(). Shouldn't that function pass arguments in the range
+96..(96+num_cqs-1) to platform_get_irq() since that is the CQ interrupt
+range for this storage controller? My understanding is that the
+devm_platform_get_irqs_affinity() call from hisi_sas_v2_hw.c will affect
+the affinity of the interrupts 0..(num_cqs-1) instead of the interrupts
+in the range 96..(96+num_cqs-1). Isn't that wrong?
 
+Thanks,
+
+Bart.
