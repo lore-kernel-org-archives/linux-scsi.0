@@ -1,131 +1,184 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2806F1891AB;
-	Mon, 12 Aug 2024 17:30:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B0D5193063
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Aug 2024 20:22:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723483809; cv=none; b=QRubxwgWTSz21nBKgf7b0sK8hqYqwzC2lWjClqaonqodzZgaaMwGnQJDpPdDb+J4Inel6SZl/F6Wamh+ByLVAjkOOaUuefXLkHfu8Mf5dprEiKgyCQJogzNY8Hc+Jz6BW8mzfEgJ3B7ktjdCNDD0Sl5JbLGaHk81u0pgEmgW1Tc=
+	t=1723494170; cv=none; b=dBGEVKo6u4v7KbY9RaYw4NBhetr8/jcyZX16+RPchOW5pQAFC1vo51cJ4S7k0CkKyDEhBUWKJEwL0Se0P/6oaIm1yPkvf0zUSX2dGoaU+bgCtjT9ci9ZPWYJen6RwCRJJWB6KK3WGIYKnwp2mGb5HuaDHXxK7epJwmTGGOrFV4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723483809; c=relaxed/simple;
-	bh=Dj8PYH9oW7aGY1KsFlL/zhO2sek/0nRBJ/6Rbz/3Jgk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZoNRjVHvg25bMktv1aMU3HZdaUsOV/g9wlLB2AKayn9lgAqeqpti6+644JuWd3clVFNpFQea/2GMH9yXGFgURxC+0oHjqHolZDeLOPGgM2PoNLhwTH34MIr1TVEztH6WHj93BTyRtRAHnShqFi4qJfEnXJzjvTTBZR9oG5rOBHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZE6loB4V; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1723494170; c=relaxed/simple;
+	bh=fP8NH7ivEuUGPRcg7NBfMmNywDi5Vn6hcO6X4yBaTWM=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=N5D4EamUth4x64GF/KqtWMcZ0XjfByZBVMheRgBtfuuLOVLXiv6Zeh2nPAVt5Mz4j8LA1FBj2ADWfLMhvjtPo33mNb3bvqxbvD6S+1CDfDYLbAWIil0DMQiJx2Hx0Du2oVi2zIi5k80RXTwIrPe0NKHDq5k3/X/s/X61zwTuDyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=CJy4JU+i; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=CJy4JU+i; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZE6loB4V"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1723483808; x=1755019808;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=Dj8PYH9oW7aGY1KsFlL/zhO2sek/0nRBJ/6Rbz/3Jgk=;
-  b=ZE6loB4VxlM3nVmC7eM/p0OwZuPGgk1IoCrzS2m/msjFeZrUFre4HrRM
-   YQxLfrSOzasirGd4zu24IH9OxltjlHomNQLHIEP7lEPQbl7156HSyks9+
-   fc8TaYmOkCOYB2JNwOJzp/KQYCtaLVGVadPhZ04KEZVwy+bHJ/yclM/mj
-   sWVO605W1CgDbkVfq/PX4G2bat/i/SfxAsrA/yuFdVj9SMJOuzWNcMn2+
-   qldd5bAL/np4nbDiyQe9yVAu1zMWh3ChNVaP7BDq1YIp04Fp2zOGX4OTs
-   SeOw2gWP/sp/Jqn+DgINU6/OKiEsV6zpbLeLH1lBFzdKUyUudKMFg3Qdk
-   Q==;
-X-CSE-ConnectionGUID: kPHuG11vR5OahATFyTc/jA==
-X-CSE-MsgGUID: dkzULwGXTx+M9MHCzGte6g==
-X-IronPort-AV: E=McAfee;i="6700,10204,11162"; a="39123945"
-X-IronPort-AV: E=Sophos;i="6.09,283,1716274800"; 
-   d="scan'208";a="39123945"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2024 10:30:07 -0700
-X-CSE-ConnectionGUID: wb8C8qAhSEyNNp8BIl9PKQ==
-X-CSE-MsgGUID: haAF1XmMRz+SJZTrb56Wug==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.09,283,1716274800"; 
-   d="scan'208";a="62991831"
-Received: from unknown (HELO b6bf6c95bbab) ([10.239.97.151])
-  by fmviesa004.fm.intel.com with ESMTP; 12 Aug 2024 10:30:01 -0700
-Received: from kbuild by b6bf6c95bbab with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sdYrm-000C14-0K;
-	Mon, 12 Aug 2024 17:29:58 +0000
-Date: Tue, 13 Aug 2024 01:29:01 +0800
-From: kernel test robot <lkp@intel.com>
-To: Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-	avri.altman@wdc.com, bvanassche@acm.org, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, beanhuo@micron.com,
-	adrian.hunter@intel.com, h10.kim@samsung.com, hy50.seo@samsung.com,
-	sh425.lee@samsung.com, kwangwon.min@samsung.com,
-	junwoo80.lee@samsung.com, wkon.kim@samsung.com
-Cc: oe-kbuild-all@lists.linux.dev, Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: Re: [PATCH v1] scsi: ufs: core: introduce override_cqe_ocs
-Message-ID: <202408122344.dvhCpFj0-lkp@intel.com>
-References: <1723446114-153235-1-git-send-email-kwmad.kim@samsung.com>
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="CJy4JU+i";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="CJy4JU+i"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 50B4622606;
+	Mon, 12 Aug 2024 20:22:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1723494166; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ophy/5q9P3Ro5fYL+EsQnzcBS6f8tGW8+ImUYYbUjoI=;
+	b=CJy4JU+ibZNnZWavQTd8ant7cJyjW8+UBf6dV9UrzgVOSEmRFE8WqISG90vrJg+V7tLt0d
+	UOAPot+ptb7oILqFSl5m/XisTH8Oi2AtlP0TKyq+JGJOqP76duDWKDzLO+egLBqrzaiDjQ
+	6w0jOsYXcaJPIVqqI+1F18UX193wMAw=
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1723494166; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ophy/5q9P3Ro5fYL+EsQnzcBS6f8tGW8+ImUYYbUjoI=;
+	b=CJy4JU+ibZNnZWavQTd8ant7cJyjW8+UBf6dV9UrzgVOSEmRFE8WqISG90vrJg+V7tLt0d
+	UOAPot+ptb7oILqFSl5m/XisTH8Oi2AtlP0TKyq+JGJOqP76duDWKDzLO+egLBqrzaiDjQ
+	6w0jOsYXcaJPIVqqI+1F18UX193wMAw=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 14E2113983;
+	Mon, 12 Aug 2024 20:22:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id g+R5AxZvumbQdwAAD6G6ig
+	(envelope-from <mwilck@suse.com>); Mon, 12 Aug 2024 20:22:46 +0000
+Message-ID: <646b3701a9a3d8131eb7f0bf16c0fa6b1a0d49b4.camel@suse.com>
+Subject: Re: [PATCH] ibmvfc: Add max_sectors module parameter
+From: Martin Wilck <mwilck@suse.com>
+To: Brian King <brking@linux.ibm.com>, martin.petersen@oracle.com
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, 
+	tyreld@linux.ibm.com, brking@pobox.com
+Date: Mon, 12 Aug 2024 22:22:45 +0200
+In-Reply-To: <20240730175118.27105-1-brking@linux.ibm.com>
+References: <20240730175118.27105-1-brking@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1723446114-153235-1-git-send-email-kwmad.kim@samsung.com>
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:mid]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-Hi Kiwoong,
+On Tue, 2024-07-30 at 12:51 -0500, Brian King wrote:
+> There are some scenarios that can occur, such as performing an
+> upgrade of the virtual I/O server, where the supported max transfer
+> of the backing device for an ibmvfc HBA can change. If the max
+> transfer of the backing device decreases, this can cause issues with
+> previously discovered LUNs. This patch accomplishes two things.
+> First, it changes the default ibmvfc max transfer value to 1MB.
+> This is generally supported by all backing devices, which should
+> mitigate this issue out of the box. Secondly, it adds a module
+> parameter, enabling a user to increase the max transfer value to
+> values that are larger than 1MB, as long as they have configured
+> these larger values on the virtual I/O server as well.
+>=20
+> Signed-off-by: Brian King <brking@linux.ibm.com>
+> ---
+> =C2=A0drivers/scsi/ibmvscsi/ibmvfc.c | 10 +++++++---
+> =C2=A0drivers/scsi/ibmvscsi/ibmvfc.h |=C2=A0 2 +-
+> =C2=A02 files changed, 8 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c
+> b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index a3d1013c8307..611901562e06 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -37,6 +37,7 @@ static unsigned int default_timeout =3D
+> IBMVFC_DEFAULT_TIMEOUT;
+> =C2=A0static u64 max_lun =3D IBMVFC_MAX_LUN;
+> =C2=A0static unsigned int max_targets =3D IBMVFC_MAX_TARGETS;
+> =C2=A0static unsigned int max_requests =3D IBMVFC_MAX_REQUESTS_DEFAULT;
+> +static unsigned int max_sectors =3D IBMVFC_MAX_SECTORS;
+> =C2=A0static u16 scsi_qdepth =3D IBMVFC_SCSI_QDEPTH;
+> =C2=A0static unsigned int disc_threads =3D IBMVFC_MAX_DISC_THREADS;
+> =C2=A0static unsigned int ibmvfc_debug =3D IBMVFC_DEBUG;
+> @@ -83,6 +84,9 @@ MODULE_PARM_DESC(default_timeout,
+> =C2=A0module_param_named(max_requests, max_requests, uint, S_IRUGO);
+> =C2=A0MODULE_PARM_DESC(max_requests, "Maximum requests for this adapter. =
+"
+> =C2=A0		 "[Default=3D"
+> __stringify(IBMVFC_MAX_REQUESTS_DEFAULT) "]");
+> +module_param_named(max_sectors, max_sectors, uint, S_IRUGO);
+> +MODULE_PARM_DESC(max_sectors, "Maximum sectors for this adapter. "
+> +		 "[Default=3D" __stringify(IBMVFC_MAX_SECTORS) "]");
+> =C2=A0module_param_named(scsi_qdepth, scsi_qdepth, ushort, S_IRUGO);
+> =C2=A0MODULE_PARM_DESC(scsi_qdepth, "Maximum scsi command depth per
+> adapter queue. "
+> =C2=A0		 "[Default=3D" __stringify(IBMVFC_SCSI_QDEPTH) "]");
+> @@ -1494,7 +1498,7 @@ static void ibmvfc_set_login_info(struct
+> ibmvfc_host *vhost)
+> =C2=A0	memset(login_info, 0, sizeof(*login_info));
+> =C2=A0
+> =C2=A0	login_info->ostype =3D cpu_to_be32(IBMVFC_OS_LINUX);
+> -	login_info->max_dma_len =3D cpu_to_be64(IBMVFC_MAX_SECTORS <<
+> 9);
+> +	login_info->max_dma_len =3D cpu_to_be64(max_sectors << 9);
+> =C2=A0	login_info->max_payload =3D cpu_to_be32(sizeof(struct
+> ibmvfc_fcp_cmd_iu));
+> =C2=A0	login_info->max_response =3D cpu_to_be32(sizeof(struct
+> ibmvfc_fcp_rsp));
+> =C2=A0	login_info->partition_num =3D cpu_to_be32(vhost-
+> >partition_number);
+> @@ -5230,7 +5234,7 @@ static void ibmvfc_npiv_login_done(struct
+> ibmvfc_event *evt)
+> =C2=A0	}
+> =C2=A0
+> =C2=A0	vhost->logged_in =3D 1;
+> -	npiv_max_sectors =3D min((uint)(be64_to_cpu(rsp->max_dma_len)
+> >> 9), IBMVFC_MAX_SECTORS);
+> +	npiv_max_sectors =3D min((uint)(be64_to_cpu(rsp->max_dma_len)
+> >> 9), max_sectors);
+> =C2=A0	dev_info(vhost->dev, "Host partition: %s, device: %s %s %s
+> max sectors %u\n",
+> =C2=A0		 rsp->partition_name, rsp->device_name, rsp-
+> >port_loc_code,
+> =C2=A0		 rsp->drc_name, npiv_max_sectors);
+> @@ -6329,7 +6333,7 @@ static int ibmvfc_probe(struct vio_dev *vdev,
+> const struct vio_device_id *id)
+> =C2=A0	shost->can_queue =3D scsi_qdepth;
+> =C2=A0	shost->max_lun =3D max_lun;
+> =C2=A0	shost->max_id =3D max_targets;
+> -	shost->max_sectors =3D IBMVFC_MAX_SECTORS;
+> +	shost->max_sectors =3D max_sectors;
 
-kernel test robot noticed the following build errors:
+Would it make sense to check whether the user-provided max_sectors
+value is within some reasonable limits?
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.11-rc3 next-20240812]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Thanks
+Martin
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Kiwoong-Kim/scsi-ufs-core-introduce-override_cqe_ocs/20240812-151156
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/1723446114-153235-1-git-send-email-kwmad.kim%40samsung.com
-patch subject: [PATCH v1] scsi: ufs: core: introduce override_cqe_ocs
-config: arc-randconfig-002-20240812 (https://download.01.org/0day-ci/archive/20240812/202408122344.dvhCpFj0-lkp@intel.com/config)
-compiler: arc-elf-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240812/202408122344.dvhCpFj0-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202408122344.dvhCpFj0-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from drivers/ufs/core/ufshcd.c:31:
-   drivers/ufs/core/ufshcd-priv.h: In function 'ufshcd_vops_override_cqe_ocs':
->> drivers/ufs/core/ufshcd-priv.h:282:24: error: too few arguments to function 'hba->vops->override_cqe_ocs'
-     282 |                 return hba->vops->override_cqe_ocs(hba);
-         |                        ^~~
-   drivers/ufs/core/ufshcd.c: In function 'ufshcd_get_tr_ocs':
->> drivers/ufs/core/ufshcd.c:828:53: error: 'hba' undeclared (first use in this function)
-     828 |                 return ufshcd_vops_override_cqe_ocs(hba,
-         |                                                     ^~~
-   drivers/ufs/core/ufshcd.c:828:53: note: each undeclared identifier is reported only once for each function it appears in
---
-   In file included from drivers/ufs/core/ufs_bsg.c:14:
-   drivers/ufs/core/ufshcd-priv.h: In function 'ufshcd_vops_override_cqe_ocs':
->> drivers/ufs/core/ufshcd-priv.h:282:24: error: too few arguments to function 'hba->vops->override_cqe_ocs'
-     282 |                 return hba->vops->override_cqe_ocs(hba);
-         |                        ^~~
-
-
-vim +282 drivers/ufs/core/ufshcd-priv.h
-
-   277	
-   278	static inline enum utp_ocs ufshcd_vops_override_cqe_ocs(struct ufs_hba *hba,
-   279								enum utp_ocs ocs)
-   280	{
-   281		if (hba->vops && hba->vops->override_cqe_ocs)
- > 282			return hba->vops->override_cqe_ocs(hba);
-   283	
-   284		return ocs;
-   285	}
-   286	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
