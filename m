@@ -1,100 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ECAA219EB;
-	Tue, 13 Aug 2024 05:14:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4434A2262B;
+	Tue, 13 Aug 2024 05:35:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723526088; cv=none; b=mC8y26akcJFwrvOGsjUUd1FAl/MPEqdFZc/vEu89tEDFIq8/swFGiG9tzP3g2QjT/xom4MFhPJCKJCGkacP1D8+J05p/2iRmTO1IRokVlLTmxokZUTcCy+iaLZLNIAk0U1pPiB4TqEZVD5zvfZeSNxmPd7aKPw6Cwk5a5850Qdo=
+	t=1723527354; cv=none; b=t5nhpeYgvQSHl5xgUn6O5rTzNbP/OrJ1AZcHHGx/nFjlMHnsJ3geMkCp/QiKVp7y03oOgVJrZkOGVkkvYYzVDaRcUxBCiVqCFjIPklzdam1HboQDS0sANAYHW+ZzntY7/GVaIQxqsfI1zOPQ2dX4iNnmqDp0fNh0O3BXPDEY++A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723526088; c=relaxed/simple;
-	bh=Zy3d+CQ+9kwcPHjJ2TpBkbN91nBgsNVclVWu2IJOqrA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PgnBpxQc2nOPIzRueyYBgRp+xrWL1C25eNV0FKpL6Jo4t4od4nPna5v8Z9IWT3EqETcU071asPQkdKBXb2R0pSXIDtNukR/zmjV+RKkuYD8y6wI7/AbEv4KCqug2VsYH7sleFkNMPHSoPIvW26A/mZ3xexu0SAm1pQ8va+A0u1g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=qHos+eJh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723527354; c=relaxed/simple;
+	bh=leX6LTkBLs4xXEn0eU34c+kXiu6whunxTHrih4W8c7U=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mtyeLquzLWe2ft3uvA06ubW2umGq9yF/d1kEd11WcRtbsCrCLtKmewJvM3s4NUN+xxWXniUGIbZaOeP95ZxdJQC+hYZQmJZmdeUiI1t4NTgchZY3RZkhQOxHAVl1Sjouv15h05M9LuDlu/NGeLoK4IYniPu6R3k4egPfs7kZJGU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=ur8dWJqm; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="qHos+eJh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5A76C4AF09;
-	Tue, 13 Aug 2024 05:14:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1723526088;
-	bh=Zy3d+CQ+9kwcPHjJ2TpBkbN91nBgsNVclVWu2IJOqrA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qHos+eJhM/ztgA3THGVPR4X6ogA5gmE+adasiNA1C+Zy3uZDJ7yitXObzc3bDICw8
-	 43nvJiqh4ZajCO5RoSzjbN8t7m111DwEavd2iqgHrjQ4b8Dq5QoaZEudWrwSCpM/gy
-	 DR7RuhoyzacBNYUK7IS+S1o8wLMwlO9BOTkQEpCk=
-Date: Tue, 13 Aug 2024 07:14:45 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Yihang Li <liyihang9@huawei.com>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bvanassche@acm.org, linuxarm@huawei.com, prime.zeng@huawei.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v3] scsi: sd: retry command SYNC CACHE if format in
- progress
-Message-ID: <2024081338-trance-precinct-bfa6@gregkh>
-References: <20240813011747.3643577-1-liyihang9@huawei.com>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="ur8dWJqm"
+X-UUID: e21fd0bc593511ef9a4e6796c666300c-20240813
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=/EL4a84+ewNtTbFzf9olvVO+ScQrjy5OcNClP3jBT/Q=;
+	b=ur8dWJqmragf9F617NZtYGjGQtSSzzxU40yoM9n7DWZTWflVJhj1cM87HwEaGozfeYtonb4ovyBFQH3P/hDWItachhAjiDzOIIlKhC1VI7uqJ1b5HLCFYSMl25DAO6NYADGdBUSSVF9j1K4v+I8GcEvBY4K5mC/tE+Dc0fNHzE0=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.1.41,REQID:13ba0f39-76b7-4140-8442-79f59cf65512,IP:0,U
+	RL:0,TC:0,Content:0,EDM:-25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:-25
+X-CID-META: VersionHash:6dc6a47,CLOUDID:343a85c1-acff-4a0f-9582-14bcdf4ed7e0,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:1,IP:nil,UR
+	L:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,S
+	PR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: e21fd0bc593511ef9a4e6796c666300c-20240813
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw01.mediatek.com
+	(envelope-from <chaotian.jing@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1575888886; Tue, 13 Aug 2024 13:35:43 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.26; Tue, 13 Aug 2024 13:35:44 +0800
+Received: from mhfsdcap04.gcn.mediatek.inc (10.17.3.154) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1118.26 via Frontend Transport; Tue, 13 Aug 2024 13:35:43 +0800
+From: Chaotian Jing <chaotian.jing@mediatek.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+CC: Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-mediatek@lists.infradead.org>, <srv_heupstream@mediatek.com>, Chaotian
+ Jing <chaotian.jing@mediatek.com>, <stable@vger.kernel.org>, Bart Van Assche
+	<bvanassche@acm.org>
+Subject: [PATCH v2] scsi: fix the return value of scsi_logical_block_count
+Date: Tue, 13 Aug 2024 13:34:10 +0800
+Message-ID: <20240813053534.7720-1-chaotian.jing@mediatek.com>
+X-Mailer: git-send-email 2.46.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240813011747.3643577-1-liyihang9@huawei.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On Tue, Aug 13, 2024 at 09:17:47AM +0800, Yihang Li wrote:
-> If formatting a suspended disk (such as formatting with different DIF
-> type), the disk will be resuming first, and then the format command will
-> submit to the disk through SG_IO ioctl.
-> 
-> When the disk is processing the format command, the system does not submit
-> other commands to the disk. Therefore, the system attempts to suspend the
-> disk again and sends the SYNC CACHE command. However, the SYNC CACHE
-> command will fail because the disk is in the formatting process, which
-> will cause the runtime_status of the disk to error and it is difficult
-> for user to recover it. Error info like:
-> 
-> [  669.925325] sd 6:0:6:0: [sdg] Synchronizing SCSI cache
-> [  670.202371] sd 6:0:6:0: [sdg] Synchronize Cache(10) failed: Result: hostbyte=0x00 driverbyte=DRIVER_OK
-> [  670.216300] sd 6:0:6:0: [sdg] Sense Key : 0x2 [current]
-> [  670.221860] sd 6:0:6:0: [sdg] ASC=0x4 ASCQ=0x4
-> 
-> To solve the issue, retry the command until format command is finished.
-> 
-> Signed-off-by: Yihang Li <liyihang9@huawei.com>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/sd.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index adeaa8ab9951..5cd88a8eea73 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1823,6 +1823,11 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
->  			    (sshdr.asc == 0x74 && sshdr.ascq == 0x71))	/* drive is password locked */
->  				/* this is no error here */
->  				return 0;
-> +
-> +			/* retry if format in progress */
-> +			if (sshdr.asc == 0x4 && sshdr.ascq == 0x4)
-> +				return -EBUSY;
-> +
->  			/*
->  			 * This drive doesn't support sync and there's not much
->  			 * we can do because this is called during shutdown
-> -- 
-> 2.33.0
-> 
-> 
+scsi_logical_block_count() should return the block count of scsi device,
+but the original code has a wrong implement.
 
-<formletter>
+Cc: stable@vger.kernel.org
+Fixes: 6a20e21ae1e2 ("scsi: core: Add helper to return number of logical
+blocks in a request")
+Signed-off-by: Chaotian Jing <chaotian.jing@mediatek.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+---
+ include/scsi/scsi_cmnd.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read:
-    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
-for how to do this properly.
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 45c40d200154..8ecfb94049db 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -234,7 +234,7 @@ static inline sector_t scsi_get_lba(struct scsi_cmnd *scmd)
+ 
+ static inline unsigned int scsi_logical_block_count(struct scsi_cmnd *scmd)
+ {
+-	unsigned int shift = ilog2(scmd->device->sector_size) - SECTOR_SHIFT;
++	unsigned int shift = ilog2(scmd->device->sector_size);
+ 
+ 	return blk_rq_bytes(scsi_cmd_to_rq(scmd)) >> shift;
+ }
+-- 
+2.46.0
 
-</formletter>
