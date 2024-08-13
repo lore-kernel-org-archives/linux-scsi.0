@@ -1,79 +1,99 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 066DA19B3E1
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Aug 2024 12:56:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 179DD18A94E;
+	Tue, 13 Aug 2024 13:11:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723553801; cv=none; b=dPoFoOFgnhhdAYnsrb0u15orBud8qZzk2b4eFCs1IA4vXAbzBW7Ym/bQXAUNvAxlkKBevZ1tQTP8yMs9NF1bda/fltdxJ4e2TSZicBwXNP1UdypjAiR89qEuL7eEvytfFfxt4GDGeNjC64lKzAfRYP9x4EpycRUxWWbSIIhsbMk=
+	t=1723554708; cv=none; b=SzMbdR8o/4wFtAQFujCKZswKiQleiBWUgvkR8MFOCPqsYaoA2XooFeKGzuky9nhQLOtDz0GBjfvFjXSk9Q7lmuq2HoTBsmQZxxXq3nB/8+gswDQI296kPkw4UvVkauKob/+528o8jvW1SKau6vusFHmtPrpC/PtnsokMXZqH1E4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723553801; c=relaxed/simple;
-	bh=dtfdG2/tny22RWPYnguJl5VfCgrZVLKuqTdshHOe1L8=;
+	s=arc-20240116; t=1723554708; c=relaxed/simple;
+	bh=nwrRtJCWatyFdWExCpf1lT5rClcrqjnVxyIfQtEz6Gk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CYu2yUE3rFbPjNF4ePw4wpD/1NgF4xd2RaGO5WO5fHtw381n99ciFgO3li6KxHrCVkYEoGyWXd/VxSrdt6l8/bFOWzh38OreC6TwIqUj2SLdi9F+g0miCdk7YRxiYlgVN4zGczkSfUet3ki4NGe16ae+PoUCyCm5eCjlZnfWacw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=X8atI2Eq; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=rQD1ZWly2giJMtz4hNfb8TauzoIzJdVGiHJryYzd6Sg8tVblfvWmfttp2nk3oNpJPXD8QK57j200rtsuC1QDROQlgNrKA2hTDofOn1QQUCGRNuDaA8YHZsBcDflsePjwzzgI98z78TCpsrVyi1SaQ6QKSvYBCo1JcEOVakiwEm8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YdDshMQ7; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=jgOPz3i3; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YdDshMQ7; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=jgOPz3i3; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="X8atI2Eq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1723553798;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fdMETTEImRyAVHiJjuMBFrMxCEIjWPptnF/f3Mcubwk=;
-	b=X8atI2EqCscvVXLmkjzqEmUBCsMQk1Wh8bdSDfjPYJg0p/WWi7hUesUx8yHQyXzK+V0wB5
-	XkJwCM6RxK0Rk56NRuNyj7lrQPNqTY+xzZOLm8hRIqId2zGs2Oi06nxxLucsuy2Tj4qDZk
-	8dVc5ROCTshTbjHXCeRHmVV+eVGMEFw=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-81-aWKwkjLwMuy558NDq8AgRg-1; Tue,
- 13 Aug 2024 08:56:32 -0400
-X-MC-Unique: aWKwkjLwMuy558NDq8AgRg-1
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YdDshMQ7";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="jgOPz3i3";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YdDshMQ7";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="jgOPz3i3"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B21C91954B13;
-	Tue, 13 Aug 2024 12:56:27 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.133])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CDEF119560AA;
-	Tue, 13 Aug 2024 12:56:08 +0000 (UTC)
-Date: Tue, 13 Aug 2024 20:56:02 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Daniel Wagner <dwagner@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Christoph Hellwig <hch@lst.de>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	Jonathan Corbet <corbet@lwn.net>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>,
-	Sridhar Balaraman <sbalaraman@parallelwireless.com>,
-	"brookxu.cn" <brookxu.cn@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, virtualization@lists.linux.dev,
-	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com,
-	linux-doc@vger.kernel.org, ming.lei@redhat.com
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 25794203AD;
+	Tue, 13 Aug 2024 13:11:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1723554705; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nwrRtJCWatyFdWExCpf1lT5rClcrqjnVxyIfQtEz6Gk=;
+	b=YdDshMQ7mxAV0JmLSj07L+9KBwxzqqdROUsHk7zW52djSfjt2r1H+mR0AfJZRzuk2w8yfX
+	vv5bj/v6JTTBnlWHHXZ4Ss3AtQLlYksZuydh38qcf0wxRJg74gpxtK2rIsgwb85A4c7jeU
+	Nns7Nr84GgwQXduUdiV1cIG9Nwke9Kk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1723554705;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nwrRtJCWatyFdWExCpf1lT5rClcrqjnVxyIfQtEz6Gk=;
+	b=jgOPz3i3I+pHId0uPcovGl1gP+PcrknurukRnQ9/MIRbTNL2FznL1bIx+X+VU/S0YIXfBU
+	3Bi2rUnnKahamfCQ==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=YdDshMQ7;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=jgOPz3i3
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1723554705; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nwrRtJCWatyFdWExCpf1lT5rClcrqjnVxyIfQtEz6Gk=;
+	b=YdDshMQ7mxAV0JmLSj07L+9KBwxzqqdROUsHk7zW52djSfjt2r1H+mR0AfJZRzuk2w8yfX
+	vv5bj/v6JTTBnlWHHXZ4Ss3AtQLlYksZuydh38qcf0wxRJg74gpxtK2rIsgwb85A4c7jeU
+	Nns7Nr84GgwQXduUdiV1cIG9Nwke9Kk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1723554705;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nwrRtJCWatyFdWExCpf1lT5rClcrqjnVxyIfQtEz6Gk=;
+	b=jgOPz3i3I+pHId0uPcovGl1gP+PcrknurukRnQ9/MIRbTNL2FznL1bIx+X+VU/S0YIXfBU
+	3Bi2rUnnKahamfCQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F16EB13983;
+	Tue, 13 Aug 2024 13:11:44 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 7myfOpBbu2buDwAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Tue, 13 Aug 2024 13:11:44 +0000
+Date: Tue, 13 Aug 2024 15:11:44 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, 
+	Sagi Grimberg <sagi@grimberg.me>, Thomas Gleixner <tglx@linutronix.de>, 
+	Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	John Garry <john.g.garry@oracle.com>, "Michael S. Tsirkin" <mst@redhat.com>, 
+	Jason Wang <jasowang@redhat.com>, Kashyap Desai <kashyap.desai@broadcom.com>, 
+	Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, 
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, 
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Nilesh Javali <njavali@marvell.com>, 
+	GR-QLogic-Storage-Upstream@marvell.com, Jonathan Corbet <corbet@lwn.net>, 
+	Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>, 
+	Sridhar Balaraman <sbalaraman@parallelwireless.com>, "brookxu.cn" <brookxu.cn@gmail.com>, 
+	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
+	linux-scsi@vger.kernel.org, virtualization@lists.linux.dev, megaraidlinux.pdl@broadcom.com, 
+	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com, 
+	linux-doc@vger.kernel.org
 Subject: Re: [PATCH v3 15/15] blk-mq: use hk cpus only when isolcpus=io_queue
  is enabled
-Message-ID: <ZrtX4pzqwVUEgIPS@fedora>
+Message-ID: <6449daa0-b8e1-4c5d-86ad-19dada7c849e@flourine.local>
 References: <20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de>
  <20240806-isolcpus-io-queues-v3-15-da0eecfeaf8b@suse.de>
+ <ZrtX4pzqwVUEgIPS@fedora>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,106 +102,47 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240806-isolcpus-io-queues-v3-15-da0eecfeaf8b@suse.de>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+In-Reply-To: <ZrtX4pzqwVUEgIPS@fedora>
+X-Rspamd-Queue-Id: 25794203AD
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-3.01 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[34];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	FREEMAIL_CC(0.00)[kernel.dk,kernel.org,grimberg.me,linutronix.de,lst.de,oracle.com,redhat.com,broadcom.com,marvell.com,lwn.net,suse.de,parallelwireless.com,gmail.com,vger.kernel.org,lists.infradead.org,lists.linux.dev,microchip.com];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	R_RATELIMIT(0.00)[to_ip_from(RLbomrtoisjzkgzhj6iko5ju7u)];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,flourine.local:mid,suse.de:dkim]
+X-Spam-Score: -3.01
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-On Tue, Aug 06, 2024 at 02:06:47PM +0200, Daniel Wagner wrote:
-> When isolcpus=io_queue is enabled all hardware queues should run on the
-> housekeeping CPUs only. Thus ignore the affinity mask provided by the
-> driver. Also we can't use blk_mq_map_queues because it will map all CPUs
-> to first hctx unless, the CPU is the same as the hctx has the affinity
-> set to, e.g. 8 CPUs with isolcpus=io_queue,2-3,6-7 config
-> 
->   queue mapping for /dev/nvme0n1
->         hctx0: default 2 3 4 6 7
->         hctx1: default 5
->         hctx2: default 0
->         hctx3: default 1
-> 
->   PCI name is 00:05.0: nvme0n1
->         irq 57 affinity 0-1 effective 1 is_managed:0 nvme0q0
->         irq 58 affinity 4 effective 4 is_managed:1 nvme0q1
->         irq 59 affinity 5 effective 5 is_managed:1 nvme0q2
->         irq 60 affinity 0 effective 0 is_managed:1 nvme0q3
->         irq 61 affinity 1 effective 1 is_managed:1 nvme0q4
-> 
-> where as with blk_mq_hk_map_queues we get
-> 
->   queue mapping for /dev/nvme0n1
->         hctx0: default 2 4
->         hctx1: default 3 5
->         hctx2: default 0 6
->         hctx3: default 1 7
-> 
->   PCI name is 00:05.0: nvme0n1
->         irq 56 affinity 0-1 effective 1 is_managed:0 nvme0q0
->         irq 61 affinity 4 effective 4 is_managed:1 nvme0q1
->         irq 62 affinity 5 effective 5 is_managed:1 nvme0q2
->         irq 63 affinity 0 effective 0 is_managed:1 nvme0q3
->         irq 64 affinity 1 effective 1 is_managed:1 nvme0q4
-> 
-> Signed-off-by: Daniel Wagner <dwagner@suse.de>
-> ---
->  block/blk-mq-cpumap.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 56 insertions(+)
-> 
-> diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
-> index c1277763aeeb..7e026c2ffa02 100644
-> --- a/block/blk-mq-cpumap.c
-> +++ b/block/blk-mq-cpumap.c
-> @@ -60,11 +60,64 @@ unsigned int blk_mq_num_online_queues(unsigned int max_queues)
->  }
->  EXPORT_SYMBOL_GPL(blk_mq_num_online_queues);
->  
-> +static bool blk_mq_hk_map_queues(struct blk_mq_queue_map *qmap)
-> +{
-> +	struct cpumask *hk_masks;
-> +	cpumask_var_t isol_mask;
-> +
-> +	unsigned int queue, cpu;
-> +
-> +	if (!housekeeping_enabled(HK_TYPE_IO_QUEUE))
-> +		return false;
-> +
-> +	/* map housekeeping cpus to matching hardware context */
-> +	hk_masks = group_cpus_evenly(qmap->nr_queues);
-> +	if (!hk_masks)
-> +		goto fallback;
-> +
-> +	for (queue = 0; queue < qmap->nr_queues; queue++) {
-> +		for_each_cpu(cpu, &hk_masks[queue])
-> +			qmap->mq_map[cpu] = qmap->queue_offset + queue;
-> +	}
-> +
-> +	kfree(hk_masks);
-> +
-> +	/* map isolcpus to hardware context */
-> +	if (!alloc_cpumask_var(&isol_mask, GFP_KERNEL))
-> +		goto fallback;
-> +
-> +	queue = 0;
-> +	cpumask_andnot(isol_mask,
-> +		       cpu_possible_mask,
-> +		       housekeeping_cpumask(HK_TYPE_IO_QUEUE));
-> +
-> +	for_each_cpu(cpu, isol_mask) {
-> +		qmap->mq_map[cpu] = qmap->queue_offset + queue;
-> +		queue = (queue + 1) % qmap->nr_queues;
-> +	}
-> +
+On Tue, Aug 13, 2024 at 08:56:02PM GMT, Ming Lei wrote:
+> With patch 14 and the above change, managed irq's affinity becomes not
+> matched with blk-mq mapping any more.
 
-With patch 14 and the above change, managed irq's affinity becomes not
-matched with blk-mq mapping any more.
-
-If the last CPU in managed irq's affinity becomes offline, blk-mq
-mapping may have other isolated CPUs, so IOs in this hctx won't be
-drained from blk_mq_hctx_notify_offline() in case of CPU offline,
-but genirq still shutdowns this manage irq.
-
-So IO hang risk is introduced here, it should be the reason of your
-hang observation.
-
-
-Thanks, 
-Ming
-
+Ah, got it. The problem here is that I need to update also the irq
+affinity mask for the hctx when offlining a CPU.
