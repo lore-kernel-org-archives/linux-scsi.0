@@ -1,160 +1,93 @@
-Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [207.226.244.122])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1254A19CD05;
-	Tue, 13 Aug 2024 13:48:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.226.244.122
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ABA4195;
+	Wed, 14 Aug 2024 01:41:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723556924; cv=none; b=XMkFxuzPZvOR1heYIZqwrwi7mfkbdjZp+GyTELopkPwUs/pfvixaaa0/7LIbB1aKCNvoF+oWFILGxrSEr/N1klyxYV3HRiipXOrqKuIgywlDRyFqYPOataExVLT4Eh8ZRg0MEOie6iOEoBEP6rPnzH8FFztTn/yoyMqleNv5JxM=
+	t=1723599709; cv=none; b=eh0PDLl4pVoI3EXXZ8/iy5gTZtdsrW6qVlZgUkhRV+UqB1atMb32rtMMR5dkqo/T630hyyriQ7dyAvYtwV0J+NuVz/XM/y7u0PdD8W2Jl8Rk0ZMeo+sJ4dSePLGW30Qa+7U0vePtoQuqjQnQmBbpYJG1wge8vTeBDdKgsYtOA1g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723556924; c=relaxed/simple;
-	bh=8L+5hdMZi624aswdRULhySVYITXomchoDsxT+/7/Xk4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=UsZl2DywZL+B2dU///cFVl5xoAfjeVzXJBqMHmokoeT2V2jZn5ncNS9lheWtZG5ARwPa3AKYmckBTk4PDErZLaxDcpC4j3hSRJ1d0YkwDN3MXHU2r4lPHx4lgfQYqmderND2IHtBMoyt7tTAIRimhOVzeRxulF3Y8bC5yMq+L64=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=207.226.244.122
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
-X-CSE-ConnectionGUID: c6C2O5LqQtiPkbP36ydycw==
-X-CSE-MsgGUID: 8cMa+XtKT22D9+IagzsBtA==
-X-IronPort-AV: E=Sophos;i="6.09,286,1716220800"; 
-   d="scan'208";a="119246640"
-From: ZhangHui <zhanghui31@xiaomi.com>
-To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
-CC: <alim.akhtar@samsung.com>, <avri.altman@wdc.co>, <bvanassche@acm.org>,
-	<peter.wang@mediatek.com>, <manivannan.sadhasivam@linaro.org>,
-	<huangjianan@xiaomi.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, zhanghui <zhanghui31@xiaomi.com>
-Subject: [PATCH] ufs: core: fix bus timeout in ufshcd_wl_resume flow
-Date: Tue, 13 Aug 2024 21:47:29 +0800
-Message-ID: <20240813134729.284583-1-zhanghui31@xiaomi.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1723599709; c=relaxed/simple;
+	bh=ndoIQQGmfXCxhqDwh5Uh3xVbrVVoHqkoxLgmdSPBzVc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WTVHWQnG9qsQTr7WpVJZfbl0kq1qWYA7DY0nPVC0RqlX6t2xetddvfhFad8NmupT513KI3jYBgzcBscUAJAuCzy6ZedjHRUXvoWJiX4iActUprh3xDTpsNXpBBdMN+b/8aFsM/afI8f5bVK6hiWVKyq399Q11gqyi7t9cXaOTiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=mnx/++Ml; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="mnx/++Ml"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Wk9w43HWKzlgVnY;
+	Wed, 14 Aug 2024 01:41:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1723599697; x=1726191698; bh=rvs/VRBEmNk5DZozy8w5EZO0
+	viZDCy22tk7qlebXLsI=; b=mnx/++MleogbbCyeg13MyyiWQdTrUVmyGKiMasa6
+	hnmkOj1Wmy2/DnEuHkvzTINgbdATitQsCLhkX1X2Nd49TzGvqov3bLVta5uGYjJ5
+	KqzdPGADqPa/ah4oq/X3uD0fxahUEqg33nDUt+nLvXpqc0N/O124nPAUpPz3aB7m
+	FLMdxK5LO+8dOMTgGiB0vYn0pwoKiK9A97Eek642Le1IhWhjjXB6509J7trLkTCY
+	GQlqDgV3zgxx0mHbpiYQR9QukOT2OQnzc8cUHjUhnxcDvFIeChx7y3kn1OfInYxB
+	on9nlZib8zqcDZieknCclqhgsHasvqu9vOJLHBwYOcJqfw==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id OUEOPTwRH8iA; Wed, 14 Aug 2024 01:41:37 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Wk9vx75nnzlgVnW;
+	Wed, 14 Aug 2024 01:41:33 +0000 (UTC)
+Message-ID: <b2fbe277-2819-4af4-9b36-b7407618cbf6@acm.org>
+Date: Tue, 13 Aug 2024 18:41:29 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: bj-mbx11.mioffice.cn (10.237.8.131) To YZ-MBX07.mioffice.cn
- (10.237.88.127)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ufs: core: fix bus timeout in ufshcd_wl_resume flow
+To: ZhangHui <zhanghui31@xiaomi.com>, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com
+Cc: alim.akhtar@samsung.com, avri.altman@wdc.co, peter.wang@mediatek.com,
+ manivannan.sadhasivam@linaro.org, huangjianan@xiaomi.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240813134729.284583-1-zhanghui31@xiaomi.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20240813134729.284583-1-zhanghui31@xiaomi.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: zhanghui <zhanghui31@xiaomi.com>
+On 8/13/24 6:47 AM, ZhangHui wrote:
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 5e3c67e96956..e5e3e0277d43 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -3291,6 +3291,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>   	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+>   	int err;
+>   
+> +	if (hba->ufshcd_reg_state == UFSHCD_REG_RESET)
+> +		return -EBUSY;
+>   	/* Protects use of hba->reserved_slot. */
+>   	lockdep_assert_held(&hba->dev_cmd.lock);
 
-If the SSU CMD completion flow in UFS resume and the CMD timeout flow occur
-simultaneously, the timestamp attribute command will be sent to the device
-during the UFS resume flow, while the UFS controller performs a reset in
-the timeout error handling flow.
+Does this change make ufshcd_exec_dev_cmd() unpredictable - it succeeds
+if the controller is in the normal state and fails if error recovery
+is ongoing? If so, which code paths does this affect and/or break?
 
-In this scenario, a bus timeout will occur because the UFS resume flow
-will attempt to access the UFS host controller registers while the UFS
-controller is in a reset state or power cycle.
+Additionally, I think the above check is racy. hba->ufshcd_reg_state may
+change after the above code checked it and before ufshcd_exec_dev_cmd()
+has finished. Wouldn't it be better to make code that shouldn't be
+executed while the error handler is ongoing wait until error handling
+has finished?
 
-Call trace:
-  arm64_serror_panic+0x6c/0x94
-  do_serror+0xbc/0xc8
-  el1h_64_error_handler+0x34/0x48
-  el1h_64_error+0x68/0x6c
-  _raw_spin_unlock+0x18/0x44
-  ufshcd_send_command+0x1c0/0x380
-  ufshcd_exec_dev_cmd+0x21c/0x29c
-  ufshcd_set_timestamp_attr+0x78/0xdc
-  __ufshcd_wl_resume+0x228/0x48c
-  ufshcd_wl_resume+0x5c/0x1b4
-  scsi_bus_resume+0x58/0xa0
-  dpm_run_callback+0x6c/0x23c
-  __device_resume+0x298/0x46c
-  async_resume+0x24/0x3c
-  async_run_entry_fn+0x44/0x150
-  process_scheduled_works+0x254/0x4f4
-  worker_thread+0x244/0x334
-  kthread+0x124/0x1f0
-  ret_from_fork+0x10/0x20
+Thanks,
 
-This patch fixes the issue by adding a check of the UFS controller
-register states before sending the device command.
-
-Signed-off-by: zhanghui <zhanghui31@xiaomi.com>
----
- drivers/ufs/core/ufshcd.c | 14 ++++++++++++++
- include/ufs/ufshcd.h      | 13 +++++++++++++
- 2 files changed, 27 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 5e3c67e96956..e5e3e0277d43 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3291,6 +3291,8 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	int err;
- 
-+	if (hba->ufshcd_reg_state == UFSHCD_REG_RESET)
-+		return -EBUSY;
- 	/* Protects use of hba->reserved_slot. */
- 	lockdep_assert_held(&hba->dev_cmd.lock);
- 
-@@ -4857,6 +4859,7 @@ static int ufshcd_hba_execute_hce(struct ufs_hba *hba)
- int ufshcd_hba_enable(struct ufs_hba *hba)
- {
- 	int ret;
-+	unsigned long flags;
- 
- 	if (hba->quirks & UFSHCI_QUIRK_BROKEN_HCE) {
- 		ufshcd_set_link_off(hba);
-@@ -4881,6 +4884,13 @@ int ufshcd_hba_enable(struct ufs_hba *hba)
- 		ret = ufshcd_hba_execute_hce(hba);
- 	}
- 
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (ret)
-+		hba->ufshcd_reg_state = UFSHCD_REG_RESET;
-+	else
-+		hba->ufshcd_reg_state = UFSHCD_REG_OPERATIONAL;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(ufshcd_hba_enable);
-@@ -7693,7 +7703,11 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- {
- 	int err;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	hba->ufshcd_reg_state = UFSHCD_REG_RESET;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	/*
- 	 * Stop the host controller and complete the requests
- 	 * cleared by h/w
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index cac0cdb9a916..e5af4c2114ce 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -523,6 +523,18 @@ enum ufshcd_state {
- 	UFSHCD_STATE_ERROR,
- };
- 
-+/**
-+ * enum ufshcd_state - UFS host controller state
-+ * @UFSHCD_REG_OPERATIONAL: UFS host controller is enabled, the host controller
-+ * register can be accessed.
-+ * @UFSHCD_REG_RESET: UFS host controller registers will be reset, can't access
-+ * any ufs host controller register.
-+ */
-+enum ufshcd_reg_state {
-+	UFSHCD_REG_OPERATIONAL,
-+	UFSHCD_REG_RESET,
-+};
-+
- enum ufshcd_quirks {
- 	/* Interrupt aggregation support is broken */
- 	UFSHCD_QUIRK_BROKEN_INTR_AGGR			= 1 << 0,
-@@ -1020,6 +1032,7 @@ struct ufs_hba {
- 	struct completion *uic_async_done;
- 
- 	enum ufshcd_state ufshcd_state;
-+	enum ufshcd_reg_state ufshcd_reg_state;
- 	u32 eh_flags;
- 	u32 intr_mask;
- 	u16 ee_ctrl_mask;
--- 
-2.43.0
+Bart.
 
