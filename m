@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 164373F9FB;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 364561448EB;
 	Thu, 15 Aug 2024 05:17:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723699021; cv=none; b=SLvame5GCjnzlkscsdMHgPXmVY9/fAJNMZz5fFc6A9KdolzN6M5y9ANKRqd/H/WLPaYjCZHFL3selEfsZTKSuEEKbVUsTnyyhdZb3jx/zISV6r8oR+zO4pmMsEgwjV9pA+0q8M9l1H4qHULI0Yu+WDxspsPCKnRmVsXHsXKhfp8=
+	t=1723699021; cv=none; b=gpKG2z6UUvM2jj8RTj2EJXz2vGcYtmJ3KcpYF3dmaxynAGGMapK0f2zsnbjSo3dxUuXL+3TOX2K5UIZSfkqArtN/oC3xjCwb7MN8fcC81Yi+oL/Vjxija26lA6/QdoIzfm/S02Fjz89t4s7KOA74IYiSxp83tZjx03AU5Rypx1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1723699021; c=relaxed/simple;
-	bh=/khdo0My3G+swuccfI6ySQc7yVQu776veJ6unGUnbVA=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=pJPZzDw4uO4If3QTvSWOJHYzTNVbrypZ5CyMIeBcA1PjSv03cnaHcDIJclGRcJqJ+7N0yvmC6iZBgRvVLvMXwRrzwQZUG+e1723+boFCfjHM14M2rHHSuuiCnHqKpX9A2irlmznEawC/7B5NBVCnV7wAG8dLiEkuzen2SJ1xZp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QNULd7Ym; arc=none smtp.client-ip=10.30.226.201
+	bh=M0ZalJaR2cqaYtu21nRymj3MSV1IRF0NUOW7L0tD/OQ=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=kKso1CVgYcNuMCmXaWCKGVgQWa4RwOxcCwpnHLbdGb3AmRuFOIuKfVBk2sLc1gsQ6r3QRtfplRNgpjnM+85Nvva7pmK0Jz31WlVEy3RJPxdDgV3vYUDhzDvMQM0qshe8geo7TBjxA8a+5pvP68OC0wr7fMeEhv3IYyx+cQagRc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Y5V6fmyK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QNULd7Ym"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 9255BC4AF0A;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Y5V6fmyK"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BA714C4AF0D;
 	Thu, 15 Aug 2024 05:17:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1723699020;
-	bh=/khdo0My3G+swuccfI6ySQc7yVQu776veJ6unGUnbVA=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=QNULd7YmtR7VUcRdCWwHCsJOEOuxEWIFHr9MYoPthFaP6bsPH39XYNIJakAe35+XP
-	 49CW8ExD2oK3oQxuX2yiMOHRuyjwlJjD+dxasfUHV6x19pLuJqx14a1M7Oov8ffQgs
-	 Fx4ZNJYTr8rQnM0spaJNv+qT3cNIV4BFaI4KFcXJ4pmoheY71pa/BhNS0ycrP+M0FR
-	 rBt6G8qhW3d/aRjQl0Qh7JdFw3tVCdMIlIFBAsEJOyQKZxlLl0O/04iNgAW+UWPQLC
-	 zsEKpJzxNt3zdiwrcNd1EpI0kn40MGy6AKHg4/diZ6zDV8Ji6fjp+KW08d+/Yk9VlP
-	 TKR8wry6fye6g==
+	bh=M0ZalJaR2cqaYtu21nRymj3MSV1IRF0NUOW7L0tD/OQ=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=Y5V6fmyK2CE3DXYntItXgXd1y+1xieyIhg4zl47jlfIhJZoJ0cUfYUDIDV2hA1eSw
+	 3IJhaDHYaKKNUsdvKlEhFyMXcR2RauHebbTpBvNy9La9lcrbYoWEB/78Kx4NroNWWg
+	 nl7RS0ee6diDbPw5yxjvDF1KDCxp+RE9pYE4Qb+0kqzghOiLZWKqFQADsR+vgPA+Ch
+	 EgbPs3J1OuN3/9kkJuJmmsgbCseljf4oUuUYDIywpGtCnUSjBKyTzTcqXR6gg1jPzP
+	 uhl16XacYIo7psjwZT+Rm8XlCtB8V/Xoo5Flhp8u2medXfjpyL36ubPwJqoaa5g3PH
+	 GjGnMlEQAE7tw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85B61C3DA7F;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF30DC52D7F;
 	Thu, 15 Aug 2024 05:17:00 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Subject: [PATCH v2 0/3] ufs: qcom: Fix probe failure on SM8550 SoC due to
- broken LSDBS field
-Date: Thu, 15 Aug 2024 10:46:55 +0530
-Message-Id: <20240815-ufs-bug-fix-v2-0-b373afae888f@linaro.org>
+Date: Thu, 15 Aug 2024 10:46:57 +0530
+Subject: [PATCH v2 2/3] ufs: core: Add a quirk for handling broken LSDBS
+ field in controller capabilities register
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,9 +41,9 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAEePvWYC/22MQQ7CIBAAv9Ls2TVAQKon/2F6KHahmxgwYBtNw
- 9/Fnj3OJDMbFMpMBS7dBplWLpxiA3Xo4D6PMRDy1BiUUFr0UuPiC7oloOc3aq2sd0K6/iSgFc9
- MTe+329B45vJK+bPPV/mz/z+rRIGGnD5Pxltj5fXBcczpmHKAodb6BRhIAo+nAAAA
+Message-Id: <20240815-ufs-bug-fix-v2-2-b373afae888f@linaro.org>
+References: <20240815-ufs-bug-fix-v2-0-b373afae888f@linaro.org>
+In-Reply-To: <20240815-ufs-bug-fix-v2-0-b373afae888f@linaro.org>
 To: Alim Akhtar <alim.akhtar@samsung.com>, 
  Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
@@ -53,16 +53,16 @@ Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
  Amit Pundir <amit.pundir@linaro.org>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1250;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1982;
  i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=/khdo0My3G+swuccfI6ySQc7yVQu776veJ6unGUnbVA=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBmvY9JRRIr3klzE2+LW0sbg+9HwwUTKNVwST3Vs
- 06Qf8uV06qJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZr2PSQAKCRBVnxHm/pHO
- 9bEUCACDNJnn8YxXYv6i8vQzD1bpRkK6pgb3wLXk8j+UWlxvt2N3OkvVH3CHPtngsFUnetodsPu
- z82+ZHIvhP+trg03GWRVQcw0H/Ut7h6XLdBrTYflttlXmbAbMT4u+SrvJXinWiopuP6GtdYSJEI
- Q4OwiVv+iohmkLoXW0fwaIJySkcxVWnt7m5P/XqvdHrC2PNu7CbJniq9EK4Y999ypS900urGfz7
- 5B9/R/DY89cg9iI+CJt3z55Dl6BcCoK8Ir7XGhAeUNpcaA7pbPomQuFl9XsJjmvvDvGkNbd0Q7g
- TJh1C8wdQjh7LEWOiMlKX9vbROnxOB5RB9h64RTvSLVrrvs8
+ bh=MCIRPdIw7ETAreNWkpU0sRIHAGg28eU3fllnElqMe2c=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBmvY9K42XDU3zXkh8FTpsrZGIqprZAcOJUKh6e5
+ LYBQbLGUpKJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZr2PSgAKCRBVnxHm/pHO
+ 9d5UCACQsRMTBjEYzY25J46wBA0oF+Efi6dHqYgYJnNyd9Ed3kgAuLh0S9/FvKP4vIpLQtOmBCm
+ SolfhpoHqvGg4/lj313fwwOoY3BlGqJBAjRO2ruTMb8QJnTSn0WeMC9eXDZJ9sLIW1ZwB3Q/cbF
+ ILstaNVW9sRcPITMglvKi3+GQu4TbDmsQmiVME6Nq/Sc7eCxjWYSq77umg6VOBRcuwIls4xzRnk
+ w9ePwQVYmYjuKZDWkXuoI1JXyJ+bdH239tCOBqa4qN7do/Omk2WXaJFTRIwonXEIRFJpdlz3B/p
+ 1PcsYCGvY5R/EcUaGCbBiTD1cFdLR7wkVxyATHqkSUzUIQou
 X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -70,39 +70,62 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Reply-To: manivannan.sadhasivam@linaro.org
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-This series fixes the probe failure on the Qcom SM8550 SoC due to the broken
-LSDBS field in the host controller capabilities register.
+'Legacy Queue & Single Doorbell Support (LSDBS)' field in the controller
+capabilities register is supposed to be reserved for UFSHCI 3.0 based
+controllers and should read as 0. But some controllers may report bogus
+value of 1 due to the hardware bug. So let's add a quirk to handle those
+controllers.
 
-Please consider this series for v6.11 as it fixes a regression.
+If the quirk is enabled by the controller driver, then LSDBS register field
+will be ignored and legacy/single doorbell mode is assumed to be enabled
+always.
 
+Tested-by: Amit Pundir <amit.pundir@linaro.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
-Changes in v2:
-- Changed SDBS to LSDBS as per the final version of UFSHCI 4.0 spec
-- Moved the quirk check to assignment
-- Used correct fixes tag in patch 3/3
-- Added tested-by tags
-- Link to v1: https://lore.kernel.org/r/20240814-ufs-bug-fix-v1-0-5eb49d5f7571@linaro.org
+ drivers/ufs/core/ufshcd.c | 6 +++++-
+ include/ufs/ufshcd.h      | 7 +++++++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
----
-Manivannan Sadhasivam (3):
-      ufs: core: Rename LSDB to LSDBS to reflect the UFSHCI 4.0 spec
-      ufs: core: Add a quirk for handling broken LSDBS field in controller capabilities register
-      ufs: qcom: Add UFSHCD_QUIRK_BROKEN_LSDBS_CAP for SM8550 SoC
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0b1787074215..8c9ff8696bcd 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2426,7 +2426,11 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+ 	 * 0h: legacy single doorbell support is available
+ 	 * 1h: indicate that legacy single doorbell support has been removed
+ 	 */
+-	hba->lsdbs_sup = !FIELD_GET(MASK_LSDBS_SUPPORT, hba->capabilities);
++	if (!(hba->quirks & UFSHCD_QUIRK_BROKEN_LSDBS_CAP))
++		hba->lsdbs_sup = !FIELD_GET(MASK_LSDBS_SUPPORT, hba->capabilities);
++	else
++		hba->lsdbs_sup = true;
++
+ 	if (!hba->mcq_sup)
+ 		return 0;
+ 
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index c6ab1c671ad7..250adb6eddb6 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -676,6 +676,13 @@ enum ufshcd_quirks {
+ 	 * the standard best practice for managing keys).
+ 	 */
+ 	UFSHCD_QUIRK_KEYS_IN_PRDT			= 1 << 24,
++
++	/*
++	 * This quirk needs to be enabled if the host controller has the broken
++	 * Legacy Queue & Single Doorbell Support (LSDBS) field in Controller
++	 * Capabilities register.
++	 */
++	UFSHCD_QUIRK_BROKEN_LSDBS_CAP			= 1 << 25,
+ };
+ 
+ enum ufshcd_caps {
 
- drivers/ufs/core/ufshcd.c   | 10 +++++++---
- drivers/ufs/host/ufs-qcom.c |  6 +++++-
- include/ufs/ufshcd.h        |  9 ++++++++-
- include/ufs/ufshci.h        |  2 +-
- 4 files changed, 21 insertions(+), 6 deletions(-)
----
-base-commit: 7c626ce4bae1ac14f60076d00eafe71af30450ba
-change-id: 20240814-ufs-bug-fix-4427fb01b860
-
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+2.25.1
 
 
