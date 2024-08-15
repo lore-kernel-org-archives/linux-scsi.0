@@ -1,66 +1,80 @@
-Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [207.226.244.122])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id E908F19F462;
-	Thu, 15 Aug 2024 13:14:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.226.244.122
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85D56381B9;
+	Thu, 15 Aug 2024 17:47:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723727664; cv=none; b=Ei9udhFca1GpZY2+oOCi8FPvUX264fQRbOlvU5D40Xj6nv0+wxu9B3ZphItGqJzpb2q34weluiAIZT5/X3x6DRMDFNN6z5sMsxx7tgl+okpwfESng0e08HeSKM5dPEq33cIgH3QWQETAbrZh7sz2Z2CMRw7NWeXpPIm9XFkdOtc=
+	t=1723744064; cv=none; b=V/mjEzSnDbP5ZY15LxV81VFzaSRqx8M741vhlMjDo8351vboe00TNRHG9Lu14FDzdC+GGJECTMUtQ+WwuevZ9kdF6rEjSWS4X8W0cj9MY9rTEyIW6cWbkl7qn4+eXkcI+zgKQAYsNCf4ALa7qbJRmilenYFsH3XPOkuGerVG5cI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723727664; c=relaxed/simple;
-	bh=xK81SCJet9OWcNbkPj598ufd8Y9tG3VHTlqcbNbLCh8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=NK6rPtcj3hsntGHPaSe4Fvgo7vAKBiaNDIwxEnhRjfRFpdhXcSrquviM7Rm91DrM3d1LfVDCfcbVHklgrMoKvX/kprYNtBs7OxqOyKubTw6tFQPTmAkxPYCsxzd2BI/Ds4hOqUh/kWi5MX2fohGkGKoJoiF1EM8JiVHG4+xnQps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=207.226.244.122
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
-X-CSE-ConnectionGUID: ysuD4FvjQESPyVZtHZq1bg==
-X-CSE-MsgGUID: UyOh9GZHQk6T38EMZcVvtA==
-X-IronPort-AV: E=Sophos;i="6.10,149,1719849600"; 
-   d="scan'208";a="119451810"
-From: =?utf-8?B?56ug6L6J?= <zhanghui31@xiaomi.com>
-To: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "bvanassche@acm.org"
-	<bvanassche@acm.org>, "avri.altman@wdc.co" <avri.altman@wdc.co>, Huang Jianan
-	<huangjianan@xiaomi.com>, "manivannan.sadhasivam@linaro.org"
-	<manivannan.sadhasivam@linaro.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [External Mail]Re: [PATCH] ufs: core: fix bus timeout in
- ufshcd_wl_resume flow
-Thread-Topic: [External Mail]Re: [PATCH] ufs: core: fix bus timeout in
- ufshcd_wl_resume flow
-Thread-Index: AQHa7YdYc9Ki7OjQ5EaL6aO/rOJ9D7IlyESAgAIAogA=
-Date: Thu, 15 Aug 2024 13:14:18 +0000
-Message-ID: <8c96dc60-1977-4109-a625-ff74fdd005ad@xiaomi.com>
-References: <20240813134729.284583-1-zhanghui31@xiaomi.com>
- <58c2bf59f5190f6ef527c1debffaf73cd0752311.camel@mediatek.com>
-In-Reply-To: <58c2bf59f5190f6ef527c1debffaf73cd0752311.camel@mediatek.com>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <36FA0C062066114B95504A7F8AFB2E6B@xiaomi.com>
-Content-Transfer-Encoding: base64
+	s=arc-20240116; t=1723744064; c=relaxed/simple;
+	bh=DTY5vhhVs/JFNuUFMNzI7mcxoohJksI8QzqLh34g294=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rMR6OzS94OaJEcCWouPc7YSM1f3o+RYh2UYogAtzvSPq+ufrOuJrxiqJsVusz3sTLru2HvMm/vgJC+j5aeA7eBUIXI/iRW4SdxBsQCZ7l05qqCmTsNxOGIS9fI0aAI1e250CgyKIunBgkh80VdiXOxycOQ7iN/P8kWJ0CjY+kO4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=MxKGdfXE; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="MxKGdfXE"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WlCJ83GN4z6ClY8q;
+	Thu, 15 Aug 2024 17:47:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1723744053; x=1726336054; bh=DTY5vhhVs/JFNuUFMNzI7mcx
+	oohJksI8QzqLh34g294=; b=MxKGdfXEQKbSpQIAD6+UxQ7iSouXuwNJhBIHTE3c
+	vbytkuTYqmKxpMTHR67oEInSusNueT1qLr9mAsOZsJtsLyuOm/9o2qP5Qd2RaVym
+	BFyEDQNKeYDIxxE3iAQoPrEx+V1PoBgjZWjPlryXBVtuOaxCUyWQPrlZ9nORmcJf
+	2ZPhB1TajFvVrwxdGJgJZBd49GKCfx+0ca4SlD0eK/62uhIRoMC+1n17o5rvhhsr
+	ZOr213tFH8NLoYCYRwMr3ntBhM4nbVt+TvnvEwM2HBvrEybFHTg2ykTEr6DS19Bc
+	eOpY/nbWGLrcNn5IlwyQ6QmFe3m98VOUVPJ9zAXToGka8Q==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id Ngpqyb4JQK5x; Thu, 15 Aug 2024 17:47:33 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WlCJ34Wgbz6ClbJ9;
+	Thu, 15 Aug 2024 17:47:31 +0000 (UTC)
+Message-ID: <b613d16f-1167-456d-a5cd-807db875adb9@acm.org>
+Date: Thu, 15 Aug 2024 10:47:30 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: ufshcd-pltfrm: Signedness bug in
+ ufshcd_parse_clock_info()
+To: Dan Carpenter <dan.carpenter@linaro.org>, Rob Herring <robh@kernel.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+ Brian Masney <bmasney@redhat.com>, Nitin Rawat <quic_nitirawa@quicinc.com>,
+ Can Guo <quic_cang@quicinc.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+References: <404a4727-89c6-410b-9ece-301fa399d4db@stanley.mountain>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <404a4727-89c6-410b-9ece-301fa399d4db@stanley.mountain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-T24gMjAyNC84LzE0IDE0OjM5LCBQZXRlciBXYW5nICjnjovkv6Hlj4spIHdyb3RlOg0KPiBPbiBU
-dWUsIDIwMjQtMDgtMTMgYXQgMjE6NDcgKzA4MDAsIFpoYW5nSHVpIHdyb3RlOg0KPj4gRnJvbTog
-emhhbmdodWkgPHpoYW5naHVpMzFAeGlhb21pLmNvbT4NCj4+DQo+PiBJZiB0aGUgU1NVIENNRCBj
-b21wbGV0aW9uIGZsb3cgaW4gVUZTIHJlc3VtZSBhbmQgdGhlIENNRCB0aW1lb3V0IGZsb3cNCj4+
-IG9jY3VyDQo+PiBzaW11bHRhbmVvdXNseSwgdGhlIHRpbWVzdGFtcCBhdHRyaWJ1dGUgY29tbWFu
-ZCB3aWxsIGJlIHNlbnQgdG8gdGhlDQo+PiBkZXZpY2UNCj4+DQo+IEhpIFpoYW5naHVpLA0KPg0K
-PiBJZiB0aGUgdGltZW91dCBjb21tYW5kIGlzIFNTVT8NCj4gSW4gcmVzdW1lIGZsb3csIGlmIFNT
-VSBjb21tYW5kIHRpbWVvdXQsIHVmc2hjZF9laF9ob3N0X3Jlc2V0X2hhbmRsZXINCj4gaW52b2tl
-IHVmc2hjZF9saW5rX3JlY292ZXJ5IG9ubHksIG5vdCBzY2hlZHVsZSBlaCB3b3JrPw0KPg0KPg0K
-PiBUaGFua3MuDQo+IFBldGVyDQoNCmhpIFBldGVyIEcsDQoNCiDCoMKgwqAgdWZzaGNkX2xpbmtf
-cmVjb3ZlcnkgY2FsbHMgdWZzaGNkX2hvc3RfcmVzZXRfYW5kX3Jlc3RvcmUgdG8gcG93ZXIgDQpj
-eWNsZQ0KDQogwqDCoMKgIGFuZCByZXNldCB0aGUgaG9zdCBjb250cm9sbGVyLg0KDQoNClRoYW5r
-cw0KDQpaaGFuZ2h1aQ0KDQoNCg==
+On 8/15/24 4:24 AM, Dan Carpenter wrote:
+> The "sz" variable needs to be a signed type for the error handling to
+> work as intended.
+
+What error handling are you referring to? I haven't found any code that
+assigns a negative value to 'sz' in ufshcd_parse_clock_info(). Did I
+perhaps overlook something?
+
+Thanks,
+
+Bart.
