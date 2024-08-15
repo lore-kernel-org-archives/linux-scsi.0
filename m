@@ -1,106 +1,80 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44D4B1AC891
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Aug 2024 11:29:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [207.226.244.122])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id EF5FE1714A8;
+	Thu, 15 Aug 2024 13:07:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.226.244.122
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723721352; cv=none; b=KfD5M9cXPQpU647GYw/HdIM5XkimaSJt65aF5zF/5FJA6yYdMGt11/+xzXkPIV2rMpgmgwqDsrsnaBxufJFU5xeLLCkEdIFz3HBKLBzywmbtrRDfdKYWRe4mMr6q161NHN+EnhROdhSBvKticBcys9pGlgnIXODlyCP8We/7wb0=
+	t=1723727267; cv=none; b=jZAGXZ20wSuRXbKPCGjJ6OASqTOaueNtmXMQ2Ls6StlyWvqnhHpQRcaGw5W2OlESOu6CQ3Cs70MiqpUSV8/2nwcOPyblgmOstahGDBotnyvHtH8STaytqhOF1kQXm37QUBbkBIpi35RqABX2krFn3/2c4Qn9jB+/C1yrctTrPFI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723721352; c=relaxed/simple;
-	bh=5yq7ytwNHn2qEvgK7GpGxCanu4fLp9NgxjldEljV6Iw=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=CVDq4NJwfhe55gN0tdjvBMmsyiQuc6cwVzRKCTrULgPgEOg8W+2uPZPA8JYhkSjXVmhZp4Fkrld96MwI3iNKx0Eg8ZWuc/0pqjyt0IPuK2XzmQdXja4dbPXwn0qaYhgvJwdRELlvA6I5xFv0BO1kTKXCC0KQ2ivuWiywJHNJ1+o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=s1JqzpUG; arc=none smtp.client-ip=209.85.208.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="s1JqzpUG"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-5a15692b6f6so1147855a12.0
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Aug 2024 04:29:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1723721350; x=1724326150; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=54Zuy7nrqOr7HzwudR7mUSOwh6Bt+KzFm1OF0/li1xk=;
-        b=s1JqzpUGhteq3nJA6TbhRNhk945JVTr+EAbdJpJ9lSNj54j75VdexDFqAlu1cQ97I/
-         d0usb0OOAjR0jJkeBlL00zTFyQ3rx5qb3KKCr1QGx0LzkUNbovs9sBd8+uP3on+zwWJa
-         2tSLlG9hSVyeD2c2IvS5NDPsMGkdzjKNLMEbGQnUMaLYm93FVQS1iZNETVUXL0cAPqQq
-         +l9c5kdJC6ahjxpmSprYeWyjF+PEEs+OM3kXab0HDiQOFgnveks6Q4j1PuENI92pIMFJ
-         WuTolzzfTJyLN5y08TR0Hc2QFSY/GlfLNv1KwdZds9kTeEiuUyC4KvVkOZ//q4pF0Bwb
-         A+hw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723721350; x=1724326150;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=54Zuy7nrqOr7HzwudR7mUSOwh6Bt+KzFm1OF0/li1xk=;
-        b=JT6lovXTZMERYEXiLc9rxv3BfDN+DKzhPLg3AeoJYNWA5R2Zc/8asg7RXfM29P42Ic
-         a5hbyNsaOKklnq9scFCXIDV9Ci6/tTJovnDVHGulpRiKtFyHQs98tJaT9adCRs/6zSLB
-         jLpTxDDpYxvdR9+ytqeiTOJfWTgx56Jgjxr+AKylLiwYfFVdOIBb0vfHiQfYmUreePKd
-         btOsU0c8WffFr8rDXi3yMVHCLqDv5WhJzxC5iRLajIRKr/pAz9wZ+YmivHSfcjbHduSk
-         89B++MlEgncK4lTq9jbHXJ9y76BYLTqmYdlK7RKT+HlOfQ1erv+/k4NZRkE1+swC8DL7
-         SR+g==
-X-Forwarded-Encrypted: i=1; AJvYcCWCru72rp9O9ZB0uqYNlsSD1G+pS6v6YT50Sh8nDrDPgIh/5zUPs0ycIdawINFcSIdUUI3YFiqXoxum4EZUUbq5OlfhJAKmt3FM5Q==
-X-Gm-Message-State: AOJu0Yy0rrOg3AJIilTpksN4tuPUIskrwqpzAP6W5qZ3VoC+RfVZBKxT
-	+2qLk0ClJ7hbGvLex4Ht95yo2nntcDMOOBtwMTBluDnuuK/4Atvir9nrqLiPZ4E=
-X-Google-Smtp-Source: AGHT+IHodIlI/PTrXRzPvp5z7NIYGt15OMaZASUJrA7ZoG5lrLvhWQzVLdVc0XUqFxReFzqVCQiEnA==
-X-Received: by 2002:a05:6402:e81:b0:5be:9d95:3910 with SMTP id 4fb4d7f45d1cf-5bea1c7b6efmr3910351a12.22.1723721349606;
-        Thu, 15 Aug 2024 04:29:09 -0700 (PDT)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5bebbbe26f1sm802131a12.3.2024.08.15.04.29.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Aug 2024 04:29:09 -0700 (PDT)
-Date: Thu, 15 Aug 2024 14:29:05 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: James Smart <jsmart2021@gmail.com>
-Cc: James Smart <james.smart@broadcom.com>,
-	Ram Vegesna <ram.vegesna@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Daniel Wagner <dwagner@suse.de>, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: elx: libefc: potential use after free in
- efc_nport_vport_del()
-Message-ID: <b666ab26-6581-4213-9a3d-32a9147f0399@stanley.mountain>
+	s=arc-20240116; t=1723727267; c=relaxed/simple;
+	bh=vly1wT4XrhXc97INn4caTGhoBFjIcE5gvgKZFhOQLXI=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=rz0GbwFmgylIZeqC7k75eoo6fEhVsxcQ+xvMr6hteKR9pZ+trQ9W2oRHUeeIuZuBbApaontBuYvUElMulZoq7rAG4PZbLDSleU3IRMGoGJVWBwZb1sIl8yKRIQ62RZeedvYk1zpDrPO+eSdc7E7or4XJ1TEOnWlukK+7mWMtyGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=207.226.244.122
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
+X-CSE-ConnectionGUID: TaGGtM+PTKibyu1xf22nGA==
+X-CSE-MsgGUID: qWFsU24+Tq255oQw+tsfZA==
+X-IronPort-AV: E=Sophos;i="6.10,148,1719849600"; 
+   d="scan'208";a="119451388"
+From: =?utf-8?B?56ug6L6J?= <zhanghui31@xiaomi.com>
+To: Bart Van Assche <bvanassche@acm.org>,
+	"James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "avri.altman@wdc.co"
+	<avri.altman@wdc.co>, "peter.wang@mediatek.com" <peter.wang@mediatek.com>,
+	"manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>, "Huang
+ Jianan" <huangjianan@xiaomi.com>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [External Mail]Re: [PATCH] ufs: core: fix bus timeout in
+ ufshcd_wl_resume flow
+Thread-Topic: [External Mail]Re: [PATCH] ufs: core: fix bus timeout in
+ ufshcd_wl_resume flow
+Thread-Index: AQHa7YdYc9Ki7OjQ5EaL6aO/rOJ9D7IldP+AgAJSDwA=
+Date: Thu, 15 Aug 2024 13:07:42 +0000
+Message-ID: <baef8886-5ec0-4ba4-930e-cd1487ba3a56@xiaomi.com>
+References: <20240813134729.284583-1-zhanghui31@xiaomi.com>
+ <b2fbe277-2819-4af4-9b36-b7407618cbf6@acm.org>
+In-Reply-To: <b2fbe277-2819-4af4-9b36-b7407618cbf6@acm.org>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <A49E0C54580F104ABB40AE1C7CA81DF5@xiaomi.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
 
-The kref_put() function will call nport->release if the refcount drops
-to zero.  The nport->release release function is _efc_nport_free() which
-frees "nport".  But then we dereference "nport" on the next line which
-is a use after free.  Re-order these lines to avoid the use after free.
-
-Fixes: fcd427303eb9 ("scsi: elx: libefc: SLI and FC PORT state machine interfaces")
-Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
----
-From static analysis.  Untested.  But it seems low risk.
----
- drivers/scsi/elx/libefc/efc_nport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/elx/libefc/efc_nport.c b/drivers/scsi/elx/libefc/efc_nport.c
-index 2e83a667901f..1a7437f4328e 100644
---- a/drivers/scsi/elx/libefc/efc_nport.c
-+++ b/drivers/scsi/elx/libefc/efc_nport.c
-@@ -705,9 +705,9 @@ efc_nport_vport_del(struct efc *efc, struct efc_domain *domain,
- 	spin_lock_irqsave(&efc->lock, flags);
- 	list_for_each_entry(nport, &domain->nport_list, list_entry) {
- 		if (nport->wwpn == wwpn && nport->wwnn == wwnn) {
--			kref_put(&nport->ref, nport->release);
- 			/* Shutdown this NPORT */
- 			efc_sm_post_event(&nport->sm, EFC_EVT_SHUTDOWN, NULL);
-+			kref_put(&nport->ref, nport->release);
- 			break;
- 		}
- 	}
--- 
-2.43.0
-
+T24gMjAyNC84LzE0IDk6NDEsIEJhcnQgVmFuIEFzc2NoZcKgd3JvdGU6DQo+IE9uIDgvMTMvMjQg
+Njo0NyBBTSwgWmhhbmdIdWkgd3JvdGU6DQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy91ZnMvY29y
+ZS91ZnNoY2QuYyBiL2RyaXZlcnMvdWZzL2NvcmUvdWZzaGNkLmMNCj4+IGluZGV4IDVlM2M2N2U5
+Njk1Ni4uZTVlM2UwMjc3ZDQzIDEwMDY0NA0KPj4gLS0tIGEvZHJpdmVycy91ZnMvY29yZS91ZnNo
+Y2QuYw0KPj4gKysrIGIvZHJpdmVycy91ZnMvY29yZS91ZnNoY2QuYw0KPj4gQEAgLTMyOTEsNiAr
+MzI5MSw4IEBAIHN0YXRpYyBpbnQgdWZzaGNkX2V4ZWNfZGV2X2NtZChzdHJ1Y3QgdWZzX2hiYSAN
+Cj4+ICpoYmEsDQo+PiDCoMKgwqDCoMKgIHN0cnVjdCB1ZnNoY2RfbHJiICpscmJwID0gJmhiYS0+
+bHJiW3RhZ107DQo+PiDCoMKgwqDCoMKgIGludCBlcnI7DQo+Pg0KPj4gK8KgwqDCoMKgIGlmICho
+YmEtPnVmc2hjZF9yZWdfc3RhdGUgPT0gVUZTSENEX1JFR19SRVNFVCkNCj4+ICvCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqAgcmV0dXJuIC1FQlVTWTsNCj4+IMKgwqDCoMKgwqAgLyogUHJvdGVjdHMg
+dXNlIG9mIGhiYS0+cmVzZXJ2ZWRfc2xvdC4gKi8NCj4+IMKgwqDCoMKgwqAgbG9ja2RlcF9hc3Nl
+cnRfaGVsZCgmaGJhLT5kZXZfY21kLmxvY2spOw0KPg0KPiBEb2VzIHRoaXMgY2hhbmdlIG1ha2Ug
+dWZzaGNkX2V4ZWNfZGV2X2NtZCgpIHVucHJlZGljdGFibGUgLSBpdCBzdWNjZWVkcw0KPiBpZiB0
+aGUgY29udHJvbGxlciBpcyBpbiB0aGUgbm9ybWFsIHN0YXRlIGFuZCBmYWlscyBpZiBlcnJvciBy
+ZWNvdmVyeQ0KPiBpcyBvbmdvaW5nPyBJZiBzbywgd2hpY2ggY29kZSBwYXRocyBkb2VzIHRoaXMg
+YWZmZWN0IGFuZC9vciBicmVhaz8NCj4NCj4gQWRkaXRpb25hbGx5LCBJIHRoaW5rIHRoZSBhYm92
+ZSBjaGVjayBpcyByYWN5LiBoYmEtPnVmc2hjZF9yZWdfc3RhdGUgbWF5DQo+IGNoYW5nZSBhZnRl
+ciB0aGUgYWJvdmUgY29kZSBjaGVja2VkIGl0IGFuZCBiZWZvcmUgdWZzaGNkX2V4ZWNfZGV2X2Nt
+ZCgpDQo+IGhhcyBmaW5pc2hlZC4gV291bGRuJ3QgaXQgYmUgYmV0dGVyIHRvIG1ha2UgY29kZSB0
+aGF0IHNob3VsZG4ndCBiZQ0KPiBleGVjdXRlZCB3aGlsZSB0aGUgZXJyb3IgaGFuZGxlciBpcyBv
+bmdvaW5nIHdhaXQgdW50aWwgZXJyb3IgaGFuZGxpbmcNCj4gaGFzIGZpbmlzaGVkPw0KPg0KPiBU
+aGFua3MsDQo+DQo+IEJhcnQuDQo+DQpoaSBCYXJ0LA0KDQoxLiBJZiB0aGUgaG9zdCBuZWVkcyB0
+byBzZW5kIGEgZGV2IGNvbW1hbmQsIHRoZSBIQkEgbXVzdCBiZSBlbmFibGVkLg0KV2UgaGF2ZSBz
+ZXQgdGhlIHVmc2hjZF9yZWdfc3RhdGUgdG8gb3BlcmF0aW9uYWwgaW4gdGhlIHVmc2hjZF9oYmFf
+ZW5hYmxlLA0Kc28gaXQgaXMgbm90IHVucHJlZGljdGFibGUuDQoNCjIuIFRoYXQncyBhIGdvb2Qg
+cXVlc3Rpb24sIGJ1dCBJIHRoaW5rIGl0IG1ha2VzIHNlbnNlIHRvIGJsb2NrIGRldiBjbWQgd2hp
+bGUNCnVmcyBpcyBkb2luZyBhIHJlc2V0Lg0KDQoNClRoYW5rcw0KWmhhbmdodWkNCg0K
