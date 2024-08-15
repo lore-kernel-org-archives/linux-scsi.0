@@ -1,126 +1,59 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54DF2145FE2;
-	Thu, 15 Aug 2024 05:17:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D238716BE20;
+	Thu, 15 Aug 2024 05:42:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723699021; cv=none; b=FyT+T50nZBZsSw9iq/UrFy5vimAJ+9l7UiMYe0Q9RHX75mM0Liu21j/mRg7qul/Kk1LkIyk3krt3T+KVOiciOCILh5RxfiUahGoFeX6LSzyVZQyMNw9LET6y9qshbvVOxVLfV/9MdYIotcALsHs6kLrwLGpsxoHiVRXfs3J8iOk=
+	t=1723700539; cv=none; b=NoT2JkP2gRA9+h/XRa/Qcc3wxS9uP9F+BhUHHBzotyZICFUPh9BjGllL4fcRQgHl6NZlHS8k4ke81AbRSHM5H58DQ26qHEd0ggLIWrv6yg+uq7W3quxF1opHh0sjheG0JdfJat+48bzBapnBP3ayqEVK0WTCqgJ6WCC4S8MN73E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723699021; c=relaxed/simple;
-	bh=2eAqnVbEte4Ir5jVn1zGKS2bby0UbSy1ZNXKgTB0tAA=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=oS7OIPhJ63l57ZVcCuY4wRmkXzP27ZDzur8NfHKQ0ma/56r/ix2cS7/EgZSWckKlMe8VK5qp9GIIhT+wk72LHwqP8eADij2iwckLONqXMVZI8RwJT5nOwMnFx3mX9WSb285pFY5AobgeZt6gsiX5rKg4NZdZ5kekjXU14emyI4k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kHeyH2Cs; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kHeyH2Cs"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id CE052C4AF0C;
-	Thu, 15 Aug 2024 05:17:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723699020;
-	bh=2eAqnVbEte4Ir5jVn1zGKS2bby0UbSy1ZNXKgTB0tAA=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=kHeyH2CsXNRlcMoj/FnEMzuabmPtjorQArP2gwLIUGW1iw1J346skhXxuD2duFlDS
-	 j1c5Jg4y/o91asXQBM8VvUCFQZmL3H/a1M1w0Zd284cSaFRgNPTMAMBQPNXT7jbOoX
-	 QhnINms7z6rInTGwL8XIcFfRU1T8wT5M8EqC1waET8am49vyV7JaPsKbKHeBW/y0ui
-	 yod9qIW8A2kJGNVwEfAC0hAw232TO1D8JUDNi21g2UCx07JI5gX6UgGEj04uDl5rAy
-	 ghfWQ90LdeS8D+ywRibBx0sQOb5cL1rUP0+swlt+xaOvebvfjq+yXgmpQntupWgg6b
-	 rbqdiBh27dwtg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C207CC531DE;
-	Thu, 15 Aug 2024 05:17:00 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Date: Thu, 15 Aug 2024 10:46:58 +0530
-Subject: [PATCH v2 3/3] ufs: qcom: Add UFSHCD_QUIRK_BROKEN_LSDBS_CAP for
- SM8550 SoC
+	s=arc-20240116; t=1723700539; c=relaxed/simple;
+	bh=+RsYryd49I5xvPZ9WQUndwiv1DTUsY+RawTW5CqgD7Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Rcn2ljkXRsCipgTBSVIGCEQ5MjY6KxNHPg4dijMqYj/wEhKHn+Vlw7afz7MpSS6bsDhzrznU6u3NpTWfqnssF5Thv1Qm84U0XGR6+bPD9dtuiOl4XTgmZ1HRiDxwbTuPkQERwoV926lZmcVPUbBnrhgEVOdRK3Eah241Nw0kGmI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 4B209227A87; Thu, 15 Aug 2024 07:42:11 +0200 (CEST)
+Date: Thu, 15 Aug 2024 07:42:11 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Keith Busch <kbusch@kernel.org>, linux-xfs@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-raid@vger.kernel.org, hch@lst.de, axboe@kernel.dk
+Subject: Re: [bug report] raid0 array mkfs.xfs hang
+Message-ID: <20240815054211.GA12998@lst.de>
+References: <8292cfd7-eb9c-4ca7-8eec-321b3738857b@oracle.com> <4d31268f-310b-4220-88a2-e191c3932a82@oracle.com> <ea82050f-f5a4-457d-8603-2f279237c8be@oracle.com> <ZrzDP5c7bRyh7UnE@kbusch-mbp> <yq1wmkjtb1t.fsf@ca-mkp.ca.oracle.com> <441fb8d7-422d-440c-9e12-ab58a0401cad@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240815-ufs-bug-fix-v2-3-b373afae888f@linaro.org>
-References: <20240815-ufs-bug-fix-v2-0-b373afae888f@linaro.org>
-In-Reply-To: <20240815-ufs-bug-fix-v2-0-b373afae888f@linaro.org>
-To: Alim Akhtar <alim.akhtar@samsung.com>, 
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, Kyoungrul Kim <k831.kim@samsung.com>, 
- Amit Pundir <amit.pundir@linaro.org>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1997;
- i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=86LYSca/QxWt1ChuWxvzEFW+WUoUlJ8CGwZ6Mkg+m0I=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBmvY9KezBjEvKBHyC6JRqOSOXSyAJE3HpZf7pEI
- or6TZ3a8LOJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZr2PSgAKCRBVnxHm/pHO
- 9VvKCACBCdKo6gmM1PLI+AHofj7KYljAd050Y3VIV1/+QgIwkMGg5fG+pGI6fG8cb66sZPdA5tX
- /lD78a+ijyD33Om5oBfxwOT286+/DZZ4aKfTeusnHQzcRfKJ1FTC4ra/tyHwckiARE6evITcmeS
- +zkez/V9zEy8iZi8BZ6GB9SKMYW+RcEVL9T9TGJSlcf3qoTwFh+7tynG0XOtaYUCJSPeMKTPE0C
- uPdc3Yoh9jx214LyenbxJSK3Vt2YWa2bLvKCnv9K4ra8Gl2VN/A9SJ1IePShCN6NFCkRgG4i38d
- rjbVNRbxmJfIO4jf6SvyzCVDB7Cr2imZqitPFWCt5HaG2qJ5
-X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@linaro.org/default with auth_id=185
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reply-To: manivannan.sadhasivam@linaro.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <441fb8d7-422d-440c-9e12-ab58a0401cad@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+On Wed, Aug 14, 2024 at 06:25:39PM +0100, John Garry wrote:
+> On 14/08/2024 15:52, Martin K. Petersen wrote:
+>>
+>> Keith,
+>>
+>>> Your change looks fine, though it sounds odd that md raid is changing
+>>> queue_limit values outside the limits_lock. The stacking limits should
+>>> have set the md device to 0 if one of the member drives doesn't
+>>> support write_zeroes, right?
+>>
+>
+> And even if we had used the limits lock to synchronize the update, that 
+> only synchronizes writers but not readers (of the limits).
 
-SM8550 SoC supports the UFSHCI 3.0 spec, but it reports a bogus value of
-1 in the reserved 'Legacy Queue & Single Doorbell Support (LSDBS)' field of
-the Controller Capabilities register. This field is supposed to read 0 as
-per the spec.
+Readers are blocked by freezing the queues (for most drivers) or
+doing the internal mddev suspend for md.
 
-But starting with commit 0c60eb0cc320 ("scsi: ufs: core: Check LSDBS cap
-when !mcq"), ufshcd driver is now relying on the LSDBS field to decide when
-to use the legacy doorbell mode if MCQ is not supported. And this ends up
-breaking UFS on SM8550:
-
-ufshcd-qcom 1d84000.ufs: ufshcd_init: failed to initialize (legacy doorbell mode not supported)
-ufshcd-qcom 1d84000.ufs: error -EINVAL: Initialization failed with error -22
-
-So use the UFSHCD_QUIRK_BROKEN_LSDBS_CAP quirk for SM8550 SoC so that the
-ufshcd driver could use legacy doorbell mode correctly.
-
-Fixes: 0c60eb0cc320 ("scsi: ufs: core: Check LSDBS cap when !mcq")
-Tested-by: Amit Pundir <amit.pundir@linaro.org>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/ufs/host/ufs-qcom.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 810e637047d0..c87fdc849c62 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -857,6 +857,9 @@ static void ufs_qcom_advertise_quirks(struct ufs_hba *hba)
- 
- 	if (host->hw_ver.major > 0x3)
- 		hba->quirks |= UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
-+
-+	if (of_device_is_compatible(hba->dev->of_node, "qcom,sm8550-ufshc"))
-+		hba->quirks |= UFSHCD_QUIRK_BROKEN_LSDBS_CAP;
- }
- 
- static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
-@@ -1847,7 +1850,8 @@ static void ufs_qcom_remove(struct platform_device *pdev)
- }
- 
- static const struct of_device_id ufs_qcom_of_match[] __maybe_unused = {
--	{ .compatible = "qcom,ufshc"},
-+	{ .compatible = "qcom,ufshc" },
-+	{ .compatible = "qcom,sm8550-ufshc" },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ufs_qcom_of_match);
-
--- 
-2.25.1
-
-
+So I suspect kicking off a workqueue to do the limits update will
+be the right thing going ahead.  For now we'll just need to hack
+around by doing single reads of the field.
