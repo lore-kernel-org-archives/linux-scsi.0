@@ -1,48 +1,48 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3D8052F70;
-	Thu, 15 Aug 2024 18:13:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D58C9558BC;
+	Thu, 15 Aug 2024 18:25:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723745584; cv=none; b=l/qtThE8dmYjtqON4Zu1RY9clInIW9DYnS5WlkW0UbEzVPDrIOD7MWuuQEhbdRFmrvyz5bZH/u0ykMduRB6QHx4FY1+Ht5eo90EMlKaQ6smOvq+3Txh6tp5k53cY4gkryKmBTNYJFXc25NdNU6wBNIHUjVEc96v1WCaZ0RRUyVc=
+	t=1723746346; cv=none; b=USXXi7WvAbSOo+V1Wd20ET6s8VeRiHusMnN1Aoa+FTB9PVFq61WWvp8DY339FwpNJJ7tsO1tZUpfBmk1LE7D+hqxadhIQxtdMq32nFltdQnXMe3hy1DOcFvabSAXTg54xxFki2rdvpot/XREqTHgJZZKkmj3A6fZ/OEVFgo7oBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723745584; c=relaxed/simple;
-	bh=QLpkNJNzoaAHnbBQ4AWeZQvG502e3lojYe6fHsgjlHE=;
+	s=arc-20240116; t=1723746346; c=relaxed/simple;
+	bh=Ee4cFjfTg0tyq+RqSc6hp2lZ7U3JqxVr+2hZnz0S3jQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZHudUSyOM/jbJOhCFRWXY0CcXTNkgoLmHEgVQjV78+aU1TO9cFCO5tYJuEHg87e9DPrQsZen637g9BDIqU8nqENYR2gcb+3FMHWyJ8r3hhknLQWv2l/DUYyunypOpg5vYfEVdEp020ZEOzvcdWp5PyJ8ghQcloYIhXzIHSDoCcE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=WmGWoU/s; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=fzs4K5/SPH0G5kmsAQfh7+yKtCUsG1fKyNQQT06FAr8L9lkR4dDwnfx/tfHtBEoF1RXGfr/sgndMr/quq1uicM8c/1Yp6z0unTPT50pkqDk2NeiAphIoDofVHUzv8lj7gqOwlfKcGPGMXFa0y+p9A8HnyddtKY3jPTipmmXx7kY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=AAk7gSyn; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="WmGWoU/s"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="AAk7gSyn"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WlCsV1wDwz6ClY8q;
-	Thu, 15 Aug 2024 18:13:02 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WlD881W4Nz6ClY8v;
+	Thu, 15 Aug 2024 18:25:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1723745578; x=1726337579; bh=jDb14L3lWgizVd8YVVokf0Mc
-	CWBt85gMRsDtGW9avug=; b=WmGWoU/sBgn5UTqf98/lKkKXO0qtdDjcW3v48AFw
-	TvETP38R8AsrTVJAN+CvJTxR3dBgNKHJvspL+3G0gRKXJs04k3p+72WD667qWZtk
-	NkSF+trk3yeY4tY7TBf5u2SGEkiT+RqRbd/UgugjcsaKb0RJziuEqEys3cisdmoG
-	WOv/aiVqcUgbcDOergNl6IBf+E3Y1thRuSQZNbSVfwdp6/vUJswMwZBMD37gihjl
-	X67n4dEM5l0PmgX6FetpOIKxg+af4VzIJivTNZMIlfohvlwcyoNWYjSv6dN7E4ww
-	hafwJTXj9rrqocQ8M2Ik5R3bjEkpG3CrLWsBxr6l6gmfzg==
+	 s=mr01; t=1723746340; x=1726338341; bh=hE3VaP3ma4aR3hEOxamWB+Wb
+	Z/BvUIw0sNIopWlbDao=; b=AAk7gSynSLdGv1aLnWJrVsDoETx4s6v71WBTUMny
+	yeWXlR3tXbiJ1GgUeH0UD8IxK7bv41s7ErfVRgq+fasowouE1PEbSM8yXTjBrhIq
+	XERaE6oQMR7F+JRIjK87nkdzsDydO2cTJbfxdSbWGyqBCerToW3f94nlr4Wbn6Dq
+	9MvWl1s0q7yrJ+CHmVLATnUp3tCvL1D/2sVmlcKVqepvZ9JO9eKYIyUVsZ777FMt
+	nMRGpCjWEW7ejCAD7crpDStr252kX700SgG0X7JLb6Ttdm33T8TSwS+RzNU3vEVF
+	xDWI9XzBie8ft/NgZW/q10mrRoxXq/Awmc1Eo+DmejSwVg==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 7-BDC4myUpIp; Thu, 15 Aug 2024 18:12:58 +0000 (UTC)
+ id 0IzBVFWc3UJY; Thu, 15 Aug 2024 18:25:40 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WlCsP4g36z6CmR09;
-	Thu, 15 Aug 2024 18:12:57 +0000 (UTC)
-Message-ID: <869108d2-638a-473f-81bd-21304d473fab@acm.org>
-Date: Thu, 15 Aug 2024 11:12:57 -0700
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WlD8316W5z6ClY8s;
+	Thu, 15 Aug 2024 18:25:38 +0000 (UTC)
+Message-ID: <f79a87ba-4d2d-42f0-ab94-1e6821a482f2@acm.org>
+Date: Thu, 15 Aug 2024 11:25:38 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,23 +68,30 @@ Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 8/14/24 10:16 PM, Manivannan Sadhasivam via B4 Relay wrote:
-> +	/*
-> +	 * This quirk needs to be enabled if the host controller has the broken
-> +	 * Legacy Queue & Single Doorbell Support (LSDBS) field in Controller
-> +	 * Capabilities register.
-> +	 */
-> +	UFSHCD_QUIRK_BROKEN_LSDBS_CAP			= 1 << 25,
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 0b1787074215..8c9ff8696bcd 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2426,7 +2426,11 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>   	 * 0h: legacy single doorbell support is available
+>   	 * 1h: indicate that legacy single doorbell support has been removed
+>   	 */
+> -	hba->lsdbs_sup = !FIELD_GET(MASK_LSDBS_SUPPORT, hba->capabilities);
+> +	if (!(hba->quirks & UFSHCD_QUIRK_BROKEN_LSDBS_CAP))
+> +		hba->lsdbs_sup = !FIELD_GET(MASK_LSDBS_SUPPORT, hba->capabilities);
+> +	else
+> +		hba->lsdbs_sup = true;
+> +
+>   	if (!hba->mcq_sup)
+>   		return 0;
 
-The above comment is misleading because it suggests that the definition
-of this bit in the UFSHCI specification is broken, which is not the
-case. How about this comment?
-
-	/*
-	 * This quirk indicates that the controller reports the value 1
-	 * (not supported) in the Legacy Single DoorBell Support (LSDBS)
-	 * bit although it supports the legacy single doorbell mode.
-	 */
+An additional question: since the next patch only sets
+UFSHCD_QUIRK_BROKEN_LSDBS_CAP for a board with a UFSHCI 3.0 controller,
+do we really need the new quirk or can we replace the "!(hba->quirks &
+UFSHCD_QUIRK_BROKEN_LSDBS_CAP)" test with a test that verifies that the
+UFSHCI controller implements version 4.0 or later of the specification?
 
 Thanks,
 
 Bart.
+
