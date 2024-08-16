@@ -1,113 +1,82 @@
-Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com [209.85.208.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83E5116F831
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2024 11:47:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 748871B86C9
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2024 13:00:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723808827; cv=none; b=VBbeQCXwPcYx0zniwsSzkMx7QWorvTgImftkqYlksig4H18YtorCybx10GjwFkcvx/FZ2J37JADueJ9VvZppwrWOij3gXbfA0ovZVxh3osp3WMc3HxKfN/2uwsyaTzByCHWwdOR6mNJqcULNL+kHzMNs+m1CUwDXI8SsACVGSuI=
+	t=1723813202; cv=none; b=L/JLiqvBkA1jrPEgLtdW7F80zYFEAhdDnKO40No7DUF0+87EjSk6AkbXVGF/nuFjFiNxzq5jNkRwuxJiumNZSi7MsJQdP+FwxwEQOSgMXFmT4FozUfSPe/ZKKe8VmLP7RIjmJfcFVjikL6aK8y+f57Ur8Ps/yJKUECRewP95UtA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723808827; c=relaxed/simple;
-	bh=BYNOuo7VdELGAZCeJracaEuuvIf7F0bO1297z3Jgw60=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rBHuH4mOfRkjyWIWGckoDVVZt0Zb9iqp6EbGkCGqvWkS9g2TEt3KmqyPn2b0j2xF/Jp7C1wsaszLMK5FUjesUXed2Jt3JnVG4A6qYkTWImSFSXxyInYDe9ZwmmOS34x7ORtAxBF3iNnDvUZraoeGC48hX73AZvMkElqBJZo556o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=cbBjmOEz; arc=none smtp.client-ip=209.85.208.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1723813202; c=relaxed/simple;
+	bh=VZd2qYCV7LwSPKDLqPc3zbwbKzTtehqqlwBt1PO6YZM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=hUyKFidaTZbUJQhe7+3jFWz6aSXCBmEEbSXU22jqVsnAlTAm/2echWKZ/poS7CqXHbp7mt6uiHD6Kit8/rYT/UI7pgH0AndxtuqaMrlM9UETFWl2fBOFA8NoCIEoZLgNzzHhOxs4/Mccq6RUVYtTo5N1Xq0VTyUdPD0aJj8cbzI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ED3fIAoj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="cbBjmOEz"
-Received: by mail-lj1-f171.google.com with SMTP id 38308e7fff4ca-2f189a2a7f8so18987211fa.2
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2024 04:47:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1723808824; x=1724413624; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=wV3f3tgXbZ6RS8PMVxuGaxCBTXr8Z51l89FQdcyx9OA=;
-        b=cbBjmOEzsdagCdA7RgQgdfMCNfGkm1QlompTPTii/5qlUNEQD2VwZtitGDD5ml6UdD
-         Dv0wndhGQUZ3IKb7KhsV/5j63j3hq4wdvDVxf/ltBoj0g/uRhTpOwLH3Lza27QvEVnRJ
-         Be7dccccavnXAnMw1z0lykWuMsrmWY87Jp3O3wAwUjFoxfsHBHx2t5pZ3o3Sboo6ztDN
-         ItOfTlORXy8qZ0LArXlliaNrlHGeZiUFTL5FE1lx0L14VouJW2t6lQCIpBALnAdmnm20
-         gyaUYCX7AdUn+ZiblsonXeP/u9l3npO+55Xdhwt7uZUciKgYgDERnbbU5jM97jGZqkej
-         0bUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723808824; x=1724413624;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wV3f3tgXbZ6RS8PMVxuGaxCBTXr8Z51l89FQdcyx9OA=;
-        b=LVINo+oyTi1wRf0N7EAuy7lc7ORfBJ2u7kRcdvXKQ8WtK7/n1sbpFVEN+mkvl2aL54
-         57vKDhuqzVeNbRdXROmQACYqnUbmn2KnaeOs/sTOHJJwM5CMeUpwci4TFekYybKYFLsC
-         4gYhsMJSQbq5uD518KjMPw075cOkxM7Qp0yn7c3MaFFcBl3BqJdENm4RqdLszl8xDqND
-         GAeaHZje6edmzb+aGVgVQCAGLbDXIz49YQmTeaQg2rPswLHKE74Gw6iUdEbgCDtsxTP1
-         qN7v6g2h3i5cvKZBPmXq8nT1xTJ14vqxWfqFMpDoy+1moOAXxattKHu17r1ATxc+JJpU
-         pHZQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW/NixgeXyRJxx8H+BQUmVhzbVnoWH6FI1NMmnEx0TzT2cYg5MWTLKBUO7baAlMT8KVL/+xWAuzBLmSAJmkV7gOZUcY/WeI26fveg==
-X-Gm-Message-State: AOJu0YzUrpL0s588rq5l5xRvss3UuIrvLcjcS0hptHdOyVlTsHjHAv6F
-	zSCsLFlaCdMX3vD36+Zvga0bcT545Fl0g26XzN6sNLTL0EYMNDkQPISYligtdBo=
-X-Google-Smtp-Source: AGHT+IFsJvShCAzHPXv9NfhSPB7MlpUN8gvqY9PXC7ZNR3VQQoCvobHbpuluFO6/2tEVHSxFNSgARA==
-X-Received: by 2002:a05:651c:2224:b0:2f1:6cb1:44c0 with SMTP id 38308e7fff4ca-2f3be577d8emr20100601fa.6.1723808823479;
-        Fri, 16 Aug 2024 04:47:03 -0700 (PDT)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-371898aada4sm3446023f8f.94.2024.08.16.04.47.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 16 Aug 2024 04:47:02 -0700 (PDT)
-Date: Fri, 16 Aug 2024 14:46:58 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	Brian Masney <bmasney@redhat.com>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Can Guo <quic_cang@quicinc.com>, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] scsi: ufs: ufshcd-pltfrm: Signedness bug in
- ufshcd_parse_clock_info()
-Message-ID: <cd5c2315-1d40-44db-a2d9-c4fd7ab3e7f4@stanley.mountain>
-References: <404a4727-89c6-410b-9ece-301fa399d4db@stanley.mountain>
- <b613d16f-1167-456d-a5cd-807db875adb9@acm.org>
- <6beba3f4-dfa1-4871-829c-ed1e44b5bd39@stanley.mountain>
- <20240816063404.GH2331@thinkpad>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ED3fIAoj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44514C32782;
+	Fri, 16 Aug 2024 13:00:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1723813201;
+	bh=VZd2qYCV7LwSPKDLqPc3zbwbKzTtehqqlwBt1PO6YZM=;
+	h=From:Date:Subject:To:Cc:From;
+	b=ED3fIAojib0S2ly69BBTyJ5gjRkPqhsAcwcztrD42RaRF+N3MvNf45xJRT9y04Dnm
+	 MtWd/c7CG+q9Ge7GSWpOuyyHQqmV33YTT4GS6D4TOUNbNoPlgIfNwlsVs//DRYsTc8
+	 yHCrNLoLAGyPGkaWvNRICk6v1WN+pnD8JUL+fZHFyqJxhN3fkX4/mUfe+hdn22U3tu
+	 5WT+9THhl/gMtlB1nZf0kRkobGQ4Y0ZDrq+SFKiMQhpdttUzN2hslKRzB247S6TUn2
+	 7rvr6SpapPul3vxDJnmWoT5j6n1jjcDz7ToXRA/dhtvauwAI8itcossEwXJRQljnkI
+	 mkW+qRrAPQOTQ==
+From: Simon Horman <horms@kernel.org>
+Date: Fri, 16 Aug 2024 13:59:56 +0100
+Subject: [PATCH] MAINTAINERS: Add header files to SCSI SUBSYSTEM
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240816063404.GH2331@thinkpad>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20240816-scsi-mnt-v1-1-439af8b1c28b@kernel.org>
+X-B4-Tracking: v=1; b=H4sIAEtNv2YC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDIxMDC0Mz3eLk4kzd3LwSXTNz40STpCQDc4tkAyWg8oKi1LTMCrBR0bG1tQB
+ DSI1GWgAAAA==
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+X-Mailer: b4 0.14.0
 
-On Fri, Aug 16, 2024 at 12:04:04PM +0530, Manivannan Sadhasivam wrote:
-> On Fri, Aug 16, 2024 at 12:35:22AM +0300, Dan Carpenter wrote:
-> > On Thu, Aug 15, 2024 at 10:47:30AM -0700, Bart Van Assche wrote:
-> > > On 8/15/24 4:24 AM, Dan Carpenter wrote:
-> > > > The "sz" variable needs to be a signed type for the error handling to
-> > > > work as intended.
-> > > 
-> > > What error handling are you referring to? I haven't found any code that
-> > > assigns a negative value to 'sz' in ufshcd_parse_clock_info(). Did I
-> > > perhaps overlook something?
-> > > 
-> > 
-> > Rob's patch in linux-next.
-> > 
-> 
-> It would've been helpful if you added 'next' in the patch subject prefix.
-> 
+This is part of an effort to assign a section in MAINTAINERS to header
+files that relate to Networking [1]. In this case the files with "net" in
+their name.
 
-I guess that would helped in this case.  But most of the time when I see this
-question it's because there are two different upstream maintainers modifying the
-same code...  Anyway, sure, I can change my script to add "next" to the subject
-when the FIXES_COMMIT isn't in Linus's tree.
+[1] https://lore.kernel.org/netdev/20240816-net-mnt-v1-0-ef946b47ced4@kernel.org/
 
-if [ "$FIXES_COMMIT" != "" ] ; then
-    if ! git merge-base --is-ancestor $FIXES_COMMIT origin/master ; then
-        TREE=" next"
-    fi
-fi
+As part of that effort these files came up:
+* include/uapi/scsi/scsi_netlink_fc.h
+* include/uapi/scsi/scsi_netlink.h
 
-regards,
-dan carpenter
+Unlike all the other matching files, these one seem to relate more
+closely to SCSI than Networking, so I have added them to the SCSI
+SUBSYSTEM section.
+
+In order to simplify things, and for consistency, I have added the
+entire include/uapi/scsi rather than the individual files.
+
+Signed-off-by: Simon Horman <horms@kernel.org>
+---
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 42decde38320..c2b41ddb8536 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -20351,6 +20351,7 @@ F:	Documentation/devicetree/bindings/scsi/
+ F:	drivers/scsi/
+ F:	drivers/ufs/
+ F:	include/scsi/
++F:	include/uapi/scsi/
+ 
+ SCSI TAPE DRIVER
+ M:	Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 
