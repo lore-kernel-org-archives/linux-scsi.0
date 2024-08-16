@@ -1,110 +1,75 @@
-Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00D0077107
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2024 05:35:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 853AB75817;
+	Fri, 16 Aug 2024 06:08:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723786535; cv=none; b=OcTUI/U5jGH8QEMWrXjcdH0e4Hf4CSZFtjiFy4gIH5fkxHfCL5VdJaXQs6PSAPucjKRT9M6DNO2C17yaI255+/p2UGPaxVJdzJTcUGH/97v0okeP20s1TOZmnn4ZuXI2trs8HhoNh1sfJTJRwn8LND9feTh7cNGuHrw4HRHqS54=
+	t=1723788535; cv=none; b=aAwCbH5YbGngdrG/iPsO3i+rlpBoi1+8hrzDWVMGtqESxEQY0yiIMBgn9zh1F0tnwWHXf+DB8nsv2SPOL1yMNbWQGJfqGNWJws3QWHQZX12FIGrPn1Dx2FSBMblDr3W7zGZifAVHV5X351oL3BsaAEu3wT8XEayvh3I9/EHsQN8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723786535; c=relaxed/simple;
-	bh=mLnOVTA8ZDKjWj4IQyecDgjYW0tAiFP+ZMEIQGLfMpU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PjFixIQrNO3Rh+zRvOCo/KEizzHOWgUp7WYzUh5daKUwG6fqG/IrNRzCaz0HwavAC4nbP+lJcXuX41ZlzFKzhDVpRIAZzZV8eNzQku2WdPrX43HCfAig4egjzH5V2vq0HJ/a7+N8zvdBkhrd3zJ/7rjeiBWik/uZbkjUUDuz62E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=SQpkbqmb; arc=none smtp.client-ip=209.85.167.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1723788535; c=relaxed/simple;
+	bh=6vEqT34sXONcN+h8n7GFxvTvC61LkDaA17QipPFMyO8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=TIG9kiqutmz7D3FFG/YtAqVwqFUvYP39dNUB7Mie01sS3TCc/J+/ypcGSUPLbkHYEn5HhOewVpzE1/zzvcsXVzKEi2yHEbsmWVSDO0BRYp2SoxOqX8U4bz38MPrsd7Lphm6LRNrQBoa1l7qvdCqaGi3LXrfLbj2i962axdSItyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=m+Ir0vfK; arc=none smtp.client-ip=209.85.128.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="SQpkbqmb"
-Received: by mail-oi1-f178.google.com with SMTP id 5614622812f47-3db1d4dab7fso967033b6e.1
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Aug 2024 22:35:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="m+Ir0vfK"
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-654cf0a069eso15867887b3.1;
+        Thu, 15 Aug 2024 23:08:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1723786533; x=1724391333; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=4mMaohtWWFbTctu7Q7bNFG3sM1FkY98D3v+9DciGUac=;
-        b=SQpkbqmbAVzwozBjamzZenZU4T82Mxr3DjWjHxvYBSAuS28pK9P8CYRiCfQ9HR1WjM
-         zLpum7EJeW2bwOHQxdjH+C0Yf9TG5WWSljB421f7oWm8WgRPTuPmujTEgsxUUmYhzB32
-         Sjg4cwoVswacXmmuxdo4XRt1ljdnO0T7fYi8jXe8+u0N6uYdtxBLoebwOjV3XQxcFfLo
-         v2AUtakLnEuL2bZR4cGHCA7gHMBjiMNmfW81Sz/oH6neZxeefDS7JudgCb8iho40lXIg
-         QrNckyNcnZ+/vwV6NJGOCBXVxSTNpZrIrUkcyttm/mQzuYLjd9WXlmiygXpLYyCD8dp0
-         9aGw==
+        d=gmail.com; s=20230601; t=1723788533; x=1724393333; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=6vEqT34sXONcN+h8n7GFxvTvC61LkDaA17QipPFMyO8=;
+        b=m+Ir0vfKItO6StWKSt4mnfr3Nax9KOQ19VgIl7gAIpKNRKsL1o4KnPAQPtphh9eaB8
+         f/JWJe9nI0H64WSjJlk5yezz9amcNrfn+sTeGnO+eb+JwAQ3W1qQQSaBhH14p2q6XJ8V
+         6ibqEstGDDhUDzvIndGwsCOHp3MW1gm+3k5aZST/XXE8ofzIGdKRbbQ7K7g+aKXA1LLA
+         ZOR7rRJcLowvHARwp/CPGeKQfw5r4jYG5WlA3LKy89pTMMO011uszapdkvwnkE7ce4bo
+         iGj5vt52IiWMr5KaJt11VGdi15yrXQqkcWSd3D7CZaqecjfLMw0LvRNYTHxkJWhUJhDR
+         HsGw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723786533; x=1724391333;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=4mMaohtWWFbTctu7Q7bNFG3sM1FkY98D3v+9DciGUac=;
-        b=lgDUUQifbUyellS/BQ14xB9auiZbNspFXkj9j8E0sO4eOmPoZxoQGkJTMVSb/4ajfL
-         ZmT74rit8e09b6jtDBpwQrKStU8+RY109zcnowKIgcrRRlwZPss7X828k4IEoL/mH0+5
-         D0mLM8sRN9ufZlVBCcFb+XKBJttbJXrpAFraI95Jw+lDF8wASANXvmDbAhC+jq3m1bSb
-         cGl3W933BVRcADtroWWhXLW/6dRjCXgfDVb+FpR1WGQirIb69wBf/hZ5/Bx9/Sh1AgaO
-         FGve6Pz8Sk3Fc9hdGWf6yGILZp7y9xQT/++k98dZYEYnevL2zJ8kaQTI4gp78T0syAx3
-         bmrQ==
-X-Forwarded-Encrypted: i=1; AJvYcCU8wL4ojv8bjvkr9m6zNdx/IjQhUsf/VqhW3oOTe0M4EI8FNzTt8/iQYy0IVk0/Jnhl7O27FX3BKzp0z2qmWv7jlDgJ64d5hvPLtg==
-X-Gm-Message-State: AOJu0Yx1n+O+248PgwLyRCQ5eswghjI7h1gVGY89RhvnFNROow4Q9dMq
-	Bfh7jSLUB050MMBSiOv8nH1jNvWj2vy2lFIF9ObpZ3r4ckG5SCvXSGdfrxfU3Q==
-X-Google-Smtp-Source: AGHT+IH5fYA4C+PqIdtqa5tigd13rlW3iuUhpdJbBFlL/Dw4xrGfG1S74WR2K2ZfCPHUvtemrCLNeA==
-X-Received: by 2002:a05:6870:e255:b0:254:7211:424b with SMTP id 586e51a60fabf-2701c354a33mr1863004fac.6.1723786532956;
-        Thu, 15 Aug 2024 22:35:32 -0700 (PDT)
-Received: from thinkpad ([36.255.17.34])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7127ae16f52sm1891825b3a.67.2024.08.15.22.35.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Aug 2024 22:35:32 -0700 (PDT)
-Date: Fri, 16 Aug 2024 11:05:28 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, Kyoungrul Kim <k831.kim@samsung.com>,
-	Amit Pundir <amit.pundir@linaro.org>
-Subject: Re: [PATCH v2 2/3] ufs: core: Add a quirk for handling broken LSDBS
- field in controller capabilities register
-Message-ID: <20240816053528.GE2331@thinkpad>
-References: <20240815-ufs-bug-fix-v2-0-b373afae888f@linaro.org>
- <20240815-ufs-bug-fix-v2-2-b373afae888f@linaro.org>
- <869108d2-638a-473f-81bd-21304d473fab@acm.org>
+        d=1e100.net; s=20230601; t=1723788533; x=1724393333;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6vEqT34sXONcN+h8n7GFxvTvC61LkDaA17QipPFMyO8=;
+        b=WGXTAwvVs/6jPQGQvrOQdCaSMaNkljLkd01hehWdZZpCJlm0ALkC0PlCuHFK0pg4fD
+         gtJpjQGfhDzmxRxzYGlXY9fZzqrP//Mr/SCXEfBx0pX90k1VXe3W6LASF3/I8XQC1zKM
+         hA+UpzGT9V6/dkuXCK3CVdyO6lo0KYx54o7UAJeADDZ15DMHt1y+11Q+Oj9tNu5gu3Pl
+         teKW/wLdWHAdUVLCZZ8qmO7daqep778Ictqu9bfT31+ACH9LTiigkYWY8yO6DUTIAdBF
+         eiw5tn7pcx9ZrfcrCgHKqDJasewAbR/+k02aoxhxhpmdyT73TC5dYlPkGcBYs2D629DX
+         SwXw==
+X-Forwarded-Encrypted: i=1; AJvYcCUP/3EUDY5r3UhbOcRzqrw/AE0qTdLHZpsBsnDtghSvrtL1uKeoHCN6lSQI+PHEClTxw1qlTznj6wLJa+anqnp/eQEirwI0zm4ZEFf2WdamGI2PyCkcPcmPdtQXa4udyxTFrFDFUnlacg==
+X-Gm-Message-State: AOJu0YzETCMz+EW2Su5xIBIp3aO7ylgLq+dlYaMhgo/JPu4fAByN1rlc
+	S9Q1G5Uw1kMh6ncq+VJ1y6UdoFmuDWNis2dZGSH/ODr2PI2R9vdkay3dfqjcpDc7gQCaAOwYbTO
+	Nb3eXLgpBXhjNfxVrrEkG6kLXsUQ=
+X-Google-Smtp-Source: AGHT+IHl+FkKq7UakatGyPIPNGjN/fraqzL1pp3fdrre1Wa3ZdQzIeS27HHAZuZLNJp/aMExskiiQtJoa6jken3/ZIs=
+X-Received: by 2002:a05:690c:6482:b0:6af:6762:eba1 with SMTP id
+ 00721157ae682-6b1b91bcc62mr20634577b3.20.1723788533419; Thu, 15 Aug 2024
+ 23:08:53 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <869108d2-638a-473f-81bd-21304d473fab@acm.org>
+References: <Zrog4DYXrirhJE7P@debian.local> <yq1ikw1qg49.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1ikw1qg49.fsf@ca-mkp.ca.oracle.com>
+From: Chris Bainbridge <chris.bainbridge@gmail.com>
+Date: Fri, 16 Aug 2024 07:08:42 +0100
+Message-ID: <CAP-bSRYC6sGJMRXYbHDKwgN9ve15hccw_HK-7Mdd9c70788RvA@mail.gmail.com>
+Subject: Re: [REGRESSION] critical target error, bisected
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: fengli@smartx.com, hch@lst.de, axboe@kernel.dk, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Aug 15, 2024 at 11:12:57AM -0700, Bart Van Assche wrote:
-> On 8/14/24 10:16 PM, Manivannan Sadhasivam via B4 Relay wrote:
-> > +	/*
-> > +	 * This quirk needs to be enabled if the host controller has the broken
-> > +	 * Legacy Queue & Single Doorbell Support (LSDBS) field in Controller
-> > +	 * Capabilities register.
-> > +	 */
-> > +	UFSHCD_QUIRK_BROKEN_LSDBS_CAP			= 1 << 25,
-> 
-> The above comment is misleading because it suggests that the definition
-> of this bit in the UFSHCI specification is broken, which is not the
-> case.
+On Fri, 16 Aug 2024 at 04:56, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+> I would appreciate if you could test the following patch.
 
-Really? I don't see where the comment implies that the bit in the specification
-is broken. It clearly says that the 'host controller has the broken bit'.
+Works for me.
 
->How about this comment?
-> 
-> 	/*
-> 	 * This quirk indicates that the controller reports the value 1
-> 	 * (not supported) in the Legacy Single DoorBell Support (LSDBS)
-> 	 * bit although it supports the legacy single doorbell mode.
-
-But this comment is more elaborative. So I'll use it, thanks!
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Tested-by: Chris Bainbridge <chris.bainbridge@gmail.com>
