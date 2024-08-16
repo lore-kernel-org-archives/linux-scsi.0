@@ -1,58 +1,58 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9127383A5
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2024 05:24:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B473F8289E
+	for <linux-scsi@vger.kernel.org>; Fri, 16 Aug 2024 05:28:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723785862; cv=none; b=qfKoc+F6V1yY6XF718eUzW1I96D0T7diRf/96Fdy8Cgp6CZFlIRZEDQKE0Hs6dkeB5OEauTw7g4Rro9kb6N/DKU5Rd3LJ7YG/ti+eDctXFyDtu1VWjm2Fq0SirCMvpt2k1gqMYqnIGY07qI3a1BsnAYOg56GMwJ9BixGryZsvR8=
+	t=1723786120; cv=none; b=EWidM4y8Ap9Vk7TS2kkkGwNarowsGLfnL9v1nqZgfDNUP65BMd4PpqQYTjx3lK1hZhfYJr8OjrMM4HfGM3TDNOdENYj6/X9seH2AIzbp/ctSFs8VB4NumvA2eW7SGJKUSOAIQyo0QfFNGWqnNnNlJLOhi3WwEu+HxombRmrEjIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723785862; c=relaxed/simple;
-	bh=IAD4Ng0J5zz3wi4ezGMVrCJzBG1aq3TvHsJccVDi9c8=;
+	s=arc-20240116; t=1723786120; c=relaxed/simple;
+	bh=CVgyyW45hqKlKWSJtD9mWkFJqSEYWC96cjYmVWtoD4I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EPVbfHC+OBM/evDptdRjvebAc0YaBsFymgYgQhfnaQ9hHdIVo3zri7TlwPvYLtKGqSTNFU/sdZMYSSapHqyGK1x1PFjPlMcnjMpA96gBPdAw1fnwFioLaPG7RPgX0huzSwaSO4I7lP7NmkKe+KtBlZavUivSc43ORz95T06wBgU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=nefMuZMT; arc=none smtp.client-ip=209.85.210.171
+	 Content-Type:Content-Disposition:In-Reply-To; b=MzeRxq0WCcBZT+XBcdQYEB8YfJP384nWWX9nPM7rPsVYmhYSoGO20SG30gs8Lu4iatbH0wMEgQmdnxmX4u2i++Q/JeX5kJTeEf5s8+ixfKBlPmuMyFuBcsam61aScAkFO0hE0E5e9JxqHR+n4Bsy7985o6BhI/hNVIBuDdgxyik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Rpk9rTkH; arc=none smtp.client-ip=209.85.210.179
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nefMuZMT"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-70d2b921c48so1297231b3a.1
-        for <linux-scsi@vger.kernel.org>; Thu, 15 Aug 2024 22:24:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Rpk9rTkH"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-70eae5896bcso1454068b3a.2
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Aug 2024 22:28:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1723785860; x=1724390660; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1723786118; x=1724390918; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=cWvqN8L9T4VZ6SwiImV1tS1PClTOGw7HuC117PJzjSA=;
-        b=nefMuZMT5Lo3E1jMZ2Iqf9GMCtg/DwjddWyfaCgxKnTdSU+IUv7aN/Y76izAOlSZlf
-         BgeciwRJ6bvgJ5R8ajn4e2i861TWmNi71AlWuHbF+X4R6Wr3CbgYIE3dIdvVr0TG1h+7
-         q2vZMxtu+752HWDgRWxVR94GyTwUDJlgKEKX7K2O/pMr9O56swOjPZ2eS3/Wu8UoJNs3
-         jqp+i1tW7G4ou4NJkQXJjVshisz9NC3lfr9fNuwimGCBEkrPdqtJR9S/sOK8Xol6dWN4
-         elyYrmBV0diM15BZEUxn61vVn+zRQQXQ8bPA0mysO4nCYBDj+vQHyUEaKuGsxprBHhdQ
-         5hGw==
+        bh=HjZ4i2QLY2MCZUTKrXk0L2WJ9ATcFb1xvQJ16nAWgPU=;
+        b=Rpk9rTkHkfDWBw9ANRoJmFBPA1SiQO/sIwfIM5KjzGhfd/F3SyO8OY9AYC74q5r8GC
+         Zxi0l/jNcB0pIyPkxhFlAVaki/xQWM+Ws6mYZ8uh5evqI+Ez/URAbapQMg2jhkkR2IEf
+         QpMamo0fcz3yJI6p7iSXHCX9s09ot/6vM/OzSVNnZaFpzfiW3wr6TfeBsIBpaKgk0UWh
+         bcx0A6wrL1bhkpJ/uFHlKOZ/9dDsJ70mfaV+qOlQZm4OVA0RNuD1BkZh640/qMHGQrAP
+         as0zFafFBr+iV9xU7oWjoFmTJHC5OBsKjrSWZUFla2CzCX2Fc1tiRXOpiBpWuMQ/LkYg
+         +ttA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723785860; x=1724390660;
+        d=1e100.net; s=20230601; t=1723786118; x=1724390918;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=cWvqN8L9T4VZ6SwiImV1tS1PClTOGw7HuC117PJzjSA=;
-        b=jrj7HYHreg3AlK0phqXl4ubtBEDA4Nv8Y7pretDqLscI5VuC0Cu70O9uzHz/zq/RWR
-         uBl4AHhUNLZOZJEh9PJhyRmxju3NBNkVh4++94U7NoxdIvjiuQJKF8zdRWccpFzokm+0
-         jV6tQotwAECN1kCG+GMtm647HqYogX5Q6CPlZHo13JK56Q41ZRiahOXSFyBuijouxvFR
-         IP/YAOp7KfMLo8b0+qz5S9owg5zxJK2WYHBTXLvaSiL0SkK7ERCM34CkXmAJ45Ar4rvc
-         kDm7BA3MjlEfHnk+j+H90PptcOg0/0WBHl/pI/KF7jobVsnOCBeFLxFqrkeYxAKhcpzB
-         mgLg==
-X-Forwarded-Encrypted: i=1; AJvYcCVr1mjT0CqhIbD0sI6B5vFQB5pNXm8XHY05Sbs44by8eN9k8lIrUFlzjd1uCHkZfxvnOyRBxNs8BqaHnJJZLbTA7eyQsjmBLHrtkA==
-X-Gm-Message-State: AOJu0YwOZt30rNqEzo3IG67IxG1hs5Zt8d0yHL/iB5ECeLdqPKKek8Kv
-	gRrnDk7Mwkbt7cXR+Q4nrIO206qR3+ggx2WXMuSoLjczb6C4KWkihbSouNqMmQ==
-X-Google-Smtp-Source: AGHT+IF+/eZuzaCI6HM490oe/E+8yN4V1wgPcX0TKQlnWBZOqOGaPmvWzefXzToBBiZPaWJyrTa+pA==
-X-Received: by 2002:a05:6a00:99a:b0:70a:fb91:66d7 with SMTP id d2e1a72fcca58-713c4efbff8mr2435861b3a.20.1723785859871;
-        Thu, 15 Aug 2024 22:24:19 -0700 (PDT)
+        bh=HjZ4i2QLY2MCZUTKrXk0L2WJ9ATcFb1xvQJ16nAWgPU=;
+        b=jP434g17Hanbyte+OGCIpIlehfVQiRlr/sxFb4rsONkSRyQKs94aVLoeWF8eE66a57
+         /gMg1T6FYnnjZqqmBMzkcKDgB1KjOTx3UOoULMAzZ3tO58NnJ3YGuE0tgcXW9NMIZKiZ
+         nAGo/+QaUgjaNqHxYSz9aLEnVeC/pT71kJvB4BlWzsE4wRDFnFScx0lQztIZ8aMlV6xM
+         7WsIoJLJpRuqcu04TTHCxAWd0I4ajguJU9Io8Y2QMhP6CdbVJ+jjctvbWaAV7Eci72Ib
+         pRx+Hm2v1UsVsSo8hv1enBWjBvxdZim83s3JaXLlWjLY3VZXUEyalIoGmeF99izJLFKH
+         SBSQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWTv7mkAExAYyyaZQeDOQK2aUC7VHAoPFyTKEmB8L0gzKmSI25K8TsOsvBf/K2MIUdhXRwnQ3U8zB+0rKMwSS0zmNGlbdtRTqV8fQ==
+X-Gm-Message-State: AOJu0YwDFqQEsCF0vP2H3g0vIB+dbOFdejruVa+9hzlrtMN18lZ3+fbf
+	8L/UOYZr9CetF3sLqcv/CFk09TSpFm94otoSVeCCAUHnT6TpKJzdpfBvC7xVmw==
+X-Google-Smtp-Source: AGHT+IGG47xUshJiY1c6p/0b3IHMBPociHpJXS5YR2Dk8ppi8J/QwruzB8NXPo12pRISFhAwDv1BBw==
+X-Received: by 2002:a05:6a21:3998:b0:1c2:a0b2:e69 with SMTP id adf61e73a8af0-1c90501bd2fmr2157398637.33.1723786118061;
+        Thu, 15 Aug 2024 22:28:38 -0700 (PDT)
 Received: from thinkpad ([36.255.17.34])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7127ae0e9acsm1868956b3a.82.2024.08.15.22.24.16
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-201f039e084sm18407175ad.243.2024.08.15.22.28.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Aug 2024 22:24:19 -0700 (PDT)
-Date: Fri, 16 Aug 2024 10:54:14 +0530
+        Thu, 15 Aug 2024 22:28:37 -0700 (PDT)
+Date: Fri, 16 Aug 2024 10:58:32 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: Alim Akhtar <alim.akhtar@samsung.com>,
@@ -62,12 +62,12 @@ Cc: Alim Akhtar <alim.akhtar@samsung.com>,
 	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arm-msm@vger.kernel.org, Kyoungrul Kim <k831.kim@samsung.com>,
 	Amit Pundir <amit.pundir@linaro.org>
-Subject: Re: [PATCH v2 2/3] ufs: core: Add a quirk for handling broken LSDBS
- field in controller capabilities register
-Message-ID: <20240816052414.GC2331@thinkpad>
+Subject: Re: [PATCH v2 3/3] ufs: qcom: Add UFSHCD_QUIRK_BROKEN_LSDBS_CAP for
+ SM8550 SoC
+Message-ID: <20240816052832.GD2331@thinkpad>
 References: <20240815-ufs-bug-fix-v2-0-b373afae888f@linaro.org>
- <20240815-ufs-bug-fix-v2-2-b373afae888f@linaro.org>
- <f79a87ba-4d2d-42f0-ab94-1e6821a482f2@acm.org>
+ <20240815-ufs-bug-fix-v2-3-b373afae888f@linaro.org>
+ <4b24453a-3f4e-4707-8c3a-2dbb0040281d@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -77,45 +77,46 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <f79a87ba-4d2d-42f0-ab94-1e6821a482f2@acm.org>
+In-Reply-To: <4b24453a-3f4e-4707-8c3a-2dbb0040281d@acm.org>
 
-On Thu, Aug 15, 2024 at 11:25:38AM -0700, Bart Van Assche wrote:
+On Thu, Aug 15, 2024 at 11:01:47AM -0700, Bart Van Assche wrote:
 > On 8/14/24 10:16 PM, Manivannan Sadhasivam via B4 Relay wrote:
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index 0b1787074215..8c9ff8696bcd 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > @@ -2426,7 +2426,11 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
-> >   	 * 0h: legacy single doorbell support is available
-> >   	 * 1h: indicate that legacy single doorbell support has been removed
-> >   	 */
-> > -	hba->lsdbs_sup = !FIELD_GET(MASK_LSDBS_SUPPORT, hba->capabilities);
-> > +	if (!(hba->quirks & UFSHCD_QUIRK_BROKEN_LSDBS_CAP))
-> > +		hba->lsdbs_sup = !FIELD_GET(MASK_LSDBS_SUPPORT, hba->capabilities);
-> > +	else
-> > +		hba->lsdbs_sup = true;
-> > +
-> >   	if (!hba->mcq_sup)
-> >   		return 0;
+> > From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > 
+> > SM8550 SoC supports the UFSHCI 3.0 spec, but it reports a bogus value of
+> > 1 in the reserved 'Legacy Queue & Single Doorbell Support (LSDBS)' field of
+> > the Controller Capabilities register. This field is supposed to read 0 as
+> > per the spec.
+> > 
+> > But starting with commit 0c60eb0cc320 ("scsi: ufs: core: Check LSDBS cap
+> > when !mcq"), ufshcd driver is now relying on the LSDBS field to decide when
+> > to use the legacy doorbell mode if MCQ is not supported. And this ends up
+> > breaking UFS on SM8550:
+> > 
+> > ufshcd-qcom 1d84000.ufs: ufshcd_init: failed to initialize (legacy doorbell mode not supported)
+> > ufshcd-qcom 1d84000.ufs: error -EINVAL: Initialization failed with error -22
+> > 
+> > So use the UFSHCD_QUIRK_BROKEN_LSDBS_CAP quirk for SM8550 SoC so that the
+> > ufshcd driver could use legacy doorbell mode correctly.
+> > 
+> > Fixes: 0c60eb0cc320 ("scsi: ufs: core: Check LSDBS cap when !mcq")
 > 
-> An additional question: since the next patch only sets
-> UFSHCD_QUIRK_BROKEN_LSDBS_CAP for a board with a UFSHCI 3.0 controller,
-> do we really need the new quirk or can we replace the "!(hba->quirks &
-> UFSHCD_QUIRK_BROKEN_LSDBS_CAP)" test with a test that verifies that the
-> UFSHCI controller implements version 4.0 or later of the specification?
+> Since this patch depends on the previous two patches, the previous two
+> patches probably need a "Cc: stable" tag. Otherwise the stable
+> maintainers will have a hard time figuring out which patches this patch
+> depends on.
 > 
 
-Ok. First I made a mistake by believing that SM8550 is a 3.0 based controller.
-But by looking into the internal documentation, I learned that it is a 4.0
-controller without MCQ support. So version check is not possible (and I need to
-fix the description as well).
+Well, I have not CCed stable list for this patch intentionally as the offending
+commit got merged in v6.11-rc2. So there is no need of backport. Once this
+series gets merged into one of the v6.11-rcS, all will be good.
 
-Also, while looking into the version info I found that the Qcom driver sets
-UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION quirk and the callback function
-get_ufs_hci_version() just hardcodes the version to 2.0. But the recent SoCs do
-reveal the UFSHCD version info correctly in REG_UFS_VERSION register. So the
-quirk might only be applicable for 2.0 controllers (not sure if those are
-supported now). Will check that and remove that quirk altogether.
+> Since this patch by itself looks good to me:
+> 
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+> 
+
+Thanks!
 
 - Mani
 
