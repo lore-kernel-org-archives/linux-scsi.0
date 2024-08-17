@@ -1,66 +1,67 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB9B04A33;
-	Sat, 17 Aug 2024 01:29:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A122B646;
+	Sat, 17 Aug 2024 01:29:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723858164; cv=none; b=pTsDIDOU0KGx5S5FLL1aVOgAWC1/Gf8eubloaUDv5ZEgslvw1RDnjS3dYzQUcvqWrlEqIm0ja1YBqkrfHM1q4i+H0yrF23GiLZMAhT38hdJbd5W00RDcF+GWjnHu1uYNA++vW+9+mfPu6FfeP2K8lwTXjjvhN48lDCw//Vr/lAw=
+	t=1723858172; cv=none; b=W/vZHLhMZtnjuQJ1tU80j7UFPHD4DqfNCvRlfeVSo4mYGzmlFfkkLwyUzqALkTcV1gFZ7gRurJsGAJaUJnrGgWcL2tssd5btKJO9LuJN7xf9K/AOV6bHnVSOkANtL2s5p/H84E7geSskMYCSK8TFDX3GGSI2cZzcrZY59eVbyKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723858164; c=relaxed/simple;
-	bh=V/d/6HnoTTWKblMGDKv3jp+2ukcmBYswNp0SW78fEy8=;
+	s=arc-20240116; t=1723858172; c=relaxed/simple;
+	bh=5HW8SW67EU+FWOVYhuY2pgXSU6w1OwrkpOnNHUvFTTA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PIvfAbZr/mSzat+nhlOCgahezqgmVhSTR0ZC9o74R6tC1RQWVMc8zlXCU4cB5v1UQLn+TB3Kk55C1gecY8I4Jt7RZSq8jzs71yasIo5+VoolFQqvuU3EKLY0ymYkyyHd9ny6cns+yNIgewnufiY9eaaKqXGKog3Km5HgmAzLVJM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=cSpSARHt; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=Y1TdySEOJZWCXSrZuTp1IL7j0Zt7E4KHWPSY2Q2dUX/Hb57ngT8baPxwB/FWX8NZg4/t5YddiL+2e221/qnXN8+j2L53mUhxIG3oAGLSrbA2yA6v3YIc6Xd3Yq/9GzdiAEMrMtRw+/zlTozN6JVFnjc0TrPzvpJGkpg/7QLQH0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Km/2mFSp; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cSpSARHt"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47GLCcKb015131;
-	Sat, 17 Aug 2024 01:29:16 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Km/2mFSp"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47GLBwI3002666;
+	Sat, 17 Aug 2024 01:29:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
 	from:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-type:content-transfer-encoding; s=
-	corp-2023-11-20; bh=dIujAo9/K+/2O8m95Ui4TTzkZywTRmRL8xdIFrLX10Y=; b=
-	cSpSARHtS2UXj7TJSsOgZUCsjiISDkPWd+0QP6gipGCefjDGoT4M8xNuv4XvxDJ7
-	9aiW9a6iVy5pzZRkAUAFHj4T/NEZOplt/yv6DHWAE0krFKGv9R1AeD3wmCTJ14ce
-	gwbEVLO722SQ+TRTcaKKJzKDWC0xJeAQYbwy3zPbZDvyeBtN7V+WCToLuesoOzkw
-	SXxu4uO9bL99UVEkcR/Z+D8PWQhLVy/fsR4GC81ohLp3UTCUM5qWylz0zkdQhIM5
-	5biZjS+zMAH+bxBp8k3R1mQET2LNQ8u3qQJXnQiCEpM6QsicbXvai3LeFVNghnmI
-	z1MKy3B6OesUWjb7FTMCxA==
+	corp-2023-11-20; bh=EA6ZqVmrLUT8u1Gi/L2ocydEWTBAELEMEgUj7rbu3c0=; b=
+	Km/2mFSpOhheyR1VtQQDRx8XfDGWbKLYPxkU6hIHWnzOYOggVPhUwJNxt80390BZ
+	L16uYNfyrgXsStn75p7i5IOXI2wqDwALT/MGEUBMIVtrX29gn8KhZw7bHabuB+lk
+	ad3df2qWBNaqwX7bSch93wI6FlzSBpKkUHzgIcwFeQS23UwaAqN8wGPAwj3QUHgM
+	mKyQpRPaTnq6Ybu9EvFaahnjLv8RqenBUw8uNxo1Mce4jz8HssrUv0dN6xiYALMG
+	VMudC3/J5xEP6UX/borAP2KCn37V0Elge0GUgO0ssHlgCe9XXVrAOcaNDIKHzfvG
+	aETUjj6MQJHIxTMcyWIroA==
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 40x039dhp5-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 40x0rtws25-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 17 Aug 2024 01:29:16 +0000 (GMT)
+	Sat, 17 Aug 2024 01:29:15 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 47H1IGdK021064;
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 47H1Bl7S020945;
 	Sat, 17 Aug 2024 01:29:14 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 40wxnkh7w9-1
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 40wxnkh7vy-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Sat, 17 Aug 2024 01:29:14 +0000
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 47H1TDaa025300;
-	Sat, 17 Aug 2024 01:29:14 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 47H1TDaW025300;
+	Sat, 17 Aug 2024 01:29:13 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 40wxnkh7vt-3;
-	Sat, 17 Aug 2024 01:29:14 +0000
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 40wxnkh7vt-1;
+	Sat, 17 Aug 2024 01:29:13 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: James.Bottomley@HansenPartnership.com,
+        Chaotian Jing <chaotian.jing@mediatek.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, Kyoungrul Kim <k831.kim@samsung.com>,
-        Amit Pundir <amit.pundir@linaro.org>
-Subject: Re: [PATCH v3 0/2] ufs: qcom: Fix probe failure on SM8550 SoC due to broken LSDBS field
-Date: Fri, 16 Aug 2024 21:28:36 -0400
-Message-ID: <172385808994.3430657.15574636404074767339.b4-ty@oracle.com>
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, srv_heupstream@mediatek.com,
+        stable@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v2] scsi: fix the return value of scsi_logical_block_count
+Date: Fri, 16 Aug 2024 21:28:34 -0400
+Message-ID: <172385808991.3430657.4000095161450212305.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240816-ufs-bug-fix-v3-0-e6fe0e18e2a3@linaro.org>
-References: <20240816-ufs-bug-fix-v3-0-e6fe0e18e2a3@linaro.org>
+In-Reply-To: <20240813053534.7720-1-chaotian.jing@mediatek.com>
+References: <20240813053534.7720-1-chaotian.jing@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,27 +74,23 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-08-16_18,2024-08-16_01,2024-05-17_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 bulkscore=0
- phishscore=0 malwarescore=0 suspectscore=0 spamscore=0 mlxlogscore=656
+ phishscore=0 malwarescore=0 suspectscore=0 spamscore=0 mlxlogscore=820
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2407110000
  definitions=main-2408170009
-X-Proofpoint-ORIG-GUID: tTur6kplq6Hn2p1yAWjeJaLxbvhjq6iR
-X-Proofpoint-GUID: tTur6kplq6Hn2p1yAWjeJaLxbvhjq6iR
+X-Proofpoint-ORIG-GUID: EKuiijOEDYYkysP55e_fT2efBn111NWZ
+X-Proofpoint-GUID: EKuiijOEDYYkysP55e_fT2efBn111NWZ
 
-On Fri, 16 Aug 2024 11:55:09 +0530, Manivannan Sadhasivam wrote:
+On Tue, 13 Aug 2024 13:34:10 +0800, Chaotian Jing wrote:
 
-> This series fixes the probe failure on the Qcom SM8550 SoC due to the broken
-> LSDBS field in the host controller capabilities register.
-> 
-> Please consider this series for v6.11 as it fixes a regression.
+> scsi_logical_block_count() should return the block count of scsi device,
+> but the original code has a wrong implement.
 > 
 > 
 
 Applied to 6.11/scsi-fixes, thanks!
 
-[1/2] ufs: core: Add a quirk for handling broken LSDBS field in controller capabilities register
-      https://git.kernel.org/mkp/scsi/c/cd06b713a688
-[2/2] ufs: qcom: Add UFSHCD_QUIRK_BROKEN_LSDBS_CAP for SM8550 SoC
-      https://git.kernel.org/mkp/scsi/c/ea593e028a9c
+[1/1] scsi: fix the return value of scsi_logical_block_count
+      https://git.kernel.org/mkp/scsi/c/f03e94f23b04
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
