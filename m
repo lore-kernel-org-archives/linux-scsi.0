@@ -1,94 +1,113 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE651149E0E
-	for <linux-scsi@vger.kernel.org>; Sun, 18 Aug 2024 22:25:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 577FB13210D
+	for <linux-scsi@vger.kernel.org>; Sun, 18 Aug 2024 23:25:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724019936; cv=none; b=PXE7fKuVIksD6a3ZpbwgwQTZClzHwwpB1+VS+Zl5+guQrClRvtQjrrh+oW6BxYTVclLZQoyK4i+y0i3z0DlSmxcPX/tJ1ZYgL9g6ROWaVtkvHzEXST+MFh4APwuBCZKpUsnY5V7V2UVY6mmFEpBpQhEkMaCnMhwRo8qvNvs/8kY=
+	t=1724023550; cv=none; b=OCeML5Se1FBEpXtkwdqzOOSIV01rNQvPXg6MlMMYj0qNukCcVS0IWrR0MPoV3NSKIZQScrCBuaGVDXjMxIfaO1vYmgkNOypVtE96zb5+dcEwVhrtu631DAYR6oxouUzi/tFmSkGu3DXz1i/KKLkB/t4bD0df7X2T38aTRtID+X0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724019936; c=relaxed/simple;
-	bh=gnEH/iMMSngxOeWgb4/tt8YTWoBGQyrI7J5qoexFf+k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kBNi6hgRHui/AiG1qV/jUipPWr+9t4u5zyCTyEBSd7rhagKIs29zhKYlppJWatKSaA2S/KgnrhoczWCfvDbzsHgD3kQpcVdpmoBS4OLbquri17vz40L7xFo3PH50P8VaddiX2OL1l1A4rECrUofH1vLtd8PvVxj+Ggqqn6Nwchw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mary.zone; spf=none smtp.mailfrom=mary.zone; dkim=pass (2048-bit key) header.d=mary-zone.20230601.gappssmtp.com header.i=@mary-zone.20230601.gappssmtp.com header.b=B4S4SrZA; arc=none smtp.client-ip=209.85.128.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mary.zone
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mary.zone
+	s=arc-20240116; t=1724023550; c=relaxed/simple;
+	bh=nyDB1mceKW62inTC/WLDhY+YBWxJHPpjOnHEVNneizs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Hx0KYnk16r4c+nupIn1+QrzNx1zeKeaVAGJYzQ8/HRjM6in3XiBpEDi0juaOnR3uAHYQ/6RiuW+FJXzNWfs2xILszzvM1/I/N6JQk4GIGDHFOLrtYx54ywq7Ozq8rVKhq3uecdVqSbaN9/2ciq8wbNQot5CuK6LitgeogI8LtF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ilwhU+a/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mary-zone.20230601.gappssmtp.com header.i=@mary-zone.20230601.gappssmtp.com header.b="B4S4SrZA"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4281ca54fd3so28987475e9.2
-        for <linux-scsi@vger.kernel.org>; Sun, 18 Aug 2024 15:25:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mary-zone.20230601.gappssmtp.com; s=20230601; t=1724019930; x=1724624730; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=AmXbMFGvUj5uU6lE8/ehF7ygNXBrr76qPt34D+Rf3CQ=;
-        b=B4S4SrZAq/gZ7yAhwQVWp3NqfY864K4uYvgn6eQK1vMceBvbBD7TnpOGocTdD9c9Xf
-         cLqVEKRwuNZ1DDZok5bhgVZ/6pR9iq/k6fY0Dd+2HLrcfSicMcYYBXxMONJI1/WT3r+h
-         bgoPjxTHzidZccMgjNkmzWi17dMgJkvt34F/AqvgLlPhmlWFmf/rRiQFDUYJjRMi7p00
-         TLfIrLjMYDMd6ZUX3OR6HA2LWpQIulMUryLANOfHZ2FWXzHTqD9PSHFl07DcmwGt1c/X
-         JZjm1yDNzIdfvopOjhi2cie7IuHC7ZIBDc/KvJlJZhZmdEAJR4sjQwayjiCgUE+mO0gE
-         /IaA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724019930; x=1724624730;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=AmXbMFGvUj5uU6lE8/ehF7ygNXBrr76qPt34D+Rf3CQ=;
-        b=OtrgWOkoiEKyE9l2GuLIJU3Q3SJlS4FMCYCNPtiB45ppCXxP48JosETEMVGJD3BvOn
-         xCptLoYhB/Apw7aoJWT70ysqu77mw1LCUkiIZZ3VQ/CX7wT3lnlJ1I2TS1aU6BfGoLe3
-         5i3RoFGVukG4D7WRngME0EQSO6PKlzKdVMd0xZGhkOFl0FMHnA9Wr0fZRAmveIA5LQJQ
-         IR1j7d8SKTYpUdwJAGuZwTIGiIaVcWkobZU6ijFAeRlgXzVry2DR/wy4NheBRxdDT866
-         Xax2rJaSPNljvSEeXZvqhq15GLXXCdNcWlgc0okN2+Jhh2Pn/Al2rYucJkR/iYuKy6KN
-         Ll0A==
-X-Gm-Message-State: AOJu0YxO/tvTGPUkNaaplAYJ5F+r1Hn1HONKcC5ReUmpt/zjqK5Lugwr
-	Em618H7VpH9SKgihSQ3jdsAZE2Ey2JvcILbv/On1+VriYTvPf4ZPoXT3QLXbsy/BEFl3Wg/D0a+
-	h5QZ+XQ==
-X-Google-Smtp-Source: AGHT+IG+j1Q3fYSaUFDUt2lqMNM3JcP/kVgcWKHAbRqJjxk+j5RzGyXxJJtc1NrJZ23kICutDwYc/g==
-X-Received: by 2002:adf:f70d:0:b0:371:8bc8:ad5b with SMTP id ffacd0b85a97d-37194696ce6mr5802867f8f.60.1724019929705;
-        Sun, 18 Aug 2024 15:25:29 -0700 (PDT)
-Received: from kiyama.home (2a01cb040b5eb100f7cb8228474da207.ipv6.abo.wanadoo.fr. [2a01:cb04:b5e:b100:f7cb:8228:474d:a207])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-37189896df5sm8918631f8f.69.2024.08.18.15.25.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Aug 2024 15:25:29 -0700 (PDT)
-From: Mary Guillemard <mary@mary.zone>
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org,
-	Mary Guillemard <mary@mary.zone>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Subject: [PATCH 0/1] ufs: mediatek: Fix probe failure on MT8395 SoC
-Date: Mon, 19 Aug 2024 00:24:41 +0200
-Message-ID: <20240818222442.44990-2-mary@mary.zone>
-X-Mailer: git-send-email 2.46.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ilwhU+a/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30316C32786;
+	Sun, 18 Aug 2024 23:25:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724023549;
+	bh=nyDB1mceKW62inTC/WLDhY+YBWxJHPpjOnHEVNneizs=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=ilwhU+a/n3yjINgc+siNeGESQ03EoYdSUqG2QNovRxliofyXT7GXk+sO9ONFKDhwJ
+	 y7loaLPqzxavCDoK8dz4+JpPAnvEmqRJ8alW56VU9HGVw/ED1UijGE/EYIaUST3gfT
+	 iBN5HZGbFb3RJbBE2GRaBfgA9p6XxdpkteSEJDz/3LGUTeZq9qMLw8PoQ90CRnXZWS
+	 OhnMF+PoIhqF/dxtjQSPDERG1hfcJuAayoz9SzOmoiav7s3tzJFtITYNJ1YNSJZFJt
+	 uDPxQmp1kQjAOYiLJ7QjFRSN4Adr+LXMg3r6YVbAQgw4lf/Y5qbFr0SDLCMWMhmE2V
+	 5CNAMFt9d6Myw==
+Message-ID: <686d0650-f5c9-4c86-9900-ba980baecb00@kernel.org>
+Date: Mon, 19 Aug 2024 08:25:42 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 01/18] scsi: Expand all create*_workqueue() invocations
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+ Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Saurav Kashyap <skashyap@marvell.com>, Javed Hasan <jhasan@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com,
+ James Smart <james.smart@broadcom.com>,
+ Ram Vegesna <ram.vegesna@broadcom.com>,
+ Bradley Grove <linuxdrivers@attotech.com>, Hannes Reinecke <hare@suse.de>,
+ Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>,
+ Karan Tilak Kumar <kartilak@cisco.com>,
+ Xiang Chen <chenxiang66@hisilicon.com>, Tyrel Datwyler
+ <tyreld@linux.ibm.com>, Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+ Nilesh Javali <njavali@marvell.com>,
+ Manish Rangankar <mrangankar@marvell.com>,
+ Vishal Bhakta <vishal.bhakta@broadcom.com>,
+ Nathan Chancellor <nathan@kernel.org>,
+ Mike Christie <michael.christie@oracle.com>, Martin Wilck <mwilck@suse.com>,
+ John Garry <john.g.garry@oracle.com>,
+ Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+ Peter Wang <peter.wang@mediatek.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Avri Altman <avri.altman@wdc.com>, Bean Huo <beanhuo@micron.com>
+References: <20240816215605.36240-1-bvanassche@acm.org>
+ <20240816215605.36240-2-bvanassche@acm.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20240816215605.36240-2-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hello,
+On 8/17/24 06:55, Bart Van Assche wrote:
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> index 1078c20c5ef6..f49783b89d04 100644
+> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> @@ -2363,8 +2363,8 @@ static int _bnx2fc_create(struct net_device *netdev,
+>  	interface->vlan_id = vlan_id;
+>  	interface->tm_timeout = BNX2FC_TM_TIMEOUT;
+>  
+> -	interface->timer_work_queue =
+> -			create_singlethread_workqueue("bnx2fc_timer_wq");
+> +	interface->timer_work_queue = alloc_ordered_workqueue(
+> +		"%s", WQ_MEM_RECLAIM, "bnx2fc_timer_wq");
 
-This series fixes probe failure on MT8395 SoC caused by LSDBS field
-in the CAP register being set while the controller only support
-UFSHCI 2.1.
+Very odd line split. And there are a few more like this one. Maybe your patch
+needs some manual tuning after running the script ?
 
-This is based on 6.11/scsi-fixes as it requires the LSDBS quirk from [1].
+The patch overall looks good to me, but it would be nice to have consistency in
+the line splitting. Personnally, I prefer the pattern such as:
 
-This was tested on a Radxa NIO 12L with [2] and appropriate dt changes.
+-	kmpath_rdacd = create_singlethread_workqueue("kmpath_rdacd");
++	kmpath_rdacd =
++		alloc_ordered_workqueue("%s", WQ_MEM_RECLAIM, "kmpath_rdacd");
 
-[1]https://lore.kernel.org/linux-scsi/20240816-ufs-bug-fix-v3-1-e6fe0e18e2a3@linaro.org/
-[2]https://lore.kernel.org/all/20240612074309.50278-1-angelogioacchino.delregno@collabora.com/
+instead of:
 
-Mary Guillemard (1):
-  scsi: ufs-mediatek: Add UFSHCD_QUIRK_BROKEN_LSDBS_CAP
+-	lio_wq = create_singlethread_workqueue("efct_lio_worker");
++	lio_wq = alloc_ordered_workqueue("%s", WQ_MEM_RECLAIM,
++					 "efct_lio_worker");
 
- drivers/ufs/host/ufs-mediatek.c | 3 +++
- 1 file changed, 3 insertions(+)
+Though I guess that is a matter of taste :)
 
-
-base-commit: cbaac68987b8699397df29413b33bd51f5255255
 -- 
-2.46.0
+Damien Le Moal
+Western Digital Research
 
