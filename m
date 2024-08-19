@@ -1,145 +1,117 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FAD01804E;
-	Mon, 19 Aug 2024 03:51:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A6228801;
+	Mon, 19 Aug 2024 04:07:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724039513; cv=none; b=fCRxPbOXUouEcVVjZHi5+vHbyX2zOduC4rX/B/PYXx7ICSSk0OzWa3mldGp5/9LJQ/KBggXWkwBFQy9FoBbJUfiB5xBdhn1I4RoyDY0iOm1Bs2SIOMQWxc1cPfvE0GvOSdsRLaxOl8vrgyq6AHry0fGobGbqT8EDLc+q05mIgm4=
+	t=1724040439; cv=none; b=LfYnC4COGlWtxnBEldQHWrfk5aMH6i+2j5Hhm9tLJTvGVgUGYved7Xj/ZNOo3e8bJ0p4U71N/NHEJmCjoMvAg70RHiaciGicYW7Umyga5FRg7/BvTb35z6T8Wkf612BxRYJTR12GHxQJiD9tmk4oAsJtL9QZJptL1HTtGbhr+4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724039513; c=relaxed/simple;
-	bh=ofuJA077IN9sgtkIcOrbBKrHzo6+Kw5sYtd/kH055LE=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JwjFpqXL60JDM0HYYWNOnOCh87Zzc4ix7YB01oL1sm+ZwbuLcq/cAQjnz3ka3FJTDEKXXFIsjuHIjSFQTirFPdrnTso/btZXmY3k9sSvBrsKKw4UrjITofw1d+WOy6EO7PQuPozN6dG/xJ+tI+0x9oqOM8ejf0Wl+5zZ0lkifg4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nphpxJPl; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nphpxJPl"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47IMISNt004413;
-	Mon, 19 Aug 2024 03:51:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	e51BkQ4mOJQHDoN4yfAiVJOICRObHoy6Xy0rx+J4FgU=; b=nphpxJPl4Z6M0eh0
-	2MmqO7wRYvsgci/wVOSLUP2CYCGhGMP/q8NV04/ZtDJHxLUZxIN/4N9q6z7lyI4L
-	MheVbN9lSQmTziz+PushFXfDulU1uI4x/ZEKlFRs1p1diTn25IVLxfP/edHzoS1k
-	7IMdJaQ2Q74v9yoSSaTlfZ8WUrMAn5YZc57F+5X4BabgAKazy7jZ3r0ApxNOM2Qu
-	kCKoRaQ9f49pUkuNMcpTLeVXIQcBrSnQVdIwl7dxqZ66tpw/1p2t9HlVAXnKOyDH
-	OydFc+GFa57th/MabQkO1fT+JE6sSBxyzypYywbF7S/ItCHMZAIovHG5+p2B74Di
-	S0DPjA==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 412m32jupy-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 19 Aug 2024 03:51:27 +0000 (GMT)
-Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 47J3pQ4F015619
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 19 Aug 2024 03:51:26 GMT
-Received: from hu-bjorande-lv.qualcomm.com (10.49.16.6) by
- nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
+	s=arc-20240116; t=1724040439; c=relaxed/simple;
+	bh=YC4pg6rIZ6V7oITQ3r15iFjLXh/SwMR391VwGJ8UtSc=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=mstztF0A1T5lLvbqijk2GxfSLShvjgd+dkka0LjzFuLCoI4s9xIsCLxhmV69ragsPr0iZ4kJeUaB1dBk1990C7QhoCDbG7eK8CHD33Lz6bIgJ0SnmItsN/G9igwNI3UzPBIZXm7RUbm5LzYrmKJuqcqHmP7qqcgQWo/c+Zs+XnU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4WnJvL639szyR0y;
+	Mon, 19 Aug 2024 12:06:54 +0800 (CST)
+Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
+	by mail.maildlp.com (Postfix) with ESMTPS id 00D231800F2;
+	Mon, 19 Aug 2024 12:07:15 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Sun, 18 Aug 2024 20:51:26 -0700
-Date: Sun, 18 Aug 2024 20:51:24 -0700
-From: Bjorn Andersson <quic_bjorande@quicinc.com>
-To: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>
-CC: <regressions@lists.linux.dev>, Kyoungrul Kim <k831.kim@samsung.com>,
-        "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@hansenpartnership.com>,
-        "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "Ed.Tsai@mediatek.com" <Ed.Tsai@mediatek.com>,
-        Minwoo Im
-	<minwoo.im@samsung.com>,
-        "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>
-Subject: Re: [PATCH V4] scsi: ufs: core: Check LSDBS cap when !mcq
-Message-ID: <ZsLBPJmQnEShE8Q4@hu-bjorande-lv.qualcomm.com>
-References: <CGME20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122@epcms2p8>
- <20240709232520epcms2p8ebdb5c4fccc30a6221390566589bf122@epcms2p8>
- <Zr/XrH1hsp0seP2Q@hu-bjorande-lv.qualcomm.com>
- <20240817055508.iomq7c4wvsn5gvj3@thinkpad>
- <ZsK0H8RanqNfG9HJ@hu-bjorande-lv.qualcomm.com>
+ 15.2.1544.11; Mon, 19 Aug 2024 12:07:14 +0800
+Subject: Re: [PATCH v4] scsi: sd: retry command SYNC CACHE if format in
+ progress
+To: Damien Le Moal <dlemoal@kernel.org>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+References: <20240817015019.3467765-1-liyihang9@huawei.com>
+ <10c56cbc-a367-44c3-8b14-b846a3c4e4a0@kernel.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<bvanassche@acm.org>, <linuxarm@huawei.com>, <prime.zeng@huawei.com>,
+	<stable@vger.kernel.org>, <liyihang9@huawei.com>
+From: Yihang Li <liyihang9@huawei.com>
+Message-ID: <4618fc13-4499-53f1-efea-0487f436b353@huawei.com>
+Date: Mon, 19 Aug 2024 12:07:14 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <10c56cbc-a367-44c3-8b14-b846a3c4e4a0@kernel.org>
 Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZsK0H8RanqNfG9HJ@hu-bjorande-lv.qualcomm.com>
-X-ClientProxiedBy: nalasex01a.na.qualcomm.com (10.47.209.196) To
- nalasex01c.na.qualcomm.com (10.47.97.35)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: Tukzo6qkuU0J28yb5LWsj5fuo2QAjIwb
-X-Proofpoint-ORIG-GUID: Tukzo6qkuU0J28yb5LWsj5fuo2QAjIwb
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-08-19_01,2024-08-16_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 mlxscore=0
- suspectscore=0 priorityscore=1501 phishscore=0 bulkscore=0
- lowpriorityscore=0 impostorscore=0 clxscore=1015 mlxlogscore=999
- spamscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2407110000 definitions=main-2408190028
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemf100013.china.huawei.com (7.185.36.179)
 
-On Sun, Aug 18, 2024 at 07:55:27PM -0700, Bjorn Andersson wrote:
-> On Sat, Aug 17, 2024 at 11:25:08AM +0530, Manivannan Sadhasivam wrote:
-> > On Fri, Aug 16, 2024 at 03:50:20PM -0700, Bjorn Andersson wrote:
-> > > On Wed, Jul 10, 2024 at 08:25:20AM +0900, Kyoungrul Kim wrote:
-> > > > if the user sets use_mcq_mode to 0, the host will try to activate the
-> > > > lsdb mode unconditionally even when the lsdbs of device hci cap is 1. so
-> > > > it makes timeout cmds and fail to device probing.
-> > > > 
-> > > > To prevent that problem. check the lsdbs cap when mcq is not supported
-> > > > case.
-> > > > 
-> > > > Signed-off-by: k831.kim <k831.kim@samsung.com>
-> > > > ---
-> > > > Changes to v1: Fix wrong bit of lsdb support.
-> > > > Changes to v2: Fix extra space and wrong commit messeage.
-> > > > Changes to v3: Close missing parenthesis and fix grammatical error.
-> > > 
-> > > This causes the probe of the UFSHCD in Qualcomm SM8550 MTP to fail with
-> > > -EINVAL.
-> > > 
-> > > [    6.132937] ufshcd-qcom 1d84000.ufs: Adding to iommu group 4
-> > > [    6.142509] ufshcd-qcom 1d84000.ufs: freq-table-hz property not specified
-> > > [    6.149843] ufshcd-qcom 1d84000.ufs: ufshcd_populate_vreg: Unable to find vccq2-supply regulator, assuming enabled
-> > > [    6.209794] ufshcd-qcom 1d84000.ufs: ufshcd_init: failed to initialize (legacy doorbell mode not supported)
-> > > [    6.226571] ufshcd-qcom 1d84000.ufs: error -EINVAL: Initialization failed with error -22
-> > > [    6.348770] ufshcd-qcom 1d84000.ufs: error -EINVAL: ufshcd_pltfrm_init() failed
-> > > [    6.363203] ufshcd-qcom 1d84000.ufs: probe with driver ufshcd-qcom failed with error -22
-> > > 
-> > > #regzbot introduced: 0c60eb0cc320
-> > > #regzbot title: scsi: ufs: Qualcomm SM8550 MTP UFSHCD probe failing
-> > > 
-> > 
-> > Fix got merged for v6.11: https://lore.kernel.org/linux-scsi/20240816-ufs-bug-fix-v3-0-e6fe0e18e2a3@linaro.org/
-> > 
+
+
+On 2024/8/19 7:55, Damien Le Moal wrote:
+> On 8/17/24 10:50, Yihang Li wrote:
+>> If formatting a suspended disk (such as formatting with different DIF
+>> type), the disk will be resuming first, and then the format command will
+>> submit to the disk through SG_IO ioctl.
+>>
+>> When the disk is processing the format command, the system does not submit
+>> other commands to the disk. Therefore, the system attempts to suspend the
+>> disk again and sends the SYNC CACHE command. However, the SYNC CACHE
 > 
-> This seems to be included in v6.11-rc4, but I see the same issue still.
-> Perhaps I'm doing something wrong?
+> Why would the system try to suspend the disk with a request in flight ? Sounds
+> like there is a bug with PM reference counting, no ?
+
+According to my understand and test, the format command request is finished,
+so it is not in flight for the kernel. And the command need a few time to processing
+in the disk while no other commands are being sent.
+
 > 
-
-I'm sorry, I misread, the series hasn't made it into v6.11-rc4.
-cherry-picking the fixes solves my problem.
-
-#regzbot fixed: cd06b713a688
-
-Thank you,
-Bjorn
-
-> Regards,
-> Bjorn
-> 
-> > - Mani
-> > 
-> > -- 
-> > மணிவண்ணன் சதாசிவம்
+>> command will fail because the disk is in the formatting process, which
+>> will cause the runtime_status of the disk to error and it is difficult
+>> for user to recover it. Error info like:
+>>
+>> [  669.925325] sd 6:0:6:0: [sdg] Synchronizing SCSI cache
+>> [  670.202371] sd 6:0:6:0: [sdg] Synchronize Cache(10) failed: Result: hostbyte=0x00 driverbyte=DRIVER_OK
+>> [  670.216300] sd 6:0:6:0: [sdg] Sense Key : 0x2 [current]
+>> [  670.221860] sd 6:0:6:0: [sdg] ASC=0x4 ASCQ=0x4
+>>
+>> To solve the issue, retry the command until format command is finished.
+>>
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Yihang Li <liyihang9@huawei.com>
+>> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+>> ---
+>> Changes since v3:
+>> - Add Cc tag for kernel stable.
+>>
+>> Changes since v2:
+>> - Add Reviewed-by for Bart.
+>>
+>> Changes since v1:
+>> - Updated and added error information to the patch description.
+>>
+>> ---
+>>  drivers/scsi/sd.c | 5 +++++
+>>  1 file changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index adeaa8ab9951..5cd88a8eea73 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -1823,6 +1823,11 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+>>  			    (sshdr.asc == 0x74 && sshdr.ascq == 0x71))	/* drive is password locked */
+>>  				/* this is no error here */
+>>  				return 0;
+>> +
+>> +			/* retry if format in progress */
+>> +			if (sshdr.asc == 0x4 && sshdr.ascq == 0x4)
+>> +				return -EBUSY;
+>> +
+>>  			/*
+>>  			 * This drive doesn't support sync and there's not much
+>>  			 * we can do because this is called during shutdown
 > 
