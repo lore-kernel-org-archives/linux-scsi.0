@@ -1,131 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6838F142900;
-	Mon, 19 Aug 2024 10:57:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96A0815666B;
+	Mon, 19 Aug 2024 12:09:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724065053; cv=none; b=rXNVX1dEjgrb+Z21zHufs8RWMSp1M8jrkKEaL5kO8Bpmgiqsu34tUY7SQothXYUKjf7nhPIKZdWCWAyDbT2Sfs1e2jAXAsOlumMbpTPKBj6fwWjeNP6bd8mMpGMI0g7DmyKFouU726diSZofOUsf7E0tMA1F5XtS/mIrpLsjsHQ=
+	t=1724069342; cv=none; b=E7Xqr1vsyOHCbet20QhgJQEkXVp1iJzoXfBYx0S2TM/ecHvVIypcxtsJwci3Ehh4qoaGG7OPTLWKrDu31331drW+bifXro3OGN0/o1W3wf2zXW5tPZ7ei87mPS5xWzqinNcrzihI70bel0Y90VAMNel6OxRjfKBBCoS1UvqbMXw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724065053; c=relaxed/simple;
-	bh=EXnBZhRBDTjgOZaGOlzmFEXScQis9I93u6zh7wJFIcU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cugWtVm50CfItDcvcNk2oDSHVMePTCnBzG3so3Zr5E8DUV+pPuykGKrYhhLuCkqzpYj40y+Sgtm4OVFo43Yn5rH7rxLfiVNdNyH+hVWS0/SdYgIWeUYMXVy2cbYbsAB7oQzspzNZTSESllHUrwlfibuw4zwRlgAi+m/uTXw3HUI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LqrHPf/w; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1724069342; c=relaxed/simple;
+	bh=PKUgctShUuF5smxVxpXr/elfbiHpvj5MZhJ0BzZoYNA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GNHw8muKYLlix3NKWOtPPb4s8JNYztSRcFrOgwQIQAHowI1VIdJf05YOifHayCBdsawscaAZam9w+i0Y4HcYGTf+wB8yIBnQo3ju8OSFfEjMkPZFdj7U5MdaeXLXbNAwLiOPVyDzvHM5y/mdXqHlW4ycGIsck9NFkmcxboy8uF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XySd1RRj; arc=none smtp.client-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LqrHPf/w"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFF41C32782;
-	Mon, 19 Aug 2024 10:57:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724065053;
-	bh=EXnBZhRBDTjgOZaGOlzmFEXScQis9I93u6zh7wJFIcU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=LqrHPf/wpTiFcS2kjZKdhodpWiHaPfsJ/ydvHxw8Bv1HfrGc/xFm5KGba/GZuLoK0
-	 zuaEVkZ3ldcEIU91+kW7VDRZ7XGG0SWPmLffoqiURzZfRF1/+Obe450QWKwHrcZxJy
-	 ohPXCr7im5Nl/2IwFTeZDERyXikloS40IGW/wwvCgHPkrToLcYA9Z5VVWndIzRyift
-	 kXpHfgwXuakO374q+lfzRqKi++Fn/TjaS58dzATpJ1EUZwaJ/8aAweZNVuXJ9BGjWw
-	 0vUmCWbc6c6q2CjBKgcnoIvFac+w/mG41TQ+ceQJKg5AnNjzyIrjzURXyAhfXnB0zE
-	 3NXjkEjA+QDcQ==
-Message-ID: <c1552d1f-e147-44d9-8cc6-5ab2110b4703@kernel.org>
-Date: Mon, 19 Aug 2024 19:57:30 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XySd1RRj"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-710bdddb95cso2374273b3a.3;
+        Mon, 19 Aug 2024 05:09:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1724069340; x=1724674140; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Pt6QHwBAmFKSEnRFwX3SHcnEffqlGCVeUH83wmSq7vw=;
+        b=XySd1RRjD+v01Etd9TasJ9tt4zcYVjRPpV91UN04wZjNgJY9bFIGdd+Lwl4kR+9x92
+         EPW4h+cQj3zTD0dCpzt/jVc/ApxnMXXIoCMAPz4VnDpRicPxyu0vuroMgZCnzr3QwznS
+         FmB6Z2MeckwAxntqVeOwPd04J2dsHC8L9vhdrojY1JF8OZHSvkXxdy2CpB7W9I9satSM
+         C+nueb3XNbvnWyL02QNFSkZAtk/7wOvwzyZFjvI7Svv2T/UZ4HgW5rnXZdHjAP3T8klq
+         3Ox8nH0vj2WeRxO945YrcDcPMAzel0WZ9wX8ArU6DUNN1vxk0VWPnvkNNZCfanVi+fjV
+         MQ9A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724069340; x=1724674140;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Pt6QHwBAmFKSEnRFwX3SHcnEffqlGCVeUH83wmSq7vw=;
+        b=ZFUQT0dGkRcAETgvcpSzIf7vJtEz8nmgc5MqMFbQ4gz48DVDEtnL6+Gz5i4kAZEWkR
+         xW6flU6WowRoXI3PyaIHsfB7M8RIXejxvPAIMzUWUFxV05X4WJGjs1A+w1WozCq62LgS
+         B+xOcgU4OCaFYB61Um0RLyVlwtRPLLQqBdMPe3s7gqpu+stGkFqm2TMThoc/EF/L+ISi
+         TC9ZFSO1PP0CJrc9X9MOi/EfrK8eECkulTc8iTn9309/ECjAoeoZNxgl3UjsmQDzUHG7
+         PcpD3/bv08K9cUdFlROcWFvg4Pc+camMzaV8x4C5SN47YC6qgyGr07SpSfrM7vuN0Kfv
+         DKmw==
+X-Forwarded-Encrypted: i=1; AJvYcCWkzDyRkAX/VIWWE9h6HvbeuAjN1YWrCyXTI02d+QydYdo5aNDaj869WF8t2kybfE86mLny8kM0LVbHfCd2LK+LDreC+MH5vuYahA==
+X-Gm-Message-State: AOJu0YynWF7wbQVftfLP77il4yS9I089dOi/+08bBkJZUWYpPwbvw6BR
+	yeF9+mZGiLEWr4RX9zPdy8F6uSVSN1vdVBUtKVZhXqpmBjzay0Tp
+X-Google-Smtp-Source: AGHT+IGuUzJlxNFYojz7oNc/kOovo0osmwFt37B0ghd4icWTleq7T+Rpk4VrXL/Ocep2C2cxCK5CfQ==
+X-Received: by 2002:a05:6a20:9c99:b0:1c2:8949:5ba1 with SMTP id adf61e73a8af0-1c905059d72mr10180241637.53.1724069339770;
+        Mon, 19 Aug 2024 05:08:59 -0700 (PDT)
+Received: from thinkpad ([120.60.128.138])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7127add43dcsm6490526b3a.28.2024.08.19.05.08.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Aug 2024 05:08:59 -0700 (PDT)
+Date: Mon, 19 Aug 2024 17:38:52 +0530
+From: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>
+To: Mary Guillemard <mary@mary.zone>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	Peter Wang <peter.wang@mediatek.com>,
+	Stanley Jhu <chu.stanley@gmail.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Subject: Re: [PATCH 1/1] scsi: ufs-mediatek: Add UFSHCD_QUIRK_BROKEN_LSDBS_CAP
+Message-ID: <20240819120852.tdxlebj7pjcxjbou@thinkpad>
+References: <20240818222442.44990-2-mary@mary.zone>
+ <20240818222442.44990-3-mary@mary.zone>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5] scsi: sd: Ignore command SYNC CACHE error if format in
- progress
-To: Yihang Li <liyihang9@huawei.com>, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- bvanassche@acm.org, linuxarm@huawei.com, prime.zeng@huawei.com,
- stable@vger.kernel.org
-References: <20240819090934.2130592-1-liyihang9@huawei.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20240819090934.2130592-1-liyihang9@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240818222442.44990-3-mary@mary.zone>
 
-On 8/19/24 18:09, Yihang Li wrote:
-> If formatting a suspended disk (such as formatting with different DIF
-> type), the disk will be resuming first, and then the format command will
-> submit to the disk through SG_IO ioctl.
+On Mon, Aug 19, 2024 at 12:24:42AM +0200, Mary Guillemard wrote:
+> MT8183 supports UFSHCI 2.1 spec, but report a bogus value of 1 in the
+> reserved part for the Legacy Single Doorbell Support (LSDBS) capability.
 > 
-> When the disk is processing the format command, the system does not submit
-> other commands to the disk. Therefore, the system attempts to suspend the
-> disk again and sends the SYNC CACHE command. However, the SYNC CACHE
-> command will fail because the disk is in the formatting process, which
-> will cause the runtime_status of the disk to error and it is difficult
-> for user to recover it. Error info like:
+
+Wow... I never thought that this quirk will be used outside of Qcom SoCs...
+
+> This set UFSHCD_QUIRK_BROKEN_LSDBS_CAP when MCQ support is explicitly
+> disabled, allowing the device to be properly registered.
 > 
-> [  669.925325] sd 6:0:6:0: [sdg] Synchronizing SCSI cache
-> [  670.202371] sd 6:0:6:0: [sdg] Synchronize Cache(10) failed: Result: hostbyte=0x00 driverbyte=DRIVER_OK
-> [  670.216300] sd 6:0:6:0: [sdg] Sense Key : 0x2 [current]
-> [  670.221860] sd 6:0:6:0: [sdg] ASC=0x4 ASCQ=0x4
-> 
-> To solve the issue, ignore the error and return success/0 when formatting
-> in progress.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Yihang Li <liyihang9@huawei.com>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-
-The patch changed significantly, so I do not think you can retain Bart's review
-tag...
-
-In any case, this looks OK to me, so:
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
+> Signed-off-by: Mary Guillemard <mary@mary.zone>
 > ---
-> Changes since v4:
-> - Rename the commit title.
-> - Ignore the SYNC command error during formatting as suggested by Damien.
+>  drivers/ufs/host/ufs-mediatek.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> Changes since v3:
-> - Add Cc tag for kernel stable.
-> 
-> Changes since v2:
-> - Add Reviewed-by for Bart.
-> 
-> Changes since v1:
-> - Updated and added error information to the patch description.
-> 
-> ---
->  drivers/scsi/sd.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index adeaa8ab9951..2d7240a24b52 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1823,13 +1823,15 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
->  			    (sshdr.asc == 0x74 && sshdr.ascq == 0x71))	/* drive is password locked */
->  				/* this is no error here */
->  				return 0;
-> +
->  			/*
-> -			 * This drive doesn't support sync and there's not much
-> -			 * we can do because this is called during shutdown
-> -			 * or suspend so just return success so those operations
-> -			 * can proceed.
-> +			 * If a format is in progress or if the drive does not
-> +			 * support sync, there is not much we can do because
-> +			 * this is called during shutdown or suspend so just
-> +			 * return success so those operations can proceed.
->  			 */
-> -			if (sshdr.sense_key == ILLEGAL_REQUEST)
-> +			if ((sshdr.asc == 0x04 && sshdr.ascq == 0x04) ||
-> +			    sshdr.sense_key == ILLEGAL_REQUEST)
->  				return 0;
->  		}
+> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+> index 02c9064284e1..9a5919434c4e 100644
+> --- a/drivers/ufs/host/ufs-mediatek.c
+> +++ b/drivers/ufs/host/ufs-mediatek.c
+> @@ -1026,6 +1026,9 @@ static int ufs_mtk_init(struct ufs_hba *hba)
+>  	if (host->caps & UFS_MTK_CAP_DISABLE_AH8)
+>  		hba->caps |= UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
 >  
+> +	if (host->caps & UFS_MTK_CAP_DISABLE_MCQ)
+
+How can this be the deciding factor? You said above that the issue is with
+MT8183 SoC. So why not just use the quirk only for that platform?
+
+- Mani
+
+> +		hba->quirks |= UFSHCD_QUIRK_BROKEN_LSDBS_CAP;
+> +
+>  	ufs_mtk_init_clocks(hba);
+>  
+>  	/*
+> -- 
+> 2.46.0
+> 
+> 
 
 -- 
-Damien Le Moal
-Western Digital Research
-
+மணிவண்ணன் சதாசிவம்
