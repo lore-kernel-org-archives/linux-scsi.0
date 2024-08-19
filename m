@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7CB215E96
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Aug 2024 23:05:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B288158540
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Aug 2024 23:15:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724108726; cv=none; b=KLW6jQIzWk4P4jB+TeW2g6CFqQ9PiPGJlwmtVzraW2B/+z5FMWjjoJup6f1S95uCcZES3VSLRSDqi8LO5u3xnoXa6IeEdSzAkV8FpthOOQXhB3VCjPuPAvGIYvFJyPQTPWcRMs6bBnDq3Q75qWzGSSeiyQVhH0Y/7zcTzfwr+l4=
+	t=1724109322; cv=none; b=KnzcbkZWO9sodTmTVWsP8DlQH3ofJU4/xAyebTTjDYsNsjIBEwdeCu9L0HBh0WLP0GkpOB2eBR/nxxwKhbzcat0T4veSHlfgrNTSFgm0oNWN9trJiRBzJTwSaI7V4jDJIrT0I1o7bWt0UzViftTc7guzUVtNeifaFzLZda1Bx0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724108726; c=relaxed/simple;
-	bh=K2IQPV/ueTPiMl9ZdmUFwr2Rm3VC+33d/s5U5YRx8ZU=;
+	s=arc-20240116; t=1724109322; c=relaxed/simple;
+	bh=vmhVR2PgEqexpBNeakpqNcnmtE9AOxNMBloSw8kz6e8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ciG6nCX+bBiZeaO1L6I5EDOMeHw16Dj8QsMKkyBRmAspHG9Penr5iszmDkIQ4yxGAm2Q7DiLWlDBq+oOVP0QLBgW3NQT0r+rHqxMeCN6sklSGmqgqut0CSwxNpEMvxCXiyPx7jG4Ai89K3dHyLOpx9RZzp1gNW+CVdI0Ry2Tobs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pc17x3nG; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=oRr4Sd7MrsbWuUsNqd8OAXSIBR6rplcFBX6rsBz72QqTQbKqlJFfiaHat9XKb6gb8g1S9m6tWFeOYqTt+q6i/zlyiLaUyMQuInvwVdNGvp5SKq3vtOHMWNcPzMssI/yCw2QLWDW3Mmj298jTVsoDp+xvz74a/APivJ1qOBvkM2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SEe1k1Wf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pc17x3nG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88295C32782;
-	Mon, 19 Aug 2024 23:05:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SEe1k1Wf"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AB14C32782;
+	Mon, 19 Aug 2024 23:15:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724108725;
-	bh=K2IQPV/ueTPiMl9ZdmUFwr2Rm3VC+33d/s5U5YRx8ZU=;
+	s=k20201202; t=1724109321;
+	bh=vmhVR2PgEqexpBNeakpqNcnmtE9AOxNMBloSw8kz6e8=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=pc17x3nGIxjMDyt87qEyGBmRjgGK4jwFiw8Bzey5Kgb5FBVFg4WQmrWHE4hQDgQ2U
-	 YTSCJwq0fQh+TkwxyjOZnAFVvTwtQbQ+XhYHF8Y0gylLGzrPL0l2JbwtkF0QjQSXun
-	 6HWfwHchOrNX8J5dcfWVwNVucyQvhGiwA+oTbTojCpvzloeVoJOsFsJRSvuma/XYHt
-	 gJGM2yTo2BSpTT/aJ0d4Evg4OPVFz+X4+x2gRSDM8W6K9adHyIfVlqSV6Zg3pjupqc
-	 z7X8+eI5CqC5p3MtnTLBPT1hH+BHaphy2ygBNlFTyuvmAqNA/WyMzjgcgvW40Lpinu
-	 00i73pAbIBtFg==
-Message-ID: <61ee112d-5df1-4dc0-8929-e6b7f53d7f9b@kernel.org>
-Date: Tue, 20 Aug 2024 08:05:23 +0900
+	b=SEe1k1WfvgsXm9B+3U+i/KOPXhdIc+g3t+/uAYGLFBAlVGUbbTIvY3oUL3kgEQLLh
+	 qXD6FLS0f9rQjEzPYVrp0qId0zUhVX/ydmsO5LyBcdlYmLWvD5M//ybeSS7Xkwojkc
+	 ndb6jXmV+rILmk6Rh2wGL80wrQyHeDu0V0CNb+EG6QDmglOWYpas2BweBRXv8Dz0nv
+	 N1LPqjaxQGaVXwirYK9zZf8uFmyRXRr6CbBoBiBoExFrwSrWunVZkUCa1dzYSKxfBn
+	 /XgqPlNzMpbmZyS/vADgZu7TQR1wwoieagQfg5A7EVEC/MaI/T8qxwJqtShdJB8DXe
+	 9o8A4bZFv0zBQ==
+Message-ID: <4220a817-592f-4bba-ab80-64993968f605@kernel.org>
+Date: Tue, 20 Aug 2024 08:15:19 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,64 +35,84 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 02/18] scsi: mptfusion: Simplify the alloc*_workqueue()
- invocations
+Subject: Re: [PATCH v2 01/18] scsi: Expand all create*_workqueue() invocations
 To: Bart Van Assche <bvanassche@acm.org>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: linux-scsi@vger.kernel.org
 References: <20240816215605.36240-1-bvanassche@acm.org>
- <20240816215605.36240-3-bvanassche@acm.org>
- <c1d0468d-eaf0-46c2-ba62-846ffdae6993@kernel.org>
- <01880e15-56d6-432b-8441-974ef56935fe@acm.org>
+ <20240816215605.36240-2-bvanassche@acm.org>
+ <686d0650-f5c9-4c86-9900-ba980baecb00@kernel.org>
+ <bd0ad5fc-bf76-423a-b734-bc306b2edc45@acm.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <01880e15-56d6-432b-8441-974ef56935fe@acm.org>
+In-Reply-To: <bd0ad5fc-bf76-423a-b734-bc306b2edc45@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 8/20/24 02:08, Bart Van Assche wrote:
-> On 8/18/24 4:51 PM, Damien Le Moal wrote:
+On 8/20/24 02:17, Bart Van Assche wrote:
+> On 8/18/24 4:25 PM, Damien Le Moal wrote:
 >> On 8/17/24 06:55, Bart Van Assche wrote:
->>> Let alloc*_workqueue() format the workqueue names instead of calling
->>> snprintf() explicitly.
->>>
->>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>>> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>>> index 1078c20c5ef6..f49783b89d04 100644
+>>> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>>> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+>>> @@ -2363,8 +2363,8 @@ static int _bnx2fc_create(struct net_device *netdev,
+>>>   	interface->vlan_id = vlan_id;
+>>>   	interface->tm_timeout = BNX2FC_TM_TIMEOUT;
+>>>   
+>>> -	interface->timer_work_queue =
+>>> -			create_singlethread_workqueue("bnx2fc_timer_wq");
+>>> +	interface->timer_work_queue = alloc_ordered_workqueue(
+>>> +		"%s", WQ_MEM_RECLAIM, "bnx2fc_timer_wq");
 >>
->> In patch 1, you have all the changes for removing the use of
->> create_singlethread_workqueue() in a single patch, touching different drivers.
->> But the series has 17 more patches to further cleanup the workqueue API use in
->> various drivers. So why not have the changes in patch 1 split into these
->> different driver patches with a title like "Cleanup and simplify workqueue API
->> use" ? That would make reviewing easier I think and avoid having the patch 2-17
->> changing again code that was changed in patch 1...
+>> Very odd line split. And there are a few more like this one. Maybe your patch
+>> needs some manual tuning after running the script ?
+>>
+>> The patch overall looks good to me, but it would be nice to have consistency in
+>> the line splitting. Personnally, I prefer the pattern such as:
+>>
+>> -	kmpath_rdacd = create_singlethread_workqueue("kmpath_rdacd");
+>> +	kmpath_rdacd =
+>> +		alloc_ordered_workqueue("%s", WQ_MEM_RECLAIM, "kmpath_rdacd");
+>>
+>> instead of:
+>>
+>> -	lio_wq = create_singlethread_workqueue("efct_lio_worker");
+>> +	lio_wq = alloc_ordered_workqueue("%s", WQ_MEM_RECLAIM,
+>> +					 "efct_lio_worker");
+>>
+>> Though I guess that is a matter of taste :)
 > 
-> Hi Damien,
+> (reduced cc-list)
 > 
-> Thanks for having taken a look at this patch series. Would splitting
-> patch 01/18 really help? Splitting that patch would make the description
-> of the split patches longer than the actual code changes. That might
-> annoy other reviewers. Additionally, isn't typical that Coccinelle
-> patches are applied tree-wide instead of one driver at a time? A few
-> examples:
-> * 795f90c6f13c ("sysctl: treewide: constify argument
->                   ctl_table_root::permissions(table)").
-> * e8058a49e67f ("netlink: introduce type-checking attribute iteration").
+> If I run "git clang-format HEAD^" on this patch, no code is changed. 
+> Does this perhaps mean that the .clang-format style file in the kernel
+> tree needs further tuning? The most recent change in that file other
+> than adding for-each macro names is from two years ago (see also commit 
+> 781121a7f6d1 ("clang-format: Fix space after for_each macros")). Or does
+> this perhaps mean that there is broad agreement about the coding style
+> parameters in the .clang-format file?
 
-I know about script-based patches. But in this case, the script generated patch
-changes lines of code that following patches change again (not all of them
-though). So I thought splitting patch 1 may be a good idea as that would as well
-isolate driver changes in their own patches, which definitely should facilitate
-reviewing by the driver maintainers.
+As I said, most likely a matter of taste :)
+The pattern:
 
-But no strong feelings about all this. If you do not want to do that, fine.
+	lio_wq = alloc_ordered_workqueue("%s", WQ_MEM_RECLAIM,
+					 "efct_lio_worker");
+
+follows the regular kernel coding style.
+I only meant to say that I find the pattern:
+
+	lio_wq =
+		alloc_ordered_workqueue("%s", WQ_MEM_RECLAIM, "efct_lio_worker");
+
+more pleasing visually. But the line may be too long anyway...
 
 > 
 > Thanks,
 > 
 > Bart.
+> 
 > 
 
 -- 
