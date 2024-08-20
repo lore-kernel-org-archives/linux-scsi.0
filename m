@@ -1,310 +1,138 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4032225632
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Aug 2024 01:51:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54723156CF;
+	Tue, 20 Aug 2024 04:01:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.71.153.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724118669; cv=none; b=hFGq6X3CTjQbuG9q7/udww6mmQG0ozQxPqhKu9/OsGh17bGuzqoIE922uc039ARgjJdlhQfe8MggITXVPc6uEB64fjWKB6k55341J1RRkFuzTLoNpSNnTb9192N10P0mIWxh5X2UISGK2KKt5fkYw01uTr8YJgt74u6lkiyAafs=
+	t=1724126475; cv=none; b=GTgTPJFOTYalHP4g93/sFZvjYNYpMw690pceKl8NExi1PvpBwLVBUh4hGoldlGJ6nP/ivMiGwovN6SknAKtvpCi3aKfji4m3u/VYYwoXPF0+eRF1dletHs/abiN/nLwNUQqhBmAw+8op2foHmg/9Y+peAaVvPYzgGxAYn4BqZIc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724118669; c=relaxed/simple;
-	bh=X7Tf/2sbMns8bMTKUFg1k31n585aRPKOnD1Dmxtvuwk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=h0/Airj161Uh0xGZLTiLga8YkbDoaIczH6fvCJbTGfgsf7VCIFE8A6i51YPZnrtFbqxAjQuzUbij9OS5scGgXe4fEOwMr78iUJ6bysQ/4Fpa0cKL8ocqpSfldod7hHqB88hUQdxw45SZEMSwHqcBCEvlRs683KUqDbdYRmjTeeg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hZzAa/3Y; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1724126475; c=relaxed/simple;
+	bh=/fcTDhyfY/4OIdy7+1GXGjnZwj0jbSEXTVhs8GsELmI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=r6keYaRlX38z1POOnmTnAcIl0AOJ90jeciAGixInloS13cQf6mJYoOl7mCGXjZf30+jJv4WYeCziB5Qx87iCVTWvDq5dgy1y04NcTiTXCh+Cc4N9wD9aL0ZJBps4bzCJxkZCqd8eh4gvi/UELHs/iLIb1Hza/Nr28jFzeKPtTZM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=fuMncEdT; arc=none smtp.client-ip=216.71.153.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hZzAa/3Y"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1724118663;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=zemSLB7cpZj/xdAoHKekxRhjOKghwOYrL/smZ5zzA84=;
-	b=hZzAa/3YBu06m5hCLQOKIp3JJEOMCOhICS59L8rPpm1hkPYE6Ajm4a5jRQQkEhuBuSsHUQ
-	vNXhfPalf9LoQGbnnyHFYEO2HSy18i/nBePD15tTXorbjVDlG68I+9LQM1vnDe44/MluyJ
-	QdsndS8r9PkgJyXJfM2orwMTtr2MtQ8=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-5-6PwNNiNdOiOKI_6_vVavdQ-1; Mon, 19 Aug 2024 21:51:02 -0400
-X-MC-Unique: 6PwNNiNdOiOKI_6_vVavdQ-1
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-2d3bbfcc5dbso4500650a91.0
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Aug 2024 18:51:01 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724118659; x=1724723459;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=zemSLB7cpZj/xdAoHKekxRhjOKghwOYrL/smZ5zzA84=;
-        b=jXh76/1+ULz7AlrAD6pOstJ/ot1E/dc4iXZcxzoW7ZTyQwVMIt6ANoGWLL+G9F65SP
-         W6zOZhQ9WW501Igs7p6tvdD7QRopnHRDb5hi/ddoXR/6fLHp791PUXceuujV75UfQgrq
-         03cun4zdycOz1NrEgpD1N7O+MOf5RqAPlUJl5lb7n6tlZeBXKcFdXSwO6nOw0c6IdjnZ
-         c4hLNzoju+/xz99bYTD+mKxvrpAEUgDYYskZtFnmVESXWYM7vyvufKqdY0A1Ye0Nq6/p
-         Aq/ePUZ+EB1C1pYDg1/1oYueKqomWbCMBTYldDDSzzbsyuzmoq4GJ0LbWHbuXrssxe+Q
-         aAOA==
-X-Forwarded-Encrypted: i=1; AJvYcCX2Is1oZ5DPz1gQBlhzSUCQx5xll2kKqvZK9sHGGVDkSRWm5T5cFfLp85+UkOOa6MNPUU4d9U03JfTA@vger.kernel.org
-X-Gm-Message-State: AOJu0YwXXLFi8Cinmiqww/HNFyoh8CvqjYsIAzIvL+bpHtSO/Z86/tHt
-	oZgr4yOUzUuCRPIZHMPCklK1vozM/TnYYNQDdhtrPqlZ5/OoKpxLb4hW8I0IRnoWEoWZjZflFZO
-	WPquz5YdBVA6+BbZ7C8QNCA5V303wf6SOgpZA2dX11ds5E18pf8OlfC09cOcRKKQO21bn2NGiBO
-	EAaoyKwGfuRiQIeX/UIgkuRHs5q6XQpCVsKA==
-X-Received: by 2002:a17:90a:8a02:b0:2c8:87e:c2d9 with SMTP id 98e67ed59e1d1-2d3e03e89dcmr12525649a91.39.1724118659442;
-        Mon, 19 Aug 2024 18:50:59 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IF2xNwaA7efDn4iFU7NRQCn5zeIDhK2iOTMbDt+qvGPJ3lKC0GseK99B8PoX4eAcf/7EG7ilcLRq4e0JUPo6TI=
-X-Received: by 2002:a17:90a:8a02:b0:2c8:87e:c2d9 with SMTP id
- 98e67ed59e1d1-2d3e03e89dcmr12525636a91.39.1724118659021; Mon, 19 Aug 2024
- 18:50:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="fuMncEdT"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1724126473; x=1755662473;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=/fcTDhyfY/4OIdy7+1GXGjnZwj0jbSEXTVhs8GsELmI=;
+  b=fuMncEdTfJSkhBWhH+YH206DWBYuVdSccoaOu2WPO5E/EhL1jRJ1KpKT
+   INIAglOprBSiRM8WKlsYCVRgEybFbTy8+r4wnfPIcbzdVkEZy0poz1LsO
+   InWxUuGOZ2iLgeA8v5Zc9tvA2SuLYiPBDNjZDY9g72O5c9dmV+t4WSWbV
+   KunFWtpaXRBcnwDWvFHdJYKoMiaEss7+ooWcxNAR2efWEQs5iXZPOrimk
+   VUhJzCVvwQAfSlExsXwroo8lz/YeSD2mT4JUfh41SpvsXje2lDTGgMCOv
+   GnAOz+NJfCChAfF7gAzA2aCmb8+q+wNUWClE9UnlGj9uHSCwH3hmi+WQM
+   A==;
+X-CSE-ConnectionGUID: AiWK796YQEK4XMi2yPSDBw==
+X-CSE-MsgGUID: b4QSQE2VQ16kInRX0kCbTQ==
+X-IronPort-AV: E=Sophos;i="6.10,160,1719849600"; 
+   d="scan'208";a="24663340"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Aug 2024 12:00:04 +0800
+IronPort-SDR: 66c4080e_zwEAfga2bLbD5A5aWMfgQAAYvh9BqnEwRIiaCmh/WyYAxTy
+ UOZDaVRJNkvpTAWrPo5ijO9r8YPaA47BC3tTtQw==
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Aug 2024 20:05:50 -0700
+WDCIronportException: Internal
+Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 19 Aug 2024 21:00:02 -0700
+From: Avri Altman <avri.altman@wdc.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH] scsi: ufs: Move UFS trace events to private header
+Date: Tue, 20 Aug 2024 06:58:26 +0300
+Message-Id: <20240820035826.3124001-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <5yal5unzvisrvfhhvsqrsqgu4tfbjp2fsrnbuyxioaxjgbojsi@o2arvhebzes3>
- <ab363932-ab3d-49b1-853d-7313f02cce9e@linux.ibm.com> <ljqlgkvhkojsmehqddmeo4dng6l3yaav6le2uslsumfxivluwu@m7lkx3j4mkkw>
- <79a7ec0d-c22d-44cf-a832-13da05a1fcbd@linux.ibm.com> <CAHj4cs-5DPDFuBzm3aymeAi6UWHhgXSYsgaCACKbjXp=i0SyTA@mail.gmail.com>
- <1f917bc1-8a6a-4c88-a619-cf8ddc4534a4@linux.ibm.com> <tczctp5tkr34o3k3f4dlyhuutgp2ycex6gdbjuqx4trn6ewm2i@qbkza3yr5wdd>
- <f2f9d5b4-3c50-41a9-bc53-49706f6f4e12@linux.ibm.com>
-In-Reply-To: <f2f9d5b4-3c50-41a9-bc53-49706f6f4e12@linux.ibm.com>
-From: Yi Zhang <yi.zhang@redhat.com>
-Date: Tue, 20 Aug 2024 09:50:47 +0800
-Message-ID: <CAHj4cs8B-Md_WnPo0Z2o6dZ3n30QqL5D-YbW9wWbCMLjxDSrsg@mail.gmail.com>
-Subject: Re: blktests failures with v6.11-rc1 kernel
-To: Nilay Shroff <nilay@linux.ibm.com>
-Cc: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>, 
-	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, 
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "nbd@other.debian.org" <nbd@other.debian.org>, 
-	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Mon, Aug 19, 2024 at 9:35=E2=80=AFPM Nilay Shroff <nilay@linux.ibm.com> =
-wrote:
->
->
->
-> On 8/19/24 18:04, Shinichiro Kawasaki wrote:
-> > On Aug 14, 2024 / 18:05, Nilay Shroff wrote:
-> >>
-> >>
-> >> On 8/13/24 12:36, Yi Zhang wrote:
-> >>> On Sat, Aug 3, 2024 at 12:49=E2=80=AFAM Nilay Shroff <nilay@linux.ibm=
-.com> wrote:
-> >>>
-> >>> There are no simultaneous tests during the CKI tests running.
-> >>> I reproduced the failure on that server and always can be reproduced
-> >>> within 5 times:
-> >>> # sh a.sh
-> >>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D0
-> >>> nvme/052 (tr=3Dloop) (Test file-ns creation/deletion under one subsys=
-tem) [passed]
-> >>>     runtime  21.496s  ...  21.398s
-> >>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D1
-> >>> nvme/052 (tr=3Dloop) (Test file-ns creation/deletion under one subsys=
-tem) [failed]
-> >>>     runtime  21.398s  ...  21.974s
-> >>>     --- tests/nvme/052.out 2024-08-10 00:30:06.989814226 -0400
-> >>>     +++ /root/blktests/results/nodev_tr_loop/nvme/052.out.bad
-> >>> 2024-08-13 02:53:51.635047928 -0400
-> >>>     @@ -1,2 +1,5 @@
-> >>>      Running nvme/052
-> >>>     +cat: /sys/block/nvme1n2/uuid: No such file or directory
-> >>>     +cat: /sys/block/nvme1n2/uuid: No such file or directory
-> >>>     +cat: /sys/block/nvme1n2/uuid: No such file or directory
-> >>>      Test complete
-> >>> # uname -r
-> >>> 6.11.0-rc3
-> >>
-> >> We may need to debug this further. Is it possible to patch blktest and
-> >> collect some details when this issue manifests? If yes then can you pl=
-ease
-> >> apply the below diff and re-run your test? This patch would capture ou=
-tput
-> >> of "nvme list" and "sysfs attribute tree created under namespace head =
-node"
-> >> and store those details in 052.full file.
-> >>
-> >> diff --git a/common/nvme b/common/nvme
-> >> index 9e78f3e..780b5e3 100644
-> >> --- a/common/nvme
-> >> +++ b/common/nvme
-> >> @@ -589,8 +589,23 @@ _find_nvme_ns() {
-> >>                 if ! [[ "${ns}" =3D~ nvme[0-9]+n[0-9]+ ]]; then
-> >>                         continue
-> >>                 fi
-> >> +               echo -e "\nBefore ${ns}/uuid check:\n" >> ${FULL}
-> >> +               echo -e "\n`nvme list -v`\n" >> ${FULL}
-> >> +               echo -e "\n`tree ${ns}`\n" >> ${FULL}
-> >> +
-> >>                 [ -e "${ns}/uuid" ] || continue
-> >>                 uuid=3D$(cat "${ns}/uuid")
-> >> +
-> >> +               if [ "$?" =3D "1" ]; then
-> >> +                       echo -e "\nFailed to read $ns/uuid\n" >> ${FUL=
-L}
-> >> +                       echo "`nvme list -v`" >> ${FULL}
-> >> +                       if [ -d "${ns}" ]; then
-> >> +                               echo -e "\n`tree ${ns}`\n" >> ${FULL}
-> >> +                       else
-> >> +                               echo -e "\n${ns} doesn't exist!\n" >> =
-${FULL}
-> >> +                       fi
-> >> +               fi
-> >> +
-> >>                 if [[ "${subsys_uuid}" =3D=3D "${uuid}" ]]; then
-> >>                         basename "${ns}"
-> >>                 fi
-> >>
-> >>
-> >> After applying the above diff, when this issue occurs on your system c=
-opy this
-> >> file "</path/to/blktests>/results/nodev_tr_loop/nvme/052.full" and sen=
-d it across.
-> >> This may give us some clue about what might be going wrong.
-> >
-> > Nilay, thank you for this suggestion. To follow it, I tried to recreate=
- the
-> > failure again, and managed to do it :) When I repeat the test case 20 o=
-r 40
-> > times one of my test machines, the failure is observed in stable manner=
-.
->
-> Shinichiro, I am glad that you were able to recreate this issue.
->
-> > I applied your debug patch above to blktests, then I repeated the test =
-case.
-> > Unfortunately, the failure disappeared. When I repeat the test case 100=
- times,
-> > the failure was not observed. I guess the echos for debug changed the t=
-iming to
-> > access the sysfs uuid file, then the failure disappeared.
->
-> Yes this could be possible. BTW, Yi tried the same patch and with the pat=
-ch applied,
-> this issue could be still reproduced on Yi's testbed!!
-> > This helped me think about the cause. The test case repeats _create_nvm=
-et_ns
-> > and _remove_nvmet_ns. Then, it repeats creating and removing the sysfs =
-uuid
-> > file. I guess when _remove_nvmet_ns echos 0 to ${nvemt_ns_path}/enable =
-to
-> > remove the namespace, it does not wait for the completion of the remova=
-l work.
-> > Then, when _find_nvme_ns() checks existence of the sysfs uuid file, it =
-refers to
-> > the sysfs uuid file that the previous _remove_nvmet_ns left. When it do=
-es cat
-> > to the sysfs uuid file, it fails because the sysfs uuid file has got re=
-moved,
-> > before recreating it for the next _create_nvmet_ns.
->
-> I agree with your assessment about the plausible cause of this issue. I j=
-ust reviewed
-> the nvme target kernel code and it's now apparent to me that we need to w=
-ait for the
-> removal of the namespace before we re-create the next namespace. I think =
-this is a miss.
-> >
-> > Based on this guess, I created a patch below. It modifies the test case=
- to wait
-> > for the namespace device disappears after calling _remove_nvmet_ns. (I =
-assume
-> > that the sysfs uuid file disappears when the device file disappears). W=
-ith
-> > this patch, the failure was not observed by repeating it 100 times. I a=
-lso
-> > reverted the kernel commit ff0ffe5b7c3c ("nvme: fix namespace removal l=
-ist")
-> > from v6.11-rc4, then confirmed that the test case with this change stil=
-l can
-> > detect the regression.
-> >
-> I am pretty sure that your patch would solve this issue.
->
-> > I will do some more confirmation. If it goes well, will post this chang=
-e as
-> > a formal patch.
-> >
-> > diff --git a/tests/nvme/052 b/tests/nvme/052
-> > index cf6061a..469cefd 100755
-> > --- a/tests/nvme/052
-> > +++ b/tests/nvme/052
-> > @@ -39,15 +39,32 @@ nvmf_wait_for_ns() {
-> >               ns=3D$(_find_nvme_ns "${uuid}")
-> >       done
-> >
-> > +     echo "$ns"
-> >       return 0
-> >  }
-> >
-> > +nvmf_wait_for_ns_removal() {
-> > +     local ns=3D$1 i
-> > +
-> > +     for ((i =3D 0; i < 10; i++)); do
-> > +             if [[ ! -e /dev/$ns ]]; then
-> > +                     return
-> > +             fi
-> > +             sleep .1
-> > +             echo "wait removal of $ns" >> "$FULL"
-> > +     done
-> > +
-> > +     if [[ -e /dev/$ns ]]; then
-> > +             echo "Failed to remove the namespace $"
-> > +     fi
-> > +}
-> > +
-> >  test() {
-> >       echo "Running ${TEST_NAME}"
-> >
-> >       _setup_nvmet
-> >
-> > -     local iterations=3D20
-> > +     local iterations=3D20 ns
-> >
-> >       _nvmet_target_setup
-> >
-> > @@ -63,7 +80,7 @@ test() {
-> >               _create_nvmet_ns "${def_subsysnqn}" "${i}" "$(_nvme_def_f=
-ile_path).$i" "${uuid}"
-> >
-> >               # wait until async request is processed and ns is created
-> > -             nvmf_wait_for_ns "${uuid}"
-> > +             ns=3D$(nvmf_wait_for_ns "${uuid}")
-> >               if [ $? -eq 1 ]; then
-> >                       echo "FAIL"
-> >                       rm "$(_nvme_def_file_path).$i"
-> > @@ -71,6 +88,7 @@ test() {
-> >               fi
-> >
-> >               _remove_nvmet_ns "${def_subsysnqn}" "${i}"
-> > +             nvmf_wait_for_ns_removal "$ns"
-> >               rm "$(_nvme_def_file_path).$i"
-> >       }
-> >       done
->
-> I think there's some formatting issue in the above patch. I see some stra=
-y characters
-> which you may cleanup/fix later when you send the formal patch.
->
-> Yi, I think you you may also try the above patch on your testbed and conf=
-irm the result.
+ufs trace events are called exclusively from the ufs core drivers.  Make
+those events privet to the core driver.
 
-Nilay/Shinichiro
+The MAINTAINERS file does not need updating as the maintainership
+remains the same and the relevant directory is already covered.
 
-Confirmed the failure cannot be reproduced with this patch now.
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+---
+ include/trace/events/ufs.h => drivers/ufs/core/ufs_trace.h | 6 ++++++
+ drivers/ufs/core/ufshcd.c                                  | 2 +-
+ include/ufs/ufs.h                                          | 4 ++--
+ 3 files changed, 9 insertions(+), 3 deletions(-)
+ rename include/trace/events/ufs.h => drivers/ufs/core/ufs_trace.h (98%)
 
->
-> Thanks,
-> --Nilay
->
-
-
---=20
-Best Regards,
-  Yi Zhang
+diff --git a/include/trace/events/ufs.h b/drivers/ufs/core/ufs_trace.h
+similarity index 98%
+rename from include/trace/events/ufs.h
+rename to drivers/ufs/core/ufs_trace.h
+index c4e209fbdfbb..84deca2b841d 100644
+--- a/include/trace/events/ufs.h
++++ b/drivers/ufs/core/ufs_trace.h
+@@ -9,6 +9,7 @@
+ #if !defined(_TRACE_UFS_H) || defined(TRACE_HEADER_MULTI_READ)
+ #define _TRACE_UFS_H
+ 
++#include <ufs/ufs.h>
+ #include <linux/tracepoint.h>
+ 
+ #define str_opcode(opcode)						\
+@@ -395,5 +396,10 @@ TRACE_EVENT(ufshcd_exception_event,
+ 
+ #endif /* if !defined(_TRACE_UFS_H) || defined(TRACE_HEADER_MULTI_READ) */
+ 
++#undef TRACE_INCLUDE_PATH
++#define TRACE_INCLUDE_PATH ../../drivers/ufs/core
++#undef TRACE_INCLUDE_FILE
++#define TRACE_INCLUDE_FILE ufs_trace
++
+ /* This part must be outside protection */
+ #include <trace/define_trace.h>
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0dd26059f5d7..db30d0c4d91e 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -39,7 +39,7 @@
+ #include <asm/unaligned.h>
+ 
+ #define CREATE_TRACE_POINTS
+-#include <trace/events/ufs.h>
++#include "ufs_trace.h"
+ 
+ #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
+ 				 UTP_TASK_REQ_COMPL |\
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index 853e95957c31..e594abe5d05f 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -597,7 +597,7 @@ struct ufs_dev_info {
+ };
+ 
+ /*
+- * This enum is used in string mapping in include/trace/events/ufs.h.
++ * This enum is used in string mapping in ufs_trace.h.
+  */
+ enum ufs_trace_str_t {
+ 	UFS_CMD_SEND, UFS_CMD_COMP, UFS_DEV_COMP,
+@@ -607,7 +607,7 @@ enum ufs_trace_str_t {
+ 
+ /*
+  * Transaction Specific Fields (TSF) type in the UPIU package, this enum is
+- * used in include/trace/events/ufs.h for UFS command trace.
++ * used in ufs_trace.h for UFS command trace.
+  */
+ enum ufs_trace_tsf_t {
+ 	UFS_TSF_CDB, UFS_TSF_OSF, UFS_TSF_TM_INPUT, UFS_TSF_TM_OUTPUT
+-- 
+2.25.1
 
