@@ -1,41 +1,42 @@
 Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6BE917C67;
-	Tue, 20 Aug 2024 01:24:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C33B1BC58;
+	Tue, 20 Aug 2024 01:25:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724117067; cv=none; b=nvyNKT4e8T60Ik2AjYZEb68ySjDfO5xHofYv80die9RUM1+Ju2SViK20Hp3UuiznPtPzEiBBcT6B7NeV5vj7z2f/RbJuc8xu5pMXDNnIqDte/QgRdsm71juARQXitb8fXDQ51eAU+wt8mDnvRWojmDChcMwotC6p9TzoZhPDk2E=
+	t=1724117152; cv=none; b=OtUg94z/+ewxPJ9zW3ZKipcP4pd+pI6lMRfsOfAAczghUWh9BHgyTwtNXTHUVgckSu8VfDTZMGTvEn9ux4ttgf6wIjRyyykvZxKFrx/mLmpUPhbvlX8A1N5OzXppeBK+Q+DOgzKEg1iT/imE8tQEnvhaliGFqOS2uWeunC4moMo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724117067; c=relaxed/simple;
-	bh=PFhpBbGcqoFv9Ee+zZUeXGlY7AZl2F9JOryxrAQ354Q=;
+	s=arc-20240116; t=1724117152; c=relaxed/simple;
+	bh=ltGNretTtu1vKis5Qr5JrJc1GRGPHP9zlVyAbsNYovg=;
 	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=s97bg0apVqDRcxYwGh9Yj2QY20/Y+TFHXl08i6vYULwAZY8cUssVtI+XtcWZg0r5kf7gBbegcAe0bMjfEi8NC8/eVQmiay7l5AmJQ1LruAwtVCFvVaNAw1tbtDBTYKX0hBystqP4zp7u+zK5xfnOT0jjt8ZM8eIpT0RlAo7hEJo=
+	 In-Reply-To:Content-Type; b=LKxI2+7WJRYs/4/ITOWF1T/1T0arezYoQcSVce7zqzf5Z1M5vLOxKzd7Ydt9h367iBtR2Kb0XTIZqIVC4kS6MLj/1p8Y8E9obxovb+E7UYhMo1i6RMnGbwwawmJALImJ3qICxVPvnaYt8wx7WHqoMocQUOvV+/6JGs7t7+vleYg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.174])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WnsC22hyvzfbd9;
-	Tue, 20 Aug 2024 09:22:22 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.105])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WnsDj2TPgzfbdL;
+	Tue, 20 Aug 2024 09:23:49 +0800 (CST)
 Received: from dggpemf100013.china.huawei.com (unknown [7.185.36.179])
-	by mail.maildlp.com (Postfix) with ESMTPS id 48822140135;
-	Tue, 20 Aug 2024 09:24:22 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 4160A1402E0;
+	Tue, 20 Aug 2024 09:25:49 +0800 (CST)
 Received: from [10.67.120.126] (10.67.120.126) by
  dggpemf100013.china.huawei.com (7.185.36.179) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 20 Aug 2024 09:24:21 +0800
+ 15.2.1544.11; Tue, 20 Aug 2024 09:25:48 +0800
 Subject: Re: [PATCH v5] scsi: sd: Ignore command SYNC CACHE error if format in
  progress
-To: Bart Van Assche <bvanassche@acm.org>,
+To: Bart Van Assche <bvanassche@acm.org>, Damien Le Moal <dlemoal@kernel.org>,
 	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
 References: <20240819090934.2130592-1-liyihang9@huawei.com>
- <bfce098e-a070-40b1-95fc-951e2b3c1c22@acm.org>
+ <c1552d1f-e147-44d9-8cc6-5ab2110b4703@kernel.org>
+ <099752c2-9cc2-43ef-8b97-56d26c148c88@acm.org>
 CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<dlemoal@kernel.org>, <linuxarm@huawei.com>, <prime.zeng@huawei.com>,
-	<stable@vger.kernel.org>, <liyihang9@huawei.com>
+	<linuxarm@huawei.com>, <prime.zeng@huawei.com>, <stable@vger.kernel.org>,
+	<liyihang9@huawei.com>
 From: Yihang Li <liyihang9@huawei.com>
-Message-ID: <fd8c091f-a777-6641-835e-397fa8b5de94@huawei.com>
-Date: Tue, 20 Aug 2024 09:24:21 +0800
+Message-ID: <e11b6850-e793-7f73-25e5-c474ef758211@huawei.com>
+Date: Tue, 20 Aug 2024 09:25:48 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
  Thunderbird/45.7.1
 Precedence: bulk
@@ -44,33 +45,20 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <bfce098e-a070-40b1-95fc-951e2b3c1c22@acm.org>
+In-Reply-To: <099752c2-9cc2-43ef-8b97-56d26c148c88@acm.org>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
  dggpemf100013.china.huawei.com (7.185.36.179)
 
 
 
-On 2024/8/20 0:59, Bart Van Assche wrote:
-> On 8/19/24 2:09 AM, Yihang Li wrote:
->> +            if ((sshdr.asc == 0x04 && sshdr.ascq == 0x04) ||
+On 2024/8/20 0:54, Bart Van Assche wrote:
+> On 8/19/24 3:57 AM, Damien Le Moal wrote:
+>> The patch changed significantly, so I do not think you can retain Bart's review
+>> tag...
 > 
-> Shouldn't symbolic names be introduced for these numeric constants?
-> Although there is more code in the SCSI core that compares ASC / ASCQ
-> values with numeric constants, I think we need symbolic names for these
-> constants to make code like the above easier to read. There is already
-> a header file for definitions that come directly from the SCSI standard
-> and that is used by both SCSI initiator and SCSI target code:
-> <scsi/scsi_proto.h>.
+> Agreed, my Reviewed-by definitely should have been removed.
 > 
 
-My idea is to be consistent with the style of the code context.
-That's why I use numerical values.
-
-If we want to use symbolic names to replace all numeric constants,
-I think that would be another series of patches, and the changes would be more.
-
-Thanks,
-
-Yihang.
+Sorry about that forgot remove your Reviewed-by tag.
