@@ -1,87 +1,116 @@
-Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+Received: from maynard.decadent.org.uk (maynard.decadent.org.uk [65.21.191.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B5F5178CEA
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 21:39:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E5DC1494AD
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 23:11:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.21.191.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724276398; cv=none; b=aipdVxQNGeLLJC0GdYJ4G4ttOmTG1p/59YVnom4ySKf+GZujSL/yhzQDJFlju3XuNVTJDaPb59Q6qD5eXnDuss8uSvNhKlqqzknGkM+UjSXYVkSPyKh2EXEpIEcNgCXgB9QJv6KQy+si6nipFt5/K2jsCp/q3jdwahsokTob1So=
+	t=1724281863; cv=none; b=tT1SU3Q7FS9VumMQlJs7A56sWfXdZtqsSxZn2RV6EiGP1joMTQXoyH7SolRd0u2neyv6QGsVE98o+F+oFS47+x5FNOOUemqcyCflgKalBHwmeVdGVEdFR1nl9Co9zSoddYKoXRj2uikvZk2QMbPROhPiKE4oEla2gxFTVO5iFVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724276398; c=relaxed/simple;
-	bh=o2DbpWauX+tRIzEkwWw9A3E6HYWvKtIM+1HD2P3wYlw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dmuGLMbhRbOywTtE83ljLt06xEXc7GaF08/1r6ll1VdAFUozABoT/Rq0hPOmcHI7hD+dPN/5RCldhIQ0IxS6k/3I4YhIV+SDFxRkR2MVIr4yHlIhwJYKkXE6BiY4eWO5qUWqRIAH76HG8GqteMyKE/haJ+zPbBbB0JKB4rGdDco=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2BS3oDhk; arc=none smtp.client-ip=199.89.1.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2BS3oDhk"
-Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Wq09K6KTNz6ClY9D;
-	Wed, 21 Aug 2024 21:39:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1724276385; x=1726868386; bh=o2DbpWauX+tRIzEkwWw9A3E6
-	HYWvKtIM+1HD2P3wYlw=; b=2BS3oDhkQXql9+YZlUDBRBAPidyasTk8yBAK1UHr
-	lD5lSNh+7/01/C6QprpCeg3KD0vj6Xu00H4xu0iATJe4hMtDH+uVJncjuGUcE+/B
-	RSZ78/AnaMsj3HPlJwaAS36Qg/KL8kau6Edlum8C1l2HmO87Wvd/gqh6FILVj6RG
-	ORg8gfiWbaIQBXe+N1/eZNeotIE++1LJhSM4JtppBlwX5PLVjTAr2hnCn9tMCIxK
-	xVq5si82rXGZWdZPAbnsyG6vskE8pkxcMffDkF+/sfpviPFoLWiUO1d2Ij3G7S99
-	/ny260CP4UpoSAEPZxWAaVtsz6xuo6ljMzxnD6cMWHfk7A==
-X-Virus-Scanned: by MailRoute
-Received: from 008.lax.mailroute.net ([127.0.0.1])
- by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id mZ_sAvqEq2-i; Wed, 21 Aug 2024 21:39:45 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Wq09D3f8Jz6ClY97;
-	Wed, 21 Aug 2024 21:39:44 +0000 (UTC)
-Message-ID: <25ba6504-9a10-4c59-a180-620ddfd06622@acm.org>
-Date: Wed, 21 Aug 2024 14:39:43 -0700
+	s=arc-20240116; t=1724281863; c=relaxed/simple;
+	bh=9VBaL92c70s2HomVB+5Lnd8xoumFMjj+d/tq9KYHnb0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=AHUnqHEeOVqh97742Hhs+lfwHjn7zNCbhVpLqw2JGvhPAFI7Mdh40n2pwZrKfR/GNV4wP4lEFbNGQ0D6ABn2qRww5BgG2xgiAbFyNBwMjKEXwSJSd8RBDWZAKsTYfqXZUgS4nSC+Id4nvjFN5DAHkjVOVhF+jT3i16N3TyMAar0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=decadent.org.uk; arc=none smtp.client-ip=65.21.191.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=decadent.org.uk
+Received: from [2a02:1810:1d14:e000:db6f:81d2:6624:c91c] (helo=deadeye)
+	by maynard with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <ben@decadent.org.uk>)
+	id 1sguB6-005CZe-0y;
+	Wed, 21 Aug 2024 22:51:43 +0000
+Received: from ben by deadeye with local (Exim 4.98)
+	(envelope-from <ben@decadent.org.uk>)
+	id 1sguB4-00000003XOq-162O;
+	Thu, 22 Aug 2024 00:51:42 +0200
+Date: Thu, 22 Aug 2024 00:51:42 +0200
+From: Ben Hutchings <benh@debian.org>
+To: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] aacraid: Fix double-free on probe failure
+Message-ID: <ZsZvfqlQMveoL5KQ@decadent.org.uk>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
- hibernation
-To: Bean Huo <huobean@gmail.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Peter Wang <peter.wang@mediatek.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Avri Altman <avri.altman@wdc.com>, Andrew Halaney <ahalaney@redhat.com>,
- Bean Huo <beanhuo@micron.com>, Alim Akhtar <alim.akhtar@samsung.com>,
- Eric Biggers <ebiggers@google.com>, Minwoo Im <minwoo.im@samsung.com>,
- Maramaina Naresh <quic_mnaresh@quicinc.com>
-References: <20240821182923.145631-1-bvanassche@acm.org>
- <20240821182923.145631-3-bvanassche@acm.org>
- <0e552232c1759ba1749acb9b606a03670bbe1ba1.camel@gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <0e552232c1759ba1749acb9b606a03670bbe1ba1.camel@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="uZ0buPasHycSnHlR"
+Content-Disposition: inline
+X-SA-Exim-Connect-IP: 2a02:1810:1d14:e000:db6f:81d2:6624:c91c
+X-SA-Exim-Mail-From: ben@decadent.org.uk
+X-SA-Exim-Scanned: No (on maynard); SAEximRunCond expanded to false
 
-On 8/21/24 2:27 PM, Bean Huo wrote:
-> My only concern is, removing disabling UIC completion IRQ, and keeping
-> is.uccs 1, then we don't read its status in case of ufshcd_uic_pwr_ctrl
-> path, whether this will affect the next UIC access result.
 
-Hmm ... I think I need more context information. If the UIC completion
-interrupt is left enabled then ufshcd_intr() will execute the code
-"intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS)". This statement
-reads all bits from the interrupt status register including the UCCS
-bit, isn't it?
+--uZ0buPasHycSnHlR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+aac_probe_one() calls hardware-specific init functions through the
+aac_driver_ident::init pointer, all of which eventually call down to
+aac_init_adapter().
 
-Bart.
+If aac_init_adapter() fails after allocating memory for
+aac_dev::queues, it frees the memory but does not clear that member.
+
+After the hardware-specific init function returns an error,
+aac_probe_one() goes down an error path that frees the memory pointed
+to by aac_dev::queues, resulting.in a double-free.
+
+Reported-by: Michael Gordon <m.gordon.zelenoborsky@gmail.com>
+References: https://bugs.debian.org/1075855
+Fixes: 8e0c5ebde82b ("[SCSI] aacraid: Newer adapter communication iterface =
+support")
+Signed-off-by: Ben Hutchings <benh@debian.org>
+---
+ drivers/scsi/aacraid/comminit.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/commini=
+t.c
+index bd99c5492b7d..0f64b0244303 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -642,6 +642,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+=20
+ 	if (aac_comm_init(dev)<0){
+ 		kfree(dev->queues);
++		dev->queues =3D NULL;
+ 		return NULL;
+ 	}
+ 	/*
+@@ -649,6 +650,7 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+ 	 */
+ 	if (aac_fib_setup(dev) < 0) {
+ 		kfree(dev->queues);
++		dev->queues =3D NULL;
+ 		return NULL;
+ 	}
+ 	=09
+
+--uZ0buPasHycSnHlR
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEErCspvTSmr92z9o8157/I7JWGEQkFAmbGb3cACgkQ57/I7JWG
+EQnJcBAAnuqh9MiSekrWG0VFiWulrs6Y946LlYQqrzHSY/1a7jhwBN8ipvEIfWHI
+uQAA+AecHd45T5zLipOTSsZ2cYPaadHWcV8iqgPS2fouH1zB3HtGlpSAb6zbvTlu
+re91gk5w82C6x3N0t+QUTztheOYXa45L1dNgQa8VcBeUg3fbVdfjqVF0jvvoscQn
+ZIQ38hLdymWYsxcepJebZt7Szz8+y66S+tQRP8kQVFLcZwrUYfdR2rt/NPeGLlLQ
+paHwUFYnxr1grAwT2IMGhJKnTtcUUs1KBh8PxI471o9FSYKdPI8ZCiqRuY9ZNcpf
+c/QMZB5e/EuNYtL0nWVTwwZVi30fvw6gKj8dXrUxYRvjn3vkxOzgedxsQ/oh9y5Z
+4PTEPRkh/E6U+DKW+U2yhmHp073P91priptgqkLAS4L4wokYtoTjH4sIRkc+rdwI
+HV+pq3IbdJG9QmHXQMCqyB9y7SgteBg5PXTMvlpDDahly8zFMYzdGDqVvzkEWaJ6
+gBU/kQB4Q7/whAxwdx1L/yAwZ8dQk2SU1apE12Wn+PYBMGH7vbb3cW/m09HNEzpQ
+kU3h0TyZmj++eIC3HRALTCQS58BjmEcYxQz9q4gg0Xi954FQyFmsCelO1K2o5vAd
+ioy5SZhKI8DRhPZfjzAPJ1D08WvMlwDFDxXrbdqleNW5XiMMCZY=
+=XCh4
+-----END PGP SIGNATURE-----
+
+--uZ0buPasHycSnHlR--
