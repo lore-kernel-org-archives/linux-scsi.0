@@ -1,159 +1,113 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78F2316F265
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 06:42:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F3EF185B59;
+	Wed, 21 Aug 2024 06:51:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724222528; cv=none; b=qVweoM1qKBsr9gWoLgk7ngkpeuelnIgISWqpexqDZhM7Noq4x0klScg6NHeX6SrkHV2AJHx4wCgNAL5rQ/e/s/7Ugue5eRX8oMPtqrrP6+oymkv1y2uRVMSUA3Scu8JVXy+0bE56hrpvv2fOka800aPWT1WpWX2A+itkYOC7CF0=
+	t=1724223098; cv=none; b=fQRLFsjabrgoseYWOI19hCa6Uc7GVcIH/quvZaty9GruVkt++DwvC6+aNNXeM0EAbsX8GvMlwZSRsOjKvo+gXM02ZCoVo8TXvBRwAvNm+MTZ0EqgugpDm4+DPtmMB+pZg1W7+Ci1752SIi1x015UE3nxxHHy+v8G8hojrfY1jmo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724222528; c=relaxed/simple;
-	bh=2YMk0tU/ZuY6pC6YfFTXPztae5lb6hoSXuLup1em3HU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:In-Reply-To:
-	 Content-Type:References; b=LfRI15L3C3e/rxNawcNCJZWxA3vanP8FB4rc16GLSrQBccuUuBxnZLFgRmvXye5aWFBtTQZHS3bgFGJzWtbLVzFQxFPbw6iEc7Fudpt867oqSF7owfM/rz2Ojzawcyn/9JMsO5lEJESRsQzh7Zag8bEZT6IOiUhMex0wogobYRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=WaU9S0rf; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1724223098; c=relaxed/simple;
+	bh=eCHDWLX3EQfO870KM02gATOAbYHiHFt3dOKAmRMVTu8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dcKwX2aD7WqKfSO3/06EYSfZ0tngwqP9yxHHOoZONJ8NJWKMEln/S1AUuxnQjNHi/ZVmO4tKIU4kuXGqGL39wEj50IUZLWG51VwJmlgPemP1Y8/N57tXwQZdF+e/omE7RKkfvW13JcIUz6FtNeQE6rmxBIDMqrohdUxgPFK97fk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=apU+KR6K; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="WaU9S0rf"
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20240821064157epoutp04c4753bdd70b38771252cfe77a9a64201~tqz6a-WFb2388823888epoutp04N
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 06:41:57 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20240821064157epoutp04c4753bdd70b38771252cfe77a9a64201~tqz6a-WFb2388823888epoutp04N
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1724222517;
-	bh=5EqnHaZ504P6UH5gWXZF2XLXr3/zz7CZ6fpkZoARR/Y=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:In-Reply-To:References:From;
-	b=WaU9S0rfSEMWp+ZyLv+CxOXlTZvjs+ubbIS41I20FsrxPp8ZxYyMojAb+V8SFTvW5
-	 4Uydae4XEfUQ0wTKRKOcP+Ok3UnVOhkFP9Uf0Ih+uRBXRFdl9VYTUB9v53Gj4VlOtk
-	 QuAkSeLrk7/wY+BZR7KB+tzvKFQk0j/Es3vjsnTM=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-	epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-	20240821064157epcas2p456a8d00ba18b2ea4b2a539f4a1d2766f~tqz5zSaRf3154231542epcas2p42;
-	Wed, 21 Aug 2024 06:41:57 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.36.89]) by
-	epsnrtp2.localdomain (Postfix) with ESMTP id 4WpcFJ21Pjz4x9QC; Wed, 21 Aug
-	2024 06:41:56 +0000 (GMT)
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-	epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-	E1.9A.10016.43C85C66; Wed, 21 Aug 2024 15:41:56 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas2p1.samsung.com (KnoxPortal) with ESMTPA id
-	20240821064155epcas2p1ff32f6cc352363a831a08c4cb09f446b~tqz4nPvDM0676306763epcas2p1d;
-	Wed, 21 Aug 2024 06:41:55 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240821064155epsmtrp11e27fd3cf5157a20a47087794b386de1~tqz4hL8mg1068210682epsmtrp1k;
-	Wed, 21 Aug 2024 06:41:55 +0000 (GMT)
-X-AuditID: b6c32a48-4b5ff70000002720-b9-66c58c34d6df
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	E7.C0.19367.33C85C66; Wed, 21 Aug 2024 15:41:55 +0900 (KST)
-Received: from ubuntu.dsn.sec.samsung.com (unknown [10.229.95.128]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20240821064155epsmtip23006339411a5d3766cd3df77aefa52a3~tqz4RJmua2089620896epsmtip2E;
-	Wed, 21 Aug 2024 06:41:55 +0000 (GMT)
-From: Kiwoong Kim <kwmad.kim@samsung.com>
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, beanhuo@micron.com,
-	adrian.hunter@intel.com, h10.kim@samsung.com, hy50.seo@samsung.com,
-	sh425.lee@samsung.com, kwangwon.min@samsung.com, junwoo80.lee@samsung.com,
-	wkon.kim@samsung.com
-Cc: Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v1 2/2] scsi: ufs: ufs-exynos: implement override_cqe_ocs
-Date: Wed, 21 Aug 2024 15:44:36 +0900
-Message-Id: <7842191d46ebfc11a3fdf4caac81d31b36d3252c.1724222619.git.kwmad.kim@samsung.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1724222619.git.kwmad.kim@samsung.com>
-In-Reply-To: <cover.1724222619.git.kwmad.kim@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrEJsWRmVeSWpSXmKPExsWy7bCmha5Jz9E0g6O3uCxOPlnDZvFg3jY2
-	i5c/r7JZHHzYyWIx7cNPZou/ty+yWqxe/IDFYtGNbUwWu/42M1lsvbGTxeLmlqMsFpd3zWGz
-	6L6+g81i+fF/TBZL/71lsdh86RuLg4DH5SveHov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR
-	4/MmOY/2A91MARxR2TYZqYkpqUUKqXnJ+SmZeem2St7B8c7xpmYGhrqGlhbmSgp5ibmptkou
-	PgG6bpk5QB8oKZQl5pQChQISi4uV9O1sivJLS1IVMvKLS2yVUgtScgrMC/SKE3OLS/PS9fJS
-	S6wMDQyMTIEKE7Iztp0+wFTwiKvi4sdGxgbGHxxdjJwcEgImEr8u/2PuYuTiEBLYwSix/d4V
-	NgjnE6PEtBkrGUGqwJwtL8NgOlqP/WGEKNrJKLF++QYo5wejxNsjF9lBqtgENCWe3pzKBJIQ
-	EfjIJLF5/jawBLOAusSuCSeYQGxhAU+JEwtPMoPYLAKqEtNvXAVbxysQLfFr9VMmiHVyEjfP
-	dYLVcApYStxu6WBCZXMB1czkkPjf+RPIYQdyXCR2O0K0Cku8Or6FHcKWknjZ3wZlF0us3XEV
-	qrWBUWL1q9NQCWOJWc/agW7gALpTU2L9Ln0QU0JAWeLILRaI6/kkOg7/ZYcI80p0tAlBNCpL
-	/Jo0mRHClpSYefMO1EAPidl3XzFBgqeHUeL4gY/sExjlZyEsWMDIuIpRLLWgODc9tdiowAQe
-	ecn5uZsYwYlVy2MH4+y3H/QOMTJxMB5ilOBgVhLh7X55ME2INyWxsiq1KD++qDQntfgQoykw
-	GCcyS4km5wNTe15JvKGJpYGJmZmhuZGpgbmSOO+91rkpQgLpiSWp2ampBalFMH1MHJxSDUwe
-	MSry9aw+yzdeF/zHduv5Bd43l50Fsn9rpdy9eJ9R/L/Lw1nbBQ6tUXsrM+fy0d3NfGp9uRoK
-	znGvLkewpxV+eHBgaWKLVWPohIwdU317Q00DF/2YYf3ixxkbY63iOYyz5qmfi7C/UsXZ/J3p
-	eNkFv8sxJiu6T5zYVXb2/qZt7/cvXn+dV9V/8wfXLzPcd6v+CDaPOdn/8+DjqLoijQlXWKI8
-	Gks2/+YN5Wcz8/1irC3uWCzXqn6TLWjR3hvxhWJ8BdfrpR6mGc6Y8nmLjcjH2QVmnzR+7lvw
-	bZZT5fZ5yo6/HDSUOlNP3lH8N3tNzRxvqYLlh+6227w5zxh9We1cwqXSR0ZX76zTnvbjEfN9
-	JZbijERDLeai4kQAnXKnnDUEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrGLMWRmVeSWpSXmKPExsWy7bCSvK5xz9E0g8UPFC1OPlnDZvFg3jY2
-	i5c/r7JZHHzYyWIx7cNPZou/ty+yWqxe/IDFYtGNbUwWu/42M1lsvbGTxeLmlqMsFpd3zWGz
-	6L6+g81i+fF/TBZL/71lsdh86RuLg4DH5SveHov3vGTymLDoAKPH9/UdbB4fn95i8ejbsorR
-	4/MmOY/2A91MARxRXDYpqTmZZalF+nYJXBnbTh9gKnjEVXHxYyNjA+MPji5GTg4JAROJ1mN/
-	GLsYuTiEBLYzStw/+Z0ZIiEpcWLnc0YIW1jifssRVoiib4wSXWens4Ak2AQ0JZ7enMoEYosI
-	NDNL9DXZg9jMAuoSuyacAIsLC3hKnFh4Emwoi4CqxPQbV8GG8gpES/xa/ZQJYoGcxM1znWA1
-	nAKWErdbOsDiQgIWEg3zjrLiEp/AKLCAkWEVo2hqQXFuem5ygaFecWJucWleul5yfu4mRnBU
-	aAXtYFy2/q/eIUYmDsZDjBIczEoivN0vD6YJ8aYkVlalFuXHF5XmpBYfYpTmYFES51XO6UwR
-	EkhPLEnNTk0tSC2CyTJxcEo1MHlcbIpxXLng0/96jqPn16X/YLKsCW/iNEhnOtVTvdqMleHM
-	6nmfNwgqB1dudZX+M71jjSLHvy5N06ozupUz/KXqr88/IuvDKtnP2sP1eO4kuT07fH2OSXO9
-	ddsV+1lvff6XsjPmH397JqZIbnVSlZliJTL1wpLy5sXS79pkma6vMfhw0MLoWKml+IZyQ2nr
-	3tL3knpZ73kLVq9iLjvFqKb2Ia0iNG931vKaK0bZdSbVOs7vRO4++81b5c98bNGV/dqua2a9
-	Pcht9fpxpFLUpi/TqyxWPuNcHLF7x89DWsGzu77vqGcR2+VpwbF57i1t/hnCDNyrVD3sXqQF
-	ZVTFb1Zp2X6Jwbo2NvKlgmCrEktxRqKhFnNRcSIA7jCobfkCAAA=
-X-CMS-MailID: 20240821064155epcas2p1ff32f6cc352363a831a08c4cb09f446b
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240821064155epcas2p1ff32f6cc352363a831a08c4cb09f446b
-References: <cover.1724222619.git.kwmad.kim@samsung.com>
-	<CGME20240821064155epcas2p1ff32f6cc352363a831a08c4cb09f446b@epcas2p1.samsung.com>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="apU+KR6K"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47L4fYPK003860;
+	Wed, 21 Aug 2024 06:51:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
+	from:to:cc:subject:date:message-id:mime-version
+	:content-transfer-encoding; s=corp-2023-11-20; bh=NMKia/ORa1GdOb
+	qCLAYhbFv9EbJlEL5ozFVZElGmjnQ=; b=apU+KR6KV4BTnUPg2vMN72uPFeS4Po
+	dqbq2yEENba8tVWTJJ1bXSsjeWGE7TCcUyxJByCTJ5RvBFtuD9eocZDQe0/vYw+k
+	ylmZPOpSa5XYXQnLqnVRSH8rAcciyvtEp/h7jmn8FpU3WLzgMeEcTbbREstt23Tl
+	c1Kv3usAkjPHpVD5a9oEfJKmUl04Rjyn8xiaqt9v1lntuPVdn22h6WKblFMBQf9K
+	X123iLnybuTGmE7rsiDJm3hQ/LS0sDY7Jk/UP7k6FqFV1h5432iu1RGwfRLobrtU
+	MCMEI/IpHIlj4x8zF8Pmy2no9W4WOvfM4iY3KVDyn/pN+wVkQyv7L5fA==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 414yrj12sj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 21 Aug 2024 06:51:33 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 47L6It4R006250;
+	Wed, 21 Aug 2024 06:51:32 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 415av28vdb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 21 Aug 2024 06:51:32 +0000
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 47L6pVPq016860;
+	Wed, 21 Aug 2024 06:51:32 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 415av28vd5-1;
+	Wed, 21 Aug 2024 06:51:31 +0000
+From: Sherry Yang <sherry.yang@oracle.com>
+To: james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        sherry.yang@oracle.com
+Subject: [PATCH] scsi: lpfc: fix overflow build issue
+Date: Tue, 20 Aug 2024 23:51:31 -0700
+Message-ID: <20240821065131.1180791-1-sherry.yang@oracle.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-08-21_07,2024-08-19_03,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 spamscore=0
+ mlxscore=0 mlxlogscore=999 phishscore=0 adultscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2407110000
+ definitions=main-2408210048
+X-Proofpoint-ORIG-GUID: c1bK0JHnvUEOFF_iZA-3zJQpaHoTqXf8
+X-Proofpoint-GUID: c1bK0JHnvUEOFF_iZA-3zJQpaHoTqXf8
 
-Exynos host reports OCS_ABORT when a command is nullifed
-or cleaned up with MCQ enabled. I think the command in those
-situations should be issued again, rather than fail, because
-when some conditions that caused the nullification or cleaning up
-disppears after recovery, the command could be processed.
+Build failed while enabling "CONFIG_GCOV_KERNEL=y" and
+"CONFIG_GCOV_PROFILE_ALL=y" with following error:
 
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+BUILDSTDERR: drivers/scsi/lpfc/lpfc_bsg.c: In function 'lpfc_get_cgnbuf_info':
+BUILDSTDERR: ./include/linux/fortify-string.h:114:33: error: '__builtin_memcpy' accessing 18446744073709551615 bytes at offsets 0 and 0 overlaps 9223372036854775807 bytes at offset -9223372036854775808 [-Werror=restrict]
+BUILDSTDERR:   114 | #define __underlying_memcpy     __builtin_memcpy
+BUILDSTDERR:       |                                 ^
+BUILDSTDERR: ./include/linux/fortify-string.h:637:9: note: in expansion of macro '__underlying_memcpy'
+BUILDSTDERR:   637 |         __underlying_##op(p, q, __fortify_size);                        \
+BUILDSTDERR:       |         ^~~~~~~~~~~~~
+BUILDSTDERR: ./include/linux/fortify-string.h:682:26: note: in expansion of macro '__fortify_memcpy_chk'
+BUILDSTDERR:   682 | #define memcpy(p, q, s)  __fortify_memcpy_chk(p, q, s,                  \
+BUILDSTDERR:       |                          ^~~~~~~~~~~~~~~~~~~~
+BUILDSTDERR: drivers/scsi/lpfc/lpfc_bsg.c:5468:9: note: in expansion of macro 'memcpy'
+BUILDSTDERR:  5468 |         memcpy(cgn_buff, cp, cinfosz);
+BUILDSTDERR:       |         ^~~~~~
+
+This happens from the commit 06bb7fc0feee ("kbuild: turn on -Wrestrict
+by default"). Address this issue by using size_t type.
+
+Signed-off-by: Sherry Yang <sherry.yang@oracle.com>
 ---
- drivers/ufs/host/ufs-exynos.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/scsi/lpfc/lpfc_bsg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index 16ad352..4ed06fa 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -1376,6 +1376,14 @@ static void exynos_ufs_fmp_resume(struct ufs_hba *hba)
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 4156419c52c7..4756a3f82531 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -5410,7 +5410,7 @@ lpfc_get_cgnbuf_info(struct bsg_job *job)
+ 	struct get_cgnbuf_info_req *cgnbuf_req;
+ 	struct lpfc_cgn_info *cp;
+ 	uint8_t *cgn_buff;
+-	int size, cinfosz;
++	size_t size, cinfosz;
+ 	int  rc = 0;
  
- #endif /* !CONFIG_SCSI_UFS_CRYPTO */
- 
-+static enum utp_ocs exynos_ufs_override_cqe_ocs(struct ufs_hba *hba,
-+						enum utp_ocs ocs)
-+{
-+	if (ocs == OCS_ABORTED)
-+		ocs = OCS_INVALID_COMMAND_STATUS;
-+	return ocs;
-+}
-+
- static int exynos_ufs_init(struct ufs_hba *hba)
- {
- 	struct device *dev = hba->dev;
-@@ -1926,6 +1934,7 @@ static const struct ufs_hba_variant_ops ufs_hba_exynos_ops = {
- 	.suspend			= exynos_ufs_suspend,
- 	.resume				= exynos_ufs_resume,
- 	.fill_crypto_prdt		= exynos_ufs_fmp_fill_prdt,
-+	.override_cqe_ocs		= exynos_ufs_override_cqe_ocs,
- };
- 
- static struct ufs_hba_variant_ops ufs_hba_exynosauto_vh_ops = {
+ 	if (job->request_len < sizeof(struct fc_bsg_request) +
 -- 
-2.7.4
+2.45.2
 
