@@ -1,138 +1,87 @@
-Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53EAB178378
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 21:32:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B5F5178CEA
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 21:39:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724275933; cv=none; b=BdttTYkOOrOLAihZqLiGorPE+iLuJlAseurbHpx1NgRfXfeRqEdUF20Hd+iT0bNr9mYkp0Qk5u1+gRhItl/FC1oooih5XNfIGMDigyH7v1wYT0x31EJC96ZbhX88X8FYh62ZkNwK6FvGiBJIxTWtRd0LsxK9sheyQjJQqyMk16U=
+	t=1724276398; cv=none; b=aipdVxQNGeLLJC0GdYJ4G4ttOmTG1p/59YVnom4ySKf+GZujSL/yhzQDJFlju3XuNVTJDaPb59Q6qD5eXnDuss8uSvNhKlqqzknGkM+UjSXYVkSPyKh2EXEpIEcNgCXgB9QJv6KQy+si6nipFt5/K2jsCp/q3jdwahsokTob1So=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724275933; c=relaxed/simple;
-	bh=G2ZYzUM9xPfjHf7MaE5c1ZAlligmTgj92iLVFjxn+BE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hrPC904xjmjddy5/2HmkKlVx7k+LIQd0daKMczxr4nr92QShM/AZrwqH+LaWBP+2OwjnjI35OQEU5MCHinKQdPdOuIL6VSemqwaj8T+zYJ9m+sAnknQcHtA3yGIPmlDP+b8GFG8TSlgEHKtVW8x7bDnccBrh8TgworM3osrOURY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mary.zone; spf=none smtp.mailfrom=mary.zone; dkim=pass (2048-bit key) header.d=mary-zone.20230601.gappssmtp.com header.i=@mary-zone.20230601.gappssmtp.com header.b=uh/OfoMR; arc=none smtp.client-ip=209.85.128.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mary.zone
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mary.zone
+	s=arc-20240116; t=1724276398; c=relaxed/simple;
+	bh=o2DbpWauX+tRIzEkwWw9A3E6HYWvKtIM+1HD2P3wYlw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=dmuGLMbhRbOywTtE83ljLt06xEXc7GaF08/1r6ll1VdAFUozABoT/Rq0hPOmcHI7hD+dPN/5RCldhIQ0IxS6k/3I4YhIV+SDFxRkR2MVIr4yHlIhwJYKkXE6BiY4eWO5qUWqRIAH76HG8GqteMyKE/haJ+zPbBbB0JKB4rGdDco=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2BS3oDhk; arc=none smtp.client-ip=199.89.1.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mary-zone.20230601.gappssmtp.com header.i=@mary-zone.20230601.gappssmtp.com header.b="uh/OfoMR"
-Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-42809d6e719so696145e9.3
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 14:32:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mary-zone.20230601.gappssmtp.com; s=20230601; t=1724275928; x=1724880728; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=e8/UWu+nkogk+rrCqpk1JaTQfdH+a2mQFoDGBlja3Pc=;
-        b=uh/OfoMRQ0N16C462jwQuK76cIxkdK5U8HxQbJgt6EgShlHzRRZUV8LQkQGEzoImbV
-         SuE11IqpQWJ+gOXlPjFfmeyG1qiJJbFAwX204Xw3tshleNipwZ+DUHAyjGq7PXDsiPGy
-         9q6YhJgeXp935es4psJDFi6bqL7nCTuIuHs1sziOiLLpdc0QjyZEn/l424p03bMH/Jsy
-         IZ5aMhAHTIjPzAI5kwhWLOj8kg/FVX9heJrtsyzEHNHG/lCq1h5IWc/zBssB/VIRinED
-         5TYzl36azXCoKZhVBwirTPbBOtrVZmiD9W5QKRunM1RExyhFJWA/BrQWOgB/f6QHdZhe
-         KN+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724275928; x=1724880728;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=e8/UWu+nkogk+rrCqpk1JaTQfdH+a2mQFoDGBlja3Pc=;
-        b=tRFsJsoVX0Mov+ERFV138UC6C4SgJhVtUCqyyXgNdx1bDoP6StcGq5SOlO2p3HuuSE
-         pMNKxKdtrs5YlhKvtwM6WFd7DTyK3ovmBMOZmqagOXBrsX9QrlVu2P6vHaQo6iXcgcfK
-         GNuaKsFqVK+LetbE/qCN8ygJE16HNwJ9aUt1ykyRBxClg3Dr9JRY7Luu4Yl/dVBfKRbI
-         i+zm4wW2diDDnCNDD/yipP0LahGRxGx6qNUgL3rZLJfJQGyeFWL/XgvvyIeXk6RFbjr+
-         vq3dKFWMcxRrnaItrGoqXG+4JXvd8oJiazpEflQbtu/8iDIHnlIO6Q3c8mgWPgz9eGiU
-         W3Gg==
-X-Forwarded-Encrypted: i=1; AJvYcCXddI/hLXciG/X+V0uMP+Zv+CM7+P/Prqm9O9X1y6ObMFSXZHXfcSZ+Bqm/XSSRcScMib0SnO7I+/x8@vger.kernel.org
-X-Gm-Message-State: AOJu0YxS2qYftN6KAB/c0DnAOh+SeOM9LkpdoW4Dl4LRZw192Fn6xmF4
-	dP6ngW0qo2L4+le4qSfxastGmg6re3MN2rSkG1z/6clyGfA3z7ezoGNEer0fLC8=
-X-Google-Smtp-Source: AGHT+IHKJLdclZTFijLA7DW5BcP/iaYLqoD8ipe3pdpTBJexDaFe7tQ5JwO0ExnL7fnrsWAfryPdzA==
-X-Received: by 2002:a05:600c:5486:b0:426:5f8f:51a4 with SMTP id 5b1f17b1804b1-42abd22ffd0mr25332835e9.12.1724275928297;
-        Wed, 21 Aug 2024 14:32:08 -0700 (PDT)
-Received: from kuroko.kudu-justice.ts.net (2a01cb040b5eb100cb3bcc29e5f2b7ed.ipv6.abo.wanadoo.fr. [2a01:cb04:b5e:b100:cb3b:cc29:e5f2:b7ed])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3730815b7e3sm23778f8f.53.2024.08.21.14.32.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Aug 2024 14:32:07 -0700 (PDT)
-Date: Wed, 21 Aug 2024 23:32:06 +0200
-From: Mary Guillemard <mary@mary.zone>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	Peter Wang <peter.wang@mediatek.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Subject: Re: [PATCH 1/1] scsi: ufs-mediatek: Add UFSHCD_QUIRK_BROKEN_LSDBS_CAP
-Message-ID: <ZsZc1jYL8wSZZYSw@kuroko.kudu-justice.ts.net>
-References: <20240818222442.44990-2-mary@mary.zone>
- <20240818222442.44990-3-mary@mary.zone>
- <20240819120852.tdxlebj7pjcxjbou@thinkpad>
- <ZsOJKMg8xlpdgoi5@kuroko.kudu-justice.ts.net>
- <20240820060946.ktiysu7sn7qgbwx4@thinkpad>
- <223cc3ca-9214-4ba1-a3c8-2d672aef52f9@acm.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2BS3oDhk"
+Received: from localhost (localhost [127.0.0.1])
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4Wq09K6KTNz6ClY9D;
+	Wed, 21 Aug 2024 21:39:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1724276385; x=1726868386; bh=o2DbpWauX+tRIzEkwWw9A3E6
+	HYWvKtIM+1HD2P3wYlw=; b=2BS3oDhkQXql9+YZlUDBRBAPidyasTk8yBAK1UHr
+	lD5lSNh+7/01/C6QprpCeg3KD0vj6Xu00H4xu0iATJe4hMtDH+uVJncjuGUcE+/B
+	RSZ78/AnaMsj3HPlJwaAS36Qg/KL8kau6Edlum8C1l2HmO87Wvd/gqh6FILVj6RG
+	ORg8gfiWbaIQBXe+N1/eZNeotIE++1LJhSM4JtppBlwX5PLVjTAr2hnCn9tMCIxK
+	xVq5si82rXGZWdZPAbnsyG6vskE8pkxcMffDkF+/sfpviPFoLWiUO1d2Ij3G7S99
+	/ny260CP4UpoSAEPZxWAaVtsz6xuo6ljMzxnD6cMWHfk7A==
+X-Virus-Scanned: by MailRoute
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id mZ_sAvqEq2-i; Wed, 21 Aug 2024 21:39:45 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4Wq09D3f8Jz6ClY97;
+	Wed, 21 Aug 2024 21:39:44 +0000 (UTC)
+Message-ID: <25ba6504-9a10-4c59-a180-620ddfd06622@acm.org>
+Date: Wed, 21 Aug 2024 14:39:43 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <223cc3ca-9214-4ba1-a3c8-2d672aef52f9@acm.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
+ hibernation
+To: Bean Huo <huobean@gmail.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Peter Wang <peter.wang@mediatek.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Avri Altman <avri.altman@wdc.com>, Andrew Halaney <ahalaney@redhat.com>,
+ Bean Huo <beanhuo@micron.com>, Alim Akhtar <alim.akhtar@samsung.com>,
+ Eric Biggers <ebiggers@google.com>, Minwoo Im <minwoo.im@samsung.com>,
+ Maramaina Naresh <quic_mnaresh@quicinc.com>
+References: <20240821182923.145631-1-bvanassche@acm.org>
+ <20240821182923.145631-3-bvanassche@acm.org>
+ <0e552232c1759ba1749acb9b606a03670bbe1ba1.camel@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <0e552232c1759ba1749acb9b606a03670bbe1ba1.camel@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Aug 20, 2024 at 02:50:58PM -0700, Bart Van Assche wrote:
-> On 8/19/24 11:09 PM, Manivannan Sadhasivam wrote:
-> > On Mon, Aug 19, 2024 at 08:17:10PM +0200, Mary Guillemard wrote:
-> > > On Mon, Aug 19, 2024 at 05:38:52PM +0530, Manivannan Sadhasivam wrote:
-> > > > On Mon, Aug 19, 2024 at 12:24:42AM +0200, Mary Guillemard wrote:
-> > > > > +	if (host->caps & UFS_MTK_CAP_DISABLE_MCQ)
-> > > > 
-> > > > How can this be the deciding factor? You said above that the issue is with
-> > > > MT8183 SoC. So why not just use the quirk only for that platform?
-> > > 
-> > > So my current assumption is that it also affect other Mediatek SoCs
-> > > that are also based on UFS 2.1 spec but I cannot check this.
-> > > 
-> > > Instead, we know that if MCQ isn't supported, we must fallback to LSDB
-> > > as there is no other ways to drive the device.
-> > > 
-> > > UFS_MTK_CAP_DISABLE_MCQ (mediatek,ufs-disable-mcq) being unused upstream,
-> > > I think that's an acceptable fix.
-> > > 
-> > 
-> > If you use this quirk, then you need to use the corresponding DT property. But
-> > using the 'mediatek,ufs-disable-mcq' property for 2.1 controller doesn't make
-> > sense as MCQ is for controllers >= 4.0.
-> > 
-> > > Another way to handle this would be to add a new dt property and add it
-> > > to ufs_mtk_host_caps but I feel that my approach should be enough.
-> > > 
-> > 
-> > No need to add a DT property. Just use the SoC specific compatible as I did for
-> > SM8550 SoC.
-> 
-> Mary, do you plan to implement Manivannan's feedback?
-> 
-> Thanks,
-> 
-> Bart.
->
+On 8/21/24 2:27 PM, Bean Huo wrote:
+> My only concern is, removing disabling UIC completion IRQ, and keeping
+> is.uccs 1, then we don't read its status in case of ufshcd_uic_pwr_ctrl
+> path, whether this will affect the next UIC access result.
 
-Hello Bart,
-
-I think that considering Peter's reply, explicitly checking for the
-MT8183 controller isn't required.
-
-I also think it could be required for at least the MT8192 and MT8195
-considering they are apparently also based on UFS 2.1 spec [1].
-
-However, if you want me to add an explicit check, I will happily send a
-v2.
+Hmm ... I think I need more context information. If the UIC completion
+interrupt is left enabled then ufshcd_intr() will execute the code
+"intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS)". This statement
+reads all bits from the interrupt status register including the UCCS
+bit, isn't it?
 
 Thanks,
 
-Mary.
-
-[1]https://corp.mediatek.com/news-events/press-releases/mediatek-announces-new-mt8192-and-mt8195-chipsets-designed-for-next-generation-of-chromebooks
-
-
+Bart.
