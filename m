@@ -1,113 +1,168 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2048.outbound.protection.outlook.com [40.107.117.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F3EF185B59;
-	Wed, 21 Aug 2024 06:51:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724223098; cv=none; b=fQRLFsjabrgoseYWOI19hCa6Uc7GVcIH/quvZaty9GruVkt++DwvC6+aNNXeM0EAbsX8GvMlwZSRsOjKvo+gXM02ZCoVo8TXvBRwAvNm+MTZ0EqgugpDm4+DPtmMB+pZg1W7+Ci1752SIi1x015UE3nxxHHy+v8G8hojrfY1jmo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724223098; c=relaxed/simple;
-	bh=eCHDWLX3EQfO870KM02gATOAbYHiHFt3dOKAmRMVTu8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dcKwX2aD7WqKfSO3/06EYSfZ0tngwqP9yxHHOoZONJ8NJWKMEln/S1AUuxnQjNHi/ZVmO4tKIU4kuXGqGL39wEj50IUZLWG51VwJmlgPemP1Y8/N57tXwQZdF+e/omE7RKkfvW13JcIUz6FtNeQE6rmxBIDMqrohdUxgPFK97fk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=apU+KR6K; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D14F192D66;
+	Wed, 21 Aug 2024 07:02:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.117.48
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1724223757; cv=fail; b=GQ5NTLHZdXoIcxkkhdqVf5aYEugun4llRbFoZtP/chs5B2FJA6YFbRfpeHLbG/sHJbp/f6V7TKddxL6BOnV4G80bK6Em1gtuyeYCB7mOwgDrtDOO81QXvQweCwCQrmMCAG8bXEGHX9I8DolRWXuXTTbz8jlG9ynJNRhAE0jlTSg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1724223757; c=relaxed/simple;
+	bh=3knthpcdY9b1UB2CuMfp69Fu4iw10obB/6x0xCvYCzM=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=mV56G1vqqvIeiJADBgDrrWe6pw7R632aeE7nUs7xNz79df3tXxtpjTT5QvsuYTW+UVGMgRuBhfue3DoCwP1IyBaCzvCzOM7wJ/DGYhY9Okj0AXRw30VqF4qks1Ac5w6uf8jX2ZbGmbQ+5RdoQWWSVuyj8TxeK173azk/Zdwsv10=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=UFL5OKFr; arc=fail smtp.client-ip=40.107.117.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="apU+KR6K"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47L4fYPK003860;
-	Wed, 21 Aug 2024 06:51:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=
-	from:to:cc:subject:date:message-id:mime-version
-	:content-transfer-encoding; s=corp-2023-11-20; bh=NMKia/ORa1GdOb
-	qCLAYhbFv9EbJlEL5ozFVZElGmjnQ=; b=apU+KR6KV4BTnUPg2vMN72uPFeS4Po
-	dqbq2yEENba8tVWTJJ1bXSsjeWGE7TCcUyxJByCTJ5RvBFtuD9eocZDQe0/vYw+k
-	ylmZPOpSa5XYXQnLqnVRSH8rAcciyvtEp/h7jmn8FpU3WLzgMeEcTbbREstt23Tl
-	c1Kv3usAkjPHpVD5a9oEfJKmUl04Rjyn8xiaqt9v1lntuPVdn22h6WKblFMBQf9K
-	X123iLnybuTGmE7rsiDJm3hQ/LS0sDY7Jk/UP7k6FqFV1h5432iu1RGwfRLobrtU
-	MCMEI/IpHIlj4x8zF8Pmy2no9W4WOvfM4iY3KVDyn/pN+wVkQyv7L5fA==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 414yrj12sj-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 21 Aug 2024 06:51:33 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 47L6It4R006250;
-	Wed, 21 Aug 2024 06:51:32 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 415av28vdb-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 21 Aug 2024 06:51:32 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 47L6pVPq016860;
-	Wed, 21 Aug 2024 06:51:32 GMT
-Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 415av28vd5-1;
-	Wed, 21 Aug 2024 06:51:31 +0000
-From: Sherry Yang <sherry.yang@oracle.com>
-To: james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        sherry.yang@oracle.com
-Subject: [PATCH] scsi: lpfc: fix overflow build issue
-Date: Tue, 20 Aug 2024 23:51:31 -0700
-Message-ID: <20240821065131.1180791-1-sherry.yang@oracle.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="UFL5OKFr"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=dpxMmAqdsI/0z3Kn1wCyAlZQPi7+ZzjC/QOo4t0NmSts/uXoofurdUxP4XXa4hUySdw4QKJka1VHT0CjXzJNPO1S974GIGqLvw6PZnyALsg/C4Uk1hXpPhlqtQu2on+oeIgl1nyGIoSxx+CEbvBLPDHMwLOEbGxie89ej5UbfyNdjtY7awr58VUlQPlCZWhbPP6+Jjp2kR7jC583mBHkUrCvF9fv9BbABrM+MdJ2KDzFnhRoZYP4NJGEZuamrYr1bkgBuOUZH2RFbuOBd/QQtg0NQkPf2cW0T1rLRp/qI6fZhiHe+72Hd+rw8JL+bdyQ0/o6pDQdj3VcTTDvHhpfUg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=joBuJgplqJ5ipDYuDuhn4NvKsGOaa84RDM3iCts7Uio=;
+ b=ypU18DRoZ7kBWeRuwAIe2Ih6869Q22V03fUM9Dc2BnrLisqfN5bSZhqb7hEZhcnu7RNniJDaeTni2gAn2Lq9iGR6Q/v1/Advx3iR+vofMTOFXKCuYnhmj8KU81t1ZjfKRHkVeHT+qQeslOh9aA9W4y9jVoG62h35rQvGXm6S9b6NoabEui1GsOKMiOlNj3amO/jQFxsiRLBkIQomZZGnIk6HDdh6tTgvv/epzC57t6CepOF74D/lPZdNxFjgsw0nB0jkUwKFYGk/05Xaaqd87zbSjl/1GUgwQPk2/7raf72bHeDLoQy3M/Os1UPsSMnPsjCqJV9nD4kf+e0y4KxXjw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=joBuJgplqJ5ipDYuDuhn4NvKsGOaa84RDM3iCts7Uio=;
+ b=UFL5OKFrZFrfHE3RZFs1u2llidgeqxNs0A+pXygrZvrOdgpeJY4wyP4hsloU+2hbVFTUnOw8ZpXfCvkJU+22t1u6/XrlsBVuuZRGKU/K8b6j2fwC7BnUwlQxmAGo06wihWgYzdcJeMoz06nYHqgCdxGaO9s8fFM2PqRmoGK5jUY8VMy7q4z0GrCUGM8BGkrOBAx6NKGFcPdOLPzSrNcfcB7i5aA0nrnwRykZEsKRXLtc63itV8iltS0v9qIuwm7ytiNvUPSN0kFHhJO8yVRZ3arPNyFRBtGl+TKPTnVPISmqvGXz3Afl8MGCxBOX9+SWpy80BXBNJq0oY0+72Zx7ug==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from TYZPR06MB6263.apcprd06.prod.outlook.com (2603:1096:400:33d::14)
+ by TYZPR06MB5074.apcprd06.prod.outlook.com (2603:1096:400:1c6::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7875.21; Wed, 21 Aug
+ 2024 07:02:32 +0000
+Received: from TYZPR06MB6263.apcprd06.prod.outlook.com
+ ([fe80::bd8:d8ed:8dd5:3268]) by TYZPR06MB6263.apcprd06.prod.outlook.com
+ ([fe80::bd8:d8ed:8dd5:3268%6]) with mapi id 15.20.7875.019; Wed, 21 Aug 2024
+ 07:02:32 +0000
+From: Yang Ruibin <11162571@vivo.com>
+To: Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: opensource.kernel@vivo.com,
+	Yang Ruibin <11162571@vivo.com>
+Subject: [PATCH v1] drivers:mpt3saa:Fix the NULL vs IS_ERR() bug for debugfs_create_dir()
+Date: Wed, 21 Aug 2024 03:02:20 -0400
+Message-Id: <20240821070221.7157-1-11162571@vivo.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR01CA0179.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:28::35) To TYZPR06MB6263.apcprd06.prod.outlook.com
+ (2603:1096:400:33d::14)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-08-21_07,2024-08-19_03,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 spamscore=0
- mlxscore=0 mlxlogscore=999 phishscore=0 adultscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2407110000
- definitions=main-2408210048
-X-Proofpoint-ORIG-GUID: c1bK0JHnvUEOFF_iZA-3zJQpaHoTqXf8
-X-Proofpoint-GUID: c1bK0JHnvUEOFF_iZA-3zJQpaHoTqXf8
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: TYZPR06MB6263:EE_|TYZPR06MB5074:EE_
+X-MS-Office365-Filtering-Correlation-Id: ca8b6394-348f-4c64-c237-08dcc1af3a2d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|376014|52116014|38350700014|81742002;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?ihiujB9/Cd6bVOosb4iIP4z390XFRc3l3+bsofIQz+mGoJMFFDm2vI6258EG?=
+ =?us-ascii?Q?0zjImwmRKhCtgUktwb8zTZUxS60p4pYJahex8g5j7OcJzMKtmjWRiF9MZFMd?=
+ =?us-ascii?Q?pKoLV9k4B0UFrO/8f1CR/RzxF5PCD3MKmkevXmzPUcKzfnaYj9/o3/q3WEvD?=
+ =?us-ascii?Q?RP0it6E9i6m6+7ZUh6fFZvRXMcmQ3sujkh5u1xspZcizU3vOAmJDdSCE6pNA?=
+ =?us-ascii?Q?j8EiAQLwJ3cdShG8dL4xKESMmfCKvnQA6sLk2+crE5VM2ls7NVQIpdmjggWW?=
+ =?us-ascii?Q?8W0cp6a5nDLHAhMxKQKCjlQtTLD9mV8MzErTc5dUlJe89buiZBJwt1WlT6De?=
+ =?us-ascii?Q?CUmKujK35tccvtLN1kghrAD74DQ8W+2Sb9yYfsfg9HdsMQ4gndy9mgKEs80l?=
+ =?us-ascii?Q?HnZu7NOZUeBYu3sZ7vaL95Pr1RFLEUes7T/LU/VkK2wvDamObuRWt6M7SpPl?=
+ =?us-ascii?Q?qNu5bVpYGoXNvhiTrXVYk710CdJ3LWKE0TKYmU1lV4RLmnUmXD5yoSBMElym?=
+ =?us-ascii?Q?y/QDdGZqLYFBeynBj+kQaPQVV2fIOm/ZeNjifRCsm/9UIlQlNaWT+VKq7InE?=
+ =?us-ascii?Q?1BTGDFq+qGJMz8VWmI7MOt+yI9g9G61qp1ncu/7LGW0Kwh2bSrpkck+QZHN9?=
+ =?us-ascii?Q?aHj5k2J7y/PNbCntF2CvOz+N9ryPy4OZ+vrkRNe2TdfqSWRDnib+SQicCuJq?=
+ =?us-ascii?Q?O2j4LPks9bBQyc5BbbUpk4d4KIFufgl3dyzgJn9IRse22Ugb1xHttmAz+Di2?=
+ =?us-ascii?Q?0RdO7m38SM1vrD54BMPItDiDRRZ3Vatn5d1vQO9L6v8qogxzJOiLR4blvNON?=
+ =?us-ascii?Q?TG410MvJ6U+3C+KEAWfPGfy/O3cPIZ6CofrwPmLFYqAInWdZTpsdZehH3CUU?=
+ =?us-ascii?Q?wU8wlMCXF26Ykph2iS7vvOlfGqE6OhuyYhPASw6R2V9l2CuvWOIzuIipC74h?=
+ =?us-ascii?Q?5ja1S4VoLjBLd4B83e7etRhq2xDC5rTZQn+U4XQh2Quuj5CDEmCOfkTXvDF4?=
+ =?us-ascii?Q?CcfVgiILsh0+viddR8W44gyMioDOcanTvfXwjcafrCqkZWRlRPVyGqhNFARU?=
+ =?us-ascii?Q?GTHi+Mlwlw2tRD/w4sLAseZt1p4ETUfWV0vqekOjv1srorW8CaT7BSwnhqbq?=
+ =?us-ascii?Q?dxB5ViDv1hA40gIhGzL+yOXyct+BBB6H/O4svk/1nFhjbm7s3pUIvleA4wYY?=
+ =?us-ascii?Q?ylEzsB4kO3q7pS64TNWzcPaWx820y1zejLlYYmH6Gv5JjfGKYVUZQEv0n0sL?=
+ =?us-ascii?Q?r+Pso2FK23YZe7P7xVk12XCFesajJB+OpUD9RUSmboTOh2wi92Yj4KUZriO9?=
+ =?us-ascii?Q?WBUKYkI6utJraMkVdIXg731mgsn4rZbl0PwR/EQB12FeuF58LGDcE1EQ6+Wq?=
+ =?us-ascii?Q?LhpYXyuxxsDWmUPG2uZVdQl7YffLZi3QzcZOvXBraF+hSpOHioOv8Rrzz4GQ?=
+ =?us-ascii?Q?7KGZRB9tZjw=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR06MB6263.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(52116014)(38350700014)(81742002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?scbdyemFTR3UC59ydK4LtJyPyX3x/tugVUIYgMXunxk0g2fBttJg2/fMmd79?=
+ =?us-ascii?Q?APuCBdXPjow7d6URZ1+1ig/xW0bFtrKhZLJ4F+SFTO6GQ5Qh6ozZ+RyUXaVX?=
+ =?us-ascii?Q?MdzTOFdPt6UXQUZD4rpAawl+fNF2fe5iUPNvJFyNwvYPU8nwTrEYyQwklhbX?=
+ =?us-ascii?Q?Hv0pQCAYHvMbVIbowPnYcvKdGrElQukuY4ezvIy/fenjQTykimL4D0S2ZjvS?=
+ =?us-ascii?Q?hd0vOC5r7rnXBzI4qqSASxG7QMTfzmujRYZE3firbUrMsXs2LMvSrBB7v54I?=
+ =?us-ascii?Q?q4GZ2gCkO9zceYn3NdDu//EM7Fi5/+C7BUIfavf54BR1+l0Wl7w+/9atHccJ?=
+ =?us-ascii?Q?ASY05YSj8oguYAydI0boLuqbAEVN6A0bppzgYJ+gVzIvZSCMEsWGqExhnt32?=
+ =?us-ascii?Q?uq3cjVDQP2P90+LO5OYyL5KxItb9a/lg3TO/Mj8akWWvg4dZ/con1ElPVMKW?=
+ =?us-ascii?Q?zlkSKzbZwvSY4f9frbEXojYGWhAGfHBOEwAhRZ5ntS2wlYB7sEJW9qNUouKF?=
+ =?us-ascii?Q?wns9iYmdBykYU9Pd9mec3wwqdikk6zcZD9msZ89m4cN5NI73mg62/9BdkAFf?=
+ =?us-ascii?Q?e7BEPkLsBE1BWeZik589KoAow1Mg5kD126D+goBzotZt5kBG+9hglVcRiS5v?=
+ =?us-ascii?Q?HDtIOfBsd+UbxHbml/wKAbreHdeV2/Q3lkOmIyjewPVoVcyGzmffn5MpMr8L?=
+ =?us-ascii?Q?QW6jItHxDbDAWVceTYc++pkwiQy6OCEOYRNNIb4IPMwifFr8ZOS8SxOlJRgE?=
+ =?us-ascii?Q?qCESpB8MqYVr/1rhg2f/hpPTLupHyx37CMrMcNdAbzg8oh7ohmJmVk8wqWmo?=
+ =?us-ascii?Q?DokMTuoQWIlBWlrLo5tSASzezy9i5qDvrPKRDuJICsKQ6ZFVGKm+FanvM9/F?=
+ =?us-ascii?Q?66GsTv+4D9y26fVSUFY7KnNFkn8dDPWjNgOByEtdRC/sNH9Vg4e4w7ce4eNI?=
+ =?us-ascii?Q?d+SBakvlBUvFtAGyX39SQmhwPUqgxTPoeJKeILUBgtYSL1HggtL+iHtMsfFT?=
+ =?us-ascii?Q?T6o5UHUF9LzGEGSHn4HlMwZGfyJKIQslswUTvTZ5zdf4lroVsljgZ8XIVMAX?=
+ =?us-ascii?Q?RmfKBGvqwuUwrYbobmIfh3BwpcWExW5S2bJdCLkODiB7rmLAgKeO5t1v2s18?=
+ =?us-ascii?Q?BUb8S5SfDjlHGbo+xrGt20GkkEk33Gjt1P9Uo8rjh7ejFRZszfqBCk3Dbs0B?=
+ =?us-ascii?Q?yEP+sbJaliMqzhGFxliPZNQJoaiM846CKM6RE0diJ7GKCAjldjObr5TPgMud?=
+ =?us-ascii?Q?9L2xYUpSVKM6OUXx+9azGSnTBFTQBXXw5zy4DxSqIBrHoLgdr9UedFlWLcxo?=
+ =?us-ascii?Q?ivBBCsUVziZnf7RCPVDxiiwKMv4zth7UKr6mESM58xIzpcAzBS6Q2fiXDIWd?=
+ =?us-ascii?Q?0+T7doFIJ/SLTK+y8KRiEkMefkPccY36Aku2D5mWJTu6VoLnBsO95qeRwP9w?=
+ =?us-ascii?Q?lGHVnNJ2SJyVwLMa8klDvUKaFkYrP+37yydxkUN2wdQxJeEzXqKoZ+KxhjXd?=
+ =?us-ascii?Q?4EVJ16WQsCu1t5+AsH2yCmH8CbZ9zeOwMMOXd3gteQCkmr1yx4L7hHsarfho?=
+ =?us-ascii?Q?95+fQkHQva6+73MIcGY0MKYQIrK54DrmvLrH256c?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ca8b6394-348f-4c64-c237-08dcc1af3a2d
+X-MS-Exchange-CrossTenant-AuthSource: TYZPR06MB6263.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Aug 2024 07:02:32.1081
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 1BWexCtIsLeky7sxygvv5DikuT2mhuTACLMkbxeXj60af/cyUkmsztviQtKmxzt79kG9haY7CTwpUPn93YFo3Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR06MB5074
 
-Build failed while enabling "CONFIG_GCOV_KERNEL=y" and
-"CONFIG_GCOV_PROFILE_ALL=y" with following error:
+The debugfs_create_dir() function returns error pointers.
+It never returns NULL. So use IS_ERR() to check it.
 
-BUILDSTDERR: drivers/scsi/lpfc/lpfc_bsg.c: In function 'lpfc_get_cgnbuf_info':
-BUILDSTDERR: ./include/linux/fortify-string.h:114:33: error: '__builtin_memcpy' accessing 18446744073709551615 bytes at offsets 0 and 0 overlaps 9223372036854775807 bytes at offset -9223372036854775808 [-Werror=restrict]
-BUILDSTDERR:   114 | #define __underlying_memcpy     __builtin_memcpy
-BUILDSTDERR:       |                                 ^
-BUILDSTDERR: ./include/linux/fortify-string.h:637:9: note: in expansion of macro '__underlying_memcpy'
-BUILDSTDERR:   637 |         __underlying_##op(p, q, __fortify_size);                        \
-BUILDSTDERR:       |         ^~~~~~~~~~~~~
-BUILDSTDERR: ./include/linux/fortify-string.h:682:26: note: in expansion of macro '__fortify_memcpy_chk'
-BUILDSTDERR:   682 | #define memcpy(p, q, s)  __fortify_memcpy_chk(p, q, s,                  \
-BUILDSTDERR:       |                          ^~~~~~~~~~~~~~~~~~~~
-BUILDSTDERR: drivers/scsi/lpfc/lpfc_bsg.c:5468:9: note: in expansion of macro 'memcpy'
-BUILDSTDERR:  5468 |         memcpy(cgn_buff, cp, cinfosz);
-BUILDSTDERR:       |         ^~~~~~
-
-This happens from the commit 06bb7fc0feee ("kbuild: turn on -Wrestrict
-by default"). Address this issue by using size_t type.
-
-Signed-off-by: Sherry Yang <sherry.yang@oracle.com>
+Signed-off-by: Yang Ruibin <11162571@vivo.com>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c | 2 +-
+ drivers/scsi/mpt3sas/mpt3sas_debugfs.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index 4156419c52c7..4756a3f82531 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -5410,7 +5410,7 @@ lpfc_get_cgnbuf_info(struct bsg_job *job)
- 	struct get_cgnbuf_info_req *cgnbuf_req;
- 	struct lpfc_cgn_info *cp;
- 	uint8_t *cgn_buff;
--	int size, cinfosz;
-+	size_t size, cinfosz;
- 	int  rc = 0;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+index a6ab1db81167..306616bdea83 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_debugfs.c
+@@ -99,7 +99,7 @@ static const struct file_operations mpt3sas_debugfs_iocdump_fops = {
+ void mpt3sas_init_debugfs(void)
+ {
+ 	mpt3sas_debugfs_root = debugfs_create_dir("mpt3sas", NULL);
+-	if (!mpt3sas_debugfs_root)
++	if (IS_ERR(mpt3sas_debugfs_root))
+ 		pr_info("mpt3sas: Cannot create debugfs root\n");
+ }
  
- 	if (job->request_len < sizeof(struct fc_bsg_request) +
 -- 
-2.45.2
+2.34.1
 
