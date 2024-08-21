@@ -1,76 +1,77 @@
-Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com [209.85.219.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E36F2199956;
-	Wed, 21 Aug 2024 17:01:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D30BA1B253F
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 18:29:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724259663; cv=none; b=edJVtRRgr62Jhe9Kx1iZe1DQv7nYTqkFB+ZUcLZVpXLmnq3/CcmNTu4T0hvdGBxEciRlzWhQoOJOfiTPjq1bCv6nbIYsY7tAzL8IftxOQ+On0Vwlrbzks+3eqoDwBCqvXYFkf0VYN9Q+EJdz9AECfymg03KHK25S1xJwH4tEb2k=
+	t=1724264978; cv=none; b=ZTjMPt7C1tlDAUyxQvB4kS/xGmSNgbn6HYci6EEm5dhILdBdFWvxObZPvVx+0EUHcETXh9on0wSyCnnEaBlB3WpVe9m8iycA6e3/KHVDrEXN6f1Jje2f8/myGKbVEqZzYhWWbEUhCymREoCEFc3AL1OTDFeeuX6V/Qsy7RMe0iM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724259663; c=relaxed/simple;
-	bh=jUEZoOE+I/HL6qmkqpRxBAW840EWU6rM2MCD09k8aQI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=n9B1iFdgThjVJDYXjE/3iPBsTNgGiPjy73PqeLvqINbSitYsRIQc2c+3AUT8MMot8P/5uTz1Gsx+3x5Vf3XKfTfXis1fZp/F9AaVW8Ca16vZviqudwU1D6GMoJhgazq1xNwdO2hoWw/xM86BNWezs89ySnp0wIfLmP0MfFI45sk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Tee2qmv4; arc=none smtp.client-ip=209.85.219.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1724264978; c=relaxed/simple;
+	bh=S2phs7NKqV/EJIJIl1QSkuCu9JfNDTnE+lZaDUgMEPA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=OSAwVeTEaKirEhD3SrC1dwE/z3+WUgqfU+cgqDTSiFELO2qoizZC51q/a/e+1hYxp9Wwm0GfP4+TbopPgVkex76p+iyX3JbsSZfqESgiMzmWPVK3vPdNTHeI915NBDICSule/xxoUXEr7AShWEx5uSf5BhFX6Sbh+DX5wyRl4yY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ixz0rnAw; arc=none smtp.client-ip=199.89.1.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Tee2qmv4"
-Received: by mail-yb1-f180.google.com with SMTP id 3f1490d57ef6-e116a5c3922so6825097276.1;
-        Wed, 21 Aug 2024 10:01:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1724259661; x=1724864461; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=jUEZoOE+I/HL6qmkqpRxBAW840EWU6rM2MCD09k8aQI=;
-        b=Tee2qmv4xRv8zLQ06fEElSct/AcFDzU4PmEKFMcZQ4amFzCILCSpYIM03UwrGot7Qy
-         yuZpcFBbNABctQO5uuoRBXqFhA7VetElb2MScRh3mj18OX3sdbiSefbfgn/QnX2R4Rvi
-         scGCdoqdM4YM38RB5C1RoPQKO2TbIilB7w9dBYMJybWPnBrxcTAcr/DQ4I9WecdOUx0I
-         cS542RWZ4ZJtkp18eINtYh3SxlAiebprsuQKIoOa80sChG+AcB2NsZHgkYR+UYg/qKU9
-         yP6byuWq1DfUXweBD6BrVxvd3Y7kT8uC6CtEIHZc40oDfFnTXGm2IzLijRX5kHTGngJd
-         odcg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724259661; x=1724864461;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=jUEZoOE+I/HL6qmkqpRxBAW840EWU6rM2MCD09k8aQI=;
-        b=YF1LuXAIQrq40juqwgcUcBmuJpzqGAlPZoGNgOvU9AaUZdFBx/FzUuA6MujVzu6uXq
-         yZoinXwmFuxFIHapNcXOBlCLXaP1otcfcuPFUQtVbtR4IRdxq0QZbWTFqIAr2UxnPBmo
-         HXzBnVjafYJvwXmyTirBLH37hm4zL4DD3kJa16rKROFyjHfSv+YdwCulAHYghi4dy1th
-         isVkk7fU9gZxpC4kMtD8Ovd1FL8T7+YP8vpjpkqIrL/gXJrNQtqrd9fmydldY6OSpxYq
-         se1ePXKZEo0npf3tZJi36FqESaWSkShT5/RzuvTx7Ehq0lMXZgBFKMHgkfEeIWcBoz1M
-         OZtw==
-X-Forwarded-Encrypted: i=1; AJvYcCUoAge/m4EoWlUgsmz3DWarhl9TFOL++sW+7tlEJLoIVeNQmekpPCBMUasWga3qnPEFXadM+KQOF/MYkA==@vger.kernel.org, AJvYcCWrQy1M2Mdl+e/0ror6etdg2nxc/9/XYS9vqCPHIGYouAakTa5hZenruG2RKObjp3V4yLUxP7O7TKL0GdY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxFGeuBgWF7rV1s8SCFvY7YBNq45F81M8hHOuulK3OLHAAeV7cm
-	Y2tIfPq7uZLVYfkzMS6V2ZTMyFwi7GFO1+h/HSfxmbfdzZo/pDUndhpF1IU4ueXKA5ZzpvRKTZd
-	opKgyBA6UdLvTBVRCTaNTw8ohBcg=
-X-Google-Smtp-Source: AGHT+IHJtsVTdcWpB6K1lde36WYTbOIQqqa2SThwZxersF8oZwCQZO6hrNlfeyomgV75DZrsAyY/Ewvpvw7CPjD9Jg8=
-X-Received: by 2002:a05:6902:1583:b0:e16:506a:343c with SMTP id
- 3f1490d57ef6-e1665495d0dmr3829937276.30.1724259660665; Wed, 21 Aug 2024
- 10:01:00 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ixz0rnAw"
+Received: from localhost (localhost [127.0.0.1])
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Wpvxr1n3mzlgVnK;
+	Wed, 21 Aug 2024 18:29:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1724264975; x=1726856976; bh=E3awdxIw0rjiXnogTuqRoRbnv5Ha2x5UENG
+	BFe45pIA=; b=ixz0rnAwpUnm06KgwA4F7msZXFAvxZoPC4SX7mdW93KR2X1ucEm
+	5TOSiq1IFbP6QYrRqoXrD+3SBpcJo1q1o1jPAdkSuAzaI1stv3Z3bBMEIThij2ws
+	onqsaPCph6ETeYzExwazQ/t6AZZVH9t3wTbyMDTNF2vkJNJkWuNildSN5DbMkG9o
+	/4V0xNJA1WddbQHHsjlGHgsvnwdOqx5gevotO1srtbpR8BmhmihpohHFo5/6pPkO
+	ngpatFq4P9G5JDiij0QpjgSsuoaMdZI9lAr6jWd7ErT7gaJF8hqsrr23K5KyWaC0
+	Iz14+daXya7n/44IVXexwDVlJj9yIJmoLyg==
+X-Virus-Scanned: by MailRoute
+Received: from 009.lax.mailroute.net ([127.0.0.1])
+ by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id fppQma9qwBjm; Wed, 21 Aug 2024 18:29:35 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Wpvxp6q4jzlgVnF;
+	Wed, 21 Aug 2024 18:29:34 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/2] Fix the UFS driver hibernation code
+Date: Wed, 21 Aug 2024 11:29:10 -0700
+Message-ID: <20240821182923.145631-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.46.0.295.g3b9ea8a38a-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240821065131.1180791-1-sherry.yang@oracle.com>
-In-Reply-To: <20240821065131.1180791-1-sherry.yang@oracle.com>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Wed, 21 Aug 2024 10:00:49 -0700
-Message-ID: <CABPRKS8f88W6nCiaTLKpfXcM+XfZ5TxE3cCxL7dDRHH2mFXRTQ@mail.gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: fix overflow build issue
-To: Sherry Yang <sherry.yang@oracle.com>
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, 
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Justin Tee <justin.tee@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+Hi Martin,
 
-Thanks looks fine.
+While testing the UFS driver we noticed that the UFS host controller does=
+ not
+always enter hibernation when it should enter hibernation. This patch ser=
+ies
+fixes this. Please consider this patch series for the next merge window.
 
-Regards,
-Justin
+Thanks,
+
+Bart.
+
+Bart Van Assche (2):
+  scsi: ufs: core: Make ufshcd_uic_cmd_compl() easier to read
+  scsi: ufs: core: Fix the code for entering hibernation
+
+ drivers/ufs/core/ufshcd.c | 37 +++++++++++++------------------------
+ include/ufs/ufshcd.h      |  7 ++++---
+ 2 files changed, 17 insertions(+), 27 deletions(-)
+
