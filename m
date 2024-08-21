@@ -1,85 +1,138 @@
-Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25C4113B297
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 21:27:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53EAB178378
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 21:32:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724275666; cv=none; b=EbEZ63maDaveddMryHyMINo3AfBzAfg7ULY46p8uXF5gJvZ5fb0AoS9sZt2fegkgNGXOqr9qcqBbr0Wb8Ik5fy6GI4s2TTFo8dvlgRQyCXuPETqoN6tUUAMbPV0yP7Y8hYR30INMi2t1CmlJ2660zhkxGi4VRnyTRnv/RDyEVtQ=
+	t=1724275933; cv=none; b=BdttTYkOOrOLAihZqLiGorPE+iLuJlAseurbHpx1NgRfXfeRqEdUF20Hd+iT0bNr9mYkp0Qk5u1+gRhItl/FC1oooih5XNfIGMDigyH7v1wYT0x31EJC96ZbhX88X8FYh62ZkNwK6FvGiBJIxTWtRd0LsxK9sheyQjJQqyMk16U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724275666; c=relaxed/simple;
-	bh=C4Qg9ozUNOwBREpg/H7MZaH4i/ngSF6+/YUz/Eveifo=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=YtNdPELmS3pNPy9kmVDhq/SOAq3CpZNvUO+OxL8PrsMTT7Gx8+EI2rgguMDT9kkhFs2S3x40V04q10/TBHzke5XWSJHbveuzIELbQLuQRbTyi2brN2DNylZNLM2kobZctRpwXCoy+QjGYu6rCgJyrf2ClgBHAIbiWZAjPc/h5qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ez5JCbyS; arc=none smtp.client-ip=209.85.208.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1724275933; c=relaxed/simple;
+	bh=G2ZYzUM9xPfjHf7MaE5c1ZAlligmTgj92iLVFjxn+BE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hrPC904xjmjddy5/2HmkKlVx7k+LIQd0daKMczxr4nr92QShM/AZrwqH+LaWBP+2OwjnjI35OQEU5MCHinKQdPdOuIL6VSemqwaj8T+zYJ9m+sAnknQcHtA3yGIPmlDP+b8GFG8TSlgEHKtVW8x7bDnccBrh8TgworM3osrOURY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mary.zone; spf=none smtp.mailfrom=mary.zone; dkim=pass (2048-bit key) header.d=mary-zone.20230601.gappssmtp.com header.i=@mary-zone.20230601.gappssmtp.com header.b=uh/OfoMR; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mary.zone
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mary.zone
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ez5JCbyS"
-Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2f029e9c9cfso1315451fa.2
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 14:27:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=mary-zone.20230601.gappssmtp.com header.i=@mary-zone.20230601.gappssmtp.com header.b="uh/OfoMR"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-42809d6e719so696145e9.3
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 14:32:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1724275663; x=1724880463; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=C4Qg9ozUNOwBREpg/H7MZaH4i/ngSF6+/YUz/Eveifo=;
-        b=Ez5JCbyS5xswwH0RWrlEfFHa7bsB1JR4/mezk6jslpT+VpPc9VWzp06uP8bX7EkCVG
-         X11mFOGF3dNL+v9eKs/+bd9Xro8VMTimj3OqyJEVbeXjTlWB7ySRMjnSvfq2AfV2+6UM
-         wkXJz/PjjuD/08WlsA3jMNHdKz+BNLjr095Ckmf/BHQYpCMS0fFz2qVzHIqPr7iM3F7y
-         jR3JrmfWKpYGshG7T/BiQH6j+jEsRP8ZI6l2GtDY80NLJERM2SYyPcnmKlxw5YCrPlpN
-         TCYN9mDNAPhktYrvKwgf5mXQxzdkRFnmVdZ6ftvd8Np73S+pgXATAMr1QmuUWXY0xbaW
-         5COw==
+        d=mary-zone.20230601.gappssmtp.com; s=20230601; t=1724275928; x=1724880728; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=e8/UWu+nkogk+rrCqpk1JaTQfdH+a2mQFoDGBlja3Pc=;
+        b=uh/OfoMRQ0N16C462jwQuK76cIxkdK5U8HxQbJgt6EgShlHzRRZUV8LQkQGEzoImbV
+         SuE11IqpQWJ+gOXlPjFfmeyG1qiJJbFAwX204Xw3tshleNipwZ+DUHAyjGq7PXDsiPGy
+         9q6YhJgeXp935es4psJDFi6bqL7nCTuIuHs1sziOiLLpdc0QjyZEn/l424p03bMH/Jsy
+         IZ5aMhAHTIjPzAI5kwhWLOj8kg/FVX9heJrtsyzEHNHG/lCq1h5IWc/zBssB/VIRinED
+         5TYzl36azXCoKZhVBwirTPbBOtrVZmiD9W5QKRunM1RExyhFJWA/BrQWOgB/f6QHdZhe
+         KN+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724275663; x=1724880463;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=C4Qg9ozUNOwBREpg/H7MZaH4i/ngSF6+/YUz/Eveifo=;
-        b=mA35ONspCzyhrLAnMekSWw7X0ZJS4kfYrSwfENDUi/OCHf+vivJTDES9D+BhguomWo
-         l4eOsL8N66CY8fwfQqPCIy4AsZ7W36N2DGc3ZYOUTxKbiPCyFUWXGGbGtnGVCouOnbra
-         cZvY1bmibRdPMkJ6IL+zrIaYBxsuWY4ZBvGd0C/Xd71X9hkwmXV+tRIqmZpMAZ9k+5GC
-         TF+amh/8UQU7AvOdbMVDZyzXwSeUATE7GgbnU23E1UTYHI8F5gaF2WHwfHl1tvGVLcqD
-         WA9g8agS7UezMAG19U8j0xlVNlU6ApMS6gUHQNtZwYoOPkhN0cs+oTYV08wgasPdzcon
-         0sTA==
-X-Gm-Message-State: AOJu0Yxi9NhRXwiX96QW9n60emi/dXiK2OkjU05GL5cbZIUNFjcVgzh7
-	YpXroUh9g+NonIcyA8f0VvB1e9GayfiHVh1V0Qrqb7DMRpypxOYO
-X-Google-Smtp-Source: AGHT+IE7jgDH+xTByD+JDEAz2CT/vIg4L42ANqbAybihJKAhfk0jcMkQZWuszMvqmFmRv3wBRwk4sg==
-X-Received: by 2002:a2e:bc06:0:b0:2ef:17ee:62a2 with SMTP id 38308e7fff4ca-2f3f8846ac2mr29215861fa.14.1724275662600;
-        Wed, 21 Aug 2024 14:27:42 -0700 (PDT)
-Received: from p200300c58710ea38238d6e8507432297.dip0.t-ipconnect.de (p200300c58710ea38238d6e8507432297.dip0.t-ipconnect.de. [2003:c5:8710:ea38:238d:6e85:743:2297])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a868f220244sm13233866b.23.2024.08.21.14.27.41
+        d=1e100.net; s=20230601; t=1724275928; x=1724880728;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=e8/UWu+nkogk+rrCqpk1JaTQfdH+a2mQFoDGBlja3Pc=;
+        b=tRFsJsoVX0Mov+ERFV138UC6C4SgJhVtUCqyyXgNdx1bDoP6StcGq5SOlO2p3HuuSE
+         pMNKxKdtrs5YlhKvtwM6WFd7DTyK3ovmBMOZmqagOXBrsX9QrlVu2P6vHaQo6iXcgcfK
+         GNuaKsFqVK+LetbE/qCN8ygJE16HNwJ9aUt1ykyRBxClg3Dr9JRY7Luu4Yl/dVBfKRbI
+         i+zm4wW2diDDnCNDD/yipP0LahGRxGx6qNUgL3rZLJfJQGyeFWL/XgvvyIeXk6RFbjr+
+         vq3dKFWMcxRrnaItrGoqXG+4JXvd8oJiazpEflQbtu/8iDIHnlIO6Q3c8mgWPgz9eGiU
+         W3Gg==
+X-Forwarded-Encrypted: i=1; AJvYcCXddI/hLXciG/X+V0uMP+Zv+CM7+P/Prqm9O9X1y6ObMFSXZHXfcSZ+Bqm/XSSRcScMib0SnO7I+/x8@vger.kernel.org
+X-Gm-Message-State: AOJu0YxS2qYftN6KAB/c0DnAOh+SeOM9LkpdoW4Dl4LRZw192Fn6xmF4
+	dP6ngW0qo2L4+le4qSfxastGmg6re3MN2rSkG1z/6clyGfA3z7ezoGNEer0fLC8=
+X-Google-Smtp-Source: AGHT+IHKJLdclZTFijLA7DW5BcP/iaYLqoD8ipe3pdpTBJexDaFe7tQ5JwO0ExnL7fnrsWAfryPdzA==
+X-Received: by 2002:a05:600c:5486:b0:426:5f8f:51a4 with SMTP id 5b1f17b1804b1-42abd22ffd0mr25332835e9.12.1724275928297;
+        Wed, 21 Aug 2024 14:32:08 -0700 (PDT)
+Received: from kuroko.kudu-justice.ts.net (2a01cb040b5eb100cb3bcc29e5f2b7ed.ipv6.abo.wanadoo.fr. [2a01:cb04:b5e:b100:cb3b:cc29:e5f2:b7ed])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3730815b7e3sm23778f8f.53.2024.08.21.14.32.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Aug 2024 14:27:42 -0700 (PDT)
-Message-ID: <7e7f22dc6e73f6b1871f00032517bfe5b3a7d13e.camel@gmail.com>
-Subject: Re: [PATCH 1/2] scsi: ufs: core: Make ufshcd_uic_cmd_compl() easier
- to read
-From: Bean Huo <huobean@gmail.com>
-To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
-	 <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>, Peter Wang
- <peter.wang@mediatek.com>,  Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>, Avri Altman <avri.altman@wdc.com>, Bean
- Huo <beanhuo@micron.com>,  Andrew Halaney <ahalaney@redhat.com>
-Date: Wed, 21 Aug 2024 23:27:41 +0200
-In-Reply-To: <20240821182923.145631-2-bvanassche@acm.org>
-References: <20240821182923.145631-1-bvanassche@acm.org>
-	 <20240821182923.145631-2-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+        Wed, 21 Aug 2024 14:32:07 -0700 (PDT)
+Date: Wed, 21 Aug 2024 23:32:06 +0200
+From: Mary Guillemard <mary@mary.zone>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	Peter Wang <peter.wang@mediatek.com>,
+	Stanley Jhu <chu.stanley@gmail.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Subject: Re: [PATCH 1/1] scsi: ufs-mediatek: Add UFSHCD_QUIRK_BROKEN_LSDBS_CAP
+Message-ID: <ZsZc1jYL8wSZZYSw@kuroko.kudu-justice.ts.net>
+References: <20240818222442.44990-2-mary@mary.zone>
+ <20240818222442.44990-3-mary@mary.zone>
+ <20240819120852.tdxlebj7pjcxjbou@thinkpad>
+ <ZsOJKMg8xlpdgoi5@kuroko.kudu-justice.ts.net>
+ <20240820060946.ktiysu7sn7qgbwx4@thinkpad>
+ <223cc3ca-9214-4ba1-a3c8-2d672aef52f9@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <223cc3ca-9214-4ba1-a3c8-2d672aef52f9@acm.org>
 
-On Wed, 2024-08-21 at 11:29 -0700, Bart Van Assche wrote:
-> Introduce a local variable for the expression hba->active_uic_cmd.
-> Remove superfluous parentheses.
->=20
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+On Tue, Aug 20, 2024 at 02:50:58PM -0700, Bart Van Assche wrote:
+> On 8/19/24 11:09 PM, Manivannan Sadhasivam wrote:
+> > On Mon, Aug 19, 2024 at 08:17:10PM +0200, Mary Guillemard wrote:
+> > > On Mon, Aug 19, 2024 at 05:38:52PM +0530, Manivannan Sadhasivam wrote:
+> > > > On Mon, Aug 19, 2024 at 12:24:42AM +0200, Mary Guillemard wrote:
+> > > > > +	if (host->caps & UFS_MTK_CAP_DISABLE_MCQ)
+> > > > 
+> > > > How can this be the deciding factor? You said above that the issue is with
+> > > > MT8183 SoC. So why not just use the quirk only for that platform?
+> > > 
+> > > So my current assumption is that it also affect other Mediatek SoCs
+> > > that are also based on UFS 2.1 spec but I cannot check this.
+> > > 
+> > > Instead, we know that if MCQ isn't supported, we must fallback to LSDB
+> > > as there is no other ways to drive the device.
+> > > 
+> > > UFS_MTK_CAP_DISABLE_MCQ (mediatek,ufs-disable-mcq) being unused upstream,
+> > > I think that's an acceptable fix.
+> > > 
+> > 
+> > If you use this quirk, then you need to use the corresponding DT property. But
+> > using the 'mediatek,ufs-disable-mcq' property for 2.1 controller doesn't make
+> > sense as MCQ is for controllers >= 4.0.
+> > 
+> > > Another way to handle this would be to add a new dt property and add it
+> > > to ufs_mtk_host_caps but I feel that my approach should be enough.
+> > > 
+> > 
+> > No need to add a DT property. Just use the SoC specific compatible as I did for
+> > SM8550 SoC.
+> 
+> Mary, do you plan to implement Manivannan's feedback?
+> 
+> Thanks,
+> 
+> Bart.
+>
+
+Hello Bart,
+
+I think that considering Peter's reply, explicitly checking for the
+MT8183 controller isn't required.
+
+I also think it could be required for at least the MT8192 and MT8195
+considering they are apparently also based on UFS 2.1 spec [1].
+
+However, if you want me to add an explicit check, I will happily send a
+v2.
+
+Thanks,
+
+Mary.
+
+[1]https://corp.mediatek.com/news-events/press-releases/mediatek-announces-new-mt8192-and-mt8195-chipsets-designed-for-next-generation-of-chromebooks
+
 
