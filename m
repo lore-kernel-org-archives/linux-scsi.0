@@ -1,85 +1,76 @@
-Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com [209.85.219.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC618192D82;
-	Wed, 21 Aug 2024 12:49:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E36F2199956;
+	Wed, 21 Aug 2024 17:01:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724244584; cv=none; b=u7txUQdrlywPpONGd3OZcQo3wfZA2el8g+LRoGLaD3d0lOx6FZ8ar6Dw2k5UMZ+WIWLLFi1nWPL2z4gR+X2qKKdS06pTT+bgakxT/JRLJL1mIn71vpsZD+UreYhysqLL5Z5uGiRfpT3xDcHbsQVB692gn+ngTRAqbWifzBYExXo=
+	t=1724259663; cv=none; b=edJVtRRgr62Jhe9Kx1iZe1DQv7nYTqkFB+ZUcLZVpXLmnq3/CcmNTu4T0hvdGBxEciRlzWhQoOJOfiTPjq1bCv6nbIYsY7tAzL8IftxOQ+On0Vwlrbzks+3eqoDwBCqvXYFkf0VYN9Q+EJdz9AECfymg03KHK25S1xJwH4tEb2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724244584; c=relaxed/simple;
-	bh=ivBLmAjrAdfXQCnNJnRfb3XazdZTgFVx5cfbyrli2GU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=We6Crb3h2vKitLVySaVgW1b2YPIOoT086N9aDzG1Pq6D1suC9EyMWLNvJECIhWmH8DmfkJn1AFBAtR1+VrC999i8vQCYoTA7eOpCU4UXul5JCacwphuejNadnEHr8XkIPUiQaulETSB5XhJJZAw23Dma7UZbjHU6Yl5u5I6JIUk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=e+9qBNNI; arc=none smtp.client-ip=209.85.218.50
+	s=arc-20240116; t=1724259663; c=relaxed/simple;
+	bh=jUEZoOE+I/HL6qmkqpRxBAW840EWU6rM2MCD09k8aQI=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=n9B1iFdgThjVJDYXjE/3iPBsTNgGiPjy73PqeLvqINbSitYsRIQc2c+3AUT8MMot8P/5uTz1Gsx+3x5Vf3XKfTfXis1fZp/F9AaVW8Ca16vZviqudwU1D6GMoJhgazq1xNwdO2hoWw/xM86BNWezs89ySnp0wIfLmP0MfFI45sk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Tee2qmv4; arc=none smtp.client-ip=209.85.219.180
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e+9qBNNI"
-Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-a7abe5aa9d5so729188466b.1;
-        Wed, 21 Aug 2024 05:49:42 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Tee2qmv4"
+Received: by mail-yb1-f180.google.com with SMTP id 3f1490d57ef6-e116a5c3922so6825097276.1;
+        Wed, 21 Aug 2024 10:01:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1724244581; x=1724849381; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=ivBLmAjrAdfXQCnNJnRfb3XazdZTgFVx5cfbyrli2GU=;
-        b=e+9qBNNI/8S4YtHz50D4k0dim4wHZOwnSkjk/NVkx+x7/zjz0wzVjrjvcnnznw4/Ka
-         lscGPvGti6HAapIJ7LnSV6YIARBBNhhgZxazPHtvKxEL+R3OLUJNwz6rYcksDXVml4Ns
-         6SP6SSnMBD9MH+NH+9D81h5zXz7CuKwyN6XM1kEYiaPUelP7pQWWdWhBg5nEdn5d2Zc4
-         P5diKJ6gCu5cvPIkfWHusG6HlFkbhXac1GbSRqFfqd6G/M5c8fPruIKFZzVms18nupIh
-         XOXL18hyF4tcQdN0DBIuPggrho4NP4v/LsUvlxoLLHbCPTt3Cq9w5ViaYvdKPsHWqCd6
-         0j2Q==
+        d=gmail.com; s=20230601; t=1724259661; x=1724864461; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=jUEZoOE+I/HL6qmkqpRxBAW840EWU6rM2MCD09k8aQI=;
+        b=Tee2qmv4xRv8zLQ06fEElSct/AcFDzU4PmEKFMcZQ4amFzCILCSpYIM03UwrGot7Qy
+         yuZpcFBbNABctQO5uuoRBXqFhA7VetElb2MScRh3mj18OX3sdbiSefbfgn/QnX2R4Rvi
+         scGCdoqdM4YM38RB5C1RoPQKO2TbIilB7w9dBYMJybWPnBrxcTAcr/DQ4I9WecdOUx0I
+         cS542RWZ4ZJtkp18eINtYh3SxlAiebprsuQKIoOa80sChG+AcB2NsZHgkYR+UYg/qKU9
+         yP6byuWq1DfUXweBD6BrVxvd3Y7kT8uC6CtEIHZc40oDfFnTXGm2IzLijRX5kHTGngJd
+         odcg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724244581; x=1724849381;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ivBLmAjrAdfXQCnNJnRfb3XazdZTgFVx5cfbyrli2GU=;
-        b=hJZwNvBZdoesdcdb9Lzm/p48veKhstoP+Wf+B07EA2WEZyKBclnFnYyMAjBP8jy3vX
-         NI70YJHWFBdSZ3+LOxQZrjVlnwTxnKirq+I5Qwxx4VYB4ZMsppkwSX+CrprPVj51yq4k
-         d4CFVyuDmGqDR2wa+u5MFknAfSr6EK34+fDC7RVJj+0/2Iqnq7nhbptDMl+AA8bgsduV
-         Ry2LFhnO3kgEDKavDG7kcEsoujLJAAxQFR03RdmXAdr9XlwxQ/mKtk+8NS+Z9KrBscxF
-         TohIsCmxgrrbQdxqIjd0VZnYEZvLgSmXWKZWoHEErjU8mkvGu+kvLFH3O/8WVThNafw7
-         pHag==
-X-Forwarded-Encrypted: i=1; AJvYcCUZpFCpRWdq7i9KGf5otbkDAFaAe3grzNs3wa35oiKG3841he4pYKj5tUYijxd2rCge9HawgXY4nkAzECI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxCRgeq2Y1p6GZGUZjWRglre6HRkWqwTylTn6Jlk5mCxIQqjXIV
-	QUzOk0ar0q+44fdRiowv6KBkajGn1mmVWvg9iQ/LlGuGVL0rTq1q0QeerRBD
-X-Google-Smtp-Source: AGHT+IFuNF65BQB77WK5NFqDaCMrwDijcbzYxVS+HyalkmdLsChj9w/zp8rXB+PM8qihnngfuxkyKQ==
-X-Received: by 2002:a17:906:cae0:b0:a7d:2fb2:d852 with SMTP id a640c23a62f3a-a866f72e01dmr160152366b.52.1724244580426;
-        Wed, 21 Aug 2024 05:49:40 -0700 (PDT)
-Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a8383949e45sm904788566b.145.2024.08.21.05.49.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Aug 2024 05:49:40 -0700 (PDT)
-Message-ID: <40361ef4723db11ec484a7265627cd77276772bd.camel@gmail.com>
-Subject: Re: [PATCH v2] scsi: ufs: Move UFS trace events to private header
-From: Bean Huo <huobean@gmail.com>
-To: Avri Altman <avri.altman@wdc.com>, "Martin K . Petersen"
-	 <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Bart Van
- Assche <bvanassche@acm.org>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Date: Wed, 21 Aug 2024 14:49:38 +0200
-In-Reply-To: <20240821055411.3128159-1-avri.altman@wdc.com>
-References: <20240821055411.3128159-1-avri.altman@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+        d=1e100.net; s=20230601; t=1724259661; x=1724864461;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jUEZoOE+I/HL6qmkqpRxBAW840EWU6rM2MCD09k8aQI=;
+        b=YF1LuXAIQrq40juqwgcUcBmuJpzqGAlPZoGNgOvU9AaUZdFBx/FzUuA6MujVzu6uXq
+         yZoinXwmFuxFIHapNcXOBlCLXaP1otcfcuPFUQtVbtR4IRdxq0QZbWTFqIAr2UxnPBmo
+         HXzBnVjafYJvwXmyTirBLH37hm4zL4DD3kJa16rKROFyjHfSv+YdwCulAHYghi4dy1th
+         isVkk7fU9gZxpC4kMtD8Ovd1FL8T7+YP8vpjpkqIrL/gXJrNQtqrd9fmydldY6OSpxYq
+         se1ePXKZEo0npf3tZJi36FqESaWSkShT5/RzuvTx7Ehq0lMXZgBFKMHgkfEeIWcBoz1M
+         OZtw==
+X-Forwarded-Encrypted: i=1; AJvYcCUoAge/m4EoWlUgsmz3DWarhl9TFOL++sW+7tlEJLoIVeNQmekpPCBMUasWga3qnPEFXadM+KQOF/MYkA==@vger.kernel.org, AJvYcCWrQy1M2Mdl+e/0ror6etdg2nxc/9/XYS9vqCPHIGYouAakTa5hZenruG2RKObjp3V4yLUxP7O7TKL0GdY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxFGeuBgWF7rV1s8SCFvY7YBNq45F81M8hHOuulK3OLHAAeV7cm
+	Y2tIfPq7uZLVYfkzMS6V2ZTMyFwi7GFO1+h/HSfxmbfdzZo/pDUndhpF1IU4ueXKA5ZzpvRKTZd
+	opKgyBA6UdLvTBVRCTaNTw8ohBcg=
+X-Google-Smtp-Source: AGHT+IHJtsVTdcWpB6K1lde36WYTbOIQqqa2SThwZxersF8oZwCQZO6hrNlfeyomgV75DZrsAyY/Ewvpvw7CPjD9Jg8=
+X-Received: by 2002:a05:6902:1583:b0:e16:506a:343c with SMTP id
+ 3f1490d57ef6-e1665495d0dmr3829937276.30.1724259660665; Wed, 21 Aug 2024
+ 10:01:00 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20240821065131.1180791-1-sherry.yang@oracle.com>
+In-Reply-To: <20240821065131.1180791-1-sherry.yang@oracle.com>
+From: Justin Tee <justintee8345@gmail.com>
+Date: Wed, 21 Aug 2024 10:00:49 -0700
+Message-ID: <CABPRKS8f88W6nCiaTLKpfXcM+XfZ5TxE3cCxL7dDRHH2mFXRTQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: fix overflow build issue
+To: Sherry Yang <sherry.yang@oracle.com>
+Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	Justin Tee <justin.tee@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Wed, 2024-08-21 at 08:54 +0300, Avri Altman wrote:
-> ufs trace events are called exclusively from the ufs core drivers.=C2=A0
-> Make
-> those events private to the core driver.
->=20
-> The MAINTAINERS file does not need updating as the maintainership
-> remains the same and the relevant directory is already covered.
->=20
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
-Acked-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+
+Thanks looks fine.
+
+Regards,
+Justin
