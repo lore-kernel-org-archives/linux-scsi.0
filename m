@@ -1,24 +1,24 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C999516B38E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E47E16D9A7
 	for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 06:28:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724221734; cv=none; b=OpXK8fpAArXTI2NdQr9G+tlRq8XpcJDfPxLJ0o1dzH4iRlpYZu3UYJZjFdATQqnve6Cu6J8S3W6LnZQvZh13IdGx2HaA8iJPSeVzL04MZ/cvctwoL+MmpuWIdAMaI9lkI1jvYX/wkNXq0UdVOBaUHBIfn+MGcpypGofc7vMQVnM=
+	t=1724221735; cv=none; b=CRLZ0S2PQ+OwlWChYH4nEbugNOkCofgw4d6UrkKhIARTlPRHCH81gmawj+RpUWAt5fNSyLvTqFqNk0r0/vu5Ns/eikcAgRBB18NzH0iYVUgZDgsJdYR3VKIpdzXpl8qMH0pXhyrp4iSGWLNOj7/UK5YWzME697Ci4N67wYwPHwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724221734; c=relaxed/simple;
+	s=arc-20240116; t=1724221735; c=relaxed/simple;
 	bh=AT+h+PMJv3iLk4GrKR1icil37rWOLljV/+sZS2N+/E0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hjhZUmOPP7A5uLlRLurcI14jBrGP+RDbRKL9v3uTSQr0KaMoDbdjI14aCuCqL6H6el8C3C85J9d0zRmfnnyLOCrg14q9xq6LlDM1u/McmmHCRzZ7yOfb8rsUdj/ju9cLtmzf7/K8oeC1a9GKRORG7dnuZsPVhH5plcm3HK/eK1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+	 MIME-Version:Content-Type; b=WOzpzvY2I/Yl4s3NqPDrZVC4JAdkJQp0a+D3U13q0hchc1pbRZsTwYBXy/PIkn70uuwDq2lvUaQL/AIk+uFrs8B/gHOg9uZ/+WgF6Hz56U01RI4qT+WwJMUN3PIOGKwqXHncL/+f9y2TYdQBmTparcams3vbywtxjf63vF2j9Ow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.44])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Wpbrl1lVGz20mCB;
-	Wed, 21 Aug 2024 14:24:07 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4WpbxP63byzpT0b;
+	Wed, 21 Aug 2024 14:28:09 +0800 (CST)
 Received: from dggpeml500022.china.huawei.com (unknown [7.185.36.66])
-	by mail.maildlp.com (Postfix) with ESMTPS id B30891401E9;
+	by mail.maildlp.com (Postfix) with ESMTPS id D7F851401F4;
 	Wed, 21 Aug 2024 14:28:48 +0800 (CST)
 Received: from huawei.com (10.90.53.73) by dggpeml500022.china.huawei.com
  (7.185.36.66) with Microsoft SMTP Server (version=TLS1_2,
@@ -29,8 +29,8 @@ To: <njavali@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>,
 	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <lihongbo22@huawei.com>
 Subject: [PATCH -next 1/2] driver: scsi: Make use of the helper macro LIST_HEAD()
-Date: Wed, 21 Aug 2024 14:36:08 +0800
-Message-ID: <20240821063609.2292672-2-lihongbo22@huawei.com>
+Date: Wed, 21 Aug 2024 14:36:09 +0800
+Message-ID: <20240821063609.2292672-3-lihongbo22@huawei.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240821063609.2292672-1-lihongbo22@huawei.com>
 References: <20240821063609.2292672-1-lihongbo22@huawei.com>
