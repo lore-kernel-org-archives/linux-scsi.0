@@ -1,56 +1,55 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 592BE37700
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E259D13AA4E
 	for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2024 20:00:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724356818; cv=none; b=cN4SzOgk9JMawkOmnceNxV0wZRcilUGN8jYimYyJTOoao9v8oW33Ibu1OJ6Q6JFArEovF2cB64Hou36zVMqLF7MjzQTXIj+9C09eUyIT7vXB+8zIWfQyuLZG3WCs1OcPH3TT8w4mHGXjGNoX4Umnje/2vBZvonDN/B81U8vFOe4=
+	t=1724356819; cv=none; b=uOoAYApCLPD67eaPrkXZywEVWrjITrNdUyZGL1J9ZRv/4g+wIO1fbBdxqIWWOTLdoKZ+mTaFjpFlUsDAe93lHrYxl5eqx/RS6HzfwY9QbCvJQCtn2BMdFA09+sh3GQoRdIbYVPagoFQU37TQDMTSFTSfF+sMdl5fM9RAV34KVqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724356818; c=relaxed/simple;
-	bh=o10ljLmONycsnD5xQJZYaGnLPjqhRC6/yapUKzQ4TAs=;
+	s=arc-20240116; t=1724356819; c=relaxed/simple;
+	bh=loXYXyFcPHxSm4oGA5Hka00d64Otm7zUReO1qVODTH4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tHgpcQgV+I/uW18rzd6JiiijPWFCfN6Q7IVGV2edrf0xFCHRmAu/XjjYZF4HFvLIC8Gl9jPB/Q6sWj8txyaCnSukpb25o3DskOPzbv/XDYMPzOXjPGdGrzw8ElxtNL6RLSQNiRgaIm9O65IwTBG28pV3SQyYr4oe1g0skNdz5ow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=YkcDobKf; arc=none smtp.client-ip=199.89.1.11
+	 MIME-Version; b=n6sigu8VLFUW0pXXIVE6ylgiQrUFQEUChqhU7HWy0nryEhqijvWUNiqI6B+WAR/G4vB5gFU8TFbvszIOyzB+s9sQmOJtUpDbJPQHNUGb3h/UrCvIBy4G1H6C6mjK+h4Z/USNJIvsO2b+k/UrZ4VKFyGOvPzUymslp6scV8bDf2M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dKl4yndW; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="YkcDobKf"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dKl4yndW"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WqYw05wg7z6ClY9S;
-	Thu, 22 Aug 2024 20:00:16 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WqYw14d7Gz6ClY9T;
+	Thu, 22 Aug 2024 20:00:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1724356812; x=1726948813; bh=NOhjZ
-	YZgYhNzxOBwIteWrZ1e+yhklFzUfYuAEEbHfWY=; b=YkcDobKf0RGhSBstPM/dq
-	EsKgaBt7zLMZBQZogm8vCPFlzLouYmOumfhLuPBIlVj5xsEH0fOH1M/gzVFGiG0n
-	OVhIkJsV6YgkmS82ApGUEx2C7zexcTamEF9SHwg2kmxaJ6MRHHZb4RxOQqT0e16D
-	UxJ0fZn7IrjR/MxIN9kTXIS/sWuBdjjBJlNBYd+qL8eCLsfXSHBIDb8oEsO8r19/
-	6tXnRfqluFVWARjQzCB/IAvKeQvN/oS5UwQPVPhaJ9xxiHKVQdyLxvN4BBho2u9V
-	KHy4TSlDQ7A90Unb9eP9MfCRcAnvJFoXhzS1BrivAX70sI7nmw3kqZOhooqRp9iM
+	:received:received; s=mr01; t=1724356815; x=1726948816; bh=ope2b
+	Zgdg6uen/17iF5cq5qvjLUE3R35vW81Zdlofic=; b=dKl4yndWGVZIDZ6QdLHVs
+	me6v2KEl5HAIjxiQ2fNZ+veXNphj8jrF7EV7zXMSCWX7WI1Rz6x2D2UeekSM8y15
+	tY5a/zR/6S61MikUGLGGAyb/91YgXhGYKYH3ee4c+qUaZocmvmUL5kUL3RZWNoLu
+	7hTFOlJ5dF30OTB8iD4WMJKXpYnIXPin0flJQqmx/3rmuBXHo8m8h/f6sa0SMmgv
+	ai61RI4SDf2kRn7RlY66JC3Tg5CUrn2FbhQJu60UuT3rXA55OI7RFmDK9hj/R/M6
+	RVH71DQiDp4pVeymomRNwQr8jJlnd9TjjsS8RuFCKaWS7ppDKdNCTnlWULXXWE+v
 	A==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id t5Xv6Qu1WpWg; Thu, 22 Aug 2024 20:00:12 +0000 (UTC)
+ id QmZiU9EhslSz; Thu, 22 Aug 2024 20:00:15 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WqYvv3yPDz6ClY9L;
-	Thu, 22 Aug 2024 20:00:11 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WqYvx6bFdz6ClY9P;
+	Thu, 22 Aug 2024 20:00:13 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v3 02/18] scsi: mptfusion: Simplify the alloc*_workqueue() invocations
-Date: Thu, 22 Aug 2024 12:59:06 -0700
-Message-ID: <20240822195944.654691-3-bvanassche@acm.org>
+	Bradley Grove <linuxdrivers@attotech.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH v3 05/18] scsi: esas2r: Simplify an alloc_ordered_workqueue() invocation
+Date: Thu, 22 Aug 2024 12:59:09 -0700
+Message-ID: <20240822195944.654691-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.46.0.295.g3b9ea8a38a-goog
 In-Reply-To: <20240822195944.654691-1-bvanassche@acm.org>
 References: <20240822195944.654691-1-bvanassche@acm.org>
@@ -62,95 +61,45 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Let alloc*_workqueue() format the workqueue names instead of calling
+Let alloc_ordered_workqueue() format the workqueue name instead of callin=
+g
 snprintf() explicitly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/message/fusion/mptbase.c | 10 +++-------
- drivers/message/fusion/mptbase.h |  3 ---
- drivers/message/fusion/mptfc.c   |  7 ++-----
- 3 files changed, 5 insertions(+), 15 deletions(-)
+ drivers/scsi/esas2r/esas2r.h      | 1 -
+ drivers/scsi/esas2r/esas2r_init.c | 6 ++----
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mp=
-tbase.c
-index 4bf669c55649..738bc4e60a18 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1856,10 +1856,8 @@ mpt_attach(struct pci_dev *pdev, const struct pci_=
-device_id *id)
- 	/* Initialize workqueue */
- 	INIT_DELAYED_WORK(&ioc->fault_reset_work, mpt_fault_reset_work);
+diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
+index ed63f7a9ea54..8a133254c4f6 100644
+--- a/drivers/scsi/esas2r/esas2r.h
++++ b/drivers/scsi/esas2r/esas2r.h
+@@ -929,7 +929,6 @@ struct esas2r_adapter {
+ 	struct list_head fw_event_list;
+ 	spinlock_t fw_event_lock;
+ 	u8 fw_events_off;                       /* if '1', then ignore events *=
+/
+-	char fw_event_q_name[ESAS2R_KOBJ_NAME_LEN];
+ 	/*
+ 	 * intr_mode stores the interrupt mode currently being used by this
+ 	 * adapter. it is based on the interrupt_mode module parameter, but
+diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas=
+2r_init.c
+index ff1fa3160c61..0cea5f3d1a08 100644
+--- a/drivers/scsi/esas2r/esas2r_init.c
++++ b/drivers/scsi/esas2r/esas2r_init.c
+@@ -311,10 +311,8 @@ int esas2r_init_adapter(struct Scsi_Host *host, stru=
+ct pci_dev *pcid,
+ 	sema_init(&a->nvram_semaphore, 1);
 =20
--	snprintf(ioc->reset_work_q_name, MPT_KOBJ_NAME_LEN,
--		 "mpt_poll_%d", ioc->id);
--	ioc->reset_work_q =3D alloc_workqueue(ioc->reset_work_q_name,
--					    WQ_MEM_RECLAIM, 0);
-+	ioc->reset_work_q =3D
-+		alloc_workqueue("mpt_poll_%d", WQ_MEM_RECLAIM, 0, ioc->id);
- 	if (!ioc->reset_work_q) {
- 		printk(MYIOC_s_ERR_FMT "Insufficient memory to add adapter!\n",
- 		    ioc->name);
-@@ -1986,9 +1984,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_d=
-evice_id *id)
+ 	esas2r_fw_event_off(a);
+-	snprintf(a->fw_event_q_name, ESAS2R_KOBJ_NAME_LEN, "esas2r/%d",
+-		 a->index);
+-	a->fw_event_q =3D alloc_ordered_workqueue("%s", WQ_MEM_RECLAIM,
+-						a->fw_event_q_name);
++	a->fw_event_q =3D
++		alloc_ordered_workqueue("esas2r/%d", WQ_MEM_RECLAIM, a->index);
 =20
- 	INIT_LIST_HEAD(&ioc->fw_event_list);
- 	spin_lock_init(&ioc->fw_event_lock);
--	snprintf(ioc->fw_event_q_name, MPT_KOBJ_NAME_LEN, "mpt/%d", ioc->id);
--	ioc->fw_event_q =3D alloc_workqueue(ioc->fw_event_q_name,
--					  WQ_MEM_RECLAIM, 0);
-+	ioc->fw_event_q =3D alloc_workqueue("mpt/%d", WQ_MEM_RECLAIM, 0, ioc->i=
-d);
- 	if (!ioc->fw_event_q) {
- 		printk(MYIOC_s_ERR_FMT "Insufficient memory to add adapter!\n",
- 		    ioc->name);
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mp=
-tbase.h
-index 8031173c3655..b406fd676da0 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -729,7 +729,6 @@ typedef struct _MPT_ADAPTER
- 	struct list_head	 fw_event_list;
- 	spinlock_t		 fw_event_lock;
- 	u8			 fw_events_off; /* if '1', then ignore events */
--	char 			 fw_event_q_name[MPT_KOBJ_NAME_LEN];
-=20
- 	struct mutex		 sas_discovery_mutex;
- 	u8			 sas_discovery_runtime;
-@@ -764,7 +763,6 @@ typedef struct _MPT_ADAPTER
- 	u8			 fc_link_speed[2];
- 	spinlock_t		 fc_rescan_work_lock;
- 	struct work_struct	 fc_rescan_work;
--	char			 fc_rescan_work_q_name[MPT_KOBJ_NAME_LEN];
- 	struct workqueue_struct *fc_rescan_work_q;
-=20
- 	/* driver forced bus resets count */
-@@ -778,7 +776,6 @@ typedef struct _MPT_ADAPTER
- 	spinlock_t		  scsi_lookup_lock;
- 	u64			dma_mask;
- 	u32			  broadcast_aen_busy;
--	char			 reset_work_q_name[MPT_KOBJ_NAME_LEN];
- 	struct workqueue_struct *reset_work_q;
- 	struct delayed_work	 fault_reset_work;
-=20
-diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptf=
-c.c
-index a3c17c4fe69c..91242f26defb 100644
---- a/drivers/message/fusion/mptfc.c
-+++ b/drivers/message/fusion/mptfc.c
-@@ -1349,11 +1349,8 @@ mptfc_probe(struct pci_dev *pdev, const struct pci=
-_device_id *id)
-=20
- 	/* initialize workqueue */
-=20
--	snprintf(ioc->fc_rescan_work_q_name, sizeof(ioc->fc_rescan_work_q_name)=
-,
--		 "mptfc_wq_%d", sh->host_no);
--	ioc->fc_rescan_work_q =3D
--		alloc_ordered_workqueue(ioc->fc_rescan_work_q_name,
--					WQ_MEM_RECLAIM);
-+	ioc->fc_rescan_work_q =3D alloc_ordered_workqueue(
-+		"mptfc_wq_%d", WQ_MEM_RECLAIM, sh->host_no);
- 	if (!ioc->fc_rescan_work_q) {
- 		error =3D -ENOMEM;
- 		goto out_mptfc_host;
+ 	init_waitqueue_head(&a->buffered_ioctl_waiter);
+ 	init_waitqueue_head(&a->nvram_waiter);
