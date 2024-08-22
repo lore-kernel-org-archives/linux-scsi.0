@@ -1,112 +1,137 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02256139D09
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2024 06:37:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90917183CC4;
+	Thu, 22 Aug 2024 10:39:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724308622; cv=none; b=pMxG3vux7C8a2ckgB1jB8DvKX1bIt7iH4UDSNg/MPBGpnQojuBS+RsAHJJobjaCI+Any7l8hhVxK0wV3UPDJ9HzKFCRndi5VxG5sEtyTJJjnGirIqey2r5RXTo5MpNvgwPr8QrO8eWrL8juAWnw1lypXzkq1A3h5QU38LUspDJs=
+	t=1724323148; cv=none; b=Vx7OUu0mcRzMVE3dIq+3eFGN+2k884k3xoTdxenv0EN9LsZY55FzwHR/RROx7sHO2SMiLgOCjXr9+BOJX5gFsEkK8fpzuI3YcgyxbkAGtTWEhpe2aTxTnnQ+AgWfUpn2+iTWX5iBoy3zXZjp8mfCZLV0K00yUIKiTs9NEzd0njo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724308622; c=relaxed/simple;
-	bh=oGOHTDY51Gg+mJcTm2seW0ElhhYl+OMH4epVMewAGj0=;
+	s=arc-20240116; t=1724323148; c=relaxed/simple;
+	bh=Io9HIxmoSqST+xmstMBwH5AUMwojE/puDceefBlKsTU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YVtQ+VZeyvQ5vzsMxzwSE/uzUvehHh+8aXK+rCkHtQ2/SGknnHmKvoaV0+9FJdBsFvTL9A+OOF3GxG6WzQGCaU4OxAmtXoCFvl5ie47yUn7w4/GN2jDUDGl8J823HvccEZPHpBzv3O6mJ+TNxHgndeQ/cPT/mfnxzUod2gcVonM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FWXxEpq6; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=qQTiqoSOEYs3GcXwhZ5I7XAND/p4ucfjD/G2U3DIAdqodf6PeIFTQ/WD5ocl2iR/AiwXWM31wjyIFmvhUvtFCCQpy6NkeQv4BkaMOe4LCZg+f2T2mNWZFu/81PEIv3uyTBJsgUN2/uhZuonzrIz2FgBkjT4lSygeDbSJ5HZd12I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CH6+LB2v; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FWXxEpq6"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-712603f7ba5so413140b3a.3
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Aug 2024 23:37:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1724308620; x=1724913420; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=TJG2Lofxymap9hQg3cIGyOFlmJAgxmYranBHj8oOVvw=;
-        b=FWXxEpq63693YWQg53N5qvzqM73/RMIFFsVq8ia/t7/11t0GE9Wy441SpU2TmUD0gH
-         2tL7MbLmkVxlFfgGyLVEgSCvemaoz3xZO0nTdgsIEWFLyBuYd+mCecoJagR15PnoYg/o
-         6eTTElx32t4CA3/wThyzlXHhwcGHCF8tkyiuK7Oq49E5AN3UI819H2W2KEJO0XHkncxg
-         D2G2EQaBpd6xPT0kh2nUJSlAlFppqSA2PDAZbOdP3cdHK4nyW2ozFG52WtLWWIt+oDmD
-         a138B5M8pM03AJenf/cN+rxeKq6O5+eYbPkc187HcDFAY6LSaxA5YbNYLRVjXSfa5hUB
-         9uWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724308620; x=1724913420;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=TJG2Lofxymap9hQg3cIGyOFlmJAgxmYranBHj8oOVvw=;
-        b=csoNeB1eZ5pEvz0ZS4lnYDTm/4jd5koSFs58aRxTkLoIdVmq+y3vfDEg5B+/BZumE+
-         YRuuQG6h8gfQROOAPAii0sg/uw4v+aFt8DK+X0Mu3fuH6RpOgeACvCA0U8uejsJoZEuK
-         FTIygds3vSkzi/d+d91tgiMhydehIaMiOUtFNknsbm5ldooHoZfXGbCqWoUpUy1gS9EZ
-         TrHrbq++2Oy7UqDfThwtel0ChtcT+4EE6PgCcJTbGXr1XnaJWiupsWb6sM2fy7CTmtvH
-         tghRWpsvRg3cOHLcO4pym8TD7GxeVFZv88BRFz7WCuBbziyqqVD343QFHjBXTJkIzLAY
-         SlnQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVlGgqSAxNeH6daVWtriQiFVWzCLzvDssVIFYqAdfn0R7pWHKqLtrLTZjJEKrNyM7kHcov5WNZI2FTf@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz9VXx2eW5ZWbzpzADLGd+lfdEQIj6EyI5zNBmEvqItSUQ4kdH/
-	cENADyWw/08ZSobLoDeSf3CDJfW7HP7byKq150DJAPSeQt0Gb9se
-X-Google-Smtp-Source: AGHT+IFmAMEGZb1Ey2xb06+L/fRqbmgqXkL4cswU065jMuisGH2bz3GdkOJuOd4kb2D//6ZgE99ZCw==
-X-Received: by 2002:a05:6a00:91c1:b0:706:34f3:7b60 with SMTP id d2e1a72fcca58-71423557c38mr4636071b3a.23.1724308620184;
-        Wed, 21 Aug 2024 23:37:00 -0700 (PDT)
-Received: from thinkpad ([117.213.99.42])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-71434336fb3sm675489b3a.201.2024.08.21.23.36.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Aug 2024 23:36:59 -0700 (PDT)
-Date: Thu, 22 Aug 2024 12:06:52 +0530
-From: Manivannan Sadhasivam <manisadhasivam.linux@gmail.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Avri Altman <avri.altman@wdc.com>,
-	Andrew Halaney <ahalaney@redhat.com>, Bean Huo <beanhuo@micron.com>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Eric Biggers <ebiggers@google.com>,
-	Minwoo Im <minwoo.im@samsung.com>,
-	Maramaina Naresh <quic_mnaresh@quicinc.com>
-Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
- hibernation
-Message-ID: <20240822063652.luevaztzhvzb2ztz@thinkpad>
-References: <20240821182923.145631-1-bvanassche@acm.org>
- <20240821182923.145631-3-bvanassche@acm.org>
- <41e5ed21-8ea6-3a4c-2f25-922458593f38@quicinc.com>
- <6e8df17b-320e-4bfc-a0be-c7918b0263d4@acm.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CH6+LB2v"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1724323145; x=1755859145;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Io9HIxmoSqST+xmstMBwH5AUMwojE/puDceefBlKsTU=;
+  b=CH6+LB2vZyYgW55xWQJ4dmgQW9WOk/w/PsUN+QgjkdKd1npE3dHSIYCQ
+   tmb6WNjlU8ocGSRLAGxsw6uo7KHtXldTZ4BPnyM3S6V6hUi9TO38BLQPv
+   m8n2V3SlPNvNMpEUPG4EAPmyA1ZsZ4ZOnlm3mQjCfVVh0k+Az/Ynda9oe
+   VvgL2l3u/llr7MGCJsX2LDaFe9bhRQkoCHE0HwSMmpgfTbbJ7U7mKxY11
+   xwbE6f/rmFSWVUw/ELOD7q+Pu62x19mark0zuHbXAZnrfJ888buAFO+V1
+   a8N6SH9nE4BGELT7TGDJNErheBSCa+y40q0S+d7he8Gk26219xNf+cP+d
+   A==;
+X-CSE-ConnectionGUID: pv+1dAuDRha5DHxBpCAUiQ==
+X-CSE-MsgGUID: Lf2gwXAjRW+c1/cwO1v6sw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11171"; a="33346049"
+X-IronPort-AV: E=Sophos;i="6.10,166,1719903600"; 
+   d="scan'208";a="33346049"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Aug 2024 03:39:04 -0700
+X-CSE-ConnectionGUID: ZhXwxmwCT0KLnj6UUSK+1Q==
+X-CSE-MsgGUID: mBz6vPkIRAiOT0CUj44S4g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,166,1719903600"; 
+   d="scan'208";a="92144920"
+Received: from lkp-server01.sh.intel.com (HELO 9a732dc145d3) ([10.239.97.150])
+  by orviesa002.jf.intel.com with ESMTP; 22 Aug 2024 03:39:02 -0700
+Received: from kbuild by 9a732dc145d3 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sh5DX-000Cfy-1p;
+	Thu, 22 Aug 2024 10:38:59 +0000
+Date: Thu, 22 Aug 2024 18:38:40 +0800
+From: kernel test robot <lkp@intel.com>
+To: Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+	avri.altman@wdc.com, bvanassche@acm.org, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, beanhuo@micron.com,
+	adrian.hunter@intel.com, h10.kim@samsung.com, hy50.seo@samsung.com,
+	sh425.lee@samsung.com, kwangwon.min@samsung.com,
+	junwoo80.lee@samsung.com, wkon.kim@samsung.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: Re: [PATCH v1 1/2] scsi: ufs: core: introduce override_cqe_ocs
+Message-ID: <202408221823.jnozM7Ys-lkp@intel.com>
+References: <895b69ac1e938490cd1d17b5f82b6f730bcd82c2.1724222619.git.kwmad.kim@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <6e8df17b-320e-4bfc-a0be-c7918b0263d4@acm.org>
+In-Reply-To: <895b69ac1e938490cd1d17b5f82b6f730bcd82c2.1724222619.git.kwmad.kim@samsung.com>
 
-On Wed, Aug 21, 2024 at 05:14:52PM -0700, Bart Van Assche wrote:
-> On 8/21/24 4:26 PM, Bao D. Nguyen wrote:
-> > On 8/21/2024 11:29 AM, Bart Van Assche wrote:
-> > > Accessing a host controller register after the host controller has
-> > > entered the hibernation state may cause the host controller to exit the
-> > > hibernation state. Hence rework the hibernation entry code such that it
-> > > does not modify the interrupt enabled status. Bart,
-> >
-> > I am not clear on the offending condition, particularly the term
-> > "hibernation" used in this context. In the function
-> > ufshcd_uic_pwr_ctrl() where you are making the change, the host
-> > controller is fully active at this point, right?
-> > Please help me clarify the issue.
-> 
-> Hi Bao,
-> 
-> Isn't "hibernation" terminology that comes from the M-PHY standard?
+Hi Kiwoong,
 
-Yeah, it creates confusion between OS hibernation and M-PHY hibernation. Maybe
-saying 'link hibernation' would avoid this.
+kernel test robot noticed the following build errors:
 
-- Mani
+[auto build test ERROR on jejb-scsi/for-next]
+[also build test ERROR on mkp-scsi/for-next krzk/for-next linus/master v6.11-rc4 next-20240822]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Kiwoong-Kim/scsi-ufs-core-introduce-override_cqe_ocs/20240821-144404
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/895b69ac1e938490cd1d17b5f82b6f730bcd82c2.1724222619.git.kwmad.kim%40samsung.com
+patch subject: [PATCH v1 1/2] scsi: ufs: core: introduce override_cqe_ocs
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20240822/202408221823.jnozM7Ys-lkp@intel.com/config)
+compiler: clang version 18.1.5 (https://github.com/llvm/llvm-project 617a15a9eac96088ae5e9134248d8236e34b91b1)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240822/202408221823.jnozM7Ys-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202408221823.jnozM7Ys-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/ufs/core/ufshcd.c:828:39: error: use of undeclared identifier 'hba'
+     828 |                 return ufshcd_vops_override_cqe_ocs(hba,
+         |                                                     ^
+   drivers/ufs/core/ufshcd.c:10344:44: warning: shift count >= width of type [-Wshift-count-overflow]
+    10344 |                 if (!dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(64)))
+          |                                                          ^~~~~~~~~~~~~~~~
+   include/linux/dma-mapping.h:77:54: note: expanded from macro 'DMA_BIT_MASK'
+      77 | #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
+         |                                                      ^ ~~~
+   1 warning and 1 error generated.
+
+
+vim +/hba +828 drivers/ufs/core/ufshcd.c
+
+   814	
+   815	/**
+   816	 * ufshcd_get_tr_ocs - Get the UTRD Overall Command Status
+   817	 * @lrbp: pointer to local command reference block
+   818	 * @cqe: pointer to the completion queue entry
+   819	 *
+   820	 * This function is used to get the OCS field from UTRD
+   821	 *
+   822	 * Return: the OCS field in the UTRD.
+   823	 */
+   824	static enum utp_ocs ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp,
+   825					      struct cq_entry *cqe)
+   826	{
+   827		if (cqe)
+ > 828			return ufshcd_vops_override_cqe_ocs(hba,
+   829							    le32_to_cpu(cqe->status) &
+   830							    MASK_OCS);
+   831	
+   832		return lrbp->utr_descriptor_ptr->header.ocs & MASK_OCS;
+   833	}
+   834	
 
 -- 
-மணிவண்ணன் சதாசிவம்
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
