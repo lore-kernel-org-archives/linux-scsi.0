@@ -1,48 +1,48 @@
-Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
+Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E7251CCEEB;
-	Thu, 22 Aug 2024 16:26:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 756FB1CF282
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2024 17:03:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724343979; cv=none; b=aUY6dSg1dXoWeR1V1HGl8Nf/EOCl6Qp01SPI/MGkUttfmCXv4rWoiv2J4Sqdh+mi9qWlV9DkBpBDc7Scgz+x1ER9BpMzqx6E3/wZ6AbFZ0KD9mdwZR+EVCMNaEJLiqCpp5qvZrvDM7mFAw6fOQqelp1aEuBe02w6+R2s19AjLOs=
+	t=1724346186; cv=none; b=C0o5c+7VqAS7sZrw6EpApR/lrNrno0PJZxCFhTLN9dfhVrxJfXRlCDoqWfbHBJbv+y7eM5t3URmFwbS50e78b/fEC1LYp0Of9po6+EW0z5ylUtE3HTQ1w+0IA17/YxGo/TbCTVwyX+cX37giqS4rdkvQeBEJWaeLNpSFIJtnfpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724343979; c=relaxed/simple;
-	bh=qj9ZIU8ryzdTxvvRkpC6wojsZb9qx7JD9R0+KOzJ8vQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=cEVETxkGgwMIGvffH42hvlsZ83T8aqJVKaNymO4W3RIllWGedwJFwL8c3WYV4vauO1gdr6s4f76iR2N9YGBcQsvQeeDQwENEOULZPQT5HHMGyDjpHVT1vo33DdeNORb1JvTYoVjAGw42LHwPIqqJ+7kFK5w3lwfZeQi5BOUvfk8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=whUrTEz/; arc=none smtp.client-ip=199.89.1.12
+	s=arc-20240116; t=1724346186; c=relaxed/simple;
+	bh=M0OcK3NeG2FCkWHRjHtEpoDhJPsRqgN7sJ2Ma8Fmy2w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AFkGDEdrjjp/kUcAlBapXO9PyrdjrT1I7BJxIAKUXnhiRnbUyOWUFrIjIqRzaVsJzSzOc1AD7xAOrM7zCJKX3/2u7qM2YouDVIaSoPfe14LA4Ew3kKLRYfZ+Zzk1yffxOvSHumo1ZZeNcx2VDezImJ7z8GLBMHOwVX1prDmvPK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=y2p0aCA/; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="whUrTEz/"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="y2p0aCA/"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4WqT8z21GHzlgVnK;
-	Thu, 22 Aug 2024 16:26:11 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WqTzW5yJ3z6ClY9B;
+	Thu, 22 Aug 2024 17:03:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1724343966; x=1726935967; bh=uwXtexiiApM2ZjIZ0EAA4qeH
-	2ZzD69Meamj7U3JQK4M=; b=whUrTEz/TdIbG4MdBaWpLU5gAbunSzFCMCfJv/9O
-	2xar1uZal7U12S9iyYGkdvsS68UqZzrH3IO8l6lMVROy6yfSbNc8upHKAg0wHFsT
-	4FlthHolO7c/xIpbI6SwxhpLtf1l4njhTRRyM/IFMcqbW+kTu9o1VUED3PU2gOFK
-	KrUnOaar84gfWPyDEsHmpQvDfx1Bsg4m+BahqypEeWMirnn81XddiDpCp/5zzug2
-	2J10OKRmSaGt8tlnnmuko3/4zaDsi7j4K2r5IoX4TZr6IM6CwMLvKYKzfPOUQEa1
-	k6btRjOmMjwhSmH0H7mzH3pjvHlpd/KnLbAiyneRnEAiXA==
+	 s=mr01; t=1724346180; x=1726938181; bh=ESa/0hMTpBUGqmRSunIMKmjG
+	AidTAqYHJ8d5SWsxhnY=; b=y2p0aCA/64ZwsalyhiVJyfdG5t7ndLwuXUOKVo8+
+	5MTVj4B2Gz0BZv9JcAbi75iP7ClonrvdF+9Zb7G00GDSpmjH5oydu5v4BS4MBCzH
+	6RFMp9n7c9PSqLJ/3RlrYSjbB5QmhVNcNLF+eLScoZQ7LEm/f+U/FJwS5UvH2e60
+	AWUmpgD7a9p2ezUKzmNwNGb5cCdSI9RgtZ96VdKVAoYjC3rZYCNBSkDdd1QgKPDK
+	z/wi5VXUN6JhxX6lqGs6Js3C3h1VqOi8mIr7ERotRGi8UZfZjF3aNYlVYttcxd6d
+	9FgS3qJe40NV7EGelH+YDg7/zXGaep9EU3QhsrptD/Nm/w==
 X-Virus-Scanned: by MailRoute
-Received: from 009.lax.mailroute.net ([127.0.0.1])
- by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id lwkJYkDn9dTQ; Thu, 22 Aug 2024 16:26:06 +0000 (UTC)
-Received: from [IPV6:2a00:79e0:2e14:8:2a97:b8c7:bd2d:fb28] (unknown [104.135.204.80])
+Received: from 008.lax.mailroute.net ([127.0.0.1])
+ by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id oNMzrXVtHODm; Thu, 22 Aug 2024 17:03:00 +0000 (UTC)
+Received: from [IPV6:2a00:79e0:2e14:8:2767:7e57:9a00:979d] (unknown [104.135.204.81])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4WqT8s1VcBzlgVnF;
-	Thu, 22 Aug 2024 16:26:05 +0000 (UTC)
-Message-ID: <2e7e0a2e-39e3-47d1-adc4-24b7e9761b5f@acm.org>
-Date: Thu, 22 Aug 2024 09:26:04 -0700
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WqTzQ1Fnzz6ClY98;
+	Thu, 22 Aug 2024 17:02:57 +0000 (UTC)
+Message-ID: <3dd5c574-97ce-46cb-a925-9074973e8afb@acm.org>
+Date: Thu, 22 Aug 2024 10:02:55 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,52 +50,47 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/2] scsi: ufs: introduce a callback to override OCS
- value
-To: Bean Huo <huobean@gmail.com>, Kiwoong Kim <kwmad.kim@samsung.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
- martin.petersen@oracle.com, beanhuo@micron.com, adrian.hunter@intel.com,
- h10.kim@samsung.com, hy50.seo@samsung.com, sh425.lee@samsung.com,
- kwangwon.min@samsung.com, junwoo80.lee@samsung.com, wkon.kim@samsung.com
-References: <CGME20240822111247epcas2p2d3051255f42af05fd049b7247c395da4@epcas2p2.samsung.com>
- <cover.1724325280.git.kwmad.kim@samsung.com>
- <04306da77d74e16edab1d682a8602f61b35025a3.camel@gmail.com>
+Subject: Re: [PATCH 1/2] scsi: ufs: core: Make ufshcd_uic_cmd_compl() easier
+ to read
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "beanhuo@micron.com" <beanhuo@micron.com>,
+ "ahalaney@redhat.com" <ahalaney@redhat.com>,
+ "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>
+References: <20240821182923.145631-1-bvanassche@acm.org>
+ <20240821182923.145631-2-bvanassche@acm.org>
+ <50e21f3e873c19da78b108b0352a8aa6cf95907e.camel@mediatek.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <04306da77d74e16edab1d682a8602f61b35025a3.camel@gmail.com>
+In-Reply-To: <50e21f3e873c19da78b108b0352a8aa6cf95907e.camel@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-On 8/22/24 8:42 AM, Bean Huo wrote:
-> On Thu, 2024-08-22 at 20:15 +0900, Kiwoong Kim wrote:
->> Kiwoong Kim (2):
->>  =C2=A0 scsi: ufs: core: introduce override_cqe_ocs
->>  =C2=A0 scsi: ufs: ufs-exynos: implement override_cqe_ocs
+On 8/21/24 10:34 PM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> For example, consider the following complex conditional expression:
 >=20
->=20
-> Hi Kiwoong Kim,
->=20
-> I didn't see your patch email,just post your second patch here, and
-> provide my comments:
->=20
->  =20
-> +static enum utp_ocs exynos_ufs_override_cqe_ocs(enum utp_ocs ocs)
-> +{
-> +	if (ocs =3D=3D OCS_ABORTED)
-> +		ocs =3D OCS_INVALID_COMMAND_STATUS;
-> +	return ocs;
-> +}
->=20
->=20
-> I wonder if you have considered the case where the command is aborted
-> by the host software or by the device itself?
->=20
-> If you change OCS to OCS_INVALID_COMMAND_STATUS, there will report a
-> DID_REQUEUE to SCSI.
+> if (a =3D=3D b && c > d || e < f && g !=3D h)
 
-The decision about what to do probably should depend on whether or not
-the command has been nullified.
+Hi Peter,
+
+As you may know, the above is not allowed in Linux kernel code. I'm
+not sure this has been written down anywhere formally. The C compilers
+supported by the Linux kernel emit a warning about expressions like the
+above and Linux kernel code should be warning-free.
+
+I agree with you that code readability is important. However, I think
+that it's important for Linux kernel developers to make themselves
+familiar with expressions like (a & b && ...) since this style is common
+in the Linux kernel. Do you agree that the data below shows that not
+surrounding binary and expressions with parentheses is common in Linux
+kernel code?
+
+$ git grep -nHE 'if.*&&[^()&]*&[^&]|if.*[^&]&[^&()]*&&' | wc -l
+    2548
 
 Thanks,
 
