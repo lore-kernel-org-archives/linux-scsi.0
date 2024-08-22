@@ -1,58 +1,58 @@
-Received: from mail-lj1-f173.google.com (mail-lj1-f173.google.com [209.85.208.173])
+Received: from mail-lj1-f177.google.com (mail-lj1-f177.google.com [209.85.208.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A02DF1CC151;
-	Thu, 22 Aug 2024 14:54:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB66E1CB33B;
+	Thu, 22 Aug 2024 15:42:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724338474; cv=none; b=eBMTYwPjJkGYqZAeleYJ9g48u8u81hWCPvryl5SeoWZSYSDeMazKpLn8SytPirCOvGYJ7Cz846SePrEca9gW7tK3S/d3TLROFDclM0MPAlM6M2uTR+ocLcnBt5uSKGQwYuOH1EB2CAgexw/Yn4sqcNGWQXx1QeVRJUvpnBj4w8w=
+	t=1724341351; cv=none; b=OZb+X6A/gO8CRTCmUd0mx2VQ5KSYdPl7AfsGfVyDBcAfuiFOkTtuXNs4IpNQgvt0IM8htX3DK7ZfcT07pwKpFjm1YpTXsyYRePNYA9Jp2z7F2ijjt/RVLGHXK/mS1oVPI2zx0LT3RAUQUj9UwSTZz/eY6JC8zcLQZP3ic7t/PxU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724338474; c=relaxed/simple;
-	bh=+TUSP11wjCwnjRuybst5FS9wNxTbnJ3fnYQiOquRoXE=;
+	s=arc-20240116; t=1724341351; c=relaxed/simple;
+	bh=srQv0vhfpJ7TuVF5UATQEzYC7ABOs0mfT8jGWJNhfog=;
 	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=m7i6+HaXX+8KU6GAw4NHrmw4+pDERlVBZ5KxcFgd3X3/FEryZCI3RTuKTVMH8YoAV6PCPUWtuSvTEwKj2MmPAqd2pXfg9Qr4b7CNwtpqP+Be5dMx8VUWRQfq5JF8Nsf9dYdiBYPyCVyYZJn8SfPPFrqc6alFwbldoWqI8pZ+g6U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GWXuVKr4; arc=none smtp.client-ip=209.85.208.173
+	 Content-Type:MIME-Version; b=CZYSqIXUO/Xcq1LGXULqwF4HrkT7kTJnaaLT9ODs5qL5zCVW2bwsXfwf06eYhYKJWOFl0/9lkXC+PyItt5VpZ6RaSnq5w8ABFHgV1CyKhS2Rzf9wqZTYPVDyNulS7vOyOb+AOQjvXbuRoYIFoWg4wUeeP0GWLos1+WEaxCM3SYw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=e6EzmFV2; arc=none smtp.client-ip=209.85.208.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GWXuVKr4"
-Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-2f3e071eb64so13241801fa.1;
-        Thu, 22 Aug 2024 07:54:32 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e6EzmFV2"
+Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-2f4f2868783so964641fa.2;
+        Thu, 22 Aug 2024 08:42:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1724338471; x=1724943271; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1724341348; x=1724946148; darn=vger.kernel.org;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:to:from:subject:message-id:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=+TUSP11wjCwnjRuybst5FS9wNxTbnJ3fnYQiOquRoXE=;
-        b=GWXuVKr4Zbqx8CXdUR8NIkcFBXUXeSVfYpOdiddRoyjewC5b4eFjmu7uB1z5AoV6+3
-         eGryZ0tgyPBRjAZLPttRPQ/FsUbPGohnHmnzkvNt42ENMadv2bckZHyt1t7enqXcr3Ce
-         tdSVhT/NPfXLUbvshngqbOBtfSEHh7D19FGrjtTfpZwEMsDXTFh2xnGUh1vbJ4bIdNAo
-         KA751ip7w56uUxe6X7hrTGqNVv4NVeXAPymlCeag/lCFltm6YZVZ2kgBPR5bnMST3sgw
-         g4utAp2Xjtrz3h8rUP5yaZ9awORbBQ/xCWfwTmJAf4Ow5jAaOeg7uS0//S0JvW5lBj5W
-         7Kwg==
+        bh=KKuRHz3dN9ycQVjAWBxa5fGvRl8U6lvrA2n927jgmHQ=;
+        b=e6EzmFV2U6Sb7n4Hg+YCdXqBdPVILXVrtuhWqJjH76W5Qg8Ds2YxbsqlIGUVGBFJWH
+         nzIWdJgKNX9FmoGTFNd1/JCA6bNU0Zia+rjZY9ciKSBqi9+8NWzkx8VdgldakRQuEWaN
+         dhdFqZmYiuNvu450SBOFeEXbIuRtZNeqZk0GJDvhLXF8dbUgqZmAibf3Zu78jzx9s+GV
+         GGKedTYPfm1TzTQhObVD4Djwx5dVlh1up0g6b5x8Dt3LZXPnXVWHitysNn1aRo6cZ/QW
+         jck1MduAHzDW3xN0gWHI1KXj2ZPZzUbczSBg4hRZ2Kgr4k1njBkAWGvRc4OlzNEBDS56
+         8seQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724338471; x=1724943271;
+        d=1e100.net; s=20230601; t=1724341348; x=1724946148;
         h=mime-version:user-agent:content-transfer-encoding:references
          :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=+TUSP11wjCwnjRuybst5FS9wNxTbnJ3fnYQiOquRoXE=;
-        b=Td6S24NUZOYUPNOW5Qs1OZ/tPOsQGBwZLGUiwmQAF3N81AXcDOtlvJGfTdsQ1fDQVp
-         AX9IuM+3+excMxvpfjat5HiPAqN/cCTnWRkRDDFJ7ca53enHgxCmvXG5GDttMi4i5aEo
-         zVd92xNhJVYcCLd/1i+0tbYStswBkfEhYlKEQSE3WcxfqdinSsUuBoxnuM20sec9ilTq
-         7VB908/naCGAkfZWKv6bsWuAv6nzb2DEeKJSeyyuixXizlwZn3gLXPkQgJwyW4JmyRdR
-         UsWt29Oa/6B/OiMojYw1sK7YnQctveXkRuXu8aVFScJTj87S55mGo1e2tMcVIEfJTMyF
-         WTKQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUydCTUadLqUOrxcy9fJ6r8LZMF4S7ZRXPXIglUw/jVTTfakifLZpyvYwnCZewzY59CwyT1ZIAKyaBXOA==@vger.kernel.org, AJvYcCV/tf9k92yn+TZruHjd+P2xziIjakJTdNGB0lhJXoH23zO/Tsa/Oe81EQ/7keTXtkK4VYuTeMuc290d1I8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxcnsWkAsqSTGrePEWDr56TxJ5UtUoFTx6W2LmsTPfZKfswFlsp
-	PxOoyx3FxGMafUpTqFtIMGiUeT0ElvZ7pDhThkhPEhgbBu5Zq+Vw
-X-Google-Smtp-Source: AGHT+IHHQLJky14YCYfHmGvcL+P+t82R4pEsMMJV8VeNqUl5LX/0oZXRvjHMpvuElGzR1USJVojd0A==
-X-Received: by 2002:a05:651c:154b:b0:2ef:2ba5:d214 with SMTP id 38308e7fff4ca-2f405c8bf3cmr16014141fa.4.1724338469809;
-        Thu, 22 Aug 2024 07:54:29 -0700 (PDT)
+        bh=KKuRHz3dN9ycQVjAWBxa5fGvRl8U6lvrA2n927jgmHQ=;
+        b=NdJbGmRvv9iHGGoxvqsmWKmS0M68IizQin09p2akd0WIsE1ozI2/88wRxlz1rsm5U3
+         BqxaWZAIe0W/F7sW+HiauatKH0CnVyg9IO763henTtXjgs0Mx+6b34VlMknAXW/EIQVH
+         cw+/yaKypG+J8z23v6ZjEcRvSZd9iL+N18/xZnkRQSroB2iKv6W+/Mz0oISRbt7Psgdv
+         KwEhu80YgcMyPjplkOqssJhzUY8XEDGomDstSwRjg3z/XxZT8sCt1d/sbMH47Inhwft/
+         0MdfmayZzxDmYWZNcEQLISWhYuRKF3aQXFbYIE/8kw8PXu54fUr26Uf7Uswm1SZo+HZY
+         Ws7Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVbWVMO7zaJDW1O4bc7qontmzlXsOSoLgXBT95zK9+R6iZnWlpvdpxx8AemoePwMGPBFhiXYqIL6UoIYXM=@vger.kernel.org, AJvYcCVbs6YEg4Qa01UMzXhJ34X7dE58w5K9eY5k3EZ3cdBLwvEVwyjeL4rbXUB3eSB4ukxqlh1YJ7oiy3Nx3A==@vger.kernel.org
+X-Gm-Message-State: AOJu0YyO/MKzxVae63+0xk3TtKYyn5LXvJuL1gMdarv8i0aubmYLW3tB
+	v8g2xy1bnf6LZWBtgWVGUAEbBMefnyR54Ljt/ZwhPbg9bvJqRoct
+X-Google-Smtp-Source: AGHT+IHbrtS+R0RFzaXyAy2XKC8PLf3HwKp357wuUBM0qJBbr8MasTdsFXLPMzhkZ7GcbK3rwCcqoQ==
+X-Received: by 2002:a2e:8781:0:b0:2f3:e795:3e6f with SMTP id 38308e7fff4ca-2f3f8953568mr35059981fa.45.1724341347345;
+        Thu, 22 Aug 2024 08:42:27 -0700 (PDT)
 Received: from [10.176.235.56] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a868f29a568sm129477266b.53.2024.08.22.07.54.28
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5c04a3cbdeasm1050253a12.33.2024.08.22.08.42.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Aug 2024 07:54:29 -0700 (PDT)
-Message-ID: <ed370c6355dee6a4af15587cdbb3b06a1fe0b842.camel@gmail.com>
+        Thu, 22 Aug 2024 08:42:26 -0700 (PDT)
+Message-ID: <04306da77d74e16edab1d682a8602f61b35025a3.camel@gmail.com>
 Subject: Re: [PATCH v2 0/2] scsi: ufs: introduce a callback to override OCS
  value
 From: Bean Huo <huobean@gmail.com>
@@ -62,7 +62,7 @@ To: Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
  beanhuo@micron.com, adrian.hunter@intel.com, h10.kim@samsung.com, 
  hy50.seo@samsung.com, sh425.lee@samsung.com, kwangwon.min@samsung.com, 
  junwoo80.lee@samsung.com, wkon.kim@samsung.com
-Date: Thu, 22 Aug 2024 16:54:27 +0200
+Date: Thu, 22 Aug 2024 17:42:25 +0200
 In-Reply-To: <cover.1724325280.git.kwmad.kim@samsung.com>
 References: 
 	<CGME20240822111247epcas2p2d3051255f42af05fd049b7247c395da4@epcas2p2.samsung.com>
@@ -78,33 +78,31 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
 On Thu, 2024-08-22 at 20:15 +0900, Kiwoong Kim wrote:
-> UFSHCI defines OCS values but doesn't specify what exact
-> conditions raise them. So I think it needs another callback
-> to replace the original OCS value with the value that works
-> the way you want.
->=20
-> v1 -> v2: fix build error for arguments
->=20
 > Kiwoong Kim (2):
 > =C2=A0 scsi: ufs: core: introduce override_cqe_ocs
 > =C2=A0 scsi: ufs: ufs-exynos: implement override_cqe_ocs
 
-Hi kiwoong Kim,
 
-I didn't see your above two patches following your cover-letter, did
-you send patch with "--thread" optioin?
+Hi Kiwoong Kim,
+
+I didn't see your patch email,just post your second patch here, and
+provide my comments:
+
+=20
++static enum utp_ocs exynos_ufs_override_cqe_ocs(enum utp_ocs ocs)
++{
++	if (ocs =3D=3D OCS_ABORTED)
++		ocs =3D OCS_INVALID_COMMAND_STATUS;
++	return ocs;
++}
+
+
+I wonder if you have considered the case where the command is aborted
+by the host software or by the device itself?
+
+If you change OCS to OCS_INVALID_COMMAND_STATUS, there will report a
+DID_REQUEUE to SCSI.
 
 
 Kind regards,
 Bean
-
->=20
-> =C2=A0drivers/ufs/core/ufshcd-priv.h |=C2=A0 9 +++++++++
-> =C2=A0drivers/ufs/core/ufshcd.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 | 11 ++++++=
-+----
-> =C2=A0drivers/ufs/host/ufs-exynos.c=C2=A0 |=C2=A0 8 ++++++++
-> =C2=A0include/ufs/ufshcd.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 |=C2=A0 1 +
-> =C2=A04 files changed, 25 insertions(+), 4 deletions(-)
->=20
-
