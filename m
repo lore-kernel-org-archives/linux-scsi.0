@@ -1,52 +1,62 @@
 Received: from 009.lax.mailroute.net (009.lax.mailroute.net [199.89.1.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B34F14B964
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2024 21:36:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B28EA933
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2024 21:37:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724362613; cv=none; b=JBHipj49YOIXPld0krPNU5A2S9WXqSRLQ735R1pwpKOKN4vgzQfTMm0huulvpxFJLsKb/sEJIK45zdg6M2GQFB3OcgZBw4PVDHb2a+yONIBH6wzXfv3jSKl7HlmaDdvp5z45avy+Jd/51tZQlcJCRfvVId+uJWY0fU5f+1lu5XY=
+	t=1724362621; cv=none; b=C2EWgcjLt8yXy+qUnCP/m4MfimLuzKxuRH65VV/U/fn07UmI+TV/V0yu6Q3sb+2smnB0R9XeNFJUMrC8QBqqvrD9Me8CBgIAazqisf3VBX3mCfP6DseSuEs3Erflmom/9GOYj85yW6mBiL+83bDRhUHhrEaHbuuqQKgBKCL8nvg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724362613; c=relaxed/simple;
-	bh=sbxZ6hzX6G89KBlDVEKSP+2jIKwJBjL9FNTyocDelPg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=d7+mystfjYm3HQpHhGebdWOgxphup6laoZnrRtLGNjV6vO1+1fOYX2MTxHPNxygo1CyvteLwdhGEMpnSx5EbcxMIPOVCb7l0cqMnx7ZkOLXYIXHalzrbE42+/38QN1lRDzc4gsg7d84oToOh/Q1OhUU8e8xy7+kuNdbCzXBySyk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QoZ9eJzZ; arc=none smtp.client-ip=199.89.1.12
+	s=arc-20240116; t=1724362621; c=relaxed/simple;
+	bh=nTypzgEjksi3jcwKnR0tyfT3fWHf6lw6I3DfZjucD0s=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=r29CAy9g0ARrLq+KKE8ZEtp66HHr2jxqlbGMAk4sbl0MX5WJKwDmMcUMdRYHfpSj76vSuVqIghCygpHyjxt3xZwDDqpAT1tIEOTlsMm4hD9nG0Up2DX7bs4a3xo/QCwsyNjoB5edEupoyfiz1CfML+X1uutj7QYcG9mNknNItU4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=c3Xmhzmu; arc=none smtp.client-ip=199.89.1.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QoZ9eJzZ"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="c3Xmhzmu"
 Received: from localhost (localhost [127.0.0.1])
-	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Wqc3R4BxDzlgVnf;
-	Thu, 22 Aug 2024 21:36:51 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTP id 4Wqc3b4s9czlgT1K;
+	Thu, 22 Aug 2024 21:36:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1724362610; x=1726954611; bh=bkZJJabxwVyS2Gk63XkaHzs6KQrs2AXA0j/
-	+ASmg7wU=; b=QoZ9eJzZn6uE1kP/KUfjJr+R4mhckREA7iz/BrUO8DBttsb6dIt
-	+WyUVyV7E+SDvn/E/NHPr68kUSur++UZVlxoFdcKiHVpLsl92BwOqlLGwf24xHzp
-	yhzpBWgmtkFPY9LcPZ74ueQvpmIYNRbXA28z3H900JtyP5T6flClPlOaKRty27bG
-	yWuFUCfrJ4MrWrJ5OPWO9BZWe2QKvimNz/Le7r4D29dUtNr8yKOoTFc8oeYbSh8c
-	hcSGDBdDpQ4smXT35qHQQrcUYlWrDBkA0KDV1S0LUVI0yd9aYue2zN6ExZ0Q5Ros
-	KzVadlgwVnIooa3gVM8gSjwCy5Cn9AwDC0g==
+	content-transfer-encoding:mime-version:references:in-reply-to
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1724362615; x=1726954616; bh=u2/WG
+	8iVe04Ig/1vNTkhyEqdtFiTGRq9qrsGuIQaj9c=; b=c3XmhzmuTPAAGgbU0L540
+	GnQgBRmn6kx6UIzXUPs/uQDODP7SYuJXZmUH0Gw02A/JooDp+RUTZcZ6cddGb0Yz
+	rWVrqRiVLjVfBCLfnx7jJVFK+bxyJxp8Ft9FR2hLG/Mx1PdQJoCWmsiclJ7QCVgy
+	qxwigzBGx1tIa3P5Oo5/mMNFEhtalBEiKEXWsCYAOW1HrW9Od41fuDQcEO+jh1PL
+	OR3R2SUAd9bLbMLMOIcygokDGlPK42MXm1u2jPcPG6Q9MWz/LMecHJ0D0opIK1aw
+	YdSVlZa8kd3zL1Y21gH3z/2dIBvDHwleEkZHZFlG8U06yELyGszSF4K/6qg8+iFr
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 009.lax.mailroute.net ([127.0.0.1])
  by localhost (009.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id vRDbDN_azOzW; Thu, 22 Aug 2024 21:36:50 +0000 (UTC)
+ id azMw9IYG9gxl; Thu, 22 Aug 2024 21:36:55 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Wqc3Q0Q5NzlgVnK;
-	Thu, 22 Aug 2024 21:36:49 +0000 (UTC)
+	by 009.lax.mailroute.net (Postfix) with ESMTPSA id 4Wqc3V2sXczlgVnK;
+	Thu, 22 Aug 2024 21:36:54 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v2 0/9] Simplify the UFS driver initialization code
-Date: Thu, 22 Aug 2024 14:36:01 -0700
-Message-ID: <20240822213645.1125016-1-bvanassche@acm.org>
+	Bart Van Assche <bvanassche@acm.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Avri Altman <avri.altman@wdc.com>,
+	Andrew Halaney <ahalaney@redhat.com>,
+	Bean Huo <beanhuo@micron.com>
+Subject: [PATCH v2 1/9] ufs: core: Introduce ufshcd_add_scsi_host()
+Date: Thu, 22 Aug 2024 14:36:02 -0700
+Message-ID: <20240822213645.1125016-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.46.0.295.g3b9ea8a38a-goog
+In-Reply-To: <20240822213645.1125016-1-bvanassche@acm.org>
+References: <20240822213645.1125016-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,40 +65,125 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Hi Martin,
+Move the code for adding a SCSI host and also the code for managing
+TMF tags from ufshcd_init() into a new function called
+ufshcd_add_scsi_host(). No functionality has been changed.
 
-This patch series addresses the following issues in the UFS driver
-initialization code:
-* The legacy and MCQ scsi_add_host() calls occur in different functions. =
-This
-  patch series reduces the number of scsi_add_host() calls from two to on=
-e.
-* Two functions have a boolean 'init_dev_params' argument. This patch ser=
-ies
-  removes that argument from both functions by splitting functions and by
-  pushing some function calls from caller into callee.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufshcd.c | 84 ++++++++++++++++++++++++---------------
+ 1 file changed, 53 insertions(+), 31 deletions(-)
 
-Please consider this patch series for the next merge window.
-
-Thanks,
-
-Bart.
-
-Changes compared to v1:
- - Fixed a compiler warning reported by the kernel build robot.
- - Improved patch descriptions.
-
-Bart Van Assche (9):
-  ufs: core: Introduce ufshcd_add_scsi_host()
-  ufs: core: Introduce ufshcd_activate_link()
-  ufs: core: Introduce ufshcd_post_device_init()
-  ufs: core: Call ufshcd_add_scsi_host() later
-  ufs: core: Move the ufshcd_device_init() call
-  ufs: core: Move the ufshcd_device_init(hba, true) call
-  ufs: core: Expand the ufshcd_device_init(hba, true) call
-  ufs: core: Move the MCQ scsi_add_host() call
-  ufs: core: Remove the second argument of ufshcd_device_init()
-
- drivers/ufs/core/ufshcd.c | 269 ++++++++++++++++++++++----------------
- 1 file changed, 154 insertions(+), 115 deletions(-)
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 0dd26059f5d7..d29e469c3873 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10381,6 +10381,56 @@ static const struct blk_mq_ops ufshcd_tmf_ops =3D=
+ {
+ 	.queue_rq =3D ufshcd_queue_tmf,
+ };
+=20
++static int ufshcd_add_scsi_host(struct ufs_hba *hba)
++{
++	int err;
++
++	if (!is_mcq_supported(hba)) {
++		err =3D scsi_add_host(hba->host, hba->dev);
++		if (err) {
++			dev_err(hba->dev, "scsi_add_host failed\n");
++			return err;
++		}
++		hba->scsi_host_added =3D true;
++	}
++
++	hba->tmf_tag_set =3D (struct blk_mq_tag_set) {
++		.nr_hw_queues	=3D 1,
++		.queue_depth	=3D hba->nutmrs,
++		.ops		=3D &ufshcd_tmf_ops,
++		.flags		=3D BLK_MQ_F_NO_SCHED,
++	};
++	err =3D blk_mq_alloc_tag_set(&hba->tmf_tag_set);
++	if (err < 0)
++		goto remove_scsi_host;
++	hba->tmf_queue =3D blk_mq_alloc_queue(&hba->tmf_tag_set, NULL, NULL);
++	if (IS_ERR(hba->tmf_queue)) {
++		err =3D PTR_ERR(hba->tmf_queue);
++		goto free_tmf_tag_set;
++	}
++	hba->tmf_rqs =3D devm_kcalloc(hba->dev, hba->nutmrs,
++				    sizeof(*hba->tmf_rqs), GFP_KERNEL);
++	if (!hba->tmf_rqs) {
++		err =3D -ENOMEM;
++		goto free_tmf_queue;
++	}
++
++	return 0;
++
++free_tmf_queue:
++	blk_mq_destroy_queue(hba->tmf_queue);
++	blk_put_queue(hba->tmf_queue);
++
++free_tmf_tag_set:
++	blk_mq_free_tag_set(&hba->tmf_tag_set);
++
++remove_scsi_host:
++	if (hba->scsi_host_added)
++		scsi_remove_host(hba->host);
++
++	return err;
++}
++
+ /**
+  * ufshcd_init - Driver initialization routine
+  * @hba: per-adapter instance
+@@ -10514,35 +10564,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iome=
+m *mmio_base, unsigned int irq)
+ 		hba->is_irq_enabled =3D true;
+ 	}
+=20
+-	if (!is_mcq_supported(hba)) {
+-		err =3D scsi_add_host(host, hba->dev);
+-		if (err) {
+-			dev_err(hba->dev, "scsi_add_host failed\n");
+-			goto out_disable;
+-		}
+-		hba->scsi_host_added =3D true;
+-	}
+-
+-	hba->tmf_tag_set =3D (struct blk_mq_tag_set) {
+-		.nr_hw_queues	=3D 1,
+-		.queue_depth	=3D hba->nutmrs,
+-		.ops		=3D &ufshcd_tmf_ops,
+-		.flags		=3D BLK_MQ_F_NO_SCHED,
+-	};
+-	err =3D blk_mq_alloc_tag_set(&hba->tmf_tag_set);
+-	if (err < 0)
+-		goto out_remove_scsi_host;
+-	hba->tmf_queue =3D blk_mq_alloc_queue(&hba->tmf_tag_set, NULL, NULL);
+-	if (IS_ERR(hba->tmf_queue)) {
+-		err =3D PTR_ERR(hba->tmf_queue);
+-		goto free_tmf_tag_set;
+-	}
+-	hba->tmf_rqs =3D devm_kcalloc(hba->dev, hba->nutmrs,
+-				    sizeof(*hba->tmf_rqs), GFP_KERNEL);
+-	if (!hba->tmf_rqs) {
+-		err =3D -ENOMEM;
+-		goto free_tmf_queue;
+-	}
++	err =3D ufshcd_add_scsi_host(hba);
++	if (err)
++		goto out_disable;
+=20
+ 	/* Reset the attached device */
+ 	ufshcd_device_reset(hba);
+@@ -10600,9 +10624,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
+ *mmio_base, unsigned int irq)
+ free_tmf_queue:
+ 	blk_mq_destroy_queue(hba->tmf_queue);
+ 	blk_put_queue(hba->tmf_queue);
+-free_tmf_tag_set:
+ 	blk_mq_free_tag_set(&hba->tmf_tag_set);
+-out_remove_scsi_host:
+ 	if (hba->scsi_host_added)
+ 		scsi_remove_host(hba->host);
+ out_disable:
