@@ -1,48 +1,48 @@
 Received: from 008.lax.mailroute.net (008.lax.mailroute.net [199.89.1.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA9D115ACA
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2024 17:51:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B349F1CFEC1
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Aug 2024 18:13:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724349085; cv=none; b=Ob+K42t9bR1SyTycjX2YbM33UjCFdN73SSQ7HhchfTRz6v2j92zCZB462AJQ8Uk6fZjRjmq2tMUwjpT6mFoxItd3Z7sYhehXntMEIIdNWxAy8ghXXjgXOlTeVf7iUttZAoH9In5SWjsj7tOPRi0gtKiC4cxjkteao2moG17FVm0=
+	t=1724350435; cv=none; b=Jc4WBQtutBHvHeO2KIf04pXStK+OxsB7vR3TffXWWRS7UwxhGS4R/JqlN5Ky8crxC2ptiWqcPkqlfyXg2XIhYZehjFx3SgKwu9Y6uTBbRW3O20XWjPqO9GH7mR8Yk2/5N+rHrEjRQjNS19WnmJNrBBk4iLWm4zlOF6y31o07f/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724349085; c=relaxed/simple;
-	bh=sK6VnKJ6LrjUnd0yWVGP8LGzSbNR1D9qTAGFjQBhb6w=;
+	s=arc-20240116; t=1724350435; c=relaxed/simple;
+	bh=1SYoHDeVydOspYhNlylT3qcIX+QdmzlwF8VV+pMjaHc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZcP/GGhDPwEaQBQCTvXUpVwn1kO9yoYJAyCxMZP31z8NcNviGJPcKuLWySOi2uSQdYLP+KGQqz3JfdVxPrg36nlXRux9HsADcakTwyzVfikbjaU/jEOAJ7QWA39DN3yIQOW4N/6oziZGhN7vuC5IloPJZ7GLdB0nMu7QioxJ36A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=avaVsr5D; arc=none smtp.client-ip=199.89.1.11
+	 In-Reply-To:Content-Type; b=D4fHUYx+gXKOYQRP9dNtekplf4+gHFincZLAIEnUo+u8DYnPeysm3s/N9pPjpO5qSWnV1qG0xGyoioqjhyVf0LejBiAJi77PweU2iYzvjwPzm7pR6J6J90JXfg8ENAW2gbRkE8wkgIPpXRQboI2z+YCepDigETHtGCHjzAipZuE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=qJwbkpQ2; arc=none smtp.client-ip=199.89.1.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="avaVsr5D"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="qJwbkpQ2"
 Received: from localhost (localhost [127.0.0.1])
-	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WqW3H0jRVz6ClY9J;
-	Thu, 22 Aug 2024 17:51:23 +0000 (UTC)
+	by 008.lax.mailroute.net (Postfix) with ESMTP id 4WqWYF0L2Dz6ClY9J;
+	Thu, 22 Aug 2024 18:13:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1724349079; x=1726941080; bh=sK6VnKJ6LrjUnd0yWVGP8LGz
-	SbNR1D9qTAGFjQBhb6w=; b=avaVsr5D+6YU5+5q7qtSC9ay47eNPb0XAriq0m6J
-	jWOm996ha8EN03eE6wPu9A+FnIfpE+lGlgQ9nZY1wgJoy6O7Y7GsyqGW1ITeXM8t
-	ksJOCyNhC0ox0txDZ6FBLBnmvPJ9NTieNUE+OiN9Ew7QrQSKonxSLzZ2LTFkM3vf
-	pKJdgDQdwIroksbqndcJuPbdbNAotox4w2e0v/eqYv3Z8fuT8j/LoghFcU9jKwv3
-	UhGvrgoVfqHmATcgGF/+y63R9KhrebtyRheQMEBgRbyG5HU+xUg4z3/rpVsKi7CP
-	gR4rQP5j0BUUXCZ/M8816juaJ6VmxmIWR1pdl9E0KRQYUA==
+	 s=mr01; t=1724350428; x=1726942429; bh=+WlUdXiSB8OXpwpRTqKbO2A3
+	g6yx99SuCK1dmZEPpH0=; b=qJwbkpQ2opoPdxlbhfV9vPPPbQ49iDyTot+ItR0Q
+	Bgm65aD4Py9XzYSg6ER9Vm5Hj8swoAL0TYuEuy+FimhPM0EMf/WOYOoGoQedKmb8
+	N9FSFfHeNvC0RN8xqGuNR1JzkFKsgSuWAtxYGnjcGqAHC3FM5eEwPc6dzdcuWvrT
+	XhooRX0vrGbNZofBmFIC9a+KDTelcmA+DNP1YBRi7ApLr/CfFiv9uzoPO12E1Ke/
+	zsCJXtCmHiaaYBHkEYCiBn8uFL5oV7S55hXniaGHu108oRxIiS5/zwRCXT2naCd8
+	+kgjnMfFMx+K3gUFtp0C35bY5riZD6BtFCPnLwAQN8WUqQ==
 X-Virus-Scanned: by MailRoute
 Received: from 008.lax.mailroute.net ([127.0.0.1])
  by localhost (008.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id n0XUcV8_tTyo; Thu, 22 Aug 2024 17:51:19 +0000 (UTC)
+ id 5qAgiLESgt6U; Thu, 22 Aug 2024 18:13:48 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WqW396Wxjz6ClY9F;
-	Thu, 22 Aug 2024 17:51:17 +0000 (UTC)
-Message-ID: <4964ac76-abdd-4cdc-b8d0-3484b3286449@acm.org>
-Date: Thu, 22 Aug 2024 10:51:17 -0700
+	by 008.lax.mailroute.net (Postfix) with ESMTPSA id 4WqWY66llFz6ClY9F;
+	Thu, 22 Aug 2024 18:13:46 +0000 (UTC)
+Message-ID: <85481ed2-a911-41a4-8fd4-80e4d20dbf04@acm.org>
+Date: Thu, 22 Aug 2024 11:13:46 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -52,7 +52,7 @@ MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH 2/2] scsi: ufs: core: Fix the code for entering
  hibernation
-To: Bean Huo <huobean@gmail.com>,
+To: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
@@ -64,22 +64,36 @@ Cc: linux-scsi@vger.kernel.org,
  Maramaina Naresh <quic_mnaresh@quicinc.com>
 References: <20240821182923.145631-1-bvanassche@acm.org>
  <20240821182923.145631-3-bvanassche@acm.org>
- <0e552232c1759ba1749acb9b606a03670bbe1ba1.camel@gmail.com>
- <25ba6504-9a10-4c59-a180-620ddfd06622@acm.org>
- <bb2a1649ef94637f236dece7255d497f7fe03f19.camel@gmail.com>
+ <41e5ed21-8ea6-3a4c-2f25-922458593f38@quicinc.com>
+ <6e8df17b-320e-4bfc-a0be-c7918b0263d4@acm.org>
+ <6fceba57-e1f6-e76b-94f3-1684c1fe6e98@quicinc.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <bb2a1649ef94637f236dece7255d497f7fe03f19.camel@gmail.com>
+In-Reply-To: <6fceba57-e1f6-e76b-94f3-1684c1fe6e98@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 8/22/24 7:17 AM, Bean Huo wrote:
-> Do you mean re-enabling UIC complete interrupt will cause the problem?
+On 8/21/24 6:05 PM, Bao D. Nguyen wrote:
+> If I understand correctly, the link is hibernated because we had a 
+> successful ufshcd_uic_hibern8_enter() earlier. Then the 
+> ufshcd_uic_pwr_ctrl() is invoked probably from a power mode change 
+> command? (a callstack would be helpful in this case).
 
-That's correct. ufshcd_uic_hibern8_enter() calls ufshcd_uic_pwr_ctrl()
-indirectly. For the test setup that is on my desk, the code in
-ufshcd_uic_pwr_ctrl() that re-enables the UIC completion interrupt
-causes the UFS host controller to exit hibernation.
+Hi Bao,
+
+ufshcd_uic_hibern8_enter() calls ufshcd_uic_pwr_ctrl() directly. The
+former function causes the latter to send the UIC_CMD_DME_HIBER_ENTER
+command. Although UIC_CMD_DME_HIBER_ENTER causes the link to enter the
+hibernation state, the code in ufshcd_uic_pwr_ctrl() for re-enabling
+interrupts causes the UFS host controller that I'm testing to exit the
+hibernation state.
+
+> Anyway, accessing the UFSHCI host controller registers space somehow 
+> affected the M-PHY link state? If my understanding is correct, it seems 
+> like a hardware issue that we are trying to work around?
+
+Yes, this is a workaround particular behavior of a particular UFS
+controller.
 
 Thanks,
 
